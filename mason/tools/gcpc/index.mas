@@ -43,7 +43,7 @@
             <div id="sin_list"></div>
               <p style="margin-left: 30px;margin-right: 30px;">OR</p>
               <button class="btn btn-success" >
-              <a href="http://localhost:8080/selection/index" target="_blank" rel="noopener noreferrer" style="color: white">Create a new one here</a>
+              <a href="/selection/index" target="_blank" rel="noopener noreferrer" style="color: white">Create a new one here</a>
               </button>
           </div>
           

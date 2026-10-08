@@ -15,12 +15,12 @@
                     <&| /util/workflow.mas, id=> "transactions_upload_workflow" &>
                         <&| /util/workflow.mas:step, title=> "Intro" &>
                             <& /page/page_title.mas, title=>"Upload Seedlot Transactions" &>
-                            <center>You can upload 4 different types of seedlot transactions. All of the transactions in each file have to be the same type.</center>
+                            <center>You can upload 3 different types of seedlot transactions. All of the transactions in each file have to be the same type.</center>
                             <ul>
                                 <li>Transferring seeds from existing seedlot to another existing seedlot.</li>
                                 <li>Transferring seeds from existing seedlot to a new seedlot. A new seedlot is created beforing adding new transaction.</li>
-                                <li>Transferring seeds from existing seedlot to a previously stored plot</li>
                                 <li>Removing seeds from existing seedlot to unspecified seedlot name or plot name</li>
+                                <li><b>Note:</b>To transfer seeds from existing seedlot to a previously stored plot, Please use <b>Upload Seedlots Planted in Trial</b> link in the Experimental Design section on the Trial Detail page.</li>
                             </ul>
                             <br/><br/>
                             <center>
@@ -38,7 +38,6 @@
                                             <option value="">Select a transaction type that you want to upload</option>
                                             <option value="seedlots_to_seedlots">From existing seedlots to other existing seedlots</option>
                                             <option value="seedlots_to_new_seedlots">From existing seedlots to new seedlots</option>
-                                            <option value="seedlots_to_plots">From existing seedlots to plots</option>
                                             <option value="seedlots_to_unspecified_names">From existing seedlots to unpecified seedlots/plots</option>
                                         </select>
                                     </div>

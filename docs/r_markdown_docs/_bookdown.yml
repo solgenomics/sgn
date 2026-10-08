@@ -13,18 +13,21 @@ rmd_files: [
   "managing_genotyping_plates.Rmd",
   "using_fieldbook_app.Rmd",
   "managing_phenotypic_data.Rmd",
+  "managing_high_dim_phenotyping_data.Rmd",
   "managing_barcodes.Rmd",
   "using_label_designer.Rmd",
   "managing_downloads.Rmd",
   "managing_odk_collection.Rmd",
   "managing_tissue_samples.Rmd",
   "managing_observation_variables.Rmd",
-  "managing_image_data.Rmd",
+  "managing_drone_imagery.Rmd",
+  "managing_images.Rmd",
   "managing_vcf_data.Rmd",
   "managing_spectral_data.Rmd",
   "managing_sequence_metadata.Rmd",
   "managing_outliers_in_dataset.Rmd",
-  "data_analysis_tools.Rmd"
+  "data_analysis_tools.Rmd",
+  "vector_viewer.Rmd"
   ]
 book_filename: BreedbaseManual
 output_dir: ../

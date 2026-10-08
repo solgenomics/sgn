@@ -1,0 +1,198 @@
+<%args>
+
+</%args>
+
+<div class="modal fade" id="add_derived_accessions_using_list_dialog" name="add_derived_accessions_using_list_dialog" tabindex="-1" role="dialog" aria-labelledby="addDerivedAccessionsUsingListDialog">
+    <div class="modal-dialog modal-xl" role="document">
+        <div class="modal-content ui-front">
+            <div class="modal-header">
+                <button type="reset" class="close" id="add_derived_accessions_using_list_dismiss_button_1" name="add_derived_accessions_using_list_dismiss_button" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <center><h4 class="modal-title" id="addDerivedAccessions">Add New Accessions Derived from Accessions/Plants/Tissue Samples Using a List</h4></center>
+            </div>
+            <div class="modal-body">
+                <div class="container-fluid">
+                    <&| /util/workflow.mas, id=> "add_derived_accessions_workflow" &>
+                        <&| /util/workflow.mas:step, title=> "Intro" &>
+                            <& /page/page_title.mas, title=>"Add Derived Accessions" &>
+                            <ul>
+                                <li>List must be accessions, plants or tissue samples list type</li>
+                                <li>Names in the list must exist in the database</li>
+                                <li>Derived accession names must not exist in the database</li>
+                                <li>Description provided will be stored as description for the specify derived accession</li>
+                            </ul>
+                            <hr>
+                            <center>
+                                <button id="next_step_add_new_intro" class="btn btn-primary" onclick="Workflow.complete(this);">Go to Next Step</button>
+                            </center>
+                        </&>
+                        <form class="form-horizontal" role="form" name="add_derived_accessions_form" id="add_derived_accessions_form">
+                            <&| /util/workflow.mas:step, title=> "Add New Derived Accessions" &>
+                                <& /page/page_title.mas, title=>"Enter information about derived accessions" &>
+                                <br/>
+                                <br/>
+                                <div class="form-horizontal">
+                                    <div class="form-group">
+                                        <label class="col-sm-4 control-label">Derived From: </label>
+                                        <div class="col-sm-8">
+                                            <select class="form-control" id="derived_from_type">
+                                                <option value="">Select a type</option>
+                                                <option value="accessions">accessions</option>
+                                                <option value="plants">plants</option>
+                                                <option value="tissue_samples">tissue samples</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div id="derived_accession_section" style="display:none">
+                                        <div class="form-group">
+                                            <label class="control-label col-sm-4">Select a List of source materials:</label>
+                                            <div class="col-sm-8" >
+                                                <div class="input-group">
+                                                    <select class="form-control" id="derived_from_list_select"></select>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div id ="derived_accessions_form_div">
+                                        </div>
+                                    </div>
+                                </div>
+                                <br/>
+                                <div id="form_footer" style="display:none" >
+                                    <center>
+                                        <button type="button" class="btn btn-primary" onclick="Workflow.complete(this, false);" name="derived_accessions_list_submit" id="derived_accessions_list_submit">Submit</button>
+                                    </center>
+                                </div>
+                            </&>
+                        </form>
+
+                        <&| /util/workflow.mas:complete, title=> "Complete" &>
+                            <& /page/page_title.mas, title=>"Finished! Your new accessions were stored" &>
+                            <p>
+                                <span class="ui-icon ui-icon-circle-check" style="float: left; margin: 0 7px 50px 0;"></span>
+                                New derived accessions were added successfully
+                            </p>
+                            <br/>
+                        </&>
+                    </&><!-- End of workflow -->
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button id="add_derived_accessions_using_list_dismiss_button_2" name="add_derived_accessions_using_list_dismiss_button" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<script>
+
+jQuery(document).ready(function(){
+
+    jQuery('#add_derived_accessions_using_list_link').click( function(){
+        jQuery('#add_derived_accessions_using_list_dialog').modal('show');
+    });
+
+    var list = new CXGN.List();
+    var list_type = '';
+    var derived_from_list_id = '';
+    jQuery(document).on('change', '#derived_from_type', function () {
+        list_type = jQuery('#derived_from_type').val();
+        jQuery("#derived_accession_section").show();
+        document.getElementById("derived_from_list_select").innerHTML = list.listSelect("derived_from_list_select", [ list_type ], 'Please select a list','', undefined);
+    });
+
+    jQuery("#derived_from_list_select").change(function() {
+        derived_from_list_id = jQuery('#derived_from_list_select').val();
+        if (derived_from_list_id){
+            let derived_from_list_validation = 1;
+            derived_from_list_validation = list.legacy_validate(derived_from_list_id, list_type, true);
+            if (derived_from_list_validation != 1) {
+                alert("The list did not pass validation. Names in the list must be uniquenames in the database");
+                return;
+            } else {
+                add_derived_accessions_form(derived_from_list_id);
+            }
+        }
+    })
+
+    function add_derived_accessions_form (derived_from_list_id) {
+        const derived_from_list = list.getList(derived_from_list_id);
+
+        var html = '<table class="table table-bordered" id="accession_info_table"><thead><tr><th>Source Name</th><th>New Accession Name</th><th>Description</th></tr></thead><tbody>';
+        for (var i=0; i<derived_from_list.length; i++){
+            html = html + '<tr><td>' + derived_from_list[i] + '</td><td><input class="form-control"  name ="new_derived_accession_name" id="new_derived_accession_name_'+ i +'" value="" placeholder="Required"/></td><td><input class="form-control"  name ="accession_description" id="accession_description_'+ i +'" value="" placeholder="Required"/></td></tr>';
+        };
+
+        html = html + '</tbody></table>';
+
+        jQuery('#derived_accessions_form_div').html(html);
+
+        jQuery('#form_footer').show();
+
+    };
+
+    jQuery('#derived_accessions_list_submit').click(function(e){
+        e.preventDefault();
+        let derived_accession_info = [];
+        let all_new_names = [];
+        const derived_from_list_id = jQuery('#derived_from_list_select').val();
+        const derived_from_list = list.getList(derived_from_list_id);
+
+        for (var i=0; i<derived_from_list.length; i++) {
+            let stock_name = derived_from_list[i];
+            let derived_accession_name = jQuery('#new_derived_accession_name_'+ i ).val();
+            let accession_description = jQuery('#accession_description_'+ i ).val();
+            if (derived_accession_name === '') {
+                alert("please provide new accession name for:" + stock_name);
+                return;
+            }
+            if (accession_description === '') {
+                alert("please provide description for:" + derived_accession_name);
+                return;
+            }
+            derived_accession_info.push({'stock_name':stock_name, 'derived_accession_name':derived_accession_name, 'accession_description':accession_description});
+            all_new_names.push(derived_accession_name);
+        }
+
+        jQuery.ajax({
+            url: '/stock/add_derived_accessions_using_list',
+            method: 'POST',
+            data: {
+                'derived_accession_info': JSON.stringify(derived_accession_info),
+                'all_new_names': JSON.stringify(all_new_names),
+            },
+            dataType:'json',
+            beforeSend: function() {
+                jQuery("#working_modal").modal("show");
+            },
+            success: function(response) {
+                jQuery("#working_modal").modal("hide");
+                if (response.error) {
+                    alert(response.error);
+                    return;
+                }
+                if (response.success) {
+                    Workflow.focus("#add_derived_accessions_workflow", -1);
+                    Workflow.check_complete("#add_derived_accessions_workflow");
+                }
+            },
+
+            error: function() {
+                jQuery("#working_modal").modal("hide");
+                alert('An error occurred storing new accessions.');
+            },
+        });
+    });
+
+    jQuery("[name = 'add_derived_accessions_using_list_dismiss_button']").click(function() {
+        jQuery("#add_derived_accessions_using_list_dialog").modal("hide");
+        jQuery('#derived_from_type').val('');
+        jQuery('#derived_from_list_select').val('');
+        const form_div = document.getElementById('derived_accessions_form_div');
+        form_div.innerHTML = '';
+        jQuery("#derived_accession_section").hide();
+        jQuery('#form_footer').hide();
+    });
+
+});
+
+</script>

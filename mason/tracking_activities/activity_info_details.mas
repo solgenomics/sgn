@@ -20,10 +20,12 @@ $project_id
 $activity_type
 $stock_type_page
 $source_info => undef
+$can_obsolete => undef
+$vector_id => undef
 
 </%args>
 
-<& /util/import_javascript.mas, classes => [ 'jquery', 'jquery/dataTables', 'CXGN.BreedersToolbox.HTMLSelect.js', 'CXGN.List' ] &>
+<& /util/import_javascript.mas, classes => [ 'jquery', 'jquery/dataTables', 'CXGN.BreedersToolbox.HTMLSelect.js', 'CXGN.List', 'flatpickr_min' ] &>
 
 % use utf8;
 % my @column_headers = @$activity_headers;
@@ -157,7 +159,7 @@ $source_info => undef
 </div>
 
 % if ($material_type eq 'transformation') {
-    <& /transformation/transformants_section.mas, transformation_id => $material_id &>
+    <& /transformation/transformants_section.mas, transformation_id => $material_id, program_name => $program_name, can_obsolete => $can_obsolete, vector_id => $vector_id &>
     <& /transformation/obsoleted_transformants_section.mas, transformation_id => $material_id &>
 % }
 
@@ -211,7 +213,11 @@ jQuery(document).ready( function() {
         jQuery('#selected_type_input').val('');
         var input_type = jQuery('#type_select').val();
         if (input_type.indexOf('date') != -1) {
-            jQuery('#selected_type_input').val(date);
+            flatpickr('#selected_type_input', {
+                allowInput: true,
+                dateFormat: "Y-m-d",
+                defaultDate: "today"
+            });
         }
     });
 

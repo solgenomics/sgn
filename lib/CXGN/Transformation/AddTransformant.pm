@@ -22,6 +22,7 @@ use Moose::Util::TypeConstraints;
 use Try::Tiny;
 use CXGN::Stock::StockLookup;
 use SGN::Model::Cvterm;
+use Data::Dumper;
 
 has 'schema' => (
     is => 'rw',
@@ -54,13 +55,20 @@ has 'transformant_names' => (
     isa =>'ArrayRef[Str]',
     is => 'rw',
     predicate => 'has_transformant_names',
-    required => 1,);
+    required => 1,
+);
 
 has 'owner_id' => (
     isa => 'Int',
     is => 'rw',
     predicate => 'has_owner_id',
     required => 1,
+);
+
+has 'additional_transformant_info' => (
+    isa => 'Maybe[HashRef]',
+    is => 'rw',
+    predicate => 'has_additional_transformant_info',
 );
 
 
@@ -71,6 +79,7 @@ sub add_transformant {
     my $phenome_schema = $self->get_phenome_schema();
     my $transformation_stock_id = $self->get_transformation_stock_id();
     my @transformant_names = @{$self->get_transformant_names()};
+    my $additional_transformant_info = $self->get_additional_transformant_info();
     my $female_parent;
     my $plant_material;
     my $plant_material_stock;
@@ -92,6 +101,7 @@ sub add_transformant {
         my $transgenic_cvterm =  SGN::Model::Cvterm->get_cvterm_row($schema, 'transgenic', 'stock_property');
         my $female_parent_cvterm = SGN::Model::Cvterm->get_cvterm_row($schema, 'female_parent', 'stock_relationship');
         my $male_parent_cvterm = SGN::Model::Cvterm->get_cvterm_row($schema,  'male_parent', 'stock_relationship');
+        my $number_of_insertions_cvterm =  SGN::Model::Cvterm->get_cvterm_row($schema, 'number_of_insertions', 'stock_property');
 
         $plant_material = $schema->resultset("Stock::StockRelationship")->find ({
             object_id => $transformation_stock_id,
@@ -108,7 +118,7 @@ sub add_transformant {
         $vector_construct = $schema->resultset("Stock::StockRelationship")->find ({
             object_id => $transformation_stock_id,
             type_id => $vector_construct_of_cvterm->cvterm_id(),
-            });
+        });
 
         foreach my $name (@transformant_names) {
             my $accession_stock = $schema->resultset("Stock::Stock")->create({
@@ -139,7 +149,11 @@ sub add_transformant {
             });
 
             $accession_stock->create_stockprops({$transgenic_cvterm->name() => 1});
-            
+
+            my $number_of_insertions = $additional_transformant_info->{$name}->{'number_of_insertions'};
+            if ($number_of_insertions) {
+                $accession_stock->create_stockprops({$number_of_insertions_cvterm->name() => $number_of_insertions});
+            }
         }
     };
 
@@ -150,18 +164,17 @@ sub add_transformant {
     };
 
     if ($transaction_error) {
-        print STDERR "Transaction1 error adding transformants: $transaction_error\n";
-        return;
+        return { error => $transaction_error };
+    } else {
+        foreach my $stock_id (@added_stock_ids) {
+            $phenome_schema->resultset("StockOwner")->find_or_create({
+    			stock_id     => $stock_id,
+    			sp_person_id =>  $owner_id,
+    	    });
+        }
     }
 
-    foreach my $stock_id (@added_stock_ids) {
-        $phenome_schema->resultset("StockOwner")->find_or_create({
-			stock_id     => $stock_id,
-			sp_person_id =>  $owner_id,
-	    });
-    }
-
-    return { success=>1};
+    return { success => 1};
 
 }
 

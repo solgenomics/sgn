@@ -25,7 +25,8 @@ use DateTime;
 use File::Basename qw | basename dirname|;
 use File::Copy;
 use File::Slurp;
-use File::Spec::Functions;
+use File::Spec;
+use File::Temp 'tempfile';
 use Digest::MD5;
 use List::MoreUtils qw /any /;
 use Data::Dumper;
@@ -55,6 +56,8 @@ use CXGN::File::Parse;
 use CXGN::People::Person;
 use CXGN::Tools::Run;
 use CXGN::Job;
+use Cwd;
+use CXGN::Phenotypes::StorePhenotypes;
 
 BEGIN { extends 'Catalyst::Controller::REST' }
 
@@ -92,7 +95,7 @@ sub generate_experimental_design_POST : Args(0) {
     my $plot_numbering_scheme = $c->req->param('plot_numbering_scheme') || 'block_based';
     print STDERR "Setting plot_numbering_scheme to $plot_numbering_scheme\n";
     $trial_design->set_plot_numbering_scheme($plot_numbering_scheme);
-    
+
     if ($c->req->param('stock_list')) {
 	@stock_names = @{_parse_list_from_json($c->req->param('stock_list'))};
     }
@@ -116,6 +119,8 @@ sub generate_experimental_design_POST : Args(0) {
     my $block_col_number=$c->req->param('col_number_per_block');
     my $col_number =$c->req->param('col_number');
 
+    my $json = JSON::XS->new();
+
     my $block_size =  $c->req->param('block_size');
     my $max_block_size =  $c->req->param('max_block_size');
     my $plot_prefix =  $c->req->param('plot_prefix');
@@ -126,7 +131,10 @@ sub generate_experimental_design_POST : Args(0) {
     my $fieldmap_col_number = $c->req->param('fieldmap_col_number');
     my $fieldmap_row_number = $c->req->param('fieldmap_row_number');
     my $plot_layout_format = $c->req->param('plot_layout_format');
-    my @treatments = $c->req->param('treatments[]');
+    my $treatments = $c->req->param('treatments') ? $c->req->param('treatments') : "";
+    if ($treatments) {
+        $treatments = $json->decode($treatments);
+    }
     my $num_plants_per_plot = $c->req->param('num_plants_per_plot');
     my $num_seed_per_plot = $c->req->param('num_seed_per_plot');
     my $westcott_check_1 = $c->req->param('westcott_check_1');
@@ -137,9 +145,26 @@ sub generate_experimental_design_POST : Args(0) {
     my $plot_width = $c->req->param('plot_width');
     my $plot_length = $c->req->param('plot_length');
 
+    my $breeding_program_name_param = $c->req->param('breeding_program_name');
+    if ($breeding_program_name_param) {
+        $trial_design->set_breeding_program_name($breeding_program_name_param);
+    }
+
+    my $plot_name_template_param = $c->req->param('plot_name_template');
+    if ($plot_name_template_param) {
+        my $template = eval { $json->decode($plot_name_template_param) };
+        if ($template) {
+            my ($format_name) = keys %$template;
+            my $name_attributes = $template->{$format_name}->{'name_attributes'} || [];
+            my %valid_attrs = map { $_ => 1 } qw(breedingProgram trialName accessionName plotNumber blockNumber rangeNumber repNumber rowNumber colNumber);
+            my $attrs_ok = !grep { ref $_ eq 'HASH' ? 0 : !$valid_attrs{$_} } @$name_attributes;
+            $trial_design->set_plot_name_template($plot_name_template_param) if $attrs_ok;
+        }
+    }
+
     if ( !$start_number ) {
         $c->stash->{rest} = { error => "You need to select the starting plot number."};
-        
+
     }
 
     if ($design_type eq 'Westcott'){
@@ -160,7 +185,7 @@ sub generate_experimental_design_POST : Args(0) {
     }
 
     if ($design_type eq 'splitplot'){
-        if (scalar(@treatments)<1){
+        if (scalar(keys(%{$treatments}))<1){
             $c->stash->{rest} = { error => "You need to provide at least one treatment for a splitplot design."};
             return;
         }
@@ -181,7 +206,7 @@ sub generate_experimental_design_POST : Args(0) {
         }
     }
 
-    
+
 
     my $row_in_design_number = $c->req->param('row_in_design_number');
     my $col_in_design_number = $c->req->param('col_in_design_number');
@@ -211,6 +236,8 @@ sub generate_experimental_design_POST : Args(0) {
     my $number_of_unreplicated_stocks = scalar(@unreplicated_stocks);
 
     my $greenhouse_num_plants = $c->req->param('greenhouse_num_plants');
+    my $num_rows_per_plot = $c->req->param('num_rows_per_plot');
+    my $num_cols_per_plot = $c->req->param('num_cols_per_plot');
     my $use_same_layout = $c->req->param('use_same_layout');
     my $number_of_checks = scalar(@control_names_crbd);
 
@@ -311,8 +338,8 @@ sub generate_experimental_design_POST : Args(0) {
         $trial_design->set_backend($c->config->{backend});
         $trial_design->set_submit_host($c->config->{cluster_host});
         $trial_design->set_temp_base($c->config->{cluster_shared_tempdir});
-	$trial_design->set_plot_numbering_scheme($plot_numbering_scheme);
-	
+	    $trial_design->set_plot_numbering_scheme($plot_numbering_scheme);
+
         my $design_created = 0;
         if ($use_same_layout) {
             $design_created = 1;
@@ -384,6 +411,10 @@ sub generate_experimental_design_POST : Args(0) {
             my $json = JSON::XS->new();
             $trial_design->set_greenhouse_num_plants($json->decode($greenhouse_num_plants));
         }
+        if ($num_rows_per_plot && $num_cols_per_plot) {
+            $trial_design->set_num_rows_per_plot($num_rows_per_plot);
+            $trial_design->set_num_cols_per_plot($num_cols_per_plot);
+        }
         if ($westcott_check_1){
             $trial_design->set_westcott_check_1($westcott_check_1);
         }
@@ -444,8 +475,8 @@ sub generate_experimental_design_POST : Args(0) {
             $trial_design->set_sub_block_sequence($no_of_sub_block_sequence);
         }
 
-        if (scalar(@treatments)>0) {
-            $trial_design->set_treatments(\@treatments);
+        if ($treatments && scalar(keys(%{$treatments}))>0) {
+            $trial_design->set_treatments($treatments);
         }
         if($num_plants_per_plot){
             $trial_design->set_num_plants_per_plot($num_plants_per_plot);
@@ -524,6 +555,7 @@ sub save_experimental_design_POST : Args(0) {
     my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema", undef, $user_id);
     my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema");
     my $dbh = $c->dbc->dbh;
+    my $allow_obsoleted_accessions = $c->config->{allow_obsoleted_accessions};
     my $save;
 
     print STDERR "Saving trial... :-)\n";
@@ -536,13 +568,12 @@ sub save_experimental_design_POST : Args(0) {
         $c->stash->{rest} = {error =>  "You have insufficient privileges to add a trial." };
         return;
     }
-    
+
 
     my $user_name = $c->user()->get_object()->get_username();
     my $error;
 
     my $design = _parse_design_from_json($c->req->param('design_json'));
-    #print STDERR "\nDesign: " . Dumper $design;
 
     my @locations;
     my $multi_location;
@@ -648,6 +679,7 @@ sub save_experimental_design_POST : Args(0) {
             genotyping_trial_from_field_trial => $add_project_trial_genotype_trial_select,
             crossing_trial_from_field_trial => $add_project_trial_crossing_trial_select,
             trial_stock_type => $trial_stock_type,
+            allow_obsoleted_accessions => $allow_obsoleted_accessions,
         );
 
         if ($field_size){
@@ -658,6 +690,10 @@ sub save_experimental_design_POST : Args(0) {
         }
         if ($plot_length){
             $trial_info_hash{plot_length} = $plot_length;
+        }
+        my $plot_name_template = $c->req->param('plot_name_template');
+        if ($plot_name_template) {
+            $trial_info_hash{plot_name_template} = $plot_name_template;
         }
         my $trial_create = CXGN::Trial::TrialCreate->new(\%trial_info_hash);
 
@@ -701,6 +737,7 @@ sub save_experimental_design_POST : Args(0) {
         my $trial_id = $save->{'trial_id'};
         my $time = DateTime->now();
         my $timestamp = $time->ymd();
+        my $pheno_timestamp = $time->ymd()."_".$time->hms();
         my $calendar_funcs = CXGN::Calendar->new({});
         my $formatted_date = $calendar_funcs->check_value_format($timestamp);
         my $create_date = $calendar_funcs->display_start_date($formatted_date);
@@ -716,6 +753,103 @@ sub save_experimental_design_POST : Args(0) {
         if (!$activity_prop_id) {
             $c->stash->{rest} = {error => "Error saving trial activity info" };
             return;
+        }
+
+        if ($c->req->param('design_type') eq "splitplot") {
+
+            my $temp_basedir = $c->config->{tempfiles_subdir};
+            my $site_basedir = getcwd();
+            if (! -d "$site_basedir/$temp_basedir/delete_nd_experiment_ids/"){
+                mkdir("$site_basedir/$temp_basedir/delete_nd_experiment_ids/");
+            }
+            my (undef, $tempfile) = tempfile("$site_basedir/$temp_basedir/delete_nd_experiment_ids/fileXXXX");
+
+            my $phenostore_data_hash = {};
+            my %phenostore_stocks = ();
+            my %phenostore_treatments = ();
+
+            my $treatment_design;
+            foreach my $design_json (@{$design}) {
+                my $design = $json->decode($design_json);
+                $treatment_design = $design->{'treatments'};
+                foreach my $unique_treatment (keys(%{$treatment_design->{'treatments'}})) {
+                    my @treatment_pairs = ($unique_treatment =~ m/\{([^{}]+)\}/g);
+                    my $treatments = [];
+                    foreach my $pair (@treatment_pairs) {
+                        my ($treatment, $value) = $pair =~ m/([^=]+)=(.*)/;
+                        $phenostore_treatments{$treatment} = 1;
+                        push @{$treatments}, {
+                            'treatment' => $treatment,
+                            'value' => $value
+                        };
+                    }
+                    my $subplots = $treatment_design->{'treatments'}->{$unique_treatment};
+                    foreach my $treatment (@{$treatments}) {
+                        foreach my $subplot (@{$subplots}) {
+                            $phenostore_stocks{$subplot} = 1;
+                            my $plants = $treatment_design->{'plants'}->{$subplot};
+                            $phenostore_data_hash->{$subplot}->{$treatment->{'treatment'}} = [
+                                $treatment->{'value'},
+                                $pheno_timestamp,
+                                $user_name,
+                                '',
+                                ''
+                            ];
+                            foreach my $plant (@{$plants}) {
+                                $phenostore_stocks{$plant} = 1;
+                                $phenostore_data_hash->{$plant}->{$treatment->{'treatment'}} = [
+                                    $treatment->{'value'},
+                                    $pheno_timestamp,
+                                    $user_name,
+                                    '',
+                                    ''
+                                ];
+                            }
+                        }
+                    }
+                }
+            }
+
+            my $store_phenotypes = CXGN::Phenotypes::StorePhenotypes->new({
+                basepath => $temp_basedir,
+                dbhost => $c->config->{dbhost},
+                dbuser => $c->config->{dbuser},
+                dbname => $c->config->{dbname},
+                dbpass => $c->config->{dbpass},
+                temp_file_nd_experiment_id => $tempfile,
+                bcs_schema => $chado_schema,
+                metadata_schema => $metadata_schema,
+                phenome_schema => $phenome_schema,
+                user_id => $user_id,
+                stock_list => [keys(%phenostore_stocks)],
+                trait_list => [keys(%phenostore_treatments)],
+                values_hash => $phenostore_data_hash,
+                metadata_hash =>{
+                    archived_file => 'none',
+                    archived_file_type => 'new trial design with treatments',
+                    operator => $user_name,
+                    date => $pheno_timestamp
+                }
+            });
+
+            my ($verified_warning, $verified_error) = $store_phenotypes->verify();
+
+            if ($verified_warning) {
+                warn $verified_warning;
+            }
+            if ($verified_error) {
+                print STDERR "$verified_error\n";
+                $c->stash->{rest} = {error => "The trial was saved, but there was an issue applying treatments: $verified_error\n" };
+                return;
+            }
+
+            my ($stored_phenotype_error, $stored_phenotype_success) = $store_phenotypes->store();
+
+            if ($stored_phenotype_error) {
+                print STDERR "$stored_phenotype_error\n";
+                $c->stash->{rest} = {error => "The trial was saved, but there was an issue applying treatments: $stored_phenotype_error\n" };
+                return;
+            }
         }
     }
 
@@ -758,6 +892,7 @@ sub verify_stock_list : Path('/ajax/trial/verify_stock_list') : ActionClass('RES
 sub verify_stock_list_POST : Args(0) {
     my ($self, $c) = @_;
     my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
+    my $allow_obsoleted_accessions = $c->config->{allow_obsoleted_accessions};
     my @stock_names;
     my $error;
     my %errors;
@@ -771,7 +906,12 @@ sub verify_stock_list_POST : Args(0) {
     }
 
     my $lv = CXGN::List::Validate->new();
-    my @accessions_missing = @{$lv->validate($schema,'accessions',\@stock_names)->{'missing'}};
+    my @accessions_missing = ();
+    if ($allow_obsoleted_accessions) {
+        @accessions_missing = @{$lv->validate($schema,'accessions_and_obsoleted_accessions',\@stock_names)->{'missing'}};
+    } else {
+        @accessions_missing = @{$lv->validate($schema,'accessions',\@stock_names)->{'missing'}};
+    }
 
     if (scalar(@accessions_missing) > 0){
         my $error = 'The following accessions are not valid in the database, so you must add them first: '.join ',', @accessions_missing;
@@ -935,6 +1075,33 @@ sub upload_trial_file_POST : Args(0) {
     my $add_project_trial_crossing_trial_select = [$add_project_trial_crossing_trial];
     my $trial_stock_type = $c->req->param('trial_upload_trial_stock_type');
     my $ignore_warnings = $c->req->param('upload_trial_ignore_warnings');
+    my $plot_name_template_param = $c->req->param('plot_name_template');
+
+    if ($plot_name_template_param) {
+        my $json = JSON::XS->new();
+        my $template = eval { $json->decode($plot_name_template_param) };
+        my $format_name = $template ? (keys %$template)[0] : undef;
+        my $name_attributes = $format_name ? ($template->{$format_name}->{'name_attributes'} || []) : [];
+        my %valid_attrs = map { $_ => 1 } qw(breedingProgram trialName accessionName plotNumber blockNumber rangeNumber repNumber rowNumber colNumber);
+        my $attrs_ok = $format_name && !grep { ref $_ eq 'HASH' ? 0 : !$valid_attrs{$_} } @$name_attributes;
+        if (!$attrs_ok) {
+            $c->stash->{rest} = {error => "Invalid plot name template."};
+            return;
+        }
+
+        my $program_row = $chado_schema->resultset('Project::Project')->find({ name => $program });
+        if (!$program_row) {
+            $c->stash->{rest} = {error => "Breeding program not found."};
+            return;
+        }
+        my $projects = CXGN::BreedersToolbox::Projects->new({ schema => $chado_schema });
+        my $available_templates = $projects->get_autogenerated_name_metadata_by_breeding_program($program_row->project_id(), 'plot');
+        my %available_template_lookup = map { %$_ } @$available_templates;
+        if (!exists $available_template_lookup{$format_name}) {
+            $c->stash->{rest} = {error => "Plot name template <strong>$format_name</strong> does not belong to breeding program <strong>$program</strong>."};
+            return;
+        }
+    }
 
     my $upload = $c->req->upload('trial_uploaded_file');
     my $parser;
@@ -1003,7 +1170,7 @@ sub upload_trial_file_POST : Args(0) {
     $upload_metadata{'date'}="$timestamp";
 
     #parse uploaded file with appropriate plugin
-    $parser = CXGN::Trial::ParseUpload->new(chado_schema => $chado_schema, filename => $archived_filename_with_path, trial_stock_type => $trial_stock_type, trial_name => $trial_name);
+    $parser = CXGN::Trial::ParseUpload->new(chado_schema => $chado_schema, filename => $archived_filename_with_path, trial_stock_type => $trial_stock_type, trial_name => $trial_name, plot_name_template => $plot_name_template_param || '', breeding_program_name => $program || '');
     $parser->load_plugin('TrialGeneric');
     $parsed_data = $parser->parse();
 
@@ -1076,6 +1243,9 @@ sub upload_trial_file_POST : Args(0) {
         if ($plot_length){
             $trial_info_hash{plot_length} = $plot_length;
         }
+        if ($plot_name_template_param && $parsed_data->{'plot_name_template_used'}){
+            $trial_info_hash{plot_name_template} = $plot_name_template_param;
+        }
         my $trial_create = CXGN::Trial::TrialCreate->new(\%trial_info_hash);
         $save = $trial_create->save_trial();
 
@@ -1135,6 +1305,78 @@ sub upload_trial_file_POST : Args(0) {
         $trial_activity_obj->trial_activities(\%trial_activity);
         $trial_activity_obj->parent_id($trial_id);
         my $activity_prop_id = $trial_activity_obj->store();
+
+        # save treatments if any
+        if ($parsed_data->{'treatment_design'}) {
+            my $temp_basedir = $c->config->{tempfiles_subdir};
+            my $site_basedir = getcwd();
+            if (! -d "$site_basedir/$temp_basedir/delete_nd_experiment_ids/"){
+                mkdir("$site_basedir/$temp_basedir/delete_nd_experiment_ids/");
+            }
+            my (undef, $tempfile) = tempfile("$site_basedir/$temp_basedir/delete_nd_experiment_ids/fileXXXX");
+
+            my $phenostore_data_hash = {};
+            my %phenostore_stocks = ();
+            my %phenostore_treatments = ();
+
+            my $time = DateTime->now();
+            my $pheno_timestamp = $time->ymd()."_".$time->hms();
+
+            my $treatment_design = $parsed_data->{'treatment_design'};
+            foreach my $plot (keys(%{$treatment_design})) {
+                $phenostore_stocks{$plot} = 1;
+                foreach my $treatment (keys(%{$treatment_design->{$plot}})) {
+                    $phenostore_treatments{$treatment} = 1;
+                    $phenostore_data_hash->{$plot}->{$treatment} = [
+                        $treatment_design->{$plot}->{$treatment},
+                        $pheno_timestamp,
+                        $user_name,
+                        '',''
+                    ];
+                }
+            }
+
+            my $store_phenotypes = CXGN::Phenotypes::StorePhenotypes->new({
+                basepath => $temp_basedir,
+                dbhost => $c->config->{dbhost},
+                dbuser => $c->config->{dbuser},
+                dbname => $c->config->{dbname},
+                dbpass => $c->config->{dbpass},
+                temp_file_nd_experiment_id => $tempfile,
+                bcs_schema => $chado_schema,
+                metadata_schema => $metadata_schema,
+                phenome_schema => $phenome_schema,
+                user_id => $user_id,
+                stock_list => [keys(%phenostore_stocks)],
+                trait_list => [keys(%phenostore_treatments)],
+                values_hash => $phenostore_data_hash,
+                metadata_hash =>{
+                    archived_file => 'none',
+                    archived_file_type => 'new trial upload with treatments',
+                    operator => $user_name,
+                    date => $pheno_timestamp
+                }
+            });
+
+            my ($verified_warning, $verified_error) = $store_phenotypes->verify();
+
+            if ($verified_warning) {
+                warn $verified_warning;
+            }
+            if ($verified_error) {
+                print STDERR "$verified_error\n";
+                $c->stash->{rest} = {error => "The trial was saved, but there was an issue applying treatments: $verified_error\n" };
+                return;
+            }
+
+            my ($stored_phenotype_error, $stored_phenotype_success) = $store_phenotypes->store();
+
+            if ($stored_phenotype_error) {
+                print STDERR "$stored_phenotype_error\n";
+                $c->stash->{rest} = {error => "The trial was saved, but there was an issue applying treatments: $stored_phenotype_error\n" };
+                return;
+            }
+        }
     }
 
     #print STDERR "Check 5: ".localtime()."\n";
@@ -1222,12 +1464,16 @@ sub upload_multiple_trial_designs_file_POST : Args(0) {
     my $job = CXGN::Job->new({
         sp_person_id => $user_id,
         schema => $c->dbic_schema("Bio::Chado::Schema"),
+        dbhost => $dbhost,
+        dbname => $dbname,
+        dbuser => $dbuser,
+        dbpass => $dbpass,
+        basepath => $basepath,
         people_schema => $c->dbic_schema("CXGN::People::Schema"),
         cmd => $cmd,
         name => "$upload_original_name multiple trial designs upload",
         results_page => '/breeders/trials',
-        job_type => 'upload',
-        finish_logfile => $c->config->{job_finish_log}
+        job_type => 'upload'
     });
     if ( $email_option_enabled && $email_address ) {
         #$runner->run_async($cmd);
@@ -1316,6 +1562,7 @@ sub upload_trial_metadata_file : Path('/ajax/trial/upload_trial_metadata_file') 
 sub upload_trial_metadata_file_POST : Args(0) {
     my ($self, $c)                 = @_;
     my $upload                     = $c->req->upload('trial_metadata_upload_file');
+    my $ignore_warnings            = $c->req->param('trial_metadata_upload_ignore_warnings');
 
     my $chado_schema               = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
     my $dbhost                     = $c->config->{dbhost};
@@ -1385,9 +1632,11 @@ sub upload_trial_metadata_file_POST : Args(0) {
     }
 
     if ($parser->has_parse_warnings()) {
-        my $warnings = $parser->get_parse_warnings();
-        $c->stash->{rest} = { warnings => $warnings->{'warning_messages'} };
-        return;
+        unless ($ignore_warnings) {
+            my $warnings = $parser->get_parse_warnings();
+            $c->stash->{rest} = { warnings => $warnings->{'warning_messages'} };
+            return;
+        }
     }
 
     # Check breeding program permissions, if not a curator
@@ -1402,6 +1651,34 @@ sub upload_trial_metadata_file_POST : Args(0) {
         if ( scalar(@missing_breeding_programs) > 0 ) {
             $c->stash->{rest} = { errors => "You need to be either a curator, or a submitter associated with the breeding program(s) " . join(', ', @missing_breeding_programs) . " to change the details of trial(s) associated with these program(s)." };
             return;
+        }
+    }
+
+    # Create missing folders
+    my %created_folders;
+    foreach my $trial_id (keys %{$parsed_data->{trial_data}} ) {
+        my $details = $parsed_data->{trial_data}->{$trial_id};
+        if ( $details->{folder} ) {
+            if ( $details->{folder}->{type} eq 'missing' ) {
+                my $folder_id;
+
+                if ( exists $created_folders{$details->{folder}->{name}} ) {
+                    $folder_id = $created_folders{$details->{folder}->{name}};
+                }
+                else {
+                    my $f = CXGN::Trial::Folder->create({
+                        bcs_schema => $chado_schema,
+                        name => $details->{folder}->{name},
+                        breeding_program_id => $details->{folder}->{breeding_program_id},
+                        folder_for_trials => 1
+                    });
+                    $folder_id = $f->folder_id();
+                    $created_folders{$details->{folder}->{name}} = $folder_id;
+                }
+
+                $parsed_data->{trial_data}->{$trial_id}->{folder}->{type} = "exists";
+                $parsed_data->{trial_data}->{$trial_id}->{folder}->{id} = $folder_id;
+            }
         }
     }
 

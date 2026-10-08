@@ -1,0 +1,141 @@
+
+<%args>
+$transformation_id => undef
+$vector_id
+$vector_name
+$vector_related_genes => undef
+$vector_analyzed_tissue_types => undef
+$program_name
+</%args>
+
+<form class="form-horizontal" >
+    <div class="form-group">
+        <label class="col-sm-2" for="analyzed_tissue_type">Tissue Type: </label>
+        <div class="col-sm-3">
+            <select class="form-control" id="analyzed_tissue_types_select">
+% my @tissue_types = split ',',$vector_analyzed_tissue_types;
+% foreach my $tissue_type(@tissue_types) {
+                <option value="<%$tissue_type%>"><%$tissue_type%></option>
+%}
+            </select>
+        </div>
+    </div>
+    <div class="form-group">
+        <label class="col-sm-2 control-label">Assay Date: </label>
+        <div class="col-sm-3" >
+            <div id="assay_date_select_div">
+            </div>
+        </div>
+    </div><br/>
+</form>
+<br/>
+
+<div style="overflow:scroll" id="vector_transgenic_line_details_div">
+    <table class="table table-hover table-bordered display" id="vector_transgenic_line_details_table">
+        <thead>
+            <tr>
+                <th>Accession</th>
+                <th>Number of Insertions</th>
+% my @column_header = split ',',$vector_related_genes;
+% foreach my $column_header(@column_header) {
+                <th><%$column_header. " ".'(Relative)'%></th>
+%}
+                <th>qPCR Tissue Type</th>
+                <th>qPCR Assay Date</th>
+% if (!$transformation_id) {
+                <th>Transformation ID</th>
+% }
+            </tr>
+        </thead>
+    </table>
+</div>
+
+<div class="panel panel-default">
+    <div class="panel-body">
+        <&| /page/info_section.mas, title => 'Copy accessions to a List', collapsible=>1, collapsed=>0, subtitle=>'<i>Copy the accession names to a new or exisiting list</i>'&>
+        <br>
+        <div id="transformant_names" style="display:none"></div>
+        <div id="transformants_to_list_menu"></div>
+        </&>
+    </div>
+</div>
+
+<& /transformation/upload_qPCR_data_dialog.mas, vector_id => $vector_id, vector_name => $vector_name &>
+<& /transformation/obsolete_accessions_dialog.mas, transformation_id => $transformation_id, program_name => $program_name, vector_id => $vector_id &>
+
+<style>
+    .table th {
+        white-space: nowrap;
+    }
+</style>
+
+
+<script>
+
+jQuery(document).ready(function(){
+
+    const vector_id = "<%$vector_id%>";
+    const filter_by_transformation_id = "<%$transformation_id%>";
+    let tissue_type = '';
+    let assay_date = '';
+
+    jQuery('#transgenic_line_details_section_onswitch').click( function() {
+        tissue_type = jQuery('#analyzed_tissue_types_select').val();
+        get_select_box('assay_dates', 'assay_date_select_div', { 'name' : 'tissue_assay_date', 'id' : 'tissue_assay_date', 'vector_stock_id': vector_id, 'assay_tissue_type': tissue_type});
+
+        display_vector_transgenic_line_details(vector_id, tissue_type);
+    });
+
+    jQuery('#analyzed_tissue_types_select').change( function() {
+        tissue_type = jQuery('#analyzed_tissue_types_select').val();
+        get_select_box('assay_dates', 'assay_date_select_div', { 'name' : 'tissue_assay_date', 'id' : 'tissue_assay_date', 'vector_stock_id': vector_id, 'assay_tissue_type': tissue_type });
+        display_vector_transgenic_line_details(vector_id, tissue_type);
+    });
+
+    jQuery('#assay_date_select_div').change( function() {
+        assay_date = jQuery('#tissue_assay_date').val();
+        display_vector_transgenic_line_details(vector_id, tissue_type, assay_date);
+    });
+
+
+    function display_vector_transgenic_line_details(vector_id, tissue_type, assay_date) {
+        var transgenic_line_details_table = jQuery('#vector_transgenic_line_details_table').DataTable({
+            'autoWidth': false,
+            'ordering': false,
+            'destroy': true,
+            'ajax': { 'url':  '/ajax/transformation/vector_transgenic_line_details',
+                'data': function(d) {
+                    d.vector_id = vector_id;
+                    d.filter_by_transformation_id = filter_by_transformation_id;
+                    d.selected_tissue_type = tissue_type;
+                    d.selected_assay_date = assay_date;
+                }
+            },
+            "fnInitComplete": function(oSettings, json) {
+                //console.log(json);
+                if (!isLoggedIn()) {
+                    jQuery('#transformants_to_list_menu').html("<div class='well well-sm'><h3>Please login to use lists!</h3></div>");
+                } else {
+                    var html = "";
+                    for(var i=0; i<json.data.length; i++){
+                        html += json.data[i][json.data[i].length-1]+"\n";
+                    }
+                    jQuery("#transformant_names").html(html);
+                    addToListMenu("transformants_to_list_menu", "transformant_names", {
+                        selectText: true,
+                        listType:'accessions'
+                    });
+                }
+            }
+        });
+
+    }
+
+    jQuery("[name='obsolete_accessions_link']").click(function() {
+        jQuery("#obsolete_accessions_in_bulk_dialog").modal("show");
+    });
+
+});
+
+
+</script>

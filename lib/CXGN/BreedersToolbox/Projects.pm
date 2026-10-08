@@ -52,11 +52,13 @@ sub trial_exists {
 
 sub get_breeding_programs {
     my $self = shift;
-
+    my $ids = shift;
 
     my $breeding_program_cvterm_id = $self->get_breeding_program_cvterm_id();
 
-    my $rs = $self->schema->resultset('Project::Project')->search( { 'projectprops.type_id'=>$breeding_program_cvterm_id }, { join => 'projectprops', order_by => { -asc => 'name'}}  );
+    my $search = { 'projectprops.type_id'=>$breeding_program_cvterm_id };
+    $search->{'me.project_id'} = { -in => $ids } if defined $ids;
+    my $rs = $self->schema->resultset('Project::Project')->search($search, { join => 'projectprops', order_by => { -asc => 'name'}}  );
 
     my @projects;
     while (my $row = $rs->next()) {
@@ -179,6 +181,7 @@ sub get_trials_by_breeding_program {
     my $sampling_trial_projects;
     my $tracking_activity_projects;
     my $transformation_projects;
+    my $propagation_projects;
 
     my $h = $self->_get_all_trials_by_breeding_program($breeding_project_id);
     my $crossing_trial_cvterm_id = $self->get_crossing_trial_cvterm_id();
@@ -186,6 +189,7 @@ sub get_trials_by_breeding_program {
     my $analysis_metadata_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->schema(), 'analysis_metadata_json', 'project_property')->cvterm_id();
     my $tracking_project_cvterm_id = $self->get_tracking_project_cvterm_id();
     my $transformation_project_cvterm_id = $self->get_transformation_project_cvterm_id();
+    my $propagation_project_cvterm_id = $self->get_propagation_project_cvterm_id();
 
     my %projects_that_are_crosses;
     my %project_year;
@@ -200,6 +204,7 @@ sub get_trials_by_breeding_program {
     my %projects_that_are_sampling_trials;
     my %projects_that_are_tracking_projects;
     my %projects_that_are_transformation_projects;
+    my %projects_that_are_propagation_projects;
 
     while (my ($id, $name, $desc, $prop, $propvalue) = $h->fetchrow_array()) {
         #print STDERR "PROP: $prop, $propvalue \n";
@@ -247,6 +252,9 @@ sub get_trials_by_breeding_program {
                 if ($propvalue eq "transformation_project") {
                     $projects_that_are_transformation_projects{$id} = 1;
                 }
+                if ($propvalue eq "propagation_project") {
+                    $projects_that_are_propagation_projects{$id} = 1;
+                }
             }
         }
     }
@@ -254,7 +262,7 @@ sub get_trials_by_breeding_program {
     my @sorted_by_year_keys = sort { $project_year{$a} cmp $project_year{$b} } keys(%project_year);
 
     foreach my $id_key (@sorted_by_year_keys) {
-        if (!$projects_that_are_crosses{$id_key} && !$projects_that_are_genotyping_trials{$id_key} && !$projects_that_are_genotyping_trials{$id_key} && !$projects_that_are_treatment_trials{$id_key} && !$projects_that_are_genotyping_data_projects{$id_key} && !$projects_that_are_drone_run_projects{$id_key} && !$projects_that_are_drone_run_band_projects{$id_key} && !$projects_that_are_analyses{$id_key} && !$projects_that_are_sampling_trials{$id_key} && !$projects_that_are_tracking_projects{$id_key} && !$projects_that_are_transformation_projects{$id_key}) {
+        if (!$projects_that_are_crosses{$id_key} && !$projects_that_are_genotyping_trials{$id_key} && !$projects_that_are_genotyping_trials{$id_key} && !$projects_that_are_treatment_trials{$id_key} && !$projects_that_are_genotyping_data_projects{$id_key} && !$projects_that_are_drone_run_projects{$id_key} && !$projects_that_are_drone_run_band_projects{$id_key} && !$projects_that_are_analyses{$id_key} && !$projects_that_are_sampling_trials{$id_key} && !$projects_that_are_tracking_projects{$id_key} && !$projects_that_are_transformation_projects{$id_key} && !$projects_that_are_propagation_projects{$id_key}) {
             push @$field_trials, [ $id_key, $project_name{$id_key}, $project_description{$id_key}];
         } elsif ($projects_that_are_crosses{$id_key}) {
             push @$cross_trials, [ $id_key, $project_name{$id_key}, $project_description{$id_key}];
@@ -276,10 +284,12 @@ sub get_trials_by_breeding_program {
             push @$tracking_activity_projects, [ $id_key, $project_name{$id_key}, $project_description{$id_key}];
         } elsif ($projects_that_are_transformation_projects{$id_key}) {
             push @$transformation_projects, [ $id_key, $project_name{$id_key}, $project_description{$id_key}];
+        } elsif ($projects_that_are_propagation_projects{$id_key}) {
+            push @$propagation_projects, [ $id_key, $project_name{$id_key}, $project_description{$id_key}];
         }
     }
 
-    return ($field_trials, $cross_trials, $genotyping_trials, $genotyping_data_projects, $field_management_factor_projects, $drone_run_projects, $drone_run_band_projects, $analyses_projects, $sampling_trial_projects, $transformation_projects, $tracking_activity_projects);
+    return ($field_trials, $cross_trials, $genotyping_trials, $genotyping_data_projects, $field_management_factor_projects, $drone_run_projects, $drone_run_band_projects, $analyses_projects, $sampling_trial_projects, $transformation_projects, $tracking_activity_projects, $propagation_projects);
 }
 
 sub get_genotyping_trials_by_breeding_program {
@@ -468,33 +478,56 @@ sub get_location_geojson_data {
 
 sub get_locations {
     my $self = shift;
+    my $ids = shift;
+    my $dbh = $self->schema()->storage()->dbh;
 
-    my @rows = $self->schema()->resultset('NaturalDiversity::NdGeolocation')->all();
+    my $abbreviation_type_id = SGN::Model::Cvterm->get_cvterm_row($self->schema, 'abbreviation', 'geolocation_property')->cvterm_id();
+    my $country_code_type_id = SGN::Model::Cvterm->get_cvterm_row($self->schema, 'country_code', 'geolocation_property')->cvterm_id();
+    my $country_name_type_id = SGN::Model::Cvterm->get_cvterm_row($self->schema, 'country_name', 'geolocation_property')->cvterm_id();
+    my $location_type_type_id = SGN::Model::Cvterm->get_cvterm_row($self->schema, 'location_type', 'geolocation_property')->cvterm_id();
+    my $noaa_station_id_type_id = SGN::Model::Cvterm->get_cvterm_row($self->schema, 'noaa_station_id', 'geolocation_property')->cvterm_id();
 
-    my $type_id = $self->schema()->resultset('Cv::Cvterm')->search( { 'name'=>'plot' })->first->cvterm_id;
-
+    my $where = "";
+    if ( defined $ids ) {
+        my $phs = join ',', map { "?" } @$ids;
+        $where = "WHERE nd_geolocation.nd_geolocation_id IN ($phs)"
+    }
+    my $q = "SELECT nd_geolocation.nd_geolocation_id, nd_geolocation.description, latitude, longitude, altitude, abbreviation.value, country_code.value, country_name.value, location_type.value, noaa_station_id.value
+        FROM nd_geolocation
+        LEFT JOIN nd_geolocationprop AS abbreviation ON (nd_geolocation.nd_geolocation_id = abbreviation.nd_geolocation_id) AND abbreviation.type_id = ?
+        LEFT JOIN nd_geolocationprop AS country_code ON (nd_geolocation.nd_geolocation_id = country_code.nd_geolocation_id) AND country_code.type_id = ?
+        LEFT JOIN nd_geolocationprop AS country_name ON (nd_geolocation.nd_geolocation_id = country_name.nd_geolocation_id) AND country_name.type_id = ?
+        LEFT JOIN nd_geolocationprop AS location_type ON (nd_geolocation.nd_geolocation_id = location_type.nd_geolocation_id) AND location_type.type_id = ?
+        LEFT JOIN nd_geolocationprop AS noaa_station_id ON (nd_geolocation.nd_geolocation_id = noaa_station_id.nd_geolocation_id) AND noaa_station_id.type_id = ?
+        $where
+        GROUP BY 1,2,3,4,5,6,7,8,9,10;";
+    my $h = $dbh->prepare($q);
+    $h->execute($abbreviation_type_id, $country_code_type_id, $country_name_type_id, $location_type_type_id, $noaa_station_id_type_id, @$ids);
 
     my @locations = ();
-    foreach my $row (@rows) {
-	my $plot_count = "SELECT count(*) from stock join cvterm on(type_id=cvterm_id) join nd_experiment_stock using(stock_id) join nd_experiment using(nd_experiment_id)   where cvterm.name='plot' and nd_geolocation_id=?"; # and sp_person_id=?";
-	my $sh = $self->schema()->storage()->dbh->prepare($plot_count);
-	$sh->execute($row->nd_geolocation_id); #, $c->user->get_object->get_sp_person_id);
+    while (my ($id, $name, $lat, $lon, $alt, $abv, $cc, $cn, $lt, $noaa) = $h->fetchrow_array()) {
+        my $plot_count = "SELECT count(*) from stock join cvterm on(type_id=cvterm_id) join nd_experiment_stock using(stock_id) join nd_experiment using(nd_experiment_id)   where cvterm.name='plot' and nd_geolocation_id=?"; # and sp_person_id=?";
+        my $sh = $dbh->prepare($plot_count);
+        $sh->execute($id); #, $c->user->get_object->get_sp_person_id);
 
-	my ($count) = $sh->fetchrow_array();
+        my ($count) = $sh->fetchrow_array();
 
-	#if ($count > 0) {
-
-		push @locations,  [ $row->nd_geolocation_id,
-				    $row->description,
-				    $row->latitude,
-				    $row->longitude,
-				    $row->altitude,
-				    $count, # number of experiments TBD
-
-		];
+        push @locations, [
+            $id,
+            $name,
+            $lat,
+            $lon,
+            $alt,
+            $count, # number of experiments TBD
+            $abv,
+            $cc,
+            $cn,
+            $lt,
+            $noaa
+        ];
     }
-    return \@locations;
 
+    return \@locations;
 }
 
 sub get_all_years {
@@ -771,6 +804,13 @@ sub get_transformation_project_cvterm_id {
     return $transformation_project_cvterm_id->cvterm_id();
 }
 
+sub get_propagation_project_cvterm_id {
+    my $self = shift;
+
+    my $propagation_project_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->schema, 'propagation_project',  'project_type');
+    return $propagation_project_cvterm_id->cvterm_id();
+}
+
 sub _get_design_trial_cvterm_id {
     my $self = shift;
      my $cvterm = $self->schema->resultset("Cv::Cvterm")
@@ -862,20 +902,31 @@ sub get_autogenerated_name_metadata_by_breeding_program {
     my $self = shift;
     my $schema = $self->schema;
     my $breeding_program_id = shift;
+    my $name_type = shift;
+    my @type_ids = ();
 
-    my $autogenerated_name_metadata_cvterm = SGN::Model::Cvterm->get_cvterm_row($schema, 'autogenerated_name_metadata', 'project_property');
-    my $program = $schema->resultset('Project::Project')->find({ project_id => $breeding_program_id});
-
-    my $name_metadata_hashes;
-    my $name_metadata_projectprop_rs = $program->projectprops({type_id => $autogenerated_name_metadata_cvterm->cvterm_id});
-    if ($name_metadata_projectprop_rs->count == 1){
-        my $name_metadata_string = $name_metadata_projectprop_rs->first->value();
-        $name_metadata_hashes = decode_json $name_metadata_string;
+    my $transformant_autogenerated_name_metadata_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'transformant_autogenerated_name_metadata', 'project_property')->cvterm_id;
+    my $plot_autogenerated_name_metadata_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'plot_autogenerated_name_metadata', 'project_property')->cvterm_id;
+    if ($name_type eq 'transformant') {
+        @type_ids = ($transformant_autogenerated_name_metadata_cvterm_id);
+    } elsif ($name_type eq 'plot') {
+        @type_ids = ($plot_autogenerated_name_metadata_cvterm_id);        
     } else {
-        return {error => "Error retrieving autogenerated name metadata!\n"};
+        @type_ids = ($transformant_autogenerated_name_metadata_cvterm_id,$plot_autogenerated_name_metadata_cvterm_id);
     }
 
-    return {name_metadata => $name_metadata_hashes};
+    my $name_metadata_projectprop_rs = $schema->resultset('Project::Projectprop')->search({ project_id => $breeding_program_id, type_id => { -in => \@type_ids}});
+
+    my @name_metadata_array = ();
+    if ($name_metadata_projectprop_rs->count > 0){
+        while (my $row= $name_metadata_projectprop_rs->next()) {
+            my $metadata_string = $row->value();
+            my $name_metadata_hash_ref = decode_json $metadata_string;
+            push @name_metadata_array, $name_metadata_hash_ref;
+        }
+    }
+
+    return \@name_metadata_array;
 
 }
 

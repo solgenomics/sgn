@@ -54,11 +54,11 @@
                 <div class="col-sm-11">
                     <div class="form-horizontal">
                         <div class="form-group">
-                            <label class="control-label col-sm-4">Select a set of markers (markerset):</label>
+                            <label class="control-label col-sm-4">Select a list of marker alleles:</label>
                             <div class="col-sm-8" >
                                 <div class="input-group">
                                     <select class="form-control" id="markerset_select">
-                                        <option value="">Select a markerset</option>
+                                        <option value="">Select a list of marker alleles</option>
                                     </select>
                                 </div>
                             </div>
@@ -66,7 +66,7 @@
                         <div class="form-group">
                             <label class="control-label col-sm-4"></label>
                             <div class="col-sm-8" >
-                                <a href="/breeders/markers"><p>Need to create new markerset.</p></a>
+                                <a href="/breeders/markers"><p>Need to create a list of marker alleles.</p></a>
                             </div>
                         </div>
                     </div>
@@ -117,7 +117,7 @@ jQuery(document).ready(function (){
 //    get_select_box('datasets', 'dataset_accessions', {"checkbox_name":"dataset_accessions_checkbox"});
     jQuery('#stock_list_select').html(lo.listSelect('stock_list_select', ['accessions'], 'Select a list of accessions', undefined, undefined));
 
-    jQuery('#markerset_select').html(lo.listSelect('markerset_select', ['markers'], 'Select a markerset', undefined, undefined));
+    jQuery('#markerset_select').html(lo.listSelect('markerset_select', ['markers'], 'Select a list of marker alleles', undefined, undefined));
 
     jQuery("#search_accessions_using_markerset").click(function(){
 
@@ -147,7 +147,7 @@ jQuery(document).ready(function (){
         var markerset_id = jQuery('#markerset_select').val();
 
         if (!markerset_id) {
-            alert("Please choose a markerset");
+            alert("Please choose a list of marker alleles");
             return;
         }
 
@@ -177,10 +177,14 @@ jQuery(document).ready(function (){
                 {
                     title: "Genotypes",
                     data: "genotypes",
-//                    render: function(data, type,row){
-//                        var newFormat = data.split(",").join("&nbsp &nbsp &nbsp &nbsp &nbsp");
-//                        return newFormat;
-//                    }
+                    render: function(data, type,row){
+                        var parsed = JSON.parse(data);
+                        var items = [];
+                        Object.entries(parsed).forEach(([key, value]) => {
+                            items.push(`<strong>${key}</strong>: ${JSON.stringify(value)}`);
+                        });
+                        return items.join('<br />');
+                    }
                 },
             ],
         });

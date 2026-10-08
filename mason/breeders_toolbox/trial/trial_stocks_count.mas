@@ -14,7 +14,7 @@ jQuery(document).ready(function(){
         success: function(response){
               //console.log(response);
               //alert(response.data.length);
-              console.log(response.data);
+              //console.log(response.data);
               var html = '';
               html += 'Number of accessions: ';
                html += response.data.length;

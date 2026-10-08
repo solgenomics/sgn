@@ -18,7 +18,6 @@ $activity_type
 % } elsif ($activity_type eq 'tissue_culture') {
                 <th>Accession</th>
 % }
-                <th>Transformation ID</th>
 % foreach my $column_header(@$field_headers){
                 <th><%$column_header%></th>
 % }

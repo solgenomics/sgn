@@ -70,7 +70,7 @@ sub observation_variable_ontologies {
     my $self = shift;
 	my $inputs = shift;
 	my $name_spaces = $inputs->{name_spaces} || [];
-	my $cvprop_types = $inputs->{cvprop_type_names} || ['trait_ontology','method_ontology','unit_ontology','composed_trait_ontology','object_ontology','attribute_ontology','time_ontology'];
+	my $cvprop_types = $inputs->{cvprop_type_names} || ['trait_ontology','method_ontology','unit_ontology','composed_trait_ontology','object_ontology','attribute_ontology','time_ontology', 'experiment_treatment_ontology', 'composed_experiment_treatment_ontology'];
 	my $page_size = $self->page_size;
 	my $page = $self->page;
 	my $status = $self->status;

@@ -102,6 +102,10 @@ jQuery(document).ready(function () {
         source: '/ajax/stock/stock_autocomplete'
     });
 
+    jQuery("#image_project_name").autocomplete({
+        source: '/ajax/trials/trial_autocomplete'
+    });
+
     jQuery('#image_search_submit').click( function() {
         _load_image_search_results();
     });
@@ -114,7 +118,11 @@ jQuery(document).ready(function () {
     });
 
     jQuery('#images_search_results').on( 'draw.dt', function () {
-        jQuery('a.image_search_group').colorbox();
+        jQuery('a.image_search_group').colorbox({photo: true, onComplete: function () {
+            var titleWidth = jQuery('#cboxTitle').outerWidth(true);
+            var paddedWidth = titleWidth + 500;
+            jQuery.colorbox.resize({width: paddedWidth + 'px'});
+        }});
     });
 
 });

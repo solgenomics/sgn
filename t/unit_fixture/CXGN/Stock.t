@@ -18,6 +18,7 @@ $new_s->uniquename("aniceuniquename");
 $new_s->name("anicename");
 $new_s->type("accession");
 $new_s->description("blablabla");
+$new_s->is_obsolete(0);
 my $new_s_id = $new_s->store();
 
 my $copy_s = CXGN::Stock->new(schema => $schema, stock_id => $new_s_id);

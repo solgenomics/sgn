@@ -57,7 +57,7 @@ $assay_type
                             <label class="col-sm-4 control-label" for="edit_protocol_description">Description: </label>
                             <div class="col-sm-7">
                                 <div class="input-group">
-                                    <textarea class="form-control" id="edit_protocol_description" title="description" rows="3" maxlength="250"><% $protocol_description %></textarea>
+                                    <textarea class="form-control" id="edit_protocol_description" title="description" rows="3"><% $protocol_description %></textarea>
                                 </div>
                             </div>
                         </div>

@@ -13,6 +13,7 @@ use CXGN::BrAPI::JSONResponse;
 use CXGN::Cross;
 use Try::Tiny;
 use JSON;
+use CXGN::JSONUtils qw(decode_stored_json);
 
 extends 'CXGN::BrAPI::v2::Common';
 
@@ -223,14 +224,15 @@ sub search {
         }        
 
         if (defined $_->{'stock_additional_info'} && $_->{'stock_additional_info'} ne '' && %additional) {
-            $additional_info = decode_json($_->{'stock_additional_info'});
+            $additional_info = decode_stored_json($_->{'stock_additional_info'});
             $additional_info = {%$additional_info , ("additionalProps" => \%additional)} ;
         } elsif (defined $_->{'stock_additional_info'} && $_->{'stock_additional_info'} ne '') {
-            $additional_info = decode_json($_->{'stock_additional_info'});        
+            $additional_info = decode_stored_json($_->{'stock_additional_info'});
         } elsif (%additional) {
             $additional_info = {"additionalProps" => \%additional};
         }
 
+	my $default_PUI = $main_production_site_url."/stock/".$_->{stock_id}."/view";
         #Populating data
         push @data, {
             accessionNumber=>$_->{'accession number'},
@@ -243,7 +245,7 @@ sub search {
             commonCropName=>$_->{common_name},
             countryOfOriginCode=>$_->{'country of origin'},
             defaultDisplayName=>$_->{stock_name},
-            documentationURL=>$_->{'PUI'} && $_->{'PUI'} ne '' ? $_->{'PUI'} : $main_production_site_url . "/stock/$_->{stock_id}/view",
+            documentationURL=>$_->{'PUI'} && $_->{'PUI'} ne '' ? $_->{'PUI'}.",$default_PUI" : $default_PUI,
             donors=>\@donors,
             externalReferences=>\@references,
             genus=>$_->{genus},
@@ -847,9 +849,9 @@ sub store {
         return CXGN::BrAPI::JSONResponse->return_error($self->status, sprintf('There was an error storing germplasm %s', $transaction_error));
     }
 
-    my $bs = CXGN::BreederSearch->new( { dbh=>$dbh, dbname=>$c->config->{dbname}, } );
+ #   my $bs = CXGN::BreederSearch->new( { dbh=>$dbh, dbname=>$c->config->{dbname}, } );
 
-    my $refresh = $bs->refresh_matviews($c->config->{dbhost}, $c->config->{dbname}, $c->config->{dbuser}, $c->config->{dbpass}, 'stockprop', 'concurrent', $c->config->{basepath}, 0);
+#    my $refresh = $bs->refresh_matviews($c->config->{dbhost}, $c->config->{dbname}, $c->config->{dbuser}, $c->config->{dbpass}, 'stockprop', 'concurrent', $c->config->{basepath}, 0);
 
     #retrieve saved items
     my @data = _simple_search($self,undef,$accession_list);
@@ -1064,8 +1066,8 @@ sub update {
     }
 
     #update matviews
-    my $bs = CXGN::BreederSearch->new( { dbh=>$dbh, dbname=>$c->config->{dbname}, } );
-    my $refresh = $bs->refresh_matviews($c->config->{dbhost}, $c->config->{dbname}, $c->config->{dbuser}, $c->config->{dbpass}, 'stockprop', 'concurrent', $c->config->{basepath}, 0);
+#    my $bs = CXGN::BreederSearch->new( { dbh=>$dbh, dbname=>$c->config->{dbname}, } );
+#    my $refresh = $bs->refresh_matviews($c->config->{dbhost}, $c->config->{dbname}, $c->config->{dbuser}, $c->config->{dbpass}, 'stockprop', 'concurrent', $c->config->{basepath}, 0);
 
      #retrieve updated item
     my @result = _simple_search($self,[$germplasm_id]);
@@ -1198,10 +1200,10 @@ sub _simple_search {
         }        
 
         if (defined $_->{'stock_additional_info'} && $_->{'stock_additional_info'} ne '' && %additional) {
-            $additional_info = decode_json($_->{'stock_additional_info'});
+            $additional_info = decode_stored_json($_->{'stock_additional_info'});
             $additional_info = {%$additional_info , ("additionalProps" => \%additional)} ;
         } elsif (defined $_->{'stock_additional_info'} && $_->{'stock_additional_info'} ne '') {
-            $additional_info = decode_json($_->{'stock_additional_info'});        
+            $additional_info = decode_stored_json($_->{'stock_additional_info'});
         } elsif (%additional) {
             $additional_info = {"additionalProps" => \%additional};
         }

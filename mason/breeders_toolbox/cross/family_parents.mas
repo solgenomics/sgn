@@ -1,0 +1,48 @@
+<%args>
+$family_id
+$family_type
+</%args>
+
+<& /util/import_css.mas, paths => ['/documents/inc/datatables/jquery.dataTables.css'] &>
+
+<div style="overflow:scroll">
+    <table class="table table-hover table-bordered" id="family_parent_information">
+        <thead>
+            <tr>
+% if ($family_type eq 'same_parents') {
+                        <th>Female Parent</th>
+                        <th>Female Stock Type</th>
+                        <th>Female Ploidy</th>
+                        <th>Male Parent</th>
+                        <th>Male Stock Type</th>
+                        <th>Male Ploidy</th>
+% } elsif ($family_type eq 'reciprocal_parents') {
+                        <th>Parent 1</th>
+                        <th>Parent 1 Stock Type</th>
+                        <th>Parent 1 Ploidy</th>
+                        <th>Parent 2</th>
+                        <th>Parent 2 Stock Type</th>
+                        <th>Parent 2 Ploidy</th>
+%}
+            </tr>
+        </thead>
+    </table>
+</div>
+
+<script>
+
+jQuery(document).ready(function(){
+    const family_id = "<%$family_id%>";
+    const family_parent_table = jQuery('#family_parent_information').DataTable({
+        'ajax': '/ajax/family/parent_info/'+family_id,
+        'paging' : false,
+        'searching' : false,
+        'destroy' : true,
+        "bLengthChange" : false,
+        'bInfo' : false,
+        'autoWidth': false,
+    });
+
+});
+
+</script>

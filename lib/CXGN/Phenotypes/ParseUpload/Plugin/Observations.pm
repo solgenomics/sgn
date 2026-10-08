@@ -169,7 +169,7 @@ sub parse {
         push @values, $value;
 
         # track data for store
-        $data{$obsunit_db_id}->{$trait_name} = [$value, $timestamp, $collector, $obs_db_id, undef, $additional_info,$external_references];
+        push @{$data{$obsunit_db_id}->{$trait_name}}, [$value, $timestamp, $collector, $obs_db_id, undef, $additional_info,$external_references];
     }
     #print STDERR "Data is ".Dumper(%data)."\n";
     @observations = uniq @observations;

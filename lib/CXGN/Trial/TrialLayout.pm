@@ -30,6 +30,7 @@ CXGN::Trial::TrialLayout - Module to get layout information about a trial
         "plot_id" => 1234,
         "accession_name" => "accession1",
         "accession_id" => 2345,
+        "intercrop_accessions" => [{ "accession_id" => 2346, "accession_name" => "intercrop_accession_1" }],
         "block_number" => 1,
         "row_number" => 2,
         "col_number" => 3,
@@ -121,6 +122,7 @@ If there are errors, $trial_errors is a HashRef like:
 # use CXGN::Chado::Stock;
 # use JSON;
 
+use strict;
 use CXGN::Trial::TrialLayoutFactory;
 
 

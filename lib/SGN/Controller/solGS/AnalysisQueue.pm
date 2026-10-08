@@ -3,7 +3,7 @@ package SGN::Controller::solGS::AnalysisQueue;
 use Moose;
 use namespace::autoclean;
 use File::Path qw / make_path  /;
-use File::Spec::Functions qw / catfile catdir/;
+use File::Spec;
 use File::Slurp qw /write_file read_file/;
 use JSON;
 use CXGN::Tools::Run;
@@ -318,13 +318,19 @@ sub format_log_entry {
 
 }
 
+
 sub analysis_report_job_args {
     my ( $self, $c, $status_check_duration ) = @_;
 
     my $analysis_details = $c->stash->{bg_job_output_details};
+    my $analysis_profile = $analysis_details->{analysis_profile} || {};
+    if (!$analysis_profile->{analysis_type} && $analysis_profile->{arguments}) {
+        my $analysis_args = JSON->new->decode($analysis_profile->{arguments});
+        $analysis_profile->{analysis_type} = $analysis_args->{analysis_type};
+    }
 
-    my $temp_dir =
-      $c->stash->{analysis_tempfiles_dir} || $c->stash->{solgs_tempfiles_dir};
+    my $solgs_tempfiles_dir = $c->controller('solGS::Files')->solgs_tempfiles_dir($c);
+    my $temp_dir = $c->stash->{analysis_tempfiles_dir} || $solgs_tempfiles_dir;
 
     my $temp_file_template = "analysis-status";
     my $cluster_files      = $c->controller('solGS::AsyncJob')
@@ -364,6 +370,7 @@ sub analysis_report_job_args {
         'config'         => $job_config,
         'background_job' => $c->stash->{background_job},
         'temp_dir'       => $temp_dir,
+        'record_job'     => 0,
     };
 
     $c->stash->{analysis_report_job_args} = $job_args;
@@ -376,7 +383,7 @@ sub get_analysis_report_job_args_file {
     $self->analysis_report_job_args( $c, $status_check_duration );
     my $analysis_job_args = $c->stash->{analysis_report_job_args};
 
-    my $temp_dir = $c->stash->{solgs_tempfiles_dir};
+    my $temp_dir = $c->controller('solGS::Files')->solgs_tempfiles_dir($c);
 
     my $report_file = $c->controller('solGS::Files')
       ->create_tempfile( $temp_dir, 'analysis-report-job-args' );
@@ -425,7 +432,7 @@ sub structure_output_details {
     $referer = $base . "/" . $referer;
 
     my $output_details = {};
-
+  
     my $match_pages =
         'solgs\/traits\/all\/population\/'
       . '|solgs\/trait\/'
@@ -467,8 +474,8 @@ m/solgs\/selection\/(\d+|\w+_\d+)\/model\/|solgs\/combined\/model\/\d+\/selectio
     $output_details->{contact_page}      = $base . '/contact/form';
     $output_details->{data_set_type}     = $c->stash->{data_set_type};
     $output_details->{analysis_log_file} = $log_file;
-    $output_details->{host}              = qq | $base |;
-    $output_details->{referer}           = qq | $referer |;
+    $output_details->{host}              = $base;
+    $output_details->{referer}           = $referer;
     $output_details->{mailing_list}      = $mail_list;
 
     $c->stash->{bg_job_output_details} = $output_details;
@@ -503,8 +510,6 @@ sub structure_kinship_analysis_output {
     my $kinship_page = $base . $analysis_page;
     $analysis_data->{analysis_page} = $kinship_page;
 
-    my %output_details = ();
-
     my $trait_id = $c->stash->{trait_id};
 
     $c->controller('solGS::Files')
@@ -515,12 +520,15 @@ sub structure_kinship_analysis_output {
       ->get_kinship_coef_files( $c, $pop_id, $protocol_id, $trait_id );
     my $matrix_file = $coef_files->{matrix_file_adj};
 
-    $output_details{ 'kinship_' . $pop_id } = {
+    my %output_details = (
+      'kinship_' . $pop_id  => {
         'output_page'    => $kinship_page,
         'kinship_pop_id' => $pop_id,
         'genotype_file'  => $geno_file,
         'matrix_file'    => $matrix_file,
-    };
+    },
+    'analysis_type' => 'kinship',
+    );
 
     return \%output_details;
 }
@@ -550,7 +558,8 @@ sub structure_pca_analysis_output {
             'pca_pop_id'  => $pop_id,
             'input_file'  => $input_file,
             'scores_file' => $scores_file,
-          }
+          },
+        'analysis_type' => 'pca',
     );
 
     return \%output_details;
@@ -591,7 +600,8 @@ sub structure_cluster_analysis_output {
             'cluster_pop_id' => $pop_id,
             'input_file'     => $input_file,
             'result_file'    => $result_file,
-          }
+          },
+        'analysis_type' => 'cluster',
     );
 
     return \%output_details;
@@ -658,7 +668,7 @@ sub structure_training_modeling_output {
     foreach my $trait_id (@traits_ids) {
         $url_args->{trait_id} = $trait_id;
 
-        $c->stash->{cache_dir} = $c->stash->{solgs_cache_dir};
+        $c->stash->{cache_dir} = $c->controller('solGS::Files')->solgs_cache_dir($c);
 
         $c->controller('solGS::Trait')->get_trait_details( $c, $trait_id );
         $c->controller('solGS::Files')->rrblup_training_gebvs_file($c);
@@ -1130,8 +1140,7 @@ sub predict_selection_traits {
     }
     elsif ( $referer =~ /\/combined\// ) {
         $c->stash->{data_set_type} = 'combined_populations';
-        $c->controller('solGS::combinedTrials')
-          ->predict_selection_pop_combined_pops_model($c);
+        $c->controller('solGS::combinedTrials')->predict_selection_pop_combined_pops_model($c);
     }
 
 }
@@ -1233,12 +1242,11 @@ sub analysis_log_file {
     $self->create_analysis_log_dir($c);
     my $log_dir = $c->stash->{analysis_log_dir};
 
-    $c->stash->{cache_dir} = $log_dir;
-
     my $cache_data = {
         key       => 'analysis_log',
         file      => 'analysis_log',
-        stash_key => 'analysis_log_file'
+        stash_key => 'analysis_log_file',
+        cache_dir => $log_dir,
     };
 
     $c->controller('solGS::Files')->cache_file( $c, $cache_data );
@@ -1419,15 +1427,11 @@ sub create_analysis_log_dir {
     my $user_id = $c->user->id;
 
     $c->controller('solGS::Files')->get_solgs_dirs($c);
-
     my $log_dir = $c->stash->{analysis_log_dir};
 
-    $log_dir = catdir( $log_dir, $user_id );
-    # mkpath( $log_dir, 0, 0755 );
-    make_path($log_dir,{
-      verbose => 1,
-      chmod => "0755"
-    });
+    $log_dir = File::Spec->catdir( $log_dir, $user_id );
+
+    make_path($log_dir, { mode => oct('0755') });
 
     $c->stash->{analysis_log_dir} = $log_dir;
 

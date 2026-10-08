@@ -8,7 +8,7 @@ use Image::Size;
 use SGN::Model::Cvterm;
 use SGN::Image;
 use CXGN::Image::Search;
-use CXGN::Page;
+#use CXGN::Page;
 use CXGN::Tag;
 use CXGN::Phenotypes::StorePhenotypes;
 use Scalar::Util qw(looks_like_number);
@@ -18,11 +18,14 @@ extends 'CXGN::BrAPI::v1::Common';
 sub search {
     my $self = shift;
     my $params = shift;
+    my $main_production_site_url = shift;
+    
     my $page_size = $self->page_size;
     my $page = $self->page;
     my $status = $self->status;
-    my $page_obj = CXGN::Page->new();
-    my $hostname = $page_obj->get_hostname();
+#    my $page_obj = CXGN::Page->new();
+    #    my $hostname = $page_obj->get_hostname();
+    
     my @data_files;
 
     my $image_ids_arrayref = $params->{imageDbId} || ($params->{imageDbIds} || ());
@@ -56,7 +59,7 @@ sub search {
     foreach (@$result) {
         my $image = SGN::Image->new($self->bcs_schema()->storage->dbh(), $_->{'image_id'});
         my @cvterms = $image->get_cvterms();
-        my $url = $hostname . $image->get_image_url('medium');
+        my $url = $main_production_site_url. $image->get_image_url('medium');
         my $filename = $image->get_filename();
         my $size = (stat($filename))[7];
         my ($width, $height) = imgsize($filename);
@@ -125,16 +128,18 @@ sub search {
 sub detail {
     my $self = shift;
     my $inputs = shift;
+    my $main_production_site_url = shift;
+    
     my $page_size = $self->page_size;
     my $page = $self->page;
     my $status = $self->status;
-    my $page = CXGN::Page->new();
-    my $hostname = $page->get_hostname();
+#    my $page = CXGN::Page->new();
+    #my $hostname = $page->get_hostname();
     my @data_files;
 
     my $image = SGN::Image->new($self->bcs_schema()->storage->dbh(), $inputs->{image_id});
     my @cvterms = $image->get_cvterms();
-    my $url = $hostname . $image->get_image_url('medium');
+    my $url = $main_production_site_url . $image->get_image_url('medium');
     my $filename = $image->get_filename();
     my $size = (stat($filename))[7];
     my ($width, $height) = imgsize($filename);
@@ -420,6 +425,7 @@ sub detail {
     my $image_id = shift;
     my $inputs = shift;
     my $content_type = shift;
+    my $main_production_site_url = shift;
 
     print STDERR "Image ID: $image_id. inputs to image metadata store: ".Dumper($inputs);
 
@@ -465,9 +471,9 @@ sub detail {
 
     foreach (@$search_result) {
         my $sgn_image = SGN::Image->new($self->bcs_schema()->storage->dbh(), $_->{'image_id'});
-        my $page_obj = CXGN::Page->new();
-        my $hostname = $page_obj->get_hostname();
-        my $url = $hostname . $sgn_image->get_image_url('medium');
+        #my $page_obj = CXGN::Page->new();
+        #my $hostname = $page_obj->get_hostname();
+        my $url = $main_production_site_url . $sgn_image->get_image_url('medium');
         my $filename = $sgn_image->get_filename();
         my $size = (stat($filename))[7];
         my ($width, $height) = imgsize($filename);

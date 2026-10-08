@@ -6,7 +6,7 @@ use Moose;
 use Data::Dumper;
 use File::Temp qw | tempfile |;
 # use File::Slurp;
-use File::Spec qw | catfile|;
+use File::Spec;
 use File::Basename qw | basename |;
 use File::Copy;
 use CXGN::Dataset;
@@ -186,6 +186,11 @@ sub high_dimensional_phenotypes_nirs_upload_verify_POST : Args(0) {
     my $cmd_s = "Rscript ".$c->config->{basepath} . "/R/Nirs/nirs_upload_filter_aggregate.R '$filter_json_filepath' '$output_csv_filepath' '$output_raw_csv_filepath' '$output_plot_filepath' '$output_outliers_filepath' ";
     print STDERR $cmd_s;
     my $cmd_status = system($cmd_s);
+    if ($cmd_status != 0) {
+        push @error_status, "Error filtering and aggregating NIRS spectra (outlier detection failed).";
+        $c->stash->{rest} = {success => \@success_status, error => \@error_status };
+        $c->detach();
+    }
 
     my $parsed_file_agg = $parser->parse($validate_type, $output_csv_filepath, $timestamp_included, $data_level, $schema, $archived_image_zipfile_with_path, $user_id, $c, $protocol_id, $nd_protocol_filename);
     if (!$parsed_file_agg) {
@@ -400,6 +405,11 @@ sub high_dimensional_phenotypes_nirs_upload_store_POST : Args(0) {
     my $cmd_s = "Rscript ".$c->config->{basepath} . "/R/Nirs/nirs_upload_filter_aggregate.R '$filter_json_filepath' '$output_csv_filepath' '$output_raw_csv_filepath' '$output_plot_filepath' '$output_outliers_filepath' ";
     print STDERR $cmd_s;
     my $cmd_status = system($cmd_s);
+    if ($cmd_status != 0) {
+        push @error_status, "Error filtering and aggregating NIRS spectra (outlier detection failed).";
+        $c->stash->{rest} = {success => \@success_status, error => \@error_status };
+        $c->detach();
+    }
 
     my %parsed_data_agg;
 
@@ -751,6 +761,15 @@ sub high_dimensional_phenotypes_transcriptomics_upload_store_POST : Args(0) {
     my $protocol_unit = $c->req->param('upload_transcriptomics_spreadsheet_protocol_unit');
     my $protocol_genome_version = $c->req->param('upload_transcriptomics_spreadsheet_protocol_genome');
     my $protocol_genome_annotation_version = $c->req->param('upload_transcriptomics_spreadsheet_protocol_annotation');
+    my $protocol_instrument_model = $c->req->param('upload_transcriptomics_spreadsheet_protocol_instrument_model');
+    my $protocol_layout = $c->req->param('upload_transcriptomics_spreadsheet_protocol_layout');
+    my $protocol_library_method = $c->req->param('upload_transcriptomics_spreadsheet_protocol_library_method');
+    my $protocol_library_comments = $c->req->param('upload_transcriptomics_spreadsheet_protocol_library_comments');
+    my $protocol_mapping_software = $c->req->param('upload_transcriptomics_spreadsheet_protocol_mapping_software');
+    my $protocol_sequencing_center = $c->req->param('upload_transcriptomics_spreadsheet_protocol_sequencing_center');
+    my $protocol_sequencing_platform = $c->req->param('upload_transcriptomics_spreadsheet_protocol_sequencing_platform');
+    my $protocol_read_length = $c->req->param('upload_transcriptomics_spreadsheet_protocol_read_length');
+    my $protocol_nucleic_acid_extraction_method = $c->req->param('upload_transcriptomics_spreadsheet_protocol_nucleic_acid_extraction_method');
 
     if ($protocol_id && $protocol_name) {
         $c->stash->{rest} = {error => ["Please give a protocol name or select a previous protocol, not both!"]};
@@ -863,6 +882,15 @@ sub high_dimensional_phenotypes_transcriptomics_upload_store_POST : Args(0) {
             expression_unit => $protocol_unit,
             genome_version => $protocol_genome_version,
             annotation_version => $protocol_genome_annotation_version,
+            instrument_model => $protocol_instrument_model,
+            layout => $protocol_layout,
+            library_method => $protocol_library_method,
+            library_comments => $protocol_library_comments,
+            mapping_software => $protocol_mapping_software,
+            sequencing_center => $protocol_sequencing_center,
+            sequencing_platform => $protocol_sequencing_platform,
+            read_length => $protocol_read_length,
+            nucleic_acid_extraction_method => $protocol_nucleic_acid_extraction_method,
             header_column_names => \@transcripts,
             header_column_details => \%transcripts_details
         );
@@ -1555,16 +1583,16 @@ sub high_dimensional_phenotypes_download_file_POST : Args(0) {
                 }
             }
             elsif ($high_dimensional_download_type eq 'identifier_metadata') {
-                my $header_string = 'transcript_name,chromosome,start_position,end_position,gene_description,notes';
+                my $header_string = 'gene_id,chromosome,pos_left,pos_right,functional_annotation,notes';
                 print $F $header_string."\n";
 
                 foreach (@identifier_names_sorted) {
                     my $chromosome = $identifier_metadata->{$_}->{chr};
-                    my $start_position = $identifier_metadata->{$_}->{start};
-                    my $end_position = $identifier_metadata->{$_}->{end};
-                    my $gene_description = $identifier_metadata->{$_}->{gene_desc};
+                    my $pos_left = $identifier_metadata->{$_}->{start};
+                    my $pos_right = $identifier_metadata->{$_}->{end};
+                    my $functional_annotation = $identifier_metadata->{$_}->{gene_desc};
                     my $notes = $identifier_metadata->{$_}->{notes};
-                    print $F "$_,$chromosome,$start_position,$end_position,$gene_description,$notes\n";
+                    print $F "$_,$chromosome,$pos_left,$pos_right,$functional_annotation,$notes\n";
                 }
             }
         }

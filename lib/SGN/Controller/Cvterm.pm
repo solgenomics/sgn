@@ -3,6 +3,8 @@ package SGN::Controller::Cvterm;
 
 #use CXGN::Chado::Cvterm; #DEPRECATE this !! 
 use CXGN::Cvterm;
+use CXGN::Onto;
+use Data::Dumper;
 
 use Moose;
 
@@ -44,21 +46,42 @@ sub view_cvterm : Chained('get_cvterm') PathPart('view') Args(0) {
     $submitter = $logged_user->check_roles('submitter') if $logged_user;
     $sequencer = $logged_user->check_roles('sequencer') if $logged_user;
     my $props = $self->_cvtermprops($cvterm);
-    my $editable_cvterm_props = "trait_format,trait_default_value,trait_minimum,trait_maximum,trait_details,trait_categories";
-   
+    my $editable_cvterm_props = "trait_format,trait_default_value,trait_minimum,trait_maximum,trait_details,trait_categories,trait_repeat_type";
+    my $schema = $c->dbic_schema("Bio::Chado::Schema", undef, $person_id);
+
+    my $db_name = $cvterm->db->name();
+
+    my $allow_edits = 0;
+    my $editable_ontologies_str = $c->config->{allow_trait_edits}; #this can be 1 or a list of dbnames
+
+     my $ontology_obj = CXGN::Onto->new({
+        schema => $schema
+    });
+    my @root_nodes = $ontology_obj->get_root_nodes('trait_ontology');
+    my $first_root_db = $root_nodes[0]->[1] =~ s/:.*//r;
+
+    if ($editable_ontologies_str == 1 && $curator && $db_name eq $first_root_db) { #just give the first hit
+        $allow_edits = 1;
+    } else { #need to actually check if ontology is editable
+        my @editable_ontologies = split(",", $editable_ontologies_str);
+        if ((grep {$_ eq $db_name} @editable_ontologies) && $curator) {
+            $allow_edits = 1;
+        }
+    }
     
     $c->stash(
-	template => '/chado/cvterm.mas',
-	cvterm   => $cvterm, #deprecate this maybe? 
-	cvtermref => {
-	    cvterm    => $bcs_cvterm,
-	    curator   => $curator,
-            submitter => $submitter,
-            sequencer => $sequencer,
-            person_id => $person_id,
-	    props     => $props,
-	    editable_cvterm_props => $editable_cvterm_props,
-	}
+        template => '/chado/cvterm.mas',
+        cvterm   => $cvterm, #deprecate this maybe? 
+        allow_edits => $allow_edits,
+        cvtermref => {
+            cvterm    => $bcs_cvterm,
+            curator   => $curator,
+                submitter => $submitter,
+                sequencer => $sequencer,
+                person_id => $person_id,
+            props     => $props,
+            editable_cvterm_props => $editable_cvterm_props,
+        }
 	);
     
 }

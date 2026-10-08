@@ -344,7 +344,7 @@ $response = $ua3->post(
 
 $message = $response->decoded_content;
 $message_hash = decode_json $message;
-ok($message_hash->{warning});
+like($message_hash->{warning}, qr/^Marker S01_0001 in your/, 'error starts with "Marker S01_0001 in your"');
 
 #checking protocol metadata
 my $protocol = CXGN::Genotype::Protocol->new({
@@ -606,5 +606,10 @@ $mech->get_ok('http://localhost:3010/ajax/breeders/trial/'.$genotyping_project_i
 $response = decode_json $mech->content;
 is($response->{'success'}, '1');
 
+$f->clean_up_db();
+
+my $bs = CXGN::BreederSearch->new( { dbh=> $f->dbh() });
+
+my $refresh = $bs->refresh_matviews($f->config->{dbhost}, $f->config->{dbname}, $f->config->{dbuser}, $f->config->{dbpass}, 'phenotypes', 'concurrent', $f->config->{basepath});
 
 done_testing();

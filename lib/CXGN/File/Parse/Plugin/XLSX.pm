@@ -1,7 +1,7 @@
 package CXGN::File::Parse::Plugin::XLSX;
 
 use Moose;
-use CXGN::File::Parse::Plugin::Excel;
+use CXGN::File::Parse::Plugin::Spreadsheet;
 
 sub type {
   return "xlsx";
@@ -10,7 +10,7 @@ sub type {
 sub parse {
   my $self = shift;
   my $super = shift;
-  return CXGN::File::Parse::Plugin::Excel->parse($super);
+  return CXGN::File::Parse::Plugin::Spreadsheet->parse($super);
 }
 
 1;

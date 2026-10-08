@@ -41,7 +41,7 @@ createGenoData <- function(inputFiles) {
     filteredGenoFile <- c()
 
     if (length(genoFiles) > 1) {   
-        genoData <- combineGenoData(genoFiles)
+        genoData <- genoDataFilter::combineGenoData(genoFiles)
    
         genoMetaData   <- genoData$trial
         genoData$trial <- NULL
@@ -70,9 +70,9 @@ createGenoData <- function(inputFiles) {
     } else {
 
         ##genoDataFilter::filterGenoData
-       genoData <- convertToNumeric(genoData)
-       genoData <- filterGenoData(genoData, maf=0.01)
-       genoData <- roundAlleleDosage(genoData)
+       genoData <- genoDataFilter::convertToNumeric(genoData)
+       genoData <- genoDataFilter::filterGenoData(genoData, maf=0.01)
+       genoData <- genoDataFilter::roundAlleleDosage(genoData)
 
         message("No. of geno missing values, ", sum(is.na(genoData)))
         if (sum(is.na(genoData)) > 0) {
@@ -110,7 +110,7 @@ aveKinship <- c()
 relationshipMatrixJson <- c()
 
 
-relationshipMatrix           <- A.mat(genoData)
+relationshipMatrix           <- rrBLUP::A.mat(genoData)
 diag(relationshipMatrix)     <- diag(relationshipMatrix) + 1e-6
 genos <- rownames(relationshipMatrix)
 
@@ -156,9 +156,6 @@ aveKinship <- aveKinship %>%
 
 relationshipMatrixJson <- relationshipMatrix
 relationshipMatrixJson[upper.tri(relationshipMatrixJson)] <- NA
-
-
-#relationshipMatrixJson <- data.frame(relationshipMatrixJson)  
 relationshipMatrixList <- list(labels = names(relationshipMatrixJson),
                                values = relationshipMatrixJson)
 relationshipMatrixJson <- jsonlite::toJSON(relationshipMatrixList)

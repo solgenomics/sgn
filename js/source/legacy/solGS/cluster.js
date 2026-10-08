@@ -13,6 +13,7 @@ solGS.cluster = {
   clusterPopsDiv: "#cluster_pops_select_div",
   clusterPopsSelectMenuId: "#cluster_pops_select",
   clusterPopsDataDiv: "#cluster_pops_data_div",
+  defaultKNum: 3,
 
   getClusterArgsFromUrl: function () {
     var page = location.pathname;
@@ -217,11 +218,24 @@ solGS.cluster = {
       dataTypes = this.getDataTypeOpts();
     }
 
+    var protocolId;
+
+    if (dataStr.match(/dataset/)) {
+        datasetId = popId;
+        protocolId = solGS.dataset.getDatasetGenoProtocolId(datasetId);
+    }
+
+    if (!protocolId) {
+      protocolId = jQuery("#cluster_div #genotyping_protocol #genotyping_protocol_id").val();
+    }
+
+    clusterPop.protocol_id = protocolId;
+
     var dataTypeOpts = solGS.cluster.createDataTypeSelect(dataTypes, clusterPopId);
-    var kNumId = solGS.cluster.clusterKnumSelectId(clusterPopId);
+    var kNumId = solGS.cluster.clusterKnumSelectId(clusterPopId) || this.defaultKNum;
     var runClusterBtnId = solGS.cluster.getRunClusterBtnId(clusterPopId);
 
-    var kNum = '<input class="form-control" type="text" placeholder="3" id="' + kNumId + '"/>';
+    var kNum = '<input class="form-control" type="text" placeholder="default" id="' + kNumId + '"/>';
 
     var clusterArgs = JSON.stringify(clusterPop);
 
@@ -286,7 +300,18 @@ solGS.cluster = {
 
     dataType = dataType.toLowerCase();
     clusterType = clusterType.toLowerCase();
-    var protocolId = jQuery("#cluster_div #genotyping_protocol #genotyping_protocol_id").val();
+
+    var protocolId;
+    var datasetId;
+
+    if (dataStr && dataStr.match(/dataset/)) {
+        datasetId = clusterPopId.replace(/dataset_/, "");
+        protocolId = solGS.dataset.getDatasetGenoProtocolId(datasetId);
+    }
+
+    if (!protocolId) {
+      protocolId = jQuery("#cluster_div #genotyping_protocol #genotyping_protocol_id").val();
+    }
 
     if (!protocolId) {
       protocolId = solGS.genotypingProtocol.getGenotypingProtocolId("cluster_div");
@@ -662,11 +687,18 @@ solGS.cluster = {
       downloadLinks += " | " + kclusterVariancesLink + " | " + elbowLink;
     }
 
-    var clusterPlotDiv = this.clusterPlotDiv.replace(/#/, '');
-    var plotId = res.file_id;;
-    var clusterDownloadLinkId = `download_${clusterPlotDiv}_${plotId}`;
-    var clusterPlotDownload =
-      `<a href='#'  onclick='event.preventDefault();' id='${clusterDownloadLinkId}'>Cluster plot</a>`;
+    var clusterPlotDownload;
+
+    if (clusterPlotFileName.match(/k-means/i)) {
+      var clusterPlotDiv = this.clusterPlotDiv.replace(/#/, "");
+      var plotId = res.file_id;
+      var clusterDownloadLinkId = `download_${clusterPlotDiv}_${plotId}`;
+      clusterPlotDownload =
+        `<a href="#" onclick="event.preventDefault();" id="${clusterDownloadLinkId}">Cluster plot</a>`;
+    } else {
+      clusterPlotDownload =
+        `<a href="${res.cluster_plot}" download="${clusterPlotFileName}">Cluster plot</a>`;
+    }
 
     downloadLinks += " | " + clusterPlotDownload;
 
@@ -704,7 +736,7 @@ solGS.cluster = {
     var clusterPopId = this.getClusterPopId(selectedId, dataStr);
     var clusterOpts = solGS.cluster.clusteringOptions(clusterPopId);
     var clusterType = clusterOpts.cluster_type || "k-means";
-    var kNumber = clusterOpts.k_number || 3;
+    var kNumber = clusterOpts.k_number || this.defaultKNum;
     var dataType = clusterOpts.data_type || "genotype";
 
     var clusterArgs = {
@@ -726,15 +758,17 @@ solGS.cluster = {
     var dataTypeId = this.clusterDataTypeSelectId(clusterPopId);
     var selectionPropId = this.clusterSelPropSelectId(clusterPopId);
 
+
     var dataType = jQuery("#" + dataTypeId).val() || "genotype";
     var clusterType = jQuery("#" + clusterTypeId).val() || "k-means";
-    var kNumber = jQuery("#" + kNumId).val() || 3;
-    var selectionProp = jQuery("#" + selectionPropId).val();
+    var kNumber = jQuery("#" + kNumId).val();
+    kNumber = kNumber.replace(/\s+/g, "");
 
-    if (typeof kNumber === "string") {
-      kNumber = kNumber.replace(/\s+/g, "");
+    if (kNumber == "") {
+      kNumber = this.defaultKNum;
     }
 
+    var selectionProp = jQuery("#" + selectionPropId).val();
     if (selectionProp) {
       selectionProp = selectionProp.replace(/%/, "");
       selectionProp = selectionProp.replace(/\s+/g, "");
@@ -802,21 +836,32 @@ solGS.cluster = {
     var clusterArgs;
 
     var selectedPopDiv = document.getElementById(runClusterElemId);
+    
+
     if (selectedPopDiv) {
-      var selectedPopData = selectedPopDiv.dataset;
+        var protocolId;
+        var selectedPopData = selectedPopDiv.dataset;
 
-      clusterArgs = JSON.parse(selectedPopData.selectedPop);
-      var clusterPopId = clusterArgs.data_str + "_" + clusterArgs.id;
+        clusterArgs = JSON.parse(selectedPopData.selectedPop);
+        var clusterPopId = clusterArgs.data_str + "_" + clusterArgs.id;
 
-      var protocolId = solGS.genotypingProtocol.getGenotypingProtocolId("cluster_div");
+        if (clusterArgs.data_str && clusterArgs.data_str.match(/dataset/)) {
+            var datasetId = clusterArgs.id;
+            protocolId = solGS.dataset.getDatasetGenoProtocolId(datasetId);
+        }
 
-      clusterArgs["analysis_type"] = "cluster analysis";
-      clusterArgs["genotyping_protocol_id"] = protocolId;
-      clusterArgs["cluster_pop_id"] = clusterPopId;
-      clusterArgs["data_structure"] = clusterArgs.data_str;
+        if (!protocolId) {
+            protocolId = solGS.genotypingProtocol.getGenotypingProtocolId("cluster_div");
+        }
+
+        clusterArgs["analysis_type"] = "cluster analysis";
+        clusterArgs["genotyping_protocol_id"] = protocolId;
+        clusterArgs["cluster_pop_id"] = clusterPopId;
+        clusterArgs["data_structure"] = clusterArgs.data_str;
     }
 
     return clusterArgs;
+    
   },
 
   populateClusterMenu: function (newPop) {
@@ -828,6 +873,12 @@ solGS.cluster = {
       if (trialSelPopsList) {
         clusterPops.push(trialSelPopsList);
       }
+    }
+
+    if (solGS.listTypeSelectionPopulation) {
+      clusterPops.push(
+        solGS.listTypeSelectionPopulation.getPredictedSelectionPops()
+      );
     }
   
     var menu = new SelectMenu(this.clusterPopsDiv, this.clusterPopsSelectMenuId);
@@ -926,7 +977,7 @@ solGS.cluster = {
     var pc2Axis = d3.axisLeft(pc2AxisLabel).tickSize(3);
 
     var nudgeVal = 15;
-    var axesLabelColor = "green";
+    var tickLabelColor = "#523CB5";
     var labelFs = 12;
     var yAxisHeight = pad.top + height + nudgeVal; 
 
@@ -940,9 +991,8 @@ solGS.cluster = {
       .attr("x", 15)
       .attr("dy", ".1em")
       .attr("transform", "rotate(90)")
-      .attr("fill", axesLabelColor)
-      .style("text-anchor", "start")
-      .style("fill", axesLabelColor);
+      .attr("fill", tickLabelColor)
+      .style("text-anchor", "start");
 
     clusterPlot
       .append("g")
@@ -952,7 +1002,32 @@ solGS.cluster = {
       .selectAll("text")
       .attr("y", 0)
       .attr("x", -10)
-      .style("fill", axesLabelColor);
+      .attr("fill", tickLabelColor);
+
+
+    var pc1AxisMid = 0.5 * height + pad.top;
+    var pc2AxisMid = 0.5 * width + pad.left;
+    var axesLabelColor = "#523CB5";
+    clusterPlot
+        .append("g")
+        .attr("transform", "translate(" + pad.left + "," + (pc2AxisMid - 30)+ ")")
+        .append("text")
+        .text("PC2")
+        .attr("y", -40)
+        .attr("x", 0)
+        .attr("transform", "rotate(-90)")
+        .attr("font-size", labelFs)
+        .style("fill", axesLabelColor);
+
+    clusterPlot
+        .append("g")
+        .attr("transform", "translate(" + (pc1AxisMid + 30) + "," + height + ")")
+        .append("text")
+        .text("PC1")
+        .attr("y", pad.top + 60)
+        .attr("x", 0)
+        .attr("font-size", labelFs)
+        .style("fill", axesLabelColor);
 
     var grpColor = d3.scaleOrdinal(d3.schemeCategory10);
 
@@ -982,7 +1057,7 @@ solGS.cluster = {
         }
       })
       .on("mouseover", function (d) {
-        d3.select(this).attr("r", 5).style("fill", axesLabelColor);
+        d3.select(this).attr("r", 5).style("fill", tickLabelColor);
         clusterPlot
         .data(d)
           .append("text")
@@ -1008,7 +1083,7 @@ solGS.cluster = {
       .attr("height", height + nudgeVal)
       .attr("width", width + nudgeVal)
       .attr("fill", "none")
-      .attr("stroke", "#523CB5")
+      .attr("stroke", axesLabelColor)
       .attr("stroke-width", 1)
       .attr("pointer-events", "none");
 
@@ -1037,7 +1112,7 @@ solGS.cluster = {
       .attr("x", 0)
       .attr("y", 15)
       .style("font-size",'12px')
-      .style("fill", axesLabelColor);
+      .style("fill", tickLabelColor);
 
      clusterPlot
         .append("g")
@@ -1073,8 +1148,8 @@ solGS.cluster = {
         .data(legendValues)
         .enter()
         .append("text")
-        .attr("fill", "#523CB5")
-        .style("fill", "#523CB5")
+        .attr("fill", axesLabelColor)
+        .style("fill", axesLabelColor)
         .attr("x", 1)
         .attr("y", function (d) {
           return 1 + d[0] * recLH + d[0] * 5;
@@ -1128,7 +1203,16 @@ jQuery(document).ready(function () {
     var clusterPlotId = linkId.replace(/download_/, "");
 
     if (clusterPlotId.match(/cluster_plot_/)) {
-      saveSvgAsPng(document.getElementById(`#${clusterPlotId}`), `${clusterPlotId}.png`, { scale: 2});
+        var clusterPlot = document.getElementById(clusterPlotId);
+        var clusterSvg = null;
+        
+        if (clusterPlot) {
+            clusterSvg = clusterPlot.querySelector("svg");
+        }
+
+        if (clusterSvg) {
+            saveSvgAsPng(clusterSvg, `${clusterPlotId}.png`, { scale: 2});
+        }
     }
   });
 
@@ -1203,6 +1287,7 @@ jQuery(document).ready(function () {
       var clusterOptsId = "cluster_options";
       var clusterPopId = solGS.cluster.getClusterPopId(selectedId, dataStr);
       var clusterOpts = solGS.cluster.clusteringOptions(clusterPopId);
+      var kNumber = clusterOpts.k_number || solGS.cluster.defaultKNum;
 
       var clusterArgs = {
         selected_id: selectedId,
@@ -1211,7 +1296,7 @@ jQuery(document).ready(function () {
         cluster_pop_id: clusterPopId,
         cluster_type: clusterOpts.cluster_type,
         data_type: clusterOpts.data_type,
-        k_number: clusterOpts.k_number,
+        k_number: kNumber,
         selection_proportion: clusterOpts.selection_proportion,
       };
 
@@ -1270,14 +1355,15 @@ jQuery(document).ready(function () {
                       .runClusterAnalysis(clusterArgs)
                       .done(function (res) {
                         if (res.result == "success") {
-                          if (res.pc_scores_groups) {
-                            solGS.cluster.cleanupFeedback(canvas, runClusterBtnId, clusterMsgDiv )
-                            solGS.cluster.displayClusterOutput(res);
-                          } else {
+                          if (res.cluster_type.match(/k-means/i) && !res.pc_scores_groups) {
                             var msg = "There is no cluster groups data to plot. " + 
-                            "The R clustering script did not write cluster results to output files.";
+                            "The R clustering script did not write cluster " + 
+                            "results to output files.";
 
                             solGS.cluster.cleanupFeedback(canvas, runClusterBtnId, clusterMsgDiv, msg);
+                          } else {
+                            solGS.cluster.cleanupFeedback(canvas, runClusterBtnId, clusterMsgDiv )
+                            solGS.cluster.displayClusterOutput(res);    
                           }
                         } else {
                           var msg = "Error occured running the clustering. Possibly the R script failed.";
@@ -1285,7 +1371,7 @@ jQuery(document).ready(function () {
                         }
                       })
                       .fail(function () {
-                        var msg = "Error occured running the clustering";
+                        var msg = "Error occured running the clustering.";
                         solGS.cluster.cleanupFeedback(canvas, runClusterBtnId, clusterMsgDiv, msg);
                       });
                   },

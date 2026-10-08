@@ -1,0 +1,203 @@
+<%args>
+
+</%args>
+
+<div class="modal fade" id="upload_propagation_ids_dialog" name="upload_propagation_ids_dialog" tabindex="-1" role="dialog" aria-labelledby="uploadPropagationIDsDialog">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="reset" class="close" id="upload_propagation_ids_dismiss_button_2" name="upload_propagation_ids_dismiss_button" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="uploadPropagationIDsDialog">Upload Propagation IDs</h4>
+            </div>
+            <div class="modal-body">
+                <div class="container-fluid">
+                    <&| /page/explanation.mas, title=>'Template Information' &>
+                        <p>
+                            <b>File format information</b>
+                            <br>
+                            <a id="propagation_ids_upload_spreadsheet_format_info">Spreadsheet Format</a>
+                        </p>
+                    </&>
+                    <form method="post" enctype="multipart/form-data" encoding="multipart/form-data" id="upload_propagation_ids_form" name="upload_propagation_ids_form">
+                        <div class="form-group">
+                            <label class="col-sm-3 control-label">Upload File: </label>
+                            <div class="col-sm-9" >
+                                <input type="file" name="propagation_ids_file" id="propagation_ids_file" encoding="multipart/form-data" />
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button id="upload_propagation_ids_dismiss_button_1" name="upload_propagation_ids_dismiss_button" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary" name="upload_propagation_ids_submit" id="upload_propagation_ids_submit">Upload</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="propagation_ids_saved_dialog_message" name="propagation_ids_saved_dialog_message" tabindex="-1" role="dialog" aria-labelledby="propagationIdsSavedDialog">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="propagationIdsSavedDialog">Success</h4>
+            </div>
+            <div class="modal-body">
+                <div class="container-fluid">
+                    <p>
+                        <span class="ui-icon ui-icon-circle-check" style="float: left; margin: 0 7px 50px 0;"></span>
+                        The propagation ids were saved successfully.
+                    </p>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button id="dismiss_propagation_ids_saved_dialog" type="button" class="btn btn-default" data-dismiss="modal">Close & Reload</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="upload_propagation_ids_error_display" name="upload_propagation_ids_error_display" tabindex="-1" role="dialog" aria-labelledby="uploadPropagationIdsErrorDialog">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="uploadPropagationIdsErrorDialog">Upload Propagation Identifiers Error</h4>
+            </div>
+            <div class="modal-body">
+                <div class="container-fluid">
+                    <table>
+                        <tbody></tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="propagation_id_upload_spreadsheet_info_dialog" name="propagation_id_upload_spreadsheet_info_dialog" tabindex="-1" role="dialog" aria-labelledby="uploadPropagationIDInfoDialog">
+    <div class="modal-dialog modal-xl" role="document">
+        <div class="modal-content">
+            <div class="modal-header" style="text-align: center">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="uploadPropagationIDInfoDialog">Upload Template Information For Propagation Identifiers</h4>
+            </div>
+            <div class="modal-body">
+                <div class="container-fluid">
+                    <b>Header:</b>
+                    <br>
+                    The first row (header) must contain the <b>propagation_group_identifier</b>, <b>propagation_identifier</b>, <b>status_type</b>, <b>status_date</b>, <b>status_updated_by</b>. Additional information can be included by selecting optional column(s) (see below):
+                    <br/>
+                    <br>
+                    <table class="table table-hover table-bordered table-condensed" >
+                        <thead></thead>
+                        <tbody>
+                            <tr>
+                                <td>propagation_group_identifier</td>
+                                <td>propagation_identifier</td>
+                                <td>status_type</td>
+                                <td>status_date</td>
+                                <td>status_updated_by</td>
+                                <td>rootstock</td>
+                                <td>status_notes</td>
+                                <td>inventory_identifier</td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <b>Required fields:</b>
+                    <ul>
+                        <li>propagation_group_identifier (must exist in the database)</li>
+                        <li>propagation_identifier (must not exist in the database)</li>
+                        <li>status_type (must be one of the following:'in progress', 'inventoried', 'distributed', 'planted in trial', 'dead', 'disposed')</li>
+                        <li>status_date (must be in the <b>YYYY-MM-DD</b> format)</li>
+                        <li>status_updated_by (person name)</li>
+                    </ul>
+
+                    <b>Optional fields:</b>
+                    <ul>
+                        <li>rootstock (rootstock accession must exist in the database)</li>
+                        <li>status_notes</li>
+                        <li>inventory_identifier (must not exist in the database and must be globally unique. If any propagation_identifier has Inventoried status type, the propagation identifier and the derived inventory identifier can be uploaded at the same time)</li>
+                    </ul>
+                </div>
+                <& /help/file_upload_type.mas, type => "Propagation Identifiers", optional_column => 1 &>
+            </div>
+            <div class="modal-footer">
+                <button id="close_propagation_id_info_upload_dialog" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<script>
+
+jQuery(document).ready(function(){
+
+    jQuery('#upload_propagation_ids_link').click(function() {
+        jQuery("#upload_propagation_ids_dialog").modal("show");
+    });
+
+    jQuery('#upload_propagation_ids_spreadsheet_format_info').click(function(){
+        jQuery("#propagation_ids_upload_spreadsheet_info_dialog").modal("show");
+    });
+
+    jQuery("#upload_propagation_ids_submit").click(function(){
+        upload_propagation_ids();
+    });
+
+    function upload_propagation_ids() {
+        var uploadFile = jQuery("#propagation_ids_file").val();
+        if (uploadFile === '') {
+            alert("Please select a file");
+            return;
+        }
+
+        jQuery("#working_modal").modal("show");
+        jQuery.ajax({
+            url: "/ajax/propagation/upload_propagation_identifiers",
+            type: 'POST',
+            data: new FormData(jQuery("#upload_propagation_ids_form")[0]),
+            processData: false,
+            contentType: false,
+            success: function(response) {
+                jQuery("#working_modal").modal("hide");
+                if (response.error_string) {
+                    jQuery("#upload_propagation_ids_error_display tbody").html('');
+                    jQuery("#upload_propagation_ids_error_display tbody").append(response.error_string);
+                    jQuery("#upload_propagation_ids_error_display").modal("show");
+                    return;
+                }
+                if (response.error) {
+                    alert(response.error);
+                    return;
+                }
+                if (response.success) {
+                    jQuery("#upload_propagation_ids_dialog").modal("hide");
+                    jQuery('#propagation_ids_saved_dialog_message').modal("show");
+                }
+            }
+        });
+    };
+
+    jQuery("#dismiss_propagation_ids_saved_dialog").click(function(){
+        location.reload();
+    });
+
+    jQuery('#propagation_ids_upload_spreadsheet_format_info').click(function() {
+        jQuery("#propagation_id_upload_spreadsheet_info_dialog").modal("show");
+    });
+
+    jQuery("[name='upload_propagation_ids_dismiss_button']").click(function() {
+        jQuery('#upload_propagation_ids_dialog').modal('hide');
+        jQuery('#propagation_ids_file').val('');
+    });
+
+});
+
+</script>

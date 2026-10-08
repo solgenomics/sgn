@@ -1,0 +1,167 @@
+<%args>
+</%args>
+
+<%perl>
+</%perl>
+
+<& /util/import_css.mas, paths => ['leaflet.css'] &>
+<& /util/import_javascript.mas, classes => ['jquery', 'CXGN.Login', 'CXGN.BreedersToolbox.HTMLSelect', 'jquery.dataTables', 'jszip-min'], entries => ['environments'] &>
+
+<& /page/page_title.mas, title=>"Environment Stratification" &>
+
+<&| /page/info_section.mas, id=>"environment_stratification_input_section", title=>"Select Input Data", collapsible=>1, collapsed=>0 &>
+  <div id="environment_stratification_tool">
+    <div class="form-group form-inline">
+      <label for="environment_stratification_dataset_select">Available Datasets: </label>
+      <div id="environment_stratification_dataset_select"></div>
+      <br>
+      <button class="btn btn-primary" id="environment_stratification_select_dataset" type="button">Select Dataset</button>
+    </div>
+
+    <div class="form-group form-inline">
+      <label class="environment-stratification-select-label" for="environment_stratification_trait_select">Available Traits: </label>
+      <& /page/html_select.mas, name=>'environment_stratification_trait_select', id=>'environment_stratification_trait_select', params=>"class\=\"form-control input-sm environment-stratification-select-box\"", choices=>"" &>
+    </div>
+
+    <div class="form-group form-inline">
+      <input type="checkbox" id="environment_stratification_dataset_trait_outliers" />
+      <label for="environment_stratification_dataset_trait_outliers">Exclude dataset outliers</label>
+    </div>
+
+    <div class="form-group form-inline">
+      <label for="environment_stratification_alpha">Alpha: </label>
+      <input class="form-control input-sm" id="environment_stratification_alpha" type="number" min="0.0001" max="0.5" step="0.001" value="0.05" />
+    </div>
+
+    <div class="form-group">
+      <button class="btn btn-primary" id="environment_stratification_run" type="button">Run Environment Stratification</button>
+    </div>
+
+    <div id="environment_stratification_tempfile" style="display:none"></div>
+    <div id="environment_stratification_trait_summary"></div>
+  </div>
+</&>
+
+<&| /page/info_section.mas, title=>"Instructions", collapsible=>1, collapsed=>1 &>
+  <h5><b>Preparing Dataset:</b></h5>
+  <h5>1. Dataset must include trials, locations, accessions, and at least one numeric trait.</h5>
+  <h5>2. The selected trait must be measured in at least two environments.</h5>
+  <h5>3. Accessions shared across environments are used to test genotype-by-environment compatibility.</h5>
+  <h5>4. Environments are stratified when their GxE test is not significant at the selected alpha.</h5>
+</&>
+
+<&| /page/info_section.mas, id=>"environment_stratification_output_section", title=>"Output", collapsible=>1, collapsed=>0 &>
+  <div id="environment_stratification_message"></div>
+
+  <ul class="nav nav-tabs" id="environment_stratification_result_tabs">
+    <li class="active"><a data-toggle="tab" href="#environment_stratification_groups_tab">Groups</a></li>
+    <li><a data-toggle="tab" href="#environment_stratification_pairwise_tab">Pairwise Tests</a></li>
+    <li><a data-toggle="tab" href="#environment_stratification_anova_tab">ANOVA</a></li>
+    <li><a data-toggle="tab" href="#environment_stratification_ungrouped_tab">Ungrouped</a></li>
+  </ul>
+
+  <div class="tab-content environment-stratification-results">
+    <div id="environment_stratification_groups_tab" class="tab-pane fade in active">
+      <button class="btn btn-default environment-stratification-download" data-table="environment_stratification_groups_table" data-filename="environment_stratification_groups.xlsx" type="button">Download XLSX</button>
+      <div id="environment_stratification_groups"></div>
+    </div>
+    <div id="environment_stratification_pairwise_tab" class="tab-pane fade">
+      <button class="btn btn-default environment-stratification-download" data-table="environment_stratification_pairwise_table" data-filename="environment_stratification_pairwise.xlsx" type="button">Download XLSX</button>
+      <div id="environment_stratification_pairwise"></div>
+    </div>
+    <div id="environment_stratification_anova_tab" class="tab-pane fade">
+      <button class="btn btn-default environment-stratification-download" data-table="environment_stratification_anova_table" data-filename="environment_stratification_anova.xlsx" type="button">Download XLSX</button>
+      <div id="environment_stratification_anova"></div>
+    </div>
+    <div id="environment_stratification_ungrouped_tab" class="tab-pane fade">
+      <button class="btn btn-default environment-stratification-download" data-table="environment_stratification_ungrouped_table" data-filename="environment_stratification_ungrouped.xlsx" type="button">Download XLSX</button>
+      <div id="environment_stratification_ungrouped"></div>
+    </div>
+  </div>
+</&>
+
+<&| /page/info_section.mas, id=>"environment_stratification_map_section", title=>"Map", collapsible=>1, collapsed=>0 &>
+  <div id="environment_stratification_map_message"></div>
+  <div id="environment_stratification_map"></div>
+  <div id="environment_stratification_map_legend"></div>
+</&>
+
+<script>
+var require_login = "<% $c->get_conf('brapi_require_login') %>";
+var check_outliers = "<% $c->get_conf('exclude_phenotype_outliers') || 0 %>";
+
+if (require_login === '1') {
+  var auth_token = "<% CXGN::Login->new($c->dbc->dbh)->get_login_cookie() %>";
+  if (!auth_token) {
+    alert("Login required to use Environment Stratification");
+  }
+}
+
+if (parseInt(check_outliers) === 1) {
+  document.getElementById('environment_stratification_dataset_trait_outliers').checked = true;
+}
+
+jQuery(document).ready(function() {
+  window.jsMod['environments'].init("environment_stratification_tool");
+});
+</script>
+
+<style>
+  h1 {
+    display:none;
+  }
+
+  .environment-stratification-select-box {
+    width: 360px;
+    margin-right: 10px;
+  }
+
+  .environment-stratification-select-label {
+    width: 120px;
+    margin-right: 10px;
+    line-height: 32px;
+  }
+
+  .environment-stratification-results {
+    margin-top: 15px;
+  }
+
+  .environment-stratification-download {
+    margin-bottom: 10px;
+  }
+
+  #environment_stratification_message {
+    margin-bottom: 15px;
+  }
+
+  #environment_stratification_map {
+    height: 520px;
+    min-height: 520px;
+    width: 100%;
+    border: 1px solid #ddd;
+  }
+
+  #environment_stratification_map_legend {
+    margin-top: 10px;
+  }
+
+  .environment-stratification-map-legend-item {
+    display: inline-block;
+    margin-right: 18px;
+    margin-bottom: 6px;
+  }
+
+  .environment-stratification-map-swatch {
+    display: inline-block;
+    width: 13px;
+    height: 13px;
+    margin-right: 5px;
+    border: 1px solid #777;
+    vertical-align: middle;
+  }
+
+  #environment_stratification_trait_summary table,
+  #environment_stratification_output_section table {
+    width: 100%;
+  }
+</style>

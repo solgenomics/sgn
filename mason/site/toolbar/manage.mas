@@ -5,11 +5,14 @@
     <li><a href="/breeders/manage_programs/">Breeding Programs</a></li>
     <li><a href="/breeders/locations">Locations</a></li>
     <li><a href="/tools/report/">Report Factory</a></li>
+    <li><a href="/breeders/meeting/">Decision Meetings</a></li>
+
 
     <li role="separator" class="divider"></li>
     <li><a href="/breeders/accessions/">Accessions</a></li>
     <li><a href="/breeders/seedlots/">Seed Lots</a></li>
     <li><a href="/breeders/crosses/">Crosses</a></li>
+    <li><a href="/breeders/propagations/">Propagations</a></li>
 
     <li role="separator" class="divider"></li>
     <li><a href="/order/stocks/view">Order Stocks</a></li>
@@ -18,6 +21,7 @@
 
     <li role="separator" class="divider"></li>
     <li><a href="/breeders/trials/">Field Trials</a></li>
+    <li><a href="/tools/trialallocation">Trial Allocation</a></li>
     <li><a href="/fieldbook">Field Book App</a></li>
     <li><a href="/breeders/phenotyping/">Phenotyping</a></li>
     <li><a href="/barcode">Barcodes</a></li>
@@ -26,7 +30,7 @@
     <li role="separator" class="divider"></li>
     <li><a href="/breeders/genotyping_projects/">Genotyping Projects</a></li>
     <li><a href="/breeders/genotyping/">Genotyping Plates</a></li>
-    <li><a href="/breeders/markers/">Markerset</a></li>
+    <li><a href="/breeders/markers/">Marker Allele Lists</a></li>
 
     <li role="separator" class="divider"></li>
     <li><a href="/breeders/download">Download</a></li>
@@ -34,5 +38,9 @@
     <li><a href="/breeders/identifier_generation">Identifier Generation</a></li>
 <!--    <li><a href="/breeders/odk">ODK Data Collection</a></li>  -->
     <li><a href="/breeders/file_share_dump">File Share</a></li>
+
+    <li role="seperator" class="divider"></li>
+    <li><a href="/breeders/nirs">NIRS</a></li>
+    <li><a href="/breeders/transcriptomics">Transcriptomics</a></li>
   </ul>
 </li>

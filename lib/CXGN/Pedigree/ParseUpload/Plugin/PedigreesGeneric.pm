@@ -26,7 +26,8 @@ sub _validate_with_plugin {
             'female parent accession' => ['female_parent_accession', 'female_parent', 'female parent'],
             'type' => ['cross_type', 'cross type'],
             'male parent accession' => ['male_parent_accession', 'male_parent', 'male parent']
-        }
+        },
+        unique_only_columns => [ 'progeny name' ]
     );
     my $parsed = $parser->parse();
     my $parsed_errors = $parsed->{errors};

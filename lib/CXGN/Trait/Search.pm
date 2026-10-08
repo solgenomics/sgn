@@ -76,6 +76,11 @@ has 'trait_name_list' => (
     is => 'rw',
 );
 
+has 'trait_synonym_list' => (
+    isa => 'ArrayRef[Str]|Undef',
+    is =>'rw',
+);
+
 has 'trait_name_is_exact' => (
     isa => 'Bool|Undef',
     is => 'rw',
@@ -129,7 +134,9 @@ sub search {
     }
 
     if ($self->accession_list && scalar(@{$self->accession_list}) > 0){
-        $and_conditions{'dbxref.accession'} = { -in => $self->accession_list };
+        foreach my $term (@{$self->accession_list}) {
+            push @{$and_conditions{'dbxref.accession'}}, {'ilike' => '%' . $term . '%'};
+        }
     }
 
     if ($self->trait_definition_list && scalar(@{$self->trait_definition_list}) > 0){
@@ -138,6 +145,20 @@ sub search {
             my $match_string = join '%', @words;
             push @{$and_conditions{'me.definition'}}, {'ilike' => '%'.$match_string.'%'};
         }
+    }
+
+    if ($self->trait_synonym_list && scalar(@{$self->trait_synonym_list}) > 0){
+        my @synonym_conditions;
+
+        foreach (@{$self->trait_synonym_list}){
+            my @words = split "\s+", $_;
+            my $match_string = join '%', @words;
+
+            push @synonym_conditions, {
+                'cvtermsynonyms.synonym' => { 'ilike' => '%' . $match_string . '%' }
+            };
+        }
+        $and_conditions{'-or'} = \@synonym_conditions;
     }
 
     if ($self->trait_name_list && scalar(@{$self->trait_name_list}) > 0){
@@ -173,32 +194,73 @@ sub search {
         $where_join{'type.name'} = 'VARIABLE_OF';
     }
 
-    my $trait_rs = $schema->resultset("Cv::Cvterm")->search(
-        \%and_conditions, 
+    my @joins = ({'cvterm_relationship_subjects' => 'type'}, {'dbxref' => 'db'});
+
+    if ($self->trait_synonym_list && @{$self->trait_synonym_list}) {
+        push @joins, 'cvtermsynonyms';
+    }
+
+    my @filter_joins = (
+        {'cvterm_relationship_subjects' => 'type'},
+        {'dbxref' => 'db'}
+    );
+
+    # Add cvtermsynonyms to filter join only if searching by synonym
+    if ($self->trait_synonym_list && scalar(@{$self->trait_synonym_list}) > 0) {
+        push @filter_joins, 'cvtermsynonyms';
+    }
+
+    # Get correct total count
+    my $records_total = $schema->resultset("Cv::Cvterm")->search(
+        \%and_conditions,
         {
-            join => [{'cvterm_relationship_subjects' => 'type'}, {'dbxref' => 'db'} ],
-            where => \%where_join,
-            order_by => { '-asc' => $order_by },
-            '+select' => ['db.name', 'dbxref.accession', 'type.name'],
-            '+as' => ['db_name', 'db_accession', 'cvterm_relationship_name'],
+            join     => \@filter_joins,
+            where    => \%where_join,
             distinct => 1
+        }
+    )->count();
+
+    # Get correct page of unique trait_ids
+    my $limit = $self->limit;
+    my $offset = $self->offset;
+
+    my $id_rs = $schema->resultset("Cv::Cvterm")->search(
+        \%and_conditions,
+        {
+            join     => \@filter_joins,
+            where    => \%where_join,
+            columns  => ['me.cvterm_id'],
+            distinct => 1,
+            order_by => { '-asc' => 'me.name' },
         }
     );
 
-    my @result;
-    my %traits = ();
-
-    my $limit = $self->limit;
-    my $offset = $self->offset;
-    my $records_total = $trait_rs->count();
-    if (defined($limit) && defined($offset)){
-        $trait_rs = $trait_rs->slice($offset, $limit);
+    if (defined($limit) && defined($offset)) {
+        $id_rs = $id_rs->slice($offset, $limit);
     }
 
+    my @paged_ids = $id_rs->get_column('me.cvterm_id')->all();
+
+    if (!@paged_ids) {
+        return ([], $records_total);
+    }
+
+    # Fetch full trait data WITH synonyms for paged ids only
+    my $trait_rs = $schema->resultset("Cv::Cvterm")->search(
+        { 'me.cvterm_id' => { '-in' => \@paged_ids } },
+        {
+            join => [ {'cvterm_relationship_subjects' => 'type'}, {'dbxref' => 'db'}, 'cvtermsynonyms' ],
+            '+select' => [ 'db.name', 'dbxref.accession', 'type.name', 'cvtermsynonyms.synonym' ],
+            '+as' => [ 'db_name', 'db_accession', 'cvterm_relationship_name', 'synonym' ],
+            order_by => { '-asc' => 'me.name' },
+        }
+    );
+    my @result;
     while ( my $t = $trait_rs->next() ) {
         push @result, {
             trait_id => $t->cvterm_id,
             trait_name => $t->name,
+            synonym => $t->get_column('synonym'),
             trait_definition => $t->definition,
             db_name => $t->get_column('db_name'),
             accession=> $t->get_column('db_accession'),

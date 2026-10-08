@@ -17,7 +17,7 @@ use File::Temp;
 use CXGN::Trial::TrialLayout;
 use Try::Tiny;
 use File::Basename qw | basename dirname|;
-use File::Spec::Functions;
+use File::Spec;
 use CXGN::People::Roles;
 use CXGN::Trial::TrialLayout;
 use CXGN::Genotype::Search;
@@ -194,6 +194,53 @@ sub manage_tissue_samples : Path("/breeders/samples") Args(0) {
     $c->stash->{sampling_facilities} = \@sampling_facilities;
     $c->stash->{user_id} = $c->user()->get_object()->get_sp_person_id();
     $c->stash->{template} = '/breeders_toolbox/manage_samples.mas';
+}
+
+sub index :Path('/breeders/meeting') :Args(0) {
+  my $self = shift;
+  my $c = shift;
+  if (! $c->user) {
+    $c->res->redirect(uri( path => '/user/login', query => { goto_url => $c->req->uri->path_query } ) );
+    return;
+  }
+
+  my $raw_decision_role = $c->config->{decision_role};
+  my $decision_role_conf = '';
+
+  if (ref($raw_decision_role) eq 'ARRAY') {
+    $decision_role_conf = defined($raw_decision_role->[0]) ? $raw_decision_role->[0] : '';
+  }
+  else {
+    $decision_role_conf = $raw_decision_role // '';
+  }
+
+  my @allowed_roles = grep { $_ ne '' }
+    map {
+      my $x = $_ // '';
+      $x =~ s/^\s+|\s+$//g;
+      $x;
+    }
+    split(/\s*,\s*/, $decision_role_conf);
+
+  my %allowed = map { $_ => 1 } @allowed_roles;
+  my $can_access = 0;
+
+  foreach my $role ($c->user->roles) {
+    if ($allowed{$role}) {
+      $can_access = 1;
+      last;
+    }
+  }
+
+  if (!$can_access) {
+    $c->res->status(403);
+    $c->res->content_type('text/plain; charset=utf-8');
+    $c->res->body('You are not authorized to access the decision meeting page.');
+    return;
+  }
+
+  $c->stash->{template} = '/breeders_toolbox/decision_meeting.mas';
+  
 }
 
 
@@ -511,7 +558,7 @@ sub manage_phenotyping_download : Path("/breeders/phenotyping/download") Args(1)
 
     my $metadata_schema = $c->dbic_schema('CXGN::Metadata::Schema');
     my $file_row = $metadata_schema->resultset("MdFiles")->find({file_id => $file_id});
-    my $file_destination =  catfile($file_row->dirname, $file_row->basename);
+    my $file_destination =  File::Spec->catfile($file_row->dirname, $file_row->basename);
     #print STDERR "\n\n\nfile name:".$file_row->basename."\n";
     my $contents = read_file($file_destination);
     my $file_name = $file_row->basename;
@@ -527,7 +574,7 @@ sub manage_phenotyping_view : Path("/breeders/phenotyping/view") Args(1) {
 
     my $metadata_schema = $c->dbic_schema('CXGN::Metadata::Schema');
     my $file_row = $metadata_schema->resultset("MdFiles")->find({file_id => $file_id});
-    my $file_destination =  catfile($file_row->dirname, $file_row->basename);
+    my $file_destination =  File::Spec->catfile($file_row->dirname, $file_row->basename);
     #print STDERR "\n\n\nfile name:".$file_row->basename."\n";
     my @contents = ReadData ($file_destination);
     #print STDERR Dumper \@contents;
@@ -1047,6 +1094,51 @@ sub manage_activities : Path("/breeders/activities") Args(0) {
 
 }
 
+
+sub manage_propagations : Path("/breeders/propagations") Args(0) {
+    my $self = shift;
+    my $c = shift;
+
+    if (!$c->user()) {
+
+	# redirect to login page
+	#
+	$c->res->redirect( uri( path => '/user/login', query => { goto_url => $c->req->uri->path_query } ) );
+	return;
+    }
+    my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
+    my $bp = CXGN::BreedersToolbox::Projects->new({ schema=>$schema });
+    my $breeding_programs = $bp->get_breeding_programs();
+
+
+    $c->stash->{user_id} = $c->user()->get_object()->get_sp_person_id();
+
+    my $transformation = CXGN::BreedersToolbox::Projects->new({ schema=>$schema });
+
+    my @breeding_programs = @$breeding_programs;
+    my @roles = $c->user->roles();
+
+    foreach my $role (@roles) {
+        for (my $i=0; $i < scalar @breeding_programs; $i++) {
+            if ($role eq $breeding_programs[$i][1]){
+                $breeding_programs[$i][3] = 1;
+            } else {
+                $breeding_programs[$i][3] = 0;
+            }
+        }
+    }
+
+    my $locations = $transformation->get_all_locations_by_breeding_program();
+
+    $c->stash->{locations} = $locations;
+
+    $c->stash->{programs} = \@breeding_programs;
+
+    $c->stash->{roles} = $c->user()->roles();
+
+    $c->stash->{template} = '/propagation/manage_propagation.mas';
+
+}
 
 
 1;

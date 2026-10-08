@@ -1,0 +1,51 @@
+<%args>
+
+$trial_id => undef
+$trial_name => undef
+
+</%args>
+
+<!-- analysis tools on saved measurements -->
+<& /breeders_toolbox/trial/saved_measurement_analysis.mas,
+    trial_id => $trial_id
+&>
+
+<!-- Phenotypic correlation analysis -->
+<& /solgs/tools/correlation/analysis.mas,
+    corr_pop_id   => $trial_id,
+    corr_pop_name => $trial_name
+&>
+
+<& /solgs/tools/anova/analysis.mas,
+    trial_id => $trial_id
+&>
+
+<!-- Population structure analysis PCA -->
+<& /solgs/tools/pca/analysis.mas,
+    trial_id => $trial_id
+&>
+
+<!-- Clustering -->
+<& /solgs/tools/cluster/analysis.mas,
+    trial_id => $trial_id
+&>
+
+<!-- kinship and inbreeding -->
+<& /solgs/tools/kinship/analysis.mas,
+    trial_id => $trial_id
+&>
+
+<& /tools/heritability/heritability.mas,
+    trial_id => $trial_id
+&>
+
+<& /solgs/population/trait_acronyms.mas,
+    trial_id => $trial_id
+&>
+
+% if ($c->req->base =~ /sweetpotatobase/) {
+    <& /tools/qualityControl/qualityControl.mas,
+        trial_id => $trial_id
+    &>
+% }
+

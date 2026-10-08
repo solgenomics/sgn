@@ -8,8 +8,8 @@ use Array::Utils qw(:all);
 use Cache::File;
 use Carp qw/ carp confess croak /;
 use CXGN::Tools::Run;
-use File::Path qw / mkpath  /;
-use File::Spec::Functions qw / catfile catdir/;
+use File::Path qw /make_path/;
+use File::Spec;
 use File::Temp qw / tempfile tempdir /;
 use File::Slurp qw /write_file read_file/;
 use File::Copy;
@@ -18,7 +18,7 @@ use JSON;
 use List::MoreUtils qw /uniq/;
 use Scalar::Util qw /weaken reftype/;
 use Storable qw/ nstore retrieve /;
-use String::CRC;
+use String::CRC32;
 use Try::Tiny;
 use URI::FromHash 'uri';
 
@@ -463,7 +463,7 @@ sub combine_populations : Path('/solgs/combine/populations/trait') Args() {
     my $ret->{status} = 0;
 
     if ( scalar(@pop_ids) > 1 ) {
-        $combo_pops_id                = crc( join( '', @pop_ids ) );
+        $combo_pops_id                = crc32( join( '', @pop_ids ) );
         $c->stash->{combo_pops_id}    = $combo_pops_id;
         $c->stash->{trait_combo_pops} = $ids;
 
@@ -632,7 +632,7 @@ sub multi_pops_pheno_files {
 
     if ($trait_id) {
         my $name     = "trait_${trait_id}_multi_pheno_files";
-        my $temp_dir = $c->stash->{solgs_tempfiles_dir};
+        my $temp_dir = $c->controller('solGS::Files')->solgs_tempfiles_dir($c);
         my $tempfile =
           $c->controller('solGS::Files')->create_tempfile( $temp_dir, $name );
         write_file( $tempfile, { binmode => ':utf8' }, $files );
@@ -665,7 +665,7 @@ sub multi_pops_geno_files {
 
     if ($trait_id) {
         my $name     = "trait_${trait_id}_multi_geno_files";
-        my $temp_dir = $c->stash->{solgs_tempfiles_dir};
+        my $temp_dir = $c->controller('solGS::Files')->solgs_tempfiles_dir($c);
         my $tempfile =
           $c->controller('solGS::Files')->create_tempfile( $temp_dir, $name );
         write_file( $tempfile, { binmode => ':utf8' }, $files );
@@ -720,11 +720,14 @@ sub multi_pops_genotype_data {
 sub combined_pops_catalogue_file {
     my ( $self, $c ) = @_;
 
+    my $combo_pops_id = $c->stash->{combo_pops_id} || $c->stash->{training_pop_id};
+    my $cache_dir = $c->controller('solGS::Files')->solgs_cache_dir($c, $combo_pops_id);
+    
     my $cache_data = {
         key       => 'combined_pops_catalogue_file',
         file      => 'combined_pops_catalogue_file',
         stash_key => 'combined_pops_catalogue_file',
-        cache_dir => $c->stash->{solgs_cache_dir}
+        cache_dir => $cache_dir
     };
 
     $c->controller('solGS::Files')->cache_file( $c, $cache_data );
@@ -755,8 +758,10 @@ sub catalogue_combined_pops {
         write_file( $file, { binmode => ':utf8' }, ( $header, $entry ) );
     }
     else {
-        my (@entries) = map { $_ =~ s/\n// ? $_ : undef }
-          read_file( $file, { binmode => ':utf8' } );
+        my @entries;
+        for my $line ( read_file($file, { binmode => ':utf8' }) ) {
+            push @entries, $line =~ s/\n// ? $line : undef;
+        }
         my @intersect = intersect( @entry, @entries );
         unless (@intersect) {
             write_file(
@@ -990,8 +995,7 @@ sub predict_selection_pop_combined_pops_model {
     $c->stash->{training_pop_id} = $training_pop_id;
     $c->stash->{pop_id}          = $training_pop_id;
 
-    my @selected_traits = @{ $c->stash->{training_traits_ids} }
-      if $c->stash->{training_traits_ids};
+    my @selected_traits = $c->stash->{training_traits_ids} ? @{ $c->stash->{training_traits_ids} } : ();
 
     $c->controller('solGS::solGS')->traits_with_valid_models($c);
     my @traits_with_valid_models =
@@ -1048,9 +1052,15 @@ sub combine_trait_data {
     my $combined_pops_pheno_file = $c->stash->{trait_combined_pheno_file};
     my $combined_pops_geno_file  = $c->stash->{trait_combined_geno_file};
 
-    my $geno_cnt = ( split( /\s+/, qx / wc -l $combined_pops_geno_file / ) )[0];
-    my $pheno_cnt =
-      ( split( /\s+/, qx / wc -l $combined_pops_pheno_file / ) )[0];
+    my $geno_cnt = 0;
+    open(my $fh_geno, "<", $combined_pops_geno_file) or die "can't open $combined_pops_geno_file: $!";
+    $geno_cnt++ while <$fh_geno>;
+    close $fh_geno;
+
+    my $pheno_cnt = 0;
+    open(my $fh_pheno, "<", $combined_pops_pheno_file) or die "can't open $combined_pops_pheno_file: $!";
+    $pheno_cnt++ while <$fh_pheno>;
+    close $fh_pheno;
 
     unless ( $geno_cnt > 10 && $pheno_cnt > 10 ) {
         $self->get_combined_pops_list($c);
@@ -1100,7 +1110,7 @@ sub r_combine_populations_args {
     my $temp_file_template = $c->stash->{combine_r_temp_file};
     my $r_script           = 'R/solGS/combine_populations.r';
 
-    my $temp_dir       = $c->stash->{solgs_tempfiles_dir};
+    my $temp_dir       = $c->controller('solGS::Files')->solgs_tempfiles_dir($c);
     my $background_job = $c->stash->{background_job};
 
     my $cluster_files = $c->controller('solGS::AsyncJob')
@@ -1170,7 +1180,7 @@ sub get_combine_populations_args_file {
         $preq_jobs = $combine_jobs;
     }
 
-    my $temp_dir  = $c->stash->{solgs_tempfiles_dir};
+    my $temp_dir  = $c->controller('solGS::Files')->solgs_tempfiles_dir($c);
     my $args_file = $c->controller('solGS::Files')
       ->create_tempfile( $temp_dir, 'combine_pops_args_file' );
 
@@ -1195,7 +1205,7 @@ sub combined_pops_gs_input_files {
     my $model_info_file = $c->stash->{model_info_file};
 
     my $trait_abbr   = $c->stash->{trait_abbr};
-    my $temp_dir     = $c->stash->{solgs_tempfiles_dir};
+    my $temp_dir     = $c->controller('solGS::Files')->solgs_tempfiles_dir($c);
     my $dataset_file = $c->controller('solGS::Files')
       ->create_tempfile( $temp_dir, "dataset_info_${trait_abbr}" );
     write_file( $dataset_file, { binmode => ':utf8' }, 'combined_populations' );
@@ -1418,7 +1428,7 @@ sub combine_trait_data_input {
     $c->controller('solGS::Files')->model_info_file($c);
     my $model_info_file = $c->stash->{model_info_file};
 
-    $c->stash->{cache_dir} = $c->stash->{solgs_cache_dir};
+    $c->stash->{cache_dir} = $c->controller('solGS::Files')->solgs_cache_dir($c, $combo_pops_id);
     $c->controller('solGS::Files')->analysis_report_file($c);
     my $analysis_type = $c->stash->{analysis_type};
     $analysis_type =~ s/\s+/_/g;
@@ -1433,7 +1443,7 @@ sub combine_trait_data_input {
         $combined_pops_pheno_file, $combined_pops_geno_file,
         $trait_raw_phenodatafile,  $analysis_report_file );
 
-    my $temp_dir = $c->stash->{solgs_tempfiles_dir};
+    my $temp_dir = $c->controller('solGS::Files')->solgs_tempfiles_dir($c);
     my $tempfile_input =
       $c->controller('solGS::Files')
       ->create_tempfile( $temp_dir,
@@ -1473,7 +1483,7 @@ sub create_combined_pops_id {
     my ( $self, $c ) = @_;
 
     $c->stash->{combo_pops_id} =
-      crc( join( '', @{ $c->stash->{pops_ids_list} } ) );
+      crc32( join( '', @{ $c->stash->{pops_ids_list} } ) );
 
 }
 

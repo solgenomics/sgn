@@ -11,6 +11,8 @@ use SGN::Model::Cvterm;
 use CXGN::List::Validate;
 use CXGN::List;
 use CXGN::Stock::Seedlot;
+use CXGN::Stock::CompileCatalogItems;
+use Sort::Key::Natural qw(natkeysort);
 
 BEGIN { extends 'Catalyst::Controller::REST' }
 
@@ -323,40 +325,103 @@ sub get_catalog :Path('/ajax/catalog/items') :Args(0) {
     my $self = shift;
     my $c = shift;
     my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
+    my $dbh = $c->dbc->dbh;
+
+    my $catalog_criteria = $c->config->{catalog_criteria};
+    my @catalog_info = split(/:/,$catalog_criteria);
+    my $catalog_stock_type = $catalog_info[0];
+    my $catalog_stock_property = $catalog_info[1];
+    my $catalog_stock_property_value = $catalog_info[2];
+    my $item_type = $c->req->param('item_type');
+    my $vector_construct = $c->req->param('vector_construct');
+    if ($vector_construct eq '') {
+        $vector_construct = undef;
+    }
     my @catalog_items;
+    my %return;
 
-    my $catalog_obj = CXGN::Stock::Catalog->new({ bcs_schema => $schema});
-    my $catalog_ref = $catalog_obj->get_catalog_items();
-#    print STDERR "ITEM RESULTS =".Dumper($catalog_ref)."\n";
-    my @catalog_list = @$catalog_ref;
-    foreach my $catalog_item (@catalog_list) {
-        my @item_details = ();
-        @item_details = @$catalog_item;
-        my $item_id = shift @item_details;
-        my $stock_rs = $schema->resultset("Stock::Stock")->find({stock_id => $item_id });
-        my $item_name = $stock_rs->uniquename();
+    if ($catalog_stock_property eq 'transgenic') {
+        my $catalog_obj = CXGN::Stock::CompileCatalogItems->new({schema => $schema, dbh => $dbh, catalog_stock_type => $catalog_stock_type, catalog_stock_property => $catalog_stock_property, catalog_stock_property_value => $catalog_stock_property_value, vector_construct => $vector_construct});
+        if ($item_type eq 'all') {
+            my $results_specified_items = $catalog_obj->compile_specified_catalog_items();
+            my @sorted_specified_items = natkeysort {($_->[1])} @$results_specified_items;
+            foreach my $item (@sorted_specified_items) {
+                my $item_id = $item->[0];
+                my $item_name = $item->[1];
+                my $species = $item->[2];
+                push @catalog_items, [ qq{<a href="/stock/$item_id/view">$item_name</a>}, '', '', $species, "<input type='checkbox' name='catalog_item_select' value=$item_name>"]
+            }
+            my $results_based_on_type = $catalog_obj->compile_catalog_items_based_on_type();
+            my @sorted_items_based_on_type = natkeysort {($_->[1])} @$results_based_on_type;
+            foreach my $item (@sorted_items_based_on_type) {
+                my $item_id = $item->[0];
+                my $item_name = $item->[1];
+                my $plant_id = $item->[2];
+                my $plant_name = $item->[3];
+                my $vector_id = $item->[4];
+                my $vector_name = $item->[5];
+                my $species = $item->[6];
 
-        my $program_id = $item_details[7];
-        my $program_rs = $schema->resultset('Project::Project')->find({project_id => $program_id});
-        my $program_name = $program_rs->name();
-        my $availability = $item_details[8];
-        if (!defined $availability) {
-            $availability = 'available';
+                push @catalog_items, [ qq{<a href="/stock/$item_id/view">$item_name</a>},  qq{<a href="/stock/$vector_id/view">$vector_name</a>},  qq{<a href="/stock/$plant_id/view">$plant_name</a>}, $species, "<input type='checkbox' name='catalog_item_select' value=$item_name>"]
+            }
+        } elsif ($item_type eq 'wild_type') {
+            my $results_specified_items = $catalog_obj->compile_specified_catalog_items();
+            my @sorted_specified_items = natkeysort {($_->[1])} @$results_specified_items;
+            foreach my $item (@sorted_specified_items) {
+                my $item_id = $item->[0];
+                my $item_name = $item->[1];
+                my $species = $item->[2];
+                push @catalog_items, [ qq{<a href="/stock/$item_id/view">$item_name</a>}, '', '', $species, "<input type='checkbox' name='catalog_item_select' value=$item_name>"]
+            }
+        } elsif (($item_type eq 'transgenic') || (defined $vector_construct)) {
+            my $results_based_on_type = $catalog_obj->compile_catalog_items_based_on_type();
+            my @sorted_items_based_on_type = natkeysort {($_->[1])} @$results_based_on_type;
+            foreach my $item (@sorted_items_based_on_type) {
+                my $item_id = $item->[0];
+                my $item_name = $item->[1];
+                my $plant_id = $item->[2];
+                my $plant_name = $item->[3];
+                my $vector_id = $item->[4];
+                my $vector_name = $item->[5];
+                my $species = $item->[6];
+
+                push @catalog_items, [ qq{<a href="/stock/$item_id/view">$item_name</a>},  qq{<a href="/stock/$vector_id/view">$vector_name</a>},  qq{<a href="/stock/$plant_id/view">$plant_name</a>}, $species, "<input type='checkbox' name='catalog_item_select' value=$item_name>"]
+            }
         }
+    } else {
 
-        push @catalog_items, {
-            item_id => $item_id,
-            item_name => $item_name,
-            item_type => $item_details[0],
-            species => $item_details[1],
-            variety => $item_details[2],
-            material_type => $item_details[3],
-            category => $item_details[4],
-            material_source => $item_details[5],
-            additional_info => $item_details[6],
-            breeding_program => $program_name,
-            availability => $availability
-        };
+        my $catalog_obj = CXGN::Stock::Catalog->new({ bcs_schema => $schema});
+        my $catalog_ref = $catalog_obj->get_catalog_items();
+        my @catalog_list = @$catalog_ref;
+        foreach my $catalog_item (@catalog_list) {
+            my @item_details = ();
+            @item_details = @$catalog_item;
+            my $item_id = shift @item_details;
+            my $stock_rs = $schema->resultset("Stock::Stock")->find({stock_id => $item_id });
+            my $item_name = $stock_rs->uniquename();
+
+            my $program_id = $item_details[7];
+            my $program_rs = $schema->resultset('Project::Project')->find({project_id => $program_id});
+            my $program_name = $program_rs->name();
+            my $availability = $item_details[8];
+            if (!defined $availability) {
+                $availability = 'available';
+            }
+
+            push @catalog_items, {
+                item_id => $item_id,
+                item_name => $item_name,
+                item_type => $item_details[0],
+                species => $item_details[1],
+                variety => $item_details[2],
+                material_type => $item_details[3],
+                category => $item_details[4],
+                material_source => $item_details[5],
+                additional_info => $item_details[6],
+                breeding_program => $program_name,
+                availability => $availability
+            };
+        }
     }
 
     $c->stash->{rest} = {data => \@catalog_items};

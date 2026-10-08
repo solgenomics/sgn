@@ -2,7 +2,7 @@
 # indicator is the field that is used to test for form submission
 indicator: submit
 # Start listing the form elements
-action: update
+action: primer3/update
 elements:
 
     - type: Block
@@ -21,14 +21,23 @@ elements:
                       label: "Paste source sequence below (5'->3', string of ACGTNacgtn -- other letters treated as N -- numbers and blanks ignored). FASTA format ok. Please N-out undesirable sequence (vector, ALUs, LINEs, etc.) or use a Mispriming Library (repeat library):"
                       name: PRIMER_MISPRIMING_LIBRARY
                       attributes:
-                          title: "This selection indicates what mispriming library (if any) Primer3 should use to screen for interspersed repeats or for other sequence to avoid as a location for primers. The human and rodent libraries on the web page are adapted from Repbase (J. Jurka, A.F.A. Smit, C. Pethiyagoda, et al., 1995-1996) ftp://ftp.ncbi.nih.gov/repository/repbase). The human library is humrep.ref concatenated with simple.ref, translated to FASTA format. There are two rodent libraries. One is rodrep.ref translated to FASTA format, and the other is rodrep.ref concatenated with simple.ref, translated to FASTA format.
+                          title: >-
+                            This selection indicates what mispriming library (if any) Primer3 should use to screen for interspersed repeats or for
+                            other sequence to avoid as a location for primers. The human and rodent libraries on the web page are adapted from Repbase
+                            (J. Jurka, A.F.A. Smit, C. Pethiyagoda, et al., 1995-1996) ftp://ftp.ncbi.nih.gov/repository/repbase). The human library
+                            is humrep.ref concatenated with simple.ref, translated to FASTA format. There are two rodent libraries. One is rodrep.ref
+                            translated to FASTA format, and the other is rodrep.ref concatenated with simple.ref, translated to FASTA format.
 
-The Drosophila library is the concatenation of two libraries from the Berkeley Drosophila Genome Project:
+                            The Drosophila library is the concatenation of two libraries from the Berkeley Drosophila Genome Project:
 
-    1. A library of transposable elements The transposable elements of the Drosophila melanogaster euchromatin - a genomics perspective J.S. Kaminker, C.M. Bergman, B. Kronmiller, J. Carlson, R. Svirskas, S. Patel, E. Frise, D.A. Wheeler, S.E. Lewis, G.M. Rubin, M. Ashburner and S.E. Celniker Genome Biology (2002) 3(12):research0084.1-0084.20, http://www.fruitfly.org/p_disrupt/datasets/ASHBURNER/D_mel_transposon_sequence_set.fasta
+                            1. A library of transposable elements The transposable elements of the Drosophila melanogaster euchromatin - a genomics
+                            perspective J.S. Kaminker, C.M. Bergman, B. Kronmiller, J. Carlson, R. Svirskas, S. Patel, E. Frise, D.A. Wheeler, S.E.
+                            Lewis, G.M. Rubin, M. Ashburner and S.E. Celniker Genome Biology (2002) 3(12):research0084.1-0084.20,
+                            http://www.fruitfly.org/p_disrupt/datasets/ASHBURNER/D_mel_transposon_sequence_set.fasta
 
-    2. A library of repetitive DNA sequences http://www.fruitfly.org/sequence/sequence_db/na_re.dros. "
-                      options: 
+                            2. A library of repetitive DNA sequences http://www.fruitfly.org/sequence/sequence_db/na_re.dros.
+
+                      options:
                         - [ '', 'NONE' ]
                         - [ 'static/documents/primer3-libraries/human.txt', 'HUMAN' ]
                         - [ 'static/documents/primer3-libraries/rodent_and_simple.txt', 'RODENT_AND_SIMPLE' ]
@@ -45,7 +54,7 @@ The Drosophila library is the concatenation of two libraries from the Berkeley D
                       name: SEQUENCE_TEMPLATE
                       cols: 100
                       rows: 10
-     
+
 
 
 
@@ -66,11 +75,11 @@ The Drosophila library is the concatenation of two libraries from the Berkeley D
                   elements:
                     - type: Checkbox
                       name: PRIMER_PICK_LEFT_PRIMER
-                      label: "Pick left primer, or use left primer below:" 
+                      label: "Pick left primer, or use left primer below:"
                       default: 1
                 - type: Block
                   tag: td
-                  elements: 
+                  elements:
                     - type: Checkbox
                       name: PRIMER_PICK_INTERNAL_OLIGO
                       label: "Pick hybridization probe (internal oligo), or use oligo below:"
@@ -91,21 +100,21 @@ The Drosophila library is the concatenation of two libraries from the Berkeley D
                     - type: Text
                       name: SEQUENCE_PRIMER
                       attributes:
-                          size: 30                    
+                          size: 30
                 - type: Block
                   tag: td
-                  elements: 
+                  elements:
                     - type: Text
                       name: SEQUENCE_INTERNAL_OLIGO
                       attributes:
-                          size: 30   
+                          size: 30
                 - type: Block
                   tag: td
                   elements:
                     - type: Text
                       name: SEQUENCE_PRIMER_REVCOMP
                       attributes:
-                          size: 30   
+                          size: 30
 
 
 ###### Sequence ID, Targets, Excluded Regions Table ######
@@ -115,7 +124,7 @@ The Drosophila library is the concatenation of two libraries from the Berkeley D
       elements:
         - type: Block
           tag: table
-          elements:  
+          elements:
             - type: Block
               tag: tr
               elements:
@@ -128,7 +137,7 @@ The Drosophila library is the concatenation of two libraries from the Berkeley D
                           title: An identifier that is reproduced in the output to enable you to identify the chosen primers.
                 - type: Block
                   tag: td
-                  elements: 
+                  elements:
                     - type: Text
                       name: SEQUENCE_ID
                 - type: Block
@@ -152,9 +161,9 @@ start,length
 pairs where start is the index of the first base of a Target, and length is its length."
                 - type: Block
                   tag: td
-                  elements: 
+                  elements:
                     - type: Text
-                      name: SEQUENCE_TARGET 
+                      name: SEQUENCE_TARGET
                 - type: Block
                   tag: td
                   elements:
@@ -176,9 +185,9 @@ start,length
 pairs where start is the index of the first base of the excluded region, and length is its length. This tag is useful for tasks such as excluding regions of low sequence quality or for excluding regions containing repetitive elements such as ALUs or LINEs."
                 - type: Block
                   tag: td
-                  elements: 
+                  elements:
                     - type: Text
-                      name: SEQUENCE_EXCLUDED_REGION 
+                      name: SEQUENCE_EXCLUDED_REGION
                 - type: Block
                   tag: td
                   elements:
@@ -207,7 +216,7 @@ pairs where start is the index of the first base of the excluded region, and len
 Primer3 first tries to pick primers in the first range. If that is not possible, it goes to the next range and tries again. It continues in this way until it has either picked all necessary primers or until there are no more ranges. For technical reasons this option makes much lighter computational demands than the Product Size option."
                 - type: Block
                   tag: td
-                  elements: 
+                  elements:
                     - type: Text
                       name: PRIMER_PRODUCT_SIZE_RANGE
                       default: 100-300
@@ -236,7 +245,7 @@ Primer3 first tries to pick primers in the first range. If that is not possible,
                           title: "The maximum number of primer pairs to return. Primer pairs returned are sorted by their 'quality', in other words by the value of the objective function (where a lower number indicates a better primer pair). Caution: setting this parameter to a large value will increase running time."
                 - type: Block
                   tag: td
-                  elements: 
+                  elements:
                     - type: Text
                       name: PRIMER_NUM_RETURN
                       default: 5
@@ -265,7 +274,7 @@ Primer3 first tries to pick primers in the first range. If that is not possible,
                           title: "The maximum allowed weighted similarity with any sequence in Mispriming Library. Default is 12."
                 - type: Block
                   tag: td
-                  elements: 
+                  elements:
                     - type: Text
                       name: PRIMER_MAX_LIBRARY_MISPRIMING
                       default: 12.00
@@ -289,12 +298,12 @@ Primer3 first tries to pick primers in the first range. If that is not possible,
                   tag: td style="color:blue;"
                   elements:
                     - type: Block
-                      content: "Max Template Mispriming: " 
+                      content: "Max Template Mispriming: "
                       attributes:
-                          title: "The maximum allowed similarity to ectopic sites in the sequence from which you are designing the primers. The scoring system is the same as used for Max Mispriming, except that an ambiguity code is never treated as a consensus." 
+                          title: "The maximum allowed similarity to ectopic sites in the sequence from which you are designing the primers. The scoring system is the same as used for Max Mispriming, except that an ambiguity code is never treated as a consensus."
                 - type: Block
                   tag: td
-                  elements: 
+                  elements:
                     - type: Text
                       name: PRIMER_MAX_TEMPLATE_MISPRIMING
                       default: 12.00
@@ -340,7 +349,7 @@ Primer3 first tries to pick primers in the first range. If that is not possible,
                           title: "Minimum, Optimum, and Maximum lengths (in bases) of a primer oligo. Primer3 will not pick primers shorter than Min or longer than Max, and with default arguments will attempt to pick primers close with size close to Opt. Min cannot be smaller than 1. Max cannot be larger than 36. (This limit is governed by maximum oligo size for which melting-temperature calculations are valid.) Min cannot be greater than Max."
                 - type: Block
                   tag: td
-                  elements: 
+                  elements:
                     - type: Text
                       name: PRIMER_MIN_SIZE
                       label: Min
@@ -379,7 +388,7 @@ Primer3 first tries to pick primers in the first range. If that is not possible,
 By default Primer3 uses the oligo melting temperature formula and the table of thermodynamic parameters given in Breslauer et al. 1986, DOI:10.1073/pnas.83.11.3746 For more information see caption Table of thermodynamic parameters"
                 - type: Block
                   tag: td
-                  elements: 
+                  elements:
                     - type: Text
                       name: PRIMER_MIN_TM
                       label: Min
@@ -432,19 +441,19 @@ By default Primer3 uses the oligo melting temperature formula and the table of t
 
 The maximum allowed melting temperature of the amplicon. Primer3 calculates product Tm calculated using the formula from Bolton and McCarthy, PNAS 84:1390 (1962) as presented in Sambrook, Fritsch and Maniatis, Molecular Cloning, p 11.46 (1989, CSHL Press).
 
-    Tm = 81.5 + 16.6(log10([Na+])) + .41*(%GC) - 600/length, 
+    Tm = 81.5 + 16.6(log10([Na+])) + .41*(%GC) - 600/length,
 
 where [Na+] is the molar sodium concentration, (%GC) is the percent of Gs and Cs in the sequence, and length is the length of the sequence.
 
 A similar formula is used by the prime primer selection program in GCG (http://www.accelrys.com/products/gcg/), which instead uses 675.0 / length in the last term (after F. Baldino, Jr, M.-F. Chesselet, and M.E. Lewis, Methods in Enzymology 168:766 (1989) eqn (1) on page 766 without the mismatch and formamide terms). The formulas here and in Baldino et al. assume Na+ rather than K+. According to J.G. Wetmur, Critical Reviews in BioChem. and Mol. Bio. 26:227 (1991) 50 mM K+ should be equivalent in these formulae to .2 M Na+. Primer3 uses the same salt concentration value for calculating both the primer melting temperature and the oligo melting temperature. If you are planning to use the PCR product for hybridization later this behavior will not give you the Tm under hybridization conditions."
                 - type: Block
                   tag: td
-                  elements: 
+                  elements:
                     - type: Text
                       name: PRIMER_PRODUCT_MIN_TM
                       label: Min
                       attributes:
-                          size: 10 
+                          size: 10
                 - type: Block
                   tag: td
                   elements:
@@ -493,7 +502,7 @@ For specifying the salt correction method for melting temperature calculation se
                           title: "Minimum, Optimum, and Maximum percentage of Gs and Cs in any primer or oligo."
                 - type: Block
                   tag: td
-                  elements: 
+                  elements:
                     - type: Text
                       name: PRIMER_MIN_GC
                       label: Min
@@ -538,7 +547,7 @@ For specifying the salt correction method for melting temperature calculation se
                           title: "The maximum allowable local alignment score when testing a single primer for (local) self-complementarity and the maximum allowable local alignment score when testing for complementarity between left and right primers. Local self-complementarity is taken to predict the tendency of primers to anneal to each other without necessarily causing self-priming in the PCR. The scoring system gives 1.00 for complementary bases, -0.25 for a match of any base (or N) with an N, -1.00 for a mismatch, and -2.00 for a gap. Only single-base-pair gaps are allowed. Scores are non-negative, and a score of 0.00 indicates that there is no reasonable local alignment between two oligos. "
                 - type: Block
                   tag: td
-                  elements: 
+                  elements:
                     - type: Text
                       name: PRIMER_MAX_SELF_ANY
                       default: 8.00
@@ -706,7 +715,7 @@ According to the formula concentration of desoxynucleotide triphosphate [dNTP] m
 
     - type: Block
       tag: table
-      elements:    
+      elements:
         - type: Block
           tag: tr
           elements:
@@ -715,7 +724,7 @@ According to the formula concentration of desoxynucleotide triphosphate [dNTP] m
               elements:
                 - type: Block
                   content: "Annealing Oligo Concentration:"
-                  attributes: 
+                  attributes:
                       title: "The nanomolar concentration of annealing oligos in the PCR. Primer3 uses this argument to calculate oligo melting temperatures. The default (50nM) works well with the standard protocol used at the Whitehead/MIT Center for Genome Research--0.5 microliters of 20 micromolar concentration for each primer oligo in a 20 microliter reaction with 10 nanograms template, 0.025 units/microliter Taq polymerase in 0.1 mM each dNTP, 1.5mM MgCl2, 50mM KCl, 10mM Tris-HCL (pH 9.3) using 35 cycles with an annealing temperature of 56 degrees Celsius. This parameter corresponds to 'c' in Rychlik, Spencer and Rhoads' equation (ii) (Nucleic Acids Research, vol 18, num 21) where a suitable value (for a lower initial concentration of template) is 'empirically determined'. The value of this parameter is less than the actual concentration of oligos in the reaction because it is the concentration of annealing oligos, which in turn depends on the amount of template (including PCR product) in a given cycle. This concentration increases a great deal during a PCR; fortunately PCR seems quite robust for a variety of oligo melting temperatures."
             - type: Block
               tag: td
@@ -792,7 +801,7 @@ start,length
 where start is the index of the first base to consider, and length is the number of subsequent bases in the primer-picking region."
                - type: Block
                  tag: td
-                 elements: 
+                 elements:
                    - type: Text
                      name: SEQUENCE_INCLUDED_REGION
                - type: Block
@@ -892,7 +901,7 @@ where start is the index of the first base to consider, and length is the number
     - type: Block
       tag: HR
       elements:
-        - type: Block 
+        - type: Block
 
     - type: Block
       tag: h1 style="color:blue;"
@@ -900,9 +909,9 @@ where start is the index of the first base to consider, and length is the number
         - type: Block
           content: "Penalties"
           attributes:
-              title: "This section describes 'penalty weights', which allow the user to modify the criteria that Primer3 uses to select the 'best' primers. There are two classes of weights: 
+              title: "This section describes 'penalty weights', which allow the user to modify the criteria that Primer3 uses to select the 'best' primers. There are two classes of weights:
 
-(1) For some parameters there is a 'Lt' (less than) and a 'Gt' (greater than) weight. These are the weights that Primer3 uses when the value is less or greater than (respectively) the specified optimum. 
+(1) For some parameters there is a 'Lt' (less than) and a 'Gt' (greater than) weight. These are the weights that Primer3 uses when the value is less or greater than (respectively) the specified optimum.
 
 (2) For the remaining parameters the optimum is understood and the actual value can only vary in one direction from the optimum.
 
@@ -936,7 +945,7 @@ The following govern the weight given to various parameters of primer pairs (or 
                    - type: Text
                      name: PRIMER_WT_TM_LT
                      default: 1.0
-                     label: "LT:" 
+                     label: "LT:"
                - type: Block
                  tag: td
                  elements:
@@ -1088,7 +1097,7 @@ The following govern the weight given to various parameters of primer pairs (or 
                    - type: Block
                      content: "Position Penalty:"
                      attributes:
-                         title: "Determines the overall weight of the position penalty in calculating the penalty for a primer." 
+                         title: "Determines the overall weight of the position penalty in calculating the penalty for a primer."
                - type: Block
                  tag: td
                  elements:
@@ -1153,7 +1162,7 @@ The following govern the weight given to various parameters of primer pairs (or 
                    - type: Text
                      name: PRIMER_PAIR_WT_PRODUCT_SIZE_LT
                      default: 0.0
-                     label: "LT:" 
+                     label: "LT:"
                - type: Block
                  tag: td
                  elements:
@@ -1300,7 +1309,7 @@ The following govern the weight given to various parameters of primer pairs (or 
     - type: Block
       tag: HR
       elements:
-        - type: Block    
+        - type: Block
 
     - type: Block
       tag: h1 style="color:blue;"
@@ -1308,7 +1317,7 @@ The following govern the weight given to various parameters of primer pairs (or 
         - type: Block
           content: "Hyb Oligos (Internal Oligos)"
           attributes:
-              title: "Parameters governing choice of internal oligos are analogous to the parameters governing choice of primer pairs. The exception is Max 3' Complementarity which is meaningless when applied to internal oligos used for hybridization-based detection, since primer-dimer will not occur. We recommend that Max 3' Complementarity be set at least as high as Max Complementarity." 
+              title: "Parameters governing choice of internal oligos are analogous to the parameters governing choice of primer pairs. The exception is Max 3' Complementarity which is meaningless when applied to internal oligos used for hybridization-based detection, since primer-dimer will not occur. We recommend that Max 3' Complementarity be set at least as high as Max Complementarity."
 
     - type: Block
       tag: h2
@@ -1365,7 +1374,7 @@ The following govern the weight given to various parameters of primer pairs (or 
                    - type: Text
                      name: PRIMER_INTERNAL_MIN_SIZE
                      default: 18
-                     label: "Min:" 
+                     label: "Min:"
                - type: Block
                  tag: td
                  elements:
@@ -1457,7 +1466,7 @@ The following govern the weight given to various parameters of primer pairs (or 
                       content: "Hyb Oligo Self Complementarity:"
                 - type: Block
                   tag: td
-                  elements: 
+                  elements:
                     - type: Text
                       name: PRIMER_INTERNAL_MAX_SELF_ANY
                       default: 12.00
@@ -1512,7 +1521,7 @@ The following govern the weight given to various parameters of primer pairs (or 
                   elements:
                     - type: Select
                       name: PRIMER_INTERNAL_MISHYB_LIBRARY
-                      options: 
+                      options:
                         - [ '', 'NONE' ]
                         - [ 'static/documents/primer3-libraries/human.txt', 'HUMAN' ]
                         - [ 'static/documents/primer3-libraries/rodent_and_simple.txt', 'RODENT_AND_SIMPLE' ]
@@ -1624,7 +1633,7 @@ The following govern the weight given to various parameters of primer pairs (or 
                    - type: Text
                      name: PRIMER_INTERNAL_WT_TM_LT
                      default: 1.0
-                     label: "Lt:" 
+                     label: "Lt:"
                - type: Block
                  tag: td
                  elements:
@@ -1752,7 +1761,3 @@ The following govern the weight given to various parameters of primer pairs (or 
     - type: Submit
       name: submit
       value: Pick Primers
-
-
-
-

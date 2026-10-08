@@ -12,10 +12,8 @@ my $trial_plot_layout = CXGN::Trial::TrialLayoutDownload::PlotLayout->new({
     data_level => $data_level,
     selected_columns => \%selected_cols,
     selected_trait_ids => \@selected_traits,
-    treatment_project_ids => $treatments,
     design => $design,
     trial => $selected_trial,
-    treatment_info_hash => \%treatment_info_hash,
     overall_performance_hash => \%fieldbook_trait_hash,
     all_stats => $all_stats,
 });
@@ -47,18 +45,17 @@ sub retrieve {
     my %selected_cols = %{$self->selected_columns};
     my %design = %{$self->design};
     my $trial = $self->trial;
-    my $treatment_info_hash = $self->treatment_info_hash || {};
-    my $treatment_list = $treatment_info_hash->{treatment_trial_list} || [];
-    my $treatment_name_list = $treatment_info_hash->{treatment_trial_names_list} || [];
-    my $treatment_units_hash_list = $treatment_info_hash->{treatment_units_hash_list} || [];
     my $trait_header = $self->trait_header || [];
     my $exact_performance_hash = $self->exact_performance_hash || {};
     my $overall_performance_hash = $self->overall_performance_hash || {};
     my $all_stats = $self->all_stats;
     my @output;
     my $trial_stock_type = $self->trial_stock_type();
+    my $include_plot_order = $self->include_plot_order() && $self->plot_order() && $self->plot_order() ne '' && $self->plot_start() && $self->plot_start() ne '';
 
-    my @possible_cols = ('plot_name','plot_id','accession_name','accession_id','plot_number','block_number','is_a_control','rep_number','range_number','row_number','col_number','seedlot_name','seed_transaction_operator','num_seed_per_plot','pedigree','location_name','trial_name','year','synonyms','tier','plot_geo_json');
+    my @possible_cols = ('plot_name','plot_id','accession_name','accession_id','plot_order','plot_number','block_number','is_a_control','rep_number','range_number','row_number','col_number','seedlot_name','seed_transaction_operator','num_seed_per_plot','pedigree','location_name','trial_name','year', 'planting_date', 'synonyms','variety','tier','plot_geo_json',);
+
+    $selected_cols{plot_order} = 1 if $include_plot_order;
 
     my @header;
     foreach (@possible_cols){
@@ -72,9 +69,6 @@ sub retrieve {
             }
         }
     }
-    foreach (@$treatment_name_list){
-        push @header, "Treastment:".$_;
-    }
     foreach (@$trait_header){
         push @header, $_;
     }
@@ -84,13 +78,34 @@ sub retrieve {
     my $trial_name = $trial->get_name ? $trial->get_name : '';
     my $location_name = $trial->get_location ? $trial->get_location->[1] : '';
     my $trial_year = $trial->get_year ? $trial->get_year : '';
+    my $trial_planting_date = $trial->get_planting_date ? $trial->get_planting_date : '';
+
+    # Add plot order to design, if requested by the user
+    if ( $include_plot_order ) {
+        my $results = CXGN::Trial->get_sorted_plots($schema, [$self->trial_id], $self->plot_order, $self->plot_start);
+        if ( $results->{plots} ) {
+            foreach (@{$results->{plots}}) {
+                $design{$_->{plot_number}}->{plot_order} = $_->{order};
+            }
+        }
+    }
 
     my @plot_design = values %design;
-    @plot_design = sort { $a->{plot_number} <=> $b->{plot_number} } @plot_design;
+
+    # sort plots by plot order, if requested, otherwise plot number
+    my $sort_key = $include_plot_order ? 'plot_order' : 'plot_number';
+    @plot_design = sort { $a->{$sort_key} <=> $b->{$sort_key} } @plot_design;
     my $pedigree_strings = $self->_get_all_pedigrees(\%design);
 
     my @overall_trait_names = sort keys %$overall_performance_hash;
     my @exact_trait_names = sort keys %$exact_performance_hash;
+
+    # for accession stockprops like synonym and variety, it is way too slow to create a CXGN::Stock::Accession for each plot.
+    # Instead, there needs to be one big call at the start to retrieve these stockprops and index them for the next loop
+    my %accessionprops = ();
+    if ($selected_cols{"variety"} || $selected_cols{"synonyms"}) {
+        %accessionprops = %{$self->_get_trial_accessionprops()};
+    }
 
     foreach my $design_info (@plot_design) {
         my $line;
@@ -105,13 +120,16 @@ sub retrieve {
                     push @$line, $trial_name;
                 } elsif ($_ eq 'year'){
                     push @$line, $trial_year;
+                } elsif ($_ eq 'planting_date') {
+                    push @$line, $trial_planting_date;
                 } elsif ($_ eq 'tier'){
                     my $row = $design_info->{"row_number"} ? $design_info->{"row_number"} : '';
                     my $col = $design_info->{"col_number"} ? $design_info->{"col_number"} : '';
                     push @$line, $row."/".$col;
                 } elsif ($_ eq 'synonyms'){
-                    my $accession = CXGN::Stock::Accession->new({schema=>$schema, stock_id=>$design_info->{"accession_id"}});
-                    push @$line, join ',', @{$accession->synonyms}
+                    push @$line, $accessionprops{$design_info->{accession_id}}->{synonyms} // "";
+                } elsif ($_ eq 'variety'){
+                    push @$line, $accessionprops{$design_info->{accession_id}}->{variety} // "";
                 } elsif ($_ eq 'pedigree'){
                     push @$line, $pedigree_strings->{$design_info->{"accession_name"}};
                 } else {
@@ -122,7 +140,6 @@ sub retrieve {
 
         #print STDERR "Adding treatment and trait performance\n";
 
-        $line = $self->_add_treatment_to_line($treatment_units_hash_list, $line, $design_info->{'plot_name'});
         $line = $self->_add_exact_performance_to_line(\@exact_trait_names, $line, $exact_performance_hash, $design_info->{'plot_name'});
         $line = $self->_add_overall_performance_to_line(\@overall_trait_names, $line, $overall_performance_hash, $design_info, $all_stats);
         push @output, $line;

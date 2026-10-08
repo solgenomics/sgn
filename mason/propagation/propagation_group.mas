@@ -1,0 +1,75 @@
+<%args>
+
+$propagation_group_id
+$propagation_group_name
+$description
+$material_type
+$material_source_type
+$accession_link
+$source_link
+$date
+$sub_location
+$operator_name
+$project_link
+$accession_stock_id
+$purpose
+
+</%args>
+
+<& /util/import_javascript.mas, classes => ["jquery", "jqueryui", "thickbox", "CXGN.Page.FormattingHelpers", "jquery.cookie", "CXGN.List", "jquery.dataTables"] &>
+<& /util/import_css.mas, paths => ['/documents/inc/datatables/jquery.dataTables.css'] &>
+
+
+<& /page/page_title.mas, title => "Details for Propagation Group ID '$propagation_group_name'" &>
+
+<&| /page/info_section.mas, title=>"Details",  collapsible => 1, collapsed=>0 &>
+
+    <div class="panel panel-default">
+        <div class="panel-body">
+            <div class="row">
+                <div class="col-sm-6">
+                    <table class="table table-bordered table-hover">
+                        <tr><td><b>Project</b></td><td><%$project_link%></td></tr>
+                        <tr><td><b>Material</b></td><td><%$accession_link%></td></tr>
+                        <tr><td><b>Material Type</b></td><td><%$material_type%></td></tr>
+                        <tr><td><b>Source Type</b></td><td><%$material_source_type%></td></tr>
+                        <tr><td><b>Source Name</b></td><td><%$source_link%></td></tr>
+                        <tr><td><b>Date</b></td><td><%$date%></td></tr>
+                        <tr><td><b>Sub-Location</b></td><td><%$sub_location%></td></tr>
+                        <tr><td><b>Purpose</b></td><td><%$purpose%></td></tr>                        
+                        <tr><td><b>Description</b></td><td><%$description%></td></tr>
+                        <tr><td><b>Operator</b></td><td><%$operator_name%></td></tr>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <button class="btn btn-sm btn-primary" style="margin:3px" id="add_new_propagation_id_link">Add New Propagation ID</button>
+</&>
+
+<& /propagation/propagation_id_section.mas, propagation_group_stock_id => $propagation_group_id &>
+<& /propagation/inactive_propagation_id_section.mas, propagation_group_stock_id => $propagation_group_id &>
+
+<& /propagation/add_propagation_id_dialog.mas, propagation_group_id => $propagation_group_id, propagation_group_name => $propagation_group_name, accession_stock_id => $accession_stock_id&>
+
+
+<script>
+
+jQuery(document).ready(function(){
+
+jQuery('#add_new_propagation_id_link').click(function() {
+
+    jQuery("#propagation_rootstock_name").autocomplete({
+        source: '/ajax/stock/only_accession_autocomplete',
+        appendTo : propagation_id_dialog
+    });
+
+    jQuery("#add_propagation_id_dialog").modal("show");
+
+});
+
+
+});
+
+</script>

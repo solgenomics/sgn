@@ -192,9 +192,6 @@ sub create_dataset_pheno_data_query_jobs {
     {
     my $trials_ids = $data->{categories}->{trials};
 
-    $c->controller('solGS::combinedTrials')->multi_pops_pheno_files($c, $trials_ids);
-    $c->stash->{phenotype_files_list} = $c->stash->{multi_pops_pheno_files};
-
     $c->controller('solGS::AsyncJob')->get_trials_phenotype_query_jobs_args($c, $trials_ids);
     $c->stash->{dataset_pheno_data_query_jobs} = $c->stash->{trials_phenotype_query_jobs_args};
     }
@@ -261,7 +258,7 @@ sub dataset_genotype_query_jobs {
     my $out_temp_file = $c->stash->{out_file_temp};
     my $err_temp_file = $c->stash->{err_file_temp};
 
-    my $temp_dir = $c->stash->{solgs_tempfiles_dir};
+    my $temp_dir = $c->controller('solGS::Files')->solgs_tempfiles_dir($c);
     my $background_job = $c->stash->{background_job};
 
     my $report_file = $c->controller('solGS::Files')->create_tempfile($temp_dir, "geno-data-query-report-args-${pop_id}");

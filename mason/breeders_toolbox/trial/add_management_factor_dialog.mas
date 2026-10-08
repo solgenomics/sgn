@@ -1,0 +1,124 @@
+<%args>
+$management_factor_types => undef
+$trial_id => undef
+</%args>
+
+<div class="modal fade" id="trial_design_add_management_factor" name="trial_design_add_management_factor" tabindex="-1" role="dialog" aria-labelledby="addTrialDesignManagementFactorsDialog">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header" style="text-align: center">
+                <button type="button" id="new_trial_add_management_factor_header_close_btn" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="addTrialDesignManagementFactorsDialog">Add Management Factor to Trial</h4>
+            </div>
+            <div class="modal-body">
+                <div class="container-fluid">
+                    <form class="form-horizontal" role="form" method="post" id="new_management_factor_form" name="new_management_factor_form">
+                    <div class="form-group">
+                            <label class="col-sm-3 control-label"><span class="glyphicon glyphicon-question-sign" style="color:blue;font-size:18px" title="The allowed management factor types are defined
+in the server configuration file. Contact the 
+server administrator with questions."></span>&nbsp; Management factor type:</label>
+                            <div class="col-sm-8">
+                                    <select class="form-control" id="new_management_factor_type" name="new_management_factor_type">
+%                                   foreach my $management_factor_type(@$management_factor_types){
+                                        <option value="<%$management_factor_type%>"><%$management_factor_type%></option>
+%                                   }
+                                    </select>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="col-sm-3 control-label">Management factor description:</label>
+                            <div class="col-sm-8">
+                                <input style="width:100%;" class="form-control" id="new_management_factor_description" name="new_management_factor_description" type="text" placeholder="e.g. Fertilizer Brand Sprayed with 20N40P50K"/>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="col-sm-3 control-label">Application schedule:</label>
+                            <div class="col-sm-8">
+                                <input style="width:100%;" class="form-control" id="new_management_factor_schedule" name="new_management_factor_schedule" type="text" placeholder="e.g. Twice weekly on Mondays and Thursdays starting 1 July 2025"/>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="col-sm-3 control-label">Application start date:</label>
+                            <div class="col-sm-8">
+                                <input style="width:100%;" class="form-control" id="new_management_factor_start_date" name="new_management_factor_schedule" type="date"/>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="col-sm-3 control-label">Application end date:</label>
+                            <div class="col-sm-8">
+                                <input style="width:100%;" class="form-control" id="new_management_factor_end_date" name="new_management_factor_schedule" type="date"/>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="col-sm-3 control-label">Completion records:<br>
+                            <i style="font-weight:normal;">These can be modified later.</i></label>
+                            <div class="col-sm-8">
+                                <table>
+                                    <tr>
+                                        <td><input class="form-control" id="new_mf_new_completion_time" type="datetime-local"/></td>
+                                        <td><button id="new_mf_dialog_add_completion_time_btn" class="btn btn-small btn-success">+</button></td>
+                                    </tr>
+                                </table>
+                                <br>
+                                <table id="new_mf_completion_times_table" style="width:50%">
+                                </table>
+                                <button id="new_mf_remove_most_recent_completion_time_btn" class="btn btn-small btn-danger" style="display:none;"><span class="glyphicon glyphicon-trash"></span></button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-info" id="new_trial_add_management_factors_submit" >Submit</button>
+                <button type="button" id="new_trial_add_management_factor_footer_close_btn" class="btn btn-default" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+jQuery(document).ready( function() {
+    jQuery('#new_mf_dialog_add_completion_time_btn').on('click',function(e) {
+        e.preventDefault();
+        let time_to_add = jQuery('#new_mf_new_completion_time').val();
+
+        if (time_to_add !== null && time_to_add !== "" && time_to_add.trim() !== "" ) {
+            time_to_add = time_to_add.replace('T', ' ');
+            let table_str = jQuery('#new_mf_completion_times_table').html();
+            let table_elems = [];
+            if (table_str && table_str.trim() !== "") {
+                table_elems = JSON.parse(html_table_to_json(table_str));
+            }
+            table_elems.push(time_to_add);
+            console.log(table_elems);
+            table_str = json_to_html_table(table_elems);
+            jQuery('#new_mf_completion_times_table').html(table_str);
+            if (table_elems.length > 0) {
+                jQuery('#new_mf_remove_most_recent_completion_time_btn').css('display', '');
+            }
+        }
+        jQuery('#new_mf_new_completion_time').val('');
+    });
+
+    jQuery('#new_mf_remove_most_recent_completion_time_btn').on('click',function(e) {
+        e.preventDefault();
+        let table_str = jQuery('#new_mf_completion_times_table').html();
+        let table_elems = JSON.parse(html_table_to_json(table_str));
+        table_elems.pop();
+        if (table_elems.length == 0) {
+            jQuery('#new_mf_remove_most_recent_completion_time_btn').css('display', 'none');
+        }
+        table_str = json_to_html_table(table_elems);
+        jQuery('#new_mf_completion_times_table').html(table_str);
+    });
+
+    function html_table_to_json(html_str) {
+        return JSON.stringify(html_str.replace(/^<tr>|<\/?table>|<tr>|^\s+|<td>|<\/td>|<\/tr>$|\s+$/g,'').split("</tr>").filter(str => str.trim() !== ''));
+    }
+
+    function json_to_html_table(json) {
+        json.sort();
+        return "<tr><td>"+json.join("</td></tr><tr><td>")+"</td></tr>";
+    }
+});
+</script>

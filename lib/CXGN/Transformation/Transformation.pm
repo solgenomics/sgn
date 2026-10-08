@@ -32,12 +32,22 @@ has 'dbh' => (
 );
 
 has 'project_id' => (
-    isa => "Int",
+    isa => 'Maybe[Int]',
     is => 'rw',
 );
 
 has 'transformation_stock_id' => (
-    isa => "Int",
+    isa => 'Maybe[Int]',
+    is => 'rw',
+);
+
+has 'transformation_name' => (
+    isa => 'Maybe[Str]',
+    is => 'rw',
+);
+
+has 'transformation_notes' => (
+    isa => 'Maybe[Str]',
     is => 'rw',
 );
 
@@ -103,7 +113,7 @@ sub get_active_transformations_in_project {
         LEFT JOIN stock_relationship AS has_control ON (has_control.object_id =transformation.stock_id) AND has_control.type_id = ?
         LEFT JOIN stock AS control on (has_control.subject_id = control.stock_id)
         LEFT JOIN stockprop AS stockprop3 ON (stockprop3.stock_id = transformation.stock_id) AND stockprop3.type_id in (?, ?)
-        WHERE nd_experiment_project.project_id = ? AND stockprop3.value IS NULL";
+        WHERE nd_experiment_project.project_id = ? AND stockprop3.value IS NULL ORDER BY transformation.stock_id ASC";
 
     my $h = $schema->storage->dbh()->prepare($q);
 
@@ -174,7 +184,7 @@ sub _get_transformants {
     my $q = "SELECT stock.stock_id, stock.uniquename
         FROM stock_relationship
         JOIN stock ON (stock_relationship.subject_id = stock.stock_id) and stock_relationship.type_id = ?
-        where stock_relationship.object_id = ? AND stock.is_obsolete = 'F' ";
+        where stock_relationship.object_id = ? AND stock.is_obsolete = 'F' ORDER BY stock.stock_id ASC";
 
     my $h = $schema->storage->dbh()->prepare($q);
 
@@ -210,7 +220,9 @@ sub _get_obsoleted_transformants {
 
     my @obsoleted_transformants = ();
     while (my ($stock_id,  $stock_name, $obsolete_note, $obsolete_date, $sp_person_id) = $h->fetchrow_array()){
-        push @obsoleted_transformants, [$stock_id,  $stock_name, $obsolete_note, $obsolete_date, $sp_person_id]
+        if ($obsolete_date =~ /Obsolete/) {
+            push @obsoleted_transformants, [$stock_id,  $stock_name, $obsolete_note, $obsolete_date, $sp_person_id];
+        }
     }
 
     $self->obsoleted_transformants(\@obsoleted_transformants);
@@ -542,6 +554,74 @@ sub set_as_control {
 
 }
 
+
+sub get_transformant_details {
+    my $self = shift;
+    my $schema = $self->schema();
+    my $transformation_stock_id = $self->transformation_stock_id();
+    my $transformation_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, "transformation", "stock_type")->cvterm_id();
+    my $accession_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, "accession", "stock_type")->cvterm_id();
+    my $transformant_of_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, "transformant_of", "stock_relationship")->cvterm_id();
+    my $number_of_insertions_type_id =  SGN::Model::Cvterm->get_cvterm_row($schema, 'number_of_insertions', 'stock_property')->cvterm_id();
+
+    my $q = "SELECT stock.stock_id, stock.uniquename, stockprop.value
+        FROM stock_relationship
+        JOIN stock ON (stock_relationship.subject_id = stock.stock_id) and stock_relationship.type_id = ?
+        LEFT JOIN stockprop ON (stock.stock_id = stockprop.stock_id) AND stockprop.type_id = ?
+        where stock_relationship.object_id = ? AND stock.is_obsolete = 'F' ORDER BY stock.stock_id ASC";
+
+    my $h = $schema->storage->dbh()->prepare($q);
+
+    $h->execute($transformant_of_type_id, $number_of_insertions_type_id, $transformation_stock_id);
+
+    my @transformant_details = ();
+    while (my ($stock_id,  $stock_name, $number_of_insertions) = $h->fetchrow_array()){
+        push @transformant_details, [$stock_id,  $stock_name, $number_of_insertions]
+    }
+
+    $self->transformants(\@transformant_details);
+}
+
+
+sub update_transformation_metadata {
+    my $self = shift;
+    my $schema = $self->schema();
+    my $dbh = $self->schema()->storage()->dbh();
+    my $transformation_stock_id = $self->transformation_stock_id();
+    my $new_transformation_name = $self->transformation_name();
+    my $new_transformation_notes = $self->transformation_notes();
+
+    eval {
+        if ($new_transformation_name) {
+            my $check_new_name_rs = $schema->resultset('Stock::Stock')->find({ 'uniquename' => $new_transformation_name});
+            if ($check_new_name_rs){
+                die "This new transformation ID already exists in the database. Please use another name.\n";
+            } else {
+                my $transformation_rs = $schema->resultset('Stock::Stock')->find({ 'stock_id' => $transformation_stock_id});
+                $transformation_rs->uniquename($new_transformation_name);
+                $transformation_rs->update();
+            }
+        }
+
+        my $transformation_notes_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema,  'transformation_notes', 'stock_property')->cvterm_id();
+        if ($new_transformation_notes) {
+            my $notes_update = $schema->resultset('Stock::Stockprop')->update_or_create({
+                type_id=>$transformation_notes_cvterm_id,
+                stock_id=>$transformation_stock_id,
+                rank=>0,
+                value=>$new_transformation_notes
+            }),
+        };
+    };
+
+    if ($@) {
+        print STDERR "An error occurred while updating information for transformation stock id ".$transformation_stock_id."$@\n";
+        return $@;
+    } else {
+        return 0;
+    }
+
+}
 
 
 

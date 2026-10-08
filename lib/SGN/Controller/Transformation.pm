@@ -58,6 +58,7 @@ sub transformation_page : Path('/transformation') Args(1) {
     my $plant_material_name = $info->[0]->[1];
     my $vector_id = $info->[0]->[2];
     my $vector_name = $info->[0]->[3];
+
     my $plant_material = qq{<a href="/stock/$plant_material_id/view">$plant_material_name</a>};
     my $vector_construct = qq{<a href="/stock/$vector_id/view">$vector_name</a>};
     my $transformation_notes = $info->[0]->[4];
@@ -133,6 +134,27 @@ sub transformation_page : Path('/transformation') Args(1) {
     $source_info_hash->{'plantMaterial'} = $plant_material_name;
     my $source_info_string = encode_json $source_info_hash;
 
+    my $can_obsolete;
+    my @user_roles = $c->user->roles();
+    my %has_roles = ();
+    map { $has_roles{$_} = 1; } @user_roles;
+
+    if ((exists($has_roles{$program_name}) && exists($has_roles{submitter})) || exists($has_roles{curator})) {
+        $can_obsolete = 1;
+    }
+
+    my $vector_related_genes;
+    my $vector_analyzed_tissue_types;
+
+    my $vector_construct_obj = CXGN::Stock::Vector->new(schema=>$schema, stock_id=>$vector_id);
+    $vector_related_genes = $vector_construct_obj->Gene;
+    my $vector_assay_metadata = $vector_construct_obj->assay_metadata;
+    if ($vector_assay_metadata) {
+        my $metadata_hash = decode_json $vector_assay_metadata;
+        my @assay_tissue_types = sort keys (%$metadata_hash);
+        $vector_analyzed_tissue_types = join(",",@assay_tissue_types);
+    }
+
     $c->stash->{transformation_id} = $transformation_id;
     $c->stash->{transformation_name} = $transformation_name;
     $c->stash->{plant_material} = $plant_material;
@@ -158,8 +180,13 @@ sub transformation_page : Path('/transformation') Args(1) {
     $c->stash->{project_id} = $project_id;
     $c->stash->{is_a_control} = $is_a_control;
     $c->stash->{control_name} = $control_name;
-    $c->stash->{control_id} = $control_id;            
+    $c->stash->{control_id} = $control_id;
     $c->stash->{control_link} = $control_link;
+    $c->stash->{can_obsolete} = $can_obsolete;
+    $c->stash->{vector_related_genes} = $vector_related_genes;
+    $c->stash->{vector_analyzed_tissue_types} = $vector_analyzed_tissue_types;
+    $c->stash->{vector_id} = $vector_id;
+    $c->stash->{vector_name} = $vector_name;
 
     $c->stash->{template} = '/transformation/transformation.mas';
 

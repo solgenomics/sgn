@@ -190,7 +190,6 @@ is($contents->[0]->{'sheets'}, '1', "check that type of file is correct");
 my $columns = $contents->[1]->{'cell'};
 #print STDERR Dumper scalar(@$columns);
 ok(scalar(@$columns) == 15, "check number of col in created file.");
-
 print STDERR Dumper $columns;
 is_deeply ($columns,[
           [],

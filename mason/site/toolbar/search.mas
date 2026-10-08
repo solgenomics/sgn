@@ -1,4 +1,4 @@
-
+% if ($c->config->{enable_quick_search} && $c->user()) {
 <li style="height:100%">
   <form id="toolbar_search_form" class="navbar-form navbar-left form-inline" role="search" action="/search/quick_search.pl" style="padding-right: 2px;height:100%">
     <div class="input-group">
@@ -54,3 +54,4 @@
     
   });
 </script>
+% }

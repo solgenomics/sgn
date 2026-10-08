@@ -221,10 +221,10 @@ function delete_field_map() {
 	     jQuery('#working_modal').modal("hide");
 
       if (response.error) {
-		      alert("Error Deleting Field Map: "+response.error);
+		      alert("Error deleting field map: "+response.error);
       } else {
-          //alert("Field map deletion Successful...");
-		      jQuery('#delete_field_map_dialog_message').dialog("open");
+              alert("Field map deletion successful.");
+		      location.reload();
           }
 	 },
 	 error: function () {
@@ -323,6 +323,13 @@ function edit_trial_details(){
     jQuery('#edit_trial_plan_to_cross option[value="'+default_type+'"]').attr('selected','selected');
 
     //create bootstrap daterangepickers for planting, transplanting and harvest dates
+
+    jQuery(document).on('focusin', function(e) {
+        if (jQuery(e.target).closest('.daterangepicker').length) {
+            e.stopImmediatePropagation();
+        }
+    });
+
     var planting_date_element = jQuery("#edit_trial_planting_date");
     set_daterangepicker_default (planting_date_element);
     jQuery('input[title="planting_date"]').daterangepicker({
@@ -493,7 +500,11 @@ delete_field_map();
 
 
 jQuery('#delete_field_map_hm_link').click(function () {
-    jQuery('#delete_field_map_dialog').dialog("open");
+    if (confirm("Are you sure you want to delete the spatial layout of this trial?")) {
+        delete_field_map();
+    } else {
+        return;
+    }
 });
 
 jQuery("#delete_field_map_dialog_message").dialog({
@@ -635,34 +646,45 @@ jQuery(document).ready(function ($) {
          $("#trial_coord_upload_spreadsheet_info_dialog" ).modal("show");
     });
 
-     $('#upload_trial_coordinates_form').iframePostForm({
-	json: true,
-	post: function () {
+    $('#upload_trial_coordinates_form').iframePostForm({
+        json: true,
+        post: function () {
             var uploadedtrialcoordFile = $("#trial_coordinates_uploaded_file").val();
-	    $('#working_modal').modal("show");
+            $('#working_modal').modal("show");
             if (uploadedtrialcoordFile === '') {
-		$('#working_modal').modal("hide");
-		alert("No file selected");
+                $('#working_modal').modal("hide");
+                alert("No file selected");
             }
-	},
-	complete: function (response) {
-	    $('#working_modal').modal("hide");
-            if (response.error_string) {
-		$("#upload_trial_coord_error_display tbody").html('');
-		$("#upload_trial_coord_error_display tbody").append(response.error_string);
-        jQuery('#upload_trial_coord_error_display').modal('show');
+        },
+        complete: function (response) {
+            $('#working_modal').modal("hide");
 
-		return;
+            // Check if response exists and is valid
+            if (!response || typeof response !== 'object') {
+                alert("Error: No response received from server. Please try again.");
+                return;
             }
+
             if (response.error) {
-		alert(response.error);
-		return;
+                $("#upload_trial_coord_error_display tbody").html('');
+                $("#upload_trial_coord_error_display tbody").append(response.error);
+                jQuery('#upload_trial_coord_error_display').modal('show');
+                return;
             }
+
             if (response.success) {
-		$('#trial_coord_upload_success_dialog_message').modal("show");
-		//alert("File uploaded successfully");
+                $('#trial_coord_upload_success_dialog_message').modal("show");
+                $('#trial_coord_upload_success_dialog_message_cancel').on('click', function() {
+                    location.reload();
+                });
+                return;
             }
-	}
+
+            // Catch-all for unexpected responses
+            console.error("Unexpected server response:", response);
+            alert("An unexpected error occurred. The server response was not in the expected format. Please check the console for details or contact support.");
+
+        }
     });
 
 	function upload_trial_coord_file() {
@@ -697,7 +719,12 @@ jQuery(document).ready(function ($) {
       open_subtitute_plot_accession_dialog();
     });
 
+    jQuery('#barcode_design_option_link').click(function () {
+        $('#barcode_design_option_dialog').modal("show");
+    });
+
     jQuery('#generate_trial_barcode_link').click(function () {
+        $('#barcode_design_option_dialog').modal("hide");
         $('#generate_trial_barcode_button_dialog').modal("show");
     });
 

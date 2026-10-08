@@ -6,7 +6,7 @@ use Data::Dumper;
 sub pagination_response {
 	my $self = shift;
 	my $data_count = shift;
-	my $page_size = shift;
+	my $page_size = shift || 10;
 	my $page = shift;
 
 	$page_size += 0; # convert from string to int

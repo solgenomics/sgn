@@ -94,9 +94,10 @@ sub read_file_data_cols {
 sub count_data_rows {
     my ($self, $file) = @_;
 
-    my $geno = qx /wc -l $file/;
-    my ($geno_lines, $g_file) = split(" ", $geno);
-    my $count = $geno_lines > 1 ? $geno_lines - 1 : 0;
+    my $count = 0;
+    open(my $fh, "<", $file) or die "can't open $file: $!";
+    $count++ while <$fh>;
+    close $fh;
 
     return $count;
 
@@ -296,10 +297,9 @@ sub save_metadata {
     $c->controller('solGS::Files')->phenotype_metadata_file($c);
     my $metadata_file = $c->stash->{phenotype_metadata_file};
 
-    if (!-s $metadata_file)
-    {
-	my $metadata   = $c->controller('solGS::Search')->model($c)->trial_metadata();
-	write_file($metadata_file, {binmode => ':utf8'}, join("\t", @$metadata));
+    if (!-s $metadata_file) {
+	    my $metadata   = $c->controller('solGS::Search')->model($c)->trial_metadata();
+	    write_file($metadata_file, {binmode => ':utf8'}, join("\t", @$metadata));
     }
 
 }

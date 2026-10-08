@@ -32,6 +32,9 @@ use CXGN::Chado::Cvterm;
 use CXGN::Onto;
 use Data::Dumper;
 use JSON;
+use CXGN::Job;
+use Encode;
+use Cwd;
 
 use namespace::autoclean;
 
@@ -42,6 +45,78 @@ __PACKAGE__->config(
     stash_key => 'rest',
     map       => { 'application/json' => 'JSON' },
    );
+
+=head2 download_obo
+
+Dumps a DB as a .obo file. Accepts db.name as an argument
+
+=cut
+
+sub download_obo: Path('/ajax/onto/download_obo') Args(1) {
+    my $self = shift;
+    my $c = shift;
+    my $db_name = shift;
+
+    my $dbhost = $c->config->{dbhost};
+    my $dbname = $c->config->{dbname};
+    my $dbuser = $c->config->{dbuser};
+    my $dbpass = $c->config->{dbpass};
+    my $basepath = $c->config->{basepath};
+
+    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
+    my $schema = $c->dbic_schema("Bio::Chado::Schema", undef, $sp_person_id);
+    my $people_schema = $c->dbic_schema("CXGN::People::Schema", undef, $sp_person_id);
+
+    my $temp_basedir = $c->config->{cluster_shared_tempdir};
+
+    if (! -d "$temp_basedir/obo_downloads") {
+        `mkdir $temp_basedir/obo_downloads`;
+    }
+
+    my $outdir = "$temp_basedir/obo_downloads";
+
+    my $cmd = "perl ./bin/download_obo.pl -i $db_name -H $dbhost -D $dbname -U $dbuser -P $dbpass -o $outdir";
+
+    print STDERR "Dumping OBO file at $outdir/$db_name.breedbase.obo\n";
+
+    my $obo_downloader;
+
+    eval {
+
+        $obo_downloader = CXGN::Job->new({
+            people_schema => $people_schema, 
+            schema => $schema,
+            dbhost => $dbhost,
+            dbname => $dbname,
+            dbuser => $dbuser,
+            dbpass => $dbpass,
+            basepath => $basepath,
+            sp_person_id => $sp_person_id,
+            cmd => $cmd,
+            name => "$db_name ontology download",
+            job_type => 'download',
+            submit_page => $c->req->path
+        });
+
+        $obo_downloader->submit();
+
+    };
+
+    if ($@) {
+        $c->stash->rest = {error => "An error occurred starting the download: $@"};
+        return;
+    }
+
+    $obo_downloader->wait();
+
+    $c->res->content_type('application/octet-stream');
+    $c->res->header('Content-Disposition' => "attachment; filename=\"$db_name.obo\"");
+    $c->res->body(do {
+        open my $f, '<', "$outdir/$db_name.breedbase.obo" or die "Can't open file: $!";
+        local $/; #this slurps a file I think
+        <$f>;
+    });
+}
 
 =head2 compose_trait
 
@@ -57,12 +132,13 @@ sub compose_trait: Path('/ajax/onto/store_composed_term') Args(0) {
   #my @ids = $c->req->param("ids[]");
   #print STDERR "Ids array for composing in AJAX Onto = @ids\n";
 
-  my $new_trait_names = decode_json $c->req->param("new_trait_names");
+  my $new_trait_names = decode_json( encode("utf8", $c->req->param("new_trait_names")) );
+  my $term_type = $c->req->param("type") ? $c->req->param("type") : 'trait';
   #print STDERR Dumper $new_trait_names;
   my $new_terms;
   eval {
       my $onto = CXGN::Onto->new( { schema => $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado') } );
-      $new_terms = $onto->store_composed_term($new_trait_names);
+      $new_terms = $onto->store_composed_term($new_trait_names, $term_type);
   };
   if ($@) {
       $c->stash->{rest} = { error => "An error occurred saving the new trait details: $@" };
@@ -292,11 +368,12 @@ sub get_traits_from_component_categories: Path('/ajax/onto/get_traits_from_compo
   my @trait_ids = $c->req->param("trait_ids[]");
   my @tod_ids = $c->req->param("tod_ids[]");
   my @toy_ids = $c->req->param("toy_ids[]");
+  my @tiy_ids = $c->req->param("tiy_ids[]");
   my @gen_ids = $c->req->param("gen_ids[]");
   my @evt_ids = $c->req->param("evt_ids[]");
   my @meta_ids = $c->req->param("meta_ids[]");
 
-  print STDERR "Obj ids are @object_ids\n Attr ids are @attribute_ids\n Method ids are @method_ids\n unit ids are @unit_ids\n trait ids are @trait_ids\n tod ids are @tod_ids\n toy ids are @toy_ids\n gen ids are @gen_ids\n evt ids are @evt_ids\n metadata ids are @meta_ids\n";
+  print STDERR "Obj ids are @object_ids\n Attr ids are @attribute_ids\n Method ids are @method_ids\n unit ids are @unit_ids\n trait ids are @trait_ids\n tod ids are @tod_ids\n toy ids are @toy_ids\n tiy ids are @tiy_ids\n gen ids are @gen_ids\n evt ids are @evt_ids\n metadata ids are @meta_ids\n";
   my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
 
   my $traits = SGN::Model::Cvterm->get_traits_from_component_categories($schema, \@allowed_composed_cvs, $composable_cvterm_delimiter, $composable_cvterm_format, {
@@ -307,6 +384,7 @@ sub get_traits_from_component_categories: Path('/ajax/onto/get_traits_from_compo
       trait => \@trait_ids,
       tod => \@tod_ids,
       toy => \@toy_ids,
+      tiy => \@tiy_ids,
       gen => \@gen_ids,
       evt => \@evt_ids,
       meta => \@meta_ids,
@@ -344,7 +422,7 @@ sub children_GET {
 
     my ($db_name, $accession) = split ":", $c->request->param('node');
 
-    my $db = $schema->resultset('General::Db')->search({ name => uc($db_name) })->first();
+    my $db = $schema->resultset('General::Db')->search({ 'UPPER(name)' => uc($db_name) })->first();
     my $dbxref = $db->find_related('dbxrefs', { accession => $accession });
 
     my $cvterm = $dbxref->cvterm;
@@ -400,6 +478,12 @@ sub parents_GET  {
 	}
 	);
     my $db_id;
+
+    if ($db->count() == 0) {
+        $c->stash->{rest} = { error => "The term $db_name:$accession does not exist." };
+        $c->detach();
+    }
+    
     if (!$db || !$accession) {
 	#not sure we need here to send an error key, since cache is usually called after parents (? )
 	$response{error} = "Did not pass a legal ontology term ID! ( $db_name : $accession)";
@@ -478,7 +562,7 @@ sub menu_GET  {
     print STDERR "MENUDATA: $menudata\n";
     my @menuitems = split ",", $menudata;
 
-    my $menu = '<select name="cv_select">';
+    my $menu = '<select class="form-control" name="cv_select">';
 
     foreach my $mi (@menuitems) {
 	print STDERR "MENU ITEM: $mi\n";

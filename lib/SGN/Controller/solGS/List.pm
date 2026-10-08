@@ -21,8 +21,8 @@ use namespace::autoclean;
 use Carp qw/ carp confess croak /;
 use CXGN::List::Transform;
 use CXGN::Tools::Run;
-use File::Path qw / mkpath  /;
-use File::Spec::Functions qw / catfile catdir/;
+use File::Path qw / make_path  /;
+use File::Spec;
 use File::Slurp qw /write_file read_file/;
 use File::Temp qw / tempfile tempdir /;
 use JSON;
@@ -30,7 +30,7 @@ use List::MoreUtils qw /uniq firstidx/;
 use CXGN::People::Person;
 use POSIX qw(strftime);
 use Storable qw/ nstore retrieve /;
-use String::CRC;
+use String::CRC32;
 use Try::Tiny;
 
 use solGS::queryJobs;
@@ -41,7 +41,7 @@ sub generate_check_value : Path('/solgs/generate/checkvalue') Args(0) {
     my ( $self, $c ) = @_;
 
     my $file_name   = $c->req->param('string');
-    my $check_value = crc($file_name);
+    my $check_value = crc32($file_name);
 
     my $ret->{status} = 'failed';
 
@@ -207,15 +207,23 @@ sub get_genotypes_list_details {
 }
 
 sub get_list_breeding_program {
-  my ($self, $c) = @_;
+    my ($self, $c) = @_;
+    my $trials_ids = [];
 
-  $self->get_genotypes_list_details($c);
-  my $accessions_ids = $c->stash->{genotypes_ids};
-  
-  my $trials_ids = $c->controller('solGS::Search')->model($c)->get_trial_id_by_accession($accessions_ids->[0]);
-  my $program_id = $c->controller('solGS::Search')->model($c)->trial_breeding_program_id($trials_ids->[0]);
+    my $list_id = $c->stash->{list_id};
+    $self->stash_list_metadata($c, $list_id);
+    if ($c->stash->{list_type} eq 'trials') {
+        $self->get_list_trials_ids($c);
+        $trials_ids = $c->stash->{trials_ids};
+    } else {
+        $self->get_genotypes_list_details($c);
+        my $accessions_ids = $c->stash->{genotypes_ids};
+        $trials_ids = $c->controller('solGS::Search')->model($c)->get_trial_id_by_accession($accessions_ids->[0]);
+    }
 
-  return $program_id;
+    my $program_id = $c->controller('solGS::Search')->model($c)->trial_breeding_program_id($trials_ids->[0]);
+
+    return $program_id;
 
 }
 
@@ -577,7 +585,7 @@ sub genotypes_list_genotype_query_job {
     my $out_temp_file = $c->stash->{out_file_temp};
     my $err_temp_file = $c->stash->{err_file_temp};
 
-    my $temp_dir       = $c->stash->{solgs_tempfiles_dir};
+    my $temp_dir       = $c->controller('solGS::Files')->solgs_tempfiles_dir($c);
     my $background_job = $c->stash->{background_job};
 
     my $report_file = $c->controller('solGS::Files')
@@ -662,7 +670,7 @@ sub plots_list_phenotype_query_job {
     my $out_temp_file = $c->stash->{out_file_temp};
     my $err_temp_file = $c->stash->{err_file_temp};
 
-    my $temp_dir       = $c->stash->{solgs_tempfiles_dir};
+    my $temp_dir       = $c->controller('solGS::Files')->solgs_tempfiles_dir($c);
     my $background_job = $c->stash->{background_job};
 
     my $temp_data_files =
@@ -829,7 +837,7 @@ sub get_list_training_data_query_jobs_file {
     $self->get_list_training_data_query_jobs( $c, $protocol_id );
     my $query_jobs = $c->stash->{list_training_data_query_jobs};
 
-    my $temp_dir          = $c->stash->{solgs_tempfiles_dir};
+    my $temp_dir          = $c->controller('solGS::Files')->solgs_tempfiles_dir($c);
     my $queries_args_file = $c->controller('solGS::Files')
       ->create_tempfile( $temp_dir, 'list_training_data_query_args' );
 

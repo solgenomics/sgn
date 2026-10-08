@@ -74,7 +74,7 @@ $d->while_logged_in_as('submitter', sub {
     # Change page to trial comparison
     $d->get_ok('/tools/trial/comparison/list');
 
-    sleep(6);
+    sleep(10);
 
     $d->find_element("trials_list_select", "id", "find trials select")->click();
     sleep(1);
@@ -92,7 +92,7 @@ $d->while_logged_in_as('submitter', sub {
         '//select[@id="unit_select"]/option[@value="plot"]',
         "xpath",
         "select plot observation level")->click();
-    sleep(180);
+    sleep(20);
 
     $d->find_element_ok("trait_select", "id", "find trait select");
     sleep(1);

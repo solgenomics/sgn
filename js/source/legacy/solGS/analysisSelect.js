@@ -19,9 +19,18 @@ solGS.analysisSelect = {
     
     getAnalysisPopId: function () {
         var analysisPopId = jQuery("#analysis_pop_id").val();
+        if (!analysisPopId) {
+            analysisPopId = jQuery("#trial_select option:selected").val();
+            if (this.analysisPopName && this.analysisPopName.match(/Dataset:/)) {
+                analysisPopId = `dataset_${analysisPopId}`;
+                this.dataStructure = 'dataset';
+            }
+        }
+
         if (analysisPopId) {
             this.analysisPopId = analysisPopId;
         }
+
         return this.analysisPopId;
     },
 
@@ -37,9 +46,24 @@ solGS.analysisSelect = {
 
     getAnalysisPopName: function () {
         var analysisPopName = jQuery("#analysis_pop_name").val();
+        if (!analysisPopName) {
+            analysisPopName = jQuery("#trial_select option:selected").text();
+            console.log("Analysis Pop Name from trial select: ", analysisPopName);
+        }
+
         if (analysisPopName) {
             this.analysisPopname = analysisPopName;
         }
+
+        if (analysisPopName && analysisPopName.match(/Trial:/)) {
+            this.dataStructure = 'trial';
+        }
+
+        if (analysisPopName && analysisPopName.match(/Dataset:/)) {
+            this.dataStructure = 'dataset';
+            this.analysisPopId = `dataset_${this.analysisPopId}`;
+        }
+
         return this.analysisPopname;
     },
 
@@ -93,8 +117,7 @@ solGS.analysisSelect = {
         console.log("Tools Compatibility Check: ", toolsCompatibilityCheck);
 
         return toolsCompatibilityCheck;
-},
-
+    },
     
 }
 
@@ -105,11 +128,21 @@ jQuery(document).on("change", "#analysis_select", function () {
     jQuery("#dataset_trials_analysis_message").empty();
     jQuery("#run_analysis").prop("disabled", false);
     if (selectedAnalysis) {
-        jQuery("#analysis_type").val(selectedAnalysis)
+        jQuery("#analysis_type").val(selectedAnalysis);
+        solGS.analysisSelect.getAnalysisPopId();
+        solGS.analysisSelect.getAnalysisPopName();
+        solGS.analysisSelect.getAnalysisType();
+        solGS.analysisSelect.getDataStructure();
+
+        console.log("Analysis Pop ID: ", solGS.analysisSelect.analysisPopId);
+        console.log("Analysis Pop Name: ", solGS.analysisSelect.analysisPopname);
+        console.log("Analysis Type: ", solGS.analysisSelect.analysisType);
+        console.log("Data Structure: ", solGS.analysisSelect.dataStructure);
+
         var datasetId = solGS.analysisSelect.getDatasetId();
         console.log("Dataset ID: ", datasetId);
 
-        implementedAnalyses = solGS.analysisSelect.implementedAnalyses;
+        var implementedAnalyses = solGS.analysisSelect.implementedAnalyses;
         if (!implementedAnalyses.includes(selectedAnalysis)) {
             selectedAnalysis = selectedAnalysis.replace(/_/, ' ');
             jQuery("#dataset_trials_analysis_message").html(
@@ -156,11 +189,13 @@ jQuery(document).ready(function () {
         var analysisPopId = solGS.analysisSelect.getAnalysisPopId();
 
         if (!analysisType) {
-        jQuery("#dataset_trials_analysis_message").html("Please select an analysis type.").show();
+            jQuery("#dataset_trials_analysis_message").html("Please select an analysis type.").show();
+            return;
         }
 
         if (!analysisPopId) {   
-        jQuery("#dataset_trials_analysis_message").html("Please select an analysis population.").show();
+            jQuery("#dataset_trials_analysis_message").html("Please select an analysis population.").show();
+            return;
         }
 
         console.log("Running analysis: ", analysisType, " on population: ", analysisPopId);
@@ -172,16 +207,15 @@ jQuery(document).ready(function () {
             jQuery("#corr_pop_id").val(solGS.analysisSelect.getAnalysisPopId());
 
             jQuery("#data_type").val("Phenotype");
-            if (jQuery("#corr_pop_id").val().match(/dataset/) === "") {
-            jQuery("#data_structure").val('dataset');
+            if (jQuery("#corr_pop_id").val().match(/dataset/)) {
+                jQuery("#data_structure").val('dataset');
             }
 
             corrArgs = solGS.correlation.getPhenoCorrArgs();
             if (!corrArgs['corr_pop_name']) {
-            corrArgs['corr_pop_name'] = solGS.analysisSelect.getAnalysisPopName();
+                corrArgs['corr_pop_name'] = solGS.analysisSelect.getAnalysisPopName();
             }
 
-            console.log("Correlation args: ", JSON.stringify(corrArgs));
             corrPlotDivId = corrArgs.corr_plot_div;
 
             var canvas = solGS.correlation.canvas;
@@ -191,11 +225,24 @@ jQuery(document).ready(function () {
             jQuery(corrMsgDiv).html("Running correlation... please wait...").show();
 
             solGS.correlation.runPhenoCorrelation(corrArgs).done(function (res) {
-                if (res.data) {
+                if (res.error) {
+                    jQuery(`${canvas} .multi-spinner-container`).hide();
+                    jQuery(corrMsgDiv).html(res.error).show();
+                    return;
+                }
+
+                if (res.corr_output_data) {
                     corrArgs["corr_table_file"] = res.corre_table_file;
                     var corrDownload = solGS.correlation.createCorrDownloadLink(corrArgs);
+                    console.log(`results for correlation: ${JSON.stringify(res)}`);
+                    var heatmapArgs = {
+                      heatmap_input_data: res.corr_output_data,
+                      canvas: canvas,
+                      plot_div_id: corrPlotDivId,
+                      download_links: corrDownload,
+                    };
 
-                    solGS.heatmap.plot(res.data, canvas, corrPlotDivId, corrDownload);
+                    solGS.heatmap.plot(heatmapArgs);
 
                     jQuery(`${canvas} .multi-spinner-container`).hide();
                     jQuery(corrMsgDiv).empty();
@@ -209,5 +256,4 @@ jQuery(document).ready(function () {
             });
         }
     });
-
 });

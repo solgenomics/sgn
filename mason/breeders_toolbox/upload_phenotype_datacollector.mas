@@ -23,22 +23,22 @@
         
             <form class="form-horizontal" role="form" method="post" enctype="multipart/form-data" encoding="multipart/form-data" id="upload_datacollector_phenotype_file_form" name="upload_datacollector_phenotype_file_form">
                 <div class="form-group">
-                    <label class="col-sm-3 control-label">Timestamps Included: </label>
-                    <div class="col-sm-9" >
+                    <label class="col-sm-6 control-label">Timestamps Included: </label>
+                    <div class="col-sm-6" >
                         <input type="checkbox" id="upload_datacollector_phenotype_timestamp_checkbox" name="upload_datacollector_phenotype_timestamp_checkbox" />
                     </div>
                 </div>
                 <div class="form-group">
-                    <label class="col-sm-3 control-label">Data Level: </label>
-                    <div class="col-sm-9" >
+                    <label class="col-sm-6 control-label">Data Level: </label>
+                    <div class="col-sm-6" >
                         <select class="form-control" id="upload_phenotype_datacollector_data_level">
                             <option value="plots">Plots</option>
                         </select>
                     </div>
                 </div>
                 <div class="form-group">
-                    <label class="col-sm-3 control-label">Data Collector File: </label>
-                    <div class="col-sm-9" >
+                    <label class="col-sm-6 control-label">Data Collector File: </label>
+                    <div class="col-sm-6" >
                         <input type="file" id="upload_datacollector_phenotype_file_input" name="upload_datacollector_phenotype_file_input" encoding="multipart/form-data" />
                     </div>
                 </div>

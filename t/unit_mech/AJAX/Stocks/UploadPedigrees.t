@@ -9,6 +9,8 @@ use LWP::UserAgent;
 use Data::Dumper;
 use JSON::XS;
 use SGN::Model::Cvterm;
+use Encode;
+use JSON;
 
 local $Data::Dumper::Indent = 0;
 
@@ -83,6 +85,43 @@ my $male_parent_id_2 = $rs_4->subject_id;
 is($female_parent_id_2, $XG120261_id);
 is($male_parent_id_2, $XG120261_id);
 is($cross_type_2, 'self');
+
+#checking pedigree info after updating stock property
+my $json = JSON->new->allow_nonref;
+my $file = $f->config->{basepath}."/t/data/stock/test_accession_stockprop_update.xlsx";
+my $ua = LWP::UserAgent->new;
+$response = $ua->post(
+    'http://localhost:3010/ajax/accessions/verify_accessions_file',
+    Content_Type => 'form-data',
+    Content => [
+        new_accessions_upload_file => [ $file, 'test_accession_stockprop_update.xlsx', Content_Type => 'application/vnd.ms-excel', ],
+        "sgn_session_id"=>$sgn_session_id
+    ]
+);
+ok($response->is_success);
+my $message = $response->decoded_content;
+my $message_hash = JSON::XS->new->decode($message);
+my @full_info;
+foreach (keys %{$message_hash->{'full_data'}}){
+    push @full_info, $message_hash->{'full_data'}->{$_};
+}
+
+$mech->post_ok('http://localhost:3010/ajax/accession_list/add', [ 'full_info'=>$json->encode(\@full_info), 'allowed_organisms'=>$json->encode(['Manihot esculenta']) ]);
+$response = decode_json $mech->content;
+
+is_deeply($response, {'added' => [[$XG120251_id,'XG120251']],'success' => '1'});
+
+my $rs_1_after_updated = $schema->resultset("Stock::StockRelationship")->find( { type_id=>$female_cvterm_id, object_id => $XG120251_id } );
+my $female_parent_after_updated = $rs_1_after_updated->subject_id;
+my $cross_type_after_updated = $rs_1_after_updated->value;
+
+my $rs_2_after_updated = $schema->resultset("Stock::StockRelationship")->find( { type_id=>$male_cvterm_id, object_id => $XG120251_id } );
+my $male_parent_after_updated = $rs_2_after_updated->subject_id;
+
+is($female_parent_after_updated, $XG120261_id);
+is($male_parent_after_updated, $XG120273_id);
+is($cross_type_after_updated, 'biparental');
+
 
 $f->clean_up_db();
 

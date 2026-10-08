@@ -71,14 +71,19 @@ sub image_analysis_submit_POST : Args(0) {
 
     unless (ref($image_ids) eq 'ARRAY') { $image_ids = [$image_ids]; }
 
-    my ($trait_name, $db_accession) = split(/\|/, $trait);
-    my ($db, $accession) = split(/:/, $db_accession);
-    my ($trait_details, $record_number) = CXGN::Trait::Search->new({
-        bcs_schema=>$schema,
-        ontology_db_name_list => [$db],
-        accession_list => [$accession]
-    })->search();
+    my $trait_details;
+    my $record_number;
 
+    if ($service ne "multi-trait") {
+        my ($trait_name, $db_accession) = split(/\|/, $trait);
+        my ($db, $accession) = split(/:/, $db_accession);
+        ($trait_details, $record_number) = CXGN::Trait::Search->new({
+            bcs_schema=>$schema,
+            ontology_db_name_list => [$db],
+            accession_list => [$accession]
+        })->search();
+    }
+    print STDERR "image ids:" . Dumper $image_ids;
     my $image_search = CXGN::Image::Search->new({
         bcs_schema=>$schema,
         people_schema=>$people_schema,
@@ -87,7 +92,7 @@ sub image_analysis_submit_POST : Args(0) {
     });
 
     my ($result, $records_total) = $image_search->search();
-
+    print STDERR "image search result:" . Dumper $result;
     my @image_urls;
     my @image_files;
     foreach (@$result) {
@@ -97,47 +102,13 @@ sub image_analysis_submit_POST : Args(0) {
         push @image_urls, $original_img;
         push @image_files, $image_file;
     }
-    print STDERR Dumper \@image_urls;
+    print STDERR "IMAGE URLS: ".Dumper(\@image_urls);
+    print STDERR "IMAGE FILES: ".Dumper(\@image_files);
 
     my $service_details_json = $c->config->{image_analysis_services} || '{}';
 
     my %service_details = %{decode_json($service_details_json)};
     
-    # my %service_details = (
-    #     'necrosis' => {
-    #         server_endpoint => "http://unet.mcrops.org/api/",
-    #         image_type_name => "image_analysis_necrosis_solomon_nsumba",
-    #     },
-    #     'whitefly_count' => {
-    #         server_endpoint => "http://18.216.149.204/home/api2/",
-    #         image_type_name => "image_analysis_white_fly_count_solomon_nsumba",
-    #     },
-    #     'count_contours' => {
-    #         image_type_name => "image_analysis_contours",
-    #         trait_name => "count_contours",
-    #         script => 'GetContours.py',
-    #         input_image => 'image_path',
-    #         outfile_image => 'outfile_path',
-    #         results_outfile => 'results_outfile_path',
-    #     },
-    #     'largest_contour_percent' => {
-    #         image_type_name => 'image_analysis_largest_contour',
-    #         trait_name => 'percent_largest_contour',
-    #         script => 'GetLargestContour.py',
-    #         input_image => 'image_path',
-    #         outfile_image => 'outfile_path',
-    #         results_outfile => 'results_outfile_path',
-    #     },
-    #     'count_sift' => {
-    #         image_type_name => "image_analysis_sift",
-    #         trait_name => "count_sift",
-    #         script => 'ImageProcess/CalculatePhenotypeSift.py',
-    #         input_image => 'image_paths',
-    #         outfile_image => 'outfile_paths',
-    #         results_outfile => 'results_outfile_path',
-    #     }
-    # );
-
     my $image_type_name = $service_details{$service}->{'image_type_name'};
 
     my $linking_table_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, $image_type_name, 'project_md_image')->cvterm_id();
@@ -159,6 +130,7 @@ sub image_analysis_submit_POST : Args(0) {
     );
     my $it = 0;
 
+    my $image_link;
     foreach (@image_files) {
         my $dir = $c->tempfiles_subdir('/'.$image_type_name);
         my $archive_temp_image = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => $image_type_name.'/imageXXXX');
@@ -166,7 +138,7 @@ sub image_analysis_submit_POST : Args(0) {
         my %res;
 
         if (defined $service_details{$service}->{'server_endpoint'}) { # submit image to external service for processing
-            print STDERR "Using endpoint ".$service_details{$service}->{'server_endpoint'}." to analyze image\n";
+            print STDERR "Using endpoint ".$service_details{$service}->{'server_endpoint'}." to analyze image test\n";
             my $resp = $ua->post(
                 $service_details{$service}->{'server_endpoint'},
                 Content_Type => 'form-data',
@@ -177,15 +149,35 @@ sub image_analysis_submit_POST : Args(0) {
             if ($resp->is_success) {
                 my $message = $resp->decoded_content;
                 my $message_hashref = decode_json $message;
-                my $rc = getstore($message_hashref->{image_link}, $archive_temp_image);
+                print STDERR "response message trait: " . Dumper $message_hashref;
+                my $is_multi_trait = (exists $message_hashref->{objects}[0]{traits});
+                print STDERR "is multi trait: $is_multi_trait";
+
+                my $rc;
+                if ($is_multi_trait) {
+                    $image_link = $message_hashref->{derived_images}[0]{url};
+                } else{
+                    $image_link = $message_hashref->{image_link};
+                }
+                print STDERR "image link: $image_link";
+                $rc = getstore($image_link, $archive_temp_image);
                 if (is_error($rc)) {
                     die "getstore of ".$message_hashref->{image_link}." failed with $rc";
                 }
-                print STDERR Dumper $message_hashref;
-                $res{'value'} = $message_hashref->{trait_value};
-                $res{'analysis_info'} = $message_hashref->{info} || {};
-                $res{'trait'} = $trait;
-                $res{'trait_id'} = $trait_details->[0]->{trait_id};
+                print STDERR "MESSAGE HASHREF: ".Dumper($message_hashref); 
+
+                if ($is_multi_trait) {
+                    my $formatted_data = format_multi_trait_data($message_hashref);
+
+                    $res{'subanalyses'} = $formatted_data->{subanalyses};
+                    $res{'analysis_info'} = $message_hashref->{info} || {};
+                } else {
+                    $res{'value'} = $message_hashref->{trait_value};
+                    $res{'analysis_info'} = $message_hashref->{info} || {};
+                    $res{'trait'} = $trait;
+                    $res{'trait_id'} = $trait_details->[0]->{trait_id};
+                    $res{'subanalyses'} = $message_hashref->{results};
+                }
             }
             else {
                 print STDERR Dumper $resp->status_line;
@@ -227,6 +219,7 @@ sub image_analysis_submit_POST : Args(0) {
             my $md5 = $image->calculate_md5sum($archive_temp_image);
             my $stock_id = $result->[$it]->{stock_id};
             my $project_id = $result->[$it]->{project_id};
+            print STDERR "project id: $project_id";
 
             my $project_where = ' ';
             my $project_join = ' ';
@@ -273,14 +266,15 @@ sub image_analysis_submit_POST : Args(0) {
 
             $res{'analyzed_image_id'} = $image_id;
             $res{'image_link'} = $image->get_image_url("original");
+            $res{'analyzed_image_overlay'} = $image_link;
         }
 
         $result->[$it]->{result} = \%res;
         $it++;
     }
 
-    # print STDERR "Before grouping result is: ".Dumper($result);
-
+    print STDERR "Before grouping result is: ".Dumper($result);
+    
     $c->stash->{rest} = { success => 1, results => $result };
 }
 
@@ -288,8 +282,10 @@ sub image_analysis_group : Path('/ajax/image_analysis/group') : ActionClass('RES
 sub image_analysis_group_POST : Args(0) {
     my $self = shift;
     my $c = shift;
+    my $schema = $c->dbic_schema("Bio::Chado::Schema");
     my $result = decode_json $c->req->param('result');
-    # print STDERR Dumper($result);
+    #my $image_id = decode_json $c->req->param('image_id');
+    print STDERR "IMAGE ANALYSIS RESULTS: ".Dumper($result);
     my %grouped_results = ();
     my @table_data = ();
 
@@ -298,18 +294,19 @@ sub image_analysis_group_POST : Args(0) {
     my @sorted_result = sort {$$a{"stock_id"} <=> $$b{"stock_id"} } @{$result};
     # my $old_uniquename = $sorted_result[0]->{'stock_uniquename'};
     $grouped_results{$sorted_result[0]->{'stock_uniquename'}}{$sorted_result[0]->{'result'}->{'trait'}} = [];
+    my $is_multi_trait = !exists($results_ref->{result}{trait});
 
     for (my $i = 0; $i <= $#sorted_result; $i++) {
         $results_ref = $sorted_result[$i];
-        # print STDERR "\n\nResults ref is ".Dumper($results_ref)."\n\n";
+        print STDERR "\n\nResults ref is ".Dumper($results_ref)."\n\n";
         $uniquename = $results_ref->{'stock_uniquename'};
         $trait = $results_ref->{'result'}->{'trait'};
         $value = $results_ref->{'result'}->{'value'};
 
-        if ($trait && $value) {
+        if ($trait && $value) {  # we have a single analysis
             print STDERR "Working on $trait for $uniquename. Saving the details \n";
 
-	    my $analyzed_link = dirname($results_ref->{'result'}->{'image_link'})."/small.jpg";
+	        my $analyzed_link = dirname($results_ref->{'result'}->{'image_link'})."/small.jpg";
 	    
             push @{$grouped_results{$uniquename}{$trait}}, {
                         stock_id => $results_ref->{'stock_id'},
@@ -321,35 +318,199 @@ sub image_analysis_group_POST : Args(0) {
                         value => $value + 0
                 };
         }
-        else { # if no result returned for an image, include it with error details.
-            print STDERR "No usable analysis data in this results_ref \n";
-            push @{$grouped_results{$uniquename}{$trait}}, {
-                        stock_id => $results_ref->{'stock_id'},
-                        collector => $results_ref->{'image_username'},
-                        original_link => $results_ref->{'result'}->{'original_image'},
-                        analyzed_link => 'Error: ' . $results_ref->{'result'}->{'error'},
-                        image_name => $results_ref->{'image_original_filename'}.$results_ref->{'image_file_ext'},
-                        trait_id => $results_ref->{'result'}->{'trait_id'},
-                        value => 'NA'
+        elsif (exists($results_ref->{result}->{subanalyses}) && ref($results_ref->{result}->{subanalyses}) eq "HASH")  { # multiple results are returned, for several sub-images
+	    print STDERR "MULTIPLE RESULTS DETECTED!\n";
+        my $project_id;
+
+	    foreach my $sample (keys %{$results_ref->{result}->{subanalyses}}) {
+
+            my $sample_data = $results_ref->{result}->{subanalyses}{$sample};
+
+           # my $is_multi_trait = ref($sample_data) eq 'HASH' && !exists($results_ref->{result}{trait});
+
+            my $stock_id = $results_ref->{stock_id};
+            print STDERR "STOCK ID IS: $stock_id";
+            my $projects_rs = $schema->resultset('NaturalDiversity::NdExperimentStock')->search({ stock_id => $stock_id })->search_related('nd_experiment')->search_related('nd_experiment_projects')->search_related('project');
+            if (my $project = $projects_rs->next) {
+                $project_id = $project->project_id;
+            }
+            print STDERR "PROJECT ID IS: $project_id\n";
+
+            my $stock = $schema->resultset('Stock::Stock')->find({ stock_id => $stock_id });
+            my $accession_id;
+            my $stock_type;
+            my $stock_type_name;
+            if ($stock) {
+                $stock_type = $stock->type;
+                $stock_type_name = $stock_type->name;
+
+                if ($stock_type_name eq 'plant') {
+                    my $plant_of_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'plant_of', 'stock_relationship')->cvterm_id();
+
+                    my $plot_rel = $schema->resultset("Stock::StockRelationship")->find({ object_id => $stock_id, type_id => $plant_of_cvterm_id, });
+                    my $plot_stock = $plot_rel ? $plot_rel->subject() : undef;
+                    
+                    my $plot_rel = $stock->search_related('stock_relationship_subjects', { 'type.name' => 'plant_of', }, {join => 'type' })->single;
+                    my $plot = $plot_rel ? $plot_rel->object : undef;
+
+                    if ($plot) {
+                        my $acc_rel = $plot_stock->search_related('stock_relationship_subjects', { 'type.name' => 'plot_of', }, { join => 'type', })->single;
+
+                        my $accession = $acc_rel ? $acc_rel->object : undef;
+                        $accession_id = $accession ? $accession->stock_id : undef;
+                    }
+                } elsif ($stock_type_name eq 'plot') {
+                    my $accession = $stock->search_related('stock_relationship_subjects', { 'type.name' => 'plot_of', }, { join => 'type', })->single;
+                    if ($accession) {
+                        $accession_id = $accession->object->stock_id;
+                    }
+                } else {
+                    $accession_id = $stock->stock_id;
+                }
+            }
+
+            my $tissue_sample_of_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'tissue_sample_of', 'stock_relationship')->cvterm_id();
+
+            my $rs = $schema->resultset("Stock::StockRelationship")->search(
+                {
+                    'me.object_id' => $stock_id,
+                    'me.type_id' => $tissue_sample_of_cvterm_id,
+                },
+                {
+                    prefetch => 'subject',
+                }
+            );
+
+            my @samples;
+            while (my $rel = $rs->next) {
+                push @samples, $rel->subject->uniquename;
+            }
+
+            my $sample_num = $sample;
+            $sample_num =~ /_(\d+)$/;
+            $sample_num = int($sample_num);
+
+            my $trait_id;
+            $trait_id = $results_ref->{'result'}->{'trait_id'};
+            my @trait_samples = grep { $_ =~ /$trait_id/ } @samples;
+
+            my $max_num = 0;
+            if (@trait_samples) {
+                for my $s (@trait_samples) {
+                    if ($s =~ /_sample(\d+)$/) {
+                        $max_num = $1 if $1 > $max_num;
+                    }
+                }
+            }
+
+            my $image_id = $results_ref->{'image_id'};
+            my @existingSamples = grep { $_ =~ /$image_id/ } @samples;
+            my $image_analyzed = 0;
+            if (@existingSamples) {
+                $image_analyzed = 1;
+                $max_num = 0;
+            }
+
+            if ($is_multi_trait) {
+                print STDERR "RESULT IS MULTI TRAIT";
+                my @trait_rows;
+                #my $test_trait_id = 70739; 
+
+                foreach my $trait_name (keys %{$sample_data}) {
+                    if (exists $results_ref->{result}->{subanalyses}{$sample}{$trait_name}{trait_id}) {
+                        $trait_id = $results_ref->{result}->{subanalyses}{$sample}{$trait_name}{trait_id};
+                    } else {
+                        my ($trimmed_trait_name) = split (/\|/, $trait_name);
+                        print STDERR "trimmed trait name: $trimmed_trait_name";
+                        #my $test_trait_name = 'apical branching';
+                        my $cvterm = $schema->resultset('Cv::Cvterm')->find({
+                            name => $trimmed_trait_name
+                        });
+                        print STDERR "cvterm test: $cvterm";
+                        if ($cvterm) {
+                            $trait_id = $cvterm->cvterm_id;
+                        }
+                    }
+
+                    print STDERR "final trait_id test: $trait_id";
+
+                    my $val = $sample_data->{$trait_name}{trait_value};
+                    push @{$grouped_results{$uniquename}{$trait_name}}, {
+                        stock_id      => $results_ref->{stock_id},
+                        collector     => $results_ref->{image_username},
+                        trial_id => $project_id,
+                        accession_id => $accession_id,
+                        original_link => $results_ref->{result}->{original_image},
+                        analyzed_link => $results_ref->{result}->{image_link},
+                        object_name    => $sample,
+                        trait_name    => $trait_name,
+                        trait_id      => $trait_id,
+                        stock_type => $stock_type_name,
+                        sample_num => $sample_num,
+                        image_analyzed => $image_analyzed,
+                        value         => $val + 0,
+                        status => 'create',
+                    };
+                    #$test_trait_id++;
                 };
-        }
+            } else {
+                # print STDERR "stock type: $stock_type_name accession id: $accession_id";
+
+                my $related_accession;
+                        
+                push @{$grouped_results{$uniquename}{$trait}}, {
+                    stock_id => $results_ref->{stock_id},
+                    collector => $results_ref->{image_username},
+                    trial_id => $project_id,
+                    accession_id => $accession_id,
+                    original_link => $results_ref->{result}->{original_image},
+                    analyzed_link => $results_ref->{result}->{subanalyses}->{$sample}->{image_link},
+                    #image_name => dirname($results_ref->{image_original_filename}."_".$sample."_".$results_ref->{image_file_ext}),
+                    image_name => $sample,
+                    trait_name => $results_ref->{result}->{trait},
+                    trait_id => $results_ref->{'result'}->{'trait_id'},
+                    stock_type => $stock_type_name,
+                    sample_num => $max_num,
+                    image_analyzed => $image_analyzed,
+                    value => $results_ref->{result}->{subanalyses}->{$sample}->{trait_value}+0,
+                    status => 'create',
+                };
+            }
+	     
+	    }
+	    print STDERR "SUBANALYSIS IMAGE RESULTS: ".Dumper(\%grouped_results);
+	} else { # if no result returned for an image, include it with error details.
+        print STDERR "No usable analysis data in this results_ref \n";
+        push @{$grouped_results{$uniquename}{$trait}}, {
+            stock_id => $results_ref->{'stock_id'},
+            collector => $results_ref->{'image_username'},
+            original_link => $results_ref->{'result'}->{'original_image'},
+            analyzed_link => 'Error: ' . $results_ref->{'result'}->{'error'},
+            image_name => $results_ref->{'image_original_filename'}.$results_ref->{'image_file_ext'},
+            trait_id => $results_ref->{'result'}->{'trait_id'},
+            value => 'NA'
+	    };
+    }
 
         $next_results_ref = $sorted_result[$i+1];
         $next_uniquename = $next_results_ref->{'stock_uniquename'};
 
-        if ($next_uniquename ne $uniquename) {
+        if (!defined $next_results_ref || $next_uniquename ne $uniquename) {
 
             print STDERR "Calculating mean value for $uniquename\n";
 
             my $uniquename_data = $grouped_results{$uniquename};
 
             foreach my $trait (keys %{$uniquename_data}) {
+                next unless defined $trait && $trait ne '';
+
                 my $details = $uniquename_data->{$trait};
                 my @values = map { $_->{'value'}} @{$uniquename_data->{$trait}};
                 @values= grep { $_ ne 'NA' } @values; # remove NAs before calculating mean
                 # print STDERR "\n\n\nVALUES ARE @values and length is ". scalar @values . "\n\n\n";
                 my $mean_value = @values ? sprintf("%.2f", sum(@values)/@values) : undef;
                 print STDERR "Mean value is $mean_value\n";
+               # print STDERR "Trait Id: " . $uniquename_data->{$trait}[0]->{'trait_id'};
                 push @table_data, {
                     observationUnitDbId => $uniquename_data->{$trait}[0]->{'stock_id'},
                     observationUnitName => $uniquename,
@@ -357,6 +518,11 @@ sub image_analysis_group_POST : Args(0) {
                     observationTimeStamp => localtime()->datetime,
                     observationVariableDbId => $uniquename_data->{$trait}[0]->{'trait_id'},
                     observationVariableName => $trait,
+                    studyDbId => $uniquename_data->{$trait}[0]->{'trial_id'},
+                    germplasmDbId => $uniquename_data->{$trait}[0]->{'accession_id'},
+                    stock_type => $uniquename_data->{$trait}[0]->{'stock_type'},
+                    sample_num => $uniquename_data->{$trait}[0]->{'sample_num'},
+                    image_analyzed => $uniquename_data->{$trait}[0]->{'image_analyzed'},
                     value => $mean_value,
                     details => $details,
                     numberAnalyzed => scalar @values
@@ -364,9 +530,59 @@ sub image_analysis_group_POST : Args(0) {
                 };
             }
         }
+        
     }
-    # print STDERR "table data is ".Dumper(@table_data);
-    $c->stash->{rest} = { success => 1, results => \@table_data };
+    
+    my $image_overlay = $results_ref->{result}{analyzed_image_overlay};
+    print STDERR "table data is ".Dumper(@table_data);
+    $c->stash->{rest} = { success => 1, results => { table_data => \@table_data, analyzed_image_overlay => $image_overlay, multi_trait_analysis => $is_multi_trait}};
+}
+
+sub format_multi_trait_data {
+    my $message_hashref = shift;
+    my %subanalyses;
+    my $image_link;
+
+    foreach my $obj (@{$message_hashref->{objects}}) {
+        my $sample_name = $obj->{object_id};
+
+        foreach my $trait_key (keys %{$obj->{traits}}) {
+            my $trait_val = $obj->{traits}{$trait_key}{value};
+
+            if (exists $message_hashref->{$trait_key}{image_link}) {
+                $image_link = $message_hashref->{$trait_key}{image_link};
+            }
+            $subanalyses{$sample_name}{$trait_key} = {
+                trait_value => $trait_val,
+                image_link => $image_link
+            };
+        }
+    }
+
+    return {
+        subanalyses => \%subanalyses,
+        image_link => $message_hashref->{derived_images}[0]{url},
+        info => {
+            object_count => $message_hashref->{qc}->{object_count},
+            job_id => $message_hashref->{job_id}
+        }
+    };
+}
+
+sub get_image_file : Path('/get_image_file') Args(0) {
+    my ($self, $c) = @_;
+    my $url = $c->req->params->{url};
+
+    my $ua = LWP::UserAgent->new;
+    my $res = $ua->get($url);
+
+    if ($res->is_success) {
+        $c->res->content_type($res->header('Content-Type'));
+        $c->res->body($res->decoded_content(charset => 'none'));
+    } else {
+        $c->res->status(500);
+        $c->res->body("Failed to fetch image");
+    }
 }
 
 sub get_activity_data : Path('/ajax/image_analysis/activity') Args(0) {
@@ -430,21 +646,33 @@ sub _log_analysis_activity {
     my $now = DateTime->now();
 
     if ($c->config->{image_analysis_log}) {
-      my $logfile = $c->config->{image_analysis_log};
-      open (my $F, ">> :encoding(UTF-8)", $logfile) || die "Can't open logfile $logfile\n";
-      print $F join("\t", (
-            $now->year()."-".$now->month()."-".$now->day()." ".$now->hour().":".$now->minute(),
-            $c->user->get_object->get_username(),
-            $service,
-            $trait,
-            $image_ids
-            ));
-      print $F "\n";
-      close($F);
-      print STDERR "Analysis submission logged in $logfile\n";
+	my $logfile = $c->config->{image_analysis_log};
+	if (! -e $logfile) {
+	    print STDERR "No log file available, returning.\n";
+	    return;
+	}
+	print STDERR "Opening logfile $logfile...\n";
+	my $F;
+	eval { 
+	    open ( $F, ">> :encoding(UTF-8)", $logfile) || die "Can't open logfile $logfile\n";
+
+	};
+	if ($@) {
+	    print STDERR "Can't open logfile because of $@\n";
+	}
+	print $F join("\t", (
+			  $now->year()."-".$now->month()."-".$now->day()." ".$now->hour().":".$now->minute(),
+			  $c->user->get_object->get_username(),
+			  $service,
+			  $trait,
+			  $image_ids
+		      ));
+	print $F "\n";
+	close($F);
+	print STDERR "Analysis submission logged in $logfile\n";
     }
     else {
-      print STDERR "Note: set config variable image_analysis_log to obtain a log and graph of image analysis activity.\n";
+	print STDERR "Note: set config variable image_analysis_log to obtain a log and graph of image analysis activity.\n";
     }
 }
 

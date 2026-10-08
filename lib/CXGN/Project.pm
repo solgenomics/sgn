@@ -29,7 +29,7 @@ use Moose;
 
 use Data::Dumper;
 use Try::Tiny;
-use Data::Dumper;
+use List::MoreUtils qw(uniq);
 use CXGN::Trial::Folder;
 use CXGN::Stock;
 use CXGN::Trial::TrialLayout;
@@ -39,10 +39,15 @@ use Time::Piece;
 use Time::Seconds;
 use CXGN::Calendar;
 use JSON;
+use CXGN::JSONUtils qw(decode_stored_json);
 use File::Basename qw | basename dirname|;
+use File::Temp 'tempfile';
 use Scalar::Util qw | looks_like_number |;
 use CXGN::Genotype::GenotypingProject;
 use CXGN::Genotype::Protocol;
+use CXGN::Phenotypes::StorePhenotypes;
+use CXGN::Phenotypes::SearchFactory;
+use CXGN::People::Person;
 
 =head2 accessor bcs_schema()
 
@@ -199,9 +204,9 @@ sub get_cxgn_project_type {
     my $analysis_metadata_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema(), 'analysis_metadata_json', 'project_property')->cvterm_id();
     my $crossing_trial_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema(), 'crossing_trial',  'project_type')->cvterm_id();
 
-    my $q = "SELECT projectprop.type_id, projectprop.value FROM project JOIN projectprop USING(project_id)";
+    my $q = "SELECT projectprop.type_id, projectprop.value FROM project JOIN projectprop USING(project_id) WHERE project_id = ?";
 	my $h = $self->bcs_schema->storage->dbh->prepare($q);
-	$h->execute();
+	$h->execute($self->get_trial_id());
 
     my $cxgn_project_type = 'field_trial_project';
     my $plot_data_level = 'plot';
@@ -2015,7 +2020,7 @@ sub set_field_size {
 sub get_additional_info {
     my $self = shift;
     my $additional_info = $self->_get_projectprop('project_additional_info');
-    return $additional_info ? decode_json($additional_info) : undef;
+    return $additional_info ? decode_stored_json($additional_info) : undef;
 }
 
 sub set_additional_info {
@@ -2263,15 +2268,15 @@ sub delete_field_layout {
     my $cxgn_project_type = $self->get_cxgn_project_type()->{cxgn_project_type};
 
     if (scalar(@{$self->get_genotyping_trials_from_field_trial}) > 0) {
-        return 'This field trial has been linked to genotyping trials already, and cannot be easily deleted.';
+        return 'This field trial has been linked to genotyping trials already, and cannot be deleted.';
     }
     if (scalar(@{$self->get_field_trials_source_of_genotyping_trial}) > 0) {
-        return 'This genotyping trial has been linked to field trials already, and cannot be easily deleted.';
+        return 'This genotyping trial has been linked to field trials already, and cannot be deleted.';
     }
 
     if ($cxgn_project_type ne 'analysis_project') {
         if (scalar(@{$self->get_crossing_experiments_from_field_trial}) >0) {
-            return 'This field trial has been linked to crossing experiments already, and cannot be easily deleted.';
+            return 'This field trial has been linked to crossing experiments already, and cannot be deleted.';
         }
     }
 
@@ -2405,15 +2410,15 @@ sub delete_metadata {
     my $cxgn_project_type = $self->get_cxgn_project_type()->{cxgn_project_type};
 
     if (scalar(@{$self->get_genotyping_trials_from_field_trial}) > 0) {
-        return 'This field trial has been linked to genotyping trials already, and cannot be easily deleted.';
+        return 'This field trial has been linked to genotyping trials already, and cannot be deleted.';
     }
     if (scalar(@{$self->get_field_trials_source_of_genotyping_trial}) > 0) {
-        return 'This genotyping trial has been linked to field trials already, and cannot be easily deleted.';
+        return 'This genotyping trial has been linked to field trials already, and cannot be deleted.';
     }
 
     if ($cxgn_project_type ne 'analysis_project') {
         if (scalar(@{$self->get_crossing_experiments_from_field_trial}) >0) {
-            return 'This field trial has been linked to crossing experiments already, and cannot be easily deleted.';
+            return 'This field trial has been linked to crossing experiments already, and cannot be deleted.';
         }
     }
 
@@ -2550,10 +2555,10 @@ sub _delete_field_layout_experiment {
     return { success => 1 };
 }
 
-sub _delete_management_factors_experiments {
+sub _delete_management_factors_experiments { # DEPRECATED
     my $self = shift;
     my $management_factor_type_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'treatment_experiment', 'experiment_type')->cvterm_id();
-    my $management_factors = $self->get_treatments;
+    my $management_factors = $self->get_treatment_projects; #$self->get_treatments
     foreach (@$management_factors){
         my $m = CXGN::Trial->new({
             bcs_schema => $self->bcs_schema,
@@ -2571,6 +2576,78 @@ sub _delete_management_factors_experiments {
         $m->delete_project_entry;
     }
     return { success => 1 };
+}
+
+sub add_management_factor {
+    my $self = shift;
+    my $management_factor = shift;
+    my $schema = $self->bcs_schema();
+    my $management_regime_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'management_regime', 'project_property')->cvterm_id();
+    my $mf_rs = $schema->resultset("Project::Projectprop")->find({
+        project_id => $self->get_trial_id(),
+        type_id => $management_regime_type_id
+    });
+
+    if ($mf_rs) {
+        my $management_regime = decode_json($mf_rs->value());
+        push @{$management_regime}, $management_factor;
+        $management_regime = encode_json($management_regime);
+        $mf_rs->update({
+            value => $management_regime
+        });
+    } else {
+        $schema->resultset("Project::Projectprop")->create({
+            project_id => $self->get_trial_id(),
+            value => encode_json([$management_factor]),
+            type_id => $management_regime_type_id
+        });
+    }
+}
+
+sub get_management_regime {
+    my $self = shift;
+    my $schema = $self->bcs_schema();
+    my $management_regime_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'management_regime', 'project_property')->cvterm_id();
+    my $mf_rs = $schema->resultset("Project::Projectprop")->find({
+        project_id => $self->get_trial_id(),
+        type_id => $management_regime_type_id
+    });
+
+    if ($mf_rs) {
+        my $management_regime = decode_json($mf_rs->value());
+        return $management_regime;
+    } else {
+        return "";
+    }
+}
+
+sub remove_management_factor {
+    my $self = shift;
+    my $management_factor = shift;
+    my $schema = $self->bcs_schema();
+    my $management_regime_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'management_regime', 'project_property')->cvterm_id();
+    my $mf_rs = $schema->resultset("Project::Projectprop")->find({
+        project_id => $self->get_trial_id(),
+        type_id => $management_regime_type_id
+    });
+
+    if ($mf_rs) {
+        my $management_regime = decode_json($mf_rs->value());
+        $management_regime = [grep {
+            !($_->{type} eq $management_factor->{type} &&
+            $_->{schedule} eq $management_factor->{schedule} && 
+            $_->{description} eq $management_factor->{description} && 
+            encode_json($_->{completions}) eq encode_json($management_factor->{completions}) &&
+            $_->{start_date} eq $management_factor->{start_date} && 
+            $_->{end_date} eq $management_factor->{end_date})
+        } @{$management_regime}]; 
+        $management_regime = encode_json($management_regime);
+        $mf_rs->update({
+            value => $management_regime
+        });
+    } else {
+        die "No management regime to edit.";
+    }
 }
 
 =head2 function delete_project_entry()
@@ -2593,10 +2670,10 @@ sub delete_project_entry {
     }
 
     if (scalar(@{$self->get_genotyping_trials_from_field_trial}) > 0) {
-        return 'This field trial has been linked to genotyping trials already, and cannot be easily deleted.';
+        return 'This field trial has been linked to genotyping trials already, and cannot be deleted.';
     }
     if (scalar(@{$self->get_field_trials_source_of_genotyping_trial}) > 0) {
-        return 'This genotyping trial has been linked to field trials already, and cannot be easily deleted.';
+        return 'This genotyping trial has been linked to field trials already, and cannot be deleted.';
     }
 
     my $project_owner_schema = CXGN::Phenome::Schema->connect( sub {
@@ -2794,7 +2871,7 @@ sub obsolete_additional_uploaded_file {
 
 
 
-=head2 function get_phenotypes_for_trait($trait_id)
+=head2 function get_phenotypes_for_trait($trait_id, $stock_type, $start_date, $end_date)
 
  Usage:
  Desc:         returns the measurements for the given trait in this trial as an array of values, e.g. [2.1, 2, 50]
@@ -2811,6 +2888,14 @@ sub get_phenotypes_for_trait {
     my $stock_type = shift;
     my @data;
     my $dbh = $self->bcs_schema->storage()->dbh();
+    my $start_date = shift;
+    my $end_date = shift;
+    my $date_sql = '';
+    my @date_placeholders;
+    if ($start_date && $end_date) {
+        $date_sql = " AND (collect_date > ? and collect_date < ?)";
+        @date_placeholders = ($start_date, $end_date);
+    }
 	#my $schema = $self->bcs_schema();
 
 	my $h;
@@ -2821,11 +2906,11 @@ sub get_phenotypes_for_trait {
 		$join_string = 'JOIN nd_experiment_stock USING(nd_experiment_id) JOIN stock USING(stock_id)';
 		$where_string = "stock.type_id=$stock_type_id and";
 	}
-	my $q = "SELECT phenotype.value::real FROM cvterm JOIN phenotype ON (cvterm_id=cvalue_id) JOIN nd_experiment_phenotype USING(phenotype_id) JOIN nd_experiment_project USING(nd_experiment_id) $join_string WHERE $where_string project_id=? and cvterm.cvterm_id = ? and phenotype.value~? ORDER BY phenotype_id ASC;";
+	my $q = "SELECT phenotype.value::real FROM cvterm JOIN phenotype ON (cvterm_id=cvalue_id) JOIN nd_experiment_phenotype USING(phenotype_id) JOIN nd_experiment_project USING(nd_experiment_id) $join_string WHERE $where_string project_id=? and cvterm.cvterm_id = ? and phenotype.value~? $date_sql ORDER BY phenotype_id ASC;";
 	$h = $dbh->prepare($q);
 
     my $numeric_regex = '^-?[0-9]+([,.][0-9]+)?$';
-    $h->execute($self->get_trial_id(), $trait_id, $numeric_regex );
+    $h->execute($self->get_trial_id(), $trait_id, $numeric_regex, @date_placeholders );
     while (my ($value) = $h->fetchrow_array()) {
 	   push @data, $value + 0;
     }
@@ -2850,7 +2935,7 @@ sub get_phenotypes_for_trait {
 sub get_stock_phenotypes_for_traits {
     my $self = shift;
     my $trait_ids = shift;
-    my $stock_type = shift; #plot, plant, all
+    my $stock_type = shift; #plot, plant, subplot,  all
     my $stock_relationships = shift; #arrayref. plot_of, plant_of
     my $relationship_stock_type = shift; #plot, plant
 	my $subject_or_object = shift;
@@ -2942,26 +3027,31 @@ sub get_traits_assayed {
         $cvtermprop_where = " AND cvtermprop.type_id = $trait_format_cvterm_id AND cvtermprop.value = '$trait_format' ";
     }
 
-    my $contains_relationship_rs = $schema->resultset("Cv::Cvterm")->search({ name => 'contains' });
-    if ($contains_relationship_rs->count == 0) {
-        die "The cvterm 'contains' was not found! Please add this cvterm! Generally this term is added when loading an ontology into the database.\n";
+
+    my $relationship_cv = $schema->resultset("Cv::Cv")->find({ name => 'relationship'});
+    my $rel_cv_id;
+    if ($relationship_cv) {
+        $rel_cv_id = $relationship_cv->cv_id ;
+    } else {
+        print STDERR "relationship ontology is not found in the database\n";
     }
-    elsif ($contains_relationship_rs->count > 1) {
-        die "The cvterm 'contains' was found more than once! Please consolidate this cvterm by updating cvterm_relationship entries and then deleting the left over cvterm entry! Generally this term is added when loading an ontology into the database.\n";
+
+    my $variable_relationship = $schema->resultset("Cv::Cvterm")->find({ name => 'VARIABLE_OF'  , cv_id => $rel_cv_id });
+    if (!$variable_relationship) {
+        die "The cvterm 'VARIABLE_OF' was not found! Please make sure your database us up-to-date! This term is part of the relationship ontology.\n";
     }
-    my $contains_relationship_cvterm_id = $contains_relationship_rs->first->cvterm_id;
-    my $variable_relationship_rs = $schema->resultset("Cv::Cvterm")->search({ name => 'VARIABLE_OF' });
-    if ($variable_relationship_rs->count == 0) {
-        die "The cvterm 'VARIABLE_OF' was not found! Please add this cvterm! Generally this term is added when loading an ontology into the database.\n";
+    my $contains_relationship = $schema->resultset("Cv::Cvterm")->find({ name => 'contains', cv_id => $rel_cv_id });
+    if (!$contains_relationship) {
+        die "The cvterm 'contains' was not found! Please make sure your database is up-to-date! This term is part of the relationship ontology.\n";
     }
-    elsif ($variable_relationship_rs->count > 1) {
-        die "The cvterm 'VARIABLE_OF' was found more than once! Please consolidate this cvterm by updating cvterm_relationship entries and then deleting the left over cvterm entry! Generally this term is added when loading an ontology into the database.\n";
-    }
+    my $contains_relationship_cvterm_id = $contains_relationship->cvterm_id;
+
 
     my $composable_cv_type_cvterm_id = $contains_composable_cv_type ? SGN::Model::Cvterm->get_cvterm_row($schema, $contains_composable_cv_type, 'composable_cvtypes')->cvterm_id : '';
 
     my $q;
     if ($stock_type) {
+        # print STDERR " the stock type here: = $stock_type\n";
         my $stock_type_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema(), $stock_type, 'stock_type')->cvterm_id();
         $q = "SELECT (((cvterm.name::text || '|'::text) || db.name::text) || ':'::text) || dbxref.accession::text AS trait, cvterm.cvterm_id, imaging_project.project_id, imaging_project.name, count(phenotype.value)
             FROM cvterm
@@ -3001,7 +3091,7 @@ sub get_traits_assayed {
             FILTER (WHERE component_cvterm.cvterm_id IS NOT NULL), '[]'
         ) AS components
         FROM cvterm
-        LEFT JOIN cvterm_relationship on (cvterm.cvterm_id = cvterm_relationship.object_id AND cvterm_relationship.type_id = $contains_relationship_cvterm_id)
+        LEFT JOIN cvterm_relationship on (cvterm.cvterm_id = cvterm_relationship.object_id AND cvterm_relationship.type_id = ?)
         LEFT JOIN cvterm AS component_cvterm on (cvterm_relationship.subject_id = component_cvterm.cvterm_id)
         LEFT JOIN cv on (component_cvterm.cv_id = cv.cv_id)
         LEFT JOIN cvprop on (cv.cv_id = cvprop.cv_id)
@@ -3015,7 +3105,7 @@ sub get_traits_assayed {
 
     $traits_assayed_h->execute($self->get_trial_id());
     while (my ($trait_name, $trait_id, $imaging_project_id, $imaging_project_name, $count) = $traits_assayed_h->fetchrow_array()) {
-        $component_h->execute($trait_id);
+        $component_h->execute($contains_relationship_cvterm_id, $trait_id);
         my ($component_terms) = $component_h->fetchrow_array();
         $component_terms = decode_json $component_terms;
         if ($contains_composable_cv_type) {
@@ -3182,7 +3272,7 @@ sub get_project_start_date_cvterm_id {
 
 =cut
 
-sub create_plant_entities {
+sub create_plant_entities { 
     my $self = shift;
     my $plants_per_plot = shift || 30;
     my $inherits_plot_treatments = shift;
@@ -3190,9 +3280,28 @@ sub create_plant_entities {
     my $plant_owner_username = shift;
     my $rows_per_plot = shift;
     my $cols_per_plot = shift;
+    my $phenotype_store_config = shift;
+    my $additional_plants = shift;
+
+    my $chado_schema = $self->bcs_schema();
+
+    my %phenostore_stocks = ();
+    my $treatments = $self->get_treatments();
+    my $phenostore_data_hash = {};
+    my $phenosearch = CXGN::Phenotypes::SearchFactory->instantiate(
+        'Native', {
+        bcs_schema => $chado_schema,
+        trait_list => [map {$_->{trait_id}} @{$treatments}],
+        trial_list => [$self->get_trial_id()],
+        data_level => 'plot'
+    });
+    my $treatment_data = $phenosearch->search();
+    my $plot_pheno = {};
+    foreach my $row (@{$treatment_data}) {
+        $plot_pheno->{$row->{obsunit_uniquename}}->{$row->{trait_name}} = $row->{phenotype_value};
+    }
 
     my $create_plant_entities_txn = sub {
-        my $chado_schema = $self->bcs_schema();
         my $layout = CXGN::Trial::TrialLayout->new( { schema => $chado_schema, trial_id => $self->get_trial_id(), experiment_type=>'field_layout' });
         my $design = $layout->get_design();
 
@@ -3211,45 +3320,36 @@ sub create_plant_entities {
         my $col_num_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'col_number', 'stock_property')->cvterm_id();
         my $has_plants_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'project_has_plant_entries', 'project_property')->cvterm_id();
         my $field_layout_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'field_layout', 'experiment_type')->cvterm_id();
-        my $treatment_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'treatment_experiment', 'experiment_type')->cvterm_id();
         # my $row_num_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'row_number', 'stock_property')->cvterm_id();
         #my $plants_per_plot_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'plants_per_plot', 'project_property')->cvterm_id();
 
-        my $treatments;
-        my %treatment_experiments;
-        my %treatment_plots;
-        if ($inherits_plot_treatments){
-            $treatments = $self->get_treatments();
-            foreach (@$treatments){
-
-                my $rs = $chado_schema->resultset("Project::Projectprop")->find_or_create({
-                    type_id => $has_plants_cvterm,
-                    value => $plants_per_plot,
-                    project_id => $_->[0],
-                });
-
-                my $treatment_nd_experiment = $chado_schema->resultset("Project::Project")->search( { 'me.project_id' => $_->[0] }, {select=>['nd_experiment.nd_experiment_id']})->search_related('nd_experiment_projects')->search_related('nd_experiment', { 'nd_experiment.type_id' => $treatment_cvterm })->single();
-                $treatment_experiments{$_->[0]} = $treatment_nd_experiment->nd_experiment_id();
-
-                my $treatment_trial = CXGN::Project->new({ bcs_schema => $chado_schema, trial_id => $_->[0]});
-                my $plots = $treatment_trial->get_plots();
-                foreach my $plot (@$plots){
-                    $treatment_plots{$_->[0]}->{$plot->[0]} = 1;
-                }
+        if (!$additional_plants) {
+            my $rs = $chado_schema->resultset("Project::Projectprop")->find_or_create({
+                type_id => $has_plants_cvterm,
+                value => $plants_per_plot,
+                project_id => $self->get_trial_id(),
+            });
+        } else {
+            my $rs = $chado_schema->resultset("Project::Projectprop")->find({
+                type_id => $has_plants_cvterm,
+                project_id => $self->get_trial_id(),
+            });
+            if ($rs) {
+                $rs->update({ value => $rs->value() + $plants_per_plot });
             }
         }
-
-        my $rs = $chado_schema->resultset("Project::Projectprop")->find_or_create({
-            type_id => $has_plants_cvterm,
-            value => $plants_per_plot,
-            project_id => $self->get_trial_id(),
-        });
 
         my $field_layout_experiment = $chado_schema->resultset("Project::Project")->search( { 'me.project_id' => $self->get_trial_id() }, {select=>['nd_experiment.nd_experiment_id']})->search_related('nd_experiment_projects')->search_related('nd_experiment', { 'nd_experiment.type_id' => $field_layout_cvterm })->single();
 
         foreach my $plot (keys %$design) {
             #print STDERR " ... creating plants for plot $plot...\n";
             my $plot_row = $chado_schema->resultset("Stock::Stock")->find( { uniquename => $design->{$plot}->{plot_name}, type_id=>$plot_cvterm });
+            my $existing_count = 0;
+            if ($additional_plants) {
+                my $existing_plants = $design->{$plot}->{plant_names};
+                $existing_count = $existing_plants ? scalar(@$existing_plants) : 0;
+            }
+
             my @plant_coords = ();
 
             if ($rows_per_plot && $cols_per_plot) { #if these are defined then we need to record row col data for plants
@@ -3258,20 +3358,61 @@ sub create_plant_entities {
                         push @plant_coords, "$row,$col";
                     }
                 }
+                if ($additional_plants) {
+                    my $total_capacity = $rows_per_plot * $cols_per_plot;
+                    if ($existing_count + $plants_per_plot > $total_capacity) {
+                        die "Cannot add $plants_per_plot plant(s) to plot $design->{$plot}->{plot_name}: $existing_count plant(s) already exist and the grid capacity is $total_capacity ($rows_per_plot rows x $cols_per_plot cols).";
+                    }
+                    my %occupied_coords;
+                    my $existing_plants_ref = $design->{$plot}->{plant_names} // [];
+                    if (@$existing_plants_ref) {
+                        my $ep_rs = $chado_schema->resultset("Stock::Stock")->search(
+                            { uniquename => { -in => $existing_plants_ref }, type_id => $plant_cvterm }
+                        );
+                        while (my $ep = $ep_rs->next()) {
+                            my $rp = $ep->search_related('stockprops', { type_id => $row_num_cvterm })->first();
+                            my $cp = $ep->search_related('stockprops', { type_id => $col_num_cvterm })->first();
+                            if ($rp && $cp) {
+                                $occupied_coords{ $rp->value() . ',' . $cp->value() } = 1;
+                            }
+                        }
+                    }
+                    @plant_coords = grep { !$occupied_coords{$_} } @plant_coords;
+                    if (scalar(@plant_coords) < $plants_per_plot) {
+                        die "Cannot add $plants_per_plot plant(s) to plot $design->{$plot}->{plot_name}: only " . scalar(@plant_coords) . " unoccupied grid position(s) available within the ${rows_per_plot}x${cols_per_plot} grid.";
+                    }
+                }
             }
 
             if (! $plot_row) {
                 print STDERR "The plot $plot is not found in the database\n";
-                return "The plot $plot is not yet in the database. Cannot create plant entries.";
+                die "The plot $plot is not yet in the database. Cannot create plant entries.";
             }
 
             my $parent_plot = $plot_row->stock_id();
             my $parent_plot_name = $plot_row->uniquename();
             my $parent_plot_organism = $plot_row->organism_id();
 
-            foreach my $plant_index_number (1..$plants_per_plot) {
+            my $start_index = $existing_count + 1;
+            my $end_index   = $existing_count + $plants_per_plot;
+            foreach my $plant_index_number ($start_index..$end_index) {
                 my $plant_name = $parent_plot_name."_plant_$plant_index_number";
                 #print STDERR "... ... creating plant $plant_name...\n";
+
+                foreach my $treatment (@{$treatments}) {
+                    my $treatment_name = $treatment->{trait_name};
+                    if (exists($plot_pheno->{$parent_plot_name}->{$treatment_name})) {
+                        $phenostore_data_hash->{$plant_name}->{$treatment_name} = [
+                            $plot_pheno->{$parent_plot_name}->{$treatment_name},
+                            $phenotype_store_config->{metadata_hash}->{date},
+                            $phenotype_store_config->{metadata_hash}->{operator},
+                            '',
+                            ''
+                        ];
+                        $phenostore_stocks{$plant_name} = 1;
+                    }
+                }
+
                 my $row_num;
                 my $col_num;
 
@@ -3282,8 +3423,8 @@ sub create_plant_entities {
 
                 $self->_save_plant_entry($chado_schema, $accession_cvterm, $cross_cvterm, $family_name_cvterm, $parent_plot_organism, $parent_plot_name,
                 $parent_plot, $plant_name, $plant_cvterm, $plant_index_number, $plant_index_number_cvterm, $block_cvterm, $plot_number_cvterm,
-                $replicate_cvterm, $row_num_cvterm, $row_num, $col_num_cvterm, $col_num, $plant_relationship_cvterm, $field_layout_experiment, $field_layout_cvterm, $inherits_plot_treatments, $treatments,
-                $plot_relationship_cvterm, \%treatment_plots, \%treatment_experiments, $treatment_cvterm, $plant_owner, $plant_owner_username);
+                $replicate_cvterm, $row_num_cvterm, $row_num, $col_num_cvterm, $col_num, $plant_relationship_cvterm, $field_layout_experiment, $field_layout_cvterm,
+                $plot_relationship_cvterm, $plant_owner, $plant_owner_username);
             }
         }
 
@@ -3292,19 +3433,55 @@ sub create_plant_entities {
 
     eval {
         $self->bcs_schema()->txn_do($create_plant_entities_txn);
+
+        if ($inherits_plot_treatments && $treatments) {
+            my @treatment_names = map {$_->{trait_name}} @{$treatments};
+
+            my $store_phenotypes = CXGN::Phenotypes::StorePhenotypes->new({
+                basepath => $phenotype_store_config->{basepath},
+                dbhost => $phenotype_store_config->{dbhost},
+                dbname => $phenotype_store_config->{dbname},
+                dbuser => $phenotype_store_config->{dbuser},
+                dbpass => $phenotype_store_config->{dbpass},
+                temp_file_nd_experiment_id => $phenotype_store_config->{temp_file_nd_experiment_id},
+                bcs_schema => $chado_schema,
+                metadata_schema => $self->metadata_schema,
+                phenome_schema => $self->phenome_schema,
+                user_id => $phenotype_store_config->{user_id},
+                stock_list => [keys(%phenostore_stocks)],
+                trait_list => \@treatment_names,
+                values_hash => $phenostore_data_hash,
+                metadata_hash => $phenotype_store_config->{metadata_hash}
+            });
+
+            my ($verified_warning, $verified_error) = $store_phenotypes->verify();
+
+            if ($verified_warning) {
+                warn $verified_warning;
+            }
+            if ($verified_error) {
+                die $verified_error;
+            }
+
+            my ($stored_phenotype_error, $stored_phenotype_success) = $store_phenotypes->store();
+
+            if ($stored_phenotype_error) {
+                die "An error occurred inheriting treatments: $stored_phenotype_error\n";
+            }
+        }
     };
     if ($@) {
         print STDERR "An error occurred creating the plant entities. $@\n";
-        return 0;
+        return {error => "An error occurred creating the plant entities. $@"};
     }
 
     print STDERR "Plant entities created.\n";
-    return 1;
+    return {success => 1};
 }
 
 =head2 function save_plant_entries()
 
- Usage:        $trial->save_plant_entries(\%data, $plants_per_plot, $inherits_plot_treatments);
+ Usage:        $trial->save_plant_entries(\%data, $plants_per_plot, $inherits_plot_treatments, $owner_id, $phenotype_store_config, $add_additional_plants);
  Desc:         Some trials require plant-level data. It is possible to upload
                 plant_names to save.
  Ret:
@@ -3321,9 +3498,29 @@ sub save_plant_entries {
     my $parsed_data = shift;
     my $plants_per_plot = shift;
     my $inherits_plot_treatments = shift;
+    my $user_id = shift;
+    my $phenotype_store_config = shift;
+    my $add_additional_plants = shift;
+
+    my $chado_schema = $self->bcs_schema();
+
+    my %phenostore_stocks = ();
+    my $treatments = $self->get_treatments();
+    my $phenostore_data_hash = {};
+    my $phenosearch = CXGN::Phenotypes::SearchFactory->instantiate(
+        'Native', {
+        bcs_schema => $chado_schema,
+        trait_list => [map {$_->{trait_id}} @{$treatments}],
+        trial_list => [$self->get_trial_id()],
+        data_level => 'plot'
+    });
+    my $treatment_data = $phenosearch->search();
+    my $plot_pheno = {};
+    foreach my $row (@{$treatment_data}) {
+        $plot_pheno->{$row->{obsunit_uniquename}}->{$row->{trait_name}} = $row->{phenotype_value};
+    }
 
     my $create_plant_entities_txn = sub {
-        my $chado_schema = $self->bcs_schema();
         my $layout = CXGN::Trial::TrialLayout->new( { schema => $chado_schema, trial_id => $self->get_trial_id(), experiment_type=>'field_layout' });
         my $design = $layout->get_design();
 
@@ -3342,41 +3539,33 @@ sub save_plant_entries {
         my $col_num_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'col_number', 'stock_property')->cvterm_id();
         my $has_plants_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'project_has_plant_entries', 'project_property')->cvterm_id();
         my $field_layout_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'field_layout', 'experiment_type')->cvterm_id();
-        my $treatment_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'treatment_experiment', 'experiment_type')->cvterm_id();
-        #my $plants_per_plot_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'plants_per_plot', 'project_property')->cvterm_id();
+        # my $plants_per_plot_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'plants_per_plot', 'project_property')->cvterm_id();
 
-        my $treatments;
-        my %treatment_experiments;
-        my %treatment_plots;
-        if ($inherits_plot_treatments){
-            $treatments = $self->get_treatments();
-            foreach (@$treatments){
+        # my $rs = $chado_schema->resultset("Project::Projectprop")->find_or_create({
+        #     type_id => $has_plants_cvterm,
+        #     value => $plants_per_plot,
+        #     project_id => $self->get_trial_id(),
+        # });
 
-                my $rs = $chado_schema->resultset("Project::Projectprop")->find_or_create({
-                    type_id => $has_plants_cvterm,
-                    value => $plants_per_plot,
-                    project_id => $_->[0],
-                });
-
-                my $treatment_nd_experiment = $chado_schema->resultset("Project::Project")->search( { 'me.project_id' => $_->[0] }, {select=>['nd_experiment.nd_experiment_id']})->search_related('nd_experiment_projects')->search_related('nd_experiment', { type_id => $treatment_cvterm })->single();
-                $treatment_experiments{$_->[0]} = $treatment_nd_experiment->nd_experiment_id();
-
-                my $treatment_trial = CXGN::Trial->new({ bcs_schema => $chado_schema, trial_id => $_->[0]});
-                my $plots = $treatment_trial->get_plots();
-                foreach my $plot (@$plots){
-                    $treatment_plots{$_->[0]}->{$plot->[0]} = 1;
-                }
+        if (!$add_additional_plants) {
+            my $rs = $chado_schema->resultset("Project::Projectprop")->find_or_create({
+                type_id => $has_plants_cvterm,
+                value => $plants_per_plot,
+                project_id => $self->get_trial_id(),
+            });
+        } else {
+            my $rs = $chado_schema->resultset("Project::Projectprop")->find({
+                type_id => $has_plants_cvterm,
+                project_id => $self->get_trial_id(),
+            });
+            if ($rs) {
+                $rs->update({ value => $rs->value() + $plants_per_plot });
             }
         }
 
-        my $rs = $chado_schema->resultset("Project::Projectprop")->find_or_create({
-            type_id => $has_plants_cvterm,
-            value => $plants_per_plot,
-            project_id => $self->get_trial_id(),
-        });
-
-
         my $field_layout_experiment = $chado_schema->resultset("Project::Project")->search( { 'me.project_id' => $self->get_trial_id() }, {select=>['nd_experiment.nd_experiment_id']})->search_related('nd_experiment_projects')->search_related('nd_experiment', { 'nd_experiment.type_id' => $field_layout_cvterm })->single();
+
+        my %design_by_plot_name = map { $design->{$_}->{plot_name} => $design->{$_} } keys %$design;
 
         while( my ($key, $val) = each %$parsed_data){
             my $plot_stock_id = $key;
@@ -3386,18 +3575,60 @@ sub save_plant_entries {
 
             if (!$plot_row) {
                 print STDERR "The plot $plot_name is not found in the database\n";
-                return "The plot $plot_name is not yet in the database. Cannot create plant entries.";
+                die "The plot $plot_name is not yet in the database. Cannot create plant entries.";
             }
 
             my $parent_plot = $plot_row->stock_id();
             my $parent_plot_name = $plot_row->uniquename();
             my $parent_plot_organism = $plot_row->organism_id();
 
-            my $plant_index_number = 1;
+            my $existing_count = 0;
+            if ($add_additional_plants) {
+                my $design_entry = $design_by_plot_name{$parent_plot_name};
+                my $existing_plants = $design_entry ? $design_entry->{plant_names} : undef;
+                $existing_count = $existing_plants ? scalar(@$existing_plants) : 0;
+            }
+
+            if ($add_additional_plants && $val->{plant_coords}) {
+                my $existing_plants_ref = $design_by_plot_name{$parent_plot_name} ? ($design_by_plot_name{$parent_plot_name}->{plant_names} // []) : [];
+                if (@$existing_plants_ref) {
+                    my %occupied_coords;
+                    my $ep_rs = $chado_schema->resultset("Stock::Stock")->search(
+                        { uniquename => { -in => $existing_plants_ref }, type_id => $plant_cvterm }
+                    );
+                    while (my $ep = $ep_rs->next()) {
+                        my $rp = $ep->search_related('stockprops', { type_id => $row_num_cvterm })->first();
+                        my $cp = $ep->search_related('stockprops', { type_id => $col_num_cvterm })->first();
+                        if ($rp && $cp) {
+                            $occupied_coords{ $rp->value() . ',' . $cp->value() } = 1;
+                        }
+                    }
+                    my @filtered_coords = grep { !$occupied_coords{$_} } @{$val->{plant_coords}};
+                    if (scalar(@filtered_coords) < scalar(@{$val->{plant_names}})) {
+                        die "Cannot add plants to plot $parent_plot_name: insufficient unoccupied grid positions after filtering occupied coordinates.";
+                    }
+                    $val->{plant_coords} = \@filtered_coords;
+                }
+            }
+
+            my $plant_index_number = $existing_count + 1;
             my $plant_names = $val->{plant_names};
             my $plant_index_numbers = $val->{plant_index_numbers};
             my $increment = 0;
             foreach my $plant_name (@$plant_names) {
+                foreach my $treatment (@{$treatments}) {
+                    my $treatment_name = $treatment->{trait_name};
+                    if (exists($plot_pheno->{$parent_plot_name}->{$treatment_name})) {
+                        $phenostore_data_hash->{$plant_name}->{$treatment_name} = [
+                            $plot_pheno->{$parent_plot_name}->{$treatment_name},
+                            $phenotype_store_config->{metadata_hash}->{date},
+                            $phenotype_store_config->{metadata_hash}->{operator},
+                            '',
+                            ''
+                        ];
+                        $phenostore_stocks{$plant_name} = 1;
+                    }
+                }
                 my $given_plant_index_number = $plant_index_numbers->[$increment];
                 my $plant_index_number_save = $given_plant_index_number ? $given_plant_index_number : $plant_index_number;
 
@@ -3410,7 +3641,7 @@ sub save_plant_entries {
                 $self->_save_plant_entry($chado_schema, $accession_cvterm, $cross_cvterm, $family_name_cvterm, $parent_plot_organism,
                 $parent_plot_name, $parent_plot, $plant_name, $plant_cvterm, $plant_index_number_save, $plant_index_number_cvterm,
                 $block_cvterm, $plot_number_cvterm, $replicate_cvterm, $row_num_cvterm, $row_num, $col_num_cvterm, $col_num, $plant_relationship_cvterm, $field_layout_experiment, $field_layout_cvterm,
-                $inherits_plot_treatments, $treatments, $plot_relationship_cvterm, \%treatment_plots, \%treatment_experiments, $treatment_cvterm);
+                $plot_relationship_cvterm, $user_id);
                 $plant_index_number++;
                 $increment++;
             }
@@ -3421,6 +3652,43 @@ sub save_plant_entries {
 
     eval {
         $self->bcs_schema()->txn_do($create_plant_entities_txn);
+
+        if ($inherits_plot_treatments && $treatments) {
+            my @treatment_names = map {$_->{trait_name}} @{$treatments};
+
+            my $store_phenotypes = CXGN::Phenotypes::StorePhenotypes->new({
+                basepath => $phenotype_store_config->{basepath},
+                dbhost => $phenotype_store_config->{dbhost},
+                dbname => $phenotype_store_config->{dbname},
+                dbuser => $phenotype_store_config->{dbuser},
+                dbpass => $phenotype_store_config->{dbpass},
+                temp_file_nd_experiment_id => $phenotype_store_config->{temp_file_nd_experiment_id},
+                bcs_schema => $chado_schema,
+                metadata_schema => $self->metadata_schema,
+                phenome_schema => $self->phenome_schema,
+                user_id => $phenotype_store_config->{user_id},
+                stock_list => [keys(%phenostore_stocks)],
+                trait_list => \@treatment_names,
+                values_hash => $phenostore_data_hash,
+                metadata_hash => $phenotype_store_config->{metadata_hash}
+            });
+
+            my ($verified_warning, $verified_error) = $store_phenotypes->verify();
+
+            if ($verified_warning) {
+                warn $verified_warning;
+            }
+            if ($verified_error) {
+                die $verified_error;
+            }
+
+            my ($stored_phenotype_error, $stored_phenotype_success) = $store_phenotypes->store();
+
+            if ($stored_phenotype_error) {
+                die "An error occurred inheriting treatments: $stored_phenotype_error\n";
+            }
+        }
+
     };
     if ($@) {
         print STDERR "An error occurred creating the plant entities. $@\n";
@@ -3451,9 +3719,28 @@ sub create_plant_subplot_entities {
     my $plant_owner_username = shift;
     my $rows_per_subplot = shift;
     my $cols_per_subplot = shift;
+    my $phenotype_store_config = shift;
+    my $additional_plants = shift;
+
+    my $chado_schema = $self->bcs_schema();
+
+    my %phenostore_stocks = ();
+    my $treatments = $self->get_treatments();
+    my $phenostore_data_hash = {};
+    my $phenosearch = CXGN::Phenotypes::SearchFactory->instantiate(
+        'Native', {
+        bcs_schema => $chado_schema,
+        trait_list => [map {$_->{trait_id}} @{$treatments}],
+        trial_list => [$self->get_trial_id()],
+        data_level => 'subplot'
+    });
+    my $treatment_data = $phenosearch->search();
+    my $subplot_pheno = {};
+    foreach my $row (@{$treatment_data}) {
+        $subplot_pheno->{$row->{obsunit_uniquename}}->{$row->{trait_name}} = $row->{phenotype_value};
+    }
 
     my $create_plant_entities_txn = sub {
-        my $chado_schema = $self->bcs_schema();
         my $layout = CXGN::Trial::TrialLayout->new( { schema => $chado_schema, trial_id => $self->get_trial_id(), experiment_type=>'field_layout' });
         my $design = $layout->get_design();
 
@@ -3475,7 +3762,6 @@ sub create_plant_subplot_entities {
         my $has_subplots_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'project_has_subplot_entries', 'project_property')->cvterm_id();
         my $has_plants_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'project_has_plant_entries', 'project_property')->cvterm_id();
         my $field_layout_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'field_layout', 'experiment_type')->cvterm_id();
-        my $treatment_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'treatment_experiment', 'experiment_type')->cvterm_id();
         #my $plants_per_plot_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'plants_per_plot', 'project_property')->cvterm_id();
 
         # Calculate the number of plants per plot (subplots_per_plot * plants_per_subplot)
@@ -3486,35 +3772,21 @@ sub create_plant_subplot_entities {
         my $subplots_per_plot = $subplots_per_plot_row->value();
         my $plants_per_plot = $subplots_per_plot * $plants_per_subplot;
 
-        my $treatments;
-        my %treatment_experiments;
-        my %treatment_plots;
-        if ($inherits_plot_treatments){
-            $treatments = $self->get_treatments();
-            foreach (@$treatments){
-
-                my $rs = $chado_schema->resultset("Project::Projectprop")->find_or_create({
-                    type_id => $has_plants_cvterm,
-                    value => $plants_per_plot,
-                    project_id => $_->[0],
-                });
-
-                my $treatment_nd_experiment = $chado_schema->resultset("Project::Project")->search( { 'me.project_id' => $_->[0] }, {select=>['nd_experiment.nd_experiment_id']})->search_related('nd_experiment_projects')->search_related('nd_experiment', { 'nd_experiment.type_id' => $treatment_cvterm })->single();
-                $treatment_experiments{$_->[0]} = $treatment_nd_experiment->nd_experiment_id();
-
-                my $treatment_trial = CXGN::Project->new({ bcs_schema => $chado_schema, trial_id => $_->[0]});
-                my $plots = $treatment_trial->get_plots();
-                foreach my $plot (@$plots){
-                    $treatment_plots{$_->[0]}->{$plot->[0]} = 1;
-                }
+        if (!$additional_plants) {
+            my $rs = $chado_schema->resultset("Project::Projectprop")->find_or_create({
+                type_id => $has_plants_cvterm,
+                value => $plants_per_plot,
+                project_id => $self->get_trial_id(),
+            });
+        } else {
+            my $rs = $chado_schema->resultset("Project::Projectprop")->find({
+                type_id => $has_plants_cvterm,
+                project_id => $self->get_trial_id(),
+            });
+            if ($rs) {
+                $rs->update({ value => $rs->value() + ($plants_per_subplot * $subplots_per_plot) });
             }
         }
-
-        my $rs = $chado_schema->resultset("Project::Projectprop")->find_or_create({
-            type_id => $has_plants_cvterm,
-            value => $plants_per_plot,
-            project_id => $self->get_trial_id(),
-        });
 
         my $field_layout_experiment = $chado_schema->resultset("Project::Project")->search( { 'me.project_id' => $self->get_trial_id() }, {select=>['nd_experiment.nd_experiment_id']})->search_related('nd_experiment_projects')->search_related('nd_experiment', { 'nd_experiment.type_id' => $field_layout_cvterm })->single();
 
@@ -3525,7 +3797,7 @@ sub create_plant_subplot_entities {
 
             if (! $plot_row) {
                 print STDERR "The plot $plot is not found in the database\n";
-                return "The plot $plot is not yet in the database. Cannot create plant entries.";
+                die "The plot $plot is not yet in the database. Cannot create plant entries.";
             }
 
             my $parent_plot = $plot_row->stock_id();
@@ -3539,10 +3811,16 @@ sub create_plant_subplot_entities {
                 my $subplot_row = $chado_schema->resultset("Stock::Stock")->find({ uniquename => $subplot, type_id => $subplot_cvterm });
                 if ( !$subplot_row ) {
                     print STDERR "The subplot $subplot is not found in the database\n";
-                    return "The subplot $subplot is not yet in the database. Cannot create plant entries.";
+                    die "The subplot $subplot is not yet in the database. Cannot create plant entries.";
                 }
 
                 my $parent_subplot = $subplot_row->stock_id();
+
+                my $existing_count = 0;
+                if ($additional_plants) {
+                    my $existing_plants = $design->{$plot}->{subplots_plant_names}->{$subplot};
+                    $existing_count = $existing_plants ? scalar(@$existing_plants) : 0;
+                }
 
                 my @plant_coords = ();
 
@@ -3552,11 +3830,53 @@ sub create_plant_subplot_entities {
                             push @plant_coords, "$row,$col";
                         }
                     }
+                    if ($additional_plants) {
+                        my $total_capacity = $rows_per_subplot * $cols_per_subplot;
+                        if ($existing_count + $plants_per_subplot > $total_capacity) {
+                            die "Cannot add $plants_per_subplot plant(s) to subplot $subplot: $existing_count plant(s) already exist and the grid capacity is $total_capacity ($rows_per_subplot rows x $cols_per_subplot cols).";
+                        }
+                        # Query the actual row/col coordinates of existing plants so we exclude
+                        # only the slots that are genuinely occupied (the old grid may have had
+                        # different dimensions, so a positional splice would remove the wrong slots).
+                        my %occupied_coords;
+                        my $existing_plants_ref = $design->{$plot}->{subplots_plant_names}->{$subplot} // [];
+                        if (@$existing_plants_ref) {
+                            my $ep_rs = $chado_schema->resultset("Stock::Stock")->search(
+                                { uniquename => { -in => $existing_plants_ref }, type_id => $plant_cvterm }
+                            );
+                            while (my $ep = $ep_rs->next()) {
+                                my $rp = $ep->search_related('stockprops', { type_id => $row_num_cvterm })->first();
+                                my $cp = $ep->search_related('stockprops', { type_id => $col_num_cvterm })->first();
+                                if ($rp && $cp) {
+                                    $occupied_coords{ $rp->value() . ',' . $cp->value() } = 1;
+                                }
+                            }
+                        }
+                        @plant_coords = grep { !$occupied_coords{$_} } @plant_coords;
+                        if (scalar(@plant_coords) < $plants_per_subplot) {
+                            die "Cannot add $plants_per_subplot plant(s) to subplot $subplot: only " . scalar(@plant_coords) . " unoccupied grid position(s) available within the ${rows_per_subplot}x${cols_per_subplot} grid.";
+                        }
+                    }
                 }
 
-                foreach my $plant_index_number (1..$plants_per_subplot) {
+                my $start_index = $existing_count + 1;
+                my $end_index   = $existing_count + $plants_per_subplot;
+                foreach my $plant_index_number ($start_index..$end_index) {
                     my $plant_name = $subplot."_plant_$plant_index_number";
                     # print STDERR "... ... ... creating plant $plant_name...\n";
+                    foreach my $treatment (@{$treatments}) {
+                        my $treatment_name = $treatment->{trait_name};
+                        if (exists($subplot_pheno->{$subplot}->{$treatment_name})) {
+                            $phenostore_data_hash->{$plant_name}->{$treatment_name} = [
+                                $subplot_pheno->{$subplot}->{$treatment_name},
+                                $phenotype_store_config->{metadata_hash}->{date},
+                                $phenotype_store_config->{metadata_hash}->{operator},
+                                '',
+                                ''
+                            ];
+                            $phenostore_stocks{$plant_name} = 1;
+                        }
+                    }
 
                     my $row_num;
                     my $col_num;
@@ -3568,8 +3888,8 @@ sub create_plant_subplot_entities {
 
                     $self->_save_plant_entry($chado_schema, $accession_cvterm, $cross_cvterm, $family_name_cvterm, $parent_plot_organism, $parent_plot_name,
                     $parent_plot, $plant_name, $plant_cvterm, $plant_index_number, $plant_index_number_cvterm, $block_cvterm, $plot_number_cvterm,
-                    $replicate_cvterm, $row_num_cvterm, $row_num, $col_num_cvterm, $col_num, $plant_relationship_cvterm, $field_layout_experiment, $field_layout_cvterm, $inherits_plot_treatments, $treatments,
-                    $plot_relationship_cvterm, \%treatment_plots, \%treatment_experiments, $treatment_cvterm, $plant_owner, $plant_owner_username,
+                    $replicate_cvterm, $row_num_cvterm, $row_num, $col_num_cvterm, $col_num, $plant_relationship_cvterm, $field_layout_experiment, $field_layout_cvterm,
+                    $plot_relationship_cvterm, $plant_owner, $plant_owner_username,
                     $parent_subplot, $plant_subplot_relationship_cvterm);
                 }
             }
@@ -3580,20 +3900,56 @@ sub create_plant_subplot_entities {
 
     eval {
         $self->bcs_schema()->txn_do($create_plant_entities_txn);
+
+        if ($inherits_plot_treatments && $treatments) {
+            my @treatment_names = map {$_->{trait_name}} @{$treatments};
+
+            my $store_phenotypes = CXGN::Phenotypes::StorePhenotypes->new({
+                basepath => $phenotype_store_config->{basepath},
+                dbhost => $phenotype_store_config->{dbhost},
+                dbname => $phenotype_store_config->{dbname},
+                dbuser => $phenotype_store_config->{dbuser},
+                dbpass => $phenotype_store_config->{dbpass},
+                temp_file_nd_experiment_id => $phenotype_store_config->{temp_file_nd_experiment_id},
+                bcs_schema => $chado_schema,
+                metadata_schema => $self->metadata_schema,
+                phenome_schema => $self->phenome_schema,
+                user_id => $phenotype_store_config->{user_id},
+                stock_list => [keys(%phenostore_stocks)],
+                trait_list => \@treatment_names,
+                values_hash => $phenostore_data_hash,
+                metadata_hash => $phenotype_store_config->{metadata_hash}
+            });
+
+            my ($verified_warning, $verified_error) = $store_phenotypes->verify();
+
+            if ($verified_warning) {
+                warn $verified_warning;
+            }
+            if ($verified_error) {
+                die $verified_error;
+            }
+
+            my ($stored_phenotype_error, $stored_phenotype_success) = $store_phenotypes->store();
+
+            if ($stored_phenotype_error) {
+                die "An error occurred inheriting treatments: $stored_phenotype_error\n";
+            }
+        }
     };
     if ($@) {
         print STDERR "An error occurred creating the plant entities. $@\n";
-        return 0;
+        return {error => "An error occurred creating the plant entities. $@"};
     }
 
     print STDERR "Plant entities created.\n";
-    return 1;
+    return {success => 1};
 }
 
 
 =head2 function save_plant_subplot_entries()
 
- Usage:        $trial->save_plant_subplot_entries(\%data, $plants_per_subplot, $inherits_plot_treatments);
+ Usage:        $trial->save_plant_subplot_entries(\%data, $plants_per_subplot, $inherits_plot_treatments, $add_additional_plants);
  Desc:         Some trials require plant-level data. It is possible to upload
                 plant_names to save.
  Ret:
@@ -3612,9 +3968,28 @@ sub save_plant_subplot_entries {
     my $inherits_plot_treatments = shift;
     my $plant_owner = shift;
     my $plant_owner_username = shift;
+    my $phenotype_store_config = shift;
+    my $add_additional_plants = shift;
+
+    my $chado_schema = $self->bcs_schema();
+
+    my %phenostore_stocks = ();
+    my $treatments = $self->get_treatments();
+    my $phenostore_data_hash = {};
+    my $phenosearch = CXGN::Phenotypes::SearchFactory->instantiate(
+        'Native', {
+        bcs_schema => $chado_schema,
+        trait_list => [map {$_->{trait_id}} @{$treatments}],
+        trial_list => [$self->get_trial_id()],
+        data_level => 'subplot'
+    });
+    my $treatment_data = $phenosearch->search();
+    my $subplot_pheno = {};
+    foreach my $row (@{$treatment_data}) {
+        $subplot_pheno->{$row->{obsunit_uniquename}}->{$row->{trait_name}} = $row->{phenotype_value};
+    }
 
     my $create_plant_entities_txn = sub {
-        my $chado_schema = $self->bcs_schema();
         my $layout = CXGN::Trial::TrialLayout->new( { schema => $chado_schema, trial_id => $self->get_trial_id(), experiment_type=>'field_layout' });
         my $design = $layout->get_design();
 
@@ -3637,7 +4012,6 @@ sub save_plant_subplot_entries {
         my $has_subplots_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'project_has_subplot_entries', 'project_property')->cvterm_id();
         my $has_plants_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'project_has_plant_entries', 'project_property')->cvterm_id();
         my $field_layout_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'field_layout', 'experiment_type')->cvterm_id();
-        my $treatment_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'treatment_experiment', 'experiment_type')->cvterm_id();
 
         # Calculate the number of plants per plot (subplots_per_plot * plants_per_subplot)
         my $subplots_per_plot_row = $chado_schema->resultset("Project::Projectprop")->find({
@@ -3647,38 +4021,33 @@ sub save_plant_subplot_entries {
         my $subplots_per_plot = $subplots_per_plot_row->value();
         my $plants_per_plot = $subplots_per_plot * $plants_per_subplot;
 
-        my $treatments;
-        my %treatment_experiments;
-        my %treatment_plots;
-        if ($inherits_plot_treatments){
-            $treatments = $self->get_treatments();
-            foreach (@$treatments){
-
-                my $rs = $chado_schema->resultset("Project::Projectprop")->find_or_create({
-                    type_id => $has_plants_cvterm,
-                    value => $plants_per_plot,
-                    project_id => $_->[0],
-                });
-
-                my $treatment_nd_experiment = $chado_schema->resultset("Project::Project")->search( { 'me.project_id' => $_->[0] }, {select=>['nd_experiment.nd_experiment_id']})->search_related('nd_experiment_projects')->search_related('nd_experiment', { 'nd_experiment.type_id' => $treatment_cvterm })->single();
-                $treatment_experiments{$_->[0]} = $treatment_nd_experiment->nd_experiment_id();
-
-                my $treatment_trial = CXGN::Trial->new({ bcs_schema => $chado_schema, trial_id => $_->[0]});
-                my $plots = $treatment_trial->get_plots();
-                foreach my $plot (@$plots){
-                    $treatment_plots{$_->[0]}->{$plot->[0]} = 1;
-                }
+        if (!$add_additional_plants) {
+            my $rs = $chado_schema->resultset("Project::Projectprop")->find_or_create({
+                type_id => $has_plants_cvterm,
+                value => $plants_per_plot,
+                project_id => $self->get_trial_id(),
+            });
+        } else {
+            my $rs = $chado_schema->resultset("Project::Projectprop")->find({
+                type_id => $has_plants_cvterm,
+                project_id => $self->get_trial_id(),
+            });
+            if ($rs) {
+                $rs->update({ value => $rs->value() + ($plants_per_subplot * $subplots_per_plot) });
             }
         }
 
-        my $rs = $chado_schema->resultset("Project::Projectprop")->find_or_create({
-            type_id => $has_plants_cvterm,
-            value => $plants_per_plot,
-            project_id => $self->get_trial_id(),
-        });
-
-
         my $field_layout_experiment = $chado_schema->resultset("Project::Project")->search( { 'me.project_id' => $self->get_trial_id() }, {select=>['nd_experiment.nd_experiment_id']})->search_related('nd_experiment_projects')->search_related('nd_experiment', { 'nd_experiment.type_id' => $field_layout_cvterm })->single();
+
+        my %subplot_existing_plants;
+        foreach my $plot_num (keys %$design) {
+            my $spn = $design->{$plot_num}->{subplots_plant_names};
+            if ($spn) {
+                foreach my $sn (keys %$spn) {
+                    $subplot_existing_plants{$sn} = $spn->{$sn};
+                }
+            }
+        }
 
         while( my ($key, $val) = each %$parsed_data){
             my $subplot_stock_id = $key;
@@ -3688,7 +4057,7 @@ sub save_plant_subplot_entries {
             my $subplot_row = $chado_schema->resultset("Stock::Stock")->find( { stock_id=>$subplot_stock_id });
             if (!$subplot_row) {
                 print STDERR "The subplot $subplot_name is not found in the database\n";
-                return "The subplot $subplot_name is not yet in the database. Cannot create plant entries.";
+                die "The subplot $subplot_name is not yet in the database. Cannot create plant entries.";
             }
 
             my $plot_relationship_row = $chado_schema->resultset("Stock::StockRelationship")->find({
@@ -3697,25 +4066,68 @@ sub save_plant_subplot_entries {
             });
             if (!$plot_relationship_row) {
                 print STDERR "The subplot $subplot_name does not have a defined plot relationship in the database\n";
-                return "The subplot $subplot_name does not have a defined plot relationship in the database. Cannot create plant entries.";
+                die "The subplot $subplot_name does not have a defined plot relationship in the database. Cannot create plant entries.";
             }
             my $plot_row = $chado_schema->resultset("Stock::Stock")->find({ stock_id => $plot_relationship_row->subject_id() });
             if (!$plot_row) {
                 print STDERR "The parent plot of subplot $subplot_name is not found in the database\n";
-                return "The parent plot of subplot $subplot_name is not yet in the database. Cannot create plant entries.";
+                die "The parent plot of subplot $subplot_name is not yet in the database. Cannot create plant entries.";
             }
 
             my $parent_plot = $plot_row->stock_id();
             my $parent_plot_name = $plot_row->uniquename();
             my $parent_plot_organism = $plot_row->organism_id();
 
-            my $plant_index_number = 1;
+            my $existing_count = 0;
+            if ($add_additional_plants) {
+                my $existing_plants = $subplot_existing_plants{$subplot_name};
+                $existing_count = $existing_plants ? scalar(@$existing_plants) : 0;
+            }
+
+            if ($add_additional_plants && $val->{plant_coords}) {
+                my $existing_plants_ref = $subplot_existing_plants{$subplot_name} // [];
+                if (@$existing_plants_ref) {
+                    my %occupied_coords;
+                    my $ep_rs = $chado_schema->resultset("Stock::Stock")->search(
+                        { uniquename => { -in => $existing_plants_ref }, type_id => $plant_cvterm }
+                    );
+                    while (my $ep = $ep_rs->next()) {
+                        my $rp = $ep->search_related('stockprops', { type_id => $row_num_cvterm })->first();
+                        my $cp = $ep->search_related('stockprops', { type_id => $col_num_cvterm })->first();
+                        if ($rp && $cp) {
+                            $occupied_coords{ $rp->value() . ',' . $cp->value() } = 1;
+                        }
+                    }
+                    my @filtered_coords = grep { !$occupied_coords{$_} } @{$val->{plant_coords}};
+                    if (scalar(@filtered_coords) < scalar(@{$val->{plant_names}})) {
+                        die "Cannot add plants to subplot $subplot_name: insufficient unoccupied grid positions after filtering occupied coordinates.";
+                    }
+                    $val->{plant_coords} = \@filtered_coords;
+                }
+            }
+
+            my $plant_index_number = $existing_count + 1;
             my $plant_names = $val->{plant_names};
             my $plant_index_numbers = $val->{plant_index_numbers};
             my $increment = 0;
+
             foreach my $plant_name (@$plant_names) {
                 my $given_plant_index_number = $plant_index_numbers->[$increment];
                 my $plant_index_number_save = $given_plant_index_number ? $given_plant_index_number : $plant_index_number;
+
+                foreach my $treatment (@{$treatments}) {
+                    my $treatment_name = $treatment->{trait_name};
+                    if (exists($subplot_pheno->{$subplot_name}->{$treatment_name})) {
+                        $phenostore_data_hash->{$plant_name}->{$treatment_name} = [
+                            $subplot_pheno->{$subplot_name}->{$treatment_name},
+                            $phenotype_store_config->{metadata_hash}->{date},
+                            $phenotype_store_config->{metadata_hash}->{operator},
+                            '',
+                            ''
+                        ];
+                        $phenostore_stocks{$plant_name} = 1;
+                    }
+                }
 
                 my ($row_num, $col_num);
                 if ($val->{plant_coords}) {
@@ -3726,8 +4138,8 @@ sub save_plant_subplot_entries {
                 $self->_save_plant_entry($chado_schema, $accession_cvterm, $cross_cvterm, $family_name_cvterm, $parent_plot_organism,
                 $parent_plot_name, $parent_plot, $plant_name, $plant_cvterm, $plant_index_number_save, $plant_index_number_cvterm,
                 $block_cvterm, $plot_number_cvterm, $replicate_cvterm, $row_num_cvterm, $row_num, $col_num_cvterm, $col_num, $plant_relationship_cvterm, $field_layout_experiment, $field_layout_cvterm,
-                $inherits_plot_treatments, $treatments, $plot_relationship_cvterm,
-                \%treatment_plots, \%treatment_experiments, $treatment_cvterm, $plant_owner, $plant_owner_username,
+                $plot_relationship_cvterm,
+                $plant_owner, $plant_owner_username,
                 $subplot_stock_id, $plant_subplot_relationship_cvterm);
                 $plant_index_number++;
                 $increment++;
@@ -3738,7 +4150,44 @@ sub save_plant_subplot_entries {
     };
 
     eval {
+
         $self->bcs_schema()->txn_do($create_plant_entities_txn);
+
+        if ($inherits_plot_treatments && $treatments) {
+            my @treatment_names = map {$_->{trait_name}} @{$treatments};
+
+            my $store_phenotypes = CXGN::Phenotypes::StorePhenotypes->new({ #not right stock list...
+                basepath => $phenotype_store_config->{basepath},
+                dbhost => $phenotype_store_config->{dbhost},
+                dbname => $phenotype_store_config->{dbname},
+                dbuser => $phenotype_store_config->{dbuser},
+                dbpass => $phenotype_store_config->{dbpass},
+                temp_file_nd_experiment_id => $phenotype_store_config->{temp_file_nd_experiment_id},
+                bcs_schema => $chado_schema,
+                metadata_schema => $self->metadata_schema,
+                phenome_schema => $self->phenome_schema,
+                user_id => $phenotype_store_config->{user_id},
+                stock_list => [keys(%phenostore_stocks)],
+                trait_list => \@treatment_names,
+                values_hash => $phenostore_data_hash,
+                metadata_hash => $phenotype_store_config->{metadata_hash}
+            });
+
+            my ($verified_warning, $verified_error) = $store_phenotypes->verify();
+
+            if ($verified_warning) {
+                warn $verified_warning;
+            }
+            if ($verified_error) {
+                die $verified_error;
+            }
+
+            my ($stored_phenotype_error, $stored_phenotype_success) = $store_phenotypes->store();
+
+            if ($stored_phenotype_error) {
+                die "An error occurred inheriting treatments: $stored_phenotype_error\n";
+            }
+        }
     };
     if ($@) {
         print STDERR "An error occurred creating the plant entities. $@\n";
@@ -3772,18 +4221,11 @@ sub _save_plant_entry {
     my $plant_relationship_cvterm = shift;
     my $field_layout_experiment = shift;
     my $field_layout_cvterm = shift;
-    my $inherits_plot_treatments = shift;
-    my $treatments = shift;
     my $plot_relationship_cvterm = shift;
-    my $treatment_plots_ref = shift;
-    my $treatment_experiments_ref = shift;
-    my $treatment_cvterm = shift;
     my $plant_owner = shift;
     my $plant_owner_username = shift;
     my $parent_subplot = shift;
     my $plant_subplot_relationship_cvterm = shift;
-    my %treatment_plots = %$treatment_plots_ref;
-    my %treatment_experiments = %$treatment_experiments_ref;
 
     my $plant = $chado_schema->resultset("Stock::Stock")->create({
         organism_id => $parent_plot_organism,
@@ -3861,21 +4303,6 @@ sub _save_plant_entry {
         type_id => $field_layout_cvterm,
         stock_id => $plant->stock_id(),
     });
-
-    if ($inherits_plot_treatments){
-        if($treatments){
-            foreach (@$treatments){
-                my $plots = $treatment_plots{$_->[0]};
-                if (exists($plots->{$parent_plot})){
-                    my $plant_nd_experiment_stock = $chado_schema->resultset("NaturalDiversity::NdExperimentStock")->create({
-                        nd_experiment_id => $treatment_experiments{$_->[0]},
-                        type_id => $treatment_cvterm,
-                        stock_id => $plant->stock_id(),
-                    });
-                }
-            }
-        }
-    }
 }
 
 =head2 function has_plant_entries()
@@ -3926,10 +4353,27 @@ sub create_tissue_samples {
     my $use_tissue_numbers = shift;
     my $tissue_sample_owner = shift;
     my $username = shift;
+    my $phenotype_store_config = shift;
 
+    my $chado_schema = $self->bcs_schema();
+
+    my %phenostore_stocks = ();
+    my $treatments = $self->get_treatments();
+    my $phenostore_data_hash = {};
+    my $phenosearch = CXGN::Phenotypes::SearchFactory->instantiate(
+        'Native', {
+        bcs_schema => $chado_schema,
+        trait_list => [map {$_->{trait_id}} @{$treatments}],
+        trial_list => [$self->get_trial_id()],
+        data_level => 'plant'
+    });
+    my $treatment_data = $phenosearch->search();
+    my $plant_pheno = {};
+    foreach my $row (@{$treatment_data}) {
+        $plant_pheno->{$row->{obsunit_uniquename}}->{$row->{trait_name}} = $row->{phenotype_value};
+    }
 
     my $create_tissue_sample_entries_txn = sub {
-        my $chado_schema = $self->bcs_schema();
         my $layout = CXGN::Trial::TrialLayout->new( { schema => $chado_schema, trial_id => $self->get_trial_id(), experiment_type=>'field_layout' });
         my $design = $layout->get_design();
 
@@ -3951,7 +4395,6 @@ sub create_tissue_samples {
         my $tissue_type_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'tissue_type', 'stock_property')->cvterm_id();
         my $replicate_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'replicate', 'stock_property')->cvterm_id();
         my $field_layout_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'field_layout', 'experiment_type')->cvterm_id();
-        my $treatment_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'treatment_experiment', 'experiment_type')->cvterm_id();
 
         my $rs_previous_tissue = $chado_schema->resultset("Project::Projectprop")->search({
             type_id => $has_tissues_cvterm,
@@ -3962,39 +4405,6 @@ sub create_tissue_samples {
             $previous_tissue_number = $rs_previous_tissue->first->value;
         }
         my $new_tissue_number = $previous_tissue_number + ($use_tissue_numbers ? scalar(@$tissue_names) : 0);
-
-        my $treatments;
-        my %treatment_experiments;
-        my %treatment_plots;
-        my %treatment_subplots;
-        if ($inherits_plot_treatments){
-            $treatments = $self->get_treatments();
-            foreach (@$treatments){
-
-                my $rs = $chado_schema->resultset('Project::Projectprop')->update_or_create({
-                    type_id => $has_tissues_cvterm,
-                    project_id => $_->[0],
-                    rank => 0,
-                    value => $new_tissue_number
-                },
-                {
-                    key=>'projectprop_c1'
-                });
-
-                my $treatment_nd_experiment = $chado_schema->resultset("Project::Project")->search( { 'me.project_id' => $_->[0] }, {select=>['nd_experiment.nd_experiment_id']})->search_related('nd_experiment_projects')->search_related('nd_experiment', { 'nd_experiment.type_id' => $treatment_cvterm })->single();
-                $treatment_experiments{$_->[0]} = $treatment_nd_experiment->nd_experiment_id();
-
-                my $treatment_trial = CXGN::Trial->new({ bcs_schema => $chado_schema, trial_id => $_->[0]});
-                my $plots = $treatment_trial->get_plots();
-                foreach my $plot (@$plots){
-                    $treatment_plots{$_->[0]}->{$plot->[0]} = 1;
-                }
-                my $subplots = $treatment_trial->get_subplots();
-                foreach my $subplot (@$subplots){
-                    $treatment_subplots{$_->[0]}->{$subplot->[0]} = 1;
-                }
-            }
-        }
 
         my $rs = $chado_schema->resultset('Project::Projectprop')->update_or_create({
             type_id => $has_tissues_cvterm,
@@ -4020,7 +4430,7 @@ sub create_tissue_samples {
 
                 if (! $plant_row) {
                     print STDERR "The plant $plant_name is not found in the database\n";
-                    return "The plant $plant_name is not yet in the database. Cannot create tissue entries.";
+                    die "The plant $plant_name is not yet in the database. Cannot create tissue entries.";
                 }
 
                 my $parent_plant = $plant_row->stock_id();
@@ -4037,6 +4447,20 @@ sub create_tissue_samples {
                     }
                     print STDERR "... ... creating tissue $tissue_sample_name...\n";
 
+                    foreach my $treatment (@{$treatments}) {
+                        my $treatment_name = $treatment->{trait_name};
+                        if (exists($plant_pheno->{$plant_name}->{$treatment_name})) {
+                            $phenostore_data_hash->{$tissue_sample_name}->{$treatment_name} = [
+                                $plant_pheno->{$plant_name}->{$treatment_name},
+                                $phenotype_store_config->{metadata_hash}->{date},
+                                $phenotype_store_config->{metadata_hash}->{operator},
+                                '',
+                                ''
+                            ];
+                            $phenostore_stocks{$tissue_sample_name} = 1;
+                        }
+                    }
+
                     my $plant_accession_rs = $self->bcs_schema()->resultset("Stock::StockRelationship")->search({'me.subject_id'=>$parent_plant, 'me.type_id'=>$plant_relationship_cvterm, 'object.type_id'=>[$accession_cvterm, $cross_cvterm, $family_name_cvterm]}, {'join'=>'object'});
                     if ($plant_accession_rs->count != 1){
                         die "There is not 1 stock_relationship of type plant_of between the plant $parent_plant and an accession, a cross or a family_name.";
@@ -4052,17 +4476,6 @@ sub create_tissue_samples {
                     push @tissue_subjects, { type_id => $tissue_relationship_cvterm, object_id => $parent_plot_id };
                     push @tissue_subjects, { type_id => $tissue_relationship_cvterm, object_id => $plant_accession_rs->first->object_id };
                     push @tissue_nd_experiment_stocks, { nd_experiment_id => $field_layout_experiment->nd_experiment_id(), type_id => $field_layout_cvterm };
-
-                    if ($inherits_plot_treatments){
-                        if($treatments){
-                            foreach (@$treatments){
-                                my $plots = $treatment_plots{$_->[0]};
-                                if (exists($plots->{$parent_plot_id})){
-                                    push @tissue_nd_experiment_stocks, { nd_experiment_id => $treatment_experiments{$_->[0]}, type_id => $treatment_cvterm };
-                                }
-                            }
-                        }
-                    }
 
                     my $tissue = $chado_schema->resultset("Stock::Stock")->create({
                         organism_id => $parent_plant_organism,
@@ -4097,35 +4510,53 @@ sub create_tissue_samples {
                             subject_id => $t,
                             type_id => $tissue_relationship_cvterm,
                         });
-
-                        if ($inherits_plot_treatments){
-                            if($treatments){
-                                foreach (@$treatments){
-                                    my $subplots = $treatment_subplots{$_->[0]};
-                                    if (exists($subplots->{$subplot_row->stock_id})){
-                                        my $plant_nd_experiment_stock = $chado_schema->resultset("NaturalDiversity::NdExperimentStock")->create({
-                                            nd_experiment_id => $treatment_experiments{$_->[0]},
-                                            type_id => $treatment_cvterm,
-                                            stock_id => $t,
-                                        });
-                                    }
-                                }
-                            }
-                        }
                     }
                 }
             }
         }
 
-        foreach (@$treatments) {
-            my $layout = CXGN::Trial::TrialLayout->new( { schema => $chado_schema, trial_id => $_->[0], experiment_type=>'field_layout' });
-            $layout->generate_and_cache_layout();
-        }
         $layout->generate_and_cache_layout();
     };
 
     eval {
         $self->bcs_schema()->txn_do($create_tissue_sample_entries_txn);
+
+        if ($inherits_plot_treatments && $treatments) {
+
+            my @treatment_names = map {$_->{trait_name}} @{$treatments};
+
+            my $store_phenotypes = CXGN::Phenotypes::StorePhenotypes->new({
+                basepath => $phenotype_store_config->{basepath},
+                dbhost => $phenotype_store_config->{dbhost},
+                dbname => $phenotype_store_config->{dbname},
+                dbuser => $phenotype_store_config->{dbuser},
+                dbpass => $phenotype_store_config->{dbpass},
+                temp_file_nd_experiment_id => $phenotype_store_config->{temp_file_nd_experiment_id},
+                bcs_schema => $chado_schema,
+                metadata_schema => $self->metadata_schema,
+                phenome_schema => $self->phenome_schema,
+                user_id => $phenotype_store_config->{user_id},
+                stock_list => [keys(%phenostore_stocks)],
+                trait_list => \@treatment_names,
+                values_hash => $phenostore_data_hash,
+                metadata_hash => $phenotype_store_config->{metadata_hash}
+            });
+
+            my ($verified_warning, $verified_error) = $store_phenotypes->verify();
+
+            if ($verified_warning) {
+                warn $verified_warning;
+            }
+            if ($verified_error) {
+                die $verified_error;
+            }
+
+            my ($stored_phenotype_error, $stored_phenotype_success) = $store_phenotypes->store();
+
+            if ($stored_phenotype_error) {
+                die "An error occurred inheriting treatments: $stored_phenotype_error\n";
+            }
+        }
     };
     if ($@) {
         print STDERR "An error occurred creating the tissue sample entities. $@\n";
@@ -4227,9 +4658,28 @@ sub create_subplot_entities {
     my $inherits_plot_treatments = shift;
     my $subplot_owner = shift;
     my $subplot_owner_username = shift;
+    my $phenotype_store_config = shift;
+    my $additional_subplots = shift;
+
+    my $chado_schema = $self->bcs_schema();
+
+    my %phenostore_stocks = ();
+    my $treatments = $self->get_treatments();
+    my $phenostore_data_hash = {};
+    my $phenosearch = CXGN::Phenotypes::SearchFactory->instantiate(
+        'Native', {
+        bcs_schema => $chado_schema,
+        trait_list => [map {$_->{trait_id}} @{$treatments}],
+        trial_list => [$self->get_trial_id()],
+        data_level => 'plot'
+    });
+    my $treatment_data = $phenosearch->search();
+    my $plot_pheno = {};
+    foreach my $row (@{$treatment_data}) {
+        $plot_pheno->{$row->{obsunit_uniquename}}->{$row->{trait_name}} = $row->{phenotype_value};
+    }
 
     my $create_subplot_entities_txn = sub {
-        my $chado_schema = $self->bcs_schema();
         my $layout = CXGN::Trial::TrialLayout->new( { schema => $chado_schema, trial_id => $self->get_trial_id(), experiment_type=>'field_layout' });
         my $design = $layout->get_design();
 
@@ -4246,38 +4696,23 @@ sub create_subplot_entities {
         my $replicate_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'replicate', 'stock_property')->cvterm_id();
         my $has_subplots_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'project_has_subplot_entries', 'project_property')->cvterm_id();
         my $field_layout_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'field_layout', 'experiment_type')->cvterm_id();
-        my $treatment_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'treatment_experiment', 'experiment_type')->cvterm_id();
         #my $subplots_per_plot_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'subplots_per_plot', 'project_property')->cvterm_id();
 
-        my $treatments;
-        my %treatment_experiments;
-        my %treatment_plots;
-        if ($inherits_plot_treatments){
-            $treatments = $self->get_treatments();
-            foreach (@$treatments){
-
-                my $rs = $chado_schema->resultset("Project::Projectprop")->find_or_create({
-                    type_id => $has_subplots_cvterm,
-                    value => $subplots_per_plot,
-                    project_id => $_->[0],
-                });
-
-                my $treatment_nd_experiment = $chado_schema->resultset("Project::Project")->search( { 'me.project_id' => $_->[0] }, {select=>['nd_experiment.nd_experiment_id']})->search_related('nd_experiment_projects')->search_related('nd_experiment', { 'nd_experiment.type_id' => $treatment_cvterm })->single();
-                $treatment_experiments{$_->[0]} = $treatment_nd_experiment->nd_experiment_id();
-
-                my $treatment_trial = CXGN::Project->new({ bcs_schema => $chado_schema, trial_id => $_->[0]});
-                my $plots = $treatment_trial->get_plots();
-                foreach my $plot (@$plots){
-                    $treatment_plots{$_->[0]}->{$plot->[0]} = 1;
-                }
+        if (!$additional_subplots) {
+            my $rs = $chado_schema->resultset("Project::Projectprop")->find_or_create({
+                type_id => $has_subplots_cvterm,
+                value => $subplots_per_plot,
+                project_id => $self->get_trial_id(),
+            });
+        } else {
+            my $rs = $chado_schema->resultset("Project::Projectprop")->find({
+                type_id => $has_subplots_cvterm,
+                project_id => $self->get_trial_id(),
+            });
+            if ($rs) {
+                $rs->update({ value => $rs->value() + $subplots_per_plot });
             }
         }
-
-        my $rs = $chado_schema->resultset("Project::Projectprop")->find_or_create({
-            type_id => $has_subplots_cvterm,
-            value => $subplots_per_plot,
-            project_id => $self->get_trial_id(),
-        });
 
         my $field_layout_experiment = $chado_schema->resultset("Project::Project")->search( { 'me.project_id' => $self->get_trial_id() }, {select=>['nd_experiment.nd_experiment_id']})->search_related('nd_experiment_projects')->search_related('nd_experiment', { 'nd_experiment.type_id' => $field_layout_cvterm })->single();
 
@@ -4287,21 +4722,43 @@ sub create_subplot_entities {
 
             if (! $plot_row) {
                 print STDERR "The plot $plot is not found in the database\n";
-                return "The plot $plot is not yet in the database. Cannot create subplot entries.";
+                die "The plot $plot is not yet in the database. Cannot create subplot entries.";
             }
 
             my $parent_plot = $plot_row->stock_id();
             my $parent_plot_name = $plot_row->uniquename();
             my $parent_plot_organism = $plot_row->organism_id();
 
-            foreach my $subplot_index_number (1..$subplots_per_plot) {
+            my $existing_count = 0;
+            if ($additional_subplots) {
+                my $existing_subplots = $design->{$plot}->{subplot_names};
+                $existing_count = $existing_subplots ? scalar(@$existing_subplots) : 0;
+            }
+
+            my $start_index = $existing_count + 1;
+            my $end_index   = $existing_count + $subplots_per_plot;
+            foreach my $subplot_index_number ($start_index..$end_index) {
                 my $subplot_name = $parent_plot_name."_subplot_$subplot_index_number";
+
+                foreach my $treatment (@{$treatments}) {
+                    my $treatment_name = $treatment->{trait_name};
+                    if (exists($plot_pheno->{$parent_plot_name}->{$treatment_name})) {
+                        $phenostore_data_hash->{$subplot_name}->{$treatment_name} = [
+                            $plot_pheno->{$parent_plot_name}->{$treatment_name},
+                            $phenotype_store_config->{metadata_hash}->{date},
+                            $phenotype_store_config->{metadata_hash}->{operator},
+                            '',
+                            ''
+                        ];
+                        $phenostore_stocks{$subplot_name} = 1;
+                    }
+                }
                 #print STDERR "... ... creating subplot $subplot_name...\n";
 
                 $self->_save_subplot_entry($chado_schema, $accession_cvterm, $cross_cvterm, $family_name_cvterm, $parent_plot_organism, $parent_plot_name,
                 $parent_plot, $subplot_name, $subplot_cvterm, $subplot_index_number, $subplot_index_number_cvterm, $block_cvterm, $plot_number_cvterm,
-                $replicate_cvterm, $subplot_relationship_cvterm, $field_layout_experiment, $field_layout_cvterm, $inherits_plot_treatments, $treatments,
-                $plot_relationship_cvterm, \%treatment_plots, \%treatment_experiments, $treatment_cvterm, $subplot_owner, $subplot_owner_username);
+                $replicate_cvterm, $subplot_relationship_cvterm, $field_layout_experiment, $field_layout_cvterm,
+                $plot_relationship_cvterm, $subplot_owner, $subplot_owner_username);
             }
         }
 
@@ -4310,6 +4767,43 @@ sub create_subplot_entities {
 
     eval {
         $self->bcs_schema()->txn_do($create_subplot_entities_txn);
+
+        if ($inherits_plot_treatments && $treatments) { 
+
+            my @treatment_names = map {$_->{trait_name}} @{$treatments};
+
+            my $store_phenotypes = CXGN::Phenotypes::StorePhenotypes->new({
+                basepath => $phenotype_store_config->{basepath},
+                dbhost => $phenotype_store_config->{dbhost},
+                dbname => $phenotype_store_config->{dbname},
+                dbuser => $phenotype_store_config->{dbuser},
+                dbpass => $phenotype_store_config->{dbpass},
+                temp_file_nd_experiment_id => $phenotype_store_config->{temp_file_nd_experiment_id},
+                bcs_schema => $chado_schema,
+                metadata_schema => $self->metadata_schema,
+                phenome_schema => $self->phenome_schema,
+                user_id => $phenotype_store_config->{user_id},
+                stock_list => [keys(%phenostore_stocks)],
+                trait_list => \@treatment_names,
+                values_hash => $phenostore_data_hash,
+                metadata_hash => $phenotype_store_config->{metadata_hash}
+            });
+
+            my ($verified_warning, $verified_error) = $store_phenotypes->verify();
+
+            if ($verified_warning) {
+                warn $verified_warning;
+            }
+            if ($verified_error) {
+                die $verified_error;
+            }
+
+            my ($stored_phenotype_error, $stored_phenotype_success) = $store_phenotypes->store();
+
+            if ($stored_phenotype_error) {
+                die "An error occurred inheriting treatments: $stored_phenotype_error\n";
+            }
+        }
     };
     if ($@) {
         print STDERR "An error occurred creating the subplot entities. $@\n";
@@ -4323,7 +4817,7 @@ sub create_subplot_entities {
 
 =head2 function save_subplot_entries()
 
- Usage:        $trial->save_subplot_entries(\%data, $subplots_per_plot, $inherits_plot_treatments);
+ Usage:        $trial->save_subplot_entries(\%data, $subplots_per_plot, $inherits_plot_treatments, $add_additional_subplots);
  Desc:         Some trials require subplot-level data. It is possible to upload
                 subplot_names to save.
  Ret:
@@ -4340,9 +4834,30 @@ sub save_subplot_entries {
     my $parsed_data = shift;
     my $subplots_per_plot = shift;
     my $inherits_plot_treatments = shift;
+    my $owner_id = shift;
+    my $owner_name = shift;
+    my $phenotype_store_config = shift;
+    my $add_additional_subplots = shift;
+
+    my $chado_schema = $self->bcs_schema();
+
+    my %phenostore_stocks = ();
+    my $treatments = $self->get_treatments();
+    my $phenostore_data_hash = {};
+    my $phenosearch = CXGN::Phenotypes::SearchFactory->instantiate(
+        'Native', {
+        bcs_schema => $chado_schema,
+        trait_list => [map {$_->{trait_id}} @{$treatments}],
+        trial_list => [$self->get_trial_id()],
+        data_level => 'plot'
+    });
+    my $treatment_data = $phenosearch->search();
+    my $plot_pheno = {};
+    foreach my $row (@{$treatment_data}) {
+        $plot_pheno->{$row->{obsunit_uniquename}}->{$row->{trait_name}} = $row->{phenotype_value};
+    }
 
     my $create_subplot_entities_txn = sub {
-        my $chado_schema = $self->bcs_schema();
         my $layout = CXGN::Trial::TrialLayout->new( { schema => $chado_schema, trial_id => $self->get_trial_id(), experiment_type=>'field_layout' });
         my $design = $layout->get_design();
 
@@ -4359,41 +4874,27 @@ sub save_subplot_entries {
         my $replicate_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'replicate', 'stock_property')->cvterm_id();
         my $has_subplots_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'project_has_subplot_entries', 'project_property')->cvterm_id();
         my $field_layout_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'field_layout', 'experiment_type')->cvterm_id();
-        my $treatment_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'treatment_experiment', 'experiment_type')->cvterm_id();
         #my $subplots_per_plot_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'subplots_per_plot', 'project_property')->cvterm_id();
 
-        my $treatments;
-        my %treatment_experiments;
-        my %treatment_plots;
-        if ($inherits_plot_treatments){
-            $treatments = $self->get_treatments();
-            foreach (@$treatments){
-
-                my $rs = $chado_schema->resultset("Project::Projectprop")->find_or_create({
-                    type_id => $has_subplots_cvterm,
-                    value => $subplots_per_plot,
-                    project_id => $_->[0],
-                });
-
-                my $treatment_nd_experiment = $chado_schema->resultset("Project::Project")->search( { 'me.project_id' => $_->[0] }, {select=>['nd_experiment.nd_experiment_id']})->search_related('nd_experiment_projects')->search_related('nd_experiment', { 'nd_experiment.type_id' => $treatment_cvterm })->single();
-                $treatment_experiments{$_->[0]} = $treatment_nd_experiment->nd_experiment_id();
-
-                my $treatment_trial = CXGN::Trial->new({ bcs_schema => $chado_schema, trial_id => $_->[0]});
-                my $plots = $treatment_trial->get_plots();
-                foreach my $plot (@$plots){
-                    $treatment_plots{$_->[0]}->{$plot->[0]} = 1;
-                }
+        if (!$add_additional_subplots) {
+            my $rs = $chado_schema->resultset("Project::Projectprop")->find_or_create({
+                type_id => $has_subplots_cvterm,
+                value => $subplots_per_plot,
+                project_id => $self->get_trial_id(),
+            });
+        } else {
+            my $rs = $chado_schema->resultset("Project::Projectprop")->find({
+                type_id => $has_subplots_cvterm,
+                project_id => $self->get_trial_id(),
+            });
+            if ($rs) {
+                $rs->update({ value => $rs->value() + $subplots_per_plot });
             }
         }
 
-        my $rs = $chado_schema->resultset("Project::Projectprop")->find_or_create({
-            type_id => $has_subplots_cvterm,
-            value => $subplots_per_plot,
-            project_id => $self->get_trial_id(),
-        });
-
-
         my $field_layout_experiment = $chado_schema->resultset("Project::Project")->search( { 'me.project_id' => $self->get_trial_id() }, {select=>['nd_experiment.nd_experiment_id']})->search_related('nd_experiment_projects')->search_related('nd_experiment', { 'nd_experiment.type_id' => $field_layout_cvterm })->single();
+
+        my %design_by_plot_name = map { $design->{$_}->{plot_name} => $design->{$_} } keys %$design;
 
         while( my ($key, $val) = each %$parsed_data){
             my $plot_stock_id = $key;
@@ -4403,22 +4904,44 @@ sub save_subplot_entries {
 
             if (!$plot_row) {
                 print STDERR "The plot $plot_name is not found in the database\n";
-                return "The plot $plot_name is not yet in the database. Cannot create subplot entries.";
+                die "The plot $plot_name is not yet in the database. Cannot create subplot entries.";
             }
 
             my $parent_plot = $plot_row->stock_id();
             my $parent_plot_name = $plot_row->uniquename();
             my $parent_plot_organism = $plot_row->organism_id();
 
-            my $subplot_index_number = 1;
+            my $existing_count = 0;
+            if ($add_additional_subplots) {
+                my $design_entry = $design_by_plot_name{$parent_plot_name};
+                my $existing_subplots = $design_entry ? $design_entry->{subplot_names} : undef;
+                $existing_count = $existing_subplots ? scalar(@$existing_subplots) : 0;
+            }
+
+            my $subplot_index_number = $existing_count + 1;
             my $subplot_names = $val->{subplot_names};
             my $subplot_index_numbers = $val->{subplot_index_numbers};
             my $increment = 0;
             foreach my $subplot_name (@$subplot_names) {
+
+                foreach my $treatment (@{$treatments}) {
+                    my $treatment_name = $treatment->{trait_name};
+                    if (exists($plot_pheno->{$parent_plot_name}->{$treatment_name})) {
+                        $phenostore_data_hash->{$subplot_name}->{$treatment_name} = [
+                            $plot_pheno->{$parent_plot_name}->{$treatment_name},
+                            $phenotype_store_config->{metadata_hash}->{date},
+                            $phenotype_store_config->{metadata_hash}->{operator},
+                            '',
+                            ''
+                        ];
+                        $phenostore_stocks{$subplot_name} = 1;
+                    }
+                }
+
                 my $given_subplot_index_number = $subplot_index_numbers->[$increment];
                 my $subplot_index_number_save = $given_subplot_index_number ? $given_subplot_index_number : $subplot_index_number;
 
-                $self->_save_subplot_entry($chado_schema, $accession_cvterm, $cross_cvterm, $family_name_cvterm, $parent_plot_organism, $parent_plot_name, $parent_plot, $subplot_name, $subplot_cvterm, $subplot_index_number_save, $subplot_index_number_cvterm, $block_cvterm, $plot_number_cvterm, $replicate_cvterm, $subplot_relationship_cvterm, $field_layout_experiment, $field_layout_cvterm, $inherits_plot_treatments, $treatments, $plot_relationship_cvterm, \%treatment_plots, \%treatment_experiments, $treatment_cvterm);
+                $self->_save_subplot_entry($chado_schema, $accession_cvterm, $cross_cvterm, $family_name_cvterm, $parent_plot_organism, $parent_plot_name, $parent_plot, $subplot_name, $subplot_cvterm, $subplot_index_number_save, $subplot_index_number_cvterm, $block_cvterm, $plot_number_cvterm, $replicate_cvterm, $subplot_relationship_cvterm, $field_layout_experiment, $field_layout_cvterm, $plot_relationship_cvterm);
                 $subplot_index_number++;
                 $increment++;
             }
@@ -4429,6 +4952,42 @@ sub save_subplot_entries {
 
     eval {
         $self->bcs_schema()->txn_do($create_subplot_entities_txn);
+
+        if ($inherits_plot_treatments && $treatments) {
+            my @treatment_names = map {$_->{trait_name}} @{$treatments};
+
+            my $store_phenotypes = CXGN::Phenotypes::StorePhenotypes->new({
+                basepath => $phenotype_store_config->{basepath},
+                dbhost => $phenotype_store_config->{dbhost},
+                dbname => $phenotype_store_config->{dbname},
+                dbuser => $phenotype_store_config->{dbuser},
+                dbpass => $phenotype_store_config->{dbpass},
+                temp_file_nd_experiment_id => $phenotype_store_config->{temp_file_nd_experiment_id},
+                bcs_schema => $chado_schema,
+                metadata_schema => $self->metadata_schema,
+                phenome_schema => $self->phenome_schema,
+                user_id => $phenotype_store_config->{user_id},
+                stock_list => [keys(%phenostore_stocks)],
+                trait_list => \@treatment_names,
+                values_hash => $phenostore_data_hash,
+                metadata_hash => $phenotype_store_config->{metadata_hash}
+            });
+
+            my ($verified_warning, $verified_error) = $store_phenotypes->verify();
+
+            if ($verified_warning) {
+                warn $verified_warning;
+            }
+            if ($verified_error) {
+                die $verified_error;
+            }
+
+            my ($stored_phenotype_error, $stored_phenotype_success) = $store_phenotypes->store();
+
+            if ($stored_phenotype_error) {
+                die "An error occurred inheriting treatments: $stored_phenotype_error\n";
+            }
+        }
     };
     if ($@) {
         print STDERR "An error occurred creating the subplot entities. $@\n";
@@ -4458,16 +5017,9 @@ sub _save_subplot_entry {
     my $subplot_relationship_cvterm = shift;
     my $field_layout_experiment = shift;
     my $field_layout_cvterm = shift;
-    my $inherits_plot_treatments = shift;
-    my $treatments = shift;
     my $plot_relationship_cvterm = shift;
-    my $treatment_plots_ref = shift;
-    my $treatment_experiments_ref = shift;
-    my $treatment_cvterm = shift;
     my $subplot_owner = shift;
     my $subplot_owner_username = shift;
-    my %treatment_plots = %$treatment_plots_ref;
-    my %treatment_experiments = %$treatment_experiments_ref;
 
     my $subplot = $chado_schema->resultset("Stock::Stock")->create({
         organism_id => $parent_plot_organism,
@@ -4522,21 +5074,6 @@ sub _save_subplot_entry {
         type_id => $field_layout_cvterm,
         stock_id => $subplot->stock_id(),
     });
-
-    if ($inherits_plot_treatments){
-        if($treatments){
-            foreach (@$treatments){
-                my $plots = $treatment_plots{$_->[0]};
-                if (exists($plots->{$parent_plot})){
-                    my $subplot_nd_experiment_stock = $chado_schema->resultset("NaturalDiversity::NdExperimentStock")->create({
-                        nd_experiment_id => $treatment_experiments{$_->[0]},
-                        type_id => $treatment_cvterm,
-                        stock_id => $subplot->stock_id(),
-                    });
-                }
-            }
-        }
-    }
 }
 
 =head2 function has_subplot_entries()
@@ -4641,28 +5178,32 @@ sub get_accessions {
     my $family_name_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'family_name', 'stock_type' )->cvterm_id();
 	my $field_trial_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, "field_layout", "experiment_type")->cvterm_id();
 	my $plot_of_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, "plot_of", "stock_relationship")->cvterm_id();
+    my $intercrop_plot_of_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, "intercrop_plot_of", "stock_relationship")->cvterm_id();
 	my $plant_of_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, "plant_of", "stock_relationship")->cvterm_id();
 	my $subplot_of_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, "subplot_of", "stock_relationship")->cvterm_id();
 	my $tissue_sample_of_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, "tissue_sample_of", "stock_relationship")->cvterm_id();
 
-	my $q = "SELECT DISTINCT(accession.stock_id), accession.uniquename, cvterm.name
+	my $q = "SELECT accession.stock_id, accession.uniquename, cvterm.name, STRING_AGG(DISTINCT(srt.name), ', '), organism.species
 		FROM stock as accession
         JOIN cvterm on (accession.type_id = cvterm.cvterm_id)
 		JOIN stock_relationship on (accession.stock_id = stock_relationship.object_id)
+		LEFT JOIN cvterm AS srt ON (stock_relationship.type_id = srt.cvterm_id)
 		JOIN stock as plot on (plot.stock_id = stock_relationship.subject_id)
 		JOIN nd_experiment_stock on (plot.stock_id=nd_experiment_stock.stock_id)
 		JOIN nd_experiment using(nd_experiment_id)
 		JOIN nd_experiment_project using(nd_experiment_id)
 		JOIN project using(project_id)
+		LEFT JOIN organism ON (accession.organism_id = organism.organism_id)
 		WHERE accession.type_id IN (?, ?, ?)
-		AND stock_relationship.type_id IN (?, ?, ?, ?)
+		AND stock_relationship.type_id IN (?, ?, ?, ?, ?)
 		AND project.project_id = ?
+		GROUP BY 1,2,3,5
 		ORDER BY accession.stock_id;";
 
 	my $h = $self->bcs_schema->storage->dbh()->prepare($q);
-	$h->execute($accession_cvterm_id, $cross_cvterm_id, $family_name_cvterm_id,$plot_of_cvterm_id, $tissue_sample_of_cvterm_id, $plant_of_cvterm_id, $subplot_of_cvterm_id,$self->get_trial_id());
-	while (my ($stock_id, $uniquename, $stock_type) = $h->fetchrow_array()) {
-		push @accessions, {accession_name=>$uniquename, stock_id=>$stock_id, stock_type=>$stock_type};
+	$h->execute($accession_cvterm_id, $cross_cvterm_id, $family_name_cvterm_id, $plot_of_cvterm_id, $intercrop_plot_of_cvterm_id, $tissue_sample_of_cvterm_id, $plant_of_cvterm_id, $subplot_of_cvterm_id,$self->get_trial_id());
+	while (my ($stock_id, $uniquename, $stock_type, $relationship_type, $organism) = $h->fetchrow_array()) {
+		push @accessions, {accession_name=>$uniquename, stock_id=>$stock_id, stock_type=>$stock_type, relationship_type=>$relationship_type, organism=>$organism};
 	}
 	return \@accessions;
 }
@@ -4970,7 +5511,7 @@ sub get_subplots {
     } else {
         @subplots = @{$self->get_observation_units_direct('subplot')};
     }
-    print STDERR Dumper \@subplots;
+    # print STDERR Dumper \@subplots;
     return \@subplots;
 }
 
@@ -5091,9 +5632,9 @@ sub get_controls_by_plot {
 
 =head2 get_treatments
 
- Usage:        $plants = $t->get_treatments();
+ Usage:        $treatment_summary = $t->get_treatments();
  Desc:         retrieves the treatments that are part of this trial
- Ret:          an array ref containing from project table [ treatment_name, treatment_id ]
+ Ret:          an array ref of hash refs containing { trait_id, trait_name, count }
  Args:
  Side Effects:
  Example:
@@ -5102,6 +5643,38 @@ sub get_controls_by_plot {
 
 sub get_treatments {
     my $self = shift;
+
+    my $all_traits = $self->get_traits_assayed(); #[$trait_id, $trait_name, $component_terms, $count, $imaging_project_id, $imaging_project_name];
+
+    my @treatment_traits = grep {$_->[1] =~ /_TREATMENT:/} @{$all_traits};
+
+    my @return_data;
+
+    foreach my $treatment (@treatment_traits) {
+        push @return_data, {
+            trait_id => $treatment->[0], 
+            trait_name => $treatment->[1], 
+            count => $treatment->[3]
+        };
+    }
+
+    return \@return_data;
+}
+
+=head2 get_treatment_projects (DEPRECATED)
+
+ Usage:        DEPRECATED $treatment_summary = $t->get_treatment_projects();
+ Desc:         DEPRECATED retrieves the treatments that are part of this trial
+ Ret:          DEPRECATED an array ref containing from project table [ treatment_id, treatment_name]
+ Args:
+ Side Effects:
+ Example:
+
+=cut
+
+sub get_treatment_projects { #WARNING: THIS FUNCTION IS DEPRECATD AND SHOULD NOT BE USED
+    my $self = shift;
+
     my @plants;
     my $treatment_rel_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, "trial_treatment_relationship", "project_relationship")->cvterm_id();
 
@@ -5112,6 +5685,7 @@ sub get_treatments {
         push @treatments, [$rs->project_id, $rs->name];
     }
     return \@treatments;
+
 }
 
 =head2 get_trial_contacts
@@ -5239,7 +5813,7 @@ sub suppress_plot_phenotype {
 
 =head2 delete_assayed_trait
 
-Usage:        	my $delete_trait_return_error = $trial->delete_assayed_trait($c->config->{basepath}, $c->config->{dbhost}, $c->config->{dbname}, $c->config->{dbuser}, $c->config->{dbpass}, $phenotypes_ids, [] );
+Usage:        	my $delete_trait_return_error = $trial->delete_assayed_trait($c->config->{basepath}, $c->config->{dbhost}, $c->config->{dbname}, $c->config->{dbuser}, $c->config->{dbpass},$tempfile_id, $phenotypes_ids, [] );
                 if ($delete_trait_return_error) {
                     $c->stash->{rest} = { error => $delete_trait_return_error };
                     return;
@@ -5768,6 +6342,12 @@ sub update_metadata {
         if ($details->{facility_submitted}) { $self->set_genotyping_facility_submitted($details->{facility_submitted}); }
         if ($details->{facility_status}) { $self->set_genotyping_facility_status($details->{set_genotyping_facility_status}); }
         if ($details->{raw_data_link}) { $self->set_raw_data_link($details->{raw_data_link}); }
+        if ($details->{folder}) {
+            if ( $details->{folder}->{type} eq 'exists' ) {
+                my $folder = CXGN::Trial::Folder->new({ bcs_schema => $self->bcs_schema(), folder_id => $self->get_trial_id() });
+                $folder->associate_parent($details->{folder}->{id});
+            }
+        }
     };
     if ($@) {
         return "An error occurred setting the new trial details of trial " . $self->get_name() . ": $@";

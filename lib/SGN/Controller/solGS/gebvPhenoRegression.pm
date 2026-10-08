@@ -46,7 +46,6 @@ sub get_regression_data_files {
 
     my $pop_id     = $c->stash->{training_pop_id};
     my $trait_abbr = $c->stash->{trait_abbr};
-    my $cache_dir  = $c->stash->{solgs_cache_dir};
 
     $c->controller('solGS::Files')->model_phenodata_file($c);
     my $phenotype_file = $c->stash->{model_phenodata_file};
@@ -108,8 +107,10 @@ sub get_regeression_data :Path('/solgs/get/regression/data/') Args(0) {
     my $gebv_file  = $c->stash->{regression_gebv_file};
     my $pheno_file = $c->stash->{regression_pheno_file};
 
-    my @gebv_data  = map { $_ =~ s/\n//; $_ }  read_file($gebv_file, {binmode => ':utf8'});
-    my @pheno_data = map { $_ =~ s/\n//; $_ }  read_file($pheno_file, {binmode => ':utf8'});
+    my @gebv_data = read_file($gebv_file, { binmode => ':utf8' });
+    chomp @gebv_data;
+    my @pheno_data = read_file($pheno_file, { binmode => ':utf8' });
+    chomp @pheno_data;
 
     @gebv_data  = map { [ split(/\t/) ] } @gebv_data;
     @pheno_data = map { [ split(/\t/) ] } @pheno_data;

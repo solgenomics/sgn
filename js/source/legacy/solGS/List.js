@@ -1,5 +1,4 @@
 /**
-
 A list object template with methods for getting details about the list.
 Isaak Y Tecle 
 iyt2@cornell.edu
@@ -10,19 +9,19 @@ class solGSList {
     if(listId) {
       this.listId = listId;
     }
-    this.CxgnList = new CXGN.List();
+    this.cxgnList = new CXGN.List();
   }
 
   getListDetail() {
     return {
-      name: this.CxgnList.listNameById(this.listId),
-      type: this.CxgnList.getListType(this.listId),
+      name: this.cxgnList.listNameById(this.listId),
+      type: this.cxgnList.getListType(this.listId),
       list_id: this.listId,
     };
   }
 
   getListElementsIds() {
-    var listData = this.CxgnList.getListData(this.listId);
+    var listData = this.cxgnList.getListData(this.listId);
     var listElems = listData.elements;
     var ids = [];
     for (var i = 0; i < listElems.length; i++) {
@@ -33,7 +32,7 @@ class solGSList {
   }
 
   getListElementsNames() {
-    var listData = this.CxgnList.getListData(this.listId);
+    var listData = this.cxgnList.getListData(this.listId);
     var listElems = listData.elements;
     var names = [];
     for (var i = 0; i < listElems.length; i++) {
@@ -44,10 +43,10 @@ class solGSList {
   }
 
   getLists(listTypes) {
-    var lists = this.CxgnList.getLists(listTypes);
-    var privateLists = this.CxgnList.convertArrayToJson(lists.private_lists);
+    var lists = this.cxgnList.getLists(listTypes);
+    var privateLists = this.cxgnList.convertArrayToJson(lists.private_lists);
     privateLists = this.addDataOwnerAttr(privateLists, 'private')
-    var publicLists = this.CxgnList.convertArrayToJson(lists.public_lists);
+    var publicLists = this.cxgnList.convertArrayToJson(lists.public_lists);
     publicLists = this.addDataOwnerAttr(publicLists, 'public')
 
     lists = [privateLists, publicLists]

@@ -21,7 +21,7 @@ sub _validate_with_plugin {
     my %missing_accessions;
 
     # optional columns = these hard-coded columns plus any editable stock props
-    my @optional_columns = ('description', 'synonyms', 'populationName', 'organizationName', 'locationCode', 'ploidyLevel', 'genomeStructure', 'variety', 'donor', 'donor institute', 'donor PUI', 'countryOfOriginCode', 'state', 'instituteCode', 'instituteName', 'biologicalStatusOfAccessionCode', 'notes', 'accessionNumber', 'germplasmPUI', 'germplasmSeedSource', 'typeOfGermplasmStorageCode', 'acquisitionDate', 'transgenic', 'introgression_parent', 'introgression_backcross_parent', 'introgression_chromosome', 'introgression_start_position_bp', 'introgression_end_position_bp');
+    my @optional_columns = ('description', 'synonyms', 'populationName', 'organizationName', 'locationCode', 'ploidyLevel', 'genomeStructure', 'variety', 'donor', 'donor institute', 'donor PUI', 'countryOfOriginCode', 'state', 'instituteCode', 'instituteName', 'biologicalStatusOfAccessionCode', 'notes', 'accessionNumber', 'germplasmPUI', 'germplasmSeedSource', 'typeOfGermplasmStorageCode', 'acquisitionDate', 'transgenic', 'introgression_parent', 'introgression_backcross_parent', 'introgression_chromosome', 'introgression_start_position_bp', 'introgression_end_position_bp', 'number_of_insertions');
     push @optional_columns, @$editable_stockprops;
 
     my $parser = CXGN::File::Parse->new(
@@ -57,9 +57,11 @@ sub _validate_with_plugin {
         'introgression_backcross_parent' => ['introgression_backcross_parent', 'introgression_backcross_parents', 'introgression_backcross_parent(s)'],
         'introgression_chromosome' => ['introgression_chromosome', 'introgression_chromosomes', 'introgression_chromosome(s)'],
         'introgression_start_position_bp' => ['introgression_start_position_bp', 'introgression_start_position_bps', 'introgression_start_position_bp(s)'],
-        'introgression_end_position_bp' => ['introgression_end_position_bp', 'introgression_end_position_bps', 'introgression_end_position_bp(s)']
+        'introgression_end_position_bp' => ['introgression_end_position_bp', 'introgression_end_position_bps', 'introgression_end_position_bp(s)'],
+        'number_of_insertions' => ['number of insertions'],
       },
-      column_arrays => [ 'synonyms' ]
+      column_arrays => [ 'synonyms' ],
+      unique_only_columns => [ 'accession_name' ]
     );
     my $parsed = $parser->parse();
     my $parsed_errors = $parsed->{errors};
@@ -82,17 +84,6 @@ sub _validate_with_plugin {
       ];
       $self->_set_parse_errors(\%errors);
       return;
-    }
-
-    # check for duplicate accession entries
-    my %accession_name_counts;
-    foreach my $row (@$parsed_data) {
-      $accession_name_counts{$row->{'accession_name'}}++;
-    }
-    foreach my $k (keys %accession_name_counts) {
-      if ($accession_name_counts{$k} > 1) {
-        push @error_messages, "Accession $k occures $accession_name_counts{$k} times in the file. Accession names must be unique. Please remove duplicated accession names.";
-      }
     }
 
     # check validity of species names

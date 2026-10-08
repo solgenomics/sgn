@@ -1,0 +1,31 @@
+<%doc>Decision Meeting</%doc>
+
+<div class="well">
+
+  <&| /page/info_section.mas,
+       title=>'Meeting Tracker',
+       is_subsection=>1, collapsible=>1, collapsed=>0,
+       subtitle=>'View Meetings Record'
+  &>
+    <div class="panel panel-default">
+      <div class="panel-body">
+        <div class="table-responsive">
+          <table id="meeting_table" class="table table-striped table-bordered" width="100%">
+            <thead>
+              <tr>
+                <th>Select</th>
+                <th>Meeting</th>
+                <th>Programs</th>
+                <th>Date</th>
+                <th>Location</th>
+                <th>Attendees</th>
+                <th>Download</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </&>
+</div>

@@ -28,18 +28,21 @@ The input file should have the following column headers:
   trait_maximum
   trait_categories
   trait_details
+  trait_repeat_type
 
   trait_name: the name of the variable human readable form (e.g., "plant height in cm")
   trait_format: can be numeric, qualitative, date or boolean
   trait_default_value: is the value if no value is given
   trait_categories: are the different possible names of the categories, separated by /, for example "1/2/3/4/5"
   trait_details: string describing the trait categories 
+  trait_repeat_type: one of 'single', 'multiple', 'time_series'
 
 =head2 AUTHOR
 
-Jeremy D. Edwards (jde22@cornell.edu)
+ Jeremy D. Edwards (jde22@cornell.edu) - initial script, April 2014
+ Lukas Mueller (lam87@cornell.edu) - added trait_repeat_type, Feb 2024
 
-April 2014
+
 
 =head2 TODO
 
@@ -117,6 +120,7 @@ my @trait_property_names = qw(
     trait_maximum
     trait_categories
     trait_details
+    trait_repeat_type
     );
 
 #check header for property names

@@ -92,7 +92,13 @@ sub download {
     my $phenotype_max_value = $self->phenotype_max_value();
     my $exclude_phenotype_outlier = $self->exclude_phenotype_outlier;
     my $include_pedigree_parents = $self->include_pedigree_parents();
+    my $include_intercrop_stocks = $self->include_intercrop_stocks();
+    my $include_entry_numbers = $self->include_entry_numbers();
+    my $include_trait_synonyms = $self->include_trait_synonyms();
     my $search_type = $self->search_type();
+    my $phenotype_start_date = $self->start_date();
+    my $phenotype_end_date = $self->end_date();
+    my $repetitive_measurements = $self->repetitive_measurements();
 
     $self->trial_download_log($trial_id, "trial phenotypes");
 
@@ -125,7 +131,13 @@ sub download {
             trait_contains=>$trait_contains,
             phenotype_min_value=>$phenotype_min_value,
             phenotype_max_value=>$phenotype_max_value,
-            include_pedigree_parents=>$include_pedigree_parents
+            include_pedigree_parents=>$include_pedigree_parents,
+            include_intercrop_stocks=>$include_intercrop_stocks,
+            include_entry_numbers=>$include_entry_numbers,
+            include_trait_synonyms=>$include_trait_synonyms,
+            phenotype_start_date => $phenotype_start_date,
+            phenotype_end_date => $phenotype_end_date,
+            repetitive_measurements => $repetitive_measurements,
         );
         @data = $phenotypes_search->get_phenotype_matrix();
     }
@@ -160,7 +172,11 @@ sub download {
         my $num_col = scalar(@$header);
         for (my $line =0; $line< @data; $line++) {
             my $columns = $data[$line];
-            print $F join ',', map { $_ =~ s/"/""/g; qq!"$_"! } @$columns;
+            print $F join ',', map {
+                my $field = $_;
+                $field =~ s/"/""/g;
+                qq!"$field"!;
+            } @$columns;
             print $F "\n";
         }
     close($F);

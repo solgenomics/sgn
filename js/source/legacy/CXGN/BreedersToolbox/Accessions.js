@@ -25,6 +25,7 @@ var infoToAdd;
 var accessionListFound;
 var speciesNames;
 var doFuzzySearch;
+var upload_in_progress = false;
 
 function disable_ui() {
     jQuery('#working_modal').modal("show");
@@ -32,6 +33,7 @@ function disable_ui() {
 
 function enable_ui() {
     jQuery('#working_modal').modal("hide");
+    jQuery('.modal-backdrop').hide();
 }
 
 jQuery(document).ready(function ($) {
@@ -382,6 +384,19 @@ jQuery(document).ready(function ($) {
     jQuery('#email_option_to_recieve_accession_upload_status').on('change', toggleEmailField);
     toggleEmailField();
 
+    function toggleAccessionListName() {
+        var checkbox = jQuery('#create_accession_list');
+        var nameInput = jQuery('#create_accession_list_name');
+        if ( checkbox.prop('checked')) {
+            nameInput.show();
+        }
+        else {
+            nameInput.hide();
+        }
+    }
+    jQuery('#create_accession_list').on('change', toggleAccessionListName);
+    toggleAccessionListName();
+
     function add_accessions(full_info, species_names) {
         var email_address = jQuery('#email_address_upload').val();
         var email_option_enabled = jQuery('#email_option_to_recieve_accession_upload_status').prop('checked') ? 1 : 0;
@@ -395,6 +410,12 @@ jQuery(document).ready(function ($) {
                 return;
             }
         }
+        else {
+            disable_ui();
+        }
+
+        upload_in_progress = true;
+
         $.ajax({
             type: 'POST',
             url: '/ajax/accession_list/add',
@@ -406,35 +427,47 @@ jQuery(document).ready(function ($) {
                 'email_address_upload': email_address,
                 'email_option_enabled': email_option_enabled,
             },
-            // beforeSend: function(){
+            // beforeSend: function(){ //UI gets disabled before ajax call if email option is not enabled
             //     disable_ui();
             // },
             success: function (response) {
                 console.log("email_option_enabled on success:", email_option_enabled);
-                if (!email_option_enabled) {
-                    enable_ui();
-                }
-		        //alert("ADD ACCESSIONS: "+JSON.stringify(response));
                 if (response.error) {
+                    enable_ui();
                     alert(response.error);
                 } else {
+                    enable_ui();
                     var html = 'The following stocks were added!<br/>';
                     for (var i=0; i<response.added.length; i++){
                         html = html + '<a href="/stock/'+response.added[i][0]+'/view">'+response.added[i][1]+'</a><br/>';
                     }
                     jQuery('#add_accessions_saved_message').html(html);
                     jQuery('#add_accessions_saved_message_modal').modal('show');
+
+                    // Remove list_id from the URL query params, if present
+                    const url = new URL(window.location.href);
+                    url.searchParams.delete('list_id');
+                    history.replaceState({}, '', url);
                 }
             },
             error: function (response) {
                 console.log("email_option_enabled on error:", email_option_enabled);
-                if (!email_option_enabled) {
-                    enable_ui();
-                }
                 alert('An error occurred in processing. sorry'+response.responseText);
-            }
+            },
+            complete: function () {
+                upload_in_progress = false;
+                if (!email_option_enabled) enable_ui();
+            },
         });
     }
+
+    jQuery(window).on('beforeunload', function (e) {
+        if (upload_in_progress) {
+            e.preventDefault();
+            e.returnValue = ''; // required for Chrome
+            return '';          // required for some older browsers
+        }
+    });
 
     function verify_species_name() {
         var speciesName = $("#species_name_input").val();
@@ -510,10 +543,10 @@ jQuery(document).ready(function ($) {
 		        alert('ERROR! Try again later.');
 		    }
 	        );
+	    } else {
+	        add_accessions(infoToAdd, speciesNames, emailAddress, email_option_enabled);
+	        $('#review_absent_dialog').modal("hide");
 	    }
-
-	    add_accessions(infoToAdd, speciesNames, emailAddress, email_option_enabled);
-	    $('#review_absent_dialog').modal("hide");
 
         //window.location.href='/breeders/accessions';
     });
@@ -564,7 +597,7 @@ jQuery(document).ready(function ($) {
             }
             else if (response.success) {
                 fullParsedData = response.full_data;
-                doFuzzySearch = jQuery('#fuzzy_check_upload_accessions').prop('checked');;
+                doFuzzySearch = jQuery('#fuzzy_check_upload_accessions').prop('checked');
                 review_verification_results(doFuzzySearch, response, response.list_id);
             }
             else {
@@ -576,15 +609,15 @@ jQuery(document).ready(function ($) {
 
     $('[name="add_accessions_link"]').click(function () {
         var list = new CXGN.List();
-        accessionList;
-        accession_list_id;
-        validSpecies;
-        fuzzyResponse;
-        fullParsedData;
-        infoToAdd;
-        accessionListFound;
-        speciesNames;
-        doFuzzySearch;
+        accessionList	= [];
+        accession_list_id = undefined;
+        validSpecies	= undefined;
+        fuzzyResponse	= undefined;
+        fullParsedData	= undefined;
+        infoToAdd	= [];
+        accessionListFound	= {};
+        speciesNames	= [];
+        doFuzzySearch	= undefined;
         $('#add_accessions_dialog').modal("show");
         $('#review_found_matches_dialog').modal("hide");
         $('#review_fuzzy_matches_dialog').modal("hide");
@@ -628,7 +661,7 @@ function openWindowWithPost(fuzzyResponse) {
 }
 
 function verify_accession_list(accession_list_id) {
-    accession_list = JSON.stringify(list.getList(accession_list_id));
+    accessionList = JSON.stringify(list.getList(accession_list_id));
     doFuzzySearch = jQuery('#fuzzy_check').prop('checked');
 
     jQuery.ajax({
@@ -638,7 +671,7 @@ function verify_accession_list(accession_list_id) {
         //async: false,
         dataType: "json",
         data: {
-            'accession_list': accession_list,
+            'accession_list': accessionList,
             'do_fuzzy_search': doFuzzySearch,
         },
         beforeSend: function(){
@@ -695,7 +728,7 @@ function review_verification_results(doFuzzySearch, verifyResponse, accession_li
 
     if (verifyResponse.fuzzy.length > 0 && doFuzzySearch) {
         fuzzyResponse = verifyResponse.fuzzy;
-        var fuzzy_html = '<table id="add_accession_fuzzy_table" class="table"><thead><tr><th class="col-xs-4">Name in Your List</th><th class="col-xs-4">Existing Name(s) in Database</th><th class="col-xs-4">Options&nbsp;&nbsp;&nbsp&nbsp;<input type="checkbox" id="add_accession_fuzzy_option_all"/> Use Same Option for All</th></tr></thead><tbody>';
+        var fuzzy_html = '<table id="add_accession_fuzzy_table" class="table"><thead><tr><th class="col-xs-4">Name in Your List</th><th class="col-xs-4">Existing Name(s) in Database</th><th class="col-xs-4">Options&nbsp;&nbsp;&nbsp;&nbsp;<input type="checkbox" id="add_accession_fuzzy_option_all"/> Use Same Option for All</th></tr></thead><tbody>';
         for( i=0; i < verifyResponse.fuzzy.length; i++) {
             fuzzy_html = fuzzy_html + '<tr id="add_accession_fuzzy_option_form'+i+'"><td>'+ verifyResponse.fuzzy[i].name + '<input type="hidden" name="fuzzy_name" value="'+ verifyResponse.fuzzy[i].name + '" /></td>';
             fuzzy_html = fuzzy_html + '<td><select class="form-control" name ="fuzzy_select">';
@@ -741,7 +774,7 @@ function review_verification_results(doFuzzySearch, verifyResponse, accession_li
         }
     });
 
-    jQuery(document).on('click', '#review_fuzzy_matches_continue', function(){
+    jQuery(document).off('click', '#review_fuzzy_matches_continue').on('click', '#review_fuzzy_matches_continue', function(){
         process_fuzzy_options(accession_list_id);
     });
 

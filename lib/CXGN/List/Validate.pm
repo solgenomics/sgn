@@ -29,4 +29,6 @@ sub validate {
     return $data;
 }
 
+__PACKAGE__->meta->make_immutable;
+
 1;

@@ -100,8 +100,7 @@ sub generatereport_POST :Path('generatereport') :Args(0) {
                 sp_person_id => $sp_person_id,
                 name => $file_basename." report generation",
                 cmd => $script_cmd,
-                job_type => 'report',
-                finish_logfile => $c->config->{job_finish_log}
+                job_type => 'report'
             });
 
             # Start or enqueue the job

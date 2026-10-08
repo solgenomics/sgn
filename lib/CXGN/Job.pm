@@ -14,6 +14,11 @@ supplying the Run arguments to the cxgn_tools_run_config hash.
 my $job = CXGN::Job->new({
     people_schema => $people_schema
     schema => $bcs_schema,
+    dbhost => $dbhost,
+    dbname => $dbname,
+    dbuser => $dbuser,
+    dbpass => $dbpass,
+    basepath => $basepath,
     sp_person_id => $c->user->get_object()->get_sp_person_id(),
     cmd => $cmd,
     cxgn_tools_run_config => {
@@ -24,9 +29,8 @@ my $job = CXGN::Job->new({
         'is_cluster' => 1,
         'do_cleanup' => 0,
         'sleep' => undef,
-        'backend' => 'Slurm'
+        'backend' => 'Tsp'
     },
-    finish_logfile => $c->config->{job_finish_log},
     name => 'Sample download',
     job_type => 'download',
     submit_page => 'https://www.breedbase.org/submit_page_url',
@@ -38,7 +42,7 @@ my $job_id = $job->submit();
 
 ...
 
-my $job = CXGN::Jobs->new({
+my $job = CXGN::Job->new({
     people_schema => $people_schema
     schema => $bcs_schema
     sp_job_id => $job_id
@@ -71,8 +75,10 @@ use Data::Dumper;
 use File::Slurp qw( write_file read_file );
 use File::Path qw( make_path );
 use JSON::Any;
+use File::Spec;
 use CXGN::Tools::Run;
 use CXGN::People::Schema;
+use Try::Tiny;
 
 =head1 ACCESSORS
 
@@ -92,6 +98,46 @@ accessor for Bio::Chado::Schema database object
 
 has 'schema' => ( isa => "Bio::Chado::Schema", is => 'rw', required => 1 );
 
+=head2 dbhost()
+
+Database hostname. Required for submitting background jobs.
+
+=cut
+
+has 'dbhost' => (isa => 'Maybe[Str]', is => 'ro', predicate => 'has_dbhost');
+
+=head2 dbname()
+
+Database name. Required for submitting background jobs.
+
+=cut
+
+has 'dbname' => (isa => 'Maybe[Str]', is => 'ro', predicate => 'has_dbname');
+
+=head2 dbuser()
+
+Database username. Required for submitting background jobs.
+
+=cut
+
+has 'dbuser' => (isa => 'Maybe[Str]', is => 'ro', predicate => 'has_dbuser');
+
+=head2 dbpass()
+
+Database password. Required for submitting background jobs.
+
+=cut
+
+has 'dbpass' => (isa => 'Maybe[Str]', is => 'ro', predicate => 'has_dbpass');
+
+=head2 basepath()
+
+Site basepath from $c->config->{basepath}. Required for submitting background jobs.
+
+=cut
+
+has 'basepath' => (isa => 'Maybe[Str]', is => 'ro', predicate => 'has_basepath');
+
 =head2 sp_job_id()
 
 Database ID for submitted job
@@ -110,7 +156,7 @@ has 'sp_person_id' => ( isa => 'Maybe[Int]', is => 'rw' );
 
 =head2 backend_id()
 
-ID of the running process, as used by the workload manager (assumed to be Slurm). Useful for checking job status. 
+ID of the job in the CXGN::Tools::Run backend (Slurm job id, tsp job id, ...). Useful for checking job status. 
 
 =cut
 
@@ -134,13 +180,13 @@ has 'finish_timestamp' => ( isa => 'Maybe[Str]', is => 'rw', predicate => 'has_f
 
 =head2 status()
 
-Current status of the job. May be stored in DB or may be gathered from Slurm (and then stored)
+Current status of the job. May be stored in DB or may be gathered from the job backend (and then stored)
 
 =cut 
 
 has 'status' => ( 
     isa => 'Maybe[Str]',
-    isa => enum([qw( submitted finished failed timeout canceled )]), 
+    isa => enum([qw( submitted finished failed timed_out canceled )]), 
     is => 'rw'
 );
 
@@ -205,7 +251,7 @@ Config keys include:
 - is_cluster (true by default)
 - do_cleanup (0 by default)
 - sleep (undef by default)
-- backend (likely to be Slurm)
+- backend (CXGN::Tools::Run backend plugin, e.g. Slurm or Tsp)
 
 =cut
 
@@ -217,15 +263,7 @@ The command submitted to be run.
 
 =cut
 
-has 'cmd' => (isa => 'Str', is => 'rw');
-
-=head2 logfile()
-
-The logfile used to store and retrieve finish timestamps. Required for job creation. 
-
-=cut
-
-has 'finish_logfile' => (isa => 'Str', is => 'rw', predicate => 'has_finish_logfile');
+has 'cmd' => (isa => 'Maybe[Str]', is => 'rw');
 
 =head2 name()
 
@@ -266,16 +304,11 @@ sub BUILD {
                 cv_id => $cv_id
             });
         }
-        my $logfile;
-        if (!$self->has_finish_logfile()) {
-            $logfile = `cat /home/production/cxgn/sgn/sgn.conf | grep job_finish_log | sed 's/\\w+\\s//'`;
-            $self->finish_logfile($logfile);
-        }
         $self->create_timestamp(DateTime->now(time_zone => 'local')->strftime('%Y-%m-%d %H:%M:%S'));
         if (!$self->has_cxgn_tools_run_config()) {
             $self->cxgn_tools_run_config($self->get_default_cxgn_tools_run_config());
         }
-        
+
     } else { #existing job, retrieve from DB
         my $row = $self->people_schema()->resultset("SpJob")->find({ sp_job_id => $self->sp_job_id() });
         if (!$row) { die "The job with id ".$self->sp_job_id()." does not exist"; }
@@ -297,11 +330,7 @@ sub BUILD {
         $self->additional_args($job_args->{additional_args});
         $self->cxgn_tools_run_config($job_args->{cxgn_tools_run_config});
         $self->cmd($job_args->{cmd});
-        my $logfile = $job_args->{finish_logfile} ? $job_args->{finish_logfile} : `cat /home/production/cxgn/sgn/sgn.conf | grep job_finish_log | sed 's/\\w+\\s//'`;
-        $self->finish_logfile($logfile);
     }
-
-    $self->enforce_finish_logfile();
 }
 
 =head2 check_status()
@@ -314,97 +343,47 @@ sub check_status {
     my $self = shift;
 
     my $backend_id = $self->backend_id();
-    my $logfile = $self->finish_logfile();
 
-    if ($self->status() eq "canceled" || $self->status() eq "failed") {
+    if ($self->status() eq "canceled" || $self->status() eq "failed" || $self->status() eq "timed_out" || $self->status() eq "finished") { #just return a finish state if already recorded
         return $self->status();
     }
 
-    if (!$backend_id || !$self->has_sp_job_id()) {
-        my $finish_timestamp = $self->read_finish_timestamp();
-        if ($finish_timestamp && $self->status() ne "canceled") {
+    my $finish_timestamp = $self->finish_timestamp();
+    if ($finish_timestamp) {
+        if ($self->status() ne "canceled" && $self->status() ne "failed" && $self->status() ne "timed_out") { #if theres a timestamp and the job doesn't already have and end state, then mark it as done
             $self->status("finished");
             $self->store();
-        }
-        return $self->status() ? $self->status() : "";
-    } else {
-        if ($self->status() eq "submitted") {
-            my $squeue = `squeue --job=$backend_id`;
-            my @job_results = split("\n", $squeue);
-            if (scalar(@job_results) < 2) { #Squeue gives only header line if no job to show
-                my $finish_timestamp = $self->read_finish_timestamp();
-
-                if (!$finish_timestamp) {
-                    $self->status("failed");
+        } 
+    } else { # no finish timestamp in db. Is this job running? Or did it die?
+        if (defined($backend_id)) {
+            return scalar($self->update_status_from_backend());
+        } else { #job has no backend ID and no finish timestamp.
+            if (!$self->create_timestamp()) { #something is weird if it has no create timestamp. 
+                $self->status("failed");
+                $self->store();
+            } else { # no backend id, but has a create timestamp and no finish timestamp. 
+                my $now = DateTime->now(time_zone => 'local');
+                my $create_timestamp = $self->create_timestamp();
+                $create_timestamp =~ s/ /T/;
+                my $start_time = DateTime::Format::ISO8601->parse_datetime($create_timestamp);
+                my $age = ( $now->epoch - $start_time->epoch ) / 86400;
+                if ($age > 1) {
+                    $self->status("timed_out");
                     $self->store();
-                } else {
-                    $self->status("finished");
+                } else { # no backend, no create timestamp, no finish timestamp, but hasnt been running long
+                    $self->status("submitted");
                     $self->store();
-                }
-
-            } else { #job is live 
-                my ($JOBID,$PARTITION,$NAME,$USER,$ST,$TIME,$NODES,$NODELIST) = split(/\s+/, $job_results[1]);
-                my @timestamp = split("-", $TIME);#squeue time outputs look like Days-Hours:Mins:Seconds, but days are ommitted for short lived jobs. 
-
-                if (scalar(@timestamp) > 1) {#The length will be greater than one if the job has been running greater than 24 hours
-
-                    if (int($timestamp[0]) >= 2) { #job is timed out!
-                        $self->status("timed_out");
-                        system("scancel $backend_id");
-                        $self->store();
-                    }
                 }
             }
-        } 
-        return $self->status()
+        }
     }
+    return $self->status();
 }
 
-=head2 read_finish_timestamp()
-
-Returns the finish timestamp if already recorded. Otherwise, reads the logfile, stores the timestamp, and returns the time.
-
-=cut
-
-sub read_finish_timestamp {
-    my $self = shift;
-
-    if (!$self->has_finish_logfile()) {
-        die "No finish logfile to read.\n";
-    }
-
-    my $logfile = $self->finish_logfile();
-
-    if ($self->finish_timestamp()) {
-        return $self->finish_timestamp();
-    }
-
-    my @rows;
-    eval {
-        @rows = read_file( $logfile, { binmode => ':utf8' } );
-    }; 
-    if ($@) {
-        return "";
-    }  
-
-    my $db_id = $self->sp_job_id();
-    my @finish_row = grep {/$db_id\s+/} @rows;
-    my $finish_row = pop(@finish_row);
-
-    $finish_row =~ m/$db_id\s+(?<FINISH_TIMESTAMP>\d+-\d+-\d+ \d+:\d+:\d+.*)/;
-
-    if ($+{FINISH_TIMESTAMP}) {
-        $self->finish_timestamp($+{FINISH_TIMESTAMP});
-        $self->store();
-        return $+{FINISH_TIMESTAMP};
-    }
-
-    return "";
-}
 
 =head2 delete()
 
-Deletes the job from the database and the log finish file
+Deletes the job from the database
 
 =cut
 
@@ -415,35 +394,22 @@ sub delete {
         die "Deletion has no meaning for jobs that have not yet been stored.\n";
     } 
 
-    my $logfile = $self->finish_logfile();
-
     my $row = $self->people_schema()->resultset("SpJob")->find({ sp_job_id => $self->sp_job_id() });
 
     if (!$row){
         die "The specified job does not exist in the database.\n";
     }
 
-    eval {
+    try {
         $row->delete();
-    };
-    if ($@) {
-        die "An error occurred deleting job from database: $@\n";
-    }
-    my $job_id = $self->sp_job_id();
-    my @rows;
-    eval {
-        @rows = read_file( $logfile, { binmode => ':utf8' } );
-    }; 
-    if ($@) {
-        return "";
-    }  
-    @rows = grep {!m/$job_id\s+\d+-\d+-\d+ \d+:\d+:\d+/} @rows;
-    write_file($logfile,{binmode => ':utf8'},@rows);
+    } catch {
+        die "An error occurred deleting job from database: $_\n";
+    } ;
 }
 
 =head2 cancel()
 
-If the job is still alive and running, runs scancel to kill it. 
+If the job is still alive and running, kills it through its CXGN::Tools::Run backend.
 
 =cut
 
@@ -454,22 +420,16 @@ sub cancel {
         die "Cannot cancel a job without a backend ID.\n";
     }
 
-    my $logfile = $self->finish_logfile();
-
-    my $backend_id = $self->backend_id();
-
-    eval {
-        system("scancel $backend_id");
+    try {
+        $self->run_object()->cancel();
 
         $self->status('canceled');
         my $formatted_time = DateTime->now(time_zone => 'local')->strftime('%Y-%m-%d %H:%M:%S');
         $self->finish_timestamp($formatted_time);
-        system('echo "'.$self->sp_job_id().'    '.$formatted_time.'" >> '.$logfile);
         $self->store();
-    };
-    if ($@){
-        die "Error canceling job: $@\n";
-    }
+    } catch {
+        die "Error canceling job: $_\n";
+    } ;
 }
 
 =head2 submit()
@@ -480,7 +440,14 @@ Creates a CXGN::Tools::Run object and runs the current job. Stores job data in a
 
 sub submit {
     my $self = shift;
-    my $run_sync = shift;
+    if (!$self->has_dbhost() || !$self->has_dbname() || !$self->has_dbuser() || !$self->has_dbpass() || !$self->has_basepath()) {
+        die "Cannot submit background jobs without db connection parameters and site basepath!\n";
+    }
+    my $dbhost = $self->dbhost();
+    my $dbname = $self->dbname();
+    my $dbuser = $self->dbuser();
+    my $dbpass = $self->dbpass();
+    my $basepath = $self->basepath();
 
     if ($self->has_sp_job_id()) {
         die "This job has already been submitted!\n";
@@ -489,12 +456,6 @@ sub submit {
     if (!$self->cmd()) {
         die "Background jobs must have a command to run.\n";
     }
-
-    if (!$self->has_finish_logfile()) {
-        die "Need a finish logfile for job submission.\n";
-    }
-
-    my $logfile = $self->finish_logfile();
 
     my $cmd = $self->cmd();
     my $cxgn_tools_run_config;
@@ -511,10 +472,9 @@ sub submit {
 
     my $job;
     my $backend_id;
-    # my $cxgn_tools_run_id;
     my $status;
 
-    eval {
+    try {
 
         $job = CXGN::Tools::Run->new($cxgn_tools_run_config);
         print STDERR "Submitting job: \n$cmd\n";
@@ -526,17 +486,16 @@ sub submit {
 
         $backend_id = $job->cluster_job_id();
         $status = 'submitted';
-    };
-
-    if ($@) {
+    } catch {
         $self->update_status('failed');
-        die "An error occured trying to submit a background job.\n$@\n";
-    } 
+        die "An error occured trying to submit a background job.\n$_\n";
+    } ;
 
     $self->backend_id($backend_id);
-    $self->update_status($status);
     $self->cxgn_tools_run_config->{out_file} = $job->out_file();
     $self->cxgn_tools_run_config->{jobid} = $job->jobid();
+    $self->{run_object} = $job; # see run_object()
+    $self->update_status($status);
 
     return $sp_job_id;
 }
@@ -549,7 +508,7 @@ Stores job data in a new db row.
 
 sub store {
     my $self = shift;
-    eval {
+    try {
         
         if ($self->has_sp_job_id()) {
             my $row = $self->people_schema()->resultset("SpJob")->find( { sp_job_id => $self->sp_job_id() });
@@ -559,7 +518,6 @@ sub store {
             $row->args(JSON::Any->encode({
                 cxgn_tools_run_config => $self->cxgn_tools_run_config(),
                 name => $self->name(),
-                finish_logfile => $self->finish_logfile(),
                 cmd => $self->cmd(),
                 results_page => $self->results_page(),
                 submit_page => $self->submit_page(),
@@ -581,7 +539,6 @@ sub store {
                 args => JSON::Any->encode({
                     cxgn_tools_run_config => $self->cxgn_tools_run_config(),
                     name => $self->name(),
-                    finish_logfile => $self->finish_logfile(),
                     cmd => $self->cmd(),
                     results_page => $self->results_page(),
                     submit_page => $self->submit_page(),
@@ -596,11 +553,9 @@ sub store {
             });
             $self->sp_job_id($row->sp_job_id());
         }
-    };
-
-    if ($@) {
-        die "Error storing job in database!$@\n";
-    } 
+    } catch {
+        die "Error storing job in database!$_\n";
+    } ;
     
     return $self->sp_job_id();
 }
@@ -613,12 +568,14 @@ Generates a command that gives the finish timestamp. Use to append to a cmd befo
 
 sub generate_finish_timestamp_cmd {
     my $self = shift;
-
-    if (!$self->has_finish_logfile()) {
-        return "";
+    if (!$self->has_dbhost() || !$self->has_dbname() || !$self->has_dbuser() || !$self->has_dbpass() || !$self->has_basepath()) {
+        die "Cannot create the finish timestamp script without db connection parameters and site basepath!\n";
     }
-
-    my $logfile = $self->finish_logfile();
+    my $dbhost = $self->dbhost();
+    my $dbname = $self->dbname();
+    my $dbuser = $self->dbuser();
+    my $dbpass = $self->dbpass();
+    my $basepath = $self->basepath();
 
     if (!$self->has_sp_job_id()) {
         die "Can't generate a finish timestamp if job has no id.\n";
@@ -626,12 +583,28 @@ sub generate_finish_timestamp_cmd {
 
     my $sp_job_id = $self->sp_job_id();
 
-    return ';
+    return ";
 
-FINISH_TIMESTAMP=$(date +"%Y-%m-%d %H:%M:%S%z"); 
-echo "'.$sp_job_id.'    $FINISH_TIMESTAMP" >> '.$logfile.' ;
+perl $basepath/bin/record_finish_timestamp.pl -H $dbhost -D $dbname -U $dbuser -P $dbpass -j $sp_job_id ;
 
-';
+";
+}
+
+=head2 retrieve_finish_timestamp()
+
+Check the database for a finish timestamp. Useful if you created a job object for job submission, and want to 
+check for a finish timestamp before the object has been destroyed and reformed. 
+
+=cut
+
+sub retrieve_finish_timestamp {
+    my $self = shift;
+
+    my $row = $self->people_schema()->resultset("SpJob")->find({ sp_job_id => $self->sp_job_id() });
+
+    my $finish_timestamp = $row->finish_timestamp() ? $row->finish_timestamp() : "";
+    $self->finish_timestamp($finish_timestamp);
+    return $finish_timestamp;
 }
 
 =head2 update_status($status)
@@ -652,6 +625,93 @@ sub update_status {
     $self->store();
 }
 
+=head2 run_object()
+
+The CXGN::Tools::Run object of a submitted job, rebuilt from its stored
+cxgn_tools_run_config and backend_id. All interaction with the job queue
+(state, cancel) goes through it, so that CXGN::Job works with any
+CXGN::Tools::Run backend.
+
+=cut
+
+sub run_object {
+    my $self = shift;
+
+    if (!$self->has_backend_id()) {
+        die "Job has not been submitted!\n";
+    }
+    return $self->{run_object} if $self->{run_object};
+
+    my %config = %{ $self->cxgn_tools_run_config() || $self->get_default_cxgn_tools_run_config() };
+    $config{backend} ||= 'Slurm'; # jobs stored before the backend was recorded
+
+    # use the job's own jobid and tempdir, so that no new job dir is created
+    my $jobid = $config{jobid} || 'sp_job_'.($self->sp_job_id() // 'unknown');
+    my %run_args = (%config, is_cluster => 1, jobid => $jobid, cluster_job_id => "".$self->backend_id());
+    $run_args{job_tempdir} = File::Spec->catdir($config{temp_base}, $jobid) if $config{temp_base};
+
+    $self->{run_object} = CXGN::Tools::Run->new(\%run_args);
+    return $self->{run_object};
+}
+
+=head2 update_status_from_backend()
+
+Query the job's CXGN::Tools::Run backend for the job's state, update the database status,
+and return the new status. In list context, also returns the backend's description of the
+state. Jobs that are still queued or running after two days are canceled and marked
+timed_out. Jobs the backend doesn't know (anymore) stay submitted for a day, then are
+marked failed.
+
+=cut
+
+sub update_status_from_backend {
+    my $self = shift;
+
+    my ($state, $backend_state) = $self->run_object()->job_state();
+
+    my $job_status;
+    if ($state eq 'queued' || $state eq 'running') {
+        if ($self->_age_in_days() >= 2) {
+            $self->run_object()->cancel();
+            $job_status = 'timed_out';
+        } else {
+            $job_status = 'submitted';
+        }
+    }
+    elsif ($state eq 'finished' || $state eq 'failed' || $state eq 'canceled' || $state eq 'timed_out') {
+        $job_status = $state;
+    }
+    else {
+        $job_status = $self->_age_in_days() > 1 ? 'failed' : 'submitted';
+    }
+
+    $self->update_status($job_status);
+
+    return wantarray
+        ? ($job_status, $backend_state)
+        : $job_status;
+}
+
+=head2 update_status_from_slurm()
+
+Old name of update_status_from_backend(), kept for existing callers.
+
+=cut
+
+sub update_status_from_slurm {
+    my $self = shift;
+    return $self->update_status_from_backend(@_);
+}
+
+sub _age_in_days {
+    my $self = shift;
+
+    my $create_timestamp = $self->create_timestamp() or return 0;
+    $create_timestamp =~ s/ /T/;
+    my $start_time = DateTime::Format::ISO8601->parse_datetime($create_timestamp);
+    return (DateTime->now(time_zone => 'local')->epoch - $start_time->epoch) / 86400;
+}
+
 =head2 get_default_cxgn_tools_run_config()
 
 Returns a hashref of the default config options for cxgn tools run. Used when no cxgn_tools_run_config found.
@@ -661,16 +721,6 @@ Returns a hashref of the default config options for cxgn tools run. Used when no
 sub get_default_cxgn_tools_run_config {
     my $self = shift;
 
-    # my $cxgn_tools_run_config;
-    # my $user_id = $self->sp_person_id();
-    # my $name = $self->name() =~ s/ /_/gr;
-    # $name =~ s/[\\*?[\]{}|;><&$"'`]//g;
-    # if (!$name) {
-    #     $name = "job_".DateTime->now(time_zone => 'local')->strftime('%Y_%m_%d_%H_%M_%S');
-    # }
-    # my $temp_base = "/home/production/volume/tmp/user_$user_id/$name";
-    # my $err_file = "$temp_base/job.err";
-    # my $out_file = "$temp_base/job.out";
     my $cxgn_tools_run_config = {
         #'err_file' => $err_file,
         'submit_host' => 'localhost',
@@ -681,7 +731,7 @@ sub get_default_cxgn_tools_run_config {
         'is_cluster' => 1,
         'do_cleanup' => 0,
         'sleep' => undef,
-        'backend' => 'Slurm'
+        'backend' => 'Tsp'
     };
 
     return $cxgn_tools_run_config;
@@ -705,54 +755,20 @@ sub wait {
 
 =head2 alive()
 
-Returns true as long as squeue says job is still alive.
+Returns true as long as the job's CXGN::Tools::Run backend says the job is queued or running.
 
 =cut
 
 sub alive {
     my $self = shift;
 
-    if (!$self->has_backend_id()) {
-        die "Job has not been submitted!";
-    }
-
-    my $backend_id = $self->backend_id();
-
-    my $squeue = `squeue --job=$backend_id`;
-    my @job_results = split("\n", $squeue);
-
-    if (scalar(@job_results) < 2) { #Squeue gives only header line if no job to show
-       return 0;
-    } else {
-        return 1;
-    }
-}
-
-=head2 enforce_finish_logfile()
-
-Checks to see if the finish logfile has been created, and makes it if necessary.
-
-=cut
-
-sub enforce_finish_logfile {
-    my $self = shift;
-
-    if (!$self->has_finish_logfile()) {
-        die "No finish logfile specified.\n";
-    }
-
-    my $logfile = $self->finish_logfile();
-
-    unless (-e $logfile) {
-        my ($directory, $file) = $logfile =~ m|(.*/)([^/]+)$|;
-        make_path($directory);
-        system("touch $logfile");
-    }
+    my ($state) = $self->run_object()->job_state();
+    return ($state eq 'queued' || $state eq 'running') ? 1 : 0;
 }
 
 =head1 CLASS METHODS
 
-=head2 get_user_submitted_jobs(bcs_schema, people_schema, user_id)
+=head2 get_user_submitted_jobs(bcs_schema, people_schema, user_id, user_role)
 
 Returns a listref of sp_job_ids submitted by the given user id
 
@@ -773,9 +789,22 @@ sub get_user_submitted_jobs {
     
     my $rs;
     if ($user_role eq 'curator') {
-        $rs = $people_schema->resultset("SpJob")->search();
+        $rs = $people_schema->resultset("SpJob")->search(
+            {},
+            {
+                join     => 'sp_person',
+                order_by => [
+                    { -asc  => 'sp_person.first_name' },
+                    { -asc  => 'sp_person.last_name' },
+                    { -desc => 'me.create_timestamp' },
+                ],
+            },
+        );
     } else {
-        $rs = $people_schema->resultset("SpJob")->search( { sp_person_id => $sp_person_id });
+        $rs = $people_schema->resultset("SpJob")->search(
+            { 'me.sp_person_id' => $sp_person_id },
+            { order_by => { -desc => 'me.create_timestamp' } },
+        );
     }
 
     while (my $row = $rs->next()){
@@ -785,7 +814,7 @@ sub get_user_submitted_jobs {
     return \@user_jobs;
 }
 
-=head2 delete_dead_jobs(bcs_schema, people_schema, user_id)
+=head2 delete_dead_jobs(bcs_schema, people_schema, user_id, is_curator)
 
 Deletes dead jobs (failed or timed out) belonging to a user_id
 
@@ -796,33 +825,52 @@ sub delete_dead_jobs {
     my $bcs_schema = shift;
     my $people_schema = shift;
     my $sp_person_id = shift;
+    my $is_curator = shift;
 
     if (!$sp_person_id) {
         die "Need to supply a user id.\n";
     } 
 
-    eval {
-        my @job_ids;
-        my $rs = $people_schema->resultset("SpJob")->search( { sp_person_id => $sp_person_id, status => { in => ['failed', 'timed_out'] } });
-        while(my $row = $rs->next()) {
-            push @job_ids, $row->sp_job_id();
-        }
-        foreach my $job_id (@job_ids){
-            my $job = $class->new({
-                people_schema => $people_schema,
-                schema => $bcs_schema,
-                sp_job_id => $job_id
-            });
-            $job->delete();
-        }
-    };
-
-    if ($@) {
-        die "Encountered an error trying to delete jobs: $@\n";
+    if ($is_curator) {
+        try {
+            my @job_ids;
+            my $rs = $people_schema->resultset("SpJob")->search( {status => { in => ['failed', 'timed_out'] } });
+            while(my $row = $rs->next()) {
+                push @job_ids, $row->sp_job_id();
+            }
+            foreach my $job_id (@job_ids){
+                my $job = $class->new({
+                    people_schema => $people_schema,
+                    schema => $bcs_schema,
+                    sp_job_id => $job_id
+                });
+                $job->delete();
+            }
+        } catch {
+            die "Encountered an error trying to delete jobs: $_\n";
+        } ;
+    } else {
+        try {
+            my @job_ids;
+            my $rs = $people_schema->resultset("SpJob")->search( { sp_person_id => $sp_person_id, status => { in => ['failed', 'timed_out'] } });
+            while(my $row = $rs->next()) {
+                push @job_ids, $row->sp_job_id();
+            }
+            foreach my $job_id (@job_ids){
+                my $job = $class->new({
+                    people_schema => $people_schema,
+                    schema => $bcs_schema,
+                    sp_job_id => $job_id
+                });
+                $job->delete();
+            }
+        } catch {
+            die "Encountered an error trying to delete jobs: $_\n";
+        } ;
     }
 } 
 
-=head2 delete_jobs_older_than(bcs_schema, people_schema, user_id, time_limit)
+=head2 delete_jobs_older_than(bcs_schema, people_schema, user_id, time_limit, is_curator)
 
 Deletes jobs belonging to user_id older than the given time string.
 
@@ -834,6 +882,7 @@ sub delete_jobs_older_than {
     my $people_schema = shift;
     my $sp_person_id = shift;
     my $time_limit = shift;
+    my $is_curator = shift;
 
     if (!$sp_person_id || !$time_limit) {
         die "Need to supply a user id and a time interval.\n";
@@ -848,38 +897,64 @@ sub delete_jobs_older_than {
 
     $time_limit = $timetable->{$time_limit};
 
-    eval {
-        my @job_ids;
-        my $rs = $people_schema->resultset("SpJob")->search( { sp_person_id => $sp_person_id });
-        while(my $row = $rs->next()) {
-            my $create_timestamp = $row->create_timestamp();
-            $create_timestamp =~ s/ /T/;
-            my $start_time = DateTime::Format::ISO8601->parse_datetime($create_timestamp);
-            my $now = DateTime->now();
-            my $age = ( $now->epoch - $start_time->epoch ) / 86400;
+    if ($is_curator) {
+        try {
+            my @job_ids;
+            my $rs = $people_schema->resultset("SpJob")->search();
+            while(my $row = $rs->next()) {
+                my $create_timestamp = $row->create_timestamp();
+                $create_timestamp =~ s/ /T/;
+                my $start_time = DateTime::Format::ISO8601->parse_datetime($create_timestamp);
+                my $now = DateTime->now(time_zone => 'local');
+                my $age = ( $now->epoch - $start_time->epoch ) / 86400;
 
-            if ($age > $time_limit) {
-                push @job_ids, $row->sp_job_id();
+                if ($age > $time_limit) {
+                    push @job_ids, $row->sp_job_id();
+                }
             }
-        }
-        foreach my $job_id (@job_ids) {
-            my $job = $class->new({
-                people_schema => $people_schema,
-                schema => $bcs_schema,
-                sp_job_id => $job_id
-            });
-            $job->delete();
-        }
-    };
+            foreach my $job_id (@job_ids) {
+                my $job = $class->new({
+                    people_schema => $people_schema,
+                    schema => $bcs_schema,
+                    sp_job_id => $job_id
+                });
+                $job->delete();
+            }
+        } catch {
+            die "Encountered an error trying to delete jobs: $_\n";
+        } ;
+    } else {
+        try {
+            my @job_ids;
+            my $rs = $people_schema->resultset("SpJob")->search( { sp_person_id => $sp_person_id });
+            while(my $row = $rs->next()) {
+                my $create_timestamp = $row->create_timestamp();
+                $create_timestamp =~ s/ /T/;
+                my $start_time = DateTime::Format::ISO8601->parse_datetime($create_timestamp);
+                my $now = DateTime->now(time_zone => 'local');
+                my $age = ( $now->epoch - $start_time->epoch ) / 86400;
 
-    if ($@) {
-        die "Encountered an error trying to delete jobs: $@\n";
+                if ($age > $time_limit) {
+                    push @job_ids, $row->sp_job_id();
+                }
+            }
+            foreach my $job_id (@job_ids) {
+                my $job = $class->new({
+                    people_schema => $people_schema,
+                    schema => $bcs_schema,
+                    sp_job_id => $job_id
+                });
+                $job->delete();
+            }
+        } catch {
+            die "Encountered an error trying to delete jobs: $_\n";
+        } ;
     }
 }
 
-=head2 delete_finished_jobs(bcs_schema, people_schema, user_id)
+=head2 delete_finished_jobs(bcs_schema, people_schema, user_id, is_curator)
 
-Deletes finished and canceled jobs for the given user. 
+Deletes finished and canceled jobs for the given user. All finished and canceled jobs if curator.
 
 =cut
 
@@ -888,29 +963,48 @@ sub delete_finished_jobs {
     my $bcs_schema = shift;
     my $people_schema = shift;
     my $sp_person_id = shift;
+    my $is_curator = shift;
 
     if (!$sp_person_id) {
         die "Need to supply a user id.\n";
     } 
 
-    eval {
-        my @job_ids;
-        my $rs = $people_schema->resultset("SpJob")->search( { sp_person_id => $sp_person_id, status => { in => ['finished', 'canceled'] } });
-        while(my $row = $rs->next()) {
-            push @job_ids, $row->sp_job_id();
-        }
-        foreach my $job_id (@job_ids){
-            my $job = $class->new({
-                people_schema => $people_schema,
-                schema => $bcs_schema,
-                sp_job_id => $job_id
-            });
-            $job->delete();
-        }
-    };
-
-    if ($@) {
-        die "Encountered an error trying to delete jobs: $@\n";
+    if ($is_curator) {
+        try {
+            my @job_ids;
+            my $rs = $people_schema->resultset("SpJob")->search( { status => { in => ['finished', 'canceled'] } });
+            while(my $row = $rs->next()) {
+                push @job_ids, $row->sp_job_id();
+            }
+            foreach my $job_id (@job_ids){
+                my $job = $class->new({
+                    people_schema => $people_schema,
+                    schema => $bcs_schema,
+                    sp_job_id => $job_id
+                });
+                $job->delete();
+            }
+        } catch {
+            die "Encountered an error trying to delete jobs: $_\n";
+        } ;
+    } else {
+        try {
+            my @job_ids;
+            my $rs = $people_schema->resultset("SpJob")->search( { sp_person_id => $sp_person_id, status => { in => ['finished', 'canceled'] } });
+            while(my $row = $rs->next()) {
+                push @job_ids, $row->sp_job_id();
+            }
+            foreach my $job_id (@job_ids){
+                my $job = $class->new({
+                    people_schema => $people_schema,
+                    schema => $bcs_schema,
+                    sp_job_id => $job_id
+                });
+                $job->delete();
+            }
+        } catch {
+            die "Encountered an error trying to delete jobs: $_\n";
+        } ;
     }
 }
 

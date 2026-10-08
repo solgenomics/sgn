@@ -1,0 +1,7 @@
+format-version: 1.2
+ontology: treatment_ontology
+default-namespace: treatment_ontology
+
+[Term]
+id: TREATMENT:0000000
+name: TREATMENT

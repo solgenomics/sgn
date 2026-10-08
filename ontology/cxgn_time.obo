@@ -3047,3 +3047,23 @@ id: TIME:0000505
 name: Timepoint 20
 def: "generic timepoint #20" []
 is_a: TIME:0000477 ! Event relations
+
+[Term]
+id: TIME:0000506
+name: Before Wilting
+is_a: TIME:0000477 ! Event relations
+
+[Term]
+id: TIME:0000507
+name: After Wilting
+is_a: TIME:0000477 ! Event relations
+
+[Term]
+id: TIME:0000508
+name: After Water Stop
+is_a: TIME:0000477 ! Event relations
+
+[Term]
+id: TIME:0000509
+name: After Water Restart
+is_a: TIME:0000477 ! Event relations

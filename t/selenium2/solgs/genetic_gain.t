@@ -8,6 +8,7 @@ use SGN::Test::WWW::WebDriver;
 use SGN::Test::Fixture;
 use SGN::Test::solGSData;
 use Config::Any;
+use File::Path qw/remove_tree/;
 
 my $d = SGN::Test::WWW::WebDriver->new();
 my $f = SGN::Test::Fixture->new();
@@ -19,9 +20,9 @@ my $solgs_data = SGN::Test::solGSData->new({
     'user_id' => 40,
 });
 
-my $cache_dir = $solgs_data->site_cluster_shared_dir();
+my $cache_dir = $solgs_data->base_analyses_cache_dir();
 
-`rm -r $cache_dir`;
+remove_tree($cache_dir, {safe => 1});
 sleep(5);
 
 $d->while_logged_in_as("submitter", sub {

@@ -64,6 +64,7 @@ sub _get_cvterms {
 			     trait_maximum
 			     trait_details
 			     trait_categories
+                             trait_repeat_type
 			  );
 
   my $cv = $chado_schema->resultset("Cv::Cv")

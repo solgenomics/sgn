@@ -151,31 +151,31 @@ sub validate {
         return \%parse_result;
     }
 
-    my $transcript_name_head = $columns[0];
-    $transcript_name_head =~ s/^\s+|\s+$//g;
+    my $gene_id_head = $columns[0];
+    $gene_id_head =~ s/^\s+|\s+$//g;
 
     my $chromosome_head = $columns[1];
     $chromosome_head =~ s/^\s+|\s+$//g;
 
-    my $start_position_head = $columns[2];
-    $start_position_head =~ s/^\s+|\s+$//g;
+    my $pos_left_head = $columns[2];
+    $pos_left_head =~ s/^\s+|\s+$//g;
 
-    my $end_position_head = $columns[3];
-    $end_position_head =~ s/^\s+|\s+$//g;
+    my $pos_right_head = $columns[3];
+    $pos_right_head =~ s/^\s+|\s+$//g;
 
-    my $gene_description_head = $columns[4];
-    $gene_description_head =~ s/^\s+|\s+$//g;
+    my $functional_annotation_head = $columns[4];
+    $functional_annotation_head =~ s/^\s+|\s+$//g;
 
     my $notes_head = $columns[5];
     $notes_head =~ s/^\s+|\s+$//g; 
 
-    if ($transcript_name_head  ne "transcript_name" ||
+    if ($gene_id_head  ne "gene_id" ||
         $chromosome_head ne "chromosome" ||
-        $start_position_head ne "start_position" ||
-        $end_position_head ne "end_position" ||
-        $gene_description_head ne "gene_description" ||
+        $pos_left_head ne "pos_left" ||
+        $pos_right_head ne "pos_right" ||
+        $functional_annotation_head ne "functional_annotation" ||
         $notes_head ne "notes") {
-      $parse_result{'error'} = "Header row must be 'transcript_name', 'chromosome', 'start_position', 'end_position', 'gene_description', 'notes'. Please, check your file.";
+      $parse_result{'error'} = "Header row must be 'gene_id', 'chromosome', 'pos_left', 'pos_right', 'functional_annotation', 'notes'. Please, check your file.";
       return \%parse_result;
     }
     while (my $line = <$fh>) {
@@ -183,14 +183,14 @@ sub validate {
         if ($csv->parse($line)) {
             @fields = $csv->fields();
         }
-        my $transcript_name = $fields[0];
+        my $gene_id = $fields[0];
         my $chromosome = $fields[1];
-        my $start_position = $fields[2];
-        my $end_position = $fields[3];
-        my $gene_description = $fields[4];
+        my $pos_left = $fields[2];
+        my $pos_right = $fields[3];
+        my $functional_annotation = $fields[4];
         my $notes = $fields[5];
 
-        if (!$transcript_name){
+        if (!$gene_id){
             $parse_result{'error'}= "Transcript name is required!";
             return \%parse_result;
         }
@@ -198,11 +198,11 @@ sub validate {
             $parse_result{'error'}= "Chromosome is required!";
             return \%parse_result;
         }
-        if (!defined($start_position) && !length($start_position)){
+        if (!defined($pos_left) && !length($pos_left)){
             $parse_result{'error'}= "Start position is required!";
             return \%parse_result;
         }
-        if (!defined($end_position) && !length($end_position)){
+        if (!defined($pos_right) && !length($pos_right)){
             $parse_result{'error'}= "End position is required!";
             return \%parse_result;
         }
@@ -312,10 +312,10 @@ sub parse {
         foreach my $col (3..$num_cols-1){
             my $column_name = $header[$col];
             if ($column_name ne ''){
-                my $transcript_name = $column_name;
-                $traits_seen{$transcript_name}++;
+                my $gene_id = $column_name;
+                $traits_seen{$gene_id}++;
                 my $transcipt_value = $columns[$col];
-                $spectra{$transcript_name} = $transcipt_value;
+                $spectra{$gene_id} = $transcipt_value;
             }
         }
         $data{$observationunit_name}->{'transcriptomics'}->{'device_id'} = $device_id;
@@ -356,18 +356,18 @@ sub parse {
         if ($csv->parse($line)) {
             @fields = $csv->fields();
         }
-        my $transcript_name = $fields[0];
+        my $gene_id = $fields[0];
         my $chromosome = $fields[1];
-        my $start_position = $fields[2];
-        my $end_position = $fields[3];
-        my $gene_description = $fields[4];
+        my $pos_left = $fields[2];
+        my $pos_right = $fields[3];
+        my $functional_annotation = $fields[4];
         my $notes = $fields[5];
 
-        $header_column_details{$transcript_name} = {
+        $header_column_details{$gene_id} = {
             chr => $chromosome,
-            start => $start_position,
-            end => $end_position,
-            gene_desc => $gene_description,
+            start => $pos_left,
+            end => $pos_right,
+            gene_desc => $functional_annotation,
             notes => $notes
         };
     }

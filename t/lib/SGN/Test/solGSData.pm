@@ -148,7 +148,6 @@ sub get_list_details {
     my $list_type_name= $type. '_list_name';
     my $name = $self->$list_type_name;
     my $owner = $self->user_id;
-print STDERR "\n get_list_details: name: $name -- owner: $owner\n";
     my $q = "SELECT list_id, name
                     FROM sgn_people.list
                     WHERE name = ?
@@ -157,8 +156,9 @@ print STDERR "\n get_list_details: name: $name -- owner: $owner\n";
     my $h = $self->get_dbh->prepare($q);
     $h->execute($name, $owner);
     my ($list_id, $list_name) = $h->fetchrow_array();
-print STDERR "\n get_list_details: list_name: $list_name -- list_id: $list_id\n";
-    return { list_id => $list_id,
+
+    return { 
+        list_id => $list_id,
         list_name => $list_name
     };
 
@@ -181,8 +181,9 @@ print STDERR "\n get_dataset_details name: $name -- owner: $owner\n";
     my $h = $self->get_dbh->prepare($q);
     $h->execute($name, $owner);
     my ($dataset_id, $dataset_name) = $h->fetchrow_array();
-print STDERR "\n get_list_details: dataset_name: $dataset_name -- dataset_id: $dataset_id\n";
-    return { dataset_id => $dataset_id,
+    
+    return { 
+        dataset_id => $dataset_id,
         dataset_name => $dataset_name
     };
 
@@ -269,7 +270,6 @@ sub load_list_elems {
 
     $list->type($type);
 
-    print STDERR "\nadding $type...: @$elems\n";
     my $res = $list->add_bulk($elems);
 
     return { list_id => $list_id,
@@ -293,7 +293,6 @@ sub delete_list {
     my $self = shift;
     my $list_id = shift;
 
-    print STDERR "\nDELETING list $list_id\n";
     CXGN::List::delete_list($self->get_dbh, $list_id);
 
 }
@@ -304,7 +303,6 @@ sub delete_dataset {
 
     my $dataset = $self->get_dataset_obj();
     $dataset->sp_dataset_id($dataset_id);
-    print STDERR "\nDELETING dataset $dataset_id\n";
     my $res = $dataset->delete();
 
 }
@@ -317,8 +315,9 @@ sub load_trials_dataset {
     $dataset->trials($self->trials_ids);
     $dataset->store();
 
-    return {'dataset_name' => $dataset->name,
-        'dataset_id' =>$dataset->sp_dataset_id
+    return {
+        dataset_name => $dataset->name,
+        dataset_id => $dataset->sp_dataset_id
     };
 }
 
@@ -332,17 +331,15 @@ sub load_accessions_dataset {
     $dataset->trials([$trial_id]);
 
     my $accessions_ids = $self->get_accessions_ids;
-    print STDERR "\nload_accessions_dataset: @$accessions_ids\n";
 
     $dataset->accessions($accessions_ids);
     $dataset->is_live(1);
     my $dataset_id = $dataset->store();
 
     my $sp_dt_id = $dataset->sp_dataset_id();
-    print STDERR "\nstored dataset: $dataset_id -- sp_dataset_id: $sp_dt_id\n";
-
-    return {'dataset_name' => $dataset->name,
-        'dataset_id' =>$dataset->sp_dataset_id
+    return {
+        dataset_name => $dataset->name,
+        dataset_id => $dataset->sp_dataset_id
     };
 }
 
@@ -360,15 +357,15 @@ sub load_plots_dataset {
     $dataset->is_live(1);
     $dataset->store();
 
-    return {'dataset_name' => $dataset->name,
-        'dataset_id' =>$dataset->sp_dataset_id
+    return {
+        dataset_name => $dataset->name,
+        dataset_id => $dataset->sp_dataset_id
     };
 }
 
 sub get_dataset_obj {
     my $self = shift;
-    # my $sp_dataset_id = shift;
-
+    
     my $dataset = CXGN::Dataset->new({
 	       schema => $self->bcs_schema,
 	       people_schema => $self->people_schema,
@@ -406,7 +403,6 @@ sub get_fixture_obj {
     my $self = shift;
 
     return $self->fixture;
-    # return SGN::Test::Fixture->new();
 }
 
 sub people_schema {
@@ -445,7 +441,6 @@ sub accessions_list {
 
     my $trial_id = $self->accessions_source_trial;
 
-print STDERR "\naccessions_list: getting accessions from trial $trial_id\n";
     my $trial =  $self->get_trial_obj($trial_id);
     my $accessions = $trial->get_accessions();
 
@@ -454,7 +449,6 @@ print STDERR "\naccessions_list: getting accessions from trial $trial_id\n";
     if ($subset) {
         my @accs_subset = @$accessions[0..$subset-1];
         $accessions = \@accs_subset;
-        print STDERR "\n subsetting $subset accessions  from trial: $trial_id\n";
     }
 
     return $accessions;
@@ -474,7 +468,6 @@ sub plots_list {
         my @plots_subset = @$plots[0..$subset-1];
         $plots = \@plots_subset;
 
-        print STDERR "\n subsetting $subset plots from trial $trial_id\n";
     }
 
     return $plots;
@@ -484,9 +477,12 @@ sub plots_list {
 sub get_trial_obj {
     my ($self, $trial_id) = @_;
 
-    my $trial = CXGN::Trial->new({'bcs_schema' => $self->bcs_schema,
-        'trial_id' => $trial_id}
-        );
+    my $trial = CXGN::Trial->new(
+        {
+            bcs_schema => $self->bcs_schema,
+            trial_id   => $trial_id
+        }
+    );
 
     return $trial;
 
@@ -565,14 +561,38 @@ sub site_cluster_shared_dir {
 sub default_protocol_dir { 
     my $self = shift;
 
+    return $self->base_analyses_cache_dir();
+
+}
+
+sub base_analyses_cache_dir {
+    my $self = shift;
+
     my $host_dir = $self->site_cluster_shared_dir();
 
     my $default_protocol = $self->fixture->get_conf('default_genotyping_protocol');
-    $default_protocol       = 'analysis-data' if ($default_protocol =~ /undefined/) || !$default_protocol;$default_protocol       =~ s/\s+//g;
+    if ($default_protocol =~ /undefined/ || !$default_protocol) {
+        $default_protocol = 'analysis-data';
+    }
+    
+    $default_protocol =~ s/\s+//g;
 
-    my $geno_dir    = File::Spec->catdir($host_dir, $default_protocol);
+    my $base_cache_dir = File::Spec->catdir($host_dir, $default_protocol);
 
-    return $geno_dir;
+    return $base_cache_dir;
+}
+
+sub analysis_cache_dir {
+    my ($self, $analysis_type, $trial_id) = @_;
+
+    my $host_dir = $self->base_analyses_cache_dir();
+
+    my $cache_dir = File::Spec->catdir($host_dir, $analysis_type, 'trials');
+    if ($trial_id) {
+        $cache_dir = File::Spec->catdir($cache_dir, $trial_id, 'cache');
+    }
+
+    return $cache_dir;
 
 }
 

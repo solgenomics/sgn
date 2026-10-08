@@ -30,6 +30,10 @@ function get_select_box(type, div_id, options = {}) {
             var select_collection = document.getElementById(options.id).options;
             document.getElementById(options.id).setAttribute("size", select_collection.length);
         }
+
+        if (typeof options.after_load === "function") {
+            options.after_load();
+        }
 	},
 	error: function(response) {
 	    alert("An error occurred");

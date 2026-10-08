@@ -26,6 +26,11 @@ Lukas Mueller <lam87@cornell.edu>
 package SGN::Controller::AJAX::Image;
 
 use Moose;
+use File::Temp qw(tempdir);
+use File::Basename qw(basename);
+use JSON;
+use SGN::Model::Cvterm;
+use Data::Dumper;
 
 BEGIN { extends 'Catalyst::Controller::REST' };
 
@@ -98,6 +103,67 @@ sub image_stock_connection_POST {
     my $c = shift;
 
     $c->stash->{stock_id} = shift;
+}
+
+sub image_associated_objects : Chained('basic_ajax_image') PathPart('associated_objects') Args(0) ActionClass('REST') { }
+
+sub image_associated_objects_GET {
+    my $self = shift;
+    my $c = shift;
+    my $user_id = $c->user()->get_object->get_sp_person_id;
+    my $schema = $c->dbic_schema('Bio::Chado::Schema', undef, $user_id);
+    my $image_id = shift;
+
+    my $image = $c->stash->{image};
+
+    my @associated_objects = $image->get_associated_objects();
+    my @results;
+    my $stock_type;
+
+    foreach my $association (@associated_objects) {
+        my ($type, $id, $name) = @$association;
+        $name ||= '';
+        my $link;
+        my $stock_type_name;
+
+        if ($type eq "stock") {
+            $link = "<a href=\"/stock/$id/view\">$name.</a>";
+            my $stock = $schema->resultset('Stock::Stock')->find({ stock_id => $id });
+            $stock_type = $stock->type;
+            $stock_type_name = $stock_type->name;
+        }
+
+        if ($type eq "trial") {
+            $link = "<a href=\"/breeders/trial/$id/\">$name.</a>";
+        }
+
+        if ($type eq "experiment") {
+            $link = "<a href=\"/insitu/detail/experiment.pl?experiment_id=$id&amp;action=view\">insitu experiment $name</a>";
+        }
+
+        if ($type eq "fished_clone") {
+            $link = qq { <a href="/maps/physical/clone_info.pl?id=$id">FISHed clone id:$id</a> };
+        }
+        if ($type eq "locus" ) {
+            $link = qq { <a href="/phenome/locus_display.pl?locus_id=$id">Locus name:$name</a> };
+        }
+        if ($type eq "organism" ) {
+            $link = qq { <a href="/organism/$id/view/">Organism name:$name</a> };
+        }
+
+        if ($type eq "cvterm" ) {
+            $link = qq { <a href="/cvterm/$id/view/">$name</a> };
+            $type = "trait";
+        }
+
+        push @results, {
+            type => $type,
+            id => $id,
+            name => $link,
+            stock_type => $stock_type_name
+        }
+    }
+    $c->stash->{rest} = \@results;
 }
 
 # GET endpoint /ajax/image/<image_id>/stock/<stock_id>/display_order
@@ -221,6 +287,164 @@ sub add_image_locus_display_order_POST {
     else { 
 	$c->stash->{rest} = { success => 1 };
     }
+}
+
+sub scan_barcode : Path('/ajax/image/scan_barcode') : Args(0) : ActionClass('REST') { }
+
+sub scan_barcode_POST {
+    my ($self, $c) = @_;
+    my $user_id = $c->user()->get_object->get_sp_person_id;
+    my $schema = $c->dbic_schema('Bio::Chado::Schema', undef, $user_id);
+
+    my $upload_param = $c->req->uploads->{"images"} || $c->req->uploads->{"images[]"};
+    my @uploads = ref($upload_param) eq 'ARRAY' ? @$upload_param : ($upload_param);
+    my @results;
+    my $stock_exists;
+    my $valid_barcode;
+    my $multiple_codes;
+
+    foreach my $upload (@uploads) {
+        my $filename = $upload->filename;
+        my $file_path = $upload->tempname;
+        my @barcode_data = CXGN::Image->read_barcode($file_path);
+
+        if (@barcode_data > 1) {
+            $multiple_codes = "true";
+        } elsif (@barcode_data == 1) {
+            $multiple_codes = "false";
+        } else {
+            $valid_barcode = "false"
+        }
+
+        my $stock_id = $barcode_data[0]->{data};
+
+        if ($stock_id) {
+            $valid_barcode = "true";
+
+            my $stock_found = $schema->resultset('Stock::Stock')->find({stock_id => $stock_id });
+            if ($stock_found) {
+                $stock_exists = "true";
+            } else {
+                $stock_exists = "false";
+            }
+        } else {
+            $valid_barcode = "false"
+        }
+
+        my $exif = CXGN::Image->extract_exif_info($file_path);
+        my $create_date;
+        if ($exif) {
+            $create_date = $exif->{"CreateDate"};
+        }
+        push @results, { filename => $filename, stock_id => $stock_id, stock_exists => $stock_exists, valid_barcode => $valid_barcode, timestamp => $create_date, multiple_codes => $multiple_codes };
+    }
+    $c->stash->{rest} = { images => \@results };
+}
+
+sub verify_exif : Path('/ajax/image/verify_exif') : Args(0) : ActionClass('REST') { }
+
+sub verify_exif_POST {
+    my ($self, $c) = @_;
+    my $user_id = $c->user()->get_object->get_sp_person_id;
+    my $schema = $c->dbic_schema('Bio::Chado::Schema', undef, $user_id);
+
+    my $upload_param = $c->req->uploads->{"images"} || $c->req->uploads->{"images[]"};
+    my @uploads = ref($upload_param) eq 'ARRAY' ? @$upload_param : ($upload_param);
+    my @results;
+
+    foreach my $upload (@uploads) {
+        my $filename = $upload->filename;
+        my $file_path = $upload->tempname;
+ 
+        my $meta = CXGN::Image->extract_exif_info_class($file_path);
+        if ($meta) {
+            my $decoded_json = decode_json($meta);
+            my $id_type = $decoded_json->{study}->{study_unique_id_name};
+            my $stock_name;
+            my $stock_exists;
+            my $stock_name_found;
+
+            if ($id_type ne 'ObservationUnitDbId' && $id_type ne 'plot_id') {
+                # Replace observation unit name with id if there is only is stock name 
+                $stock_name = $decoded_json->{observation_unit}->{observation_unit_db_id};
+                $stock_name_found = $schema->resultset('Stock::Stock')->find({ uniquename => $stock_name});
+                if ($stock_name_found) {
+                    my $obs_unit_id = $schema->resultset("Stock::Stock")->find({ uniquename => $stock_name })->stock_id();
+                    $decoded_json->{observation_unit}->{observation_unit_db_id} = "$obs_unit_id";
+                } else {
+                    $stock_exists = "false";
+                }
+            } else {
+                my $stock_id = $decoded_json->{observation_unit}->{observation_unit_db_id};
+                my $stock_found = $schema->resultset('Stock::Stock')->find({ stock_id => $stock_id });
+                #Check if stock exists in db before creating stock object
+                if ($stock_found) {
+                    my $stock = CXGN::Chado::Stock->new($schema, $stock_id);
+                    $stock_name = $stock->get_name();
+                    $stock_exists = "true";
+                } else {
+                    $stock_exists = "false";
+                }
+            }
+            # Get cvterm_id of recorded trait
+            my $observation_variable = $decoded_json->{observation_variable};
+            my $trait_id = $decoded_json->{observation_variable}->{external_db_id};
+            my $trait_name = $observation_variable->{observation_variable_name};
+            my $cvterm_id;
+            my $trait_lookup_type;
+            my $trait_lookup_value;
+            my $trait_matched_name;
+
+            if ($trait_id) {
+                $trait_lookup_type  = "id";
+                $trait_lookup_value = $trait_id;
+                $cvterm_id = SGN::Model::Cvterm->find_trait_by_id($schema, $trait_id);
+            }
+            elsif ($trait_name) {
+                $trait_lookup_type  = "name";
+                $trait_lookup_value = $trait_name;
+                my $cvterm = $schema->resultset('Cv::Cvterm')->find({ name => $trait_name });
+                if ($cvterm) {
+                    $cvterm_id = $cvterm->cvterm_id();
+                } else {
+                    my $escaped_name = $trait_name;
+                    $escaped_name =~ s/([%_\\])/\\$1/g;
+
+                    my $synonym_row = $schema->resultset('Cv::Cvtermsynonym')->search( { synonym => { -ilike => '"' . $escaped_name . '"%' } } )->first;
+
+                    if ($synonym_row) {
+                        $cvterm_id = $synonym_row->cvterm_id();
+                        $trait_lookup_type = "synonym";
+
+                        my $matched_cvterm = $schema->resultset('Cv::Cvterm')->find({ cvterm_id => $cvterm_id });
+                        $trait_matched_name = $matched_cvterm ? $matched_cvterm->name() : undef;
+                        print STDERR "trait matched name: $trait_matched_name";
+                    } else {
+                        $cvterm_id = undef;
+                    }
+                }
+            }
+
+            $decoded_json->{stock_name} = $stock_name;
+            if ($cvterm_id) {
+                $decoded_json->{cvterm_id} = $cvterm_id;
+            }
+            push @results, {
+                filename        => $filename,
+                exif            => $decoded_json,
+                stock_exists    => $stock_exists,
+                trait_present   => $observation_variable ? "true" : "false",
+                trait_exists    => $cvterm_id ? "true" : "false",
+                trait_lookup_type => $trait_lookup_type,
+                trait_lookup_value => $trait_lookup_value,
+                trait_matched_name => $trait_matched_name,
+            };
+            
+        } else {
+            push @results, { filename => $filename, exif => undef, status => "no_exif" };
+        }
+    }
+    $c->stash->{rest} = { images => \@results };
 }
 
  sub image_metadata_store {

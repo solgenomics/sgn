@@ -54,12 +54,26 @@ has 'igd_numbers_included' => (
     default => 0,
 );
 
+has 'marker_metadata_trait_ontology_root' => (
+    isa => 'Str|Undef',
+    is => 'ro',
+    default => 0
+);
+
 has 'parse_errors' => (
     is => 'ro',
     isa => 'HashRef',
     writer => '_set_parse_errors',
     reader => 'get_parse_errors',
     predicate => 'has_parse_errors',
+);
+
+has 'parse_warnings' => (
+    is => 'ro',
+    isa => 'HashRef',
+    writer => '_set_parse_warnings',
+    reader => 'get_parse_warnings',
+    predicate => 'has_parse_warnings',
 );
 
 has '_parsed_data' => (

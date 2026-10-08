@@ -46,20 +46,17 @@ my $q = "update sgn_people.sp_person set private_email='$email' where username =
 my $sth = $f->bcs_schema->storage->dbh->prepare($q);
 $sth->execute;
 
+$mech->get_ok('http://localhost:3010/ajax/user/forgot_username?forgot_username_email=test@testcassavabase.com');
+$response = decode_json $mech->content;
+print STDERR Dumper $response;
+is($response->{message}, 'Username email requested. If you have an account on this database with this email, you will receive a message that includes the username associated with this email address.  If you do not have an account with this email address, you will not receive a message.');
+
 $mech->get_ok('http://localhost:3010/ajax/user/reset_password?password_reset_email=test@testcassavabase.com');
 $response = decode_json $mech->content;
 print STDERR Dumper $response;
-is($response->{message}, 'Reset link sent. Please check your email and click on the link.');
-is(scalar(@{$response->{reset_links}}), 1);
-is(scalar(@{$response->{reset_tokens}}), 1);
-my $token = $response->{reset_tokens}->[0];
+is($response->{message}, 'Password reset email requested. If you have an account on this database with this email, you will receive a message with a password reset link.  If you do not have an account with this email address, you will not receive a message.');
 
-$mech->get_ok('http://localhost:3010/ajax/user/process_reset_password?token='.$token.'&new_password=testpasschange&confirm_password=testpasschange');
-$response = decode_json $mech->content;
-print STDERR Dumper $response;
-is($response->{message}, 'The password was successfully updated.');
-
-$mech->get_ok('http://localhost:3010/ajax/user/login?username=testusername&password=testpasschange');
+$mech->get_ok('http://localhost:3010/ajax/user/login?username=testusername&password=testpass');
 $response = decode_json $mech->content;
 print STDERR Dumper $response;
 is($response->{message}, 'Login successful');

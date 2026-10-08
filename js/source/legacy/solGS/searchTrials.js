@@ -51,11 +51,11 @@ solGS.searchTrials = {
     }
   },
 
-  checkTrainingPopulation: function (popIds) {
+  checkTrainingPopulation: function (trialId) {
     var protocolId = jQuery("#genotyping_protocol_id").val();
 
     console.log(`checkTrainingPopulation protocolId: ${protocolId}`);
-    var args = { population_ids: popIds, genotyping_protocol_id: protocolId };
+    var args = { trial_id: trialId, genotyping_protocol_id: protocolId };
     args = JSON.stringify(args);
 
     var checkTrainingPop = jQuery.ajax({
@@ -250,22 +250,35 @@ jQuery(document).ready(function () {
 
     var msgDiv = solGS.searchTrials.msgDiv;
     if (entry) {
+        var protocolId = jQuery("#genotyping_protocol_id").val()
+
+        if (!protocolId) {
+        var msg =
+          "No genotyping protocol found. There is no default genotyping " +
+          "protocol. If a genotyping protocol exists in the database, " +
+          "please select one to search for trials that can be used as a" +
+          "training population.";
+
+        solGS.showMessage(msgDiv, msg);    
+        return;
+    }
+
       solGS.searchTrials
         .checkPopulationExists(entry)
         .done(function (res) {
-          if (res.population_ids) {
+          if (res.trial_id) {
             msg =
               "<p>Checking if the trial or population can be used <br />" +
               "as a training population...please wait...</p>";
             solGS.showMessage(msgDiv, msg);
 
             solGS.searchTrials
-              .checkTrainingPopulation(res.population_ids)
+              .checkTrainingPopulation(res.trial_id)
               .done(function (res) {
                 if (res.is_training_population) {
                   var resultDivId = "#trial_search_result";
                   var tableId = "#searched_trials_table";
-                  var msgDiv = solGS.searchTrials.msgDiv; //'#trial_search_progress_message';
+        
                   jQuery(msgDiv).hide();
                   jQuery(resultDivId).show();
 
@@ -311,7 +324,7 @@ jQuery(document).ready(function () {
     } else {
       jQuery("#trial_search_box").css("border", "solid #FF0000");
 
-      jQuery("#form-feedback-search-trials").text("Please enter trial name.");
+      jQuery("#form-feedback-search-trials").text("Please enter a trial name.");
     }
   });
 });

@@ -255,7 +255,7 @@ sub _parse_with_plugin {
             if (@coord_pairs) {
                 ($r, $c) = split(',',shift(@coord_pairs));
             }
-            
+
             #skip blank lines
             if (!$plot_name && !$plant_name) {
                 next;

@@ -5,9 +5,8 @@ $stockref => undef
 </%args>
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<script src="/js/source/legacy/d3/graphers/nirsDataLineGraph.js"></script>
 
-<& /util/import_javascript.mas, classes => [ 'jquery', 'thickbox', 'jquery.dataTables', 'd3.graphers.nirsDataLineGraph.js', 'd3.d3v4Min' ] &>
+<& /util/import_javascript.mas, classes => [ 'jquery', 'thickbox', 'jquery.dataTables', 'jquery.dataTables-buttons-min', 'd3.graphers.nirsDataLineGraph.js', 'd3.d3v4Min' ] &>
 
 <style>
     #nirs_spectra_table tbody tr {
@@ -78,11 +77,12 @@ jQuery(document).ready(function() {
             alert('Please select one protocol.');
         } else {
             const selectedProtocolId = selected[0];
+            get_nirs_protocols(selectedProtocolId);
             //console.log('Selected protocol ID:', selectedProtocolId);
             jQuery('#working_modal').modal('show');
             Promise.all([
                 get_nirs_data(trial_id, selectedProtocolId),
-                get_nirs_protocol(selectedProtocolId)
+                get_nirs_details(selectedProtocolId)
             ])
             .then(([nirsDataResponse, protocolResponse]) => {
                 console.log("NIRS data:", nirsDataResponse);
@@ -104,7 +104,7 @@ jQuery(document).ready(function() {
         }
     });
 
-    function get_nirs_protocol(selectedProtocolId) {
+    function get_nirs_details(selectedProtocolId) {
         return jQuery.ajax({
             'url': "/brapi/v2/nirs/" + selectedProtocolId,
             'method': "GET"
@@ -117,6 +117,13 @@ jQuery(document).ready(function() {
             'data': {
                 studyDbId: trial_id,
             },
+            'method': "GET"
+        });
+    }
+
+    function get_nirs_protocols(selectedProtocolId) {
+        return jQuery.ajax({
+            'url': "/brapi/v2/nirs/" + selectedProtocolId + "/protocols",
             'method': "GET"
         });
     }

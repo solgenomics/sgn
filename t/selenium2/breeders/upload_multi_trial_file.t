@@ -98,6 +98,7 @@ for my $extension ("xlsx", "xls", "csv") {
                     'is_a_control' => 1,
                     'plot_number'  => '9',
                     'stock_name'   => 'UG120022',
+                    'intercrop_stock_name' => [],
                     'rep_number'   => '1',
                     'block_number' => '1',
                     'row_number'   => '9',
@@ -107,6 +108,7 @@ for my $extension ("xlsx", "xls", "csv") {
                     'is_a_control' => 1,
                     'plot_number'  => '8',
                     'stock_name'   => 'UG120021',
+                    'intercrop_stock_name' => [],
                     'rep_number'   => '1',
                     'block_number' => '1',
                     'row_number'   => '8',
@@ -120,6 +122,7 @@ for my $extension ("xlsx", "xls", "csv") {
                 },
                 '14' => {
                     'stock_name'    => 'UG120019',
+                    'intercrop_stock_name' => [],
                     'rep_number'    => '1',
                     'plot_number'   => '7',
                     'is_a_control'  => 1,
@@ -135,6 +138,7 @@ for my $extension ("xlsx", "xls", "csv") {
                     'is_a_control'  => 1,
                     'plot_number'   => '5',
                     'stock_name'    => 'UG120010',
+                    'intercrop_stock_name' => [],
                     'rep_number'    => '2',
                     'block_number'  => '1',
                     'row_number'    => '5',
@@ -145,6 +149,7 @@ for my $extension ("xlsx", "xls", "csv") {
                     'plot_name'    => '198667HBEPR_popa_rep1_BRA28_6',
                     'rep_number'   => '2',
                     'stock_name'   => 'UG120017',
+                    'intercrop_stock_name' => [],
                     'is_a_control' => 1,
                     'plot_number'  => '6',
                     'block_number' => '1',
@@ -175,6 +180,7 @@ for my $extension ("xlsx", "xls", "csv") {
                     'is_a_control' => 1,
                     'rep_number'   => '1',
                     'stock_name'   => 'XG120071',
+                    'intercrop_stock_name' => [],
                     'plot_name'    => '199275HBEPR_stom_rep1_CG1420-1_33',
                     'range_number' => '6'
                 },
@@ -183,6 +189,7 @@ for my $extension ("xlsx", "xls", "csv") {
                     'plot_name'    => '199275HBEPR_stom_rep1_SOLITA_31',
                     'rep_number'   => '1',
                     'stock_name'   => 'XG120061',
+                    'intercrop_stock_name' => [],
                     'plot_number'  => '31',
                     'is_a_control' => 1,
                     'block_number' => '1',
@@ -191,6 +198,7 @@ for my $extension ("xlsx", "xls", "csv") {
                 },
                 '21' => {
                     'stock_name'   => 'XG120073',
+                    'intercrop_stock_name' => [],
                     'rep_number'   => '1',
                     'is_a_control' => 1,
                     'plot_number'  => '34',
@@ -207,6 +215,7 @@ for my $extension ("xlsx", "xls", "csv") {
                     'is_a_control'  => 1,
                     'plot_number'   => '32',
                     'stock_name'    => 'XG120068',
+                    'intercrop_stock_name' => [],
                     'rep_number'    => '1',
                     'plot_name'     => '199275HBEPR_stom_rep1_CG917-5_32',
                     'range_number'  => '6'
@@ -218,6 +227,7 @@ for my $extension ("xlsx", "xls", "csv") {
                     'range_number'  => '6',
                     'plot_name'     => '199275HBEPR_stom_rep1_CM3306-4_30',
                     'stock_name'    => 'XG120030',
+                    'intercrop_stock_name' => [],
                     'rep_number'    => '1',
                     'is_a_control'  => 1,
                     'plot_number'   => '30'
@@ -242,6 +252,7 @@ for my $extension ("xlsx", "xls", "csv") {
                     'block_number' => '1',
                     'rep_number'   => '2',
                     'stock_name'   => 'UG120006',
+                    'intercrop_stock_name' => [],
                     'plot_number'  => '3',
                     'is_a_control' => 1,
                     'range_number' => '4',
@@ -256,7 +267,8 @@ for my $extension ("xlsx", "xls", "csv") {
                     'plot_number'  => '4',
                     'is_a_control' => 1,
                     'rep_number'   => '2',
-                    'stock_name'   => 'UG120008'
+                    'stock_name'   => 'UG120008',
+                    'intercrop_stock_name' => []
                 },
                 '6' => {
                     'col_number'   => '5',
@@ -264,6 +276,7 @@ for my $extension ("xlsx", "xls", "csv") {
                     'block_number' => '2',
                     'rep_number'   => '2',
                     'stock_name'   => 'UG120009',
+                    'intercrop_stock_name' => [],
                     'is_a_control' => 1,
                     'plot_number'  => '5',
                     'range_number' => '5',
@@ -271,6 +284,7 @@ for my $extension ("xlsx", "xls", "csv") {
                 },
                 '2' => {
                     'stock_name'   => 'UG120002',
+                    'intercrop_stock_name' => [],
                     'rep_number'   => '2',
                     'is_a_control' => 1,
                     'plot_number'  => '1',
@@ -283,6 +297,7 @@ for my $extension ("xlsx", "xls", "csv") {
                 '3' => {
                     'rep_number'   => '2',
                     'stock_name'   => 'UG120004',
+                    'intercrop_stock_name' => [],
                     'is_a_control' => 1,
                     'plot_number'  => '2',
                     'range_number' => '4',
@@ -319,6 +334,7 @@ for my $extension ("xlsx", "xls", "csv") {
                     'row_number'    => '60',
                     'block_number'  => '1',
                     'stock_name'    => 'UG120158',
+                    'intercrop_stock_name' => [],
                     'rep_number'    => '2',
                     'plot_number'   => '2',
                     'is_a_control'  => 1,
@@ -334,7 +350,8 @@ for my $extension ("xlsx", "xls", "csv") {
                     'is_a_control' => 1,
                     'plot_number'  => '4',
                     'rep_number'   => '2',
-                    'stock_name'   => 'UG120160'
+                    'stock_name'   => 'UG120160',
+                    'intercrop_stock_name' => []
                 },
                 '9' => {
                     'row_number'   => '70',
@@ -343,6 +360,7 @@ for my $extension ("xlsx", "xls", "csv") {
                     'is_a_control' => 1,
                     'plot_number'  => '3',
                     'stock_name'   => 'UG120159',
+                    'intercrop_stock_name' => [],
                     'rep_number'   => '2',
                     'plot_name'    => '199947HBEPR_mora_rep1_UG120159_3',
                     'range_number' => '7'
@@ -354,6 +372,7 @@ for my $extension ("xlsx", "xls", "csv") {
                     'is_a_control' => 1,
                     'rep_number'   => '2',
                     'stock_name'   => 'UG120157',
+                    'intercrop_stock_name' => [],
                     'block_number' => '1',
                     'row_number'   => '50',
                     'col_number'   => '5'
@@ -363,6 +382,7 @@ for my $extension ("xlsx", "xls", "csv") {
                     'plot_name'    => '199947HBEPR_mora_rep1_UG120161_5',
                     'rep_number'   => '2',
                     'stock_name'   => 'UG120161',
+                    'intercrop_stock_name' => [],
                     'is_a_control' => 1,
                     'plot_number'  => '5',
                     'block_number' => '1',

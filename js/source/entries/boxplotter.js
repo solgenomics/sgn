@@ -1,4 +1,4 @@
-import BrAPIBoxPlotter from "BrAPI-BoxPlotter";
+import BrAPIBoxPlotter from "brapi-boxplotter";
 import "../legacy/d3/d3v4Min.js";
 import "../legacy/jquery.js";
 import "../legacy/brapi/BrAPI.js";

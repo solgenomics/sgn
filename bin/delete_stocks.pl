@@ -7,14 +7,21 @@ delete_stocks.pl - delete stocks from a cxgn database
 
 perl delete_stocks.pl -H [host] -D [dbname] [-s accession ] -t (for testing) file
 
-where the file contains a list of uniquenames specifying the stocks to be deleted, one per line.
+where the file is a text file containing  a list of uniquenames specifying the stocks to be deleted, one per line.
 
-The parameter -s specifies the type of stock (accession, plot, family_name, etc) to be deleted.
+The script will check now if the stock has any associated experiments and not delete such accessions.
+
+The parameter -s specifies the type of stock (accession, tissue_sample, or plant) to be deleted.
+
 The default is "accession".
+
+Note that the script cannot delete plots, subplots, crosses or families. This is because these data types are managed on a trial or cross level and should not be individually modified.
 
 If the -t flag is provided, the changes will be rolled back in the database.
 
 Note that it may be possible that some stocks have additional connections, such as images, that this script does not delete yet, and so won't be able to delete those stocks.
+
+The file is a text file containing one accession name per line. There is no header line.
 
 =head1 AUTHOR
 
@@ -27,18 +34,30 @@ use Getopt::Std;
 use DBI;
 use Bio::Chado::Schema;
 use CXGN::Phenome::Schema;
+use CXGN::Stock;
+use CXGN::Stock::Plot;
 
-our ($opt_H, $opt_D, $opt_t, $opt_s);
+our ($opt_H, $opt_D, $opt_t, $opt_s, $opt_p);
 
-getopts('H:D:s:t');
+getopts('H:D:s:tp:');
 
 my $stock_type = $opt_s || "accession";
 
+if ($stock_type eq 'plot' || $stock_type eq 'subplot' || $stock_type eq 'cross' || $stock_type eq 'family' ) {
+    print STDERR "This script cannot delete plots or subplots. They have to be managed through the trial or cross interface.\n";
+    exit();
+}
+
 my $file = shift;
 
-print "Password for $opt_H / $opt_D: \n";
-my $pw = <>;
-chomp($pw);
+my $pw;
+
+if (! $opt_p) { 
+    print "Password for $opt_H / $opt_D: \n";
+    $pw = <>;
+    chomp($pw);
+}
+else { $pw = $opt_p; }
 
 print STDERR "Connecting to database...\n";
 my $dsn = 'dbi:Pg:database='.$opt_D.";host=".$opt_H.";port=5432";
@@ -62,63 +81,47 @@ open(my $F, "<", $file) || die " Can't open file $file\n";
 while (<$F>) { 
     chomp;
     
-    my $stock = $_;
-    $stock =~ s/\r//g;
-    if (!$stock) { 
+    my $stock_name = $_;
+    $stock_name =~ s/\r//g;
+    if (!$stock_name) { 
 	next();
     }
 
     $stock_count++;
 
-    print STDERR "Processing $stock\n";
+    print STDERR "Processing $stock_name\n";
 
-    my $stock_row = $bcs_schema->resultset("Stock::Stock")->find( { uniquename => $stock, type_id => $stock_type_cvterm_id });
+    my $stock_row = $bcs_schema->resultset("Stock::Stock")->find( { uniquename => $stock_name, type_id => $stock_type_cvterm_id });
     
     if (!$stock_row) { 
-	print STDERR "Could not find stock $stock of type $stock_type. Skipping...\n";
+	print STDERR "Could not find stock $stock_name of type $stock_type. Skipping...\n";
 	$missing_stocks++;
 	next;
     }
-
-    my $owner_rs = $phenome_schema->resultset("StockOwner")->search( { stock_id => $stock_row->stock_id() });
-    if ($owner_rs->count() > 1) { 
-	print STDERR "Weird. $stock has more than one owner.\n";
-    }
-
-    my $subject_relationship_rs = $bcs_schema->resultset("Stock::StockRelationship")->search( { object_id => $stock_row->stock_id() });
-
-    while (my $r = $subject_relationship_rs->next()) { 
-	print STDERR "Found object relationship with stock ".$r->subject_id()." of type ".$r->type_id()."\n";
-    }
     
-    my $object_relationship_rs = $bcs_schema->resultset("Stock::StockRelationship")->search( { subject_id => $stock_row->stock_id() });
-    while (my $r = $object_relationship_rs->next()) { 
-	print STDERR "Found subject relationship with stock ".$r->object_id()." of type ".$r->type_id()."\n";
-    }
+    my $stock_id = $stock_row->stock_id();
+    
+    my $stock = CXGN::Stock->new( { schema => $bcs_schema, stock_id => $stock_id });
 
-    while (my $owner_row = $owner_rs->next()) { 
-	
-	if (! $opt_t) {
-	    eval { 
-		print STDERR "Removing stockowner (".$owner_row->stock_id().")...\n";
-		$owner_row->delete();
-	    };
-	    if ($@) { 
-		print STDERR "Could not delete owner of stock $stock because of: $@\stock";
-	    }
-	}
-	
-	$stock_owner_count++;
+    # check if stock has associated trials, refuse to delete if yes
+    #
+    my @trials = $stock->get_trials();
+
+    if (@trials > 0) {
+	print STDERR "Stock $stock_name cannot be deleted because it is associated with trials ".join(", ", map { $_->[1] } @trials).". Skipping...\n";
+
+	next();
     }
     
     if (! $opt_t) { 
 	eval { 
-	    $stock_row->delete();
+	    $stock->hard_delete();
 	};
 	if ($@) { 
 	    print STDERR "Could not delete entry for stock $stock because of: $@\n";
 	}
-	else { 
+	else {
+	    print STDERR "Successfully deleted stock $stock_name\n";
 	    $deleted_stock_count++;
 	}
     }

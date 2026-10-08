@@ -1,0 +1,279 @@
+<%args>
+$trial_id
+$management_factor_types => (),
+$user_can_modify => undef
+</%args>
+
+<& /util/import_javascript.mas, classes => [ "jquery", "jquery.dataTables", 'jquery.dataTables-buttons-min'] &>
+
+<div class="well well-sm">
+
+    <table id="management_regime_table" style="width:100%;">
+    </table>
+
+    <br>
+    
+% if ($user_can_modify) {
+    <button id="edit_management_regime" class="btn btn-sm btn-primary">Add management factor</button>
+% }
+
+    
+</div>
+
+<script>
+jQuery(document).ready( function() {
+    jQuery('#edit_management_regime').click(function() {
+        jQuery('#trial_design_add_management_factor').modal("show");
+    });
+
+    load_management_regime_table();
+
+    jQuery('#new_trial_add_management_factors_submit').on('click',add_management_factor);
+
+    function add_management_factor(mode, row_json) {
+        var new_management_factor_description = jQuery('#new_management_factor_description').val();
+        var new_management_factor_type = jQuery('#new_management_factor_type').val();
+        var new_management_factor_schedule = jQuery('#new_management_factor_schedule').val();
+        var new_management_factor_start_date = jQuery('#new_management_factor_start_date').val();
+        var new_management_factor_end_date = jQuery('#new_management_factor_end_date').val();
+        var new_management_factor_completions = jQuery('#new_mf_completion_times_table').html();
+        new_management_factor_completions = html_table_to_json(new_management_factor_completions);
+
+        let local_json = JSON.stringify({
+            description: new_management_factor_description,
+            type: new_management_factor_type,
+            schedule: new_management_factor_schedule,
+            completions: new_management_factor_completions,
+            start_date: new_management_factor_start_date,
+            end_dated: new_management_factor_end_date
+        });
+
+        if (mode !== null && row_json !== null && mode == 'edit' && row_json == local_json) {
+            return;
+        }
+
+        jQuery.ajax({
+            beforeSend: function() {
+                jQuery("#working_modal").modal("show");
+            },
+            url: '/ajax/breeders/trial/'+<% $trial_id %>+'/edit_management_factor_details',
+            data: {
+                description : new_management_factor_description,
+                schedule : new_management_factor_schedule,
+                type : new_management_factor_type,
+                completions: new_management_factor_completions,
+                start_date : new_management_factor_start_date,
+                end_date : new_management_factor_end_date,
+                action : 'add'
+            },
+            success: function(response) {
+                jQuery("#working_modal").modal("hide");
+                if (response.error) {
+                    alert("Error adding management factor: "+response.error);
+                } else {
+                    alert("Management factor submitted.");
+                    if (mode !== null && row_json !== null && mode == 'edit' && row_json !== local_json) {
+                        delete_management_factor(row_json);
+                    }
+                    reload_managment_regime_table();
+                    jQuery('#new_management_factor_description').val('');
+                    jQuery('#new_management_factor_type').val('');
+                    jQuery('#new_management_factor_schedule').val('');
+                    jQuery('#new_mf_completion_times_table').html('');
+                    jQuery('#new_mf_remove_most_recent_completion_time_btn').css('display', 'none');
+                    jQuery('#trial_design_add_management_factor').modal("hide");
+                    jQuery(".modal-backdrop").remove();
+                }
+            },
+            error: function(response) {
+                jQuery("#working_modal").modal("hide");
+                alert("An error occurred submitting new management factor." + response.error)
+            }
+        });
+    }
+
+    function delete_management_factor(row_json) {
+        row_data = JSON.parse(row_json);
+        jQuery.ajax({
+            beforeSend: function() {
+                jQuery("#working_modal").modal("show");
+            },
+            url: '/ajax/breeders/trial/'+<% $trial_id %>+'/edit_management_factor_details',
+            data: {
+                description : row_data.description,
+                schedule : row_data.schedule,
+                type : row_data.type,
+                start_date : row_data.start_date,
+                end_date : row_data.end_date,
+                completions: JSON.stringify(row_data.completions),
+                action : 'remove'
+            },
+            success: function(response) {
+                jQuery("#working_modal").modal("hide");
+                if (response.error) {
+                    alert(response.error);
+                    console.log(response.error);
+                } else {
+                    reload_managment_regime_table();
+                }
+            },
+            error: function(response) {
+                jQuery("#working_modal").modal("hide");
+                alert("An error occurred deleting management factor: " + response.error);
+                console.log(response.error);
+            }
+        });
+    }
+
+    async function load_management_regime_table() {
+        try {
+            let response = await fetch('/ajax/breeders/trial/' + <% $trial_id %> + '/get_management_regime');
+
+            if (!response.ok) {
+                throw new Error("Bad network response");
+            }
+
+            let result = await response.json();
+
+            if (result.error) {
+                alert("Error retrieving management regime.");
+                console.log(result.error);
+                return;
+            } 
+            jQuery('#management_regime_table').DataTable({
+                data: JSON.parse(result.data),
+                columns: [
+                    { data: 'type', title: 'Type' },
+                    { data: 'description', title: 'Description' },
+                    { data: 'schedule', title: 'Schedule' },
+                    { data: 'start_date', title: 'Start Date'},
+                    { data: 'end_date', title: 'End Date'},
+                    { 
+                        data: 'completions', 
+                        title: 'Completion records',
+                        orderable: false,
+                        render: function(data, type, row, meta) {
+                            if (Array.isArray(data)) {
+                                let html = '<table>';
+                                data.forEach(item => {
+                                    html += `<tr><td>${item}</td></tr>`;
+                                });
+                                html += '</table>';
+                                return html;
+                            } else {
+                                return data;
+                            }
+                        }
+                    },
+                    {
+                        title: 'Actions',
+                        data: null,
+                        orderable: false,
+                        render: function (data, type, row, meta) {
+                            let row_json = JSON.stringify(row).replace(/"/g, '&quot;');
+                            return `<button class="btn btn-danger delete_management_factor_btn" data-row="${row_json}"><span class="glyphicon glyphicon-trash"></span></button>
+                            <button class="btn btn-success edit_management_factor_btn" data-row="${row_json}"><span class="glyphicon glyphicon-pencil"></span></button>`;
+                        }
+                    }
+                ]
+            });
+
+        } catch (error) {
+            alert("Error retrieving management regime.");
+            console.log(error);
+        }
+    }
+
+    async function reload_managment_regime_table() {
+        try {
+            let response = await fetch('/ajax/breeders/trial/' + <% $trial_id %> + '/get_management_regime');
+
+            if (!response.ok) {
+                throw new Error("Bad network response");
+            }
+
+            let result = await response.json();
+
+            if (result.error) {
+                alert("Error retrieving management regime.");
+                console.log(result.error);
+                return;
+            } else {
+                let table = jQuery('#management_regime_table').DataTable();
+                table.clear();
+                table.rows.add(JSON.parse(result.data));
+                table.draw();
+            }
+        } catch (error) {
+            alert("Error retrieving management regime.");
+            console.log(error);
+        }
+    }
+
+    jQuery('#management_regime_table').on('click','.delete_management_factor_btn', function() {
+        let row_json = jQuery(this).attr('data-row');
+        delete_management_factor(row_json);
+    });
+
+    jQuery('#management_regime_table').on('click','.edit_management_factor_btn', function() {
+        let row_json = jQuery(this).attr('data-row');
+        row_data = JSON.parse(row_json);
+
+        let completions = row_data.completions;
+        let completions_html = json_to_html_table(completions);
+
+        jQuery('#new_management_factor_description').val(row_data.description);
+        jQuery('#new_management_factor_type').val(row_data.type);
+        jQuery('#new_management_factor_schedule').val(row_data.schedule);
+        jQuery('#new_management_factor_start_date').val(row_data.start_date);
+        jQuery('#new_management_factor_end_date').val(row_data.end_date);
+        jQuery('#new_mf_completion_times_table').html(completions_html);
+
+        if (completions.length == 0) {
+            jQuery('#new_mf_remove_most_recent_completion_time_btn').css('display', 'none');
+        } else {
+            jQuery('#new_mf_remove_most_recent_completion_time_btn').css('display', '');
+        }
+
+        jQuery('#trial_design_add_management_factor').modal("show");
+
+        const original_submit_button = document.getElementById("new_trial_add_management_factors_submit");
+        const submit_clone = original_submit_button.cloneNode(true);
+        submit_clone.id="new_trial_edit_management_factors_submit";
+        original_submit_button.parentNode.replaceChild(submit_clone, original_submit_button);
+
+        let header_close = document.getElementById("new_trial_add_management_factor_header_close_btn");
+        let footer_close = document.getElementById("new_trial_add_management_factor_footer_close_btn");
+        header_close.addEventListener('click',close_temp_behavior);
+        footer_close.addEventListener('click',close_temp_behavior);
+
+        jQuery('#new_trial_edit_management_factors_submit').click(function() {
+            add_management_factor('edit', row_json);
+            header_close.removeEventListener('click', close_temp_behavior);
+            footer_close.removeEventListener('click', close_temp_behavior);
+            submit_clone.parentNode.replaceChild(original_submit_button, submit_clone);
+        });
+        function close_temp_behavior() {
+            jQuery('#new_management_factor_description').val('');
+            jQuery('#new_management_factor_type').val('');
+            jQuery('#new_management_factor_schedule').val('');
+            jQuery('#new_management_factor_start_date').val('');
+            jQuery('#new_management_factor_end_date').val('');
+            jQuery('#new_mf_completion_times_table').html('');
+            jQuery('#new_mf_remove_most_recent_completion_time_btn').css('display', 'none');
+            submit_clone.parentNode.replaceChild(original_submit_button, submit_clone);
+            header_close.removeEventListener('click', close_temp_behavior);
+            footer_close.removeEventListener('click', close_temp_behavior);
+        }
+    });
+
+    function html_table_to_json(html_str) {
+        return JSON.stringify(html_str.replace(/^<tr>|<\/?table>|<tr>|^\s+|<td>|<\/td>|<\/tr>$|\s+$/g,'').split("</tr>").filter(str => str.trim() !== ''));
+    }
+
+    function json_to_html_table(json) {
+        json.sort();
+        return "<tr><td>"+json.join("</td></tr><tr><td>")+"</td></tr>";
+    }
+});
+</script>
