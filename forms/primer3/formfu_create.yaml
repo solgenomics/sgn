@@ -174,11 +174,14 @@ elements:
                     - type: Block
                       content: "Excluded Regions: "
                       attributes:
-                          title: "Primer oligos may not overlap any region specified in this tag. The associated value must be a space-separated list of
+                          title: >-
+                            Primer oligos may not overlap any region specified in this tag. The associated value must be a space-separated list of
 
-start,length
+                            start,length
 
-pairs where start is the index of the first base of the excluded region, and length is its length. This tag is useful for tasks such as excluding regions of low sequence quality or for excluding regions containing repetitive elements such as ALUs or LINEs."
+                            pairs where start is the index of the first base of the excluded region, and length is its length. This tag is useful for
+                            tasks such as excluding regions of low sequence quality or for excluding regions containing repetitive elements such as
+                            ALUs or LINEs.
                 - type: Block
                   tag: td
                   elements:
@@ -205,11 +208,14 @@ pairs where start is the index of the first base of the excluded region, and len
                     - type: Block
                       content: "Product Size Ranges:"
                       attributes:
-                          title: "A list of product size ranges, for example
+                          title: >-
+                            A list of product size ranges, for example
 
-150-250 100-300 301-400
+                            150-250 100-300 301-400
 
-Primer3 first tries to pick primers in the first range. If that is not possible, it goes to the next range and tries again. It continues in this way until it has either picked all necessary primers or until there are no more ranges. For technical reasons this option makes much lighter computational demands than the Product Size option."
+                            Primer3 first tries to pick primers in the first range. If that is not possible, it goes to the next range and tries
+                            again. It continues in this way until it has either picked all necessary primers or until there are no more ranges. For
+                            technical reasons this option makes much lighter computational demands than the Product Size option.
                 - type: Block
                   tag: td
                   elements:
@@ -379,9 +385,13 @@ Primer3 first tries to pick primers in the first range. If that is not possible,
                     - type: Block
                       content: "Primer Tm"
                       attributes:
-                          title: "Minimum, Optimum, and Maximum melting temperatures (Celsius) for a primer oligo. Primer3 will not pick oligos with temperatures smaller than Min or larger than Max, and with default conditions will try to pick primers with melting temperatures close to Opt.
+                          title: >-
+                            Minimum, Optimum, and Maximum melting temperatures (Celsius) for a primer oligo. Primer3 will not pick oligos with
+                            temperatures smaller than Min or larger than Max, and with default conditions will try to pick primers with melting
+                            temperatures close to Opt.
 
-By default Primer3 uses the oligo melting temperature formula and the table of thermodynamic parameters given in Breslauer et al. 1986, DOI:10.1073/pnas.83.11.3746 For more information see caption Table of thermodynamic parameters"
+                            By default Primer3 uses the oligo melting temperature formula and the table of thermodynamic parameters given in Breslauer
+                            et al. 1986, DOI:10.1073/pnas.83.11.3746 For more information see caption Table of thermodynamic parameters
                 - type: Block
                   tag: td
                   elements:
@@ -433,15 +443,27 @@ By default Primer3 uses the oligo melting temperature formula and the table of t
                     - type: Block
                       content: "Product Tm"
                       attributes:
-                          title: "The minimum, optimum, and maximum melting temperature of the amplicon. Primer3 will not pick a product with melting temperature less than min or greater than max. If Opt is supplied and the Penalty Weights for Product Size are non-0 Primer3 will attempt to pick an amplicon with melting temperature close to Opt.
+                          title: >-
+                            The minimum, optimum, and maximum melting temperature of the amplicon. Primer3 will not pick a product with melting
+                            temperature less than min or greater than max. If Opt is supplied and the Penalty Weights for Product Size are non-0
+                            Primer3 will attempt to pick an amplicon with melting temperature close to Opt.
 
-The maximum allowed melting temperature of the amplicon. Primer3 calculates product Tm calculated using the formula from Bolton and McCarthy, PNAS 84:1390 (1962) as presented in Sambrook, Fritsch and Maniatis, Molecular Cloning, p 11.46 (1989, CSHL Press).
+                            The maximum allowed melting temperature of the amplicon. Primer3 calculates product Tm calculated using the formula from
+                            Bolton and McCarthy, PNAS 84:1390 (1962) as presented in Sambrook, Fritsch and Maniatis, Molecular Cloning, p 11.46 (1989,
+                            CSHL Press).
 
-    Tm = 81.5 + 16.6(log10([Na+])) + .41*(%GC) - 600/length,
+                            Tm = 81.5 + 16.6(log10([Na+])) + .41*(%GC) - 600/length,
 
-where [Na+] is the molar sodium concentration, (%GC) is the percent of Gs and Cs in the sequence, and length is the length of the sequence.
+                            where [Na+] is the molar sodium concentration, (%GC) is the percent of Gs and Cs in the sequence, and length is the length
+                            of the sequence.
 
-A similar formula is used by the prime primer selection program in GCG (http://www.accelrys.com/products/gcg/), which instead uses 675.0 / length in the last term (after F. Baldino, Jr, M.-F. Chesselet, and M.E. Lewis, Methods in Enzymology 168:766 (1989) eqn (1) on page 766 without the mismatch and formamide terms). The formulas here and in Baldino et al. assume Na+ rather than K+. According to J.G. Wetmur, Critical Reviews in BioChem. and Mol. Bio. 26:227 (1991) 50 mM K+ should be equivalent in these formulae to .2 M Na+. Primer3 uses the same salt concentration value for calculating both the primer melting temperature and the oligo melting temperature. If you are planning to use the PCR product for hybridization later this behavior will not give you the Tm under hybridization conditions."
+                            A similar formula is used by the prime primer selection program in GCG (http://www.accelrys.com/products/gcg/), which
+                            instead uses 675.0 / length in the last term (after F. Baldino, Jr, M.-F. Chesselet, and M.E. Lewis, Methods in Enzymology
+                            168:766 (1989) eqn (1) on page 766 without the mismatch and formamide terms). The formulas here and in Baldino et al.
+                            assume Na+ rather than K+. According to J.G. Wetmur, Critical Reviews in BioChem. and Mol. Bio. 26:227 (1991) 50 mM K+
+                            should be equivalent in these formulae to .2 M Na+. Primer3 uses the same salt concentration value for calculating both
+                            the primer melting temperature and the oligo melting temperature. If you are planning to use the PCR product for
+                            hybridization later this behavior will not give you the Tm under hybridization conditions.
                 - type: Block
                   tag: td
                   elements:
@@ -472,12 +494,15 @@ A similar formula is used by the prime primer selection program in GCG (http://w
                     - type: Block
                       content: "Table of Thermodynamic Parameters"
                       attributes:
-                          title: "Option for the table of Nearest-Neighbor thermodynamic parameters and for the method of melting temperature calculation. Two different tables of thermodynamic parameters are available:
+                          title: >-
+                            Option for the table of Nearest-Neighbor thermodynamic parameters and for the method of melting temperature calculation.
+                            Two different tables of thermodynamic parameters are available:
 
-    Breslauer et al. 1986, DOI:10.1073/pnas.83.11.3746 In that case the formula for melting temperature calculation suggested by Rychlik et al. 1990 is used (this is used until Primer3 version 1.0.1). This is the default value of Primer3 (for backward compatibility).
-    SantaLucia 1998, DOI:10.1073/pnas.95.4.1460 This is the recommended value.
+                            Breslauer et al. 1986, DOI:10.1073/pnas.83.11.3746 In that case the formula for melting temperature calculation suggested
+                            by Rychlik et al. 1990 is used (this is used until Primer3 version 1.0.1). This is the default value of Primer3 (for
+                            backward compatibility). SantaLucia 1998, DOI:10.1073/pnas.95.4.1460 This is the recommended value.
 
-For specifying the salt correction method for melting temperature calculation see Salt correction formula."
+                            For specifying the salt correction method for melting temperature calculation see Salt correction formula.
                 - type: Block
                   tag: td
                   elements:
@@ -687,8 +712,13 @@ For specifying the salt correction method for melting temperature calculation se
                     - type: Block
                       content: "Concentration of divalent cations:"
                       attributes:
-                          title: "The millimolar concentration of divalent salt cations (usually MgCl2+ in the PCR). Primer3 converts concentration of divalent cations to concentration of monovalent cations using formula suggested in the paper Ahsen et al., 2001.
-According to the formula concentration of desoxynucleotide triphosphate [dNTP] must be smaller than concentration of divalent cations. The concentration of dNTPs is included to the formula beacause of some magnesium is bound by the dNTP. Attained concentration of monovalent cations is used to calculate oligo/primer melting temperature. See Concentration of dNTPs to specify the concentration of dNTPs."
+                          title: >-
+                            The millimolar concentration of divalent salt cations (usually MgCl2+ in the PCR). Primer3 converts concentration of
+                            divalent cations to concentration of monovalent cations using formula suggested in the paper Ahsen et al., 2001. According
+                            to the formula concentration of desoxynucleotide triphosphate [dNTP] must be smaller than concentration of divalent
+                            cations. The concentration of dNTPs is included to the formula beacause of some magnesium is bound by the dNTP. Attained
+                            concentration of monovalent cations is used to calculate oligo/primer melting temperature. See Concentration of dNTPs to
+                            specify the concentration of dNTPs.
                 - type: Block
                   tag: td
                   elements:
@@ -792,9 +822,10 @@ According to the formula concentration of desoxynucleotide triphosphate [dNTP] m
                    - type: Block
                      content: "Included Region:"
                      attributes:
-                         title: "A sub-region of the given sequence in which to pick primers. For example, often the first dozen or so bases of a sequence are vector, and should be excluded from consideration. The value for this parameter has the form
-start,length
-where start is the index of the first base to consider, and length is the number of subsequent bases in the primer-picking region."
+                         title: >-
+                           A sub-region of the given sequence in which to pick primers. For example, often the first dozen or so bases of a sequence
+                           are vector, and should be excluded from consideration. The value for this parameter has the form start,length where start
+                           is the index of the first base to consider, and length is the number of subsequent bases in the primer-picking region.
                - type: Block
                  tag: td
                  elements:
@@ -905,15 +936,19 @@ where start is the index of the first base to consider, and length is the number
         - type: Block
           content: "Penalties"
           attributes:
-              title: "This section describes 'penalty weights', which allow the user to modify the criteria that Primer3 uses to select the 'best' primers. There are two classes of weights:
+              title: >-
+                This section describes 'penalty weights', which allow the user to modify the criteria that Primer3 uses to select the 'best' primers.
+                There are two classes of weights:
 
-(1) For some parameters there is a 'Lt' (less than) and a 'Gt' (greater than) weight. These are the weights that Primer3 uses when the value is less or greater than (respectively) the specified optimum.
+                (1) For some parameters there is a 'Lt' (less than) and a 'Gt' (greater than) weight. These are the weights that Primer3 uses when the
+                value is less or greater than (respectively) the specified optimum.
 
-(2) For the remaining parameters the optimum is understood and the actual value can only vary in one direction from the optimum.
+                (2) For the remaining parameters the optimum is understood and the actual value can only vary in one direction from the optimum.
 
-The following weights are treated specially: Position Penalty Weight, Primer Weight, Hyb Oligo Weight.
+                The following weights are treated specially: Position Penalty Weight, Primer Weight, Hyb Oligo Weight.
 
-The following govern the weight given to various parameters of primer pairs (or primer pairs plus hyb oligo): Tm Difference, Primer-Primer Complementarity, Primer-Primer 3' Complementarity, Primer Pair Mispriming Similarity."
+                The following govern the weight given to various parameters of primer pairs (or primer pairs plus hyb oligo): Tm Difference,
+                Primer-Primer Complementarity, Primer-Primer 3' Complementarity, Primer Pair Mispriming Similarity.
 
     - type: Block
       tag: h2
