@@ -42,18 +42,35 @@
     cap.solve();
 
     // When the captcha has been solved...
-    // verify the token that has been returned
-    // if the token is valid, redirect to the original URL
+    // verify the returned token
     cap.addEventListener("solve", (e) => {
         status.innerHTML = "<strong>Saving verification token...</strong>";
         loader.removeAttribute("value");
+        verifyToken(e?.detail?.token);
+    });
 
-        // Use fetch() rather than jQuery.ajax() here: this page is the gate shown
-        // before the rest of the site (and its jQuery bundle) is known to have loaded
-        // successfully, so the verification flow must not depend on jQuery.
+    // Update the progress of the captcha solve routine...
+    cap.addEventListener("progress", (e) => {
+        status.innerHTML = `<strong>Verifying your request...</strong>`;
+        loader.value = e.detail.progress;
+    });
+
+    // The captcha solve has failed...
+    // try to verify a token anyway
+    // the backend will check if the server is down
+    // if the server is down, we may bypass the verification
+    cap.addEventListener("error", (e) => {
+        status.innerHTML = `<strong>Could not verify the token</strong><br />${e.detail.message}`;
+        loader.style.display = "none";
+        verifyToken(e?.detail?.token);
+    });
+
+    // Verify the token returned by the solve routine
+    // The token will be checked by the backend to make sure it's valid
+    const verifyToken = (token = "site:challenge:response") => {
         fetch('/ajax/captcha', {
             method: 'POST',
-            body: new URLSearchParams({ token: e.detail.token })
+            body: new URLSearchParams({ token })
         })
             .then((r) => r.json())
             .then((response) => {
@@ -72,21 +89,10 @@
                     }
                 }
             })
-            .catch(() => {
-                status.innerHTML = "<strong>Could not save verification token</strong>";
+            .catch((err) => {
+                console.log(`Captcha Error [${err}]`)
+                status.innerHTML = `<strong>Could not save verification token</strong><br />${err}`;
                 loader.style.display = "none";
             });
-    });
-
-    // Update the progress of the captcha solve routine...
-    cap.addEventListener("progress", (e) => {
-        status.innerHTML = `<strong>Verifying your request...</strong>`;
-        loader.value = e.detail.progress;
-    });
-
-    // The captcha solve has failed...
-    cap.addEventListener("error", (e) => {
-        status.innerHTML = `<strong>Could not verify the token</strong><br />${e.detail.message}`;
-        loader.style.display = "none";
-    });
+    }
 </script>

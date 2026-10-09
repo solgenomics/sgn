@@ -7,6 +7,7 @@ use LWP::UserAgent;
 use HTTP::Request;
 use JSON;
 use Digest::SHA qw(hmac_sha256_base64);
+use Try::Tiny;
 
 BEGIN { extends 'Catalyst::Controller::REST'; }
 
@@ -50,20 +51,41 @@ sub captcha : Path("/ajax/captcha") Args(0) {
     my $req = HTTP::Request->new(POST => $server . "/siteverify");
     $req->header('Content-Type' => 'application/json');
     $req->content($data);
-    my $response = $ua->request($req);
-    my $response_data = decode_json($response->content);
 
-    # The server did not verify the token
-    if ( !$response->is_success || !$response_data->{success} ) {
-        $c->stash->{rest} = { error => $response_data->{error} || $response->status_line };
+    my $response = $ua->request($req);
+    my $status = $response->code;
+    my $response_data;
+    try {
+        $response_data = decode_json($response->content);
+    } catch {
+        $response_data = { error => $response->status_line };
+    };
+
+    # Captcha Verification Responses:
+    # 200 - captcha passed
+    # 400 - invalid token format
+    # 403 - invalid site secret
+    # 404 - invalid response token
+    # 500 - server unavailable
+
+    # Continue to sign the token
+    if ( 
+        ($response->is_success && $status eq 200 && !defined $response_data->{error}) ||     # if the captcha verification passed
+        ($status == 500)                                                                     # if the captcha server is down
+    ) {
+
+        # Sign the token with the signing key
+        my $signature = hmac_sha256_base64($token, $config->{signing_key});
+
+        # Save the token and its signature in a cookie
+        CXGN::Cookie::set_cookie('captcha-token', "$token:$signature");
+
+        $c->stash->{rest} = { success => 1 };
         return;
+
     }
 
-    # Sign the token with the signing key
-    my $signature = hmac_sha256_base64($token, $config->{signing_key});
-
-    # Save the token and its signature in a cookie
-    CXGN::Cookie::set_cookie('captcha-token', "$token:$signature");
-
-    $c->stash->{rest} = { success => 1 };
+    # The server did not verify the token
+    $c->stash->{rest} = { error => $response_data->{error} || 'An unknown error occurred' };
+    return;
 }
