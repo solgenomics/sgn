@@ -1,0 +1,607 @@
+<%args>
+$collection_id
+$collection_name
+$description      => undef
+$collection_type  => undef
+$owner_username   => undef
+$user_can_modify  => 0
+</%args>
+<%init>
+my $is_file_type = (defined $collection_type && $collection_type eq 'file');
+my $items_title  = $is_file_type ? 'Files in this collection' : 'Images in this collection';
+</%init>
+
+<& /util/import_javascript.mas, classes => ['jquery', 'thickbox', 'jquery.dataTables'] &>
+<& /collection/message_modal.mas &>
+
+<& /page/page_title.mas, title => "Collection: " . $collection_name &>
+
+<&| /page/info_section.mas, title => "Collection Details", collapsible => 1, collapsed => 0 &>
+  <table class="table table-bordered table-condensed">
+    <tr>
+      <td style="width:25%;"><b>Name</b></td>
+      <td><span id="collection_name_display"><% $collection_name | h %></span></td>
+    </tr>
+    <tr>
+      <td><b>Description</b></td>
+      <td><span id="collection_description_display"><% ($description || '—') | h %></span></td>
+    </tr>
+    <tr>
+      <td><b>Created by</b></td>
+      <td><% ($owner_username || '—') | h %></td>
+    </tr>
+% if ($collection_type) {
+    <tr>
+      <td><b>Type</b></td>
+      <td><% $collection_type | h %></td>
+    </tr>
+% }
+  </table>
+
+% if ($user_can_modify) {
+  <button class="btn btn-default btn-sm" id="rename_collection_button">Rename collection</button>
+  <button class="btn btn-danger btn-sm" id="delete_collection_button">Delete collection</button>
+% }
+</&>
+
+<&| /page/info_section.mas, title => $items_title, collapsible => 1, collapsed => 0 &>
+
+% if ($user_can_modify) {
+  <div style="margin-bottom:10px;">
+% if ($is_file_type) {
+    <button class="btn btn-primary btn-sm" id="open_add_files_modal_button">
+      <span class="glyphicon glyphicon-plus"></span> Add Files
+    </button>
+% } else {
+    <button class="btn btn-primary btn-sm" id="open_add_images_modal_button">
+      <span class="glyphicon glyphicon-plus"></span> Add Images
+    </button>
+% }
+    <button class="btn btn-danger btn-sm" id="remove_selected_button">
+      Remove selected <% $is_file_type ? 'files' : 'images' %> from collection
+    </button>
+  </div>
+% }
+
+% if ($is_file_type) {
+  <table id="collection_files_table" class="table table-hover table-condensed" style="width:100%">
+    <thead>
+      <tr>
+% if ($user_can_modify) {
+        <th></th>
+% }
+        <th>File Name</th><th>Type</th><th>Comment</th><th>Uploader</th><th>Added</th>
+      </tr>
+    </thead>
+  </table>
+% } else {
+  <table id="collection_images_table" class="table table-hover table-condensed" style="width:100%">
+    <thead>
+      <tr>
+% if ($user_can_modify) {
+        <th></th>
+% }
+        <th>Image</th><th>Filename</th><th>Description</th>
+        <th>Submitter</th><th>Associations</th><th>Accession</th>
+        <th>Observations</th><th>Tags</th>
+      </tr>
+    </thead>
+  </table>
+% }
+</&>
+
+<div class="modal fade" id="add_images_to_collection_dialog" tabindex="-1" role="dialog">
+  <div class="modal-dialog modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal">&times;</button>
+        <h4 class="modal-title">Add Images to collection</h4>
+      </div>
+      <div class="modal-body">
+
+        <div class="form-inline" style="margin-bottom:10px;">
+          <input type="text" class="form-control" id="add_images_search_box"
+                 placeholder="Search by filename or description..."
+                 style="width:320px;">
+          <button class="btn btn-default" id="add_images_search_button">Search</button>
+        </div>
+
+        <div style="margin-bottom:8px;">
+          <span class="text-muted">
+            <span id="add_images_selected_count">0</span> image(s) selected
+          </span>
+          <button class="btn btn-link btn-xs" id="add_images_clear_selection_button">
+            clear selection
+          </button>
+        </div>
+
+        <table id="add_images_search_table"
+               class="table table-hover table-condensed" style="width:100%">
+          <thead>
+            <tr>
+              <th></th>
+              <th>Image</th>
+              <th>Filename</th>
+              <th>Description</th>
+              <th>Submitter</th>
+            </tr>
+          </thead>
+        </table>
+
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+        <button type="button" class="btn btn-primary" id="add_images_submit_button">
+          Add Selected
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+% if ($is_file_type) {
+<div class="modal fade" id="add_files_to_collection_dialog" tabindex="-1" role="dialog">
+  <div class="modal-dialog modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal">&times;</button>
+        <h4 class="modal-title">Add Files to collection</h4>
+      </div>
+      <div class="modal-body">
+
+        <div class="form-inline" style="margin-bottom:10px;">
+          <input type="text" class="form-control" id="add_files_search_box"
+                 placeholder="Search by filename or comment..."
+                 style="width:320px;">
+          <button class="btn btn-default" id="add_files_search_button">Search</button>
+        </div>
+
+        <div style="margin-bottom:8px;">
+          <span class="text-muted">
+            <span id="add_files_selected_count">0</span> file(s) selected
+          </span>
+          <button class="btn btn-link btn-xs" id="add_files_clear_selection_button">
+            clear selection
+          </button>
+        </div>
+
+        <table id="add_files_search_table"
+               class="table table-hover table-condensed" style="width:100%">
+          <thead>
+            <tr>
+              <th></th>
+              <th>File Name</th>
+              <th>Type</th>
+              <th>Comment</th>
+              <th>Uploader</th>
+              <th>Added</th>
+            </tr>
+          </thead>
+        </table>
+
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+        <button type="button" class="btn btn-primary" id="add_files_submit_button">
+          Add Selected
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+% }
+
+% if ($user_can_modify) {
+<div class="modal fade" id="rename_collection_dialog" tabindex="-1" role="dialog">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal">&times;</button>
+        <h4 class="modal-title">Rename Collection</h4>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label for="rename_collection_name_input">New collection name</label>
+          <input type="text" class="form-control" id="rename_collection_name_input">
+          <div id="rename_collection_error" class="text-danger"
+               style="display:none; margin-top:6px;"></div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+        <button type="button" class="btn btn-primary" id="rename_collection_submit">Rename</button>
+      </div>
+    </div>
+  </div>
+</div>
+% }
+
+<div id="collection_id_div" style="display:none;"><% $collection_id %></div>
+
+<script>
+jQuery(document).ready(function () {
+
+    var collection_id  = <% $collection_id %>;
+    var can_modify     = <% $user_can_modify ? 1 : 0 %>;
+    var item_type      = '<% $is_file_type ? "file" : "image" %>';
+    var contents_table = null;
+
+    if (item_type === 'image') {
+        var images_ajax_data = { collection_id_list: collection_id };
+        if (can_modify) {
+            images_ajax_data.html_select_box = 'collection_image_select';
+        }
+        contents_table = jQuery('#collection_images_table').DataTable({
+            'ajax': {
+                'url':  '/ajax/search/images',
+                'type': 'POST',
+                'data': images_ajax_data,
+                'dataSrc': function(json) {
+                    (json.data || []).forEach(function(row) {
+                        var imgElement = jQuery(row[1]).find('img');
+                        imgElement.attr('width', '140');
+                        var anchorElement = jQuery(row[1]);
+                        anchorElement.html(imgElement.prop('outerHTML'));
+                        row[1] = anchorElement.prop('outerHTML');
+                    });
+                    return json.data;
+                }
+            },
+            'processing': true,
+            'serverSide': true,
+            'searching':  true,
+            'lengthMenu': [20, 50, 100],
+            'ordering':   false
+        }).on('draw', function () {
+            jQuery('.image_search_group').colorbox({ rel: 'image_search_group' });
+        });
+    }
+    else {
+        var files_ajax_data = { collection_id: collection_id };
+        if (can_modify) {
+            files_ajax_data.html_select_box = 'collection_file_select';
+        }
+        contents_table = jQuery('#collection_files_table').DataTable({
+            'ajax': {
+                'url':  '/ajax/search/files',
+                'type': 'POST',
+                'data': files_ajax_data
+            },
+            'processing': true,
+            'serverSide': true,
+            'searching':  true,
+            'lengthMenu': [20, 50, 100],
+            'ordering':   false,
+            'columns':
+% if ($user_can_modify) {
+                [
+                    { 'data': 0, 'orderable': false, 'searchable': false },
+                    { 'data': 1 },
+                    { 'data': 2 },
+                    { 'data': 3 },
+                    { 'data': 4 },
+                    { 'data': 5 }
+                ]
+% } else {
+                [
+                    { 'data': 0 },
+                    { 'data': 1 },
+                    { 'data': 2 },
+                    { 'data': 3 },
+                    { 'data': 4 }
+                ]
+% }
+        });
+    }
+
+    function selectedIds() {
+        var name = item_type === 'file' ? 'collection_file_select' : 'collection_image_select';
+        var ids = [];
+        jQuery('input[name="' + name + '"]:checked').each(function () {
+            ids.push(jQuery(this).val());
+        });
+        return ids;
+    }
+
+    jQuery('#remove_selected_button').click(function () {
+        var ids = selectedIds();
+        if (!ids.length) {
+            window.collection_notify_error('Please select at least one ' + item_type + ' to remove.');
+            return;
+        }
+        window.collection_confirm(
+            'Remove ' + ids.length + ' ' + item_type + '(s) from this collection? '
+            + 'The ' + item_type + 's themselves are not deleted.',
+            function () {
+                jQuery.ajax({
+                    url:  '/ajax/collection/remove_items',
+                    type: 'POST',
+                    data: {
+                        collection_id:  collection_id,
+                        item_type: item_type,
+                        item_ids_json: JSON.stringify(ids)
+                    },
+                    success: function (response) {
+                        if (response.error) { window.collection_notify_error(response.error); return; }
+                        contents_table.ajax.reload();
+                    },
+                    error: function () {
+                        window.collection_notify_error('An error occurred removing the ' + item_type + 's.');
+                    }
+                });
+            }
+        );
+    });
+
+    jQuery('#rename_collection_button').click(function () {
+        jQuery('#rename_collection_name_input').val(jQuery('#collection_name_display').text());
+        jQuery('#rename_collection_error').hide();
+        jQuery('#rename_collection_dialog').modal('show');
+    });
+
+    jQuery('#rename_collection_name_input').on('keypress', function (e) {
+        if (e.which === 13) { jQuery('#rename_collection_submit').click(); }
+    });
+
+    jQuery('#rename_collection_submit').click(function () {
+        var new_name = jQuery('#rename_collection_name_input').val();
+        var $err = jQuery('#rename_collection_error');
+        if (!new_name || !new_name.trim()) {
+            $err.text('Please enter a collection name.').show();
+            return;
+        }
+
+        jQuery('#rename_collection_submit').prop('disabled', true);
+        jQuery.ajax({
+            url:  '/ajax/collection/rename',
+            type: 'POST',
+            data: { collection_id: collection_id, name: new_name },
+            success: function (response) {
+                jQuery('#rename_collection_submit').prop('disabled', false);
+                if (response.error) {
+                    $err.text(response.error).show();
+                    return;
+                }
+                jQuery('#rename_collection_dialog').modal('hide');
+                window.collection_notify_success('Collection renamed to "' + new_name + '".');
+                window.setTimeout(function () { location.reload(); }, 600);
+            },
+            error: function () {
+                jQuery('#rename_collection_submit').prop('disabled', false);
+                window.collection_notify_error('An error occurred renaming the collection.');
+            }
+        });
+    });
+
+    jQuery('#delete_collection_button').click(function () {
+        window.collection_confirm('Delete this collection? Its contents are not deleted.', function () {
+            jQuery.ajax({
+                url:  '/ajax/collection/delete',
+                type: 'POST',
+                data: { collection_id: collection_id },
+                success: function (response) {
+                    if (response.error) { window.collection_notify_error(response.error); return; }
+                    window.location.href = '/collections';
+                },
+                error: function () { window.collection_notify_error('An error occurred deleting the collection.'); }
+            });
+        });
+    });
+
+    var picked_ids = new Set();
+    var add_items_table = null;
+
+    function updateSelectedCount() {
+        if (item_type === 'image') {
+            jQuery('#add_images_selected_count').text(picked_ids.size);
+        } else {
+            jQuery('#add_files_selected_count').text(picked_ids.size);
+        }
+    }
+
+    function initAddItemsTable() {
+        if (add_items_table) { return; }
+
+        if (item_type === 'image') {
+            add_items_table = jQuery('#add_images_search_table').DataTable({
+                'ajax': {
+                    'url': '/ajax/search/images',
+                    'type': 'POST',
+                    'data': function (d) {
+                        d.html_select_box = 'add_images_select';
+                        d.image_description_filename_composite =
+                            jQuery('#add_images_search_box').val();
+                    }
+                },
+                'serverSide': true,
+                'processing': true,
+                'searching': false,
+                'lengthMenu': [10, 25, 50],
+                'ordering': false,
+                'columns': [
+                    { 'data': 0, 'orderable': false },   // checkbox column from html_select_box
+                    { 'data': 1 },                        // colorbox thumbnail
+                    { 'data': 2 },                        // filename link
+                    { 'data': 3 },                        // description
+                    { 'data': 4 }                         // submitter
+                ]
+            });
+        }
+        else {
+            add_items_table = jQuery('#add_files_search_table').DataTable({
+                'ajax': {
+                    'url': '/ajax/search/files',
+                    'type': 'POST',
+                    'data': function (d) {
+                        d.file_name = jQuery('#add_files_search_box').val();
+                        d.html_select_box = 'add_files_select';
+                    }
+                },
+                'serverSide': true,
+                'processing': true,
+                'searching': false,
+                'lengthMenu': [10, 25, 50],
+                'ordering': false,
+                'columns': [
+                    { 'data': 0, 'orderable': false, 'searchable': false },
+                    { 'data': 1 },
+                    { 'data': 2 },
+                    { 'data': 3 },
+                    { 'data': 4 },
+                    { 'data': 5 }
+                ]
+            });
+        }
+
+        // Re-apply checked state after every redraw: serverSide rebuilds the
+        // tbody on each page turn / search, so checked boxes from a prior
+        // page are gone from the DOM even though picked_ids still remembers
+        // them.
+        add_items_table.on('draw', function () {
+            var name = item_type === 'file' ? 'add_files_select' : 'add_images_select';
+            jQuery('input[name="' + name + '"]').each(function () {
+                var id = parseInt(jQuery(this).val(), 10);
+                jQuery(this).prop('checked', picked_ids.has(id));
+            });
+        });
+    }
+
+    function openAddItemsModal() {
+        picked_ids.clear();
+        updateSelectedCount();
+        if (item_type === 'image') {
+            jQuery('#add_images_search_box').val('');
+        } else {
+            jQuery('#add_files_search_box').val('');
+        }
+        jQuery(item_type === 'image'
+            ? '#add_images_to_collection_dialog'
+            : '#add_files_to_collection_dialog').modal('show');
+
+        initAddItemsTable();
+        add_items_table.ajax.reload();
+    }
+
+% if ($is_file_type) {
+    jQuery('#open_add_files_modal_button').click(openAddItemsModal);
+% } else {
+    jQuery('#open_add_images_modal_button').click(openAddItemsModal);
+% }
+
+    jQuery('#add_images_search_button').click(function () {
+        add_items_table.ajax.reload();
+    });
+    jQuery('#add_images_search_box').on('keypress', function (e) {
+        if (e.which === 13) { add_items_table.ajax.reload(); }
+    });
+
+    jQuery('#add_files_search_button').click(function () {
+        add_items_table.ajax.reload();
+    });
+    jQuery('#add_files_search_box').on('keypress', function (e) {
+        if (e.which === 13) { add_items_table.ajax.reload(); }
+    });
+
+    jQuery('#add_images_search_table').on('change', 'input[name="add_images_select"]', function () {
+        var id = parseInt(jQuery(this).val(), 10);
+        if (jQuery(this).is(':checked')) {
+            picked_ids.add(id);
+        } else {
+            picked_ids.delete(id);
+        }
+        updateSelectedCount();
+    });
+
+    jQuery('#add_files_search_table').on('change', 'input[name="add_files_select"]', function () {
+        var id = parseInt(jQuery(this).val(), 10);
+        if (jQuery(this).is(':checked')) {
+            picked_ids.add(id);
+        } else {
+            picked_ids.delete(id);
+        }
+        updateSelectedCount();
+    });
+
+    jQuery('#add_images_clear_selection_button').click(function () {
+        picked_ids.clear();
+        jQuery('input[name="add_images_select"]').prop('checked', false);
+        updateSelectedCount();
+    });
+
+    jQuery('#add_files_clear_selection_button').click(function () {
+        picked_ids.clear();
+        jQuery('input[name="add_files_select"]').prop('checked', false);
+        updateSelectedCount();
+    });
+
+    jQuery('#add_images_submit_button').click(function () {
+        if (!picked_ids.size) {
+            window.collection_notify_error('Please select at least one image.');
+            return;
+        }
+
+        jQuery.ajax({
+            url: '/ajax/collection/add_items',
+            type: 'POST',
+            data: {
+                collection_id: collection_id,
+                item_type: 'image',
+                item_ids_json: JSON.stringify(Array.from(picked_ids))
+            },
+            success: function (response) {
+                if (response.error) { window.collection_notify_error(response.error); return; }
+
+                jQuery('#add_images_to_collection_dialog').modal('hide');
+
+                // Refresh the collection's own image grid (collection_images_table
+                // earlier in this file) and any visible counts.
+                if (jQuery.fn.DataTable.isDataTable('#collection_images_table')) {
+                    jQuery('#collection_images_table').DataTable().ajax.reload(null, false);
+                }
+                jQuery(document).trigger('collection:contents_changed', [collection_id]);
+            },
+            error: function () {
+                window.collection_notify_error('An error occurred adding images to this collection.');
+            }
+        });
+    });
+
+    jQuery('#add_files_submit_button').click(function () {
+        if (!picked_ids.size) {
+            window.collection_notify_error('Please select at least one file.');
+            return;
+        }
+
+        jQuery.ajax({
+            url: '/ajax/collection/add_items',
+            type: 'POST',
+            data: {
+                collection_id: collection_id,
+                item_type: 'file',
+                item_ids_json: JSON.stringify(Array.from(picked_ids))
+            },
+            success: function (response) {
+                if (response.error) { window.collection_notify_error(response.error); return; }
+
+                var msg = response.items_added + ' file(s) added.';
+                var duplicates = response.duplicate_ids || [];
+                if (duplicates.length) {
+                    msg += '\n' + duplicates.length +
+                        ' file(s) were already in this collection and were not re-added.';
+                }
+                window.collection_notify_success(msg);
+
+                jQuery('#add_files_to_collection_dialog').modal('hide');
+
+                if (jQuery.fn.DataTable.isDataTable('#collection_files_table')) {
+                    jQuery('#collection_files_table').DataTable().ajax.reload(null, false);
+                }
+                jQuery(document).trigger('collection:contents_changed', [collection_id]);
+            },
+            error: function () {
+                window.collection_notify_error('An error occurred adding files to this collection.');
+            }
+        });
+    });
+});
+</script>

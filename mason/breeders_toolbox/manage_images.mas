@@ -1,0 +1,737 @@
+<%doc>
+
+=head1 NAME
+
+/breeders_toolbox/manage_images.mas - hub page for image upload, analysis, and collections
+
+=head1 DESCRIPTION
+
+Orientation page. Preview tables here are deliberately short and read-only;
+the full searchable tables live on their own pages (/search/images,
+/collections) so that each table is implemented once.
+
+=head1 AUTHORS
+
+=cut
+
+</%doc>
+
+<%args>
+$user_can_modify => 1
+</%args>
+
+<& /util/import_javascript.mas, classes => [ 'jquery', 'jquery.dataTables', 'jstree.dist.jstree' ] &>
+<& /util/import_css.mas, paths => ['/documents/inc/datatables/jquery.dataTables.css', '/static/documents/inc/jstree_theme/jstree-bstheme-min.css'] &>
+<& /collection/message_modal.mas &>
+
+<& /page/page_title.mas, title => "Manage Images" &>
+<& /breeders_toolbox/upload_images.mas &>
+<& /collection/create_collection_modal.mas, default_type => 'image' &>
+
+<div class="container-fluid">
+
+<!--  About & Upload  -->
+<&| /page/info_section.mas,
+    id          => 'manage_images_about',
+    title       => 'Images in Breedbase',
+    collapsible => 1,
+    collapsed   => 0,
+    subtitle    => 'How images are linked, and how to upload them'
+&>
+<div class="panel panel-default">
+<div class="panel-body">
+
+<p>
+  Images are linked to observation units (plots, plants, tissue samples)
+</p>
+
+
+<hr/>
+<h4 style="margin-top:0;">Uploading Images</h4>
+
+<p class="text-muted" style="font-size:12px;">
+  There are three ways to upload, depending on how the images relate to
+  your data:
+</p>
+
+<div class="row">
+  <div class="col-sm-4">
+    <div class="well well-sm" style="min-height:220px;">
+      <h5 style="margin-top:0;"><b>Images Alone</b></h5>
+      <ul style="font-size:12px; padding-left:18px;">
+        <li>Select multiple images directly for upload.</li>
+        <li>Fieldbook photos carry EXIF data with the observation unit
+            name, trait name, and timestamp </li>
+        <li>Otherwise, name files
+            observationUnitName_traitname_number_time,
+            joined by underscores (Fieldbook's default naming).</li>
+      </ul>
+    </div>
+  </div>
+  <div class="col-sm-4">
+    <div class="well well-sm" style="min-height:220px;">
+      <h5 style="margin-top:0;"><b>Images with Barcodes</b></h5>
+      <ul style="font-size:12px; padding-left:18px;">
+        <li>Upload multiple selected images that contain a barcode with
+            a stock ID.</li>
+        <li>Each image must contain exactly one barcode, and the
+            associated stock must already exist in the database.</li>
+      </ul>
+    </div>
+  </div>
+  <div class="col-sm-4">
+    <div class="well well-sm" style="min-height:220px;">
+      <h5 style="margin-top:0;"><b>Images with Associated Phenotypes</b></h5>
+      <ul style="font-size:12px; padding-left:18px;">
+        <li>Upload a zip file of images alongside phenotype values.</li>
+        <li>Phenotype values go in a .xls/.xlsx file with columns:
+            <code>observationUnitName, observationVariableName, value,
+            timestamp, image_name, person</code>.</li>
+        <li><code>image_name</code> must match the filenames in the zip.</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<center style="margin-top:10px;">
+  <a id="upload_images_link" class="btn btn-primary btn-sm">
+    <span class="glyphicon glyphicon-upload"></span> Upload Images
+  </a>
+</center>
+
+<hr/>
+<a href="/search/images">
+  <span class="glyphicon glyphicon-search"></span> Search all images
+</a>
+
+</div>
+</div>
+</&>
+
+<!--  Image collections  -->
+<&| /page/info_section.mas,
+    id          => 'manage_images_collections',
+    title       => 'Image collections',
+    collapsible => 1,
+    collapsed   => 0,
+    subtitle    => 'Group images into named collections'
+&>
+  <div class="panel panel-default">
+    <div class="panel-body">
+
+      <p>
+        Images can be sorted into groups using collections. An image can belong to several
+        collections, and removing it from one does not delete the image or affect
+        the others.
+      </p>
+
+      <p class="text-muted" style="font-size:12px;">
+        To add images to a collection, select them in
+        <a href="/search/images">image search</a> and use
+        <b>Add selected to collection</b>.
+      </p>
+
+% if ($user_can_modify) {
+      <button class="btn btn-primary btn-sm" id="new_image_collection_button">
+        <span class="glyphicon glyphicon-plus"></span> New Image collection
+      </button>
+% }
+
+      <hr/>
+      <h4 style="margin-top:0;">Recent collections</h4>
+
+      <div id="recent_collections_loading" class="text-muted" style="padding:10px;">
+        <span class="glyphicon glyphicon-refresh"></span> Loading collections&hellip;
+      </div>
+
+      <table class="table table-hover table-condensed" id="recent_collections_table"
+             style="width:100%; display:none;">
+        <thead>
+          <tr>
+            <th>collection</th>
+            <th>Owner</th>
+            <th>Images</th>
+            <th>Created</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+
+      <div id="recent_collections_empty" class="text-muted"
+           style="display:none; padding:10px;">
+        No image collections yet.
+      </div>
+
+      <div style="margin-top:10px;">
+        <a href="/collections?collection_type=image">
+          Browse all image collections &rarr;
+        </a>
+      </div>
+
+      <hr/>
+      <h4 style="margin-top:0;">All image collections by breeding program</h4>
+
+      <& /collection/collections_tree.mas, collection_type => 'image', instance_id => 'collections_tree_mi' &>
+
+    </div>
+  </div>
+</&>
+
+</div><!-- /container-fluid -->
+
+<!-- Simplified collection picker for "Add Selected Images to Collection" -->
+<div class="modal fade" id="mi_pick_collection_dialog" tabindex="-1" role="dialog">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal">&times;</button>
+        <h4 class="modal-title">Add Images to Collection</h4>
+      </div>
+      <div class="modal-body">
+
+        <div class="form-group">
+          <input type="text" class="form-control" id="mi_pick_collection_search"
+                 placeholder="Search your collections by name...">
+        </div>
+
+        <div id="mi_pick_collection_loading" class="text-muted" style="padding:10px;">
+          <span class="glyphicon glyphicon-refresh"></span> Loading collections&hellip;
+        </div>
+
+        <div id="mi_pick_collection_list" style="max-height:260px; overflow-y:auto;"></div>
+
+        <div id="mi_pick_collection_empty" class="text-muted" style="display:none; padding:10px;">
+          No collections found.
+        </div>
+
+        <hr/>
+        <a href="#" id="mi_pick_collection_show_create">
+          <span class="glyphicon glyphicon-plus"></span> Create a new collection
+        </a>
+
+        <div id="mi_pick_collection_create_block" style="display:none; margin-top:10px;">
+          <div class="form-group">
+            <input type="text" class="form-control" id="mi_pick_collection_new_name"
+                   placeholder="New collection name">
+          </div>
+          <button class="btn btn-default btn-sm" id="mi_pick_collection_create_button">
+            Create &amp; Add
+          </button>
+        </div>
+
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!--  Search & Add to Collection -->
+<&| /page/info_section.mas,
+    id          => 'manage_images_search',
+    title       => 'Search Images',
+    collapsible => 1,
+    collapsed   => 0,
+    subtitle    => 'Find images and add them to a collection'
+&>
+<div class="panel panel-default">
+<div class="panel-body">
+
+  <div id="manage_images_search_form" class="well well-sm">
+    <div class="form-horizontal">
+      <div class="form-group">
+        <label class="col-sm-4 control-label">Image descriptors (name, description, or filename): </label>
+        <div class="col-sm-8">
+          <input class="form-control" type="text" id="mi_image_description_filename_composite" placeholder="e.g. MyImageName" />
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="col-sm-4 control-label">Submitter: </label>
+        <div class="col-sm-8">
+          <input class="form-control" type="text" id="mi_image_submitter" placeholder="e.g. JaneDoe" />
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="col-sm-4 control-label">Associated stock: </label>
+        <div class="col-sm-8">
+          <input class="form-control" type="text" id="mi_image_stock_uniquename" placeholder="e.g. FieldPlot100" />
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="col-sm-4 control-label">Associated project: </label>
+        <div class="col-sm-8">
+          <input class="form-control" type="text" id="mi_image_project_name" placeholder="e.g. DroneProject 01/01/2019" />
+        </div>
+      </div>
+    </div>
+    <center>
+      <button class="btn btn-primary" id="mi_image_search_submit">Search</button>
+    </center>
+  </div>
+
+  <div id="mi_add_to_collection_bar" style="margin:10px 0; display:none;">
+    <button class="btn btn-success btn-sm" id="mi_add_selected_to_collection_button">
+      <span class="glyphicon glyphicon-plus"></span>
+      Add Selected Images to Collection (<span id="mi_selected_image_count">0</span>)
+    </button>
+    <button class="btn btn-default btn-sm" id="mi_clear_image_selection_button" style="margin-left:6px;">
+      Clear Selection
+    </button>
+  </div>
+
+  <table id="mi_images_search_results" class="table table-hover table-striped" style="width:100%;">
+    <thead>
+      <tr>
+        <th><input type="checkbox" id="mi_image_select_all" /></th>
+        <th>Image Thumbnail</th>
+        <th>Filename</th>
+        <th>Description</th>
+        <th>Submitter</th>
+        <th>Associations</th>
+        <th>Related Accession</th>
+        <th>Observations</th>
+      </tr>
+    </thead>
+  </table>
+
+</div>
+</div>
+</&>
+
+<!--  Image Analysis  -->
+<&| /page/info_section.mas,
+    id          => 'manage_images_analysis',
+    title       => 'Image Analysis',
+    collapsible => 1,
+    collapsed   => 0,
+    subtitle    => 'Extract trait measurements from images'
+&>
+  <div class="panel panel-default">
+    <div class="panel-body">
+
+      <p>
+        Analysis pipelines detect objects in an image and measure them. Each
+        detected object is stored as a <b>tissue sample</b>, and its
+        measurements are stored as <b>observations</b> on that sample, so
+        results flow into the same phenotype tables as field data.
+      </p>
+
+      <a class="btn btn-primary btn-sm" href="/tools/image_analysis" style="color: #fff;">
+        Start a new analysis
+      </a>
+
+      <hr/>
+      <h4 style="margin-top:0;">Recent Analysis Runs</h4>
+
+      <div id="recent_runs_loading" class="text-muted" style="padding:10px;">
+        <span class="glyphicon glyphicon-refresh"></span> Loading runs&hellip;
+      </div>
+
+      <table class="table table-hover table-condensed" id="recent_runs_table"
+             style="width:100%; display:none;">
+        <thead>
+          <tr>
+            <th>Run Name</th>
+            <th>Service</th>
+            <th>Date</th>
+            <th>Images</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+
+      <div id="recent_runs_empty" class="text-muted"
+           style="display:none; padding:10px;">
+        No image analysis runs have been saved yet.
+      </div>
+
+    </div>
+  </div>
+</&>
+
+
+
+<script>
+jQuery(document).ready(function () {
+
+    var PREVIEW_LIMIT = 8;
+
+    function esc(s) {
+        return jQuery('<div>').text(s == null ? '' : s).html();
+    }
+
+    function muted() { return '<span class="text-muted">&mdash;</span>'; }
+
+    // ---------------------------------------------- recent analysis runs
+    jQuery.ajax({
+        url:  '/ajax/image_analysis/runs',
+        type: 'GET',
+        data: { limit: PREVIEW_LIMIT },
+        success: function (response) {
+            jQuery('#recent_runs_loading').hide();
+
+            var runs = (response && response.runs) || [];
+            if (!runs.length) {
+                jQuery('#recent_runs_empty').show();
+                return;
+            }
+
+            var $tb = jQuery('#recent_runs_table tbody').empty();
+            runs.forEach(function (run) {
+                $tb.append(
+                    '<tr>' +
+                      '<td><a href="/image_analysis/run/' + esc(run.run_project_id) +
+                          '">' + esc(run.run_name) + '</a></td>' +
+                      '<td>' + (run.service_name ? esc(run.service_name) : muted()) + '</td>' +
+                      '<td>' + (run.run_date ? esc(run.run_date) : muted()) + '</td>' +
+                      '<td>' + (run.image_count != null ? esc(run.image_count) : muted()) + '</td>' +
+                    '</tr>'
+                );
+            });
+            jQuery('#recent_runs_table').show();
+        },
+        error: function () {
+            jQuery('#recent_runs_loading').hide();
+            jQuery('#recent_runs_empty')
+                .text('Could not load recent analysis runs.').show();
+        }
+    });
+
+    // ------------------------------------------------- recent collections
+    function loadRecentcollections() {
+        jQuery('#recent_collections_loading').show();
+        jQuery('#recent_collections_table').hide();
+        jQuery('#recent_collections_empty').hide();
+
+        jQuery.ajax({
+            url:  '/ajax/collection/list',
+            type: 'GET',
+            data: { collection_type: 'image' },
+            success: function (response) {
+                jQuery('#recent_collections_loading').hide();
+
+                if (response && response.error) {
+                    jQuery('#recent_collections_empty').text(response.error).show();
+                    return;
+                }
+
+                var collections = (response && response.collections) || [];
+                if (!collections.length) {
+                    jQuery('#recent_collections_empty').show();
+                    return;
+                }
+
+                // Newest first, then trim to the preview length.
+                collections.sort(function (a, b) {
+                    return (b.collection_id || 0) - (a.collection_id || 0);
+                });
+                var preview = collections.slice(0, PREVIEW_LIMIT);
+
+                var $tb = jQuery('#recent_collections_table tbody').empty();
+                preview.forEach(function (collection) {
+                    $tb.append(
+                        '<tr>' +
+                          '<td><a href="/collection/' + esc(collection.collection_id) +
+                              '">' + esc(collection.name) + '</a></td>' +
+                          '<td>' + (collection.username ? esc(collection.username) : muted()) + '</td>' +
+                          '<td>' + esc(collection.image_count) + '</td>' +
+                          '<td>' + (collection.create_date ? esc(collection.create_date) : muted()) + '</td>' +
+                        '</tr>'
+                    );
+                });
+                jQuery('#recent_collections_table').show();
+            },
+            error: function () {
+                jQuery('#recent_collections_loading').hide();
+                jQuery('#recent_collections_empty')
+                    .text('Could not load image collections.').show();
+            }
+        });
+    }
+
+    loadRecentcollections();
+
+    // ------------------------------------------------- create a collection
+    // Shared dialog from /collection/create_collection_modal.mas.
+    jQuery('#new_image_collection_button').click(function () {
+        window.create_collection_dialog_open('image');
+    });
+    jQuery('#new_image_collection_button_2').click(function () {
+        window.create_collection_dialog_open('image');
+    });
+
+        // ===================================================================
+    // 5. Search Images + Add Selected Images to Collection
+    // ===================================================================
+
+    var mi_selected_image_ids = new Set();
+    var mi_selected_image_labels = {};
+
+    function mi_esc(s) {
+        return jQuery('<div>').text(s == null ? '' : s).html();
+    }
+
+    function mi_update_selection_bar() {
+        var count = mi_selected_image_ids.size;
+        jQuery('#mi_selected_image_count').text(count);
+        jQuery('#mi_add_to_collection_bar').toggle(count > 0);
+    }
+
+    _load_mi_images_search_results();
+
+    jQuery('#mi_image_search_submit').click(function () {
+        _load_mi_images_search_results();
+    });
+
+    jQuery('#manage_images_search_form').keypress(function (e) {
+        var code = e.keyCode || e.which;
+        if (code === 13) {
+            e.preventDefault();
+            jQuery('#mi_image_search_submit').click();
+        }
+    });
+
+    // serverSide rebuilds the tbody on every page turn / search — reapply
+    // checked state for anything still selected, keep "select all" synced
+    // with what's visible, and re-bind colorbox since the old <a>
+    // elements are gone after each redraw.
+    jQuery('#mi_images_search_results').on('draw.dt', function () {
+        jQuery('input[name="mi_image_select"]').each(function () {
+            var id = parseInt(jQuery(this).val(), 10);
+            jQuery(this).prop('checked', mi_selected_image_ids.has(id));
+        });
+
+        var visible = jQuery('input[name="mi_image_select"]');
+        var all_checked = visible.length > 0 && visible.filter(':checked').length === visible.length;
+        jQuery('#mi_image_select_all').prop('checked', all_checked);
+
+        jQuery('a.image_search_group').colorbox({
+            photo: true,
+            onComplete: function () {
+                var titleWidth = jQuery('#cboxTitle').outerWidth(true);
+                jQuery.colorbox.resize({ width: (titleWidth + 500) + 'px' });
+            }
+        });
+    });
+
+    jQuery('#mi_images_search_results').on('change', 'input[name="mi_image_select"]', function () {
+        var id = parseInt(jQuery(this).val(), 10);
+        var filename_text = jQuery(this).closest('tr').find('td').eq(2).text().trim();
+
+        if (jQuery(this).is(':checked')) {
+            mi_selected_image_ids.add(id);
+            mi_selected_image_labels[id] = filename_text;
+        } else {
+            mi_selected_image_ids.delete(id);
+            jQuery('#mi_image_select_all').prop('checked', false);
+        }
+        mi_update_selection_bar();
+    });
+
+    jQuery('#mi_image_select_all').change(function () {
+        var checked = jQuery(this).is(':checked');
+        jQuery('input[name="mi_image_select"]').each(function () {
+            var id = parseInt(jQuery(this).val(), 10);
+            var filename_text = jQuery(this).closest('tr').find('td').eq(2).text().trim();
+            jQuery(this).prop('checked', checked);
+            if (checked) {
+                mi_selected_image_ids.add(id);
+                mi_selected_image_labels[id] = filename_text;
+            } else {
+                mi_selected_image_ids.delete(id);
+            }
+        });
+        mi_update_selection_bar();
+    });
+
+    jQuery('#mi_clear_image_selection_button').click(function () {
+        mi_selected_image_ids.clear();
+        mi_selected_image_labels = {};
+        jQuery('input[name="mi_image_select"]').prop('checked', false);
+        jQuery('#mi_image_select_all').prop('checked', false);
+        mi_update_selection_bar();
+    });
+
+    // ------------------------------------------------- collection picker
+
+    var mi_pick_all_collections = {};
+
+    function mi_render_collection_picker_list(filter_text) {
+        var $list = jQuery('#mi_pick_collection_list').empty();
+        var needle = (filter_text || '').toLowerCase();
+        var shown = 0;
+
+        Object.keys(mi_pick_all_collections).forEach(function (cid) {
+            var collection = mi_pick_all_collections[cid];
+            if (needle && collection.name.toLowerCase().indexOf(needle) === -1) { return; }
+            shown++;
+            $list.append(
+                '<div style="margin:6px 0; padding-bottom:6px; border-bottom:1px solid #eee; ' +
+                     'display:flex; justify-content:space-between; align-items:center;">' +
+                  '<div>' +
+                    '<strong>' + mi_esc(collection.name) + '</strong><br/>' +
+                    '<span class="text-muted" style="font-size:11px;">' +
+                      (collection.username ? mi_esc(collection.username) : 'unknown') +
+                      ' &middot; ' + (collection.image_count || 0) + ' images' +
+                    '</span>' +
+                  '</div>' +
+                  '<button class="btn btn-primary btn-xs mi_pick_collection_add_btn" ' +
+                          'data-collection-id="' + cid + '">Add</button>' +
+                '</div>'
+            );
+        });
+
+        jQuery('#mi_pick_collection_empty').toggle(shown === 0);
+    }
+
+    function mi_load_collection_picker(search_term) {
+        jQuery('#mi_pick_collection_loading').show();
+        jQuery('#mi_pick_collection_list').empty();
+
+        jQuery.ajax({
+            url: '/ajax/search/collections',
+            type: 'POST',
+            data: { name: search_term || '', length: 100, start: 0 }
+        }).done(function (response) {
+            jQuery('#mi_pick_collection_loading').hide();
+
+            if (response.error) {
+                jQuery('#mi_pick_collection_empty').text(response.error).show();
+                return;
+            }
+
+            // Only offer collections this user can actually modify —
+            // matches _require_edit_privileges server-side exactly, so no
+            // row shown here can be rejected by add_items.
+            mi_pick_all_collections = {};
+            (response.data || []).forEach(function (c) {
+                if (c.user_can_modify) { mi_pick_all_collections[c.collection_id] = c; }
+            });
+
+            mi_render_collection_picker_list(jQuery('#mi_pick_collection_search').val());
+        }).fail(function () {
+            jQuery('#mi_pick_collection_loading').hide();
+            jQuery('#mi_pick_collection_empty').text('Could not load collections.').show();
+        });
+    }
+
+    jQuery('#mi_add_selected_to_collection_button').click(function () {
+        if (!mi_selected_image_ids.size) { return; }
+        jQuery('#mi_pick_collection_search').val('');
+        jQuery('#mi_pick_collection_create_block').hide();
+        jQuery('#mi_pick_collection_new_name').val('');
+        mi_load_collection_picker('');
+        jQuery('#mi_pick_collection_dialog').modal('show');
+    });
+
+    jQuery('#mi_pick_collection_search').on('input', function () {
+        mi_load_collection_picker(jQuery(this).val());
+    });
+
+    jQuery('#mi_pick_collection_show_create').click(function (e) {
+        e.preventDefault();
+        jQuery('#mi_pick_collection_create_block').toggle();
+    });
+
+    jQuery('#mi_pick_collection_create_button').click(function () {
+        var name = jQuery('#mi_pick_collection_new_name').val();
+        if (!name || !name.replace(/\s/g, '').length) {
+            window.collection_notify_error('Please enter a collection name.');
+            return;
+        }
+        jQuery.ajax({
+            url: '/ajax/collection/create',
+            type: 'POST',
+            data: { name: name, collection_type: 'image' }
+        }).done(function (response) {
+            if (response.error) { window.collection_notify_error(response.error); return; }
+            mi_add_images_to_collection(response.collection_id, name);
+        }).fail(function () {
+            window.collection_notify_error('An error occurred creating the collection.');
+        });
+    });
+
+    jQuery('#mi_pick_collection_list').on('click', '.mi_pick_collection_add_btn', function () {
+        var collection_id = jQuery(this).data('collection-id');
+        var collection_name = mi_pick_all_collections[collection_id]
+            ? mi_pick_all_collections[collection_id].name
+            : ('#' + collection_id);
+        mi_add_images_to_collection(collection_id, collection_name);
+    });
+
+    function mi_add_images_to_collection(collection_id, collection_name) {
+        jQuery.ajax({
+            url: '/ajax/collection/add_items',
+            type: 'POST',
+            data: {
+                collection_id: collection_id,
+                item_type: 'image',
+                item_ids_json: JSON.stringify(Array.from(mi_selected_image_ids))
+            }
+        }).done(function (response) {
+            if (response.error) { window.collection_notify_error(response.error); return; }
+
+            jQuery('#mi_pick_collection_dialog').modal('hide');
+
+            var message = response.items_added + ' image(s) added to "' + collection_name + '".';
+            var duplicates = response.duplicate_ids || [];
+            if (duplicates.length) {
+                var labels = duplicates.map(function (id) {
+                    return mi_selected_image_labels[id] || ('#' + id);
+                });
+                message += '\n' + duplicates.length +
+                    ' image(s) were already in that collection and were not re-added:\n' +
+                    labels.join(', ');
+            }
+            window.collection_notify_success(message);
+
+            mi_selected_image_ids.clear();
+            mi_selected_image_labels = {};
+            jQuery('input[name="mi_image_select"]').prop('checked', false);
+            jQuery('#mi_image_select_all').prop('checked', false);
+            mi_update_selection_bar();
+        }).fail(function () {
+            window.collection_notify_error('An error occurred adding images to the collection.');
+        });
+    }
+
+});
+
+var mi_images_table;
+
+function _load_mi_images_search_results() {
+    mi_images_table = jQuery('#mi_images_search_results').DataTable({
+        'destroy'   : true,
+        'searching' : false,
+        'ordering'  : false,
+        'processing': true,
+        'serverSide': true,
+        'scrollX'   : true,
+        'lengthMenu': [10,20,50,100,1000,5000],
+        'ajax': { 'url':  '/ajax/search/images',
+            'type': 'POST',
+            'data': function(d) {
+              d.image_description_filename_composite = jQuery('#mi_image_description_filename_composite').val();
+              d.image_person = jQuery('#mi_image_submitter').val();
+              d.image_stock_uniquename = jQuery('#mi_image_stock_uniquename').val();
+              d.image_related_stock = jQuery('#mi_image_related_stock').val();
+              d.image_project_name = jQuery('#mi_image_project_name').val();
+              d.html_select_box = 'mi_image_select';
+            }
+        },
+        'columns': [
+            { 'data': 0, 'orderable': false, 'searchable': false },  // checkbox
+            { 'data': 1, 'orderable': false, 'searchable': false },  // thumbnail
+            { 'data': 2 },  // filename
+            { 'data': 3 },  // description
+            { 'data': 4 },  // submitter
+            { 'data': 5 },  // associations
+            { 'data': 6 },  // related accession
+            { 'data': 7 },  // observations
+        ]
+    });
+}
+</script>
