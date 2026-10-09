@@ -22,6 +22,8 @@ box filters nodes live.
 
 </%doc>
 
+<& /collection/message_modal.mas &>
+
 <%args>
 $collection_type => undef
 $instance_id => 'collections_tree'
@@ -68,9 +70,17 @@ my $instance = $instance_id;
 var <% $instance %>_ready = false;
 
 function <% $instance %>_collection_li(c) {
+    var counts;
+% if ($collection_type eq 'file') {
+    counts = c.file_count;
+% } elsif ($collection_type eq 'image') {
+    counts = c.image_count;
+% } else {
+    counts = (c.image_count || 0) + '/' + (c.file_count || 0);
+% }
     return '<li data-jstree=\'{"type":"collection"}\' id="collection_' + c.collection_id + '">' +
         '<a href="/collection/' + c.collection_id + '">' +
-        c.name + ' <span class="text-muted" style="font-size:11px;">(' + (c.image_count || 0) + ')</span></a>';
+        c.name + ' <span class="text-muted" style="font-size:11px;">(' + counts + ')</span></a>';
 }
 
 function <% $instance %>_project_li(p) {
@@ -150,7 +160,7 @@ function _load_<% $instance %>(refresh) {
         success: function (groups) {
             jQuery('#<% $instance %>_loading').hide();
             jQuery('#<% $instance %>').show();
-            if (groups && groups.error) { alert(groups.error); return; }
+            if (groups && groups.error) { window.collection_notify_error(groups.error); return; }
             _render_<% $instance %>(groups);
         },
         error: function () {

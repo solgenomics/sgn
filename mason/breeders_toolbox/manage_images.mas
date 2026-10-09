@@ -22,13 +22,15 @@ $user_can_modify => 1
 
 <& /util/import_javascript.mas, classes => [ 'jquery', 'jquery.dataTables', 'jstree.dist.jstree' ] &>
 <& /util/import_css.mas, paths => ['/documents/inc/datatables/jquery.dataTables.css', '/static/documents/inc/jstree_theme/jstree-bstheme-min.css'] &>
+<& /collection/message_modal.mas &>
 
 <& /page/page_title.mas, title => "Manage Images" &>
 <& /breeders_toolbox/upload_images.mas &>
+<& /collection/create_collection_modal.mas, default_type => 'image' &>
 
 <div class="container-fluid">
 
-<!-- ========================================= 1. About & Upload ======== -->
+<!--  About & Upload  -->
 <&| /page/info_section.mas,
     id          => 'manage_images_about',
     title       => 'Images in Breedbase',
@@ -106,7 +108,7 @@ $user_can_modify => 1
 </div>
 </&>
 
-<!-- ========================================= 4. Image collections ======== -->
+<!--  Image collections  -->
 <&| /page/info_section.mas,
     id          => 'manage_images_collections',
     title       => 'Image collections',
@@ -131,7 +133,7 @@ $user_can_modify => 1
 
 % if ($user_can_modify) {
       <button class="btn btn-primary btn-sm" id="new_image_collection_button">
-        <span class="glyphicon glyphicon-collection-close"></span> New Image collection
+        <span class="glyphicon glyphicon-plus"></span> New Image collection
       </button>
 % }
 
@@ -168,13 +170,7 @@ $user_can_modify => 1
 
       <hr/>
       <h4 style="margin-top:0;">All image collections by breeding program</h4>
-% if ($user_can_modify) {
-      <p>
-        <button class="btn btn-primary btn-sm" id="new_image_collection_button_2">
-          <span class="glyphicon glyphicon-plus"></span> New collection
-        </button>
-      </p>
-% }
+
       <& /collection/collections_tree.mas, collection_type => 'image', instance_id => 'collections_tree_mi' &>
 
     </div>
@@ -182,37 +178,6 @@ $user_can_modify => 1
 </&>
 
 </div><!-- /container-fluid -->
-
-<!-- New collection dialog -->
-<div class="modal fade" id="new_image_collection_dialog" tabindex="-1" role="dialog">
-  <div class="modal-dialog" role="document">
-    <div class="modal-content">
-      <div class="modal-header">
-        <button type="button" class="close" data-dismiss="modal">&times;</button>
-        <h4 class="modal-title">New Image collection</h4>
-      </div>
-      <div class="modal-body">
-        <div class="form-group">
-          <label for="new_collection_name_input">collection name</label>
-          <input type="text" class="form-control" id="new_collection_name_input">
-        </div>
-        <div class="form-group">
-          <label for="new_collection_description_input">Description</label>
-          <textarea class="form-control" id="new_collection_description_input"
-                    rows="2"></textarea>
-        </div>
-      </div>
-      <div class="modal-footer">
-        <button type="button" class="btn btn-default" data-dismiss="modal">
-          Cancel
-        </button>
-        <button type="button" class="btn btn-primary" id="new_collection_submit">
-          Create
-        </button>
-      </div>
-    </div>
-  </div>
-</div>
 
 <!-- Simplified collection picker for "Add Selected Images to Collection" -->
 <div class="modal fade" id="mi_pick_collection_dialog" tabindex="-1" role="dialog">
@@ -262,7 +227,7 @@ $user_can_modify => 1
   </div>
 </div>
 
-<!-- ===================================== 5. Search & Add to Collection ==== -->
+<!--  Search & Add to Collection -->
 <&| /page/info_section.mas,
     id          => 'manage_images_search',
     title       => 'Search Images',
@@ -336,7 +301,7 @@ $user_can_modify => 1
 </div>
 </&>
 
-<!-- ============================================ Image Analysis ==== -->
+<!--  Image Analysis  -->
 <&| /page/info_section.mas,
     id          => 'manage_images_analysis',
     title       => 'Image Analysis',
@@ -490,39 +455,12 @@ jQuery(document).ready(function () {
     loadRecentcollections();
 
     // ------------------------------------------------- create a collection
-    function mi_show_new_collection_dialog() {
-        jQuery('#new_collection_name_input').val('');
-        jQuery('#new_collection_description_input').val('');
-        jQuery('#new_image_collection_dialog').modal('show');
-    }
-
-    jQuery('#new_image_collection_button').click(mi_show_new_collection_dialog);
-    jQuery('#new_image_collection_button_2').click(mi_show_new_collection_dialog);
-
-    jQuery('#new_collection_submit').click(function () {
-        var name = jQuery('#new_collection_name_input').val();
-        if (!name || !name.replace(/\s/g, '').length) {
-            alert('Please enter a collection name.');
-            return;
-        }
-
-        jQuery.ajax({
-            url:  '/ajax/collection/create',
-            type: 'POST',
-            data: {
-                name:            name,
-                description:     jQuery('#new_collection_description_input').val(),
-                collection_type: 'image'
-            },
-            success: function (response) {
-                if (response.error) { alert(response.error); return; }
-                jQuery('#new_image_collection_dialog').modal('hide');
-                window.location.href = '/collection/' + response.collection_id;
-            },
-            error: function () {
-                alert('An error occurred creating the collection.');
-            }
-        });
+    // Shared dialog from /collection/create_collection_modal.mas.
+    jQuery('#new_image_collection_button').click(function () {
+        window.create_collection_dialog_open('image');
+    });
+    jQuery('#new_image_collection_button_2').click(function () {
+        window.create_collection_dialog_open('image');
     });
 
         // ===================================================================
@@ -701,7 +639,7 @@ jQuery(document).ready(function () {
     jQuery('#mi_pick_collection_create_button').click(function () {
         var name = jQuery('#mi_pick_collection_new_name').val();
         if (!name || !name.replace(/\s/g, '').length) {
-            alert('Please enter a collection name.');
+            window.collection_notify_error('Please enter a collection name.');
             return;
         }
         jQuery.ajax({
@@ -709,10 +647,10 @@ jQuery(document).ready(function () {
             type: 'POST',
             data: { name: name, collection_type: 'image' }
         }).done(function (response) {
-            if (response.error) { alert(response.error); return; }
+            if (response.error) { window.collection_notify_error(response.error); return; }
             mi_add_images_to_collection(response.collection_id, name);
         }).fail(function () {
-            alert('An error occurred creating the collection.');
+            window.collection_notify_error('An error occurred creating the collection.');
         });
     });
 
@@ -734,7 +672,7 @@ jQuery(document).ready(function () {
                 item_ids_json: JSON.stringify(Array.from(mi_selected_image_ids))
             }
         }).done(function (response) {
-            if (response.error) { alert(response.error); return; }
+            if (response.error) { window.collection_notify_error(response.error); return; }
 
             jQuery('#mi_pick_collection_dialog').modal('hide');
 
@@ -748,7 +686,7 @@ jQuery(document).ready(function () {
                     ' image(s) were already in that collection and were not re-added:\n' +
                     labels.join(', ');
             }
-            alert(message);
+            window.collection_notify_success(message);
 
             mi_selected_image_ids.clear();
             mi_selected_image_labels = {};
@@ -756,7 +694,7 @@ jQuery(document).ready(function () {
             jQuery('#mi_image_select_all').prop('checked', false);
             mi_update_selection_bar();
         }).fail(function () {
-            alert('An error occurred adding images to the collection.');
+            window.collection_notify_error('An error occurred adding images to the collection.');
         });
     }
 

@@ -1,0 +1,321 @@
+<%doc>
+
+=head1 NAME
+
+/collection/folder_picker.mas - single modal for adding item(s) to folders
+
+=head1 DESCRIPTION
+
+Include this ONCE per page. Every trigger button then calls:
+
+    folder_picker_open(item_type, [id1, id2, ...])
+
+For a single id: existing membership is fetched and pre-checked; Save adds
+newly-checked folders and removes unchecked ones (full diff).
+
+For multiple ids: membership is not fetched or shown, since with several
+items there's no single checkbox state that could represent it truthfully.
+Save only adds the selected folders; nothing is removed.
+
+=head1 ARGS
+
+  user_logged_in - whether folder creation is offered (default: 0)
+
+=head1 AUTHORS
+
+=cut
+
+</%doc>
+
+<%args>
+$user_logged_in => 0
+</%args>
+
+<& /collection/message_modal.mas &>
+
+<div class="modal fade" id="folder_picker_dialog" tabindex="-1" role="dialog">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal">&times;</button>
+        <h4 class="modal-title" id="folder_picker_title">Add to Folder</h4>
+      </div>
+      <div class="modal-body">
+
+        <div class="form-group">
+          <input type="text" class="form-control" id="folder_picker_search"
+                 placeholder="Search your folders...">
+        </div>
+
+        <div id="folder_picker_loading" class="text-muted" style="padding:10px;">
+          <span class="glyphicon glyphicon-refresh"></span> Loading folders&hellip;
+        </div>
+
+        <div id="folder_picker_list" style="max-height:260px; overflow-y:auto;"></div>
+
+        <div id="folder_picker_empty" class="text-muted" style="display:none; padding:10px;">
+          No folders yet.
+        </div>
+
+% if ($user_logged_in) {
+        <hr/>
+        <a href="#" id="folder_picker_show_create">
+          <span class="glyphicon glyphicon-plus"></span> Create a new folder
+        </a>
+
+        <div id="folder_picker_create_block" style="display:none; margin-top:10px;">
+          <div class="form-group">
+            <input type="text" class="form-control" id="folder_picker_new_name"
+                   placeholder="New folder name">
+          </div>
+          <div class="form-group">
+            <textarea class="form-control" id="folder_picker_new_description"
+                      rows="2" placeholder="Description (optional)"></textarea>
+          </div>
+          <button class="btn btn-default btn-sm" id="folder_picker_create_button">
+            Create &amp; Select
+          </button>
+        </div>
+% }
+
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+        <button type="button" class="btn btn-primary" id="folder_picker_save">Save</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+jQuery(document).ready(function () {
+
+    var current_item_type = null;
+    var current_item_ids  = [];
+    var all_folders = {};
+    var original_membership = {};   // only populated when current_item_ids.length === 1
+
+    function esc(s) {
+        return jQuery('<div>').text(s == null ? '' : s).html();
+    }
+
+    function isBulk() { return current_item_ids.length > 1; }
+
+    function renderFolderList(filter_text) {
+        var $list = jQuery('#folder_picker_list').empty();
+        var needle = (filter_text || '').toLowerCase();
+        var shown = 0;
+
+        Object.keys(all_folders).forEach(function (cid) {
+            var folder = all_folders[cid];
+            if (needle && folder.name.toLowerCase().indexOf(needle) === -1) { return; }
+            shown++;
+            var checked = (!isBulk() && original_membership[cid]) ? 'checked' : '';
+            $list.append(
+                '<div class="checkbox">' +
+                  '<label>' +
+                    '<input type="checkbox" class="folder_picker_checkbox" value="' + cid + '" ' + checked + '> ' +
+                    esc(folder.name) +
+                    ' <span class="text-muted" style="font-size:11px;">' +
+                      '(' + (folder.image_count || 0) + ' images, ' + (folder.file_count || 0) + ' files)' +
+                    '</span>' +
+                  '</label>' +
+                '</div>'
+            );
+        });
+
+        jQuery('#folder_picker_empty').toggle(shown === 0 && Object.keys(all_folders).length === 0);
+    }
+
+    function loadFolders() {
+        jQuery('#folder_picker_loading').show();
+        jQuery('#folder_picker_list').empty();
+
+        var requests = [
+            jQuery.ajax({ url: '/ajax/collection/list', type: 'GET', data: { mine_only: 1 } })
+        ];
+        if (!isBulk()) {
+            requests.push(jQuery.ajax({
+                url: '/ajax/collection/for_item',
+                type: 'GET',
+                data: { item_type: current_item_type, item_id: current_item_ids[0] }
+            }));
+        }
+
+        jQuery.when.apply(jQuery, requests).done(function () {
+            var results = requests.length === 1 ? [arguments[0]] : arguments;
+            jQuery('#folder_picker_loading').hide();
+
+            var list_data = results[0][0] || results[0];
+            if (list_data.error) {
+                jQuery('#folder_picker_empty').text(list_data.error).show();
+                return;
+            }
+
+            all_folders = {};
+            (list_data.collections || []).forEach(function (c) {
+                all_folders[c.collection_id] = c;
+            });
+
+            original_membership = {};
+            if (!isBulk()) {
+                var membership_data = results[1][0] || results[1];
+                (membership_data.collections || []).forEach(function (m) {
+                    original_membership[m.collection_id] = true;
+                });
+            }
+
+            renderFolderList('');
+        }).fail(function () {
+            jQuery('#folder_picker_loading').hide();
+            jQuery('#folder_picker_empty').text('Could not load folders.').show();
+        });
+    }
+
+    // ---------------------------------------------------------- public API
+    // Call this from any button, anywhere on the page:
+    //   folder_picker_open('image', [image_id])       -- single item
+    //   folder_picker_open('image', selected_ids)      -- bulk
+    window.folder_picker_open = function (item_type, item_ids) {
+        if (!item_ids || !item_ids.length) { return; }
+
+        current_item_type = item_type;
+        current_item_ids  = item_ids.slice();
+
+        var bulk = isBulk();
+        jQuery('#folder_picker_title').text(
+            bulk
+                ? 'Add ' + current_item_ids.length + ' ' + (item_type === 'image' ? 'Images' : 'Files') + ' to Folder'
+                : 'Add to Folder'
+        );
+        jQuery('#folder_picker_save').text(bulk ? 'Add' : 'Save');
+
+        jQuery('#folder_picker_search').val('');
+        jQuery('#folder_picker_create_block').hide();
+        jQuery('#folder_picker_new_name').val('');
+        jQuery('#folder_picker_new_description').val('');
+
+        loadFolders();
+        jQuery('#folder_picker_dialog').modal('show');
+    };
+    // ------------------------------------------------------------------
+
+    jQuery('#folder_picker_search').on('input', function () {
+        renderFolderList(jQuery(this).val());
+    });
+
+    jQuery('#folder_picker_show_create').click(function (e) {
+        e.preventDefault();
+        jQuery('#folder_picker_create_block').toggle();
+    });
+
+    jQuery('#folder_picker_create_button').click(function () {
+        var name = jQuery('#folder_picker_new_name').val();
+        if (!name || !name.replace(/\s/g, '').length) {
+            window.collection_notify_error('Please enter a folder name.');
+            return;
+        }
+
+        jQuery.ajax({
+            url: '/ajax/collection/create',
+            type: 'POST',
+            data: {
+                name:        name,
+                description: jQuery('#folder_picker_new_description').val()
+            },
+            success: function (response) {
+                if (response.error) { window.collection_notify_error(response.error); return; }
+
+                all_folders[response.collection_id] = {
+                    collection_id: response.collection_id,
+                    name: name, image_count: 0, file_count: 0
+                };
+                renderFolderList(jQuery('#folder_picker_search').val());
+                jQuery('#folder_picker_create_block').hide();
+                jQuery('#folder_picker_new_name').val('');
+                jQuery('#folder_picker_new_description').val('');
+
+                jQuery('#folder_picker_list input[value="' + response.collection_id + '"]')
+                    .prop('checked', true);
+            },
+            error: function () { window.collection_notify_error('An error occurred creating the folder.'); }
+        });
+    });
+
+    jQuery('#folder_picker_save').click(function () {
+        var checked_ids = [];
+        jQuery('.folder_picker_checkbox:checked').each(function () {
+            checked_ids.push(parseInt(jQuery(this).val(), 10));
+        });
+
+        if (isBulk()) {
+            if (!checked_ids.length) {
+                jQuery('#folder_picker_dialog').modal('hide');
+                return;
+            }
+            var add_requests = checked_ids.map(function (collection_id) {
+                return jQuery.ajax({
+                    url: '/ajax/collection/add_items',
+                    type: 'POST',
+                    data: {
+                        collection_id: collection_id,
+                        item_type:     current_item_type,
+                        item_ids_json: JSON.stringify(current_item_ids)
+                    }
+                });
+            });
+            jQuery.when.apply(jQuery, add_requests).done(function () {
+                jQuery('#folder_picker_dialog').modal('hide');
+                jQuery(document).trigger('folder_picker:items_added', [current_item_type, current_item_ids]);
+            }).fail(function () {
+                window.collection_notify_error('An error occurred adding items to folders.');
+            });
+            return;
+        }
+
+        // Single-item mode: full diff against original membership.
+        var to_add = checked_ids.filter(function (cid) { return !original_membership[cid]; });
+        var to_remove = Object.keys(original_membership)
+            .map(function (cid) { return parseInt(cid, 10); })
+            .filter(function (cid) { return checked_ids.indexOf(cid) === -1; });
+
+        if (!to_add.length && !to_remove.length) {
+            jQuery('#folder_picker_dialog').modal('hide');
+            return;
+        }
+
+        var requests = [];
+        to_add.forEach(function (collection_id) {
+            requests.push(jQuery.ajax({
+                url: '/ajax/collection/add_items', type: 'POST',
+                data: { collection_id: collection_id, item_type: current_item_type,
+                        item_ids_json: JSON.stringify(current_item_ids) }
+            }));
+        });
+        to_remove.forEach(function (collection_id) {
+            requests.push(jQuery.ajax({
+                url: '/ajax/collection/remove_items', type: 'POST',
+                data: { collection_id: collection_id, item_type: current_item_type,
+                        item_ids_json: JSON.stringify(current_item_ids) }
+            }));
+        });
+
+        jQuery.when.apply(jQuery, requests).done(function () {
+            var results = requests.length === 1 ? [arguments[0]] : arguments;
+            var errors = [];
+            jQuery.each(results, function (i, r) {
+                var resp = Array.isArray(r) ? r[0] : r;
+                if (resp && resp.error) { errors.push(resp.error); }
+            });
+
+            jQuery('#folder_picker_dialog').modal('hide');
+            if (errors.length) {
+                window.collection_notify_error('Some changes could not be saved:\n' + errors.join('\n'));
+            }
+            jQuery(document).trigger('folder_picker:items_added', [current_item_type, current_item_ids]);
+        }).fail(function () {
+            window.collection_notify_error('An error occurred saving folder changes.');
+        });
+    });
+});
+</script>
