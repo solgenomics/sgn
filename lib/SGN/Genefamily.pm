@@ -1,5 +1,5 @@
 
-=head1 NAME 
+=head1 NAME
 
 SGN::Genefamily - a class to deal with (currently disk-based) genefamilies for tomato annotation purposes
 
@@ -26,8 +26,7 @@ with 'MooseX::Object::Pluggable';
 use namespace::autoclean;
 use Data::Dumper;
 use File::Slurp qw/slurp/;
-use File::Spec qw | catfile |;
-use File::Spec::Functions;
+use File::Spec;
 use File::Basename qw/basename/;
 
 =head2 accessors genefamily_method()
@@ -124,7 +123,7 @@ has 'build' => (
 sub get_alignment {
     my $self = shift;
     my $file =
-      catfile( $self->get_path(), "alignments", $self->name() . ".fa.align" );
+      File::Spec->catfile( $self->get_path(), "alignments", $self->name() . ".fa.align" );
 
     if ( !-e $file ) {
         die "No alignment file available for family " . $self->name();
@@ -147,7 +146,7 @@ sub get_alignment {
 
 sub get_fasta {
     my $self = shift;
-    my $file = catfile( $self->get_path(), "fasta", $self->name() . ".fa" );
+    my $file = File::Spec->catfile( $self->get_path(), "fasta", $self->name() . ".fa" );
 
     print STDERR "Retrieving fasta file $file for family ".$self->name()."\n";
     unless( -f $file ) {
@@ -172,7 +171,7 @@ sub get_fasta {
 
 sub get_seqs {
     my $self = shift;
-    my $file = catfile( $self->get_path(), "fasta", $self->name() . ".fa" );
+    my $file = File::Spec->catfile( $self->get_path(), "fasta", $self->name() . ".fa" );
     if ( !-e $file ) {
         die "The fasta information for family "
           . $self->name()
@@ -200,7 +199,7 @@ sub get_seqs {
 sub get_tree {
     my $self = shift;
     my $file =
-      catfile( $self->get_path(), "/trees/" . $self->name() . ".tree" );
+      File::Spec->catfile( $self->get_path(), "/trees/" . $self->name() . ".tree" );
     if ( !-e $file ) {
         die "The tree information for family "
           . $self->name()
@@ -218,7 +217,7 @@ sub get_sequence {
     my $sequence = shift;
 
     my $file = File::Spec->catfile($self->get_path(), 'fasta', $self->name().".fa");
-    
+
     my @seqs = ();
     my $io = Bio::SeqIO->new( -format => 'fasta', -file => $file );
 
@@ -243,7 +242,7 @@ sub get_members {
     my $defs = File::Spec->catfile($self->get_path(), $self->genefamily_defs_file());
 
     print STDERR "Getting member info for family $family from file $defs\n";
-    
+
     open(my $F, "<", $defs) || die "Can't open gene families definition file at $defs";
 
     my @all_members;
@@ -252,15 +251,15 @@ sub get_members {
 
 	my ($family_name, @members) = split/\t/;
 
-	if ($family_name eq $family) { 
+	if ($family_name eq $family) {
 	    foreach my $m (@members) {
-		
+
 		my @species_members = split/\,/, $m;
 		foreach my $id (@species_members) {
 		    $id = '<a href="'.$self->sequence_link()."/".$self->build()."/$family/$id".'">'.$id."</a>";
 		}
 		@all_members = (@all_members, @species_members);
-	    }   
+	    }
 	}
     }
     return \@all_members;
@@ -286,7 +285,7 @@ sub get_available_builds {
 
 sub get_path {
     my $self = shift;
-    return catfile( $self->files_dir(), $self->build() );
+    return File::Spec->catfile( $self->files_dir(), $self->build() );
 }
 
 sub table {

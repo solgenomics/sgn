@@ -22,7 +22,7 @@ use Data::Dumper;
 use File::Basename;
 use File::Copy;
 use File::Slurp qw /write_file read_file/;
-use File::Spec::Functions;
+use File::Spec;
 use File::Path qw /make_path/;
 use JSON;
 use List::Util qw/any uniq all/;
@@ -289,7 +289,7 @@ sub prepare_response {
         my $diagnostics_file = $c->stash->{anova_diagnostics_file};
 
         my $trial_id = $c->stash->{trial_id};
-        my $trial_anova_dir = catdir('anova', 'trials', $trial_id);
+        my $trial_anova_dir = File::Spec->catdir('anova', 'trials', $trial_id);
         $anova_txt_file = $c->controller('solGS::Files')
           ->copy_to_tempfiles_subdir( $c, $anova_txt_file, $trial_anova_dir );
         $model_file = $c->controller('solGS::Files')
@@ -660,7 +660,7 @@ sub anova_trial_cache_dir {
 
     $trial_id = $c->stash->{trial_id} if !$trial_id;
 
-    my $cache_dir = catdir( $c->stash->{anova_dir}, $trial_id, 'cache' );
+    my $cache_dir = File::Spec->catdir( $c->stash->{anova_dir}, $trial_id, 'cache' );
     make_path($cache_dir, { mode => oct('0755') }) unless -d $cache_dir;
 
     return $cache_dir;
@@ -673,7 +673,7 @@ sub anova_trial_temp_dir {
 
     $trial_id = $c->stash->{trial_id} if !$trial_id;
 
-    my $temp_dir = catdir( $c->stash->{anova_dir}, $trial_id, 'tempfiles' );
+    my $temp_dir = File::Spec->catdir( $c->stash->{anova_dir}, $trial_id, 'tempfiles' );
     make_path($temp_dir, { mode => oct('0755') }) unless -d $temp_dir;
 
     return $temp_dir;
