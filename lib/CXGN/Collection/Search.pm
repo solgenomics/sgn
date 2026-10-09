@@ -145,6 +145,15 @@ has 'collection_type_list' => (
     is  => 'rw',
 );
 
+# Matches collections that CONTAIN a file whose basename or comment matches —
+# mirrors the image_name_list EXISTS behavior above, but against
+# metadata.md_files via md_collection_file. Obsolescence predicate uses
+# CXGN::Collection's $FILE_OBSOLETE_SQL so the two files can't drift.
+has 'file_name_list' => (
+    isa => 'ArrayRef[Str]|Undef',
+    is  => 'rw',
+);
+
 # Only collections with no project scoping at all.
 has 'standalone_only' => (
     isa     => 'Bool|Undef',
@@ -188,6 +197,11 @@ sub search {
     my $collection_type_list          = $self->collection_type_list;
     my $standalone_only               = $self->standalone_only;
     my $include_obsolete_collections  = $self->include_obsolete_collections;
+
+    my $file_obsolete_sql = $CXGN::Collection::FILE_OBSOLETE_SQL;
+    my $file_label_column = $CXGN::Collection::FILE_LABEL_COLUMN;
+
+    my $file_name_list = $self->file_name_list;
 
     my @where_clause;
     my @and_clause;
@@ -317,6 +331,22 @@ sub search {
         my $placeholders = join(",", ("?") x scalar(@$collection_type_list));
         push @where_clause, "collection.collection_type in ($placeholders)";
         push @question_mark_values, @$collection_type_list;
+    }
+
+    if ($file_name_list && scalar(@$file_name_list) > 0) {
+        foreach my $term (@$file_name_list) {
+            push @where_clause,
+                "EXISTS (SELECT 1 FROM metadata.md_collection_file AS fname_cf
+                          JOIN metadata.md_files AS fname_files
+                            ON (fname_files.file_id = fname_cf.file_id)
+                          LEFT JOIN metadata.md_metadata AS fname_fm
+                                 ON (fname_fm.metadata_id = fname_files.metadata_id)
+                         WHERE fname_cf.collection_id = collection.collection_id
+                           AND $file_obsolete_sql
+                           AND (fname_files.basename ilike ?
+                                 OR fname_files.comment ilike ?))";
+            push @question_mark_values, ('%' . $term . '%') x 2;
+        }
     }
 
     if (!$include_obsolete_collections) {

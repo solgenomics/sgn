@@ -97,6 +97,11 @@ sub collection_search_POST : Args(0) {
         push @image_name_list, $params->{image_name};
     }
 
+    my @file_name_list;
+    if (exists($params->{file_name}) && $params->{file_name}) {
+        push @file_name_list, $params->{file_name};
+    }
+
     my @image_descriptor_list;
     if (exists($params->{image_descriptor}) && $params->{image_descriptor}) {
         push @image_descriptor_list, $params->{image_descriptor};
@@ -134,6 +139,7 @@ sub collection_search_POST : Args(0) {
         description_list       => \@description_list,
         image_descriptor_list  => \@image_descriptor_list,
         image_name_list        => \@image_name_list,
+        file_name_list         => \@file_name_list,
         creator_username_list  => \@creator_username_list,
         sp_person_id_list      => \@sp_person_id_list,
         project_id_list        => \@project_id_list,

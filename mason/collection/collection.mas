@@ -4,11 +4,12 @@ $collection_type => undef
 
 <& /util/import_javascript.mas, classes => [ 'jquery', 'jquery.dataTables', 'jstree.dist.jstree' ] &>
 <& /util/import_css.mas, paths => ['/static/documents/inc/jstree_theme/jstree-bstheme-min.css'] &>
+<& /collection/message_modal.mas &>
 
 <& /page/page_title.mas, title => "Collection Search" &>
 
 <&| /page/info_section.mas, title=>"Browse Collections by Breeding Program",  collapsible => 1, collapsed=>0, subtitle => "Collections grouped by breeding program, then project. Double click a collection to open it."&>
-    <& /collection/collections_tree.mas, collection_type => $collection_type &>
+    <& /collection/collections_tree.mas, collection_type => $collection_type, instance_id => 'collections_tree_main' &>
 </&>
 
 <&| /page/info_section.mas, title=>"Collection Search Criteria",  collapsible => 1, collapsed=>0, subtitle => "Search collections by name, description, creator, or associated project."&>
@@ -37,6 +38,12 @@ $collection_type => undef
                 <label class="col-sm-6 control-label">Contains image (name or filename): </label>
                 <div class="col-sm-6" >
                     <input class="form-control" type="text" id="collection_image_name" name="collection_image_name" placeholder="e.g. gel_03.jpg" />
+                </div>
+            </div>
+            <div class="form-group">
+                <label class="col-sm-6 control-label">Contains file (name or comment): </label>
+                <div class="col-sm-6" >
+                    <input class="form-control" type="text" id="collection_file_name" name="collection_file_name" placeholder="e.g. phenotype_2026.xls" />
                 </div>
             </div>
             <div class="form-group">
@@ -86,40 +93,75 @@ $collection_type => undef
     </div>
 </&>
 
-<div class="modal fade" id="create_collection_dialog" tabindex="-1" role="dialog">
-  <div class="modal-dialog" role="document">
-    <div class="modal-content">
-      <div class="modal-header"><h4 class="modal-title">New Collection</h4></div>
-      <div class="modal-body">
-        <div class="form-group">
-          <label>Collection name</label>
-          <input type="text" class="form-control" id="new_collection_name">
+<&| /page/info_section.mas, title=>"Files",  collapsible => 1, collapsed=>0, subtitle => "Search files and add them to a file collection."&>
+    <div class="well well-sm">
+        <div class="panel panel-default">
+            <div class="panel-body">
+
+                <div class="row">
+                    <div class="col-sm-8">
+                        <div class="form-horizontal">
+                            <div class="form-group">
+                                <label class="col-sm-4 control-label">File name or comment: </label>
+                                <div class="col-sm-8">
+                                    <input class="form-control" type="text" id="file_search_term" placeholder="e.g. phenotype_2026.xls" />
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label class="col-sm-4 control-label">File type: </label>
+                                <div class="col-sm-8">
+                                    <input class="form-control" type="text" id="file_search_type" placeholder="e.g. trial_additional_file_upload" />
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label class="col-sm-4 control-label">Uploader: </label>
+                                <div class="col-sm-8">
+                                    <input class="form-control" type="text" id="file_search_uploader" placeholder="e.g. JaneDoe" />
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-sm-4">
+                        <center>
+                            <button class="btn btn-primary" id="file_search_submit">Search Files</button>
+                        </center>
+                    </div>
+                </div>
+
+                <div id="file_add_to_collection_bar" style="margin:10px 0; display:none;">
+                    <button class="btn btn-success btn-sm" id="file_add_selected_to_collection_button">
+                        <span class="glyphicon glyphicon-plus"></span>
+                        Add Selected Files to Collection (<span id="file_selected_count">0</span>)
+                    </button>
+                    <button class="btn btn-default btn-sm" id="file_clear_selection_button" style="margin-left:6px;">
+                        Clear Selection
+                    </button>
+                </div>
+
+                <table id="files_search_results" class="table table-hover table-striped" style="width:100%;">
+                    <thead>
+                      <tr>
+                        <th><input type="checkbox" id="file_select_all" /></th>
+                        <th>File Name</th>
+                        <th>Type</th>
+                        <th>Comment</th>
+                        <th>Uploader</th>
+                        <th>Added</th>
+                      </tr>
+                    </thead>
+                </table>
+
+                <hr/>
+                <h4 style="margin-top:0;">File collections by breeding program</h4>
+                <& /collection/collections_tree.mas, collection_type => 'file', instance_id => 'collections_tree_files' &>
+
+            </div>
         </div>
-        <div class="form-group">
-          <label>Collection type</label>
-          <select class="form-control" id="new_collection_type">
-            <option value="image">Image</option>
-            <option value="file">File</option>
-          </select>
-        </div>
-        <div class="form-group">
-          <label>Breeding program</label>
-          <select class="form-control" id="new_collection_breeding_program">
-            <option value="">No program</option>
-          </select>
-        </div>
-        <div class="form-group">
-          <label>Description</label>
-          <textarea class="form-control" id="new_collection_description" rows="2"></textarea>
-        </div>
-      </div>
-      <div class="modal-footer">
-        <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
-        <button type="button" class="btn btn-primary" id="create_collection_submit">Create</button>
-      </div>
     </div>
-  </div>
-</div>
+</&>
+
+<& /collection/add_files_to_collection_modal.mas &>
+<& /collection/create_collection_modal.mas, default_type => ($collection_type || 'image') &>
 
 <script>
 
@@ -137,16 +179,8 @@ jQuery(document).ready(function () {
         source: '/ajax/trials/trial_autocomplete'
     });
 
-    // Breeding program dropdown for the create dialog.
-    jQuery.ajax({
-        url: '/ajax/html/select/breeding_programs',
-        data: { id: 'new_collection_breeding_program', name: 'breeding_program', empty: '' },
-        success: function (response) {
-            var options = '<option value="">No program</option>' + response.select;
-            // Drop the helper's "Please select a program" entry, if present.
-            options = options.replace(/<option value="">Please select a program<\/option>/, '');
-            jQuery('#new_collection_breeding_program').html(options);
-        }
+    jQuery("#file_search_uploader").autocomplete({
+        source: '/ajax/people/autocomplete'
     });
 
     jQuery('#collection_search_submit').click( function() {
@@ -166,54 +200,116 @@ jQuery(document).ready(function () {
     });
 
     jQuery('#new_folder_button').click( function() {
-        jQuery('#new_collection_name').val('');
-        jQuery('#new_collection_description').val('');
-        jQuery('#new_collection_type').val('<% $collection_type || "image" %>');
-        jQuery('#create_collection_dialog').modal('show');
-    });
-
-    jQuery('#create_collection_submit').click( function() {
-        var name = jQuery('#new_collection_name').val();
-        if (!name || !name.trim()) {
-            alert('Please enter a folder name.');
-            return;
-        }
-        var data = {
-            name:        name,
-            description: jQuery('#new_collection_description').val(),
-            collection_type: jQuery('#new_collection_type').val()
-        };
-        var bp_id = jQuery('#new_collection_breeding_program').val();
-        if (bp_id) { data.breeding_program_id = bp_id; }
-        jQuery.ajax({
-            url: '/ajax/collection/create',
-            type: 'POST',
-            data: data,
-            success: function (response) {
-                if (response.error) { alert(response.error); return; }
-                jQuery('#create_collection_dialog').modal('hide');
-                window.location.href = '/collection/' + response.collection_id;
-            },
-            error: function () { alert('An error occurred creating the folder.'); }
-        });
+        window.create_collection_dialog_open('<% $collection_type || "image" %>');
     });
 
     jQuery('#collections_search_results').on('click', '.delete-collection-btn', function () {
         var id = jQuery(this).data('collection-id');
-        if (!confirm('Delete this folder? Its contents are not deleted.')) { return; }
-        jQuery.ajax({
-            url: '/ajax/collection/delete',
-            type: 'POST',
-            data: { collection_id: id },
-            success: function (r) {
-                if (r.error) { alert(r.error); return; }
-                collections_table.ajax.reload(null, false);
-            },
-            error: function () { alert('An error occurred deleting the folder.'); }
+        window.collection_confirm('Delete this folder? Its contents are not deleted.', function () {
+            jQuery.ajax({
+                url: '/ajax/collection/delete',
+                type: 'POST',
+                data: { collection_id: id },
+                success: function (r) {
+                    if (r.error) { window.collection_notify_error(r.error); return; }
+                    collections_table.ajax.reload(null, false);
+                },
+                error: function () { window.collection_notify_error('An error occurred deleting the folder.'); }
+            });
         });
     });
 
+    //  file search
+    // Mirrors the manage_images add-selected-to-collection flow: select
+    // files in the table, then add them to a collection via the picker.
+
+    var file_selected_ids = new Set();
+    var file_selected_labels = {};
+
+    function file_update_selection_bar() {
+        var count = file_selected_ids.size;
+        jQuery('#file_selected_count').text(count);
+        jQuery('#file_add_to_collection_bar').toggle(count > 0);
+    }
+
+    jQuery('#file_search_submit').click(function () {
+        _load_file_search_results();
+    });
+
+    jQuery('#file_search_term').keypress(function (e) {
+        var code = e.keyCode || e.which;
+        if (code === 13) {
+            e.preventDefault();
+            jQuery('#file_search_submit').click();
+        }
+    });
+
+    jQuery('#files_search_results').on('draw.dt', function () {
+        jQuery('input[name="file_select"]').each(function () {
+            var id = parseInt(jQuery(this).val(), 10);
+            jQuery(this).prop('checked', file_selected_ids.has(id));
+        });
+        var visible = jQuery('input[name="file_select"]');
+        var all_checked = visible.length > 0 && visible.filter(':checked').length === visible.length;
+        jQuery('#file_select_all').prop('checked', all_checked);
+    });
+
+    jQuery('#files_search_results').on('change', 'input[name="file_select"]', function () {
+        var id = parseInt(jQuery(this).val(), 10);
+        var name_text = jQuery(this).closest('tr').find('td').eq(1).text().trim();
+        if (jQuery(this).is(':checked')) {
+            file_selected_ids.add(id);
+            file_selected_labels[id] = name_text;
+        } else {
+            file_selected_ids.delete(id);
+            jQuery('#file_select_all').prop('checked', false);
+        }
+        file_update_selection_bar();
+    });
+
+    jQuery('#file_select_all').change(function () {
+        var checked = jQuery(this).is(':checked');
+        jQuery('input[name="file_select"]').each(function () {
+            var id = parseInt(jQuery(this).val(), 10);
+            var name_text = jQuery(this).closest('tr').find('td').eq(1).text().trim();
+            jQuery(this).prop('checked', checked);
+            if (checked) {
+                file_selected_ids.add(id);
+                file_selected_labels[id] = name_text;
+            } else {
+                file_selected_ids.delete(id);
+            }
+        });
+        file_update_selection_bar();
+    });
+
+    jQuery('#file_clear_selection_button').click(function () {
+        file_selected_ids.clear();
+        file_selected_labels = {};
+        jQuery('input[name="file_select"]').prop('checked', false);
+        jQuery('#file_select_all').prop('checked', false);
+        file_update_selection_bar();
+    });
+
+    jQuery('#file_add_selected_to_collection_button').click(function () {
+        if (!file_selected_ids.size) { return; }
+        jQuery('#files_add_to_collection_dialog').modal('show');
+    });
+
+    // Fired by add_files_to_collection_modal.mas after a successful add.
+    jQuery(document).on('files_add_to_collection:items_added', function () {
+        file_selected_ids.clear();
+        file_selected_labels = {};
+        jQuery('input[name="file_select"]').prop('checked', false);
+        jQuery('#file_select_all').prop('checked', false);
+        file_update_selection_bar();
+        _load_file_search_results();
+    });
+
 });
+
+var collections_table;
+var files_table;
 
 function _load_collection_search_results() {
     collections_table = jQuery('#collections_search_results').DataTable({
@@ -230,6 +326,7 @@ function _load_collection_search_results() {
               d.name = jQuery('#collection_name').val();
               d.description = jQuery('#collection_description').val();
               d.image_name = jQuery('#collection_image_name').val();
+              d.file_name = jQuery('#collection_file_name').val();
               d.creator_username = jQuery('#collection_creator').val();
               d.project_name = jQuery('#collection_project_name').val();
               d.mine_only = jQuery('#collection_mine_only').is(':checked') ? 1 : 0;
@@ -258,6 +355,38 @@ function _load_collection_search_results() {
                     ? '<button class="btn btn-danger btn-xs delete-collection-btn" data-collection-id="' + row.collection_id + '">Delete</button>'
                     : '';
             } }
+        ]
+    });
+}
+
+// Server-side checkbox column (html_select_box) like the image search;
+// rows are [checkbox, name, type, comment, uploader, added].
+function _load_file_search_results() {
+    files_table = jQuery('#files_search_results').DataTable({
+        'destroy'   : true,
+        'searching' : false,
+        'ordering'  : false,
+        'processing': true,
+        'serverSide': true,
+        'autoWidth' : false,
+        'scrollX'   : true,
+        'lengthMenu': [10,20,50,100,1000,5000],
+        'ajax': { 'url':  '/ajax/search/files',
+            'type': 'POST',
+            'data': function(d) {
+              d.file_name = jQuery('#file_search_term').val();
+              d.file_type = jQuery('#file_search_type').val();
+              d.file_uploader = jQuery('#file_search_uploader').val();
+              d.html_select_box = 'file_select';
+            }
+        },
+        'columns': [
+            { 'data': 0, 'orderable': false, 'searchable': false },
+            { 'data': 1 },
+            { 'data': 2 },
+            { 'data': 3 },
+            { 'data': 4 },
+            { 'data': 5 }
         ]
     });
 }
