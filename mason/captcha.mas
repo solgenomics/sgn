@@ -38,7 +38,7 @@
     loader.setAttribute("value", 0);
 
     // Initiate the captcha solve routine
-    const cap = new Cap({ apiEndpoint: "<% $config->{server} %>/<% $config->{client_id} %>" });
+    const cap = new Cap({ apiEndpoint: "<% $config->{frontend_server} || $config->{server} %>/<% $config->{client_id} %>" });
     cap.solve();
 
     // When the captcha has been solved...

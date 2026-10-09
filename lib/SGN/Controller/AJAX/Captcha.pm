@@ -29,11 +29,15 @@ sub captcha : Path("/ajax/captcha") Args(0) {
     my $config = $c->config->{captcha};
     my $ua = LWP::UserAgent->new;
 
+    # Set the server URL
+    # prefer the backend server url, fallback to server url
+    my $server = $config->{backend_server} || $config->{server};
+
     # Reset the cookie
     CXGN::Cookie::set_cookie('captcha-token', "");
 
     # Check the captcha config
-    if ( !defined $config || !defined $config->{server} || !defined $config->{client_id} || !defined $config->{client_secret} || !defined $config->{signing_key} ) {
+    if ( !defined $config || !defined $server || !defined $config->{client_id} || !defined $config->{client_secret} || !defined $config->{signing_key} ) {
         $c->stash->{rest} = { error => 'Missing server captcha config' };
         return;
     }
@@ -43,7 +47,7 @@ sub captcha : Path("/ajax/captcha") Args(0) {
         secret => $config->{client_secret},
         response => $token
     });
-    my $req = HTTP::Request->new(POST => $config->{server} . "/siteverify");
+    my $req = HTTP::Request->new(POST => $server . "/siteverify");
     $req->header('Content-Type' => 'application/json');
     $req->content($data);
     my $response = $ua->request($req);

@@ -37,7 +37,8 @@ around 'finalize' => sub {
         my $config = $c->config->{'captcha'};
 
         # Check for captcha token, only if the settings are enabled
-        if ( defined $config && defined $config->{server} && defined $config->{client_id} && defined $config->{client_secret} && defined $config->{signing_key} ) {
+        if ( defined $config && (defined $config->{server} || (defined $config->{backend_server} && defined $config->{frontend_server})) 
+                && defined $config->{client_id} && defined $config->{client_secret} && defined $config->{signing_key} ) {
             my $cookies = $c->req->cookies;
             my $cookie = $cookies->{'captcha-token'};
             my $cookie_value = $cookie ? $cookie->value : undef;
