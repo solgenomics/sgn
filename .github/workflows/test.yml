@@ -14,6 +14,7 @@ jobs:
         MODE: 'TESTING'
         SYSTEM: 'GITACTION'
         PGPASSWORD: postgres
+        PGUSER: postgres
         SGN_TEST_SERVER: http://test_breedbase:3010
         SGN_REMOTE_SERVER_ADDR: selenium
       volumes:
@@ -82,7 +83,7 @@ jobs:
           npm --version
 
       - name: Run unit tests
-        run: prove --recurse t/unit
+        run: prove --recurse t/unit 2>/dev/null
 
       - name: Load/dump fixture database and build node modules
         run: |
@@ -96,7 +97,7 @@ jobs:
       - name: Run unit_fixture tests
         # need entrypoint.sh to start slurm
         # --nopatch to skip running fixture and db patches (already done in previous step)
-        run: /entrypoint.sh --nopatch t/unit_fixture
+        run: /entrypoint.sh --nopatch t/unit_fixture 2>/dev/null
 
       - name: Run unit_mech tests
         run: /entrypoint.sh --nopatch t/unit_mech
@@ -104,7 +105,7 @@ jobs:
       # selenium tests for a moment as separate folders - will change once full solgs are ready
       # but anyway, it will is still fully functional for tests purpose
       - name: Run selenium tests 01_list
-        run: /entrypoint.sh --nopatch t/selenium2/01_list
+        run: /entrypoint.sh --nopatch t/selenium2/01_list 2>/dev/null
 
       - name: Run selenium tests 02_trial
         run: /entrypoint.sh --nopatch t/selenium2/02_trial 2>/dev/null
