@@ -2262,7 +2262,40 @@ function validate_interactive(response, type, list_id) {
             //return 0;
     	}
     	else {
-	    alert('List did not pass validation because of these items: '+missing.join(", "));
+	    var wc  = wrong_case || [];
+	    var mwc = multiple_wrong_case || [];
+
+	    // build lookups so we can split "missing" into real vs. case problems
+	    var wc_map = {};
+	    wc.forEach(function(p) { wc_map[p[0]] = p[1]; });
+
+	    var mwc_map = {};
+	    mwc.forEach(function(p) {
+		(mwc_map[p[0]] = mwc_map[p[0]] || []).push(p[1]);
+	    });
+
+	    var truly_missing = missing.filter(function(m) {
+		return !wc_map[m] && !mwc_map[m];
+	    });
+
+	    var msg = 'List did not pass validation.\n\n';
+
+	    if (truly_missing.length > 0) {
+		msg += 'Not found in the database:\n    ' + truly_missing.join(', ') + '\n\n';
+	    }
+	    if (wc.length > 0) {
+		msg += 'Wrong case - change these in your list to match the database exactly:\n';
+		wc.forEach(function(p) { msg += '    ' + p[0] + '  to  ' + p[1] + '\n'; });
+		msg += '\n';
+	    }
+	    if (mwc.length > 0) {
+		msg += 'Matches more than one entry by case - fix the spelling manually:\n';
+		Object.keys(mwc_map).forEach(function(k) {
+		    msg += '    ' + k + '  to  ' + mwc_map[k].join(' / ') + '\n';
+		});
+	    }
+
+	    alert(msg);
 	    return 1;
     	}
     }

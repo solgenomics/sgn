@@ -506,11 +506,10 @@ sub _validate_with_plugin {
   ## TRIAL NAMES OVERALL VALIDATION
   my @trial_names = keys %seen_trial_names;
   my @already_used_trial_names;
-  my @missing_trial_names = @{$validator->validate($schema,'trials',\@trial_names)->{'missing'}};
-  my %unused_trial_names = map { $missing_trial_names[$_] => $_ } 0..$#missing_trial_names;
-
+  my %existing_trial_names = map { $_->name => 1 }
+      $schema->resultset('Project::Project')->search({ name => { -in => \@trial_names } })->all;
   foreach my $name (@trial_names) {
-      push(@already_used_trial_names, $name) unless exists $unused_trial_names{$name};
+      push(@already_used_trial_names, $name) if exists $existing_trial_names{$name};
   }
   if (scalar(@already_used_trial_names) > 0) {
     # $errors{'invalid_trial_names'} = \@already_used_trial_names;
