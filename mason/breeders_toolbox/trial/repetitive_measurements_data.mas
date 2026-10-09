@@ -122,6 +122,11 @@ jQuery(document).ready(function() {
 
     jQuery('#repetitive_measurement_select_button').click(function(event) {
         event.preventDefault();
+        var end_date = jQuery('#repetitive_measurement_end_date').val();
+        if (!end_date) {
+            alert('Please select an end date to view repetitive measurements.');
+            return;
+        }
         jQuery('#working_modal').modal('show');
 
         if (!selectedTraitId) { 
@@ -130,7 +135,6 @@ jQuery(document).ready(function() {
 
         //console.log("check updated trait ID:", selectedTraitId);
         var repetitive_start_date = jQuery('#repetitive_measurement_start_date').val();
-        var end_date = jQuery('#repetitive_measurement_end_date').val();
         
         //add an extra day to make all the range inclusive !!!
         var repetitive_endDate = new Date(end_date);
@@ -155,8 +159,11 @@ jQuery(document).ready(function() {
     jQuery.ajax({
         'url': '/ajax/breeders/trial/'+ trial_id + '/collect_date_range',
     }).done(function(data) {
-        var repetitive_startDate = new Date(data.start_date).toISOString().split('T')[0];
-        var repetitive_endDate = new Date(data.end_date).toISOString().split('T')[0];
+        if (!data.start_date || !data.end_date) { return; }
+        // collect dates are 'YYYY-MM-DD HH:MM:SS' without time zone: keep the calendar day, because
+        // new Date(...).toISOString() converts local time to UTC and can move it by one day
+        var repetitive_startDate = data.start_date.split(' ')[0];
+        var repetitive_endDate = data.end_date.split(' ')[0];
         jQuery('#repetitive_measurement_start_date').val(repetitive_startDate);
         jQuery('#repetitive_measurement_end_date').val(repetitive_endDate);
 
@@ -172,7 +179,7 @@ jQuery(document).ready(function() {
             		format: 'YYYY-MM-DD'
             	}
             },function (start) {
-                var new_start_date = new Date(start).getTime();
+                var new_start_date = new Date(start.format('YYYY-MM-DD')).getTime();
                 var new_end_date = new Date(jQuery('#repetitive_measurement_end_date').val()).getTime();
                 //alert("the start date is : new_start_date");
                 //alert("the end date is: new_end_date");
@@ -193,7 +200,7 @@ jQuery(document).ready(function() {
         	    },
             }, function (end) {
                 var new_start_date = new Date(jQuery('#repetitive_measurement_start_date').val()).getTime();
-                var new_end_date = new Date(end).getTime();
+                var new_end_date = new Date(end.format('YYYY-MM-DD')).getTime();
                 //console.log("the start date in the end_date section is : new_start_date");
                 //console.log("the end date  in the  end_date section is: new_end_date");
                 jQuery('#repetitive_slider_range').slider('values', [new_start_date, new_end_date]);
