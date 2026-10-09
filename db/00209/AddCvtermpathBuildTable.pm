@@ -62,7 +62,7 @@ sub patch {
 
     my $schema = Bio::Chado::Schema->connect( sub { $self->dbh->clone } );
 
-    my $dbuser = $self->dbuser;
+    my $dbuser = 'web_usr';
 
     $self->dbh->do(<<EOSQL);
 CREATE TABLE public.cvtermpath_build(

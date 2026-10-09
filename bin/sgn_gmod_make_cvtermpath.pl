@@ -77,13 +77,16 @@ a transative closure is, please see:
 
   http://www.geneontology.org/GO.database.shtml#graphs
 
+This is a fork of gmod_make_cvtermpaths.pl, originally written by Naama Menda. 
+
 =head1 AUTHOR
 
 Naama Menda <nm249@cornell.edu>
+Ryan Preble <rsp98@cornell.edu>
 
 =head1 VERSION AND DATE
 
-Version 1.2, Feb. 2011.
+Version 1.0, Oct. 2026
 
 =cut
 
