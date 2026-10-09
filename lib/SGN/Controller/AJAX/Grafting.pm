@@ -100,12 +100,13 @@ sub upload_grafts_verify : Path('/ajax/grafts/upload_verify') Args(0)  {
 	timestamp => $timestamp,
 	user_id => $user_id,
 	user_role => $user_role,
+	metadata_schema => $c->dbic_schema("CXGN::Metadata::Schema"),
     };
-    
+
     my $uploader = CXGN::UploadFile->new( $params );
-    
+
     my %upload_metadata;
-    my $archived_filename_with_path = $uploader->archive();
+    my ($archived_file_id, $archived_filename_with_path) = $uploader->archive();
     
     if (!$archived_filename_with_path) {
 	$c->stash->{rest} = {error => "Could not save file $upload_original_name in archive",};
