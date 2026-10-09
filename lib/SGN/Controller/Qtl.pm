@@ -8,7 +8,7 @@ package SGN::Controller::Qtl;
 
 use Moose;
 use namespace::autoclean;
-use File::Spec::Functions;
+use File::Spec;
 use List::MoreUtils qw /uniq/;
 use File::Temp qw / tempfile /;
 use File::Path qw / mkpath  /;
@@ -45,7 +45,8 @@ sub population : Path('/qtl/population') Args(1) {
             my $phenotype_file = $pop->phenotype_file($c);
             my $genotype_file =  $pop->genotype_file($c);
 
-            my $userid = $c->user->get_object->get_sp_person_id if $c->user;          
+            my $userid;
+            $userid = $c->user->get_object->get_sp_person_id if $c->user;
             $c->stash(template     => '/qtl/population/index.mas',                              
                       pop          => $pop, 
                       referer      => $c->req->path,             
@@ -86,7 +87,11 @@ sub download_phenotype : Path('/qtl/download/phenotype') Args(1) {
     
         unless (!-e $phenotype_file || -s $phenotype_file <= 1)
         {        
-            my @pheno_data = map {   s/,/\t/g; [ $_ ]; } read_file($phenotype_file);
+            my @pheno_data = map {
+                my $line = $_;
+                $line =~ s/,/\t/g;
+                [ $line ];
+            } read_file($phenotype_file);
             
             $c->res->content_type("text/plain");
             $c->res->body(join "",  map{ $_->[0]} @pheno_data);        
@@ -112,7 +117,11 @@ sub download_genotype : Path('/qtl/download/genotype') Args(1) {
        
         unless (!-e $genotype_file || -s $genotype_file <= 1)
         {
-            my @geno_data = map { s/,/\t/g; [ $_ ]; } read_file($genotype_file);
+            my @geno_data = map {
+                my $line = $_;
+                $line =~ s/,/\t/g;
+                [ $line ];
+            } read_file($genotype_file);
             
             $c->res->content_type("text/plain");
             $c->res->body(join "",  map{ $_->[0]} @geno_data);   
@@ -133,7 +142,7 @@ sub download_correlation : Path('/qtl/download/correlation') Args(1) {
     if ($c->stash->{is_qtl_pop})
     {
     
-        my $corr_file = catfile($c->path_to($c->config->{cluster_shared_tempdir}), 'correlation', 'cache',  "corre_coefficients_table_${id}");
+        my $corr_file = File::Spec->catfile($c->path_to($c->config->{cluster_shared_tempdir}), 'correlation', 'cache',  "corre_coefficients_table_${id}");
        
         unless (!-e $corr_file || -s $corr_file <= 1) 
         {
@@ -187,12 +196,12 @@ sub _analyze_correlation  {
     my $base_path       = $c->config->{basepath};
     my $temp_image_dir  = $c->config->{tempfiles_subdir};
     my $r_qtl_dir       = $c->config->{solqtl};
-    my $corre_image_dir = catfile($base_path, $temp_image_dir, "correlation");
-    my $corre_temp_dir  = catfile($r_qtl_dir, "cache");
+    my $corre_image_dir = File::Spec->catfile($base_path, $temp_image_dir, "correlation");
+    my $corre_temp_dir  = File::Spec->catfile($r_qtl_dir, "cache");
     
     if (-s $pheno_file) 
     {
-        mkpath ([$corre_temp_dir, $corre_image_dir], 0, 0755);  
+        mkpath ([$corre_temp_dir, $corre_image_dir], 0, oct('0755'));
     
         my ($fh_hm, $heatmap_file)     = tempfile( "heatmap_${pop_id}-XXXXXX",
                                                   DIR      => $corre_temp_dir,
@@ -290,7 +299,7 @@ sub _correlation_output {
     my $pop             = $c->{stash}->{pop};
     my $base_path       = $c->config->{basepath};
     my $temp_image_dir  = $c->config->{tempfiles_subdir};   
-    my $corre_image_dir = catfile($base_path, $temp_image_dir, "correlation");
+    my $corre_image_dir = File::Spec->catfile($base_path, $temp_image_dir, "correlation");
     my $cache           = Cache::File->new( cache_root  => $corre_image_dir);
     $cache->purge();
 
@@ -442,7 +451,8 @@ sub _get_owner_details {
 sub _show_data {
     my ($self, $c) = @_;
     my $user_id    = $c->stash->{userid};
-    my $user_type  = $c->user->get_object->get_user_type() if $c->user;
+    my $user_type;
+    $user_type = $c->user->get_object->get_user_type() if $c->user;
     my $is_public  = $c->stash->{pop}->get_privacy_status();
     my $owner_id   = $c->stash->{pop}->get_sp_person_id();
     
@@ -486,13 +496,14 @@ sub set_stat_option : PathPart('qtl/stat/option') Chained Args(0) {
 
 sub stat_options_file {
     my ($self, $c, $pop_id) = @_;
-    my $login_id            = $c->user()->get_object->get_sp_person_id() if $c->user;
+    my $login_id;
+    $login_id = $c->user()->get_object->get_sp_person_id() if $c->user;
     
     if ($login_id) 
     {
         my $qtl = CXGN::Phenome::Qtl->new($login_id);
         my ($temp_qtl_dir, $temp_user_dir) = $qtl->create_user_qtl_dir($c);
-        return  catfile( $temp_user_dir, "stat_options_pop_${pop_id}.txt" );
+        return  File::Spec->catfile( $temp_user_dir, "stat_options_pop_${pop_id}.txt" );
     }
     else 
     {
@@ -504,7 +515,8 @@ sub stat_options_file {
 sub qtl_form : PathPart('qtl/form') Chained Args {
     my ($self, $c, $type, $pop_id) = @_;  
     
-    my $userid = $c->user()->get_object->get_sp_person_id() if $c->user;
+    my $userid;
+    $userid = $c->user()->get_object->get_sp_person_id() if $c->user;
     
     unless ($userid) 
     {
@@ -640,7 +652,7 @@ sub mark_qtl_traits {
     
     if (!$rs->single) 
     {
-        return undef;
+        return;
     }
     else 
     {  

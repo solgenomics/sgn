@@ -5,7 +5,7 @@ use Moose;
 
 use Data::Dumper;
 use File::Slurp;
-use File::Spec qw | catfile |;
+use File::Spec;
 use File::Path qw(rmtree);
 use JSON::Any;
 use File::Basename qw | basename |;
@@ -49,10 +49,10 @@ sub prepare: Path('/ajax/qualitycontrol/prepare') Args(0) {
     $ds_json->retrieve_traits();
     my $ds_traits = $ds_json->traits();
 
-    
+
     # Print extracted traits
     if ($ds_traits && @$ds_traits) {
-       
+
         my $ds = CXGN::Dataset::File->new(people_schema => $people_schema, schema => $schema, sp_dataset_id => $dataset_id, exclude_dataset_outliers => 1, file_name => $temppath, quotes => 0);
         $ds->retrieve_phenotypes();
         my $pf = CXGN::Phenotypes::File->new( { file => $temppath."_phenotype.txt" });
@@ -111,7 +111,7 @@ sub extract_trait_data :Path('/ajax/qualitycontrol/grabdata') Args(0) {
         chomp;
         my @fields = split "\t";
         my %line = ();
-        
+
         for (my $n = 0; $n < @keys; $n++) {
             if (exists($fields[$n]) && defined($fields[$n])) {
                 $line{$keys[$n]} = $fields[$n];
@@ -121,7 +121,7 @@ sub extract_trait_data :Path('/ajax/qualitycontrol/grabdata') Args(0) {
             push @data, \%line;
         }
     }
-    
+
     my %unique_names;
     foreach my $entry (@data) {
         if (defined $entry->{'studyName'} && $entry->{'studyName'} ne '') {
@@ -130,15 +130,15 @@ sub extract_trait_data :Path('/ajax/qualitycontrol/grabdata') Args(0) {
     }
 
     # Format the unique project names for the SQL query
-    
+
     $trait =~ s/\|.*//;
     my $trait_like = $trait . '%';
-    
+
     my $project_names = join(", ", map { "'$_'" } keys %unique_names);
 
     my $trait_sql = qq{
         select project."name" from projectprop
-        join project on project.project_id = projectprop.project_id 
+        join project on project.project_id = projectprop.project_id
         where projectprop.type_id = (select cvterm_id from cvterm where cvterm."name" = 'validated_phenotype')
         and project.name in ($project_names)
         and projectprop.value like '$trait_like'
@@ -205,7 +205,7 @@ sub data_restore :Path('/ajax/qualitycontrol/datarestore') Args(0) {
         chomp;
         my @fields = split "\t";
         my %line = ();
-        
+
         for (my $n = 0; $n < @keys; $n++) {
             if (exists($fields[$n]) && defined($fields[$n])) {
                 $line{$keys[$n]} = $fields[$n];
@@ -225,7 +225,7 @@ sub data_restore :Path('/ajax/qualitycontrol/datarestore') Args(0) {
 
     # Format the unique project names for the SQL query
     my $project_names = join(", ", map { "'$_'" } keys %unique_names);
-    
+
     $c->stash->{rest} = { data => $project_names, trait => $trait};
 }
 
@@ -246,7 +246,7 @@ sub store_outliers : Path('/ajax/qualitycontrol/storeoutliers') Args(0) {
 
     # Retrieve and decode the outliers from the request
     my $outliers_string = $c->req->param('outliers');
-    
+
     # Now proceed to decode JSON
     my $outliers_data = decode_json($outliers_string);
     my $main_trait = $c->req->param('trait');
@@ -255,14 +255,14 @@ sub store_outliers : Path('/ajax/qualitycontrol/storeoutliers') Args(0) {
     my %study_names;
     my $trait;
 
-    my $othertraits_json = $c->req->param('othertraits');  
+    my $othertraits_json = $c->req->param('othertraits');
     my $othertraits = decode_json($othertraits_json);
 
     # Remove duplicates using a hash
     my %unique_traits = map { $_ => 1 } @$othertraits;
     my @unique_othertraits = keys %unique_traits;
 
-    foreach my $entry (@$outliers_data) { 
+    foreach my $entry (@$outliers_data) {
         $trait = $entry->{trait};  # Directly use the trait from the entry
         my $study_name = $entry->{studyName};
         $study_names{$study_name} = 1 if defined $study_name;
@@ -273,7 +273,7 @@ sub store_outliers : Path('/ajax/qualitycontrol/storeoutliers') Args(0) {
         $trait_ids{$sel_trait} = SGN::Model::Cvterm->get_cvterm_row_from_trait_name($schema, $sel_trait)->cvterm_id;
     }
 
-        
+
     $main_trait =~ s/\|.*//;
     my $trait_operator = $main_trait."|".$operator;
 
@@ -286,7 +286,7 @@ sub store_outliers : Path('/ajax/qualitycontrol/storeoutliers') Args(0) {
     # Add validated traits to projectprop
     my $trial_sql = qq{
         INSERT INTO projectprop (project_id, type_id, value, rank)
-        SELECT 
+        SELECT
             p.project_id,
             (SELECT cvterm_id FROM cvterm WHERE name = 'validated_phenotype'),
             '$trait_operator',
@@ -315,11 +315,11 @@ sub store_outliers : Path('/ajax/qualitycontrol/storeoutliers') Args(0) {
 
     print("here are plots:\n");
     print Dumper \@plot_names;
-    
+
     # Proceed only if there are outliers
     if (@plot_names) {
         # Extract plot names from the outliers data
-        
+
 
         my @unique_trait_ids = grep { !$seen{$_}++ } values %trait_ids;
         my $trait_ids_sql    = join(", ", @unique_trait_ids);
@@ -331,16 +331,16 @@ sub store_outliers : Path('/ajax/qualitycontrol/storeoutliers') Args(0) {
             # SQL Query to insert outliers
             my $outlier_data_sql = "
                 INSERT INTO phenotypeprop (phenotype_id, type_id, value)
-                SELECT phenotype.phenotype_id, 
-                       cvterm_outlier.cvterm_id, 
+                SELECT phenotype.phenotype_id,
+                       cvterm_outlier.cvterm_id,
                        phenotype.value
                 FROM phenotype
-                JOIN nd_experiment_phenotype 
-                    ON nd_experiment_phenotype.phenotype_id = phenotype.phenotype_id 
-                JOIN nd_experiment_stock 
-                    ON nd_experiment_stock.nd_experiment_id = nd_experiment_phenotype.nd_experiment_id 
-                JOIN stock 
-                    ON stock.stock_id = nd_experiment_stock.stock_id 
+                JOIN nd_experiment_phenotype
+                    ON nd_experiment_phenotype.phenotype_id = phenotype.phenotype_id
+                JOIN nd_experiment_stock
+                    ON nd_experiment_stock.nd_experiment_id = nd_experiment_phenotype.nd_experiment_id
+                JOIN stock
+                    ON stock.stock_id = nd_experiment_stock.stock_id
                 LEFT JOIN phenotypeprop existing_prop
                     ON existing_prop.phenotype_id = phenotype.phenotype_id
                     AND existing_prop.type_id = (SELECT cvterm_id FROM cvterm WHERE name = 'phenotype_outlier')
@@ -348,7 +348,7 @@ sub store_outliers : Path('/ajax/qualitycontrol/storeoutliers') Args(0) {
                 WHERE stock.uniquename IN ($plot_names_sql)
                 AND nd_experiment_stock.type_id = $experiment_type
                 AND phenotype.observable_id IN ($trait_ids_sql)
-                AND existing_prop.phenotype_id IS NULL;";  
+                AND existing_prop.phenotype_id IS NULL;";
 
 
             # If curator flag is set, execute the second query
@@ -364,7 +364,7 @@ sub store_outliers : Path('/ajax/qualitycontrol/storeoutliers') Args(0) {
     $c->stash->{rest} = $response_data;
 
 
-    
+
     ## celaning tempfiles
     rmtree(File::Spec->catfile($c->config->{basepath}, "static/documents/tempfiles/qualitycontrol"));
 }
@@ -376,15 +376,15 @@ sub restore_outliers : Path('/ajax/qualitycontrol/restoreoutliers') Args(0) {
     my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
     my $schema = $c->dbic_schema("Bio::Chado::Schema", undef, $sp_person_id);
     my @user_roles = $c->user()->roles;
-    
+
     my $curator = (grep { $_ eq 'curator' } @user_roles) ? 'curator' : undef;
-    
+
 
     # Retrieve and decode the outliers from the request
     my $outliers_string = $c->req->param('outliers');
     my $outlier_trials;
     $outlier_trials = decode_json($outliers_string);
-    
+
     # getting trait name
     my $trait = $c->req->param('trait');
     $trait =~ s/\|.*//;
@@ -424,8 +424,8 @@ sub restore_outliers : Path('/ajax/qualitycontrol/restoreoutliers') Args(0) {
             AND pr.name IN ($outlier_trials)
         );
     };
-    
-    
+
+
 
     # Execute the SQL query
     if ($curator eq 'curator'){

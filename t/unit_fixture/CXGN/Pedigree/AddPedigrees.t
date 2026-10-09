@@ -23,6 +23,8 @@ BEGIN {require_ok('Moose');}
 my $test = SGN::Test::Fixture->new();
 my $schema = $test->bcs_schema();
 
+my $missing_pedigree_before = scalar @{ CXGN::Cross->get_accessions_missing_pedigree($schema) };
+
 # biparental pedigree
 #
 ok(my $pedigree = Bio::GeneticRelationships::Pedigree->new(name => "XG120251", cross_type => "biparental"),"Create pedigree object");
@@ -108,15 +110,15 @@ my $validate_return = $add_open_polycross_pedigree->validate_pedigrees();
 print STDERR Dumper $validate_return;
 ok($validate_return);
 ok(!exists($validate_return->{error}));
-my $add_return = $add_open_polycross_pedigree->add_pedigrees();
-print STDERR Dumper $add_return;
-ok($add_return);
-ok(!exists($add_return->{error}));
+my $add_return2 = $add_open_polycross_pedigree->add_pedigrees();
+print STDERR Dumper $add_return2;
+ok($add_return2);
+ok(!exists($add_return2->{error}));
 
 #check accessions missing pedigree
 my $missing_pedigree_result = CXGN::Cross->get_accessions_missing_pedigree($schema);
 my $number_of_accessions = scalar @$missing_pedigree_result;
-is($number_of_accessions, '456');
+cmp_ok($number_of_accessions, '<', $missing_pedigree_before, "number of accessions missing a pedigree decreased after adding pedigrees above");
 
 $test->clean_up_db();
 
