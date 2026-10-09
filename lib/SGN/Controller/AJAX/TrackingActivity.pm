@@ -25,10 +25,9 @@ use CXGN::Stock::Status;
 use File::Basename qw | basename dirname|;
 use File::Copy;
 use File::Slurp;
-use File::Spec::Functions;
+use File::Spec;
 use Digest::MD5;
 use File::Path qw(make_path);
-use File::Spec::Functions qw / catfile catdir/;
 
 use LWP::UserAgent;
 use LWP::Simple;

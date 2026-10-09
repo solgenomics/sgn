@@ -687,11 +687,18 @@ solGS.cluster = {
       downloadLinks += " | " + kclusterVariancesLink + " | " + elbowLink;
     }
 
-    var clusterPlotDiv = this.clusterPlotDiv.replace(/#/, '');
-    var plotId = res.file_id;;
-    var clusterDownloadLinkId = `download_${clusterPlotDiv}_${plotId}`;
-    var clusterPlotDownload =
-      `<a href='#'  onclick='event.preventDefault();' id='${clusterDownloadLinkId}'>Cluster plot</a>`;
+    var clusterPlotDownload;
+
+    if (clusterPlotFileName.match(/k-means/i)) {
+      var clusterPlotDiv = this.clusterPlotDiv.replace(/#/, "");
+      var plotId = res.file_id;
+      var clusterDownloadLinkId = `download_${clusterPlotDiv}_${plotId}`;
+      clusterPlotDownload =
+        `<a href="#" onclick="event.preventDefault();" id="${clusterDownloadLinkId}">Cluster plot</a>`;
+    } else {
+      clusterPlotDownload =
+        `<a href="${res.cluster_plot}" download="${clusterPlotFileName}">Cluster plot</a>`;
+    }
 
     downloadLinks += " | " + clusterPlotDownload;
 
@@ -1196,7 +1203,16 @@ jQuery(document).ready(function () {
     var clusterPlotId = linkId.replace(/download_/, "");
 
     if (clusterPlotId.match(/cluster_plot_/)) {
-      saveSvgAsPng(document.getElementById(`#${clusterPlotId}`), `${clusterPlotId}.png`, { scale: 2});
+        var clusterPlot = document.getElementById(clusterPlotId);
+        var clusterSvg = null;
+        
+        if (clusterPlot) {
+            clusterSvg = clusterPlot.querySelector("svg");
+        }
+
+        if (clusterSvg) {
+            saveSvgAsPng(clusterSvg, `${clusterPlotId}.png`, { scale: 2});
+        }
     }
   });
 

@@ -39,6 +39,7 @@ use Time::Piece;
 use Time::Seconds;
 use CXGN::Calendar;
 use JSON;
+use CXGN::JSONUtils qw(decode_stored_json);
 use File::Basename qw | basename dirname|;
 use File::Temp 'tempfile';
 use Scalar::Util qw | looks_like_number |;
@@ -2019,7 +2020,7 @@ sub set_field_size {
 sub get_additional_info {
     my $self = shift;
     my $additional_info = $self->_get_projectprop('project_additional_info');
-    return $additional_info ? decode_json($additional_info) : undef;
+    return $additional_info ? decode_stored_json($additional_info) : undef;
 }
 
 sub set_additional_info {

@@ -46,6 +46,7 @@ use SGN::Model::Cvterm;
 use CXGN::Stock::StockLookup;
 use CXGN::Calendar;
 use JSON;
+use CXGN::JSONUtils qw(decode_stored_json);
 
 has 'bcs_schema' => ( isa => 'Bio::Chado::Schema',
     is => 'rw',
@@ -286,11 +287,11 @@ sub search {
         }
 
         if ($additional_info){
-            $additional_info = decode_json $additional_info;
+            $additional_info = decode_stored_json($additional_info);
         }
 
         if ($plot_geo_json){
-            $plot_geo_json = decode_json $plot_geo_json;
+            $plot_geo_json = decode_stored_json($plot_geo_json);
         }
 
         my @image_ids_parsed;
@@ -425,8 +426,8 @@ sub _include_observations {
             my $obs_timestamp = $_->{collect_date} ? $_->{collect_date} : $_->{timestamp};
 
             push @{$data_window{$observation_unit_id}}, {
-                additionalInfo => $_->{phenotype_additional_info} ? decode_json($_->{phenotype_additional_info}) : undef,
-                externalReferences => $_->{phenotype_external_references} ? decode_json($_->{phenotype_external_references}) : undef,
+                additionalInfo => $_->{phenotype_additional_info} ? decode_stored_json($_->{phenotype_additional_info}) : undef,
+                externalReferences => $_->{phenotype_external_references} ? decode_stored_json($_->{phenotype_external_references}) : undef,
                 germplasmDbId => qq|$_->{accession_stock_id}|,
                 germplasmName => $_->{accession_uniquename},
                 observationUnitDbId => qq|$_->{obsunit_stock_id}|,

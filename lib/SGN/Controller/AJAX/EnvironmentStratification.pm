@@ -7,7 +7,7 @@ use File::Temp qw | tempfile |;
 use File::Slurp qw | read_file |;
 use File::Basename qw | basename |;
 use File::Copy;
-use File::Spec qw | catfile |;
+use File::Spec;
 use CXGN::Dataset;
 use CXGN::Dataset::File;
 use CXGN::Job;
