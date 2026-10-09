@@ -38,6 +38,8 @@ use CXGN::GEM::Expression;
 
 ## Create the mason object
 
+return "This tool has been deactivated.";
+
 my $m = CXGN::MasonFactory->new();
 
 
@@ -45,6 +47,7 @@ my $m = CXGN::MasonFactory->new();
 
 my $psqlv = `psql --version`;
 chomp($psqlv);
+
 
 my @schema_list = ('gem', 'biosource', 'metadata', 'public');
 if ($psqlv =~ /8\.1/) {
