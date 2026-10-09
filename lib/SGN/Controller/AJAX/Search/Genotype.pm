@@ -23,7 +23,7 @@ use utf8;
 use File::Slurp qw | read_file |;
 use File::Temp 'tempfile';
 use File::Copy;
-use File::Spec::Functions;
+use File::Spec;
 use File::Basename qw | basename dirname|;
 use Digest::MD5;
 use DateTime;
@@ -335,9 +335,9 @@ sub pcr_genotyping_data_download_POST : Args(0) {
     my $time = DateTime->now();
     my $timestamp = $time->ymd()."_".$time->hms();
     my $subdirectory_name = "ssr_download";
-    my $archived_file_name = catfile($user_id, $subdirectory_name,$timestamp."_".'ssr_genotype_data'.".csv");
+    my $archived_file_name = File::Spec->catfile($user_id, $subdirectory_name,$timestamp."_".'ssr_genotype_data'.".csv");
     my $archive_path = $c->config->{archive_path};
-    my $file_destination =  catfile($archive_path, $archived_file_name);
+    my $file_destination =  File::Spec->catfile($archive_path, $archived_file_name);
     my $dbh = $c->dbc->dbh();
 
     my $genotypes = CXGN::Genotype::DownloadFactory->instantiate(
@@ -363,12 +363,12 @@ sub pcr_genotyping_data_download_POST : Args(0) {
         mkdir $archive_path;
     }
 
-    if (! -d catfile($archive_path, $user_id)) {
-        mkdir (catfile($archive_path, $user_id));
+    if (! -d File::Spec->catfile($archive_path, $user_id)) {
+        mkdir (File::Spec->catfile($archive_path, $user_id));
     }
 
-    if (! -d catfile($archive_path, $user_id,$subdirectory_name)) {
-        mkdir (catfile($archive_path, $user_id, $subdirectory_name));
+    if (! -d File::Spec->catfile($archive_path, $user_id,$subdirectory_name)) {
+        mkdir (File::Spec->catfile($archive_path, $user_id, $subdirectory_name));
     }
 
     my $md_row = $metadata_schema->resultset("MdMetadata")->create({

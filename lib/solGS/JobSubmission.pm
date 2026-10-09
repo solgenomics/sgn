@@ -372,6 +372,11 @@ sub submit_job {
         my $slurm_job_id = $job->cluster_job_id();
 
         foreach my $job_record (@$job_records) {
+            $job_record->cxgn_tools_run_config({
+                %{$args->{config}},
+                jobid => $job->jobid(),
+            });
+            
             $job_record->backend_id($slurm_job_id);
             $job_record->update_status('submitted');
         }

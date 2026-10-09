@@ -5,6 +5,7 @@ use File::Slurp;
 use CXGN::Tools::Run;
 use Moose::Role;
 use Data::Dumper;
+use SGN::Context;
 
 sub create_design {
   my $self = shift;
@@ -88,8 +89,9 @@ sub create_design {
 
   my $cmd = "R CMD BATCH  '--args paramfile=\"".$tempfile.".params\"' " .  " R/rrc_design.R ".$tempfile.".out";
 
-  my $backend = 'Slurm';
-  my $cluster_host = "localhost";
+  my $vhost_conf = SGN::Context->new;
+  my $backend = $vhost_conf->get_conf('backend');
+  my $cluster_host = $vhost_conf->get_conf('cluster_host');
 
   my $ctr = CXGN::Tools::Run->new( {
       backend => $self->get_backend(),
