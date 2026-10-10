@@ -63,10 +63,9 @@ sub search {
         }
     }
 
-    # The join table can be schema-qualified (sgn_people.list_dbxref),
-    # but its primary-key column is unqualified (list_dbxref_id).
-    my ($table_basename) = $table =~ /([^.]+)$/;
-    $query .= " order by o_dbxref.${table_basename}_dbxref_id";
+    # the dbxref table's id column has no schema prefix (sgn_people.list -> list_dbxref_id)
+    (my $table_base = $table) =~ s/^.*\.//;
+    $query .=  " order by o_dbxref.${table_base}_dbxref_id";  ### ORDER THE OUTPUT SO IT IS REPRODUCIBLE FOR THE TEST.
 
     print STDERR "QUERY = $query\n";
     my $sth = $self->bcs_schema->storage()->dbh()->prepare($query);
