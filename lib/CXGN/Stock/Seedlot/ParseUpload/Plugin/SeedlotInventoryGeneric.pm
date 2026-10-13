@@ -2,7 +2,6 @@ package CXGN::Stock::Seedlot::ParseUpload::Plugin::SeedlotInventoryGeneric;
 
 use Moose::Role;
 use CXGN::File::Parse;
-use CXGN::Stock::StockLookup;
 use SGN::Model::Cvterm;
 use Data::Dumper;
 use CXGN::List::Validate;
@@ -66,10 +65,26 @@ sub _validate_with_plugin {
 
     my $seen_seedlot_names = $parsed_values->{'seed_id'};
 
-    my $seedlot_validator = CXGN::List::Validate->new();
-    my @seedlots_missing = @{$seedlot_validator->validate($schema,'seedlots',$seen_seedlot_names)->{'missing'}};
+    my $existing_seedlot_validator = CXGN::List::Validate->new();
+    my $validation = $existing_seedlot_validator->validate($schema,'seedlots', $seen_seedlot_names);
+    my @all_seedlots_missing = @{$validation->{missing}};
+    my @seedlots_discarded = @{$validation->{discarded}};
+    my @seedlots_missing;
+    my %discarded_lookup = map {$_ => 1} @seedlots_discarded;
+    foreach my $seedlot (@all_seedlots_missing) {
+        if ($discarded_lookup{$seedlot}) {
+            next;
+        } else {
+            push @seedlots_missing, $seedlot;
+        }
+    }
+
     if (scalar(@seedlots_missing) > 0) {
-        push @error_messages, "The following seedlots are not in the database as uniquenames: ".join(',',@seedlots_missing);
+        push @error_messages, "The following seedlots are not in the database: ".join(',',@seedlots_missing);
+    }
+
+    if (scalar(@seedlots_discarded) > 0) {
+        push @error_messages, "The following seedlots are marked as DISCARDED: ".join(',',@seedlots_discarded);
     }
 
     if (scalar(@error_messages) >= 1) {

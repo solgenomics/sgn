@@ -348,6 +348,29 @@ is($seedlot_test2_1_after_removed->current_count, 38, "check current count after
 my $seedlot_test2_2_after_removed = CXGN::Stock::Seedlot->new(schema => $schema, seedlot_id => $seedlot_test2_2_id);
 is($seedlot_test2_2_after_removed->current_count, 23, "check current count after removing seeds");
 
+#from sources to existing seedlots
+my $file_5 = $f->config->{basepath}."/t/data/stock/from_sources_to_existing_seedlots.xlsx";
+my $ua_5 = LWP::UserAgent->new;
+my $response_5 = $ua_5->post(
+    'http://localhost:3010/ajax/breeders/upload_transactions',
+    Content_Type => 'form-data',
+    Content => [
+        sources_to_existing_seedlots_file => [ $file_5, "from_sources_to_existing_seedlots.xlsx", Content_Type => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'],
+        "sgn_session_id"=>$sgn_session_id
+    ]
+);
+
+ok($response_5->is_success);
+my $message_5 = $response_5->decoded_content;
+my $message_hash_5 = decode_json $message_5;
+is_deeply($message_hash_5, { 'success' => 1 });
+
+my $seedlot_test2_1_after_adding_more_seeds = CXGN::Stock::Seedlot->new(schema => $schema, seedlot_id => $seedlot_test2_1_id);
+is($seedlot_test2_1_after_adding_more_seeds->current_count, 48, "check current count after adding more seeds");
+
+my $seedlot_test2_2_after_adding_more_seeds = CXGN::Stock::Seedlot->new(schema => $schema, seedlot_id => $seedlot_test2_2_id);
+is($seedlot_test2_2_after_adding_more_seeds->current_count, 43, "check current count after adding more seeds");
+
 #test discarding seedlot
 my $seedlot_test1_rs = $schema->resultset('Stock::Stock')->find({ name => 'seedlot_test1' });
 my $seedlot_test1_id = $seedlot_test1_rs->stock_id();
