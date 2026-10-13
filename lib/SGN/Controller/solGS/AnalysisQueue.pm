@@ -3,7 +3,7 @@ package SGN::Controller::solGS::AnalysisQueue;
 use Moose;
 use namespace::autoclean;
 use File::Path qw / make_path  /;
-use File::Spec::Functions qw / catfile catdir/;
+use File::Spec;
 use File::Slurp qw /write_file read_file/;
 use JSON;
 use CXGN::Tools::Run;
@@ -318,12 +318,18 @@ sub format_log_entry {
 
 }
 
+
 sub analysis_report_job_args {
     my ( $self, $c, $status_check_duration ) = @_;
 
     my $analysis_details = $c->stash->{bg_job_output_details};
-    my $solgs_tempfiles_dir = $c->controller('solGS::Files')->solgs_tempfiles_dir($c);
+    my $analysis_profile = $analysis_details->{analysis_profile} || {};
+    if (!$analysis_profile->{analysis_type} && $analysis_profile->{arguments}) {
+        my $analysis_args = JSON->new->decode($analysis_profile->{arguments});
+        $analysis_profile->{analysis_type} = $analysis_args->{analysis_type};
+    }
 
+    my $solgs_tempfiles_dir = $c->controller('solGS::Files')->solgs_tempfiles_dir($c);
     my $temp_dir = $c->stash->{analysis_tempfiles_dir} || $solgs_tempfiles_dir;
 
     my $temp_file_template = "analysis-status";
@@ -364,6 +370,7 @@ sub analysis_report_job_args {
         'config'         => $job_config,
         'background_job' => $c->stash->{background_job},
         'temp_dir'       => $temp_dir,
+        'record_job'     => 0,
     };
 
     $c->stash->{analysis_report_job_args} = $job_args;
@@ -1422,7 +1429,7 @@ sub create_analysis_log_dir {
     $c->controller('solGS::Files')->get_solgs_dirs($c);
     my $log_dir = $c->stash->{analysis_log_dir};
 
-    $log_dir = catdir( $log_dir, $user_id );
+    $log_dir = File::Spec->catdir( $log_dir, $user_id );
 
     make_path($log_dir, { mode => oct('0755') });
 

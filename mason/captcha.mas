@@ -45,16 +45,18 @@
     // verify the token that has been returned
     // if the token is valid, redirect to the original URL
     cap.addEventListener("solve", (e) => {
-        jQuery.ajax({
-            url: '/ajax/captcha',
+        status.innerHTML = "<strong>Saving verification token...</strong>";
+        loader.removeAttribute("value");
+
+        // Use fetch() rather than jQuery.ajax() here: this page is the gate shown
+        // before the rest of the site (and its jQuery bundle) is known to have loaded
+        // successfully, so the verification flow must not depend on jQuery.
+        fetch('/ajax/captcha', {
             method: 'POST',
-            data: { token: e.detail.token },
-            dataType:'json',
-            beforeSend: function() {
-                status.innerHTML = "<strong>Saving verification token...</strong>";
-                loader.removeAttribute("value");
-            },
-            success: function(response) {
+            body: new URLSearchParams({ token: e.detail.token })
+        })
+            .then((r) => r.json())
+            .then((response) => {
                 if ( response?.error || response?.success !== 1 ) {
                     status.innerHTML = `<strong>Could not save verification token</strong><br />${response.error}`;
                     loader.style.display = "none";
@@ -69,12 +71,11 @@
                         window.location = url.pathname + url.search;
                     }
                 }
-            },
-            error: function() {
+            })
+            .catch(() => {
                 status.innerHTML = "<strong>Could not save verification token</strong>";
                 loader.style.display = "none";
-            }
-        });
+            });
     });
 
     // Update the progress of the captcha solve routine...

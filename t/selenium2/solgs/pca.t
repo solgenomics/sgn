@@ -21,46 +21,30 @@ my $solgs_data = SGN::Test::solGSData->new({
 
 my $cache_dir = $solgs_data->base_analyses_cache_dir();
 my $pca_dir = catdir( $cache_dir, 'pca' );
-print STDERR "\ncache_dir-- $cache_dir\n";
 
 my $accessions_list = $solgs_data->load_accessions_list();
-
-# my $accessions_list = $solgs_data->get_list_details('accessions');
 my $accessions_list_name = $accessions_list->{list_name};
 my $accessions_list_id   = 'list_' . $accessions_list->{list_id};
-print STDERR "\naccessions list: $accessions_list_name -- $accessions_list_id\n";
-my $plots_list = $solgs_data->load_plots_list();
 
-# my $plots_list =  $solgs_data->get_list_details('plots');
+my $plots_list = $solgs_data->load_plots_list();
 my $plots_list_name = $plots_list->{list_name};
 my $plots_list_id   = 'list_' . $plots_list->{list_id};
 
-print STDERR "\nadding trials list\n";
 my $trials_list = $solgs_data->load_trials_list();
-
-# my $trials_list =  $solgs_data->get_list_details('trials');
 my $trials_list_name = $trials_list->{list_name};
 my $trials_list_id   = 'list_' . $trials_list->{list_id};
-print STDERR "\nadding trials dataset\n";
 
-# my $trials_dt =  $solgs_data->get_dataset_details('trials');
 my $trials_dt      = $solgs_data->load_trials_dataset();
 my $trials_dt_name = $trials_dt->{dataset_name};
 my $trials_dt_id   = 'dataset_' . $trials_dt->{dataset_id};
-print STDERR "\nadding accessions dataset\n";
 
-# my $accessions_dt =  $solgs_data->get_dataset_details('accessions');
 my $accessions_dt      = $solgs_data->load_accessions_dataset();
 my $accessions_dt_name = $accessions_dt->{dataset_name};
 my $accessions_dt_id   = 'dataset_' . $accessions_dt->{dataset_id};
 
-print STDERR "\nadding plots dataset\n";
-
-# my $plots_dt =  $solgs_data->get_dataset_details('plots');
 my $plots_dt      = $solgs_data->load_plots_dataset();
 my $plots_dt_name = $plots_dt->{dataset_name};
 my $plots_dt_id   = 'dataset_' . $plots_dt->{dataset_id};
-
 
 my @test_trials_ids = @{$solgs_data->trials_ids()};
 
@@ -68,6 +52,8 @@ remove_tree($cache_dir, {safe => 1});
 
 $d->while_logged_in_as("submitter", sub {
 
+
+    ###### standalone pca analysis page #####
     $d->get_ok('/pca/analysis', 'pca home page');
     sleep(5);
 
@@ -283,6 +269,9 @@ $d->while_logged_in_as("submitter", sub {
     remove_tree($cache_dir, {safe => 1});
     sleep(5);
 
+
+    ########## trial detail page pca analysis ##########
+
     $d->get_ok('/breeders/trial/' . $test_trials_ids[0], 'trial detail home page');
     sleep(10);
     my $analysis_tools = $d->find_element('Analysis Tools', 'partial_link_text', 'toogle analysis tools');
@@ -363,6 +352,8 @@ $d->while_logged_in_as("submitter", sub {
     remove_tree($cache_dir, {safe => 1});
     sleep(5);
 
+
+    ####### solgs pca analysis ########
     $d->get_ok('/solgs', 'solgs homepage');
     sleep(10);
 

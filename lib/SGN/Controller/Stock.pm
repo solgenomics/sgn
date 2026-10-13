@@ -306,6 +306,22 @@ sub view_stock : Chained('get_stock') PathPart('view') Args(0) {
         }
     }
 
+    my $family_type_string;
+    my $family_type;
+    if ($stock_type eq 'family_name') {
+        my $family_type_id = SGN::Model::Cvterm->get_cvterm_row($schema,  'family_type', 'stock_property')->cvterm_id();
+        my $family_prop = $schema->resultset("Stock::Stockprop")->find({ stock_id => $stock_id, type_id => $family_type_id});
+
+        if ($family_prop){
+            $family_type = $family_prop->value();
+            if ($family_type eq 'same_parents'){
+                $family_type_string = 'This family includes only crosses having the same female parent and the same male parent';
+            } elsif ($family_type eq 'reciprocal_parents'){
+                $family_type_string = 'This family includes reciprocal crosses';
+            }
+        }
+    }
+
     my $derived_accession_relationship;
     my $related_stock_link;
     my $original_stock_link;
@@ -327,7 +343,7 @@ sub view_stock : Chained('get_stock') PathPart('view') Args(0) {
                 if ($original_stock_type eq 'cross') {
                     $original_stock_link = qq{<a href = "/cross/$original_stock_id">$original_stock_name</a>}."(cross)";
                 } elsif ($original_stock_type eq 'family_name') {
-                    $original_stock_link = qq{<a href = "/family/$original_stock_id/">$original_stock_name</a>}."(family name)";
+                    $original_stock_link = qq{<a href="/stock/$original_stock_id/view">$original_stock_name</a>}."(family name)";
                 } else {
                     $original_stock_link = qq{<a href="/stock/$original_stock_id/view">$original_stock_name</a>}."(accession)";
                 }
@@ -393,6 +409,8 @@ sub view_stock : Chained('get_stock') PathPart('view') Args(0) {
         vector_analyzed_tissue_types => $vector_analyzed_tissue_types,
         number_of_insertions => $number_of_insertions,
         is_a_parent => $is_a_parent,
+        family_type_string => $family_type_string,
+        family_type => $family_type,
 	    },
 	    locus_add_uri  => $c->uri_for( '/ajax/stock/associate_locus' ),
 	    cvterm_add_uri => $c->uri_for( '/ajax/stock/associate_ontology'),
@@ -496,10 +514,10 @@ sub download_genotypes : Chained('get_stock') PathPart('genotypes') Args(0) {
     my $stock_row = $c->stash->{stock_row};
     my $stock_id = $stock_row->stock_id;
     my $stock_name = $stock_row->uniquename;
-    my $genotype_id = $c->req->param('genotype_id') ? [$c->req->param('genotype_id')] : undef;
+    my $genotype_id = $c->req->param('genotype_id');
     my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
 
-    if (!$genotype_id) {
+    if (!$genotype_id || $genotype_id !~ /^[0-9]+\z/) {
 
 	my $referer = $c->req->referer;
 	my $message = "<p>Genotype data download for the stock is missing an associated genotype id. <br/>"
@@ -519,11 +537,22 @@ sub download_genotypes : Chained('get_stock') PathPart('genotypes') Args(0) {
 	my $stock_type = $stock->type();
 
 	if ($stock_id) {
+	    # the VCF header lines and marker order come from the genotyping protocol
+	    my $protocol_ids = $schema->storage->dbh()->selectcol_arrayref(
+		"SELECT DISTINCT nd_experiment_protocol.nd_protocol_id
+		FROM nd_experiment_genotype
+		JOIN nd_experiment_protocol USING(nd_experiment_id)
+		WHERE nd_experiment_genotype.genotype_id = ?",
+		undef,
+		$genotype_id,
+		);
+
 	    my %genotype_download_factory = (
 		bcs_schema=>$schema,
 		people_schema=>$people_schema,
 		cache_root_dir=>$c->config->{cache_file_path},
-		markerprofile_id_list=>$genotype_id,
+		markerprofile_id_list=>[$genotype_id],
+		protocol_id_list=>$protocol_ids,
 		#genotype_data_project_list=>$genotype_data_project_list,
 		#marker_name_list=>['S80_265728', 'S80_265723'],
 		#limit=>$limit,

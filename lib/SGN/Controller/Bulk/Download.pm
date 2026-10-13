@@ -8,7 +8,7 @@ BEGIN { extends 'Catalyst::Controller' };
 use Data::Dumper;
 use File::Slurp qw | read_file |;
 use Cache::File; 
-use File::Spec::Functions;
+use File::Spec;
 
 use CXGN::Bulk::BAC;
 use CXGN::Bulk::UnigeneConverter;

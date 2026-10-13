@@ -796,6 +796,7 @@ sub delete_existing_synonyms {
 sub interactive_store {
 	my $self = shift;
     my $parent_terms_json = shift;
+	my $db_name = shift || die "No trait ontology supplied to store the new term in.\n"; # db name of the ontology the new term belongs to, e.g. CO_334
 
     my $schema = $self->bcs_schema();
 
@@ -858,25 +859,22 @@ sub interactive_store {
         "$category_details_cvterm_id" => $category_details
     );
 
-	my $trait_ontology_cvterm_id = $schema->resultset("Cv::Cvterm")->find({
-        name => 'trait_ontology'
-    })->cvterm_id();
-	my $trait_cv_id = $schema->resultset("Cv::Cvprop")->find({
-		type_id => $trait_ontology_cvterm_id
-	})->cv_id();
+	# it is possible to have multiple trait ontologies, so find the root node of the one that was requested
+	my $ontology_obj = CXGN::Onto->new({
+		schema => $schema
+	});
+	my @root_nodes = $ontology_obj->get_root_nodes('trait_ontology'); # each entry is [ cv_id, "DB:accession Term name" ]
+
+	my ($root_node) = grep { $_->[1] =~ m/^\Q$db_name\E:/ } @root_nodes;
+
+	if (!$root_node) {
+		die "No trait ontology named $db_name could be found in the database.\n";
+	}
+
+	my $trait_cv_id = $root_node->[0];
 	my $trait_ontology = $schema->resultset("Cv::Cv")->find({
 		cv_id => $trait_cv_id
 	})->name();
-
-	my $get_db_from_cv_sql = "SELECT DISTINCT(db.name) FROM cvterm 
-	JOIN dbxref USING (dbxref_id)
-	JOIN db USING (db_id)
-	WHERE cv_id=?";
-
-	my $h = $schema->storage->dbh->prepare($get_db_from_cv_sql);
-    $h->execute($trait_cv_id);
-
-	my $db_name = $h->fetchrow_array();
 
 	my $parent_terms = [];
 	if ($parent_terms_json) {
@@ -892,17 +890,12 @@ sub interactive_store {
 		}
 
 		@parent_ids = @{$transform->{transform}};
-	} else {
-		my $ontology_obj = CXGN::Onto->new({
-			schema => $schema
-		});
-		my @root_nodes = $ontology_obj->get_root_nodes('trait_ontology');
-
-		my $root_term_name = $root_nodes[0]->[1] =~ s/\w+:\d+ //r;
+	} else { # default to the root term of the ontology the new term is being added to
+		my $root_term_name = $root_node->[1] =~ s/\w+:\d+ //r;
 
 		push @parent_ids, $schema->resultset("Cv::Cvterm")->find({
 			name => $root_term_name,
-			cv_id => $root_nodes[0]->[0]
+			cv_id => $trait_cv_id
 		})->cvterm_id();
 	}
 
@@ -926,7 +919,7 @@ sub interactive_store {
         $isa_id = $isa_relationship->cvterm_id();
     }
 
-    $h = $schema->storage->dbh->prepare($get_db_accessions_sql);
+    my $h = $schema->storage->dbh->prepare($get_db_accessions_sql);
     $h->execute($db_name);
 
     my @accessions;

@@ -1384,7 +1384,7 @@ jQuery(document).ready( function() {
         },
         error: function () {
           jQuery('#working_modal').modal("hide");
-          alert('An error occurred replacing plot accession');
+          alert('A server error occurred replacing plot accession - see console.');
         }
       });
     }

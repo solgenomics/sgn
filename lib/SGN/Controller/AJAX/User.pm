@@ -38,7 +38,7 @@ sub login : Path('/ajax/user/login') Args(0) {
 	return;
     }
     elsif (exists($login_info->{account_disabled}) && $login_info->{account_disabled}) {
-	$c->stash->{rest} = { error => "This account has been disabled due to $login_info->{account_disabled}. Please contact the database to fix this problem." };
+	$c->stash->{rest} = { error => "This account has been deactivated due to $login_info->{account_disabled}. Please contact the database administrator to re-instate the account." };
 	return;
     }
     else {
@@ -694,7 +694,7 @@ ername.";}
     $new_user_login->set_password($password);
 
     $new_user_login->store();
-    
+
     my $new_user_person_id=$new_user_login->get_sp_person_id();
     my $new_user = CXGN::People::Person->new($c->dbc->dbh, $new_user_person_id);
 
@@ -704,7 +704,7 @@ ername.";}
 	$new_user->set_user_type(encode_entities($new_user_type));
 	$new_user->set_first_name(encode_entities($first_name));
 	$new_user->set_last_name(encode_entities($last_name));
-	
+
 	$new_user->store();
     };
 

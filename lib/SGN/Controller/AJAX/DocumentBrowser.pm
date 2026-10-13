@@ -16,7 +16,7 @@ use Moose;
 use Try::Tiny;
 use DateTime;
 use File::Slurp;
-use File::Spec::Functions;
+use File::Spec;
 use File::Copy;
 use Data::Dumper;
 use CXGN::UploadFile;

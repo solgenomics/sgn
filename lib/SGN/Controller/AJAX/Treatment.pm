@@ -26,7 +26,10 @@ sub create_treatment :Path('/ajax/treatment/create') {
         return;
     }
 
-    if (! $c->config->{allow_treatment_edits}) {
+    my $editable_ontologies_str = $c->config->{allow_trait_edits};
+    my @editable_ontologies = split(",", $editable_ontologies_str);
+
+    if (! grep {$_ eq "EXPERIMENT_TREATMENT"} @editable_ontologies) {
         $c->stash->{rest} = {error => "You do not have permission to design new treatments.\n"};
         return;
     }

@@ -25,7 +25,7 @@ use LWP::UserAgent;
 use JSON;
 use CXGN::ODK::Crosses;
 use Carp;
-use File::Spec::Functions qw / catfile catdir/;
+use File::Spec;
 use File::Path qw(make_path);
 use CXGN::List;
 
@@ -155,7 +155,7 @@ sub get_crossing_data_GET {
     my ($germplasm_info_temp_file, $germplasm_info_uri1) = $c->tempfile( TEMPLATE => 'ODK_ONA_cross_info/ODK_ONA_germplasm_info_downloadXXXXX');
     my $germplasm_info_temp_file_path = $germplasm_info_temp_file->filename;
 
-    my $progress_tree_dir = catdir($c->site_cluster_shared_dir, "ODK_ONA_cross_info");
+    my $progress_tree_dir = File::Spec->catdir($c->site_cluster_shared_dir, "ODK_ONA_cross_info");
 
     my $odk_crosses = CXGN::ODK::Crosses->new({
         bcs_schema=>$bcs_schema,
@@ -236,7 +236,7 @@ sub schedule_get_crossing_data_GET {
     my ($germplasm_info_temp_file, $germplasm_info_uri1) = $c->tempfile( TEMPLATE => 'ODK_ONA_cross_info/ODK_ONA_germplasm_info_downloadXXXXX');
     my $germplasm_info_temp_file_path = $germplasm_info_temp_file->filename;
 
-    my $progress_tree_dir = catdir($c->site_cluster_shared_dir, "ODK_ONA_cross_info");
+    my $progress_tree_dir = File::Spec->catdir($c->site_cluster_shared_dir, "ODK_ONA_cross_info");
 
     my $cross_properties = $c->config->{cross_properties};
     my $rootpath = $c->config->{rootpath};
@@ -403,7 +403,7 @@ sub get_odk_cross_progress_cached_GET {
     my $bcs_schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado', $user_id);
     my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema", undef, $user_id);
 
-    my $dir = catdir($c->site_cluster_shared_dir, "ODK_ONA_cross_info");
+    my $dir = File::Spec->catdir($c->site_cluster_shared_dir, "ODK_ONA_cross_info");
     eval { make_path($dir) };
     if ($@) {
         print "Couldn't create $dir: $@";
@@ -474,7 +474,7 @@ sub get_odk_cross_summary_cached_GET {
     my $bcs_schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado', $user_id);
     my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema", undef, $user_id);
 
-    my $dir = catdir($c->site_cluster_shared_dir, "ODK_ONA_cross_info");
+    my $dir = File::Spec->catdir($c->site_cluster_shared_dir, "ODK_ONA_cross_info");
     eval { make_path($dir) };
     if ($@) {
         print "Couldn't create $dir: $@";
