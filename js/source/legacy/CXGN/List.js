@@ -2067,15 +2067,19 @@ function validate_interactive(response, type, list_id) {
     multiple_wrong_case = response.multiple_wrong_case;
     synonym_matches = response.synonyms;
     multiple_synonym_matches = response.multiple_synonyms;
+    discarded_seedlots = response.discarded;
     valid = response.valid;
 
     //alert("validate_interactive: "+JSON.stringify(response));
     if (warning !== undefined && type != 'accessions' && warning.length != 0) {
-	alert(warning.join(", "));
+        alert(warning.join(", "));
+    }
+    if (type === 'seedlots' && discarded_seedlots && discarded_seedlots.length > 0) {
+        alert(`WARNING: The following seedlots have been discarded: ${discarded_seedlots.join(', ')}`);
     }
     if (type == 'accessions' && valid == 1) {
-	alert("This list passed validation.");
-	return;
+        alert("This list passed validation.");
+        return;
     }
     else if (missing !== undefined  && type != 'accessions' && missing.length == 0) {
         alert("This list passed validation.");

@@ -31,11 +31,10 @@ sub validate {
     while (my ($uniquename, $synonym, $discarded) = $h->fetchrow_array()) {
         if (defined $discarded) {
             $all_discarded{$uniquename}++;
-        } else {
-            $all_names{$uniquename}++;
-            if (defined $synonym) {
-                $all_names{$synonym}++;
-            }
+        }
+        $all_names{$uniquename}++;
+        if (defined $synonym) {
+            $all_names{$synonym}++;
         }
     }
 
