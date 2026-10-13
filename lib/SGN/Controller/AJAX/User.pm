@@ -416,10 +416,9 @@ sub reset_password :Path('/ajax/user/reset_password') Args(0) {
         my $person = CXGN::People::Login->new( $c->dbc->dbh(), $pid);
         $person->update_confirm_code($email_reset_token);
         # Mail the link to the account's own stored address, never to the
-        # $email value from the request. get_login_by_email() matches with
-        # an SQL ILIKE, so a request address that only matches through a
-        # wildcard (for example "_" standing in for ".") must not receive
-        # another account's reset link.
+        # $email value from the request, which only has to match it
+        # case-insensitively (and, with older corelibs that matched with
+        # ILIKE, could be a look-alike address containing wildcards).
         $self->send_reset_email_message($c, $pid, $person->get_private_email(), $reset_link, $person->{username});
     }
 
