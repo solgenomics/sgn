@@ -110,14 +110,16 @@ export function WizardDatasets(main_id,wizard){
       }
       cols = cols.slice(0, first_irrelevant_col);
       var order = cols.map(c=>c.type);
-      var params = `?name=${name}&category_order=${JSON.stringify(order)}`
+      var params = new URLSearchParams();
+      params.append("name", name);
+      params.append("category_order", JSON.stringify(order));
       cols.forEach(c=>{
-        params+=`&${c.type}=${JSON.stringify(c.items.filter(d=>d.selected).map(d=>d.value.id))}`;
+        params.append(c.type, JSON.stringify(c.items.filter(d=>d.selected).map(d=>d.value.id)));
       })
-      console.log(document.location.origin+'/ajax/dataset/save'+params);
-      fetch(document.location.origin+'/ajax/dataset/save'+params,{
+      fetch(document.location.origin+'/ajax/dataset/save',{
         method:'post',
-        credentials: 'include'
+        credentials: 'include',
+        body: params
       }).then(response => {
         if (!response.ok){
           alert("Network error!");

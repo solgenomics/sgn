@@ -153,6 +153,7 @@ has 'trial_description' => (isa => 'Maybe[Str]', is => 'rw', predicate => 'has_t
 has 'trial_location' => (isa => 'Maybe[Str]', is => 'rw', predicate => 'has_trial_location', required => 0,);
 has 'design_type' => (isa => 'Maybe[Str]', is => 'rw', predicate => 'has_design_type', required => 0);
 has 'design' => (isa => 'HashRef[HashRef]|Undef', is => 'rw', predicate => 'has_design', required => 0);
+has 'skip_design_store' => (isa => 'Bool', is => 'rw', required => 0, default => 0);
 has 'trial_name' => (isa => 'Str', is => 'rw', predicate => 'has_trial_name', required => 1);
 has 'trial_type' => (isa => 'Str', is => 'rw', predicate => 'has_trial_type', required => 0);
 has 'trial_type_value' => (isa => 'Str', is => 'rw', predicate => 'has_trial_type_value', required => 0);
@@ -467,6 +468,13 @@ sub save_trial {
     if ($design_type eq 'greenhouse') {
         my $has_plants_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'project_has_plant_entries', 'project_property');
         $project->create_projectprops({ $has_plants_cvterm->name() => 'varies' });
+    }
+
+    # Some project types, such as decision meetings, deliberately have no
+    # observation-unit layout. Their project and metadata records above are
+    # complete without running the plot/accession design validator or store.
+    if ($self->get_skip_design_store()) {
+        return { trial_id => $project->project_id };
     }
 
     print STDERR "NOW CALLING TRIAl DESIGN STORE...\n";

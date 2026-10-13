@@ -193,7 +193,7 @@ $facilities
                                                         <br/><br/>
                                                         <input type="radio" name="upload_genotype_vcf_observation_type" value="accession">&nbsp;&nbsp;&nbsp;Accession: The sample names are of accession names
                                                         <br/><br/>
-                                                        <input type="radio" name="upload_genotype_vcf_observation_type" value="stocks">&nbsp;&nbsp;&nbsp;Mixed Stocks: The sample names are a mix of accession names or plot names or sample names or other stock names. This is <strong>not recommended</strong> because it will lead to messy sample metadata.
+                                                        <input type="radio" name="upload_genotype_vcf_observation_type" value="stocks">&nbsp;&nbsp;&nbsp;Mixed Stocks: The sample names are a mix of accession names, plot names, subplot names, plant names, and/or tissue sample names.
                                                     </div>
                                                 </div>
                                             </div>

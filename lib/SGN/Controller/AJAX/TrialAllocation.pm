@@ -4,7 +4,7 @@ use Moose;
 
 use Data::Dumper;
 use File::Slurp;
-use File::Spec qw | catfile |;
+use File::Spec;
 use File::Path qw(rmtree);
 use JSON::Any;
 use File::Basename qw | basename |;
@@ -141,22 +141,22 @@ sub generate_design :Path('/ajax/trialallocation/generate_design') :Args(0) {
     my $description = $trial->{description};
     my $treatments = $trial->{treatment_list_id};
     my $controls   = $trial->{control_list_id};
-    
+
     my $rows = $trial->{rows};
-    my $rows_per_block = $trial->{rows_per_block};  
-    my $rows_in_field = $trial->{rows_in_field};    
-    
+    my $rows_per_block = $trial->{rows_per_block};
+    my $rows_in_field = $trial->{rows_in_field};
+
     my $cols = $trial->{cols};
-    my $cols_per_block = $trial->{cols_per_block};  
-    my $cols_in_field = $trial->{cols_in_field};    
-    
+    my $cols_per_block = $trial->{cols_per_block};
+    my $cols_in_field = $trial->{cols_in_field};
+
     my $reps = $trial->{reps};
-    my $blocks = $trial->{blocks}; 
-    
+    my $blocks = $trial->{blocks};
+
     my $layout_type = $trial->{layout_type} || 'serpentine';
     my $engine = 'trial_allocation';
     my $trial_design;
-    
+
     ## Retrieving elements
     my $treatment_list = CXGN::List->new({ dbh => $dbh, list_id => $treatments });
     my $control_list   = CXGN::List->new({ dbh => $dbh, list_id => $controls });
@@ -182,8 +182,8 @@ sub generate_design :Path('/ajax/trialallocation/generate_design') :Args(0) {
     print STDERR "***** temppath = $temppath\n";
 
     print Dumper \$trial;
-    
- 
+
+
     # Define specific file names with extensions
     my $paramfile = $temppath . ".params";  # for R input
     my $outfile   = $temppath . ".out";     # for R output
@@ -207,7 +207,7 @@ sub generate_design :Path('/ajax/trialallocation/generate_design') :Args(0) {
     print $F "plot_type <- layout <- \"$layout_type\"\n";  # optional
     print $F "engine <- \"$engine\"\n";  # optional
     close($F);
-    
+
     print STDERR "***** The design is = $design\n";
 
     # Run R if needed
@@ -216,13 +216,13 @@ sub generate_design :Path('/ajax/trialallocation/generate_design') :Args(0) {
         print STDERR "Running: $cmd\n";
         system($cmd);
     }
-    
+
     if ($design eq "Doubly-Resolvable Row-Column") {
         my $cmd = "R CMD BATCH --no-save --no-restore '--args paramfile=\"$paramfile\"' R/DRRC.r $outfile";
         print STDERR "Running: $cmd\n";
         system($cmd);
     }
-    
+
     if ($design eq "Un-Replicated Diagonal") {
         my $cmd = "R CMD BATCH --no-save --no-restore '--args paramfile=\"$paramfile\"' R/urdd_design.R $outfile";
         print STDERR "Running: $cmd\n";
@@ -250,7 +250,7 @@ sub generate_design :Path('/ajax/trialallocation/generate_design') :Args(0) {
     }
 
     ## Handelling with error messages
-    
+
     if (-e $message_file) {
         open(my $fh, '<', $message_file) or die "Could not open $message_file: $!";
         my $error_text = do { local $/; <$fh> };
@@ -259,7 +259,7 @@ sub generate_design :Path('/ajax/trialallocation/generate_design') :Args(0) {
     }
 
 
-    
+
     ## Adjusting variables for RCBD
     my $json_desing;
     if( $design eq "RCBD"){
@@ -271,10 +271,10 @@ sub generate_design :Path('/ajax/trialallocation/generate_design') :Args(0) {
         my ($trial_design) = arrange_design($design_file, $design);
         $json_desing = encode_json($trial_design);
         my ($n_row, $n_col);
-        
+
         if ($design eq 'Augmented Row-Column'){
             $n_row = $rows_in_field;
-            $n_col = $cols_in_field; 
+            $n_col = $cols_in_field;
         } else {
             $n_row = $rows;
             $n_col = $cols;
@@ -285,7 +285,7 @@ sub generate_design :Path('/ajax/trialallocation/generate_design') :Args(0) {
         $trial->{n_row} = $n_row;
         $trial->{n_col} = $n_col;
     }
-    
+
 
     # Return filenames
     $c->stash->{rest} = {
@@ -318,7 +318,7 @@ sub farms :Path('/ajax/trialallocation/farms') Args(0) {
     }
 
     @farms = sort { lc($a->{name}) cmp lc($b->{name}) } @farms;
-    
+
     $c->stash->{rest} = {
         success => 1,
         farms   => \@farms

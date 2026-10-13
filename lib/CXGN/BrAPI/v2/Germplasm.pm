@@ -13,6 +13,7 @@ use CXGN::BrAPI::JSONResponse;
 use CXGN::Cross;
 use Try::Tiny;
 use JSON;
+use CXGN::JSONUtils qw(decode_stored_json);
 
 extends 'CXGN::BrAPI::v2::Common';
 
@@ -223,10 +224,10 @@ sub search {
         }        
 
         if (defined $_->{'stock_additional_info'} && $_->{'stock_additional_info'} ne '' && %additional) {
-            $additional_info = decode_json($_->{'stock_additional_info'});
+            $additional_info = decode_stored_json($_->{'stock_additional_info'});
             $additional_info = {%$additional_info , ("additionalProps" => \%additional)} ;
         } elsif (defined $_->{'stock_additional_info'} && $_->{'stock_additional_info'} ne '') {
-            $additional_info = decode_json($_->{'stock_additional_info'});        
+            $additional_info = decode_stored_json($_->{'stock_additional_info'});
         } elsif (%additional) {
             $additional_info = {"additionalProps" => \%additional};
         }
@@ -1199,10 +1200,10 @@ sub _simple_search {
         }        
 
         if (defined $_->{'stock_additional_info'} && $_->{'stock_additional_info'} ne '' && %additional) {
-            $additional_info = decode_json($_->{'stock_additional_info'});
+            $additional_info = decode_stored_json($_->{'stock_additional_info'});
             $additional_info = {%$additional_info , ("additionalProps" => \%additional)} ;
         } elsif (defined $_->{'stock_additional_info'} && $_->{'stock_additional_info'} ne '') {
-            $additional_info = decode_json($_->{'stock_additional_info'});        
+            $additional_info = decode_stored_json($_->{'stock_additional_info'});
         } elsif (%additional) {
             $additional_info = {"additionalProps" => \%additional};
         }

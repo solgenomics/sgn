@@ -19,9 +19,18 @@ solGS.analysisSelect = {
     
     getAnalysisPopId: function () {
         var analysisPopId = jQuery("#analysis_pop_id").val();
+        if (!analysisPopId) {
+            analysisPopId = jQuery("#trial_select option:selected").val();
+            if (this.analysisPopName && this.analysisPopName.match(/Dataset:/)) {
+                analysisPopId = `dataset_${analysisPopId}`;
+                this.dataStructure = 'dataset';
+            }
+        }
+
         if (analysisPopId) {
             this.analysisPopId = analysisPopId;
         }
+
         return this.analysisPopId;
     },
 
@@ -34,11 +43,27 @@ solGS.analysisSelect = {
         }
         return this.datasetId;
     },
+
     getAnalysisPopName: function () {
         var analysisPopName = jQuery("#analysis_pop_name").val();
+        if (!analysisPopName) {
+            analysisPopName = jQuery("#trial_select option:selected").text();
+            console.log("Analysis Pop Name from trial select: ", analysisPopName);
+        }
+
         if (analysisPopName) {
             this.analysisPopname = analysisPopName;
         }
+
+        if (analysisPopName && analysisPopName.match(/Trial:/)) {
+            this.dataStructure = 'trial';
+        }
+
+        if (analysisPopName && analysisPopName.match(/Dataset:/)) {
+            this.dataStructure = 'dataset';
+            this.analysisPopId = `dataset_${this.analysisPopId}`;
+        }
+
         return this.analysisPopname;
     },
 
@@ -182,7 +207,7 @@ jQuery(document).ready(function () {
             jQuery("#corr_pop_id").val(solGS.analysisSelect.getAnalysisPopId());
 
             jQuery("#data_type").val("Phenotype");
-            if (!jQuery("#corr_pop_id").val().match(/dataset/)) {
+            if (jQuery("#corr_pop_id").val().match(/dataset/)) {
                 jQuery("#data_structure").val('dataset');
             }
 

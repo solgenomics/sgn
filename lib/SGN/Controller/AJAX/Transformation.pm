@@ -1860,6 +1860,42 @@ sub get_vector_obsoleted_accessions :Path('/ajax/transformation/vector_obsoleted
     $c->stash->{rest}={data=>\@obsoleted_accessions};
 }
 
+
+sub update_transformation_metadata : Path('/ajax/transformation/update_transformation_metadata') : ActionClass('REST') {}
+
+sub update_transformation_metadata_POST :Args(0){
+    my ($self, $c) = @_;
+    my $dbh = $c->dbc->dbh;
+    my $transformation_stock_id = $c->req->param('transformation_stock_id');
+    my $new_transformation_name = $c->req->param('new_transformation_name');
+    my $new_transformation_notes = $c->req->param('new_transformation_notes');
+
+    if (!$c->user()) {
+        $c->res->redirect( uri( path => '/user/login', query => { goto_url => $c->req->uri->path_query } ) );
+        return;
+    }
+
+    if (!any { $_ eq "curator" || $_ eq "submitter" } ($c->user()->roles)){
+        $c->stash->{rest} = {error =>  "you have insufficient privileges to edit this transformation metadata." };
+        return;
+    }
+
+    my $user_id = $c->user()->get_object()->get_sp_person_id();
+    my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado', $user_id);
+
+    my $transformation_obj = CXGN::Transformation::Transformation->new({schema=>$schema, dbh=>$dbh, transformation_stock_id=>$transformation_stock_id, transformation_name=>$new_transformation_name, transformation_notes=>$new_transformation_notes});
+    my $error = $transformation_obj->update_transformation_metadata();
+
+    if ($error) {
+        $c->stash->{rest} = { error => "Error: $error" };
+        return;
+    }
+
+    $c->stash->{rest} = { success => 1 };
+
+}
+
+
 ###
 1;#
 ###
