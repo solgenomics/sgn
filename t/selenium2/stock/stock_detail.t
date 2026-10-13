@@ -160,6 +160,13 @@ my $ok = eval { $t->while_logged_in_as("submitter", sub {
     ok(wait_for(sub { $t->find_element('synonyms_content', 'id')->get_text() =~ /test_synonym/ }), 'synonym shown in additional info');
 
     my $delete_synonym_xpath = q{//div[@id="synonyms_content"]/a[contains(@href, "'test_synonym'")]};
+    # the delete link is only rendered if JS can read the session cookie and edit_privs === 1
+    # (note, not diag: CI discards stderr)
+    if (!wait_for(sub { $t->find_element($delete_synonym_xpath, 'xpath') }, 5)) {
+        note("document.cookie: " . $t->driver->execute_script('return document.cookie;'));
+        note("jQuery.cookie('sgn_session_id'): " . ($t->driver->execute_script('return String(jQuery.cookie("sgn_session_id"));') // 'undef'));
+        note("synonyms_content innerHTML: " . $t->find_element('synonyms_content', 'id')->get_attribute('innerHTML'));
+    }
     wait_for_element_ok($delete_synonym_xpath, "xpath", "find delete synonym link")->click();
     accept_alert_like(qr/Delete stockprop test_synonym/, 'confirm delete synonym');
     accept_alert_like(qr/The element was removed from the database/, 'synonym deleted');
