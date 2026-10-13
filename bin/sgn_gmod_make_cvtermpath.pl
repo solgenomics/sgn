@@ -160,7 +160,7 @@ print STDOUT "Connected to database $dbname on host $dbhost.\n" if $verbose;
 ##########
 
 
-if ($opt_o) { open (OUT, ">$opt_o") ||die "can't open error file $opt_o for writting.\n" ; }
+if ($opt_o) { open (my $OUT, ">", $opt_o) ||die "can't open error file $opt_o for writting.\n" ; }
 
 my $cv_id;
 warn "select cv_id from cv where name = '$cvname'" if $verbose;
@@ -470,5 +470,5 @@ sub message {
     my $message = shift;
     my $default=shift;
     if ($opt_v || $default) {  print STDOUT "$message"; }
-    print OUT "$message" if $opt_o;
+    print $OUT "$message" if $opt_o;
 }

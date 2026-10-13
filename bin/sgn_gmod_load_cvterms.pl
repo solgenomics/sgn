@@ -282,7 +282,7 @@ if (!$file) {
 
 die "Some required command lines parameters not set. Aborting.\n" if $error;
 
-if ($opt_o) { open (OUT, ">$opt_o") ||die "can't open error file $opt_o for writting.\n" ; }
+if ($opt_o) { open (my $OUT, ">", $opt_o) ||die "can't open error file $opt_o for writting.\n" ; }
 
 
 message( "Connected to database $dbname on host $dbhost.\n", 1);
@@ -404,7 +404,7 @@ foreach my $new_ont(@onts) {
 		#This happens in InterPro file - which is translated from xml to obo.
 		if ($opt_v) { print STDERR "Novel term: $k ".($file_index{$k}->name())."\n"; }
 		else { print STDERR "."; }
-		print OUT "Novel term: $k ".($file_index{$k}->name())."\n" if $opt_o;
+		print $OUT "Novel term: $k ".($file_index{$k}->name())."\n" if $opt_o;
 		$novel_terms{$k}=$file_index{$k};
 	    }
 	}
@@ -730,7 +730,7 @@ foreach my $new_ont(@onts) {
 	
 		if ($opt_v) { print STDERR "Novel relationship: $r\n"; }
 		elsif ($r_count % 100 == 0) { print STDERR "."; } 
-		print OUT "Novel relationship: $r\n" if $opt_o;
+		print $OUT "Novel relationship: $r\n" if $opt_o;
 	
 	    }
 		####
@@ -898,7 +898,7 @@ sub message {
     my $message = shift;
     my $default=shift;
     if ($opt_v || $default) {  print STDOUT "$message"; }
-    print OUT "$message" if $opt_o;
+    print $OUT "$message" if $opt_o;
 }
 
 sub numeric_id {
