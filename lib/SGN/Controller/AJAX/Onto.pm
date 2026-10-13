@@ -30,7 +30,6 @@ use Moose;
 use SGN::Model::Cvterm;
 use CXGN::Chado::Cvterm;
 use CXGN::Onto;
-use CXGN::Cvterm;
 use File::Spec;
 use Data::Dumper;
 use JSON;
@@ -126,9 +125,11 @@ Recomputes the transitive closure (the cvtermpath table) for a single
 ontology, by running chado_tools/chado/bin/gmod_make_cvtermpath.pl as a
 background job.
 
-Accepts an ontology namespace (db.name), e.g. "CO_334". The cv.name to
-operate on is looked up from the namespace's root term, which is assumed
-to be the accession with seven zeroes, e.g. "CO_334:0000000".
+Accepts an ontology namespace (db.name), e.g. "CO_334". The cv to operate
+on is derived from the namespace by joining db to dbxref on db_id, and
+the first dbxref that has a cvterm to cvterm on dbxref_id, and taking
+that cvterm's cv_id. There is only one cv per db.name, so any
+cvterm-bearing dbxref of the db maps to the correct cv.
 
 Returns the sp_job_id of the submitted job. The closure can take a long
 time to compute on a large ontology, so the job is not waited on.
@@ -175,19 +176,29 @@ sub make_cvtermpath : Path('/ajax/onto/make_cvtermpath') Args(1) {
     my $schema = $c->dbic_schema("Bio::Chado::Schema", undef, $sp_person_id);
     my $people_schema = $c->dbic_schema("CXGN::People::Schema", undef, $sp_person_id);
 
-    # the root term of an ontology is assumed to be the accession with
-    # exactly seven digits, all zeroes.
-    my $root_accession = $namespace . ':' . ('0' x 7);
+    # There is one db row per namespace, and one cv per namespace, so the cv
+    # can be derived from any of the db's dbxrefs (assuming it has a cvterm).
+    my $db = $schema->resultset('General::Db')->search(
+        { 'upper(me.name)' => uc($namespace) }
+        )->first();
 
-    my $root_term = CXGN::Cvterm->new({ schema => $schema, accession => $root_accession });
-
-    if (!$root_term->cv()) {
-        $c->stash->{rest} = { error => "No root term $root_accession found. Cannot determine the cv name for ontology namespace $namespace." };
+    if (!$db) {
+        $c->stash->{rest} = { error => "No db row found for ontology namespace $namespace. Cannot determine the cv name." };
         return;
     }
 
-    my $cv_name = $root_term->cv->name();
-    my $cv_id = $root_term->cv->cv_id();
+    my $dbxref = $db->search_related('dbxrefs',
+        { 'cvterm.cvterm_id' => { '!=', undef } },
+        { join => 'cvterm', rows => 1 }
+        )->first();
+
+    if (!$dbxref) {
+        $c->stash->{rest} = { error => "No cvterms found for ontology namespace $namespace. Cannot determine the cv name." };
+        return;
+    }
+
+    my $cv_name = $dbxref->cvterm->cv->name();
+    my $cv_id = $dbxref->cvterm->cv_id();
 
     # Don't queue a second build for a cv that is already being built. The
     # script performs this check again when it starts, which is the check that
