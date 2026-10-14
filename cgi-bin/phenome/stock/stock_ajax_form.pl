@@ -1,8 +1,8 @@
 use strict;
 use warnings;
 
-package CXGN::Phenome::Stock::StockForm;
-my $stock_form = CXGN::Phenome::Stock::StockForm->new();
+package stock_ajax_form;
+my $stock_form = stock_ajax_form->new();
 
 use base qw/CXGN::Page::Form::AjaxFormPage  /;
 
