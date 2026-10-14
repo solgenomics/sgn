@@ -76,10 +76,10 @@ sub _clean_name {
 }
 
 # Valid values match the collection_type filter in get_collections. Undef or
-# empty string yields undef (stored as NULL) for programmatic callers.
+# empty string yields undef (stored as NULL) 
 sub _clean_collection_type {
     my ($self, $type) = @_;
-    return undef unless defined $type && length $type;
+    return unless defined $type && length $type;
     $type =~ s/^\s+|\s+$//g;
     unless ($type =~ /^(image|file|mixed)$/) {
         die "collection_type must be image, file, or mixed.\n";
@@ -225,7 +225,7 @@ sub create_collection {
 
 sub get_collection {
     my ($self, $collection_id) = @_;
-    return undef unless defined $collection_id && $collection_id =~ /^\d+$/;
+    return unless defined $collection_id && $collection_id =~ /^\d+$/;
 
     my $h = $self->_dbh->prepare(
         "SELECT c.collection_id, c.name, c.description, c.collection_type,
@@ -239,7 +239,7 @@ sub get_collection {
     );
     $h->execute($collection_id);
     my $row = $h->fetchrow_hashref();
-    return undef unless $row;
+    return unless $row;
 
     $row->{projects}    = $self->get_projects($collection_id);
     $row->{image_count} = scalar @{ $self->get_image_ids($collection_id) };
