@@ -30,15 +30,11 @@ CXGN::Collection::Search - an object to handle searching for collections
 
 =head1 DESCRIPTION
 
-Mirrors the shape of CXGN::Image::Search: list-based Moose attributes,
-raw SQL built from @where_clause / @question_mark_values, a window-function
-total count, and LIMIT/OFFSET for DataTables server-side pagination.
 
-One deliberate difference from CXGN::Image::Search: the "projects" a
-collection belongs to are fetched via a correlated scalar subquery
+The "projects"a collection belongs to are fetched via a correlated scalar subquery
 (json_agg inside a subquery), not a LEFT JOIN + GROUP BY. A join here would
 multiply collection rows per associated project the same way the field_trial
-join once duplicated image rows in CXGN::Image::Search — the subquery avoids
+join once duplicated image rows in CXGN::Image::Search; the subquery avoids
 that class of bug rather than reproducing it.
 
 File/obsolete predicates for metadata.md_files are read from
