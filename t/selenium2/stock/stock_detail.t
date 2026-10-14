@@ -32,11 +32,13 @@ sub wait_for {
     return wait_until { $cond->() } timeout => $timeout, interval => 1;
 }
 
-# Wait for an element to be displayed, then return it
+# Wait for an element to be displayed, then return it.
+# With Firefox, is_displayed() is false unless the element is inside the viewport, so scroll to it first
 sub wait_for_element_ok {
     my ($locator, $method, $test_name) = @_;
     my $element = wait_for(sub {
         my $e = $t->find_element($locator, $method);
+        $t->driver->execute_script("arguments[0].scrollIntoView({block: 'center'});", $e);
         return $e->is_displayed() ? $e : undef;
     });
     ok($element, $test_name);
