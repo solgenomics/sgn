@@ -152,9 +152,12 @@ sub search {
     my $include_obsolete_files         = $self->include_obsolete_files;
 
     my @where_clause;
+    # One shared OR group for the loosely matched basename and comment terms: the controller passes the composite file_name term to BOTH lists, so they must OR together (term matches basename OR comment)
+    my @file_descriptors_or_clause;
+    my @file_descriptor_terms;
+    # Loosely matched filetype and uploader terms, ANDed together.
     my @and_clause;
-    my @basename_or_clause;
-    my @comment_or_clause;
+    my @and_clause_terms;
     my @question_mark_values;
 
     if ($file_id_list && scalar(@$file_id_list) > 0) {
@@ -170,8 +173,8 @@ sub search {
             push @question_mark_values, @$basename_list;
         } else {
             foreach (@$basename_list) {
-                push @basename_or_clause, "files.basename ilike ?";
-                push @question_mark_values, '%' . $_ . '%';
+                push @file_descriptors_or_clause, 'files.basename ilike ?';
+                push @file_descriptor_terms, '%' . $_ . '%';
             }
         }
     }
@@ -183,8 +186,8 @@ sub search {
             push @question_mark_values, @$comment_list;
         } else {
             foreach (@$comment_list) {
-                push @comment_or_clause, "files.comment ilike ?";
-                push @question_mark_values, '%' . $_ . '%';
+                push @file_descriptors_or_clause, "files.comment ilike ?";
+                push @file_descriptor_terms, '%' . $_ . '%';
             }
         }
     }
@@ -197,7 +200,7 @@ sub search {
         } else {
             foreach (@$filetype_list) {
                 push @and_clause, "files.filetype ilike ?";
-                push @question_mark_values, '%' . $_ . '%';
+                push @and_clause_terms, '%' . $_ . '%';
             }
         }
     }
@@ -210,7 +213,7 @@ sub search {
         } else {
             foreach (@$uploader_username_list) {
                 push @and_clause, "uploader.username ilike ?";
-                push @question_mark_values, '%' . $_ . '%';
+                push @and_clause_terms, '%' . $_ . '%';
             }
         }
     }
@@ -234,17 +237,14 @@ sub search {
         push @where_clause, $CXGN::Collection::FILE_OBSOLETE_SQL;
     }
 
-    if (scalar(@basename_or_clause) > 0) {
-        my $w = " ( " . (join (" OR ", @basename_or_clause)) . " ) ";
-        push @where_clause, $w;
-    }
-
-    if (scalar(@comment_or_clause) > 0) {
-        my $w = " ( " . (join (" OR ", @comment_or_clause)) . " ) ";
+    if (scalar(@file_descriptors_or_clause) > 0) {
+        push @question_mark_values, @file_descriptor_terms;
+        my $w = " ( " . (join (" OR ", @file_descriptors_or_clause)) . " ) ";
         push @where_clause, $w;
     }
 
     if (scalar(@and_clause) > 0) {
+        push @question_mark_values, @and_clause_terms;
         my $w = " ( " . (join (" AND ", @and_clause)) . " ) ";
         push @where_clause, $w;
     }

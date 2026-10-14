@@ -123,6 +123,15 @@ sub collection_search_POST : Args(0) {
         else { @project_id_list = split /,/, $params->{project_id}; }
     }
 
+    my @collection_type_list;
+    if (exists($params->{collection_type}) && $params->{collection_type}) {
+        if (ref($params->{collection_type}) eq 'ARRAY') {
+            push @collection_type_list, @{ $params->{collection_type} };
+        } else {
+            @collection_type_list = split /,/, $params->{collection_type};
+        }
+    }
+
     my @project_name_list;
     if (exists($params->{project_name}) && $params->{project_name}) {
         push @project_name_list, $params->{project_name};
@@ -144,6 +153,7 @@ sub collection_search_POST : Args(0) {
         sp_person_id_list      => \@sp_person_id_list,
         project_id_list        => \@project_id_list,
         project_name_list      => \@project_name_list,
+        collection_type_list   => \@collection_type_list,
         standalone_only        => $standalone_only,
         limit                  => $limit,
         offset                 => $offset,

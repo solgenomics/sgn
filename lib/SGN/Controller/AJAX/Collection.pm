@@ -172,11 +172,16 @@ sub create_POST : Args(0) {
     my $user_id = $self->_require_login($c);
     my $cobj    = $self->_collection_object($c);
 
+    # Capture in scalar context first
+    my $name            = $c->req->param('name');
+    my $description     = $c->req->param('description');
+    my $collection_type = $c->req->param('collection_type');
+
     my $collection_id = eval {
         $cobj->create_collection({
-            name         => $c->req->param('name'),
-            description  => $c->req->param('description'),
-            collection_type => $c->req->param('collection_type'),
+            name         => $name,
+            description  => $description,
+            collection_type => $collection_type,
             sp_person_id => $user_id,
         });
     };
@@ -379,10 +384,11 @@ sub for_trial_GET : Args(0) {
     }
 
     my $cobj = $self->_collection_object($c);
+    my $req_collection_type = $c->req->param('collection_type');
     my $collections = eval {
         $cobj->get_collections_for_trial({
             trial_id        => $trial_id,
-            collection_type => $c->req->param('collection_type'),
+            collection_type => $req_collection_type,
         })
     };
     if ($@) {
