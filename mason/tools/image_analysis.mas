@@ -315,7 +315,7 @@ jQuery(document).ready(function(){
 
     jQuery('#image_analysis_image_search_results').on( 'draw.dt', function () {
         jQuery('a.image_search_group').colorbox();
-    });$
+    });
 
     jQuery('#image_analysis_service_select').change(function() {
         var service = jQuery('#image_analysis_service_select').val();
@@ -326,7 +326,8 @@ jQuery(document).ready(function(){
         if (service && service !== "multi-trait") {
             jQuery('#working_modal').modal('show');
             // add crop and service specific trait options
-            var all_traits = service_defs[service].service_traits;
+            var def = service_defs[service] || {};
+            var all_traits = def.service_traits || service_traits[service] || {};
             var trait_names = Object.keys(all_traits);
             // console.log("trait names", trait_names);
             var options =  [];
@@ -362,7 +363,7 @@ jQuery(document).ready(function(){
                     jQuery('#image_analysis_trait_select').append(options);
                     jQuery('#image_analysis_trait_group').show();
                     jQuery('#working_modal').modal('hide');
-                    jQuery('#analyzed_header'),text('# Analyzed Images');
+                    jQuery('#analyzed_header').text('# Analyzed Images');
                 }
             });
         }

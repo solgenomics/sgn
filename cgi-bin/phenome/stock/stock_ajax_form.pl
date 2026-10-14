@@ -74,6 +74,9 @@ sub store {
     my $error;
     $stock->species($args{organism});
     $stock->type_id($args{type_id});
+    # CXGN::Stock::store() derives type_id from the type name, so set the name too
+    my $type = $args{type_id} ? $stock->schema->resultset("Cv::Cvterm")->find({ cvterm_id => $args{type_id} }) : undef;
+    $stock->type($type->name) if $type;
     $stock->name($args{uniquename});
     $stock->uniquename($args{uniquename});
     $stock->description($args{description});
