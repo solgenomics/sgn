@@ -3026,8 +3026,8 @@ sub stock_obsolete_in_bulk_GET {
             return;
         }
     } elsif ($accession_list_id) {
-        if (! exists($has_roles{curator})) {
-            $c->stash->{rest} = { error => "You need to be a curator to obsolete stocks." };
+        if (! exists($has_roles{curator}) && ! exists($has_roles{submitter})) {
+            $c->stash->{rest} = { error => "You need to be a curator or a submitter to obsolete stocks." };
             return;
         }
     }
