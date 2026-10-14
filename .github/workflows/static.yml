@@ -2,7 +2,7 @@
 name: Deploy static content to Pages
 
 on:
-  # Runs on pushes/marge targeting the default branch
+  # Runs on pushes/merge targeting the default branch
   push:
     branches: ["master"]
     paths:
