@@ -76,44 +76,45 @@ jQuery(document).ready(function(){
 
     jQuery("#obsolete_accessions_using_list_submit").click(function(){
         const accession_list_id = jQuery('#accession_list_to_obsolete_select').val();
+        const obsolete_note = jQuery('#obsolete_accessions_note').val();
 
         if (!accession_list_id) {
             alert("Please select a list");
             return;
         }
 
-        const obsolete_note = jQuery('#obsolete_accessions_note').val();
-
-        const confirmation = confirm('Are you sure you want to obsolete accessions in this list?');
-
-        if (confirmation) {
-            jQuery.ajax({
-                url: '/ajax/stock/obsolete_in_bulk',
-                data : {
-                    'accession_list_id' : accession_list_id,
-                    'obsolete_note': obsolete_note,
-                },
-                beforeSend: function(response){
-                    jQuery('#working_modal').modal('show');
-                },
-                success: function(response){
-                    console.log(response);
-                    jQuery('#working_modal').modal('hide');
-                    if (response.error) {
-                        alert(response.error);
+        lo.validate(accession_list_id, 'uniquenames', true).then((r) => {
+            if (r.missing.length > 0) {
+                alert("The accession list did not pass validation. Please correct the list and try again");
+                return;
+            } else {
+                jQuery.ajax({
+                    url: '/ajax/stock/obsolete_in_bulk',
+                    data : {
+                        'accession_list_id' : accession_list_id,
+                        'obsolete_note': obsolete_note,
+                    },
+                    beforeSend: function(response){
+                        jQuery('#working_modal').modal('show');
+                    },
+                    success: function(response){
+                        console.log(response);
+                        jQuery('#working_modal').modal('hide');
+                        if (response.error) {
+                            alert(response.error);
+                        }
+                        if (response.success == 1) {
+                            jQuery('#obsolete_accessions_using_list_dialog').modal('hide');
+                            jQuery('#obsolete_accessions_using_list_success_dialog_message').modal('show');
+                        }
+                    },
+                    error: function(response){
+                        jQuery('#working_modal').modal('hide');
+                        alert("Error obsoleting accessions.");
                     }
-                    if (response.success == 1) {
-                        jQuery('#obsolete_accessions_using_list_dialog').modal('hide');
-                        jQuery('#obsolete_accessions_using_list_success_dialog_message').modal('show');
-                    }
-                },
-                error: function(response){
-                    jQuery('#working_modal').modal('hide');
-                    alert("Error obsoleting accessions.");
-                }
-            });
-        }
-
+                });
+            }
+        });
     });
 
     jQuery("#dismiss_obsolete_accessions_using_list_success_dialog").click(function(){
