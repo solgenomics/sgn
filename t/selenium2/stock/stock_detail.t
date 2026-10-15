@@ -32,14 +32,22 @@ sub wait_for {
     return wait_until { $cond->() } timeout => $timeout, interval => 1;
 }
 
-# Wait for an element to be displayed, then return it.
-# With Firefox, is_displayed() is false unless the element is inside the viewport, so scroll to it first
+# True if the element is rendered. Selenium's is_displayed() for Firefox only checks the element's own
+# CSS display and viewport position, so it is true for elements inside a hidden parent (e.g. a closed modal)
+sub is_visible {
+    my $element = shift;
+    return $t->driver->execute_script(
+        "var e = arguments[0]; return !!(e.offsetWidth || e.offsetHeight || e.getClientRects().length);", $element);
+}
+
+# Wait for an element to be visible, then scroll it into view and return it
 sub wait_for_element_ok {
     my ($locator, $method, $test_name) = @_;
     my $element = wait_for(sub {
         my $e = $t->find_element($locator, $method);
+        return undef if !is_visible($e);
         $t->driver->execute_script("arguments[0].scrollIntoView({block: 'center'});", $e);
-        return $e->is_displayed() ? $e : undef;
+        return $e;
     });
     ok($element, $test_name);
     die "Element '$locator' not found\n" if !$element;
@@ -89,10 +97,10 @@ sub open_pedigree_section {
 # Fill in and submit the add parent dialog, opening it first if needed
 sub add_parent {
     my ($parent_name, $parent_type, $cross_type, $expected_alert, $test_name) = @_;
-    my $dialog_open = eval { $t->find_element('stock_autocomplete', 'id')->is_displayed() };
+    my $dialog_open = eval { is_visible($t->find_element('stock_autocomplete', 'id')) };
     wait_for_element_ok('add_parent_link', 'id', 'find add parent link')->click() if !$dialog_open;
     my $stock_name = wait_for_element_ok('stock_autocomplete', 'id', 'find add parent input');
-    $t->find_element_ok($parent_type, 'id', "select $parent_type parent type")->click();
+    wait_for_element_ok($parent_type, 'id', "select $parent_type parent type")->click();
     if ($cross_type) {
         wait_for_element_ok("//select[\@id='add_parent_cross_type']/option[\@value='$cross_type']", 'xpath', "select $cross_type cross type")->click();
     }
