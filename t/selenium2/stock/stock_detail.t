@@ -45,7 +45,7 @@ sub wait_for_element_ok {
     my ($locator, $method, $test_name) = @_;
     my $element = wait_for(sub {
         my $e = $t->find_element($locator, $method);
-        return undef if !is_visible($e);
+        return if !is_visible($e);
         $t->driver->execute_script("arguments[0].scrollIntoView({block: 'center'});", $e);
         return $e;
     });
