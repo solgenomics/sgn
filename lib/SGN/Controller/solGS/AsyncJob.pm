@@ -760,17 +760,10 @@ sub create_cluster_config {
         err_file         => $args->{err_file},
         is_async         => 0,
         do_cleanup       => 0,
-        sleep            => $args->{sleep}
+        sleep            => $args->{sleep},
+        backend          => $c->config->{backend},
+        submit_host      => $c->config->{cluster_host} || 'localhost',
     };
-
-    if ( $args->{cluster_host} =~ /localhost/ || !$c->config->{cluster_host} ) {
-        $config->{backend}     = 'Slurm';
-        $config->{submit_host} = 'localhost';
-    }
-    else {
-        $config->{backend}     = $c->config->{backend};
-        $config->{submit_host} = $c->config->{cluster_host};
-    }
 
     return $config;
 }
@@ -923,7 +916,9 @@ sub submit_job_cluster {
     my $job;
 
     eval {
-        $job = CXGN::Tools::Run->new( $args->{config} );
+        my %local_runner_config = %{ $args->{config} };
+        delete $local_runner_config{backend};
+        $job = CXGN::Tools::Run->new( \%local_runner_config );
         $job->do_not_cleanup(1);
     
         if ( $args->{background_job} ) {

@@ -29,6 +29,7 @@ use File::Copy;
 use CXGN::Tools::Run;
 use CXGN::Job;
 use CXGN::Phenotypes::File;
+use SGN::Context;
 
 =head2 dependent_variables()
 
@@ -450,10 +451,15 @@ The result files will initially contain these R-based names as well. The convers
 
 sub run_model {
     my $self = shift;
-    my $backend = shift || 'Slurm';
-    my $cluster_host = shift || "localhost";
+    my $backend = shift;
+    my $cluster_host = shift;
     my $cluster_shared_tempdir = shift;
 	my $job_config = shift;
+
+    my $vhost_conf = SGN::Context->new;
+    $backend = $vhost_conf->get_conf('backend') if !defined $backend;
+    $cluster_host = $vhost_conf->get_conf('cluster_host') if !defined $cluster_host;
+    $cluster_shared_tempdir = $vhost_conf->get_conf('cluster_shared_tempdir') if !defined $cluster_shared_tempdir;
 
     my $random_factors = '"'.join('","', @{$self->random_factors()}).'"';
     my $fixed_factors = '"'.join('","',@{$self->fixed_factors()}).'"';

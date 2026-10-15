@@ -36,6 +36,7 @@ use Data::Dumper;
 use SGN::Model::Cvterm;
 use CXGN::Calendar;
 use JSON;
+use CXGN::JSONUtils qw(decode_stored_json);
 
 has 'bcs_schema' => ( isa => 'Bio::Chado::Schema',
     is => 'rw',
@@ -446,7 +447,7 @@ sub search {
             genotyping_facility_plate_id  => $genotyping_facility_plate_id,
             sampling_facility             => $sampling_facility,
             sampling_trial_sample_type    => $sampling_facility_sample_type,
-            additional_info               => $project_additional_info ? decode_json($project_additional_info) : undef
+            additional_info               => $project_additional_info ? decode_stored_json($project_additional_info) : undef
         };
         $total_count = $full_count;
     }
