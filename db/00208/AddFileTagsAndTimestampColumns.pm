@@ -62,7 +62,7 @@ sub patch {
     $self->dbh()->do( <<'EOSQL');
 --do your SQL here
 --
-ALTER TABLE metadata.md_files ADD COLUMN create_timestamp TIMESTAMPTZ NOT NULL DEFAULT NOW();
+ALTER TABLE metadata.md_files ADD COLUMN create_timestamp TIMESTAMP NOT NULL DEFAULT NOW();
 ALTER TABLE metadata.md_files ADD COLUMN tags TEXT;
 
 WITH timestamped_files AS (
@@ -71,7 +71,7 @@ WITH timestamped_files AS (
       FROM metadata.md_files
 )
 UPDATE metadata.md_files AS f
-   SET create_timestamp = replace(t.file_timestamp, '_', ' ')::timestamptz
+   SET create_timestamp = replace(t.file_timestamp, '_', ' ')::timestamp
   FROM timestamped_files AS t
  WHERE t.file_id = f.file_id
    AND t.file_timestamp IS NOT NULL;
