@@ -184,7 +184,7 @@ sub resolve_javascript_classes :Private {
         push @deps, File::Spec->catfile( "/js/build/", $dep )
     }
 
-    $c->stash->{js_uris} = \@deps;
+    $c->stash->{js_uris} = [ uniq @deps ]; #< the same entry module can be requested by several components
 }
 
 ########## helpers #########
