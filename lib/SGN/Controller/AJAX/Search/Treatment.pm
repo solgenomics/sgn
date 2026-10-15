@@ -6,6 +6,7 @@ use Data::Dumper;
 use CXGN::Trait;
 use CXGN::Trait::Search;
 use CXGN::BreederSearch;
+use CXGN::BrAPI::v1::ObservationVariables;
 
 
 BEGIN { extends 'Catalyst::Controller::REST'; }
@@ -28,24 +29,23 @@ sub search : Path('/ajax/search/treatments') Args(0) {
         $ontology_db_ids = ref($params->{'ontology_db_id[]'}) eq 'ARRAY' ? $params->{'ontology_db_id[]'} : [$params->{'ontology_db_id[]'}];
     }
 
-    my $observation_variables = CXGN::BrAPI::v2::ObservationVariables->new({
+    # With no ontology ticked, search every ontology tagged as a treatment
+    # ontology: the same list the page offers as checkboxes
+    # (/ajax/html/select/trait_variable_ontologies). The treatment ontologies
+    # are not in the default onto_root_namespaces, and an empty list here
+    # means no ontology filter at all.
+    my $observation_variables = CXGN::BrAPI::v1::ObservationVariables->new({
         bcs_schema => $c->dbic_schema("Bio::Chado::Schema", undef, $sp_person_id),
         metadata_schema => $c->dbic_schema("CXGN::Metadata::Schema", undef, $sp_person_id),
         phenome_schema=>$c->dbic_schema("CXGN::Phenome::Schema", undef, $sp_person_id),
         people_schema => $c->dbic_schema("CXGN::People::Schema", undef, $sp_person_id),
         page_size => 1000000,
         page => 0,
-        status => [],
-        context => $c
+        status => []
     });
 
-    my $name_spaces_str = $c->config->{onto_root_namespaces};
-    my @name_spaces_pairs = split(", ",$name_spaces_str);
-    my @name_spaces = map { s/ .*//r } @name_spaces_pairs;
-
     my $result = $observation_variables->observation_variable_ontologies({
-        cvprop_type_names => ['experiment_treatment_ontology', 'composed_experiment_treatment_ontology'],
-        name_spaces => \@name_spaces
+        cvprop_type_names => ['experiment_treatment_ontology', 'composed_experiment_treatment_ontology']
     });
 
     my @ontos;
