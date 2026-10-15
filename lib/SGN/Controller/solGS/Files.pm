@@ -1021,7 +1021,7 @@ sub analysis_metadata_dir {
     my ($self, $c) = @_;
 
     my $cluster_shared_dir = $self->get_cluster_shared_dir($c);
-    my $metadata_dir = catdir($cluster_shared_dir, 'metadata');
+    my $metadata_dir = File::Spec->catdir($cluster_shared_dir, 'metadata');
 
     make_path($metadata_dir, { mode => oct('0755') })
         unless -d $metadata_dir;
@@ -1042,7 +1042,7 @@ sub get_cluster_shared_dir {
 
     $geno_version =~ s/\s+//g;
 
-    my $cluster_shared_dir = catdir(
+    my $cluster_shared_dir = File::Spec->catdir(
         $c->site_cluster_shared_dir,
         $geno_version
     );
@@ -1070,8 +1070,7 @@ sub get_solgs_dirs {
     }
 
     my $analysis_log_dir = File::Spec->catdir($cluster_shared_dir, 'log');
-    #my $solgs_dir       = File::Spec->catdir($cluster_shared_dir, "solgs");
-    # my $solgs_temp_dir   = File::Spec->catdir($solgs_dir, 'tempfiles');
+    my $analysis_metadata_dir = File::Spec->catdir($cluster_shared_dir, 'metadata');
     my $solgs_lists     = File::Spec->catdir($cluster_shared_dir, 'solgs', 'tempfiles', 'lists');
     my $solgs_datasets  = File::Spec->catdir($cluster_shared_dir, 'solgs', 'tempfiles', 'datasets');
 
