@@ -49,6 +49,14 @@ is_deeply($response->{result}->{data}, [], 'trials page past the last row is emp
 $response = get_json('http://localhost:3010/brapi/v1/trials?programDbId=999999999');
 is_deeply($response->{result}->{data}, [], 'trials with no matching program returns an empty list');
 
+# CXGN::BrAPI::v1::Studies::observation_units() had the identical
+# page_size*(page+1)-1 LIMIT bug as v1 ObservationUnits.pm: page 0 returned
+# one row fewer than pageSize, and later pages returned more than pageSize.
+$response = get_json('http://localhost:3010/brapi/v1/studies/165/observationunits?pageSize=2&page=0');
+is(scalar(@{$response->{result}->{data} || []}), 2, 'studies/{id}/observationunits page 0 returns pageSize rows');
+$response = get_json('http://localhost:3010/brapi/v1/studies/165/observationunits?pageSize=3&page=1');
+is(scalar(@{$response->{result}->{data} || []}), 3, 'studies/{id}/observationunits page 1 returns pageSize rows');
+
 $f->clean_up_db();
 
 done_testing();
