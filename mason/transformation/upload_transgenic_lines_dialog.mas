@@ -22,7 +22,7 @@ $breeding_program_name
                         <div class="form-group">
                             <label class="col-sm-3 control-label">Upload File: </label>
                             <div class="col-sm-9" >
-                                <input type="file" name="transgenic_lines_file" id="transgenic_lines_file" encoding="multipart/form-data" />
+                                <input type="file" name="transgenic_lines_upload_file" id="transgenic_lines_upload_file" encoding="multipart/form-data" />
                                 <input name="project_breeding_program_name" id="project_breeding_program_name" type="hidden" value="<% $breeding_program_name %>">
                             </div>
                         </div>
@@ -98,7 +98,7 @@ $breeding_program_name
                         <thead></thead>
                         <tbody>
                             <tr>
-                                <td>transformation_ID</td>
+                                <td>transformation_identifier</td>
                                 <td>transgenic_line_name</td>
                             </tr>
                         </tbody>
@@ -106,7 +106,7 @@ $breeding_program_name
 
                     <b>Required fields:</b>
                     <ul>
-                        <li>transformation_ID (must exist in the database)</li>
+                        <li>transformation_identifier (must exist in the database)</li>
                         <li>transgenic_line_name (must NOT exist in the database)</li>
                     </ul>
                 </div>
@@ -118,7 +118,6 @@ $breeding_program_name
         </div>
     </div>
 </div>
-
 
 <script>
 
@@ -133,6 +132,38 @@ jQuery(document).ready(function(){
     });
 
 
+    jQuery("#upload_transgenic_lines_submit").click(function(){
+        if (transgenic_lines_upload_file === ''){
+            alert("Please select a file");
+            return;
+        }
+
+        jQuery("#working_modal").modal("show");
+        jQuery.ajax({
+            url: "/ajax/transformation/upload_transgenic_lines",
+            type: 'POST',
+            data: new FormData(jQuery("#upload_transgenic_lines_form")[0]),
+            processData: false,
+            contentType: false,
+            success: function(response) {
+                jQuery("#working_modal").modal("hide");
+                if (response.error_string) {
+                    jQuery("#upload_transgenic_lines_error_display tbody").html('');
+                    jQuery("#upload_transgenic_lines_error_display tbody").append(response.error_string);
+                    jQuery("#upload_transgenic_lines_error_display").modal("show");
+                    return;
+                }
+                if (response.error) {
+                    alert(response.error);
+                    return;
+                }
+                if (response.success) {
+                    jQuery('#upload_transgenic_lines_dialog').modal('hide');
+                    jQuery('#transgenic_lines_saved_dialog_message').modal("show");
+                }
+            }
+        });
+    });
 
     jQuery("#dismiss_transgenic_lines_saved_dialog").click(function(){
         location.reload();
