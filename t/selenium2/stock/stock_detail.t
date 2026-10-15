@@ -213,7 +213,12 @@ my $ok = eval { $t->while_logged_in_as("submitter", sub {
     like($pedigree_html, qr/test_accession1/, "Verify if test_accession1 on pedigree panel");
     like($pedigree_html, qr/test_accession2/, "Verify if test_accession2 on pedigree panel");
 
-    my $pedigree_string = $t->find_element_ok("pedigree_string", "id", "verify pedigree string")->get_text();
+    # #pedigree_string is filled by its own AJAX call, separate from the pedigree view
+    my $pedigree_string_el = $t->find_element_ok("pedigree_string", "id", "verify pedigree string");
+    my $pedigree_string = wait_for(sub {
+        my $text = $pedigree_string_el->get_attribute('textContent');
+        return $text =~ /loading/ ? undef : $text;
+    }) // $pedigree_string_el->get_attribute('textContent');
     like($pedigree_string, qr/test_accession1\/test_accession2/, "Verify if pedigree string contain 'test_accession1/test_accession2'");
 
     # Test removing parents from pedigree info section (section is already open)
