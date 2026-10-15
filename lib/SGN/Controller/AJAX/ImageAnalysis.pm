@@ -1100,7 +1100,8 @@ sub image_analysis_submit_POST : Args(0) {
                 @columns = $csv->fields();
             }
             $res{'value'} = $columns[0];
-            $res{'trait'} = $service_details{$service}->{'trait_name'};
+            $res{'trait'} = $trait || $service_details{$service}->{'trait_name'};
+            $res{'trait_id'} = $trait_details->[0]->{trait_id};
         }
 
         $res{'original_image'} = $image_urls[$it];

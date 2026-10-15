@@ -178,14 +178,14 @@ function <% $div_name %>_addProp() {
     },
     data: { 'stock_id' : <% $stock_id %>, 'prop' : prop, 'prop_type': prop_type },
     success: function(response) {
-        jQuery('#working_modal').modal('hide');
+        <% $div_name %>_hideWorkingModal();
         if ("error" in response) { alert ('ERROR '+response.error); }
         if ("message" in response) {
             alert('Successfully added property: ' + prop + '. ('+response.message+')');
         }
     },
     error: function(response) {
-        jQuery('#working_modal').modal('hide');
+        <% $div_name %>_hideWorkingModal();
         alert('an error occurred while storing the prop ' + response.error);
     },
     complete: function() {
@@ -195,6 +195,14 @@ function <% $div_name %>_addProp() {
   });
   
   }
+
+
+// If the response arrives before the Bootstrap 3 show fade ends, hide() is ignored and the modal stays stuck open
+function <% $div_name %>_hideWorkingModal() {
+    var m = jQuery('#working_modal');
+    if (m.hasClass('in')) { m.modal('hide'); }
+    else { m.one('shown.bs.modal', function() { m.modal('hide'); }); }
+}
 
 
 function <% $div_name %>_deleteProp(stockprop_value, stockprop_id) {
