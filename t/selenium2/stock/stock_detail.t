@@ -62,6 +62,14 @@ sub clear_and_type {
     $element->send_keys($text);
 }
 
+# Wait until the #working_modal overlay (and its backdrop) is fully hidden, so it can't intercept clicks
+sub wait_for_working_modal_hidden {
+    my $test_name = shift;
+    ok(wait_for(sub {
+        $t->driver->execute_script("return !jQuery('#working_modal').is(':visible') && jQuery('.modal-backdrop').length === 0;");
+    }), $test_name);
+}
+
 sub body_text {
     return $t->find_element('body', 'tag_name')->get_text();
 }
@@ -169,6 +177,7 @@ my $ok = eval { $t->while_logged_in_as("submitter", sub {
         note("jQuery.cookie('sgn_session_id'): " . ($t->driver->execute_script('return String(jQuery.cookie("sgn_session_id"));') // 'undef'));
         note("synonyms_content innerHTML: " . $t->find_element('synonyms_content', 'id')->get_attribute('innerHTML'));
     }
+    wait_for_working_modal_hidden('working modal closed after adding synonym');
     wait_for_element_ok($delete_synonym_xpath, "xpath", "find delete synonym link")->click();
     accept_alert_like(qr/Delete stockprop test_synonym/, 'confirm delete synonym');
     accept_alert_like(qr/The element was removed from the database/, 'synonym deleted');
