@@ -1,0 +1,376 @@
+<div class="modal fade" id="seedlot_upload_inventory_spreadsheet_info_dialog" name="seedlot_upload_inventory_spreadsheet_info_dialog" tabindex="-1" role="dialog" aria-labelledby="uploadSeedlotInventoryInfoDialog">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header" style="text-align: center">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="uploadSeedlotInventoryInfoDialog">Upload Template Information</h4>
+            </div>
+            <div class="modal-body">
+                <div class="container-fluid">
+                    <b>Seedlots may be uploaded in a CSV file (.csv)</b>
+                    <br />
+                    (Excel .xls and .xlsx format not supported)
+                    <br /><br />
+                    <b>Header:</b>
+                    <br>
+                    The first row (header) should contain the following:
+                    <br />
+
+                    <table class="table table-hover table-bordered table-condensed" >
+                        <thead></thead>
+                        <tbody>
+                            <tr>
+                                <td>box_id</td>
+                                <td>seed_id</td>
+                                <td>inventory_date</td>
+                                <td>inventory_person</td>
+                                <td>weight_gram</td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <b>Required fields:</b>
+                    <ul>
+                    <li>box_id (the name of the box that the seedlot is in. also called box_name.)</li>
+                    <li>seed_id (unique identifier for the seedlot. must exist in the database. also called seedlot_name)</li>
+                    <li>inventory_date (a timestamp for when the seedlot was inventoried)</li>
+                    <li>inventory_person (the name of the person doing the inventory. can be any name. also called operator_name)</li>
+                    <li>weight_gram (the weight in grams of the seedlot)</li>
+                    </ul>
+
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button id="close_seedlot_info_upload_inventory_dialog" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="seedlot_upload_spreadsheet_harvested_info_dialog" name="seedlot_upload_spreadsheet_harvested_info_dialog" tabindex="-1" role="dialog" aria-labelledby="uploadSeedlotHarvestedInfoDialog">
+    <div class="modal-dialog modal-xl" role="document">
+        <div class="modal-content">
+            <div class="modal-header" style="text-align: center">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="uploadSeedlotHarvestedInfoDialog">Upload Template Information For Harvested Seedlots</h4>
+            </div>
+            <div class="modal-body">
+                <div class="container-fluid">
+                    <b>Header:</b>
+                    <br>
+                    The first row (header) should contain the following:
+                    <br />
+
+                    <table class="table table-hover table-bordered table-condensed" >
+                        <thead></thead>
+                        <tbody>
+                            <tr>
+                                <td>seedlot_name</td>
+                                <td>cross_unique_id</td>
+                                <td>operator_name</td>
+                                <td>amount</td>
+                                <td>weight_gram</td>
+                                <td>description</td>
+                                <td>box_name</td>
+                                <td>quality</td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <b>Required fields:</b>
+                    <ul>
+                    <li>seedlot_name (must be unique)</li>
+                    <li>cross_unique_id (must exist in the database. a cross_unique_id can represent a cross between accessions e.g. AxB, but a cross can also represent a cross between specific plots in the field if you have this information)</li>
+                    <li>operator_name (the name of the person who oversaw the inventory process. can be any name.)</li>
+                    <li>
+                    amount (number of materials in seedlot. can be provided in conjunction with weight_gram. must provide a value for amount or weight_gram or both.)
+                    <br/><b>AND/OR</b><br/>
+                    weight_gram (weight in grams of seedlot. can be provided in conjunction with amount. must provide a value for amount or weight_gram or both.)
+                    </li>
+                    <li>box_name (the box name that the plant material is located in. can be any name.)</li>
+                    </ul>
+
+                    <b>Optional fields:</b>
+                    <ul>
+                      <li>description (information about why this seedlot is being added)</li>
+                      <li>quality (brief description of quality, e.g.,  "ok", "moldy", "insect damage", etc)</li>
+                    </ul>
+                </div>
+                <& /help/file_upload_type.mas, type => "Seedlots", optional_column => 1 &>
+            </div>
+            <div class="modal-footer">
+                <button id="close_seedlot_harvested_info_upload_dialog" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="seedlot_upload_spreadsheet_info_dialog" name="seedlot_upload_spreadsheet_info_dialog" tabindex="-1" role="dialog" aria-labelledby="uploadSeedlotInfoDialog">
+    <div class="modal-dialog modal-xl" role="document">
+        <div class="modal-content">
+            <div class="modal-header" style="text-align: center">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="uploadSeedlotInfoDialog">Upload Template Information For Named Accessions</h4>
+            </div>
+            <div class="modal-body">
+                <div class="container-fluid">
+                    <b>Header:</b>
+                    <br>
+                    The first row (header) should contain the following:
+                    <br />
+
+                    <table class="table table-hover table-bordered table-condensed" >
+                        <thead></thead>
+                        <tbody>
+                            <tr>
+                                <td>seedlot_name</td>
+                                <td>accession_name</td>
+                                <td>operator_name</td>
+                                <td>amount</td>
+                                <td>weight_gram</td>
+                                <td>description</td>
+                                <td>box_name</td>
+                                <td>quality</td>
+                                <td>source</td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <b>Required fields:</b>
+                    <ul>
+                    <li>seedlot_name (must be unique)</li>
+                    <li>accession_name (must exist in the database. the accession_name is the unique identifier for the named genotype)</li>
+                    <li>operator_name (the name of the person who oversaw the inventory process. can be any name.)</li>
+                    <li>
+                    amount (number of materials in seedlot. can be provided in conjunction with weight_gram. must provide a value for amount or weight_gram or both.)
+                    <br/><b>AND/OR</b><br/>
+                    weight_gram (weight in grams of seedlot. can be provided in conjunction with amount. must provide a value for amount or weight_gram or both.)
+                    </li>
+                    <li>box_name (the box name that the plant material is located in. can be any name.)</li>
+                    </ul>
+
+                    <b>Optional fields:</b>
+                    <ul>
+                      <li>description (information about why this seedlot is being added)</li>
+                      <li>quality (status of the seedlot, for example "ok", "moldy", "insect damage" etc.)</li>
+                      <li>source (an alternate source, such as a plot, subplot, or plant identifier from which the seed was collected)</li>
+                    </ul>
+                </div>
+                <& /help/file_upload_type.mas, type => "Seedlots", optional_column => 1 &>
+            </div>
+            <div class="modal-footer">
+                <button id="close_seedlot_info_upload_dialog" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="seedlots_to_seedlots_info_dialog" name="seedlots_to_seedlots_info_dialog" tabindex="-1" role="dialog" aria-labelledby="seedlotsToseedlotsInfoDialog">
+    <div class="modal-dialog modal-xl" role="document">
+        <div class="modal-content">
+            <div class="modal-header" style="text-align: center">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="seedlotsToseedlotsInfoDialog">Upload Template Information For Existing Seedlot to Existing Seedlot Transactions  </h4>
+            </div>
+            <div class="modal-body">
+                <div class="container-fluid">
+                    <b>Transactions may be uploaded in an Excel file (.xls or .xlsx)</b>
+                    <br />
+                    <b>Header:</b>
+                    <br>
+                    The first row (header) must contain the following:
+                    <br />
+                    <table class="table table-hover table-bordered table-condensed" >
+                        <thead></thead>
+                        <tbody>
+                            <tr>
+                                <td>from_seedlot_name</td>
+                                <td>to_seedlot_name</td>
+                                <td>amount</td>
+                                <td>weight(g)</td>
+                                <td>operator_name</td>
+                                <td>transaction_description</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <b>Required fields:</b>
+                    <ul>
+                        <li><b>from_seedlot_name:</b> Must exist in the database. Seeds were taken from this seedlot.</li>
+                        <li><b>to_seedlot_name:</b> Must exist in the database. Seeds were added to this seedlot.</li>
+                        <li>
+                            <b>amount:</b> Number of seeds being transaferred. Can be provided in conjunction with weight(g). Must provide a value for amount or weight(g) or both.
+                            <br/><b>AND/OR</b><br/>
+                            <b>weight(g):</b> Weight in grams of seedlot being transferred. Can be provided in conjunction with amount. Must provide a value for amount or weight(g) or both.
+                        </li>
+                        <li><b>operator_name:</b> Name of the person who oversaw the transaction process. Can be any name.</li>
+                    </ul>
+                    <b>Optional fields:</b>
+                    <ul>
+                        <li><b>transaction_description:</b> Information about why this transaction is processed.</li>
+                    </ul>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button id="close_seedlots_to_seedlots_info_dialog" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="seedlots_to_new_seedlots_info_dialog" name="seedlots_to_new_seedlots_info_dialog" tabindex="-1" role="dialog" aria-labelledby="seedlotsToNewSeedlotsInfoDialog">
+    <div class="modal-dialog modal-xl" role="document">
+        <div class="modal-content">
+            <div class="modal-header" style="text-align: center">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="seedlotsToNewSeedlotsInfoDialog">Upload Template Information For Existing Seedlot to New Seedlot Transactions  </h4>
+            </div>
+            <div class="modal-body">
+                <div class="container-fluid">
+                    <b>Transactions may be uploaded in an Excel file (.xls or .xlsx)</b>
+                    <br />
+                    <b>Header:</b>
+                    <br>
+                    The first row (header) must contain the following:
+                    <br />
+                    <table class="table table-hover table-bordered table-condensed" >
+                        <thead></thead>
+                        <tbody>
+                            <tr>
+                                <td>from_seedlot_name</td>
+                                <td>amount</td>
+                                <td>weight(g)</td>
+                                <td>operator_name</td>
+                                <td>transaction_description</td>
+                                <td>to_new_seedlot_name</td>
+                                <td>new_seedlot_box_name</td>
+                                <td>new_seedlot_description</td>
+                                <td>new_seedlot_quality</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <b>Required fields:</b>
+                    <ul>
+                        <li><b>from_seedlot_name:</b> Must exist in the database. Seeds were taken from this seedlot.</li>
+                        <li>
+                            <b>amount:</b> Number of seeds being transaferred. Can be provided in conjunction with weight(g). Must provide a value for amount or weight(g) or both.
+                            <br/><b>AND/OR</b><br/>
+                            <b>weight(g):</b> Weight in grams of seedlot being transferred. Can be provided in conjunction with amount. Must provide a value for amount or weight(g) or both.
+                        </li>
+                        <li><b>operator_name:</b> Name of the person who oversaw the transaction process. Can be any name.</li>
+                        <li><b>to_new_seedlot_name:</b> Must NOT exist in the database. New seedlot will be created using amount/weight of seeeds from existing seedlot.</li>
+                        <li><b>new_seedlot_box_name:</b> Box name that this new seedlot is stored. Can be any name.</li>
+                    </ul>
+                    <b>Optional fields:</b>
+                    <ul>
+                        <li><b>transaction_description:</b> Information about why this transaction is processed.</li>
+                        <li><b>new_seedlot_description:</b> Information about this new seedlot.</li>
+                        <li><b>new_seedlot_quality:</b> Status or condition of the seedlot, for example "ok", "moldy", "insect damage" etc.</li>
+                    </ul>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button id="close_seedlots_to_new_seedlots_info_dialog" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="seedlots_to_plots_info_dialog" name="seedlots_to_plots_info_dialog" tabindex="-1" role="dialog" aria-labelledby="seedlotsToPlotsInfoDialog">
+    <div class="modal-dialog modal-xl" role="document">
+        <div class="modal-content">
+            <div class="modal-header" style="text-align: center">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="seedlotsToPlotsInfoDialog">Upload Template Information For Existing Seedlot to Plot Transactions  </h4>
+            </div>
+            <div class="modal-body">
+                <div class="container-fluid">
+                    <b>Transactions may be uploaded in an Excel file (.xls or .xlsx)</b>
+                    <br />
+                    <b>Header:</b>
+                    <br>
+                    The first row (header) must contain the following:
+                    <br />
+
+                    <table class="table table-hover table-bordered table-condensed" >
+                        <thead></thead>
+                        <tbody>
+                            <tr>
+                                <td>from_seedlot_name</td>
+                                <td>to_plot_name</td>
+                                <td>amount</td>
+                                <td>weight(g)</td>
+                                <td>operator_name</td>
+                                <td>transaction_description</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <b>Required fields:</b>
+                    <ul>
+                        <li><b>from_seedlot_name:</b> Must exist in the database. Seeds were taken from this seedlot.</li>
+                        <li><b>to_plot_name:</b> Must exist in the database. Seeds were used for this plot. You can also record seedlot used for each plot during uploading existing trial on the Manage Trials page</li>
+                        <li>
+                            <b>amount:</b> Number of seeds being transaferred. Can be provided in conjunction with weight(g). Must provide a value for amount or weight(g) or both.
+                            <br/><b>AND/OR</b><br/>
+                            <b>weight(g):</b> Weight in grams of seedlot being transferred. Can be provided in conjunction with amount. Must provide a value for amount or weight(g) or both.
+                        </li>
+                        <li><b>operator_name:</b> Name of the person who oversaw the transaction process. Can be any name.</li>
+                    </ul>
+                    <b>Optional fields:</b>
+                    <ul>
+                        <li><b>transaction_description:</b> Information about why this transaction is processed.</li>
+                    </ul>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button id="close_seedlots_to_plots_info_dialog" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="seedlots_to_unspecified_names_info_dialog" name="seedlots_to_unspecified_names_info_dialog" tabindex="-1" role="dialog" aria-labelledby="seedlotsToUnspecifiedNamesInfoDialog">
+    <div class="modal-dialog modal-xl" role="document">
+        <div class="modal-content">
+            <div class="modal-header" style="text-align: center">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="seedlotsToUnspecifiedNamesInfoDialog">Upload Template Information For Existing Seedlot to Unspecified Seedlots/Plots Transactions  </h4>
+            </div>
+            <div class="modal-body">
+                <div class="container-fluid">
+                    <b>Transactions may be uploaded in an Excel file (.xls or .xlsx)</b>
+                    <br />
+                    <b>Header:</b>
+                    <br>
+                    The first row (header) must contain the following:
+                    <br />
+                    <table class="table table-hover table-bordered table-condensed" >
+                        <thead></thead>
+                        <tbody>
+                            <tr>
+                                <td>from_seedlot_name</td>
+                                <td>amount</td>
+                                <td>weight(g)</td>
+                                <td>operator_name</td>
+                                <td>transaction_description</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <b>Required fields:</b>
+                    <ul>
+                        <li><b>from_seedlot_name:</b> Must exist in the database. Seeds were taken from this seedlot.</li>
+                        <li>
+                            <b>amount:</b> Number of seeds being transferred. Can be provided in conjunction with weight(g). Must provide a value for amount or weight(g) or both.
+                            <br/><b>AND/OR</b><br/>
+                            <b>weight(g):</b> Weight in grams of seedlot being transferred. Can be provided in conjunction with amount. Must provide a value for amount or weight(g) or both.
+                        </li>
+                        <li><b>operator_name:</b> Name of the person who oversaw the transaction process. Can be any name.</li>
+                        <li><b>transaction_description:</b> Information about why this transaction is processed.</li>
+                    </ul>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button id="close_seedlots_to_unspecified_names_info_dialog" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>

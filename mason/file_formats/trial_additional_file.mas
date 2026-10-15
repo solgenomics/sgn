@@ -1,0 +1,26 @@
+<div class="modal fade" id="trial_upload_additional_file_info_dialog" name="trial_upload_additional_file_info_dialog" tabindex="-1" role="dialog" aria-labelledby="trialUploadAdditionalFileInfoDialog">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header" style="text-align: center">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="trialUploadAdditionalFileInfoDialog">Upload Information</h4>
+            </div>
+            <div class="modal-body">
+                <div class="container-fluid">
+                    <b>This is for uploading any additional files you may have for a trial.</b>
+                    <br/><br/>
+                    <p>Possible additional files inlude, but are not limited to:</p>
+                    <ul>
+                        <li>Trial Related Images, such as a physical field image or an aerial picture of the field.</li>
+                        <li>Trial Related Documentation, such as protocols or permits for the trial.</li>
+                        <li>Trial Related Reports, such as supplementary information or publications.</li>
+                        <li>Trial Related Recordings, whether audio or video.</li>
+                    </ul>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button id="close_trial_upload_additional_file_info_dialog" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>

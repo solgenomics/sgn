@@ -14,10 +14,11 @@ CXGN::UploadFile - an object to handle uploading files
     archive_filename => 'myfilename.csv',
     timestamp => '2016-09-24_10:30:30',
     user_id => 41,
-    user_role => 'curator'
+    user_role => 'curator',
+    metadata_schema => $metadata_schema
  });
- my $uploaded_file = $uploader->archive();
- my $md5 = $uploader->get_md5($uploaded_file);
+ my ($upload_file_id, $uploaded_file_name_with_path) = $uploader->archive();
+ my $md5 = $uploader->get_md5($uploaded_file_name_with_path);
 
  In this example, the tempfile myfile.csv will be saved in: /some/path/to/dir/41/some_directory/2016-09-24_10:30:30_myfilename.csv
 
@@ -40,6 +41,7 @@ use File::Spec::Functions;
 use File::Basename qw | basename dirname|;
 use Digest::MD5;
 use Data::Dumper;
+use CXGN::Metadata::Schema;
 
 has 'tempfile' => (isa => "Str",
     is => 'rw',
@@ -93,6 +95,17 @@ has 'include_timestamp' => (
     default => 1
 );
 
+has 'metadata_schema' => (
+    isa => 'CXGN::Metadata::Schema',
+    is => 'rw',
+    required => 1
+);
+
+has 'file_type' => (isa => "Maybe[Str]",
+    is => 'rw',
+    required => 0
+);
+
 sub archive {
     my $self = shift;
     my $subdirectory = $self->subdirectory;
@@ -104,6 +117,8 @@ sub archive {
     my $archive_path = $self->archive_path;
     my $user_id = $self->user_id;
     my $file_destination;
+    my $metadata_schema = $self->metadata_schema;
+    my $file_type = $self->file_type;
     my $error;
 
     #    if (!$subdirectory || !$tempfile || !$archive_filename || !$timestamp || !$archive_path || !$user_id){
@@ -171,7 +186,24 @@ sub archive {
         print STDERR  "$error\n";
     }
     print STDERR "ARCHIVED: $file_destination\n";
-    return $file_destination;
+
+    my $file_path_without_archive = $file_destination =~ s/$archive_path//gr;
+
+    my $md_row = $metadata_schema->resultset("MdMetadata")->create({create_person_id => $user_id});
+    $md_row->insert();
+    my $md5 = $self->get_md5($file_destination);
+    my $file_row = $metadata_schema->resultset("MdFiles")->create({
+        basename => basename($file_path_without_archive),
+        dirname => dirname($file_path_without_archive),
+        filetype => $file_type,
+        md5checksum => $md5->hexdigest(),
+        metadata_id => $md_row->metadata_id(),
+    });
+    $file_row->insert();
+
+    my $file_id = $file_row->file_id();
+
+    return ($file_id, $file_destination);
 }
 
 sub get_md5 {

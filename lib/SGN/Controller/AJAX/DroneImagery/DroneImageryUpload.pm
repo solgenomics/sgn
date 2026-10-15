@@ -449,9 +449,10 @@ sub upload_drone_imagery_POST : Args(0) {
                 archive_filename => $upload_original_name,
                 timestamp => $timestamp,
                 user_id => $user_id,
-                user_role => $user_role
+                user_role => $user_role,
+                metadata_schema => $metadata_schema
             });
-            my $archived_filename_with_path = $uploader->archive();
+            my ($archived_file_id, $archived_filename_with_path) = $uploader->archive();
             my $md5 = $uploader->get_md5($archived_filename_with_path);
             if (!$archived_filename_with_path) {
                 $c->stash->{rest} = { error => "Could not save file $upload_original_name in archive." };
@@ -507,9 +508,10 @@ sub upload_drone_imagery_POST : Args(0) {
             archive_filename => $upload_original_name,
             timestamp => $timestamp,
             user_id => $user_id,
-            user_role => $user_role
+            user_role => $user_role,
+            metadata_schema => $metadata_schema
         });
-        my $archived_filename_with_path = $uploader->archive();
+        my ($archived_file_id, $archived_filename_with_path) = $uploader->archive();
         my $md5 = $uploader->get_md5($archived_filename_with_path);
         if (!$archived_filename_with_path) {
             $c->stash->{rest} = { error => "Could not save file $upload_original_name in archive." };
@@ -561,9 +563,10 @@ sub upload_drone_imagery_POST : Args(0) {
                 archive_filename => $upload_original_name_panel,
                 timestamp => $timestamp,
                 user_id => $user_id,
-                user_role => $user_role
+                user_role => $user_role,
+                metadata_schema => $metadata_schema
             });
-            my $archived_filename_with_path_panel = $uploader_panel->archive();
+            my ($archived_file_id_panel, $archived_filename_with_path_panel) = $uploader_panel->archive();
             my $md5_panel = $uploader->get_md5($archived_filename_with_path_panel);
             if (!$archived_filename_with_path_panel) {
                 $c->stash->{rest} = { error => "Could not save file $upload_original_name_panel in archive." };
@@ -634,9 +637,10 @@ sub upload_drone_imagery_POST : Args(0) {
                 archive_filename => $upload_original_name,
                 timestamp => $timestamp,
                 user_id => $user_id,
-                user_role => $user_role
+                user_role => $user_role,
+                metadata_schema => $metadata_schema
             });
-            my $archived_filename_with_path = $uploader->archive();
+            my ($archived_file_id, $archived_filename_with_path) = $uploader->archive();
             my $md5 = $uploader->get_md5($archived_filename_with_path);
             if (!$archived_filename_with_path) {
                 $c->stash->{rest} = { error => "Could not save file $upload_original_name in archive." };
@@ -698,9 +702,10 @@ sub upload_drone_imagery_POST : Args(0) {
             archive_filename => $upload_original_name,
             timestamp => $timestamp,
             user_id => $user_id,
-            user_role => $user_role
+            user_role => $user_role,
+            metadata_schema => $metadata_schema
         });
-        my $archived_filename_with_path = $uploader->archive();
+        my ($archived_file_id, $archived_filename_with_path) = $uploader->archive();
         my $md5 = $uploader->get_md5($archived_filename_with_path);
         if (!$archived_filename_with_path) {
             $c->stash->{rest} = { error => "Could not save file $upload_original_name in archive." };
@@ -747,9 +752,10 @@ sub upload_drone_imagery_POST : Args(0) {
                 archive_filename => $upload_original_name_panel,
                 timestamp => $timestamp,
                 user_id => $user_id,
-                user_role => $user_role
+                user_role => $user_role,
+                metadata_schema => $metadata_schema
             });
-            my $archived_filename_with_path_panel = $uploader_panel->archive();
+            my ($archived_file_id_panel, $archived_filename_with_path_panel) = $uploader_panel->archive();
             my $md5_panel = $uploader->get_md5($archived_filename_with_path_panel);
             if (!$archived_filename_with_path_panel) {
                 $c->stash->{rest} = { error => "Could not save file $upload_original_name_panel in archive." };
@@ -867,9 +873,10 @@ sub upload_drone_imagery_POST : Args(0) {
                 archive_filename => $upload_original_name,
                 timestamp => $timestamp,
                 user_id => $user_id,
-                user_role => $user_role
+                user_role => $user_role,
+                metadata_schema => $metadata_schema
             });
-            my $archived_filename_with_path = $uploader->archive();
+            my ($archived_file_id, $archived_filename_with_path) = $uploader->archive();
             my $md5 = $uploader->get_md5($archived_filename_with_path);
             if (!$archived_filename_with_path) {
                 $c->stash->{rest} = { error => "Could not save file $upload_original_name in archive." };
@@ -912,9 +919,10 @@ sub upload_drone_imagery_POST : Args(0) {
             archive_filename => $upload_original_name,
             timestamp => $timestamp,
             user_id => $user_id,
-            user_role => $user_role
+            user_role => $user_role,
+            metadata_schema => $metadata_schema
         });
-        my $archived_filename_with_path = $uploader->archive();
+        my ($archived_file_id, $archived_filename_with_path) = $uploader->archive();
         my $md5 = $uploader->get_md5($archived_filename_with_path);
         if (!$archived_filename_with_path) {
             $c->stash->{rest} = { error => "Could not save file $upload_original_name in archive." };
@@ -963,9 +971,10 @@ sub upload_drone_imagery_POST : Args(0) {
                 archive_filename => $upload_original_name_panel,
                 timestamp => $timestamp,
                 user_id => $user_id,
-                user_role => $user_role
+                user_role => $user_role,
+                metadata_schema => $metadata_schema
             });
-            my $archived_filename_with_path_panel = $uploader_panel->archive();
+            my ($archived_file_id_panel, $archived_filename_with_path_panel) = $uploader_panel->archive();
             my $md5_panel = $uploader->get_md5($archived_filename_with_path_panel);
             if (!$archived_filename_with_path_panel) {
                 $c->stash->{rest} = { error => "Could not save file $upload_original_name_panel in archive." };
@@ -1026,9 +1035,11 @@ sub upload_drone_imagery_POST : Args(0) {
             archive_filename => $alignment_output_path_name,
             timestamp => $timestamp,
             user_id => $user_id,
-            user_role => $user_role
+            user_role => $user_role,
+            file_type => $alignment_matrices_type,
+            metadata_schema => $metadata_schema
         });
-        my $alignment_archived_filename_with_path = $uploader_alignment->archive();
+        my ($alignment_archived_file_id, $alignment_archived_filename_with_path) = $uploader_alignment->archive();
         my $alignment_md5 = $uploader_alignment->get_md5($archived_filename_with_path);
         if (!$alignment_archived_filename_with_path) {
             return { error => "Could not save file $alignment_output_path_name in archive." };
@@ -1142,9 +1153,10 @@ sub upload_drone_imagery_POST : Args(0) {
             archive_filename => $upload_original_name,
             timestamp => $timestamp,
             user_id => $user_id,
-            user_role => $user_role
+            user_role => $user_role,
+            metadata_schema => $metadata_schema
         });
-        my $archived_filename_with_path = $uploader->archive();
+        my ($archived_file_id, $archived_filename_with_path) = $uploader->archive();
         my $md5 = $uploader->get_md5($archived_filename_with_path);
         if (!$archived_filename_with_path) {
             $c->stash->{rest} = { error => "Could not save file $upload_original_name in archive." };
@@ -1174,9 +1186,10 @@ sub upload_drone_imagery_POST : Args(0) {
                 timestamp => $timestamp,
                 user_id => $user_id,
                 user_role => $user_role,
-                include_timestamp => 0
+                include_timestamp => 0,
+                metadata_schema => $metadata_schema
             });
-            my $archived_filename_with_path_odm_img = $uploader_odm_dir->archive();
+            my ($archived_file_id_odm_img, $archived_filename_with_path_odm_img) = $uploader_odm_dir->archive();
             my $md5 = $uploader_odm_dir->get_md5($archived_filename_with_path_odm_img);
             if (!$archived_filename_with_path_odm_img) {
                 $c->stash->{rest} = { error => "Could not save file $i in archive." };
@@ -1232,9 +1245,10 @@ sub upload_drone_imagery_POST : Args(0) {
                     archive_filename => $upload_panel_original_name,
                     timestamp => $timestamp,
                     user_id => $user_id,
-                    user_role => $user_role
+                    user_role => $user_role,
+                    metadata_schema => $metadata_schema
                 });
-                my $archived_filename_panel_with_path = $uploader_panel->archive();
+                my ($archived_file_id_panel, $archived_filename_panel_with_path) = $uploader_panel->archive();
                 my $md5_panel = $uploader_panel->get_md5($archived_filename_panel_with_path);
                 if (!$archived_filename_panel_with_path) {
                     $c->stash->{rest} = { error => "Could not save file $archived_filename_panel_with_path in archive." };
@@ -1326,9 +1340,10 @@ sub upload_drone_imagery_POST : Args(0) {
                     archive_filename => $upload_original_name,
                     timestamp => $timestamp,
                     user_id => $user_id,
-                    user_role => $user_role
+                    user_role => $user_role,
+                    metadata_schema => $metadata_schema
                 });
-                my $archived_filename_with_path = $uploader->archive();
+                my ($archived_file_id, $archived_filename_with_path) = $uploader->archive();
                 my $md5 = $uploader->get_md5($archived_filename_with_path);
                 if (!$archived_filename_with_path) {
                     $c->stash->{rest} = { error => "Could not save file $upload_original_name in archive." };

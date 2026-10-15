@@ -22,6 +22,7 @@ use Data::Dumper;
 use CXGN::UploadFile;
 use File::Basename qw | basename dirname|;
 use JSON;
+use CXGN::File;
 
 BEGIN { extends 'Catalyst::Controller::REST' }
 
@@ -38,51 +39,52 @@ sub upload_document_POST : Args(0) {
     my $schema = $c->dbic_schema("Bio::Chado::Schema");
     my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema");
 
-    my $upload = $c->req->upload('upload_document_browser_file_input');
-    my $upload_original_name = $upload->filename();
-    my $upload_tempfile = $upload->tempname;
-    my $time = DateTime->now();
-    my $timestamp = $time->ymd()."_".$time->hms();
-    
     if (!$c->user){
         $c->stash->{rest} = { error => 'Must be logged in!' };
         $c->detach;
     }
     
-    my $user_id = $c->user->get_object->get_sp_person_id;
+    my $user_id = $c->user->get_object->get_sp_person_id();
     my $user_type = $c->user->get_object->get_user_type();
 
-    my $uploader = CXGN::UploadFile->new({
-        tempfile => $upload_tempfile,
-        subdirectory => 'document_browser',
-        archive_path => $c->config->{archive_path},
-        archive_filename => $upload_original_name,
-        timestamp => $timestamp,
-        user_id => $user_id,
-        user_role => $user_type
-    });
-    my $archived_filename_with_path = $uploader->archive();
-    if (!$archived_filename_with_path){
-        $c->stash->{rest} = { error => 'Problem archiving the file!' };
-        $c->detach;
-    }
-    my $md5 = $uploader->get_md5($archived_filename_with_path);
-    if (!$md5){
-        $c->stash->{rest} = { error => 'Problem retrieving file md5!' };
-        $c->detach;
+    my $uploads = $c->req->upload('upload_document_browser_file_input');
+    my $factory_uploads = $c->req->uploads->{'upload_factory_archive_new_file[]'};
+
+    if ($factory_uploads) {
+        $uploads = $factory_uploads;
     }
 
-    my $md_row = $metadata_schema->resultset("MdMetadata")->create({create_person_id => $user_id});
-    $md_row->insert();
-    my $file_row = $metadata_schema->resultset("MdFiles")
-        ->create({
-            basename => basename($archived_filename_with_path),
-            dirname => dirname($archived_filename_with_path),
-            filetype => 'document_browser',
-            md5checksum => $md5->hexdigest(),
-            metadata_id => $md_row->metadata_id(),
+    $uploads = [$uploads] unless ref($uploads) eq 'ARRAY';
+
+    foreach my $upload (@$uploads) {
+        my $upload_original_name = $upload->filename();
+        my $upload_tempfile = $upload->tempname;
+        my $time = DateTime->now();
+        my $timestamp = $time->ymd()."_".$time->hms();
+        my $archive_path = $c->config->{archive_path};
+
+        my $uploader = CXGN::UploadFile->new({
+            tempfile => $upload_tempfile,
+            subdirectory => 'document_browser',
+            archive_path => $archive_path,
+            archive_filename => $upload_original_name,
+            timestamp => $timestamp,
+            user_id => $user_id,
+            user_role => $user_type,
+            metadata_schema => $metadata_schema
         });
-    $file_row->insert();
+        my ($archived_file_id, $archived_filename_with_path) = $uploader->archive();
+        if (!$archived_filename_with_path){
+            $c->stash->{rest} = { error => 'Problem archiving the files!' };
+            $c->detach;
+        }
+        $archived_filename_with_path =~ s/$archive_path//g;
+        my $md5 = $uploader->get_md5("$archive_path/$archived_filename_with_path");
+        if (!$md5){
+            $c->stash->{rest} = { error => 'Problem retrieving file md5 checksums!' };
+            $c->detach;
+        }
+    }
 
     $c->stash->{rest} = {success => 'Successfully saved file!'};
 }
@@ -123,6 +125,36 @@ sub search_document_POST : Args(0) {
         }
     }
     $c->stash->{rest} = {success => 1, found_lines => \@found_lines, list_elements => \@list_elements};
+}
+
+sub user_archived_files : Path('/ajax/tools/documents/user_archive') : ActionClass('REST') { }
+sub user_archived_files_POST : Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $user_id = $c->req->param("user_id") || undef;
+
+    my $logged_user = $c->user->get_object()->get_sp_person_id();
+    my $role = $c->user->get_object()->get_user_type();
+
+    if (!$user_id || ($user_id ne $logged_user && $role ne "curator")) {
+        $c->stash->{rest} = {error => "You do not have permission to view these files.\n"} ;
+        return;
+    }
+
+    my $bcs_schema = $c->dbic_schema("Bio::Chado::Schema", undef, $logged_user);
+
+    my $dbh = $c->dbc->dbh();
+    my $q;
+    my $data;
+
+    if ($role eq "curator") {
+        $data = CXGN::File->get_all_archived_files($bcs_schema);
+    } else {
+        $data = CXGN::File->get_user_archived_files($bcs_schema, $user_id);
+    }
+
+    $c->stash->{rest} = {success => 1, data => $data};
+    return;
 }
 
 #########
