@@ -23,6 +23,7 @@ use Getopt::Long;
 use Data::Dumper;
 use File::Basename qw(dirname);
 use Cwd qw(abs_path);
+use POSIX qw(WIFEXITED WEXITSTATUS);
 
 my $dbuser;
 my $dbpass;
@@ -114,7 +115,7 @@ sub run_patches {
         # Legacy mx-run patches can return nonzero values on success.
         # Match db/run_all_patches.pl's check for an execution error.
         die "Failed executing patch $patch (status $?).\n"
-            if $? == -1 || ($? & 127) || ($? >> 8) == 255;
+            if $? == -1 || !WIFEXITED($?) || WEXITSTATUS($?) == 255;
         print STDERR "\n\n\n";
     }
 }
