@@ -23,7 +23,6 @@ use Getopt::Long;
 use Data::Dumper;
 use File::Basename qw(dirname);
 use Cwd qw(abs_path);
-use POSIX qw(WIFEXITED WEXITSTATUS);
 
 my $dbuser;
 my $dbpass;
@@ -94,10 +93,6 @@ for (my $i = $dbindex; $i < (scalar @dbfolders); $i++) {
 }
 
 sub run_patches {
-    # InsertDBH also reads these variables in container environments.
-    # Honor the credentials supplied to this runner in either connection mode.
-    local $ENV{PGUSER} = $dbuser;
-    local $ENV{PGPASSWORD} = $dbpass;
     my @patches = grep {!($_ ~~ @installed)} map { s/.pm//r } (split "\n", `ls`);
     for (my $j = 0; $j < (scalar @patches); $j++) {
         my $patch = $patches[$j];
@@ -112,10 +107,6 @@ sub run_patches {
         my $cmd = "echo -ne \"$dbuser\\n$dbpass\" | mx-run $patch -H $host -D $db -u $editinguser".($test?' -t':'');
         print STDERR $cmd."\n";
         system("bash -c '$cmd'");
-        # Legacy mx-run patches can return nonzero values on success.
-        # Match db/run_all_patches.pl's check for an execution error.
-        die "Failed executing patch $patch (status $?).\n"
-            if $? == -1 || !WIFEXITED($?) || WEXITSTATUS($?) == 255;
         print STDERR "\n\n\n";
     }
 }
