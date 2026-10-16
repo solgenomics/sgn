@@ -88,16 +88,14 @@ getCorrPopsRows: function(corrPops) {
 
 },
 
-getCorrPops: function () {
+getCorrPops: function (source, ownership) {
+  if (source === "list") {
+    var list = new solGSList();
+    var lists = list.getLists(["plots", "trials"], ownership);
+    return list.addDataStrAttr(lists);
+  }
 
-  var list = new solGSList();
-  var lists = list.getLists(["plots", "trials"]);
-  lists = list.addDataStrAttr(lists);
-
-  var datasets = solGS.dataset.getDatasetPops(["plots", "trials"]);
-  var corrPops = [lists, datasets];
-
-  return corrPops.flat();
+  return solGS.dataset.getDatasetPops(["plots", "trials"], ownership);
 
 },
 
@@ -247,10 +245,18 @@ getSelectedPopCorrArgs: function (runCorrElemId) {
       'processing': true,
       'paging': true,
       'info': false,
-      'pageLength': 15,
+      'pageLength': 5,
       'rowId': function (a) {
         return a[6]
-      }
+      },
+      columnDefs: [
+        {
+            targets: [1, 2, 3, 4, 5],
+            orderable: false
+        }
+    ],
+
+    order: [[0, "asc"]]
     });
   
     table.rows.add(data).draw();
@@ -582,17 +588,13 @@ jQuery(document).ready(function () {
 
 jQuery(document).ready(function () {
   if (location.pathname.match(/correlation\/analysis/)) {
-    corrPopsDataDiv = solGS.correlation.corrPopsDataDiv;
-    var tableId = 'corr_pops_table';
-    var corrPopsTable = solGS.correlation.createTable(tableId);
-    jQuery(corrPopsDataDiv).append(corrPopsTable).show();
-
-    var corrPops = solGS.correlation.getCorrPops();
-    var corrPopsRows = solGS.correlation.getCorrPopsRows(corrPops);
-
-    solGS.correlation.displayCorrPopsTable(tableId, corrPopsRows);
-
-    jQuery("#create_new_list_dataset").show();
+    solGS.dataTableTabs.initialize({
+      prefix: "corr",
+      createTable: function (tableId) { return solGS.correlation.createTable(tableId); },
+      getPopulations: function (source, ownership) { return solGS.correlation.getCorrPops(source, ownership); },
+      getRows: function (populations) { return solGS.correlation.getCorrPopsRows(populations); },
+      displayTable: function (tableId, rows) { solGS.correlation.displayCorrPopsTable(tableId, rows); }
+    });
 
   }
 });
