@@ -1,5 +1,7 @@
 use strict;
 use warnings;
+
+package main;  # the mock classes below are declared inside this test
 use Test::More;
 use JSON qw(encode_json);
 use CXGN::BrAPI::v1::ObservationVariables;
