@@ -24,7 +24,7 @@ use Try::Tiny;
 use File::Basename qw | basename dirname|;
 use File::Copy;
 use File::Slurp;
-use File::Spec::Functions;
+use File::Spec;
 use Digest::MD5;
 use JSON -support_by_pp;
 use Spreadsheet::WriteExcel;
@@ -200,9 +200,9 @@ sub create_trait_file_for_field_book_POST : Args(0) {
     my $time = DateTime->now();
     my $timestamp = $time->ymd()."_".$time->hms();
     my $subdirectory_name = "tablet_trait_files";
-    my $archived_file_name = catfile($user_id, $subdirectory_name,$timestamp."_".$trait_file_name.".trt");
+    my $archived_file_name = File::Spec->catfile($user_id, $subdirectory_name,$timestamp."_".$trait_file_name.".trt");
     my $archive_path = $c->config->{archive_path};
-    my $file_destination =  catfile($archive_path, $archived_file_name);
+    my $file_destination =  File::Spec->catfile($archive_path, $archived_file_name);
     my $dbh = $c->dbc->dbh();
     my @trait_ids;
 
@@ -218,12 +218,12 @@ sub create_trait_file_for_field_book_POST : Args(0) {
 	mkdir $archive_path;
     }
 
-    if (! -d catfile($archive_path, $user_id)) {
-	mkdir (catfile($archive_path, $user_id));
+    if (! -d File::Spec->catfile($archive_path, $user_id)) {
+	mkdir (File::Spec->catfile($archive_path, $user_id));
     }
 
-    if (! -d catfile($archive_path, $user_id,$subdirectory_name)) {
-	mkdir (catfile($archive_path, $user_id, $subdirectory_name));
+    if (! -d File::Spec->catfile($archive_path, $user_id,$subdirectory_name)) {
+	mkdir (File::Spec->catfile($archive_path, $user_id, $subdirectory_name));
     }
     
     print STDERR Dumper($file_destination);

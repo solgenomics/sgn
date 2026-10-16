@@ -11,7 +11,7 @@ use Tie::UrlEncoder; our %urlencode;
 use File::Temp qw | tempfile |;
 use File::Basename qw | basename |;
 use File::Copy qw | copy |;
-use File::Spec qw | catfile |;
+use File::Spec;
 use File::Slurp qw | read_file write_file |;
 use File::NFSLock qw | uncache |;
 use CXGN::Tools::Run;

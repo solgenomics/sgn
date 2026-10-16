@@ -13,7 +13,7 @@ use strict;
 
 BEGIN { extends 'Catalyst::Controller' }
 
-use File::Spec::Functions;
+use File::Spec;
 
 
 =head1 PUBLIC ACTIONS
@@ -111,11 +111,11 @@ sub rflp_image_link {
     my ( $dir ) = $marker_name =~ /^(CD|CT|PC|PG|TG|PCD2)/
 	or return;
 
-    my $source = catfile( $c->get_conf('image_path'), 'rflp', $dir, "$marker_name.jpg" );
+    my $source = File::Spec->catfile( $c->get_conf('image_path'), 'rflp', $dir, "$marker_name.jpg" );
 
     return unless -f $source;
 
-    return catfile( $c->get_conf('static_datasets_url'), 'images','rflp', $dir, "$marker_name.jpg" );
+    return File::Spec->catfile( $c->get_conf('static_datasets_url'), 'images','rflp', $dir, "$marker_name.jpg" );
 }
 
 

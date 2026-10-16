@@ -13,6 +13,7 @@ use CXGN::TimeUtils;
 use DateTime;
 use utf8;
 use JSON;
+use CXGN::JSONUtils qw(decode_stored_json);
 
 extends 'CXGN::BrAPI::v2::Common';
 
@@ -332,8 +333,8 @@ sub _search {
 
             if ($counter >= $start_index && $counter <= $end_index) {
                 push @data_window, {
-                    additionalInfo => $_->{phenotype_additional_info} ? decode_json($_->{phenotype_additional_info}) : undef,
-                    externalReferences => $_->{phenotype_external_references} ? decode_json($_->{phenotype_external_references}) : undef,
+                    additionalInfo => $_->{phenotype_additional_info} ? decode_stored_json($_->{phenotype_additional_info}) : undef,
+                    externalReferences => $_->{phenotype_external_references} ? decode_stored_json($_->{phenotype_external_references}) : undef,
                     germplasmDbId => qq|$_->{accession_stock_id}|,
                     germplasmName => $_->{accession_uniquename},
                     observationUnitDbId => qq|$_->{obsunit_stock_id}|,

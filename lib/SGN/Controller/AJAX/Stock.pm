@@ -1498,8 +1498,10 @@ sub add_stock_parent_GET :Args(0) {
 
     if ($error) {
 	$c->stash->{rest} = { error => $error };
+	return;
     }
 
+    $c->stash->{rest} = { success => 1 };
 }
 
 
