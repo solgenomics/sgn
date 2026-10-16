@@ -120,6 +120,14 @@ Will be the trait root term by default if none are added."></span>&nbsp;Chain to
         <td>
             <button id="download_ontology_btn" class="btn btn-primary"><span class="glyphicon glyphicon-floppy-save"></span></button>
         </td>
+        <td style="padding-left:2em;">
+            <select id="trait_cvtermpath_rebuild_select" class="form-control">
+                <option value="">Select an ontology...</option>
+            </select>
+        </td>
+        <td>
+            <button id="trait_rebuild_cvtermpath_btn" class="btn btn-primary">Rebuild cvterm paths for selected CV</button>
+        </td>
     </tr>
 </table>
 
@@ -353,7 +361,39 @@ Will be the trait root term by default if none are added."></span>&nbsp;Chain to
                 jQuery('#trait_ontology_download_select').append(
                     jQuery('<option>', { value : db_name, text : db_name })
                 );
+                jQuery('#trait_cvtermpath_rebuild_select').append(
+                    jQuery('<option>', { value : db_name, text : db_name })
+                );
             }
+        });
+
+        jQuery('#trait_rebuild_cvtermpath_btn').click(function() {
+
+            let db_name = jQuery('#trait_cvtermpath_rebuild_select').val();
+
+            if (!db_name || db_name == null || db_name == "") {
+                alert("Please select a CV before rebuilding its cvterm paths.");
+                return;
+            }
+
+            jQuery('#working_modal').modal("show");
+
+            jQuery.ajax({
+                url: '/ajax/onto/make_cvtermpath/' + db_name,
+                method: 'GET',
+                success: function(response) {
+                    jQuery('#working_modal').modal("hide");
+                    if (response.error) {
+                        alert(response.error);
+                        return;
+                    }
+                    alert(response.success);
+                },
+                error: function(xhr, status, error) {
+                    jQuery('#working_modal').modal("hide");
+                    alert("An error occurred starting the cvterm path rebuild: " + error);
+                }
+            });
         });
 
         jQuery('#download_ontology_btn').click(function() {
