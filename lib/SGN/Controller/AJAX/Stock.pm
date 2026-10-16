@@ -144,7 +144,6 @@ sub add_stockprop_POST {
     } else {
 	$c->stash->{rest} = { error => 'user does not have a curator/sequencer/submitter account' };
     }
-    $c->stash->{rest} = { message => 'success' };
 }
 
 sub add_stockprop_GET {
