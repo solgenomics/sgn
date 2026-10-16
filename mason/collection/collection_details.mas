@@ -381,7 +381,7 @@ jQuery(document).ready(function () {
                 data: { collection_id: collection_id },
                 success: function (response) {
                     if (response.error) { window.collection_notify_error(response.error); return; }
-                    window.location.href = '/collections';
+                    window.location.href = '<% $is_file_type ? "/collections/files" : "/collections/images" %>';
                 },
                 error: function () { window.collection_notify_error('An error occurred deleting the collection.'); }
             });

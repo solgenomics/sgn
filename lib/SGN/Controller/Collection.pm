@@ -11,9 +11,25 @@ sub _collection_object {
     return CXGN::Collection->new({ bcs_schema => $schema });
 }
 
+# Image and file collections each have their own page. The old combined page
+# redirects to one of them, keeping links like /collections?collection_type=file.
 sub collections_list : Path('/collections') : Args(0) {
     my ($self, $c) = @_;
-    $c->stash->{template} = '/collection/collection.mas';
+    my $type = $c->req->param('collection_type') || '';
+    $c->res->redirect($c->uri_for($type eq 'file' ? '/collections/files' : '/collections/images'));
+    $c->detach();
+}
+
+sub image_collections : Path('/collections/images') : Args(0) {
+    my ($self, $c) = @_;
+    $c->stash->{collection_type} = 'image';
+    $c->stash->{template}        = '/collection/collection.mas';
+}
+
+sub file_collections : Path('/collections/files') : Args(0) {
+    my ($self, $c) = @_;
+    $c->stash->{collection_type} = 'file';
+    $c->stash->{template}        = '/collection/collection.mas';
 }
 
 sub collection_detail : Path('/collection') : Args(1) {

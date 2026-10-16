@@ -1,18 +1,38 @@
+<%doc>
+The image (/collections/images) and file (/collections/files) collection pages.
+The title, info section, tree, search, and results follow $collection_type;
+the file search for adding files appears only on the file page.
+</%doc>
+
 <%args>
-$collection_type => undef
+$collection_type
 </%args>
+
+<%init>
+my $type_label = $collection_type eq 'file' ? 'File' : 'Image';
+</%init>
 
 <& /util/import_javascript.mas, classes => [ 'jquery', 'jquery.dataTables', 'jstree.dist.jstree' ] &>
 <& /util/import_css.mas, paths => ['/static/documents/inc/jstree_theme/jstree-bstheme-min.css'] &>
 <& /collection/message_modal.mas &>
 
-<& /page/page_title.mas, title => "Collection Search" &>
+<& /page/page_title.mas, title => "$type_label Collections" &>
 
-<&| /page/info_section.mas, title=>"Browse Collections by Breeding Program",  collapsible => 1, collapsed=>0, subtitle => "Collections grouped by breeding program, then project. Double click a collection to open it."&>
+<&| /page/info_section.mas, title => "About $type_label Collections", collapsible => 1, collapsed => 0 &>
+    <div class="well well-sm">
+% if ($collection_type eq 'image') {
+        <!-- TODO: describe image collections here -->
+% } else {
+        <!-- TODO: describe file collections here -->
+% }
+    </div>
+</&>
+
+<&| /page/info_section.mas, title=>"Browse $type_label Collections by Breeding Program",  collapsible => 1, collapsed=>0, subtitle => "Collections grouped by breeding program, then project. Double click a collection to open it."&>
     <& /collection/collections_tree.mas, collection_type => $collection_type, instance_id => 'collections_tree_main' &>
 </&>
 
-<&| /page/info_section.mas, title=>"Collection Search Criteria",  collapsible => 1, collapsed=>0, subtitle => "Search collections by name, description, creator, or associated project."&>
+<&| /page/info_section.mas, title=>"$type_label Collection Search Criteria",  collapsible => 1, collapsed=>0, subtitle => "Search collections by name, description, creator, or associated project."&>
 
     <div id="collection_search_form" class="well well-sm">
         <div class="form-horizontal" >
@@ -34,18 +54,21 @@ $collection_type => undef
                     <input class="form-control" type="text" id="collection_creator" name="collection_creator" placeholder="e.g. JaneDoe" />
                 </div>
             </div>
+% if ($collection_type eq 'image') {
             <div class="form-group">
                 <label class="col-sm-6 control-label">Contains image (name or filename): </label>
                 <div class="col-sm-6" >
                     <input class="form-control" type="text" id="collection_image_name" name="collection_image_name" placeholder="e.g. gel_03.jpg" />
                 </div>
             </div>
+% } else {
             <div class="form-group">
                 <label class="col-sm-6 control-label">Contains file (name or comment): </label>
                 <div class="col-sm-6" >
                     <input class="form-control" type="text" id="collection_file_name" name="collection_file_name" placeholder="e.g. phenotype_2026.xls" />
                 </div>
             </div>
+% }
             <div class="form-group">
                 <label class="col-sm-6 control-label">Associated project: </label>
                 <div class="col-sm-6" >
@@ -70,7 +93,7 @@ $collection_type => undef
 </&>
 
 
-<&| /page/info_section.mas, title=>"Collections",  collapsible => 1, collapsed=>0 &>
+<&| /page/info_section.mas, title=>"$type_label Collections",  collapsible => 1, collapsed=>0 &>
     <div class="well well-sm">
         <div class="panel panel-default">
             <div class="panel-body">
@@ -81,8 +104,7 @@ $collection_type => undef
                     <th>Description</th>
                     <th>Owner</th>
                     <th>Associated Project</th>
-                    <th>Images</th>
-                    <th>Files</th>
+                    <th><% $type_label %>s</th>
                     <th>Created</th>
                     <th></th>
                 </tr>
@@ -93,6 +115,7 @@ $collection_type => undef
     </div>
 </&>
 
+% if ($collection_type eq 'file') {
 <&| /page/info_section.mas, title=>"Files",  collapsible => 1, collapsed=>0, subtitle => "Search files and add them to a file collection."&>
     <div class="well well-sm">
         <div class="panel panel-default">
@@ -151,17 +174,15 @@ $collection_type => undef
                     </thead>
                 </table>
 
-                <hr/>
-                <h4 style="margin-top:0;">File collections by breeding program</h4>
-                <& /collection/collections_tree.mas, collection_type => 'file', instance_id => 'collections_tree_files' &>
-
             </div>
         </div>
     </div>
 </&>
 
 <& /collection/add_files_to_collection_modal.mas &>
-<& /collection/create_collection_modal.mas, default_type => ($collection_type || 'image') &>
+% }
+
+<& /collection/create_collection_modal.mas, default_type => $collection_type &>
 
 <script>
 
@@ -200,7 +221,7 @@ jQuery(document).ready(function () {
     });
 
     jQuery('#new_folder_button').click( function() {
-        window.create_collection_dialog_open('<% $collection_type || "image" %>');
+        window.create_collection_dialog_open('<% $collection_type %>');
     });
 
     jQuery('#collections_search_results').on('click', '.delete-collection-btn', function () {
@@ -325,14 +346,15 @@ function _load_collection_search_results() {
             'data': function(d) {
               d.name = jQuery('#collection_name').val();
               d.description = jQuery('#collection_description').val();
+% if ($collection_type eq 'image') {
               d.image_name = jQuery('#collection_image_name').val();
+% } else {
               d.file_name = jQuery('#collection_file_name').val();
+% }
               d.creator_username = jQuery('#collection_creator').val();
               d.project_name = jQuery('#collection_project_name').val();
               d.mine_only = jQuery('#collection_mine_only').is(':checked') ? 1 : 0;
-% if ($collection_type) {
               d.collection_type = '<% $collection_type %>';
-% }
             }
         },
         'columns': [
@@ -347,8 +369,7 @@ function _load_collection_search_results() {
                     return '<a href="/breeders/trial/' + p.project_id + '">' + p.name + '</a>';
                 }).join(', ');
             } },
-            { 'data': 'image_count' },
-            { 'data': 'file_count' },
+            { 'data': '<% $collection_type %>_count' },
             { 'data': 'create_date' },
             { 'data': null, 'render': function (data, type, row) {
                 return row.user_can_modify

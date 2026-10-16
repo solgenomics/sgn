@@ -163,7 +163,7 @@ $user_can_modify => 1
       </div>
 
       <div style="margin-top:10px;">
-        <a href="/collections?collection_type=image">
+        <a href="/collections/images">
           Browse all image collections &rarr;
         </a>
       </div>
