@@ -611,13 +611,13 @@ sub _collections_for_item {
 
  Args: { trial_id => $id, collection_type => 'image'|'file'|'mixed' }
 
-Returns collections holding at least one live image associated with the
-trial, matching the same link semantics the trial page's image table uses:
-an image is "in" the trial when it is attached to one of the trial's stocks
-(phenome.stock_image) or directly to the trial (phenome.project_md_image).
+Returns collections holding at least one  item associated with the
+trial. Which items count follows collection_type: 'image' counts only
+images, 'file' counts only files
 
-Each row carries n_trial_images, the number of trial images in the
-collection.
+
+Each row carries n_trial_images and n_trial_files, the number of trial
+images and trial files in the collection.
 
 =cut
 
@@ -629,6 +629,12 @@ sub get_collections_for_trial {
         unless defined $trial_id && $trial_id =~ /^\d+$/;
 
     my @where = ("c.obsolete = 'f'");
+
+    my $type = $args->{collection_type};
+    if ($type) {
+        die "collection_type must be image, file, or mixed.\n"
+            unless $type =~ /^(image|file|mixed)$/;
+    }
 
     # Images linked to the trial through any of its stocks...
     my $trial_images_sql = "
@@ -653,9 +659,20 @@ sub get_collections_for_trial {
     ";
     push @vals, $trial_id;
 
-    if (my $type = $args->{collection_type}) {
-        die "collection_type must be image, file, or mixed.\n"
-            unless $type =~ /^(image|file|mixed)$/;
+    # Files linked to the trial through any of its nd_experiments.
+    my $trial_files_sql = "
+        SELECT nemf.file_id
+          FROM nd_experiment_project AS nep
+          JOIN phenome.nd_experiment_md_files AS nemf
+            ON (nemf.nd_experiment_id = nep.nd_experiment_id)
+          JOIN metadata.md_files AS files ON (files.file_id = nemf.file_id)
+          LEFT JOIN metadata.md_metadata AS file_metadata
+            ON (file_metadata.metadata_id = files.metadata_id)
+         WHERE nep.project_id = ? AND $FILE_OBSOLETE_SQL
+    ";
+    push @vals, $trial_id;
+
+    if ($type) {
         # NULL-type (legacy/untyped) collections are never excluded: they
         # predate the column, so they can't be mislabeled.
         push @where, "(c.collection_type = ? OR c.collection_type IS NULL)";
@@ -664,23 +681,31 @@ sub get_collections_for_trial {
 
     my $where = join(' AND ', @where);
 
+    my $has_trial_items = !$type || $type eq 'mixed'
+        ? "n_trial_images > 0 OR n_trial_files > 0"
+        : ($type eq 'image' ? "n_trial_images > 0" : "n_trial_files > 0");
+
+    # Counts come from correlated subqueries, like get_collections, so a
+    # collection holding both kinds of items is not multiplied by a join.
     my $h = $self->_dbh->prepare("
-        SELECT c.collection_id, c.name, c.description, c.collection_type,
-               c.sp_person_id, person.username,
-               to_char(c.create_date,   'YYYY-MM-DD') AS create_date,
-               to_char(c.modified_date, 'YYYY-MM-DD') AS modified_date,
-               count(ci.image_id) AS n_trial_images
-          FROM metadata.md_collection AS c
-          JOIN metadata.md_collection_image AS ci
-            ON (ci.collection_id = c.collection_id)
-          JOIN ($trial_images_sql) AS trial_images
-            ON (trial_images.image_id = ci.image_id)
-          LEFT JOIN sgn_people.sp_person AS person
-            ON (person.sp_person_id = c.sp_person_id)
-         WHERE $where
-         GROUP BY c.collection_id, c.name, c.description, c.collection_type,
-                  c.sp_person_id, person.username, c.create_date, c.modified_date
-         ORDER BY lower(c.name)
+        SELECT * FROM (
+            SELECT c.collection_id, c.name, c.description, c.collection_type,
+                   c.sp_person_id, person.username,
+                   to_char(c.create_date,   'YYYY-MM-DD') AS create_date,
+                   to_char(c.modified_date, 'YYYY-MM-DD') AS modified_date,
+                   (SELECT count(*) FROM metadata.md_collection_image AS ci
+                     WHERE ci.collection_id = c.collection_id
+                       AND ci.image_id IN ($trial_images_sql)) AS n_trial_images,
+                   (SELECT count(*) FROM metadata.md_collection_file AS cf
+                     WHERE cf.collection_id = c.collection_id
+                       AND cf.file_id IN ($trial_files_sql)) AS n_trial_files
+              FROM metadata.md_collection AS c
+              LEFT JOIN sgn_people.sp_person AS person
+                ON (person.sp_person_id = c.sp_person_id)
+             WHERE $where
+        ) AS counted
+         WHERE $has_trial_items
+         ORDER BY lower(name)
     ");
     $h->execute(@vals);
 
