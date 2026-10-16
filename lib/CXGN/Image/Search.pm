@@ -219,6 +219,11 @@ has 'project_md_image_type_name_list' => (
     is => 'rw',
 );
 
+has 'collection_id_list' => (
+    isa => 'ArrayRef[Int]|Undef',
+    is  => 'rw',
+);
+
 has 'limit' => (
     isa => 'Int|Undef',
     is => 'rw'
@@ -258,6 +263,7 @@ sub search {
     my $project_names_exact = $self->project_names_exact;
     my $project_md_image_type_name_list = $self->project_md_image_type_name_list;
     my $project_md_image_type_names_exact = $self->project_md_image_type_names_exact;
+    my $collection_id_list = $self->collection_id_list;
     my $include_obsolete_images = $self->include_obsolete_images;
     my $include_obsolete_tags = $self->include_obsolete_tags;
     my $include_obsolete_image_tags = $self->include_obsolete_image_tags;
@@ -466,6 +472,14 @@ sub search {
 		        push @question_mark_values, '%' . $_ . '%';
             }
         }
+    }
+    if ($collection_id_list && scalar(@$collection_id_list) > 0) {
+        my $placeholders = join(",", ("?") x scalar(@$collection_id_list));
+        push @where_clause,
+            "EXISTS (SELECT 1 FROM metadata.md_collection_image AS collection_membership
+                    WHERE collection_membership.image_id = image.image_id
+                        AND collection_membership.collection_id IN ($placeholders))";
+        push @question_mark_values, @$collection_id_list;
     }
     if (!$include_obsolete_images) {
         push @where_clause, "image.obsolete = 'f'";

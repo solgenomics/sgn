@@ -53,6 +53,33 @@ $for_analysis_page => undef
             </&><!-- closes uploaded additional file section -->
         </div>
     </div>
+    <div class="panel panel-default">
+        <div class="panel-body">
+            <&| /page/info_section.mas, title=>"File Collections", subtitle=>"Collections that contain at least one file from this trial", is_subsection => 1, collapsible=>1, collapsed=>0 &>
+
+                <div id="trial_file_collections_loading" class="text-muted" style="padding:5px;">
+                    <span class="glyphicon glyphicon-refresh"></span> Loading collections&hellip;
+                </div>
+                <div id="trial_file_collections_empty" class="text-muted" style="display:none; padding:5px;">
+                    No collections contain files from this trial yet. Files can be added to a
+                    collection from the <a href="/collections/files">file collections page</a>.
+                </div>
+                <table class="table table-hover table-condensed" id="trial_file_collections_table" style="width:100%; display:none;">
+                    <thead>
+                        <tr>
+                            <th>Collection</th>
+                            <th>Description</th>
+                            <th>Owner</th>
+                            <th>Trial Files</th>
+                            <th>Created</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+
+            </&><!-- closes file collections section -->
+        </div>
+    </div>
 
 </div><!-- closes well -->
 
@@ -71,6 +98,51 @@ jQuery(document).ready(function() {
             ]
         });
 
+        load_trial_file_collections();
     });
 });
+
+function load_trial_file_collections() {
+    function esc(s) {
+        return jQuery('<div>').text(s == null ? '' : s).html();
+    }
+
+    jQuery.ajax({
+        method: 'GET',
+        url: '/ajax/collection/for_trial',
+        data: { trial_id: <% $trial_id %>, collection_type: 'file' },
+        success: function (response) {
+            jQuery('#trial_file_collections_loading').hide();
+
+            if (response && response.error) {
+                jQuery('#trial_file_collections_empty').text(response.error).show();
+                return;
+            }
+
+            var collections = (response && response.collections) || [];
+            if (!collections.length) {
+                jQuery('#trial_file_collections_empty').show();
+                return;
+            }
+
+            var $tb = jQuery('#trial_file_collections_table tbody').empty();
+            collections.forEach(function (c) {
+                $tb.append(
+                    '<tr>' +
+                      '<td><a href="/collection/' + esc(c.collection_id) + '">' + esc(c.name) + '</a></td>' +
+                      '<td>' + esc(c.description) + '</td>' +
+                      '<td>' + esc(c.username) + '</td>' +
+                      '<td>' + esc(c.n_trial_files) + '</td>' +
+                      '<td>' + esc(c.create_date) + '</td>' +
+                    '</tr>'
+                );
+            });
+            jQuery('#trial_file_collections_table').show();
+        },
+        error: function () {
+            jQuery('#trial_file_collections_loading').hide();
+            jQuery('#trial_file_collections_empty').text('Could not load collections.').show();
+        }
+    });
+}
 </script>
