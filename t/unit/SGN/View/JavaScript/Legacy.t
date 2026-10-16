@@ -15,6 +15,8 @@ once, as the Content-Type says.
 use strict;
 use warnings;
 
+package main;  # the mock classes below are declared inside this test
+
 use Test::More;
 use File::Temp qw | tempdir |;
 use Encode qw | decode |;
