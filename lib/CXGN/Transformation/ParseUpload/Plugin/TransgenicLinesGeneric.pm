@@ -49,9 +49,9 @@ sub _validate_with_plugin {
     my $seen_transgenic_line_names = $parsed_values->{'transgenic_line_name'};
 
     my $transformation_identifier_validator = CXGN::List::Validate->new();
-    my @transformation_identifiers_missing = @{$transformation_identifier_validator->validate($schema,'transformation_identifier', $seen_transformation_identiifers)->{'missing'}};
-    if (scalar(@transformation_identifers_missing) > 0) {
-        push @error_messages, "The following transformation identifiers are not in the database: ".join(',',@transformation_identifers_missing);
+    my @transformation_identifiers_missing = @{$transformation_identifier_validator->validate($schema,'transformation_identifiers', $seen_transformation_identifiers)->{'missing'}};
+    if (scalar(@transformation_identifiers_missing) > 0) {
+        push @error_messages, "The following transformation identifiers are not in the database: ".join(',',@transformation_identifiers_missing);
     }
 
     my $rs = $schema->resultset("Stock::Stock")->search({
@@ -67,7 +67,7 @@ sub _validate_with_plugin {
         my $transgenic_line = $row->{'transgenic_line_name'};
 
         if ($duplicated_transgenic_line_names{$transgenic_line}) {
-            push @error_messages, "Cell A$row_num: duplicate transgenic line name: $transgenic_line_name. Transgenic line name must be unique.";
+            push @error_messages, "Cell A$row_num: duplicate transgenic line name: $transgenic_line. Transgenic line name must be unique.";
         } else {
             $duplicated_transgenic_line_names{$transgenic_line}++;
         }
@@ -92,10 +92,9 @@ sub _parse_with_plugin {
     my %transgenic_line_info;
 
     foreach my $row (@$parsed_data) {
-        my $row_number = $row->{'_row'};
         my $transformation_identifier = $row->{'transformation_identifier'};
         my $transgenic_line = $row->{'transgenic_line_name'};
-        $transgenic_line_info{$row_number}{$transformation_identifier} = $transgenic_line_name;
+        $transgenic_line_info{$transformation_identifier}{$transgenic_line} = 1;
     }
 
     $self->_set_parsed_data(\%transgenic_line_info);

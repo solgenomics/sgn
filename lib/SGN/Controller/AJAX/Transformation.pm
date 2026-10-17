@@ -1901,7 +1901,6 @@ sub upload_transgenic_lines : Path('/ajax/transformation/upload_transgenic_lines
 sub upload_transgenic_lines_POST : Args(0) {
     my $self = shift;
     my $c = shift;
-    my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema");
     my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema");
     my $dbh = $c->dbc->dbh;
     my $breeding_program_name = $c->req->param('project_breeding_program_name');
@@ -1984,17 +1983,15 @@ sub upload_transgenic_lines_POST : Args(0) {
     }
     unlink $upload_tempfile;
 
-    my @stock_props;
-    $parser = CXGN::Stock::ParseUpload->new(chado_schema => $schema, filename => $archived_filename_with_path, editable_stock_props=>\@stock_props);
+    $parser = CXGN::Transformation::ParseUpload->new(chado_schema => $schema, filename => $archived_filename_with_path);
 
     $parser->load_plugin('TransgenicLinesGeneric');
     $parsed_data = $parser->parse();
-#    print STDERR "PARSED DATA =". Dumper($parsed_data)."\n";
     if (!$parsed_data){
         my $return_error = '';
         my $parse_errors;
         if (!$parser->has_parse_errors() ){
-            $c->stash->{rest} = {error => "Could not get parsing errors"};
+            $c->stash->{rest} = {error_string => "Could not get parsing errors"};
         } else {
             $parse_errors = $parser->get_parse_errors();
             #print STDERR Dumper $parse_errors;
@@ -2002,14 +1999,39 @@ sub upload_transgenic_lines_POST : Args(0) {
                 $return_error .= $error_string."<br>";
             }
         }
-        $c->stash->{rest} = {error => $return_error};
+        $c->stash->{rest} = {error_string => $return_error};
         $c->detach();
     }
 
+    if ($parsed_data){
+        foreach my $transformation_identifier (keys %$parsed_data) {
+            my $transformation_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'transformation', 'stock_type')->cvterm_id();
+            my $transformation_stock_id;
+            my $transformation_identifier_rs = $schema->resultset("Stock::Stock")->find( { uniquename => $transformation_identifier, type_id => $transformation_type_id });
+            my $transformation_stock_id = $transformation_identifier_rs->stock_id();
+            my $new_transformant_names = $parsed_data->{$transformation_identifier};
+            my @new_names = keys %$new_transformant_names;
 
+            eval {
+                my $add_transformants = CXGN::Transformation::AddTransformant->new({
+                    schema => $schema,
+                    phenome_schema => $phenome_schema,
+                    dbh => $dbh,
+                    transformation_stock_id => $transformation_stock_id,
+                    transformant_names => \@new_names,
+                    owner_id => $user_id,
+                });
 
+                $add_transformants->add_transformant();
+            };
 
-
+            if ($@) {
+                $c->stash->{rest} = { success => 0, error => $@ };
+                print STDERR "An error condition occurred, was not able to create new transformants. ($@).\n";
+                return;
+            }
+        }
+    };
 
     $c->stash->{rest} = {success => "1",};
 

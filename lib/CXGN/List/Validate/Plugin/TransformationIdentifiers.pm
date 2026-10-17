@@ -11,7 +11,7 @@ sub validate {
     my $schema = shift;
     my $list = shift;
 
-    my $transformation_identifier_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'transformation_identifier', 'stock_type')->cvterm_id();
+    my $transformation_identifier_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'transformation', 'stock_type')->cvterm_id();
 
     my @missing = ();
     foreach my $l (@$list){
