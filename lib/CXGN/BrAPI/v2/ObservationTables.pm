@@ -64,7 +64,6 @@ sub search {
     }
 
     my @data_files;
-    my $total_count = scalar(@data)-1;
     my @header_names = @{$data[0]};
     my @trait_names = @header_names[30 .. $#header_names];
     my @variables;
@@ -77,6 +76,8 @@ sub search {
         };
     }
 
+    # Include units with empty phenotype values in both the rows and pagination.
+    my $total_count = scalar(@data)-1;
     my $start = $page_size*$page+1;
     my $end = $page_size*($page+1)+1;
     my @data_window;
@@ -147,7 +148,6 @@ sub search_observationunit_tables {
     }
 
     my @data_files;
-    my $total_count = scalar(@data)-1;
     my @header_names = @{$data[0]};
     my @trait_names = @header_names[30 .. $#header_names];
     my @variables;
@@ -160,6 +160,8 @@ sub search_observationunit_tables {
         };
     }
 
+    # Include units with empty phenotype values in both the rows and pagination.
+    my $total_count = scalar(@data)-1;
     my $start = $page_size*$page+1;
     my $end = $page_size*($page+1)+1;
     my @data_window;
