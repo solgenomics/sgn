@@ -14,14 +14,21 @@ my $jbrowse_url = $jbrowse_path ."%2Ftrials%2F" . $trial_id ."&tracks=DNA%2CGene
 
 </%perl>
 
+<& /util/import_javascript.mas, entries => ["jbrowse_datasets"] &>
+
 <script type="text/javascript" defer="defer">
 jQuery(document).ready(function () {
 
 	jQuery.ajax({
 		url: "<% $test_url %>",
+		dataType: "text",
 		success: function(response) {
-			if ( response.indexOf("Trial_<%$trial_id%>") > -1 ) { // if jbrowse instance is found, create and display link
-				jQuery('#trial_jbrowse_check').replaceWith('<a id="jbrowse_link" href="<% $jbrowse_url %>">View the dataset for this trial in JBrowse</a>');
+			// The exact dataset Trial_<id>, linked to its own url when it has one.
+			var href = jsMod['jbrowse_datasets'].linkFor(response, "Trial_<% $trial_id %>",
+				"/<% $basepath %>/", "<% $jbrowse_url %>");
+			if ( href ) { // if jbrowse instance is found, create and display link
+				jQuery('#trial_jbrowse_check').replaceWith(jQuery('<a id="jbrowse_link"></a>').attr('href', href)
+					.text('View the dataset for this trial in JBrowse'));
 			}
 			else { // if not found, display message that jbrowse instance wasn't found
 				jQuery('#trial_jbrowse_check').html(" <i>This trial does not have a dataset in Jbrowse.</i>");
