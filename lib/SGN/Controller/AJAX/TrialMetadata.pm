@@ -383,7 +383,7 @@ sub phenotype_summary : Chained('trial') PathPart('phenotypes') Args(0) {
     my $stock_type_id;
     my $rel_type_id;
     my $total_complete_number;
-    # print STDERR "trial phenotypes: START DATE: $start_date. END DATE: $end_date, INLCUDE DATELESS $include_dateless_items, DIPLAY = $display\n";
+    # print STDERR "trial phenotypes: START DATE: $start_date. END DATE: $end_date, INCLUDE DATELESS $include_dateless_items, DISPLAY = $display\n";
     if ($display eq 'plots') {
         if ($group_by_accession) {
             $stock_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'plot', 'stock_type')->cvterm_id();
@@ -2982,7 +2982,7 @@ sub trial_remove_treatment : Chained('trial') PathPart('remove_treatment') Args(
     my $treatment_id = $c->req->param('treatment_id');
 
     if (!$treatment_id) {
-        $c->stash->{rest} = {errpr => "You need to supply a valid treatment id."};
+        $c->stash->{rest} = {error => "You need to supply a valid treatment id."};
         return;
     }
 
@@ -6028,7 +6028,7 @@ sub download_entry_number_template : Path('/ajax/breeders/trial_entry_numbers/do
 # upload params:
 #   upload_entry_numbers_file: Excel file to validate and parse
 #   ignore_warnings: true to add processed data if warnings exist
-# return: validation errors and warnings or success = 1 if entry numbers sucessfully stored
+# return: validation errors and warnings or success = 1 if entry numbers successfully stored
 #   filename: original upload file name
 #   error: array of error messages
 #   warning: array of warning messages
