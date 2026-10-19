@@ -3262,6 +3262,11 @@ sub replace_trial_stock : Chained('trial') PathPart('replace_stock') Args(0) {
     return;
   }
 
+  $replace_stock_fieldmap->_regenerate_trial_layout_cache();
+  my $dbh = $c->dbc->dbh();
+  my $bs = CXGN::BreederSearch->new( { dbh=>$dbh, dbname=>$c->config->{dbname}, } );
+  my $refresh = $bs->refresh_matviews($c->config->{dbhost}, $c->config->{dbname}, $c->config->{dbuser}, $c->config->{dbpass}, 'phenotypes', 'concurrent', $c->config->{basepath});
+
   $c->stash->{rest} = { success => 1};
 }
 

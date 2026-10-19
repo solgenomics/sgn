@@ -15,6 +15,8 @@ use JSON::XS;
 use URI::Encode qw(uri_encode uri_decode);
 use CXGN::Chado::Stock;
 use CXGN::Trial;
+use CXGN::Trial::TrialLayout;
+use SGN::Model::Cvterm;
 use CXGN::Trait::Treatment;
 use CXGN::UploadFile;
 use CXGN::Phenotypes::ParseUpload;
@@ -201,6 +203,28 @@ is_deeply($response, {'plots' => [[[38857,'test_trial21'],[38858,'test_trial22']
 $mech->post_ok('http://localhost:3010/ajax/breeders/trial/'.$trial_id.'/replace_plot_accessions', ['old_accession' => 'test_accession1', 'new_accession' => 'test_accession3', 'old_plot_id' => '38866', 'old_plot_name' => 'test_trial210_afterchange', 'new_plot_name' => "test_trial210", 'override' => 'check']);
 $response = decode_json $mech->content;
 is_deeply($response, {success => 1});
+
+# Change Accessions (replace_stock) must refresh the cached trial layout.
+# test_accession3 is swapped for a temporary accession that is in no other trial, then swapped back.
+my $accession_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'accession', 'stock_type')->cvterm_id();
+my $organism_id = $schema->resultset('Stock::Stock')->find({ uniquename => 'test_accession3' })->organism_id();
+my $temp_stock = $schema->resultset('Stock::Stock')->create({ uniquename => 'replace_stock_temp_accession', name => 'replace_stock_temp_accession', type_id => $accession_type_id, organism_id => $organism_id });
+my $plot_accessions = sub {
+    my $design = CXGN::Trial::TrialLayout->new({ schema => $schema, trial_id => $trial_id, experiment_type => 'field_layout' })->get_design();
+    return { map { $_->{plot_name} => $_->{accession_name} } values %$design };
+};
+is($plot_accessions->()->{'test_trial210'}, 'test_accession3', "layout shows original accession before replace_stock");
+
+my $accession3_id = $schema->resultset('Stock::Stock')->find({ uniquename => 'test_accession3' })->stock_id();
+$mech->post_ok('http://localhost:3010/ajax/breeders/trial/'.$trial_id.'/replace_stock', ['old_stock_id' => $accession3_id, 'new_stock' => 'replace_stock_temp_accession', 'trial_stock_type' => 'accession']);
+$response = decode_json $mech->content;
+is_deeply($response, {success => 1}, "replace_stock succeeds");
+is($plot_accessions->()->{'test_trial210'}, 'replace_stock_temp_accession', "layout shows the new accession after replace_stock");
+is($plot_accessions->()->{'test_trial23'}, 'replace_stock_temp_accession', "layout shows the new accession for every replaced plot");
+
+$mech->post_ok('http://localhost:3010/ajax/breeders/trial/'.$trial_id.'/replace_stock', ['old_stock_id' => $temp_stock->stock_id(), 'new_stock' => 'test_accession3', 'trial_stock_type' => 'accession']);
+is($plot_accessions->()->{'test_trial210'}, 'test_accession3', "layout shows the original accession again after swapping back");
+$temp_stock->delete();
 
 $mech->get_ok('http://localhost:3010/ajax/breeders/trial/'.$trial_id.'/get_management_regime');
 $response = decode_json $mech->content;
