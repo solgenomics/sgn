@@ -103,8 +103,8 @@ print STDERR "PLOT START NUMBER: $plot_start_number, #STOCK ".scalar(@stock_name
 #
 my $next_block_plot_number = $plot_start_number+((scalar(@stock_names)-1)+ 100); #next block
 print STDERR "INDEX = $next_block_plot_number\n";
-print STDERR "DESING OF : ".Dumper($design{$next_block_plot_number})."\n";
-print STDERR "LENGTH : ".$design{$next_block_plot_number}->{block_number}."\n"; # zero indexed, need to substract 1
+print STDERR "DESIGN OF : ".Dumper($design{$next_block_plot_number})."\n";
+print STDERR "LENGTH : ".$design{$next_block_plot_number}->{block_number}."\n"; # zero indexed, need to subtract 1
 
 my $length = $design{$next_block_plot_number}->{block_number};
 is($length, 2, "Block 1 is the right length");
