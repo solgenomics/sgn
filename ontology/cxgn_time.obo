@@ -3067,3 +3067,13 @@ is_a: TIME:0000477 ! Event relations
 id: TIME:0000509
 name: After Water Restart
 is_a: TIME:0000477 ! Event relations
+
+[Term]
+id: TIME:0000510
+name: After harvest raw product
+is_a: TIME:0000477 ! Event relations
+
+[Term]
+id: TIME:0000511
+name: After harvest cooked product
+is_a: TIME:0000477 ! Event relations
