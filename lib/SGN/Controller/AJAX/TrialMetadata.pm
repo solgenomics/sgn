@@ -3256,10 +3256,49 @@ sub replace_trial_stock : Chained('trial') PathPart('replace_stock') Args(0) {
        return;
      }
 
+  # Plots whose names contain the old accession name are renamed, as in replace_plot_accessions
+  my $old_stock_row = $schema->resultset("Stock::Stock")->find({ stock_id => $old_stock_id });
+  if (!$old_stock_row) {
+    $c->stash->{rest} = { error => "Could not find stock with id $old_stock_id." };
+    return;
+  }
+  my $old_stock_name = $old_stock_row->uniquename;
+  my $trial_layout_download = CXGN::Trial::TrialLayoutDownload->new({
+    schema => $schema,
+    trial_id => $trial_id,
+    data_level => 'plots',
+    selected_columns => {"plot_name"=>1,"plot_id"=>1,"accession_id"=>1},
+  });
+  my @layout_rows = @{$trial_layout_download->get_layout_output()->{output} || []};
+  my $layout_header = shift @layout_rows;
+  my %col_idx;
+  for my $i (0..$#{$layout_header || []}) { $col_idx{$layout_header->[$i]} = $i; }
+  my %plot_renames;
+  foreach my $plot_row (@layout_rows) {
+    next unless $plot_row->[$col_idx{accession_id}] == $old_stock_id;
+    my $plot_name = $plot_row->[$col_idx{plot_name}];
+    (my $renamed = $plot_name) =~ s/\Q$old_stock_name\E/$new_stock/;
+    $plot_renames{$plot_row->[$col_idx{plot_id}]} = [$plot_name, $renamed] if $renamed ne $plot_name;
+  }
+  foreach my $plot_id (keys %plot_renames) {
+    if ($schema->resultset("Stock::Stock")->search({ uniquename => $plot_renames{$plot_id}->[1] })->count()) {
+      $c->stash->{rest} = { error => "Plot name ".$plot_renames{$plot_id}->[1]." already exists in the database" };
+      return;
+    }
+  }
+
   my $replace_return_error = $replace_stock_fieldmap->replace_trial_stock_fieldMap($new_stock, $old_stock_id);
   if ($replace_return_error) {
     $c->stash->{rest} = { error => $replace_return_error };
     return;
+  }
+
+  foreach my $plot_id (keys %plot_renames) {
+    my $rename_error = $replace_stock_fieldmap->replace_plot_name_fieldMap($plot_id, @{$plot_renames{$plot_id}});
+    if ($rename_error) {
+      $c->stash->{rest} = { error => $rename_error };
+      return;
+    }
   }
 
   $replace_stock_fieldmap->_regenerate_trial_layout_cache();
