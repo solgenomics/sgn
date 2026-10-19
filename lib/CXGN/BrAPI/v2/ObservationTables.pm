@@ -60,7 +60,7 @@ sub search {
         @data = $phenotypes_search->get_phenotype_matrix();
     }
     catch {
-        return CXGN::BrAPI::JSONResponse->return_error($status, 'An Error Occured During Observations Search Table');
+        return CXGN::BrAPI::JSONResponse->return_error($status, 'An Error Occurred During Observations Search Table');
     }
 
     my @data_files;
@@ -144,7 +144,7 @@ sub search_observationunit_tables {
         @data = $phenotypes_search->get_phenotype_matrix();
     }
     catch {
-        return CXGN::BrAPI::JSONResponse->return_error($status, 'An Error Occured During Observation Units Search Table');
+        return CXGN::BrAPI::JSONResponse->return_error($status, 'An Error Occurred During Observation Units Search Table');
     }
 
     my @data_files;

@@ -288,7 +288,7 @@ sub search {
             }
 
 
-            #For performace reasons it is faster to include specific stock_ids in the query.
+            #For performance reasons it is faster to include specific stock_ids in the query.
             if ($self->data_level eq 'analysis_instance'){
                 if (!$self->plot_list){
                     $self->plot_list(\@plots_list);

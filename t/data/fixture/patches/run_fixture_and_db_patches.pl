@@ -5,7 +5,7 @@
 Usage: ./run_fixture_and_db_patches.pl -u <dbuser> -p <dbpassword> -h <dbhost> -d <dbname> -e <editinguser> [-s <startfrom>] [--test]
 
 -u, --user=         database login username   
--p, --pass=         database login pasword    
+-p, --pass=         database login password
 -h, --host=         database host
 -d, --db=           database name
 -e, --editinguser=  user to write as patch executor
