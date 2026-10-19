@@ -1436,7 +1436,7 @@ sub remove_parent_GET : Path('/ajax/stock/parent/remove') Args(0) {
     }
 
     if (! ($c->user && ($c->user->check_roles('curator') || $c->user->check_roles('submitter'))))  {
-	$c->stash->{rest} = { error => "Log in is required, or insufficent privileges, for removing parents" };
+	$c->stash->{rest} = { error => "Log in is required, or insufficient privileges, for removing parents" };
 	return;
     }
 
@@ -2919,7 +2919,7 @@ sub upload_derived_accessions_file_POST : Args(0) {
         user_role => $user_role
     });
 
-    ## Store uploaded temporary file in arhive
+    ## Store uploaded temporary file in archive
     $archived_filename_with_path = $uploader->archive();
     $md5 = $uploader->get_md5($archived_filename_with_path);
     if (!$archived_filename_with_path) {

@@ -62,7 +62,7 @@ $show_grafting_interface => ''
     <a href="/search/download_all_accessions_with_pedigree" class="btn btn-sm btn-default">Download All Accessions and Pedigree Info</a>
     <br>
     <br>
-    <&| /page/info_section.mas, title => 'Copy accessions to a List', collapsible=>1, collapsed=>1, subtitle=>'<i>Copy the accession names to a new or exisiting list</i>'&>
+    <&| /page/info_section.mas, title => 'Copy accessions to a List', collapsible=>1, collapsed=>1, subtitle=>'<i>Copy the accession names to a new or existing list</i>'&>
       <br>
       <div style="text-align:right" id="accessions_with_pedigree_to_list_menu"></div>
       <div id="accession_names_with_pedigree" style="display: none;"></div>
@@ -82,7 +82,7 @@ $show_grafting_interface => ''
     </table>
     <br>
     <br>
-    <&| /page/info_section.mas, title => 'Copy accessions to a List', collapsible=>1, collapsed=>1, subtitle=>'<i>Copy the accession names to a new or exisiting list</i>'&>
+    <&| /page/info_section.mas, title => 'Copy accessions to a List', collapsible=>1, collapsed=>1, subtitle=>'<i>Copy the accession names to a new or existing list</i>'&>
       <br>
       <div style="text-align:right" id="accessions_missing_pedigree_to_list_menu"></div>
       <div id="accession_names_missing_pedigree" style="display: none;"></div>

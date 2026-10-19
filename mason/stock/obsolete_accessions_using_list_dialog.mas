@@ -85,10 +85,10 @@ jQuery(document).ready(function(){
 
         lo.validate(accession_list_id, 'uniquenames', true).then((r) => {
             if (r.obsoleted.length > 0) {
-                alert("One or more accessions in the list are already obsoleted. Please remove obsoleted accessions from the list :" +r.obsoleted);
+                alert("One or more accessions in the list are already obsoleted. Please remove obsoleted accessions from the list :" + " " + r.obsoleted);
                 return;
             } else if (r.missing.length > 0) {
-                alert("One or more accessions in the list are not in the database. Please check your accession names in the list :" + r.missing);
+                alert("One or more accessions in the list are not in the database. Please check your accession names in the list :" + " " + r.missing);
                 return;
             } else {
                 jQuery.ajax({
