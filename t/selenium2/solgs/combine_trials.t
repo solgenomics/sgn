@@ -217,7 +217,8 @@ $d->while_logged_in_as("submitter", sub {
     my $sel_pred = $d->find_element('Predict', 'partial_link_text', 'scroll to selection pred');
     my $elem = $d->driver->execute_script( "arguments[0].scrollIntoView(true);window.scrollBy(0,-70);", $sel_pred);
     sleep(5);
-    
+
+    $d->select_datatable_tab('list_type_selection_private_lists');
     $d->find_element_ok('//tr[@id="' . $accessions_list_id .'"]//*[contains(text(), "Predict")]', 'xpath', 'click list sel pred')->click();
     sleep(5);
     $d->find_element_ok('queue_job', 'id', 'job queueing')->click();
@@ -235,7 +236,8 @@ $d->while_logged_in_as("submitter", sub {
     my $sel_pred = $d->find_element('Predict', 'partial_link_text', 'scroll to selection pred');
     my $elem = $d->driver->execute_script( "arguments[0].scrollIntoView(true);window.scrollBy(0,-70);", $sel_pred);
     sleep(5);
-    
+
+    $d->select_datatable_tab('list_type_selection_private_lists');
     $d->find_element_ok('//tr[@id="' . $accessions_list_id .'"]//*[contains(text(), "Predict")]', 'xpath', 'click list sel pred')->click();
     sleep(3);
     $d->find_element_ok('//tr[@id="' . $accessions_list_id .'"]//*[contains(text(), "DMCP")]', 'xpath', 'click list sel pred')->click();
@@ -257,6 +259,7 @@ $d->while_logged_in_as("submitter", sub {
     my $sel_pred = $d->find_element('Predict', 'partial_link_text', 'scroll to selection pred');
     my $elem = $d->driver->execute_script( "arguments[0].scrollIntoView(true);window.scrollBy(0,-70);", $sel_pred);
     sleep(5);
+    $d->select_datatable_tab('list_type_selection_private_datasets');
     $d->find_element_ok('//tr[@id="' . $accessions_dt_id .'"]//*[contains(text(), "Predict")]', 'xpath', 'dataset accession sel pred')->click();
     sleep(5);
     $d->find_element_ok('queue_job', 'id', 'job queueing')->click();
@@ -273,6 +276,7 @@ $d->while_logged_in_as("submitter", sub {
     my $sel_pred = $d->find_element('Predict', 'partial_link_text', 'scroll to selection pred');
     my $elem = $d->driver->execute_script( "arguments[0].scrollIntoView(true);window.scrollBy(0,-70);", $sel_pred);
     sleep(5);
+    $d->select_datatable_tab('list_type_selection_private_datasets');
     $d->find_element_ok('//tr[@id="' . $accessions_dt_id .'"]//*[contains(text(), "Predict")]', 'xpath', 'dataset accessions sel pred')->click();
     sleep(3);
     $d->find_element_ok('//tr[@id="' . $accessions_dt_id .'"]//*[contains(text(), "DMCP")]', 'xpath', 'dataset accessions sel pred')->click();
@@ -349,6 +353,7 @@ $d->while_logged_in_as("submitter", sub {
 	$d->driver->go_back();
 	sleep(3);
 
+    $d->select_datatable_tab('list_type_selection_private_lists');
     $d->find_element_ok('//tr[@id="' . $accessions_list_id .'"]//*[contains(text(), "Predict")]', 'xpath', 'click list sel pred')->click();
     sleep(5);
     $d->find_element_ok('queue_job', 'id', 'job queueing')->click();
@@ -363,6 +368,7 @@ $d->while_logged_in_as("submitter", sub {
     $d->find_element_ok('Go back', 'partial_link_text', 'go back')->click();
     sleep(5);
 
+    $d->select_datatable_tab('list_type_selection_private_lists');
     $d->find_element_ok('//tr[@id="' . $accessions_list_id .'"]//*[contains(text(), "Predict")]', 'xpath', 'click list sel pred')->click();
     sleep(3);
     $d->find_element_ok('//tr[@id="' . $accessions_list_id .'"]//*[contains(text(), "FRW")]', 'xpath', 'click list sel pred')->click();
@@ -371,6 +377,7 @@ $d->while_logged_in_as("submitter", sub {
     $d->driver->go_back();
     sleep(5);
 
+    $d->select_datatable_tab('list_type_selection_private_datasets');
     $d->find_element_ok('//tr[@id="' . $accessions_dt_id .'"]//*[contains(text(), "Predict")]', 'xpath', 'click list sel pred')->click();
     sleep(5);
     $d->find_element_ok('queue_job', 'id', 'job queueing')->click();
@@ -387,6 +394,7 @@ $d->while_logged_in_as("submitter", sub {
     my $sel_pred = $d->find_element('Predict', 'partial_link_text', 'scroll to selection pred');
     my $elem = $d->driver->execute_script( "arguments[0].scrollIntoView(true);window.scrollBy(0,-70);", $sel_pred);
     sleep(5);
+    $d->select_datatable_tab('list_type_selection_private_datasets');
     $d->find_element_ok('//tr[@id="' . $accessions_dt_id .'"]//*[contains(text(), "Predict")]', 'xpath', 'click list sel pred')->click();
     sleep(3);
     $d->find_element_ok('//tr[@id="' . $accessions_dt_id .'"]//*[contains(text(), "FRW")]', 'xpath', 'click list sel pred')->click();

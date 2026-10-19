@@ -1,4 +1,5 @@
 use strict;
+use warnings;
 use lib 't/lib';
 
 use Test::More;
@@ -20,10 +21,16 @@ $mech->post_ok('http://localhost:3010/brapi/v1/token', [ "username"=> "janedoe",
 my $response = decode_json $mech->content;
 print STDERR Dumper $response;
 is($response->{'metadata'}->{'status'}->[2]->{'message'}, 'Login Successfull');
-my $sgn_session_id = $response->{access_token};
-print STDERR $sgn_session_id."\n";
 
-my $trial_id = $schema->resultset('Project::Project')->find({name=>'test_trial'})->project_id();
+my $sgn_session_id = $response->{access_token};
+ok($sgn_session_id, 'Login returned an access token')
+  or BAIL_OUT('Cannot continue without an access token');
+
+# Find fixture trial
+my $trial = $schema->resultset('Project::Project') ->find({ name => 'test_trial' });
+BAIL_OUT('Could not find fixture trial test_trial')
+  unless $trial;
+my $trial_id = $trial->project_id;
 
 my $file = $test->config->{basepath}."/t/data/trial/field_coord_upload.csv";
 print STDERR "Upload file path: $file \n";
@@ -38,7 +45,13 @@ $response = $ua->post(
         ]
     );
 
-ok($response->is_success);
+ok(
+    $response->is_success,
+    'CSV upload returned a successful HTTP status'
+) or diag(
+    'HTTP status: ' . $response->status_line .
+    "\nResponse: " . $response->decoded_content
+);
 
 $file = $test->config->{basepath}."/t/data/trial/field_coord_upload.tsv";
 print STDERR "Upload file path: $file \n";
@@ -53,7 +66,13 @@ $response = $ua->post(
         ]
     );
 
-ok($response->is_success);
+ok(
+    $response->is_success,
+    'TSV upload returned a successful HTTP status'
+) or diag(
+    'HTTP status: ' . $response->status_line .
+    "\nResponse: " . $response->decoded_content
+);
 
 #test bad file input
 $file = $test->config->{basepath}."/t/data/trial/field_coord_upload_bad_input.csv";
@@ -69,10 +88,22 @@ $response = $ua->post(
         ]
     );
 
-ok($response->is_success);
-my $message = $response->decoded_content;
-my $message_hash = decode_json $message;
-print STDERR Dumper $message_hash;
+ok(
+    $response->is_success,
+    'Bad input CSV upload returned a successful HTTP status'
+) or diag(
+    'HTTP status: ' . $response->status_line .
+    "\nResponse: " . $response->decoded_content
+);
+
+my $body = $response->decoded_content;
+my $message_hash = eval { decode_json($body) };
+ok(
+  ref($message_hash) eq 'HASH', 'Bad-input response contains a JSON object'
+) or diag(
+  'HTTP status: ' . $response->status_line . "\nResponse: " . $body
+);
+
 my $messages = $message_hash->{error};
 ok($messages =~ m/do not exist in the database as plots/gi);
 ok($messages =~ m/assigned to multiple plots/gi);

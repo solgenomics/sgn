@@ -423,10 +423,26 @@ jQuery(document).ready(function ($) {
         submit_genotype_data_upload()
     });
 
+    jQuery('#upload_genotype_vcf_file_input').change(function() {
+        jQuery('#upload_genotypes_errors_div').html('').hide();
+        jQuery('#upload_genotypes_warnings_div').hide();
+        jQuery('#upload_genotypes_warnings_html').html('');
+
+        jQuery('#upload_genotypes_missing_stocks_div').hide();
+
+        jQuery('#upload_genotypes_missing_marker_div').hide();
+        jQuery('#upload_genotypes_add_missing_marker_html').html('');
+        jQuery('#upload_genotype_add_new_markers').prop('selectedIndex', 0);
+
+        jQuery('#upload_genotypes_mismatched_marker_div').hide();
+        jQuery('#upload_genotype_update_markers').prop('selectedIndex', 0);
+    });
+
     function submit_genotype_data_upload() {
         jQuery('#working_modal').modal('show');
         jQuery('#upload_genotypes_form').attr("action", "/ajax/genotype/upload");
         jQuery('#upload_genotypes_missing_marker_div').hide();
+        jQuery('#upload_genotypes_mismatched_marker_div').hide();
         jQuery("#upload_genotypes_form").submit();
     }
 
@@ -446,7 +462,7 @@ jQuery(document).ready(function ($) {
                 if (response.error_string){
                     error_html = error_html + response.error_string;
                 }
-                jQuery('#upload_genotypes_errors_div').html(error_html);
+                jQuery('#upload_genotypes_errors_div').html(error_html).show();
 
                 if (response.missing_stocks && response.missing_stocks.length > 0){
                     jQuery('#upload_genotypes_missing_stocks_div').show();
@@ -474,15 +490,40 @@ jQuery(document).ready(function ($) {
                 }
                 return;
             } else {
-                jQuery('#upload_genotypes_errors_div').html('');
+                jQuery('#upload_genotypes_errors_div').html('').hide();
             }
 
             if (response.warning) {
-                jQuery('#upload_genotypes_warnings_html').html(response.warning);
+                if (response.warning_groups && response.warning_groups.length > 0) {
+                    var accordion_id = 'upload_genotypes_warnings_accordion';
+                    var accordion_html = '<div class="panel-group" id="' + accordion_id + '">';
+                    for (var i = 0; i < response.warning_groups.length; i++) {
+                        var group = response.warning_groups[i];
+                        var panel_id = accordion_id + '_panel_' + i;
+                        accordion_html += '<div class="panel panel-warning">';
+                        accordion_html += '<div class="panel-heading"><h4 class="panel-title"><a data-toggle="collapse" data-parent="#' + accordion_id + '" href="#' + panel_id + '">' + group.title + ' (' + group.count + ')</a></h4></div>';
+                        var group_messages = jQuery.grep(group.messages, function(m) { return m; });
+                        accordion_html += '<div id="' + panel_id + '" class="panel-collapse collapse"><div class="panel-body" style="color:#333; background-color:#fff;">' + group_messages.join('<br>') + '</div></div>';
+                        accordion_html += '</div>';
+                    }
+                    accordion_html += '</div>';
+                    jQuery('#upload_genotypes_warnings_html').html(accordion_html);
+                } else {
+                    jQuery('#upload_genotypes_warnings_html').html(response.warning);
+                }
                 jQuery('#upload_genotypes_warnings_div').show();
+                if (response.mismatched_markers && response.mismatched_markers.length > 0) {
+                    jQuery('#upload_genotypes_mismatched_marker_div').show();
+                } else {
+                    jQuery('#upload_genotypes_mismatched_marker_div').hide();
+                    jQuery('#upload_genotype_update_markers').val('0');
+                }
                 return;
             }
             if (response.success) {
+                jQuery('#upload_genotypes_warnings_div').hide();
+                jQuery('#upload_genotypes_mismatched_marker_div').hide();
+                jQuery('#upload_genotype_update_markers').val('0');
                 var success_string = "<h4>Go to your <a href='/breeders/trial/"+response.project_id+"'>genotyping project page</a></h4>";
                 console.log(success_string);
                 jQuery('#upload_genotype_submit_complete').html(success_string);
