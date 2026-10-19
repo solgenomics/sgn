@@ -274,7 +274,7 @@ has 'overwrite' => (
 
 =head2 remove_empty_value
 
-Remove a value if the value in the file is undef or '' and another value is already
+Remove a value if the value in the file is undef, '', '.' or 'NA' and another value is already
 stored in the database. Requires overwrite(1).
 
 =cut
@@ -356,7 +356,7 @@ sub store {
 
         # check if a value needs to be removed.
         #
-        if ($self->remove_empty_value() && (!defined($self->value()) || $self->value() eq '')) {
+        if ($self->remove_empty_value() && (!defined($self->value()) || $self->value() eq '' || $self->value() eq '.' || $self->value() eq 'NA')) {
             #print STDERR "REMOVE VALUES SET. REMOVING THE VALUE ".$self->value()." BECAUSE IT IS NOT DEFINED.\n";
             $self->delete_phenotype();
             return { success => 1, remove_count => 1, reason => "DELETED ENTRY - DELETE VALUES SET ON EMPTY VALUE.\n" };
