@@ -23,6 +23,7 @@ use Getopt::Long;
 use Data::Dumper;
 use File::Basename qw(dirname);
 use Cwd qw(abs_path);
+use List::Util qw(any);
 
 my $dbuser;
 my $dbpass;
@@ -93,7 +94,10 @@ for (my $i = $dbindex; $i < (scalar @dbfolders); $i++) {
 }
 
 sub run_patches {
-    my @patches = grep {!($_ ~~ @installed)} map { s/.pm//r } (split "\n", `ls`);
+    my @patches = grep {
+        my $patch = $_;
+        !any { $_ eq $patch } @installed;
+    } map { s/.pm//r } (split "\n", `ls`);
     for (my $j = 0; $j < (scalar @patches); $j++) {
         my $patch = $patches[$j];
 	

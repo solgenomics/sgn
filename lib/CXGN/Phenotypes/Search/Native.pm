@@ -252,9 +252,9 @@ sub search {
     if ($self->trial_list && scalar(@{$self->trial_list})>0) {
 
         my $has_observationunit_filter =
-            ($self->plot_list && @{$self->plot_list})
-            || ($self->plant_list && @{$self->plant_list})
-            || ($self->subplot_list && @{$self->subplot_list});
+            (ref($self->plot_list) eq 'ARRAY' && @{$self->plot_list})
+            || (ref($self->plant_list) eq 'ARRAY' && @{$self->plant_list})
+            || (ref($self->subplot_list) eq 'ARRAY' && @{$self->subplot_list});
         $trial_observationunit_list = []
             if $self->data_level eq 'all' && !$has_observationunit_filter;
 
