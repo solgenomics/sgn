@@ -201,4 +201,21 @@ ok($trial_design->calculate_design(), "Calculate Augmented trial design");
 #is_deeply($trial_design->get_maximum_block_size(),$maximum_block_size, "Get maximum block size for trial design");
 #ok($trial_design->calculate_design(), "Calculate Augmented trial design");
 
+# block based plot numbers: every rep must start at first + i * increment
+#
+my $numbering_design = CXGN::Trial::TrialDesign->new();
+$numbering_design->set_plot_numbering_scheme('block_based');
+foreach my $case ([5, 1, 10], [10, 101, 100], [100, 1001, 1000], [1000, 10001, 10000]) {
+    my ($plots_per_rep, $first, $step) = @$case;
+    my $reps = 6;
+    my @placeholder = (1 .. $plots_per_rep * $reps);
+    my @rep_numbers = map { my $r = $_; ($r) x $plots_per_rep } (1 .. $reps);
+    my $numbers = $numbering_design->_convert_plot_numbers(\@placeholder, \@rep_numbers, $reps);
+    is(scalar(@$numbers), $plots_per_rep * $reps, "Block based numbering with $plots_per_rep plots per rep returns one number per plot");
+    my @rep_starts = map { $numbers->[$_ * $plots_per_rep] } (0 .. $reps - 1);
+    my @expected_starts = map { $first + $_ * $step } (0 .. $reps - 1);
+    is_deeply(\@rep_starts, \@expected_starts, "Block based numbering with $plots_per_rep plots per rep: reps start at @expected_starts");
+    is($numbers->[-1], $expected_starts[-1] + $plots_per_rep - 1, "Block based numbering with $plots_per_rep plots per rep: last plot number is consecutive within the last rep");
+}
+
 done_testing();
