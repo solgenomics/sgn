@@ -438,33 +438,27 @@ my $transformants_4 = $response_2->{'data'};
 my $transformant_4_count = scalar(@$transformants_4);
 is($transformant_4_count, '4');
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 #deleting project, transformation_id, vector_construct, transformants
 my $project_owner = $phenome_schema->resultset('ProjectOwner')->find({ project_id => $project_id });
 $project_owner->delete();
 $project_rs->delete();
+
+my $project_owner_3 = $phenome_schema->resultset('ProjectOwner')->find({ project_id => $project_id_3 });
+$project_owner_3->delete();
+$project_rs_3->delete();
 
 my $transformation_obj = CXGN::Transformation::Transformation->new({schema=>$schema, dbh=>$dbh, transformation_stock_id=>$transformation_stock_id});
 my $result = $transformation_obj->transformants();
 foreach my $transformant (@$result) {
     push @all_new_stocks, $transformant->[0];
 }
+
+my $transformation_obj_1 = CXGN::Transformation::Transformation->new({schema=>$schema, dbh=>$dbh, transformation_stock_id=>$transformation_stock_id_3});
+my $result_1 = $transformation_obj_1->transformants();
+foreach my $transformant_1 (@$result_1) {
+    push @all_new_stocks, $transformant_1->[0];
+}
+
 #print STDERR "ALL NEW STOCKS =".Dumper(\@all_new_stocks)."\n";
 my $dbh = $schema->storage->dbh;
 my $q = "delete from phenome.stock_owner where stock_id=?";
