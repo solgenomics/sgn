@@ -106,7 +106,7 @@ $breeding_program_name
 
                     <b>Required fields:</b>
                     <ul>
-                        <li>transformation_identifier (must exist in the database)</li>
+                        <li>transformation_identifier (must exist in the database). Multiple transformation identifiers can be included in the same spreadsheet.</li>
                         <li>transgenic_line_name (must NOT exist in the database)</li>
                     </ul>
                 </div>

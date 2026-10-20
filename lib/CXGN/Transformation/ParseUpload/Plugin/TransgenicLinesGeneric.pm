@@ -20,8 +20,9 @@ sub _validate_with_plugin {
         required_columns => [ 'transformation_identifier', 'transgenic_line_name' ],
         column_aliases => {
             'transformation_identifier' => ['transformation identifier', 'transformation_ID', 'transformation ID'],
-            'transgenic_line_name' => ['transgenic line name', 'transgenic line', 'transgenic name'],
-        }
+            'transgenic_line_name' => ['transgenic line name', 'transgenic line', 'transgenic name', 'transformant'],
+        },
+        unique_only_columns => ['transgenic_line_name'],
     );
     my $parsed = $parser->parse();
     my $parsed_errors = $parsed->{errors};
@@ -59,18 +60,6 @@ sub _validate_with_plugin {
     });
     while (my $r=$rs->next){
         push @error_messages, "Transgenic Line name already exists in database: ".$r->uniquename;
-    }
-
-    my %duplicated_transgenic_line_names;
-    foreach my $row (@$parsed_data) {
-        my $row_num = $row->{_row};
-        my $transgenic_line = $row->{'transgenic_line_name'};
-
-        if ($duplicated_transgenic_line_names{$transgenic_line}) {
-            push @error_messages, "Cell A$row_num: duplicate transgenic line name: $transgenic_line. Transgenic line name must be unique.";
-        } else {
-            $duplicated_transgenic_line_names{$transgenic_line}++;
-        }
     }
 
     if (scalar(@error_messages) >= 1) {
