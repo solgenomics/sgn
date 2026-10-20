@@ -301,7 +301,7 @@ sub upload_transformation_identifiers_POST : Args(0) {
         my $dbh = $c->dbc->dbh;
         my @user_info = CXGN::Login->new($dbh)->query_from_cookie($session_id);
         if (!$user_info[0]){
-            $c->stash->{rest} = {error=>'You must be logged in to upload transformation identifers!'};
+            $c->stash->{rest} = {error=>'You must be logged in to upload transformation identifiers!'};
             $c->detach();
         }
         $user_id = $user_info[0];
@@ -350,7 +350,7 @@ sub upload_transformation_identifiers_POST : Args(0) {
         user_role => $user_role
     });
 
-        ## Store uploaded temporary file in arhive
+        ## Store uploaded temporary file in archive
     $archived_filename_with_path = $uploader->archive();
     $md5 = $uploader->get_md5($archived_filename_with_path);
     if (!$archived_filename_with_path) {
@@ -1270,7 +1270,7 @@ sub upload_transgenic_historical_data_POST : Args(0) {
         user_role => $user_role
     });
 
-        ## Store uploaded temporary file in arhive
+        ## Store uploaded temporary file in archive
     $archived_filename_with_path = $uploader->archive();
     $md5 = $uploader->get_md5($archived_filename_with_path);
     if (!$archived_filename_with_path) {
@@ -1377,7 +1377,7 @@ sub upload_transgenic_historical_data_POST : Args(0) {
                         my $response = $add_transformants->add_transformant();
                         my $add_transformant_error = $response->{error};
                         if ($add_transformant_error){
-                            $c->stash->{rest} = {error => "Error adding new accessions for vector contruct: $vector_construct in batch $batch_number."};
+                            $c->stash->{rest} = {error => "Error adding new accessions for vector construct: $vector_construct in batch $batch_number."};
                             return;
                         }
                     } elsif ($accession_type eq 'existing_accession') {
@@ -1391,7 +1391,7 @@ sub upload_transgenic_historical_data_POST : Args(0) {
                         my $response = $add_transformants->link_info();
                         my $add_transformant_error = $response->{error};
                         if ($add_transformant_error){
-                            $c->stash->{rest} = {error => "Error linking accession names with tansformation info for vector contruct: $vector_construct in batch $batch_number."};
+                            $c->stash->{rest} = {error => "Error linking accession names with transformation info for vector construct: $vector_construct in batch $batch_number."};
                             return;
                         }
                     }
@@ -1585,7 +1585,7 @@ sub upload_qPCR_data_POST : Args(0) {
         user_role => $user_role
     });
 
-        ## Store uploaded temporary file in arhive
+        ## Store uploaded temporary file in archive
     $archived_filename_with_path = $uploader->archive();
     $md5 = $uploader->get_md5($archived_filename_with_path);
     if (!$archived_filename_with_path) {
@@ -1974,7 +1974,7 @@ sub upload_transgenic_lines_POST : Args(0) {
         user_role => $user_role
     });
 
-        ## Store uploaded temporary file in arhive
+        ## Store uploaded temporary file in archive
     $archived_filename_with_path = $uploader->archive();
     $md5 = $uploader->get_md5($archived_filename_with_path);
     if (!$archived_filename_with_path) {
