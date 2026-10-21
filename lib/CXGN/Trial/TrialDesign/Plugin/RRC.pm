@@ -13,7 +13,7 @@ sub create_design {
   my $rbase = R::YapRI::Base->new();
   my $stock_list;
   my @stock_list;
-  my $control_list;
+  my $control_list = '';
   my $number_of_blocks;
   my $stock_data_matrix;
   my $control_data_matrix;
@@ -108,7 +108,9 @@ sub create_design {
 
 
   my $design_file = $tempfile.".design";
-  open my $design, $design_file or die "Could not open $design_file: $!";
+  unless (-e $design_file) {
+    die "R did not produce a design file ($design_file). Check the R log at $tempfile.out\n";
+  }
 
   if ( -e $design_file) {
       my @lines = read_file($design_file);
