@@ -254,7 +254,7 @@ $conn_attr{pg_enable_utf8} = 0 if $driver =~ /^Pg$/i;
 
 my $schema= Bio::Chado::Schema->connect($dsn, $user, $pass||'', \%conn_attr);
 
-if (!$schema) { die "No schema is avaiable! \n"; }
+if (!$schema) { die "No schema is available! \n"; }
 
 #######################
 
@@ -266,7 +266,7 @@ if ($opt_t) {
     print STDERR "Trial mode - rolling back all changes at the end.\n";
 }
 if ($opt_u) { print STDERR "This script will UPDATE cvterms stored in your database from the input file! \n"; }
-else { print STDERR "WARNING: If your databse is already populated with cvterms, not running in UPDATE mode (option -u) may cause database conflicts, such as violating unique constraints!\n"; }
+else { print STDERR "WARNING: If your database is already populated with cvterms, not running in UPDATE mode (option -u) may cause database conflicts, such as violating unique constraints!\n"; }
 
 print STDERR "Default for -s: $opt_s (specifies the database names for Dbxref objects)\n";
 
@@ -282,7 +282,7 @@ if (!$file) {
 
 die "Some required command lines parameters not set. Aborting.\n" if $error;
 
-if ($opt_o) { open (my $OUT, ">", $opt_o) ||die "can't open error file $opt_o for writting.\n" ; }
+if ($opt_o) { open (my $OUT, ">", $opt_o) ||die "can't open error file $opt_o for writing.\n" ; }
 
 
 message( "Connected to database $dbname on host $dbhost.\n", 1);
@@ -362,7 +362,7 @@ foreach my $new_ont(@onts) {
 		#terms defined as '[Typedef]' in the obo file should actually be stored as relationshiptype
 		#but with the current ontology cv namespace .
 		#To do this we need to add to the obo parser (Bio::OntologyIO::obo.pm)
-		#a 'get_typedefs' funciton
+		#a 'get_typedefs' function
                 my $accession = $t->identifier() || $t->name();
                 message("Predicate term $accession will be stored later if used as a relationship in an ontology term\n",1);
 	    }
@@ -446,7 +446,7 @@ foreach my $new_ont(@onts) {
                   $db_index{$k}->set_column(is_obsolete => $file_index{$k}->is_obsolete() );
 		  
                   #changing the name of obsolete terms to "$name (obsolete $db:$accession)"
-                  #to avoid violating the cvterm unique constaint (name, cv_id, is_obsolete)
+                  #to avoid violating the cvterm unique constraint (name, cv_id, is_obsolete)
                   if ($db_index{$k}->is_obsolete() ) {
                       unless( $name =~ m/obsolete.*$opt_s:$k/ ) {
                           my $ob_name = $name . " (obsolete " . $opt_s . ":" . $k . ")" ;  
@@ -620,7 +620,7 @@ foreach my $new_ont(@onts) {
 		    });
 
 		#changing the name of obsolete terms to "$name (obsolete $db:$accession)"
-		#to avoid violating the cvterm unique constaint (name, cv_id, is_obsolete)
+		#to avoid violating the cvterm unique constraint (name, cv_id, is_obsolete)
 
 		message("Storing term $k...name = " . $novel_terms{$k}->name() . "\n");
 
@@ -876,7 +876,7 @@ foreach my $new_ont(@onts) {
 	#$schema->storage->txn_commit ;
     } catch {
 	# Transaction failed
-	die "An error occured! Rolling back! " . $_ . "\n";
+	die "An error occurred! Rolling back! " . $_ . "\n";
 	$schema->storage->txn_rollback ;
     };
 }
