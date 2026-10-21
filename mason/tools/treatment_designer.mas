@@ -126,8 +126,8 @@ Will be the treatment root term by default if none are added."></span>&nbsp;Chai
             let definition = jQuery('#new_treatment_definition').val();
             let format = jQuery('#new_treatment_format_select').val();
             let default_value = jQuery('#new_treatment_default_value').val();
-            let minimum = jQuery('#new_treatment_minimum').val();
-            let maximum = jQuery('#new_treatment_maximum').val();
+            let minimum = jQuery('#new_treatment_min_value').val();
+            let maximum = jQuery('#new_treatment_max_value').val();
             let repeat_type = jQuery('#new_treatment_repeat_select').val();
             let categories = JSON.parse(html_table_to_json(jQuery('#new_treatment_categories').html()));
             let cat_list = [];

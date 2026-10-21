@@ -154,8 +154,8 @@ Will be the trait root term by default if none are added."></span>&nbsp;Chain to
             let format = jQuery('#new_trait_format_select').val();
             let ontology_db_name = jQuery('#new_trait_ontology_select').val();
             let default_value = jQuery('#new_trait_default_value').val();
-            let minimum = jQuery('#new_trait_minimum').val();
-            let maximum = jQuery('#new_trait_maximum').val();
+            let minimum = jQuery('#new_trait_min_value').val();
+            let maximum = jQuery('#new_trait_max_value').val();
             let repeat_type = jQuery('#new_trait_repeat_select').val();
             let categories = JSON.parse(html_table_to_json(jQuery('#new_trait_categories').html()));
             let cat_list = [];
