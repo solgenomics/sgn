@@ -70,7 +70,8 @@ sub add_stockprop_POST {
     my $response;
     my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
     if (!$c->user()) {
-	$c->stash->{rest} = { error => "Log in required for adding stock properties." }; return;
+	    $c->stash->{rest} = { error => "Log in required for adding stock properties." }; 
+        return;
     }
 
     if (  any { $_ eq 'curator' || $_ eq 'submitter' || $_ eq 'sequencer' } $c->user->roles() ) {
@@ -80,69 +81,73 @@ sub add_stockprop_POST {
         $prop =~ s/^\s+|\s+$//g; #trim whitespace from both ends
         my $prop_type = $c->req->param('prop_type');
 
-	my $stock = $schema->resultset("Stock::Stock")->find( { stock_id => $stock_id } );
+	    my $stock = $schema->resultset("Stock::Stock")->find( { stock_id => $stock_id } );
 
-    if ($stock && $prop && $prop_type) {
+        if ($stock && $prop && $prop_type) {
 
-        my $message = '';
-        if ($prop_type eq 'stock_synonym') {
-            my $fuzzy_accession_search = CXGN::BreedersToolbox::StocksFuzzySearch->new({schema => $schema});
-            my $max_distance = 0.2;
-            my $fuzzy_search_result = $fuzzy_accession_search->get_matches([$prop], $max_distance, 'accession');
-            #print STDERR Dumper $fuzzy_search_result;
-            my $found_accessions = $fuzzy_search_result->{'found'};
-            my $fuzzy_accessions = $fuzzy_search_result->{'fuzzy'};
-            if ($fuzzy_search_result->{'error'}){
-                $c->stash->{rest} = { error => "ERROR: ".$fuzzy_search_result->{'error'} };
-                $c->detach();
-            }
-            if (scalar(@$found_accessions) > 0){
-                $c->stash->{rest} = { error => "Synonym not added: The synonym you are adding is already stored as its own unique stock or as a synonym." };
-                $c->detach();
-            }
-            if (scalar(@$fuzzy_accessions) > 0){
-                my @fuzzy_match_names;
-                foreach my $a (@$fuzzy_accessions){
-                    foreach my $m (@{$a->{'matches'}}) {
-                        push @fuzzy_match_names, $m->{'name'};
-                    }
+            my $message = '';
+            if ($prop_type eq 'stock_synonym') {
+                my $fuzzy_accession_search = CXGN::BreedersToolbox::StocksFuzzySearch->new({schema => $schema});
+                my $max_distance = 0.2;
+                my $fuzzy_search_result = $fuzzy_accession_search->get_matches([$prop], $max_distance, 'accession');
+                #print STDERR Dumper $fuzzy_search_result;
+                my $found_accessions = $fuzzy_search_result->{'found'};
+                my $fuzzy_accessions = $fuzzy_search_result->{'fuzzy'};
+                if ($fuzzy_search_result->{'error'}){
+                    $c->stash->{rest} = { error => "ERROR: ".$fuzzy_search_result->{'error'} };
+                    $c->detach();
                 }
-                $message = "CAUTION: The synonym you are adding is similar to these accessions and synonyms in the database: ".join(', ', @fuzzy_match_names).".";
+                if (scalar(@$found_accessions) > 0){
+                    $c->stash->{rest} = { error => "Synonym not added: The synonym you are adding is already stored as its own unique stock or as a synonym." };
+                    $c->detach();
+                }
+                if (scalar(@$fuzzy_accessions) > 0){
+                    my @fuzzy_match_names;
+                    foreach my $a (@$fuzzy_accessions){
+                        foreach my $m (@{$a->{'matches'}}) {
+                            push @fuzzy_match_names, $m->{'name'};
+                        }
+                    }
+                    $message = "CAUTION: The synonym you are adding is similar to these accessions and synonyms in the database: ".join(', ', @fuzzy_match_names).".";
+                }
             }
+
+            try {
+                print STDERR "CREATING THE STOCKPROP $prop_type $prop\n";
+                $stock->create_stockprops( { $prop_type => $prop }, { autocreate => 1 } );
+
+                my $stock = CXGN::Stock->new({
+                    schema=>$schema,
+                    stock_id=>$stock_id,
+                    is_saving=>1,
+                    sp_person_id => $c->user()->get_object()->get_sp_person_id(),
+                    user_name => $c->user()->get_object()->get_username(),
+                    modification_note => "Added property: $prop_type = $prop"
+                });
+                my $added_stock_id = $stock->store();
+
+                print STDERR "STOCK ADDED: $added_stock_id\n";
+
+                #my $dbh = $c->dbc->dbh();
+                #my $bs = CXGN::BreederSearch->new( { dbh=>$dbh, dbname=>$c->config->{dbname}, } );
+                #my $refresh = $bs->refresh_matviews($c->config->{dbhost}, $c->config->{dbname}, $c->config->{dbuser}, $c->config->{dbpass}, 'stockprop', 'concurrent', $c->config->{basepath});
+
+                $c->stash->{rest} = { message => "$message Stock_id $stock_id and type_id $prop_type have been associated with value $prop. " }; #.$refresh->{'message'} };
+                return;
+
+            } catch {
+            print STDERR "AN ERROR OCCURRED: $_\n";
+                $c->stash->{rest} = { error => "Failed: $_" };
+                $c->detach();
+            };
+        } else {
+            print STDERR "CANNOT ASSOCIATE $prop_type $prop with $stock_id\n";
+            $c->stash->{rest} = { error => "Cannot associate prop $prop_type: $prop with stock $stock_id " };
+            $c->detach();
         }
-
-        try {
-	    print STDERR "CREATING THE STOCKPROP $prop_type $prop\n";
-            $stock->create_stockprops( { $prop_type => $prop }, { autocreate => 1 } );
-
-            my $stock = CXGN::Stock->new({
-                schema=>$schema,
-                stock_id=>$stock_id,
-                is_saving=>1,
-                sp_person_id => $c->user()->get_object()->get_sp_person_id(),
-                user_name => $c->user()->get_object()->get_username(),
-                modification_note => "Added property: $prop_type = $prop"
-            });
-            my $added_stock_id = $stock->store();
-
-	    print STDERR "STOCK ADDED: $added_stock_id\n";
-
-            #my $dbh = $c->dbc->dbh();
-            #my $bs = CXGN::BreederSearch->new( { dbh=>$dbh, dbname=>$c->config->{dbname}, } );
-#            my $refresh = $bs->refresh_matviews($c->config->{dbhost}, $c->config->{dbname}, $c->config->{dbuser}, $c->config->{dbpass}, 'stockprop', 'concurrent', $c->config->{basepath});
-
-            $c->stash->{rest} = { message => "$message Stock_id $stock_id and type_id $prop_type have been associated with value $prop. " }; #.$refresh->{'message'} };
-
-        } catch {
-	    print STDERR "AN ERROR OCCURRED: $_\n";
-            $c->stash->{rest} = { error => "Failed: $_" }
-        };
     } else {
-	print STDERR "CANNOT ASSOCIATE $prop_type $prop with $stock_id\n";
-	    $c->stash->{rest} = { error => "Cannot associate prop $prop_type: $prop with stock $stock_id " };
-	}
-    } else {
-	$c->stash->{rest} = { error => 'user does not have a curator/sequencer/submitter account' };
+	    $c->stash->{rest} = { error => 'user does not have a curator/sequencer/submitter account' };
+        $c->detach();
     }
 }
 
