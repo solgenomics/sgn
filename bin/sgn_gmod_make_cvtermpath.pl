@@ -295,7 +295,7 @@ while(keys %leaf){
 	foreach my $type (keys %type){
 	    #add the leaf-type term to the seen list.
 	    $seen{$l}{$type}++;
-	    #sending the leaf as an arrayref to the recurse fuction. Distance starts with 1
+	    #sending the leaf as an arrayref to the recurse function. Distance starts with 1
 	    recurse([$l],$type,1);
 	}
 	delete $leaf{$l};
