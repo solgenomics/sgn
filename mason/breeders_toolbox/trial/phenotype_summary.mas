@@ -200,8 +200,11 @@ input[type="text"] {
             url: '/ajax/breeders/trial/'+ trial_id + '/collect_date_range',
     	}).done( function(r) {
             //alert('Setting start date to '+r.start_date+' and end date to '+r.end_date);
-            var raw_startDate = new Date(r.start_date).toISOString().split('T')[0];
-            var raw_endDate = new Date(r.end_date).toISOString().split('T')[0];
+            if (!r.start_date || !r.end_date) { return; }
+            // collect dates are 'YYYY-MM-DD HH:MM:SS' without time zone: keep the calendar day, because
+            // new Date(...).toISOString() converts local time to UTC and can move it by one day
+            var raw_startDate = r.start_date.split(' ')[0];
+            var raw_endDate = r.end_date.split(' ')[0];
             jQuery('#summary_start_date').val(raw_startDate);
             jQuery('#summary_end_date').val(raw_endDate);
 
@@ -218,7 +221,7 @@ input[type="text"] {
 	            	    format: 'YYYY-MM-DD'
 	                }
 	            },function(start) { 
-                    var summary_new_start_date = new Date(start).getTime();
+                    var summary_new_start_date = new Date(start.format('YYYY-MM-DD')).getTime();
                     var summary_new_end_date = new Date(jQuery('#summary_end_date').val()).getTime();
                     jQuery('#summary_phenotype_slider_range').slider('values', [summary_new_start_date, summary_new_end_date]);
                 });
@@ -237,7 +240,7 @@ input[type="text"] {
 	                },
 	            },function (end) {
                     var summary_new_start_date = new Date(jQuery('#summary_start_date').val()).getTime();
-                    var summary_new_end_date = new Date(end).getTime();
+                    var summary_new_end_date = new Date(end.format('YYYY-MM-DD')).getTime();
                     jQuery('#summary_phenotype_slider_range').slider('values', [summary_new_start_date, summary_new_end_date]);
                 });
             });

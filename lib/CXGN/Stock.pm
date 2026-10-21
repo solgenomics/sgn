@@ -1601,7 +1601,6 @@ sub add_parent {
     print STDERR "Add_stock_parent function...\n";
 
     my $cvterm_name = "";
-    my $cross_type = "";
     if ($parent_type eq "male") {
         $cvterm_name = "male_parent";
     }
