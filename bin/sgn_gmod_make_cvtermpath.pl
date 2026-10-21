@@ -154,13 +154,13 @@ my $schema= Bio::Chado::Schema->connect($dsn, $user, $pass||'');
 
 my $db=$schema->storage->dbh();
 
-if (!$schema || !$db) { die "No schema or dbh is avaiable! \n"; }
+if (!$schema || !$db) { die "No schema or dbh is available! \n"; }
 
 print STDOUT "Connected to database $dbname on host $dbhost.\n" if $verbose;
 ##########
 
 
-if ($opt_o) { open (my $OUT, ">", $opt_o) ||die "can't open error file $opt_o for writting.\n" ; }
+if ($opt_o) { open (my $OUT, ">", $opt_o) ||die "can't open error file $opt_o for writing.\n" ; }
 
 my $cv_id;
 warn "select cv_id from cv where name = '$cvname'" if $verbose;
@@ -417,7 +417,7 @@ sub recurse {
       try {
           $schema->txn_do($coderef);
       } catch {
-          die "An error occured. Rolling back! " . $_ . "\n\n";
+          die "An error occurred. Rolling back! " . $_ . "\n\n";
       };
   } #object
 } #recurse

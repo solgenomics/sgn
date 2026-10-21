@@ -196,7 +196,7 @@ sub edit_trait :Path('/ajax/trait/edit') {
         });
     };
     if ($@) {
-        $c->stash->{rest} = {error => "An error occurred retreiving cvterm information: $@\n"};
+        $c->stash->{rest} = {error => "An error occurred retrieving cvterm information: $@\n"};
         return;
     }
 
