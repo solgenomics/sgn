@@ -6,8 +6,7 @@ use Data::Dumper;
 use CXGN::Trait;
 use CXGN::Trait::Search;
 use CXGN::BreederSearch;
-use CXGN::BrAPI::v1::ObservationVariables;
-
+use CXGN::BrAPI::v2::ObservationVariables;
 
 BEGIN { extends 'Catalyst::Controller::REST'; }
 
@@ -29,23 +28,51 @@ sub search : Path('/ajax/search/treatments') Args(0) {
         $ontology_db_ids = ref($params->{'ontology_db_id[]'}) eq 'ARRAY' ? $params->{'ontology_db_id[]'} : [$params->{'ontology_db_id[]'}];
     }
 
-    # With no ontology ticked, search every ontology tagged as a treatment
-    # ontology: the same list the page offers as checkboxes
-    # (/ajax/html/select/trait_variable_ontologies). The treatment ontologies
-    # are not in the default onto_root_namespaces, and an empty list here
-    # means no ontology filter at all.
-    my $observation_variables = CXGN::BrAPI::v1::ObservationVariables->new({
+    my $observation_variables = CXGN::BrAPI::v2::ObservationVariables->new({
         bcs_schema => $c->dbic_schema("Bio::Chado::Schema", undef, $sp_person_id),
         metadata_schema => $c->dbic_schema("CXGN::Metadata::Schema", undef, $sp_person_id),
         phenome_schema=>$c->dbic_schema("CXGN::Phenome::Schema", undef, $sp_person_id),
         people_schema => $c->dbic_schema("CXGN::People::Schema", undef, $sp_person_id),
         page_size => 1000000,
         page => 0,
-        status => []
+        status => [],
+        context => $c
     });
 
+    my @cvprop_type_names = ('experiment_treatment_ontology', 'composed_experiment_treatment_ontology');
+
+    # Derive the db names (name spaces) of the cvs tagged as treatment ontologies:
+    # cvterm (cv type name) -> cvprop.type_id -> cvprop.cv_id -> cvterm -> dbxref -> db
+    my $cvprop_type_rs = $schema->resultset("Cv::Cvterm")->search({
+        name => { -in => \@cvprop_type_names }
+    });
+    my @cvprop_type_ids = map { $_->cvterm_id() } $cvprop_type_rs->all();
+
+    my $cvprop_rs = $schema->resultset("Cv::Cvprop")->search({
+        type_id => { -in => \@cvprop_type_ids }
+    });
+
+    my @name_spaces;
+    my %seen_name_space;
+    while (my $cvprop = $cvprop_rs->next()) {
+        my $cvterm = $schema->resultset("Cv::Cvterm")->search(
+            { cv_id => $cvprop->cv_id() },
+            { order_by => 'cvterm_id' }
+        )->first();
+        next if !$cvterm;
+
+        my $dbxref = $schema->resultset("General::Dbxref")->find({ dbxref_id => $cvterm->dbxref_id() });
+        next if !$dbxref;
+
+        my $db = $schema->resultset("General::Db")->find({ db_id => $dbxref->db_id() });
+        next if !$db;
+
+        push @name_spaces, $db->name() if !$seen_name_space{$db->name()}++;
+    }
+
     my $result = $observation_variables->observation_variable_ontologies({
-        cvprop_type_names => ['experiment_treatment_ontology', 'composed_experiment_treatment_ontology']
+        cvprop_type_names => \@cvprop_type_names,
+        name_spaces => \@name_spaces
     });
 
     my @ontos;

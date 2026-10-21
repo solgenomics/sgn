@@ -6,6 +6,7 @@ use Data::Dumper;
 use CXGN::Trait;
 use CXGN::Trait::Search;
 use CXGN::BreederSearch;
+use CXGN::BrAPI::v2::ObservationVariables;
 
 
 BEGIN { extends 'Catalyst::Controller::REST'; }
