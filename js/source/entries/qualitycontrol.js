@@ -23,30 +23,6 @@ export function init(main_div) {
     let allData = [];
     var all_traits;
 
-    $('#qc_analysis_prepare_button').click(function () {
-        dataset_id = get_dataset_id();
-        if (dataset_id != false) {
-            $.ajax({
-                url: '/ajax/qualitycontrol/prepare',
-                data: { 'dataset_id': get_dataset_id() },
-                success: function (r) {
-                    if (r.error) {
-                        alert(r.error);
-                    }  else {
-
-                        if (r.tempfile) {
-                            $('#tempfile').html(r.tempfile);
-                        }
-                        updateBoxplot();
-                }
-            },
-                error: function (jqXHR, textStatus, errorThrown) {
-                    console.error('AJAX request failed: ', textStatus, errorThrown);
-                    alert('Error in AJAX request: ' + errorThrown);
-                }
-            });
-        }
-    });
     $(function() {
             var handle = $("#custom-handle");
             $("#outliers_range").slider({
@@ -277,6 +253,10 @@ function updateBoxplot(isFixed, minValue, maxValue) {
     // Fetch the selected trait and tempfile
     var trait_selected = $('#trait_select').val();
     var tempfile = $('#tempfile').html();
+
+    if (!trait_selected || !tempfile || tempfile.trim() === '') {
+        return;
+    }
 
     const outlierMultiplier = $("#outliers_range").slider("value") || 1.5;
 
