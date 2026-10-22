@@ -1,45 +1,33 @@
 import test from 'tape';
-import { findDataset, linkFor } from '../source/entries/jbrowse_datasets.js';
+import { hasDataset } from '../source/entries/jbrowse_datasets.js';
 
 const conf = [
     '[GENERAL]',
     'dataRoot = data/json/genome',
     '',
     '[datasets.Accession_42048]',
-    'url  = ?data=data/json/genome&loc=chr3:100..200&tracks=DNA,line_42048',
+    'url  = ?data=data/json/accessions/42048',
     'name = Line 42048',
     '',
-    '[datasets.Accession_7]',
-    'name = no url here',
-    '',
-    '[datasets.Accession_9]',
-    'url = javascript:alert(1)',
+    '[ datasets.Accession_7 ]  # spaces and a comment',
+    'name = Line 7',
     '',
     '[datasets.Trial_221]',
     'url = ?data=data/json/trials/221',
 ].join('\r\n');
 
-const fallback = '/jbrowse/?data=data/json%2Faccessions%2F7';
-
 test('JBrowse datasets', t => {
-    t.deepEqual(findDataset(conf, 'Accession_42048'),
-        { found: true, url: '?data=data/json/genome&loc=chr3:100..200&tracks=DNA,line_42048' },
-        'finds the block and its url');
-    t.equal(linkFor(conf, 'Accession_42048', '/jbrowse/', fallback),
-        '/jbrowse/?data=data/json/genome&loc=chr3:100..200&tracks=DNA,line_42048',
-        'links to the dataset\'s own url');
+    t.equal(hasDataset(conf, 'Accession_42048'), true, 'finds the dataset by its exact name');
     ['Accession_4204', 'Accession_420', 'Accession_4'].forEach(prefix => {
-        t.equal(linkFor(conf, prefix, '/jbrowse/', fallback), null,
-            prefix + ' does not match Accession_42048');
+        t.equal(hasDataset(conf, prefix), false, prefix + ' does not match Accession_42048');
     });
-    t.equal(linkFor(conf, 'Accession_7', '/jbrowse/', fallback), fallback,
-        'a block without url keeps the previous link');
-    t.equal(linkFor(conf, 'Accession_9', '/jbrowse/', fallback), fallback,
-        'an unsafe url is not linked');
-    t.equal(linkFor(conf, 'Trial_221', '/jbrowse/', fallback), '/jbrowse/?data=data/json/trials/221',
-        'trials work the same way');
-    t.equal(linkFor('', 'Accession_42048', '/jbrowse/', fallback), null, 'empty configuration');
-    t.equal(linkFor('# Accession_42048 only in a comment', 'Accession_42048', '/jbrowse/', fallback), null,
+    t.equal(hasDataset(conf, 'Accession_420480'), false, 'a longer id does not match either');
+    t.equal(hasDataset(conf, 'Accession_7'), true, 'spaces inside the brackets and a comment are allowed');
+    t.equal(hasDataset(conf, 'Trial_221'), true, 'trials work the same way');
+    t.equal(hasDataset(conf, 'Trial_22'), false, 'a trial id prefix does not match');
+    t.equal(hasDataset('', 'Accession_42048'), false, 'empty configuration');
+    t.equal(hasDataset(null, 'Accession_42048'), false, 'no configuration');
+    t.equal(hasDataset('# Accession_42048 only in a comment\nurl = ?data=data/json/accessions/42048', 'Accession_42048'), false,
         'a mention outside a dataset header is not a dataset');
     t.end();
 });

@@ -68,6 +68,7 @@ use CXGN::Chado::Publication;
 use CXGN::Cview::Map::SGN::Genotype;
 use CXGN::Cview::MapOverviews;
 use SGN::Image;
+use URI::Escape ();
 
 my $trial_stock_type => undef;
 my $stock = $stockref->{stock};
@@ -229,7 +230,7 @@ my $jbrowse_path = $c->config->{jbrowse_path};
 my @path_parts = split('/', $jbrowse_path);
 my $basepath = $path_parts[1];
 my $test_url = "/" . $basepath . "/jbrowse.conf";
-my $jbrowse_url = $jbrowse_path . "%2Faccessions%2F" . $stock_id . "&tracks=DNA%2CGene%20exons%2C" . $uniquename . "_2015_V6_imputed&highlight=";
+my $jbrowse_url = $jbrowse_path . "%2Faccessions%2F" . $stock_id . "&tracks=DNA%2CGene%20exons%2C" . URI::Escape::uri_escape_utf8($uniquename) . "_2015_V6_imputed&highlight=";
 
 
 my $released_variety_link = '<button class="btn btn-default btn-sm" style="margin:3px" id="released_variety_link" disabled>Add released variety name</button>';
@@ -562,11 +563,9 @@ function jqueryStuff() {
             url: "<% $test_url %>",
             dataType: "text",
             success: function(response) {
-                // The exact dataset Accession_<id>, linked to its own url when it has one.
-                var href = jsMod['jbrowse_datasets'].linkFor(response, "Accession_<% $stock_id %>",
-                    "/<% $basepath %>/", "<% $jbrowse_url %>");
-                if ( href ) {  // if dataset is found, create and display link
-                    jQuery('#jbrowse_check').replaceWith(jQuery('<a id="jbrowse_link"></a>').attr('href', href)
+                // only the dataset named exactly Accession_<id>, not one whose id starts with it
+                if ( jsMod['jbrowse_datasets'].hasDataset(response, "Accession_<% $stock_id %>") ) {  // if dataset is found, create and display link
+                    jQuery('#jbrowse_check').replaceWith(jQuery('<a id="jbrowse_link"></a>').attr('href', "<% $jbrowse_url %>")
                         .text('View the tracks for this accession in JBrowse'));
                 }
                 else { // if not found, display message that dataset doesn't exist
