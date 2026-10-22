@@ -137,7 +137,11 @@ export function load_archived_files_table(user_id) {
                     response.data.forEach(row => {
                         let tr = jQuery("<tr>");
                         tr.append(jQuery("<td>").html("<div id='file_timestamp_"+row.file_id+"'>"+row.timestamp+"</div>"));
-                        tr.append(jQuery("<td>").html("<a id='file_name_"+row.file_id+"' href='/breeders/phenotyping/download/"+row.file_id+"'>"+row.filename+"</a> &nbsp; | &nbsp; <a target='_blank' href='/breeders/phenotyping/view/"+row.file_id+"'>View</a>"));
+                        let include_viewlink = '';
+                        // if (row.filename.includes(".xlsx")) {
+                        //     include_viewlink = " &nbsp; | &nbsp; <a target='_blank' href='/breeders/phenotyping/view/"+row.file_id+"'>View</a>";
+                        // } // this is commented out because the file viewer is broken and I think fixing it will be a different pull request.
+                        tr.append(jQuery("<td>").html("<a id='file_name_"+row.file_id+"' href='/breeders/phenotyping/download/"+row.file_id+"'>"+row.filename+"</a>"+include_viewlink));
                         tr.append(jQuery("<td>").html("<div id='file_tags_"+row.file_id+"'>"+(row.tags || '')+"</div>"));
                         if (response.data[0].hasOwnProperty('user_id')) {
                             tr.append(jQuery("<td>").html("<a href='/solpeople/profile/"+row.user_id+"'>"+row.user_name+"</a>"));
