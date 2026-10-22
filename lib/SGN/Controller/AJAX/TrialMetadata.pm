@@ -3256,13 +3256,20 @@ sub replace_trial_stock : Chained('trial') PathPart('replace_stock') Args(0) {
        return;
      }
 
-  # Plots whose names contain the old accession name are renamed, as in replace_plot_accessions
   my $old_stock_row = $schema->resultset("Stock::Stock")->find({ stock_id => $old_stock_id });
   if (!$old_stock_row) {
     $c->stash->{rest} = { error => "Could not find stock with id $old_stock_id." };
     return;
   }
+  if (!$schema->resultset("Stock::Stock")->search({ uniquename => $new_stock })->count()) {
+    $c->stash->{rest} = { error => "Could not find stock $new_stock." };
+    return;
+  }
   my $old_stock_name = $old_stock_row->uniquename;
+
+  # Plots whose names carry the old accession name are renamed. The layout is
+  # read after regenerating its cache, because the cache may be stale.
+  $replace_stock_fieldmap->_regenerate_trial_layout_cache();
   my $trial_layout_download = CXGN::Trial::TrialLayoutDownload->new({
     schema => $schema,
     trial_id => $trial_id,
@@ -3274,10 +3281,15 @@ sub replace_trial_stock : Chained('trial') PathPart('replace_stock') Args(0) {
   my %col_idx;
   for my $i (0..$#{$layout_header || []}) { $col_idx{$layout_header->[$i]} = $i; }
   my %plot_renames;
+  my @plots_not_renamed;
   foreach my $plot_row (@layout_rows) {
     next unless $plot_row->[$col_idx{accession_id}] == $old_stock_id;
     my $plot_name = $plot_row->[$col_idx{plot_name}];
-    (my $renamed = $plot_name) =~ s/\Q$old_stock_name\E/$new_stock/;
+    my $renamed = _plot_name_for_new_stock($plot_name, $old_stock_name, $new_stock);
+    if (!defined($renamed)) {
+      push @plots_not_renamed, $plot_name;
+      next;
+    }
     $plot_renames{$plot_row->[$col_idx{plot_id}]} = [$plot_name, $renamed] if $renamed ne $plot_name;
   }
   foreach my $plot_id (keys %plot_renames) {
@@ -3287,26 +3299,54 @@ sub replace_trial_stock : Chained('trial') PathPart('replace_stock') Args(0) {
     }
   }
 
-  my $replace_return_error = $replace_stock_fieldmap->replace_trial_stock_fieldMap($new_stock, $old_stock_id);
-  if ($replace_return_error) {
-    $c->stash->{rest} = { error => $replace_return_error };
+  # The accession swap, the plot renames and the layout cache change together
+  # or not at all.
+  my $txn_error;
+  try {
+    $schema->txn_do(sub {
+      my $replace_return_error = $replace_stock_fieldmap->replace_trial_stock_fieldMap($new_stock, $old_stock_id);
+      die "$replace_return_error\n" if $replace_return_error;
+      foreach my $plot_id (sort { $a <=> $b } keys %plot_renames) {
+        my $rename_error = $replace_stock_fieldmap->replace_plot_name_fieldMap($plot_id, @{$plot_renames{$plot_id}});
+        die "$rename_error\n" if $rename_error;
+      }
+      $replace_stock_fieldmap->_regenerate_trial_layout_cache();
+    });
+  } catch {
+    $txn_error = $_;
+  };
+  if ($txn_error) {
+    chomp($txn_error);
+    $c->stash->{rest} = { error => "Nothing was changed: $txn_error" };
     return;
   }
 
-  foreach my $plot_id (keys %plot_renames) {
-    my $rename_error = $replace_stock_fieldmap->replace_plot_name_fieldMap($plot_id, @{$plot_renames{$plot_id}});
-    if ($rename_error) {
-      $c->stash->{rest} = { error => $rename_error };
-      return;
-    }
-  }
-
-  $replace_stock_fieldmap->_regenerate_trial_layout_cache();
   my $dbh = $c->dbc->dbh();
   my $bs = CXGN::BreederSearch->new( { dbh=>$dbh, dbname=>$c->config->{dbname}, } );
   my $refresh = $bs->refresh_matviews($c->config->{dbhost}, $c->config->{dbname}, $c->config->{dbuser}, $c->config->{dbpass}, 'phenotypes', 'concurrent', $c->config->{basepath});
 
-  $c->stash->{rest} = { success => 1};
+  my $rest = { success => 1 };
+  $rest->{plots_not_renamed} = [ sort @plots_not_renamed ] if @plots_not_renamed;
+  $c->stash->{rest} = $rest;
+}
+
+# The plot name with the old stock name replaced by the new one. The old name
+# must appear as a whole part of the plot name: at the start or after "-" or
+# "_", and at the end or before "-" or "_", as in the generated names
+# (TRIAL-rep1-ACCESSION_1, TRIAL_ACCESSION_1). Returns the name unchanged when
+# it does not contain the old name that way, and undef when it does more than
+# once (for example when the trial name contains the accession name), so that
+# such a name is left alone instead of being changed in the wrong place.
+sub _plot_name_for_new_stock {
+  my ($plot_name, $old_name, $new_name) = @_;
+  my @positions;
+  while ($plot_name =~ /(?:^|(?<=[-_]))\Q$old_name\E(?=[-_]|$)/g) {
+    push @positions, $-[0];
+  }
+  return $plot_name if !@positions;
+  return if @positions > 1;
+  substr($plot_name, $positions[0], length($old_name)) = $new_name;
+  return $plot_name;
 }
 
 sub refresh_cache : Chained('trial') PathPart('refresh_cache') Args(0) {
