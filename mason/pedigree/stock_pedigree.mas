@@ -117,7 +117,7 @@ $stock_id
             jQuery('#add_parent_cross_type_div').show();
         } else {
             jQuery('#add_parent_cross_type_div').hide();
-            jQuery('#add_parent_cross_type').val('');
+            jQuery('#add_parent_cross_type').val('biparental');
         }
     });
 
@@ -130,7 +130,8 @@ $stock_id
 
       if (!parentName) { alert("We need a name here, sorry!"); return; }
 
-      var cross_type = jQuery('#add_parent_cross_type').val();
+      // only the female parent carries a cross type
+      var cross_type = parentType == 'female' ? jQuery('#add_parent_cross_type').val() : '';
       //alert(cross_type);
 
       var stock_id = "<% $stock_id %>";
@@ -139,7 +140,7 @@ $stock_id
         dataType: "json",
         type: 'GET',
         async: false,
-        data: 'stock_id='+stock_id+'&parent_name='+parentName+'&parent_type='+parentType+'&cross_type='+cross_type,
+        data: { stock_id: stock_id, parent_name: parentName, parent_type: parentType, cross_type: cross_type },
         error: function(response) {
             alert("An error occurred. Please try again later!"+response);
         },
@@ -203,7 +204,7 @@ $stock_id
     </label>
     <select class="form-control" style="max-width:12em; display:inline-block;">
         <option selected disabled>Select Trait Type</option>
-        <option>Nominal/Catagorical</option>
+        <option>Nominal/Categorical</option>
         <option>Scale/Numeric</option>
     </select>
     <select class="form-control" style="max-width:10em; display:inline-block;">

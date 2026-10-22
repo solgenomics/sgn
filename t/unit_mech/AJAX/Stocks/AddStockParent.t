@@ -37,7 +37,8 @@ my $child_id = $child->stock_id();
 my $add_parent = sub {
     my $parent_name = shift;
     my $parent_type = shift;
-    $mech->get_ok("http://localhost:3010/ajax/stock/add_stock_parent?stock_id=$child_id&parent_name=$parent_name&parent_type=$parent_type&cross_type=biparental", "add $parent_type parent $parent_name");
+    my $cross_type = shift // 'biparental';
+    $mech->get_ok("http://localhost:3010/ajax/stock/add_stock_parent?stock_id=$child_id&parent_name=$parent_name&parent_type=$parent_type&cross_type=$cross_type", "add $parent_type parent $parent_name");
     my $decoded = eval { decode_json $mech->content };
     # show the raw body in the test output when it is not a JSON object (for example null)
     return ref($decoded) eq 'HASH' ? $decoded : { body => $mech->content };
@@ -49,7 +50,8 @@ like($response->{'error'}, qr/was not found/, 'an unknown parent returns a JSON 
 $response = $add_parent->('test_accession1', 'female');
 is_deeply($response, { success => 1 }, 'adding a female parent returns a JSON success object');
 
-$response = $add_parent->('test_accession2', 'male');
+# the stock page used to send cross_type=null for a male parent
+$response = $add_parent->('test_accession2', 'male', 'null');
 is_deeply($response, { success => 1 }, 'adding a male parent returns a JSON success object');
 
 $response = $add_parent->('test_accession2', 'female');
@@ -61,6 +63,7 @@ my $relationships = $schema->resultset('Stock::StockRelationship')->search({ obj
 is($relationships->search({ subject_id => $female_parent->stock_id(), type_id => $female_parent_type_id })->count(), 1, 'female parent is stored');
 is($relationships->search({ subject_id => $male_parent->stock_id(), type_id => $male_parent_type_id })->count(), 1, 'male parent is stored');
 is($relationships->search({ subject_id => $female_parent->stock_id(), type_id => $female_parent_type_id })->first()->value(), 'biparental', 'the requested cross type is stored with the female parent');
+is($relationships->search({ subject_id => $male_parent->stock_id(), type_id => $male_parent_type_id })->first()->value(), undef, 'no cross type is stored with the male parent');
 is($relationships->count(), 2, 'failed requests store no relationship');
 
 # remove the relationships and the accession created by this test
