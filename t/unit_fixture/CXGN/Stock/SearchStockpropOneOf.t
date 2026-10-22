@@ -13,8 +13,8 @@ my $f = SGN::Test::Fixture->new();
 my $schema = $f->bcs_schema();
 
 my $accession_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'accession', 'stock_type')->cvterm_id();
-my @stocks = $schema->resultset('Stock::Stock')->search({ type_id => $accession_type_id }, { order_by => 'stock_id', rows => 2 })->all();
-is(scalar(@stocks), 2, 'fixture has two accessions');
+my @stocks = map { $schema->resultset('Stock::Stock')->find({ uniquename => $_, type_id => $accession_type_id }) } ('test_accession1', 'test_accession2');
+is(scalar(grep { defined } @stocks), 2, 'found the two accessions used in this test');
 
 my @values = ('one-of-test-a', 'one-of-test-b');
 my @props;
