@@ -143,7 +143,7 @@ sub _get_folders {
 		}
 	}
 
-    unless (%location_id_list && scalar @folder_studies < 1) { #skip empty folders if call was issued with search paramaters
+    unless (%location_id_list && scalar @folder_studies < 1) { #skip empty folders if call was issued with search parameters
         push @{$data}, {
     					trialDbId=>qq|$self->{'id'}|,
     					trialName=>$self->{'name'},
