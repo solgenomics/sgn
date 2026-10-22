@@ -237,7 +237,7 @@ function displayPhenotypeUploadVerifyResponse(response, upload_type, div_type) {
             message_text += `<div id='${div_type}_upload_remove_values_div' style='display: none'>To remove previously stored values if left blank in your file: <input type='checkbox' id='${div_type}_upload_remove_values' name='${div_type}_upload_remove_values' /></div>`;
             message_text += `<hr><div id='${div_type}_upload_details_default'>New values will be uploaded. Any previously stored values will be skipped.</div>`;
             message_text += `<div id='${div_type}_upload_details_overwrite' style='display: none'>New values will be uploaded. Any previously stored values will be replaced by non-blank values.  Blank values in the upload file will be skipped.</div>`;
-            message_text += `<div id='${div_type}_upload_details_remove' style='display: none'>New values will be uploaded. Any previously stored values will be replaced by non-blank values.  Blank values in the upload file will remove any previously stored values.</div>`;
+            message_text += `<div id='${div_type}_upload_details_remove' style='display: none'>New values will be uploaded. Any previously stored values will be replaced by non-blank values.  Blank values, NA and '.' in the upload file will remove any previously stored values.</div>`;
             message_text += "<br>";
             message_text += "</li>";
             for (var i = 0; i < warningarrayLength; i++) {

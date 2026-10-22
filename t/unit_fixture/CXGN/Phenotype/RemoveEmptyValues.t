@@ -82,7 +82,10 @@ sub upload {
     return $success;
 }
 
-is_deeply(stored_values(), [], 'no starting value for the plot and trait');
+# dry matter content is a single-measurement trait: a value stored by an
+# earlier test is replaced by the uploads below and put back at the end
+my $starting_values = stored_values();
+ok(scalar(@$starting_values) <= 1, 'at most one starting value for the plot and trait');
 
 upload('42', 1, 0);
 is_deeply(stored_values(), ['42'], 'a value is stored');
@@ -102,7 +105,16 @@ foreach my $empty ('NA', '.') {
 }
 
 # clean up, other test files share the fixture database
-upload('', 1, 1);
-is_deeply(stored_values(), [], 'cleaned up');
+if (@$starting_values) {
+    upload($starting_values->[0], 1, 0);
+    is_deeply(stored_values(), $starting_values, 'the starting value is back');
+}
+else {
+    upload('', 1, 1);
+    is_deeply(stored_values(), [], 'cleaned up');
+    # also the experiments and metadata rows of the uploads (not in the branch
+    # above: the restored value is in a row created by this test)
+    $f->clean_up_db();
+}
 
 done_testing();
