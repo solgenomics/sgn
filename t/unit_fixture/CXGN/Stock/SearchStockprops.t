@@ -15,8 +15,6 @@ my $people_schema = $f->people_schema();
 my $phenome_schema = $f->phenome_schema();
 
 my $accession_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'accession', 'stock_type')->cvterm_id();
-my $organization_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'organization', 'stock_property')->cvterm_id();
-my $country_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'country of origin', 'stock_property')->cvterm_id();
 
 my $stock_1 = $schema->resultset('Stock::Stock')->find({ uniquename => 'test_accession1', type_id => $accession_type_id });
 my $stock_2 = $schema->resultset('Stock::Stock')->find({ uniquename => 'test_accession2', type_id => $accession_type_id });
@@ -24,9 +22,9 @@ ok($stock_1 && $stock_2, 'found the two accessions used in this test');
 
 # stock_1 has both properties, stock_2 has only the organization
 my @created;
-push @created, $stock_1->create_related('stockprops', { type_id => $organization_type_id, value => 'TestOrgFilter' });
-push @created, $stock_1->create_related('stockprops', { type_id => $country_type_id, value => 'TestCountryFilter' });
-push @created, $stock_2->create_related('stockprops', { type_id => $organization_type_id, value => 'TestOrgFilter' });
+# (create_stockprops picks the next free rank, so props already on these stocks do not clash)
+push @created, values %{ $stock_1->create_stockprops({ 'organization' => 'TestOrgFilter', 'country of origin' => 'TestCountryFilter' }) };
+push @created, values %{ $stock_2->create_stockprops({ 'organization' => 'TestOrgFilter' }) };
 
 sub search_ids {
     my $stockprops_values = shift;
@@ -39,7 +37,7 @@ sub search_ids {
         minimal_info => 1,
     });
     my ($result) = $search->search();
-    return [ sort map { $_->{stock_id} } @$result ];
+    return [ sort { $a <=> $b } map { $_->{stock_id} } @$result ];
 }
 
 my $both = search_ids({
