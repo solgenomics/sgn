@@ -298,7 +298,7 @@ sub change_account_info_action :Path('/ajax/user/update') Args(0) {
 	my $other_user = CXGN::People::Login->get_login($c->dbc->dbh(), $new_username);
 	if (defined $other_user->get_sp_person_id() &&
 	    ($person -> get_sp_person_id() != $other_user->get_sp_person_id())) {
-	    print STDERR "Username alread in use.\n";
+	    print STDERR "Username already in use.\n";
 	    $c->stash->{rest} = { error =>  "Username \"$new_username\" is already in use. Please select a different username." };
 	    return;
 	}
