@@ -394,25 +394,44 @@ sub store_vcf_genotypes {
         }
 
         my @all_warnings;
+        my @warning_groups;
+        my @mismatched_markers;
+        my @protocol_match_errors;
         my $previous_genotypes_exist;
         if (scalar(@{$verified_errors->{warning_messages}}) > 0){
             push @warning_messages, @{$verified_errors->{warning_messages}};
             push @all_warnings, @{$verified_errors->{warning_messages}};
+            push @warning_groups, { title => 'Accessions with genotypes already stored for this protocol', count => scalar(@{$verified_errors->{warning_messages}}), messages => $verified_errors->{warning_messages} };
             $previous_genotypes_exist = $verified_errors->{previous_genotypes_exist};
         }
 
         if ($params->{protocol_id}) {
-            my $protocol_match_errors = check_vcf_protocol_markers($store_genotypes, $protocol);
-            if (!$protocol_match_errors) {
+            my $marker_check = check_vcf_protocol_markers($store_genotypes, $protocol);
+            if (!$marker_check) {
                 return;
             }
-            push @warning_messages, @$protocol_match_errors;
-            push @all_warnings, @$protocol_match_errors;
+            @protocol_match_errors = @{$marker_check->{protocol_match_errors}};
+            @mismatched_markers = @{$marker_check->{mismatched_markers}};
+            push @all_warnings, @protocol_match_errors;
+            if (scalar(@protocol_match_errors)) {
+                push @warning_groups, { title => 'Markers matched to the previously stored protocol by name, but differing in chrom, pos, ref, or alt', count => scalar(@protocol_match_errors), messages => \@protocol_match_errors };
+            }
         }
+
+        # Accepting warnings does not get past markers that differ from the stored protocol; only a
+        # curator choosing to update them does. Until then the file cannot be stored, so the job fails
+        # whether or not warnings were accepted.
+        if (scalar(@protocol_match_errors) > 0 && !$params->{update_markers}) {
+            push @error_messages, @protocol_match_errors;
+            my $warning_string = join("<br>", @all_warnings);
+            $result = { warning => $warning_string, warning_groups => \@warning_groups, previous_genotypes_exist => $previous_genotypes_exist, mismatched_markers => \@mismatched_markers };
+            return;
+        }
+        push @warning_messages, @protocol_match_errors;
 
         if (scalar(@all_warnings) > 0 && !$params->{accept_warnings}) {
             my $warning_string = join("<br>", @all_warnings);
-            $result = { warning => $warning_string, previous_genotypes_exist => $previous_genotypes_exist };
+            $result = { warning => $warning_string, warning_groups => \@warning_groups, previous_genotypes_exist => $previous_genotypes_exist, mismatched_markers => \@mismatched_markers };
             return;
         }
 
@@ -441,11 +460,12 @@ sub store_vcf_genotypes {
 =head2 check_vcf_protocol_markers($store_genotypes, $protocol)
 
 Compares the markers in a VCF file against the protocol the upload named. Markers the protocol does
-not have are either added to it or reported, depending on what the uploader asked for; markers it
-does have but describes differently are reported as warnings.
+not have are either added to it or reported, depending on what the uploader asked for. Markers it
+does have but describes differently can only be dealt with by a curator, who can choose to update
+the stored markers to match the file; a change of chromosome is never updated, only reported.
 
-Returns the differences to be warned about, or nothing if the file cannot be used against this
-protocol.
+Returns the differences to be warned about along with the names of the markers that differ, or
+nothing if the file cannot be used against this protocol.
 
 A VCF holds every marker in the assay, so a handful of new ones among them is a protocol that has
 grown slightly and anything more is the wrong protocol. That is why the limit here is a proportion
@@ -470,14 +490,32 @@ sub check_vcf_protocol_markers {
     my $total_marker_count = 0;
     my @mismatch_marker_names;
     my @mismatch_markers;
+    my @mismatched_markers;
+    my @markers_to_update;
+    my @marker_permission_errors;
     while (my ($chrom, $new_marker_data_1) = each %$new_marker_data) {
         while (my ($marker_name, $new_marker_details) = each %$new_marker_data_1) {
             $total_marker_count++;
             if (exists($compare_marker_names{$marker_name})) {
+                my @field_diffs;
+                my $chrom_changed = 0;
                 for my $key (qw(chrom pos name ref alt)) {
                     my $value = $new_marker_details->{$key};
                     if ($value ne ($stored_markers->{$marker_name}->{$key})) {
-                        push @protocol_match_errors, "Marker $marker_name in your file has $value for $key, but in the previously stored protocol shows ".$stored_markers->{$marker_name}->{$key};
+                        push @field_diffs, "Marker $marker_name was matched to the stored protocol by name, but its $key differs: your file has \"$value\", the stored protocol has \"".$stored_markers->{$marker_name}->{$key}."\"";
+                        $chrom_changed = 1 if $key eq 'chrom';
+                    }
+                }
+                if (scalar(@field_diffs)) {
+                    if (!$params->{is_curator}) {
+                        push @marker_permission_errors, @field_diffs;
+                    } else {
+                        push @mismatched_markers, $marker_name;
+                        if ($params->{update_markers} && !$chrom_changed) {
+                            push @markers_to_update, [$chrom, $marker_name];
+                        } else {
+                            push @protocol_match_errors, @field_diffs;
+                        }
                     }
                 }
             } else {
@@ -485,6 +523,13 @@ sub check_vcf_protocol_markers {
                 push @mismatch_markers, [$chrom, $marker_name];
             }
         }
+    }
+
+    if (scalar(@marker_permission_errors)) {
+        my $permission_error = "The following markers in your file differ from the previously stored protocol. Only a curator can modify existing protocol markers; please contact a curator.<br>".join("<br>", @marker_permission_errors);
+        push @error_messages, $permission_error;
+        $result = { error => $permission_error };
+        return;
     }
 
     if (scalar(@mismatch_marker_names)) {
@@ -508,7 +553,12 @@ sub check_vcf_protocol_markers {
         }
     }
 
-    return \@protocol_match_errors;
+    if (scalar(@markers_to_update)) {
+        print STDERR "Updating mismatched markers\n";
+        $store_genotypes->store_updated_markers_in_protocolprop(\@markers_to_update);
+    }
+
+    return { protocol_match_errors => \@protocol_match_errors, mismatched_markers => \@mismatched_markers };
 }
 
 =head2 store_intertek_or_kasp_genotypes($parser, $store_args)
@@ -572,25 +622,44 @@ sub store_intertek_or_kasp_genotypes {
     }
 
     my @all_warnings;
+    my @warning_groups;
+    my @mismatched_markers;
+    my @protocol_match_errors;
     my $previous_genotypes_exist;
     if (scalar(@{$verified_errors->{warning_messages}}) > 0){
         push @warning_messages, @{$verified_errors->{warning_messages}};
         push @all_warnings, @{$verified_errors->{warning_messages}};
+        push @warning_groups, { title => 'Accessions with genotypes already stored for this protocol', count => scalar(@{$verified_errors->{warning_messages}}), messages => $verified_errors->{warning_messages} };
         $previous_genotypes_exist = $verified_errors->{previous_genotypes_exist};
     }
 
     if ($params->{protocol_id}) {
-        my $protocol_match_errors = check_intertek_or_kasp_protocol_markers($store_genotypes, $protocol_info);
-        if (!$protocol_match_errors) {
+        my $marker_check = check_intertek_or_kasp_protocol_markers($store_genotypes, $protocol_info);
+        if (!$marker_check) {
             return;
         }
-        push @warning_messages, @$protocol_match_errors;
-        push @all_warnings, @$protocol_match_errors;
+        @protocol_match_errors = @{$marker_check->{protocol_match_errors}};
+        @mismatched_markers = @{$marker_check->{mismatched_markers}};
+        push @all_warnings, @protocol_match_errors;
+        if (scalar(@protocol_match_errors)) {
+            push @warning_groups, { title => 'Markers matched to the previously stored protocol by name, but differing in chrom, pos, ref, or alt', count => scalar(@protocol_match_errors), messages => \@protocol_match_errors };
+        }
     }
+
+    # Accepting warnings does not get past markers that differ from the stored protocol; only a
+    # curator choosing to update them does. Until then the file cannot be stored, so the job fails
+    # whether or not warnings were accepted.
+    if (scalar(@protocol_match_errors) > 0 && !$params->{update_markers}) {
+        push @error_messages, @protocol_match_errors;
+        my $warning_string = join("<br>", @all_warnings);
+        $result = { warning => $warning_string, warning_groups => \@warning_groups, previous_genotypes_exist => $previous_genotypes_exist, mismatched_markers => \@mismatched_markers };
+        return;
+    }
+    push @warning_messages, @protocol_match_errors;
 
     if (scalar(@all_warnings) > 0 && !$params->{accept_warnings}) {
         my $warning_string = join("<br>", @all_warnings);
-        $result = { warning => $warning_string, previous_genotypes_exist => $previous_genotypes_exist };
+        $result = { warning => $warning_string, warning_groups => \@warning_groups, previous_genotypes_exist => $previous_genotypes_exist, mismatched_markers => \@mismatched_markers };
         return;
     }
 
@@ -605,8 +674,8 @@ sub store_intertek_or_kasp_genotypes {
 Compares the markers in an Intertek or KASP file against the protocol the upload named, the same
 way the VCF check does.
 
-Returns the differences to be warned about, or nothing if the file cannot be used against this
-protocol.
+Returns the differences to be warned about along with the names of the markers that differ, or
+nothing if the file cannot be used against this protocol.
 
 These files hold a chosen panel of markers rather than a whole assay, so new markers among them are
 counted rather than measured against the size of the file.
@@ -629,14 +698,32 @@ sub check_intertek_or_kasp_protocol_markers {
     my $total_marker_count = 0;
     my @mismatch_marker_names;
     my @mismatch_markers;
+    my @mismatched_markers;
+    my @markers_to_update;
+    my @marker_permission_errors;
     while (my ($chrom, $new_marker_data_1) = each %$new_marker_data) {
         while (my ($marker_name, $new_marker_details) = each %$new_marker_data_1) {
             $total_marker_count++;
             if (exists($compare_marker_names{$marker_name})) {
+                my @field_diffs;
+                my $chrom_changed = 0;
                 for my $key (qw(chrom pos name ref alt)) {
                     my $value = $new_marker_details->{$key};
                     if ($value ne ($stored_markers->{$marker_name}->{$key})) {
-                        push @protocol_match_errors, "Marker $marker_name in your file has $value for $key, but in the previously stored protocol shows ".$stored_markers->{$marker_name}->{$key};
+                        push @field_diffs, "Marker $marker_name was matched to the stored protocol by name, but its $key differs: your file has \"$value\", the stored protocol has \"".$stored_markers->{$marker_name}->{$key}."\"";
+                        $chrom_changed = 1 if $key eq 'chrom';
+                    }
+                }
+                if (scalar(@field_diffs)) {
+                    if (!$params->{is_curator}) {
+                        push @marker_permission_errors, @field_diffs;
+                    } else {
+                        push @mismatched_markers, $marker_name;
+                        if ($params->{update_markers} && !$chrom_changed) {
+                            push @markers_to_update, [$chrom, $marker_name];
+                        } else {
+                            push @protocol_match_errors, @field_diffs;
+                        }
                     }
                 }
             } else {
@@ -644,6 +731,13 @@ sub check_intertek_or_kasp_protocol_markers {
                 push @mismatch_markers, [$chrom, $marker_name];
             }
         }
+    }
+
+    if (scalar(@marker_permission_errors)) {
+        my $permission_error = "The following markers in your file differ from the previously stored protocol. Only a curator can modify existing protocol markers; please contact a curator.<br>".join("<br>", @marker_permission_errors);
+        push @error_messages, $permission_error;
+        $result = { error => $permission_error };
+        return;
     }
 
     if (scalar(@mismatch_marker_names)){
@@ -668,7 +762,12 @@ sub check_intertek_or_kasp_protocol_markers {
         }
     }
 
-    return \@protocol_match_errors;
+    if (scalar(@markers_to_update)) {
+        print STDERR "Updating mismatched markers\n";
+        $store_genotypes->store_updated_markers_in_protocolprop(\@markers_to_update);
+    }
+
+    return { protocol_match_errors => \@protocol_match_errors, mismatched_markers => \@mismatched_markers };
 }
 
 =head2 store_ssr_genotypes($parser, $store_args)

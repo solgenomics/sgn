@@ -91,6 +91,7 @@ sub upload_genotype_verify_POST : Args(0) {
         $c->stash->{rest} = { error => 'Must have correct permissions to upload VCF genotypes! Please contact us.' };
         $c->detach();
     }
+    my $is_curator = $user_role eq 'curator' ? 1 : 0;
 
     my $project_id = $c->req->param('upload_genotype_project_id') || undef;
     my $protocol_id = $c->req->param('upload_genotype_protocol_id') || undef;
@@ -112,6 +113,7 @@ sub upload_genotype_verify_POST : Args(0) {
     my $assay_type = $c->req->param('assay_type_select');
     my $add_new_accessions = $c->req->param('upload_genotype_add_new_accessions');
     my $add_new_markers = $c->req->param('upload_genotype_add_new_markers');
+    my $update_existing_markers = $c->req->param('upload_genotype_update_markers');
     my $add_accessions;
     if ($add_new_accessions){
         $add_accessions = 1;
@@ -120,6 +122,10 @@ sub upload_genotype_verify_POST : Args(0) {
     my $add_markers;
     if ($add_new_markers) {
         $add_markers = 1;
+    }
+    my $update_markers;
+    if ($update_existing_markers && $is_curator) {
+        $update_markers = 1;
     }
     my $include_igd_numbers;
     if ($contains_igd){
@@ -641,6 +647,8 @@ sub upload_genotype_verify_POST : Args(0) {
         organism_species => $organism_species,
         add_accessions => $add_accessions,
         add_markers => $add_markers,
+        update_markers => $update_markers,
+        is_curator => $is_curator,
         include_igd_numbers => $include_igd_numbers,
         include_lab_numbers => $include_lab_numbers,
         accept_warnings => $accept_warnings,

@@ -42,18 +42,35 @@ class solGSList {
     return names;
   }
 
-  getLists(listTypes) {
-    var lists = this.cxgnList.getLists(listTypes);
-    var privateLists = this.cxgnList.convertArrayToJson(lists.private_lists);
-    privateLists = this.addDataOwnerAttr(privateLists, 'private')
-    var publicLists = this.cxgnList.convertArrayToJson(lists.public_lists);
-    publicLists = this.addDataOwnerAttr(publicLists, 'public')
+  getLists(listTypes, ownership) {
+    var privateLists = [];
+    var publicLists = [];
 
-    lists = [privateLists, publicLists]
+    for (var i = 0; i < listTypes.length; i++) {
+      if (!ownership || ownership === "private") {
+        var ownedLists = this.cxgnList.availableLists(listTypes[i]) || [];
+        privateLists = privateLists.concat(
+          ownedLists.filter(function (item) {
+            if (!item[6]) {
+              return item;
+            }
+          })
+        );
+      }
 
-    lists = lists.flat();
-  
-    return lists;
+      if (!ownership || ownership === "public") {
+        publicLists = publicLists.concat(
+          this.cxgnList.publicLists(listTypes[i]) || []
+        );
+      }
+    }
+
+    privateLists = this.cxgnList.convertArrayToJson(privateLists);
+    privateLists = this.addDataOwnerAttr(privateLists, "private");
+    publicLists = this.cxgnList.convertArrayToJson(publicLists);
+    publicLists = this.addDataOwnerAttr(publicLists, "public");
+
+    return privateLists.concat(publicLists);
 
   }
 
