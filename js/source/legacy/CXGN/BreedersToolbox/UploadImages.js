@@ -57,7 +57,7 @@ jQuery( document ).ready( function() {
                 }
                 jQuery('#working_modal').modal("hide");
             }).fail(function() {
-                reportVerifyResult({ "error": ["Error ocurred during EXIF verification."]});
+                reportVerifyResult({ "error": ["Error occurred during EXIF verification."]});
                 jQuery('#working_modal').modal("hide");
             });
         } else if (type == 'images_with_barcodes') {
@@ -83,7 +83,7 @@ jQuery( document ).ready( function() {
                 jQuery('#working_modal').modal("hide");
 
             }).fail(function() {
-                reportVerifyResult({ "error": ["Error ocurred during barcode scan"]});
+                reportVerifyResult({ "error": ["Error occurred during barcode scan"]});
                 jQuery('#working_modal').modal("hide");
             });
         } else { // verify associated phenotypes format
