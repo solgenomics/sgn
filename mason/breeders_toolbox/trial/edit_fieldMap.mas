@@ -580,6 +580,9 @@ jQuery(document).on('click', '#confirm_store_spatial_correction', async function
                 if (response.error) {
                     alert("Error Replacing Stock: "+response.error);
                 } else {
+                    if (response.plots_not_renamed && response.plots_not_renamed.length) {
+                        alert("The stock was replaced. These plot names contain the old name more than once and were left unchanged: "+response.plots_not_renamed.join(", "));
+                    }
                     jQuery('#replace_stock_dialog_success_message').modal("show");
                 }
             },

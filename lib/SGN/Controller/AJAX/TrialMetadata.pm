@@ -383,7 +383,7 @@ sub phenotype_summary : Chained('trial') PathPart('phenotypes') Args(0) {
     my $stock_type_id;
     my $rel_type_id;
     my $total_complete_number;
-    # print STDERR "trial phenotypes: START DATE: $start_date. END DATE: $end_date, INLCUDE DATELESS $include_dateless_items, DIPLAY = $display\n";
+    # print STDERR "trial phenotypes: START DATE: $start_date. END DATE: $end_date, INCLUDE DATELESS $include_dateless_items, DISPLAY = $display\n";
     if ($display eq 'plots') {
         if ($group_by_accession) {
             $stock_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'plot', 'stock_type')->cvterm_id();
@@ -2982,7 +2982,7 @@ sub trial_remove_treatment : Chained('trial') PathPart('remove_treatment') Args(
     my $treatment_id = $c->req->param('treatment_id');
 
     if (!$treatment_id) {
-        $c->stash->{rest} = {errpr => "You need to supply a valid treatment id."};
+        $c->stash->{rest} = {error => "You need to supply a valid treatment id."};
         return;
     }
 
@@ -3256,13 +3256,97 @@ sub replace_trial_stock : Chained('trial') PathPart('replace_stock') Args(0) {
        return;
      }
 
-  my $replace_return_error = $replace_stock_fieldmap->replace_trial_stock_fieldMap($new_stock, $old_stock_id);
-  if ($replace_return_error) {
-    $c->stash->{rest} = { error => $replace_return_error };
+  my $old_stock_row = $schema->resultset("Stock::Stock")->find({ stock_id => $old_stock_id });
+  if (!$old_stock_row) {
+    $c->stash->{rest} = { error => "Could not find stock with id $old_stock_id." };
+    return;
+  }
+  if (!$schema->resultset("Stock::Stock")->search({ uniquename => $new_stock })->count()) {
+    $c->stash->{rest} = { error => "Could not find stock $new_stock." };
+    return;
+  }
+  my $old_stock_name = $old_stock_row->uniquename;
+
+  # Plots whose names carry the old accession name are renamed. The layout is
+  # read after regenerating its cache, because the cache may be stale.
+  $replace_stock_fieldmap->_regenerate_trial_layout_cache();
+  my $trial_layout_download = CXGN::Trial::TrialLayoutDownload->new({
+    schema => $schema,
+    trial_id => $trial_id,
+    data_level => 'plots',
+    selected_columns => {"plot_name"=>1,"plot_id"=>1,"accession_id"=>1},
+  });
+  my @layout_rows = @{$trial_layout_download->get_layout_output()->{output} || []};
+  my $layout_header = shift @layout_rows;
+  my %col_idx;
+  for my $i (0..$#{$layout_header || []}) { $col_idx{$layout_header->[$i]} = $i; }
+  my %plot_renames;
+  my @plots_not_renamed;
+  foreach my $plot_row (@layout_rows) {
+    next unless $plot_row->[$col_idx{accession_id}] == $old_stock_id;
+    my $plot_name = $plot_row->[$col_idx{plot_name}];
+    my $renamed = _plot_name_for_new_stock($plot_name, $old_stock_name, $new_stock);
+    if (!defined($renamed)) {
+      push @plots_not_renamed, $plot_name;
+      next;
+    }
+    $plot_renames{$plot_row->[$col_idx{plot_id}]} = [$plot_name, $renamed] if $renamed ne $plot_name;
+  }
+  foreach my $plot_id (keys %plot_renames) {
+    if ($schema->resultset("Stock::Stock")->search({ uniquename => $plot_renames{$plot_id}->[1] })->count()) {
+      $c->stash->{rest} = { error => "Plot name ".$plot_renames{$plot_id}->[1]." already exists in the database" };
+      return;
+    }
+  }
+
+  # The accession swap, the plot renames and the layout cache change together
+  # or not at all.
+  my $txn_error;
+  try {
+    $schema->txn_do(sub {
+      my $replace_return_error = $replace_stock_fieldmap->replace_trial_stock_fieldMap($new_stock, $old_stock_id);
+      die "$replace_return_error\n" if $replace_return_error;
+      foreach my $plot_id (sort { $a <=> $b } keys %plot_renames) {
+        my $rename_error = $replace_stock_fieldmap->replace_plot_name_fieldMap($plot_id, @{$plot_renames{$plot_id}});
+        die "$rename_error\n" if $rename_error;
+      }
+      $replace_stock_fieldmap->_regenerate_trial_layout_cache();
+    });
+  } catch {
+    $txn_error = $_;
+  };
+  if ($txn_error) {
+    chomp($txn_error);
+    $c->stash->{rest} = { error => "Nothing was changed: $txn_error" };
     return;
   }
 
-  $c->stash->{rest} = { success => 1};
+  my $dbh = $c->dbc->dbh();
+  my $bs = CXGN::BreederSearch->new( { dbh=>$dbh, dbname=>$c->config->{dbname}, } );
+  my $refresh = $bs->refresh_matviews($c->config->{dbhost}, $c->config->{dbname}, $c->config->{dbuser}, $c->config->{dbpass}, 'phenotypes', 'concurrent', $c->config->{basepath});
+
+  my $rest = { success => 1 };
+  $rest->{plots_not_renamed} = [ sort @plots_not_renamed ] if @plots_not_renamed;
+  $c->stash->{rest} = $rest;
+}
+
+# The plot name with the old stock name replaced by the new one. The old name
+# must appear as a whole part of the plot name: at the start or after "-" or
+# "_", and at the end or before "-" or "_", as in the generated names
+# (TRIAL-rep1-ACCESSION_1, TRIAL_ACCESSION_1). Returns the name unchanged when
+# it does not contain the old name that way, and undef when it does more than
+# once (for example when the trial name contains the accession name), so that
+# such a name is left alone instead of being changed in the wrong place.
+sub _plot_name_for_new_stock {
+  my ($plot_name, $old_name, $new_name) = @_;
+  my @positions;
+  while ($plot_name =~ /(?:^|(?<=[-_]))\Q$old_name\E(?=[-_]|$)/g) {
+    push @positions, $-[0];
+  }
+  return $plot_name if !@positions;
+  return if @positions > 1;
+  substr($plot_name, $positions[0], length($old_name)) = $new_name;
+  return $plot_name;
 }
 
 sub refresh_cache : Chained('trial') PathPart('refresh_cache') Args(0) {
@@ -5984,7 +6068,7 @@ sub download_entry_number_template : Path('/ajax/breeders/trial_entry_numbers/do
 # upload params:
 #   upload_entry_numbers_file: Excel file to validate and parse
 #   ignore_warnings: true to add processed data if warnings exist
-# return: validation errors and warnings or success = 1 if entry numbers sucessfully stored
+# return: validation errors and warnings or success = 1 if entry numbers successfully stored
 #   filename: original upload file name
 #   error: array of error messages
 #   warning: array of warning messages
