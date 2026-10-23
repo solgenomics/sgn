@@ -57,6 +57,38 @@
                     <br>
                     <div id="preview" class="form-group justify-content-sm-center"></div>
                 </div>
+                <div id="upload_images_collection_div">
+                    <div class="form-group">
+                        <label class="col-sm-3 control-label">Add to Collection: </label>
+                        <div class="col-sm-9" >
+                            <select class="form-control" id="upload_images_collection_mode">
+                                <option value="none">Do not add to a collection</option>
+                                <option value="existing">Add to an existing collection</option>
+                                <option value="new">Create a new collection</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-group" id="upload_images_collection_existing_div" style="display:none">
+                        <label class="col-sm-3 control-label">Collection: </label>
+                        <div class="col-sm-9" >
+                            <select class="form-control" id="upload_images_collection_id"></select>
+                        </div>
+                    </div>
+                    <div id="upload_images_collection_new_div" style="display:none">
+                        <div class="form-group">
+                            <label class="col-sm-3 control-label">Collection Name: </label>
+                            <div class="col-sm-9" >
+                                <input class="form-control" type="text" id="upload_images_collection_name" placeholder="e.g. Field Photos 2026" />
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="col-sm-3 control-label">Description: </label>
+                            <div class="col-sm-9" >
+                                <input class="form-control" type="text" id="upload_images_collection_description" />
+                            </div>
+                        </div>
+                    </div>
+                </div>
                 <div class="form-group" id="upload_images_status"></div>
 
                 </div>
@@ -141,16 +173,60 @@ jQuery(document).ready(function() {
 
     jQuery('#upload_images_file_format').change(function(){
         jQuery('#upload_images_status').html('');
+        // images uploaded with associated phenotypes are stored by the
+        // phenotype upload, which does not return their ids, so they cannot
+        // be added to a collection here
         if (jQuery(this).val() == 'images_with_associated_phenotypes') {
             jQuery('#upload_images_with_associated_phenotypes_div').show();
             jQuery('#upload_images_div').hide();
+            jQuery('#upload_images_collection_div').hide();
         }
         else {
             jQuery('#upload_images_div').show();
+            jQuery('#upload_images_collection_div').show();
             jQuery('#upload_images_with_associated_phenotypes_div').hide();
         }
     });
 
+    jQuery('#upload_images_collection_mode').change(function(){
+        var mode = jQuery(this).val();
+        jQuery('#upload_images_collection_existing_div').toggle(mode == 'existing');
+        jQuery('#upload_images_collection_new_div').toggle(mode == 'new');
+        if (mode == 'existing') {
+            load_upload_images_collections();
+        }
+    });
+
 });
+
+// fill the existing collection dropdown with the image collections the user can add to
+function load_upload_images_collections() {
+    var select = jQuery('#upload_images_collection_id');
+    select.html('<option value="">Loading collections...</option>');
+
+    jQuery.ajax({
+        url: '/ajax/collection/list',
+        data: { collection_type: 'image' },
+        success: function(response) {
+            select.empty();
+            if (response.error) {
+                select.append(jQuery('<option>').val('').text(response.error));
+                return;
+            }
+            var collections = (response.collections || []).filter(function(c) { return c.user_can_modify; });
+            if (!collections.length) {
+                select.append(jQuery('<option>').val('').text('No image collections available'));
+                return;
+            }
+            select.append(jQuery('<option>').val('').text('Select a collection'));
+            collections.forEach(function(c) {
+                select.append(jQuery('<option>').val(c.collection_id).text(c.name));
+            });
+        },
+        error: function() {
+            select.html('<option value="">Could not load collections</option>');
+        }
+    });
+}
 
 </script>

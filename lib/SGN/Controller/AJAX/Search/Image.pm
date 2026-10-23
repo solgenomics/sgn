@@ -79,6 +79,15 @@ sub image_search_POST : Args(0) {
         }
     }
 
+    my @collection_id_list;
+    if (exists($params->{collection_id_list}) && $params->{collection_id_list}) {
+        if (ref($params->{collection_id_list}) eq 'ARRAY') {
+            @collection_id_list = @{ $params->{collection_id_list} };
+        } else {
+            @collection_id_list = split /,/, $params->{collection_id_list};
+        }
+    }
+
     my $limit = $params->{length};
     my $offset = $params->{start};
 
@@ -95,6 +104,7 @@ sub image_search_POST : Args(0) {
         stock_name_list=>\@stock_name_list,
         related_stock_list => \@related_stock_list,
         project_name_list=>\@project_name_list,
+        collection_id_list =>\@collection_id_list,
         tag_list=>\@tags,
         limit=>$limit,
         offset=>$offset
