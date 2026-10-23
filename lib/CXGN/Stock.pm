@@ -622,7 +622,7 @@ sub store {
     my $stock = $self->stock;
     my $schema = $self->schema();
 
-    #no stock id . Check first if the name  exists in te database
+    #no stock id . Check first if the name  exists in the database
     my $exists;
     if ($self->check_name_exists){
         $exists= $self->exists_in_database();
@@ -659,7 +659,7 @@ sub store {
         }
     }
 
-    # ###Check first if the name  exists in te database
+    # ###Check first if the name  exists in the database
     # $exists = 0;
     # if ($self->check_name_exists){
     # 	print STDERR "Checking stock uniquename \n";
@@ -1411,7 +1411,7 @@ sub get_ancestor_hash {
   push @$direct_descendant_ids, $stock_id; #excluded in parent retrieval to prevent loops
 
   my $stock = $self->schema->resultset("Stock::Stock")->find({stock_id => $stock_id});
-  #print STDERR "Stock ".$stock->uniquename()." decendants are: ".Dumper($direct_descendant_ids)."\n";
+  #print STDERR "Stock ".$stock->uniquename()." descendants are: ".Dumper($direct_descendant_ids)."\n";
   my %pedigree;
   $pedigree{'id'} = $stock_id;
   $pedigree{'name'} = $stock->uniquename();
@@ -1489,7 +1489,7 @@ sub get_descendant_hash {
 =head2 get_pedigree_rows()
 
  Usage:
- Desc:          get an array of pedigree rows from an array of stock ids, conatining female parent, male parent, and cross type if defined
+ Desc:          get an array of pedigree rows from an array of stock ids, containing female parent, male parent, and cross type if defined
  Ret:
  Args: $accession_ids, $format (either 'parents_only' or 'full'), $include (either 'ancestors' or 'ancestors_descendants')
  Side Effects:
@@ -1642,12 +1642,17 @@ sub add_parent {
 	return $error;
     }
 
+    # The cross type belongs to the female parent relationship, as in pedigree
+    # uploads. An empty or "null" value from the page means no cross type.
+    my $relationship_value = ($parent_type eq 'female' && defined($cross_type) && $cross_type ne '' && $cross_type ne 'null')
+        ? $cross_type : undef;
+
     my $new_row = $self->schema()->resultset("Stock::StockRelationship")->new(
 	{
 	    subject_id => $parent->stock_id,
 	    object_id  => $self->stock_id,
 	    type_id    => $type_id_row,
-	    value => $cross_type
+	    value => $relationship_value
 	});
 
     eval {
@@ -2329,7 +2334,7 @@ sub get_child_stocks {
 
 =head2 get_child_stocks_flat_list
 
-Same as get_child_stocks, but returns just a flat listref and not a hierarchy. Stockprops are ommitted.
+Same as get_child_stocks, but returns just a flat listref and not a hierarchy. Stockprops are omitted.
 Listref elements are hashrefs with structure {stock_id, name, type}. Self is dropped in the list,
 unlike in get_child_stocks where it remains at the top of the hierarchy.
 
