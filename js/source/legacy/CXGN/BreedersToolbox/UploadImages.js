@@ -108,6 +108,22 @@ jQuery( document ).ready( function() {
 
     jQuery('#upload_images_submit_store').click( function() {
         var type = jQuery('#upload_images_file_format').val();
+        if (type == 'images_with_associated_phenotypes') {
+            storeImages(type, null);
+            return;
+        }
+        // resolve (or create) the collection before uploading anything, so a
+        // bad collection name stops the upload instead of stranding the images
+        // the error handler is passed to then() rather than catch(), so an
+        // error thrown inside storeImages is not reported as a collection error
+        prepareUploadCollection().then(function(uploadCollection) {
+            storeImages(type, uploadCollection);
+        }, function(error) {
+            jQuery('#upload_images_status').html(formatMessage(error, 'error'));
+        });
+    });
+
+    function storeImages(type, uploadCollection) {
         if (type == 'images') {
             var imageFiles = document.getElementById('upload_images_file_input').files;
             //console.log("imageFiles", imageFiles);
@@ -138,7 +154,7 @@ jQuery( document ).ready( function() {
                 loadAllImages(imageFiles, imageData).done(function(result) {
                     // console.log("Result from promise is: "+JSON.stringify(result));
                     jQuery('#progress_modal').modal('hide');
-                    reportStoreResult(result);
+                    finishImageUpload(result, uploadCollection);
                 })
                 .fail(function(error) {
                     console.log(error);
@@ -177,7 +193,7 @@ jQuery( document ).ready( function() {
                     loadAllImages(imageFiles, imageData).done(function(result) {
                         // console.log("Result from promise is: "+JSON.stringify(result));
                         jQuery('#progress_modal').modal('hide');
-                        reportStoreResult(result);
+                        finishImageUpload(result, uploadCollection);
                     })
                     .fail(function(error) {
                         console.log(error);
@@ -212,8 +228,8 @@ jQuery( document ).ready( function() {
 
             loadAllImages(imageFiles, imageData).done(function(result) {
                 jQuery('#progress_modal').modal('hide');
-                reportStoreResult(result);
-            }); 
+                finishImageUpload(result, uploadCollection);
+            });
         } else { // store associated phenotypes format
             jQuery('#working_modal').modal("show");
             var phenoFile =  document.getElementById('upload_associated_phenotypes_file_input').files[0];
@@ -233,8 +249,85 @@ jQuery( document ).ready( function() {
                 jQuery('#working_modal').modal("hide");
             });
         }
-    });
+    }
 });
+
+
+// Returns a promise for the collection chosen in the upload dialog:
+// { collection_id, name } for an existing or newly created collection, or
+// null when the images should not be added to a collection.
+function prepareUploadCollection() {
+    var mode = jQuery('#upload_images_collection_mode').val();
+
+    if (mode == 'existing') {
+        var collectionId = jQuery('#upload_images_collection_id').val();
+        if (!collectionId) {
+            return Promise.reject('Please select a collection to add the images to.');
+        }
+        return Promise.resolve({
+            collection_id: collectionId,
+            name: jQuery('#upload_images_collection_id option:selected').text()
+        });
+    }
+
+    if (mode == 'new') {
+        var name = jQuery.trim(jQuery('#upload_images_collection_name').val());
+        if (!name) {
+            return Promise.reject('Please enter a name for the new collection.');
+        }
+        // the request failure handler is the second argument to then(), so it
+        // only handles a failed request, not the error thrown for response.error
+        return Promise.resolve(jQuery.ajax({
+            url: '/ajax/collection/create',
+            method: 'POST',
+            data: {
+                name: name,
+                description: jQuery('#upload_images_collection_description').val(),
+                collection_type: 'image'
+            }
+        })).then(function(response) {
+            if (response.error) { throw response.error; }
+            return { collection_id: response.collection_id, name: name };
+        }, function() {
+            throw 'An error occurred creating the collection.';
+        });
+    }
+
+    return Promise.resolve(null);
+}
+
+
+// Adds every image stored in this upload to the chosen collection, then
+// reports the upload result with the collection outcome appended.
+function finishImageUpload(result, uploadCollection) {
+    if (!uploadCollection || !result.image_ids || result.image_ids.length < 1) {
+        reportStoreResult(result);
+        return;
+    }
+
+    var collectionLink = "<a href='/collection/" + uploadCollection.collection_id + "'>" +
+        jQuery('<div>').text(uploadCollection.name).html() + "</a>";
+
+    jQuery.ajax({
+        url: '/ajax/collection/add_items',
+        method: 'POST',
+        data: {
+            collection_id: uploadCollection.collection_id,
+            item_type: 'image',
+            item_ids_json: JSON.stringify(result.image_ids)
+        }
+    }).done(function(response) {
+        if (response.error) {
+            result.error.push("Images were stored, but could not be added to collection " + collectionLink + ": " + response.error);
+        } else {
+            result.success.push("Added " + response.items_added + " image(s) to collection " + collectionLink);
+        }
+        reportStoreResult(result);
+    }).fail(function() {
+        result.error.push("Images were stored, but an error occurred adding them to collection " + collectionLink);
+        reportStoreResult(result);
+    });
+}
 
 
 function showImagePreview(imageFiles) {
@@ -618,7 +711,7 @@ function submitAssociatedPhenotypes (phenoFile, zipFile, url) {
 
 
 function loadAllImages(imageFiles, imageData){
-    return loadImagesSequentially(imageFiles, imageData, {"success":[],"error":[]} );
+    return loadImagesSequentially(imageFiles, imageData, {"success":[],"error":[],"image_ids":[]} );
 }
 
 
@@ -630,6 +723,7 @@ function loadImagesSequentially(imageFiles, imageData, uploadStatus){
         if (response.result) {
             var msg = "Successfly uploaded image "+response.result.data[0].imageFileName;
             uploadStatus.success.push(msg);
+            uploadStatus.image_ids.push(response.result.data[0].imageDbId);
         } else {
             // console.log("handling response errors: "+JSON.stringify(response.metadata.status));
             response.metadata.status.forEach(function(msg) {
