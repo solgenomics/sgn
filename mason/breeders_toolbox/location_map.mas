@@ -4,7 +4,7 @@ $user_id => undef
 </%args>
 
 <& /util/import_javascript.mas, classes => ['CXGN.Locations', 'leaflet', 'esri-leaflet', 'esri-leaflet-geocoder-debug', 'leaflet_extra-markers_min', 'jquery.dstk'] &>
-<center><p><i> Add a new location by clicking on the map. Or select an exisiting location to view details and options.</i></p></center>
+<center><p><i> Add a new location by clicking on the map. Or select an existing location to view details and options.</i></p></center>
 <br>
 <div id="location_map" style="height: 540px;"></div>
 

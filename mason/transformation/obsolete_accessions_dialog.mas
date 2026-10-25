@@ -105,7 +105,7 @@ jQuery(document).ready(function(){
 
         if (confirmation) {
             jQuery.ajax({
-                url: '/stock/obsolete_in_bulk',
+                url: '/ajax/stock/obsolete_in_bulk',
                 data : {
                     'stock_names' : stock_name_string,
                     'obsolete_note': obsolete_note,

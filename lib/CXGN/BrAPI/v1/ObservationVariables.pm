@@ -144,13 +144,16 @@ sub search {
 
 	my $join = '';
 	my @and_wheres;
+	my @bind_values;
 	if (scalar(@trait_ids)>0){
-		my $trait_ids_sql = join ',', @trait_ids;
+		my $trait_ids_sql = join ',', ('?') x scalar(@trait_ids);
 		push @and_wheres, "cvterm.id IN ($trait_ids_sql)";
+		push @bind_values, @trait_ids;
 	}
 	if (scalar(@db_names)>0){
 		foreach (@db_names){
-			push @and_wheres, "db.name = '$_'";
+			push @and_wheres, "db.name = ?";
+			push @bind_values, $_;
 		}
 	}
 	if (scalar(@dbxref_terms)>0){
@@ -162,21 +165,25 @@ sub search {
 			push @dbxref_accessions, $accession;
 		}
 		foreach (@db_names){
-			push @and_wheres, "db.name = '$_'";
+			push @and_wheres, "db.name = ?";
+			push @bind_values, $_;
 		}
 		foreach (@dbxref_accessions){
-			push @and_wheres, "dbxref.accession = '$_'";
+			push @and_wheres, "dbxref.accession = ?";
+			push @bind_values, $_;
 		}
 	}
 	if (scalar(@cvterm_names)>0){
 		foreach (@cvterm_names){
-			push @and_wheres, "cvterm.name = '$_'";
+			push @and_wheres, "cvterm.name = ?";
+			push @bind_values, $_;
 		}
 	}
 	if (scalar(@datatypes)>0){
 		$join = 'JOIN cvtermprop on (cvterm.cvterm_id=cvtermprop.cvterm_id)';
 		foreach (@datatypes){
-			push @and_wheres, "cvtermprop.value = '$_'";
+			push @and_wheres, "cvtermprop.value = ?";
+			push @bind_values, $_;
 		}
 	}
 
@@ -198,7 +205,7 @@ sub search {
 		ORDER BY cvterm.name ASC LIMIT $limit OFFSET $offset;";
 
 	my $sth = $self->bcs_schema->storage->dbh->prepare($q);
-	$sth->execute();
+	$sth->execute(@bind_values);
 
 	# Get values from our config
 	my $supported_crop = $c->config->{'supportedCrop'};
