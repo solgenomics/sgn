@@ -168,7 +168,7 @@ solGS.heatmap = {
       .attr("id", heatmapPlotDivId)
       .attr("transform", "translate(0, 0)");
 
-    yAxisLabels = corrplot
+    var yAxisLabels = corrplot
       .append("g")
       .attr("class", "y_axis")
       .attr("transform", `translate(${pad.left}, ${pad.top})`)
@@ -410,7 +410,7 @@ solGS.heatmap = {
       if (!heatmapPlotDivId.match("#")) {
         heatmapPlotDivId = "#" + heatmapPlotDivId;
       }
-      
+
     var longestYAxisLabelWidth = 0;
     yAxisLabels.each(function () {
       longestYAxisLabelWidth = Math.max(
@@ -419,9 +419,9 @@ solGS.heatmap = {
       );
     });
 
-    var yAxisLabelsLeft = Math.max(
+      var yAxisLabelsLeft = Math.max(
       0,
-      Math.ceil(pad.left - 10 - longestYAxisLabelWidth)
+      Math.floor(pad.left - 10 - longestYAxisLabelWidth)
     );
       jQuery(heatmapPlotDivId).append(
         `<p style="margin: 20px 0 0 ${yAxisLabelsLeft}px">${downloadLinks}</p>`
