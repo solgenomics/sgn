@@ -965,7 +965,7 @@ sub set_transformation_control_POST :Args(0){
     my ($self, $c) = @_;
     my $dbh = $c->dbc->dbh;
     my $transformation_stock_id = $c->req->param('transformation_stock_id');
-    my $control_stock_id = $c->req->param('control_stock_id');
+    my $selected_control_name = $c->req->param('selected_control_name');
     my $program_name = $c->req->param('program_name');
 
     if (!$c->user()) {
@@ -989,6 +989,13 @@ sub set_transformation_control_POST :Args(0){
 
     my $user_id = $c->user()->get_object()->get_sp_person_id();
     my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado', $user_id);
+
+    my $transformation_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'transformation','stock_type')->cvterm_id();
+    my $control_stock_id = $schema->resultset("Stock::Stock")->find({uniquename => $selected_control_name, type_id => $transformation_cvterm_id})->stock_id();
+    if (!$transformation_stock_id) {
+        $c->stash->{rest} = {error =>  "Error retrieving selected control information." };
+        return;
+    }
 
     my $transformation_obj = CXGN::Transformation::Transformation->new({schema=>$schema, dbh=>$dbh, transformation_stock_id=>$transformation_stock_id, transformation_control_stock_id=>$control_stock_id});
     my $error = $transformation_obj->set_transformation_control();

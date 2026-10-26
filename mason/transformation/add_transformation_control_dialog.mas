@@ -4,7 +4,7 @@ $transformation_name
 $project_id
 $program_name
 $is_a_control
-$control_name
+$control_names_string
 </%args>
 
 <div class="modal fade" id="set_transformation_control_dialog" name="set_transformation_control_dialog" tabindex="-1" role="dialog" aria-labelledby="setTransformationControlDialog">
@@ -111,10 +111,11 @@ jQuery(document).ready(function(){
 
     const transformation_id = '<%$transformation_id%>';
     const program_name = '<%$program_name%>';
-    const control_name = '<%$control_name%>';
+    const control_names_string = '<%$control_names_string%>';
+    const control_names = control_names_string.split(",");
     const is_a_control = '<%$is_a_control%>';
 
-    get_select_box('control_transformation_ids', 'transformation_control_select_div', { 'name' : 'transformation_control_id', 'id' : 'transformation_control_id', 'project_id':'<% $project_id %>', 'transformation_id': '<% $transformation_id %>','exclude_self': '1', 'empty': '1'});
+    get_select_box('control_transformation_ids', 'transformation_control_select_div', { 'name' : 'transformation_control_name', 'id' : 'transformation_control_name', 'project_id':'<% $project_id %>', 'transformation_id': '<% $transformation_id %>','exclude_self': '1', 'empty': '1'});
 
     jQuery('#select_a_transformation_control_link').click(function(){
         jQuery('#set_transformation_control_dialog').modal('show');
@@ -125,20 +126,25 @@ jQuery(document).ready(function(){
     });
 
     jQuery('#set_transformation_control_submit').click(function(){
-        const control_stock_id = jQuery('#transformation_control_id').val();
+        const selected_control_name = jQuery('#transformation_control_name').val();
 
-        if (!control_stock_id) {
+        if (!selected_control_name) {
             alert ("Please select a control");
             return;
         }
 
-        if (control_name) {
-            var confirmation = confirm("This transformation ID already has " +control_name+ " as a control. Do you want to add additional control?");
+        if (control_names.includes(selected_control_name)) {
+            alert ("The selected control name is already set as a control for this transformation ID");
+            return;
+        }
+
+        if (control_names_string) {
+            var confirmation = confirm("This transformation ID already has " +control_names_string+ " as a control. Do you want to add additional control?");
             if (confirmation) {
-                setTransformationControl(transformation_id, control_stock_id, program_name);
+                setTransformationControl(transformation_id, selected_control_name, program_name);
             }
         } else {
-            setTransformationControl(transformation_id, control_stock_id, program_name);
+            setTransformationControl(transformation_id, selected_control_name, program_name);
         }
     });
 

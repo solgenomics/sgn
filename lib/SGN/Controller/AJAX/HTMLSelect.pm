@@ -2883,10 +2883,10 @@ sub get_control_transformation_ids_select : Path('/ajax/html/select/control_tran
         if ($is_a_control) {
             if ($exclude_self == 1) {
                 if ($self_transformation_id != $transformation_id ) {
-                    push @transformations, [$transformation_id, $transformation_name];
+                    push @transformations, [$transformation_name, $transformation_name];
                 }
             } else {
-                push @transformations, [$transformation_id, $transformation_name];
+                push @transformations, [$transformation_name, $transformation_name];
             }
         }
     }
