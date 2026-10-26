@@ -48,7 +48,7 @@ $location_id => 'not_provided'
 jQuery(document).ready(function () {
 
    var trial_table = jQuery('#trial_search_results').DataTable( {
-       'ajax': '/ajax/search/trials?location_id=<% $location_id %>',
+       'ajax': '/ajax/search/trials?location_id=<% $location_id |u %>',
        "scrollX": true
    });
 

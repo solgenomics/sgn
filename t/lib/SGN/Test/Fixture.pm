@@ -313,6 +313,9 @@ sub get_auditdb_stats {
   Effects: removes any rows that were added to the database since the 
            currently running test started. Should be called at the end of the test
   Note:    Will not revert deletions or updates occuring during the test
+  Note:    Deletes through the schema connections, which autocommit, so the
+           cleanup takes effect even if the test turned AutoCommit off on
+           $f->dbh. The test's own transaction on $f->dbh is left untouched.
 
 =cut
 
@@ -446,24 +449,35 @@ sub delete_table_entries {
     }
 
     if ($table eq "metadata") {
+        # Delete through the metadata schema connection, which autocommits,
+        # not through $self->dbh. A test may have turned AutoCommit off on
+        # $self->dbh; these deletes, and the experiment file links removed by
+        # ON DELETE CASCADE, would then stay locked in the test's open
+        # transaction, and the experiment_files step below, which deletes the
+        # same links through the phenome schema connection, would wait forever.
+        my $dbh = $self->metadata_schema()->storage->dbh();
         # delete associated images first
 	my $iq = "DELETE FROM phenome.stock_image where metadata_id > ?";
-	my $ih = $self->dbh()->prepare($iq);
+	my $ih = $dbh->prepare($iq);
 	$ih->execute($previous_max_id);
 	    
         my $rs = undef;
         my $q = "DELETE FROM metadata.md_files where metadata_id > ?";
-        my $h = $self->dbh()->prepare($q);
+        my $h = $dbh->prepare($q);
         $h->execute($previous_max_id);
 
         my $q2 = "DELETE FROM metadata.md_metadata where metadata_id > ? ";
-        my $h2 = $self->dbh()->prepare($q2);
+        my $h2 = $dbh->prepare($q2);
         $h2->execute($previous_max_id);
     }
 
     if ($table eq "images") {
+        my $dbh = $self->metadata_schema()->storage->dbh();
+        # md_tag_image does not cascade when an image is deleted, so remove the
+        # tag links of new images first. Tags, and links to older images, stay.
+        $dbh->do("DELETE FROM metadata.md_tag_image WHERE image_id > ?", undef, $previous_max_id);
 	my $q = "DELETE FROM metadata.md_image where image_id > ?";
-	my $h = $self->dbh()->prepare($q);
+	my $h = $dbh->prepare($q);
 	$h->execute($previous_max_id);
     }
 

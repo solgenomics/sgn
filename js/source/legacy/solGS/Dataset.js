@@ -69,7 +69,7 @@ solGS.dataset = {
     for (var i = 0; i < datasets.length; i++) {
       var id = datasets[i][0];
       var name = datasets[i][1];
-      var d = dataset.getDataset(id);
+      var d = datasets[i][5] || dataset.getDataset(id);
       for (var j = 0; j < datasetTypes.length; j++) {
         if (d.categories[datasetTypes[j]] && d.categories[datasetTypes[j]].length) {
           if (!dsIds.includes(id)) {
@@ -91,24 +91,35 @@ solGS.dataset = {
 
   },
 
-  getDatasetPops: function (datasetTypes) {
+  getDatasetPops: function (datasetTypes, ownership) {
     if (!Array.isArray(datasetTypes)) {
       datasetTypes = [datasetTypes];
     }
     var dataset = new CXGN.Dataset();
     
-    var publicDatasets = dataset.getPublicDatasets();
-    publicDatasets = this.converDatasetArrayToJson(publicDatasets, datasetTypes);
-    publicDatasets = this.addDataOwnerAttr(publicDatasets, 'public')
+    var datasetPops = [];
 
+    if (!ownership || ownership === "private") {
+      var privateDatasets = dataset.getDatasets();
+      privateDatasets = privateDatasets.filter(function (item) {
+        if (!item[4]) {
+          return item;
+        }
 
-    var privateDatasets = dataset.getDatasets();
-    privateDatasets = this.converDatasetArrayToJson(privateDatasets, datasetTypes);
-    privateDatasets = this.addDataOwnerAttr(privateDatasets, 'private')
-    
-    var allDatasets = [privateDatasets, publicDatasets];
-    console.log(allDatasets);
-    return allDatasets.flat();
+      });
+      privateDatasets = this.converDatasetArrayToJson(privateDatasets, datasetTypes);
+      privateDatasets = this.addDataOwnerAttr(privateDatasets, "private");
+      datasetPops = datasetPops.concat(privateDatasets);
+    }
+
+    if (!ownership || ownership === "public") {
+      var publicDatasets = dataset.getPublicDatasets();
+      publicDatasets = this.converDatasetArrayToJson(publicDatasets, datasetTypes);
+      publicDatasets = this.addDataOwnerAttr(publicDatasets, "public");
+      datasetPops = datasetPops.concat(publicDatasets);
+    }
+
+    return datasetPops;
     
   },
 
