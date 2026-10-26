@@ -102,10 +102,11 @@ Will be the treatment root term by default if none are added."></span>&nbsp;Chai
 </div>
 
 <button id="download_ontology_btn" class="btn btn-primary">Download Treatment Ontology</button>
+&nbsp;&nbsp;&nbsp;&nbsp;
 <select id="treatment_cvtermpath_rebuild_select" class="form-control" style="display:inline-block;width:auto;vertical-align:middle;margin-left:2em;">
     <option value="">Select an ontology...</option>
 </select>
-<button id="treatment_rebuild_cvtermpath_btn" class="btn btn-primary">Rebuild cvterm paths for selected CV</button>
+<button id="treatment_rebuild_cvtermpath_btn" class="btn btn-primary btn-sm">Rebuild cvterm paths</button>
 <br>
 <br>
 % 

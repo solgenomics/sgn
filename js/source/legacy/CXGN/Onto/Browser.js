@@ -214,10 +214,10 @@ CXGN.Onto.Browser.prototype = {
 	}
 
 	var s = '<div id="cvtermpath_rebuild" style="margin-bottom:0" >';
-	s += '<table summary="" cellpadding="5" cellspacing="0"><tr><td width="140px">&nbsp;</td><td width="160px">';
+	s += '<table summary="" cellpadding="5" cellspacing="0"><tr><td width="140px">Rebuild Cvterm Paths</td><td width="160px">';
 	s += '<select id="cvtermpath_rebuild_select" class="form-control">' + options + '</select>';
-	s += '</td><td width="10px">&nbsp;</td><td>';
-	s += '<input id="cvtermpath_rebuild_btn" type="button" value="Rebuild cvterm paths for selected CV" class="btn btn-primary" onClick="javascript:o.rebuildCvtermpath()" />';
+	s += '</td><td width="10px">&nbsp;</td><br><td>';
+	s += '<input id="cvtermpath_rebuild_btn" type="button" value="Rebuild paths" class="btn btn-primary btn-sm" onClick="javascript:o.rebuildCvtermpath()" />';
 	s += '</td></tr></table>';
 	s += '</div>';
 

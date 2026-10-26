@@ -110,7 +110,7 @@ Will be the trait root term by default if none are added."></span>&nbsp;Chain to
     </div>
 </div>
 
-<table>
+<table style="50%">
     <tr>
         <td>
             <select id="trait_ontology_download_select" class="form-control">
@@ -120,13 +120,13 @@ Will be the trait root term by default if none are added."></span>&nbsp;Chain to
         <td>
             <button id="download_ontology_btn" class="btn btn-primary"><span class="glyphicon glyphicon-floppy-save"></span></button>
         </td>
-        <td style="padding-left:2em;">
+        <td style="padding-left:8em;">
             <select id="trait_cvtermpath_rebuild_select" class="form-control">
                 <option value="">Select an ontology...</option>
             </select>
         </td>
         <td>
-            <button id="trait_rebuild_cvtermpath_btn" class="btn btn-primary">Rebuild cvterm paths for selected CV</button>
+            <button id="trait_rebuild_cvtermpath_btn" class="btn btn-primary btn-sm">Rebuild cvterm paths</button>
         </td>
     </tr>
 </table>
