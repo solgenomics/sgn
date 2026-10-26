@@ -6,7 +6,7 @@ Isaak Y Tecle <iyt2@cornell.edu>
 =head1 Name
 
 SGN::Controller::solGS::Anova - a controller for ANOVA. For now, this implements a one-way
-single trial ANOVA with a possibility for simultanously running anova for multiple traits.
+single trial ANOVA with a possibility for simultaneously running anova for multiple traits.
 
 =cut
 
@@ -25,8 +25,8 @@ use File::Slurp qw /write_file read_file/;
 use File::Spec;
 use File::Path qw /make_path/;
 use JSON;
-use List::Util qw/any uniq all/;
-use List::MoreUtils qw/firstidx/;
+use POSIX qw/isfinite/;
+use Text::CSV;
 use Scalar::Util qw /weaken reftype looks_like_number/;
 use Storable qw/nstore retrieve/;
 use URI::FromHash 'uri';
@@ -78,44 +78,38 @@ sub anova_phenotype_data : Path('/anova/phenotype/data/') Args(0) {
 
     my $args = $c->req->param('arguments');
     $c->controller('solGS::Utils')->stash_json_args( $c, $args );
+    delete $c->stash->{anova_data_error};
 
-    my $trial_id = $c->stash->{trial_id};
-    my $trait_id = $c->stash->{trait_id};
-
-    $c->controller('solGS::Trait')->get_trait_details( $c, $trait_id );
-
+    my $traits_abbrs = $self->get_traits_abbrs($c);
     my $pheno_file = $self->trial_phenotype_file($c);
+    $pheno_file = $self->create_anova_phenodata_file($c) unless -s $pheno_file;
 
-    if ( !-s $pheno_file ) {
-
-        $pheno_file = $self->create_anova_phenodata_file($c);
-
-        if ( !-s $pheno_file ) {
-            $c->stash->{rest}{'Error'} =
-              'There is no phenotype data for this  trial.';
-        }
-
-        if ( @{ $c->error } ) {
-            $c->stash->{rest}{'Error'} =
-              'There was error querying for the phenotype data.';
-        }
+    if ( @{ $c->error } ) {
+        $c->stash->{rest}{Error} = 'There was error querying for the phenotype data.';
+    }
+    elsif ( !-s $pheno_file ) {
+        $c->stash->{rest}{Error} = 'There is no phenotype data for this trial.';
+    }
+    elsif ( $c->stash->{anova_data_error} ) {
+        $c->stash->{rest}{Error} = $c->stash->{anova_data_error};
     }
     else {
         my $categorical = $self->check_categorical_dependent_variable($c);
-        if ($categorical) {
-            $c->stash->{rest}{'Error'} =
-"The trait data is not all numeric. Some or all of the trait values are text. ";
+        if ( $c->stash->{anova_data_error} ) {
+            $c->stash->{rest}{Error} = $c->stash->{anova_data_error};
+        }
+        elsif ($categorical) {
+            $c->stash->{rest}{Error} = 'The trait data is not all numeric.';
         }
         else {
-            $c->stash->{rest}{'success'} = 'Success.';
+            $c->stash->{rest}{success} = 'Success.';
         }
     }
 
-    my $traits_abbrs = $self->get_traits_abbrs($c);
-    $c->stash->{rest}{trial_id}     = $trial_id;
+    $c->stash->{rest}{trial_id} = $c->stash->{trial_id};
     $c->stash->{rest}{traits_abbrs} = $traits_abbrs;
-
 }
+
 
 sub anova_analyis : Path('/anova/analysis/') Args(0) {
     my ( $self, $c ) = @_;
@@ -125,8 +119,12 @@ sub anova_analyis : Path('/anova/analysis/') Args(0) {
 
     my $anova_result = $self->check_anova_output($c);
 
-    $c->controller('solGS::Trait')
-      ->get_trait_details( $c, $c->stash->{trait_id} );
+    delete $c->stash->{anova_data_error};
+    $self->get_traits_abbrs($c);
+    if ( $c->stash->{anova_data_error} ) {
+        $c->stash->{rest}{Error} = $c->stash->{anova_data_error};
+        return;
+    }
 
     if ( !$anova_result ) {
         $self->run_anova($c);
@@ -225,8 +223,24 @@ sub get_traits_abbrs {
     $c->controller('solGS::Trait')->get_all_traits( $c, $trial_id );
     $c->controller('solGS::Files')->all_traits_file( $c, $trial_id );
 
-    $c->controller('solGs::Trait')->get_trait_details( $c, $trait_id );
-    my $trait_abbr = $c->stash->{trait_abbr};
+    $c->controller('solGS::Trait')->get_trait_details( $c, $trait_id );
+    my $utils = $c->controller('solGS::Utils');
+    my $trait_name = $utils->clean_traits($c->stash->{trait_name});
+    my $pairs = $c->controller('solGS::Trait')->get_acronym_pairs($c, $trial_id);
+    my @matches = grep {
+        defined($_->[1]) && $utils->clean_traits($_->[1]) eq $trait_name
+    } @$pairs;
+    my $trait_abbr;
+    if (@matches > 1) {
+        $c->stash->{anova_data_error} = 'The selected trait has an ambiguous phenotype column. Clear the ANOVA cache and try again.';
+    }
+    elsif (!@matches) {
+        $c->stash->{anova_data_error} = 'The selected trait has no mapping to a phenotype column. Clear the ANOVA cache and try again.';
+    }
+    else {
+        $trait_abbr = $matches[0][0];
+    }
+    $c->stash->{trait_abbr} = $trait_abbr;
 
     my $id_abbr      = { 'trait_id' => $trait_id, 'trait_abbr' => $trait_abbr };
     my $json         = JSON->new();
@@ -239,25 +253,52 @@ sub check_categorical_dependent_variable {
     my ( $self, $c ) = @_;
 
     my $pheno_file = $self->trial_phenotype_file($c);
-    my $header     = ( read_file( $pheno_file, { binmode => ':utf8' } ) )[0];
-    my @headers    = split( /\t/, $header );
-
-    $c->controller('solGS::Trait')
-      ->get_trait_details( $c, $c->stash->{trait_id} );
     my $trait_abbr = $c->stash->{trait_abbr};
-
-    my $trait_idx = firstidx { $_ eq $trait_abbr } @headers;
-    my $trait_col = $trait_idx + 1;
-
-    my $trait_values = `cut -f $trait_col $pheno_file 2>&1`;
-    $trait_values =~ s/$trait_abbr|\n//g;
-    my @trait_values = split( /\t/, $trait_values );
-
-    my $categorical = all { $_ =~ /[A-Za-z]/ } @trait_values;
-
+    open(my $input, '<:encoding(UTF-8)', $pheno_file) or do {
+        $c->stash->{anova_data_error} = 'Could not read phenotype data. Clear the ANOVA cache and try again.';
+        return 0;
+    };
+    my $parser = Text::CSV->new({sep_char => "\t", binary => 1});
+    my $headers = $parser->getline($input);
+    my @columns = $headers && defined($trait_abbr)
+        ? grep { $headers->[$_] eq $trait_abbr } 0 .. $#$headers : ();
+    if (@columns != 1) {
+        $c->stash->{anova_data_error} = 'The selected trait is not uniquely present in the phenotype data. Clear the ANOVA cache and try again.';
+        close $input;
+        return 0;
+    }
+    my $column = $columns[0];
+    my %missing = map { $_ => 1 } ('', 'NA', '-', '.', '..', 'NaN');
+    my ($numeric_count, $row_number, $categorical) = (0, 1, 0);
+    while (my $row = $parser->getline($input)) {
+        $row_number++;
+        if (@$row != @$headers) {
+            $c->stash->{anova_data_error} = "The phenotype data has inconsistent columns on row $row_number. Clear the ANOVA cache and try again.";
+            last;
+        }
+        my $value = $row->[$column];
+        $value = '' unless defined $value;
+        $value =~ s/^\s+|\s+$//g;
+        next if exists $missing{$value};
+        if (!looks_like_number($value) || !isfinite(0 + $value)) {
+            $categorical = 1;
+            $c->stash->{anova_data_error} = "The trait data is not all numeric. The first nonnumeric or non-finite value is on row $row_number.";
+            last;
+        }
+        $numeric_count++;
+    }
+    if (!$categorical && !$c->stash->{anova_data_error}) {
+        if (!$parser->eof) {
+            $c->stash->{anova_data_error} = 'Could not parse phenotype data. Clear the ANOVA cache and try again.';
+        }
+        elsif (!$numeric_count) {
+            $c->stash->{anova_data_error} = 'There are no numeric observations for the selected trait.';
+        }
+    }
+    close $input;
     return $categorical;
-
 }
+
 
 sub check_anova_output {
     my ( $self, $c ) = @_;
