@@ -57,7 +57,6 @@ sub _parse_measurements {
         $timestamp =~ s/^\s+|\s+$//g;
 
         next if $timestamp_included && $trait_value eq '' && $timestamp eq '';
-        next if $trait_value eq '.';
 
         push @measurements, [ $trait_value, $timestamp ];
     }

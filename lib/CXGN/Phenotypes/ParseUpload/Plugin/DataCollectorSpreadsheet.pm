@@ -72,7 +72,7 @@ sub validate {
    my  ( $col_min, $col_max ) = $worksheet->col_range();
 
     if (($col_max - $col_min)  < 1 || ($row_max - $row_min) < 1 ) { #must have header with at least plot_name and one trait, as well as one row of phenotypes
-        $parse_result{'error'} = "Spreadsheet is missing plot_name and atleast one trait in header.";
+        $parse_result{'error'} = "Spreadsheet is missing plot_name and at least one trait in header.";
         print STDERR "Spreadsheet is missing header\n";
         return \%parse_result;
     }
@@ -256,9 +256,7 @@ sub parse {
             }
 
             if ( defined($trait_value) && defined($timestamp) ) {
-                if ($trait_value ne '.'){
-                    $data{$plot_name}->{$trait_key} = [$trait_value, $timestamp];
-                }
+                $data{$plot_name}->{$trait_key} = [$trait_value, $timestamp];
             } else {
                 $parse_result{'error'} = "Value or timestamp missing.";
                 return \%parse_result;

@@ -205,7 +205,7 @@ sub parse {
                 $trait_name =~ s/^\s+|\s+$//g;
                 $traits_seen{$trait_name} = 1;
                 my $value_string = '';
-                if ($columns[$col_num]){
+                if (defined($columns[$col_num])){
                     $value_string = $columns[$col_num];
                 }
                 #print STDERR $value_string."\n";
@@ -222,9 +222,7 @@ sub parse {
                 #print STDERR $trait_value." : ".$timestamp."\n";
 
                 if ( defined($value) && defined($timestamp) ) {
-                    if ($value ne '.'){
-                        $data{$observation_unit_name}->{$trait_name} = [$value, $timestamp];
-                    }
+                    $data{$observation_unit_name}->{$trait_name} = [$value, $timestamp];
                 } else {
                     $parse_result{'error'} = "Value or timestamp missing.";
                     return \%parse_result;
