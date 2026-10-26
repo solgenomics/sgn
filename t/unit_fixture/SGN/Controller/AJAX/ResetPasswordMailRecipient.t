@@ -32,6 +32,8 @@ Test::WWW::Mechanize, because the web server runs in a separate process.
 use strict;
 use warnings;
 
+package main;  # the mock classes below are declared inside this test
+
 use lib 't/lib';
 use SGN::Test::Fixture;
 use Test::More;

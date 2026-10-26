@@ -312,7 +312,7 @@ sub get_auditdb_stats {
   Usage:   $f->clean_up_db();
   Effects: removes any rows that were added to the database since the 
            currently running test started. Should be called at the end of the test
-  Note:    Will not revert deletions or updates occuring during the test
+  Note:    Will not revert deletions or updates occurring during the test
   Note:    Deletes through the schema connections, which autocommit, so the
            cleanup takes effect even if the test turned AutoCommit off on
            $f->dbh. The test's own transaction on $f->dbh is left untouched.
