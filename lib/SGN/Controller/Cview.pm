@@ -121,6 +121,11 @@ sub map :Path("/cview/map.pl") :Args(0) {
 	return;
     }
 
+    # Marker searches use the map ID, not the displayed map version ID.
+    $c->stash->{map_id} = CXGN::Cview::Map::Tools::find_map_id_with_version(
+        $c->stash->{dbh}, $c->stash->{map_version_id}
+    );
+
     my $private = $self->data_is_private($c, $c->stash->{dbh}, $map);
 
     $c->stash->{long_name} = $map->get_long_name();
