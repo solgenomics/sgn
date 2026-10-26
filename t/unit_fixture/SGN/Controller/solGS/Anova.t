@@ -30,12 +30,22 @@ END { $f->clean_up_db if $f; }
 my $schema = $f->bcs_schema;
 my $directory = tempdir(CLEANUP => 1);
 my $name = "anova_fixture_$$";
+# Earlier fixture tests may obsolete shared accessions. Own this test's stock.
+my $reference_accession = $schema->resultset('Stock::Stock')
+    ->find({uniquename => 'test_accession1'});
+my $original_obsolete = $reference_accession->is_obsolete;
+my $accession_name = "${name}_accession";
+$schema->resultset('Stock::Stock')->create({
+    name => $accession_name, uniquename => $accession_name,
+    organism_id => $reference_accession->organism_id,
+    type_id => $reference_accession->type_id, is_obsolete => 0,
+});
 my $trait_id = 70741;
 my ($previous_max) = $f->dbh->selectrow_array('SELECT max(phenotype_id) FROM phenotype');
 my $snapshot_sql = 'SELECT phenotype_id, value, collect_date FROM phenotype WHERE cvalue_id=? AND phenotype_id<=? ORDER BY phenotype_id';
 my $original = $f->dbh->selectall_arrayref($snapshot_sql, undef, $trait_id, $previous_max);
 my %design = map { $_ => {
-    plot_name => "${name}_$_", plot_number => $_, stock_name => 'test_accession1',
+    plot_name => "${name}_$_", plot_number => $_, stock_name => $accession_name,
     block_number => 1, rep_number => 1, row_number => 1, col_number => $_,
 } } 1 .. 5;
 my $created = CXGN::Trial::TrialCreate->new({
@@ -146,6 +156,8 @@ ok(scalar(grep(defined($_) && $_ eq '7.25', @$cells)), 'regenerated input contai
 ok(!grep(defined($_) && $_ eq '2.5', @$cells), 'regenerated input drops the old cached value');
 is_deeply($f->dbh->selectall_arrayref($snapshot_sql, undef, $trait_id, $previous_max), $original,
     'original fixture observations for this trait are unchanged');
+is($reference_accession->discard_changes->is_obsolete, $original_obsolete,
+    'the original fixture accession status is unchanged');
 $f->clean_up_db;
 undef $f;
 done_testing();
