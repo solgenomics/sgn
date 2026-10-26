@@ -12,11 +12,10 @@
             </div>
             <div class="modal-body">
                 <div class="container-fluid">
-                    <p><strong>Select an Excel (.xls) file with the Seedlot Maintenance Events to upload</strong></p>
                     <p><strong>Requirements:</strong></p>
                     <ul>
                         <li>
-                            The Maintenance Events are associated with Seedlots, so the name of the Seedlot in the file must match an existing Seedlot in the database.    
+                            The Maintenance Events are associated with Seedlots, so the name of the Seedlot in the file must match an existing Seedlot in the database.
                             If a Seedlot is not yet in the database, go to the <a href='/breeders/seedlots/'>Manage Seedlots</a> page to create it first.
                         </li>
                         <li>
@@ -72,8 +71,6 @@
             </div>
             <div class="modal-body">
                 <div class="container-fluid">
-                    <strong>Seedlot Maintenance Events may be uploaded in an Excel file (.xls or .xlsx)</strong>
-                    <br />
                     <strong>Header:</strong>
                     <br />
                     The first row (header) should contain the following:
@@ -103,6 +100,7 @@
                         <li>timestamp (date/time of when the event is recorded in 'YYYY-MM-DD HH:MM:SS' format)</li>
                     </ul>
                 </div>
+                <& /help/file_upload_type.mas, type => "Upload Seedlot Maintenance Events", optional_column => 0 &>
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
@@ -255,7 +253,7 @@
         let html = "";
         let class_name = "danger";
         let icon_name = "remove";
-        
+
         if ( type === "success" ) {
             class_name = "success";
             icon_name = "ok";
