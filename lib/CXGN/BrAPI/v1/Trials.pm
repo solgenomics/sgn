@@ -15,7 +15,7 @@ sub search {
 	my $schema = $self->bcs_schema;
     my $page_size = $self->page_size;
     my $page = $self->page;
-    my $data;
+    my $data = [];
     my $status = $self->status();
     #my $auth = _authenticate_user($c);
 
@@ -41,10 +41,9 @@ sub search {
             $data = _get_folders($program, $schema, $data, \%location_id_list, 'breeding_program');
         }
     }
-    my $total_count = scalar @{$data};
-    my %result = (data => $data);
+    my ($data_window, $pagination) = CXGN::BrAPI::Pagination->paginate_array($data, $page_size, $page);
+    my %result = (data => $data_window);
     my @data_files;
-    my $pagination = CXGN::BrAPI::Pagination->pagination_response($total_count,$self->page_size,$self->page);
     return CXGN::BrAPI::JSONResponse->return_success(\%result, $pagination, \@data_files, $self->status, 'Trials-search result constructed');
 }
 
@@ -144,7 +143,7 @@ sub _get_folders {
 		}
 	}
 
-    unless (%location_id_list && scalar @folder_studies < 1) { #skip empty folders if call was issued with search paramaters
+    unless (%location_id_list && scalar @folder_studies < 1) { #skip empty folders if call was issued with search parameters
         push @{$data}, {
     					trialDbId=>qq|$self->{'id'}|,
     					trialName=>$self->{'name'},
