@@ -272,7 +272,7 @@ sub data_is_private {
     if ($is_public ||
 	$user_type && $user_type eq 'curator' ||
         $login_id  && $owner_id && $login_id == $owner_id )  {
-	return undef;
+	return;
     } 
     else {
 	if ($pop_id) {     
@@ -292,7 +292,7 @@ sub data_is_private {
 
          return $private;
  } else {
-return undef; }
+return; }
     } 
     
 }
