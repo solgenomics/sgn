@@ -133,7 +133,7 @@ jQuery(document).ready(function(){
         }
 
         if (control_name) {
-            var confirmation = confirm("This transformation ID already has " +control_name+ " as a control. Do you want to replace with a new one?");
+            var confirmation = confirm("This transformation ID already has " +control_name+ " as a control. Do you want to add additional control?");
             if (confirmation) {
                 setTransformationControl(transformation_id, control_stock_id, program_name);
             }

@@ -495,15 +495,15 @@ sub set_transformation_control {
         my $transformation_rs = $schema->resultset("Stock::Stock")->find({stock_id => $transformation_stock_id, type_id => $transformation_cvterm_id });
 
         if ($transformation_control_stock_id) {
-            my $previous_control = $schema->resultset('Stock::StockRelationship')->search({
-                type_id => $control_of_cvterm_id,
-                object_id => $transformation_stock_id,
-            });
-            if ($previous_control) {
-                while(my $r = $previous_control->next()){
-                    $r->delete();
-                }
-            }
+#            my $previous_control = $schema->resultset('Stock::StockRelationship')->search({
+#                type_id => $control_of_cvterm_id,
+#                object_id => $transformation_stock_id,
+#            });
+#            if ($previous_control) {
+#                while(my $r = $previous_control->next()){
+#                    $r->delete();
+#                }
+#            }
 
              $transformation_rs->find_or_create_related('stock_relationship_subjects', {
                 type_id    => $control_of_cvterm_id,
@@ -623,6 +623,32 @@ sub update_transformation_metadata {
 
 }
 
+
+sub get_transformation_controls {
+    my $self = shift;
+    my $schema = $self->schema();
+    my $transformation_stock_id = $self->transformation_stock_id();
+    my $transformation_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, "transformation", "stock_type")->cvterm_id();
+    my $control_of_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'control_of', 'stock_relationship')->cvterm_id();
+
+
+    my $q = "SELECT stock.stock_id, stock.uniquename
+        FROM stock_relationship
+        JOIN stock ON (stock_relationship.subject_id = stock.stock_id) AND stock_relationship.type_id = ? AND stock.type_id = ?
+        Where stock_relationship.object_id = ?";
+
+    my $h = $schema->storage->dbh()->prepare($q);
+
+    $h->execute($control_of_type_id, $transformation_type_id, $transformation_stock_id);
+
+    my @transformation_controls = ();
+    while (my ($control_id, $control_name) = $h->fetchrow_array()){
+        push @transformation_controls, [$control_id, $control_name]
+    }
+
+    return \@transformation_controls;
+
+}
 
 
 ###

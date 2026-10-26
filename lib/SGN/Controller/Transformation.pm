@@ -45,6 +45,7 @@ sub transformation_page : Path('/transformation') Args(1) {
 
     my $transformation_obj = CXGN::Transformation::Transformation->new({schema=>$schema, dbh=>$dbh, transformation_stock_id=>$transformation_id});
     my $info = $transformation_obj->get_transformation_info();
+    my $transformation_controls = $transformation_obj->get_transformation_controls();
     my $transformants = $transformation_obj->transformants();
     my $number_of_transformants = scalar(@$transformants);
     my $obsoleted_transformants = $transformation_obj->obsoleted_transformants();
@@ -73,6 +74,26 @@ sub transformation_page : Path('/transformation') Args(1) {
     my $control_link;
     if ($control_id) {
         $control_link = qq{<a href="/transformation/$control_id">$control_name</a>}
+    }
+
+    my $control_links_string;
+    my $control_ids_string;
+    my $control_names_string;
+
+    if (scalar @$transformation_controls > 0) {
+        my @control_links;
+        my @control_ids;
+        my @control_names;
+        foreach my $control (@$transformation_controls) {
+            my $control_stock_id = $control->[0];
+            my $control_name = $control->[1];
+            push @control_ids, $control_stock_id;
+            push @control_names, $control_name;
+            push @control_links, qq{<a href="/transformation/$control_stock_id">$control_name</a>}
+        }
+        $control_ids_string = join(",", @control_ids);
+        $control_names_string = join(",", @control_names);
+        $control_links_string = join("<br>", @control_links);
     }
 
     my $updated_status_type = $info->[0]->[8];
@@ -179,9 +200,9 @@ sub transformation_page : Path('/transformation') Args(1) {
     $c->stash->{has_associated_transformants} = $has_associated_transformants;
     $c->stash->{project_id} = $project_id;
     $c->stash->{is_a_control} = $is_a_control;
-    $c->stash->{control_name} = $control_name;
-    $c->stash->{control_id} = $control_id;
-    $c->stash->{control_link} = $control_link;
+    $c->stash->{control_names_string} = $control_names_string;
+    $c->stash->{control_ids_string} = $control_ids_string;
+    $c->stash->{control_links_string} = $control_links_string;
     $c->stash->{can_obsolete} = $can_obsolete;
     $c->stash->{vector_related_genes} = $vector_related_genes;
     $c->stash->{vector_analyzed_tissue_types} = $vector_analyzed_tissue_types;
