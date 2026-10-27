@@ -255,12 +255,12 @@ jQuery(document).ready(function () {
             });
 
             solGS.download.getTrainingPopRawDataFiles().fail(function (res) {
-                var errorMsg = (window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.download_training_data_error", "Error occured getting training pop raw data files.") : "Error occured getting training pop raw data files.");
+                var errorMsg = (window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.download_training_data_error", "Error occurred getting training pop raw data files.") : "Error occurred getting training pop raw data files.");
                 solGS.showMessage(downloadMsgDiv, errorMsg)
             });
 
             solGS.download.getTrainingPopRawDataFiles().fail(function (res) {
-                var errorMsg = (window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.download_training_data_error", "Error occured getting training pop raw data files.") : "Error occured getting training pop raw data files.");
+                var errorMsg = (window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.download_training_data_error", "Error occurred getting training pop raw data files.") : "Error occurred getting training pop raw data files.");
                 solGS.showMessage(downloadMsgDiv, errorMsg)
             });
 
@@ -270,7 +270,7 @@ jQuery(document).ready(function () {
             });
 
             solGS.download.getModelInputDataFiles().fail(function (res) {
-                var errorMsg = (window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.download_model_input_error", "Error occured getting model input data files.") : "Error occured getting model input data files.");
+                var errorMsg = (window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.download_model_input_error", "Error occurred getting model input data files.") : "Error occurred getting model input data files.");
                 solGS.showMessage(downloadMsgDiv, errorMsg)
             });
 
@@ -279,7 +279,7 @@ jQuery(document).ready(function () {
             });
 
             solGS.download.getValidationFile().fail(function (res) {
-                var errorMsg = (window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.download_validation_error", "Error occured getting model validation file.") : "Error occured getting model validation file.");
+                var errorMsg = (window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.download_validation_error", "Error occurred getting model validation file.") : "Error occurred getting model validation file.");
                 solGS.showMessage("#validation_download_message", errorMsg);
             });
 
@@ -288,7 +288,7 @@ jQuery(document).ready(function () {
             });
 
             solGS.download.getMarkerEffectsFile().fail(function (res) {
-                var errorMsg = (window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.download_marker_effects_error", "Error occured getting marker effects file.") : "Error occured getting marker effects file.");
+                var errorMsg = (window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.download_marker_effects_error", "Error occurred getting marker effects file.") : "Error occurred getting marker effects file.");
                 solGS.showMessage("#marker_effects_download_message", errorMsg);
 
             });
@@ -298,14 +298,14 @@ jQuery(document).ready(function () {
             });
 
             solGS.download.getSelectionPopRawDataFiles().fail(function (res) {
-                var errorMsg = (window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.download_selection_genotype_error", "Error occured getting selection population genotype data files.") : "Error occured getting selection population genotype data files.");
+                var errorMsg = (window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.download_selection_genotype_error", "Error occurred getting selection population genotype data files.") : "Error occurred getting selection population genotype data files.");
                 solGS.showMessage(downloadMsgDiv, errorMsg);
             });
         }
     });
 
     solGS.checkPageType().fail(function (res) {
-        var errorMsg = (window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.download_page_type_error", "Error occured checking for page type.") : "Error occured checking for page type.");
+        var errorMsg = (window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.download_page_type_error", "Error occurred checking for page type.") : "Error occurred checking for page type.");
         solGS.showMessage(downloadMsgDiv, errorMsg)
     });
 });

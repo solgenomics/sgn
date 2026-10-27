@@ -19,7 +19,7 @@
 
 <h4><% $c->i18n->p("help.blast.results", "Results") |h %></h4>
 
-<p><% $c->i18n->p("help.blast.results_behavior", "The Results section will show the ouput (depending on your chosen Output options) when a BLAST analysis has been run. When the analysis is finished, the Input parameters sections will be collapsed and the Results section opened. To re-run a query, simply click on the + sign in the Input parameter section header to view that section again and adjust the parameters.") |h %></p>
+<p><% $c->i18n->p("help.blast.results_behavior", "The Results section will show the output (depending on your chosen Output options) when a BLAST analysis has been run. When the analysis is finished, the Input parameters sections will be collapsed and the Results section opened. To re-run a query, simply click on the + sign in the Input parameter section header to view that section again and adjust the parameters.") |h %></p>
 
 <p><% $c->i18n->p("help.blast.download_report", "The raw BLAST report can be downloaded using the download link in the Results section header.") |h %></p>
 

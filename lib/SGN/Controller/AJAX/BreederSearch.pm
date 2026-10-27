@@ -61,7 +61,7 @@ sub get_data : Path('/ajax/breeder/search') Args(0) {
 
     if (@data) {
       print STDERR "Validating dataref ids\n";
-      for (my $i=0; $i<@data; $i++) { # ensure dataref arguements (ids) are numeric
+      for (my $i=0; $i<@data; $i++) { # ensure dataref arguments (ids) are numeric
         if (m/\D/) {
           $error = $c->i18n->p('global.wizard.valid_values_for_dataref_are_numeric_ids', 'Valid values for dataref are numeric ids');
           $c->stash->{rest} = { error => $error };

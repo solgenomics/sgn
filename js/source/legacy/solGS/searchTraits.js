@@ -47,7 +47,7 @@ function searchTraits (name) {
 	    },	    
 	    error: function () {
 		jQuery("#search_trait_message")
-                    .html((window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.trait_search_error", "Error occured searching for trait %{name}", {name: String(name)}) : 'Error occured searching for trait ' + name))
+                    .html((window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.trait_search_error", "Error occurred searching for trait %{name}", {name: String(name)}) : 'Error occurred searching for trait ' + name))
 	    	    .show()
 		    .fadeOut(5000);
 		

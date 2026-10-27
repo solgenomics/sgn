@@ -27,7 +27,7 @@ jQuery(document).ready(function () {
     });
   
     solGS.analysisSave.checkUserStatus().fail(function () {
-      solGS.alertMessage((window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.save_user_status_error", "Error occured checking for user status") : "Error occured checking for user status"));
+      solGS.alertMessage((window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.save_user_status_error", "Error occurred checking for user status") : "Error occurred checking for user status"));
     });
   
       solGS.analysisSave.getGebvsResultDetails(analysisArgs).done(function (res) {
@@ -97,7 +97,7 @@ jQuery(document).ready(function () {
       });
   
       solGS.analysisSave.checkUserStatus().fail(function () {
-        solGS.alertMessage((window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.save_user_status_error", "Error occured checking for user status") : "Error occured checking for user status"));
+        solGS.alertMessage((window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.save_user_status_error", "Error occurred checking for user status") : "Error occurred checking for user status"));
       });
   
       solGS.analysisSave.getGebvsResultDetails(analysisArgs).done(function (res) {
@@ -137,4 +137,4 @@ jQuery(document).ready(function () {
     });
   });
   
-  
+

@@ -2561,13 +2561,13 @@ jQuery(document).ready(function ($) {
     function open_project_dialog() {
         $('#add_project_dialog').modal("show");
 
-        //add a blank line to location select dropdown that dissappears when dropdown is opened
+        //add a blank line to location select dropdown that disappears when dropdown is opened
         $("#add_project_location").prepend("<option value=''></option>").val('');
         $("#add_project_location").one('mousedown', function () {
             $("option:first", this).remove();
         });
 
-        //add a blank line to list select dropdown that dissappears when dropdown is opened
+        //add a blank line to list select dropdown that disappears when dropdown is opened
         $("#select_list_list_select").prepend("<option value=''></option>").val('');
         $("#select_list_list_select").one('mousedown', function () {
             $("option:first", this).remove();
@@ -2583,14 +2583,14 @@ jQuery(document).ready(function ($) {
             $("option:first", this).remove();
         });
 
-        //add a blank line to list select dropdown that dissappears when dropdown is opened
+        //add a blank line to list select dropdown that disappears when dropdown is opened
         $("#select_seedlot_list_list_select").prepend("<option value=''></option>").val('');
         $("#select_seedlot_list_list_select").one('mousedown', function () {
             $("option:first", this).remove();
         });
 
 
-        //add a blank line to list of checks select dropdown that dissappears when dropdown is opened
+        //add a blank line to list of checks select dropdown that disappears when dropdown is opened
         $("#list_of_checks_section_list_select").prepend("<option value=''></option>").val('');
         $("#list_of_checks_section_list_select").one('mousedown', function () {
             $("option:first", this).remove();
@@ -2621,7 +2621,7 @@ jQuery(document).ready(function ($) {
             $("option:first", this).remove();
         });
 
-        //add a blank line to design method select dropdown that dissappears when dropdown is opened
+        //add a blank line to design method select dropdown that disappears when dropdown is opened
         $("#select_design_method").prepend("<option value=''></option>").val('');
         $("#select_design_method").one('mousedown', function () {
             $("option:first", this).remove();

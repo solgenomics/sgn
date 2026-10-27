@@ -337,7 +337,8 @@ jQuery(document).ready(function() {
         },
         eventSources: [fcSources.month_view, fcSources.agendaWeek_view, fcSources.gcal_cassbase, fcSources.gcal_holidays],
         defaultView: 'month',
-        googleCalendarApiKey: 'AIzaSyDHH6NGHEYJcYRcxr5mHBWKcqNlKyu-L-Q',
+        // Existing public browser API key from upstream; not a server credential.
+        googleCalendarApiKey: 'AIzaSyDHH6NGHEYJcYRcxr5mHBWKcqNlKyu-L-Q', // gitleaks:allow
         eventRender: function(event, element, view) {
             if (!event.url) {
                 element.find('.fc-title').html(event.title + ": " + event.property ); 
@@ -594,7 +595,7 @@ jQuery(document).ready(function() {
                 } else if (data.status == 0) {
                     alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("community.calendar.event_already_existed_your_edit_was_not_saved", "Event Already Existed! Your Edit Was Not Saved!") : "Event Already Existed! Your Edit Was Not Saved!"));
                 } else if (data.status == 3) {
-                    alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("community.calendar.you_do_not_have_the_permissions_to_edit_thie_event", "You do not have the permissions to edit thie event.") : "You do not have the permissions to edit thie event."));
+                    alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("community.calendar.you_do_not_have_the_permissions_to_edit_thie_event", "You do not have the permissions to edit the event.") : "You do not have the permissions to edit the event."));
                 }
             },
             error: function() {

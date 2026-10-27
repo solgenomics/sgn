@@ -98,7 +98,7 @@ jQuery(document).ready(function ($) {
             success: function(response) {
                 jQuery('#working_modal').modal('hide');
                 if (response.error) {
-                    alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("transformation.helper.an_error_occured_no_grafts_were_saved_try_fixing_your_file_for_the_i", "An Error Occured: No grafts were saved! Try Fixing Your File For The Issues Identified In the Validation. ") : 'An Error Occured: No grafts were saved! Try Fixing Your File For The Issues Identified In the Validation. ')+response.error);
+                    alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("transformation.helper.an_error_occured_no_grafts_were_saved_try_fixing_your_file_for_the_i", "An Error Occurred: No grafts were saved! Try Fixing Your File For The Issues Identified In the Validation. ") : 'An Error Occurred: No grafts were saved! Try Fixing Your File For The Issues Identified In the Validation. ')+response.error);
                 }
                 else {
 		    //alert("RESPONSE: "+JSON.stringify(response));

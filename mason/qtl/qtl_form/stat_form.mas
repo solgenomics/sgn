@@ -31,7 +31,7 @@ my $no_draws = tooltipped_text($c->i18n->p("analysis.qtl.ui.no_of_imputations", 
 my $permu_level = tooltipped_text($c->i18n->p("analysis.qtl.ui.significance_level_of_permutation_test", "Significance level of permutation test:"),
                                   $c->i18n->p("analysis.qtl.ui.required_only_if_permutation_analysis_lod_threshold_is_run", "required only if permutation analysis \n                                  (LOD threshold) is run"));
 my $genome_scan = tooltipped_text($c->i18n->p("analysis.qtl.ui.genome_scan_size_cm", "Genome scan size (cM):"), $c->i18n->p("analysis.qtl.ui.not_required_for_marker_regression", "not required for \n                                   Marker Regression"));
-my $qtl_prob = tooltipped_text($c->i18n->p("analysis.qtl.ui.qtl_genotype_probablity_method", "QTL genotype probablity method:"),
+my $qtl_prob = tooltipped_text($c->i18n->p("analysis.qtl.ui.qtl_genotype_probablity_method", "QTL genotype probability method:"),
                                $c->i18n->p("analysis.qtl.ui.not_required_for_marker_regression_55357a", "not required for Marker Regression"));
 
 </%perl>

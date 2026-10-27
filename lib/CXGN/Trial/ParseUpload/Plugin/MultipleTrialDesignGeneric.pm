@@ -884,7 +884,7 @@ sub _validate_with_plugin {
             }
         }
 
-        # check assigments by entry number
+        # check assignments by entry number
         foreach my $en (keys %{$seen_entry_numbers{$tk}{'by_num'}} ) {
             my @ans = uniq @{$seen_entry_numbers{$tk}{'by_num'}{$en}};
             my $count = scalar(@ans);

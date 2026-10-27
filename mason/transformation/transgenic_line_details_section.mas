@@ -19,7 +19,7 @@ $can_obsolete
                 </div>
                 <div class="panel panel-default">
                     <div class="panel-body">
-                        <&| /page/info_section.mas, anchor_title => 'Add accessions to a List', title => HTML::Entities::encode_entities($c->i18n->p("transformation.add_accessions_to_a_list", 'Add accessions to a List')), collapsible=>1, collapsed=>1, subtitle=>("<i>" . HTML::Entities::encode_entities($c->i18n->p("transformation.adding_transgenic_lines_accessions_to_a_new_or_exisiting_list", "Adding transgenic lines (accessions) to a new or exisiting list")) . "</i>")&>
+                        <&| /page/info_section.mas, anchor_title => 'Add accessions to a List', title => HTML::Entities::encode_entities($c->i18n->p("transformation.add_accessions_to_a_list", 'Add accessions to a List')), collapsible=>1, collapsed=>1, subtitle=>("<i>" . HTML::Entities::encode_entities($c->i18n->p("transformation.adding_transgenic_lines_accessions_to_a_new_or_exisiting_list", "Adding transgenic lines (accessions) to a new or existing list")) . "</i>")&>
                             <br>
                             <div id="transgenic_lines_to_new_list" style="display:none"></div>
                             <div id="transgenic_lines_add_to_list"></div>

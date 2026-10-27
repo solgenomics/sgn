@@ -12,7 +12,7 @@
     @param {Object} [layout] - (OPTIONAL) ab object that that holds all the dimensions properties including length, width, margin etc ... of the line graph !!
     @param {String} trait_name - the trait_name is used for the y-axis label !!
     @param {string} label_observation_unit_name - since, we have the repetitive values for unique obs_unit_name, therefore, using as the title of the graph !!
-    @param {Object} [options] - (OPTIONAL) this is an object holds the properites related to graphs details - x- and y-axis labels, title, and data-points !!
+    @param {Object} [options] - (OPTIONAL) this is an object holds the properties related to graphs details - x- and y-axis labels, title, and data-points !!
     
     */
 

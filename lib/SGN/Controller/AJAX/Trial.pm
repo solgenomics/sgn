@@ -516,9 +516,9 @@ sub generate_experimental_design_POST : Args(0) {
         my $total_area = $plot_width * $plot_length * $num_plots; #sq meters. 1 ha = 10000m2
         my $field_size_m = $field_size * 10000;
         if ($field_size_m < $total_area){
-            $warning_message = $c->i18n->p('trial.create.server.field_too_small', 'The generated design would require atleast %{area} square meters, which is larger than the %{hectares} hectare (%{field_area} square meters) field size you indicated.', { area => $total_area, hectares => $field_size, field_area => $field_size_m });
+            $warning_message = $c->i18n->p('trial.create.server.field_too_small', 'The generated design would require at least %{area} square meters, which is larger than the %{hectares} hectare (%{field_area} square meters) field size you indicated.', { area => $total_area, hectares => $field_size, field_area => $field_size_m });
         } else {
-            $warning_message = $c->i18n->p('trial.create.server.field_area', 'The generated design would require atleast %{area} square meters and your field size is %{hectares} hectare (%{field_area} square meters).', { area => $total_area, hectares => $field_size, field_area => $field_size_m });
+            $warning_message = $c->i18n->p('trial.create.server.field_area', 'The generated design would require at least %{area} square meters and your field size is %{hectares} hectare (%{field_area} square meters).', { area => $total_area, hectares => $field_size, field_area => $field_size_m });
         }
     }
 
@@ -880,7 +880,7 @@ sub verify_trial_name_GET : Args(0) {
     my $project_rs = $schema->resultset('Project::Project')->find({name=>$trial_name});
 
     if ($project_rs){
-        my $error = $c->i18n->p('trial.create.validation.duplicate_name', 'The following trial name has aready been used. Please use a unique name');
+        my $error = $c->i18n->p('trial.create.validation.duplicate_name', 'The following trial name has already been used. Please use a unique name');
         $c->stash->{rest} = {error => $error};
     } else {
         $c->stash->{rest} = {

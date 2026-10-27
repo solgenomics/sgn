@@ -180,7 +180,7 @@ jQuery(document).ready(function () {
         },
         error: function () {
           jQuery(searchResultMsg)
-            .html((window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.next_trials_error", "Error occured fetching the next set of GS trials.") : "Error occured fetching the next set of GS trials."))
+            .html((window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.next_trials_error", "Error occurred fetching the next set of GS trials.") : "Error occurred fetching the next set of GS trials."))
             .show();
         },
       });
@@ -220,7 +220,7 @@ jQuery(document).ready(function () {
       })
       .fail(function () {
         jQuery(searchResultMsg)
-          .html((window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.first_trials_error", "Error occured fetching the first set of GS trials.") : "Error occured fetching the first set of GS trials."))
+          .html((window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.first_trials_error", "Error occurred fetching the first set of GS trials.") : "Error occurred fetching the first set of GS trials."))
           .show();
       });
   }
@@ -306,7 +306,7 @@ jQuery(document).ready(function () {
               })
               .fail(function () {
                 var msg =
-                  (window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.training_population_check_error", "Error occured checking for if trial can be used as training population.") : "Error occured checking for if trial can be used as training population.");
+                  (window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.training_population_check_error", "Error occurred checking for if trial can be used as training population.") : "Error occurred checking for if trial can be used as training population.");
                 solGS.showMessage(msgDiv, msg);
               });
           } else {
@@ -315,7 +315,7 @@ jQuery(document).ready(function () {
           }
         })
         .fail(function (res) {
-          msg = (window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.training_population_exists_error", "Error occured checking if the training population exists.") : "Error occured checking if the training population exists.");
+          msg = (window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.training_population_exists_error", "Error occurred checking if the training population exists.") : "Error occurred checking if the training population exists.");
           solGS.showMessage(msgDiv, msg);
         });
     } else {

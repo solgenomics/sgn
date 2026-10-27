@@ -1110,7 +1110,7 @@ sub get_cross_tissue_culture_samples {
 =head2 get_pedigree_male_parents
 
     Class method.
-    Returns all male parents that were crossed with a spefified female parent.
+    Returns all male parents that were crossed with a specified female parent.
     Example: my @male_parents = CXGN::Cross->get_pedigree_male_parents($schema, $pedigree_female_parent)
 
 =cut
@@ -1149,7 +1149,7 @@ sub get_pedigree_male_parents {
 =head2 get_pedigree_female_parents
 
     Class method.
-    Returns all female parents that were crossed with a spefified male parent.
+    Returns all female parents that were crossed with a specified male parent.
     Example: my @female_parents = CXGN::Cross->get_pedigree_female_parents($schema, $pedigree_male_parent)
 
 =cut
@@ -1189,7 +1189,7 @@ sub get_pedigree_female_parents {
 =head2 get_cross_male_parents
 
     Class method.
-    Returns all male parents that were crossed with a spefified male parent.
+    Returns all male parents that were crossed with a specified male parent.
     Example: my @male_parents = CXGN::Cross->get_cross_male_parents($schema, $cross_female_parent)
 
 =cut
@@ -1229,7 +1229,7 @@ sub get_cross_male_parents {
 =head2 get_cross_female_parents
 
     Class method.
-    Returns all female parents that were crossed with a spefified male parent.
+    Returns all female parents that were crossed with a specified male parent.
     Example: my @male_parents = CXGN::Cross->get_cross_male_parents($schema, $cross_female_parent)
 
 =cut

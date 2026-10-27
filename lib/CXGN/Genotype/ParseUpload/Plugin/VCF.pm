@@ -339,7 +339,7 @@ sub next_genotype {
             my $chrom = $marker_info[0];
 
             my @format =  split /:/,  $marker_info_p8;
-            #As it goes down the rows, it contructs a separate json object for each observation unit column. They are all stored in the %genotypeprop_observation_units. Later this hash is iterated over and actually stores the json object in the database.
+            #As it goes down the rows, it constructs a separate json object for each observation unit column. They are all stored in the %genotypeprop_observation_units. Later this hash is iterated over and actually stores the json object in the database.
             for (my $i = 0; $i < scalar(@$observation_unit_names); $i++ ) {
                 my @fvalues = split /:/, $values[$i];
                 my %value;

@@ -1,7 +1,7 @@
 
 =head1 SGN::Controller::AJAX::HTMLSelect - a resource to dynamically obtain html selects for a number of widely used data types
 
-=head1 SYNOPSYS
+=head1 SYNOPSIS
 
 get_location_select()
 
@@ -328,7 +328,7 @@ sub get_projects_select : Path('/ajax/html/select/projects') Args(0) {
                 push @all_projects, @trials;
             }
             if ($excluded_plates_in_project_id && scalar(@genotyping_plate_ids)>0) {
-                print STDERR "SUBSTRACTING..."."\n";
+                print STDERR "SUBTRACTING..."."\n";
                 foreach my $project (@all_projects) {
                     next if ($project->[0] ~~ @genotyping_plate_ids);
                     push @projects, $project;

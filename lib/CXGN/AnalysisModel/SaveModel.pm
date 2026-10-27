@@ -2,7 +2,7 @@ package CXGN::AnalysisModel::SaveModel;
 
 =head1 NAME
 
-CXGN::AnalysisModel::SaveModel - A Moose object to handle saving and retriving models and their training data files
+CXGN::AnalysisModel::SaveModel - A Moose object to handle saving and retrieving models and their training data files
 
 =head1 USAGE
 

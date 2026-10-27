@@ -628,7 +628,7 @@ sub simple_checkbox_html {
 
 =item __tableattrs
 
-  A string of HTML attributes (like qq{width="100%" height="200"}) that will be directly imbedded
+  A string of HTML attributes (like qq{width="100%" height="200"}) that will be directly embedded
   in the beginning <table> tag.
 
 =item __multicol
@@ -1444,7 +1444,7 @@ sub multilevel_mode_selector_html {
 
 #TODO: transform the conf into a more standard tree structure, which is easier to work with
 #      and rewrite render code for it
-    sub _xform_tree {
+    sub _xform_tree { ## no critic (Subroutines::ProhibitNestedSubs) # Retain the existing recursive helper name and renderer call structure.
         my ( $def, $stem_name ) = @_;
         my @child_keys = _ml_child_keys($def);
         my @children;
@@ -1550,7 +1550,7 @@ sub _ml_render {
     my $thisml = $ml_id_ctr++;
 
     #sorts a single set of children by sort_index, if present
-    sub _sort_nodes {
+    sub _sort_nodes { ## no critic (Subroutines::ProhibitNestedSubs) # Retain the existing named sort helper used by the renderer.
         no warnings 'uninitialized';
         my ($nodelist) = @_;
         sort { $a->{sort_index} <=> $b->{sort_index} } @$nodelist;
@@ -1562,7 +1562,7 @@ sub _ml_render {
     #  print Dumper($tree);
     my %id_based_index;
 
-    sub _assign_ids_and_build_idx {
+    sub _assign_ids_and_build_idx { ## no critic (Subroutines::ProhibitNestedSubs) # Retain the existing named index helper used by the renderer.
         my ( $self, $parent_id, $idx ) = @_;
         my $id = "ml_" . $ml_id_ctr++;
         $self->{ml_id}        = $id;

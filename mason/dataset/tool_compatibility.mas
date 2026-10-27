@@ -72,7 +72,7 @@ jQuery(document).ready(function() {
             success: function(response) {
                 if (response.error) {
                     jQuery('#working_modal').modal("hide");
-                    alert((window.SGN && SGN.i18n ? SGN.i18n.p("lists_datasets.compatibility.calculate_error_detail", "An error occured calculating tool compatibility: \n%{error}", {error:response.error}) : "An error occured calculating tool compatibility: \n" + response.error));
+                    alert((window.SGN && SGN.i18n ? SGN.i18n.p("lists_datasets.compatibility.calculate_error_detail", "An error occurred calculating tool compatibility: \n%{error}", {error:response.error}) : "An error occurred calculating tool compatibility: \n" + response.error));
                     jQuery('#predicted-tool-compatibility').css('height', '100px');
                     jQuery('#predicted-tool-compatibility').text((window.SGN && SGN.i18n ? SGN.i18n.p("lists_datasets.compatibility.calculate_failed", "Error calculating tool compatibility.") : "Error calculating tool compatibility."));
                 } else {

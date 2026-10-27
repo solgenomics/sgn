@@ -85,7 +85,7 @@ print ("<tr><td>\n<b><u>" . SGN::I18N::translate($ui_i18n, "phenotype.root.displ
   if (system ("ls " . $gen_image_dir . "zips/" . $filepath . ".gz") == 0) {
     print "<a href=\"$gen_image_dir/zips/" .$filepath . ".gz\">";
     print ("" . SGN::I18N::translate($ui_i18n, "phenotype.root.download", "download", undef, { entities => ($ui_i18n && $ui_i18n->locale ne 'en' ? '<>&\x80-\x{10FFFF}' : '<>&'), decode => 1 }) . "");
-    print ("</a>" . SGN::I18N::translate($ui_i18n, "phenotype.root.the_zipped_copy_for_the_orginal_image", " the zipped copy for the orginal image.", undef, { entities => ($ui_i18n && $ui_i18n->locale ne 'en' ? '<>&\x80-\x{10FFFF}' : '<>&'), decode => 1 }) . "");
+    print ("</a>" . SGN::I18N::translate($ui_i18n, "phenotype.root.the_zipped_copy_for_the_orginal_image", " the zipped copy for the original image.", undef, { entities => ($ui_i18n && $ui_i18n->locale ne 'en' ? '<>&\x80-\x{10FFFF}' : '<>&'), decode => 1 }) . "");
   }
   else {
     print ("" . SGN::I18N::translate($ui_i18n, "phenotype.root.a_downloadable_copy_is_not_available_at_this_time", "A downloadable copy is not available at this time.", undef, { entities => ($ui_i18n && $ui_i18n->locale ne 'en' ? '<>&\x80-\x{10FFFF}' : '<>&'), decode => 1 }) . "");

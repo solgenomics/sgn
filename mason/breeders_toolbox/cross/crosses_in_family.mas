@@ -17,7 +17,7 @@ $family_type_string
     </div>
     <div class="panel panel-default">
         <div class="panel-body">
-            <&| /page/info_section.mas, anchor_title => 'Add Crosses to a List', title => HTML::Entities::encode_entities($c->i18n->p("cross.ui.add_crosses_to_a_list", "Add Crosses to a List")), collapsible=>1, collapsed=>1, subtitle=>("<i>" . HTML::Entities::encode_entities($c->i18n->p("cross.pages.adding_crosses_in_this_family_to_a_new_or_exisiting", "Adding crosses in this family to a new or exisiting list")) . "</i>")&>
+            <&| /page/info_section.mas, anchor_title => 'Add Crosses to a List', title => HTML::Entities::encode_entities($c->i18n->p("cross.ui.add_crosses_to_a_list", "Add Crosses to a List")), collapsible=>1, collapsed=>1, subtitle=>("<i>" . HTML::Entities::encode_entities($c->i18n->p("cross.pages.adding_crosses_in_this_family_to_a_new_or_exisiting", "Adding crosses in this family to a new or existing list")) . "</i>")&>
                 <br>
                 <div id="members_to_new_list" style="display:none"></div>
                 <div id="members_add_to_list"></div>

@@ -414,7 +414,7 @@ sub default_toolbar_data {
                     name => 'CAPS Designer',
                     link => '/tools/caps_designer/caps_input.pl',
                     desc =>
-'Designs CAPS (Cleaved Amplified Polymorphic Sequence) assays for up to twelve sequences. Two types of nucleotide inputs are accepted: fasta sequences and clustal aligment. It generates a list of polymorphic enzymes that cut the sequences into different length products.'
+'Designs CAPS (Cleaved Amplified Polymorphic Sequence) assays for up to twelve sequences. Two types of nucleotide inputs are accepted: fasta sequences and clustal alignment. It generates a list of polymorphic enzymes that cut the sequences into different length products.'
                 },
 #                 {
 #                     name => 'Seed BAC Finder',

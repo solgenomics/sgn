@@ -72,7 +72,7 @@ if (!$topic_id) {
 my $topic = CXGN::People::Forum::Topic->new($dbh, $topic_id);
 if ($topic->get_topic_name() eq "") { 
     $page->header();
-    print "<p>The topic you are refering to does not exist or no longer exists. Please <a href=\"topics.pl\">go back</a> and try again!<br /><br />\n"; 
+    print "<p>The topic you are referring to does not exist or no longer exists. Please <a href=\"topics.pl\">go back</a> and try again!<br /><br />\n";
     $page->footer();
     exit(0);
 }

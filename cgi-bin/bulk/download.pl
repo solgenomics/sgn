@@ -119,7 +119,7 @@ exit;
   Args: array; example: get_parameters($ARGV[0]);
   Ret : modified parameter array
 
-  Retrives parameters from CXGN::Page object (passed from the user).
+  Retrieves parameters from CXGN::Page object (passed from the user).
 
 =cut
 

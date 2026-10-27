@@ -39,7 +39,7 @@
 <!--    <li><a href="/breeders/odk">ODK Data Collection</a></li>  -->
     <li><a href="/breeders/file_share_dump"><% $c->i18n->p('navigation.manage.file_share', 'File Share') |h %></a></li>
 
-    <li role="seperator" class="divider"></li>
+    <li role="seperator" class="divider"></li><!-- codespell:ignore seperator (existing DOM role value) -->
     <li><a href="/breeders/nirs"><% $c->i18n->p('navigation.manage.nirs', 'NIRS') |h %></a></li>
     <li><a href="/breeders/transcriptomics"><% $c->i18n->p('navigation.manage.transcriptomics', 'Transcriptomics') |h %></a></li>
   </ul>

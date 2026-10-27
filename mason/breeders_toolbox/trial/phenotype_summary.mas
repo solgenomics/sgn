@@ -123,7 +123,7 @@ input[type="text"] {
     <div class="panel panel-default">
         <div class="panel-body">
 
-            <&| /page/info_section.mas, anchor_title => 'Copy Selected Results to a List', title => HTML::Entities::encode_entities($c->i18n->p("phenotype.copy_selected_results_to_a_list", 'Copy Selected Results to a List')), collapsible=>1, collapsed=>0, subtitle=>("<i>" . HTML::Entities::encode_entities($c->i18n->p("phenotype.copy_the_names_currently_selected_in_the_first_column_of", "Copy the names currently selected in the first column of the summary table to a new or exisiting list")) . "</i>")&>
+            <&| /page/info_section.mas, anchor_title => 'Copy Selected Results to a List', title => HTML::Entities::encode_entities($c->i18n->p("phenotype.copy_selected_results_to_a_list", 'Copy Selected Results to a List')), collapsible=>1, collapsed=>0, subtitle=>("<i>" . HTML::Entities::encode_entities($c->i18n->p("phenotype.copy_the_names_currently_selected_in_the_first_column_of", "Copy the names currently selected in the first column of the summary table to a new or existing list")) . "</i>")&>
             <br>
             <p><em><span id="selected_row_count">0</span> <% $c->i18n->p("phenotype.row_s_selected", "row(s) selected.") |h %></em></p>
             <div style="text-align:right" id="names_to_list_menu"></div>
@@ -583,7 +583,7 @@ input[type="text"] {
                         },
                         error: function(response) {
                             jQuery("#working_modal").modal("hide");
-                            alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("phenotype.an_error_occured_retrieving_trait_histogram_data", "An error occured retrieving trait histogram data.") : 'An error occured retrieving trait histogram data.'));
+                            alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("phenotype.an_error_occured_retrieving_trait_histogram_data", "An error occurred retrieving trait histogram data.") : 'An error occurred retrieving trait histogram data.'));
                         }
                     });
                 } else {
@@ -664,7 +664,7 @@ input[type="text"] {
             },
             error: function(response) {
                 jQuery("#working_modal").modal("hide");
-                alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("phenotype.an_error_occured_retrieving_trait_histogram_data", "An error occured retrieving trait histogram data.") : 'An error occured retrieving trait histogram data.'));
+                alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("phenotype.an_error_occured_retrieving_trait_histogram_data", "An error occurred retrieving trait histogram data.") : 'An error occurred retrieving trait histogram data.'));
             }
         });
     }

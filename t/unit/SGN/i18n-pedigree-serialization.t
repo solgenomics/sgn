@@ -24,7 +24,7 @@ use HTTP::Request::Common qw(GET);
  package OwnedPedigreeResponseContext;
  sub new {my $s=bless {stash=>{}},shift;$s->{response}=Catalyst::Response->new(_context=>$s);return $s;}
  sub res {shift->{response}} sub response {shift->{response}} sub stash {shift->{stash}}
- sub encoding {Encode::find_encoding('UTF-8')} sub _encode_check {Encode::FB_CROAK()|Encode::LEAVE_SRC()}
+ sub encoding {Encode::find_encoding('UTF-8')} sub _encode_check {Encode::FB_CROAK()|Encode::LEAVE_SRC()} ## no critic (ValuesAndExpressions::ProhibitBitwiseOperators) # Match Encode's required combined strict UTF-8/source-preservation flags.
 }
 my $owned_config=SGN::Controller::AJAX::Pedigrees->config;
 my $peer_config=SGN::Controller::AJAX::Cross->config;

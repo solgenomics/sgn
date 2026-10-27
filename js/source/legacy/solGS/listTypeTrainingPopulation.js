@@ -263,7 +263,7 @@ jQuery(document).ready(function () {
               solGS.combinedTrials.getCombinedPopsId(res.trials_ids);
             })
             .fail(function (res) {
-              alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.trial_ids_error", "Error occured querying for trials ids") : "Error occured querying for trials ids"));
+              alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.trial_ids_error", "Error occurred querying for trials ids") : "Error occurred querying for trials ids"));
             });
         }
       } else {

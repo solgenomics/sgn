@@ -84,7 +84,7 @@ $trial_name => undef
             <!-- End Generate Template -->
 
           </&>
-          <!-- End Workdlow -->
+          <!-- End Workflow -->
 
         </div>
       </div>
@@ -132,7 +132,7 @@ $trial_name => undef
       'include_lists': 1 
     });
     
-    // Proceeed to Next Step
+    // Proceed to Next Step
     Workflow.complete('#set_entry_numbers_intro_step');
     Workflow.focus('#set_entry_numbers_workflow', 1);
   }
@@ -166,7 +166,7 @@ $trial_name => undef
     // Generate the Upload Template
     generateTemplate(trials);
     
-    // Proceeed to Next Step
+    // Proceed to Next Step
     Workflow.complete('#set_entry_numbers_select_trials_step');
     Workflow.focus('#set_entry_numbers_workflow', 2);
   }

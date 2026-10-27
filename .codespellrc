@@ -1,0 +1,9 @@
+[codespell]
+check-hidden =
+# Translations and generated/opaque source registries are checked by the catalog compiler.
+skip = */package-lock.json,*.log,.git,locale/*/LC_MESSAGES/sgn.po,locale/sgn.pot,locale/sources.txt,locale/workflows.json
+# Keep API/variable names, named placeholders, paths and semantic context IDs stable.
+ignore-regex = (?:->)?\{[A-Za-z_][A-Za-z0-9_]*\}|\b[A-Za-z_][A-Za-z0-9_]*(?=\s*=>)|\bisnt(?=\s*\()|\b[A-Za-z0-9_]*[a-z][A-Z][A-Za-z0-9_]*\b|\\[nrt][A-Za-z]+|[$@%][A-Za-z_][A-Za-z0-9_]*|%\{[A-Za-z][A-Za-z0-9_]*\}|\b[A-Za-z0-9]+(?:[._/][A-Za-z0-9_-]+)+\b
+
+# Scientific acronyms, taxonomic names, APIs, country codes and original contributors.
+ignore-words-list = agre,caf,chinense,desig,fro,hart,intensional,lod,multicat,nam,nd,plack,serie,som,tha,tre,waring

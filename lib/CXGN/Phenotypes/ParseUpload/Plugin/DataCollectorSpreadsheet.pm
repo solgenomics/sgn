@@ -77,7 +77,7 @@ sub validate {
 
     if (($col_max - $col_min)  < 1 || ($row_max - $row_min) < 1 ) { #must have header with at least plot_name and one trait, as well as one row of phenotypes
         $parse_result{'error_detail'} = { code => 'missing_header', variables => { column => 'plot_name' } };
-        $parse_result{'error'} = SGN::I18N::translate($ui_validate_i18n, "phenotype_upload.datacollector_error.missing_header", "Spreadsheet is missing %{column} and atleast one trait in header.", {column => ("" . ("plot_name"))});
+        $parse_result{'error'} = SGN::I18N::translate($ui_validate_i18n, "phenotype_upload.datacollector_error.missing_header", "Spreadsheet is missing %{column} and at least one trait in header.", {column => ("" . ("plot_name"))});
         print STDERR "Spreadsheet is missing header\n";
         return \%parse_result;
     }

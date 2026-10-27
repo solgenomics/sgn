@@ -59,7 +59,7 @@ $trial_id => undef
                 <div class="container-fluid">
                     <b><% $c->i18n->p('trial.additional_file.help', "This is for uploading any additional files you may have for a trial.") |h %></b>
                     <br/><br/>
-                    <p><% $c->i18n->p('trial.additional_file.examples', "Possible additional files inlude, but are not limited to:") |h %></p>
+                    <p><% $c->i18n->p('trial.additional_file.examples', "Possible additional files include, but are not limited to:") |h %></p>
                     <ul>
                         <li><% $c->i18n->p('trial.additional_file.images', "Trial Related Images, such as a physical field image or an aerial picture of the field.") |h %></li>
                         <li><% $c->i18n->p('trial.additional_file.documentation', "Trial Related Documentation, such as protocols or permits for the trial.") |h %></li>

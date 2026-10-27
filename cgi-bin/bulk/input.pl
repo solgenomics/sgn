@@ -178,7 +178,7 @@ sub ug_build_selectbox {
   Args: n/a
   Ret : clone tab format
 
-  Defines the format of the clone tab using html, perl and perl dbi. Speicfies
+  Defines the format of the clone tab using html, perl and perl dbi. Specifies
   information fields available for searching clones. Also, this and all other
   tabs print the debug checkbox when debug parameter is set to one.
 
@@ -192,7 +192,7 @@ sub clone_search {
     my SGN::I18N $bulk_clone_search_i18n = eval { $c && $c->i18n };
     my $bulk_clone_search_reset_button = encode_entities($bulk_clone_search_i18n ? $bulk_clone_search_i18n->p('lists_datasets.bulk.reset', 'Reset') : 'Reset');
     my $bulk_clone_search_submit_button = encode_entities($bulk_clone_search_i18n ? $bulk_clone_search_i18n->p('lists_datasets.bulk.submit', 'Submit') : 'Submit');
-    my $bulk_clone_search_prompt = encode_entities($bulk_clone_search_i18n ? $bulk_clone_search_i18n->p('lists_datasets.bulk.enter_a_list_of_identifiers_or_upload_a_file_containing_identifers_one_per_lin', 'Enter a list of identifiers or upload a file containing identifers, one per line:') : 'Enter a list of identifiers or upload a file containing identifers, one per line:');
+    my $bulk_clone_search_prompt = encode_entities($bulk_clone_search_i18n ? $bulk_clone_search_i18n->p('lists_datasets.bulk.enter_a_list_of_identifiers_or_upload_a_file_containing_identifers_one_per_lin', 'Enter a list of identifiers or upload a file containing identifiers, one per line:') : 'Enter a list of identifiers or upload a file containing identifiers, one per line:');
     my $bulk_clone_search_example = encode_entities($bulk_clone_search_i18n ? $bulk_clone_search_i18n->p('lists_datasets.bulk.example', 'Example:') : 'Example:');
     my $bulk_clone_search_upload = encode_entities($bulk_clone_search_i18n ? $bulk_clone_search_i18n->p('lists_datasets.bulk.and_or_upload_list_file', 'And/or upload list file:') : 'And/or upload list file:');
     my $bulk_clone_search_debug = encode_entities($bulk_clone_search_i18n ? $bulk_clone_search_i18n->p('global.bulk.input.print_debug', 'print debug statements') : 'print debug statements');
@@ -352,7 +352,7 @@ HTML
   Args: n/a
   Ret : unigene tab format
 
-  Defines the format of the unigene tab using html, perl and perl dbi. Speicfies
+  Defines the format of the unigene tab using html, perl and perl dbi. Specifies
   information fields available for searching unigenes. Prints the debug
   checkbox when debug parameter is set to one.
 
@@ -399,7 +399,7 @@ sub unigene_search {
     my $bulk_unigene_est_sequence = encode_entities($bulk_unigene_options_i18n ? $bulk_unigene_options_i18n->p('lists_datasets.bulk.est_sequence', 'EST sequence') : 'EST sequence');
     my $bulk_unigene_convert_title = encode_entities($bulk_unigene_options_i18n ? $bulk_unigene_options_i18n->p('global.bulk.input.convert_title', 'Check this box to convert each unigene in the list to its equivalent in the most current corresponding unigene build(s), if available') : 'Check this box to convert each unigene in the list to its equivalent in the most current corresponding unigene build(s), if available');
     my SGN::I18N $bulk_unigene_search_i18n = eval { $c && $c->i18n };
-    my $bulk_unigene_search_prompt = encode_entities($bulk_unigene_search_i18n ? $bulk_unigene_search_i18n->p('lists_datasets.bulk.enter_a_list_of_identifiers_or_upload_a_file_containing_one_identifer_separate', 'Enter a list of identifiers or upload a file containing one identifer separated by whitespace (returns, spaces or tabs):') : 'Enter a list of identifiers or upload a file containing one identifer separated by whitespace (returns, spaces or tabs):');
+    my $bulk_unigene_search_prompt = encode_entities($bulk_unigene_search_i18n ? $bulk_unigene_search_i18n->p('lists_datasets.bulk.enter_a_list_of_identifiers_or_upload_a_file_containing_one_identifer_separate', 'Enter a list of identifiers or upload a file containing one identifier separated by whitespace (returns, spaces or tabs):') : 'Enter a list of identifiers or upload a file containing one identifier separated by whitespace (returns, spaces or tabs):');
     my $bulk_unigene_search_example = encode_entities($bulk_unigene_search_i18n ? $bulk_unigene_search_i18n->p('lists_datasets.bulk.example', 'Example:') : 'Example:');
     my $bulk_unigene_search_upload = encode_entities($bulk_unigene_search_i18n ? $bulk_unigene_search_i18n->p('lists_datasets.bulk.and_or_upload_list_file', 'And/or upload list file:') : 'And/or upload list file:');
     my $bulk_unigene_search_debug = encode_entities($bulk_unigene_search_i18n ? $bulk_unigene_search_i18n->p('global.bulk.input.print_debug', 'print debug statements') : 'print debug statements');
@@ -508,7 +508,7 @@ HTML2
   Args: n/a
   Ret : unigene tab format
 
-  Defines the format of the unigene conversion tab using html, perl and perl dbi. Speicfies
+  Defines the format of the unigene conversion tab using html, perl and perl dbi. Specifies
   information fields available for searching unigenes. Prints the debug
   checkbox when debug parameter is set to one.
 
@@ -526,7 +526,7 @@ sub unigene_convert {
     my SGN::I18N $bulk_unigene_convert_i18n = eval { $c && $c->i18n };
     my $bulk_unigene_convert_reset_button = encode_entities($bulk_unigene_convert_i18n ? $bulk_unigene_convert_i18n->p('lists_datasets.bulk.reset', 'Reset') : 'Reset');
     my $bulk_unigene_convert_submit_button = encode_entities($bulk_unigene_convert_i18n ? $bulk_unigene_convert_i18n->p('global.bulk.input.convert_button', 'Convert') : 'Convert');
-    my $bulk_unigene_convert_prompt = encode_entities($bulk_unigene_convert_i18n ? $bulk_unigene_convert_i18n->p('lists_datasets.bulk.enter_a_list_of_identifiers_or_upload_a_file_containing_one_identifer_separate', 'Enter a list of identifiers or upload a file containing one identifer separated by whitespace (returns, spaces or tabs):') : 'Enter a list of identifiers or upload a file containing one identifer separated by whitespace (returns, spaces or tabs):');
+    my $bulk_unigene_convert_prompt = encode_entities($bulk_unigene_convert_i18n ? $bulk_unigene_convert_i18n->p('lists_datasets.bulk.enter_a_list_of_identifiers_or_upload_a_file_containing_one_identifer_separate', 'Enter a list of identifiers or upload a file containing one identifier separated by whitespace (returns, spaces or tabs):') : 'Enter a list of identifiers or upload a file containing one identifier separated by whitespace (returns, spaces or tabs):');
     my $bulk_unigene_convert_example = encode_entities($bulk_unigene_convert_i18n ? $bulk_unigene_convert_i18n->p('lists_datasets.bulk.example', 'Example:') : 'Example:');
     my $bulk_unigene_convert_upload = encode_entities($bulk_unigene_convert_i18n ? $bulk_unigene_convert_i18n->p('lists_datasets.bulk.and_or_upload_list_file', 'And/or upload list file:') : 'And/or upload list file:');
     my $bulk_unigene_convert_debug = encode_entities($bulk_unigene_convert_i18n ? $bulk_unigene_convert_i18n->p('global.bulk.input.print_debug', 'print debug statements') : 'print debug statements');
@@ -651,7 +651,7 @@ OUTPUT_LIST
   Args: n/a
   Ret : BAC tab format
 
-  Defines the format of the BAC tab using html & perl. Speicfies
+  Defines the format of the BAC tab using html & perl. Specifies
   information fields available for searching BACs. Prints the debug
   checkbox when debug parameter is set to one.
 
@@ -677,7 +677,7 @@ sub bac_search {
     my $bulk_bac_search_chromosome_label = encode_entities($bulk_bac_search_labels_i18n ? $bulk_bac_search_labels_i18n->p('global.bulk.input.bac_search.chromosome', 'Clone name with chromosome') : 'Clone name with chromosome');
     my $bulk_bac_search_heading = encode_entities($bulk_bac_search_labels_i18n ? $bulk_bac_search_labels_i18n->p('lists_datasets.bulk.download_bac_information', 'Download BAC information:') : 'Download BAC information:');
     my SGN::I18N $bulk_bac_search_i18n = eval { $c && $c->i18n };
-    my $bulk_bac_search_prompt = encode_entities($bulk_bac_search_i18n ? $bulk_bac_search_i18n->p('lists_datasets.bulk.enter_a_list_of_identifiers_or_upload_a_file_containing_identifers_separated_b', 'Enter a list of identifiers or upload a file containing identifers separated by whitespace (returns, spaces or tabs):') : 'Enter a list of identifiers or upload a file containing identifers separated by whitespace (returns, spaces or tabs):');
+    my $bulk_bac_search_prompt = encode_entities($bulk_bac_search_i18n ? $bulk_bac_search_i18n->p('lists_datasets.bulk.enter_a_list_of_identifiers_or_upload_a_file_containing_identifers_separated_b', 'Enter a list of identifiers or upload a file containing identifiers separated by whitespace (returns, spaces or tabs):') : 'Enter a list of identifiers or upload a file containing identifiers separated by whitespace (returns, spaces or tabs):');
     my $bulk_bac_search_example = encode_entities($bulk_bac_search_i18n ? $bulk_bac_search_i18n->p('lists_datasets.bulk.example', 'Example:') : 'Example:');
     my $bulk_bac_search_upload = encode_entities($bulk_bac_search_i18n ? $bulk_bac_search_i18n->p('lists_datasets.bulk.and_or_upload_list_file', 'And/or upload list file:') : 'And/or upload list file:');
     my $bulk_bac_search_debug = encode_entities($bulk_bac_search_i18n ? $bulk_bac_search_i18n->p('global.bulk.input.print_debug', 'print debug statements') : 'print debug statements');
@@ -784,7 +784,7 @@ sub bac_end_search {
     my $bulk_bac_end_raw = encode_entities($bulk_bac_end_search_labels_i18n ? $bulk_bac_end_search_labels_i18n->p('lists_datasets.bulk.raw_sequence_and_or_quality', 'raw sequence and/or quality') : 'raw sequence and/or quality');
     my $bulk_bac_end_trimmed = encode_entities($bulk_bac_end_search_labels_i18n ? $bulk_bac_end_search_labels_i18n->p('lists_datasets.bulk.trimmed_seq_and_or_quality', 'trimmed seq. and/or quality') : 'trimmed seq. and/or quality');
     my SGN::I18N $bulk_bac_end_search_i18n = eval { $c && $c->i18n };
-    my $bulk_bac_end_search_prompt = encode_entities($bulk_bac_end_search_i18n ? $bulk_bac_end_search_i18n->p('lists_datasets.bulk.enter_a_list_of_identifiers_or_upload_a_file_containing_identifers_separated_b', 'Enter a list of identifiers or upload a file containing identifers separated by whitespace (returns, spaces or tabs):') : 'Enter a list of identifiers or upload a file containing identifers separated by whitespace (returns, spaces or tabs):');
+    my $bulk_bac_end_search_prompt = encode_entities($bulk_bac_end_search_i18n ? $bulk_bac_end_search_i18n->p('lists_datasets.bulk.enter_a_list_of_identifiers_or_upload_a_file_containing_identifers_separated_b', 'Enter a list of identifiers or upload a file containing identifiers separated by whitespace (returns, spaces or tabs):') : 'Enter a list of identifiers or upload a file containing identifiers separated by whitespace (returns, spaces or tabs):');
     my $bulk_bac_end_search_example = encode_entities($bulk_bac_end_search_i18n ? $bulk_bac_end_search_i18n->p('lists_datasets.bulk.example', 'Example:') : 'Example:');
     my $bulk_bac_end_search_upload = encode_entities($bulk_bac_end_search_i18n ? $bulk_bac_end_search_i18n->p('lists_datasets.bulk.and_or_upload_list_file', 'And/or upload list file:') : 'And/or upload list file:');
     my $bulk_bac_end_search_debug = encode_entities($bulk_bac_end_search_i18n ? $bulk_bac_end_search_i18n->p('global.bulk.input.print_debug', 'print debug statements') : 'print debug statements');

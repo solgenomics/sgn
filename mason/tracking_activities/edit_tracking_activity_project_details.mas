@@ -19,7 +19,7 @@ $planting_date
                 <div class="container-fluid">
                     <form class="form-horizontal" role="form" method="post" enctype="multipart/form-data" encoding="multipart/form-data">
                         <div class="form-group">
-                            <label class="col-sm-3 control-label" for="edit_trial_name"><% $c->i18n->p("transformation.root.projec_name", "Projec Name:") |h %> </label>
+                            <label class="col-sm-3 control-label" for="edit_trial_name"><% $c->i18n->p("transformation.root.projec_name", "Project Name:") |h %> </label>
                                 <div class="col-sm-8">
                                     <div class="input-group">
                                         <input class="form-control col-sm-8" id="edit_trial_name" title="name" type="text" value="<%$trial_name%>" aria-describedby="edit_trial_name_status"/>

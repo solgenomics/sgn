@@ -199,7 +199,7 @@ solGS.combinedTrials = {
 
 		},
 		error: function(res) {
-                    alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.combined_trials_id_error", "Error occured getting combined trials unique id") : 'Error occured getting combined trials unique id'));
+                    alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.combined_trials_id_error", "Error occurred getting combined trials unique id") : 'Error occurred getting combined trials unique id'));
 		}
 
 	    });
@@ -301,7 +301,7 @@ solGS.combinedTrials = {
             },
             error: function(res) {
 		jQuery.unblockUI();
-		alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.trial_phenotype_genotype_retrieval_error", "An error occured retrieving phenotypeand genotype data for trials..") : 'An error occured retrieving phenotype' +
+		alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.trial_phenotype_genotype_retrieval_error", "An error occurred retrieving phenotypeand genotype data for trials..") : 'An error occurred retrieving phenotype' +
                       'and genotype data for trials..'));
             }
 	});

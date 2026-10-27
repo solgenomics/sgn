@@ -161,7 +161,7 @@ sub invalid_search {
 
   print <<EOF;
   <br />
-  <b>The specified unigene identifer ($unigene_id) does not result in a valid search.</b>
+  <b>The specified unigene identifier ($unigene_id) does not result in a valid search.</b>
 
 EOF
 

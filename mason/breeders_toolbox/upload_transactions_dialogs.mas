@@ -18,7 +18,7 @@
                             <center><% $c->i18n->p('seedlots.ui.transaction_types_intro', 'You can upload %{count} different types of seedlot transactions. All of the transactions in each file have to be the same type.', {count => 4}) |h %></center>
                             <ul>
                                 <li><% $c->i18n->p('seedlots.ui.transferring_seeds_from_existing_seedlot_to_another_existing_see', 'Transferring seeds from existing seedlot to another existing seedlot.') |h %></li>
-                                <li><% $c->i18n->p('seedlots.ui.transferring_seeds_from_existing_seedlot_to_a_new_seedlot_a_new_', 'Transferring seeds from existing seedlot to a new seedlot. A new seedlot is created beforing adding new transaction.') |h %></li>
+                                <li><% $c->i18n->p('seedlots.ui.transferring_seeds_from_existing_seedlot_to_a_new_seedlot_a_new_', 'Transferring seeds from existing seedlot to a new seedlot. A new seedlot is created before adding new transaction.') |h %></li>
                                 <li><% $c->i18n->p('seedlots.ui.removing_seeds_from_existing_seedlot_to_unspecified_seedlot_name', 'Removing seeds from existing seedlot to unspecified seedlot name or plot name') |h %></li>
                                 <li><b><% $c->i18n->p('seedlots.ui.note_to_transfer_seeds_from_existing_seedlot_to_a_previously_sto', 'Note: To transfer seeds from existing seedlot to a previously stored plot, Please use Upload Seedlots Planted in Trial link in the Experimental Design section on the Trial Detail page.') |h %></b></li>
                                 <li><% $c->i18n->p('seedlots.ui.add_sources_to_existing', 'Add additional seeds from accession or cross to existing seedlot') |h %></li>
@@ -165,7 +165,7 @@
                                     <br/>
                                     <hr class ="solid">
                                     <center>
-                                        <h4><% $c->i18n->p('seedlots.ui.you_want_to_remove_seeds_from_existing_seedlots_to_unspefified_s', 'You want to remove seeds from existing seedlots to unspefified seedlots/plots') |h %></h4>
+                                        <h4><% $c->i18n->p('seedlots.ui.you_want_to_remove_seeds_from_existing_seedlots_to_unspefified_s', 'You want to remove seeds from existing seedlots to unspecified seedlots/plots') |h %></h4>
                                     </center>
                                     <div class="well well-sm">
                                         <div class="row">

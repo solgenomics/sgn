@@ -4,9 +4,9 @@
 #
 ######################################################################
 
-my $trait_detail_page=CXGN::Phenome::TraitDetailPage->new();
+my $trait_detail_page=CXGN::Phenome::TraitDetailPage->new(); ## no critic (TestingAndDebugging::RequireUseStrict) # Legacy CGI dispatch instantiates its page before the package declaration.
 
-package CXGN::Phenome::TraitDetailPage;
+package CXGN::Phenome::TraitDetailPage; ## no critic (Modules::RequireFilenameMatchesPackage) # This CGI script intentionally declares its page package.
 
 use base qw/CXGN::Page::Form::SimpleFormPage/;
 

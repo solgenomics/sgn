@@ -258,8 +258,8 @@ sub confidence_interval
 	    if ($m_pos == $left_position) { $marker_details_of{$m}{orientation} = 'left'; }
 		
 	    my $m_id    = $marker->marker_id();
-	    my $remark1 = "<i>" . SGN::I18N::translate($ui_qtl_detail_i18n, "analysis.qtl.server.highest_lod_score", "Highest LOD score is %{score} at %{position} cM", {score => "" . ($highest_lod), position => "" . ($peak_position)}) . "</i>." if $m_lod == $peak_marker_lod;
-	    my $remark2 = "<i>" . SGN::I18N::translate($ui_qtl_detail_i18n, "analysis.qtl.server.closest_marker_to_peak", "The closest marker to the peak position (%{position} cM)", {position => "" . ($peak_position)}) . "</i>." if $m eq $p_m;
+	    my $remark1 = "<i>" . SGN::I18N::translate($ui_qtl_detail_i18n, "analysis.qtl.server.highest_lod_score", "Highest LOD score is %{score} at %{position} cM", {score => "" . ($highest_lod), position => "" . ($peak_position)}) . "</i>." if $m_lod == $peak_marker_lod; ## no critic (Variables::ProhibitConditionalDeclarations) # Preserve the original conditional declaration lifetime; only the message text is localized.
+	    my $remark2 = "<i>" . SGN::I18N::translate($ui_qtl_detail_i18n, "analysis.qtl.server.closest_marker_to_peak", "The closest marker to the peak position (%{position} cM)", {position => "" . ($peak_position)}) . "</i>." if $m eq $p_m; ## no critic (Variables::ProhibitConditionalDeclarations) # Preserve the original conditional declaration lifetime; only the message text is localized.
       				
 	    push @marker_html,
 	    [

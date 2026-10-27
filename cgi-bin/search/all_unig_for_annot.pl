@@ -134,7 +134,7 @@ my $match_text=$match_detail[1];
 
 #strip <br /> tags.
 #this is for the current specific version of manual annotation
-#it is a kludge, there should be a text only searcheable field
+#it is a kludge, there should be a text only searchable field
 # and a separate html enhanced text display field in the db
 
 $match_text =~ s/\<br\>/  /g;

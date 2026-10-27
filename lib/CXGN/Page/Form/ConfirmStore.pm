@@ -385,7 +385,7 @@ sub set_submit_button_text
  Ret:
  Args:         
 	       Note: as table does not call validate itself to give some
-               more control on the appearance (you don't wan't the 
+               more control on the appearance (you don't want the
                new input field to appear with error messages).
  Side Effects:
  Example:

@@ -34,7 +34,7 @@
                         <br/><br/>
                         <button class="btn btn-default" id="upload_drone_imagery_bulk_button" ><% $c->i18n->p("drone.interface.go_to_bulk_upload_of_imaging_events", "Go to bulk upload of imaging events") |h %></button>
                         <br/><br/>
-                        <button class="btn btn-default" id="upload_drone_imagery_bulk_previous_button" ><% $c->i18n->p("drone.interface.go_to_bulk_upload_of_previously_processed_imaging_events_geojson_defitions_inc", "Go to bulk upload of previously processed imaging events (GeoJSON defitions included)") |h %></button>
+                        <button class="btn btn-default" id="upload_drone_imagery_bulk_previous_button" ><% $c->i18n->p("drone.interface.go_to_bulk_upload_of_previously_processed_imaging_events_geojson_defitions_inc", "Go to bulk upload of previously processed imaging events (GeoJSON definitions included)") |h %></button>
                         </center>
                     </&>
                     <&| /util/workflow.mas:step, title=> $c->i18n->p("drone.interface.field_trial", "Field Trial") &>
@@ -170,7 +170,7 @@
                             <center><h4><% $c->i18n->p("drone.interface.uploading_raw_images_to_stitch_using_opendronemap", "Uploading raw images to stitch using OpenDroneMap") |h %></h4></center>
                             <ul>
                                 <li><% $c->i18n->p("drone.interface.you_can_upload_raw_images_png_tiff_jpeg_from_a_micasense_5_channel_camera_or_a", "You can upload raw images (PNG, TIFF, JPEG) from a MicaSense 5-channel camera or a color image camera, for instance collected from an aerial drone, and then orthophotomosaics will be created using OpenDroneMap and saved in ImageBreed.") |h %></li>
-                                <li><% $c->i18n->p("drone.interface.raw_images_are_uploaded_using_a_zipfile_zip_place_all_images_relevant_to_the_i_variant_2", "Raw images are uploaded using a zipfile (.zip). Place all images relevant to the imaging event into one zipfile. Include atleast 25 images in the zipfile.") |h %></li>
+                                <li><% $c->i18n->p("drone.interface.raw_images_are_uploaded_using_a_zipfile_zip_place_all_images_relevant_to_the_i_variant_2", "Raw images are uploaded using a zipfile (.zip). Place all images relevant to the imaging event into one zipfile. Include at least 25 images in the zipfile.") |h %></li>
                                 <li>Make sure there is ><% $c->i18n->p("drone.interface.metric_75_overlap_in_the_images_so_that_the_images_can_be_properly_assembled", "75% overlap in the images, so that the images can be properly assembled.") |h %></li>
                                 <li><% $c->i18n->p("drone.interface.a_digital_surface_map_dsm_will_also_be_generated_and_saved_as_a_black_and_whit", "A digital surface map (DSM) will also be generated and saved as a black and white image. The DSM is a representation of height of objects.") |h %></li>
                             </ul>

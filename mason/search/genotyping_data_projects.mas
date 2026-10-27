@@ -35,7 +35,7 @@ use HTML::Entities ();
     <div class="panel panel-default">
         <div class="panel-body">
             <br><br>
-            <&| /page/info_section.mas, anchor_title => 'Copy Results to a List', title => HTML::Entities::encode_entities($c->i18n->p("stock_search.section.copy", 'Copy Results to a List')), collapsible=>1, collapsed=>0, subtitle=>("<i>" . HTML::Entities::encode_entities($c->i18n->p("genotype.plate.copy_the_genotyping_project_names_currently_showing_in_the_search", "Copy the genotyping project names currently showing in the search results table to a new or exisiting list")) . "</i>")&>
+            <&| /page/info_section.mas, anchor_title => 'Copy Results to a List', title => HTML::Entities::encode_entities($c->i18n->p("stock_search.section.copy", 'Copy Results to a List')), collapsible=>1, collapsed=>0, subtitle=>("<i>" . HTML::Entities::encode_entities($c->i18n->p("genotype.plate.copy_the_genotyping_project_names_currently_showing_in_the_search", "Copy the genotyping project names currently showing in the search results table to a new or existing list")) . "</i>")&>
                 <br>
                 <div style="text-align:right" id="genotyping_data_project_to_list_menu"></div>
                 <div id="genotyping_data_project_result_names" style="display: none;"></div>

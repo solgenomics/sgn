@@ -217,7 +217,7 @@ return $html;
 sub get_file_lines {
     my $self   = shift;
     my $file   = shift;
-    open my $f, $file or die "$! opening $file";
+    open my $f, '<', $file or die "$! opening $file";
     my $cnt = 0;
     $cnt++ while <$f>;
     close $f;

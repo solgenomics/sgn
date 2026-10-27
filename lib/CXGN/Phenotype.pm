@@ -372,7 +372,7 @@ sub store {
 
             if (! $self->image_id() && ($self->value() eq "" || ! defined($self->value()) || $self->value() eq ".") || $self->value() eq "NA") {
                 #print STDERR "DELETE VALUES NOT SET FOR EMPTY VALUE. IGNORING EMPTY VALUES!\n";
-                return { succes => 1, skip_count => 1, reason => "SKIPPING EMPTY VALUE WITHOUT DELETE_VALUES\n" };
+                return { succes => 1, skip_count => 1, reason => "SKIPPING EMPTY VALUE WITHOUT DELETE_VALUES\n" }; # codespell:ignore succes (legacy result hash key)
             }
 
             if ($self->old_value() && ($self->old_value() eq $self->value())) {
@@ -430,7 +430,7 @@ sub store {
 
         #print STDERR "INSERTING... ".$self->value()."\n";
         if (! $self->image_id() && ($self->value() eq "" || ! defined($self->value()) || $self->value() eq ".") || $self->value() eq "NA") {
-            #print STDERR "NOT STORING EMTPY VALUE\n";
+            #print STDERR "NOT STORING EMPTY VALUE\n";
             return { success => 1, skip_count => 1, message => "Not storing empty values" };
         }
         #print STDERR "INSERTING new value ...\n";

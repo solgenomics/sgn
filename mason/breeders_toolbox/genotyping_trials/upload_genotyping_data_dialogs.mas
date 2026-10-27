@@ -23,9 +23,9 @@ $facilities
                         <&| /util/workflow.mas, id=> "upload_genotypes_workflow" &>
                             <&| /util/workflow.mas:step, title=> HTML::Entities::encode_entities($c->i18n->p("cross.ui.intro", "Intro")) &>
                                 <& /page/page_title.mas, title=>HTML::Entities::encode_entities($c->i18n->p("genotype.plate.this_workflow_will_guide_you_through_uploading_genotypes_into_the", "This workflow will guide you through uploading genotypes into the database")) &>
-                                <p><% $c->i18n->p("genotype.plate.select_a_genotyping_project_on_the_next_screen_this_project", "Select a genotyping project on the next screen. This project can represent a series of genotyping plates sent to a genotyping facilty.") |h %></p>
+                                <p><% $c->i18n->p("genotype.plate.select_a_genotyping_project_on_the_next_screen_this_project", "Select a genotyping project on the next screen. This project can represent a series of genotyping plates sent to a genotyping facility.") |h %></p>
                                 <p><% $c->i18n->p("genotype.plate.ideally_the_sample_names_in_your_vcf_file_will_match", "Ideally the sample names in your VCF file will match sample names in genotyping plates in the database; however, the sample names in your file can also match accession names in the database.") |h %></p>
-                                <p><% $c->i18n->p("genotype.plate.curently_we_support_the_vcf_format_the_tassel_hdf5_format", "Curently we support the VCF format, the Tassel HDF5 format, the Intertek CSV format, KASP data and SSR data for upload.") |h %></p>
+                                <p><% $c->i18n->p("genotype.plate.curently_we_support_the_vcf_format_the_tassel_hdf5_format", "Currently we support the VCF format, the Tassel HDF5 format, the Intertek CSV format, KASP data and SSR data for upload.") |h %></p>
                                 <p><% $c->i18n->p("genotype.plate.if_you_are_uploading_many_files_that_used_the_same", "If you are uploading many files that used the same genotyping protocol, you can do so, and the database will ensure that the marker information is consistent across the genotyping data (e.g. the same reference, alternate, position, etc.).") |h %></p>
 
                                 <br/><br/>
@@ -648,7 +648,7 @@ $facilities
                     <b>
                         <% $c->i18n->p("program.profile_upload.optional_columns", "Optional columns:") |h %>
                     </b>
-                    <% $c->i18n->p("genotype.plate.you_can_include_additional_marker_infomation_by_selecting_one_or", "You can include additional marker infomation by selecting one or more column headers listed below. Please add the selected column(s) after \"Position\" column.") |h %> </li>
+                    <% $c->i18n->p("genotype.plate.you_can_include_additional_marker_infomation_by_selecting_one_or", "You can include additional marker information by selecting one or more column headers listed below. Please add the selected column(s) after \"Position\" column.") |h %> </li>
                     <ul>
                         <li><b><% $c->i18n->p("seedlots.ui.quality.e77b76f", "Quality") |h %></b></li>
                         <li><b><% $c->i18n->p("seedlot_maintenance_table.ui.filter", "Filter") |h %></b></li>

@@ -61,7 +61,7 @@ export function Wizard(main_id,col_number){
    * Returns the column contents for a given target type and selection
    * @callback Wizard~load_selectionCallback
    * @param {string} target Type of column contents to load.
-   * @param {Array.<Wizard~columnItem>} categories Array of pervious column types in order
+   * @param {Array.<Wizard~columnItem>} categories Array of previous column types in order
    * @param {Object.<string,Array.<Wizard~columnItem>>} selections Object where keys are categories and values are arrays of items selected in those categories
    * @param {Object.<string,number>} operations Object where keys are categories and values are the match value (0=any, 1=all, 0-1=match min percent)
    * @returns {Array.<Wizard~columnItem>} contents of column
@@ -71,7 +71,7 @@ export function Wizard(main_id,col_number){
 
   /**
    * @typedef {Object} Wizard~listDetails
-   * @property {string} type catagory of list
+   * @property {string} type category of list
    * @property {Array.<Wizard~columnItem>} items contents of list
   */
   /**
@@ -95,7 +95,7 @@ export function Wizard(main_id,col_number){
    * @callback Wizard~on_changeCallback
    * @param {Array.<Wizard~columnItem>} categories Array of column types in order
    * @param {Object.<string,Array.<Wizard~columnItem>>} selections Object where keys are categories and values are arrays of items selected in those categories
-   * @param {Object.<string,boolean>} operations Object where keys are categories and values are booleans (true if interect, false if union)
+   * @param {Object.<string,boolean>} operations Object where keys are categories and values are booleans (true if intersect, false if union)
    */
   var on_change_cbs = [];
 
@@ -772,7 +772,7 @@ export function Wizard(main_id,col_number){
     },
 
     /**
-     * lists - sets or resets the availible lists to show in the wizard
+     * lists - sets or resets the available lists to show in the wizard
      * @memberof Wizard.prototype
      * @param  {Object} list_dict object where keys are listIDs and values are the human-readable name
      * @returns {this}
@@ -780,7 +780,7 @@ export function Wizard(main_id,col_number){
     lists: function(list_dict){ set_lists(list_dict); return wizard},
 
     /**
-     * types - sets or resets the availible types to show in the wizard
+     * types - sets or resets the available types to show in the wizard
      * @memberof Wizard.prototype
      * @param  {Object} type_dict object where keys are type/catagory ids and values are the human-readable name
      * @returns {this}
@@ -788,9 +788,9 @@ export function Wizard(main_id,col_number){
     types: function(type_dict){ set_types(type_dict); return wizard},
 
     /**
-     * types - sets or resets the availible types to show in the wizard
+     * types - sets or resets the available types to show in the wizard
      * @memberof Wizard.prototype
-     * @param  {Array.<string>} types list of types availible in the first column
+     * @param  {Array.<string>} types list of types available in the first column
      * @returns {this}
      */
     initial_types: function(types){set_inital_types(types); return wizard}

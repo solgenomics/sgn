@@ -115,7 +115,7 @@ function add_user_role(sp_person_id, person_name) {
             },
             error: function(response) {
                 jQuery("#working_modal").modal("hide");
-                alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("program.roles.error.details", "An error occured: %{details}", {details: String(response)}) : 'An error occured: ' + response));
+                alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("program.roles.error.details", "An error occurred: %{details}", {details: String(response)}) : 'An error occurred: ' + response));
             }
         });
 }
@@ -142,7 +142,7 @@ function add_user_role(sp_person_id, person_name) {
         },
         error: function(response) {
             jQuery("#working_modal").modal("hide");
-            alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("program.roles.error.details", "An error occured: %{details}", {details: String(response)}) : 'An error occured: ' + response));
+            alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("program.roles.error.details", "An error occurred: %{details}", {details: String(response)}) : 'An error occurred: ' + response));
         }
     });
 });

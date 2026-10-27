@@ -1,5 +1,5 @@
 /**
- * K-means and hierarchical cluster analysis and vizualization
+ * K-means and hierarchical cluster analysis and visualization
  * Isaak Y Tecle <iyt2@cornell.edu>
  *
  */
@@ -1372,12 +1372,12 @@ jQuery(document).ready(function () {
                             solGS.cluster.displayClusterOutput(res);    
                           }
                         } else {
-                          var msg = (window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.clustering_r_error", "Error occured running the clustering. Possibly the R script failed.") : "Error occured running the clustering. Possibly the R script failed.");
+                          var msg = (window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.clustering_r_error", "Error occurred running the clustering. Possibly the R script failed.") : "Error occurred running the clustering. Possibly the R script failed.");
                           solGS.cluster.cleanupFeedback(canvas, runClusterBtnId, clusterMsgDiv, msg);
                         }
                       })
                       .fail(function () {
-                        var msg = (window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.clustering_error", "Error occured running the clustering.") : "Error occured running the clustering.");
+                        var msg = (window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.clustering_error", "Error occurred running the clustering.") : "Error occurred running the clustering.");
                         solGS.cluster.cleanupFeedback(canvas, runClusterBtnId, clusterMsgDiv, msg);
                       });
                   },

@@ -146,7 +146,7 @@ sub upload_cross_file_POST : Args(0) {
         user_role => $user_role
     });
 
-    ## Store uploaded temporary file in arhive
+    ## Store uploaded temporary file in archive
     $archived_filename_with_path = $uploader->archive();
     $md5 = $uploader->get_md5($archived_filename_with_path);
     if (!$archived_filename_with_path) {
@@ -1057,7 +1057,7 @@ sub upload_progenies_POST : Args(0) {
         user_role => $user_role
     });
 
-    ## Store uploaded temporary file in arhive
+    ## Store uploaded temporary file in archive
     $archived_filename_with_path = $uploader->archive();
     $md5 = $uploader->get_md5($archived_filename_with_path);
     if (!$archived_filename_with_path) {
@@ -1204,7 +1204,7 @@ sub validate_upload_existing_progenies_POST : Args(0) {
         user_role => $user_role
     });
 
-    ## Store uploaded temporary file in arhive
+    ## Store uploaded temporary file in archive
     $archived_filename_with_path = $uploader->archive();
     $md5 = $uploader->get_md5($archived_filename_with_path);
     if (!$archived_filename_with_path) {
@@ -1399,7 +1399,7 @@ sub upload_info_POST : Args(0) {
         user_role => $user_role
     });
 
-    ## Store uploaded temporary file in arhive
+    ## Store uploaded temporary file in archive
     $archived_filename_with_path = $uploader->archive();
     $md5 = $uploader->get_md5($archived_filename_with_path);
     if (!$archived_filename_with_path) {
@@ -1577,7 +1577,7 @@ sub upload_family_names_POST : Args(0) {
         user_role => $user_role
     });
 
-    ## Store uploaded temporary file in arhive
+    ## Store uploaded temporary file in archive
     $archived_filename_with_path = $uploader->archive();
     $md5 = $uploader->get_md5($archived_filename_with_path);
     if (!$archived_filename_with_path) {

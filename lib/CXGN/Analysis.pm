@@ -467,7 +467,7 @@ sub create_and_store_analysis_design {
 #	print STDERR "VALIDATE ERROR! "; #.Dumper($validate_error)."\n";
 #    }
 #    else {
-##	print STDERR "Valiation successful. Storing...\n";
+##	print STDERR "Validation successful. Storing...\n";
 #	try { $store_error = $design_store->store() }
 #	catch { $store_error = $_ };
 #    }

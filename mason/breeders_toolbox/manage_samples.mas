@@ -28,7 +28,7 @@ $sample_tissue_types => ()
 
 jQuery(document).ready(function(){
     jQuery('button[name="export_genotyping_trial_link"]').click(function(){
-        alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("genotype.plate.automatic_export_to_genotyping_vendors_is_currently_not_avaiable_however", "Automatic export to genotyping vendors is currently not avaiable; however, you can download the layout and submit to vendor manually.") : 'Automatic export to genotyping vendors is currently not avaiable; however, you can download the layout and submit to vendor manually.'));
+        alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("genotype.plate.automatic_export_to_genotyping_vendors_is_currently_not_avaiable_however", "Automatic export to genotyping vendors is currently not available; however, you can download the layout and submit to vendor manually.") : 'Automatic export to genotyping vendors is currently not available; however, you can download the layout and submit to vendor manually.'));
     });
 });
 

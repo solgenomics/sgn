@@ -27,7 +27,7 @@ sub get_all_sequenced_stocks :Path('/ajax/genomes/sequenced_stocks') {
     my $schema = $c->dbic_schema("Bio::Chado::Schema", undef, $user_id);
     my $sequenced_stocks = CXGN::Stock::SequencingInfo->get_props($schema);
 
-    print STDERR "SEQeunced STOCKS: ".Dumper($sequenced_stocks);
+    print STDERR "SEQUENCED STOCKS: ".Dumper($sequenced_stocks);
     
     my @info = $self->format_sequencing_infos($schema, $user_id, $sequenced_stocks, $c->i18n);
 

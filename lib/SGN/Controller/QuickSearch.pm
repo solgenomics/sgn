@@ -748,7 +748,7 @@ sub quick_bp_search {
 sub quick_web_search {
     my SGN::I18N $quick_web_search_i18n = Scalar::Util::blessed($_[4]) && $_[4]->isa('SGN::I18N') ? $_[4] : undef;
   my ($self, undef, $term) = @_;
-  # works the same way as quick_page_search, except that the domain contraint is removed from the
+  # works the same way as quick_page_search, except that the domain constraint is removed from the
   # search.
   print STDERR "Performing web search... ";
   return $self->google_search(($quick_web_search_i18n ? $quick_web_search_i18n->p('global.quick_search.entire_web', 'the entire web') : 'the entire web'),$term,undef,$quick_web_search_i18n);

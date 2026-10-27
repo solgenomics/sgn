@@ -160,27 +160,19 @@
         },
         "controls.save\u0004Save": {
           "plural": null,
-          "forms": [
-            "Зберегти"
-          ]
+          "forms": ["Зберегти"]
         },
         "seedlots.save\u0004Save": {
           "plural": null,
-          "forms": [
-            "Зберегти партію"
-          ]
+          "forms": ["Зберегти партію"]
         },
         "\u0004Save": {
           "plural": null,
-          "forms": [
-            "Зберегти без контексту"
-          ]
+          "forms": ["Зберегти без контексту"]
         },
         "trial.named\u0004Created trial %{name}.": {
           "plural": null,
-          "forms": [
-            "Створено дослід %{name}."
-          ]
+          "forms": ["Створено дослід %{name}."]
         }
       }
     },
@@ -362,10 +354,7 @@
       "messages": {
         "trials.count\u0004%{count} trial found": {
           "plural": "%{count} trials found",
-          "forms": [
-            "pt-BR[0] %{count}",
-            "pt-BR[1] %{count}"
-          ]
+          "forms": ["pt-BR[0] %{count}", "pt-BR[1] %{count}"]
         }
       }
     },
@@ -396,10 +385,7 @@
       "messages": {
         "trials.count\u0004%{count} trial found": {
           "plural": "%{count} trials found",
-          "forms": [
-            "pt-PT[0] %{count}",
-            "pt-PT[1] %{count}"
-          ]
+          "forms": ["pt-PT[0] %{count}", "pt-PT[1] %{count}"]
         }
       }
     }

@@ -56,7 +56,7 @@ $stock_id
                 <div class="container-fluid">
                     <b><% $c->i18n->p("accession.files.intro", "This is for uploading any additional files you may have for the accession.") |h %></b>
                     <br/><br/>
-                    <p><% $c->i18n->p("accession.files.possible_files", "Possible additional files inlude, but are not limited to:") |h %></p>
+                    <p><% $c->i18n->p("accession.files.possible_files", "Possible additional files include, but are not limited to:") |h %></p>
                     <ul>
                         <li><% $c->i18n->p("accession.files.images_help", "Accession Related Images, such as a physical field image or an aerial picture of the field.") |h %></li>
                         <li><% $c->i18n->p("accession.files.documentation_help", "Accession Related Documentation, such as protocols or permits for the accession.") |h %></li>

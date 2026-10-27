@@ -324,7 +324,7 @@ Automatic guessing of the input's intensional type didn't work too well.
   </tr>
   <tr>
     <td><input type="radio" name="request_type" value="9" /></td>
-    <td>SGN Chromatogram/Trace Identifer (SGN-T#)</td>
+    <td>SGN Chromatogram/Trace Identifier (SGN-T#)</td>
     <td>SGN-T123401</td>
   </tr>
   <tr>

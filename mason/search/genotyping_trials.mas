@@ -36,7 +36,7 @@ $nd_geolocation => 'not_provided'
     <div class="panel panel-default">
         <div class="panel-body">
             <br><br>
-            <&| /page/info_section.mas, anchor_title => 'Copy Results to a List', title => HTML::Entities::encode_entities($c->i18n->p("stock_search.section.copy", 'Copy Results to a List')), collapsible=>1, collapsed=>0, subtitle=>("<i>" . HTML::Entities::encode_entities($c->i18n->p("trial.search.copy_help", "Copy the trial names currently showing in the search results table to a new or exisiting list")) . "</i>")&>
+            <&| /page/info_section.mas, anchor_title => 'Copy Results to a List', title => HTML::Entities::encode_entities($c->i18n->p("stock_search.section.copy", 'Copy Results to a List')), collapsible=>1, collapsed=>0, subtitle=>("<i>" . HTML::Entities::encode_entities($c->i18n->p("trial.search.copy_help", "Copy the trial names currently showing in the search results table to a new or existing list")) . "</i>")&>
                 <br>
                 <div style="text-align:right" id="genotyping_trials_to_list_menu"></div>
                 <div id="genotyping_trial_result_names" style="display: none;"></div>

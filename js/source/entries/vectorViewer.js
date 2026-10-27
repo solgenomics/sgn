@@ -695,7 +695,7 @@ export function draw_vector(vector_div, metadata, radius, re_sites_table, featur
 	console.log('Wraparound is '+wrapAround);
 
 //	alert('VectorLength = '+vectorLength);
-	//Convert the data from feature_table into a useable form inside the "data" dataset
+	//Convert the data from feature_table into a usable form inside the "data" dataset
 	data.push({
 	    name: feature_table[i][0],
 	    startAngle: parseInt(feature_table[i][1]) / vectorLength * Math.PI * 2,
@@ -707,14 +707,14 @@ export function draw_vector(vector_div, metadata, radius, re_sites_table, featur
     
 //    alert("NOW HERE 2 with data = "+JSON.stringify(data));
     /////// note the re_sites array should have the correct format?
-    //Anoter for each loop, this time for the RE sites
+    //Another for each loop, this time for the RE sites
 
     var re_sites = new Array();
     for (var i = 0; i < re_sites_table.length; i++) {
      	var name = re_sites_table[i][0];
      	var cutCoord = re_sites_table[i][1];
 	
-	//Convert the data from feature_table_RESites into a useable form inside the "re_sites" dataset
+	//Convert the data from feature_table_RESites into a usable form inside the "re_sites" dataset
 	re_sites.push({
 	    name: name,
 	    cutCoord: cutCoord

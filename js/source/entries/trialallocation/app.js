@@ -658,7 +658,7 @@ export function initTrialAllocation() {
   colLabelContainer.style.pointerEvents = 'none';
   headerLayer.appendChild(colLabelContainer);
 
-  /* pools the renderer can re-use */
+  /* pools the renderer can reuse */
   const rowLabelPool = [], colLabelPool = [];
   for (let i = 0; i < VISIBLE_ROWS; i++) {
     const d = document.createElement('div');
@@ -1694,7 +1694,7 @@ export function initTrialAllocation() {
     });
   }
 
-  /******** Gereate trial Design *************/
+  /******** Generate trial Design *************/
   window.generateDesign = function(i, rowStart = 0, colStart = 0, btn) {
     const formEl = qs('#tname' + i)?.closest('.border.rounded');
     if (existingProjectTrials.has(+i) || lockedTrialForms.has(+i) || databaseSavedTrialIndexes.has(String(i)) || formEl?.dataset.existingProject === '1' || formEl?.dataset.locked === '1') {
@@ -2094,7 +2094,7 @@ export function initTrialAllocation() {
     moveSelectedTrial(delta[0], delta[1]);
   });
 
-  /************* grab coodinates from grd ****************/
+  /************* grab coordinates from grd ****************/
 
   function clearTrialCache(i) {
     delete trialDesignCache[i];

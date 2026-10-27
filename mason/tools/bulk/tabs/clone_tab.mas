@@ -13,7 +13,7 @@ $debug => ''
 	<% $ug_build_select %>
 	<br />
 	
-	<% $c->i18n->p("lists_datasets.bulk.enter_a_list_of_identifiers_or_upload_a_file_containing_identifers_one_per_lin", "Enter a list of identifiers or upload a file containing identifers, one per line:") |h %><br />
+	<% $c->i18n->p("lists_datasets.bulk.enter_a_list_of_identifiers_or_upload_a_file_containing_identifers_one_per_lin", "Enter a list of identifiers or upload a file containing identifiers, one per line:") |h %><br />
 	<table summary="" width="100%"><tr><td>
 	      <textarea id="ids" name="ids" rows="5" cols="20"></textarea>
 	    </td>

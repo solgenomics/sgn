@@ -202,7 +202,7 @@ sub send_image_email :Private {
     my $sp_person_id = shift;
     my $refering_page=shift;
     my $type= shift;  #locus or...?
-    my $type_id = shift; #the database id of the refering object (locus..)
+    my $type_id = shift; #the database id of the referring object (locus..)
 
     my $image_id = $image->get_image_id();
 

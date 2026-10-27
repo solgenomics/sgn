@@ -16,7 +16,7 @@ $stock_type => undef
 
 <div class="panel panel-default">
     <div class="panel-body">
-        <&| /page/info_section.mas, anchor_title => 'Copy Accessions to a List', title => HTML::Entities::encode_entities($c->i18n->p("transformation.root.copy_accessions_to_a_list", 'Copy Accessions to a List')), collapsible=>1, collapsed=>0, subtitle=>("<i>" . HTML::Entities::encode_entities($c->i18n->p("accessions.section.copy_list_help", "Copy the accession names to a new or exisiting list")) . "</i>")&>
+        <&| /page/info_section.mas, anchor_title => 'Copy Accessions to a List', title => HTML::Entities::encode_entities($c->i18n->p("transformation.root.copy_accessions_to_a_list", 'Copy Accessions to a List')), collapsible=>1, collapsed=>0, subtitle=>("<i>" . HTML::Entities::encode_entities($c->i18n->p("accessions.section.copy_list_help", "Copy the accession names to a new or existing list")) . "</i>")&>
         <br>
         <div id="transformant_names" style="display:none"></div>
         <div id="transformants_to_list_menu"></div>

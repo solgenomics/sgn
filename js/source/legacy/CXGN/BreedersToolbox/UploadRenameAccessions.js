@@ -101,7 +101,7 @@ jQuery(document).ready(function ($) {
             success: function(response) {
                 jQuery('#working_modal').modal('hide');
                 if (response.error) {
-                    alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("accession.rename.store_error", "An Error Occured: No accessions were renamed! Try Fixing Your File For The Issues Identified In the Validation. %{details}", {details: String(response.error)}) : 'An Error Occured: No accessions were renamed! Try Fixing Your File For The Issues Identified In the Validation. '+response.error));
+                    alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("accession.rename.store_error", "An Error Occurred: No accessions were renamed! Try Fixing Your File For The Issues Identified In the Validation. %{details}", {details: String(response.error)}) : 'An Error Occurred: No accessions were renamed! Try Fixing Your File For The Issues Identified In the Validation. '+response.error));
                 }
                 else {
 		    //alert("RESPONSE: "+JSON.stringify(response));

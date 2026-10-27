@@ -151,7 +151,7 @@ jQuery(document).ready(function ($) {
             success: function(response) {
                 jQuery('#working_modal').modal('hide');
                 if (response.error) {
-                    alert(crossI18n.p("cross.ui.an_error_occured_no_pedigrees_were_saved_try_fixing_your_file_", "An Error Occured: No pedigrees were saved! Try Fixing Your File For The Issues Identified In the Validation. %{detail}", {detail: response.error}));
+                    alert(crossI18n.p("cross.ui.an_error_occured_no_pedigrees_were_saved_try_fixing_your_file_", "An Error Occurred: No pedigrees were saved! Try Fixing Your File For The Issues Identified In the Validation. %{detail}", {detail: response.error}));
                 }
                 else {
                     jQuery('#pedigrees_upload_success_dialog_message').modal('show');

@@ -71,7 +71,7 @@ sub new {
   Ret : page
 
   Calls summary page to be displayed. Determines what page to render depending
-  on the outout type the user selects.
+  on the output type the user selects.
 
 =cut
 
@@ -110,9 +110,10 @@ sub display_page() {
 sub display_summary_page {
     my $self = shift;
     my $file = $self->{tempdir} . "/" . $self->{dumpfile} . ".summary";
-    open( F, "<$file" ) || $self->{page}->error_page("can't open $file");
+    open my $summary_fh, '<', $file
+      or $self->{page}->error_page("can't open $file");
     $self->{page}->header();
-    while (<F>) {
+    while (<$summary_fh>) {
         print $_;
     }
     $self->{page}->footer();
@@ -171,6 +172,7 @@ sub render_html_table_page {
       $self->getFileLines( $self->{tempdir} . "/" . $self->{dumpfile} );
     $self->{line_count} = $line_count;
     $self->debug("Line Count in the file: $line_count");
+    my $table_fh;
     if ( $line_count < 2 ) {
         my SGN::I18N $bulk_display_empty_i18n = $self->{i18n};
         my $bulk_display_empty_text = $bulk_display_empty_i18n ? $bulk_display_empty_i18n->p('global.bulk.display.no_data', 'No data was retrieved. Please verify your input parameters. Thanks.<br /><br />') : 'No data was retrieved. Please verify your input parameters. Thanks.<br /><br />';
@@ -179,14 +181,14 @@ sub render_html_table_page {
         $self->{content} .= $bulk_display_empty_text . "\n";
     }
     else {
-        open( F, "<" . $self->{tempdir} . "/" . $self->{dumpfile} )
-          || $self->{page}->error_page("Can't open $self->{dumpfile}");
+        open($table_fh, '<', $self->{tempdir} . "/" . $self->{dumpfile})
+          or $self->{page}->error_page("Can't open $self->{dumpfile}");
 
         #
         # read the column definitions
         #
         my @output_fields;
-        my $defs = <F>;
+        my $defs = <$table_fh>;
         if ($defs) { chomp($defs); @output_fields = split /\t/, $defs; }
         $self->debug( "column definitions: " . ( join " ", @output_fields ) );
 
@@ -215,7 +217,7 @@ sub render_html_table_page {
           . ( join "</td><td>", @output_fields )
           . "</td></tr>";
 
-        while (<F>) {
+        while (<$table_fh>) {
             chomp;
             $line++;
             if ( $line >=
@@ -323,7 +325,7 @@ sub render_html_table_page {
     #
     print $self->{content};
     $self->{page}->footer();
-    close(F);
+    close($table_fh) if defined $table_fh;
 }
 
 =head2 render_fasta
@@ -350,15 +352,15 @@ sub render_fasta_page {
     else {
         print "Content-type: text/plain\n\n";
     }
-    open( F, "<" . $self->{tempdir} . "/" . $self->{dumpfile} )
-      || $self->{page}->error_page( "Can't open " . $self->{dumpfile} );
+    open my $fasta_fh, '<', $self->{tempdir} . "/" . $self->{dumpfile}
+      or $self->{page}->error_page( "Can't open " . $self->{dumpfile} );
 
     # read column definitions
     my @output_fields;
-    my $defs = <F>;
+    my $defs = <$fasta_fh>;
     if ($defs) { chomp($defs); @output_fields = split /\t/, $defs; }
 
-    while (<F>) {
+    while (<$fasta_fh>) {
         chomp;
         my @f    = split /\t/;
         my %data = ();
@@ -491,7 +493,7 @@ sub render_fasta_page {
 
     }
 
-    close(F);
+    close($fasta_fh);
 }
 
 =head2 buttons
@@ -691,12 +693,12 @@ sub dumptextfile {
 
     # open file
     print $message. "\n";
-    open( F, "<$file" ) || no_data_error_page();
+    open my $dump_fh, '<', $file or no_data_error_page();
 
-    while (<F>) {
+    while (<$dump_fh>) {
         print $_;
     }
-    close(F);
+    close($dump_fh);
 }
 
 =head2 debug

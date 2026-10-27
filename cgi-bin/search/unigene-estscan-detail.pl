@@ -103,7 +103,7 @@ sub invalid_search {
 
   $page->header();
 
-  my $invalid_unigene_search = encode_entities($cgi_unigene_estscan_detail_invalid_search_i18n ? $cgi_unigene_estscan_detail_invalid_search_i18n->p('global.unigene_estscan_detail.invalid_search', 'The specified unigene identifer (%{id}) does not result in a valid search.', { id => $unigene_id }) : "The specified unigene identifer ($unigene_id) does not result in a valid search.");
+  my $invalid_unigene_search = encode_entities($cgi_unigene_estscan_detail_invalid_search_i18n ? $cgi_unigene_estscan_detail_invalid_search_i18n->p('global.unigene_estscan_detail.invalid_search', 'The specified unigene identifier (%{id}) does not result in a valid search.', { id => $unigene_id }) : "The specified unigene identifier ($unigene_id) does not result in a valid search.");
   print <<EOF;
   <br />
   <b>$invalid_unigene_search</b>

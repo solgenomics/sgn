@@ -72,7 +72,7 @@ function startReader() {
     var loadingMessage = document.getElementById("loadingMessage");
     loadingMessage.innerHTML = ("<strong>" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("barcode.mason.unable_to_access_video_stream", "Unable to access video stream") : "Unable to access video stream")).html() + "</strong><br />" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("barcode.mason.please_make_sure_you_have_a_webcam_enabled_and_permissions", "Please make sure you have a webcam enabled and permissions have been granted for this site") : "Please make sure you have a webcam enabled and permissions have been granted for this site")).html() + "</p>");
 
-    // Use facingMode: environment to attemt to get the front camera on phones
+    // Use facingMode: environment to attempt to get the front camera on phones
     navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } }).then(function(stream) {
         video.srcObject = stream;
         video.setAttribute("playsinline", true); // required to tell iOS safari we don't want fullscreen

@@ -104,12 +104,12 @@ Ret: a field object with the given name, or undef if none exists
 sub get_field_obj_by_name
 {
 	my ($self, $name) = @_;
-	return undef unless exists($self->{fields});
+	return undef unless exists($self->{fields}); ## no critic (Subroutines::ProhibitExplicitReturnUndef) # Preserve the explicit missing-field value for list-context callers.
 	foreach my $obj (@{$self->{fields}})
 	{
 		return $obj if $obj->get_field_name() eq $name;
 	}
-	return undef;
+	return undef; ## no critic (Subroutines::ProhibitExplicitReturnUndef) # Preserve the explicit missing-field value for list-context callers.
 }
 
 =head2 add_field

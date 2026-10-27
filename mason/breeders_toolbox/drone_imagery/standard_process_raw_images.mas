@@ -1752,7 +1752,7 @@ jQuery(document).ready(function(){
         drone_imagery_plot_polygons_rectangles_apply_square_raw_images_interactive_counter = drone_imagery_plot_polygons_rectangles_apply_square_raw_images_interactive_counter + 1;
 
         if (drone_imagery_plot_polygons_rectangles_apply_square_raw_images_interactive_counter < 10) {
-            alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("drone.interface.click_the_boundaries_of_another_plot_you_need_to_click_atleast_10_to_get_a_good_average_completed", "Click the boundaries of another plot. You need to click atleast 10 to get a good average. Completed: ") : "Click the boundaries of another plot. You need to click atleast 10 to get a good average. Completed: ")+drone_imagery_plot_polygons_rectangles_apply_square_raw_images_interactive_counter);
+            alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("drone.interface.click_the_boundaries_of_another_plot_you_need_to_click_atleast_10_to_get_a_good_average_completed", "Click the boundaries of another plot. You need to click at least 10 to get a good average. Completed: ") : "Click the boundaries of another plot. You need to click at least 10 to get a good average. Completed: ")+drone_imagery_plot_polygons_rectangles_apply_square_raw_images_interactive_counter);
             return false;
         }
 

@@ -389,7 +389,7 @@ jQuery(document).ready(function () {
                 }
               })
               .fail(function () {
-                alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.predicted_output_check_error", ("Error occured checking if the selection population has predicted output.")) : "Error occured checking if the selection population has predicted output."));
+                alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.predicted_output_check_error", ("Error occurred checking if the selection population has predicted output.")) : "Error occurred checking if the selection population has predicted output."));
               });
           } else {
             //TO-DO
@@ -423,7 +423,7 @@ jQuery(document).ready(function () {
             }
           })
           .fail(function () {
-            alert("Error occured checking if the selection population has predicted output.");
+            alert("Error occurred checking if the selection population has predicted output.");
           });
         }
       }

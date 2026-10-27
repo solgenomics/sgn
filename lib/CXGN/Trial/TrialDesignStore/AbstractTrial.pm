@@ -65,7 +65,7 @@ has 'nd_experiment_id' => (isa => 'Int', is => 'rw', predicate => 'has_nd_experi
 
 =head2 set_nd_geolocation_id(), get_nd_geolocation_id(), has_nd_geolocation_id()
 
-The nd_geolocation_id of this trial (globally, not individiual plots etc). Required.
+The nd_geolocation_id of this trial (globally, not individual plots etc). Required.
 
 =cut
 

@@ -23,7 +23,7 @@ use CXGN::Chado::Publication;
 
 # Start a new SGN page.
 
-my $page = CXGN::Page->new( encode_entities(($i18n ? $i18n->p("global.final_caption.sgn_publcation_search_results", "SGN publcation search results") : "SGN publcation search results")), "Naama" );
+my $page = CXGN::Page->new( encode_entities(($i18n ? $i18n->p("global.final_caption.sgn_publcation_search_results", "SGN publication search results") : "SGN publication search results")), "Naama" );
 
 $page->jsan_use("jquery");
 $page->jsan_use("CXGN.Phenome.Publication");
@@ -84,7 +84,7 @@ if (%params) {
         my @stat_options = ( "curated", "pending", "irrelevant", "no gene" );
         my $stat_options = qq|<option value=""></option>|;
         foreach my $s (@stat_options) {
-            my $selected = qq|selected="selected"| if $s eq $stat || '';
+            my $selected = qq|selected="selected"| if $s eq $stat || ''; ## no critic (Variables::ProhibitConditionalDeclarations) # Preserve the original conditional declaration lifetime.
             $stat_options .= qq|<option value="$s" $selected >$s</option>|;
         }
         my $stats = $stat;
@@ -101,7 +101,7 @@ qq|<select id="pub_stat" onchange="Publication.updatePubCuratorStat(this.value, 
         my $curator_options = qq|<option value=""></option>|;
         for my $curator_id ( keys %names ) {
             my $curator  = $names{$curator_id};
-            my $selected = qq|selected="selected"| if $curator_id == $assigned_to_id || '';
+            my $selected = qq|selected="selected"| if $curator_id == $assigned_to_id || ''; ## no critic (Variables::ProhibitConditionalDeclarations) # Preserve the original conditional declaration lifetime.
             $curator_options .=
               qq|<option value="$curator_id" $selected>$curator</option>|;
         }

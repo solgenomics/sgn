@@ -1380,7 +1380,7 @@ sub delete_seedlot_transaction :Chained('seedlot_transaction_base') PathPart('de
         $c->stash->{rest} = { success => 1 };
     }
     else {
-        $c->stash->{rest} = { error => $c->i18n->p('seedlots.server.an_error_occured_deleting_the_seedlot_transactio', 'An error occured deleting the seedlot transaction') };
+        $c->stash->{rest} = { error => $c->i18n->p('seedlots.server.an_error_occured_deleting_the_seedlot_transactio', 'An error occurred deleting the seedlot transaction') };
     }
 }
 
@@ -1438,7 +1438,7 @@ sub seedlot_maintenance_ontology : Path('/ajax/breeders/seedlot/maintenance/onto
 # PARAMS:
 #   filters: an array of filter properties, with the following keys:
 #       - names: an array of seedlot names
-#       - dates: an array of date filter properies:
+#       - dates: an array of date filter properties:
 #           - date: date in YYYY-MM-DD format
 #           - comp: date comparison type ('=', '<=', '<', '>=', '>')
 #       - types: an array of event type/value filter properties
@@ -1558,7 +1558,7 @@ sub seedlot_maintenance_events_GET {
 # Add one or more Maintenance Events to the specified Seedlot
 # PATH: POST /ajax/breeders/seedlot/{seedlot id}/maintenance
 # PARAMS:
-#   events: the events to store in the databsae, an array of objects with the following keys:
+#   events: the events to store in the database, an array of objects with the following keys:
 #       - cvterm_id: id of seedlot maintenance event ontology term
 #       - value: value of the seedlot maintenance event
 #       - notes: (optional) additional notes/comments about the event

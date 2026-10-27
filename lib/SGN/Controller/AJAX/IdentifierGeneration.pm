@@ -1,8 +1,8 @@
 =head1 SGN::Controller::AJAX::IdentifierGeneration
 
-=head1 SYNOPSYS
+=head1 SYNOPSIS
 
-A page for handling identifier generation. identifier generation is used by ACAI and Banana Agronomy to create barcodes that are not associated with entitities in the database. Can be used for any kind of "preprinting" where identifiers are printed and later assigned to entities.
+A page for handling identifier generation. identifier generation is used by ACAI and Banana Agronomy to create barcodes that are not associated with entities in the database. Can be used for any kind of "preprinting" where identifiers are printed and later assigned to entities.
 
 =head1 AUTHOR
 

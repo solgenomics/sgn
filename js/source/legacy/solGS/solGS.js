@@ -79,7 +79,7 @@ solGS.submitJob = {
         }
       },
       error: function () {
-        alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.cached_output_check_error", "Error occured checking for cached output.") : "Error occured checking for cached output."));
+        alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.cached_output_check_error", "Error occurred checking for cached output.") : "Error occurred checking for cached output."));
       },
     });
   },
@@ -409,7 +409,7 @@ solGS.submitJob = {
 
     checkName.fail(function (res) {
       var message =
-        (window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.job_submission_failed", ("Error occured submitting the job. Please contact the developers.")) : "Error occured submitting the job. Please contact the developers.") +
+        (window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.job_submission_failed", ("Error occurred submitting the job. Please contact the developers.")) : "Error occurred submitting the job. Please contact the developers.") +
         (window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.job_error_hint", "\n\nHint: ") : "\n\nHint: ") +
         response.result;
       solGS.alertMessage(message);
@@ -599,7 +599,7 @@ solGS.submitJob = {
         }
       },
       error: function () {
-        var message = (window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.profile_save_call_failed", "Error occured calling the function to save your analysis profile.") : "Error occured calling the function to save your analysis profile.");
+        var message = (window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.profile_save_call_failed", "Error occurred calling the function to save your analysis profile.") : "Error occurred calling the function to save your analysis profile.");
         solGS.alertMessage(message);
       },
     });
@@ -616,7 +616,7 @@ solGS.submitJob = {
           solGS.submitJob.submissionFeedback(res.arguments);
         } else {
           var message =
-            "Error occured submitting the job. Please contact the developers." +
+            "Error occurred submitting the job. Please contact the developers." +
             "\n\nHint: " +
             res.result;
           solGS.alertMessage(message);
@@ -624,7 +624,7 @@ solGS.submitJob = {
       },
       error: function (response) {
         var message =
-          "Error occured submitting the job. Please contact the developers." +
+          "Error occurred submitting the job. Please contact the developers." +
           "\n\nHint: " +
           res.result;
         solGS.alertMessage(message);

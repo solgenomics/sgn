@@ -461,7 +461,7 @@ sub store {
       $schema->txn_do($coderef);
     } catch {
       # Transaction failed
-      $error =  (SGN::I18N::translate($ui_store_i18n, "accession.template.store_failed", "An error occured! Cannot store data! ")) . "<br />" . $_ . "\n";
+      $error =  (SGN::I18N::translate($ui_store_i18n, "accession.template.store_failed", "An error occurred! Cannot store data! ")) . "<br />" . $_ . "\n";
     };
 
     if ($error) {

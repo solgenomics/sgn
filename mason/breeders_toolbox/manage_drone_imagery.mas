@@ -4750,7 +4750,7 @@ jQuery(document).ready(function() {
         manage_drone_imagery_autoencoder_keras_vi_field_trial_id_training_string = manage_drone_imagery_autoencoder_keras_vi_field_trial_id_training_array.join();
 
         if (manage_drone_imagery_autoencoder_keras_vi_field_trial_id_training_array.length < 1) {
-            alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("drone.interface.please_select_atleast_one_field_trial", "Please select atleast one field trial!") : "Please select atleast one field trial!"));
+            alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("drone.interface.please_select_atleast_one_field_trial", "Please select at least one field trial!") : "Please select at least one field trial!"));
         }
         else if (manage_drone_imagery_autoencoder_keras_vi_field_trial_id_training_string == '') {
             alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("analysis.interface.please_select_a_field_trial_first", "Please select a field trial first!") : "Please select a field trial first!"));
@@ -4781,7 +4781,7 @@ jQuery(document).ready(function() {
             manage_drone_imagery_autoencoder_keras_vi_drone_run_ids_training.push(jQuery(this).val());
         });
         if (manage_drone_imagery_autoencoder_keras_vi_drone_run_ids_training.length < 1){
-            alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("drone.interface.please_select_atleast_one_imaging_event", "Please select atleast one imaging event!") : "Please select atleast one imaging event!"));
+            alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("drone.interface.please_select_atleast_one_imaging_event", "Please select at least one imaging event!") : "Please select at least one imaging event!"));
         } else {
 
             jQuery('#drone_image_autoencoder_keras_vi_plot_polygon_image_type_training_table').DataTable({

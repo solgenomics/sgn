@@ -92,7 +92,7 @@ else
     if ($routing_id == 1) 
     {
         my $order_clones = join(" ",keys(%order_clones));
-        # Fei hates the "-" seperators in clone names that we use at SGN
+        # Fei hates the "-" separators in clone names that we use at SGN
         $order_clones =~ s/-//g;
         $page->header();
         my $route_help = encode_entities($i18n ? $i18n->p('global.route-order.route_help', 'This page should automatically route your order to the ordering facility. If you are seeing this page, your browser may not support the javascript commands which automate the order submission. Simply click the button below in that case.') : 'This page should automatically route your order to the ordering facility. If you are seeing this page, your browser may not support the javascript commands which automate the order submission. Simply click the button below in that case.');

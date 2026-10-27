@@ -15,7 +15,7 @@ $trial_id
 </div>
 <div class="panel panel-default">
     <div class="panel-body">
-        <&| /page/info_section.mas, title => HTML::Entities::encode_entities($c->i18n->p('trial.card.list_selection.stocks_title', 'Add stocks to a List')), collapsible=>1, collapsed=>0, subtitle=>'<i>'.HTML::Entities::encode_entities($c->i18n->p('trial.card.list_selection.stocks_subtitle', 'Adding stocks in this trial to a new or exisiting list')).'</i>'&>
+        <&| /page/info_section.mas, title => HTML::Entities::encode_entities($c->i18n->p('trial.card.list_selection.stocks_title', 'Add stocks to a List')), collapsible=>1, collapsed=>0, subtitle=>'<i>'.HTML::Entities::encode_entities($c->i18n->p('trial.card.list_selection.stocks_subtitle', 'Adding stocks in this trial to a new or existing list')).'</i>'&>
         <br>
         <div id="stocks_to_new_list" style="display:none"></div>
         <div id="stocks_add_to_list"></div>

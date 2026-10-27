@@ -30,13 +30,13 @@
                                 <h4>
                                     <% $c->i18n->p('seedlots.ui.how_to_mark_seedlot_as_status', 'How to Mark Seedlot as %{status}:', {status => 'DISCARDED'}) |h %>
                                 </h4>
-                                <li><% $c->i18n->p('seedlots.ui.using_a_list_several_seedlots_can_be_discarded_at_once_by_using_', 'Using a List: Several seedlots can be discarded at once by using a list with seedlots list type. The link can be found at the buttom of Manage Seedlots (Available Seedlots) page.') |h %></li>
-                                <li><% $c->i18n->p('seedlots.ui.discarding_single_seedlot_the_link_can_be_found_at_the_buttom_of', 'Discarding single seedlot: The link can be found at the buttom of Seedlot Details page.') |h %></li>
+                                <li><% $c->i18n->p('seedlots.ui.using_a_list_several_seedlots_can_be_discarded_at_once_by_using_', 'Using a List: Several seedlots can be discarded at once by using a list with seedlots list type. The link can be found at the bottom of Manage Seedlots (Available Seedlots) page.') |h %></li>
+                                <li><% $c->i18n->p('seedlots.ui.discarding_single_seedlot_the_link_can_be_found_at_the_buttom_of', 'Discarding single seedlot: The link can be found at the bottom of Seedlot Details page.') |h %></li>
                                 <hr class ="solid">
                                 <h4>
                                     <% $c->i18n->p('seedlots.ui.undo_discarding_seedlots', 'UNDO Discarding seedlots:') |h %>
                                 </h4>
-                                <p><% $c->i18n->p('seedlots.ui.discarded_seedlot_can_be_reversed_by_using_undo_option_at_the_bu', 'Discarded seedlot can be reversed by using UNDO option at the buttom of Seedlot Details page') |h %> </p>
+                                <p><% $c->i18n->p('seedlots.ui.discarded_seedlot_can_be_reversed_by_using_undo_option_at_the_bu', 'Discarded seedlot can be reversed by using UNDO option at the bottom of Seedlot Details page') |h %> </p>
                             </div>
                             <div class="modal-footer">
                                 <button id="close_discarded_seedlot_usage_dialog" type="button" class="btn btn-default" data-dismiss="modal"><% $c->i18n->p('seedlots.ui.close', 'Close') |h %></button>

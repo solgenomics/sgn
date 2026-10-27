@@ -7,7 +7,7 @@
 
 =cut
 
-package SGN::Controller::DroneImagery::DroneImageryUpload;
+package SGN::Controller::DroneImagery::DroneImageryUpload; ## no critic (Modules::RequireFilenameMatchesPackage) # The public controller package name predates its file path and is referenced by route configuration.
 
 use Moose;
 use SGN::I18N ();
@@ -189,7 +189,7 @@ sub upload_drone_imagery : Path("/drone_imagery/upload_drone_imagery") :Args(0) 
         }
         my $drone_run_date_obj = Time::Piece->strptime($new_drone_run_date, "%Y/%m/%d %H:%M:%S");
         if (exists($seen_field_trial_drone_run_dates{$drone_run_date_obj->epoch})) {
-            $c->stash->{rest} = { error => "An imaging event has already occured on this field trial at the same date and time! Please give a unique date/time for each imaging event!" };
+            $c->stash->{rest} = { error => "An imaging event has already occurred on this field trial at the same date and time! Please give a unique date/time for each imaging event!" };
             $c->detach();
         }
 
@@ -604,7 +604,7 @@ sub upload_drone_imagery : Path("/drone_imagery/upload_drone_imagery") :Args(0) 
 
         my $current_odm_image_count = $new_drone_run_band_stitching_odm_current_image_count+scalar(@$image_paths);
         if ($current_odm_image_count < 25) {
-            $c->stash->{message} = SGN::I18N::translate($i18n, "drone.upload.upload_more_than_count_images_atleast_25_are_required_for_opendronemap_to_stitch", "Upload more than %{count} images! Atleast 25 are required for OpenDroneMap to stitch.", {count => "" . ($current_odm_image_count // "")});
+            $c->stash->{message} = SGN::I18N::translate($i18n, "drone.upload.upload_more_than_count_images_atleast_25_are_required_for_opendronemap_to_stitch", "Upload more than %{count} images! At least 25 are required for OpenDroneMap to stitch.", {count => "" . ($current_odm_image_count // "")});
             $c->stash->{template} = 'generic_message.mas';
             return;
         }
@@ -1129,7 +1129,7 @@ sub upload_drone_imagery_bulk : Path("/drone_imagery/upload_drone_imagery_bulk")
     #     my $field_trial_name = $v->{field_trial_name};
     #     my $field_trial_id = $v->{field_trial_id};
     #     if (exists($seen_field_trial_drone_run_dates{$time})) {
-    #         $c->stash->{message} = SGN::I18N::translate($i18n, "drone.upload.an_imaging_event_has_already_occured_on_this_field_trial_trial_at_the_same_date_and_time_date_please_give_a_unique_date_time_for_each_imaging_event", "An imaging event has already occured on this field trial (%{trial}) at the same date and time (%{date})! Please give a unique date/time for each imaging event!", {trial => "" . ($field_trial_name // ""), date => "" . ($date // "")});
+    #         $c->stash->{message} = SGN::I18N::translate($i18n, "drone.upload.an_imaging_event_has_already_occured_on_this_field_trial_trial_at_the_same_date_and_time_date_please_give_a_unique_date_time_for_each_imaging_event", "An imaging event has already occurred on this field trial (%{trial}) at the same date and time (%{date})! Please give a unique date/time for each imaging event!", {trial => "" . ($field_trial_name // ""), date => "" . ($date // "")});
     #         $c->stash->{template} = 'generic_message.mas';
     #         return;
     #     }
@@ -1749,7 +1749,7 @@ sub upload_drone_imagery_bulk_previous : Path("/drone_imagery/upload_drone_image
         my $imaging_event_date_time_object = Time::Piece->strptime($imaging_event_date, "%Y/%m/%d %H:%M:%S");
 
         if (exists($seen_field_trial_drone_run_dates{$imaging_event_date_time_object->epoch})) {
-            $c->stash->{message} = SGN::I18N::translate($i18n, "drone.upload.an_imaging_event_has_already_occured_on_this_field_trial_at_the_same_date_and_time_date_please_give_a_unique_date_time_for_each_imaging_event", "An imaging event has already occured on this field trial at the same date and time (%{date})! Please give a unique date/time for each imaging event!", {date => "" . ($imaging_event_date // "")});
+            $c->stash->{message} = SGN::I18N::translate($i18n, "drone.upload.an_imaging_event_has_already_occured_on_this_field_trial_at_the_same_date_and_time_date_please_give_a_unique_date_time_for_each_imaging_event", "An imaging event has already occurred on this field trial at the same date and time (%{date})! Please give a unique date/time for each imaging event!", {date => "" . ($imaging_event_date // "")});
             $c->stash->{template} = 'generic_message.mas';
             return;
         }

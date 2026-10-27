@@ -492,8 +492,8 @@ sub retrieve_plot_info {
     my $well_facility_identifier_prop = $stockprop_hash{$self->cvterm_id('facility_identifier')} ? join ',', @{$stockprop_hash{$self->cvterm_id('facility_identifier')}} : undef;
     my $plot_geo_json_prop = $stockprop_hash{$self->cvterm_id('plot_geo_json')} ? $stockprop_hash{$self->cvterm_id('plot_geo_json')}->[0] : undef;
 
-    #print  STDERR "SORUCE STOCK TYPES: ".Dumper($self->get_source_stock_type_ids())."\n".Dumper($self->get_source_stock_types());
-    #print STDERR "REL TYEPS = ".Dumper($self->get_relationship_types());
+    #print  STDERR "SOURCE STOCK TYPES: ".Dumper($self->get_source_stock_type_ids())."\n".Dumper($self->get_source_stock_types());
+    #print STDERR "REL TYPES = ".Dumper($self->get_relationship_types());
     my $source_primary_stock_type_ids = $self->get_source_primary_stock_type_ids();
 
     my $accession_rs = $plot->search_related('stock_relationship_subjects')->search(

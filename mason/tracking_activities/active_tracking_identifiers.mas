@@ -31,7 +31,7 @@ $activity_type
 
 <div class="panel panel-default">
     <div class="panel-body">
-        <&| /page/info_section.mas, anchor_title => 'Add Identifiers to a List', title => HTML::Entities::encode_entities($c->i18n->p("transformation.root.add_identifiers_to_a_list", 'Add Identifiers to a List')), collapsible=>1, collapsed=>1, subtitle=>("<i>" . HTML::Entities::encode_entities($c->i18n->p("transformation.root.adding_identifiers_in_this_project_to_a_new_or_exisiting", "Adding identifiers in this project to a new or exisiting list")) . "</i>")&>
+        <&| /page/info_section.mas, anchor_title => 'Add Identifiers to a List', title => HTML::Entities::encode_entities($c->i18n->p("transformation.root.add_identifiers_to_a_list", 'Add Identifiers to a List')), collapsible=>1, collapsed=>1, subtitle=>("<i>" . HTML::Entities::encode_entities($c->i18n->p("transformation.root.adding_identifiers_in_this_project_to_a_new_or_exisiting", "Adding identifiers in this project to a new or existing list")) . "</i>")&>
         <br>
         <div id="identifiers_to_new_list" style="display:none"></div>
         <div id="identifiers_add_to_list"></div>

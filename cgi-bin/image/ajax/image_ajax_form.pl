@@ -4,7 +4,7 @@ use warnings;
 
 my $image_ajax_form = CXGN::ImageAjaxForm->new();
 
-package CXGN::ImageAjaxForm;
+package CXGN::ImageAjaxForm; ## no critic (Modules::RequireFilenameMatchesPackage) # This CGI script intentionally declares its historical page package.
 
 use CatalystX::GlobalContext '$c';
 

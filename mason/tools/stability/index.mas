@@ -98,11 +98,11 @@ use HTML::Entities ();
   <h5> <% $c->i18n->p("analysis.interface.1_dataset_must_have_at_least_trials_and_trait_s", "1. Dataset must have at least trials and trait(s).") |h %></h5>
   <h5> <% $c->i18n->p("analysis.interface.2_trials_must_be_placed_in_more_than_1_location", "2. Trials must be placed in more than 1 location.") |h %> </h5>
   <h5> <% $c->i18n->p("analysis.interface.3_accessions_must_be_placed_in_all_locations_with_replications", "3. Accessions must be placed in all locations with replications. Check the trial design to make sure it has replications.") |h %> </h5>
-  <h5> <% $c->i18n->p("analysis.interface.4_the_same_trait_must_be_available_in_all_selected", "4. The same trait must be available in all selected locations. Missing data is acceptable for some replications, however the model wont work if it is missing data in all replications.") |h %> </h5>
+  <h5> <% $c->i18n->p("analysis.interface.4_the_same_trait_must_be_available_in_all_selected", "4. The same trait must be available in all selected locations. Missing data is acceptable for some replications, however the model won't work if it is missing data in all replications.") |h %> </h5>
   <h5><b><% $c->i18n->p("analysis.interface.impuation", "Impuation:") |h %></b></h5>
   <h5> <% $c->i18n->p("analysis.interface.imputation_is_based_on_genotypes_average_using_the_r_package", "Imputation is based on genotypes average using the R package mice. The imputation accuracy is processed by subsetting the data and calculating the correlation between imputed and original data.") |h %> </h5>
   <h5><b><% $c->i18n->p("analysis.interface.output", "Output:") |h %></b></h5>
-  <h5><% $c->i18n->p("analysis.interface.the_ammi_graphic_shows_stable_varieties_with_horizintal_lines_the", "The AMMI graphic shows stable varieties with horizintal lines. The slope is proportional to their stability index.") |h %></h5>
+  <h5><% $c->i18n->p("analysis.interface.the_ammi_graphic_shows_stable_varieties_with_horizintal_lines_the", "The AMMI graphic shows stable varieties with horizontal lines. The slope is proportional to their stability index.") |h %></h5>
   
   <center>
     <div id="stability_summary"></div>

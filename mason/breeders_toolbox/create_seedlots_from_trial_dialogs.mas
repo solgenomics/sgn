@@ -527,7 +527,7 @@ $default_seedlot_material_type => undef
                 TRAIT_DATA = await getTraitData(TRAITS);
             }
 
-            // Hide the working modal, renable the button, and continue (if complete)
+            // Hide the working modal, re-enable the button, and continue (if complete)
             jQuery('#working_modal').modal("hide");
             jQuery("#create_seedlots_trial_complete_select_trial").attr("disabled", false);
             jQuery("#create_seedlots_trial_accession_count").html(ACCESSIONS ? ACCESSIONS.length : '');

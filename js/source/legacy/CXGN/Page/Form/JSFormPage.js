@@ -66,11 +66,11 @@ function _sgnStockFormLocaleHeaders(url, action) {
    The javascript form constructor
    usually called from mason/page/form.mas
    'new CXGN.Page.Form.JSFormPage'
-   args are in the following order: (variabe names are not important, just the order)
+   args are in the following order: (variable names are not important, just the order)
    object_id (a database id)
    object_type (the name of the object, usually the table name. e.g. 'locus')
    server_side_script (the script where the form is defined. e.g. '/phenome/stock/stock_ajax_form.pl')
-   form_id (the div_id of hte form)
+   form_id (the div_id of the form)
    js_object_name (a name for this Javascript object. Allows using multiple form objects in one page)
    page_url (the url for the page. Used for reloading a new page for a new empty object)
 

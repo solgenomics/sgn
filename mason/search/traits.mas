@@ -87,7 +87,7 @@ use HTML::Entities ();
             <div class="panel panel-default">
                 <div class="panel-body">
 
-                    <&| /page/info_section.mas, anchor_title => 'Copy Selected Results to a List', title => HTML::Entities::encode_entities($c->i18n->p("phenotype.root.copy_selected_results_to_a_list", 'Copy Selected Results to a List')), collapsible=>1, collapsed=>0, subtitle=>("<i>" . HTML::Entities::encode_entities($c->i18n->p("phenotype.root.copy_the_trait_names_currently_selected_in_the_search_results", "Copy the trait names currently selected in the search results table to a new or exisiting list")) . "</i>")&>
+                    <&| /page/info_section.mas, anchor_title => 'Copy Selected Results to a List', title => HTML::Entities::encode_entities($c->i18n->p("phenotype.root.copy_selected_results_to_a_list", 'Copy Selected Results to a List')), collapsible=>1, collapsed=>0, subtitle=>("<i>" . HTML::Entities::encode_entities($c->i18n->p("phenotype.root.copy_the_trait_names_currently_selected_in_the_search_results", "Copy the trait names currently selected in the search results table to a new or existing list")) . "</i>")&>
                     <br>
                     <p><em><span id="trait_result_count">0</span> <% $c->i18n->p("phenotype.root.trait_s_selected", "trait(s) selected.") |h %></em></p>
                     <div style="text-align:right" id="traits_to_list_menu"></div>
@@ -234,7 +234,7 @@ function parseArgs() {
 }
 
 /**
- * Copy the specifed trait information to the user's clipboard
+ * Copy the specified trait information to the user's clipboard
  * - name = trait name
  * - accession = trait accession term
  * - id = trait cvterm id

@@ -144,7 +144,7 @@ sub store_qPCR_data {
 		    type_id => $accession_cvterm->cvterm_id(),
 	    });
         if (!$transformant_stock) {
-            $return{error} = (SGN::I18N::translate($ui_store_qPCR_data_i18n, 'transformation.transgenic_line_cound_not_be_found_in_the_database_transformant_name', 'Transgenic line cound not be found in the database: %{transformant_name}!', {transformant_name => ("" . ("$transformant_name"))}));
+            $return{error} = (SGN::I18N::translate($ui_store_qPCR_data_i18n, 'transformation.transgenic_line_cound_not_be_found_in_the_database_transformant_name', 'Transgenic line could not be found in the database: %{transformant_name}!', {transformant_name => ("" . ("$transformant_name"))}));
             return \%return;
         } else {
             $transformant_stock_id = $transformant_stock->stock_id();
@@ -155,7 +155,7 @@ sub store_qPCR_data {
 		    type_id => $vector_construct_cvterm->cvterm_id(),
 	    });
         if (!$vector_construct_stock) {
-            $return{error} = (SGN::I18N::translate($ui_store_qPCR_data_i18n, 'transformation.vector_construct_cound_not_be_found_in_the_database_vector_construct', 'Vector construct cound not be found in the database: %{vector_construct_name}!', {vector_construct_name => ("" . ("$vector_construct_name"))}));
+            $return{error} = (SGN::I18N::translate($ui_store_qPCR_data_i18n, 'transformation.vector_construct_cound_not_be_found_in_the_database_vector_construct', 'Vector construct could not be found in the database: %{vector_construct_name}!', {vector_construct_name => ("" . ("$vector_construct_name"))}));
             return \%return;
         } else {
 			$vector_construct_stock_id = $vector_construct_stock->stock_id();

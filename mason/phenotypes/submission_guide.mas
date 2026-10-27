@@ -43,7 +43,7 @@ Naama Menda (nm249@cornell.edu)
   </li>
   <li>
     <strong> <% $c->i18n->p("global.search.features.location", "Location") |h %></strong><br />
-    <% $c->i18n->p("phenotype.where_the_experiment_was_performed_we_also_support", "Where the experiment was performed. We also support") |h %> <a href="http://en.wikipedia.org/wiki/WGS84"><% $c->i18n->p("phenotype.wgs84_geodetic_datum", "WGS84 geodetic datum") |h %></a><% $c->i18n->p("phenotype.for_a_full_geolocation_fill_in_the_longitude_latitide_and", ". For a full geolocation fill in the longitude, latitide, and altitude fields.") |h %>
+    <% $c->i18n->p("phenotype.where_the_experiment_was_performed_we_also_support", "Where the experiment was performed. We also support") |h %> <a href="http://en.wikipedia.org/wiki/WGS84"><% $c->i18n->p("phenotype.wgs84_geodetic_datum", "WGS84 geodetic datum") |h %></a><% $c->i18n->p("phenotype.for_a_full_geolocation_fill_in_the_longitude_latitide_and", ". For a full geolocation fill in the longitude, latitude, and altitude fields.") |h %>
   </li>
   </ul>
 </&>

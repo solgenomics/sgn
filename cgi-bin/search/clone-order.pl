@@ -45,7 +45,7 @@ if ($clone_add) {
 }
 
 # Note: An advantage of server-side statefulness here is not repeating this
-#       everytime. This is typical of stateful/stateless tradeoff -- storing
+#       every time. This is typical of stateful/stateless tradeoff -- storing
 #       state provides performance gains but at the expense of correctness and
 #       increased complexity.
 #

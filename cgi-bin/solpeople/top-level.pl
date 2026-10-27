@@ -124,7 +124,7 @@ EOHTML
 # EOHTML
 
 #return 1 if the first term is eq to one of the other terms given
-sub in(@) {
+sub in(@) { ## no critic (Subroutines::ProhibitSubroutinePrototypes) # Existing callers rely on prototype parsing for this CGI helper.
     my $t = shift;
     ( grep { $t eq $_ } @_ ) ? 1 : 0;
 }

@@ -215,7 +215,7 @@ jQuery(document).ready(function() {
             }
         });
     }).fail(function(xhr, status, error) {
-        alert(window.SGN && SGN.i18n ? SGN.i18n.p('trial.repetitive.measurement_error', "An error occured in the repetitive measurement!%{details}", {details: String(xhr.responseText)}) : 'An error occured in the repetitive measurement!' + xhr.responseText);
+        alert(window.SGN && SGN.i18n ? SGN.i18n.p('trial.repetitive.measurement_error', "An error occurred in the repetitive measurement!%{details}", {details: String(xhr.responseText)}) : 'An error occurred in the repetitive measurement!' + xhr.responseText);
         //console.error("the status:", xhr.status);
         //console.error("the error:", error);
     })
@@ -334,7 +334,7 @@ jQuery(document).ready(function() {
         for (var unique_id in observation_units_map) {
             //console.log(`unique_id: ${unique_id}`)
             var group = observation_units_map[unique_id];
-            //sort the repetitive values arrray by collect_date!!
+            //sort the repetitive values array by collect_date!!
             group.values.sort((a, b) => a.date - b.date);
             var values = group.values.map(d => d.value); //store only the value for each object !!
             var valueToShow = get_values_to_show(values, repetitive_measurement_level);

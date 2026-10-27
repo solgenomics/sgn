@@ -255,7 +255,7 @@ sub upload_propagation_group_identifiers_POST : Args(0) {
         my $dbh = $c->dbc->dbh;
         my @user_info = CXGN::Login->new($dbh)->query_from_cookie($session_id);
         if (!$user_info[0]){
-            $c->stash->{rest} = {error=>do { local $_; local $@; local $!; $c->i18n->p("seedlot.server.you_must_be_logged_in_to_upload_propagation.04192e7", "You must be logged in to upload propagation group identifers!") }};
+            $c->stash->{rest} = {error=>do { local $_; local $@; local $!; $c->i18n->p("seedlot.server.you_must_be_logged_in_to_upload_propagation.04192e7", "You must be logged in to upload propagation group identifiers!") }};
             $c->detach();
         }
         $user_id = $user_info[0];
@@ -296,7 +296,7 @@ sub upload_propagation_group_identifiers_POST : Args(0) {
         user_role => $user_role
     });
 
-        ## Store uploaded temporary file in arhive
+        ## Store uploaded temporary file in archive
     $archived_filename_with_path = $uploader->archive();
     $md5 = $uploader->get_md5($archived_filename_with_path);
     if (!$archived_filename_with_path) {
@@ -495,7 +495,7 @@ sub upload_propagation_identifiers_POST : Args(0) {
         my $dbh = $c->dbc->dbh;
         my @user_info = CXGN::Login->new($dbh)->query_from_cookie($session_id);
         if (!$user_info[0]){
-            $c->stash->{rest} = {error=>do { local $_; local $@; local $!; $c->i18n->p("seedlot.server.you_must_be_logged_in_to_upload_propagation.ca675c9", "You must be logged in to upload propagation identifers!") }};
+            $c->stash->{rest} = {error=>do { local $_; local $@; local $!; $c->i18n->p("seedlot.server.you_must_be_logged_in_to_upload_propagation.ca675c9", "You must be logged in to upload propagation identifiers!") }};
             $c->detach();
         }
         $user_id = $user_info[0];
@@ -530,7 +530,7 @@ sub upload_propagation_identifiers_POST : Args(0) {
         user_role => $user_role
     });
 
-        ## Store uploaded temporary file in arhive
+        ## Store uploaded temporary file in archive
     $archived_filename_with_path = $uploader->archive();
     $md5 = $uploader->get_md5($archived_filename_with_path);
     if (!$archived_filename_with_path) {
@@ -909,7 +909,7 @@ sub upload_propagation_identifier_status_POST : Args(0) {
         my $dbh = $c->dbc->dbh;
         my @user_info = CXGN::Login->new($dbh)->query_from_cookie($session_id);
         if (!$user_info[0]){
-            $c->stash->{rest} = {error=>do { local $_; local $@; local $!; $c->i18n->p("seedlot.server.you_must_be_logged_in_to_upload_propagation.ad49c13", "You must be logged in to upload propagation identifer statuses!") }};
+            $c->stash->{rest} = {error=>do { local $_; local $@; local $!; $c->i18n->p("seedlot.server.you_must_be_logged_in_to_upload_propagation.ad49c13", "You must be logged in to upload propagation identifier statuses!") }};
             $c->detach();
         }
         $user_id = $user_info[0];
@@ -944,7 +944,7 @@ sub upload_propagation_identifier_status_POST : Args(0) {
         user_role => $user_role
     });
 
-        ## Store uploaded temporary file in arhive
+        ## Store uploaded temporary file in archive
     $archived_filename_with_path = $uploader->archive();
     $md5 = $uploader->get_md5($archived_filename_with_path);
     if (!$archived_filename_with_path) {

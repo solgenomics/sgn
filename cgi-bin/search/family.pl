@@ -366,7 +366,7 @@ sub invalid_search {
 
   $page->header();
 
-  my $invalid_family_id_text = encode_entities($cgi_family_invalid_search_i18n ? $cgi_family_invalid_search_i18n->p('global.family.invalid_family_id', 'The specified family identifer (%{family_id}) does not result in a valid search.', { family_id => $family_id }) : 'The specified family identifer (' . $family_id . ') does not result in a valid search.');
+  my $invalid_family_id_text = encode_entities($cgi_family_invalid_search_i18n ? $cgi_family_invalid_search_i18n->p('global.family.invalid_family_id', 'The specified family identifier (%{family_id}) does not result in a valid search.', { family_id => $family_id }) : 'The specified family identifier (' . $family_id . ') does not result in a valid search.');
   print <<EOF;
 
   <b>$invalid_family_id_text</b>

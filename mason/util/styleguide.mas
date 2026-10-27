@@ -16,7 +16,7 @@ sub styleguide_fixed_markup {
 <h3><% $c->i18n->p('styleguide.section.importing_css', 'Importing CSS') |h %></h3>
 
 <p>
-  <% styleguide_fixed_markup($c->i18n->p('styleguide.css.intro', 'To import CSS one should use the %{component} mason component instead of a %{link} element. This will ensure that a link is added to the %{head} instead of being part of the %{body}. One provides this mason componant with a list of strings which are one of the following:', { component => '__SGN_CSS_COMPONENT__', link => '__SGN_LINK_ELEMENT__', head => '__SGN_HEAD_ELEMENT__', body => '__SGN_BODY_ELEMENT__' }), { '__SGN_CSS_COMPONENT__' => '<code>/util/import_css.mas</code>', '__SGN_LINK_ELEMENT__' => '<code>&lt;link&gt;</code>', '__SGN_HEAD_ELEMENT__' => '<code>&lt;head&gt;</code>', '__SGN_BODY_ELEMENT__' => '<code>&lt;body&gt;</code>' }) |n %>
+  <% styleguide_fixed_markup($c->i18n->p('styleguide.css.intro', 'To import CSS one should use the %{component} mason component instead of a %{link} element. This will ensure that a link is added to the %{head} instead of being part of the %{body}. One provides this mason component with a list of strings which are one of the following:', { component => '__SGN_CSS_COMPONENT__', link => '__SGN_LINK_ELEMENT__', head => '__SGN_HEAD_ELEMENT__', body => '__SGN_BODY_ELEMENT__' }), { '__SGN_CSS_COMPONENT__' => '<code>/util/import_css.mas</code>', '__SGN_LINK_ELEMENT__' => '<code>&lt;link&gt;</code>', '__SGN_HEAD_ELEMENT__' => '<code>&lt;head&gt;</code>', '__SGN_BODY_ELEMENT__' => '<code>&lt;body&gt;</code>' }) |n %>
   <ul>
     <li><% $c->i18n->p('styleguide.css.path.relative', 'The relative path to the CSS file from the /static/css folder.') |h %></li>
     <li><% $c->i18n->p('styleguide.css.path.absolute', 'The absolute site path to the CSS file.') |h %></li>
@@ -34,7 +34,7 @@ sub styleguide_fixed_markup {
 <h3><% $c->i18n->p('styleguide.section.importing_javascript', 'Importing JavaScript') |h %></h3>
 
 <p>
-  <% styleguide_fixed_markup($c->i18n->p('styleguide.javascript.intro', 'To import JavaScript one should use the %{component} mason component. This will ensure that the script is loaded in the %{head} instead of being part of the %{body}. One provides this mason componant with a list of strings which are the path to the JavaScript file with slashes replaced by periods (e.g. %{expression}) and the file extension removed.', { component => '__SGN_JS_COMPONENT__', head => '__SGN_HEAD_ELEMENT__', body => '__SGN_BODY_ELEMENT__', expression => '__SGN_PATH_EXPRESSION__' }), { '__SGN_JS_COMPONENT__' => '<code>/util/import_javascript.mas</code>', '__SGN_HEAD_ELEMENT__' => '<code>&lt;head&gt;</code>', '__SGN_BODY_ELEMENT__' => '<code>&lt;body&gt;</code>', '__SGN_PATH_EXPRESSION__' => '<code>s/\/\./g</code>' }) |n %>
+  <% styleguide_fixed_markup($c->i18n->p('styleguide.javascript.intro', 'To import JavaScript one should use the %{component} mason component. This will ensure that the script is loaded in the %{head} instead of being part of the %{body}. One provides this mason component with a list of strings which are the path to the JavaScript file with slashes replaced by periods (e.g. %{expression}) and the file extension removed.', { component => '__SGN_JS_COMPONENT__', head => '__SGN_HEAD_ELEMENT__', body => '__SGN_BODY_ELEMENT__', expression => '__SGN_PATH_EXPRESSION__' }), { '__SGN_JS_COMPONENT__' => '<code>/util/import_javascript.mas</code>', '__SGN_HEAD_ELEMENT__' => '<code>&lt;head&gt;</code>', '__SGN_BODY_ELEMENT__' => '<code>&lt;body&gt;</code>', '__SGN_PATH_EXPRESSION__' => '<code>s/\/\./g</code>' }) |n %>
   <pre><%text><& /util/import_javascript.mas, classes => [qw[ CXGN.Effects CXGN.Phenome.Locus MochiKit.DOM ]] &></%text></pre>
 </p>
 
@@ -102,7 +102,7 @@ sub styleguide_fixed_markup {
 
 <hr>
 
-<h3><% $c->i18n->p('styleguide.section.html_multiple_selects', 'HTML Muliple Selects (%{function} has many options e.g. search for trials in %{program_key})', { function => 'get_select_box', program_key => 'breeding_program_name' }) |h %></h3>
+<h3><% $c->i18n->p('styleguide.section.html_multiple_selects', 'HTML Multiple Selects (%{function} has many options e.g. search for trials in %{program_key})', { function => 'get_select_box', program_key => 'breeding_program_name' }) |h %></h3>
 <p><% $c->i18n->p('styleguide.caption.source', 'Source:') |h %></p>
 <pre>
 &lt;& /util/import_javascript.mas, classes => ['CXGN.BreedersToolbox.HTMLSelect'] &&gt;

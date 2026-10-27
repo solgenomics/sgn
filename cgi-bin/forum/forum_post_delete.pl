@@ -51,7 +51,7 @@ my $user_id = CXGN::Login->new($dbh)->verify_session();
 topic_id: The id of the topic the post to be deleted belongs to.
 post_id: The id of the post to be deleted.
 confirm: a boolean that will ask for confirmation before deleting.
-refering page: The page that called this script, so that we can 
+referring page: The page that called this script, so that we can
   provide a link back to that page. This will no always be equal to the REFERER that
   one can obtain from the Apache object! 
 

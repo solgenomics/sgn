@@ -6,7 +6,7 @@ use CatalystX::GlobalContext '$c';
 
 =head1 NAME
 
-CXGN::TrackingActivity::ActivityInfo - a modul to handle tracking activity info
+CXGN::TrackingActivity::ActivityInfo - a module to handle tracking activity info
 
 =head1 USAGE
 

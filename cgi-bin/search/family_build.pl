@@ -193,18 +193,18 @@ while (my ($count) = $family_size_q->fetchrow_array()){
   
 ###############################################
 #Draw bar chart
-#First generte a random file.
+#First generate a random file.
 my $html_root_path = $c->config->{'basepath'};
 my $doc_path = $c->tempfiles_subdir('family_images');
 my $path = $html_root_path . $doc_path;
-my $tmp = new File::Temp(
+my $tmp = File::Temp->new(
                         DIR => $path,
                         SUFFIX => '.png',
                         UNLINK => 0,
                     );
 
 #Draw the bar chart  
-my $graph = new GD::Graph::bars(700, 400);
+my $graph = GD::Graph::bars->new(700, 400);
 
 $graph->set(
 		   x_label => 'Family Size',
@@ -268,7 +268,7 @@ sub invalid_search {
 
   $page->header();
 
-  my %ui_caption_values = (BUILD_ID => $family_build_id); my $ui_caption = (SGN::I18N::translate($ui_family_build_invalid_search_i18n, "cross.the_specified_family_identifer_family_build_id_does_not_result_in_a_valid_search", "The specified family identifer (%{family_build_id}) does not result in a valid search.", {family_build_id => "__SGN_B20_BUILD_ID__"}, { fallback => "The specified family identifer ($family_build_id) does not result in a valid search." })); if ($ui_family_build_invalid_search_i18n) { $ui_caption = HTML::Entities::encode_entities($ui_caption, '^\x00-\x7F'); $ui_caption =~ s/__SGN_B20_(BUILD_ID)__/$ui_caption_values{$1}/ge; } print "\n  <b>" . $ui_caption . "</b>\n\n";
+  my %ui_caption_values = (BUILD_ID => $family_build_id); my $ui_caption = (SGN::I18N::translate($ui_family_build_invalid_search_i18n, "cross.the_specified_family_identifer_family_build_id_does_not_result_in_a_valid_search", "The specified family identifier (%{family_build_id}) does not result in a valid search.", {family_build_id => "__SGN_B20_BUILD_ID__"}, { fallback => "The specified family identifier ($family_build_id) does not result in a valid search." })); if ($ui_family_build_invalid_search_i18n) { $ui_caption = HTML::Entities::encode_entities($ui_caption, '^\x00-\x7F'); $ui_caption =~ s/__SGN_B20_(BUILD_ID)__/$ui_caption_values{$1}/ge; } print "\n  <b>" . $ui_caption . "</b>\n\n";
 
   $page->footer();
   exit 0;

@@ -169,7 +169,7 @@ sub _validate_with_plugin {
 
     foreach my $k (keys %accession_name_counts) {
 	if ($accession_name_counts{$k} > 1) {
-	    push @error_messages, (SGN::I18N::translate($ui_validate_with_plugin_i18n, "accession.xls.error_12", "Accession %{k} occures %{accession_name_counts_k} times in the file. Accession names must be unique. Please remove duplicated accession names.", {k => "" . ($k), accession_name_counts_k => "" . ($accession_name_counts{$k})}));
+	    push @error_messages, (SGN::I18N::translate($ui_validate_with_plugin_i18n, "accession.xls.error_12", "Accession %{k} occurs %{accession_name_counts_k} times in the file. Accession names must be unique. Please remove duplicated accession names.", {k => "" . ($k), accession_name_counts_k => "" . ($accession_name_counts{$k})}));
 	}
     }
 

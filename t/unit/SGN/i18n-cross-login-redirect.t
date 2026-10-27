@@ -28,7 +28,7 @@ use SGN::Controller::BreedersToolbox;
     sub req {shift->{request}}
     sub res {shift->{response}}
     sub i18n {shift->{translator}}
-    sub user {return undef}
+    sub user {return}
     sub dbic_schema {++$_[0]{db_calls};die 'Unauthenticated redirect must not touch a database'}
     sub config {die 'Unauthenticated redirect must not read application/role configuration'}
     sub stash {die 'Unauthenticated redirect must not enter the authorized page model'}

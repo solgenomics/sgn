@@ -34,7 +34,7 @@ use SGN::I18N ();
     <div class="panel panel-default">
         <div class="panel-body">
             <br><br>
-            <&| /page/info_section.mas, title => 'Copy Results to a List', collapsible=>1, collapsed=>0, subtitle=>'<i>Copy the protocol names currently showing in the search results table to a new or exisiting list</i>'&>
+            <&| /page/info_section.mas, title => 'Copy Results to a List', collapsible=>1, collapsed=>0, subtitle=>'<i>Copy the protocol names currently showing in the search results table to a new or existing list</i>'&>
                 <br>
                 <div style="text-align:right" id="genotyping_protocol_to_list_menu"></div>
                 <div id="genotyping_protocol_result_names" style="display: none;"></div>

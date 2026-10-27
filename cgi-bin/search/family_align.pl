@@ -87,7 +87,7 @@ my $total_member_nr = int (@all_sgn_member) + int (@at_member);
 ($total_member_nr >= $family_size_limit) and large_size($page, $family_id, $total_member_nr);
 
 
-##Retrieve alignment sequences, SGN and Arabidopsis seperately
+##Retrieve alignment sequences, SGN and Arabidopsis separately
 my %align_seq = ();
 foreach (keys %sgn_member) {
   my $organism = $_;
@@ -180,7 +180,7 @@ my $overlap_len = $family_align -> get_overlap_num();
 my @all_align_members = $family_align -> get_nonhidden_member_ids();
 my $total_align_member = int (@all_align_members);
 
-#This number might be different from $total_align_member since some mebers might be hidden
+#This number might be different from $total_align_member since some members might be hidden
 my @nonhidden_align_members = $family_align->get_nonhidden_member_ids();
 my $total_show_align_member = int (@nonhidden_align_members);
 
@@ -192,7 +192,7 @@ $sum_content .= "<tr><th>" . HTML::Entities::encode_entities((SGN::I18N::transla
 $sum_content .= "<tr><th>" . HTML::Entities::encode_entities((SGN::I18N::translate($ui_family_align_i18n, "cross.range", "Range"))) . "</th><td>$range_start - $range_end bp</td></tr>";
 $sum_content .= "<tr><th>" . HTML::Entities::encode_entities((SGN::I18N::translate($ui_family_align_i18n, "cross.overlap", "Overlap"))) . "</th><td>$overlap_len bp</td></tr>";
 
-$sum_content .= "<tr><td colspan=\"2\" align=\"center\"><a target=\"blank\" href=\"/about/align_term.pl\">" . HTML::Entities::encode_entities((SGN::I18N::translate($ui_family_align_i18n, "cross.for_an_explanation_of_the_terms_plase_click_here", "For an explanation of the terms, plase click here."))) . "</a></td></tr>";
+$sum_content .= "<tr><td colspan=\"2\" align=\"center\"><a target=\"blank\" href=\"/about/align_term.pl\">" . HTML::Entities::encode_entities((SGN::I18N::translate($ui_family_align_i18n, "cross.for_an_explanation_of_the_terms_plase_click_here", "For an explanation of the terms, please click here."))) . "</a></td></tr>";
 
 #############################################################
 #Draw family_alignment image
@@ -202,7 +202,7 @@ my $html_root_path = $c->config->{'basepath'};
 my $doc_path = $c->config->{'tempfiles_subdir'}.'/align_viewer';
 my $path = $html_root_path . $doc_path;
 
-my $tmp_image = new File::Temp(
+my $tmp_image = File::Temp->new(
 			       DIR => $path,
 			       SUFFIX => '.png',
 			       UNLINK => 0,
@@ -288,7 +288,7 @@ my $ol_seq_ref = $family_align -> get_overlap_seqs();
 
 if (defined $seq_ref) {
 
-  my $tmp_seq_file = new File::Temp(
+  my $tmp_seq_file = File::Temp->new(
 				    DIR => $path,
 				    SUFFIX => '.txt',
 				    UNLINK => 0,
@@ -317,7 +317,7 @@ if (defined $seq_ref) {
 
 if (defined $align_seq_ref) {
 
-  my $tmp_align_seq_file = new File::Temp(
+  my $tmp_align_seq_file = File::Temp->new(
 					  DIR => $path,
 					  SUFFIX => '.txt',
 					  UNLINK => 0,
@@ -350,7 +350,7 @@ if (defined $align_seq_ref) {
 if ($overlap_len > 0) {
   my %ol_seqs = %$ol_seq_ref;
 
-  my $tmp_ol_seq_file = new File::Temp(
+  my $tmp_ol_seq_file = File::Temp->new(
 				       DIR => $path,
 				       SUFFIX => '.txt',
 				       UNLINK => 0,
@@ -410,7 +410,7 @@ print info_section_html(title => HTML::Entities::encode_entities((SGN::I18N::tra
 
 print info_section_html(title => HTML::Entities::encode_entities((SGN::I18N::translate($ui_family_align_i18n, "cross.putative_allele_pairs", "Putative Allele Pairs"))), anchor_title => 'Putative Allele Pairs', contents => '<table width="100%" cellpadding="5" cellspacing="0" border="0">'.$al_content.'</table>');
 
-print info_section_html(title => HTML::Entities::encode_entities((SGN::I18N::translate($ui_family_align_i18n, "cross.aligment_analysis", "Aligment Analysis"))), anchor_title => 'Aligment Analysis', contents => '<table width="100%" cellpadding="5" cellspacing="0" border="1">'.$seq_sum_content.'</table>');
+print info_section_html(title => HTML::Entities::encode_entities((SGN::I18N::translate($ui_family_align_i18n, "cross.aligment_analysis", "Alignment Analysis"))), anchor_title => 'Alignment Analysis', contents => '<table width="100%" cellpadding="5" cellspacing="0" border="1">'.$seq_sum_content.'</table>');
 
 print info_section_html(title => HTML::Entities::encode_entities((SGN::I18N::translate($ui_family_align_i18n, "cross.output_sequences", "Output Sequences"))), anchor_title => 'Output Sequences', contents => '<table width="100%" cellpadding="5" cellspacing="0" border="0">'.$seq_output_content.'</table>');
 

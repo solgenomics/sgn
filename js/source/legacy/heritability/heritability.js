@@ -188,7 +188,7 @@ function formatGenCorInputData (popId, type, indexFile) {
         error: function(response) {
             jQuery(divPlace +"#heritability_message")
                 .css({"padding-left": '0px'})
-                .html((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("analysis.interface.error_3_occured_preparing_the_additive_genetic_data_for_heritability", "Error 3 occured preparing the additive genetic data for heritability analysis.") : "Error 3 occured preparing the additive genetic data for heritability analysis."));
+                .html((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("analysis.interface.error_3_occured_preparing_the_additive_genetic_data_for_heritability", "Error 3 occurred preparing the additive genetic data for heritability analysis.") : "Error 3 occurred preparing the additive genetic data for heritability analysis."));
              
             jQuery.unblockUI();
         }         
@@ -282,7 +282,7 @@ function runPhenoHeritabilityAnalysis () {
         error: function(response) {                          
             jQuery("#heritability_message")
                 .css({"padding-left": '0px'})
-                .html((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("analysis.interface.error_2_occured_running_the_heritability_analysis", "Error 2 occured running the heritability analysis.") : "Error 2 occured running the heritability analysis."));
+                .html((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("analysis.interface.error_2_occured_running_the_heritability_analysis", "Error 2 occurred running the heritability analysis.") : "Error 2 occurred running the heritability analysis."));
             
         jQuery("#run_pheno_heritability").show();
         }                

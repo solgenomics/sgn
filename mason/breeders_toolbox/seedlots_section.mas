@@ -21,7 +21,7 @@ $stock_type => undef
             </div>
         </div>
         <br>
-        <&| /page/info_section.mas, anchor_title => 'Copy Seedlots to a List', title => HTML::Entities::encode_entities($c->i18n->p('seedlots.ui.copy_seedlots_to_a_list', 'Copy Seedlots to a List')), collapsible=>1, collapsed=>1, subtitle=>'<i>' . HTML::Entities::encode_entities($c->i18n->p('seedlots.ui.copy_the_seedlot_names_showing_in_table_to_a_new_or_exisiting_li', 'Copy the seedlot names showing in table to a new or exisiting list')) . '</i>'&>
+        <&| /page/info_section.mas, anchor_title => 'Copy Seedlots to a List', title => HTML::Entities::encode_entities($c->i18n->p('seedlots.ui.copy_seedlots_to_a_list', 'Copy Seedlots to a List')), collapsible=>1, collapsed=>1, subtitle=>'<i>' . HTML::Entities::encode_entities($c->i18n->p('seedlots.ui.copy_the_seedlot_names_showing_in_table_to_a_new_or_exisiting_li', 'Copy the seedlot names showing in table to a new or existing list')) . '</i>'&>
             <br/>
             <div style="text-align:right" id="accession_seedlots_to_list_menu"><% $c->i18n->p('seedlots.ui.loading', '[LOADING...]') |h %></div>
             <textarea readonly id="accession_seedlot_names" style="display: none;"></textarea>

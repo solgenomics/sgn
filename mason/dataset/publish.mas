@@ -983,8 +983,8 @@ async function sendArchive() {
 }
 
 /**
- * Create a new article on the exernal service
- * - This uses the user-provided title, description, and additonal authors
+ * Create a new article on the external service
+ * - This uses the user-provided title, description, and additional authors
  * - This will resolve with the new article id, if successful
  */
 function createArticle() {

@@ -136,7 +136,7 @@ function trait_summary_hist_display_change(program_id) {
                     },
                     error: function(response) {
                         jQuery("#working_modal").modal("hide");
-                        alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("phenotype.an_error_occured_retrieving_trait_histogram_data", "An error occured retrieving trait histogram data.") : 'An error occured retrieving trait histogram data.'));
+                        alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("phenotype.an_error_occured_retrieving_trait_histogram_data", "An error occurred retrieving trait histogram data.") : 'An error occurred retrieving trait histogram data.'));
                     }
                 });
             } else {
@@ -175,7 +175,7 @@ function trait_summary_hist_change(program_id, value) {
         },
         error: function(response) {
             jQuery("#working_modal").modal("hide");
-            alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("phenotype.an_error_occured_retrieving_trait_histogram_data", "An error occured retrieving trait histogram data.") : 'An error occured retrieving trait histogram data.'));
+            alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("phenotype.an_error_occured_retrieving_trait_histogram_data", "An error occurred retrieving trait histogram data.") : 'An error occurred retrieving trait histogram data.'));
         }
     });
 }

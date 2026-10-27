@@ -3,7 +3,7 @@
 
 CXGN::People::Roles - helper class for people's roles
 
-=head1 SYNOPSYS
+=head1 SYNOPSIS
 
  my $person_roles = CXGN::Person::Roles->new( { people_schema => $schema } );
 

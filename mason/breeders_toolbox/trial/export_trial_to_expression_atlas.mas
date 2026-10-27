@@ -164,7 +164,7 @@ jQuery(document).ready(function() {
                 },
                 success: function (response) {
                     jQuery('#working_modal').modal("hide");
-                    jQuery('#submit_export_to_expression_atlas_message').text(window.SGN && SGN.i18n ? SGN.i18n.p("trial.expression_atlas.export_success", "Succesfully exported trial to Expression Atlas!") : "Succesfully exported trial to Expression Atlas!");
+                    jQuery('#submit_export_to_expression_atlas_message').text(window.SGN && SGN.i18n ? SGN.i18n.p("trial.expression_atlas.export_success", "Successfully exported trial to Expression Atlas!") : "Successfully exported trial to Expression Atlas!");
                     jQuery('#submit_export_to_expression_atlas_modal').modal('show');
                 },
                 error: function () {

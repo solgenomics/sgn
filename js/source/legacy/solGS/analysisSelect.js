@@ -249,7 +249,7 @@ jQuery(document).ready(function () {
                 }
             }).fail(function (res) {
                 jQuery(`${canvas} .multi-spinner-container`).hide();
-                jQuery(corrMsgDiv).html((window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.correlation_analysis_error", "Error occured running the correlation analysis.") : "Error occured running the correlation analysis.")).fadeOut(8400);
+                jQuery(corrMsgDiv).html((window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.correlation_analysis_error", "Error occurred running the correlation analysis.") : "Error occurred running the correlation analysis.")).fadeOut(8400);
             });
         }
     });

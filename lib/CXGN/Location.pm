@@ -3,7 +3,7 @@
 
 CXGN::Location - helper class for locations
 
-=head1 SYNOPSYS
+=head1 SYNOPSIS
 
  my $location = CXGN::Location->new( { bcs_schema => $schema } );
  $location->set_altitude(280);

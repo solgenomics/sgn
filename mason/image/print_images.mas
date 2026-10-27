@@ -236,7 +236,7 @@ if (@more_is) {    #html_optional_show if there are more than 3 figures
         },
         error: function() {
           jQuery('#working_modal').modal('hide');
-          alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("community.image.an_error_occured_while_setting_the_display_image", "An error occured while setting the display image") : "An error occured while setting the display image"));
+          alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("community.image.an_error_occured_while_setting_the_display_image", "An error occurred while setting the display image") : "An error occurred while setting the display image"));
         }
       });
 

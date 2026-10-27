@@ -323,7 +323,7 @@ $trial_name => undef
             </div>
             <div class="modal-body">
                 <div class="container-fluid">
-                    <b><% $c->i18n->p('trial.plant_plot.index_count_full', "The plant name will be saved as a concatenation of plot_name + _ + plant_index_number for as many plants as specfied by num_plants_per_plot") |h %></b>
+                    <b><% $c->i18n->p('trial.plant_plot.index_count_full', "The plant name will be saved as a concatenation of plot_name + _ + plant_index_number for as many plants as specified by num_plants_per_plot") |h %></b>
                     <br/>
                     <b><% $c->i18n->p("trial.common.excel_upload_help", "May be uploaded in an Excel file (.xls or .xlsx)") |h %></b>
                     <br />

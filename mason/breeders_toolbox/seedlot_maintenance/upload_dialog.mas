@@ -271,7 +271,7 @@
      */
     function handleUploadResponse(response) {
         if ( response && response.success && response.success === 1 ) {
-            add_message("success", maintenanceUploadHTML(maintenanceUploadI18n.p("seedlot_maintenance_upload.ui.stored_success", "Seedlot Maintenace Events successfully stored!")));
+            add_message("success", maintenanceUploadHTML(maintenanceUploadI18n.p("seedlot_maintenance_upload.ui.stored_success", "Seedlot Maintenance Events successfully stored!")));
             if ( getEvents ) getEvents();
         }
         else if ( response && response.error ) {

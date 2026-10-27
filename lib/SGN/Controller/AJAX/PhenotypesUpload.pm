@@ -494,7 +494,7 @@ sub _localized_datacollector_error {
             && defined($variables->{column})
             && !ref($variables->{column})
             && $variables->{column} eq 'plot_name';
-        $message = $c->i18n->p('phenotype_upload.datacollector_error.missing_header', 'Spreadsheet is missing %{column} and atleast one trait in header.', { column => 'plot_name' });
+        $message = $c->i18n->p('phenotype_upload.datacollector_error.missing_header', 'Spreadsheet is missing %{column} and at least one trait in header.', { column => 'plot_name' });
     }
     elsif ($code eq 'missing_plot_name') {
         return $result->{error} unless keys(%$variables) == 1

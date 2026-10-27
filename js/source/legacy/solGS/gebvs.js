@@ -139,7 +139,7 @@ jQuery(document).ready(function () {
             });
 
             solGS.gebvs.getGebvsFiles().fail(function (res) {
-                var errorMsg = (window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.gebv_files_error", "Error occured getting training gebvs files.") : "Error occured getting training gebvs files.");
+                var errorMsg = (window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.gebv_files_error", "Error occurred getting training gebvs files.") : "Error occurred getting training gebvs files.");
                 jQuery("#gebvs_output_message").html(errorMsg);
             });
         }

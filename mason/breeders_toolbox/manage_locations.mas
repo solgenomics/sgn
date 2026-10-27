@@ -19,7 +19,7 @@ $user_id => undef
 
 </&>
 
-<&| /page/info_section.mas, title => HTML::Entities::encode_entities($c->i18n->p('locations.manage.copy', 'Copy Locations to a List')), collapsible=>1, collapsed=>0, subtitle=>'<i>' . HTML::Entities::encode_entities($c->i18n->p('locations.manage.copy_help', 'Copy the location names in the table to a new or exisiting list')) . '</i>'&>
+<&| /page/info_section.mas, title => HTML::Entities::encode_entities($c->i18n->p('locations.manage.copy', 'Copy Locations to a List')), collapsible=>1, collapsed=>0, subtitle=>'<i>' . HTML::Entities::encode_entities($c->i18n->p('locations.manage.copy_help', 'Copy the location names in the table to a new or existing list')) . '</i>'&>
 <br>
 <div style="text-align:right" id="locations_to_list_menu"></div>
 <textarea id="location_names" readonly style="display: none;"></textarea>

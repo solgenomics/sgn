@@ -202,7 +202,7 @@ function updateVector() {
     }
     
 
-    //Convert the data from table_data into a useable form inside the "data" dataset
+    //Convert the data from table_data into a usable form inside the "data" dataset
     data.push({
       name: table_data[i][0],
       startAngle: table_data[i][1] / vectorLength * Math.PI * 2,
@@ -218,12 +218,12 @@ function updateVector() {
 
   }
 
-  //Anoter for each loop, this time for the RE sites
+  //Another for each loop, this time for the RE sites
     for (var i = 0; i < table_data_RESites.length; i++) {
   var name = table_data_RESites[i][0];
   var cutCoord = table_data_RESites[i][1];
 
-    //Convert the data from table_data_RESites into a useable form inside the "re_sites" dataset
+    //Convert the data from table_data_RESites into a usable form inside the "re_sites" dataset
       re_sites.push({
     name: name,
     cutCoord: cutCoord

@@ -150,7 +150,7 @@ sub delete_population_member {
         my $population_member_rs = $schema->resultset("Stock::StockRelationship")->find({stock_relationship_id => $stock_relationship_id, type_id => $member_of_type_id});
         if (!$population_member_rs) {
             print STDERR "This accession is not a population member. Cannot delete.\n";
-	        die (SGN::I18N::translate($ui_population_delete_population_member_i18n, "accession.population.not_member", "This accession is not a population memeber. Cannot delete.\n"));
+	        die (SGN::I18N::translate($ui_population_delete_population_member_i18n, "accession.population.not_member", "This accession is not a population member. Cannot delete.\n"));
         } else {
             $population_id = $population_member_rs->object_id();
             my $population_rs = $schema->resultset("Stock::Stock")->find ({stock_id => $population_id, type_id => $population_type_id});

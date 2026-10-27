@@ -217,7 +217,7 @@ around 'finalize_error' => sub {
 
     if( @$notify && $self->config->{production_server} ) {
         $self->stash->{email_errors} = $notify;
-        ####supress sgn-bugs emails#####
+        ####suppress sgn-bugs emails#####
         #try {
         #    $self->view('Email::ErrorEmail')->process( $self )
         #} catch {

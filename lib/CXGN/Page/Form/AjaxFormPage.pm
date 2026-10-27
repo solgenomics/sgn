@@ -84,7 +84,7 @@ use base qw /CXGN::Debug/ ;
     ajax_page = CXGN::Scrap::AjaxPage->new
     {is_owner} = 0
     login = CXGN::Login->new
-    args (all encoded agruments)
+    args (all encoded arguments)
     if action = new, sets object_id and primary key to 0
     sets jason_hash (here can have only an 'error' key if 'action' is not a valid one.
  Example:
@@ -177,7 +177,7 @@ sub new {
 
  Ret:          0 if user is a curator
  Args:
- Side Effects: sets json_hash with the folowing keys:
+ Side Effects: sets json_hash with the following keys:
     {login} = 1 if user is not logged in
     {error} if logged in user is not submitter|sequencer|curator
            or if logged-in user tries to modify an object, while not being an owner or a curator
@@ -621,7 +621,7 @@ sub set_object_name {
         and this accessor will return an array with one element.
         However, if the object has multiple owners
         (such as 'Locus' - group of owners is defined in locus_owner table)
-        this function will need to be overriden (see CXGN/Phenome/Locus.pm)
+        this function will need to be overridden (see CXGN/Phenome/Locus.pm)
  Ret:   an array
  Args:  none
  Side Effects:

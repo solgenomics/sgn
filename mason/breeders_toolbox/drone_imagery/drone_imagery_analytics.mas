@@ -118,7 +118,7 @@
                                     </div>
                                 </div>
                                 <div class="form-group">
-                                    <label class="col-sm-3 control-label"><% $c->i18n->p("drone.interface.number_interations", "Number Interations:") |h %> </label>
+                                    <label class="col-sm-3 control-label"><% $c->i18n->p("drone.interface.number_interations", "Number Iterations:") |h %> </label>
                                     <div class="col-sm-9" >
                                         <select class="form-control" id="drone_imagery_analytics_number_iterations">
                                             <option value="10">10</option>

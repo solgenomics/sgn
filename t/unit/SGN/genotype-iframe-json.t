@@ -23,7 +23,7 @@ use SGN::Controller::AJAX::Cross;
  sub new {my($class,$mime,$body)=@_;my $s=bless{stash=>{},req=>bless({body=>$body},'GenotypeIframeRequest')},$class;$s->{res}=Catalyst::Response->new(_context=>$s);$s->{res}->status(200);$s->{res}->content_type($mime);$s}
  sub stash {shift->{stash}} sub response {shift->{res}} sub res {shift->{res}}
  sub req {shift->{req}} sub request {shift->{req}} sub debug {0} sub log {bless{},'GenotypeIframeLog'}
- sub encoding {Encode::find_encoding('UTF-8')} sub _encode_check {Encode::FB_CROAK()|Encode::LEAVE_SRC()}
+ sub encoding {Encode::find_encoding('UTF-8')} sub _encode_check {Encode::FB_CROAK()|Encode::LEAVE_SRC()} ## no critic (ValuesAndExpressions::ProhibitBitwiseOperators) # Match Encode's required combined strict UTF-8/source-preservation flags.
  package GenotypeIframeBlessed;sub TO_JSON {{name=>$_[0]{name},value=>0}}
 }
 my $cfg=SGN::Controller::AJAX::GenotypingTrial->config;

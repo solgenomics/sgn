@@ -26,7 +26,7 @@ $debug => ''
 
 
 <br />
-<% $c->i18n->p("lists_datasets.bulk.enter_a_list_of_identifiers_or_upload_a_file_containing_identifers_separated_b", "Enter a list of identifiers or upload a file containing identifers separated by whitespace (returns, spaces or tabs):") |h %><br />
+<% $c->i18n->p("lists_datasets.bulk.enter_a_list_of_identifiers_or_upload_a_file_containing_identifers_separated_b", "Enter a list of identifiers or upload a file containing identifiers separated by whitespace (returns, spaces or tabs):") |h %><br />
 <table summary="" width="100%"><tr><td>
 <textarea name="ids" rows="5" cols="25"></textarea>
 </td>

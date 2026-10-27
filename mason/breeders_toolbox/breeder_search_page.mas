@@ -598,7 +598,7 @@ $archived_genotype_help =~ s/\Q$archived_choice_token\E/<strong>one or more geno
                 <div class="checkbox">
                   <label>
                     <input class="wizard-download-high-dim-phenotypes-outliers" type="checkbox" />
-                    Supress user defined phenotype outliers
+                    Suppress user defined phenotype outliers
                   </label>
                 </div>
               </td>

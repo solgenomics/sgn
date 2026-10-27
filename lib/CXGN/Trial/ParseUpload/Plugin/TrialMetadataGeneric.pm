@@ -157,7 +157,7 @@ sub _validate_with_plugin {
     }
 
     # Folder: should already exist in the database
-    # return missing folder names as a warning, that can be overriden by the user
+    # return missing folder names as a warning, that can be overridden by the user
     my @existing_folders = CXGN::Trial::Folder->list({ bcs_schema => $schema, folder_for_trials => 1 });
     my %folders_hash = map { @{$_}[1] => @{$_}[0] } @existing_folders;
     my $entered_folders = $parsed_values->{'folder'};

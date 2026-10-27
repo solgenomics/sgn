@@ -5,7 +5,7 @@ import "../legacy/CXGN/Dataset.js";
  * WizardDownloads - Creates a new WizardDownloads object.
  *
  * @class
- * @classdesc links to a wizard and manages showing relavant related data
+ * @classdesc links to a wizard and manages showing relevant related data
  * @param  {type} main_id div to draw within
  * @param  {type} wizard wizard to link to
  * @returns {Object}

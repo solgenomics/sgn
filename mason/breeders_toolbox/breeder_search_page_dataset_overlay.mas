@@ -1,6 +1,6 @@
 
 <!-- 
-    DATASET CREATION PIPELINE FOR SEACH WIZARD:
+    DATASET CREATION PIPELINE FOR SEARCH WIZARD:
     When provided with the proper query params, the search wizard will walk the user through 
     creating a dataset with the required parameters, save the dataset, and return to the 
     originating page.
@@ -108,7 +108,7 @@
 
     /**
      * Setup the selections and instructions for selecting items from the specified column
-     * @param {int} col Column indx
+     * @param {int} col Column index
      */
     function setCol(col) {
         

@@ -9,7 +9,7 @@ CXGN::Stock::Seedlot::Maintenance - a class to manage Seedlot Maintenance Events
 This class is used to store and retrieve maintenance actions and/or observations performed 
 for the proper maintenance of a particular Seedlot.
 
-Seedlot maintenance events are stored as JSON stock props, where each maintanence event 
+Seedlot maintenance events are stored as JSON stock props, where each maintenance event
 has an associated cvterm_id of a cvterm from a 'seedlot maintenance' ontology.  This 
 ontology defines that types of maintenance events that can be associated with a Seedlot.
 
@@ -47,7 +47,7 @@ use Encode ();
 
 sub _json_query_variants {
     my ($value) = @_;
-    return undef if ref($value) && ref($value) ne 'ARRAY';
+    return if ref($value) && ref($value) ne 'ARRAY';
     my @items = ref($value) eq 'ARRAY' ? @$value : ($value);
     my @variants;
     my $expanded = 0;
@@ -56,8 +56,8 @@ sub _json_query_variants {
         next if !defined($item) || ref($item);
         my $text = $item;
         next if $text !~ /[^\x00-\x7f]/;
-        my $octets = Encode::encode('UTF-8', $text, Encode::FB_CROAK | Encode::LEAVE_SRC);
-        my $legacy = Encode::decode('ISO-8859-1', $octets, Encode::FB_CROAK | Encode::LEAVE_SRC);
+        my $octets = Encode::encode('UTF-8', $text, Encode::FB_CROAK | Encode::LEAVE_SRC); ## no critic (ValuesAndExpressions::ProhibitBitwiseOperators) # Encode expects these two error/source-preservation flag bits combined.
+        my $legacy = Encode::decode('ISO-8859-1', $octets, Encode::FB_CROAK | Encode::LEAVE_SRC); ## no critic (ValuesAndExpressions::ProhibitBitwiseOperators) # Encode expects these two error/source-preservation flag bits combined.
         push @variants, $legacy;
         $expanded = 1;
     }

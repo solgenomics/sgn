@@ -119,7 +119,7 @@ jQuery(document).ready(function () {
     });
 
     solGS.phenoHistogram.getTraitPhenoMeansData().fail(function(res) {
-        var msg = "<p>" + (window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.pheno_histogram_error", "Error occured plotting histogram for this trait dataset.") : "Error occured plotting histogram for this trait dataset.") + "</p>";
+        var msg = "<p>" + (window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.pheno_histogram_error", "Error occurred plotting histogram for this trait dataset.") : "Error occurred plotting histogram for this trait dataset.") + "</p>";
         solGS.showMessage(histMsgId, msg);
     });
 
@@ -158,7 +158,7 @@ jQuery(document).ready(function () {
      });
 
      solGS.phenoHistogram.getTraitPhenoRawData().fail(function(res) {
-         var msg = "<p>" + (window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.pheno_histogram_error", "Error occured plotting histogram for this trait dataset.") : "Error occured plotting histogram for this trait dataset.") + "</p>";
+         var msg = "<p>" + (window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.pheno_histogram_error", "Error occurred plotting histogram for this trait dataset.") : "Error occurred plotting histogram for this trait dataset.") + "</p>";
          solGS.showMessage(histMsgIdRaw, msg);
      });
 

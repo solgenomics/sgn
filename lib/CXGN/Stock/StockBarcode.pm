@@ -98,7 +98,7 @@ sub parse {
 
         }
         ################################
-        #values are recorded only manualy and not from the barcode.
+        #values are recorded only manually and not from the barcode.
         ##################################
             #if ( defined($value) && ($value ne '') ) { #need to include 0
             #    print STDERR " **** parse ... parsing : $op_name \t $project_id \t $location_id \t $date .. stock_id = $stock_id accession = $cvterm_accession time = $time, value = $value \n\n";
@@ -307,7 +307,7 @@ sub store {
         $error = (SGN::I18N::translate($ui_store_i18n, 'barcode.server.store_completed', 'Store completed!'));
     } catch {
         # Transaction failed
-        $error =  (SGN::I18N::translate($ui_store_i18n, 'barcode.server.an_error_occured_cannot_store_data', 'An error occured! Cannot store data!') . " <br />" . $_ . "\n");
+        $error =  (SGN::I18N::translate($ui_store_i18n, 'barcode.server.an_error_occured_cannot_store_data', 'An error occurred! Cannot store data!') . " <br />" . $_ . "\n");
     };
     $self->store_error($error);
     $self->store_message($message);

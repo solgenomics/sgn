@@ -336,7 +336,7 @@ my $breeding_programs_select = simple_selectbox_html(
 
     <div class="panel panel-default">
         <div class="panel-body">
-            <&| /page/info_section.mas, title => HTML::Entities::encode_entities($c->i18n->p('stock_search.section.copy', 'Copy Results to a List')), collapsible=>1, collapsed=>0, subtitle=>'<i>' . HTML::Entities::encode_entities($c->i18n->p('stock_search.copy_help', 'Copy the stock names currently showing in the search results table to a new or exisiting list. Use "Show All entries" to capture all results.')) . '</i>'&>
+            <&| /page/info_section.mas, title => HTML::Entities::encode_entities($c->i18n->p('stock_search.section.copy', 'Copy Results to a List')), collapsible=>1, collapsed=>0, subtitle=>'<i>' . HTML::Entities::encode_entities($c->i18n->p('stock_search.copy_help', 'Copy the stock names currently showing in the search results table to a new or existing list. Use "Show All entries" to capture all results.')) . '</i>'&>
             <br>
             <div style="text-align:right" id="results_to_list_menu"></div>
             <textarea id="search_result_names" readonly aria-hidden="true" style="display: none;"></textarea>

@@ -158,13 +158,13 @@ jQuery(document).ready(function () {
               }
             })
             .fail(function () {
-              solGS.anova.showMessage((window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.anova_trait_list_error", "Error occured listing anova traits.") : "Error occured listing anova traits."));
+              solGS.anova.showMessage((window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.anova_trait_list_error", "Error occurred listing anova traits.") : "Error occurred listing anova traits."));
               jQuery(runDiv).hide();
             });
         }
       })
       .fail(function () {
-        solGS.anova.showMessage((window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.anova_design_error", "Error occured running the ANOVA.") : "Error occured running the ANOVA."));
+        solGS.anova.showMessage((window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.anova_design_error", "Error occurred running the ANOVA.") : "Error occurred running the ANOVA."));
         jQuery(runDiv).show();
       });
   }
@@ -256,7 +256,7 @@ jQuery(document).ready(function () {
             })
             .fail(function () {
               jQuery(`${canvas} .multi-spinner-container`).hide();
-              solGS.anova.showMessage((window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.anova_run_error", "Error occured running the anova analysis.") : "Error occured running the anova analysis."));
+              solGS.anova.showMessage((window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.anova_run_error", "Error occurred running the anova analysis.") : "Error occurred running the anova analysis."));
               jQuery(runDiv).show();
             });
         }

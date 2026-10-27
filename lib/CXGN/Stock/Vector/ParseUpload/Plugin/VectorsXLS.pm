@@ -114,7 +114,7 @@ sub _validate_with_plugin {
 
     foreach my $k (keys %vector_name_counts) {
         if ($vector_name_counts{$k} > 1) {
-            push @error_messages, (SGN::I18N::translate($ui__validate_with_plugin_i18n, 'transformation.helper.vector_k_occures_value2_times_in_the_file_vector_names_must_be_uniqu', 'Vector %{k} occures %{value2} times in the file. Vector names must be unique. Please remove duplicated vector names.', {k => ("" . ("$k")), value2 => ("" . ("$vector_name_counts{$k}"))}));
+            push @error_messages, (SGN::I18N::translate($ui__validate_with_plugin_i18n, 'transformation.helper.vector_k_occures_value2_times_in_the_file_vector_names_must_be_uniqu', 'Vector %{k} occurs %{value2} times in the file. Vector names must be unique. Please remove duplicated vector names.', {k => ("" . ("$k")), value2 => ("" . ("$vector_name_counts{$k}"))}));
         }
     }
 

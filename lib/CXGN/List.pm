@@ -3,7 +3,7 @@
 
 CXGN::List - class that deals with website lists
 
-=head1 SYNOPSYS
+=head1 SYNOPSIS
 
  my $list = CXGN::List->new( { dbh => $dbh, list_id => 34 } );
 

@@ -1281,7 +1281,7 @@ CXGN.List.prototype = {
                         html += "<tr><td>"+response.found[i].unique_name+"</td></tr>";
                     }
                     html += "</tbody></table>";
-                    html += "<h2>" + _sgnListEscapeHTML(listUiI18n.p('lists.fuzzy.similar_heading', '%{type} that are not found in the database, but fuzzy match (names are visibily similar)', {type: list_type_name})) + "</h2>";
+                    html += "<h2>" + _sgnListEscapeHTML(listUiI18n.p('lists.fuzzy.similar_heading', '%{type} that are not found in the database, but fuzzy match (names are visibly similar)', {type: list_type_name})) + "</h2>";
                     html += "<table class='table table-hover table-bordered' ><thead><tr><th>" + _sgnListEscapeHTML(listUiI18n.p('lists.fuzzy.name_in_your_list', 'Name In Your List')) + "</th><th>" + _sgnListEscapeHTML(listUiI18n.p('lists.fuzzy.found_in_database', 'Found In Database')) + "</th><th>" + _sgnListEscapeHTML(listUiI18n.p('lists.fuzzy.distance_score', 'Distance Score')) + " <span style='position: relative; top: 0: right: 0; cursor: help;' title='" + _sgnListEscapeHTML(listUiI18n.p('lists.fuzzy.distance_help', 'The closer the score is to 1.0, the more similar the match')) + "'>(?)</span></th></tr></thead><tbody>";
                     for(var i=0; i<response.fuzzy.length; i++){
                         for(j=0; j <response.fuzzy[i].matches.length; j++){

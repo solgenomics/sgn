@@ -31,7 +31,7 @@ BEGIN { extends 'Catalyst::Controller::REST' }
 # This info is used to provide additional properties for list items of
 # specific types to the label designer.
 # - The first-level hash key defines the list type
-# - The second-level hash key defines the propery name (displayed in the label designer)
+# - The second-level hash key defines the property name (displayed in the label designer)
 #   NOTE: Each list type needs to define (as '_transform') the list transform plugin name used to convert the list item names to database ids
 # - The value of the second-level hash is a subroutine that calculates the
 #   property value(s) for the specified list item(s)
@@ -591,7 +591,7 @@ __PACKAGE__->config(
                                     my $image = $pdf->image_png($png_location);
                                     my $height = $element{'height'} / $conversion_factor ; # scale to 72 pts per inch
                                     my $width = $element{'width'} / $conversion_factor ; # scale to 72 pts per inch
-                                    my $elementy = $elementy - ($height/2); # adjust for img position sarting at bottom
+                                    my $elementy = $elementy - ($height/2); # adjust for img position starting at bottom
                                     my $elementx = $elementx - ($width/2);
                                     #print STDERR 'adding Code 128 params $image, $elementx, $elementy, $width, $height with: '."$image, $elementx, $elementy, $width, $height\n";
                                     $gfx->image($image, $elementx, $elementy, $width, $height);
@@ -605,7 +605,7 @@ __PACKAGE__->config(
                                    my $image = $pdf->image_png($png_location);
                                    my $height = $element{'height'} / $conversion_factor ; # scale to 72 pts per inch
                                    my $width = $element{'width'} / $conversion_factor ; # scale to 72 pts per inch
-                                   my $elementy = $elementy - ($height/2); # adjust for img position sarting at bottom
+                                   my $elementy = $elementy - ($height/2); # adjust for img position starting at bottom
                                    my $elementx = $elementx - ($width/2);
                                    $gfx->image($image, $elementx, $elementy, $width, $height);
 

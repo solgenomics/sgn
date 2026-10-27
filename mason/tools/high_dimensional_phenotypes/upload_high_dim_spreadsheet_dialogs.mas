@@ -460,7 +460,7 @@ my @sequencing_center_options = split ",", $c->config->{genotyping_facilities};
                             <div class="form-group">
                                 <label class="col-sm-3 control-label"><% $c->i18n->p("phenotype.data_process_description", "Data Process Description:") |h %> </label>
                                 <div class="col-sm-9" >
-                                    <textarea rows="10" class="form-control" id="high_dim_data_upload_metabolomics_data_process_description" placeholder="<% $c->i18n->p("phenotype.e_g_this_describes_mode_instrument_settings_calibration_procedure_also", "e.g. This describes mode, instrument settings, calibration procedure. Also, describes how the files from the LCMS machine were transformed into peak area. Finally, describes how metabolite annotations were assinged to peaks") |h %>"></textarea>
+                                    <textarea rows="10" class="form-control" id="high_dim_data_upload_metabolomics_data_process_description" placeholder="<% $c->i18n->p("phenotype.e_g_this_describes_mode_instrument_settings_calibration_procedure_also", "e.g. This describes mode, instrument settings, calibration procedure. Also, describes how the files from the LCMS machine were transformed into peak area. Finally, describes how metabolite annotations were assigned to peaks") |h %>"></textarea>
                                 </div>
                             </div>
                             <div class="form-group">
@@ -819,7 +819,7 @@ my @sequencing_center_options = split ",", $c->config->{genotyping_facilities};
                 <li><% $c->i18n->p("phenotype.pos_left_required_the_start_position_in_base_pairs_of", "pos_left (required): The start position in base pairs of where the transcript begins.") |h %></li>
                 <li><% $c->i18n->p("phenotype.pos_right_required_the_end_position_in_base_pairs_of", "pos_right (required): The end position in base pairs of where the transcript ends.") |h %></li>
                 <li><% $c->i18n->p("phenotype.functional_annotation_optional_descriptors_for_gene_annotations", "functional_annotation (optional): Descriptors for gene annotations.") |h %></li>
-                <li><% $c->i18n->p("phenotype.notes_optional_any_additional_descrptions", "notes (optional): Any additional descrptions.") |h %></li>
+                <li><% $c->i18n->p("phenotype.notes_optional_any_additional_descrptions", "notes (optional): Any additional descriptions.") |h %></li>
             </ul>
             <table class="table table-hover table-bordered table-condensed" >
                 <thead></thead>
@@ -1253,10 +1253,10 @@ jQuery(document).ready(function() {
                             message_text += "</li>";
                         }
                         if (errorarrayLength == 0) {
-                            message_text += ("<li class='list-group-item list-group-item-success'><hr><h3>" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("phenotype.upload_successfull", "Upload Successfull!") : "Upload Successfull!")).html() + "</h3></li>");
+                            message_text += ("<li class='list-group-item list-group-item-success'><hr><h3>" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("phenotype.upload_successfull", "Upload Successful!") : "Upload Successful!")).html() + "</h3></li>");
                         }
                     } else {
-                        message_text += ("<li class='list-group-item list-group-item-success'><hr><h3>" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("phenotype.upload_successfull", "Upload Successfull!") : "Upload Successfull!")).html() + "</h3></li>");
+                        message_text += ("<li class='list-group-item list-group-item-success'><hr><h3>" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("phenotype.upload_successfull", "Upload Successful!") : "Upload Successful!")).html() + "</h3></li>");
                     }
                     message_text += "</ul>";
                     jQuery(upload_phenotype_status).html(message_text);
@@ -1378,10 +1378,10 @@ jQuery(document).ready(function() {
                         message_text += "</li>";
                     }
                     if (errorarrayLength == 0) {
-                        message_text += ("<li class='list-group-item list-group-item-success'><hr><h3>" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("phenotype.upload_successfull", "Upload Successfull!") : "Upload Successfull!")).html() + "</h3></li>");
+                        message_text += ("<li class='list-group-item list-group-item-success'><hr><h3>" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("phenotype.upload_successfull", "Upload Successful!") : "Upload Successful!")).html() + "</h3></li>");
                     }
                 } else {
-                    message_text += ("<li class='list-group-item list-group-item-success'><hr><h3>" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("phenotype.upload_successfull", "Upload Successfull!") : "Upload Successfull!")).html() + "</h3></li>");
+                    message_text += ("<li class='list-group-item list-group-item-success'><hr><h3>" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("phenotype.upload_successfull", "Upload Successful!") : "Upload Successful!")).html() + "</h3></li>");
                 }
             }
             message_text += "</ul>";
@@ -1507,10 +1507,10 @@ jQuery(document).ready(function() {
                             message_text += "</li>";
                         }
                         if (errorarrayLength == 0) {
-                            message_text += ("<li class='list-group-item list-group-item-success'><hr><h3>" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("phenotype.upload_successfull", "Upload Successfull!") : "Upload Successfull!")).html() + "</h3></li>");
+                            message_text += ("<li class='list-group-item list-group-item-success'><hr><h3>" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("phenotype.upload_successfull", "Upload Successful!") : "Upload Successful!")).html() + "</h3></li>");
                         }
                     } else {
-                        message_text += ("<li class='list-group-item list-group-item-success'><hr><h3>" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("phenotype.upload_successfull", "Upload Successfull!") : "Upload Successfull!")).html() + "</h3></li>");
+                        message_text += ("<li class='list-group-item list-group-item-success'><hr><h3>" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("phenotype.upload_successfull", "Upload Successful!") : "Upload Successful!")).html() + "</h3></li>");
                     }
                     message_text += "</ul>";
                     jQuery(upload_phenotype_status).html(message_text);

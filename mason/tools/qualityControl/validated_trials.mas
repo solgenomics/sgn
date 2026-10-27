@@ -72,7 +72,7 @@ use HTML::Entities ();
 <br>
 <br>
 
-<&| /page/info_section.mas, anchor_title => "Statistcs", title=>HTML::Entities::encode_entities($c->i18n->p("analysis.interface.statistcs", "Statistcs")), collapsible=>1, collapsed=>1 &>
+<&| /page/info_section.mas, anchor_title => "Statistics", title=>HTML::Entities::encode_entities($c->i18n->p("analysis.interface.statistcs", "Statistics")), collapsible=>1, collapsed=>1 &>
 
     <button id="calculate_statistics"><% $c->i18n->p("analysis.interface.calculate_statistics_20fbc2", "Calculate Statistics") |h %></button>
     <br>

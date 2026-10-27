@@ -14,11 +14,11 @@ export function WizardDatasets(main_id,wizard){
   var main = d3.select(main_id);
   var datasets = new CXGN.Dataset();
 
-  var catagories = [];
+  var catagories = []; // codespell:ignore catagories (legacy local variable name)
   var selections = {};
   var operations = {};
   wizard.on_change((c,s,o)=>{
-    catagories = c;
+    catagories = c; // codespell:ignore catagories (legacy local variable name)
     selections = s;
     operations = o;
   });

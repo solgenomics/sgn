@@ -46,7 +46,7 @@ function graphicalTableLanguage() {
     };
 }
 
-  //statics
+  // statics; codespell:ignore statics (Leaflet API concept)
   var gfilter = {};
   var colors = ["#ffffff","#b3e2cd","#f1e2cc","#fff2ae","#f4cae4","#e6f5c9","#cbd5e8","#fdcdac"];
   var color = d3.scaleOrdinal()
@@ -244,7 +244,7 @@ function graphicalTableLanguage() {
   Filter.prototype.updateData = function(data){};
   
   /**  
-   * Filter.prototype.draw - redraws componants shared by both filter groups and range filters (all filter types).
+   * Filter.prototype.draw - redraws components shared by both filter groups and range filters (all filter types).
    *    
    * @param  {DOM node} node where to draw   
    */   
@@ -780,7 +780,7 @@ function graphicalTableLanguage() {
               .map(function(d){return d-hist.margin.left;})
               .map(hist.x.invert);
             }
-            //if there arent enough items in the selection (2) expand the selection to include the nearest ones.
+            //if there aren't enough items in the selection (2) expand the selection to include the nearest ones.
             if (hist.getFilter()&&hist.data.filter(hist.getFilter()).length<2){
               console.log("adjusted");
               var values = hist.data.map(hist.valueAccessor);

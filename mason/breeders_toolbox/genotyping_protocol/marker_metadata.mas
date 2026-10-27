@@ -223,7 +223,7 @@ use JSON::PP ();
                 success: (resp) => {
                     if ( resp?.error ) {
                         const deleteError = ("" + resp.error);
-                        alert(window.SGN && SGN.i18n ? SGN.i18n.p('genotype.protocol.marker_metadata_ui.delete_error', 'Could not delete marker meatadata: %{error}', {error: deleteError}) : "Could not delete marker meatadata: " + deleteError);
+                        alert(window.SGN && SGN.i18n ? SGN.i18n.p('genotype.protocol.marker_metadata_ui.delete_error', 'Could not delete marker metadata: %{error}', {error: deleteError}) : "Could not delete marker metadata: " + deleteError);
                     }
                     else {
                         loadMetadata();

@@ -231,7 +231,7 @@ jQuery(document).ready(function ($) {
         },
         error: function(response) {
           enable_ui();
-          alert(accessionI18n.p("accessions.population.retrieve_failed", "An error occured retrieving population data."));
+          alert(accessionI18n.p("accessions.population.retrieve_failed", "An error occurred retrieving population data."));
         }
       });
     });

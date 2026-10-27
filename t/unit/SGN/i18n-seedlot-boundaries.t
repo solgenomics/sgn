@@ -48,7 +48,7 @@ sub compile_methods {
     my ($package,$text,@names) = @_;
     my $program = "package $package; use strict; use warnings; use Data::Dumper; use HTML::Entities qw(encode_entities); use SGN::I18N;\n";
     $program .= join("\n", map {method($text,$_)} @names) . "\n1;";
-    my $ok = eval $program;
+    my $ok = eval $program; ## no critic (BuiltinFunctions::ProhibitStringyEval) # Compile controlled method source extracted from reviewed modules into the test fixture.
     BAIL_OUT("Actual source method compilation failed: $@") unless $ok;
 }
 
@@ -73,7 +73,7 @@ sub compile_methods {
     package OwnedSeedlotSchema;
     sub new { bless {lookups=>[]},shift }
     sub storage { shift }
-    sub dbh { return undef }
+    sub dbh { return undef } ## no critic (Subroutines::ProhibitExplicitReturnUndef) # Match the database handle stub's explicit undefined scalar/list result.
     sub resultset { my ($self,$kind)=@_; return bless {schema=>$self,kind=>$kind},'OwnedSeedlotResultSet'; }
     sub txn_do { die 'Unexpected transaction/data write' }
     package OwnedSeedlotResultSet;
@@ -86,7 +86,7 @@ sub compile_methods {
     }
     sub search { my ($self,$criteria)=@_; push @{$self->{schema}{lookups}},[$self->{kind},$criteria]; return $self; }
     sub count { return 0 }
-    sub next { return undef }
+    sub next { return undef } ## no critic (Subroutines::ProhibitExplicitReturnUndef) # Match DBIx::Class next() returning one undefined placeholder when exhausted.
     sub create { die 'Unexpected create' }
     sub update { die 'Unexpected update' }
     sub delete { die 'Unexpected delete' }
@@ -123,7 +123,7 @@ for my $name (@producers) {
     my $body=method($controller,$name);
     my ($loop)=$body =~ /(foreach my \$error_string \(\@\{\$parse_errors->\{'error_messages'\}\}\)\s*\{[^\n]*\n[^\n]*\n[ \t]*\})/;
     BAIL_OUT("Missing actual HTML assembly loop in $name") unless $loop;
-    my $ok=eval 'package OwnedSeedlotHTML; sub '.$name.' { my ($parse_errors)=@_; my $return_error=""; '.$loop.' return $return_error; } 1;';
+    my $ok=eval 'package OwnedSeedlotHTML; sub '.$name.' { my ($parse_errors)=@_; my $return_error=""; '.$loop.' return $return_error; } 1;'; ## no critic (BuiltinFunctions::ProhibitStringyEval) # Compile the extracted production assembly loop into a controlled test-only package.
     BAIL_OUT("Cannot compile actual assembly $name: $@") unless $ok;
 }
 
@@ -193,7 +193,11 @@ sub decoded_fragment {
 for my $producer (@producers) {
     my $errors=[$model_error,$parser_error,$compatibility,$english_error];
     # Wrappers compiled from the actual loops use a function argument, not a class.
-    no strict 'refs'; my $html=&{'OwnedSeedlotHTML::'.$producer}({error_messages=>$errors}); use strict 'refs';
+    my $html;
+    {
+        no strict 'refs'; ## no critic (TestingAndDebugging::ProhibitNoStrict) # Invoke only the explicitly enumerated compiled fixture subroutine.
+        $html=&{'OwnedSeedlotHTML::'.$producer}({error_messages=>$errors});
+    }
     like($html,qr/\Q&lt;br&gt;\E/,'Literal br is escaped once: '.$producer);
     like($html,qr/\Q&lt;strong&gt;\E/,'Literal strong is inert text: '.$producer);
     like($html,qr/\Q&amp;amp;\E/,'Literal entity spelling is escaped once: '.$producer);
@@ -246,7 +250,11 @@ if (my $compiled_root=$ENV{I18N_TEST_CATALOG_ROOT}) {
         like($actual_error,qr/\Q%{columns}\E/,'Compiled parser translation does not recurse into data placeholders: '.$locale);
         isnt($actual_model,$english_error,'Actual compiled human message differs from English: '.$locale) unless $locale eq 'en';
         for my $producer (@producers) {
-            no strict 'refs'; my $html=&{'OwnedSeedlotHTML::'.$producer}({error_messages=>[$actual_model,$actual_error]}); use strict 'refs';
+            my $html;
+            {
+                no strict 'refs'; ## no critic (TestingAndDebugging::ProhibitNoStrict) # Invoke only the explicitly enumerated compiled fixture subroutine.
+                $html=&{'OwnedSeedlotHTML::'.$producer}({error_messages=>[$actual_model,$actual_error]});
+            }
             my ($text,$tags)=decoded_fragment($html);
             is($text,$actual_model."\n".$actual_error."\n",'Actual compiled locale survives the real HTML producer: '.$locale.' '.$producer);
             is_deeply($tags,['br','br'],'Scientific tags never become markup in compiled locale: '.$locale.' '.$producer);

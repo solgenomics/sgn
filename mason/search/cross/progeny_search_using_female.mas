@@ -63,7 +63,7 @@ use HTML::Entities ();
         </div>
         <div class="panel panel-default">
             <div class="panel-body">
-                <&| /page/info_section.mas, anchor_title => 'Copy Progenies to a List', title => HTML::Entities::encode_entities($c->i18n->p("cross.pages.copy_progenies_to_a_list", "Copy Progenies to a List")), collapsible=>1, collapsed=>1, subtitle=>("<i>" . HTML::Entities::encode_entities($c->i18n->p("cross.pages.copy_the_progeny_names_showing_in_table_to_a_new", "Copy the progeny names showing in table to a new or exisiting list")) . "</i>")&>
+                <&| /page/info_section.mas, anchor_title => 'Copy Progenies to a List', title => HTML::Entities::encode_entities($c->i18n->p("cross.pages.copy_progenies_to_a_list", "Copy Progenies to a List")), collapsible=>1, collapsed=>1, subtitle=>("<i>" . HTML::Entities::encode_entities($c->i18n->p("cross.pages.copy_the_progeny_names_showing_in_table_to_a_new", "Copy the progeny names showing in table to a new or existing list")) . "</i>")&>
                     <br>
                     <div style="text-align:right" id="progenies_to_list_menu"></div>
                     <div id="progeny_names" style="display: none;"></div>

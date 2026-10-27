@@ -18,7 +18,7 @@ use HTML::Entities ();
     </div>
 </div>
 
-<& /page/detail_page_2_col_section.mas, info_section_collapsed => 0, info_section_title => '<h4 style="display:inline">' . HTML::Entities::encode_entities($c->i18n->p("program.identifiers.section_title", "Available Identifiers")) . '</h4>', info_section_subtitle => HTML::Entities::encode_entities($c->i18n->p("program.identifiers.section_help", "View, add, and dowload identifiers.")), buttons_html => '<button class="btn btn-primary btn-sm" id="add_new_identifier_button" style="margin:3px">' . HTML::Entities::encode_entities($c->i18n->p("program.identifiers.add_new", "Add New Identifier")) . '</button>', icon_class => "glyphicon glyphicon-dashboard", info_section_id => "identifier_generation_list" &>
+<& /page/detail_page_2_col_section.mas, info_section_collapsed => 0, info_section_title => '<h4 style="display:inline">' . HTML::Entities::encode_entities($c->i18n->p("program.identifiers.section_title", "Available Identifiers")) . '</h4>', info_section_subtitle => HTML::Entities::encode_entities($c->i18n->p("program.identifiers.section_help", "View, add, and download identifiers.")), buttons_html => '<button class="btn btn-primary btn-sm" id="add_new_identifier_button" style="margin:3px">' . HTML::Entities::encode_entities($c->i18n->p("program.identifiers.add_new", "Add New Identifier")) . '</button>', icon_class => "glyphicon glyphicon-dashboard", info_section_id => "identifier_generation_list" &>
 
 <div class="modal fade" id="add_new_identifier_dialog" name="add_new_identifier_dialog" tabindex="-1" role="dialog" aria-labelledby="addNewIdentifierDialog">
     <div class="modal-dialog modal-xl" role="document">

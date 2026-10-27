@@ -11,7 +11,7 @@ $trial_id
 </div>
 <div class="panel panel-default">
     <div class="panel-body">
-        <&| /page/info_section.mas, anchor_title => HTML::Entities::encode_entities('Add Crosses to a List'), title => HTML::Entities::encode_entities($c->i18n->p('cross.ui.add_crosses_to_a_list', 'Add Crosses to a List')), collapsible=>1, collapsed=>0, subtitle=>'<i>' . HTML::Entities::encode_entities($c->i18n->p('cross.ui.adding_crosses_in_this_crossing_experiment_to_a_new_or_exisiti', 'Adding crosses in this crossing experiment to a new or exisiting list')) . '</i>'&>
+        <&| /page/info_section.mas, anchor_title => HTML::Entities::encode_entities('Add Crosses to a List'), title => HTML::Entities::encode_entities($c->i18n->p('cross.ui.add_crosses_to_a_list', 'Add Crosses to a List')), collapsible=>1, collapsed=>0, subtitle=>'<i>' . HTML::Entities::encode_entities($c->i18n->p('cross.ui.adding_crosses_in_this_crossing_experiment_to_a_new_or_exisiti', 'Adding crosses in this crossing experiment to a new or existing list')) . '</i>'&>
         <br>
         <div id="crosses_to_new_list" style="display:none"></div>
         <div id="crosses_add_to_list"></div>

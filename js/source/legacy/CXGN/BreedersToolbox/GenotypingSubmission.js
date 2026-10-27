@@ -282,7 +282,7 @@ jQuery(document).ready(function ($) {
                         jQuery('#organism_name').append(jQuery('<option></option>').val(p.organismName).html(p.organismName));
                         jQuery('#service_id_select').append(jQuery('<option></option>').val(p.serviceId).html(p.serviceName));
 
-                        var requeriments = p.specificRequirements;
+                        var requeriments = p.specificRequirements; // codespell:ignore requeriments (legacy API field and local variable)
                         if (requeriments.length  > 0) {
                             requeriments.forEach(function(o) {
                                 let type = document.createElement('label'); 
@@ -485,14 +485,14 @@ jQuery(document).ready(function ($) {
             return;
         }
 
-        var requeriments = {};
+        var requeriments = {}; // codespell:ignore requeriments (legacy order_info payload key)
 
         $("input[id^=req-").each(function(){
             let idd = $(this).attr('id');
-            requeriments[idd.replace("req-", "")] = $(this).val();
+            requeriments[idd.replace("req-", "")] = $(this).val(); // codespell:ignore requeriments (legacy order_info payload key)
         });
 
-        order_info.requeriments = requeriments;
+        order_info.requeriments = requeriments; // codespell:ignore requeriments (legacy payload key)
 
         submit_samples(order_info);
 

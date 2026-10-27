@@ -7,7 +7,7 @@ use HTML::Entities ();
 =head1 NAME 
 
 qtl/population/download.mas - a mason component for 
-diplaying links to download pages of phenotype, genotype,
+displaying links to download pages of phenotype, genotype,
 correlation and trait acronmyms files.
 
 =AUTHOR

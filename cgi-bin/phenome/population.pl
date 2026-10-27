@@ -3,7 +3,7 @@ use warnings;
 
 my $population_detail_page = CXGN::Phenome::PopulationDetailPage->new();
 
-package CXGN::Phenome::PopulationDetailPage;
+package CXGN::Phenome::PopulationDetailPage; ## no critic (Modules::RequireFilenameMatchesPackage) # This CGI script intentionally declares its page package.
 
 use SGN::I18N ();
 use HTML::Entities ();
@@ -586,9 +586,9 @@ sub genetic_map {
  Usage: my ($heatmap_file, $corre_table_file) = $self->analyze_correlation();
  Desc: runs correlation analysis (R) in the cluster system
        for all the traits assayed for a population
-       and returns a heatmap of the correlation coeffients
+       and returns a heatmap of the correlation coefficients
        (documents/tempfiles/correlation/heatmap_file.png)
-       and a table containing the correlation coeffients
+       and a table containing the correlation coefficients
        and their p-values ( /data/prod/tmp/r_qtl/corre_table_file.txt).
  Ret: heatmap image file  and correlation output text file
  Args: None
@@ -615,7 +615,7 @@ sub analyze_correlation
         {
             unless (-d $dir)
             {
-                mkpath ($dir, 0, 0755);
+                mkpath ($dir, 0, oct('0755'));
             }
         }
 
@@ -674,7 +674,7 @@ sub analyze_correlation
         return $heatmap_file, $corre_table_file;
     }
     else {
-        return undef;
+        return undef; ## no critic (Subroutines::ProhibitExplicitReturnUndef) # Preserve the single undefined list-context result on correlation failure.
     }
 
 }
@@ -710,7 +710,7 @@ sub display_correlation {
 
     #there seems to be a problem with the phenotype data of one population (pop id = 18), 
     #causing problem to the R correlation analysis and thus crashing the pop page.
-    #unitl I identify the problem, displaying the message below  in case the site is updated
+    #until I identify the problem, displaying the message below  in case the site is updated
     #before I identify the problem.
    
     if ($pop_id == 18) 

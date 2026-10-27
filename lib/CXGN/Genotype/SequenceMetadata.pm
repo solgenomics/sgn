@@ -695,7 +695,7 @@ LEFT JOIN public.feature ON feature.feature_id = featureprop_json.feature_id
 LEFT JOIN public.cvterm ON cvterm.cvterm_id = featureprop_json.type_id
 LEFT JOIN public.nd_protocol ON nd_protocol.nd_protocol_id = featureprop_json.nd_protocol_id";
 
-    # Add aditional conditions
+    # Add additional conditions
     $query .= $query_where;
     $query .= " AND (
 ((s->>'start')::int >= ? AND (s->>'end')::int <= ?) 

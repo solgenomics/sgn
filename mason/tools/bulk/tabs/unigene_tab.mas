@@ -11,7 +11,7 @@ $debug => ''
   Args: n/a
   Ret : unigene tab format
 
-  Defines the format of the unigene tab using html, perl and perl dbi. Speicfies
+  Defines the format of the unigene tab using html, perl and perl dbi. Specifies
   information fields available for searching unigenes. Prints the debug
   checkbox when debug parameter is set to one.
 
@@ -43,7 +43,7 @@ sub unigene_search {
 <table summary="" cellpadding="10" width="100%"><tr><td valign="top" bgcolor="#EEEEEE" width="320">
 
 <br />
-<% $c->i18n->p("lists_datasets.bulk.enter_a_list_of_identifiers_or_upload_a_file_containing_one_identifer_separate", "Enter a list of identifiers or upload a file containing one identifer separated by whitespace (returns, spaces or tabs):") |h %><br />
+<% $c->i18n->p("lists_datasets.bulk.enter_a_list_of_identifiers_or_upload_a_file_containing_one_identifer_separate", "Enter a list of identifiers or upload a file containing one identifier separated by whitespace (returns, spaces or tabs):") |h %><br />
 
 
 <table summary="" width="100%" cellpadding="0"><tr><td>

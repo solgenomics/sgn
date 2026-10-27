@@ -514,7 +514,7 @@ jQuery(document).ready(function () {
       })
       .fail(function (res) {
         jQuery(`${canvas} .multi-spinner-container`).hide();
-        jQuery(corrMsgDiv).html(res.status + (window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.correlation_error_suffix", " Error occured running correlation analysis.") : " Error occured running correlation analysis.")).fadeOut(8400);
+        jQuery(corrMsgDiv).html(res.status + (window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.correlation_error_suffix", " Error occurred running correlation analysis.") : " Error occurred running correlation analysis.")).fadeOut(8400);
         jQuery(runCorrBtnId).show();
       });
     }
@@ -563,7 +563,7 @@ jQuery(document).ready(function () {
       })
       .fail(function (res) {
         jQuery(`${canvas} .multi-spinner-container`).hide();
-        jQuery(corrMsgDiv).html(res.status + (window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.correlation_error_suffix", " Error occured running correlation analysis.") : " Error occured running correlation analysis.")).fadeOut(8400);
+        jQuery(corrMsgDiv).html(res.status + (window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.correlation_error_suffix", " Error occurred running correlation analysis.") : " Error occurred running correlation analysis.")).fadeOut(8400);
         jQuery(runCorrBtnId).show();
         
       });

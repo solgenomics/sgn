@@ -303,7 +303,7 @@ jQuery(document).ready(function () {
         }
       })
       .fail(function () {
-        var msg = (window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.selection_index_form_error", "Error occured creating the selection index form.") : "Error occured creating the selection index form.");
+        var msg = (window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.selection_index_form_error", "Error occurred creating the selection index form.") : "Error occurred creating the selection index form.");
         jQuery(siMsgDiv).empty().append(msg);
       });
   }, 5000);
@@ -414,7 +414,7 @@ jQuery(document).on("click", "#calculate_si", function () {
               }
             })
             .fail(function (res) {
-              jQuery(siMsgDiv).html((window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.selection_index_correlation_error", "Error occured running correlation analysis.") : "Error occured running correlation analysis.")).fadeOut(8400);
+              jQuery(siMsgDiv).html((window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.selection_index_correlation_error", "Error occurred running correlation analysis.") : "Error occurred running correlation analysis.")).fadeOut(8400);
             });
 
           jQuery("#si_canvas #selected_pop").val("");
@@ -432,7 +432,7 @@ jQuery(document).on("click", "#calculate_si", function () {
         }
       })
       .fail(function () {
-        var msg = (window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.selection_index_calculation_error", "error occured calculating selection index.") : "error occured calculating selection index.");
+        var msg = (window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.selection_index_calculation_error", "error occurred calculating selection index.") : "error occurred calculating selection index.");
         jQuery(siMsgDiv).html(msg).show();
       });
   }

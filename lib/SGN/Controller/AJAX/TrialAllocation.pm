@@ -175,7 +175,7 @@ sub generate_design :Path('/ajax/trialallocation/generate_design') :Args(0) {
     my $n_trt = scalar(@$treatment_names);
     my $n_ctl = scalar(@$control_names);
 
-    # Send paramenter to a temp file
+    # Send parameter to a temp file
     $c->tempfiles_subdir("trial_allocation");
 
     # Create base temp file (no extension yet)

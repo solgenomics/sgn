@@ -39,6 +39,9 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           HTMLHINT_CONFIG_FILE: .htmlhintrc
           GITLEAKS_CONFIG_FILE: .gitleaks.toml
+          PYTHON_BLACK_CONFIG_FILE: script/i18n/.python-black
+          PYTHON_ISORT_CONFIG_FILE: script/i18n/.isort.cfg
+          PYTHON_PYLINT_CONFIG_FILE: script/i18n/.python-lint
           VALIDATE_ALL_CODEBASE: false
           VALIDATE_SHELL_SHFMT: false
           VALIDATE_ANSIBLE: false

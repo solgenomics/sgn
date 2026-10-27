@@ -1363,7 +1363,7 @@ sub upload_barcode_output : Path('/breeders/phenotype/upload') :Args(0) {
 
     $tempfile = $archive_path . "/" . $basename ;
     print STDERR "**tempfile = $tempfile \n\n"; ##OK
-    #chack for write permissions in $archive_path !
+    #check for write permissions in $archive_path !
     my $upload_success = $upload->copy_to($archive_path . "/" . $basename); #returns false for failure, true for success
     if (!$upload_success) { die (SGN::I18N::translate($ui_upload_barcode_output_i18n, 'barcode.server.could_not_upload_upload_success', 'Could not upload!
  %{upload_success}', {upload_success => ("" . ("$upload_success"))})) ; }

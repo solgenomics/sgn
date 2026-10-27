@@ -57,7 +57,7 @@ jQuery( document ).ready( function() {
                 }
                 jQuery('#working_modal').modal("hide");
             }).fail(function() {
-                reportVerifyResult({ "error": [(window.SGN && window.SGN.i18n ? SGN.i18n.p("drone_imaging.upload.exif_verification_failure", "Error ocurred during EXIF verification.") : "Error ocurred during EXIF verification.")]});
+                reportVerifyResult({ "error": [(window.SGN && window.SGN.i18n ? SGN.i18n.p("drone_imaging.upload.exif_verification_failure", "Error occurred during EXIF verification.") : "Error occurred during EXIF verification.")]});
                 jQuery('#working_modal').modal("hide");
             });
         } else if (type == 'images_with_barcodes') {
@@ -83,7 +83,7 @@ jQuery( document ).ready( function() {
                 jQuery('#working_modal').modal("hide");
 
             }).fail(function() {
-                reportVerifyResult({ "error": [(window.SGN && window.SGN.i18n ? SGN.i18n.p("drone_imaging.upload.barcode_scan_failure", "Error ocurred during barcode scan") : "Error ocurred during barcode scan")]});
+                reportVerifyResult({ "error": [(window.SGN && window.SGN.i18n ? SGN.i18n.p("drone_imaging.upload.barcode_scan_failure", "Error occurred during barcode scan") : "Error occurred during barcode scan")]});
                 jQuery('#working_modal').modal("hide");
             });
         } else { // verify associated phenotypes format

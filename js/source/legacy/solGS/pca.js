@@ -1255,7 +1255,7 @@ jQuery(document).ready(function () {
                                             })
                                             .fail(function (res) {
                                                 var msg =
-                                                    (window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.pca_run_error", "Error occured running the PCA.") : "Error occured running the PCA.");
+                                                    (window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.pca_run_error", "Error occurred running the PCA.") : "Error occurred running the PCA.");
                                                 solGS.pca.feedBackOnFailure(
                                                     pcaPopId,
                                                     msg
@@ -1306,7 +1306,7 @@ jQuery(document).ready(function () {
                                     }
                                 })
                                 .fail(function (res) {
-                                    var msg = (window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.pca_run_error", "Error occured running the PCA.") : "Error occured running the PCA.");
+                                    var msg = (window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.pca_run_error", "Error occurred running the PCA.") : "Error occurred running the PCA.");
                                     solGS.pca.feedBackOnFailure(pcaPopId, msg);
                                     jQuery(runPcaBtnId).show();
                                 });
@@ -1314,7 +1314,7 @@ jQuery(document).ready(function () {
                     }
                 })
                 .fail(function () {
-                    var msg = (window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.pca_cached_output_check_error", "Error occured checking for cached output.") : "Error occured checking for cached output.");
+                    var msg = (window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.pca_cached_output_check_error", "Error occurred checking for cached output.") : "Error occurred checking for cached output.");
                     solGS.pca.feedBackOnFailure(pcaPopId, msg);
                     jQuery(runPcaBtnId).show();
                 });

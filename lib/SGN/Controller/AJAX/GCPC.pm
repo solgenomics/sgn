@@ -147,7 +147,7 @@ sub get_method: Path('/ajax/gcpc/get_method') : {
     my $method_1 = $c->req->param('method_id');
     print STDERR Dumper($method_1);
     $method_id = $method_1;
-    print "The vairable method_id is $method_id \n";
+    print "The variable method_id is $method_id \n";
 }
 
 

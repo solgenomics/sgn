@@ -25,7 +25,7 @@ $stock_type => undef
             </div>
 
             <br>
-            <&| /page/info_section.mas, title => HTML::Entities::encode_entities($c->i18n->p("accession.related_stock.copy_to_list", "Copy Stocks to a List")), collapsible=>1, collapsed=>1, subtitle=>'<i>' . HTML::Entities::encode_entities($c->i18n->p("accession.related_stock.copy_stock_help", "Copy the stock names showing in table to a new or exisiting list")) . '</i>'&>
+            <&| /page/info_section.mas, title => HTML::Entities::encode_entities($c->i18n->p("accession.related_stock.copy_to_list", "Copy Stocks to a List")), collapsible=>1, collapsed=>1, subtitle=>'<i>' . HTML::Entities::encode_entities($c->i18n->p("accession.related_stock.copy_stock_help", "Copy the stock names showing in table to a new or existing list")) . '</i>'&>
                 <br>
                 <div style="text-align:right" id="trial_stocks_to_list_menu"></div>
                 <div id="trial_stock_names" style="display: none;"></div>
@@ -52,7 +52,7 @@ $stock_type => undef
             </div>
 
             <br>
-            <&| /page/info_section.mas, title => HTML::Entities::encode_entities($c->i18n->p("accession.related_stock.copy_to_list", "Copy Stocks to a List")), collapsible=>1, collapsed=>1, subtitle=>'<i>' . HTML::Entities::encode_entities($c->i18n->p("accession.related_stock.copy_seedlot_help", "Copy the seedlot names showing in table to a new or exisiting list")) . '</i>'&>
+            <&| /page/info_section.mas, title => HTML::Entities::encode_entities($c->i18n->p("accession.related_stock.copy_to_list", "Copy Stocks to a List")), collapsible=>1, collapsed=>1, subtitle=>'<i>' . HTML::Entities::encode_entities($c->i18n->p("accession.related_stock.copy_seedlot_help", "Copy the seedlot names showing in table to a new or existing list")) . '</i>'&>
                 <br>
                 <div style="text-align:right" id="seedlots_to_list_menu"></div>
                 <div id="seedlot_names" style="display: none;"></div>
@@ -83,7 +83,7 @@ $stock_type => undef
             </div>
 
             <br>
-            <&| /page/info_section.mas, title => HTML::Entities::encode_entities($c->i18n->p("accession.related_stock.copy_to_list", "Copy Stocks to a List")), collapsible=>1, collapsed=>1, subtitle=>'<i>' . HTML::Entities::encode_entities($c->i18n->p("accession.related_stock.copy_stock_help", "Copy the stock names showing in table to a new or exisiting list")) . '</i>'&>
+            <&| /page/info_section.mas, title => HTML::Entities::encode_entities($c->i18n->p("accession.related_stock.copy_to_list", "Copy Stocks to a List")), collapsible=>1, collapsed=>1, subtitle=>'<i>' . HTML::Entities::encode_entities($c->i18n->p("accession.related_stock.copy_stock_help", "Copy the stock names showing in table to a new or existing list")) . '</i>'&>
                 <br>
                 <div style="text-align:right" id="tissue_samples_to_list_menu"></div>
                 <div id="tissue_sample_names" style="display: none;"></div>
@@ -112,7 +112,7 @@ $stock_type => undef
             </div>
 
             <br>
-            <&| /page/info_section.mas, title => HTML::Entities::encode_entities($c->i18n->p("accession.related_stock.copy_to_list", "Copy Stocks to a List")), collapsible=>1, collapsed=>1, subtitle=>'<i>' . HTML::Entities::encode_entities($c->i18n->p("accession.related_stock.copy_stock_help", "Copy the stock names showing in table to a new or exisiting list")) . '</i>'&>
+            <&| /page/info_section.mas, title => HTML::Entities::encode_entities($c->i18n->p("accession.related_stock.copy_to_list", "Copy Stocks to a List")), collapsible=>1, collapsed=>1, subtitle=>'<i>' . HTML::Entities::encode_entities($c->i18n->p("accession.related_stock.copy_stock_help", "Copy the stock names showing in table to a new or existing list")) . '</i>'&>
                 <br>
                 <div style="text-align:right" id="progenies_to_list_menu"></div>
                 <div id="progeny_names" style="display: none;"></div>
@@ -161,7 +161,7 @@ $stock_type => undef
             </div>
 
             <br>
-            <&| /page/info_section.mas, title => HTML::Entities::encode_entities($c->i18n->p("accession.related_stock.copy_siblings", "Copy siblings to a List")), collapsible=>1, collapsed=>1, subtitle=>'<i>' . HTML::Entities::encode_entities($c->i18n->p("accession.related_stock.copy_sibling_help", "Copy the sibling names showing in table to a new or exisiting list")) . '</i>'&>
+            <&| /page/info_section.mas, title => HTML::Entities::encode_entities($c->i18n->p("accession.related_stock.copy_siblings", "Copy siblings to a List")), collapsible=>1, collapsed=>1, subtitle=>'<i>' . HTML::Entities::encode_entities($c->i18n->p("accession.related_stock.copy_sibling_help", "Copy the sibling names showing in table to a new or existing list")) . '</i>'&>
                 <br>
                 <div style="text-align:right" id="siblings_to_list_menu"></div>
                 <div id="sibling_names" style="display: none;"></div>
@@ -189,7 +189,7 @@ $stock_type => undef
             </div>
 
             <br>
-            <&| /page/info_section.mas, title => HTML::Entities::encode_entities($c->i18n->p("accession.related_stock.copy_to_list", "Copy Stocks to a List")), collapsible=>1, collapsed=>1, subtitle=>'<i>' . HTML::Entities::encode_entities($c->i18n->p("accession.related_stock.copy_stock_help", "Copy the stock names showing in table to a new or exisiting list")) . '</i>'&>
+            <&| /page/info_section.mas, title => HTML::Entities::encode_entities($c->i18n->p("accession.related_stock.copy_to_list", "Copy Stocks to a List")), collapsible=>1, collapsed=>1, subtitle=>'<i>' . HTML::Entities::encode_entities($c->i18n->p("accession.related_stock.copy_stock_help", "Copy the stock names showing in table to a new or existing list")) . '</i>'&>
                 <br>
                 <div style="text-align:right" id="groups_and_members_to_list_menu"></div>
                 <div id="group_and_member_names" style="display: none;"></div>

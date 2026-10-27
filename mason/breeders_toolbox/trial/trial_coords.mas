@@ -88,7 +88,7 @@ var trial_id = <% $trial_id %>;
             jQuery("#trial_coords").css("display", "none");
             jQuery("#delete_button").css("display", "inline-block");
             if (false_coord){
-                alert(window.SGN && SGN.i18n ? SGN.i18n.p('trial.card.coords.pseudo_coords', "Psudo row and column numbers have been used in displaying the field map. Plots row and column numbers were generated from block_number and displayed in zigzag format. You can upload row and column numbers for this trial to reflect the field layout.") : "Psudo row and column numbers have been used in displaying the field map. Plots row and column numbers were generated from block_number and displayed in zigzag format. You can upload row and column numbers for this trial to reflect the field layout.");
+                alert(window.SGN && SGN.i18n ? SGN.i18n.p('trial.card.coords.pseudo_coords', "Pseudo row and column numbers have been used in displaying the field map. Plots row and column numbers were generated from block_number and displayed in zigzag format. You can upload row and column numbers for this trial to reflect the field layout.") : "Pseudo row and column numbers have been used in displaying the field map. Plots row and column numbers were generated from block_number and displayed in zigzag format. You can upload row and column numbers for this trial to reflect the field layout.");
             }
 		}
 
@@ -138,7 +138,7 @@ var trial_id = <% $trial_id %>;
 		stage.add(popup_layer);
 
 	    },
-      error: function(reponse) {
+      error: function(reponse) { // codespell:ignore reponse (existing callback parameter name)
 	       jQuery("#working_modal").modal("hide");
       }
     });

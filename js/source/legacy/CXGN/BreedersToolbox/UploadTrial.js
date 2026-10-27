@@ -360,7 +360,7 @@ jQuery(document).ready(function ($) {
 
     function open_upload_trial_dialog() {
         jQuery('#upload_trial_dialog').modal("show");
-        //add a blank line to design method select dropdown that dissappears when dropdown is opened
+        //add a blank line to design method select dropdown that disappears when dropdown is opened
         jQuery("#trial_upload_design_method").prepend("<option value=''></option>").val('');
         jQuery("#trial_upload_design_method").one('mousedown', function () {
             jQuery("option:first", this).remove();

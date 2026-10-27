@@ -10,7 +10,7 @@ for this branch.
 
 ## Results
 
-- 19 native unit files: 771 top-level checks passed, including the native wrapper
+- 52 native unit files: 2,259 top-level checks passed locally, including the native wrapper
   for 12 JavaScript suites. Four optional browser-dependent cases are explicitly
   unarmed; their source/DOM checks ran where available. No native HTTP, database
   write, outbound mail, image-processing job or scientific application run is
@@ -27,7 +27,7 @@ for this branch.
   unchanged baseline: three XLS validators refer to undeclared variables, and
   `solGS/combinedTrials.pm` requires `String::CRC32`, absent in this dependency
   environment. They are not counted as passing checks.
-- All 15,399 active message identities from 1,759 registered sources compiled
+- All 15,398 active message identities from 1,759 registered sources compiled
   with filled Ukrainian, Spanish and Arabic translations, correct named
   placeholders and validated plural rules. Each language has 29 partitions;
   all 90 JSON/index files passed hash checks and remain within the per-pack
@@ -80,3 +80,19 @@ The existing documentation workflow still renders English only. The included
 commands build translated readers and their PDF downloads; maintainers must
 invoke them when publishing the multilingual documentation site. CI workflows
 are unchanged.
+
+## CI portability repairs
+
+The JavaScript dependency unit test uses a controlled temporary mapping and the
+real candidate legacy resolver, so it does not require webpack output before
+CI builds it. Mason/browser harnesses supply the actual English translator and
+request/browser contexts. Python formatters share the same 120-column style;
+strict JSON scalar checks intentionally reject bool and custom subclasses.
+
+Spelling corrections retain semantic contexts, API/data identifiers and all
+translated forms. One duplicate message identity is merged. Existing public
+Calendar browser-key use is unchanged and annotated narrowly for Gitleaks.
+
+Documentation CI uses the normal pull-request checkout. HTML/PDF builds still
+run for fork PRs; the existing commit/push step runs only for an explicit manual
+workflow on master. Existing permissions are not expanded.

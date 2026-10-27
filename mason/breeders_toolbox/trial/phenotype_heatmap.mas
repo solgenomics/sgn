@@ -184,7 +184,7 @@ $trial_stock_type => undef
     </div>
 </div>
 
-<div class="form-group form-group-sm" id="ctrldiv" style="diaplay:none">
+<div class="form-group form-group-sm" id="ctrldiv" style="diaplay:none"><!-- codespell:ignore diaplay (preserve existing CSS value; do not change behavior) -->
     <label for="check_list_dropdown" class="col-sm-2 control-label"><% $c->i18n->p("trial.heatmap.view_check_plots", "View Check Plots:") |h %></label><br />
     <div class="col-sm-12">
         <div id="heatmap_trial_checks_dropdown">
@@ -648,7 +648,7 @@ $trial_stock_type => undef
 
                       <div class="form-group">
                         <div class="col-sm-12 list-group-item-warning" >
-                          <p><i><% $c->i18n->p("trial.heatmap.warning_new_plot_name", "Warning: the new plot name will replace the old plot name in subplots, plants, and tissue samples if possible. If a plot name template is saved in assocation with this trial, it will be used to rename the plot unless a new plot name is manually specified. Changing plot accessions may change plot replicate numbers. You may need to reprint labels after the changes are applied.") |h %></i></p>
+                          <p><i><% $c->i18n->p("trial.heatmap.warning_new_plot_name", "Warning: the new plot name will replace the old plot name in subplots, plants, and tissue samples if possible. If a plot name template is saved in association with this trial, it will be used to rename the plot unless a new plot name is manually specified. Changing plot accessions may change plot replicate numbers. You may need to reprint labels after the changes are applied.") |h %></i></p>
                         </div>
                       </div>
 
@@ -1103,7 +1103,7 @@ jQuery(document).ready( function() {
                 },
                 error: function(response) {
                     jQuery('#working_modal').modal("hide");
-                    alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("trial.heatmap.find_filler_accession_error", "An error occured while trying to find accession name of filler plots") : 'An error occured while trying to find accession name of filler plots'));
+                    alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("trial.heatmap.find_filler_accession_error", "An error occurred while trying to find accession name of filler plots") : 'An error occurred while trying to find accession name of filler plots'));
                 }
             });
         } else {

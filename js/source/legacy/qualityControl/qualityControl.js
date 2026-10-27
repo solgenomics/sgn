@@ -188,7 +188,7 @@ function formatGenCorInputData (popId, type, indexFile) {
         error: function(response) {
             jQuery(divPlace +"#qualityControl_message")
                 .css({"padding-left": '0px'})
-                .html((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("analysis.interface.error_3_occured_preparing_the_additive_genetic_data_for_qualitycontrol", "Error 3 occured preparing the additive genetic data for qualityControl analysis.") : "Error 3 occured preparing the additive genetic data for qualityControl analysis."));
+                .html((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("analysis.interface.error_3_occured_preparing_the_additive_genetic_data_for_qualitycontrol", "Error 3 occurred preparing the additive genetic data for qualityControl analysis.") : "Error 3 occurred preparing the additive genetic data for qualityControl analysis."));
              
             jQuery.unblockUI();
         }         
@@ -239,7 +239,7 @@ function phenotypicqualityControl () {
             error: function(response) {
                 jQuery("#qualityControl_message")
                     .css({"padding-left": '0px'})
-                    .html((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("analysis.interface.error_1_occured_preparing_the_phenotype_data_for_qualitycontrol_analysis", "Error 1 occured preparing the phenotype data for qualityControl analysis.") : "Error 1 occured preparing the phenotype data for qualityControl analysis."));
+                    .html((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("analysis.interface.error_1_occured_preparing_the_phenotype_data_for_qualitycontrol_analysis", "Error 1 occurred preparing the phenotype data for qualityControl analysis.") : "Error 1 occurred preparing the phenotype data for qualityControl analysis."));
 
 		jQuery("#run_pheno_qualityControl").show();
             }
@@ -277,7 +277,7 @@ function runPhenoqualityControlAnalysis () {
         error: function(response) {                          
             jQuery("#qualityControl_message")
                 .css({"padding-left": '0px'})
-                .html((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("analysis.interface.error_2_occured_running_the_qualitycontrol_analysis", "Error 2 occured running the qualityControl analysis.") : "Error 2 occured running the qualityControl analysis."));
+                .html((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("analysis.interface.error_2_occured_running_the_qualitycontrol_analysis", "Error 2 occurred running the qualityControl analysis.") : "Error 2 occurred running the qualityControl analysis."));
             
         jQuery("#run_pheno_qualityControl").show();
         }                

@@ -51,16 +51,14 @@ my $full_pathname = '';
 # The actual extension used should have been stored in the database, but it
 # was not. This is because most chromatograms we had at the start did not have
 # an extension. Overtime, it became clear that preserving the facility's 
-# specified filename is necessary, thus conventions for file extenstions are
+# specified filename is necessary, thus conventions for file extensions are
 # not standardized. This nested loop below wastes some time, but is arguably
 # robust and easily extended to new types.
 #
-# Add the extenstion used to seqread in the database to solve the problem
+# Add the extension used to seqread in the database to solve the problem
 # cleanly, do NOT standardize the extensions used on the file system.
-my $type_ext;
-my $comp_ext;
-foreach $type_ext ( '',qw/.ab1 .abi .scf .esd .SCF/) {
-  foreach $comp_ext ( '',qw/.gz .Z .bz2/) {
+foreach my $type_ext ( '',qw/.ab1 .abi .scf .esd .SCF/) {
+  foreach my $comp_ext ( '',qw/.gz .Z .bz2/) {
     if ( -f "$basename$type_ext$comp_ext" ) {
       $full_pathname = $basename . $type_ext . $comp_ext;
       $name .= $type_ext . $comp_ext;
@@ -74,18 +72,18 @@ if (!$full_pathname) {
   $page->message_page(HTML::Entities::encode_entities($trace_i18n->p('global.trace_download.caption_2', 'This sequence does not seem to have an associated chromatogram.')));
 }
 
-open F, "<$full_pathname"
+open my $trace_fh, '<', $full_pathname
  or $page->error_page(HTML::Entities::encode_entities($trace_i18n->p('global.trace_download.open_failed', 'Failed to open chromatogram file for SGN-T%{read_id} (%{error})', {read_id => $read_id // "", error => "" . $!})));
 
 print "Pragma: \"no-cache\"\nContent-Disposition: filename=$name\n";
 print "Content-type: application/data\n\n";
 
 
-while(read(F,$_,4096)) {
+while(read($trace_fh,$_,4096)) {
     print;
 }
 
-close F;
+close $trace_fh;
 
 sub invalid_search {
     my SGN::I18N $cgi_trace_download_invalid_search_i18n = eval { $c && $c->i18n };

@@ -3,16 +3,22 @@ use strict;
 use warnings;
 use Test::More;
 use JSON::PP;
-use File::Slurp qw(read_file);
 use File::Spec;
+use Cwd qw(abs_path);
+use FindBin qw($Bin);
+use File::Temp qw(tempfile);
 use List::MoreUtils qw(uniq);
 
-# The actual controller and JSAN parser read the immutable image's real webpack
-# mapping/legacy dependencies. Only the application path constructor and request
-# stash are memory-only; no Catalyst app/server/database is bootstrapped.
+# The actual controller and JSAN parser read a controlled mapping fixture and
+# resolve legacy candidates from this checkout. No generated webpack build,
+# Catalyst app, server, or database is required.
 BEGIN {
     package SGN;
-    sub path_to { shift; File::Spec->catfile('/home/production/cxgn/sgn', @_) }
+    sub path_to {
+        shift;
+        my $root = Cwd::abs_path(File::Spec->catdir($FindBin::Bin, qw(.. .. ..)));
+        return File::Spec->catfile($root, @_);
+    }
 }
 use SGN::Controller::JavaScript;
 {
@@ -28,15 +34,27 @@ use SGN::Controller::JavaScript;
         return $self->$orig($files);
     };
 }
-my $root=$ENV{I18N_TEST_JS_SOURCE_ROOT}||'/home/production/cxgn/sgn';
-my $mapping_path=File::Spec->catfile($root,'js/build/mapping.json');
-my $mapping=JSON::PP->new->decode(scalar read_file($mapping_path));
+my $root=abs_path(File::Spec->catdir($Bin, qw(.. .. ..)));
+my $legacy_root=File::Spec->catdir($root,'js','source','legacy');
+my $mapping={
+    sequenced_accessions=>{files=>['runtime.min.js','sequenced_accessions.min.js'],legacy=>['jquery']},
+    fieldmap=>{files=>['runtime.min.js','fieldmap.min.js'],legacy=>['jquery.js','solGS.heatMap']},
+    field_trial_linkage=>{files=>['runtime.min.js','field_trial_linkage.min.js'],legacy=>['jquery','solGS.heatMap.js']},
+};
+my ($mapping_fh,$mapping_path)=tempfile(UNLINK=>1);
+print {$mapping_fh} JSON::PP->new->encode($mapping);
+close($mapping_fh) or die "Cannot close controlled JavaScript mapping fixture: $!";
+ok(-d $legacy_root,'Portable source checkout contains the legacy dependency candidate root');
 for my $entry(qw(sequenced_accessions fieldmap field_trial_linkage)) {
-    ok(ref($mapping->{$entry}{files})eq'ARRAY'&&@{$mapping->{$entry}{files}},'Real immutable webpack fixture contains '.$entry);
+    ok(ref($mapping->{$entry}{files})eq'ARRAY'&&@{$mapping->{$entry}{files}},'Controlled webpack mapping fixture contains '.$entry);
 }
 my @entries=((map {'sequenced_accessions'} 1..19),'fieldmap','field_trial_linkage');
 my @classes=('jquery','jquery.js','calendar.fullcalendar_min','solGS.heatMap','solGS.heatMap.js');
-my $controller=Local::JavaScriptDependencies::Controller->new(dependency_json_path=>[$mapping_path],js_legacy_path=>[File::Spec->catdir($root,'js/source/legacy')]);
+my $controller=Local::JavaScriptDependencies::Controller->new(
+    js_path=>[File::Spec->catdir($root,'js','build')],
+    dependency_json_path=>[$mapping_path],
+    js_legacy_path=>[$legacy_root],
+);
 my $context=Local::JavaScriptDependencies::Context->new({jsan_classes=>[@classes],js_modules=>[@entries]});
 my @raw_module_files=map {@{$mapping->{$_}{files}}} @entries;
 my @raw_legacy=(@classes,map {@{$mapping->{$_}{legacy}}} @entries);

@@ -186,7 +186,7 @@
 	    // the behaviour: using options, listening to events, or extending.
 	    L$$1.Editable = L$$1.Evented.extend({
 
-	        statics: {
+	        statics: { // codespell:ignore statics (Leaflet API property)
 	            FORWARD: 1,
 	            BACKWARD: -1
 	        },

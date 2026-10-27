@@ -141,7 +141,7 @@ sub publish_dataset_authorize_finish : Path('/dataset/publish/authorize') Args(0
 
     if ( $error ) {
         $c->stash->{template} = 'generic_message.mas';
-        $c->stash->{message} = HTML::Entities::encode_entities($c->i18n->p("lists_datasets.controller.authorization_failed", "Could not authorize the appication: %{error}", {error => $error}));
+        $c->stash->{message} = HTML::Entities::encode_entities($c->i18n->p("lists_datasets.controller.authorization_failed", "Could not authorize the application: %{error}", {error => $error}));
         return;
     }
 

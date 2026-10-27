@@ -253,7 +253,7 @@ msgstr ""
 
 #: mason/stock/upload_additional_accessions_file.mas:59
 msgctxt "accession.files.possible_files"
-msgid "Possible additional files inlude, but are not limited to:"
+msgid "Possible additional files include, but are not limited to:"
 msgstr ""
 
 #: mason/stock/upload_additional_accessions_file.mas:64
@@ -1008,7 +1008,7 @@ msgstr ""
 
 #: lib/CXGN/Population.pm:153
 msgctxt "accession.population.not_member"
-msgid "This accession is not a population memeber. Cannot delete.\n"
+msgid "This accession is not a population member. Cannot delete.\n"
 msgstr ""
 
 #: lib/CXGN/Population.pm:104
@@ -1308,12 +1308,12 @@ msgstr ""
 
 #: mason/stock/related_stock.mas:55
 msgctxt "accession.related_stock.copy_seedlot_help"
-msgid "Copy the seedlot names showing in table to a new or exisiting list"
+msgid "Copy the seedlot names showing in table to a new or existing list"
 msgstr ""
 
 #: mason/stock/related_stock.mas:164
 msgctxt "accession.related_stock.copy_sibling_help"
-msgid "Copy the sibling names showing in table to a new or exisiting list"
+msgid "Copy the sibling names showing in table to a new or existing list"
 msgstr ""
 
 #: mason/stock/related_stock.mas:164
@@ -1323,7 +1323,7 @@ msgstr ""
 
 #: mason/stock/related_stock.mas:115 mason/stock/related_stock.mas:192 mason/stock/related_stock.mas:28 mason/stock/related_stock.mas:86
 msgctxt "accession.related_stock.copy_stock_help"
-msgid "Copy the stock names showing in table to a new or exisiting list"
+msgid "Copy the stock names showing in table to a new or existing list"
 msgstr ""
 
 #: mason/stock/related_stock.mas:115 mason/stock/related_stock.mas:192 mason/stock/related_stock.mas:28 mason/stock/related_stock.mas:55 mason/stock/related_stock.mas:86
@@ -1453,7 +1453,7 @@ msgstr ""
 
 #: js/source/legacy/CXGN/BreedersToolbox/UploadRenameAccessions.js:104
 msgctxt "accession.rename.store_error"
-msgid "An Error Occured: No accessions were renamed! Try Fixing Your File For The Issues Identified In the Validation. %{details}"
+msgid "An Error Occurred: No accessions were renamed! Try Fixing Your File For The Issues Identified In the Validation. %{details}"
 msgstr ""
 
 #: lib/SGN/Controller/AJAX/Accessions/Rename.pm:111 lib/SGN/Controller/AJAX/Grafting.pm:114 lib/SGN/Controller/AJAX/PCRBasedGenotypeData.pm:110 lib/SGN/Controller/AJAX/Transformation.pm:1292 lib/SGN/Controller/AJAX/Transformation.pm:1608 lib/SGN/Controller/AJAX/Transformation.pm:362 lib/SGN/Controller/AJAX/VectorConstruct.pm:261
@@ -1463,7 +1463,7 @@ msgstr ""
 
 #: lib/SGN/Controller/AJAX/Accessions/Rename.pm:86
 msgctxt "accession.rename_server.file_type"
-msgid "The rename accessions funtion requires a tab delimited file. Excel files (.xls and .xlsx) are currently not supported. Please convert the file and try again."
+msgid "The rename accessions function requires a tab delimited file. Excel files (.xls and .xlsx) are currently not supported. Please convert the file and try again."
 msgstr ""
 
 #: lib/SGN/Controller/AJAX/Accessions/Rename.pm:164 lib/SGN/Controller/AJAX/Accessions/Rename.pm:174 lib/SGN/Controller/AJAX/Accessions/Rename.pm:47 lib/SGN/Controller/AJAX/Accessions/Rename.pm:57 lib/SGN/Controller/AJAX/Grafting.pm:153 lib/SGN/Controller/AJAX/Grafting.pm:163 lib/SGN/Controller/AJAX/Grafting.pm:52 lib/SGN/Controller/AJAX/Grafting.pm:62
@@ -2883,7 +2883,7 @@ msgstr ""
 
 #: lib/CXGN/Stock/StockTemplate.pm:464
 msgctxt "accession.template.store_failed"
-msgid "An error occured! Cannot store data! "
+msgid "An error occurred! Cannot store data! "
 msgstr ""
 
 #: lib/CXGN/List/Transform/Plugin/Accessions2AccessionCase.pm:14
@@ -3043,7 +3043,7 @@ msgstr ""
 
 #: lib/CXGN/Stock/ParseUpload/Plugin/AccessionsXLS.pm:172
 msgctxt "accession.xls.error_12"
-msgid "Accession %{k} occures %{accession_name_counts_k} times in the file. Accession names must be unique. Please remove duplicated accession names."
+msgid "Accession %{k} occurs %{accession_name_counts_k} times in the file. Accession names must be unique. Please remove duplicated accession names."
 msgstr ""
 
 #: lib/CXGN/Stock/ParseUpload/Plugin/AccessionsXLS.pm:62 lib/CXGN/Stock/Vector/ParseUpload/Plugin/VectorsXLS.pm:61
@@ -3473,7 +3473,7 @@ msgstr ""
 
 #: js/source/legacy/CXGN/BreedersToolbox/Accessions.js:234
 msgctxt "accessions.population.retrieve_failed"
-msgid "An error occured retrieving population data."
+msgid "An error occurred retrieving population data."
 msgstr ""
 
 #: js/source/legacy/CXGN/BreedersToolbox/Accessions.js:865
@@ -3696,12 +3696,7 @@ msgctxt "accessions.section.copy_list"
 msgid "Copy accessions to a List"
 msgstr ""
 
-#: mason/stock/vector_related_accessions.mas:19 mason/transformation/transformant_details.mas:59
-msgctxt "accessions.section.copy_list_help"
-msgid "Copy the accession names to a new or exisiting list"
-msgstr ""
-
-#: mason/breeders_toolbox/manage_accessions.mas:69 mason/breeders_toolbox/manage_accessions.mas:89
+#: mason/breeders_toolbox/manage_accessions.mas:69 mason/breeders_toolbox/manage_accessions.mas:89 mason/stock/vector_related_accessions.mas:19 mason/transformation/transformant_details.mas:59
 msgctxt "accessions.section.copy_list_help"
 msgid "Copy the accession names to a new or existing list"
 msgstr ""
@@ -3988,7 +3983,7 @@ msgstr ""
 
 #: mason/user/change_account.mas:64
 msgctxt "account.change.email_help"
-msgid "Your private e-mail address is not publically displayed online. It is used only for SGN staff to contact you about changes to your record or for e-mailing your password to you. Changing your private e-mail address will trigger a confirmation message from SGN to verify the address is usable by SGN."
+msgid "Your private e-mail address is not publicly displayed online. It is used only for SGN staff to contact you about changes to your record or for e-mailing your password to you. Changing your private e-mail address will trigger a confirmation message from SGN to verify the address is usable by SGN."
 msgstr ""
 
 #: mason/user/change_account.mas:63
@@ -4388,7 +4383,7 @@ msgstr ""
 
 #: mason/tools/stability/index.mas:101
 msgctxt "analysis.interface.4_the_same_trait_must_be_available_in_all_selected"
-msgid "4. The same trait must be available in all selected locations. Missing data is acceptable for some replications, however the model wont work if it is missing data in all replications."
+msgid "4. The same trait must be available in all selected locations. Missing data is acceptable for some replications, however the model won't work if it is missing data in all replications."
 msgstr ""
 
 #: mason/analyses/analysis_calculate_statistics.mas:194
@@ -5018,7 +5013,7 @@ msgstr ""
 
 #: js/source/legacy/qualityControl/qualityControl.js:242
 msgctxt "analysis.interface.error_1_occured_preparing_the_phenotype_data_for_qualitycontrol_analysis"
-msgid "Error 1 occured preparing the phenotype data for qualityControl analysis."
+msgid "Error 1 occurred preparing the phenotype data for qualityControl analysis."
 msgstr ""
 
 #: js/source/entries/mixedmodels.js:180
@@ -5028,22 +5023,22 @@ msgstr ""
 
 #: js/source/legacy/heritability/heritability.js:285
 msgctxt "analysis.interface.error_2_occured_running_the_heritability_analysis"
-msgid "Error 2 occured running the heritability analysis."
+msgid "Error 2 occurred running the heritability analysis."
 msgstr ""
 
 #: js/source/legacy/qualityControl/qualityControl.js:280
 msgctxt "analysis.interface.error_2_occured_running_the_qualitycontrol_analysis"
-msgid "Error 2 occured running the qualityControl analysis."
+msgid "Error 2 occurred running the qualityControl analysis."
 msgstr ""
 
 #: js/source/legacy/heritability/heritability.js:191
 msgctxt "analysis.interface.error_3_occured_preparing_the_additive_genetic_data_for_heritability"
-msgid "Error 3 occured preparing the additive genetic data for heritability analysis."
+msgid "Error 3 occurred preparing the additive genetic data for heritability analysis."
 msgstr ""
 
 #: js/source/legacy/qualityControl/qualityControl.js:191
 msgctxt "analysis.interface.error_3_occured_preparing_the_additive_genetic_data_for_qualitycontrol"
-msgid "Error 3 occured preparing the additive genetic data for qualityControl analysis."
+msgid "Error 3 occurred preparing the additive genetic data for qualityControl analysis."
 msgstr ""
 
 #: mason/analyses/analysis_calculate_statistics.mas:503 mason/breeders_toolbox/drone_imagery/drone_imagery_analysis.mas:1029
@@ -6318,7 +6313,7 @@ msgstr ""
 
 #: mason/tools/qualityControl/validated_trials.mas:75
 msgctxt "analysis.interface.statistcs"
-msgid "Statistcs"
+msgid "Statistics"
 msgstr ""
 
 #: mason/analyses/store_new_analysis_values_and_model.mas:275
@@ -6368,7 +6363,7 @@ msgstr ""
 
 #: mason/tools/stability/index.mas:105
 msgctxt "analysis.interface.the_ammi_graphic_shows_stable_varieties_with_horizintal_lines_the"
-msgid "The AMMI graphic shows stable varieties with horizintal lines. The slope is proportional to their stability index."
+msgid "The AMMI graphic shows stable varieties with horizontal lines. The slope is proportional to their stability index."
 msgstr ""
 
 #: lib/SGN/Controller/AJAX/MixedModels.pm:265 lib/SGN/Controller/AJAX/MixedModels.pm:288
@@ -6963,7 +6958,7 @@ msgstr ""
 
 #: mason/qtl/qtl_load/population_exists.mas:29
 msgctxt "analysis.qtl.ui.if_you_are_trying_to_load_more_or_change_data"
-msgid "If you are trying to load more or change data to an \n                  exising population contact us."
+msgid "If you are trying to load more or change data to an \n                  existing population contact us."
 msgstr ""
 
 #: mason/qtl/qtl_form/intro.mas:43
@@ -7128,7 +7123,7 @@ msgstr ""
 
 #: mason/qtl/qtl_form/stat_form.mas:34
 msgctxt "analysis.qtl.ui.qtl_genotype_probablity_method"
-msgid "QTL genotype probablity method:"
+msgid "QTL genotype probability method:"
 msgstr ""
 
 #: mason/qtl/qtl/index.mas:42
@@ -7168,7 +7163,7 @@ msgstr ""
 
 #: mason/qtl/qtl_load/check_organism.mas:32
 msgctxt "analysis.qtl.ui.read_also_the_guidline_for_the_nomenclature_format_you_have"
-msgid "Read also the guidline for the nomenclature format \n                  you have to use to submit the parental lines."
+msgid "Read also the guideline for the nomenclature format \n                  you have to use to submit the parental lines."
 msgstr ""
 
 #: mason/qtl/qtl_form/pop_form.mas:78
@@ -8633,7 +8628,7 @@ msgstr ""
 
 #: js/source/legacy/tools/LabelDesigner.js:802
 msgctxt "barcode.js.an_error_occured_while_retrieving_the_design_elements_of_this_trial"
-msgid "An error occured while retrieving the design elements of this trial: "
+msgid "An error occurred while retrieving the design elements of this trial: "
 msgstr ""
 
 #: js/source/legacy/tools/LabelDesigner.js:416
@@ -9660,7 +9655,7 @@ msgstr ""
 
 #: lib/CXGN/Stock/StockBarcode.pm:310
 msgctxt "barcode.server.an_error_occured_cannot_store_data"
-msgid "An error occured! Cannot store data!"
+msgid "An error occurred! Cannot store data!"
 msgstr ""
 
 #: lib/CXGN/Stock/StockBarcode.pm:171
@@ -10513,17 +10508,17 @@ msgctxt "community.calendar.are_you_associated_with_the_breeding_program_you_are
 msgid "Are you associated with the breeding program you are interested in viewing?"
 msgstr ""
 
-#: mason/calendar/events_by_user_role.mas:408 mason/calendar/events_by_user_role.mas:451
+#: mason/calendar/events_by_user_role.mas:409 mason/calendar/events_by_user_role.mas:452
 msgctxt "community.calendar.are_you_sure_about_this_change"
 msgid "Are you sure about this change?"
 msgstr ""
 
-#: mason/calendar/events_by_user_role.mas:522
+#: mason/calendar/events_by_user_role.mas:523
 msgctxt "community.calendar.are_you_sure_you_want_to_delete_this_event"
 msgid "Are you sure you want to delete this event?"
 msgstr ""
 
-#: mason/calendar/events_by_user_role.mas:581
+#: mason/calendar/events_by_user_role.mas:582
 msgctxt "community.calendar.are_you_sure_you_want_to_save_this_edit"
 msgid "Are you sure you want to save this edit?"
 msgstr ""
@@ -10578,17 +10573,17 @@ msgctxt "community.calendar.description"
 msgid "Description:"
 msgstr ""
 
-#: mason/calendar/events_by_user_role.mas:396 mason/calendar/events_by_user_role.mas:399
+#: mason/calendar/events_by_user_role.mas:397 mason/calendar/events_by_user_role.mas:400
 msgctxt "community.calendar.description_ebc5574"
 msgid "Description: "
 msgstr ""
 
-#: mason/calendar/events_by_user_role.mas:540
+#: mason/calendar/events_by_user_role.mas:541
 msgctxt "community.calendar.did_not_delete_event_e_001"
 msgid "Did Not Delete Event! E.001"
 msgstr ""
 
-#: mason/calendar/events_by_user_role.mas:601
+#: mason/calendar/events_by_user_role.mas:602
 msgctxt "community.calendar.did_not_save_edit_e_001"
 msgid "Did Not Save Edit! E.001"
 msgstr ""
@@ -10608,37 +10603,37 @@ msgctxt "community.calendar.end_date"
 msgid "End Date:"
 msgstr ""
 
-#: mason/calendar/events_by_user_role.mas:399
+#: mason/calendar/events_by_user_role.mas:400
 msgctxt "community.calendar.end_fb3ce79"
 msgid "End: "
 msgstr ""
 
-#: mason/calendar/events_by_user_role.mas:446 mason/calendar/events_by_user_role.mas:489
+#: mason/calendar/events_by_user_role.mas:447 mason/calendar/events_by_user_role.mas:490
 msgctxt "community.calendar.error_did_not_update_event_e_001"
 msgid "Error! Did Not Update Event! E.001"
 msgstr ""
 
-#: mason/calendar/events_by_user_role.mas:514
+#: mason/calendar/events_by_user_role.mas:515
 msgctxt "community.calendar.error_event_not_added_e_001"
 msgid "Error! Event Not Added! E.001"
 msgstr ""
 
-#: mason/calendar/events_by_user_role.mas:508
+#: mason/calendar/events_by_user_role.mas:509
 msgctxt "community.calendar.error_event_not_added_e_002"
 msgid "Error! Event Not Added! E.002"
 msgstr ""
 
-#: mason/calendar/events_by_user_role.mas:366
+#: mason/calendar/events_by_user_role.mas:367
 msgctxt "community.calendar.error_preparing_day_dialog"
 msgid "Error preparing Day dialog!"
 msgstr ""
 
-#: mason/calendar/events_by_user_role.mas:567
+#: mason/calendar/events_by_user_role.mas:568
 msgctxt "community.calendar.error_preparing_edit_event_dialog"
 msgid "Error Preparing Edit Event Dialog!"
 msgstr ""
 
-#: mason/calendar/events_by_user_role.mas:595
+#: mason/calendar/events_by_user_role.mas:596
 msgctxt "community.calendar.event_already_existed_your_edit_was_not_saved"
 msgid "Event Already Existed! Your Edit Was Not Saved!"
 msgstr ""
@@ -10653,7 +10648,7 @@ msgctxt "community.calendar.event_info"
 msgid "Event Info"
 msgstr ""
 
-#: mason/calendar/events_by_user_role.mas:504
+#: mason/calendar/events_by_user_role.mas:505
 msgctxt "community.calendar.event_successfully_added"
 msgid "Event Successfully Added!"
 msgstr ""
@@ -10668,12 +10663,12 @@ msgctxt "community.calendar.event_web_url"
 msgid "Event Web URL:"
 msgstr ""
 
-#: mason/calendar/events_by_user_role.mas:607
+#: mason/calendar/events_by_user_role.mas:608
 msgctxt "community.calendar.export"
 msgid "Export"
 msgstr ""
 
-#: mason/calendar/events_by_user_role.mas:175 mason/calendar/events_by_user_role.mas:607
+#: mason/calendar/events_by_user_role.mas:175 mason/calendar/events_by_user_role.mas:608
 msgctxt "community.calendar.export_event"
 msgid "Export Event"
 msgstr ""
@@ -10738,7 +10733,7 @@ msgctxt "community.calendar.leave_blank_if_not_applicable"
 msgid "Leave Blank if Not Applicable"
 msgstr ""
 
-#: mason/calendar/events_by_user_role.mas:396
+#: mason/calendar/events_by_user_role.mas:397
 msgctxt "community.calendar.location"
 msgid "Location: "
 msgstr ""
@@ -10853,7 +10848,7 @@ msgctxt "community.calendar.start"
 msgid "Start:"
 msgstr ""
 
-#: mason/calendar/events_by_user_role.mas:399
+#: mason/calendar/events_by_user_role.mas:400
 msgctxt "community.calendar.start_00308aa"
 msgid "Start: "
 msgstr ""
@@ -10873,12 +10868,12 @@ msgctxt "community.calendar.sunday"
 msgid "Sunday"
 msgstr ""
 
-#: mason/calendar/events_by_user_role.mas:536
+#: mason/calendar/events_by_user_role.mas:537
 msgctxt "community.calendar.the_event_was_not_deleted"
 msgid "The event was not deleted!"
 msgstr ""
 
-#: mason/calendar/events_by_user_role.mas:432 mason/calendar/events_by_user_role.mas:475
+#: mason/calendar/events_by_user_role.mas:433 mason/calendar/events_by_user_role.mas:476
 msgctxt "community.calendar.the_was_a_problem_editing_this_event"
 msgid "The was a problem editing this event."
 msgstr ""
@@ -10908,12 +10903,12 @@ msgctxt "community.calendar.tuesday"
 msgid "Tuesday"
 msgstr ""
 
-#: mason/calendar/events_by_user_role.mas:399
+#: mason/calendar/events_by_user_role.mas:400
 msgctxt "community.calendar.type"
 msgid "Type: "
 msgstr ""
 
-#: mason/calendar/events_by_user_role.mas:399
+#: mason/calendar/events_by_user_role.mas:400
 msgctxt "community.calendar.url"
 msgid "URL: "
 msgstr ""
@@ -10948,22 +10943,22 @@ msgctxt "community.calendar.year"
 msgid "year"
 msgstr ""
 
-#: mason/calendar/events_by_user_role.mas:510
+#: mason/calendar/events_by_user_role.mas:511
 msgctxt "community.calendar.you_do_not_have_the_permissions_to_add_an_event"
 msgid "You do not have the permissions to add an event."
 msgstr ""
 
-#: mason/calendar/events_by_user_role.mas:534
+#: mason/calendar/events_by_user_role.mas:535
 msgctxt "community.calendar.you_do_not_have_the_permissions_to_delete_an_event"
 msgid "You do not have the permissions to delete an event."
 msgstr ""
 
-#: mason/calendar/events_by_user_role.mas:597
+#: mason/calendar/events_by_user_role.mas:598
 msgctxt "community.calendar.you_do_not_have_the_permissions_to_edit_thie_event"
-msgid "You do not have the permissions to edit thie event."
+msgid "You do not have the permissions to edit the event."
 msgstr ""
 
-#: mason/calendar/events_by_user_role.mas:430 mason/calendar/events_by_user_role.mas:473
+#: mason/calendar/events_by_user_role.mas:431 mason/calendar/events_by_user_role.mas:474
 msgctxt "community.calendar.you_do_not_have_the_permissions_to_edit_this_event"
 msgid "You do not have the permissions to edit this event."
 msgstr ""
@@ -11605,7 +11600,7 @@ msgstr ""
 
 #: mason/image/print_images.mas:239
 msgctxt "community.image.an_error_occured_while_setting_the_display_image"
-msgid "An error occured while setting the display image"
+msgid "An error occurred while setting the display image"
 msgstr ""
 
 #: mason/image/display_order.mas:26
@@ -11993,7 +11988,7 @@ msgctxt "community.image.view_selected"
 msgid "View Selected"
 msgstr ""
 
-#: cgi-bin/solpeople/personal-info.pl:345
+#: cgi-bin/solpeople/personal-info.pl:349
 msgctxt "community.people.a_b_semicolon_b_separated_list"
 msgid " a <b>semicolon</b>-separated list."
 msgstr ""
@@ -12013,7 +12008,7 @@ msgctxt "community.people.add_comment"
 msgid "[Add comment]"
 msgstr ""
 
-#: cgi-bin/solpeople/personal-info.pl:256
+#: cgi-bin/solpeople/personal-info.pl:260
 msgctxt "community.people.address"
 msgid "Address"
 msgstr ""
@@ -12023,9 +12018,9 @@ msgctxt "community.people.agp_tpf_upload"
 msgid "AGP and TPF File Upload"
 msgstr ""
 
-#: cgi-bin/solpeople/personal-info.pl:296
+#: cgi-bin/solpeople/personal-info.pl:300
 msgctxt "community.people.an_address_here_this_address_will_be_displayed_publically_to_all_sgn_users_who_view_your_entry"
-msgid " an address here. This address will be displayed publically to all SGN users who view your entry."
+msgid " an address here. This address will be displayed publicly to all SGN users who view your entry."
 msgstr ""
 
 #: mason/people/profile.mas:181
@@ -12048,7 +12043,7 @@ msgctxt "community.people.attribute_bac"
 msgid "Attribute a BAC to your chromosome sequencing project"
 msgstr ""
 
-#: cgi-bin/solpeople/personal-info.pl:361
+#: cgi-bin/solpeople/personal-info.pl:365
 msgctxt "community.people.auto_format_entry_is_plain_text"
 msgid "Auto-format (entry is plain text)"
 msgstr ""
@@ -12068,12 +12063,12 @@ msgctxt "community.people.cannot_create_xmlhttp"
 msgid "Giving up :( Cannot create an XMLHTTP instance"
 msgstr ""
 
-#: cgi-bin/solpeople/personal-info.pl:212
+#: cgi-bin/solpeople/personal-info.pl:216
 msgctxt "community.people.censor_contact_information_from_directory_search_and_public_display"
 msgid "Censor contact information from directory search and public display"
 msgstr ""
 
-#: cgi-bin/solpeople/personal-info.pl:398
+#: cgi-bin/solpeople/personal-info.pl:402
 msgctxt "community.people.clear"
 msgid "Clear"
 msgstr ""
@@ -12088,12 +12083,12 @@ msgctxt "community.people.confirm_password"
 msgid "Confirm Password"
 msgstr ""
 
-#: cgi-bin/solpeople/personal-info.pl:298
+#: cgi-bin/solpeople/personal-info.pl:302
 msgctxt "community.people.contact_e_mail"
 msgid "Contact E-mail"
 msgstr ""
 
-#: cgi-bin/solpeople/people_search.pl:70 cgi-bin/solpeople/personal-info.pl:264
+#: cgi-bin/solpeople/people_search.pl:70 cgi-bin/solpeople/personal-info.pl:268
 msgctxt "community.people.country"
 msgid "Country"
 msgstr ""
@@ -12188,12 +12183,12 @@ msgctxt "community.people.edit"
 msgid "[Edit]"
 msgstr ""
 
-#: cgi-bin/solpeople/personal-info.pl:316
+#: cgi-bin/solpeople/personal-info.pl:320
 msgctxt "community.people.enter_research_keywords_for_searching_and_a_fuller_explanation_of_your_research_interests_for_searching_and_displaying_below"
 msgid "Enter research keywords (for searching) and a fuller explanation of your research interests (for searching and displaying) below."
 msgstr ""
 
-#: cgi-bin/solpeople/personal-info.pl:284
+#: cgi-bin/solpeople/personal-info.pl:288
 msgctxt "community.people.fax"
 msgid "Fax"
 msgstr ""
@@ -12203,7 +12198,7 @@ msgctxt "community.people.file_label"
 msgid "File:"
 msgstr ""
 
-#: cgi-bin/solpeople/personal-info.pl:233
+#: cgi-bin/solpeople/personal-info.pl:237
 msgctxt "community.people.first_name"
 msgid "First name"
 msgstr ""
@@ -12223,7 +12218,7 @@ msgctxt "community.people.first_name_header"
 msgid "First name"
 msgstr ""
 
-#: cgi-bin/solpeople/personal-info.pl:369
+#: cgi-bin/solpeople/personal-info.pl:373
 msgctxt "community.people.for_auto_formatted_plain_text_entries_separate_paragraphs_by_a_single_empty_line_for_html_entries_please_use_only_paragraph"
 msgid "For auto-formatted plain text entries, separate paragraphs by a single empty line. For HTML entries, please use only paragraph"
 msgstr ""
@@ -12253,7 +12248,7 @@ msgctxt "community.people.general_tools"
 msgid "General Tools"
 msgstr ""
 
-#: cgi-bin/solpeople/personal-info.pl:330
+#: cgi-bin/solpeople/personal-info.pl:334
 msgctxt "community.people.host_pathogen_interaction_drought_tolerance"
 msgid " host pathogen interaction; drought tolerance)"
 msgstr ""
@@ -12268,17 +12263,17 @@ msgctxt "community.people.if_you_accidentally_save_an_incorrect_organism_name_pl
 msgid "If you accidentally save an incorrect organism name, please contact us via"
 msgstr ""
 
-#: cgi-bin/solpeople/personal-info.pl:386
+#: cgi-bin/solpeople/personal-info.pl:390
 msgctxt "community.people.if_you_need_to_define_new_organisms_the_preview_will_show_how_the_website_is_parsing_the_text_you_ve_entered_above"
 msgid " if you need to define new organisms, the preview will show how the website is parsing the text you've entered above."
 msgstr ""
 
-#: cgi-bin/solpeople/personal-info.pl:274
+#: cgi-bin/solpeople/personal-info.pl:278
 msgctxt "community.people.if_you_wish_to_be_contacted_via_telephone_or_fax_by_interested_parties_who_found_your_directory_entry_on_sgn_please_enter"
 msgid "If you wish to be contacted via telephone or fax by interested parties who found your directory entry on SGN, please enter"
 msgstr ""
 
-#: cgi-bin/solpeople/personal-info.pl:295
+#: cgi-bin/solpeople/personal-info.pl:299
 msgctxt "community.people.if_you_would_like_to_be_contacted_via_email_by_interested_parties_who_found_your_directory_entry_on_sgn_please_enter"
 msgid "If you would like to be contacted via email by interested parties who found your directory entry on SGN, please enter"
 msgstr ""
@@ -12288,22 +12283,22 @@ msgctxt "community.people.if_you_would_like_to_change_your_user_status"
 msgid " if you would like to change your user status."
 msgstr ""
 
-#: cgi-bin/solpeople/personal-info.pl:210
+#: cgi-bin/solpeople/personal-info.pl:214
 msgctxt "community.people.if_you_would_like_to_enter_or_update_information_at_this_time_but_do_not_want_it_displayed_publically_check_this_option"
-msgid "If you would like to enter or update information at this time but do not want it displayed publically, check this option."
+msgid "If you would like to enter or update information at this time but do not want it displayed publicly, check this option."
 msgstr ""
 
-#: cgi-bin/solpeople/personal-info.pl:469
+#: cgi-bin/solpeople/personal-info.pl:473
 msgctxt "community.people.illegal_person_action"
 msgid "Illegal parameter: action '%{action}' is not supported by %{script}"
 msgstr ""
 
-#: cgi-bin/solpeople/personal-info.pl:344
+#: cgi-bin/solpeople/personal-info.pl:348
 msgctxt "community.people.in_the_selection_box_please_specify_your_additional_organisms_by_their_official_latin_names_in_the_text_entry_box_below_in"
 msgid " in the selection box, please specify your additional organisms by their official Latin names in the text entry box below, in"
 msgstr ""
 
-#: cgi-bin/solpeople/personal-info.pl:372
+#: cgi-bin/solpeople/personal-info.pl:376
 msgctxt "community.people.interests"
 msgid "Interests"
 msgstr ""
@@ -12318,12 +12313,12 @@ msgctxt "community.people.job_submissions"
 msgid "Job Submissions"
 msgstr ""
 
-#: cgi-bin/solpeople/personal-info.pl:318
+#: cgi-bin/solpeople/personal-info.pl:322
 msgctxt "community.people.keywords"
 msgid "Keywords"
 msgstr ""
 
-#: cgi-bin/solpeople/personal-info.pl:241
+#: cgi-bin/solpeople/personal-info.pl:245
 msgctxt "community.people.last_name"
 msgid "Last name"
 msgstr ""
@@ -12388,7 +12383,7 @@ msgctxt "community.people.no_query_parameters_provided"
 msgid "No query parameters provided"
 msgstr ""
 
-#: cgi-bin/solpeople/personal-info.pl:231
+#: cgi-bin/solpeople/personal-info.pl:235
 msgctxt "community.people.no_salutation"
 msgid "None"
 msgstr ""
@@ -12408,12 +12403,12 @@ msgctxt "community.people.once_committed_these_names_cannot_be_changed_by_this_i
 msgid "Once committed, these names cannot be changed by this interface."
 msgstr ""
 
-#: cgi-bin/solpeople/personal-info.pl:113
+#: cgi-bin/solpeople/personal-info.pl:117
 msgctxt "community.people.organism_code_missing"
 msgid "Organism code \"%{code}\" is not defined in the database.\n"
 msgstr ""
 
-#: cgi-bin/solpeople/people_search.pl:70 cgi-bin/solpeople/personal-info.pl:249
+#: cgi-bin/solpeople/people_search.pl:70 cgi-bin/solpeople/personal-info.pl:253
 msgctxt "community.people.organization"
 msgid "Organization"
 msgstr ""
@@ -12478,7 +12473,7 @@ msgctxt "community.people.personal_info_link"
 msgid "View or update personal (contact and research) information"
 msgstr ""
 
-#: cgi-bin/solpeople/personal-info.pl:277
+#: cgi-bin/solpeople/personal-info.pl:281
 msgctxt "community.people.phone"
 msgid "Phone"
 msgstr ""
@@ -12488,7 +12483,7 @@ msgctxt "community.people.please_contact"
 msgid "Please contact "
 msgstr ""
 
-#: cgi-bin/solpeople/personal-info.pl:329
+#: cgi-bin/solpeople/personal-info.pl:333
 msgctxt "community.people.please_separate_terms_with_a_b_semicolon_b_do_not_use_quotation_marks_or_other_punctuation_example_fruit_development"
 msgid "Please separate terms with a <b>semicolon</b>. Do not use quotation marks or other punctuation. (Example: fruit development;"
 msgstr ""
@@ -12538,7 +12533,7 @@ msgctxt "community.people.qtl_submission"
 msgid "QTL Data Submission"
 msgstr ""
 
-#: cgi-bin/solpeople/personal-info.pl:332
+#: cgi-bin/solpeople/personal-info.pl:336
 msgctxt "community.people.research_organisms"
 msgid "Research Organisms"
 msgstr ""
@@ -12548,7 +12543,7 @@ msgctxt "community.people.results"
 msgid "Results"
 msgstr ""
 
-#: cgi-bin/solpeople/personal-info.pl:225
+#: cgi-bin/solpeople/personal-info.pl:229
 msgctxt "community.people.salutation"
 msgid "Salutation"
 msgstr ""
@@ -12588,7 +12583,7 @@ msgctxt "community.people.short_name"
 msgid "Short name"
 msgstr ""
 
-#: cgi-bin/solpeople/personal-info.pl:476
+#: cgi-bin/solpeople/personal-info.pl:480
 msgctxt "community.people.sol_people_contact_and_research_info"
 msgid "Sol People: contact and research info"
 msgstr ""
@@ -12603,19 +12598,19 @@ msgctxt "community.people.submit"
 msgid "Submit"
 msgstr ""
 
-#: cgi-bin/solpeople/personal-info.pl:399
+#: cgi-bin/solpeople/personal-info.pl:403
 msgctxt "community.people.submit_changes"
 msgid "Submit Changes"
 msgstr ""
 
-#: cgi-bin/solpeople/personal-info.pl:370
+#: cgi-bin/solpeople/personal-info.pl:374
 msgctxt "community.people.tags_lt_p_gt_bold_and_italic_tags_lt_b_gt_lt_i_gt_and_break_tags_lt_br_gt_all_other_tags_will_be_removed"
 msgid " tags (&lt;p&gt;), bold and italic tags (&lt;b&gt;, &lt;i&gt;), and break tags (&lt;br&gt;). All other tags will be removed."
 msgstr ""
 
-#: cgi-bin/solpeople/personal-info.pl:275
+#: cgi-bin/solpeople/personal-info.pl:279
 msgctxt "community.people.telephone_numbers_here_these_numbers_will_be_displayed_publically_to_all_sgn_users_who_view_your_entry"
-msgid " telephone numbers here. These numbers will be displayed publically to all SGN users who view your entry."
+msgid " telephone numbers here. These numbers will be displayed publicly to all SGN users who view your entry."
 msgstr ""
 
 #: mason/people/profile.mas:143
@@ -12628,12 +12623,12 @@ msgctxt "community.people.test_website_error_handling"
 msgid "Test website error handling"
 msgstr ""
 
-#: cgi-bin/solpeople/personal-info.pl:222
+#: cgi-bin/solpeople/personal-info.pl:226
 msgctxt "community.people.the_first_and_last_names_you_enter_here_will_be_displayed_in_the_sgn_directory_if_not_censored_using_the_box_above"
 msgid "The first and last names you enter here will be displayed in the SGN directory (if not censored using the box above)."
 msgstr ""
 
-#: cgi-bin/solpeople/personal-info.pl:385
+#: cgi-bin/solpeople/personal-info.pl:389
 msgctxt "community.people.the_preview_feature_below_requires_javascript_shows_your_current_interests_statement_if_you_ve_selected_html_format_also"
 msgid "The preview feature below (requires JavaScript) shows your current interests statement if you've selected HTML format. Also,"
 msgstr ""
@@ -12653,7 +12648,7 @@ msgctxt "community.people.to_upgrade_to_a"
 msgid " to upgrade to a "
 msgstr ""
 
-#: cgi-bin/solpeople/personal-info.pl:347
+#: cgi-bin/solpeople/personal-info.pl:351
 msgctxt "community.people.unlisted_organisms"
 msgid "Unlisted Organisms"
 msgstr ""
@@ -12683,7 +12678,7 @@ msgctxt "community.people.upload_tpf_file"
 msgid "Upload Tiling Path Format (TPF) File"
 msgstr ""
 
-#: cgi-bin/solpeople/personal-info.pl:361
+#: cgi-bin/solpeople/personal-info.pl:365
 msgctxt "community.people.use_html_markup_tags"
 msgid "Use HTML markup tags"
 msgstr ""
@@ -12763,7 +12758,7 @@ msgctxt "community.people.view_user_stats"
 msgid "View user stats"
 msgstr ""
 
-#: cgi-bin/solpeople/personal-info.pl:305
+#: cgi-bin/solpeople/personal-info.pl:309
 msgctxt "community.people.website"
 msgid "Website"
 msgstr ""
@@ -12788,7 +12783,7 @@ msgctxt "community.people.you_have_the_maximum_user_privileges_on_sgn"
 msgid "You have the maximum user privileges on SGN."
 msgstr ""
 
-#: cgi-bin/solpeople/personal-info.pl:343
+#: cgi-bin/solpeople/personal-info.pl:347
 msgctxt "community.people.you_may_select_multiple_organisms_by_clicking_on_more_than_one_while_holding_the_control_key_down_if_an_organism_is_not_listed"
 msgid "You may select multiple organisms by clicking on more than one while holding the control key down. If an organism is not listed"
 msgstr ""
@@ -12808,7 +12803,7 @@ msgctxt "community.people.your_research_interests_will_be_displayed_on_sgn_s_web
 msgid "Your research interests will be displayed on SGN's website as shown in the box below (the box will not be displayed)."
 msgstr ""
 
-#: cgi-bin/solpeople/personal-info.pl:223
+#: cgi-bin/solpeople/personal-info.pl:227
 msgctxt "community.people.your_username_for_this_interface_is_not_displayed"
 msgid " Your username for this interface is not displayed."
 msgstr ""
@@ -12835,7 +12830,7 @@ msgstr ""
 
 #: cgi-bin/search/family_align.pl:413
 msgctxt "cross.aligment_analysis"
-msgid "Aligment Analysis"
+msgid "Alignment Analysis"
 msgstr ""
 
 #: cgi-bin/search/family_align.pl:403
@@ -13525,7 +13520,7 @@ msgstr ""
 
 #: cgi-bin/search/family_align.pl:195
 msgctxt "cross.for_an_explanation_of_the_terms_plase_click_here"
-msgid "For an explanation of the terms, plase click here."
+msgid "For an explanation of the terms, please click here."
 msgstr ""
 
 #: lib/CXGN/Pedigree/ParseUpload/Plugin/CrossesSimpleExcel.pm:192
@@ -13635,7 +13630,7 @@ msgstr ""
 
 #: mason/breeders_toolbox/cross/add_progenies_dialogs.mas:482
 msgctxt "cross.forms.an_error_occured_no_progenies_were_saved"
-msgid "An Error Occured: No progenies were saved!. "
+msgid "An Error Occurred: No progenies were saved!. "
 msgstr ""
 
 #: mason/breeders_toolbox/cross/add_family_members_using_list_dialog.mas:139
@@ -14770,7 +14765,7 @@ msgstr ""
 
 #: mason/breeders_toolbox/cross/target_numbers_usage_info_dialog.mas:17
 msgctxt "cross.forms.you_can_set_target_numbers_of_seeds_and_or"
-msgid "You can set target numbers of seeds and/or target numbers of progenies for parental combinations that you plan to include in this cossing experiment. Once target numbers are stored in the database, this section will automatically track crossing acitvities in this crossing experiment. Target numbers can be added before or after actual crossing activities are stored in the database."
+msgid "You can set target numbers of seeds and/or target numbers of progenies for parental combinations that you plan to include in this cossing experiment. Once target numbers are stored in the database, this section will automatically track crossing activities in this crossing experiment. Target numbers can be added before or after actual crossing activities are stored in the database."
 msgstr ""
 
 #: mason/breeders_toolbox/cross/upload_update_crosses.mas:97
@@ -15085,12 +15080,12 @@ msgstr ""
 
 #: mason/breeders_toolbox/cross/crosses_in_family.mas:20
 msgctxt "cross.pages.adding_crosses_in_this_family_to_a_new_or_exisiting"
-msgid "Adding crosses in this family to a new or exisiting list"
+msgid "Adding crosses in this family to a new or existing list"
 msgstr ""
 
 #: mason/breeders_toolbox/cross/progenies_from_family.mas:18
 msgctxt "cross.pages.adding_progenies_of_this_family_to_a_new_or_exisiting"
-msgid "Adding progenies of this family to a new or exisiting list"
+msgid "Adding progenies of this family to a new or existing list"
 msgstr ""
 
 #: mason/search/cross.mas:18
@@ -15140,12 +15135,12 @@ msgstr ""
 
 #: mason/search/cross/cross_search_using_female.mas:66 mason/search/cross/cross_search_using_male.mas:67
 msgctxt "cross.pages.copy_the_cross_unique_ids_showing_in_table_to_a"
-msgid "Copy the cross unique ids showing in table to a new or exisiting list"
+msgid "Copy the cross unique ids showing in table to a new or existing list"
 msgstr ""
 
 #: mason/search/cross/progeny_search_using_female.mas:66 mason/search/cross/progeny_search_using_male.mas:65
 msgctxt "cross.pages.copy_the_progeny_names_showing_in_table_to_a_new"
-msgid "Copy the progeny names showing in table to a new or exisiting list"
+msgid "Copy the progeny names showing in table to a new or existing list"
 msgstr ""
 
 #: mason/search/cross/cross_search_using_female.mas:34 mason/search/cross/cross_search_using_male.mas:35
@@ -15790,7 +15785,7 @@ msgstr ""
 
 #: cgi-bin/search/family_build.pl:271
 msgctxt "cross.the_specified_family_identifer_family_build_id_does_not_result_in_a_valid_search"
-msgid "The specified family identifer (%{family_build_id}) does not result in a valid search."
+msgid "The specified family identifier (%{family_build_id}) does not result in a valid search."
 msgstr ""
 
 #: cgi-bin/search/family_align.pl:217
@@ -16005,7 +16000,7 @@ msgstr ""
 
 #: mason/breeders_toolbox/cross/crosses_in_crossingtrial.mas:14
 msgctxt "cross.ui.adding_crosses_in_this_crossing_experiment_to_a_new_or_exisiti"
-msgid "Adding crosses in this crossing experiment to a new or exisiting list"
+msgid "Adding crosses in this crossing experiment to a new or existing list"
 msgstr ""
 
 #: mason/breeders_toolbox/cross/add_cross_dialogs.mas:285
@@ -16035,7 +16030,7 @@ msgstr ""
 
 #: js/source/legacy/CXGN/BreedersToolbox/UploadPedigrees.js:154
 msgctxt "cross.ui.an_error_occured_no_pedigrees_were_saved_try_fixing_your_file_"
-msgid "An Error Occured: No pedigrees were saved! Try Fixing Your File For The Issues Identified In the Validation. %{detail}"
+msgid "An Error Occurred: No pedigrees were saved! Try Fixing Your File For The Issues Identified In the Validation. %{detail}"
 msgstr ""
 
 #: js/source/legacy/CXGN/BreederSearch.js:205 js/source/legacy/CXGN/Trial.js:40 js/source/legacy/CXGN/Trial.js:71 mason/breeders_toolbox/cross/index.mas:298 mason/breeders_toolbox/genotyping_data_project/genotyping_project_deletion.mas:196
@@ -16180,7 +16175,7 @@ msgstr ""
 
 #: mason/breeders_toolbox/cross/index.mas:187
 msgctxt "cross.ui.changing_the_parameters_can_have_unpredicatable_results_in_dow"
-msgid " Changing the parameters can have unpredicatable results in downstream analyses if they are inconsistent with other data."
+msgid " Changing the parameters can have unpredictable results in downstream analyses if they are inconsistent with other data."
 msgstr ""
 
 #: mason/breeders_toolbox/cross/add_cross_dialogs.mas:25 mason/breeders_toolbox/cross/add_cross_dialogs.mas:425 mason/breeders_toolbox/cross/add_cross_dialogs.mas:435 mason/breeders_toolbox/cross/add_cross_dialogs.mas:466 mason/breeders_toolbox/cross/add_cross_dialogs.mas:476 mason/breeders_toolbox/cross/add_cross_dialogs.mas:488 mason/breeders_toolbox/cross/add_crossing_trial_dialogs.mas:113 mason/breeders_toolbox/cross/add_crossing_trial_dialogs.mas:13 mason/breeders_toolbox/cross/add_family_members_using_list_dialog.mas:12 mason/breeders_toolbox/cross/add_family_members_using_list_dialog.mas:43 mason/breeders_toolbox/cross/add_family_members_using_list_dialog.mas:53 mason/breeders_toolbox/cross/add_family_members_using_list_dialog.mas:65 mason/breeders_toolbox/cross/add_family_members_using_list_dialog.mas:75 mason/breeders_toolbox/cross/add_family_members_using_list_dialog.mas:86 mason/breeders_toolbox/cross/add_progenies_dialogs.mas:106 mason/breeders_toolbox/cross/add_progenies_dialogs.mas:128 mason/breeders_toolbox/cross/add_progenies_dialogs.mas:152 mason/breeders_toolbox/cross/add_progenies_dialogs.mas:163 mason/breeders_toolbox/cross/add_progenies_dialogs.mas:175 mason/breeders_toolbox/cross/add_progenies_dialogs.mas:186 mason/breeders_toolbox/cross/add_progenies_dialogs.mas:220 mason/breeders_toolbox/cross/add_progenies_dialogs.mas:230 mason/breeders_toolbox/cross/add_progenies_dialogs.mas:274 mason/breeders_toolbox/cross/add_progenies_dialogs.mas:285 mason/breeders_toolbox/cross/add_progenies_dialogs.mas:296 mason/breeders_toolbox/cross/add_progenies_dialogs.mas:30 mason/breeders_toolbox/cross/add_progenies_dialogs.mas:307 mason/breeders_toolbox/cross/add_progenies_dialogs.mas:344 mason/breeders_toolbox/cross/add_progenies_dialogs.mas:354 mason/breeders_toolbox/cross/add_progenies_dialogs.mas:41 mason/breeders_toolbox/cross/add_progenies_dialogs.mas:6 mason/breeders_toolbox/cross/add_progenies_dialogs.mas:75 mason/breeders_toolbox/cross/add_progenies_dialogs.mas:85 mason/breeders_toolbox/cross/add_progenies_dialogs.mas:96 mason/breeders_toolbox/cross/cross_wishlist.mas:15 mason/breeders_toolbox/cross/cross_wishlist.mas:194 mason/breeders_toolbox/cross/cross_wishlist.mas:201 mason/breeders_toolbox/cross/cross_wishlist.mas:212 mason/breeders_toolbox/cross/cross_wishlist.mas:225 mason/breeders_toolbox/cross/cross_wishlist.mas:235 mason/breeders_toolbox/cross/cross_wishlist.mas:246 mason/breeders_toolbox/cross/cross_wishlist.mas:256 mason/breeders_toolbox/cross/cross_wishlist.mas:267 mason/breeders_toolbox/cross/cross_wishlist.mas:277 mason/breeders_toolbox/cross/cross_wishlist.mas:288 mason/breeders_toolbox/cross/cross_wishlist.mas:298 mason/breeders_toolbox/cross/cross_wishlist.mas:334 mason/breeders_toolbox/cross/edit_crossingtrial_details_dialog.mas:108 mason/breeders_toolbox/cross/edit_crossingtrial_details_dialog.mas:125 mason/breeders_toolbox/cross/edit_crossingtrial_details_dialog.mas:132 mason/breeders_toolbox/cross/edit_crossingtrial_details_dialog.mas:16 mason/breeders_toolbox/cross/intercross_file_upload.mas:103 mason/breeders_toolbox/cross/intercross_file_upload.mas:11 mason/breeders_toolbox/cross/intercross_file_upload.mas:148 mason/breeders_toolbox/cross/intercross_file_upload.mas:49 mason/breeders_toolbox/cross/intercross_file_upload.mas:60 mason/breeders_toolbox/cross/intercross_file_upload.mas:71 mason/breeders_toolbox/cross/intercross_file_upload.mas:81 mason/breeders_toolbox/cross/intercross_parents_download.mas:126 mason/breeders_toolbox/cross/intercross_parents_download.mas:13 mason/breeders_toolbox/cross/intercross_parents_download.mas:62 mason/breeders_toolbox/cross/intercross_parents_download.mas:77 mason/breeders_toolbox/cross/intercross_parents_download.mas:87 mason/breeders_toolbox/cross/intercross_wishlist_download.mas:100 mason/breeders_toolbox/cross/intercross_wishlist_download.mas:147 mason/breeders_toolbox/cross/intercross_wishlist_download.mas:22 mason/breeders_toolbox/cross/intercross_wishlist_download.mas:62 mason/breeders_toolbox/cross/intercross_wishlist_download.mas:75 mason/breeders_toolbox/cross/intercross_wishlist_download.mas:90 mason/breeders_toolbox/cross/target_numbers_upload.mas:11 mason/breeders_toolbox/cross/target_numbers_upload.mas:125 mason/breeders_toolbox/cross/target_numbers_upload.mas:39 mason/breeders_toolbox/cross/target_numbers_upload.mas:50 mason/breeders_toolbox/cross/target_numbers_upload.mas:61 mason/breeders_toolbox/cross/target_numbers_upload.mas:71 mason/breeders_toolbox/cross/target_numbers_upload.mas:93 mason/breeders_toolbox/cross/target_numbers_usage_info_dialog.mas:31 mason/breeders_toolbox/cross/target_numbers_usage_info_dialog.mas:9 mason/breeders_toolbox/cross/target_numbers_using_lists.mas:108 mason/breeders_toolbox/cross/target_numbers_using_lists.mas:22 mason/breeders_toolbox/cross/target_numbers_using_lists.mas:61 mason/breeders_toolbox/cross/target_numbers_using_lists.mas:74 mason/breeders_toolbox/cross/target_numbers_using_lists.mas:86 mason/breeders_toolbox/cross/target_numbers_using_lists.mas:96 mason/breeders_toolbox/cross/upload_crosses_confirm_spreadsheet.mas:77 mason/breeders_toolbox/cross/upload_crosses_dialogs.mas:15 mason/breeders_toolbox/cross/upload_crosses_dialogs.mas:192 mason/breeders_toolbox/cross/upload_crosses_dialogs.mas:202 mason/breeders_toolbox/cross/upload_crosses_dialogs.mas:213 mason/breeders_toolbox/cross/upload_crosses_dialogs.mas:223 mason/breeders_toolbox/cross/upload_crosses_dialogs.mas:283 mason/breeders_toolbox/cross/upload_update_crosses.mas:10 mason/breeders_toolbox/cross/upload_update_crosses.mas:109 mason/breeders_toolbox/cross/upload_update_crosses.mas:119 mason/breeders_toolbox/cross/upload_update_crosses.mas:142 mason/breeders_toolbox/cross/upload_update_crosses.mas:166 mason/breeders_toolbox/cross/upload_update_crosses.mas:177 mason/breeders_toolbox/cross/upload_update_crosses.mas:217 mason/breeders_toolbox/cross/upload_update_crosses.mas:36 mason/breeders_toolbox/cross/upload_update_crosses.mas:47 mason/breeders_toolbox/cross/upload_update_crosses.mas:58 mason/breeders_toolbox/cross/upload_update_crosses.mas:68 mason/breeders_toolbox/upload_pedigrees_dialogs.mas:103 mason/breeders_toolbox/upload_pedigrees_dialogs.mas:162 mason/breeders_toolbox/upload_pedigrees_dialogs.mas:20 mason/breeders_toolbox/upload_pedigrees_dialogs.mas:31 mason/breeders_toolbox/upload_pedigrees_dialogs.mas:40 mason/breeders_toolbox/upload_pedigrees_dialogs.mas:50 mason/breeders_toolbox/upload_pedigrees_dialogs.mas:59 mason/breeders_toolbox/upload_pedigrees_dialogs.mas:69 mason/breeders_toolbox/upload_pedigrees_dialogs.mas:8 mason/breeders_toolbox/upload_pedigrees_dialogs.mas:92 mason/pedigree/stock_pedigree.mas:48 mason/pedigree/stock_pedigree.mas:93
@@ -20297,7 +20292,7 @@ msgstr ""
 
 #: mason/breeders_toolbox/drone_imagery/standard_process_raw_images.mas:1755
 msgctxt "drone.interface.click_the_boundaries_of_another_plot_you_need_to_click_atleast_10_to_get_a_good_average_completed"
-msgid "Click the boundaries of another plot. You need to click atleast 10 to get a good average. Completed: "
+msgid "Click the boundaries of another plot. You need to click at least 10 to get a good average. Completed: "
 msgstr ""
 
 #: mason/breeders_toolbox/drone_imagery/standard_process_raw_images.mas:1694
@@ -21407,7 +21402,7 @@ msgstr ""
 
 #: mason/breeders_toolbox/drone_imagery/upload_drone_imagery_dialogs.mas:37
 msgctxt "drone.interface.go_to_bulk_upload_of_previously_processed_imaging_events_geojson_defitions_inc"
-msgid "Go to bulk upload of previously processed imaging events (GeoJSON defitions included)"
+msgid "Go to bulk upload of previously processed imaging events (GeoJSON definitions included)"
 msgstr ""
 
 #: mason/breeders_toolbox/drone_imagery/drone_imagery_export_imaging_events.mas:28
@@ -22202,7 +22197,7 @@ msgstr ""
 
 #: mason/breeders_toolbox/drone_imagery/drone_imagery_analytics.mas:121
 msgctxt "drone.interface.number_interations"
-msgid "Number Interations:"
+msgid "Number Iterations:"
 msgstr ""
 
 #: mason/breeders_toolbox/drone_imagery/standard_process_raw_images.mas:1421
@@ -22777,12 +22772,12 @@ msgstr ""
 
 #: mason/breeders_toolbox/manage_drone_imagery.mas:4753
 msgctxt "drone.interface.please_select_atleast_one_field_trial"
-msgid "Please select atleast one field trial!"
+msgid "Please select at least one field trial!"
 msgstr ""
 
 #: mason/breeders_toolbox/manage_drone_imagery.mas:4784
 msgctxt "drone.interface.please_select_atleast_one_imaging_event"
-msgid "Please select atleast one imaging event!"
+msgid "Please select at least one imaging event!"
 msgstr ""
 
 #: mason/breeders_toolbox/drone_imagery/standard_process_raw_images.mas:1411
@@ -22982,7 +22977,7 @@ msgstr ""
 
 #: mason/breeders_toolbox/drone_imagery/upload_drone_imagery_dialogs.mas:173
 msgctxt "drone.interface.raw_images_are_uploaded_using_a_zipfile_zip_place_all_images_relevant_to_the_i_variant_2"
-msgid "Raw images are uploaded using a zipfile (.zip). Place all images relevant to the imaging event into one zipfile. Include atleast 25 images in the zipfile."
+msgid "Raw images are uploaded using a zipfile (.zip). Place all images relevant to the imaging event into one zipfile. Include at least 25 images in the zipfile."
 msgstr ""
 
 #: mason/breeders_toolbox/manage_drone_imagery.mas:774
@@ -24252,7 +24247,7 @@ msgstr ""
 
 #: lib/SGN/Controller/DroneImageryUpload.pm:1752
 msgctxt "drone.upload.an_imaging_event_has_already_occured_on_this_field_trial_at_the_same_date_and_time_date_please_give_a_unique_date_time_for_each_imaging_event"
-msgid "An imaging event has already occured on this field trial at the same date and time (%{date})! Please give a unique date/time for each imaging event!"
+msgid "An imaging event has already occurred on this field trial at the same date and time (%{date})! Please give a unique date/time for each imaging event!"
 msgstr ""
 
 #: lib/SGN/Controller/DroneImageryUpload.pm:1459 lib/SGN/Controller/DroneImageryUpload.pm:882
@@ -24502,7 +24497,7 @@ msgstr ""
 
 #: lib/SGN/Controller/DroneImageryUpload.pm:607
 msgctxt "drone.upload.upload_more_than_count_images_atleast_25_are_required_for_opendronemap_to_stitch"
-msgid "Upload more than %{count} images! Atleast 25 are required for OpenDroneMap to stitch."
+msgid "Upload more than %{count} images! At least 25 are required for OpenDroneMap to stitch."
 msgstr ""
 
 #: lib/SGN/Controller/DroneImageryUpload.pm:2302 lib/SGN/Controller/DroneImageryUpload.pm:2312
@@ -24527,7 +24522,7 @@ msgstr ""
 
 #: js/source/legacy/CXGN/BreedersToolbox/UploadImages.js:86
 msgctxt "drone_imaging.upload.barcode_scan_failure"
-msgid "Error ocurred during barcode scan"
+msgid "Error occurred during barcode scan"
 msgstr ""
 
 #: js/source/legacy/CXGN/BreedersToolbox/UploadImages.js:498
@@ -24547,7 +24542,7 @@ msgstr ""
 
 #: js/source/legacy/CXGN/BreedersToolbox/UploadImages.js:60
 msgctxt "drone_imaging.upload.exif_verification_failure"
-msgid "Error ocurred during EXIF verification."
+msgid "Error occurred during EXIF verification."
 msgstr ""
 
 #: mason/breeders_toolbox/upload_images.mas:90
@@ -25047,7 +25042,7 @@ msgstr ""
 
 #: mason/breeders_toolbox/trial/download_layout_interface_dialog.mas:586
 msgctxt "fieldbook.export.help.year"
-msgid "The year that this trial occured will appear."
+msgid "The year that this trial occurred will appear."
 msgstr ""
 
 #: mason/breeders_toolbox/trial/download_layout_interface_dialog.mas:206
@@ -28707,7 +28702,7 @@ msgstr ""
 
 #: lib/CXGN/Trial/ParseUpload/Plugin/GenotypeTrialXLS.pm:329
 msgctxt "genotype.parser.xlsx.facility_missing"
-msgid "Cell %{cell}: %{field_facility_identifier} is misssing"
+msgid "Cell %{cell}: %{field_facility_identifier} is missing"
 msgstr ""
 
 #: lib/CXGN/Trial/ParseUpload/Plugin/GenotypeTrialXLS.pm:48
@@ -28997,7 +28992,7 @@ msgstr ""
 
 #: mason/breeders_toolbox/manage_samples.mas:31
 msgctxt "genotype.plate.automatic_export_to_genotyping_vendors_is_currently_not_avaiable_however"
-msgid "Automatic export to genotyping vendors is currently not avaiable; however, you can download the layout and submit to vendor manually."
+msgid "Automatic export to genotyping vendors is currently not available; however, you can download the layout and submit to vendor manually."
 msgstr ""
 
 #: mason/breeders_toolbox/genotyping_trials/upload_genotyping_data_dialogs.mas:549
@@ -29062,7 +29057,7 @@ msgstr ""
 
 #: mason/search/genotyping_data_projects.mas:38
 msgctxt "genotype.plate.copy_the_genotyping_project_names_currently_showing_in_the_search"
-msgid "Copy the genotyping project names currently showing in the search results table to a new or exisiting list"
+msgid "Copy the genotyping project names currently showing in the search results table to a new or existing list"
 msgstr ""
 
 #: mason/breeders_toolbox/manage_samples.mas:18
@@ -29077,7 +29072,7 @@ msgstr ""
 
 #: mason/breeders_toolbox/genotyping_trials/upload_genotyping_data_dialogs.mas:28
 msgctxt "genotype.plate.curently_we_support_the_vcf_format_the_tassel_hdf5_format"
-msgid "Curently we support the VCF format, the Tassel HDF5 format, the Intertek CSV format, KASP data and SSR data for upload."
+msgid "Currently we support the VCF format, the Tassel HDF5 format, the Intertek CSV format, KASP data and SSR data for upload."
 msgstr ""
 
 #: mason/breeders_toolbox/genotyping_trials/upload_genotyping_data_dialogs.mas:551
@@ -30857,7 +30852,7 @@ msgstr ""
 
 #: mason/breeders_toolbox/genotyping_trials/upload_genotyping_data_dialogs.mas:26
 msgctxt "genotype.plate.select_a_genotyping_project_on_the_next_screen_this_project"
-msgid "Select a genotyping project on the next screen. This project can represent a series of genotyping plates sent to a genotyping facilty."
+msgid "Select a genotyping project on the next screen. This project can represent a series of genotyping plates sent to a genotyping facility."
 msgstr ""
 
 #: mason/breeders_toolbox/genotyping_trials/upload_genotyping_data_dialogs.mas:1286
@@ -31467,7 +31462,7 @@ msgstr ""
 
 #: mason/breeders_toolbox/genotyping_trials/upload_genotyping_data_dialogs.mas:651
 msgctxt "genotype.plate.you_can_include_additional_marker_infomation_by_selecting_one_or"
-msgid "You can include additional marker infomation by selecting one or more column headers listed below. Please add the selected column(s) after \"Position\" column."
+msgid "You can include additional marker information by selecting one or more column headers listed below. Please add the selected column(s) after \"Position\" column."
 msgstr ""
 
 #: mason/breeders_toolbox/genotyping_trials/upload_genotyping_data_dialogs.mas:991
@@ -31942,7 +31937,7 @@ msgstr ""
 
 #: mason/breeders_toolbox/genotyping_protocol/marker_metadata.mas:226
 msgctxt "genotype.protocol.marker_metadata_ui.delete_error"
-msgid "Could not delete marker meatadata: %{error}"
+msgid "Could not delete marker metadata: %{error}"
 msgstr ""
 
 #: mason/breeders_toolbox/genotyping_protocol/marker_metadata.mas:217
@@ -32452,7 +32447,7 @@ msgstr ""
 
 #: mason/breeders_toolbox/manage_genotype_qc.mas:22
 msgctxt "genotype.qc.step2.body"
-msgid " with the qc markers by comparing with existing protocol in the database. This requries just the "
+msgid " with the qc markers by comparing with existing protocol in the database. This requires just the "
 msgstr ""
 
 #: mason/breeders_toolbox/manage_genotype_qc.mas:22
@@ -33745,27 +33740,27 @@ msgctxt "global.breeders_toolbox.heading"
 msgid "SGN Breeder's Toolbox"
 msgstr ""
 
-#: cgi-bin/bulk/display.pl:212
+#: cgi-bin/bulk/display.pl:214
 msgctxt "global.bulk.display.line"
 msgid "line"
 msgstr ""
 
-#: cgi-bin/bulk/display.pl:614
+#: cgi-bin/bulk/display.pl:616
 msgctxt "global.bulk.display.new_search"
 msgid "New Search"
 msgstr ""
 
-#: cgi-bin/bulk/display.pl:176
+#: cgi-bin/bulk/display.pl:178
 msgctxt "global.bulk.display.no_data"
 msgid "No data was retrieved. Please verify your input parameters. Thanks.<br /><br />"
 msgstr ""
 
-#: cgi-bin/bulk/display.pl:512 cgi-bin/search/markers/markersearch.pl:243
+#: cgi-bin/bulk/display.pl:514 cgi-bin/search/markers/markersearch.pl:243
 msgctxt "global.bulk.display.of"
 msgid "of"
 msgstr ""
 
-#: cgi-bin/bulk/display.pl:511
+#: cgi-bin/bulk/display.pl:513
 msgctxt "global.bulk.display.page"
 msgid "Page"
 msgstr ""
@@ -33775,7 +33770,7 @@ msgctxt "global.bulk.display.page_title"
 msgid "Browse Bulk Results"
 msgstr ""
 
-#: cgi-bin/bulk/display.pl:158
+#: cgi-bin/bulk/display.pl:159
 msgctxt "global.bulk.display.results_title"
 msgid "Bulk download results"
 msgstr ""
@@ -35002,7 +34997,7 @@ msgstr ""
 
 #: js/source/entries/dataset_scatterplot.js:263 js/source/entries/dataset_scatterplot.js:284
 msgctxt "global.dataset_scatterplot.alert.outliers_reset"
-msgid "outliers successfully reseted!"
+msgid "outliers successfully reset!"
 msgstr ""
 
 #: js/source/entries/dataset_scatterplot.js:245 js/source/entries/dataset_scatterplot.js:368
@@ -35677,7 +35672,7 @@ msgstr ""
 
 #: cgi-bin/search/family.pl:369
 msgctxt "global.family.invalid_family_id"
-msgid "The specified family identifer (%{family_id}) does not result in a valid search."
+msgid "The specified family identifier (%{family_id}) does not result in a valid search."
 msgstr ""
 
 #: cgi-bin/search/family.pl:117 cgi-bin/search/family.pl:223
@@ -35872,7 +35867,7 @@ msgstr ""
 
 #: cgi-bin/search/pub_search.pl:26
 msgctxt "global.final_caption.sgn_publcation_search_results"
-msgid "SGN publcation search results"
+msgid "SGN publication search results"
 msgstr ""
 
 #: cgi-bin/search/unigene-all-blast-matches.pl:18
@@ -38675,7 +38670,7 @@ msgctxt "global.trace_download.caption_1"
 msgid "Invalid GET parameters"
 msgstr ""
 
-#: cgi-bin/search/trace_download.pl:74
+#: cgi-bin/search/trace_download.pl:72
 msgctxt "global.trace_download.caption_2"
 msgid "This sequence does not seem to have an associated chromatogram."
 msgstr ""
@@ -38685,17 +38680,17 @@ msgctxt "global.trace_download.invalid"
 msgid "Invalid: '%{chromat_id}', '%{read_id}'.\n"
 msgstr ""
 
-#: cgi-bin/search/trace_download.pl:97
+#: cgi-bin/search/trace_download.pl:95
 msgctxt "global.trace_download.invalid_search"
 msgid "Requested search is invalid."
 msgstr ""
 
-#: cgi-bin/search/trace_download.pl:110
+#: cgi-bin/search/trace_download.pl:108
 msgctxt "global.trace_download.not_found"
 msgid "No chromatogram was found for SGN-T%{id}."
 msgstr ""
 
-#: cgi-bin/search/trace_download.pl:78
+#: cgi-bin/search/trace_download.pl:76
 msgctxt "global.trace_download.open_failed"
 msgid "Failed to open chromatogram file for SGN-T%{read_id} (%{error})"
 msgstr ""
@@ -38837,7 +38832,7 @@ msgstr ""
 
 #: cgi-bin/search/unigene-estscan-detail.pl:106
 msgctxt "global.unigene_estscan_detail.invalid_search"
-msgid "The specified unigene identifer (%{id}) does not result in a valid search."
+msgid "The specified unigene identifier (%{id}) does not result in a valid search."
 msgstr ""
 
 #: cgi-bin/search/unigene-estscan-detail.pl:87
@@ -39097,7 +39092,7 @@ msgstr ""
 
 #: mason/help/blast.mas:22
 msgctxt "help.blast.results_behavior"
-msgid "The Results section will show the ouput (depending on your chosen Output options) when a BLAST analysis has been run. When the analysis is finished, the Input parameters sections will be collapsed and the Results section opened. To re-run a query, simply click on the + sign in the Input parameter section header to view that section again and adjust the parameters."
+msgid "The Results section will show the output (depending on your chosen Output options) when a BLAST analysis has been run. When the analysis is finished, the Input parameters sections will be collapsed and the Results section opened. To re-run a query, simply click on the + sign in the Input parameter section header to view that section again and adjust the parameters."
 msgstr ""
 
 #: mason/help/blast.mas:8
@@ -39782,7 +39777,7 @@ msgstr ""
 
 #: mason/help/workflow_guided/tissue_sample_help.mas:453
 msgctxt "help.tissue.js.no_layout"
-msgid "You selected to sample on the accession level, meaning that you wil not sample from a field trial. In this case there is no field layout to download!"
+msgid "You selected to sample on the accession level, meaning that you will not sample from a field trial. In this case there is no field layout to download!"
 msgstr ""
 
 #: mason/help/workflow_guided/tissue_sample_help.mas:255
@@ -40855,7 +40850,7 @@ msgstr ""
 
 #: js/source/legacy/CXGN/List.js:1284
 msgctxt "lists.fuzzy.similar_heading"
-msgid "%{type} that are not found in the database, but fuzzy match (names are visibily similar)"
+msgid "%{type} that are not found in the database, but fuzzy match (names are visibly similar)"
 msgstr ""
 
 #: js/source/legacy/CXGN/List.js:1289
@@ -41945,27 +41940,27 @@ msgstr ""
 
 #: mason/tools/bulk/display/features.mas:8 mason/tools/bulk/tabs/feature_tab.mas:8
 msgctxt "lists_datasets.bulk.enter_a_list_of_feature_identifier_or_upload_a_file_containing_one_identifer_s"
-msgid "Enter a list of feature identifier or upload a file containing one identifer separated by whitespace (returns, spaces or tabs):"
+msgid "Enter a list of feature identifier or upload a file containing one identifier separated by whitespace (returns, spaces or tabs):"
 msgstr ""
 
 #: mason/tools/bulk/display/bulk_gene.mas:8 mason/tools/bulk/tabs/gene_tab.mas:11
 msgctxt "lists_datasets.bulk.enter_a_list_of_gene_identifier_or_upload_a_file_containing_one_identifer_sepa"
-msgid "Enter a list of gene identifier or upload a file containing one identifer separated by whitespace (returns, spaces or tabs):"
+msgid "Enter a list of gene identifier or upload a file containing one identifier separated by whitespace (returns, spaces or tabs):"
 msgstr ""
 
 #: cgi-bin/bulk/input.pl:195 mason/tools/bulk/tabs/clone_tab.mas:16
 msgctxt "lists_datasets.bulk.enter_a_list_of_identifiers_or_upload_a_file_containing_identifers_one_per_lin"
-msgid "Enter a list of identifiers or upload a file containing identifers, one per line:"
+msgid "Enter a list of identifiers or upload a file containing identifiers, one per line:"
 msgstr ""
 
 #: cgi-bin/bulk/input.pl:680 cgi-bin/bulk/input.pl:787 mason/tools/bulk/tabs/bac_end_tab.mas:29 mason/tools/bulk/tabs/bac_tab.mas:29
 msgctxt "lists_datasets.bulk.enter_a_list_of_identifiers_or_upload_a_file_containing_identifers_separated_b"
-msgid "Enter a list of identifiers or upload a file containing identifers separated by whitespace (returns, spaces or tabs):"
+msgid "Enter a list of identifiers or upload a file containing identifiers separated by whitespace (returns, spaces or tabs):"
 msgstr ""
 
 #: cgi-bin/bulk/input.pl:402 cgi-bin/bulk/input.pl:529 mason/tools/bulk/tabs/unigene_tab.mas:46
 msgctxt "lists_datasets.bulk.enter_a_list_of_identifiers_or_upload_a_file_containing_one_identifer_separate"
-msgid "Enter a list of identifiers or upload a file containing one identifer separated by whitespace (returns, spaces or tabs):"
+msgid "Enter a list of identifiers or upload a file containing one identifier separated by whitespace (returns, spaces or tabs):"
 msgstr ""
 
 #: cgi-bin/bulk/input.pl:278 mason/tools/bulk/tabs/array_tab.mas:31
@@ -41975,7 +41970,7 @@ msgstr ""
 
 #: mason/tools/bulk/tabs/converter_tab.mas:12
 msgctxt "lists_datasets.bulk.enter_a_list_of_identifiers_sgn_unigene_ids_or_tom1_array_ids_or_upload_a_file"
-msgid "Enter a list of identifiers (SGN unigene ids or TOM1 array ids) or upload a file containing one identifer separated by whitespace (returns, spaces or tabs):"
+msgid "Enter a list of identifiers (SGN unigene ids or TOM1 array ids) or upload a file containing one identifier separated by whitespace (returns, spaces or tabs):"
 msgstr ""
 
 #: lib/CXGN/Bulk.pm:188
@@ -42003,9 +41998,14 @@ msgctxt "lists_datasets.bulk.error_no_ids"
 msgid "You may not have entered any identifiers for download"
 msgstr ""
 
-#: cgi-bin/bulk/download.pl:232 lib/SGN/Controller/Bulk/Download.pm:236
+#: cgi-bin/bulk/download.pl:232
 msgctxt "lists_datasets.bulk.error_occurred_title"
 msgid "An Error has occured"
+msgstr ""
+
+#: lib/SGN/Controller/Bulk/Download.pm:236
+msgctxt "lists_datasets.bulk.error_occurred_title"
+msgid "An Error has occurred"
 msgstr ""
 
 #: lib/CXGN/Bulk.pm:182
@@ -42148,7 +42148,7 @@ msgctxt "lists_datasets.bulk.new_query"
 msgid "New query"
 msgstr ""
 
-#: cgi-bin/bulk/display.pl:547 cgi-bin/bulk/display.pl:550 mason/tools/bulk/display/buttons/next.mas:27 mason/tools/bulk/display/buttons/next.mas:30
+#: cgi-bin/bulk/display.pl:549 cgi-bin/bulk/display.pl:552 mason/tools/bulk/display/buttons/next.mas:27 mason/tools/bulk/display/buttons/next.mas:30
 msgctxt "lists_datasets.bulk.next_page"
 msgid "Next Page"
 msgstr ""
@@ -42203,7 +42203,7 @@ msgctxt "lists_datasets.bulk.preferred_sequence"
 msgid "preferred sequence"
 msgstr ""
 
-#: cgi-bin/bulk/display.pl:573 cgi-bin/bulk/display.pl:576 mason/tools/bulk/display/buttons/previous.mas:22 mason/tools/bulk/display/buttons/previous.mas:25
+#: cgi-bin/bulk/display.pl:575 cgi-bin/bulk/display.pl:578 mason/tools/bulk/display/buttons/previous.mas:22 mason/tools/bulk/display/buttons/previous.mas:25
 msgctxt "lists_datasets.bulk.previous_page"
 msgid "Previous Page"
 msgstr ""
@@ -42253,7 +42253,7 @@ msgctxt "lists_datasets.bulk.submitted_lines"
 msgid "The query you submitted contained %{count} lines."
 msgstr ""
 
-#: cgi-bin/bulk/display.pl:598 mason/tools/bulk/display/buttons/summary.mas:21
+#: cgi-bin/bulk/display.pl:600 mason/tools/bulk/display/buttons/summary.mas:21
 msgctxt "lists_datasets.bulk.summary_page"
 msgid "Summary Page"
 msgstr ""
@@ -42350,7 +42350,7 @@ msgstr ""
 
 #: mason/dataset/tool_compatibility.mas:75
 msgctxt "lists_datasets.compatibility.calculate_error_detail"
-msgid "An error occured calculating tool compatibility: \n%{error}"
+msgid "An error occurred calculating tool compatibility: \n%{error}"
 msgstr ""
 
 #: mason/dataset/tool_compatibility.mas:77 mason/dataset/tool_compatibility.mas:89
@@ -42380,7 +42380,7 @@ msgstr ""
 
 #: lib/SGN/Controller/Dataset.pm:144
 msgctxt "lists_datasets.controller.authorization_failed"
-msgid "Could not authorize the appication: %{error}"
+msgid "Could not authorize the application: %{error}"
 msgstr ""
 
 #: lib/SGN/Controller/Dataset.pm:42
@@ -43050,7 +43050,7 @@ msgstr ""
 
 #: mason/site/list.mas:108
 msgctxt "lists_datasets.shared.items_listed_here_have_mulitple_case_mismatches_and_must_be_fixed_manually_if_accessions_need_to_be_"
-msgid "Items listed here have mulitple case mismatches and must be fixed manually. If accessions need to be merged, contact the database directly."
+msgid "Items listed here have multiple case mismatches and must be fixed manually. If accessions need to be merged, contact the database directly."
 msgstr ""
 
 #: mason/site/list.mas:221
@@ -44535,7 +44535,7 @@ msgstr ""
 
 #: mason/breeders_toolbox/manage_locations.mas:22
 msgctxt "locations.manage.copy_help"
-msgid "Copy the location names in the table to a new or exisiting list"
+msgid "Copy the location names in the table to a new or existing list"
 msgstr ""
 
 #: mason/breeders_toolbox/manage_locations.mas:28
@@ -47804,7 +47804,7 @@ msgstr ""
 
 #: mason/breeders_toolbox/program/traits.mas:139 mason/breeders_toolbox/program/traits.mas:178 mason/breeders_toolbox/trial/phenotype_summary.mas:586 mason/breeders_toolbox/trial/phenotype_summary.mas:667
 msgctxt "phenotype.an_error_occured_retrieving_trait_histogram_data"
-msgid "An error occured retrieving trait histogram data."
+msgid "An error occurred retrieving trait histogram data."
 msgstr ""
 
 #: mason/breeders_toolbox/manage_plot_phenotyping.mas:239 mason/breeders_toolbox/manage_trial_phenotyping.mas:351
@@ -47989,7 +47989,7 @@ msgstr ""
 
 #: mason/breeders_toolbox/trial/phenotype_summary.mas:126
 msgctxt "phenotype.copy_the_names_currently_selected_in_the_first_column_of"
-msgid "Copy the names currently selected in the first column of the summary table to a new or exisiting list"
+msgid "Copy the names currently selected in the first column of the summary table to a new or existing list"
 msgstr ""
 
 #: mason/tools/high_dimensional_phenotypes/upload_high_dim_spreadsheet_dialogs.mas:870
@@ -48164,7 +48164,7 @@ msgstr ""
 
 #: mason/tools/high_dimensional_phenotypes/upload_high_dim_spreadsheet_dialogs.mas:463
 msgctxt "phenotype.e_g_this_describes_mode_instrument_settings_calibration_procedure_also"
-msgid "e.g. This describes mode, instrument settings, calibration procedure. Also, describes how the files from the LCMS machine were transformed into peak area. Finally, describes how metabolite annotations were assinged to peaks"
+msgid "e.g. This describes mode, instrument settings, calibration procedure. Also, describes how the files from the LCMS machine were transformed into peak area. Finally, describes how metabolite annotations were assigned to peaks"
 msgstr ""
 
 #: mason/tools/high_dimensional_phenotypes/upload_high_dim_spreadsheet_dialogs.mas:389
@@ -48294,7 +48294,7 @@ msgstr ""
 
 #: mason/phenotypes/submission_guide.mas:46
 msgctxt "phenotype.for_a_full_geolocation_fill_in_the_longitude_latitide_and"
-msgid ". For a full geolocation fill in the longitude, latitide, and altitude fields."
+msgid ". For a full geolocation fill in the longitude, latitude, and altitude fields."
 msgstr ""
 
 #: mason/phenotypes/submission_guide.mas:15
@@ -48869,7 +48869,7 @@ msgstr ""
 
 #: mason/tools/high_dimensional_phenotypes/upload_high_dim_spreadsheet_dialogs.mas:822
 msgctxt "phenotype.notes_optional_any_additional_descrptions"
-msgid "notes (optional): Any additional descrptions."
+msgid "notes (optional): Any additional descriptions."
 msgstr ""
 
 #: mason/tools/high_dimensional_phenotypes/upload_high_dim_spreadsheet_dialogs.mas:292
@@ -49649,7 +49649,7 @@ msgstr ""
 
 #: mason/search/traits.mas:90
 msgctxt "phenotype.root.copy_the_trait_names_currently_selected_in_the_search_results"
-msgid "Copy the trait names currently selected in the search results table to a new or exisiting list"
+msgid "Copy the trait names currently selected in the search results table to a new or existing list"
 msgstr ""
 
 #: lib/CXGN/Phenotypes/StorePhenotypes.pm:520
@@ -49874,7 +49874,7 @@ msgstr ""
 
 #: cgi-bin/phenotype/index.pl:48
 msgctxt "phenotype.root.from_this_page_you_can_search_the_phenotype_databse_for"
-msgid "From this page, you can search the phenotype databse for data and images of all plants from all populations."
+msgid "From this page, you can search the phenotype database for data and images of all plants from all populations."
 msgstr ""
 
 #: mason/tools/trait_designer.mas:99
@@ -50751,7 +50751,7 @@ msgstr ""
 
 #: cgi-bin/phenotype/display_image_and_data.pl:88
 msgctxt "phenotype.root.the_zipped_copy_for_the_orginal_image"
-msgid " the zipped copy for the orginal image."
+msgid " the zipped copy for the original image."
 msgstr ""
 
 #: lib/CXGN/Phenotypes/StorePhenotypes.pm:631
@@ -51771,7 +51771,7 @@ msgstr ""
 
 #: lib/CXGN/Phenotypes/ParseUpload/Plugin/PhenotypeSpreadsheet.pm:74
 msgctxt "phenotype.upload.spreadsheet_is_missing_plot_name_and_atleast_one_trait_in_header"
-msgid "Spreadsheet is missing plot_name and atleast one trait in header."
+msgid "Spreadsheet is missing plot_name and at least one trait in header."
 msgstr ""
 
 #: lib/CXGN/Phenotypes/ParseUpload/Plugin/PhenotypeSpreadsheetSimpleGeneric.pm:126 lib/CXGN/Phenotypes/ParseUpload/Plugin/PhenotypeSpreadsheetSimpleGeneric.pm:205
@@ -51911,7 +51911,7 @@ msgstr ""
 
 #: mason/tools/high_dimensional_phenotypes/upload_high_dim_spreadsheet_dialogs.mas:1256 mason/tools/high_dimensional_phenotypes/upload_high_dim_spreadsheet_dialogs.mas:1259 mason/tools/high_dimensional_phenotypes/upload_high_dim_spreadsheet_dialogs.mas:1381 mason/tools/high_dimensional_phenotypes/upload_high_dim_spreadsheet_dialogs.mas:1384 mason/tools/high_dimensional_phenotypes/upload_high_dim_spreadsheet_dialogs.mas:1510 mason/tools/high_dimensional_phenotypes/upload_high_dim_spreadsheet_dialogs.mas:1513
 msgctxt "phenotype.upload_successfull"
-msgid "Upload Successfull!"
+msgid "Upload Successful!"
 msgstr ""
 
 #: mason/tools/high_dimensional_phenotypes/upload_high_dim_spreadsheet_dialogs.mas:735
@@ -52056,7 +52056,7 @@ msgstr ""
 
 #: lib/CXGN/Phenotypes/ParseUpload/Plugin/DataCollectorSpreadsheet.pm:80 lib/SGN/Controller/AJAX/PhenotypesUpload.pm:497
 msgctxt "phenotype_upload.datacollector_error.missing_header"
-msgid "Spreadsheet is missing %{column} and atleast one trait in header."
+msgid "Spreadsheet is missing %{column} and at least one trait in header."
 msgstr ""
 
 #: lib/CXGN/Phenotypes/ParseUpload/Plugin/DataCollectorSpreadsheet.pm:93 lib/SGN/Controller/AJAX/PhenotypesUpload.pm:504
@@ -53161,7 +53161,7 @@ msgstr ""
 
 #: mason/breeders_toolbox/identifier_generation/manage_identifier_generation.mas:21
 msgctxt "program.identifiers.section_help"
-msgid "View, add, and dowload identifiers."
+msgid "View, add, and download identifiers."
 msgstr ""
 
 #: mason/breeders_toolbox/identifier_generation/manage_identifier_generation.mas:21
@@ -53331,7 +53331,7 @@ msgstr ""
 
 #: mason/breeders_toolbox/upload_locations_dialogs.mas:39
 msgctxt "program.location.upload.program_help"
-msgid "must be an exisiting Breeding Program in the database, or multiple breeding programs separated by '&'"
+msgid "must be an existing Breeding Program in the database, or multiple breeding programs separated by '&'"
 msgstr ""
 
 #: mason/breeders_toolbox/genotyping_trials/upload_genotyping_data_dialogs.mas:1146 mason/breeders_toolbox/upload_locations_dialogs.mas:34
@@ -54196,7 +54196,7 @@ msgstr ""
 
 #: mason/breeders_toolbox/manage_roles.mas:118 mason/breeders_toolbox/manage_roles.mas:145
 msgctxt "program.roles.error.details"
-msgid "An error occured: %{details}"
+msgid "An error occurred: %{details}"
 msgstr ""
 
 #: lib/SGN/Controller/AJAX/Transformation.pm:1907 mason/breeders_toolbox/manage_roles.mas:137
@@ -55381,7 +55381,7 @@ msgstr ""
 
 #: lib/CXGN/Stock/ParseUpload/Plugin/PropagationIdentifierStatusUpdate.pm:88
 msgctxt "seedlot.server.status_type_not_supported_b_type_b_status"
-msgid "Status type not supported: <b>%{type}</b>. Status type should be inventoried, in trial, distribued, dead or disposed "
+msgid "Status type not supported: <b>%{type}</b>. Status type should be inventoried, in trial, distributed, dead or disposed "
 msgstr ""
 
 #: lib/CXGN/Stock/ParseUpload/Plugin/PropagationIdentifiersGeneric.pm:111
@@ -55451,7 +55451,7 @@ msgstr ""
 
 #: lib/SGN/Controller/AJAX/Propagation.pm:258
 msgctxt "seedlot.server.you_must_be_logged_in_to_upload_propagation.04192e7"
-msgid "You must be logged in to upload propagation group identifers!"
+msgid "You must be logged in to upload propagation group identifiers!"
 msgstr ""
 
 #: lib/SGN/Controller/AJAX/Propagation.pm:507
@@ -55466,7 +55466,7 @@ msgstr ""
 
 #: lib/SGN/Controller/AJAX/Propagation.pm:912
 msgctxt "seedlot.server.you_must_be_logged_in_to_upload_propagation.ad49c13"
-msgid "You must be logged in to upload propagation identifer statuses!"
+msgid "You must be logged in to upload propagation identifier statuses!"
 msgstr ""
 
 #: lib/SGN/Controller/AJAX/Propagation.pm:921
@@ -55476,7 +55476,7 @@ msgstr ""
 
 #: lib/SGN/Controller/AJAX/Propagation.pm:498
 msgctxt "seedlot.server.you_must_be_logged_in_to_upload_propagation.ca675c9"
-msgid "You must be logged in to upload propagation identifers!"
+msgid "You must be logged in to upload propagation identifiers!"
 msgstr ""
 
 #: lib/SGN/Controller/AJAX/Propagation.pm:284
@@ -56411,7 +56411,7 @@ msgstr ""
 
 #: mason/breeders_toolbox/seedlot_maintenance/upload_dialog.mas:274
 msgctxt "seedlot_maintenance_upload.ui.stored_success"
-msgid "Seedlot Maintenace Events successfully stored!"
+msgid "Seedlot Maintenance Events successfully stored!"
 msgstr ""
 
 #: mason/breeders_toolbox/seedlot_maintenance/upload_dialog.mas:41
@@ -57486,7 +57486,7 @@ msgstr ""
 
 #: lib/SGN/Controller/AJAX/Seedlot.pm:1383
 msgctxt "seedlots.server.an_error_occured_deleting_the_seedlot_transactio"
-msgid "An error occured deleting the seedlot transaction"
+msgid "An error occurred deleting the seedlot transaction"
 msgstr ""
 
 #: lib/SGN/Controller/AJAX/Seedlot.pm:455
@@ -58201,7 +58201,7 @@ msgstr ""
 
 #: mason/breeders_toolbox/seedlots_section.mas:24
 msgctxt "seedlots.ui.copy_the_seedlot_names_showing_in_table_to_a_new_or_exisiting_li"
-msgid "Copy the seedlot names showing in table to a new or exisiting list"
+msgid "Copy the seedlot names showing in table to a new or existing list"
 msgstr ""
 
 #: mason/breeders_toolbox/seedlots.mas:325 mason/breeders_toolbox/seedlots_section.mas:99 mason/tools/available_seedlots.mas:14
@@ -58323,7 +58323,7 @@ msgstr ""
 
 #: mason/breeders_toolbox/discard_undo_seedlot_usage.mas:39
 msgctxt "seedlots.ui.discarded_seedlot_can_be_reversed_by_using_undo_option_at_the_bu"
-msgid "Discarded seedlot can be reversed by using UNDO option at the buttom of Seedlot Details page"
+msgid "Discarded seedlot can be reversed by using UNDO option at the bottom of Seedlot Details page"
 msgstr ""
 
 #: mason/breeders_toolbox/discard_undo_seedlot_usage.mas:28
@@ -58348,7 +58348,7 @@ msgstr ""
 
 #: mason/breeders_toolbox/discard_undo_seedlot_usage.mas:34
 msgctxt "seedlots.ui.discarding_single_seedlot_the_link_can_be_found_at_the_buttom_of"
-msgid "Discarding single seedlot: The link can be found at the buttom of Seedlot Details page."
+msgid "Discarding single seedlot: The link can be found at the bottom of Seedlot Details page."
 msgstr ""
 
 #: mason/breeders_toolbox/discard_undo_seedlot_usage.mas:21
@@ -59733,7 +59733,7 @@ msgstr ""
 
 #: mason/breeders_toolbox/upload_transactions_dialogs.mas:21
 msgctxt "seedlots.ui.transferring_seeds_from_existing_seedlot_to_a_new_seedlot_a_new_"
-msgid "Transferring seeds from existing seedlot to a new seedlot. A new seedlot is created beforing adding new transaction."
+msgid "Transferring seeds from existing seedlot to a new seedlot. A new seedlot is created before adding new transaction."
 msgstr ""
 
 #: mason/breeders_toolbox/upload_transactions_dialogs.mas:20
@@ -59918,7 +59918,7 @@ msgstr ""
 
 #: mason/breeders_toolbox/discard_undo_seedlot_usage.mas:33
 msgctxt "seedlots.ui.using_a_list_several_seedlots_can_be_discarded_at_once_by_using_"
-msgid "Using a List: Several seedlots can be discarded at once by using a list with seedlots list type. The link can be found at the buttom of Manage Seedlots (Available Seedlots) page."
+msgid "Using a List: Several seedlots can be discarded at once by using a list with seedlots list type. The link can be found at the bottom of Manage Seedlots (Available Seedlots) page."
 msgstr ""
 
 #: mason/breeders_toolbox/add_transactions_using_list.mas:47
@@ -60033,7 +60033,7 @@ msgstr ""
 
 #: mason/breeders_toolbox/upload_transactions_dialogs.mas:168
 msgctxt "seedlots.ui.you_want_to_remove_seeds_from_existing_seedlots_to_unspefified_s"
-msgid "You want to remove seeds from existing seedlots to unspefified seedlots/plots"
+msgid "You want to remove seeds from existing seedlots to unspecified seedlots/plots"
 msgstr ""
 
 #: mason/breeders_toolbox/upload_transactions_dialogs.mas:51
@@ -60603,7 +60603,7 @@ msgstr ""
 
 #: js/source/legacy/solGS/anova.js:167
 msgctxt "solgs.browser.anova_design_error"
-msgid "Error occured running the ANOVA."
+msgid "Error occurred running the ANOVA."
 msgstr ""
 
 #: js/source/legacy/solGS/anova.js:232
@@ -60633,7 +60633,7 @@ msgstr ""
 
 #: js/source/legacy/solGS/anova.js:259
 msgctxt "solgs.browser.anova_run_error"
-msgid "Error occured running the anova analysis."
+msgid "Error occurred running the anova analysis."
 msgstr ""
 
 #: js/source/legacy/solGS/anova.js:192
@@ -60658,7 +60658,7 @@ msgstr ""
 
 #: js/source/legacy/solGS/anova.js:161
 msgctxt "solgs.browser.anova_trait_list_error"
-msgid "Error occured listing anova traits."
+msgid "Error occurred listing anova traits."
 msgstr ""
 
 #: js/source/legacy/solGS/kinship.js:363
@@ -60668,7 +60668,7 @@ msgstr ""
 
 #: js/source/legacy/solGS/solGS.js:82
 msgctxt "solgs.browser.cached_output_check_error"
-msgid "Error occured checking for cached output."
+msgid "Error occurred checking for cached output."
 msgstr ""
 
 #: js/source/legacy/solGS/cluster.js:1387 js/source/legacy/solGS/kinship.js:545 js/source/legacy/solGS/pca.js:1269 js/source/legacy/solGS/solGS.js:202
@@ -60813,12 +60813,12 @@ msgstr ""
 
 #: js/source/legacy/solGS/cluster.js:1380
 msgctxt "solgs.browser.clustering_error"
-msgid "Error occured running the clustering."
+msgid "Error occurred running the clustering."
 msgstr ""
 
 #: js/source/legacy/solGS/cluster.js:1375
 msgctxt "solgs.browser.clustering_r_error"
-msgid "Error occured running the clustering. Possibly the R script failed."
+msgid "Error occurred running the clustering. Possibly the R script failed."
 msgstr ""
 
 #: js/source/legacy/solGS/cluster.js:1119 js/source/legacy/solGS/cluster.js:629
@@ -60833,7 +60833,7 @@ msgstr ""
 
 #: js/source/legacy/solGS/combineTrials.js:202
 msgctxt "solgs.browser.combined_trials_id_error"
-msgid "Error occured getting combined trials unique id"
+msgid "Error occurred getting combined trials unique id"
 msgstr ""
 
 #: js/source/legacy/solGS/combineTrials.js:342
@@ -60848,12 +60848,12 @@ msgstr ""
 
 #: js/source/legacy/solGS/analysisSelect.js:252
 msgctxt "solgs.browser.correlation_analysis_error"
-msgid "Error occured running the correlation analysis."
+msgid "Error occurred running the correlation analysis."
 msgstr ""
 
 #: js/source/legacy/solGS/correlation.js:517 js/source/legacy/solGS/correlation.js:566
 msgctxt "solgs.browser.correlation_error_suffix"
-msgid " Error occured running correlation analysis."
+msgid " Error occurred running correlation analysis."
 msgstr ""
 
 #: js/source/legacy/solGS/correlation.js:397
@@ -60968,7 +60968,7 @@ msgstr ""
 
 #: js/source/legacy/solGS/download.js:291
 msgctxt "solgs.browser.download_marker_effects_error"
-msgid "Error occured getting marker effects file."
+msgid "Error occurred getting marker effects file."
 msgstr ""
 
 #: js/source/legacy/solGS/download.js:178
@@ -60983,12 +60983,12 @@ msgstr ""
 
 #: js/source/legacy/solGS/download.js:273
 msgctxt "solgs.browser.download_model_input_error"
-msgid "Error occured getting model input data files."
+msgid "Error occurred getting model input data files."
 msgstr ""
 
 #: js/source/legacy/solGS/download.js:308
 msgctxt "solgs.browser.download_page_type_error"
-msgid "Error occured checking for page type."
+msgid "Error occurred checking for page type."
 msgstr ""
 
 #: js/source/legacy/solGS/gebvPhenoRegression.js:51 js/source/legacy/solGS/gebvs.js:104
@@ -60998,7 +60998,7 @@ msgstr ""
 
 #: js/source/legacy/solGS/download.js:301
 msgctxt "solgs.browser.download_selection_genotype_error"
-msgid "Error occured getting selection population genotype data files."
+msgid "Error occurred getting selection population genotype data files."
 msgstr ""
 
 #: js/source/legacy/solGS/download.js:132
@@ -61008,7 +61008,7 @@ msgstr ""
 
 #: js/source/legacy/solGS/download.js:258 js/source/legacy/solGS/download.js:263
 msgctxt "solgs.browser.download_training_data_error"
-msgid "Error occured getting training pop raw data files."
+msgid "Error occurred getting training pop raw data files."
 msgstr ""
 
 #: js/source/legacy/solGS/download.js:99
@@ -61018,7 +61018,7 @@ msgstr ""
 
 #: js/source/legacy/solGS/download.js:282
 msgctxt "solgs.browser.download_validation_error"
-msgid "Error occured getting model validation file."
+msgid "Error occurred getting model validation file."
 msgstr ""
 
 #: js/source/legacy/solGS/solGS.js:396
@@ -61058,7 +61058,7 @@ msgstr ""
 
 #: js/source/legacy/solGS/searchTrials.js:223
 msgctxt "solgs.browser.first_trials_error"
-msgid "Error occured fetching the first set of GS trials."
+msgid "Error occurred fetching the first set of GS trials."
 msgstr ""
 
 #: js/source/legacy/solGS/gebvs.js:57
@@ -61068,7 +61068,7 @@ msgstr ""
 
 #: js/source/legacy/solGS/gebvs.js:142
 msgctxt "solgs.browser.gebv_files_error"
-msgid "Error occured getting training gebvs files."
+msgid "Error occurred getting training gebvs files."
 msgstr ""
 
 #: js/source/legacy/solGS/gebvs.js:102
@@ -61078,7 +61078,7 @@ msgstr ""
 
 #: js/source/legacy/solGS/gebvPhenoRegression.js:86
 msgctxt "solgs.browser.gebv_phenotype_regression_request_error"
-msgid "Error occured requesting for theGEBVs vs observed phenotypes regression data."
+msgid "Error occurred requesting for theGEBVs vs observed phenotypes regression data."
 msgstr ""
 
 #: js/source/legacy/solGS/kinship.js:441 js/source/legacy/solGS/kinship.js:502 js/source/legacy/solGS/kinship.js:581
@@ -61108,7 +61108,7 @@ msgstr ""
 
 #: js/source/legacy/solGS/geneticGain.js:145
 msgctxt "solgs.browser.genetic_gain_plot_error"
-msgid "Error occured plotting the genetic gain."
+msgid "Error occurred plotting the genetic gain."
 msgstr ""
 
 #: js/source/legacy/solGS/geneticGain.js:319
@@ -61268,7 +61268,7 @@ msgstr ""
 
 #: js/source/legacy/solGS/solGS.js:412
 msgctxt "solgs.browser.job_submission_failed"
-msgid "Error occured submitting the job. Please contact the developers."
+msgid "Error occurred submitting the job. Please contact the developers."
 msgstr ""
 
 #: js/source/legacy/solGS/solGS.js:111
@@ -61283,7 +61283,7 @@ msgstr ""
 
 #: js/source/legacy/solGS/kinship.js:534 js/source/legacy/solGS/kinship.js:558
 msgctxt "solgs.browser.kinship_analysis_error"
-msgid "Error occured running the kinship."
+msgid "Error occurred running the kinship."
 msgstr ""
 
 #: js/source/legacy/solGS/kinship.js:126
@@ -61423,7 +61423,7 @@ msgstr ""
 
 #: js/source/legacy/solGS/searchTrials.js:183
 msgctxt "solgs.browser.next_trials_error"
-msgid "Error occured fetching the next set of GS trials."
+msgid "Error occurred fetching the next set of GS trials."
 msgstr ""
 
 #: js/source/legacy/solGS/solGS.js:144
@@ -61533,7 +61533,7 @@ msgstr ""
 
 #: js/source/legacy/solGS/pca.js:1317
 msgctxt "solgs.browser.pca_cached_output_check_error"
-msgid "Error occured checking for cached output."
+msgid "Error occurred checking for cached output."
 msgstr ""
 
 #: js/source/legacy/solGS/pca.js:496
@@ -61583,7 +61583,7 @@ msgstr ""
 
 #: js/source/legacy/solGS/pca.js:1258 js/source/legacy/solGS/pca.js:1309
 msgctxt "solgs.browser.pca_run_error"
-msgid "Error occured running the PCA."
+msgid "Error occurred running the PCA."
 msgstr ""
 
 #: js/source/legacy/solGS/pca.js:1212
@@ -61653,7 +61653,7 @@ msgstr ""
 
 #: js/source/legacy/solGS/phenoHistogram.js:122 js/source/legacy/solGS/phenoHistogram.js:161
 msgctxt "solgs.browser.pheno_histogram_error"
-msgid "Error occured plotting histogram for this trait dataset."
+msgid "Error occurred plotting histogram for this trait dataset."
 msgstr ""
 
 #: js/source/legacy/solGS/phenoHistogram.js:97
@@ -61723,12 +61723,12 @@ msgstr ""
 
 #: js/source/legacy/solGS/listTypeSelectionPopulation.js:392
 msgctxt "solgs.browser.predicted_output_check_error"
-msgid "Error occured checking if the selection population has predicted output."
+msgid "Error occurred checking if the selection population has predicted output."
 msgstr ""
 
 #: js/source/legacy/solGS/geneticGain.js:264
 msgctxt "solgs.browser.predicted_traits_check_error"
-msgid "Error occured checking for predicted traits for the selection population %{id}"
+msgid "Error occurred checking for predicted traits for the selection population %{id}"
 msgstr ""
 
 #: js/source/legacy/solGS/solGS.js:654
@@ -61738,7 +61738,7 @@ msgstr ""
 
 #: js/source/legacy/solGS/solGS.js:602
 msgctxt "solgs.browser.profile_save_call_failed"
-msgid "Error occured calling the function to save your analysis profile."
+msgid "Error occurred calling the function to save your analysis profile."
 msgstr ""
 
 #: js/source/legacy/solGS/solGS.js:597
@@ -61823,7 +61823,7 @@ msgstr ""
 
 #: js/source/legacy/solGS/gebvsSave.js:100 js/source/legacy/solGS/gebvsSave.js:30 js/source/legacy/solGS/pcaSave.js:34
 msgctxt "solgs.browser.save_user_status_error"
-msgid "Error occured checking for user status"
+msgid "Error occurred checking for user status"
 msgstr ""
 
 #: js/source/legacy/solGS/gebvsSave.js:18
@@ -61888,7 +61888,7 @@ msgstr ""
 
 #: js/source/legacy/solGS/geneticGain.js:209
 msgctxt "solgs.browser.selection_gebv_check_error"
-msgid "Error occured checking for GEBV data for the selection population."
+msgid "Error occurred checking for GEBV data for the selection population."
 msgstr ""
 
 #: js/source/legacy/solGS/selectionIndex.js:331
@@ -61898,12 +61898,12 @@ msgstr ""
 
 #: js/source/legacy/solGS/selectionIndex.js:435
 msgctxt "solgs.browser.selection_index_calculation_error"
-msgid "error occured calculating selection index."
+msgid "error occurred calculating selection index."
 msgstr ""
 
 #: js/source/legacy/solGS/selectionIndex.js:417
 msgctxt "solgs.browser.selection_index_correlation_error"
-msgid "Error occured running correlation analysis."
+msgid "Error occurred running correlation analysis."
 msgstr ""
 
 #: js/source/legacy/solGS/selectionIndex.js:382
@@ -61913,7 +61913,7 @@ msgstr ""
 
 #: js/source/legacy/solGS/selectionIndex.js:306
 msgctxt "solgs.browser.selection_index_form_error"
-msgid "Error occured creating the selection index form."
+msgid "Error occurred creating the selection index form."
 msgstr ""
 
 #: js/source/legacy/solGS/selectionIndex.js:354 mason/breeders_toolbox/drone_imagery/standard_process_raw_images.mas:351 mason/breeders_toolbox/manage_drone_imagery.mas:381
@@ -61948,17 +61948,17 @@ msgstr ""
 
 #: js/source/legacy/solGS/selectionPopulations.js:228
 msgctxt "solgs.browser.selection_population_process_error"
-msgid "Error occured processing the query."
+msgid "Error occurred processing the query."
 msgstr ""
 
 #: js/source/legacy/solGS/selectionPopulations.js:138
 msgctxt "solgs.browser.selection_population_query_error"
-msgid "Errro occured querying for selection populations"
+msgid "Error occurred querying for selection populations"
 msgstr ""
 
 #: js/source/legacy/solGS/selectionPopulations.js:163
 msgctxt "solgs.browser.selection_population_search_error"
-msgid "Error occured searching for the selection populations."
+msgid "Error occurred searching for the selection populations."
 msgstr ""
 
 #: js/source/legacy/solGS/cluster.js:590
@@ -62023,17 +62023,17 @@ msgstr ""
 
 #: js/source/legacy/solGS/geneticGain.js:174
 msgctxt "solgs.browser.training_gebv_check_error"
-msgid "Error occured checking for GEBV data for the training population."
+msgid "Error occurred checking for GEBV data for the training population."
 msgstr ""
 
 #: js/source/legacy/solGS/searchTrials.js:309
 msgctxt "solgs.browser.training_population_check_error"
-msgid "Error occured checking for if trial can be used as training population."
+msgid "Error occurred checking for if trial can be used as training population."
 msgstr ""
 
 #: js/source/legacy/solGS/searchTrials.js:318
 msgctxt "solgs.browser.training_population_exists_error"
-msgid "Error occured checking if the training population exists."
+msgid "Error occurred checking if the training population exists."
 msgstr ""
 
 #: js/source/legacy/solGS/solGS.js:100
@@ -62048,12 +62048,12 @@ msgstr ""
 
 #: js/source/legacy/solGS/searchTraits.js:50
 msgctxt "solgs.browser.trait_search_error"
-msgid "Error occured searching for trait %{name}"
+msgid "Error occurred searching for trait %{name}"
 msgstr ""
 
 #: js/source/legacy/solGS/listTypeTrainingPopulation.js:266
 msgctxt "solgs.browser.trial_ids_error"
-msgid "Error occured querying for trials ids"
+msgid "Error occurred querying for trials ids"
 msgstr ""
 
 #: js/source/legacy/solGS/searchTrials.js:313
@@ -62063,7 +62063,7 @@ msgstr ""
 
 #: js/source/legacy/solGS/combineTrials.js:304
 msgctxt "solgs.browser.trial_phenotype_genotype_retrieval_error"
-msgid "An error occured retrieving phenotypeand genotype data for trials.."
+msgid "An error occurred retrieving phenotypeand genotype data for trials.."
 msgstr ""
 
 #: js/source/legacy/solGS/searchTrials.js:99
@@ -63143,7 +63143,7 @@ msgstr ""
 
 #: mason/search/stocks.mas:339
 msgctxt "stock_search.copy_help"
-msgid "Copy the stock names currently showing in the search results table to a new or exisiting list. Use \"Show All entries\" to capture all results."
+msgid "Copy the stock names currently showing in the search results table to a new or existing list. Use \"Show All entries\" to capture all results."
 msgstr ""
 
 #: mason/search/stocks.mas:274
@@ -63168,7 +63168,7 @@ msgstr ""
 
 #: mason/search/stocks_graphicalfiltering.mas:37
 msgctxt "stock_search.graphical.copy_help"
-msgid "Copy the accession names in table to a new or exisiting list"
+msgid "Copy the accession names in table to a new or existing list"
 msgstr ""
 
 #: js/source/legacy/brapi/GraphicalFilter.js:89
@@ -63468,7 +63468,7 @@ msgstr ""
 
 #: mason/util/styleguide.mas:19
 msgctxt "styleguide.css.intro"
-msgid "To import CSS one should use the %{component} mason component instead of a %{link} element. This will ensure that a link is added to the %{head} instead of being part of the %{body}. One provides this mason componant with a list of strings which are one of the following:"
+msgid "To import CSS one should use the %{component} mason component instead of a %{link} element. This will ensure that a link is added to the %{head} instead of being part of the %{body}. One provides this mason component with a list of strings which are one of the following:"
 msgstr ""
 
 #: mason/util/styleguide.mas:22
@@ -63593,7 +63593,7 @@ msgstr ""
 
 #: mason/util/styleguide.mas:37
 msgctxt "styleguide.javascript.intro"
-msgid "To import JavaScript one should use the %{component} mason component. This will ensure that the script is loaded in the %{head} instead of being part of the %{body}. One provides this mason componant with a list of strings which are the path to the JavaScript file with slashes replaced by periods (e.g. %{expression}) and the file extension removed."
+msgid "To import JavaScript one should use the %{component} mason component. This will ensure that the script is loaded in the %{head} instead of being part of the %{body}. One provides this mason component with a list of strings which are the path to the JavaScript file with slashes replaced by periods (e.g. %{expression}) and the file extension removed."
 msgstr ""
 
 #: mason/util/styleguide.mas:123
@@ -63618,7 +63618,7 @@ msgstr ""
 
 #: mason/util/styleguide.mas:105
 msgctxt "styleguide.section.html_multiple_selects"
-msgid "HTML Muliple Selects (%{function} has many options e.g. search for trials in %{program_key})"
+msgid "HTML Multiple Selects (%{function} has many options e.g. search for trials in %{program_key})"
 msgstr ""
 
 #: mason/util/styleguide.mas:87
@@ -63873,7 +63873,7 @@ msgstr ""
 
 #: mason/transformation/transformants_section.mas:23 mason/transformation/transgenic_line_details_section.mas:22
 msgctxt "transformation.adding_transgenic_lines_accessions_to_a_new_or_exisiting_list"
-msgid "Adding transgenic lines (accessions) to a new or exisiting list"
+msgid "Adding transgenic lines (accessions) to a new or existing list"
 msgstr ""
 
 #: cgi-bin/tools/vector/index.pl:177
@@ -64163,7 +64163,7 @@ msgstr ""
 
 #: js/source/legacy/CXGN/BreedersToolbox/UploadGrafts.js:101
 msgctxt "transformation.helper.an_error_occured_no_grafts_were_saved_try_fixing_your_file_for_the_i"
-msgid "An Error Occured: No grafts were saved! Try Fixing Your File For The Issues Identified In the Validation. "
+msgid "An Error Occurred: No grafts were saved! Try Fixing Your File For The Issues Identified In the Validation. "
 msgstr ""
 
 #: js/source/entries/vectorViewer.js:330
@@ -64623,7 +64623,7 @@ msgstr ""
 
 #: lib/CXGN/Stock/Vector/ParseUpload/Plugin/VectorsXLS.pm:117
 msgctxt "transformation.helper.vector_k_occures_value2_times_in_the_file_vector_names_must_be_uniqu"
-msgid "Vector %{k} occures %{value2} times in the file. Vector names must be unique. Please remove duplicated vector names."
+msgid "Vector %{k} occurs %{value2} times in the file. Vector names must be unique. Please remove duplicated vector names."
 msgstr ""
 
 #: lib/SGN/Controller/AJAX/Treatment.pm:28 lib/SGN/Controller/AJAX/Treatment.pm:37
@@ -65213,12 +65213,12 @@ msgstr ""
 
 #: mason/stock/accession_related_transformation_info.mas:67 mason/stock/accession_related_transformation_info.mas:89
 msgctxt "transformation.root.adding_accession_names_to_a_new_or_exisiting_list"
-msgid "Adding accession names to a new or exisiting list"
+msgid "Adding accession names to a new or existing list"
 msgstr ""
 
 #: mason/tracking_activities/active_tracking_identifiers.mas:34
 msgctxt "transformation.root.adding_identifiers_in_this_project_to_a_new_or_exisiting"
-msgid "Adding identifiers in this project to a new or exisiting list"
+msgid "Adding identifiers in this project to a new or existing list"
 msgstr ""
 
 #: mason/breeders_toolbox/upload_graft_dialogs.mas:45
@@ -65228,7 +65228,7 @@ msgstr ""
 
 #: mason/stock/add_vector.mas:150
 msgctxt "transformation.root.an_error_occured_while_storing_vectors"
-msgid "An Error occured while storing vectors."
+msgid "An Error occurred while storing vectors."
 msgstr ""
 
 #: mason/tracking_activities/generate_tracking_identifiers_dialog.mas:189
@@ -65343,12 +65343,12 @@ msgstr ""
 
 #: mason/transformation/obsoleted_accessions.mas:31
 msgctxt "transformation.root.copy_the_obsoleted_accession_names_to_a_new_or_exisiting"
-msgid "Copy the obsoleted accession names to a new or exisiting list"
+msgid "Copy the obsoleted accession names to a new or existing list"
 msgstr ""
 
 #: mason/search/treatments.mas:89
 msgctxt "transformation.root.copy_the_treatment_names_currently_selected_in_the_search_results"
-msgid "Copy the treatment names currently selected in the search results table to a new or exisiting list"
+msgid "Copy the treatment names currently selected in the search results table to a new or existing list"
 msgstr ""
 
 #: mason/stock/add_vector.mas:14
@@ -65788,7 +65788,7 @@ msgstr ""
 
 #: mason/tracking_activities/edit_tracking_activity_project_details.mas:22
 msgctxt "transformation.root.projec_name"
-msgid "Projec Name:"
+msgid "Project Name:"
 msgstr ""
 
 #: mason/tracking_activities/activity_project_tree.mas:33
@@ -66603,7 +66603,7 @@ msgstr ""
 
 #: lib/CXGN/Transformation/StoreTransgeneExpressionData.pm:147
 msgctxt "transformation.transgenic_line_cound_not_be_found_in_the_database_transformant_name"
-msgid "Transgenic line cound not be found in the database: %{transformant_name}!"
+msgid "Transgenic line could not be found in the database: %{transformant_name}!"
 msgstr ""
 
 #: lib/SGN/Controller/AJAX/Transformation.pm:1999
@@ -66843,7 +66843,7 @@ msgstr ""
 
 #: mason/transformation/manage_transformation.mas:40
 msgctxt "transformation.using_transformation_tool_togehter_with_autogenerated_name_feature_new_transformants"
-msgid "Using transformation tool togehter with autogenerated name feature, new transformants can be added to the database simply by indicating number of transformants. The generated transformants will be automatically stored in the database as new accessions."
+msgid "Using transformation tool together with autogenerated name feature, new transformants can be added to the database simply by indicating number of transformants. The generated transformants will be automatically stored in the database as new accessions."
 msgstr ""
 
 #: mason/order/catalog_transgenic_lines.mas:69 mason/stock/accession_related_transformation_info.mas:19 mason/transformation/inactive_transformation_ids_in_project.mas:15 mason/transformation/transformation.mas:59 mason/transformation/transformations_in_project.mas:14
@@ -66858,7 +66858,7 @@ msgstr ""
 
 #: lib/CXGN/Transformation/StoreTransgeneExpressionData.pm:158
 msgctxt "transformation.vector_construct_cound_not_be_found_in_the_database_vector_construct"
-msgid "Vector construct cound not be found in the database: %{vector_construct_name}!"
+msgid "Vector construct could not be found in the database: %{vector_construct_name}!"
 msgstr ""
 
 #: mason/transformation/add_transformation_identifier_dialog.mas:127
@@ -67148,7 +67148,7 @@ msgstr ""
 
 #: mason/breeders_toolbox/trial/upload_additional_file.mas:62
 msgctxt "trial.additional_file.examples"
-msgid "Possible additional files inlude, but are not limited to:"
+msgid "Possible additional files include, but are not limited to:"
 msgstr ""
 
 #: mason/breeders_toolbox/trial/upload_additional_file.mas:25
@@ -67383,7 +67383,7 @@ msgstr ""
 
 #: mason/breeders_toolbox/trial/trial_coords.mas:91
 msgctxt "trial.card.coords.pseudo_coords"
-msgid "Psudo row and column numbers have been used in displaying the field map. Plots row and column numbers were generated from block_number and displayed in zigzag format. You can upload row and column numbers for this trial to reflect the field layout."
+msgid "Pseudo row and column numbers have been used in displaying the field map. Plots row and column numbers were generated from block_number and displayed in zigzag format. You can upload row and column numbers for this trial to reflect the field layout."
 msgstr ""
 
 #: mason/breeders_toolbox/trial/trial_coords.mas:63
@@ -67868,7 +67868,7 @@ msgstr ""
 
 #: mason/breeders_toolbox/trial/trial_plants.mas:26
 msgctxt "trial.card.list_selection.plants_subtitle"
-msgid "Adding plants in this trial to a new or exisiting list"
+msgid "Adding plants in this trial to a new or existing list"
 msgstr ""
 
 #: mason/breeders_toolbox/trial/trial_plants.mas:26
@@ -67878,7 +67878,7 @@ msgstr ""
 
 #: mason/breeders_toolbox/trial/trial_plots.mas:25
 msgctxt "trial.card.list_selection.plots_subtitle"
-msgid "Adding plots in this trial to a new or exisiting list"
+msgid "Adding plots in this trial to a new or existing list"
 msgstr ""
 
 #: mason/breeders_toolbox/trial/trial_plots.mas:25
@@ -67888,7 +67888,7 @@ msgstr ""
 
 #: mason/breeders_toolbox/trial/trial_stocks.mas:18
 msgctxt "trial.card.list_selection.stocks_subtitle"
-msgid "Adding stocks in this trial to a new or exisiting list"
+msgid "Adding stocks in this trial to a new or existing list"
 msgstr ""
 
 #: mason/breeders_toolbox/trial/trial_stocks.mas:18
@@ -68653,7 +68653,7 @@ msgstr ""
 
 #: mason/breeders_toolbox/trial/trial_status.mas:110
 msgctxt "trial.card.status.physical_map_label"
-msgid "Has Physial Map"
+msgid "Has Physical Map"
 msgstr ""
 
 #: mason/breeders_toolbox/trial/trial_status.mas:110
@@ -70175,12 +70175,12 @@ msgstr ""
 
 #: lib/SGN/Controller/AJAX/Trial.pm:521
 msgctxt "trial.create.server.field_area"
-msgid "The generated design would require atleast %{area} square meters and your field size is %{hectares} hectare (%{field_area} square meters)."
+msgid "The generated design would require at least %{area} square meters and your field size is %{hectares} hectare (%{field_area} square meters)."
 msgstr ""
 
 #: lib/SGN/Controller/AJAX/Trial.pm:519
 msgctxt "trial.create.server.field_too_small"
-msgid "The generated design would require atleast %{area} square meters, which is larger than the %{hectares} hectare (%{field_area} square meters) field size you indicated."
+msgid "The generated design would require at least %{area} square meters, which is larger than the %{hectares} hectare (%{field_area} square meters) field size you indicated."
 msgstr ""
 
 #: lib/SGN/Controller/AJAX/Trial.pm:497
@@ -70400,7 +70400,7 @@ msgstr ""
 
 #: lib/SGN/Controller/AJAX/Trial.pm:883
 msgctxt "trial.create.validation.duplicate_name"
-msgid "The following trial name has aready been used. Please use a unique name"
+msgid "The following trial name has already been used. Please use a unique name"
 msgstr ""
 
 #: js/source/legacy/CXGN/BreedersToolbox/AddTrial.js:145
@@ -71191,7 +71191,7 @@ msgstr ""
 
 #: mason/breeders_toolbox/trial/export_trial_to_expression_atlas.mas:167
 msgctxt "trial.expression_atlas.export_success"
-msgid "Succesfully exported trial to Expression Atlas!"
+msgid "Successfully exported trial to Expression Atlas!"
 msgstr ""
 
 #: mason/breeders_toolbox/trial/export_trial_to_expression_atlas.mas:14
@@ -72446,7 +72446,7 @@ msgstr ""
 
 #: mason/breeders_toolbox/trial/phenotype_heatmap.mas:1106
 msgctxt "trial.heatmap.find_filler_accession_error"
-msgid "An error occured while trying to find accession name of filler plots"
+msgid "An error occurred while trying to find accession name of filler plots"
 msgstr ""
 
 #: mason/breeders_toolbox/trial/phenotype_heatmap.mas:281
@@ -72861,7 +72861,7 @@ msgstr ""
 
 #: mason/breeders_toolbox/trial/phenotype_heatmap.mas:651
 msgctxt "trial.heatmap.warning_new_plot_name"
-msgid "Warning: the new plot name will replace the old plot name in subplots, plants, and tissue samples if possible. If a plot name template is saved in assocation with this trial, it will be used to rename the plot unless a new plot name is manually specified. Changing plot accessions may change plot replicate numbers. You may need to reprint labels after the changes are applied."
+msgid "Warning: the new plot name will replace the old plot name in subplots, plants, and tissue samples if possible. If a plot name template is saved in association with this trial, it will be used to rename the plot unless a new plot name is manually specified. Changing plot accessions may change plot replicate numbers. You may need to reprint labels after the changes are applied."
 msgstr ""
 
 #: mason/breeders_toolbox/trial/phenotype_heatmap.mas:229
@@ -73571,7 +73571,7 @@ msgstr ""
 
 #: mason/breeders_toolbox/trial/add_plants_per_plot.mas:326
 msgctxt "trial.plant_plot.index_count_full"
-msgid "The plant name will be saved as a concatenation of plot_name + _ + plant_index_number for as many plants as specfied by num_plants_per_plot"
+msgid "The plant name will be saved as a concatenation of plot_name + _ + plant_index_number for as many plants as specified by num_plants_per_plot"
 msgstr ""
 
 #: mason/breeders_toolbox/trial/add_plants_per_plot.mas:251
@@ -73591,7 +73591,7 @@ msgstr ""
 
 #: mason/breeders_toolbox/trial/add_plants_per_subplot.mas:325
 msgctxt "trial.plant_subplot.index_count_full"
-msgid "The plant name will be saved as a concatenation of subplot_name + _ + plant_index_number for as many plants as specfied by num_plants_per_subplot"
+msgid "The plant name will be saved as a concatenation of subplot_name + _ + plant_index_number for as many plants as specified by num_plants_per_subplot"
 msgstr ""
 
 #: mason/breeders_toolbox/trial/add_plants_per_subplot.mas:250
@@ -73656,7 +73656,7 @@ msgstr ""
 
 #: mason/breeders_toolbox/trial/repetitive_measurements_data.mas:218
 msgctxt "trial.repetitive.measurement_error"
-msgid "An error occured in the repetitive measurement!%{details}"
+msgid "An error occurred in the repetitive measurement!%{details}"
 msgstr ""
 
 #: mason/breeders_toolbox/trial/repetitive_measurements_data.mas:61
@@ -73764,12 +73764,7 @@ msgctxt "trial.search.breeding_program"
 msgid "Breeding program"
 msgstr ""
 
-#: mason/search/genotyping_trials.mas:39
-msgctxt "trial.search.copy_help"
-msgid "Copy the trial names currently showing in the search results table to a new or exisiting list"
-msgstr ""
-
-#: mason/search/trials.mas:39
+#: mason/search/genotyping_trials.mas:39 mason/search/trials.mas:39
 msgctxt "trial.search.copy_help"
 msgid "Copy the trial names currently showing in the search results table to a new or existing list"
 msgstr ""
@@ -74281,7 +74276,7 @@ msgstr ""
 
 #: mason/breeders_toolbox/trial/add_subplots_per_plot.mas:282
 msgctxt "trial.subplot.index_count_full"
-msgid "The subplot name will be saved as a concatenation of plot_name + _ + subplot_index_number for as many subplots as specfied by num_subplots_per_plot"
+msgid "The subplot name will be saved as a concatenation of plot_name + _ + subplot_index_number for as many subplots as specified by num_subplots_per_plot"
 msgstr ""
 
 #: mason/breeders_toolbox/trial/add_subplots_per_plot.mas:215
@@ -74396,7 +74391,7 @@ msgstr ""
 
 #: mason/breeders_toolbox/trial/trial_subplots.mas:25
 msgctxt "trial.subplots.subtitle"
-msgid "Add subplots in this trial to a new or exisiting list"
+msgid "Add subplots in this trial to a new or existing list"
 msgstr ""
 
 #: mason/breeders_toolbox/trial/add_subplots_per_plot.mas:192
@@ -75151,7 +75146,7 @@ msgstr ""
 
 #: mason/breeders_toolbox/trial/trial_coords_upload_dialogs.mas:67
 msgctxt "trial.upload.coordinates.success_title"
-msgid "Upload Coordinates Uploaded Sucessfully"
+msgid "Upload Coordinates Uploaded Successfully"
 msgstr ""
 
 #: mason/breeders_toolbox/trial/trial_coords_upload_dialogs.mas:11

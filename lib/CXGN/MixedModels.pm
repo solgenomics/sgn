@@ -448,7 +448,7 @@ traits.
 The files from the dataset will contain trait names that are incompatible with R. These names are converted using the clean_file subroutine. The conversion takes place and is saved in a file with a .clean extension. Then, the .clean file is moved to the previous file name, such that there is not difference in file naming.
 
 
-The result files will initially contain these R-based names as well. The conversion between R and dataset names are stored in a file with the extension .traits . The inital result files will be converted back to dataset names using the sub convert_file_headers_back_to_breedbase_traits() function. The conversion is saved in a file with the .original_traits extension, which is then moved back to the original file name once the conversion is complete. 
+The result files will initially contain these R-based names as well. The conversion between R and dataset names are stored in a file with the extension .traits . The initial result files will be converted back to dataset names using the sub convert_file_headers_back_to_breedbase_traits() function. The conversion is saved in a file with the .original_traits extension, which is then moved back to the original file name once the conversion is complete.
   
 
 

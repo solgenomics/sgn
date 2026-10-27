@@ -141,7 +141,7 @@ solGS.histogram = {
   // 'bar_color': 'optional color for bars,
   // 'alt_bar_color': 'optional color for bars for on mouseover',
   // 'values': optional array of values
-  // 'named_values' : an array of arrray of named values}, necessary if you want view bin
+  // 'named_values' : an array of array of named values}, necessary if you want view bin
   //elements on mouseover;
   //
   plotHistogram: function (histo) {

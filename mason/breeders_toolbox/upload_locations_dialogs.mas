@@ -36,7 +36,7 @@
                 <b>Abbreviation:</b> <% $c->i18n->p("program.location.upload.abbreviation_help", "used in the map and in uploads, must not conflict with an existing abbreviation") |h %><br>
                 <b>Country Code:</b> <% $c->i18n->p("program.location.upload.country_code_help", "must be an ") |h %><a href="https://en.wikipedia.org/wiki/ISO_3166-1_alpha-3"><% $c->i18n->p("program.location.upload.iso_country_code", "ISO Alpha-3 country code") |h %></a><br>
                 <b>Country Name:</b> <% $c->i18n->p("program.location.upload.country_name_help", "must be an uppercase english short name from the ") |h %><a href="https://en.wikipedia.org/wiki/ISO_3166-1_alpha-3"><% $c->i18n->p("program.location.upload.iso_standard", "ISO standard") |h %></a><br>
-                <b>Program:</b> <% $c->i18n->p("program.location.upload.program_help", "must be an exisiting Breeding Program in the database, or multiple breeding programs separated by '&'") |h %><br>
+                <b>Program:</b> <% $c->i18n->p("program.location.upload.program_help", "must be an existing Breeding Program in the database, or multiple breeding programs separated by '&'") |h %><br>
                 <b>Type:</b> <% $c->i18n->p("program.location.upload.type_help", "must be one of the following: Town, Farm, Field, Greenhouse, Screenhouse, Lab, Storage, Other") |h %><br>
                 <b>Latitude:</b> <% $c->i18n->p("program.location.upload.latitude_help", "(in degrees) must be a number between 90 and -90.") |h %><br>
                 <b>Longitude:</b> <% $c->i18n->p("program.location.upload.longitude_help", "(in degrees) must be a number between 180 and -180.") |h %><br>

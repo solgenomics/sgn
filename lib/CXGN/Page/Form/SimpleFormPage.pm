@@ -646,7 +646,7 @@ sub set_object {
         and this accessor will return an array with one element.
         However, if the object has multiple owners
         (such as 'Locus' - group of owners is defined in locus_owner table)
-        this function will need to be overriden (see CXGN/Phenome/Locus.pm)
+        this function will need to be overridden (see CXGN/Phenome/Locus.pm)
  Ret:   an array
  Args:  none
  Side Effects:

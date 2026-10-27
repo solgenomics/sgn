@@ -147,7 +147,7 @@ function handleSubmit() {
           }
         },
         error: function(response) {
-          alert( (window.SGN && window.SGN.i18n ? window.SGN.i18n.p("transformation.root.an_error_occured_while_storing_vectors", "An Error occured while storing vectors.") : 'An Error occured while storing vectors.'));
+          alert( (window.SGN && window.SGN.i18n ? window.SGN.i18n.p("transformation.root.an_error_occured_while_storing_vectors", "An Error occurred while storing vectors.") : 'An Error occurred while storing vectors.'));
         }
     });
 }

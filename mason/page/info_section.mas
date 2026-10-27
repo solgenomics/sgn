@@ -63,7 +63,7 @@ boolean - a true value will draw the section in the collapsed state
 =item $is_subsection
 
 boolean - a true value will draw the section as a subsection, with
-slighly altered title bar and text rendering.
+slightly altered title bar and text rendering.
 
 =item $align
 

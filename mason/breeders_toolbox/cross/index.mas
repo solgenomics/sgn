@@ -184,7 +184,7 @@ $identifier_prefix => ''
 
     <button id="property_submit" ><% $c->i18n->p('cross.ui.save', 'Save') |h %></button>
 
-    <p><b><% $c->i18n->p('cross.ui.warning', 'WARNING!') |h %></b><% $c->i18n->p('cross.ui.changing_the_parameters_can_have_unpredicatable_results_in_dow', ' Changing the parameters can have unpredicatable results in downstream analyses if they are inconsistent with other data.') |h %></p>
+    <p><b><% $c->i18n->p('cross.ui.warning', 'WARNING!') |h %></b><% $c->i18n->p('cross.ui.changing_the_parameters_can_have_unpredicatable_results_in_dow', ' Changing the parameters can have unpredictable results in downstream analyses if they are inconsistent with other data.') |h %></p>
 
 </div>
 

@@ -85,7 +85,7 @@ sub _validate_with_plugin {
 
     foreach my $type (@$seen_status_types) {
         if (!exists $supported_status_types{$type}) {
-            push @error_messages, (SGN::I18N::translate($ui_i18n, "seedlot.server.status_type_not_supported_b_type_b_status", "Status type not supported: <b>%{type}</b>. Status type should be inventoried, in trial, distribued, dead or disposed ", {type => "" . ($type)}));
+            push @error_messages, (SGN::I18N::translate($ui_i18n, "seedlot.server.status_type_not_supported_b_type_b_status", "Status type not supported: <b>%{type}</b>. Status type should be inventoried, in trial, distributed, dead or disposed ", {type => "" . ($type)}));
         }
     }
 

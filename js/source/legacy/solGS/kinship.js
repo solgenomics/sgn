@@ -531,7 +531,7 @@ jQuery(document).ready(function () {
                         })
                         .fail(function () {
                             jQuery(kinshipMsgDiv)
-                            .html((window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.kinship_analysis_error", "Error occured running the kinship.") : "Error occured running the kinship."))
+                            .html((window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.kinship_analysis_error", "Error occurred running the kinship.") : "Error occurred running the kinship."))
                             .show()
                             .fadeOut(8400);
 
@@ -555,7 +555,7 @@ jQuery(document).ready(function () {
             }
             })
             .fail(function () {
-            jQuery(kinshipMsgDiv).html((window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.kinship_analysis_error", "Error occured running the kinship.") : "Error occured running the kinship.")).show().fadeOut(8400);
+            jQuery(kinshipMsgDiv).html((window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.kinship_analysis_error", "Error occurred running the kinship.") : "Error occurred running the kinship.")).show().fadeOut(8400);
             jQuery(`${canvas} .multi-spinner-container`).hide();
             jQuery(runKinshipBtnId).show();
             });

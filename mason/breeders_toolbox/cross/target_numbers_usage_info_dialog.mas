@@ -14,7 +14,7 @@
                     <h4>
                         <% $c->i18n->p("cross.forms.target_numbers_of_seeds_and_or_progenies.e3e7ebc", "Target Numbers of Seeds and/or Progenies:") |h %>
                     </h4>
-                    <p><% $c->i18n->p("cross.forms.you_can_set_target_numbers_of_seeds_and_or", "You can set target numbers of seeds and/or target numbers of progenies for parental combinations that you plan to include in this cossing experiment. Once target numbers are stored in the database, this section will automatically track crossing acitvities in this crossing experiment. Target numbers can be added before or after actual crossing activities are stored in the database.") |h %></p>
+                    <p><% $c->i18n->p("cross.forms.you_can_set_target_numbers_of_seeds_and_or", "You can set target numbers of seeds and/or target numbers of progenies for parental combinations that you plan to include in this cossing experiment. Once target numbers are stored in the database, this section will automatically track crossing activities in this crossing experiment. Target numbers can be added before or after actual crossing activities are stored in the database.") |h %></p>
                     <br>
                     <h4>
                         <% $c->i18n->p("cross.forms.how_to_record_target_numbers", "How to Record Target Numbers:") |h %>

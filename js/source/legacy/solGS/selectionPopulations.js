@@ -135,7 +135,7 @@ jQuery(document).ready(function () {
       // jQuery(searchBtn).show();
     })
     .fail(function () {
-      var msg = (window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.selection_population_query_error", "Errro occured querying for selection populations") : "Errro occured querying for selection populations");
+      var msg = (window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.selection_population_query_error", "Error occurred querying for selection populations") : "Error occurred querying for selection populations");
       solGS.selectionPopulation.feedbackOnFail(msg);
       // jQuery(searchBtn).show();
     });
@@ -160,7 +160,7 @@ jQuery(document).ready(function () {
         }
       })
       .fail(function () {
-        var msg = (window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.selection_population_search_error", "Error occured searching for the selection populations.") : "Error occured searching for the selection populations.");
+        var msg = (window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.selection_population_search_error", "Error occurred searching for the selection populations.") : "Error occurred searching for the selection populations.");
         jQuery(this.msgDiv).html(msg).show().fadeOut(8000);
       });
   });
@@ -225,7 +225,7 @@ jQuery(document).ready(function () {
             jQuery(`${selPopsDiv} .multi-spinner-container`).hide();
           })
           .fail(function () {
-            var msg = (window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.selection_population_process_error", "Error occured processing the query.") : "Error occured processing the query.");
+            var msg = (window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.selection_population_process_error", "Error occurred processing the query.") : "Error occurred processing the query.");
             solGS.selectionPopulation.feedbackOnFail(msg);
             jQuery(searchBtn).show();
             jQuery(`${selPopsDiv} .multi-spinner-container`).hide();

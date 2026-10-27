@@ -83,7 +83,7 @@ sub upload_rename_accessions_verify : Path('/ajax/rename_accessions/upload_verif
     # check file type by file name extension
     #
     if ($upload_original_name =~ /\.xls$|\.xlsx/) {
-	$c->stash->{rest} = { error => $c->i18n->p("accession.rename_server.file_type", "The rename accessions funtion requires a tab delimited file. Excel files (.xls and .xlsx) are currently not supported. Please convert the file and try again.") };
+	$c->stash->{rest} = { error => $c->i18n->p("accession.rename_server.file_type", "The rename accessions function requires a tab delimited file. Excel files (.xls and .xlsx) are currently not supported. Please convert the file and try again.") };
 	return;
     }
     

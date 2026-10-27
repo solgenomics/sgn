@@ -23,6 +23,7 @@ chomp($node);
 plan skip_all => 'node is not installed' if !$node;
 
 my $mason_file = 'mason/breeders_toolbox/trial/phenotype_summary.mas';
+my $runtime_file = 'static/js/sgn-i18n.js';
 
 my ($fh, $harness) = tempfile(SUFFIX => '.js', UNLINK => 1);
 print $fh do { local $/; <DATA> };
@@ -33,7 +34,7 @@ sub run_page {
     my $collect_date_range = shift;
 
     local $ENV{TZ} = $tz;
-    open(my $out, '-|', $node, $harness, $mason_file, encode_json($collect_date_range)) or die "Can't run node: $!";
+    open(my $out, '-|', $node, $harness, $mason_file, $runtime_file, encode_json($collect_date_range)) or die "Can't run node: $!";
     my $result = do { local $/; <$out> };
     close($out);
     return eval { decode_json($result) } || {};
@@ -57,9 +58,15 @@ __DATA__
 // usage: node harness.js <mason file> <collect_date_range response as JSON>
 const fs = require('fs');
 const vm = require('vm');
+const path = require('path');
 
 const mason_file = process.argv[2];
-const collect_date_range = JSON.parse(process.argv[3]);
+const runtime_file = process.argv[3];
+const collect_date_range = JSON.parse(process.argv[4]);
+const I18N = require(path.resolve(process.cwd(), runtime_file));
+const translator = new I18N({locale: 'en', dir: 'ltr', domain: 'sgn', catalogs: []});
+const sgn = {i18n: translator};
+const window = {SGN: sgn};
 
 const source = fs.readFileSync(mason_file, 'utf8');
 const script = source.slice(source.indexOf('<script>') + '<script>'.length, source.lastIndexOf('</script>'))
@@ -112,6 +119,7 @@ Element.prototype.slider = function (options, values) {
 };
 Element.prototype.DataTable = function (options) {
     summary_table_urls.push(options.ajax);
+    this.buttons = { exportData: function () { return { header: [] }; } };
     return this;
 };
 
@@ -156,6 +164,7 @@ const document = {};
 vm.runInNewContext(script, {
     trial_id: collect_date_range.trial_id,
     jQuery: jQuery, document: document, d3v4: {}, stackedObservationPhenotypeHistogram: {},
+    window: window, SGN: sgn,
     addToListMenu: function () {}, alert: function () {}, console: console,
 });
 

@@ -326,7 +326,7 @@ sub _validate_with_plugin {
 
         if ($include_facility_identifiers) {
             if (!$facility_identifier || ($facility_identifier eq '')) {
-                push @error_messages, ($self->i18n ? $self->i18n->p('genotype.parser.xlsx.facility_missing', 'Cell %{cell}: %{field_facility_identifier} is misssing', { 'cell' => 'O' . ($row_name), 'field_facility_identifier' => 'facility_identifier' }) : "Cell O$row_name: facility_identifier is misssing");
+                push @error_messages, ($self->i18n ? $self->i18n->p('genotype.parser.xlsx.facility_missing', 'Cell %{cell}: %{field_facility_identifier} is missing', { 'cell' => 'O' . ($row_name), 'field_facility_identifier' => 'facility_identifier' }) : "Cell O$row_name: facility_identifier is missing");
             } else {
                 $facility_identifier =~ s/^\s+|\s+$//g;
 

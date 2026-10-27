@@ -279,7 +279,7 @@ $trial_name => undef
             </div>
             <div class="modal-body">
                 <div class="container-fluid">
-                    <b><% $c->i18n->p('trial.subplot.index_count_full', "The subplot name will be saved as a concatenation of plot_name + _ + subplot_index_number for as many subplots as specfied by num_subplots_per_plot") |h %></b>
+                    <b><% $c->i18n->p('trial.subplot.index_count_full', "The subplot name will be saved as a concatenation of plot_name + _ + subplot_index_number for as many subplots as specified by num_subplots_per_plot") |h %></b>
                     <br/>
                     <b><% $c->i18n->p("trial.common.excel_upload_help", "May be uploaded in an Excel file (.xls or .xlsx)") |h %></b>
                     <br />

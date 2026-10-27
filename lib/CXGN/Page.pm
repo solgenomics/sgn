@@ -362,7 +362,7 @@ EOHTML
 # #
 # # a way of coming up with temporary file names
 use IO::File;
-our $dev_urandom = new IO::File "</dev/urandom"
+our $dev_urandom = IO::File->new("</dev/urandom")
   or print STDERR "Can't open /dev/urandom for an entropy source.";
 
 sub tempname {

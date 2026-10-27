@@ -64,7 +64,7 @@ use HTML::Entities ();
         </div>
         <div class="panel panel-default">
             <div class="panel-body">
-                <&| /page/info_section.mas, anchor_title => 'Copy crosses to a List', title => HTML::Entities::encode_entities($c->i18n->p("cross.pages.copy_crosses_to_a_list", "Copy crosses to a List")), collapsible=>1, collapsed=>1, subtitle=>("<i>" . HTML::Entities::encode_entities($c->i18n->p("cross.pages.copy_the_cross_unique_ids_showing_in_table_to_a", "Copy the cross unique ids showing in table to a new or exisiting list")) . "</i>")&>
+                <&| /page/info_section.mas, anchor_title => 'Copy crosses to a List', title => HTML::Entities::encode_entities($c->i18n->p("cross.pages.copy_crosses_to_a_list", "Copy crosses to a List")), collapsible=>1, collapsed=>1, subtitle=>("<i>" . HTML::Entities::encode_entities($c->i18n->p("cross.pages.copy_the_cross_unique_ids_showing_in_table_to_a", "Copy the cross unique ids showing in table to a new or existing list")) . "</i>")&>
                     <div style="text-align:right" id="crosses_to_list_menu"></div>
                     <div id="cross_names" style="display: none;"></div>
                 </&>

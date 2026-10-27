@@ -27,9 +27,9 @@ use CXGN::Login;
         personal_info_for => SGN::I18N::translate($ui_people_i18n, 'community.people.personal_info_for', 'Personal info for ', undef, { entities => '\x{0080}-\x{10FFFF}', decode => 0 }),
     );
 
-my $contact_info_page = new SolPeoplePersonalInfoPage();
+my $contact_info_page = SolPeoplePersonalInfoPage->new();
 
-package SolPeoplePersonalInfoPage;
+package SolPeoplePersonalInfoPage; ## no critic (Modules::RequireFilenameMatchesPackage) # This CGI script intentionally declares its historical page package.
 
 use CXGN::Page;
 use CXGN::Page::FormattingHelpers qw/page_title_html/;
@@ -55,7 +55,7 @@ sub define_object {
 	# call set_object_id, set_object and set_primary_key here
 	my %args = $self->get_args();
 	$self->set_object_id($args{sp_person_id});
-	$self->set_object(new CXGN::People::Person($self->get_dbh(), $args{sp_person_id}));
+	$self->set_object(CXGN::People::Person->new($self->get_dbh(), $args{sp_person_id}));
 	$self->set_primary_key("sp_person_id");		      
 	$self->set_owners($self->get_object()->get_sp_person_id());
 }
@@ -104,10 +104,14 @@ sub validate_parameters_before_store
 	$format = "auto" unless $format eq "html";
 
 	#after checking for legal values, do the actual storing of existing organism IDs here
-	my @organism_codes = map {$_ =~ tr/[0-9]//cds; $_} split(/\0/, $organism_codes_str);
+	my @organism_codes = map {
+	    my $organism_code = $_;
+	    $organism_code =~ tr/[0-9]//cds;
+	    $organism_code;
+	} split(/\0/, $organism_codes_str);
 	foreach my $c ( @organism_codes )
 	{
-		my $test = new CXGN::People::Organism($self->get_dbh(), $c);
+		my $test = CXGN::People::Organism->new($self->get_dbh(), $c);
 		if(!defined($test))
 		{
 			$self->get_page()->message_page(SGN::I18N::translate($ui_people_i18n, 'community.people.organism_code_missing', 'Organism code "%{code}" is not defined in the database.
@@ -207,7 +211,7 @@ sub generate_form
 	if($form->is_editable()) {
 	    $form->add_label(display_name => "",
 			     field_name => "lbl1",
-			     contents => SGN::I18N::translate($ui_people_i18n, 'community.people.if_you_would_like_to_enter_or_update_information_at_this_time_but_do_not_want_it_displayed_publically_check_this_option', 'If you would like to enter or update information at this time but do not want it displayed publically, check this option.', undef, { entities => '\x{0080}-\x{10FFFF}', decode => 0 }));
+			     contents => SGN::I18N::translate($ui_people_i18n, 'community.people.if_you_would_like_to_enter_or_update_information_at_this_time_but_do_not_want_it_displayed_publically_check_this_option', 'If you would like to enter or update information at this time but do not want it displayed publicly, check this option.', undef, { entities => '\x{0080}-\x{10FFFF}', decode => 0 }));
 	    
 	    $form->add_checkbox(display_name => SGN::I18N::translate($ui_people_i18n, 'community.people.censor_contact_information_from_directory_search_and_public_display', 'Censor contact information from directory search and public display', undef, { entities => '\x{0080}-\x{10FFFF}', decode => 0 }),
 				field_name => "censor",
@@ -272,7 +276,7 @@ sub generate_form
 	    $form->add_label(display_name => "",
 			     field_name => "lbl3",
 			     contents => SGN::I18N::translate($ui_people_i18n, 'community.people.if_you_wish_to_be_contacted_via_telephone_or_fax_by_interested_parties_who_found_your_directory_entry_on_sgn_please_enter', 'If you wish to be contacted via telephone or fax by interested parties who found your directory entry on SGN, please enter', undef, { entities => '\x{0080}-\x{10FFFF}', decode => 0 })
-			     . SGN::I18N::translate($ui_people_i18n, 'community.people.telephone_numbers_here_these_numbers_will_be_displayed_publically_to_all_sgn_users_who_view_your_entry', ' telephone numbers here. These numbers will be displayed publically to all SGN users who view your entry.', undef, { entities => '\x{0080}-\x{10FFFF}', decode => 0 }));
+			     . SGN::I18N::translate($ui_people_i18n, 'community.people.telephone_numbers_here_these_numbers_will_be_displayed_publically_to_all_sgn_users_who_view_your_entry', ' telephone numbers here. These numbers will be displayed publicly to all SGN users who view your entry.', undef, { entities => '\x{0080}-\x{10FFFF}', decode => 0 }));
 	}
 	$form->add_field(display_name => SGN::I18N::translate($ui_people_i18n, 'community.people.phone', 'Phone', undef, { entities => '\x{0080}-\x{10FFFF}', decode => 0 }),
 			 field_name => "phone",
@@ -293,7 +297,7 @@ sub generate_form
 		$form->add_label(display_name => "",
 								field_name => "lbl4",
 								contents => SGN::I18N::translate($ui_people_i18n, 'community.people.if_you_would_like_to_be_contacted_via_email_by_interested_parties_who_found_your_directory_entry_on_sgn_please_enter', 'If you would like to be contacted via email by interested parties who found your directory entry on SGN, please enter', undef, { entities => '\x{0080}-\x{10FFFF}', decode => 0 })
-								. SGN::I18N::translate($ui_people_i18n, 'community.people.an_address_here_this_address_will_be_displayed_publically_to_all_sgn_users_who_view_your_entry', ' an address here. This address will be displayed publically to all SGN users who view your entry.', undef, { entities => '\x{0080}-\x{10FFFF}', decode => 0 }));
+								. SGN::I18N::translate($ui_people_i18n, 'community.people.an_address_here_this_address_will_be_displayed_publically_to_all_sgn_users_who_view_your_entry', ' an address here. This address will be displayed publicly to all SGN users who view your entry.', undef, { entities => '\x{0080}-\x{10FFFF}', decode => 0 }));
 	}
 	$form->add_field(display_name => SGN::I18N::translate($ui_people_i18n, 'community.people.contact_e_mail', 'Contact E-mail', undef, { entities => '\x{0080}-\x{10FFFF}', decode => 0 }),
 							field_name => "contact_email",

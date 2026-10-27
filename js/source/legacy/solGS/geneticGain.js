@@ -142,7 +142,7 @@ solGS.geneticGain = {
       },
       error: function (res) {
         jQuery(`${canvas} .multi-spinner-container`).hide();
-        solGS.showMessage(ggMsgDiv, (window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.genetic_gain_plot_error", "Error occured plotting the genetic gain.") : "Error occured plotting the genetic gain."));
+        solGS.showMessage(ggMsgDiv, (window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.genetic_gain_plot_error", "Error occurred plotting the genetic gain.") : "Error occurred plotting the genetic gain."));
         jQuery("#check_genetic_gain").show();
       },
     });
@@ -171,7 +171,7 @@ solGS.geneticGain = {
       },
       error: function () {
         jQuery(ggMsgDiv)
-          .html((window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.training_gebv_check_error", "Error occured checking for GEBV data for the training population.") : "Error occured checking for GEBV data for the training population."))
+          .html((window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.training_gebv_check_error", "Error occurred checking for GEBV data for the training population.") : "Error occurred checking for GEBV data for the training population."))
           .show();
       },
     });
@@ -206,7 +206,7 @@ solGS.geneticGain = {
       },
       error: function () {
         jQuery(ggMsgDiv)
-          .html((window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.selection_gebv_check_error", "Error occured checking for GEBV data for the selection population.") : "Error occured checking for GEBV data for the selection population."))
+          .html((window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.selection_gebv_check_error", "Error occurred checking for GEBV data for the selection population.") : "Error occurred checking for GEBV data for the selection population."))
           .show();
       },
     });
@@ -261,7 +261,7 @@ solGS.geneticGain = {
       error: function () {
         jQuery(ggMsgDiv)
           .html(
-            (window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.predicted_traits_check_error", "Error occured checking for predicted traits for the selection population %{id}", {"id": String(selectionPopId)}) : "Error occured checking for predicted traits for the selection population " +
+            (window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.predicted_traits_check_error", "Error occurred checking for predicted traits for the selection population %{id}", {"id": String(selectionPopId)}) : "Error occurred checking for predicted traits for the selection population " +
               selectionPopId)
           )
           .show();

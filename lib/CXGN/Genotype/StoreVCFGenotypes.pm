@@ -11,7 +11,7 @@ Protocol is for saving all the marker info, top header lines, and reference_geno
 For sample names that contain IGD numbers (with : separation) e.g. ABC:9292:9:c19238, make sure to use the igd_numbers_included flag.
 For sample names that contain Lab numbers (with . separation) e.g. ABC.A238, make sure to use the lab_numbers_included flag.
 
-protocol_info shold be a hashref with the following:
+protocol_info should be a hashref with the following:
 notice that the info in the markers and markers_array keys are identical, just in two different representations.
 
 {
@@ -74,7 +74,7 @@ notice that the info in the markers and markers_array keys are identical, just i
     ]
 }
 
-genotype_info shold be a hashref with the following (though the inner object keys are whatever is in the VCF format):
+genotype_info should be a hashref with the following (though the inner object keys are whatever is in the VCF format):
 notice that the top level keys are all the sample names, and the next keys are marker names.
 {
     'samplename1' => {

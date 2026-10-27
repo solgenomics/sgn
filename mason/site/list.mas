@@ -105,7 +105,7 @@
           <h3><% $c->i18n->p('lists_datasets.shared.multiple_mismatched_case', 'Multiple mismatched case') |h %></h3>
           <div id="multiple_case_match_message_div">
             <br />
-            <% $c->i18n->p('lists_datasets.shared.items_listed_here_have_mulitple_case_mismatches_and_must_be_fixed_manually_if_accessions_need_to_be_', 'Items listed here have mulitple case mismatches and must be fixed manually. If accessions need to be merged, contact the database directly.') |h %>
+            <% $c->i18n->p('lists_datasets.shared.items_listed_here_have_mulitple_case_mismatches_and_must_be_fixed_manually_if_accessions_need_to_be_', 'Items listed here have multiple case mismatches and must be fixed manually. If accessions need to be merged, contact the database directly.') |h %>
           </div>
 
           <table id="multiple_wrong_case_table" style="margin:0pt"></table>
