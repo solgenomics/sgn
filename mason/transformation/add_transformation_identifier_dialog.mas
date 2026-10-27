@@ -12,47 +12,47 @@ $default_plant_material_name
     <div class="modal-dialog modal-xl" role="document">
         <div class="modal-content ui-front">
             <div class="modal-header text-center">
-                <button type="reset" class="close" id="add_transformation_id_dismiss_button_1" name="add_transformation_id_dismiss_button" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                <h4 class="modal-title" id="addTransformationIdentifierDialog">Add New Transformation ID</h4>
+                <button type="reset" class="close" id="add_transformation_id_dismiss_button_1" name="add_transformation_id_dismiss_button" aria-label="<% $c->i18n->p("global.dataset_publish.close", "Close") |h %>"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="addTransformationIdentifierDialog"><% $c->i18n->p("transformation.add_new_transformation_id", "Add New Transformation ID") |h %></h4>
             </div>
             <div class="modal-body" id="add_new_transformation_identifier_body">
                 <div class="container-fluid">
                     <form class="form-horizontal" role="form" method="post" enctype="multipart/form-data" encoding="multipart/form-data">
                         <div class="form-group">
-                            <label class="col-sm-4 control-label" >Transformation ID: </label>
+                            <label class="col-sm-4 control-label" ><% $c->i18n->p("transformation.transformation_id.2d7a636", "Transformation ID:") |h %> </label>
                             <div class="col-sm-8">
                                 <input class="form-control" type="text" id="new_transformation_identifier_name" name="new_transformation_identifier_name"  />
                             </div>
                         </div>
 % if ($default_plant_material_name) {
                         <div class="form-group">
-                            <label class="col-sm-4 control-label" >Plant Material (accession name): </label>
+                            <label class="col-sm-4 control-label" ><% $c->i18n->p("transformation.plant_material_accession_name", "Plant Material (accession name):") |h %> </label>
                             <div class="col-sm-8">
                                 <input class="form-control" name="plant_material" id="plant_material" disabled value="<% $default_plant_material_name %>">
                             </div>
                         </div>
 % } else {
                         <div class="form-group">
-                            <label class="col-sm-4 control-label" >Plant Material (accession name): </label>
+                            <label class="col-sm-4 control-label" ><% $c->i18n->p("transformation.plant_material_accession_name", "Plant Material (accession name):") |h %> </label>
                                 <div class="col-sm-8">
                                     <input class="form-control" type="text" id="plant_material" name="plant_material"  />
                                 </div>
                         </div>
 % }
                         <div class="form-group">
-                            <label class="col-sm-4 control-label" >Vector Construct: </label>
+                            <label class="col-sm-4 control-label" ><% $c->i18n->p("transformation.vector_construct.dc7aa9e", "Vector Construct:") |h %> </label>
                                 <div class="col-sm-8">
                                     <input class="form-control" type="text" id="vector_construct" name="vector_construct"  />
                                 </div>
                         </div>
                         <div class="form-group">
-                            <label class="col-sm-4 control-label">Is a Control: </label>
+                            <label class="col-sm-4 control-label"><% $c->i18n->p("transformation.is_a_control", "Is a Control:") |h %> </label>
                             <div class="col-sm-8">
                                 <input type="checkbox" id="is_a_transformation_control_checkbox" />
                             </div>
                         </div>
                         <div class="form-group">
-                            <label class="col-sm-4 control-label" >Notes: </label>
+                            <label class="col-sm-4 control-label" ><% $c->i18n->p("seedlots.ui.notes", "Notes:") |h %> </label>
                                 <div class="col-sm-8">
                                     <div class="input-group">
                                         <textarea class="form-control" id="transformation_notes" ></textarea>
@@ -63,8 +63,8 @@ $default_plant_material_name
                 </div>
             </div>
             <div class="modal-footer">
-                <button id="add_transformation_id_dismiss_button_2" name="add_transformation_id_dismiss_button" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-                <button type="button" class="btn btn-primary" id="new_transformation_identifier_submit">Submit</button>
+                <button id="add_transformation_id_dismiss_button_2" name="add_transformation_id_dismiss_button" type="button" class="btn btn-default" data-dismiss="modal"><% $c->i18n->p("global.dataset_publish.close", "Close") |h %></button>
+                <button type="button" class="btn btn-primary" id="new_transformation_identifier_submit"><% $c->i18n->p("global.manage_file_share_dump.submit", "Submit") |h %></button>
             </div>
         </div>
     </div>
@@ -74,19 +74,19 @@ $default_plant_material_name
     <div class="modal-dialog" role="document">
         <div class="modal-content">
             <div class="modal-header">
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                <h4 class="modal-title" id="transformationIDSavedDialog">Success</h4>
+                <button type="button" class="close" data-dismiss="modal" aria-label="<% $c->i18n->p("global.dataset_publish.close", "Close") |h %>"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="transformationIDSavedDialog"><% $c->i18n->p("cross.ui.success", "Success") |h %></h4>
             </div>
             <div class="modal-body">
                 <div class="container-fluid">
                     <p>
                         <span class="ui-icon ui-icon-circle-check" style="float: left; margin: 0 7px 50px 0;"></span>
-                        The transformation ID was saved successfully.
+                        <% $c->i18n->p("transformation.the_transformation_id_was_saved_successfully", "The transformation ID was saved successfully.") |h %>
                     </p>
                 </div>
             </div>
             <div class="modal-footer">
-                <button id="dismiss_transformation_id_saved_dialog" type="button" class="btn btn-default" data-dismiss="modal">Close & Reload</button>
+                <button id="dismiss_transformation_id_saved_dialog" type="button" class="btn btn-default" data-dismiss="modal"><% $c->i18n->p("seedlots.ui.close_reload", "Close & Reload") |h %></button>
             </div>
         </div>
     </div>
@@ -112,19 +112,19 @@ jQuery(document).ready(function(){
     jQuery('#new_transformation_identifier_submit').click(function() {
         var transformation_identifier = jQuery("#new_transformation_identifier_name").val();
         if (!transformation_identifier) {
-            alert("Transformation ID is required");
+            alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("transformation.transformation_id_is_required", "Transformation ID is required") : "Transformation ID is required"));
             return;
         }
 
         var plant_material = jQuery("#plant_material").val();
         if (!plant_material) {
-            alert("Plant material is required");
+            alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("transformation.plant_material_is_required", "Plant material is required") : "Plant material is required"));
             return;
         }
 
         var vector_construct = jQuery("#vector_construct").val();
         if (!vector_construct) {
-            alert ("Vector construct is required");
+            alert ((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("transformation.vector_construct_is_required", "Vector construct is required") : "Vector construct is required"));
             return;
         }
 
@@ -164,7 +164,7 @@ jQuery(document).ready(function(){
             },
             error: function(response){
                 jQuery('#working_modal').modal('hide');
-                alert('An error occurred creating transformation ID');
+                alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("transformation.an_error_occurred_creating_transformation_id", "An error occurred creating transformation ID") : 'An error occurred creating transformation ID'));
             }
         });
 

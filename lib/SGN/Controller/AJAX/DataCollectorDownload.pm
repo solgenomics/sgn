@@ -17,6 +17,7 @@ Jeremy Edwards <jde22@cornell.edu>
 package SGN::Controller::AJAX::DataCollectorDownload;
 
 use Moose;
+use SGN::I18N ();
 use Try::Tiny;
 use DateTime;
 use File::Slurp;
@@ -51,6 +52,7 @@ sub create_DataCollector_spreadsheet_GET : Args(0) {
 sub create_DataCollector_spreadsheet_POST : Args(0) {
   print STDERR "phenotype download controller\n";
   my ($self, $c) = @_;
+    my SGN::I18N $ui_create_DataCollector_spreadsheet_POST_i18n = SGN::I18N::translate($c);
   my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
   my $trial_id = $c->req->param('trial_id');
   my $trait_list_ref = $c->req->param('trait_list');
@@ -60,7 +62,7 @@ sub create_DataCollector_spreadsheet_POST : Args(0) {
   if ($data_level eq 'plants') {
       my $trial = CXGN::Trial->new( { bcs_schema => $c->dbic_schema("Bio::Chado::Schema"), trial_id => $trial_id });
       if (!$trial->has_plant_entries()) {
-          $c->stash->{rest} = { error => "The requested trial (".$trial->get_name().") does not have plant entries. Please create the plant entries first." };
+          $c->stash->{rest} = { error => SGN::I18N::translate($ui_create_DataCollector_spreadsheet_POST_i18n, "phenotype.server.the_requested_trial_value_does_not_have_plant", "The requested trial (%{value}) does not have plant entries. Please create the plant entries first.", {value => ("" . ($trial->get_name()))})};
           return;
       }
   }

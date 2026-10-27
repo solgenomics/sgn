@@ -9,37 +9,41 @@
 
 </%args>
 
+<%init>
+use HTML::Entities ();
+</%init>
+
 <& /util/import_css.mas, paths => ['tools/GraphicalFiltering.css'] &>
 
-<& '/page/page_title.mas', title => "Graphical Filtering" &>
+<& '/page/page_title.mas', title => HTML::Entities::encode_entities($c->i18n->p('global.graphical_filtering.title', 'Graphical Filtering')) &>
 
 <& '/util/import_javascript.mas', classes => [ 'jquery', 'jqueryui', 'jquery.dataTables-buttons-min', 'jquery.dataTables-buttons-html5-min', 'jszip-min', 'CXGN.List', 'd3.d3v4Min', 'brapi.BrAPI', 'brapi.GraphicalFilter' ] &>
 
 <div id="select_div" class="row" hidden="true">
     <!-- form for selecting a list -->
-    <p>Choose a list of <!--plant, plots, or -->trials to filter.</p>
+    <p><% $c->i18n->p('global.graphical_filtering.choose_list', 'Choose a list of trials to filter.') |h %></p>
     <form class="tc-form">
         <div class="form-group">
             <!-- list select -->
             <div id="filter_list_select_container" class="select_container col-md-6">
                 <select disabled class="form-control input-sm" id="filter_list_select">
-                    <option selected="selected">Loading...</option>
+                    <option selected="selected"><% $c->i18n->p('global.graphical_filtering.loading', 'Loading...') |h %></option>
                 </select>
             </div>
             <div id="type_list_select_container" class="select_container col-md-2">
                 <select disabled class="form-control input-sm" id="type_list_select">
-                    <option selected disabled value="">Select Type</option>
-                    <option value="plot">Plots</option>
-                    <option value="plant">Plants</option>
+                    <option selected disabled value=""><% $c->i18n->p('global.graphical_filtering.select_type', 'Select Type') |h %></option>
+                    <option value="plot"><% $c->i18n->p('global.graphical_filtering.plots', 'Plots') |h %></option>
+                    <option value="plant"><% $c->i18n->p('global.graphical_filtering.plants', 'Plants') |h %></option>
                 </select>
             </div>
             <div class="checkbox col-md-2">
                 <label>
-                    <input type="checkbox" id="accession_group"> Group By Accession
+                    <input type="checkbox" id="accession_group"> <% $c->i18n->p('global.graphical_filtering.group_by_accession', 'Group By Accession') |h %>
                 </label>
             </div>
             <div class="select_container col-md-2">
-                <button id="confirm_list_select" type="button" class="btn btn-primary">Confirm</button>
+                <button id="confirm_list_select" type="button" class="btn btn-primary"><% $c->i18n->p('global.graphical_filtering.confirm', 'Confirm') |h %></button>
             </div>
         </div>
     </form>
@@ -47,7 +51,7 @@
 <!-- spinner to show during ajax call -->
 <div class="row">
     <center>
-        <img hidden="true" id="results-loading-spinner" src="/img/wheel.gif" alt="loading">
+        <img hidden="true" id="results-loading-spinner" src="/img/wheel.gif" alt="<% $c->i18n->p('global.graphical_filtering.loading_alt', 'loading') |h %>">
     </center>
 </div>
 <br>
@@ -55,10 +59,10 @@
 <div id="filter_div" class="row"></div>
 <!-- div with table of filtered results and an option to save the output as a list -->
 <div id="filtered_results_wrap" hidden="true" class="row dataTables_wrapper">
-<&| /page/info_section.mas, title => 'Filtered Results', collapsible=>0, collapsed=>0 &>
+<&| /page/info_section.mas, title => HTML::Entities::encode_entities($c->i18n->p('global.graphical_filtering.filtered_results', 'Filtered Results')), collapsible=>0, collapsed=>0 &>
     <table id="filtered_results" width="100%" class="table table-hover table-striped dataTable no-footer" role="grid" style="width: 100%;"></table>
 </&>
-<&| /page/info_section.mas, title => 'Save Accessions results as List', collapsible=>1, collapsed=>1 &>
+<&| /page/info_section.mas, title => HTML::Entities::encode_entities($c->i18n->p('global.graphical_filtering.save_accessions_as_list', 'Save Accessions results as List')), collapsible=>1, collapsed=>1 &>
     <div style="text-align:right" id="graphical_filter_results_to_list_menu"></div>
     <div id="graphical_filter_result_names" style="display: none;"></div>
 
@@ -69,13 +73,18 @@
 
 (function() {
   'use strict';
+  function escapeGraphicalLabel(value) {
+    var element = document.createElement('span');
+    element.textContent = String(value);
+    return element.innerHTML;
+  }
   var currentGFilter = null;
   var list = new CXGN.List();
   var auth_token;
   var require_login = "<%  $c->get_conf('brapi_require_login') %>";
   if (require_login === '1'){
       auth_token = "<%  CXGN::Login->new($c->dbc->dbh)->get_login_cookie() %>";
-      if (!auth_token){ alert("Login required to display graphical filtering"); }
+      if (!auth_token){ alert(window.SGN && SGN.i18n ? SGN.i18n.p('global.graphical_filtering.login_required', 'Login required to display graphical filtering') : 'Login required to display graphical filtering'); }
   }
 
   $('#confirm_list_select').on("click", function() {
@@ -89,7 +98,7 @@
     switch (list_type) {
       case 'plots':
       case 'plants':
-        alert("not yet implimented");
+        alert(window.SGN && SGN.i18n ? SGN.i18n.p('global.graphical_filtering.not_implemented', 'not yet implimented') : 'not yet implimented');
         break;
       case 'trials':
         updateGFilter(group,
@@ -138,7 +147,7 @@
             },
              {
                  extend: 'copyHtml5',
-                 text: "Copy to Clipboard",
+                 text: escapeGraphicalLabel(window.SGN && SGN.i18n ? SGN.i18n.p('global.graphical_filtering.copy_to_clipboard', 'Copy to Clipboard') : 'Copy to Clipboard'),
             },
         ]
         );
@@ -150,7 +159,7 @@
     $('#select_div').show();
 
     // set up list
-    var filter_list_select_html = list.listSelect('filter', ['trials'/*,'plots','plants'*/], 'Choose a List:', undefined, undefined);
+    var filter_list_select_html = list.listSelect('filter', ['trials'/*,'plots','plants'*/], escapeGraphicalLabel(window.SGN && SGN.i18n ? SGN.i18n.p('global.graphical_filtering.choose_a_list', 'Choose a List:') : 'Choose a List:'), undefined, undefined);
     $('#filter_list_select_container').html(filter_list_select_html);
     $('#filter_list_select>option:first-of-type').prop('disabled', true);
     
@@ -202,7 +211,7 @@
   // set up the form for saving results as a list
   $('#new-list-form').submit(function () {
     if (!window.gfiltering.data){
-      alert("Can't create a list from nothing.")
+      alert(window.SGN && SGN.i18n ? SGN.i18n.p('global.graphical_filtering.cannot_create_empty_list', "Can't create a list from nothing.") : "Can't create a list from nothing.")
       return false;
     }
     try {
@@ -214,7 +223,7 @@
       var data = currentGFilter.data.filter(currentGFilter.root.getFilter());
       var count = list.addBulk(newListID,data.map(function(d){return d.observationUnitName}));
       if (!count) throw "Added nothing to list or addition failed.";
-      alert("List \""+form.get("name").value+"\" created with "+count+" entries.")
+      alert(window.SGN && SGN.i18n ? SGN.i18n.p('global.graphical_filtering.list_created', 'List "%{name}" created with %{count} entries.', {name: form.get("name").value, count: count}) : "List \""+form.get("name").value+"\" created with "+count+" entries.")
     }
     catch(err) {
       setTimeout(function(){throw err;});

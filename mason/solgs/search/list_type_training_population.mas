@@ -1,3 +1,7 @@
+<%once>
+use HTML::Entities ();
+</%once>
+
 <%doc>
 
 =head1 NAME
@@ -22,10 +26,10 @@ my $search_params = '?dsp=genotyping_protocols,trials|plots,traits,accessions&ds
 
 <& /util/import_javascript.mas, classes => ["CXGN.List", "solGS.List", "solGS.listTypeTrainingPopulation"] &>
 
-<&| /page/info_section.mas, 
+<&| /page/info_section.mas, anchor_title => "Or use a list or dataset as a training population",
     collapsible => 1, 
   collapsed   => 0,
-  title       => "Or use a list or dataset as a training population",
+  title       => HTML::Entities::encode_entities($c->i18n->p("solgs.interface.or_use_a_list_or_dataset_as_a_training_population", "Or use a list or dataset as a training population")),
 &>
 
 
@@ -33,7 +37,7 @@ my $search_params = '?dsp=genotyping_protocols,trials|plots,traits,accessions&ds
   <& /solgs/tools/login.mas,
     tool_url => '/solgs/search/' ,
     analysis_type => 'list_type_training',
-    wizard_link_txt => 'Create a new dataset of plots or trials',
+    wizard_link_txt => HTML::Entities::encode_entities($c->i18n->p("solgs.interface.create_a_new_dataset_of_plots_or_trials", "Create a new dataset of plots or trials")),
     breeder_search_params => $search_params  
     &>
 

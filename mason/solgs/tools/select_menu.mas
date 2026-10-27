@@ -20,7 +20,7 @@ $breeder_search_params =>''
 <%perl>
 my $label = $analysis_type =~ s/_/ /gr;
 my $analysis_abbr = $analysis_type =~ /correlation/ ? 'corr' : $analysis_type;
-$wizard_link_txt = 'Create a new list or dataset' if !$wizard_link_txt;
+$wizard_link_txt = $c->i18n->p("solgs.interface.create_a_new_list_or_dataset", "Create a new list or dataset") if !$wizard_link_txt;
 </%perl>
 
 <& /util/import_css.mas, paths => ['/static/css/solgs/solgs.css'] &>
@@ -28,11 +28,11 @@ $wizard_link_txt = 'Create a new list or dataset' if !$wizard_link_txt;
 
 <div id="select_menu" style="padding-top: 20px;">
   <div class="select_menu_block" id="<% $analysis_type %>_pops_label">
-    <label for="<% $analysis_abbr %>_pops_label">Select a population</label>
+    <label for="<% $analysis_abbr %>_pops_label"><% $c->i18n->p("solgs.interface.select_a_population", "Select a population") |h %></label>
   </div>
   <div class="select_menu_block" id="<% $analysis_abbr %>_pops_select_div"></div>
   <div class="select_menu_block go_btn" id="<% $analysis_abbr %>_pop_go_btn">
-    <input type="button" value="View" />
+    <input type="button" value="<% $c->i18n->p("solgs.interface.view", "View") |h %>" />
   </div>
   <div class="select_menu_block" >
     <i class="glyphicon-plus"></i>

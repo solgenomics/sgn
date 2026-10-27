@@ -9,8 +9,8 @@ $user_role => undef
     <div class="modal-dialog modal-lg" role="document">
         <div class="modal-content">
             <div class="modal-header">
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                <h4 class="modal-title" id="deleteSeedlotsDialog">Delete Seedlots </h4>
+                <button type="button" class="close" data-dismiss="modal" aria-label="<% $c->i18n->p('seedlots.ui.close', 'Close') |h %>"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="deleteSeedlotsDialog"><% $c->i18n->p('seedlots.ui.delete_seedlots', 'Delete Seedlots') |h %> </h4>
             </div>
             <div class="modal-body">
                 <div class="container-fluid">
@@ -18,24 +18,24 @@ $user_role => undef
                         <form class="form-horizontal" id="delete_seedlot_info" name="delete_seedlot_info">
                             <div class="form-group form-group-sm">
                                 <ul>
-                                    <strong>Note:</strong>
-                                    <li>Only seedlots that are not associated with crosses or trials can be deleted.</li>
-                                    <li>Deleting seedlots cannot be undone.</li>
+                                    <strong><% $c->i18n->p('seedlots.ui.note', 'Note:') |h %></strong>
+                                    <li><% $c->i18n->p('seedlots.ui.only_seedlots_that_are_not_associated_with_crosses_or_trials_can', 'Only seedlots that are not associated with crosses or trials can be deleted.') |h %></li>
+                                    <li><% $c->i18n->p('seedlots.ui.deleting_seedlots_cannot_be_undone', 'Deleting seedlots cannot be undone.') |h %></li>
                                 </ul>
                             </div>
                         </form>
                     </div>
                     <form class="form-horizontal" role="form" method="post" id="delete_seedlots_form" name="delete_seedlots_form">
                         <div class="form-group" id="delete_seedlot_list_section" >
-                            <label class="col-sm-4 control-label">Select a List of Seedlots:</label>
+                            <label class="col-sm-4 control-label"><% $c->i18n->p('seedlots.ui.select_a_list_of_seedlots.d8679cd', 'Select a List of Seedlots:') |h %></label>
                             <div class="col-sm-8" id="seedlots_to_delete_html" name="seedlots_to_delete_html"></div>
                         </div>
                     </form>
                 </div>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-                <button type="button" class="btn btn-primary" name="delete_seedlots_submit" id="delete_seedlots_submit">Delete Seedlots</button>
+                <button type="button" class="btn btn-default" data-dismiss="modal"><% $c->i18n->p('seedlots.ui.close', 'Close') |h %></button>
+                <button type="button" class="btn btn-primary" name="delete_seedlots_submit" id="delete_seedlots_submit"><% $c->i18n->p('seedlots.ui.delete_seedlots', 'Delete Seedlots') |h %></button>
             </div>
         </div>
     </div>
@@ -45,8 +45,8 @@ $user_role => undef
     <div class="modal-dialog modal-lg" role="document">
         <div class="modal-content">
             <div class="modal-header">
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                <h4 class="modal-title">Seedlot Deletion Verify</h4>
+                <button type="button" class="close" data-dismiss="modal" aria-label="<% $c->i18n->p('seedlots.ui.close', 'Close') |h %>"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title"><% $c->i18n->p('seedlots.ui.seedlot_deletion_verify', 'Seedlot Deletion Verify') |h %></h4>
             </div>
             <div class="modal-body">
               <div class="container-fluid">
@@ -55,8 +55,8 @@ $user_role => undef
 	      </div>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-                <button type="button" class="btn btn-primary" name="delete_seedlots_confirm" id="delete_seedlots_confirm">Delete green elements</button>
+                <button type="button" class="btn btn-default" data-dismiss="modal"><% $c->i18n->p('seedlots.ui.close', 'Close') |h %></button>
+                <button type="button" class="btn btn-primary" name="delete_seedlots_confirm" id="delete_seedlots_confirm"><% $c->i18n->p('seedlots.ui.delete_green_elements', 'Delete green elements') |h %></button>
             </div>
         </div>
     </div>
@@ -64,6 +64,57 @@ $user_role => undef
 
 
 <script>
+// Optional language assets preserve the native workflow and raw data values.
+var seedlotI18n = (window.SGN && window.SGN.i18n) || {
+    p: function (context, source, variables) {
+        return source.replace(/%\{([A-Za-z0-9_]+)\}/g, function (match, name) {
+            return variables && Object.prototype.hasOwnProperty.call(variables, name) ? String(variables[name]) : match;
+        });
+    },
+    np: function (context, one, many, count, variables) {
+        return this.p(context, count === 1 ? one : many, variables);
+    }
+};
+function seedlotHTML(value) {
+    return String(value == null ? '' : value).replace(/[&<>"']/g, function (character) {
+        return {'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'}[character];
+    });
+}
+// The locale is carried only by these source-traced, same-origin core routes.
+function _sgnSeedlotLocaleHeaders(url) {
+    try {
+        var guardedURL = new URL(url, window.location.href);
+        if (guardedURL.origin !== window.location.origin) return {};
+        var admitted = /^\/ajax\/breeders\/(?:seedlots|seedlot\/[0-9]+(?:\/(?:edit|delete|transactions|transaction\/(?:add|[0-9]+(?:\/(?:edit|delete))?)))?|seedlot\/(?:discard|undo_discard)|seedlot-create|seedlot-upload|seedlot-inventory-upload|upload_transactions|add_transactions_using_list)\/?$/.test(guardedURL.pathname)
+            || /^\/ajax\/seedlots\/(?:verify_delete_by_list|confirm_delete_by_list)$/.test(guardedURL.pathname)
+            || /^\/ajax\/stock\/stock_related_seedlots\/[0-9]+$/.test(guardedURL.pathname)
+            || /^\/ajax\/manage_accessions\/population_seedlots\/[0-9]+$/.test(guardedURL.pathname)
+            || /^\/ajax\/accessions\/possible_seedlots$/.test(guardedURL.pathname)
+            || /^\/ajax\/breeders\/program\/[0-9]+\/seedlots$/.test(guardedURL.pathname)
+            || /^\/ajax\/breeders\/trial\/[0-9]+\/(?:seedlots_from_crossingtrial|seedlots|upload_used_seedlots)$/.test(guardedURL.pathname)
+            || guardedURL.pathname === '/breeders/download_population_seedlots_action';
+        if (!admitted) return {};
+        var root = typeof document !== 'undefined' && document.documentElement;
+        var runtime = window.SGN && window.SGN.i18n;
+        var requested = root && typeof root.getAttribute === 'function' && root.getAttribute('data-sgn-locale');
+        var locale = requested || (runtime && runtime.requestedLocale) || (root && root.lang) || (runtime && runtime.locale) || 'en';
+        return {'X-SGN-Locale': typeof locale === 'string' && /^[A-Za-z]{2,8}(?:-[A-Za-z0-9]{1,8})*$/.test(locale) ? locale : 'en'};
+    } catch (error) {
+        return {};
+    }
+}
+function _sgnSeedlotLocaleURL(url) {
+    try {
+        var headers = _sgnSeedlotLocaleHeaders(url);
+        if (!headers['X-SGN-Locale']) return url;
+        var guardedURL = new URL(url, window.location.href);
+        guardedURL.searchParams.set('lang', headers['X-SGN-Locale']);
+        return guardedURL.pathname + guardedURL.search + guardedURL.hash;
+    } catch (error) {
+        return url;
+    }
+}
+
 
 jQuery(window).ready( function() {
 
@@ -71,20 +122,20 @@ jQuery(window).ready( function() {
         jQuery('#delete_seedlots_using_list_dialog').modal('show');
     });
 
-    jQuery("#seedlots_to_delete_html").append(list.listSelect("seedlots_to_delete_html_select", [ 'seedlots' ], 'None', undefined, undefined));
+    jQuery("#seedlots_to_delete_html").append(list.listSelect("seedlots_to_delete_html_select", [ 'seedlots' ], seedlotI18n.p("seedlots.ui.none", "None"), undefined, undefined));
     
 });
 
 jQuery('#delete_seedlots_submit').click( function() {
    var list_id = jQuery('#seedlots_to_delete_html_select_list_select').val();
-   if (list_id === "") { alert("Please select a list "+list_id); return; }
-   verify_seedlot_deletion(list_id).then(function(r) { display_seedlot_deletion_info(r) }, function(r) { alert("ERROR!")});
+   if (list_id === "") { alert(seedlotI18n.p("seedlots.ui.please_select_a_list_list_id", "Please select a list %{list_id}", {list_id: list_id})); return; }
+   verify_seedlot_deletion(list_id).then(function(r) { display_seedlot_deletion_info(r) }, function(r) { alert(seedlotI18n.p("seedlots.ui.error", "ERROR!"))});
 });
 
 jQuery('#delete_seedlots_confirm').click( function() {
     var list_id = jQuery('#seedlots_to_delete_html_select_list_select').val();
     if (list_id) {
-        delete_seedlots(list_id).then( function(r) { alert(r.delete_count+" elements have been deleted"); }, function(r) { alert('An error occurred'); });
+        delete_seedlots(list_id).then( function(r) { alert(seedlotI18n.np("seedlots.ui.count_element_has_been_deleted", "%{count} element has been deleted", "%{count} elements have been deleted", r.delete_count, {count: r.delete_count})); }, function(r) { alert(seedlotI18n.p("seedlots.ui.an_error_occurred", "An error occurred")); });
     }
 });
 
@@ -92,12 +143,14 @@ function verify_seedlot_deletion(list_id) {
 
    return jQuery.ajax( {
         url: '/ajax/seedlots/verify_delete_by_list?list_id='+list_id,
+        headers: _sgnSeedlotLocaleHeaders('/ajax/seedlots/verify_delete_by_list?list_id='+list_id),
     });
 }
 
 function delete_seedlots(list_id) {
    return jQuery.ajax( {
        url: '/ajax/seedlots/confirm_delete_by_list?list_id='+list_id,
+       headers: _sgnSeedlotLocaleHeaders('/ajax/seedlots/confirm_delete_by_list?list_id='+list_id),
    });
 }
 
@@ -110,17 +163,17 @@ function display_seedlot_deletion_info(r) {
     var html = "";
 
     for (const n of ok) {
-        html += "<li class='list-group-item list-group-item-success'>"+n+"</li>";
+        html += "<li class='list-group-item list-group-item-success'>"+seedlotHTML(n)+"</li>";
     }
 
     for (const n of errors) {
-       html += "<li class='list-group-item list-group-item-danger' >"+n[0]+" ("+n[1]+")</li>";
+       html += "<li class='list-group-item list-group-item-danger' >"+seedlotHTML(n[0])+" ("+seedlotHTML(n[1])+")</li>";
     }
 
     html += "</ul>";
 
     if (ok.length === 0) {
-        html += '<br /><img src="/static/documents/img/info_icon.png"> No items can be deleted.';
+        html += '<br /><img src="/static/documents/img/info_icon.png"> ' + seedlotHTML(seedlotI18n.p("seedlots.ui.no_items_can_be_deleted", "No items can be deleted.")) + '';
         jQuery('#delete_seedlots_confirm').prop('disabled', true);
     }
     else {

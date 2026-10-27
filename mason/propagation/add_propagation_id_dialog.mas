@@ -9,34 +9,34 @@ $accession_stock_id
     <div class="modal-dialog modal-xl" role="document">
         <div class="modal-content">
             <div class="modal-header">
-                <h4 class="modal-title" id="addPropagationIdDialog">Add New Propagation ID</h4>
+                <h4 class="modal-title" id="addPropagationIdDialog"><% $c->i18n->p("seedlot.add_new_propagation_id", "Add New Propagation ID") |h %></h4>
             </div>
             <div class="modal-body" id = "propagation_id_dialog">
                 <div class="container-fluid">
                     <form class="form-horizontal" role="form" method="post" id="add_new_propagation_id_form" name="add_new_propagation_id_form">
                         <div class="form-group">
-                            <label class="col-sm-4 control-label">Group ID: </label>
+                            <label class="col-sm-4 control-label"><% $c->i18n->p("seedlot.group_id", "Group ID:") |h %> </label>
                             <div class="col-sm-8" >
                                 <input class="form-control" name="propagation_group_id" id="propagation_group_id" disabled value="<% $propagation_group_name %>">
                             </div>
                         </div>
                         <div class="form-group">
-                            <label class="col-sm-4 control-label">Propagation Identifier: </label>
+                            <label class="col-sm-4 control-label"><% $c->i18n->p("seedlot.propagation_identifier.03149e2", "Propagation Identifier:") |h %> </label>
                             <div class="col-sm-8" >
-                                <input class="form-control" type="text" id="new_propagation_identifier" name="new_propagation_identifier" placeholder="Must not exist in the database.">
+                                <input class="form-control" type="text" id="new_propagation_identifier" name="new_propagation_identifier" placeholder="<% $c->i18n->p("seedlot.must_not_exist_in_the_database", "Must not exist in the database.") |h %>">
                             </div>
                         </div>
                         <div class="form-group" id = "get_propagation_rootstock_name">
-                            <label class="col-sm-4 control-label">Rootstock Name: </label>
+                            <label class="col-sm-4 control-label"><% $c->i18n->p("seedlot.rootstock_name", "Rootstock Name:") |h %> </label>
                             <div class="col-sm-8" >
-                                <input class="form-control" type="text" id="propagation_rootstock_name" name="propagation_rootstock_name" placeholder="Must exist in the database">
+                                <input class="form-control" type="text" id="propagation_rootstock_name" name="propagation_rootstock_name" placeholder="<% $c->i18n->p("seedlot.must_exist_in_the_database", "Must exist in the database") |h %>">
                             </div>
                         </div>
                     </div>
                 </div>
                 <div class="modal-footer">
-                    <button id="add_propagation_id_dismiss_button" name="add_propagation_id_dismiss_button" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-                    <button id="submit_new_propagation_id" type="button" class="btn btn-primary" >Add</button>
+                    <button id="add_propagation_id_dismiss_button" name="add_propagation_id_dismiss_button" type="button" class="btn btn-default" data-dismiss="modal"><% $c->i18n->p("global.dataset_publish.close", "Close") |h %></button>
+                    <button id="submit_new_propagation_id" type="button" class="btn btn-primary" ><% $c->i18n->p("global.search_wizard.add", "Add") |h %></button>
                 </div>
             </form>
         </div>
@@ -47,19 +47,19 @@ $accession_stock_id
     <div class="modal-dialog" role="document">
         <div class="modal-content">
             <div class="modal-header">
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                <h4 class="modal-title" id="addPropagationIdSavedDialog">Success</h4>
+                <button type="button" class="close" data-dismiss="modal" aria-label="<% $c->i18n->p("global.dataset_publish.close", "Close") |h %>"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="addPropagationIdSavedDialog"><% $c->i18n->p("cross.ui.success", "Success") |h %></h4>
             </div>
             <div class="modal-body">
                 <div class="container-fluid">
                     <p>
                         <span class="ui-icon ui-icon-circle-check" style="float: left; margin: 0 7px 50px 0;"></span>
-                        The propagation identifier was saved successfully.
+                        <% $c->i18n->p("seedlot.the_propagation_identifier_was_saved_successfully", "The propagation identifier was saved successfully.") |h %>
                     </p>
                 </div>
             </div>
             <div class="modal-footer">
-                <button id="dismiss_propagation_id_saved_dialog" type="button" class="btn btn-default" data-dismiss="modal">Close & Reload</button>
+                <button id="dismiss_propagation_id_saved_dialog" type="button" class="btn btn-default" data-dismiss="modal"><% $c->i18n->p("seedlots.ui.close_reload", "Close & Reload") |h %></button>
             </div>
         </div>
     </div>
@@ -75,7 +75,7 @@ jQuery(document).ready(function(){
         const propagation_group_stock_id = "<%$propagation_group_id%>";
 
         if (propagation_identifier == '') {
-            alert("Please provide a propagation identifier");
+            alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("seedlot.please_provide_a_propagation_identifier", "Please provide a propagation identifier") : "Please provide a propagation identifier"));
             return;
         }
 
@@ -103,7 +103,7 @@ jQuery(document).ready(function(){
             },
             error: function(response){
                 jQuery('#working_modal').modal('hide');
-                alert('An error occurred adding propagation identifier');
+                alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("seedlot.an_error_occurred_adding_propagation_identifier", "An error occurred adding propagation identifier") : 'An error occurred adding propagation identifier'));
             }
         });
     });

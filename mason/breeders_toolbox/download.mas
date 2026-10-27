@@ -1,3 +1,6 @@
+<%init>
+use HTML::Entities ();
+</%init>
 <%args>
 $seedlot_maintenance_enabled => 0
 $is_curator => 0
@@ -5,34 +8,34 @@ $is_curator => 0
 
 <& /util/import_javascript.mas, classes => [ 'jqueryui', 'jquery.cookie', 'CXGN.BreederSearch', 'CXGN.List', 'CXGN.BreedersToolbox.HTMLSelect', 'spin_min', 'ladda_min' ] &>
 
-<& /page/page_title.mas, title=>"Download Using Lists" &>
+<& /page/page_title.mas, title=>HTML::Entities::encode_entities($c->i18n->p("lists_datasets.download.download_using_lists", "Download Using Lists")) &>
 
 <div class="container-fluid">
 
 <div class="well">
-Choose a list for each parameter and click "Download".
+<% $c->i18n->p("lists_datasets.download.choose_a_list_for_each_parameter_and_click_download", "Choose a list for each parameter and click \"Download\".") |h %>
 </div>
 
 <div class="well well-sm">
-<h4>Download Phenotypes Using Lists</h4><p>Select Parameters:</p>
+<h4><% $c->i18n->p("lists_datasets.download.download_phenotypes_using_lists", "Download Phenotypes Using Lists") |h %></h4><p><% $c->i18n->p("lists_datasets.download.select_parameters.edfe1a5", "Select Parameters:") |h %></p>
 <form id="download_form" action="/breeders/download_action" method="POST" >
 <table class="table table-bordered" >
   <thead>
   <tr>
     <th>
-      Accessions
+      <% $c->i18n->p("lists_datasets.download.accessions", "Accessions") |h %>
     </th>
     <th>
-      Trials
+      <% $c->i18n->p("lists_datasets.download.trials", "Trials") |h %>
     </th>
     <th>
-      Traits
+      <% $c->i18n->p("lists_datasets.download.traits", "Traits") |h %>
     </th>
     <th>
-        Options
+        <% $c->i18n->p("lists_datasets.download.options", "Options") |h %>
     </th>
     <th>
-      Action
+      <% $c->i18n->p("lists_datasets.download.action", "Action") |h %>
     </th>
   </tr>
   </thead>
@@ -51,52 +54,52 @@ Choose a list for each parameter and click "Download".
       </div>
    </td>
     <td>
-    <b>Format:</b><br/>
+    <b><% $c->i18n->p("lists_datasets.download.format.39442ac", "Format:") |h %></b><br/>
     <select class="form-control" id="format" name="format">
         <option value=".csv">CSV</option>
         <option value=".xlsx">XLSX</option>
         <option value="html">HTML</option>
     </select>
     <br/>
-    <b>Data Level:</b><br/>
+    <b><% $c->i18n->p("lists_datasets.download.data_level", "Data Level:") |h %></b><br/>
     <select class="form-control" id="phenotype_datalevel" name="phenotype_datalevel">
-        <option value="all">All</option>
-        <option value="plot">Plot</option>
-        <option value="plant">Plant</option>
+        <option value="all"><% $c->i18n->p("lists_datasets.download.all", "All") |h %></option>
+        <option value="plot"><% $c->i18n->p("lists_datasets.download.plot", "Plot") |h %></option>
+        <option value="plant"><% $c->i18n->p("lists_datasets.download.plant", "Plant") |h %></option>
     </select>
     <br/>
-    <b>Timestamp:</b><br/>
+    <b><% $c->i18n->p("lists_datasets.download.timestamp", "Timestamp:") |h %></b><br/>
     <select class="form-control" id="timestamp" name="timestamp">
-        <option value="0">No</option>
-        <option value="1">Yes</option>
+        <option value="0"><% $c->i18n->p("lists_datasets.download.no", "No") |h %></option>
+        <option value="1"><% $c->i18n->p("lists_datasets.download.yes", "Yes") |h %></option>
     </select>
     <br/>
-    <b>Exclude Phenotype Outliers:</b><br/>
+    <b><% $c->i18n->p("lists_datasets.download.exclude_phenotype_outliers", "Exclude Phenotype Outliers:") |h %></b><br/>
     <select class="form-control" id="exclude_phenotype_outlier" name="exclude_phenotype_outlier">
-        <option value="0">No</option>
-        <option value="1">Yes</option>
+        <option value="0"><% $c->i18n->p("lists_datasets.download.no", "No") |h %></option>
+        <option value="1"><% $c->i18n->p("lists_datasets.download.yes", "Yes") |h %></option>
     </select>
     <br/>
-    <b>Include Intercrop Accessions:</b><br/>
+    <b><% $c->i18n->p("lists_datasets.download.include_intercrop_accessions", "Include Intercrop Accessions:") |h %></b><br/>
     <select class="form-control" id="intercrop" name="intercrop">
-        <option value="0">No</option>
-        <option value="1">Yes</option>
+        <option value="0"><% $c->i18n->p("lists_datasets.download.no", "No") |h %></option>
+        <option value="1"><% $c->i18n->p("lists_datasets.download.yes", "Yes") |h %></option>
     </select>
     <br/>
-    <b>Include Accession Entry Numbers:</b><br/>
+    <b><% $c->i18n->p("lists_datasets.download.include_accession_entry_numbers", "Include Accession Entry Numbers:") |h %></b><br/>
     <select class="form-control" id="entry_numbers" name="entry_numbers">
-        <option value="0">No</option>
-        <option value="1">Yes</option>
+        <option value="0"><% $c->i18n->p("lists_datasets.download.no", "No") |h %></option>
+        <option value="1"><% $c->i18n->p("lists_datasets.download.yes", "Yes") |h %></option>
     </select>
     <br/>
-    <b>Include Parents:</b><br/>
+    <b><% $c->i18n->p("lists_datasets.download.include_parents", "Include Parents:") |h %></b><br/>
     <select class="form-control" id="pedigrees" name="pedigrees">
-        <option value="0">No</option>
-        <option value="1">Yes</option>
+        <option value="0"><% $c->i18n->p("lists_datasets.download.no", "No") |h %></option>
+        <option value="1"><% $c->i18n->p("lists_datasets.download.yes", "Yes") |h %></option>
     </select>
     </td>
     <td>
-      <button class="btn btn-primary" type="button" id="phenotype">Download</button>
+      <button class="btn btn-primary" type="button" id="phenotype"><% $c->i18n->p("lists_datasets.download.download", "Download") |h %></button>
       <input type="hidden" id="phenotype_download_token" name="phenotype_download_token"/>
     </td>
   </tr>
@@ -106,12 +109,12 @@ Choose a list for each parameter and click "Download".
 </div>
 
 <div class="well well-sm">
-<h4>Inspect Datasets</h4>
+<h4><% $c->i18n->p("lists_datasets.download.inspect_datasets", "Inspect Datasets") |h %></h4>
 <table class="table table-bordered" >
   <thead>
   <tr>
     <th>
-      Datasets
+      <% $c->i18n->p("lists_datasets.download.datasets", "Datasets") |h %>
     </th>
   </tr>
   </thead>
@@ -127,19 +130,19 @@ Choose a list for each parameter and click "Download".
 </div>
 
 <div class="well well-sm">
-<h4>Download Metadata</h4><p>Select Parameters:</p>
+<h4><% $c->i18n->p("lists_datasets.download.download_metadata", "Download Metadata") |h %></h4><p><% $c->i18n->p("lists_datasets.download.select_parameters.edfe1a5", "Select Parameters:") |h %></p>
 <form id="download_metadata_form" action="/breeders/download_action" method="POST" >
 <table class="table table-bordered" >
   <thead>
   <tr>
     <th>
-      Trials
+      <% $c->i18n->p("lists_datasets.download.trials", "Trials") |h %>
     </th>
     <th>
-        Options
+        <% $c->i18n->p("lists_datasets.download.options", "Options") |h %>
     </th>
     <th>
-      Action
+      <% $c->i18n->p("lists_datasets.download.action", "Action") |h %>
     </th>
   </tr>
   </thead>
@@ -150,7 +153,7 @@ Choose a list for each parameter and click "Download".
       </div>
     </td>
     <td>
-    <b>Format:</b><br/>
+    <b><% $c->i18n->p("lists_datasets.download.format.39442ac", "Format:") |h %></b><br/>
     <select class="form-control" id="metadata_format" name="metadata_format">
         <option value=".xlsx">XLSX</option>
         <option value=".csv">CSV</option>
@@ -159,12 +162,12 @@ Choose a list for each parameter and click "Download".
     <br/>
     <div id="datalevel" style="display:none">
       <select class="form-control" id="metadata_datalevel" name="metadata_datalevel">
-          <option value="metadata">Metadata</option>
+          <option value="metadata"><% $c->i18n->p("lists_datasets.download.metadata", "Metadata") |h %></option>
       </select>
     </div>
     </td>
     <td>
-      <button class="btn btn-primary" type="button" id="metadata">Download</button>
+      <button class="btn btn-primary" type="button" id="metadata"><% $c->i18n->p("lists_datasets.download.download", "Download") |h %></button>
       <input type="hidden" id="metadata_download_token" name="metadata_download_token"/>
     </td>
   </tr>
@@ -178,10 +181,10 @@ $(document).ready(function() {
 
     var lo = new CXGN.List();
 
-    $('#accession_list').html(lo.listSelect('accession_list', [ 'accessions' ], 'select', undefined, undefined));
-    $('#trial_list').html(lo.listSelect('trial_list', [ 'trials' ], 'select', undefined, undefined ));
-    $('#trait_list').html(lo.listSelect('trait_list', [ 'traits' ], 'select', undefined, undefined  ));
-    $('#trial_metadata_list').html(lo.listSelect('trial_metadata_list', ['trials'], 'select', undefined, undefined));
+    $('#accession_list').html(lo.listSelect('accession_list', [ 'accessions' ], (window.SGN && SGN.i18n ? SGN.i18n.p("lists_datasets.download_js.select", "select") : "select"), undefined, undefined));
+    $('#trial_list').html(lo.listSelect('trial_list', [ 'trials' ], (window.SGN && SGN.i18n ? SGN.i18n.p("lists_datasets.download_js.select", "select") : "select"), undefined, undefined ));
+    $('#trait_list').html(lo.listSelect('trait_list', [ 'traits' ], (window.SGN && SGN.i18n ? SGN.i18n.p("lists_datasets.download_js.select", "select") : "select"), undefined, undefined  ));
+    $('#trial_metadata_list').html(lo.listSelect('trial_metadata_list', ['trials'], (window.SGN && SGN.i18n ? SGN.i18n.p("lists_datasets.download_js.select", "select") : "select"), undefined, undefined));
 
     get_select_box('datasets', 'phenotype_download_dataset_list');
 
@@ -191,7 +194,7 @@ $(document).ready(function() {
       if (trial_list_id) { trial_validation = lo.validate(trial_list_id, 'trials', true).then(
          function(r) {
             if (r.missing.length != 0) {
-               alert("The following lists did not pass validation: "+r.missing.join(", ")+". Please correct the list(s) and try again");
+               alert((window.SGN && SGN.i18n ? SGN.i18n.p("lists_datasets.download_js.the_following_lists_did_not_pass_validation_lists_please_correct_", "The following lists did not pass validation: %{lists}. Please correct the list(s) and try again", {lists:String(r.missing.join(", "))}) : "The following lists did not pass validation: "+r.missing.join(", ")+". Please correct the list(s) and try again"));
             }
             else {
 
@@ -239,7 +242,7 @@ $(document).ready(function() {
             names_str += r.invalid_lists[n][1];
 	 }
          if(names_str.length > 0) {
-            alert('Some lists ('+names_str+') are not valid, please check.');
+            alert((window.SGN && SGN.i18n ? SGN.i18n.p("lists_datasets.download_js.some_lists_lists_are_not_valid_please_check", "Some lists (%{lists}) are not valid, please check.", {lists:String(names_str)}) : 'Some lists ('+names_str+') are not valid, please check.'));
             jQuery('#working_modal').modal('hide');
          }
          else {
@@ -287,11 +290,11 @@ function download_phenotypes() {
   <form id="download_accession_properties" action="/breeders/download_accession_properties_action" method="POST">
     <table class="table"  cellpadding="10">
       <thead>
-        <tr><td colspan="2"><h4>Download Accession Properties</h4><p>Select parameters:</p></tr>
+        <tr><td colspan="2"><h4><% $c->i18n->p("lists_datasets.download.download_accession_properties", "Download Accession Properties") |h %></h4><p><% $c->i18n->p("lists_datasets.download.select_parameters.03fa00c", "Select parameters:") |h %></p></tr>
         <tr>
-          <th>Accessions</th>
-          <th>Format</th>
-          <th>Action</th>
+          <th><% $c->i18n->p("lists_datasets.download.accessions", "Accessions") |h %></th>
+          <th><% $c->i18n->p("lists_datasets.download.format.fda5b99", "Format") |h %></th>
+          <th><% $c->i18n->p("lists_datasets.download.action", "Action") |h %></th>
         </tr>
       </thead>
       <tbody>
@@ -306,7 +309,7 @@ function download_phenotypes() {
           </select>
         </td>
         <td>
-          <button class="btn btn-primary" type="button" id="accession_properties_download">Download</button>
+          <button class="btn btn-primary" type="button" id="accession_properties_download"><% $c->i18n->p("lists_datasets.download.download", "Download") |h %></button>
           <input type="hidden" id="accession_properties_download_token" name="accession_properties_download_token"/>
         </td>
       </tr>
@@ -321,13 +324,13 @@ $(document).ready(function() {
 
     var lo = new CXGN.List();
 
-    $('#accession_list5').html(lo.listSelect('accession_properties_accession_list', [ 'accessions' ], 'select', undefined, undefined));
+    $('#accession_list5').html(lo.listSelect('accession_properties_accession_list', [ 'accessions' ], (window.SGN && SGN.i18n ? SGN.i18n.p("lists_datasets.download_js.select", "select") : "select"), undefined, undefined));
 
     $('#accession_properties_download').click(function() {
 
         var accession_list_id = $('#accession_properties_accession_list_list_select').val();
         if (!accession_list_id) {
-            alert("You need to select an accession list!");
+            alert((window.SGN && SGN.i18n ? SGN.i18n.p("lists_datasets.download_js.you_need_to_select_an_accession_list", "You need to select an accession list!") : "You need to select an accession list!"));
             return;
         }
 
@@ -337,7 +340,7 @@ $(document).ready(function() {
               lo.validate(accession_list_id, 'accessions', true).then(
               function(r) {
                  if (r.valid != 1) {
-                    alert("The accession list did not pass validation. Please correct the list and try again");
+                    alert((window.SGN && SGN.i18n ? SGN.i18n.p("lists_datasets.download_js.the_accession_list_did_not_pass_validation_please_correct_the_lis", "The accession list did not pass validation. Please correct the list and try again") : "The accession list did not pass validation. Please correct the list and try again"));
                     jQuery('#working_modal').modal('hide');
                  }
                  else {
@@ -368,19 +371,19 @@ $(document).ready(function() {
 <form id="download_pedigree" action="/breeders/download_pedigree_action" method="POST">
 <table class="table"  cellpadding="10">
   <thead>
-  <tr><td colspan="2"><h4>Download Pedigrees </h4><p>Select parameter:</p></tr>
+  <tr><td colspan="2"><h4><% $c->i18n->p("lists_datasets.download.download_pedigrees", "Download Pedigrees") |h %> </h4><p><% $c->i18n->p("lists_datasets.download.select_parameter", "Select parameter:") |h %></p></tr>
   <tr>
     <th>
-      Accessions
+      <% $c->i18n->p("lists_datasets.download.accessions", "Accessions") |h %>
     </th>
     <th>
-      Query
+      <% $c->i18n->p("lists_datasets.download.query", "Query") |h %>
     </th>
     <th>
-      Format
+      <% $c->i18n->p("lists_datasets.download.format.fda5b99", "Format") |h %>
     </th>
     <th>
-      Action
+      <% $c->i18n->p("lists_datasets.download.action", "Action") |h %>
     </th>
   </tr>
   </thead>
@@ -392,30 +395,30 @@ $(document).ready(function() {
     </td>
     <td>
       <div style="width: 175px">
-        <p><strong>Depth:</strong></p>
+        <p><strong><% $c->i18n->p("lists_datasets.download.depth", "Depth:") |h %></strong></p>
         <div class="radio">
-          <label><input type="radio" id="ped_format_parents" name="ped_format" value="parents_only" checked>Only One Generation</label>
+          <label><input type="radio" id="ped_format_parents" name="ped_format" value="parents_only" checked><% $c->i18n->p("lists_datasets.download.only_one_generation", "Only One Generation") |h %></label>
         </div>
         <div class="radio">
-          <label><input type="radio" id="ped_format_full" name="ped_format" value="full">All Generations</label>
+          <label><input type="radio" id="ped_format_full" name="ped_format" value="full"><% $c->i18n->p("lists_datasets.download.all_generations", "All Generations") |h %></label>
         </div>
-        <p><strong>Include:</strong></p>
+        <p><strong><% $c->i18n->p("lists_datasets.download.include", "Include:") |h %></strong></p>
         <div class="radio">
-          <label><input type="radio" id="include_ancestors" name="ped_include" value="ancestors" checked>Only Ancestors</label>
+          <label><input type="radio" id="include_ancestors" name="ped_include" value="ancestors" checked><% $c->i18n->p("lists_datasets.download.only_ancestors", "Only Ancestors") |h %></label>
         </div>
         <div class="radio">
-          <label><input type="radio" id="include_ancestors_descendants" name="ped_include" value="ancestors_descendants">Ancestors and Descendants</label>
+          <label><input type="radio" id="include_ancestors_descendants" name="ped_include" value="ancestors_descendants"><% $c->i18n->p("lists_datasets.download.ancestors_and_descendants", "Ancestors and Descendants") |h %></label>
         </div>
       </div>
     </td>
     <td>
       <select class="form-control" id="pedigree_file_format" name="file_format">
-        <option value=".txt">Plain Text</option>
-        <option value=".helium">Helium Format</option>
+        <option value=".txt"><% $c->i18n->p("lists_datasets.download.plain_text", "Plain Text") |h %></option>
+        <option value=".helium"><% $c->i18n->p("lists_datasets.download.helium_format", "Helium Format") |h %></option>
       </select>
     </td>
     <td>
-      <button class="btn btn-primary" type="button" id="pedigree">Download</button>
+      <button class="btn btn-primary" type="button" id="pedigree"><% $c->i18n->p("lists_datasets.download.download", "Download") |h %></button>
       <input type="hidden" id="pedigree_download_token" name="pedigree_download_token"/>
     </td>
   </tr>
@@ -430,13 +433,13 @@ $(document).ready(function() {
 
     var lo = new CXGN.List();
 
-    $('#accession_list4').html(lo.listSelect('pedigree_accession_list', [ 'accessions' ], 'select', undefined, undefined));
+    $('#accession_list4').html(lo.listSelect('pedigree_accession_list', [ 'accessions' ], (window.SGN && SGN.i18n ? SGN.i18n.p("lists_datasets.download_js.select", "select") : "select"), undefined, undefined));
 
     $('#pedigree').click(function() {
 
         var accession_list_id = $('#pedigree_accession_list_list_select').val();
         if (!accession_list_id) {
-            alert("You need to select an accession list!");
+            alert((window.SGN && SGN.i18n ? SGN.i18n.p("lists_datasets.download_js.you_need_to_select_an_accession_list", "You need to select an accession list!") : "You need to select an accession list!"));
             return;
         }
 
@@ -444,7 +447,7 @@ $(document).ready(function() {
            accession_validation = lo.validate(accession_list_id, 'accessions', true).then(
              function(r) {
                  if(r.valid != 1) {
-                   alert("The accession list did not pass validation. Please correct the list and try again");
+                   alert((window.SGN && SGN.i18n ? SGN.i18n.p("lists_datasets.download_js.the_accession_list_did_not_pass_validation_please_correct_the_lis", "The accession list did not pass validation. Please correct the list and try again") : "The accession list did not pass validation. Please correct the list and try again"));
                  }
                  else {
                     //var ladda = Ladda.create(this);
@@ -485,11 +488,11 @@ $(document).ready(function() {
     <form id="download_cross_family" action="/breeders/download_cross_family_of_progenies" method="POST">
         <table class="table"  cellpadding="10">
             <thead>
-                <tr><td colspan="2"><h4>Download Crosses and Families of Progenies </h4><p>Select parameters:</p></tr>
+                <tr><td colspan="2"><h4><% $c->i18n->p("lists_datasets.download.download_crosses_and_families_of_progenies", "Download Crosses and Families of Progenies") |h %> </h4><p><% $c->i18n->p("lists_datasets.download.select_parameters.03fa00c", "Select parameters:") |h %></p></tr>
                 <tr>
-                    <th>Accessions</th>
-                    <th>Format</th>
-                    <th>Action</th>
+                    <th><% $c->i18n->p("lists_datasets.download.accessions", "Accessions") |h %></th>
+                    <th><% $c->i18n->p("lists_datasets.download.format.fda5b99", "Format") |h %></th>
+                    <th><% $c->i18n->p("lists_datasets.download.action", "Action") |h %></th>
                 </tr>
             </thead>
             <tbody>
@@ -503,7 +506,7 @@ $(document).ready(function() {
                         </select>
                     </td>
                     <td>
-                        <button class="btn btn-primary" type="button" id="cross_family">Download</button>
+                        <button class="btn btn-primary" type="button" id="cross_family"><% $c->i18n->p("lists_datasets.download.download", "Download") |h %></button>
                         <input type="hidden" id="progeny_list_id" name="list_id" />
                         <input type="hidden" id="cross_family_download_token" name="list_download_token" />
                     </td>
@@ -517,17 +520,17 @@ $(document).ready(function() {
 <script>
 $(document).ready(function() {
     const lo = new CXGN.List();
-    jQuery('#progeny_list').html(lo.listSelect('progeny_list', [ 'accessions' ], 'select', undefined, undefined));
+    jQuery('#progeny_list').html(lo.listSelect('progeny_list', [ 'accessions' ], (window.SGN && SGN.i18n ? SGN.i18n.p("lists_datasets.download_js.select", "select") : "select"), undefined, undefined));
     jQuery('#cross_family').click(function() {
         const progeny_list_id = $('#progeny_list_list_select').val();
         if (!progeny_list_id) {
-            alert("You need to select an accession list!");
+            alert((window.SGN && SGN.i18n ? SGN.i18n.p("lists_datasets.download_js.you_need_to_select_an_accession_list", "You need to select an accession list!") : "You need to select an accession list!"));
             return;
         }
         else {
             lo.validate(progeny_list_id, 'accessions', true).then((r) => {
                 if (r.missing.length > 0) {
-                   alert("The accession list did not pass validation. Please correct the list and try again");
+                   alert((window.SGN && SGN.i18n ? SGN.i18n.p("lists_datasets.download_js.the_accession_list_did_not_pass_validation_please_correct_the_lis", "The accession list did not pass validation. Please correct the list and try again") : "The accession list did not pass validation. Please correct the list and try again"));
                 }
                 else {
                     jQuery("#progeny_list_id").val(seedlot_list_id);
@@ -549,11 +552,11 @@ $(document).ready(function() {
     <form id="download_seedlot_details" action="/list/download_details" method="POST">
         <table class="table"  cellpadding="10">
             <thead>
-                <tr><td colspan="2"><h4>Download Seedlot Details </h4><p>Select parameters:</p></tr>
+                <tr><td colspan="2"><h4><% $c->i18n->p("lists_datasets.download.download_seedlot_details", "Download Seedlot Details") |h %> </h4><p><% $c->i18n->p("lists_datasets.download.select_parameters.03fa00c", "Select parameters:") |h %></p></tr>
                 <tr>
-                    <th>Seedlots</th>
-                    <th>Format</th>
-                    <th>Action</th>
+                    <th><% $c->i18n->p("lists_datasets.download.seedlots", "Seedlots") |h %></th>
+                    <th><% $c->i18n->p("lists_datasets.download.format.fda5b99", "Format") |h %></th>
+                    <th><% $c->i18n->p("lists_datasets.download.action", "Action") |h %></th>
                 </tr>
             </thead>
             <tbody>
@@ -563,11 +566,11 @@ $(document).ready(function() {
                     </td>
                     <td>
                         <select class="form-control" id="seedlot_file_format" name="file_format">
-                            <option value=".txt">Plain Text</option>
+                            <option value=".txt"><% $c->i18n->p("lists_datasets.download.plain_text", "Plain Text") |h %></option>
                         </select>
                     </td>
                     <td>
-                        <button class="btn btn-primary" type="button" id="seedlot">Download</button>
+                        <button class="btn btn-primary" type="button" id="seedlot"><% $c->i18n->p("lists_datasets.download.download", "Download") |h %></button>
                         <input type="hidden" id="seedlot_list_id" name="list_id" />
                         <input type="hidden" id="seedlot_download_token" name="list_download_token" />
                     </td>
@@ -581,17 +584,17 @@ $(document).ready(function() {
 <script>
 $(document).ready(function() {
     var lo = new CXGN.List();
-    $('#seedlot_list').html(lo.listSelect('seedlot_list', [ 'seedlots' ], 'select', undefined, undefined));
+    $('#seedlot_list').html(lo.listSelect('seedlot_list', [ 'seedlots' ], (window.SGN && SGN.i18n ? SGN.i18n.p("lists_datasets.download_js.select", "select") : "select"), undefined, undefined));
     $('#seedlot').click(function() {
         var seedlot_list_id = $('#seedlot_list_list_select').val();
         if (!seedlot_list_id) {
-            alert("You need to select a seedlot list!");
+            alert((window.SGN && SGN.i18n ? SGN.i18n.p("lists_datasets.download_js.you_need_to_select_a_seedlot_list", "You need to select a seedlot list!") : "You need to select a seedlot list!"));
             return;
         }
         else {
             lo.validate(seedlot_list_id, 'seedlots', true).then((r) => {
                 if (r.missing.length > 0) {
-                   alert("The seedlot list did not pass validation. Please correct the list and try again");
+                   alert((window.SGN && SGN.i18n ? SGN.i18n.p("lists_datasets.download_js.the_seedlot_list_did_not_pass_validation_please_correct_the_list_", "The seedlot list did not pass validation. Please correct the list and try again") : "The seedlot list did not pass validation. Please correct the list and try again"));
                 }
                 else {
                     jQuery("#seedlot_list_id").val(seedlot_list_id);
@@ -616,11 +619,11 @@ $(document).ready(function() {
   <form id="download_seedlot_maintenance_events" action="/breeders/download_seedlot_maintenance_events_action" method="POST">
       <table class="table"  cellpadding="10">
         <thead>
-          <tr><td colspan="2"><h4>Download Seedlot Maintenance Events</h4><p>Select parameters:</p></tr>
+          <tr><td colspan="2"><h4><% $c->i18n->p("lists_datasets.download.download_seedlot_maintenance_events", "Download Seedlot Maintenance Events") |h %></h4><p><% $c->i18n->p("lists_datasets.download.select_parameters.03fa00c", "Select parameters:") |h %></p></tr>
           <tr>
-            <th>Seedlots</th>
-            <th>Format</th>
-            <th>Action</th>
+            <th><% $c->i18n->p("lists_datasets.download.seedlots", "Seedlots") |h %></th>
+            <th><% $c->i18n->p("lists_datasets.download.format.fda5b99", "Format") |h %></th>
+            <th><% $c->i18n->p("lists_datasets.download.action", "Action") |h %></th>
           </tr>
         </thead>
         <tbody>
@@ -634,7 +637,7 @@ $(document).ready(function() {
             </select>
           </td>
           <td>
-            <button class="btn btn-primary" type="button" id="seedlot_maintenance_events_download">Download</button>
+            <button class="btn btn-primary" type="button" id="seedlot_maintenance_events_download"><% $c->i18n->p("lists_datasets.download.download", "Download") |h %></button>
             <input type="hidden" id="seedlot_maintenance_events_download_token" name="seedlot_maintenance_events_download_token"/>
           </td>
         </tr>
@@ -648,13 +651,13 @@ $(document).ready(function() {
 
     var lo = new CXGN.List();
 
-    $('#seedlot_list1').html(lo.listSelect('seedlot_maintenance_events_list', [ 'seedlots' ], 'select', undefined, undefined));
+    $('#seedlot_list1').html(lo.listSelect('seedlot_maintenance_events_list', [ 'seedlots' ], (window.SGN && SGN.i18n ? SGN.i18n.p("lists_datasets.download_js.select", "select") : "select"), undefined, undefined));
 
     $('#seedlot_maintenance_events_download').click(function() {
 
         var seedlot_list_id = $('#seedlot_maintenance_events_list_list_select').val();
         if (!seedlot_list_id) {
-            alert("You need to select a seedlot list!");
+            alert((window.SGN && SGN.i18n ? SGN.i18n.p("lists_datasets.download_js.you_need_to_select_a_seedlot_list", "You need to select a seedlot list!") : "You need to select a seedlot list!"));
             return;
         }
 
@@ -664,7 +667,7 @@ $(document).ready(function() {
         }
 
         if (seedlot_validation != 1) {
-            alert("The seedlot list did not pass validation. Please correct the list and try again");
+            alert((window.SGN && SGN.i18n ? SGN.i18n.p("lists_datasets.download_js.the_seedlot_list_did_not_pass_validation_please_correct_the_list_", "The seedlot list did not pass validation. Please correct the list and try again") : "The seedlot list did not pass validation. Please correct the list and try again"));
             return;
         }
 
@@ -693,11 +696,11 @@ $(document).ready(function() {
     <form id="download_obsolete_metadata_action" action="/breeders/download_obsolete_metadata_action" method="POST">
         <table class="table" cellpadding="10">
             <thead>
-                <tr><td colspan="2"><h4>Download Obsolete Metadata</h4><p>Select parameters:</p></tr>
+                <tr><td colspan="2"><h4><% $c->i18n->p("lists_datasets.download.download_obsolete_metadata", "Download Obsolete Metadata") |h %></h4><p><% $c->i18n->p("lists_datasets.download.select_parameters.03fa00c", "Select parameters:") |h %></p></tr>
                 <tr>
-                    <th>Obsoleted Stocks</th>
-                    <th>Format</th>
-                    <th>Action</th>
+                    <th><% $c->i18n->p("lists_datasets.download.obsoleted_stocks", "Obsoleted Stocks") |h %></th>
+                    <th><% $c->i18n->p("lists_datasets.download.format.fda5b99", "Format") |h %></th>
+                    <th><% $c->i18n->p("lists_datasets.download.action", "Action") |h %></th>
                 </tr>
             </thead>
             <tbody>
@@ -711,7 +714,7 @@ $(document).ready(function() {
                         </select>
                     </td>
                     <td>
-                        <button class="btn btn-primary" type="button" id="obsolete_metadata_download">Download</button>
+                        <button class="btn btn-primary" type="button" id="obsolete_metadata_download"><% $c->i18n->p("lists_datasets.download.download", "Download") |h %></button>
                         <input type="hidden" id="obsolete_metadata_download_token" name="obsolete_metadata_download_token"/>
                     </td>
                 </tr>
@@ -724,17 +727,17 @@ $(document).ready(function() {
 jQuery(document).ready(function() {
 
     var lo = new CXGN.List();
-    jQuery('#obsoleted_stock_list').html(lo.listSelect('obsoleted_stock_list', [ 'obsoleted_stocks' ], 'Please select', undefined, undefined));
+    jQuery('#obsoleted_stock_list').html(lo.listSelect('obsoleted_stock_list', [ 'obsoleted_stocks' ], (window.SGN && window.SGN.i18n ? window.SGN.i18n.p("lists.selector.please_select", "Please select") : 'Please select'), undefined, undefined));
 
     jQuery('#obsolete_metadata_download').click(function() {
         var obsoleted_stock_list_id = jQuery('#obsoleted_stock_list_list_select').val();
         if (!obsoleted_stock_list_id) {
-            alert("Please select an obsoleted stock list!");
+            alert((window.SGN && SGN.i18n ? SGN.i18n.p("lists_datasets.download_js.please_select_an_obsoleted_stock_list", "Please select an obsoleted stock list!") : "Please select an obsoleted stock list!"));
             return;
         } else {
             lo.validate(obsoleted_stock_list_id, 'obsoleted_stocks', true).then((r) => {
                 if (r.missing.length > 0) {
-                   alert("The obsoleted stock list did not pass validation. Please correct the list and try again");
+                   alert((window.SGN && SGN.i18n ? SGN.i18n.p("lists_datasets.download_js.the_obsoleted_stock_list_did_not_pass_validation_please_correct_t", "The obsoleted stock list did not pass validation. Please correct the list and try again") : "The obsoleted stock list did not pass validation. Please correct the list and try again"));
                 } else {
                     var token = new Date().getTime(); //use the current timestamp as the token name and value
                     jQuery('#obsolete_metadata_download_token').val(token);
@@ -757,16 +760,16 @@ jQuery(document).ready(function() {
 <form id="download_gbs" action="/breeders/download_gbs_action" method="POST">
 <table class="table"  cellpadding="10">
   <thead>
-  <tr><td colspan="2"><h4>Download Genotypes </h4><p>Select parameter:</p></tr>
+  <tr><td colspan="2"><h4><% $c->i18n->p("lists_datasets.download.download_genotypes", "Download Genotypes") |h %> </h4><p><% $c->i18n->p("lists_datasets.download.select_parameter", "Select parameter:") |h %></p></tr>
   <tr>
     <th>
-      Accessions
+      <% $c->i18n->p("lists_datasets.download.accessions", "Accessions") |h %>
     </th>
     <th>
-      Genotyping Protocol
+      <% $c->i18n->p("lists_datasets.download.genotyping_protocol", "Genotyping Protocol") |h %>
     </th>
     <th>
-      Action
+      <% $c->i18n->p("lists_datasets.download.action", "Action") |h %>
     </th>
   </tr>
   </thead>
@@ -781,7 +784,7 @@ jQuery(document).ready(function() {
       </div>
     </td>
     <td>
-      <button class="btn btn-primary" type="button" id="genotype">Download</button>
+      <button class="btn btn-primary" type="button" id="genotype"><% $c->i18n->p("lists_datasets.download.download", "Download") |h %></button>
       <input type="hidden" id="gbs_download_token" name="gbs_download_token"/>
     </td>
   </tr>
@@ -795,7 +798,7 @@ jQuery(document).ready(function() {
 
       var lo = new CXGN.List();
 
-      $('#accession_list2').html(lo.listSelect('genotype_accession_list', [ 'accessions' ], 'select', undefined, undefined));
+      $('#accession_list2').html(lo.listSelect('genotype_accession_list', [ 'accessions' ], (window.SGN && SGN.i18n ? SGN.i18n.p("lists_datasets.download_js.select", "select") : "select"), undefined, undefined));
       get_select_box("genotyping_protocol", "protocol_list");
 
       $('#genotype').click(function() {
@@ -808,10 +811,10 @@ jQuery(document).ready(function() {
   accession_validation = lo.validate(accession_list_id, 'accessions', true).then(
      function(r) {
          if (!( accession_list_id || protocol_list_id) ) {
-             alert("You need to select a list of accessions and a protocol !");
+             alert((window.SGN && SGN.i18n ? SGN.i18n.p("lists_datasets.download_js.you_need_to_select_a_list_of_accessions_and_a_protocol", "You need to select a list of accessions and a protocol !") : "You need to select a list of accessions and a protocol !"));
          }
          else if(r.valid != 1)  {
-             alert("The accession list could not be validated. Please correct the list(s) and try again");
+             alert((window.SGN && SGN.i18n ? SGN.i18n.p("lists_datasets.download_js.the_accession_list_could_not_be_validated_please_correct_the_list", "The accession list could not be validated. Please correct the list(s) and try again") : "The accession list could not be validated. Please correct the list(s) and try again"));
          }
   else  {
 
@@ -823,7 +826,7 @@ jQuery(document).ready(function() {
       //jQuery('#gbs_download_token').val(token);
       jQuery('#download_gbs').submit();
    }
-  }, function(e) { alert('An error occurred.'); });
+  }, function(e) { alert((window.SGN && SGN.i18n ? SGN.i18n.p("lists_datasets.download_js.an_error_occurred", "An error occurred.") : "An error occurred.")); });
   }
 
   });
@@ -834,19 +837,19 @@ jQuery(document).ready(function() {
 <form id="gbs_qc" action="/breeders/gbs_qc_action" method="POST">
 <table class="table" cellpadding="10">
   <thead>
-  <tr><td colspan="3"><h4>Genotyping QC</h4><p>Select parameter:</p></tr>
+  <tr><td colspan="3"><h4><% $c->i18n->p("lists_datasets.download.genotyping_qc", "Genotyping QC") |h %></h4><p><% $c->i18n->p("lists_datasets.download.select_parameter", "Select parameter:") |h %></p></tr>
   <tr>
     <th>
-      Trials
+      <% $c->i18n->p("lists_datasets.download.trials", "Trials") |h %>
     </th>
     <th>
-      Accessions
+      <% $c->i18n->p("lists_datasets.download.accessions", "Accessions") |h %>
     </th>
     <th>
-      Genotyping Protocol
+      <% $c->i18n->p("lists_datasets.download.genotyping_protocol", "Genotyping Protocol") |h %>
     </th>
     <th>
-      Action
+      <% $c->i18n->p("lists_datasets.download.action", "Action") |h %>
     </th>
   </tr>
   </thead>
@@ -865,7 +868,7 @@ jQuery(document).ready(function() {
       </div>
     </td>
     <td>
-      <button class="btn btn-primary" type="button" id="genotype_qc">Download</button>
+      <button class="btn btn-primary" type="button" id="genotype_qc"><% $c->i18n->p("lists_datasets.download.download", "Download") |h %></button>
       <input type="hidden" id="qc_download_token" name="qc_download_token"/>
     </td>
   </tr>
@@ -881,8 +884,8 @@ jQuery(document).ready(function() {
 
       var lo = new CXGN.List();
 
-      $('#accession_list3').html(lo.listSelect('genotype_qc_accession_list', [ 'accessions' ], 'select', undefined, undefined));
-      $('#trial_list3').html(lo.listSelect('genotype_trial_list', [ 'trials' ], 'select', undefined, undefined ));
+      $('#accession_list3').html(lo.listSelect('genotype_qc_accession_list', [ 'accessions' ], (window.SGN && SGN.i18n ? SGN.i18n.p("lists_datasets.download_js.select", "select") : "select"), undefined, undefined));
+      $('#trial_list3').html(lo.listSelect('genotype_trial_list', [ 'trials' ], (window.SGN && SGN.i18n ? SGN.i18n.p("lists_datasets.download_js.select", "select") : "select"), undefined, undefined ));
       get_select_box("genotyping_protocol", "protocol_list2", {'id':'protocol_list2_select', 'name':'protocol_list2_select'});
 
       $('#genotype_qc').click(function() {
@@ -906,7 +909,7 @@ jQuery(document).ready(function() {
 
 
       if (! (accession_list_id || trial_list_id) ) {
-        alert("You need to select an accession or a trial, or both!");
+        alert((window.SGN && SGN.i18n ? SGN.i18n.p("lists_datasets.download_js.you_need_to_select_an_accession_or_a_trial_or_both", "You need to select an accession or a trial, or both!") : "You need to select an accession or a trial, or both!"));
         return;
       }
 
@@ -931,7 +934,7 @@ jQuery(document).ready(function() {
             names_str += r.invalid_lists[n][1];
 	 }
          if(names_str.length > 0) {
-            alert('Some lists ('+names_str+') are not valid, please check.');
+            alert((window.SGN && SGN.i18n ? SGN.i18n.p("lists_datasets.download_js.some_lists_lists_are_not_valid_please_check", "Some lists (%{lists}) are not valid, please check.", {lists:String(names_str)}) : 'Some lists ('+names_str+') are not valid, please check.'));
             jQuery('#working_modal').modal('hide');
          }
          else {

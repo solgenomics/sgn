@@ -13,7 +13,7 @@ $dbh
     $url = $image->get_image_url($size);
 };
 if ($@) { 
-    print "Sorry. Could not get image # $image_id\n"; 
+    print $c->i18n->p("community.image.sorry_could_not_get_image_image_id", "Sorry. Could not get image # %{image_id}\n", { image_id => $image_id });
 }
 </%perl>
 

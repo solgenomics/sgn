@@ -5,6 +5,9 @@ my $population_detail_page = CXGN::Phenome::PopulationDetailPage->new();
 
 package CXGN::Phenome::PopulationDetailPage;
 
+use SGN::I18N ();
+use HTML::Entities ();
+
 
 use CXGN::Page;
 use CXGN::Page::FormattingHelpers qw /info_section_html
@@ -45,6 +48,7 @@ sub new {
 }
 
 sub define_object {
+    my SGN::I18N $ui_define_object_i18n = $c && $c->can('i18n') ? $c->i18n : undef;
     my $self = shift;
 
     # call set_object_id, set_object and set_primary_key here
@@ -53,7 +57,7 @@ sub define_object {
     $self->set_dbh( CXGN::DB::Connection->new );
     my %args = $self->get_args();
     my $population_id= $args{population_id};
-    unless (!$population_id || $population_id =~m /^\d+$/) { $self->get_page->message_page("No population exists for identifier $population_id"); }
+    unless (!$population_id || $population_id =~m /^\d+$/) { $self->get_page->message_page((SGN::I18N::translate($ui_define_object_i18n, "accession.population_cgi.missing_id", "No population exists for identifier %{population_id}", {population_id => "" . ($population_id)}))); }
     $self->set_object_id($population_id);
     $self->set_object(CXGN::Phenome::Population->new($self->get_dbh(),$self->get_object_id()));
     $self->set_primary_key("population_id");
@@ -64,6 +68,7 @@ sub define_object {
 
 
 sub generate_form {
+    my SGN::I18N $ui_generate_form_i18n = $c && $c->can('i18n') ? $c->i18n : undef;
     my $self = shift;
 
     $self->init_form();
@@ -89,7 +94,7 @@ sub generate_form {
     }
 
    $form->add_field(
-                      display_name=>"Name:",
+                      display_name=>HTML::Entities::encode_entities((SGN::I18N::translate($ui_generate_form_i18n, "accession.population_cgi.name", "Name:"))),
                       field_name=>"name",
                       length=>15,
                       object=>$population,
@@ -98,7 +103,7 @@ sub generate_form {
                       validate => 'string',
                       );
     $form->add_textarea(
-                          display_name=>"Description: ",
+                          display_name=>HTML::Entities::encode_entities((SGN::I18N::translate($ui_generate_form_i18n, "accession.population_cgi.description", "Description: "))),
                           field_name=>"description",
                           object=>$population,
                           getter=>"get_description", setter=>"set_description",
@@ -107,7 +112,7 @@ sub generate_form {
                           );
 
 
-    $form->add_label( display_name=>"Uploaded by: ",
+    $form->add_label( display_name=>HTML::Entities::encode_entities((SGN::I18N::translate($ui_generate_form_i18n, "accession.population_cgi.uploaded_by", "Uploaded by: "))),
                           field_name=>"submitter",
                           contents=>$submitter_link,
                           );
@@ -142,6 +147,16 @@ sub generate_form {
 }
 
 sub display_page {
+    my SGN::I18N $ui_display_page_i18n = $c && $c->can('i18n') ? $c->i18n : undef;
+    my $ui_new_qtl = HTML::Entities::encode_entities((SGN::I18N::translate($ui_display_page_i18n, "accession.population_cgi.new_qtl", "New QTL Population")));
+    my $ui_see_all = HTML::Entities::encode_entities((SGN::I18N::translate($ui_display_page_i18n, "accession.population_cgi.see_all", "See all accessions ...")));
+    my $ui_raw_phenotype = HTML::Entities::encode_entities((SGN::I18N::translate($ui_display_page_i18n, "accession.population_cgi.raw_phenotype", "[Phenotype raw data]")));
+    my $ui_raw_genotype = HTML::Entities::encode_entities((SGN::I18N::translate($ui_display_page_i18n, "accession.population_cgi.raw_genotype", "[Genotype raw data]")));
+    my $ui_associate_publication = HTML::Entities::encode_entities((SGN::I18N::translate($ui_display_page_i18n, "accession.population_cgi.associate_publication", "[Associate publication]")));
+    my $ui_download = HTML::Entities::encode_entities((SGN::I18N::translate($ui_display_page_i18n, "accession.population_cgi.download", "Download:")));
+    my $ui_private_notice = HTML::Entities::encode_entities((SGN::I18N::translate($ui_display_page_i18n, "accession.population_cgi.private_notice", "The QTL data for this population is not public yet.\n                       If you would like to know more about this data,\n                       please contact the owner of the data: ")));
+    my $ui_email_sgn = HTML::Entities::encode_entities((SGN::I18N::translate($ui_display_page_i18n, "accession.population_cgi.email_sgn", "or email to SGN:")));
+
     my $self = shift;
 
     $self->get_page->add_style( text => <<EOS);
@@ -169,12 +184,12 @@ EOS
 
     my $action = $args{action};
     if (!$population_id && $action ne 'new' && $action ne 'store')
-                     { $self->get_page->message_page("No population exists for this identifier"); }
+                     { $self->get_page->message_page((SGN::I18N::translate($ui_display_page_i18n, "accession.population_cgi.missing", "No population exists for this identifier"))); }
     ################################
     #redirecting to the stock page 
     my $stock_id = $population->get_stock_id;
     $c->throw(is_error=>1,
-              message=>"No population exists for identifier $population_name (id = $population_id)",
+              message=>(SGN::I18N::translate($ui_display_page_i18n, "accession.population_cgi.missing_named", "No population exists for identifier %{population_name} (id = %{population_id})", {population_name => "" . ($population_name), population_id => "" . ($population_id)})),
         ) if !$stock_id;
     $self->get_page->client_redirect("/stock/$stock_id/view");
     ###############
@@ -184,13 +199,13 @@ EOS
     my $login_user_type= $login_user->get_user_type();
     my $page="../phenome/population.pl?population_id=$population_id";
 
-    $self->get_page()->header("SGN Population name: $population_name");
+    $self->get_page()->header((SGN::I18N::translate($ui_display_page_i18n, "accession.population_cgi.page_header", "SGN Population name: %{population_name}", {population_name => "" . ($population_name)})));
 
-    print page_title_html("Population: $population_name \n");
+    print page_title_html((SGN::I18N::translate($ui_display_page_i18n, "accession.population_cgi.page_title", "Population: %{population_name} \n", {population_name => "" . ($population_name)})));
 
     $args{calling_page} = $page;
 
-    my $population_html = $self->get_edit_link_html(). "\t[<a href=/phenome/qtl_form.pl>New QTL Population</a>] <br />";
+    my $population_html = $self->get_edit_link_html(). "\t[<a href=/phenome/qtl_form.pl>$ui_new_qtl</a>] <br />";
 
     #print all editable form  fields
     $population_html .= $self->get_form()->as_table_string();
@@ -311,7 +326,7 @@ EOS
      }
 
     my $accessions_link = qq |<a href="../search/phenotype_search.pl?wee9_population_id=$population_id">
-                              See all accessions ...</a>
+                              $ui_see_all</a>
                              |;
 
     my ($phenotype_data, $data_view, $data_download);
@@ -320,12 +335,12 @@ EOS
     {
         if ($is_qtl_pop) {
             $phenotype_data = columnar_table_html(headings => [
-                                                           'Trait',
-                                                           'Minimum',
-                                                           'Maximum',
-                                                           'Average',
-                                                           'No. of lines',
-                                                           'QTL(s)...',
+                                                           HTML::Entities::encode_entities((SGN::I18N::translate($ui_display_page_i18n, "accession.population_cgi.trait", "Trait"))),
+                                                           HTML::Entities::encode_entities((SGN::I18N::translate($ui_display_page_i18n, "accession.population_cgi.min", "Minimum"))),
+                                                           HTML::Entities::encode_entities((SGN::I18N::translate($ui_display_page_i18n, "accession.population_cgi.max", "Maximum"))),
+                                                           HTML::Entities::encode_entities((SGN::I18N::translate($ui_display_page_i18n, "accession.population_cgi.average", "Average"))),
+                                                           HTML::Entities::encode_entities((SGN::I18N::translate($ui_display_page_i18n, "accession.population_cgi.lines", "No. of lines"))),
+                                                           HTML::Entities::encode_entities((SGN::I18N::translate($ui_display_page_i18n, "accession.population_cgi.qtl", "QTL(s)..."))),
                                                            ],
                                               data     =>\@phenotype,
                                               __alt_freq   =>2,
@@ -334,20 +349,20 @@ EOS
                                               __align =>'l',
                                               );
 
-            $data_download .=  qq { <span><br/><br/>Download:<a href="phenotype_download.pl?population_id=$population_id"><b>\
-                                [Phenotype raw data]</b></a> <a href="genotype_download.pl?population_id=$population_id"><b>\
-                                [Genotype raw data]</b></a></span>
+            $data_download .=  qq { <span><br/><br/>$ui_download<a href="phenotype_download.pl?population_id=$population_id"><b>\
+                                $ui_raw_phenotype</b></a> <a href="genotype_download.pl?population_id=$population_id"><b>\
+                                $ui_raw_genotype</b></a></span>
                               };
 
 
         } else
         {
             $phenotype_data = columnar_table_html(headings => [
-                                                           'Trait',
-                                                           'Minimum',
-                                                           'Maximum',
-                                                           'Average',
-                                                           'No. of lines',
+                                                           HTML::Entities::encode_entities((SGN::I18N::translate($ui_display_page_i18n, "accession.population_cgi.trait", "Trait"))),
+                                                           HTML::Entities::encode_entities((SGN::I18N::translate($ui_display_page_i18n, "accession.population_cgi.min", "Minimum"))),
+                                                           HTML::Entities::encode_entities((SGN::I18N::translate($ui_display_page_i18n, "accession.population_cgi.max", "Maximum"))),
+                                                           HTML::Entities::encode_entities((SGN::I18N::translate($ui_display_page_i18n, "accession.population_cgi.average", "Average"))),
+                                                           HTML::Entities::encode_entities((SGN::I18N::translate($ui_display_page_i18n, "accession.population_cgi.lines", "No. of lines"))),
                                                            ],
                                               data     =>\@phenotype,
                                               __alt_freq   =>2,
@@ -356,8 +371,8 @@ EOS
                                               __align =>'l',
                                               );
 
-            $data_download .=  qq { <span><br/><br/>Download:<a href="phenotype_download.pl?population_id=$population_id"><b>\
-                                [Phenotype raw data]</b></a></span>
+            $data_download .=  qq { <span><br/><br/>$ui_download<a href="phenotype_download.pl?population_id=$population_id"><b>\
+                                $ui_raw_phenotype</b></a></span>
                               };
 
         }
@@ -369,11 +384,11 @@ EOS
 
     my $pub_subtitle;
     if ($population_name && ($login_user_type eq 'curator' || $login_user_type eq 'submitter')) {
-        $pub_subtitle .= qq|<a href="../chado/add_publication.pl?type=population&amp;type_id=$population_id&amp;refering_page=$page&amp;action=new">[Associate publication]</a>|;
+        $pub_subtitle .= qq|<a href="../chado/add_publication.pl?type=population&amp;type_id=$population_id&amp;refering_page=$page&amp;action=new">$ui_associate_publication</a>|;
 
     }
 
-    else { $pub_subtitle= qq|<span class=\"ghosted\">[Associate publication]</span>|;
+    else { $pub_subtitle= qq|<span class=\"ghosted\">$ui_associate_publication</span>|;
 
     }
 
@@ -432,7 +447,7 @@ EOS
 
 
             $abstract_view = html_optional_show("abstracts$abstract_count",
-                               'Show/hide abstract',
+                               HTML::Entities::encode_entities((SGN::I18N::translate($ui_display_page_i18n, "accession.population_cgi.abstract", "Show/hide abstract"))),
                                qq|$abstract <b> <i>$authors.</i> $journal. $pyear. $volume($issue). $pages.</b>|,
                                                  0, #< do not show by default
                                                  'abstract_optional_show', #< don't use the default button-like style
@@ -443,7 +458,7 @@ EOS
         }
     }
 
-    print info_section_html(title   => 'Population Details',
+    print info_section_html(title   => HTML::Entities::encode_entities((SGN::I18N::translate($ui_display_page_i18n, "accession.population_cgi.details", "Population Details"))),
                             contents => $population_html,
                             );
 
@@ -457,17 +472,17 @@ EOS
         {
             my $correlation_data = $self->display_correlation();
 
-            print info_section_html(title    => 'Phenotype Data and QTLs',
+            print info_section_html(title    => HTML::Entities::encode_entities((SGN::I18N::translate($ui_display_page_i18n, "accession.population_cgi.phenotypes_qtls", "Phenotype Data and QTLs"))),
                                     contents => $phenotype_data ." ".$data_download
                                    );
 
-            print info_section_html( title    => 'Pearson Correlation Analysis',
+            print info_section_html( title    => HTML::Entities::encode_entities((SGN::I18N::translate($ui_display_page_i18n, "accession.population_cgi.correlation", "Pearson Correlation Analysis"))),
                                      contents => $correlation_data,
                                    );
         }
         else
         {
-            print info_section_html(title    => 'Phenotype Data',
+            print info_section_html(title    => HTML::Entities::encode_entities((SGN::I18N::translate($ui_display_page_i18n, "accession.population_cgi.phenotypes", "Phenotype Data"))),
                                     contents => $accessions_link
                                    );
         }
@@ -475,7 +490,7 @@ EOS
         my $map_link = $self->genetic_map();
         unless (!$map_link)
         {
-            print info_section_html( title    => 'Genetic Map',
+            print info_section_html( title    => HTML::Entities::encode_entities((SGN::I18N::translate($ui_display_page_i18n, "accession.population_cgi.map", "Genetic Map"))),
                                      contents => $map_link
                                    );
         }
@@ -484,20 +499,18 @@ EOS
     else
     {
         my ($submitter_obj, $submitter_link) = $self->submitter();
-        my $message = "The QTL data for this population is not public yet.
-                       If you would like to know more about this data,
-                       please contact the owner of the data: <b>$submitter_link</b>
-                       or email to SGN:
+        my $message = "$ui_private_notice<b>$submitter_link</b>
+                       $ui_email_sgn
                        <a href=mailto:sgn-feedback\@sgn.cornell.edu>
                        sgn-feedback\@sgn.cornell.edu</a>.\n";
 
-        print info_section_html(title   => 'Phenotype Data and QTLs',
+        print info_section_html(title   => HTML::Entities::encode_entities((SGN::I18N::translate($ui_display_page_i18n, "accession.population_cgi.phenotypes_qtls", "Phenotype Data and QTLs"))),
                                 contents =>$message,
                                );
 
     }
 
-    print info_section_html(title   => 'Literature Annotation',
+    print info_section_html(title   => HTML::Entities::encode_entities((SGN::I18N::translate($ui_display_page_i18n, "accession.population_cgi.literature", "Literature Annotation"))),
                             #subtitle => $pub_subtitle,
                             contents => $pubmed,
                             );
@@ -685,6 +698,11 @@ sub analyze_correlation
 =cut
 
 sub display_correlation {
+    my SGN::I18N $ui_display_correlation_i18n = $c && $c->can('i18n') ? $c->i18n : undef;
+    my $ui_correlation_download = HTML::Entities::encode_entities((SGN::I18N::translate($ui_display_correlation_i18n, "accession.population_cgi.correlation_download", "Download:")));
+    my $ui_heatmap_alt = HTML::Entities::encode_entities((SGN::I18N::translate($ui_display_correlation_i18n, "accession.population_cgi.heatmap_alt", "correlation heatmap image")));
+    my $ui_correlation_table = HTML::Entities::encode_entities((SGN::I18N::translate($ui_display_correlation_i18n, "accession.population_cgi.correlation_table", "[Correlation coefficients and p-values table]")));
+
     my $self = shift;
     my $pop  = $self->get_object();
     my $pop_id = $self->get_object_id();
@@ -697,13 +715,13 @@ sub display_correlation {
    
     if ($pop_id == 18) 
     { 
-	$corre_data = qq | Correlation analysis canno't be run for this population. |;
+	$corre_data = (SGN::I18N::translate($ui_display_correlation_i18n, "accession.population_cgi.correlation_unavailable", " Correlation analysis canno't be run for this population. "));
     }
     else 
     {
 	my ($heatmap_file, $corre_table_file) = $self->analyze_correlation();
 
-	my $heatmap_image = qq |<img alt="correlation heatmap image" src="$heatmap_file"/> |;
+	my $heatmap_image = qq |<img alt="$ui_heatmap_alt" src="$heatmap_file"/> |;
 
 	my @traits = $pop->get_cvterms();
 	my @tr_acronym_table;
@@ -723,7 +741,7 @@ sub display_correlation {
 	}
 
 	my $acronym_key  = columnar_table_html(
-                                           headings     => [ 'Acronym',  'Trait'],
+                                           headings     => [ HTML::Entities::encode_entities((SGN::I18N::translate($ui_display_correlation_i18n, "accession.population_cgi.acronym", "Acronym"))),  HTML::Entities::encode_entities((SGN::I18N::translate($ui_display_correlation_i18n, "accession.population_cgi.trait", "Trait")))],
                                            data         => \@tr_acronym_table,
                                            __alt_freq   => 2,
                                            __alt_width  => 1,
@@ -732,12 +750,12 @@ sub display_correlation {
                                           );
 
 	my  $acronym_view = html_optional_show("key",
-                                           'Show/hide acronym key',
+                                           HTML::Entities::encode_entities((SGN::I18N::translate($ui_display_correlation_i18n, "accession.population_cgi.acronym_key", "Show/hide acronym key"))),
                                            qq | $acronym_key |,
                                            0,
                                           );
 
-	$corre_data = $heatmap_image .  qq | <span><br/><br/>Download:<a href="correlation_download.pl?population_id=$pop_id&amp;corre_file=$corre_table_file">[Correlation coefficients and p-values table]</a> $acronym_view</span> |;
+	$corre_data = $heatmap_image .  qq | <span><br/><br/>$ui_correlation_download<a href="correlation_download.pl?population_id=$pop_id&amp;corre_file=$corre_table_file">$ui_correlation_table</a> $acronym_view</span> |;
     }
     return $corre_data;
 

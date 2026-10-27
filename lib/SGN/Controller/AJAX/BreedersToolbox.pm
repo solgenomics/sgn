@@ -49,7 +49,7 @@ sub store_breeding_program :Path('/breeders/program/store') Args(0) {
     my $desc = $c->req->param("desc");
 
     if (!($c->user() || $c->user()->check_roles('submitter'))) {
-        $c->stash->{rest} = { error => 'You need to be logged in and have sufficient privileges to add or edit a breeding program.' };
+        $c->stash->{rest} = { error => $c->i18n->p("trial.server.program_edit_login", "You need to be logged in and have sufficient privileges to add or edit a breeding program.") };
     }
 
     my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
@@ -79,7 +79,7 @@ sub delete_breeding_program :Path('/breeders/program/delete') Args(1) {
     	$c->stash->{rest} = [ 1 ];
     }
     else {
-        $c->stash->{rest} = { error => "You need to be logged in with curator privileges to delete a breeding program." };
+        $c->stash->{rest} = { error => $c->i18n->p("trial.server.program_delete_role", "You need to be logged in with curator privileges to delete a breeding program.") };
     }
 }
 
@@ -105,12 +105,12 @@ sub add_data_agreement :Path('/breeders/trial/add/data_agreement') Args(0) {
     my $data_agreement = $c->req->param('text');
 
     if (!$c->user()) {
-	$c->stash->{rest} = { error => 'You need to be logged in to add a data agreement' };
+	$c->stash->{rest} = { error => $c->i18n->p("trial.server.agreement_login", "You need to be logged in to add a data agreement") };
 	return;
     }
 
     if (!($c->user()->check_roles('curator') || $c->user()->check_roles('submitter'))) {
-	$c->stash->{rest} = { error => 'You do not have the required privileges to add a data agreement to this trial.' };
+	$c->stash->{rest} = { error => $c->i18n->p("trial.server.agreement_role", "You do not have the required privileges to add a data agreement to this trial.") };
 	return;
     }
 
@@ -130,7 +130,7 @@ sub add_data_agreement :Path('/breeders/trial/add/data_agreement') Args(0) {
 	    );
 
 	if ($project_rs->count() == 0) {
-	    $c->stash->{rest} = { error => "No such project $project_id", };
+	    $c->stash->{rest} = { error => $c->i18n->p("trial.server.project_missing", "No such project %{id}", {id => "$project_id"}), };
 	    return;
 	}
 
@@ -143,11 +143,11 @@ sub add_data_agreement :Path('/breeders/trial/add/data_agreement') Args(0) {
 	    $projectprop = $projectprop_rs->first();
 	    $projectprop->value($data_agreement);
 	    $projectprop->update();
-	    $c->stash->{rest} = { message => 'Updated data agreement.' };
+	    $c->stash->{rest} = { message => $c->i18n->p("trial.server.agreement_updated", "Updated data agreement.") };
 	}
 	else {
 	    $projectprop = $project->create_projectprops( { 'data_agreement' => $data_agreement,}, {autocreate=>1});
-	    $c->stash->{rest} = { message => 'Inserted new data agreement.'};
+	    $c->stash->{rest} = { message => $c->i18n->p("trial.server.agreement_inserted", "Inserted new data agreement.")};
 	}
     };
     if ($@) {
@@ -168,7 +168,7 @@ sub get_data_agreement :Path('/breeders/trial/data_agreement/get') :Args(0) {
     my $data_agreement_cvterm_id_rs = $schema->resultset('Cv::Cvterm')->search( { name => 'data_agreement' });
 
     if ($data_agreement_cvterm_id_rs->count() == 0) {
-	$c->stash->{rest} = { error => "No data agreements have been added yet." };
+	$c->stash->{rest} = { error => $c->i18n->p("trial.server.agreement_absent", "No data agreements have been added yet.") };
 	return;
     }
 
@@ -181,7 +181,7 @@ sub get_data_agreement :Path('/breeders/trial/data_agreement/get') :Args(0) {
 	);
 
     if ($projectprop_rs->count() == 0) {
-	$c->stash->{rest} = { error => "No such project $project_id", };
+	$c->stash->{rest} = { error => $c->i18n->p("trial.server.project_missing", "No such project %{id}", {id => "$project_id"}), };
 	return;
     }
     my $projectprop = $projectprop_rs->first();
@@ -216,7 +216,7 @@ sub get_trial_location : Path('/ajax/breeders/trial/location') Args(1) {
 	$c->stash->{rest} = { location => $t->get_location() };
     }
     else {
-	$c->stash->{rest} = { error => "The trial with id $trial_id does not exist" };
+	$c->stash->{rest} = { error => $c->i18n->p("trial.server.trial_missing", "The trial with id %{id} does not exist", {id => "$trial_id"}) };
 
     }
 }

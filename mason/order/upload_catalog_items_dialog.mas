@@ -7,22 +7,22 @@
     <div class="modal-dialog modal-lg" role="document">
         <div class="modal-content">
             <div class="modal-header">
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                <h4 class="modal-title" id="uploadCatalogItemsDialog">Upload Catalog Items </h4>
+                <button type="button" class="close" data-dismiss="modal" aria-label="<% $c->i18n->p("global.dataset_publish.close", "Close") |h %>"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="uploadCatalogItemsDialog"><% $c->i18n->p("barcode.helper.upload_catalog_items", "Upload Catalog Items") |h %> </h4>
             </div>
             <div class="modal-body">
                 <div class="container-fluid">
-                    <&| /page/explanation.mas, title=>'Template Information' &>
+                    <&| /page/explanation.mas, title=>$c->i18n->p("cross.ui.template_information.bf8c643", 'Template Information') &>
                         <p>
-                            <b>File Format Information</b>
+                            <b><% $c->i18n->p("cross.forms.file_format_information", "File Format Information") |h %></b>
                             <br>
-                            <a id="upload_catalog_items_format">Spreadsheet Format</a>
+                            <a id="upload_catalog_items_format"><% $c->i18n->p("cross.ui.spreadsheet_format.f1285ec", "Spreadsheet Format") |h %></a>
                             <br>
                         </p>
                     </&>
                     <form class="form-horizontal" role="form" method="post" enctype="multipart/form-data" encoding="multipart/form-data" id="upload_catalog_items_form" name="upload_catalog_items_form">
                         <div class="form-group">
-                            <label class="col-sm-4 control-label">Upload File (.xls or .xlsx): </label>
+                            <label class="col-sm-4 control-label"><% $c->i18n->p("cross.forms.upload_file_xls_or_xlsx", "Upload File (.xls or .xlsx):") |h %> </label>
                                 <div class="col-sm-8">
                                     <input type="file" name="catalog_items_upload_file" id="catalog_items_upload_file" encoding="multipart/form-data" />
                                 </div>
@@ -31,8 +31,8 @@
                 </div>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-                <button type="button" class="btn btn-primary" name="upload_catalog_items_submit" id="upload_catalog_items_submit">Upload File</button>
+                <button type="button" class="btn btn-default" data-dismiss="modal"><% $c->i18n->p("global.dataset_publish.close", "Close") |h %></button>
+                <button type="button" class="btn btn-primary" name="upload_catalog_items_submit" id="upload_catalog_items_submit"><% $c->i18n->p("cross.ui.upload_file.3ee3b0b", "Upload File") |h %></button>
             </div>
         </div>
     </div>
@@ -42,8 +42,8 @@
     <div class="modal-dialog modal-lg" role="document">
         <div class="modal-content">
             <div class="modal-header">
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                <h4 class="modal-title" id="uploadCatalogItemsErrorDialog">Upload Catalog Items File Error</h4>
+                <button type="button" class="close" data-dismiss="modal" aria-label="<% $c->i18n->p("global.dataset_publish.close", "Close") |h %>"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="uploadCatalogItemsErrorDialog"><% $c->i18n->p("barcode.helper.upload_catalog_items_file_error", "Upload Catalog Items File Error") |h %></h4>
             </div>
             <div class="modal-body">
                 <div class="container-fluid">
@@ -53,7 +53,7 @@
                 </div>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-default" data-dismiss="modal"><% $c->i18n->p("global.dataset_publish.close", "Close") |h %></button>
             </div>
         </div>
     </div>
@@ -63,19 +63,19 @@
     <div class="modal-dialog" role="document">
         <div class="modal-content">
             <div class="modal-header">
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                <h4 class="modal-title" id="catalogItemsSavedDialog">Success</h4>
+                <button type="button" class="close" data-dismiss="modal" aria-label="<% $c->i18n->p("global.dataset_publish.close", "Close") |h %>"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="catalogItemsSavedDialog"><% $c->i18n->p("cross.ui.success", "Success") |h %></h4>
             </div>
             <div class="modal-body">
                 <div class="container-fluid">
                     <p>
                         <span class="ui-icon ui-icon-circle-check" style="float: left; margin: 0 7px 50px 0;"></span>
-                        The catalog items were saved successfully.
+                        <% $c->i18n->p("barcode.helper.the_catalog_items_were_saved_successfully", "The catalog items were saved successfully.") |h %>
                     </p>
                 </div>
             </div>
             <div class="modal-footer">
-                <button id="dismiss_catalog_items_saved_dialog" type="button" class="btn btn-default" data-dismiss="modal">Close & Reload</button>
+                <button id="dismiss_catalog_items_saved_dialog" type="button" class="btn btn-default" data-dismiss="modal"><% $c->i18n->p("seedlots.ui.close_reload", "Close & Reload") |h %></button>
             </div>
         </div>
     </div>
@@ -85,16 +85,16 @@
     <div class="modal-dialog modal-lg" role="document">
         <div class="modal-content">
             <div class="modal-header">
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                <h4 class="modal-title" id="uploadCatalogItemsFormatDialog">Template Information</h4>
+                <button type="button" class="close" data-dismiss="modal" aria-label="<% $c->i18n->p("global.dataset_publish.close", "Close") |h %>"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="uploadCatalogItemsFormatDialog"><% $c->i18n->p("cross.ui.template_information.bf8c643", "Template Information") |h %></h4>
             </div>
             <div class="modal-body">
                 <div class="container-fluid">
-                    <b>Catalog Items may be uploaded in an Excel file (.xls or .xlsx)</b>
+                    <b><% $c->i18n->p("barcode.helper.catalog_items_may_be_uploaded_in_an_excel_file_xls", "Catalog Items may be uploaded in an Excel file (.xls or .xlsx)") |h %></b>
                     <br>
-                    <b>Header:</b>
+                    <b><% $c->i18n->p("accessions.template.header", "Header:") |h %></b>
                     <br>
-                    The first row (header) must contain the following:
+                    <% $c->i18n->p("seedlots.ui.the_first_row_header_must_contain_the_following", "The first row (header) must contain the following:") |h %>
                     <br>
                     <table class="table table-bordered table-hover">
                         <tbody>
@@ -108,19 +108,19 @@
                             </tr>
                         </tbody>
                     </table>
-                    <b>Required columns:</b>
+                    <b><% $c->i18n->p("cross.ui.required_columns", "Required columns:") |h %></b>
                     <ul>
-                        <li><b>item_name:</b>Item name must be in the database, can be accession, seedlot, population or vector_construct stock type</li>
-                        <li><b>category:</b>Must be one of the following (released variety, pathogen assay, control, transgenic line). This field can be customized, please contact us. </li>
-                        <li><b>additional_info:</b> Required in the header, but value may be left blank.</li>
-                        <li><b>material_source:</b> Required in the header, but value may be left blank.</li>
-                        <li><b>breeding_program:</b>Breeding program must be in the database.</li>
-                        <li><b>contact_person_username:</b>Please indicate contact person of each item. Contact person username must be in the database</li>
+                        <li><b><% $c->i18n->p("barcode.helper.item_name.50dd400", "item_name:") |h %></b><% $c->i18n->p("barcode.helper.item_name_must_be_in_the_database_can_be_accession", "Item name must be in the database, can be accession, seedlot, population or vector_construct stock type") |h %></li>
+                        <li><b><% $c->i18n->p("barcode.helper.category.2776699", "category:") |h %></b><% $c->i18n->p("barcode.helper.must_be_one_of_the_following_released_variety_pathogen_assay", "Must be one of the following (released variety, pathogen assay, control, transgenic line). This field can be customized, please contact us.") |h %> </li>
+                        <li><b><% $c->i18n->p("barcode.helper.additional_info.289c4cd", "additional_info:") |h %></b> <% $c->i18n->p("barcode.helper.required_in_the_header_but_value_may_be_left_blank", "Required in the header, but value may be left blank.") |h %></li>
+                        <li><b><% $c->i18n->p("barcode.helper.material_source.8471806", "material_source:") |h %></b> <% $c->i18n->p("barcode.helper.required_in_the_header_but_value_may_be_left_blank", "Required in the header, but value may be left blank.") |h %></li>
+                        <li><b><% $c->i18n->p("barcode.helper.breeding_program", "breeding_program:") |h %></b><% $c->i18n->p("barcode.helper.breeding_program_must_be_in_the_database", "Breeding program must be in the database.") |h %></li>
+                        <li><b><% $c->i18n->p("barcode.helper.contact_person_username.7f37aab", "contact_person_username:") |h %></b><% $c->i18n->p("barcode.helper.please_indicate_contact_person_of_each_item_contact_person_username", "Please indicate contact person of each item. Contact person username must be in the database") |h %></li>
                     </ul>
                 </div>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-default" data-dismiss="modal"><% $c->i18n->p("global.dataset_publish.close", "Close") |h %></button>
             </div>
         </div>
     </div>
@@ -145,7 +145,7 @@ jQuery(document).ready( function() {
         var uploadFile = jQuery("#catalog_items_upload_file").val();
         jQuery('#upload_catalog_items_form').attr("action", "/ajax/catalog/upload_items");
         if (uploadFile === ''){
-            alert("Please select a file");
+            alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("global.manage_file_share_dump.select_file", "Please select a file") : "Please select a file"));
             return;
         }
         jQuery("#upload_catalog_items_form").submit();

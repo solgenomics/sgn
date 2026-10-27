@@ -17,11 +17,15 @@ $editable_stock_props => {}
 
 </%args>
 
+<%init>
+use HTML::Entities ();
+</%init>
+
 <div style="text-align: center">
 
-<h3>Welcome back <% $first_name %>!</h3>
+<h3><% $c->i18n->p('global.index_logged_in_user.welcome', 'Welcome back %{first_name}!', {first_name => $first_name}) |h %></h3>
 
-Your status is currently "<% $role %>".
+<% $c->i18n->p('global.index_logged_in_user.status', 'Your status is currently "%{role}".', {role => $role}) |h %>
 
 <!-- table id="manage_user_role_table" class="table table-bordered" width="100%" >
 <thead>
@@ -34,42 +38,42 @@ Your status is currently "<% $role %>".
 
 % if ($role ne "user") {
 
-<&|  /page/info_section.mas, title => "<b><font size=\"3\">Continue where you left off</font></b>", collapsible => 1, collapsed => 1 &>
+<&|  /page/info_section.mas, title => "<b><font size=\"3\">" . HTML::Entities::encode_entities($c->i18n->p('global.index_logged_in_user.continue_title', 'Continue where you left off')) . "</font></b>", collapsible => 1, collapsed => 1 &>
 
-<h4>Continue where you left off:</h4>
-Interval:&nbsp;
+<h4><% $c->i18n->p('global.index_logged_in_user.continue_heading', 'Continue where you left off:') |h %></h4>
+<% $c->i18n->p('global.index_logged_in_user.interval', 'Interval:') |h %>&nbsp;
 
 <select id="interval">
-    <option>day</option>
-    <option>week</option>
-    <option>month</option>
-    <option>year</option>
+    <option value="day"><% $c->i18n->p('global.index_logged_in_user.day', 'day') |h %></option>
+    <option value="week"><% $c->i18n->p('global.index_logged_in_user.week', 'week') |h %></option>
+    <option value="month"><% $c->i18n->p('global.index_logged_in_user.month', 'month') |h %></option>
+    <option value="year"><% $c->i18n->p('global.index_logged_in_user.year', 'year') |h %></option>
 </select>
 
 <br /><br />
-<h4>10 most recently created trials:</h4>
+<h4><% $c->i18n->p('global.index_logged_in_user.created_trials', '10 most recently created trials:') |h %></h4>
 
 <table id="recently_created_trial_table" style="width:100%" >
 <thead>
-<tr><th>Trial</th><th>Trial Type</th><th>Breeding Program</th><th>Create date</th></tr>
+<tr><th><% $c->i18n->p('global.index_logged_in_user.trial', 'Trial') |h %></th><th><% $c->i18n->p('global.index_logged_in_user.trial_type', 'Trial Type') |h %></th><th><% $c->i18n->p('global.index_logged_in_user.breeding_program', 'Breeding Program') |h %></th><th><% $c->i18n->p('global.index_logged_in_user.create_date', 'Create date') |h %></th></tr>
 </thead>
 </table>
 
 <br /><br />
-<h4>10 most recently modified trials:</h4>
+<h4><% $c->i18n->p('global.index_logged_in_user.modified_trials', '10 most recently modified trials:') |h %></h4>
 
 <table id="recently_modified_trial_table" style="width:100%">
 <thead>
-<tr><th>Trial</th><th>Trial Type</th><th>Breeding Program</th><th>Last phenotype added</th></tr>
+<tr><th><% $c->i18n->p('global.index_logged_in_user.trial', 'Trial') |h %></th><th><% $c->i18n->p('global.index_logged_in_user.trial_type', 'Trial Type') |h %></th><th><% $c->i18n->p('global.index_logged_in_user.breeding_program', 'Breeding Program') |h %></th><th><% $c->i18n->p('global.index_logged_in_user.last_phenotype_added', 'Last phenotype added') |h %></th></tr>
 </thead>
 </table>
 
 <br /><br />
-<h4>10 most recently added accessions:</h4>
+<h4><% $c->i18n->p('global.index_logged_in_user.added_accessions', '10 most recently added accessions:') |h %></h4>
 
 <table id="recently_added_accessions_table" style="width:100%">
 <thead>
-<tr><th>Accession</th><th>Create date</th></tr>
+<tr><th><% $c->i18n->p('global.index_logged_in_user.accession', 'Accession') |h %></th><th><% $c->i18n->p('global.index_logged_in_user.create_date', 'Create date') |h %></th></tr>
 </thead>
 </table>
 

@@ -1,3 +1,6 @@
+<%init>
+use HTML::Entities ();
+</%init>
 <%args>
 </%args>
 
@@ -5,7 +8,7 @@
 
 <div class="container-fluid">
 
-<& /page/page_title.mas, title=>'Gene annotation and families' &>
+<& /page/page_title.mas, title => HTML::Entities::encode_entities($c->i18n->p('global.search.annotation.genes.gene_annotation_and_families', 'Gene annotation and families')) &>
 
 
 <%perl>
@@ -17,7 +20,7 @@ use CXGN::Page::FormattingHelpers qw / conditional_like_input_html simple_select
 
 <br />
 
-<&| /page/info_section.mas, title => 'Search Results', collapsible=>1, collapsed=>0 &>
+<&| /page/info_section.mas, title => HTML::Entities::encode_entities($c->i18n->p('global.search.annotation.genes.search_results', 'Search Results')), collapsible=>1, collapsed=>0 &>
 
 <div class="well well-sm">
 
@@ -27,8 +30,8 @@ use CXGN::Page::FormattingHelpers qw / conditional_like_input_html simple_select
                 <table id="stock_search_results" width="100%" class="table table-hover table-striped">
                     <thead>
                         <tr>
-                            <th>Stock Name</th>
-                            <th>Description</th>
+                            <th><% $c->i18n->p('global.search.annotation.genes.stock_name', 'Stock Name') |h %></th>
+                            <th><% $c->i18n->p('global.search.annotation.genes.description', 'Description') |h %></th>
                             <th>GOs</th>
                             <th>PFAMs</th>
                         </tr>

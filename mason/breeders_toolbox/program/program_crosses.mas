@@ -9,10 +9,10 @@ $program_id
 <table id="program_cross_table" class="display">
     <thead>
         <tr>
-            <th>Cross Unique ID</th>
-            <th>Female Parent</th>
-            <th>Male Parent</th>
-            <th>Cross Type</th>
+            <th><% $c->i18n->p("cross.ui.cross_unique_id.923bfbc", "Cross Unique ID") |h %></th>
+            <th><% $c->i18n->p("accession.related_stock.header.female_parent", "Female Parent") |h %></th>
+            <th><% $c->i18n->p("accession.related_stock.header.male_parent", "Male Parent") |h %></th>
+            <th><% $c->i18n->p("accession.related_stock.header.cross_type_upper", "Cross Type") |h %></th>
         </tr>
     </thead>
 </table>

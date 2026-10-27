@@ -1,6 +1,8 @@
 
 package SGN::Controller::AJAX::TrackingActivity;
 
+use SGN::I18N ();
+
 use Moose;
 use CXGN::Stock::Order;
 use CXGN::Stock::OrderBatch;
@@ -50,6 +52,7 @@ sub create_tracking_activity_project : Path('/ajax/tracking_activity/create_trac
 sub create_tracking_activity_project_POST : Args(0) {
     my $self = shift;
     my $c = shift;
+    my SGN::I18N $ui_create_tracking_activity_project_POST_i18n = SGN::I18N::translate($c);
     my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
     my $dbh = $c->dbc->dbh;
     my $project_name = $c->req->param("project_name");
@@ -66,7 +69,7 @@ sub create_tracking_activity_project_POST : Args(0) {
     }
 
     if (!($user->has_role('submitter') or $user->has_role('curator'))) {
-        $c->stash->{rest} = { error => "You do not have sufficient privileges to create tracking activity project." };
+        $c->stash->{rest} = { error => (SGN::I18N::translate($ui_create_tracking_activity_project_POST_i18n, 'transformation.helper.you_do_not_have_sufficient_privileges_to_create_tracking_activity_pr', 'You do not have sufficient privileges to create tracking activity project.'))};
         return;
     }
 
@@ -76,7 +79,7 @@ sub create_tracking_activity_project_POST : Args(0) {
     map { $has_roles{$_} = 1; } @user_roles;
 
     if (! ( (exists($has_roles{$program_name}) && exists($has_roles{submitter})) || exists($has_roles{curator}))) {
-        $c->stash->{rest} = { error => "You need to be either a curator, or a submitter associated with breeding program $program_name to add tracking project." };
+        $c->stash->{rest} = { error => (SGN::I18N::translate($ui_create_tracking_activity_project_POST_i18n, 'transformation.helper.you_need_to_be_either_a_curator_or_a_submitter_associated_with_breed.3f5957e', 'You need to be either a curator, or a submitter associated with breeding program %{program_name} to add tracking project.', {program_name => ("" . ("$program_name"))}))};
         return;
     }
 
@@ -85,7 +88,7 @@ sub create_tracking_activity_project_POST : Args(0) {
     my $geolocation_lookup = CXGN::Location::LocationLookup->new(schema =>$schema);
     $geolocation_lookup->set_location_name($project_location);
     if(!$geolocation_lookup->get_geolocation()){
-        $c->stash->{rest}={error => "Location not found"};
+        $c->stash->{rest}={error => (SGN::I18N::translate($ui_create_tracking_activity_project_POST_i18n, 'cross.server.location_not_found', 'Location not found'))};
         return;
     }
 
@@ -107,7 +110,7 @@ sub create_tracking_activity_project_POST : Args(0) {
     };
 
     if (!$return){
-        $c->stash->{rest} = {error => "Error saving project",};
+        $c->stash->{rest} = {error => (SGN::I18N::translate($ui_create_tracking_activity_project_POST_i18n, 'seedlot.server.error_saving_project', 'Error saving project')),};
         return;
     }
 
@@ -132,16 +135,17 @@ sub generate_tracking_identifiers : Path('/ajax/tracking_activity/generate_track
 sub generate_tracking_identifiers_POST : Args(0) {
     my $self = shift;
     my $c = shift;
+    my SGN::I18N $ui_generate_tracking_identifiers_POST_i18n = SGN::I18N::translate($c);
     my $project_name = $c->req->param("project_name");
     my $list_id = $c->req->param("list_id");
     my $program_name = $c->req->param("program_name");
 
     if (!$c->user()) {
-        $c->stash->{rest} = { error => "You must be logged in to generate tracking identifiers." };
+        $c->stash->{rest} = { error => (SGN::I18N::translate($ui_generate_tracking_identifiers_POST_i18n, 'transformation.helper.you_must_be_logged_in_to_generate_tracking_identifiers', 'You must be logged in to generate tracking identifiers.'))};
         return;
     }
     if (!($c->user()->has_role('submitter') or $c->user()->has_role('curator'))) {
-        $c->stash->{rest} = { error => "You do not have sufficient privileges to add tracking identifiers." };
+        $c->stash->{rest} = { error => (SGN::I18N::translate($ui_generate_tracking_identifiers_POST_i18n, 'transformation.helper.you_do_not_have_sufficient_privileges_to_add_tracking_identifiers', 'You do not have sufficient privileges to add tracking identifiers.'))};
         return;
     }
 
@@ -150,7 +154,7 @@ sub generate_tracking_identifiers_POST : Args(0) {
     map { $has_roles{$_} = 1; } @user_roles;
 
     if (! ( (exists($has_roles{$program_name}) && exists($has_roles{submitter})) || exists($has_roles{curator}))) {
-        $c->stash->{rest} = { error => "You need to be either a curator, or a submitter associated with breeding program $program_name to add tracking identifiers." };
+        $c->stash->{rest} = { error => (SGN::I18N::translate($ui_generate_tracking_identifiers_POST_i18n, 'transformation.helper.you_need_to_be_either_a_curator_or_a_submitter_associated_with_breed.06550e6', 'You need to be either a curator, or a submitter associated with breeding program %{program_name} to add tracking identifiers.', {program_name => ("" . ("$program_name"))}))};
         return;
     }
 
@@ -163,7 +167,8 @@ sub generate_tracking_identifiers_POST : Args(0) {
     my $project_id;
     my $project_rs = $schema->resultset("Project::Project")->find( { name => $project_name });
     if (!$project_rs) {
-        $c->stash->{rest} = { error => "Error! Project name: $project_name was not found in the database.\n" };
+        $c->stash->{rest} = { error => (SGN::I18N::translate($ui_generate_tracking_identifiers_POST_i18n, 'transformation.helper.error_project_name_project_name_was_not_found_in_the_database', 'Error! Project name: %{project_name} was not found in the database.
+', {project_name => ("" . ("$project_name"))}))};
         return;
     } else {
         $project_id = $project_rs->project_id();
@@ -192,7 +197,7 @@ sub generate_tracking_identifiers_POST : Args(0) {
         'uniquename' => { -in => \@check_identifier_names }
     });
     while (my $r=$rs->next){
-        push @error_messages, "Tracking identifier name already exists in database: ".$r->uniquename;
+        push @error_messages, (SGN::I18N::translate($ui_generate_tracking_identifiers_POST_i18n, 'transformation.helper.tracking_identifier_name_already_exists_in_database_value1', 'Tracking identifier name already exists in database: %{value1}', {value1 => ("" . ($r->uniquename))}));
     }
 
     if (scalar(@error_messages) >= 1) {
@@ -215,7 +220,7 @@ sub generate_tracking_identifiers_POST : Args(0) {
 
         my $return = $tracking_obj->store();
         if (!$return) {
-            $c->stash->{rest} = {error => "Error generating tracking identifier"};
+            $c->stash->{rest} = {error => (SGN::I18N::translate($ui_generate_tracking_identifiers_POST_i18n, 'transformation.helper.error_generating_tracking_identifier', 'Error generating tracking identifier'))};
             return;
         } elsif ($return->{error}) {
             my $error = $return->{error};
@@ -234,6 +239,7 @@ sub activity_info_save : Path('/ajax/tracking_activity/save') : ActionClass('RES
 sub activity_info_save_POST : Args(0) {
     my $self = shift;
     my $c = shift;
+    my SGN::I18N $ui_activity_info_save_POST_i18n = SGN::I18N::translate($c);
     my $tracking_identifier = $c->req->param("tracking_identifier_name");
     my $tracking_identifier_id = $c->req->param("tracking_identifier_id");
     my $selected_type = $c->req->param("selected_type");
@@ -246,11 +252,11 @@ sub activity_info_save_POST : Args(0) {
     my $tracking_transformation = $c->config->{tracking_transformation};
 
     if (!$c->user()) {
-        $c->stash->{rest} = { error => "You must be logged in to add new information." };
+        $c->stash->{rest} = { error => (SGN::I18N::translate($ui_activity_info_save_POST_i18n, 'transformation.helper.you_must_be_logged_in_to_add_new_information', 'You must be logged in to add new information.'))};
         return;
     }
     if (!($c->user()->has_role('submitter') or $c->user()->has_role('curator'))) {
-        $c->stash->{rest} = { error => "You do not have sufficient privileges to record new information." };
+        $c->stash->{rest} = { error => (SGN::I18N::translate($ui_activity_info_save_POST_i18n, 'transformation.helper.you_do_not_have_sufficient_privileges_to_record_new_information', 'You do not have sufficient privileges to record new information.'))};
         return;
     }
 
@@ -259,14 +265,14 @@ sub activity_info_save_POST : Args(0) {
     map { $has_roles{$_} = 1; } @user_roles;
 
     if (! ( (exists($has_roles{$program_name}) && exists($has_roles{submitter})) || exists($has_roles{curator}))) {
-        $c->stash->{rest} = { error => "You need to be either a curator, or a submitter associated with breeding program $program_name to record new information." };
+        $c->stash->{rest} = { error => (SGN::I18N::translate($ui_activity_info_save_POST_i18n, 'transformation.helper.you_need_to_be_either_a_curator_or_a_submitter_associated_with_breed.a87f650', 'You need to be either a curator, or a submitter associated with breeding program %{program_name} to record new information.', {program_name => ("" . ("$program_name"))}))};
         return;
     }
 
     my $user_id = $c->user()->get_object()->get_sp_person_id();
 
     if ($selected_type =~ m/number/ && !($input =~ /^\d+?$/) ) {
-        $c->stash->{rest} = {error => "Input is not a positive integer"};
+        $c->stash->{rest} = {error => (SGN::I18N::translate($ui_activity_info_save_POST_i18n, 'transformation.helper.input_is_not_a_positive_integer', 'Input is not a positive integer'))};
         return;
     }
 
@@ -287,14 +293,14 @@ sub activity_info_save_POST : Args(0) {
             my $new_names_info;
             my $stored_name_format = $schema->resultset('Project::Projectprop')->find({ project_id => $linked_project_id, type_id => $autogenerated_name_format_cvterm_id});
             if (!$stored_name_format) {
-                $c->stash->{rest} = {error => "Please set up prefix for autogenerated names for this transformation project before using tracking tool"};
+                $c->stash->{rest} = {error => (SGN::I18N::translate($ui_activity_info_save_POST_i18n, 'transformation.helper.please_set_up_prefix_for_autogenerated_names_for_this_transformation', 'Please set up prefix for autogenerated names for this transformation project before using tracking tool'))};
                 return;
             } else {
                 my $name_format = $stored_name_format->value();
                 my $autogenerated_names = CXGN::Transformation::CreateTransformantAutogeneratedNames->new({schema => $schema, dbh => $dbh, breeding_program_id => $program_id, name_format => $name_format, number_of_names => $number_of_transformants, source_info => $source_info });
                 my $return = $autogenerated_names->create_names();
                 if (!$return){
-                    $c->stash->{rest} = {error => "Error generating transformant names"};
+                    $c->stash->{rest} = {error => (SGN::I18N::translate($ui_activity_info_save_POST_i18n, 'transformation.helper.error_generating_transformant_names', 'Error generating transformant names'))};
                     return;
                 } elsif ($return->{error}) {
                     $c->stash->{rest} = {error => $return->{error}};
@@ -344,7 +350,7 @@ sub activity_info_save_POST : Args(0) {
     my $return = $add_activity_info->add_info();
 
     if (!$return){
-        $c->stash->{rest} = {error => "Error saving info",};
+        $c->stash->{rest} = {error => (SGN::I18N::translate($ui_activity_info_save_POST_i18n, 'cross.server.error_saving_info', 'Error saving info')),};
         return;
     } else {
         $c->stash->{rest} = $return;
@@ -356,6 +362,7 @@ sub activity_info_save_POST : Args(0) {
 sub get_activity_details :Path('/ajax/tracking_activity/details') :Args(1) {
     my $self = shift;
     my $c = shift;
+    my SGN::I18N $ui_get_activity_details_i18n = SGN::I18N::translate($c);
     my $identifier_id = shift;
     my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
     my $dbh = $c->dbc->dbh;
@@ -397,17 +404,17 @@ sub get_activity_details :Path('/ajax/tracking_activity/details') :Args(1) {
                 %details_hash = %{$details};
                 foreach my $timestamp (sort keys %details_hash) {
                     my @each_timestamp_details = ();
-                    push @each_timestamp_details, "timestamp".":"."".$timestamp;
+                    push @each_timestamp_details, (SGN::I18N::translate($ui_get_activity_details_i18n, 'transformation.helper.timestamp', 'timestamp')).":"."".$timestamp;
                     my $operator_id = $details_hash{$timestamp}{'operator_id'};
 
                     my $person= CXGN::People::Person->new($dbh, $operator_id);
                     my $operator_name = $person->get_first_name()." ".$person->get_last_name();
 
-                    push @each_timestamp_details, "operator".":"."".$operator_name;
+                    push @each_timestamp_details, (SGN::I18N::translate($ui_get_activity_details_i18n, 'seedlot_maintenance_table.ui.property_operator', 'operator')).":"."".$operator_name;
                     my $input = $details_hash{$timestamp}{'input'};
-                    push @each_timestamp_details, "input".":"."".$input;
+                    push @each_timestamp_details, (SGN::I18N::translate($ui_get_activity_details_i18n, 'transformation.helper.input', 'input')).":"."".$input;
                     my $notes = $details_hash{$timestamp}{'notes'};
-                    push @each_timestamp_details, "notes".":"."".$notes;
+                    push @each_timestamp_details, (SGN::I18N::translate($ui_get_activity_details_i18n, 'transformation.helper.notes', 'notes')).":"."".$notes;
 
                     push @each_timestamp_details, $empty_string;
 
@@ -440,6 +447,7 @@ sub get_activity_details :Path('/ajax/tracking_activity/details') :Args(1) {
 sub get_activity_summary :Path('/ajax/tracking_activity/summary') :Args(1) {
     my $self = shift;
     my $c = shift;
+    my SGN::I18N $ui_get_activity_summary_i18n = SGN::I18N::translate($c);
     my $identifier_id = shift;
     my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
     my $dbh = $c->dbc->dbh;
@@ -497,9 +505,9 @@ sub get_activity_summary :Path('/ajax/tracking_activity/summary') :Args(1) {
 
                     if (($type eq 'number_of_transformants') && ($obsoleted_transformant_count >= 1)) {
                         my @details = ();
-                        my $generated_count = 'Selected'. ":"." ".$input;
-                        my $obsoleted_count = 'Obsoleted'. ":"." ".$obsoleted_transformant_count;
-                        my $current_number = 'Current Number'. ":"." ".($input-=$obsoleted_transformant_count);
+                        my $generated_count = (SGN::I18N::translate($ui_get_activity_summary_i18n, 'transformation.helper.selected', 'Selected')). ":"." ".$input;
+                        my $obsoleted_count = (SGN::I18N::translate($ui_get_activity_summary_i18n, 'transformation.helper.obsoleted', 'Obsoleted')). ":"." ".$obsoleted_transformant_count;
+                        my $current_number = (SGN::I18N::translate($ui_get_activity_summary_i18n, 'program.identifiers.list.header.current_number', 'Current Number')). ":"." ".($input-=$obsoleted_transformant_count);
                         push @details, ($current_number, $generated_count, $obsoleted_count);
                         my $details_string = join("<br>", @details);
                         push @summary, $details_string;
@@ -631,6 +639,7 @@ sub update_status : Path('/ajax/tracking_activity/update_status') : ActionClass(
 sub update_status_POST : Args(0) {
     my $self = shift;
     my $c = shift;
+    my SGN::I18N $ui_update_status_POST_i18n = SGN::I18N::translate($c);
     my $dbh = $c->dbc->dbh();
     my $identifier_id = $c->req->param("identifier_id");
     my $status_type = $c->req->param("status_type");
@@ -642,11 +651,11 @@ sub update_status_POST : Args(0) {
     my @stocks_to_update;
 
     if (!$c->user()){
-        $c->stash->{rest} = { error_string => "You must be logged in to update status" };
+        $c->stash->{rest} = { error_string => (SGN::I18N::translate($ui_update_status_POST_i18n, 'transformation.helper.you_must_be_logged_in_to_update_status', 'You must be logged in to update status'))};
         return;
     }
     if (!$c->user()->check_roles("curator")) {
-        $c->stash->{rest} = { error_string => "You do not have the correct role to update status. Please contact us." };
+        $c->stash->{rest} = { error_string => (SGN::I18N::translate($ui_update_status_POST_i18n, 'transformation.helper.you_do_not_have_the_correct_role_to_update_status_please_contact_us', 'You do not have the correct role to update status. Please contact us.'))};
         return;
     }
 
@@ -659,7 +668,7 @@ sub update_status_POST : Args(0) {
     if ($identifier_id) {
         my $identifier_rs = $schema->resultset("Stock::Stock")->find( { stock_id => $identifier_id, type_id => $tracking_identifier_type_id });
         if (!$identifier_rs) {
-            $c->stash->{rest} = { error_string => 'Error. No tracking identifier entry found in the database.' };
+            $c->stash->{rest} = { error_string => (SGN::I18N::translate($ui_update_status_POST_i18n, 'transformation.helper.error_no_tracking_identifier_entry_found_in_the_database', 'Error. No tracking identifier entry found in the database.'))};
     	    return;
         } else {
             push @stocks_to_update, $identifier_id;
@@ -669,7 +678,7 @@ sub update_status_POST : Args(0) {
     my $material_stock_type_id;
     my $material_rs = $schema->resultset("Stock::Stock")->find( { stock_id => $material_id });
     if (!$material_rs) {
-        $c->stash->{rest} = { error_string => 'Error. No material entry found in the database.' };
+        $c->stash->{rest} = { error_string => (SGN::I18N::translate($ui_update_status_POST_i18n, 'transformation.helper.error_no_material_entry_found_in_the_database', 'Error. No material entry found in the database.'))};
         return;
     } else {
        $material_stock_type_id = $material_rs->type_id;
@@ -701,7 +710,7 @@ sub update_status_POST : Args(0) {
         $update_status->store();
 
         if (!$update_status->store()){
-            $c->stash->{rest} = {error_string => "Error updating status"};
+            $c->stash->{rest} = {error_string => (SGN::I18N::translate($ui_update_status_POST_i18n, 'seedlot.server.error_updating_status', 'Error updating status'))};
             return;
         }
     }
@@ -715,6 +724,7 @@ sub reverse_status : Path('/ajax/tracking_activity/reverse_status') : ActionClas
 sub reverse_status_POST : Args(0) {
     my $self = shift;
     my $c = shift;
+    my SGN::I18N $ui_reverse_status_POST_i18n = SGN::I18N::translate($c);
     my $dbh = $c->dbc->dbh();
     my $identifier_id = $c->req->param("identifier_id");
     my $updated_status_type = $c->req->param("updated_status_type");
@@ -722,11 +732,11 @@ sub reverse_status_POST : Args(0) {
     my $program_name = $c->req->param("program_name");
 
     if (!$c->user()){
-        $c->stash->{rest} = { error_string => "You must be logged in to reverse status of this tracking identifier" };
+        $c->stash->{rest} = { error_string => (SGN::I18N::translate($ui_reverse_status_POST_i18n, 'transformation.helper.you_must_be_logged_in_to_reverse_status_of_this_tracking_identifier', 'You must be logged in to reverse status of this tracking identifier'))};
         return;
     }
     if (!$c->user()->check_roles("curator")) {
-        $c->stash->{rest} = { error_string => "You do not have the correct role to reverse status of this tracking identifier. Please contact us." };
+        $c->stash->{rest} = { error_string => (SGN::I18N::translate($ui_reverse_status_POST_i18n, 'transformation.helper.you_do_not_have_the_correct_role_to_reverse_status_of_this_tracking_', 'You do not have the correct role to reverse status of this tracking identifier. Please contact us.'))};
         return;
     }
 
@@ -746,7 +756,7 @@ sub reverse_status_POST : Args(0) {
     my $material_stock_type_id;
     my $material_rs = $schema->resultset("Stock::Stock")->find( { stock_id => $material_id });
     if (!$material_rs) {
-        $c->stash->{rest} = { error_string => 'Error. No material entry found in the database.' };
+        $c->stash->{rest} = { error_string => (SGN::I18N::translate($ui_reverse_status_POST_i18n, 'transformation.helper.error_no_material_entry_found_in_the_database', 'Error. No material entry found in the database.'))};
         return;
     } else {
        $material_stock_type_id = $material_rs->type_id;
@@ -772,6 +782,7 @@ sub reverse_status_POST : Args(0) {
 sub get_project_inactive_identifiers :Path('/ajax/tracking_activity/project_inactive_identifiers') :Args(1) {
     my $self = shift;
     my $c = shift;
+    my SGN::I18N $ui_get_project_inactive_identifiers_i18n = SGN::I18N::translate($c);
     my $project_id = shift;
     my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
 
@@ -800,9 +811,9 @@ sub get_project_inactive_identifiers :Path('/ajax/tracking_activity/project_inac
 
         my $status = $identifier_info->[6];
         if ($status eq 'terminated_metadata') {
-            $status = '<span style="color:red">'.'TERMINATED'.'</span>';
+            $status = '<span style="color:red">'.(SGN::I18N::translate($ui_get_project_inactive_identifiers_i18n, 'transformation.helper.terminated', 'TERMINATED')).'</span>';
         } elsif ($status eq 'completed_metadata') {
-            $status = '<span style="color:red">'.'COMPLETED'.'</span>';
+            $status = '<span style="color:red">'.(SGN::I18N::translate($ui_get_project_inactive_identifiers_i18n, 'transformation.helper.completed', 'COMPLETED')).'</span>';
         }
         push @row, $status;
 

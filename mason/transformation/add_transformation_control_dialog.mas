@@ -11,14 +11,14 @@ $control_name
     <div class="modal-dialog modal-lg" role="document">
         <div class="modal-content ">
             <div class="modal-header">
-                <button type="reset" class="close" id="set_transformation_control_dismiss_button_1" name="set_transformation_control_dismiss_button" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                <center><h4 class="modal-title" id="setTransformationControlDialog">Set Transformation Control</h4></center>
+                <button type="reset" class="close" id="set_transformation_control_dismiss_button_1" name="set_transformation_control_dismiss_button" aria-label="<% $c->i18n->p("global.dataset_publish.close", "Close") |h %>"><span aria-hidden="true">&times;</span></button>
+                <center><h4 class="modal-title" id="setTransformationControlDialog"><% $c->i18n->p("transformation.set_transformation_control", "Set Transformation Control") |h %></h4></center>
             </div>
             <div class="modal-body">
                 <div class="container-fluid">
                     <form class="form-horizontal" role="form" name="set_transformation_control_form" id="set_transformation_control_form">
                         <div class="form-group">
-                            <label class="col-sm-5 control-label">Select a control: </label>
+                            <label class="col-sm-5 control-label"><% $c->i18n->p("transformation.select_a_control", "Select a control:") |h %> </label>
                             <div class="col-sm-7" >
                                 <div id="transformation_control_select_div"></div>
                             </div>
@@ -27,8 +27,8 @@ $control_name
                 </div>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-primary" id="set_transformation_control_submit">Submit</button>
-                <button id="set_trnsformation_control_dismiss_button_2" name="set_transformation_control_dismiss_button" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary" id="set_transformation_control_submit"><% $c->i18n->p("global.manage_file_share_dump.submit", "Submit") |h %></button>
+                <button id="set_trnsformation_control_dismiss_button_2" name="set_transformation_control_dismiss_button" type="button" class="btn btn-default" data-dismiss="modal"><% $c->i18n->p("global.dataset_publish.close", "Close") |h %></button>
             </div>
         </div>
     </div>
@@ -38,8 +38,8 @@ $control_name
     <div class="modal-dialog modal-lg" role="document">
         <div class="modal-content">
             <div class="modal-header">
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                <h4 class="modal-title" id="setTransformationControlSavedDialog">Success</h4>
+                <button type="button" class="close" data-dismiss="modal" aria-label="<% $c->i18n->p("global.dataset_publish.close", "Close") |h %>"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="setTransformationControlSavedDialog"><% $c->i18n->p("cross.ui.success", "Success") |h %></h4>
             </div>
             <div class="modal-body">
                 <div class="container-fluid">
@@ -49,7 +49,7 @@ $control_name
                 </div>
             </div>
             <div class="modal-footer">
-                <button id="dismiss_set_transformation_control_saved_dialog" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                <button id="dismiss_set_transformation_control_saved_dialog" type="button" class="btn btn-default" data-dismiss="modal"><% $c->i18n->p("global.dataset_publish.close", "Close") |h %></button>
             </div>
         </div>
     </div>
@@ -59,8 +59,8 @@ $control_name
     <div class="modal-dialog modal-lg" role="document">
         <div class="modal-content">
             <div class="modal-header">
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                <h4 class="modal-title" id="setTransformationControlErrorDialog">Set Transformation Control Error</h4>
+                <button type="button" class="close" data-dismiss="modal" aria-label="<% $c->i18n->p("global.dataset_publish.close", "Close") |h %>"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="setTransformationControlErrorDialog"><% $c->i18n->p("transformation.set_transformation_control_error", "Set Transformation Control Error") |h %></h4>
             </div>
             <div class="modal-body">
                 <div class="container-fluid">
@@ -70,7 +70,7 @@ $control_name
                 </div>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-default" data-dismiss="modal"><% $c->i18n->p("global.dataset_publish.close", "Close") |h %></button>
             </div>
         </div>
     </div>
@@ -80,14 +80,14 @@ $control_name
     <div class="modal-dialog modal-lg" role="document">
         <div class="modal-content ">
             <div class="modal-header">
-                <button type="reset" class="close" id="set_as_a_control_dismiss_button_1" name="set_as_a_control_dismiss_button" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                <center><h4 class="modal-title" id="setAsAControlDialog">Set as a Control</h4></center>
+                <button type="reset" class="close" id="set_as_a_control_dismiss_button_1" name="set_as_a_control_dismiss_button" aria-label="<% $c->i18n->p("global.dataset_publish.close", "Close") |h %>"><span aria-hidden="true">&times;</span></button>
+                <center><h4 class="modal-title" id="setAsAControlDialog"><% $c->i18n->p("transformation.set_as_a_control", "Set as a Control") |h %></h4></center>
             </div>
             <div class="modal-body">
                 <div class="container-fluid">
                     <form class="form-horizontal" role="form" name="set_transformation_control_form" id="set_transformation_control_form">
                         <div class="form-group">
-                            <label class="col-sm-6 control-label">Set this Transformation ID as a Control: </label>
+                            <label class="col-sm-6 control-label"><% $c->i18n->p("transformation.set_this_transformation_id_as_a_control.5635753", "Set this Transformation ID as a Control:") |h %> </label>
                             <div class="col-sm-6" >
                                 <input class="form-control" name="set_as_a_control" id="set_as_a_control" disabled value="<% $transformation_name %>">
                                 <input name="transformation_id_as_control" id="transformation_id_as_control" type="hidden" value="<% $transformation_id %>">
@@ -97,8 +97,8 @@ $control_name
                 </div>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-primary" id="set_as_a_control_submit">Submit</button>
-                <button id="set_as_a_control_dismiss_button_2" name="set_as_a_control_dismiss_button" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary" id="set_as_a_control_submit"><% $c->i18n->p("global.manage_file_share_dump.submit", "Submit") |h %></button>
+                <button id="set_as_a_control_dismiss_button_2" name="set_as_a_control_dismiss_button" type="button" class="btn btn-default" data-dismiss="modal"><% $c->i18n->p("global.dataset_publish.close", "Close") |h %></button>
             </div>
         </div>
     </div>
@@ -128,12 +128,12 @@ jQuery(document).ready(function(){
         const control_stock_id = jQuery('#transformation_control_id').val();
 
         if (!control_stock_id) {
-            alert ("Please select a control");
+            alert ((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("transformation.please_select_a_control", "Please select a control") : "Please select a control"));
             return;
         }
 
         if (control_name) {
-            var confirmation = confirm("This transformation ID already has " +control_name+ " as a control. Do you want to replace with a new one?");
+            var confirmation = confirm((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("transformation.this_transformation_id_already_has", "This transformation ID already has ") : "This transformation ID already has ") +control_name+ (window.SGN && window.SGN.i18n ? window.SGN.i18n.p("transformation.as_a_control_do_you_want_to_replace_with_a", " as a control. Do you want to replace with a new one?") : " as a control. Do you want to replace with a new one?"));
             if (confirmation) {
                 setTransformationControl(transformation_id, control_stock_id, program_name);
             }
@@ -145,12 +145,12 @@ jQuery(document).ready(function(){
     jQuery('#set_as_a_control_submit').click(function(){
         const transformation_id = jQuery('#transformation_id_as_control').val();
         if (!transformation_id) {
-            alert ("Error retrieving transformation ID info");
+            alert ((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("transformation.error_retrieving_transformation_id_info", "Error retrieving transformation ID info") : "Error retrieving transformation ID info"));
             return;
         }
 
         if (is_a_control) {
-            alert ("This transformation ID has already been set as a control");
+            alert ((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("transformation.this_transformation_id_has_already_been_set_as_a_control.99bc68b", "This transformation ID has already been set as a control") : "This transformation ID has already been set as a control"));
             return;
         } else {
             setAsAControl(transformation_id, program_name)

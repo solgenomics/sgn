@@ -131,7 +131,7 @@ window.onload = function initialize() {
         if (selected_trials.length !== 0 || selected_locations.length !== 0 || selected_accessions.length !== 0 || selected_traits.length !== 0 || selected_trait_components.length !== 0 || selected_plots.length !== 0 || selected_plants.length !== 0 || selected_years.length !== 0) {
             window.open("/breeders/trials/phenotype/download?trial_list="+JSON.stringify(selected_trials)+"&format="+format+"&trait_list="+JSON.stringify(selected_traits)+"&trait_component_list="+JSON.stringify(selected_trait_components)+"&accession_list="+JSON.stringify(selected_accessions)+"&plot_list="+JSON.stringify(selected_plots)+"&plant_list="+JSON.stringify(selected_plants)+"&location_list="+JSON.stringify(selected_locations)+"&year_list="+JSON.stringify(selected_years)+"&dataLevel="+data_level+"&phenotype_min_value="+phenotype_min_value+"&phenotype_max_value="+phenotype_max_value+"&timestamp="+timestamp+"&trait_contains="+JSON.stringify(trait_contains_array)+"&include_row_and_column_numbers=1&exclude_phenotype_outlier="+exclude_phenotype_outlier);
         } else {
-            alert("No filters selected for download.");
+            alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("global.search_wizard.no_filters_download", "No filters selected for download.") : "No filters selected for download."));
         }
     });
 
@@ -143,7 +143,7 @@ window.onload = function initialize() {
         if (selected_trials.length !== 0 ) {
             window.open("/breeders/trials/phenotype/download?trial_list="+JSON.stringify(selected_trials)+"&format="+format+"&dataLevel="+data_level);
         } else {
-            alert("No filters selected for download.");
+            alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("global.search_wizard.no_filters_download", "No filters selected for download.") : "No filters selected for download."));
         }
     });
 
@@ -182,7 +182,7 @@ window.onload = function initialize() {
 	var params =  "accessions="+JSON.stringify(accessions)+"&trials="+JSON.stringify(trials)+"&plots="+JSON.stringify(plots)+"&years="+JSON.stringify(years)+"&locations="+JSON.stringify(locations)+"&traits="+JSON.stringify(traits)+"&breeding_programs="+JSON.stringify(breeding_programs)+"&genotyping_protocols="+JSON.stringify(genotyping_protocols)+"&trial_types="+JSON.stringify(trial_types)+"&trial_designs="+JSON.stringify(trial_designs)+"&plants="+JSON.stringify(plants)+"&name="+name+"&description="+description+"&category_order="+JSON.stringify(category_order);
 
 	if (name === '' || name === undefined) {
-	    alert('Please enter a name for the selection.');
+	    alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("global.search_wizard.selection_name_required", "Please enter a name for the selection.") : 'Please enter a name for the selection.'));
 	    return;
 	}
 
@@ -194,7 +194,7 @@ window.onload = function initialize() {
 		    alert(response.error);
 		}
 		else {
-	            alert("Successfully stored the dataset!");
+	            alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("global.search_wizard.dataset_stored", "Successfully stored the dataset!") : "Successfully stored the dataset!"));
 		    jQuery('#save_wizard_dataset_dialog').modal("hide");
 		    get_select_box('datasets', 'dataset_manage_select');
         
@@ -202,7 +202,7 @@ window.onload = function initialize() {
 
 	    },
             'error': function(response) {
-	        alert("An error occurred.");
+	        alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("cross.ui.an_error_occurred", "An error occurred.") : "An error occurred."));
 		jQuery('#save_wizard_dataset_dialog').modal("hide");
 	    }
 	});
@@ -595,9 +595,21 @@ function enable_ui() {
 }
 
 function show_list_counts(count_div, total_count, selected) {
-    var html = 'Items: '+total_count+'<br />';
+    var listCountI18n = (window.SGN && window.SGN.i18n) || {
+        p: function (context, source, vars) {
+            return source.replace(/%\{([A-Za-z_][A-Za-z0-9_]*)\}/g, function (marker, name) {
+                return Object.prototype.hasOwnProperty.call(vars, name) ? String(vars[name]) : marker;
+            });
+        }
+    };
+    function countCaptionHTML(value) {
+        return String(value).replace(/[&<>"']/g, function (character) {
+            return {'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'}[character];
+        });
+    }
+    var html = countCaptionHTML(listCountI18n.p('seedlots.ui.items_count', 'Items: %{count}', {count: total_count}))+'<br />';
     if (selected) {
-	html += 'Selected: '+selected;
+	html += countCaptionHTML(listCountI18n.p('seedlots.ui.selected_count', 'Selected: %{count}', {count: selected}));
     }
     jQuery('#'+count_div).html(html);
 }

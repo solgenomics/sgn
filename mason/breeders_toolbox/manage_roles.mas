@@ -1,3 +1,6 @@
+<%once>
+use HTML::Entities ();
+</%once>
 
 <%args>
 $roles => undef
@@ -6,14 +9,14 @@ $is_curator => undef
 
 <& /util/import_javascript.mas, entries => [ "manage_user_roles" ] &>
 
-<& /page/page_title.mas, title=>"Manage User Roles" &>
+<& /page/page_title.mas, title => HTML::Entities::encode_entities($c->i18n->p("program.roles.page_title", "Manage User Roles")) &>
 
 <table id="manage_user_roles_table" class="table table-bordered">
 <thead>
 % if ($is_curator){
-<tr><th>User</th><th>Roles</th></tr>
+<tr><th><% $c->i18n->p("program.roles.header.user", "User") |h %></th><th><% $c->i18n->p("program.roles.header.roles", "Roles") |h %></th></tr>
 % } else {
-<tr><th>User</th><th>Breeding Programs</th></tr>
+<tr><th><% $c->i18n->p("program.roles.header.user", "User") |h %></th><th><% $c->i18n->p("program.roles.header.programs", "Breeding Programs") |h %></th></tr>
 % }
 </thead>
 <tbody>
@@ -26,8 +29,8 @@ $is_curator => undef
   <div class="modal-dialog" role="document">
     <div class="modal-content">
       <div class="modal-header">
-        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-        <h4 class="modal-title" id="addPersonRoleDialog">Add Role for <span id="person_name_for_role"></span></h4>
+        <button type="button" class="close" data-dismiss="modal" aria-label="<% $c->i18n->p("folder.ui.close", "Close") |h %>"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title" id="addPersonRoleDialog"><% $c->i18n->p("program.roles.add_title", "Add Role for ") |h %><span id="person_name_for_role"></span></h4>
       </div>
       <div class="modal-body">
         <div class="container-fluid">
@@ -43,7 +46,7 @@ $is_curator => undef
 	        </div -->
             <input type="hidden" id="sp_person_id" name="sp_person_id" value="" />
             <div class="form-group">
-                <label class="col-sm-3 control-label">Role: </label>
+                <label class="col-sm-3 control-label"><% $c->i18n->p("program.roles.role_label", "Role: ") |h %></label>
                 <div class="col-sm-9" >
                     <div id="add_person_role_role_select_div">
                     [LOADING...]
@@ -55,8 +58,8 @@ $is_curator => undef
         </div>
       </div>
       <div class="modal-footer">
-        <button type="button" class="btn btn-default" name="add_person_role_cancel_button" id="add_person_role_cancel_button" data-dismiss="modal">Close</button>
-        <button type="button" class="btn btn-primary" name="add_person_role_submit_button" id="add_person_role_submit_button" title="Submit">Submit</button>
+        <button type="button" class="btn btn-default" name="add_person_role_cancel_button" id="add_person_role_cancel_button" data-dismiss="modal"><% $c->i18n->p("folder.ui.close", "Close") |h %></button>
+        <button type="button" class="btn btn-primary" name="add_person_role_submit_button" id="add_person_role_submit_button" title="<% $c->i18n->p("trial.repetitive.submit", "Submit") |h %>"><% $c->i18n->p("trial.repetitive.submit", "Submit") |h %></button>
       </div>
     </div>
   </div>
@@ -64,7 +67,7 @@ $is_curator => undef
 </div>  <!-- manage_user_roles -->
 
 % if (! $is_curator) {
-Note: Only curators can change user role assignments.
+<% $c->i18n->p("program.roles.curator_note", "Note: Only curators can change user role assignments.") |h %>
 % }
 
 <script>
@@ -81,13 +84,13 @@ jQuery(document).ready(function() {
 
 function delete_user_role(sp_person_role_id) {
     
-    var yes = confirm("Really delete this role association?");
+    var yes = confirm((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("program.roles.confirm_delete", "Really delete this role association?") : "Really delete this role association?"));
     if (yes) { 
       $.ajax( {
         url: '/ajax/roles/delete/association/'+sp_person_role_id
       });
       jQuery('#manage_user_roles_table').DataTable().ajax.reload();					  
-      alert('Association deleted.');
+      alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("program.roles.deleted", "Association deleted.") : "Association deleted."));
     }
   }
 
@@ -112,7 +115,7 @@ function add_user_role(sp_person_id, person_name) {
             },
             error: function(response) {
                 jQuery("#working_modal").modal("hide");
-                alert('An error occured: '+response);
+                alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("program.roles.error.details", "An error occured: %{details}", {details: String(response)}) : 'An error occured: ' + response));
             }
         });
 }
@@ -131,15 +134,15 @@ function add_user_role(sp_person_id, person_name) {
             //console.log(response);
             jQuery("#working_modal").modal("hide");
             if (response.error) {
-                alert('Error: '+response.error);
+                alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("program.roles.error.response", "Error: %{error}", {error: String(response.error)}) : 'Error: ' + response.error));
             } else {
             jQuery('#manage_user_roles_table').DataTable().ajax.reload();
-                alert('Role Added for User!');
+                alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("program.roles.added", "Role Added for User!") : "Role Added for User!"));
             }
         },
         error: function(response) {
             jQuery("#working_modal").modal("hide");
-            alert('An error occured: '+response);
+            alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("program.roles.error.details", "An error occured: %{details}", {details: String(response)}) : 'An error occured: ' + response));
         }
     });
 });

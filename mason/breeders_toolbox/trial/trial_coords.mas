@@ -40,27 +40,27 @@ $trial_id
     </style>
 
 
-<div id="row_desc" class="row_desc" >  &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;  <b>Field Layout Rows </b></div>
+<div id="row_desc" class="row_desc" >  &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;  <b><% $c->i18n->p('trial.card.coords.row_title', "Field Layout Rows") |h %> </b></div>
 <p></br><div id="col_desc" class="col_desc">  &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;  <ul class="legend">
-  <li><span class="block_even_number"></span> Even Block Numbers (e.g. 2,4,...)</li>
-  <li><span class="block_odd_number"></span> Odd Block Numbers (e.g. 1,3,...)</li>
-  <li><span class="checks"></span> Checks</li>
-  <li><span class="rep_odd_number"></span> Odd Rep Numbers (e.g. 1,3,...)</li>
-  <li><span class="rep_even_number"></span> Even Rep Numbers (e.g. 2,4,...)</li>
-</ul> </br><b>Field Layout Columns </b></div></p>
+  <li><span class="block_even_number"></span> <% $c->i18n->p('trial.card.coords.even_blocks', "Even Block Numbers (e.g. 2,4,...)") |h %></li>
+  <li><span class="block_odd_number"></span> <% $c->i18n->p('trial.card.coords.odd_blocks', "Odd Block Numbers (e.g. 1,3,...)") |h %></li>
+  <li><span class="checks"></span> <% $c->i18n->p('trial.card.coords.checks', "Checks") |h %></li>
+  <li><span class="rep_odd_number"></span> <% $c->i18n->p('trial.card.coords.odd_reps', "Odd Rep Numbers (e.g. 1,3,...)") |h %></li>
+  <li><span class="rep_even_number"></span> <% $c->i18n->p('trial.card.coords.even_reps', "Even Rep Numbers (e.g. 2,4,...)") |h %></li>
+</ul> </br><b><% $c->i18n->p('trial.card.coords.col_title', "Field Layout Columns") |h %> </b></div></p>
 
  <div id="container" ></div>
- <div id="trial_coords" >loading...</div>
- <div id="trial_no_coordsMSG" >Upload physical field coordinates for this trial</div>
+ <div id="trial_coords" ><% $c->i18n->p('trial.card.coords.loading', "loading...") |h %></div>
+ <div id="trial_no_coordsMSG" ><% $c->i18n->p('trial.card.coords.no_coords', "Upload physical field coordinates for this trial") |h %></div>
  <div class="col-sm-10" id="delete_button" style="display:none";>
   <!--<ul class="legend">
     <li><span class="block_even_number"></span> Even Block Numbers (e.g. 2,4,...)</li>
     <li><span class="block_odd_number"></span> Odd Block Numbers (e.g. 1,3,...)</li>
-    <li><span class="checks"></span> Checks</li>
+    <li><span class="checks"></span> <% $c->i18n->p('trial.card.coords.checks', "Checks") |h %></li>
     <li><span class="rep_odd_number"></span> Odd Rep Numbers (e.g. 1,3,...)</li>
     <li><span class="rep_even_number"></span> Even Rep Numbers (e.g. 2,4,...)</li>
   </ul> </br> -->
-   <a id="download" class="btn btn-primary">Download as Image</a> &nbsp; <a id="delete_field_map_link"><button class="btn btn-danger"  type="button" id="delete_map_button" value="delete_cords" >Delete Map</button></a> &nbsp; <a id="update_field_map_link"><button class="btn btn-success"  type="button" id="update_map_button" value="update_cords" style="display:none;">Update Map</button></a> &nbsp; <a id="replace_accessions_link"><button class="btn btn-success"  type="button" id="replace_accession_button" value="replace_accession" style="display:none;">Replace Accession</button></a>
+   <a id="download" class="btn btn-primary"><% $c->i18n->p('trial.card.coords.download_image', "Download as Image") |h %></a> &nbsp; <a id="delete_field_map_link"><button class="btn btn-danger"  type="button" id="delete_map_button" value="delete_cords" ><% $c->i18n->p('trial.card.coords.delete_map', "Delete Map") |h %></button></a> &nbsp; <a id="update_field_map_link"><button class="btn btn-success"  type="button" id="update_map_button" value="update_cords" style="display:none;"><% $c->i18n->p('trial.card.coords.update_map', "Update Map") |h %></button></a> &nbsp; <a id="replace_accessions_link"><button class="btn btn-success"  type="button" id="replace_accession_button" value="replace_accession" style="display:none;"><% $c->i18n->p('trial.card.coords.replace_accession', "Replace Accession") |h %></button></a>
  </div>
 
 
@@ -88,7 +88,7 @@ var trial_id = <% $trial_id %>;
             jQuery("#trial_coords").css("display", "none");
             jQuery("#delete_button").css("display", "inline-block");
             if (false_coord){
-                alert("Psudo row and column numbers have been used in displaying the field map. Plots row and column numbers were generated from block_number and displayed in zigzag format. You can upload row and column numbers for this trial to reflect the field layout.");
+                alert(window.SGN && SGN.i18n ? SGN.i18n.p('trial.card.coords.pseudo_coords', "Psudo row and column numbers have been used in displaying the field map. Plots row and column numbers were generated from block_number and displayed in zigzag format. You can upload row and column numbers for this trial to reflect the field layout.") : "Psudo row and column numbers have been used in displaying the field map. Plots row and column numbers were generated from block_number and displayed in zigzag format. You can upload row and column numbers for this trial to reflect the field layout.");
             }
 		}
 
@@ -309,32 +309,32 @@ var trial_id = <% $trial_id %>;
 </script>
 
 
-<div id="delete_field_map_dialog" title="Physical Field Map Deletion" style="display:none;">
+<div id="delete_field_map_dialog" title="<% $c->i18n->p('trial.card.coords.delete_title', "Physical Field Map Deletion") |h %>" style="display:none;">
    <div id="trait_list_dc" name="trait_list">
-       <label id="trait_list_label_dc" for="trait_list_list_select" style="display: inline-block; width: 300px;">Please, confirm field map deletion... <br />
+       <label id="trait_list_label_dc" for="trait_list_list_select" style="display: inline-block; width: 300px;"><% $c->i18n->p('trial.card.coords.confirm_delete', "Please, confirm field map deletion...") |h %> <br />
 
        </label>
 
    </div>
 </div>
 
-<div id="update_field_map_dialog" title="Update Physical Field Map" style="display:none;">
+<div id="update_field_map_dialog" title="<% $c->i18n->p('trial.card.coords.update_title', "Update Physical Field Map") |h %>" style="display:none;">
    <div id="trait_list_dc" name="trait_list">
-       <label id="trait_list_label_dc" for="trait_list_list_select" style="display: inline-block; width: 300px;">Please, confirm change of accessions between plots in the map... <br />
+       <label id="trait_list_label_dc" for="trait_list_list_select" style="display: inline-block; width: 300px;"><% $c->i18n->p('trial.card.coords.confirm_update', "Please, confirm change of accessions between plots in the map...") |h %> <br />
 
        </label>
 
    </div>
 </div>
 
-<div id="replace_accessions_dialog_message" title="Replace Plot Accessions" style="display:none;">
+<div id="replace_accessions_dialog_message" title="<% $c->i18n->p('trial.card.coords.replace_title', "Replace Plot Accessions") |h %>" style="display:none;">
    <p>
        <span class="ui-icon ui-icon-circle-check" style="float: left; margin: 0 7px 50px 0;"></span>
        Plot accession was replaced successfully...
    </p>
 </div>
 
-<div id="update_field_map_dialog_message" title="Update Physical Field Map" style="display:none;">
+<div id="update_field_map_dialog_message" title="<% $c->i18n->p('trial.card.coords.update_title', "Update Physical Field Map") |h %>" style="display:none;">
    <p>
        <span class="ui-icon ui-icon-circle-check" style="float: left; margin: 0 7px 50px 0;"></span>
        The field coordinates were updated successfully...
@@ -345,8 +345,8 @@ var trial_id = <% $trial_id %>;
     <div class="modal-dialog " role="document">
         <div class="modal-content">
             <div class="modal-header" style="text-align: center">
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                <h4 class="modal-title" id="ReplacePlotAccessionsDialog">Replace Plot Accession</h4>
+                <button type="button" class="close" data-dismiss="modal" aria-label="<% $c->i18n->p('trial.create.close', "Close") |h %>"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="ReplacePlotAccessionsDialog"><% $c->i18n->p('trial.card.coords.replace_accession_title', "Replace Plot Accession") |h %></h4>
             </div>
             <div class="modal-body">
                 <div class="container-fluid">
@@ -356,32 +356,32 @@ var trial_id = <% $trial_id %>;
                       </div>
 
                       <div class="form-group">
-                        <label class="col-sm-3 control-label">Plot Name: </label>
+                        <label class="col-sm-3 control-label"><% $c->i18n->p('trial.card.coords.plot_name', "Plot Name: ") |h %></label>
                         <div class="col-sm-9" id="edit_plot_name">
 
                         </div>
                       </div>
 
                       <div class="form-group">
-                        <label class="col-sm-3 control-label">Plot Number: </label>
+                        <label class="col-sm-3 control-label"><% $c->i18n->p('trial.card.coords.plot_number', "Plot Number: ") |h %></label>
                         <div class="col-sm-9" id="edit_plot_number">
                         </div>
                       </div>
 
                       <div class="form-group">
-                        <label class="col-sm-3 control-label">Plot Database ID: </label>
+                        <label class="col-sm-3 control-label"><% $c->i18n->p('trial.card.coords.plot_id', "Plot Database ID: ") |h %></label>
                         <div class="col-sm-9" id="edit_plot_id">
                         </div>
                       </div>
 
                       <div class="form-group">
-                        <label class="col-sm-3 control-label">Accession: </label>
+                        <label class="col-sm-3 control-label"><% $c->i18n->p('trial.card.coords.accession', "Accession: ") |h %></label>
                         <div class="col-sm-9" id="edit_plot_accession">
                         </div>
                       </div>
 
                       <div class="form-group">
-                        <label class="col-sm-3 control-label">Enter New Accession: </label>
+                        <label class="col-sm-3 control-label"><% $c->i18n->p('trial.card.coords.new_accession', "Enter New Accession: ") |h %></label>
                         <div class="col-sm-9" >
                           <input class="form-control" id="enter_database_accession" name="enter_database_accession"></input>
                         </div>
@@ -392,8 +392,8 @@ var trial_id = <% $trial_id %>;
                 </div>
             </div>
             <div class="modal-footer">
-                <button id="close_replace_plot_accession_dialog" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-                <button type="button" class="btn btn-primary" name="replace_plot_accession_submit" id="replace_plot_accession_submit">Replace Plot Accession</button>
+                <button id="close_replace_plot_accession_dialog" type="button" class="btn btn-default" data-dismiss="modal"><% $c->i18n->p('trial.create.close', "Close") |h %></button>
+                <button type="button" class="btn btn-primary" name="replace_plot_accession_submit" id="replace_plot_accession_submit"><% $c->i18n->p('trial.card.coords.replace_accession_title', "Replace Plot Accession") |h %></button>
             </div>
         </div>
     </div>
@@ -434,7 +434,7 @@ jQuery(document).ready( function() {
         jQuery('#working_modal').modal("hide");
 
         if (response.error) {
-          alert("Error Replacing Plot Accession: "+response.error);
+          alert((window.SGN && SGN.i18n ? SGN.i18n.p('trial.card.coords.replace_error', "Error Replacing Plot Accession: ") : "Error Replacing Plot Accession: ")+response.error);
         }
         else {
           jQuery('#replace_accessions_dialog_message').dialog("open");
@@ -442,7 +442,7 @@ jQuery(document).ready( function() {
       },
       error: function () {
         jQuery('#working_modal').modal("hide");
-        alert('An error occurred replacing plot accession');
+        alert(window.SGN && SGN.i18n ? SGN.i18n.p('trial.card.coords.replace_network_error', "An error occurred replacing plot accession") : "An error occurred replacing plot accession");
       }
     });
   }

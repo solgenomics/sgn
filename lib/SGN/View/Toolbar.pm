@@ -1,5 +1,7 @@
 package SGN::View::Toolbar;
 use Moose;
+use SGN::I18N ();
+use HTML::Entities ();
 
 extends 'Catalyst::View';
 
@@ -724,8 +726,104 @@ sub option_desc {
     }
 }
 
+# Keep toolbar_data names as canonical lookup keys. Only translate the label
+# returned to the browser, and only when the request-owned translator is passed.
+sub _display_label {
+    my ($self, $i18n, $label) = @_;
+    return $label unless $i18n;
+    my SGN::I18N $label_i18n = $i18n;
+
+    my $translated;
+    if ($label eq 'search') {
+        $translated = $label_i18n->p('global.toolbar.heading.search', 'search');
+    } elsif ($label eq 'maps') {
+        $translated = $label_i18n->p('global.toolbar.heading.maps', 'maps');
+    } elsif ($label eq 'genomes') {
+        $translated = $label_i18n->p('global.toolbar.heading.genomes', 'genomes');
+    } elsif ($label eq 'tools') {
+        $translated = $label_i18n->p('global.toolbar.heading.tools', 'tools');
+    } elsif ($label eq 'Organisms') {
+        $translated = $label_i18n->p('global.search.advanced_search.organisms', 'Organisms');
+    } elsif ($label eq 'Genes') {
+        $translated = $label_i18n->p('global.search.advanced_search.genes', 'Genes');
+    } elsif ($label eq 'Genome features') {
+        $translated = $label_i18n->p('global.search.advanced_search.genome_features', 'Genome features');
+    } elsif ($label eq 'Phenotypes') {
+        $translated = $label_i18n->p('global.search.advanced_search.phenotypes', 'Phenotypes');
+    } elsif ($label eq 'QTLs') {
+        $translated = $label_i18n->p('global.search.advanced_search.qtls', 'QTLs');
+    } elsif ($label eq 'Unigenes') {
+        $translated = $label_i18n->p('global.search.advanced_search.unigenes', 'Unigenes');
+    } elsif ($label eq 'Gene Families') {
+        $translated = $label_i18n->p('global.search.advanced_search.gene_families', 'Gene Families');
+    } elsif ($label eq 'Markers') {
+        $translated = $label_i18n->p('global.search.advanced_search.markers', 'Markers');
+    } elsif ($label eq 'BACs') {
+        $translated = $label_i18n->p('global.search.advanced_search.bacs', 'BACs');
+    } elsif ($label eq 'ESTs and libraries') {
+        $translated = $label_i18n->p('global.search.advanced_search.ests_and_libraries', 'ESTs and libraries');
+    } elsif ($label eq 'Insitu database') {
+        $translated = $label_i18n->p('global.search.advanced_search.insitu_database', 'Insitu database');
+    } elsif ($label eq 'Images') {
+        $translated = $label_i18n->p('global.search.advanced_search.images', 'Images');
+    } elsif ($label eq 'Expression') {
+        $translated = $label_i18n->p('global.search.advanced_search.expression', 'Expression');
+    } elsif ($label eq 'People') {
+        $translated = $label_i18n->p('global.search.advanced_search.people', 'People');
+    } elsif ($label eq 'FAQ') {
+        $translated = $label_i18n->p('global.search.advanced_search.faq', 'FAQ');
+    } elsif ($label eq 'Reference genomes') {
+        $translated = $label_i18n->p('global.toolbar.genomes.reference', 'Reference genomes');
+    } elsif ($label eq 'Draft genomes') {
+        $translated = $label_i18n->p('global.toolbar.genomes.draft', 'Draft genomes');
+    } elsif ($label eq 'Projects') {
+        $translated = $label_i18n->p('global.toolbar.genomes.projects', 'Projects');
+    } elsif ($label eq 'Comparative viewer...') {
+        $translated = $label_i18n->p('global.toolbar.maps.comparative_viewer', 'Comparative viewer...');
+    } elsif ($label eq 'See all available maps...') {
+        $translated = $label_i18n->p('global.toolbar.maps.all', 'See all available maps...');
+    } elsif ($label eq 'Sequence Analysis') {
+        $translated = $label_i18n->p('global.tools.sequence_analysis', 'Sequence Analysis');
+    } elsif ($label eq 'Alignment Analyzer') {
+        $translated = $label_i18n->p('global.tools.alignment_analyzer', 'Alignment Analyzer');
+    } elsif ($label eq 'Tree Browser') {
+        $translated = $label_i18n->p('global.tools.tree_browser', 'Tree Browser');
+    } elsif ($label eq 'Mapping') {
+        $translated = $label_i18n->p('global.tools.mapping', 'Mapping');
+    } elsif ($label eq 'Genome Browser (Jbrowse)') {
+        $translated = $label_i18n->p('global.tools.genome_browser', 'Genome Browser (Jbrowse)');
+    } elsif ($label eq 'Comparative Map Viewer') {
+        $translated = $label_i18n->p('global.tools.comparative_map_viewer', 'Comparative Map Viewer');
+    } elsif ($label eq 'Molecular Biology') {
+        $translated = $label_i18n->p('global.tools.molecular_biology', 'Molecular Biology');
+    } elsif ($label eq 'In Silico PCR') {
+        $translated = $label_i18n->p('global.tools.in_silico_pcr', 'In Silico PCR');
+    } elsif ($label eq 'Systems Biology') {
+        $translated = $label_i18n->p('global.tools.systems_biology', 'Systems Biology');
+    } elsif ($label eq 'Breeder Tools') {
+        $translated = $label_i18n->p('global.tools.breeder_tools', 'Breeder Tools');
+    } elsif ($label eq 'Breeder Home') {
+        $translated = $label_i18n->p('global.toolbar.tools.breeder_home', 'Breeder Home');
+    } elsif ($label eq 'Bulk Query') {
+        $translated = $label_i18n->p('global.tools.bulk_query', 'Bulk Query');
+    } elsif ($label eq 'FTP Site') {
+        $translated = $label_i18n->p('global.tools.ftp_site', 'FTP Site');
+    } elsif ($label eq 'Download Gene Sequences') {
+        $translated = $label_i18n->p('global.tools.download_gene_sequences', 'Download Gene Sequences');
+    } elsif ($label eq 'Clones, Arrays, Unigenes and BACs') {
+        $translated = $label_i18n->p('global.tools.clones_arrays_unigenes_bacs', 'Clones, Arrays, Unigenes and BACs');
+    } elsif ($label eq 'Unigene Converter') {
+        $translated = $label_i18n->p('global.tools.unigene_converter', 'Unigene Converter');
+    } elsif ($label eq 'Other') {
+        $translated = $label_i18n->p('global.toolbar.tools.other', 'Other');
+    }
+
+    return defined $translated ? HTML::Entities::encode_entities($translated) : $label;
+}
+
 sub as_html {
     my $self     = shift;
+    my ($i18n)   = @_;
     my @headings = $self->headings();
 
     #decorate the headings array with its menu alignments
@@ -747,10 +845,11 @@ EOH
         map {
             my ( $align, $heading ) = @$_;
             my $heading_link = $self->heading_link($heading);
-            my $popup_menu   = $self->render_menu($heading);
+            my $popup_menu   = $self->render_menu($heading, $i18n);
+            my $display_heading = $self->_display_label($i18n, $heading);
             <<EOH
   <td class="toolbar_content" onmouseover="CXGN.Page.Toolbar.showmenu('$heading')" onmouseout="CXGN.Page.Toolbar.hidemenu()" style="text-align: $align">
-    <a class="toolbar_menuname" href="$heading_link">$heading</a>
+    <a class="toolbar_menuname" href="$heading_link">$display_heading</a>
     <div style="position: relative; text-align: left">
 $popup_menu
     </div>
@@ -783,7 +882,7 @@ EOH
 
 #return HTML for the popup menu for the  menu heading
 sub render_menu {
-    my ( $self, $heading ) = @_;
+    my ( $self, $heading, $i18n ) = @_;
 
     my @menu_options = $self->menu_options($heading);
 
@@ -793,13 +892,14 @@ EOH
       . join( '',
               map {
                   my $menu_option = $_;
+                  my $display_option = $self->_display_label($i18n, $menu_option);
 
                   #menu options for each heading, these will be invisible unless hovered over
                   my $option_link = $self->option_link( $heading, $menu_option );
 		  my $option_target = $self->option_target( $heading, $menu_option );
                   $option_link &&=
-                      qq|<a class="toolbar_item" $option_target href="$option_link">$menu_option</a>|;
-                  $option_link ||= qq|<span class="toolbar_item">$menu_option</span>|;
+                      qq|<a class="toolbar_item" $option_target href="$option_link">$display_option</a>|;
+                  $option_link ||= qq|<span class="toolbar_item">$display_option</span>|;
                   my $style = $self->option_style( $heading, $menu_option );
                   <<EOH
        <tr><td class="toolbar_item">$option_link</td></tr>

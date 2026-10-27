@@ -13,14 +13,14 @@ $trial_description
     <div class="modal-dialog modal-xl" role="document">
         <div class="modal-content ui-front">
             <div class="modal-header text-center">
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                <h4 class="modal-title" id="crossingtrialDetailsEditDialog">Edit Crossing Experiment Details</h4>
+                <button type="button" class="close" data-dismiss="modal" aria-label="<% $c->i18n->p("cross.ui.close", "Close") |h %>"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="crossingtrialDetailsEditDialog"><% $c->i18n->p("cross.ui.edit_crossing_experiment_details", "Edit Crossing Experiment Details") |h %></h4>
             </div>
             <div class="modal-body" id="trial_details_edit_body">
                 <div class="container-fluid">
                     <form class="form-horizontal" role="form" method="post" enctype="multipart/form-data" encoding="multipart/form-data">
                         <div class="form-group">
-                            <label class="col-sm-3 control-label" for="edit_trial_name">Crossing Experiment Name: </label>
+                            <label class="col-sm-3 control-label" for="edit_trial_name"><% $c->i18n->p("cross.ui.crossing_experiment_name.2050c65", "Crossing Experiment Name:") |h %> </label>
                                 <div class="col-sm-8">
                                     <div class="input-group">
                                         <input class="form-control col-sm-8" id="edit_trial_name" title="name" type="text" value="<%$trial_name%>" aria-describedby="edit_trial_name_status"/>
@@ -28,7 +28,7 @@ $trial_description
                                 </div>
                         </div>
                         <div class="form-group">
-                            <label class="col-sm-3 control-label" for="edit_trial_breeding_program">Breeding Program: </label>
+                            <label class="col-sm-3 control-label" for="edit_trial_breeding_program"><% $c->i18n->p("cross.ui.breeding_program.2c9b17e", "Breeding Program:") |h %> </label>
                                 <div class="col-sm-8">
                                     <div class="input-group">
                                         <select class="form-control" id="edit_trial_breeding_program" title="breeding_program" value="<%$breeding_program_id%>"></select>
@@ -36,7 +36,7 @@ $trial_description
                                 </div>
                         </div>
                         <div class="form-group">
-                            <label class="col-sm-3 control-label" for="edit_trial_location">Location: </label>
+                            <label class="col-sm-3 control-label" for="edit_trial_location"><% $c->i18n->p("seedlot_record.ui.location", "Location:") |h %> </label>
                                 <div class="col-sm-8">
                                     <div class="input-group">
                                         <select class="form-control" id="edit_trial_location" title="location" value="<%$location_id%>"></select>
@@ -44,7 +44,7 @@ $trial_description
                                 </div>
                         </div>
                         <div class="form-group">
-                            <label class="col-sm-3 control-label" for="edit_trial_year">Year: </label>
+                            <label class="col-sm-3 control-label" for="edit_trial_year"><% $c->i18n->p("cross.ui.year.c9410fe", "Year:") |h %> </label>
                                 <div class="col-sm-8">
                                     <div class="input-group">
                                         <select class="form-control" id="edit_trial_year" title="year" value="<%$year%>"></select>
@@ -52,25 +52,25 @@ $trial_description
                                 </div>
                         </div>
                         <div class="form-group">
-                            <label class="col-sm-3 control-label" for="edit_trial_planting_date">Planting Date: </label>
+                            <label class="col-sm-3 control-label" for="edit_trial_planting_date"><% $c->i18n->p("cross.forms.planting_date", "Planting Date:") |h %> </label>
                                 <div class="col-sm-8">
                                     <div class="input-group">
-                                        <span class="input-group-btn"><button class="btn btn-default" id="clear_planting_date" type="button">Clear</button></span>
+                                        <span class="input-group-btn"><button class="btn btn-default" id="clear_planting_date" type="button"><% $c->i18n->p("global.search_wizard.clear", "Clear") |h %></button></span>
                                         <input class="form-control" id="edit_trial_planting_date" title="planting_date" type="text" value="<%$planting_date%>"/>
                                     </div>
                                 </div>
                         </div>
                         <div class="form-group">
-                            <label class="col-sm-3 control-label" for="edit_trial_harvest_date">Harvest Date: </label>
+                            <label class="col-sm-3 control-label" for="edit_trial_harvest_date"><% $c->i18n->p("cross.forms.harvest_date", "Harvest Date:") |h %> </label>
                                 <div class="col-sm-8">
                                     <div class="input-group">
-                                        <span class="input-group-btn"><button class="btn btn-default" id="clear_harvest_date" type="button">Clear</button></span>
+                                        <span class="input-group-btn"><button class="btn btn-default" id="clear_harvest_date" type="button"><% $c->i18n->p("global.search_wizard.clear", "Clear") |h %></button></span>
                                         <input class="form-control" id="edit_trial_harvest_date" title="harvest_date" type="text" value="<%$harvest_date%>"/>
                                     </div>
                                 </div>
                         </div>
                         <div class="form-group">
-                            <label class="col-sm-3 control-label" for="edit_trial_description">Description: </label>
+                            <label class="col-sm-3 control-label" for="edit_trial_description"><% $c->i18n->p("cross.ui.description.00d6aa4", "Description:") |h %> </label>
                                 <div class="col-sm-8">
                                     <div class="input-group">
                                         <textarea class="form-control" id="edit_trial_description" title="description" rows="5" maxlength="250"><% $trial_description %></textarea>
@@ -93,9 +93,9 @@ $trial_description
                 </div>
             </div>
             <div class="modal-footer">
-                <p class="text-success vertical-align pull-left"><span class="glyphicon glyphicon-pencil"></span> Indicates pending change</p>
-                <button type="button" class="btn btn-default" data-dismiss="modal" id="edit_trial_details_cancel_button">Cancel</button>
-                <button type="button" class="btn btn-primary" id="save_trial_details">Save Changes</button>
+                <p class="text-success vertical-align pull-left"><span class="glyphicon glyphicon-pencil"></span> <% $c->i18n->p("trial.details.pending", "Indicates pending change") |h %></p>
+                <button type="button" class="btn btn-default" data-dismiss="modal" id="edit_trial_details_cancel_button"><% $c->i18n->p("cross.ui.cancel", "Cancel") |h %></button>
+                <button type="button" class="btn btn-primary" id="save_trial_details"><% $c->i18n->p("trial.details.save", "Save Changes") |h %></button>
             </div>
         </div>
     </div>
@@ -105,14 +105,14 @@ $trial_description
     <div class="modal-dialog" role="document">
         <div class="modal-content ui-front">
             <div class="modal-header text-center">
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                <h4 class="modal-title" id="trialDetailsSavedDialog">Details Saved</h4>
+                <button type="button" class="close" data-dismiss="modal" aria-label="<% $c->i18n->p("cross.ui.close", "Close") |h %>"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="trialDetailsSavedDialog"><% $c->i18n->p("trial.details.saved", "Details Saved") |h %></h4>
             </div>
             <div class="modal-body" id="trial_details_saved_body">
                 <ul class="list-group" id="trial_details_saved_message"></ul>
             </div>
             <div class="modal-footer">
-                <button id="trial_details_saved_close_button" type="button" class="btn btn-default" data-dismiss="modal">Close & Reload</button>
+                <button id="trial_details_saved_close_button" type="button" class="btn btn-default" data-dismiss="modal"><% $c->i18n->p("seedlots.ui.close_reload", "Close & Reload") |h %></button>
             </div>
         </div>
     </div>
@@ -122,14 +122,14 @@ $trial_description
     <div class="modal-dialog" role="document">
         <div class="modal-content ui-front">
             <div class="modal-header text-center">
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                <h4 class="modal-title" id="trialDetailsErrorDialog">Error Saving Crossing Experiment Details</h4>
+                <button type="button" class="close" data-dismiss="modal" aria-label="<% $c->i18n->p("cross.ui.close", "Close") |h %>"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="trialDetailsErrorDialog"><% $c->i18n->p("cross.forms.error_saving_crossing_experiment_details", "Error Saving Crossing Experiment Details") |h %></h4>
             </div>
             <div class="modal-body" id="trial_details_error_body">
                 <ul class="list-group" id="trial_details_error_message"></ul>
             </div>
             <div class="modal-footer">
-                <button id="trial_details_error_close_button" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                <button id="trial_details_error_close_button" type="button" class="btn btn-default" data-dismiss="modal"><% $c->i18n->p("cross.ui.close", "Close") |h %></button>
             </div>
         </div>
     </div>

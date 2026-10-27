@@ -1,7 +1,23 @@
 // Depends on CXGN.BreedersToolbox.HTMLSelect
 
+// A failed optional language asset must not block the native save workflow.
+// Source messages remain ordinary text; this fallback never evaluates input.
+window.SGN = window.SGN || {};
+if (!window.SGN.i18n) {
+    window.SGN.i18n = {
+        locale: document.documentElement.lang || 'en',
+        requestedLocale: document.documentElement.getAttribute('data-sgn-locale') || document.documentElement.lang || 'en',
+        p: function (context, source, variables) {
+            variables = variables || {};
+            return source.replace(/%\{([A-Za-z_][A-Za-z0-9_]*)\}/g, function (match, name) {
+                return Object.prototype.hasOwnProperty.call(variables, name) ? String(variables[name]) : match;
+            });
+        }
+    };
+}
+
 function delete_phenotype_data_by_trial_id(trial_id) {
-    var yes = confirm("Are you sure you want to delete all phenotypic data associated with trial "+trial_id+" ? This action cannot be undone.");
+    var yes = confirm((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("trial.card.delete_phenotype_data.confirm", "Are you sure you want to delete all phenotypic data associated with trial %{trial_id} ? This action cannot be undone.", { trial_id: ("" + trial_id) }) : "Are you sure you want to delete all phenotypic data associated with trial " + trial_id + " ? This action cannot be undone."));
     if (yes) {
 
 	jQuery.ajax( {
@@ -15,13 +31,13 @@ function delete_phenotype_data_by_trial_id(trial_id) {
            alert(response.error);
 		       }
 		    else {
-		       alert('The phenotypic data has been deleted.'); // to do: give some idea how many items were deleted.
+		       alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("trial.card.delete_phenotype_data.success", "The phenotypic data has been deleted.") : 'The phenotypic data has been deleted.')); // to do: give some idea how many items were deleted.
 		    window.location.href="/breeders/trial/"+trial_id;
 		}
             },
       error: function(response) {
 		    jQuery('#working_modal').modal('hide');
-		    alert("An error occurred.");
+		    alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("cross.ui.an_error_occurred", "An error occurred.") : "An error occurred."));
             }
 	});
  }
@@ -29,7 +45,7 @@ function delete_phenotype_data_by_trial_id(trial_id) {
 
 
 function delete_layout_data_by_trial_id(trial_id) {
-    var yes = confirm("Are you sure you want to delete the layout data associated with trial "+trial_id+" and the trial entry itself? This action cannot be undone.");
+    var yes = confirm((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("trial.card.delete_layout_data.confirm", "Are you sure you want to delete the layout data associated with trial %{trial_id} and the trial entry itself? This action cannot be undone.", { trial_id: ("" + trial_id) }) : "Are you sure you want to delete the layout data associated with trial " + trial_id + " and the trial entry itself? This action cannot be undone."));
     if (yes) {
 
         jQuery.ajax( {
@@ -45,14 +61,14 @@ function delete_layout_data_by_trial_id(trial_id) {
                 else {
                     jQuery('#working_modal').modal('hide');
                     jQuery('#working_msg').html('');
-                    alert('The field trial has been deleted.'); // to do: give some idea how many items were deleted.
+                    alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("trial.card.field_trial_deleted", "The field trial has been deleted.") : 'The field trial has been deleted.')); // to do: give some idea how many items were deleted.
                     window.location.href="/breeders/trial/"+trial_id;
                 }
             },
             error: function(response) {
                 jQuery('#working_modal').modal('hide');
                 jQuery('#working_msg').html('');
-                alert("An error occurred.");
+                alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("cross.ui.an_error_occurred", "An error occurred.") : "An error occurred."));
             }
         });
     }
@@ -67,7 +83,7 @@ function associate_breeding_program() {
 	url: '/breeders/program/associate/'+program+'/'+ trial_id,
 	async: false,
 	success: function(response) {
-            alert("Associated program with id "+program + " to trial with id "+ trial_id);
+            alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("trial.card.program_associated", "Associated program with id %{program_id} to trial with id %{trial_id}", { program_id: ("" + program), trial_id: ("" + trial_id) }) : "Associated program with id " + program + " to trial with id " + trial_id));
 
 	}
     });
@@ -132,7 +148,7 @@ function create_DataCollector() {
 
      if (response.error) {
        console.log("error: "+response.error);
-       alert("error: "+response.error);
+       alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("shared.form.error_prefix_lower", "error: ") : "error: ")+response.error);
        jQuery('#open_create_DataCollector_dialog').dialog("close");
      } else {
        //alert("success: "+response.filename);
@@ -144,7 +160,7 @@ function create_DataCollector() {
 	 error: function () {
 	     //jQuery('#working').dialog("close");
 	     jQuery('#working_modal').modal("hide");
-             alert('An error occurred creating a DataCollector file.');
+             alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("collection.an_error_occurred_creating_a_datacollector_file", "An error occurred creating a DataCollector file.") : 'An error occurred creating a DataCollector file.'));
              jQuery('#open_download_DataCollector_dialog').dialog("close");
 	 }
      });
@@ -169,7 +185,7 @@ function compute_derived_trait() {
     var trait = jQuery('#derived_trait_select').val();
     var trialID = parseInt(jQuery('#trialIDDiv').text());
     if (trait === '') {
-		alert("No trait selected");
+		alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("trial.card.deletion.no_trait_selected", "No trait selected") : "No trait selected"));
 	    }
 
      new jQuery.ajax({
@@ -185,7 +201,7 @@ function compute_derived_trait() {
 	     jQuery('#working_modal').modal("hide");
 
              if (response.error) {
-		 alert("Computation stopped: "+response.error);
+		 alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("trial.card.computation_stopped_prefix", "Computation stopped: ") : "Computation stopped: ")+response.error);
 		 //alert("Computation for "+trait+" stopped: "+response.error);
 		 jQuery('#open_derived_trait_dialog').dialog("close");
 
@@ -193,13 +209,13 @@ function compute_derived_trait() {
 		 jQuery('#open_derived_trait_dialog').dialog("close");
 		 jQuery('#working_modal').modal("hide");
 		 jQuery('derived_trait_saved_dialog_message');
-		 alert("Successfully derived and uploaded phenotype");
+		 alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("trial.card.phenotype_derived_uploaded", "Successfully derived and uploaded phenotype") : "Successfully derived and uploaded phenotype"));
 		// alert("Successfully derived and uploaded ' "+trait+" ' values for this trial");
              }
 	 },
 	 error: function () {
 	     jQuery('#working_modal').modal("hide");
-             alert('An error occurred creating trait.');
+             alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("trial.card.trait_create_error", "An error occurred creating trait.") : 'An error occurred creating trait.'));
 	 }
      });
 }
@@ -221,15 +237,15 @@ function delete_field_map() {
 	     jQuery('#working_modal').modal("hide");
 
       if (response.error) {
-		      alert("Error deleting field map: "+response.error);
+		      alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("trial.card.delete_fieldmap_error_prefix", "Error deleting field map: ") : "Error deleting field map: ")+response.error);
       } else {
-              alert("Field map deletion successful.");
+              alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("trial.card.fieldmap_delete_success", "Field map deletion successful.") : "Field map deletion successful."));
 		      location.reload();
           }
 	 },
 	 error: function () {
 	     jQuery('#working_modal').modal("hide");
-             alert('An error occurred deleting field map.');
+             alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("trial.card.fieldmap_delete_error", "An error occurred deleting field map.") : 'An error occurred deleting field map.'));
 	 }
   });
 }
@@ -251,19 +267,19 @@ function replace_accessions() {
     },
 
     success: function (response) {
- 	     jQuery('#working_modal').modal("hide");
+	     jQuery('#working_modal').modal("hide");
 
        if (response.error) {
- 		      alert("Error replacing accessions: "+response.error);
+		      alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("trial.card.replace_accessions_error_prefix", "Error replacing accessions: ") : "Error replacing accessions: ")+response.error);
        } else {
            //alert("Field map deletion Successful...");
- 		      jQuery('#replace_accessions_dialog_message').dialog("open");
+		      jQuery('#replace_accessions_dialog_message').dialog("open");
            }
- 	 },
- 	 error: function () {
- 	     jQuery('#working_modal').modal("hide");
-              alert('An error occurred replacing accessions.');
- 	 }
+	 },
+	 error: function () {
+	     jQuery('#working_modal').modal("hide");
+              alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("trial.card.replace_accessions_error", "An error occurred replacing accessions.") : 'An error occurred replacing accessions.'));
+	 }
  });
 }
 
@@ -355,7 +371,7 @@ function edit_trial_details(){
         highlight_changed_details(transplanting_date_element);
     }
     );
-    
+
     var harvest_date_element = jQuery("#edit_trial_harvest_date");
     set_daterangepicker_default (harvest_date_element);
     harvest_date_element.daterangepicker({
@@ -377,7 +393,7 @@ function edit_trial_details(){
         var changed_elements = document.getElementsByName("changed");
         var categories = [];
         var new_details = {};
-        var success_message = '';
+        var success_message = [];
         for(var i=0; i<changed_elements.length; i++){
             var id = changed_elements[i].id;
             var type = changed_elements[i].title;
@@ -394,7 +410,7 @@ function edit_trial_details(){
             if(jQuery('#'+id).is("select")){
                 new_value = changed_elements[i].options[changed_elements[i].selectedIndex].text
             }
-            success_message += "<li class='list-group-item list-group-item-success'> Changed "+type+" to: <b>"+new_value+"</b></li>";
+            success_message.push(SGN.i18n.p('trial.details.changed', 'Changed %{field} to: %{value}', {field: trial_detail_label(type), value: new_value}));
         }
 
         save_trial_details(categories, new_details, success_message);
@@ -474,7 +490,7 @@ function trial_detail_page_setup_dialogs() {
 		jQuery('#derived_trait_select').html(html);
 	    },
 	    error: function(response) {
-		alert("An error occurred trying to retrieve derived traits.");
+		alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("trial.card.derived_traits_retrieve_error", "An error occurred trying to retrieve derived traits.") : "An error occurred trying to retrieve derived traits."));
 	    }
 	});
 
@@ -500,7 +516,7 @@ delete_field_map();
 
 
 jQuery('#delete_field_map_hm_link').click(function () {
-    if (confirm("Are you sure you want to delete the spatial layout of this trial?")) {
+    if (confirm((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("trial.card.spatial_layout_delete_confirm", "Are you sure you want to delete the spatial layout of this trial?") : "Are you sure you want to delete the spatial layout of this trial?"))) {
         delete_field_map();
     } else {
         return;
@@ -589,26 +605,50 @@ function highlight_changed_details(element) { // compare changed value to defaul
 function reset_dialog_body (body_id, body_html) {
   document.getElementById(body_id).innerHTML = body_html;
 }
+
+/** Return a human label without changing the canonical trial field key. */
+function trial_detail_label(field) {
+    switch (field) {
+    case 'name': return SGN.i18n.p('trial.field.name', 'Trial Name');
+    case 'breeding_program': return SGN.i18n.p('trial.field.breeding_program', 'Breeding Program');
+    case 'location': return SGN.i18n.p('trial.field.location', 'Location');
+    case 'year': return SGN.i18n.p('trial.field.year', 'Year');
+    case 'type': return SGN.i18n.p('trial.field.type', 'Trial Type');
+    case 'planting_date': return SGN.i18n.p('trial.field.planting_date', 'Planting Date');
+    case 'transplanting_date': return SGN.i18n.p('trial.field.transplanting_date', 'Transplanting Date');
+    case 'harvest_date': return SGN.i18n.p('trial.field.harvest_date', 'Harvest Date');
+    case 'description': return SGN.i18n.p('trial.field.description', 'Description');
+    case 'field_size': return SGN.i18n.p('trial.field.field_size', 'Field Size (ha)');
+    case 'plot_width': return SGN.i18n.p('trial.field.plot_width', 'Plot Width (m)');
+    case 'plot_length': return SGN.i18n.p('trial.field.plot_length', 'Plot Length (m)');
+    case 'plan_to_genotype': return SGN.i18n.p('trial.field.plan_to_genotype', 'Trial Will Be Genotyped');
+    case 'plan_to_cross': return SGN.i18n.p('trial.field.plan_to_cross', 'Trial Will Be Crossed');
+    default: return field;
+    }
+}
+
 function save_trial_details (categories, details, success_message) {
   var trial_id = get_trial_id();
   jQuery.ajax( {
     url: '/ajax/breeders/trial/'+trial_id+'/details/',
     type: 'POST',
+    headers: {'X-SGN-Locale': SGN.i18n.requestedLocale || SGN.i18n.locale},
     data: { 'categories' : categories, 'details' : details },
 
     success: function(response) {
       if (response.success) {
-        document.getElementById('trial_details_saved_message').innerHTML = success_message;
+        var saved = jQuery('#trial_details_saved_message').empty();
+        success_message.forEach(function(message) { jQuery('<li>').addClass('list-group-item list-group-item-success').text(message).appendTo(saved); });
         jQuery('#trial_details_saved_dialog').modal("show");
         return;
       }
       else {
-        document.getElementById('trial_details_error_message').innerHTML = "<li class='list-group-item list-group-item-danger'>"+response.error+"</li>";
+        jQuery('#trial_details_error_message').empty().append(jQuery('<li>').addClass('list-group-item list-group-item-danger').text(response.error));
         jQuery('#trial_details_error_dialog').modal("show");
       }
     },
     error: function(response) {
-      document.getElementById('trial_details_error_message').innerHTML = "<li class='list-group-item list-group-item-danger'> Trial detail update AJAX request failed. Update not completed.</li>";
+      jQuery('#trial_details_error_message').empty().append(jQuery('<li>').addClass('list-group-item list-group-item-danger').text(SGN.i18n.p('trial.details.network_error', 'Trial detail update AJAX request failed. Update not completed.')));
       jQuery('#trial_details_error_dialog').modal("show");
     },
   });
@@ -653,7 +693,7 @@ jQuery(document).ready(function ($) {
             $('#working_modal').modal("show");
             if (uploadedtrialcoordFile === '') {
                 $('#working_modal').modal("hide");
-                alert("No file selected");
+                alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("trial.upload.no_file", "No file selected") : "No file selected"));
             }
         },
         complete: function (response) {
@@ -661,7 +701,7 @@ jQuery(document).ready(function ($) {
 
             // Check if response exists and is valid
             if (!response || typeof response !== 'object') {
-                alert("Error: No response received from server. Please try again.");
+                alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("trial.card.no_file_response", "Error: No response received from server. Please try again.") : "Error: No response received from server. Please try again."));
                 return;
             }
 
@@ -682,7 +722,7 @@ jQuery(document).ready(function ($) {
 
             // Catch-all for unexpected responses
             console.error("Unexpected server response:", response);
-            alert("An unexpected error occurred. The server response was not in the expected format. Please check the console for details or contact support.");
+            alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("trial.card.unexpected_response", "An unexpected error occurred. The server response was not in the expected format. Please check the console for details or contact support.") : "An unexpected error occurred. The server response was not in the expected format. Please check the console for details or contact support."));
 
         }
     });
@@ -691,7 +731,7 @@ jQuery(document).ready(function ($) {
         var uploadFile = $("#trial_coordinates_uploaded_file").val();
         $('#upload_trial_coordinates_form').attr("action", "/ajax/breeders/trial/coordsupload");
         if (uploadFile === '') {
-	    alert("Please select a file");
+	    alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("trial.card.entry_numbers.select_file", "Please select a file") : "Please select a file"));
 	    return;
         }
         $("#upload_trial_coordinates_form").submit();

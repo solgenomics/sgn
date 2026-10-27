@@ -3,9 +3,12 @@
 #Display page by property
 
 use strict;
+use SGN::I18N ();
+use HTML::Entities ();
 use CXGN::Page;
 use CXGN::DB::PhenoPopulation;
 use CatalystX::GlobalContext qw( $c );
+my SGN::I18N $ui_i18n = SGN::I18N::translate($c);
 
 #get parameters from form on previous page
 my %params = %{$c->req->params};
@@ -27,17 +30,9 @@ my $page = CXGN::Page->new('phenotype', 'Adri');
 
 print "<!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.0 transitional//EN\" \"http://www.w3.org/tr/xhtml1/DTD/xhtml1-transitional.dtd\">";
 
-$page->header("Image and Data");
+$page->header(SGN::I18N::translate($ui_i18n, "phenotype.root.image_and_data", "Image and Data", undef, { entities => ($ui_i18n && $ui_i18n->locale ne 'en' ? '<>&\x80-\x{10FFFF}' : '<>&'), decode => 1 }));
 
-print <<EOF
-
-<table summary="" width="100%" cellpadding="0" cellspacing="10" border="0">
-
-<tr><td colspan="5">
-<center><h3><u>Image and Data</u></h3></center>
-</td></tr>
-
-EOF
+print ("\n<table summary=\"\" width=\"100%\" cellpadding=\"0\" cellspacing=\"10\" border=\"0\">\n\n<tr><td colspan=\"5\">\n<center><h3><u>" . SGN::I18N::translate($ui_i18n, "phenotype.root.image_and_data", "Image and Data", undef, { entities => ($ui_i18n && $ui_i18n->locale ne 'en' ? '<>&\x80-\x{10FFFF}' : '<>&'), decode => 1 }) . "</u></h3></center>\n</td></tr>\n\n");
 ;
 
 
@@ -46,12 +41,12 @@ if ($filepath) {
 
 #plant info
 print "<tr><td>";
-print "<b><u>Image Information</u></b>\n";
+print ("<b><u>" . SGN::I18N::translate($ui_i18n, "phenotype.root.image_information", "Image Information", undef, { entities => ($ui_i18n && $ui_i18n->locale ne 'en' ? '<>&\x80-\x{10FFFF}' : '<>&'), decode => 1 }) . "</u></b>\n");
 print "<ul>\n";
-print "<li>Population: <a href=\"population.pl?pop_id=$pop_id\"><b>$pop_name</b></a></li>\n";
-print "<li>Genotype Group: <a href=\"display_plants_from_genotype.pl?pop_id=$pop_id\&amp;pop_name=$pop_name\&amp;gen_id=$gen_id\"><b>$gen_name</b></a></li>\n";
-print "<li>Plant Name: <a href=\"display_samples_from_plant.pl?pop_id=$pop_id\&amp;pop_name=$pop_name\&amp;gen_id=$gen_id\&amp;gen_name=$gen_name\&amp;plant_name=$plant_name\&amp;plant_id=$plant_id\&amp;institution=$institution\&amp;environment=$environment\&amp;year=$year\"><b>$plant_name</b></a></li>\n";
-print "<li>Location: <b> $institution $environment $year</b></li>\n";
+print ("<li>" . SGN::I18N::translate($ui_i18n, "phenotype.root.population.8943544", "Population: ", undef, { entities => ($ui_i18n && $ui_i18n->locale ne 'en' ? '<>&\x80-\x{10FFFF}' : '<>&'), decode => 1 }) . "<a href=\"population.pl?pop_id=$pop_id\"><b>$pop_name</b></a></li>\n");
+print ("<li>" . SGN::I18N::translate($ui_i18n, "phenotype.root.genotype_group", "Genotype Group: ", undef, { entities => ($ui_i18n && $ui_i18n->locale ne 'en' ? '<>&\x80-\x{10FFFF}' : '<>&'), decode => 1 }) . "<a href=\"display_plants_from_genotype.pl?pop_id=$pop_id\&amp;pop_name=$pop_name\&amp;gen_id=$gen_id\"><b>$gen_name</b></a></li>\n");
+print ("<li>" . SGN::I18N::translate($ui_i18n, "phenotype.root.plant_name", "Plant Name: ", undef, { entities => ($ui_i18n && $ui_i18n->locale ne 'en' ? '<>&\x80-\x{10FFFF}' : '<>&'), decode => 1 }) . "<a href=\"display_samples_from_plant.pl?pop_id=$pop_id\&amp;pop_name=$pop_name\&amp;gen_id=$gen_id\&amp;gen_name=$gen_name\&amp;plant_name=$plant_name\&amp;plant_id=$plant_id\&amp;institution=$institution\&amp;environment=$environment\&amp;year=$year\"><b>$plant_name</b></a></li>\n");
+print ("<li>" . SGN::I18N::translate($ui_i18n, "trial.details.location", "Location: ", undef, { entities => ($ui_i18n && $ui_i18n->locale ne 'en' ? '<>&\x80-\x{10FFFF}' : '<>&'), decode => 1 }) . "<b> $institution $environment $year</b></li>\n");
 print "</ul>\n";
 print "</td></tr>\n";
 
@@ -65,7 +60,7 @@ print "<tr><td>\n";
 
 #table for image
 print "<table summary=\"\">\n";
-print "<tr><td>\n<b><u>Display Image</u></b>\n</td></tr>\n";
+print ("<tr><td>\n<b><u>" . SGN::I18N::translate($ui_i18n, "phenotype.root.display_image", "Display Image", undef, { entities => ($ui_i18n && $ui_i18n->locale ne 'en' ? '<>&\x80-\x{10FFFF}' : '<>&'), decode => 1 }) . "</u></b>\n</td></tr>\n");
 
   print "<tr><td>\n<br />";
 
@@ -75,7 +70,7 @@ print "<tr><td>\n<b><u>Display Image</u></b>\n</td></tr>\n";
   my $ext = $3;
 
   if ($ext eq "psd") {
-    print "<img src=\"/documents/img/linux_penguin_display.jpg\" align=\"middle\" alt=\"UNAVAILABLE\" />";
+    print ("<img src=\"/documents/img/linux_penguin_display.jpg\" align=\"middle\" alt=\"" . SGN::I18N::translate($ui_i18n, "phenotype.root.unavailable", "UNAVAILABLE", undef, { entities => undef, decode => 1 }) . "\" />");
   }
   elsif (!$filepath) {
     print "<img src=\"/documents/img/linux_penguin_display.jpg\" align=\"middle\" alt=\"=(\" />";
@@ -86,14 +81,14 @@ print "<tr><td>\n<b><u>Display Image</u></b>\n</td></tr>\n";
 
   #zipped copy for download
   print "<br /><br />\n";
-  print "<center><b>Note</b>: this is not the original image;<br />";
+  print ("<center><b>" . SGN::I18N::translate($ui_i18n, "phenotype.root.note", "Note", undef, { entities => ($ui_i18n && $ui_i18n->locale ne 'en' ? '<>&\x80-\x{10FFFF}' : '<>&'), decode => 1 }) . "</b>" . SGN::I18N::translate($ui_i18n, "phenotype.root.this_is_not_the_original_image", ": this is not the original image;", undef, { entities => ($ui_i18n && $ui_i18n->locale ne 'en' ? '<>&\x80-\x{10FFFF}' : '<>&'), decode => 1 }) . "<br />");
   if (system ("ls " . $gen_image_dir . "zips/" . $filepath . ".gz") == 0) {
     print "<a href=\"$gen_image_dir/zips/" .$filepath . ".gz\">";
-    print "download";
-    print "</a> the zipped copy for the orginal image.";
+    print ("" . SGN::I18N::translate($ui_i18n, "phenotype.root.download", "download", undef, { entities => ($ui_i18n && $ui_i18n->locale ne 'en' ? '<>&\x80-\x{10FFFF}' : '<>&'), decode => 1 }) . "");
+    print ("</a>" . SGN::I18N::translate($ui_i18n, "phenotype.root.the_zipped_copy_for_the_orginal_image", " the zipped copy for the orginal image.", undef, { entities => ($ui_i18n && $ui_i18n->locale ne 'en' ? '<>&\x80-\x{10FFFF}' : '<>&'), decode => 1 }) . "");
   }
   else {
-    print "A downloadable copy is not available at this time.";
+    print ("" . SGN::I18N::translate($ui_i18n, "phenotype.root.a_downloadable_copy_is_not_available_at_this_time", "A downloadable copy is not available at this time.", undef, { entities => ($ui_i18n && $ui_i18n->locale ne 'en' ? '<>&\x80-\x{10FFFF}' : '<>&'), decode => 1 }) . "");
   }
   print "</center>\n";
   print "</td></tr>\n";
@@ -102,24 +97,7 @@ print "</table>\n";
 print "</td>\n";
 
 #table for graph
-print <<EOF
-<td valign="top">
-<table summary="" width="100%" cellpadding="0" cellspacing="0" border="0">
-<tr><td align="center"><b><u>All Data For Image</u></b></td></tr>
-
-<tr><td>
-<img src="/documents/img/dot_clear.gif" alt="" width="220" height="1" />
-</td></tr>
-
-<tr><td>
-
-<table summary="" border="1" width="100%">
-<tr>
-<td width="33%"><center><b>PROPERTY</b></center></td>
-<td width="33%"><center><b>SAMPLE</b></center></td>
-<td width="33%"><center><b>VALUE</b></center></td>
-</tr>
-EOF
+print ("<td valign=\"top\">\n<table summary=\"\" width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" border=\"0\">\n<tr><td align=\"center\"><b><u>" . SGN::I18N::translate($ui_i18n, "phenotype.root.all_data_for_image", "All Data For Image", undef, { entities => ($ui_i18n && $ui_i18n->locale ne 'en' ? '<>&\x80-\x{10FFFF}' : '<>&'), decode => 1 }) . "</u></b></td></tr>\n\n<tr><td>\n<img src=\"/documents/img/dot_clear.gif\" alt=\"\" width=\"220\" height=\"1\" />\n</td></tr>\n\n<tr><td>\n\n<table summary=\"\" border=\"1\" width=\"100%\">\n<tr>\n<td width=\"33%\"><center><b>" . SGN::I18N::translate($ui_i18n, "phenotype.root.property.f78dc8f", "PROPERTY", undef, { entities => ($ui_i18n && $ui_i18n->locale ne 'en' ? '<>&\x80-\x{10FFFF}' : '<>&'), decode => 1 }) . "</b></center></td>\n<td width=\"33%\"><center><b>" . SGN::I18N::translate($ui_i18n, "phenotype.root.sample.e3d75bd", "SAMPLE", undef, { entities => ($ui_i18n && $ui_i18n->locale ne 'en' ? '<>&\x80-\x{10FFFF}' : '<>&'), decode => 1 }) . "</b></center></td>\n<td width=\"33%\"><center><b>" . SGN::I18N::translate($ui_i18n, "phenotype.root.value.9e6f05d", "VALUE", undef, { entities => ($ui_i18n && $ui_i18n->locale ne 'en' ? '<>&\x80-\x{10FFFF}' : '<>&'), decode => 1 }) . "</b></center></td>\n</tr>\n");
 ;
 
 # graph goes here #
@@ -153,7 +131,7 @@ my %dp_value_by_prop_and_sample_name = CXGN::DB::PhenoPopulation::get_dp_info_fr
 	print "<td><center>$dp_value</center></td>\n";
       }
       else {
-	print "<td><center>Not Available</center></td>\n";
+	print ("<td><center>" . SGN::I18N::translate($ui_i18n, "phenotype.root.not_available", "Not Available", undef, { entities => ($ui_i18n && $ui_i18n->locale ne 'en' ? '<>&\x80-\x{10FFFF}' : '<>&'), decode => 1 }) . "</center></td>\n");
       }
 
       print "</tr>\n";
@@ -179,7 +157,7 @@ EOF
 #no image_id specified, something wrong with the prev link or somebody playing with the link?
 else {
   print "<tr><td>";
-  print "ERROR:  No image has been specified";
+  print ("" . SGN::I18N::translate($ui_i18n, "phenotype.root.error_no_image_has_been_specified", "ERROR:  No image has been specified", undef, { entities => ($ui_i18n && $ui_i18n->locale ne 'en' ? '<>&\x80-\x{10FFFF}' : '<>&'), decode => 1 }) . "");
   print "</td></tr>";
 }
 

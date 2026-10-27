@@ -27,6 +27,9 @@ Ryan Preble <rsp98@cornell.edu>
 
 package CXGN::Trait::Treatment;
 
+use SGN::I18N ();
+use CatalystX::GlobalContext '$c';
+
 use Moose;
 use Data::Dumper;
 use List::Util qw(max);
@@ -42,6 +45,7 @@ sub BUILD {
 
 sub store {
     my $self = shift;
+    my SGN::I18N $ui_store_i18n = SGN::I18N::translate($c);
     my $parent_terms_json = shift;
 
     my $schema = $self->bcs_schema();
@@ -58,14 +62,18 @@ sub store {
     my $transform = $lt->transform($schema, "traits_2_trait_ids", $parent_terms);
 
     if (@{$transform->{missing}} > 0) {
-        die "Parent term(s) " . join(", ", @{$transform->{missing}}) . " could not be found in the database.\n";
+        die (SGN::I18N::translate($ui_store_i18n, 'transformation.parent_term_s_value1_could_not_be_found_in_the_database', 'Parent term(s) %{value1} could not be found in the database.
+', {value1 => ("" . (join(", ", @{$transform->{missing}})))}));
     }
 
     my @parent_ids = @{$transform->{transform}};
 
-    my $name = $self->name() || die "No name found.\n";
-    my $definition = $self->definition() || die "No definition found.\n";
-    my $format = $self->format() || die "No format found.\n";
+    my $name = $self->name() || die (SGN::I18N::translate($ui_store_i18n, 'phenotype.root.no_name_found', 'No name found.
+'));
+    my $definition = $self->definition() || die (SGN::I18N::translate($ui_store_i18n, 'phenotype.root.no_definition_found', 'No definition found.
+'));
+    my $format = $self->format() || die (SGN::I18N::translate($ui_store_i18n, 'phenotype.root.no_format_found', 'No format found.
+'));
     my $default_value = $self->default_value() ne "" ? $self->default_value() : undef;
     my $minimum = $self->minimum() ne "" ? $self->minimum() : undef;
     my $maximum = $self->maximum() ne "" ? $self->maximum() : undef;

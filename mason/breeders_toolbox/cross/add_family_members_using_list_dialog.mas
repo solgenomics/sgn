@@ -9,26 +9,26 @@ $family_type_string
     <div class="modal-dialog modal-xl" role="document">
         <div class="modal-content ">
             <div class="modal-header">
-                <button type="reset" class="close" id="add_family_members_using_list_dismiss_button_1" name="add_family_members_using_list_dismiss_button" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                <center><h4 class="modal-title" id="addFamilyMembersUsingList">Add Family Members Using a List</h4></center>
+                <button type="reset" class="close" id="add_family_members_using_list_dismiss_button_1" name="add_family_members_using_list_dismiss_button" aria-label="<% $c->i18n->p("cross.ui.close", "Close") |h %>"><span aria-hidden="true">&times;</span></button>
+                <center><h4 class="modal-title" id="addFamilyMembersUsingList"><% $c->i18n->p("cross.forms.add_family_members_using_a_list", "Add Family Members Using a List") |h %></h4></center>
             </div>
             <div class="modal-body">
                 <div class="container-fluid">
                     <form class="form-horizontal" role="form" name="add_family_members_form" id="add_family_members_form">
                         <div class="form-group">
-                            <label class="col-sm-3 control-label" >Family Name: </label>
+                            <label class="col-sm-3 control-label" ><% $c->i18n->p("trial.fieldmap_js.tooltip.family_name", "Family Name:") |h %> </label>
                             <div class="col-sm-9">
                                 <input class="form-control" name="members_for_family_name" id="members_for_family_name" disabled value="<% $family_name %>">
                             </div>
                         </div>
                         <div class="form-group">
-                            <label class="col-sm-3 control-label" >Family Type: </label>
+                            <label class="col-sm-3 control-label" ><% $c->i18n->p("cross.forms.family_type", "Family Type:") |h %> </label>
                             <div class="col-sm-9">
                                 <input class="form-control" name="family_name_type" id="family_name_type" disabled value="<% $family_type_string %>">
                             </div>
                         </div>
                         <div class="form-group">
-                            <label class="control-label col-sm-3">Select a List of Crosses to Add:</label>
+                            <label class="control-label col-sm-3"><% $c->i18n->p("cross.forms.select_a_list_of_crosses_to_add", "Select a List of Crosses to Add:") |h %></label>
                             <div class="col-sm-9" >
                                 <div class="input-group">
                                     <select class="form-control" id="family_crosses_list_select"></select>
@@ -39,8 +39,8 @@ $family_type_string
                 </div>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-primary" id="add_family_members_submit">Submit</button>
-                <button id="add_family_members_using_list_dismiss_button_2" name="add_family_members_using_list_dismiss_button" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary" id="add_family_members_submit"><% $c->i18n->p("cross.ui.submit", "Submit") |h %></button>
+                <button id="add_family_members_using_list_dismiss_button_2" name="add_family_members_using_list_dismiss_button" type="button" class="btn btn-default" data-dismiss="modal"><% $c->i18n->p("cross.ui.close", "Close") |h %></button>
             </div>
         </div>
     </div>
@@ -50,19 +50,19 @@ $family_type_string
     <div class="modal-dialog" role="document">
         <div class="modal-content">
             <div class="modal-header">
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                <h4 class="modal-title" id="addFamilyMembersUsingListSavedDialog">Success</h4>
+                <button type="button" class="close" data-dismiss="modal" aria-label="<% $c->i18n->p("cross.ui.close", "Close") |h %>"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="addFamilyMembersUsingListSavedDialog"><% $c->i18n->p("cross.ui.success", "Success") |h %></h4>
             </div>
             <div class="modal-body">
                 <div class="container-fluid">
                     <p>
                         <span class="ui-icon ui-icon-circle-check" style="float: left; margin: 0 7px 50px 0;"></span>
-                        The new family members were stored successfully.
+                        <% $c->i18n->p("cross.forms.the_new_family_members_were_stored_successfully", "The new family members were stored successfully.") |h %>
                     </p>
                 </div>
             </div>
             <div class="modal-footer">
-                <button id="dismiss_add_family_members_using_list_saved_dialog" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                <button id="dismiss_add_family_members_using_list_saved_dialog" type="button" class="btn btn-default" data-dismiss="modal"><% $c->i18n->p("cross.ui.close", "Close") |h %></button>
             </div>
         </div>
     </div>
@@ -72,8 +72,8 @@ $family_type_string
     <div class="modal-dialog modal-lg" role="document">
         <div class="modal-content">
             <div class="modal-header">
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                <h4 class="modal-title" id="addFamilyMembersUsingListErrorDialog">Add Family Members Error</h4>
+                <button type="button" class="close" data-dismiss="modal" aria-label="<% $c->i18n->p("cross.ui.close", "Close") |h %>"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="addFamilyMembersUsingListErrorDialog"><% $c->i18n->p("cross.forms.add_family_members_error", "Add Family Members Error") |h %></h4>
             </div>
             <div class="modal-body">
                 <div class="container-fluid">
@@ -83,7 +83,7 @@ $family_type_string
                 </div>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-default" data-dismiss="modal"><% $c->i18n->p("cross.ui.close", "Close") |h %></button>
             </div>
         </div>
     </div>
@@ -94,17 +94,17 @@ $family_type_string
 jQuery(document).ready(function(){
 
     var lo = new CXGN.List();
-    jQuery('#family_crosses_list_select').html(lo.listSelect('family_crosses_list_select', ['crosses'], 'Select a list', undefined, undefined));
+    jQuery('#family_crosses_list_select').html(lo.listSelect('family_crosses_list_select', ['crosses'], (window.SGN && window.SGN.i18n ? window.SGN.i18n.p("fieldbook.trait.client.select_list", "Select a list") : "Select a list"), undefined, undefined));
 
     jQuery("#add_family_members_submit").click(function(){
         var crosses_list_id = jQuery('#family_crosses_list_select').val();
         if (!crosses_list_id) {
-            alert ("Please select a list of crosses.");
+            alert ((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("cross.forms.please_select_a_list_of_crosses", "Please select a list of crosses.") : "Please select a list of crosses."));
             return;
         } else {
             list_validation = lo.legacy_validate(crosses_list_id, 'crosses', true);
             if (list_validation != 1) {
-                alert("The list did not pass validation. Cross Unique IDs in the list must be uniquenames with cross stock type in the database");
+                alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("cross.forms.the_list_did_not_pass_validation_cross_unique_ids", "The list did not pass validation. Cross Unique IDs in the list must be uniquenames with cross stock type in the database") : "The list did not pass validation. Cross Unique IDs in the list must be uniquenames with cross stock type in the database"));
                 return;
             }
         }
@@ -136,7 +136,7 @@ jQuery(document).ready(function(){
             },
             error: function(response){
                 jQuery('#working_modal').modal('hide');
-                alert('An error occurred adding new family members');
+                alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("cross.forms.an_error_occurred_adding_new_family_members", "An error occurred adding new family members") : "An error occurred adding new family members"));
             }
         });
     });

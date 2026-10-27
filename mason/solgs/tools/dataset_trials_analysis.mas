@@ -48,11 +48,11 @@ my $url = $c->req->path;
     
     <& /solgs/tools/analysis_select.mas &>
     
-    <input id="run_analysis" class="btn btn-success" type="button" value="Run Analysis" style="margin-top:20px" />
+    <input id="run_analysis" class="btn btn-success" type="button" value="<% $c->i18n->p("solgs.interface.run_analysis", "Run Analysis") |h %>" style="margin-top:20px" />
 </div>
 
 % } else {
-<div class="alert alert-info" style="margin-top:15px;">You must be logged in to use Analysis Tools.</div>
+<div class="alert alert-info" style="margin-top:15px;"><% $c->i18n->p("solgs.interface.you_must_be_logged_in_to_use_analysis_tools", "You must be logged in to use Analysis Tools.") |h %></div>
 % }
 
 <div id="dataset_trials_analysis_message" class="message"> </div>

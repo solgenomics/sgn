@@ -19,7 +19,7 @@ $show_link=>1
 </table>
 
 % if ($show_link) { 
-<button class="btn btn-info btn-sm" onclick=location.href="/search/organisms">Search other species...</button>
+<button class="btn btn-info btn-sm" onclick=location.href="/search/organisms"><% $c->i18n->p('global.popular_species.search', 'Search other species...') |h %></button>
 %}
 
 <!-- </div>

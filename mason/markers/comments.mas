@@ -30,9 +30,11 @@ $marker
 </%args>
 
 <%perl>
+use SGN::I18N ();
+
 my $comments=$marker->comments();
 if($comments) {
-  return blue_section_html('Comments', newlines_to_brs($comments));
+  return CXGN::Page::FormattingHelpers::info_section_html(title => SGN::I18N::translate($c->i18n, "marker.detail.comments", "Comments", undef, {entities => '<>&'}), anchor_title => "Comments", contents => newlines_to_brs($comments));
 }
 else {
   return'';

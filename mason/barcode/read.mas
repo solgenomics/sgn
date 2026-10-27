@@ -19,15 +19,15 @@
 
 <& /util/import_javascript.mas, classes => [ 'bootstrap_min.js', 'jquery', 'jsqr' ] &>
 
-<& /page/page_title.mas, title => 'Barcode Reader' &>
+<& /page/page_title.mas, title => HTML::Entities::encode_entities($c->i18n->p("barcode.mason.barcode_reader", 'Barcode Reader')) &>
 
 <div class="panel panel-default">
-    <div class="panel-heading">Scan a Barcode<span id="panel-heading-return"></span></div>
+    <div class="panel-heading"><% $c->i18n->p("barcode.mason.scan_a_barcode", "Scan a Barcode") |h %><span id="panel-heading-return"></span></div>
     <div class="panel-body" style="text-align: center">
-        <div id="loadingMessage">Starting...</div>
+        <div id="loadingMessage"><% $c->i18n->p("barcode.mason.starting", "Starting...") |h %></div>
         <canvas id="canvas" hidden></canvas>
     </div>
-    <div class="panel-footer">Scanning for Barcode...</div>
+    <div class="panel-footer"><% $c->i18n->p("barcode.mason.scanning_for_barcode", "Scanning for Barcode...") |h %></div>
 </div>
 
 <script type="text/javascript">
@@ -53,7 +53,7 @@ function parseArgs() {
     const urlSearchParams = new URLSearchParams(window.location.search);
     if ( urlSearchParams.has('return') ) {
         RETURN_URL = decodeURIComponent(urlSearchParams.get('return'));
-        jQuery("#panel-heading-return").html(" to return to <a href='" + RETURN_URL + "'>" + RETURN_URL + "</a>");
+        jQuery("#panel-heading-return").html((" " + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("barcode.mason.to_return_to", "to return to") : "to return to")).html() + " <a href='") + RETURN_URL + "'>" + RETURN_URL + "</a>");
     }
     RETURN_PARAM = urlSearchParams.get('param');
 }
@@ -70,7 +70,7 @@ function startReader() {
     var canvasElement = document.getElementById("canvas");
     var canvas = canvasElement.getContext("2d");
     var loadingMessage = document.getElementById("loadingMessage");
-    loadingMessage.innerHTML = "<strong>Unable to access video stream</strong><br />Please make sure you have a webcam enabled and permissions have been granted for this site</p>";
+    loadingMessage.innerHTML = ("<strong>" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("barcode.mason.unable_to_access_video_stream", "Unable to access video stream") : "Unable to access video stream")).html() + "</strong><br />" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("barcode.mason.please_make_sure_you_have_a_webcam_enabled_and_permissions", "Please make sure you have a webcam enabled and permissions have been granted for this site") : "Please make sure you have a webcam enabled and permissions have been granted for this site")).html() + "</p>");
 
     // Use facingMode: environment to attemt to get the front camera on phones
     navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } }).then(function(stream) {
@@ -81,7 +81,7 @@ function startReader() {
     });
 
     function tick() {
-        loadingMessage.innerText = "Loading video...";
+        loadingMessage.innerText = (window.SGN && window.SGN.i18n ? window.SGN.i18n.p("barcode.mason.loading_video", "Loading video...") : "Loading video...");
         if (video.readyState === video.HAVE_ENOUGH_DATA) {
             loadingMessage.hidden = true;
             canvasElement.hidden = false;
@@ -137,7 +137,7 @@ function stopReader() {
  * @param {string} data QR Code data
  */
 function processCode(data) {
-    jQuery(".panel-footer").html("<strong>Barcode Found:</strong> " + data);
+    jQuery(".panel-footer").html(("<strong>" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("barcode.mason.barcode_found", "Barcode Found:") : "Barcode Found:")).html() + "</strong> ") + data);
     if ( data && data !== "" && RETURN_URL && RETURN_URL !== "" && RETURN_PARAM && RETURN_PARAM !== "" ) {
         let q = RETURN_URL.includes('?') ? '&' : '?';
         window.location = RETURN_URL + q + RETURN_PARAM + '=' + encodeURIComponent(data);
@@ -146,3 +146,7 @@ function processCode(data) {
 }
 
 </script>
+
+<%once>
+use HTML::Entities ();
+</%once>

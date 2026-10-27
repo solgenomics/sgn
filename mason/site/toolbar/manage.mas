@@ -1,46 +1,46 @@
-<li class="dropdown"><a class="menu_click_dropdown dropdown-toggle" data-toggle="dropdown" href="/breeders/home">Manage</a>
+<li class="dropdown"><a class="menu_click_dropdown dropdown-toggle" data-toggle="dropdown" href="/breeders/home"><% $c->i18n->p('navigation.manage.menu', 'Manage') |h %></a>
 <!-- <li class="dropdown"><a class="dropdown-toggle" data-toggle="dropdown" href="#">Tools<span class="caret"></span></a> -->
   <ul class="dropdown-menu">
-    <li><a href="/breeders/manage_roles/">User Roles</a></li>
-    <li><a href="/breeders/manage_programs/">Breeding Programs</a></li>
-    <li><a href="/breeders/locations">Locations</a></li>
-    <li><a href="/tools/report/">Report Factory</a></li>
-    <li><a href="/breeders/meeting/">Decision Meetings</a></li>
+    <li><a href="/breeders/manage_roles/"><% $c->i18n->p('navigation.manage.roles', 'User Roles') |h %></a></li>
+    <li><a href="/breeders/manage_programs/"><% $c->i18n->p('navigation.manage.programs', 'Breeding Programs') |h %></a></li>
+    <li><a href="/breeders/locations"><% $c->i18n->p('navigation.manage.locations', 'Locations') |h %></a></li>
+    <li><a href="/tools/report/"><% $c->i18n->p('navigation.manage.reports', 'Report Factory') |h %></a></li>
+    <li><a href="/breeders/meeting/"><% $c->i18n->p('navigation.manage.meetings', 'Decision Meetings') |h %></a></li>
 
 
     <li role="separator" class="divider"></li>
-    <li><a href="/breeders/accessions/">Accessions</a></li>
-    <li><a href="/breeders/seedlots/">Seed Lots</a></li>
-    <li><a href="/breeders/crosses/">Crosses</a></li>
-    <li><a href="/breeders/propagations/">Propagations</a></li>
+    <li><a href="/breeders/accessions/"><% $c->i18n->p('navigation.manage.accessions', 'Accessions') |h %></a></li>
+    <li><a href="/breeders/seedlots/"><% $c->i18n->p('navigation.manage.seedlots', 'Seed Lots') |h %></a></li>
+    <li><a href="/breeders/crosses/"><% $c->i18n->p('navigation.manage.crosses', 'Crosses') |h %></a></li>
+    <li><a href="/breeders/propagations/"><% $c->i18n->p('navigation.manage.propagations', 'Propagations') |h %></a></li>
 
     <li role="separator" class="divider"></li>
-    <li><a href="/order/stocks/view">Order Stocks</a></li>
-    <li><a href="/breeders/activities">Tracking Activities</a></li>
-    <li><a href="/breeders/transformations/">Transformations</a></li>
+    <li><a href="/order/stocks/view"><% $c->i18n->p('navigation.manage.order_stocks', 'Order Stocks') |h %></a></li>
+    <li><a href="/breeders/activities"><% $c->i18n->p('navigation.manage.activities', 'Tracking Activities') |h %></a></li>
+    <li><a href="/breeders/transformations/"><% $c->i18n->p('navigation.manage.transformations', 'Transformations') |h %></a></li>
 
     <li role="separator" class="divider"></li>
-    <li><a href="/breeders/trials/">Field Trials</a></li>
-    <li><a href="/tools/trialallocation">Trial Allocation</a></li>
-    <li><a href="/fieldbook">Field Book App</a></li>
-    <li><a href="/breeders/phenotyping/">Phenotyping</a></li>
-    <li><a href="/barcode">Barcodes</a></li>
-    <li><a href="/tools/label_designer">Label Designer</a></li>
+    <li><a href="/breeders/trials/"><% $c->i18n->p('navigation.manage.field_trials', 'Field Trials') |h %></a></li>
+    <li><a href="/tools/trialallocation"><% $c->i18n->p('navigation.manage.trial_allocation', 'Trial Allocation') |h %></a></li>
+    <li><a href="/fieldbook"><% $c->i18n->p('navigation.manage.field_book', 'Field Book App') |h %></a></li>
+    <li><a href="/breeders/phenotyping/"><% $c->i18n->p('navigation.manage.phenotyping', 'Phenotyping') |h %></a></li>
+    <li><a href="/barcode"><% $c->i18n->p('navigation.manage.barcodes', 'Barcodes') |h %></a></li>
+    <li><a href="/tools/label_designer"><% $c->i18n->p('navigation.manage.labels', 'Label Designer') |h %></a></li>
 
     <li role="separator" class="divider"></li>
-    <li><a href="/breeders/genotyping_projects/">Genotyping Projects</a></li>
-    <li><a href="/breeders/genotyping/">Genotyping Plates</a></li>
-    <li><a href="/breeders/markers/">Marker Allele Lists</a></li>
+    <li><a href="/breeders/genotyping_projects/"><% $c->i18n->p('navigation.manage.genotyping_projects', 'Genotyping Projects') |h %></a></li>
+    <li><a href="/breeders/genotyping/"><% $c->i18n->p('navigation.manage.genotyping_plates', 'Genotyping Plates') |h %></a></li>
+    <li><a href="/breeders/markers/"><% $c->i18n->p('navigation.manage.markers', 'Marker Allele Lists') |h %></a></li>
 
     <li role="separator" class="divider"></li>
-    <li><a href="/breeders/download">Download</a></li>
-    <li><a href="/breeders/upload">Upload</a></li>
-    <li><a href="/breeders/identifier_generation">Identifier Generation</a></li>
+    <li><a href="/breeders/download"><% $c->i18n->p('navigation.manage.download', 'Download') |h %></a></li>
+    <li><a href="/breeders/upload"><% $c->i18n->p('navigation.manage.upload', 'Upload') |h %></a></li>
+    <li><a href="/breeders/identifier_generation"><% $c->i18n->p('navigation.manage.identifiers', 'Identifier Generation') |h %></a></li>
 <!--    <li><a href="/breeders/odk">ODK Data Collection</a></li>  -->
-    <li><a href="/breeders/file_share_dump">File Share</a></li>
+    <li><a href="/breeders/file_share_dump"><% $c->i18n->p('navigation.manage.file_share', 'File Share') |h %></a></li>
 
     <li role="seperator" class="divider"></li>
-    <li><a href="/breeders/nirs">NIRS</a></li>
-    <li><a href="/breeders/transcriptomics">Transcriptomics</a></li>
+    <li><a href="/breeders/nirs"><% $c->i18n->p('navigation.manage.nirs', 'NIRS') |h %></a></li>
+    <li><a href="/breeders/transcriptomics"><% $c->i18n->p('navigation.manage.transcriptomics', 'Transcriptomics') |h %></a></li>
   </ul>
 </li>

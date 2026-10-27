@@ -1,5 +1,8 @@
 package SGN::Controller::AJAX::LabelDesigner;
 
+use SGN::I18N ();
+use CatalystX::GlobalContext '$c';
+
 use Moose;
 use CXGN::Stock;
 use CXGN::List;
@@ -286,6 +289,7 @@ __PACKAGE__->config(
    sub retrieve_longest_fields :Path('/tools/label_designer/retrieve_longest_fields') {
         my $self = shift;
         my $c = shift;
+    my SGN::I18N $ui_retrieve_longest_fields_i18n = SGN::I18N::translate($c);
         my $schema = $c->dbic_schema('Bio::Chado::Schema');
         my $data_type = $c->req->param("data_type");
         my $source_id = $c->req->param("source_id");
@@ -296,7 +300,7 @@ __PACKAGE__->config(
         my ($trial_num, $design) = get_data($c, $schema, $data_type, $data_level, $source_id);
 
        if ($trial_num > 1) {
-           $c->stash->{rest} = { error => "The selected list contains plots, plants, subplots or tissues from more than one trial. This is not supported. Please select a different data source." };
+           $c->stash->{rest} = { error => (SGN::I18N::translate($ui_retrieve_longest_fields_i18n, 'barcode.server.the_selected_list_contains_plots_plants_subplots_or_tissues_from_mor', 'The selected list contains plots, plants, subplots or tissues from more than one trial. This is not supported. Please select a different data source.'))};
            return;
        }
 
@@ -386,6 +390,7 @@ __PACKAGE__->config(
   sub label_designer_download_POST : Args(0) {
        my $self = shift;
        my $c = shift;
+    my SGN::I18N $ui_label_designer_download_POST_i18n = SGN::I18N::translate($c);
        my $schema = $c->dbic_schema('Bio::Chado::Schema');
        my $download_type = $c->req->param("download_type");
        my $data_type = $c->req->param("data_type");
@@ -417,13 +422,13 @@ __PACKAGE__->config(
        my $label_params = $design_params->{'label_elements'};
 
        if ($trial_num > 1) {
-           $c->stash->{rest} = { error => "The selected list contains plots from more than one trial. This is not supported. Please select a different data source." };
+           $c->stash->{rest} = { error => (SGN::I18N::translate($ui_label_designer_download_POST_i18n, 'barcode.server.the_selected_list_contains_plots_from_more_than_one_trial_this_is_no', 'The selected list contains plots from more than one trial. This is not supported. Please select a different data source.'))};
            return;
        }
 
        my %design = %{$design};
        if (!$design) {
-           $c->stash->{rest} = { error => "$source_name is not linked to a valid field design. Can't create labels." };
+           $c->stash->{rest} = { error => (SGN::I18N::translate($ui_label_designer_download_POST_i18n, 'barcode.server.source_name_is_not_linked_to_a_valid_field_design_can_t_create_label', '%{source_name} is not linked to a valid field design. Can\'t create labels.', {source_name => ("" . ("$source_name"))}))};
            return;
        }
 
@@ -1054,6 +1059,7 @@ sub get_data {
 
 sub get_additional_list_data {
     my $c = shift;
+    my SGN::I18N $ui_get_additional_list_data_i18n = SGN::I18N::translate($c);
     my $list_id = shift;
     my $list_item_id = shift;
     my $list_item_name = shift;
@@ -1061,7 +1067,7 @@ sub get_additional_list_data {
     my $dbh = $schema->storage->dbh();
 
     if ( !$list_id || $list_id eq '' ) {
-        die "List ID not provided!";
+        die (SGN::I18N::translate($ui_get_additional_list_data_i18n, 'barcode.server.list_id_not_provided', 'List ID not provided!'));
     }
 
     my $list;
@@ -1073,7 +1079,7 @@ sub get_additional_list_data {
         $list_type_data_def = $ADDITIONAL_LIST_DATA{$list_type};
     };
     if ( $@ || !$list ) {
-        die "List not found!"
+        die (SGN::I18N::translate($ui_get_additional_list_data_i18n, 'barcode.server.list_not_found', 'List not found!'))
     }
 
     # No additional list data defined for list type...

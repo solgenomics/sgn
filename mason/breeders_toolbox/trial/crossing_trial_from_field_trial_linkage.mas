@@ -24,13 +24,13 @@ jQuery(document).ready(function () {
                 jQuery("#working_modal").modal("hide");
                 var html1 = '';
 % if ($trial_type eq 'field_trial'){
-                html1 = '<table class="table table-hover table-bordered"><thead><tr><th>Crossing Experiment(s) Done On This Field Trial</th></tr></thead><tbody>';
+                html1 = ("<table class=\"table table-hover table-bordered\"><thead><tr><th>" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("cross.pages.crossing_experiment_s_done_on_this_field_trial", "Crossing Experiment(s) Done On This Field Trial") : "Crossing Experiment(s) Done On This Field Trial")).html() + "</th></tr></thead><tbody>");
                 for (var i=0; i<response.crossing_trials_from_field_trial.length; i++){
                     html1 = html1 + '<tr><td><a href="/breeders/trial/'+response.crossing_trials_from_field_trial[i][0]+'">'+response.crossing_trials_from_field_trial[i][1]+'</a></td></tr>';
                 }
 % }
 % if ($trial_type eq 'crossing_trial'){
-                html1 = '<table class="table table-hover table-bordered"><thead><tr><th>Field Trial(s) That Are Part Of This Crossing Experiment</th></tr></thead><tbody>';
+                html1 = ("<table class=\"table table-hover table-bordered\"><thead><tr><th>" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("cross.pages.field_trial_s_that_are_part_of_this_crossing_experiment", "Field Trial(s) That Are Part Of This Crossing Experiment") : "Field Trial(s) That Are Part Of This Crossing Experiment")).html() + "</th></tr></thead><tbody>");
                 for (var i=0; i<response.field_trials_source_of_crossing_trial.length; i++){
                     html1 = html1 + '<tr><td><a href="/breeders/trial/'+response.field_trials_source_of_crossing_trial[i][0]+'">'+response.field_trials_source_of_crossing_trial[i][1]+'</a></td></tr>';
                 }
@@ -40,7 +40,7 @@ jQuery(document).ready(function () {
             },
             error: function(response){
                 jQuery("#working_modal").modal("hide");
-                alert("Error retrieving crossing experiment to field trial linkage.");
+                alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("cross.pages.error_retrieving_crossing_experiment_to_field_trial_linkage", "Error retrieving crossing experiment to field trial linkage.") : "Error retrieving crossing experiment to field trial linkage."));
             }
         });
     });

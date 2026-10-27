@@ -1,3 +1,7 @@
+<%once>
+use HTML::Entities ();
+</%once>
+
 
 <%args>
 </%args>
@@ -5,56 +9,56 @@
 <& /util/import_javascript.mas, classes => [ 'jquery', 'jquery.dataTables', 'jquery.dataTables-select-min' ] &>
 <& /util/import_css.mas, paths => ['/documents/inc/datatables/jquery.dataTables.css', '/documents/inc/datatables/custom_datatable_select_styles.css'] &>
 
-<& /page/page_title.mas, title => "Trait Search" &>
+<& /page/page_title.mas, title => HTML::Entities::encode_entities($c->i18n->p("phenotype.root.trait_search", "Trait Search")) &>
 
-    <&| /page/info_section.mas, title => 'Search', collapsible=>1, collapsed=>0 &>
+    <&| /page/info_section.mas, anchor_title => 'Search', title => HTML::Entities::encode_entities($c->i18n->p("global.search.advanced_search.search", 'Search')), collapsible=>1, collapsed=>0 &>
         <div id="trait_search_form" class="form-horizontal well">
             <div class="form-group form-group-sm">
-                <label class="col-sm-3 control-label">Select Ontology Name(s): </label>
+                <label class="col-sm-3 control-label"><% $c->i18n->p("phenotype.root.select_ontology_name_s", "Select Ontology Name(s):") |h %> </label>
                 <div class="col-sm-9" >
                     <div id="trait_search_ontology_select"></div>
                 </div>
             </div>
             <div class="form-group form-group-sm">
-                <label class="col-sm-3 control-label">Search Trait Name: </label>
+                <label class="col-sm-3 control-label"><% $c->i18n->p("phenotype.root.search_trait_name", "Search Trait Name:") |h %> </label>
                 <div class="col-sm-9" >
-                    <input type="text" class="form-control" id="trait_search_name" placeholder="Search any trait name or piece of name"/>
+                    <input type="text" class="form-control" id="trait_search_name" placeholder="<% $c->i18n->p("phenotype.root.search_any_trait_name_or_piece_of_name", "Search any trait name or piece of name") |h %>"/>
                 </div>
             </div>
             <div class="form-group form-group-sm">
-                <label class="col-sm-3 control-label">Search Trait ID: </label>
+                <label class="col-sm-3 control-label"><% $c->i18n->p("phenotype.root.search_trait_id", "Search Trait ID:") |h %> </label>
                 <div class="col-sm-9" >
-                    <input type="text" class="form-control" id="trait_search_id" placeholder="Search any trait ID or part of an ID"/>
+                    <input type="text" class="form-control" id="trait_search_id" placeholder="<% $c->i18n->p("phenotype.root.search_any_trait_id_or_part_of_an_id", "Search any trait ID or part of an ID") |h %>"/>
                 </div>
             </div>
             <div class="form-group form-group-sm">
-                <label class="col-sm-3 control-label">Search Trait Synonym: </label>
+                <label class="col-sm-3 control-label"><% $c->i18n->p("phenotype.root.search_trait_synonym", "Search Trait Synonym:") |h %> </label>
                 <div class="col-sm-9" >
-                    <input type="text" class="form-control" id="trait_search_synonym" placeholder="Search any trait synonym or part of a synonym"/>
+                    <input type="text" class="form-control" id="trait_search_synonym" placeholder="<% $c->i18n->p("phenotype.root.search_any_trait_synonym_or_part_of_a_synonym", "Search any trait synonym or part of a synonym") |h %>"/>
                 </div>
             </div>
             <div class="form-group form-group-sm">
-                <label class="col-sm-3 control-label">Search Definition: </label>
+                <label class="col-sm-3 control-label"><% $c->i18n->p("phenotype.root.search_definition", "Search Definition:") |h %> </label>
                 <div class="col-sm-9" >
-                    <input type="text" class="form-control" id="trait_search_definition" placeholder="Search any word or piece of definition"/>
+                    <input type="text" class="form-control" id="trait_search_definition" placeholder="<% $c->i18n->p("phenotype.root.search_any_word_or_piece_of_definition", "Search any word or piece of definition") |h %>"/>
                 </div>
             </div>
             <div class="form-group form-group-sm">
-                <label class="col-sm-3 control-label">Subset Traits: </label>
+                <label class="col-sm-3 control-label"><% $c->i18n->p("phenotype.root.subset_traits", "Subset Traits:") |h %> </label>
                 <div class="col-sm-9" >
                     <div id="trait_search_list_select">
-                        [LOADING...]
+                        <% $c->i18n->p("accession.files.loading_upper", "[LOADING...]") |h %>
                     </div>
                 </div>
             </div>
         </div>
 
         <center>
-            <button class="btn btn-primary" id="submit_trait_search" />Search</button>
+            <button class="btn btn-primary" id="submit_trait_search" /><% $c->i18n->p("global.search.advanced_search.search", "Search") |h %></button>
         </center>
     </&>
 
-    <&| /page/info_section.mas, title => 'Results', collapsible=>1, collapsed=>0 &>
+    <&| /page/info_section.mas, anchor_title => 'Results', title => HTML::Entities::encode_entities($c->i18n->p("global.gem_experiment_search.results", 'Results')), collapsible=>1, collapsed=>0 &>
 
         <div class="well well-sm">
             <div class="panel panel-default">
@@ -63,19 +67,19 @@
                     <table id="trait_search_results" width="100%" class="table table-hover table-striped">
                     <thead>
                       <tr>
-                        <th>Select</th>
-                        <th>Copy Name|ID</th>
-                        <th>Trait ID</th>
-                        <th>Trait Name</th>
-                        <th>Synonym</th>
-                        <th>Definition</th>
-                        <th>Trait&nbsp;Usage</th>
+                        <th><% $c->i18n->p("styleguide.demo.trial_table.select", "Select") |h %></th>
+                        <th><% $c->i18n->p("phenotype.root.copy_name_id", "Copy Name|ID") |h %></th>
+                        <th><% $c->i18n->p("phenotype.root.trait_id", "Trait ID") |h %></th>
+                        <th><% $c->i18n->p("phenotype.root.trait_name.4f1c8cb", "Trait Name") |h %></th>
+                        <th><% $c->i18n->p("lists.validation.synonym_column", "Synonym") |h %></th>
+                        <th><% $c->i18n->p("phenotype.root.definition.f21575b", "Definition") |h %></th>
+                        <th><% HTML::Entities::decode_entities($c->i18n->p("phenotype.root.extra.trait_nbsp_usage", "Trait&nbsp;Usage")) |h %></th>
                       </tr>
                     </thead>
                     </table>
 
-                    <button type="button" class="selectAll-dt">Select All</button>
-                    <button type="button" class="deselectAll-dt">Deselect All</button>
+                    <button type="button" class="selectAll-dt"><% $c->i18n->p("global.search_wizard.select_all", "Select All") |h %></button>
+                    <button type="button" class="deselectAll-dt"><% $c->i18n->p("phenotype.root.deselect_all", "Deselect All") |h %></button>
 
                 </div>
             </div>
@@ -83,9 +87,9 @@
             <div class="panel panel-default">
                 <div class="panel-body">
 
-                    <&| /page/info_section.mas, title => 'Copy Selected Results to a List', collapsible=>1, collapsed=>0, subtitle=>'<i>Copy the trait names currently selected in the search results table to a new or exisiting list</i>'&>
+                    <&| /page/info_section.mas, anchor_title => 'Copy Selected Results to a List', title => HTML::Entities::encode_entities($c->i18n->p("phenotype.root.copy_selected_results_to_a_list", 'Copy Selected Results to a List')), collapsible=>1, collapsed=>0, subtitle=>("<i>" . HTML::Entities::encode_entities($c->i18n->p("phenotype.root.copy_the_trait_names_currently_selected_in_the_search_results", "Copy the trait names currently selected in the search results table to a new or exisiting list")) . "</i>")&>
                     <br>
-                    <p><em><span id="trait_result_count">0</span> trait(s) selected.</em></p>
+                    <p><em><span id="trait_result_count">0</span> <% $c->i18n->p("phenotype.root.trait_s_selected", "trait(s) selected.") |h %></em></p>
                     <div style="text-align:right" id="traits_to_list_menu"></div>
                     <div id="trait_result_names" style="display: none;"></div>
                     </&>
@@ -97,17 +101,17 @@
 
 <& /breeders_toolbox/add_new_trait_dialogs.mas &>
 
-    <&| /page/info_section.mas, title => 'Help', collapsible=>1, collapsed=>0 &>
+    <&| /page/info_section.mas, anchor_title => 'Help', title => HTML::Entities::encode_entities($c->i18n->p("global.search.datasets.help", 'Help')), collapsible=>1, collapsed=>0 &>
         <div class="well well-sm">
             <div class="panel panel-default">
                 <div class="panel-body">
-                    <h2>Is the trait you are looking for not here?</h2>
+                    <h2><% $c->i18n->p("phenotype.root.is_the_trait_you_are_looking_for_not_here", "Is the trait you are looking for not here?") |h %></h2>
 
 %  if ($c->config->{allow_observation_variable_submission_interface}) {
-                        <button class="btn btn-primary" name="add_new_observation_variable_button">Add A New Observation Variable To the Database</button>
+                        <button class="btn btn-primary" name="add_new_observation_variable_button"><% $c->i18n->p("phenotype.root.add_a_new_observation_variable_to_the_database", "Add A New Observation Variable To the Database") |h %></button>
 %  } else {
-                        <p>Please submit your new trait <a href="http://submit.rtbbase.org/">using the trait submission form</a>.</p>
-                        <p>To speed up addition of your trait into the database please contact us using the <a href="/contact/form">Contact Form</a>.</p>
+                        <p><% $c->i18n->p("phenotype.root.please_submit_your_new_trait", "Please submit your new trait") |h %> <a href="http://submit.rtbbase.org/"><% $c->i18n->p("phenotype.root.using_the_trait_submission_form", "using the trait submission form") |h %></a>.</p>
+                        <p><% $c->i18n->p("phenotype.root.to_speed_up_addition_of_your_trait_into_the_database", "To speed up addition of your trait into the database please contact us using the") |h %> <a href="/contact/form"><% $c->i18n->p("phenotype.root.contact_form", "Contact Form") |h %></a>.</p>
 %  }
                 </div>
             </div>
@@ -125,7 +129,7 @@ jQuery(document).ready(function () {
     jQuery('[data-toggle="tooltip"]').tooltip();
 
     var lo = new CXGN.List();
-    jQuery('#trait_search_list_select').html(lo.listSelect('trait_search_list_select', [ 'traits' ], 'Leave blank to see all traits', undefined, undefined));
+    jQuery('#trait_search_list_select').html(lo.listSelect('trait_search_list_select', [ 'traits' ], (window.SGN && window.SGN.i18n ? window.SGN.i18n.p("phenotype.root.leave_blank_to_see_all_traits", "Leave blank to see all traits") : 'Leave blank to see all traits'), undefined, undefined));
 
     jQuery(document).on('change', '#trait_search_list_select', function(){
         _draw_trait_search_result_table();

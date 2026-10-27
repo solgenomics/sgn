@@ -1,3 +1,7 @@
+<%once>
+use HTML::Entities ();
+</%once>
+
 <!--
 This Mason can be imported on any page for saving analyses, the results of analyses, and the model used in an analysis.
 
@@ -173,32 +177,32 @@ The trait names will be post-composed with the analysis_statistical_ontology_ter
     <div class="modal-dialog modal-xl" role="document">
         <div class="modal-content">
             <div class="modal-header">
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                <h4 class="modal-title" id="genericStoreAnalysisDialog">Save Analysis Results</h4>
+                <button type="button" class="close" data-dismiss="modal" aria-label="<% $c->i18n->p("global.close", "Close") |h %>"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="genericStoreAnalysisDialog"><% $c->i18n->p("analysis.interface.save_analysis_results", "Save Analysis Results") |h %></h4>
             </div>
             <div class="modal-body">
                 <div class="container-fluid">
                     <&| /util/workflow.mas, id=> "generic_save_analysis_workflow" &>
-                        <&| /util/workflow.mas:step, title=> "Intro" &>
-                            <& /page/page_title.mas, title=>"This workflow will guide you through storing a new analysis and the results, and saving model weights" &>
-                            <p>An analysis is stored independently; however, it maintains associations to the results for the accessions and traits involved. In the case where a model is being trained for predictions e.g. genomic selection or CNN image predictions, those trained model weights can be saved.</p>
+                        <&| /util/workflow.mas:step, title=> HTML::Entities::encode_entities($c->i18n->p("cross.ui.intro", "Intro")) &>
+                            <& /page/page_title.mas, title=>HTML::Entities::encode_entities($c->i18n->p("analysis.interface.this_workflow_will_guide_you_through_storing_a_new_analysis", "This workflow will guide you through storing a new analysis and the results, and saving model weights")) &>
+                            <p><% $c->i18n->p("analysis.interface.an_analysis_is_stored_independently_however_it_maintains_associations_to", "An analysis is stored independently; however, it maintains associations to the results for the accessions and traits involved. In the case where a model is being trained for predictions e.g. genomic selection or CNN image predictions, those trained model weights can be saved.") |h %></p>
                             <br/><br/>
                             <center>
-                            <button class="btn btn-primary" onclick="Workflow.complete(this); return false;">Go to Next Step</button>
+                            <button class="btn btn-primary" onclick="Workflow.complete(this); return false;"><% $c->i18n->p("global.workflow.next_step", "Go to Next Step") |h %></button>
                             </center>
                         </&>
-                        <&| /util/workflow.mas:step, title=> "Analysis Info" &>
-                            <& /page/page_title.mas, title=>"Save analysis results" &>
+                        <&| /util/workflow.mas:step, title=> HTML::Entities::encode_entities($c->i18n->p("analysis.interface.analysis_info", "Analysis Info")) &>
+                            <& /page/page_title.mas, title=>HTML::Entities::encode_entities($c->i18n->p("analysis.interface.save_analysis_results_73b6e1", "Save analysis results")) &>
 
-                            <p>This is an optional step and is only available when there are actual results to save. Please move on to saving the model weights if there are no results to save.</p>
+                            <p><% $c->i18n->p("analysis.interface.this_is_an_optional_step_and_is_only_available_when", "This is an optional step and is only available when there are actual results to save. Please move on to saving the model weights if there are no results to save.") |h %></p>
 
                             <form class="form-horizontal">
                                 <div class="form-group form-group-sm">
-                                    <label class="col-sm-3 control-label">Do you want to save the analysis results?: </label>
+                                    <label class="col-sm-3 control-label"><% $c->i18n->p("analysis.interface.do_you_want_to_save_the_analysis_results", "Do you want to save the analysis results?:") |h %> </label>
                                     <div class="col-sm-9">
                                         <select class="form-control" id="generic_save_analysis_analysis_to_save" name="generic_save_analysis_analysis_to_save" >
-                                            <option value="no">No</option>
-                                            <option value="yes">Yes</option>
+                                            <option value="no"><% $c->i18n->p("global.search_wizard.no", "No") |h %></option>
+                                            <option value="yes"><% $c->i18n->p("global.search_wizard.yes", "Yes") |h %></option>
                                         </select>
                                     </div>
                                 </div>
@@ -206,31 +210,31 @@ The trait names will be post-composed with the analysis_statistical_ontology_ter
                             <hr>
 
                             <center>
-                            <button class="btn btn-primary" id="generic_save_analysis_next">Go to Next Step</button>
+                            <button class="btn btn-primary" id="generic_save_analysis_next"><% $c->i18n->p("global.workflow.next_step", "Go to Next Step") |h %></button>
                             </center>
                             <br/><br/>
 
                             <form class="form-horizontal" id="generic_save_analysis_analysis_form" style="display:none">
                                 <div class="form-group form-group-sm">
-                                    <label class="col-sm-3 control-label">Analysis Name (must be unique): </label>
+                                    <label class="col-sm-3 control-label"><% $c->i18n->p("analysis.interface.analysis_name_must_be_unique", "Analysis Name (must be unique):") |h %> </label>
                                     <div class="col-sm-9">
                                         <input class="form-control" id="generic_save_analysis_analysis_name" name="generic_save_analysis_analysis_name" type="text" />
                                     </div>
                                 </div>
                                 <div class="form-group form-group-sm">
-                                    <label class="col-sm-3 control-label">Analysis Description: </label>
+                                    <label class="col-sm-3 control-label"><% $c->i18n->p("analysis.interface.analysis_description_857d74", "Analysis Description:") |h %> </label>
                                     <div class="col-sm-9">
                                         <input class="form-control" id="generic_save_analysis_analysis_description" name="generic_save_analysis_analysis_description" type="text" />
                                     </div>
                                 </div>
                                 <div class="form-group form-group-sm">
-                                    <label class="col-sm-3 control-label">Breeding Program: </label>
+                                    <label class="col-sm-3 control-label"><% $c->i18n->p("cross.ui.breeding_program.2c9b17e", "Breeding Program:") |h %> </label>
                                     <div class="col-sm-9">
                                         <div id="generic_save_analysis_breeding_program_div"></div>
                                     </div>
                                 </div>
                                 <div class="form-group form-group-sm">
-                                    <label class="col-sm-3 control-label">Year: </label>
+                                    <label class="col-sm-3 control-label"><% $c->i18n->p("cross.ui.year.c9410fe", "Year:") |h %> </label>
                                     <div class="col-sm-9">
                                         <div id="generic_save_analysis_analysis_year_div"></div>
                                     </div>
@@ -238,81 +242,81 @@ The trait names will be post-composed with the analysis_statistical_ontology_ter
                                 <hr>
 
                                 <div class="form-group form-group-sm">
-                                    <label class="col-sm-3 control-label">Protocol: </label>
+                                    <label class="col-sm-3 control-label"><% $c->i18n->p("genotype.marker.protocol", "Protocol:") |h %> </label>
                                     <div class="col-sm-9">
                                         <input class="form-control" id="generic_save_analysis_protocol" name="generic_save_analysis_protocol" type="text" placeholder="e.g. lmer(grain_yield ~ replicate + 1|germplasmName)" />
                                     </div>
                                 </div>
                                 <div class="form-group form-group-sm">
-                                    <label class="col-sm-3 control-label">Dataset ID: </label>
+                                    <label class="col-sm-3 control-label"><% $c->i18n->p("analysis.interface.dataset_id", "Dataset ID:") |h %> </label>
                                     <div class="col-sm-9">
                                         <input class="form-control" id="generic_save_analysis_dataset_id" name="generic_save_analysis_dataset_id" type="number" disabled/>
                                     </div>
                                 </div>
                                  <div class="form-group form-group-sm">
-                                    <label class="col-sm-3 control-label">Trial ID: </label>
+                                    <label class="col-sm-3 control-label"><% $c->i18n->p("analysis.interface.trial_id", "Trial ID:") |h %> </label>
                                     <div class="col-sm-9">
                                         <input class="form-control" id="generic_save_analysis_trial_id" name="generic_save_analysis_trial_id" type="number" disabled/>
                                     </div>
                                 </div>
                                 <div class="form-group form-group-sm">
-                                    <label class="col-sm-3 control-label">Accession Names: </label>
+                                    <label class="col-sm-3 control-label"><% $c->i18n->p("analysis.interface.accession_names", "Accession Names:") |h %> </label>
                                     <div class="col-sm-9">
                                         <input class="form-control" id="generic_save_analysis_accession_names" name="generic_save_analysis_accession_names" type="text" disabled/>
                                     </div>
                                 </div>
                                 <div class="form-group form-group-sm">
-                                    <label class="col-sm-3 control-label">Trait Names: </label>
+                                    <label class="col-sm-3 control-label"><% $c->i18n->p("analysis.interface.trait_names", "Trait Names:") |h %> </label>
                                     <div class="col-sm-9">
                                         <input class="form-control" id="generic_save_analysis_trait_names" name="generic_save_analysis_trait_names" type="text" disabled/>
                                     </div>
                                 </div>
                                 <div class="form-group form-group-sm">
-                                    <label class="col-sm-3 control-label">Statistical Ontology Term: </label>
+                                    <label class="col-sm-3 control-label"><% $c->i18n->p("analysis.interface.statistical_ontology_term", "Statistical Ontology Term:") |h %> </label>
                                     <div class="col-sm-9">
                                         <input class="form-control" id="generic_save_analysis_statistical_ontology_term" name="generic_save_analysis_statistical_ontology_term" type="text" disabled/>
                                     </div>
                                 </div>
                                 <div class="form-group form-group-sm">
-                                    <label class="col-sm-3 control-label">Analysis Design (If left blank, design will be created using above accession names): </label>
+                                    <label class="col-sm-3 control-label"><% $c->i18n->p("analysis.interface.analysis_design_if_left_blank_design_will_be_created_using", "Analysis Design (If left blank, design will be created using above accession names):") |h %> </label>
                                     <div class="col-sm-9">
                                         <input class="form-control" id="generic_save_analysis_design" name="generic_save_analysis_design" type="text" disabled/>
                                     </div>
                                 </div>
                                 <div class="form-group form-group-sm">
-                                    <label class="col-sm-3 control-label">Analysis Result Values: </label>
+                                    <label class="col-sm-3 control-label"><% $c->i18n->p("analysis.interface.analysis_result_values", "Analysis Result Values:") |h %> </label>
                                     <div class="col-sm-9">
                                         <input class="form-control" id="generic_save_analysis_result_values" name="generic_save_analysis_result_values" type="text" disabled/>
                                     </div>
                                 </div>
                                 <div class="form-group form-group-sm">
-                                    <label class="col-sm-3 control-label">Analysis Result Values Type: </label>
+                                    <label class="col-sm-3 control-label"><% $c->i18n->p("analysis.interface.analysis_result_values_type", "Analysis Result Values Type:") |h %> </label>
                                     <div class="col-sm-9">
                                         <input class="form-control" id="generic_save_analysis_result_values_type" name="generic_save_analysis_result_values_type" type="text" disabled/>
                                     </div>
                                 </div>
                                 <div class="form-group form-group-sm">
-                                    <label class="col-sm-3 control-label">Analysis Result Summary Values: </label>
+                                    <label class="col-sm-3 control-label"><% $c->i18n->p("analysis.interface.analysis_result_summary_values", "Analysis Result Summary Values:") |h %> </label>
                                     <div class="col-sm-9">
                                         <input class="form-control" id="generic_save_analysis_result_summary_values" name="generic_save_analysis_result_summary_values" type="text" disabled/>
                                     </div>
                                 </div>
                                 <div class="form-group form-group-sm">
-                                    <label class="col-sm-3 control-label">Compose Trait Info With Time Term(optional): </label>
+                                    <label class="col-sm-3 control-label"><% $c->i18n->p("analysis.interface.compose_trait_info_with_time_term_optional", "Compose Trait Info With Time Term(optional):") |h %> </label>
                                     <div class="col-sm-9">
                                         <input class="form-control" id="generic_save_analysis_result_compose_trait_info" name="generic_save_analysis_result_compose_trait_info" type="text" disabled/>
                                     </div>
                                 </div>
                             </form>
                         </&>
-                        <&| /util/workflow.mas:step, title=> "Model Info" &>
-                            <& /page/page_title.mas, title=>"Save model information" &>
+                        <&| /util/workflow.mas:step, title=> HTML::Entities::encode_entities($c->i18n->p("analysis.interface.model_info", "Model Info")) &>
+                            <& /page/page_title.mas, title=>HTML::Entities::encode_entities($c->i18n->p("analysis.interface.save_model_information", "Save model information")) &>
 
-                            <p>This step may be pre-populated if you are using a model that is already saved in the database. If there is no input enabled, move to the next step.</p>
+                            <p><% $c->i18n->p("analysis.interface.this_step_may_be_pre_populated_if_you_are_using", "This step may be pre-populated if you are using a model that is already saved in the database. If there is no input enabled, move to the next step.") |h %></p>
 
                             <div class="form-horizontal" id="generic_save_analysis_model_select_form">
                                 <div class="form-group form-group-sm">
-                                    <label class="col-sm-3 control-label">Select a Model (If Not A New Model): </label>
+                                    <label class="col-sm-3 control-label"><% $c->i18n->p("analysis.interface.select_a_model_if_not_a_new_model", "Select a Model (If Not A New Model):") |h %> </label>
                                     <div class="col-sm-9">
                                         <div id="save_new_analysis_model_select_div"></div>
                                     </div>
@@ -323,95 +327,95 @@ The trait names will be post-composed with the analysis_statistical_ontology_ter
 
                             <form class="form-horizontal" id="generic_save_analysis_model_form">
                                 <div class="form-group form-group-sm" id="generic_save_analysis_model_name_div">
-                                    <label class="col-sm-3 control-label">New Model Name (must be unique): </label>
+                                    <label class="col-sm-3 control-label"><% $c->i18n->p("analysis.interface.new_model_name_must_be_unique", "New Model Name (must be unique):") |h %> </label>
                                     <div class="col-sm-9">
                                         <input class="form-control" id="generic_save_analysis_model_name" name="generic_save_analysis_model_name" type="text" />
                                     </div>
                                 </div>
                                 <div class="form-group form-group-sm" id="generic_save_analysis_model_description_div">
-                                    <label class="col-sm-3 control-label">New Model Description: </label>
+                                    <label class="col-sm-3 control-label"><% $c->i18n->p("analysis.interface.new_model_description", "New Model Description:") |h %> </label>
                                     <div class="col-sm-9">
                                         <input class="form-control" id="generic_save_analysis_model_description" name="generic_save_analysis_model_description" type="text" />
                                     </div>
                                 </div>
                                 <div class="form-group form-group-sm" id="generic_save_analysis_model_is_public_div">
-                                    <label class="col-sm-3 control-label">New Model Is Public: </label>
+                                    <label class="col-sm-3 control-label"><% $c->i18n->p("analysis.interface.new_model_is_public", "New Model Is Public:") |h %> </label>
                                     <div class="col-sm-9">
                                         <select class="form-control" id="generic_save_analysis_model_is_public" name="generic_save_analysis_model_is_public" >
-                                            <option value="yes">Yes</option>
-                                            <option value="no">No</option>
+                                            <option value="yes"><% $c->i18n->p("global.search_wizard.yes", "Yes") |h %></option>
+                                            <option value="no"><% $c->i18n->p("global.search_wizard.no", "No") |h %></option>
                                         </select>
                                     </div>
                                 </div>
 
                                 <hr>
                                 <center>
-                                <button class="btn btn-primary" id="generic_save_analysis_submit_button" onclick="return false;">Save Analysis Results And/Or Model</button>
+                                <button class="btn btn-primary" id="generic_save_analysis_submit_button" onclick="return false;"><% $c->i18n->p("analysis.interface.save_analysis_results_and_or_model", "Save Analysis Results And/Or Model") |h %></button>
                                 </center>
                                 <br/><br/>
 
                                 <div class="form-group form-group-sm">
-                                    <label class="col-sm-3 control-label">Model ID: </label>
+                                    <label class="col-sm-3 control-label"><% $c->i18n->p("analysis.interface.model_id", "Model ID:") |h %> </label>
                                     <div class="col-sm-9">
                                         <input class="form-control" id="generic_save_analysis_model_id" name="generic_save_analysis_model_id" type="text" disabled/>
                                     </div>
                                 </div>
                                 <div class="form-group form-group-sm">
-                                    <label class="col-sm-3 control-label">Model Language: </label>
+                                    <label class="col-sm-3 control-label"><% $c->i18n->p("analysis.interface.model_language", "Model Language:") |h %> </label>
                                     <div class="col-sm-9">
                                         <input class="form-control" id="generic_save_analysis_model_language" name="generic_save_analysis_model_language" type="text" disabled/>
                                     </div>
                                 </div>
                                 <div class="form-group form-group-sm">
-                                    <label class="col-sm-3 control-label">Model Type: </label>
+                                    <label class="col-sm-3 control-label"><% $c->i18n->p("analysis.interface.model_type_726f29", "Model Type:") |h %> </label>
                                     <div class="col-sm-9">
                                         <input class="form-control" id="generic_save_analysis_model_type" name="generic_save_analysis_model_type" type="text" disabled/>
                                     </div>
                                 </div>
                                 <div class="form-group form-group-sm">
-                                    <label class="col-sm-3 control-label">Model Properties: </label>
+                                    <label class="col-sm-3 control-label"><% $c->i18n->p("analysis.interface.model_properties_2f4cf1", "Model Properties:") |h %> </label>
                                     <div class="col-sm-9">
                                         <input class="form-control" id="generic_save_analysis_model_properties" name="generic_save_analysis_model_properties" type="text" disabled/>
                                     </div>
                                 </div>
                                 <div class="form-group form-group-sm">
-                                    <label class="col-sm-3 control-label">Application Name: </label>
+                                    <label class="col-sm-3 control-label"><% $c->i18n->p("analysis.interface.application_name", "Application Name:") |h %> </label>
                                     <div class="col-sm-9">
                                         <input class="form-control" id="generic_save_analysis_model_application_name" name="generic_save_analysis_model_application_name" type="text" disabled/>
                                     </div>
                                 </div>
                                 <div class="form-group form-group-sm">
-                                    <label class="col-sm-3 control-label">Application Version: </label>
+                                    <label class="col-sm-3 control-label"><% $c->i18n->p("analysis.interface.application_version", "Application Version:") |h %> </label>
                                     <div class="col-sm-9">
                                         <input class="form-control" id="generic_save_analysis_model_application_version" name="generic_save_analysis_model_application_version" type="text" disabled/>
                                     </div>
                                 </div>
                                 <div class="form-group form-group-sm">
-                                    <label class="col-sm-3 control-label">Model File To Archive: </label>
+                                    <label class="col-sm-3 control-label"><% $c->i18n->p("analysis.interface.model_file_to_archive", "Model File To Archive:") |h %> </label>
                                     <div class="col-sm-9">
                                         <input class="form-control" id="generic_save_analysis_model_file" name="generic_save_analysis_model_file" type="text" disabled/>
                                     </div>
                                 </div>
                                 <div class="form-group form-group-sm">
-                                    <label class="col-sm-3 control-label">Archive Model File Type: </label>
+                                    <label class="col-sm-3 control-label"><% $c->i18n->p("analysis.interface.archive_model_file_type", "Archive Model File Type:") |h %> </label>
                                     <div class="col-sm-9">
                                         <input class="form-control" id="generic_save_analysis_model_archived_model_file_type" name="generic_save_analysis_model_archive_model_file_type" type="text" disabled/>
                                     </div>
                                 </div>
                                 <div class="form-group form-group-sm">
-                                    <label class="col-sm-3 control-label">Training Data File To Archive: </label>
+                                    <label class="col-sm-3 control-label"><% $c->i18n->p("analysis.interface.training_data_file_to_archive", "Training Data File To Archive:") |h %> </label>
                                     <div class="col-sm-9">
                                         <input class="form-control" id="generic_save_analysis_model_training_data_file" name="generic_save_analysis_model_training_data_file" type="text" disabled/>
                                     </div>
                                 </div>
                                 <div class="form-group form-group-sm">
-                                    <label class="col-sm-3 control-label">Archive Training Data File Type: </label>
+                                    <label class="col-sm-3 control-label"><% $c->i18n->p("analysis.interface.archive_training_data_file_type", "Archive Training Data File Type:") |h %> </label>
                                     <div class="col-sm-9">
                                         <input class="form-control" id="generic_save_analysis_model_archived_training_data_file_type" name="generic_save_analysis_model_archived_training_data_file_type" type="text" disabled/>
                                     </div>
                                 </div>
                                 <div class="form-group form-group-sm">
-                                    <label class="col-sm-3 control-label">Auxiliary Files to Archive: </label>
+                                    <label class="col-sm-3 control-label"><% $c->i18n->p("analysis.interface.auxiliary_files_to_archive", "Auxiliary Files to Archive:") |h %> </label>
                                     <div class="col-sm-9">
                                         <input class="form-control" id="generic_save_analysis_model_auxiliary_files" name="generic_save_analysis_model_auxiliary_files" type="text" disabled/>
                                     </div>
@@ -419,8 +423,8 @@ The trait names will be post-composed with the analysis_statistical_ontology_ter
                             </form>
 
                         </&>
-                        <&| /util/workflow.mas:step, title=> "Saved" &>
-                            <& /page/page_title.mas, title=>"Saved successfully" &>
+                        <&| /util/workflow.mas:step, title=> HTML::Entities::encode_entities($c->i18n->p("decision.js.saved", "Saved")) &>
+                            <& /page/page_title.mas, title=>HTML::Entities::encode_entities($c->i18n->p("analysis.interface.saved_successfully", "Saved successfully")) &>
 
                             <div id="generic_save_analysis_response_div"></div>
                         </&>
@@ -428,7 +432,7 @@ The trait names will be post-composed with the analysis_statistical_ontology_ter
                 </div>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-default" data-dismiss="modal"><% $c->i18n->p("global.close", "Close") |h %></button>
             </div>
         </div>
     </div>
@@ -438,32 +442,32 @@ The trait names will be post-composed with the analysis_statistical_ontology_ter
     <div class="modal-dialog modal-xl" role="document">
         <div class="modal-content">
             <div class="modal-header">
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                <h4 class="modal-title" id="genericStoreAnalysisTemplateDialog">Save Analysis Results</h4>
+                <button type="button" class="close" data-dismiss="modal" aria-label="<% $c->i18n->p("global.close", "Close") |h %>"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="genericStoreAnalysisTemplateDialog"><% $c->i18n->p("analysis.interface.save_analysis_results", "Save Analysis Results") |h %></h4>
             </div>
             <div class="modal-body">
                 <div class="container-fluid">
                     <form class="form-horizontal" id="generic_save_analysis_template_analysis_form">
                         <div class="form-group form-group-sm">
-                            <label class="col-sm-3 control-label">Analysis Name Template (must be unique): </label>
+                            <label class="col-sm-3 control-label"><% $c->i18n->p("analysis.interface.analysis_name_template_must_be_unique", "Analysis Name Template (must be unique):") |h %> </label>
                             <div class="col-sm-9">
                                 <input class="form-control" id="generic_save_analysis_template_analysis_name" name="generic_save_analysis_template_analysis_name" type="text" />
                             </div>
                         </div>
                         <div class="form-group form-group-sm">
-                            <label class="col-sm-3 control-label">Analysis Description: </label>
+                            <label class="col-sm-3 control-label"><% $c->i18n->p("analysis.interface.analysis_description_857d74", "Analysis Description:") |h %> </label>
                             <div class="col-sm-9">
                                 <input class="form-control" id="generic_save_analysis_template_analysis_description" name="generic_save_analysis_template_analysis_description" type="text" />
                             </div>
                         </div>
                         <div class="form-group form-group-sm">
-                            <label class="col-sm-3 control-label">Breeding Program: </label>
+                            <label class="col-sm-3 control-label"><% $c->i18n->p("cross.ui.breeding_program.2c9b17e", "Breeding Program:") |h %> </label>
                             <div class="col-sm-9">
                                 <div id="generic_save_analysis_template_breeding_program_div"></div>
                             </div>
                         </div>
                         <div class="form-group form-group-sm">
-                            <label class="col-sm-3 control-label">Year: </label>
+                            <label class="col-sm-3 control-label"><% $c->i18n->p("cross.ui.year.c9410fe", "Year:") |h %> </label>
                             <div class="col-sm-9">
                                 <div id="generic_save_analysis_template_analysis_year_div"></div>
                             </div>
@@ -474,13 +478,13 @@ The trait names will be post-composed with the analysis_statistical_ontology_ter
 
                     <hr>
                     <center>
-                    <button class="btn btn-primary" id="generic_save_analysis_template_submit_button" onclick="return false;">Save Analysis Results And Model</button>
+                    <button class="btn btn-primary" id="generic_save_analysis_template_submit_button" onclick="return false;"><% $c->i18n->p("analysis.interface.save_analysis_results_and_model", "Save Analysis Results And Model") |h %></button>
                     </center>
                     <br/><br/>
                 </div>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-default" data-dismiss="modal"><% $c->i18n->p("global.close", "Close") |h %></button>
             </div>
         </div>
     </div>
@@ -556,88 +560,88 @@ jQuery(document).ready(function() {
 
         if (generic_save_analysis_analysis_to_save_boolean == 'yes') {
             if (generic_save_analysis_analysis_name == '') {
-                alert('Please give an analysis name');
+                alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("analysis.interface.please_give_an_analysis_name", "Please give an analysis name") : 'Please give an analysis name'));
                 return false;
             }
             if (generic_save_analysis_analysis_description == '') {
-                alert('Please give an analysis description');
+                alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("analysis.interface.please_give_an_analysis_description", "Please give an analysis description") : 'Please give an analysis description'));
                 return false;
             }
             if (generic_save_analysis_analysis_year == '') {
-                alert('Please give an analysis year');
+                alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("analysis.interface.please_give_an_analysis_year", "Please give an analysis year") : 'Please give an analysis year'));
                 return false;
             }
             if (generic_save_analysis_breeding_program_id == '') {
-                alert('Please give a breeding program');
+                alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("trial.upload.ui.program", "Please give a breeding program") : 'Please give a breeding program'));
                 return false;
             }
             if (generic_save_analysis_protocol == '') {
-                alert('Please give an analysis protocol e.g. lmer(grain_yield ~ replicate + 1|germplasmName)');
+                alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("analysis.interface.please_give_an_analysis_protocol_e_g_lmer_grain_yield", "Please give an analysis protocol e.g. lmer(grain_yield ~ replicate + 1|germplasmName)") : 'Please give an analysis protocol e.g. lmer(grain_yield ~ replicate + 1|germplasmName)'));
                 return false;
             }
             if (generic_save_analysis_accession_names == '') {
-                alert('Please give analysis accession names');
+                alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("analysis.interface.please_give_analysis_accession_names", "Please give analysis accession names") : 'Please give analysis accession names'));
                 return false;
             }
             if (generic_save_analysis_trait_names == '') {
-                alert('Please give analysis trait names');
+                alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("analysis.interface.please_give_analysis_trait_names", "Please give analysis trait names") : 'Please give analysis trait names'));
                 return false;
             }
             if (generic_save_analysis_statistical_ontology_term == '') {
-                alert('Please give a statistical ontology term');
+                alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("analysis.interface.please_give_a_statistical_ontology_term", "Please give a statistical ontology term") : 'Please give a statistical ontology term'));
                 return false;
             }
             if (generic_save_analysis_result_values == '') {
-                alert('Please give analysis result values');
+                alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("analysis.interface.please_give_analysis_result_values", "Please give analysis result values") : 'Please give analysis result values'));
                 return false;
             }
             if (generic_save_analysis_result_values_type == '') {
-                alert('Please give analysis result values type');
+                alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("analysis.interface.please_give_analysis_result_values_type", "Please give analysis result values type") : 'Please give analysis result values type'));
                 return false;
             }
             if (generic_save_analysis_result_summary_values == '') {
-                alert('Please give analysis result summary info');
+                alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("analysis.interface.please_give_analysis_result_summary_info", "Please give analysis result summary info") : 'Please give analysis result summary info'));
                 return false;
             }
         }
         if ( (generic_save_analysis_model_id != '' || generic_save_analysis_select_model_id != '') && generic_save_analysis_model_name != '') {
-            alert('If Model ID is given, then you should not give a new model name!');
+            alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("analysis.interface.if_model_id_is_given_then_you_should_not_give", "If Model ID is given, then you should not give a new model name!") : 'If Model ID is given, then you should not give a new model name!'));
             return false;
         }
         if ( (generic_save_analysis_model_id != '' || generic_save_analysis_select_model_id != '') && generic_save_analysis_model_description != '') {
-            alert('If Model ID is given, then you should not give a new model description!');
+            alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("analysis.interface.if_model_id_is_given_then_you_should_not_give_87fb7a", "If Model ID is given, then you should not give a new model description!") : 'If Model ID is given, then you should not give a new model description!'));
             return false;
         }
         if ( (generic_save_analysis_model_id == '' && generic_save_analysis_select_model_id == '') && generic_save_analysis_model_name == '') {
-            alert('Please give a model name');
+            alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("analysis.interface.please_give_a_model_name", "Please give a model name") : 'Please give a model name'));
             return false;
         }
         if ( (generic_save_analysis_model_id == '' && generic_save_analysis_select_model_id == '') && generic_save_analysis_model_description == '') {
-            alert('Please give a model description');
+            alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("analysis.interface.please_give_a_model_description", "Please give a model description") : 'Please give a model description'));
             return false;
         }
         if ( (generic_save_analysis_model_id == '' && generic_save_analysis_select_model_id == '') && generic_save_analysis_model_is_public == '') {
-            alert('Please tell if a model is public');
+            alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("analysis.interface.please_tell_if_a_model_is_public", "Please tell if a model is public") : 'Please tell if a model is public'));
             return false;
         }
         if ( (generic_save_analysis_model_id == '' && generic_save_analysis_select_model_id == '') && generic_save_analysis_model_language == '') {
-            alert('Please give a model language');
+            alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("analysis.interface.please_give_a_model_language", "Please give a model language") : 'Please give a model language'));
             return false;
         }
         if ( (generic_save_analysis_model_id == '' && generic_save_analysis_select_model_id == '') && generic_save_analysis_model_type == '') {
-            alert('Please give a model type');
+            alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("analysis.interface.please_give_a_model_type", "Please give a model type") : 'Please give a model type'));
             return false;
         }
         if ( (generic_save_analysis_model_id == '' && generic_save_analysis_select_model_id == '') && generic_save_analysis_model_properties == '') {
-            alert('Please give a model properties JSON object');
+            alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("analysis.interface.please_give_a_model_properties_json_object", "Please give a model properties JSON object") : 'Please give a model properties JSON object'));
             return false;
         }
         if ( (generic_save_analysis_model_id == '' && generic_save_analysis_select_model_id == '') && generic_save_analysis_model_application_name == '') {
-            alert('Please give a model application name');
+            alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("analysis.interface.please_give_a_model_application_name", "Please give a model application name") : 'Please give a model application name'));
             return false;
         }
         if ( (generic_save_analysis_model_id == '' && generic_save_analysis_select_model_id == '') && generic_save_analysis_model_application_version == '') {
-            alert('Please give a model application version');
+            alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("analysis.interface.please_give_a_model_application_version", "Please give a model application version") : 'Please give a model application version'));
             return false;
         }
 
@@ -691,13 +695,13 @@ jQuery(document).ready(function() {
                     alert(response.error);
                 }
                 if (response.success) {
-                    alert('Analysis and/or model saved!');
+                    alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("analysis.interface.analysis_and_or_model_saved", "Analysis and/or model saved!") : 'Analysis and/or model saved!'));
                     var html = '<center>';
                     if (response.analysis_id) {
-                        html = html + '<p>Go to saved <a href="/analyses/'+response.analysis_id+'" target=_blank >analysis</a></p>';
+                        html = html + ("<p>" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("analysis.interface.go_to_saved", "Go to saved") : "Go to saved")).html() + " <a href=\"/analyses/")+response.analysis_id+("\" target=_blank >" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("analysis.interface.analysis_f44e85", "analysis") : "analysis")).html() + "</a></p>");
                     }
                     if (response.model_id) {
-                        html = html + '<p>Go to saved <a href="/analyses_model/'+response.model_id+'" target=_blank >model</a></p>';
+                        html = html + ("<p>" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("analysis.interface.go_to_saved", "Go to saved") : "Go to saved")).html() + " <a href=\"/analyses_model/")+response.model_id+("\" target=_blank >" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("analysis.interface.model_9372c4", "model") : "model")).html() + "</a></p>");
                     }
                     html = html + '</center>';
                     jQuery('#generic_save_analysis_response_div').html(html);
@@ -708,7 +712,7 @@ jQuery(document).ready(function() {
             },
             error: function(response){
                 jQuery('#working_modal').modal('hide');
-                alert('Error saving analysis!');
+                alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("analysis.interface.error_saving_analysis", "Error saving analysis!") : 'Error saving analysis!'));
             }
         });
     });

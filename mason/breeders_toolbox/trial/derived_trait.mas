@@ -8,10 +8,10 @@ $trial_id
     <div class="row">
         <div class="col-sm-6">
             <div class="well">
-                <h4>Derive Trait Phenotypes</h4>
+                <h4><% $c->i18n->p("phenotype.derive_trait_phenotypes", "Derive Trait Phenotypes") |h %></h4>
                 <div class="row">
                     <div class="col-sm-4">
-                        <a id="compute_derived_trait_link"><button class="button" type="button" id="derived_button" value="Create_Trait" >Derive Trait</button></a>
+                        <a id="compute_derived_trait_link"><button class="button" type="button" id="derived_button" value="Create_Trait" ><% $c->i18n->p("phenotype.derive_trait", "Derive Trait") |h %></button></a>
                     </div>
                     <div class="col-sm-8">
                         <p><b>P <sub>Calculated</sub></b> = <i>f</i> ( <b>P <sub>Trait1</sub></b> , <b>P <sub>Trait2</sub></b> )</p>
@@ -21,10 +21,10 @@ $trial_id
         </div>
         <div class="col-sm-6">
             <div class="well">
-                <h4>Calculate Plot Phenotypes from Plant Phenotypes</h4>
+                <h4><% $c->i18n->p("phenotype.calculate_plot_phenotypes_from_plant_phenotypes", "Calculate Plot Phenotypes from Plant Phenotypes") |h %></h4>
                 <div class="row">
                     <div class="col-sm-4">
-                        <a id="generate_plot_pheno_link"><button class="button" type="button" >Calculate</button></a>
+                        <a id="generate_plot_pheno_link"><button class="button" type="button" ><% $c->i18n->p("phenotype.calculate", "Calculate") |h %></button></a>
                     </div>
                     <div class="col-sm-8">
                         <p><b>P <sub>Plot</sub></b> = <i>average</i> ( <b>P <sub>Plants</sub></b> )</p>
@@ -34,19 +34,19 @@ $trial_id
         </div>
     </div>
 
-<div id="compute_derived_trait_dialog" title="Compute Derived Traits" style="display:none;">
+<div id="compute_derived_trait_dialog" title="<% $c->i18n->p("phenotype.compute_derived_traits", "Compute Derived Traits") |h %>" style="display:none;">
   	<div id="trait_list_dc" name="trait_list">
-    		<label id="trait_list_label_dc" for="trait_list_list_select" style="display: inline-block; width: 300px;">Please select trait to compute: <br />
+                <label id="trait_list_label_dc" for="trait_list_list_select" style="display: inline-block; width: 300px;"><% $c->i18n->p("phenotype.please_select_trait_to_compute", "Please select trait to compute:") |h %> <br />
   			<select id="derived_trait_select"></select>
     		</label> 
     			
   	</div>
 </div>
 
-<div id="derived_trait_saved_dialog_message" title="Computation of Derived Traits" style="display:none;">
+<div id="derived_trait_saved_dialog_message" title="<% $c->i18n->p("phenotype.computation_of_derived_traits", "Computation of Derived Traits") |h %>" style="display:none;">
   	<p>
     		<span class="ui-icon ui-icon-circle-check" style="float: left; margin: 0 7px 50px 0;"></span>
-    		The trait was created and saved successfully
+                <% $c->i18n->p("phenotype.the_trait_was_created_and_saved_successfully", "The trait was created and saved successfully") |h %>
   	</p>
 </div>
 
@@ -54,8 +54,8 @@ $trial_id
   <div class="modal-dialog modal-lg" role="document">
     <div class="modal-content">
       <div class="modal-header">
-        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-        <h4 class="modal-title" id="generatePlotPhenoDialog">Generate Plot Phenotypes from Plant Phenotypes</h4>
+        <button type="button" class="close" data-dismiss="modal" aria-label="<% $c->i18n->p("global.dataset_publish.close", "Close") |h %>"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title" id="generatePlotPhenoDialog"><% $c->i18n->p("phenotype.generate_plot_phenotypes_from_plant_phenotypes", "Generate Plot Phenotypes from Plant Phenotypes") |h %></h4>
       </div>
       <div class="modal-body">
         <div class="container-fluid">
@@ -65,40 +65,40 @@ $trial_id
                     <form class="form-horizontal" role="form" method="post" id="generate_plot_pheno_dialog_form" name="generate_plot_pheno_dialog_form">
 
                         <div class="form-group">
-                            <label class="col-sm-3 control-label">Trait: </label>
+                            <label class="col-sm-3 control-label"><% $c->i18n->p("trial.comparison.no_list.trait", "Trait:") |h %> </label>
                             <div class="col-sm-9" >
                                 <div id="generate_plot_pheno_trait_select_dropdown">
-                                    [No Plants Phenotyped]
+                                    <% $c->i18n->p("phenotype.no_plants_phenotyped", "[No Plants Phenotyped]") |h %>
                                     <!--ajax populated -->
                                 </div>
                             </div>
                         </div>
                         <hr>
                         <div class="form-group">
-                            <label class="col-sm-3 control-label">Method: </label>
+                            <label class="col-sm-3 control-label"><% $c->i18n->p("phenotype.method.61d47b9", "Method:") |h %> </label>
                             <div class="col-sm-9" >
                                 <select id="generate_plot_pheno_method_select" class="form-control">
-                                    <option value="arithmetic_mean">Arithmetic Mean</option>
-                                    <option value="mode">Mode</option>
-                                    <option value="maximum">Maximum</option>
-                                    <option value="minimum">Minimum</option>
-                                    <option value="median">Median</option>
+                                    <option value="arithmetic_mean"><% $c->i18n->p("phenotype.arithmetic_mean", "Arithmetic Mean") |h %></option>
+                                    <option value="mode"><% $c->i18n->p("phenotype.mode", "Mode") |h %></option>
+                                    <option value="maximum"><% $c->i18n->p("accession.population_cgi.max", "Maximum") |h %></option>
+                                    <option value="minimum"><% $c->i18n->p("accession.population_cgi.min", "Minimum") |h %></option>
+                                    <option value="median"><% $c->i18n->p("lists_datasets.pages.median", "Median") |h %></option>
                                 </select>
                             </div>
                         </div>
                         <div class="form-group">
-                            <label class="col-sm-3 control-label">Rounding: </label>
+                            <label class="col-sm-3 control-label"><% $c->i18n->p("phenotype.rounding", "Rounding:") |h %> </label>
                             <div class="col-sm-9" >
                                 <select id="generate_plot_pheno_rounding_select" class="form-control">
-                                    <option value="no_rounding">No rounding</option>
-                                    <option value="round">Round to nearest integer</option>
-                                    <option value="round_up">Always round up to nearest integer</option>
-                                    <option value="round_down">Always round down to nearest integer</option>
+                                    <option value="no_rounding"><% $c->i18n->p("phenotype.no_rounding", "No rounding") |h %></option>
+                                    <option value="round"><% $c->i18n->p("phenotype.round_to_nearest_integer", "Round to nearest integer") |h %></option>
+                                    <option value="round_up"><% $c->i18n->p("phenotype.always_round_up_to_nearest_integer", "Always round up to nearest integer") |h %></option>
+                                    <option value="round_down"><% $c->i18n->p("phenotype.always_round_down_to_nearest_integer", "Always round down to nearest integer") |h %></option>
                                 </select>
                             </div>
                         </div>
                         <div class="form-group">
-                            <label class="col-sm-3 control-label">Overwrite Previous Plot Values for this Trait: </label>
+                            <label class="col-sm-3 control-label"><% $c->i18n->p("phenotype.overwrite_previous_plot_values_for_this_trait", "Overwrite Previous Plot Values for this Trait:") |h %> </label>
                             <div class="col-sm-9" >
                                 <input type='checkbox' id="generate_plot_pheno_overwrite" name="generate_plot_pheno_overwrite"/>
                             </div>
@@ -117,9 +117,9 @@ $trial_id
         </div>
       </div>
       <div class="modal-footer">
-        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-        <button type="button" class="btn btn-primary" name="generate_plot_pheno_calc_submit" id="generate_plot_pheno_calc_submit" title="Calculate">View Calculation (Does Not Save)</button>
-        <button disabled type="button" class="btn btn-primary" name="generate_plot_pheno_save" id="generate_plot_pheno_save" title="">Save</button>
+        <button type="button" class="btn btn-default" data-dismiss="modal"><% $c->i18n->p("global.dataset_publish.close", "Close") |h %></button>
+        <button type="button" class="btn btn-primary" name="generate_plot_pheno_calc_submit" id="generate_plot_pheno_calc_submit" title="<% $c->i18n->p("phenotype.calculate", "Calculate") |h %>"><% $c->i18n->p("phenotype.view_calculation_does_not_save", "View Calculation (Does Not Save)") |h %></button>
+        <button disabled type="button" class="btn btn-primary" name="generate_plot_pheno_save" id="generate_plot_pheno_save" title=""><% $c->i18n->p("account.quick_create.save", "Save") |h %></button>
       </div>
     </div>
   </div>
@@ -145,7 +145,7 @@ jQuery(document).ready(function () {
                 jQuery("#working_modal").modal("hide");
                 if (response.traits_assayed[0][0]) {
                     var traits_assayed_html = "<select class='form-control' id='generate_plot_pheno_trait_select' onchange='generate_plot_pheno_trait_change(this.value)'>";
-                    traits_assayed_html = traits_assayed_html + '<option value="all">All</option>';
+                    traits_assayed_html = traits_assayed_html + ("<option value=\"all\">" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("global.search_wizard.all_levels", "All") : "All")).html() + "</option>");
                     for (i=0; i<response.traits_assayed[0].length; i++) {
                         traits_assayed_html = traits_assayed_html + "<option value="+ encodeURI(response.traits_assayed[0][i][1]) + " >" + response.traits_assayed[0][i][1] + "</option>";
                     }
@@ -153,7 +153,7 @@ jQuery(document).ready(function () {
 
                     jQuery("#generate_plot_pheno_trait_select_dropdown").html(traits_assayed_html);
 
-                    jQuery('#generate_plot_pheno_trait_select_definition').html("<a href='/cvterm/"+response.traits_assayed[0][0][0]+"/view'>Definition</a>");
+                    jQuery('#generate_plot_pheno_trait_select_definition').html("<a href='/cvterm/"+response.traits_assayed[0][0][0]+("/view'>" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("phenotype.definition", "Definition") : "Definition")).html() + "</a>"));
                 }
             }
         });
@@ -177,7 +177,7 @@ jQuery(document).ready(function () {
             },
             success: function(response){
                 //console.log(response);
-                var html = '<hr><h5>Trait: '+response.trait_name+'</h5><h5>Method: '+response.method+'</h5><h5>Rounding: '+response.rounding+'</h5><table class="table table-hover"><thead><tr><th>Plot</th><th>Plant Values</th><th>Calculation Output</th><th>Value to Store</th><th>Notes</th></tr></thead><tbody>';
+                var html = ("<hr><h5>" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("trial.comparison.no_list.trait", "Trait:") : "Trait:")).html() + " ")+response.trait_name+("</h5><h5>" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("phenotype.method.61d47b9", "Method:") : "Method:")).html() + " ")+response.method+("</h5><h5>" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("phenotype.rounding", "Rounding:") : "Rounding:")).html() + " ")+response.rounding+("</h5><table class=\"table table-hover\"><thead><tr><th>" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("lists_datasets.download.plot", "Plot") : "Plot")).html() + "</th><th>" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("phenotype.plant_values", "Plant Values") : "Plant Values")).html() + "</th><th>" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("phenotype.calculation_output", "Calculation Output") : "Calculation Output")).html() + "</th><th>" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("phenotype.value_to_store", "Value to Store") : "Value to Store")).html() + "</th><th>" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("cross.ui.notes", "Notes") : "Notes")).html() + "</th></tr></thead><tbody>");
                 for (var k=0; k<response.info.length; k++) {
                     for (var i=0; i<response.info[k].length; i++) {
                         html = html + '<tr><td>'+response.info[k][i].plot_name+'</td><td>'+response.info[k][i].plant_values+'</td><td>'+response.info[k][i].output+'</td><td>'+response.info[k][i].value_to_store+'</td>';
@@ -229,7 +229,7 @@ jQuery(document).ready(function () {
 });
 
 function generate_plot_pheno_trait_change(trait_id) {
-    jQuery('#generate_plot_pheno_trait_select_definition').html("<a href='/cvterm/"+trait_id+"/view'>Definition</a>");
+    jQuery('#generate_plot_pheno_trait_select_definition').html("<a href='/cvterm/"+trait_id+("/view'>" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("phenotype.definition", "Definition") : "Definition")).html() + "</a>"));
 }
 
 </script>

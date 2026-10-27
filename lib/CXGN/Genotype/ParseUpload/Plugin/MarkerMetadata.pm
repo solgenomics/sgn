@@ -1,6 +1,7 @@
 package CXGN::Genotype::ParseUpload::Plugin::MarkerMetadata;
 
 use Moose::Role;
+use SGN::I18N ();
 use CXGN::File::Parse;
 use CXGN::Onto;
 use Data::Dumper;
@@ -11,6 +12,7 @@ has 'parsed_dbs' => (is => 'rw', isa => 'HashRef');
 
 sub _validate_with_plugin {
     my $self = shift;
+    my $i18n = SGN::I18N::translate($self);
     my $protocol_id = $self->get_nd_protocol_id();
     my $filename = $self->get_filename();
     my $schema = $self->get_chado_schema();
@@ -63,7 +65,7 @@ sub _validate_with_plugin {
     # Make sure marker names are valid
     foreach my $marker (@markers) {
         if ( !exists $valid_markers->{$marker} ) {
-            push @error_messages, "The marker '$marker' in your file does not match any of the markers in the selected protocol.";
+            push @error_messages, SGN::I18N::translate($i18n, "genotype.protocol.metadata.marker_unknown", "The marker '%{marker}' in your file does not match any of the markers in the selected protocol.", {marker => ("" . $marker)});
         }
     }
 
@@ -82,7 +84,7 @@ sub _validate_with_plugin {
         push @existing_protocol_locus_ids, $locus_id;
     }
     if ( scalar @existing_protocol_locus_names > 0 ) {
-        push @warning_messages, "The following markers already exist in the Locus table and are associated with this protocol: " . join(', ', sort @existing_protocol_locus_names) . ".  You can replace the existing metadata with the information in your file by selecting the 'ignore warnings' option.";
+        push @warning_messages, SGN::I18N::translate($i18n, "genotype.protocol.metadata.markers_existing", "The following markers already exist in the Locus table and are associated with this protocol: %{names}.  You can replace the existing metadata with the information in your file by selecting the 'ignore warnings' option.", {names => join(', ', sort @existing_protocol_locus_names)});
     }
     $parsed->{existing_locus_names} = \@existing_protocol_locus_names;
     $parsed->{existing_locus_ids} = \@existing_protocol_locus_ids;
@@ -105,7 +107,7 @@ sub _validate_with_plugin {
         push @existing_global_locus_names, $locus_name;
     }
     if ( scalar @existing_global_locus_names > 0 ) {
-        push @error_messages, "The following markers already exist in the Locus table outside of this protocol: " . join(', ', sort @existing_global_locus_names) . ". These locus names cannot be used.";
+        push @error_messages, SGN::I18N::translate($i18n, "genotype.protocol.metadata.markers_conflict", "The following markers already exist in the Locus table outside of this protocol: %{names}. These locus names cannot be used.", {names => join(', ', sort @existing_global_locus_names)});
     }
 
     # Return a warning for allele names that already exist and are associated with this protocol
@@ -120,7 +122,7 @@ sub _validate_with_plugin {
         push @existing_protocol_allele_ids, $allele_id;
     }
     if ( scalar @existing_protocol_allele_names > 0 ) {
-        push @warning_messages, "The following alleles already exist in the Allele table and are associated with this protocol: " . join(', ', sort @existing_protocol_allele_names) . ".  You can replace the existing metadata with the information in your file by selecting the 'ignore warnings' option.";
+        push @warning_messages, SGN::I18N::translate($i18n, "genotype.protocol.metadata.alleles_existing", "The following alleles already exist in the Allele table and are associated with this protocol: %{names}.  You can replace the existing metadata with the information in your file by selecting the 'ignore warnings' option.", {names => join(', ', sort @existing_protocol_allele_names)});
     }
     $parsed->{existing_allele_names} = \@existing_protocol_allele_names;
     $parsed->{existing_allele_ids} = \@existing_protocol_allele_ids;
@@ -143,7 +145,7 @@ sub _validate_with_plugin {
         push @existing_global_allele_names, $allele_name;
     }
     if ( scalar @existing_global_allele_names > 0 ) {
-        push @error_messages, "The following alleles already exist in the Allele table outside of this protocol: " . join(', ', sort @existing_global_allele_names) . ". These names cannot be used.";
+        push @error_messages, SGN::I18N::translate($i18n, "genotype.protocol.metadata.alleles_conflict", "The following alleles already exist in the Allele table outside of this protocol: %{names}. These names cannot be used.", {names => join(', ', sort @existing_global_allele_names)});
     }
 
     # Parse each row to get unique marker and allele counts
@@ -174,15 +176,15 @@ sub _validate_with_plugin {
         }
     }
     if ( scalar @duplicated_markers > 0 ) {
-        push @error_messages, "The following markers were included in your file more than once: " . join(', ', sort @duplicated_markers);
+        push @error_messages, SGN::I18N::translate($i18n, "genotype.protocol.metadata.markers_duplicate", "The following markers were included in your file more than once: %{names}", {names => join(', ', sort @duplicated_markers)});
     }
     if ( scalar @duplicated_alleles > 0 ) {
-        push @error_messages, "The following alleles were included in your file more than once: " . join(', ', sort @duplicated_alleles);
+        push @error_messages, SGN::I18N::translate($i18n, "genotype.protocol.metadata.alleles_duplicate", "The following alleles were included in your file more than once: %{names}", {names => join(', ', sort @duplicated_alleles)});
     }
 
     # Ensure that the marker trait ontology root is set in the config
     if ( ! $self->{marker_metadata_trait_ontology_root} ) {
-        push @error_messages, "The marker metadata trait ontology is not set in the server config.";
+        push @error_messages, SGN::I18N::translate($i18n, "genotype.protocol.metadata.ontology_unconfigured", "The marker metadata trait ontology is not set in the server config.");
     }
 
     # Check the trait categories against the ontology terms
@@ -215,7 +217,7 @@ sub _validate_with_plugin {
 
         # Return an error if there are missing categories
         if ( scalar(@missing_categories) > 0 ) {
-            push @error_messages, "The following trait categories are not in the marker metadata trait ontology: " . join(', ', @missing_categories);
+            push @error_messages, SGN::I18N::translate($i18n, "genotype.protocol.metadata.categories_missing", "The following trait categories are not in the marker metadata trait ontology: %{names}", {names => join(', ', @missing_categories)});
         }
 
         # Cache the parsed ontology terms
@@ -251,7 +253,7 @@ sub _validate_with_plugin {
         }
     }
     if ( scalar @missing_dbs > 0 ) {
-        push @error_messages, "The following external reference databases do not exist: " . join(', ', @missing_dbs);
+        push @error_messages, SGN::I18N::translate($i18n, "genotype.protocol.metadata.databases_missing", "The following external reference databases do not exist: %{names}", {names => join(', ', @missing_dbs)});
     }
 
     # return any error messages

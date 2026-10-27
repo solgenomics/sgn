@@ -25,6 +25,17 @@ use Try::Tiny;
 use SGN::Model::Cvterm;
 use CXGN::BrAPI::v2::ExternalReferences;
 
+# Optional request/job-owned presentation; never controls storage or process locale.
+has 'i18n' => (
+    is => 'ro',
+    isa => 'Maybe[Object]',
+    trigger => sub {
+        my ($self, $translator) = @_;
+        die 'Presentation translator must implement p and np'
+            if defined($translator) && (!$translator->can('p') || !$translator->can('np'));
+    },
+);
+
 has 'bcs_schema' => (
 	isa => 'Bio::Chado::Schema',
 	is => 'rw',
@@ -128,6 +139,7 @@ sub BUILD {
 
 sub store_location {
 	my $self = shift;
+    my $locationStoreI18n = $self->i18n;
     my $schema = $self->bcs_schema();
     my $error;
 
@@ -147,29 +159,29 @@ sub store_location {
     # Validate properties
 
     if (!$nd_geolocation_id && !$name) {
-        return { error => "Cannot add a new location with an undefined name. A location name is required" };
+        return { error => ($locationStoreI18n ? $locationStoreI18n->p('locations.model.required_name', 'Cannot add a new location with an undefined name. A location name is required') : "Cannot add a new location with an undefined name. A location name is required") };
     }
     elsif (!$self->_is_valid_name($name, $nd_geolocation_id)) { # can't add a new location with name that already exists or update an existing location with a name already used by a different location
-        return { error => "The location - $name - already exists. Please choose another name, or use the existing location" };
+        return { error => ($locationStoreI18n ? $locationStoreI18n->p('locations.model.duplicate_name', 'The location - %{name} - already exists. Please choose another name, or use the existing location', {name => $name}) : "The location - $name - already exists. Please choose another name, or use the existing location") };
     }
 
     if (!$self->_is_valid_abbreviation($abbreviation, $nd_geolocation_id)) {
-       return { error => "Abbreviation $abbreviation already exists in the database. Please choose another abbreviation" };
+       return { error => ($locationStoreI18n ? $locationStoreI18n->p('locations.model.duplicate_abbreviation', 'Abbreviation %{abbreviation} already exists in the database. Please choose another abbreviation', {abbreviation => $abbreviation}) : "Abbreviation $abbreviation already exists in the database. Please choose another abbreviation") };
     }
 
     if ($country_name && $country_name =~ m/[0-9]/) {
-       return { error => "Country name $country_name is not a valid ISO standard country name." };
+       return { error => ($locationStoreI18n ? $locationStoreI18n->p('locations.model.invalid_country_name', 'Country name %{country} is not a valid ISO standard country name.', {country => $country_name}) : "Country name $country_name is not a valid ISO standard country name.") };
     }
 
     if ($country_code && (($country_code !~ m/^[^a-z]*$/) || (length($country_code) != 3 ))) {
-       return { error => "Country code $country_code is not a valid ISO Alpha-3 code." };
+       return { error => ($locationStoreI18n ? $locationStoreI18n->p('locations.model.invalid_country_code', 'Country code %{code} is not a valid ISO Alpha-3 code.', {code => $country_code}) : "Country code $country_code is not a valid ISO Alpha-3 code.") };
     }
 
     my @breeding_program_ids;
     foreach my $breeding_program (split ("&", $breeding_programs)) {
         $breeding_program = _trim($breeding_program);
         if ($breeding_program && !$self->_is_valid_program($breeding_program)) { # can't use a breeding program that doesn't exist
-    	    return { error => "Breeding program $breeding_program doesn't exist in the database." };
+            return { error => ($locationStoreI18n ? $locationStoreI18n->p('locations.model.invalid_program', 'Breeding program %{program} doesn\'t exist in the database.', {program => $breeding_program}) : "Breeding program $breeding_program doesn't exist in the database.") };
         } else {
             push @breeding_program_ids, $self->bcs_schema->resultset("Project::Project")->search({ name => $breeding_program })->first->project_id();
         }
@@ -177,19 +189,19 @@ sub store_location {
     my $breeding_program_ids = join '&', @breeding_program_ids;
 
     if ($location_type && !$self->_is_valid_type($location_type)) {
-        return { error => "Location type $location_type must be must be one of the following: Town, Farm, Field, Greenhouse, Screenhouse, Lab, Storage, Other." };
+        return { error => ($locationStoreI18n ? $locationStoreI18n->p('locations.model.invalid_type', 'Location type %{type} must be must be one of the following: %{types}.', {type => $location_type, types => 'Town, Farm, Field, Greenhouse, Screenhouse, Lab, Storage, Other'}) : "Location type $location_type must be must be one of the following: Town, Farm, Field, Greenhouse, Screenhouse, Lab, Storage, Other.") };
     }
 
     if ( ($latitude && $latitude !~ /^-?[0-9.]+$/) || ($latitude && $latitude < -90) || ($latitude && $latitude > 90)) {
-	    return { error => "Latitude (in degrees) must be a number between 90 and -90." };
+	    return { error => ($locationStoreI18n ? $locationStoreI18n->p('locations.model.invalid_latitude', 'Latitude (in degrees) must be a number between %{upper} and %{lower}.', {upper => 90, lower => -90}) : "Latitude (in degrees) must be a number between 90 and -90.") };
     }
 
     if ( ($longitude && $longitude !~ /^-?[0-9.]+$/) || ($longitude && $longitude < -180) || ($longitude && $longitude > 180)) {
-	    return { error => "Longitude (in degrees) must be a number between 180 and -180." };
+	    return { error => ($locationStoreI18n ? $locationStoreI18n->p('locations.model.invalid_longitude', 'Longitude (in degrees) must be a number between %{upper} and %{lower}.', {upper => 180, lower => -180}) : "Longitude (in degrees) must be a number between 180 and -180.") };
     }
 
     if ( ($altitude && $altitude !~ /^-?[0-9.]+$/) || ($altitude && $altitude < -418) || ($altitude && $altitude > 8848) ) {
-        return { error => "Altitude (in meters) must be a number between -418 (Dead Sea) and 8,848 (Mt. Everest)." };
+        return { error => ($locationStoreI18n ? $locationStoreI18n->p('locations.model.invalid_altitude', 'Altitude (in meters) must be a number between %{lower} (Dead Sea) and %{upper} (Mt. Everest).', {lower => -418, upper => '8,848'}) : "Altitude (in meters) must be a number between -418 (Dead Sea) and 8,848 (Mt. Everest).") };
     }
 
     # Add new location if no id supplied
@@ -259,7 +271,7 @@ sub store_location {
             return { error => $transaction_error };
         } else {
             print STDERR "Location $name added successfully\n";
-            return { success => "Location $name added successfully\n", nd_geolocation_id=>$self->location()->nd_geolocation_id() };
+            return { success => ($locationStoreI18n ? $locationStoreI18n->p('locations.model.added', "Location %{name} added successfully\n", {name => $name}) : "Location $name added successfully\n"), nd_geolocation_id=>$self->location()->nd_geolocation_id() };
         }
     }
     # Edit existing location if id supplied
@@ -288,13 +300,14 @@ sub store_location {
             return { error => $error };
         } else {
             print STDERR "Location $name was successfully updated\n";
-            return { success => "Location $name was successfully updated\n", nd_geolocation_id=>$self->location()->nd_geolocation_id() };
+            return { success => ($locationStoreI18n ? $locationStoreI18n->p('locations.model.updated', "Location %{name} was successfully updated\n", {name => $name}) : "Location $name was successfully updated\n"), nd_geolocation_id=>$self->location()->nd_geolocation_id() };
         }
     }
 }
 
 sub delete_location {
     my $self = shift;
+    my $locationDeleteI18n = $self->i18n;
     my $row = $self->bcs_schema->resultset("NaturalDiversity::NdGeolocation")->find({ nd_geolocation_id=> $self->nd_geolocation_id() });
     my $name = $row->description();
     my @experiments = $row->nd_experiments;
@@ -303,7 +316,7 @@ sub delete_location {
     if (@experiments) {
         my $error = "Location $name cannot be deleted because there are ".scalar @experiments." measurements associated with it from at least one trial.\n";
         print STDERR $error;
-        return { error => $error };
+        return { error => ($locationDeleteI18n ? $locationDeleteI18n->np('locations.model.delete_measurements', "Location %{name} cannot be deleted because there is %{count} measurement associated with it from at least one trial.\n", "Location %{name} cannot be deleted because there are %{count} measurements associated with it from at least one trial.\n", scalar(@experiments), {name => $name, count => scalar(@experiments)}) : $error) };
     }
 	else {
 	    $row->delete();
@@ -312,7 +325,7 @@ sub delete_location {
         while (my $r = $projectprop_rows->next()){ # remove any links to deleted location in projectprop
             $r->delete();
         }
-        return { success => "Location $name was successfully deleted.\n" };
+        return { success => ($locationDeleteI18n ? $locationDeleteI18n->p('locations.model.deleted', "Location %{name} was successfully deleted.\n", {name => $name}) : "Location $name was successfully deleted.\n") };
 	}
 }
 

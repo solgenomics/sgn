@@ -47,8 +47,8 @@ createGebvPhenoDownloadLinks: function () {
 
     var gebvPhenoRegPlotDivId = this.gebvPhenoRegPlotDivId.replace(/#/, '');
     var regDownloadBtn = "download_" + gebvPhenoRegPlotDivId;
-    var regPlotLink = "<a href='#'  onclick='event.preventDefault();' id='" + regDownloadBtn + "'> Regression plot</a>";
-    var downloadLinks = `Download:  ${regPlotLink}`;
+    var regPlotLink = "<a href='#'  onclick='event.preventDefault();' id='" + regDownloadBtn + "'>" + (window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.regression_plot_link", " Regression plot") : " Regression plot") + "</a>";
+    var downloadLinks = `${(window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.download_prefix", "Download:  ") : "Download:  ")}${regPlotLink}`;
 
     return downloadLinks;
 
@@ -68,7 +68,7 @@ jQuery(document).ready( function() {
                     'y_data': res.gebv_data,
                     'y_label': 'GEBVs',
                     'x_data': res.pheno_deviations,
-                    'x_label': 'Phenotypic deviations',
+                    'x_label': (window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.phenotypic_deviations_axis", "Phenotypic deviations") : 'Phenotypic deviations'),
                     'heritability': res.heritability,
                     'plot_div_id': gebvPhenoRegPlotDivId,
                     'canvas': canvas,
@@ -78,12 +78,12 @@ jQuery(document).ready( function() {
             jQuery("#gebv_pheno_regression_message").empty();
             solGS.scatterPlot.plotRegression(regressionData);
         } else {
-            jQuery("#gebvs_pheno_regression_message").html('There is no GEBVs vs observed phenotypes regression data.');
+            jQuery("#gebvs_pheno_regression_message").html((window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.no_gebv_phenotype_regression", "There is no GEBVs vs observed phenotypes regression data.") : 'There is no GEBVs vs observed phenotypes regression data.'));
         }
     }); 
 
     solGS.gebvPhenoRegression.getRegressionData(args).fail(function(res){ 
-        jQuery("#gebvs_pheno_regression_message").html('Error occured requesting for theGEBVs vs observed phenotypes regression data.');
+        jQuery("#gebvs_pheno_regression_message").html((window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.gebv_phenotype_regression_request_error", "Error occured requesting for theGEBVs vs observed phenotypes regression data.") : 'Error occured requesting for theGEBVs vs observed phenotypes regression data.'));
     });
 
     jQuery("#gebv_pheno_regression_canvas").on('click' , 'a', function(e) {

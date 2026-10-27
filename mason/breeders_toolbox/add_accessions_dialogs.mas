@@ -5,6 +5,7 @@ $editable_stock_props_definitions
 </%args>
 
 <%perl>
+    use HTML::Entities ();
     my $user_role = '';
     my $email_address = '';
     if ($c->user) {
@@ -17,15 +18,15 @@ $editable_stock_props_definitions
   <div class="modal-dialog modal-lg" role="document">
     <div class="modal-content">
       <div class="modal-header">
-        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-        <h4 class="modal-title" id="addAccessionsDialog">Add Accessions</h4>
+        <button type="button" class="close" data-dismiss="modal" aria-label="<% $c->i18n->p('accessions.common.close', 'Close') |h %>"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title" id="addAccessionsDialog"><% $c->i18n->p('accessions.dialog.add', 'Add Accessions') |h %></h4>
       </div>
       <div class="modal-body">
         <div class="container-fluid">
 
             <ul class="nav nav-pills nav-justified" id="add_new_accessions_tab_select">
-                <li class="active" id="add_new_accessions_list_tab"><a data-toggle="tab" href="#with_list_tab">Using Lists</a></li>
-                <li id="add_new_accessions_file_tab"><a data-toggle="tab" href="#with_file_tab">Uploading a File</a></li>
+                <li class="active" id="add_new_accessions_list_tab"><a data-toggle="tab" href="#with_list_tab"><% $c->i18n->p('accessions.dialog.using_lists', 'Using Lists') |h %></a></li>
+                <li id="add_new_accessions_file_tab"><a data-toggle="tab" href="#with_file_tab"><% $c->i18n->p('accessions.dialog.uploading_file', 'Uploading a File') |h %></a></li>
             </ul>
 
             <div class="tab-content">
@@ -34,18 +35,18 @@ $editable_stock_props_definitions
                     <hr>
                     <form class="form-horizontal" role="form" name="new_accessions_form" id="new_accessions_form">
                         <div class="form-group">
-                            <label class="col-sm-4 control-label">Choose a List of Accessions to Add: </label>
+                            <label class="col-sm-4 control-label"><% $c->i18n->p('accessions.dialog.choose_list', 'Choose a List of Accessions to Add: ') |h %></label>
                             <div class="col-sm-8" id="list_div" name="list_div">
                             </div>
                         </div>
                         <div class="form-group">
                             <label class="col-sm-4 control-label"></label>
                             <div class="col-sm-8">
-                                <button name="lists_link" class="btn btn-info btn-sm" style="margin:6px 0px 0px 0px" type="button" >Manage Lists</button>
+                                <button name="lists_link" class="btn btn-info btn-sm" style="margin:6px 0px 0px 0px" type="button" ><% $c->i18n->p('accessions.dialog.manage_lists', 'Manage Lists') |h %></button>
                             </div>
                         </div>
                         <div class="form-group">
-                            <label class="col-sm-4 control-label">Use Fuzzy Search: </label>
+                            <label class="col-sm-4 control-label"><% $c->i18n->p('accessions.dialog.fuzzy_search', 'Use Fuzzy Search: ') |h %></label>
                             <div class="col-sm-8">
 % if ( $user_role eq 'curator' ) {
                                 <input type="checkbox" id="fuzzy_check" name="fuzzy_check"></input>
@@ -53,7 +54,7 @@ $editable_stock_props_definitions
                                 <input type="checkbox" id="fuzzy_check" name="fuzzy_check" checked disabled></input>
 % }
                                 <br/>
-                                <small>Note: Use the fuzzy search to match similar names to prevent uploading of duplicate accessions. Fuzzy searching is much slower than regular search. </small>
+                                <small><% $c->i18n->p('accessions.dialog.fuzzy_help', 'Note: Use the fuzzy search to match similar names to prevent uploading of duplicate accessions. Fuzzy searching is much slower than regular search. ') |h %></small>
                             </div>
                         </div>
                     </form>
@@ -61,31 +62,31 @@ $editable_stock_props_definitions
 
                 <div id="with_file_tab" class="tab-pane fade">
                     <hr>
-                    <&| /page/explanation.mas, title=>'Template information' &>
+                    <&| /page/explanation.mas, title=>HTML::Entities::encode_entities($c->i18n->p('accessions.dialog.template', 'Template information')) &>
                         <p>
-                            <b>File format information</b>
+                            <b><% $c->i18n->p('accessions.dialog.file_format', 'File format information') |h %></b>
                             <br>
-                            <a id="accessions_upload_spreadsheet_format_info">Spreadsheet format</a>
+                            <a id="accessions_upload_spreadsheet_format_info"><% $c->i18n->p('accessions.dialog.spreadsheet_format', 'Spreadsheet format') |h %></a>
                         </p>
                     </&>
 
                     <form class="form-horizontal" role="form" method="post" enctype="multipart/form-data" encoding="multipart/form-data" id="upload_new_accessions_form" name="upload_new_accessions_form">
                         <div class="form-group">
-                            <label class="col-sm-4 control-label">Upload File: </label>
+                            <label class="col-sm-4 control-label"><% $c->i18n->p('accessions.dialog.upload_file', 'Upload File: ') |h %></label>
                             <div class="col-sm-8" >
                                 <input type="file" name="new_accessions_upload_file" id="new_accessions_upload_file" encoding="multipart/form-data" />
                             </div>
                         </div>
                         <div class="form-group">
-                            <label class="col-sm-4 control-label">Email Alert: </label>
+                            <label class="col-sm-4 control-label"><% $c->i18n->p('accessions.dialog.email_alert', 'Email Alert: ') |h %></label>
                             <div class="col-sm-8">
                                 <input id="email_option_to_recieve_accession_upload_status" name="email_option_to_recieve_upload_status" type="checkbox" data-toggle="toggle" style="margin-right: 10px;">
-                                <label id="email_label_upload" class="control-label" style="display: none; margin-right: 10px;">Email:</label>
-                                <input id="email_address_upload" name="email_address_upload" type="email" value="<% $email_address %>" style="display: none;">
+                                <label id="email_label_upload" class="control-label" style="display: none; margin-right: 10px;"><% $c->i18n->p('accessions.dialog.email', 'Email:') |h %></label>
+                                <input id="email_address_upload" name="email_address_upload" type="email" value="<% $email_address |h %>" style="display: none;">
                             </div>
                         </div>
                         <div class="form-group">
-                            <label class="col-sm-4 control-label">Use Fuzzy Search: </label>
+                            <label class="col-sm-4 control-label"><% $c->i18n->p('accessions.dialog.fuzzy_search', 'Use Fuzzy Search: ') |h %></label>
                             <div class="col-sm-8">
 %# if ( $user_role eq 'curator' ) {
                                 <input type="checkbox" id="fuzzy_check_upload_accessions" name="fuzzy_check_upload_accessions"></input>
@@ -93,24 +94,24 @@ $editable_stock_props_definitions
 %#                                <input type="checkbox" id="fuzzy_check_upload_accessions" name="fuzzy_check_upload_accessions" checked disabled></input>
 %# }
                                 <br/>
-                                <small>Note: Use the fuzzy search to match similar names to prevent uploading of duplicate accessions. Fuzzy searching is much slower than regular search. Only a curator can disable the fuzzy search.</small>
+                                <small><% $c->i18n->p('accessions.dialog.fuzzy_curator_help', 'Note: Use the fuzzy search to match similar names to prevent uploading of duplicate accessions. Fuzzy searching is much slower than regular search. Only a curator can disable the fuzzy search.') |h %></small>
                             </div>
                         </div>
                         <div class="form-group">
-                            <label class="col-sm-4 control-label">Append Synonyms:</label>
+                            <label class="col-sm-4 control-label"><% $c->i18n->p('accessions.dialog.append_synonyms', 'Append Synonyms:') |h %></label>
                             <div class="col-sm-8">
                                 <input type="checkbox" id="append_synonyms" name="append_synonyms" checked />
                                 <br />
-                                <small>When checked, add synonyms of existing accession entries to the synonyms already stored in the database.  When not checked, remove any existing synonyms of existing accession entries and store only the synonyms in the upload file.</small>
+                                <small><% $c->i18n->p('accessions.dialog.append_synonyms_help', 'When checked, add synonyms of existing accession entries to the synonyms already stored in the database.  When not checked, remove any existing synonyms of existing accession entries and store only the synonyms in the upload file.') |h %></small>
                             </div>
                         </div>
                         <div class="form-group">
-                            <label class="col-sm-4 control-label">Create Accession List:</label>
+                            <label class="col-sm-4 control-label"><% $c->i18n->p('accessions.dialog.create_list', 'Create Accession List:') |h %></label>
                             <div class="col-sm-8">
                                 <input type="checkbox" id="create_accession_list" name="create_accession_list" />
                                 <br />
-                                <small>When checked, automatically create a new accession list with the accessions in your upload file.</small>
-                                <input id="create_accession_list_name" name="create_accession_list_name" class='form-control input-sm' placeholder='New List Name' />
+                                <small><% $c->i18n->p('accessions.dialog.create_list_help', 'When checked, automatically create a new accession list with the accessions in your upload file.') |h %></small>
+                                <input id="create_accession_list_name" name="create_accession_list_name" class='form-control input-sm' placeholder="<% $c->i18n->p('accessions.dialog.new_list_name', 'New List Name') |h %>" />
                             </div>
                         </div>
                     </form>
@@ -124,8 +125,8 @@ $editable_stock_props_definitions
         </div>
       </div>
       <div class="modal-footer">
-        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-        <button type="button" class="btn btn-primary" name="new_accessions_submit" id="new_accessions_submit">Continue</button>
+        <button type="button" class="btn btn-default" data-dismiss="modal"><% $c->i18n->p('accessions.common.close', 'Close') |h %></button>
+        <button type="button" class="btn btn-primary" name="new_accessions_submit" id="new_accessions_submit"><% $c->i18n->p('accessions.common.continue', 'Continue') |h %></button>
       </div>
     </div>
   </div>
@@ -135,14 +136,14 @@ $editable_stock_props_definitions
     <div class="modal-dialog modal-xl" role="document">
         <div class="modal-content">
             <div class="modal-header" style="text-align: center">
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                <h4 class="modal-title" id="uploadAccessionsInfoDialog">Upload Accessions Template Information</h4>
+                <button type="button" class="close" data-dismiss="modal" aria-label="<% $c->i18n->p('accessions.common.close', 'Close') |h %>"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="uploadAccessionsInfoDialog"><% $c->i18n->p('accessions.template.title', 'Upload Accessions Template Information') |h %></h4>
             </div>
             <div class="modal-body">
                 <div class="container-fluid">
-                    <b>Header:</b>
+                    <b><% $c->i18n->p('accessions.template.header', 'Header:') |h %></b>
                     <br>
-                    The first row (header) must contain the <b>accession_name</b> and <b>species_name</b> columns. Additional information can be included by selecting optional column(s) (see below). :
+                    <% $c->i18n->p('accessions.template.header_help', 'The first row (header) must contain the %{accession_column} and %{species_column} columns. Additional information can be included by selecting optional column(s) (see below). :', {accession_column => 'accession_name', species_column => 'species_name'}) |h %>
                     <br />
 
                     <table class="table table-hover table-bordered table-condensed" >
@@ -155,36 +156,32 @@ $editable_stock_props_definitions
                                 <td>synonym</td>
 				<td>description</td>
 %  foreach my $editable_stockprop (sort keys %$editable_stock_props) {
-%                               print "<td>$editable_stockprop</td>";
+%                               print "<td>" . HTML::Entities::encode_entities($editable_stockprop) . "</td>";
 % }
                             </tr>
                         </tbody>
                     </table>
 
-                    <b>Comma Separated Fields:</b>
+                    <b><% $c->i18n->p('accessions.template.comma_fields', 'Comma Separated Fields:') |h %></b>
                     <ul>
-                    <li>The following fields can take comma-separated values to indicate there are several values for the accession: organization_name, synonym
-%  foreach my $editable_stockprop (sort keys %$editable_stock_props) {
-%                   print ", $editable_stockprop";
-%  }
-                    </li>
+                    <li><% $c->i18n->p('accessions.template.comma_help', 'The following fields can take comma-separated values to indicate there are several values for the accession: %{fields}', {fields => join(', ', 'organization_name', 'synonym', sort keys %$editable_stock_props)}) |h %></li>
                     </ul>
 
-                    <b>Required Fields:</b>
+                    <b><% $c->i18n->p('accessions.template.required', 'Required Fields:') |h %></b>
                     <ul>
-                    <li>accession_name (must be unique)</li>
-                    <li>species_name (must exist in the database)</li>
+                    <li><% $c->i18n->p('accessions.template.unique', '%{field} (must be unique)', {field => 'accession_name'}) |h %></li>
+                    <li><% $c->i18n->p('accessions.template.species_exists', '%{field} (must exist in the database)', {field => 'species_name'}) |h %></li>
                     </ul>
-                    <b>Optional Fields:</b>
+                    <b><% $c->i18n->p('accessions.template.optional', 'Optional Fields:') |h %></b>
                     <ul>
-		    <li>description - a free text description of the stock.</li>
-                    <li>population_name (a population is a grouping of accessions. If the population already exists in the database, the accession will be added to it; otherwise, a new population will be created). Multiple populations can be specified, using the pipe symbol (|) as the separator (for example, pop1|pop2|pop3)</li>
-                    <li>synonym (an accession can be known by many names including local popular names. a synonym name can be used instead of the accession_name throughout the database; because of this, synonyms must themselves be unique. e.g. accession_synonym1,accession_synonym001)</li>
+		    <li><% $c->i18n->p('accessions.template.description', '%{field} - a free text description of the stock.', {field => 'description'}) |h %></li>
+                    <li><% $c->i18n->p('accessions.template.population', '%{field} (a population is a grouping of accessions. If the population already exists in the database, the accession will be added to it; otherwise, a new population will be created). Multiple populations can be specified, using the pipe symbol (%{separator}) as the separator (for example, %{example})', {field => 'population_name', separator => '|', example => 'pop1|pop2|pop3'}) |h %></li>
+                    <li><% $c->i18n->p('accessions.template.synonym', '%{field} (an accession can be known by many names including local popular names. a synonym name can be used instead of the %{accession_column} throughout the database; because of this, synonyms must themselves be unique. e.g. %{example})', {field => 'synonym', accession_column => 'accession_name', example => 'accession_synonym1,accession_synonym001'}) |h %></li>
 %  foreach my $editable_stockprop (sort keys %$editable_stock_props) {
 %    if (exists($editable_stock_props_definitions->{$editable_stockprop})) {
-%                   print "<li>$editable_stockprop (".$editable_stock_props_definitions->{$editable_stockprop}.")</li>";
+%                   print "<li>" . HTML::Entities::encode_entities($editable_stockprop . " (" . $editable_stock_props_definitions->{$editable_stockprop} . ")") . "</li>";
 %    } else {
-%                   print "<li>$editable_stockprop (no definition available)</li>";
+%                   print "<li>" . HTML::Entities::encode_entities($c->i18n->p('accessions.template.no_definition', '%{property} (no definition available)', {property => $editable_stockprop})) . "</li>";
 %    }
 %  }
                     </ul>
@@ -192,7 +189,7 @@ $editable_stock_props_definitions
                 <& /help/file_upload_type.mas, type => "Accessions", optional_column => 1 &>
             </div>
             <div class="modal-footer">
-                <button id="close_trial_upload_dialog" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                <button id="close_trial_upload_dialog" type="button" class="btn btn-default" data-dismiss="modal"><% $c->i18n->p('accessions.common.close', 'Close') |h %></button>
             </div>
         </div>
     </div>
@@ -202,22 +199,22 @@ $editable_stock_props_definitions
   <div class="modal-dialog modal-xl" role="document">
     <div class="modal-content ui-front">
       <div class="modal-header">
-        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-        <h4 class="modal-title" id="reviewAbsentDialog">Accessions to be Added</h4>
+        <button type="button" class="close" data-dismiss="modal" aria-label="<% $c->i18n->p('accessions.common.close', 'Close') |h %>"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title" id="reviewAbsentDialog"><% $c->i18n->p('accessions.review.added_title', 'Accessions to be Added') |h %></h4>
       </div>
       <div class="modal-body">
         <div class="container-fluid">
             <div id="add_accessions_using_list_inputs" style="display:none">
-                <label for="species_name_input">Species name for added accessions</label>
-                <input class="form-control" type="text" id="species_name_input" value="<% $preferred_species %>"></input>
+                <label for="species_name_input"><% $c->i18n->p('accessions.review.species', 'Species name for added accessions') |h %></label>
+                <input class="form-control" type="text" id="species_name_input" value="<% $preferred_species |h %>"></input>
                 <br><br>
-                <label for="population_name_input">Population name for added accessions (optional)</label>
+                <label for="population_name_input"><% $c->i18n->p('accessions.review.population', 'Population name for added accessions (optional)') |h %></label>
                 <input class="form-control" type="text" id="population_name_input"></input>
                 <br><br>
-                <label for="organization_name_input">Organization name for added accessions (optional)</label>
+                <label for="organization_name_input"><% $c->i18n->p('accessions.review.organization', 'Organization name for added accessions (optional)') |h %></label>
                 <input class="form-control" type="text" id="organization_name_input"></input>
                 <br><br>
-                <b>The following accessions are new and will be added to the database:</b>
+                <b><% $c->i18n->p('accessions.review.new_help', 'The following accessions are new and will be added to the database:') |h %></b>
                 <div id="count_of_absent_accessions"></div>
                 <br>
                 <div id="view_absent"></div>
@@ -226,8 +223,8 @@ $editable_stock_props_definitions
         </div>
       </div>
       <div class="modal-footer">
-        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-	<button type="button" class="btn btn-primary" name="review_absent_accessions_submit" id="review_absent_accessions_submit">Add Accessions</button>
+        <button type="button" class="btn btn-default" data-dismiss="modal"><% $c->i18n->p('accessions.common.close', 'Close') |h %></button>
+	<button type="button" class="btn btn-primary" name="review_absent_accessions_submit" id="review_absent_accessions_submit"><% $c->i18n->p('accessions.dialog.add', 'Add Accessions') |h %></button>
       </div>
     </div>
   </div>
@@ -237,19 +234,19 @@ $editable_stock_props_definitions
   <div class="modal-dialog modal-xl" role="document">
     <div class="modal-content">
       <div class="modal-header">
-        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-        <h4 class="modal-title" id="reviewFuzzyDialog">Fuzzy Matches</h4>
+        <button type="button" class="close" data-dismiss="modal" aria-label="<% $c->i18n->p('accessions.common.close', 'Close') |h %>"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title" id="reviewFuzzyDialog"><% $c->i18n->p('accessions.review.fuzzy_title', 'Fuzzy Matches') |h %></h4>
       </div>
       <div class="modal-body">
         <div class="container-fluid">
-    	  <b>Accessions were found with similar names.</b>
+          <b><% $c->i18n->p('accessions.review.fuzzy_help', 'Accessions were found with similar names.') |h %></b>
   	  <br/><br/>
   	  <div id="view_fuzzy_matches"></div>
         </div>
       </div>
       <div class="modal-footer">
-        <button type="button" class="btn btn-default" name="review_fuzzy_matches_download" id="review_fuzzy_matches_download">Download Fuzzy Matches</button>
-        <button type="button" class="btn btn-primary" name="review_fuzzy_matches_continue" id="review_fuzzy_matches_continue" data-dismiss="modal">Make Changes and Continue</button>
+        <button type="button" class="btn btn-default" name="review_fuzzy_matches_download" id="review_fuzzy_matches_download"><% $c->i18n->p('accessions.review.fuzzy_download', 'Download Fuzzy Matches') |h %></button>
+        <button type="button" class="btn btn-primary" name="review_fuzzy_matches_continue" id="review_fuzzy_matches_continue" data-dismiss="modal"><% $c->i18n->p('accessions.review.fuzzy_continue', 'Make Changes and Continue') |h %></button>
       </div>
     </div>
   </div>
@@ -259,19 +256,19 @@ $editable_stock_props_definitions
   <div class="modal-dialog modal-xl" role="document">
     <div class="modal-content">
       <div class="modal-header">
-        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-        <h4 class="modal-title" id="reviewFoundDialog">Found Accessions</h4>
+        <button type="button" class="close" data-dismiss="modal" aria-label="<% $c->i18n->p('accessions.common.close', 'Close') |h %>"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title" id="reviewFoundDialog"><% $c->i18n->p('accessions.review.found_title', 'Found Accessions') |h %></h4>
       </div>
       <div class="modal-body">
         <div class="container-fluid">
-    	  <b>The following accessions already exist in the database:</b>
+          <b><% $c->i18n->p('accessions.review.found_help', 'The following accessions already exist in the database:') |h %></b>
   	  <div id="count_of_found_accessions"></div>
   	  <br/>
   	  <div id="view_found_matches"></div>
         </div>
       </div>
       <div class="modal-footer">
-        <button type="button" class="btn btn-primary" name="review_found_matches_hide" id="review_found_matches_hide" data-dismiss="modal">Continue</button>
+        <button type="button" class="btn btn-primary" name="review_found_matches_hide" id="review_found_matches_hide" data-dismiss="modal"><% $c->i18n->p('accessions.common.continue', 'Continue') |h %></button>
       </div>
     </div>
   </div>
@@ -281,8 +278,8 @@ $editable_stock_props_definitions
     <div class="modal-dialog" role="document">
         <div class="modal-content">
             <div class="modal-header" style="text-align: center">
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                <h4 class="modal-title" id="addAccessionsSavedDialog">Accessions Saved</h4>
+                <button type="button" class="close" data-dismiss="modal" aria-label="<% $c->i18n->p('accessions.common.close', 'Close') |h %>"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="addAccessionsSavedDialog"><% $c->i18n->p('accessions.review.saved_title', 'Accessions Saved') |h %></h4>
             </div>
             <div class="modal-body">
                 <div class="container-fluid">
@@ -290,7 +287,7 @@ $editable_stock_props_definitions
                 </div>
             </div>
             <div class="modal-footer">
-                <button id="close_add_accessions_saved_message_modal" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                <button id="close_add_accessions_saved_message_modal" type="button" class="btn btn-default" data-dismiss="modal"><% $c->i18n->p('accessions.common.close', 'Close') |h %></button>
             </div>
         </div>
     </div>
@@ -314,4 +311,15 @@ $editable_stock_props_definitions
 * html .ui-autocomplete {
   height: 100px;
 }
+</style>
+
+<style>
+  /* Long biological text must fit the native review table in either direction. */
+  #review_absent_dialog #infoToAdd_new_table th,
+  #review_absent_dialog #infoToAdd_new_table td,
+  #review_absent_dialog #infoToAdd_updated_table th,
+  #review_absent_dialog #infoToAdd_updated_table td {
+    overflow-wrap: anywhere;
+    word-break: normal;
+  }
 </style>

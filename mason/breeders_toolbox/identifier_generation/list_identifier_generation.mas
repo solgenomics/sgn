@@ -4,14 +4,14 @@
 <table class="table table-hover table-bordered" id="identifier_generator_list_table">
     <thead>
         <tr>
-            <th>Name</th>
-            <th>Description</th>
-            <th>Prefix</th>
-            <th>Number of Digits</th>
-            <th>Current Number</th>
-            <th>Next Identifier</th>
-            <th>History</th>
-            <th>Download Next Identifiers</th>
+            <th><% $c->i18n->p("program.identifiers.list.header.name", "Name") |h %></th>
+            <th><% $c->i18n->p("program.identifiers.list.header.description", "Description") |h %></th>
+            <th><% $c->i18n->p("program.identifiers.list.header.prefix", "Prefix") |h %></th>
+            <th><% $c->i18n->p("program.identifiers.list.header.digits", "Number of Digits") |h %></th>
+            <th><% $c->i18n->p("program.identifiers.list.header.current_number", "Current Number") |h %></th>
+            <th><% $c->i18n->p("program.identifiers.list.header.next_identifier", "Next Identifier") |h %></th>
+            <th><% $c->i18n->p("program.identifiers.list.header.history", "History") |h %></th>
+            <th><% $c->i18n->p("program.identifiers.list.header.download_next", "Download Next Identifiers") |h %></th>
         </tr>
     </thead>
 </table>
@@ -20,8 +20,8 @@
     <div class="modal-dialog modal-xl" role="document">
         <div class="modal-content">
             <div class="modal-header" style="text-align: center">
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                <h4 class="modal-title" id="identifierGenerationHistoryDialog">Identifier Generation History</h4>
+                <button type="button" class="close" data-dismiss="modal" aria-label="<% $c->i18n->p("folder.ui.close", "Close") |h %>"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="identifierGenerationHistoryDialog"><% $c->i18n->p("program.identifiers.history.title", "Identifier Generation History") |h %></h4>
             </div>
             <div class="modal-body">
                 <div class="container-fluid">
@@ -30,13 +30,15 @@
                 </div>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-default" data-dismiss="modal"><% $c->i18n->p("folder.ui.close", "Close") |h %></button>
             </div>
         </div>
     </div>
 </div>
 
 <script>
+
+function _sgnB14IdentifierEscapeHTML(value) { return jQuery('<div>').text(value).html(); }
 
 jQuery(document).ready(function(){
     var identifier_generation_list_table = jQuery('#identifier_generator_list_table').DataTable({
@@ -63,7 +65,7 @@ jQuery(document).ready(function(){
                 }
             },
             error: function(response){
-                alert('Error downloading new identifiers!');
+                alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("program.identifiers.error.download", "Error downloading new identifiers!") : "Error downloading new identifiers!"));
             }
         });
     });
@@ -81,7 +83,7 @@ jQuery(document).ready(function(){
                     alert(response.error);
                 }
                 if(response.success){
-                    var html = '<table class="table table-bordered table-hover"><thead><tr><th>Timestamp</th><th>Username</th><th>Next Count</th><th>Action Type</th></tr></thead><tbody>';
+                    var html = '<table class="table table-bordered table-hover"><thead><tr><th>' + _sgnB14IdentifierEscapeHTML(window.SGN && window.SGN.i18n ? window.SGN.i18n.p('program.identifiers.history.timestamp', 'Timestamp') : 'Timestamp') + '</th><th>' + _sgnB14IdentifierEscapeHTML(window.SGN && window.SGN.i18n ? window.SGN.i18n.p('program.identifiers.history.username', 'Username') : 'Username') + '</th><th>' + _sgnB14IdentifierEscapeHTML(window.SGN && window.SGN.i18n ? window.SGN.i18n.p('program.identifiers.history.next_count', 'Next Count') : 'Next Count') + '</th><th>' + _sgnB14IdentifierEscapeHTML(window.SGN && window.SGN.i18n ? window.SGN.i18n.p('program.identifiers.history.action_type', 'Action Type') : 'Action Type') + '</th></tr></thead><tbody>';
                     for(var i=0; i<response.records.length; i++){
                         html = html + '<tr><td>' + response.records[i].timestamp + '</td><td>' + response.records[i].username + '</td><td>' + response.records[i].next_number + '</td><td>' + response.records[i].type + '</td></tr>';
                     }
@@ -91,7 +93,7 @@ jQuery(document).ready(function(){
                 }
             },
             error: function(response){
-                alert('Error getting identifier list history!');
+                alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("program.identifiers.error.history", "Error getting identifier list history!") : "Error getting identifier list history!"));
             }
         });
     });

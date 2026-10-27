@@ -9,11 +9,11 @@ $program_id
 <table id="product_profile_table" class="display">
     <thead>
         <tr>
-            <th>Product Profile Name</th>
-            <th>Scope</th>
-            <th>Trait</th>
-            <th>Submitter</th>
-            <th>Date (Y-M-D)</th>
+            <th><% $c->i18n->p("program.product_profile.table.name", "Product Profile Name") |h %></th>
+            <th><% $c->i18n->p("program.product_profile.table.scope", "Scope") |h %></th>
+            <th><% $c->i18n->p("program.product_profile.table.trait", "Trait") |h %></th>
+            <th><% $c->i18n->p("program.product_profile.table.submitter", "Submitter") |h %></th>
+            <th><% $c->i18n->p("program.product_profile.table.date", "Date (Y-M-D)") |h %></th>
         </tr>
     </thead>
 </table>

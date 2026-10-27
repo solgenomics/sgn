@@ -66,8 +66,8 @@ solGS.histogram = {
       '<table class="table bin_elements_table" style="text-align: left;display:none">' +
       "<thead>" +
       "<tr>" +
-      "<th>Bin elements</th>" +
-      "<th>Values</th>" +
+      "<th>" + (window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.histogram_bin_elements", "Bin elements") : "Bin elements") + "</th>" +
+      "<th>" + (window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.histogram_values", "Values") : "Values") + "</th>" +
       "</tr>" +
       "</thead>" +
       "</table>";
@@ -235,8 +235,8 @@ solGS.histogram = {
 
     var yAxis = d3.axisLeft(yAxisLabel);
 
-    var xLabel = histo.x_label || "Values";
-    var yLabel = histo.y_label || "Frequency";
+    var xLabel = histo.x_label || (window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.histogram_values_axis", "Values") : "Values");
+    var yLabel = histo.y_label || (window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.histogram_frequency_axis", "Frequency") : "Frequency");
     var xAxisOrigin = 3 * margin.left;
     var yAxisOrigin = height + margin.top;
 

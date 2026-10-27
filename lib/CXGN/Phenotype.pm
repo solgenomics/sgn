@@ -35,6 +35,9 @@ Phenotypes can have different types:
 package CXGN::Phenotype;
 
 use Moose;
+use SGN::I18N ();
+use HTML::Entities ();
+use CatalystX::GlobalContext '$c';
 use Data::Dumper;
 use Bio::Chado::Schema;
 use Scalar::Util qw | looks_like_number |;
@@ -554,6 +557,7 @@ sub delete_phenotype {
 
 sub check_categories {
     my $self = shift;
+    my SGN::I18N $ui_check_categories_i18n = SGN::I18N::translate($c);
 
     my $error_message;
 
@@ -588,7 +592,7 @@ sub check_categories {
         foreach my $value (@check_values) {
             if ($value ne '' && defined($value) && !exists($trait_categories_hash{$value})) {
                 my $valid_values = join("/", sort keys %trait_categories_hash);  # Sort values for consistent order
-                $error_message =  "<small> This trait value should be one of $valid_values: <br/>Value: ".$self->value()."</small><hr>";
+                $error_message =  ("<small>" . SGN::I18N::translate($ui_check_categories_i18n, "phenotype.root.this_trait_value_should_be_one_of", " This trait value should be one of ", undef, { entities => '<>&', decode => 1 }) . "$valid_values" . ": " . "<br/>" . SGN::I18N::translate($ui_check_categories_i18n, "phenotype.root.value.7476ccb", "Value: ", undef, { entities => '<>&', decode => 1 }) . "").$self->value()."</small><hr>";
             }
             else {
                 #print STDERR "Trait value ".$self->value()." is valid\n";
@@ -628,6 +632,7 @@ STATUS: NOT YET IMPLEMENTED.
 
 sub check {
     my $self = shift;
+    my SGN::I18N $ui_check_i18n = SGN::I18N::translate($c);
 
     my @errors;
     my @warnings;
@@ -636,15 +641,15 @@ sub check {
 
     if (defined($trait_value) && $trait_value ne '' && $trait_value ne 'NA' && $trait_value ne '.' && $self->trait_format() eq 'numeric') { # check only if the trait_value is defined and not NA etc.
         if (! looks_like_number($trait_value)) {
-            push @errors, "Trait format is numeric but value is not a number ($trait_value)\n";
+            push @errors, ("" . SGN::I18N::translate($ui_check_i18n, "phenotype.root.trait_format_is_numeric_but_value_is_not_a_number", "Trait format is numeric but value is not a number (", undef, { entities => '<>&', decode => 1 }) . "$trait_value" . ")\n" . "");
         }
 
         if ($self->check_trait_minimum()) {
-            push @errors, "Trait value $trait_value is smaller than defined minimum ".$self->trait_min_value()."\n";
+            push @errors, ("" . SGN::I18N::translate($ui_check_i18n, "phenotype.root.trait_value", "Trait value ", undef, { entities => '<>&', decode => 1 }) . "$trait_value" . SGN::I18N::translate($ui_check_i18n, "phenotype.root.is_smaller_than_defined_minimum", " is smaller than defined minimum ", undef, { entities => '<>&', decode => 1 }) . "").$self->trait_min_value()."\n";
         }
 
         if ($self->check_trait_maximum()) {
-            push @errors, "Trait value $trait_value is larger than defined maximum ".$self->trait_max_value()."\n";
+            push @errors, ("" . SGN::I18N::translate($ui_check_i18n, "phenotype.root.trait_value", "Trait value ", undef, { entities => '<>&', decode => 1 }) . "$trait_value" . SGN::I18N::translate($ui_check_i18n, "phenotype.root.is_larger_than_defined_maximum", " is larger than defined maximum ", undef, { entities => '<>&', decode => 1 }) . "").$self->trait_max_value()."\n";
         }
     }
 
@@ -669,7 +674,7 @@ sub check {
         #print STDERR "Trait repeat type: ".$self->trait_repeat_type()."\n";
         if (!$self->collect_date()) {
             # print STDERR "cvterm_id : ".$self->cvterm_id()." is multiple without timestamp \n";
-            push @errors, "For trait with cvterm_id ".$self->cvterm_id()." that is defined as a 'multiple' or 'time_series' repeat type trait, a timestamp is required.\n";
+            push @errors, ("" . SGN::I18N::translate($ui_check_i18n, "phenotype.root.for_trait_with_cvterm_id", "For trait with cvterm_id ", undef, { entities => '<>&', decode => 1 }) . "").$self->cvterm_id().("" . SGN::I18N::translate($ui_check_i18n, "phenotype.root.that_is_defined_as_a_multiple_or_time_series_repeat", " that is defined as a 'multiple' or 'time_series' repeat type trait, a timestamp is required.\n", undef, { entities => '<>&', decode => 1 }) . "");
         }
     }
 
@@ -749,6 +754,7 @@ sub check_trait_maximum {
 
 sub check_collect_date {
     my $self = shift;
+    my SGN::I18N $ui_check_collect_date_i18n = SGN::I18N::translate($c);
 
     my $error_message = "";
     my $timestamp = $self->collect_date();
@@ -757,7 +763,7 @@ sub check_collect_date {
     if ( (!$timestamp && !$trait_value) || ($timestamp && !$trait_value) || ($timestamp && $trait_value) ) {
         if ($timestamp) {
             if( !$timestamp =~ m/(\d{4})-(\d{2})-(\d{2}) (\d{2}):(\d{2}):(\d{2})(\S)(\d{4})/) {
-                $error_message = $error_message."<small>Bad timestamp for value for observation unit id: ".$self->observationunit_id()."<br/>Trait Name: ".$trait_name."<br/>Should be YYYY-MM-DD HH:MM:SS-0000 or YYYY-MM-DD HH:MM:SS+0000</small><hr>";
+                $error_message = $error_message.("<small>" . SGN::I18N::translate($ui_check_collect_date_i18n, "phenotype.root.bad_timestamp_for_value_for_observation_unit_id", "Bad timestamp for value for observation unit id: ", undef, { entities => '<>&', decode => 1 }) . "").$self->observationunit_id().("<br/>" . SGN::I18N::translate($ui_check_collect_date_i18n, "trial.repetitive.trait_name", "Trait Name: ", undef, { entities => '<>&', decode => 1 }) . "").$trait_name.("<br/>" . SGN::I18N::translate($ui_check_collect_date_i18n, "phenotype.root.should_be_yyyy_mm_dd_hh_mm_ss_0000_or", "Should be YYYY-MM-DD HH:MM:SS-0000 or YYYY-MM-DD HH:MM:SS+0000", undef, { entities => '<>&', decode => 1 }) . "</small><hr>");
                 return 0;
             }
             else {

@@ -14,18 +14,18 @@ $breeding_programs
 <table class="table table-bordered">
   <thead>
     <tr>
-      <th>Information</th>
-      <th>Breeding Programs -- -- Trials</th>
+      <th><% $c->i18n->p("trial.tree.information.8d28ab2", "Information") |h %></th>
+      <th><% $c->i18n->p("trial.tree.tree_heading", "Breeding Programs -- -- Trials") |h %></th>
     </tr>
   </thead>
   <tbody>
   <tr>
     <td>
-      <h4>Download Trial</h4>
-      <button class="btn btn-primary" id="download_button" disabled="disabled" title="First Select a Trial to Download">Excel</button>
-      <button class="btn btn-primary" id="download_button_csv" disabled="disabled" title="First Select a Trial to Download">CSV</button><br />
+      <h4><% $c->i18n->p("trial.tree.download_trial", "Download Trial") |h %></h4>
+      <button class="btn btn-primary" id="download_button" disabled="disabled" title="<% $c->i18n->p("trial.tree.select_trial_tip", "First Select a Trial to Download") |h %>">Excel</button>
+      <button class="btn btn-primary" id="download_button_csv" disabled="disabled" title="<% $c->i18n->p("trial.tree.select_trial_tip", "First Select a Trial to Download") |h %>">CSV</button><br />
       <hr>
-      <h5><i>Double click<br />trial to view</i></h5>
+      <h5><i><% $c->i18n->p("trial.tree.double_click", "Double click") |h %><br /><% $c->i18n->p("trial.tree.trial_view", "trial to view") |h %></i></h5>
       <!-- hr>
       <button id="delete" disabled="disabled" >Delete</button -->
       <br />
@@ -53,7 +53,7 @@ $breeding_programs
 
       },
       error: function(response) { 
-        alert("An error occurred");
+        alert(window.SGN && SGN.i18n ? SGN.i18n.p("trial.tree.error", "An error occurred") : "An error occurred");
       }
   });
 
@@ -99,7 +99,7 @@ $breeding_programs
         if (selected.length !== 0) { 
 	  window.open('/breeders/trials/phenotype/download/'+selected.join(","));
         }
-        else { alert("No leaf nodes selected for download."); }
+        else { alert(window.SGN && SGN.i18n ? SGN.i18n.p("trial.tree.no_leaf_nodes", "No leaf nodes selected for download.") : "No leaf nodes selected for download."); }
        
     });
 
@@ -108,7 +108,7 @@ $breeding_programs
         if (selected.length !== 0) { 
 	  window.open('/breeders/trials/phenotype/download/'+selected.join(",")+'?format=csv');
         }
-        else { alert("No leaf nodes selected for download."); }
+        else { alert(window.SGN && SGN.i18n ? SGN.i18n.p("trial.tree.no_leaf_nodes", "No leaf nodes selected for download.") : "No leaf nodes selected for download."); }
        
     });
 

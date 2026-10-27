@@ -2,7 +2,7 @@
 <nav class="navbar navbar-default navbar-fixed-top">
   <div class="container-fluid">
     <div class="navbar-header">
-      <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#myNavbar">
+      <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#myNavbar" aria-label="<% $c->i18n->p('navigation.toggle', 'Toggle navigation') |h %>">
         <span class="icon-bar"></span>
         <span class="icon-bar"></span>
         <span class="icon-bar"></span>
@@ -75,6 +75,32 @@
 <script>
 
 jQuery(document).ready(function() {
+% if ($c->config->{i18n_enabled}) {
+  // Translated navigation can wrap after asynchronous account controls load.
+  // Reserve its real height. A very tall header must scroll with the document
+  // so native page controls cannot remain hidden behind fixed navigation.
+  var navbar = document.querySelector('nav.navbar-fixed-top');
+  var originalPadding = parseFloat(window.getComputedStyle(document.body).paddingTop) || 0;
+  function fitTranslatedNavigation() {
+    if (!navbar) { return; }
+    var height = Math.ceil(navbar.getBoundingClientRect().height);
+    var inFlow = height > window.innerHeight / 2;
+    var position = inFlow ? 'static' : '';
+    var padding = (inFlow ? 0 : Math.max(originalPadding, height)) + 'px';
+    if (navbar.style.position !== position) { navbar.style.position = position; }
+    if (document.body.style.paddingTop !== padding) { document.body.style.paddingTop = padding; }
+  }
+  fitTranslatedNavigation();
+  window.addEventListener('resize', fitTranslatedNavigation);
+  if (window.ResizeObserver && navbar) {
+    new ResizeObserver(fitTranslatedNavigation).observe(navbar);
+  } else if (window.MutationObserver && navbar) {
+    new MutationObserver(fitTranslatedNavigation).observe(navbar, {
+      childList: true, subtree: true, characterData: true
+    });
+  }
+  jQuery('#myNavbar').on('shown.bs.collapse hidden.bs.collapse', fitTranslatedNavigation);
+% }
   if (jQuery(document).width() > 768) {
     jQuery(".menu_click_dropdown").removeClass("dropdown-toggle");
     jQuery(".menu_click_dropdown").removeAttr("data-toggle");

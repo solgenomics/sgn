@@ -47,6 +47,8 @@ use CXGN::People;
 use CXGN::People::Person;
 
 package CXGN::Page::Form::SimpleFormPage;
+use SGN::I18N ();
+use HTML::Entities ();
 
 use CXGN::Page::FormattingHelpers qw / page_title_html blue_section_html /;
 
@@ -72,6 +74,8 @@ sub new {
     my $primary_key = shift;
 
     $self->set_page(CXGN::Page->new("SGN", "Lukas"));
+    $self->{i18n} = $self->get_page()->{i18n};
+    my SGN::I18N $simpleformpage_new_i18n = $self->{i18n};
     my $dbh=$self->get_page()->get_dbh(); # reuse the dbh from the Page object
     $self->set_dbh($dbh);
 
@@ -95,11 +99,11 @@ sub new {
     }
 
     if (!$self->get_object_id() && $self->get_action()!~/new|store|confirm_store/) {
-        $self->get_page()->message_page("No identifier provided to display data of this page for action view.");
+        $self->get_page()->message_page(HTML::Entities::encode_entities($simpleformpage_new_i18n ? $simpleformpage_new_i18n->p("shared.form.no_identifier_view", "No identifier provided to display data of this page for action view.") : "No identifier provided to display data of this page for action view."));
     }
     else {
         if ($self->get_action()!~/new|view|edit|store|delete|confirm_delete|confirm_store/) {
-            $self->get_page()->error_page("Undefined input. Cannot proceed. Sorry.\n");
+            $self->get_page()->error_page(HTML::Entities::encode_entities($simpleformpage_new_i18n ? $simpleformpage_new_i18n->p("shared.form.undefined_input", "Undefined input. Cannot proceed. Sorry.") : "Undefined input. Cannot proceed. Sorry.") . "\n");
         }
     }
 
@@ -123,12 +127,12 @@ sub new {
     elsif ($self->get_action() eq "confirm_delete") {
         my $id = $args{$self->get_primary_key()};
         if (!$id) {
-            $self->get_page()->error_page("need an id for deleting");
+            $self->get_page()->error_page(HTML::Entities::encode_entities($simpleformpage_new_i18n ? $simpleformpage_new_i18n->p("shared.form.delete_id_required", "need an id for deleting") : "need an id for deleting"));
         }
-        $self->delete_dialog("Delete", "Object",
+        $self->delete_dialog(HTML::Entities::encode_entities($simpleformpage_new_i18n ? $simpleformpage_new_i18n->p("shared.form.delete", "Delete") : "Delete"), HTML::Entities::encode_entities($simpleformpage_new_i18n ? $simpleformpage_new_i18n->p("shared.form.object", "Object") : "Object"),
                              $self->get_primary_key(),
                              $id,
-                             "<a href=\"".$self->get_script_name()."?".$self->get_primary_key()."=".$id."&amp;action=view\">Go back to detail page without deleting</a>");
+                             "<a href=\"".$self->get_script_name()."?".$self->get_primary_key()."=".$id."&amp;action=view\">" . HTML::Entities::encode_entities($simpleformpage_new_i18n ? $simpleformpage_new_i18n->p("shared.form.back_without_delete", "Go back to detail page without deleting") : "Go back to detail page without deleting") . "</a>");
 
      }
      elsif ($self->get_action() eq "delete") {
@@ -161,6 +165,7 @@ sub new {
 
 sub check_modify_privileges {
     my $self = shift;
+    my SGN::I18N $simpleformpage_privileges_i18n = $self->{i18n};
 
     # implement quite strict access controls by default
     #
@@ -171,7 +176,7 @@ sub check_modify_privileges {
         return 0;
     }
     if ($user->get_user_type() !~ /submitter|sequencer|curator/) {
-        $self->get_page()->message_page("You must have an account of type submitter to be able to submit data. Please contact SGN to change your account type.");
+        $self->get_page()->message_page(HTML::Entities::encode_entities($simpleformpage_privileges_i18n ? $simpleformpage_privileges_i18n->p("shared.form.submitter_account", "You must have an account of type submitter to be able to submit data. Please contact SGN to change your account type.") : "You must have an account of type submitter to be able to submit data. Please contact SGN to change your account type."));
     }
 
     my @owners = $self->get_owners();
@@ -183,7 +188,7 @@ sub check_modify_privileges {
         #  {
 
 
-        $self->get_page()->message_page("You do not have rights to modify this database entry because you do not own it. [$user_id, @owners]");
+        $self->get_page()->message_page(HTML::Entities::encode_entities($simpleformpage_privileges_i18n ? $simpleformpage_privileges_i18n->p("shared.form.not_owner", "You do not have rights to modify this database entry because you do not own it. [%{person}, %{owners}]", {person => $user_id, owners => "@owners"}) : "You do not have rights to modify this database entry because you do not own it. [$user_id, @owners]"));
     }
     else {
         return 0;
@@ -400,6 +405,7 @@ sub generate_form {
 
 sub delete_dialog {
     my $self = shift;
+    my SGN::I18N $simple_delete_dialog_i18n = $self->{i18n};
     $self->check_modify_privileges();
     my $title = shift;
     my $object_name = shift;
@@ -407,15 +413,17 @@ sub delete_dialog {
     my $object_id = shift;
     my $back_link = shift;
 
+    my $delete_question = HTML::Entities::encode_entities($simple_delete_dialog_i18n ? $simple_delete_dialog_i18n->p("shared.form.delete_question", "Delete database object %{object} (id=%{id})?", {object => $object_name, id => $object_id}) : "Delete database object $object_name (id=$object_id)?");
+    my $delete_caption = HTML::Entities::encode_entities($simple_delete_dialog_i18n ? $simple_delete_dialog_i18n->p("shared.form.delete", "Delete") : "Delete");
     $self->get_page()->header();
 
     page_title_html("$title");
     print qq {
         <form>
-        Delete database object $object_name (id=$object_id)?
+        $delete_question
         <input type="hidden" name="action" value="delete" />
         <input type="hidden" name="$field_name" value="$object_id" />
-        <input type="submit" value="Delete" />
+        <input type="submit" value="$delete_caption" />
         </form>
 
         $back_link
@@ -457,19 +465,24 @@ sub delete {
 sub confirm_store {
 
     my $self=shift;
+    my SGN::I18N $simple_confirm_store_i18n = $self->{i18n};
+    my $confirm_title = HTML::Entities::encode_entities($simple_confirm_store_i18n ? $simple_confirm_store_i18n->p("shared.form.confirm_store", "Confirm store") : "Confirm store");
+    my $store_question = HTML::Entities::encode_entities($simple_confirm_store_i18n ? $simple_confirm_store_i18n->p("shared.form.store_question", "Store object in the database?") : "Store object in the database?");
+    my $store_caption = HTML::Entities::encode_entities($simple_confirm_store_i18n ? $simple_confirm_store_i18n->p("cross.ui.store", "Store") : "Store");
+    my $back_caption = HTML::Entities::encode_entities($simple_confirm_store_i18n ? $simple_confirm_store_i18n->p("shared.form.back_without_store", "Go back without storing the object") : "Go back without storing the object");
     $self->get_page()->header();
 
 
-    page_title_html("Confirm store");
+    page_title_html($confirm_title);
     print qq {
         <form>
-        Store object in the database?
+        $store_question
         <input type="hidden" name="action" value="store" />
 
-        <input type="submit" value="Store" />
+        <input type="submit" value="$store_caption" />
         </form>
 
-        <a href="javascript:history.back(1)">Go back without storing the object</a>
+        <a href="javascript:history.back(1)">$back_caption</a>
 
     };
 
@@ -796,13 +809,13 @@ sub init_form {
     my $self = shift;
 
     if ($self->get_action() =~/edit|^store|new/) {
-        $self->set_form( CXGN::Page::Form::Editable -> new() );
+        $self->set_form( CXGN::Page::Form::Editable -> new({i18n => $self->{i18n}}) );
 
     }elsif ($self->get_action() =~/confirm_store/) {
-        $self->set_form( CXGN::Page::Form::ConfirmStore->new() ) ;
+        $self->set_form( CXGN::Page::Form::ConfirmStore->new({i18n => $self->{i18n}}) ) ;
 
     }else  {
-        $self->set_form( CXGN::Page::Form::Static -> new() );
+        $self->set_form( CXGN::Page::Form::Static -> new({i18n => $self->{i18n}}) );
     }
 
 }
@@ -896,18 +909,21 @@ sub get_edit_links {
 
 sub get_new_link_html {
     my $self = shift;
+    my SGN::I18N $simple_get_new_link_html_i18n = $self->{i18n};
     my $form_name = shift;
+    my $caption_new = HTML::Entities::encode_entities($simple_get_new_link_html_i18n ? $simple_get_new_link_html_i18n->p("shared.form.link.new", "[New]") : "[New]");
+    my $caption_cancel = HTML::Entities::encode_entities($simple_get_new_link_html_i18n ? $simple_get_new_link_html_i18n->p("shared.form.link.cancel", "[Cancel]") : "[Cancel]");
 
     my $script_name = $self->get_script_name();
     my $primary_key = $self->get_primary_key();
     my $object_id = $self->get_object_id();
 
-    my $new_link = qq { <a href="$script_name?action=new&amp;form=$form_name">[New]</a> };
+    my $new_link = qq { <a href="$script_name?action=new&amp;form=$form_name">$caption_new</a> };
     if ($self->get_action() eq "edit") {
-        $new_link = qq { <span class="ghosted">[New]</span> };
+        $new_link = qq { <span class="ghosted">$caption_new</span> };
     }
     if ($self->get_action() eq "new") {
-        $new_link = qq { <a onClick="history.go(-1)">[Cancel]</a> };
+        $new_link = qq { <a onClick="history.go(-1)">$caption_cancel</a> };
     }
     return $new_link;
 }
@@ -920,7 +936,10 @@ sub get_new_link_html {
 
 sub get_edit_link_html {
     my $self = shift;
+    my SGN::I18N $simple_get_edit_link_html_i18n = $self->{i18n};
     my $form_name = shift;
+    my $caption_edit = HTML::Entities::encode_entities($simple_get_edit_link_html_i18n ? $simple_get_edit_link_html_i18n->p("shared.form.link.edit", "[Edit]") : "[Edit]");
+    my $caption_cancel_edit = HTML::Entities::encode_entities($simple_get_edit_link_html_i18n ? $simple_get_edit_link_html_i18n->p("shared.form.link.cancel_edit", "[Cancel Edit]") : "[Cancel Edit]");
 
     my $edit_link = "";
     my $script_name = $self->get_script_name();
@@ -930,19 +949,19 @@ sub get_edit_link_html {
     my $user_id= $self->get_user()->get_sp_person_id();
     my @owners= $self->get_owners();
     if (($self->get_user()->get_user_type() eq "curator") || $user_id && grep{/^$user_id$/} @owners ) {
-         $edit_link = qq { <a href="$script_name?action=edit&amp;form=$form_name&amp;$primary_key=$object_id">[Edit]</a> };
+         $edit_link = qq { <a href="$script_name?action=edit&amp;form=$form_name&amp;$primary_key=$object_id">$caption_edit</a> };
 
      }else {
-         $edit_link = qq { <span class="ghosted">[Edit]</span> };
+         $edit_link = qq { <span class="ghosted">$caption_edit</span> };
      }
 
 
     if ($self->get_action() eq "edit") {
-        $edit_link = qq { <a href="$script_name?action=view&amp;form=$form_name&amp;$primary_key=$object_id">[Cancel Edit]</a> };
+        $edit_link = qq { <a href="$script_name?action=view&amp;form=$form_name&amp;$primary_key=$object_id">$caption_cancel_edit</a> };
     }
 
     if ($self->get_action() eq "new") {
-        $edit_link = qq { <span class="ghosted">[Edit]</span> };
+        $edit_link = qq { <span class="ghosted">$caption_edit</span> };
     }
 
     return $edit_link;
@@ -956,7 +975,9 @@ sub get_edit_link_html {
 
 sub get_delete_link_html {
     my $self = shift;
+    my SGN::I18N $simple_get_delete_link_html_i18n = $self->{i18n};
     my $form_name = shift;
+    my $caption_delete_link = HTML::Entities::encode_entities($simple_get_delete_link_html_i18n ? $simple_get_delete_link_html_i18n->p("shared.form.link.delete_link", "[Delete]") : "[Delete]");
 
     my $delete_link = "";
     my $script_name = $self->get_script_name();
@@ -966,18 +987,18 @@ sub get_delete_link_html {
     my @owners= $self->get_owners();
     if (($self->get_user()->get_user_type() eq "curator") || grep{/^$user_id$/} @owners ) {
 
-        $delete_link = qq { <a href="$script_name?action=confirm_delete&amp;form=$form_name&amp;$primary_key=$object_id">[Delete]</a> };
+        $delete_link = qq { <a href="$script_name?action=confirm_delete&amp;form=$form_name&amp;$primary_key=$object_id">$caption_delete_link</a> };
 
     }else {
-        $delete_link = qq { <span class="ghosted">[Delete]</span> };
+        $delete_link = qq { <span class="ghosted">$caption_delete_link</span> };
     }
 
     if ($self->get_action() eq "edit") {
-        $delete_link = qq { <span class="ghosted">[Delete]</span> };
+        $delete_link = qq { <span class="ghosted">$caption_delete_link</span> };
     }
 
     if ($self->get_action() eq "new") {
-        $delete_link = qq { <span class="ghosted">[Delete]</span> };
+        $delete_link = qq { <span class="ghosted">$caption_delete_link</span> };
     }
     return $delete_link;
 }

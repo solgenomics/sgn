@@ -1,6 +1,7 @@
 package CXGN::Genotype::ParseUpload::Plugin::VCF;
 
 use Moose::Role;
+use SGN::I18N ();
 use SGN::Model::Cvterm;
 use Data::Dumper;
 use Scalar::Util qw(looks_like_number);
@@ -23,6 +24,7 @@ has '_fh' => (is => 'rw', isa => 'Ref');
 
 sub _validate_with_plugin {
     my $self = shift;
+    my $i18n = SGN::I18N::translate($self);
     my $filename = $self->get_filename();
     my $schema = $self->get_chado_schema();
     my %errors;
@@ -102,22 +104,22 @@ sub _validate_with_plugin {
             push @markers, $marker_name;
 
             if ($marker_info[2] eq '' || !defined($marker_info[2])) {
-                push @error_messages, "No marker name given on line $line_count. Marker name can be . if not assigned";
+                push @error_messages, SGN::I18N::translate($i18n, "genotype.file.no_marker_name_given_on_line_line_count_marker_name_can_be", "No marker name given on line %{line_count}. Marker name can be . if not assigned", {line_count => ("" . "$line_count")});
             }
             if ($marker_info[0] eq '' || !defined($marker_info[0])) {
-                push @error_messages, "No chromosome 'chrom' given for marker $marker_name";
+                push @error_messages, SGN::I18N::translate($i18n, "genotype.file.no_chromosome_field_given_for_marker_marker_name", "No chromosome '%{field}' given for marker %{marker_name}", {field => "chrom", marker_name => ("" . "$marker_name")});
             }
             if ($marker_info[1] eq '' || !defined($marker_info[1])) {
-                push @error_messages, "No position 'pos' given for marker $marker_name";
+                push @error_messages, SGN::I18N::translate($i18n, "genotype.file.no_position_field_given_for_marker_marker_name", "No position '%{field}' given for marker %{marker_name}", {field => "pos", marker_name => ("" . "$marker_name")});
             }
             if (!$marker_info[3]) {
-                push @error_messages, "No reference 'ref' allele given for marker $marker_name";
+                push @error_messages, SGN::I18N::translate($i18n, "genotype.file.no_reference_field_allele_given_for_marker_marker_name", "No reference '%{field}' allele given for marker %{marker_name}", {field => "ref", marker_name => ("" . "$marker_name")});
             }
             if (!$marker_info[4]) {
-                push @error_messages, "No alternate 'alt' allele given for marker $marker_name";
+                push @error_messages, SGN::I18N::translate($i18n, "genotype.file.no_alternate_field_allele_given_for_marker_marker_name", "No alternate '%{field}' allele given for marker %{marker_name}", {field => "alt", marker_name => ("" . "$marker_name")});
             }
             if (!$marker_info[8]) {
-                push @error_messages, "No format 'format' given for marker $marker_name";
+                push @error_messages, SGN::I18N::translate($i18n, "genotype.file.no_format_field_given_for_marker_marker_name", "No format '%{field}' given for marker %{marker_name}", {field => "format", marker_name => ("" . "$marker_name")});
             }
             $line_count++;
         }
@@ -125,35 +127,35 @@ sub _validate_with_plugin {
     close($F);
 
     if (scalar(@markers) < 1) {
-        push @error_messages, "Less than one marker is in your file!";
+        push @error_messages, SGN::I18N::translate($i18n, "genotype.file.less_than_one_marker_is_in_your_file", "Less than one marker is in your file!");
     }
 
     if ($header[0] ne '#CHROM'){
-        push @error_messages, 'Column 1 header must be "#CHROM".';
+        push @error_messages, SGN::I18N::translate($i18n, "genotype.file.column_column_header_must_be_field", "Column %{column} header must be \"%{field}\".", {column => "1", field => "#CHROM"});
     }
     if ($header[1] ne 'POS'){
-        push @error_messages, 'Column 2 header must be "POS".';
+        push @error_messages, SGN::I18N::translate($i18n, "genotype.file.column_column_header_must_be_field", "Column %{column} header must be \"%{field}\".", {column => "2", field => "POS"});
     }
     if ($header[2] ne 'ID'){
-        push @error_messages, 'Column 3 header must be "ID".';
+        push @error_messages, SGN::I18N::translate($i18n, "genotype.file.column_column_header_must_be_field", "Column %{column} header must be \"%{field}\".", {column => "3", field => "ID"});
     }
     if ($header[3] ne 'REF'){
-        push @error_messages, 'Column 4 header must be "REF".';
+        push @error_messages, SGN::I18N::translate($i18n, "genotype.file.column_column_header_must_be_field", "Column %{column} header must be \"%{field}\".", {column => "4", field => "REF"});
     }
     if ($header[4] ne 'ALT'){
-        push @error_messages, 'Column 5 header must be "ALT".';
+        push @error_messages, SGN::I18N::translate($i18n, "genotype.file.column_column_header_must_be_field", "Column %{column} header must be \"%{field}\".", {column => "5", field => "ALT"});
     }
     if ($header[5] ne 'QUAL'){
-        push @error_messages, 'Column 6 header must be "QUAL".';
+        push @error_messages, SGN::I18N::translate($i18n, "genotype.file.column_column_header_must_be_field", "Column %{column} header must be \"%{field}\".", {column => "6", field => "QUAL"});
     }
     if ($header[6] ne 'FILTER'){
-        push @error_messages, 'Column 7 header must be "FILTER".';
+        push @error_messages, SGN::I18N::translate($i18n, "genotype.file.column_column_header_must_be_field", "Column %{column} header must be \"%{field}\".", {column => "7", field => "FILTER"});
     }
     if ($header[7] ne 'INFO'){
-        push @error_messages, 'Column 8 header must be "INFO".';
+        push @error_messages, SGN::I18N::translate($i18n, "genotype.file.column_column_header_must_be_field", "Column %{column} header must be \"%{field}\".", {column => "8", field => "INFO"});
     }
     if ($header[8] ne 'FORMAT'){
-        push @error_messages, 'Column 9 header must be "FORMAT".';
+        push @error_messages, SGN::I18N::translate($i18n, "genotype.file.column_column_header_must_be_field", "Column %{column} header must be \"%{field}\".", {column => "9", field => "FORMAT"});
     }
 
     $self->chroms(\@chroms);
@@ -197,7 +199,7 @@ sub _validate_with_plugin {
     } elsif ($stock_type eq 'stocks'){
         @missing_stocks = @{$validator->validate($schema,'stocks',$observation_unit_names)->{'missing'}};
     } else {
-        push @error_messages, "You can only upload genotype data for a tissue_sample OR accession (including synonyms) OR stocks!"
+        push @error_messages, SGN::I18N::translate($i18n, "genotype.file.you_can_only_upload_genotype_data_for_a_field_or_accession_including", "You can only upload genotype data for a %{field} OR %{accession} (including synonyms) OR %{stocks}!", {field => "tissue_sample", accession => "accession", stocks => "stocks"})
     }
 
     my %unique_stocks;
@@ -224,7 +226,7 @@ sub _validate_with_plugin {
 
     if (scalar(@missing_stocks_return)>0){
         $errors{'missing_stocks'} = \@missing_stocks_return;
-        push @error_messages, "The following stocks are not in the database: ".join(',',@missing_stocks_return);
+        push @error_messages, SGN::I18N::translate($i18n, "genotype.file.the_following_stocks_are_not_in_the_database_items", "The following stocks are not in the database: %{items}", {items => join(',',@missing_stocks_return)});
     }
 
     #store any errors found in the parsed file to parse_errors accessor

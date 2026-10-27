@@ -18,6 +18,8 @@ Bryan Ellerbrock (bje24@cornell.edu)
 =cut
 
 use Moose;
+use SGN::I18N ();
+use CatalystX::GlobalContext '$c';
 use MooseX::FollowPBP;
 use Moose::Util::TypeConstraints;
 use Try::Tiny;
@@ -69,6 +71,7 @@ has 'member_type' => (
 
 sub add_population {
     my $self = shift;
+    my SGN::I18N $ui_add_population_i18n = SGN::I18N::translate($c);
     my $schema = $self->get_schema();
     my $population_name = $self->get_name();
     my $phenome_schema = $self->get_phenome_schema();
@@ -92,7 +95,7 @@ sub add_population {
         type_id => $population_cvterm_id,
     });
     if ($previous_pop_rs->count() > 0){
-        return { error => "$population_name already used in the database! Use another name or use the existing population entry." };
+        return { error => (SGN::I18N::translate($ui_add_population_i18n, "cross.model.population_exists", "%{population_name} already used in the database! Use another name or use the existing population entry.", {population_name => "" . ($population_name)})) };
     }
 
     my $acc_synonym_rs = $schema->resultset("Stock::Stock")->search({
@@ -143,7 +146,7 @@ sub add_population {
     };
     if ($error) {
         print STDERR "Error creating population $population_name: $error\n";
-        return { error => "Error creating population $population_name: $error" };
+        return { error => (SGN::I18N::translate($ui_add_population_i18n, "cross.model.population_create_error", "Error creating population %{population_name}: %{error}", {population_name => "" . ($population_name), error => "" . ($error)})) };
     } else {
         print STDERR "population $population_name added successfully\n";
         $phenome_schema->resultset("StockOwner")->find_or_create ({
@@ -152,11 +155,12 @@ sub add_population {
         });
     }
 
-    return { success => "Success! Population $population_name created", population_id=>$population_id };
+    return { success => (SGN::I18N::translate($ui_add_population_i18n, "cross.model.population_created", "Success! Population %{population_name} created", {population_name => "" . ($population_name)})), population_id=>$population_id };
 }
 
 sub add_members {
     my $self = shift;
+    my SGN::I18N $ui_add_members_i18n = SGN::I18N::translate($c);
     my $schema = $self->get_schema();
     my $population_name = $self->get_name();
     my @members = @{$self->get_members()};
@@ -185,10 +189,10 @@ sub add_members {
     };
     if ($error) {
         print STDERR "Error adding members to population $population_name: $error\n";
-        return { error => "Error adding members to population $population_name: $error" };
+        return { error => (SGN::I18N::translate($ui_add_members_i18n, "cross.model.population_members_error", "Error adding members to population %{population_name}: %{error}", {population_name => "" . ($population_name), error => "" . ($error)})) };
     } else {
         print STDERR "Member added to population $population_name successfully\n";
-        return { success => "Member added to population $population_name successfully!" };
+        return { success => (SGN::I18N::translate($ui_add_members_i18n, "cross.model.population_members_added", "Member added to population %{population_name} successfully!", {population_name => "" . ($population_name)})) };
     }
 }
 

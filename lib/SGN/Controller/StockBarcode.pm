@@ -1,6 +1,9 @@
 
 package SGN::Controller::StockBarcode;
 
+use SGN::I18N ();
+use CatalystX::GlobalContext '$c';
+
 use Moose;
 use File::Slurp;
 use PDF::Create;
@@ -996,6 +999,7 @@ sub download_pdf_labels :Path('/barcode/stock/download/pdf') :Args(0) {
 sub download_qrcode : Path('/barcode/stock/download/plot_QRcode') : Args(0) {
   my $self = shift;
   my $c = shift;
+    my SGN::I18N $ui_download_qrcode_i18n = SGN::I18N::translate($c);
 
   my $stock_names = $c->req->param("stock_names_2");
   my $stock_names_file = $c->req->upload("stock_names_file_2");
@@ -1052,7 +1056,7 @@ sub download_qrcode : Path('/barcode/stock/download/plot_QRcode') : Args(0) {
     my $type_id = $stock->type_id();
     if ($type_id == $accession_cvterm_id) {
       print "You are using accessions\n";
-      my $error = "used only for downloading Plot barcodes.";
+      my $error = (SGN::I18N::translate($ui_download_qrcode_i18n, 'barcode.server.used_only_for_downloading_plot_barcodes', 'used only for downloading Plot barcodes.'));
       $c->stash->{error} = $error;
       $c->stash->{template} = '/barcode/stock_download_result.mas';
       $c->detach;
@@ -1344,12 +1348,15 @@ sub label_to_page {
 
 sub upload_barcode_output : Path('/breeders/phenotype/upload') :Args(0) {
     my ($self, $c) = @_;
+    my SGN::I18N $ui_upload_barcode_output_i18n = SGN::I18N::translate($c);
     my $upload = $c->req->upload('phenotype_file');
     my @contents = split /\n/, $upload->slurp;
     my $basename = $upload->basename;
     my $tempfile = $upload->tempname; #create a tempfile with the uploaded file
     if (! -e $tempfile) {
-        die "The file does not exist!\n\n";
+        die (SGN::I18N::translate($ui_upload_barcode_output_i18n, 'barcode.server.the_file_does_not_exist', 'The file does not exist!
+
+'));
     }
     print STDERR "***Basename= $basename, tempfile = $tempfile \n\n"; ##OK
     my $archive_path = $c->config->{archive_path};
@@ -1358,7 +1365,8 @@ sub upload_barcode_output : Path('/breeders/phenotype/upload') :Args(0) {
     print STDERR "**tempfile = $tempfile \n\n"; ##OK
     #chack for write permissions in $archive_path !
     my $upload_success = $upload->copy_to($archive_path . "/" . $basename); #returns false for failure, true for success
-    if (!$upload_success) { die "Could not upload!\n $upload_success" ; }
+    if (!$upload_success) { die (SGN::I18N::translate($ui_upload_barcode_output_i18n, 'barcode.server.could_not_upload_upload_success', 'Could not upload!
+ %{upload_success}', {upload_success => ("" . ("$upload_success"))})) ; }
     my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
     my $sb = CXGN::Stock::StockBarcode->new( { schema=> $c->dbic_schema("Bio::Chado::Schema", 'sgn_chado', $sp_person_id) });
     my $identifier_prefix = $c->config->{identifier_prefix};

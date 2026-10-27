@@ -1,11 +1,15 @@
 
 package CXGN::Trial::TrialDesign::Plugin::Alpha;
 
+use CXGN::Trial::TrialDesign::ROutput qw(read_rbase_utf8);
+
 use Moose::Role;
+use SGN::I18N ();
 
 sub create_design {
 #sub _get_alpha_lattice_design {
     my $self = shift;
+    my SGN::I18N $design_i18n = $self->i18n;
     my %alpha_design;
     my $rbase = R::YapRI::Base->new();
     my @stock_list;
@@ -30,7 +34,7 @@ sub create_design {
     if ($self->has_stock_list()) {
 	@stock_list = @{$self->get_stock_list()};
     } else {
-	die "No stock list specified\n";
+	die (($design_i18n ? $design_i18n->p("genotype.generation.no_stock_list", "No stock list specified") : "No stock list specified") . "\n");
     }
     if ($self->has_control_list_crbd()) {
 	@control_list_crbd = @{$self->get_control_list_crbd()};
@@ -41,10 +45,10 @@ sub create_design {
     if ($self->has_number_of_reps()) {
 	$number_of_reps = $self->get_number_of_reps();
 	if ($number_of_reps < 2) {
-	    die "Number of reps for alpha lattice design must be 2 or greater\n";
+	    die (($design_i18n ? $design_i18n->p("trial.design.alpha_reps", "Number of reps for alpha lattice design must be 2 or greater") : "Number of reps for alpha lattice design must be 2 or greater") . "\n");
 	}
     } else {
-	die "Number of reps not specified\n";
+	die (($design_i18n ? $design_i18n->p("trial.design.reps_missing", "Number of reps not specified") : "Number of reps not specified") . "\n");
     }
     
     if ($self->has_fieldmap_col_number()) {
@@ -55,11 +59,11 @@ sub create_design {
 	$block_size = $self->get_block_size();
 	#print STDERR "block size = $block_size\n";
 	if ($block_size < 3) {
-	    die "Block size must be greater than 2 for alpha lattice design\n";
+	    die (($design_i18n ? $design_i18n->p("trial.design.alpha_block_size", "Block size must be greater than 2 for alpha lattice design") : "Block size must be greater than 2 for alpha lattice design") . "\n");
 	}
 	#	print "stock_list: ".scalar(@stock_list)."block_size: $block_size\n";
 	if (scalar(@stock_list) % $block_size != 0) {
-	    die "Number of stocks (".scalar(@stock_list).") for alpha lattice design is not divisible by the block size ($block_size)\n";
+	    die (($design_i18n ? $design_i18n->p("trial.design.alpha_divisible", "Number of stocks (%{stocks}) for alpha lattice design is not divisible by the block size (%{size})", {stocks => scalar(@stock_list), size => $block_size}) : "Number of stocks (".scalar(@stock_list).") for alpha lattice design is not divisible by the block size ($block_size)") . "\n");
 	}
 	#     else {
 	# 		my $dummy_var = scalar(@stock_list) % $block_size;
@@ -74,10 +78,10 @@ sub create_design {
 	
 	$number_of_blocks = scalar(@stock_list)/$block_size;
 	if ($number_of_blocks < $block_size) {
-	    die "The number of blocks ($number_of_blocks) for alpha lattice design must not be less than the block size ($block_size)\n";
+	    die (($design_i18n ? $design_i18n->p("trial.design.alpha_blocks", "The number of blocks (%{blocks}) for alpha lattice design must not be less than the block size (%{size})", {blocks => $number_of_blocks, size => $block_size}) : "The number of blocks ($number_of_blocks) for alpha lattice design must not be less than the block size ($block_size)") . "\n");
 	}
     } else {
-	die "No block size specified\n";
+	die (($design_i18n ? $design_i18n->p("trial.design.block_size_missing", "No block size specified") : "No block size specified") . "\n");
     }
     
     if ($self->has_fieldmap_row_number()) {
@@ -122,7 +126,7 @@ sub create_design {
     
     $r_block->run_block();
     
-    $result_matrix = R::YapRI::Data::Matrix->read_rbase( $rbase,'r_block','alpha_book');
+    $result_matrix = read_rbase_utf8( $rbase,'r_block','alpha_book');
     @plot_numbers = $result_matrix->get_column("plots");
     @block_numbers = $result_matrix->get_column("block");
     @rep_numbers = $result_matrix->get_column("replication");

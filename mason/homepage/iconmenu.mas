@@ -139,48 +139,48 @@ pages.
 
 <div id="icon_nav">
 <ul>
-	<li class="MapsMarkers"><a href="/cview/" ><img src="/img/soliconmenu/MapsMarkers.png" title="Maps and Markers" /></a>
+	<li class="MapsMarkers"><a href="/cview/" ><img src="/img/soliconmenu/MapsMarkers.png" title="<% $c->i18n->p('global.iconmenu.maps_markers', 'Maps and Markers') |h %>" /></a>
 
    		<ul>
         	  <div class="submenu MapsMarkersSubMenu">
-		    <li><a href="/cview/index.pl">Available maps</a></li>
-                    <li><a href="/cview/view_chromosome.pl?show_offsets=1&show_ruler=1&show_offsets=1">Comparative viewer</a></li>
-                    <li><a href="/search/direct_search.pl?search=markers">Search markers</a></li>
+		    <li><a href="/cview/index.pl"><% $c->i18n->p('global.iconmenu.available_maps', 'Available maps') |h %></a></li>
+                    <li><a href="/cview/view_chromosome.pl?show_offsets=1&show_ruler=1&show_offsets=1"><% $c->i18n->p('global.iconmenu.comparative_viewer', 'Comparative viewer') |h %></a></li>
+                    <li><a href="/search/direct_search.pl?search=markers"><% $c->i18n->p('global.iconmenu.search_markers', 'Search markers') |h %></a></li>
 		    <li><a href="">&nbsp;</a></li>
-		    <li><a href="/cview/help/map_submission">Submit map information to SGN</a></li>
+		    <li><a href="/cview/help/map_submission"><% $c->i18n->p('global.iconmenu.submit_map_information', 'Submit map information to SGN') |h %></a></li>
 		  </div>
 		</ul>
 	</li>
 
-	<li class="Genes"><a href="/search/direct_search.pl?search=loci" style="background: none"><img src="/img/soliconmenu/Genes.png" title="Genes" /></a>
+	<li class="Genes"><a href="/search/direct_search.pl?search=loci" style="background: none"><img src="/img/soliconmenu/Genes.png" title="<% $c->i18n->p('global.iconmenu.genes', 'Genes') |h %>" /></a>
 	  <ul>
             <div class="submenu GenesSubMenu"  >
-              <li><a href="/search/direct_search.pl?search=loci">Search loci</a></li>
-              <li><a href="/search/direct_search.pl?search=unigene">Search unigenes</a></li>
-              <li><a href="/search/direct_search.pl?search=template">Expression</a></li>
-              <li><a href="/organism/Solanum_lycopersicum/genome">Search/browse tomato genome</a></li>
-	      <li><a href="/phenome/">Become an SGN locus editor</a></li>              
+              <li><a href="/search/direct_search.pl?search=loci"><% $c->i18n->p('global.iconmenu.search_loci', 'Search loci') |h %></a></li>
+              <li><a href="/search/direct_search.pl?search=unigene"><% $c->i18n->p('global.iconmenu.search_unigenes', 'Search unigenes') |h %></a></li>
+              <li><a href="/search/direct_search.pl?search=template"><% $c->i18n->p('global.iconmenu.expression', 'Expression') |h %></a></li>
+              <li><a href="/organism/Solanum_lycopersicum/genome"><% $c->i18n->p('global.iconmenu.search_browse_crop_genome', 'Search/browse %{crop} genome', {crop => 'tomato'}) |h %></a></li>
+	      <li><a href="/phenome/"><% $c->i18n->p('global.iconmenu.become_locus_editor', 'Become an SGN locus editor') |h %></a></li>
 	      </div>
 	      
 	  </ul>
 
 
 
-	<li class="Phenotypes"><a href="/search/direct_search.pl?search=phenotypes" style="background: none"><img src="/img/soliconmenu/Phenotypes.png" alt="Phenotypes and QTLs" title="Phenotypes and QTLs" /></a>
+	<li class="Phenotypes"><a href="/search/direct_search.pl?search=phenotypes" style="background: none"><img src="/img/soliconmenu/Phenotypes.png" alt="<% $c->i18n->p('global.iconmenu.phenotypes_qtls', 'Phenotypes and QTLs') |h %>" title="<% $c->i18n->p('global.iconmenu.phenotypes_qtls', 'Phenotypes and QTLs') |h %>" /></a>
 	  <ul>
 	    <div class="submenu PhenotypesSubMenu">
-              <li><a href="/search/direct_search.pl?search=phenotypes">Search phenotypes</a></li>
+              <li><a href="/search/direct_search.pl?search=phenotypes"><% $c->i18n->p('global.iconmenu.search_phenotypes', 'Search phenotypes') |h %></a></li>
 
-              <li><a href="/qtl/">Analyze QTLs</a></li>
-              <li><a href="/tools/onto/">Ontology browser</a></li>
+              <li><a href="/qtl/"><% $c->i18n->p('global.iconmenu.analyze_qtls', 'Analyze QTLs') |h %></a></li>
+              <li><a href="/tools/onto/"><% $c->i18n->p('global.iconmenu.ontology_browser', 'Ontology browser') |h %></a></li>
 	      <li><a href="">&nbsp;</a></li>
-	      <li><a href="/phenome/">Submit phenotype data</a></li>
+	      <li><a href="/phenome/"><% $c->i18n->p('global.iconmenu.submit_phenotype_data', 'Submit phenotype data') |h %></a></li>
             </div>
           </ul>
 
 	</li>
     
-    <li class="BreedersToolBox"><a href="/breeders/"><img src="/img/soliconmenu/BreedersToolBox.png" alt="Breeders Toolbox" title="Click to access the Breeder's toolbox" /></a>
+    <li class="BreedersToolBox"><a href="/breeders/"><img src="/img/soliconmenu/BreedersToolBox.png" alt="<% $c->i18n->p('global.iconmenu.breeders_toolbox', 'Breeders Toolbox') |h %>" title="<% $c->i18n->p('global.iconmenu.click_breeders_toolbox', 'Click to access the Breeder\'s toolbox') |h %>" /></a>
     	<!--
 		<ul>
             <div class="submenu BreedersToolBoxSubMenu">
@@ -192,7 +192,7 @@ pages.
         -->
 	</li>
     
-  <li class="GenomesSequences"><a href="/genomes"><img src="/img/soliconmenu/GenomesSequences.png" alt="Genomes and Sequences" title="Genomes and Sequences" /></a>
+  <li class="GenomesSequences"><a href="/genomes"><img src="/img/soliconmenu/GenomesSequences.png" alt="<% $c->i18n->p('global.iconmenu.genomes_sequences', 'Genomes and Sequences') |h %>" title="<% $c->i18n->p('global.iconmenu.genomes_sequences', 'Genomes and Sequences') |h %>" /></a>
     <ul>
       <div class="submenu GenomesSequencesSubMenu">
         <li><a href="/organism/Solanum_lycopersicum/genome">Tomato Genome Project</a></li>
@@ -206,7 +206,7 @@ pages.
     </ul>
   </li>
     
-    <li class="Pathways"><a href="http://solcyc.solgenomics.net/"><img src="/img/soliconmenu/Pathways.png" alt="Pathways" title="Click to access SolCyc" /></a>
+    <li class="Pathways"><a href="http://solcyc.solgenomics.net/"><img src="/img/soliconmenu/Pathways.png" alt="<% $c->i18n->p('global.iconmenu.pathways', 'Pathways') |h %>" title="<% $c->i18n->p('global.iconmenu.click_solcyc', 'Click to access SolCyc') |h %>" /></a>
     	<!--
 		<ul>
             <div class="submenu PathwaysSubMenu">

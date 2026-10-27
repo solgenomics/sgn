@@ -34,9 +34,9 @@ $training_pop_id   => undef,
 
     <div>
     <div id="anova_select_a_trait_div" style="display:inline-block;"></div>
-    <button style="display:inline-block;" id="run_anova" class="btn btn-success">Run ANOVA</button>
+    <button style="display:inline-block;" id="run_anova" class="btn btn-success"><% $c->i18n->p("solgs.interface.run_anova", "Run ANOVA") |h %></button>
 
-    <button id="clear_cache_anova" class="btn btn-warning pull-right hidden">Clear cache</button>
+    <button id="clear_cache_anova" class="btn btn-warning pull-right hidden"><% $c->i18n->p("solgs.interface.clear_cache", "Clear cache") |h %></button>
 
   </div>
     <div id="anova_selected_trait_div" style="display:none">

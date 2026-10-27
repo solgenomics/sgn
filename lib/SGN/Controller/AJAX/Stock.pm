@@ -22,6 +22,7 @@ use Moose;
 use List::MoreUtils qw /any /;
 use Data::Dumper;
 use Try::Tiny;
+use HTML::Entities ();
 use CXGN::Phenome::Schema;
 use CXGN::Phenome::Allele;
 use CXGN::Stock;
@@ -70,7 +71,7 @@ sub add_stockprop_POST {
     my $response;
     my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
     if (!$c->user()) {
-	$c->stash->{rest} = { error => "Log in required for adding stock properties." }; return;
+	$c->stash->{rest} = { error => $c->i18n->p("accession.stock.message_1", "Log in required for adding stock properties.") }; return;
     }
 
     if (  any { $_ eq 'curator' || $_ eq 'submitter' || $_ eq 'sequencer' } $c->user->roles() ) {
@@ -93,11 +94,11 @@ sub add_stockprop_POST {
             my $found_accessions = $fuzzy_search_result->{'found'};
             my $fuzzy_accessions = $fuzzy_search_result->{'fuzzy'};
             if ($fuzzy_search_result->{'error'}){
-                $c->stash->{rest} = { error => "ERROR: ".$fuzzy_search_result->{'error'} };
+                $c->stash->{rest} = { error => $c->i18n->p("accession.stock.message_2", "ERROR: ").$fuzzy_search_result->{'error'} };
                 $c->detach();
             }
             if (scalar(@$found_accessions) > 0){
-                $c->stash->{rest} = { error => "Synonym not added: The synonym you are adding is already stored as its own unique stock or as a synonym." };
+                $c->stash->{rest} = { error => $c->i18n->p("accession.stock.message_3", "Synonym not added: The synonym you are adding is already stored as its own unique stock or as a synonym.") };
                 $c->detach();
             }
             if (scalar(@$fuzzy_accessions) > 0){
@@ -107,7 +108,7 @@ sub add_stockprop_POST {
                         push @fuzzy_match_names, $m->{'name'};
                     }
                 }
-                $message = "CAUTION: The synonym you are adding is similar to these accessions and synonyms in the database: ".join(', ', @fuzzy_match_names).".";
+                $message = $c->i18n->p("accession.stock.message_48", "CAUTION: The synonym you are adding is similar to these accessions and synonyms in the database: ").join(', ', @fuzzy_match_names).".";
             }
         }
 
@@ -131,18 +132,18 @@ sub add_stockprop_POST {
             #my $bs = CXGN::BreederSearch->new( { dbh=>$dbh, dbname=>$c->config->{dbname}, } );
 #            my $refresh = $bs->refresh_matviews($c->config->{dbhost}, $c->config->{dbname}, $c->config->{dbuser}, $c->config->{dbpass}, 'stockprop', 'concurrent', $c->config->{basepath});
 
-            $c->stash->{rest} = { message => "$message Stock_id $stock_id and type_id $prop_type have been associated with value $prop. " }; #.$refresh->{'message'} };
+            $c->stash->{rest} = { message => $c->i18n->p("accession.stock.message_4", "%{message} Stock_id %{stock_id} and type_id %{prop_type} have been associated with value %{prop}. ", {message => "" . ($message), stock_id => "" . ($stock_id), prop_type => "" . ($prop_type), prop => "" . ($prop)}) }; #.$refresh->{'message'} };
 
         } catch {
 	    print STDERR "AN ERROR OCCURRED: $_\n";
-            $c->stash->{rest} = { error => "Failed: $_" }
+            $c->stash->{rest} = { error => do { my $ui_error_details = "" . ($_); $c->i18n->p("accession.stock.message_5", "Failed: %{details}", {details => $ui_error_details}) } }
         };
     } else {
 	print STDERR "CANNOT ASSOCIATE $prop_type $prop with $stock_id\n";
-	    $c->stash->{rest} = { error => "Cannot associate prop $prop_type: $prop with stock $stock_id " };
+	    $c->stash->{rest} = { error => $c->i18n->p("accession.stock.message_6", "Cannot associate prop %{prop_type}: %{prop} with stock %{stock_id} ", {prop_type => "" . ($prop_type), prop => "" . ($prop), stock_id => "" . ($stock_id)}) };
 	}
     } else {
-	$c->stash->{rest} = { error => 'user does not have a curator/sequencer/submitter account' };
+	$c->stash->{rest} = { error => $c->i18n->p("accession.stock.message_7", "user does not have a curator/sequencer/submitter account") };
     }
     $c->stash->{rest} = { message => 'success' };
 }
@@ -201,23 +202,23 @@ sub delete_stockprop_GET {
     my $c = shift;
     my $stockprop_id = $c->req->param("stockprop_id");
     if (! any { $_ eq 'curator' || $_ eq 'submitter' || $_ eq 'sequencer' } $c->user->roles() ) {
-	$c->stash->{rest} = { error => 'Log in required for deletion of stock properties.' };
+	$c->stash->{rest} = { error => $c->i18n->p("accession.stock.message_8", "Log in required for deletion of stock properties.") };
 	return;
     }
     my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
     my $spr = $schema->resultset("Stock::Stockprop")->find( { stockprop_id => $stockprop_id });
     if (! $spr) {
-	$c->stash->{rest} = { error => 'The specified prop does not exist' };
+	$c->stash->{rest} = { error => $c->i18n->p("accession.stock.message_9", "The specified prop does not exist") };
 	return;
     }
     eval {
 	$spr->delete();
     };
     if ($@) {
-	$c->stash->{rest} = { error => "An error occurred during deletion: $@" };
+	$c->stash->{rest} = { error => do { my $ui_error_details = "" . ($@); $c->i18n->p("accession.stock.message_10", "An error occurred during deletion: %{details}", {details => $ui_error_details}) } };
 	    return;
     }
-    $c->stash->{rest} = { message => "The element was removed from the database." };
+    $c->stash->{rest} = { message => $c->i18n->p("accession.stock.message_11", "The element was removed from the database.") };
 
 }
 
@@ -227,7 +228,7 @@ sub associate_locus:Path('/ajax/stock/associate_locus') :ActionClass('REST') {}
 
 sub associate_locus_POST :Args(0) {
     my ($self, $c) = @_;
-    $c->stash->{rest} = { error => "Nothing here, it's a POST.." } ;
+    $c->stash->{rest} = { error => $c->i18n->p("accession.stock.message_12", "Nothing here, it's a POST..") } ;
 }
 
 sub associate_locus_GET :Args(0) {
@@ -238,7 +239,7 @@ sub associate_locus_GET :Args(0) {
     #phytoene synthase 1 (psy1)
     my $locus_input = $c->req->param('loci') ;
     if (!$locus_input) {
-        $self->status_bad_request($c, message => 'need loci param' );
+        $self->status_bad_request($c, message => $c->i18n->p("accession.stock.message_13", "need loci param") );
         return;
     }
     my ($locus_data, $allele_symbol) = split (/ Allele: / ,$locus_input);
@@ -259,13 +260,13 @@ sub associate_locus_GET :Args(0) {
             allele_symbol => $allele_symbol,
             is_default => $is_default} );
     if (!$allele) {
-        $c->stash->{rest} = { error => "no allele found for locus '$locus_data' (allele: '$allele_symbol')" };
+        $c->stash->{rest} = { error => $c->i18n->p("accession.stock.message_14", "no allele found for locus '%{locus_data}' (allele: '%{allele_symbol}')", {locus_data => "" . ($locus_data), allele_symbol => "" . ($allele_symbol)}) };
         return;
     }
     my $stock = $schema->resultset("Stock::Stock")->find({stock_id => $stock_id } ) ;
     my  $allele_id = $allele->allele_id;
     if (!$c->user) {
-        $c->stash->{rest} = { error => 'Must be logged in for associating loci! ' };
+        $c->stash->{rest} = { error => $c->i18n->p("accession.stock.message_15", "Must be logged in for associating loci! ") };
         return;
     }
     if ( any { $_ eq 'curator' || $_ eq 'submitter' || $_ eq 'sequencer' } $c->user->roles() ) {
@@ -281,14 +282,14 @@ sub associate_locus_GET :Args(0) {
                 # need to update the loci div!!
                 return;
             } catch {
-                $c->stash->{rest} = { error => "Failed: $_" };
+                $c->stash->{rest} = { error => do { my $ui_error_details = "" . ($_); $c->i18n->p("accession.stock.message_5", "Failed: %{details}", {details => $ui_error_details}) } };
                 return;
             };
         } else {
-            $c->stash->{rest} = { error => 'need both valid stock_id and allele_id for adding the stockprop! ' };
+            $c->stash->{rest} = { error => $c->i18n->p("accession.stock.message_16", "need both valid stock_id and allele_id for adding the stockprop! ") };
         }
     } else {
-        $c->stash->{rest} = { error => 'No privileges for adding new loci. You must have an sgn submitter account. Please contact sgn-feedback@solgenomics.net for upgrading your user account. ' };
+        $c->stash->{rest} = { error => $c->i18n->p("accession.stock.message_17", "No privileges for adding new loci. You must have an sgn submitter account. Please contact sgn-feedback\@solgenomics.net for upgrading your user account. ") };
     }
 }
 
@@ -322,7 +323,7 @@ sub display_alleles_GET  {
     }
     $hashref->{html} = @allele_data ?
         columnar_table_html(
-            headings     =>  [ "Locus name", "Allele symbol", "Phenotype" ],
+            headings     =>  [ HTML::Entities::encode_entities($c->i18n->p("accession.stock.locus_header", "Locus name")), HTML::Entities::encode_entities($c->i18n->p("accession.stock.allele_header", "Allele symbol")), HTML::Entities::encode_entities($c->i18n->p("accession.stock.phenotype_header", "Phenotype")) ],
             data         => \@allele_data,
         )  : undef ;
     $c->stash->{rest} = $hashref;
@@ -335,6 +336,10 @@ sub display_ontologies : Chained('/stock/get_stock') :PathPart('ontologies') : A
 
 sub display_ontologies_GET  {
     my ($self, $c) = @_;
+    my $ui_ontology_delete = HTML::Entities::encode_entities($c->i18n->p("accession.stock.ontology_delete", "delete"));
+
+    my $ui_ontology_unobsolete = HTML::Entities::encode_entities($c->i18n->p("accession.stock.ontology_unobsolete", "unobsolete"));
+
     $c->forward('/stock/get_stock_cvterms');
     my $schema = $c->dbic_schema("Bio::Chado::Schema", 'sgn_chado');
     my $stock = $c->stash->{stock};
@@ -407,7 +412,7 @@ sub display_ontologies_GET  {
         my $unobsolete;
         my $obsolete_link;
         if ($obsolete_prop) {
-            $unobsolete =  qq | <input type = "button" onclick= "javascript:Tools.toggleObsoleteAnnotation('0', \'$stock_cvterm_id\',  \'/ajax/stock/toggle_obsolete_annotation\', \'/stock/$stock_id/ontologies\')" value = "unobsolete" /> | if $privileged ;
+            $unobsolete =  qq | <input type = "button" onclick= "javascript:Tools.toggleObsoleteAnnotation('0', \'$stock_cvterm_id\',  \'/ajax/stock/toggle_obsolete_annotation\', \'/stock/$stock_id/ontologies\')" value = "$ui_ontology_unobsolete" /> | if $privileged ;
 
             # generate the list of obsolete annotations
             push @obs_annot,
@@ -419,7 +424,7 @@ sub display_ontologies_GET  {
             my $ontology_details = $rel_name
                 . qq| $cvterm_link ($db_name:<a href="$url$db_accession" target="blank"> $accession</a>)<br />|;
             # build the obsolete link if the user has  editing privileges
-            $obsolete_link =  qq | <input type = "button" onclick="javascript:Tools.toggleObsoleteAnnotation('1', \'$stock_cvterm_id\',  \'/ajax/stock/toggle_obsolete_annotation\', \'/stock/$stock_id/ontologies\')" value ="delete" /> | if $privileged ;
+            $obsolete_link =  qq | <input type = "button" onclick="javascript:Tools.toggleObsoleteAnnotation('1', \'$stock_cvterm_id\',  \'/ajax/stock/toggle_obsolete_annotation\', \'/stock/$stock_id/ontologies\')" value ="$ui_ontology_delete" /> | if $privileged ;
 
             my ($ev_with) = $props->search( {'type.name' => 'evidence_with'} , { join => 'type'  } )->single;
             my $ev_with_dbxref = $ev_with ? $schema->resultset("General::Dbxref")->find( { dbxref_id=> $ev_with->value } ) : undef;
@@ -480,7 +485,7 @@ sub display_ontologies_GET  {
             $obsoleted .= qq |$term  <br />\n |;
         }
         $print_obsoleted = html_alternate_show(
-            'obsoleted_terms', 'Show obsolete',
+            'obsoleted_terms', HTML::Entities::encode_entities($c->i18n->p("accession.stock.show_obsolete", "Show obsolete")),
             '',                qq|<div class="minorbox">$obsoleted</div> |,
             );
     }
@@ -493,7 +498,7 @@ sub associate_ontology:Path('/ajax/stock/associate_ontology') :ActionClass('REST
 
 sub associate_ontology_GET :Args(0) {
     my ($self, $c) = @_;
-    $c->stash->{rest} = { error => "Nothing here, it's a GET.." } ;
+    $c->stash->{rest} = { error => $c->i18n->p("accession.stock.message_18", "Nothing here, it's a GET..") } ;
 }
 
 
@@ -531,14 +536,14 @@ sub associate_ontology_POST :Args(0) {
         ->search({ 'me.name' => $db_name, } )->search_related('dbxrefs' , { accession => $accession } )
         ->search_related('cvterm')->first; # should be only 1 cvterm per dbxref
     if (!$cvterm) {
-        $c->stash->{rest} = { error => "no ontology term found for term $db_name : $accession" };
+        $c->stash->{rest} = { error => $c->i18n->p("accession.stock.message_19", "no ontology term found for term %{db_name} : %{accession}", {db_name => "" . ($db_name), accession => "" . ($accession)}) };
         return;
     }
     my ($stock) = $c->stash->{stock} || $schema->resultset("Stock::Stock")->find( { stock_id => $stock_id } );
 
     my  $cvterm_id = $cvterm->cvterm_id;
     if (!$c->user) {
-        $c->stash->{rest} = { error => 'Must be logged in for associating ontology terms! ' };
+        $c->stash->{rest} = { error => $c->i18n->p("accession.stock.message_20", "Must be logged in for associating ontology terms! ") };
         return;
     }
     if ( any { $_ eq 'curator' || $_ eq 'submitter' || $_ eq 'sequencer' } $c->user->roles() ) {
@@ -575,7 +580,7 @@ sub associate_ontology_POST :Args(0) {
 
                     # return error if annotation + evidence exist
                     if ($rel_prop && $ev_prop) {
-                        $c->stash->{rest} = { error => "Annotation exists with these evidence codes! " };
+                        $c->stash->{rest} = { error => $c->i18n->p("accession.stock.message_21", "Annotation exists with these evidence codes! ") };
                         return;
                     }
                 }
@@ -605,7 +610,7 @@ sub associate_ontology_POST :Args(0) {
                 return;
             } catch {
                 print STDERR "***** associate_ontology failed! $_ \n\n";
-                $c->stash->{rest} = { error => "Failed: $_" };
+                $c->stash->{rest} = { error => do { my $ui_error_details = "" . ($_); $c->i18n->p("accession.stock.message_5", "Failed: %{details}", {details => $ui_error_details}) } };
                 # send an email to sgn bugs
                 $c->stash->{email} = {
                     to      => 'sgn-bugs@sgn.cornell.edu',
@@ -627,10 +632,10 @@ sub associate_ontology_POST :Args(0) {
             $c->forward( $c->view('Email') );
 
         } else {
-            $c->stash->{rest} = { error => 'need both valid stock_id and cvterm_id for adding an ontology term to this stock! ' };
+            $c->stash->{rest} = { error => $c->i18n->p("accession.stock.message_22", "need both valid stock_id and cvterm_id for adding an ontology term to this stock! ") };
         }
     } else {
-        $c->stash->{rest} = { error => 'No privileges for adding new ontology terms. You must have an sgn submitter account. Please contact sgn-feedback@solgenomics.net for upgrading your user account. ' };
+        $c->stash->{rest} = { error => $c->i18n->p("accession.stock.message_23", "No privileges for adding new ontology terms. You must have an sgn submitter account. Please contact sgn-feedback\@solgenomics.net for upgrading your user account. ") };
     }
 }
 
@@ -697,8 +702,8 @@ sub toggle_obsolete_annotation_POST :Args(0) {
             }
             $response->{response} = "success";
         }
-        else { $response->{error} = "No stock_cvtermp found for id $stock_cvterm_id ! "; }
-    } else { $response->{error} = 'stock_cvterm $stock_cvterm_id does not exists! ';  }
+        else { $response->{error} = $c->i18n->p("accession.stock.message_24", "No stock_cvtermp found for id %{stock_cvterm_id} ! ", {stock_cvterm_id => "" . ($stock_cvterm_id)}); }
+    } else { $response->{error} = $c->i18n->p("accession.stock.message_25", "stock_cvterm \$stock_cvterm_id does not exists! ");  }
     $c->stash->{rest} = $response;
 }
 
@@ -1431,12 +1436,12 @@ sub remove_parent_GET : Path('/ajax/stock/parent/remove') Args(0) {
     my $parent_id = $c->req->param("parent_id");
 
     if (!$stock_id || ! $parent_id) {
-	$c->stash->{rest} = { error => "No stock and parent specified" };
+	$c->stash->{rest} = { error => $c->i18n->p("accession.stock.message_26", "No stock and parent specified") };
 	return;
     }
 
     if (! ($c->user && ($c->user->check_roles('curator') || $c->user->check_roles('submitter'))))  {
-	$c->stash->{rest} = { error => "Log in is required, or insufficient privileges, for removing parents" };
+	$c->stash->{rest} = { error => $c->i18n->p("accession.stock.message_27", "Log in is required, or insufficient privileges, for removing parents") };
 	return;
     }
 
@@ -1472,13 +1477,13 @@ sub add_stock_parent_GET :Args(0) {
     my ($self, $c) = @_;
     if (!$c->user()) {
 	print STDERR "User not logged in... not associating stocks.\n";
-	$c->stash->{rest} = {error => "You need to be logged in to add pedigree information." };
+	$c->stash->{rest} = {error => $c->i18n->p("accession.stock.message_28", "You need to be logged in to add pedigree information.") };
 	return;
     }
 
     if (!any { $_ eq "curator" || $_ eq "submitter" } ($c->user()->roles)  ) {
 	print STDERR "User does not have sufficient privileges.\n";
-	$c->stash->{rest} = {error =>  "you have insufficient privileges to add pedigree information." };
+	$c->stash->{rest} = {error =>  $c->i18n->p("accession.stock.message_29", "you have insufficient privileges to add pedigree information.") };
 	return;
     }
 
@@ -1535,7 +1540,7 @@ sub add_phenotype :PATH('/ajax/stock/add_phenotype') : ActionClass('REST') { }
 
 sub add_phenotype_GET :Args(0) {
     my ($self, $c) = @_;
-    $c->stash->{rest} = { error => "Nothing here, it's a GET.." } ;
+    $c->stash->{rest} = { error => $c->i18n->p("accession.stock.message_18", "Nothing here, it's a GET..") } ;
 }
 
 sub add_phenotype_POST {
@@ -1585,11 +1590,11 @@ sub add_phenotype_POST {
                     phenotype_id => $phenotype->phenotype_id()
                 } );
 
-            $response = { message => "stock_id $stock_id and project_id $project_id associated with cvterm $observable_id , phenotype value $value (phenotype_id = " . $phenotype->phenotype_id . "\n" , }
+            $response = { message => $c->i18n->p("accession.stock.message_30", "stock_id %{stock_id} and project_id %{project_id} associated with cvterm %{observable_id} , phenotype value %{value} (phenotype_id = ", {stock_id => "" . ($stock_id), project_id => "" . ($project_id), observable_id => "" . ($observable_id), value => "" . ($value)}) . $phenotype->phenotype_id . "\n" , }
         } catch {
-            $response = { error => "Failed: $_" }
+            $response = { error => do { my $ui_error_details = "" . ($_); $c->i18n->p("accession.stock.message_5", "Failed: %{details}", {details => $ui_error_details}) } }
         };
-    }  else {  $c->stash->{rest} = { error => 'user does not have a curator/sequencer/submitter account' };
+    }  else {  $c->stash->{rest} = { error => $c->i18n->p("accession.stock.message_7", "user does not have a curator/sequencer/submitter account") };
     }
 }
 
@@ -1672,7 +1677,7 @@ sub get_stock_trials :Chained('/stock/get_stock') PathPart('datatables/trials') 
 
     my @formatted_trials;
     foreach my $t (@trials) {
-	push @formatted_trials, [ '<a href="/breeders/trial/'.$t->[0].'">'.$t->[1].'</a>', $t->[3], '<a href="javascript:show_stock_trial_detail('.$c->stash->{stock}->get_stock_id().', \''.$c->stash->{stock}->get_name().'\' ,'.$t->[0].',\''.$t->[1].'\')">Details</a>' ];
+	push @formatted_trials, [ '<a href="/breeders/trial/'.$t->[0].'">'.$t->[1].'</a>', $t->[3], '<a href="javascript:show_stock_trial_detail('.$c->stash->{stock}->get_stock_id().', \''.$c->stash->{stock}->get_name().'\' ,'.$t->[0].',\''.$t->[1].'\')">' . HTML::Entities::encode_entities($c->i18n->p("accession.stock.trial_details", "Details")) . '</a>' ];
     }
     $c->stash->{rest} = { data => \@formatted_trials };
 }
@@ -1779,7 +1784,7 @@ sub get_shared_trials :Path('/stock/get_shared_trials'){
         foreach my $t (@current_trials) {
             #print STDERR "t = " . Dumper($t);
             if (grep {$t->[0] == $_} @all_analyses){
-                $trials_string = $trials_string . '<a href="/analyses/'.$t->[0].'" style="color: limegreen">'.$t->[1].' (Analysis)'.'</a>,  ';
+                $trials_string = $trials_string . '<a href="/analyses/'.$t->[0].'" style="color: limegreen">'.$t->[1].HTML::Entities::encode_entities($c->i18n->p("accession.stock.analysis_suffix", " (Analysis)")).'</a>,  ';
             } else {
                 $trials_string = $trials_string . '<a href="/breeders/trial/'.$t->[0].'">'.$t->[1].'</a>,  ';
             }
@@ -1793,15 +1798,15 @@ sub get_shared_trials :Path('/stock/get_shared_trials'){
 	    my $trials_string = '';
 	    foreach my $t (@shared_trials) {
             if (grep {$t->[0] == $_} @all_analyses){
-                $trials_string = $trials_string . '<a href="/analyses/'.$t->[0].'" style="color: limegreen">'.$t->[1].' (Analysis)'.'</a>,  ';
+                $trials_string = $trials_string . '<a href="/analyses/'.$t->[0].'" style="color: limegreen">'.$t->[1].HTML::Entities::encode_entities($c->i18n->p("accession.stock.analysis_suffix", " (Analysis)")).'</a>,  ';
             } else {
                 $trials_string = $trials_string . '<a href="/breeders/trial/'.$t->[0].'">'.$t->[1].'</a>,  ';
             }
       }
 	    $trials_string  =~ s/,\s+$//;
-	    push @formatted_rows, [ "Trials in Common", $num_trials, $trials_string];
+	    push @formatted_rows, [ HTML::Entities::encode_entities($c->i18n->p("accession.stock.trials_common", "Trials in Common")), $num_trials, $trials_string];
     } else {
-      push @formatted_rows, [ "Trials in Common", $num_trials, "No shared trials found."];
+      push @formatted_rows, [ HTML::Entities::encode_entities($c->i18n->p("accession.stock.trials_common", "Trials in Common")), $num_trials, HTML::Entities::encode_entities($c->i18n->p("accession.stock.no_shared_trials", "No shared trials found."))];
     }
 
     $c->stash->{rest} = { data => \@formatted_rows, shared_trials => \@shared_trials };
@@ -2040,7 +2045,7 @@ sub get_child_stocks : Path('/stock/get_child_stocks') Args(1) {
 
     if ($@) {
         print STDERR "Error: $@\n";
-        $c->stash->{rest} = {error => "An error occurred: $@"};
+        $c->stash->{rest} = {error => do { my $ui_error_details = "" . ($@); $c->i18n->p("accession.stock.message_31", "An error occurred: %{details}", {details => $ui_error_details}) }};
     }
 
 
@@ -2308,7 +2313,7 @@ sub get_stock_datatables_genotype_data_GET  {
                     $g->{genotypingDataProjectDescription},
                     $g->{analysisMethod},
                     $g->{genotypeDescription},
-                    '<a href="/stock/'.$stock_id.'/genotypes?genotype_id='.$g->{genotypeDbId}.'">Download</a>'
+                    '<a href="/stock/'.$stock_id.'/genotypes?genotype_id='.$g->{genotypeDbId}.'">' . HTML::Entities::encode_entities($c->i18n->p("accession.stock.genotype_download", "Download")) . '</a>'
                 ];
             }
             $counter++;
@@ -2337,11 +2342,11 @@ sub stock_obsolete_GET {
     my ( $self, $c ) = @_;
     my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
     if (!$c->user()) {
-        $c->stash->{rest} = { error => "Log in required for making stock obsolete." }; return;
+        $c->stash->{rest} = { error => $c->i18n->p("accession.stock.message_32", "Log in required for making stock obsolete.") }; return;
     }
 
     if ( !any { $_ eq 'curator' || $_ eq 'submitter' || $_ eq 'sequencer' } $c->user->roles() ) {
-        $c->stash->{rest} = { error => 'Cannot obsolete stock! You do not have a curator, sequencer or submitter account' };
+        $c->stash->{rest} = { error => $c->i18n->p("accession.stock.message_33", "Cannot obsolete stock! You do not have a curator, sequencer or submitter account") };
         $c->detach();
     }
 
@@ -2366,10 +2371,10 @@ sub stock_obsolete_GET {
             my $saved_stock_id = $stock->store();
             $c->stash->{rest} = { success => 1 };
         } catch {
-            $c->stash->{rest} = { error => "Failed: $_" }
+            $c->stash->{rest} = { error => do { my $ui_error_details = "" . ($_); $c->i18n->p("accession.stock.message_5", "Failed: %{details}", {details => $ui_error_details}) } }
         };
     } else {
-	    $c->stash->{rest} = { error => "Not a valid stock $stock_id " };
+	    $c->stash->{rest} = { error => $c->i18n->p("accession.stock.message_34", "Not a valid stock %{stock_id} ", {stock_id => "" . ($stock_id)}) };
 	}
 
 }
@@ -2387,9 +2392,12 @@ sub get_accessions_with_pedigree_GET {
     my @accessions_with_pedigree;
     foreach my $accession_info (@$result){
         my ($female_id, $female_name, $male_id, $male_name, $accession_id, $accession_name, $cross_type) =@$accession_info;
-        push @accessions_with_pedigree, [ qq{<a href="/stock/$accession_id/view">$accession_name</a>},
-            qq{<a href="/stock/$female_id/view">$female_name</a>},
-            qq{<a href="/stock/$male_id/view">$male_name</a>}, $cross_type, $accession_name ];
+        my $accession_label = HTML::Entities::encode_entities($accession_name, q{<>&"'});
+        my $female_label = HTML::Entities::encode_entities($female_name, q{<>&"'});
+        my $male_label = HTML::Entities::encode_entities($male_name, q{<>&"'});
+        push @accessions_with_pedigree, [ qq{<a href="/stock/$accession_id/view">$accession_label</a>},
+            qq{<a href="/stock/$female_id/view">$female_label</a>},
+            qq{<a href="/stock/$male_id/view">$male_label</a>}, $cross_type, $accession_name ];
     }
     print STDERR "ACCESSIONS =".Dumper(\@accessions_with_pedigree)."\n";
     $c->stash->{rest} = { data => \@accessions_with_pedigree };
@@ -2423,7 +2431,7 @@ sub get_accessions_missing_pedigree_GET {
                 my $owner_id = $each_owner->[0];
                 my $first_name = $each_owner->[2];
                 my $last_name = $each_owner->[3];
-                my $name = $first_name." ".$last_name;
+                my $name = HTML::Entities::encode_entities($first_name." ".$last_name, q{<>&"'});
                 my $each_owner_link = qq{<a href="/solpeople/personal-info.pl?sp_person_id=$owner_id">$name</a>};
                 push @owners, $each_owner_link,
             }
@@ -2431,7 +2439,8 @@ sub get_accessions_missing_pedigree_GET {
             print STDERR "OWNER LINK =".Dumper($owner_link)."\n";
 
         }
-        push @accessions_missing_pedigree, [ qq{<a href="/stock/$accession_id/view">$accession_name</a>}, $owner_link, $accession_name],
+        my $accession_label = HTML::Entities::encode_entities($accession_name, q{<>&"'});
+        push @accessions_missing_pedigree, [ qq{<a href="/stock/$accession_id/view">$accession_label</a>}, $owner_link, $accession_name],
     }
 
     $c->stash->{rest} = {data => \@accessions_missing_pedigree};
@@ -2454,7 +2463,7 @@ sub stock_additional_file_upload :Chained('/stock/get_stock') PathPart('upload_a
         my $dbh = $c->dbc->dbh;
         my @user_info = CXGN::Login->new($dbh)->query_from_cookie($session_id);
         if (!$user_info[0]){
-            $c->stash->{rest} = {error=>'You must be logged in to upload additional trials to a file!'};
+            $c->stash->{rest} = {error=>$c->i18n->p("accession.stock.message_35", "You must be logged in to upload additional trials to a file!")};
             $c->detach();
         }
         $user_id = $user_info[0];
@@ -2463,7 +2472,7 @@ sub stock_additional_file_upload :Chained('/stock/get_stock') PathPart('upload_a
         $user_name = $p->get_username;
     } else{
         if (!$c->user){
-            $c->stash->{rest} = {error=>'You must be logged in to upload additional files to a trial!'};
+            $c->stash->{rest} = {error=>$c->i18n->p("accession.stock.message_36", "You must be logged in to upload additional files to a trial!")};
             $c->detach();
         }
         $user_id = $c->user()->get_object()->get_sp_person_id();
@@ -2491,7 +2500,7 @@ sub stock_additional_file_upload :Chained('/stock/get_stock') PathPart('upload_a
     my $archived_filename_with_path = $uploader->archive();
     my $md5 = $uploader->get_md5($archived_filename_with_path);
     if (!$archived_filename_with_path) {
-        $c->stash->{rest} = {error => "Could not save file $upload_original_name in archive",};
+        $c->stash->{rest} = {error => $c->i18n->p("accession.stock.message_37", "Could not save file %{upload_original_name} in archive", {upload_original_name => "" . ($upload_original_name)}),};
         $c->detach();
     }
     unlink $upload_tempfile;
@@ -2512,7 +2521,7 @@ sub get_accession_additional_file_uploaded :Chained('/stock/get_stock') PathPart
     my $c = shift;
 
     if (!$c->user){
-        $c->stash->{rest} = {error=>'You must be logged in to see uploaded additional files!'};
+        $c->stash->{rest} = {error=>$c->i18n->p("accession.stock.message_38", "You must be logged in to see uploaded additional files!")};
         $c->detach();
     }
 
@@ -2533,7 +2542,7 @@ sub obsolete_trial_additional_file_uploaded :Chained('/stock/get_stock') PathPar
     my $stock_id = $c->stash->{stock_row}->stock_id();
 
     if (!$c->user) {
-	    $c->stash->{rest} = { error => "You must be logged in to obsolete additional files!" };
+	    $c->stash->{rest} = { error => $c->i18n->p("accession.stock.message_39", "You must be logged in to obsolete additional files!") };
 	    $c->detach();
     }
 
@@ -2788,11 +2797,11 @@ sub add_derived_accessions_using_list_POST : Args(0) {
     my $dbh = $c->dbc->dbh;
 
     if (!$c->user()) {
-        $c->stash->{rest} = { error => "Log in required for adding derived accessions." }; return;
+        $c->stash->{rest} = { error => $c->i18n->p("accession.stock.message_40", "Log in required for adding derived accessions.") }; return;
     }
 
     if ( !any { $_ eq 'curator' || $_ eq 'submitter' || $_ eq 'sequencer' } $c->user->roles() ) {
-        $c->stash->{rest} = { error => 'Cannot add new accessions! You do not have a curator account' };
+        $c->stash->{rest} = { error => $c->i18n->p("accession.stock.message_41", "Cannot add new accessions! You do not have a curator account") };
         $c->detach();
     }
 
@@ -2840,7 +2849,7 @@ sub add_derived_accessions_using_list_POST : Args(0) {
     };
 
     if ($@) {
-        $c->stash->{rest} = { error => "An error occurred while adding new accessions: $@"};
+        $c->stash->{rest} = { error => do { my $ui_error_details = "" . ($@); $c->i18n->p("accession.stock.message_42", "An error occurred while adding new accessions: %{details}", {details => $ui_error_details}) }};
         return;
     }
     if ($result->{error}) {
@@ -2887,7 +2896,7 @@ sub upload_derived_accessions_file_POST : Args(0) {
         my $dbh = $c->dbc->dbh;
         my @user_info = CXGN::Login->new($dbh)->query_from_cookie($session_id);
         if (!$user_info[0]){
-            $c->stash->{rest} = {error=>'You must be logged in to upload derived accessions!'};
+            $c->stash->{rest} = {error=>$c->i18n->p("accession.stock.message_43", "You must be logged in to upload derived accessions!")};
             $c->detach();
         }
         $user_id = $user_info[0];
@@ -2896,7 +2905,7 @@ sub upload_derived_accessions_file_POST : Args(0) {
         $user_name = $p->get_username;
     } else{
         if (!$c->user){
-            $c->stash->{rest} = {error=>'You must be logged in to upload derived accessions!'};
+            $c->stash->{rest} = {error=>$c->i18n->p("accession.stock.message_43", "You must be logged in to upload derived accessions!")};
             $c->detach();
         }
         $user_id = $c->user()->get_object()->get_sp_person_id();
@@ -2905,7 +2914,7 @@ sub upload_derived_accessions_file_POST : Args(0) {
     }
 
     if (($user_role ne 'curator') && ($user_role ne 'submitter')) {
-        $c->stash->{rest} = {error=>'Only a submitter or a curator can upload derived accessions'};
+        $c->stash->{rest} = {error=>$c->i18n->p("accession.stock.message_44", "Only a submitter or a curator can upload derived accessions")};
         $c->detach();
     }
 
@@ -2923,7 +2932,7 @@ sub upload_derived_accessions_file_POST : Args(0) {
     $archived_filename_with_path = $uploader->archive();
     $md5 = $uploader->get_md5($archived_filename_with_path);
     if (!$archived_filename_with_path) {
-        $c->stash->{rest} = {error => "Could not save file $upload_original_name in archive",};
+        $c->stash->{rest} = {error => $c->i18n->p("accession.stock.message_37", "Could not save file %{upload_original_name} in archive", {upload_original_name => "" . ($upload_original_name)}),};
         return;
     }
     unlink $upload_tempfile;
@@ -2974,7 +2983,7 @@ sub upload_derived_accessions_file_POST : Args(0) {
             }
         };
         if ($@) {
-            $c->stash->{rest} = { error => "An error occurred while adding new accessions: $@"};
+            $c->stash->{rest} = { error => do { my $ui_error_details = "" . ($@); $c->i18n->p("accession.stock.message_42", "An error occurred while adding new accessions: %{details}", {details => $ui_error_details}) }};
             return;
         }
         if ($result->{error}) {
@@ -3015,7 +3024,7 @@ sub stock_obsolete_in_bulk_GET {
     my $accession_list_id  = $c->req->param('accession_list_id');
 
     if (!$c->user()){
-        $c->stash->{rest} = { error => "You must be logged in to obsolete stocks" };
+        $c->stash->{rest} = { error => $c->i18n->p("accession.stock.message_45", "You must be logged in to obsolete stocks") };
         $c->detach();
     }
 
@@ -3063,10 +3072,10 @@ sub stock_obsolete_in_bulk_GET {
                 });
                 my $saved_stock_id = $stock_obj->store();
             } catch {
-                $c->stash->{rest} = { error => "Failed: $_" }
+                $c->stash->{rest} = { error => do { my $ui_error_details = "" . ($_); $c->i18n->p("accession.stock.message_5", "Failed: %{details}", {details => $ui_error_details}) } }
             };
         } else {
-            $c->stash->{rest} = { error => "Not a valid stock: $stock_name" };
+            $c->stash->{rest} = { error => $c->i18n->p("accession.stock.message_47", "Not a valid stock: %{stock_name}", {stock_name => "" . ($stock_name)}) };
         }
     }
 
@@ -3091,9 +3100,11 @@ sub get_stock_related_seedlots :Path('/ajax/stock/stock_related_seedlots') :Args
         my $cross_stock_id = $seedlot->{cross_stock_id};
         my $cross_name = $seedlot->{cross_name};
         if ($accession_stock_id) {
-            $content_html = qq{<a href="/stock/$accession_stock_id/view">$accession_name</a>};
+            my $accession_name_html = HTML::Entities::encode_entities("$accession_name", q{<>&"'});
+            $content_html = qq{<a href="/stock/$accession_stock_id/view">$accession_name_html</a>};
         } elsif ($cross_stock_id) {
-            $content_html = qq{<a href = "/cross/$cross_stock_id">$cross_name</a>}
+            my $cross_name_html = HTML::Entities::encode_entities("$cross_name", q{<>&"'});
+            $content_html = qq{<a href = "/cross/$cross_stock_id">$cross_name_html</a>}
         }
 
         push @stock_seedlots, {

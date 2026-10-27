@@ -13,16 +13,16 @@ $debug => ''
 	<% $ug_build_select %>
 	<br />
 	
-	Enter a list of identifiers or upload a file containing identifers, one per line:<br />
+	<% $c->i18n->p("lists_datasets.bulk.enter_a_list_of_identifiers_or_upload_a_file_containing_identifers_one_per_lin", "Enter a list of identifiers or upload a file containing identifers, one per line:") |h %><br />
 	<table summary="" width="100%"><tr><td>
 	      <textarea id="ids" name="ids" rows="5" cols="20"></textarea>
 	    </td>
 	    <td>
-	      <i>Example:</i> #example box
+	      <i><% $c->i18n->p("lists_datasets.bulk.example", "Example:") |h %></i> #example box
 	      <div style="border: 1px solid gray; width: 10em; height: 5em">
 <pre><div id="clone_example_ids">cLEB-1-A2
 cLEB-1-A3
-cLEB-1-A4</div></pre><a href="javascript:copy_example_data()">[copy]</a>
+cLEB-1-A4</div></pre><a href="javascript:copy_example_data()"><% $c->i18n->p("lists_datasets.bulk.copy", "[copy]") |h %></a>
 </div> 
 
 <script>
@@ -35,26 +35,26 @@ document.getElementById("ids").innerHTML=document.getElementById("clone_example_
 	
 	<br />
 	<br />
-	And/or upload list file: <br /><input type="file" name="file" />
+	<% $c->i18n->p("lists_datasets.bulk.and_or_upload_list_file", "And/or upload list file:") |h %> <br /><input type="file" name="file" />
 	<br />
 	<br />
 	
     </td><td valign="top" bgcolor="#EEEEEE" width="320">
-	<b>Please select the information you would like for each identifier:</b><br />
-	<input type="checkbox" name="clone_name" checked="checked" /> clone name<br />
-	<input type="checkbox" name="SGN_C" checked="checked" /> clone id (SGN-C)<br />
-	<input type="checkbox" name="SGN_T" checked="checked" /> sequence read id (SGN-T)<br />
-	<input type="checkbox" name="SGN_E" checked="checked" /> est id (SGN-E)<br />
-	<input type="checkbox" name="build_nr" checked="checked" /> unigene build nr<br />
-	<input type="checkbox" name="SGN_U" checked="checked" /> unigene id (SGN-U)<br />
-	<input type="checkbox" name="chipname" checked="checked" /> chipname<br />
-	<input type="checkbox" name="SGN_S" checked="checked" /> microarray spot id (SGN-S)<br />
-	<input type="checkbox" name="TUS" checked="checked" /> TUS number (used to order clones)<br />
-	<input type="checkbox" name="manual_annotation" /> manual annotation<br />
-	<input type="checkbox" name="automatic_annotation" /> automatic (BLAST) annotation<br />
-	<input type="checkbox" name="sequence" onclick="check_fasta_option()" /> sequence<br />
-	&nbsp;&nbsp;&nbsp;<input type="radio" name="seq_type" value="est_seq" checked="checked" /> EST sequence<br />
-	&nbsp;&nbsp;&nbsp;<input type="radio" name="seq_type" value="unigene_seq" /> Unigene sequence<br />
+	<b><% $c->i18n->p("lists_datasets.bulk.please_select_the_information_you_would_like_for_each_identifier", "Please select the information you would like for each identifier:") |h %></b><br />
+	<input type="checkbox" name="clone_name" checked="checked" /> <% $c->i18n->p("lists_datasets.bulk.clone_name", "clone name") |h %><br />
+	<input type="checkbox" name="SGN_C" checked="checked" /> <% $c->i18n->p("lists_datasets.bulk.clone_id_sgn_c", "clone id (SGN-C)") |h %><br />
+	<input type="checkbox" name="SGN_T" checked="checked" /> <% $c->i18n->p("lists_datasets.bulk.sequence_read_id_sgn_t", "sequence read id (SGN-T)") |h %><br />
+	<input type="checkbox" name="SGN_E" checked="checked" /> <% $c->i18n->p("lists_datasets.bulk.est_id_sgn_e", "est id (SGN-E)") |h %><br />
+	<input type="checkbox" name="build_nr" checked="checked" /> <% $c->i18n->p("lists_datasets.bulk.unigene_build_nr", "unigene build nr") |h %><br />
+	<input type="checkbox" name="SGN_U" checked="checked" /> <% $c->i18n->p("lists_datasets.bulk.unigene_id_sgn_u", "unigene id (SGN-U)") |h %><br />
+	<input type="checkbox" name="chipname" checked="checked" /> <% $c->i18n->p("lists_datasets.bulk.chipname", "chipname") |h %><br />
+	<input type="checkbox" name="SGN_S" checked="checked" /> <% $c->i18n->p("lists_datasets.bulk.microarray_spot_id_sgn_s", "microarray spot id (SGN-S)") |h %><br />
+	<input type="checkbox" name="TUS" checked="checked" /> <% $c->i18n->p("lists_datasets.bulk.tus_number_used_to_order_clones", "TUS number (used to order clones)") |h %><br />
+	<input type="checkbox" name="manual_annotation" /> <% $c->i18n->p("lists_datasets.bulk.manual_annotation", "manual annotation") |h %><br />
+	<input type="checkbox" name="automatic_annotation" /> <% $c->i18n->p("lists_datasets.bulk.automatic_blast_annotation", "automatic (BLAST) annotation") |h %><br />
+	<input type="checkbox" name="sequence" onclick="check_fasta_option()" /> <% $c->i18n->p("lists_datasets.bulk.sequence", "sequence") |h %><br />
+	&nbsp;&nbsp;&nbsp;<input type="radio" name="seq_type" value="est_seq" checked="checked" /> <% $c->i18n->p("lists_datasets.bulk.est_sequence", "EST sequence") |h %><br />
+	&nbsp;&nbsp;&nbsp;<input type="radio" name="seq_type" value="unigene_seq" /> <% $c->i18n->p("lists_datasets.bulk.unigene_sequence", "Unigene sequence") |h %><br />
 
 </td></tr></table>
 
@@ -64,8 +64,8 @@ document.getElementById("ids").innerHTML=document.getElementById("clone_example_
 %    }
 
  	<input type="hidden" name="idType" value="clone" />
-	<input type="reset" />&nbsp;&nbsp;
-        <input type="submit" value="Submit" /><br />
+	<input type="reset"  value="<% $c->i18n->p("lists_datasets.bulk.reset", "Reset") |h %>"/>&nbsp;&nbsp;
+        <input type="submit" value="<% $c->i18n->p("lists_datasets.bulk.submit", "Submit") |h %>" /><br />
    </form>
 
 

@@ -53,7 +53,7 @@ jQuery(document).ready(function ($) {
                 if (response.error) {
                     alert(response.error);
                 } else {
-                    var html = 'The following vectors were added!<br/>';
+                    var html = ("" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("transformation.helper.the_following_vectors_were_added", "The following vectors were added!") : "The following vectors were added!")).html() + "<br/>");
                     for (var i=0; i<response.added.length; i++){
                         html = html + '<a href="/stock/'+response.added[i][0]+'/view">'+response.added[i][1]+'</a><br/>';
                     }
@@ -62,7 +62,7 @@ jQuery(document).ready(function ($) {
                 }
             },
             error: function (response) {
-                alert('An error occurred in processing. sorry'+response.responseText);
+                alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("transformation.helper.an_error_occurred_in_processing_sorry", "An error occurred in processing. sorry") : 'An error occurred in processing. sorry')+response.responseText);
             }
         });
     }
@@ -73,7 +73,7 @@ jQuery(document).ready(function ($) {
             var vectorsToAdd = vectorList;
 
             if (!vectorsToAdd || vectorsToAdd.length == 0) {
-                alert("No vectors to add");
+                alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("transformation.helper.no_vectors_to_add", "No vectors to add") : "No vectors to add"));
                 return;
 	        }
 
@@ -92,7 +92,7 @@ jQuery(document).ready(function ($) {
 	    var uploadFile = jQuery("#new_vectors_upload_file").val();
 	    jQuery('#upload_new_vectors_form').attr("action", "/ajax/vectors/verify_vectors_file");
 	    if (uploadFile === '') {
-                alert("Please select a file");
+                alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("accession.files.required_file", "Please select a file") : "Please select a file"));
                 return;
 	    }
 	    jQuery("#upload_new_vectors_form").submit();
@@ -127,7 +127,7 @@ jQuery(document).ready(function ($) {
             }
             else {
                 fullParsedData = undefined;
-                alert("An unknown error occurred.  Please try again later or contact us for help.");
+                alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("accessions.upload.unknown_error", "An unknown error occurred.  Please try again later or contact us for help.") : "An unknown error occurred.  Please try again later or contact us for help."));
             }
         }
     });
@@ -190,8 +190,8 @@ function review_verification_results(doFuzzySearch, verifyResponse, vector_list_
     //console.log(vector_list_id);
 
     if (verifyResponse.found) {
-        jQuery('#count_of_found_vectors').html("Total number already in the database("+verifyResponse.found.length+")");
-        var found_html = '<table class="table table-bordered" id="found_vectors_table"><thead><tr><th>Search Name</th><th>Found in Database</th></tr></thead><tbody>';
+        jQuery('#count_of_found_vectors').html(jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("transformation.helper.total_number_already_in_the_database", "Total number already in the database(") : "Total number already in the database(")).html()+verifyResponse.found.length+")");
+        var found_html = ("<table class=\"table table-bordered\" id=\"found_vectors_table\"><thead><tr><th>" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("accessions.review.search_name", "Search Name") : "Search Name")).html() + "</th><th>" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("accessions.review.database_match", "Found in Database") : "Found in Database")).html() + "</th></tr></thead><tbody>");
         for( i=0; i < verifyResponse.found.length; i++){
             found_html = found_html
                 +'<tr><td>'+verifyResponse.found[i].matched_string
@@ -213,18 +213,18 @@ function review_verification_results(doFuzzySearch, verifyResponse, vector_list_
 
     if (verifyResponse.fuzzy.length > 0 && doFuzzySearch) {
         fuzzyResponse = verifyResponse.fuzzy;
-        var fuzzy_html = '<table id="add_vector_fuzzy_table" class="table"><thead><tr><th class="col-xs-4">Name in Your List</th><th class="col-xs-4">Existing Name(s) in Database</th><th class="col-xs-4">Options&nbsp;&nbsp;&nbsp&nbsp;<input type="checkbox" id="add_vector_fuzzy_option_all"/> Use Same Option for All</th></tr></thead><tbody>';
+        var fuzzy_html = ("<table id=\"add_vector_fuzzy_table\" class=\"table\"><thead><tr><th class=\"col-xs-4\">" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("accessions.review.list_name", "Name in Your List") : "Name in Your List")).html() + "</th><th class=\"col-xs-4\">" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("accessions.review.existing_names", "Existing Name(s) in Database") : "Existing Name(s) in Database")).html() + "</th><th class=\"col-xs-4\">" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("accession.files.files.header.options", "Options") : "Options")).html() + "&nbsp;&nbsp;&nbsp&nbsp;<input type=\"checkbox\" id=\"add_vector_fuzzy_option_all\"/> " + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("accessions.review.same_option", "Use Same Option for All") : "Use Same Option for All")).html() + "</th></tr></thead><tbody>");
         for( i=0; i < verifyResponse.fuzzy.length; i++) {
             fuzzy_html = fuzzy_html + '<tr id="add_vector_fuzzy_option_form'+i+'"><td>'+ verifyResponse.fuzzy[i].name + '<input type="hidden" name="fuzzy_name" value="'+ verifyResponse.fuzzy[i].name + '" /></td>';
             fuzzy_html = fuzzy_html + '<td><select class="form-control" name ="fuzzy_select">';
             for(j=0; j < verifyResponse.fuzzy[i].matches.length; j++){
                 if (verifyResponse.fuzzy[i].matches[j].is_synonym){
-                    fuzzy_html = fuzzy_html + '<option value="' + verifyResponse.fuzzy[i].matches[j].synonym_of + '">' + verifyResponse.fuzzy[i].matches[j].name + ' (SYNONYM OF: '+verifyResponse.fuzzy[i].matches[j].synonym_of+')</option>';
+                    fuzzy_html = fuzzy_html + '<option value="' + verifyResponse.fuzzy[i].matches[j].synonym_of + '">' + verifyResponse.fuzzy[i].matches[j].name + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("transformation.helper.synonym_of", " (SYNONYM OF: ") : ' (SYNONYM OF: ')).html()+verifyResponse.fuzzy[i].matches[j].synonym_of+')</option>';
                 } else {
                     fuzzy_html = fuzzy_html + '<option value="' + verifyResponse.fuzzy[i].matches[j].name + '">' + verifyResponse.fuzzy[i].matches[j].name + '</option>';
                 }
             }
-            fuzzy_html = fuzzy_html + '</select></td><td><select class="form-control" name="fuzzy_option"><option value="keep">Continue saving name in your list</option><option value="replace">Replace name in your list with selected existing name</option><option value="remove">Remove name in your list and ignore</option><option value="synonymize">Add name in your list as a synonym to selected existing name</option></select></td></tr>';
+            fuzzy_html = fuzzy_html + ("</select></td><td><select class=\"form-control\" name=\"fuzzy_option\"><option value=\"keep\">" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("accessions.review.keep", "Continue saving name in your list") : "Continue saving name in your list")).html() + "</option><option value=\"replace\">" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("accessions.review.replace", "Replace name in your list with selected existing name") : "Replace name in your list with selected existing name")).html() + "</option><option value=\"remove\">" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("accessions.review.remove", "Remove name in your list and ignore") : "Remove name in your list and ignore")).html() + "</option><option value=\"synonymize\">" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("accessions.review.synonymize", "Add name in your list as a synonym to selected existing name") : "Add name in your list as a synonym to selected existing name")).html() + "</option></select></td></tr>");
         }
         fuzzy_html = fuzzy_html + '</tbody></table>';
         jQuery('#view_fuzzy_matches').html(fuzzy_html);
@@ -253,7 +253,7 @@ function review_verification_results(doFuzzySearch, verifyResponse, vector_list_
             if (verifyResponse.absent.length > 0 || infoToAdd.length>0){
                 populate_review_absent_dialog(verifyResponse.absent, infoToAdd);
             } else {
-                alert('All vectors in your list already exist in the database. (3)');
+                alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("transformation.helper.all_vectors_in_your_list_already_exist_in_the_database_3", "All vectors in your list already exist in the database. (3)") : 'All vectors in your list already exist in the database. (3)'));
             }
         }
     });
@@ -268,7 +268,7 @@ function populate_review_absent_dialog(absent, infoToAdd){
     console.log(infoToAdd);
     console.log(absent);
 
-    jQuery('#count_of_absent_vectors').html("Total number to be added("+absent.length+")");
+    jQuery('#count_of_absent_vectors').html(jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("transformation.helper.total_number_to_be_added", "Total number to be added(") : "Total number to be added(")).html()+absent.length+")");
     var absent_html = '';
 
     for( i=0; i < absent.length; i++){
@@ -280,7 +280,7 @@ function populate_review_absent_dialog(absent, infoToAdd){
     jQuery('#view_infoToAdd').html('');
 
     if (infoToAdd.length>0){
-        var infoToAdd_html = '<div class="well"><b>The following new vectors will be added:</b><br/><br/><table id="infoToAdd_new_table" class="table table-bordered table-hover"><thead><tr><th>uniquename</th><th>properties</th></tr></thead><tbody>';
+        var infoToAdd_html = ("<div class=\"well\"><b>" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("transformation.helper.the_following_new_vectors_will_be_added", "The following new vectors will be added:") : "The following new vectors will be added:")).html() + "</b><br/><br/><table id=\"infoToAdd_new_table\" class=\"table table-bordered table-hover\"><thead><tr><th>uniquename</th><th>properties</th></tr></thead><tbody>");
         for( i=0; i < infoToAdd.length; i++){
             if (!('stock_id' in infoToAdd[i])){
                 infoToAdd_html = infoToAdd_html + '<tr><td>'+infoToAdd[i]['germplasmName']+'</td>';
@@ -299,7 +299,7 @@ function populate_review_absent_dialog(absent, infoToAdd){
             }
         }
         infoToAdd_html = infoToAdd_html + "</tbody></table></div>";
-        infoToAdd_html = infoToAdd_html + '<div class="well"><b>The following vectors will be updated:</b><br/><br/><table id="infoToAdd_updated_table" class="table table-bordered table-hover"><thead><tr><th>uniquename</th><th>properties</th></tr></thead><tbody>';
+        infoToAdd_html = infoToAdd_html + ("<div class=\"well\"><b>" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("transformation.helper.the_following_vectors_will_be_updated", "The following vectors will be updated:") : "The following vectors will be updated:")).html() + "</b><br/><br/><table id=\"infoToAdd_updated_table\" class=\"table table-bordered table-hover\"><thead><tr><th>uniquename</th><th>properties</th></tr></thead><tbody>");
         for( i=0; i < infoToAdd.length; i++){
             if ('stock_id' in infoToAdd[i]){
                 infoToAdd_html = infoToAdd_html + '<tr><td>'+infoToAdd[i]['germplasmName']+'</td>';
@@ -373,11 +373,11 @@ function process_fuzzy_options(vector_list_id) {
                 populate_review_absent_dialog(vectorList, infoToAdd);
                 jQuery('#review_absent_dialog').modal('show');
             } else {
-                alert('All vectors in your list now exist in the database. 2');
+                alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("transformation.helper.all_vectors_in_your_list_now_exist_in_the_database_2", "All vectors in your list now exist in the database. 2") : 'All vectors in your list now exist in the database. 2'));
             }
         },
         error: function () {
-            alert('An error occurred checking your fuzzy options! Do not try to add a synonym to a synonym! Also do not use any special characters!');
+            alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("accessions.review.fuzzy_failed", "An error occurred checking your fuzzy options! Do not try to add a synonym to a synonym! Also do not use any special characters!") : 'An error occurred checking your fuzzy options! Do not try to add a synonym to a synonym! Also do not use any special characters!'));
         }
     });
 }

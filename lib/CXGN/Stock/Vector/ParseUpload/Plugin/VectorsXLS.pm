@@ -1,5 +1,8 @@
 package CXGN::Stock::Vector::ParseUpload::Plugin::VectorsXLS;
 
+use SGN::I18N ();
+use CatalystX::GlobalContext '$c';
+
 use Moose::Role;
 use Spreadsheet::ParseExcel;
 use Spreadsheet::ParseXLSX;
@@ -15,6 +18,7 @@ use CXGN::BreedersToolbox::StocksFuzzySearch;
 
 sub _validate_with_plugin {
     my $self = shift;
+    my SGN::I18N $ui__validate_with_plugin_i18n = SGN::I18N::translate($c);
 
     my $filename = $self->get_filename();
     my $schema = $self->get_chado_schema();
@@ -46,7 +50,7 @@ sub _validate_with_plugin {
 
     my $worksheet = ( $excel_obj->worksheets() )[0]; #support only one worksheet
     if (!$worksheet) {
-        push @error_messages, "Spreadsheet must be on 1st tab in Excel (.xls) file";
+        push @error_messages, (SGN::I18N::translate($ui__validate_with_plugin_i18n, 'accession.catalog.error_1', 'Spreadsheet must be on 1st tab in Excel (.xls) file'));
         $errors{'error_messages'} = \@error_messages;
         $self->_set_parse_errors(\%errors);
         return;
@@ -54,7 +58,7 @@ sub _validate_with_plugin {
     my ( $row_min, $row_max ) = $worksheet->row_range();
     my ( $col_min, $col_max ) = $worksheet->col_range();
     if (($col_max - $col_min)  < 1 || ($row_max - $row_min) < 1 ) { #must have header and at least one row of plot data
-        push @error_messages, "Spreadsheet is missing header or contains no rows";
+        push @error_messages, (SGN::I18N::translate($ui__validate_with_plugin_i18n, 'accession.xls.error_2', 'Spreadsheet is missing header or contains no rows'));
         $errors{'error_messages'} = \@error_messages;
         $self->_set_parse_errors(\%errors);
         return;
@@ -77,12 +81,12 @@ sub _validate_with_plugin {
             $stockprops_head  = $worksheet->get_cell(0,$i)->value();
         }
         if ($stockprops_head && !exists($allowed_stockprops_head{$stockprops_head})){
-            push @error_messages, "$stockprops_head is not a valid property to have in the header! Please check the spreadsheet format help.";
+            push @error_messages, (SGN::I18N::translate($ui__validate_with_plugin_i18n, 'accession.xls.error_3', '%{stockprops_head} is not a valid property to have in the header! Please check the spreadsheet format help.', {stockprops_head => ("" . ("$stockprops_head"))}));
         }
     }
 
     if (!$uniquename_head || $uniquename_head ne 'uniquename' ) {
-        push @error_messages, "Cell A1: uniquename is missing from the header";
+        push @error_messages, (SGN::I18N::translate($ui__validate_with_plugin_i18n, 'transformation.helper.cell_a1_uniquename_is_missing_from_the_header', 'Cell A1: uniquename is missing from the header'));
     }
 
     my %seen_vector_names;
@@ -98,7 +102,7 @@ sub _validate_with_plugin {
 
         if (!$vector_name || $vector_name eq '' ) {
             if (! $autogenerate_uniquename ){
-                push @error_messages, "Cell A$row_name: vector_name missing.";
+                push @error_messages, (SGN::I18N::translate($ui__validate_with_plugin_i18n, 'transformation.helper.cell_a_row_name_vector_name_missing', 'Cell A%{row_name}: vector_name missing.', {row_name => ("" . ("$row_name"))}));
             }
         } else {
             $vector_name =~ s/^\s+|\s+$//g; #trim whitespace from front and end...
@@ -110,7 +114,7 @@ sub _validate_with_plugin {
 
     foreach my $k (keys %vector_name_counts) {
         if ($vector_name_counts{$k} > 1) {
-            push @error_messages, "Vector $k occures $vector_name_counts{$k} times in the file. Vector names must be unique. Please remove duplicated vector names.";
+            push @error_messages, (SGN::I18N::translate($ui__validate_with_plugin_i18n, 'transformation.helper.vector_k_occures_value2_times_in_the_file_vector_names_must_be_uniqu', 'Vector %{k} occures %{value2} times in the file. Vector names must be unique. Please remove duplicated vector names.', {k => ("" . ("$k")), value2 => ("" . ("$vector_name_counts{$k}"))}));
         }
     }
 

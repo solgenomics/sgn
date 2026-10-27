@@ -4,28 +4,28 @@
     <!-- Modal content-->
   <div class="modal-content">
     <div class="modal-header">
-      <button type="button" class="close" data-dismiss="modal">&times;</button>
-      <h4 class="modal-title">Old browser version detected</h4>
+      <button type="button" class="close" data-dismiss="modal" aria-label="<% $c->i18n->p('browser.close', 'Close') |h %>">&times;</button>
+      <h4 class="modal-title"><% $c->i18n->p('browser.title', 'Old browser version detected') |h %></h4>
       <!-- <h4 class="modal-title">This site is best viewed with:</h4> -->
     </div>
     
     <div class="modal-body">
     	<p>
-        This site is optimized for modern web browsers<br>
+        <% $c->i18n->p('browser.modern', 'This site is optimized for modern web browsers') |h %><br>
         <center>
         <a href="http://browsehappy.com" target="_blank" class="footer">
-          Please upgrade your browser<br>
+          <% $c->i18n->p('browser.upgrade', 'Please upgrade your browser') |h %><br>
           <img src="https://lh3.ggpht.com/O0aW5qsyCkR2i7Bu-jUU1b5BWA_NygJ6ui4MgaAvL7gfqvVWqkOBscDaq4pn-vkwByUx=w300" width="25">
           <img src="/documents/img/Firefox_logo_2019.png" width="25">
           <img src="/documents/img/Safari_logo.jpeg" width="25">
         </a>
         </center>
       </p>
-        Sorry!, some features may not work in outdated browsers
+        <% $c->i18n->p('browser.limited', 'Sorry!, some features may not work in outdated browsers') |h %>
     </div>
     
     <div class="modal-footer">
-      <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+      <button type="button" class="btn btn-default" data-dismiss="modal"><% $c->i18n->p('browser.close', 'Close') |h %></button>
     </div>
   </div>
     
@@ -58,7 +58,7 @@
           $("#nav_dialog").modal("show");
         });
       } else {
-        alert("Old browser version detected. Please upgrade your browser.");
+        alert(window.SGN && SGN.i18n ? SGN.i18n.p('browser.fallback', 'Old browser version detected. Please upgrade your browser.') : 'Old browser version detected. Please upgrade your browser.');
       }
     }
 

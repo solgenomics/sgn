@@ -1,6 +1,9 @@
 
 package CXGN::List::Transform::Plugin::Synonyms2AccessionUniqueName;
 
+use SGN::I18N ();
+use CatalystX::GlobalContext '$c';
+
 use strict;
 
 use Data::Dumper;
@@ -10,7 +13,8 @@ sub name {
 }
 
 sub display_name {
-    return "synonyms to accession unique names";
+    my SGN::I18N $ui_display_name_i18n = $c && $c->can('i18n') ? $c->i18n : undef;
+    return (SGN::I18N::translate($ui_display_name_i18n, "accession.transform.synonyms", "synonyms to accession unique names"));
 }
 
 sub can_transform {

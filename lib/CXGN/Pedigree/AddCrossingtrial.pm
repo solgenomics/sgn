@@ -16,6 +16,18 @@ use CXGN::Trial;
 use SGN::Model::Cvterm;
 use Data::Dumper;
 
+# Optional request-owned presentation; it never controls pedigrees or parsing.
+has 'i18n' => (
+    is => 'ro',
+    isa => 'Maybe[Object]',
+    reader => 'i18n',
+    trigger => sub {
+        my ($self, $translator) = @_;
+        die 'Presentation translator must implement p'
+            if defined($translator) && !$translator->can('p');
+    },
+);
+
 has 'chado_schema' => (isa => 'DBIx::Class::Schema',
 		 is => 'rw',
 		 required => 1,
@@ -81,13 +93,13 @@ sub save_crossingtrial {
 
     if ($self->existing_crossingtrials()){
         print STDERR "Can't create crossing experiment: Crossing experiment name already exists\n";
-        return {error => "Crossing experiment not saved: Crossing experiment name already exists"};
+        return {error => ($self->i18n ? $self->i18n->p('cross.experiment.crossing_experiment_not_saved_crossing_experiment_name_already', 'Crossing experiment not saved: Crossing experiment name already exists') : "Crossing experiment not saved: Crossing experiment name already exists")};
     }
 
 
     if (!$self->get_breeding_program_id()){
         print STDERR "Can't create crossing experiment: Breeding program does not exist\n";
-        return {error => "Crossing experiment not saved: Breeding program does not exist"};
+        return {error => ($self->i18n ? $self->i18n->p('cross.experiment.crossing_experiment_not_saved_breeding_program_does_not_exist', 'Crossing experiment not saved: Breeding program does not exist') : "Crossing experiment not saved: Breeding program does not exist")};
     }
 
     my $parent_folder_id;

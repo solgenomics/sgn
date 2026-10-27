@@ -2,9 +2,63 @@
 $location
 </%args>
 
-<p id="trial_weather_check">[loading...]</p>
+<p id="trial_weather_check">(window.SGN && SGN.i18n ? SGN.i18n.p("trial.b12.weather.loading", "[loading...]") : "[loading...]")</p>
 
 <script type="text/javascript" defer="defer">
+function _sgnB12WeatherEscape(value) { return jQuery('<div>').text(value).html(); }
+
+function _sgnB12WeatherEscape(value) { return jQuery('<div>').text(value).html(); }
+
+function _sgnB12WeatherEscape(value) { return jQuery('<div>').text(value).html(); }
+
+function _sgnB12WeatherEscape(value) { return jQuery('<div>').text(value).html(); }
+
+function _sgnB12WeatherEscape(value) { return jQuery('<div>').text(value).html(); }
+
+function _sgnB12WeatherEscape(value) { return jQuery('<div>').text(value).html(); }
+
+function _sgnB12WeatherEscape(value) { return jQuery('<div>').text(value).html(); }
+
+function _sgnB12WeatherEscape(value) { return jQuery('<div>').text(value).html(); }
+
+function _sgnB12WeatherEscape(value) { return jQuery('<div>').text(value).html(); }
+
+function _sgnB12WeatherEscape(value) { return jQuery('<div>').text(value).html(); }
+
+function _sgnB12WeatherEscape(value) { return jQuery('<div>').text(value).html(); }
+
+function _sgnB12WeatherEscape(value) { return jQuery('<div>').text(value).html(); }
+
+function _sgnB12WeatherEscape(value) { return jQuery('<div>').text(value).html(); }
+
+function _sgnB12WeatherEscape(value) { return jQuery('<div>').text(value).html(); }
+
+function _sgnB12WeatherEscape(value) { return jQuery('<div>').text(value).html(); }
+
+function _sgnB12WeatherEscape(value) { return jQuery('<div>').text(value).html(); }
+
+function _sgnB12WeatherEscape(value) { return jQuery('<div>').text(value).html(); }
+
+function _sgnB12WeatherEscape(value) { return jQuery('<div>').text(value).html(); }
+
+function _sgnB12WeatherEscape(value) { return jQuery('<div>').text(value).html(); }
+
+function _sgnB12WeatherEscape(value) { return jQuery('<div>').text(value).html(); }
+
+function _sgnB12WeatherEscape(value) { return jQuery('<div>').text(value).html(); }
+
+function _sgnB12WeatherEscape(value) { return jQuery('<div>').text(value).html(); }
+
+function _sgnB12WeatherEscape(value) { return jQuery('<div>').text(value).html(); }
+
+function _sgnB12WeatherEscape(value) { return jQuery('<div>').text(value).html(); }
+
+function _sgnB12WeatherEscape(value) { return jQuery('<div>').text(value).html(); }
+
+function _sgnB12WeatherEscape(value) { return jQuery('<div>').text(value).html(); }
+
+function _sgnB12WeatherEscape(value) { return jQuery('<div>').text(value).html(); }
+
 jQuery(document).ready(function () {
 
   jQuery.getJSON("https://weather.rtbbase.org/rest/locations",function(data){
@@ -15,11 +69,11 @@ jQuery(document).ready(function () {
     for (var i=0; i < locations.length; i++) {
       if (locations[i] == trial_location) {
         location_status = 'found';
-        jQuery('#trial_weather_check').html('<a href="https://weather.rtbbase.org?location='+trial_location+'">Weather for '+trial_location+'</a>')
+        jQuery('#trial_weather_check').html('<a href="https://weather.rtbbase.org?location='+trial_location+'">' + _sgnB12WeatherEscape(window.SGN && SGN.i18n ? SGN.i18n.p('trial.weather.link', 'Weather for %{location}', {location: String(trial_location)}) : 'Weather for '+trial_location) + '</a>')
       }
     }
     if (location_status != 'found') {
-      jQuery('#trial_weather_check').html('<p><i> No weather data available for location '+trial_location+'</i></p>')
+      jQuery('#trial_weather_check').html('<p><i>' + _sgnB12WeatherEscape(window.SGN && SGN.i18n ? SGN.i18n.p('trial.weather.unavailable', ' No weather data available for location %{location}', {location: String(trial_location)}) : ' No weather data available for location '+trial_location) + '</i></p>')
     }
   });
 

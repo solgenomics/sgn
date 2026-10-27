@@ -5,7 +5,7 @@ jQuery(document).ready(function () {
   solGS.analysisSave.checkStoredAnalysis(analysisArgs).done(function (res) {
     if (res.analysis_id) {
       jQuery("#save_gebvs").hide();
-      var link = ' | <a href="/analyses/' + res.analysis_id + '">View stored GEBVs</a> |';
+      var link = ' | <a href="/analyses/' + res.analysis_id + '">' + (window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.view_stored_gebvs", "View stored GEBVs") : "View stored GEBVs") + '</a> |';
       jQuery("#gebvs_output").append(link);
     }
   });
@@ -15,7 +15,7 @@ jQuery(document).ready(function () {
     console.log(`analysisArgs: ${JSON.stringify(analysisArgs)}`)
     jQuery("#gebvs_output .multi-spinner-container").show();
     jQuery("#gebvs_save_message")
-      .html("Please wait...saving the GEBVs may take a few minutes.")
+      .html((window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.saving_gebvs_wait", "Please wait...saving the GEBVs may take a few minutes.") : "Please wait...saving the GEBVs may take a few minutes."))
       .show();
     jQuery("#save_gebvs").hide();
 
@@ -27,7 +27,7 @@ jQuery(document).ready(function () {
     });
   
     solGS.analysisSave.checkUserStatus().fail(function () {
-      solGS.alertMessage("Error occured checking for user status");
+      solGS.alertMessage((window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.save_user_status_error", "Error occured checking for user status") : "Error occured checking for user status"));
     });
   
       solGS.analysisSave.getGebvsResultDetails(analysisArgs).done(function (res) {
@@ -35,7 +35,7 @@ jQuery(document).ready(function () {
         if (res.error) {
           jQuery("#gebvs_output .multi-spinner-container").hide();
           jQuery("#gebvs_save_message")
-            .html(res.error + ". The logged info may not exist for the result.")
+            .html(res.error + (window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.save_result_log_info_missing", ". The logged info may not exist for the result.") : ". The logged info may not exist for the result."))
             .show()
             .fadeOut(50000);
   
@@ -52,7 +52,7 @@ jQuery(document).ready(function () {
             } else {
               jQuery("#gebvs_save_message").hide();
   
-              var link = ' | <a href="/analyses/' + res.analysis_id + '">View stored GEBVs</a> |';
+              var link = ' | <a href="/analyses/' + res.analysis_id + '">' + (window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.view_stored_gebvs", "View stored GEBVs") : "View stored GEBVs") + '</a> |';
               jQuery("#gebvs_output").append(link);
             }
           });
@@ -75,7 +75,7 @@ jQuery(document).ready(function () {
       solGS.analysisSave.checkStoredAnalysis(analysisArgs).done(function (res) {
       if (res.analysis_id) {
         jQuery("#save_genetic_values").hide();
-        var link = ' | <a href="/analyses/' + res.analysis_id + '">View stored genetic values</a> |';
+        var link = ' | <a href="/analyses/' + res.analysis_id + '">' + (window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.view_stored_genetic_values", "View stored genetic values") : "View stored genetic values") + '</a> |';
         jQuery("#gebvs_output").append(link);
         }
     });
@@ -85,7 +85,7 @@ jQuery(document).ready(function () {
 
       jQuery("#gebvs_output .multi-spinner-container").show();
       jQuery("#gebvs_save_message")
-        .html("Please wait...saving the genetic values (adjusted means) may take a few minutes.")
+        .html((window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.saving_genetic_values_wait", "Please wait...saving the genetic values (adjusted means) may take a few minutes.") : "Please wait...saving the genetic values (adjusted means) may take a few minutes."))
         .show();
       jQuery("#save_genetic_values").hide();
   
@@ -97,7 +97,7 @@ jQuery(document).ready(function () {
       });
   
       solGS.analysisSave.checkUserStatus().fail(function () {
-        solGS.alertMessage("Error occured checking for user status");
+        solGS.alertMessage((window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.save_user_status_error", "Error occured checking for user status") : "Error occured checking for user status"));
       });
   
       solGS.analysisSave.getGebvsResultDetails(analysisArgs).done(function (res) {
@@ -105,7 +105,7 @@ jQuery(document).ready(function () {
         if (res.error) {
           jQuery("#gebvs_output .multi-spinner-container").hide();
           jQuery("#gebvs_save_message")
-            .html(res.error + ". The logged info may not exist for the result.")
+            .html(res.error + (window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.save_result_log_info_missing", ". The logged info may not exist for the result.") : ". The logged info may not exist for the result."))
             .show()
             .fadeOut(50000);
   
@@ -122,7 +122,7 @@ jQuery(document).ready(function () {
             } else {
               jQuery("#gebvs_save_message").hide();
   
-              var link = '| <a href="/analyses/' + res.analysis_id + '">View stored genetic values</a> |';
+              var link = '| <a href="/analyses/' + res.analysis_id + '">' + (window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.view_stored_genetic_values", "View stored genetic values") : "View stored genetic values") + '</a> |';
               jQuery("#gebvs_output").append(link);
             }
           });

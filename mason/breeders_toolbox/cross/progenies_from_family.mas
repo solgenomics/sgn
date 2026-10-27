@@ -1,3 +1,7 @@
+<%once>
+use HTML::Entities ();
+</%once>
+
 <%args>
 $family_id
 </%args>
@@ -11,7 +15,7 @@ $family_id
     </div>
     <div class="panel panel-default">
         <div class="panel-body">
-            <&| /page/info_section.mas, title => 'Add progenies to a List', collapsible=>1, collapsed=>1, subtitle=>'<i>Adding progenies of this family to a new or exisiting list</i>'&>
+            <&| /page/info_section.mas, anchor_title => 'Add progenies to a List', title => HTML::Entities::encode_entities($c->i18n->p("cross.pages.add_progenies_to_a_list", "Add progenies to a List")), collapsible=>1, collapsed=>1, subtitle=>("<i>" . HTML::Entities::encode_entities($c->i18n->p("cross.pages.adding_progenies_of_this_family_to_a_new_or_exisiting", "Adding progenies of this family to a new or exisiting list")) . "</i>")&>
                 <br>
                 <div id="progenies_to_new_list" style="display:none"></div>
                 <div id="progenies_add_to_list"></div>
@@ -29,13 +33,13 @@ jQuery(document).ready(function(){
         'destroy': true,
         'autoWidth': false,
         columns: [
-            { title: "Progeny Name", "data": null, "render": function ( data, type, row ) { return "<a href='/stock/"+row.progeny_id+"/view'>"+row.progeny_name+"</a>"; } },
-            { title: "Cross Unique ID", "data": null, "render": function ( data, type, row ) { return "<a href='/cross/"+row.cross_id+"'>"+row.cross_name+"</a>"; } },
+            { title: jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("cross.pages.progeny_name", "Progeny Name") : "Progeny Name")).html(), "data": null, "render": function ( data, type, row ) { return "<a href='/stock/"+row.progeny_id+"/view'>"+row.progeny_name+"</a>"; } },
+            { title: jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("cross.ui.cross_unique_id.923bfbc", "Cross Unique ID") : "Cross Unique ID")).html(), "data": null, "render": function ( data, type, row ) { return "<a href='/cross/"+row.cross_id+"'>"+row.cross_name+"</a>"; } },
         ],
         "fnInitComplete": function(oSettings, json) {
             //console.log(json);
             if (!isLoggedIn()) {
-                jQuery('#progenies_add_to_list').html("<div class='well well-sm'><h3>Please login to use lists!</h3></div>");
+                jQuery('#progenies_add_to_list').html(("<div class='well well-sm'><h3>" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("accession.related_stock.login_lists", "Please login to use lists!") : "Please login to use lists!")).html() + "</h3></div>"));
             } else {
                 var html = "";
                 for(var i=0; i<json.data.length; i++){

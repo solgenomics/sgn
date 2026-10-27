@@ -1,3 +1,6 @@
+<%init>
+use HTML::Entities ();
+</%init>
 <%doc>
 =head1 NAME
 
@@ -33,7 +36,7 @@ results and returns the appropriate URL for going to that page of results
 
 <div class="container-fluid">
 
-<& /page/page_title.mas, title => 'Organism/Taxon Search' &>
+<& /page/page_title.mas, title => HTML::Entities::encode_entities($c->i18n->p('global.search.organisms.organism_taxon_search', 'Organism/Taxon Search')) &>
 
 <style>
 #organism_search_form .checkboxgroup span span {
@@ -63,18 +66,15 @@ div.paginate_nav {
 <& /util/import_javascript.mas, classes => [ 'jquery' ] &>
   
 
-  <&| /page/info_section.mas, title    => 'Search Results',
-                              subtitle => 'Results '
-                                          .$pager->first
-                                          .'-'.$pager->last
-                                          .' of '.Number::Format->new->format_number($pager->total_entries)
+  <&| /page/info_section.mas, title => HTML::Entities::encode_entities($c->i18n->p('global.search.organisms.search_results', 'Search Results')),
+                              subtitle => HTML::Entities::encode_entities($c->i18n->p('global.search.organisms.results_first_last_of_total', 'Results %{first}-%{last} of %{total}', {first => $pager->first, last => $pager->last, total => Number::Format->new->format_number($pager->total_entries)}))
    &>
 
   <div class="well">
 
 %   if( $results->count ) {
      <% columnar_table_html(
-            headings => ['Taxon name','Common name'],
+            headings => [HTML::Entities::encode_entities($c->i18n->p('global.search.organisms.taxon_name', 'Taxon name')), HTML::Entities::encode_entities($c->i18n->p('global.search.organisms.common_name', 'Common name'))],
             data     => [
                 map [ '<a href="/organism/' . $_->organism_id . '/view/">'
                     . $_->species . "</a>",
@@ -83,7 +83,7 @@ div.paginate_nav {
         )
       %>
 %   } else {
-     <h3 style="text-align: center">No Matching Results Found</h3>
+     <h3 style="text-align: center"><% $c->i18n->p('global.search.organisms.no_matching_results_found', 'No Matching Results Found') |h %></h3>
 %   }
   </&>
 
@@ -92,7 +92,7 @@ div.paginate_nav {
   </div>
 % }
 
-<&| /page/info_section.mas, title    => 'Search', collapsible=>1, collapsed=>0 &>
+<&| /page/info_section.mas, title => HTML::Entities::encode_entities($c->i18n->p('global.search.organisms.search', 'Search')), collapsible=>1, collapsed=>0 &>
 
 <div class="well">
   <% $form->render %>
@@ -104,7 +104,7 @@ div.paginate_nav {
 <center>
 <div style="width:400px">
   <div class="panel panel-info">
-    <div class="panel-heading">Popular Species</div>
+    <div class="panel-heading"><% $c->i18n->p('global.search.organisms.popular_species', 'Popular Species') |h %></div>
     <div class="panel-body" style="overflow:hidden">
       <& /homepage/popular_species.mas, show_link => 0 &>
     </div>

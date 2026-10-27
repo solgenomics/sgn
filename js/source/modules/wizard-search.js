@@ -12,6 +12,31 @@ const list_prefix = "__LIST__";
  * @param  {type} col_number number of wizard columns to create
  * @returns {Object}
  */
+
+// Translate only owned control captions in a cloned template, never item names or values.
+function localizeWizardColumnTemplate(markup) {
+  if (!markup || !globalThis.SGN || !SGN.i18n || SGN.i18n.locale === 'en') return markup;
+  var captions = [
+    {selector: "input.wizard-search", kind: "placeholder", source: "Search", target: SGN.i18n.p("unassigned.wizard.controls.search", "Search")},
+    {selector: "button.wizard-select-all", kind: "text", source: "Select All", target: SGN.i18n.p("unassigned.wizard.controls.select_all", "Select All")},
+    {selector: "button.wizard-select-clear", kind: "text", source: "Clear", target: SGN.i18n.p("unassigned.wizard.controls.clear", "Clear")},
+    {selector: ".wizard-union-toggle", kind: "text", source: "Toggle", target: SGN.i18n.p("unassigned.wizard.controls.toggle", "Toggle")},
+    {selector: "button.wizard-add-to-list", kind: "text", source: "Add", target: SGN.i18n.p("unassigned.wizard.controls.add", "Add")},
+    {selector: "button.wizard-create-list", kind: "text", source: "Create", target: SGN.i18n.p("unassigned.wizard.controls.create", "Create")},
+  ];
+  if (captions.every(function (caption) { return caption.source === caption.target; })) return markup;
+  var holder = document.createElement('div');
+  holder.innerHTML = markup;
+  captions.forEach(function (caption) {
+    Array.prototype.forEach.call(holder.querySelectorAll(caption.selector), function (node) {
+      if (caption.kind === 'placeholder') {
+        if (node.getAttribute('placeholder') === caption.source) node.setAttribute('placeholder', caption.target);
+      } else if (!node.children.length && node.textContent === caption.source) node.textContent = caption.target;
+    });
+  });
+  return holder.innerHTML;
+}
+
 export function Wizard(main_id,col_number){
 
   /**
@@ -91,7 +116,7 @@ export function Wizard(main_id,col_number){
 
   var unselectedHTML = main.select(".templates .wizard-unselected").html();
   var selectedHTML = main.select(".templates .wizard-selected").html();
-  var columnHTML = main.select(".templates .wizard-column").html();
+  var columnHTML = localizeWizardColumnTemplate(main.select(".templates .wizard-column").html());
 
   var col_objects = [];
   for (var i = 0; i < col_number; i++) {

@@ -20,17 +20,17 @@ $sp_person_id
 
 <div id ="job_log_div" style="display:none;">
     <div style='display:flex;justify-content:center;'>
-        <button id="clear_dead_jobs_button" class='btn btn-sm btn-primary'>Dismiss failed and timed out jobs</button>
+        <button id="clear_dead_jobs_button" class='btn btn-sm btn-primary'><% $c->i18n->p("jobs.interface.dismiss_failed_timed_out_records", "Dismiss failed and timed out jobs") |h %></button>
         <span style="display: inline-block; width: 100px;"></span>
-        <button id="clear_finished_jobs_button" class='btn btn-sm btn-primary'>Dismiss finished and canceled jobs</button> 
+        <button id="clear_finished_jobs_button" class='btn btn-sm btn-primary'><% $c->i18n->p("jobs.interface.dismiss_finished_and_canceled_jobs", "Dismiss finished and canceled jobs") |h %></button>
         <span style="display: inline-block; width: 100px;"></span>
-        <button id="clear_old_jobs_button" class='btn btn-sm btn-primary'>Dismiss all jobs older than</button> 
+        <button id="clear_old_jobs_button" class='btn btn-sm btn-primary'><% $c->i18n->p("jobs.interface.dismiss_older_records", "Dismiss all jobs older than") |h %></button>
         &nbsp;
         <select id="keep_recent_jobs_select">
-            <option value='one_week'>One week</option>
-            <option value='one_month'>One month</option>
-            <option value='six_months'>Six months</option>
-            <option value='one_year'>One year</option>
+            <option value='one_week'><% $c->i18n->p("solgs.interface.one_week", "One week") |h %></option>
+            <option value='one_month'><% $c->i18n->p("solgs.interface.one_month", "One month") |h %></option>
+            <option value='six_months'><% $c->i18n->p("solgs.interface.six_months", "Six months") |h %></option>
+            <option value='one_year'><% $c->i18n->p("solgs.interface.one_year", "One year") |h %></option>
         </select>
     </div>
     <br>
@@ -44,11 +44,11 @@ jQuery(document).ready(function (){
         url: '/ajax/job/jobs_by_user/<% $sp_person_id %>',
         success: function(response) {
             if (response.error) {
-                alert("Error fetching submitted jobs, check console.");
+                alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("jobs.interface.error_fetching_submitted_jobs_console", "Error fetching submitted jobs, check console.") : "Error fetching submitted jobs, check console."));
                 console.error(response.error);
             } else {
                 jQuery('#job_log_div').removeAttr('style');
-                jQuery('#user_job_log_table').DataTable(response.data);
+                jQuery('#user_job_log_table').DataTable(window.jsMod && window.jsMod.job && typeof window.jsMod.job.job_display_config === 'function' ? window.jsMod.job.job_display_config(response.data) : response.data);
                 console.log(response.data);
                 jQuery('#clear_dead_jobs_button').click(function() {
                     jsMod['job'].dismiss_dead_jobs(<% $sp_person_id %>);
@@ -62,7 +62,7 @@ jQuery(document).ready(function (){
             }
         }, 
         error: function(response) {
-            alert("Error fetching submitted jobs");
+            alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("jobs.interface.error_fetching_submitted_jobs", "Error fetching submitted jobs") : "Error fetching submitted jobs"));
         }
     });
 });

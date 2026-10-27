@@ -15,14 +15,14 @@ export function init(main_div) {
     <div class="row">
       <div class="col-sm-12 boxplotter-loading"></div>
       <div class="form col-sm-12 form-group boxplotter-variable-select-div" style="display:none;">
-        <label for="sort" class="control-label">Variable</label>
+        <label for="sort" class="control-label">${jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("seedlot.variable", "Variable") : "Variable")).html()}</label>
         <select class="form-control boxplotter-variable-select"></select>
       </div>
     </div>
 
     <div class="row boxplotter-group-list" style="display:none;">
       <div class="form col-sm-12 form-group">
-        <label for="sort" class="control-label"> Group By </label>
+        <label for="sort" class="control-label"> ${jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("analysis.interface.group_by", "Group By") : "Group By")).html()} </label>
         <div class="groupBy-div">
           <select class="form-control groupBy" style="width:auto; display:inline;">
             <option value="" selected></option>
@@ -50,7 +50,7 @@ export function init(main_div) {
         bp.find(
             ".boxplotter-variable-select-div, .boxplotter-group-list, .boxplotter-result"
         ).hide();
-        bp.find(".boxplotter-loading").html("Loading ...");
+        bp.find(".boxplotter-loading").html((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("analysis.interface.loading", "Loading ...") : "Loading ..."));
         $.ajax({
             url: document.location.origin + "/ajax/tools/boxplotter/get_constraints",
             type: "GET",
@@ -81,7 +81,7 @@ export function init(main_div) {
                 boxplot.getVariables().then((vs) => {
                     if (vs.length < 1) {
                         bp.find(".boxplotter-result").html(
-                            '<strong class="not-enough-data">Not Enough Data with the Given Constraints</strong>'
+                            ("<strong class=\"not-enough-data\">" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("analysis.interface.not_enough_data_with_the_given_constraints", "Not Enough Data with the Given Constraints") : "Not Enough Data with the Given Constraints")).html() + "</strong>")
                         );
                         bp.find(".boxplots").hide();
                     } else {

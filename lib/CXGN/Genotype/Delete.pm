@@ -18,6 +18,8 @@ CXGN::Genotype::Delete - an object to delete plate, project or protocol genotypi
 package CXGN::Genotype::Delete;
 
 use Moose;
+use SGN::I18N ();
+has 'i18n' => (is => 'rw', isa => 'Maybe[Object]');
 use SGN::Model::Cvterm;
 use Data::Dumper;
 use JSON;
@@ -54,6 +56,7 @@ has 'empty_protocol_id' => (
 
 sub delete_genotype_data {
     my $self = shift;
+    my $i18n = SGN::I18N::translate($self);
     my $schema = $self->bcs_schema();
     my $genotyping_project_id = $self->genotyping_project_id();
     my $genotyping_plate_id = $self->genotyping_plate_id();
@@ -70,7 +73,7 @@ sub delete_genotype_data {
 
         if (!$genotyping_project_id && !$genotyping_plate_id && !$genotyping_protocol_id) {
             print STDERR "No project id, plate id or protocol id info.\n";
-            die "No project id, plate id or protocol id info.\n";
+            die SGN::I18N::translate($i18n, "genotype.validation.no_project_id_plate_id_or_protocol_id_info", "No project id, plate id or protocol id info.\n");
         }
 
         my @samples_array;
@@ -170,6 +173,7 @@ sub delete_genotype_data {
 
 sub delete_empty_protocol {
     my $self = shift;
+    my $i18n = SGN::I18N::translate($self);
     my $schema = $self->bcs_schema();
     my $dbh = $schema->storage->dbh;
     my $empty_protocol_id = $self->empty_protocol_id();
@@ -181,7 +185,7 @@ sub delete_empty_protocol {
 
         if ($experiment_count > 0) {
             print STDERR "This protocol has associated genotyping data. Cannot delete.\n";
-            die "This protocol has associated genotyping data. Cannot delete.\n";
+            die SGN::I18N::translate($i18n, "genotype.validation.this_protocol_has_associated_genotyping_data_cannot_delete", "This protocol has associated genotyping data. Cannot delete.\n");
         } elsif ($experiment_count == 0) {
             my $delete_protocol_q = "DELETE from nd_protocol WHERE nd_protocol_id=?;";
             my $delete_protocol_h = $schema->storage->dbh()->prepare($delete_protocol_q);

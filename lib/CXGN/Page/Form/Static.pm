@@ -21,6 +21,9 @@ Lukas Mueller (lam87@cornell.edu)
 use strict;
 
 package CXGN::Page::Form::Static;
+use SGN::I18N ();
+use CatalystX::GlobalContext '$c';
+use HTML::Entities ();
 
 use Data::Dumper;
 use CXGN::Page::Form::Field;
@@ -51,6 +54,7 @@ sub new {
     my $args = shift;
     
     my $self = bless {}, $class;
+    $self->{i18n} = $args->{i18n} || ($c && $c->can('i18n') ? $c->i18n : undef);
     $self->set_form_id($args->{form_id});
     return $self;
 }
@@ -123,7 +127,7 @@ sub get_field_obj_by_name
 sub add_field { 
     my $self = shift;
     my %args = @_;
-    my $field = CXGN::Page::Form::Field->new(%args);
+    my $field = CXGN::Page::Form::Field->new(%args, i18n => $self->{i18n});
     $self->add_field_obj($field);
 }
 
@@ -142,7 +146,7 @@ sub add_field {
 sub add_password_field { 
     my $self = shift;
     my %args = @_;
-    my $field = CXGN::Page::Form::PasswordField->new(%args);
+    my $field = CXGN::Page::Form::PasswordField->new(%args, i18n => $self->{i18n});
     $self->add_field_obj($field);
 }
 
@@ -160,7 +164,7 @@ sub add_password_field {
 sub add_textarea {
     my $self = shift;
     my %args = @_;
-    my $field = CXGN::Page::Form::TextArea->new(%args);
+    my $field = CXGN::Page::Form::TextArea->new(%args, i18n => $self->{i18n});
     $self->add_field_obj($field);
 }
 
@@ -181,7 +185,7 @@ sub add_label {
     my $self = shift;
     my %args = @_;
 
-    my $label = CXGN::Page::Form::Label->new(%args);
+    my $label = CXGN::Page::Form::Label->new(%args, i18n => $self->{i18n});
 
     $self->add_field_obj($label);
 }
@@ -205,7 +209,7 @@ sub add_select {
     my $self = shift;
     my %args = @_;
     
-    my $select = CXGN::Page::Form::Select->new(%args);
+    my $select = CXGN::Page::Form::Select->new(%args, i18n => $self->{i18n});
     $self->add_field_obj($select);
 }
 
@@ -227,7 +231,7 @@ sub add_hidden {
     my $self = shift;
     my %args = @_;
 
-    my $hidden = CXGN::Page::Form::Hidden->new(%args);
+    my $hidden = CXGN::Page::Form::Hidden->new(%args, i18n => $self->{i18n});
     $self->add_field_obj($hidden);
 }
 
@@ -247,7 +251,7 @@ sub add_checkbox {
     my $self = shift;
     my %args = @_;
 
-    my $checkbox = CXGN::Page::Form::Checkbox->new(%args);
+    my $checkbox = CXGN::Page::Form::Checkbox->new(%args, i18n => $self->{i18n});
     $self->add_field_obj($checkbox);
 }
 
@@ -268,7 +272,7 @@ sub add_radio_list
 	my $self = shift;
     my %args = @_;
 
-    my $radio = CXGN::Page::Form::RadioList->new(%args);
+    my $radio = CXGN::Page::Form::RadioList->new(%args, i18n => $self->{i18n});
     $self->add_field_obj($radio);
 }
 
@@ -289,7 +293,7 @@ sub add_multiselect
 	my $self = shift;
     my %args = @_;
 
-    my $radio = CXGN::Page::Form::MultiSelect->new(%args);
+    my $radio = CXGN::Page::Form::MultiSelect->new(%args, i18n => $self->{i18n});
     $self->add_field_obj($radio);
 }
 
@@ -592,34 +596,43 @@ sub as_table_string {
 
 sub get_error_message { 
     my $self = shift;
+    my SGN::I18N $i18n = $self->{i18n};
     my $error = shift;
+    my $caption_input = HTML::Entities::encode_entities($i18n ? $i18n->p("shared.form.error.input", "Input required") : "Input required");
+    my $caption_integer = HTML::Entities::encode_entities($i18n ? $i18n->p("shared.form.error.integer", "Integer required") : "Integer required");
+    my $caption_number = HTML::Entities::encode_entities($i18n ? $i18n->p("shared.form.error.number", "Number required") : "Number required");
+    my $caption_token = HTML::Entities::encode_entities($i18n ? $i18n->p("shared.form.error.token", "Token required. No spaces or special characters are allowed.") : "Token required. No spaces or special characters are allowed.");
+    my $caption_length = HTML::Entities::encode_entities($i18n ? $i18n->p("shared.form.error.length", "Field length limit exceeded.") : "Field length limit exceeded.");
+    my $caption_date = HTML::Entities::encode_entities($i18n ? $i18n->p("shared.form.error.date", "Date required") : "Date required");
+    my $caption_unique = HTML::Entities::encode_entities($i18n ? $i18n->p("shared.form.error.unique", "Unique input required") : "Unique input required");
+    my $caption_allele = HTML::Entities::encode_entities($i18n ? $i18n->p("shared.form.error.allele", "Allele symbol required XXX-NN") : "Allele symbol required XXX-NN");
     print  $CXGN::Page::Form::INPUT_REQUIRED_ERROR."\n";
 
     if ($error == $CXGN::Page::Form::ElementI::INPUT_REQUIRED_ERROR) { 
-	return qq { <font color="red">Input required</font>\n };
+	return qq { <font color="red">$caption_input</font>\n };
     }
     if ($error == $CXGN::Page::Form::ElementI::INTEGER_REQUIRED_ERROR) { 
-	return qq { <font color="red">Integer required</font>\n };
+	return qq { <font color="red">$caption_integer</font>\n };
     }
     if ($error == $CXGN::Page::Form::ElementI::NUMBER_REQUIRED_ERROR) { 
-	return qq { <font color="red">Number required</font>\n };
+	return qq { <font color="red">$caption_number</font>\n };
     }
     if ($error == $CXGN::Page::Form::ElementI::TOKEN_REQUIRED_ERROR) { 
-	return qq { <font color="red">Token required. No spaces or special characters are allowed.\n</font>\n };
+	return qq { <font color="red">$caption_token\n</font>\n };
     }
     if ($error == $CXGN::Page::Form::ElementI::LENGTH_EXCEEDED_ERROR) { 
-	return qq { <font color="red">Field length limit exceeded.\n</font> };
+	return qq { <font color="red">$caption_length\n</font> };
     }
     if ($error == $CXGN::Page::Form::ElementI::DATE_REQUIRED_ERROR) { 
-	return qq { <font color="red">Date required</font> };
+	return qq { <font color="red">$caption_date</font> };
     }
     if ($error == $CXGN::Page::Form::ElementI::UNIQUE_REQUIRED_ERROR) { 
-	return qq { <font color="red">Unique input required</font> };
+	return qq { <font color="red">$caption_unique</font> };
     }
     if ($error == $CXGN::Page::Form::ElementI::ALLELE_SYMBOL_REQUIRED_ERROR) { 
-	return qq { <font color="red">Allele symbol required XXX-NN</font> };
+	return qq { <font color="red">$caption_allele</font> };
     }
-    if ($error) { return qq { <font color="red">Unknown error [$error]\n</font> }; }
+    if ($error) { my $caption = HTML::Entities::encode_entities($i18n ? $i18n->p("shared.form.error.unknown", "Unknown error [%{error}]", {error => $error}) : "Unknown error [$error]"); return qq { <font color="red">$caption\n</font> }; }
 }
 
 

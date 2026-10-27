@@ -4,6 +4,8 @@
 #####################
 
 use strict;
+use SGN::I18N ();
+
 
 use CXGN::DB::Connection;
 use CXGN::Page;
@@ -21,6 +23,26 @@ our $c;
 use CatalystX::GlobalContext qw($c);
 
 
+    my SGN::I18N $ui_people_i18n = SGN::I18N::translate($c);
+    my %ui_people_text = (
+        welcome => SGN::I18N::translate($ui_people_i18n, 'community.people.welcome', 'Welcome ', undef, { entities => '\x{0080}-\x{10FFFF}', decode => 0 }),
+        log_out => SGN::I18N::translate($ui_people_i18n, 'community.people.log_out', '[log out]', undef, { entities => '\x{0080}-\x{10FFFF}', decode => 0 }),
+        view_or_update_personal_contact_and_research_information => SGN::I18N::translate($ui_people_i18n, 'community.people.view_or_update_personal_contact_and_research_information', 'View or update personal (contact and research) information', undef, { entities => '\x{0080}-\x{10FFFF}', decode => 0 }),
+        update_account_information => SGN::I18N::translate($ui_people_i18n, 'community.people.update_account_information', 'Update account information', undef, { entities => '\x{0080}-\x{10FFFF}', decode => 0 }),
+        post_to_sgn_forum => SGN::I18N::translate($ui_people_i18n, 'community.people.post_to_sgn_forum', 'Post to SGN forum', undef, { entities => '\x{0080}-\x{10FFFF}', decode => 0 }),
+        test_website_error_handling => SGN::I18N::translate($ui_people_i18n, 'community.people.test_website_error_handling', 'Test website error handling', undef, { entities => '\x{0080}-\x{10FFFF}', decode => 0 }),
+        view_user_stats => SGN::I18N::translate($ui_people_i18n, 'community.people.view_user_stats', 'View user stats', undef, { entities => '\x{0080}-\x{10FFFF}', decode => 0 }),
+        create_new_user_account => SGN::I18N::translate($ui_people_i18n, 'community.people.create_new_user_account', 'Create new user account', undef, { entities => '\x{0080}-\x{10FFFF}', decode => 0 }),
+        create_new_organization => SGN::I18N::translate($ui_people_i18n, 'community.people.create_new_organization', 'Create new organization', undef, { entities => '\x{0080}-\x{10FFFF}', decode => 0 }),
+        your_current_user_status_is => SGN::I18N::translate($ui_people_i18n, 'community.people.your_current_user_status_is', 'Your current user status is ', undef, { entities => '\x{0080}-\x{10FFFF}', decode => 0 }),
+        you_have_the_maximum_user_privileges_on_sgn => SGN::I18N::translate($ui_people_i18n, 'community.people.you_have_the_maximum_user_privileges_on_sgn', 'You have the maximum user privileges on SGN.', undef, { entities => '\x{0080}-\x{10FFFF}', decode => 0 }),
+        you_have_maximum_user_privileges_on_sgn => SGN::I18N::translate($ui_people_i18n, 'community.people.you_have_maximum_user_privileges_on_sgn', 'You have maximum user privileges on SGN.', undef, { entities => '\x{0080}-\x{10FFFF}', decode => 0 }),
+        please_contact => SGN::I18N::translate($ui_people_i18n, 'community.people.please_contact', 'Please contact ', undef, { entities => '\x{0080}-\x{10FFFF}', decode => 0 }),
+        to_upgrade_to_a => SGN::I18N::translate($ui_people_i18n, 'community.people.to_upgrade_to_a', ' to upgrade to a ', undef, { entities => '\x{0080}-\x{10FFFF}', decode => 0 }),
+        account_with_more_privileges_submitters_can_upload_user_maps_est_data_and_become_locus_editors => SGN::I18N::translate($ui_people_i18n, 'community.people.account_with_more_privileges_submitters_can_upload_user_maps_est_data_and_become_locus_editors', ' account with more privileges. Submitters can upload user maps, EST data, and become locus editors.', undef, { entities => '\x{0080}-\x{10FFFF}', decode => 0 }),
+        if_you_would_like_to_change_your_user_status => SGN::I18N::translate($ui_people_i18n, 'community.people.if_you_would_like_to_change_your_user_status', ' if you would like to change your user status.', undef, { entities => '\x{0080}-\x{10FFFF}', decode => 0 }),
+    );
+
 my $page = CXGN::Page->new( "solpeople main menu", "john" );
 my $dbh = CXGN::DB::Connection->new();
 my $site_name = $c->config->{project_name};
@@ -29,11 +51,11 @@ my $sp_person_id = CXGN::Login->new($dbh)->verify_session();
 
 my $sp = CXGN::People::Person->new( $dbh, $sp_person_id );
 unless ($sp_person_id) {
-    $page->error_page( "Login ID not found.",
+    $page->error_page( SGN::I18N::translate($ui_people_i18n, 'community.people.login_id_not_found', 'Login ID not found.', undef, { entities => '\x{0080}-\x{10FFFF}', decode => 0 }),
         "", "", "Login ID not found: $sp_person_id" );
 }
 unless ( $sp->get_username() ) {
-    $page->error_page( "Username not found.",
+    $page->error_page( SGN::I18N::translate($ui_people_i18n, 'community.people.username_not_found', 'Username not found.', undef, { entities => '\x{0080}-\x{10FFFF}', decode => 0 }),
         "", "", "Username not found for sp_person_id '$sp_person_id'" );
 }
 my $username = $sp->get_first_name() . " " . $sp->get_last_name();
@@ -81,13 +103,13 @@ print <<END_HTML;
 END_HTML
 
 print page_title_html("My $site_name");
-print qq|<div align="center">Welcome <b>$username</b></div>\n|;
+print qq|<div align="center">$ui_people_text{welcome}<b>$username</b></div>\n|;
 print
-qq|<div align="right" style="margin-bottom: 0.5em">Not $username? <a href="login.pl?logout=yes">[log out]</a></div>\n|;
-print info_section_html( title => 'General Tools', contents => <<EOHTML);
-    <a href="personal-info.pl?action=edit&sp_person_id=$sp_person_id">View or update personal (contact and research) information</a><br />
-    <a href="change-account.pl?action=edit&sp_person_id=$sp_person_id">Update account information</a><br />
-    <a href="/forum/topics.pl">Post to SGN forum</a><br />
+qq|<div align="right" style="margin-bottom: 0.5em">Not $username? <a href="login.pl?logout=yes">$ui_people_text{log_out}</a></div>\n|;
+print info_section_html( title => SGN::I18N::translate($ui_people_i18n, 'community.people.general_tools', 'General Tools', undef, { entities => '\x{0080}-\x{10FFFF}', decode => 0 }), contents => <<EOHTML);
+    <a href="personal-info.pl?action=edit&sp_person_id=$sp_person_id">$ui_people_text{view_or_update_personal_contact_and_research_information}</a><br />
+    <a href="change-account.pl?action=edit&sp_person_id=$sp_person_id">$ui_people_text{update_account_information}</a><br />
+    <a href="/forum/topics.pl">$ui_people_text{post_to_sgn_forum}</a><br />
 EOHTML
 
 # my $queries =
@@ -191,11 +213,11 @@ print info_section_html(
 
 
 if ( $sp->get_user_type() eq 'curator' ) {
-    print info_section_html( title => 'Curator Tools', contents => <<EOHTML);
-<a href="/solpeople/admin/crash_test.pl">Test website error handling</a><br />
-<a href="/solpeople/admin/stats.pl">View user stats</a><br />
-<a href="/solpeople/admin/quick_create_account.pl">Create new user account</a><br />
-<a href="/solpeople/admin/create_organization.pl">Create new organization</a>
+    print info_section_html( title => SGN::I18N::translate($ui_people_i18n, 'community.people.curator_tools', 'Curator Tools', undef, { entities => '\x{0080}-\x{10FFFF}', decode => 0 }), contents => <<EOHTML);
+<a href="/solpeople/admin/crash_test.pl">$ui_people_text{test_website_error_handling}</a><br />
+<a href="/solpeople/admin/stats.pl">$ui_people_text{view_user_stats}</a><br />
+<a href="/solpeople/admin/quick_create_account.pl">$ui_people_text{create_new_user_account}</a><br />
+<a href="/solpeople/admin/create_organization.pl">$ui_people_text{create_new_organization}</a>
 EOHTML
 }
 
@@ -327,18 +349,18 @@ qq| <a href="../phenome/recent_annotated_loci.pl">[View annotated loci by date]<
 
 my $user_type = $sp->get_user_type();
 my $user_info = {
-    user => qq{ Your current user status is <b>$user_type</b>. Please contact <a href="mailto:sgn-feedback\@sgn.cornell.edu">SGN</a> to upgrade to a <b>submitter</b> account with more privileges. Submitters can upload user maps, EST data, and become locus editors. },
+    user => qq{ $ui_people_text{your_current_user_status_is}<b>$user_type</b>. $ui_people_text{please_contact}<a href="mailto:sgn-feedback\@sgn.cornell.edu">SGN</a>$ui_people_text{to_upgrade_to_a}<b>submitter</b>$ui_people_text{account_with_more_privileges_submitters_can_upload_user_maps_est_data_and_become_locus_editors} },
 
-    submitter => qq{ Your current user status is <b>$user_type</b>. You have the maximum user privileges on SGN. Please contact <a href="mailto:sgn-feedback\@sgn.cornell.edu">SGN</a> if you would like to change your user status.},
+    submitter => qq{ $ui_people_text{your_current_user_status_is}<b>$user_type</b>. $ui_people_text{you_have_the_maximum_user_privileges_on_sgn} $ui_people_text{please_contact}<a href="mailto:sgn-feedback\@sgn.cornell.edu">SGN</a>$ui_people_text{if_you_would_like_to_change_your_user_status}},
 
-    curator => qq{ Your current user status is <b>$user_type</b>. },
+    curator => qq{ $ui_people_text{your_current_user_status_is}<b>$user_type</b>. },
 
-    sequencer => qq{ Your current user status is <b>$user_type</b>. You have maximum user privileges on SGN. },
+    sequencer => qq{ $ui_people_text{your_current_user_status_is}<b>$user_type</b>. $ui_people_text{you_have_maximum_user_privileges_on_sgn} },
 
-    genefamily_editor => qq{ Your current user status is <b>$user_type</b>. },
+    genefamily_editor => qq{ $ui_people_text{your_current_user_status_is}<b>$user_type</b>. },
 };
 
-print info_section_html( title => 'User Status',
+print info_section_html( title => SGN::I18N::translate($ui_people_i18n, 'community.people.user_status', 'User Status', undef, { entities => '\x{0080}-\x{10FFFF}', decode => 0 }),
     contents => $user_info->{$user_type} );
 
 $page->footer();

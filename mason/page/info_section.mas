@@ -87,6 +87,7 @@ Lukas Mueller, based on the Perl code from Rob Buels.
 
 <%args>
     $title
+    $anchor_title  => undef
     $subtitle      => ""
     $empty_message => "None"
     $collapsible   => 0
@@ -101,7 +102,7 @@ Lukas Mueller, based on the Perl code from Rob Buels.
 
 % my $sub = $is_subsection ? 'sub_' : '';
 
-<a class="info_section_anchor<% $sub ? ' info_subsection_anchor' : '' %>" name="<% anchor_name( $title ) %>"></a>
+<a class="info_section_anchor<% $sub ? ' info_subsection_anchor' : '' %>" name="<% anchor_name( defined($anchor_title) ? $anchor_title : $title ) %>"></a>
 
 <%perl>
 

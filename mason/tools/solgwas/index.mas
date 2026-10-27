@@ -1,3 +1,7 @@
+<%once>
+use HTML::Entities ();
+</%once>
+
 
 <%doc>
 </%doc>
@@ -19,30 +23,30 @@
 <script src="https://cdn.jsdelivr.net/npm/vega-lite@2"></script>
 <script src="https://cdn.jsdelivr.net/npm/vega-embed@4"></script>
 
-<& /page/page_title.mas, title=>"SolGWAS" &>
+<& /page/page_title.mas, title=>HTML::Entities::encode_entities($c->i18n->p("analysis.interface.solgwas", "SolGWAS")) &>
 
-<&| /page/info_section.mas, id=>"input_dataset_section", title=>"Select Input Data", collapsible=>1, collapsed=>0, subtitle=>'<a class="btn btn-link pull-right" href="/help/solgwas" target="_blank">Help <span class="glyphicon glyphicon-question-sign"></span></a>' &>
+<&| /page/info_section.mas, anchor_title => "Select Input Data", id=>"input_dataset_section", title=>HTML::Entities::encode_entities($c->i18n->p("analysis.interface.select_input_data", "Select Input Data")), collapsible=>1, collapsed=>0, subtitle=>("<a class=\"btn btn-link pull-right\" href=\"/help/solgwas\" target=\"_blank\">" . HTML::Entities::encode_entities($c->i18n->p("global.search.datasets.help", "Help")) . " <span class=\"glyphicon glyphicon-question-sign\"></span></a>") &>
   <input type="hidden" name="outformat" value="0" />
 
 
   <div class="form-group form-inline">
-    <label for="dataset_select">Available Datasets: </label><div id="dataset_select"></div>
+    <label for="dataset_select"><% $c->i18n->p("analysis.interface.available_datasets", "Available Datasets:") |h %> </label><div id="dataset_select"></div>
     <br>
 
-    <button class="btn btn-info" id="createDataset"><span class="glyphicon glyphicon-plus"></span>&nbsp;&nbsp;Create Dataset</button>
-    <button class="btn btn-primary" id="selectDataset" type="submit" name="selectDataset" value="selectDataset">Select Dataset</button>
+    <button class="btn btn-info" id="createDataset"><span class="glyphicon glyphicon-plus"></span>&nbsp;&nbsp;<% $c->i18n->p("analysis.interface.create_dataset", "Create Dataset") |h %></button>
+    <button class="btn btn-primary" id="selectDataset" type="submit" name="selectDataset" value="selectDataset"><% $c->i18n->p("analysis.interface.select_dataset", "Select Dataset") |h %></button>
     <br>
     <br>
 
     </div>
       <div class="form-group form-inline">
-        <label class="blast_select_label" for="pheno_select">Available&nbspTraits:&nbsp; </label>        
+        <label class="blast_select_label" for="pheno_select"><% $c->i18n->p("analysis.interface.available_nbsptraits", "Available&nbspTraits:") %>&nbsp; </label><% '        ' %>
         <& /page/html_select.mas, name=>'pheno_select', id=>'pheno_select', params=>"class\=\"form-control input-sm blast_select_box\"", choices=>"" &>                
-        <button class="btn btn-primary" id="preview_trait_histogram_btn" type="submit" name="preview_trait_histogram_btn" value="preview_trait_histogram_btn">View Trait Histogram</button>
+        <button class="btn btn-primary" id="preview_trait_histogram_btn" type="submit" name="preview_trait_histogram_btn" value="preview_trait_histogram_btn"><% $c->i18n->p("analysis.interface.view_trait_histogram", "View Trait Histogram") |h %></button>
         <img id="loading-spinner" src="/img/wheel.gif" alt="loading" style="visibility: hidden;">
         <br>
         <input type="checkbox" id="dataset_trait_outliers" />
-        <label>Exclude dataset outliers &nbsp; </label>
+        <label><% $c->i18n->p("analysis.interface.exclude_dataset_outliers", "Exclude dataset outliers") |h %> &nbsp; </label>
         <br>
         <br>
         <center>
@@ -53,11 +57,11 @@
         <br>
         <div class="form-group form-inline">
           <input type="checkbox" id="kinshipmat" />
-          <label>Include kinship matrix in model &nbsp; </label>
+          <label><% $c->i18n->p("analysis.interface.include_kinship_matrix_in_model", "Include kinship matrix in model") |h %> &nbsp; </label>
           <br>
           <input type="checkbox" id="princomp" />
-          <label>Include principal components in model &nbsp; </label>
-          <button class="btn btn-primary" id="preview_pca" type="submit" name="preview_pca" value="preview_pca">View PCA Plot</button>
+          <label><% $c->i18n->p("analysis.interface.include_principal_components_in_model", "Include principal components in model") |h %> &nbsp; </label>
+          <button class="btn btn-primary" id="preview_pca" type="submit" name="preview_pca" value="preview_pca"><% $c->i18n->p("analysis.interface.view_pca_plot", "View PCA Plot") |h %></button>
         </div>
         <br>
         <br>
@@ -73,7 +77,7 @@
       </div>
 
       <div style="text-align: center">
-        <button class="btn btn-primary" id="runGWA" name="runGWA">Run SolGWAS</button>
+        <button class="btn btn-primary" id="runGWA" name="runGWA"><% $c->i18n->p("analysis.interface.run_solgwas", "Run SolGWAS") |h %></button>
       </div>
       <br />
 
@@ -89,14 +93,14 @@
 
 
 
-<&| /page/info_section.mas, title=>"Output", collapsible=>1, collapsed=>0, subtitle=>'<a id="download_table" class="download_tag" target="_blank" href="javascript:download_table();" title="Download results in tabular format">Table&#8675;</a>&nbsp;&nbsp;<a id="download_basic" class="download_tag" target="_blank" href="javascript:download();" title="Download results in basic format">Basic&#8675;</a>' &>
+<&| /page/info_section.mas, anchor_title => "Output", title=>HTML::Entities::encode_entities($c->i18n->p("genotype.comparison.step.output", "Output")), collapsible=>1, collapsed=>0, subtitle=>("<a id=\"download_table\" class=\"download_tag\" target=\"_blank\" href=\"javascript:download_table();\" title=\"" . HTML::Entities::encode_entities($c->i18n->p("analysis.interface.download_results_in_tabular_format", "Download results in tabular format")) . "\">" . HTML::Entities::encode_entities(HTML::Entities::decode_entities($c->i18n->p("analysis.interface.table_8675", "Table&#8675;"))) . "</a>&nbsp;&nbsp;<a id=\"download_basic\" class=\"download_tag\" target=\"_blank\" href=\"javascript:download();\" title=\"" . HTML::Entities::encode_entities($c->i18n->p("analysis.interface.download_results_in_basic_format", "Download results in basic format")) . "\">" . HTML::Entities::encode_entities(HTML::Entities::decode_entities($c->i18n->p("analysis.interface.basic_8675", "Basic&#8675;"))) . "</a>") &>
 
 
 
   <center>
     <div id="sgn_blast_graph" style="display:none">
         <div id="myCanvas">
-          Your browser does not support the HTML5 canvas
+          <% $c->i18n->p("analysis.interface.your_browser_does_not_support_the_html5_canvas", "Your browser does not support the HTML5 canvas") |h %>
         </div>
     </div>
   </center>
@@ -120,7 +124,7 @@ jQuery(document).ready(function() {
     get_select_box("datasets", "dataset_select", {"checkbox_name":"dataset_select_checkbox", "analysis_type":"GWAS", "show_compatibility":"yes"});
   }
   else {
-    alert('You must be logged in to use SolGWAS');
+    alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("analysis.interface.you_must_be_logged_in_to_use_solgwas", "You must be logged in to use SolGWAS") : 'You must be logged in to use SolGWAS'));
   }
   $('#pheno_select').attr("disabled",true).html('');
 
@@ -170,7 +174,7 @@ jQuery(document).ready(function() {
 	      }
       },
       error: function(response) {
-        alert("An error occurred, the service may temporarily be unavailable");
+        alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("analysis.interface.an_error_occurred_the_service_may_temporarily_be_unavailable", "An error occurred, the service may temporarily be unavailable") : "An error occurred, the service may temporarily be unavailable"));
         document.getElementById("preview_trait_histogram_btn").disabled = false;
         document.getElementById("loading-spinner").style.visibility = 'hidden'; 
       }
@@ -194,7 +198,7 @@ jQuery(document).ready(function() {
       success: function(response) {
         if (response.error) {
           $('#dataset_select').val('ERROR');
-          alert("An error occurred, the is some problem with data");
+          alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("analysis.interface.an_error_occurred_the_is_some_problem_with_data", "An error occurred, the is some problem with data") : "An error occurred, the is some problem with data"));
           document.getElementById("preview_trait_histogram_btn").disabled = false;          
           document.getElementById("loading-spinner").style.visibility = 'hidden'; 
         }        
@@ -205,7 +209,7 @@ jQuery(document).ready(function() {
 	      }
       },
       error: function(response) {
-        alert("An error occurred, the service may temporarily be unavailable");
+        alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("analysis.interface.an_error_occurred_the_service_may_temporarily_be_unavailable", "An error occurred, the service may temporarily be unavailable") : "An error occurred, the service may temporarily be unavailable"));
         document.getElementById("preview_trait_histogram_btn").disabled = false;
         document.getElementById("loading-spinner").style.visibility = 'hidden'; 
       }
@@ -215,7 +219,7 @@ jQuery(document).ready(function() {
 
   jQuery('#preview_trait_histogram_btn').on('click', function() {
     if (!jQuery('#pheno_select').val()) {
-      alert("Please select a dataset and trait.")
+      alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("analysis.interface.please_select_a_dataset_and_trait", "Please select a dataset and trait.") : "Please select a dataset and trait."))
     } else {
       //alert("Inside trait preview");
       var tempfile = jQuery('#tempfile').html();
@@ -252,7 +256,7 @@ jQuery(document).ready(function() {
           },
 
 
-        error: function(e) { alert('error!'); }
+        error: function(e) { alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("analysis.interface.error", "error!") : 'error!')); }
       });
     };
   });
@@ -260,7 +264,7 @@ jQuery(document).ready(function() {
 
   jQuery('#preview_pca').click( function () {
     if (!jQuery('#pheno_select').val()) {
-      alert("Please select a dataset and trait.")
+      alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("analysis.interface.please_select_a_dataset_and_trait", "Please select a dataset and trait.") : "Please select a dataset and trait."))
     } else {
       $('#pca_output').empty();
       if ($('#pheno_select').val() != ""){
@@ -287,7 +291,7 @@ jQuery(document).ready(function() {
   	      }
           },
           error: function(response) {
-            alert("An error occurred, the service may temporarily be unavailable");
+            alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("analysis.interface.an_error_occurred_the_service_may_temporarily_be_unavailable", "An error occurred, the service may temporarily be unavailable") : "An error occurred, the service may temporarily be unavailable"));
           }
         });
       }
@@ -296,7 +300,7 @@ jQuery(document).ready(function() {
 
   jQuery('#runGWA').click( function () {
     if (!jQuery('#pheno_select').val()) {
-      alert("Please select a dataset and trait.")
+      alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("analysis.interface.please_select_a_dataset_and_trait", "Please select a dataset and trait.") : "Please select a dataset and trait."))
       $('#Solgwas_output').empty();
     } else {
       $('#Solgwas_output').empty();
@@ -359,10 +363,10 @@ jQuery(document).ready(function() {
           selected_datasets.push(jQuery(this).val());
       });
       if (selected_datasets.length < 1){
-          alert('Please select at least one dataset!');
+          alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("analysis.interface.please_select_at_least_one_dataset", "Please select at least one dataset!") : 'Please select at least one dataset!'));
           return false;
       } else if (selected_datasets.length > 1){
-          alert('Please select only one dataset!');
+          alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("analysis.interface.please_select_only_one_dataset", "Please select only one dataset!") : 'Please select only one dataset!'));
           return false;
       } else {
   	var dataset_id=selected_datasets[0];

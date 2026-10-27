@@ -49,7 +49,7 @@ $size => 'medium'
 use SGN::Image;
 
 if (!$object_id) { 
-   print "<br /><br />No image is available with these parameters."; 
+   print "<br /><br />" . HTML::Entities::encode_entities($c->i18n->p("community.image.no_image_is_available_with_these_parameters", "No image is available with these parameters."));
    return; 
  }
 
@@ -57,14 +57,18 @@ my $image = SGN::Image->new($dbh, $object_id);
 
 </%perl>
 
-<& /page/page_title.mas, title=>"SGN Image ".$image->get_name() &>
+<& /page/page_title.mas, title=>HTML::Entities::encode_entities($c->i18n->p("community.image.sgn_image", "SGN Image ")).HTML::Entities::encode_entities($image->get_name()) &>
 
-<&| /page/info_section.mas, title=>"Image data" &>
+<&| /page/info_section.mas, title=>HTML::Entities::encode_entities($c->i18n->p("community.image.image_data", "Image data")), anchor_title=>"Image data" &>
 
     <& /page/form.mas, object_type=>'image', object_id=>"$object_id", form_name=> 'image_form', server_side_script => '/image/ajax/image_ajax_form.pl', form_div_name=>'image_info_div', js_object_name=> 'image_form', page_url => '/image/index.pl', alternate_new_button => '' &>
 
 </&>
 
-<&| /page/info_section.mas, title=>"Image" &>
+<&| /page/info_section.mas, title=>HTML::Entities::encode_entities($c->i18n->p("community.image.image", "Image")), anchor_title=>"Image" &>
     <& /image/display_image.mas, image=>$image, size=>$size &>
 </&>
+
+<%once>
+use HTML::Entities ();
+</%once>

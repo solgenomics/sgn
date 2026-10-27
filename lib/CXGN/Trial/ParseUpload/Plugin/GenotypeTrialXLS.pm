@@ -45,7 +45,7 @@ sub _validate_with_plugin {
 
     $worksheet = ( $excel_obj->worksheets() )[0]; #support only one worksheet
     if (!$worksheet) {
-        push @error_messages, "Spreadsheet must be on 1st tab in Excel (.xls or .xlsx) file";
+        push @error_messages, ($self->i18n ? $self->i18n->p('genotype.parser.xlsx.first_tab', 'Spreadsheet must be on 1st tab in %{product} (%{xls} or %{xlsx}) file', { 'xlsx' => '.xlsx', 'xls' => '.xls', 'product' => 'Excel' }) : "Spreadsheet must be on 1st tab in Excel (.xls or .xlsx) file");
         $errors{'error_messages'} = \@error_messages;
         $self->_set_parse_errors(\%errors);
         return;
@@ -53,7 +53,7 @@ sub _validate_with_plugin {
     my ( $row_min, $row_max ) = $worksheet->row_range();
     my ( $col_min, $col_max ) = $worksheet->col_range();
     if (($col_max - $col_min)  < 2 || ($row_max - $row_min) < 1 ) { #must have header and at least one row of plot data
-        push @error_messages, "Spreadsheet is missing header or contains no rows";
+        push @error_messages, ($self->i18n ? $self->i18n->p('genotype.parser.xlsx.missing_rows', 'Spreadsheet is missing header or contains no rows') : "Spreadsheet is missing header or contains no rows");
         $errors{'error_messages'} = \@error_messages;
         $self->_set_parse_errors(\%errors);
         return;
@@ -140,50 +140,50 @@ sub _validate_with_plugin {
     }
 
     if (!$date_head || $date_head ne 'date' ) {
-        push @error_messages, "Cell A1: date is missing from the header";
+        push @error_messages, ($self->i18n ? $self->i18n->p('genotype.parser.xlsx.header_date', 'Cell %{cell}: %{field_date} is missing from the header', { 'cell' => 'A1', 'field_date' => 'date' }) : "Cell A1: date is missing from the header");
     }
     if (!$sample_id_head || $sample_id_head ne 'sample_id') {
-        push @error_messages, "Cell B1: sample_id is missing from the header";
+        push @error_messages, ($self->i18n ? $self->i18n->p('genotype.parser.xlsx.header_sample', 'Cell %{cell}: %{field_sample_id} is missing from the header', { 'cell' => 'B1', 'field_sample_id' => 'sample_id' }) : "Cell B1: sample_id is missing from the header");
     }
     if (!$well_A01_head || $well_A01_head ne 'well_A01') {
-        push @error_messages, "Cell C1: well_A01 is missing from the header.";
+        push @error_messages, ($self->i18n ? $self->i18n->p('genotype.parser.xlsx.header_well', 'Cell %{cell}: %{field_well_A01} is missing from the header.', { 'cell' => 'C1', 'field_well_A01' => 'well_A01' }) : "Cell C1: well_A01 is missing from the header.");
     }
     if (!$row_head || $row_head ne 'row') {
-        push @error_messages, "Cell D1: row is missing from the header.";
+        push @error_messages, ($self->i18n ? $self->i18n->p('genotype.parser.xlsx.header_row', 'Cell %{cell}: %{field_row} is missing from the header.', { 'cell' => 'D1', 'field_row' => 'row' }) : "Cell D1: row is missing from the header.");
     }
     if (!$column_head || $column_head ne 'column') {
-        push @error_messages, "Cell E1: column is missing from the header.";
+        push @error_messages, ($self->i18n ? $self->i18n->p('genotype.parser.xlsx.header_column', 'Cell %{cell}: %{field_column} is missing from the header.', { 'cell' => 'E1', 'field_column' => 'column' }) : "Cell E1: column is missing from the header.");
     }
     if (!$source_observation_unit_name_head || $source_observation_unit_name_head ne 'source_observation_unit_name') {
-        push @error_messages, "Cell F1: source_observation_unit_name is missing from the header.";
+        push @error_messages, ($self->i18n ? $self->i18n->p('genotype.parser.xlsx.header_source', 'Cell %{cell}: %{field_source_observation_unit_name} is missing from the header.', { 'cell' => 'F1', 'field_source_observation_unit_name' => 'source_observation_unit_name' }) : "Cell F1: source_observation_unit_name is missing from the header.");
     }
     if (!$ncbi_taxonomy_id_head || $ncbi_taxonomy_id_head ne 'ncbi_taxonomy_id') {
-        push @error_messages, "Cell G1: ncbi_taxonomy_id is missing from the header. (Header is required, but values are optional)";
+        push @error_messages, ($self->i18n ? $self->i18n->p('genotype.parser.xlsx.header_taxonomy', 'Cell %{cell}: %{field_ncbi_taxonomy_id} is missing from the header. (Header is required, but values are optional)', { 'cell' => 'G1', 'field_ncbi_taxonomy_id' => 'ncbi_taxonomy_id' }) : "Cell G1: ncbi_taxonomy_id is missing from the header. (Header is required, but values are optional)");
     }
     if (!$dna_person_head || $dna_person_head ne 'dna_person') {
-        push @error_messages, "Cell H1: dna_person is missing from the header. (Header is required, but values are optional)";
+        push @error_messages, ($self->i18n ? $self->i18n->p('genotype.parser.xlsx.header_person', 'Cell %{cell}: %{field_dna_person} is missing from the header. (Header is required, but values are optional)', { 'cell' => 'H1', 'field_dna_person' => 'dna_person' }) : "Cell H1: dna_person is missing from the header. (Header is required, but values are optional)");
     }
     if (!$notes_head || $notes_head ne 'notes') {
-        push @error_messages, "Cell I1: notes is missing from the header. (Header is required, but values are optional)";
+        push @error_messages, ($self->i18n ? $self->i18n->p('genotype.parser.xlsx.header_notes', 'Cell %{cell}: %{field_notes} is missing from the header. (Header is required, but values are optional)', { 'cell' => 'I1', 'field_notes' => 'notes' }) : "Cell I1: notes is missing from the header. (Header is required, but values are optional)");
     }
     if (!$tissue_type_head || $tissue_type_head ne 'tissue_type') {
-        push @error_messages, "Cell J1: tissue_type is missing from the header. (Header is required, but values are optional)";
+        push @error_messages, ($self->i18n ? $self->i18n->p('genotype.parser.xlsx.header_tissue', 'Cell %{cell}: %{field_tissue_type} is missing from the header. (Header is required, but values are optional)', { 'cell' => 'J1', 'field_tissue_type' => 'tissue_type' }) : "Cell J1: tissue_type is missing from the header. (Header is required, but values are optional)");
     }
     if (!$extraction_head || $extraction_head ne 'extraction') {
-        push @error_messages, "Cell K1: col_number is missing from the header. (Header is required, but values are optional)";
+        push @error_messages, ($self->i18n ? $self->i18n->p('genotype.parser.xlsx.header_extraction_label', 'Cell %{cell}: %{field_col_number} is missing from the header. (Header is required, but values are optional)', { 'cell' => 'K1', 'field_col_number' => 'col_number' }) : "Cell K1: col_number is missing from the header. (Header is required, but values are optional)");
     }
     if (!$concentration_head || $concentration_head ne 'concentration') {
-        push @error_messages, "Cell L1: concentration is missing from the header. (Header is required, but values are optional)";
+        push @error_messages, ($self->i18n ? $self->i18n->p('genotype.parser.xlsx.header_concentration', 'Cell %{cell}: %{field_concentration} is missing from the header. (Header is required, but values are optional)', { 'cell' => 'L1', 'field_concentration' => 'concentration' }) : "Cell L1: concentration is missing from the header. (Header is required, but values are optional)");
     }
     if (!$volume_head || $volume_head ne 'volume') {
-        push @error_messages, "Cell M1: volume is missing from the header. (Header is required, but values are optional)";
+        push @error_messages, ($self->i18n ? $self->i18n->p('genotype.parser.xlsx.header_volume', 'Cell %{cell}: %{field_volume} is missing from the header. (Header is required, but values are optional)', { 'cell' => 'M1', 'field_volume' => 'volume' }) : "Cell M1: volume is missing from the header. (Header is required, but values are optional)");
     }
     if (!$is_blank_head || $is_blank_head ne 'is_blank') {
-        push @error_messages, "Cell N1: is_blank is missing from the header.";
+        push @error_messages, ($self->i18n ? $self->i18n->p('genotype.parser.xlsx.header_blank', 'Cell %{cell}: %{field_is_blank} is missing from the header.', { 'cell' => 'N1', 'field_is_blank' => 'is_blank' }) : "Cell N1: is_blank is missing from the header.");
     }
     if ($include_facility_identifiers) {
         if (!$facility_identifier_head || $facility_identifier_head ne 'facility_identifier') {
-            push @error_messages, "Cell O1: facility_identifier is missing from the header.";
+            push @error_messages, ($self->i18n ? $self->i18n->p('genotype.parser.xlsx.header_facility', 'Cell %{cell}: %{field_facility_identifier} is missing from the header.', { 'cell' => 'O1', 'field_facility_identifier' => 'facility_identifier' }) : "Cell O1: facility_identifier is missing from the header.");
         }
     }
 
@@ -266,16 +266,16 @@ sub _validate_with_plugin {
 
         #sample_id must not be blank
         if (!$sample_id || $sample_id eq '' ) {
-            push @error_messages, "Cell B$row_name: sample_id missing.";
+            push @error_messages, ($self->i18n ? $self->i18n->p('genotype.parser.xlsx.sample_missing', 'Cell %{cell}: %{field_sample_id} missing.', { 'cell' => 'B' . ($row_name), 'field_sample_id' => 'sample_id' }) : "Cell B$row_name: sample_id missing.");
         }
         elsif ($sample_id =~ /\s/ || $sample_id =~ /\// || $sample_id =~ /\\/ ) {
-            push @error_messages, "Cell B$row_name: sample_id name must not contain spaces or slashes.";
+            push @error_messages, ($self->i18n ? $self->i18n->p('genotype.parser.xlsx.sample_format', 'Cell %{cell}: %{field_sample_id} name must not contain spaces or slashes.', { 'cell' => 'B' . ($row_name), 'field_sample_id' => 'sample_id' }) : "Cell B$row_name: sample_id name must not contain spaces or slashes.");
         }
         else {
             #file must not contain duplicate sample_id
             $sample_id =~ s/^\s+|\s+$//g; #trim whitespace from front and end...
             if ($seen_sample_ids{$sample_id}) {
-                push @error_messages, "Cell B$row_name: duplicate sample_id at cell B".$seen_sample_ids{$sample_id}.": $sample_id";
+                push @error_messages, ($self->i18n ? $self->i18n->p('genotype.parser.xlsx.sample_duplicate', 'Cell %{cell}: duplicate %{field_sample_id} at cell %{previous_cell}: %{sample}', { 'cell' => 'B' . ($row_name), 'previous_cell' => 'B' . ($seen_sample_ids{$sample_id}), 'sample' => $sample_id, 'field_sample_id' => 'sample_id' }) : "Cell B$row_name: duplicate sample_id at cell B".$seen_sample_ids{$sample_id}.": $sample_id");
             }
             $seen_sample_ids{$sample_id}=$row_name;
         }
@@ -288,50 +288,50 @@ sub _validate_with_plugin {
 
         #well_A01 must not be blank
         if (!$well_A01 || $well_A01 eq '') {
-            push @error_messages, "Cell C$row_name: well_A01 missing";
+            push @error_messages, ($self->i18n ? $self->i18n->p('genotype.parser.xlsx.well_missing', 'Cell %{cell}: %{field_well_A01} missing', { 'cell' => 'C' . ($row_name), 'field_well_A01' => 'well_A01' }) : "Cell C$row_name: well_A01 missing");
         } else {
             $well_A01 =~ s/^\s+|\s+$//g;
         }
         #well A01 must be unique in file
         if (exists($seen_well_numbers{$well_A01})){
-            push @error_messages, "Cell C$row_name: well_A01 must be unique in your file. You already used this plot number in C".$seen_well_numbers{$well_A01};
+            push @error_messages, ($self->i18n ? $self->i18n->p('genotype.parser.xlsx.well_duplicate', 'Cell %{cell}: %{field_well_A01} must be unique in your file. You already used this plot number in %{previous_cell}', { 'cell' => 'C' . ($row_name), 'previous_cell' => 'C' . ($seen_well_numbers{$well_A01}), 'field_well_A01' => 'well_A01' }) : "Cell C$row_name: well_A01 must be unique in your file. You already used this plot number in C".$seen_well_numbers{$well_A01});
         } else {
             $seen_well_numbers{$well_A01} = $row_name;
         }
 
         #row must not be blank
         if (!$row_val || $row_val eq '') {
-            push @error_messages, "Cell D$row_name: row missing";
+            push @error_messages, ($self->i18n ? $self->i18n->p('genotype.parser.xlsx.row_missing', 'Cell %{cell}: %{field_row} missing', { 'cell' => 'D' . ($row_name), 'field_row' => 'row' }) : "Cell D$row_name: row missing");
         }
         #column must not be blank
         if (!$column || $column eq '') {
-            push @error_messages, "Cell E$row_name: column missing";
+            push @error_messages, ($self->i18n ? $self->i18n->p('genotype.parser.xlsx.column_missing', 'Cell %{cell}: %{field_column} missing', { 'cell' => 'E' . ($row_name), 'field_column' => 'column' }) : "Cell E$row_name: column missing");
         }
         #date must not be blank
         if (!$date || $date eq '') {
-            push @error_messages, "Cell A$row_name: date missing";
+            push @error_messages, ($self->i18n ? $self->i18n->p('genotype.parser.xlsx.date_missing', 'Cell %{cell}: %{field_date} missing', { 'cell' => 'A' . ($row_name), 'field_date' => 'date' }) : "Cell A$row_name: date missing");
         } elsif (!$date =~ m/(\d{4})-(\d{2})-(\d{2})/) {
-            push @error_messages, "Cell A$row_name: date must be YYYY-MM-DD format";
+            push @error_messages, ($self->i18n ? $self->i18n->p('genotype.parser.xlsx.date_format', 'Cell %{cell}: %{field_date} must be %{date_format} format', { 'cell' => 'A' . ($row_name), 'field_date' => 'date', 'date_format' => 'YYYY-MM-DD' }) : "Cell A$row_name: date must be YYYY-MM-DD format");
         }
 
         if ($is_blank) {
             if (!($is_blank eq "1" || $is_blank eq "0" || $is_blank eq '')) {
-                push @error_messages, "Cell M$row_name: is_blank is not either 1, 0, or blank: $is_blank";
+                push @error_messages, ($self->i18n ? $self->i18n->p('genotype.parser.xlsx.blank_value', 'Cell %{cell}: %{field_is_blank} is not either %{one}, %{zero}, or blank: %{value}', { 'cell' => 'M' . ($row_name), 'value' => $is_blank, 'field_is_blank' => 'is_blank', 'one' => '1', 'zero' => '0' }) : "Cell M$row_name: is_blank is not either 1, 0, or blank: $is_blank");
             }
         }
         #tissue_type must not be blank and must be either leaf, root, stem, seed, fruit, tuber
         if (!$tissue_type || $tissue_type eq '' || ($tissue_type ne 'leaf' && $tissue_type ne 'root' && $tissue_type ne 'stem' && $tissue_type ne 'seed' && $tissue_type ne 'fruit' && $tissue_type ne 'tuber')) {
-            push @error_messages, "Cell E$row_name: column tissue type and must be either stem, leaf, root, seed, fruit or tuber";
+            push @error_messages, ($self->i18n ? $self->i18n->p('genotype.parser.xlsx.tissue_type', 'Cell %{cell}: %{field_column} tissue type and must be either %{code_stem}, %{code_leaf}, %{code_root}, %{code_seed}, %{code_fruit} or %{code_tuber}', { 'cell' => 'E' . ($row_name), 'field_column' => 'column', 'code_stem' => 'stem', 'code_leaf' => 'leaf', 'code_root' => 'root', 'code_seed' => 'seed', 'code_fruit' => 'fruit', 'code_tuber' => 'tuber' }) : "Cell E$row_name: column tissue type and must be either stem, leaf, root, seed, fruit or tuber");
         }
 
         if ($include_facility_identifiers) {
             if (!$facility_identifier || ($facility_identifier eq '')) {
-                push @error_messages, "Cell O$row_name: facility_identifier is misssing";
+                push @error_messages, ($self->i18n ? $self->i18n->p('genotype.parser.xlsx.facility_missing', 'Cell %{cell}: %{field_facility_identifier} is misssing', { 'cell' => 'O' . ($row_name), 'field_facility_identifier' => 'facility_identifier' }) : "Cell O$row_name: facility_identifier is misssing");
             } else {
                 $facility_identifier =~ s/^\s+|\s+$//g;
 
                 if ($seen_facility_identifiers{$facility_identifier}) {
-                    push @error_messages, "Cell O$row_name: duplicate facility identifier at cell O".$seen_facility_identifiers{$facility_identifier}.": $facility_identifier";
+                    push @error_messages, ($self->i18n ? $self->i18n->p('genotype.parser.xlsx.facility_duplicate', 'Cell %{cell}: duplicate facility identifier at cell %{previous_cell}: %{identifier}', { 'cell' => 'O' . ($row_name), 'previous_cell' => 'O' . ($seen_facility_identifiers{$facility_identifier}), 'identifier' => $facility_identifier }) : "Cell O$row_name: duplicate facility identifier at cell O".$seen_facility_identifiers{$facility_identifier}.": $facility_identifier");
                 }
 
                 $seen_facility_identifiers{$facility_identifier}=$row_name;
@@ -346,7 +346,7 @@ sub _validate_with_plugin {
         'uniquename' => { -in => \@sample_ids }
     });
     while (my $r=$rs->next){
-        push @error_messages, "Cell B".$seen_sample_ids{$r->uniquename}.": sample_id already exists: ".$r->uniquename;
+        push @error_messages, ($self->i18n ? $self->i18n->p('genotype.parser.xlsx.sample_existing', 'Cell %{cell}: %{field_sample_id} already exists: %{sample}', { 'cell' => 'B' . ($seen_sample_ids{$r->uniquename}), 'sample' => $r->uniquename, 'field_sample_id' => 'sample_id' }) : "Cell B".$seen_sample_ids{$r->uniquename}.": sample_id already exists: ".$r->uniquename);
     }
 
     if ($include_facility_identifiers) {
@@ -357,7 +357,7 @@ sub _validate_with_plugin {
             'value' => { -in => \@identifiers }
         });
         while (my $each_id=$identifier_rs->next){
-            push @error_messages, "Cell O".$seen_facility_identifiers{$each_id->value}.": facility identifier already exists: ".$each_id->value;
+            push @error_messages, ($self->i18n ? $self->i18n->p('genotype.parser.xlsx.facility_existing', 'Cell %{cell}: facility identifier already exists: %{identifier}', { 'cell' => 'O' . ($seen_facility_identifiers{$each_id->value}), 'identifier' => $each_id->value }) : "Cell O".$seen_facility_identifiers{$each_id->value}.": facility identifier already exists: ".$each_id->value);
         }
     }
 
@@ -378,7 +378,7 @@ sub _validate_with_plugin {
     }
     foreach (@seen_source_observation_unit_names){
         if (!$found_source_observation_unit_names{$_}){
-            push @error_messages, "This source observation unit name is not in the database: $_ .";
+            push @error_messages, ($self->i18n ? $self->i18n->p('genotype.parser.xlsx.source_missing', 'This source observation unit name is not in the database: %{source} .', { 'source' => $_ }) : "This source observation unit name is not in the database: $_ .");
         }
     }
 

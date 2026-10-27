@@ -19,15 +19,18 @@ use CXGN::Page::Form::Static;
 use CXGN::Page::Form::Editable;
 
 package CXGN::Page::Form::ConfirmStore;
+use SGN::I18N ();
+use HTML::Entities ();
 
 use base qw / CXGN::Page::Form::Editable /;
 
 sub new {
 	my $class = shift;
 	my $self = $class->SUPER::new(@_);
-	$self->set_static_form(CXGN::Page::Form::Static->new()) ;
-	$self->set_reset_button_text("Reset");
-	$self->set_submit_button_text("Store");
+    my SGN::I18N $confirmstore_new_i18n = $self->{i18n};
+	$self->set_static_form(CXGN::Page::Form::Static->new({i18n => $self->{i18n}})) ;
+	$self->set_reset_button_text(HTML::Entities::encode_entities($confirmstore_new_i18n ? $confirmstore_new_i18n->p("auth.registration.reset", "Reset") : "Reset"));
+	$self->set_submit_button_text(HTML::Entities::encode_entities($confirmstore_new_i18n ? $confirmstore_new_i18n->p("cross.ui.store", "Store") : "Store"));
 	$self->set_submit_method(); #use hardcoded default
 	return $self;
 }
@@ -57,7 +60,8 @@ sub is_editable {
 =cut
 
 sub store { 
-    my $self = shift; 
+    my $self = shift;
+    my SGN::I18N $confirmstore_store_i18n = $self->{i18n};
     my %args = @_;
     
     #print STDERR "args hash before in the store function: \n";
@@ -83,7 +87,7 @@ sub store {
       if ($obj->can("exists_in_database")) { 
 	  my $message = $obj->exists_in_database();
 	 if ($message) { 
-	     my $text = "This object (" . ref($obj) . ") already seems to exist in the database and violates constraints. Please correct your input.";
+	     my $text = HTML::Entities::encode_entities($confirmstore_store_i18n ? $confirmstore_store_i18n->p("shared.form.already_exists", "This object (%{class}) already seems to exist in the database and violates constraints. Please correct your input.", {class => ref($obj)}) : "This object (" . ref($obj) . ") already seems to exist in the database and violates constraints. Please correct your input.");
 	     $message = "" unless ($message =~ /[a-zA-Z]/);
 	     CXGN::Page->new()->message_page($text, $message);
 	 }
@@ -124,7 +128,7 @@ sub add_field {
     my $self = shift;
     my %args = @_;
     $self->get_static_form->add_field(%args);
-    my $field = CXGN::Page::Form::Hidden->new(%args);
+    my $field = CXGN::Page::Form::Hidden->new(%args, i18n => $self->{i18n});
     if(exists $args{validate})
     {
     	$field->set_validate($args{validate});
@@ -160,7 +164,7 @@ sub add_textarea {
     my %args = @_;
 
     $self->get_static_form->add_textarea(%args);
-    my $field = CXGN::Page::Form::Hidden->new(%args);
+    my $field = CXGN::Page::Form::Hidden->new(%args, i18n => $self->{i18n});
  
     if(exists $args{validate})
     {
@@ -197,7 +201,7 @@ sub add_select {
     
     #foreach my $k (keys %args) { print "Args to add_select $k, $args{$k}\n<br />"; }
     $self->get_static_form->add_select(%args);
-    my $select = CXGN::Page::Form::Hidden->new(%args);
+    my $select = CXGN::Page::Form::Hidden->new(%args, i18n => $self->{i18n});
  
     if(exists $args{validate})
     {
@@ -222,7 +226,7 @@ sub add_hidden {
     my $self = shift;
     my %args = @_;
     $self->get_static_form->add_hidden(%args);
-    my $hidden = CXGN::Page::Form::EditableHidden->new(%args);
+    my $hidden = CXGN::Page::Form::EditableHidden->new(%args, i18n => $self->{i18n});
  
     if(exists $args{validate})
     {
@@ -248,7 +252,7 @@ sub add_checkbox
     my %args = @_;
     
     $self->get_static_form->add_checkbox(%args);
-    my $checkbox = CXGN::Page::Form::Hidden->new(%args);
+    my $checkbox = CXGN::Page::Form::Hidden->new(%args, i18n => $self->{i18n});
  
     $self->add_field_obj($checkbox);
 }
@@ -270,7 +274,7 @@ sub add_radio_list
     my %args = @_;
     
     $self->get_static_form->add_radio_list(%args);
-    my $radio = CXGN::Page::Form::Hidden->new(%args);
+    my $radio = CXGN::Page::Form::Hidden->new(%args, i18n => $self->{i18n});
  
     $self->add_field_obj($radio);
 }
@@ -292,7 +296,7 @@ sub add_multiselect
     my %args = @_;
     
     $self->get_static_form->add_multiselect(%args);
-    my $radio = CXGN::Page::Form::Hidden->new(%args);
+    my $radio = CXGN::Page::Form::Hidden->new(%args, i18n => $self->{i18n});
    
     $self->add_field_obj($radio);
 }
@@ -390,6 +394,7 @@ sub set_submit_button_text
 
 sub as_table_string { 
     my $self = shift;
+    my SGN::I18N $confirmstore_as_table_string_i18n = $self->{i18n};
     my $string = "";
 
    
@@ -435,7 +440,8 @@ sub as_table_string {
 	}
     }
     if ($has_required_field) { 
-	$string .= qq { (<font color="red">*</font> denotes required field.)<br /><br /> }; 
+	my $required_hint = HTML::Entities::encode_entities($confirmstore_as_table_string_i18n ? $confirmstore_as_table_string_i18n->p("shared.form.required_hint", "denotes required field.") : "denotes required field.");
+	$string .= qq { (<font color="red">*</font> $required_hint)<br /><br /> };
     }
     $string .= qq { </td></tr></table> };
     $string .= $self->get_form_end();

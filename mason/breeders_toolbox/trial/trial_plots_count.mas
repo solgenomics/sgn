@@ -17,12 +17,12 @@ jQuery(document).ready(function(){
               //alert(response.plots[0].length);
               //console.log(response.plots[0]);
               var html = '';
-              html += 'Number of plots: ';
+              html += (window.SGN && SGN.i18n ? SGN.i18n.p('trial.counts.plots', "Number of plots: ") : "Number of plots: ");
                html += response.plots[0].length;
               jQuery("#plots_counts").html(html);
           },
           error: function(response){
-              alert('Error displaying plots count');
+              alert((window.SGN && SGN.i18n ? SGN.i18n.p('trial.counts.plots_error', "Error displaying plots count") : "Error displaying plots count"));
           }
 
       });

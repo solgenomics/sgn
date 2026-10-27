@@ -2,6 +2,8 @@
 package CXGN::Trial::TrialLayout::AbstractLayout;
 
 use Moose;
+use SGN::I18N ();
+use CatalystX::GlobalContext '$c';
 use namespace::autoclean;
 use MooseX::FollowPBP;
 use Moose::Util::TypeConstraints;
@@ -383,6 +385,7 @@ sub _get_design_from_trial {
 
 sub generate_and_cache_layout {
     my $self = shift;
+    my SGN::I18N $layout_failure_i18n = $c && $c->can('i18n') ? $c->i18n : undef;
     print STDERR "TrialLayout generate layout ".localtime."\n";
     my $schema = $self->get_schema();
     my $plots_ref;
@@ -395,7 +398,7 @@ sub generate_and_cache_layout {
     $plots_ref = $self->_get_plots();
     if (!$plots_ref) {
       print STDERR "_get_design_from_trial: not plots provided... returning.\n";
-      return { error => "Something went wrong retrieving plots for this trial. This should not happen, so please contact us." };
+      return { error => ($layout_failure_i18n ? $layout_failure_i18n->p("trial.layout.plots_unavailable", "Something went wrong retrieving plots for this trial. This should not happen, so please contact us.") : "Something went wrong retrieving plots for this trial. This should not happen, so please contact us.") };
   }
 #print STDERR "Check 2.3.4.2: ".localtime()."\n";
 

@@ -1,3 +1,6 @@
+<%init>
+use HTML::Entities ();
+</%init>
 
 <%args>
 $dataset_id
@@ -19,32 +22,32 @@ $dataset_is_public => 0
     my $wizard_link = '<a href=\'/breeders/search?dataset_id=' . $dataset_id . '\'>' . $dataset_name . '</a>';
 </%perl>
 
-<& /page/page_title.mas, title => "Dataset $dataset_name" &>
+<& /page/page_title.mas, title => HTML::Entities::encode_entities($c->i18n->p("lists_datasets.pages.dataset_name", "Dataset %{name}", {name => $dataset_name})) &>
 <& /util/import_javascript.mas, entries => [qw|dataset|], classes => [ qw|jqueryui.js jquery.js dataset jstree.dist.jstree thickbox CXGN.Page.FormattingHelpers jquery.dataTables| ] &>
 
 <div class="panel panel-default">
     <div class="panel-body" style="padding: 0">
         <table id="dataset-table" class="table table-hover" style="padding: 15px">
                 <tr>
-                    <td>Name</td>
+                    <td><% $c->i18n->p("lists_datasets.pages.name", "Name") |h %></td>
                     <td><% $dataset_name %></td>
                 </tr>
 
 
                 <tr>
-                    <td>Description</td>
+                    <td><% $c->i18n->p("lists_datasets.pages.description", "Description") |h %></td>
                     <td>
                         <div id="dataset-description-update" style="display: none">
                             <textarea type="text" id="description" class="form-control" rows=5><% $dataset_description %></textarea>
                             <button class="btn btn-sm btn-primary" onclick="datasetUpdate(<% $dataset_id %>)">
-                                <span class="glyphicon glyphicon-ok"></span>&nbsp;&nbsp;Update
+                                <span class="glyphicon glyphicon-ok"></span>&nbsp;&nbsp;<% $c->i18n->p("lists_datasets.pages.update", "Update") |h %>
                             </button>
                         </div>
                         <div id="dataset-description-display">
                             <p id="dataset-description-update-content"><% $dataset_description_string %></p>
 % if ( $is_dataset_owner ) {
                                 <button class="btn btn-sm btn-primary" onclick="datasetEdit()">
-                                    <span class="glyphicon glyphicon-pencil"></span>&nbsp;&nbsp;Edit
+                                    <span class="glyphicon glyphicon-pencil"></span>&nbsp;&nbsp;<% $c->i18n->p("lists_datasets.pages.edit", "Edit") |h %>
                                 </button>
 % }
                         </div>
@@ -52,61 +55,61 @@ $dataset_is_public => 0
                 </tr>
 
                 <tr>
-                    <td>Owner</td>
+                    <td><% $c->i18n->p("lists_datasets.pages.owner", "Owner") |h %></td>
                     <td><a href='/solpeople/personal-info.pl?sp_person_id=<% $dataset_owner_id %>'><% $dataset_owner_name %></a></td>
                 </tr>
 
                 <tr>
-                    <td>Contents</td>
+                    <td><% $c->i18n->p("lists_datasets.pages.contents", "Contents") |h %></td>
                     <td><% $dataset_contents %></td>
                 </tr>
 
 % if ( $is_dataset_owner ) {
                     <tr>
-                        <td>Edit</td>
+                        <td><% $c->i18n->p("lists_datasets.pages.edit", "Edit") |h %></td>
                         <td>
                             <button id="dataset-edit-private"
                                 style="display: <% $dataset_is_public ? 'inline-block' : 'none' %>" 
                                 class="btn btn-sm btn-primary" 
                                 onclick="datasetPrivate(<% $dataset_id %>)">
-                                    <span class="glyphicon glyphicon-eye-close"></span>&nbsp;&nbsp;Make Private
+                                    <span class="glyphicon glyphicon-eye-close"></span>&nbsp;&nbsp;<% $c->i18n->p("lists_datasets.pages.make_private", "Make Private") |h %>
                             </button>
                             <button id="dataset-edit-public"
                                 style="display: <% $dataset_is_public ? 'none' : 'inline-block' %>"
                                 class="btn btn-sm btn-primary"
                                 onclick="datasetPublic(<% $dataset_id %>)">
-                                    <span class="glyphicon glyphicon-eye-open"></span>&nbsp;&nbsp;Make Public
+                                    <span class="glyphicon glyphicon-eye-open"></span>&nbsp;&nbsp;<% $c->i18n->p("lists_datasets.pages.make_public", "Make Public") |h %>
                             </button>
                             <button 
                                 style="margin-left:4px;"
                                 class="btn btn-sm btn-danger"
                                 onclick="datasetDelete(<% $dataset_id %>)">
-                                    <span class="glyphicon glyphicon-trash"></span>&nbsp;&nbsp;Delete
+                                    <span class="glyphicon glyphicon-trash"></span>&nbsp;&nbsp;<% $c->i18n->p("lists_datasets.pages.delete", "Delete") |h %>
                             </button>
                         </td>
                     </tr>
 % }
 
                 <tr>
-                    <td>Select Dataset in Wizard</td>
+                    <td><% $c->i18n->p("lists_datasets.pages.select_dataset_in_wizard", "Select Dataset in Wizard") |h %></td>
                     <td><% $wizard_link %></td>
                 </tr>
 
                 <tr>
-                    <td>Analyses using this dataset</td>
+                    <td><% $c->i18n->p("lists_datasets.pages.analyses_using_this_dataset", "Analyses using this dataset") |h %></td>
                     <td id="dataset_analysis_usage"></td>
                 </tr>
         </table>
     </div>
 </div>
 
-<& /page/detail_page_2_col_section.mas, info_section_title => "<h4 style='display:inline'>Outlier Detection</h4>", info_section_subtitle => '', icon_class => "glyphicon glyphicon-signal", info_section_id => "dataset_outlier_detection", dataset_id => $dataset_id, dataset_name => $dataset_name &>
+<& /page/detail_page_2_col_section.mas, info_section_title => "<h4 style='display:inline'>" . HTML::Entities::encode_entities($c->i18n->p("lists_datasets.pages.outlier_detection", "Outlier Detection")) . "</h4>", info_section_subtitle => '', icon_class => "glyphicon glyphicon-signal", info_section_id => "dataset_outlier_detection", dataset_id => $dataset_id, dataset_name => $dataset_name &>
 
-<& /page/detail_page_2_col_section.mas, info_section_title => "<h4 style='display:inline'>Analysis Tools</h4>", info_section_subtitle => '', icon_class => "glyphicon glyphicon-wrench", info_section_id => "dataset_analysis_tools", dataset_id => $dataset_id, dataset_name => $dataset_name &>
+<& /page/detail_page_2_col_section.mas, info_section_title => "<h4 style='display:inline'>" . HTML::Entities::encode_entities($c->i18n->p("lists_datasets.pages.analysis_tools", "Analysis Tools")) . "</h4>", info_section_subtitle => '', icon_class => "glyphicon glyphicon-wrench", info_section_id => "dataset_analysis_tools", dataset_id => $dataset_id, dataset_name => $dataset_name &>
 
-<& /page/detail_page_2_col_section.mas, info_section_title => "<h4 style='display:inline'>Tool Compatibility</h4>", info_section_subtitle => '', icon_class => "glyphicon glyphicon-check", info_section_id => "dataset_tool_compatibility", dataset_id => $dataset_id, dataset_name => $dataset_name &>
+<& /page/detail_page_2_col_section.mas, info_section_title => "<h4 style='display:inline'>" . HTML::Entities::encode_entities($c->i18n->p("lists_datasets.pages.tool_compatibility", "Tool Compatibility")) . "</h4>", info_section_subtitle => '', icon_class => "glyphicon glyphicon-check", info_section_id => "dataset_tool_compatibility", dataset_id => $dataset_id, dataset_name => $dataset_name &>
 
-<& /page/detail_page_2_col_section.mas, info_section_title => "<h4 style='display:inline'>Publish Dataset</h4>", info_section_subtitle => '', icon_class => "glyphicon glyphicon-export", info_section_id => "dataset_publish", dataset_id => $dataset_id, dataset_name => $dataset_name, is_dataset_owner => $is_dataset_owner, is_dataset_public => $dataset_is_public &>
+<& /page/detail_page_2_col_section.mas, info_section_title => "<h4 style='display:inline'>" . HTML::Entities::encode_entities($c->i18n->p("lists_datasets.pages.publish_dataset", "Publish Dataset")) . "</h4>", info_section_subtitle => '', icon_class => "glyphicon glyphicon-export", info_section_id => "dataset_publish", dataset_id => $dataset_id, dataset_name => $dataset_name, is_dataset_owner => $is_dataset_owner, is_dataset_public => $dataset_is_public &>
 
 
 <script>
@@ -123,7 +126,7 @@ jQuery(document).ready(function() {
             }
         },
         error: function(response) {
-            alert("Error retrieving analyses using this dataset.");
+            alert((window.SGN && SGN.i18n ? SGN.i18n.p("lists_datasets.pages.analysis_retrieval_error", "Error retrieving analyses using this dataset.") : "Error retrieving analyses using this dataset."));
         }
     });
 });

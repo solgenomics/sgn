@@ -12,8 +12,8 @@
     <div class="modal-dialog modal-xl" role="document">
         <div class="modal-content">
             <div class="modal-header">
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                <h4 class="modal-title" id="createCrossWishlistDialog">Create Cross Wishlist</h4>
+                <button type="button" class="close" data-dismiss="modal" aria-label="<% $c->i18n->p("cross.ui.close", "Close") |h %>"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="createCrossWishlistDialog"><% $c->i18n->p("cross.forms.create_cross_wishlist", "Create Cross Wishlist") |h %></h4>
             </div>
 
             <div class="modal-body">
@@ -21,18 +21,18 @@
                     <div class="well">
                         <form class="form-horizontal" id="cross_wishlist_create_select_form_id" name="cross_wishlist_create_select_form_id">
                             <div class="form-group">
-                                <label class="col-sm-4 control-label">Select An ODK Form on ONA: </label>
+                                <label class="col-sm-4 control-label"><% $c->i18n->p("cross.forms.select_an_odk_form_on_ona", "Select An ODK Form on ONA:") |h %> </label>
                                 <div class="col-sm-8" >
-                                    <div id="cross_wishlist_create_select_form_id_div">LOADING...</div>
+                                    <div id="cross_wishlist_create_select_form_id_div"><% $c->i18n->p("trial.card.status.loading", "LOADING...") |h %></div>
                                 </div>
                             </div>
                         </form>
                     </div>
 
                     <ul class="nav nav-pills nav-justified" id="cross_wishlist_tab_select">
-                        <li id="cross_wishlist_list_tab"><a data-toggle="tab" href="#with_lists">Using Accession Lists</a></li>
-                        <li class="active" id="cross_wishlist_no_list_tab"><a data-toggle="tab" href="#not_with_lists">Using Crossing Blocks</a></li>
-                        <li id="cross_wishlist_upload_tab"><a data-toggle="tab" href="#upload_wishlist">Uploading Cross Combinations</a></li>
+                        <li id="cross_wishlist_list_tab"><a data-toggle="tab" href="#with_lists"><% $c->i18n->p("cross.forms.using_accession_lists", "Using Accession Lists") |h %></a></li>
+                        <li class="active" id="cross_wishlist_no_list_tab"><a data-toggle="tab" href="#not_with_lists"><% $c->i18n->p("cross.forms.using_crossing_blocks", "Using Crossing Blocks") |h %></a></li>
+                        <li id="cross_wishlist_upload_tab"><a data-toggle="tab" href="#upload_wishlist"><% $c->i18n->p("cross.forms.uploading_cross_combinations", "Uploading Cross Combinations") |h %></a></li>
                     </ul>
 
                     <div class="tab-content">
@@ -41,21 +41,21 @@
                             <hr>
                             <form class="form-horizontal" >
                                 <div class="form-group" style="display:none" <!-- location name is coming from the trial they select --> >
-                                    <label class="col-sm-3 control-label">Location Name (Optional): </label>
+                                    <label class="col-sm-3 control-label"><% $c->i18n->p("cross.forms.location_name_optional", "Location Name (Optional):") |h %> </label>
                                     <div class="col-sm-9" >
                                         <div id="cross_wishlist_location_select_list_div">
                                         </div>
                                     </div>
                                 </div>
                                 <div class="form-group">
-                                    <label class="col-sm-3 control-label">Female's Trial Name: </label>
+                                    <label class="col-sm-3 control-label"><% $c->i18n->p("cross.forms.female_s_trial_name", "Female's Trial Name:") |h %> </label>
                                     <div class="col-sm-9" >
                                         <div id="cross_wishlist_female_trial_select_list_div">
                                         </div>
                                     </div>
                                 </div>
                                 <div class="form-group">
-                                    <label class="col-sm-3 control-label">Male's Trial Name: </label>
+                                    <label class="col-sm-3 control-label"><% $c->i18n->p("cross.forms.male_s_trial_name", "Male's Trial Name:") |h %> </label>
                                     <div class="col-sm-9" >
                                         <div id="cross_wishlist_male_trial_select_list_div">
                                         </div>
@@ -63,7 +63,7 @@
                                 </div>
                                 <div class="well well-sm">
                                     <div class="form-group">
-                                        <label class="col-sm-6 control-label">Cross plan will be added to the cross wishlist named: </label>
+                                        <label class="col-sm-6 control-label"><% $c->i18n->p("cross.forms.cross_plan_will_be_added_to_the_cross_wishlist", "Cross plan will be added to the cross wishlist named:") |h %> </label>
                                         <div class="col-sm-6" >
                                             <div id="cross_wishlist_trial_select_list_cross_wishlist_name_div">
                                                 <input class="form-control" type="text" disabled value="Please Select a Trial First" />
@@ -72,12 +72,12 @@
                                     </div>
                                 </div>
                                 <div class="form-group">
-                                    <label class="col-sm-3 control-label">Female Accession List: </label>
+                                    <label class="col-sm-3 control-label"><% $c->i18n->p("cross.forms.female_accession_list", "Female Accession List:") |h %> </label>
                                     <div class="col-sm-9" id="female_accession_list_div" name="female_accession_list_div">
                                     </div>
                                 </div>
                                 <div class="form-group">
-                                    <label class="col-sm-3 control-label">Male Accession List: </label>
+                                    <label class="col-sm-3 control-label"><% $c->i18n->p("cross.forms.male_accession_list", "Male Accession List:") |h %> </label>
                                     <div class="col-sm-9" id="male_accession_list_div" name="male_accession_list_div">
                                     </div>
                                 </div>
@@ -91,14 +91,14 @@
 
                             <form class="form-horizontal" >
                                 <div class="form-group">
-                                    <label class="col-sm-3 control-label">Female's Trial Name: </label>
+                                    <label class="col-sm-3 control-label"><% $c->i18n->p("cross.forms.female_s_trial_name", "Female's Trial Name:") |h %> </label>
                                     <div class="col-sm-9" >
                                         <div id="cross_wishlist_female_trial_select_no_list_div">
                                         </div>
                                     </div>
                                 </div>
                                 <div class="form-group">
-                                    <label class="col-sm-3 control-label">Male's Trial Name: </label>
+                                    <label class="col-sm-3 control-label"><% $c->i18n->p("cross.forms.male_s_trial_name", "Male's Trial Name:") |h %> </label>
                                     <div class="col-sm-9" >
                                         <div id="cross_wishlist_male_trial_select_no_list_div">
                                         </div>
@@ -106,7 +106,7 @@
                                 </div>
                                 <div class="well well-sm">
                                     <div class="form-group">
-                                        <label class="col-sm-6 control-label">Cross plan will be added to the cross wishlist named: </label>
+                                        <label class="col-sm-6 control-label"><% $c->i18n->p("cross.forms.cross_plan_will_be_added_to_the_cross_wishlist", "Cross plan will be added to the cross wishlist named:") |h %> </label>
                                         <div class="col-sm-6" >
                                             <div id="cross_wishlist_trial_select_no_list_cross_wishlist_name_div">
                                                 <input class="form-control" type="text" disabled value="Please Select a Trial First" />
@@ -115,10 +115,10 @@
                                     </div>
                                 </div>
                                 <div class="form-group">
-                                    <label class="col-sm-3 control-label">Female Accession Name(s):</label>
+                                    <label class="col-sm-3 control-label"><% $c->i18n->p("cross.forms.female_accession_name_s", "Female Accession Name(s):") |h %></label>
                                     <div class="col-sm-9" >
                                         <div id="cross_wishlist_female_accession_select_div">
-                                            <p>First Select A Trial</p>
+                                            <p><% $c->i18n->p("cross.forms.first_select_a_trial", "First Select A Trial") |h %></p>
                                         </div>
                                     </div>
                                 </div>
@@ -132,14 +132,14 @@
                             <form class="form-horizontal" role="form" method="post" enctype="multipart/form-data" encoding="multipart/form-data" id="upload_wishlist_form" name="upload_wishlist_form">
 
                                 <div class="form-group">
-                                    <label class="col-sm-3 control-label">Female's Trial Name: </label>
+                                    <label class="col-sm-3 control-label"><% $c->i18n->p("cross.forms.female_s_trial_name", "Female's Trial Name:") |h %> </label>
                                     <div class="col-sm-9" >
                                         <div id="cross_wishlist_female_trial_select_upload_div">
                                         </div>
                                     </div>
                                 </div>
                                 <div class="form-group">
-                                    <label class="col-sm-3 control-label">Male's Trial Name: </label>
+                                    <label class="col-sm-3 control-label"><% $c->i18n->p("cross.forms.male_s_trial_name", "Male's Trial Name:") |h %> </label>
                                     <div class="col-sm-9" >
                                         <div id="cross_wishlist_male_trial_select_upload_div">
                                         </div>
@@ -147,7 +147,7 @@
                                 </div>
                                 <div class="well well-sm">
                                     <div class="form-group">
-                                        <label class="col-sm-6 control-label">Cross plan will be added to the cross wishlist named: </label>
+                                        <label class="col-sm-6 control-label"><% $c->i18n->p("cross.forms.cross_plan_will_be_added_to_the_cross_wishlist", "Cross plan will be added to the cross wishlist named:") |h %> </label>
                                         <div class="col-sm-6" >
                                             <div id="cross_wishlist_trial_select_upload_cross_wishlist_name_div">
                                                 <input class="form-control" type="text" disabled value="Please Select a Trial First" />
@@ -158,11 +158,11 @@
                                 <div class="well well-sm">
                                     <div class="row">
                                         <div class="col-sm-4">
-                                            <&| /page/explanation.mas, title=>'Template information' &>
+                                            <&| /page/explanation.mas, title=>HTML::Entities::encode_entities($c->i18n->p("cross.ui.template_information.2b5757e", "Template information")) &>
                                                 <p>
-                                                    <b>File format information</b>
+                                                    <b><% $c->i18n->p("cross.ui.file_format_information", "File format information") |h %></b>
                                                     <br>
-                                                    <a id="wishlist_format">Spreadsheet format</a>
+                                                    <a id="wishlist_format"><% $c->i18n->p("cross.ui.spreadsheet_format.2b7e73c", "Spreadsheet format") |h %></a>
                                                 </p>
                                             </&>
                                         </div>
@@ -171,7 +171,7 @@
                                             <div class="panel panel-default">
                                                 <div class="panel-body">
                                                     <div class="form-group">
-                                                        <label class="col-sm-6 control-label">Select an XLS File: </label>
+                                                        <label class="col-sm-6 control-label"><% $c->i18n->p("trial.soil_upload.file_label", "Select an XLS File:") |h %> </label>
                                                         <div class="col-sm-6">
                                                             <input type="file" name="wishlist_file" id="wishlist_file" encoding="multipart/form-data" />
                                                         </div>
@@ -189,16 +189,16 @@
 
             <div id="wishlist_lists_footer">
                 <div class="modal-footer">
-                    <button class="btn btn-info" id="show_cross_wishlists_select_submits" name="show_cross_wishlists_select_submits">Available Cross Wishlist(s) for ODK Use</button>
-                    <button class="btn btn-primary" id="cross_wishlist_submit" name="cross_wishlist_submits">Next</button>
-                    <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                    <button class="btn btn-info" id="show_cross_wishlists_select_submits" name="show_cross_wishlists_select_submits"><% $c->i18n->p("cross.forms.available_cross_wishlist_s_for_odk_use", "Available Cross Wishlist(s) for ODK Use") |h %></button>
+                    <button class="btn btn-primary" id="cross_wishlist_submit" name="cross_wishlist_submits"><% $c->i18n->p("global.annotation_search_result.next", "Next") |h %></button>
+                    <button type="button" class="btn btn-default" data-dismiss="modal"><% $c->i18n->p("cross.ui.close", "Close") |h %></button>
                 </div>
             </div>
             <div id="wishlist_upload_footer" style="display:none">
                 <div class="modal-footer">
-                    <button class="btn btn-info" id="upload_show_cross_wishlists_select_submits" name="upload_show_cross_wishlists_select_submits">Available Cross Wishlist(s) for ODK Use</button>
-                    <button class="btn btn-primary" id="wishlist_upload_submit" name="wishlist_upload_submit">Upload File</button>
-                    <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                    <button class="btn btn-info" id="upload_show_cross_wishlists_select_submits" name="upload_show_cross_wishlists_select_submits"><% $c->i18n->p("cross.forms.available_cross_wishlist_s_for_odk_use", "Available Cross Wishlist(s) for ODK Use") |h %></button>
+                    <button class="btn btn-primary" id="wishlist_upload_submit" name="wishlist_upload_submit"><% $c->i18n->p("cross.ui.upload_file.3ee3b0b", "Upload File") |h %></button>
+                    <button type="button" class="btn btn-default" data-dismiss="modal"><% $c->i18n->p("cross.ui.close", "Close") |h %></button>
                 </div>
             </div>
         </div>
@@ -209,9 +209,9 @@
     <div class="modal-dialog modal-xl" role="document">
         <div class="modal-content">
             <div class="modal-header">
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                <h4 class="modal-title" id="createCrossWishlistSelectDialog">Select Plots for Cross Wishlist</h4>
-                <h4>Female Plots are in <span class="bg-primary">Blue</span><!-- and Male Plots are in <span class="bg-success">Green</span>.--></h4>
+                <button type="button" class="close" data-dismiss="modal" aria-label="<% $c->i18n->p("cross.ui.close", "Close") |h %>"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="createCrossWishlistSelectDialog"><% $c->i18n->p("cross.forms.select_plots_for_cross_wishlist", "Select Plots for Cross Wishlist") |h %></h4>
+                <h4><% $c->i18n->p("cross.forms.female_plots_are_in", "Female Plots are in") |h %> <span class="bg-primary"><% $c->i18n->p("cross.forms.blue", "Blue") |h %></span><!-- and Male Plots are in <span class="bg-success">Green</span>.--></h4>
             </div>
 
             <div class="modal-body">
@@ -221,8 +221,8 @@
             </div>
 
             <div class="modal-footer">
-                <button class="btn btn-primary" id="cross_wishlist_select_submits" name="cross_wishlist_select_submits">Create Wishlist</button>
-                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                <button class="btn btn-primary" id="cross_wishlist_select_submits" name="cross_wishlist_select_submits"><% $c->i18n->p("cross.forms.create_wishlist", "Create Wishlist") |h %></button>
+                <button type="button" class="btn btn-default" data-dismiss="modal"><% $c->i18n->p("cross.ui.close", "Close") |h %></button>
             </div>
         </div>
     </div>
@@ -232,8 +232,8 @@
     <div class="modal-dialog modal-xl" role="document">
         <div class="modal-content">
             <div class="modal-header">
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                <h4 class="modal-title" id="createCrossWishlistResponseDialog">Cross Wishlist</h4>
+                <button type="button" class="close" data-dismiss="modal" aria-label="<% $c->i18n->p("cross.ui.close", "Close") |h %>"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="createCrossWishlistResponseDialog"><% $c->i18n->p("cross.forms.cross_wishlist", "Cross Wishlist") |h %></h4>
             </div>
 
             <div class="modal-body">
@@ -243,7 +243,7 @@
             </div>
 
             <div class="modal-footer">
-                <button type="button" class="btn btn-default" id="dismiss_wishlist_response_dialog" data-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-default" id="dismiss_wishlist_response_dialog" data-dismiss="modal"><% $c->i18n->p("cross.ui.close", "Close") |h %></button>
             </div>
         </div>
     </div>
@@ -253,8 +253,8 @@
     <div class="modal-dialog modal-xl" role="document">
         <div class="modal-content">
             <div class="modal-header">
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                <h4 class="modal-title" id="showCrossWishlistsResponseDialog">Cross Wishlists Previously Created</h4>
+                <button type="button" class="close" data-dismiss="modal" aria-label="<% $c->i18n->p("cross.ui.close", "Close") |h %>"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="showCrossWishlistsResponseDialog"><% $c->i18n->p("cross.forms.cross_wishlists_previously_created", "Cross Wishlists Previously Created") |h %></h4>
             </div>
 
             <div class="modal-body">
@@ -264,7 +264,7 @@
             </div>
 
             <div class="modal-footer">
-                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-default" data-dismiss="modal"><% $c->i18n->p("cross.ui.close", "Close") |h %></button>
             </div>
         </div>
     </div>
@@ -274,8 +274,8 @@
     <div class="modal-dialog modal-lg" role="document">
         <div class="modal-content">
             <div class="modal-header">
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                <h4 class="modal-title" id="uploadWishlistErrorDialog">Upload Wishlist File Error</h4>
+                <button type="button" class="close" data-dismiss="modal" aria-label="<% $c->i18n->p("cross.ui.close", "Close") |h %>"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="uploadWishlistErrorDialog"><% $c->i18n->p("cross.forms.upload_wishlist_file_error", "Upload Wishlist File Error") |h %></h4>
             </div>
             <div class="modal-body">
                 <div class="container-fluid">
@@ -285,7 +285,7 @@
                 </div>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-default" data-dismiss="modal"><% $c->i18n->p("cross.ui.close", "Close") |h %></button>
             </div>
         </div>
     </div>
@@ -295,20 +295,20 @@
     <div class="modal-dialog modal-lg" role="document">
         <div class="modal-content">
             <div class="modal-header">
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                <h4 class="modal-title" id="uploadWishlistInfoDialog">Template Information</h4>
+                <button type="button" class="close" data-dismiss="modal" aria-label="<% $c->i18n->p("cross.ui.close", "Close") |h %>"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="uploadWishlistInfoDialog"><% $c->i18n->p("cross.ui.template_information.bf8c643", "Template Information") |h %></h4>
             </div>
             <div class="modal-body">
                 <div class="container-fluid">
                     <b>
-                        Cross wishlist may be uploaded in an Excel file (.xls or .xlsx)
+                        <% $c->i18n->p("cross.forms.cross_wishlist_may_be_uploaded_in_an_excel_file", "Cross wishlist may be uploaded in an Excel file (.xls or .xlsx)") |h %>
                     </b>
                     <br>
                     <b>
-                        Header:
+                        <% $c->i18n->p("cross.ui.header", "Header:") |h %>
                     </b>
                     <br>
-                        The first row (header) must contain the following:
+                        <% $c->i18n->p("seedlots.ui.the_first_row_header_must_contain_the_following", "The first row (header) must contain the following:") |h %>
                     <br>
 
                     <table class="table table-bordered table-hover">
@@ -321,17 +321,17 @@
                         </tbody>
                     </table>
                     <b>
-                        Required columns:
+                        <% $c->i18n->p("cross.ui.required_columns", "Required columns:") |h %>
                     </b>
                     <ul>
-                        <li><b>female_accession</b> (accession names must exist as <b>uniquenames</b> in the database and are in the selected female trial. Wishlist will include all of the female plots in the trial.)</li>
-                        <li><b>male_accession</b> (accession names must exist as <b>uniquenames</b> in the database)</li>
-                        <li><b>priority</b> (1 is the most important) </li>
+                        <li><b>female_accession</b> <% $c->i18n->p("cross.forms.accession_names_must_exist_as", "(accession names must exist as") |h %> <b>uniquenames</b> <% $c->i18n->p("cross.forms.in_the_database_and_are_in_the_selected_female", "in the database and are in the selected female trial. Wishlist will include all of the female plots in the trial.)") |h %></li>
+                        <li><b>male_accession</b> <% $c->i18n->p("cross.forms.accession_names_must_exist_as", "(accession names must exist as") |h %> <b>uniquenames</b> <% $c->i18n->p("cross.forms.in_the_database", "in the database)") |h %></li>
+                        <li><b>priority</b> <% $c->i18n->p("cross.forms.1_is_the_most_important", "(1 is the most important)") |h %> </li>
                     </ul>
                 </div>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-default" data-dismiss="modal"><% $c->i18n->p("cross.ui.close", "Close") |h %></button>
             </div>
         </div>
     </div>
@@ -344,7 +344,7 @@ var lo = new CXGN.List();
 
 function draw_cross_grid(female_accessions, male_accessions){
     console.log("draw cross grid");
-    var cross_grid_html = '<h3>Set Cross Priorities: 1 is highest and 60 is lowest</h3><h4>Female Accessions Are in First Column and Male Accessions Are in Header</h4><table class="table table-bordered"><thead><tr><th>Female Accessions</th>';
+    var cross_grid_html = ("<h3>" + jQuery("<div>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("cross.forms.set_cross_priorities_1_is_highest_and_60_is", "Set Cross Priorities: 1 is highest and 60 is lowest") : "Set Cross Priorities: 1 is highest and 60 is lowest")).html() + "</h3><h4>" + jQuery("<div>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("cross.forms.female_accessions_are_in_first_column_and_male_accessions", "Female Accessions Are in First Column and Male Accessions Are in Header") : "Female Accessions Are in First Column and Male Accessions Are in Header")).html() + "</h4><table class=\"table table-bordered\"><thead><tr><th>" + jQuery("<div>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("cross.forms.female_accessions", "Female Accessions") : "Female Accessions")).html() + "</th>");
     for(var i=0; i<male_accessions.length; i++){
         cross_grid_html = cross_grid_html + '<th>' + male_accessions[i] + '</th>';
     }
@@ -376,7 +376,7 @@ jQuery(document).ready(function($) {
                 jQuery('#working_modal').modal('hide');
                 var html = '';
                 if(response.success){
-                    html += "<table class='table table-bordered table-hover'><thead><tr><th>File</th><th>Updated By</th><th>Date</th></tr></thead><tbody>";
+                    html += ("<table class='table table-bordered table-hover'><thead><tr><th>" + jQuery("<div>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("cross.forms.file", "File") : "File")).html() + "</th><th>" + jQuery("<div>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("cross.forms.updated_by", "Updated By") : "Updated By")).html() + "</th><th>" + jQuery("<div>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("global.file_dump_share_files.date", "Date") : "Date")).html() + "</th></tr></thead><tbody>");
                     for(var i=0; i<response.files.length; i++){
                         html += "<tr><td><a href='/breeders/phenotyping/download/"+response.files[i][0]+"' >"+response.files[i][1]+"</a></td><td><a href='/solpeople/personal-info.pl?sp_person_id="+response.files[i][6]+"' >"+response.files[i][7]+" "+response.files[i][8]+"</a></td><td>"+response.files[i][5]+"</td></tr>";
                     }
@@ -388,7 +388,7 @@ jQuery(document).ready(function($) {
             },
             error: function(response) {
                 jQuery('#working_modal').modal('hide');
-                alert("An error occurred getting cross wishlists");
+                alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("cross.forms.an_error_occurred_getting_cross_wishlists", "An error occurred getting cross wishlists") : "An error occurred getting cross wishlists"));
             }
         });
 
@@ -396,8 +396,8 @@ jQuery(document).ready(function($) {
 
     jQuery("#create_cross_wishlist").click(function() {
         jQuery("#create_cross_wishlist_dialog").modal("show");
-        jQuery("#female_accession_list_div").html(lo.listSelect('female_accession_list_div', ["accessions"], "Please select list with < 60 accessions", undefined, undefined ));
-        jQuery("#male_accession_list_div").html(lo.listSelect('male_accession_list_div', ["accessions"], "Please select list with < 60 accessions", undefined, undefined ));
+        jQuery("#female_accession_list_div").html(lo.listSelect('female_accession_list_div', ["accessions"], (window.SGN && window.SGN.i18n ? window.SGN.i18n.p("cross.forms.please_select_list_with_60_accessions", "Please select list with < 60 accessions") : "Please select list with < 60 accessions"), undefined, undefined ));
+        jQuery("#male_accession_list_div").html(lo.listSelect('male_accession_list_div', ["accessions"], (window.SGN && window.SGN.i18n ? window.SGN.i18n.p("cross.forms.please_select_list_with_60_accessions", "Please select list with < 60 accessions") : "Please select list with < 60 accessions"), undefined, undefined ));
         var female_accessions;
         var male_accessions
         if (jQuery('#female_accession_list_div_list_select').val() != '' && jQuery('#male_accession_list_div_list_select').val() != '' ) {
@@ -443,7 +443,7 @@ jQuery(document).ready(function($) {
                             }
                         },
                         error: function(response_forms){
-                            alert("Error retrieving saved ODK ONA forms");
+                            alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("cross.forms.error_retrieving_saved_odk_ona_forms", "Error retrieving saved ODK ONA forms") : "Error retrieving saved ODK ONA forms"));
                         }
                     });
 
@@ -451,7 +451,7 @@ jQuery(document).ready(function($) {
             },
             error: function(response){
                 jQuery("#working_modal").modal("hide");
-                alert("Error retrieving available ODK crossing forms");
+                alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("cross.forms.error_retrieving_available_odk_crossing_forms", "Error retrieving available ODK crossing forms") : "Error retrieving available ODK crossing forms"));
             }
         });
 
@@ -476,11 +476,11 @@ jQuery(document).ready(function($) {
             var male_accession_list_id = $('#male_accession_list_div_list_select').val();
             var female_trial_id = jQuery('#cross_wishlist_list_female_trial_id').val();
             if (! lo.legacy_validate(female_accession_list_id, 'accessions', true)) {
-                alert('The female accession list contains elements that are not accessions.');
+                alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("cross.forms.the_female_accession_list_contains_elements_that_are_not", "The female accession list contains elements that are not accessions.") : "The female accession list contains elements that are not accessions."));
                 return;
             }
             if (! lo.legacy_validate(male_accession_list_id, 'accessions', true)) {
-                alert('The male accession list contains elements that are not accessions.');
+                alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("cross.forms.the_male_accession_list_contains_elements_that_are_not", "The male accession list contains elements that are not accessions.") : "The male accession list contains elements that are not accessions."));
                 return;
             }
 
@@ -556,7 +556,7 @@ jQuery(document).ready(function($) {
                 jQuery('#cross_wishlist_trial_select_no_list_cross_wishlist_name_div').html('<input type="text" class="form-control" disabled value="'+cross_wishlist_name+'" />');
             },
             error: function(response) {
-                alert("An error occurred getting trial location");
+                alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("cross.forms.an_error_occurred_getting_trial_location", "An error occurred getting trial location") : "An error occurred getting trial location"));
             }
         });
 
@@ -595,7 +595,7 @@ jQuery(document).ready(function($) {
                 jQuery('#cross_wishlist_trial_select_list_cross_wishlist_name_div').html('<input type="text" class="form-control" disabled value="'+cross_wishlist_name+'" />');
             },
             error: function(response) {
-                alert("An error occurred getting trial location");
+                alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("cross.forms.an_error_occurred_getting_trial_location", "An error occurred getting trial location") : "An error occurred getting trial location"));
             }
         });
     };
@@ -631,7 +631,7 @@ jQuery(document).ready(function($) {
                 jQuery('#cross_wishlist_trial_select_upload_cross_wishlist_name_div').html('<input type="text" class="form-control" disabled value="'+cross_wishlist_name+'" />');
             },
             error: function(response) {
-                alert("An error occurred getting trial location");
+                alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("cross.forms.an_error_occurred_getting_trial_location", "An error occurred getting trial location") : "An error occurred getting trial location"));
             }
         });
     };
@@ -652,14 +652,14 @@ jQuery(document).ready(function($) {
             male_trial_ids_string = male_trial_ids;
         }
         if (male_trial_ids.length == 0){
-            alert('Please select a male trial first!');
+            alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("cross.forms.please_select_a_male_trial_first", "Please select a male trial first!") : "Please select a male trial first!"));
             return;
         }
 
         var female_accession_ids = jQuery('#cross_wishlist_female_accession_ids').val();
-        var html = '<table class="table table-bordered" id="cross_wishlist_male_select_table"><thead><tr><th>Female Parent</th><th>Select Male Parent</th><th>Priority ( 1 : highest, 60 : lowest )</th></tr></thead><tbody>';
+        var html = ("<table class=\"table table-bordered\" id=\"cross_wishlist_male_select_table\"><thead><tr><th>" + jQuery("<div>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("cross.ui.female_parent.ed89c1c", "Female Parent") : "Female Parent")).html() + "</th><th>" + jQuery("<div>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("cross.forms.select_male_parent", "Select Male Parent") : "Select Male Parent")).html() + "</th><th>" + jQuery("<div>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("cross.forms.priority_1_highest_60_lowest", "Priority ( 1 : highest, 60 : lowest )") : "Priority ( 1 : highest, 60 : lowest )")).html() + "</th></tr></thead><tbody>");
         for(var i=0; i<female_accession_ids.length; i++){
-            html = html + '<tr><td>' + female_accession_ids[i] + '</td><td><div name="cross_wishlist_male_selects" id="cross_wishlist_male_select_' +i+ '"></div></td><td><span id="cross_wishlist_male_accession_id_'+ i +'_priority" data-related="'+encodeURI(female_accession_ids[i])+'" >Select Male(s)</span></td></tr>';
+            html = html + '<tr><td>' + female_accession_ids[i] + '</td><td><div name="cross_wishlist_male_selects" id="cross_wishlist_male_select_' +i+ '"></div></td><td><span id="cross_wishlist_male_accession_id_'+ i +'_priority" data-related="'+encodeURI(female_accession_ids[i])+("\" >" + jQuery("<div>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("cross.forms.select_male_s", "Select Male(s)") : "Select Male(s)")).html() + "</span></td></tr>");
         };
         html = html + '</tbody></table>';
         jQuery('#cross_wishlist_male_parent_div').html(html);
@@ -687,7 +687,7 @@ jQuery(document).ready(function($) {
         var female_accession_ids = jQuery('#cross_wishlist_female_accession_ids').val();
         var male_ids = jQuery(div_id).val();
         var female_id = jQuery(div_id).data('related');
-        var html = '<table class="table table-bordered" div="' + div_id +'_table"><thead><tr><th>Male Parent</th><th>Priority</th></tr></thead><tbody>';
+        var html = '<table class="table table-bordered" div="' + div_id +("_table\"><thead><tr><th>" + jQuery("<div>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("cross.ui.male_parent.7df4e67", "Male Parent") : "Male Parent")).html() + "</th><th>" + jQuery("<div>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("cross.forms.priority", "Priority") : "Priority")).html() + "</th></tr></thead><tbody>");
         for (var i=0; i<male_ids.length; i++){
             html = html + '<tr><td>' + male_ids[i] + '</td><td><input class="form-control" male_id="' + male_ids[i] + '" female_id="' + female_id + '" name ="cross_wishlist_final_priority" id="cross_wishlist_male_priority_'+ i +'" value="1" placeholder="1"/></td></tr>';
         };
@@ -743,17 +743,17 @@ jQuery(document).ready(function($) {
         //console.log(trial_id);
         //console.log(female_male_tracker);
         if(!female_trial_id){
-            alert('You must select a female trial!');
+            alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("cross.forms.you_must_select_a_female_trial", "You must select a female trial!") : "You must select a female trial!"));
             return;
         }
         if(!male_trial_id){
-            alert('You must select a male trial! It can be the same trial as the female trial.');
+            alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("cross.forms.you_must_select_a_male_trial_it_can_be", "You must select a male trial! It can be the same trial as the female trial.") : "You must select a male trial! It can be the same trial as the female trial."));
             return;
         }
         for (f in female_male_tracker){
             var male_array = female_male_tracker[f];
             if (male_array.length > male_accession_limit){
-                alert('A maximum of 60 male accessions can be selected for each cross!');
+                alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("cross.forms.a_maximum_of_60_male_accessions_can_be_selected", "A maximum of 60 male accessions can be selected for each cross!") : "A maximum of 60 male accessions can be selected for each cross!"));
                 return;
             }
         }
@@ -781,7 +781,7 @@ jQuery(document).ready(function($) {
             },
             error: function(response) {
                 jQuery('#working_modal').modal('hide');
-                alert("An error occurred submitting plots for cross wishlist");
+                alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("cross.forms.an_error_occurred_submitting_plots_for_cross_wishlist", "An error occurred submitting plots for cross wishlist") : "An error occurred submitting plots for cross wishlist"));
             }
         });
     });
@@ -818,7 +818,7 @@ jQuery(document).ready(function($) {
         for (f in female_male_tracker){
             var male_array = female_male_tracker[f];
             if (male_array.length > male_plot_limit){
-                alert('A maximum of 60 male plots can be selected for each cross!');
+                alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("cross.forms.a_maximum_of_60_male_plots_can_be_selected", "A maximum of 60 male plots can be selected for each cross!") : "A maximum of 60 male plots can be selected for each cross!"));
                 return;
             }
         }
@@ -836,7 +836,7 @@ jQuery(document).ready(function($) {
             },
             dataType:'json',
             beforeSend: function() {
-                jQuery('#working_msg').html('Creating cross wishlist files and sending information to ONA... This can take time...');
+                jQuery('#working_msg').html((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("cross.forms.creating_cross_wishlist_files_and_sending_information_to_ona", "Creating cross wishlist files and sending information to ONA... This can take time...") : "Creating cross wishlist files and sending information to ONA... This can take time..."));
                 jQuery('#working_modal').modal('show');
             },
             success: function(response) {
@@ -857,7 +857,7 @@ jQuery(document).ready(function($) {
             error: function(response) {
                 jQuery('#working_msg').html('');
                 jQuery('#working_modal').modal('hide');
-                alert("An error occurred creating cross wishlist");
+                alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("cross.forms.an_error_occurred_creating_cross_wishlist", "An error occurred creating cross wishlist") : "An error occurred creating cross wishlist"));
             }
         });
     });
@@ -878,19 +878,19 @@ jQuery(document).ready(function($) {
     function upload_wishlist_file() {
         var female_trial_id = $('#cross_wishlist_upload_female_trial_id').val();
         if (!female_trial_id) {
-            alert('A female trial is required');
+            alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("cross.forms.a_female_trial_is_required", "A female trial is required") : "A female trial is required"));
             return;
         }
 
         var male_trial_id = $('#cross_wishlist_upload_male_trial_id').val();
         if (!male_trial_id) {
-            alert('A male trial is required');
+            alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("cross.forms.a_male_trial_is_required", "A male trial is required") : "A male trial is required"));
             return;
         }
 
         var uploadFile = $("#wishlist_file").val();
         if (uploadFile === ''){
-            alert("Please select a file");
+            alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("cross.ui.please_select_a_file", "Please select a file") : "Please select a file"));
             return;
         }
 
@@ -905,9 +905,9 @@ jQuery(document).ready(function($) {
         post: function() {
             var uploadFile = $('#wishlist_file').val();
             if (uploadFile === '') {
-                alert("No file selected");
+                alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("cross.ui.no_file_selected", "No file selected") : "No file selected"));
             }
-            jQuery('#working_msg').html('Creating cross wishlist files and sending information to ONA... This can take time...');
+            jQuery('#working_msg').html((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("cross.forms.creating_cross_wishlist_files_and_sending_information_to_ona", "Creating cross wishlist files and sending information to ONA... This can take time...") : "Creating cross wishlist files and sending information to ONA... This can take time..."));
             jQuery('#working_modal').modal('show');
         },
         complete: function(response) {
@@ -961,7 +961,7 @@ jQuery(document).ready(function($) {
                     error: function(response) {
                         jQuery('#working_msg').html('');
                         jQuery('#working_modal').modal('hide');
-                        alert("An error occurred creating cross wishlist");
+                        alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("cross.forms.an_error_occurred_creating_cross_wishlist", "An error occurred creating cross wishlist") : "An error occurred creating cross wishlist"));
                     }
                 });
             }
@@ -990,7 +990,7 @@ jQuery(document).ready(function($) {
             },
             error: function(response) {
                 jQuery('#working_modal').modal('hide');
-                alert("An error occurred checking accession list");
+                alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("cross.forms.an_error_occurred_checking_accession_list", "An error occurred checking accession list") : "An error occurred checking accession list"));
             }
         });
 

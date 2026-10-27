@@ -1,3 +1,7 @@
+<%once>
+use HTML::Entities ();
+</%once>
+
 <%args>
 </%args>
 
@@ -7,51 +11,51 @@
   <div class="modal-dialog modal-xl" role="document">
     <div class="modal-content">
       <div class="modal-header">
-        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-        <h4 class="modal-title" id="analysisCalculateStatisticsDialog">Calculate statistics</h4>
+        <button type="button" class="close" data-dismiss="modal" aria-label="<% $c->i18n->p("global.close", "Close") |h %>"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title" id="analysisCalculateStatisticsDialog"><% $c->i18n->p("analysis.interface.calculate_statistics", "Calculate statistics") |h %></h4>
       </div>
       <div class="modal-body">
         <div class="container-fluid">
 
             <&| /util/workflow.mas, id=> "analysis_calculate_statistics_workflow" &>
-                <&| /util/workflow.mas:step, title=> "Field Trial" &>
-                    <& /page/page_title.mas, title=>"Select the field trial(s) you are interested in." &>
+                <&| /util/workflow.mas:step, title=> HTML::Entities::encode_entities($c->i18n->p("cross.pages.field_trial", "Field Trial")) &>
+                    <& /page/page_title.mas, title=>HTML::Entities::encode_entities($c->i18n->p("analysis.interface.select_the_field_trial_s_you_are_interested_in", "Select the field trial(s) you are interested in.")) &>
                     <br/><br/>
                     <form class="form-horizontal">
                         <div class="form-group">
-                            <label class="col-sm-3 control-label">Field Trial(s): </label>
+                            <label class="col-sm-3 control-label"><% $c->i18n->p("analysis.interface.field_trial_s", "Field Trial(s):") |h %> </label>
                             <div class="col-sm-9" >
                                 <div id="analysis_calculate_statistics_trial_select_div"></div>
                             </div>
                         </div>
                     </form>
                     <center>
-                    <button class="btn btn-primary" id="analysis_calculate_statistics_field_trial_select_step">Go to Next Step</button>
+                    <button class="btn btn-primary" id="analysis_calculate_statistics_field_trial_select_step"><% $c->i18n->p("global.workflow.next_step", "Go to Next Step") |h %></button>
                     </center>
                 </&>
-                <&| /util/workflow.mas:step, title=> "Trait Selection" &>
-                    <& /page/page_title.mas, title=>"Select the observation variable you are interested in" &>
+                <&| /util/workflow.mas:step, title=> HTML::Entities::encode_entities($c->i18n->p("analysis.interface.trait_selection", "Trait Selection")) &>
+                    <& /page/page_title.mas, title=>HTML::Entities::encode_entities($c->i18n->p("analysis.interface.select_the_observation_variable_you_are_interested_in", "Select the observation variable you are interested in")) &>
                     <br/><br/>
                     <form class="form-horizontal">
                         <div class="form-group">
-                            <label class="col-sm-3 control-label">Observation Variables Phenotyped in the Selected Field Trial(s): </label>
+                            <label class="col-sm-3 control-label"><% $c->i18n->p("analysis.interface.observation_variables_phenotyped_in_the_selected_field_trial_s", "Observation Variables Phenotyped in the Selected Field Trial(s):") |h %> </label>
                             <div class="col-sm-9" >
                                 <div id="analysis_calculate_statistics_trait_select_div"></div>
                             </div>
                         </div>
                     </form>
                     <center>
-                    <button class="btn btn-primary" id="analysis_calculate_statistics_trait_select_step">Go to Next Step</button>
+                    <button class="btn btn-primary" id="analysis_calculate_statistics_trait_select_step"><% $c->i18n->p("global.workflow.next_step", "Go to Next Step") |h %></button>
                     </center>
                 </&>
-                <&| /util/workflow.mas:step, title=> "Statistics" &>
-                    <& /page/page_title.mas, title=>"Select statistics to calculate" &>
+                <&| /util/workflow.mas:step, title=> HTML::Entities::encode_entities($c->i18n->p("analysis.interface.statistics", "Statistics")) &>
+                    <& /page/page_title.mas, title=>HTML::Entities::encode_entities($c->i18n->p("analysis.interface.select_statistics_to_calculate", "Select statistics to calculate")) &>
 
                     <div id="analysis_calculate_statistics_model_select_div"></div>
 
                     <br/><br/>
                     <center>
-                    <button class="btn btn-default" id="analysis_calculate_statistics_create_new_model_button">My Model is Not Shown, So Create New Model</button>
+                    <button class="btn btn-default" id="analysis_calculate_statistics_create_new_model_button"><% $c->i18n->p("analysis.interface.my_model_is_not_shown_so_create_new_model", "My Model is Not Shown, So Create New Model") |h %></button>
                     </center>
 
                     <div id="analysis_calculate_statistics_create_new_model_div" style="display:none">
@@ -59,22 +63,22 @@
 
                         <div class="well well-sm">
                             <select class="form-control" id="analysis_calculate_statistics_select_input">
-                                <option value="">Select A Model</option>
-                                <option value="lmer_germplasmname_replicate">LMER BLUPs y~replicate+location_year+1|Germplasm. Univariate genetic effects across location_years</option>
-                                <option value="sommer_grm_genetic_blups">Sommer GBLUPs Y~replicate+location_year+GRM. Multivariate genetic effects using GRM across location_years</option>
-                                <option value="sommer_grm_spatial_genetic_blups">Sommer Spatial GBLUPs Y~replicate+location_year+GRM+spatial. Multivariate genetic + 2Dspl spatial effects across location_years</option>
+                                <option value=""><% $c->i18n->p("analysis.interface.select_a_model_ba25d3", "Select A Model") |h %></option>
+                                <option value="lmer_germplasmname_replicate">LMER BLUPs y~replicate+location_year+1|Germplasm. <% $c->i18n->p("analysis.interface.univariate_genetic_effects_across_location_years", "Univariate genetic effects across location_years") |h %></option>
+                                <option value="sommer_grm_genetic_blups">Sommer GBLUPs Y~replicate+location_year+GRM. <% $c->i18n->p("analysis.interface.multivariate_genetic_effects_using_grm_across_location_years", "Multivariate genetic effects using GRM across location_years") |h %></option>
+                                <option value="sommer_grm_spatial_genetic_blups">Sommer Spatial GBLUPs Y~replicate+location_year+GRM+spatial. <% $c->i18n->p("analysis.interface.multivariate_genetic_2dspl_spatial_effects_across_location_years", "Multivariate genetic + 2Dspl spatial effects across location_years") |h %></option>
                             </select>
 
                             <div id="analysis_calculate_statistics_relationship_matrix_type_div" style="display:none">
                                 <hr>
                                 <div class="form-horizontal">
                                     <div class="form-group">
-                                        <label class="col-sm-3 control-label">Relationship Matrix Type: </label>
+                                        <label class="col-sm-3 control-label"><% $c->i18n->p("analysis.interface.relationship_matrix_type", "Relationship Matrix Type:") |h %> </label>
                                         <div class="col-sm-9" >
                                             <select class="form-control" id="analysis_calculate_statistics_relationship_matrix_type_select_div">
-                                                <option value="">Identity</option>
-                                                <option value="htp_phenotypes">High-throughput Phenotyping Data</option>
-                                                <option value="genotypes">Genotyping Data</option>
+                                                <option value=""><% $c->i18n->p("analysis.interface.identity", "Identity") |h %></option>
+                                                <option value="htp_phenotypes"><% $c->i18n->p("analysis.interface.high_throughput_phenotyping_data", "High-throughput Phenotyping Data") |h %></option>
+                                                <option value="genotypes"><% $c->i18n->p("genotype.plate.genotyping_data", "Genotyping Data") |h %></option>
                                             </select>
                                         </div>
                                     </div>
@@ -85,17 +89,17 @@
                                 <hr>
                                 <div class="form-horizontal">
                                     <div class="form-group">
-                                        <label class="col-sm-3 control-label">Genotyping Protocol To Calculate Genomic Relationship Matrix (optional. If none selected, an identity matrix is used): </label>
+                                        <label class="col-sm-3 control-label"><% $c->i18n->p("analysis.interface.genotyping_protocol_to_calculate_genomic_relationship_matrix_optional_if_none", "Genotyping Protocol To Calculate Genomic Relationship Matrix (optional. If none selected, an identity matrix is used):") |h %> </label>
                                         <div class="col-sm-9" >
                                             <div id="analysis_calculate_statistics_genotyping_protocol_select_div"></div>
                                         </div>
                                     </div>
                                     <div class="form-group">
-                                        <label class="col-sm-3 control-label">Compute Genotypes From Parents: </label>
+                                        <label class="col-sm-3 control-label"><% $c->i18n->p("analysis.interface.compute_genotypes_from_parents", "Compute Genotypes From Parents:") |h %> </label>
                                         <div class="col-sm-9" >
                                             <select class="form-control" id="analysis_calculate_statistics_genotyping_protocol_compute_from_parents_select">
-                                                <option value="no">No</option>
-                                                <option value="yes">Yes</option>
+                                                <option value="no"><% $c->i18n->p("global.search_wizard.no", "No") |h %></option>
+                                                <option value="yes"><% $c->i18n->p("global.search_wizard.yes", "Yes") |h %></option>
                                             </select>
                                         </div>
                                     </div>
@@ -105,28 +109,28 @@
                             <div id="analysis_calculate_statistics_htp_phenotypes_rel_matrix_div" class="well well-sm" style="display:none">
                                 <div class="form-horizontal">
                                     <div class="form-group">
-                                        <label class="col-sm-3 control-label">How to calculate the relationship matrix with high-throughput phenotypes: </label>
+                                        <label class="col-sm-3 control-label"><% $c->i18n->p("analysis.interface.how_to_calculate_the_relationship_matrix_with_high_throughput_phenotypes", "How to calculate the relationship matrix with high-throughput phenotypes:") |h %> </label>
                                         <div class="col-sm-9" >
                                             <select class="form-control" id="analysis_calculate_statistics_htp_phenotypes_rel_matrix_select">
-                                                <option value="correlations">Correlations</option>
+                                                <option value="correlations"><% $c->i18n->p("analysis.interface.correlations", "Correlations") |h %></option>
                                                 <option value="blues">BLUEs</option>
                                             </select>
                                         </div>
                                     </div>
                                     <div class="form-group">
-                                        <label class="col-sm-3 control-label">Time Points to Use: </label>
+                                        <label class="col-sm-3 control-label"><% $c->i18n->p("analysis.interface.time_points_to_use", "Time Points to Use:") |h %> </label>
                                         <div class="col-sm-9" >
                                             <select class="form-control" id="analysis_calculate_statistics_htp_phenotypes_rel_matrix_times_select">
-                                                <option value="all">All Available</option>
-                                                <option value="latest_trait">Up to latest days after planting selecting in traits</option>
-                                                <option value="vegetative" disabled>Vegetative Growth Stage</option>
-                                                <option value="reproductive" disabled>Reproductive Growth Stage</option>
-                                                <option value="mature" disabled>Mature Growth Stage</option>
+                                                <option value="all"><% $c->i18n->p("analysis.interface.all_available", "All Available") |h %></option>
+                                                <option value="latest_trait"><% $c->i18n->p("analysis.interface.up_to_latest_days_after_planting_selecting_in_traits", "Up to latest days after planting selecting in traits") |h %></option>
+                                                <option value="vegetative" disabled><% $c->i18n->p("analysis.interface.vegetative_growth_stage", "Vegetative Growth Stage") |h %></option>
+                                                <option value="reproductive" disabled><% $c->i18n->p("analysis.interface.reproductive_growth_stage", "Reproductive Growth Stage") |h %></option>
+                                                <option value="mature" disabled><% $c->i18n->p("analysis.interface.mature_growth_stage", "Mature Growth Stage") |h %></option>
                                             </select>
                                         </div>
                                     </div>
                                     <div class="form-group" id="analysis_calculate_statistics_htp_phenotypes_rel_matrix_inversion_select_div" style="display:none">
-                                        <label class="col-sm-3 control-label">HTP BLUEs Inversion Tolerance: </label>
+                                        <label class="col-sm-3 control-label"><% $c->i18n->p("analysis.interface.htp_blues_inversion_tolerance", "HTP BLUEs Inversion Tolerance:") |h %> </label>
                                         <div class="col-sm-9" >
                                             <select class="form-control" id="analysis_calculate_statistics_htp_phenotypes_rel_matrix_inversion_select">
                                                 <option value="0.00001">0.00001</option>
@@ -144,7 +148,7 @@
                             <hr>
                             <div class="form-horizontal">
                                 <div class="form-group">
-                                    <label class="col-sm-3 control-label">Inversion Tolerance: </label>
+                                    <label class="col-sm-3 control-label"><% $c->i18n->p("analysis.interface.inversion_tolerance", "Inversion Tolerance:") |h %> </label>
                                     <div class="col-sm-9" >
                                         <select class="form-control" id="analysis_calculate_statistics_tolparinv_select">
                                             <option value="0.000001">0.000001</option>
@@ -165,29 +169,29 @@
                             <hr>
                             <div class="form-horizontal">
                                 <div class="form-group">
-                                    <label class="col-sm-3 control-label">Fixed Effects: </label>
+                                    <label class="col-sm-3 control-label"><% $c->i18n->p("analysis.interface.fixed_effects", "Fixed Effects:") |h %> </label>
                                     <div class="col-sm-9" >
                                         <select class="form-control" id="analysis_calculate_statistics_fixed_effect_select_div">
-                                            <option value="replicate">Replicate</option>
-                                            <option value="fixed_effect_trait">Select a continuous trait (e.g. soil elevation curvature)</option>
+                                            <option value="replicate"><% $c->i18n->p("analysis.interface.replicate", "Replicate") |h %></option>
+                                            <option value="fixed_effect_trait"><% $c->i18n->p("analysis.interface.select_a_continuous_trait_e_g_soil_elevation_curvature", "Select a continuous trait (e.g. soil elevation curvature)") |h %></option>
                                         </select>
                                     </div>
                                 </div>
                                 <div class="form-group" id="analysis_calculate_statistics_fixed_effect_select_trait_div" style="display:none">
-                                    <label class="col-sm-3 control-label">Fixed Effect Trait: </label>
+                                    <label class="col-sm-3 control-label"><% $c->i18n->p("analysis.interface.fixed_effect_trait", "Fixed Effect Trait:") |h %> </label>
                                     <div class="col-sm-9" >
                                         <div id="analysis_calculate_statistics_fixed_effect_trait_select_div"></div>
                                     </div>
                                 </div>
                                 <div class="form-group" id="analysis_calculate_statistics_fixed_effect_select_quantile_div" style="display:none">
-                                    <label class="col-sm-3 control-label">Fixed Effect Continuous Trait Quantile Binning: </label>
+                                    <label class="col-sm-3 control-label"><% $c->i18n->p("analysis.interface.fixed_effect_continuous_trait_quantile_binning", "Fixed Effect Continuous Trait Quantile Binning:") |h %> </label>
                                     <div class="col-sm-9" >
                                         <select class="form-control" id="analysis_calculate_statistics_fixed_effect_select_quantile">
-                                            <option value="10">10% Quantiles</option>
-                                            <option value="5">20% Quantiles</option>
-                                            <option value="4">25% Quantiles</option>
-                                            <option value="3">33% Quantiles</option>
-                                            <option value="20">5% Quantiles</option>
+                                            <option value="10"><% $c->i18n->p("analysis.interface.10_quantiles", "10% Quantiles") |h %></option>
+                                            <option value="5"><% $c->i18n->p("analysis.interface.20_quantiles", "20% Quantiles") |h %></option>
+                                            <option value="4"><% $c->i18n->p("analysis.interface.25_quantiles", "25% Quantiles") |h %></option>
+                                            <option value="3"><% $c->i18n->p("analysis.interface.33_quantiles", "33% Quantiles") |h %></option>
+                                            <option value="20"><% $c->i18n->p("analysis.interface.5_quantiles", "5% Quantiles") |h %></option>
                                         </select>
                                     </div>
                                 </div>
@@ -199,18 +203,18 @@
 
                     <br/><br/>
                     <center>
-                    <button class="btn btn-primary" id="analysis_calculate_statistics_select_step">Submit</button>
+                    <button class="btn btn-primary" id="analysis_calculate_statistics_select_step"><% $c->i18n->p("global.manage_file_share_dump.submit", "Submit") |h %></button>
                     </center>
                 </&>
-                <&| /util/workflow.mas:step, title=> "Results" &>
-                    <& /page/page_title.mas, title=>"Statistics results" &>
+                <&| /util/workflow.mas:step, title=> HTML::Entities::encode_entities($c->i18n->p("global.gem_experiment_search.results", "Results")) &>
+                    <& /page/page_title.mas, title=>HTML::Entities::encode_entities($c->i18n->p("analysis.interface.statistics_results", "Statistics results")) &>
 
                     <hr>
-                    <button class="btn btn-primary" id="analysis_calculate_statistics_analysis_save_blups_genetic_pe_residual" style="display:none">Go To Save Analysis Results For Genetic and Environment BLUPS and Residuals</button>
-                    <button class="btn btn-primary" id="analysis_calculate_statistics_analysis_save_blups_genetic" style="display:none">Go To Save Analysis Results For Genetic BLUPS</button>
-                    <button class="btn btn-primary" id="analysis_calculate_statistics_analysis_save_blups_spatial" style="display:none">Go To Save Analysis Results For Spatial BLUPS</button>
-                    <button class="btn btn-primary" id="analysis_calculate_statistics_analysis_save_residuals" style="display:none">Go To Save Analysis Results For Residuals</button>
-                    <button class="btn btn-primary" id="analysis_calculate_statistics_analysis_save_fitted" style="display:none">Go To Save Analysis Results For Fitted Values</button>
+                    <button class="btn btn-primary" id="analysis_calculate_statistics_analysis_save_blups_genetic_pe_residual" style="display:none"><% $c->i18n->p("analysis.interface.go_to_save_analysis_results_for_genetic_and_environment_blups", "Go To Save Analysis Results For Genetic and Environment BLUPS and Residuals") |h %></button>
+                    <button class="btn btn-primary" id="analysis_calculate_statistics_analysis_save_blups_genetic" style="display:none"><% $c->i18n->p("analysis.interface.go_to_save_analysis_results_for_genetic_blups", "Go To Save Analysis Results For Genetic BLUPS") |h %></button>
+                    <button class="btn btn-primary" id="analysis_calculate_statistics_analysis_save_blups_spatial" style="display:none"><% $c->i18n->p("analysis.interface.go_to_save_analysis_results_for_spatial_blups", "Go To Save Analysis Results For Spatial BLUPS") |h %></button>
+                    <button class="btn btn-primary" id="analysis_calculate_statistics_analysis_save_residuals" style="display:none"><% $c->i18n->p("analysis.interface.go_to_save_analysis_results_for_residuals", "Go To Save Analysis Results For Residuals") |h %></button>
+                    <button class="btn btn-primary" id="analysis_calculate_statistics_analysis_save_fitted" style="display:none"><% $c->i18n->p("analysis.interface.go_to_save_analysis_results_for_fitted_values", "Go To Save Analysis Results For Fitted Values") |h %></button>
                     <hr>
 
                     <div id ="analysis_calculate_statistics_result_div">
@@ -222,7 +226,7 @@
 
       </div>
       <div class="modal-footer">
-        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+        <button type="button" class="btn btn-default" data-dismiss="modal"><% $c->i18n->p("global.close", "Close") |h %></button>
       </div>
     </div>
   </div>
@@ -260,7 +264,7 @@ jQuery(document).ready(function() {
 
         analysis_calculate_statistics_field_trial_id_string = analysis_calculate_statistics_field_trial_id_array.join(",");
         if (analysis_calculate_statistics_field_trial_id_string == '') {
-            alert('Please select a field trial first!');
+            alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("analysis.interface.please_select_a_field_trial_first", "Please select a field trial first!") : 'Please select a field trial first!'));
         } else {
             get_select_box('traits', 'analysis_calculate_statistics_trait_select_div', { 'name' : 'analysis_calculate_statistics_trait_id_select', 'id' : 'analysis_calculate_statistics_trait_id_select', 'empty':1, 'multiple':0, 'trial_ids':analysis_calculate_statistics_field_trial_id_string, 'stock_type':'plot' });
 
@@ -285,7 +289,7 @@ jQuery(document).ready(function() {
 
         analysis_calculate_statistics_trait_id = jQuery('#analysis_calculate_statistics_trait_id_select').val();
         if (analysis_calculate_statistics_trait_id == null || analysis_calculate_statistics_trait_id == undefined) {
-            alert('Please select one observation variable!');
+            alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("analysis.interface.please_select_one_observation_variable", "Please select one observation variable!") : 'Please select one observation variable!'));
             return false;
         }
 
@@ -419,7 +423,7 @@ jQuery(document).ready(function() {
 
                     var html = '';
                     if (response.sum_square_residual) {
-                        html = html + '<h4>Sum square residual: '+response.sum_square_residual+'</h4><hr>';
+                        html = html + ("<h4>" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("analysis.interface.sum_square_residual", "Sum square residual:") : "Sum square residual:")).html() + " ")+response.sum_square_residual+'</h4><hr>';
                     }
                     if (response.genetic_effects_line_plot) {
                         html = html + '<img src="'+response.genetic_effects_line_plot+'"><hr>';
@@ -433,7 +437,7 @@ jQuery(document).ready(function() {
                         analysis_calculate_statistics_phenotype_training_file = response.stats_tempfile;
                         analysis_calculate_statistics_grm_training_file = response.grm_file;
 
-                        html = html + '<table class="table table-bordered table-hover"><thead><tr><th>Accessions</th>';
+                        html = html + ("<table class=\"table table-bordered table-hover\"><thead><tr><th>" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("accessions.section.accessions", "Accessions") : "Accessions")).html() + "</th>");
                         for (var i=0; i<analysis_calculate_statistics_trait_names.length; i++) {
                             html = html + '<th>'+analysis_calculate_statistics_trait_names[i]+'</th>';
                         }
@@ -458,7 +462,7 @@ jQuery(document).ready(function() {
                         analysis_calculate_statistics_plot_names = response.unique_plots;
                         analysis_calculate_statistics_trait_names = response.unique_traits;
 
-                        html = html + '<table class="table table-bordered table-hover"><thead><tr><th>Plots</th>';
+                        html = html + ("<table class=\"table table-bordered table-hover\"><thead><tr><th>" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("global.graphical_filtering.plots", "Plots") : "Plots")).html() + "</th>");
                         for (var i=0; i<response.unique_traits.length; i++) {
                             html = html + '<th>'+response.unique_traits[i]+'</th>';
                         }
@@ -475,17 +479,17 @@ jQuery(document).ready(function() {
                     }
 
                     if (response.results.length > 0) {
-                        html = '<table class="table table-bordered table-hover"><thead><tr><th>Observation Variable</th><th>Statistics</th><th>Plot</th></tr></thead><tbody>';
+                        html = ("<table class=\"table table-bordered table-hover\"><thead><tr><th>" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("accession.usage.header.variable", "Observation Variable") : "Observation Variable")).html() + "</th><th>" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("analysis.interface.statistics", "Statistics") : "Statistics")).html() + "</th><th>" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("lists_datasets.download.plot", "Plot") : "Plot")).html() + "</th></tr></thead><tbody>");
                         for (var i=0; i<response.results.length; i++) {
                             html = html + '<tr><td>'+response.results[i][0]+'</td><td>'+response.results[i][1]+'</td><td><img src="'+response.results[i][2]+'"></td></tr>';
                         }
                         html = html + '</tbody></table>';
                     }
 
-                    html = html + '<hr><a href="'+response.stats_out_tempfile_string+'.log" target=_blank>Stats file or log</a>';
+                    html = html + '<hr><a href="'+response.stats_out_tempfile_string+(".log\" target=_blank>" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("analysis.interface.stats_file_or_log", "Stats file or log") : "Stats file or log")).html() + "</a>");
 
                     if (jQuery('#analysis_calculate_statistics_relationship_matrix_type_select_div').val() == 'htp_phenotypes') {
-                        html = html + '<hr><a href="'+response.stats_out_htp_rel_tempfile_out_string+'" target=_blank>HTP Relationship Matrix</a>';
+                        html = html + '<hr><a href="'+response.stats_out_htp_rel_tempfile_out_string+("\" target=_blank>" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("analysis.interface.htp_relationship_matrix", "HTP Relationship Matrix") : "HTP Relationship Matrix")).html() + "</a>");
                     }
 
                     jQuery('#analysis_calculate_statistics_result_div').html(html);
@@ -496,7 +500,7 @@ jQuery(document).ready(function() {
             },
             error: function(response){
                 jQuery("#working_modal").modal("hide");
-                alert('Error calculating statistics!')
+                alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("analysis.interface.error_calculating_statistics", "Error calculating statistics!") : 'Error calculating statistics!'))
             }
         });
     });
@@ -512,15 +516,15 @@ jQuery(document).ready(function() {
         var generic_save_analysis_template_breeding_program_id = jQuery('#generic_save_analysis_template_breeding_program_id').val();
 
         if (generic_save_analysis_template_analysis_name == '') {
-            alert('Please give an analysis template name');
+            alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("analysis.interface.please_give_an_analysis_template_name", "Please give an analysis template name") : 'Please give an analysis template name'));
             return false;
         }
         if (generic_save_analysis_template_analysis_description == '') {
-            alert('Please give an analysis template description');
+            alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("analysis.interface.please_give_an_analysis_template_description", "Please give an analysis template description") : 'Please give an analysis template description'));
             return false;
         }
         if (generic_save_analysis_template_analysis_year == '') {
-            alert('Please give an analysis template year');
+            alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("analysis.interface.please_give_an_analysis_template_year", "Please give an analysis template year") : 'Please give an analysis template year'));
             return false;
         }
 
@@ -633,10 +637,10 @@ jQuery(document).ready(function() {
                 if (response.success) {
                     var html = '<center>';
                     if (response.model_id) {
-                        html = html + '<p>Go to saved <a href="/analyses_model/'+response.model_id+'" target=_blank >model</a></p>';
+                        html = html + ("<p>" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("analysis.interface.go_to_saved", "Go to saved") : "Go to saved")).html() + " <a href=\"/analyses_model/")+response.model_id+("\" target=_blank >" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("analysis.interface.model_9372c4", "model") : "model")).html() + "</a></p>");
                     }
                     if (response.analysis_id) {
-                        html = html + '<p>Go to saved <a href="/analyses/'+response.analysis_id+'" target=_blank >GBLUP analysis</a></p>';
+                        html = html + ("<p>" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("analysis.interface.go_to_saved", "Go to saved") : "Go to saved")).html() + " <a href=\"/analyses/")+response.analysis_id+("\" target=_blank >" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("analysis.interface.gblup_analysis", "GBLUP analysis") : "GBLUP analysis")).html() + "</a></p>");
                     }
                     html = html + '</center>';
                     jQuery('#generic_save_analysis_template_response_div').html(html);
@@ -698,7 +702,7 @@ jQuery(document).ready(function() {
                                 html = html + '<center>';
                                 if (response.analysis_id) {
                                     if (analysis_calculate_statistics_select == 'sommer_grm_spatial_genetic_blups') {
-                                        html = html + '<p>Go to saved <a href="/analyses/'+response.analysis_id+'" target=_blank >spatial BLUP analysis</a></p>';
+                                        html = html + ("<p>" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("analysis.interface.go_to_saved", "Go to saved") : "Go to saved")).html() + " <a href=\"/analyses/")+response.analysis_id+("\" target=_blank >" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("analysis.interface.spatial_blup_analysis", "spatial BLUP analysis") : "spatial BLUP analysis")).html() + "</a></p>");
                                     }
                                 }
                                 html = html + '</center>';
@@ -709,7 +713,7 @@ jQuery(document).ready(function() {
 
                                 if (analysis_calculate_statistics_select == 'sommer_grm_spatial_genetic_blups') {
                                     jQuery('#working_modal').modal('hide');
-                                    alert('Analysis and/or model saved!');
+                                    alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("analysis.interface.analysis_and_or_model_saved", "Analysis and/or model saved!") : 'Analysis and/or model saved!'));
                                     return false;
                                 }
 
@@ -754,30 +758,30 @@ jQuery(document).ready(function() {
                                             alert(response.error);
                                         }
                                         if (response.success) {
-                                            alert('Analysis and/or model saved!');
+                                            alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("analysis.interface.analysis_and_or_model_saved", "Analysis and/or model saved!") : 'Analysis and/or model saved!'));
                                             html = html + '<center>';
                                             if (response.analysis_id) {
-                                                html = html + '<p>Go to saved <a href="/analyses/'+response.analysis_id+'" target=_blank >residuals analysis</a></p>';
+                                                html = html + ("<p>" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("analysis.interface.go_to_saved", "Go to saved") : "Go to saved")).html() + " <a href=\"/analyses/")+response.analysis_id+("\" target=_blank >" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("analysis.interface.residuals_analysis", "residuals analysis") : "residuals analysis")).html() + "</a></p>");
                                             }
                                             html = html + '</center>';
                                             jQuery('#generic_save_analysis_template_response_div').html(html);
                                         }
                                     },
                                     error: function(response){
-                                        alert('Error saving analysis multiple!');
+                                        alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("analysis.interface.error_saving_analysis_multiple", "Error saving analysis multiple!") : 'Error saving analysis multiple!'));
                                     }
                                 });
                             }
                         },
                         error: function(response){
-                            alert('Error saving analysis multiple!');
+                            alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("analysis.interface.error_saving_analysis_multiple", "Error saving analysis multiple!") : 'Error saving analysis multiple!'));
                         }
                     });
                 }
             },
             error: function(response){
                 jQuery('#working_modal').modal('hide');
-                alert('Error saving analysis multiple!');
+                alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("analysis.interface.error_saving_analysis_multiple", "Error saving analysis multiple!") : 'Error saving analysis multiple!'));
             }
         });
     });
@@ -873,7 +877,7 @@ jQuery(document).ready(function() {
 
     jQuery('#analysis_calculate_statistics_analysis_save_blups_spatial').click(function(){
         if (analysis_calculate_statistics_field_trial_id_array.length>1) {
-            alert('Saving spatial BLUPs currently only implemented for a single trial, so only select one field trial in your analysis');
+            alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("analysis.interface.saving_spatial_blups_currently_only_implemented_for_a_single_trial", "Saving spatial BLUPs currently only implemented for a single trial, so only select one field trial in your analysis") : 'Saving spatial BLUPs currently only implemented for a single trial, so only select one field trial in your analysis'));
             return false;
         }
 

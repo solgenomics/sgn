@@ -9,13 +9,13 @@ $trial_id
     <table class="table table-hover table-bordered" id="target_numbers_and_progress_table">
         <thead>
             <tr>
-                <th>Female Accession</th>
-                <th>Male Accession</th>
-                <th>Target No. of Seeds</th>
-                <th>Actual No. of Seeds</th>
-                <th>Target No. of Progenies</th>
-                <th>Actual No. of Progenies</th>
-                <th>Cross Unique IDs</th>
+                <th><% $c->i18n->p("cross.ui.female_accession", "Female Accession") |h %></th>
+                <th><% $c->i18n->p("cross.ui.male_accession", "Male Accession") |h %></th>
+                <th><% $c->i18n->p("cross.forms.target_no_of_seeds", "Target No. of Seeds") |h %></th>
+                <th><% $c->i18n->p("cross.forms.actual_no_of_seeds", "Actual No. of Seeds") |h %></th>
+                <th><% $c->i18n->p("cross.forms.target_no_of_progenies", "Target No. of Progenies") |h %></th>
+                <th><% $c->i18n->p("cross.forms.actual_no_of_progenies", "Actual No. of Progenies") |h %></th>
+                <th><% $c->i18n->p("trial.card.design_section.stock_cross_unique_ids", "Cross Unique IDs") |h %></th>
             </tr>
         </thead>
     </table>

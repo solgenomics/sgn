@@ -1,4 +1,4 @@
-<html>
+<html lang="<% $c->i18n->locale |h %>" dir="<% $c->i18n->dir |h %>">
 <head>
 <& /util/import_css.mas, paths => ['/css/sgn.css'] &>
 </head>

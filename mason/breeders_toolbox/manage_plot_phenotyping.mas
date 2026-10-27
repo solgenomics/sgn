@@ -1,3 +1,7 @@
+<%once>
+use HTML::Entities ();
+</%once>
+
 <%args>
 $plot_name
 $stock_id
@@ -7,7 +11,7 @@ $type_name => "plot"
 
 <& /util/import_javascript.mas, classes => [ 'CXGN.BreedersToolbox.HTMLSelect' ] &>
 
-<& /page/page_title.mas, title=>"Manage Plot Phenotyping" &>
+<& /page/page_title.mas, title=>HTML::Entities::encode_entities($c->i18n->p("phenotype.manage_plot_phenotyping", "Manage Plot Phenotyping")) &>
 
 <div class="well well-sm">
   <div class="row">
@@ -16,7 +20,7 @@ $type_name => "plot"
     <div class="col-md-10 col-lg-10">
 
       <div class="form-group form-group-sm">
-        <label class="col-sm-4 control-label for="plot_name">Plot:</label>
+        <label class="col-sm-4 control-label for="plot_name"><% $c->i18n->p("trial.fieldmap_edit.plot_label.plot_prefix", "Plot:") |h %></label>
         <div class="col-sm-8">
           <input type="text" value="<%$plot_name%>" class="form-control" id="plot_name" name="plot_name" disabled="1"></input>
         </div>
@@ -25,14 +29,14 @@ $type_name => "plot"
       <br /><br />
 
       <div class="form-group form-group-sm" id="all_traits">
-        <label class="col-sm-4 control-label" for="select_traits_for_trait_file">Select trait: </label>
+        <label class="col-sm-4 control-label" for="select_traits_for_trait_file"><% $c->i18n->p("phenotype.select_trait", "Select trait:") |h %> </label>
         <div class="col-sm-8">
           <select class="form-control" id="select_traits_for_trait_file"></select>
         </div>
       </div>
 
       <div class="form-group form-group-sm">
-      <label class="col-sm-4 control-label">Or Use Trait List: </label>
+      <label class="col-sm-4 control-label"><% $c->i18n->p("phenotype.or_use_trait_list", "Or Use Trait List:") |h %> </label>
       <div class="col-sm-8">
         <input type="checkbox"  id="use_trait_list" value="use_trait_list"/>
       </div>
@@ -42,7 +46,7 @@ $type_name => "plot"
 
       <div id="show_trait_textbox" style="display: none">
           <div class="form-group form-group-sm" >
-            <label class="col-sm-4 control-label">Enter a List of Trait Names: </label>
+            <label class="col-sm-4 control-label"><% $c->i18n->p("phenotype.enter_a_list_of_trait_names", "Enter a List of Trait Names:") |h %> </label>
             <div class="col-sm-8" id="show_trait_selectbox">
 
             </div>
@@ -52,12 +56,12 @@ $type_name => "plot"
 
       <div id="show_trait_list_box" style="display: none">
       <div class="form-group form-group-sm">
-        <label class="col-sm-4 control-label">Or Paste From a List: </label>
+        <label class="col-sm-4 control-label"><% $c->i18n->p("phenotype.or_paste_from_a_list", "Or Paste From a List:") |h %> </label>
         <div class="col-sm-8">
             <div id="list_menu_traits"></div>
     <script defer="defer">
       jQuery(document).ready(function() {
-          pasteTraitListMenu('show_trait_selectbox', 'list_menu_traits', 'Paste Trait List');
+          pasteTraitListMenu('show_trait_selectbox', 'list_menu_traits', (window.SGN && window.SGN.i18n ? window.SGN.i18n.p("phenotype.paste_trait_list", "Paste Trait List") : 'Paste Trait List'));
 
           function pasteTraitListMenu (div_name, menu_div, button_name) {
               var list = new CXGN.List();
@@ -76,7 +80,7 @@ $type_name => "plot"
       <br /><br />
 
       <div class="form-group form-group-sm">
-        <label class="col-sm-4 control-label">Enter trait value: </label>
+        <label class="col-sm-4 control-label"><% $c->i18n->p("phenotype.enter_trait_value", "Enter trait value:") |h %> </label>
         <div class="col-sm-3">
             <input type="number" class="form-control" id="select_pheno_value" name="select_pheno_value"></input>
         </div>
@@ -95,7 +99,7 @@ $type_name => "plot"
     </div>
     <div class="col-md-10 col-lg-10">
 
-<&| /page/info_section.mas, id=>"stock_trials_section", title => "Trials", collapsible=> 1, collapsed=>1 &>
+<&| /page/info_section.mas, anchor_title => "Trials", id=>"stock_trials_section", title => HTML::Entities::encode_entities($c->i18n->p("accession.stock.trials.title", "Trials")), collapsible=> 1, collapsed=>1 &>
 
   <& /stock/trials.mas, stock_id => $stock_id, type_name => $type_name &>
 
@@ -114,7 +118,7 @@ $type_name => "plot"
     <div class="col-md-10 col-lg-10">
 
 <& /stock/download_stock_phenotypes_dialog.mas, stock_id => $stock_id, stock_name => $plot_name, stock_type => $type_name &>
-<&| /page/info_section.mas, id=>"stock_traits_section", title => "Traits assayed", collapsible=>1, collapsed=>1, hide_if_empty=>1, subtitle=>"[<a id='stock_download_phenotypes_button'>Download Data</a>]" &>
+<&| /page/info_section.mas, anchor_title => "Traits assayed", id=>"stock_traits_section", title => HTML::Entities::encode_entities($c->i18n->p("phenotype.traits_assayed", "Traits assayed")), collapsible=>1, collapsed=>1, hide_if_empty=>1, subtitle=>("[<a id='stock_download_phenotypes_button'>" . HTML::Entities::encode_entities($c->i18n->p("phenotype.download_data", "Download Data")) . "</a>]") &>
 
   <& /stock/traits.mas, stock_id => $stock_id &>
 
@@ -184,11 +188,11 @@ $type_name => "plot"
 
         success: function (response) {
           if (response.error){
-            alert("Error Saving Trait Value: "+response.error);
+            alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("phenotype.error_saving_trait_value", "Error Saving Trait Value: ") : "Error Saving Trait Value: ")+response.error);
           }
         },
           error: function() {
-            alert('An error occurred saving trait value');
+            alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("phenotype.an_error_occurred_saving_trait_value", "An error occurred saving trait value") : 'An error occurred saving trait value'));
           }
 
       });
@@ -223,7 +227,7 @@ $type_name => "plot"
             var black = {'color': 'red'};
 
             if (response.error){
-              alert("Error Retrieving Trait Value: "+response.error);
+              alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("phenotype.error_retrieving_trait_value", "Error Retrieving Trait Value: ") : "Error Retrieving Trait Value: ")+response.error);
             }else{
               if (value){
                 jQuery("#select_pheno_value").css(black);
@@ -232,7 +236,7 @@ $type_name => "plot"
             }
           },
             error: function() {
-              alert('An error occurred retrieving trait value');
+              alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("phenotype.an_error_occurred_retrieving_trait_value", "An error occurred retrieving trait value") : 'An error occurred retrieving trait value'));
             }
 
         });

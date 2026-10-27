@@ -10,25 +10,25 @@ $breeding_programs
   <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.min.js"></script>
   <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.css" />
   
-<& /page/page_title.mas, title => 'Database Stats' &>
+<& /page/page_title.mas, title => HTML::Entities::encode_entities($c->i18n->p('widgets.db_stats.page_title', 'Database Stats')) &>
 
-<&| /page/info_section.mas, title => "Date Range" &>
+<&| /page/info_section.mas, title => HTML::Entities::encode_entities($c->i18n->p('widgets.db_stats.date_range', 'Date Range')), anchor_title => "Date Range" &>
 
-Filter by date of addition to database<br /><br />
+<% $c->i18n->p("widgets.db_stats.filter_by_date", "Filter by date of addition to database") |h %><br /><br />
 <table><tr><td>
 
-Start Date: <input type="text" id="dbstats_start_date" title="dbstats_start_date"  />
+<% $c->i18n->p("trial.card.raw_data.start_date", "Start Date:") |h %> <input type="text" id="dbstats_start_date" title="dbstats_start_date"  />
 <td>&nbsp;</td></td><td>
 
-End Date: <input type="text" id="dbstats_end_date" title="dbstats_end_date"  />
+<% $c->i18n->p("trial.card.raw_data.end_date", "End Date:") |h %> <input type="text" id="dbstats_end_date" title="dbstats_end_date"  />
 </td><td>
 &nbsp;
 </td><td>
-<input type="checkbox" id="include_dateless_items"> include items without a date</input>
+<input type="checkbox" id="include_dateless_items"> <% $c->i18n->p("widgets.db_stats.include_dateless", "include items without a date") |h %></input>
 </td><td>
 &nbsp;
 </td><td>
-<button id="update_dbstats_by_date">Update</button>
+<button id="update_dbstats_by_date"><% $c->i18n->p("lists.render.update", "Update") |h %></button>
 
 </td>
 </tr></table>
@@ -74,7 +74,7 @@ jQuery('input[title="dbstats_end_date"]').daterangepicker(
 
 </script>
 
-<&| /page/info_section.mas, title => "Data categories" &>
+<&| /page/info_section.mas, title => HTML::Entities::encode_entities($c->i18n->p('widgets.db_stats.data_categories', 'Data categories')), anchor_title => "Data categories" &>
 
 <table><tr><td>
 
@@ -186,7 +186,7 @@ function draw_overview_charts() {
         jQuery.ajax({
         url: '/ajax/dbstats/trials_by_breeding_program_chart',
         data: { 'start_date' : start_date, 'end_date' : end_date, 'include_dateless_items' : include_dateless_items },	
-        error: function(response) { alert('An error occurred' + JSON.stringify(response));  },
+        error: function(response) { alert((window.SGN && window.SGN.i18n ? SGN.i18n.p('lists.validation.request_error', 'An error occurred') : 'An error occurred') + JSON.stringify(response));  },
         success: function(response)  { 
             //alert('success' + JSON.stringify(response)); 
             var types_pie = new d3pie('trials_by_breeding_programs_div', response);
@@ -196,7 +196,7 @@ function draw_overview_charts() {
     jQuery.ajax({
         url: '/ajax/dbstats/traits_chart',
         data: { 'start_date' : start_date, 'end_date' : end_date, 'include_dateless_items' : include_dateless_items },	
-        error: function(response) { alert('An error occurred' + JSON.stringify(response));  },
+        error: function(response) { alert((window.SGN && window.SGN.i18n ? SGN.i18n.p('lists.validation.request_error', 'An error occurred') : 'An error occurred') + JSON.stringify(response));  },
         success: function(response)  { 
            //alert('success' + JSON.stringify(response)); 
            var types_pie = new d3pie('traits_div', response);
@@ -206,7 +206,7 @@ function draw_overview_charts() {
     jQuery.ajax({
         url: '/ajax/dbstats/stocks_chart',
         data: { 'start_date' : start_date, 'end_date' : end_date, 'include_dateless_items' : include_dateless_items },
-        error: function(response) { alert('An error occurred' + JSON.stringify(response));  },
+        error: function(response) { alert((window.SGN && window.SGN.i18n ? SGN.i18n.p('lists.validation.request_error', 'An error occurred') : 'An error occurred') + JSON.stringify(response));  },
         success: function(response)  { 
             var types_pie = new d3pie('stocks_div', response);
         }
@@ -215,7 +215,7 @@ function draw_overview_charts() {
     jQuery.ajax({
         url: '/ajax/dbstats/trial_types_chart',
         data: { 'start_date' : start_date, 'end_date' : end_date, 'include_dateless_items' : include_dateless_items },
-        error: function(response) { alert('An error occurred' + JSON.stringify(response));  },
+        error: function(response) { alert((window.SGN && window.SGN.i18n ? SGN.i18n.p('lists.validation.request_error', 'An error occurred') : 'An error occurred') + JSON.stringify(response));  },
         success: function(response)  { 
             //alert('success' + JSON.stringify(response)); 
             var types_pie = new d3pie('trial_types_div', response);      
@@ -486,3 +486,7 @@ function trait_summary_hist_change(program_id, value) {
 }
 
 </script>
+
+<%once>
+use HTML::Entities ();
+</%once>

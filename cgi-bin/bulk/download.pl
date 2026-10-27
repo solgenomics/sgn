@@ -30,6 +30,8 @@ use CatalystX::GlobalContext qw( $c );
 
 use strict;
 use warnings;
+use SGN::I18N;
+use HTML::Entities qw(encode_entities);
 
 use CXGN::Page;
 use CXGN::DB::Connection;
@@ -218,13 +220,20 @@ sub get_parameters {
 
 sub post_only {
   my ($page) = @_;
-  $page->error_page('This page can only accept HTTP POST requests. Please go to <a href="input.pl">Bulk Download</a> to make your selections.');
+  my SGN::I18N $bulk_download_post_i18n = eval { $c && $c->i18n };
+  my $text = $bulk_download_post_i18n ? $bulk_download_post_i18n->p('lists_datasets.bulk.post_only', 'This page can only accept HTTP POST requests. Please go to %{link} to make your selections.', { link => '__SGN_BULK_LINK__' }) : 'This page can only accept HTTP POST requests. Please go to __SGN_BULK_LINK__ to make your selections.';
+  $text = encode_entities($text);
+  $text =~ s/__SGN_BULK_LINK__/<a href="input.pl">Bulk Download<\/a>/;
+  $page->error_page($text);
 }
 
 sub _invalid_params {
+    my SGN::I18N $bulk_download_invalid_i18n = eval { $c && $c->i18n };
+    my $title = $bulk_download_invalid_i18n ? $bulk_download_invalid_i18n->p('lists_datasets.bulk.error_occurred_title', 'An Error has occured') : 'An Error has occured';
+    my $message = $bulk_download_invalid_i18n ? $bulk_download_invalid_i18n->p('lists_datasets.bulk.id_type_required', 'ID Type must be provided') : 'ID Type must be provided';
     $c->throw(
-        title    => "An Error has occured",
-        message  => "ID Type must be provided",
+        title    => $title,
+        message  => $message,
         notify   => 0,
         is_error => 0,
     );

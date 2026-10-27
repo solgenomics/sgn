@@ -2,7 +2,7 @@
 $trial_id
 </%args>
 
-<p id="trial_jbrowse_check">[loading...]</p>
+<p id="trial_jbrowse_check"><% $c->i18n->p('trial.jbrowse.loading', '[loading...]') |h %></p>
 
 <%perl>
 
@@ -16,19 +16,24 @@ my $jbrowse_url = $jbrowse_path ."%2Ftrials%2F" . $trial_id ."&tracks=DNA%2CGene
 
 <script type="text/javascript" defer="defer">
 jQuery(document).ready(function () {
+    var trialJBrowseI18n = (window.SGN && window.SGN.i18n) || {
+        p: function (context, source) { return source; }
+    };
 
 	jQuery.ajax({
 		url: "<% $test_url %>",
 		success: function(response) {
 			if ( response.indexOf("Trial_<%$trial_id%>") > -1 ) { // if jbrowse instance is found, create and display link
-				jQuery('#trial_jbrowse_check').replaceWith('<a id="jbrowse_link" href="<% $jbrowse_url %>">View the dataset for this trial in JBrowse</a>');
+				jQuery('#trial_jbrowse_check').replaceWith(jQuery('<a>')
+                .attr({id: 'jbrowse_link', href: "<% $jbrowse_url %>"})
+                .text(trialJBrowseI18n.p('trial.jbrowse.open', 'View the dataset for this trial in JBrowse')));
 			}
 			else { // if not found, display message that jbrowse instance wasn't found
-				jQuery('#trial_jbrowse_check').html(" <i>This trial does not have a dataset in Jbrowse.</i>");
+				jQuery('#trial_jbrowse_check').empty().append(' ', jQuery('<i>').text(trialJBrowseI18n.p('trial.jbrowse.no_dataset', 'This trial does not have a dataset in Jbrowse.')));
 			}
 		},
 		error: function() {
-			jQuery('#trial_jbrowse_check').html(" <i>Jbrowse has not been set up for this database.</i>");
+			jQuery('#trial_jbrowse_check').empty().append(' ', jQuery('<i>').text(trialJBrowseI18n.p('trial.jbrowse.unconfigured', 'Jbrowse has not been set up for this database.')));
 		}
 	});
 });

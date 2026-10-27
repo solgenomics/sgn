@@ -17,6 +17,7 @@ sub _validate_with_plugin {
     my %missing_seedlots;
 
     my $parser = CXGN::File::Parse->new (
+        i18n => $self->i18n,
         file => $filename,
         required_columns => [ 'box_id', 'seed_id', 'inventory_date', 'inventory_person'],
         optional_columns => ['weight_gram', 'amount'],
@@ -46,7 +47,7 @@ sub _validate_with_plugin {
 
     if ( $additional_columns && scalar(@$additional_columns) > 0 ) {
         $errors{'error_messages'} = [
-            "The following columns are not recognized: " . join(', ', @$additional_columns) . ". Please check the spreadsheet format for the allowed columns."
+            ($self->i18n ? $self->i18n->p('seedlots.parse.the_following_columns_are_not_recognized_columns_please_check_the_spread', 'The following columns are not recognized: %{columns}. Please check the spreadsheet format for the allowed columns.', {columns => join(', ', @$additional_columns)}) : "The following columns are not recognized: " . join(', ', @$additional_columns) . ". Please check the spreadsheet format for the allowed columns.")
         ];
         $self->_set_parse_errors(\%errors);
         return;
@@ -59,7 +60,7 @@ sub _validate_with_plugin {
         my $weight = $row->{'weight_gram'};
 
         if (!defined $amount && !defined $weight) {
-            push @error_messages, "On row:$row_num you must provide either a weight in grams or a seed count amount.";
+            push @error_messages, ($self->i18n ? $self->i18n->p('seedlots.parse.on_row_row_you_must_provide_either_a_weight_in_grams_or_a_seed_count_amo.ea4edcb', 'On row:%{row} you must provide either a weight in grams or a seed count amount.', {row => '' . ($row_num)}) : "On row:$row_num you must provide either a weight in grams or a seed count amount.");
         }
     }
 
@@ -80,11 +81,11 @@ sub _validate_with_plugin {
     }
 
     if (scalar(@seedlots_missing) > 0) {
-        push @error_messages, "The following seedlots are not in the database: ".join(',',@seedlots_missing);
+        push @error_messages, ($self->i18n ? $self->i18n->p('seedlots.parse.missing_seedlots', 'The following seedlots are not in the database: %{names}', {names => join(',', @seedlots_missing)}) : "The following seedlots are not in the database: ".join(',',@seedlots_missing));
     }
 
     if (scalar(@seedlots_discarded) > 0) {
-        push @error_messages, "The following seedlots are marked as DISCARDED: ".join(',',@seedlots_discarded);
+        push @error_messages, ($self->i18n ? $self->i18n->p('seedlots.parse.discarded_seedlots', 'The following seedlots are marked as %{status}: %{names}', {status => 'DISCARDED', names => join(',', @seedlots_discarded)}) : "The following seedlots are marked as DISCARDED: ".join(',',@seedlots_discarded));
     }
 
     if (scalar(@error_messages) >= 1) {

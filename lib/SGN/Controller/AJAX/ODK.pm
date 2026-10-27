@@ -60,7 +60,7 @@ sub get_phenotyping_data_GET {
         }
 
     } else {
-        $c->stash->{rest} = { error => 'Error: We only support SMAP as an ODK phenotyping service for now.' };
+        $c->stash->{rest} = { error => $c->i18n->p('odk.server.phenotyping_service_smap_only', 'Error: We only support SMAP as an ODK phenotyping service for now.') };
         $c->detach();
     }
     $c->stash->{rest} = { success => 1 };
@@ -83,7 +83,7 @@ sub get_crossing_available_forms_GET {
         my $dbh = $c->dbc->dbh;
         my @user_info = CXGN::Login->new($dbh)->query_from_cookie($session_id);
         if (!$user_info[0]){
-            $c->stash->{rest} = {error=>'You must be logged in to look at ONA forms!'};
+            $c->stash->{rest} = {error=>$c->i18n->p('odk.server.login_forms_required', 'You must be logged in to look at ONA forms!')};
             $c->detach();
         }
         $user_id = $user_info[0];
@@ -92,7 +92,7 @@ sub get_crossing_available_forms_GET {
         $user_name = $p->get_username;
     } else{
         if (!$c->user){
-            $c->stash->{rest} = {error=>'You must be logged in to look at ONA forms!'};
+            $c->stash->{rest} = {error=>$c->i18n->p('odk.server.login_forms_required', 'You must be logged in to look at ONA forms!')};
             $c->detach();
         }
         $user_id = $c->user()->get_object()->get_sp_person_id();
@@ -116,6 +116,18 @@ sub get_crossing_available_forms_GET {
     $c->stash->{rest} = { success => 1, forms=>$message_hash };
 }
 
+# These four literals are produced by save_ona_cross_info itself. Preserve any
+# unknown/vendor error unchanged; business libraries keep their English API.
+sub _odk_crossing_error_message {
+    my ($c, $error) = @_;
+    return $error if !defined($error) || ref($error);
+    return $c->i18n->p('odk.server.crosses_validation_failed', 'Error validating crosses') if $error eq 'Error validating crosses';
+    return $c->i18n->p('odk.server.crosses_save_failed', 'Error saving crosses') if $error eq 'Error saving crosses';
+    return $c->i18n->p('odk.server.progenies_save_failed', 'Error saving progenies') if $error eq 'Error saving progenies';
+    return $c->i18n->p('odk.server.ona_connection_failed', 'Could not connect to ONA') if $error eq 'Could not connect to ONA';
+    return $error;
+}
+
 sub get_crossing_data : Path('/ajax/odk/get_crossing_data') : ActionClass('REST') { }
 
 sub get_crossing_data_GET {
@@ -130,7 +142,7 @@ sub get_crossing_data_GET {
         my $dbh = $c->dbc->dbh;
         my @user_info = CXGN::Login->new($dbh)->query_from_cookie($session_id);
         if (!$user_info[0]){
-            $c->stash->{rest} = {error=>'You must be logged in to request ODK crossing data import!'};
+            $c->stash->{rest} = {error=>$c->i18n->p('odk.server.login_import_required', 'You must be logged in to request ODK crossing data import!')};
             $c->detach();
         }
         $user_id = $user_info[0];
@@ -139,7 +151,7 @@ sub get_crossing_data_GET {
         $user_name = $p->get_username;
     } else{
         if (!$c->user){
-            $c->stash->{rest} = {error=>'You must be logged in to request ODK crossing data import!'};
+            $c->stash->{rest} = {error=>$c->i18n->p('odk.server.login_import_required', 'You must be logged in to request ODK crossing data import!')};
             $c->detach();
         }
         $user_id = $c->user()->get_object()->get_sp_person_id();
@@ -180,14 +192,14 @@ sub get_crossing_data_GET {
     if ($odk_crossing_data_service_name eq 'ONA'){
         my $result = $odk_crosses->save_ona_cross_info($c);
         if ($result->{error}){
-            $c->stash->{rest} = { error => $result->{error} };
+            $c->stash->{rest} = { error => _odk_crossing_error_message($c, $result->{error}) };
             $c->detach();
         } elsif ($result->{success}){
             $c->stash->{rest} = { success => 1 };
             $c->detach();
         }
     } else {
-        $c->stash->{rest} = { error => 'Error: We only support ONA as an ODK crossing service for now.' };
+        $c->stash->{rest} = { error => $c->i18n->p('odk.server.crossing_service_ona_only', 'Error: We only support ONA as an ODK crossing service for now.') };
         $c->detach();
     }
 }
@@ -197,7 +209,7 @@ sub schedule_get_crossing_data : Path('/ajax/odk/schedule_get_crossing_data') : 
 sub schedule_get_crossing_data_GET {
     my ( $self, $c ) = @_;
     if ($c->config->{production_server}){
-        $c->stash->{rest} = { error=>'Please use contact form. Currently this cannot be set through the website.' };
+        $c->stash->{rest} = { error=>$c->i18n->p('odk.server.scheduling_contact_required', 'Please use contact form. Currently this cannot be set through the website.') };
         $c->detach();
     }
     my $form_id = $c->req->param('form_id');
@@ -210,7 +222,7 @@ sub schedule_get_crossing_data_GET {
         my $dbh = $c->dbc->dbh;
         my @user_info = CXGN::Login->new($dbh)->query_from_cookie($session_id);
         if (!$user_info[0]){
-            $c->stash->{rest} = {error=>'You must be logged in to schedule ODK crossing data import!'};
+            $c->stash->{rest} = {error=>$c->i18n->p('odk.server.login_schedule_required', 'You must be logged in to schedule ODK crossing data import!')};
             $c->detach();
         }
         $user_id = $user_info[0];
@@ -219,7 +231,7 @@ sub schedule_get_crossing_data_GET {
         $user_name = $p->get_username;
     } else{
         if (!$c->user){
-            $c->stash->{rest} = {error=>'You must be logged in to schedule ODK crossing data import!'};
+            $c->stash->{rest} = {error=>$c->i18n->p('odk.server.login_schedule_required', 'You must be logged in to schedule ODK crossing data import!')};
             $c->detach();
         }
         $user_id = $c->user()->get_object()->get_sp_person_id();
@@ -292,7 +304,7 @@ sub get_crossing_data_cronjobs_GET {
         my $dbh = $c->dbc->dbh;
         my @user_info = CXGN::Login->new($dbh)->query_from_cookie($session_id);
         if (!$user_info[0]){
-            $c->stash->{rest} = {error=>'You must be logged in to see scheduled ODK crossing data import!'};
+            $c->stash->{rest} = {error=>$c->i18n->p('odk.server.login_schedule_list_required', 'You must be logged in to see scheduled ODK crossing data import!')};
             $c->detach();
         }
         $user_id = $user_info[0];
@@ -301,7 +313,7 @@ sub get_crossing_data_cronjobs_GET {
         $user_name = $p->get_username;
     } else{
         if (!$c->user){
-            $c->stash->{rest} = {error=>'You must be logged in to see scheduled ODK crossing data import!'};
+            $c->stash->{rest} = {error=>$c->i18n->p('odk.server.login_schedule_list_required', 'You must be logged in to see scheduled ODK crossing data import!')};
             $c->detach();
         }
         $user_id = $c->user()->get_object()->get_sp_person_id();
@@ -339,7 +351,7 @@ sub get_crossing_available_wishlists_GET {
         my $dbh = $c->dbc->dbh;
         my @user_info = CXGN::Login->new($dbh)->query_from_cookie($session_id);
         if (!$user_info[0]){
-            $c->stash->{rest} = {error=>'You must be logged in to see ODK cross wishlists!'};
+            $c->stash->{rest} = {error=>$c->i18n->p('odk.server.login_wishlists_required', 'You must be logged in to see ODK cross wishlists!')};
             $c->detach();
         }
         $user_id = $user_info[0];
@@ -348,7 +360,7 @@ sub get_crossing_available_wishlists_GET {
         $user_name = $p->get_username;
     } else{
         if (!$c->user){
-            $c->stash->{rest} = {error=>'You must be logged in to see ODK cross wishlists!'};
+            $c->stash->{rest} = {error=>$c->i18n->p('odk.server.login_wishlists_required', 'You must be logged in to see ODK cross wishlists!')};
             $c->detach();
         }
         $user_id = $c->user()->get_object()->get_sp_person_id();
@@ -384,7 +396,7 @@ sub get_odk_cross_progress_cached_GET {
         my $dbh = $c->dbc->dbh;
         my @user_info = CXGN::Login->new($dbh)->query_from_cookie($session_id);
         if (!$user_info[0]){
-            $c->stash->{rest} = {error=>'You must be logged in to see ODK crossing data progress!'};
+            $c->stash->{rest} = {error=>$c->i18n->p('odk.server.login_progress_required', 'You must be logged in to see ODK crossing data progress!')};
             $c->detach();
         }
         $user_id = $user_info[0];
@@ -393,7 +405,7 @@ sub get_odk_cross_progress_cached_GET {
         $user_name = $p->get_username;
     } else{
         if (!$c->user){
-            $c->stash->{rest} = {error=>'You must be logged in to see ODK crossing data progress!'};
+            $c->stash->{rest} = {error=>$c->i18n->p('odk.server.login_progress_required', 'You must be logged in to see ODK crossing data progress!')};
             $c->detach();
         }
         $user_id = $c->user()->get_object()->get_sp_person_id();
@@ -411,7 +423,7 @@ sub get_odk_cross_progress_cached_GET {
     my $filename = $dir."/ona_odk_cross_progress_top_level_json_html_".$ona_form_id.".txt";
     print STDERR "Opening $filename \n";
     my $json;
-    open(my $fh, '< ":encoding(UTF-8)', $filename) or warn "cannot open file $filename";
+    open(my $fh, '<:raw', $filename) or warn "cannot open file $filename";
     {
         local $/;
         my $line = <$fh>;
@@ -428,7 +440,7 @@ sub get_odk_cross_progress_cached_GET {
         $filename = $dir."/ona_odk_cross_progress_top_level_contents_html_".$ona_form_id.".txt";
         print STDERR "Opening $filename \n";
         my $top_level_contents;
-        open(my $fh, '< :encoding(UTF-8)', $filename) or warn "cannot open file $filename";
+        open(my $fh, '<:raw', $filename) or warn "cannot open file $filename";
         {
             local $/;
             my $line = <$fh>;
@@ -455,7 +467,7 @@ sub get_odk_cross_summary_cached_GET {
         my $dbh = $c->dbc->dbh;
         my @user_info = CXGN::Login->new($dbh)->query_from_cookie($session_id);
         if (!$user_info[0]){
-            $c->stash->{rest} = {error=>'You must be logged in to see ODK crossing data progress!'};
+            $c->stash->{rest} = {error=>$c->i18n->p('odk.server.login_progress_required', 'You must be logged in to see ODK crossing data progress!')};
             $c->detach();
         }
         $user_id = $user_info[0];
@@ -464,7 +476,7 @@ sub get_odk_cross_summary_cached_GET {
         $user_name = $p->get_username;
     } else{
         if (!$c->user){
-            $c->stash->{rest} = {error=>'You must be logged in to see ODK crossing data progress!'};
+            $c->stash->{rest} = {error=>$c->i18n->p('odk.server.login_progress_required', 'You must be logged in to see ODK crossing data progress!')};
             $c->detach();
         }
         $user_id = $c->user()->get_object()->get_sp_person_id();
@@ -482,7 +494,7 @@ sub get_odk_cross_summary_cached_GET {
     my $filename = $dir."/ona_odk_cross_progress_summary_info_html_".$ona_form_id.".txt";
     print STDERR "Opening $filename \n";
     my $summary;
-    open(my $fh, '< :encoding(UTF-8)', $filename) or warn "cannot open file $filename";
+    open(my $fh, '<:raw', $filename) or warn "cannot open file $filename";
     {
         local $/;
         my $line = <$fh>;
@@ -492,7 +504,7 @@ sub get_odk_cross_summary_cached_GET {
     $filename = $dir."/ona_odk_cross_progress_summary_plant_status_info_html_".$ona_form_id.".txt";
     print STDERR "Opening $filename \n";
     my $plant_status_summary;
-    open($fh, '< :encoding(UTF-8)', $filename) or warn "cannot open file $filename";
+    open($fh, '<:raw', $filename) or warn "cannot open file $filename";
     {
         local $/;
         my $line = <$fh>;
@@ -516,7 +528,7 @@ sub get_crossing_saved_ona_forms_GET {
         my $dbh = $c->dbc->dbh;
         my @user_info = CXGN::Login->new($dbh)->query_from_cookie($session_id);
         if (!$user_info[0]){
-            $c->stash->{rest} = {error=>'You must be logged in to see your saved odk ona forms!'};
+            $c->stash->{rest} = {error=>$c->i18n->p('odk.server.login_saved_forms_required', 'You must be logged in to see your saved odk ona forms!')};
             $c->detach();
         }
         $user_id = $user_info[0];
@@ -525,7 +537,7 @@ sub get_crossing_saved_ona_forms_GET {
         $user_name = $p->get_username;
     } else{
         if (!$c->user){
-            $c->stash->{rest} = {error=>'You must be logged in to see your saved odk ona forms!'};
+            $c->stash->{rest} = {error=>$c->i18n->p('odk.server.login_saved_forms_required', 'You must be logged in to see your saved odk ona forms!')};
             $c->detach();
         }
         $user_id = $c->user()->get_object()->get_sp_person_id();

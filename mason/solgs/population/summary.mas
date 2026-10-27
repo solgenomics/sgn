@@ -1,3 +1,7 @@
+<%once>
+use HTML::Entities ();
+</%once>
+
 <%doc>
 
 =head1 NAME
@@ -42,11 +46,11 @@ $owner = 'NA' if !$owner;
 $training_pop_url = $training_pop_name if !$training_pop_url;
 my $pop_desc = $selection_pop_desc ? $selection_pop_desc : $training_pop_desc;
 my $pop_name = $selection_pop_name ? $selection_pop_name : $training_pop_url;
-my @data_c1 = (['Name', $pop_name],  ['Description', $pop_desc], ['Owner', $owner], ['Trial detail page', $trial_detail_page]);
-my @data_c2 = (['No. of lines', $stocks_no],  ['No. of markers', $markers_no], ['Genotyping version', $protocol_url]);
+my @data_c1 = ([HTML::Entities::encode_entities($c->i18n->p("global.library_search.name", "Name")), $pop_name],  [HTML::Entities::encode_entities($c->i18n->p("global.dataset_cxgn_dataset.table.description", "Description")), $pop_desc], [HTML::Entities::encode_entities($c->i18n->p("global.search.datasets.owner", "Owner")), $owner], [HTML::Entities::encode_entities($c->i18n->p("solgs.interface.trial_detail_page", "Trial detail page")), $trial_detail_page]);
+my @data_c2 = ([HTML::Entities::encode_entities($c->i18n->p("accession.population_cgi.lines", "No. of lines")), $stocks_no],  [HTML::Entities::encode_entities($c->i18n->p("solgs.interface.no_of_markers", "No. of markers")), $markers_no], [HTML::Entities::encode_entities($c->i18n->p("solgs.interface.genotyping_version", "Genotyping version")), $protocol_url]);
 
-push @data_c2,  ['No. of traits', $traits_no] if $traits_no > 1;
-push @data_c2,  ['Training model', $model_page_url] if $model_page_url;
+push @data_c2,  [HTML::Entities::encode_entities($c->i18n->p("analysis.qtl.ui.no_of_traits", "No. of traits")), $traits_no] if $traits_no > 1;
+push @data_c2,  [HTML::Entities::encode_entities($c->i18n->p("solgs.interface.training_model", "Training model")), $model_page_url] if $model_page_url;
 
 </%perl>
 

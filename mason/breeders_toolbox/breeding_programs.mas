@@ -1,3 +1,6 @@
+<%once>
+use HTML::Entities ();
+</%once>
 
 <%args>
 $breeding_programs
@@ -11,7 +14,7 @@ if ($user && $user->check_roles("curator")) {
 }
 </%perl>
 
-<& /page/page_title.mas, title=>"Manage Breeding Programs" &>
+<& /page/page_title.mas, title => HTML::Entities::encode_entities($c->i18n->p("program.programs.page_title", "Manage Breeding Programs")) &>
 
 <div class="container-fluid">
 <hr>
@@ -21,8 +24,12 @@ if ($user && $user->check_roles("curator")) {
     <tr>
 
     <%perl>
-      if ($curator_flag) { print "<th>Name</th><th>Info</th><th>Edit</th><th>Delete</th>"; }
-        else { print "<th>Name</th><th>Info</th>"; }
+      my $program_name_header = HTML::Entities::encode_entities($c->i18n->p("program.programs.header.name", "Name"));
+      my $program_info_header = HTML::Entities::encode_entities($c->i18n->p("program.programs.header.info", "Info"));
+      my $program_edit_header = HTML::Entities::encode_entities($c->i18n->p("program.programs.header.edit", "Edit"));
+      my $program_delete_header = HTML::Entities::encode_entities($c->i18n->p("program.programs.header.delete", "Delete"));
+      if ($curator_flag) { print "<th>$program_name_header</th><th>$program_info_header</th><th>$program_edit_header</th><th>$program_delete_header</th>"; }
+        else { print "<th>$program_name_header</th><th>$program_info_header</th>"; }
     </%perl>
 
     </tr>
@@ -35,8 +42,10 @@ if ($user && $user->check_roles("curator")) {
         print "<tr><td><b><a href=\"/breeders/program/$bp->[0]\" >$bp->[1]</a></b></td><td>$bp->[2]</td>";
 
   	if ($curator_flag) {
-      print "<td><a title=\"edit this breeding program\" id=\"edit_breeding_program_link\_".$bp->[1]."\" href=\"javascript:edit_breeding_program($bp->[0],'$bp->[1]','$bp->[2]')\" ><span class=\"glyphicon glyphicon-pencil\"></span></a></td>";
-	  print "<td><a title=\"delete this breeding program\" id=\"delete_breeding_program_link\_".$bp->[1]."\" href=\"javascript:delete_breeding_program($bp->[0],'$bp->[1]')\" ><font color=\"red\">X</font></a></td></tr>";
+      my $edit_title = HTML::Entities::encode_entities($c->i18n->p("program.programs.edit_tooltip", "edit this breeding program"));
+      my $delete_title = HTML::Entities::encode_entities($c->i18n->p("program.programs.delete_tooltip", "delete this breeding program"));
+      print "<td><a title=\"$edit_title\" id=\"edit_breeding_program_link\_".$bp->[1]."\" href=\"javascript:edit_breeding_program($bp->[0],'$bp->[1]','$bp->[2]')\" ><span class=\"glyphicon glyphicon-pencil\"></span></a></td>";
+	  print "<td><a title=\"$delete_title\" id=\"delete_breeding_program_link\_".$bp->[1]."\" href=\"javascript:delete_breeding_program($bp->[0],'$bp->[1]')\" ><font color=\"red\">X</font></a></td></tr>";
 	} else {
 	  print "</tr>";
 	}
@@ -47,7 +56,7 @@ if ($user && $user->check_roles("curator")) {
 </table>
 
 <br/>
-<button type="button" class="btn btn-primary" name="new_breeding_program_link" id="new_breeding_program_link">Add New Program</button>
+<button type="button" class="btn btn-primary" name="new_breeding_program_link" id="new_breeding_program_link"><% $c->i18n->p("program.programs.add_new", "Add New Program") |h %></button>
 
 </div>
 
@@ -57,21 +66,21 @@ if ($user && $user->check_roles("curator")) {
   <div class="modal-dialog" role="document">
     <div class="modal-content">
       <div class="modal-header">
-        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-        <h4 class="modal-title" id="addBreedingProgramDialog">Store Breeding Program Details</h4>
+        <button type="button" class="close" data-dismiss="modal" aria-label="<% $c->i18n->p("folder.ui.close", "Close") |h %>"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title" id="addBreedingProgramDialog"><% $c->i18n->p("program.programs.store_details", "Store Breeding Program Details") |h %></h4>
       </div>
       <div class="modal-body">
         <div class="container-fluid">
 	  <form class="form-horizontal" role="form" name="store_breeding_program_form" id="store_breeding_program_form">
         <div class="form-group" id="store_breeding_program_id" style="display: none"></div>
 	    <div class="form-group">
-      	      <label class="col-sm-2 control-label">Name: </label>
+		<label class="col-sm-2 control-label"><% $c->i18n->p("program.programs.name_label", "Name: ") |h %></label>
       	      <div class="col-sm-10">
 		<input class="form-control" name="store_breeding_program_name" id="store_breeding_program_name" type="text" />
               </div>
 	    </div>
 	    <div class="form-group">
-      	      <label class="col-sm-2 control-label">Description: </label>
+		<label class="col-sm-2 control-label"><% $c->i18n->p("program.programs.description_label", "Description: ") |h %></label>
       	      <div class="col-sm-10">
 		<input class="form-control" name="store_breeding_program_desc" id="store_breeding_program_desc" type="text" />
               </div>
@@ -80,8 +89,8 @@ if ($user && $user->check_roles("curator")) {
         </div>
       </div>
       <div class="modal-footer">
-        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-        <button type="button" class="btn btn-primary" name="store_breeding_program_submit" id="store_breeding_program_submit">Store Breeding Program Details</button>
+        <button type="button" class="btn btn-default" data-dismiss="modal"><% $c->i18n->p("folder.ui.close", "Close") |h %></button>
+        <button type="button" class="btn btn-primary" name="store_breeding_program_submit" id="store_breeding_program_submit"><% $c->i18n->p("program.programs.store_details", "Store Breeding Program Details") |h %></button>
       </div>
     </div>
   </div>
@@ -104,7 +113,7 @@ jQuery(document).ready(function() {
       var desc = jQuery('#store_breeding_program_desc').val();
       name = name.trim();
       if ( (name === '') || (desc === '')) {
-          alert("Please enter a name and a description.");
+          alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("program.programs.validation.name_description", "Please enter a name and a description.") : "Please enter a name and a description."));
           return;
       }
       // console.log("Name is "+name+" and desc is: "+desc);
@@ -122,7 +131,7 @@ jQuery(document).ready(function() {
               location.reload();
           },
           error: function(response) {
-              alert("An error occurred."+ response.responseText);
+              alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("program.programs.error.details", "An error occurred.%{details}", {details: String(response.responseText)}) : "An error occurred."+ response.responseText));
               jQuery('#working').dialog("close");
           }
       });
@@ -141,11 +150,11 @@ function edit_breeding_program(program_id, program_name, program_description) {
 
 
 function delete_breeding_program(program_id, program_name) {
-   if (confirm("Delete breeding program "+program_name+"? The associated trials will not be deleted, but be listed under 'Other'")) {
+   if (confirm((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("program.programs.confirm.delete", "Delete breeding program %{name}? The associated trials will not be deleted, but be listed under 'Other'", {name: String(program_name)}) : "Delete breeding program "+program_name+"? The associated trials will not be deleted, but be listed under 'Other'"))) {
       jQuery.ajax( {
         url: '/breeders/program/delete/'+program_id,
         error: function(response) {
-        alert("An error occurred.");
+        alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("program.programs.error.generic", "An error occurred.") : "An error occurred."));
       },
       success: function(response) {
         if (response.error) {

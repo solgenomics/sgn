@@ -3,6 +3,8 @@
 package SGN::Controller::AJAX::Analyze::Phenotypes;
 
 use Moose;
+use SGN::I18N ();
+use HTML::Entities ();
 
 use strict;
 use warnings;
@@ -24,6 +26,7 @@ __PACKAGE__->config(
 sub analyze_trial_phenotypes : Path('/analyze/phenotypes/trials') Args(0) {
   my $self = shift;
   my $c = shift;
+    my SGN::I18N $ui_analyze_trial_phenotypes_i18n = SGN::I18N::translate($c);
   my $schema = $c->dbic_schema("Bio::Chado::Schema", "sgn_chado");
   my $trial_design = $c->req->param("trial_design");
   my $analysis_type = $c->req->param("analysis_type");
@@ -96,7 +99,7 @@ sub analyze_trial_phenotypes : Path('/analyze/phenotypes/trials') Args(0) {
     return;
   }
   else {
-    $c->stash->{rest} = { error => "Error in R script R/Anova.R"};
+    $c->stash->{rest} = { error => ("" . SGN::I18N::translate($ui_analyze_trial_phenotypes_i18n, "phenotype.root.error_in_r_script_r_anova_r", "Error in R script R/Anova.R", undef, { entities => '<>&', decode => 1 }) . "")};
     return;
   }
 }

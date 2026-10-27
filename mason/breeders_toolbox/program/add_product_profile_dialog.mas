@@ -7,40 +7,40 @@ $program_name
     <div class="modal-dialog modal-lg" role="document">
         <div class="modal-content">
             <div class="modal-header" style="text-align: center">
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                <h4 class="modal-title" id="addProductProfileDialog">Add Product Profile</h4>
+                <button type="button" class="close" data-dismiss="modal" aria-label="<% $c->i18n->p("folder.ui.close", "Close") |h %>"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="addProductProfileDialog"><% $c->i18n->p("program.product_profile.add_title", "Add Product Profile") |h %></h4>
             </div>
             <div class="modal-body">
                 <div class="container-fluid">
                     <form class="form-horizontal" role="form">
                         <div class="form-group">
-                            <label class="col-sm-3 control-label">Breeding Program: </label>
+                            <label class="col-sm-3 control-label"><% $c->i18n->p("cross.ui.breeding_program.2c9b17e", "Breeding Program:") |h %> </label>
                             <div class="col-sm-9">
                                 <input class="form-control" name="profile_program_name" id="profile_program_name" disabled value="<% $program_name %>">
                                 <input name="profile_program_id" id="profile_program_id" type="hidden" value="<% $program_id %>">
                             </div>
                         </div><br/><br/>
                         <div class="form-group">
-                            <label class="col-sm-3 control-label">Product Profile Name: </label>
+                            <label class="col-sm-3 control-label"><% $c->i18n->p("program.product_profile.name_label", "Product Profile Name: ") |h %></label>
                             <div class="col-sm-9">
                                 <input class="form-control" id="new_product_profile_name" name="new_product_profile_name" type="text"/>
                             </div>
                         </div><br/><br/>
                         <div class="form-group">
-                            <label class="col-sm-3 control-label">Scope: </label>
+                            <label class="col-sm-3 control-label"><% $c->i18n->p("program.product_profile.scope_label", "Scope: ") |h %></label>
                             <div class="col-sm-9">
                                 <input class="form-control" id="new_product_profile_scope" name="new_product_profile_scope" type="text"/>
                             </div>
                         </div><br/><br/>
                         <div class="form-group">
-                            <label class="col-sm-3 control-label" for="select_list_list_selectxx">Select a List of Traits: </label>
+                            <label class="col-sm-3 control-label" for="select_list_list_selectxx"><% $c->i18n->p("program.product_profile.trait_list", "Select a List of Traits: ") |h %></label>
                             <div class="col-sm-9">
                                 <span id="select_list_div"></span>
                             </div>
                         </div>
                         <div class="form-group form-group-sm" id="target_value_section" style="display: none" >
                             <hr>
-                            <center><h4>Add Target Value:</h4></center>
+                            <center><h4><% $c->i18n->p("program.product_profile.target_value", "Add Target Value:") |h %></h4></center>
                             <div id="target_value_for_trait" >
                             </div>
                         </div
@@ -48,8 +48,8 @@ $program_name
                 </div>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-info" id="submit_new_profile" >Submit</button>
-                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-info" id="submit_new_profile" ><% $c->i18n->p("trial.repetitive.submit", "Submit") |h %></button>
+                <button type="button" class="btn btn-default" data-dismiss="modal"><% $c->i18n->p("folder.ui.close", "Close") |h %></button>
             </div>
         </div>
     </div>
@@ -87,17 +87,17 @@ jQuery(document).ready(function () {
         trait_list_json = JSON.stringify(trait_list);
 
         if (product_profile_name === '') {
-            alert("Please supply a product profile name");
+            alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("program.product_profile.required_name", "Please supply a product profile name") : "Please supply a product profile name"));
             return;
         }
 
         if (product_profile_scope === '') {
-            alert("Please supply a product profile scope");
+            alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("program.product_profile.required_scope", "Please supply a product profile scope") : "Please supply a product profile scope"));
             return;
         }
 
         if (trait_list_id === '') {
-            alert("Please select a trait list");
+            alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("program.product_profile.required_trait_list", "Please select a trait list") : "Please select a trait list"));
             return;
         }
 
@@ -125,17 +125,17 @@ jQuery(document).ready(function () {
                 jQuery("#working_modal").modal("show");
             },
             error: function(response) {
-                alert("An error occurred. Please try again later!" + JSON.stringify(response));
+                alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("program.product_profile.network_error", "An error occurred. Please try again later!%{details}", {details: String(JSON.stringify(response))}) : "An error occurred. Please try again later!" + JSON.stringify(response)));
             },
             parseerror: function(response) {
-                alert("A parse error occurred. Please try again." + response);
+                alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("program.product_profile.parse_error", "A parse error occurred. Please try again.%{details}", {details: String(response)}) : "A parse error occurred. Please try again." + response));
             },
             success: function(response) {
                 jQuery("#working_modal").modal("hide");
                 if (response.error) {
                     alert(response.error);
                 } else {
-                    alert('The product profile was saved successfully.');
+                    alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("program.product_profile.saved", "The product profile was saved successfully.") : "The product profile was saved successfully."));
                 }
             },
 

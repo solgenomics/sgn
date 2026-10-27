@@ -37,7 +37,7 @@ sub get_data : Path('/ajax/breeder/search') Args(0) {
   foreach my $select (@criteria_list) { #ensure criteria list arguments are one of the possible categories
     chomp($select);
     if (! any { $select eq $_ } ('accessions', 'accessions_ids','organisms','breeding_programs', 'genotyping_protocols', 'genotyping_projects', 'locations', 'plants', 'plots', 'subplots','tissue_sample','seedlots', 'populations', 'trait_components', 'traits', 'trials', 'trial_designs', 'trial_types', 'years', 'protocols', 'instances', undef)) {
-      $error = "Valid keys are accessions, organisms, breeding_programs, genotyping_protocols, genotyping_projects, locations, plants, plots, subplots,tissue_sample, seedlots, trait_components, traits, trials, trial_designs, trial_types and years or undef";
+      $error = $c->i18n->p('global.wizard.valid_keys', 'Valid keys are %{keys} and %{last_key} or undef', {keys => 'accessions, organisms, breeding_programs, genotyping_protocols, genotyping_projects, locations, plants, plots, subplots,tissue_sample, seedlots, trait_components, traits, trials, trial_designs, trial_types', last_key => 'years'});
       $c->stash->{rest} = { error => $error };
       return;
     }
@@ -47,7 +47,7 @@ sub get_data : Path('/ajax/breeder/search') Args(0) {
   foreach my $binary_number (@querytypes) {# ensure querytype arguments are 0 or 1
     chomp($binary_number);
     if ( $binary_number < 0 || $binary_number > 1 ) {
-      $error = "Valid querytypes are '1' for intersect or '0' for union or between 0 and 1 for percent match";
+      $error = $c->i18n->p('global.wizard.valid_querytypes_are_1_for_intersect_or_0_for_union_or_between_0_and_1', 'Valid querytypes are \'1\' for intersect or \'0\' for union or between 0 and 1 for percent match');
       $c->stash->{rest} = { error => $error };
       return;
     }
@@ -63,7 +63,7 @@ sub get_data : Path('/ajax/breeder/search') Args(0) {
       print STDERR "Validating dataref ids\n";
       for (my $i=0; $i<@data; $i++) { # ensure dataref arguements (ids) are numeric
         if (m/\D/) {
-          $error = "Valid values for dataref are numeric ids";
+          $error = $c->i18n->p('global.wizard.valid_values_for_dataref_are_numeric_ids', 'Valid values for dataref are numeric ids');
           $c->stash->{rest} = { error => $error };
           return;
         }
@@ -77,7 +77,7 @@ sub get_data : Path('/ajax/breeder/search') Args(0) {
 
   my $dbh = $c->dbc->dbh();
   my $bs = CXGN::BreederSearch->new( { dbh=>$dbh } );
-  my $status = $bs->test_matviews($c->config->{dbhost}, $c->config->{dbname}, $c->config->{dbuser}, $c->config->{dbpass});
+  my $status = $bs->test_matviews($c->config->{dbhost}, $c->config->{dbname}, $c->config->{dbuser}, $c->config->{dbpass}, $c->i18n);
   if ($status->{'error'}) {
       $c->stash->{rest} = { error => $status->{'error'}};
       return;
@@ -93,11 +93,11 @@ sub get_data : Path('/ajax/breeder/search') Args(0) {
 ##    return;
 ##  }
   if (@results >= 10_000) {
-    $c->stash->{rest} = { list => \@results, message => 'Over 10,000 matches. Speeds may be affected, consider narrowing your search' };
+    $c->stash->{rest} = { list => \@results, message => $c->i18n->p('global.wizard.over_10_000_matches_speeds_may_be_affected_consider_narrowing_your_sea', 'Over 10,000 matches. Speeds may be affected, consider narrowing your search') };
     return;
   }
   elsif (@results < 1) {
-    $c->stash->{rest} = { list => \@results, message => scalar(@results).' matches. Nothing to display' };
+    $c->stash->{rest} = { list => \@results, message => $c->i18n->p('global.wizard.nothing_to_display', '%{count} matches. Nothing to display', {count => scalar(@results)}) };
     return;
   }
   else {
@@ -186,7 +186,7 @@ sub refresh_matviews : Path('/ajax/breeder/refresh') Args(0) {
 
   my $dbh = $c->dbc->dbh();
   my $bs = CXGN::BreederSearch->new( { dbh=>$dbh, dbname=>$c->config->{dbname}, } );
-  my $refresh = $bs->refresh_matviews($c->config->{dbhost}, $c->config->{dbname}, $c->config->{dbuser}, $c->config->{dbpass}, $matviews, 'concurrent', $c->config->{basepath});
+  my $refresh = $bs->refresh_matviews($c->config->{dbhost}, $c->config->{dbname}, $c->config->{dbuser}, $c->config->{dbpass}, $matviews, 'concurrent', $c->config->{basepath}, undef, $c->i18n);
 
   if ($refresh->{error}) {
     print STDERR "Returning with error . . .\n";
@@ -206,7 +206,7 @@ sub check_status : Path('/ajax/breeder/check_status') Args(0) {
   my $dbh = $c->dbc->dbh();
 
   my $bs = CXGN::BreederSearch->new( { dbh=>$dbh } );
-  my $status = $bs->matviews_status();
+  my $status = $bs->matviews_status($c->i18n);
 
   if ($status->{refreshing}) {
     $c->stash->{rest} = { refreshing => $status->{'refreshing'} };

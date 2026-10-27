@@ -12,7 +12,7 @@ $user_role => undef
 $default_seedlot_material_type => undef
 </%args>
 
-<& /page/page_title.mas, title=>"Available Seedlots" &>
+<& /page/page_title.mas, title=>HTML::Entities::encode_entities($c->i18n->p('seedlots.ui.available_seedlots', 'Available Seedlots')) &>
 
 <style>
 .ui-autocomplete {
@@ -22,29 +22,29 @@ $default_seedlot_material_type => undef
 
   <& /util/import_javascript.mas, classes => [ 'bootstrap_min.js', 'jquery.iframe-post-form','CXGN.List','CXGN.BreedersToolbox.Accessions', 'CXGN.BreedersToolbox.UploadPedigrees', 'jquery', 'jquery.dataTables', 'CXGN.BreedersToolbox.Crosses', 'jqueryui' ] &>
 
-<&| /page/info_section.mas, title=>"About Seedlots",  collapsible => 1, collapsed=>1 &>
+<&| /page/info_section.mas, anchor_title => "About Seedlots", title=>HTML::Entities::encode_entities($c->i18n->p('seedlots.ui.about_seedlots', 'About Seedlots')),  collapsible => 1, collapsed=>1 &>
     <div class="well well-sm">
         <div class="panel panel-default">
             <div class="panel-body">
-                <b><p>What are seedlots?</p></b>
+                <b><p><% $c->i18n->p('seedlots.ui.what_are_seedlots', 'What are seedlots?') |h %></p></b>
                 <ul>
-                <li>Seedlots represent physical plant materials in packets/containers.</li>
-                <li>Plant material can be seed, root, clone, plant, tissue culture or gametophyte.</li>
-                <li>If you would like to set a default material type for seedlots, please contact us.</li>
-                <li>These materials can be from crosses or for named accessions.</li>
-                <li>Seedlots can have a specific location, box, weight(g), and count.</li>
-                <li>Plant material can be transferred into and out of a seedlot. Such as from a seedlot into a plot.</li>
-                <li>Seedlots can belong to breeding programs and organizations.</li>
+                <li><% $c->i18n->p('seedlots.ui.seedlots_represent_physical_plant_materials_in_packets_container', 'Seedlots represent physical plant materials in packets/containers.') |h %></li>
+                <li><% $c->i18n->p('seedlots.ui.plant_material_can_be_seed_root_clone_plant_tissue_culture_or_ga', 'Plant material can be seed, root, clone, plant, tissue culture or gametophyte.') |h %></li>
+                <li><% $c->i18n->p('seedlots.ui.if_you_would_like_to_set_a_default_material_type_for_seedlots_pl', 'If you would like to set a default material type for seedlots, please contact us.') |h %></li>
+                <li><% $c->i18n->p('seedlots.ui.these_materials_can_be_from_crosses_or_for_named_accessions', 'These materials can be from crosses or for named accessions.') |h %></li>
+                <li><% $c->i18n->p('seedlots.ui.seedlots_can_have_a_specific_location_box_column_weight_g_and_co', 'Seedlots can have a specific location, box, %{column_weight_g}, and count.', {column_weight_g => 'weight(g)'}) |h %></li>
+                <li><% $c->i18n->p('seedlots.ui.plant_material_can_be_transferred_into_and_out_of_a_seedlot_such', 'Plant material can be transferred into and out of a seedlot. Such as from a seedlot into a plot.') |h %></li>
+                <li><% $c->i18n->p('seedlots.ui.seedlots_can_belong_to_breeding_programs_and_organizations', 'Seedlots can belong to breeding programs and organizations.') |h %></li>
                 </ul>
 
-                <b><p>How do I inventory my seed?</p></b>
+                <b><p><% $c->i18n->p('seedlots.ui.how_do_i_inventory_my_seed', 'How do I inventory my seed?') |h %></p></b>
                 <ul>
-                <li>Make sure your seedlots are in the database. Use "Add New Seedlot" to add a single seedlot or "Upload New Seedlots" to add many.</li>
-                <li>Make sure your seedlots are barcoded. You can print these barcodes from the database.</li>
-                <li>The inventory app is currently not available but you can continue using it if it is installed on your tablet device.
+                <li><% $c->i18n->p('seedlots.ui.make_sure_your_seedlots_are_in_the_database_use_add_new_seedlot_', 'Make sure your seedlots are in the database. Use "Add New Seedlot" to add a single seedlot or "Upload New Seedlots" to add many.') |h %></li>
+                <li><% $c->i18n->p('seedlots.ui.make_sure_your_seedlots_are_barcoded_you_can_print_these_barcode', 'Make sure your seedlots are barcoded. You can print these barcodes from the database.') |h %></li>
+                <li><% $c->i18n->p('seedlots.ui.the_inventory_app_is_currently_not_available_but_you_can_continu', 'The inventory app is currently not available but you can continue using it if it is installed on your tablet device.') |h %>
                 <!-- li>3) Use the "Inventory" Android Application to scan seedlot barcodes and record weight. Then click "Upload Inventory" on the Manage Seedlots page to upload this info into the database. If you do not want to use the Inventory Android Application you can create your own CSV file and upload that.</li --><!-- the app is currently not available - re-instate when it is available again -->
                 <!-- li><b>For more info about the "Seed Inventory" Android Application go to <a href="https://play.google.com/store/apps/details?id=org.wheatgenetics.inventory/">Inventory</a>.</b></li -->
-                It is also possible to manually enter a transaction by going to the seedlot detail page and clicking "Add New Transaction".</li>
+                <% $c->i18n->p('seedlots.ui.it_is_also_possible_to_manually_enter_a_transaction_by_going_to_', 'It is also possible to manually enter a transaction by going to the seedlot detail page and clicking "Add New Transaction".') |h %></li>
                 </ul>
             </div>
         </div>
@@ -52,14 +52,14 @@ $default_seedlot_material_type => undef
 </&>
 
 <%perl>
-    my $maintenance_button = $maintenance_enabled ? ' <button onclick="location.href=\'/breeders/seedlot/maintenance\'" class="btn btn-sm btn-primary" style="margin:3px" name="seedlot_record_maintenance">Seedlot Maintenance</button>' : '';
+    my $maintenance_button = $maintenance_enabled ? ' <button onclick="location.href=\'/breeders/seedlot/maintenance\'" class="btn btn-sm btn-primary" style="margin:3px" name="seedlot_record_maintenance">' . HTML::Entities::encode_entities($c->i18n->p('seedlot_maintenance.ui.title', 'Seedlot Maintenance')) . '</button>' : '';
     my $seedlot_subtitle = !!$c->user()
-        ? '<div class="btn-group"><button type="button" class="btn btn-sm btn-primary dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Create Seedlot(s)&nbsp;<span class="caret"></span></button><ul class="dropdown-menu"><li><a href="#" name="add_seedlot_button">Add New Seedlot</a></li><li><a href="#" name="seedlot_bulk_upload">Upload Seedlots</a></li><li><a href="#" name="create_seedlots_trial_button">Create Seedlots from Trial</a></li></ul></div>
-        <div class="btn-group"><button type="button" class="btn btn-sm btn-primary dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Add/Upload Transactions&nbsp;<span class="caret"></span></button><ul class="dropdown-menu"><li><a href="#" name="transactions_upload_link">Upload a File</a></li><li><a href="#" id="add_transactions_using_list_link" name="add_transactions_using_list_link">Using a List</a></li><li></ul></div>
-        <button class="btn btn-sm btn-primary" style="margin:3px" name="seedlot_upload_inventory">Upload Inventory</button>' . $maintenance_button
-        : "Login to add or upload seedlots";
+        ? '<div class="btn-group"><button type="button" class="btn btn-sm btn-primary dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">' . HTML::Entities::encode_entities($c->i18n->p('seedlots.ui.create_seedlot_s', 'Create Seedlot(s)')) . '&nbsp;<span class="caret"></span></button><ul class="dropdown-menu"><li><a href="#" name="add_seedlot_button">' . HTML::Entities::encode_entities($c->i18n->p('seedlots.ui.add_new_seedlot', 'Add New Seedlot')) . '</a></li><li><a href="#" name="seedlot_bulk_upload">' . HTML::Entities::encode_entities($c->i18n->p('seedlots.ui.upload_seedlots.b7849bd', 'Upload Seedlots')) . '</a></li><li><a href="#" name="create_seedlots_trial_button">' . HTML::Entities::encode_entities($c->i18n->p('seedlot.create_seedlots_from_trial', 'Create Seedlots from Trial')) . '</a></li></ul></div>
+        <div class="btn-group"><button type="button" class="btn btn-sm btn-primary dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">' . HTML::Entities::encode_entities($c->i18n->p('seedlots.ui.add_upload_transactions', 'Add/Upload Transactions')) . '&nbsp;<span class="caret"></span></button><ul class="dropdown-menu"><li><a href="#" name="transactions_upload_link">' . HTML::Entities::encode_entities($c->i18n->p('seedlots.ui.upload_a_file', 'Upload a File')) . '</a></li><li><a href="#" id="add_transactions_using_list_link" name="add_transactions_using_list_link">' . HTML::Entities::encode_entities($c->i18n->p('seedlots.ui.using_a_list', 'Using a List')) . '</a></li><li></ul></div>
+        <button class="btn btn-sm btn-primary" style="margin:3px" name="seedlot_upload_inventory">' . HTML::Entities::encode_entities($c->i18n->p('seedlots.ui.upload_inventory.f4c5421', 'Upload Inventory')) . '</button>' . $maintenance_button
+        : HTML::Entities::encode_entities($c->i18n->p('seedlots.ui.login_to_add_or_upload_seedlots', 'Login to add or upload seedlots'));
 </%perl>
-<&| /page/info_section.mas, title=>"Seedlots",  collapsible => 1, subtitle => $seedlot_subtitle &>
+<&| /page/info_section.mas, anchor_title => "Seedlots", title=>HTML::Entities::encode_entities($c->i18n->p('seedlots.ui.seedlots', 'Seedlots')),  collapsible => 1, subtitle => $seedlot_subtitle &>
 
 <br/>
 
@@ -67,70 +67,70 @@ $default_seedlot_material_type => undef
     <div class="panel panel-default">
         <div class="panel-body">
 
-<&| /page/info_section.mas, title=>"Search Seedlots",  collapsible => 1, collapsed=>0 &>
+<&| /page/info_section.mas, anchor_title => "Search Seedlots", title=>HTML::Entities::encode_entities($c->i18n->p('seedlots.ui.search_seedlots', 'Search Seedlots')),  collapsible => 1, collapsed=>0 &>
 
 <div class="well well-sm">
     <form class="form-horizontal" id="search_seedlot_form" name="search_seedlot_form">
         <div class="form-group form-group-sm">
-            <label class="col-sm-3 control-label">Seedlot Name: </label>
+            <label class="col-sm-3 control-label"><% $c->i18n->p('seedlots.ui.seedlot_name.72a2020', 'Seedlot Name:') |h %> </label>
             <div class="col-sm-9" >
                 <input class="form-control" id="search_seedlot_form_seedlot_name" type="text" />
             </div>
         </div>
         <div class="form-group form-group-sm">
-            <label class="col-sm-3 control-label">Breeding Program: </label>
+            <label class="col-sm-3 control-label"><% $c->i18n->p('seedlots.ui.breeding_program.5983e34', 'Breeding Program:') |h %> </label>
             <div class="col-sm-9" >
                 <input class="form-control" id="search_seedlot_form_breeding_program" type="text" />
             </div>
         </div>
         <div class="form-group form-group-sm">
-            <label class="col-sm-3 control-label">Contents (Accession Uniquename): </label>
+            <label class="col-sm-3 control-label"><% $c->i18n->p('seedlots.ui.contents_accession_uniquename', 'Contents (Accession Uniquename):') |h %> </label>
             <div class="col-sm-7" >
                 <input class="form-control" id="search_seedlot_form_contents_accession" type="text" />
             </div>
             <div class="col-sm-2 form-check form-check-inline align-bottom">
               <input class="form-check-input" type="checkbox" id="exact_accession" value="1">
-              <label class="form-check-label" for="exact_accession">exact match</label>
+              <label class="form-check-label" for="exact_accession"><% $c->i18n->p('seedlots.ui.exact_match', 'exact match') |h %></label>
             </div>
         </div>
         <div class="form-group form-group-sm">
-            <label class="col-sm-3 control-label">Contents (Cross Unique ID): </label>
+            <label class="col-sm-3 control-label"><% $c->i18n->p('seedlots.ui.contents_cross_unique_id', 'Contents (Cross Unique ID):') |h %> </label>
             <div class="col-sm-7" >
                 <input class="form-control" id="search_seedlot_form_contents_cross" type="text" />
             </div>
             <div class="col-sm-2 form-check form-check-inline align-bottom">
               <input class="form-check-input" type="checkbox" id="exact_cross" value="1">
-              <label class="form-check-label" for="exact_cross">exact match</label>
+              <label class="form-check-label" for="exact_cross"><% $c->i18n->p('seedlots.ui.exact_match', 'exact match') |h %></label>
             </div>
         </div>
 % if (!$default_seedlot_material_type) {
         <div class="form-group form-group-sm">
-            <label class="col-sm-3 control-label">Material Type: </label>
+            <label class="col-sm-3 control-label"><% $c->i18n->p('seedlots.ui.material_type.21ab872', 'Material Type:') |h %> </label>
             <div class="col-sm-9" >
                 <div id="search_seedlot_form_material_type_div"></div>
             </div>
         </div>
 % }
         <div class="form-group form-group-sm">
-            <label class="col-sm-3 control-label">Location: </label>
+            <label class="col-sm-3 control-label"><% $c->i18n->p('seedlots.ui.location.8f494b2', 'Location:') |h %> </label>
             <div class="col-sm-9" >
                 <input class="form-control" id="search_seedlot_form_location" type="text" />
             </div>
         </div>
         <div class="form-group form-group-sm">
-            <label class="col-sm-3 control-label">Box Name: </label>
+            <label class="col-sm-3 control-label"><% $c->i18n->p('seedlots.ui.box_name.3781c9f', 'Box Name:') |h %> </label>
             <div class="col-sm-9" >
                 <input class="form-control" id="search_seedlot_form_box_name" type="text" />
             </div>
         </div>
         <div class="form-group form-group-sm">
-            <label class="col-sm-3 control-label">Minimum Count: </label>
+            <label class="col-sm-3 control-label"><% $c->i18n->p('seedlots.ui.minimum_count', 'Minimum Count:') |h %> </label>
             <div class="col-sm-9" >
                 <input class="form-control" id="search_seedlot_form_minimum_count" type="number" />
             </div>
         </div>
         <div class="form-group form-group-sm">
-            <label class="col-sm-3 control-label">Minimum Weight (g): </label>
+            <label class="col-sm-3 control-label"><% $c->i18n->p('seedlots.ui.minimum_weight_g', 'Minimum Weight (g):') |h %> </label>
 
             <div class="col-sm-9" >
                 <input class="form-control" id="search_seedlot_form_minimum_weight" type="number" />
@@ -145,23 +145,23 @@ $default_seedlot_material_type => undef
         </div  -->
 
         <div class="form-group form-group-sm">
-            <label class="col-sm-3 control-label">Quality: </label>
+            <label class="col-sm-3 control-label"><% $c->i18n->p('seedlots.ui.quality.d50ece1', 'Quality:') |h %> </label>
             <div class="col-sm-9" >
                 <input class="form-control" id="search_seedlot_form_quality" type="text" />
             </div>
         </div>
         <div class="form-group form-group-sm">
-            <label class="col-sm-3 control-label">Trial Usage: </label>
+            <label class="col-sm-3 control-label"><% $c->i18n->p('seedlots.ui.trial_usage', 'Trial Usage:') |h %> </label>
             <div class="col-sm-9">
                 <div class="col-sm-5" style="padding-left: 0; padding-right: 5px">
-                    <input class="form-control" id="search_seedlot_form_trial_name" type="text" placeholder="Trial Name" />
+                    <input class="form-control" id="search_seedlot_form_trial_name" type="text" placeholder="<% $c->i18n->p('seedlots.ui.trial_name', 'Trial Name') |h %>" />
                 </div>
                 <div class="col-sm-7" style="padding-left: 5px; padding-right: 0">
                     <select class="form-control" id="search_seedlot_form_trial_usage">
-                        <option value="">Select trial / seedlot usage...</option>
-                        <option value="source">Trial --> Seedlot: Find seedlots that are derived from this trial</option>
-                        <option value="sink">Seedlot --> Trial: Find seedlots that provided seed to this trial</option>
-                        <option value="source|sink">Either of the above</option>
+                        <option value=""><% $c->i18n->p('seedlots.ui.select_trial_seedlot_usage', 'Select trial / seedlot usage...') |h %></option>
+                        <option value="source"><% $c->i18n->p('trial.tree.trial', 'Trial') |h %> --> <% $c->i18n->p('seedlots.ui.seedlot_find_seedlots_that_are_derived_from_this_trial', 'Seedlot: Find seedlots that are derived from this trial') |h %></option>
+                        <option value="sink"><% $c->i18n->p('seedlot_record.ui.seedlot', 'Seedlot') |h %> --> <% $c->i18n->p('seedlots.ui.trial_find_seedlots_that_provided_seed_to_this_trial', 'Trial: Find seedlots that provided seed to this trial') |h %></option>
+                        <option value="source|sink"><% $c->i18n->p('seedlots.ui.either_of_the_above', 'Either of the above') |h %></option>
                     </select>
                 </div>
             </div>
@@ -169,13 +169,13 @@ $default_seedlot_material_type => undef
 
     </form>
     <div style="text-align: center">
-        <button class="btn btn-primary" id="submit_seedlot_search">Search</button>
+        <button class="btn btn-primary" id="submit_seedlot_search"><% $c->i18n->p('seedlots.ui.search', 'Search') |h %></button>
     </div>
 </div>
 </&>
 
 <div style="text-align: center">
-    Enter search terms and click the "Search" button to view results.
+    <% $c->i18n->p('seedlots.ui.enter_search_terms_and_click_the_search_button_to_view_results', 'Enter search terms and click the "Search" button to view results.') |h %>
 </div>
 
 <br />
@@ -188,8 +188,8 @@ $default_seedlot_material_type => undef
 
 <hr>
 
-<div id="available_seedlots_to_list" style="display:none">
-</div>
+<textarea readonly id="available_seedlots_to_list" style="display:none">
+</textarea>
 <div id="available_seedlots_add_to_list">
 </div>
 
@@ -198,31 +198,31 @@ $default_seedlot_material_type => undef
 </div>
 </&>
 
-<&| /page/info_section.mas, title=>"Mark seedlots as DISCARDED using a list",  collapsible => 1, collapsed=>1 &>
+<&| /page/info_section.mas, anchor_title => "Mark seedlots as DISCARDED using a list", title=>HTML::Entities::encode_entities($c->i18n->p('seedlots.ui.mark_seedlots_as_status_using_a_list', 'Mark seedlots as %{status} using a list', {status => 'DISCARDED'})),  collapsible => 1, collapsed=>1 &>
 % if ($user_role eq "curator" ) {
     <div class="well well-sm">
         <div class="panel panel-default">
             <div class="panel-body">
-                <button class="btn btn-sm btn-default" style="margin:3px" id ="discard_seedlot_usage_info" name = "discard_seedlot_usage_info">Usage Help <span class="glyphicon glyphicon-question-sign"></span></button><button class="btn btn-sm btn-primary" style="margin:3px" id="discard_seedlot_link">Mark Seedlots as Discarded</button>
+                <button class="btn btn-sm btn-default" style="margin:3px" id ="discard_seedlot_usage_info" name = "discard_seedlot_usage_info"><% $c->i18n->p('seedlots.ui.usage_help', 'Usage Help') |h %> <span class="glyphicon glyphicon-question-sign"></span></button><button class="btn btn-sm btn-primary" style="margin:3px" id="discard_seedlot_link"><% $c->i18n->p('seedlots.ui.mark_seedlots_as_discarded', 'Mark Seedlots as Discarded') |h %></button>
             </div>
         </div>
     </div>
 % } else {
-    You need to be logged in or you do not have sufficient privileges to mark seedlots as DISCARDED using lists.
+    <% $c->i18n->p('seedlots.ui.you_need_to_be_logged_in_or_you_do_not_have_sufficient_privilege.5e7cc40', 'You need to be logged in or you do not have sufficient privileges to mark seedlots as %{status} using lists.', {status => 'DISCARDED'}) |h %>
 % }
 </&>
 
-<&| /page/info_section.mas, title=>"Delete seedlots using a list",  collapsible => 1, collapsed=>1 &>
+<&| /page/info_section.mas, anchor_title => "Delete seedlots using a list", title=>HTML::Entities::encode_entities($c->i18n->p('seedlots.ui.delete_seedlots_using_a_list', 'Delete seedlots using a list')),  collapsible => 1, collapsed=>1 &>
 % if ($user_role eq "curator" ) {
     <div class="well well-sm">
         <div class="panel panel-default">
             <div class="panel-body">
-                <button class="btn btn-sm btn-primary" style="margin:3px" id="delete_seedlots_link">Delete seedlots using a list</button>
+                <button class="btn btn-sm btn-primary" style="margin:3px" id="delete_seedlots_link"><% $c->i18n->p('seedlots.ui.delete_seedlots_using_a_list', 'Delete seedlots using a list') |h %></button>
             </div>
         </div>
     </div>
 % } else {
-    You need to be logged in or you do not have sufficient privileges to delete seedlots.
+    <% $c->i18n->p('seedlots.ui.you_need_to_be_logged_in_or_you_do_not_have_sufficient_privilege.6e34ec8', 'You need to be logged in or you do not have sufficient privileges to delete seedlots.') |h %>
 % }
 </&>
 
@@ -242,6 +242,57 @@ $default_seedlot_material_type => undef
 
 
 <script>
+// Optional language assets preserve the native workflow and raw data values.
+var seedlotI18n = (window.SGN && window.SGN.i18n) || {
+    p: function (context, source, variables) {
+        return source.replace(/%\{([A-Za-z0-9_]+)\}/g, function (match, name) {
+            return variables && Object.prototype.hasOwnProperty.call(variables, name) ? String(variables[name]) : match;
+        });
+    },
+    np: function (context, one, many, count, variables) {
+        return this.p(context, count === 1 ? one : many, variables);
+    }
+};
+function seedlotHTML(value) {
+    return String(value == null ? '' : value).replace(/[&<>"']/g, function (character) {
+        return {'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'}[character];
+    });
+}
+// The locale is carried only by these source-traced, same-origin core routes.
+function _sgnSeedlotLocaleHeaders(url) {
+    try {
+        var guardedURL = new URL(url, window.location.href);
+        if (guardedURL.origin !== window.location.origin) return {};
+        var admitted = /^\/ajax\/breeders\/(?:seedlots|seedlot\/[0-9]+(?:\/(?:edit|delete|transactions|transaction\/(?:add|[0-9]+(?:\/(?:edit|delete))?)))?|seedlot\/(?:discard|undo_discard)|seedlot-create|seedlot-upload|seedlot-inventory-upload|upload_transactions|add_transactions_using_list)\/?$/.test(guardedURL.pathname)
+            || /^\/ajax\/seedlots\/(?:verify_delete_by_list|confirm_delete_by_list)$/.test(guardedURL.pathname)
+            || /^\/ajax\/stock\/stock_related_seedlots\/[0-9]+$/.test(guardedURL.pathname)
+            || /^\/ajax\/manage_accessions\/population_seedlots\/[0-9]+$/.test(guardedURL.pathname)
+            || /^\/ajax\/accessions\/possible_seedlots$/.test(guardedURL.pathname)
+            || /^\/ajax\/breeders\/program\/[0-9]+\/seedlots$/.test(guardedURL.pathname)
+            || /^\/ajax\/breeders\/trial\/[0-9]+\/(?:seedlots_from_crossingtrial|seedlots|upload_used_seedlots)$/.test(guardedURL.pathname)
+            || guardedURL.pathname === '/breeders/download_population_seedlots_action';
+        if (!admitted) return {};
+        var root = typeof document !== 'undefined' && document.documentElement;
+        var runtime = window.SGN && window.SGN.i18n;
+        var requested = root && typeof root.getAttribute === 'function' && root.getAttribute('data-sgn-locale');
+        var locale = requested || (runtime && runtime.requestedLocale) || (root && root.lang) || (runtime && runtime.locale) || 'en';
+        return {'X-SGN-Locale': typeof locale === 'string' && /^[A-Za-z]{2,8}(?:-[A-Za-z0-9]{1,8})*$/.test(locale) ? locale : 'en'};
+    } catch (error) {
+        return {};
+    }
+}
+function _sgnSeedlotLocaleURL(url) {
+    try {
+        var headers = _sgnSeedlotLocaleHeaders(url);
+        if (!headers['X-SGN-Locale']) return url;
+        var guardedURL = new URL(url, window.location.href);
+        guardedURL.searchParams.set('lang', headers['X-SGN-Locale']);
+        return guardedURL.pathname + guardedURL.search + guardedURL.hash;
+    } catch (error) {
+        return url;
+    }
+}
+
 jQuery(document).ready(function(){
     jQuery("#search_seedlot_form_seedlot_name").autocomplete({
        source: '/ajax/stock/seedlot_name_autocomplete',
@@ -266,21 +317,22 @@ jQuery(document).ready(function(){
             'lengthMenu': [10,20,50,100,1000],
 
             columns: [
-                { title: "Seedlot Name", "data": null, "render": function ( data, type, row ) { return "<a href='/breeders/seedlot/"+row.seedlot_stock_id+"'>"+row.seedlot_stock_uniquename+"</a>"; } },
-                { title: "Breeding Program", "data": "breeding_program_name" },
-                { title: "Contents", "data": "contents_html" },
-                { title: "Material Type", "data": "material_type" },
-                { title: "Location", "data": "location" },
-                { title: "Count", "data": "count" },
-                { title: "Weight (g)", "data": "weight_gram" },
-                { title: "Submitters", "data": "owners_string" },
-                { title: "Organization", "data": "organization" },
-                { title: "Box", "data": "box" },
-                { title: "Quality", "data": "seedlot_quality" },
-                { title: "Delete", "data": "null", "render": function ( data, type, row ) { return "<a onclick='removeSeedlot("+row.seedlot_stock_id+")' >X</a>"; } },
+                { title: seedlotHTML(seedlotI18n.p("seedlots.ui.seedlot_name.8bbaf6d", "Seedlot Name")), "data": null, "render": function ( data, type, row ) { return "<a href='/breeders/seedlot/"+row.seedlot_stock_id+"'>"+seedlotHTML(row.seedlot_stock_uniquename)+"</a>"; } },
+                { title: seedlotHTML(seedlotI18n.p("seedlots.ui.breeding_program.a79d70a", "Breeding Program")), "data": "breeding_program_name", "render": function (data, type, row) { return type === "display" ? seedlotHTML(data) : data; } },
+                { title: seedlotHTML(seedlotI18n.p("seedlots.ui.contents.d1ce6ee", "Contents")), "data": "contents_html" },
+                { title: seedlotHTML(seedlotI18n.p("seedlots.ui.material_type.b9881bc", "Material Type")), "data": "material_type", "render": function (data, type, row) { return type === "display" ? seedlotHTML(data) : data; } },
+                { title: seedlotHTML(seedlotI18n.p("seedlots.ui.location.5cf58de", "Location")), "data": "location", "render": function (data, type, row) { return type === "display" ? seedlotHTML(data) : data; } },
+                { title: seedlotHTML(seedlotI18n.p("seedlots.ui.count", "Count")), "data": "count" },
+                { title: seedlotHTML(seedlotI18n.p("seedlots.ui.weight_g.3319361", "Weight (g)")), "data": "weight_gram" },
+                { title: seedlotHTML(seedlotI18n.p("seedlots.ui.submitters", "Submitters")), "data": "owners_string" },
+                { title: seedlotHTML(seedlotI18n.p("seedlots.ui.organization.989e84c", "Organization")), "data": "organization", "render": function (data, type, row) { return type === "display" ? seedlotHTML(data) : data; } },
+                { title: seedlotHTML(seedlotI18n.p("seedlots.ui.box", "Box")), "data": "box", "render": function (data, type, row) { return type === "display" ? seedlotHTML(data) : data; } },
+                { title: seedlotHTML(seedlotI18n.p("seedlots.ui.quality.e77b76f", "Quality")), "data": "seedlot_quality", "render": function (data, type, row) { return type === "display" ? seedlotHTML(data) : data; } },
+                { title: seedlotHTML(seedlotI18n.p("seedlots.ui.delete", "Delete")), "data": "null", "render": function ( data, type, row ) { return "<a onclick='removeSeedlot("+row.seedlot_stock_id+")' >X</a>"; } },
                 { title: "", "data": "seedlot_stock_uniquename"}
             ],
             'ajax': { 'url': '/ajax/breeders/seedlots',
+                'headers': _sgnSeedlotLocaleHeaders('/ajax/breeders/seedlots'),
                 'data': function(d) {
                     d.seedlot_name  = jQuery('#search_seedlot_form_seedlot_name').val();
                     d.breeding_program = jQuery('#search_seedlot_form_breeding_program').val();
@@ -315,7 +367,7 @@ jQuery(document).ready(function(){
             names += seedlot_names[i]+'\n';
         }
 
-        jQuery('#available_seedlots_to_list').html(names);
+        jQuery('#available_seedlots_to_list').val(names);
         addToListMenu('available_seedlots_add_to_list', 'available_seedlots_to_list', {
             listType: 'seedlots'
         });
@@ -330,16 +382,17 @@ jQuery(document).ready(function(){
 });
 
 function removeSeedlot(seedlot_stock_id){
-    if (confirm("Are you sure you want to delete this seedlot?")){
+    if (confirm(seedlotI18n.p("seedlots.ui.are_you_sure_you_want_to_delete_this_seedlot", "Are you sure you want to delete this seedlot?"))){
         jQuery.ajax({
             url: '/ajax/breeders/seedlot/'+seedlot_stock_id+'/delete',
+            headers: _sgnSeedlotLocaleHeaders('/ajax/breeders/seedlot/'+seedlot_stock_id+'/delete'),
             beforeSend: function(){
                 jQuery('#working_modal').modal('show');
             },
             success: function(response) {
                 jQuery('#working_modal').modal('hide');
                 if (response.success == 1) {
-                    alert("The seedlot has been deleted.");
+                    alert(seedlotI18n.p("seedlots.ui.the_seedlot_has_been_deleted", "The seedlot has been deleted."));
                     location.reload();
                 }
                 if (response.error) {
@@ -348,7 +401,7 @@ function removeSeedlot(seedlot_stock_id){
             },
             error: function(response){
                 jQuery('#working_modal').modal('hide');
-                alert('An error occurred deleting seed lot');
+                alert(seedlotI18n.p("seedlots.ui.an_error_occurred_deleting_seed_lot", "An error occurred deleting seed lot"));
             }
         });
     }

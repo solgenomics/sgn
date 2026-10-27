@@ -79,7 +79,7 @@ function plotPhenotypeScatter () {
     var plotPhenoData    = allPhenoData.bothAxisPhenoValues;
         
     if (plotPhenoData == 'undefined') {
-        var message = 'There is no phenotype data to plot. Please report this problem';  
+        var message = (window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.legacy_no_phenotype_data", "There is no phenotype data to plot. Please report this problem") : 'There is no phenotype data to plot. Please report this problem');
         jQuery('#phenoPlot').append(message).show();
     } else { 
         var optionsPheno = { 
@@ -104,7 +104,7 @@ function plotPhenotypeScatter () {
                 mode: 'categories',
                 tickColor: '#ffffff',
                 ticks: '', 
-                axisLabel: 'Clones',
+                axisLabel: (window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.legacy_clones_axis", "Clones") : 'Clones'),
                 position: 'bottom',
                 axisLabelPadding: 20,
                 color: '#0066CC',
@@ -112,7 +112,7 @@ function plotPhenotypeScatter () {
             yaxis: {                                
                 min: null,
                 max: null, 
-                axisLabel: 'Phenotype values',
+                axisLabel: (window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.legacy_phenotype_values_axis", "Phenotype values") : 'Phenotype values'),
                 position: 'left',
                 color: '#0066CC',                    
             },

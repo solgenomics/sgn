@@ -1,3 +1,4 @@
+function _sgnB16RenameEscape(value) { return jQuery('<span>').text(value).html(); }
 /*jslint browser: true, devel: true */
 
 /**
@@ -43,7 +44,7 @@ jQuery(document).ready(function ($) {
             $('#working_modal').modal("show");
             if (uploadedRenameAccessionsFile === '') {
                 $('#working_modal').modal("hide");
-                alert("No file selected");
+                alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("cross.ui.no_file_selected", "No file selected") : "No file selected"));
             }
         },
         complete: function (r) {
@@ -56,7 +57,7 @@ jQuery(document).ready(function ($) {
             var html;
 
             if (response.error) {
-                html = '<h3>The Following Issues Were Identified</h3><p class="bg-warning">'+response.error+'</p>';
+                html = '<h3>' + _sgnB16RenameEscape((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("accession.rename.issues", "The Following Issues Were Identified") : "The Following Issues Were Identified")) + '</h3><p class="bg-warning">'+response.error+'</p>';
 		$('#upload_rename_accessions_store').prop("disabled", true);
             }
             else {
@@ -64,7 +65,7 @@ jQuery(document).ready(function ($) {
                 archived_filename = response.archived_filename_with_path;
 
 		$('#upload_rename_accessions_store').prop("disabled", false);
-                html = '<h3>There Were No Issues Identified</h3>Please click the "Rename" button to renamee the accessions in the database.';
+                html = '<h3>' + _sgnB16RenameEscape((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("accession.rename.no_issues", "There Were No Issues Identified") : "There Were No Issues Identified")) + '</h3>' + _sgnB16RenameEscape((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("accession.rename.ready", "Please click the \"Rename\" button to renamee the accessions in the database.") : "Please click the \"Rename\" button to renamee the accessions in the database.")) + '';
             }
             $("#upload_rename_accessions_validate_display tbody").html(html);
             $("#upload_rename_accessions_validate_display").modal('show');
@@ -75,7 +76,7 @@ jQuery(document).ready(function ($) {
         var uploadFile = $("#rename_accessions_uploaded_file").val();
         $('#upload_rename_accessions_form').attr("action", "/ajax/rename_accessions/upload_verify");
         if (uploadFile === '') {
-            alert("Please select a file");
+            alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("accessions.upload.file_required", "Please select a file") : "Please select a file"));
             return;
         }
         $("#upload_rename_accessions_form").submit();
@@ -100,7 +101,7 @@ jQuery(document).ready(function ($) {
             success: function(response) {
                 jQuery('#working_modal').modal('hide');
                 if (response.error) {
-                    alert('An Error Occured: No accessions were renamed! Try Fixing Your File For The Issues Identified In the Validation. '+response.error);
+                    alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("accession.rename.store_error", "An Error Occured: No accessions were renamed! Try Fixing Your File For The Issues Identified In the Validation. %{details}", {details: String(response.error)}) : 'An Error Occured: No accessions were renamed! Try Fixing Your File For The Issues Identified In the Validation. '+response.error));
                 }
                 else {
 		    //alert("RESPONSE: "+JSON.stringify(response));
@@ -112,7 +113,7 @@ jQuery(document).ready(function ($) {
             },
             error: function(response) {
                 jQuery('#working_modal').modal('hide');
-		alert('An error occurred storing the accession data. None were renamed.'+response.responseText);
+		alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("accession.rename.request_error", "An error occurred storing the accession data. None were renamed.%{details}", {details: String(response.responseText)}) : 'An error occurred storing the accession data. None were renamed.'+response.responseText));
             }
         });
     });

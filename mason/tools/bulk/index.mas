@@ -1,3 +1,6 @@
+<%init>
+use HTML::Entities ();
+</%init>
 
 <%args>
 $mode => ''
@@ -12,7 +15,7 @@ if (!exists($modes{$mode})) { $mode = "clone_search"; }
 
 <& /util/import_javascript.mas, classes => [ 'jqueryui' ] &>
 
-<& /page/page_title.mas, title=>"Bulk Download" &>
+<& /page/page_title.mas, title=>HTML::Entities::encode_entities($c->i18n->p("lists_datasets.bulk.bulk_download", "Bulk Download")) &>
 
 <script>
   jQuery(function() {
@@ -22,9 +25,8 @@ if (!exists($modes{$mode})) { $mode = "clone_search"; }
       active: <% $modes{$mode} %>,
       beforeLoad: function( event, ui ) {
         ui.jqXHR.fail(function() {
-          ui.panel.html(
-            "Couldn't load this tab. We'll try to fix this as soon as possible. " +
-            "If this wouldn't be a demo." );
+          ui.panel.text(
+            (window.SGN && SGN.i18n ? SGN.i18n.p("lists_datasets.bulk.tab_load_failed", "Couldn't load this tab. We'll try to fix this as soon as possible. If this wouldn't be a demo.") : "Couldn't load this tab. We'll try to fix this as soon as possible. If this wouldn't be a demo.") );
         });
       }
 
@@ -35,14 +37,14 @@ if (!exists($modes{$mode})) { $mode = "clone_search"; }
 
 <div id="tabs">
   <ul>
-    <li><a href="/tools/bulk/tabs/clone_tab">Clones</a></li>
-    <li><a href="/tools/bulk/tabs/array_tab">Arrays</a></li>
-    <li><a href="/tools/bulk/tabs/unigene_tab">Unigenes</a></li>
-    <li><a href="/tools/bulk/tabs/bac_tab">BACs</a></li>
-    <li><a href="/tools/bulk/tabs/bac_end_tab">BAC ends</a></li>
-    <li><a href="/tools/bulk/tabs/gene_tab">Genes</a></li>
-    <li><a href="/tools/bulk/tabs/feature_tab">Features</a></li>
-    <li><a href="/tools/bulk/tabs/converter_tab">Converter</a></li>
+    <li><a href="/tools/bulk/tabs/clone_tab"><% $c->i18n->p("lists_datasets.bulk.clones", "Clones") |h %></a></li>
+    <li><a href="/tools/bulk/tabs/array_tab"><% $c->i18n->p("lists_datasets.bulk.arrays", "Arrays") |h %></a></li>
+    <li><a href="/tools/bulk/tabs/unigene_tab"><% $c->i18n->p("lists_datasets.bulk.unigenes", "Unigenes") |h %></a></li>
+    <li><a href="/tools/bulk/tabs/bac_tab"><% $c->i18n->p("lists_datasets.bulk.bacs", "BACs") |h %></a></li>
+    <li><a href="/tools/bulk/tabs/bac_end_tab"><% $c->i18n->p("lists_datasets.bulk.bac_ends", "BAC ends") |h %></a></li>
+    <li><a href="/tools/bulk/tabs/gene_tab"><% $c->i18n->p("lists_datasets.bulk.genes", "Genes") |h %></a></li>
+    <li><a href="/tools/bulk/tabs/feature_tab"><% $c->i18n->p("lists_datasets.bulk.features", "Features") |h %></a></li>
+    <li><a href="/tools/bulk/tabs/converter_tab"><% $c->i18n->p("lists_datasets.bulk.converter", "Converter") |h %></a></li>
     <li><a href="/tools/bulk/tabs/ftp_tab">FTP</a></li>
   </ul>
 </div>

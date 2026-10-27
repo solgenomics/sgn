@@ -15,11 +15,11 @@ $trial_name
     <br /><br />
 </div>
 
-<button id="set_entry_numbers_template_btn" class="btn btn-default">Generate Entry Number Template</button>
+<button id="set_entry_numbers_template_btn" class="btn btn-default"><% $c->i18n->p('trial.card.entry_numbers.generate_template', 'Generate Entry Number Template') |h %></button>
 
-<button id="set_entry_numbers_upload_btn" class="btn btn-default">Upload Entry Number Template</button>
+<button id="set_entry_numbers_upload_btn" class="btn btn-default"><% $c->i18n->p('trial.card.entry_numbers.upload_template', 'Upload Entry Number Template') |h %></button>
 
-<button id="delete_entry_numbers_btn" class="btn btn-default" disabled="1">Delete Entry Numbers</button>
+<button id="delete_entry_numbers_btn" class="btn btn-default" disabled="1"><% $c->i18n->p('trial.card.entry_numbers.delete', 'Delete Entry Numbers') |h %></button>
 
 <script src="//cdn.datatables.net/plug-ins/1.11.3/sorting/natural.js" defer></script>
 <script type="text/javascript">
@@ -32,7 +32,7 @@ $trial_name
         });
 
 	jQuery('#delete_entry_numbers_btn').click(function() {
-	    var yes = confirm("Are you sure you would like to remove the entry numbers from this trial? This action cannot be undone.");
+	    var yes = confirm(window.SGN && SGN.i18n ? SGN.i18n.p('trial.card.entry_numbers.confirm_delete', "Are you sure you would like to remove the entry numbers from this trial? This action cannot be undone.") : "Are you sure you would like to remove the entry numbers from this trial? This action cannot be undone.");
 
 	    if (yes) {
 	       var p = jQuery.ajax( {
@@ -41,7 +41,7 @@ $trial_name
 	     	   data: { trial_id : <% $trial_id %> },
 	       } );
 
-	       p.then( function(value) { loadEntryNumbers(); alert("Success!"); }, function(error) { alert("An error occurred deleting the entry numbers." ) } )
+	       p.then( function(value) { loadEntryNumbers(); alert(window.SGN && SGN.i18n ? SGN.i18n.p('trial.card.entry_numbers.delete_success', "Success!") : "Success!"); }, function(error) { alert(window.SGN && SGN.i18n ? SGN.i18n.p('trial.card.entry_numbers.delete_error', "An error occurred deleting the entry numbers.") : "An error occurred deleting the entry numbers." ) } )
  	    }
 	});
 	
@@ -99,11 +99,11 @@ $trial_name
                     displayEntryNumbers(response.entry_numbers);
                 }
                 else {
-                    alert("ERROR: Could not load entry numbers due to a server error!");
+                    alert(window.SGN && SGN.i18n ? SGN.i18n.p('trial.card.entry_numbers.load_error', "ERROR: Could not load entry numbers due to a server error!") : "ERROR: Could not load entry numbers due to a server error!");
                 }
             },
             error: function() {
-                alert("ERROR: Could not load entry numbers due to a server error!");
+                alert(window.SGN && SGN.i18n ? SGN.i18n.p('trial.card.entry_numbers.load_error', "ERROR: Could not load entry numbers due to a server error!") : "ERROR: Could not load entry numbers due to a server error!");
             }
         });
     }

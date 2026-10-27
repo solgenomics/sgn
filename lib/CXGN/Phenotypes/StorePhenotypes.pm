@@ -66,6 +66,9 @@ Some functionality has been more from the StorePhenotypes object to the CXGN::Ph
 =cut
 
 use strict;
+use SGN::I18N ();
+use HTML::Entities ();
+use CatalystX::GlobalContext '$c';
 use warnings;
 use Moose;
 use Try::Tiny;
@@ -195,6 +198,36 @@ has 'metadata_hash' => (
     isa => "HashRef",
     is => 'rw',
     required => 1,
+);
+
+# Presentation metadata for the last fully completed store call. Legacy callers
+# retain the original return tuple and English success string.
+has 'upload_summary' => (
+    isa => 'Maybe[HashRef]',
+    is => 'ro',
+    init_arg => undef,
+    writer => '_set_upload_summary',
+    clearer => '_clear_upload_summary',
+);
+
+# Completed typed Verify errors are independent of translated request text.
+has 'verification_errors' => (
+    isa => 'Maybe[ArrayRef]',
+    is => 'ro',
+    init_arg => undef,
+    writer => '_set_verification_errors',
+    clearer => '_clear_verification_errors',
+);
+
+# Optional presentation records for a completed Verify call. Existing callers
+# keep the original return tuple and English warning HTML. A partial capture is
+# not published; the request layer then uses the original warning unchanged.
+has 'verification_warnings' => (
+    isa => 'Maybe[ArrayRef]',
+    is => 'ro',
+    init_arg => undef,
+    writer => '_set_verification_warnings',
+    clearer => '_clear_verification_warnings',
 );
 
 has 'image_zipfile_path' => (
@@ -416,6 +449,13 @@ sub create_hash_lookups {
 
 sub verify {
     my $self = shift;
+    my SGN::I18N $ui_verify_i18n = SGN::I18N::translate($c);
+    $self->_clear_verification_warnings();
+    $self->_clear_verification_errors();
+    my @verification_errors;
+    my $error_capture_complete = 1;
+    my @verification_warnings;
+    my $warning_capture_complete = 1;
     # print STDERR "CXGN::Phenotypes::StorePhenotypes verify\n";
 
     my @plot_list = @{$self->stock_list};
@@ -453,27 +493,37 @@ sub verify {
         # print STDERR "Plots or traits not valid\n";
         # print STDERR "Invalid plots: ".join(", ", map { "'$_'" } @plots_missing)."\n" if (@plots_missing);
         # print STDERR "Invalid traits: ".join(", ", map { "'$_'" } @traits_missing)."\n" if (@traits_missing);
-        $error_message .= "Invalid plots: <br/>".join(", <br/>", map { "'$_'" } @plots_missing) if (@plots_missing);
-        $error_message .= "Invalid traits: <br/>".join(", <br/>", map { "'$_'" } @traits_missing) if (@traits_missing);
+        $error_message .= ("" . SGN::I18N::translate($ui_verify_i18n, "phenotype.root.invalid_plots", "Invalid plots: ", undef, { entities => '<>&', decode => 1 }) . "<br/>").join(", <br/>", map { "'$_'" } @plots_missing) if (@plots_missing);
+        push @verification_errors, { code => 'invalid_plots', variables => { plots => [@plots_missing] } } if @plots_missing;
+        $error_message .= ("" . SGN::I18N::translate($ui_verify_i18n, "phenotype.root.invalid_traits", "Invalid traits: ", undef, { entities => '<>&', decode => 1 }) . "<br/>").join(", <br/>", map { "'$_'" } @traits_missing) if (@traits_missing);
+        push @verification_errors, { code => 'invalid_traits', variables => { traits => [@traits_missing] } } if @traits_missing;
 
         # Display matches of traits with the wrong id
         if ( scalar(@traits_wrong_ids) > 0 ) {
-            $error_message .= "<br /><br /><strong>Possible Trait Matches:</strong>";
-            $error_message .= "<br /><br />The following traits have names and ontology identifiers that do not match in this database.  The following suggestions have the correct ontology identifier for the name used in your data.";
+            $error_message .= ("<br /><br /><strong>" . SGN::I18N::translate($ui_verify_i18n, "phenotype_upload.verify_error.possible_matches_heading", "Possible Trait Matches:", undef, { entities => '<>&', decode => 1 }) . "</strong>");
+            push @verification_errors, { code => 'possible_matches_heading', variables => {} };
+            $error_message .= ("<br /><br />" . SGN::I18N::translate($ui_verify_i18n, "phenotype_upload.verify_error.possible_matches_explanation", "The following traits have names and ontology identifiers that do not match in this database.  The following suggestions have the correct ontology identifier for the name used in your data.", undef, { entities => '<>&', decode => 1 }) . "");
+            push @verification_errors, { code => 'possible_matches_explanation', variables => {} };
             foreach my $m (@traits_wrong_ids) {
-                $error_message .= "<br /><br />" . $m->{'original_term'} . "<br />should be<br />" . $m->{'matching_term'};
+                $error_message .= "<br /><br />" . $m->{'original_term'} . ("<br />" . SGN::I18N::translate($ui_verify_i18n, "phenotype.root.should_be", "should be", undef, { entities => '<>&', decode => 1 }) . "<br />") . $m->{'matching_term'};
+                push @verification_errors, { code => 'possible_match', variables => { original => $m->{original_term}, matching => $m->{matching_term} } };
             }
         }
 
         # Display traits that are not variables
         if ( scalar(@traits_not_variables) > 0 ) {
-            $error_message .= "<br /><br /><strong>Traits That Are Not Ontology Variables:</strong>";
-            $error_message .= "<br /><br />The following traits are not ontology variables (they do not have associated method and scale information).  Use the Search &gt; Traits page to find the proper Trait Name and Trait ID to use.  The following suggestions include related ontology variables to the terms used in your data.";
+            $error_message .= ("<br /><br /><strong>" . SGN::I18N::translate($ui_verify_i18n, "phenotype_upload.verify_error.not_variables_heading", "Traits That Are Not Ontology Variables:", undef, { entities => '<>&', decode => 1 }) . "</strong>");
+            push @verification_errors, { code => 'not_variables_heading', variables => {} };
+            $error_message .= ("<br /><br />" . SGN::I18N::translate($ui_verify_i18n, "phenotype.root.the_following_traits_are_not_ontology_variables_they_do_not", "The following traits are not ontology variables (they do not have associated method and scale information).  Use the Search &gt; Traits page to find the proper Trait Name and Trait ID to use.  The following suggestions include related ontology variables to the terms used in your data.", undef, { entities => '<>&', decode => 1 }) . "");
+            push @verification_errors, { code => 'not_variables_explanation', variables => {} };
             foreach my $m (@traits_not_variables) {
-                $error_message .= "<br /><br />" . $m->{'original_term'} . "<br />could be<br />" . $m->{'matching_term'};
+                $error_message .= "<br /><br />" . $m->{'original_term'} . ("<br />" . SGN::I18N::translate($ui_verify_i18n, "phenotype.root.could_be", "could be", undef, { entities => '<>&', decode => 1 }) . "<br />") . $m->{'matching_term'};
+                push @verification_errors, { code => 'related_variable', variables => { original => $m->{original_term}, matching => $m->{matching_term} } };
             }
         }
 
+        $self->_set_verification_warnings([]);
+        $self->_set_verification_errors(\@verification_errors);
         return ($warning_message, $error_message);
     }
 
@@ -498,7 +548,8 @@ sub verify {
         my $archived_zip = CXGN::ZipFile->new(archived_zipfile_path=>$archived_image_zipfile_with_path);
         my @archived_zipfile_return = $archived_zip->file_names();
         if (!@archived_zipfile_return){
-            $error_message .= "<small>Image zipfile could not be read. Is it .zip format?</small><hr>";
+            $error_message .= ("<small>" . SGN::I18N::translate($ui_verify_i18n, "phenotype_upload.verify_error.image_zip_unreadable", "Image zipfile could not be read. Is it .zip format?", undef, { entities => '<>&', decode => 1 }) . "</small><hr>");
+            push @verification_errors, { code => 'image_zip_unreadable', variables => {} };
         } else {
             my $file_names_stripped = $archived_zipfile_return[0];
             my $file_names_full = $archived_zipfile_return[1];
@@ -512,7 +563,9 @@ sub verify {
             foreach my $img_name (@$file_names_stripped) {
                 $img_name = substr($img_name, 0, -20);
                 if ($img_name && !exists($plot_name_check{$img_name})) {
-                    $warning_message = $error_message."<small>Image ".$img_name." in images zip file does not reference a plot or plant_name (e.g. the image filename does not have a plot or plant name in it)!</small><hr>";
+                    $warning_message = $error_message."<small>Image ".$img_name.("" . SGN::I18N::translate($ui_verify_i18n, "phenotype.root.in_images_zip_file_does_not_reference_a_plot_or", " in images zip file does not reference a plot or plant_name (e.g. the image filename does not have a plot or plant name in it)!", undef, { entities => '<>&', decode => 1 }) . "</small><hr>");
+                    @verification_warnings = ({ code => 'image_plot_missing', variables => { image => $img_name } });
+                    $warning_capture_complete = length($error_message) ? 0 : 1;
                 }
             }
         }
@@ -550,21 +603,36 @@ sub verify {
                     # print STDERR "Value array = ".Dumper($value_array)."\n";
 		    my $multiple_values = 0;
 		    if (scalar(@$measurements_array) > 1) { $multiple_values = 1; }
-                    ($warnings, $errors) = $self->check_measurement($plot_name, $trait_name, $value_array, $multiple_values);
+                    my @measurement_warnings;
+                    my @measurement_errors;
+                    ($warnings, $errors) = $self->check_measurement($plot_name, $trait_name, $value_array, $multiple_values, \@measurement_warnings, \@measurement_errors);
+                    $error_capture_complete = 0 if $errors && !@measurement_errors;
+                    push @verification_errors, @measurement_errors;
+                    $warning_capture_complete = 0 if $warnings && !@measurement_warnings;
+                    push @verification_warnings, @measurement_warnings;
                     $error_message .= $errors;
                     $warning_message .= $warnings;
                 }
              }
             else {
-                ($warnings, $errors) = $self->check_measurement($plot_name, $trait_name, $measurements_array, 0);
+                my @measurement_warnings;
+                my @measurement_errors;
+                ($warnings, $errors) = $self->check_measurement($plot_name, $trait_name, $measurements_array, 0, \@measurement_warnings, \@measurement_errors);
+                $error_capture_complete = 0 if $errors && !@measurement_errors;
+                push @verification_errors, @measurement_errors;
+                $warning_capture_complete = 0 if $warnings && !@measurement_warnings;
+                push @verification_warnings, @measurement_warnings;
                 $error_message .= $errors;
                 $warning_message .= $warnings;
             }
         }
     }
     if ( defined($self->same_value_count()) && ($self->same_value_count > 0) ) {
-        $warning_message .= "There are ".$self->same_value_count()." values in your file that are the same as values already stored in the database.";
+        $warning_message .= ("" . SGN::I18N::translate($ui_verify_i18n, "phenotype.root.there_are", "There are ", undef, { entities => '<>&', decode => 1 }) . "").$self->same_value_count().("" . SGN::I18N::translate($ui_verify_i18n, "phenotype.root.values_in_your_file_that_are_the_same_as_values", " values in your file that are the same as values already stored in the database.", undef, { entities => '<>&', decode => 1 }) . "");
+        push @verification_warnings, { code => 'same_values', variables => { count => $self->same_value_count() } };
     }
+    $self->_set_verification_warnings(\@verification_warnings) if $warning_capture_complete;
+    $self->_set_verification_errors(\@verification_errors) if $error_capture_complete;
     return ($warning_message, $error_message);
 }
 
@@ -605,10 +673,19 @@ sub verify {
 
 sub check_measurement {
     my $self = shift;
+    my SGN::I18N $ui_check_measurement_i18n = SGN::I18N::translate($c);
     my $plot_name = shift;
     my $trait_name = shift;
     my $value_array = shift;
     my $file_contains_multiple_values = shift;
+    # Optional per-call collector; it mirrors warning append/replacement only.
+    # Store and all existing callers may omit it without changing return values.
+    my $warning_details = shift;
+    my $capture_warnings = ref($warning_details) eq 'ARRAY';
+    @$warning_details = () if $capture_warnings;
+    my $error_details = shift;
+    my $capture_errors = ref($error_details) eq 'ARRAY';
+    @$error_details = () if $capture_errors;
 
     my $error_message = "";
     my $warning_message = "";
@@ -647,7 +724,8 @@ sub check_measurement {
             if ( (!$timestamp && !$trait_value) || ($timestamp && !$trait_value) || ($timestamp && $trait_value) ) {
                 if ($timestamp) {
                     if( !$timestamp =~ m/(\d{4})-(\d{2})-(\d{2}) (\d{2}):(\d{2}):(\d{2})(\S)(\d{4})/) {
-                        $error_message .= "<small>Bad timestamp for value for Plot Name: ".$plot_name."<br/>Trait Name: ".$trait_name."<br/>Should be YYYY-MM-DD HH:MM:SS-0000 or YYYY-MM-DD HH:MM:SS+0000</small><hr>";
+                        $error_message .= ("<small>" . SGN::I18N::translate($ui_check_measurement_i18n, "phenotype.root.bad_timestamp_for_value_for_plot_name", "Bad timestamp for value for Plot Name: ", undef, { entities => '<>&', decode => 1 }) . "").$plot_name.("<br/>" . SGN::I18N::translate($ui_check_measurement_i18n, "trial.repetitive.trait_name", "Trait Name: ", undef, { entities => '<>&', decode => 1 }) . "").$trait_name.("<br/>" . SGN::I18N::translate($ui_check_measurement_i18n, "phenotype.root.should_be_yyyy_mm_dd_hh_mm_ss_0000_or", "Should be YYYY-MM-DD HH:MM:SS-0000 or YYYY-MM-DD HH:MM:SS+0000", undef, { entities => '<>&', decode => 1 }) . "</small><hr>");
+                        push @$error_details, { code => 'bad_timestamp', variables => { plot => $plot_name, trait => $trait_name } } if $capture_errors;
                     }
                     # remove timezone from timestamp since it is not stored in the database
                     $timestamp =~ s/[\-\+][0-9]{4}$//;
@@ -661,7 +739,8 @@ sub check_measurement {
             if ($self->check_trait_format()->{$trait_cvterm_id} =~ m/numeric|counter|percent|boolean/i ) {
                 my $trait_format_checked = looks_like_number($trait_value);
                 if (!$trait_format_checked && $trait_value ne '') {
-                    $error_message .= "<small>This trait value should be numeric: <br/>Plot Name: ".$plot_name."<br/>Trait Name: ".$trait_name."<br/>Value: ".$trait_value."</small><hr>";
+                    $error_message .= ("<small>" . SGN::I18N::translate($ui_check_measurement_i18n, "phenotype.root.this_trait_value_should_be_numeric", "This trait value should be numeric: ", undef, { entities => '<>&', decode => 1 }) . "<br/>" . SGN::I18N::translate($ui_check_measurement_i18n, "trial.card.coords.plot_name", "Plot Name: ", undef, { entities => '<>&', decode => 1 }) . "").$plot_name.("<br/>" . SGN::I18N::translate($ui_check_measurement_i18n, "trial.repetitive.trait_name", "Trait Name: ", undef, { entities => '<>&', decode => 1 }) . "").$trait_name.("<br/>" . SGN::I18N::translate($ui_check_measurement_i18n, "phenotype.root.value.7476ccb", "Value: ", undef, { entities => '<>&', decode => 1 }) . "").$trait_value."</small><hr>";
+                    push @$error_details, { code => 'numeric_required', variables => { plot => $plot_name, trait => $trait_name, value => $trait_value } } if $capture_errors;
                 }
 
                 my $trait_min = defined $self->check_trait_min_value->{$trait_cvterm_id} ? $self->check_trait_min_value->{$trait_cvterm_id} : undef;
@@ -671,13 +750,15 @@ sub check_measurement {
                 # print STDERR "the trait maximum: Trait Maximum for trait $trait_name: ", (defined $trait_max ? $trait_max : undef), "\n";
 
                 if (defined $trait_min && $trait_value ne '' && $trait_value < $trait_min) {
-                    $error_message .= "<small>For trait '$trait_name' the trait value $trait_value should not be smaller than the defined trait_minimum, $trait_min.</small><hr>";
+                    $error_message .= ("<small>" . SGN::I18N::translate($ui_check_measurement_i18n, "phenotype.root.for_trait.5f862b3", "For trait '", undef, { entities => '<>&', decode => 1 }) . "$trait_name" . SGN::I18N::translate($ui_check_measurement_i18n, "phenotype.root.the_trait_value", "' the trait value ", undef, { entities => '<>&', decode => 1 }) . "$trait_value" . SGN::I18N::translate($ui_check_measurement_i18n, "phenotype.root.should_not_be_smaller_than_the_defined_trait_minimum", " should not be smaller than the defined trait_minimum, ", undef, { entities => '<>&', decode => 1 }) . "$trait_min" . "." . "</small><hr>");
+                    push @$error_details, { code => 'minimum', variables => { trait => $trait_name, value => $trait_value, minimum => $trait_min } } if $capture_errors;
                 } else {
                     # print STDERR "the trait min and trait value : No minimum value defined for trait '$trait_name' (cvterm_id: $trait_cvterm_id).\n";
                 }
 
                 if (defined $trait_max && $trait_value > $trait_max) {
-                    $error_message .= "<small>For the trait '$trait_name' the trait value $trait_value should not be larger than the defined trait_maximum, $trait_max.</small><hr>";
+                    $error_message .= ("<small>" . SGN::I18N::translate($ui_check_measurement_i18n, "phenotype.root.for_the_trait.ad542d7", "For the trait '", undef, { entities => '<>&', decode => 1 }) . "$trait_name" . SGN::I18N::translate($ui_check_measurement_i18n, "phenotype.root.the_trait_value", "' the trait value ", undef, { entities => '<>&', decode => 1 }) . "$trait_value" . SGN::I18N::translate($ui_check_measurement_i18n, "phenotype.root.should_not_be_larger_than_the_defined_trait_maximum", " should not be larger than the defined trait_maximum, ", undef, { entities => '<>&', decode => 1 }) . "$trait_max" . "." . "</small><hr>");
+                    push @$error_details, { code => 'maximum', variables => { trait => $trait_name, value => $trait_value, maximum => $trait_max } } if $capture_errors;
                 } else {
                     # print STDERR "the trait max and trait value: No maximum value defined for trait '$trait_name' (cvterm_id: $trait_cvterm_id). \n";
                 }
@@ -687,7 +768,8 @@ sub check_measurement {
             if ($self->check_trait_format->{$trait_cvterm_id} eq 'image') {
                 $trait_value =~ s/^.*photos\///;
                 if (!exists($self->image_plot_full_names->{$trait_value})) {
-                    $error_message .= "<small>For Plot Name: $plot_name there should be a corresponding image named in the zipfile called $trait_value. </small><hr>";
+                    $error_message .= ("<small>" . SGN::I18N::translate($ui_check_measurement_i18n, "phenotype.root.for_plot_name", "For Plot Name: ", undef, { entities => '<>&', decode => 1 }) . "$plot_name" . SGN::I18N::translate($ui_check_measurement_i18n, "phenotype.root.there_should_be_a_corresponding_image_named_in_the_zipfile", " there should be a corresponding image named in the zipfile called ", undef, { entities => '<>&', decode => 1 }) . "$trait_value" . ". " . "</small><hr>");
+                    push @$error_details, { code => 'image_missing', variables => { plot => $plot_name, image => $trait_value } } if $capture_errors;
                 }
             }
 
@@ -739,7 +821,8 @@ sub check_measurement {
                 foreach my $value (@check_values) {
                     if ($value ne '' && !exists($trait_categories_hash{$value})) {
                         my $valid_values = join("/", sort keys %trait_categories_hash);  # Sort values for consistent order
-                        $error_message = "<small> This trait value should be one of $valid_values: $valid_values<br/>Plot Name: $plot_name <br/>Trait Name: $trait_name <br/>Value: $trait_value</small><hr>";
+                        $error_message = ("<small>" . SGN::I18N::translate($ui_check_measurement_i18n, "phenotype.root.this_trait_value_should_be_one_of", " This trait value should be one of ", undef, { entities => '<>&', decode => 1 }) . "$valid_values" . ": " . "$valid_values" . "" . "<br/>" . SGN::I18N::translate($ui_check_measurement_i18n, "trial.card.coords.plot_name", "Plot Name: ", undef, { entities => '<>&', decode => 1 }) . "$plot_name" . " " . "<br/>" . SGN::I18N::translate($ui_check_measurement_i18n, "trial.repetitive.trait_name", "Trait Name: ", undef, { entities => '<>&', decode => 1 }) . "$trait_name" . " " . "<br/>" . SGN::I18N::translate($ui_check_measurement_i18n, "phenotype.root.value.7476ccb", "Value: ", undef, { entities => '<>&', decode => 1 }) . "$trait_value" . "" . "</small><hr>");
+                        @$error_details = ({ code => 'category', variables => { valid_values => $valid_values, plot => $plot_name, trait => $trait_name, value => $trait_value } }) if $capture_errors;
                         # print STDERR "The error in the value $error_message \n";
                     }
                     else {
@@ -765,7 +848,8 @@ sub check_measurement {
             # print STDERR "Trait repeat type: $repeat_type\n";
             if (!$timestamp) {
                 # print STDERR "trait name : $trait_name is multiple without timestamp \n";
-                $error_message .= "For trait $trait_name that is defined as a 'multiple' or 'time_series' repeat type trait, a timestamp is required.\n";
+                $error_message .= ("" . SGN::I18N::translate($ui_check_measurement_i18n, "phenotype.root.for_trait.1c1521c", "For trait ", undef, { entities => '<>&', decode => 1 }) . "$trait_name" . SGN::I18N::translate($ui_check_measurement_i18n, "phenotype.root.that_is_defined_as_a_multiple_or_time_series_repeat", " that is defined as a 'multiple' or 'time_series' repeat type trait, a timestamp is required.\n", undef, { entities => '<>&', decode => 1 }) . "");
+                push @$error_details, { code => 'timestamp_required', variables => { trait => $trait_name } } if $capture_errors;
             }
 
             if (exists($self->unique_value_trait_stock_timestamp->{$trait_value, $trait_cvterm_id, $stock_id, $timestamp})) {
@@ -779,7 +863,9 @@ sub check_measurement {
             elsif (exists($self->unique_trait_stock_timestamp->{$trait_cvterm_id, $stock_id, $timestamp})) {
                 my $prev = $self->unique_trait_stock_timestamp->{$trait_cvterm_id, $stock_id, $timestamp};
                 if ( defined($prev) ) {
-                    $warning_message .= "<small>$plot_name already has a <strong>different value</strong> stored in the database ($prev) than in your file (" . ($trait_value ? $trait_value : "<em>blank</em>") . ") for the trait $trait_name on $timestamp.</small><hr>";
+                    $warning_message .= ("<small>" . "" . "$plot_name" . SGN::I18N::translate($ui_check_measurement_i18n, "phenotype.root.already_has_a", " already has a ", undef, { entities => '<>&', decode => 1 }) . "<strong>" . SGN::I18N::translate($ui_check_measurement_i18n, "phenotype.root.different_value", "different value", undef, { entities => '<>&', decode => 1 }) . "</strong>" . SGN::I18N::translate($ui_check_measurement_i18n, "phenotype.root.stored_in_the_database", " stored in the database (", undef, { entities => '<>&', decode => 1 }) . "$prev" . SGN::I18N::translate($ui_check_measurement_i18n, "phenotype.root.than_in_your_file", ") than in your file (", undef, { entities => '<>&', decode => 1 }) . "") . ($trait_value ? $trait_value : "<em>blank</em>") . ("" . SGN::I18N::translate($ui_check_measurement_i18n, "phenotype.root.for_the_trait.55cdbfa", ") for the trait ", undef, { entities => '<>&', decode => 1 }) . "$trait_name" . SGN::I18N::translate($ui_check_measurement_i18n, "shared.feature.located_on", " on ", undef, { entities => '<>&', decode => 1 }) . "$timestamp" . "." . "</small><hr>");
+                    # Preserve original falsey-zero display; keep the raw incoming value.
+                    push @$warning_details, { code => 'conflict_at_time', legacy_blank => $trait_value ? 0 : 1, variables => { plot => $plot_name, trait => $trait_name, previous => $prev, incoming => $trait_value, timestamp => $timestamp } } if $capture_warnings;
                 }
             }
         }
@@ -788,7 +874,8 @@ sub check_measurement {
         #check if the plot_name, trait_name combination already exists in database.
         elsif ($repeat_type eq "single") {
 	    if ($file_contains_multiple_values  && (defined($trait_value) && $trait_value ne '')) {
-		$warning_message .= "Multiple values present in file for single repeat_type term $trait_name\n";
+		$warning_message .= ("" . SGN::I18N::translate($ui_check_measurement_i18n, "phenotype.root.multiple_values_present_in_file_for_single_repeat_type_term", "Multiple values present in file for single repeat_type term ", undef, { entities => '<>&', decode => 1 }) . "$trait_name" . "\n" . "");
+                push @$warning_details, { code => 'multiple_single', variables => { trait => $trait_name } } if $capture_warnings;
 	    }
 
             print STDERR "Processing this trait with value $trait_value as a single repeat type trait with overwrite_values set to ".$self->overwrite_values()."...\n";
@@ -803,35 +890,43 @@ sub check_measurement {
             elsif (exists($self->unique_trait_stock_timestamp->{$trait_cvterm_id, $stock_id, $timestamp})) {
                 my $prev = $self->unique_trait_stock_timestamp->{$trait_cvterm_id, $stock_id, $timestamp};
                 if ( defined($prev) ) {
-                    $warning_message .= "<small>$plot_name already has a <strong>different value</strong> stored in the database ($prev) than in your file (" . ($trait_value ? $trait_value : "<em>blank</em>") . ") for the trait $trait_name.</small><hr>";
+                    $warning_message .= ("<small>" . "" . "$plot_name" . SGN::I18N::translate($ui_check_measurement_i18n, "phenotype.root.already_has_a", " already has a ", undef, { entities => '<>&', decode => 1 }) . "<strong>" . SGN::I18N::translate($ui_check_measurement_i18n, "phenotype.root.different_value", "different value", undef, { entities => '<>&', decode => 1 }) . "</strong>" . SGN::I18N::translate($ui_check_measurement_i18n, "phenotype.root.stored_in_the_database", " stored in the database (", undef, { entities => '<>&', decode => 1 }) . "$prev" . SGN::I18N::translate($ui_check_measurement_i18n, "phenotype.root.than_in_your_file", ") than in your file (", undef, { entities => '<>&', decode => 1 }) . "") . ($trait_value ? $trait_value : "<em>blank</em>") . ("" . SGN::I18N::translate($ui_check_measurement_i18n, "phenotype.root.for_the_trait.55cdbfa", ") for the trait ", undef, { entities => '<>&', decode => 1 }) . "$trait_name" . "." . "</small><hr>");
+                    # Preserve original falsey-zero display; keep the raw incoming value.
+                    push @$warning_details, { code => 'conflict', legacy_blank => $trait_value ? 0 : 1, variables => { plot => $plot_name, trait => $trait_name, previous => $prev, incoming => $trait_value } } if $capture_warnings;
                 }
             }
             elsif (exists($self->unique_trait_stock->{$trait_cvterm_id, $stock_id})) {
                 my $prev = $self->unique_trait_stock->{$trait_cvterm_id, $stock_id};
                 if ( defined($prev) ) {
-                    $warning_message .= "<small>$plot_name already has a <strong>different value</strong> stored in the database ($prev) than in your file (" . ($trait_value ? $trait_value : "<em>blank</em>") . ") for the trait $trait_name.</small><hr>";
+                    $warning_message .= ("<small>" . "" . "$plot_name" . SGN::I18N::translate($ui_check_measurement_i18n, "phenotype.root.already_has_a", " already has a ", undef, { entities => '<>&', decode => 1 }) . "<strong>" . SGN::I18N::translate($ui_check_measurement_i18n, "phenotype.root.different_value", "different value", undef, { entities => '<>&', decode => 1 }) . "</strong>" . SGN::I18N::translate($ui_check_measurement_i18n, "phenotype.root.stored_in_the_database", " stored in the database (", undef, { entities => '<>&', decode => 1 }) . "$prev" . SGN::I18N::translate($ui_check_measurement_i18n, "phenotype.root.than_in_your_file", ") than in your file (", undef, { entities => '<>&', decode => 1 }) . "") . ($trait_value ? $trait_value : "<em>blank</em>") . ("" . SGN::I18N::translate($ui_check_measurement_i18n, "phenotype.root.for_the_trait.55cdbfa", ") for the trait ", undef, { entities => '<>&', decode => 1 }) . "$trait_name" . "." . "</small><hr>");
+                    # Preserve original falsey-zero display; keep the raw incoming value.
+                    push @$warning_details, { code => 'conflict', legacy_blank => $trait_value ? 0 : 1, variables => { plot => $plot_name, trait => $trait_name, previous => $prev, incoming => $trait_value } } if $capture_warnings;
                 }
             }
         }
 
         #check if the plot_name, trait_name, timestamp combination already exists in same file.
         if (exists($self->check_file_stock_trait_duplicates->{$trait_cvterm_id, $stock_id, $timestamp})) {
-            $warning_message .= "<small>$plot_name has a duplicate value for trait $trait_name in your file</small><hr>";
+            $warning_message .= ("<small>" . "" . "$plot_name" . SGN::I18N::translate($ui_check_measurement_i18n, "phenotype.root.has_a_duplicate_value_for_trait", " has a duplicate value for trait ", undef, { entities => '<>&', decode => 1 }) . "$trait_name" . SGN::I18N::translate($ui_check_measurement_i18n, "phenotype.root.in_your_file", " in your file", undef, { entities => '<>&', decode => 1 }) . "</small><hr>");
+            push @$warning_details, { code => 'duplicate_file', variables => { plot => $plot_name, trait => $trait_name } } if $capture_warnings;
         }
         $self->check_file_stock_trait_duplicates()->{$trait_cvterm_id, $stock_id, $timestamp} = 1;
     }
 
     ## Verify metadata
     if ($self->metadata_hash->{'archived_file'} && (!$self->metadata_hash->{'archived_file_type'} || $self->metadata_hash->{'archived_file_type'} eq "")) {
-        $error_message = "No file type provided for archived file.";
+        $error_message = ("" . SGN::I18N::translate($ui_check_measurement_i18n, "phenotype_upload.verify_error.metadata_type_missing", "No file type provided for archived file.", undef, { entities => '<>&', decode => 1 }) . "");
+        @$error_details = ({ code => 'metadata_type_missing', variables => {  } }) if $capture_errors;
         return ($warning_message, $error_message);
     }
     if (!$self->metadata_hash->{'operator'} || $self->metadata_hash->{'operator'} eq "") {
-        $warning_message = "No operator provided in file upload metadata.";
+        $warning_message = ("" . SGN::I18N::translate($ui_check_measurement_i18n, "phenotype_upload.warning.operator_missing", "No operator provided in file upload metadata.", undef, { entities => '<>&', decode => 1 }) . "");
+        @$warning_details = ({ code => 'operator_missing', variables => {} }) if $capture_warnings;
         return ($warning_message, $error_message);
     }
     if (!$self->metadata_hash->{'date'} || $self->metadata_hash->{'date'} eq "") {
-        $error_message = "No date provided in file upload metadata.";
+        $error_message = ("" . SGN::I18N::translate($ui_check_measurement_i18n, "phenotype_upload.verify_error.metadata_date_missing", "No date provided in file upload metadata.", undef, { entities => '<>&', decode => 1 }) . "");
+        @$error_details = ({ code => 'metadata_date_missing', variables => {  } }) if $capture_errors;
         return ($warning_message, $error_message);
     }
 
@@ -841,6 +936,8 @@ sub check_measurement {
 
 sub store {
     my $self = shift;
+    my SGN::I18N $ui_store_i18n = SGN::I18N::translate($c);
+    $self->_clear_upload_summary();
     # print STDERR "CXGN::Phenotypes::StorePhenotypes store\n";
 
     $self->create_hash_lookups();
@@ -882,6 +979,7 @@ sub store {
     my $external_references_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'phenotype_external_references', 'phenotype_property')->cvterm_id();
     my %experiment_ids;
     my @stored_details;
+    my $pending_upload_summary;
     my %nd_experiment_md_images;
 
     #    my %check_unique_trait_stock = %{$self->unique_trait_stock};
@@ -1271,17 +1369,24 @@ sub store {
             push @overwritten_values, $self->delete_previous_phenotypes(\%trait_and_stock_to_overwrite, \@saved_nd_experiment_ids);
         }
 
-        $success_message = 'All values in your file have been successfully processed!<br><br>';
-        $success_message .= "$new_count new values stored<br>";
-        $success_message .= "$skip_count previously stored values skipped<br>";
+        $success_message = ("" . SGN::I18N::translate($ui_store_i18n, "phenotype_upload.server.processed", "All values in your file have been successfully processed!", undef, { entities => '<>&', decode => 1 }) . "<br><br>");
+        $success_message .= ("" . "" . "$new_count" . SGN::I18N::translate($ui_store_i18n, "phenotype.root.new_values_stored", " new values stored", undef, { entities => '<>&', decode => 1 }) . "<br>");
+        $success_message .= ("" . "" . "$skip_count" . SGN::I18N::translate($ui_store_i18n, "phenotype.root.previously_stored_values_skipped", " previously stored values skipped", undef, { entities => '<>&', decode => 1 }) . "<br>");
 ###	$success_message .= "of which $previously_stored_skip_count were skipped because a value had previously been stored.";
-        $success_message .= "$overwrite_count previously stored values overwritten<br>";
+        $success_message .= ("" . "" . "$overwrite_count" . SGN::I18N::translate($ui_store_i18n, "phenotype.root.previously_stored_values_overwritten", " previously stored values overwritten", undef, { entities => '<>&', decode => 1 }) . "<br>");
 
-        $success_message .= "$remove_count previously stored values removed<br><br>";
+        $success_message .= ("" . "" . "$remove_count" . SGN::I18N::translate($ui_store_i18n, "phenotype.root.previously_stored_values_removed", " previously stored values removed", undef, { entities => '<>&', decode => 1 }) . "<br><br>");
         my %files_with_overwritten_values = map {$_->[0] => 1} @overwritten_values;
         my $obsoleted_files = $self->check_overwritten_files_status(keys %files_with_overwritten_values);
+        $pending_upload_summary = {
+            new_count => $new_count,
+            skip_count => $skip_count,
+            overwrite_count => $overwrite_count,
+            remove_count => $remove_count,
+            obsolete_filenames => [map { $_->[1] } @$obsoleted_files],
+        };
         if (scalar(@$obsoleted_files) > 0){
-            $success_message .= ' The following previously uploaded files are now obsolete because all values from them were overwritten by your upload: ';
+            $success_message .= ("" . SGN::I18N::translate($ui_store_i18n, "phenotype.root.the_following_previously_uploaded_files_are_now_obsolete_because_all", " The following previously uploaded files are now obsolete because all values from them were overwritten by your upload: ", undef, { entities => '<>&', decode => 1 }) . "");
             foreach (@$obsoleted_files){
                 $success_message .= " ".$_->[1];
             }
@@ -1308,6 +1413,7 @@ sub store {
         $self->save_archived_images_metadata(\%nd_experiment_md_images);
     }
 
+    $self->_set_upload_summary($pending_upload_summary);
     return ($error_message, $success_message, \@stored_details);
 }
 

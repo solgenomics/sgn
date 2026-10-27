@@ -1,3 +1,7 @@
+<%once>
+use HTML::Entities ();
+</%once>
+
 <%args>
 $trial_id
 </%args>
@@ -11,7 +15,7 @@ $trial_id
 </div>
 <div class="panel panel-default">
     <div class="panel-body">
-        <&| /page/info_section.mas, title => 'Add stocks to a List', collapsible=>1, collapsed=>0, subtitle=>'<i>Adding stocks in this trial to a new or exisiting list</i>'&>
+        <&| /page/info_section.mas, title => HTML::Entities::encode_entities($c->i18n->p('trial.card.list_selection.stocks_title', 'Add stocks to a List')), collapsible=>1, collapsed=>0, subtitle=>'<i>'.HTML::Entities::encode_entities($c->i18n->p('trial.card.list_selection.stocks_subtitle', 'Adding stocks in this trial to a new or exisiting list')).'</i>'&>
         <br>
         <div id="stocks_to_new_list" style="display:none"></div>
         <div id="stocks_add_to_list"></div>
@@ -45,17 +49,19 @@ jQuery(document).ready(function(){
                 },
             },
             columns: [
-                { title: "Stock Name", "data": null, "render": function ( data, type, row ) {
+                { title: window.SGN && SGN.i18n ? SGN.i18n.p('trial.card.stocks.header.name', 'Stock Name') : 'Stock Name', "data": null, "render": function ( data, type, row ) {
                     if (row.stock_type == 'cross') { return "<a href='/cross/"+row.stock_id+"'>"+row.accession_name+"</a>";
                     } else { return "<a href='/stock/"+row.stock_id+"/view'>"+row.accession_name+"</a>";}
                 }},
-                { title: "Stock Species", "data": "organism" },
-                { title: "Stock Type", "data": "stock_type" },
+                { title: window.SGN && SGN.i18n ? SGN.i18n.p('trial.card.stocks.header.species', 'Stock Species') : 'Stock Species', "data": "organism" },
+                { title: window.SGN && SGN.i18n ? SGN.i18n.p('trial.card.stocks.header.type', 'Stock Type') : 'Stock Type', "data": "stock_type" },
             ],
             "fnInitComplete": function(oSettings, json) {
                 //console.log(json);
                 if (!isLoggedIn()) {
-                    jQuery('#stocks_add_to_list').html("<div class='well well-sm'><h3>Please login to use lists!</h3></div>");
+                    var loginMessage = window.SGN && SGN.i18n ? SGN.i18n.p('trial.card.stocks.login_required', 'Please login to use lists!') : 'Please login to use lists!';
+                    var escapedLoginMessage = jQuery('<div>').text(loginMessage).html();
+                    jQuery('#stocks_add_to_list').html("<div class='well well-sm'><h3>"+escapedLoginMessage+"</h3></div>");
                 } else {
                     var html = "";
                     for(var i=0; i<json.data.length; i++){

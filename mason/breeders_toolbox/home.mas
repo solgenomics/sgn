@@ -4,43 +4,43 @@
 
 </%args>
 
-<& /page/page_title.mas, title=>'Breeder Tools' &>
+<& /page/page_title.mas, title=>HTML::Entities::encode_entities($c->i18n->p('global.tools.breeder_tools', 'Breeder Tools')) &>
 
 <div class="container-fluid">
 
 <dl>
-<dt><a href="/breeders/manage_programs">Breeding Programs</a></dt>
-<dd>Add new breeding program information.</dd>
+<dt><a href="/breeders/manage_programs"><% $c->i18n->p("navigation.manage.programs", "Breeding Programs") |h %></a></dt>
+<dd><% $c->i18n->p("widgets.breeder_tools.add_program_info", "Add new breeding program information.") |h %></dd>
 
-<dt><a href="/breeders/accessions">Accessions</a></dt>
-<dd>Manage accessions. Add new accessions using fuzzy matching.</dd>
+<dt><a href="/breeders/accessions"><% $c->i18n->p("accessions.section.accessions", "Accessions") |h %></a></dt>
+<dd><% $c->i18n->p("widgets.breeder_tools.manage_accessions_info", "Manage accessions. Add new accessions using fuzzy matching.") |h %></dd>
 
-<dt><a href="/breeders/trials">Field Trials</a></dt>
-<dd>Manage trials. Add new trials and create field layouts.</dd>
+<dt><a href="/breeders/trials"><% $c->i18n->p("navigation.manage.field_trials", "Field Trials") |h %></a></dt>
+<dd><% $c->i18n->p("widgets.breeder_tools.manage_trials_info", "Manage trials. Add new trials and create field layouts.") |h %></dd>
 
-<dt><a href="/breeders/genotyping">Genotyping Plates</a></dt>
-<dd>Upload and manage IGD genotyping plates.</dd>
+<dt><a href="/breeders/genotyping"><% $c->i18n->p("navigation.manage.genotyping_plates", "Genotyping Plates") |h %></a></dt>
+<dd><% $c->i18n->p("widgets.breeder_tools.manage_igd_plates_info", "Upload and manage IGD genotyping plates.") |h %></dd>
 
-<dt><a href="/breeders/locations">Locations</a></dt>
-<dd>Manage locations. Add/remove locations</dd>
+<dt><a href="/breeders/locations"><% $c->i18n->p("navigation.manage.locations", "Locations") |h %></a></dt>
+<dd><% $c->i18n->p("widgets.breeder_tools.manage_locations_info", "Manage locations. Add/remove locations") |h %></dd>
 
-<dt><a href="/breeders/crosses">Crosses</a></dt>
-<dd>Create new crosses.</dd>
+<dt><a href="/breeders/crosses"><% $c->i18n->p("navigation.manage.crosses", "Crosses") |h %></a></dt>
+<dd><% $c->i18n->p("widgets.breeder_tools.create_crosses_info", "Create new crosses.") |h %></dd>
 
-<dt><a href="/breeders/phenotyping">Phenotyping</a></dt>
-<dd>Upload phenotype information for accessions in the database.</dd>
+<dt><a href="/breeders/phenotyping"><% $c->i18n->p("navigation.manage.phenotyping", "Phenotyping") |h %></a></dt>
+<dd><% $c->i18n->p("widgets.breeder_tools.phenotype_info", "Upload phenotype information for accessions in the database.") |h %></dd>
 
 <dt><a href="/fieldbook">Fieldbook</a><dt>
-<dd>Create files for the Android Fieldbook app, upload files from Fieldbook to the database.
+<dd><% $c->i18n->p("widgets.breeder_tools.fieldbook_info", "Create files for the Android Fieldbook app, upload files from Fieldbook to the database.") |h %>
 
-<dt><a href="/barcode">Barcodes</a></dt>
-<dd>Download barcodes for accessions and plots.</dd>
+<dt><a href="/barcode"><% $c->i18n->p("navigation.manage.barcodes", "Barcodes") |h %></a></dt>
+<dd><% $c->i18n->p("widgets.breeder_tools.barcodes_info", "Download barcodes for accessions and plots.") |h %></dd>
 
-<dt><a href="/breeders/download">Download Data</a></dt>
-<dd>Download phenotypic and genotypic data by trial, triat and location.</dd>
+<dt><a href="/breeders/download"><% $c->i18n->p("phenotype.download_data", "Download Data") |h %></a></dt>
+<dd><% $c->i18n->p("widgets.breeder_tools.download_data_info", "Download phenotypic and genotypic data by trial, triat and location.") |h %></dd>
 
 </div>
 
-
-
-
+<%once>
+use HTML::Entities ();
+</%once>

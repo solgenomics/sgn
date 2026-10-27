@@ -51,7 +51,7 @@ my $collapsible = 0;
 
 <div id='trials_select_div' class="col-xs-12 col-sm-6 col-md-4" style="margin-top: 18px;">
     <select id="trial_select" class="form-control">
-        <option value="" disabled selected>Select a trial</option>
+        <option value="" disabled selected><% $c->i18n->p("solgs.interface.select_a_trial", "Select a trial") |h %></option>
         <!-- Options will be dynamically populated -->
     </select>
 </div>

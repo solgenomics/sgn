@@ -127,8 +127,8 @@
                 var e = d3.event;
                 tooltip
                     .html(
-                        "<strong>Value:</strong> " + d.value + "<br/>" +
-                        "<strong>Frequency:</strong> " + d.frequency
+                        "<strong>" + (typeof window !== 'undefined' && window.SGN && window.SGN.i18n && window.jQuery ? jQuery('<span>').text(SGN.i18n.p("widgets.graph.value_label", "Value:")).html() : "Value:") + "</strong> " + d.value + "<br/>" +
+                        "<strong>" + (typeof window !== 'undefined' && window.SGN && window.SGN.i18n && window.jQuery ? jQuery('<span>').text(SGN.i18n.p("widgets.graph.frequency_label", "Frequency:")).html() : "Frequency:") + "</strong> " + d.frequency
                     )
                     .style("left", (e.pageX + 10) + "px")
                     .style("top",  (e.pageY - 25) + "px")
@@ -324,9 +324,9 @@
 
                         tooltip2
                             .html(
-                                "<strong>Sample:<strong> " + dataset.label + "<br/>" +
-                                "<strong>Value:</strong> " + d.value + "<br/>" +
-                                "<strong>Frequency:</strong> " + d.frequency
+                                "<strong>" + (typeof window !== 'undefined' && window.SGN && window.SGN.i18n && window.jQuery ? jQuery('<span>').text(SGN.i18n.p("widgets.graph.sample_label", "Sample:")).html() : "Sample:") + "<strong> " + dataset.label + "<br/>" +
+                                "<strong>" + (typeof window !== 'undefined' && window.SGN && window.SGN.i18n && window.jQuery ? jQuery('<span>').text(SGN.i18n.p("widgets.graph.value_label", "Value:")).html() : "Value:") + "</strong> " + d.value + "<br/>" +
+                                "<strong>" + (typeof window !== 'undefined' && window.SGN && window.SGN.i18n && window.jQuery ? jQuery('<span>').text(SGN.i18n.p("widgets.graph.frequency_label", "Frequency:")).html() : "Frequency:") + "</strong> " + d.frequency
                             )
                             .style("left", (e.clientX + 10) + "px")
                             .style("top",  (e.clientY - 25 + window.scrollY) + "px")

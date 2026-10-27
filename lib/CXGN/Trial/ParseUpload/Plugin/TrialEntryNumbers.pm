@@ -1,6 +1,8 @@
 package CXGN::Trial::ParseUpload::Plugin::TrialEntryNumbers;
 
 use Moose::Role;
+use SGN::I18N ();
+use CatalystX::GlobalContext '$c';
 use Spreadsheet::ParseExcel;
 use Spreadsheet::ParseXLSX;
 use Data::Dumper;
@@ -10,6 +12,7 @@ use CXGN::Stock::StockLookup;
 
 sub _validate_with_plugin {
   my $self = shift;
+    my SGN::I18N $ui_trialentrynumbers_i18n = $c && $c->can('i18n') ? $c->i18n : undef;
   my $filename = $self->get_filename();
   my $schema = $self->get_chado_schema();
 
@@ -48,7 +51,7 @@ sub _validate_with_plugin {
 
   $worksheet = ( $excel_obj->worksheets() )[0]; #support only one worksheet
   if (!$worksheet) {
-      push @error_messages, "Spreadsheet must be on 1st tab in Excel (.xls) file";
+      push @error_messages, (SGN::I18N::translate($ui_trialentrynumbers_i18n, "seedlot_maintenance_upload.parse.first_sheet", "Spreadsheet must be on 1st tab in Excel (.xls) file"));
       $errors{'error_messages'} = \@error_messages;
       $self->_set_parse_errors(\%errors);
       return;
@@ -56,7 +59,7 @@ sub _validate_with_plugin {
   my ( $row_min, $row_max ) = $worksheet->row_range();
   my ( $col_min, $col_max ) = $worksheet->col_range();
   if (($col_max - $col_min)  < 2 || ($row_max - $row_min) < 1 ) { #must have header and at least one row of plot data
-    push @error_messages, "Spreadsheet is missing header or contains no rows";
+    push @error_messages, (SGN::I18N::translate($ui_trialentrynumbers_i18n, "trial.upload.multi.excel.header_or_rows", "Spreadsheet is missing header or contains no rows"));
     $errors{'error_messages'} = \@error_messages;
     $self->_set_parse_errors(\%errors);
     return;
@@ -81,13 +84,13 @@ sub _validate_with_plugin {
   }
 
   if (!$accession_name_head || $accession_name_head ne 'accession_name' ) {
-    push @error_messages, "Cell A1: accession_name is missing from the header";
+    push @error_messages, (SGN::I18N::translate($ui_trialentrynumbers_i18n, "trial.parse.header_cell", "Cell %{cell}: %{field} is missing from the header", {cell => "A1", field => "accession_name"}));
   }
   if (!$trial_names_head || $trial_names_head ne 'trial_names' ) {
-    push @error_messages, "Cell A1: trial_names is missing from the header";
+    push @error_messages, (SGN::I18N::translate($ui_trialentrynumbers_i18n, "trial.parse.header_cell", "Cell %{cell}: %{field} is missing from the header", {cell => "A1", field => "trial_names"}));
   }
   if (!$entry_number_head || $entry_number_head ne 'entry_number' ) {
-    push @error_messages, "Cell A1: entry_number is missing from the header";
+    push @error_messages, (SGN::I18N::translate($ui_trialentrynumbers_i18n, "trial.parse.header_cell", "Cell %{cell}: %{field} is missing from the header", {cell => "A1", field => "entry_number"}));
   }
 
   for my $row ( 1 .. $row_max ) {
@@ -113,7 +116,7 @@ sub _validate_with_plugin {
 
     #check required fields and track values
     if (!$accession_name || $accession_name eq '' ) {
-      push @error_messages, "Cell A$row_name: accession_name missing.";
+      push @error_messages, (SGN::I18N::translate($ui_trialentrynumbers_i18n, "trial.parse.cell_missing_dot", "Cell %{cell}: %{field} missing.", {cell => "A$row_name", field => "accession_name"}));
     }
     else {
       $accession_name =~ s/^\s+|\s+$//g; #trim whitespace from front and end...
@@ -121,7 +124,7 @@ sub _validate_with_plugin {
     }
 
     if (!$trial_names_str || $trial_names_str eq '' ) {
-      push @error_messages, "Cell B$row_name: trial_names missing.";
+      push @error_messages, (SGN::I18N::translate($ui_trialentrynumbers_i18n, "trial.parse.cell_missing_dot", "Cell %{cell}: %{field} missing.", {cell => "B$row_name", field => "trial_names"}));
     }
     else {
       my @trial_names = split(',', $trial_names_str);
@@ -149,11 +152,11 @@ sub _validate_with_plugin {
   my @accession_names_missing = @{$accession_name_validator->validate($schema, 'accessions', \@accession_names)->{'missing'}};
   if ( scalar(@accession_names_missing) > 0 ) {
     $errors{'missing_accessions'} = \@accession_names_missing;
-    push(@error_messages, "The following accession names are not in the database as uniquenames or synonyms: " . join(',', @accession_names_missing));
+    push(@error_messages, (SGN::I18N::translate($ui_trialentrynumbers_i18n, "trial.parse.accessions_missing", "The following accession names are not in the database as uniquenames or synonyms: %{names}", {names => join(',', @accession_names_missing)})));
   }
   foreach my $accession_name (@accession_names) {
     if ( $seen_accession_names{$accession_name} > 1 ) {
-      push(@warning_messages, "The accession $accession_name was used more than once in the file");
+      push(@warning_messages, (SGN::I18N::translate($ui_trialentrynumbers_i18n, "trial.parse.accession_repeated", "The accession %{name} was used more than once in the file", {name => "$accession_name"})));
     }
   }
 
@@ -164,7 +167,7 @@ sub _validate_with_plugin {
   my @trial_names_missing = @{$trial_name_validator->validate($schema, 'trials', \@trial_names)->{'missing'}};
   if ( scalar(@trial_names_missing) > 0 ) {
     $errors{'missing_trials'} = \@trial_names_missing;
-    push(@error_messages, "The following trial names are not in the database: " . join(',', @trial_names_missing));
+    push(@error_messages, (SGN::I18N::translate($ui_trialentrynumbers_i18n, "trial.parse.entry_trials_missing", "The following trial names are not in the database: %{names}", {names => join(',', @trial_names_missing)})));
   }
 
   # Check Entry Numbers:
@@ -172,7 +175,7 @@ sub _validate_with_plugin {
   my @entry_numbers = keys %seen_entry_numbers;
   foreach my $entry_number (@entry_numbers) {
     if ( $seen_entry_numbers{$entry_number} > 1 ) {
-      push(@error_messages, "The entry number $entry_number is used more than once in the file");
+      push(@error_messages, (SGN::I18N::translate($ui_trialentrynumbers_i18n, "trial.parse.entry_repeated", "The entry number %{number} is used more than once in the file", {number => "$entry_number"})));
     }
   }
 

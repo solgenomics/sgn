@@ -1,3 +1,7 @@
+<%once>
+use HTML::Entities ();
+</%once>
+
 <%args>
 </%args>
 
@@ -7,8 +11,8 @@
     <div class="modal-dialog modal-xl" role="document">
         <div class="modal-content">
             <div class="modal-header" style="text-align: center">
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                <h4 class="modal-title" id="uploadNewAnalysisDialog">Upload Analysis</h4>
+                <button type="button" class="close" data-dismiss="modal" aria-label="<% $c->i18n->p("global.close", "Close") |h %>"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="uploadNewAnalysisDialog"><% $c->i18n->p("analysis.interface.upload_analysis", "Upload Analysis") |h %></h4>
             </div>
             <div class="modal-body">
                 <div class="container-fluid">
@@ -16,84 +20,84 @@
                     <form class="form-horizontal" method="post" enctype="multipart/form-data" encoding="multipart/form-data" id="upload_new_analysis_dialog_form" name="upload_new_analysis_dialog_form">
                     
                         <&| /util/workflow.mas, id=> "upload_new_analysis_workflow" &>
-                            <&| /util/workflow.mas:step, title=> "Intro" &>
-                                <& /page/page_title.mas, title=>"This workflow will guide you through uploading an analysis to the database" &>
-                                <p>You should have a spreadsheet (.csv) where the first column names the accession names or plots, and the subsequent columns have result values.</p>
-                                <p>The header row should have 'stock_name' in the first column and subsequent column headers should be for a trait variable e.g. 'plant height|CO_323:0000123'</p>
+                            <&| /util/workflow.mas:step, title=> HTML::Entities::encode_entities($c->i18n->p("cross.ui.intro", "Intro")) &>
+                                <& /page/page_title.mas, title=>HTML::Entities::encode_entities($c->i18n->p("analysis.interface.this_workflow_will_guide_you_through_uploading_an_analysis_to", "This workflow will guide you through uploading an analysis to the database")) &>
+                                <p><% $c->i18n->p("analysis.interface.you_should_have_a_spreadsheet_csv_where_the_first_column", "You should have a spreadsheet (.csv) where the first column names the accession names or plots, and the subsequent columns have result values.") |h %></p>
+                                <p><% $c->i18n->p("analysis.interface.the_header_row_should_have_stock_name_in_the_first", "The header row should have 'stock_name' in the first column and subsequent column headers should be for a trait variable e.g. 'plant height|CO_323:0000123'") |h %></p>
 
                                 <br/><br/>
                                 <center>
-                                <button class="btn btn-primary" onclick="Workflow.complete(this); return false;">Go to Next Step</button>
+                                <button class="btn btn-primary" onclick="Workflow.complete(this); return false;"><% $c->i18n->p("global.workflow.next_step", "Go to Next Step") |h %></button>
                                 </center>
                             </&>
-                            <&| /util/workflow.mas:step, title=> "Analysis" &>
-                                <& /page/page_title.mas, title=>"Define the analysis" &>
+                            <&| /util/workflow.mas:step, title=> HTML::Entities::encode_entities($c->i18n->p("analysis.interface.analysis", "Analysis")) &>
+                                <& /page/page_title.mas, title=>HTML::Entities::encode_entities($c->i18n->p("analysis.interface.define_the_analysis", "Define the analysis")) &>
 
                                 <div class="form-group form-group-sm">
-                                    <label class="col-sm-3 control-label">Analysis Name (must be unique): </label>
+                                    <label class="col-sm-3 control-label"><% $c->i18n->p("analysis.interface.analysis_name_must_be_unique", "Analysis Name (must be unique):") |h %> </label>
                                     <div class="col-sm-9">
                                         <input class="form-control" id="upload_new_analysis_name" name="upload_new_analysis_name" type="text" />
                                     </div>
                                 </div>
                                 <div class="form-group form-group-sm">
-                                    <label class="col-sm-3 control-label">Analysis Description: </label>
+                                    <label class="col-sm-3 control-label"><% $c->i18n->p("analysis.interface.analysis_description_857d74", "Analysis Description:") |h %> </label>
                                     <div class="col-sm-9">
                                         <input class="form-control" id="upload_new_analysis_description" name="upload_new_analysis_description" type="text" />
                                     </div>
                                 </div>
                                 <div class="form-group form-group-sm">
-                                    <label class="col-sm-3 control-label">Analysis Protocol (describe the analysis as a formula arbitrarily) (e.g. lme4(t1 ~ rep + accession)): </label>
+                                    <label class="col-sm-3 control-label"><% $c->i18n->p("analysis.interface.analysis_protocol_describe_the_analysis_as_a_formula_arbitrarily_e", "Analysis Protocol (describe the analysis as a formula arbitrarily) (e.g. lme4(t1 ~ rep + accession)):") |h %> </label>
                                     <div class="col-sm-9">
                                         <input class="form-control" id="upload_new_analysis_protocol" name="upload_new_analysis_protocol" type="text" />
                                     </div>
                                 </div>
                                 <div class="form-group form-group-sm">
-                                    <label class="col-sm-3 control-label">Analysis Of: </label>
+                                    <label class="col-sm-3 control-label"><% $c->i18n->p("analysis.interface.analysis_of", "Analysis Of:") |h %> </label>
                                     <div class="col-sm-9">
                                         <select class="form-control" id="upload_new_analysis_result_values_type" name="upload_new_analysis_result_values_type" >
-                                            <option value='analysis_result_values_match_accession_names'>Accession Names (for genetic blups, genetic results)</option>
-                                            <option value='analysis_result_values_match_precomputed_design'>Plot Names (for plot predictions, spatial, temporal results)</option>
+                                            <option value='analysis_result_values_match_accession_names'><% $c->i18n->p("analysis.interface.accession_names_for_genetic_blups_genetic_results", "Accession Names (for genetic blups, genetic results)") |h %></option>
+                                            <option value='analysis_result_values_match_precomputed_design'><% $c->i18n->p("analysis.interface.plot_names_for_plot_predictions_spatial_temporal_results", "Plot Names (for plot predictions, spatial, temporal results)") |h %></option>
                                         </select>
                                     </div>
                                 </div>
                                 <div class="form-group form-group-sm">
-                                    <label class="col-sm-3 control-label">Breeding Program: </label>
+                                    <label class="col-sm-3 control-label"><% $c->i18n->p("cross.ui.breeding_program.2c9b17e", "Breeding Program:") |h %> </label>
                                     <div class="col-sm-9">
                                         <div id="upload_new_analysis_breeding_program_div"></div>
                                     </div>
                                 </div>
                                 <div class="form-group form-group-sm">
-                                    <label class="col-sm-3 control-label">Year: </label>
+                                    <label class="col-sm-3 control-label"><% $c->i18n->p("cross.ui.year.c9410fe", "Year:") |h %> </label>
                                     <div class="col-sm-9">
                                         <div id="upload_new_analysis_year_div"></div>
                                     </div>
                                 </div>
                                 <div class="form-group form-group-sm">
-                                    <label class="col-sm-3 control-label">Statistical Ontology Term (from SGNSTAT): </label>
+                                    <label class="col-sm-3 control-label"><% $c->i18n->p("analysis.interface.statistical_ontology_term_from_sgnstat", "Statistical Ontology Term (from SGNSTAT):") |h %> </label>
                                     <div class="col-sm-9">
                                         <div id="upload_new_analysis_stat_term_div"></div>
                                     </div>
                                 </div>
                                 <div class="form-group form-group-sm">
-                                    <label class="col-sm-3 control-label">Results File (.csv): </label>
+                                    <label class="col-sm-3 control-label"><% $c->i18n->p("analysis.interface.results_file_csv", "Results File (.csv):") |h %> </label>
                                     <div class="col-sm-9" >
                                         <input type="file" name="upload_new_analysis_file" id="upload_new_analysis_file" encoding="multipart/form-data" />
                                     </div>
                                 </div>
                                 <div class="form-group form-group-sm">
-                                    <label class="col-sm-3 control-label">Dataset ID (optional): </label>
+                                    <label class="col-sm-3 control-label"><% $c->i18n->p("analysis.interface.dataset_id_optional", "Dataset ID (optional):") |h %> </label>
                                     <div class="col-sm-9">
                                         <input class="form-control" id="upload_new_analysis_dataset_id" name="upload_new_analysis_dataset_id" type="text" />
                                     </div>
                                 </div>
                                 <div class="form-group form-group-sm">
-                                    <label class="col-sm-3 control-label">Result Summary (optional) (key:value comma separated. e.g. genetic_variance:0.6,phenotypic_variance:0.8): </label>
+                                    <label class="col-sm-3 control-label"><% $c->i18n->p("analysis.interface.result_summary_optional_key_value_comma_separated_e_g_genetic", "Result Summary (optional) (key:value comma separated. e.g. genetic_variance:0.6,phenotypic_variance:0.8):") |h %> </label>
                                     <div class="col-sm-9">
                                         <input class="form-control" id="upload_new_analysis_result_summary_string" name="upload_new_analysis_result_summary_string" type="text" />
                                     </div>
                                 </div>
                                 <div class="form-group form-group-sm">
-                                    <label class="col-sm-3 control-label">Compose Trait Info With Time Term (optional) (key||||value comma separated. e.g. harvest info|CO_323:0000101||||day 10|TIME:0002020) (all uploaded variables must be represented here): </label>
+                                    <label class="col-sm-3 control-label"><% $c->i18n->p("analysis.interface.compose_trait_info_with_time_term_optional_key_value_comma", "Compose Trait Info With Time Term (optional) (key||||value comma separated. e.g. harvest info|CO_323:0000101||||day 10|TIME:0002020) (all uploaded variables must be represented here):") |h %> </label>
                                     <div class="col-sm-9">
                                         <input class="form-control" id="upload_new_analysis_result_trait_compose_info_string" name="upload_new_analysis_result_trait_compose_info_string" type="text"/>
                                     </div>
@@ -101,67 +105,67 @@
 
                                 <br/><br/>
                                 <center>
-                                <button class="btn btn-primary" id="upload_new_analysis_analysis_continue">Go to Next Step</button>
+                                <button class="btn btn-primary" id="upload_new_analysis_analysis_continue"><% $c->i18n->p("global.workflow.next_step", "Go to Next Step") |h %></button>
                                 </center>
                             </&>
-                            <&| /util/workflow.mas:step, title=> "Model" &>
-                                <& /page/page_title.mas, title=>"Define the model used to generate the analysis results" &>
+                            <&| /util/workflow.mas:step, title=> HTML::Entities::encode_entities($c->i18n->p("analysis.interface.model", "Model")) &>
+                                <& /page/page_title.mas, title=>HTML::Entities::encode_entities($c->i18n->p("analysis.interface.define_the_model_used_to_generate_the_analysis_results", "Define the model used to generate the analysis results")) &>
 
                                 <div class="form-group form-group-sm">
-                                    <label class="col-sm-3 control-label">Select a Model: </label>
+                                    <label class="col-sm-3 control-label"><% $c->i18n->p("analysis.interface.select_a_model", "Select a Model:") |h %> </label>
                                     <div class="col-sm-9">
                                         <div id="upload_new_analysis_model_select_div"></div>
                                     </div>
                                 </div>
 
                                 <center>
-                                    <button type="button" class="btn btn-default" id="upload_new_analysis_model_button" >Create a New Model if Needed</button>
+                                    <button type="button" class="btn btn-default" id="upload_new_analysis_model_button" ><% $c->i18n->p("analysis.interface.create_a_new_model_if_needed", "Create a New Model if Needed") |h %></button>
                                 </center>
                                 <hr>
 
                                 <div id="upload_new_analysis_model_div" style="display:none">
                                 
                                     <div class="form-group form-group-sm">
-                                        <label class="col-sm-3 control-label">Model Name (must be unique): </label>
+                                        <label class="col-sm-3 control-label"><% $c->i18n->p("analysis.interface.model_name_must_be_unique", "Model Name (must be unique):") |h %> </label>
                                         <div class="col-sm-9">
                                             <input class="form-control" id="upload_new_analysis_model_name" name="upload_new_analysis_model_name" type="text" />
                                         </div>
                                     </div>
                                     <div class="form-group form-group-sm">
-                                        <label class="col-sm-3 control-label">Model Description: </label>
+                                        <label class="col-sm-3 control-label"><% $c->i18n->p("analysis.interface.model_description_d66e45", "Model Description:") |h %> </label>
                                         <div class="col-sm-9">
                                             <input class="form-control" id="upload_new_analysis_model_description" name="upload_new_analysis_model_description" type="text" />
                                         </div>
                                     </div>
                                     <div class="form-group form-group-sm">
-                                        <label class="col-sm-3 control-label">Model Is Public: </label>
+                                        <label class="col-sm-3 control-label"><% $c->i18n->p("analysis.interface.model_is_public", "Model Is Public:") |h %> </label>
                                         <div class="col-sm-9">
                                             <select class="form-control" id="upload_new_analysis_model_is_public" name="upload_new_analysis_model_is_public" >
-                                                <option value="yes">Yes</option>
-                                                <option value="no">No</option>
+                                                <option value="yes"><% $c->i18n->p("global.search_wizard.yes", "Yes") |h %></option>
+                                                <option value="no"><% $c->i18n->p("global.search_wizard.no", "No") |h %></option>
                                             </select>
                                         </div>
                                     </div>
                                     <div class="form-group form-group-sm">
-                                        <label class="col-sm-3 control-label">Model Language (e.g. R, Python, F90): </label>
+                                        <label class="col-sm-3 control-label"><% $c->i18n->p("analysis.interface.model_language_e_g_r_python_f90", "Model Language (e.g. R, Python, F90):") |h %> </label>
                                         <div class="col-sm-9">
                                             <input class="form-control" id="upload_new_analysis_model_language" name="upload_new_analysis_model_language" type="text"/>
                                         </div>
                                     </div>
                                     <div class="form-group form-group-sm">
-                                        <label class="col-sm-3 control-label">Model Properties (required) (key:value comma separated e.g. conversion_criteria:0.01,protocol_id:2): </label>
+                                        <label class="col-sm-3 control-label"><% $c->i18n->p("analysis.interface.model_properties_required_key_value_comma_separated_e_g_conversion", "Model Properties (required) (key:value comma separated e.g. conversion_criteria:0.01,protocol_id:2):") |h %> </label>
                                         <div class="col-sm-9">
                                             <input class="form-control" id="upload_new_analysis_model_properties_string" name="upload_new_analysis_model_properties_string" type="text"/>
                                         </div>
                                     </div>
                                     <div class="form-group form-group-sm">
-                                        <label class="col-sm-3 control-label">Application Name (e.g. MyAmazingPipeline): </label>
+                                        <label class="col-sm-3 control-label"><% $c->i18n->p("analysis.interface.application_name_e_g_myamazingpipeline", "Application Name (e.g. MyAmazingPipeline):") |h %> </label>
                                         <div class="col-sm-9">
                                             <input class="form-control" id="upload_new_analysis_model_application_name" name="upload_new_analysis_model_application_name" type="text"/>
                                         </div>
                                     </div>
                                     <div class="form-group form-group-sm">
-                                        <label class="col-sm-3 control-label">Application Version (e.g. v1.01): </label>
+                                        <label class="col-sm-3 control-label"><% $c->i18n->p("analysis.interface.application_version_e_g_v1_01", "Application Version (e.g. v1.01):") |h %> </label>
                                         <div class="col-sm-9">
                                             <input class="form-control" id="upload_new_analysis_model_application_version" name="upload_new_analysis_model_application_version" type="text"/>
                                         </div>
@@ -170,20 +174,20 @@
                                 </div>
 
                                 <div class="well well-sm">
-                                    <h4>Data files from this analysis model</h4>
+                                    <h4><% $c->i18n->p("analysis.interface.data_files_from_this_analysis_model", "Data files from this analysis model") |h %></h4>
                                     
                                     <table class="table table-bordered">
                                         <thead>
                                             <tr>
-                                                <th>File Upload</th>
-                                                <th>File Type</th>
+                                                <th><% $c->i18n->p("analysis.interface.file_upload", "File Upload") |h %></th>
+                                                <th><% $c->i18n->p("file_viewer.ui.type", "File Type") |h %></th>
                                             </tr>
                                         </thead>
                                         <tbody>
                                             <tr>
                                                 <td>
                                                     <div class="form-group form-group-sm">
-                                                        <label class="col-sm-3 control-label">Main Phenotype Data File To Archive (required) (this should be the primary data file input into the model e.g. MyPhenotypes.csv): </label>
+                                                        <label class="col-sm-3 control-label"><% $c->i18n->p("analysis.interface.main_phenotype_data_file_to_archive_required_this_should_be", "Main Phenotype Data File To Archive (required) (this should be the primary data file input into the model e.g. MyPhenotypes.csv):") |h %> </label>
                                                         <div class="col-sm-9">
                                                             <input id="upload_new_analysis_model_training_data_file" name="upload_new_analysis_model_training_data_file" type="file" encoding="multipart/form-data"/>
                                                         </div>
@@ -191,7 +195,7 @@
                                                 </td>
                                                 <td>
                                                     <div class="form-group form-group-sm">
-                                                        <label class="col-sm-3 control-label">Archive Main Phenotype Data File Type (required) (e.g. MyAmazingPipeline_MainPhenotypeFile): </label>
+                                                        <label class="col-sm-3 control-label"><% $c->i18n->p("analysis.interface.archive_main_phenotype_data_file_type_required_e_g_myamazingpipeline", "Archive Main Phenotype Data File Type (required) (e.g. MyAmazingPipeline_MainPhenotypeFile):") |h %> </label>
                                                         <div class="col-sm-9">
                                                             <input class="form-control" id="upload_new_analysis_model_training_data_file_type" name="upload_new_analysis_model_training_data_file_type" type="text"/>
                                                         </div>
@@ -201,7 +205,7 @@
                                             <tr>
                                                 <td>
                                                     <div class="form-group form-group-sm">
-                                                        <label class="col-sm-3 control-label">Model File To Archive (optional) (this should be a model weights file): </label>
+                                                        <label class="col-sm-3 control-label"><% $c->i18n->p("analysis.interface.model_file_to_archive_optional_this_should_be_a_model", "Model File To Archive (optional) (this should be a model weights file):") |h %> </label>
                                                         <div class="col-sm-9">
                                                             <input id="upload_new_analysis_model_file" name="upload_new_analysis_model_file" type="file" encoding="multipart/form-data"/>
                                                         </div>
@@ -209,7 +213,7 @@
                                                 </td>
                                                 <td>
                                                     <div class="form-group form-group-sm">
-                                                        <label class="col-sm-3 control-label">Archive Model File Type (optional) (e.g. MyAmazingPipeline_ModelWeights.Rds or MyAmazingPipeline_CNNWeights.hdf5): </label>
+                                                        <label class="col-sm-3 control-label"><% $c->i18n->p("analysis.interface.archive_model_file_type_optional_e_g_myamazingpipeline_modelweights_rds", "Archive Model File Type (optional) (e.g. MyAmazingPipeline_ModelWeights.Rds or MyAmazingPipeline_CNNWeights.hdf5):") |h %> </label>
                                                         <div class="col-sm-9">
                                                             <input class="form-control" id="upload_new_analysis_model_file_type" name="upload_new_analysis_model_file_type" type="text"/>
                                                         </div>
@@ -219,7 +223,7 @@
                                             <tr>
                                                 <td>
                                                     <div class="form-group form-group-sm">
-                                                        <label class="col-sm-3 control-label">(1) Auxiliary File To Archive (optional) (e.g. log file, param file, grm input file): </label>
+                                                        <label class="col-sm-3 control-label"><% $c->i18n->p("analysis.interface.1_auxiliary_file_to_archive_optional_e_g_log_file", "(1) Auxiliary File To Archive (optional) (e.g. log file, param file, grm input file):") |h %> </label>
                                                         <div class="col-sm-9">
                                                             <input id="upload_new_analysis_model_auxiliary_file_1" name="upload_new_analysis_model_auxiliary_file_1" type="file" encoding="multipart/form-data"/>
                                                         </div>
@@ -227,7 +231,7 @@
                                                 </td>
                                                 <td>
                                                     <div class="form-group form-group-sm">
-                                                        <label class="col-sm-3 control-label">(1) Auxiliary File Type (optional): </label>
+                                                        <label class="col-sm-3 control-label"><% $c->i18n->p("analysis.interface.1_auxiliary_file_type_optional", "(1) Auxiliary File Type (optional):") |h %> </label>
                                                         <div class="col-sm-9">
                                                             <input class="form-control" id="upload_new_analysis_model_auxiliary_file_type_1" name="upload_new_analysis_model_auxiliary_file_type_1" type="text"/>
                                                         </div>
@@ -237,7 +241,7 @@
                                             <tr>
                                                 <td>
                                                     <div class="form-group form-group-sm">
-                                                        <label class="col-sm-3 control-label">(2) Auxiliary File To Archive (optional) (e.g. log file, param file, grm input file): </label>
+                                                        <label class="col-sm-3 control-label"><% $c->i18n->p("analysis.interface.2_auxiliary_file_to_archive_optional_e_g_log_file", "(2) Auxiliary File To Archive (optional) (e.g. log file, param file, grm input file):") |h %> </label>
                                                         <div class="col-sm-9">
                                                             <input id="upload_new_analysis_model_auxiliary_file_2" name="upload_new_analysis_model_auxiliary_file_2" type="file" encoding="multipart/form-data"/>
                                                         </div>
@@ -245,7 +249,7 @@
                                                 </td>
                                                 <td>
                                                     <div class="form-group form-group-sm">
-                                                        <label class="col-sm-3 control-label">(2) Auxiliary File Type (optional): </label>
+                                                        <label class="col-sm-3 control-label"><% $c->i18n->p("analysis.interface.2_auxiliary_file_type_optional", "(2) Auxiliary File Type (optional):") |h %> </label>
                                                         <div class="col-sm-9">
                                                             <input class="form-control" id="upload_new_analysis_model_auxiliary_file_type_2" name="upload_new_analysis_model_auxiliary_file_type_2" type="text"/>
                                                         </div>
@@ -255,7 +259,7 @@
                                             <tr>
                                                 <td>
                                                     <div class="form-group form-group-sm">
-                                                        <label class="col-sm-3 control-label">(3) Auxiliary File To Archive (optional) (e.g. log file, param file, grm input file): </label>
+                                                        <label class="col-sm-3 control-label"><% $c->i18n->p("analysis.interface.3_auxiliary_file_to_archive_optional_e_g_log_file", "(3) Auxiliary File To Archive (optional) (e.g. log file, param file, grm input file):") |h %> </label>
                                                         <div class="col-sm-9">
                                                             <input id="upload_new_analysis_model_auxiliary_file_3" name="upload_new_analysis_model_auxiliary_file_3" type="file" encoding="multipart/form-data"/>
                                                         </div>
@@ -263,7 +267,7 @@
                                                 </td>
                                                 <td>
                                                     <div class="form-group form-group-sm">
-                                                        <label class="col-sm-3 control-label">(3) Auxiliary File Type (optional): </label>
+                                                        <label class="col-sm-3 control-label"><% $c->i18n->p("analysis.interface.3_auxiliary_file_type_optional", "(3) Auxiliary File Type (optional):") |h %> </label>
                                                         <div class="col-sm-9">
                                                             <input class="form-control" id="upload_new_analysis_model_auxiliary_file_type_3" name="upload_new_analysis_model_auxiliary_file_type_3" type="text"/>
                                                         </div>
@@ -275,7 +279,7 @@
                                 </div>
 
                                 <center>
-                                    <button type="button" class="btn btn-primary" id="upload_new_analysis_submit" >Submit</button>
+                                    <button type="button" class="btn btn-primary" id="upload_new_analysis_submit" ><% $c->i18n->p("global.manage_file_share_dump.submit", "Submit") |h %></button>
                                 </center>
                             </&>
                         </&>
@@ -284,7 +288,7 @@
                 </div>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-default" data-dismiss="modal"><% $c->i18n->p("global.close", "Close") |h %></button>
             </div>
         </div>
     </div>
@@ -317,27 +321,27 @@ jQuery(document).ready(function () {
         var upload_new_analysis_file = jQuery('#upload_new_analysis_file').val();
 
         if (upload_new_analysis_name == '' || upload_new_analysis_description == '') {
-            alert('Please give an analysis name and description');
+            alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("analysis.interface.please_give_an_analysis_name_and_description", "Please give an analysis name and description") : 'Please give an analysis name and description'));
             return false;
         }
         else if (upload_new_analysis_protocol == '') {
-            alert('Please give an analysis protocol');
+            alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("analysis.interface.please_give_an_analysis_protocol", "Please give an analysis protocol") : 'Please give an analysis protocol'));
             return false;
         }
         else if (upload_new_analysis_result_values_type == '') {
-            alert('Please select result values type');
+            alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("analysis.interface.please_select_result_values_type", "Please select result values type") : 'Please select result values type'));
             return false;
         }
         else if (upload_new_analysis_breeding_program_id == '') {
-            alert('Please select a breeding program');
+            alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("seedlots.ui.please_select_a_breeding_program", "Please select a breeding program") : 'Please select a breeding program'));
             return false;
         }
         else if (upload_new_analysis_statistical_ontology_term == '') {
-            alert('Please select a statistical ontology term');
+            alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("analysis.interface.please_select_a_statistical_ontology_term", "Please select a statistical ontology term") : 'Please select a statistical ontology term'));
             return false;
         }
         else if (upload_new_analysis_file === '') {
-            alert('Please select a results file');
+            alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("analysis.interface.please_select_a_results_file", "Please select a results file") : 'Please select a results file'));
             return false;
         }
         else {
@@ -351,7 +355,7 @@ jQuery(document).ready(function () {
         var uploadFile = jQuery("#upload_new_analysis_file").val();
         jQuery('#upload_new_analysis_dialog_form').attr("action", "/ajax/analysis/store/spreadsheet");
         if (uploadFile === '') {
-            alert("Please select a file");
+            alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("global.manage_file_share_dump.select_file", "Please select a file") : "Please select a file"));
             return;
         }
 
@@ -383,27 +387,27 @@ jQuery(document).ready(function () {
         //     return false;
         // }
         if (upload_new_analysis_model_id == '' && upload_new_analysis_model_name !== '' && upload_new_analysis_model_description == '') {
-            alert('Please give a new model description');
+            alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("analysis.interface.please_give_a_new_model_description", "Please give a new model description") : 'Please give a new model description'));
             return false;
         }
         if (upload_new_analysis_model_id == '' && upload_new_analysis_model_name !== '' && upload_new_analysis_model_is_public == '') {
-            alert('Please specify if the new model is public');
+            alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("analysis.interface.please_specify_if_the_new_model_is_public", "Please specify if the new model is public") : 'Please specify if the new model is public'));
             return false;
         }
         if (upload_new_analysis_model_id == '' && upload_new_analysis_model_name !== '' && upload_new_analysis_model_language == '') {
-            alert('Please give a new model language');
+            alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("analysis.interface.please_give_a_new_model_language", "Please give a new model language") : 'Please give a new model language'));
             return false;
         }
         if (upload_new_analysis_model_id == '' && upload_new_analysis_model_name !== '' && upload_new_analysis_model_properties_string == '') {
-            alert('Please give a new model properties. At least one key:value!');
+            alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("analysis.interface.please_give_a_new_model_properties_at_least_one_key", "Please give a new model properties. At least one key:value!") : 'Please give a new model properties. At least one key:value!'));
             return false;
         }
         if (upload_new_analysis_model_id == '' && upload_new_analysis_model_name !== '' && upload_new_analysis_model_application_name == '') {
-            alert('Please give a new model application name');
+            alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("analysis.interface.please_give_a_new_model_application_name", "Please give a new model application name") : 'Please give a new model application name'));
             return false;
         }
         if (upload_new_analysis_model_id == '' && upload_new_analysis_model_name !== '' && upload_new_analysis_model_application_version == '') {
-            alert('Please give a new model application version');
+            alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("analysis.interface.please_give_a_new_model_application_version", "Please give a new model application version") : 'Please give a new model application version'));
             return false;
         }
         // if (upload_new_analysis_model_training_data_file === '') {
@@ -415,19 +419,19 @@ jQuery(document).ready(function () {
         //     return false;
         // }
         if ( (upload_new_analysis_model_file == '' && upload_new_analysis_model_file_type != '') || (upload_new_analysis_model_file != '' && upload_new_analysis_model_file_type == '') ) {
-            alert('If you give a new model file, please give a new model file type also');
+            alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("analysis.interface.if_you_give_a_new_model_file_please_give_a", "If you give a new model file, please give a new model file type also") : 'If you give a new model file, please give a new model file type also'));
             return false;
         }
         if ( (upload_new_analysis_model_auxiliary_file_1 == '' && upload_new_analysis_model_auxiliary_file_type_1 != '') || (upload_new_analysis_model_auxiliary_file_1 != '' && upload_new_analysis_model_auxiliary_file_type_1 == '') ) {
-            alert('If you give a new model aux file 1, please give a new model aux file 1 type also');
+            alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("analysis.interface.if_you_give_a_new_model_aux_file_1_please", "If you give a new model aux file 1, please give a new model aux file 1 type also") : 'If you give a new model aux file 1, please give a new model aux file 1 type also'));
             return false;
         }
         if ( (upload_new_analysis_model_auxiliary_file_2 == '' && upload_new_analysis_model_auxiliary_file_type_2 != '') || (upload_new_analysis_model_auxiliary_file_2 != '' && upload_new_analysis_model_auxiliary_file_type_2 == '') ) {
-            alert('If you give a new model aux file 2, please give a new model aux file 2 type also');
+            alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("analysis.interface.if_you_give_a_new_model_aux_file_2_please", "If you give a new model aux file 2, please give a new model aux file 2 type also") : 'If you give a new model aux file 2, please give a new model aux file 2 type also'));
             return false;
         }
         if ( (upload_new_analysis_model_auxiliary_file_3 == '' && upload_new_analysis_model_auxiliary_file_type_3 != '') || (upload_new_analysis_model_auxiliary_file_3 != '' && upload_new_analysis_model_auxiliary_file_type_3 == '') ) {
-            alert('If you give a new model aux file 3, please give a new model aux file 3 type also');
+            alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("analysis.interface.if_you_give_a_new_model_aux_file_3_please", "If you give a new model aux file 3, please give a new model aux file 3 type also") : 'If you give a new model aux file 3, please give a new model aux file 3 type also'));
             return false;
         }
 
@@ -449,13 +453,13 @@ jQuery(document).ready(function () {
                 alert(response.error_messages);
             }
             else {
-                alert('Successfully saved! Page will now refresh!')
+                alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("analysis.interface.successfully_saved_page_will_now_refresh", "Successfully saved! Page will now refresh!") : 'Successfully saved! Page will now refresh!'))
                 location.reload();
             }
         },
         error: function(response) {
             jQuery('#working_modal').modal("hide");
-            alert("An error occurred uploading analysis");
+            alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("analysis.interface.an_error_occurred_uploading_analysis", "An error occurred uploading analysis") : "An error occurred uploading analysis"));
         }
     });
 

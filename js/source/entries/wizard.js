@@ -93,11 +93,38 @@ function makeURL(target, id) {
     }
 }
 
+
+function wizardTypeCaptions() {
+  return {
+    "accessions": (typeof window !== "undefined" && window.SGN && window.SGN.i18n ? SGN.i18n.p("unassigned.wizard.types.accessions", "Accessions") : "Accessions"),
+    "accessions_ids": (typeof window !== "undefined" && window.SGN && window.SGN.i18n ? SGN.i18n.p("unassigned.wizard.types.accessions_ids", "Accessions Ids") : "Accessions Ids"),
+    "organisms": (typeof window !== "undefined" && window.SGN && window.SGN.i18n ? SGN.i18n.p("unassigned.wizard.types.organisms", "Organisms") : "Organisms"),
+    "breeding_programs": (typeof window !== "undefined" && window.SGN && window.SGN.i18n ? SGN.i18n.p("unassigned.wizard.types.breeding_programs", "Breeding Programs") : "Breeding Programs"),
+    "genotyping_protocols": (typeof window !== "undefined" && window.SGN && window.SGN.i18n ? SGN.i18n.p("unassigned.wizard.types.genotyping_protocols", "Genotyping Protocols") : "Genotyping Protocols"),
+    "genotyping_projects": (typeof window !== "undefined" && window.SGN && window.SGN.i18n ? SGN.i18n.p("unassigned.wizard.types.genotyping_projects", "Genotyping Projects") : "Genotyping Projects"),
+    "locations": (typeof window !== "undefined" && window.SGN && window.SGN.i18n ? SGN.i18n.p("unassigned.wizard.types.locations", "Locations") : "Locations"),
+    "protocols": (typeof window !== "undefined" && window.SGN && window.SGN.i18n ? SGN.i18n.p("unassigned.wizard.types.protocols", "HDP Protocols") : "HDP Protocols"),
+    "instances": (typeof window !== "undefined" && window.SGN && window.SGN.i18n ? SGN.i18n.p("unassigned.wizard.types.instances", "HDP Upload Ids") : "HDP Upload Ids"),
+    "plots": (typeof window !== "undefined" && window.SGN && window.SGN.i18n ? SGN.i18n.p("unassigned.wizard.types.plots", "Plots") : "Plots"),
+    "subplots": (typeof window !== "undefined" && window.SGN && window.SGN.i18n ? SGN.i18n.p("unassigned.wizard.types.subplots", "Subplots") : "Subplots"),
+    "plants": (typeof window !== "undefined" && window.SGN && window.SGN.i18n ? SGN.i18n.p("unassigned.wizard.types.plants", "Plants") : "Plants"),
+    "tissue_sample": (typeof window !== "undefined" && window.SGN && window.SGN.i18n ? SGN.i18n.p("unassigned.wizard.types.tissue_sample", "Tissue Samples") : "Tissue Samples"),
+    "populations": (typeof window !== "undefined" && window.SGN && window.SGN.i18n ? SGN.i18n.p("unassigned.wizard.types.populations", "Populations") : "Populations"),
+    "seedlots": (typeof window !== "undefined" && window.SGN && window.SGN.i18n ? SGN.i18n.p("unassigned.wizard.types.seedlots", "Seedlots") : "Seedlots"),
+    "trait_components": (typeof window !== "undefined" && window.SGN && window.SGN.i18n ? SGN.i18n.p("unassigned.wizard.types.trait_components", "Trait Components") : "Trait Components"),
+    "traits": (typeof window !== "undefined" && window.SGN && window.SGN.i18n ? SGN.i18n.p("unassigned.wizard.types.traits", "Traits") : "Traits"),
+    "trials": (typeof window !== "undefined" && window.SGN && window.SGN.i18n ? SGN.i18n.p("unassigned.wizard.types.trials", "Trials") : "Trials"),
+    "trial_designs": (typeof window !== "undefined" && window.SGN && window.SGN.i18n ? SGN.i18n.p("unassigned.wizard.types.trial_designs", "Trial Designs") : "Trial Designs"),
+    "trial_types": (typeof window !== "undefined" && window.SGN && window.SGN.i18n ? SGN.i18n.p("unassigned.wizard.types.trial_types", "Trial Types") : "Trial Types"),
+    "years": (typeof window !== "undefined" && window.SGN && window.SGN.i18n ? SGN.i18n.p("unassigned.wizard.types.years", "Years") : "Years"),
+  };
+}
+
 export function WizardSetup(main_id) {
   var list = new CXGN.List();
 
   var wiz = new Wizard(d3.select(main_id).select(".wizard-main").node(), 4)
-    .types(types)
+    .types(wizardTypeCaptions())
     .initial_types(initialtypes)
 
     // Column 1 loader
@@ -155,7 +182,7 @@ export function WizardSetup(main_id) {
         const loadType     = toLoadType(validateType);
 
         if (!fetchTypes.includes(validateType)) {
-          setTimeout(() => alert("List is not of an appropriate type."), 1);
+          setTimeout(() => alert((typeof window !== "undefined" && window.SGN && window.SGN.i18n ? SGN.i18n.p("unassigned.wizard.invalid_list_type", "List is not of an appropriate type.") : "List is not of an appropriate type.")), 1);
         }
 
 
@@ -204,7 +231,7 @@ export function WizardSetup(main_id) {
 
   wiz.add_to_list((listID, items) => {
     var count = list.addBulk(listID, items.map(i => i.name));
-    if (count) alert(`${count} items added to list.`);
+    if (count) alert((typeof window !== "undefined" && window.SGN && window.SGN.i18n ? SGN.i18n.p("unassigned.wizard.items_added", "%{count} items added to list.", {count: count}) : `${count} items added to list.`));
     load_lists();
   })
   .create_list((listName, colType, items) => {
@@ -212,7 +239,7 @@ export function WizardSetup(main_id) {
     if (newID) {
       list.setListType(newID, colType);
       var count = list.addBulk(newID, items.map(i => i.name));
-      if (count) alert(`${count} items added to list ${listName}.`);
+      if (count) alert((typeof window !== "undefined" && window.SGN && window.SGN.i18n ? SGN.i18n.p("unassigned.wizard.items_added_named", "%{count} items added to list %{list_name}.", {count: count, list_name: listName}) : `${count} items added to list ${listName}.`));
     }
     load_lists();
   });

@@ -1,5 +1,8 @@
 package SGN::Controller::AJAX::TrialAllocation;
 
+use SGN::I18N ();
+use CatalystX::GlobalContext '$c';
+
 use Moose;
 
 use Data::Dumper;
@@ -116,11 +119,12 @@ sub accession_autocomplete :Path('/ajax/trialallocation/accession_autocomplete')
 
 sub generate_design :Path('/ajax/trialallocation/generate_design') :Args(0) {
     my ($self, $c) = @_;
+    my SGN::I18N $ui_generate_design_i18n = SGN::I18N::translate($c);
 
     my $json_string = $c->req->param('trial');
 
     unless ($json_string) {
-        $c->stash->{rest} = { success => 0, error => "Missing 'trial' parameter" };
+        $c->stash->{rest} = { success => 0, error => (SGN::I18N::translate($ui_generate_design_i18n, 'decision.server.missing_trial_parameter', 'Missing \'trial\' parameter'))};
         return;
     }
 
@@ -129,7 +133,7 @@ sub generate_design :Path('/ajax/trialallocation/generate_design') :Args(0) {
         $trial = decode_json($json_string);
     };
     if ($@ || !$trial) {
-        $c->stash->{rest} = { success => 0, error => "Invalid JSON in 'trial'" };
+        $c->stash->{rest} = { success => 0, error => (SGN::I18N::translate($ui_generate_design_i18n, 'decision.server.invalid_json_in_trial', 'Invalid JSON in \'trial\''))};
         return;
     }
 
@@ -243,8 +247,7 @@ sub generate_design :Path('/ajax/trialallocation/generate_design') :Args(0) {
             my $r_output = -e $outfile ? read_file($outfile) : '';
             $c->stash->{rest} = {
                 success => 0,
-                error => 'Augmented Row-Column design generation failed. ' . ($r_output || 'No R output was produced.')
-            };
+                error => (SGN::I18N::translate($ui_generate_design_i18n, 'decision.server.augmented_row_column_design_generation_failed_value1', 'Augmented Row-Column design generation failed. %{value1}', {value1 => ("" . (($r_output || (SGN::I18N::translate($ui_generate_design_i18n, 'decision.server.no_r_output_was_produced', 'No R output was produced.')))))}))};
             return;
         }
     }
@@ -290,7 +293,7 @@ sub generate_design :Path('/ajax/trialallocation/generate_design') :Args(0) {
     # Return filenames
     $c->stash->{rest} = {
         success     => 1,
-        message     => "Files created and R script triggered.",
+        message     => (SGN::I18N::translate($ui_generate_design_i18n, 'decision.server.files_created_and_r_script_triggered', 'Files created and R script triggered.')),
         n_row   => $trial->{n_row},
         n_col   => $trial->{n_col},
         design  => $json_desing,
@@ -503,17 +506,18 @@ sub existing_trials :Path('/ajax/trialallocation/existing_trials') Args(0) {
 
 sub existing_trial_design :Path('/ajax/trialallocation/existing_trial_design') Args(0) {
     my ($self, $c) = @_;
+    my SGN::I18N $ui_existing_trial_design_i18n = SGN::I18N::translate($c);
 
     my $trial_id = $c->req->param('trial_id');
     if (!$trial_id || $trial_id eq 'null') {
-        $c->stash->{rest} = { success => 0, error => 'Missing trial id.' };
+        $c->stash->{rest} = { success => 0, error => (SGN::I18N::translate($ui_existing_trial_design_i18n, 'decision.server.missing_trial_id', 'Missing trial id.'))};
         return;
     }
 
     my $schema = $c->dbic_schema('Bio::Chado::Schema');
     my $trial = $schema->resultset('Project::Project')->find({ project_id => $trial_id });
     if (!$trial) {
-        $c->stash->{rest} = { success => 0, error => 'Trial not found.' };
+        $c->stash->{rest} = { success => 0, error => (SGN::I18N::translate($ui_existing_trial_design_i18n, 'decision.server.trial_not_found', 'Trial not found.'))};
         return;
     }
 
@@ -550,7 +554,7 @@ sub existing_trial_design :Path('/ajax/trialallocation/existing_trial_design') A
 
     my @plots = ref($plots) eq 'HASH' ? @{$plots->{plots} || []} : @$plots;
     if (!@plots) {
-        $c->stash->{rest} = { success => 0, error => 'No plots found for selected trial.' };
+        $c->stash->{rest} = { success => 0, error => (SGN::I18N::translate($ui_existing_trial_design_i18n, 'decision.server.no_plots_found_for_selected_trial', 'No plots found for selected trial.'))};
         return;
     }
 
@@ -845,6 +849,7 @@ sub _layout_key_matches {
 
 sub save_layout :Path('/ajax/trialallocation/save_layout') Args(0) {
     my ($self, $c) = @_;
+    my SGN::I18N $ui_save_layout_i18n = SGN::I18N::translate($c);
 
     my $json_string = $c->req->param('layout');
     my $layout = eval { decode_json($json_string) };
@@ -852,8 +857,7 @@ sub save_layout :Path('/ajax/trialallocation/save_layout') Args(0) {
     if (!$layout) {
         $c->stash->{rest} = {
             success => 0,
-            error   => "Invalid JSON in 'layout' param: $@"
-        };
+            error   => (SGN::I18N::translate($ui_save_layout_i18n, 'decision.server.invalid_json_in_layout_param_error_details', 'Invalid JSON in \'layout\' param: %{error_details}', {error_details => ("" . ("$@"))}))};
         return;
     }
 
@@ -866,8 +870,7 @@ sub save_layout :Path('/ajax/trialallocation/save_layout') Args(0) {
     if (!$location_id || $location_id !~ /^\d+$/ || !$year) {
         $c->stash->{rest} = {
             success => 0,
-            error   => 'A valid location and year are required to save layout.'
-        };
+            error   => (SGN::I18N::translate($ui_save_layout_i18n, 'decision.server.a_valid_location_and_year_are_required_to_save_layout', 'A valid location and year are required to save layout.'))};
         return;
     }
 
@@ -884,8 +887,7 @@ sub save_layout :Path('/ajax/trialallocation/save_layout') Args(0) {
     if (!$location) {
         $c->stash->{rest} = {
             success => 0,
-            error   => "Location $location_id was not found."
-        };
+            error   => (SGN::I18N::translate($ui_save_layout_i18n, 'decision.server.location_location_id_was_not_found', 'Location %{location_id} was not found.', {location_id => ("" . ("$location_id"))}))};
         return;
     }
 
@@ -927,14 +929,13 @@ sub save_layout :Path('/ajax/trialallocation/save_layout') Args(0) {
     if (!$saved) {
         $c->stash->{rest} = {
             success => 0,
-            error => "Could not save layout: $@"
-        };
+            error => (SGN::I18N::translate($ui_save_layout_i18n, 'decision.server.could_not_save_layout_error_details', 'Could not save layout: %{error_details}', {error_details => ("" . ("$@"))}))};
         return;
     }
 
     $c->stash->{rest} = {
         success => 1,
-        message => 'Layout saved.',
+        message => (SGN::I18N::translate($ui_save_layout_i18n, 'decision.server.layout_saved', 'Layout saved.')),
         layout_count => scalar @remaining,
         existing_trials_updated => $existing_trials_updated
     };
@@ -1036,6 +1037,7 @@ sub _find_trial_layout_entry_key {
 
 sub get_layout :Path('/ajax/trialallocation/get_layout') Args(0) {
     my ($self, $c) = @_;
+    my SGN::I18N $ui_get_layout_i18n = SGN::I18N::translate($c);
 
     my $location_id = $c->req->param('location_id');
     my $year = $c->req->param('year');
@@ -1046,8 +1048,7 @@ sub get_layout :Path('/ajax/trialallocation/get_layout') Args(0) {
     if (!$location_id || $location_id !~ /^\d+$/ || !$year) {
         $c->stash->{rest} = {
             success => 0,
-            error => 'A valid location and year are required to load layout.'
-        };
+            error => (SGN::I18N::translate($ui_get_layout_i18n, 'decision.server.a_valid_location_and_year_are_required_to_load_layout', 'A valid location and year are required to load layout.'))};
         return;
     }
 
@@ -1072,8 +1073,7 @@ sub get_layout :Path('/ajax/trialallocation/get_layout') Args(0) {
     if (!$stored || ref($stored) ne 'HASH') {
         $c->stash->{rest} = {
             success => 0,
-            error => 'Stored layout JSON could not be decoded.'
-        };
+            error => (SGN::I18N::translate($ui_get_layout_i18n, 'decision.server.stored_layout_json_could_not_be_decoded', 'Stored layout JSON could not be decoded.'))};
         return;
     }
 
@@ -1088,9 +1088,10 @@ sub get_layout :Path('/ajax/trialallocation/get_layout') Args(0) {
 
 sub delete_layout :Path('/ajax/trialallocation/delete_layout') Args(0) {
     my ($self, $c) = @_;
+    my SGN::I18N $ui_delete_layout_i18n = SGN::I18N::translate($c);
 
     if (!$c->user || !$c->user->check_roles('curator')) {
-        $c->stash->{rest} = { success => 0, error => 'Only curators can delete a saved layout view.' };
+        $c->stash->{rest} = { success => 0, error => (SGN::I18N::translate($ui_delete_layout_i18n, 'decision.server.only_curators_can_delete_a_saved_layout_view', 'Only curators can delete a saved layout view.'))};
         return;
     }
 
@@ -1100,7 +1101,7 @@ sub delete_layout :Path('/ajax/trialallocation/delete_layout') Args(0) {
     $season = '' unless defined $season;
 
     if (!$location_id || $location_id !~ /^\d+$/ || !$year) {
-        $c->stash->{rest} = { success => 0, error => 'A valid location and year are required to delete layout.' };
+        $c->stash->{rest} = { success => 0, error => (SGN::I18N::translate($ui_delete_layout_i18n, 'decision.server.a_valid_location_and_year_are_required_to_delete_layout', 'A valid location and year are required to delete layout.'))};
         return;
     }
 
@@ -1117,19 +1118,19 @@ sub delete_layout :Path('/ajax/trialallocation/delete_layout') Args(0) {
     });
 
     if (!$prop || !$prop->value) {
-        $c->stash->{rest} = { success => 0, error => 'No saved layout view was found.' };
+        $c->stash->{rest} = { success => 0, error => (SGN::I18N::translate($ui_delete_layout_i18n, 'decision.server.no_saved_layout_view_was_found', 'No saved layout view was found.'))};
         return;
     }
 
     my $stored = eval { decode_json($prop->value) };
     if (!$stored || ref($stored) ne 'HASH') {
-        $c->stash->{rest} = { success => 0, error => 'Stored layout JSON could not be decoded.' };
+        $c->stash->{rest} = { success => 0, error => (SGN::I18N::translate($ui_delete_layout_i18n, 'decision.server.stored_layout_json_could_not_be_decoded', 'Stored layout JSON could not be decoded.'))};
         return;
     }
 
     my @remaining = grep { !_layout_key_matches($_, $year, $season) } @{$stored->{layouts} || []};
     if (@remaining == scalar(@{$stored->{layouts} || []})) {
-        $c->stash->{rest} = { success => 0, error => 'No matching saved layout view was found.' };
+        $c->stash->{rest} = { success => 0, error => (SGN::I18N::translate($ui_delete_layout_i18n, 'decision.server.no_matching_saved_layout_view_was_found', 'No matching saved layout view was found.'))};
         return;
     }
 
@@ -1142,9 +1143,10 @@ sub delete_layout :Path('/ajax/trialallocation/delete_layout') Args(0) {
 
 sub delete_layout_trial :Path('/ajax/trialallocation/delete_layout_trial') Args(0) {
     my ($self, $c) = @_;
+    my SGN::I18N $ui_delete_layout_trial_i18n = SGN::I18N::translate($c);
 
     if (!$c->user || !$c->user->check_roles('curator')) {
-        $c->stash->{rest} = { success => 0, error => 'Only curators can remove a trial from a saved layout view.' };
+        $c->stash->{rest} = { success => 0, error => (SGN::I18N::translate($ui_delete_layout_trial_i18n, 'decision.server.only_curators_can_remove_a_trial_from_a_saved_layout_view', 'Only curators can remove a trial from a saved layout view.'))};
         return;
     }
 
@@ -1156,11 +1158,11 @@ sub delete_layout_trial :Path('/ajax/trialallocation/delete_layout_trial') Args(
     $season = '' unless defined $season;
 
     if (!$location_id || $location_id !~ /^\d+$/ || !$year) {
-        $c->stash->{rest} = { success => 0, error => 'A valid location and year are required to update layout.' };
+        $c->stash->{rest} = { success => 0, error => (SGN::I18N::translate($ui_delete_layout_trial_i18n, 'decision.server.a_valid_location_and_year_are_required_to_update_layout', 'A valid location and year are required to update layout.'))};
         return;
     }
     if (!$root && $trial_index eq '') {
-        $c->stash->{rest} = { success => 0, error => 'A trial identifier is required.' };
+        $c->stash->{rest} = { success => 0, error => (SGN::I18N::translate($ui_delete_layout_trial_i18n, 'decision.server.a_trial_identifier_is_required', 'A trial identifier is required.'))};
         return;
     }
 
@@ -1177,13 +1179,13 @@ sub delete_layout_trial :Path('/ajax/trialallocation/delete_layout_trial') Args(
     });
 
     if (!$prop || !$prop->value) {
-        $c->stash->{rest} = { success => 0, error => 'No saved layout view was found.' };
+        $c->stash->{rest} = { success => 0, error => (SGN::I18N::translate($ui_delete_layout_trial_i18n, 'decision.server.no_saved_layout_view_was_found', 'No saved layout view was found.'))};
         return;
     }
 
     my $stored = eval { decode_json($prop->value) };
     if (!$stored || ref($stored) ne 'HASH') {
-        $c->stash->{rest} = { success => 0, error => 'Stored layout JSON could not be decoded.' };
+        $c->stash->{rest} = { success => 0, error => (SGN::I18N::translate($ui_delete_layout_trial_i18n, 'decision.server.stored_layout_json_could_not_be_decoded', 'Stored layout JSON could not be decoded.'))};
         return;
     }
 
@@ -1207,7 +1209,7 @@ sub delete_layout_trial :Path('/ajax/trialallocation/delete_layout_trial') Args(
     }
 
     if (!$removed) {
-        $c->stash->{rest} = { success => 0, error => 'No matching trial was found in the saved layout view.' };
+        $c->stash->{rest} = { success => 0, error => (SGN::I18N::translate($ui_delete_layout_trial_i18n, 'decision.server.no_matching_trial_was_found_in_the_saved_layout_view', 'No matching trial was found in the saved layout view.'))};
         return;
     }
 
@@ -1385,13 +1387,14 @@ sub _parse_multiple_trial_upload_file {
 
 sub save_trials_database :Path('/ajax/trialallocation/save_trials_database') Args(0) {
     my ($self, $c) = @_;
+    my SGN::I18N $ui_save_trials_database_i18n = SGN::I18N::translate($c);
 
     if (!$c->user()) {
-        $c->stash->{rest} = { success => 0, error => "You need to be logged in to save trials." };
+        $c->stash->{rest} = { success => 0, error => (SGN::I18N::translate($ui_save_trials_database_i18n, 'decision.server.you_need_to_be_logged_in_to_save_trials', 'You need to be logged in to save trials.'))};
         return;
     }
     if (!any { $_ eq "curator" || $_ eq "submitter" } ($c->user()->roles)) {
-        $c->stash->{rest} = { success => 0, error => "You have insufficient privileges to save trials." };
+        $c->stash->{rest} = { success => 0, error => (SGN::I18N::translate($ui_save_trials_database_i18n, 'decision.server.you_have_insufficient_privileges_to_save_trials', 'You have insufficient privileges to save trials.'))};
         return;
     }
 
@@ -1400,8 +1403,7 @@ sub save_trials_database :Path('/ajax/trialallocation/save_trials_database') Arg
     if (!$layout) {
         $c->stash->{rest} = {
             success => 0,
-            error => "Invalid JSON in 'layout' param: $@"
-        };
+            error => (SGN::I18N::translate($ui_save_trials_database_i18n, 'decision.server.invalid_json_in_layout_param_error_details', 'Invalid JSON in \'layout\' param: %{error_details}', {error_details => ("" . ("$@"))}))};
         return;
     }
 
@@ -1520,6 +1522,7 @@ sub _layout_without_existing_trials {
 
 sub save_coordinates :Path('/ajax/trialallocation/save_coordinates') :Args(0) {
     my ($self, $c) = @_;
+    my SGN::I18N $ui_save_coordinates_i18n = SGN::I18N::translate($c);
 
     my $json_string = $c->req->param('trial');
     my $data = eval { decode_json($json_string) };
@@ -1529,8 +1532,7 @@ sub save_coordinates :Path('/ajax/trialallocation/save_coordinates') :Args(0) {
     if (!$data) {
     $c->stash->{rest} = {
         success => 0,
-        error   => "Invalid JSON in 'trial' param: $@"
-    };
+        error   => (SGN::I18N::translate($ui_save_coordinates_i18n, 'decision.server.invalid_json_in_trial_param_error_details', 'Invalid JSON in \'trial\' param: %{error_details}', {error_details => ("" . ("$@"))}))};
         return;
     }
 
@@ -1612,19 +1614,19 @@ sub save_coordinates :Path('/ajax/trialallocation/save_coordinates') :Args(0) {
 
     $c->stash->{rest} = {
         success => 1,
-        message => "Trial saved!"
-    };
+        message => (SGN::I18N::translate($ui_save_coordinates_i18n, 'decision.server.trial_saved', 'Trial saved!'))};
 }
 
 sub get_design :Path('/ajax/trialallocation/get_design') :Args(0) {
     my $self = shift;
     my $c    = shift;
+    my SGN::I18N $ui_get_design_i18n = SGN::I18N::translate($c);
 
     my $trial_path = $c->req->param('trial_path');
 
     unless ($trial_path && -e $trial_path) {
         $c->res->status(400);
-        $c->res->body("Design file not found or path not provided.");
+        $c->res->body((SGN::I18N::translate($ui_get_design_i18n, 'decision.server.design_file_not_found_or_path_not_provided', 'Design file not found or path not provided.')));
         return;
     }
 
@@ -1639,7 +1641,7 @@ sub get_design :Path('/ajax/trialallocation/get_design') :Args(0) {
     };
     if ($@) {
         $c->res->status(500);
-        $c->res->body("Error reading design file: $@");
+        $c->res->body((SGN::I18N::translate($ui_get_design_i18n, 'decision.server.error_reading_design_file_error_details', 'Error reading design file: %{error_details}', {error_details => ("" . ("$@"))})));
     }
 }
 

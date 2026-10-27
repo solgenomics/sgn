@@ -7,10 +7,10 @@ $order_properties_dialog => undef
 <& /util/import_css.mas, paths => ['/documents/inc/datatables/jquery.dataTables.css'] &>
 
 <td>
-    <a href="/order/stocks/view"><p>Go to Manage Order Page</p></a>
+    <a href="/order/stocks/view"><p><% $c->i18n->p("barcode.helper.go_to_manage_order_page", "Go to Manage Order Page") |h %></p></a>
 </td>
 
-<&| /page/info_section.mas, title => 'Order Form', collapsible=>1, collapsed=>0 &>
+<&| /page/info_section.mas, anchor_title => 'Order Form', title => HTML::Entities::encode_entities($c->i18n->p("barcode.helper.order_form", 'Order Form')), collapsible=>1, collapsed=>0 &>
     <div class = "well well-sm">
         <div class = "panel panel-default">
             <center>
@@ -21,23 +21,23 @@ $order_properties_dialog => undef
             </div>
             <div class="modal-footer">
                 <center>
-                    <button id="submit_request_form_button" type="button" class="btn btn-primary" >Submit</button>
+                    <button id="submit_request_form_button" type="button" class="btn btn-primary" ><% $c->i18n->p("global.manage_file_share_dump.submit", "Submit") |h %></button>
                 </center>
             </div>
         </div>
     </div>
 </&>
 
-<&| /page/info_section.mas, title => 'Catalog Items (Accessions)', collapsible=>1, collapsed=>0 &>
+<&| /page/info_section.mas, anchor_title => 'Catalog Items (Accessions)', title => HTML::Entities::encode_entities($c->i18n->p("barcode.helper.catalog_items_accessions", 'Catalog Items (Accessions)')), collapsible=>1, collapsed=>0 &>
     <div class = "well well-sm">
         <div class="row">
             <div class="form-group">
-                <label class="col-sm-6 control-label">Filter by Item Type (wild type or transgenic plants): </label>
+                <label class="col-sm-6 control-label"><% $c->i18n->p("barcode.helper.filter_by_item_type_wild_type_or_transgenic_plants", "Filter by Item Type (wild type or transgenic plants):") |h %> </label>
                 <div class="col-sm-4">
                     <select class="form-control" id="filter_by_item_type">
-                        <option value="">Please Select</option>
-                        <option value="wild_type">Wild Type Plants</option>
-                        <option value="transgenic">Transgenic Plants</option>
+                        <option value=""><% $c->i18n->p("barcode.helper.please_select", "Please Select") |h %></option>
+                        <option value="wild_type"><% $c->i18n->p("barcode.helper.wild_type_plants", "Wild Type Plants") |h %></option>
+                        <option value="transgenic"><% $c->i18n->p("barcode.helper.transgenic_plants", "Transgenic Plants") |h %></option>
                     </select>
                 </div>
             </div>
@@ -46,15 +46,15 @@ $order_properties_dialog => undef
         <div id="vector_construct_section" style="display:none">
             <div class="row">
                 <div class="form-group">
-                    <label class="col-sm-6 control-label">Filter by Vector Construct: </label>
+                    <label class="col-sm-6 control-label"><% $c->i18n->p("barcode.helper.filter_by_vector_construct", "Filter by Vector Construct:") |h %> </label>
                     <div class="col-sm-4">
-                        <input class="form-control" type="text" id="filter_by_vector_construct" name="filter_by_vector_construct" placeholder="Type to Autocomplete"  />
+                        <input class="form-control" type="text" id="filter_by_vector_construct" name="filter_by_vector_construct" placeholder="<% $c->i18n->p("stock_search.autocomplete_placeholder", "Type to Autocomplete") |h %>"  />
                     </div>
                 </div>
             </div>
             <div class="modal-footer">
                 <center>
-                    <button id="filter_by_vector_construct_submit" type="button" class="btn btn-primary" >Get Transgenic lines</button>
+                    <button id="filter_by_vector_construct_submit" type="button" class="btn btn-primary" ><% $c->i18n->p("barcode.helper.get_transgenic_lines", "Get Transgenic lines") |h %></button>
                 </center>
             </div>
         </div>
@@ -65,11 +65,11 @@ $order_properties_dialog => undef
                     <table id="catalog_transgenic_lines_table" width="100%" class="table table-hover table-striped">
                         <thead>
                             <tr>
-                                <th>Accession</th>
-                                <th>Vector Construct</th>
-                                <th>Plant Material</th>
-                                <th>Species</th>
-                                <th>Select</th>
+                                <th><% $c->i18n->p("global.index_logged_in_user.accession", "Accession") |h %></th>
+                                <th><% $c->i18n->p("transformation.vector_construct.d77fa05", "Vector Construct") |h %></th>
+                                <th><% $c->i18n->p("transformation.plant_material", "Plant Material") |h %></th>
+                                <th><% $c->i18n->p("cross.species", "Species") |h %></th>
+                                <th><% $c->i18n->p("styleguide.demo.trial_table.select", "Select") |h %></th>
                             </tr>
                         </thead>
                     </table>
@@ -83,8 +83,8 @@ $order_properties_dialog => undef
     <div class="modal-dialog modal-xl" role="document">
         <div class="modal-content">
             <div class="modal-header">
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                <center><h4 class="modal-title" id="requestFormDialog">Request Form</h4></center>
+                <button type="button" class="close" data-dismiss="modal" aria-label="<% $c->i18n->p("global.dataset_publish.close", "Close") |h %>"><span aria-hidden="true">&times;</span></button>
+                <center><h4 class="modal-title" id="requestFormDialog"><% $c->i18n->p("barcode.helper.request_form", "Request Form") |h %></h4></center>
             </div>
             <div class="modal-body">
                 <div class="container-fluid">
@@ -95,8 +95,8 @@ $order_properties_dialog => undef
                 </div>
             </div>
             <div class="modal-footer">
-                <button id="close_request_form_dialog" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-                <button id="submit_request_form_button" type="button" class="btn btn-primary" >Submit</button>
+                <button id="close_request_form_dialog" type="button" class="btn btn-default" data-dismiss="modal"><% $c->i18n->p("global.dataset_publish.close", "Close") |h %></button>
+                <button id="submit_request_form_button" type="button" class="btn btn-primary" ><% $c->i18n->p("global.manage_file_share_dump.submit", "Submit") |h %></button>
             </div>
         </div>
     </div>
@@ -106,8 +106,8 @@ $order_properties_dialog => undef
     <div class="modal-dialog" role="document">
         <div class="modal-content">
             <div class="modal-header">
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                <h4 class="modal-title" id="submitResponseDialog">Your Request</h4>
+                <button type="button" class="close" data-dismiss="modal" aria-label="<% $c->i18n->p("global.dataset_publish.close", "Close") |h %>"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="submitResponseDialog"><% $c->i18n->p("barcode.helper.your_request", "Your Request") |h %></h4>
             </div>
             <div class="modal-body">
                 <div class="container-fluid">
@@ -115,7 +115,7 @@ $order_properties_dialog => undef
                 </div>
             </div>
             <div class="modal-footer">
-                <button id="dismiss_submit_response_dialog" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                <button id="dismiss_submit_response_dialog" type="button" class="btn btn-default" data-dismiss="modal"><% $c->i18n->p("global.dataset_publish.close", "Close") |h %></button>
             </div>
         </div>
     </div>
@@ -271,7 +271,7 @@ jQuery(document).ready( function() {
             let each_property_value = jQuery('#'+ i +'').val();
             if (!(property_keys[i].includes('optional')) && !(property_keys[i].includes('if possible'))) {
                 if (!each_property_value || (each_property_value == 'Please Select')) {
-                    alert ('Please provide info for:' + " " + property_keys[i]);
+                    alert ((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("barcode.helper.please_provide_info_for", "Please provide info for:") : 'Please provide info for:') + " " + property_keys[i]);
                     return;
                 } else {
                     order_details[property_keys[i]] = each_property_value;
@@ -288,7 +288,7 @@ jQuery(document).ready( function() {
 
         const vendor_id = jQuery('#selected_vendor_id').val();
         if (!vendor_id) {
-            alert ('Please select a vendor');
+            alert ((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("barcode.helper.please_select_a_vendor", "Please select a vendor") : 'Please select a vendor'));
             return;
         }
 
@@ -318,7 +318,7 @@ jQuery(document).ready( function() {
             },
             error: function(response){
                 jQuery('#working_modal').modal('hide');
-                alert('An error occurred saving your request');
+                alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("barcode.helper.an_error_occurred_saving_your_request", "An error occurred saving your request") : 'An error occurred saving your request'));
             }
         });
     });
@@ -332,9 +332,9 @@ jQuery(document).ready( function() {
 function itemForm (selected_items, item_info) {
     var html;
     if (selected_items.length === 0) {
-        html = '<body><h4 style="color:red;">Please select items that you would like to order from the catalog below</h4></body>';
+        html = ("<body><h4 style=\"color:red;\">" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("barcode.helper.please_select_items_that_you_would_like_to_order_from", "Please select items that you would like to order from the catalog below") : "Please select items that you would like to order from the catalog below")).html() + "</h4></body>");
     } else {
-        var html = '<div class="well well-lg"><table class="table table-bordered" style="width: 70%;" id="item_info_table"><thead><tr><th>Accession Name</th><th>Quantity</th></tr></thead><tbody>';
+        var html = ("<div class=\"well well-lg\"><table class=\"table table-bordered\" style=\"width: 70%;\" id=\"item_info_table\"><thead><tr><th>" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("accession.related_stock.header.accession_name", "Accession Name") : "Accession Name")).html() + "</th><th>" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("barcode.helper.quantity", "Quantity") : "Quantity")).html() + "</th></tr></thead><tbody>");
         for(var i=0; i<selected_items.length; i++){
             item = selected_items[i];
             item_quantity = item_info[item];
@@ -344,7 +344,7 @@ function itemForm (selected_items, item_info) {
             } else {
                 html +=  '<td><input class="form-control" item_name="' + selected_items[i] + '" name ="quantity" id="quantity_'+ i +'" value="" placeholder=""/></td>';
             }
-            html += '<td><span data-selected-item-name="'+selected_items[i]+'" class="selected_item_remove btn btn-danger btn-xs"><span class="glyphicon glyphicon-trash"></span>&nbsp;&nbsp;Remove</span></td>'
+            html += '<td><span data-selected-item-name="'+selected_items[i]+("\" class=\"selected_item_remove btn btn-danger btn-xs\"><span class=\"glyphicon glyphicon-trash\"></span>&nbsp;&nbsp;" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("global.dataset_publish.action.remove", "Remove") : "Remove")).html() + "</span></td>")
             html += '</tr>';
         };
         html = html + '</tbody></table></div>';
@@ -361,7 +361,7 @@ function requestForm(order_properties_dialog){
     for(var i=0; i<properties.length; i++){
         var each_property_info = properties[i].split(":");
         if (each_property_info.length == 1 && (properties[i].includes("Date"))) {
-            html = html + '<label class="col-sm-4 control-label">'+ properties[i] +'</label><div class="col-sm-8" ><input class="form-control date-picker" id= '+ i +' name= '+ i +' placeholder="YYYY-MM-DD"></div><br><br>';
+            html = html + '<label class="col-sm-4 control-label">'+ properties[i] +'</label><div class="col-sm-8" ><input class="form-control date-picker" id= '+ i +' name= '+ i +(" placeholder=\"" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("decision.root.yyyy_mm_dd", "YYYY-MM-DD") : "YYYY-MM-DD")).html() + "\"></div><br><br>");
         } else if (each_property_info.length == 1) {
             html = html + '<label class="col-sm-4 control-label">'+ properties[i] +'</label><div class="col-sm-8" ><input class="form-control" id= '+ i +' name= '+ i +' placeholder=""></div><br><br>';
         } else {
@@ -372,8 +372,8 @@ function requestForm(order_properties_dialog){
             html = html + "</select></div><br><br>";
         }
     }
-    html = html + '<label class="col-sm-4 control-label">Send Request Form to</label><div class="col-sm-8" ><div id="vendor_list_div" name="vendor_list_div" ></div></div><br><br>';
-    html = html + '<p><center>If you would like to get notifications about your order, please include your email in your user profile.</center></p>';
+    html = html + ("<label class=\"col-sm-4 control-label\">" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("barcode.helper.send_request_form_to", "Send Request Form to") : "Send Request Form to")).html() + "</label><div class=\"col-sm-8\" ><div id=\"vendor_list_div\" name=\"vendor_list_div\" ></div></div><br><br>");
+    html = html + ("<p><center>" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("barcode.helper.if_you_would_like_to_get_notifications_about_your_order", "If you would like to get notifications about your order, please include your email in your user profile.") : "If you would like to get notifications about your order, please include your email in your user profile.")).html() + "</center></p>");
 
     html = html + '</div></div></form>';
 
@@ -391,3 +391,7 @@ function requestForm(order_properties_dialog){
 
 
 </script>
+
+<%once>
+use HTML::Entities ();
+</%once>

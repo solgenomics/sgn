@@ -1,3 +1,19 @@
+<%init>
+use HTML::Entities ();
+# Escape catalog text first, then restore only fixed component-owned inline tags.
+my $plate_rich = sub {
+    my ($text) = @_;
+    my $escaped = HTML::Entities::encode_entities($text, q{&<>"'});
+    my %tags = (
+        '[[br_slash]]' => '<br/>', '[[br]]' => '<br>',
+        '[[b]]' => '<b>', '[[/b]]' => '</b>',
+        '[[i]]' => '<i>', '[[/i]]' => '</i>',
+        '[[small]]' => '<small>', '[[/small]]' => '</small>',
+    );
+    $escaped =~ s/(\[\[(?:br_slash|br|\/?b|\/?i|\/?small)\]\])/$tags{$1}/ge;
+    return $escaped;
+};
+</%init>
 <%args>
 $facilities => ();
 </%args>
@@ -5,117 +21,149 @@ $facilities => ();
 <& /util/import_javascript.mas, classes => [ 'CXGN.BreedersToolbox.GenotypingTrial' ] &>
 
 
+<style>
+/* Keep complete translated step captions without changing workflow nodes. */
+#genotyping_trial_create_workflow .workflow-prog {
+    display: flex;
+    align-items: stretch;
+}
+#genotyping_trial_create_workflow .workflow-prog > li {
+    display: flex;
+    flex: 1 1 0;
+    min-width: 0;
+    flex-direction: column;
+    align-items: center;
+}
+#genotyping_trial_create_workflow .workflow-title {
+    flex: 1;
+    white-space: normal;
+    overflow: visible;
+    overflow-wrap: anywhere;
+    text-overflow: clip;
+}
+#genotyping_trial_create_workflow .workflow-prog > li::before {
+    position: absolute;
+    top: auto;
+    bottom: 15px;
+    margin-left: 0;
+    inset-inline-start: 50%;
+}
+#genotyping_trial_create_workflow .workflow-prog > li::after {
+    flex: none;
+    margin-top: 4px;
+}
+</style>
 <div class="modal fade" id="genotyping_trial_dialog" name="genotyping_trial_dialog" tabindex="-1" role="dialog" aria-labelledby="addGenoTrialDialog">
     <div class="modal-dialog modal-xl" role="document">
         <div class="modal-content">
             <div class="modal-header">
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                <h4 class="modal-title" id="addGenoTrialDialog">Add Genotyping Plate</h4>
+                <button type="button" class="close" data-dismiss="modal" aria-label="<% $c->i18n->p('genotype.plate.dialog.button_close', 'Close') |h %>"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="addGenoTrialDialog"><% $c->i18n->p('genotype.plate.dialog.h4_add_genotyping_plate', 'Add Genotyping Plate') |h %></h4>
             </div>
             <div class="modal-body">
                 <div class="container-fluid">
                     <&| /util/workflow.mas, id=> "genotyping_trial_create_workflow" &>
-                        <&| /util/workflow.mas:step, title=> "Intro" &>
-                            <& /page/page_title.mas, title=>"This workflow will guide you through adding a genotyping plate in the database" &>
-                            <p>Genotyping plates represent 96 or 384 well plates.</p>
-                            <p>Each plate has a globally unique Plate ID.</p>
-                            <p>Each well in the plate has a globally unique tissue sample ID.</p>
-                            <p>The "contents" of each well can be either a tissue sample, plant name, subplot name, plot name, or accession name. This "source" name must be in the database already. This is useful if you provide a field trial entity (such as a plot or subplot or plant or tissue sample name), so that phenotypes and genotypes can be directly compared.</p>
-                            <p>If you choose to submit your genotyping plate to a genotyping facility (Cornell IGD, Intertek, BGI, etc) we can generate the files they require for you. Please be aware of their requirements, such as blank well positions and concentrations.</p>
-                            <p>In addition to sample ID, you have an option to include facility identifier for each well. </p>
+                        <&| /util/workflow.mas:step, title=> HTML::Entities::encode_entities($c->i18n->p('genotype.plate.dialog.title_intro', 'Intro'), q{&<>"'}) &>
+                            <& /page/page_title.mas, title=>HTML::Entities::encode_entities($c->i18n->p('genotype.plate.dialog.title_this_workflow_will_guide_you_through_adding', 'This workflow will guide you through adding a genotyping plate in the database'), q{&<>"'}) &>
+                            <p><% $c->i18n->p('genotype.plate.dialog.p_genotyping_plates_represent_or_well_plates', 'Genotyping plates represent %{literal_1} or %{literal_2} well plates.', { 'literal_1' => '96', 'literal_2' => '384' }) |h %></p>
+                            <p><% $c->i18n->p('genotype.plate.dialog.p_each_plate_has_a_globally_unique_plate', 'Each plate has a globally unique Plate ID.') |h %></p>
+                            <p><% $c->i18n->p('genotype.plate.dialog.p_each_well_in_the_plate_has_a', 'Each well in the plate has a globally unique tissue sample ID.') |h %></p>
+                            <p><% $c->i18n->p('genotype.plate.dialog.p_the_contents_of_each_well_can_be', 'The "contents" of each well can be either a tissue sample, plant name, subplot name, plot name, or accession name. This "source" name must be in the database already. This is useful if you provide a field trial entity (such as a plot or subplot or plant or tissue sample name), so that phenotypes and genotypes can be directly compared.') |h %></p>
+                            <p><% $c->i18n->p('genotype.plate.dialog.p_if_you_choose_to_submit_your_genotyping', 'If you choose to submit your genotyping plate to a genotyping facility (%{literal_1}, %{literal_2}, %{literal_3}, etc) we can generate the files they require for you. Please be aware of their requirements, such as blank well positions and concentrations.', { 'literal_1' => 'Cornell IGD', 'literal_2' => 'Intertek', 'literal_3' => 'BGI' }) |h %></p>
+                            <p><% $c->i18n->p('genotype.plate.dialog.p_in_addition_to_sample_id_you_have', 'In addition to sample ID, you have an option to include facility identifier for each well. ') |h %></p>
                             <br/><br/>
                             <div style="text-align: center">
-                                <button id="next_step_intro_button" class="btn btn-primary" onclick="Workflow.complete(this); return false;">Go to Next Step</button>
+                                <button id="next_step_intro_button" class="btn btn-primary" onclick="Workflow.complete(this); return false;"><% $c->i18n->p('genotype.plate.dialog.button_go_to_next_step', 'Go to Next Step') |h %></button>
                             </div>
                         </&>
 
-                        <&| /util/workflow.mas:step, title=> "Genotyping Project" &>
-                            <& /page/page_title.mas, title=>"Select a genotyping project" &>
-                            <p>Genotyping projects are for grouping genotyping plates and/or genotyping data together. Genotyping Project should match Vendor Project if you have one. </p>
+                        <&| /util/workflow.mas:step, title=> HTML::Entities::encode_entities($c->i18n->p('genotype.plate.dialog.title_genotyping_project', 'Genotyping Project'), q{&<>"'}) &>
+                            <& /page/page_title.mas, title=>HTML::Entities::encode_entities($c->i18n->p('genotype.plate.dialog.title_select_a_genotyping_project', 'Select a genotyping project'), q{&<>"'}) &>
+                            <p><% $c->i18n->p('genotype.plate.dialog.p_genotyping_projects_are_for_grouping_genotyping_plates', 'Genotyping projects are for grouping genotyping plates and/or genotyping data together. Genotyping Project should match Vendor Project if you have one. ') |h %></p>
                             <div style="text-align: center">
-                                <button class="btn btn-info" name="create_genotyping_project_link">If you need to create a genotyping project, click here</button><br/><br/>
-                                <button id="next_step_creating_genotyping_plates" class="btn btn-primary" onclick="Workflow.complete(this);">Once you have a genotyping project, go to Next Step</button>
+                                <button class="btn btn-info" name="create_genotyping_project_link"><% $c->i18n->p('genotype.plate.dialog.button_if_you_need_to_create_a_genotyping', 'If you need to create a genotyping project, click here') |h %></button><br/><br/>
+                                <button id="next_step_creating_genotyping_plates" class="btn btn-primary" onclick="Workflow.complete(this);"><% $c->i18n->p('genotype.plate.dialog.button_once_you_have_a_genotyping_project_go', 'Once you have a genotyping project, go to Next Step') |h %></button>
                             </div>
                         </&>
 
-                        <&| /util/workflow.mas:step, title=> "Basic Plate Info" &>
-                            <& /page/page_title.mas, title=>"Provide info about your plate" &>
+                        <&| /util/workflow.mas:step, title=> HTML::Entities::encode_entities($c->i18n->p('genotype.plate.dialog.title_basic_plate_info', 'Basic Plate Info'), q{&<>"'}) &>
+                            <& /page/page_title.mas, title=>HTML::Entities::encode_entities($c->i18n->p('genotype.plate.dialog.title_provide_info_about_your_plate', 'Provide info about your plate'), q{&<>"'}) &>
                             <form class="form-horizontal" role="form" method="post" enctype="multipart/form-data" encoding="multipart/form-data" id="upload_genotyping_trials_form" name="upload_genotyping_trials_form">
                                 <div class="form-group">
-                                    <label class="col-sm-5 control-label">Genotyping Project Name: </label>
+                                    <label class="col-sm-5 control-label"><% $c->i18n->p('genotype.plate.dialog.label_genotyping_project_name', 'Genotyping Project Name: ') |h %></label>
                                     <div class="col-sm-7">
                                         <span id="plate_genotyping_project_select_div"></span>
                                     </div>
                                 </div>
                                 <div class="form-group">
-                                    <label class="col-sm-5 control-label">Genotyping Plate ID: <br/><small>-In Coordinate App this is called "Plate Name"<br/>-This is the globally unique name of the plate</small></label>
+                                    <label class="col-sm-5 control-label"><% $plate_rich->($c->i18n->p('genotype.plate.dialog.label_genotyping_plate_id_in_app_this_is', 'Genotyping Plate ID: [[br_slash]][[small]]-In %{literal_1} App this is called "Plate Name"[[br_slash]]-This is the globally unique name of the plate[[/small]]', { 'literal_1' => 'Coordinate' })) %></label>
                                     <div class="col-sm-7">
-                                        <input class="form-control" id="genotyping_trial_name" name="genotyping_trial_name" type="text" placeholder=" e.g. 18DNA00001"/>
+                                        <input class="form-control" id="genotyping_trial_name" name="genotyping_trial_name" type="text" placeholder="<% $c->i18n->p('genotype.plate.dialog.hint_e_g', ' e.g. %{literal_1}', { 'literal_1' => '18DNA00001' }) |h %>"/>
                                     </div>
                                 </div>
                                 <div class="form-group">
-                                    <label class="col-sm-5 control-label">Plate Format: </label>
+                                    <label class="col-sm-5 control-label"><% $c->i18n->p('genotype.plate.dialog.label_plate_format', 'Plate Format: ') |h %></label>
                                     <div class="col-sm-7">
                                         <select class="form-control" id="genotyping_trial_plate_format">
-                                            <option value="96">96 Well</option>
-                                            <option value="384">384 Well</option>
+                                            <option value="96"><% $c->i18n->p('genotype.plate.dialog.option_well', '%{literal_1} Well', { 'literal_1' => '96' }) |h %></option>
+                                            <option value="384"><% $c->i18n->p('genotype.plate.dialog.option_well', '%{literal_1} Well', { 'literal_1' => '384' }) |h %></option>
                                         </select>
                                     </div>
                                 </div>
                                 <div class="form-group">
-                                    <label class="col-sm-5 control-label">Sample Type: </label>
+                                    <label class="col-sm-5 control-label"><% $c->i18n->p('genotype.plate.dialog.label_sample_type', 'Sample Type: ') |h %></label>
                                     <div class="col-sm-7">
                                         <select class="form-control" id="genotyping_trial_plate_sample_type">
                                             <option value="DNA">DNA</option>
                                             <option value="RNA">RNA</option>
-                                            <option value="Tissue">Tissue</option>
+                                            <option value="Tissue"><% $c->i18n->p('genotype.plate.dialog.option_tissue', 'Tissue') |h %></option>
                                         </select>
                                     </div>
                                 </div>
                                 <div class="form-group">
-                                    <label class="col-sm-5 control-label">Genotyping Plate's Description (optional): </label>
+                                    <label class="col-sm-5 control-label"><% $c->i18n->p('genotype.plate.dialog.label_genotyping_plate_s_description_optional', 'Genotyping Plate\'s Description (optional): ') |h %></label>
                                     <div class="col-sm-7">
                                         <textarea class="form-control" id="genotyping_trial_description" name="genotyping_trial_description"></textarea>
                                     </div>
                                 </div>
                                 <div class="form-group">
-                                    <label class="col-sm-5 control-label">Include Identifiers Generated by Genotyping Facility <br/>(only for upload options):<br/></label>
+                                    <label class="col-sm-5 control-label"><% $plate_rich->($c->i18n->p('genotype.plate.dialog.label_include_identifiers_generated_by_genotyping_facility_only', 'Include Identifiers Generated by Genotyping Facility [[br_slash]](only for upload options):[[br_slash]]')) %></label>
                                     <div class="col-sm-7">
                                         <input type="checkbox" id="upload_include_facility_identifiers" name="upload_include_facility_identifiers" >
                                     </div>
                                 </div>
                                 <br/>
                                 <div style="text-align: center">
-                                    <button id="plate_info_intro_button" class="btn btn-primary" onclick="Workflow.complete(this); return false;">Go to Next Step</button>
+                                    <button id="plate_info_intro_button" class="btn btn-primary" onclick="Workflow.complete(this); return false;"><% $c->i18n->p('genotype.plate.dialog.button_go_to_next_step', 'Go to Next Step') |h %></button>
                                 </div>
                             </&>
-                            <&| /util/workflow.mas:step, title=> "Well Info" &>
-                                <& /page/page_title.mas, title=>"Provide information about the wells in your plate" &>
+                            <&| /util/workflow.mas:step, title=> HTML::Entities::encode_entities($c->i18n->p('genotype.plate.dialog.title_well_info', 'Well Info'), q{&<>"'}) &>
+                                <& /page/page_title.mas, title=>HTML::Entities::encode_entities($c->i18n->p('genotype.plate.dialog.title_provide_information_about_the_wells_in_your', 'Provide information about the wells in your plate'), q{&<>"'}) &>
                                 <br/>
                                 <div class="form-group">
-                                    <label class="col-sm-3 control-label text-align: right">Select One: </label>
+                                    <label class="col-sm-3 control-label text-align: right"><% $c->i18n->p('genotype.plate.dialog.label_select_one', 'Select One: ') |h %></label>
                                     <div class="col-sm-9">
                                         <select class="form-control" id="genotyping_trial_well_input_option">
-                                            <option value="">Select a file format that you want to upload</option>
-                                            <option value="xlsx">I am uploading a plate design I made in Excel</option>
-                                            <option value="coordinate">I am uploading a Default Coordinate Android Application plate design</option>
-                                            <option value="coordinate_template">I am uploading a Custom Coordinate Android Application plate design</option>
-                                            <option value="design">I need to design a completely new plate</option>
+                                            <option value=""><% $c->i18n->p('genotype.plate.dialog.option_select_a_file_format_that_you_want', 'Select a file format that you want to upload') |h %></option>
+                                            <option value="xlsx"><% $c->i18n->p('genotype.plate.dialog.option_i_am_uploading_a_plate_design_i', 'I am uploading a plate design I made in %{literal_1}', { 'literal_1' => 'Excel' }) |h %></option>
+                                            <option value="coordinate"><% $c->i18n->p('genotype.plate.dialog.option_i_am_uploading_a_default_application_plate', 'I am uploading a Default %{literal_1} %{literal_2} Application plate design', { 'literal_1' => 'Coordinate', 'literal_2' => 'Android' }) |h %></option>
+                                            <option value="coordinate_template"><% $c->i18n->p('genotype.plate.dialog.option_i_am_uploading_a_custom_application_plate', 'I am uploading a Custom %{literal_1} %{literal_2} Application plate design', { 'literal_1' => 'Coordinate', 'literal_2' => 'Android' }) |h %></option>
+                                            <option value="design"><% $c->i18n->p('genotype.plate.dialog.option_i_need_to_design_a_completely_new', 'I need to design a completely new plate') |h %></option>
                                         </select>
                                     </div>
                                 </div>
                                 <br/><br/>
 
                                 <div id="genotyping_trial_well_upload_section" style="display:none">
-                                    <h3>You want to upload an existing plate layout</h3>
+                                    <h3><% $c->i18n->p('genotype.plate.dialog.h3_you_want_to_upload_an_existing_plate', 'You want to upload an existing plate layout') |h %></h3>
                                     <div class="well well-sm">
                                         <div class="row">
                                             <div class="col-sm-4">
-                                                <&| /page/explanation.mas, title=>'Template information' &>
+                                                <&| /page/explanation.mas, title=>HTML::Entities::encode_entities($c->i18n->p('genotype.plate.dialog.title_template_information', 'Template information'), q{&<>"'}) &>
                                                     <p>
-                                                        <b>File format information</b>
+                                                        <b><% $c->i18n->p('genotype.plate.dialog.help_file_format_information', 'File format information') |h %></b>
                                                         <br>
-                                                        <a id="genotyping_trial_layout_upload_spreadsheet_info_format">Spreadsheet format</a>
+                                                        <a id="genotyping_trial_layout_upload_spreadsheet_info_format"><% $c->i18n->p('genotype.plate.dialog.help_spreadsheet_format', 'Spreadsheet format') |h %></a>
                                                     </p>
                                                 </&>
                                             </div>
@@ -124,7 +172,7 @@ $facilities => ();
                                                 <div class="panel panel-default">
                                                     <div class="panel-body">
                                                         <div class="form-group">
-                                                            <label class="col-sm-6 control-label">Select Plate Layout XLSX File: </label>
+                                                            <label class="col-sm-6 control-label"><% $c->i18n->p('genotype.plate.dialog.label_select_plate_layout_xlsx_file', 'Select Plate Layout XLSX File: ') |h %></label>
                                                             <div class="col-sm-6">
                                                                 <input type="file" name="genotyping_trial_layout_upload" id="genotyping_trial_layout_upload" encoding="multipart/form-data" />
                                                             </div>
@@ -137,15 +185,15 @@ $facilities => ();
                                 </div>
 
                                 <div id="genotyping_trial_well_coordinate_upload_section" style="display:none">
-                                    <h3>You want to upload a Coordinate Android Application file.</h3>
+                                    <h3><% $c->i18n->p('genotype.plate.dialog.h3_you_want_to_upload_a_application_file', 'You want to upload a %{literal_1} %{literal_2} Application file.', { 'literal_1' => 'Coordinate', 'literal_2' => 'Android' }) |h %></h3>
                                     <div class="well well-sm">
                                         <div class="row">
                                             <div class="col-sm-4">
-                                                <&| /page/explanation.mas, title=>'Template information' &>
+                                                <&| /page/explanation.mas, title=>HTML::Entities::encode_entities($c->i18n->p('genotype.plate.dialog.title_template_information', 'Template information'), q{&<>"'}) &>
                                                     <p>
-                                                        <b>File format information</b>
+                                                        <b><% $c->i18n->p('genotype.plate.dialog.help_file_format_information', 'File format information') |h %></b>
                                                         <br>
-                                                        <a id="genotyping_trial_layout_upload_coordinate_spreadsheet_info_format">Spreadsheet format</a>
+                                                        <a id="genotyping_trial_layout_upload_coordinate_spreadsheet_info_format"><% $c->i18n->p('genotype.plate.dialog.help_spreadsheet_format', 'Spreadsheet format') |h %></a>
                                                     </p>
                                                 </&>
                                             </div>
@@ -154,7 +202,7 @@ $facilities => ();
                                                 <div class="panel panel-default">
                                                     <div class="panel-body">
                                                         <div class="form-group">
-                                                            <label class="col-sm-6 control-label">Select Coordinate CSV File: </label>
+                                                            <label class="col-sm-6 control-label"><% $c->i18n->p('genotype.plate.dialog.label_select_csv_file', 'Select %{literal_1} CSV File: ', { 'literal_1' => 'Coordinate' }) |h %></label>
                                                             <div class="col-sm-6">
                                                                 <input type="file" name="genotyping_trial_layout_upload_coordinate" id="genotyping_trial_layout_upload_coordinate" encoding="multipart/form-data" />
                                                             </div>
@@ -167,15 +215,15 @@ $facilities => ();
                                 </div>
 
                                 <div id="genotyping_trial_well_coordinate_template_upload_section" style="display:none">
-                                    <h3>You want to upload a Custom Android Application file.</h3>
+                                    <h3><% $c->i18n->p('genotype.plate.dialog.h3_you_want_to_upload_a_custom_application', 'You want to upload a Custom %{literal_1} Application file.', { 'literal_1' => 'Android' }) |h %></h3>
                                     <div class="well well-sm">
                                         <div class="row">
                                             <div class="col-sm-4">
-                                                <&| /page/explanation.mas, title=>'Template information' &>
+                                                <&| /page/explanation.mas, title=>HTML::Entities::encode_entities($c->i18n->p('genotype.plate.dialog.title_template_information', 'Template information'), q{&<>"'}) &>
                                                     <p>
-                                                        <b>File format information</b>
+                                                        <b><% $c->i18n->p('genotype.plate.dialog.help_file_format_information', 'File format information') |h %></b>
                                                         <br>
-                                                        <a id="genotyping_trial_layout_upload_coordinate_custom_spreadsheet_info_format">Spreadsheet format</a>
+                                                        <a id="genotyping_trial_layout_upload_coordinate_custom_spreadsheet_info_format"><% $c->i18n->p('genotype.plate.dialog.help_spreadsheet_format', 'Spreadsheet format') |h %></a>
                                                     </p>
                                                 </&>
                                             </div>
@@ -184,7 +232,7 @@ $facilities => ();
                                                 <div class="panel panel-default">
                                                     <div class="panel-body">
                                                         <div class="form-group">
-                                                            <label class="col-sm-6 control-label">Select Coordinate CSV File: </label>
+                                                            <label class="col-sm-6 control-label"><% $c->i18n->p('genotype.plate.dialog.label_select_csv_file', 'Select %{literal_1} CSV File: ', { 'literal_1' => 'Coordinate' }) |h %></label>
                                                             <div class="col-sm-6">
                                                                 <input type="file" name="genotyping_trial_layout_upload_coordinate_template" id="genotyping_trial_layout_upload_coordinate_template" encoding="multipart/form-data" />
                                                             </div>
@@ -197,86 +245,86 @@ $facilities => ();
                                 </div>
 
                                 <div id="genotyping_trial_well_design_section" style="display:none">
-                                    <h3>You want to design a completely new plate.</h3>
+                                    <h3><% $c->i18n->p('genotype.plate.dialog.h3_you_want_to_design_a_completely_new', 'You want to design a completely new plate.') |h %></h3>
                                     <div class="well well-sm">
                                         <ul>
-                                            <li>Select a list for the source material going into each well. Your list should be a one to one pairing to each well e.g. if you want to fill 95 wells you should supply a list of 95 elements.</li>
-                                            <li>Note: From the most desirable to least desirable source observation unit you can choose: tissue samples, plants, subplots, plots, or accessions</li>
+                                            <li><% $c->i18n->p('genotype.plate.dialog.li_select_a_list_for_the_source_material', 'Select a list for the source material going into each well. Your list should be a one to one pairing to each well e.g. if you want to fill %{literal_1} wells you should supply a list of %{literal_1} elements.', { 'literal_1' => '95' }) |h %></li>
+                                            <li><% $c->i18n->p('genotype.plate.dialog.li_note_from_the_most_desirable_to_least', 'Note: From the most desirable to least desirable source observation unit you can choose: tissue samples, plants, subplots, plots, or accessions') |h %></li>
                                         </ul>
                                     </div>
                                     <div class="form-group">
-                                        <label class="col-sm-7 control-label">Source Observation Unit List: </label>
+                                        <label class="col-sm-7 control-label"><% $c->i18n->p('genotype.plate.dialog.label_source_observation_unit_list', 'Source Observation Unit List: ') |h %></label>
                                         <div class="col-sm-5">
-                                            <span id="accession_select_box_span">[loading...]</span>
+                                            <span id="accession_select_box_span"><% $c->i18n->p('genotype.plate.dialog.help_loading', '[loading...]') |h %></span>
                                         </div>
                                     </div>
                                     <br/>
                                     <br/>
                                     <div class="form-group form-group-sm">
-                                        <label class="col-sm-7 control-label"><i>Optional</i> Blank Well: <small>(Cornell IGD requires a specific well to be blank.)</small></label>
+                                        <label class="col-sm-7 control-label"><% $plate_rich->($c->i18n->p('genotype.plate.dialog.label_optional_blank_well_requires_a_specific_well', '[[i]]Optional[[/i]] Blank Well: [[small]](%{literal_1} requires a specific well to be blank.)[[/small]]', { 'literal_1' => 'Cornell IGD' })) %></label>
                                         <div class="col-sm-5">
-                                            <input class="form-control" id="genotyping_blank_well" name="genotyping_blank_well" type="text" placeholder="e.g. A01"/>
+                                            <input class="form-control" id="genotyping_blank_well" name="genotyping_blank_well" type="text" placeholder="<% $c->i18n->p('genotype.plate.dialog.hint_e_g.12f18a6', 'e.g. %{literal_1}', { 'literal_1' => 'A01' }) |h %>"/>
                                         </div>
                                     </div>
                                     <br/>
                                     <div class="form-group form-group-sm">
-                                        <label class="col-sm-7 control-label"><i>Optional</i> Well Concentration (ng/ul): <small>(If you used the same conc for all wells)</small></label>
+                                        <label class="col-sm-7 control-label"><% $plate_rich->($c->i18n->p('genotype.plate.dialog.label_optional_well_concentration_if_you_used_the', '[[i]]Optional[[/i]] Well Concentration (%{literal_1}): [[small]](If you used the same conc for all wells)[[/small]]', { 'literal_1' => 'ng/ul' })) %></label>
                                         <div class="col-sm-5">
                                             <input class="form-control" id="genotyping_well_concentration" name="genotyping_well_concentration" type="text" />
                                         </div>
                                     </div>
                                     <br/>
                                     <div class="form-group form-group-sm">
-                                        <label class="col-sm-7 control-label"><i>Optional</i> Well Volume (ul): <small>(If you used the same vol for all wells)</small></label>
+                                        <label class="col-sm-7 control-label"><% $plate_rich->($c->i18n->p('genotype.plate.dialog.label_optional_well_volume_if_you_used_the', '[[i]]Optional[[/i]] Well Volume (%{literal_1}): [[small]](If you used the same vol for all wells)[[/small]]', { 'literal_1' => 'ul' })) %></label>
                                         <div class="col-sm-5">
                                             <input class="form-control" id="genotyping_well_volume" name="genotyping_well_volume" type="text" />
                                         </div>
                                     </div>
                                     <br/>
                                     <div class="form-group form-group-sm">
-                                        <label class="col-sm-7 control-label"><i>Optional</i> Tissue: <small>(If used the same tissue for all wells)</small> </label>
+                                        <label class="col-sm-7 control-label"><% $plate_rich->($c->i18n->p('genotype.plate.dialog.label_optional_tissue_if_used_the_same_tissue', '[[i]]Optional[[/i]] Tissue: [[small]](If used the same tissue for all wells)[[/small]] ')) %></label>
                                         <div class="col-sm-5">
                                             <select class="form-control" id="genotyping_well_tissue">
-                                                <option value="leaf">Leaf</option>
-                                                <option value="root">Root</option>
-                                                <option value="stem">Stem</option>
-                                                <option value="seed">Seed</option>
-                                                <option value="fruit">Fruit</option>
-                                                <option value="tuber">Tuber</option>
+                                                <option value="leaf"><% $c->i18n->p('genotype.plate.dialog.option_leaf', 'Leaf') |h %></option>
+                                                <option value="root"><% $c->i18n->p('genotype.plate.dialog.option_root', 'Root') |h %></option>
+                                                <option value="stem"><% $c->i18n->p('genotype.plate.dialog.option_stem', 'Stem') |h %></option>
+                                                <option value="seed"><% $c->i18n->p('genotype.plate.dialog.option_seed', 'Seed') |h %></option>
+                                                <option value="fruit"><% $c->i18n->p('genotype.plate.dialog.option_fruit', 'Fruit') |h %></option>
+                                                <option value="tuber"><% $c->i18n->p('genotype.plate.dialog.option_tuber', 'Tuber') |h %></option>
                                             </select>
                                         </div>
                                     </div>
                                     <br/>
                                     <div class="form-group form-group-sm">
-                                        <label class="col-sm-7 control-label"><i>Optional</i> NCBI Taxonomy ID: <small>(Official NCBI ID.)</small> </label>
+                                        <label class="col-sm-7 control-label"><% $plate_rich->($c->i18n->p('genotype.plate.dialog.label_optional_taxonomy_id_official_id', '[[i]]Optional[[/i]] %{literal_1} Taxonomy ID: [[small]](Official %{literal_1} ID.)[[/small]] ', { 'literal_1' => 'NCBI' })) %></label>
                                         <div class="col-sm-5">
                                             <input class="form-control" id="genotyping_well_ncbi_taxonomy_id" name="genotyping_well_ncbi_taxonomy_id" type="text" />
                                         </div>
                                     </div>
                                     <br/>
                                     <div class="form-group form-group-sm">
-                                        <label class="col-sm-7 control-label"><i>Optional</i> Extraction: <small>(If used the same extraction for all wells)</small> </label>
+                                        <label class="col-sm-7 control-label"><% $plate_rich->($c->i18n->p('genotype.plate.dialog.label_optional_extraction_if_used_the_same_extraction', '[[i]]Optional[[/i]] Extraction: [[small]](If used the same extraction for all wells)[[/small]] ')) %></label>
                                         <div class="col-sm-5">
                                             <input class="form-control" id="genotyping_well_extraction" name="genotyping_well_extraction" type="text" />
                                         </div>
                                     </div>
                                     <br/>
                                     <div class="form-group form-group-sm">
-                                        <label class="col-sm-7 control-label"><i>Optional</i> Person: <small>(If same person prepared all wells.)</small> </label>
+                                        <label class="col-sm-7 control-label"><% $plate_rich->($c->i18n->p('genotype.plate.dialog.label_optional_person_if_same_person_prepared_all', '[[i]]Optional[[/i]] Person: [[small]](If same person prepared all wells.)[[/small]] ')) %></label>
                                         <div class="col-sm-5">
                                             <input class="form-control" id="genotyping_well_dna_person" name="genotyping_well_dna_person" type="text" />
                                         </div>
                                     </div>
                                     <br/>
                                     <div class="form-group form-group-sm">
-                                        <label class="col-sm-7 control-label"><i>Optional</i> Date: <small>(If plated on same date. YYYY/MM/DD)</small> </label>
+                                        <label class="col-sm-7 control-label"><% $plate_rich->($c->i18n->p('genotype.plate.dialog.label_optional_date_if_plated_on_same_date', '[[i]]Optional[[/i]] Date: [[small]](If plated on same date. %{literal_1})[[/small]] ', { 'literal_1' => 'YYYY/MM/DD' })) %></label>
                                         <div class="col-sm-5">
-                                            <input class="form-control" id="genotyping_well_date" name="genotyping_well_date" type="text" placeholder="YYYY/MM/DD"/>
+                                            <input class="form-control" id="genotyping_well_date" name="genotyping_well_date" type="text" placeholder="<% $c->i18n->p('genotype.plate.dialog.hint_', '%{literal_1}', { 'literal_1' => 'YYYY/MM/DD' }) |h %>"/>
                                         </div>
                                     </div>
                                     <br/>
                                     <div class="form-group form-group-sm">
-                                        <label class="col-sm-7 control-label"><i>Optional</i> Notes: <small>(Additional notes for these wells.)</small> </label>
+                                        <label class="col-sm-7 control-label"><% $plate_rich->($c->i18n->p('genotype.plate.dialog.label_optional_notes_additional_notes_for_these_wells', '[[i]]Optional[[/i]] Notes: [[small]](Additional notes for these wells.)[[/small]] ')) %></label>
                                         <div class="col-sm-5">
                                             <input class="form-control" id="genotyping_well_notes" name="genotyping_well_notes" type="text" />
                                         </div>
@@ -286,22 +334,22 @@ $facilities => ();
                                 <br/>
                                 <div id="next_upload_button" style="display:none">
                                     <div style="text-align: center">
-                                        <button id="well_info_intro_button" class="btn btn-primary" onclick="Workflow.complete(this); return false;">Go to Next Step</button>
+                                        <button id="well_info_intro_button" class="btn btn-primary" onclick="Workflow.complete(this); return false;"><% $c->i18n->p('genotype.plate.dialog.button_go_to_next_step', 'Go to Next Step') |h %></button>
                                     </div>
                                 </div>
                             </&>
-                            <&| /util/workflow.mas:step, title=> "Trial Linkage" &>
-                                <& /page/page_title.mas, title=>"Is your genotyping plate linked with field trials in the database? This information can also be added from the genotyping plate detail page once the trial is saved in the database." &>
-                                <p>If you provided us with information about where the tissue sample in each well originated (e.g. it came from a plot name or a subplot name or plant name or tissue sample name in a field trial), we will automatically create linkage between the field trial(s) and this genotyping plate.</p>
+                            <&| /util/workflow.mas:step, title=> HTML::Entities::encode_entities($c->i18n->p('genotype.plate.dialog.title_trial_linkage', 'Trial Linkage'), q{&<>"'}) &>
+                                <& /page/page_title.mas, title=>HTML::Entities::encode_entities($c->i18n->p('genotype.plate.dialog.title_is_your_genotyping_plate_linked_with_field', 'Is your genotyping plate linked with field trials in the database? This information can also be added from the genotyping plate detail page once the trial is saved in the database.'), q{&<>"'}) &>
+                                <p><% $c->i18n->p('genotype.plate.dialog.p_if_you_provided_us_with_information_about', 'If you provided us with information about where the tissue sample in each well originated (e.g. it came from a plot name or a subplot name or plant name or tissue sample name in a field trial), we will automatically create linkage between the field trial(s) and this genotyping plate.') |h %></p>
                                 <br/>
                                 <div style="text-align: center">
-                                    <button id="trial_linkage_intro_button"  class="btn btn-lg btn-primary" onclick="Workflow.complete(this); return false;" >Continue to Next Step</button>
+                                    <button id="trial_linkage_intro_button"  class="btn btn-lg btn-primary" onclick="Workflow.complete(this); return false;" ><% $c->i18n->p('genotype.plate.dialog.button_continue_to_next_step', 'Continue to Next Step') |h %></button>
                                 </div>
                             </&>
-                            <&| /util/workflow.mas:step, title=> "Confirm" &>
-                                <& /page/page_title.mas, title=>"Finalize and submit your genotyping plate" &>
+                            <&| /util/workflow.mas:step, title=> HTML::Entities::encode_entities($c->i18n->p('genotype.plate.dialog.title_confirm', 'Confirm'), q{&<>"'}) &>
+                                <& /page/page_title.mas, title=>HTML::Entities::encode_entities($c->i18n->p('genotype.plate.dialog.title_finalize_and_submit_your_genotyping_plate', 'Finalize and submit your genotyping plate'), q{&<>"'}) &>
 
-                                <p>Automatic submission to the Genotyping Facility currently not working. You can submit it from the Genotyping Plate's detail page or download the information from the Genotyping Plate's detail page and submit it yourself after clicking Submit</p>
+                                <p><% $c->i18n->p('genotype.plate.dialog.p_automatic_submission_to_the_genotyping_facility_currently', 'Automatic submission to the Genotyping Facility currently not working. You can submit it from the Genotyping Plate\'s detail page or download the information from the Genotyping Plate\'s detail page and submit it yourself after clicking Submit') |h %></p>
 <!--
                                 <div class="form-group">
                                     <label class="col-sm-5 control-label">Along with saving this information to this database, I want to automatically submit to the Genotyping Facility: <small>Automatic submission currently not working. You can submit it from the Genotyping Plate's detail page or download the information from the Genotyping Plate's detail page and submit it yourself after clicking Submit</small></label>
@@ -318,19 +366,19 @@ $facilities => ();
                                 </form>
                                 <hr/>
                                 <div style="text-align: center">
-                                    <button type="button" class="btn btn-primary" name="add_geno_trial_submit" id="add_geno_trial_submit">Submit</button>
+                                    <button type="button" class="btn btn-primary" name="add_geno_trial_submit" id="add_geno_trial_submit"><% $c->i18n->p('genotype.plate.dialog.button_submit', 'Submit') |h %></button>
                                 </div>
                             </&>
 
                             <&| /util/workflow.mas:complete, title=> "Complete" &>
-                                <& /page/page_title.mas, title=>"Complete! Your genotyping plate was saved in the database." &>
+                                <& /page/page_title.mas, title=>HTML::Entities::encode_entities($c->i18n->p('genotype.plate.dialog.title_complete_your_genotyping_plate_was_saved_in', 'Complete! Your genotyping plate was saved in the database.'), q{&<>"'}) &>
                                 <p>
                                     <span class="ui-icon ui-icon-circle-check" style="float: left; margin: 0 7px 50px 0;"></span>
-                                    The genotyping plate was saved successfully
+                                    <% $c->i18n->p('genotype.plate.dialog.success_the_genotyping_plate_was_saved_successfully', 'The genotyping plate was saved successfully') |h %>
                                 </p>
                                 <ul>
-                                    <li>You may want to proceed to the genotyping plate detail page for the trial you just created.</li>
-                                    <li>You can print barcodes for the plate and tissue samples.</li>
+                                    <li><% $c->i18n->p('genotype.plate.dialog.li_you_may_want_to_proceed_to_the', 'You may want to proceed to the genotyping plate detail page for the trial you just created.') |h %></li>
+                                    <li><% $c->i18n->p('genotype.plate.dialog.li_you_can_print_barcodes_for_the_plate', 'You can print barcodes for the plate and tissue samples.') |h %></li>
                                 </ul>
                                 <br/>
                             </&>
@@ -338,7 +386,7 @@ $facilities => ();
                     </div>
             </div>
             <div class="modal-footer">
-                <button id="close_trial_button" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                <button id="close_trial_button" type="button" class="btn btn-default" data-dismiss="modal"><% $c->i18n->p('genotype.plate.dialog.button_close', 'Close') |h %></button>
             </div>
         </div>
     </div>
@@ -348,20 +396,20 @@ $facilities => ();
     <div class="modal-dialog modal-xl" role="document">
         <div class="modal-content">
             <div class="modal-header" style="text-align: center">
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                <h4 class="modal-title" id="uploadGenotypingTrialInfoDialog">Upload Template Information</h4>
+                <button type="button" class="close" data-dismiss="modal" aria-label="<% $c->i18n->p('genotype.plate.dialog.button_close', 'Close') |h %>"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="uploadGenotypingTrialInfoDialog"><% $c->i18n->p('genotype.plate.dialog.h4_upload_template_information', 'Upload Template Information') |h %></h4>
             </div>
             <div class="modal-body">
                 <div class="container-fluid">
-                    <b>This is for uploading a pre-existing genotyping plate layout.</b>
+                    <b><% $c->i18n->p('genotype.plate.dialog.b_this_is_for_uploading_a_pre_existing', 'This is for uploading a pre-existing genotyping plate layout.') |h %></b>
                     <br/>
-                    <b>File must be Excel file (.xls or .xlsx)</b>
+                    <b><% $c->i18n->p('genotype.plate.dialog.b_file_must_be_file_or', 'File must be %{literal_1} file (%{literal_2} or %{literal_3})', { 'literal_1' => 'Excel', 'literal_2' => '.xls', 'literal_3' => '.xlsx' }) |h %></b>
                     <br />
-                    <b>Header:</b>
+                    <b><% $c->i18n->p('genotype.plate.dialog.b_header', 'Header:') |h %></b>
                     <br>
-                    The first row (header) must contain the following:
+                    <% $c->i18n->p('genotype.plate.dialog.help_the_first_row_header_must_contain_the', 'The first row (header) must contain the following:') |h %>
 
-                    <table class="table table-hover table-bordered table-condensed" >
+                    <div class="table-responsive" dir="ltr" tabindex="0"><table class="table table-hover table-bordered table-condensed" dir="ltr">
                         <thead></thead>
                         <tbody>
                             <tr>
@@ -381,36 +429,36 @@ $facilities => ();
                                 <td>is_blank</td>
                             </tr>
                         </tbody>
-                    </table>
-                    Optional column: In addition to sample ids, you can add facility identifiers in the last column with the header: "facility_identifier".
+                    </table></div>
+                    <% $c->i18n->p('genotype.plate.dialog.help_optional_column_in_addition_to_sample_ids', 'Optional column: In addition to sample ids, you can add facility identifiers in the last column with the header: "%{literal_1}".', { 'literal_1' => 'facility_identifier' }) |h %>
                     <br/><br/>
-                    <b>Required fields:</b>
+                    <b><% $c->i18n->p('genotype.plate.dialog.b_required_fields', 'Required fields:') |h %></b>
                     <ul>
-                    <li>date (should be YYYY-MM-DD)</li>
-                    <li>sample_id (the unique identifier for the sample in the well)</li>
-                    <li>well_A01 (the position of the sample in the plate e.q. A10)</li>
-                    <li>row (the row position of the sample in the plate e.g. A)</li>
-                    <li>column (the column position of the sample in the plate e.g. 10)</li>
-                    <li>source_observation_unit_name (must exist in the database. the identifier of the origin material. in order of most desirable identifier to least desirable identifier that can be used here: tissue sample name, plant name, subplot name, plot name, accession name. For blank wells, you can write BLANK here and place a 1 in the is_blank column also.)</li>
-                    <li>tissue_type (must be either leaf, root, stem, seed, fruit or tuber)</li>
+                    <li><% $c->i18n->p('genotype.plate.dialog.li_should_be', '%{field} (should be %{literal_2})', { 'field' => 'date', 'literal_2' => 'YYYY-MM-DD' }) |h %></li>
+                    <li><% $c->i18n->p('genotype.plate.dialog.li_the_unique_identifier_for_the_sample_in', '%{literal_1} (the unique identifier for the sample in the well)', { 'literal_1' => 'sample_id' }) |h %></li>
+                    <li><% $c->i18n->p('genotype.plate.dialog.li_the_position_of_the_sample_in_the', '%{literal_1} (the position of the sample in the plate e.q. %{literal_2})', { 'literal_1' => 'well_A01', 'literal_2' => 'A10' }) |h %></li>
+                    <li><% $c->i18n->p('genotype.plate.dialog.li_the_row_position_of_the_sample_in', '%{field} (the row position of the sample in the plate e.g. %{literal_2})', { 'field' => 'row', 'literal_2' => 'A' }) |h %></li>
+                    <li><% $c->i18n->p('genotype.plate.dialog.li_the_column_position_of_the_sample_in', '%{field} (the column position of the sample in the plate e.g. %{literal_2})', { 'field' => 'column', 'literal_2' => '10' }) |h %></li>
+                    <li><% $c->i18n->p('genotype.plate.dialog.li_must_exist_in_the_database_the_identifier', '%{literal_1} (must exist in the database. the identifier of the origin material. in order of most desirable identifier to least desirable identifier that can be used here: tissue sample name, plant name, subplot name, plot name, accession name. For blank wells, you can write %{literal_2} here and place a %{literal_3} in the %{literal_4} column also.)', { 'literal_1' => 'source_observation_unit_name', 'literal_2' => 'BLANK', 'literal_3' => '1', 'literal_4' => 'is_blank' }) |h %></li>
+                    <li><% $c->i18n->p('genotype.plate.dialog.li_must_be_either_or', '%{literal_1} (must be either %{literal_2}, %{literal_3}, %{literal_4}, %{literal_5}, %{literal_6} or %{literal_7})', { 'literal_1' => 'tissue_type', 'literal_2' => 'leaf', 'literal_3' => 'root', 'literal_4' => 'stem', 'literal_5' => 'seed', 'literal_6' => 'fruit', 'literal_7' => 'tuber' }) |h %></li>
                     </ul>
 
-                    <b>Optional fields:</b>
+                    <b><% $c->i18n->p('genotype.plate.dialog.b_optional_fields', 'Optional fields:') |h %></b>
                     <ul>
-                    <li>ncbi_taxonomy_id (NCBI taxonomy identifier)</li>
-                    <li>dna_person (the name of the person who prepared the well)</li>
-                    <li>notes (any additional notes on the well)</li>
-                    <li>extraction (free-text for the extraction method e.g. CTAB)</li>
-                    <li>concentration (concentration in ng/ul)</li>
-                    <li>volume (volume in ul)</li>
-                    <li>is_blank (indicates if well is blank. write 1 if blank, otherwise leave empty.)</li>
-                    <li>facility_identifier (if you would like to include facility identifiers in your genotyping plate layout, you can add facility identifiers in the last column with the header <b>"facility_identifier"</b>)</li>
+                    <li><% $c->i18n->p('genotype.plate.dialog.li_taxonomy_identifier', '%{literal_1} (%{literal_2} taxonomy identifier)', { 'literal_1' => 'ncbi_taxonomy_id', 'literal_2' => 'NCBI' }) |h %></li>
+                    <li><% $c->i18n->p('genotype.plate.dialog.li_the_name_of_the_person_who_prepared', '%{literal_1} (the name of the person who prepared the well)', { 'literal_1' => 'dna_person' }) |h %></li>
+                    <li><% $c->i18n->p('genotype.plate.dialog.li_any_additional_notes_on_the_well', '%{field} (any additional notes on the well)', { 'field' => 'notes' }) |h %></li>
+                    <li><% $c->i18n->p('genotype.plate.dialog.li_free_text_for_the_extraction_method_e', '%{field} (free-text for the extraction method e.g. %{literal_2})', { 'field' => 'extraction', 'literal_2' => 'CTAB' }) |h %></li>
+                    <li><% $c->i18n->p('genotype.plate.dialog.li_concentration_in', '%{field} (concentration in %{literal_2})', { 'field' => 'concentration', 'literal_2' => 'ng/ul' }) |h %></li>
+                    <li><% $c->i18n->p('genotype.plate.dialog.li_volume_in', '%{field} (volume in %{literal_2})', { 'field' => 'volume', 'literal_2' => 'ul' }) |h %></li>
+                    <li><% $c->i18n->p('genotype.plate.dialog.li_indicates_if_well_is_blank_write_if', '%{literal_1} (indicates if well is blank. write %{literal_2} if blank, otherwise leave empty.)', { 'literal_1' => 'is_blank', 'literal_2' => '1' }) |h %></li>
+                    <li><% $plate_rich->($c->i18n->p('genotype.plate.dialog.li_if_you_would_like_to_include_facility', '%{literal_1} (if you would like to include facility identifiers in your genotyping plate layout, you can add facility identifiers in the last column with the header [[b]]"%{literal_1}"[[/b]])', { 'literal_1' => 'facility_identifier' })) %></li>
                     </ul>
 
                 </div>
             </div>
             <div class="modal-footer">
-                <button id="close_upload_genotyping_spreadsheet_info_dialog" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                <button id="close_upload_genotyping_spreadsheet_info_dialog" type="button" class="btn btn-default" data-dismiss="modal"><% $c->i18n->p('genotype.plate.dialog.button_close', 'Close') |h %></button>
             </div>
         </div>
     </div>
@@ -420,22 +468,22 @@ $facilities => ();
     <div class="modal-dialog modal-xl" role="document">
         <div class="modal-content">
             <div class="modal-header" style="text-align: center">
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                <h4 class="modal-title" id="uploadGenotypingTrialCoordinateInfoDialog">Upload Template Information</h4>
+                <button type="button" class="close" data-dismiss="modal" aria-label="<% $c->i18n->p('genotype.plate.dialog.button_close', 'Close') |h %>"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="uploadGenotypingTrialCoordinateInfoDialog"><% $c->i18n->p('genotype.plate.dialog.h4_upload_template_information', 'Upload Template Information') |h %></h4>
             </div>
             <div class="modal-body">
                 <div class="container-fluid">
-                    <b>This is for uploading a Default Coordinate Android Application exported plate layout.</b>
+                    <b><% $c->i18n->p('genotype.plate.dialog.b_this_is_for_uploading_a_default_application', 'This is for uploading a Default %{literal_1} %{literal_2} Application exported plate layout.', { 'literal_1' => 'Coordinate', 'literal_2' => 'Android' }) |h %></b>
                     <br/>
-                    <b>File must be a CSV file (.csv)</b>
+                    <b><% $c->i18n->p('genotype.plate.dialog.b_file_must_be_a_csv_file', 'File must be a CSV file (%{literal_1})', { 'literal_1' => '.csv' }) |h %></b>
                     <br />
-                    (Excel format not supported)
+                    <% $c->i18n->p('genotype.plate.dialog.help_format_not_supported', '(%{literal_1} format not supported)', { 'literal_1' => 'Excel' }) |h %>
                     <br /><br />
-                    <b>Header:</b>
+                    <b><% $c->i18n->p('genotype.plate.dialog.b_header', 'Header:') |h %></b>
                     <br>
-                    The first row (header) must contain the following:
+                    <% $c->i18n->p('genotype.plate.dialog.help_the_first_row_header_must_contain_the', 'The first row (header) must contain the following:') |h %>
 
-                    <table class="table table-hover table-bordered table-condensed" >
+                    <div class="table-responsive" dir="ltr" tabindex="0"><table class="table table-hover table-bordered table-condensed" dir="ltr">
                         <thead></thead>
                         <tbody>
                             <tr>
@@ -452,33 +500,33 @@ $facilities => ();
                                 <td>extraction</td>
                             </tr>
                         </tbody>
-                    </table>
-                    Optional column: In addition to sample ids, you can add facility identifiers in the last column with the header: "facility_identifier".
+                    </table></div>
+                    <% $c->i18n->p('genotype.plate.dialog.help_optional_column_in_addition_to_sample_ids', 'Optional column: In addition to sample ids, you can add facility identifiers in the last column with the header: "%{literal_1}".', { 'literal_1' => 'facility_identifier' }) |h %>
                     <br/><br/>
-                    <b>Required fields:</b>
+                    <b><% $c->i18n->p('genotype.plate.dialog.b_required_fields', 'Required fields:') |h %></b>
                     <ul>
-                    <li>date (should be YYYY-MM-DD)</li>
-                    <li>plate_id (an identifier for a grouping of plates. called "Genotyping Project Name" in genotyping plate submission form. e.g. NextGenCassava)</li>
-                    <li>plate_name (the unique name for the individual plate. called "Plate ID" in genotyping plate submission form. e.g. 18DNA00001)</li>
-                    <li>sample_id (the unique identifier for the sample in the well. e.g. 18DNA00001_A01)</li>
-                    <li>well_A01 (the position of the sample in the plate in this format A01)</li>
-                    <li>well_01A (the position of the sample in the plate in this format 01A)</li>
-                    <li>tissue_id (the identifier of the origin material. in order of most desirable identifier to least desirable identifier that can be used here: tissue sample name, plant name, subplot name, plot name, accession name. this can also say 'BLANK' to indicate a blank well.)</li>
-                    <li>dna_person (the name of the person who plated the individual sample. can be any name.)</li>
-                    <li>tissue_type (must be either leaf, root, or stem)</li>
+                    <li><% $c->i18n->p('genotype.plate.dialog.li_should_be', '%{field} (should be %{literal_2})', { 'field' => 'date', 'literal_2' => 'YYYY-MM-DD' }) |h %></li>
+                    <li><% $c->i18n->p('genotype.plate.dialog.li_an_identifier_for_a_grouping_of_plates', '%{literal_1} (an identifier for a grouping of plates. called "Genotyping Project Name" in genotyping plate submission form. e.g. %{literal_2})', { 'literal_1' => 'plate_id', 'literal_2' => 'NextGenCassava' }) |h %></li>
+                    <li><% $c->i18n->p('genotype.plate.dialog.li_the_unique_name_for_the_individual_plate', '%{literal_1} (the unique name for the individual plate. called "Plate ID" in genotyping plate submission form. e.g. %{literal_2})', { 'literal_1' => 'plate_name', 'literal_2' => '18DNA00001' }) |h %></li>
+                    <li><% $c->i18n->p('genotype.plate.dialog.li_the_unique_identifier_for_the_sample_in.7828df9', '%{literal_1} (the unique identifier for the sample in the well. e.g. %{literal_2})', { 'literal_1' => 'sample_id', 'literal_2' => '18DNA00001_A01' }) |h %></li>
+                    <li><% $c->i18n->p('genotype.plate.dialog.li_the_position_of_the_sample_in_the.13c8005', '%{literal_1} (the position of the sample in the plate in this format %{literal_2})', { 'literal_1' => 'well_A01', 'literal_2' => 'A01' }) |h %></li>
+                    <li><% $c->i18n->p('genotype.plate.dialog.li_the_position_of_the_sample_in_the.13c8005', '%{literal_1} (the position of the sample in the plate in this format %{literal_2})', { 'literal_1' => 'well_01A', 'literal_2' => '01A' }) |h %></li>
+                    <li><% $c->i18n->p('genotype.plate.dialog.li_the_identifier_of_the_origin_material_in', '%{literal_1} (the identifier of the origin material. in order of most desirable identifier to least desirable identifier that can be used here: tissue sample name, plant name, subplot name, plot name, accession name. this can also say \'%{literal_2}\' to indicate a blank well.)', { 'literal_1' => 'tissue_id', 'literal_2' => 'BLANK' }) |h %></li>
+                    <li><% $c->i18n->p('genotype.plate.dialog.li_the_name_of_the_person_who_plated', '%{literal_1} (the name of the person who plated the individual sample. can be any name.)', { 'literal_1' => 'dna_person' }) |h %></li>
+                    <li><% $c->i18n->p('genotype.plate.dialog.li_must_be_either_or.3a97a8e', '%{literal_1} (must be either %{literal_2}, %{literal_3}, or %{literal_4})', { 'literal_1' => 'tissue_type', 'literal_2' => 'leaf', 'literal_3' => 'root', 'literal_4' => 'stem' }) |h %></li>
                     </ul>
 
-                    <b>Optional fields:</b>
+                    <b><% $c->i18n->p('genotype.plate.dialog.b_optional_fields', 'Optional fields:') |h %></b>
                     <ul>
-                    <li>notes (any additional notes on the well)</li>
-                    <li>extraction (free-text for the extraction method e.g. CTAB)</li>
-                    <li>facility_identifier (if you would like to include facility identifiers in your genotyping plate layout, you can add facility identifiers in the last column with the header <b>"facility_identifier"</b>)</li>
+                    <li><% $c->i18n->p('genotype.plate.dialog.li_any_additional_notes_on_the_well', '%{field} (any additional notes on the well)', { 'field' => 'notes' }) |h %></li>
+                    <li><% $c->i18n->p('genotype.plate.dialog.li_free_text_for_the_extraction_method_e', '%{field} (free-text for the extraction method e.g. %{literal_2})', { 'field' => 'extraction', 'literal_2' => 'CTAB' }) |h %></li>
+                    <li><% $plate_rich->($c->i18n->p('genotype.plate.dialog.li_if_you_would_like_to_include_facility', '%{literal_1} (if you would like to include facility identifiers in your genotyping plate layout, you can add facility identifiers in the last column with the header [[b]]"%{literal_1}"[[/b]])', { 'literal_1' => 'facility_identifier' })) %></li>
                     </ul>
 
                 </div>
             </div>
             <div class="modal-footer">
-                <button id="close_upload_genotyping_coordinate_info_dialog" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                <button id="close_upload_genotyping_coordinate_info_dialog" type="button" class="btn btn-default" data-dismiss="modal"><% $c->i18n->p('genotype.plate.dialog.button_close', 'Close') |h %></button>
             </div>
         </div>
     </div>
@@ -488,25 +536,25 @@ $facilities => ();
     <div class="modal-dialog modal-xl" role="document">
         <div class="modal-content">
             <div class="modal-header" style="text-align: center">
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                <h4 class="modal-title" id="uploadGenotypingTrialCoordinateCustomInfoDialog">Upload Template Information</h4>
+                <button type="button" class="close" data-dismiss="modal" aria-label="<% $c->i18n->p('genotype.plate.dialog.button_close', 'Close') |h %>"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="uploadGenotypingTrialCoordinateCustomInfoDialog"><% $c->i18n->p('genotype.plate.dialog.h4_upload_template_information', 'Upload Template Information') |h %></h4>
             </div>
             <div class="modal-body">
                 <div class="container-fluid">
-                    <b>This is for uploading a Custom Coordinate Android Application exported plate layout.</b>
+                    <b><% $c->i18n->p('genotype.plate.dialog.b_this_is_for_uploading_a_custom_application', 'This is for uploading a Custom %{literal_1} %{literal_2} Application exported plate layout.', { 'literal_1' => 'Coordinate', 'literal_2' => 'Android' }) |h %></b>
                     <br/>
-                    <b>File must be a CSV file (.csv)</b>
+                    <b><% $c->i18n->p('genotype.plate.dialog.b_file_must_be_a_csv_file', 'File must be a CSV file (%{literal_1})', { 'literal_1' => '.csv' }) |h %></b>
                     <br />
-                    (Excel format not supported)
+                    <% $c->i18n->p('genotype.plate.dialog.help_format_not_supported', '(%{literal_1} format not supported)', { 'literal_1' => 'Excel' }) |h %>
                     <br /><br />
-                    <b>Header:</b>
+                    <b><% $c->i18n->p('genotype.plate.dialog.b_header', 'Header:') |h %></b>
                     <br
 
-                    <p>Note that tissue type will be set to 'leaf' if you use this upload type, since tissue type is not provided in the upload and tissue type is required for DaRT.</p>
+                    <p><% $c->i18n->p('genotype.plate.dialog.p_note_that_tissue_type_will_be_set', 'Note that tissue type will be set to \'%{literal_1}\' if you use this upload type, since tissue type is not provided in the upload and tissue type is required for %{literal_2}.', { 'literal_1' => 'leaf', 'literal_2' => 'DaRT' }) |h %></p>
 
-                    The first row (header) must contain the following:
+                    <% $c->i18n->p('genotype.plate.dialog.help_the_first_row_header_must_contain_the', 'The first row (header) must contain the following:') |h %>
 
-                    <table class="table table-hover table-bordered table-condensed" >
+                    <div class="table-responsive" dir="ltr" tabindex="0"><table class="table table-hover table-bordered table-condensed" dir="ltr">
                         <thead></thead>
                         <tbody>
                             <tr>
@@ -518,27 +566,27 @@ $facilities => ();
                                 <td>Date</td>
                             </tr>
                         </tbody>
-                    </table>
-                    Optional column: In addition to sample ids, you can add facility identifiers in the last column with the header: "Facility Identifier".
+                    </table></div>
+                    <% $c->i18n->p('genotype.plate.dialog.help_optional_column_in_addition_to_sample_ids', 'Optional column: In addition to sample ids, you can add facility identifiers in the last column with the header: "%{literal_1}".', { 'literal_1' => 'Facility Identifier' }) |h %>
                     <br/><br/>
-                    <b>Required fields:</b>
+                    <b><% $c->i18n->p('genotype.plate.dialog.b_required_fields', 'Required fields:') |h %></b>
                     <ul>
-                        <li>Value (the identifier of the origin material. e.g. 2018MyPlant0001. in order of most desirable identifier to least desirable identifier that can be used here: tissue sample name, plant name, subplot name, plot name, accession name. This can also say 'exclude' to indicate a BLANK)</li>
-                        <li>Column (the column position of the sample e.g. 10)</li>
-                        <li>Row (the row position of the sample e.g. A)</li>
-                        <li>Identification (free text)</li>
-                        <li>Person (the name of the person who plated the individual sample. can be any name.)</li>
-                        <li>Date (should be YYYY-MM-DD)</li>
+                        <li><% $c->i18n->p('genotype.plate.dialog.li_the_identifier_of_the_origin_material_e', '%{field} (the identifier of the origin material. e.g. %{literal_2}. in order of most desirable identifier to least desirable identifier that can be used here: tissue sample name, plant name, subplot name, plot name, accession name. This can also say \'%{literal_3}\' to indicate a %{literal_4})', { 'field' => 'Value', 'literal_2' => '2018MyPlant0001', 'literal_3' => 'exclude', 'literal_4' => 'BLANK' }) |h %></li>
+                        <li><% $c->i18n->p('genotype.plate.dialog.li_the_column_position_of_the_sample_e', '%{field} (the column position of the sample e.g. %{literal_2})', { 'field' => 'Column', 'literal_2' => '10' }) |h %></li>
+                        <li><% $c->i18n->p('genotype.plate.dialog.li_the_row_position_of_the_sample_e', '%{field} (the row position of the sample e.g. %{literal_2})', { 'field' => 'Row', 'literal_2' => 'A' }) |h %></li>
+                        <li><% $c->i18n->p('genotype.plate.dialog.li_free_text', '%{field} (free text)', { 'field' => 'Identification' }) |h %></li>
+                        <li><% $c->i18n->p('genotype.plate.dialog.li_the_name_of_the_person_who_plated.35f20f0', '%{field} (the name of the person who plated the individual sample. can be any name.)', { 'field' => 'Person' }) |h %></li>
+                        <li><% $c->i18n->p('genotype.plate.dialog.li_should_be', '%{field} (should be %{literal_2})', { 'field' => 'Date', 'literal_2' => 'YYYY-MM-DD' }) |h %></li>
                     </ul>
-                    <b>Optional field:</b>
+                    <b><% $c->i18n->p('genotype.plate.dialog.b_optional_field', 'Optional field:') |h %></b>
                     <ul>
-                        <li>Facility Identifier (if you would like to include facility identifiers in your genotyping plate layout, you can add facility identifiers in the last column with the header <b>"Facility Identifier"</b>)</li>
+                        <li><% $plate_rich->($c->i18n->p('genotype.plate.dialog.li_if_you_would_like_to_include_facility', '%{literal_1} (if you would like to include facility identifiers in your genotyping plate layout, you can add facility identifiers in the last column with the header [[b]]"%{literal_1}"[[/b]])', { 'literal_1' => 'Facility Identifier' })) %></li>
                     </ul>
 
                 </div>
             </div>
             <div class="modal-footer">
-                <button id="close_upload_genotyping_coordinate_custom_info_dialog" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                <button id="close_upload_genotyping_coordinate_custom_info_dialog" type="button" class="btn btn-default" data-dismiss="modal"><% $c->i18n->p('genotype.plate.dialog.button_close', 'Close') |h %></button>
             </div>
         </div>
     </div>

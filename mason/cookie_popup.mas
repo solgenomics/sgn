@@ -1,3 +1,8 @@
+<style>
+  #cookie_popup p { overflow-wrap: anywhere; }
+  #cookie_agree_submit { max-width: 100%; white-space: normal; overflow-wrap: anywhere; }
+</style>
+
 
 <div id="cookie_popup" name="cookie_popup" style="display:none">
     <div class="container-fluid">
@@ -6,10 +11,10 @@
                 <div class="panel-body bg-danger">
                     <div class="row">
                         <div class="col-sm-10">
-                            <p>This site uses cookies to provide logins and other features. Please accept the use of cookies by clicking Accept.</p>
+                            <p><% $c->i18n->p('cookie.notice', 'This site uses cookies to provide logins and other features. Please accept the use of cookies by clicking Accept.') |h %></p>
                         </div>
                         <div class="col-sm-2">
-                            <button class="btn btn-primary btn-sm" id="cookie_agree_submit">Accept</button>
+                            <button class="btn btn-primary btn-sm" id="cookie_agree_submit"><% $c->i18n->p('cookie.accept', 'Accept') |h %></button>
                         </div>
                     </div>
                 </div>
@@ -28,7 +33,7 @@
             var expDate = new Date();
             expDate.setTime(expDate.getTime() + (50000 * 60 * 1000)); //about 30 days
             jQuery.cookie("cookies_approved", "1", { expires: expDate, path: '/' } );
-            jQuery('#cookie_popup_content_div').html('<div class="panel panel-success"><div class="panel-body bg-success"><center><h3>Thank you :-)</h3></center></div></div>');
+            jQuery('#cookie_popup_content_div').html('<div class="panel panel-success"><div class="panel-body bg-success"><center><h3></h3></center></div></div>').find('h3').text((window.SGN && SGN.i18n ? SGN.i18n.p("cookie.thank_you", "Thank you :-)") : "Thank you :-)"));
             setTimeout(function() {
                 jQuery('#cookie_popup').hide('slow');
             }, 1500);

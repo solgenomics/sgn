@@ -1,3 +1,7 @@
+<%once>
+use HTML::Entities ();
+</%once>
+
 
 <%args>
 $facilities => ()
@@ -7,13 +11,13 @@ $sample_tissue_types => ()
 
 <& /util/import_javascript.mas, classes => [ 'jquery.iframe-post-form', 'CXGN.BreedersToolbox.GenotypingTrial' ] &>
 
-<& /page/page_title.mas, title=>"Manage Tissue Samples" &>
+<& /page/page_title.mas, title=>HTML::Entities::encode_entities($c->i18n->p("phenotype.manage_tissue_samples", "Manage Tissue Samples")) &>
 
-<& /page/detail_page_2_col_section.mas, info_section_collapsed => 0, info_section_title => "<h4 style='display:inline'>Field Trial Tissue Samples</h4>", info_section_subtitle => 'View and create tissue samples for field trials. Tissue samples come from a plant in a plot.', buttons_html => '<button class="btn btn-sm btn-primary" style="margin:3px" name="tissue_sample_guided_help">Guided help for field trial tissue samples</button><button class="btn btn-sm btn-primary" style="margin:3px" name="manage_tissue_samples_create_field_trial_samples">Create tissue samples for field trial</button>', icon_class => "glyphicon glyphicon-leaf", info_section_id => "manage_tissue_samples_field_trials" &>
+<& /page/detail_page_2_col_section.mas, info_section_anchor_title => "<h4 style='display:inline'>Field Trial Tissue Samples</h4>", info_section_collapsed => 0, info_section_title => ("<h4 style='display:inline'>" . HTML::Entities::encode_entities($c->i18n->p("genotype.plate.field_trial_tissue_samples", "Field Trial Tissue Samples")) . "</h4>"), info_section_subtitle => HTML::Entities::encode_entities($c->i18n->p("genotype.plate.view_and_create_tissue_samples_for_field_trials_tissue_samples", 'View and create tissue samples for field trials. Tissue samples come from a plant in a plot.')), buttons_html => ("<button class=\"btn btn-sm btn-primary\" style=\"margin:3px\" name=\"tissue_sample_guided_help\">" . HTML::Entities::encode_entities($c->i18n->p("genotype.plate.guided_help_for_field_trial_tissue_samples", "Guided help for field trial tissue samples")) . "</button><button class=\"btn btn-sm btn-primary\" style=\"margin:3px\" name=\"manage_tissue_samples_create_field_trial_samples\">" . HTML::Entities::encode_entities($c->i18n->p("genotype.plate.create_tissue_samples_for_field_trial", "Create tissue samples for field trial")) . "</button>"), icon_class => "glyphicon glyphicon-leaf", info_section_id => "manage_tissue_samples_field_trials" &>
 
-<& /page/detail_page_2_col_section.mas, info_section_collapsed => 0, info_section_title => "<h4 style='display:inline'>Genotyping Plate Tissue Samples</h4>", info_section_subtitle => 'View and create tissue samples for genotyping plates. Genotyping plates represent tissue samples in a 96 or 384 well plate layout.', buttons_html => '<button class="btn btn-sm btn-primary" style="margin:3px" name="create_genotyping_trial_link">Create or upload a genotyping plate</button> <button class="btn btn-sm btn-primary" style="margin:3px" name="export_genotyping_trial_link">Export to Genotyping Vendor</button>', icon_class => "glyphicon glyphicon-th", info_section_id => "manage_tissue_samples_genotyping_trials" &>
+<& /page/detail_page_2_col_section.mas, info_section_anchor_title => "<h4 style='display:inline'>Genotyping Plate Tissue Samples</h4>", info_section_collapsed => 0, info_section_title => ("<h4 style='display:inline'>" . HTML::Entities::encode_entities($c->i18n->p("genotype.plate.genotyping_plate_tissue_samples", "Genotyping Plate Tissue Samples")) . "</h4>"), info_section_subtitle => HTML::Entities::encode_entities($c->i18n->p("genotype.plate.view_and_create_tissue_samples_for_genotyping_plates_genotyping_plates", 'View and create tissue samples for genotyping plates. Genotyping plates represent tissue samples in a 96 or 384 well plate layout.')), buttons_html => ("<button class=\"btn btn-sm btn-primary\" style=\"margin:3px\" name=\"create_genotyping_trial_link\">" . HTML::Entities::encode_entities($c->i18n->p("genotype.plate.create_or_upload_a_genotyping_plate", "Create or upload a genotyping plate")) . "</button> <button class=\"btn btn-sm btn-primary\" style=\"margin:3px\" name=\"export_genotyping_trial_link\">" . HTML::Entities::encode_entities($c->i18n->p("genotype.plate.export_to_genotyping_vendor", "Export to Genotyping Vendor")) . "</button>"), icon_class => "glyphicon glyphicon-th", info_section_id => "manage_tissue_samples_genotyping_trials" &>
 
-<& /page/detail_page_2_col_section.mas, info_section_collapsed => 0, info_section_title => "<h4 style='display:inline'>Sampling Trials</h4>", info_section_subtitle => 'View and create tissue samples for generic sampling trials.', buttons_html => '<button class="btn btn-sm btn-primary" style="margin:3px" name="create_sampling_trial_button">Create new sampling trial</button>', icon_class => "glyphicon glyphicon-th", info_section_id => "manage_tissue_samples_sampling_trials" &>
+<& /page/detail_page_2_col_section.mas, info_section_anchor_title => "<h4 style='display:inline'>Sampling Trials</h4>", info_section_collapsed => 0, info_section_title => ("<h4 style='display:inline'>" . HTML::Entities::encode_entities($c->i18n->p("genotype.plate.sampling_trials", "Sampling Trials")) . "</h4>"), info_section_subtitle => HTML::Entities::encode_entities($c->i18n->p("genotype.plate.view_and_create_tissue_samples_for_generic_sampling_trials", 'View and create tissue samples for generic sampling trials.')), buttons_html => ("<button class=\"btn btn-sm btn-primary\" style=\"margin:3px\" name=\"create_sampling_trial_button\">" . HTML::Entities::encode_entities($c->i18n->p("phenotype.create_new_sampling_trial", "Create new sampling trial")) . "</button>"), icon_class => "glyphicon glyphicon-th", info_section_id => "manage_tissue_samples_sampling_trials" &>
 
 <& /help/workflow_guided/tissue_sample_help.mas &>
 <& /breeders_toolbox/genotyping_trials/create_genotyping_trial_dialogs.mas, facilities=>$facilities &>
@@ -24,7 +28,7 @@ $sample_tissue_types => ()
 
 jQuery(document).ready(function(){
     jQuery('button[name="export_genotyping_trial_link"]').click(function(){
-        alert('Automatic export to genotyping vendors is currently not avaiable; however, you can download the layout and submit to vendor manually.');
+        alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("genotype.plate.automatic_export_to_genotyping_vendors_is_currently_not_avaiable_however", "Automatic export to genotyping vendors is currently not avaiable; however, you can download the layout and submit to vendor manually.") : 'Automatic export to genotyping vendors is currently not avaiable; however, you can download the layout and submit to vendor manually.'));
     });
 });
 

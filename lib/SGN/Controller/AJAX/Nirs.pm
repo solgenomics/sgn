@@ -738,4 +738,4 @@ sub _check_user_login_nirs {
     return ($user_id, $user_name, $user_role);
 }
 
-1
+1;

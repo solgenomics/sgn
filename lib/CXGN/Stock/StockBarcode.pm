@@ -1,6 +1,10 @@
 
 package CXGN::Stock::StockBarcode;
 
+use SGN::I18N ();
+use CatalystX::GlobalContext '$c';
+use CatalystX::GlobalContext '$c';
+
 
 =head1 NAME
 
@@ -56,6 +60,7 @@ has 'store_message' => (
 
 sub parse {
     my $self = shift;
+    my SGN::I18N $ui_parse_i18n = SGN::I18N::translate($c);
     my @errors;
     my ($contents , $identifier_prefix, $db_name ) = @_;
     print STDERR "Identifier prefix = $identifier_prefix, db_name = $db_name\n";
@@ -112,7 +117,7 @@ sub parse {
         }
         if ($code !~ /^O|^P|^L|^D|^$identifier_prefix|^$db_name:\d+|^\d/ ) {
             print STDERR  "Cannot find code ' $code ' in the database! \n\n";
-            push @errors, " Data ' $code ' cannot be stored in the database! \n Please check your barcode input\n";
+            push @errors, (SGN::I18N::translate($ui_parse_i18n, 'barcode.server.data_code_cannot_be_stored_in_the_database_please_check_your_barcode', " Data ' %{code} ' cannot be stored in the database! \n Please check your barcode input\n", {code => ("" . ("$code"))}));
         }
 
         #O:Lukas, 12:16:46, 12/11/2012
@@ -136,6 +141,7 @@ sub parse {
 
 sub verify {
     my $self = shift;
+    my SGN::I18N $ui_verify_i18n = SGN::I18N::translate($c);
     my $schema = $self->schema;
     #check is stock exists and if cvterm exists.
     #print error only if stocks do not exist and the cvterms
@@ -148,19 +154,22 @@ sub verify {
         my ($op, $project_id, $location_id, $date, $count) = split(/\t/, $key);
         print STDERR "***** verify found key $key !!!!!!!\n\n";
         print STDERR "verify :  ... . . . .op = $op, project_id = $project_id, location_id = $location_id, date = $date\n\n";
-        if (!$project_id) { push @warnings, "Did not scan a project name, will generate a new 'UNKNOWN' project"; }
-        if (!$location_id) { push @warnings, "Did not scan a location, will generate a new 'UNKNOWN' location"; }
+        if (!$project_id) { push @warnings, (SGN::I18N::translate($ui_verify_i18n, 'barcode.server.did_not_scan_a_project_name_will_generate_a_new_unknown_project', 'Did not scan a project name, will generate a new \'UNKNOWN\' project')); }
+        if (!$location_id) { push @warnings, (SGN::I18N::translate($ui_verify_i18n, 'barcode.server.did_not_scan_a_location_will_generate_a_new_unknown_location', 'Did not scan a location, will generate a new \'UNKNOWN\' location')); }
         foreach my $stock_id (keys %{$hashref->{$key} } ) {
             #check if the stock exists
             print STDERR "verify .. Looking for stock_id $stock_id\n";
             my $stock = $schema->resultset("Stock::Stock")->find( { stock_id => $stock_id } );
-            if (!$stock) { push @errors, "Stock $stock_id does not exist in the database!\n"; }
+            if (!$stock) { push @errors, (SGN::I18N::translate($ui_verify_i18n, 'barcode.server.stock_stock_id_does_not_exist_in_the_database', 'Stock %{stock_id} does not exist in the database!
+', {stock_id => ("" . ("$stock_id"))})); }
             foreach my $cvterm_accession (keys %{$hashref->{$key}->{$stock_id} } ) {
                 #push @verify 
                 print STDERR "verify ... Looking for accession $cvterm_accession..\n";
                 my ($db_name, $accession) = split (/:/, $cvterm_accession);
-                if (!$db_name) { push @errors, "could not find valid db_name in accession $cvterm_accession\n";}
-                if (!$accession) { push @errors, "Could not find valid cvterm accession in $cvterm_accession\n";}
+                if (!$db_name) { push @errors, (SGN::I18N::translate($ui_verify_i18n, 'barcode.server.could_not_find_valid_db_name_in_accession_cvterm_accession', 'could not find valid db_name in accession %{cvterm_accession}
+', {cvterm_accession => ("" . ("$cvterm_accession"))}));}
+                if (!$accession) { push @errors, (SGN::I18N::translate($ui_verify_i18n, 'barcode.server.could_not_find_valid_cvterm_accession_in_cvterm_accession', 'Could not find valid cvterm accession in %{cvterm_accession}
+', {cvterm_accession => ("" . ("$cvterm_accession"))}));}
                 #check if the cvterm exists
                 my $db = $schema->resultset("General::Db")->search(
                     { 'me.name' => $db_name } );
@@ -169,13 +178,14 @@ sub verify {
 
                     if ($dbxref->count) {
                         my $cvterm = $dbxref->search_related("cvterm", {} )->single;
-                        if (!$cvterm) { push @errors, "NO cvterm found in the database for accession $cvterm_accession!\n db_name = '" .  $db_name  . "' , accession = '" .  $accession . "' \n";
+                        if (!$cvterm) { push @errors, (SGN::I18N::translate($ui_verify_i18n, 'barcode.server.no_cvterm_found_in_the_database_for_accession_cvterm_accession_db_na', "NO cvterm found in the database for accession %{cvterm_accession}!\n db_name = '%{value2}' , accession = '%{value3}' \n", {cvterm_accession => ("" . ("$cvterm_accession")), value2 => ("" . ($db_name)), value3 => ("" . ($accession))}));
 			}
                     } else {
-                        push @errors, "No dbxref found for cvterm accession $accession\n";
+                        push @errors, (SGN::I18N::translate($ui_verify_i18n, 'barcode.server.no_dbxref_found_for_cvterm_accession_accession', 'No dbxref found for cvterm accession %{accession}
+', {accession => ("" . ("$accession"))}));
                     }
                 } else {
-                    push @errors , "db_name $db_name does not exist in the database! \n";
+                    push @errors , (SGN::I18N::translate($ui_verify_i18n, 'barcode.server.db_name_db_name_does_not_exist_in_the_database', "db_name %{db_name} does not exist in the database! \n", {db_name => ("" . ("$db_name"))}));
                 }
             }
         }
@@ -189,6 +199,7 @@ sub verify {
 
 sub store {
     my $self = shift;
+    my SGN::I18N $ui_store_i18n = SGN::I18N::translate($c);
     my $schema = $self->schema;
     my $hashref = $self->parsed_data;
     my $message;
@@ -283,7 +294,7 @@ sub store {
                             #link the phenotpe to the experiment
                             $experiment->find_or_create_related('nd_experiment_phenotypes' , {
                                 phenotype_id => $phenotype->phenotype_id });
-                            $message .= "Added phenotype: trait= " . $cvterm->name . ", value = $value, to stock " . qq|<a href="/stock/$stock_id/view">$stock_name</a><br />| ;
+                            $message .= (SGN::I18N::translate($ui_store_i18n, 'barcode.server.added_phenotype_trait_value1_value_value_to_stock_value3', 'Added phenotype: trait= %{value1}, value = %{value}, to stock %{value3}', {value1 => ("" . ($cvterm->name)), value => ("" . ("$value")), value3 => ("" . (qq|<a href="/stock/$stock_id/view">$stock_name</a><br />|))}));
                         }
                     }
                 }
@@ -293,10 +304,10 @@ sub store {
     my $error;
     try {
         $schema->txn_do($coderef);
-        $error = "Store completed!";
+        $error = (SGN::I18N::translate($ui_store_i18n, 'barcode.server.store_completed', 'Store completed!'));
     } catch {
         # Transaction failed
-        $error =  "An error occured! Cannot store data! <br />" . $_ . "\n";
+        $error =  (SGN::I18N::translate($ui_store_i18n, 'barcode.server.an_error_occured_cannot_store_data', 'An error occured! Cannot store data!') . " <br />" . $_ . "\n");
     };
     $self->store_error($error);
     $self->store_message($message);

@@ -47,7 +47,7 @@ function refreshTrailJsTree(refreshpage) {
             },
             error: function(response) {
                 jQuery("#working_modal").modal("hide");
-                alert('An error occurred refreshing trial jstree html');
+                alert(window.SGN && SGN.i18n ? SGN.i18n.p('tree.refresh.error.trial', 'An error occurred refreshing trial jstree html') : 'An error occurred refreshing trial jstree html');
             }
         });
     }, 500);
@@ -70,7 +70,7 @@ function refreshCrossJsTree(refreshpage){
             },
             error: function(response) {
                 jQuery("#working_modal").modal("hide");
-                alert('An error occurred refreshing crosses jstree html');
+                alert(window.SGN && SGN.i18n ? SGN.i18n.p('tree.refresh.error.crosses', 'An error occurred refreshing crosses jstree html') : 'An error occurred refreshing crosses jstree html');
             }
         });
     }, 500);
@@ -91,7 +91,7 @@ function refreshGenotypingTrialJsTree(refreshpage){
             },
             error: function(response) {
                 jQuery("#working_modal").modal("hide");
-                alert('An error occurred refreshing genotype trial jstree html');
+                alert(window.SGN && SGN.i18n ? SGN.i18n.p('tree.refresh.error.genotype_trial', 'An error occurred refreshing genotype trial jstree html') : 'An error occurred refreshing genotype trial jstree html');
             }
         });
     }, 500);
@@ -112,7 +112,7 @@ function refreshGenotypingProjectJsTree(refreshpage){
             },
             error: function(response) {
                 jQuery("#working_modal").modal("hide");
-                alert('An error occurred refreshing genotype project jstree html');
+                alert(window.SGN && SGN.i18n ? SGN.i18n.p('tree.refresh.error.genotype_project', 'An error occurred refreshing genotype project jstree html') : 'An error occurred refreshing genotype project jstree html');
             }
         });
     }, 500);
@@ -135,7 +135,7 @@ function refreshActivityJsTree(refreshpage){
             },
             error: function(response) {
                 jQuery("#working_modal").modal("hide");
-                alert('An error occurred refreshing activity jstree html');
+                alert(window.SGN && SGN.i18n ? SGN.i18n.p('tree.refresh.error.activity', 'An error occurred refreshing activity jstree html') : 'An error occurred refreshing activity jstree html');
             }
         });
     }, 500);
@@ -156,7 +156,7 @@ function refreshTransformationProjectJsTree(refreshpage){
             },
             error: function(response) {
                 jQuery("#working_modal").modal("hide");
-                alert('An error occurred refreshing transformation project jstree html');
+                alert(window.SGN && SGN.i18n ? SGN.i18n.p('tree.refresh.error.transformation', 'An error occurred refreshing transformation project jstree html') : 'An error occurred refreshing transformation project jstree html');
             }
         });
     }, 500);
@@ -177,7 +177,7 @@ function refreshPropagationProjectJsTree(refreshpage){
             },
             error: function(response) {
                 jQuery("#working_modal").modal("hide");
-                alert('An error occurred refreshing propagation project jstree html');
+                alert(window.SGN && SGN.i18n ? SGN.i18n.p('tree.refresh.error.propagation', 'An error occurred refreshing propagation project jstree html') : 'An error occurred refreshing propagation project jstree html');
             }
         });
     }, 500);

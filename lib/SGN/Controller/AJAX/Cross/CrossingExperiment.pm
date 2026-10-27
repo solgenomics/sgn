@@ -77,7 +77,7 @@ sub upload_target_numbers_POST : Args(0) {
         my $dbh = $c->dbc->dbh;
         my @user_info = CXGN::Login->new($dbh)->query_from_cookie($session_id);
         if (!$user_info[0]){
-            $c->stash->{rest} = {error=>'You must be logged in to upload target numbers!'};
+            $c->stash->{rest} = {error=>$c->i18n->p("cross.controller.you_must_be_logged_in_to_upload_target", "You must be logged in to upload target numbers!")};
             $c->detach();
         }
         $user_id = $user_info[0];
@@ -86,7 +86,7 @@ sub upload_target_numbers_POST : Args(0) {
         $user_name = $p->get_username;
     } else {
         if (!$c->user){
-            $c->stash->{rest} = {error=>'You must be logged in to upload intercross data!'};
+            $c->stash->{rest} = {error=>$c->i18n->p("cross.controller.you_must_be_logged_in_to_upload_intercross", "You must be logged in to upload intercross data!")};
             $c->detach();
         }
         $user_id = $c->user()->get_object()->get_sp_person_id();
@@ -95,7 +95,7 @@ sub upload_target_numbers_POST : Args(0) {
     }
 
     if (($user_role ne 'curator') && ($user_role ne 'submitter')) {
-        $c->stash->{rest} = {error=>'Only a submitter or a curator can upload target numbers of seed/progenies'};
+        $c->stash->{rest} = {error=>$c->i18n->p("cross.controller.only_a_submitter_or_a_curator_can_upload.0531cc9", "Only a submitter or a curator can upload target numbers of seed/progenies")};
         $c->detach();
     }
 
@@ -113,13 +113,13 @@ sub upload_target_numbers_POST : Args(0) {
     $archived_filename_with_path = $uploader->archive();
     $md5 = $uploader->get_md5($archived_filename_with_path);
     if (!$archived_filename_with_path) {
-        $c->stash->{rest} = {error => "Could not save file $upload_original_name in archive",};
+        $c->stash->{rest} = {error => $c->i18n->p("cross.server.could_not_save_file_upload_original_name_in_archive", "Could not save file %{upload_original_name} in archive", {upload_original_name => "" . ($upload_original_name)}),};
         return;
     }
     unlink $upload_tempfile;
 
     #parse uploaded file with appropriate plugin
-    $parser = CXGN::Pedigree::ParseUpload->new(chado_schema => $schema, filename => $archived_filename_with_path);
+    $parser = CXGN::Pedigree::ParseUpload->new(i18n => $c->i18n, chado_schema => $schema, filename => $archived_filename_with_path);
     $parser->load_plugin('TargetNumbersExcel');
     $parsed_data = $parser->parse();
     #print STDERR "PARSED DATA =". Dumper($parsed_data)."\n";
@@ -127,7 +127,7 @@ sub upload_target_numbers_POST : Args(0) {
         my $return_error = '';
         my $parse_errors;
         if (!$parser->has_parse_errors() ){
-            $c->stash->{rest} = {error_string => "Could not get parsing errors"};
+            $c->stash->{rest} = {error_string => $c->i18n->p("cross.server.could_not_get_parsing_errors", "Could not get parsing errors")};
         } else {
             $parse_errors = $parser->get_parse_errors();
             #print STDERR Dumper $parse_errors;

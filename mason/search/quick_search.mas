@@ -11,21 +11,18 @@
 
 </%args>
 
-<& /page/page_title.mas, title => 'Quick search for '.encode_entities( '"'.$quick_search_term.'"' ) &>
+<& /page/page_title.mas, title => HTML::Entities::encode_entities($c->i18n->p('global.search.quick_search.quick_search_for_term', 'Quick search for "%{term}"', {term => $quick_search_term})) &>
 
 <div class="page_introduction">
-  Note: The quick search does not perform exactly the same queries as
-  full searches for the various data types.  If your desired result
-  does not appear, you may want to try again with one of the advanced
-  search tools in the "search" menu.
+  <% $c->i18n->p('global.search.quick_search.note_the_quick_search_does_not_perform_exactly_the_same_queries_as_full_searches_for_', 'Note: The quick search does not perform exactly the same queries as full searches for the various data types. If your desired result does not appear, you may want to try again with one of the advanced search tools in the "search" menu.') |h %>
 </div>
 
-<&| /page/info_section.mas, title => 'Exact matches' &>
+<&| /page/info_section.mas, title => HTML::Entities::encode_entities($c->i18n->p('global.search.quick_search.exact_matches', 'Exact matches')) &>
 
 <div class="well">
 
 % if( $show_times ) {
-  <div>Site xref search time: <% sprintf('%0.1f sec', $xrefs_time) %></div>
+  <div><% $c->i18n->p('global.search.quick_search.site_xref_search_time', 'Site xref search time:') |h %> <% sprintf('%0.1f sec', $xrefs_time) %></div>
 % }
 % if( @$xrefs ) {
   <& /sitefeatures/mixed/xref_set/link.mas, xrefs => $xrefs &>
@@ -34,7 +31,7 @@
 
   <div>
     <dl>
-      <dt>Identifiers - Breeding Data</dt>
+      <dt><% $c->i18n->p('global.search.quick_search.identifiers_breeding_data', 'Identifiers - Breeding Data') |h %></dt>
       <dd>
 	<div style="float: left; width: 50%">
 	  <% $search{accessions} %>
@@ -49,7 +46,7 @@
 	</div>
 	<div style="clear: both;">&nbsp;</div>
       </dd>
-      <dt>Identifiers - Genomic Data</dt>
+      <dt><% $c->i18n->p('global.search.quick_search.identifiers_genomic_data', 'Identifiers - Genomic Data') |h %></dt>
       <dd >
 	<div style="float: left; width: 50%">
           <% $search{marker} %>
@@ -69,8 +66,8 @@
 </&>
 
 <&| /page/info_section.mas,
-    title => 'Fuzzy searches',
-    subtitle => 'click to view search results',
+    title => HTML::Entities::encode_entities($c->i18n->p('global.search.quick_search.fuzzy_searches', 'Fuzzy searches')),
+    subtitle => HTML::Entities::encode_entities($c->i18n->p('global.search.quick_search.click_to_view_search_results', 'click to view search results')),
  &>
 
 <div class="well">
@@ -78,8 +75,8 @@
   <div>
     <dl>
     <dt>
-      <div style="float: left; width: 50%">Identifiers</div>
-      <div style="float: right; width: 50%">cDNA Libraries</div>
+      <div style="float: left; width: 50%"><% $c->i18n->p('global.search.quick_search.identifiers', 'Identifiers') |h %></div>
+      <div style="float: right; width: 50%"><% $c->i18n->p('global.search.quick_search.cdna_libraries', 'cDNA Libraries') |h %></div>
     </dt>
     <dd>
       <div style="float: left; width: 50%">
@@ -100,8 +97,8 @@
   <div>
     <dl>
     <dt>
-      <div style="float: left; width: 50%">People (searching by name)</div>
-      <div style="float: right; width: 50%">Annotations</div>
+      <div style="float: left; width: 50%"><% $c->i18n->p('global.search.quick_search.people_searching_by_name', 'People (searching by name)') |h %></div>
+      <div style="float: right; width: 50%"><% $c->i18n->p('global.search.quick_search.annotations', 'Annotations') |h %></div>
     </dt>
     <dd>
       <div style="float: left; width: 50%">
@@ -121,8 +118,8 @@
   <div>
     <dl>
     <dt>
-      <div style="float: left; width: 50%">Images</div>
-      <div style="float: right; width: 50%">Web Pages</div>
+      <div style="float: left; width: 50%"><% $c->i18n->p('global.search.quick_search.images', 'Images') |h %></div>
+      <div style="float: right; width: 50%"><% $c->i18n->p('global.search.quick_search.web_pages', 'Web Pages') |h %></div>
     </dt>
     <dd>
       <div style="float: left; width: 50%">
@@ -149,8 +146,9 @@
   my %search = %$results;
   for my $search ( values %search ) {
       my ( $url, $desc ) = @{$search->{result}};
+      $desc = HTML::Entities::encode_entities($desc);
       my $time  = $show_times ? sprintf(' (%0.1f sec)', $search->{time}) : '';
-      my $html = $url ? qq|<div><a class="quicksearch_hit" href="$search->{result}[0]">$search->{result}[1]$time</a></div>|
+      my $html = $url ? qq|<div><a class="quicksearch_hit" href="$search->{result}[0]">$desc$time</a></div>|
                       : qq|<div class="ghosted">$desc$time</div>|;
       $search = $html;
   }

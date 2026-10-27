@@ -14,6 +14,72 @@ Jeremy D. Edwards <jde22@cornell.edu>
 
 */
 
+// Optional locale assets must not block native accession workflows.
+var accessionI18n = (window.SGN && window.SGN.i18n) || {
+    p: function (context, source, variables) {
+        return source.replace(/%\{([A-Za-z0-9_]+)\}/g, function (match, name) {
+            return variables && Object.prototype.hasOwnProperty.call(variables, name) ? String(variables[name]) : match;
+        });
+    }
+};
+function escapeAccessionHTML(value) {
+    return String(value).replace(/[&<>"']/g, function (character) {
+        return {'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'}[character];
+    });
+}
+function accessionTableText(value, type) {
+    return type === 'display' ? escapeAccessionHTML(value == null ? '' : value) : value;
+}
+function accessionLocale() {
+    return document.documentElement.getAttribute('data-sgn-locale') || document.documentElement.lang || 'en';
+}
+function accessionLocaleHeaders() { return {'X-SGN-Locale': accessionLocale()}; }
+
+// DataTables 1.10.12 accepts per-table language s*/oPaginate/oAria fields.
+// Escape its HTML sinks before the vendor expands the unchanged macro tokens.
+// ARIA suffixes use plain strings because the vendor writes DOM attributes.
+function accessionTableLanguage() {
+    return {
+        sEmptyTable: escapeAccessionHTML(accessionI18n.p("accessions.table.empty", "No data available in table")),
+        sInfo: escapeAccessionHTML(accessionI18n.p("accessions.table.info", "Showing %{start} to %{end} of %{total} entries", {start: '_START_', end: '_END_', total: '_TOTAL_'})),
+        sInfoEmpty: escapeAccessionHTML(accessionI18n.p("accessions.table.info_empty", "Showing 0 to 0 of 0 entries")),
+        sInfoFiltered: escapeAccessionHTML(accessionI18n.p("accessions.table.filtered", "(filtered from %{maximum} total entries)", {maximum: '_MAX_'})),
+        sLengthMenu: escapeAccessionHTML(accessionI18n.p("accessions.table.length", "Show %{menu} entries", {menu: '_MENU_'})),
+        sLoadingRecords: escapeAccessionHTML(accessionI18n.p("accessions.table.loading", "Loading...")),
+        sProcessing: escapeAccessionHTML(accessionI18n.p("accessions.table.processing", "Processing...")),
+        sSearch: escapeAccessionHTML(accessionI18n.p("accessions.table.search", "Search:")),
+        sZeroRecords: escapeAccessionHTML(accessionI18n.p("accessions.table.zero", "No matching records found")),
+        oPaginate: {
+            sFirst: escapeAccessionHTML(accessionI18n.p("accessions.table.first", "First")),
+            sLast: escapeAccessionHTML(accessionI18n.p("accessions.table.last", "Last")),
+            sNext: escapeAccessionHTML(accessionI18n.p("accessions.table.next", "Next")),
+            sPrevious: escapeAccessionHTML(accessionI18n.p("accessions.table.previous", "Previous"))
+        },
+        oAria: {
+            sSortAscending: accessionI18n.p("accessions.table.sort_ascending", ": activate to sort column ascending"),
+            sSortDescending: accessionI18n.p("accessions.table.sort_descending", ": activate to sort column descending")
+        }
+    };
+}
+
+// Localize fixed wire-field captions only; keys and values stay canonical.
+function accessionReviewProperty(key, value) {
+    var variables = {value: String(value)};
+    switch (key) {
+    case "germplasmName": return accessionI18n.p("accessions.review.property.name", "germplasmName:%{value}   ", variables);
+    case "defaultDisplayName": return accessionI18n.p("accessions.review.property.display_name", "defaultDisplayName:%{value}   ", variables);
+    case "species": return accessionI18n.p("accessions.review.property.species", "species:%{value}   ", variables);
+    case "populationName": return accessionI18n.p("accessions.review.property.population", "populationName:%{value}   ", variables);
+    case "organizationName": return accessionI18n.p("accessions.review.property.organization", "organizationName:%{value}   ", variables);
+    case "synonyms": return accessionI18n.p("accessions.review.property.synonyms", "synonyms:%{value}   ", variables);
+    case "description": return accessionI18n.p("accessions.review.property.description", "description:%{value}   ", variables);
+    case "stock_id": return accessionI18n.p("accessions.review.property.stock_id", "stock_id:%{value}   ", variables);
+    case "accessionNumber": return accessionI18n.p("accessions.review.property.accession_number", "accessionNumber:%{value}   ", variables);
+    case "germplasmPUI": return accessionI18n.p("accessions.review.property.pui", "germplasmPUI:%{value}   ", variables);
+    default: return key + ":" + value + "   ";
+    }
+}
+
 var $j = jQuery.noConflict();
 var list = new CXGN.List();
 var accessionList;
@@ -47,13 +113,13 @@ jQuery(document).ready(function ($) {
 
         const population_name = jQuery('#create_population_name').val();
         if (!population_name) {
-            alert ("Population name is required");
+            alert (accessionI18n.p("accessions.population.name_required", "Population name is required"));
             return;
         }
 
         const member_type = jQuery('#member_type').val();
         if (!member_type) {
-            alert ("Member type is required");
+            alert (accessionI18n.p("accessions.population.member_type_required", "Member type is required"));
             return;
         }
 
@@ -63,42 +129,43 @@ jQuery(document).ready(function ($) {
         if (member_type == 'accessions') {
             list_id =  jQuery('#create_population_accession_list_div_list_select').val();
             if (!list_id) {
-                alert ("A list of accessions is required");
+                alert (accessionI18n.p("accessions.list.accessions_required", "A list of accessions is required"));
                 return;
             } else {
                 list_validation = lo.legacy_validate(list_id, 'accessions', true);
                 if (list_validation != 1) {
-                    alert("The accession list did not pass validation. Names in the list must be uniquenames with accession stock type in the database");
+                    alert(accessionI18n.p("accessions.list.accessions_invalid", "The accession list did not pass validation. Names in the list must be uniquenames with accession stock type in the database"));
                     return;
                 }
             }
         } else if (member_type == 'plots') {
             list_id =  jQuery('#create_population_plot_list_div_list_select').val();
             if (!list_id) {
-                alert ("A list of plots is required");
+                alert (accessionI18n.p("accessions.list.plots_required", "A list of plots is required"));
                 return;
             } else {
                 list_validation = lo.legacy_validate(list_id, 'plots', true);
                 if (list_validation != 1) {
-                    alert("The plot list did not pass validation. Names in the list must be uniquenames with plot stock type in the database");
+                    alert(accessionI18n.p("accessions.list.plots_invalid", "The plot list did not pass validation. Names in the list must be uniquenames with plot stock type in the database"));
                     return;
                 }
             }
         } else if (member_type == 'plants') {
             list_id =  jQuery('#create_population_plant_list_div_list_select').val();
             if (!list_id) {
-                alert ("A list of plants is required");
+                alert (accessionI18n.p("accessions.list.plants_required", "A list of plants is required"));
                 return;
             } else {
                 list_validation = lo.legacy_validate(list_id, 'plants', true);
                 if (list_validation != 1) {
-                    alert("The plant list did not pass validation. Names in the list must be uniquenames with plant stock type in the database");
+                    alert(accessionI18n.p("accessions.list.plants_invalid", "The plant list did not pass validation. Names in the list must be uniquenames with plant stock type in the database"));
                     return;
                 }
             }
         }
 
         jQuery.ajax({
+            headers: accessionLocaleHeaders(),
             type: 'POST',
             url: '/ajax/population/new',
             dataType: "json",
@@ -124,7 +191,7 @@ jQuery(document).ready(function ($) {
                 }
             },
             error: function (r) {
-                alert('An error occurred in adding population. sorry '+r.responseText);
+                alert(accessionI18n.p("accessions.population.add_failed", "An error occurred in adding population. sorry %{detail}", {detail: String(r.responseText)}));
             }
         });
     });
@@ -138,6 +205,7 @@ jQuery(document).ready(function ($) {
       if (already_loaded_tables.length > 0) { return; }
 
       jQuery.ajax ( {
+            headers: accessionLocaleHeaders(),
         url : '/ajax/manage_accessions/populations',
         beforeSend: function() {
           disable_ui();
@@ -152,7 +220,7 @@ jQuery(document).ready(function ($) {
             var table_id = population_id+i+"_pop_table";
 
             var section_html = '<div class="row"><div class="panel panel-default"><div class="panel-heading" >';
-            section_html += '<div class="panel-title" name="populations_members_table_toggle" data-table_id="#'+table_id+'" data-population_id="'+population_id+'" data-population_name="'+name+'"><div class="row"><div class="col-sm-6" data-toggle="collapse" data-parent="#accordion" data-target="#collapse'+i+'"><a href="#'+table_id+'" class="accordion-toggle">'+name+'</a></div><div class="col-sm-3"><a href="/stock/'+population_id+'/view"><small>[Go To Population Page]</small></a></div><div class="col-sm-3"><a name="manage_populations_add_members" data-population_id="'+population_id+'" data-population_name="'+name+'" data-member_type="'+member_type+'"><small>[Add Members To Population]</small></a><br/><a name="manage_populations_delete_population" data-population_id="'+population_id+'" data-population_name="'+name+'"><small>[Delete Population]</small></a></div></div></div></div>';
+            section_html += '<div class="panel-title" name="populations_members_table_toggle" data-table_id="#'+table_id+'" data-population_id="'+population_id+'" data-population_name="'+escapeAccessionHTML(name)+'"><div class="row"><div class="col-sm-6" data-toggle="collapse" data-parent="#accordion" data-target="#collapse'+i+'"><a href="#'+table_id+'" class="accordion-toggle">'+escapeAccessionHTML(name)+'</a></div><div class="col-sm-3"><a href="/stock/'+population_id+'/view"><small>' + escapeAccessionHTML(accessionI18n.p("accessions.population.go_page", "[Go To Population Page]")) + '</small></a></div><div class="col-sm-3"><a name="manage_populations_add_members" data-population_id="'+population_id+'" data-population_name="'+escapeAccessionHTML(name)+'" data-member_type="'+member_type+'"><small>' + escapeAccessionHTML(accessionI18n.p("accessions.population.add_members", "[Add Members To Population]")) + '</small></a><br/><a name="manage_populations_delete_population" data-population_id="'+population_id+'" data-population_name="'+escapeAccessionHTML(name)+'"><small>' + escapeAccessionHTML(accessionI18n.p("accessions.population.delete", "[Delete Population]")) + '</small></a></div></div></div></div>';
             section_html += '<div id="collapse'+i+'" class="panel-collapse collapse">';
             section_html += '<div class="panel-body" style="overflow:hidden"><div class="table-responsive" style="margin-top: 10px;"><table id="'+table_id+'" class="table table-hover table-striped table-bordered" width="100%"></table><div id="populations_members_add_to_list_data_'+population_id+'" style="display:none"></div><br/><div id="populations_members_add_to_list_menu_'+population_id+'"></div></div>';
             section_html += '</div><br/></div></div></div><br/>';
@@ -163,7 +231,7 @@ jQuery(document).ready(function ($) {
         },
         error: function(response) {
           enable_ui();
-          alert('An error occured retrieving population data.');
+          alert(accessionI18n.p("accessions.population.retrieve_failed", "An error occured retrieving population data."));
         }
       });
     });
@@ -174,14 +242,15 @@ jQuery(document).ready(function ($) {
         var population_name = jQuery(this).data('population_name');
 
         var table = jQuery(table_id).DataTable({
-            ajax: '/ajax/manage_accessions/population_members/'+population_id,
+            ajax: {url: '/ajax/manage_accessions/population_members/'+population_id, headers: accessionLocaleHeaders()},
+            language: accessionTableLanguage(),
             destroy: true,
             columns: [
-                { title: "Member Name", "data": null, "render": function ( data, type, row ) { return "<a href='/stock/"+row.stock_id+"/view'>"+row.name+"</a>"; } },
-                { title: "Member Type", "data": "stock_type" },
-                { title: "Description", "data": "description" },
-                { title: "Synonyms", "data": "synonyms[, ]" },
-                { title: "Remove From Population", "data": null, "render": function ( data, type, row ) { return "<a name='populations_member_remove' data-stock_relationship_id='"+row.stock_relationship_id+"'>X</a>"; } },
+                { title: escapeAccessionHTML(accessionI18n.p("accessions.column.member_name", "Member Name")), "data": null, "render": function ( data, type, row ) { return "<a href='/stock/"+row.stock_id+"/view'>"+escapeAccessionHTML(row.name)+"</a>"; } },
+                { title: escapeAccessionHTML(accessionI18n.p("accessions.column.member_type", "Member Type")), "data": "stock_type", render: accessionTableText },
+                { title: escapeAccessionHTML(accessionI18n.p("accessions.column.description", "Description")), "data": "description", render: accessionTableText },
+                { title: escapeAccessionHTML(accessionI18n.p("accessions.column.synonyms", "Synonyms")), "data": "synonyms[, ]", render: accessionTableText },
+                { title: escapeAccessionHTML(accessionI18n.p("accessions.column.remove_population", "Remove From Population")), "data": null, "render": function ( data, type, row ) { return "<a name='populations_member_remove' data-stock_relationship_id='"+row.stock_relationship_id+"'>X</a>"; } },
             ],
             "fnInitComplete": function(oSettings, json) {
                 //console.log(json);
@@ -189,7 +258,7 @@ jQuery(document).ready(function ($) {
                 for(var i=0; i<json.data.length; i++){
                     html += json.data[i].name+"\n";
                 }
-                jQuery("#populations_members_add_to_list_data_"+population_id).html(html);
+                jQuery("#populations_members_add_to_list_data_"+population_id).text(html);
                 addToListMenu("populations_members_add_to_list_menu_"+population_id, "populations_members_add_to_list_data_"+population_id, {
                     selectText: true,
                     listType: 'accessions',
@@ -210,20 +279,20 @@ jQuery(document).ready(function ($) {
         population_name = jQuery(this).data('population_name');
         member_type = jQuery(this).data('member_type');
         if (member_type == 'plots') {
-            jQuery("#add_member_to_population_list_div").html(list.listSelect("add_member_to_population_list_div", ['plots'], 'select a list of plots', undefined, undefined));
+            jQuery("#add_member_to_population_list_div").html(list.listSelect("add_member_to_population_list_div", ['plots'], accessionI18n.p("accessions.list.choose_plots", "select a list of plots"), undefined, undefined));
         } else if (member_type == 'plants') {
-            jQuery("#add_member_to_population_list_div").html(list.listSelect("add_member_to_population_list_div", ['plants'], 'select a list of plants', undefined, undefined));
+            jQuery("#add_member_to_population_list_div").html(list.listSelect("add_member_to_population_list_div", ['plants'], accessionI18n.p("accessions.list.choose_plants", "select a list of plants"), undefined, undefined));
         } else {
-            jQuery("#add_member_to_population_list_div").html(list.listSelect("add_member_to_population_list_div", ['accessions'], 'select a list of accessions', undefined, undefined));
+            jQuery("#add_member_to_population_list_div").html(list.listSelect("add_member_to_population_list_div", ['accessions'], accessionI18n.p("accessions.list.choose_accessions", "select a list of accessions"), undefined, undefined));
         }
-        jQuery('#add_member_population_name').html(population_name);
+        jQuery('#add_member_population_name').text(population_name);
         jQuery('#manage_populations_add_members_dialog').modal('show');
     });
 
     jQuery(document).on("click", "a[name='manage_populations_delete_population']", function(){
         population_id = jQuery(this).data('population_id');
         population_name = jQuery(this).data('population_name');
-        jQuery('#delete_population_name').html(population_name);
+        jQuery('#delete_population_name').text(population_name);
         jQuery('#manage_populations_delete_dialog').modal('show');
     });
 
@@ -242,51 +311,52 @@ jQuery(document).ready(function ($) {
 
         if (member_type == 'accessions') {
             if (!member_list_id) {
-                alert ("A list of accessions is required");
+                alert (accessionI18n.p("accessions.list.accessions_required", "A list of accessions is required"));
                 return;
             } else {
                 list_validation = lo.legacy_validate(member_list_id, 'accessions', true);
                 if (list_validation != 1) {
-                    alert("The accession list did not pass validation. Names in the list must be uniquenames with accession stock type in the database");
+                    alert(accessionI18n.p("accessions.list.accessions_invalid", "The accession list did not pass validation. Names in the list must be uniquenames with accession stock type in the database"));
                     return;
                 }
             }
         } else if (member_type == 'plots') {
             if (!member_list_id) {
-                alert ("A list of plots is required");
+                alert (accessionI18n.p("accessions.list.plots_required", "A list of plots is required"));
                 return;
             } else {
                 list_validation = lo.legacy_validate(member_list_id, 'plots', true);
                 if (list_validation != 1) {
-                    alert("The plot list did not pass validation. Names in the list must be uniquenames with plot stock type in the database");
+                    alert(accessionI18n.p("accessions.list.plots_invalid", "The plot list did not pass validation. Names in the list must be uniquenames with plot stock type in the database"));
                     return;
                 }
             }
         } else if (member_type == 'plants') {
             if (!member_list_id) {
-                alert ("A list of plants is required");
+                alert (accessionI18n.p("accessions.list.plants_required", "A list of plants is required"));
                 return;
             } else {
                 list_validation = lo.legacy_validate(member_list_id, 'plants', true);
                 if (list_validation != 1) {
-                    alert("The plant list did not pass validation. Names in the list must be uniquenames with plant stock type in the database");
+                    alert(accessionI18n.p("accessions.list.plants_invalid", "The plant list did not pass validation. Names in the list must be uniquenames with plant stock type in the database"));
                     return;
                 }
             }
         } else {
             if (!member_list_id) {
-                alert ("A list of accessions is required");
+                alert (accessionI18n.p("accessions.list.accessions_required", "A list of accessions is required"));
                 return;
             } else {
                 list_validation = lo.legacy_validate(member_list_id, 'accessions', true);
                 if (list_validation != 1) {
-                    alert("The accession list did not pass validation. Names in the list must be  in the database");
+                    alert(accessionI18n.p("accessions.list.names_invalid", "The accession list did not pass validation. Names in the list must be  in the database"));
                     return;
                 }
             }
         }
 
         jQuery.ajax({
+            headers: accessionLocaleHeaders(),
             type: 'POST',
             url: '/ajax/population/add_members',
             dataType: "json",
@@ -307,13 +377,14 @@ jQuery(document).ready(function ($) {
                 }
             },
             error: function () {
-                alert('An error occurred in adding members to population. sorry');
+                alert(accessionI18n.p("accessions.population.add_members_failed", "An error occurred in adding members to population. sorry"));
             }
         });
     });
 
     jQuery("#delete_population_submit").click(function(){
         jQuery.ajax({
+            headers: accessionLocaleHeaders(),
             type: 'POST',
             url: '/ajax/population/delete',
             dataType: "json",
@@ -336,15 +407,16 @@ jQuery(document).ready(function ($) {
                 }
             },
             error: function () {
-                alert('An error occurred in deleting population. sorry');
+                alert(accessionI18n.p("accessions.population.delete_failed", "An error occurred in deleting population. sorry"));
             }
         });
     });
 
     jQuery(document).on("click", "a[name='populations_member_remove']", function(){
         var stock_relationship_id= jQuery(this).data("stock_relationship_id");
-        if (confirm("Are you sure?")){
+        if (confirm(accessionI18n.p("accessions.population.remove_confirm", "Are you sure?"))){
             jQuery.ajax({
+            headers: accessionLocaleHeaders(),
                 url: '/ajax/population/remove_member?stock_relationship_id='+stock_relationship_id,
                 dataType: "json",
                 beforeSend: function(){
@@ -362,7 +434,7 @@ jQuery(document).ready(function ($) {
                     }
                 },
                 error: function () {
-                    alert('An error occurred in removing accession from population. sorry');
+                    alert(accessionI18n.p("accessions.population.remove_failed", "An error occurred in removing accession from population. sorry"));
                 }
             });
         }
@@ -404,7 +476,7 @@ jQuery(document).ready(function ($) {
         console.log(full_info);
 
         if (email_option_enabled) {
-            var user_response = confirm('You will receive an email when the process is complete. Do you want to continue ?');
+            var user_response = confirm(accessionI18n.p("accessions.upload.email_confirm", "You will receive an email when the process is complete. Do you want to continue ?"));
             if (!user_response) {
                 console.log("no accessions saved + no email sent");
                 return;
@@ -417,6 +489,7 @@ jQuery(document).ready(function ($) {
         upload_in_progress = true;
 
         $.ajax({
+            headers: accessionLocaleHeaders(),
             type: 'POST',
             url: '/ajax/accession_list/add',
             dataType: "json",
@@ -437,9 +510,9 @@ jQuery(document).ready(function ($) {
                     alert(response.error);
                 } else {
                     enable_ui();
-                    var html = 'The following stocks were added!<br/>';
+                    var html = escapeAccessionHTML(accessionI18n.p("accessions.upload.stocks_added", "The following stocks were added!")) + '<br/>';
                     for (var i=0; i<response.added.length; i++){
-                        html = html + '<a href="/stock/'+response.added[i][0]+'/view">'+response.added[i][1]+'</a><br/>';
+                        html = html + '<a href="/stock/'+response.added[i][0]+'/view">'+escapeAccessionHTML(response.added[i][1])+'</a><br/>';
                     }
                     jQuery('#add_accessions_saved_message').html(html);
                     jQuery('#add_accessions_saved_message_modal').modal('show');
@@ -452,7 +525,7 @@ jQuery(document).ready(function ($) {
             },
             error: function (response) {
                 console.log("email_option_enabled on error:", email_option_enabled);
-                alert('An error occurred in processing. sorry'+response.responseText);
+                alert(accessionI18n.p("accessions.upload.process_failed", "An error occurred in processing. sorry%{detail}", {detail: String(response.responseText)}));
             },
             complete: function () {
                 upload_in_progress = false;
@@ -473,6 +546,7 @@ jQuery(document).ready(function ($) {
         var speciesName = $("#species_name_input").val();
         validSpecies = 0;
         return $.ajax({
+            headers: accessionLocaleHeaders(),
             type: 'GET',
             url: '/organism/verify_name',
             dataType: "json",
@@ -495,7 +569,7 @@ jQuery(document).ready(function ($) {
     }
 
     $('#species_name_input').focusout(function () {
-        verify_species_name().then( function(r) { if (r.error) { alert(r.error); } }, function(r) { alert('An error occurred. The site may not be available right now.'); });
+        verify_species_name().then( function(r) { if (r.error) { alert(r.error); } }, function(r) { alert(accessionI18n.p("accessions.upload.site_unavailable", "An error occurred. The site may not be available right now.")); });
     });
 
     $('#review_absent_accessions_submit').click(function () {
@@ -508,7 +582,7 @@ jQuery(document).ready(function ($) {
             var email_option_enabled = $("#email_option_to_recieve_accession_upload_status").prop('checked') ? 1 : 0;
 
             if (!speciesName) {
-                alert("Species name required");
+                alert(accessionI18n.p("accessions.upload.species_required", "Species name required"));
                 return;
             }
 
@@ -516,7 +590,7 @@ jQuery(document).ready(function ($) {
                 populationName = '';
             }
             if (!accessionsToAdd || accessionsToAdd.length == 0) {
-                alert("No accessions to add");
+                alert(accessionI18n.p("accessions.upload.no_accessions", "No accessions to add"));
                 return;
 	        }
 
@@ -539,7 +613,7 @@ jQuery(document).ready(function ($) {
 		        }
 		    },
 		    function(r) {
-		        alert('ERROR! Try again later.');
+		        alert(accessionI18n.p("accessions.upload.try_later", "ERROR! Try again later."));
 		    }
 	        );
 	    } else {
@@ -551,15 +625,19 @@ jQuery(document).ready(function ($) {
     });
 
     $('#new_accessions_submit').click(function () {
-        var selected_tab = jQuery('#add_new_accessions_tab_select .active').text()
-        if (selected_tab == 'Using Lists'){
+        var selected_tab = jQuery('#add_new_accessions_tab_select .active').attr('id');
+        if (selected_tab == 'add_new_accessions_list_tab'){
             accession_list_id = $('#list_div_list_select').val();
+            if (!accession_list_id) {
+                alert(accessionI18n.p("accessions.list.accessions_required", "A list of accessions is required"));
+                return;
+            }
             fullParsedData = undefined;
 	    verify_accession_list(accession_list_id);
-        } else if (selected_tab == 'Uploading a File'){
+        } else if (selected_tab == 'add_new_accessions_file_tab'){
 	    var uploadFile = jQuery("#new_accessions_upload_file").val();
 	    if (uploadFile === '') {
-                alert("Please select a file");
+                alert(accessionI18n.p("accessions.upload.file_required", "Please select a file"));
                 return;
 	    }
 
@@ -592,13 +670,13 @@ jQuery(document).ready(function ($) {
                 }
                 else {
                     fullParsedData = undefined;
-                    alert("An unknown error occurred.  Please try again later or contact us for help.");
+                    alert(accessionI18n.p("accessions.upload.unknown_error", "An unknown error occurred.  Please try again later or contact us for help."));
                 }
             },
             error: function () {
                 jQuery('#working_modal').modal("hide");
                 fullParsedData = undefined;
-                alert("An unknown error occurred.  Please try again later or contact us for help.");
+                alert(accessionI18n.p("accessions.upload.unknown_error", "An unknown error occurred.  Please try again later or contact us for help."));
             }
         });
     }
@@ -643,8 +721,8 @@ jQuery(document).ready(function ($) {
     });
 
     jQuery('#review_absent_dialog').on('shown.bs.modal', function (e) {
-        jQuery('#infoToAdd_updated_table').DataTable({});
-        jQuery('#infoToAdd_new_table').DataTable({});
+        jQuery('#infoToAdd_updated_table').DataTable({language: accessionTableLanguage()});
+        jQuery('#infoToAdd_new_table').DataTable({language: accessionTableLanguage()});
     });
 
 });
@@ -661,6 +739,7 @@ function verify_accession_list(accession_list_id) {
     doFuzzySearch = jQuery('#fuzzy_check').prop('checked');
 
     jQuery.ajax({
+            headers: accessionLocaleHeaders(),
         type: 'POST',
         url: '/ajax/accession_list/verify',
         timeout: 36000000,
@@ -685,7 +764,7 @@ function verify_accession_list(accession_list_id) {
             enable_ui();
 	    console.log(response.responseText);
 
-            alert('An error occurred in processing. sorry'+response.responseText);
+            alert(accessionI18n.p("accessions.upload.process_failed", "An error occurred in processing. sorry%{detail}", {detail: String(response.responseText)}));
         }
     });
 }
@@ -703,13 +782,13 @@ function review_verification_results(doFuzzySearch, verifyResponse, accession_li
     //console.log(accession_list_id);
 
     if (verifyResponse.found) {
-        jQuery('#count_of_found_accessions').html("Total number already in the database("+verifyResponse.found.length+")");
-        var found_html = '<table class="table table-bordered" id="found_accessions_table"><thead><tr><th>Search Name</th><th>Found in Database</th></tr></thead><tbody>';
+        jQuery('#count_of_found_accessions').text(accessionI18n.p("accessions.review.found_count", "Total number already in the database(%{count})", {count: verifyResponse.found.length}));
+        var found_html = '<table class="table table-bordered" id="found_accessions_table"><thead><tr><th>' + escapeAccessionHTML(accessionI18n.p("accessions.review.search_name", "Search Name")) + '</th><th>' + escapeAccessionHTML(accessionI18n.p("accessions.review.database_match", "Found in Database")) + '</th></tr></thead><tbody>';
         for( i=0; i < verifyResponse.found.length; i++){
             found_html = found_html
-                +'<tr><td>'+verifyResponse.found[i].matched_string
+                +'<tr><td>'+escapeAccessionHTML(verifyResponse.found[i].matched_string)
                 +'</td><td>'
-                +verifyResponse.found[i].unique_name
+                +escapeAccessionHTML(verifyResponse.found[i].unique_name)
                 +'</td></tr>';
             accessionListFound[verifyResponse.found[i].unique_name] = 1;
         }
@@ -719,7 +798,7 @@ function review_verification_results(doFuzzySearch, verifyResponse, accession_li
 
         jQuery('#review_found_matches_dialog').modal('show');
 
-        jQuery('#found_accessions_table').DataTable({});
+        jQuery('#found_accessions_table').DataTable({language: accessionTableLanguage()});
 
         accessionList = verifyResponse.absent;
 
@@ -727,18 +806,18 @@ function review_verification_results(doFuzzySearch, verifyResponse, accession_li
 
     if (verifyResponse.fuzzy.length > 0 && doFuzzySearch) {
         fuzzyResponse = verifyResponse.fuzzy;
-        var fuzzy_html = '<table id="add_accession_fuzzy_table" class="table"><thead><tr><th class="col-xs-4">Name in Your List</th><th class="col-xs-4">Existing Name(s) in Database</th><th class="col-xs-4">Options&nbsp;&nbsp;&nbsp;&nbsp;<input type="checkbox" id="add_accession_fuzzy_option_all"/> Use Same Option for All</th></tr></thead><tbody>';
+        var fuzzy_html = '<table id="add_accession_fuzzy_table" class="table"><thead><tr><th class="col-xs-4">' + escapeAccessionHTML(accessionI18n.p("accessions.review.list_name", "Name in Your List")) + '</th><th class="col-xs-4">' + escapeAccessionHTML(accessionI18n.p("accessions.review.existing_names", "Existing Name(s) in Database")) + '</th><th class="col-xs-4">' + escapeAccessionHTML(accessionI18n.p("accessions.review.options", "Options")) + '&nbsp;&nbsp;&nbsp;&nbsp;<input type="checkbox" id="add_accession_fuzzy_option_all"/> ' + escapeAccessionHTML(accessionI18n.p("accessions.review.same_option", "Use Same Option for All")) + '</th></tr></thead><tbody>';
         for( i=0; i < verifyResponse.fuzzy.length; i++) {
-            fuzzy_html = fuzzy_html + '<tr id="add_accession_fuzzy_option_form'+i+'"><td>'+ verifyResponse.fuzzy[i].name + '<input type="hidden" name="fuzzy_name" value="'+ verifyResponse.fuzzy[i].name + '" /></td>';
+            fuzzy_html = fuzzy_html + '<tr id="add_accession_fuzzy_option_form'+i+'"><td>'+ escapeAccessionHTML(verifyResponse.fuzzy[i].name) + '<input type="hidden" name="fuzzy_name" value="'+ escapeAccessionHTML(verifyResponse.fuzzy[i].name) + '" /></td>';
             fuzzy_html = fuzzy_html + '<td><select class="form-control" name ="fuzzy_select">';
             for(j=0; j < verifyResponse.fuzzy[i].matches.length; j++){
                 if (verifyResponse.fuzzy[i].matches[j].is_synonym){
-                    fuzzy_html = fuzzy_html + '<option value="' + verifyResponse.fuzzy[i].matches[j].synonym_of + '">' + verifyResponse.fuzzy[i].matches[j].name + ' (SYNONYM OF: '+verifyResponse.fuzzy[i].matches[j].synonym_of+')</option>';
+                    fuzzy_html = fuzzy_html + '<option value="' + escapeAccessionHTML(verifyResponse.fuzzy[i].matches[j].synonym_of) + '">' + escapeAccessionHTML(accessionI18n.p("accessions.review.synonym_of", "%{name} (SYNONYM OF: %{parent})", {name: verifyResponse.fuzzy[i].matches[j].name, parent: verifyResponse.fuzzy[i].matches[j].synonym_of})) + '</option>';
                 } else {
-                    fuzzy_html = fuzzy_html + '<option value="' + verifyResponse.fuzzy[i].matches[j].name + '">' + verifyResponse.fuzzy[i].matches[j].name + '</option>';
+                    fuzzy_html = fuzzy_html + '<option value="' + escapeAccessionHTML(verifyResponse.fuzzy[i].matches[j].name) + '">' + escapeAccessionHTML(verifyResponse.fuzzy[i].matches[j].name) + '</option>';
                 }
             }
-            fuzzy_html = fuzzy_html + '</select></td><td><select class="form-control" name="fuzzy_option"><option value="keep">Continue saving name in your list</option><option value="replace">Replace name in your list with selected existing name</option><option value="remove">Remove name in your list and ignore</option><option value="synonymize">Add name in your list as a synonym to selected existing name</option></select></td></tr>';
+            fuzzy_html = fuzzy_html + '</select></td><td><select class="form-control" name="fuzzy_option"><option value="keep">' + escapeAccessionHTML(accessionI18n.p("accessions.review.keep", "Continue saving name in your list")) + '</option><option value="replace">' + escapeAccessionHTML(accessionI18n.p("accessions.review.replace", "Replace name in your list with selected existing name")) + '</option><option value="remove">' + escapeAccessionHTML(accessionI18n.p("accessions.review.remove", "Remove name in your list and ignore")) + '</option><option value="synonymize">' + escapeAccessionHTML(accessionI18n.p("accessions.review.synonymize", "Add name in your list as a synonym to selected existing name")) + '</option></select></td></tr>';
         }
         fuzzy_html = fuzzy_html + '</tbody></table>';
         jQuery('#view_fuzzy_matches').html(fuzzy_html);
@@ -768,7 +847,7 @@ function review_verification_results(doFuzzySearch, verifyResponse, accession_li
             if (verifyResponse.absent.length > 0 || infoToAdd.length>0){
                 populate_review_absent_dialog(verifyResponse.absent, infoToAdd);
             } else {
-                alert('All accessions in your list already exist in the database. (3)');
+                alert(accessionI18n.p("accessions.review.all_existing", "All accessions in your list already exist in the database. (3)"));
             }
         }
     });
@@ -783,7 +862,7 @@ function populate_review_absent_dialog(absent, infoToAdd){
     console.log(infoToAdd);
     console.log(absent);
 
-    jQuery('#count_of_absent_accessions').html("Total number to be added("+absent.length+")");
+    jQuery('#count_of_absent_accessions').text(accessionI18n.p("accessions.review.absent_count", "Total number to be added(%{count})", {count: absent.length}));
     var absent_html = '';
     jQuery("#species_name_input").autocomplete({
         source: '/organism/autocomplete'
@@ -791,21 +870,21 @@ function populate_review_absent_dialog(absent, infoToAdd){
 
     for( i=0; i < absent.length; i++){
         absent_html = absent_html
-        +'<div class="left">'+absent[i]
+        +'<div class="left">'+escapeAccessionHTML(absent[i])
         +'</div>';
     }
     jQuery('#view_absent').html(absent_html);
     jQuery('#view_infoToAdd').html('');
 
     if (infoToAdd.length>0){
-        var infoToAdd_html = '<div class="well"><b>The following new accessions will be added:</b><br/><br/><table id="infoToAdd_new_table" class="table table-bordered table-hover"><thead><tr><th>uniquename</th><th>properties</th></tr></thead><tbody>';
+        var infoToAdd_html = '<div class="well"><b>' + escapeAccessionHTML(accessionI18n.p("accessions.review.new_accessions", "The following new accessions will be added:")) + '</b><br/><br/><table id="infoToAdd_new_table" class="table table-bordered table-hover"><thead><tr><th>' + escapeAccessionHTML(accessionI18n.p("accessions.column.uniquename", "uniquename")) + '</th><th>' + escapeAccessionHTML(accessionI18n.p("accessions.column.properties", "properties")) + '</th></tr></thead><tbody>';
         for( i=0; i < infoToAdd.length; i++){
             if (!('stock_id' in infoToAdd[i])){
-                infoToAdd_html = infoToAdd_html + '<tr><td>'+infoToAdd[i]['germplasmName']+'</td>';
+                infoToAdd_html = infoToAdd_html + '<tr><td>'+escapeAccessionHTML(infoToAdd[i]['germplasmName'])+'</td>';
                 var infoToAdd_properties_html = '';
                 for (key in infoToAdd[i]){
                     if (key != 'uniquename' && key != 'other_editable_stock_props'){
-                        infoToAdd_properties_html = infoToAdd_properties_html + key+':'+infoToAdd[i][key]+'   ';
+                        infoToAdd_properties_html = infoToAdd_properties_html + accessionReviewProperty(key, infoToAdd[i][key]);
                     }
                     else if (key == 'other_editable_stock_props') {
                         for (key_other in infoToAdd[i][key]) {
@@ -813,18 +892,18 @@ function populate_review_absent_dialog(absent, infoToAdd){
                         }
                     }
                 }
-                infoToAdd_html = infoToAdd_html + '<td>'+infoToAdd_properties_html+'</td></tr>';
+                infoToAdd_html = infoToAdd_html + '<td>'+escapeAccessionHTML(infoToAdd_properties_html)+'</td></tr>';
             }
         }
         infoToAdd_html = infoToAdd_html + "</tbody></table></div>";
-        infoToAdd_html = infoToAdd_html + '<div class="well"><b>The following accessions will be updated:</b><br/><br/><table id="infoToAdd_updated_table" class="table table-bordered table-hover"><thead><tr><th>uniquename</th><th>properties</th></tr></thead><tbody>';
+        infoToAdd_html = infoToAdd_html + '<div class="well"><b>' + escapeAccessionHTML(accessionI18n.p("accessions.review.updated_accessions", "The following accessions will be updated:")) + '</b><br/><br/><table id="infoToAdd_updated_table" class="table table-bordered table-hover"><thead><tr><th>' + escapeAccessionHTML(accessionI18n.p("accessions.column.uniquename", "uniquename")) + '</th><th>' + escapeAccessionHTML(accessionI18n.p("accessions.column.properties", "properties")) + '</th></tr></thead><tbody>';
         for( i=0; i < infoToAdd.length; i++){
             if ('stock_id' in infoToAdd[i]){
-                infoToAdd_html = infoToAdd_html + '<tr><td>'+infoToAdd[i]['germplasmName']+'</td>';
+                infoToAdd_html = infoToAdd_html + '<tr><td>'+escapeAccessionHTML(infoToAdd[i]['germplasmName'])+'</td>';
                 var infoToAdd_properties_html = '';
                 for (key in infoToAdd[i]){
                     if (key != 'uniquename' && key != 'other_editable_stock_props') {
-                        infoToAdd_properties_html = infoToAdd_properties_html + key+':'+infoToAdd[i][key]+'   ';
+                        infoToAdd_properties_html = infoToAdd_properties_html + accessionReviewProperty(key, infoToAdd[i][key]);
                     }
                     else if (key == 'other_editable_stock_props') {
                         for (key_other in infoToAdd[i][key]) {
@@ -832,7 +911,7 @@ function populate_review_absent_dialog(absent, infoToAdd){
                         }
                     }
                 }
-                infoToAdd_html = infoToAdd_html + '<td>'+infoToAdd_properties_html+'</td></tr>';
+                infoToAdd_html = infoToAdd_html + '<td>'+escapeAccessionHTML(infoToAdd_properties_html)+'</td></tr>';
             }
         }
         infoToAdd_html = infoToAdd_html + "</tbody></table></div>";
@@ -866,6 +945,7 @@ function process_fuzzy_options(accession_list_id) {
     });
     console.log(data);
     jQuery.ajax({
+            headers: accessionLocaleHeaders(),
         type: 'POST',
         url: '/ajax/accession_list/fuzzy_options',
         dataType: "json",
@@ -897,11 +977,11 @@ function process_fuzzy_options(accession_list_id) {
                 populate_review_absent_dialog(accessionList, infoToAdd);
                 jQuery('#review_absent_dialog').modal('show');
             } else {
-                alert('All accessions in your list now exist in the database. 2');
+                alert(accessionI18n.p("accessions.review.all_now_existing", "All accessions in your list now exist in the database. 2"));
             }
         },
         error: function () {
-            alert('An error occurred checking your fuzzy options! Do not try to add a synonym to a synonym! Also do not use any special characters!');
+            alert(accessionI18n.p("accessions.review.fuzzy_failed", "An error occurred checking your fuzzy options! Do not try to add a synonym to a synonym! Also do not use any special characters!"));
         }
     });
 }

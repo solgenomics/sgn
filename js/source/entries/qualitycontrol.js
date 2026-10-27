@@ -63,7 +63,7 @@ export function init(main_div) {
                     }
                 },
                 error: function (jqXHR, textStatus, errorThrown) {
-                    alert('Error in AJAX request: ' + errorThrown);
+                    alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("analysis.interface.error_in_ajax_request", "Error in AJAX request: ") : 'Error in AJAX request: ') + errorThrown);
                 }
             });
         }
@@ -77,7 +77,7 @@ export function init(main_div) {
         trait_selected = $('#trait_select').val();  // Get the selected trait from the dropdown
 
         if (!trait_selected) {
-            $('#trait_boxplot').html('Please select a trait to see the boxplot!');
+            $('#trait_boxplot').html((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("analysis.interface.please_select_a_trait_to_see_the_boxplot", "Please select a trait to see the boxplot!") : 'Please select a trait to see the boxplot!'));
             return;
         }
 
@@ -112,7 +112,7 @@ export function init(main_div) {
                 
             },
             error: function (e) {
-                alert('Error during AJAX request!');
+                alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("analysis.interface.error_during_ajax_request", "Error during AJAX request!") : 'Error during AJAX request!'));
             }
         });
 
@@ -142,7 +142,7 @@ export function init(main_div) {
                     }
                 },
                 error: function (jqXHR, textStatus, errorThrown) {
-                    alert('Error in AJAX request: ' + errorThrown);
+                    alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("analysis.interface.error_in_ajax_request", "Error in AJAX request: ") : 'Error in AJAX request: ') + errorThrown);
                 }
             });
         }
@@ -168,16 +168,16 @@ export function init(main_div) {
             success: function(response) {
                 if(response.is_curator === 1) {
                     $('#store_outliers_button').prop("disabled", false);
-                    alert('Outliers successfully stored!');
+                    alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("analysis.interface.outliers_successfully_stored", "Outliers successfully stored!") : 'Outliers successfully stored!'));
                 } else {
                     $('#store_outliers_button').prop("disabled", true);
-                    alert("Only curators or breeders are allowed to validated trials. Please contact a curator.", response.is_curator);
+                    alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("analysis.interface.only_curators_or_breeders_are_allowed_to_validated_trials_please", "Only curators or breeders are allowed to validated trials. Please contact a curator.") : "Only curators or breeders are allowed to validated trials. Please contact a curator."), response.is_curator);
                 }
                 
 
             },
             error: function(xhr, status, error) {
-                alert('Error saving outliers: ' + error);
+                alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("analysis.interface.error_saving_outliers", "Error saving outliers: ") : 'Error saving outliers: ') + error);
                 console.log(xhr, status);
             }
         });
@@ -202,20 +202,20 @@ export function init(main_div) {
                         success: function (r) {
                             if (r.is_curator === 1) {
                                 $('#restore_outliers_button').prop("disabled", false);
-                                alert("Data successfully restored!");
+                                alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("analysis.interface.data_successfully_restored", "Data successfully restored!") : "Data successfully restored!"));
                             } else {
                                 $('#restore_outliers_button').prop("disabled", true);
-                                alert("Only curators are allowed undo validated trial. Please contact a curator.");
+                                alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("analysis.interface.only_curators_are_allowed_undo_validated_trial_please_contact_a", "Only curators are allowed undo validated trial. Please contact a curator.") : "Only curators are allowed undo validated trial. Please contact a curator."));
                             }
                         },
                         error: function () {
-                            alert('Error during restore!');
+                            alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("analysis.interface.error_during_restore", "Error during restore!") : 'Error during restore!'));
                         }
                     });
                 }
             },
             error: function () {
-                alert('Error during AJAX request!');
+                alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("analysis.interface.error_during_ajax_request", "Error during AJAX request!") : 'Error during AJAX request!'));
             }
         });
     });
@@ -274,7 +274,7 @@ function updateBoxplot(isFixed, minValue, maxValue) {
 
         error: function (jqXHR, textStatus, errorThrown) {
             console.error('AJAX request failed: ', textStatus, errorThrown);
-            alert('Error fetching data for boxplot: ' + errorThrown);
+            alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("analysis.interface.error_fetching_data_for_boxplot", "Error fetching data for boxplot: ") : 'Error fetching data for boxplot: ') + errorThrown);
         }
     });
 }
@@ -565,7 +565,7 @@ function drawBoxplot(data, selected_trait, outlierMultiplier, isFixedMinMax, min
         .attr("x", -height / 2) // Position in the center of the Y-axis
         .attr("y", -margin.left + 10) // Ensure it's within margins
         .attr("transform", "rotate(-90)") // Rotate to match Y-axis orientation
-        .text("Location ID");
+        .text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("analysis.interface.location_id", "Location ID") : "Location ID"));
 
 
     // Draw individual points with jitter
@@ -604,7 +604,7 @@ function drawBoxplot(data, selected_trait, outlierMultiplier, isFixedMinMax, min
                 .style("opacity", .9); // Fade in the tooltip
 
             // Add plotName and value to the tooltip content
-            tooltip.html(`<strong>Plot:</strong> ${d.plotName}<br><strong>Value:</strong> ${d.value}`)
+            tooltip.html(`<strong>${jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("trial.fieldmap_edit.plot_label.plot_prefix", "Plot:") : "Plot:")).html()}</strong> ${d.plotName}<br><strong>${jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("analysis.interface.value", "Value:") : "Value:")).html()}</strong> ${d.value}`)
                 .style("left", (event.pageX + 10) + "px") // Position tooltip near the cursor
                 .style("top", (event.pageY - 28) + "px");
         })
@@ -640,10 +640,10 @@ function get_dataset_id() {
         selected_datasets.push(jQuery(this).val());
     });
     if (selected_datasets.length < 1) {
-        alert('Please select at least one dataset!');
+        alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("analysis.interface.please_select_at_least_one_dataset", "Please select at least one dataset!") : 'Please select at least one dataset!'));
         return false;
     } else if (selected_datasets.length > 1) {
-        alert('Please select only one dataset!');
+        alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("analysis.interface.please_select_only_one_dataset", "Please select only one dataset!") : 'Please select only one dataset!'));
         return false;
     } else {
         var dataset_id = selected_datasets[0];
@@ -656,7 +656,7 @@ function populateTraitDropdown(selectedVariableHTML) {
     traitSelect.empty();  // Clear previous options
 
     // Add default "Select a trait" option
-    traitSelect.append('<option disabled selected value="">Select a trait</option>');
+    traitSelect.append(("<option disabled selected value=\"\">" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("phenotype.root.select_a_trait", "Select a trait") : "Select a trait")).html() + "</option>"));
 
     // Create a temporary div to hold the HTML string
     var tempDiv = $('<div>').html(selectedVariableHTML);

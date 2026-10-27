@@ -1,3 +1,6 @@
+<%init>
+use HTML::Entities ();
+</%init>
 <%args>
 $facilities
 </%args>
@@ -9,35 +12,35 @@ $facilities
     <div class="modal-dialog modal-xl" role="document">
         <div class="modal-content ui-front">
             <div class="modal-header">
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <button type="button" class="close" data-dismiss="modal" aria-label="<% $c->i18n->p('genotype.project.dialog.close', 'Close') |h %>"><span aria-hidden="true">&times;</span></button>
                 <div style="text-align: center">
-                    <h4 class="modal-title" id="createGenotypingProjectdialog">Add New Genotyping Project</h4>
+                    <h4 class="modal-title" id="createGenotypingProjectdialog"><% $c->i18n->p('genotype.project.dialog.title', 'Add New Genotyping Project') |h %></h4>
                 </div>
             </div>
             <div class="modal-body">
                 <div class="container-fluid">
                     <&| /util/workflow.mas, id=> "add_genotyping_project_workflow" &>
-                        <&| /util/workflow.mas:step, title=> "Intro" &>
-                            <& /page/page_title.mas, title=>"Genotyping Project" &>
-                            <p>Genotyping Project can be used to group a series of genotyping plates and genotyping data. Genotyping Project should match Vendor Project if you have one.</p>
+                        <&| /util/workflow.mas:step, title=>HTML::Entities::encode_entities($c->i18n->p('genotype.project.dialog.step_intro', 'Intro'), q{&<>"'}) &>
+                            <& /page/page_title.mas, title=>HTML::Entities::encode_entities($c->i18n->p('genotype.project.dialog.project_heading', 'Genotyping Project'), q{&<>"'}) &>
+                            <p><% $c->i18n->p('genotype.project.dialog.intro', 'Genotyping Project can be used to group a series of genotyping plates and genotyping data. Genotyping Project should match Vendor Project if you have one.') |h %></p>
                             <hr>
                             <div style="text-align: center">
-                                <button id="next_step_add_new_genotyping_project" class="btn btn-primary" onclick="Workflow.complete(this);">Go to Next Step</button>
+                                <button id="next_step_add_new_genotyping_project" class="btn btn-primary" onclick="Workflow.complete(this);"><% $c->i18n->p('genotype.project.dialog.next', 'Go to Next Step') |h %></button>
                             </div>
                         </&>
 
                         <form class="form-horizontal" role="form" name="create_genotyping_project_form" id="create_genotyping_project_form">
-                            <&| /util/workflow.mas:step, title=> "Add a genotyping project" &>
-                            <& /page/page_title.mas, title=>"Enter basic information about the genotyping project" &>
+                            <&| /util/workflow.mas:step, title=>HTML::Entities::encode_entities($c->i18n->p('genotype.project.dialog.step_information', 'Add a genotyping project'), q{&<>"'}) &>
+                            <& /page/page_title.mas, title=>HTML::Entities::encode_entities($c->i18n->p('genotype.project.dialog.basic_heading', 'Enter basic information about the genotyping project'), q{&<>"'}) &>
                                 <br/>
                                 <div class="form-group">
-                                    <label class="col-sm-5 control-label">Genotyping Project Name: </label>
+                                    <label class="col-sm-5 control-label"><% $c->i18n->p('genotype.project.dialog.project_name', 'Genotyping Project Name: ') |h %></label>
                                     <div class="col-sm-7">
-                                        <input class="form-control" id="new_genotyping_project_name" name="new_genotyping_project_name" type="text" placeholder="Should match Vendor Project if you have one"/>
+                                        <input class="form-control" id="new_genotyping_project_name" name="new_genotyping_project_name" type="text" placeholder="<% $c->i18n->p('genotype.project.dialog.name_hint', 'Should match Vendor Project if you have one') |h %>"/>
                                     </div>
                                 </div><br/>
                                 <div class="form-group">
-                                    <label class="col-sm-5 control-label">Genotyping Facility: </label>
+                                    <label class="col-sm-5 control-label"><% $c->i18n->p('genotype.project.dialog.facility', 'Genotyping Facility: ') |h %></label>
                                     <div class="col-sm-7">
                                         <select class="form-control" id="genotyping_project_facility_select" name="genotyping_project_facility_select">
 %  foreach my $facility (@$facilities) {
@@ -47,35 +50,35 @@ $facilities
                                     </div>
                                 </div><br/>
                                 <div class="form-group">
-                                    <label class="col-sm-5 control-label">Data Type: </label>
+                                    <label class="col-sm-5 control-label"><% $c->i18n->p('genotype.project.dialog.data_type', 'Data Type: ') |h %></label>
                                     <div class="col-sm-7">
                                         <select class="form-control" id="data_type">
-                                            <option value="">Select a data type</option>
+                                            <option value=""><% $c->i18n->p('genotype.project.dialog.select_type', 'Select a data type') |h %></option>
                                             <option value="snp">SNP</option>
                                             <option value="ssr">SSR</option>
                                         </select>
                                     </div>
                                 </div><br/>
                                 <div class="form-group">
-                                    <label class="col-sm-5 control-label">Breeding Program: </label>
+                                    <label class="col-sm-5 control-label"><% $c->i18n->p('genotype.project.dialog.program', 'Breeding Program: ') |h %></label>
                                     <div class="col-sm-7">
                                         <span id="genotyping_project_breeding_program_select_div"></span>
                                     </div>
                                 </div><br/>
                                 <div class="form-group">
-                                    <label class="col-sm-5 control-label">Year: </label>
+                                    <label class="col-sm-5 control-label"><% $c->i18n->p('genotype.project.dialog.year', 'Year: ') |h %></label>
                                     <div class="col-sm-7">
                                         <span id="genotyping_project_year_select_div"></span>
                                     </div>
                                 </div><br/>
                                 <div class="form-group">
-                                    <label class="col-sm-5 control-label">Location of Data Generation (optional): </label>
+                                    <label class="col-sm-5 control-label"><% $c->i18n->p('genotype.project.dialog.location', 'Location of Data Generation (optional): ') |h %></label>
                                     <div class="col-sm-7">
                                         <span id="genotyping_project_location_select_div"></span>
                                     </div>
                                 </div><br/>
                                 <div class="form-group">
-                                    <label class="col-sm-5 control-label">Description: </label>
+                                    <label class="col-sm-5 control-label"><% $c->i18n->p('genotype.project.dialog.description', 'Description: ') |h %></label>
                                     <div class="col-sm-7">
                                         <textarea class="form-control" id="genotyping_project_description" name="genotyping_project_description" maxlength="250"></textarea>
                                     </div>
@@ -84,14 +87,14 @@ $facilities
                                 <br/>
                                 <br/>
                                 <div style="text-align: center">
-                                    <button type="button" class="btn btn-primary" onclick="Workflow.complete(this, false);" name="add_new_genotyping_project_submit" id="add_new_genotyping_project_submit">Submit</button>
+                                    <button type="button" class="btn btn-primary" onclick="Workflow.complete(this, false);" name="add_new_genotyping_project_submit" id="add_new_genotyping_project_submit"><% $c->i18n->p('genotype.project.dialog.submit', 'Submit') |h %></button>
                                 </div>
                             </&>
                         </form>
                         <&| /util/workflow.mas:complete, title=> "Complete" &>
-                            <& /page/page_title.mas, title=>"Finished! Your genotyping project is now in the database" &>
+                            <& /page/page_title.mas, title=>HTML::Entities::encode_entities($c->i18n->p('genotype.project.dialog.finished', 'Finished! Your genotyping project is now in the database'), q{&<>"'}) &>
                             <ul>
-                                <li>You may want to proceed to add genotyping plates and/or genotyping data in the genotyping project you just created.</li>
+                                <li><% $c->i18n->p('genotype.project.dialog.completion_help', 'You may want to proceed to add genotyping plates and/or genotyping data in the genotyping project you just created.') |h %></li>
                             </ul>
                             <br/>
                         </&>
@@ -99,7 +102,7 @@ $facilities
                 </div>
             </div>
             <div class="modal-footer">
-                <button id="add_new_genotyping_project_close_modal" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                <button id="add_new_genotyping_project_close_modal" type="button" class="btn btn-default" data-dismiss="modal"><% $c->i18n->p('genotype.project.dialog.close', 'Close') |h %></button>
             </div>
         </div>
     </div>
@@ -118,7 +121,7 @@ jQuery(document).ready(function(){
 
         var project_name = jQuery("#new_genotyping_project_name").val();
         if (!project_name) {
-            alert("Genotyping project name is required");
+            alert(window.SGN && SGN.i18n ? SGN.i18n.p('genotype.project.validation.name_required', 'Genotyping project name is required') : 'Genotyping project name is required');
             return;
         }
 
@@ -126,25 +129,25 @@ jQuery(document).ready(function(){
 
         var data_type = jQuery("#data_type").val();
         if (!data_type) {
-            alert("Data type is required");
+            alert(window.SGN && SGN.i18n ? SGN.i18n.p('genotype.project.validation.type_required', 'Data type is required') : 'Data type is required');
             return;
         }
 
         var project_breeding_program = jQuery("#genotyping_project_breeding_program_select").val();
         if (!project_breeding_program) {
-            alert ("Breeding program is required");
+            alert (window.SGN && SGN.i18n ? SGN.i18n.p('genotype.project.validation.program_required', 'Breeding program is required') : 'Breeding program is required');
             return;
         }
 
         var project_year = jQuery("#genotyping_project_year_select").val();
         if (!project_year) {
-            alert ("Year is required");
+            alert (window.SGN && SGN.i18n ? SGN.i18n.p('genotype.project.validation.year_required', 'Year is required') : 'Year is required');
             return;
         }
 
         var project_description = jQuery("#genotyping_project_description").val();
         if (!project_description) {
-            alert ("Description is required");
+            alert (window.SGN && SGN.i18n ? SGN.i18n.p('genotype.project.validation.description_required', 'Description is required') : 'Description is required');
             return;
         }
 
@@ -153,6 +156,7 @@ jQuery(document).ready(function(){
         jQuery.ajax({
             url: '/ajax/breeders/add_genotyping_project',
             dataType: "json",
+            headers: {'X-SGN-Locale': document.documentElement.getAttribute('data-sgn-locale') || document.documentElement.lang || 'en'},
             type: 'POST',
             data:{
                 'project_name': project_name,
@@ -179,7 +183,7 @@ jQuery(document).ready(function(){
             },
             error: function() {
                 jQuery("#working_modal").modal("hide");
-                alert('An error occurred saving genotyping project.');
+                alert(window.SGN && SGN.i18n ? SGN.i18n.p('genotype.project.validation.save_error', 'An error occurred saving genotyping project.') : 'An error occurred saving genotyping project.');
                 jQuery('#create_genotyping_project_dialog').modal("hide");
             },
         });

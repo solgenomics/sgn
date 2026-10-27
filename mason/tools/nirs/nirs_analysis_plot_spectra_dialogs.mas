@@ -6,59 +6,59 @@
     <div class="modal-content">
       <div class="modal-header">
         <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-        <h4 class="modal-title" id="nirsAnalysisPlotSpectraDialog">Plot Spectra</h4>
+        <h4 class="modal-title" id="nirsAnalysisPlotSpectraDialog"><% $c->i18n->p("nirs.ui.plot_spectra", "Plot Spectra") |h %></h4>
       </div>
       <div class="modal-body">
         <div class="container-fluid">
 
             <&| /util/workflow.mas, id=> "nirs_analysis_plot_spectra_workflow" &>
-                <&| /util/workflow.mas:step, title=> "Intro" &>
-                    <& /page/page_title.mas, title=>"This workflow will guide you through querying and plotting spectral data in the database." &>
+                <&| /util/workflow.mas:step, title=>$c->i18n->p("nirs.ui.intro", "Intro") &>
+                    <& /page/page_title.mas, title=>HTML::Entities::encode_entities($c->i18n->p("nirs.ui.this_workflow_will_guide_you_through_querying_and_plotting_spectral_data_in_the_database", "This workflow will guide you through querying and plotting spectral data in the database.")) &>
                     <br/><br/>
                     <center>
-                    <button class="btn btn-primary" onclick="Workflow.complete(this); return false;">Go to Next Step</button>
+                    <button class="btn btn-primary" onclick="Workflow.complete(this); return false;"><% $c->i18n->p("global.workflow.next_step", "Go to Next Step") |h %></button>
                     </center>
                 </&>
-                <&| /util/workflow.mas:step, title=> "Protocol" &>
-                    <& /page/page_title.mas, title=>"Select the protocol you are interested in plotting spectra:" &>
+                <&| /util/workflow.mas:step, title=>$c->i18n->p("nirs.ui.protocol", "Protocol") &>
+                    <& /page/page_title.mas, title=>HTML::Entities::encode_entities($c->i18n->p("nirs.ui.select_the_protocol_you_are_interested_in_plotting_spectra", "Select the protocol you are interested in plotting spectra:")) &>
 
                     <div id="nirs_analysis_plot_spectra_protocol_select">
                     </div>
 
                     <center>
-                    <button class="btn btn-primary" id="nirs_analysis_plot_spectra_protocol_select_step">Go to Next Step</button>
+                    <button class="btn btn-primary" id="nirs_analysis_plot_spectra_protocol_select_step"><% $c->i18n->p("global.workflow.next_step", "Go to Next Step") |h %></button>
                     </center>
                 </&>
-                <&| /util/workflow.mas:step, title=> "Dataset" &>
-                    <& /page/page_title.mas, title=>"Select the dataset you are interested in plotting spectra for (the accessions or plots or tissues samples in the dataset need to have spectra uploaded):" &>
+                <&| /util/workflow.mas:step, title=>$c->i18n->p("nirs.ui.dataset", "Dataset") &>
+                    <& /page/page_title.mas, title=>HTML::Entities::encode_entities($c->i18n->p("nirs.plot.select_dataset_prompt", "Select the dataset you are interested in plotting spectra for (the accessions or plots or tissues samples in the dataset need to have spectra uploaded):")) &>
 
                     <div id="nirs_analysis_plot_spectra_dataset_select_div">
                     </div>
 
                     <center>
-                    <button class="btn btn-primary" id="nirs_analysis_plot_spectra_dataset_select_step">Go to Next Step</button>
+                    <button class="btn btn-primary" id="nirs_analysis_plot_spectra_dataset_select_step"><% $c->i18n->p("global.workflow.next_step", "Go to Next Step") |h %></button>
                     </center>
                 </&>
-                <&| /util/workflow.mas:step, title=> "Search" &>
-                    <& /page/page_title.mas, title=>"Search Parameters:" &>
+                <&| /util/workflow.mas:step, title=>$c->i18n->p("nirs.ui.search", "Search") &>
+                    <& /page/page_title.mas, title=>HTML::Entities::encode_entities($c->i18n->p("nirs.ui.search_parameters", "Search Parameters:")) &>
                     <br/><br/>
                     <form class="form-horizontal">
                         <div class="form-group">
-                            <label class="col-sm-5 control-label">Query related stocks (e.g. if you have accessions in the dataset, the query will search for spectra on associated plots, plants, etc. and vice versa): </label>
+                            <label class="col-sm-5 control-label"><% $c->i18n->p("nirs.plot.related_stocks_label", "Query related stocks (e.g. if you have accessions in the dataset, the query will search for spectra on associated plots, plants, etc. and vice versa):") |h %> </label>
                             <div class="col-sm-7" >
                                 <select class="form-control" id="nirs_analysis_plot_spectra_associated_stock_select_id" name="nirs_analysis_plot_spectra_associated_stock_select_id">
-                                    <option value="yes">Yes</option>
-                                    <option value="no">No</option>
+                                    <option value="yes"><% $c->i18n->p("global.search_wizard.yes", "Yes") |h %></option>
+                                    <option value="no"><% $c->i18n->p("global.search_wizard.no", "No") |h %></option>
                                 </select>
                             </div>
                         </div>
                     </form>
                     <center>
-                    <button class="btn btn-primary" id="nirs_analysis_plot_spectra_search_step">Go to Next Step</button>
+                    <button class="btn btn-primary" id="nirs_analysis_plot_spectra_search_step"><% $c->i18n->p("global.workflow.next_step", "Go to Next Step") |h %></button>
                     </center>
                 </&>
-                <&| /util/workflow.mas:step, title=> "Results" &>
-                    <& /page/page_title.mas, title=>"Spectral Plots" &>
+                <&| /util/workflow.mas:step, title=>$c->i18n->p("nirs.ui.results", "Results") &>
+                    <& /page/page_title.mas, title=>HTML::Entities::encode_entities($c->i18n->p("nirs.ui.spectral_plots", "Spectral Plots")) &>
 
                     <div id="nir_analysis_plot_spectra_result"></div>
 
@@ -69,7 +69,7 @@
 
       </div>
       <div class="modal-footer">
-        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+        <button type="button" class="btn btn-default" data-dismiss="modal"><% $c->i18n->p("nirs.ui.close", "Close") |h %></button>
       </div>
     </div>
   </div>
@@ -94,7 +94,7 @@ jQuery(document).ready(function(){
         });
 
         if(selected.length > 1 || selected.length == 0) {
-            alert('Please select one dataset!');
+            alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("nirs.ui.dataset_required", "Please select one dataset!") : "Please select one dataset!"));
             return false;
         }
         else {
@@ -113,7 +113,7 @@ jQuery(document).ready(function(){
         });
 
         if(selected.length > 1 || selected.length == 0) {
-            alert('Please select one dataset!');
+            alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("nirs.ui.dataset_required", "Please select one dataset!") : "Please select one dataset!"));
             return false;
         }
         else {
@@ -154,7 +154,7 @@ jQuery(document).ready(function(){
                 window.scrollTo(0,0);
             },
             error: function(response){
-                alert('Error plotting spectra from NIRS!');
+                alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("nirs.plot.failure", "Error plotting spectra from NIRS!") : "Error plotting spectra from NIRS!"));
                 jQuery('#working_modal').modal('hide');
             }
         });
@@ -162,3 +162,7 @@ jQuery(document).ready(function(){
 
 });
 </script>
+
+<%once>
+use HTML::Entities ();
+</%once>

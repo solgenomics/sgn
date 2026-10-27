@@ -1,4 +1,18 @@
 use strict;
+use SGN::I18N ();
+use CatalystX::GlobalContext '$c';
+my SGN::I18N $ui_forum_i18n = SGN::I18N::translate($c);
+my %ui_forum = (
+    'community.forum.add_post_link' => SGN::I18N::translate($ui_forum_i18n, 'community.forum.add_post_link', 'Add post', undef, { entities => '<>&\x{0080}-\x{10FFFF}', decode => 0 }),
+    'community.forum.main_title' => SGN::I18N::translate($ui_forum_i18n, 'community.forum.main_title', 'Main', undef, { entities => '<>&\x{0080}-\x{10FFFF}', decode => 0 }),
+    'community.forum.no_topic_specified' => SGN::I18N::translate($ui_forum_i18n, 'community.forum.no_topic_specified', 'No topic was specified. Please go back and try another topic.', undef, { entities => '<>&\x{0080}-\x{10FFFF}', decode => 0 }),
+    'community.forum.no_user_comments' => SGN::I18N::translate($ui_forum_i18n, 'community.forum.no_user_comments', 'No user comments.', undef, { entities => '<>&\x{0080}-\x{10FFFF}', decode => 0 }),
+    'community.forum.posted_by' => SGN::I18N::translate($ui_forum_i18n, 'community.forum.posted_by', 'Posted by', undef, { entities => '<>&\x{0080}-\x{10FFFF}', decode => 0 }),
+    'community.forum.topic_description_not_available' => SGN::I18N::translate($ui_forum_i18n, 'community.forum.topic_description_not_available', '(topic description not available)', undef, { entities => '<>&\x{0080}-\x{10FFFF}', decode => 0 }),
+    'community.forum.topic_started_by' => SGN::I18N::translate($ui_forum_i18n, 'community.forum.topic_started_by', 'This topic was started by', undef, { entities => '<>&\x{0080}-\x{10FFFF}', decode => 0 }),
+    'community.forum.view_topics_list' => SGN::I18N::translate($ui_forum_i18n, 'community.forum.view_topics_list', 'View topics list', undef, { entities => '<>&\x{0080}-\x{10FFFF}', decode => 0 }),
+    'lists.render.action.delete' => SGN::I18N::translate($ui_forum_i18n, 'lists.render.action.delete', 'Delete', undef, { entities => '<>&\x{0080}-\x{10FFFF}', decode => 0 })
+);
 use warnings;
 
 use CXGN::DB::Connection;
@@ -31,7 +45,7 @@ Lukas Mueller (lam87@cornell.edu)
 
 
 
-my $page = CXGN::Page->new( "SGN Forum Main", "Lukas");
+my $page = CXGN::Page->new( "SGN Forum " . $ui_forum{'community.forum.main_title'}, "Lukas");
 
 my $dbh = CXGN::DB::Connection->new();
 my $sp_person_id = CXGN::Login->new($dbh)->has_session();
@@ -48,7 +62,7 @@ if ($sp_person_id) {
 #
 if (!$topic_id) { 
     $page->header();
-    print "<p>No topic was specified. Please go back and try another topic.\n</p>";
+    print "<p>@{[$ui_forum{'community.forum.no_topic_specified'}]}\n</p>";
     $page->footer();
     exit(0);
 }
@@ -73,15 +87,16 @@ my $s = posts_list($dbh, $sp_person_id, $topic_id, $page);
 #
 $page->header();
 
-print page_title_html("Forum Topic: ".$topic->get_topic_name()."\n");
-my $topic_started_by = "<br />This topic was started by <b><a href=\"/solpeople/personal-info.pl?sp_person_id=".
+print page_title_html(SGN::I18N::translate($ui_forum_i18n, 'community.forum.forum_topic_title', 'Forum Topic: %{topic_name}
+', { 'topic_name' => $topic->get_topic_name() }, { entities => '' }));
+my $topic_started_by = "<br />@{[$ui_forum{'community.forum.topic_started_by'}]} <b><a href=\"/solpeople/personal-info.pl?sp_person_id=".
     ($topic_start_person->get_sp_person_id)."\">".
     ($topic_start_person->get_first_name()." ".$topic_start_person->get_last_name())."</a></b>.\n";
 
 my $topic_name = $topic->get_topic_name();
 my $topic_description = $topic->get_topic_description();
 my $forum_toolbar = forum_toolbar($topic_id, $sp_person_id);
-if (!$topic_description) { $topic_description = "(topic description not available)"; }
+if (!$topic_description) { $topic_description = $ui_forum{'community.forum.topic_description_not_available'}; }
 
 
 print qq { <div class="container-fluid"><div class="row">$forum_toolbar<br/><br/>  };
@@ -105,7 +120,7 @@ sub posts_list {
     $s .= qq { };
     
     if (!@posts) { 
-	$s .= "<br/>No user comments.<br/>";
+	$s .= "<br/>@{[$ui_forum{'community.forum.no_user_comments'}]}<br/>";
     }
     
     foreach my $p (@posts) { 
@@ -130,10 +145,10 @@ sub posts_list {
 	my $refering_url = $page->{request}->uri()."?".$page->{request}->args();
 	my $encoded_url = URI::Escape::uri_escape($refering_url);
 	if (($sp_person_id && ($post_person_id == $sp_person_id)) || $user->get_user_type() eq "curator") { 
-	    $remove_link = "<a href=\"forum_post_delete.pl?post_id=".($p->get_forum_post_id())."&amp;refering_page=$encoded_url\">Delete</a>\n"; 
+	    $remove_link = "<a href=\"forum_post_delete.pl?post_id=".($p->get_forum_post_id())."&amp;refering_page=$encoded_url\">@{[$ui_forum{'lists.render.action.delete'}]}</a>\n";
 	}
 	
-	$s .= qq { <div class="panel panel-default"><div class="panel-heading"><div class="row"><div class="col-sm-10">Posted by <b><a href="/solpeople/personal-info.pl?sp_person_id=$post_sp_person_id">$post_name</a>$user_type</b> on $post_date </div><div class="col-sm-2">$remove_link</div></div></div> };
+	$s .= qq { <div class="panel panel-default"><div class="panel-heading"><div class="row"><div class="col-sm-10">@{[$ui_forum{'community.forum.posted_by'}]} <b><a href="/solpeople/personal-info.pl?sp_person_id=$post_sp_person_id">$post_name</a>$user_type</b> on $post_date </div><div class="col-sm-2">$remove_link</div></div></div> };
 	$s .= qq { <div class="panel-body">$post_text</div></div> };
     }
     $s .= "";
@@ -212,9 +227,9 @@ sub old_posts_list {
 sub forum_toolbar {
     my $topic_id=shift;
     my $person_id = shift; # not used... always display link, will go to login page if not logged in
-    my $s = "<a href=\"topics.pl\">View topics list</a> | \n";
+    my $s = "<a href=\"topics.pl\">@{[$ui_forum{'community.forum.view_topics_list'}]}</a> | \n";
 
-    $s .= "<a href=\"add_post.pl?topic_id=$topic_id\">Add post</a>";
+    $s .= "<a href=\"add_post.pl?topic_id=$topic_id\">@{[$ui_forum{'community.forum.add_post_link'}]}</a>";
     $s .= "\n";
     return $s;
 }

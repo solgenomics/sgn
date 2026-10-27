@@ -18,13 +18,34 @@ $descriptive_stat
 
 </%args>
 
+<%perl>
+my %display_labels = (
+    "Observations count" => $c->i18n->p("solgs.interface.observations_count", "Observations count"),
+    "Missing data" => $c->i18n->p("solgs.interface.missing_data", "Missing data"),
+    "Minimum" => $c->i18n->p("solgs.interface.minimum", "Minimum"),
+    "Maximum" => $c->i18n->p("solgs.interface.maximum", "Maximum"),
+    "Arithmetic mean" => $c->i18n->p("solgs.interface.arithmetic_mean", "Arithmetic mean"),
+    "Median" => $c->i18n->p("solgs.interface.median", "Median"),
+    "Standard deviation" => $c->i18n->p("solgs.interface.standard_deviation", "Standard deviation"),
+    "Coefficient of variation" => $c->i18n->p("solgs.interface.coefficient_of_variation", "Coefficient of variation")
+);
+my $display_rows = ref($descriptive_stat) eq "ARRAY" ? [map {
+    if (ref($_) eq "ARRAY") {
+        my @row = @$_;
+        $row[0] = $display_labels{$row[0]} if defined($row[0]) && exists($display_labels{$row[0]});
+        \@row;
+    } else { $_; }
+} @$descriptive_stat] : $descriptive_stat;
+</%perl>
+
+
 
 <div id="pheno_desc_stat">
     <br/>
 
     <& /page/columnar_table.mas,
        headings    => [ '',  ''],
-      data         => $descriptive_stat,
+      data         => $display_rows,
       __alt_freq   => 2,
       __alt_width  => 1,
       __alt_offset => 3,

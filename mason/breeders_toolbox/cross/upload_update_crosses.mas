@@ -7,24 +7,24 @@
     <div class="modal-dialog modal-lg" role="document">
         <div class="modal-content">
             <div class="modal-header">
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                <h4 class="modal-title" id="updateCrossinfoDialog">Upload Cross Info of Existing Crosses </h4>
+                <button type="button" class="close" data-dismiss="modal" aria-label="<% $c->i18n->p("cross.ui.close", "Close") |h %>"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="updateCrossinfoDialog"><% $c->i18n->p("cross.forms.upload_cross_info_of_existing_crosses", "Upload Cross Info of Existing Crosses") |h %> </h4>
             </div>
             <div class="modal-body">
                 <div class="container-fluid">
-                    <label class="col-sm-12 control-label">If you are uploading an Intercross file, please use manage Intercross section</label>
+                    <label class="col-sm-12 control-label"><% $c->i18n->p("cross.forms.if_you_are_uploading_an_intercross_file_please_use", "If you are uploading an Intercross file, please use manage Intercross section") |h %></label>
                     <br>
-                    <&| /page/explanation.mas, title=>'Template Information' &>
+                    <&| /page/explanation.mas, title=>HTML::Entities::encode_entities($c->i18n->p("cross.ui.template_information.bf8c643", "Template Information")) &>
                         <p>
-                            <b>File Format Information</b>
+                            <b><% $c->i18n->p("cross.forms.file_format_information", "File Format Information") |h %></b>
                             <br>
-                            <a id="update_crossinfo_spreadsheet_format">Spreadsheet Format</a>
+                            <a id="update_crossinfo_spreadsheet_format"><% $c->i18n->p("cross.ui.spreadsheet_format.f1285ec", "Spreadsheet Format") |h %></a>
                             <br>
                         </p>
                     </&>
                     <form class="form-horizontal" role="form" method="post" enctype="multipart/form-data" encoding="multipart/form-data" id="upload_crossinfo_form" name="upload_crossinfo_form">
                         <div class="form-group">
-                            <label class="col-sm-2 control-label">Upload File: </label>
+                            <label class="col-sm-2 control-label"><% $c->i18n->p("cross.ui.upload_file.9798051", "Upload File:") |h %> </label>
                                 <div class="col-sm-10">
                                     <input type="file" name="crossinfo_upload_file" id="crossinfo_upload_file" encoding="multipart/form-data" />
                                 </div>
@@ -33,8 +33,8 @@
                 </div>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-                <button type="button" class="btn btn-primary" name="update_crossinfo_submit" id="update_crossinfo_submit">Upload File</button>
+                <button type="button" class="btn btn-default" data-dismiss="modal"><% $c->i18n->p("cross.ui.close", "Close") |h %></button>
+                <button type="button" class="btn btn-primary" name="update_crossinfo_submit" id="update_crossinfo_submit"><% $c->i18n->p("cross.ui.upload_file.3ee3b0b", "Upload File") |h %></button>
             </div>
         </div>
     </div>
@@ -44,8 +44,8 @@
     <div class="modal-dialog modal-lg" role="document">
         <div class="modal-content">
             <div class="modal-header">
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                <h4 class="modal-title" id="uploadCrossinfoErrorDialog">Upload Cross Info File Error</h4>
+                <button type="button" class="close" data-dismiss="modal" aria-label="<% $c->i18n->p("cross.ui.close", "Close") |h %>"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="uploadCrossinfoErrorDialog"><% $c->i18n->p("cross.forms.upload_cross_info_file_error", "Upload Cross Info File Error") |h %></h4>
             </div>
             <div class="modal-body">
                 <div class="container-fluid">
@@ -55,7 +55,7 @@
                 </div>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-default" data-dismiss="modal"><% $c->i18n->p("cross.ui.close", "Close") |h %></button>
             </div>
         </div>
     </div>
@@ -65,36 +65,36 @@
     <div class="modal-dialog modal-lg" role="document">
         <div class="modal-content">
             <div class="modal-header">
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                <h4 class="modal-title" id="uploadCrossinfoInfoDialog">Template Information</h4>
+                <button type="button" class="close" data-dismiss="modal" aria-label="<% $c->i18n->p("cross.ui.close", "Close") |h %>"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="uploadCrossinfoInfoDialog"><% $c->i18n->p("cross.ui.template_information.bf8c643", "Template Information") |h %></h4>
             </div>
             <div class="modal-body">
                 <div class="container-fluid">
                     <b>
-                        Cross info of existing crosses may be uploaded in an Excel file (.xls or .xlsx)
+                        <% $c->i18n->p("cross.forms.cross_info_of_existing_crosses_may_be_uploaded_in", "Cross info of existing crosses may be uploaded in an Excel file (.xls or .xlsx)") |h %>
                     </b>
                     <br>
                     <b>
-                        Header:
+                        <% $c->i18n->p("cross.ui.header", "Header:") |h %>
                     </b>
                     <br>
-                        The first row (header) must contain the following:
+                        <% $c->i18n->p("seedlots.ui.the_first_row_header_must_contain_the_following", "The first row (header) must contain the following:") |h %>
                     <br>
 
                     <table class="table table-bordered table-hover">
                         <tbody>
                             <tr>
                                 <td>cross_unique_id</td>
-                                <td>At least one column of cross info listed below (please use exact column header as shown)</td>
+                                <td><% $c->i18n->p("cross.forms.at_least_one_column_of_cross_info_listed_below", "At least one column of cross info listed below (please use exact column header as shown)") |h %></td>
                             </tr>
                         </tbody>
                     </table>
                     <b>
-                        Required columns:
+                        <% $c->i18n->p("cross.ui.required_columns", "Required columns:") |h %>
                     </b>
                     <ul>
-                        <li><b>cross_unique_id:</b> Must exist in the database, must not have duplicate cross unique id in the same upload file.
-                        <li><b>At least one of the following columns:</b> You can upload different types of cross info by selecting corresponding column headers. All of cross info of the same cross unique id must be in a single row. Dates must be in the <b>YYYY/MM/DD</b> format.</li>
+                        <li><b>cross_unique_id:</b> <% $c->i18n->p("cross.forms.must_exist_in_the_database_must_not_have_duplicate", "Must exist in the database, must not have duplicate cross unique id in the same upload file.") |h %>
+                        <li><b><% $c->i18n->p("cross.forms.at_least_one_of_the_following_columns", "At least one of the following columns:") |h %></b> <% $c->i18n->p("cross.forms.you_can_upload_different_types_of_cross_info_by", "You can upload different types of cross info by selecting corresponding column headers. All of cross info of the same cross unique id must be in a single row. Dates must be in the") |h %> <b>YYYY/MM/DD</b> <% $c->i18n->p("cross.forms.format", "format.") |h %></li>
                         <br>
 % my $cross_properties = $c->config->{cross_properties};
 % my @column_header = split ',',$cross_properties;
@@ -106,7 +106,7 @@
                 </div>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-default" data-dismiss="modal"><% $c->i18n->p("cross.ui.close", "Close") |h %></button>
             </div>
         </div>
     </div>
@@ -116,19 +116,19 @@
     <div class="modal-dialog" role="document">
         <div class="modal-content">
             <div class="modal-header">
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                <h4 class="modal-title" id="crossInfoSavedDialog">Success</h4>
+                <button type="button" class="close" data-dismiss="modal" aria-label="<% $c->i18n->p("cross.ui.close", "Close") |h %>"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="crossInfoSavedDialog"><% $c->i18n->p("cross.ui.success", "Success") |h %></h4>
             </div>
             <div class="modal-body">
                 <div class="container-fluid">
                     <p>
                         <span class="ui-icon ui-icon-circle-check" style="float: left; margin: 0 7px 50px 0;"></span>
-                        The cross information was saved successfully.
+                        <% $c->i18n->p("cross.forms.the_cross_information_was_saved_successfully", "The cross information was saved successfully.") |h %>
                     </p>
                 </div>
             </div>
             <div class="modal-footer">
-                <button id="dismiss_cross_info_saved_dialog" type="button" class="btn btn-default" data-dismiss="modal">Close & Reload</button>
+                <button id="dismiss_cross_info_saved_dialog" type="button" class="btn btn-default" data-dismiss="modal"><% $c->i18n->p("seedlots.ui.close_reload", "Close & Reload") |h %></button>
             </div>
         </div>
     </div>
@@ -139,22 +139,22 @@
     <div class="modal-dialog modal-lg" role="document">
         <div class="modal-content">
             <div class="modal-header">
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                <h4 class="modal-title" id="uploadAdditionalInfoDialog">Upload Additional Parent Info of Existing Crosses </h4>
+                <button type="button" class="close" data-dismiss="modal" aria-label="<% $c->i18n->p("cross.ui.close", "Close") |h %>"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="uploadAdditionalInfoDialog"><% $c->i18n->p("cross.ui.upload_additional_parent_info_of_existing_crosses", "Upload Additional Parent Info of Existing Crosses") |h %> </h4>
             </div>
             <div class="modal-body">
                 <div class="container-fluid">
-                    <&| /page/explanation.mas, title=>'Template Information' &>
+                    <&| /page/explanation.mas, title=>HTML::Entities::encode_entities($c->i18n->p("cross.ui.template_information.bf8c643", "Template Information")) &>
                         <p>
-                            <b>File Format Information</b>
+                            <b><% $c->i18n->p("cross.forms.file_format_information", "File Format Information") |h %></b>
                             <br>
-                            <a id="upload_additional_info_format">Spreadsheet Format</a>
+                            <a id="upload_additional_info_format"><% $c->i18n->p("cross.ui.spreadsheet_format.f1285ec", "Spreadsheet Format") |h %></a>
                             <br>
                         </p>
                     </&>
                     <form class="form-horizontal" role="form" method="post" enctype="multipart/form-data" encoding="multipart/form-data" id="upload_additional_info_form" name="upload_additional_info_form">
                         <div class="form-group">
-                            <label class="col-sm-2 control-label">Upload File: </label>
+                            <label class="col-sm-2 control-label"><% $c->i18n->p("cross.ui.upload_file.9798051", "Upload File:") |h %> </label>
                                 <div class="col-sm-10">
                                     <input type="file" name="additional_info_upload_file" id="additional_info_upload_file" encoding="multipart/form-data" />
                                 </div>
@@ -163,8 +163,8 @@
                 </div>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-                <button type="button" class="btn btn-primary" name="upload_additional_info_submit" id="upload_additional_info_submit">Upload File</button>
+                <button type="button" class="btn btn-default" data-dismiss="modal"><% $c->i18n->p("cross.ui.close", "Close") |h %></button>
+                <button type="button" class="btn btn-primary" name="upload_additional_info_submit" id="upload_additional_info_submit"><% $c->i18n->p("cross.ui.upload_file.3ee3b0b", "Upload File") |h %></button>
             </div>
         </div>
     </div>
@@ -174,35 +174,35 @@
     <div class="modal-dialog modal-lg" role="document">
         <div class="modal-content">
             <div class="modal-header">
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                <h4 class="modal-title" id="uploadAdditionalInfoFormatDialog">Template Information</h4>
+                <button type="button" class="close" data-dismiss="modal" aria-label="<% $c->i18n->p("cross.ui.close", "Close") |h %>"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="uploadAdditionalInfoFormatDialog"><% $c->i18n->p("cross.ui.template_information.bf8c643", "Template Information") |h %></h4>
             </div>
             <div class="modal-body">
                 <div class="container-fluid">
                     <b>
-                        Additional Parent Info of existing crosses may be uploaded in an Excel file (.xls or .xlsx)
+                        <% $c->i18n->p("cross.forms.additional_parent_info_of_existing_crosses_may_be_uploaded", "Additional Parent Info of existing crosses may be uploaded in an Excel file (.xls or .xlsx)") |h %>
                     </b>
                     <br>
                     <b>
-                        Header:
+                        <% $c->i18n->p("cross.ui.header", "Header:") |h %>
                     </b>
                     <br>
-                        The first row (header) must contain the following:
+                        <% $c->i18n->p("seedlots.ui.the_first_row_header_must_contain_the_following", "The first row (header) must contain the following:") |h %>
                     <br>
                     <table class="table table-bordered table-hover">
                         <tbody>
                             <tr>
                                 <td>cross_unique_id</td>
-                                <td>At least one column of parent info listed below (please use exact column header as shown)</td>
+                                <td><% $c->i18n->p("cross.forms.at_least_one_column_of_parent_info_listed_below", "At least one column of parent info listed below (please use exact column header as shown)") |h %></td>
                             </tr>
                         </tbody>
                     </table>
                     <b>
-                        Required columns:
+                        <% $c->i18n->p("cross.ui.required_columns", "Required columns:") |h %>
                     </b>
                     <ul>
-                        <li><b>cross_unique_id:</b> Must exist in the database, must not have duplicate cross unique id in the same upload file.
-                        <li><b>At least one of the following columns:</b> You can upload different types of parent info by selecting corresponding column headers. All of parent info of the same cross unique id must be in a single row. Each field can have several values by using comma-delimited list (e.g. trait_1,trait_2)</li>
+                        <li><b>cross_unique_id:</b> <% $c->i18n->p("cross.forms.must_exist_in_the_database_must_not_have_duplicate", "Must exist in the database, must not have duplicate cross unique id in the same upload file.") |h %>
+                        <li><b><% $c->i18n->p("cross.forms.at_least_one_of_the_following_columns", "At least one of the following columns:") |h %></b> <% $c->i18n->p("cross.forms.you_can_upload_different_types_of_parent_info_by", "You can upload different types of parent info by selecting corresponding column headers. All of parent info of the same cross unique id must be in a single row. Each field can have several values by using comma-delimited list (e.g. trait_1,trait_2)") |h %></li>
                         <br>
 % my $cross_additional_info_string = $c->config->{cross_additional_info};
 % my @additional_info_headers = split ',',$cross_additional_info_string;
@@ -214,7 +214,7 @@
                 </div>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-default" data-dismiss="modal"><% $c->i18n->p("cross.ui.close", "Close") |h %></button>
             </div>
         </div>
     </div>
@@ -236,7 +236,7 @@ jQuery(document).ready(function(){
         var uploadFile = jQuery("#crossinfo_upload_file").val();
         jQuery('#upload_crossinfo_form').attr("action", "/ajax/cross/upload_info");
         if (uploadFile === ''){
-            alert("Please select a file");
+            alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("cross.ui.please_select_a_file", "Please select a file") : "Please select a file"));
             return;
         }
         jQuery("#upload_crossinfo_form").submit();
@@ -283,7 +283,7 @@ jQuery(document).ready(function(){
         var uploadFile = jQuery("#additional_info_upload_file").val();
         jQuery('#upload_additional_info_form').attr("action", "/ajax/cross/upload_info");
         if (uploadFile === ''){
-            alert("Please select a file");
+            alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("cross.ui.please_select_a_file", "Please select a file") : "Please select a file"));
             return;
         }
         jQuery("#upload_additional_info_form").submit();

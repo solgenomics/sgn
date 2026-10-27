@@ -17,8 +17,8 @@ jQuery(document).ready(function(){
         'autoWidth': false,
         'order': false,
         'columns': [
-            { title: "Accession", "data": null, "render": function ( data, type, row ) { return "<a href='/stock/"+row.transformant_id+"/view'>"+row.transformant_name+"</a>"; } },
-            { title: "Number of Insertions", "data": "number_of_insertions" },
+            { title: jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("global.index_logged_in_user.accession", "Accession") : "Accession")).html(), "data": null, "render": function ( data, type, row ) { return "<a href='/stock/"+row.transformant_id+"/view'>"+row.transformant_name+"</a>"; } },
+            { title: jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("transformation.number_of_insertions", "Number of Insertions") : "Number of Insertions")).html(), "data": "number_of_insertions" },
         ],
     });
 

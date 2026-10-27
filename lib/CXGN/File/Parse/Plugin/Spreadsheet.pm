@@ -13,6 +13,7 @@ sub type {
 sub parse {
   my $self = shift;
   my $super = shift;
+  my $i18n = $super->i18n();
   my $file = $super->file();
   my $type = $super->type();
   my $column_arrays = $super->column_arrays();
@@ -36,7 +37,7 @@ sub parse {
     $parser = Spreadsheet::ParseODS->new();
   }
   else {
-    push @{$rtn{errors}}, "Invalid type $type for spreadsheet parse plugin";
+    push @{$rtn{errors}}, ($i18n ? $i18n->p('file.parse.spreadsheet_type', 'Invalid type %{type} for spreadsheet parse plugin', {type => $type}) : "Invalid type $type for spreadsheet parse plugin");
     return \%rtn;
   }
 
@@ -64,7 +65,7 @@ sub parse {
     if ( $v && $v ne '' ) {
       # check for duplicated column header
       if ( exists $seen_column_headers{$v} && !exists $column_arrays->{$v} ) {
-        push @{$rtn{errors}}, "The column header $v was duplicated in column " . ($col+1) . " of your file and should only be included once.";
+        push @{$rtn{errors}}, ($i18n ? $i18n->p('file.parse.duplicate_header', 'The column header %{header} was duplicated in column %{column} of your file and should only be included once.', {header => $v, column => $col + 1}) : "The column header $v was duplicated in column " . ($col+1) . " of your file and should only be included once.");
       }
       $seen_column_headers{$v}++;
 

@@ -1,3 +1,7 @@
+<%once>
+use HTML::Entities ();
+</%once>
+
 <%args>
 
 </%args>
@@ -33,15 +37,15 @@
 <script type="text/javascript" src="http://d3js.org/d3.v3.js"></script>
 <script src="https://rawgit.com/tpreusse/radar-chart-d3/master/src/radar-chart.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<& /page/page_title.mas, title => "Radar Graph" &>
+<& /page/page_title.mas, title => HTML::Entities::encode_entities($c->i18n->p("analysis.interface.radar_graph", "Radar Graph")) &>
 
 <& /util/import_javascript.mas, classes => [ 'CXGN.BreedersToolbox.HTMLSelect' ] &>
 
-<div id="dataset_select_div">[loading...]</div>
+<div id="dataset_select_div"><% $c->i18n->p("global.loading", "[loading...]") |h %></div>
 
 
 <div class="text-center">
-<button class="button button1" id="load_data">Render Graph</button>
+<button class="button button1" id="load_data"><% $c->i18n->p("analysis.interface.render_graph", "Render Graph") |h %></button>
 </div>
 <br></br>
 
@@ -174,7 +178,7 @@ function get_dataset_id() {
         selected_ids.push(jQuery(this).val());
     });
     if (selected_ids.length < 1) {
-        alert('Please select at least one dataset!');
+        alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("analysis.interface.please_select_at_least_one_dataset", "Please select at least one dataset!") : 'Please select at least one dataset!'));
         return false;
     }
     return selected_ids;

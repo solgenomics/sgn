@@ -96,7 +96,7 @@ sub log_out :Path('/user/logout') Args(0) {
     $c->res->status(200);
     $c->res->content_type('text/plain; charset=utf-8');
     CXGN::Cookie::set_cookie( $CXGN::Login::LOGIN_COOKIE_NAME, "" );
-    $c->res->body('Logged out');
+    $c->res->body($c->i18n->p('global.login.logged_out', 'Logged out'));
     $c->detach();
 
 }

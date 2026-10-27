@@ -14,6 +14,8 @@ Naama Menda <nm249@cornell.edu>
 package CXGN::BreedingProgram;
 
 use Moose;
+use SGN::I18N ();
+use CatalystX::GlobalContext '$c';
 use Data::Dumper;
 use Try::Tiny;
 use SGN::Model::Cvterm;
@@ -27,6 +29,7 @@ has 'schema' => (
 );
 
 sub BUILD {
+    my SGN::I18N $ui_breedingprogram_build_i18n = $c && $c->can('i18n') ? $c->i18n : undef;
     my $self = shift;
     my $breeding_program_cvterm_id = $self->get_breeding_program_cvterm_id;
     my $row = $self->schema->resultset("Project::Project")->find(
@@ -36,7 +39,7 @@ sub BUILD {
 	);
     $self->set_project_object($row);
     if (!$row) {
-	die "The breeding program  ".$self->get_program_id()." does not exist";
+	die (SGN::I18N::translate($ui_breedingprogram_build_i18n, "program.model.program_missing", "The breeding program  %{id} does not exist", {id => "" . ($self->get_program_id())}));
     }
 }
 

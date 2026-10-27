@@ -1,3 +1,6 @@
+<%once>
+use HTML::Entities ();
+</%once>
 <%args>
 $main_production_site_url
 $program
@@ -6,7 +9,7 @@ $trial
 </%args>
 
 
-<&| /page/info_section.mas, id => "hidap_trial", title=>"HIDAP Trial Analysis", collapsible=>1, collapsed => 0 &>
+<&| /page/info_section.mas, id => "hidap_trial", title=>HTML::Entities::encode_entities($c->i18n->p("trial.hidap.title", "HIDAP Trial Analysis")), collapsible=>1, collapsed => 0 &>
 
 <div class="row">
   <div class="col-sm-6">
@@ -14,7 +17,7 @@ $trial
       <div class="well">
         <div class="row">
           <div class="col-sm-9">
-            Exploratory Analysis
+            <% $c->i18n->p("trial.hidap.exploratory", "Exploratory Analysis") |h %>
           </div>
           <div class="col-sm-3">
             <span class="glyphicon glyphicon-stats"></span>
@@ -28,7 +31,7 @@ $trial
       <div class="well">
         <div class="row">
           <div class="col-sm-9">
-            Trial Report
+            <% $c->i18n->p("trial.hidap.report", "Trial Report") |h %>
           </div>
           <div class="col-sm-3">
             <span class="glyphicon glyphicon-book"></span>

@@ -1,3 +1,6 @@
+<%once>
+use HTML::Entities ();
+</%once>
 <%args>
 $program_id
 </%args>
@@ -6,23 +9,23 @@ $program_id
     <div class="panel panel-default">
         <div class="panel-body">
             <td>
-                <a href="/breeders/trials"><p>Go To Manage Trials</p></a>
+                <a href="/breeders/trials"><p><% $c->i18n->p("program.project_section.manage_trials", "Go To Manage Trials") |h %></p></a>
             </td>
             <td>
-                <a href="/breeders/genotyping"><p>Go To Manage Genotyping Plates</p></a>
+                <a href="/breeders/genotyping"><p><% $c->i18n->p("program.project_section.manage_plates", "Go To Manage Genotyping Plates") |h %></p></a>
             </td>
             <td>
-                <a href="/breeders/crosses"><p>Go To Manage Crosses</p></a>
+                <a href="/breeders/crosses"><p><% $c->i18n->p("program.project_section.manage_crosses", "Go To Manage Crosses") |h %></p></a>
             </td>
         </div>
     </div>
-    <&| /page/info_section.mas, id=>"program_trials", title => "Field Trials", is_subsection => 1, collapsible=>1, collapsed=>1, hide_if_empty=>1 &>
+    <&| /page/info_section.mas, id=>"program_trials", title => HTML::Entities::encode_entities($c->i18n->p("program.project_section.field_trials", "Field Trials")), is_subsection => 1, collapsible=>1, collapsed=>1, hide_if_empty=>1 &>
         <& /breeders_toolbox/program/trials.mas, program_id => $program_id &>
     </&>
-    <&| /page/info_section.mas, id=>"program_genotyping_plates", title => "Genotyping Plates", is_subsection => 1, collapsible=>1, collapsed=>1, hide_if_empty=>1 &>
+    <&| /page/info_section.mas, id=>"program_genotyping_plates", title => HTML::Entities::encode_entities($c->i18n->p("program.project_section.genotyping_plates", "Genotyping Plates")), is_subsection => 1, collapsible=>1, collapsed=>1, hide_if_empty=>1 &>
         <& /breeders_toolbox/program/program_genotyping_plates.mas, program_id => $program_id &>
     </&>
-    <&| /page/info_section.mas, id=>"program_crossing_experiments", title => "Crossing Experiments", is_subsection => 1, collapsible=>1, collapsed=>1, hide_if_empty=>1 &>
+    <&| /page/info_section.mas, id=>"program_crossing_experiments", title => HTML::Entities::encode_entities($c->i18n->p("program.project_section.crossing_experiments", "Crossing Experiments")), is_subsection => 1, collapsible=>1, collapsed=>1, hide_if_empty=>1 &>
         <& /breeders_toolbox/program/program_crossing_experiments.mas, program_id => $program_id &>
     </&>
 </div>

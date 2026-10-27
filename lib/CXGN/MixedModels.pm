@@ -23,6 +23,8 @@ Lukas Mueller <lam87@cornell.edu>
 package CXGN::MixedModels;
 
 use Moose;
+use SGN::I18N ();
+has 'i18n' => (is => 'rw', isa => 'Maybe[Object]');
 use Data::Dumper;
 use File::Basename;
 use File::Copy;
@@ -132,6 +134,7 @@ generates the model string, in lme4 format, from the current parameters
 
 sub generate_model {
     my $self = shift;
+    my $i18n = SGN::I18N::translate($self);
 
     my $tempfile = $self->tempfile();
     my $dependent_variables = $self->dependent_variables();
@@ -167,7 +170,7 @@ sub generate_model {
 	    push @addends, $terms;
 	}
 	else {
-	    $error = "Interaction terms are not correctly defined.";
+	    $error = SGN::I18N::translate($i18n, "analysis.interface.interaction_terms_are_not_correctly_defined", "Interaction terms are not correctly defined.");
 	}
     }
 
@@ -204,6 +207,7 @@ sub generate_model {
 
 sub generate_model_sommer {
     my $self = shift;
+    my $i18n = SGN::I18N::translate($self);
 
     my $tempfile = $self->tempfile();
     my @dependent_variables_cleaned = map { make_R_variable_name($_) } @{$self->dependent_variables()};
@@ -260,7 +264,7 @@ sub generate_model_sommer {
 	    foreach my $interaction(@$fixed_factors_interaction){
 		
 		
-		if (scalar(@$interaction) != 2) { $error = "interaction needs to be pairs :-(";}
+		if (scalar(@$interaction) != 2) { $error = SGN::I18N::translate($i18n, "analysis.interface.interaction_needs_to_be_pairs", "interaction needs to be pairs :-(");}
 
 		
 		else { $mmer_fixed_factors_interaction .= " + ". join(":", @$interaction);}
@@ -295,7 +299,7 @@ sub generate_model_sommer {
 	    foreach my $intersects(@$variable_slope_intersects){
 		
 		
-		if (scalar(@$intersects) != 2) { $error = "intersects needs to be pairs :-(";}
+		if (scalar(@$intersects) != 2) { $error = SGN::I18N::translate($i18n, "analysis.interface.intersects_needs_to_be_pairs", "intersects needs to be pairs :-(");}
 		#if (scalar(@$random_factors_interaction)== 1) { $error .= "Works only with one interaction for now! :-(";}
 		
 		else { $mmer_variable_slope_intersects .= " + vsr(". join(",", @$intersects) . ")";} # vsr(Days, Subject)
@@ -333,6 +337,7 @@ sub generate_model_sommer {
 
 sub generate_model_spl2D {
     my $self = shift;
+    my $i18n = SGN::I18N::translate($self);
 
     my $tempfile = $self->tempfile();
     my @dependent_variables_cleaned = map { make_R_variable_name($_) } @{$self->dependent_variables()};
@@ -390,7 +395,7 @@ sub generate_model_spl2D {
 	    
 	    foreach my $interaction(@$fixed_factors_interaction){
 			
-		if (scalar(@$interaction) != 2) { $error = "interaction needs to be pairs :-(";}
+		if (scalar(@$interaction) != 2) { $error = SGN::I18N::translate($i18n, "analysis.interface.interaction_needs_to_be_pairs", "interaction needs to be pairs :-(");}
 
 		else { $mmer_fixed_factors_interaction .= " + ". join(":", @$interaction);}
 	    }
@@ -401,7 +406,7 @@ sub generate_model_spl2D {
 	}else {
 	    foreach my $intersects(@$variable_slope_intersects){
 			if (scalar(@$intersects) != 2) { 
-				$error = "intersects needs to be pairs :-(";
+				$error = SGN::I18N::translate($i18n, "analysis.interface.intersects_needs_to_be_pairs", "intersects needs to be pairs :-(");
 			}else { 
 				$mmer_variable_slope_intersects .= " + vsr(". join(",", @$intersects) . ")";
 			} # vsr(Days, Subject)

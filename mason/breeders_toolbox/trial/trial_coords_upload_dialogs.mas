@@ -7,22 +7,22 @@ $trial_name
   <div class="modal-dialog" role="document">
     <div class="modal-content">
       <div class="modal-header">
-        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-        <h4 class="modal-title" id="uploadTrialCoordDialog">Upload Coordinates to <% $trial_name %></h4>
+        <button type="button" class="close" data-dismiss="modal" aria-label="<% $c->i18n->p('trial.upload.coordinates.close', "Close") |h %>"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title" id="uploadTrialCoordDialog"><% $c->i18n->p('trial.upload.coordinates.title', "Upload Coordinates to %{trial_name}", { trial_name => $trial_name }) |h %></h4>
       </div>
       <div class="modal-body">
         <div class="container-fluid">
 
             <&| /page/explanation.mas, title=>'Template information' &>
                 <p>
-                    <b>File format information</b>
+                    <b><% $c->i18n->p('trial.upload.coordinates.format_info', "File format information") |h %></b>
                     <br>
-                    <a id="trial_coordinates_upload_spreadsheet_format_info">Spreadsheet format</a>
+                    <a id="trial_coordinates_upload_spreadsheet_format_info"><% $c->i18n->p('trial.upload.coordinates.spreadsheet', "Spreadsheet format") |h %></a>
                 </p>
             </&>
 
             <form method="post" enctype="multipart/form-data" encoding="multipart/form-data" id="upload_trial_coordinates_form" name="upload_trial_coordinates_form">
-                <label for="trial_coordinates_uploaded_file" style="display: inline-block; width: 100px;">Upload trial coordinates file:</label>
+                <label for="trial_coordinates_uploaded_file" style="display: inline-block; width: 100px;"><% $c->i18n->p('trial.upload.coordinates.file_label', "Upload trial coordinates file:") |h %></label>
                 <input type="file" name="trial_coordinates_uploaded_file" id="trial_coordinates_uploaded_file" encoding="multipart/form-data" />
                 <input type="hidden" name="trial_coordinates_upload_trial_id" id="trial_coordinates_upload_trial_id" value="<% $trial_id %>" />
             </form>
@@ -30,8 +30,8 @@ $trial_name
         </div>
       </div>
       <div class="modal-footer">
-        <button type="button" class="btn btn-default" name="upload_trial_coords_cancel_button" id="upload_trial_coords_cancel_button" data-dismiss="modal">Close</button>
-        <button type="button" class="btn btn-primary" name="upload_trial_coords_ok_button" id="upload_trial_coords_ok_button" title="Submit">Submit</button>
+        <button type="button" class="btn btn-default" name="upload_trial_coords_cancel_button" id="upload_trial_coords_cancel_button" data-dismiss="modal"><% $c->i18n->p('trial.upload.coordinates.close', "Close") |h %></button>
+        <button type="button" class="btn btn-primary" name="upload_trial_coords_ok_button" id="upload_trial_coords_ok_button" title="Submit"><% $c->i18n->p('trial.upload.coordinates.submit', "Submit") |h %></button>
       </div>
     </div>
   </div>
@@ -42,8 +42,8 @@ $trial_name
   <div class="modal-dialog" role="document">
     <div class="modal-content">
       <div class="modal-header">
-        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-        <h4 class="modal-title" id="uploadTrialCoordErrorDialog">Upload Coordinates Error</h4>
+        <button type="button" class="close" data-dismiss="modal" aria-label="<% $c->i18n->p('trial.upload.coordinates.close', "Close") |h %>"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title" id="uploadTrialCoordErrorDialog"><% $c->i18n->p('trial.upload.coordinates.error_title', "Upload Coordinates Error") |h %></h4>
       </div>
       <div class="modal-body">
         <div class="container-fluid">
@@ -53,7 +53,7 @@ $trial_name
         </div>
       </div>
       <div class="modal-footer">
-        <button type="button" class="btn btn-default" name="upload_trial_coord_error_display_cancel" id="upload_trial_coords_cancel_button" data-dismiss="modal">Close</button>
+        <button type="button" class="btn btn-default" name="upload_trial_coord_error_display_cancel" id="upload_trial_coords_cancel_button" data-dismiss="modal"><% $c->i18n->p('trial.upload.coordinates.close', "Close") |h %></button>
       </div>
     </div>
   </div>
@@ -63,16 +63,16 @@ $trial_name
   <div class="modal-dialog" role="document">
     <div class="modal-content">
       <div class="modal-header">
-        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-        <h4 class="modal-title" id="uploadTrialCoordSuccessDialog">Upload Coordinates Uploaded Sucessfully</h4>
+        <button type="button" class="close" data-dismiss="modal" aria-label="<% $c->i18n->p('trial.upload.coordinates.close', "Close") |h %>"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title" id="uploadTrialCoordSuccessDialog"><% $c->i18n->p('trial.upload.coordinates.success_title', "Upload Coordinates Uploaded Sucessfully") |h %></h4>
       </div>
       <div class="modal-body">
         <div class="container-fluid">
-            <h3>The trial coord upload finished with no errors.</h3>
+            <h3><% $c->i18n->p('trial.upload.coordinates.success_body', "The trial coord upload finished with no errors.") |h %></h3>
         </div>
       </div>
       <div class="modal-footer">
-        <button type="button" class="btn btn-default" name="trial_coord_upload_success_dialog_message_cancel" id="trial_coord_upload_success_dialog_message_cancel" data-dismiss="modal">Close</button>
+        <button type="button" class="btn btn-default" name="trial_coord_upload_success_dialog_message_cancel" id="trial_coord_upload_success_dialog_message_cancel" data-dismiss="modal"><% $c->i18n->p('trial.upload.coordinates.close', "Close") |h %></button>
       </div>
     </div>
   </div>
@@ -82,8 +82,8 @@ $trial_name
   <div class="modal-dialog" role="document">
     <div class="modal-content">
       <div class="modal-header">
-        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-        <h4 class="modal-title" id="uploadTrialCoordHelpDialog">Upload Coordinates Help</h4>
+        <button type="button" class="close" data-dismiss="modal" aria-label="<% $c->i18n->p('trial.upload.coordinates.close', "Close") |h %>"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title" id="uploadTrialCoordHelpDialog"><% $c->i18n->p('trial.upload.coordinates.help_title', "Upload Coordinates Help") |h %></h4>
       </div>
       <div class="modal-body">
         <div class="container-fluid">
@@ -108,7 +108,7 @@ The first row (header) should contain the following:
 
 <br>
 
-<h4>Required fields:</h4>
+<h4><% $c->i18n->p('trial.upload.coordinates.required_fields', "Required fields:") |h %></h4>
 <ul>
 <li>plot_name (must exist in the database for this trial)</li>
 <li>row_number (needed for the display of physical layout)</li>
@@ -116,17 +116,17 @@ The first row (header) should contain the following:
 </ul>
 
 
-<h4>Notes</h4>
+<h4><% $c->i18n->p('trial.upload.coordinates.notes', "Notes") |h %></h4>
 <ul>
-<li>Field plots will be displayed in the physical trial layout based on the coordinates you provided in the row and column number.</li>
-<li>Physical trial layout will capture serpentine, zigzag and any other planting format use.</li>
+<li><% $c->i18n->p('trial.upload.coordinates.plot_coords_help', "Field plots will be displayed in the physical trial layout based on the coordinates you provided in the row and column number.") |h %></li>
+<li><% $c->i18n->p('trial.upload.coordinates.layout_help', "Physical trial layout will capture serpentine, zigzag and any other planting format use.") |h %></li>
 </ul>
 
 
         </div>
       </div>
       <div class="modal-footer">
-        <button type="button" class="btn btn-default" name="trial_coord_upload_spreadsheet_info_dialog_close" id="trial_coord_upload_spreadsheet_info_dialog_close" data-dismiss="modal">Close</button>
+        <button type="button" class="btn btn-default" name="trial_coord_upload_spreadsheet_info_dialog_close" id="trial_coord_upload_spreadsheet_info_dialog_close" data-dismiss="modal"><% $c->i18n->p('trial.upload.coordinates.close', "Close") |h %></button>
       </div>
     </div>
   </div>

@@ -6,40 +6,45 @@
 
 <%init>
     if ( !$ontology ) {
-        print "<p><strong>ERROR:</strong> Seedlot Maintenance Event Ontology not loaded!</p>";
+        print '<p><strong>' . HTML::Entities::encode_entities($c->i18n->p('seedlot_record.ui.ontology_error_label', 'ERROR:')) . '</strong> ' . HTML::Entities::encode_entities($c->i18n->p('seedlot_record.ui.ontology_missing', 'Seedlot Maintenance Event Ontology not loaded!')) . '</p>';
         return;
     }
-    use JSON;
-    my $ontology_str = encode_json($ontology);
+    use JSON::PP ();
+    use HTML::Entities ();
+    my $ontology_json = JSON::PP->new->ascii->encode($ontology);
+    my $ontology_str = JSON::PP->new->ascii->encode($ontology_json);
+    $ontology_str =~ s/([<>&])/sprintf("\\u%04x", ord($1))/ge;
 </%init>
 
 <& /util/import_javascript.mas, classes => [ 'bootstrap_min.js', 'jquery' ] &>
 
-<& /page/page_title.mas, title => 'Record Seedlot Maintenance' &>
+<& /page/page_title.mas, title => HTML::Entities::encode_entities($c->i18n->p('seedlot_record.ui.title', 'Record Seedlot Maintenance')) &>
+
+<div id="seedlot-maintenance-record">
 
 <!-- SEEDLOT INFORMATION -->
-<&| /page/info_section.mas, title=>"Seedlot",  collapsible=>1, collapsed=>0, subtitle=>"" &>
+<&| /page/info_section.mas, title=>HTML::Entities::encode_entities($c->i18n->p('seedlot_record.ui.seedlot', 'Seedlot')), anchor_title=>'Seedlot',  collapsible=>1, collapsed=>0, subtitle=>"" &>
     <br /><br />
     <div class="well seedlot_event_well">
         <form class="form-horizontal">
 
             <!-- Seedlot Name -->
             <div class="form-group">
-                <label class="col-sm-3 control-label">Name: </label>
+                <label class="col-sm-3 control-label"><% $c->i18n->p('seedlot_record.ui.name', 'Name:') |h %></label>
                 <div class="col-sm-5">
                     <input class="form-control" id="seedlot_event_name" type="text" value="">
                 </div>
                 <div class="col-sm-2">
-                    <button id="seedlot_event_name_update" class="btn btn-block btn-info"><span class="glyphicon glyphicon-refresh"></span> Update</button>
+                    <button id="seedlot_event_name_update" class="btn btn-block btn-info"><span class="glyphicon glyphicon-refresh"></span> <% $c->i18n->p('seedlot_record.ui.update', 'Update') |h %></button>
                 </div>
                 <div class="col-sm-2">
-                    <button id="seedlot_event_name_barcode" class="btn btn-block btn-default"><span class="glyphicon glyphicon-qrcode"></span> Barcode</button>
+                    <button id="seedlot_event_name_barcode" class="btn btn-block btn-default"><span class="glyphicon glyphicon-qrcode"></span> <% $c->i18n->p('seedlot_record.ui.barcode', 'Barcode') |h %></button>
                 </div>
             </div>
 
             <!-- Seedlot Contents -->
             <div class="form-group">
-                <label class="col-sm-3 control-label">Contents: </label>
+                <label class="col-sm-3 control-label"><% $c->i18n->p('seedlot_record.ui.contents', 'Contents:') |h %></label>
                 <div class="col-sm-9">
                     <p class="seedlot_event_info" id="seedlot_event_contents"></p>
                 </div>
@@ -47,7 +52,7 @@
 
             <!-- Seedlot Location -->
             <div class="form-group">
-                <label class="col-sm-3 control-label">Location: </label>
+                <label class="col-sm-3 control-label"><% $c->i18n->p('seedlot_record.ui.location', 'Location:') |h %></label>
                 <div class="col-sm-9">
                     <p class="seedlot_event_info" id="seedlot_event_location"></p>
                 </div>
@@ -55,7 +60,7 @@
 
             <!-- Seedlot Box -->
             <div class="form-group">
-                <label class="col-sm-3 control-label">Box: </label>
+                <label class="col-sm-3 control-label"><% $c->i18n->p('seedlot_record.ui.box', 'Box:') |h %></label>
                 <div class="col-sm-9">
                     <p class="seedlot_event_info" id="seedlot_event_box"></p>
                 </div>
@@ -64,20 +69,20 @@
 % if ( defined $info_event_cvterms && scalar(@{$info_event_cvterms}) > 0 ) {
             <!-- Seedlot Events -->
             <div class="form-group">
-                <label class="col-sm-3 control-label">Recent Events: </label>
+                <label class="col-sm-3 control-label"><% $c->i18n->p('seedlot_record.ui.recent_events', 'Recent Events:') |h %></label>
                 <div class="col-sm-9">
                     <table class="table table-hover">
                         <thead>
                             <tr>
-                                <th>Event</th>
-                                <th>Value</th>
-                                <th>Notes</th>
-                                <th>Timestamp</th>
+                                <th><% $c->i18n->p('seedlot_record.ui.event_header', 'Event') |h %></th>
+                                <th><% $c->i18n->p('seedlot_record.ui.value_header', 'Value') |h %></th>
+                                <th><% $c->i18n->p('seedlot_record.ui.notes_header', 'Notes') |h %></th>
+                                <th><% $c->i18n->p('seedlot_record.ui.timestamp_header', 'Timestamp') |h %></th>
                             </tr>
                         </thead>
                         <tbody>
 % foreach my $cvterm (@$info_event_cvterms) { 
-                            <tr class="seedlot_event_info_cvterm_row" data-cvterm="<% $cvterm %>">
+                            <tr class="seedlot_event_info_cvterm_row" data-cvterm="<% $cvterm |h %>">
                                 <td class="seedlot_event_info_cvterm_event">&nbsp;</td>
                                 <td class="seedlot_event_info_cvterm_value"></td>
                                 <td class="seedlot_event_info_cvterm_notes"></td>
@@ -96,28 +101,28 @@
 
 
 <!-- MAINTENANCE EVENTS -->
-<&| /page/info_section.mas, title=>"Maintenance Events",  collapsible=>1, collapsed=>0, subtitle=>"" &>
+<&| /page/info_section.mas, title=>HTML::Entities::encode_entities($c->i18n->p('seedlot_record.ui.events', 'Maintenance Events')), anchor_title=>'Maintenance Events',  collapsible=>1, collapsed=>0, subtitle=>"" &>
     <div id="seedlot_event_container"></div>
 </&>
 
 
 <!-- EVENT INFORMATION -->
-<&| /page/info_section.mas, title=>"Username/Timestamp",  collapsible=>1, collapsed=>0, subtitle=>"" &>
+<&| /page/info_section.mas, title=>HTML::Entities::encode_entities($c->i18n->p('seedlot_record.ui.operator_timestamp', 'Username/Timestamp')), anchor_title=>'Username/Timestamp',  collapsible=>1, collapsed=>0, subtitle=>"" &>
     <br /><br />
     <div class="well seedlot_event_well">
         <form class="form-horizontal">
 
             <!-- Operator -->
             <div class="form-group">
-                <label class="col-sm-3 control-label">Operator: </label>
+                <label class="col-sm-3 control-label"><% $c->i18n->p('seedlot_record.ui.operator', 'Operator:') |h %></label>
                 <div class="col-sm-9">
-                    <input class="form-control" id="seedlot_event_operator" name="seedlot_event_operator" type="text" value="<% $operator %>">
+                    <input class="form-control" id="seedlot_event_operator" name="seedlot_event_operator" type="text" value="<% $operator |h %>">
                 </div>
             </div>
 
             <!-- Timestamp -->
             <div class="form-group">
-                <label class="col-sm-3 control-label">Timestamp: </label>
+                <label class="col-sm-3 control-label"><% $c->i18n->p('seedlot_record.ui.timestamp', 'Timestamp:') |h %></label>
                 <div class="col-sm-9">
                     <input class="form-control" id="seedlot_event_timestamp" name="seedlot_event_timestamp" type="text" value="">
                 </div>
@@ -131,7 +136,7 @@
 
 <!-- Submit Button -->
 <div class="center">
-    <button id="seedlot_event_submit" class="btn btn-primary btn-block" style="max-width: 600px; margin: auto" disabled>Submit</button>
+    <button id="seedlot_event_submit" class="btn btn-primary btn-block" style="max-width: 600px; margin: auto" disabled><% $c->i18n->p('seedlot_record.ui.submit', 'Submit') |h %></button>
 </div>
 <br /><br />
 
@@ -142,14 +147,62 @@
     <div class="modal-dialog" role="document">
         <div class="modal-content">
             <div id="seedlot_modal_body" class="modal-body"></div>
-            <div class="modal-footer"><button id="seedlot_modal_close" type="button" class="btn btn-default">Close</button></div>
+            <div class="modal-footer"><button id="seedlot_modal_close" type="button" class="btn btn-default"><% $c->i18n->p('seedlot_record.ui.close', 'Close') |h %></button></div>
         </div>
     </div>
 </div>
 
 
+</div>
+
 <script type="text/javascript">
-    let ONTOLOGY = JSON.parse('<% $ontology_str %>');   // Seedlot Event Ontology representation (array of categories with events and values)
+    var recordI18n = (window.SGN && window.SGN.i18n) || {
+        p: function (context, source, variables) {
+            return source.replace(/%\{([A-Za-z_][A-Za-z0-9_]*)\}/g, function (token, name) {
+                return variables && Object.prototype.hasOwnProperty.call(variables, name) ? String(variables[name]) : token;
+            });
+        }
+    };
+    function recordRequestedLocale() {
+        var locale = document.documentElement.getAttribute('data-sgn-locale') || document.documentElement.lang || 'en';
+        return /^[A-Za-z]{2,8}(?:[-_][A-Za-z0-9]{1,8})*$/.test(locale) ? locale : 'en';
+    }
+    function recordLocaleHeaders(url) {
+        try {
+            var target = new URL(url, window.location.href);
+            var admitted = target.pathname === '/ajax/breeders/seedlots'
+                || target.pathname === '/ajax/stock/seedlot_name_autocomplete'
+                || target.pathname === '/ajax/breeders/seedlot/maintenance/search'
+                || /^\/ajax\/breeders\/seedlot\/[1-9][0-9]*\/maintenance$/.test(target.pathname);
+            return target.origin === window.location.origin && admitted ? {'X-SGN-Locale': recordRequestedLocale()} : {};
+        }
+        catch (error) { return {}; }
+    }
+    function recordInertMarkup(html) {
+        var template = document.createElement('template');
+        template.innerHTML = String(html);
+        return template.content;
+    }
+    // This source-produced carrier has one authored accession/cross link and text.
+    // Parse it in a detached document and recreate only its admitted link grammar.
+    function setSeedlotContents(html) {
+        var target = jQuery('#seedlot_event_contents').empty();
+        var inert = recordInertMarkup(html || '');
+        Array.prototype.forEach.call(inert.childNodes, function (node) {
+            var href = node.nodeType === 1 && node.tagName === 'A' ? node.getAttribute('href') : null;
+            if (href && /^\/(?:stock\/[1-9][0-9]*\/view|cross\/[1-9][0-9]*)$/.test(href)) {
+                target.append(jQuery('<a>').attr('href', href).text(node.textContent));
+            }
+            else {
+                target.append(document.createTextNode(node.textContent));
+            }
+        });
+    }
+    function recordDefinitionText(definition) {
+        return recordInertMarkup(definition).textContent;
+    }
+
+    let ONTOLOGY = JSON.parse(<% $ontology_str %>);   // Seedlot Event Ontology representation (array of categories with events and values)
     let SEEDLOT_NAME;                                   // Name of current Seedlot
     let SEEDLOT_ID;                                     // ID of current Seedlot
     let PENDING_CHANGES = false;                        // Flag set to true when event selections have been made
@@ -177,7 +230,11 @@
 
         // Autocomplete for Seedlot Name input
         jQuery("#seedlot_event_name").autocomplete({
-            source: '/ajax/stock/seedlot_name_autocomplete',
+            source: function (request, response) {
+                jQuery.ajax({url: '/ajax/stock/seedlot_name_autocomplete', data: {term: request.term}, dataType: 'json',
+                    headers: recordLocaleHeaders('/ajax/stock/seedlot_name_autocomplete'),
+                    success: response, error: function () { response([]); }});
+            },
         });
 
     });
@@ -188,7 +245,7 @@
      */
     jQuery(window).bind('beforeunload', function(e) {
         if ( PENDING_CHANGES ) {
-            return e.originalEvent.returnValue = "There are pending changes that have not yet been submitted to the database! Are you sure you want to leave the page?";
+            return e.originalEvent.returnValue = recordI18n.p("seedlot_record.ui.pending_changes", "There are pending changes that have not yet been submitted to the database! Are you sure you want to leave the page?");
         }
     });
 
@@ -204,9 +261,13 @@
     function parseArgs() {
         const urlSearchParams = new URLSearchParams(window.location.search);
         if ( urlSearchParams.has('seedlot_name') ) {
-            let seedlot_name = decodeURIComponent(urlSearchParams.get('seedlot_name'));
-            seedlot_name = seedlot_name.includes('seedlot_name=') ? seedlot_name.match(/.*seedlot_name=(.*)/)[1] : seedlot_name;
-            jQuery('input[name="seedlot_event_name"]').val(seedlot_name);
+            let seedlot_name = urlSearchParams.get('seedlot_name');
+            if (/^(?:https?:\/\/|\/)/i.test(seedlot_name) && /[?&]seedlot_name=/.test(seedlot_name)) {
+                seedlot_name = seedlot_name.match(/.*[?&]seedlot_name=([\s\S]*)/)[1];
+                try { seedlot_name = decodeURIComponent(seedlot_name); }
+                catch (error) { if (!(error instanceof URIError)) throw error; }
+            }
+            jQuery('#seedlot_event_name').val(seedlot_name);
             getSeedlotInfo();
         }
     }
@@ -226,15 +287,16 @@
         jQuery.ajax({
             type: 'GET',
             dataType: 'json',
-            url: '/ajax/breeders/seedlots?seedlot_name=' + name,
+            url: '/ajax/breeders/seedlots', data: {seedlot_name: name},
+            headers: recordLocaleHeaders('/ajax/breeders/seedlots'),
             beforeSend: function() {
                 jQuery('#seedlot_event_name').attr('disabled', true);
                 jQuery('#seedlot_event_name_update').attr('disabled', true);
                 jQuery('#seedlot_event_name_barcode').attr('disabled', true);
-                jQuery(".seedlot_event_info").html("Loading...");
-                jQuery(".seedlot_event_info_cvterm_value").html("");
-                jQuery(".seedlot_event_info_cvterm_notes").html("");
-                jQuery(".seedlot_event_info_cvterm_timestamp").html("");
+                jQuery(".seedlot_event_info").text(recordI18n.p("seedlot_record.ui.loading", "Loading..."));
+                jQuery(".seedlot_event_info_cvterm_value").text("");
+                jQuery(".seedlot_event_info_cvterm_notes").text("");
+                jQuery(".seedlot_event_info_cvterm_timestamp").text("");
             },
             success: function(response) {
                 if ( response && response.data ) {
@@ -252,9 +314,9 @@
                 }
             },
             complete: function() {
-                jQuery("#seedlot_event_contents").html(contents);
-                jQuery("#seedlot_event_location").html(location);
-                jQuery("#seedlot_event_box").html(box);
+                setSeedlotContents(contents);
+                jQuery("#seedlot_event_location").text(location);
+                jQuery("#seedlot_event_box").text(box);
                 jQuery('#seedlot_event_name').attr('disabled', false);
                 jQuery('#seedlot_event_name_update').attr('disabled', false);
                 jQuery('#seedlot_event_name_barcode').attr('disabled', false);
@@ -281,6 +343,7 @@
             jQuery.ajax({
                 type: 'POST',
                 url: '/ajax/breeders/seedlot/maintenance/search',
+                headers: recordLocaleHeaders('/ajax/breeders/seedlot/maintenance/search'),
                 data: JSON.stringify({
                     filters: {
                         names: [{comp: '=', value: SEEDLOT_NAME}],
@@ -292,10 +355,10 @@
                 success: function(data) {
                     if ( data && data.results && data.results.length > 0 ) {
                         let e = data.results[0];
-                        event.html("<strong>" + e.cvterm_name + "</strong>");
-                        value.html(e.value);
-                        notes.html(e.notes ? e.notes : "");
-                        timestamp.html(e.timestamp);
+                        event.empty().append(jQuery("<strong>").text(e.cvterm_name));
+                        value.text(e.value);
+                        notes.text(e.notes ? e.notes : "");
+                        timestamp.text(e.timestamp);
                     }
                 }
             });
@@ -307,7 +370,9 @@
      * Redirect to the Barcode Reader
      */
     function scanBarcode() {
-        window.location = "/barcode/read?return=/breeders/seedlot/maintenance/record&param=seedlot_name";
+        var locale = recordRequestedLocale();
+        var target = '/breeders/seedlot/maintenance/record?' + new URLSearchParams({lang: locale}).toString();
+        window.location = '/barcode/read?' + new URLSearchParams({return: target, param: 'seedlot_name', lang: locale}).toString();
         return false;
     }
 
@@ -327,76 +392,48 @@
      * Build the display of each of the maintenace events and their values
      */
     function setEvents() {
-        let html = "";
+        let container = jQuery('#seedlot_event_container').empty();
         if ( ONTOLOGY ) {
-
-            // Parse each category
             for ( let i = 0; i < ONTOLOGY.length; i++ ) {
                 let category = ONTOLOGY[i];
                 let events = category.children ? category.children : [];
-
-                // Category Title
-                html += "<p class='seedlot_event_category'>" + category.name + "</p>";
-
-                // Parse each event
+                container.append(jQuery('<p>').addClass('seedlot_event_category').text(category.name));
                 for ( let j = 0; j < events.length; j++ ) {
                     let event = events[j];
                     let values = event.children ? event.children : [];
-
-                    // Event Well
-                    html += "<div class='well seedlot_event_well'>";
-
-                    // Event Title
-                    html += "<p class='seedlot_event_title'>" + event.name + "</p>";
-
-                    // Event Definition
+                    let well = jQuery('<div>').addClass('well seedlot_event_well');
+                    well.append(jQuery('<p>').addClass('seedlot_event_title').text(event.name));
                     if ( event.definition ) {
-                        html += "<p class='seedlot_event_definition'>" + jQuery('<div>').html(event.definition).text() + "</p>";
+                        well.append(jQuery('<p>').addClass('seedlot_event_definition').text(recordDefinitionText(event.definition)));
                     }
-
-                    // Container Div
-                    html += "<div class='seedlot_event_values_div'>";
-
-                    // Event Values (Buttons/Text) Div
-                    html += "<div class='btn-group seedlot_event_values' data-cvterm='" + event.cvterm_id + "' role='group'>";
-
-                    // Values: Add buttons for pre-determined values
+                    let value_div = jQuery('<div>').addClass('seedlot_event_values_div');
+                    let group = jQuery('<div>').addClass('btn-group seedlot_event_values').attr('data-cvterm', event.cvterm_id).attr('role', 'group');
                     if ( values && values.length > 0 ) {
-                        html += "<button type='button' class='btn btn-primary seedlot_event_value seedlot_event_value_btn'>Not Recorded</button>";
+                        group.append(jQuery('<button>').attr('type', 'button').addClass('btn btn-primary seedlot_event_value seedlot_event_value_btn')
+                            .data('recordValue', 'Not Recorded').text(recordI18n.p('seedlot_record.ui.not_recorded', 'Not Recorded')));
                         for ( let k = 0; k < values.length; k++ ) {
-                            let value = values[k];
-                            html += "<button type='button' class='btn btn-default seedlot_event_value seedlot_event_value_btn'>" + value.name + "</button>";
+                            // The original DOM value was a string; retain that type,
+                            // without interpreting/re-serializing scientific HTML.
+                            let raw_value = String(values[k].name);
+                            group.append(jQuery('<button>').attr('type', 'button').addClass('btn btn-default seedlot_event_value seedlot_event_value_btn')
+                                .data('recordValue', raw_value).text(raw_value));
                         }
                     }
-
-                    // Values: Add input text field
                     else {
-                        html += "<input type='text' class='form-control seedlot_event_value seedlot_event_value_input' value=''>";
+                        group.append(jQuery('<input>').attr('type', 'text').attr('value', '').addClass('form-control seedlot_event_value seedlot_event_value_input'));
                     }
-
-                    // End Values Div
-                    html += "</div>";
-
-                    // Notes Button
-                    html += "<div class='seedlot_event_notes_btn_div'>";
-                    html += "<button type='button' class='btn btn-default seedlot_event_notes_btn' data-cvterm='" + event.cvterm_id + "'>&nbsp;<span class='glyphicon glyphicon-comment'></span>&nbsp;</button>";
-                    html += "</div>";
-
-                    // End Container Div
-                    html += "</div>";
-
-                    // Notes Input
-                    html += "<div id='seedlot_event_notes_input_div_" + event.cvterm_id + "' class='seedlot_event_notes_input_div'>";
-                    html += "<textarea class='form-control seedlot_event_notes_input' rows='3' placeholder='Notes about the Event'></textarea>";
-                    html += "</div>";
-
-                    // End Event Well
-                    html += "</div>";
+                    value_div.append(group);
+                    let note_button = jQuery('<button>').attr('type', 'button').attr('data-cvterm', event.cvterm_id).addClass('btn btn-default seedlot_event_notes_btn');
+                    note_button.append(document.createTextNode('\u00a0')).append(jQuery('<span>').addClass('glyphicon glyphicon-comment')).append(document.createTextNode('\u00a0'));
+                    value_div.append(jQuery('<div>').addClass('seedlot_event_notes_btn_div').append(note_button));
+                    well.append(value_div);
+                    let notes = jQuery('<textarea>').addClass('form-control seedlot_event_notes_input').attr('rows', '3')
+                        .attr('placeholder', recordI18n.p('seedlot_record.ui.event_notes_placeholder', 'Notes about the Event'));
+                    well.append(jQuery('<div>').attr('id', 'seedlot_event_notes_input_div_' + event.cvterm_id).addClass('seedlot_event_notes_input_div').append(notes));
+                    container.append(well);
                 }
             }
         }
-
-        jQuery("#seedlot_event_container").html(html);
     }
 
     /**
@@ -464,7 +501,7 @@
 
         // Check for Seedlot ID
         if ( !SEEDLOT_ID ) {
-            displayError("Please enter a valid Seedlot name");
+            displayError(recordI18n.p("seedlot_record.ui.valid_seedlot_required", "Please enter a valid Seedlot name"));
             return;
         }
 
@@ -477,7 +514,7 @@
             let event_group = jQuery(event_groups[i]);
             let cvterm_id = event_group.data("cvterm");
             let event_value = event_group.find('.seedlot_event_value_btn.btn-primary,.seedlot_event_value_input');
-            let value = event_value.hasClass('seedlot_event_value_btn') ? event_value.html() : event_value.val();
+            let value = event_value.hasClass('seedlot_event_value_btn') ? event_value.data('recordValue') : event_value.val();
             let notes = jQuery("#seedlot_event_notes_input_div_" + cvterm_id).find(".seedlot_event_notes_input").val();
 
             if ( value && value !== "" && value !== "Not Recorded" ) {
@@ -494,44 +531,45 @@
 
         // Make sure there's at least one recorded event
         if ( !events || events.length === 0 ) {
-            displayError("One or more Events must be recorded");
+            displayError(recordI18n.p("seedlot_record.ui.event_required", "One or more Events must be recorded"));
             return;
         }
 
         // Disable Submit Button
         jQuery("#seedlot_event_submit").attr('disabled', true);
-        jQuery("#seedlot_event_submit").html("Submitting...");
+        jQuery("#seedlot_event_submit").text(recordI18n.p("seedlot_record.ui.submitting", "Submitting..."));
 
         // Submit the events
         jQuery.ajax({
             type: "POST",
             url: "/ajax/breeders/seedlot/" + SEEDLOT_ID + "/maintenance",
+            headers: recordLocaleHeaders("/ajax/breeders/seedlot/" + SEEDLOT_ID + "/maintenance"),
             data: JSON.stringify({events: events}),
             contentType: "application/json; charset=utf-8",
             dataType: "json",
             success: function(data) {
                 if ( data && data.events && data.events.length === events.length ) {
-                    displaySuccess(data.events.length + " events successfully stored for Seedlot " + SEEDLOT_NAME);
+                    displaySuccess(recordI18n.p("seedlot_record.ui.stored_events", "%{count} events successfully stored for Seedlot %{seedlot_name}", {count: data.events.length, seedlot_name: SEEDLOT_NAME}));
                     return _finish(true);
                 }
                 else if ( data && data.error ) {
-                    displayError("The events could not be submitted due to a database error:<br /><br /><pre><code>" + data.error + "</code></pre>");
+                    displayError(recordI18n.p("seedlot_record.ui.database_error", "The events could not be submitted due to a database error:"), data.error);
                     return _finish();
                 }
                 else {
-                    displayError("The events could not be submitted due to an unknown database error");
+                    displayError(recordI18n.p("seedlot_record.ui.unknown_database_error", "The events could not be submitted due to an unknown database error"));
                     return _finish();
                 }
             },
             error: function(msg) {
-                displayError("The events could not be submitted due to a database error:<br /><br /><pre><code>" + msg + "</code></pre>");
+                displayError(recordI18n.p("seedlot_record.ui.database_error", "The events could not be submitted due to a database error:"), String(msg));
                 return _finish();
             }
         });
 
         function _finish(complete) {
             jQuery("#seedlot_event_submit").attr('disabled', false);
-            jQuery("#seedlot_event_submit").html("Submit");
+            jQuery("#seedlot_event_submit").text(recordI18n.p("seedlot_record.ui.submit", "Submit"));
             if ( complete ) {
                 window.scrollTo(0, 0);
                 resetUI();
@@ -543,8 +581,8 @@
      * Display an error message in a bootstrap modal
      * @param {string} msg Error message to display (can include HTML)
      */
-    function displayError(msg) {
-        displayModal("Error", "#a94442", msg);
+    function displayError(msg, details) {
+        displayModal(recordI18n.p("seedlot_record.ui.error", "Error"), "#a94442", msg, details);
     }
 
     /**
@@ -552,7 +590,7 @@
      * @param {string} msg Success message to display (can include HTML)
      */
     function displaySuccess(msg) {
-        displayModal("Success", "#3c763d", msg);
+        displayModal(recordI18n.p("seedlot_record.ui.success", "Success"), "#3c763d", msg);
     }
 
     /**
@@ -561,28 +599,64 @@
      * @param {string} color Message title color
      * @param {string} msg Message to display (can include HTML)
      */
-    function displayModal(title, color, msg) {
-        let message = {
-            title: title,
-            color: color,
-            msg: msg
-        }
-        MESSAGES.push(message);
-
-        let html = [];
+    function displayModal(title, color, msg, details) {
+        MESSAGES.push({title: title, color: color, msg: msg, details: details});
+        let body = jQuery('#seedlot_modal_body').empty();
         for ( let i = 0; i < MESSAGES.length; i++ ) {
-            let _html = "<h1 style='color: " + MESSAGES[i].color + "'>" + MESSAGES[i].title + "</h1>";
-            _html += "<p style='margin: 15px 5px; font-size: 110%;'>" + MESSAGES[i].msg + "</p>";
-            html.push(_html);
+            if (i > 0) body.append(jQuery('<hr>'));
+            body.append(jQuery('<h1>').css('color', MESSAGES[i].color).text(MESSAGES[i].title));
+            let paragraph = jQuery('<p>').css({margin: '15px 5px', 'font-size': '110%'}).text(MESSAGES[i].msg);
+            if (MESSAGES[i].details !== undefined) {
+                paragraph.append(jQuery('<br>')).append(jQuery('<br>'));
+                paragraph.append(jQuery('<pre>').append(jQuery('<code>').text(String(MESSAGES[i].details))));
+            }
+            body.append(paragraph);
         }
-
-        jQuery('#seedlot_modal_body').html(html.join("<hr />"));
         jQuery('#seedlot_modal').modal({backdrop: 'static', keyboard: false});
     }
 
 </script>
 
 <style>
+    #seedlot-maintenance-record .seedlot_event_well table.table {
+        table-layout: fixed;
+        width: 100%;
+        max-width: 100%;
+    }
+    #seedlot-maintenance-record .seedlot_event_well table.table th,
+    #seedlot-maintenance-record .seedlot_event_well table.table td {
+        white-space: normal;
+        overflow-wrap: anywhere;
+    }
+    #seedlot-maintenance-record .btn,
+    #seedlot_modal .btn {
+        max-inline-size: 100%;
+        max-width: 100%;
+        white-space: normal;
+        overflow-wrap: anywhere;
+    }
+    #seedlot-maintenance-record .control-label,
+    #seedlot-maintenance-record .seedlot_event_info,
+    #seedlot-maintenance-record .seedlot_event_category,
+    #seedlot-maintenance-record .seedlot_event_title,
+    #seedlot-maintenance-record .seedlot_event_definition,
+    #seedlot_modal {
+        overflow-wrap: anywhere;
+    }
+    #seedlot-maintenance-record > table.infosectionhead {
+        table-layout: fixed;
+        width: 99%;
+        max-width: 99%;
+    }
+    #seedlot-maintenance-record > table.infosectionhead > tbody > tr > td {
+        white-space: normal;
+        overflow-wrap: anywhere;
+    }
+    #seedlot-maintenance-record .seedlot_event_values {
+        min-width: 0;
+        display: flex;
+        flex-wrap: wrap;
+    }
     .seedlot_event_info {
         padding-top: 7px;
         margin: 0;

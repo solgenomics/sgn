@@ -7,21 +7,21 @@ $trial_name
     <div class="modal-dialog modal-lg" role="document">
         <div class="modal-content">
             <div class="modal-header">
-                <button type="reset" class="close" id="upload_propagation_group_dismiss_button_2" name="upload_propagation_group_dismiss_button" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                <h4 class="modal-title" id="uploadPropagationGroupIDsDialog">Upload Propagation Group Identifiers</h4>
+                <button type="reset" class="close" id="upload_propagation_group_dismiss_button_2" name="upload_propagation_group_dismiss_button" aria-label="<% $c->i18n->p("global.dataset_publish.close", "Close") |h %>"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="uploadPropagationGroupIDsDialog"><% $c->i18n->p("seedlot.upload_propagation_group_identifiers", "Upload Propagation Group Identifiers") |h %></h4>
             </div>
             <div class="modal-body">
                 <div class="container-fluid">
-                    <&| /page/explanation.mas, title=>'Template Information' &>
+                    <&| /page/explanation.mas, title=>$c->i18n->p("cross.ui.template_information.bf8c643", 'Template Information') &>
                         <p>
-                            <b>File format information</b>
+                            <b><% $c->i18n->p("accessions.dialog.file_format", "File format information") |h %></b>
                             <br>
-                            <a id="propagation_group_ids_upload_spreadsheet_format_info">Spreadsheet Format</a>
+                            <a id="propagation_group_ids_upload_spreadsheet_format_info"><% $c->i18n->p("cross.ui.spreadsheet_format.f1285ec", "Spreadsheet Format") |h %></a>
                         </p>
                     </&>
                     <form method="post" enctype="multipart/form-data" encoding="multipart/form-data" id="upload_propagation_group_ids_form" name="upload_propagation_group_ids_form">
                         <div class="form-group">
-                            <label class="col-sm-3 control-label">Upload File: </label>
+                            <label class="col-sm-3 control-label"><% $c->i18n->p("cross.ui.upload_file.9798051", "Upload File:") |h %> </label>
                             <div class="col-sm-9" >
                                 <input type="file" name="propagation_group_ids_file" id="propagation_group_ids_file" encoding="multipart/form-data" />
                                 <input name="propagation_project_id" id="propagation_project_id" type="hidden" value="<% $trial_id %>">
@@ -31,8 +31,8 @@ $trial_name
                 </div>
             </div>
             <div class="modal-footer">
-                <button id="upload_propagation_group_dismiss_button_1" name="upload_propagation_group_dismiss_button" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-                <button type="button" class="btn btn-primary" name="upload_propagation_group_ids_submit" id="upload_propagation_group_ids_submit">Upload</button>
+                <button id="upload_propagation_group_dismiss_button_1" name="upload_propagation_group_dismiss_button" type="button" class="btn btn-default" data-dismiss="modal"><% $c->i18n->p("global.dataset_publish.close", "Close") |h %></button>
+                <button type="button" class="btn btn-primary" name="upload_propagation_group_ids_submit" id="upload_propagation_group_ids_submit"><% $c->i18n->p("global.dataset_publish.action.upload", "Upload") |h %></button>
             </div>
         </div>
     </div>
@@ -42,19 +42,19 @@ $trial_name
     <div class="modal-dialog" role="document">
         <div class="modal-content">
             <div class="modal-header">
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                <h4 class="modal-title" id="propagationGroupIdsSavedDialog">Success</h4>
+                <button type="button" class="close" data-dismiss="modal" aria-label="<% $c->i18n->p("global.dataset_publish.close", "Close") |h %>"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="propagationGroupIdsSavedDialog"><% $c->i18n->p("cross.ui.success", "Success") |h %></h4>
             </div>
             <div class="modal-body">
                 <div class="container-fluid">
                     <p>
                         <span class="ui-icon ui-icon-circle-check" style="float: left; margin: 0 7px 50px 0;"></span>
-                        The propagation group ids were saved successfully.
+                        <% $c->i18n->p("seedlot.the_propagation_group_ids_were_saved_successfully", "The propagation group ids were saved successfully.") |h %>
                     </p>
                 </div>
             </div>
             <div class="modal-footer">
-                <button id="dismiss_propagation_group_ids_saved_dialog" type="button" class="btn btn-default" data-dismiss="modal">Close & Reload</button>
+                <button id="dismiss_propagation_group_ids_saved_dialog" type="button" class="btn btn-default" data-dismiss="modal"><% $c->i18n->p("seedlots.ui.close_reload", "Close & Reload") |h %></button>
             </div>
         </div>
     </div>
@@ -64,8 +64,8 @@ $trial_name
     <div class="modal-dialog modal-lg" role="document">
         <div class="modal-content">
             <div class="modal-header">
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                <h4 class="modal-title" id="uploadPropagationGroupIdsErrorDialog">Upload Propagation Group Identifiers Error</h4>
+                <button type="button" class="close" data-dismiss="modal" aria-label="<% $c->i18n->p("global.dataset_publish.close", "Close") |h %>"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="uploadPropagationGroupIdsErrorDialog"><% $c->i18n->p("seedlot.upload_propagation_group_identifiers_error", "Upload Propagation Group Identifiers Error") |h %></h4>
             </div>
             <div class="modal-body">
                 <div class="container-fluid">
@@ -75,7 +75,7 @@ $trial_name
                 </div>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-default" data-dismiss="modal"><% $c->i18n->p("global.dataset_publish.close", "Close") |h %></button>
             </div>
         </div>
     </div>
@@ -85,14 +85,14 @@ $trial_name
     <div class="modal-dialog modal-xl" role="document">
         <div class="modal-content">
             <div class="modal-header" style="text-align: center">
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                <h4 class="modal-title" id="uploadPropagationGroupIDInfoDialog">Upload Template Information For Propagation Group Identifiers</h4>
+                <button type="button" class="close" data-dismiss="modal" aria-label="<% $c->i18n->p("global.dataset_publish.close", "Close") |h %>"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="uploadPropagationGroupIDInfoDialog"><% $c->i18n->p("seedlot.upload_template_information_for_propagation_group_identifiers", "Upload Template Information For Propagation Group Identifiers") |h %></h4>
             </div>
             <div class="modal-body">
                 <div class="container-fluid">
-                    <b>Header:</b>
+                    <b><% $c->i18n->p("accessions.template.header", "Header:") |h %></b>
                     <br>
-                    The first row (header) must contain the <b>propagation_group_identifier</b>, <b>accession_name</b>, <b>material_type</b>, <b>date</b>, <b>description</b>, <b>operator_name</b> columns. Additional information can be included by selecting optional column(s) (see below):
+                    <% $c->i18n->p("seedlot.the_first_row_header_must_contain_the", "The first row (header) must contain the") |h %> <b>propagation_group_identifier</b>, <b>accession_name</b>, <b>material_type</b>, <b>date</b>, <b>description</b>, <b>operator_name</b> <% $c->i18n->p("seedlot.columns_additional_information_can_be_included_by_selecting_optional_column", "columns. Additional information can be included by selecting optional column(s) (see below):") |h %>
                     <br/>
                     <br>
                     <table class="table table-hover table-bordered table-condensed" >
@@ -113,28 +113,28 @@ $trial_name
                         </tbody>
                     </table>
 
-                    <b>Required fields:</b>
+                    <b><% $c->i18n->p("cross.ui.required_fields", "Required fields:") |h %></b>
                     <ul>
-                        <li>propagation_group_identifier (must be globally unique and must not exist in the database )</li>
-                        <li>accession_name (must exist as <b>uniquenames</b> in the database)</li>
-                        <li>material_type (must be one of the following: budwood, stem, shoot, root, corm, plant or seed. If you would like to add additional types, please contact us.)</li>
-                        <li>date (propagation initiation date YYYY-MM-DD)</li>
+                        <li><% $c->i18n->p("seedlot.propagation_group_identifier_must_be_globally_unique_and_must_not", "propagation_group_identifier (must be globally unique and must not exist in the database )") |h %></li>
+                        <li><% $c->i18n->p("seedlot.accession_name_must_exist_as", "accession_name (must exist as") |h %> <b>uniquenames</b> <% $c->i18n->p("cross.forms.in_the_database", "in the database)") |h %></li>
+                        <li><% $c->i18n->p("seedlot.material_type_must_be_one_of_the_following_budwood_stem", "material_type (must be one of the following: budwood, stem, shoot, root, corm, plant or seed. If you would like to add additional types, please contact us.)") |h %></li>
+                        <li><% $c->i18n->p("seedlot.date_propagation_initiation_date_yyyy_mm_dd", "date (propagation initiation date YYYY-MM-DD)") |h %></li>
                         <li>description</li>
                         <li>operator_name</li>
                     </ul>
 
-                    <b>Optional fields:</b>
+                    <b><% $c->i18n->p("seedlots.ui.optional_fields", "Optional fields:") |h %></b>
                     <ul>
-                        <li>source_type (can be plot, subplot, plant, seedlot or new)</li>
-                        <li>source_name (must exist as <b>uniquenames</b> in the database, can be plot, subplot, plant or seedlot stock type.)</li>
-                        <li>sub_location (detailed location of propagation materials)</li>
-                        <li>purpose (can be replicate, replacement or backup)</li>
+                        <li><% $c->i18n->p("seedlot.source_type_can_be_plot_subplot_plant_seedlot_or_new", "source_type (can be plot, subplot, plant, seedlot or new)") |h %></li>
+                        <li><% $c->i18n->p("seedlot.source_name_must_exist_as", "source_name (must exist as") |h %> <b>uniquenames</b> <% $c->i18n->p("seedlot.in_the_database_can_be_plot_subplot_plant_or_seedlot", "in the database, can be plot, subplot, plant or seedlot stock type.)") |h %></li>
+                        <li><% $c->i18n->p("seedlot.sub_location_detailed_location_of_propagation_materials", "sub_location (detailed location of propagation materials)") |h %></li>
+                        <li><% $c->i18n->p("seedlot.purpose_can_be_replicate_replacement_or_backup", "purpose (can be replicate, replacement or backup)") |h %></li>
                     </ul>
                 </div>
-                <& /help/file_upload_type.mas, type => "Propagation Group Identifiers", optional_column => 1 &>
+                <& /help/file_upload_type.mas, type => $c->i18n->p("seedlot.propagation_group_identifiers", "Propagation Group Identifiers"), optional_column => 1 &>
             </div>
             <div class="modal-footer">
-                <button id="close_propagation_group_id_info_upload_dialog" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                <button id="close_propagation_group_id_info_upload_dialog" type="button" class="btn btn-default" data-dismiss="modal"><% $c->i18n->p("global.dataset_publish.close", "Close") |h %></button>
             </div>
         </div>
     </div>
@@ -159,7 +159,7 @@ jQuery(document).ready(function(){
     function upload_propagation_group_ids() {
         var uploadFile = jQuery("#propagation_group_ids_file").val();
         if (uploadFile === '') {
-            alert("Please select a file");
+            alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("global.manage_file_share_dump.select_file", "Please select a file") : "Please select a file"));
             return;
         }
 

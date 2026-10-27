@@ -29,13 +29,13 @@ $userid
           <input type="radio" 
                  onclick="Qtl.toggleStatOptions('default');Qtl.setUserStatOption(<% $pop_id %>, 'default')"
                  name="stat_options"
-                 value="default qtl parameters"> Use default QTL parameters
+                 value="default qtl parameters"> <% $c->i18n->p("analysis.qtl.ui.use_default_qtl_parameters", "Use default QTL parameters") |h %>
         </td>
         <td>
           <input type="radio" 
                  onclick="Qtl.setUserStatOption(<% $pop_id %>, 'user_params');Qtl.logUser(<% $userid %>)"
                  name="stat_options"
-                 value="user qtl parameters"> Set your own QTL analysis parameters
+                 value="user qtl parameters"> <% $c->i18n->p("analysis.qtl.ui.set_your_own_qtl_analysis_parameters", "Set your own QTL analysis parameters") |h %>
         </td>
 % if (0) 
 %{
@@ -43,7 +43,7 @@ $userid
           <input type="radio" 
                  onclick="Qtl.toggleStatOptions('diagnosticTests')"
                  name="stat_options"
-                 value="diagnostic tests"> Diagnostic tests
+                 value="diagnostic tests"> <% $c->i18n->p("analysis.qtl.ui.diagnostic_tests", "Diagnostic tests") |h %>
      </td>
 %}       
       </tr>            
@@ -51,9 +51,9 @@ $userid
   </form> 
  
   <div id="default"  style="display:none; color:blue">
-       Please proceed with your QTL analysis of your trait of interest.<br />
-       The default parameters for QTL analysis are <br />
-       displayed on the legend of the analysis output.<br />
+       <% $c->i18n->p("analysis.qtl.ui.please_proceed_with_your_qtl_analysis_of_your_trait_of", "Please proceed with your QTL analysis of your trait of interest.") |h %><br />
+       <% $c->i18n->p("analysis.qtl.ui.the_default_parameters_for_qtl_analysis_are", "The default parameters for QTL analysis are") |h %> <br />
+       <% $c->i18n->p("analysis.qtl.ui.displayed_on_the_legend_of_the_analysis_output", "displayed on the legend of the analysis output.") |h %><br />
   </div>
   <div id="qtlParameters" style="display:none">
     <table align="center">
@@ -78,7 +78,7 @@ $userid
               color:blue; 
               text-align:right
               ">
-    Under development.
+    <% $c->i18n->p("analysis.qtl.ui.under_development", "Under development.") |h %>
   </div>
 %}
 </div>

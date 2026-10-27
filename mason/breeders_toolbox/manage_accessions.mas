@@ -1,3 +1,6 @@
+<%init>
+    use HTML::Entities ();
+</%init>
 
 <%args>
 $accessions
@@ -12,13 +15,13 @@ $show_grafting_interface => ''
 
 <& /util/import_css.mas, paths => ['/documents/inc/datatables/jquery.dataTables.css'] &>
 
-<& /page/page_title.mas, title=>"Manage Accessions" &>
+<& /page/page_title.mas, title=>HTML::Entities::encode_entities($c->i18n->p('accessions.page.title', 'Manage Accessions')) &>
 
 <div class="container-fluid">
 
 <div class="well">
 
-<&| /page/info_section.mas, title=>'Accessions', collapsible=>1, collapsed=>0, subtitle=> ""  &>
+<&| /page/info_section.mas, title=>HTML::Entities::encode_entities($c->i18n->p('accessions.section.accessions', 'Accessions')), collapsible=>1, collapsed=>0, subtitle=> ""  &>
 
 <& /breeders_toolbox/accessions.mas, accessions=>$accessions &>
 <& /breeders_toolbox/add_accessions_dialogs.mas, preferred_species=>$preferred_species, editable_stock_props=>$editable_stock_props, editable_stock_props_definitions=>$editable_stock_props_definitions &>
@@ -32,37 +35,38 @@ $show_grafting_interface => ''
 <& /stock/obsolete_accessions_using_list_dialog.mas &>
 
 </br>
-<button class="btn btn-default" name="add_accessions_link">Add Accessions Or Upload Accession Info</button> <button class="btn btn-default" id="upload_pedigrees_link">Upload Pedigree File</button> <button class="btn btn-default" id="upload_rename_accessions_link" name="upload_rename_accessions_link">Rename Accessions</button>
+<button class="btn btn-default" name="add_accessions_link"><% $c->i18n->p('accessions.actions.add_or_upload', 'Add Accessions Or Upload Accession Info') |h %></button> <button class="btn btn-default" id="upload_pedigrees_link"><% $c->i18n->p('accessions.actions.pedigree_upload', 'Upload Pedigree File') |h %></button> <button class="btn btn-default" id="upload_rename_accessions_link" name="upload_rename_accessions_link"><% $c->i18n->p('accessions.actions.rename', 'Rename Accessions') |h %></button>
 % if (<%$show_grafting_interface%>) {
-    <button class="btn btn-default" id="upload_grafts_link" >Upload Grafts</button>
+    <button class="btn btn-default" id="upload_grafts_link" ><% $c->i18n->p('accessions.actions.grafts_upload', 'Upload Grafts') |h %></button>
 % }
 </br>
-<button class="btn btn-default" id="obsolete_accessions_using_list_link" name="obsolete_accessions_using_list_link">Obsolete Accessions Using a List</button>
-<div class="btn-group"><button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Add Derived Accessions&nbsp;<span class="caret"></span></button><ul class="dropdown-menu"><li><a href="#" id="about_derived_accessions_link">About Derived Accessions</a></li><li><a href="#" id="add_derived_accessions_using_list_link">Using a List</a></li><li><a href="#" id="upload_derived_accession_file_link" name="upload_derived_accession_file_link">Upload a File</a></li><li></ul></div>
+<button class="btn btn-default" id="obsolete_accessions_using_list_link" name="obsolete_accessions_using_list_link"><% $c->i18n->p('accessions.actions.obsolete_list', 'Obsolete Accessions Using a List') |h %></button>
+<div class="btn-group"><button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"><% $c->i18n->p('accessions.actions.derived_add', 'Add Derived Accessions') |h %>&nbsp;<span class="caret"></span></button><ul class="dropdown-menu"><li><a href="#" id="about_derived_accessions_link"><% $c->i18n->p('accessions.actions.derived_about', 'About Derived Accessions') |h %></a></li><li><a href="#" id="add_derived_accessions_using_list_link"><% $c->i18n->p('accessions.actions.using_list', 'Using a List') |h %></a></li><li><a href="#" id="upload_derived_accession_file_link" name="upload_derived_accession_file_link"><% $c->i18n->p('accessions.actions.upload_file', 'Upload a File') |h %></a></li><li></ul></div>
+
 <div>
   </br>
-  <a href="/search/stocks">Search Accessions</a>
+  <a href="/search/stocks"><% $c->i18n->p('accessions.actions.search', 'Search Accessions') |h %></a>
 </div>
 
 </&>
 </div><!-- closes well -->
 
 <div class="well">
-  <&| /page/info_section.mas, title=>"Accessions with Pedigree Information", id=> "accessions_with_pedigree", collapsible=>1, collapsed=>1&>
+  <&| /page/info_section.mas, title=>HTML::Entities::encode_entities($c->i18n->p('accessions.section.with_pedigree', 'Accessions with Pedigree Information')), id=> "accessions_with_pedigree", collapsible=>1, collapsed=>1&>
     <table class="table table-hover table-bordered" id="accessions_with_pedigree_table">
       <thead>
         <tr>
-          <th>Accession Name</th>
-          <th>Female Parent</th>
-          <th>Male Parent</th>
-          <th>Cross Type</th>
+          <th><% $c->i18n->p('accessions.column.name', 'Accession Name') |h %></th>
+          <th><% $c->i18n->p('accessions.column.female_parent', 'Female Parent') |h %></th>
+          <th><% $c->i18n->p('accessions.column.male_parent', 'Male Parent') |h %></th>
+          <th><% $c->i18n->p('accessions.column.cross_type', 'Cross Type') |h %></th>
         </tr>
       </thead>
     </table>
-    <a href="/search/download_all_accessions_with_pedigree" class="btn btn-sm btn-default">Download All Accessions and Pedigree Info</a>
+    <a href="/search/download_all_accessions_with_pedigree" class="btn btn-sm btn-default"><% $c->i18n->p('accessions.actions.download_pedigree', 'Download All Accessions and Pedigree Info') |h %></a>
     <br>
     <br>
-    <&| /page/info_section.mas, title => 'Copy accessions to a List', collapsible=>1, collapsed=>1, subtitle=>'<i>Copy the accession names to a new or existing list</i>'&>
+    <&| /page/info_section.mas, title => HTML::Entities::encode_entities($c->i18n->p('accessions.section.copy_list', 'Copy accessions to a List')), collapsible=>1, collapsed=>1, subtitle=>'<i>' . HTML::Entities::encode_entities($c->i18n->p('accessions.section.copy_list_help', 'Copy the accession names to a new or existing list')) . '</i>'&>
       <br>
       <div style="text-align:right" id="accessions_with_pedigree_to_list_menu"></div>
       <div id="accession_names_with_pedigree" style="display: none;"></div>
@@ -71,18 +75,18 @@ $show_grafting_interface => ''
 </div><!-- closes well -->
 
 <div class="well">
-  <&| /page/info_section.mas, title=>"Accessions Missing Pedigree Information", id=> "accessions_missing_pedigree", collapsible=>1, collapsed=>1&>
+  <&| /page/info_section.mas, title=>HTML::Entities::encode_entities($c->i18n->p('accessions.section.missing_pedigree', 'Accessions Missing Pedigree Information')), id=> "accessions_missing_pedigree", collapsible=>1, collapsed=>1&>
     <table class="table table-hover table-bordered" id="accessions_missing_pedigree_table">
       <thead>
         <tr>
-          <th>Accession Name</th>
-          <th>Submitter</th>
+          <th><% $c->i18n->p('accessions.column.name', 'Accession Name') |h %></th>
+          <th><% $c->i18n->p('accessions.column.submitter', 'Submitter') |h %></th>
         </tr>
       </thead>
     </table>
     <br>
     <br>
-    <&| /page/info_section.mas, title => 'Copy accessions to a List', collapsible=>1, collapsed=>1, subtitle=>'<i>Copy the accession names to a new or existing list</i>'&>
+    <&| /page/info_section.mas, title => HTML::Entities::encode_entities($c->i18n->p('accessions.section.copy_list', 'Copy accessions to a List')), collapsible=>1, collapsed=>1, subtitle=>'<i>' . HTML::Entities::encode_entities($c->i18n->p('accessions.section.copy_list_help', 'Copy the accession names to a new or existing list')) . '</i>'&>
       <br>
       <div style="text-align:right" id="accessions_missing_pedigree_to_list_menu"></div>
       <div id="accession_names_missing_pedigree" style="display: none;"></div>
@@ -91,7 +95,7 @@ $show_grafting_interface => ''
 </div><!-- closes well -->
 
 <div class="well">
-  <&| /page/info_section.mas, title=>'Find Trials in Common', collapsible=>1, collapsed=>0, subtitle=>'<i>Use a list of accessions to search for trials that contain them all</i>'&>
+  <&| /page/info_section.mas, title=>HTML::Entities::encode_entities($c->i18n->p('accessions.section.common_trials', 'Find Trials in Common')), collapsible=>1, collapsed=>0, subtitle=>'<i>' . HTML::Entities::encode_entities($c->i18n->p('accessions.section.common_trials_help', 'Use a list of accessions to search for trials that contain them all')) . '</i>'&>
 
   <& /breeders_toolbox/accessions/find_trials_by_accessions.mas &>
 
@@ -100,7 +104,7 @@ $show_grafting_interface => ''
 </div><!-- closes well -->
 
 <div class="well">
-  <&| /page/info_section.mas, title=>"Populations", id=> "manage_accessions_populations", collapsible=>1, collapsed=>1, subtitle=>"<a id='manage_accessions_populations_new'>[Create Population]</a>"&>
+  <&| /page/info_section.mas, title=>HTML::Entities::encode_entities($c->i18n->p('accessions.section.populations', 'Populations')), id=> "manage_accessions_populations", collapsible=>1, collapsed=>1, subtitle=>'<a id="manage_accessions_populations_new">' . HTML::Entities::encode_entities($c->i18n->p('accessions.actions.population_create', '[Create Population]')) . '</a>'&>
     <div class="panel-group" id="accordion"></div>
   </&>
 </div><!-- closes well -->
@@ -129,22 +133,24 @@ $show_grafting_interface => ''
 
 <script>
   jQuery(document).ready(function (){
+    var accessionMenuI18n = (window.SGN && window.SGN.i18n) || {p: function (context, source) { return source; }};
 %  if ($list_id){
     verify_accession_list(<% $list_id %>);
 %  }
 
     jQuery('#accessions_with_pedigree_onswitch').one("click", function(){
         var result_table = jQuery('#accessions_with_pedigree_table').DataTable({
-            'ajax': { 'url': '/ajax/stock/accessions_with_pedigree' },
+            language: accessionTableLanguage(),
+            'ajax': { 'url': '/ajax/stock/accessions_with_pedigree', headers: accessionLocaleHeaders() },
             "fnInitComplete": function(oSettings, json) {
                 if (!isLoggedIn()) {
-                    jQuery('#accessions_with_pedigree_to_list_menu').html("<div class='well well-sm'><h3>Please login to use lists!</h3></div>");
+                    jQuery('#accessions_with_pedigree_to_list_menu').empty().append(jQuery('<div class="well well-sm">').append(jQuery('<h3>').text(accessionMenuI18n.p('accessions.lists.login_required', 'Please login to use lists!'))));
                 } else {
                     var html = "";
                     for(var i=0; i<json.data.length; i++){
                         html += json.data[i][4]+"\n";
                     }
-                    jQuery("#accession_names_with_pedigree").html(html);
+                    jQuery("#accession_names_with_pedigree").text(html);
                     addToListMenu("accessions_with_pedigree_to_list_menu", "accession_names_with_pedigree", {
                         selectText: true,
                         listType:'accessions'
@@ -156,16 +162,17 @@ $show_grafting_interface => ''
 
     jQuery('#accessions_missing_pedigree_onswitch').one("click", function(){
         var result_table = jQuery('#accessions_missing_pedigree_table').DataTable({
-            'ajax': { 'url': '/ajax/stock/accessions_missing_pedigree' },
+            language: accessionTableLanguage(),
+            'ajax': { 'url': '/ajax/stock/accessions_missing_pedigree', headers: accessionLocaleHeaders() },
             "fnInitComplete": function(oSettings, json) {
                 if (!isLoggedIn()) {
-                    jQuery('#accessions_missing_pedigree_to_list_menu').html("<div class='well well-sm'><h3>Please login to use lists!</h3></div>");
+                    jQuery('#accessions_missing_pedigree_to_list_menu').empty().append(jQuery('<div class="well well-sm">').append(jQuery('<h3>').text(accessionMenuI18n.p('accessions.lists.login_required', 'Please login to use lists!'))));
                 } else {
                     var html = "";
                     for(var i=0; i<json.data.length; i++){
                         html += json.data[i][2]+"\n";
                     }
-                    jQuery("#accession_names_missing_pedigree").html(html);
+                    jQuery("#accession_names_missing_pedigree").text(html);
                     addToListMenu("accessions_missing_pedigree_to_list_menu", "accession_names_missing_pedigree", {
                         selectText: true,
                         listType:'accessions'

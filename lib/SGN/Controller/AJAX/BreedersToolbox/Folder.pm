@@ -64,7 +64,7 @@ sub create_folder :Path('/ajax/folder/new') Args(0) {
     my $existing = $schema->resultset("Project::Project")->find( { name => $folder_name });
 
     if ($existing) {
-        $c->stash->{rest} = { error => "A folder or trial with that name already exists in the database. Please select another name." };
+        $c->stash->{rest} = { error => $c->i18n->p("folder.server.duplicate", "A folder or trial with that name already exists in the database. Please select another name.") };
         $c->detach;
     }
     my $folder = CXGN::Trial::Folder->create({
@@ -104,7 +104,7 @@ sub delete_folder : Chained('get_folder') PathPart('delete') Args(0) {
     if ($delete_folder) {
         $c->stash->{rest} = { success => 1 };
     } else {
-        $c->stash->{rest} = { error => 'Folder Not Deleted! To delete a folder first move all trials and sub-folders out of it.' };
+        $c->stash->{rest} = { error => $c->i18n->p("folder.server.not_empty", "Folder Not Deleted! To delete a folder first move all trials and sub-folders out of it.") };
     }
 
 }
@@ -125,7 +125,7 @@ sub rename_folder : Chained('get_folder') PathPart('name') Args(0) {
     if ($rename_folder) {
         $c->stash->{rest} = { success => 1 };
     } else {
-        $c->stash->{rest} = { error => 'Folder could not be renamed!' };
+        $c->stash->{rest} = { error => $c->i18n->p("folder.server.rename_failed", "Folder could not be renamed!") };
     }
 
 }
@@ -181,12 +181,12 @@ sub check_privileges {
 
     if (!$c->user()) {
         print STDERR "User not logged in... not uploading coordinates.\n";
-        $c->stash->{rest} = {error => "You need to be logged in." };
+        $c->stash->{rest} = {error => $c->i18n->p("folder.server.login", "You need to be logged in.") };
         $c->detach;
     }
 
     if (!any { $_ eq "curator" || $_ eq "submitter" } ($c->user()->roles)  ) {
-        $c->stash->{rest} = {error =>  "You have insufficient privileges." };
+        $c->stash->{rest} = {error =>  $c->i18n->p("folder.server.privileges", "You have insufficient privileges.") };
         $c->detach;
     }
     return 1;

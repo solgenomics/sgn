@@ -68,7 +68,7 @@ function listGenCorPopulations ()  {
     var trainingPopIdName = JSON.stringify(modelData);
    
     var  popsList =  '<dl id="h2_selected_population" class="h2_dropdown">'
-        + '<dt> <a href="#"><span>Choose a population</span></a></dt>'
+        + ("<dt> <a href=\"#\"><span>" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("analysis.interface.choose_a_population", "Choose a population") : "Choose a population")).html() + "</span></a></dt>")
         + '<dd>'
         + '<ul>'
         + '<li>'
@@ -181,14 +181,14 @@ function formatGenCorInputData (popId, type, indexFile) {
             } else {
                 jQuery(divPlace +" #heritability_message")
                     .css({"padding-left": '0px'})
-                    .html("This trial has no valid traits to calculate heritability.");
+                    .html((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("analysis.interface.this_trial_has_no_valid_traits_to_calculate_heritability", "This trial has no valid traits to calculate heritability.") : "This trial has no valid traits to calculate heritability."));
         
             }
         },
         error: function(response) {
             jQuery(divPlace +"#heritability_message")
                 .css({"padding-left": '0px'})
-                .html("Error 3 occured preparing the additive genetic data for heritability analysis.");
+                .html((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("analysis.interface.error_3_occured_preparing_the_additive_genetic_data_for_heritability", "Error 3 occured preparing the additive genetic data for heritability analysis.") : "Error 3 occured preparing the additive genetic data for heritability analysis."));
              
             jQuery.unblockUI();
         }         
@@ -216,7 +216,7 @@ function phenotypicHeritability () {
  
     var population = getPopulationDetails();
     
-    jQuery("#heritability_message").html("Running heritability...");
+    jQuery("#heritability_message").html((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("analysis.interface.running_heritability", "Running heritability...") : "Running heritability..."));
          
     jQuery.ajax({
             type: 'POST',
@@ -231,7 +231,7 @@ function phenotypicHeritability () {
                 } else {
                     jQuery("#heritability_message")
                         .css({"padding-left": '0px'})
-                        .html("This population has no phenotype data.");
+                        .html((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("analysis.interface.this_population_has_no_phenotype_data", "This population has no phenotype data.") : "This population has no phenotype data."));
 
 		    jQuery("#run_pheno_heritability").show();
                 }
@@ -239,7 +239,7 @@ function phenotypicHeritability () {
             error: function(response) {
                 jQuery("#heritability_message")
                     .css({"padding-left": '0px'})
-                    .html("Please check if the data has replicates.");
+                    .html((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("analysis.interface.please_check_if_the_data_has_replicates", "Please check if the data has replicates.") : "Please check if the data has replicates."));
 
 		jQuery("#run_pheno_heritability").show();
             }
@@ -261,7 +261,7 @@ function runPhenoHeritabilityAnalysis () {
                 plotHeritability(response.data);
         
         var h2Download = "<a href=\"/download/phenotypic/heritability/population/" 
-                            + popId + "\">Download heritability coefficients</a>";
+                            + popId + ("\">" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("analysis.interface.download_heritability_coefficients", "Download heritability coefficients") : "Download heritability coefficients")).html() + "</a>");
 
         jQuery("#heritability_canvas").append("<br />[ " + h2Download + " ]").show();
     
@@ -274,7 +274,7 @@ function runPhenoHeritabilityAnalysis () {
             } else {
                 jQuery("#heritability_message")
                     .css({"padding-left": '0px'})
-                    .html("Please, check if there is numerical data and replicates for this trial."); 
+                    .html((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("analysis.interface.please_check_if_there_is_numerical_data_and_replicates_for", "Please, check if there is numerical data and replicates for this trial.") : "Please, check if there is numerical data and replicates for this trial."));
         
 		jQuery("#run_pheno_heritability").show();
             }
@@ -282,7 +282,7 @@ function runPhenoHeritabilityAnalysis () {
         error: function(response) {                          
             jQuery("#heritability_message")
                 .css({"padding-left": '0px'})
-                .html("Error 2 occured running the heritability analysis.");
+                .html((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("analysis.interface.error_2_occured_running_the_heritability_analysis", "Error 2 occured running the heritability analysis.") : "Error 2 occured running the heritability analysis."));
             
         jQuery("#run_pheno_heritability").show();
         }                
@@ -294,7 +294,7 @@ function createHeritabilityTable (tableId) {
     
     var table = '<table id="' + tableId + '" class="table" style="width:100%;text-align:left">';
     table    += '<thead><tr>';
-    table    += '<th>Trait</th><th>VG</th><th>Vres</th><th>Heritability</th>'; 
+    table    += ("<th>" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("accession.population_cgi.trait", "Trait") : "Trait")).html() + "</th><th>VG</th><th>Vres</th><th>" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("navigation.analyze.heritability", "Heritability") : "Heritability")).html() + "</th>");
     table    += '</tr></thead>';
     table    += '</table>';
 

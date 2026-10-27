@@ -1,3 +1,8 @@
+<%once>
+use HTML::Entities ();
+use SGN::I18N ();
+</%once>
+
 
 <%doc>
 
@@ -42,7 +47,7 @@ $identifier_prefix => 'SGN'
 
 <br/>
 
-<& /page/page_title.mas, title=>"Sampling trial detail for ".$trial_name &>
+<& /page/page_title.mas, title=>SGN::I18N::translate($c->i18n, 'genotype.sampling.detail.title', 'Sampling trial detail for ', undef, {entities => '<>&'}).HTML::Entities::encode_entities($trial_name) &>
 
 <div class="well">
     <div class="row">
@@ -52,13 +57,13 @@ $identifier_prefix => 'SGN'
                 <div class="panel-body">
                     <table class="table table-bordered table-hover">
                     <tbody>
-                    <tr><td><b>Breeding Program</b></td><td><% $breeding_program_name %></td></tr>
+                    <tr><td><b><% $c->i18n->p('genotype.sampling.detail.breeding_program', 'Breeding Program') |h %></b></td><td><% $breeding_program_name %></td></tr>
                     </tbody>
                     </table>
                 </div>
             </div>
 
-            <a class='btn btn-default' href='/breeders/trial/<% $trial_id %>/download/layout?format=csv&dataLevel=samplingtrial'>Download Layout</a>
+            <a class='btn btn-default' href='/breeders/trial/<% $trial_id %>/download/layout?format=csv&dataLevel=samplingtrial'><% $c->i18n->p('genotype.sampling.detail.download_layout', 'Download Layout') |h %></a>
 
         </div>
 

@@ -1,3 +1,7 @@
+<%once>
+use HTML::Entities ();
+</%once>
+
 <%doc>
 
 =head1 NAME
@@ -42,15 +46,15 @@ $pop_id = $trial_id if $trial_id;
 
 
 <& /util/import_javascript.mas, classes => ["d3.d3Min", "qualityControl.qualityControl"] &>
-<&| /page/info_section.mas, 
+<&| /page/info_section.mas, anchor_title => "Quality Control Tool (st4gi)",
       collapsible => 1, 
       collapsed   => 0, 
-      title       => "Quality Control Tool (st4gi)"
+      title       => HTML::Entities::encode_entities($c->i18n->p("analysis.interface.quality_control_tool_st4gi", "Quality Control Tool (st4gi)"))
 &>
 
 
 <div id="qualityControl_canvas">
-  <input id="run_pheno_qualityControl" class="button" type="button" value="Run QC" /> 
+  <input id="run_pheno_qualityControl" class="button" type="button" value="<% $c->i18n->p("analysis.interface.run_qc", "Run QC") |h %>" /><% ' ' %>
   <input type="hidden" id="population_id" value="<% $pop_id %>" />
   <div id="qualityControl_message"  style="font-weight:bold;text-align:center;color:#A7C942"></div>
 </div>

@@ -23,6 +23,7 @@ use Moose;
 use Try::Tiny;
 use DateTime;
 use Date::Parse;
+use HTML::Entities qw(encode_entities);
 use File::Slurp;
 use File::Spec;
 use File::Copy;
@@ -96,14 +97,17 @@ sub upload_phenotype_verify_POST : Args(1) {
     };
 
     if ($verified_error) {
-        push @$error_status, $verified_error;
+        my $localized = _localized_verification_errors($c, $store_phenotypes->verification_errors());
+        push @$error_status, defined($localized) ? $localized : $verified_error;
         $c->stash->{rest} = {success => $success_status, error => $error_status };
         return;
     }
     if ($verified_warning) {
-        push @$warning_status, $verified_warning;
+        my $details = $store_phenotypes->verification_warnings();
+        my $localized = _localized_verification_warnings($c, $details);
+        push @$warning_status, defined($localized) ? $localized : $verified_warning;
     }
-    push @$success_status, "File data verified. Plot names and trait names are valid.";
+    push @$success_status, encode_entities($c->i18n->p('phenotype_upload.server.verified', 'File data verified. Plot names and trait names are valid.'), q{&<>"'});
 
     $c->stash->{rest} = {success => $success_status, warning => $warning_status, error => $error_status};
 }
@@ -182,7 +186,10 @@ sub upload_phenotype_store_POST : Args(1) {
         return;
     }
     if ($stored_phenotype_success) {
-        push @$success_status, $stored_phenotype_success;
+        my $summary = $store_phenotypes->upload_summary();
+        push @$success_status, $summary
+            ? _localized_upload_summary($c, $summary)
+            : $stored_phenotype_success;
     }
 
     if ($validate_type eq 'field book' && $image_zip) {
@@ -193,11 +200,368 @@ sub upload_phenotype_store_POST : Args(1) {
         }
     }
 
-    push @$success_status, "Metadata saved for archived file.";
+    push @$success_status, encode_entities($c->i18n->p('phenotype_upload.server.metadata_saved', 'Metadata saved for archived file.'), q{&<>"'});
     my $bs = CXGN::BreederSearch->new( { dbh=>$c->dbc->dbh, dbname=>$c->config->{dbname}, } );
     my $refresh = $bs->refresh_matviews($c->config->{dbhost}, $c->config->{dbname}, $c->config->{dbuser}, $c->config->{dbpass}, 'phenotypes', 'concurrent', $c->config->{basepath});
 
     $c->stash->{rest} = {success => $success_status, error => $error_status};
+}
+
+# Completed typed errors are rendered only at the request boundary.
+# Any unknown or malformed record retains the original complete library error.
+sub _localized_verification_errors {
+    my ($c, $records) = @_;
+    return unless ref($records) eq 'ARRAY' && @$records;
+    my @rendered;
+    for my $record (@$records) {
+        return unless ref($record) eq 'HASH' && defined($record->{code})
+            && !ref($record->{code}) && ref($record->{variables}) eq 'HASH';
+        my $code = $record->{code};
+        my $v = { %{$record->{variables}} };
+        my ($message, $wrapper);
+        if ($code eq 'invalid_plots') {
+            return unless ref($v->{plots}) eq 'ARRAY' && @{$v->{plots}};
+            my @names;
+            for my $raw (@{$v->{plots}}) {
+                return unless defined($raw) && !ref($raw);
+                my $name = $raw;
+                push @names, "'$name'";
+            }
+            $v->{plots} = join(', ', @names);
+            $message = $c->i18n->p('phenotype_upload.verify_error.invalid_plots', 'Invalid plots: %{plots}', $v);
+            $wrapper = 'small_hr';
+        }
+        elsif ($code eq 'invalid_traits') {
+            return unless ref($v->{traits}) eq 'ARRAY' && @{$v->{traits}};
+            my @names;
+            for my $raw (@{$v->{traits}}) {
+                return unless defined($raw) && !ref($raw);
+                my $name = $raw;
+                push @names, "'$name'";
+            }
+            $v->{traits} = join(', ', @names);
+            $message = $c->i18n->p('phenotype_upload.verify_error.invalid_traits', 'Invalid traits: %{traits}', $v);
+            $wrapper = 'small_hr';
+        }
+        elsif ($code eq 'possible_matches_heading') {
+            $message = $c->i18n->p('phenotype_upload.verify_error.possible_matches_heading', 'Possible Trait Matches:');
+            $wrapper = 'heading';
+        }
+        elsif ($code eq 'possible_matches_explanation') {
+            $message = $c->i18n->p('phenotype_upload.verify_error.possible_matches_explanation', 'The following traits have names and ontology identifiers that do not match in this database.  The following suggestions have the correct ontology identifier for the name used in your data.');
+            $wrapper = 'explanation';
+        }
+        elsif ($code eq 'possible_match') {
+            return unless defined($v->{original}) && !ref($v->{original});
+            return unless defined($v->{matching}) && !ref($v->{matching});
+            $message = $c->i18n->p('phenotype_upload.verify_error.possible_match', '%{original} should be %{matching}', $v);
+            $wrapper = 'pair';
+        }
+        elsif ($code eq 'not_variables_heading') {
+            $message = $c->i18n->p('phenotype_upload.verify_error.not_variables_heading', 'Traits That Are Not Ontology Variables:');
+            $wrapper = 'heading';
+        }
+        elsif ($code eq 'not_variables_explanation') {
+            $message = $c->i18n->p('phenotype_upload.verify_error.not_variables_explanation', 'The following traits are not ontology variables (they do not have associated method and scale information).  Use the Search > Traits page to find the proper Trait Name and Trait ID to use.  The following suggestions include related ontology variables to the terms used in your data.');
+            $wrapper = 'explanation';
+        }
+        elsif ($code eq 'related_variable') {
+            return unless defined($v->{original}) && !ref($v->{original});
+            return unless defined($v->{matching}) && !ref($v->{matching});
+            $message = $c->i18n->p('phenotype_upload.verify_error.related_variable', '%{original} could be %{matching}', $v);
+            $wrapper = 'pair';
+        }
+        elsif ($code eq 'image_zip_unreadable') {
+            $message = $c->i18n->p('phenotype_upload.verify_error.image_zip_unreadable', 'Image zipfile could not be read. Is it .zip format?');
+            $wrapper = 'small_hr';
+        }
+        elsif ($code eq 'bad_timestamp') {
+            return unless defined($v->{plot}) && !ref($v->{plot});
+            return unless defined($v->{trait}) && !ref($v->{trait});
+            $message = $c->i18n->p('phenotype_upload.verify_error.bad_timestamp', 'Bad timestamp for value for Plot Name: %{plot}. Trait Name: %{trait}. Should be YYYY-MM-DD HH:MM:SS-0000 or YYYY-MM-DD HH:MM:SS+0000', $v);
+            $wrapper = 'small_hr';
+        }
+        elsif ($code eq 'numeric_required') {
+            return unless defined($v->{plot}) && !ref($v->{plot});
+            return unless defined($v->{trait}) && !ref($v->{trait});
+            return unless defined($v->{value}) && !ref($v->{value});
+            $message = $c->i18n->p('phenotype_upload.verify_error.numeric_required', 'This trait value should be numeric. Plot Name: %{plot}. Trait Name: %{trait}. Value: %{value}', $v);
+            $wrapper = 'small_hr';
+        }
+        elsif ($code eq 'minimum') {
+            return unless defined($v->{trait}) && !ref($v->{trait});
+            return unless defined($v->{value}) && !ref($v->{value});
+            return unless defined($v->{minimum}) && !ref($v->{minimum});
+            $message = $c->i18n->p('phenotype_upload.verify_error.minimum', 'For trait \'%{trait}\' the trait value %{value} should not be smaller than the defined trait_minimum, %{minimum}.', $v);
+            $wrapper = 'small_hr';
+        }
+        elsif ($code eq 'maximum') {
+            return unless defined($v->{trait}) && !ref($v->{trait});
+            return unless defined($v->{value}) && !ref($v->{value});
+            return unless defined($v->{maximum}) && !ref($v->{maximum});
+            $message = $c->i18n->p('phenotype_upload.verify_error.maximum', 'For the trait \'%{trait}\' the trait value %{value} should not be larger than the defined trait_maximum, %{maximum}.', $v);
+            $wrapper = 'small_hr';
+        }
+        elsif ($code eq 'image_missing') {
+            return unless defined($v->{plot}) && !ref($v->{plot});
+            return unless defined($v->{image}) && !ref($v->{image});
+            $message = $c->i18n->p('phenotype_upload.verify_error.image_missing', 'For Plot Name: %{plot} there should be a corresponding image named in the zipfile called %{image}.', $v);
+            $wrapper = 'small_hr';
+        }
+        elsif ($code eq 'category') {
+            return unless defined($v->{valid_values}) && !ref($v->{valid_values});
+            return unless defined($v->{plot}) && !ref($v->{plot});
+            return unless defined($v->{trait}) && !ref($v->{trait});
+            return unless defined($v->{value}) && !ref($v->{value});
+            $message = $c->i18n->p('phenotype_upload.verify_error.category', 'This trait value should be one of %{valid_values}: %{valid_values}. Plot Name: %{plot}. Trait Name: %{trait}. Value: %{value}', $v);
+            $wrapper = 'small_hr';
+        }
+        elsif ($code eq 'timestamp_required') {
+            return unless defined($v->{trait}) && !ref($v->{trait});
+            $message = $c->i18n->p('phenotype_upload.verify_error.timestamp_required', 'For trait %{trait} that is defined as a \'multiple\' or \'time_series\' repeat type trait, a timestamp is required.', $v);
+            $wrapper = 'newline';
+        }
+        elsif ($code eq 'metadata_type_missing') {
+            $message = $c->i18n->p('phenotype_upload.verify_error.metadata_type_missing', 'No file type provided for archived file.');
+            $wrapper = 'plain';
+        }
+        elsif ($code eq 'metadata_date_missing') {
+            $message = $c->i18n->p('phenotype_upload.verify_error.metadata_date_missing', 'No date provided in file upload metadata.');
+            $wrapper = 'plain';
+        }
+        else { return; }
+        my $safe = encode_entities($message, q{&<>"'});
+        push @rendered, $wrapper eq 'small_hr' ? '<small>' . $safe . '</small><hr>'
+            : $wrapper eq 'heading' ? '<strong>' . $safe . '</strong><br>'
+            : $wrapper eq 'explanation' || $wrapper eq 'pair' ? '<small>' . $safe . '</small><br>'
+            : $wrapper eq 'newline' ? $safe . "\n" : $safe;
+    }
+    return join('', @rendered);
+}
+
+# Translate only typed complete Verify records, never parse legacy HTML.
+# Unknown/incomplete records fall back atomically to the original warning.
+sub _localized_verification_warnings {
+    my ($c, $records) = @_;
+    return unless ref($records) eq 'ARRAY' && @$records;
+    my @rendered;
+    for my $record (@$records) {
+        return unless ref($record) eq 'HASH' && defined($record->{code})
+            && !ref($record->{code}) && ref($record->{variables}) eq 'HASH';
+        my $code = $record->{code};
+        my $v = { %{$record->{variables}} };
+        my $legacy_blank = $record->{legacy_blank};
+        my ($message, $wrapper);
+        if ($code eq 'conflict' || $code eq 'conflict_at_time') {
+            return unless defined($legacy_blank) && !ref($legacy_blank)
+                && ($legacy_blank eq '0' || $legacy_blank eq '1');
+            for my $key (qw(plot trait previous)) {
+                return unless defined($v->{$key}) && !ref($v->{$key});
+            }
+            return if !$legacy_blank && (!defined($v->{incoming}) || ref($v->{incoming}));
+            return if $code eq 'conflict_at_time' && (!defined($v->{timestamp}) || ref($v->{timestamp}));
+            if ($code eq 'conflict' && !$legacy_blank) {
+                $message = $c->i18n->p('phenotype_upload.warning.conflict_value', '%{plot} already has a different value stored in the database (%{previous}) than in your file (%{incoming}) for the trait %{trait}.', $v);
+            }
+            elsif ($code eq 'conflict' && $legacy_blank) {
+                $message = $c->i18n->p('phenotype_upload.warning.conflict_blank', '%{plot} already has a different value stored in the database (%{previous}) than in your file (blank) for the trait %{trait}.', $v);
+            }
+            elsif ($code eq 'conflict_at_time' && !$legacy_blank) {
+                $message = $c->i18n->p('phenotype_upload.warning.conflict_value_at_time', '%{plot} already has a different value stored in the database (%{previous}) than in your file (%{incoming}) for the trait %{trait} on %{timestamp}.', $v);
+            }
+            elsif ($code eq 'conflict_at_time' && $legacy_blank) {
+                $message = $c->i18n->p('phenotype_upload.warning.conflict_blank_at_time', '%{plot} already has a different value stored in the database (%{previous}) than in your file (blank) for the trait %{trait} on %{timestamp}.', $v);
+            }
+            $wrapper = 'small_hr';
+        }
+        elsif ($code eq 'multiple_single') {
+            return unless defined($v->{trait}) && !ref($v->{trait});
+            $message = $c->i18n->p('phenotype_upload.warning.multiple_single', 'Multiple values present in file for single repeat_type term %{trait}', $v);
+            $wrapper = 'newline';
+        }
+        elsif ($code eq 'duplicate_file') {
+            return unless defined($v->{plot}) && !ref($v->{plot});
+            return unless defined($v->{trait}) && !ref($v->{trait});
+            $message = $c->i18n->p('phenotype_upload.warning.duplicate_file', '%{plot} has a duplicate value for trait %{trait} in your file', $v);
+            $wrapper = 'small_hr';
+        }
+        elsif ($code eq 'operator_missing') {
+            $message = $c->i18n->p('phenotype_upload.warning.operator_missing', 'No operator provided in file upload metadata.');
+            $wrapper = 'plain';
+        }
+        elsif ($code eq 'image_plot_missing') {
+            return unless defined($v->{image}) && !ref($v->{image});
+            $message = $c->i18n->p('phenotype_upload.warning.image_plot_missing', 'Image %{image} in images zip file does not reference a plot or plant_name (e.g. the image filename does not have a plot or plant name in it)!', $v);
+            $wrapper = 'small_hr';
+        }
+        elsif ($code eq 'same_values') {
+            return unless defined($v->{count}) && !ref($v->{count});
+            return unless $v->{count} =~ /\A[0-9]+\z/;
+            $message = $c->i18n->np('phenotype_upload.warning.same_values', 'There is %{count} value in your file that is the same as a value already stored in the database.', 'There are %{count} values in your file that are the same as values already stored in the database.', $v->{count}, $v);
+            $wrapper = 'plain';
+        }
+        else { return; }
+        my $safe = encode_entities($message, q{&<>"'});
+        push @rendered, $wrapper eq 'small_hr' ? '<small>' . $safe . '</small><hr>'
+            : $wrapper eq 'newline' ? $safe . "\n" : $safe;
+    }
+    return join('', @rendered);
+}
+
+# Only the request presentation layer knows the negotiated language or HTML.
+# Counts and filenames come from the completed native Store call, never from
+# parsing its legacy English success HTML.
+sub _localized_upload_summary {
+    my ($c, $summary) = @_;
+    my @lines = (
+        encode_entities($c->i18n->p('phenotype_upload.server.processed', 'All values in your file have been successfully processed!'), q{&<>"'}),
+        '',
+        encode_entities($c->i18n->np('phenotype_upload.server.stored_count', '%{count} new value stored', '%{count} new values stored', $summary->{new_count}, { count => $summary->{new_count} }), q{&<>"'}),
+        encode_entities($c->i18n->np('phenotype_upload.server.skipped_count', '%{count} previously stored value skipped', '%{count} previously stored values skipped', $summary->{skip_count}, { count => $summary->{skip_count} }), q{&<>"'}),
+        encode_entities($c->i18n->np('phenotype_upload.server.overwritten_count', '%{count} previously stored value overwritten', '%{count} previously stored values overwritten', $summary->{overwrite_count}, { count => $summary->{overwrite_count} }), q{&<>"'}),
+        encode_entities($c->i18n->np('phenotype_upload.server.removed_count', '%{count} previously stored value removed', '%{count} previously stored values removed', $summary->{remove_count}, { count => $summary->{remove_count} }), q{&<>"'}),
+    );
+    my $html = join('<br>', @lines) . '<br><br>';
+    if (@{$summary->{obsolete_filenames}}) {
+        $html .= encode_entities($c->i18n->p('phenotype_upload.server.obsolete_files', 'Previously uploaded files made obsolete by this upload: %{filenames}', { filenames => join(' ', @{$summary->{obsolete_filenames}}) }), q{&<>"'});
+    }
+    return $html;
+}
+
+# Typed diagnostics are optional metadata from the FieldBook parser. Legacy
+# English errors remain available to every existing library caller. Translate
+# only explicit owned codes here; opaque external/plugin errors keep their path.
+sub _localized_fieldbook_error {
+    my ($c, $result) = @_;
+    my $detail = $result->{error_detail};
+    return $result->{error} unless ref($detail) eq 'HASH'
+        && defined($detail->{code}) && !ref($detail->{code})
+        && ref($detail->{variables}) eq 'HASH';
+    my $code = $detail->{code};
+    my $variables = $detail->{variables};
+    my $message;
+    if ($code eq 'unreadable') {
+        $message = $c->i18n->p('phenotype_upload.fieldbook_error.unreadable', 'Could not read file.');
+    }
+    elsif ($code eq 'too_short') {
+        $message = $c->i18n->p('phenotype_upload.fieldbook_error.too_short', 'File has less than 2 lines.');
+    }
+    elsif ($code eq 'no_header') {
+        $message = $c->i18n->p('phenotype_upload.fieldbook_error.no_header', 'File has no header row.');
+    }
+    elsif ($code eq 'missing_trait_value') {
+        $message = $c->i18n->p('phenotype_upload.fieldbook_error.missing_trait_value', 'trait or value column not found. Make sure to use the database Fieldbook format.');
+    }
+    elsif ($code eq 'undefined_fields') {
+        return $result->{error} unless defined($variables->{line}) && !ref($variables->{line});
+        $message = $c->i18n->p('phenotype_upload.fieldbook_error.undefined_fields', 'Error parsing line %{line}: unit, trait, or value is undefined.', { line => $variables->{line} });
+    }
+    elsif ($code eq 'timestamp_format') {
+        return $result->{error} unless defined($variables->{line}) && !ref($variables->{line});
+        $message = $c->i18n->p('phenotype_upload.fieldbook_error.timestamp_format', 'Error parsing line %{line}: timestamp needs to be of form YYYY-MM-DD HH:MM:SS-0000 or YYYY-MM-DD HH:MM:SS+0000', { line => $variables->{line} });
+    }
+    elsif ($code eq 'missing_stock') {
+        return $result->{error} unless defined($variables->{stock_id}) && !ref($variables->{stock_id});
+        $message = $c->i18n->p('phenotype_upload.fieldbook_error.missing_stock', 'Error: stock id %{stock_id} does not exist in the database.', { stock_id => $variables->{stock_id} });
+    }
+    else {
+        return $result->{error};
+    }
+    return encode_entities($message, q{&<>"'});
+}
+
+# Optional owned DataCollector diagnostics mirror the FieldBook request boundary.
+# Legacy strings and opaque vendor parser errors retain their existing fallback.
+sub _localized_datacollector_error {
+    my ($c, $result) = @_;
+    my $detail = $result->{error_detail};
+    return $result->{error} unless ref($detail) eq 'HASH'
+        && keys(%$detail) == 2
+        && defined($detail->{code}) && !ref($detail->{code})
+        && ref($detail->{variables}) eq 'HASH';
+    my $code = $detail->{code};
+    my $variables = $detail->{variables};
+    my $message;
+    if ($code eq 'missing_tab') {
+        return $result->{error} unless keys(%$variables) == 1
+            && defined($variables->{number})
+            && !ref($variables->{number})
+            && $variables->{number} eq '7';
+        $message = $c->i18n->p('phenotype_upload.datacollector_error.missing_tab', 'No %{number}th tab found in your Excel file.', { number => 7 });
+    }
+    elsif ($code eq 'missing_header') {
+        return $result->{error} unless keys(%$variables) == 1
+            && defined($variables->{column})
+            && !ref($variables->{column})
+            && $variables->{column} eq 'plot_name';
+        $message = $c->i18n->p('phenotype_upload.datacollector_error.missing_header', 'Spreadsheet is missing %{column} and atleast one trait in header.', { column => 'plot_name' });
+    }
+    elsif ($code eq 'missing_plot_name') {
+        return $result->{error} unless keys(%$variables) == 1
+            && defined($variables->{column})
+            && !ref($variables->{column})
+            && $variables->{column} eq 'plot_name';
+        $message = $c->i18n->p('phenotype_upload.datacollector_error.missing_plot_name', 'No %{column} in header.', { column => 'plot_name' });
+    }
+    elsif ($code eq 'missing_stock_name') {
+        return $result->{error} unless keys(%$variables) == 3
+            && defined($variables->{accession})
+            && !ref($variables->{accession})
+            && $variables->{accession} eq 'accession_name'
+            && defined($variables->{family})
+            && !ref($variables->{family})
+            && $variables->{family} eq 'family_name'
+            && defined($variables->{cross})
+            && !ref($variables->{cross})
+            && $variables->{cross} eq 'cross_unique_id';
+        $message = $c->i18n->p('phenotype_upload.datacollector_error.missing_stock_name', 'No %{accession} or %{family} or %{cross} in header.', { accession => 'accession_name', family => 'family_name', cross => 'cross_unique_id' });
+    }
+    elsif ($code eq 'missing_plot_number') {
+        return $result->{error} unless keys(%$variables) == 1
+            && defined($variables->{column})
+            && !ref($variables->{column})
+            && $variables->{column} eq 'plot_number';
+        $message = $c->i18n->p('phenotype_upload.datacollector_error.missing_plot_number', 'No %{column} in header.', { column => 'plot_number' });
+    }
+    elsif ($code eq 'missing_block_number') {
+        return $result->{error} unless keys(%$variables) == 1
+            && defined($variables->{column})
+            && !ref($variables->{column})
+            && $variables->{column} eq 'block_number';
+        $message = $c->i18n->p('phenotype_upload.datacollector_error.missing_block_number', 'No %{column} in header.', { column => 'block_number' });
+    }
+    elsif ($code eq 'missing_control') {
+        return $result->{error} unless keys(%$variables) == 1
+            && defined($variables->{column})
+            && !ref($variables->{column})
+            && $variables->{column} eq 'is_a_control';
+        $message = $c->i18n->p('phenotype_upload.datacollector_error.missing_control', 'No %{column} in header.', { column => 'is_a_control' });
+    }
+    elsif ($code eq 'missing_rep_number') {
+        return $result->{error} unless keys(%$variables) == 1
+            && defined($variables->{column})
+            && !ref($variables->{column})
+            && $variables->{column} eq 'rep_number';
+        $message = $c->i18n->p('phenotype_upload.datacollector_error.missing_rep_number', 'No %{column} in header.', { column => 'rep_number' });
+    }
+    elsif ($code eq 'timestamp_format') {
+        return $result->{error} unless keys(%$variables) == 2
+            && defined($variables->{negative})
+            && !ref($variables->{negative})
+            && $variables->{negative} eq 'YYYY-MM-DD HH:MM:SS-0000'
+            && defined($variables->{positive})
+            && !ref($variables->{positive})
+            && $variables->{positive} eq 'YYYY-MM-DD HH:MM:SS+0000';
+        $message = $c->i18n->p('phenotype_upload.datacollector_error.timestamp_format', 'Timestamp needs to be of form %{negative} or %{positive}', { negative => 'YYYY-MM-DD HH:MM:SS-0000', positive => 'YYYY-MM-DD HH:MM:SS+0000' });
+    }
+    elsif ($code eq 'value_timestamp_missing') {
+        return $result->{error} unless keys(%$variables) == 0;
+        $message = $c->i18n->p('phenotype_upload.datacollector_error.value_timestamp_missing', 'Value or timestamp missing.');
+    }
+    else {
+        return $result->{error};
+    }
+    return encode_entities($message, q{&<>"'});
 }
 
 sub _prep_upload {
@@ -208,7 +572,7 @@ sub _prep_upload {
 	my $user = $c->user();
 
 	if (!$user) {# only checks for login, ask whether this needs to be changed...
-		push @error_status, 'You do not have permission to upload data to this trial!';
+		push @error_status, encode_entities($c->i18n->p('phenotype_upload.server.login_required', 'You do not have permission to upload data to this trial!'), q{&<>"'});
 		return (\@success_status, \@error_status);
 	}
 
@@ -271,7 +635,7 @@ sub _prep_upload {
 
     my $user_type = $user->get_object->get_user_type();
     if ($user_type ne 'submitter' && $user_type ne 'curator') {
-        push @error_status, 'Must have submitter privileges to upload phenotypes! Please contact us!';
+        push @error_status, encode_entities($c->i18n->p('phenotype_upload.server.submitter_required', 'Must have submitter privileges to upload phenotypes! Please contact us!'), q{&<>"'});
         return (\@success_status, \@error_status);
     }
 
@@ -279,14 +643,14 @@ sub _prep_upload {
     if ($overwrite_values) {
         #print STDERR $user_type."\n";
         if ($user_type ne 'curator') {
-            push @error_status, 'Must be a curator to overwrite values! Please contact us!';
+            push @error_status, encode_entities($c->i18n->p('phenotype_upload.server.overwrite_curator', 'Must be a curator to overwrite values! Please contact us!'), q{&<>"'});
             return (\@success_status, \@error_status);
         }
     }
     my $remove_values = $overwrite_values && $c->req->param('phenotype_upload_remove_values');
     if ( $remove_values ) {
         if ($user_type ne 'curator') {
-            push @error_status, 'Must be a curator to remove values! Please contact us!';
+            push @error_status, encode_entities($c->i18n->p('phenotype_upload.server.remove_curator', 'Must be a curator to remove values! Please contact us!'), q{&<>"'});
             return (\@success_status, \@error_status);
         }
     }
@@ -309,10 +673,10 @@ sub _prep_upload {
     my $archived_filename_with_path = $uploader->archive();
     my $md5 = $uploader->get_md5($archived_filename_with_path);
     if (!$archived_filename_with_path) {
-        push @error_status, "Could not save file $upload_original_name in archive.";
+        push @error_status, encode_entities($c->i18n->p('phenotype_upload.server.archive_failed', 'Could not save file %{filename} in archive.', { filename => $upload_original_name }), q{&<>"'});
         return (\@success_status, \@error_status);
     } else {
-        push @success_status, "File $upload_original_name saved in archive.";
+        push @success_status, encode_entities($c->i18n->p('phenotype_upload.server.archived', 'File %{filename} saved in archive.', { filename => $upload_original_name }), q{&<>"'});
     }
     unlink $upload_tempfile;
     #print STDERR "Archived Phenotype File: $archived_filename_with_path\n";
@@ -333,10 +697,10 @@ sub _prep_upload {
         $archived_image_zipfile_with_path = $uploader->archive();
         my $md5 = $uploader->get_md5($archived_image_zipfile_with_path);
         if (!$archived_image_zipfile_with_path) {
-            push @error_status, "Could not save images zipfile $upload_original_name in archive.";
+            push @error_status, encode_entities($c->i18n->p('phenotype_upload.server.images_archive_failed', 'Could not save images zipfile %{filename} in archive.', { filename => $upload_original_name }), q{&<>"'});
             return (\@success_status, \@error_status);
         } else {
-            push @success_status, "Images Zip File $upload_original_name saved in archive.";
+            push @success_status, encode_entities($c->i18n->p('phenotype_upload.server.images_archived', 'Images Zip File %{filename} saved in archive.', { filename => $upload_original_name }), q{&<>"'});
         }
         unlink $upload_tempfile;
         #print STDERR "Archived Zipfile: $archived_image_zipfile_with_path\n";
@@ -345,14 +709,18 @@ sub _prep_upload {
     ## Validate and parse uploaded file
     my $validate_file = $parser->validate($validate_type, $archived_filename_with_path, $timestamp_included, $data_level, $schema, $archived_image_zipfile_with_path, undef);
     if (!$validate_file) {
-        push @error_status, "Archived file not valid: $upload_original_name.";
+        push @error_status, encode_entities($c->i18n->p('phenotype_upload.server.invalid', 'Archived file not valid: %{filename}.', { filename => $upload_original_name }), q{&<>"'});
         return (\@success_status, \@error_status);
     }
     if ($validate_file == 1){
-        push @success_status, "File valid: $upload_original_name.";
+        push @success_status, encode_entities($c->i18n->p('phenotype_upload.server.valid', 'File valid: %{filename}.', { filename => $upload_original_name }), q{&<>"'});
     } else {
         if ($validate_file->{'error'}) {
-            push @error_status, $validate_file->{'error'};
+            push @error_status, $validate_type eq 'field book'
+                ? _localized_fieldbook_error($c, $validate_file)
+                : $validate_type eq 'datacollector spreadsheet'
+                    ? _localized_datacollector_error($c, $validate_file)
+                    : $validate_file->{'error'};
         }
         return (\@success_status, \@error_status);
     }
@@ -366,11 +734,15 @@ sub _prep_upload {
 
     my $parsed_file = $parser->parse($validate_type, $archived_filename_with_path, $timestamp_included, $data_level, $schema, $archived_image_zipfile_with_path, $user_id, $c, undef);
     if (!$parsed_file) {
-        push @error_status, "Error parsing file $upload_original_name.";
+        push @error_status, encode_entities($c->i18n->p('phenotype_upload.server.parse_failed', 'Error parsing file %{filename}.', { filename => $upload_original_name }), q{&<>"'});
         return (\@success_status, \@error_status);
     }
     if ($parsed_file->{'error'}) {
-        push @error_status, $parsed_file->{'error'};
+        push @error_status, $validate_type eq 'field book'
+                ? _localized_fieldbook_error($c, $parsed_file)
+                : $validate_type eq 'datacollector spreadsheet'
+                    ? _localized_datacollector_error($c, $parsed_file)
+                    : $parsed_file->{'error'};
     }
     my %parsed_data;
     my @plots;
@@ -381,7 +753,7 @@ sub _prep_upload {
             %parsed_data = %{$parsed_file->{'data'}};
             @plots = @{$parsed_file->{'units'}};
             @traits = @{$parsed_file->{'variables'}};
-            push @success_status, "File data successfully parsed.";
+            push @success_status, encode_entities($c->i18n->p('phenotype_upload.server.parsed', 'File data successfully parsed.'), q{&<>"'});
         }
         if ($is_treatment eq "treatment") {
             foreach my $plot (@plots) {
@@ -500,7 +872,8 @@ sub update_plot_phenotype_POST : Args(0) {
 
   my ($verified_warning, $verified_error) = $store_phenotypes->verify();
   if ($verified_error){
-    $c->stash->{rest} = {error => $verified_error};
+    my $localized = _localized_verification_errors($c, $store_phenotypes->verification_errors());
+    $c->stash->{rest} = {error => defined($localized) ? $localized : $verified_error};
     $c->detach;
   }
 

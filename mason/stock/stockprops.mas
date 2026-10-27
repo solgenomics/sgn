@@ -68,8 +68,8 @@ my $prop_select = simple_selectbox_html(
   <div class="modal-dialog" role="document">
     <div class="modal-content">
       <div class="modal-header" style="text-align: center">
-        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-        <h4 class="modal-title" id="add<% $div_name %>Dialog">Add Property</h4>
+        <button type="button" class="close" data-dismiss="modal" aria-label="<% $c->i18n->p("folder.ui.close", "Close") |h %>"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title" id="add<% $div_name %>Dialog"><% $c->i18n->p("accession.stockprops.add_title", "Add Property") |h %></h4>
       </div>
       <div class="modal-body">
 	<div class="container-fluid">
@@ -88,8 +88,8 @@ my $prop_select = simple_selectbox_html(
         </div>
       
       <div class="modal-footer">
-        <button id="close_add_<% $div_name %>_stockprop_dialog" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-        <button type="button" class="btn btn-primary" name="<% $div_name %>_addProp_submit" id="<% $div_name %>_addProp_submit" title="submit">Submit</button>  
+        <button id="close_add_<% $div_name %>_stockprop_dialog" type="button" class="btn btn-default" data-dismiss="modal"><% $c->i18n->p("folder.ui.close", "Close") |h %></button>
+        <button type="button" class="btn btn-primary" name="<% $div_name %>_addProp_submit" id="<% $div_name %>_addProp_submit" title="<% $c->i18n->p("accession.stockprops.submit_tooltip", "submit") |h %>"><% $c->i18n->p("trial.repetitive.submit", "Submit") |h %></button>
       </div>
       </form>
     </div>
@@ -119,7 +119,7 @@ function <% $div_name %>_getProps() {
     url: '/stock/prop/get',
     data: { stock_id: <% $stock_id %> },
     success: function(response) { <% $div_name %>_renderProps(response);  },
-    error: function(response) { alert('an error occurred'); } 
+    error: function(response) { alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("accession.stockprops.network_short", "an error occurred") : "an error occurred")); }
   });
  
 }
@@ -168,7 +168,7 @@ function <% $div_name %>_addProp() {
   var prop_type = jQuery('#<% $div_name %>_select').val();
   var prop = jQuery('#<% $div_name %>_prop').val();
   prop = prop.trim();
-  if (prop === '') { alert("Please fill in the field."); return; }
+  if (prop === '') { alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("accession.stockprops.required", "Please fill in the field.") : "Please fill in the field.")); return; }
 
   jQuery.ajax( {
     type: 'POST',
@@ -181,12 +181,12 @@ function <% $div_name %>_addProp() {
         <% $div_name %>_hideWorkingModal();
         if ("error" in response) { alert ('ERROR '+response.error); }
         if ("message" in response) {
-            alert('Successfully added property: ' + prop + '. ('+response.message+')');
+            alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("accession.stockprops.added", "Successfully added property: %{property}. (%{message})", {property: String(prop), message: String(response.message)}) : 'Successfully added property: ' + prop + '. ('+response.message+')'));
         }
     },
     error: function(response) {
         <% $div_name %>_hideWorkingModal();
-        alert('an error occurred while storing the prop ' + response.error);
+        alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("accession.stockprops.store_error", "an error occurred while storing the prop %{error}", {error: String(response.error)}) : 'an error occurred while storing the prop ' + response.error));
     },
     complete: function() {
 	<% $div_name %>_getProps();
@@ -206,7 +206,7 @@ function <% $div_name %>_hideWorkingModal() {
 
 
 function <% $div_name %>_deleteProp(stockprop_value, stockprop_id) {
-    var yes = confirm('Delete stockprop '+stockprop_value+'?');
+    var yes = confirm((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("accession.stockprops.delete_confirm", "Delete stockprop %{value}?", {value: String(stockprop_value)}) : 'Delete stockprop '+stockprop_value+'?'));
     if (yes) {
         jQuery.ajax( {
             method: 'GET',
@@ -219,7 +219,7 @@ function <% $div_name %>_deleteProp(stockprop_value, stockprop_id) {
             }
             if ('error'   in response) {  alert(response.error);   }
            },
-           error: function(response) { alert('An error occurred. Please try again later.');
+           error: function(response) { alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("accession.stockprops.network_error", "An error occurred. Please try again later.") : 'An error occurred. Please try again later.'));
            },
          complete: function() {
            <% $div_name %>_getProps();

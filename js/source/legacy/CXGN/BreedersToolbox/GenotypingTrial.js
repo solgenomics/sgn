@@ -71,7 +71,7 @@ jQuery(document).ready(function ($) {
         plate_data.include_facility_identifiers = jQuery('#upload_genotype_plate_include_facility_identifiers').val();
 
         if (plate_data.name == '') {
-            alert("A name is required and it should be unique in the database. Please try again.");
+            alert(window.SGN && SGN.i18n ? SGN.i18n.p('genotype.plate.local.name_required', 'A name is required and it should be unique in the database. Please try again.') : "A name is required and it should be unique in the database. Please try again.");
             return;
         }
 
@@ -112,18 +112,18 @@ jQuery(document).ready(function ($) {
 
         var l = new CXGN.List();
         if (! l.legacy_validate(plate_data.list_id, 'accessions', true) && ! l.legacy_validate(plate_data.list_id, 'plots', true) && ! l.legacy_validate(plate_data.list_id, 'subplots', true)&& ! l.legacy_validate(plate_data.list_id, 'plants', true) && ! l.legacy_validate(plate_data.list_id, 'tissue_samples', true)) {
-            alert('The list contains elements that are not accessions or plots or subplots or plants or tissue_samples.');
+            alert(window.SGN && SGN.i18n ? SGN.i18n.p('genotype.plate.local.invalid_list', 'The list contains elements that are not accessions or plots or subplots or plants or %{type}.', {'type': 'tissue_samples'}) : 'The list contains elements that are not accessions or plots or subplots or plants or tissue_samples.');
             return;
         }
 
         var elements = l.getList(plate_data.list_id);
         if (typeof elements == 'undefined' ) {
-            alert("There are no elements in the list provided.");
+            alert(window.SGN && SGN.i18n ? SGN.i18n.p('genotype.plate.local.empty_list', 'There are no elements in the list provided.') : "There are no elements in the list provided.");
             return;
         }
 
         if (elements.length > plate_data.plate_format) {
-            alert("The list needs to have less than 96 or 384 elements depending on the plate format you selected");
+            alert(window.SGN && SGN.i18n ? SGN.i18n.p('genotype.plate.local.too_many_samples', 'The list needs to have less than %{small} or %{large} elements depending on the plate format you selected', {'small': 96, 'large': 384}) : "The list needs to have less than 96 or 384 elements depending on the plate format you selected");
             return;
         }
 
@@ -233,6 +233,7 @@ jQuery(document).ready(function ($) {
         $.ajax({
             url: '/ajax/breeders/generategenotypetrial',
             method: 'POST',
+            headers: {'X-SGN-Locale': document.documentElement.getAttribute('data-sgn-locale') || document.documentElement.lang || 'en'},
             beforeSend: function(){
                 jQuery("#working_modal").modal('show');
             },
@@ -250,7 +251,7 @@ jQuery(document).ready(function ($) {
                 }
             },
             error: function(response) {
-                alert('An error occurred trying the create the layout.');
+                alert(window.SGN && SGN.i18n ? SGN.i18n.p('genotype.plate.local.layout_failed', 'An error occurred trying the create the layout.') : 'An error occurred trying the create the layout.');
                 jQuery("working_modal").modal('hide');
             }
         });
@@ -258,7 +259,7 @@ jQuery(document).ready(function ($) {
 
     function submit_genotype_trial_upload(plate_data) {
         console.log('uploading genotype trial file');
-        jQuery('#upload_genotyping_trials_form').attr("action", "/ajax/breeders/parsegenotypetrial");
+        jQuery('#upload_genotyping_trials_form').attr("action", "/ajax/breeders/parsegenotypetrial?lang=" + encodeURIComponent(document.documentElement.getAttribute('data-sgn-locale') || document.documentElement.lang || 'en'));
         jQuery("#upload_genotyping_trials_form").submit();
     }
 
@@ -290,6 +291,7 @@ jQuery(document).ready(function ($) {
         jQuery.ajax({
             url: '/ajax/breeders/storegenotypetrial',
             method: 'POST',
+            headers: {'X-SGN-Locale': document.documentElement.getAttribute('data-sgn-locale') || document.documentElement.lang || 'en'},
             beforeSend: function(){
                 jQuery("#working_modal").modal('show');
             },
@@ -314,7 +316,7 @@ jQuery(document).ready(function ($) {
                 }
             },
             error: function(response) {
-                alert('An error occurred trying the create the layout.');
+                alert(window.SGN && SGN.i18n ? SGN.i18n.p('genotype.plate.local.layout_failed', 'An error occurred trying the create the layout.') : 'An error occurred trying the create the layout.');
                 jQuery("#working_modal").modal('hide');
             }
         });

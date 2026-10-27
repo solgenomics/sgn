@@ -14,10 +14,11 @@
 
 %# Clears shared variables from previous uses.
 <%init>
+  use HTML::Entities ();
   @titles = ();
   @contents = ();
   $pending = "";
-  $complete = "Complete!";
+  $complete = HTML::Entities::encode_entities($c->i18n->p('shared.workflow.complete', 'Complete!'));
 </%init>
 
 %# Adds a new step to the workflow

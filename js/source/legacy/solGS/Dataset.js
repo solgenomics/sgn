@@ -170,11 +170,11 @@ solGS.dataset = {
             solGS.combinedTrials.downloadSingleTrialTrainingPopData(singleArgs);
           }
         } else {
-          Alert("No trials ids were found for this dataset");
+          Alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.dataset_trials_ids_missing", "No trials ids were found for this dataset") : "No trials ids were found for this dataset"));
         }
       },
       error: function (res) {
-        Alert("Error Occurred fetching trials ids in the dataset. " + res.responseText);
+        Alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.dataset_trials_ids_fetch_error", "Error Occurred fetching trials ids in the dataset. ") : "Error Occurred fetching trials ids in the dataset. ") + res.responseText);
       },
     });
   },
@@ -260,10 +260,10 @@ solGS.dataset = {
 
     if (trainingPopGenoPro != selectionPopGenoPro) {
       var msg =
-        "This dataset of selection candidates has a " +
+        (window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.dataset_protocol_mismatch", "This dataset of selection candidates has a different genotyping protocol from the training population. Please use a dataset with a matching genotyping protocol.") : "This dataset of selection candidates has a " +
         "different genotyping protocol from the training " +
         "population. Please use a dataset with " +
-        "a matching genotyping protocol.";
+        "a matching genotyping protocol.");
 
       solGS.alertMessage(msg);
     } else {

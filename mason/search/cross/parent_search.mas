@@ -10,14 +10,14 @@
                 <div class="col-sm-11">
                     <div class="form-horizontal">
                         <div class="form-group">
-                            <label class="control-label col-sm-4">Select a list of accessions:</label>
+                            <label class="control-label col-sm-4"><% $c->i18n->p("cross.pages.select_a_list_of_accessions.961bcd8", "Select a list of accessions:") |h %></label>
                             <div class="col-sm-8" >
                                 <div class="input-group">
                                     <select class="form-control" id="accession_list_select">
-                                        <option value="">Select a list of accessions</option>
+                                        <option value=""><% $c->i18n->p("cross.pages.select_a_list_of_accessions.dd69e1f", "Select a list of accessions") |h %></option>
                                     </select>
                                     <div class="input-group-btn">
-                                        <button class="btn btn-info" id="search_parents"><i class="glyphicon glyphicon-search"></i> Parents </button>
+                                        <button class="btn btn-info" id="search_parents"><i class="glyphicon glyphicon-search"></i> <% $c->i18n->p("accession.stock.section.parents", "Parents") |h %> </button>
                                     </div>
                                 </div>
                             </div>
@@ -29,7 +29,7 @@
     </div>
     <div class="panel panel-default">
         <div class="panel-body">
-            <&| /page/info_section.mas, title=>"Search Results", is_subsection => 1, collapsible=>1, collapsed=>0 &>
+            <&| /page/info_section.mas, anchor_title => "Search Results", title=>HTML::Entities::encode_entities($c->i18n->p("global.search.annotation.genes.search_results", "Search Results")), is_subsection => 1, collapsible=>1, collapsed=>0 &>
                 <table class="table table-hover table-bordered" id="parent_search_results">
                 </table>
             </&>
@@ -44,17 +44,17 @@ jQuery(document).ready(function (){
 
     var lo = new CXGN.List();
 
-    jQuery('#accession_list_select').html(lo.listSelect('accession_list_select', ['accessions'], 'Select a list of accessions', undefined, undefined));
+    jQuery('#accession_list_select').html(lo.listSelect('accession_list_select', ['accessions'], (window.SGN && window.SGN.i18n ? window.SGN.i18n.p("cross.pages.select_a_list_of_accessions.dd69e1f", "Select a list of accessions") : "Select a list of accessions"), undefined, undefined));
 
     jQuery("#search_parents").click(function(){
         var accession_list_id = jQuery('#accession_list_select').val();
         if (!accession_list_id) {
-            alert("Please select a list of accessions");
+            alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("cross.pages.please_select_a_list_of_accessions", "Please select a list of accessions") : "Please select a list of accessions"));
             return;
         }
 
         if (! lo.legacy_validate(accession_list_id, 'uniquenames', true)) {
-            alert('The accession list contains elements that are not accessions or are not uniquenames.');
+            alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("cross.pages.the_accession_list_contains_elements_that_are_not_accessions_or", "The accession list contains elements that are not accessions or are not uniquenames.") : "The accession list contains elements that are not accessions or are not uniquenames."));
             return;
         }
 
@@ -67,33 +67,33 @@ jQuery(document).ready(function (){
             },
             columns: [
                 {
-                    title: "Female Parent",
+                    title: jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("accession.related_stock.header.female_parent", "Female Parent") : "Female Parent")).html(),
                     data: null,
                     render: function(data, type, row){
                         if (row.female_id === null) {
-                            return 'unknown'
+                            return (type === 'display' ? (window.SGN && window.SGN.i18n ? window.SGN.i18n.p("cross.pages.unknown", "unknown") : "unknown") : 'unknown')
                         } else {
                             return "<a href='/stock/"+row.female_id+"/view'>"+row.female_name+"</a>"
                         }
                     }
                 },
                 {
-                    title: "Male Parent",
+                    title: jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("accession.related_stock.header.male_parent", "Male Parent") : "Male Parent")).html(),
                     data: null,
                     render: function(data, type, row){
                         if (row.male_id === null) {
-                            return 'unknown'
+                            return (type === 'display' ? (window.SGN && window.SGN.i18n ? window.SGN.i18n.p("cross.pages.unknown", "unknown") : "unknown") : 'unknown')
                         } else {
                             return "<a href='/stock/"+row.male_id+"/view'>"+row.male_name+"</a>"
                         }
                     }
                 },
                 {
-                    title: "Number of Accessions",
+                    title: jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("cross.pages.number_of_accessions", "Number of Accessions") : "Number of Accessions")).html(),
                     data: "no_of_accessions",
                 },
                 {
-                    title: "Accession Names",
+                    title: jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("cross.pages.accession_names", "Accession Names") : "Accession Names")).html(),
                     data: "progenies",
                 },
             ],
@@ -104,3 +104,7 @@ jQuery(document).ready(function (){
 
 
 </script>
+
+<%once>
+use HTML::Entities ();
+</%once>

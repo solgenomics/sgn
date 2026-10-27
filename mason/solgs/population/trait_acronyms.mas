@@ -25,10 +25,10 @@ $training_pop_id => undef;
 
 <& /util/import_javascript.mas, classes => ["solGS.loadAcronyms", "jquery.dataTables"] &>
 
-<&| /page/info_section.mas,
+<&| /page/info_section.mas, anchor_title => "Acronyms legend",
     collapsible => 1,
     collapsed   => 1,
-    title       => "Acronyms legend",
+    title       => HTML::Entities::encode_entities($c->i18n->p("solgs.interface.acronyms_legend", "Acronyms legend")),
   &>
 
   
@@ -38,8 +38,8 @@ $training_pop_id => undef;
       <table class="table" id="trait_acronyms_table" style="text-align: left;">
         <thead>
           <tr>
-        	<th>Acronym</th>
-            <th>Trait</th>
+<% "        \t" %><th><% $c->i18n->p("solgs.interface.acronym", "Acronym") |h %></th>
+            <th><% $c->i18n->p("solgs.interface.trait", "Trait") |h %></th>
           </tr>
         </thead>
       </table>
@@ -51,3 +51,7 @@ $training_pop_id => undef;
 
 
 </&>
+
+<%once>
+use HTML::Entities ();
+</%once>

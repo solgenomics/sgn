@@ -1,3 +1,7 @@
+<%once>
+use HTML::Entities ();
+</%once>
+
 <%args>
 $trial_id
 $field_headers
@@ -11,11 +15,11 @@ $activity_type
     <table class="table table-hover table-bordered" id="project_active_tracking_identifiers_table">
         <thead>
             <tr>
-                <th>Tracking Identifier</th>
+                <th><% $c->i18n->p("transformation.tracking_identifier", "Tracking Identifier") |h %></th>
 % if ($activity_type eq 'transformation') {
-                <th>Transformation ID</th>
+                <th><% $c->i18n->p("transformation.transformation_id.6f39808", "Transformation ID") |h %></th>
 % } elsif ($activity_type eq 'tissue_culture') {
-                <th>Accession</th>
+                <th><% $c->i18n->p("global.index_logged_in_user.accession", "Accession") |h %></th>
 % }
 % foreach my $column_header(@$field_headers){
                 <th><%$column_header%></th>
@@ -27,7 +31,7 @@ $activity_type
 
 <div class="panel panel-default">
     <div class="panel-body">
-        <&| /page/info_section.mas, title => 'Add Identifiers to a List', collapsible=>1, collapsed=>1, subtitle=>'<i>Adding identifiers in this project to a new or exisiting list</i>'&>
+        <&| /page/info_section.mas, anchor_title => 'Add Identifiers to a List', title => HTML::Entities::encode_entities($c->i18n->p("transformation.root.add_identifiers_to_a_list", 'Add Identifiers to a List')), collapsible=>1, collapsed=>1, subtitle=>("<i>" . HTML::Entities::encode_entities($c->i18n->p("transformation.root.adding_identifiers_in_this_project_to_a_new_or_exisiting", "Adding identifiers in this project to a new or exisiting list")) . "</i>")&>
         <br>
         <div id="identifiers_to_new_list" style="display:none"></div>
         <div id="identifiers_add_to_list"></div>
@@ -47,7 +51,7 @@ jQuery(document).ready(function(){
         "fnInitComplete": function(oSettings, json) {
             //console.log(json);
             if (!isLoggedIn()) {
-                jQuery('#identifiers_add_to_list').html("<div class='well well-sm'><h3>Please login to use lists!</h3></div>");
+                jQuery('#identifiers_add_to_list').html(("<div class='well well-sm'><h3>" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("accession.related_stock.login_lists", "Please login to use lists!") : "Please login to use lists!")).html() + "</h3></div>"));
             } else {
                 var html = "";
                 for(var i=0; i<json.data.length; i++){

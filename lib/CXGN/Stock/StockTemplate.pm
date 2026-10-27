@@ -1,6 +1,9 @@
 
 package CXGN::Stock::StockTemplate;
 
+use SGN::I18N ();
+use CatalystX::GlobalContext '$c';
+
 
 =head1 NAME
 
@@ -91,6 +94,7 @@ has 'user_id' => (
 
 
 sub parse {
+    my SGN::I18N $ui_parse_i18n = $c && $c->can('i18n') ? $c->i18n : undef;
 ################################ 
     my $self = shift;
     my @errors;
@@ -121,7 +125,7 @@ sub parse {
     my ( $col_min, $col_max ) = $worksheet->col_range();
     print STDERR "$row_min $row_max $col_min $col_max \n";
     if ($col_max < 2 || $row_max < 8 ) {#must have header and at least one row of phenotypes
-      push @errors, "Spreadsheet is missing header";
+      push @errors, (SGN::I18N::translate($ui_parse_i18n, "accession.template.error_1", "Spreadsheet is missing header"));
       $self->parse_errors(\@errors);
       return;
     }
@@ -135,18 +139,18 @@ sub parse {
     my $operator        = $worksheet->get_cell(4,1);
     my $date            = $worksheet->get_cell(5,1);
     if (!$spreadsheet_id) {
-      push @errors, "Spreadsheet ID is missing from the header";
+      push @errors, (SGN::I18N::translate($ui_parse_i18n, "accession.template.error_2", "Spreadsheet ID is missing from the header"));
     }
     if (!$trial_name) {
-      push @errors, "Trial name is missing from the header";
+      push @errors, (SGN::I18N::translate($ui_parse_i18n, "accession.template.error_3", "Trial name is missing from the header"));
     }
     #add function to check that the trial name exists?
     if (!$operator) {
-      push @errors, "The name of the operator is missing from the header";
+      push @errors, (SGN::I18N::translate($ui_parse_i18n, "accession.template.error_4", "The name of the operator is missing from the header"));
     }
     #add function to check if the operator name exists in the database and matches the logged in user?
     if (!$date) {
-      push @errors, "The date is missing from the header";
+      push @errors, (SGN::I18N::translate($ui_parse_i18n, "accession.template.error_5", "The date is missing from the header"));
     }
     #add a check to make sure that the header data is valid?
     if (@errors) {
@@ -222,6 +226,7 @@ sub parse {
 }
 
 sub verify {
+    my SGN::I18N $ui_verify_i18n = $c && $c->can('i18n') ? $c->i18n : undef;
     my $self = shift;
     my $schema = $self->schema;
     #check is stock exists and if cvterm exists.
@@ -241,12 +246,12 @@ sub verify {
             print STDERR "verify .. Looking for stock_id ".$plot_stock_id."\n";
 	    my $stock;
 	    $stock = $schema->resultset("Stock::Stock")->find( { stock_id => $plot_stock_id } );
-            if (!$stock) { push @errors, "Stock $plot_stock_id does not exist in the database!"; }
+            if (!$stock) { push @errors, (SGN::I18N::translate($ui_verify_i18n, "accession.template.error_6", "Stock %{plot_stock_id} does not exist in the database!", {plot_stock_id => "" . ($plot_stock_id)})); }
             foreach my $cvterm_accession (keys %{$hashref->{$key}->{$plot_stock_id} } ) {
                 print STDERR "verify ... Looking for accession $cvterm_accession..\n";
                 my ($db_name, $accession) = split (/:/, $cvterm_accession);
-                if (!$db_name) { push @errors, "could not find valid db_name in accession $cvterm_accession";}
-                if (!$accession) { push @errors, "Could not find valid cvterm accession in $cvterm_accession";}
+                if (!$db_name) { push @errors, (SGN::I18N::translate($ui_verify_i18n, "accession.template.error_7", "could not find valid db_name in accession %{cvterm_accession}", {cvterm_accession => "" . ($cvterm_accession)}));}
+                if (!$accession) { push @errors, (SGN::I18N::translate($ui_verify_i18n, "accession.template.error_8", "Could not find valid cvterm accession in %{cvterm_accession}", {cvterm_accession => "" . ($cvterm_accession)}));}
                 #check if the cvterm exists
                 my $db = $schema->resultset("General::Db")->search(
                     { 'me.name' => $db_name } );
@@ -255,13 +260,13 @@ sub verify {
 
                     if ($dbxref->count) {
                         my $cvterm = $dbxref->search_related("cvterm", {} )->single;
-                        if (!$cvterm) { push @errors, "NO cvterm found in the database for accession $cvterm_accession!\n db_name = '" .  $db_name  . "' , accession = '" .  $accession . "'";
+                        if (!$cvterm) { push @errors, (SGN::I18N::translate($ui_verify_i18n, "accession.template.error_9", "NO cvterm found in the database for accession %{cvterm_accession}!\n db_name = '", {cvterm_accession => "" . ($cvterm_accession)})) .  $db_name  . "' , accession = '" .  $accession . "'";
 			}
                     } else {
-                        push @errors, "No dbxref found for cvterm accession $accession";
+                        push @errors, (SGN::I18N::translate($ui_verify_i18n, "accession.template.error_10", "No dbxref found for cvterm accession %{accession}", {accession => "" . ($accession)}));
                     }
                 } else {
-                    push @errors , "db_name $db_name does not exist in the database!";
+                    push @errors , (SGN::I18N::translate($ui_verify_i18n, "accession.template.error_11", "db_name %{db_name} does not exist in the database!", {db_name => "" . ($db_name)}));
                 }
             }
         }
@@ -276,6 +281,7 @@ sub verify {
 }
 
 sub store {
+    my SGN::I18N $ui_store_i18n = $c && $c->can('i18n') ? $c->i18n : undef;
     my $self = shift;
     my $schema = $self->schema;
     my $metadata_schema = $self->metadata_schema;
@@ -430,7 +436,7 @@ sub store {
 		#link the phenotpe to the experiment
 		$experiment->find_or_create_related('nd_experiment_phenotypes' , {
 		    phenotype_id => $phenotype->phenotype_id });
-		$message .= "Added phenotype: trait= " . $cvterm->name . ", value = $value, to stock " . qq|<a href="/stock/$plot_stock_id/view">$stock_name</a><br />| ;
+		$message .= (SGN::I18N::translate($ui_store_i18n, "accession.template.added_prefix", "Added phenotype: trait= ")) . $cvterm->name . (SGN::I18N::translate($ui_store_i18n, "accession.template.added_value", ", value = %{value}, to stock ", {value => "" . ($value)})) . qq|<a href="/stock/$plot_stock_id/view">$stock_name</a><br />| ;
 		
 		#link the file to the experiment
 		#$experiment->find_or_create_related('nd_experiment_md_files',{file_id => $file_row->file_id(),});
@@ -455,7 +461,7 @@ sub store {
       $schema->txn_do($coderef);
     } catch {
       # Transaction failed
-      $error =  "An error occured! Cannot store data! <br />" . $_ . "\n";
+      $error =  (SGN::I18N::translate($ui_store_i18n, "accession.template.store_failed", "An error occured! Cannot store data! ")) . "<br />" . $_ . "\n";
     };
 
     if ($error) {

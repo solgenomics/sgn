@@ -3,14 +3,14 @@
 $stock_id
 </%args>
 
-<&| /page/info_section.mas, title=>'Pedigree string' &>
+<&| /page/info_section.mas, title=>HTML::Entities::encode_entities($c->i18n->p("cross.forms.pedigree_string", "Pedigree string")), anchor_title => 'Pedigree string' &>
   <select id="pedigree_level_select">
-    <option value="Parents">Parents</option>
-    <option value="Grandparents">Grandparents</option>
-    <option value="Great-Grandparents">Great-Grandparents</option>
+    <option value="Parents"><% $c->i18n->p("cross.ui.parents", "Parents") |h %></option>
+    <option value="Grandparents"><% $c->i18n->p("cross.forms.grandparents", "Grandparents") |h %></option>
+    <option value="Great-Grandparents"><% $c->i18n->p("cross.forms.great_grandparents", "Great-Grandparents") |h %></option>
   </select>
 
-  <span id="pedigree_string">[loading...]</span>
+  <span id="pedigree_string"><% $c->i18n->p("cross.ui.loading", "[loading...]") |h %></span>
 
   <br /><br />
 </&>
@@ -21,7 +21,7 @@ jQuery(document).ready(function($) {
 
   get_pedigree_string(<% $stock_id %>);
   jQuery('#pedigree_level_select').change( function() {
-    jQuery('#pedigree_string').html('[loading...]');
+    jQuery('#pedigree_string').html((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("cross.ui.loading", "[loading...]") : "[loading...]"));
     get_pedigree_string(<% $stock_id %>);
   });
 });
@@ -31,7 +31,7 @@ function get_pedigree_string(stock_id) {
       url : '/stock/'+ stock_id +'/pedigreestring',
       data : { 'level' : jQuery('#pedigree_level_select').val() },
       error : function(response) {
-         alert("an error occurred");
+         alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("accession.sequencing_ui.read_error", "an error occurred") : "an error occurred"));
       },
       success: function(response) {
          jQuery('#pedigree_string').html(response.pedigree_string);

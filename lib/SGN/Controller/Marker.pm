@@ -6,6 +6,7 @@ SGN::Controller::Marker - controller for marker-related stuff
 
 package SGN::Controller::Marker;
 use Moose;
+use SGN::I18N ();
 use namespace::autoclean;
 use CXGN::Marker::Search;
 use CXGN::Marker::SearchMatView;
@@ -26,11 +27,12 @@ Public path: /marker/<marker_id>/rflp_image/view
 
 sub view_rflp_image: Chained('get_marker') PathPart('rflp_image/view') :Args(0) {
   my ( $self, $c, ) = @_;
+    my $i18n = SGN::I18N::translate($c);
 
   my $image_size = $c->req->query_parameters->{size};
 
   my $image_location = $self->rflp_image_link( $c, $c->stash->{marker} )
-      or $c->throw_404( "RFLP image not found for SGN-M".$c->stash->{marker}->marker_id );
+      or $c->throw_404( SGN::I18N::translate($i18n, "genotype.file.rflp_image_not_found_for_sgn_m", "RFLP image not found for SGN-M").$c->stash->{marker}->marker_id );
 
   $c->stash(
       template => '/markers/view_rflp.mas',
@@ -69,13 +71,14 @@ id.  The marker ID is an SGN-M identifier.
 
 sub get_marker: Chained('/') PathPart('marker') :CaptureArgs(1) {
     my ( $self, $c, $marker ) = @_;
+    my $i18n = SGN::I18N::translate($c);
 
     if ($marker =~/^SGN-M(\d+)*/i) {
 	my ($marker_id) = $marker =~ /^SGN-M(\d+)$/i;
         $c->stash->{marker} = CXGN::Marker->new( $c->dbc->dbh, $marker_id);
 	$c->stash->{marker_id} = $marker_id;
     } else {
-        $c->throw_404('No marker found with that ID');
+        $c->throw_404(SGN::I18N::translate($i18n, "genotype.file.no_marker_found_with_that_id", "No marker found with that ID"));
     }
 }
 

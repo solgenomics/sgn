@@ -1,3 +1,7 @@
+<%once>
+use HTML::Entities ();
+</%once>
+
 <%args>
 $trial_id
 $number_of_samples_with_data => undef
@@ -6,30 +10,30 @@ $number_of_samples_with_data => undef
 <& /util/import_javascript.mas, classes => [ 'jquery', 'jquery.dataTables', 'CXGN.BreedersToolbox.GenotypingTrial' ] &>
 <& /util/import_css.mas, paths => ['/documents/inc/datatables/jquery.dataTables.css'] &>
 
-<&| /page/info_section.mas, id=>'delete_genotyping_data_section', title => 'Delete Genotyping Data', subtitle => '<font color="red">Deletion cannot be undone</font>', collapsible=>1, collapsed=>1 &>
+<&| /page/info_section.mas, anchor_title => 'Delete Genotyping Data', id=>'delete_genotyping_data_section', title => HTML::Entities::encode_entities($c->i18n->p("genotype.plate.delete_genotyping_data", 'Delete Genotyping Data')), subtitle => ("<font color=\"red\">" . HTML::Entities::encode_entities($c->i18n->p("cross.ui.deletion_cannot_be_undone", "Deletion cannot be undone")) . "</font>"), collapsible=>1, collapsed=>1 &>
     <div class="well well-sm">
-        <div style="text-align: center">Delete all genotyping data derived from this genotyping plate.</div>
+        <div style="text-align: center"><% $c->i18n->p("genotype.plate.delete_all_genotyping_data_derived_from_this_genotyping_plate", "Delete all genotyping data derived from this genotyping plate.") |h %></div>
     </div>
     <div class="well well-sm">
         <div class="panel panel-default">
             <div class="panel-body">
-                <button class="btn btn-primary" id="delete_plate_genotyping_data" role="button">Delete genotyping data</button><br/><br/>
+                <button class="btn btn-primary" id="delete_plate_genotyping_data" role="button"><% $c->i18n->p("genotype.plate.delete_genotyping_data_25b736", "Delete genotyping data") |h %></button><br/><br/>
             </div>
         </div>
     </div>
 </&>
 
-<&| /page/info_section.mas, id=>'delete_genotyping_plate_layout_section', title => 'Delete Genotyping Plate Layout', subtitle => '<font color="red">Deletion cannot be undone.</font>', collapsible=>1, collapsed=>1 &>
+<&| /page/info_section.mas, anchor_title => 'Delete Genotyping Plate Layout', id=>'delete_genotyping_plate_layout_section', title => HTML::Entities::encode_entities($c->i18n->p("genotype.plate.delete_genotyping_plate_layout", 'Delete Genotyping Plate Layout')), subtitle => ("<font color=\"red\">" . HTML::Entities::encode_entities($c->i18n->p("cross.forms.deletion_cannot_be_undone", "Deletion cannot be undone.")) . "</font>"), collapsible=>1, collapsed=>1 &>
     <div class="well well-sm">
-        <div style="text-align: center">Do not delete a genotype layout for an experiment that has already been submitted to the sequencing facility.</div>
+        <div style="text-align: center"><% $c->i18n->p("genotype.plate.do_not_delete_a_genotype_layout_for_an_experiment_that", "Do not delete a genotype layout for an experiment that has already been submitted to the sequencing facility.") |h %></div>
     </div>
     <div class="well well-sm">
         <div class="panel panel-default">
             <div class="panel-body">
 %if ($number_of_samples_with_data > 0) {
-                <div class="boxbgcolor5" >Cannot delete genotyping plate layout. This layout has associated genotyping data.</div>
+                <div class="boxbgcolor5" ><% $c->i18n->p("genotype.plate.cannot_delete_genotyping_plate_layout_this_layout_has_associated_genotyping", "Cannot delete genotyping plate layout. This layout has associated genotyping data.") |h %></div>
 %} else {
-                <button class="btn btn-primary" id="delete_layout_data_by_trial_id" role="button">Delete genotyping plate layout</button><br/><br/>
+                <button class="btn btn-primary" id="delete_layout_data_by_trial_id" role="button"><% $c->i18n->p("genotype.plate.delete_genotyping_plate_layout_98cd3c", "Delete genotyping plate layout") |h %></button><br/><br/>
 %}
             </div>
         </div>
@@ -40,17 +44,17 @@ $number_of_samples_with_data => undef
     <div class="modal-dialog modal-lg" role="document">
         <div class="modal-content">
             <div class="modal-header">
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <button type="button" class="close" data-dismiss="modal" aria-label="<% $c->i18n->p("global.dataset_publish.close", "Close") |h %>"><span aria-hidden="true">&times;</span></button>
                 <h4 class="modal-title" id="genotypingDataDeleteMessageDialog"></h4>
             </div>
             <div class="modal-body">
                 <div class="container-fluid">
-                    <div style="text-align: center">The genotyping data was deleted successfully.</div>
+                    <div style="text-align: center"><% $c->i18n->p("genotype.plate.the_genotyping_data_was_deleted_successfully", "The genotyping data was deleted successfully.") |h %></div>
                     <div id="genotyping_data_delete_complete"></div>
                 </div>
             </div>
             <div class="modal-footer">
-                <button id="genotyping_data_delete_dismiss_button_1" name="genotyping_data_delete_dismiss_button" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                <button id="genotyping_data_delete_dismiss_button_1" name="genotyping_data_delete_dismiss_button" type="button" class="btn btn-default" data-dismiss="modal"><% $c->i18n->p("global.dataset_publish.close", "Close") |h %></button>
             </div>
 
         </div>
@@ -61,18 +65,18 @@ $number_of_samples_with_data => undef
     <div class="modal-dialog modal-lg" role="document">
         <div class="modal-content">
             <div class="modal-header">
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <button type="button" class="close" data-dismiss="modal" aria-label="<% $c->i18n->p("global.dataset_publish.close", "Close") |h %>"><span aria-hidden="true">&times;</span></button>
                 <div style="text-align: center">
-                    <h4 class="modal-title" id="createGenotypingProjectdialog">The genotyping data was deleted successfully.</h4>
+                    <h4 class="modal-title" id="createGenotypingProjectdialog"><% $c->i18n->p("genotype.plate.the_genotyping_data_was_deleted_successfully", "The genotyping data was deleted successfully.") |h %></h4>
                 </div>
             </div>
             <div class="modal-body">
                 <div class="container-fluid">
                     <div style="text-align: center">
                         <div id="empty_protocol_message"></div>
-                        <p>Do you want to delete this protocol?</p>
-                        <button id="delete_empty_protocol_submit" name="delete_empty_protocol_submit" type="button" class="btn btn-primary" data-dismiss="modal">Yes</button>
-                        <button id="empty_dismiss_button_1" name="empty_protocol_dismiss_button" type="button" class="btn btn-primary" data-dismiss="modal">No</button>
+                        <p><% $c->i18n->p("genotype.plate.do_you_want_to_delete_this_protocol", "Do you want to delete this protocol?") |h %></p>
+                        <button id="delete_empty_protocol_submit" name="delete_empty_protocol_submit" type="button" class="btn btn-primary" data-dismiss="modal"><% $c->i18n->p("global.search_wizard.yes", "Yes") |h %></button>
+                        <button id="empty_dismiss_button_1" name="empty_protocol_dismiss_button" type="button" class="btn btn-primary" data-dismiss="modal"><% $c->i18n->p("global.search_wizard.no", "No") |h %></button>
                         <br/>
                     </div>
                 </div>
@@ -90,7 +94,7 @@ jQuery(document).ready(function(){
 
     jQuery('#delete_plate_genotyping_data').click(function() {
         const trial_id = get_trial_id();
-        const confirmation = confirm("Are you sure you want to delete all genotyping data derived from this genotyping plate? This action cannot be undone.");
+        const confirmation = confirm((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("genotype.plate.are_you_sure_you_want_to_delete_all_genotyping_data", "Are you sure you want to delete all genotyping data derived from this genotyping plate? This action cannot be undone.") : "Are you sure you want to delete all genotyping data derived from this genotyping plate? This action cannot be undone."));
         if (confirmation) {
             jQuery.ajax({
                 url: '/ajax/breeders/plate_genotyping_data_delete',
@@ -101,7 +105,7 @@ jQuery(document).ready(function(){
                 },
                 beforeSend: function(){
                     jQuery('#working_modal').modal("show");
-                    jQuery('#working_msg').html("Deleting genotyping data...<br />");
+                    jQuery('#working_msg').html(("" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("genotype.plate.deleting_genotyping_data", "Deleting genotyping data...") : "Deleting genotyping data...")).html() + "<br />"));
                 },
                 success: function(response) {
                     jQuery('#working_modal').modal('hide');
@@ -122,7 +126,7 @@ jQuery(document).ready(function(){
                 },
                 error: function(response) {
                     jQuery('#working_modal').modal('hide');
-                    alert('An error occurred during deletion');
+                    alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("trial.soil_table.delete_error", "An error occurred during deletion") : 'An error occurred during deletion'));
                 }
             });
         }
@@ -139,7 +143,7 @@ jQuery(document).ready(function(){
     });
 
     jQuery('#delete_empty_protocol_submit').click(function() {
-        const confirmation = confirm("Are you sure you want to delete this genotyping protocol? This action cannot be undone.");
+        const confirmation = confirm((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("genotype.plate.are_you_sure_you_want_to_delete_this_genotyping_protocol", "Are you sure you want to delete this genotyping protocol? This action cannot be undone.") : "Are you sure you want to delete this genotyping protocol? This action cannot be undone."));
         if (confirmation) {
             jQuery.ajax({
                 url: '/ajax/breeders/empty_protocol_delete',
@@ -150,12 +154,12 @@ jQuery(document).ready(function(){
                 },
                 beforeSend: function(){
                     jQuery('#working_modal').modal("show");
-                    jQuery('#working_msg').html("Deleting genotyping protocol...<br />");
+                    jQuery('#working_msg').html(("" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("genotype.plate.deleting_genotyping_protocol", "Deleting genotyping protocol...") : "Deleting genotyping protocol...")).html() + "<br />"));
                 },
                 success: function(response) {
                     jQuery('#working_modal').modal('hide');
                     if (response.success == 1) {
-                        alert("The genotyping protocol was deleted successfully.");
+                        alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("genotype.plate.the_genotyping_protocol_was_deleted_successfully", "The genotyping protocol was deleted successfully.") : "The genotyping protocol was deleted successfully."));
                         location.reload();
                     }
                     if (response.error) {
@@ -164,7 +168,7 @@ jQuery(document).ready(function(){
                 },
                 error: function(response) {
                     jQuery('#working_modal').modal('hide');
-                    alert('An error occurred during deletion');
+                    alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("trial.soil_table.delete_error", "An error occurred during deletion") : 'An error occurred during deletion'));
                 }
             });
         }

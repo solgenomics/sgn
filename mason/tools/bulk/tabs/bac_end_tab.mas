@@ -26,12 +26,12 @@ $debug => ''
 
 
 <br />
-Enter a list of identifiers or upload a file containing identifers separated by whitespace (returns, spaces or tabs):<br />
+<% $c->i18n->p("lists_datasets.bulk.enter_a_list_of_identifiers_or_upload_a_file_containing_identifers_separated_b", "Enter a list of identifiers or upload a file containing identifers separated by whitespace (returns, spaces or tabs):") |h %><br />
 <table summary="" width="100%"><tr><td>
 <textarea name="ids" rows="5" cols="25"></textarea>
 </td>
 <td>
-<i>Example:</i>
+<i><% $c->i18n->p("lists_datasets.bulk.example", "Example:") |h %></i>
 <pre style="border: 1px solid gray; width: 15em; height: 5em">
 LE_HBa0011C24_SP6_121022
 SL_MboI0033A13_SP6_294865
@@ -41,28 +41,28 @@ SL_EcoRI0022A07_T7_229350
 </td></tr></table>
 <br />
 <br />
-And/or upload list file: <br /><input type="file" name="file" />
+<% $c->i18n->p("lists_datasets.bulk.and_or_upload_list_file", "And/or upload list file:") |h %> <br /><input type="file" name="file" />
 <br />
 <br />
 
 </td><td valign="top" bgcolor="#EEEEEE" width="280">
 
-<b>Download BAC end information:</b><br />
+<b><% $c->i18n->p("lists_datasets.bulk.download_bac_end_information", "Download BAC end information:") |h %></b><br />
 <div style="margin-left: 1em; white-space: nowrap">
-  <input type="checkbox" name="bac_id" checked= "checked" /> bac end identifier <br />
-  <input type="checkbox" name="clone_type" checked="checked" /> clone type <br />
-  <input type="checkbox" name="org_name" checked="checked" /> organism name <br />
-  <input type="checkbox" name="accession_name" checked="checked" /> accession name <br />
-  <input type="checkbox" name="library_name" checked="checked" /> library name <br />
-  <input type="checkbox" name="estimated_length" checked="checked" /> estimated length <br />
-  <input type="checkbox" name="genbank_accession" checked="checked" /> genbank accession<br />
+  <input type="checkbox" name="bac_id" checked= "checked" /> <% $c->i18n->p("lists_datasets.bulk.bac_end_identifier", "bac end identifier") |h %> <br />
+  <input type="checkbox" name="clone_type" checked="checked" /> <% $c->i18n->p("lists_datasets.bulk.clone_type", "clone type") |h %> <br />
+  <input type="checkbox" name="org_name" checked="checked" /> <% $c->i18n->p("lists_datasets.bulk.organism_name", "organism name") |h %> <br />
+  <input type="checkbox" name="accession_name" checked="checked" /> <% $c->i18n->p("lists_datasets.bulk.accession_name", "accession name") |h %> <br />
+  <input type="checkbox" name="library_name" checked="checked" /> <% $c->i18n->p("lists_datasets.bulk.library_name", "library name") |h %> <br />
+  <input type="checkbox" name="estimated_length" checked="checked" /> <% $c->i18n->p("lists_datasets.bulk.estimated_length", "estimated length") |h %> <br />
+  <input type="checkbox" name="genbank_accession" checked="checked" /> <% $c->i18n->p("lists_datasets.bulk.genbank_accession", "genbank accession") |h %><br />
   <!--	<input type="checkbox" name="overgo_matches" checked="checked" DISABLED /> overgo matches <br /> -->  <br />
-  <b>Choose format and type:</b><br />
-  <input type="checkbox" name="bac_end_sequence" checked="checked" /> bac end sequence <br />
-  <input type="checkbox" name="qual_value_seq" checked="checked" /> quality value <br />
+  <b><% $c->i18n->p("lists_datasets.bulk.choose_format_and_type", "Choose format and type:") |h %></b><br />
+  <input type="checkbox" name="bac_end_sequence" checked="checked" /> <% $c->i18n->p("lists_datasets.bulk.bac_end_sequence", "bac end sequence") |h %> <br />
+  <input type="checkbox" name="qual_value_seq" checked="checked" /> <% $c->i18n->p("lists_datasets.bulk.quality_value", "quality value") |h %> <br />
   <div style="margin-left: 1em">
-    <input type="radio" name="bac_seq_type" value="raw_seq" />raw sequence and/or quality<br />
-    <input type="radio" name="bac_seq_type" value="trim_seq" checked="checked" />trimmed seq. and/or quality<br />
+    <input type="radio" name="bac_seq_type" value="raw_seq" /><% $c->i18n->p("lists_datasets.bulk.raw_sequence_and_or_quality", "raw sequence and/or quality") |h %><br />
+    <input type="radio" name="bac_seq_type" value="trim_seq" checked="checked" /><% $c->i18n->p("lists_datasets.bulk.trimmed_seq_and_or_quality", "trimmed seq. and/or quality") |h %><br />
   </div>
 </div>
 	
@@ -74,8 +74,8 @@ And/or upload list file: <br /><input type="file" name="file" />
 %    }
 
 	<input type="hidden" name="idType" value="bac_end" />
-	<input type="reset" />&nbsp;&nbsp;
-        <input type="submit" value="Submit"><br />
+	<input type="reset"  value="<% $c->i18n->p("lists_datasets.bulk.reset", "Reset") |h %>"/>&nbsp;&nbsp;
+        <input type="submit" value="<% $c->i18n->p("lists_datasets.bulk.submit", "Submit") |h %>"><br />
    </form>
 
 

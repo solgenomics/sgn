@@ -19,11 +19,15 @@ $form
 </%args>
 
 
-<& /page/page_title.mas, title => "solGS: Search Traits" &>
-<&| /page/info_section.mas,
-  title => "Search ",
+<& /page/page_title.mas, title => HTML::Entities::encode_entities($c->i18n->p("solgs.interface.solgs_search_traits", "solGS: Search Traits")) &>
+<&| /page/info_section.mas, anchor_title => "Search ",
+  title => HTML::Entities::encode_entities($c->i18n->p("solgs.interface.search_fc9f76", "Search ")),
 &>
 
 <% $form %>
 
 </&>
+
+<%once>
+use HTML::Entities ();
+</%once>

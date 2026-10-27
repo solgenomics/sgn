@@ -76,6 +76,8 @@ David Waring <djw64@cornell.edu>
 use strict;
 use warnings;
 use Moose;
+use SGN::I18N ();
+has 'i18n' => (is => 'rw', isa => 'Maybe[Object]');
 use JSON;
 use POSIX qw(WIFSIGNALED WTERMSIG WIFEXITED WEXITSTATUS);
 
@@ -137,6 +139,7 @@ sub BUILD {
 #
 sub verify {
     my $self = shift;
+    my $i18n = SGN::I18N::translate($self);
     my $input = shift;
     my $output = shift;
     my $species = shift;
@@ -156,15 +159,15 @@ sub verify {
     my $cmd = "bash " . $script . " \"" . $input . "\" \"" . $output . "\"";
     my $rv = system($cmd);
     if ($rv == -1) {
-        $results{'error'} = "Could not launch pre-processing script: $!";
+        $results{'error'} = SGN::I18N::translate($i18n, "genotype.validation.could_not_launch_pre_processing_script_error", "Could not launch pre-processing script: %{error}", {error => ("" . "$!")});
     }
     elsif (WIFSIGNALED($rv)) {
         my $s = WTERMSIG($rv);
-        $results{'error'} = "Pre-processing script died from signal $s";
+        $results{'error'} = SGN::I18N::translate($i18n, "genotype.validation.pre_processing_script_died_from_signal_s", "Pre-processing script died from signal %{s}", {s => ("" . "$s")});
     }
     elsif (WIFEXITED($rv) && WEXITSTATUS($rv)) {
         my $e = WEXITSTATUS($rv);
-        $results{'error'} = "Pre-processing script exited with code $e"; 
+        $results{'error'} = SGN::I18N::translate($i18n, "genotype.validation.pre_processing_script_exited_with_code_e", "Pre-processing script exited with code %{e}", {e => ("" . "$e")});
     }
 
     # VERIFY THE FEATURES
@@ -262,6 +265,7 @@ sub verify {
 #
 sub create_protocol {
     my $self = shift;
+    my $i18n = SGN::I18N::translate($self);
     my $args = shift;
     my $protocol_name = $args->{'protocol_name'};
     my $protocol_description = $args->{'protocol_description'};
@@ -278,21 +282,21 @@ sub create_protocol {
 
     # Make sure SMD type_id is set
     if ( !defined $self->type_id || $self->type_id eq '' ) {
-        $results{'error'} = "Sequence Metadata type_id not set!";
+        $results{'error'} = SGN::I18N::translate($i18n, "genotype.validation.sequence_metadata_field_not_set", "Sequence Metadata %{field} not set!", {field => "type_id"});
         return(\%results);
     }
 
     # Check required arguments
     if ( !$protocol_name || $protocol_name eq '' ) {
-        $results{'error'} = "Protocol name not set!";
+        $results{'error'} = SGN::I18N::translate($i18n, "genotype.validation.protocol_name_not_set", "Protocol name not set!");
         return(\%results);
     }
     if ( !$protocol_description || $protocol_description eq '' ) {
-        $results{'error'} = "Protocol description not set!";
+        $results{'error'} = SGN::I18N::translate($i18n, "genotype.validation.protocol_description_not_set", "Protocol description not set!");
         return(\%results);
     }
     if ( !$reference_genome || $reference_genome eq '' ) {
-        $results{'error'} = "Reference genome not set!";
+        $results{'error'} = SGN::I18N::translate($i18n, "genotype.validation.reference_genome_not_set", "Reference genome not set!");
         return(\%results);
     }
 
@@ -357,6 +361,7 @@ sub create_protocol {
 #
 sub store {
     my $self = shift;
+    my $i18n = SGN::I18N::translate($self);
     my $input = shift;
     my $species = shift;
     my $chunk_size = shift;
@@ -368,11 +373,11 @@ sub store {
 
     # Make sure type_id and nd_protocol_id are set
     if ( !defined $self->type_id || $self->type_id eq '' ) {
-       $results{'error'} = "Sequence Metadata type_id not set!";
+       $results{'error'} = SGN::I18N::translate($i18n, "genotype.validation.sequence_metadata_field_not_set", "Sequence Metadata %{field} not set!", {field => "type_id"});
        return(\%results);
     }
     if ( !defined $self->nd_protocol_id || $self->nd_protocol_id eq '' ) {
-        $results{'error'} = "Sequence Metadata nd_protocol_id not set!";
+        $results{'error'} = SGN::I18N::translate($i18n, "genotype.validation.sequence_metadata_field_not_set", "Sequence Metadata %{field} not set!", {field => "nd_protocol_id"});
         return(\%results);
     }
 
@@ -384,14 +389,14 @@ sub store {
     # Check cvterm id
     my $cvterm = $self->bcs_schema->resultset("Cv::Cvterm")->find({ cvterm_id => $self->type_id });
     if ( !$cvterm ) {
-        $results{'error'} = "No matching cvterm found for the specified type id";
+        $results{'error'} = SGN::I18N::translate($i18n, "genotype.validation.no_matching_cvterm_found_for_the_specified_type_id", "No matching cvterm found for the specified type id");
         return(\%results);
     }
 
     # Check nd protocol id
     my $nd_protocol = $self->bcs_schema->resultset("NaturalDiversity::NdProtocol")->find({ nd_protocol_id => $self->nd_protocol_id });
     if ( !$nd_protocol ) {
-        $results{'error'} = "No matching nd protocol found for the specified nd protocol id";
+        $results{'error'} = SGN::I18N::translate($i18n, "genotype.validation.no_matching_nd_protocol_found_for_the_specified_nd_protocol_id", "No matching nd protocol found for the specified nd protocol id");
         return(\%results);
     }
 
@@ -449,7 +454,7 @@ sub store {
                 my $value = $kv[1];
                 ($value) = $value =~ /^"?([^"]*)"?$/;
                 if ( $key eq "score" || $key eq "start" || $key eq "end" ) {
-                    $results{'error'} = "Line has reserved key in attribute list (attributes cannot use keys of 'score', 'start' or 'end')";
+                    $results{'error'} = SGN::I18N::translate($i18n, "genotype.validation.line_has_reserved_key_in_attribute_list_attributes_cannot_use_keys_of", "Line has reserved key in attribute list (attributes cannot use keys of '%{field}', '%{field_2}' or '%{field_3}')", {field => "score", field_2 => "start", field_3 => "end"});
                     return(\%results);
                 }
                 $attribute_hash{$key} = $value;
@@ -559,6 +564,7 @@ sub _write_chunk() {
 #
 sub query {
     my ($self, $args) = @_;
+    my $i18n = SGN::I18N::translate($self);
     my $feature_id = $args->{feature_id};
     my $start = $args->{start};
     my $end = $args->{end};
@@ -579,11 +585,11 @@ sub query {
 
     # Check for required parameters
     if ( !defined $feature_id || $feature_id eq '' ) {
-        $results{'error'} = "Feature ID not provided!";
+        $results{'error'} = SGN::I18N::translate($i18n, "genotype.validation.feature_id_not_provided", "Feature ID not provided!");
         return(\%results);
     }
     if ( (!defined $reference_genome || $reference_genome eq '') && (defined $start || defined $end) ) {
-        $results{'error'} = "Reference genome must be provided with start and/or end positions(s)!";
+        $results{'error'} = SGN::I18N::translate($i18n, "genotype.validation.reference_genome_must_be_provided_with_start_and_or_end_positions_s", "Reference genome must be provided with start and/or end positions(s)!");
         return(\%results);
     }
 
@@ -609,7 +615,7 @@ sub query {
     # Check if feature_id exists
     my $feature_rs = $schema->resultset("Sequence::Feature")->find({ feature_id => $feature_id });
     if ( !defined $feature_rs ) {
-        $results{'error'} = 'Could not find matching feature!';
+        $results{'error'} = SGN::I18N::translate($i18n, "genotype.validation.could_not_find_matching_feature", "Could not find matching feature!");
         return(\%results);
     }
 
@@ -618,7 +624,7 @@ sub query {
         my $cv_rs = $schema->resultset('Cv::Cv')->find({ name => "sequence_metadata_types" });
         my $cvterm_rs = $schema->resultset('Cv::Cvterm')->find({ cvterm_id => $type_id, cv_id => $cv_rs->cv_id() });
         if ( !defined $cvterm_rs ) {
-            $results{'error'} = "Could not find matching sequence metadata type [$type_id]!";
+            $results{'error'} = SGN::I18N::translate($i18n, "genotype.validation.could_not_find_matching_sequence_metadata_type_type_id", "Could not find matching sequence metadata type [%{type_id}]!", {type_id => ("" . "$type_id")});
             return(\%results);
         }
     }
@@ -631,7 +637,7 @@ sub query {
         my $protocol_cvterm_rs = $schema->resultset('Cv::Cvterm')->find({ name => "sequence_metadata_protocol", cv_id => $protocol_cv_rs->cv_id() });
         my $protocol_rs = $schema->resultset("NaturalDiversity::NdProtocol")->find({ nd_protocol_id => $nd_protocol_id, type_id => $protocol_cvterm_rs->cvterm_id() });
         if ( !defined $protocol_rs ) {
-            $results{'error'} = "Could not find matching nd_protocol [$nd_protocol_id]!";
+            $results{'error'} = SGN::I18N::translate($i18n, "genotype.validation.could_not_find_matching_field_nd_protocol_id", "Could not find matching %{field} [%{nd_protocol_id}]!", {field => "nd_protocol", nd_protocol_id => ("" . "$nd_protocol_id")});
             return(\%results);
         }
 
@@ -676,7 +682,7 @@ sub query {
     
     # DATA QUERY TOO LARGE: return with an error message
     if ( $chunk_count > $MAX_CHUNK_COUNT ) {
-        $results{'error'} = "The requested query is too large to perform at once.  Try filtering the data by including fewer data types/protocols and/or a smaller sequence range.";
+        $results{'error'} = SGN::I18N::translate($i18n, "genotype.validation.the_requested_query_is_too_large_to_perform_at_once_try_filtering", "The requested query is too large to perform at once.  Try filtering the data by including fewer data types/protocols and/or a smaller sequence range.");
         return(\%results);
     }
 

@@ -20,6 +20,8 @@ Nicolas Morales <nm529@cornell.edu>
 package CXGN::People::Roles;
 
 use Moose;
+use SGN::I18N ();
+use CatalystX::GlobalContext '$c';
 use Try::Tiny;
 use SGN::Model::Cvterm;
 use Data::Dumper;
@@ -37,6 +39,7 @@ has 'people_schema' => (
     );
 
 sub add_sp_role {
+    my SGN::I18N $ui_roles_add_sp_role_i18n = $c && $c->can('i18n') ? $c->i18n : undef;
 	my $self = shift;
 	my $name = shift;
 	my $dbh = $self->people_schema->storage->dbh;
@@ -55,11 +58,12 @@ sub add_sp_role {
 		$sth->execute($name);
 	};
 	if ($@) {
-		return "An error occurred while storing a new role. ($@)";
+		return (SGN::I18N::translate($ui_roles_add_sp_role_i18n, "program.roles.add_sp_role", "An error occurred while storing a new role. (%{details})", {details => "$@"}));
 	}
 }
 
 sub update_sp_role {
+    my SGN::I18N $ui_roles_update_sp_role_i18n = $c && $c->can('i18n') ? $c->i18n : undef;
     my $self = shift;
     my $new_name = shift;
     my $old_name = shift;
@@ -79,7 +83,7 @@ sub update_sp_role {
 	$sth->execute($new_name,$old_name);
     };
     if ($@) {
-	return "An error occurred while updating an existing role. ($@)";
+	return (SGN::I18N::translate($ui_roles_update_sp_role_i18n, "program.roles.update_sp_role", "An error occurred while updating an existing role. (%{details})", {details => "$@"}));
     }
 }
 

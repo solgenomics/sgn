@@ -1,3 +1,14 @@
+function escapeDatasetScatterHtml(value) {
+    return String(value).replace(/[&<>"']/g, function (character) {
+        return { "&": "&amp;", "<": "&lt;", ">": "&gt;", "\"": "&quot;", "'": "&#39;" }[character];
+    });
+}
+
+function datasetStatisticCaption(value) {
+    const captions = {Mean: (window.SGN && SGN.i18n ? SGN.i18n.p("lists_datasets.pages.mean", "Mean") : "Mean"), Median: (window.SGN && SGN.i18n ? SGN.i18n.p("lists_datasets.pages.median", "Median") : "Median"), "Std Dev": (window.SGN && SGN.i18n ? SGN.i18n.p("lists_datasets.scatterplot.std_dev", "Std Dev") : "Std Dev")};
+    return Object.prototype.hasOwnProperty.call(captions, value) ? captions[value] : value;
+}
+
 export function init(datasetId, datasetName, baseWidth) {
     class Dataset {
         constructor() {
@@ -231,7 +242,7 @@ export function init(datasetId, datasetName, baseWidth) {
                     url: '/ajax/dataset/store_outliers/' + LocalThis.datasetId,
                     data: { outliers: stringOutliers, outlier_cutoffs: stringOutlierCutoffs },
                     success: function (response) {
-                        alert('outliers successfully stored!');
+                        alert((window.SGN && SGN.i18n ? SGN.i18n.p("global.dataset_scatterplot.alert.outliers_stored", "outliers successfully stored!") : "outliers successfully stored!"));
                         LocalThis.storedOutliersIds = [...allOutliers];
                         d3.select("svg").remove();
                         LocalThis.render();
@@ -249,7 +260,7 @@ export function init(datasetId, datasetName, baseWidth) {
                     url: '/ajax/dataset/store_outliers/' + LocalThis.datasetId,
                     data: { outliers: "", outlier_cutoffs: "" },
                     success: function (response) {
-                        alert('outliers successfully reseted!');
+                        alert((window.SGN && SGN.i18n ? SGN.i18n.p("global.dataset_scatterplot.alert.outliers_reset", "outliers successfully reseted!") : "outliers successfully reseted!"));
                         LocalThis.storedOutliersIds = [];
                         d3.select("svg").remove();
                         LocalThis.render();
@@ -270,7 +281,7 @@ export function init(datasetId, datasetName, baseWidth) {
                     url: '/ajax/dataset/store_outliers/' + LocalThis.datasetId,
                     data: { outliers: stringFilteredNonTrait, outlier_cutoffs: "" },
                     success: function (response) {
-                        alert('outliers successfully reseted!');
+                        alert((window.SGN && SGN.i18n ? SGN.i18n.p("global.dataset_scatterplot.alert.outliers_reset", "outliers successfully reseted!") : "outliers successfully reseted!"));
                         LocalThis.storedOutliersIds = filteredNonTrait;
                         d3.select("svg").remove();
                         LocalThis.render();
@@ -322,7 +333,7 @@ export function init(datasetId, datasetName, baseWidth) {
                 }
                 addRosnerButton.setAttribute("id", "rosner_add");
                 addRosnerButton.classList = "btn btn-sm btn-success btn-dataset";
-                addRosnerButton.textContent = "Add Rosner test outliers";
+                addRosnerButton.textContent = (window.SGN && SGN.i18n ? SGN.i18n.p("global.dataset_scatterplot.button.add_rosner_outliers", "Add Rosner test outliers") : "Add Rosner test outliers");
                 addRosnerButton.addEventListener('click', function () {
                     addRosnserOutliers(outliers);
                 });
@@ -354,7 +365,7 @@ export function init(datasetId, datasetName, baseWidth) {
                     url: '/ajax/dataset/store_outliers/' + LocalThis.datasetId,
                     data: { outliers: stringOutliers, outlier_cutoffs: stringOutlierCutoffs },
                     success: function (response) {
-                        alert('outliers successfully stored!');
+                        alert((window.SGN && SGN.i18n ? SGN.i18n.p("global.dataset_scatterplot.alert.outliers_stored", "outliers successfully stored!") : "outliers successfully stored!"));
                         LocalThis.storedOutliersIds = [...allOutliers];
                         d3.select("svg").remove();
                         LocalThis.render();
@@ -506,7 +517,7 @@ export function init(datasetId, datasetName, baseWidth) {
                     .attr("dy", ".65em")
                     .style("text-anchor", "middle")
                     .style("font", "16px arial")
-                    .text("Trait Value");
+                    .text((window.SGN && SGN.i18n ? SGN.i18n.p("global.dataset_scatterplot.axis.trait_value", "Trait Value") : "Trait Value"));
 
 
                 // Add dots
@@ -532,7 +543,7 @@ export function init(datasetId, datasetName, baseWidth) {
 
                 var mousemove = function (d) {
                     tooltip
-                        .html("id: " + LocalThis.phenoIds[d] + "<br>" + "val: " + LocalThis.traitVals[d])
+                        .html(escapeDatasetScatterHtml(window.SGN && SGN.i18n ? SGN.i18n.p("global.dataset_scatterplot.tooltip.id", "id:") : "id:") + " " + escapeDatasetScatterHtml(LocalThis.phenoIds[d]) + "<br>" + escapeDatasetScatterHtml(window.SGN && SGN.i18n ? SGN.i18n.p("global.dataset_scatterplot.tooltip.value", "val:") : "val:") + " " + escapeDatasetScatterHtml(LocalThis.traitVals[d]))
                         .style("left", (d3.mouse(this)[0] + 50) + "px")
                         .style("top", (d3.mouse(this)[1] + 40) + "px")
                 }
@@ -657,35 +668,35 @@ export function init(datasetId, datasetName, baseWidth) {
                     .attr('x', legendSize.posX + 25 + dotSize + 5)
                     .attr('y', legendSize.posY + 10 + dotSize / 2 + 1)
                     .style("font", "arial")
-                    .text('normal data point')
+                    .text((window.SGN && SGN.i18n ? SGN.i18n.p("global.dataset_scatterplot.legend.normal_data_point", "normal data point") : "normal data point"))
 
                 svg.append('text')
                     .attr('x', legendSize.posX + 25 + dotSize + 5)
                     .attr('y', legendSize.posY + 35 + dotSize / 2 + 1)
                     .style("font", "arial")
-                    .text('outliers value stored in database')
+                    .text((window.SGN && SGN.i18n ? SGN.i18n.p("global.dataset_scatterplot.legend.stored_outlier", "outliers value stored in database") : "outliers value stored in database"))
 
                 svg.append('text')
                     .attr('x', legendSize.posX + 25 + dotSize + 5)
                     .attr('y', legendSize.posY + 60 + dotSize / 2 + 1)
                     .style("font", "arial")
-                    .text('outliers from current cutoff')
+                    .text((window.SGN && SGN.i18n ? SGN.i18n.p("global.dataset_scatterplot.legend.current_cutoff_outlier", "outliers from current cutoff") : "outliers from current cutoff"))
 
 
                 legend.append("text")
-                    .text(metricString + ": " + (LocalThis.metricValue == "iqr" ? "(" + metric[0].toFixed(1) + ", " + metric[1].toFixed(1) + ")" : metric.toFixed(2)))
+                    .text(datasetStatisticCaption(metricString) + ": " + (LocalThis.metricValue == "iqr" ? "(" + metric[0].toFixed(1) + ", " + metric[1].toFixed(1) + ")" : metric.toFixed(2)))
                     .attr('x', legendSize.posX + 20 - dotSize / 2)
                     .attr('y', legendSize.posY + 85);
 
                 legend.append("text")
-                    .text(deviationString + ": " + deviation.toFixed(2))
+                    .text(datasetStatisticCaption(deviationString) + ": " + deviation.toFixed(2))
                     .style("font", "arial")
                     .attr('x', legendSize.posX + (LocalThis.metricValue == "iqr" ? 165 : 130) - dotSize / 2)
                     .attr('y', legendSize.posY + 85);
 
                 legend.append("text")
                     .text(() => {
-                        return "L. Cutoff: " + leftCutoff.toFixed(2);
+                        return (window.SGN && SGN.i18n ? SGN.i18n.p("global.dataset_scatterplot.legend.left_cutoff", "L. Cutoff") : "L. Cutoff") + ": " + leftCutoff.toFixed(2);
                     })
                     .style("font", "arial")
                     .attr('x', legendSize.posX + 20 - dotSize / 2)
@@ -693,7 +704,7 @@ export function init(datasetId, datasetName, baseWidth) {
 
                 legend.append("text")
                     .text(() => {
-                        return "R. Cutoff: " + rightCutoff.toFixed(2);
+                        return (window.SGN && SGN.i18n ? SGN.i18n.p("global.dataset_scatterplot.legend.right_cutoff", "R. Cutoff") : "R. Cutoff") + ": " + rightCutoff.toFixed(2);
                     })
                     .style("font", "arial")
                     .attr('x', legendSize.posX + 130 - dotSize / 2)

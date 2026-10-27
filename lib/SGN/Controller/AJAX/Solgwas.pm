@@ -4,6 +4,7 @@ use warnings;
 package SGN::Controller::AJAX::Solgwas;
 
 use Moose;
+use SGN::I18N ();
 use Data::Dumper;
 use File::Temp qw | tempfile |;
 use File::Slurp;
@@ -93,6 +94,7 @@ sub shared_phenotypes: Path('/ajax/solgwas/shared_phenotypes') : {
 sub extract_trait_data :Path('/ajax/solgwas/getdata') Args(0) {
     my $self = shift;
     my $c = shift;
+    my $i18n = SGN::I18N::translate($c);
 
     my $file = $c->req->param("file");
     my $trait = $c->req->param("trait");
@@ -106,7 +108,7 @@ sub extract_trait_data :Path('/ajax/solgwas/getdata') Args(0) {
 
     my $F;
     if (! open($F, "<", $temppath)) {
-	$c->stash->{rest} = { error => "Can't find data." };
+	$c->stash->{rest} = { error => SGN::I18N::translate($i18n, "analysis.interface.can_t_find_data", "Can't find data.") };
 	return;
     }
 

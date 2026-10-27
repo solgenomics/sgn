@@ -36,12 +36,14 @@ my $result = $odk_crosses->save_ona_cross_info();
 use strict;
 use warnings;
 use Moose;
+use SGN::I18N ();
 use Try::Tiny;
 use Data::Dumper;
 use SGN::Model::Cvterm;
 use LWP::Simple;
 use LWP::UserAgent;
 use JSON;
+use Encode qw(decode FB_CROAK);
 use CXGN::UploadFile;
 use DateTime;
 use File::Basename qw | basename dirname|;
@@ -171,6 +173,7 @@ sub save_ona_cross_info {
     print STDERR "SAVE ONA CROSS INFO START\n";
     my $self = shift;
     my $context = shift; #Needed for SGN::Image to store images to plots
+    my SGN::I18N $ui_save_ona_cross_info_i18n = SGN::I18N::translate($context);
     my $schema = $self->bcs_schema;
     my $metadata_schema = $self->metadata_schema;
     my $phenome_schema = $self->phenome_schema;
@@ -896,10 +899,10 @@ sub save_ona_cross_info {
             user_id => $self->sp_person_id
         });
         if (!$cross_add->validate_crosses()){
-            return {error => 'Error validating crosses'};
+            return {error => (SGN::I18N::translate($ui_save_ona_cross_info_i18n, "odk.server.crosses_validation_failed", "Error validating crosses"))};
         }
         if (!$cross_add->add_crosses()){
-            return {error => 'Error saving crosses'};
+            return {error => (SGN::I18N::translate($ui_save_ona_cross_info_i18n, "odk.server.crosses_save_failed", "Error saving crosses"))};
         }
 
 #        print STDERR "FIELD CROSS INFO =".Dumper(\%musa_cross_info)."\n";
@@ -995,7 +998,7 @@ sub save_ona_cross_info {
                 owner_name => $self->sp_person_username,
             });
             if (!$progeny_add->add_progeny()){
-                return {error => 'Error saving progenies'};
+                return {error => (SGN::I18N::translate($ui_save_ona_cross_info_i18n, "odk.server.progenies_save_failed", "Error saving progenies"))};
             }
         }
 
@@ -1014,7 +1017,7 @@ sub save_ona_cross_info {
 
     } else {
         #print STDERR Dumper $resp;
-        return { error => "Could not connect to ONA" };
+        return { error => (SGN::I18N::translate($ui_save_ona_cross_info_i18n, "odk.server.ona_connection_failed", "Could not connect to ONA")) };
     }
 }
 
@@ -1037,16 +1040,18 @@ sub create_odk_cross_progress_tree {
     my %open_tree;
     my %cross_combinations;
     my %top_level_title;
+    my %top_level_title_vars;
     my %all_plant_status_info;
 
     print STDERR "cross_wishlist $cross_wishlist_temp_file_path\n";
 
     open(my $fh, '<', $cross_wishlist_temp_file_path)
         or die "Could not open file '$cross_wishlist_temp_file_path' $!";
-    my $header_row = <$fh>;
+    my $header_row = decode('UTF-8', scalar(<$fh>), FB_CROAK);
     chomp $header_row;
     my @header_row = split ',', $header_row;
     while ( my $row = <$fh> ){
+        $row = decode('UTF-8', $row, FB_CROAK);
         chomp $row;
         my @cols = split ',', $row;
         push @wishlist_file_lines, \@cols;
@@ -1139,6 +1144,7 @@ sub create_odk_cross_progress_tree {
                 }
                 my $male_accession_names = join ',', keys %$male_hash;
                 $top_level_title{$top_level} = "Planned Female Accession: $female_accession_name. Planned Female Plot: $planned_female_plot_name. Planned Male Accession(s): $male_accession_names.";
+                $top_level_title_vars{$top_level} = {female => $female_accession_name, plot => $planned_female_plot_name, males => $male_accession_names};
             }
         }
     }
@@ -1165,6 +1171,8 @@ sub create_odk_cross_progress_tree {
         my $node = {
             'id' => $top_level,
             'children' => JSON::true,
+            # Locale-neutral metadata; canonical text and scientific keys stay intact.
+            'sgn_i18n' => {version => 1, vars => {entry => $top_level}, tooltip => $top_level_title_vars{$top_level}},
         };
         push @top_level_json, $node;
 
@@ -1173,18 +1181,21 @@ sub create_odk_cross_progress_tree {
         if (!exists($open_tree{$top_level})){
             $node->{state}->{opened} = JSON::false;
             $node->{text} = '<span order-field="2" title="'.$top_level_title{$top_level}.'">Wishlist Entry: '.$top_level." : No Crosses</span>";
+            $node->{sgn_i18n}->{kind} = 'wishlist_entry_no_crosses';
             $icon_color = 'text-danger';
             $node->{icon} = 'glyphicon glyphicon-briefcase '.$icon_color;
         }
         if (exists($female_accession_hash->{wishlist_female_plot_match})){
             #print STDERR Dumper $female_accession_hash;
             $node->{text} = '<span order-field="0" title="'.$top_level_title{$top_level}.'" class="text-success">Crossed Wishlist Entry: '.$top_level.'</span>';
+            $node->{sgn_i18n}->{kind} = 'crossed_wishlist_entry';
             $icon_color = 'text-success';
             $node->{icon} = 'glyphicon glyphicon-briefcase '.$icon_color;
             $node->{state}->{opened} = JSON::true;
             $crossed_female_plot_name = $female_accession_hash->{wishlist_female_plot_match};
         } elsif (exists($female_accession_hash->{wishlist_female_plot_no_match})){
             $node->{text} = '<span order-field="1" title="'.$top_level_title{$top_level}.'">Possibly Crossed Wishlist Entry: '.$top_level.': Cross Performed But Not On This Wishlist Female Plot</span>';
+            $node->{sgn_i18n}->{kind} = 'possibly_crossed_wishlist_entry';
             $icon_color = 'text-info';
             $node->{icon} = 'glyphicon glyphicon-briefcase '.$icon_color;
             $node->{state}->{opened} = JSON::false;
@@ -1197,6 +1208,7 @@ sub create_odk_cross_progress_tree {
             if ($female_accession_name ne 'wishlist_female_plot_match' && $female_accession_name ne 'wishlist_female_plot_no_match'){
                 my $planned_female_node = {
                     'text' => 'Wishlist Female Accession: '.$female_accession_name,
+                    'sgn_i18n' => {version => 1, kind => 'wishlist_female_accession', vars => {name => $female_accession_name}},
                     'icon' => 'glyphicon glyphicon-queen '.$icon_color,
                     'state' => { 'opened' => JSON::true }
                 };
@@ -1204,6 +1216,7 @@ sub create_odk_cross_progress_tree {
                 while (my ($planned_female_plot_name, $male_accession_hash) = each %$planned_female_plot_name_hash){
                     my $planned_female_plot_node = {
                         'text' => 'Wishlist Female Plot: '.$planned_female_plot_name,
+                        'sgn_i18n' => {version => 1, kind => 'wishlist_female_plot', vars => {name => $planned_female_plot_name}},
                         'icon' => 'glyphicon glyphicon-queen '.$icon_color
                     };
                     push @{$planned_female_node->{children}}, $planned_female_plot_node;
@@ -1212,10 +1225,12 @@ sub create_odk_cross_progress_tree {
                             my $status = $crosses_cycle_hash;
                             #print STDERR Dumper $status;
                             $planned_female_plot_node->{text} .= ' : '.$status->{'attachment_display_tiny'}.' : STATUS = '.$status->{'status_message'};
+                            $planned_female_plot_node->{sgn_i18n}->{status} = {attachment => $status->{'attachment_display_tiny'}, value => $status->{'status_message'}};
                         }
                         else {
                             my $planned_male_node = {
-                                'text' => 'Wishlist Male Accession: '.$male_accession_name
+                                'text' => 'Wishlist Male Accession: '.$male_accession_name,
+                                'sgn_i18n' => {version => 1, kind => 'wishlist_male_accession', vars => {name => $male_accession_name}}
                             };
                             push @{$planned_female_plot_node->{children}}, $planned_male_node;
                             if (ref($crosses_cycle_hash) eq "HASH") {
@@ -1233,6 +1248,7 @@ sub create_odk_cross_progress_tree {
                                             $planned_male_node->{state}->{opened} = JSON::false;
                                             my $cross_node = {
                                                 'text' => 'No Crosses',
+                                                'sgn_i18n' => {version => 1, kind => 'no_crosses', vars => {}},
                                                 'icon' => 'glyphicon glyphicon-minus',
                                             };
                                             push @{$planned_male_node->{children}}, $cross_node;
@@ -1240,6 +1256,7 @@ sub create_odk_cross_progress_tree {
                                         }
                                         my $cross_node = {
                                             'text' => 'Cross Name: '.$cross_name,
+                                            'sgn_i18n' => {version => 1, kind => 'cross_name', vars => {name => $cross_name}},
                                             'icon' => 'glyphicon glyphicon-random text-primary',
                                             'state' => { 'opened' => JSON::true }
                                         };
@@ -1486,6 +1503,9 @@ sub create_odk_cross_progress_tree {
                                     'text' => $crosses_cycle_hash,
                                     'icon' => 'glyphicon glyphicon-minus',
                                 };
+                                if ($crosses_cycle_hash eq 'No Crosses Performed') {
+                                    $action_attr_node->{sgn_i18n} = {version => 1, kind => 'no_crosses_performed', vars => {}};
+                                }
                                 push @{$planned_male_node->{children}}, $action_attr_node;
                             }
                         }

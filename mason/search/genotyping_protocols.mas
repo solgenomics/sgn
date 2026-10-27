@@ -1,10 +1,14 @@
 
+<%once>
+use SGN::I18N ();
+</%once>
+
 <%args>
 </%args>
 
 <& /util/import_javascript.mas, classes => [ 'jquery', 'jquery.dataTables' ] &>
 
-<& /page/page_title.mas, title => "Genotyping Protocol Search" &>
+<& /page/page_title.mas, title => SGN::I18N::translate($c->i18n, 'genotype.protocol.search.title', 'Genotyping Protocol Search', undef, {entities => '<>&'}) &>
 
 <div class="well well-sm">
     <div class="panel panel-default">
@@ -12,15 +16,15 @@
             <table id="genotyping_protocol_search_results" width="100%" class="table table-hover table-striped">
                 <thead>
                     <tr>
-                        <th>Protocol</th>
-                        <th>Marker Type</th>
-                        <th>Header Description</th>
-                        <th>Number of Markers</th>
-                        <th>Protocol Description</th>
-                        <th>Reference Genome</th>
-                        <th>Species Name</th>
-                        <th>Sample Type</th>
-                        <th>Create Date</th>
+                        <th><% $c->i18n->p('genotype.protocol.search.protocol', 'Protocol') |h %></th>
+                        <th><% $c->i18n->p('genotype.plate.marker_type', 'Marker Type') |h %></th>
+                        <th><% $c->i18n->p('genotype.protocol.search.header_description', 'Header Description') |h %></th>
+                        <th><% $c->i18n->p('genotype.plate.number_of_markers', 'Number of Markers') |h %></th>
+                        <th><% $c->i18n->p('genotype.plate.protocol_description', 'Protocol Description') |h %></th>
+                        <th><% $c->i18n->p('genotype.plate.reference_genome', 'Reference Genome') |h %></th>
+                        <th><% $c->i18n->p('genotype.plate.species_name', 'Species Name') |h %></th>
+                        <th><% $c->i18n->p('genotype.plate.sample_type', 'Sample Type') |h %></th>
+                        <th><% $c->i18n->p('cross.forms.create_date', 'Create Date') |h %></th>
                     </tr>
                 </thead>
             </table>
@@ -44,7 +48,7 @@
 <br /><br />
 
 
-<&| /page/info_section.mas, id=>"protocol_search_accession_filter", title => 'Filter Protocols by Accessions', collapsible=>1, collapsed=>0 &>
+<&| /page/info_section.mas, id=>"protocol_search_accession_filter", title => SGN::I18N::translate($c->i18n, 'genotype.protocol.search.filter_accessions', 'Filter Protocols by Accessions', undef, {entities => '<>&'}), anchor_title => 'Filter Protocols by Accessions', collapsible=>1, collapsed=>0 &>
 
 <& /search/genotyping_protocols_accession_filter.mas &>
 

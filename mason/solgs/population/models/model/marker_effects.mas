@@ -19,16 +19,16 @@ $top_marker_effects
 </%args>
 
 
-<&| /page/info_section.mas, 
+<&| /page/info_section.mas, anchor_title => "Marker effects",
   collapsible => 1, 
   collapsed   => 1, 
-  title       => "Marker effects" 
+  title       => HTML::Entities::encode_entities($c->i18n->p("solgs.interface.marker_effects", "Marker effects"))
 &>
  
-<i>Top 10 markers</i>:
+<i><% $c->i18n->p("solgs.interface.top_10_markers", "Top 10 markers") |h %></i>:
 
 <& /page/columnar_table.mas,
-  headings     => ["Marker", "Effects"], 
+  headings     => [$c->i18n->p("solgs.interface.marker", "Marker"), $c->i18n->p("solgs.interface.effects", "Effects")],
   data         => $top_marker_effects,
   __alt_freq   => 2,
   __alt_width  => 1,
@@ -40,3 +40,6 @@ $top_marker_effects
 <div id="marker_effcts_download_message"  class="message"></div>
 </&>
 
+<%once>
+use HTML::Entities ();
+</%once>

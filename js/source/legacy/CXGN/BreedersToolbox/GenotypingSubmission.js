@@ -35,15 +35,15 @@ jQuery(document).ready(function ($) {
             },
             success: function(response) {
                 if (response.metadata.status[0].message) {
-                    alert('Login failed. '+JSON.stringify(response.metadata.status[0].message));
+                    alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("genotype.interface.login_failed", "Login failed. ") : 'Login failed. ')+JSON.stringify(response.metadata.status[0].message));
                 }
                 else {
-                    alert("Success!"+ JSON.stringify(response)+" which is "+response.result.access_token);
+                    alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("trial.card.entry_numbers.delete_success", "Success!") : "Success!")+ JSON.stringify(response)+(window.SGN && window.SGN.i18n ? window.SGN.i18n.p("genotype.interface.which_is", " which is ") : " which is ")+response.result.access_token);
                     access_token = response.result.access_token;
                 }
             },
             error: function(response) {
-                alert("An error occurred trying to log into the sequencing facility server. Please try again later.");
+                alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("genotype.interface.an_error_occurred_trying_to_log_into_the_sequencing_facility", "An error occurred trying to log into the sequencing facility server. Please try again later.") : "An error occurred trying to log into the sequencing facility server. Please try again later."));
             }
         });
         return access_token;
@@ -63,11 +63,11 @@ jQuery(document).ready(function ($) {
                         token : response.token
                     };
                 } else {
-                        return auth_data = { error : "An error occurred", };
+                        return auth_data = { error : (window.SGN && window.SGN.i18n ? window.SGN.i18n.p("folder.new.request_error", "An error occurred") : "An error occurred"), };
                 }
             },
             error: function(response) {
-                return auth_data = { error : "An error occurred", };
+                return auth_data = { error : (window.SGN && window.SGN.i18n ? window.SGN.i18n.p("folder.new.request_error", "An error occurred") : "An error occurred"), };
             }
         });
         return auth_data;
@@ -104,7 +104,7 @@ jQuery(document).ready(function ($) {
                 }
             },
             error: function(response) {
-                alert('An error occurred trying to submit the order.');
+                alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("genotype.interface.an_error_occurred_trying_to_submit_the_order", "An error occurred trying to submit the order.") : 'An error occurred trying to submit the order.'));
                 jQuery("#working_modal").modal('hide');
             }
         });
@@ -117,7 +117,7 @@ jQuery(document).ready(function ($) {
         var order;
 
         if (auth_data.error) {
-            alert("Genotyping server credentials are not available. Stop.");
+            alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("genotype.interface.genotyping_server_credentials_are_not_available_stop", "Genotyping server credentials are not available. Stop.") : "Genotyping server credentials are not available. Stop."));
             return;
         }
 
@@ -143,7 +143,7 @@ jQuery(document).ready(function ($) {
                     const orderId = ((response || {}).result || {}).orderId;
                     if ( orderId ) {
                         order = response.result;
-                        alert("Successfully!. Plate submitted to facility.");
+                        alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("genotype.interface.successfully_plate_submitted_to_facility", "Successfully!. Plate submitted to facility.") : "Successfully!. Plate submitted to facility."));
 
                         store_order(order,parseInt(plate_id));
 
@@ -158,7 +158,7 @@ jQuery(document).ready(function ($) {
                     }
                 },
                 error: function(response) {
-                    alert("An error occurred trying to submit your plate to the facility.");
+                    alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("genotype.interface.an_error_occurred_trying_to_submit_your_plate_to_the", "An error occurred trying to submit your plate to the facility.") : "An error occurred trying to submit your plate to the facility."));
                     return;
                 }
             });
@@ -172,7 +172,7 @@ jQuery(document).ready(function ($) {
         var submission;
 
         if (auth_data.error) {
-            alert("Genotyping server credentials are not available. Stop.");
+            alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("genotype.interface.genotyping_server_credentials_are_not_available_stop", "Genotyping server credentials are not available. Stop.") : "Genotyping server credentials are not available. Stop."));
             return;
         }
 
@@ -198,7 +198,7 @@ jQuery(document).ready(function ($) {
                         // submission =  response.result;
                         submission = (response || {}).result || {};
                         jQuery('#submission_lbl').html(submissionId);
-                        alert("Successfully!. Plate submitted to facility.");
+                        alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("genotype.interface.successfully_plate_submitted_to_facility", "Successfully!. Plate submitted to facility.") : "Successfully!. Plate submitted to facility."));
                         store_submission(submission,parseInt(plate_id));
                         Workflow.complete('#submit_plate_btn');
                         document.getElementById("facility_href").href = auth_data.host + "/order.pl"; 
@@ -210,7 +210,7 @@ jQuery(document).ready(function ($) {
                     }
                 },
                 error: function(response) {
-                    alert("An error occurred trying to submit your plate to the facility.");
+                    alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("genotype.interface.an_error_occurred_trying_to_submit_your_plate_to_the", "An error occurred trying to submit your plate to the facility.") : "An error occurred trying to submit your plate to the facility."));
                     return;
                 }
             });
@@ -232,14 +232,14 @@ jQuery(document).ready(function ($) {
                     alert(response.error);
                 } else {
                     const orderId = response.order_id;
-                    alert('Order stored successfully.');
+                    alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("genotype.interface.order_stored_successfully", "Order stored successfully.") : 'Order stored successfully.'));
                      $('#order_lbl').text(orderId);
                     // Workflow.focus("#plates_to_facilities_workflow", -1); //Go to success page
                     // Workflow.check_complete("#plates_to_facilities_workflow");
                 }
             },
             error: function(response) {
-                alert('An error occurred trying to store the order.');
+                alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("genotype.interface.an_error_occurred_trying_to_store_the_order", "An error occurred trying to store the order.") : 'An error occurred trying to store the order.'));
                 jQuery("#working_modal").modal('hide');
             }
         });
@@ -252,7 +252,7 @@ jQuery(document).ready(function ($) {
         auth_data = get_genotyping_facility_credentials();
 
         if (auth_data.error) {
-            alert("Genotyping server credentials are not available. Stop.");
+            alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("genotype.interface.genotyping_server_credentials_are_not_available_stop", "Genotyping server credentials are not available. Stop.") : "Genotyping server credentials are not available. Stop."));
             jQuery("#review_order_link").prop("disabled", true);
             return;
         }
@@ -328,7 +328,7 @@ jQuery(document).ready(function ($) {
             auth_data = get_genotyping_facility_credentials();
 
             if (auth_data.error) {
-                alert("Genotyping server credentials are not available. Stop.");
+                alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("genotype.interface.genotyping_server_credentials_are_not_available_stop", "Genotyping server credentials are not available. Stop.") : "Genotyping server credentials are not available. Stop."));
                 return;
             }
 
@@ -356,7 +356,7 @@ jQuery(document).ready(function ($) {
                         }
                     },
                     error: function(response) {
-                        alert("An error occurred trying to get the order status.");
+                        alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("genotype.interface.an_error_occurred_trying_to_get_the_order_status", "An error occurred trying to get the order status.") : "An error occurred trying to get the order status."));
                     }
                 });
 
@@ -377,11 +377,11 @@ jQuery(document).ready(function ($) {
                             store_facility_order(gdf_order,parseInt(plate_id));
                         }
                         else{
-                            alert("Something went wrong! Could not get order from submission.");
+                            alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("genotype.interface.something_went_wrong_could_not_get_order_from_submission", "Something went wrong! Could not get order from submission.") : "Something went wrong! Could not get order from submission."));
                         }
                     },
                     error: function(response) {
-                        alert('Something went wrong!. Complete your order clicking the link.');
+                        alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("genotype.interface.something_went_wrong_complete_your_order_clicking_the_link", "Something went wrong!. Complete your order clicking the link.") : 'Something went wrong!. Complete your order clicking the link.'));
                     }
                 });
             }
@@ -401,9 +401,9 @@ jQuery(document).ready(function ($) {
                         var data = response.result.data;
                         var links = "";
                         data.forEach(function (item) { 
-                            links += "<b>File Name:</b> " + item.fileName + "<br>" + 
-                                    "<b>File url:</b> " + item.fileURL + "<br>" +
-                                    "<b>md5sum:</b> " + item.md5sum + "<br><br>";
+                            links += ("<b>" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("genotype.interface.file_name", "File Name:") : "File Name:")).html() + "</b> ") + item.fileName + "<br>" +
+                                    ("<b>" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("genotype.interface.file_url", "File url:") : "File url:")).html() + "</b> ") + item.fileURL + "<br>" +
+                                    ("<b>" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("genotype.interface.md5sum", "md5sum:") : "md5sum:")).html() + "</b> ") + item.md5sum + "<br><br>";
                         });
                         jQuery('#raw_data_tab').html(links);
                     },
@@ -481,7 +481,7 @@ jQuery(document).ready(function ($) {
         order_info.full_order = order_info.facility_id == 'DArT' ? false : true;
         
         if (order_info.plate_id == '' || order_info.client_id == '') {
-            alert("A plate id, client facility id and service are required. Please try again.");
+            alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("genotype.interface.a_plate_id_client_facility_id_and_service_are_required", "A plate id, client facility id and service are required. Please try again.") : "A plate id, client facility id and service are required. Please try again."));
             return;
         }
 

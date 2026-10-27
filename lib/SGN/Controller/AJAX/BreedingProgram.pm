@@ -23,6 +23,7 @@ BEGIN { extends 'Catalyst::Controller::REST' };
 use List::MoreUtils qw | any all |;
 use JSON::Any;
 use Data::Dumper;
+use HTML::Entities ();
 use Try::Tiny;
 use Math::Round;
 use CXGN::BreedingProgram;
@@ -350,11 +351,15 @@ sub program_seedlots :Chained('ajax_breeding_program') PathPart('seedlots') Args
     foreach my $r (@$result){
         my ($seedlot_id, $seedlot_name, $content_id, $content_name, $content_type) = @$r;
         if ($content_type eq 'accession') {
-            push @seedlot_data, [qq{<a href="/breeders/seedlot/$seedlot_id">$seedlot_name</a>},
-            qq{<a href="/stock/$content_id/view">$content_name</a>}, $content_type]
+            my $seedlot_name_html = HTML::Entities::encode_entities("$seedlot_name", q{<>&"'});
+            my $content_name_html = HTML::Entities::encode_entities("$content_name", q{<>&"'});
+            push @seedlot_data, [qq{<a href="/breeders/seedlot/$seedlot_id">$seedlot_name_html</a>},
+            qq{<a href="/stock/$content_id/view">$content_name_html</a>}, $content_type]
         } elsif ($content_type eq 'cross') {
-            push @seedlot_data, [qq{<a href="/breeders/seedlot/$seedlot_id">$seedlot_name</a>},
-            qq{<a href="/cross/$content_id">$content_name</a>}, $content_type]
+            my $seedlot_name_html = HTML::Entities::encode_entities("$seedlot_name", q{<>&"'});
+            my $content_name_html = HTML::Entities::encode_entities("$content_name", q{<>&"'});
+            push @seedlot_data, [qq{<a href="/breeders/seedlot/$seedlot_id">$seedlot_name_html</a>},
+            qq{<a href="/cross/$content_id">$content_name_html</a>}, $content_type]
         }
     }
 

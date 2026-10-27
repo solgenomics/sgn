@@ -8,21 +8,21 @@ $collapse_phenotypes_section => 1
 
 
 <div class="well well-sm table-responsive">
-  <center><h4>Raw Data Statistics</h4></center>
+  <center><h4><% $c->i18n->p("phenotype.raw_data_statistics", "Raw Data Statistics") |h %></h4></center>
   <br/>
 
   <div id="pheno_summary_table_div">
     <table id="phenotype_summary_data_<% $program_id %>" class="display">
       <thead>
         <tr>
-          <th>Trait</th>
-          <th>Mean</th>
-          <th>Min</th>
-          <th>Max</th>
-          <th>Std Dev</th>
+          <th><% $c->i18n->p("accession.stock.phenotype.header.trait", "Trait") |h %></th>
+          <th><% $c->i18n->p("accession.usage.header.mean", "Mean") |h %></th>
+          <th><% $c->i18n->p("accession.usage.header.min", "Min") |h %></th>
+          <th><% $c->i18n->p("accession.usage.header.max", "Max") |h %></th>
+          <th><% $c->i18n->p("accession.usage.header.stddev", "Std Dev") |h %></th>
           <th>CV</th>
-          <th>Count</th>
-          <th>Histogram</th>
+          <th><% $c->i18n->p("accession.stock.phenotype.header.count", "Count") |h %></th>
+          <th><% $c->i18n->p("phenotype.histogram", "Histogram") |h %></th>
         </tr>
       </thead>
       <tbody>
@@ -33,13 +33,13 @@ $collapse_phenotypes_section => 1
 
 
 <div class="well well-sm" id="raw_data_histogram_well">
-  <center><h4>Raw Data Histogram</h4></center><hr>
+  <center><h4><% $c->i18n->p("phenotype.raw_data_histogram", "Raw Data Histogram") |h %></h4></center><hr>
   <div id="program_summary_hist_div">
     <div class="row">
       <div class="col-sm-8">
         <form class="form-horizontal">
           <div class="form-group form-group-sm">
-            <label for="program_summary_hist_dropdown" class="col-sm-2 control-label">Select:</label>
+            <label for="program_summary_hist_dropdown" class="col-sm-2 control-label"><% $c->i18n->p("phenotype.select", "Select:") |h %></label>
             <div class="col-sm-10">
               <div id="traits_assayed_dropdown">
               </div>
@@ -117,7 +117,7 @@ function trait_summary_hist_display_change(program_id) {
                  trait_summary_hist_change(program_id, this.value);
                 });
 
-                jQuery('#traits_assayed_histogram_cvterm_link').html("<a href='/cvterm/"+response.traits_assayed[0][0][0]+"/view'>Definition</a>");
+                jQuery('#traits_assayed_histogram_cvterm_link').html("<a href='/cvterm/"+response.traits_assayed[0][0][0]+("/view'>" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("phenotype.definition", "Definition") : "Definition")).html() + "</a>"));
 
                 jQuery.ajax( {
                     url : '/ajax/breeders/program/'+ program_id +'/trait_phenotypes/?trait='+jQuery("#program_summary_hist_dropdown").val(),
@@ -128,7 +128,7 @@ function trait_summary_hist_display_change(program_id) {
                             alert(response.error);
                         }
                         else if (response.status!="success"){
-                            alert("Problem loading plant/plot data: "+response.status);
+                            alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("phenotype.problem_loading_plant_plot_data", "Problem loading plant/plot data: ") : "Problem loading plant/plot data: ")+response.status);
                         }
                         else {
                             draw_histogram(response.data, d3.select("#program_summary_hist").node());
@@ -136,24 +136,24 @@ function trait_summary_hist_display_change(program_id) {
                     },
                     error: function(response) {
                         jQuery("#working_modal").modal("hide");
-                        alert('An error occured retrieving trait histogram data.');
+                        alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("phenotype.an_error_occured_retrieving_trait_histogram_data", "An error occured retrieving trait histogram data.") : 'An error occured retrieving trait histogram data.'));
                     }
                 });
             } else {
                 jQuery("#working_modal").modal("hide");
-                jQuery("#program_summary_hist").html("<center><h4>There is no data to plot.</h4></center>");
+                jQuery("#program_summary_hist").html(("<center><h4>" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("phenotype.there_is_no_data_to_plot", "There is no data to plot.") : "There is no data to plot.")).html() + "</h4></center>"));
             }
 
         },
         error: function(response){
-            alert('Error retrieving traits assayed in this breeding program');
+            alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("phenotype.error_retrieving_traits_assayed_in_this_breeding_program", "Error retrieving traits assayed in this breeding program") : 'Error retrieving traits assayed in this breeding program'));
         }
 
     });
 }
 
 function trait_summary_hist_change(program_id, value) {
-    jQuery('#traits_assayed_histogram_cvterm_link').html("<a href='/cvterm/"+value+"/view'>Definition</a>");
+    jQuery('#traits_assayed_histogram_cvterm_link').html("<a href='/cvterm/"+value+("/view'>" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("phenotype.definition", "Definition") : "Definition")).html() + "</a>"));
     jQuery("#program_summary_hist_dropdown").val(value);
     jQuery.ajax( {
         url : '/ajax/breeders/program/'+ program_id +'/trait_phenotypes/?trait='+value+'',
@@ -167,7 +167,7 @@ function trait_summary_hist_change(program_id, value) {
                 alert(response.error);
             }
             else if (response.status!="success"){
-                alert("Problem loading plant/plot data: "+response.status);
+                alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("phenotype.problem_loading_plant_plot_data", "Problem loading plant/plot data: ") : "Problem loading plant/plot data: ")+response.status);
             }
             else {
                 draw_histogram(response.data, d3.select("#program_summary_hist").node());
@@ -175,7 +175,7 @@ function trait_summary_hist_change(program_id, value) {
         },
         error: function(response) {
             jQuery("#working_modal").modal("hide");
-            alert('An error occured retrieving trait histogram data.');
+            alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("phenotype.an_error_occured_retrieving_trait_histogram_data", "An error occured retrieving trait histogram data.") : 'An error occured retrieving trait histogram data.'));
         }
     });
 }

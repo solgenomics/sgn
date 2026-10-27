@@ -1,3 +1,7 @@
+<%once>
+use HTML::Entities ();
+</%once>
+
 <%args>
 $facilities
 </%args>
@@ -10,33 +14,33 @@ $facilities
             <form class="form-horizontal" role="form" method="post" enctype="multipart/form-data" encoding="multipart/form-data" id="upload_genotypes_form" name="upload_genotypes_form" action="/ajax/genotype/upload">
 
                 <div class="modal-header">
-                    <button type="reset" class="close" id="upload_genotype_data_close_modal_1" name="upload_genotype_data_close_modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                    <h4 class="modal-title" id="uploadGenotypesDialog">Upload Genotypes</h4>
+                    <button type="reset" class="close" id="upload_genotype_data_close_modal_1" name="upload_genotype_data_close_modal" aria-label="<% $c->i18n->p("global.dataset_publish.close", "Close") |h %>"><span aria-hidden="true">&times;</span></button>
+                    <h4 class="modal-title" id="uploadGenotypesDialog"><% $c->i18n->p("genotype.plate.upload_genotypes", "Upload Genotypes") |h %></h4>
                 </div>
                 <div class="modal-body">
                     <div class="container-fluid">
 
                         <&| /util/workflow.mas, id=> "upload_genotypes_workflow" &>
-                            <&| /util/workflow.mas:step, title=> "Intro" &>
-                                <& /page/page_title.mas, title=>"This workflow will guide you through uploading genotypes into the database" &>
-                                <p>Select a genotyping project on the next screen. This project can represent a series of genotyping plates sent to a genotyping facilty.</p>
-                                <p>Ideally the sample names in your VCF file will match sample names in genotyping plates in the database; however, the sample names in your file can also match accession names in the database.</p>
-                                <p>Curently we support the VCF format, the Tassel HDF5 format, the Intertek CSV format, KASP data and SSR data for upload.</p>
-                                <p>If you are uploading many files that used the same genotyping protocol, you can do so, and the database will ensure that the marker information is consistent across the genotyping data (e.g. the same reference, alternate, position, etc.).</p>
+                            <&| /util/workflow.mas:step, title=> HTML::Entities::encode_entities($c->i18n->p("cross.ui.intro", "Intro")) &>
+                                <& /page/page_title.mas, title=>HTML::Entities::encode_entities($c->i18n->p("genotype.plate.this_workflow_will_guide_you_through_uploading_genotypes_into_the", "This workflow will guide you through uploading genotypes into the database")) &>
+                                <p><% $c->i18n->p("genotype.plate.select_a_genotyping_project_on_the_next_screen_this_project", "Select a genotyping project on the next screen. This project can represent a series of genotyping plates sent to a genotyping facilty.") |h %></p>
+                                <p><% $c->i18n->p("genotype.plate.ideally_the_sample_names_in_your_vcf_file_will_match", "Ideally the sample names in your VCF file will match sample names in genotyping plates in the database; however, the sample names in your file can also match accession names in the database.") |h %></p>
+                                <p><% $c->i18n->p("genotype.plate.curently_we_support_the_vcf_format_the_tassel_hdf5_format", "Curently we support the VCF format, the Tassel HDF5 format, the Intertek CSV format, KASP data and SSR data for upload.") |h %></p>
+                                <p><% $c->i18n->p("genotype.plate.if_you_are_uploading_many_files_that_used_the_same", "If you are uploading many files that used the same genotyping protocol, you can do so, and the database will ensure that the marker information is consistent across the genotyping data (e.g. the same reference, alternate, position, etc.).") |h %></p>
 
                                 <br/><br/>
                                 <div style="text-align: center">
-                                    <button class="btn btn-primary" onclick="Workflow.complete(this); return false;">Go to Next Step</button>
+                                    <button class="btn btn-primary" onclick="Workflow.complete(this); return false;"><% $c->i18n->p("cross.ui.go_to_next_step", "Go to Next Step") |h %></button>
                                 </div>
                             </&>
 
-                            <&| /util/workflow.mas:step, title=> "Data Type" &>
-                                <& /page/page_title.mas, title=>"Select the type of genotyping data being uploaded" &>
+                            <&| /util/workflow.mas:step, title=> HTML::Entities::encode_entities($c->i18n->p("global.dataset_publish.data_type", "Data Type")) &>
+                                <& /page/page_title.mas, title=>HTML::Entities::encode_entities($c->i18n->p("genotype.plate.select_the_type_of_genotyping_data_being_uploaded", "Select the type of genotyping data being uploaded")) &>
                                 <div class="form-group">
-                                    <label class="col-sm-3 control-label">Type of genotyping data: </label>
+                                    <label class="col-sm-3 control-label"><% $c->i18n->p("genotype.plate.type_of_genotyping_data", "Type of genotyping data:") |h %> </label>
                                     <div class="col-sm-9">
                                         <select class="form-control" id="genotype_data_type_select" name="genotype_data_type_select">
-                                            <option value="">Select data type</option>
+                                            <option value=""><% $c->i18n->p("genotype.plate.select_data_type", "Select data type") |h %></option>
                                             <option value="vcf">VCF</option>
                                             <option value="tassel_hdf5">Tassel HDF5</option>
                                             <option value="intertek">Intertek</option>
@@ -47,29 +51,29 @@ $facilities
                                 </div>
                                 <br/><br/>
                                 <div style="text-align: center">
-                                    <button class="btn btn-primary" id="upload_genotyping_data_type_check_button">Go to Next Step</button>
+                                    <button class="btn btn-primary" id="upload_genotyping_data_type_check_button"><% $c->i18n->p("cross.ui.go_to_next_step", "Go to Next Step") |h %></button>
                                 </div>
                             </&>
 
-                            <&| /util/workflow.mas:step, title=> "Genotyping Project" &>
-                                <& /page/page_title.mas, title=>"Select the genotyping project or create a new one. A genotyping project is a specific genotyping event. You can have many genotyping projects under the same genotyping protocol to indicate that those genotyping events used the same markers." &>
+                            <&| /util/workflow.mas:step, title=> HTML::Entities::encode_entities($c->i18n->p("genotype.plate.dialog.title_genotyping_project", "Genotyping Project")) &>
+                                <& /page/page_title.mas, title=>HTML::Entities::encode_entities($c->i18n->p("genotype.plate.select_the_genotyping_project_or_create_a_new_one_a", "Select the genotyping project or create a new one. A genotyping project is a specific genotyping event. You can have many genotyping projects under the same genotyping protocol to indicate that those genotyping events used the same markers.")) &>
 
                                 <table id="upload_genotyping_data_project_search_results" width="100%" class="table table-hover table-striped">
                                     <thead>
                                         <tr>
-                                            <th>Select</th>
-                                            <th>Genotyping Project Name</th>
-                                            <th>Description</th>
-                                            <th>Breeding program</th>
-                                            <th>Year</th>
-                                            <th>Location</th>
-                                            <th>Genotyping Facility</th>
+                                            <th><% $c->i18n->p("styleguide.demo.trial_table.select", "Select") |h %></th>
+                                            <th><% $c->i18n->p("folder.detail.genotyping_project_name", "Genotyping Project Name") |h %></th>
+                                            <th><% $c->i18n->p("global.dataset_cxgn_dataset.table.description", "Description") |h %></th>
+                                            <th><% $c->i18n->p("styleguide.demo.trial_table.breeding_program", "Breeding program") |h %></th>
+                                            <th><% $c->i18n->p("accession.sequencing.table.year", "Year") |h %></th>
+                                            <th><% $c->i18n->p("global.search.features.location", "Location") |h %></th>
+                                            <th><% $c->i18n->p("genotype.plate.genotyping_facility", "Genotyping Facility") |h %></th>
                                         </tr>
                                     </thead>
                                 </table>
 
                                 <div style="text-align: center">
-                                    <button class="btn btn-primary" id="upload_genotyping_data_project_missing_button">My project is not here. Create a new one.</button>
+                                    <button class="btn btn-primary" id="upload_genotyping_data_project_missing_button"><% $c->i18n->p("genotype.plate.my_project_is_not_here_create_a_new_one", "My project is not here. Create a new one.") |h %></button>
                                 </div>
                                 <br/>
 
@@ -79,13 +83,13 @@ $facilities
                                 <div id="upload_genotyping_data_project_details" style="display:none">
                                     <div class="well">
                                         <div class="form-group">
-                                            <label class="col-sm-5 control-label">Genotyping Project Name: <br/><small>Should match Vendor Project if you have one</small></label>
+                                            <label class="col-sm-5 control-label"><% $c->i18n->p("genotype.plate.genotyping_project_name", "Genotyping Project Name:") |h %> <br/><small><% $c->i18n->p("genotype.project.dialog.name_hint", "Should match Vendor Project if you have one") |h %></small></label>
                                             <div class="col-sm-7">
                                                 <input class="form-control" id="upload_genotype_vcf_project_name" name="upload_genotype_vcf_project_name" type="text" placeholder="e.g. NextGenCassava"/>
                                             </div>
                                         </div>
                                         <div class="form-group">
-                                            <label class="col-sm-5 control-label">Genotyping Facility: </label>
+                                            <label class="col-sm-5 control-label"><% $c->i18n->p("genotype.plate.genotyping_facility_733343", "Genotyping Facility:") |h %> </label>
                                             <div class="col-sm-7">
                                                 <select class="form-control" id="upload_genotype_vcf_facility_select" name="upload_genotype_vcf_facility_select">
 %  foreach my $facility (@$facilities) {
@@ -95,19 +99,19 @@ $facilities
                                             </div>
                                         </div>
                                         <div class="form-group">
-                                            <label class="col-sm-5 control-label">Breeding Program: </label>
+                                            <label class="col-sm-5 control-label"><% $c->i18n->p("cross.ui.breeding_program.2c9b17e", "Breeding Program:") |h %> </label>
                                             <div class="col-sm-7">
                                                 <span id="upload_genotype_breeding_program_select_div"></span>
                                             </div>
                                         </div>
                                         <div class="form-group">
-                                            <label class="col-sm-5 control-label">Year: </label>
+                                            <label class="col-sm-5 control-label"><% $c->i18n->p("cross.ui.year.c9410fe", "Year:") |h %> </label>
                                             <div class="col-sm-7">
                                                 <span id="upload_genotype_year_select_div"></span>
                                             </div>
                                         </div>
                                         <div class="form-group">
-                                            <label class="col-sm-5 control-label">Description: </label>
+                                            <label class="col-sm-5 control-label"><% $c->i18n->p("global.dataset_publish.description", "Description:") |h %> </label>
                                             <div class="col-sm-7">
                                                 <textarea class="form-control" id="upload_genotype_vcf_project_description" name="upload_genotype_vcf_project_description" maxlength="250"></textarea>
                                             </div>
@@ -117,30 +121,30 @@ $facilities
 
                                 <br/>
                                 <div style="text-align: center">
-                                    <button class="btn btn-primary" id="upload_genotyping_data_project_check_button">Go to Next Step</button>
+                                    <button class="btn btn-primary" id="upload_genotyping_data_project_check_button"><% $c->i18n->p("cross.ui.go_to_next_step", "Go to Next Step") |h %></button>
                                 </div>
                             </&>
-                            <&| /util/workflow.mas:step, title=> "Genotyping Protocol" &>
-                                <& /page/page_title.mas, title=>"Provide info about the genotyping protocol used. The genotyping protocol represents a specific instance of how genotypes were called for a set of markers in a genotyping platform. Many genotyping projects can use the same genotyping protocol." &>
+                            <&| /util/workflow.mas:step, title=> HTML::Entities::encode_entities($c->i18n->p("lists_datasets.download.genotyping_protocol", "Genotyping Protocol")) &>
+                                <& /page/page_title.mas, title=>HTML::Entities::encode_entities($c->i18n->p("genotype.plate.provide_info_about_the_genotyping_protocol_used_the_genotyping_protocol", "Provide info about the genotyping protocol used. The genotyping protocol represents a specific instance of how genotypes were called for a set of markers in a genotyping platform. Many genotyping projects can use the same genotyping protocol.")) &>
 
                                 <table id="upload_genotyping_data_protocol_search_results" width="100%" class="table table-hover table-striped">
                                     <thead>
                                         <tr>
-                                            <th>Select</th>
-                                            <th>Protocol Name</th>
-                                            <th>Header Description</th>
-                                            <th>Number of Markers</th>
-                                            <th>Protocol Description</th>
-                                            <th>Reference Genome</th>
-                                            <th>Species</th>
-                                            <th>Sample Unit</th>
-                                            <th>Create Date</th>
+                                            <th><% $c->i18n->p("styleguide.demo.trial_table.select", "Select") |h %></th>
+                                            <th><% $c->i18n->p("genotype.plate.protocol_name", "Protocol Name") |h %></th>
+                                            <th><% $c->i18n->p("genotype.plate.header_description", "Header Description") |h %></th>
+                                            <th><% $c->i18n->p("genotype.plate.number_of_markers", "Number of Markers") |h %></th>
+                                            <th><% $c->i18n->p("genotype.plate.protocol_description", "Protocol Description") |h %></th>
+                                            <th><% $c->i18n->p("genotype.plate.reference_genome", "Reference Genome") |h %></th>
+                                            <th><% $c->i18n->p("cross.species", "Species") |h %></th>
+                                            <th><% $c->i18n->p("genotype.plate.sample_unit", "Sample Unit") |h %></th>
+                                            <th><% $c->i18n->p("cross.forms.create_date", "Create Date") |h %></th>
                                         </tr>
                                     </thead>
                                 </table>
 
                                 <div style="text-align: center">
-                                    <button class="btn btn-primary" id="upload_genotyping_data_protocol_missing_button">My protocol is not here. Create a new one.</button>
+                                    <button class="btn btn-primary" id="upload_genotyping_data_protocol_missing_button"><% $c->i18n->p("genotype.plate.my_protocol_is_not_here_create_a_new_one", "My protocol is not here. Create a new one.") |h %></button>
                                 </div>
                                 <br/>
 
@@ -150,28 +154,28 @@ $facilities
                                 <div id="upload_genotype_data_protocol_details" style="display:none">
                                     <div class="well">
                                         <div class="form-group">
-                                            <label class="col-sm-5 control-label">Genotyping Protocol Name:</label>
+                                            <label class="col-sm-5 control-label"><% $c->i18n->p("genotype.plate.genotyping_protocol_name", "Genotyping Protocol Name:") |h %></label>
                                             <div class="col-sm-7">
                                                 <input class="form-control" id="upload_genotype_vcf_protocol_name" name="upload_genotype_vcf_protocol_name" type="text" placeholder=" e.g. GBS ApeKI Cassava genome v6 Jan2015"/>
                                             </div>
                                         </div>
                                         <div class="form-group">
-                                            <label class="col-sm-5 control-label">Genotyping Protocol Reference Genome:</label>
+                                            <label class="col-sm-5 control-label"><% $c->i18n->p("genotype.plate.genotyping_protocol_reference_genome", "Genotyping Protocol Reference Genome:") |h %></label>
                                             <div class="col-sm-7">
                                                 <input class="form-control" id="upload_genotype_vcf_reference_genome_name" name="upload_genotype_vcf_reference_genome_name" type="text" placeholder="Mesculenta_511_v7.0"/>
                                             </div>
                                         </div>
                                         <div class="form-group">
-                                            <label class="col-sm-5 control-label">Species:</label>
+                                            <label class="col-sm-5 control-label"><% $c->i18n->p("barcode.helper.species", "Species:") |h %></label>
                                             <div class="col-sm-7">
                                                 <input class="form-control" id="upload_genotypes_species_name_input" name="upload_genotypes_species_name_input" type="text" placeholder=" e.g. Manihot esculenta"/>
                                             </div>
                                         </div>
                                         <div class="form-group">
-                                            <label class="col-sm-5 control-label">Assay Type </label>
+                                            <label class="col-sm-5 control-label"><% $c->i18n->p("genotype.plate.assay_type", "Assay Type") |h %> </label>
                                             <div class="col-sm-7">
                                                 <select class="form-control" id="assay_type_select" name="assay_type_select">
-                                                    <option value="">Select assay type</option>
+                                                    <option value=""><% $c->i18n->p("genotype.plate.select_assay_type", "Select assay type") |h %></option>
                                                     <option value="GBS">GBS</option>
                                                     <option value="KASP">KASP</option>
                                                     <option value="SSR">SSR</option>
@@ -179,21 +183,21 @@ $facilities
                                             </div>
                                         </div>
                                         <div class="form-group">
-                                            <label class="col-sm-5 control-label">Description:</label>
+                                            <label class="col-sm-5 control-label"><% $c->i18n->p("global.dataset_publish.description", "Description:") |h %></label>
                                             <div class="col-sm-7">
                                                 <input class="form-control" id="upload_genotypes_protocol_description_input" name="upload_genotypes_protocol_description_input" type="text" />
                                             </div>
                                         </div>
                                         <div class="form-group">
-                                            <label class="col-sm-5 control-label">Choose Sample Unit: </label>
+                                            <label class="col-sm-5 control-label"><% $c->i18n->p("genotype.plate.choose_sample_unit", "Choose Sample Unit:") |h %> </label>
                                             <div class="col-sm-7">
                                                 <div class="panel panel-default">
                                                     <div class="panel-body">
-                                                        <input type="radio" name="upload_genotype_vcf_observation_type" value="tissue_sample" checked>&nbsp;&nbsp;&nbsp;Exported Tissue Sample Name: The sample names in your VCF are tissue_sample_names that already exist in genotyping plates (e.g. 96 well plates) or sampling trials in the database. The sample names in your VCF file can be the tissue_sample_name triple pipe joined to the accession_name (e.g. tissue_sample_name|||accession_name) or just simply the tissue_sample_name corresponding to the genotyping plate well or sampling trial sample. This is the <strong>recommended format</strong>.
+                                                        <input type="radio" name="upload_genotype_vcf_observation_type" value="tissue_sample" checked>&nbsp;&nbsp;&nbsp;<% $c->i18n->p("genotype.plate.exported_tissue_sample_name_the_sample_names_in_your_vcf", "Exported Tissue Sample Name: The sample names in your VCF are tissue_sample_names that already exist in genotyping plates (e.g. 96 well plates) or sampling trials in the database. The sample names in your VCF file can be the tissue_sample_name triple pipe joined to the accession_name (e.g. tissue_sample_name|||accession_name) or just simply the tissue_sample_name corresponding to the genotyping plate well or sampling trial sample. This is the") |h %> <strong><% $c->i18n->p("genotype.plate.recommended_format", "recommended format") |h %></strong>.
                                                         <br/><br/>
-                                                        <input type="radio" name="upload_genotype_vcf_observation_type" value="accession">&nbsp;&nbsp;&nbsp;Accession: The sample names are of accession names
+                                                        <input type="radio" name="upload_genotype_vcf_observation_type" value="accession">&nbsp;&nbsp;&nbsp;<% $c->i18n->p("genotype.plate.accession_the_sample_names_are_of_accession_names", "Accession: The sample names are of accession names") |h %>
                                                         <br/><br/>
-                                                        <input type="radio" name="upload_genotype_vcf_observation_type" value="stocks">&nbsp;&nbsp;&nbsp;Mixed Stocks: The sample names are a mix of accession names, plot names, subplot names, plant names, and/or tissue sample names.
+                                                        <input type="radio" name="upload_genotype_vcf_observation_type" value="stocks">&nbsp;&nbsp;&nbsp;<% $c->i18n->p("genotype.plate.mixed_stock_types", "Mixed Stocks: The sample names are a mix of accession names, plot names, subplot names, plant names, and/or tissue sample names.") |h %>
                                                     </div>
                                                 </div>
                                             </div>
@@ -204,13 +208,13 @@ $facilities
 
                                 <div class="well">
                                     <div class="form-group">
-                                        <label class="col-sm-5 control-label">Location of Data Generation: </label>
+                                        <label class="col-sm-5 control-label"><% $c->i18n->p("genotype.plate.location_of_data_generation", "Location of Data Generation:") |h %> </label>
                                         <div class="col-sm-7">
                                             <span id="upload_genotype_location_select_div"></span>
                                         </div>
                                     </div>
                                     <div class="form-group">
-                                        <label class="col-sm-5 control-label">Exported Tissue Sample Names Include Numbers Generated by Genotyping Facility (e.g. sample_name:IGD1001:09):<br/><small>The generated number is separated from the tissue sample name in the database by a ':' separating character.</small> </label>
+                                        <label class="col-sm-5 control-label"><% $c->i18n->p("genotype.plate.exported_tissue_sample_names_include_numbers_generated_by_genotyping_facility", "Exported Tissue Sample Names Include Numbers Generated by Genotyping Facility (e.g. sample_name:IGD1001:09):") |h %><br/><small><% $c->i18n->p("genotype.plate.the_generated_number_is_separated_from_the_tissue_sample_name", "The generated number is separated from the tissue sample name in the database by a ':' separating character.") |h %></small> </label>
                                         <div class="col-sm-7">
                                             <input type="checkbox" id="upload_genotype_vcf_include_igd_numbers" name="upload_genotype_vcf_include_igd_numbers" >
                                         </div>
@@ -219,26 +223,26 @@ $facilities
 
                                 <br/>
                                 <div style="text-align: center">
-                                    <button class="btn btn-primary" id="upload_genotyping_data_protocol_check_button">Go to Next Step</button>
+                                    <button class="btn btn-primary" id="upload_genotyping_data_protocol_check_button"><% $c->i18n->p("cross.ui.go_to_next_step", "Go to Next Step") |h %></button>
                                 </div>
                             </&>
-                            <&| /util/workflow.mas:step, title=> "Genotype Info" &>
-                                <& /page/page_title.mas, title=>"Provide genotype information" &>
+                            <&| /util/workflow.mas:step, title=> HTML::Entities::encode_entities($c->i18n->p("genotype.plate.genotype_info", "Genotype Info")) &>
+                                <& /page/page_title.mas, title=>HTML::Entities::encode_entities($c->i18n->p("genotype.plate.provide_genotype_information", "Provide genotype information")) &>
                                 <br/><br/>
 
                                 <div class="form-group">
-                                    <label class="col-sm-5 control-label">Type of Genotype Data:</label>
+                                    <label class="col-sm-5 control-label"><% $c->i18n->p("genotype.plate.type_of_genotype_data", "Type of Genotype Data:") |h %></label>
                                     <div class="col-sm-7">
                                         <input class="form-control" id="upload_genotype_data_type" name="upload_genotype_data_type" type="text" value = "" disabled />
                                     </div>
                                 </div>
 
                                 <div class="form-group">
-                                    <label class="col-sm-5 control-label">Ignore any possible warnings and upload genotypes?: </label>
+                                    <label class="col-sm-5 control-label"><% $c->i18n->p("genotype.plate.ignore_any_possible_warnings_and_upload_genotypes", "Ignore any possible warnings and upload genotypes?:") |h %> </label>
                                     <div class="col-sm-7">
                                         <select class="form-control" id="upload_genotype_accept_warnings" name="upload_genotype_accept_warnings">
-                                            <option value="">No</option>
-                                            <option value="1">Yes</option>
+                                            <option value=""><% $c->i18n->p("global.search_wizard.no", "No") |h %></option>
+                                            <option value="1"><% $c->i18n->p("global.search_wizard.yes", "Yes") |h %></option>
                                         </select>
                                     </div>
                                 </div>
@@ -246,11 +250,11 @@ $facilities
                                 <div class="well well-sm" id="upload_genotype_data_format_vcf">
                                     <div class="row">
                                         <div class="col-sm-4">
-                                            <&| /page/explanation.mas, title=>'Template information' &>
+                                            <&| /page/explanation.mas, title=>HTML::Entities::encode_entities($c->i18n->p("accession.files.template_info", 'Template information')) &>
                                                 <p>
-                                                    <b>File format information</b>
+                                                    <b><% $c->i18n->p("accessions.dialog.file_format", "File format information") |h %></b>
                                                     <br>
-                                                    <a id="upload_genotype_vcf_spreadsheet_info_format">VCF format</a>
+                                                    <a id="upload_genotype_vcf_spreadsheet_info_format"><% $c->i18n->p("genotype.plate.vcf_format", "VCF format") |h %></a>
                                                 </p>
                                             </&>
                                         </div>
@@ -259,7 +263,7 @@ $facilities
                                             <div class="panel panel-default">
                                                 <div class="panel-body">
                                                     <div class="form-group">
-                                                        <label class="col-sm-6 control-label">Select VCF File: </label>
+                                                        <label class="col-sm-6 control-label"><% $c->i18n->p("genotype.plate.select_vcf_file", "Select VCF File:") |h %> </label>
                                                         <div class="col-sm-6">
                                                             <input type="file" name="upload_genotype_vcf_file_input" id="upload_genotype_vcf_file_input" encoding="multipart/form-data" />
                                                         </div>
@@ -273,11 +277,11 @@ $facilities
                                 <div class="well well-sm" id="upload_genotype_data_format_tassel_hdf5" style="display:none">
                                     <div class="row">
                                         <div class="col-sm-4">
-                                            <&| /page/explanation.mas, title=>'Template information' &>
+                                            <&| /page/explanation.mas, title=>HTML::Entities::encode_entities($c->i18n->p("accession.files.template_info", 'Template information')) &>
                                                 <p>
-                                                    <b>File format information</b>
+                                                    <b><% $c->i18n->p("accessions.dialog.file_format", "File format information") |h %></b>
                                                     <br>
-                                                    <a id="upload_genotype_tassel_hdf5_info_format">VCF format</a>
+                                                    <a id="upload_genotype_tassel_hdf5_info_format"><% $c->i18n->p("genotype.plate.vcf_format", "VCF format") |h %></a>
                                                 </p>
                                             </&>
                                         </div>
@@ -286,7 +290,7 @@ $facilities
                                             <div class="panel panel-default">
                                                 <div class="panel-body">
                                                     <div class="form-group">
-                                                        <label class="col-sm-6 control-label">Select Tassel HDF5 (.h5) File: </label>
+                                                        <label class="col-sm-6 control-label"><% $c->i18n->p("genotype.plate.select_tassel_hdf5_h5_file", "Select Tassel HDF5 (.h5) File:") |h %> </label>
                                                         <div class="col-sm-6">
                                                             <input type="file" name="upload_genotype_tassel_hdf5_file_input" id="upload_genotype_tassel_hdf5_file_input" encoding="multipart/form-data" />
                                                         </div>
@@ -300,11 +304,11 @@ $facilities
                                 <div class="well well-sm" id="upload_genotype_data_format_intertek" style="display:none">
                                     <div class="row">
                                         <div class="col-sm-4">
-                                            <&| /page/explanation.mas, title=>'Template information' &>
+                                            <&| /page/explanation.mas, title=>HTML::Entities::encode_entities($c->i18n->p("accession.files.template_info", 'Template information')) &>
                                                 <p>
-                                                    <b>File format information</b>
+                                                    <b><% $c->i18n->p("accessions.dialog.file_format", "File format information") |h %></b>
                                                     <br>
-                                                    <a id="upload_genotype_intertek_spreadsheet_info_format">Intertek format</a>
+                                                    <a id="upload_genotype_intertek_spreadsheet_info_format"><% $c->i18n->p("genotype.plate.intertek_format", "Intertek format") |h %></a>
                                                 </p>
                                             </&>
                                         </div>
@@ -313,7 +317,7 @@ $facilities
                                             <div class="panel panel-default">
                                                 <div class="panel-body">
                                                     <div class="form-group">
-                                                        <label class="col-sm-6 control-label">Select Intertek SNP Result Grid File: </label>
+                                                        <label class="col-sm-6 control-label"><% $c->i18n->p("genotype.plate.select_intertek_snp_result_grid_file", "Select Intertek SNP Result Grid File:") |h %> </label>
                                                         <div class="col-sm-6">
                                                             <input type="file" name="upload_genotype_intertek_file_input" id="upload_genotype_intertek_file_input" encoding="multipart/form-data" />
                                                         </div>
@@ -323,7 +327,7 @@ $facilities
                                             <div class="panel panel-default">
                                                 <div class="panel-body">
                                                     <div class="form-group">
-                                                        <label class="col-sm-6 control-label">Select Intertek SNP Information File: </label>
+                                                        <label class="col-sm-6 control-label"><% $c->i18n->p("genotype.plate.select_intertek_snp_information_file", "Select Intertek SNP Information File:") |h %> </label>
                                                         <div class="col-sm-6">
                                                             <input type="file" name="upload_genotype_intertek_snp_file_input" id="upload_genotype_intertek_snp_file_input" encoding="multipart/form-data" />
                                                         </div>
@@ -337,11 +341,11 @@ $facilities
                                 <div class="well well-sm" id="upload_genotype_data_format_kasp" style="display:none">
                                     <div class="row">
                                         <div class="col-sm-4">
-                                            <&| /page/explanation.mas, title=>'Template information' &>
+                                            <&| /page/explanation.mas, title=>HTML::Entities::encode_entities($c->i18n->p("accession.files.template_info", 'Template information')) &>
                                                 <p>
-                                                    <b>File format information</b>
+                                                    <b><% $c->i18n->p("accessions.dialog.file_format", "File format information") |h %></b>
                                                     <br>
-                                                    <a id="upload_genotype_kasp_spreadsheet_info_format">KASP data format</a>
+                                                    <a id="upload_genotype_kasp_spreadsheet_info_format"><% $c->i18n->p("genotype.plate.kasp_data_format", "KASP data format") |h %></a>
                                                 </p>
                                             </&>
                                         </div>
@@ -350,7 +354,7 @@ $facilities
                                             <div class="panel panel-default">
                                                 <div class="panel-body">
                                                     <div class="form-group">
-                                                        <label class="col-sm-6 control-label">Select KASP Marker Information File (csv): </label>
+                                                        <label class="col-sm-6 control-label"><% $c->i18n->p("genotype.plate.select_kasp_marker_information_file_csv", "Select KASP Marker Information File (csv):") |h %> </label>
                                                         <div class="col-sm-6">
                                                             <input type="file" name="upload_genotype_kasp_marker_info_file_input" id="upload_genotype_kasp_marker_info_file_input" encoding="multipart/form-data" />
                                                         </div>
@@ -360,7 +364,7 @@ $facilities
                                             <div class="panel panel-default">
                                                 <div class="panel-body">
                                                     <div class="form-group">
-                                                        <label class="col-sm-6 control-label">Select KASP Result File (csv): </label>
+                                                        <label class="col-sm-6 control-label"><% $c->i18n->p("genotype.plate.select_kasp_result_file_csv", "Select KASP Result File (csv):") |h %> </label>
                                                         <div class="col-sm-6">
                                                             <input type="file" name="upload_genotype_data_kasp_file_input" id="upload_genotype_data_kasp_file_input" encoding="multipart/form-data" />
                                                         </div>
@@ -374,11 +378,11 @@ $facilities
                                 <div class="well well-sm" id="upload_genotype_data_format_ssr" style="display:none">
                                     <div class="row">
                                         <div class="col-sm-4">
-                                            <&| /page/explanation.mas, title=>'Template information' &>
+                                            <&| /page/explanation.mas, title=>HTML::Entities::encode_entities($c->i18n->p("accession.files.template_info", 'Template information')) &>
                                                 <p>
-                                                    <b>File format information</b>
+                                                    <b><% $c->i18n->p("accessions.dialog.file_format", "File format information") |h %></b>
                                                     <br>
-                                                    <a id="upload_ssr_data_spreadsheet_info">SSR format</a>
+                                                    <a id="upload_ssr_data_spreadsheet_info"><% $c->i18n->p("genotype.plate.ssr_format", "SSR format") |h %></a>
                                                 </p>
                                             </&>
                                         </div>
@@ -387,7 +391,7 @@ $facilities
                                             <div class="panel panel-default">
                                                 <div class="panel-body">
                                                     <div class="form-group">
-                                                        <label class="col-sm-6 control-label">Select SSR File: </label>
+                                                        <label class="col-sm-6 control-label"><% $c->i18n->p("genotype.plate.select_ssr_file", "Select SSR File:") |h %> </label>
                                                         <div class="col-sm-6">
                                                             <input type="file" name="upload_genotype_ssr_file_input" id="upload_genotype_ssr_file_input" encoding="multipart/form-data" />
                                                         </div>
@@ -400,22 +404,22 @@ $facilities
 
                                 <br/><br/>
                                 <div style="text-align: center">
-                                    <button type="button" class="btn btn-default" name="file_check_button" id="file_check_button">Check File Type</button>
-                                    <button type="button" style="display:none" class="btn btn-primary" disabled onclick="Workflow.complete(this); return false;" id="genotyping_data_upload_next">Go to Next Step</button>
+                                    <button type="button" class="btn btn-default" name="file_check_button" id="file_check_button"><% $c->i18n->p("genotype.plate.check_file_type", "Check File Type") |h %></button>
+                                    <button type="button" style="display:none" class="btn btn-primary" disabled onclick="Workflow.complete(this); return false;" id="genotyping_data_upload_next"><% $c->i18n->p("cross.ui.go_to_next_step", "Go to Next Step") |h %></button>
                                 </div>
                             </&>
-                            <&| /util/workflow.mas:step, title=> "Confirm" &>
-                                <& /page/page_title.mas, title=>"Finalize and submit your genotyping data" &>
+                            <&| /util/workflow.mas:step, title=> HTML::Entities::encode_entities($c->i18n->p("global.graphical_filtering.confirm", "Confirm")) &>
+                                <& /page/page_title.mas, title=>HTML::Entities::encode_entities($c->i18n->p("genotype.plate.finalize_and_submit_your_genotyping_data", "Finalize and submit your genotyping data")) &>
 
                                 <div id="upload_genotypes_missing_stocks_div" style="display:none">
                                     <div id="upload_genotypes_add_missing_stocks_html">
                                     </div>
 
                                     <div class="form-group">
-                                        <label class="col-sm-5 control-label">Add missing stocks as new accessions?: </label>
+                                        <label class="col-sm-5 control-label"><% $c->i18n->p("genotype.plate.add_missing_stocks_as_new_accessions", "Add missing stocks as new accessions?:") |h %> </label>
                                         <div class="col-sm-7">
                                             <select class="form-control" id="upload_genotype_add_new_accessions" name="upload_genotype_add_new_accessions">
-                                                <option value="">No (currently disabled for safety)</option>
+                                                <option value=""><% $c->i18n->p("genotype.plate.no_currently_disabled_for_safety", "No (currently disabled for safety)") |h %></option>
                                                 <!--option value="1">Yes</option-->
                                             </select>
                                         </div>
@@ -426,14 +430,14 @@ $facilities
                                     </div>
                          
                                     <div class="form-group">
-                                        <label class="col-sm-5 control-label">Add missing markers?: </label>
+                                        <label class="col-sm-5 control-label"><% $c->i18n->p("genotype.plate.add_missing_markers", "Add missing markers?:") |h %> </label>
                                         <div class="col-sm-7">
                                             <select class="form-control" id="upload_genotype_add_new_markers" name="upload_genotype_add_new_markers">
 %                                               if ($c->user() && $c->user()->has_role("curator")) {
-                                                 <option value="0">No</option>
-                                                 <option value="1">Yes</option>
+                                                 <option value="0"><% $c->i18n->p("global.search_wizard.no", "No") |h %></option>
+                                                 <option value="1"><% $c->i18n->p("global.search_wizard.yes", "Yes") |h %></option>
 %                                               } else {
-                                                 <option value="">No (currently disabled for safety)</option>
+                                                 <option value=""><% $c->i18n->p("genotype.plate.no_currently_disabled_for_safety", "No (currently disabled for safety)") |h %></option>
 %                                               } 
                                             </select>
                                         </div>
@@ -466,15 +470,15 @@ $facilities
                                 </div>
 
                                 <div style="text-align: center">
-                                    <button type="button" class="btn btn-primary" name="upload_genotype_submit" id="upload_genotype_submit">Submit</button>
+                                    <button type="button" class="btn btn-primary" name="upload_genotype_submit" id="upload_genotype_submit"><% $c->i18n->p("global.manage_file_share_dump.submit", "Submit") |h %></button>
                                 </div>
                             </&>
-                            <&| /util/workflow.mas:step, title=> "Complete" &>
-                                <& /page/page_title.mas, title=>"Complete! Your genotyping data was saved in the database." &>
+                            <&| /util/workflow.mas:step, title=> HTML::Entities::encode_entities($c->i18n->p("cross.ui.complete", "Complete")) &>
+                                <& /page/page_title.mas, title=>HTML::Entities::encode_entities($c->i18n->p("genotype.plate.complete_your_genotyping_data_was_saved_in_the_database", "Complete! Your genotyping data was saved in the database.")) &>
 
                                 <p>
                                     <span class="ui-icon ui-icon-circle-check" style="float: left; margin: 0 7px 50px 0;"></span>
-                                    The genotyping data was saved successfully
+                                    <% $c->i18n->p("genotype.plate.the_genotyping_data_was_saved_successfully", "The genotyping data was saved successfully") |h %>
                                 </p>
 
                                 <div id="upload_genotype_submit_complete"></div>
@@ -484,7 +488,7 @@ $facilities
                         </&>
                     </div>
                     <div class="modal-footer">
-                        <button type="reset" id="upload_genotype_data_close_modal_2" name="upload_genotype_data_close_modal" class="btn btn-default" >Close</button>
+                        <button type="reset" id="upload_genotype_data_close_modal_2" name="upload_genotype_data_close_modal" class="btn btn-default" ><% $c->i18n->p("global.dataset_publish.close", "Close") |h %></button>
                     </div>
                 </div>
             </form>
@@ -496,18 +500,18 @@ $facilities
     <div class="modal-dialog modal-xl" role="document">
         <div class="modal-content">
             <div class="modal-header" style="text-align: center">
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                <h4 class="modal-title" id="uploadGenotypeVCFDialog">Upload VCF Template Information</h4>
+                <button type="button" class="close" data-dismiss="modal" aria-label="<% $c->i18n->p("global.dataset_publish.close", "Close") |h %>"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="uploadGenotypeVCFDialog"><% $c->i18n->p("genotype.plate.upload_vcf_template_information", "Upload VCF Template Information") |h %></h4>
             </div>
             <div class="modal-body">
                 <div class="container-fluid">
-                    <b>This is for uploading VCF genotype data.</b>
+                    <b><% $c->i18n->p("genotype.plate.this_is_for_uploading_vcf_genotype_data", "This is for uploading VCF genotype data.") |h %></b>
                     <br/>
-                    <b>VCF is a tab separated format. If your VCF is very large (greater than 10GB), please consider converting it to an HDF5 (.h5) file using Tassel, and uploading the HDF5 formatted file instead.</b>
+                    <b><% $c->i18n->p("genotype.plate.vcf_is_a_tab_separated_format_if_your_vcf_is", "VCF is a tab separated format. If your VCF is very large (greater than 10GB), please consider converting it to an HDF5 (.h5) file using Tassel, and uploading the HDF5 formatted file instead.") |h %></b>
                     <br />
-                    <b>Header:</b>
+                    <b><% $c->i18n->p("accessions.template.header", "Header:") |h %></b>
                     <br>
-                    The first row (header) must contain the following fields, followed by all genotyped sample names:
+                    <% $c->i18n->p("genotype.plate.the_first_row_header_must_contain_the_following_fields_followed", "The first row (header) must contain the following fields, followed by all genotyped sample names:") |h %>
 
                     <table class="table table-hover table-bordered table-condensed" >
                         <thead></thead>
@@ -527,64 +531,64 @@ $facilities
                         </tbody>
                     </table>
 
-                    <b>Required fields:</b>
+                    <b><% $c->i18n->p("cross.ui.required_fields", "Required fields:") |h %></b>
                     <ul>
-                    <li>#CHROM (chromosome: An identifier from the reference genome pointing to a contig in the assembly file (cf. the ##assembly line in the header). All entries for a specific CHROM should form a contiguous block within the VCF file. The colon symbol (:) must be absent from all chromosome names to avoid parsing errors when dealing with breakends. (String, no white-space permitted, Required))</li>
-                    <li>POS (position: The reference position, with the 1st base having position 1. Positions are sorted numerically, in increasing order, within each reference sequence CHROM. It is permitted to have multiple records with the same POS. Telomeres are indicated by using positions 0 or N+1, where N is the length of the corresponding chromosome or contig. (Integer, Required) )</li>
-                    <li>ID ( identifier: Semi-colon separated list of unique identifiers where available. If this is a dbSNP variant it is encouraged to use the rs number(s). No identifier should be present in more than one data record. If there is no identifier available, then the missing value should be used. (String, no white-space or semi-colons permitted) )</li>
-                    <li>REF (reference base(s): Each base must be one of A,C,G,T,N (case insensitive). Multiple bases are permitted. The value in the POS field refers to the position of the first base in the String. For simple insertions and deletions in which either the REF or one of the ALT alleles would otherwise be null/empty, the REF and ALT Strings must include the base before the event (which must be reflected in the POS field), unless the event occurs at position 1 on the contig in which case it must include the base after the event; this padding base is not required (although it is permitted) for e.g. complex substitutions or other events where all alleles have at least one base represented in their Strings. If any of the ALT alleles is a symbolic allele then the padding base is required and POS denotes the coordinate of the base preceding the polymorphism. Tools processing VCF files are not required to preserve case in the allele Strings. (String, Required) )</li>
-                    <li>ALT (alternate base(s): Comma separated list of alternate non-reference alleles. These alleles do not have to be called in any of the samples. Options are base Strings made up of the bases A,C,G,T,N,*, (case insensitive) or a breakend replacement string as described in the section on breakends. The '*' allele is reserved to indicate that the allele is missing due to a upstream deletion. If there are no alternative alleles, then the missing value should be used. Tools processing VCF files are not required to preserve case in the allele String, except for IDs, which are case sensitive. (String; no whitespace, commas, or angle-brackets are permitted in the ID String itself) )</li>
-                    <li>QUAL (quality: Phred-scaled quality score for the assertion made in ALT. i.e. -10log10 prob(call in ALT is wrong). If ALT is '.' (no variant) then this is -10log10 prob(variant), and if ALT is not '.' this is -10log10 prob(no variant). If unknown, the missing value should be specified. (Numeric) )</li>
-                    <li>FILTER (filter status: PASS if this position has passed all filters, i.e. a call is made at this position. Otherwise, if the site has not passed all filters, a semicolon-separated list of codes for filters that fail. e.g. "q10;s50" might indicate that at this site the quality is below 10 and the number of samples with data is below 50% of the total number of samples. "0" is reserved and should not be used as a filter String. If filters have not been applied, then this field should be set to the missing value. (String, no white-space or semi-colons permitted) )</li>
-                    <li>INFO (additional information: (String, no white-space, semi-colons, or equals-signs permitted; commas are permitted only as delimiters for lists of values) INFO fields are encoded as a semicolon-separated series of short keys with optional values in the format: key=data[,data]. Arbitrary keys are permitted, although the following sub-fields are reserved (albeit optional):</li>
+                    <li><% $c->i18n->p("genotype.plate.chrom_chromosome_an_identifier_from_the_reference_genome_pointing_to", "#CHROM (chromosome: An identifier from the reference genome pointing to a contig in the assembly file (cf. the ##assembly line in the header). All entries for a specific CHROM should form a contiguous block within the VCF file. The colon symbol (:) must be absent from all chromosome names to avoid parsing errors when dealing with breakends. (String, no white-space permitted, Required))") |h %></li>
+                    <li><% $c->i18n->p("genotype.plate.pos_position_the_reference_position_with_the_1st_base_having", "POS (position: The reference position, with the 1st base having position 1. Positions are sorted numerically, in increasing order, within each reference sequence CHROM. It is permitted to have multiple records with the same POS. Telomeres are indicated by using positions 0 or N+1, where N is the length of the corresponding chromosome or contig. (Integer, Required) )") |h %></li>
+                    <li><% $c->i18n->p("genotype.plate.id_identifier_semi_colon_separated_list_of_unique_identifiers_where", "ID ( identifier: Semi-colon separated list of unique identifiers where available. If this is a dbSNP variant it is encouraged to use the rs number(s). No identifier should be present in more than one data record. If there is no identifier available, then the missing value should be used. (String, no white-space or semi-colons permitted) )") |h %></li>
+                    <li><% $c->i18n->p("genotype.plate.ref_reference_base_s_each_base_must_be_one_of", "REF (reference base(s): Each base must be one of A,C,G,T,N (case insensitive). Multiple bases are permitted. The value in the POS field refers to the position of the first base in the String. For simple insertions and deletions in which either the REF or one of the ALT alleles would otherwise be null/empty, the REF and ALT Strings must include the base before the event (which must be reflected in the POS field), unless the event occurs at position 1 on the contig in which case it must include the base after the event; this padding base is not required (although it is permitted) for e.g. complex substitutions or other events where all alleles have at least one base represented in their Strings. If any of the ALT alleles is a symbolic allele then the padding base is required and POS denotes the coordinate of the base preceding the polymorphism. Tools processing VCF files are not required to preserve case in the allele Strings. (String, Required) )") |h %></li>
+                    <li><% $c->i18n->p("genotype.plate.alt_alternate_base_s_comma_separated_list_of_alternate_non", "ALT (alternate base(s): Comma separated list of alternate non-reference alleles. These alleles do not have to be called in any of the samples. Options are base Strings made up of the bases A,C,G,T,N,*, (case insensitive) or a breakend replacement string as described in the section on breakends. The '*' allele is reserved to indicate that the allele is missing due to a upstream deletion. If there are no alternative alleles, then the missing value should be used. Tools processing VCF files are not required to preserve case in the allele String, except for IDs, which are case sensitive. (String; no whitespace, commas, or angle-brackets are permitted in the ID String itself) )") |h %></li>
+                    <li><% $c->i18n->p("genotype.plate.qual_quality_phred_scaled_quality_score_for_the_assertion_made", "QUAL (quality: Phred-scaled quality score for the assertion made in ALT. i.e. -10log10 prob(call in ALT is wrong). If ALT is '.' (no variant) then this is -10log10 prob(variant), and if ALT is not '.' this is -10log10 prob(no variant). If unknown, the missing value should be specified. (Numeric) )") |h %></li>
+                    <li><% $c->i18n->p("genotype.plate.filter_filter_status_pass_if_this_position_has_passed_all", "FILTER (filter status: PASS if this position has passed all filters, i.e. a call is made at this position. Otherwise, if the site has not passed all filters, a semicolon-separated list of codes for filters that fail. e.g. \"q10;s50\" might indicate that at this site the quality is below 10 and the number of samples with data is below 50% of the total number of samples. \"0\" is reserved and should not be used as a filter String. If filters have not been applied, then this field should be set to the missing value. (String, no white-space or semi-colons permitted) )") |h %></li>
+                    <li><% $c->i18n->p("genotype.plate.info_additional_information_string_no_white_space_semi_colons_or", "INFO (additional information: (String, no white-space, semi-colons, or equals-signs permitted; commas are permitted only as delimiters for lists of values) INFO fields are encoded as a semicolon-separated series of short keys with optional values in the format: key=data[,data]. Arbitrary keys are permitted, although the following sub-fields are reserved (albeit optional):") |h %></li>
                         <ul>
-                            <li>AA : ancestral allele</li>
-                            <li>AC : allele count in genotypes, for each ALT allele, in the same order as listed</li>
-                            <li>AF : allele frequency for each ALT allele in the same order as listed: use this when estimated from primary data, not called genotypes</li>
-                            <li>AN : total number of alleles in called genotypes</li>
-                            <li>BQ : RMS base quality at this position</li>
-                            <li>CIGAR : cigar string describing how to align an alternate allele to the reference allele</li>
-                            <li>DB : dbSNP membership</li>
-                            <li>DP : combined depth across samples, e.g. DP=154</li>
-                            <li>END : end position of the variant described in this record (for use with symbolic alleles)</li>
-                            <li>H2 : membership in hapmap2</li>
-                            <li>H3 : membership in hapmap3</li>
-                            <li>MQ : RMS mapping quality, e.g. MQ=52</li>
-                            <li>MQ0 : Number of MAPQ == 0 reads covering this record</li>
-                            <li>NS : Number of samples with data</li>
-                            <li>SB : strand bias at this position</li>
-                            <li>SOMATIC : indicates that the record is a somatic mutation, for cancer genomics</li>
-                            <li>VALIDATED : validated by follow-up experiment</li>
-                            <li>1000G : membership in 1000 Genomes</li>
+                            <li><% $c->i18n->p("genotype.plate.aa_ancestral_allele", "AA : ancestral allele") |h %></li>
+                            <li><% $c->i18n->p("genotype.plate.ac_allele_count_in_genotypes_for_each_alt_allele_in", "AC : allele count in genotypes, for each ALT allele, in the same order as listed") |h %></li>
+                            <li><% $c->i18n->p("genotype.plate.af_allele_frequency_for_each_alt_allele_in_the_same", "AF : allele frequency for each ALT allele in the same order as listed: use this when estimated from primary data, not called genotypes") |h %></li>
+                            <li><% $c->i18n->p("genotype.plate.an_total_number_of_alleles_in_called_genotypes", "AN : total number of alleles in called genotypes") |h %></li>
+                            <li><% $c->i18n->p("genotype.plate.bq_rms_base_quality_at_this_position", "BQ : RMS base quality at this position") |h %></li>
+                            <li><% $c->i18n->p("genotype.plate.cigar_cigar_string_describing_how_to_align_an_alternate_allele", "CIGAR : cigar string describing how to align an alternate allele to the reference allele") |h %></li>
+                            <li><% $c->i18n->p("genotype.plate.db_dbsnp_membership", "DB : dbSNP membership") |h %></li>
+                            <li><% $c->i18n->p("genotype.plate.dp_combined_depth_across_samples_e_g_dp_154", "DP : combined depth across samples, e.g. DP=154") |h %></li>
+                            <li><% $c->i18n->p("genotype.plate.end_end_position_of_the_variant_described_in_this_record", "END : end position of the variant described in this record (for use with symbolic alleles)") |h %></li>
+                            <li><% $c->i18n->p("genotype.plate.h2_membership_in_hapmap2", "H2 : membership in hapmap2") |h %></li>
+                            <li><% $c->i18n->p("genotype.plate.h3_membership_in_hapmap3", "H3 : membership in hapmap3") |h %></li>
+                            <li><% $c->i18n->p("genotype.plate.mq_rms_mapping_quality_e_g_mq_52", "MQ : RMS mapping quality, e.g. MQ=52") |h %></li>
+                            <li><% $c->i18n->p("genotype.plate.mq0_number_of_mapq_0_reads_covering_this_record", "MQ0 : Number of MAPQ == 0 reads covering this record") |h %></li>
+                            <li><% $c->i18n->p("genotype.plate.ns_number_of_samples_with_data", "NS : Number of samples with data") |h %></li>
+                            <li><% $c->i18n->p("genotype.plate.sb_strand_bias_at_this_position", "SB : strand bias at this position") |h %></li>
+                            <li><% $c->i18n->p("genotype.plate.somatic_indicates_that_the_record_is_a_somatic_mutation_for", "SOMATIC : indicates that the record is a somatic mutation, for cancer genomics") |h %></li>
+                            <li><% $c->i18n->p("genotype.plate.validated_validated_by_follow_up_experiment", "VALIDATED : validated by follow-up experiment") |h %></li>
+                            <li><% $c->i18n->p("genotype.plate.1000g_membership_in_1000_genomes", "1000G : membership in 1000 Genomes") |h %></li>
                         </ul>
-                    <br/>The exact format of each INFO sub-field should be specified in the meta-information (as described above). Example for an INFO field: DP=154;MQ=52;H2. Keys without corresponding values are allowed in order to indicate group membership (e.g. H2 indicates the SNP is found in HapMap 2). It is not necessary to list all the properties that a site does. )</li>
-                    <li>FORMAT (A format field is given specifying the data types and order (colon-separated alphanumeric String). This is followed by one field per sample, with the colon-separated data in this field corresponding to the types specified in the format. The first sub-field must always be the genotype (GT) if it is present. There are no required sub-fields. As with the INFO field, there are several common, reserved keywords that are standards across the community:
+                    <br/><% $c->i18n->p("genotype.plate.the_exact_format_of_each_info_sub_field_should_be", "The exact format of each INFO sub-field should be specified in the meta-information (as described above). Example for an INFO field: DP=154;MQ=52;H2. Keys without corresponding values are allowed in order to indicate group membership (e.g. H2 indicates the SNP is found in HapMap 2). It is not necessary to list all the properties that a site does. )") |h %></li>
+                    <li><% $c->i18n->p("genotype.plate.format_a_format_field_is_given_specifying_the_data_types", "FORMAT (A format field is given specifying the data types and order (colon-separated alphanumeric String). This is followed by one field per sample, with the colon-separated data in this field corresponding to the types specified in the format. The first sub-field must always be the genotype (GT) if it is present. There are no required sub-fields. As with the INFO field, there are several common, reserved keywords that are standards across the community:") |h %>
                         <ul>
-                            <li>GT : genotype, encoded as allele values separated by either of / or |. The allele values are 0 for the reference allele (what is in the REF field), 1 for the first allele listed in ALT, 2 for the second allele list in ALT and so on. For diploid calls examples could be 0/1, 1 | 0, or 1/2, etc. For haploid calls, e.g. on Y, male nonpseudoautosomal X, or mitochondrion, only one allele value should be given; a triploid call might look like 0/0/1. If a call cannot be made for a sample at a given locus, '.' should be specified for each missing allele in the GT field (for example './.' for a diploid genotype and '.' for haploid genotype). The meanings of the separators are as follows (see the PS field below for more details on incorporating phasing information into the genotypes):</li>
+                            <li><% $c->i18n->p("genotype.plate.gt_genotype_encoded_as_allele_values_separated_by_either_of", "GT : genotype, encoded as allele values separated by either of / or |. The allele values are 0 for the reference allele (what is in the REF field), 1 for the first allele listed in ALT, 2 for the second allele list in ALT and so on. For diploid calls examples could be 0/1, 1 | 0, or 1/2, etc. For haploid calls, e.g. on Y, male nonpseudoautosomal X, or mitochondrion, only one allele value should be given; a triploid call might look like 0/0/1. If a call cannot be made for a sample at a given locus, '.' should be specified for each missing allele in the GT field (for example './.' for a diploid genotype and '.' for haploid genotype). The meanings of the separators are as follows (see the PS field below for more details on incorporating phasing information into the genotypes):") |h %></li>
                             <ul>
-                                <li>/ : genotype unphased</li>
-                                <li>| : genotype phased</li>
+                                <li><% $c->i18n->p("genotype.plate.genotype_unphased", "/ : genotype unphased") |h %></li>
+                                <li><% $c->i18n->p("genotype.plate.genotype_phased", "| : genotype phased") |h %></li>
                             </ul>
-                            <li>DP : read depth at this position for this sample (Integer)</li>
-                            <li>FT : sample genotype filter indicating if this genotype was "called" (similar in concept to the FILTER field). Again, use PASS to indicate that all filters have been passed, a semi-colon separated list of codes for filters that fail, or '.' to indicate that filters have not been applied. These values should be described in the metainformation in the same way as FILTERs (String, no white-space or semi-colons permitted)</li>
-                            <li>GL : genotype likelihoods comprised of comma separated floating point log10-scaled likelihoods for all possible genotypes given the set of alleles defined in the REF and ALT fields. In presence of the GT field the same ploidy is expected and the canonical order is used; without GT field, diploidy is assumed. If A is the allele in REF and B,C,... are the alleles as ordered in ALT, the ordering of genotypes for the likelihoods is given by: F(j/k) = (k*(k+1)/2)+j. In other words, for biallelic sites the ordering is: AA,AB,BB; for triallelic sites the ordering is: AA,AB,BB,AC,BC,CC, etc. For example: GT:GL 0/1:-323.03,-99.29,-802.53 (Floats)</li>
-                            <li>GLE : genotype likelihoods of heterogeneous ploidy, used in presence of uncertain copy number. For example: GLE=0:-75.22,1:-223.42,0/0:-323.03,1/0:-99.29,1/1:-802.53 (String)</li>
-                            <li>PL : the phred-scaled genotype likelihoods rounded to the closest integer (and otherwise defined precisely as the GL field) (Integers)</li>
-                            <li>GP : the phred-scaled genotype posterior probabilities (and otherwise defined precisely as the GL field); intended to store imputed genotype probabilities (Floats)</li>
-                            <li>GQ : conditional genotype quality, encoded as a phred quality -10log10 p(genotype call is wrong, conditioned on the site's being variant) (Integer)</li>
-                            <li>HQ : haplotype qualities, two comma separated phred qualities (Integers)</li>
-                            <li>PS : phase set. A phase set is defined as a set of phased genotypes to which this genotype belongs. Phased genotypes for an individual that are on the same chromosome and have the same PS value are in the same phased set. A phase set specifies multi-marker haplotypes for the phased genotypes in the set. All phased genotypes that do not contain a PS subfield are assumed to belong to the same phased set. If the genotype in the GT field is unphased, the corresponding PS field is ignored. The recommended convention is to use the position of the first variant in the set as the PS identifier (although this is not required). (Non-negative 32-bit Integer)</li>
-                            <li>PQ : phasing quality, the phred-scaled probability that alleles are ordered incorrectly in a heterozygote (against all other members in the phase set). We note that we have not yet included the specific measure for precisely defining "phasing quality"; our intention for now is simply to reserve the PQ tag for future use as a measure of phasing quality. (Integer)</li>
-                            <li>EC : comma separated list of expected alternate allele counts for each alternate allele in the same order as listed in the ALT field (typically used in association analyses) (Integers)</li>
-                            <li>MQ : RMS mapping quality, similar to the version in the INFO field. (Integer)</li>
+                            <li><% $c->i18n->p("genotype.plate.dp_read_depth_at_this_position_for_this_sample_integer", "DP : read depth at this position for this sample (Integer)") |h %></li>
+                            <li><% $c->i18n->p("genotype.plate.ft_sample_genotype_filter_indicating_if_this_genotype_was_called", "FT : sample genotype filter indicating if this genotype was \"called\" (similar in concept to the FILTER field). Again, use PASS to indicate that all filters have been passed, a semi-colon separated list of codes for filters that fail, or '.' to indicate that filters have not been applied. These values should be described in the metainformation in the same way as FILTERs (String, no white-space or semi-colons permitted)") |h %></li>
+                            <li><% $c->i18n->p("genotype.plate.gl_genotype_likelihoods_comprised_of_comma_separated_floating_point_log10", "GL : genotype likelihoods comprised of comma separated floating point log10-scaled likelihoods for all possible genotypes given the set of alleles defined in the REF and ALT fields. In presence of the GT field the same ploidy is expected and the canonical order is used; without GT field, diploidy is assumed. If A is the allele in REF and B,C,... are the alleles as ordered in ALT, the ordering of genotypes for the likelihoods is given by: F(j/k) = (k*(k+1)/2)+j. In other words, for biallelic sites the ordering is: AA,AB,BB; for triallelic sites the ordering is: AA,AB,BB,AC,BC,CC, etc. For example: GT:GL 0/1:-323.03,-99.29,-802.53 (Floats)") |h %></li>
+                            <li><% $c->i18n->p("genotype.plate.gle_genotype_likelihoods_of_heterogeneous_ploidy_used_in_presence_of", "GLE : genotype likelihoods of heterogeneous ploidy, used in presence of uncertain copy number. For example: GLE=0:-75.22,1:-223.42,0/0:-323.03,1/0:-99.29,1/1:-802.53 (String)") |h %></li>
+                            <li><% $c->i18n->p("genotype.plate.pl_the_phred_scaled_genotype_likelihoods_rounded_to_the_closest", "PL : the phred-scaled genotype likelihoods rounded to the closest integer (and otherwise defined precisely as the GL field) (Integers)") |h %></li>
+                            <li><% $c->i18n->p("genotype.plate.gp_the_phred_scaled_genotype_posterior_probabilities_and_otherwise_defined", "GP : the phred-scaled genotype posterior probabilities (and otherwise defined precisely as the GL field); intended to store imputed genotype probabilities (Floats)") |h %></li>
+                            <li><% $c->i18n->p("genotype.plate.gq_conditional_genotype_quality_encoded_as_a_phred_quality_10log10", "GQ : conditional genotype quality, encoded as a phred quality -10log10 p(genotype call is wrong, conditioned on the site's being variant) (Integer)") |h %></li>
+                            <li><% $c->i18n->p("genotype.plate.hq_haplotype_qualities_two_comma_separated_phred_qualities_integers", "HQ : haplotype qualities, two comma separated phred qualities (Integers)") |h %></li>
+                            <li><% $c->i18n->p("genotype.plate.ps_phase_set_a_phase_set_is_defined_as_a", "PS : phase set. A phase set is defined as a set of phased genotypes to which this genotype belongs. Phased genotypes for an individual that are on the same chromosome and have the same PS value are in the same phased set. A phase set specifies multi-marker haplotypes for the phased genotypes in the set. All phased genotypes that do not contain a PS subfield are assumed to belong to the same phased set. If the genotype in the GT field is unphased, the corresponding PS field is ignored. The recommended convention is to use the position of the first variant in the set as the PS identifier (although this is not required). (Non-negative 32-bit Integer)") |h %></li>
+                            <li><% $c->i18n->p("genotype.plate.pq_phasing_quality_the_phred_scaled_probability_that_alleles_are", "PQ : phasing quality, the phred-scaled probability that alleles are ordered incorrectly in a heterozygote (against all other members in the phase set). We note that we have not yet included the specific measure for precisely defining \"phasing quality\"; our intention for now is simply to reserve the PQ tag for future use as a measure of phasing quality. (Integer)") |h %></li>
+                            <li><% $c->i18n->p("genotype.plate.ec_comma_separated_list_of_expected_alternate_allele_counts_for", "EC : comma separated list of expected alternate allele counts for each alternate allele in the same order as listed in the ALT field (typically used in association analyses) (Integers)") |h %></li>
+                            <li><% $c->i18n->p("genotype.plate.mq_rms_mapping_quality_similar_to_the_version_in_the", "MQ : RMS mapping quality, similar to the version in the INFO field. (Integer)") |h %></li>
                         </ul>
-                    <br/>If any of the fields is missing, it is replaced with the missing value. For example if the FORMAT is GT:GQ:DP:HQ then 0 | 0 : . : 23 : 23, 34 indicates that GQ is missing. Trailing fields can be dropped (with the exception of the GT field, which should always be present if specified in the FORMAT field). )</li>
+                    <br/><% $c->i18n->p("genotype.plate.if_any_of_the_fields_is_missing_it_is_replaced", "If any of the fields is missing, it is replaced with the missing value. For example if the FORMAT is GT:GQ:DP:HQ then 0 | 0 : . : 23 : 23, 34 indicates that GQ is missing. Trailing fields can be dropped (with the exception of the GT field, which should always be present if specified in the FORMAT field). )") |h %></li>
                     </ul>
 
                 </div>
             </div>
             <div class="modal-footer">
-                <button id="close_upload_genotyping_spreadsheet_info_dialog" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                <button id="close_upload_genotyping_spreadsheet_info_dialog" type="button" class="btn btn-default" data-dismiss="modal"><% $c->i18n->p("global.dataset_publish.close", "Close") |h %></button>
             </div>
         </div>
     </div>
@@ -594,19 +598,19 @@ $facilities
     <div class="modal-dialog modal-xl" role="document">
         <div class="modal-content">
             <div class="modal-header" style="text-align: center">
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                <h4 class="modal-title" id="uploadGenotypeIntertekDialog">Upload Intertek Template Information</h4>
+                <button type="button" class="close" data-dismiss="modal" aria-label="<% $c->i18n->p("global.dataset_publish.close", "Close") |h %>"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="uploadGenotypeIntertekDialog"><% $c->i18n->p("genotype.plate.upload_intertek_template_information", "Upload Intertek Template Information") |h %></h4>
             </div>
             <div class="modal-body">
                 <div class="container-fluid">
-                    <b>This is for uploading Intertek genotype data.</b>
+                    <b><% $c->i18n->p("genotype.plate.this_is_for_uploading_intertek_genotype_data", "This is for uploading Intertek genotype data.") |h %></b>
                     <br/>
-                    <b>Please use csv formatted files</b>
+                    <b><% $c->i18n->p("genotype.plate.please_use_csv_formatted_files", "Please use csv formatted files") |h %></b>
                     <br/>
                     <br/>
-                    <b>For Intertek SNP Result Grid File:</b>
+                    <b><% $c->i18n->p("genotype.plate.for_intertek_snp_result_grid_file", "For Intertek SNP Result Grid File:") |h %></b>
                     <br>
-                    <p>The header must be:</p>
+                    <p><% $c->i18n->p("genotype.plate.the_header_must_be", "The header must be:") |h %></p>
                     <br/>
 
                     <table class="table table-hover table-bordered table-condensed" >
@@ -620,11 +624,11 @@ $facilities
                     </table>
 
                     <br/>
-                    <p>The SampleName.LabID column should contain the sample name (exported_tissue_sample_name or accession_name) and it must exist in the database already</p>
+                    <p><% $c->i18n->p("genotype.plate.the_samplename_labid_column_should_contain_the_sample_name_exported", "The SampleName.LabID column should contain the sample name (exported_tissue_sample_name or accession_name) and it must exist in the database already") |h %></p>
 
-                    <b>For Intertek SNP Information File:</b>
+                    <b><% $c->i18n->p("genotype.plate.for_intertek_snp_information_file", "For Intertek SNP Information File:") |h %></b>
                     <br>
-                    <p>The header must be:</p>
+                    <p><% $c->i18n->p("genotype.plate.the_header_must_be", "The header must be:") |h %></p>
                     <br/>
 
                     <table class="table table-hover table-bordered table-condensed" >
@@ -642,20 +646,20 @@ $facilities
                         </tbody>
                     </table>
                     <b>
-                        Optional columns:
+                        <% $c->i18n->p("program.profile_upload.optional_columns", "Optional columns:") |h %>
                     </b>
-                    You can include additional marker infomation by selecting one or more column headers listed below. Please add the selected column(s) after "Position" column. </li>
+                    <% $c->i18n->p("genotype.plate.you_can_include_additional_marker_infomation_by_selecting_one_or", "You can include additional marker infomation by selecting one or more column headers listed below. Please add the selected column(s) after \"Position\" column.") |h %> </li>
                     <ul>
-                        <li><b>Quality</b></li>
-                        <li><b>Filter</b></li>
-                        <li><b>Info</b></li>
-                        <li><b>Format</b></li>
-                        <li><b>Sequence</b></li>
+                        <li><b><% $c->i18n->p("seedlots.ui.quality.e77b76f", "Quality") |h %></b></li>
+                        <li><b><% $c->i18n->p("seedlot_maintenance_table.ui.filter", "Filter") |h %></b></li>
+                        <li><b><% $c->i18n->p("program.programs.header.info", "Info") |h %></b></li>
+                        <li><b><% $c->i18n->p("global.search_wizard.format", "Format") |h %></b></li>
+                        <li><b><% $c->i18n->p("global.est.sequence", "Sequence") |h %></b></li>
                     </ul>
                 </div>
             </div>
             <div class="modal-footer">
-                <button id="close_upload_genotyping_intertek_spreadsheet_info_dialog" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                <button id="close_upload_genotyping_intertek_spreadsheet_info_dialog" type="button" class="btn btn-default" data-dismiss="modal"><% $c->i18n->p("global.dataset_publish.close", "Close") |h %></button>
             </div>
         </div>
     </div>
@@ -665,21 +669,21 @@ $facilities
     <div class="modal-dialog modal-xl" role="document">
         <div class="modal-content">
             <div class="modal-header" style="text-align: center">
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                <h4 class="modal-title" id="uploadGenotypeTasselHDF5Dialog">Upload Tassel HDF5 Template Information</h4>
+                <button type="button" class="close" data-dismiss="modal" aria-label="<% $c->i18n->p("global.dataset_publish.close", "Close") |h %>"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="uploadGenotypeTasselHDF5Dialog"><% $c->i18n->p("genotype.plate.upload_tassel_hdf5_template_information", "Upload Tassel HDF5 Template Information") |h %></h4>
             </div>
             <div class="modal-body">
                 <div class="container-fluid">
-                    <b>This is for uploading Tassel HDF5 genotype data.</b>
+                    <b><% $c->i18n->p("genotype.plate.this_is_for_uploading_tassel_hdf5_genotype_data", "This is for uploading Tassel HDF5 genotype data.") |h %></b>
                     <br/>
-                    <b>Please use HDF5 (.h5) formatted files that work with Tassel</b>
+                    <b><% $c->i18n->p("genotype.plate.please_use_hdf5_h5_formatted_files_that_work_with_tassel", "Please use HDF5 (.h5) formatted files that work with Tassel") |h %></b>
                     <br/>
-                    <b>Uploading an HDF5 file is important when the size of the VCF grows greater than 10GB</b>
+                    <b><% $c->i18n->p("genotype.plate.uploading_an_hdf5_file_is_important_when_the_size_of", "Uploading an HDF5 file is important when the size of the VCF grows greater than 10GB") |h %></b>
                     <br/>
                 </div>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-default" data-dismiss="modal"><% $c->i18n->p("global.dataset_publish.close", "Close") |h %></button>
             </div>
         </div>
     </div>
@@ -689,16 +693,16 @@ $facilities
     <div class="modal-dialog modal-xl" role="document">
         <div class="modal-content">
             <div class="modal-header" style="text-align: center">
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                <h4 class="modal-title" id="uploadSSRProtocolFormatDialog">Upload SSR Marker Info Template Information</h4>
+                <button type="button" class="close" data-dismiss="modal" aria-label="<% $c->i18n->p("global.dataset_publish.close", "Close") |h %>"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="uploadSSRProtocolFormatDialog"><% $c->i18n->p("genotype.plate.upload_ssr_marker_info_template_information", "Upload SSR Marker Info Template Information") |h %></h4>
             </div>
             <div class="modal-body">
                 <div class="container-fluid">
-                    <b>SSR marker info may be uploaded in an Excel file (.xls or .xlsx)</b>
+                    <b><% $c->i18n->p("genotype.plate.ssr_marker_info_may_be_uploaded_in_an_excel_file", "SSR marker info may be uploaded in an Excel file (.xls or .xlsx)") |h %></b>
                     <br />
-                    <b>Header:</b>
+                    <b><% $c->i18n->p("accessions.template.header", "Header:") |h %></b>
                     <br>
-                    The first row (header) must contain the following fields:
+                    <% $c->i18n->p("genotype.plate.the_first_row_header_must_contain_the_following_fields", "The first row (header) must contain the following fields:") |h %>
 
                     <table class="table table-hover table-bordered table-condensed" >
                         <thead></thead>
@@ -715,7 +719,7 @@ $facilities
                             </tr>
                         </tbody>
                     </table>
-                    <b>Required columns:</b>
+                    <b><% $c->i18n->p("cross.ui.required_columns", "Required columns:") |h %></b>
                     <ul>
                         <li>marker_name</li>
                         <li>forward_primer</li>
@@ -723,7 +727,7 @@ $facilities
                         <li>annealing_temperature</li>
                         <li>product_sizes</li>
                     </ul>
-                    <b>Optional columns (required in the header, but value may be left blank)</b>
+                    <b><% $c->i18n->p("genotype.plate.optional_columns_required_in_the_header_but_value_may_be", "Optional columns (required in the header, but value may be left blank)") |h %></b>
                     <ul>
                         <li>sequence_motif</li>
                         <li>sequence_source</li>
@@ -732,7 +736,7 @@ $facilities
                 </div>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-default" data-dismiss="modal"><% $c->i18n->p("global.dataset_publish.close", "Close") |h %></button>
             </div>
         </div>
     </div>
@@ -742,8 +746,8 @@ $facilities
     <div class="modal-dialog modal-lg" role="document">
         <div class="modal-content">
             <div class="modal-header">
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                <h4 class="modal-title" id="uploadSSRProtocolErrorDialog">Upload SSR Marker Info Error</h4>
+                <button type="button" class="close" data-dismiss="modal" aria-label="<% $c->i18n->p("global.dataset_publish.close", "Close") |h %>"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="uploadSSRProtocolErrorDialog"><% $c->i18n->p("genotype.plate.upload_ssr_marker_info_error", "Upload SSR Marker Info Error") |h %></h4>
             </div>
             <div class="modal-body">
                 <div class="container-fluid">
@@ -753,7 +757,7 @@ $facilities
                 </div>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-default" data-dismiss="modal"><% $c->i18n->p("global.dataset_publish.close", "Close") |h %></button>
             </div>
         </div>
     </div>
@@ -763,19 +767,19 @@ $facilities
     <div class="modal-dialog" role="document">
         <div class="modal-content">
             <div class="modal-header">
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                <h4 class="modal-title" id="SSRProtocolSavedDialog">Success</h4>
+                <button type="button" class="close" data-dismiss="modal" aria-label="<% $c->i18n->p("global.dataset_publish.close", "Close") |h %>"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="SSRProtocolSavedDialog"><% $c->i18n->p("cross.ui.success", "Success") |h %></h4>
             </div>
             <div class="modal-body">
                 <div class="container-fluid">
                     <p>
                         <span class="ui-icon ui-icon-circle-check" style="float: left; margin: 0 7px 50px 0;"></span>
-                        SSR marker info was saved successfully. You can now proceed with SSR genotyping data upload.
+                        <% $c->i18n->p("genotype.plate.ssr_marker_info_was_saved_successfully_you_can_now_proceed", "SSR marker info was saved successfully. You can now proceed with SSR genotyping data upload.") |h %>
                     </p>
                 </div>
             </div>
             <div class="modal-footer">
-                <button id="dismiss_ssr_protocol_saved_dialog" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                <button id="dismiss_ssr_protocol_saved_dialog" type="button" class="btn btn-default" data-dismiss="modal"><% $c->i18n->p("global.dataset_publish.close", "Close") |h %></button>
             </div>
         </div>
     </div>
@@ -785,26 +789,26 @@ $facilities
     <div class="modal-dialog modal-lg" role="document">
         <div class="modal-content">
             <div class="modal-header">
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                <h4 class="modal-title" id="uploadSSRProtocolDialog">Upload SSR Protocol (Marker Info) </h4>
+                <button type="button" class="close" data-dismiss="modal" aria-label="<% $c->i18n->p("global.dataset_publish.close", "Close") |h %>"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="uploadSSRProtocolDialog"><% $c->i18n->p("genotype.plate.upload_ssr_protocol_marker_info", "Upload SSR Protocol (Marker Info)") |h %> </h4>
             </div>
             <div class="modal-body">
                 <div class="container-fluid">
                     <form class="form-horizontal" role="form" method="post" enctype="multipart/form-data" encoding="multipart/form-data" id="upload_ssr_protocol_form" name="upload_ssr_protocol_form">
                         <div class="form-group">
-                            <label class="col-sm-5 control-label">SSR Protocol Name:</label>
+                            <label class="col-sm-5 control-label"><% $c->i18n->p("genotype.plate.ssr_protocol_name", "SSR Protocol Name:") |h %></label>
                             <div class="col-sm-7">
                                 <input class="form-control" id="upload_ssr_protocol_name" name="upload_ssr_protocol_name" type="text" placeholder=" e.g. SSR Cassava set 1"/>
                             </div>
                         </div>
                         <div class="form-group">
-                            <label class="col-sm-5 control-label">Species:</label>
+                            <label class="col-sm-5 control-label"><% $c->i18n->p("barcode.helper.species", "Species:") |h %></label>
                             <div class="col-sm-7">
                                 <input class="form-control" id="upload_ssr_species_name_input" name="upload_ssr_species_name_input" type="text" placeholder=" e.g. Manihot esculenta"/>
                             </div>
                         </div>
                         <div class="form-group">
-                            <label class="col-sm-5 control-label">Description:</label>
+                            <label class="col-sm-5 control-label"><% $c->i18n->p("global.dataset_publish.description", "Description:") |h %></label>
                             <div class="col-sm-7">
                                 <input class="form-control" id="upload_ssr_protocol_description_input" name="upload_ssr_protocol_description_input" type="text" />
                             </div>
@@ -823,11 +827,11 @@ $facilities
 -->
                         <div class="row">
                             <div class="col-sm-5">
-                                <&| /page/explanation.mas, title=>'Template information' &>
+                                <&| /page/explanation.mas, title=>HTML::Entities::encode_entities($c->i18n->p("accession.files.template_info", 'Template information')) &>
                                     <p>
-                                        <b>File format information</b>
+                                        <b><% $c->i18n->p("accessions.dialog.file_format", "File format information") |h %></b>
                                         <br>
-                                        <a id="upload_ssr_protocol_format">Spreadsheet format</a>
+                                        <a id="upload_ssr_protocol_format"><% $c->i18n->p("accessions.dialog.spreadsheet_format", "Spreadsheet format") |h %></a>
                                     </p>
                                 </&>
                             </div>
@@ -836,7 +840,7 @@ $facilities
                                 <div class="panel panel-default">
                                     <div class="panel-body">
                                         <div class="form-group">
-                                            <label class="col-sm-4 control-label">Select an XLSX (or XLS) File: </label>
+                                            <label class="col-sm-4 control-label"><% $c->i18n->p("genotype.plate.select_an_xlsx_or_xls_file", "Select an XLSX (or XLS) File:") |h %> </label>
                                             <div class="col-sm-4">
                                                 <input type="file" name="xls_ssr_protocol_file" id="xls_ssr_protocol_file" encoding="multipart/form-data" />
                                             </div>
@@ -849,8 +853,8 @@ $facilities
                 </div>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-primary" name="upload_ssr_protocol_submit" id="upload_ssr_protocol_submit">Upload File</button>
-                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary" name="upload_ssr_protocol_submit" id="upload_ssr_protocol_submit"><% $c->i18n->p("cross.ui.upload_file.3ee3b0b", "Upload File") |h %></button>
+                <button type="button" class="btn btn-default" data-dismiss="modal"><% $c->i18n->p("global.dataset_publish.close", "Close") |h %></button>
             </div>
         </div>
     </div>
@@ -860,14 +864,14 @@ $facilities
     <div class="modal-dialog modal-xl" role="document">
         <div class="modal-content">
             <div class="modal-header" style="text-align: center">
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                <h4 class="modal-title" id="uploadSSRSpreadsheetInfoDialog">Upload SSR Data Template Information</h4>
+                <button type="button" class="close" data-dismiss="modal" aria-label="<% $c->i18n->p("global.dataset_publish.close", "Close") |h %>"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="uploadSSRSpreadsheetInfoDialog"><% $c->i18n->p("genotype.plate.upload_ssr_data_template_information", "Upload SSR Data Template Information") |h %></h4>
             </div>
             <div class="modal-body">
                 <div class="container-fluid">
-                    <b>SSR data may be uploaded in an Excel file (.xls or .xlsx)</b>
+                    <b><% $c->i18n->p("genotype.plate.ssr_data_may_be_uploaded_in_an_excel_file_xls", "SSR data may be uploaded in an Excel file (.xls or .xlsx)") |h %></b>
                     <br />
-                    <b>Example of SSR Data Spreadsheet:</b>
+                    <b><% $c->i18n->p("genotype.plate.example_of_ssr_data_spreadsheet", "Example of SSR Data Spreadsheet:") |h %></b>
                     <br>
                     <table class="table table-hover table-bordered table-condensed" >
                         <thead></thead>
@@ -932,20 +936,20 @@ $facilities
                         </tbody>
                     </table>
                     <b>
-                        Column Info:
+                        <% $c->i18n->p("genotype.plate.column_info", "Column Info:") |h %>
                     </b>
                     <ul>
-                        <li>s01 and s02 are marker names.</li>
-                        <li>139, 170, 194 are product sizes generated by marker s01 and 203,229,290 are product sizes generated by marker s02.</li>
-                        <li>sample_A, sample_B, sample_C are accession names.</li>
-                        <li>"1" indicates the presence of PCR product.</li>
-                        <li>"0" indicates the absence of PCR product.</li>
+                        <li><% $c->i18n->p("genotype.plate.s01_and_s02_are_marker_names", "s01 and s02 are marker names.") |h %></li>
+                        <li><% $c->i18n->p("genotype.plate.139_170_194_are_product_sizes_generated_by_marker_s01", "139, 170, 194 are product sizes generated by marker s01 and 203,229,290 are product sizes generated by marker s02.") |h %></li>
+                        <li><% $c->i18n->p("genotype.plate.sample_a_sample_b_sample_c_are_accession_names", "sample_A, sample_B, sample_C are accession names.") |h %></li>
+                        <li><% $c->i18n->p("genotype.plate.1_indicates_the_presence_of_pcr_product", "\"1\" indicates the presence of PCR product.") |h %></li>
+                        <li><% $c->i18n->p("genotype.plate.0_indicates_the_absence_of_pcr_product", "\"0\" indicates the absence of PCR product.") |h %></li>
                         <br>
                     </ul>
                 </div>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-default" data-dismiss="modal"><% $c->i18n->p("global.dataset_publish.close", "Close") |h %></button>
             </div>
         </div>
     </div>
@@ -955,19 +959,19 @@ $facilities
     <div class="modal-dialog modal-xl" role="document">
         <div class="modal-content">
             <div class="modal-header" style="text-align: center">
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                <h4 class="modal-title" id="uploadGenotypeKASPDialog">Upload KASP data Template Information</h4>
+                <button type="button" class="close" data-dismiss="modal" aria-label="<% $c->i18n->p("global.dataset_publish.close", "Close") |h %>"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="uploadGenotypeKASPDialog"><% $c->i18n->p("genotype.plate.upload_kasp_data_template_information", "Upload KASP data Template Information") |h %></h4>
             </div>
             <div class="modal-body">
                 <div class="container-fluid">
-                    <b>This is for uploading KASP genotype data.</b>
+                    <b><% $c->i18n->p("genotype.plate.this_is_for_uploading_kasp_genotype_data", "This is for uploading KASP genotype data.") |h %></b>
                     <br/>
-                    <b>Please use csv formatted files</b>
+                    <b><% $c->i18n->p("genotype.plate.please_use_csv_formatted_files", "Please use csv formatted files") |h %></b>
                     <br/>
                     <br/>
-                    <u><b>For KASP Marker Information File:</b></u>
+                    <u><b><% $c->i18n->p("genotype.plate.for_kasp_marker_information_file", "For KASP Marker Information File:") |h %></b></u>
                     <br>
-                    <p>The header must be:</p>
+                    <p><% $c->i18n->p("genotype.plate.the_header_must_be", "The header must be:") |h %></p>
                     <table class="table table-hover table-bordered table-condensed" >
                         <thead></thead>
                         <tbody>
@@ -981,25 +985,25 @@ $facilities
                             </tr>
                         </tbody>
                     </table>
-                    <b>Note:</b> For dosage calculation, Xallele is used as reference allele (0) and Yallele is used as alternative allele (1).
+                    <b><% $c->i18n->p("global.bulk.input.note_label", "Note:") |h %></b> <% $c->i18n->p("genotype.plate.for_dosage_calculation_xallele_is_used_as_reference_allele_0", "For dosage calculation, Xallele is used as reference allele (0) and Yallele is used as alternative allele (1).") |h %>
                     <br>
-                    <b>Optional columns:</b>
-                    You can include additional marker information by selecting one or more column headers listed below. Please add the selected column(s) after "Position" column. </li>
+                    <b><% $c->i18n->p("program.profile_upload.optional_columns", "Optional columns:") |h %></b>
+                    <% $c->i18n->p("genotype.plate.you_can_include_additional_marker_information_by_selecting_one_or", "You can include additional marker information by selecting one or more column headers listed below. Please add the selected column(s) after \"Position\" column.") |h %> </li>
                     <ul>
-                        <li>Quality</li>
-                        <li>Filter</li>
-                        <li>Info</li>
-                        <li>Format</li>
-                        <li>Sequence</li>
-                        <li><b>FacilityMarkerName:</b> if you are uploading genotyping data by using facility marker names, please include these names in the KASP marker information file using "FacilityMarkerName" header</li>
+                        <li><% $c->i18n->p("seedlots.ui.quality.e77b76f", "Quality") |h %></li>
+                        <li><% $c->i18n->p("seedlot_maintenance_table.ui.filter", "Filter") |h %></li>
+                        <li><% $c->i18n->p("program.programs.header.info", "Info") |h %></li>
+                        <li><% $c->i18n->p("global.search_wizard.format", "Format") |h %></li>
+                        <li><% $c->i18n->p("global.est.sequence", "Sequence") |h %></li>
+                        <li><b>FacilityMarkerName:</b> <% $c->i18n->p("genotype.plate.if_you_are_uploading_genotyping_data_by_using_facility_marker", "if you are uploading genotyping data by using facility marker names, please include these names in the KASP marker information file using \"FacilityMarkerName\" header") |h %></li>
                     </ul>
                     <hr class ="solid">
-                    <u><b>For KASP Result File:</b></u>
+                    <u><b><% $c->i18n->p("genotype.plate.for_kasp_result_file", "For KASP Result File:") |h %></b></u>
                     <br>
-                    <b>Note:</b> If your genotyping facility assigned facility marker names and facility sample names for the genotyping data generated, you have an option to directly use these facility names for uploading. After uploaded into database, the genotyping data will be automatically linked to the original marker names and sample names.
+                    <b><% $c->i18n->p("global.bulk.input.note_label", "Note:") |h %></b> <% $c->i18n->p("genotype.plate.if_your_genotyping_facility_assigned_facility_marker_names_and_facility", "If your genotyping facility assigned facility marker names and facility sample names for the genotyping data generated, you have an option to directly use these facility names for uploading. After uploaded into database, the genotyping data will be automatically linked to the original marker names and sample names.") |h %>
                     <br>
                     <br>
-                    <p>If you are uploading genotyping data using your marker names and sample names, the header must be:</p>
+                    <p><% $c->i18n->p("genotype.plate.if_you_are_uploading_genotyping_data_using_your_marker_names", "If you are uploading genotyping data using your marker names and sample names, the header must be:") |h %></p>
                     <table class="table table-hover table-bordered table-condensed" >
                         <tbody>
                             <tr>
@@ -1012,17 +1016,17 @@ $facilities
                         </tbody>
                     </table>
                     <b>
-                        Required columns:
+                        <% $c->i18n->p("cross.ui.required_columns", "Required columns:") |h %>
                     </b>
                     <ul>
-                        <li><b>MarkerName:</b> Must exist in the marker information file. If you are uploading genotyping data using previously stored protocol, marker names must exist in the selected protocol.
-                        <li><b>SampleName:</b> Must exist in the database as uniquenames.</li>
-                        <li><b>SNPcall:</b> Allele separated by ":" (for example A:G).
-                        <li><b>Xvalue:</b> raw data of X.
-                        <li><b>Yvalue:</b> raw data of Y.
+                        <li><b>MarkerName:</b> <% $c->i18n->p("genotype.plate.must_exist_in_the_marker_information_file_if_you_are", "Must exist in the marker information file. If you are uploading genotyping data using previously stored protocol, marker names must exist in the selected protocol.") |h %>
+                        <li><b>SampleName:</b> <% $c->i18n->p("genotype.plate.must_exist_in_the_database_as_uniquenames", "Must exist in the database as uniquenames.") |h %></li>
+                        <li><b>SNPcall:</b> <% $c->i18n->p("genotype.plate.allele_separated_by_for_example_a_g", "Allele separated by \":\" (for example A:G).") |h %>
+                        <li><b>Xvalue:</b> <% $c->i18n->p("genotype.plate.raw_data_of_x", "raw data of X.") |h %>
+                        <li><b>Yvalue:</b> <% $c->i18n->p("genotype.plate.raw_data_of_y", "raw data of Y.") |h %>
                     </ul>
                     <br>
-                    <p>If you are uploading genotyping data using facility marker names and facility sample names, the header must be:</p>
+                    <p><% $c->i18n->p("genotype.plate.if_you_are_uploading_genotyping_data_using_facility_marker_names", "If you are uploading genotyping data using facility marker names and facility sample names, the header must be:") |h %></p>
                     <table class="table table-hover table-bordered table-condensed" >
                         <thead></thead>
                         <tbody>
@@ -1036,19 +1040,19 @@ $facilities
                         </tbody>
                     </table>
                     <b>
-                        Required columns:
+                        <% $c->i18n->p("cross.ui.required_columns", "Required columns:") |h %>
                     </b>
                     <ul>
-                        <li><b>FacilityMarkerName:</b> Must exist in the marker information file.
-                        <li><b>FacilitySampleName:</b> Must exist in the database. You can create a link between each sample name and facility sample name by including facility sample name during uploading genotyping plates</li>
-                        <li><b>SNPcall:</b> Allele separated by ":" (for example A:G).
-                        <li><b>Xvalue:</b> raw data of X.
-                        <li><b>Yvalue:</b> raw data of Y.
+                        <li><b>FacilityMarkerName:</b> <% $c->i18n->p("genotype.plate.must_exist_in_the_marker_information_file", "Must exist in the marker information file.") |h %>
+                        <li><b>FacilitySampleName:</b> <% $c->i18n->p("genotype.plate.must_exist_in_the_database_you_can_create_a_link", "Must exist in the database. You can create a link between each sample name and facility sample name by including facility sample name during uploading genotyping plates") |h %></li>
+                        <li><b>SNPcall:</b> <% $c->i18n->p("genotype.plate.allele_separated_by_for_example_a_g", "Allele separated by \":\" (for example A:G).") |h %>
+                        <li><b>Xvalue:</b> <% $c->i18n->p("genotype.plate.raw_data_of_x", "raw data of X.") |h %>
+                        <li><b>Yvalue:</b> <% $c->i18n->p("genotype.plate.raw_data_of_y", "raw data of Y.") |h %>
                     </ul>
                 </div>
             </div>
             <div class="modal-footer">
-                <button id="close_upload_genotyping_kasp_spreadsheet_info_dialog" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                <button id="close_upload_genotyping_kasp_spreadsheet_info_dialog" type="button" class="btn btn-default" data-dismiss="modal"><% $c->i18n->p("global.dataset_publish.close", "Close") |h %></button>
             </div>
         </div>
     </div>
@@ -1059,22 +1063,22 @@ $facilities
     <div class="modal-dialog modal-xl" role="document">
         <div class="modal-content">
             <div class="modal-header">
-                <button type="reset" class="close" id="upload_mla_close_modal_header" name="upload_mla_close_modal_header" aria-label="Close" data-dismiss="modal"><span aria-hidden="true">&times;</span></button>
-                <h4 class="modal-title" id="uploadMLADialog">Upload Marker Metadata</h4>
+                <button type="reset" class="close" id="upload_mla_close_modal_header" name="upload_mla_close_modal_header" aria-label="<% $c->i18n->p("global.dataset_publish.close", "Close") |h %>" data-dismiss="modal"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="uploadMLADialog"><% $c->i18n->p("genotype.plate.upload_marker_metadata", "Upload Marker Metadata") |h %></h4>
             </div>
             <div class="modal-body">
                 <div class="container-fluid">
                     <&| /util/workflow.mas, id=> "upload_mla_workflow" &>
 
-                        <&| /util/workflow.mas:step, title=> "Intro" &>
-                            <& /page/page_title.mas, title=>"Marker Metadata Information" &>
-                            <p>This upload is used to add marker metadata and allele values to markers in an existing Genotyping Protocol.</p>
-                            <p>Supported metadata include:</p>
+                        <&| /util/workflow.mas:step, title=> HTML::Entities::encode_entities($c->i18n->p("cross.ui.intro", "Intro")) &>
+                            <& /page/page_title.mas, title=>HTML::Entities::encode_entities($c->i18n->p("genotype.plate.marker_metadata_information", "Marker Metadata Information")) &>
+                            <p><% $c->i18n->p("genotype.plate.this_upload_is_used_to_add_marker_metadata_and_allele", "This upload is used to add marker metadata and allele values to markers in an existing Genotyping Protocol.") |h %></p>
+                            <p><% $c->i18n->p("genotype.plate.supported_metadata_include", "Supported metadata include:") |h %></p>
                             <ul>
-                                <li>A description of the marker (such as the phenotype derived from different allele values)</li>
-                                <li>Trait categories of phenotypes associated with the marker</li>
-                                <li>References to external databases with more information about the marker</li>
-                                <li>Allele values for individual alleles for each marker. For example, the <strong>1RS</strong> marker can have the following allele values:
+                                <li><% $c->i18n->p("genotype.plate.a_description_of_the_marker_such_as_the_phenotype_derived", "A description of the marker (such as the phenotype derived from different allele values)") |h %></li>
+                                <li><% $c->i18n->p("genotype.plate.trait_categories_of_phenotypes_associated_with_the_marker", "Trait categories of phenotypes associated with the marker") |h %></li>
+                                <li><% $c->i18n->p("genotype.plate.references_to_external_databases_with_more_information_about_the_marker", "References to external databases with more information about the marker") |h %></li>
+                                <li><% $c->i18n->p("genotype.plate.allele_values_for_individual_alleles_for_each_marker_for_example", "Allele values for individual alleles for each marker. For example, the") |h %> <strong>1RS</strong> <% $c->i18n->p("genotype.plate.marker_can_have_the_following_allele_values", "marker can have the following allele values:") |h %>
                                     <ul>
                                         <li>Non-1RS</li>
                                         <li>1RS:1BL</li>
@@ -1084,47 +1088,45 @@ $facilities
 
                             </ul>
                             <p>
-                                The first step will be to select the Genotyping Protocol that contains the markers.
-                                This Genotyping Protocol <strong>must already exist in the database</strong>.
+                                <% $c->i18n->p("genotype.plate.the_first_step_will_be_to_select_the_genotyping_protocol", "The first step will be to select the Genotyping Protocol that contains the markers.\n                                This Genotyping Protocol") |h %> <strong><% $c->i18n->p("genotype.plate.must_already_exist_in_the_database", "must already exist in the database") |h %></strong>.
                             </p>
                             <p>
-                                The second step will be to upload the a file containing the metadata that are associated with each marker.
-                                The names of the markers in the file <strong>must match the marker names</strong> in the selected Genotyping Protocol.
+                                <% $c->i18n->p("genotype.plate.the_second_step_will_be_to_upload_the_a_file", "The second step will be to upload the a file containing the metadata that are associated with each marker.\n                                The names of the markers in the file") |h %> <strong><% $c->i18n->p("genotype.plate.must_match_the_marker_names", "must match the marker names") |h %></strong> <% $c->i18n->p("genotype.plate.in_the_selected_genotyping_protocol", "in the selected Genotyping Protocol.") |h %>
                             <hr>
                             <center>
-                                <button class="btn btn-primary" onclick="Workflow.complete(this);">Go to Next Step</button>
+                                <button class="btn btn-primary" onclick="Workflow.complete(this);"><% $c->i18n->p("cross.ui.go_to_next_step", "Go to Next Step") |h %></button>
                             </center>
                         </&>
 
-                        <&| /util/workflow.mas:step, title=> "Genotyping Protocol" &>
-                        <& /page/page_title.mas, title=>"Select Genotyping Protocol" &>
-                            <p>Select the Genotyping Protocol that contains the markers.</p>
+                        <&| /util/workflow.mas:step, title=> HTML::Entities::encode_entities($c->i18n->p("lists_datasets.download.genotyping_protocol", "Genotyping Protocol")) &>
+                        <& /page/page_title.mas, title=>HTML::Entities::encode_entities($c->i18n->p("genotype.plate.select_genotyping_protocol", "Select Genotyping Protocol")) &>
+                            <p><% $c->i18n->p("genotype.plate.select_the_genotyping_protocol_that_contains_the_markers", "Select the Genotyping Protocol that contains the markers.") |h %></p>
 
                             <table id="upload_mla_protocol_search_results" width="100%" class="table table-hover table-striped">
                                 <thead>
                                     <tr>
-                                        <th>Select</th>
-                                        <th>Protocol Name</th>
-                                        <th>Header Description</th>
-                                        <th>Number of Markers</th>
-                                        <th>Protocol Description</th>
-                                        <th>Reference Genome</th>
-                                        <th>Species</th>
-                                        <th>Sample Unit</th>
-                                        <th>Create Date</th>
+                                        <th><% $c->i18n->p("styleguide.demo.trial_table.select", "Select") |h %></th>
+                                        <th><% $c->i18n->p("genotype.plate.protocol_name", "Protocol Name") |h %></th>
+                                        <th><% $c->i18n->p("genotype.plate.header_description", "Header Description") |h %></th>
+                                        <th><% $c->i18n->p("genotype.plate.number_of_markers", "Number of Markers") |h %></th>
+                                        <th><% $c->i18n->p("genotype.plate.protocol_description", "Protocol Description") |h %></th>
+                                        <th><% $c->i18n->p("genotype.plate.reference_genome", "Reference Genome") |h %></th>
+                                        <th><% $c->i18n->p("cross.species", "Species") |h %></th>
+                                        <th><% $c->i18n->p("genotype.plate.sample_unit", "Sample Unit") |h %></th>
+                                        <th><% $c->i18n->p("cross.forms.create_date", "Create Date") |h %></th>
                                     </tr>
                                 </thead>
                             </table>
                             <hr>
                             <center>
-                                <button class="btn btn-primary" id="upload_mla_protocol_check_button">Go to Next Step</button>
+                                <button class="btn btn-primary" id="upload_mla_protocol_check_button"><% $c->i18n->p("cross.ui.go_to_next_step", "Go to Next Step") |h %></button>
                             </center>
                         </&>
 
-                        <&| /util/workflow.mas:step, title=> "Upload" &>
-                        <& /page/page_title.mas, title=>"Upload Marker Metadata" &>
-                            <b>Header:</b><br>
-                            The first row (header) must contain the following:
+                        <&| /util/workflow.mas:step, title=> HTML::Entities::encode_entities($c->i18n->p("global.dataset_publish.action.upload", "Upload")) &>
+                        <& /page/page_title.mas, title=>HTML::Entities::encode_entities($c->i18n->p("genotype.plate.upload_marker_metadata", "Upload Marker Metadata")) &>
+                            <b><% $c->i18n->p("accessions.template.header", "Header:") |h %></b><br>
+                            <% $c->i18n->p("genotype.plate.dialog.help_the_first_row_header_must_contain_the", "The first row (header) must contain the following:") |h %>
                             <br>
                             <table class="table table-bordered table-hover">
                             <tbody>
@@ -1141,28 +1143,28 @@ $facilities
                             </tr>
                             </tbody>
                             </table>
-                            <b>Required values:</b><br>
-                            <b>Marker:</b> the name of the marker (this must match the marker name in the selected Genotyping Protocol)<br>
-                            <b>Allele:</b> the name of a possible allele value for this marker (add as many Allele columns as necessary - or separate values in one column with a comma)<br>
-                            <br /><b>Optional values:</b><br>
-                            <b>Alias:</b> an alternate name for the marker (use this to provide a more human-friendly name for the marker)<br>
-                            <b>Description:</b> a description of the marker (its associated phenotype, etc)<br>
-                            <b>Category:</b> the name of the trait category that the marker belongs to (add as many Category columns as necessary - or separate values in one column with a comma) <br>
-                            <b>Reference:</b> a reference to an entity in an external database (such as a matching gene entry in GrainGenes). The format of this value should be: <code>{database name}:{entity name}</code> (such as <code>GrainGenes gene:Rht12 (Triticum)</code>).  The database name must already exist as an external database reference.<br>
+                            <b><% $c->i18n->p("program.location.upload.required", "Required values:") |h %></b><br>
+                            <b>Marker:</b> <% $c->i18n->p("genotype.plate.the_name_of_the_marker_this_must_match_the_marker", "the name of the marker (this must match the marker name in the selected Genotyping Protocol)") |h %><br>
+                            <b>Allele:</b> <% $c->i18n->p("genotype.plate.the_name_of_a_possible_allele_value_for_this_marker", "the name of a possible allele value for this marker (add as many Allele columns as necessary - or separate values in one column with a comma)") |h %><br>
+                            <br /><b><% $c->i18n->p("trial.upload.template.optional_meta_heading", "Optional values:") |h %></b><br>
+                            <b>Alias:</b> <% $c->i18n->p("genotype.plate.an_alternate_name_for_the_marker_use_this_to_provide", "an alternate name for the marker (use this to provide a more human-friendly name for the marker)") |h %><br>
+                            <b><% $c->i18n->p("global.dataset_publish.description", "Description:") |h %></b> <% $c->i18n->p("genotype.plate.a_description_of_the_marker_its_associated_phenotype_etc", "a description of the marker (its associated phenotype, etc)") |h %><br>
+                            <b>Category:</b> <% $c->i18n->p("genotype.plate.the_name_of_the_trait_category_that_the_marker_belongs", "the name of the trait category that the marker belongs to (add as many Category columns as necessary - or separate values in one column with a comma)") |h %> <br>
+                            <b>Reference:</b> <% $c->i18n->p("genotype.plate.a_reference_to_an_entity_in_an_external_database_such", "a reference to an entity in an external database (such as a matching gene entry in GrainGenes). The format of this value should be:") |h %> <code>{database name}:{entity name}</code> <% $c->i18n->p("genotype.plate.such_as", "(such as") |h %> <code>GrainGenes gene:Rht12 (Triticum)</code><% $c->i18n->p("genotype.plate.the_database_name_must_already_exist_as_an_external_database", ").  The database name must already exist as an external database reference.") |h %><br>
 
-                            <& /help/file_upload_type.mas, type => "Marker Metadata" &>
+                            <& /help/file_upload_type.mas, type => $c->i18n->p("genotype.plate.marker_metadata", "Marker Metadata") &>
 
                             <br /><br />
 
                             <form method="post" enctype="multipart/form-data" encoding="multipart/form-data" id="upload_mla_form" name="upload_mla_form">
                                 <div style="display: flex; flex-wrap: wrap; gap: 25px; align-items: flex-end">
                                     <div>
-                                        <label for="upload_mla_file" style="display: inline-block;">Marker Metadata Alleles File:</label>
+                                        <label for="upload_mla_file" style="display: inline-block;"><% $c->i18n->p("genotype.plate.marker_metadata_alleles_file", "Marker Metadata Alleles File:") |h %></label>
                                         <input type="file" name="upload_mla_file" id="upload_mla_file" encoding="multipart/form-data" />
                                     </div>
                                     <div>
                                         <input id="upload_entry_numbers_ignore_warnings_cb" name="ignore_warnings" type="checkbox" value="checked">
-                                        <label for="upload_entry_numbers_ignore_warnings_cb">Ignore Warnings</label><br>
+                                        <label for="upload_entry_numbers_ignore_warnings_cb"><% $c->i18n->p("genotype.plate.ignore_warnings", "Ignore Warnings") |h %></label><br>
                                     </div>
                                 </div>
                             </form>
@@ -1174,7 +1176,7 @@ $facilities
 
                             <hr />
                             <center>
-                                <button type="button" class="btn btn-primary" name="upload_mla_submit" id="upload_mla_submit">Upload</button>
+                                <button type="button" class="btn btn-primary" name="upload_mla_submit" id="upload_mla_submit"><% $c->i18n->p("global.dataset_publish.action.upload", "Upload") |h %></button>
                             </center>
                         </&>
 
@@ -1182,7 +1184,7 @@ $facilities
                 </div>
 
                 <div class="modal-footer">
-                    <button type="reset" id="upload_mla_close_modal" name="upload_mla_close_modal" class="btn btn-default" data-dismiss="modal">Close</button>
+                    <button type="reset" id="upload_mla_close_modal" name="upload_mla_close_modal" class="btn btn-default" data-dismiss="modal"><% $c->i18n->p("global.dataset_publish.close", "Close") |h %></button>
                 </div>
             </div>
         </div>
@@ -1264,7 +1266,7 @@ jQuery(document).ready(function(){
     jQuery('#upload_genotyping_data_type_check_button').click(function(){
         var data_type = jQuery('#genotype_data_type_select').val();
         if (data_type == '') {
-            alert('Please select a data type');
+            alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("genotype.plate.please_select_a_data_type", "Please select a data type") : 'Please select a data type'));
         } else {
             Workflow.complete('#upload_genotyping_data_type_check_button');
             Workflow.focus('#upload_genotypes_workflow', 2);
@@ -1278,21 +1280,21 @@ jQuery(document).ready(function(){
             selected.push(jQuery(this).val());
         });
         if (selected.length > 1){
-            alert('Only select one genotyping project!');
+            alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("genotype.plate.only_select_one_genotyping_project", "Only select one genotyping project!") : 'Only select one genotyping project!'));
         } else {
             if (selected.length == 0 && jQuery('#upload_genotype_vcf_project_name').val() == ''){
-                alert('Select a genotyping project or create a new one!');
+                alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("genotype.plate.select_a_genotyping_project_or_create_a_new_one", "Select a genotyping project or create a new one!") : 'Select a genotyping project or create a new one!'));
             } else if (selected.length == 1 && jQuery('#upload_genotype_vcf_project_name').val() != ''){
-                alert('If you selected a project, do not try to make a new one at the same time!');
+                alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("genotype.plate.if_you_selected_a_project_do_not_try_to_make", "If you selected a project, do not try to make a new one at the same time!") : 'If you selected a project, do not try to make a new one at the same time!'));
             } else if (selected.length == 1 && jQuery('#upload_genotype_vcf_project_name').val() == ''){
                 jQuery('#upload_genotype_project_id').val(selected[0]);
                 Workflow.complete('#upload_genotyping_data_project_check_button');
                 Workflow.focus('#upload_genotypes_workflow', 3);
             } else if (selected.length == 0 && jQuery('#upload_genotype_vcf_project_name').val() != '') {
                 if (jQuery('#upload_genotype_year_select').val() == ''){
-                    alert('Please give a year');
+                    alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("genotype.plate.please_give_a_year", "Please give a year") : 'Please give a year'));
                 } else if (jQuery('#upload_genotype_vcf_project_description').val() == ''){
-                    alert('Please give a description.');
+                    alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("genotype.plate.please_give_a_description", "Please give a description.") : 'Please give a description.'));
                 } else {
                     jQuery('#upload_genotype_project_id').val(undefined);
                     Workflow.complete('#upload_genotyping_data_project_check_button');
@@ -1316,7 +1318,7 @@ jQuery(document).ready(function(){
                     source: '/organism/autocomplete'
                 });
             } else if (selected.length > 0) {
-                alert('If you selected a protocol, do not try to make a new one at the same time!');
+                alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("genotype.plate.if_you_selected_a_protocol_do_not_try_to_make", "If you selected a protocol, do not try to make a new one at the same time!") : 'If you selected a protocol, do not try to make a new one at the same time!'));
             }
         } else {
             jQuery('#upload_genotype_data_protocol_details').show();
@@ -1333,12 +1335,12 @@ jQuery(document).ready(function(){
             selected.push(jQuery(this).val());
         });
         if (selected.length > 1){
-            alert('Only select one genotyping protocol!');
+            alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("genotype.plate.only_select_one_genotyping_protocol", "Only select one genotyping protocol!") : 'Only select one genotyping protocol!'));
         } else {
             if (selected.length == 0 && jQuery('#upload_genotype_vcf_protocol_name').val() == '' && jQuery('#upload_genotype_protocol_id').val() == ''){
-                alert('Select a genotyping protocol or create a new one!');
+                alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("genotype.plate.select_a_genotyping_protocol_or_create_a_new_one", "Select a genotyping protocol or create a new one!") : 'Select a genotyping protocol or create a new one!'));
             } else if (selected.length == 1 && jQuery('#upload_genotype_vcf_protocol_name').val() != ''){
-                alert('If you selected a protocol, do not try to make a new one at the same time!');
+                alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("genotype.plate.if_you_selected_a_protocol_do_not_try_to_make", "If you selected a protocol, do not try to make a new one at the same time!") : 'If you selected a protocol, do not try to make a new one at the same time!'));
             } else if (selected.length == 1 && jQuery('#upload_genotype_vcf_protocol_name').val() == ''){
                 jQuery('#upload_genotype_protocol_id').val(selected[0]);
                 Workflow.complete('#upload_genotyping_data_protocol_check_button');
@@ -1348,9 +1350,9 @@ jQuery(document).ready(function(){
                 Workflow.focus('#upload_genotypes_workflow', 4);
             } else if (selected.length == 0 && jQuery('#upload_genotype_vcf_protocol_name').val() != '') {
                 if (jQuery('#upload_genotype_vcf_reference_genome_name').val() == ''){
-                    alert('Please give a reference genome name.');
+                    alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("genotype.plate.please_give_a_reference_genome_name", "Please give a reference genome name.") : 'Please give a reference genome name.'));
                 } else if (jQuery('#upload_genotypes_species_name_input').val() == ''){
-                    alert('Please give a species name.');
+                    alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("genotype.plate.please_give_a_species_name", "Please give a species name.") : 'Please give a species name.'));
                 } else {
                     jQuery('#upload_genotype_protocol_id').val(undefined);
                     Workflow.complete('#upload_genotyping_data_protocol_check_button');
@@ -1365,7 +1367,7 @@ jQuery(document).ready(function(){
         var data_type = jQuery('#genotype_data_type_select').val();
         if (data_type == 'vcf') {
             if (jQuery('#upload_genotype_vcf_file_input').val() == ''){
-                alert('Please select a VCF file.');
+                alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("genotype.plate.please_select_a_vcf_file", "Please select a VCF file.") : 'Please select a VCF file.'));
             } else {
                 jQuery('#file_check_button').hide();
                 jQuery('#genotyping_data_upload_next').show();
@@ -1373,7 +1375,7 @@ jQuery(document).ready(function(){
             }
         } else if (data_type == 'tassel_hdf5') {
             if (jQuery('#upload_genotype_tassel_hdf5_file_input').val() == ''){
-                alert('Please select a Tassel HDF5 file.');
+                alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("genotype.plate.please_select_a_tassel_hdf5_file", "Please select a Tassel HDF5 file.") : 'Please select a Tassel HDF5 file.'));
             } else {
                 jQuery('#file_check_button').hide();
                 jQuery('#genotyping_data_upload_next').show();
@@ -1381,9 +1383,9 @@ jQuery(document).ready(function(){
             }
         } else if (data_type == 'intertek') {
             if (jQuery('#upload_genotype_intertek_file_input').val() == ''){
-                alert('Please select an Intertek SNP Result Grid file.');
+                alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("genotype.plate.please_select_an_intertek_snp_result_grid_file", "Please select an Intertek SNP Result Grid file.") : 'Please select an Intertek SNP Result Grid file.'));
             } else if (jQuery('#upload_genotype_intertek_snp_file_input').val() == ''){
-                alert('Please select an Intertek SNP Information File.');
+                alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("genotype.plate.please_select_an_intertek_snp_information_file", "Please select an Intertek SNP Information File.") : 'Please select an Intertek SNP Information File.'));
             } else {
                 jQuery('#file_check_button').hide();
                 jQuery('#genotyping_data_upload_next').show();
@@ -1391,9 +1393,9 @@ jQuery(document).ready(function(){
             }
         } else if (data_type == 'KASP') {
                 if (jQuery('#upload_genotype_data_kasp_file_input').val() == ''){
-                    alert('Please select a KASP Result file.');
+                    alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("genotype.plate.please_select_a_kasp_result_file", "Please select a KASP Result file.") : 'Please select a KASP Result file.'));
                 } else if (jQuery('#upload_genotype_kasp_marker_info_file_input').val() == ''){
-                    alert('Please select a KASP Marker Information File.');
+                    alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("genotype.plate.please_select_a_kasp_marker_information_file", "Please select a KASP Marker Information File.") : 'Please select a KASP Marker Information File.'));
                 } else {
                     jQuery('#file_check_button').hide();
                     jQuery('#genotyping_data_upload_next').show();
@@ -1402,7 +1404,7 @@ jQuery(document).ready(function(){
 
         } else if (data_type == 'ssr') {
             if (jQuery('#upload_genotype_ssr_file_input').val() == ''){
-                alert('Please select a SSR file.');
+                alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("genotype.plate.please_select_a_ssr_file", "Please select a SSR file.") : 'Please select a SSR file.'));
             } else {
                 jQuery('#file_check_button').hide();
                 jQuery('#genotyping_data_upload_next').show();
@@ -1445,19 +1447,19 @@ jQuery(document).ready(function(){
 
         jQuery('#upload_ssr_protocol_form').attr("action", "/ajax/genotype/upload_ssr_protocol");
         if (ssr_protocol_name === ''){
-            alert("Please give a protocol name");
+            alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("genotype.plate.please_give_a_protocol_name", "Please give a protocol name") : "Please give a protocol name"));
             return;
         }
         if (ssr_protocol_species_name === ''){
-            alert("Please give a species name");
+            alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("genotype.plate.please_give_a_species_name_43ff50", "Please give a species name") : "Please give a species name"));
             return;
         }
         if (ssr_protocol_description === ''){
-            alert("Please give a description");
+            alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("trial.upload.ui.description", "Please give a description") : "Please give a description"));
             return;
         }
         if (uploadFile === ''){
-            alert("Please select a file");
+            alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("global.manage_file_share_dump.select_file", "Please select a file") : "Please select a file"));
             return;
         }
         jQuery('#upload_ssr_protocol_form').submit();
@@ -1503,11 +1505,11 @@ jQuery(document).ready(function(){
             selected.push(jQuery(this).val());
         });
         if (selected.length > 1) {
-            alert('Only select one genotyping protocol!');
+            alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("genotype.plate.only_select_one_genotyping_protocol", "Only select one genotyping protocol!") : 'Only select one genotyping protocol!'));
         }
         else {
             if (selected.length == 0 ) {
-                alert('Select a genotyping protocol!');
+                alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("genotype.plate.select_a_genotyping_protocol", "Select a genotyping protocol!") : 'Select a genotyping protocol!'));
             }
             else {
                 Workflow.complete('#upload_mla_protocol_check_button');
@@ -1522,11 +1524,11 @@ jQuery(document).ready(function(){
         var uploadFile = jQuery("#upload_mla_file").val();
 
         if ( !genoProtocolId || genoProtocolId === '' ) {
-            alert("Please go back and select a Genotyping Protocol");
+            alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("genotype.plate.please_go_back_and_select_a_genotyping_protocol", "Please go back and select a Genotyping Protocol") : "Please go back and select a Genotyping Protocol"));
             return;
         }
         if (uploadFile === '') {
-            alert("Please select a file");
+            alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("global.manage_file_share_dump.select_file", "Please select a file") : "Please select a file"));
             return;
         }
 
@@ -1543,18 +1545,18 @@ jQuery(document).ready(function(){
             success: function(response) {
                 jQuery("#working_modal").modal("hide");
                 if ( response.success ) {
-                    jQuery('#upload_mla_success').html(`<strong>Marker Metadata successfully stored in the database!`);
+                    jQuery('#upload_mla_success').html(`<strong>${jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("genotype.plate.marker_metadata_successfully_stored_in_the_database", "Marker Metadata successfully stored in the database!") : "Marker Metadata successfully stored in the database!")).html()}`);
                     jQuery('#upload_mla_success').show();
                 }
                 else {
                     const errors = (response.error_string || response.warning_string || "An unknown error occurred.  Please try again later or contact us for more help.").replaceAll('\n', '<br />');
-                    jQuery('#upload_mla_errors').html(`<strong>Marker Metadata NOT stored:</strong><br /><br />${errors}`);
+                    jQuery('#upload_mla_errors').html(`<strong>${jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("genotype.plate.marker_metadata_not_stored", "Marker Metadata NOT stored:") : "Marker Metadata NOT stored:")).html()}</strong><br /><br />${errors}`);
                     jQuery('#upload_mla_errors').show();
                 }
             },
             error: function() {
                 jQuery("#working_modal").modal("hide");
-                jQuery('#upload_mla_errors').html(`<strong>Marker Metadata NOT stored due to a server error.</strong>`);
+                jQuery('#upload_mla_errors').html(`<strong>${jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("genotype.plate.marker_metadata_not_stored_due_to_a_server_error", "Marker Metadata NOT stored due to a server error.") : "Marker Metadata NOT stored due to a server error.")).html()}</strong>`);
                 jQuery('#upload_mla_errors').show();
             }
         });

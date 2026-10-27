@@ -1,3 +1,7 @@
+<%once>
+use HTML::Entities ();
+</%once>
+
 <%doc>
 
 =head1 NAME
@@ -22,17 +26,17 @@ $model_data
 
 </%perl>
 
-<&| /page/info_section.mas,
+<&| /page/info_section.mas, anchor_title => "Models summary",
     collapsible => 1,
     collapsed   => 0,
-    title       => "Models summary"
+    title       => HTML::Entities::encode_entities($c->i18n->p("solgs.interface.models_summary", "Models summary"))
 &>
 
 <table id="model_summary" style="width:95%">
   <tr>
-    <th>Training population</th>
-    <th>Description</th>
-    <th>Models</th>
+    <th><% $c->i18n->p("solgs.interface.training_population", "Training population") |h %></th>
+    <th><% $c->i18n->p("global.dataset_cxgn_dataset.table.description", "Description") |h %></th>
+    <th><% $c->i18n->p("solgs.interface.models", "Models") |h %></th>
   </tr>
 
 % foreach my $model (@$model_data)
@@ -47,7 +51,7 @@ $model_data
     </td>
     <td>
       <& /page/columnar_table.mas,
-         headings    => ['Trait', 'Model accuracy', 'Additive variance',  'SNP heritability'],
+         headings    => [HTML::Entities::encode_entities($c->i18n->p("accession.population_cgi.trait", "Trait")), HTML::Entities::encode_entities($c->i18n->p("solgs.interface.model_accuracy", "Model accuracy")), HTML::Entities::encode_entities($c->i18n->p("solgs.interface.additive_variance", "Additive variance")),  HTML::Entities::encode_entities($c->i18n->p("solgs.interface.snp_heritability", "SNP heritability"))],
          data        => $model->[2],
         __alt_freq   => 1,
         __align      => "l",

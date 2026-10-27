@@ -10,11 +10,11 @@ $traits_list
 </%args>
 
 <& /page/page_title.mas, 
-   title=>'List of traits with GS data'
+   title=>HTML::Entities::encode_entities($c->i18n->p("solgs.interface.list_of_traits_with_gs_data", "List of traits with GS data"))
 &>
 
-<&| /page/info_section.mas, 
-   title    => qq |Traits beginning with "$index" |
+<&| /page/info_section.mas, anchor_title => qq |Traits beginning with "$index" |,
+   title    => HTML::Entities::encode_entities($c->i18n->p("solgs.interface.traits_beginning_with_index", "Traits beginning with \"%{index}\" ", {index => "" . ($index // "")}))
 &>
 
 <&/page/columnar_table.mas,
@@ -26,3 +26,7 @@ $traits_list
  &>
 
 </&>
+
+<%once>
+use HTML::Entities ();
+</%once>

@@ -2,6 +2,7 @@
 package SGN::Controller::SiteStatus;
 
 use Moose;
+use SGN::I18N ();
 
 BEGIN { extends 'Catalyst::Controller'; }
 
@@ -9,6 +10,7 @@ BEGIN { extends 'Catalyst::Controller'; }
 sub login_status :Path('/about/status/logins') Args(0) { 
     my $self = shift;
     my $c = shift;
+    my SGN::I18N $i18n = $c && $c->can('i18n') ? $c->i18n : undef;
     
     if (! ($c->user())) { 
 	$c->res->redirect('/user/login');
@@ -16,7 +18,7 @@ sub login_status :Path('/about/status/logins') Args(0) {
     }
     if (!$c->user()->check_roles("curator")) { 
 	$c->stash->{template} = '/generic_message.mas';
-	$c->stash->{message} = 'You do not have the required privileges to view this page';
+	$c->stash->{message} = SGN::I18N::translate($i18n, "administration.status.insufficient_privileges", "You do not have the required privileges to view this page");
 	return;
     }
 	

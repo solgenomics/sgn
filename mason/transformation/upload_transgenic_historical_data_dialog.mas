@@ -10,21 +10,21 @@ $default_plant_material_name => undef
     <div class="modal-dialog modal-lg" role="document">
         <div class="modal-content">
             <div class="modal-header">
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                <h4 class="modal-title" id="uploadTransgenicHistoricalDialog">Upload Transgenic Data</h4>
+                <button type="button" class="close" data-dismiss="modal" aria-label="<% $c->i18n->p("global.dataset_publish.close", "Close") |h %>"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="uploadTransgenicHistoricalDialog"><% $c->i18n->p("transformation.upload_transgenic_data", "Upload Transgenic Data") |h %></h4>
             </div>
             <div class="modal-body">
                 <div class="container-fluid">
-                    <&| /page/explanation.mas, title=>'Template Information' &>
+                    <&| /page/explanation.mas, title=>$c->i18n->p("cross.ui.template_information.bf8c643", 'Template Information') &>
                         <p>
-                            <b>File format information</b>
+                            <b><% $c->i18n->p("accessions.dialog.file_format", "File format information") |h %></b>
                             <br>
-                            <a id="transgenic_historical_data_upload_spreadsheet_format_info">Spreadsheet Format</a>
+                            <a id="transgenic_historical_data_upload_spreadsheet_format_info"><% $c->i18n->p("cross.ui.spreadsheet_format.f1285ec", "Spreadsheet Format") |h %></a>
                         </p>
                     </&>
                     <form method="post" enctype="multipart/form-data" encoding="multipart/form-data" id="upload_transgenic_historical_data_form" name="upload_transgenic_historical_data_form">
                         <div class="form-group">
-                            <label class="col-sm-3 control-label">Upload File: </label>
+                            <label class="col-sm-3 control-label"><% $c->i18n->p("cross.ui.upload_file.9798051", "Upload File:") |h %> </label>
                             <div class="col-sm-9" >
                                 <input type="file" name="transgenic_historical_data_file" id="transgenic_historical_data_file" encoding="multipart/form-data" />
                                 <input name="transgenic_data_project_id" id="transgenic_data_project_id" type="hidden" value="<% $trial_id %>">
@@ -37,8 +37,8 @@ $default_plant_material_name => undef
                 </div>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-                <button type="button" class="btn btn-primary" name="upload_transgenic_historical_data_submit" id="upload_transgenic_historical_data_submit">Upload</button>
+                <button type="button" class="btn btn-default" data-dismiss="modal"><% $c->i18n->p("global.dataset_publish.close", "Close") |h %></button>
+                <button type="button" class="btn btn-primary" name="upload_transgenic_historical_data_submit" id="upload_transgenic_historical_data_submit"><% $c->i18n->p("global.dataset_publish.action.upload", "Upload") |h %></button>
             </div>
         </div>
     </div>
@@ -48,19 +48,19 @@ $default_plant_material_name => undef
     <div class="modal-dialog" role="document">
         <div class="modal-content">
             <div class="modal-header">
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                <h4 class="modal-title" id="transgenicDataSavedDialog">Success</h4>
+                <button type="button" class="close" data-dismiss="modal" aria-label="<% $c->i18n->p("global.dataset_publish.close", "Close") |h %>"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="transgenicDataSavedDialog"><% $c->i18n->p("cross.ui.success", "Success") |h %></h4>
             </div>
             <div class="modal-body">
                 <div class="container-fluid">
                     <p>
                         <span class="ui-icon ui-icon-circle-check" style="float: left; margin: 0 7px 50px 0;"></span>
-                        The transgenic data were saved successfully.
+                        <% $c->i18n->p("transformation.the_transgenic_data_were_saved_successfully", "The transgenic data were saved successfully.") |h %>
                     </p>
                 </div>
             </div>
             <div class="modal-footer">
-                <button id="dismiss_transgenic_data_saved_dialog" type="button" class="btn btn-default" data-dismiss="modal">Close & Reload</button>
+                <button id="dismiss_transgenic_data_saved_dialog" type="button" class="btn btn-default" data-dismiss="modal"><% $c->i18n->p("seedlots.ui.close_reload", "Close & Reload") |h %></button>
             </div>
         </div>
     </div>
@@ -70,8 +70,8 @@ $default_plant_material_name => undef
     <div class="modal-dialog modal-lg" role="document">
         <div class="modal-content">
             <div class="modal-header">
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                <h4 class="modal-title" id="uploadTransgenicDataErrorDialog">Upload Transgenic Data Error</h4>
+                <button type="button" class="close" data-dismiss="modal" aria-label="<% $c->i18n->p("global.dataset_publish.close", "Close") |h %>"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="uploadTransgenicDataErrorDialog"><% $c->i18n->p("transformation.upload_transgenic_data_error", "Upload Transgenic Data Error") |h %></h4>
             </div>
             <div class="modal-body">
                 <div class="container-fluid">
@@ -81,7 +81,7 @@ $default_plant_material_name => undef
                 </div>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-default" data-dismiss="modal"><% $c->i18n->p("global.dataset_publish.close", "Close") |h %></button>
             </div>
         </div>
     </div>
@@ -91,14 +91,14 @@ $default_plant_material_name => undef
     <div class="modal-dialog modal-xl" role="document">
         <div class="modal-content">
             <div class="modal-header" style="text-align: center">
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                <h4 class="modal-title" id="uploadTransgenicDataInfoDialog">Upload Template Information For Transgenic Historical Data</h4>
+                <button type="button" class="close" data-dismiss="modal" aria-label="<% $c->i18n->p("global.dataset_publish.close", "Close") |h %>"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="uploadTransgenicDataInfoDialog"><% $c->i18n->p("transformation.upload_template_information_for_transgenic_historical_data", "Upload Template Information For Transgenic Historical Data") |h %></h4>
             </div>
             <div class="modal-body">
                 <div class="container-fluid">
-                    <b>Header:</b>
+                    <b><% $c->i18n->p("accessions.template.header", "Header:") |h %></b>
                     <br>
-                    The first row (header) should contain the following:
+                    <% $c->i18n->p("cross.ui.the_first_row_header_should_contain_the_following", "The first row (header) should contain the following:") |h %>
                     <br />
 
                     <table class="table table-hover table-bordered table-condensed" >
@@ -115,24 +115,24 @@ $default_plant_material_name => undef
                         </tbody>
                     </table>
 
-                    <b>Required fields:</b>
+                    <b><% $c->i18n->p("cross.ui.required_fields", "Required fields:") |h %></b>
                     <ul>
-                        <li>accession_name (accession name can be either new or existing transgenic accession. If you are uploading a file using existing transgenic accessions, you must indicate '1' in the 'existing_accession' column. Please check the optional fields below. <b> IMPORTANT: all accessions in the file should be the same type (either new or existing accession type).</b> )</li>
-                        <li>vector_construct (must exist in the database)</li>
-                        <li>batch_number (transgenic plants containing the same vector construct in the same batch will be grouped in an auto-generated transformation ID and will be automatically linked to control plants included in the same batch. You can have more than one batch in the same file. <b> IMPORTANT: please include all accessions from the same batch in one file.</b> )</li>
+                        <li><% $c->i18n->p("transformation.accession_name_accession_name_can_be_either_new_or_existing", "accession_name (accession name can be either new or existing transgenic accession. If you are uploading a file using existing transgenic accessions, you must indicate '1' in the 'existing_accession' column. Please check the optional fields below.") |h %> <b> <% $c->i18n->p("transformation.important_all_accessions_in_the_file_should_be_the_same", "IMPORTANT: all accessions in the file should be the same type (either new or existing accession type).") |h %></b> )</li>
+                        <li><% $c->i18n->p("transformation.vector_construct_must_exist_in_the_database", "vector_construct (must exist in the database)") |h %></li>
+                        <li><% $c->i18n->p("transformation.batch_number_transgenic_plants_containing_the_same_vector_construct_in", "batch_number (transgenic plants containing the same vector construct in the same batch will be grouped in an auto-generated transformation ID and will be automatically linked to control plants included in the same batch. You can have more than one batch in the same file.") |h %> <b> <% $c->i18n->p("transformation.important_please_include_all_accessions_from_the_same_batch_in", "IMPORTANT: please include all accessions from the same batch in one file.") |h %></b> )</li>
                     </ul>
 
-                    <b>Optional fields:</b>
+                    <b><% $c->i18n->p("seedlots.ui.optional_fields", "Optional fields:") |h %></b>
                     <ul>
-                        <li>is_a_control (if you would like to set any new accession as a control for any batch, please indicate "1" for the "is_a_control" column.)</li>
-                        <li>existing_accession (If you previously added/uploaded transgenic accessions without linking to a transformation ID and you would like to link those names to a transformation ID, please indicate "1" for the "existing_accession" column.)</li>
-                        <li>number_of_insertions (You can indicate number of transgene insertions during transgenic historical data upload.)</li>
+                        <li><% $c->i18n->p("transformation.is_a_control_if_you_would_like_to_set_any.3f52abb", "is_a_control (if you would like to set any new accession as a control for any batch, please indicate \"1\" for the \"is_a_control\" column.)") |h %></li>
+                        <li><% $c->i18n->p("transformation.existing_accession_if_you_previously_added_uploaded_transgenic_accessions_without", "existing_accession (If you previously added/uploaded transgenic accessions without linking to a transformation ID and you would like to link those names to a transformation ID, please indicate \"1\" for the \"existing_accession\" column.)") |h %></li>
+                        <li><% $c->i18n->p("transformation.number_of_insertions_you_can_indicate_number_of_transgene_insertions", "number_of_insertions (You can indicate number of transgene insertions during transgenic historical data upload.)") |h %></li>
                     </ul>
                 </div>
-                <& /help/file_upload_type.mas, type => "Transgenic Historical Data", optional_column => 1 &>
+                <& /help/file_upload_type.mas, type => $c->i18n->p("transformation.transgenic_historical_data", "Transgenic Historical Data"), optional_column => 1 &>
             </div>
             <div class="modal-footer">
-                <button id="close_transgenic_data_info_upload_dialog" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                <button id="close_transgenic_data_info_upload_dialog" type="button" class="btn btn-default" data-dismiss="modal"><% $c->i18n->p("global.dataset_publish.close", "Close") |h %></button>
             </div>
         </div>
     </div>
@@ -146,7 +146,7 @@ jQuery(document).ready(function(){
     jQuery('#upload_transgenic_historical_data_link').click(function() {
         const defaultPlantMaterial = "<% $default_plant_material_name %>";
         if (defaultPlantMaterial === ''){
-            alert("Please set a default plant material for this project before uploading your data.");
+            alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("transformation.please_set_a_default_plant_material_for_this_project_before", "Please set a default plant material for this project before uploading your data.") : "Please set a default plant material for this project before uploading your data."));
             return;
         }
 
@@ -160,7 +160,7 @@ jQuery(document).ready(function(){
     jQuery("#upload_transgenic_historical_data_submit").click(function(){
         var uploadFile = jQuery("#transgenic_historical_data_file").val();
         if (uploadFile === ''){
-            alert("Please select a file");
+            alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("global.manage_file_share_dump.select_file", "Please select a file") : "Please select a file"));
             return;
         }
 

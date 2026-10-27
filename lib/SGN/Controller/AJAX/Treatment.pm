@@ -1,5 +1,7 @@
 package SGN::Controller::AJAX::Treatment;
 
+use SGN::I18N ();
+
 use Moose;
 use CXGN::Trait::Treatment;
 
@@ -17,12 +19,14 @@ __PACKAGE__->config(
 sub create_treatment :Path('/ajax/treatment/create') {
     my $self = shift;
     my $c = shift;
+    my SGN::I18N $ui_create_treatment_i18n = SGN::I18N::translate($c);
 
     my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
     my $schema = $c->dbic_schema("Bio::Chado::Schema", undef, $sp_person_id);
 
     if (!($c->user() && $c->user->check_roles('curator'))) {
-        $c->stash->{rest} = {error => "You do not have permission to design new treatments.\n"};
+        $c->stash->{rest} = {error => (SGN::I18N::translate($ui_create_treatment_i18n, 'transformation.helper.you_do_not_have_permission_to_design_new_treatments', 'You do not have permission to design new treatments.
+'))};
         return;
     }
 
@@ -30,7 +34,8 @@ sub create_treatment :Path('/ajax/treatment/create') {
     my @editable_ontologies = split(",", $editable_ontologies_str);
 
     if (! grep {$_ eq "EXPERIMENT_TREATMENT"} @editable_ontologies) {
-        $c->stash->{rest} = {error => "You do not have permission to design new treatments.\n"};
+        $c->stash->{rest} = {error => (SGN::I18N::translate($ui_create_treatment_i18n, 'transformation.helper.you_do_not_have_permission_to_design_new_treatments', 'You do not have permission to design new treatments.
+'))};
         return;
     }
 
@@ -66,25 +71,32 @@ sub create_treatment :Path('/ajax/treatment/create') {
     my $error = "";
 
     if (!$name) {
-        $error .= "You must supply a name.\n";
+        $error .= (SGN::I18N::translate($ui_create_treatment_i18n, 'transformation.helper.you_must_supply_a_name', 'You must supply a name.
+'));
     }
     if (!$definition) {
-        $error .= "You must supply a definition.\n";
+        $error .= (SGN::I18N::translate($ui_create_treatment_i18n, 'transformation.helper.you_must_supply_a_definition', 'You must supply a definition.
+'));
     }
     if (defined($definition) && $definition !~ m/([^\s]+\s+){6,}/) {
-        $error .= "You supplied a definition, but it seems short. Please ensure the definition fully describes the treatment and allows it to be differentiated from other treatments.\n";
+        $error .= (SGN::I18N::translate($ui_create_treatment_i18n, 'transformation.helper.you_supplied_a_definition_but_it_seems_short_please_ensure_the_defin', 'You supplied a definition, but it seems short. Please ensure the definition fully describes the treatment and allows it to be differentiated from other treatments.
+'));
     }
     if (!$format || $format !~ m/numeric|categorical|date|percent|counter|boolean|text|ontology/i) {
-        $error .= "Treatment format must be numeric, categorical, date, percent, counter, boolean, text, or ontology.\n";
+        $error .= (SGN::I18N::translate($ui_create_treatment_i18n, 'transformation.helper.treatment_format_must_be_numeric_categorical_date_percent_counter_bo', 'Treatment format must be numeric, categorical, date, percent, counter, boolean, text, or ontology.
+'));
     }
     if (defined($categories) && defined($default_value) && $categories !~ m/$default_value/) {
-        $error .= "The default value of the treatment is not in the categories list.\n";
+        $error .= (SGN::I18N::translate($ui_create_treatment_i18n, 'transformation.helper.the_default_value_of_the_treatment_is_not_in_the_categories_list', 'The default value of the treatment is not in the categories list.
+'));
     }
     if (defined($default_value) && $default_value =~ m/[=\/]/) {
-        $error .= "The default value you supplied contains special characters.\n";
+        $error .= (SGN::I18N::translate($ui_create_treatment_i18n, 'transformation.helper.the_default_value_you_supplied_contains_special_characters', 'The default value you supplied contains special characters.
+'));
     }
     if (defined($minimum) && defined($maximum) && $maximum < $minimum) {
-        $error .= "The maximum value cannot be less than the minimum value.\n";
+        $error .= (SGN::I18N::translate($ui_create_treatment_i18n, 'transformation.helper.the_maximum_value_cannot_be_less_than_the_minimum_value', 'The maximum value cannot be less than the minimum value.
+'));
     }
     if (defined($repeat_type) && $repeat_type ne 'single' && $repeat_type ne 'multiple' && $repeat_type ne 'time_series') {
         $error .- "Invalid repeat type. Must be single, multiple, or time_series.\n";
@@ -145,7 +157,7 @@ sub create_treatment :Path('/ajax/treatment/create') {
     };
 
     if ($@) {
-        $c->stash->{rest} = {error => "An error occurred trying to create treatment: $@"};
+        $c->stash->{rest} = {error => (SGN::I18N::translate($ui_create_treatment_i18n, 'transformation.helper.an_error_occurred_trying_to_create_treatment_error_details', 'An error occurred trying to create treatment: %{error_details}', {error_details => ("" . ("$@"))}))};
         return;
     }
 

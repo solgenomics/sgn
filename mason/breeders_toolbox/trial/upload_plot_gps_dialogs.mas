@@ -1,3 +1,6 @@
+<%once>
+use HTML::Entities ();
+</%once>
 <%args>
 $trial_id
 </%args>
@@ -6,30 +9,30 @@ $trial_id
     <div class="modal-dialog modal-lg" role="document">
         <div class="modal-content">
             <div class="modal-header">
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                <h4 class="modal-title" id="uploadPlotGPSDialog">Upload GPS Coordinates for Plots</h4>
+                <button type="button" class="close" data-dismiss="modal" aria-label="<% $c->i18n->p('trial.upload.dialog.close', "Close") |h %>"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="uploadPlotGPSDialog"><% $c->i18n->p('trial.gps.title', "Upload GPS Coordinates for Plots") |h %></h4>
             </div>
             <div class="modal-body">
                 <div class="container-fluid">
 
-                    <&| /page/explanation.mas, title=>'Template information' &>
+                    <&| /page/explanation.mas, title => HTML::Entities::encode_entities($c->i18n->p("trial.common.template_info", "Template information")) &>
                         <p>
-                            <b>File format information</b>
+                            <b><% $c->i18n->p('trial.upload.dialog.file_format_info', "File format information") |h %></b>
                             <br>
-                            <a id="trial_upload_plot_gps_spreadsheet_info_format">Spreadsheet format</a>
+                            <a id="trial_upload_plot_gps_spreadsheet_info_format"><% $c->i18n->p('trial.upload.coordinates.spreadsheet', "Spreadsheet format") |h %></a>
                         </p>
                     </&>
 
                     <form class="form-horizontal" role="form" method="post" enctype="multipart/form-data" encoding="multipart/form-data" id="upload_plot_gps_dialog_form" name="upload_plot_gps_dialog_form">
                         <div class="form-group">
-                            <label class="col-sm-3 control-label">Coordinates Type: </label>
+                            <label class="col-sm-3 control-label"><% $c->i18n->p('trial.gps.coordinate_type', "Coordinates Type: ") |h %></label>
                             <div class="col-sm-9">
                                 <select class="form-control" id="upload_gps_coordinate_type" name="upload_gps_coordinate_type">
-                                    <option value="polygon">Polygon</option>
-                                    <option value="point">Point</option>
+                                    <option value="polygon"><% $c->i18n->p('trial.gps.polygon', "Polygon") |h %></option>
+                                    <option value="point"><% $c->i18n->p('trial.gps.point', "Point") |h %></option>
                                 </select>
                             </div>
-                            <label class="col-sm-4 control-label">Upload File (.xls or .xlsx): </label>
+                            <label class="col-sm-4 control-label"><% $c->i18n->p('trial.gps.upload_file', "Upload File (.xls or .xlsx): ") |h %></label>
                             <div class="col-sm-8" >
                                 <input type="file" name="trial_upload_plot_gps_file" id="trial_upload_plot_gps_file" encoding="multipart/form-data" />
                             </div>
@@ -38,8 +41,8 @@ $trial_id
                 </div>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-default" name="upload_plot_gps_cancel_button" id="upload_plot_gps_cancel_button" data-dismiss="modal">Close</button>
-                <button type="button" class="btn btn-primary" name="upload_plot_gps_save_button" id="upload_plot_gps_save_button" title="Upload">Upload</button>
+                <button type="button" class="btn btn-default" name="upload_plot_gps_cancel_button" id="upload_plot_gps_cancel_button" data-dismiss="modal"><% $c->i18n->p('trial.upload.dialog.close', "Close") |h %></button>
+                <button type="button" class="btn btn-primary" name="upload_plot_gps_save_button" id="upload_plot_gps_save_button" title="<% $c->i18n->p('trial.upload.dialog.upload', "Upload") |h %>"><% $c->i18n->p('trial.upload.dialog.upload', "Upload") |h %></button>
             </div>
         </div>
     </div>
@@ -49,21 +52,21 @@ $trial_id
     <div class="modal-dialog modal-xl" role="document">
         <div class="modal-content">
             <div class="modal-header" style="text-align: center">
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                <h4 class="modal-title" id="uploadPlotGPSInfoDialog">Upload Template Information</h4>
+                <button type="button" class="close" data-dismiss="modal" aria-label="<% $c->i18n->p('trial.upload.dialog.close', "Close") |h %>"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="uploadPlotGPSInfoDialog"><% $c->i18n->p('trial.upload.dialog.template_info', "Upload Template Information") |h %></h4>
             </div>
             <div class="modal-body">
                 <div class="container-fluid">
-                    <b>This is for recording the GPS coordinates of plots.</b>
+                    <b><% $c->i18n->p('trial.gps.description', "This is for recording the GPS coordinates of plots.") |h %></b>
                     <br/>
-                    <b>GPS coordinates may be uploaded in an Excel file (.xls or .xlsx)</b>
+                    <b><% $c->i18n->p('trial.gps.excel_help', "GPS coordinates may be uploaded in an Excel file (.xls or .xlsx)") |h %></b>
                     <br />
-                    <b>Header:</b>
+                    <b><% $c->i18n->p('trial.upload.dialog.header_label', "Header:") |h %></b>
                     <br>
-                    The first row (header) should contain the following:
+                    <% $c->i18n->p('trial.gps.first_header', "The first row (header) should contain the following:") |h %>
 
-                    <h2>Uploading Polygons:</h2>
-                    <h3>Each plot is represented as a polygon with four corners. You can choose to upload UTM31N and/or WGS84 coordinates.</h3>
+                    <h2><% $c->i18n->p('trial.gps.polygons_heading', "Uploading Polygons:") |h %></h2>
+                    <h3><% $c->i18n->p('trial.gps.polygon_help', "Each plot is represented as a polygon with four corners. You can choose to upload UTM31N and/or WGS84 coordinates.") |h %></h3>
 
                     <table class="table table-hover table-bordered table-condensed" >
                         <thead></thead>
@@ -82,28 +85,28 @@ $trial_id
                         </tbody>
                     </table>
 
-                    <b>Required fields:</b>
+                    <b><% $c->i18n->p('trial.upload.dialog.required_fields', "Required fields:") |h %></b>
                     <br/>
-                    plot_name (must exist in the database)
+                    plot_name (<% $c->i18n->p('trial.gps.plot_exists', "must exist in the database") |h %>)
                     <br />
-                    WGS84_bottom_left_x (WGS84 longitude coordinate of bottom left corner of plot)
+                    WGS84_bottom_left_x (<% $c->i18n->p('trial.gps.wgs_bottom_left_lon', "WGS84 longitude coordinate of bottom left corner of plot") |h %>)
                     <br />
-                    WGS84_bottom_left_y (WGS84 latitude coordinate of bottom left corner of plot)
+                    WGS84_bottom_left_y (<% $c->i18n->p('trial.gps.wgs_bottom_left_lat', "WGS84 latitude coordinate of bottom left corner of plot") |h %>)
                     <br />
-                    WGS84_bottom_right_x (WGS84 longitude coordinate of bottom right corner of plot)
+                    WGS84_bottom_right_x (<% $c->i18n->p('trial.gps.wgs_bottom_right_lon', "WGS84 longitude coordinate of bottom right corner of plot") |h %>)
                     <br />
-                    WGS84_bottom_right_y (WGS84 latitude coordinate of bottom right corner of plot)
+                    WGS84_bottom_right_y (<% $c->i18n->p('trial.gps.wgs_bottom_right_lat', "WGS84 latitude coordinate of bottom right corner of plot") |h %>)
                     <br />
-                    WGS84_top_right_x (WGS84 longitude coordinate of top right corner of plot)
+                    WGS84_top_right_x (<% $c->i18n->p('trial.gps.wgs_top_right_lon', "WGS84 longitude coordinate of top right corner of plot") |h %>)
                     <br />
-                    WGS84_top_right_y (WGS84 latitude coordinate of top right corner of plot)
+                    WGS84_top_right_y (<% $c->i18n->p('trial.gps.wgs_top_right_lat', "WGS84 latitude coordinate of top right corner of plot") |h %>)
                     <br />
-                    WGS84_top_left_x (WGS84 longitude coordinate of top left corner of plot)
+                    WGS84_top_left_x (<% $c->i18n->p('trial.gps.wgs_top_left_lon', "WGS84 longitude coordinate of top left corner of plot") |h %>)
                     <br />
-                    WGS84_top_left_y (WGS84 latitude coordinate of top left corner of plot)
+                    WGS84_top_left_y (<% $c->i18n->p('trial.gps.wgs_top_left_lat', "WGS84 latitude coordinate of top left corner of plot") |h %>)
 
-                    <h2>Uploading Points:</h2>
-                    <h3>Each plot is represented as a point with one coordinate pair. You can upload WGS84 coordinates.</h3>
+                    <h2><% $c->i18n->p('trial.gps.points_heading', "Uploading Points:") |h %></h2>
+                    <h3><% $c->i18n->p('trial.gps.point_help', "Each plot is represented as a point with one coordinate pair. You can upload WGS84 coordinates.") |h %></h3>
 
                     <table class="table table-hover table-bordered table-condensed" >
                         <thead></thead>
@@ -116,17 +119,17 @@ $trial_id
                         </tbody>
                     </table>
 
-                    <b>Required fields:</b>
+                    <b><% $c->i18n->p('trial.upload.dialog.required_fields', "Required fields:") |h %></b>
                     <br/>
-                    plot_name (must exist in the database)
+                    plot_name (<% $c->i18n->p('trial.gps.plot_exists', "must exist in the database") |h %>)
                     <br />
-                    WGS84_x (WGS84 longitude coordinate of the point)
+                    WGS84_x (<% $c->i18n->p('trial.gps.wgs_point_lon', "WGS84 longitude coordinate of the point") |h %>)
                     <br />
-                    WGS84_y (WGS84 latitude coordinate of the point)
+                    WGS84_y (<% $c->i18n->p('trial.gps.wgs_point_lat', "WGS84 latitude coordinate of the point") |h %>)
                 </div>
             </div>
             <div class="modal-footer">
-                <button id="close_upload_plot_gps_info_dialog" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                <button id="close_upload_plot_gps_info_dialog" type="button" class="btn btn-default" data-dismiss="modal"><% $c->i18n->p('trial.upload.dialog.close', "Close") |h %></button>
             </div>
         </div>
     </div>
@@ -153,7 +156,7 @@ jQuery(document).ready(function () {
         var uploadFile = jQuery("#trial_upload_plot_gps_file").val();
         jQuery('#upload_plot_gps_dialog_form').attr("action", "/ajax/breeders/trial/<% $trial_id %>/upload_plot_gps");
         if (uploadFile === '') {
-            alert("Please select a file");
+            alert((window.SGN && SGN.i18n ? SGN.i18n.p('trial.card.entry_numbers.select_file', "Please select a file") : "Please select a file"));
             return;
         }
         jQuery("#upload_plot_gps_dialog_form").submit();
@@ -166,7 +169,7 @@ jQuery(document).ready(function () {
             jQuery('#working_modal').modal("show");
             if (uploadedFile === '') {
                 jQuery('#working_modal').modal("hide");
-                alert("No file selected");
+                alert((window.SGN && SGN.i18n ? SGN.i18n.p('trial.gps.no_file', "No file selected") : "No file selected"));
             }
         },
         complete: function (response) {
@@ -178,7 +181,7 @@ jQuery(document).ready(function () {
                 return;
             }
             if (response.success) {
-                alert("File uploaded successfully");
+                alert((window.SGN && SGN.i18n ? SGN.i18n.p('trial.gps.upload_success', "File uploaded successfully") : "File uploaded successfully"));
                 window.location.replace('/breeders/trial/'+<% $trial_id %>);
             }
         }

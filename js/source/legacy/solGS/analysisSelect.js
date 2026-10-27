@@ -146,7 +146,7 @@ jQuery(document).on("change", "#analysis_select", function () {
         if (!implementedAnalyses.includes(selectedAnalysis)) {
             selectedAnalysis = selectedAnalysis.replace(/_/, ' ');
             jQuery("#dataset_trials_analysis_message").html(
-                `This analysis (${selectedAnalysis}) is yet to be implemented.`)
+                (window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.analysis_not_implemented", "This analysis (%{analysis}) is yet to be implemented.", {"analysis": String(selectedAnalysis)}) : `This analysis (${selectedAnalysis}) is yet to be implemented.`))
                 .show();
             jQuery("#run_analysis").prop("disabled", true);
         }
@@ -162,16 +162,13 @@ jQuery(document).on("change", "#analysis_select", function () {
 
                     if (!correlationCompatible) {
                         population = solGS.analysisSelect.getDataStructure();
-                        jQuery("#dataset_trials_analysis_message").html(`<p>
-                            This analysis is not compatible with the selected ${population}. <br>
-                            Perhaps run 'Check Tool Compatibility', found in the 'Tool Compatibility' <br/>
-                            section above, if it may help.</p>`).show();
+                        jQuery("#dataset_trials_analysis_message").html("<p>\n                            " + (window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.tool_compatibility_mismatch", "This analysis is not compatible with the selected %{population}. ", {"population": String(population)}) : "This analysis is not compatible with the selected " + String(population) + ". ") + "<br>\n                            " + (window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.tool_compatibility_hint", "Perhaps run 'Check Tool Compatibility', found in the 'Tool Compatibility' ") : "Perhaps run 'Check Tool Compatibility', found in the 'Tool Compatibility' ") + "<br/>\n                            " + (window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.tool_compatibility_hint_tail", "section above, if it may help.") : "section above, if it may help.") + "</p>").show();
                         jQuery("#run_analysis").prop("disabled", true);
                     }
                 }
                 
             }).fail(function () {
-                jQuery("#dataset_trials_analysis_message").html("Error retrieving tool compatibility.").show();
+                jQuery("#dataset_trials_analysis_message").html((window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.tool_compatibility_error", "Error retrieving tool compatibility.") : "Error retrieving tool compatibility.")).show();
             });
         }
     } else {
@@ -189,12 +186,12 @@ jQuery(document).ready(function () {
         var analysisPopId = solGS.analysisSelect.getAnalysisPopId();
 
         if (!analysisType) {
-            jQuery("#dataset_trials_analysis_message").html("Please select an analysis type.").show();
+            jQuery("#dataset_trials_analysis_message").html((window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.select_analysis_type", "Please select an analysis type.") : "Please select an analysis type.")).show();
             return;
         }
 
         if (!analysisPopId) {   
-            jQuery("#dataset_trials_analysis_message").html("Please select an analysis population.").show();
+            jQuery("#dataset_trials_analysis_message").html((window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.select_analysis_population", "Please select an analysis population.") : "Please select an analysis population.")).show();
             return;
         }
 
@@ -222,7 +219,7 @@ jQuery(document).ready(function () {
             var corrMsgDiv = solGS.correlation.corrMsgDiv;
 
             jQuery(`${canvas} .multi-spinner-container`).show();
-            jQuery(corrMsgDiv).html("Running correlation... please wait...").show();
+            jQuery(corrMsgDiv).html((window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.running_correlation_wait", "Running correlation... please wait...") : "Running correlation... please wait...")).show();
 
             solGS.correlation.runPhenoCorrelation(corrArgs).done(function (res) {
                 if (res.error) {
@@ -248,11 +245,11 @@ jQuery(document).ready(function () {
                     jQuery(corrMsgDiv).empty();
                 } else {
                     jQuery(`${canvas} .multi-spinner-container`).hide();
-                    jQuery(corrMsgDiv).html("There is no correlation output for this dataset.").fadeOut(8400);
+                    jQuery(corrMsgDiv).html((window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.no_correlation_output", "There is no correlation output for this dataset.") : "There is no correlation output for this dataset.")).fadeOut(8400);
                 }
             }).fail(function (res) {
                 jQuery(`${canvas} .multi-spinner-container`).hide();
-                jQuery(corrMsgDiv).html("Error occured running the correlation analysis.").fadeOut(8400);
+                jQuery(corrMsgDiv).html((window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.correlation_analysis_error", "Error occured running the correlation analysis.") : "Error occured running the correlation analysis.")).fadeOut(8400);
             });
         }
     });

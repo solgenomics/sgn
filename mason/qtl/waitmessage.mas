@@ -19,9 +19,5 @@ Isaak Y Tecle (iyt2@cornell.edu)
               width:200px;
               word-wrap:break-word;
               ">   
-    <pre>solQTL is running ..... 
-                Please wait ..... 
-                       This may take 
-                            a few minutes.
-    </pre>
+    <pre><% $c->i18n->p("analysis.qtl.ui.solqtl_is_running_please_wait_this_may_take_a_few", "solQTL is running ..... \n                Please wait ..... \n                       This may take \n                            a few minutes.\n    ") |h %></pre>
   </div>      

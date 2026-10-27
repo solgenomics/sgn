@@ -10,44 +10,44 @@ $locations
     <div class="modal-dialog modal-xl" role="document">
         <div class="modal-content ui-front">
             <div class="modal-header">
-                <button type="reset" class="close" id="add_transformation_project_dismiss_button_1" name="add_transformation_project_dismiss_button" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                <center><h4 class="modal-title" id="createTransformationProjectDialog">Add New Transformation Project</h4></center>
+                <button type="reset" class="close" id="add_transformation_project_dismiss_button_1" name="add_transformation_project_dismiss_button" aria-label="<% $c->i18n->p("global.dataset_publish.close", "Close") |h %>"><span aria-hidden="true">&times;</span></button>
+                <center><h4 class="modal-title" id="createTransformationProjectDialog"><% $c->i18n->p("transformation.add_new_transformation_project", "Add New Transformation Project") |h %></h4></center>
             </div>
             <div class="modal-body">
                 <div class="container-fluid">
 
                     <&| /util/workflow.mas, id=> "add_transformation_project_workflow" &>
-                        <&| /util/workflow.mas:step, title=> "Intro" &>
-                            <& /page/page_title.mas, title=>"What are Transformation Projects?" &>
+                        <&| /util/workflow.mas:step, title=> $c->i18n->p("cross.ui.intro", "Intro") &>
+                            <& /page/page_title.mas, title=>HTML::Entities::encode_entities($c->i18n->p("transformation.what_are_transformation_projects.b3cc06c", "What are Transformation Projects?")) &>
 
-                            <p>You can use Transformation Projects to manage and organize your transformation experiemnts</p>
+                            <p><% $c->i18n->p("transformation.you_can_use_transformation_projects_to_manage_and_organize_your", "You can use Transformation Projects to manage and organize your transformation experiemnts") |h %></p>
                             <ul>
-                                <li>Each transformation experiment is linked to a globally unique transformation ID.</li>
-                                <li>Transformation ID captures information about plant material and vector construct used in that experiment.</li>
-                                <li>You can use transformation details page to automatically add new transformant (accession) names to database by simply indicating the number of transformants generated.</li>
-                                <li>Each auto-generated transformant (accession) name has transformation ID as basename and an incremental serial number. </li>
+                                <li><% $c->i18n->p("transformation.each_transformation_experiment_is_linked_to_a_globally_unique_transformation", "Each transformation experiment is linked to a globally unique transformation ID.") |h %></li>
+                                <li><% $c->i18n->p("transformation.transformation_id_captures_information_about_plant_material_and_vector_construct", "Transformation ID captures information about plant material and vector construct used in that experiment.") |h %></li>
+                                <li><% $c->i18n->p("transformation.you_can_use_transformation_details_page_to_automatically_add_new", "You can use transformation details page to automatically add new transformant (accession) names to database by simply indicating the number of transformants generated.") |h %></li>
+                                <li><% $c->i18n->p("transformation.each_auto_generated_transformant_accession_name_has_transformation_id_as", "Each auto-generated transformant (accession) name has transformation ID as basename and an incremental serial number.") |h %> </li>
                             </ul>
                             <hr>
                             <center>
-                                <button id="next_step_add_new_intro" class="btn btn-primary" onclick="Workflow.complete(this);">Go to Next Step</button>
+                                <button id="next_step_add_new_intro" class="btn btn-primary" onclick="Workflow.complete(this);"><% $c->i18n->p("cross.ui.go_to_next_step", "Go to Next Step") |h %></button>
                             </center>
                         </&>
 
                         <form class="form-horizontal" role="form" name="create_transformation_project_form" id="create_transformation_project_form">
-                            <&| /util/workflow.mas:step, title=> "Add a transformation project" &>
-                                <& /page/page_title.mas, title=>"Enter basic information about the transformation project" &>
+                            <&| /util/workflow.mas:step, title=> $c->i18n->p("transformation.add_a_transformation_project", "Add a transformation project") &>
+                                <& /page/page_title.mas, title=>HTML::Entities::encode_entities($c->i18n->p("transformation.enter_basic_information_about_the_transformation_project", "Enter basic information about the transformation project")) &>
                                     <br/>
                                     <div class="form-group">
-                                        <label class="col-sm-3 control-lable">Project Name: </label>
+                                        <label class="col-sm-3 control-lable"><% $c->i18n->p("seedlot.project_name", "Project Name:") |h %> </label>
                                         <div class="col-sm-9">
                                             <input class="form-control" type="text" id="transformation_project_name" name="transformation_project_name"  />
                                         </div>
                                     </div><br/>
                                     <div class="form-group">
-                                        <label class="col-sm-3 control-label">Breeding Program: </label>
+                                        <label class="col-sm-3 control-label"><% $c->i18n->p("cross.ui.breeding_program.2c9b17e", "Breeding Program:") |h %> </label>
                                         <div class="col-sm-9">
                                             <select class="form-control" id="transformation_project_program" name="transformation_project_program">
-                                                <option value="">Select Breeding Program</option>
+                                                <option value=""><% $c->i18n->p("cross.ui.select_breeding_program", "Select Breeding Program") |h %></option>
 <%perl>
 foreach my $program (@$programs) {
     if (@$program[3]) {
@@ -61,10 +61,10 @@ foreach my $program (@$programs) {
                                         </div>
                                     </div><br/>
                                     <div class="form-group">
-                                        <label class="col-sm-3 control-label">Location: </label>
+                                        <label class="col-sm-3 control-label"><% $c->i18n->p("seedlot_record.ui.location", "Location:") |h %> </label>
                                         <div class="col-sm-9">
                                             <select class="form-control" id="transformation_project_location" name="transformation_project_location">
-                                                <option value="">Select Location</option>
+                                                <option value=""><% $c->i18n->p("cross.ui.select_location", "Select Location") |h %></option>
 <%perl>
     foreach my $location_hashref (@$locations) {
         my $properties = $location_hashref->{'properties'};
@@ -77,13 +77,13 @@ foreach my $program (@$programs) {
                                         </div>
                                     </div><br/>
                                     <div class="form-group">
-                                        <label class="col-sm-3 control-label">Year:</label>
+                                        <label class="col-sm-3 control-label"><% $c->i18n->p("cross.ui.year.c9410fe", "Year:") |h %></label>
                                         <div class="col-sm-9">
                                             <div id="transformation_project_year" name="transformation_project_year" ></div>
                                         </div>
                                     </div><br/>
                                     <div class="form-group">
-                                        <label class="col-sm-3 control-label">Description:</label>
+                                        <label class="col-sm-3 control-label"><% $c->i18n->p("global.dataset_publish.description", "Description:") |h %></label>
                                         <div class="col-sm-9">
                                             <textarea class="form-control" id="transformation_project_description" name="transformation_project_description" ></textarea>
                                         </div>
@@ -92,17 +92,17 @@ foreach my $program (@$programs) {
                                 <br/>
                                 <br/>
                                 <center>
-                                    <button type="button" class="btn btn-primary" onclick="Workflow.complete(this, false);" name="create_transformation_project_submit" id="create_transformation_project_submit">Submit</button>
+                                    <button type="button" class="btn btn-primary" onclick="Workflow.complete(this, false);" name="create_transformation_project_submit" id="create_transformation_project_submit"><% $c->i18n->p("global.manage_file_share_dump.submit", "Submit") |h %></button>
                                 </center>
                             </&>
                         </form>
 
-                        <&| /util/workflow.mas:complete, title=> "Complete" &>
-                            <& /page/page_title.mas, title=>"Finished! Your transformation project is now in the database" &>
+                        <&| /util/workflow.mas:complete, title=> $c->i18n->p("cross.ui.complete", "Complete") &>
+                            <& /page/page_title.mas, title=>HTML::Entities::encode_entities($c->i18n->p("transformation.finished_your_transformation_project_is_now_in_the_database", "Finished! Your transformation project is now in the database")) &>
                             <ul>
-                                <li>Please click on 'Refresh' button to view your newly created project on the manage page.</li>
-                                <li>You can use your transformation project page to create transformation IDs.</li>
-                                <li><b>If your transformation project is automatically linked to the tracking tool, please set up a naming format for the autogenerated names of your transformation project before using the tracking tool.</b></li>
+                                <li><% $c->i18n->p("seedlot.please_click_on_refresh_button_to_view_your_newly_created", "Please click on 'Refresh' button to view your newly created project on the manage page.") |h %></li>
+                                <li><% $c->i18n->p("transformation.you_can_use_your_transformation_project_page_to_create_transformation", "You can use your transformation project page to create transformation IDs.") |h %></li>
+                                <li><b><% $c->i18n->p("transformation.if_your_transformation_project_is_automatically_linked_to_the_tracking", "If your transformation project is automatically linked to the tracking tool, please set up a naming format for the autogenerated names of your transformation project before using the tracking tool.") |h %></b></li>
                             </ul>
                             <br/>
                         </&>
@@ -110,7 +110,7 @@ foreach my $program (@$programs) {
                 </div>
             </div>
             <div class="modal-footer">
-                <button id="add_transformation_project_dismiss_button_2" name="add_transformation_project_dismiss_button" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                <button id="add_transformation_project_dismiss_button_2" name="add_transformation_project_dismiss_button" type="button" class="btn btn-default" data-dismiss="modal"><% $c->i18n->p("global.dataset_publish.close", "Close") |h %></button>
             </div>
         </div>
     </div>
@@ -140,31 +140,31 @@ jQuery(document).ready(function(){
     jQuery('#create_transformation_project_submit').click(function() {
         var transformation_project_name = jQuery("#transformation_project_name").val();
         if (!transformation_project_name) {
-            alert("Project name is required");
+            alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("seedlot.project_name_is_required", "Project name is required") : "Project name is required"));
             return;
         }
 
         var selectedProgram = jQuery("#transformation_project_program").val();
         if (!selectedProgram) {
-            alert("Breeding program is required");
+            alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("cross.ui.breeding_program_is_required", "Breeding program is required") : "Breeding program is required"));
             return;
         }
 
         var transformation_project_location = jQuery("#transformation_project_location").val();
         if (!transformation_project_location) {
-            alert ("Location is required");
+            alert ((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("seedlots.ui.location_is_required", "Location is required") : "Location is required"));
             return;
         }
 
         var year = jQuery("#transformation_project_year_select").val();
         if (!year) {
-            alert ("Year is required");
+            alert ((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("genotype.project.validation.year_required", "Year is required") : "Year is required"));
             return;
         }
 
         var project_description = jQuery('textarea#transformation_project_description').val();
         if (!project_description) {
-            alert ("Description is required");
+            alert ((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("genotype.project.validation.description_required", "Description is required") : "Description is required"));
             return;
         }
 
@@ -183,11 +183,11 @@ jQuery(document).ready(function(){
                 jQuery("#working_modal").modal("show");
             },
             error: function(response) {
-                alert("An error occurred!" + JSON.stringify(response));
+                alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("accession.files.files.error", "An error occurred!") : "An error occurred!") + JSON.stringify(response));
                 return;
             },
             parseerror: function(response) {
-                alert("A parse error occurred!" + response);
+                alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("seedlot.a_parse_error_occurred", "A parse error occurred!") : "A parse error occurred!") + response);
                 return;
             },
             success: function(response) {
@@ -208,3 +208,7 @@ jQuery(document).ready(function(){
 });
 
 </script>
+
+<%once>
+use HTML::Entities ();
+</%once>

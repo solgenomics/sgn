@@ -9,14 +9,14 @@ $program_name
     <div class="modal-dialog modal-lg" role="document">
         <div class="modal-content ">
             <div class="modal-header">
-                <button type="reset" class="close" id="add_transformants_using_list_dismiss_button_1" name="add_transformants_using_list_dismiss_button" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                <center><h4 class="modal-title" id="addTransformantsUsingList">Add New Transformants Using a List</h4></center>
+                <button type="reset" class="close" id="add_transformants_using_list_dismiss_button_1" name="add_transformants_using_list_dismiss_button" aria-label="<% $c->i18n->p("global.dataset_publish.close", "Close") |h %>"><span aria-hidden="true">&times;</span></button>
+                <center><h4 class="modal-title" id="addTransformantsUsingList"><% $c->i18n->p("transformation.add_new_transformants_using_a_list", "Add New Transformants Using a List") |h %></h4></center>
             </div>
             <div class="modal-body">
                 <div class="container-fluid">
                     <form class="form-horizontal" role="form" name="add_new_transformants_form" id="add_new_transformants_form">
                         <div class="form-group">
-                            <label class="control-label col-sm-6">Select a List of Accessions to Add:</label>
+                            <label class="control-label col-sm-6"><% $c->i18n->p("transformation.select_a_list_of_accessions_to_add", "Select a List of Accessions to Add:") |h %></label>
                             <div class="col-sm-6" >
                                 <div class="input-group">
                                     <select class="form-control" id="new_transformants_list_select"></select>
@@ -27,8 +27,8 @@ $program_name
                 </div>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-primary" id="new_transformants_list_submit">Submit</button>
-                <button id="add_transformants_using_list_dismiss_button_2" name="add_transformants_using_list_dismiss_button" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary" id="new_transformants_list_submit"><% $c->i18n->p("global.manage_file_share_dump.submit", "Submit") |h %></button>
+                <button id="add_transformants_using_list_dismiss_button_2" name="add_transformants_using_list_dismiss_button" type="button" class="btn btn-default" data-dismiss="modal"><% $c->i18n->p("global.dataset_publish.close", "Close") |h %></button>
             </div>
         </div>
     </div>
@@ -38,19 +38,19 @@ $program_name
     <div class="modal-dialog" role="document">
         <div class="modal-content">
             <div class="modal-header">
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                <h4 class="modal-title" id="addTransformantsUsingListSavedDialog">Success</h4>
+                <button type="button" class="close" data-dismiss="modal" aria-label="<% $c->i18n->p("global.dataset_publish.close", "Close") |h %>"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="addTransformantsUsingListSavedDialog"><% $c->i18n->p("cross.ui.success", "Success") |h %></h4>
             </div>
             <div class="modal-body">
                 <div class="container-fluid">
                     <p>
                         <span class="ui-icon ui-icon-circle-check" style="float: left; margin: 0 7px 50px 0;"></span>
-                        The new transformants were stored successfully.
+                        <% $c->i18n->p("transformation.the_new_transformants_were_stored_successfully", "The new transformants were stored successfully.") |h %>
                     </p>
                 </div>
             </div>
             <div class="modal-footer">
-                <button id="dismiss_add_transformants_using_list_saved_dialog" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                <button id="dismiss_add_transformants_using_list_saved_dialog" type="button" class="btn btn-default" data-dismiss="modal"><% $c->i18n->p("global.dataset_publish.close", "Close") |h %></button>
             </div>
         </div>
     </div>
@@ -60,8 +60,8 @@ $program_name
     <div class="modal-dialog modal-lg" role="document">
         <div class="modal-content">
             <div class="modal-header">
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                <h4 class="modal-title" id="addTransformantsUsingListErrorDialog">Add Transformants Error</h4>
+                <button type="button" class="close" data-dismiss="modal" aria-label="<% $c->i18n->p("global.dataset_publish.close", "Close") |h %>"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="addTransformantsUsingListErrorDialog"><% $c->i18n->p("transformation.add_transformants_error", "Add Transformants Error") |h %></h4>
             </div>
             <div class="modal-body">
                 <div class="container-fluid">
@@ -71,7 +71,7 @@ $program_name
                 </div>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-default" data-dismiss="modal"><% $c->i18n->p("global.dataset_publish.close", "Close") |h %></button>
             </div>
         </div>
     </div>
@@ -84,7 +84,7 @@ jQuery(document).ready(function(){
 
     var lo = new CXGN.List();
 
-    jQuery('#new_transformants_list_select').html(lo.listSelect('new_transformants_list_select', ['accessions'], 'Select a list', undefined, undefined));
+    jQuery('#new_transformants_list_select').html(lo.listSelect('new_transformants_list_select', ['accessions'], (window.SGN && window.SGN.i18n ? window.SGN.i18n.p("fieldbook.trait.client.select_list", "Select a list") : 'Select a list'), undefined, undefined));
 
 
     jQuery('#add_transformants_using_list_link').click(function(){
@@ -95,7 +95,7 @@ jQuery(document).ready(function(){
         var transformants_list_id = jQuery('#new_transformants_list_select').val();
 
         if (!transformants_list_id) {
-            alert("Please select a list");
+            alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("seedlots.ui.please_select_a_list", "Please select a list") : "Please select a list"));
             return;
         }
 
@@ -126,7 +126,7 @@ jQuery(document).ready(function(){
             },
             error: function(response){
                 jQuery('#working_modal').modal('hide');
-                alert('An error occurred adding new transformants');
+                alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("transformation.an_error_occurred_adding_new_transformants", "An error occurred adding new transformants") : 'An error occurred adding new transformants'));
             }
         });
 

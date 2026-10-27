@@ -1,3 +1,7 @@
+<%once>
+use HTML::Entities ();
+</%once>
+
 <%doc>
 QTL search results view.
 </%doc>
@@ -12,17 +16,17 @@ $query
 </%args>
 
 <& /page/page_title.mas,
-    title => 'QTL search results',
+    title => HTML::Entities::encode_entities($c->i18n->p("analysis.qtl.ui.qtl_search_results", 'QTL search results')),
 &>
   
 % if ($data) 
 % { 
 
-<&| /page/info_section.mas,
-      title => 'Search Results',
+<&| /page/info_section.mas, anchor_title => 'Search Results',
+      title => HTML::Entities::encode_entities($c->i18n->p("global.search.annotation.genes.search_results", 'Search Results')),
 &>
   <& /page/columnar_table.mas,
-     headings    => [ 'Trait name', 'Definition', 'QTL' ],
+     headings    => [ ("" . HTML::Entities::encode_entities($c->i18n->p("phenotype.root.trait_name.4f3e5b7", "Trait name")) . ""), ("" . HTML::Entities::encode_entities($c->i18n->p("phenotype.definition", "Definition")) . ""), 'QTL' ],
     data         => $data,
     __alt_freq   => 2,
     __alt_width  => 1,
@@ -36,22 +40,22 @@ $query
 %}
 %else
 %{
-<&| /page/info_section.mas,
-      title => 'Search Results',
+<&| /page/info_section.mas, anchor_title => 'Search Results',
+      title => HTML::Entities::encode_entities($c->i18n->p("global.search.annotation.genes.search_results", 'Search Results')),
 &>
 %if ( $query )
 %{
-<br>No results found for <i><strong>'<% $query %>'.</strong></i><br />
+<br><% $c->i18n->p("analysis.qtl.ui.no_results_found_for", "No results found for") |h %> <i><strong>'<% $query %>'.</strong></i><br />
 %}
 %else
 %{
-<br>No results. Search again with with a trait name.<br />
+<br><% $c->i18n->p("analysis.qtl.ui.no_results_search_again_with_with_a_trait_name", "No results. Search again with with a trait name.") |h %><br />
 %}
 </&>
 %}
 
-<&| /page/info_section.mas,
-    title       => 'Search',
+<&| /page/info_section.mas, anchor_title => 'Search',
+    title       => HTML::Entities::encode_entities($c->i18n->p("global.search.advanced_search.search", 'Search')),
     collapsible => '1',
     collapsed   => 1
  &>

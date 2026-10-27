@@ -25,9 +25,13 @@ $message => undef
 
 </%perl>
 
-<& /page/page_title.mas, title => "Store uploaded barcode data" &>
-<&| /page/info_section.mas, title => "Upload status" &>
+<& /page/page_title.mas, title => HTML::Entities::encode_entities($c->i18n->p("barcode.helper.store_uploaded_barcode_data", "Store uploaded barcode data")) &>
+<&| /page/info_section.mas, anchor_title => "Upload status", title => HTML::Entities::encode_entities($c->i18n->p("barcode.helper.upload_status", "Upload status")) &>
     <h4><div> <% $error %> </div></h4>
     <div> <% $message %></div>
   </form>
 </&>
+
+<%once>
+use HTML::Entities ();
+</%once>

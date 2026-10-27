@@ -10,19 +10,19 @@ $upload_data_ref => undef
 
 <article>
   <header>
-    <h1>Upload cross file verification</h1>
+    <h1><% $c->i18n->p("cross.forms.upload_cross_file_verification", "Upload cross file verification") |h %></h1>
   </header>
 </article>
-<a id="return_to_home"  href="/breeders/home" >Return to breeders tools</button>
+<a id="return_to_home"  href="/breeders/home" ><% $c->i18n->p("cross.forms.return_to_breeders_tools", "Return to breeders tools") |h %></button>
 
 
 
 <div id="verify_uploaded_data_dialog"  class="ui-widget" >
 <%perl>
-print "<br><b>Number of crosses added:</b> $number_of_crosses_added<br>";
-print "<b>Number of unique parents in added crosses</b>: $number_of_unique_parents<br><br>";
+print "<br><b>" . HTML::Entities::encode_entities($c->i18n->p("cross.forms.number_of_crosses_added", "Number of crosses added:")) . "</b> $number_of_crosses_added<br>";
+print "<b>" . HTML::Entities::encode_entities($c->i18n->p("cross.forms.number_of_unique_parents_in_added_crosses", "Number of unique parents in added crosses")) . "</b>: $number_of_unique_parents<br><br>";
 </%perl>
-<button id="view_uploaded_data_link" >View uploaded data</button>
+<button id="view_uploaded_data_link" ><% $c->i18n->p("cross.forms.view_uploaded_data", "View uploaded data") |h %></button>
 </div>
 
 <div id="display_uploaded_data_dialog"  class="ui-widget" >
@@ -74,7 +74,7 @@ foreach my $key (sort { $a <=> $b} keys %upload_data) {
 
    jQuery("#verify_uploaded_data_dialog").dialog( {
       autoOpen: true,
-      buttons: { "Close" :  function() { jQuery("#verify_uploaded_data_dialog").dialog("close"); }},
+      buttons: [{ text: (window.SGN && window.SGN.i18n ? window.SGN.i18n.p("cross.ui.close", "Close") : "Close"), click: function() { jQuery("#verify_uploaded_data_dialog").dialog("close"); } }],
       modal: true,
       width: 600,
       height: 250
@@ -87,7 +87,7 @@ foreach my $key (sort { $a <=> $b} keys %upload_data) {
 
    jQuery("#display_uploaded_data_dialog").dialog( {
       autoOpen: false,
-      buttons: { "OK" :  function() { jQuery("#display_uploaded_data_dialog").dialog("close"); },},
+      buttons: [{ text: (window.SGN && window.SGN.i18n ? window.SGN.i18n.p("cross.ui.ok", "OK") : "OK"), click: function() { jQuery("#display_uploaded_data_dialog").dialog("close"); } }],
       modal: true,
       width: 1000,
       height: 300

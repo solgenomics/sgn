@@ -22,6 +22,10 @@ Lukas Mueller
 $what
 </%args>
 
+<%init>
+use HTML::Entities ();
+</%init>
+
 <& /util/import_javascript.mas, classes=>["CXGN.Effects"] &>
 
 <%perl>
@@ -30,7 +34,7 @@ use CXGN::Page::Widgets qw/collapser/;
 
 my ($what_is_link, $what_is_content) = collapser({
     id         => "what_is_sgn",
-    linktext   => '<span class="boxheading" style="border:0">About SGN</span>',
+    linktext   => '<span class="boxheading" style="border:0">' . HTML::Entities::encode_entities($c->i18n->p('global.what_is_sgn.about', 'About SGN')) . '</span>',
     collapsed  => 1,
     linkstyle  => "font-size:0.86em;white-space:nowrap",
     alt_target => "",

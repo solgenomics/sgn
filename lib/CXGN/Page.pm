@@ -1,4 +1,6 @@
 package CXGN::Page;
+use SGN::I18N ();
+use HTML::Entities ();
 
 =head1 NAME
 
@@ -65,6 +67,7 @@ sub new {
         $self->jsan_use(@libs);
     }
     $self->{context} = $c;
+    $self->{i18n} = $c && $c->can('i18n') ? $c->i18n : undef;
     $self->{project_name} = 'SGN';
 
     $self->{page_object} = CXGN::Page::VHost::SGN->new($self->get_dbh());
@@ -121,13 +124,23 @@ sub get_footer {
 
 sub simple_footer { 
     my $self=shift;
+    my SGN::I18N $page_footer_i18n = $self->{i18n};
  #
     carp "simple_footer() deprecated, please replace this with mason code";
 
+    my $copyright_caption = HTML::Entities::encode_entities($page_footer_i18n ? $page_footer_i18n->p("shared.page.copyright", "Copyright &copy; %{sgn} and %{bti}.", {sgn => '__SGN_LINK__', bti => '__BTI_LINK__'}) : "Copyright &copy; __SGN_LINK__ and __BTI_LINK__.");
+    my $support_caption = HTML::Entities::encode_entities($page_footer_i18n ? $page_footer_i18n->p("shared.page.development_support", "Development of this software was supported by the %{nsf}.", {nsf => '__NSF_LINK__'}) : "Development of this software was supported by the __NSF_LINK__.");
+    my $sgn_link = '<a href="http://sgn.cornell.edu/" class="footer" >Sol Genomics Network</a>';
+    my $bti_link = '<a class="footer" href="http://bti.cornell.edu/">the Boyce Thompson Institute</a>';
+    my $nsf_link = '<a class="footer" href="http://www.nsf.gov/">U.S. National Science Foundation</a>';
+    $copyright_caption =~ s/&amp;copy;/&copy;/g;
+    $copyright_caption =~ s/__SGN_LINK__/$sgn_link/;
+    $copyright_caption =~ s/__BTI_LINK__/$bti_link/;
+    $support_caption =~ s/__NSF_LINK__/$nsf_link/;
     print <<END_HEREDOC;
 </td></tr>
 <tr><td><hr></td></tr>
-<tr><td id= "pagecontent_footer"><font color="gray" size="1">Copyright &copy; <a href="http://sgn.cornell.edu/" class="footer" >Sol Genomics Network</a> and <a class="footer" href="http://bti.cornell.edu/">the Boyce Thompson Institute</a>.<br />Development of this software was supported by the <a class="footer" href="http://www.nsf.gov/">U.S. National Science Foundation</a>.</td></tr>
+<tr><td id= "pagecontent_footer"><font color="gray" size="1">$copyright_caption<br />$support_caption</td></tr>
 </table>
 </div>
 </body>
@@ -185,6 +198,7 @@ sub header
 
 sub simple_header {
     my $self          = shift;
+    my SGN::I18N $page_simple_header_i18n = $self->{i18n};
     my $header_string = shift;
     my $head          = $self->{page_object}->html_head( $header_string,
                                                          $self->jsan_render_includes
@@ -193,9 +207,11 @@ sub simple_header {
                                                        );
     $self->send_content_type_header();
     print "\n"; #< just in case we printed some plain headers
+    my $html_locale = HTML::Entities::encode_entities($page_simple_header_i18n ? $page_simple_header_i18n->locale : 'en');
+    my $html_direction = $page_simple_header_i18n ? $page_simple_header_i18n->dir : 'ltr';
     print <<END_HTML;
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
-<html>
+<html lang="$html_locale" dir="$html_direction">
 $head
 
 <body>
@@ -300,15 +316,21 @@ UNDOCUMENTED, PLEASE FIX
 sub comments_html {
 
     my ( $self, $thingtype, $thingid, $passed_referer ) = @_;
+    my SGN::I18N $page_comments_i18n = $self->{i18n};
 
     # thingtype would be something like "marker" or "bac"
     # thingid would be the marker_id or the clone_id
 
+    my $comments_title = HTML::Entities::encode_entities($page_comments_i18n ? $page_comments_i18n->p("shared.page.user_comments", "User Comments") : "User Comments");
+    my $comments_wait = HTML::Entities::encode_entities($page_comments_i18n ? $page_comments_i18n->p("global.page.comments.wait", "Please wait, checking for comments.  (If comments do not show up, access them %{link})", {link => '__SGN_COMMENTS_LINK__'}) : "Please wait, checking for comments.  (If comments do not show up, access them __SGN_COMMENTS_LINK__)");
+    my $comments_here = HTML::Entities::encode_entities($page_comments_i18n ? $page_comments_i18n->p("global.page.comments.link_here", "here") : "here");
+    my $comments_link = '<a href="/forum/return_comments.pl?type=' . HTML::Entities::encode_entities($thingtype) . '&amp;id=' . HTML::Entities::encode_entities($thingid) . '">' . $comments_here . '</a>';
+    $comments_wait =~ s/__SGN_COMMENTS_LINK__/$comments_link/;
     my $placeholder = blue_section_html(
-        "User Comments",
+        $comments_title,
         qq{<!-- check for comments only shows up when AJAX is not enabled
      (old browsers, buggy ajax) -->
-Please wait, checking for comments.  (If comments do not show up, access them <a href="/forum/return_comments.pl?type=$thingtype&amp;id=$thingid">here</a>)}
+$comments_wait}
     );
 
     my $referer = $self->URLEncode($passed_referer);
@@ -485,15 +507,20 @@ sub logout {
 }
 
 sub login_form {
+    my $self = shift;
+    my SGN::I18N $page_login_i18n = ref($self) ? $self->{i18n} : undef;
+    my $login_username = HTML::Entities::encode_entities($page_login_i18n ? $page_login_i18n->p("shared.page.login.username", "Username:") : "Username:");
+    my $login_password = HTML::Entities::encode_entities($page_login_i18n ? $page_login_i18n->p("shared.page.login.password", "Password:") : "Password:");
+    my $login_login = HTML::Entities::encode_entities($page_login_i18n ? $page_login_i18n->p("shared.page.login.login", "Login") : "Login");
     return <<HTML
 	<form name="CXGN_LOGIN" method="POST" style="margin:0px;padding0px">
 	<table>
 	<td>
-	Username:</td><td><input type="text" id="CXGN_LOGIN_USERNAME" name="CXGN_LOGIN_USERNAME" /></td></tr>
+	$login_username</td><td><input type="text" id="CXGN_LOGIN_USERNAME" name="CXGN_LOGIN_USERNAME" /></td></tr>
 	<tr><td>
-	Password:</td><td><input type="password" id="CXGN_LOGIN_PASSWORD" name="CXGN_LOGIN_PASSWORD" /></td></tr>
+	$login_password</td><td><input type="password" id="CXGN_LOGIN_PASSWORD" name="CXGN_LOGIN_PASSWORD" /></td></tr>
 	<tr><td>
-	<input type="submit" value="Login" />
+	<input type="submit" value="$login_login" />
 	</td>
 	<td>
 	</td>

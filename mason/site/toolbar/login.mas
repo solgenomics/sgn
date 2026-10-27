@@ -1,5 +1,5 @@
 
-<span id="login_button_html_div" style="white-space:nowrap;width:200;float:right"><button class="btn btn-primary disabled" type="button" style="margin: 7px 7px 0px 0px">Login</button></span>
+<span id="login_button_html_div" style="white-space:nowrap;width:200;float:right"><button class="btn btn-primary disabled" type="button" style="margin: 7px 7px 0px 0px"><% $c->i18n->p('navigation.login.sign_in', 'Login') |h %></button></span>
 
 
 <script>
@@ -12,7 +12,8 @@
 
     jQuery.ajax( { 
       url: '/ajax/user/login_button_html',
-      error: function(r) { alert('An error occurred'); },
+      headers: {'X-SGN-Locale': document.documentElement.getAttribute('data-sgn-locale') || document.documentElement.lang || 'en'},
+      error: function(r) { alert(window.SGN && SGN.i18n ? SGN.i18n.p('navigation.login.network_error', 'An error occurred') : 'An error occurred'); },
       success: function(r) { 
         if (r.error) { alert(r.error); }
         else { 
@@ -29,12 +30,13 @@
   }
         
   function logout() { 
-    var answer = confirm("Are you sure you want to log out?");
+    var answer = confirm(window.SGN && SGN.i18n ? SGN.i18n.p('navigation.login.confirm_logout', 'Are you sure you want to log out?') : 'Are you sure you want to log out?');
 
     if (answer === true) { 
       jQuery.ajax( { 
         url: '/ajax/user/logout',
-        error: function(r) { alert('An error occurred'); },
+        headers: {'X-SGN-Locale': document.documentElement.getAttribute('data-sgn-locale') || document.documentElement.lang || 'en'},
+        error: function(r) { alert(window.SGN && SGN.i18n ? SGN.i18n.p('navigation.login.network_error', 'An error occurred') : 'An error occurred'); },
         success: function(r) { 
           if (r.error) { alert(r.error); }
           else { 

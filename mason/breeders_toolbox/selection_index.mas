@@ -11,27 +11,27 @@ $trial_name => undef
   src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS_CHTML">
 </script>
 <& /util/import_javascript.mas, classes => [ 'jqueryui', 'jquery.dataTables-min', 'jquery.dataTables-buttons-min', 'jszip-min', 'pdfmake.pdfmake-min', 'pdfmake.vfs_fonts', 'buttons.bootstrap-min', 'buttons.html5-min', 'buttons.print-min', 'buttons.colvis-min', 'CXGN.BreederSearch', 'CXGN.SelectionIndex' ] &>
-<& /page/page_title.mas, title=>"Build a Selection Index" &>
+<& /page/page_title.mas, title=>HTML::Entities::encode_entities($c->i18n->p("phenotype.build_a_selection_index", "Build a Selection Index")) &>
 
 <div class="panel panel-default">
   <div class="panel-heading" data-toggle="collapse" data-parent="#accordion" data-target="#collapse1">
-    <div class="panel-title"><a href="#form" class="accordion-toggle">Parameters</a><span class="pull-right clickable" onmouseover="" style="cursor: pointer;"><i class="glyphicon glyphicon-chevron-up"></i></span></div>
+    <div class="panel-title"><a href="#form" class="accordion-toggle"><% $c->i18n->p("phenotype.parameters.d0f7c9c", "Parameters") |h %></a><span class="pull-right clickable" onmouseover="" style="cursor: pointer;"><i class="glyphicon glyphicon-chevron-up"></i></span></div>
   </div>
   <div id="collapse1" class="panel-collapse collapse in">
     <div class="panel-body form-horizontal container-fluid" style="overflow:hidden">
       <div class="col-sm-12 col-md-12 col-lg-12">
-          <label for="select_trial_for_selection_index">Trial: </label>
+          <label for="select_trial_for_selection_index"><% $c->i18n->p("trial.spreadsheet.trial_label", "Trial:") |h %> </label>
           <select class="form-control" autofocus="autofocus" id="select_trial_for_selection_index"></select>
       </div><br><br><br><br><br>
       <div class="col-sm-12 col-md-12 col-lg-12 table-responsive" id="trait_table_div">
-        <label id="trait_table_label">Traits and coefficients: </label>
+        <label id="trait_table_label"><% $c->i18n->p("phenotype.traits_and_coefficients", "Traits and coefficients:") |h %> </label>
           <table class="table table-bordered table-striped table-highlight">
             <thead>
-              <th>Trait name</th>
-              <th>Trait synonym</th>
-              <th data-toggle="tooltip" title="Must be a positive or negative number.">Index coefficient</th>
-              <th data-toggle="tooltip" title="Select the trial name, or a control, to normalize means for this trait to the trial or control mean">Normalize with a control?</th>
-              <th>Remove?</th>
+              <th><% $c->i18n->p("phenotype.trait_name", "Trait name") |h %></th>
+              <th><% $c->i18n->p("phenotype.trait_synonym", "Trait synonym") |h %></th>
+              <th data-toggle="tooltip" title="<% $c->i18n->p("phenotype.must_be_a_positive_or_negative_number", "Must be a positive or negative number.") |h %>"><% $c->i18n->p("phenotype.index_coefficient", "Index coefficient") |h %></th>
+              <th data-toggle="tooltip" title="<% $c->i18n->p("phenotype.select_the_trial_name_or_a_control_to_normalize_means", "Select the trial name, or a control, to normalize means for this trait to the trial or control mean") |h %>"><% $c->i18n->p("phenotype.normalize_with_a_control", "Normalize with a control?") |h %></th>
+              <th><% $c->i18n->p("phenotype.remove", "Remove?") |h %></th>
             </thead>
             <tbody id ="trait_table"></tbody>
             <tfoot><td colspan="5">
@@ -41,23 +41,23 @@ $trial_name => undef
         </div>
 
         <div class="col-sm-6 col-md-6 col-lg-6" id="sin_formula"><br>
-        <center><label>Selection Index (SIN) formula:</label></center><br>
+        <center><label><% $c->i18n->p("phenotype.selection_index_sin_formula", "Selection Index (SIN) formula:") |h %></label></center><br>
           <p id="ranking_formula"></p><br><br>
-          <center><button type="button" class="btn btn-primary disabled" id="calculate_rankings">Calculate Rankings</button></center>
+          <center><button type="button" class="btn btn-primary disabled" id="calculate_rankings"><% $c->i18n->p("phenotype.calculate_rankings", "Calculate Rankings") |h %></button></center>
         </div><br><br><br><br><br>
 
         <div class="col-sm-6 col-md-6 col-lg-6"><br>
-        <label>Options:</label><br>
-        <label>Load a saved formula:</label>
+        <label><% $c->i18n->p("phenotype.options", "Options:") |h %></label><br>
+        <label><% $c->i18n->p("phenotype.load_a_saved_formula", "Load a saved formula:") |h %></label>
         <div id="sin_list"></div><br>
-        <label>Save the current formula:</label>
+        <label><% $c->i18n->p("phenotype.save_the_current_formula", "Save the current formula:") |h %></label>
           <div class="input-group">
-            <input type='text' id='save_sin_name' class='form-control disabled' placeholder='Enter a name'></input>
+            <input type='text' id='save_sin_name' class='form-control disabled' placeholder='<% $c->i18n->p("phenotype.enter_a_name", "Enter a name") |h %>'></input>
             <span class="input-group-btn">
-              <button class="btn btn-default disabled" id="save_sin" type="button">Save</button>
+              <button class="btn btn-default disabled" id="save_sin" type="button"><% $c->i18n->p("account.quick_create.save", "Save") |h %></button>
             </span>
           </div><br>
-            <label><input type="checkbox" id="allow_missing" value="">Include accessions with missing values in calculations</label>
+            <label><input type="checkbox" id="allow_missing" value=""><% $c->i18n->p("phenotype.include_accessions_with_missing_values_in_calculations", "Include accessions with missing values in calculations") |h %></label>
           <select class="form-control" id="control_list" style="display: none"></select>
         </div><br><br><br><br><br>
       </div>
@@ -67,11 +67,11 @@ $trial_name => undef
 
 <div class="panel panel-default">
   <div class="panel-heading" data-toggle="collapse" data-parent="#accordion" data-target="#collapse2">
-    <div class="panel-title"><a href="#table_panel" class="accordion-toggle">Results</a><span class="pull-right clickable" onmouseover="" style="cursor: pointer;"><i class="glyphicon glyphicon-chevron-up"></i></span></div>
+    <div class="panel-title"><a href="#table_panel" class="accordion-toggle"><% $c->i18n->p("global.gem_experiment_search.results", "Results") |h %></a><span class="pull-right clickable" onmouseover="" style="cursor: pointer;"><i class="glyphicon glyphicon-chevron-up"></i></span></div>
   </div>
   <div id="collapse2" class="panel-collapse collapse in">
     <div class="panel-body" id="table_panel" style="overflow:hidden">
-      <ul class="nav nav-tabs"><li class="active"><a data-toggle="tab" href="#weighted_values_div">Rankings</a></li><li><a data-toggle="tab" href="#raw_avgs_div">Unweighted Means</a></li></ul>
+      <ul class="nav nav-tabs"><li class="active"><a data-toggle="tab" href="#weighted_values_div"><% $c->i18n->p("phenotype.rankings", "Rankings") |h %></a></li><li><a data-toggle="tab" href="#raw_avgs_div"><% $c->i18n->p("phenotype.unweighted_means", "Unweighted Means") |h %></a></li></ul>
       <div class="tab-content">
         <div id="weighted_values_div" class="tab-pane fade in active"></div>
         <div id="raw_avgs_div" class="tab-pane fade"></div>
@@ -84,51 +84,51 @@ $trial_name => undef
   <div class="modal-dialog modal-lg" role="document">
     <div class="modal-content">
       <div class="modal-header">
-        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-        <center><h3 class="modal-title" id="selectionIndexInfoDialog">How the Selection Index tool works</h3></center>
+        <button type="button" class="close" data-dismiss="modal" aria-label="<% $c->i18n->p("global.dataset_publish.close", "Close") |h %>"><span aria-hidden="true">&times;</span></button>
+        <center><h3 class="modal-title" id="selectionIndexInfoDialog"><% $c->i18n->p("phenotype.how_the_selection_index_tool_works", "How the Selection Index tool works") |h %></h3></center>
       </div>
       <div class="modal-body">
         <div class="container-fluid">
 
         <h4>
-          Background:
+          <% $c->i18n->p("trial.fieldmap_edit.background", "Background:") |h %>
         </h4>
-          <center><p>A selection index is a method of optimizing selection by acting on multiple traits simultaneously. An index can accomplish this because it incorporates multiple sources of information about an individual into a single best linear prediction of breeding value. This selection index tool combines phenotypic observations with index coefficients into a selection index, SIN, of the form:</p></center>
+          <center><p><% $c->i18n->p("phenotype.a_selection_index_is_a_method_of_optimizing_selection_by", "A selection index is a method of optimizing selection by acting on multiple traits simultaneously. An index can accomplish this because it incorporates multiple sources of information about an individual into a single best linear prediction of breeding value. This selection index tool combines phenotypic observations with index coefficients into a selection index, SIN, of the form:") |h %></p></center>
           <center>\(SIN = b_1x_1 + b_2x_2\hspace{2mm}...\hspace{2mm}b_ix_i\)</center><br>
-          <center><p>where $x_i$ is the mean of observations on the $_i$th trait and $b_i$ is the selection index coefficient (or weight) for that trait.</p></center>
+          <center><p><% $c->i18n->p("phenotype.where_x_i_is_the_mean_of_observations_on_the", "where \$x_i\$ is the mean of observations on the \$_i\$th trait and \$b_i\$ is the selection index coefficient (or weight) for that trait.") |h %></p></center>
 
         <h4>
-          Parameters:
+          <% $c->i18n->p("phenotype.parameters.5b2bcd1", "Parameters:") |h %>
         </h4>
         <dl>
-          <dt>Trial</dt>
-          <dd>One trial. Must be selected first. Multiple trial selection indices are not yet supported.</dd>
-          <dt>Traits</dt>
-          <dd>One or more traits. Must be traits that were measured in the trial. At maximum, all of the traits from the trial can be used.</dd>
-          <dt>Selection coefficients</dt>
-          <dd>One for each trait. Must be a positive or negative number, and should reflect the importance of the trait in the index. If left blank it defaults to 1.</dd>
-          <dt>Normalization</dt>
-          <dd>By default the unadjusted mean of phenotypic observations is used. For each trait, users have the option to normalize these means using a control mean or the overall trial mean.</dd>
+          <dt><% $c->i18n->p("global.index_logged_in_user.trial", "Trial") |h %></dt>
+          <dd><% $c->i18n->p("phenotype.one_trial_must_be_selected_first_multiple_trial_selection_indices", "One trial. Must be selected first. Multiple trial selection indices are not yet supported.") |h %></dd>
+          <dt><% $c->i18n->p("lists_datasets.download.traits", "Traits") |h %></dt>
+          <dd><% $c->i18n->p("phenotype.one_or_more_traits_must_be_traits_that_were_measured", "One or more traits. Must be traits that were measured in the trial. At maximum, all of the traits from the trial can be used.") |h %></dd>
+          <dt><% $c->i18n->p("phenotype.selection_coefficients", "Selection coefficients") |h %></dt>
+          <dd><% $c->i18n->p("phenotype.one_for_each_trait_must_be_a_positive_or_negative", "One for each trait. Must be a positive or negative number, and should reflect the importance of the trait in the index. If left blank it defaults to 1.") |h %></dd>
+          <dt><% $c->i18n->p("phenotype.normalization", "Normalization") |h %></dt>
+          <dd><% $c->i18n->p("phenotype.by_default_the_unadjusted_mean_of_phenotypic_observations_is_used", "By default the unadjusted mean of phenotypic observations is used. For each trait, users have the option to normalize these means using a control mean or the overall trial mean.") |h %></dd>
         </dl>
 
         <h4>
-          Options:
+          <% $c->i18n->p("phenotype.options", "Options:") |h %>
         </h4>
-        <dt>Save</dt>
-        <dd>The save option allows a user to enter a name, and save the current index formula as a dataset. It is then available for later use, and visible in their list manager where it can be edited or shared with others.</dd>
-        <dt>Select</dt>
-        <dd>The select option allows a user to load a saved formula, which will consist of a saved combination of traits, coefficients, and normalization options.</dd>
-        <dt>Include checkbox</dt>
-        <dd>Accessions with missing phenotypes are excluded by default. If the allow missing phenotypes option is enabled, the rankings will expand to include any accessions which were planted in the trial but which are missing observations for one or more of the traits in the index. Missing phenotypes will not contribute to the SIN score, so the final SIN interpretation should change accordingly.</dd>
+        <dt><% $c->i18n->p("account.quick_create.save", "Save") |h %></dt>
+        <dd><% $c->i18n->p("phenotype.the_save_option_allows_a_user_to_enter_a_name", "The save option allows a user to enter a name, and save the current index formula as a dataset. It is then available for later use, and visible in their list manager where it can be edited or shared with others.") |h %></dd>
+        <dt><% $c->i18n->p("styleguide.demo.trial_table.select", "Select") |h %></dt>
+        <dd><% $c->i18n->p("phenotype.the_select_option_allows_a_user_to_load_a_saved", "The select option allows a user to load a saved formula, which will consist of a saved combination of traits, coefficients, and normalization options.") |h %></dd>
+        <dt><% $c->i18n->p("phenotype.include_checkbox", "Include checkbox") |h %></dt>
+        <dd><% $c->i18n->p("phenotype.accessions_with_missing_phenotypes_are_excluded_by_default_if_the", "Accessions with missing phenotypes are excluded by default. If the allow missing phenotypes option is enabled, the rankings will expand to include any accessions which were planted in the trial but which are missing observations for one or more of the traits in the index. Missing phenotypes will not contribute to the SIN score, so the final SIN interpretation should change accordingly.") |h %></dd>
 
         <h4>
-          Results:
+          <% $c->i18n->p("phenotype.results", "Results:") |h %>
         </h4>
-          <p>The <b>Calculate Rankings</b> button will produce a SIN score and ranking for each accession, based on the selected parameters and phenotype means. The rankings and phenotype means are displayed in the <b>Rankings</b> and <b>Unweighted Means</b> tabs of the results section, where they can be manipulated, copied and downloaded. Below the results table, users have the option to <b>save top ranked accessions to a list</b>.</p>
+          <p><% $c->i18n->p("phenotype.the", "The") |h %> <b><% $c->i18n->p("phenotype.calculate_rankings", "Calculate Rankings") |h %></b> <% $c->i18n->p("phenotype.button_will_produce_a_sin_score_and_ranking_for_each", "button will produce a SIN score and ranking for each accession, based on the selected parameters and phenotype means. The rankings and phenotype means are displayed in the") |h %> <b><% $c->i18n->p("phenotype.rankings", "Rankings") |h %></b> <% $c->i18n->p("global.formatting.range.and", "and") |h %> <b><% $c->i18n->p("phenotype.unweighted_means", "Unweighted Means") |h %></b> <% $c->i18n->p("phenotype.tabs_of_the_results_section_where_they_can_be_manipulated", "tabs of the results section, where they can be manipulated, copied and downloaded. Below the results table, users have the option to") |h %> <b><% $c->i18n->p("phenotype.save_top_ranked_accessions_to_a_list", "save top ranked accessions to a list") |h %></b>.</p>
         </div>
       </div>
       <div class="modal-footer">
-        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+        <button type="button" class="btn btn-default" data-dismiss="modal"><% $c->i18n->p("global.dataset_publish.close", "Close") |h %></button>
       </div>
     </div>
   </div>
@@ -138,14 +138,14 @@ $trial_name => undef
     <div class="modal-dialog" role="document">
         <div class="modal-content ui-front">
             <div class="modal-header text-center">
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <button type="button" class="close" data-dismiss="modal" aria-label="<% $c->i18n->p("global.dataset_publish.close", "Close") |h %>"><span aria-hidden="true">&times;</span></button>
                 <h4 class="modal-title" id="selectionIndexErrorDialog"></h4>
             </div>
             <div class="modal-body" id="selection_index_error_body">
               <ul class="list-group" id="selection_index_error_message"></ul>
             </div>
             <div class="modal-footer">
-                <button id="selection_index_error_close_button" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                <button id="selection_index_error_close_button" type="button" class="btn btn-default" data-dismiss="modal"><% $c->i18n->p("global.dataset_publish.close", "Close") |h %></button>
             </div>
         </div>
     </div>
@@ -153,13 +153,17 @@ $trial_name => undef
 
 <script>
     jQuery(document).ready(function() {
-        jQuery('#ranking_formula').html("<center><i>Select a trial, then pick traits and weights (or load a saved formula).</i></center>");
-        get_select_box('projects', 'select_trial_for_selection_index', { 'get_field_trials' : 1, 'include_analyses' : 1, 'name' : 'html_select_trial_for_selection_index', 'id' : 'html_select_trial_for_selection_index' , 'default': 'Select a trial or analysis', 'live_search': 1 });
+        jQuery('#ranking_formula').html(("<center><i>" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("phenotype.select_a_trial_then_pick_traits_and_weights_or_load", "Select a trial, then pick traits and weights (or load a saved formula).") : "Select a trial, then pick traits and weights (or load a saved formula).")).html() + "</i></center>"));
+        get_select_box('projects', 'select_trial_for_selection_index', { 'get_field_trials' : 1, 'include_analyses' : 1, 'name' : 'html_select_trial_for_selection_index', 'id' : 'html_select_trial_for_selection_index' , 'default': (window.SGN && window.SGN.i18n ? window.SGN.i18n.p("phenotype.select_a_trial_or_analysis", "Select a trial or analysis") : 'Select a trial or analysis'), 'live_search': 1 });
         var lo = new CXGN.List();
-        jQuery('#sin_list').html(lo.listSelect('sin_list', ['dataset'], 'Select a formula', 'refresh', undefined));
+        jQuery('#sin_list').html(lo.listSelect('sin_list', ['dataset'], (window.SGN && window.SGN.i18n ? window.SGN.i18n.p("phenotype.select_a_formula", "Select a formula") : 'Select a formula'), 'refresh', undefined));
         jQuery('#sin_list_list_select').change(
           function() {
             load_sin();
         });
     });
 </script>
+
+<%once>
+use HTML::Entities ();
+</%once>

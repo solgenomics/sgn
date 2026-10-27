@@ -37,6 +37,8 @@ my $file_id = $create_fieldbook_return->{'file_id'};
 =cut
 
 use Moose;
+use SGN::I18N ();
+use CatalystX::GlobalContext '$c';
 use Moose::Util::TypeConstraints;
 use Try::Tiny;
 use File::Basename qw | basename dirname|;
@@ -174,6 +176,7 @@ has 'plot_start' => (
 
 sub download {
     my $self = shift;
+    my SGN::I18N $ui_download_i18n = SGN::I18N::translate($c);
     my %errors;
     my @error_messages;
 
@@ -198,7 +201,7 @@ sub download {
 
 
     if (!$wb) {
-        push @error_messages, "Could not create file.";
+        push @error_messages, SGN::I18N::translate($ui_download_i18n, "collection.server.could_not_create_file", "Could not create file.");
         $errors{'error_messages'} = \@error_messages;
         return \%errors;
     }

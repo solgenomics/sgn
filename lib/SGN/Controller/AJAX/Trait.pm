@@ -22,7 +22,7 @@ sub create_trait :Path('/ajax/trait/create') {
     my $schema = $c->dbic_schema("Bio::Chado::Schema", undef, $sp_person_id);
 
     if (!($c->user() && $c->user->check_roles('curator'))) {
-        $c->stash->{rest} = {error => "You do not have permission to design new traits.\n"};
+        $c->stash->{rest} = {error => do { local $_; local $@; local $!; $c->i18n->p("phenotype.server.you_do_not_have_permission_to_design_new", "You do not have permission to design new traits.\n") }};
         return;
     }
 
@@ -40,7 +40,7 @@ sub create_trait :Path('/ajax/trait/create') {
     my $ontology_db_name = $c->req->param('ontology_db_name') ? $c->req->param('ontology_db_name') : undef;
 
     if (!$ontology_db_name) {
-        $c->stash->{rest} = {error => "You must select the trait ontology that the new trait belongs to.\n"};
+        $c->stash->{rest} = {error => do { local $_; local $@; local $!; $c->i18n->p("phenotype.server.you_must_select_the_trait_ontology_that_the", "You must select the trait ontology that the new trait belongs to.\n") }};
         return;
     }
 
@@ -49,14 +49,14 @@ sub create_trait :Path('/ajax/trait/create') {
     my @parent_dbs = split(",", $parent_dbs);
     foreach my $parent_db (@parent_dbs) { # ALL of the parent DBs need to be editable, or traits need to be editable in general
         if (! ($editable_ontologies_str == 1 || (grep {$parent_db eq $_} @editable_ontologies))) {
-            $c->stash->{rest} = {error => "Ontology $parent_db is not editable on this server - contact a system administrator.\n"};
+            $c->stash->{rest} = {error => do { local $_; local $@; local $!; $c->i18n->p("phenotype.server.ontology_parent_db_is_not_editable_on_this", "Ontology %{parent_db} is not editable on this server - contact a system administrator.\n", {parent_db => "" . ($parent_db)}) }};
             return;
         }
     }
 
     # the ontology the new term is stored in must be editable in its own right, since the parent dbs are supplied by the client
     if (! ($editable_ontologies_str == 1 || (grep {$ontology_db_name eq $_} @editable_ontologies))) {
-        $c->stash->{rest} = {error => "Ontology $ontology_db_name is not editable on this server - contact a system administrator.\n"};
+        $c->stash->{rest} = {error => do { local $_; local $@; local $!; $c->i18n->p("phenotype.server.ontology_ontology_db_name_is_not_editable_on", "Ontology %{ontology_db_name} is not editable on this server - contact a system administrator.\n", {ontology_db_name => "" . ($ontology_db_name)}) }};
         return;
     }
 
@@ -161,7 +161,7 @@ sub create_trait :Path('/ajax/trait/create') {
     };
 
     if ($@) {
-        $c->stash->{rest} = {error => "An error occurred trying to create trait: $@"};
+        $c->stash->{rest} = {error => do { my $ui_error_details = "" . ($@); local $_; local $@; local $!; $c->i18n->p("phenotype.server.an_error_occurred_trying_to_create_trait_value", "An error occurred trying to create trait: %{value}", {value => $ui_error_details}) }};
         return;
     }
 
@@ -176,7 +176,7 @@ sub edit_trait :Path('/ajax/trait/edit') {
     my $schema = $c->dbic_schema("Bio::Chado::Schema", undef, $sp_person_id);
 
     if (!($c->user() && $c->user->check_roles('curator'))) {
-        $c->stash->{rest} = {error => "You do not have permission to edit cvterms.\n"};
+        $c->stash->{rest} = {error => do { local $_; local $@; local $!; $c->i18n->p("phenotype.server.you_do_not_have_permission_to_edit_cvterms", "You do not have permission to edit cvterms.\n") }};
         return;
     }
 
@@ -185,7 +185,7 @@ sub edit_trait :Path('/ajax/trait/edit') {
     my $new_definition = $c->req->param('new_definition') ? $c->req->param('new_definition') : undef;
     my $trait;
     if (!$cvterm_id) {
-        $c->stash->{rest} = {error => "Cvterm ID missing.\n"};
+        $c->stash->{rest} = {error => do { local $_; local $@; local $!; $c->i18n->p("phenotype.server.cvterm_id_missing", "Cvterm ID missing.\n") }};
         return;
     }
 
@@ -196,7 +196,7 @@ sub edit_trait :Path('/ajax/trait/edit') {
         });
     };
     if ($@) {
-        $c->stash->{rest} = {error => "An error occurred retrieving cvterm information: $@\n"};
+        $c->stash->{rest} = {error => do { my $ui_error_details = "" . ($@); local $_; local $@; local $!; $c->i18n->p("phenotype.server.an_error_occurred_retreiving_cvterm_information_value", "An error occurred retrieving cvterm information: %{value}\n", {value => $ui_error_details}) }};
         return;
     }
 
@@ -204,7 +204,7 @@ sub edit_trait :Path('/ajax/trait/edit') {
     my @editable_ontologies = split(",", $editable_ontologies_str);
 
     if (! ($editable_ontologies_str == 1 || (grep {$_ eq $trait->db()} @editable_ontologies ) ) ) {
-        $c->stash->{rest} = {error => "You do not have permission to edit traits.\n"};
+        $c->stash->{rest} = {error => do { local $_; local $@; local $!; $c->i18n->p("phenotype.server.you_do_not_have_permission_to_edit_traits", "You do not have permission to edit traits.\n") }};
         return;
     }
 
@@ -220,7 +220,7 @@ sub edit_trait :Path('/ajax/trait/edit') {
     };
 
     if ($@) {
-        $c->stash->{rest} = {error => "An error occurred updating cvterm: $@"};
+        $c->stash->{rest} = {error => do { my $ui_error_details = "" . ($@); local $_; local $@; local $!; $c->i18n->p("phenotype.server.an_error_occurred_updating_cvterm_value", "An error occurred updating cvterm: %{value}", {value => $ui_error_details}) }};
         return;
     }
 
@@ -235,14 +235,14 @@ sub delete_trait :Path('/ajax/trait/delete') {
     my $schema = $c->dbic_schema("Bio::Chado::Schema", undef, $sp_person_id);
 
     if (!($c->user() && $c->user->check_roles('curator'))) {
-        $c->stash->{rest} = {error => "You do not have permission to edit cvterms.\n"};
+        $c->stash->{rest} = {error => do { local $_; local $@; local $!; $c->i18n->p("phenotype.server.you_do_not_have_permission_to_edit_cvterms", "You do not have permission to edit cvterms.\n") }};
         return;
     }
 
     my $cvterm_id = $c->req->param('cvterm_id') ? $c->req->param('cvterm_id') : undef;
 
     if (!$cvterm_id) {
-        $c->stash->{rest} = {error => "Cvterm ID missing.\n"};
+        $c->stash->{rest} = {error => do { local $_; local $@; local $!; $c->i18n->p("phenotype.server.cvterm_id_missing", "Cvterm ID missing.\n") }};
         return;
     }
 
@@ -255,7 +255,7 @@ sub delete_trait :Path('/ajax/trait/delete') {
     });
 
     if (! ($editable_ontologies_str == 1 || (grep {$_ eq $trait->db()} @editable_ontologies ) ) ) {
-        $c->stash->{rest} = {error => "You do not have permission to delete traits.\n"};
+        $c->stash->{rest} = {error => do { local $_; local $@; local $!; $c->i18n->p("phenotype.server.you_do_not_have_permission_to_delete_traits", "You do not have permission to delete traits.\n") }};
         return;
     }
 
@@ -265,7 +265,7 @@ sub delete_trait :Path('/ajax/trait/delete') {
     };
 
     if ($@) {
-        $c->stash->{rest} = {error => "An error occurred deleting cvterm: $@"};
+        $c->stash->{rest} = {error => do { my $ui_error_details = "" . ($@); local $_; local $@; local $!; $c->i18n->p("phenotype.server.an_error_occurred_deleting_cvterm_value", "An error occurred deleting cvterm: %{value}", {value => $ui_error_details}) }};
         return;
     }
 

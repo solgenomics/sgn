@@ -41,7 +41,7 @@ sub _validate_with_plugin {
 
     my $worksheet = ( $excel_obj->worksheets() )[0]; #support only one worksheet
     if (!$worksheet) {
-        push @error_messages, "Spreadsheet must be on 1st tab in Excel (.xls) file";
+        push @error_messages, ($self->i18n ? $self->i18n->p('seedlots.parse.spreadsheet_must_be_on_1st_tab_in_excel_extension_file', 'Spreadsheet must be on 1st tab in Excel (%{extension}) file', {extension => '.xls'}) : "Spreadsheet must be on 1st tab in Excel (.xls) file");
         $errors{'error_messages'} = \@error_messages;
         $self->_set_parse_errors(\%errors);
         return;
@@ -49,7 +49,7 @@ sub _validate_with_plugin {
     my ( $row_min, $row_max ) = $worksheet->row_range();
     my ( $col_min, $col_max ) = $worksheet->col_range();
     if (($col_max - $col_min)  < 2 || ($row_max - $row_min) < 1 ) { #must have header and at least one row of transaction data
-        push @error_messages, "Spreadsheet is missing header or contains no rows";
+        push @error_messages, ($self->i18n ? $self->i18n->p('seedlots.parse.spreadsheet_is_missing_header_or_contains_no_rows', 'Spreadsheet is missing header or contains no rows') : "Spreadsheet is missing header or contains no rows");
         $errors{'error_messages'} = \@error_messages;
         $self->_set_parse_errors(\%errors);
         return;
@@ -88,22 +88,22 @@ sub _validate_with_plugin {
     }
 
     if (!$from_seedlot_name_head || $from_seedlot_name_head ne 'from_seedlot_name' ) {
-        push @error_messages, "Cell A1: from_seedlot_name is missing from the header";
+        push @error_messages, ($self->i18n ? $self->i18n->p('seedlots.parse.cell_cell_column_is_missing_from_the_header', 'Cell %{cell}: %{column} is missing from the header', {cell => 'A1', column => 'from_seedlot_name'}) : "Cell A1: from_seedlot_name is missing from the header");
     }
     if (!$to_plot_name_head || $to_plot_name_head ne 'to_plot_name') {
-        push @error_messages, "Cell B1: to_plot_name is missing from the header";
+        push @error_messages, ($self->i18n ? $self->i18n->p('seedlots.parse.cell_cell_column_is_missing_from_the_header', 'Cell %{cell}: %{column} is missing from the header', {cell => 'B1', column => 'to_plot_name'}) : "Cell B1: to_plot_name is missing from the header");
     }
     if (!$amount_head || $amount_head ne 'amount') {
-        push @error_messages, "Cell C1: amount is missing from the header";
+        push @error_messages, ($self->i18n ? $self->i18n->p('seedlots.parse.cell_cell_column_is_missing_from_the_header', 'Cell %{cell}: %{column} is missing from the header', {cell => 'C1', column => 'amount'}) : "Cell C1: amount is missing from the header");
     }
     if (!$weight_head || $weight_head ne 'weight(g)') {
-        push @error_messages, "Cell D1: weight(g) is missing from the header";
+        push @error_messages, ($self->i18n ? $self->i18n->p('seedlots.parse.cell_cell_column_is_missing_from_the_header', 'Cell %{cell}: %{column} is missing from the header', {cell => 'D1', column => 'weight(g)'}) : "Cell D1: weight(g) is missing from the header");
     }
     if (!$operator_name_head || $operator_name_head ne 'operator_name') {
-        push @error_messages, "Cell E1: operator_name is missing from the header";
+        push @error_messages, ($self->i18n ? $self->i18n->p('seedlots.parse.cell_cell_column_is_missing_from_the_header', 'Cell %{cell}: %{column} is missing from the header', {cell => 'E1', column => 'operator_name'}) : "Cell E1: operator_name is missing from the header");
     }
     if (!$transaction_description_head || $transaction_description_head ne 'transaction_description') {
-        push @error_messages, "Cell F1: transaction_description is missing from the header";
+        push @error_messages, ($self->i18n ? $self->i18n->p('seedlots.parse.cell_cell_column_is_missing_from_the_header', 'Cell %{cell}: %{column} is missing from the header', {cell => 'F1', column => 'transaction_description'}) : "Cell F1: transaction_description is missing from the header");
     }
 
     my %seen_seedlot_names;
@@ -142,31 +142,31 @@ sub _validate_with_plugin {
         }
 
         if (!$from_seedlot_name || $from_seedlot_name eq '' ) {
-            push @error_messages, "Cell A$row_name: from_seedlot_name missing.";
+            push @error_messages, ($self->i18n ? $self->i18n->p('seedlots.parse.cell_cell_column_missing.38e2355', 'Cell %{cell}: %{column} missing.', {cell => "A$row_name", column => 'from_seedlot_name'}) : "Cell A$row_name: from_seedlot_name missing.");
         } else {
             $from_seedlot_name =~ s/^\s+|\s+$//g;
             $seen_seedlot_names{$from_seedlot_name}++;
         }
 
         if (!$to_plot_name || $to_plot_name eq '') {
-            push @error_messages, "Cell B:$row_name: to_plot_name missing.";
+            push @error_messages, ($self->i18n ? $self->i18n->p('seedlots.parse.cell_cell_column_missing.38e2355', 'Cell %{cell}: %{column} missing.', {cell => "B:$row_name", column => 'to_plot_name'}) : "Cell B:$row_name: to_plot_name missing.");
         } else {
             $to_plot_name =~ s/^\s+|\s+$//g;
             $seen_plot_names{$to_plot_name}++;
         }
 
         if (!defined($amount) || $amount eq '') {
-            push @error_messages, "Cell C$row_name: amount missing";
+            push @error_messages, ($self->i18n ? $self->i18n->p('seedlots.parse.cell_cell_column_missing.0beb650', 'Cell %{cell}: %{column} missing', {cell => "C$row_name", column => 'amount'}) : "Cell C$row_name: amount missing");
         }
         if (!defined($weight) || $weight eq '') {
-            push @error_messages, "Cell D$row_name: weight(g) missing";
+            push @error_messages, ($self->i18n ? $self->i18n->p('seedlots.parse.cell_cell_column_missing.0beb650', 'Cell %{cell}: %{column} missing', {cell => "D$row_name", column => 'weight(g)'}) : "Cell D$row_name: weight(g) missing");
         }
         if ($amount eq 'NA' && $weight eq 'NA') {
-            push @error_messages, "On row:$row_name you must provide either a weight in grams or a seed count amount.";
+            push @error_messages, ($self->i18n ? $self->i18n->p('seedlots.parse.on_row_row_you_must_provide_either_a_weight_in_grams_or_a_seed_count_amo.ea4edcb', 'On row:%{row} you must provide either a weight in grams or a seed count amount.', {row => '' . ($row_name)}) : "On row:$row_name you must provide either a weight in grams or a seed count amount.");
         }
 
         if (!defined($operator_name) || $operator_name eq '') {
-            push @error_messages, "Cell E$row_name: operator_name missing";
+            push @error_messages, ($self->i18n ? $self->i18n->p('seedlots.parse.cell_cell_column_missing.0beb650', 'Cell %{cell}: %{column} missing', {cell => "E$row_name", column => 'operator_name'}) : "Cell E$row_name: operator_name missing");
         }
 
         push @seedlot_plot_pairs, [$from_seedlot_name, $to_plot_name];
@@ -187,11 +187,11 @@ sub _validate_with_plugin {
     }
 
     if (scalar(@seedlots_missing) > 0) {
-        push @error_messages, "The following seedlots are not in the database: ".join(',',@seedlots_missing);
+        push @error_messages, ($self->i18n ? $self->i18n->p('seedlots.parse.the_following_seedlots_are_not_in_the_database_names', 'The following seedlots are not in the database: %{names}', {names => join(',', @seedlots_missing)}) : "The following seedlots are not in the database: ".join(',',@seedlots_missing));
     }
 
     if (scalar(@seedlots_discarded) > 0) {
-        push @error_messages, "The following seedlots are marked as DISCARDED: ".join(',',@seedlots_discarded);
+        push @error_messages, ($self->i18n ? $self->i18n->p('seedlots.parse.the_following_seedlots_are_marked_as_status_names', 'The following seedlots are marked as %{status}: %{names}', {status => 'DISCARDED', names => join(',', @seedlots_discarded)}) : "The following seedlots are marked as DISCARDED: ".join(',',@seedlots_discarded));
     }
 
     my @plots = keys %seen_plot_names;
@@ -199,10 +199,10 @@ sub _validate_with_plugin {
     my @plots_missing = @{$plots_validator->validate($schema,'plots',\@plots)->{'missing'}};
 
     if (scalar(@plots_missing) > 0) {
-        push @error_messages, "The following plots are not in the database: ".join(',',@plots_missing);
+        push @error_messages, ($self->i18n ? $self->i18n->p('seedlots.parse.the_following_plots_are_not_in_the_database_names', 'The following plots are not in the database: %{names}', {names => join(',', @plots_missing)}) : "The following plots are not in the database: ".join(',',@plots_missing));
     }
 
-    my $pairs_error = CXGN::Stock::Seedlot->verify_seedlot_plot_compatibility($schema, \@seedlot_plot_pairs);
+    my $pairs_error = CXGN::Stock::Seedlot->verify_seedlot_plot_compatibility($schema, \@seedlot_plot_pairs, $self->i18n);
     if (exists($pairs_error->{error})){
         push @error_messages, $pairs_error->{error};
     }

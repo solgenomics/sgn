@@ -1,3 +1,7 @@
+<%once>
+use HTML::Entities ();
+</%once>
+
 
 <%args>
 
@@ -7,31 +11,31 @@
 <script src="https://cdn.jsdelivr.net/npm/vega-lite@5"></script>
 <script src="https://cdn.jsdelivr.net/npm/vega-embed@6"></script>
 
-<& /page/page_title.mas, title => "Breeding Progress" &>
+<& /page/page_title.mas, title => HTML::Entities::encode_entities($c->i18n->p("analysis.interface.breeding_progress", "Breeding Progress")) &>
 
 <& /util/import_javascript.mas, classes => [ 'CXGN.BreedersToolbox.HTMLSelect' ] &>
   
   <table class="table">
     <tr>
-      <th width="100">Select Trait</th>
+      <th width="100"><% $c->i18n->p("lists_datasets.pages.select_trait", "Select Trait") |h %></th>
 
     </tr>
 
     <tr>
       <td>
-	<div id="trait_selector_div">[loading...]</div>
+	<div id="trait_selector_div"><% $c->i18n->p("global.loading", "[loading...]") |h %></div>
       </td>
 
 
     </tr>
   </table>
 
-  <button class="btn" id="display_stats_button">Show Stats</button>
+  <button class="btn" id="display_stats_button"><% $c->i18n->p("analysis.interface.show_stats", "Show Stats") |h %></button>
   
   <table id="progress_stats_datatable">
   </table>
   <br />
-  <button class="btn" id="display_graph_button">Show Graph</button>
+  <button class="btn" id="display_graph_button"><% $c->i18n->p("analysis.interface.show_graph", "Show Graph") |h %></button>
   <div id="trait_averages_bargraph"></div>
   <script>
 jQuery(window).ready(function () {
@@ -46,10 +50,10 @@ jQuery('#display_stats_button').click(function () {
         ajax: '/ajax/progress?trait_id=' + trait_id,
         destroy: true,
         columns: [
-            { "title": "year" },
-            { "title": "average" },
-            { "title": "std dev" },
-            { "title": "observations [count]" }
+            { "title": jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("global.index_logged_in_user.year", "year") : "year")).html() },
+            { "title": jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("analysis.interface.average", "average") : "average")).html() },
+            { "title": jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("analysis.interface.std_dev", "std dev") : "std dev")).html() },
+            { "title": jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("analysis.interface.observations_count", "observations [count]") : "observations [count]")).html() }
         ]
     });
 });
@@ -86,6 +90,7 @@ jQuery('#display_graph_button').click(function () {
                     "x": {
                         //"bin": true,
                         "field": "Year",
+                        "title": (window.SGN && window.SGN.i18n ? window.SGN.i18n.p("global.trial_table.year", "Year") : "Year"),
                         "type": "ordinal",
                         "axis": { "labelAngle": 0 },
                     },
@@ -100,6 +105,7 @@ jQuery('#display_graph_button').click(function () {
                         "encoding": {
                             "y": {
                                 "field": "Average",
+                        "title": (window.SGN && window.SGN.i18n ? window.SGN.i18n.p("accession.population_cgi.average", "Average") : "Average"),
                                 "type": "quantitative",
                             },
                         },
@@ -111,7 +117,7 @@ jQuery('#display_graph_button').click(function () {
                                 "field": "mean + stddev",
                                 "type": "quantitative",
                                 "scale": { "zero": false },
-                                "title": "Average"
+                                "title": jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("accession.population_cgi.average", "Average") : "Average")).html()
                             },
                             "y2": { "field": "mean - stddev" },
                             "color": {"value": "navy"}
@@ -124,7 +130,7 @@ jQuery('#display_graph_button').click(function () {
         },
 
         error: function (e) {
-            alert('cannot show graph');
+            alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("analysis.interface.cannot_show_graph", "cannot show graph") : 'cannot show graph'));
 
         }
     });

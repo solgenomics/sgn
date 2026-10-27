@@ -1,3 +1,7 @@
+<%once>
+use HTML::Entities ();
+</%once>
+
 <%args>
 $trial_id
 $trial_name
@@ -16,58 +20,58 @@ $analysis_metadata
         <table class="table table-hover table-bordered" >
 
             <tr>
-                <td><b>Analysis Name</b></td>
+                <td><b><% $c->i18n->p("analysis.interface.analysis_name", "Analysis Name") |h %></b></td>
                 <td>
                     <div id="trial_name">
 % if ($trial_name) {
 %   print "$trial_name";
 % } else {
-%   print "<span class='text-danger'>[No Trial Name]</span>";
+%   print ("<span class='text-danger'>" . HTML::Entities::encode_entities($c->i18n->p("trial.summary.empty.name", "[No Trial Name]")) . "</span>");
 % }
                     </div>
                 </td>
             </tr>
 
             <tr>
-                <td><b>Breeding Program </b></td>
+                <td><b><% $c->i18n->p("global.index_logged_in_user.breeding_program", "Breeding Program") |h %> </b></td>
                 <td>
                     <span id="breeding_program">
 % if ($breeding_program_name) {
                     <a href="/breeders/program/<% $breeding_program_id %>"><% $breeding_program_name %></a>
 % }
 % else {
-%  print "<span class='text-danger'>[No Breeding Program]</span>";
+%  print ("<span class='text-danger'>" . HTML::Entities::encode_entities($c->i18n->p("cross.ui.no_breeding_program", "[No Breeding Program]")) . "</span>");
 % }
                     </span>
                 </td>
             </tr>
 
             <tr>
-                <td><b>Year</b></td>
+                <td><b><% $c->i18n->p("global.trial_table.year", "Year") |h %></b></td>
                 <td>
                     <div id="trial_year">
 % if ($year) {
 %  print "$year";
 % } else {
-%  print "<span class='text-danger'>[No Year]</span>";
+%  print ("<span class='text-danger'>" . HTML::Entities::encode_entities($c->i18n->p("cross.ui.no_year", "[No Year]")) . "</span>");
 % }
                     </div>
                 </td>
             </tr>
 
-            <tr><td><b>Description</b></td>
+            <tr><td><b><% $c->i18n->p("global.dataset_cxgn_dataset.table.description", "Description") |h %></b></td>
                 <td>
                     <div id="trial_description">
 % if ($trial_description) {
 %  print "$trial_description";
 % } else {
-%  print "<span class='text-danger'>[No Description]</span>";
+%  print ("<span class='text-danger'>" . HTML::Entities::encode_entities($c->i18n->p("cross.ui.no_description", "[No Description]")) . "</span>");
 % }
                     </div>
                 </td>
             </tr>
 
-            <tr><td><b>Protocol</b></td>
+            <tr><td><b><% $c->i18n->p("global.search_wizard.protocol", "Protocol") |h %></b></td>
                 <td>
                     <div id="analysis_protocol">
 %  print $analysis_metadata->analysis_protocol;
@@ -75,7 +79,7 @@ $analysis_metadata
                 </td>
             </tr>
 
-            <tr><td><b>Dataset</b></td>
+            <tr><td><b><% $c->i18n->p("lists_datasets.shared.dataset", "Dataset") |h %></b></td>
                 <td>
                     <div id="analysis_dataset_id">
 %  print "<a href=/dataset/".$analysis_metadata->dataset_id.">".$analysis_metadata->dataset_id."</a>";
@@ -83,7 +87,7 @@ $analysis_metadata
                 </td>
             </tr>
 
-            <tr><td><b>Created</b></td>
+            <tr><td><b><% $c->i18n->p("analysis.interface.created", "Created") |h %></b></td>
                 <td>
                     <div id="analysis_create_timestamp">
 %  print $analysis_metadata->create_timestamp;
@@ -91,7 +95,7 @@ $analysis_metadata
                 </td>
             </tr>
 
-            <tr><td><b>Result Summary</b></td>
+            <tr><td><b><% $c->i18n->p("analysis.interface.result_summary", "Result Summary") |h %></b></td>
                 <td>
                     <div id="analysis_result_summary">
 %  if ($analysis_metadata->result_summary) {

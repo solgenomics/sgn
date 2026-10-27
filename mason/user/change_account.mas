@@ -4,9 +4,13 @@
   $private_email => ''
 </%args>
 
-<& /page/page_title.mas, title => "Update User Information" &>
+<%init>
+  use HTML::Entities ();
+</%init>
 
-Please verify your current password to make changes. Select changes desired by checking the appropriate checkbox and entering the new information. <br /><br />
+<& /page/page_title.mas, title => HTML::Entities::encode_entities($c->i18n->p('account.change.title', 'Update User Information')) &>
+
+<% $c->i18n->p('account.change.instructions', 'Please verify your current password to make changes. Select changes desired by checking the appropriate checkbox and entering the new information.') |h %> <br /><br />
 
 <style>
 
@@ -37,41 +41,41 @@ Please verify your current password to make changes. Select changes desired by c
 
 <form id="change_account_form" name="change_account_form"> 
 <div>
-  <label class="textlabel" for="current_password" id="current_password_label">Current password <font color="red">*</font></label>
+  <label class="textlabel" for="current_password" id="current_password_label"><% $c->i18n->p('account.change.current_password', 'Current password') |h %> <font color="red">*</font></label>
   <input type="password" class="form-control" id="current_password" name="current_password" />
 </div>
 
 <br />
-<h4><input type="checkbox" id="change_password" name="change_password">Change password</input></h4>
+<h4><input type="checkbox" id="change_password" name="change_password"><% $c->i18n->p('account.change.password_toggle', 'Change password') |h %></input></h4>
 
 <div>
-  <label class="textlabel" for="new_password" >New password</label>
+  <label class="textlabel" for="new_password" ><% $c->i18n->p('account.change.new_password', 'New password') |h %></label>
   <input class="form-control" id="new_password" name="new_password" type="password" />
 </div>
 
 <div>
-  <label class="textlabel" for="confirm_password" >Confirm password</label>
+  <label class="textlabel" for="confirm_password" ><% $c->i18n->p('account.change.confirm_password', 'Confirm password') |h %></label>
   <input class="form-control" id="confirm_password" name="confirm_password" type="password" />
 </div>
 <br />
 <br />
 
-<h4><input type="checkbox" id="change_email" name="change_email">Change email</input></h4>
-<div>Your private e-mail address is not publically displayed online. It is used only for SGN staff to contact you about changes to your record or for e-mailing your password to you. Changing your private e-mail address will trigger a confirmation message from SGN to verify the address is usable by SGN.</div><br />
+<h4><input type="checkbox" id="change_email" name="change_email"><% $c->i18n->p('account.change.email_toggle', 'Change email') |h %></input></h4>
+<div><% $c->i18n->p('account.change.email_help', 'Your private e-mail address is not publically displayed online. It is used only for SGN staff to contact you about changes to your record or for e-mailing your password to you. Changing your private e-mail address will trigger a confirmation message from SGN to verify the address is usable by SGN.') |h %></div><br />
 <div>
-  <label class="textlabel" for="private_email" >New email</label>
+  <label class="textlabel" for="private_email" ><% $c->i18n->p('account.change.new_email', 'New email') |h %></label>
   <input class="form-control" id="private_email" name="private_email" value="<% $private_email %>" />
 </div>
 <div>
-  <label class="textlabel" for="confirm_email" >Confirm email</label>
+  <label class="textlabel" for="confirm_email" ><% $c->i18n->p('account.change.confirm_email', 'Confirm email') |h %></label>
   <input class="form-control" id="confirm_email" name="confirm_email" value="<% $private_email %>" />
 </div>
 
 <br />
 <br />
-<h4><input class="checkboxes" type="checkbox" id="change_username" name="change_username">Change username</input></h4>
+<h4><input class="checkboxes" type="checkbox" id="change_username" name="change_username"><% $c->i18n->p('account.change.username_toggle', 'Change username') |h %></input></h4>
 <div>
-  <label class="textlabel" for="new_username">New username</label>
+  <label class="textlabel" for="new_username"><% $c->i18n->p('account.change.new_username', 'New username') |h %></label>
   <input class="form-control" id="new_username" name="new_username" value="<% $logged_in_username %>" />
 </div>
 
@@ -79,9 +83,9 @@ Please verify your current password to make changes. Select changes desired by c
 
 <br />
 <br />
-<button class="btn btn-secondary" type="clear_form" id="clear_form">Reset form</button>
+<button class="btn btn-secondary" type="clear_form" id="clear_form"><% $c->i18n->p('account.change.reset', 'Reset form') |h %></button>
 
-<button type="submit" class="btn btn-primary" id="submit_account_info">Change Account Information</button>
+<button type="submit" class="btn btn-primary" id="submit_account_info"><% $c->i18n->p('account.change.submit', 'Change Account Information') |h %></button>
 
 </form>
 
@@ -95,11 +99,11 @@ Please verify your current password to make changes. Select changes desired by c
        jQuery.ajax( { 
          url: '/ajax/user/update',
          data: form_data,
-         error: function(r) { alert('An error occurred! Sorry!');  },
+         error: function(r) { alert(window.SGN && SGN.i18n ? SGN.i18n.p('auth.network_error', 'An error occurred! Sorry!') : 'An error occurred! Sorry!');  },
          success: function(r) {
            if (r.error) { alert(r.error); }
            else { 
-             alert("Done! " +r.message);
+             alert(window.SGN && SGN.i18n ? SGN.i18n.p('account.change.done', 'Done! %{message}', {message: r.message}) : 'Done! ' + r.message);
            }
          }
        });

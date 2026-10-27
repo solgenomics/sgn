@@ -1,3 +1,7 @@
+<%once>
+use HTML::Entities ();
+</%once>
+
 <%doc>
 
 =head1 NAME 
@@ -19,10 +23,10 @@ $gs_traits_index => undef
 </%args>
 
 
-<&| /page/info_section.mas,
+<&| /page/info_section.mas, anchor_title => "Or search for a trait ",
   collapsible => 1, 
   collapsed   => 1,
-  title => "Or search for a trait ",
+  title => HTML::Entities::encode_entities($c->i18n->p("solgs.interface.or_search_for_a_trait", "Or search for a trait ")),
 &>
 
 <!-- <div id="gs_traits_index" class="row" style="margin: 20px 2px 60px;"> -->
@@ -31,7 +35,7 @@ $gs_traits_index => undef
 
 <div id="search_trait_form" class="row">
   <div style="padding-top: 40px;" align="center" class="form-inline">
-    <input type="text" id="search_trait_entry" class="form-control" size="35px" placeholder="enter trait name"/>
+    <input type="text" id="search_trait_entry" class="form-control" size="35px" placeholder="<% $c->i18n->p("solgs.interface.enter_trait_name", "enter trait name") |h %>"/>
   
     <button id="search_trait" type="submit" class="btn btn-success"> 
       <span class="glyphicon glyphicon-search"></span>

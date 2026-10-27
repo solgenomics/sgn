@@ -58,6 +58,8 @@ Nicolas Morales <nm529@cornell.edu>
 =cut
 
 use Moose;
+use SGN::I18N ();
+has 'i18n' => (is => 'rw', isa => 'Maybe[Object]');
 use Data::Dumper;
 use DateTime;
 use CXGN::UploadFile;
@@ -329,6 +331,7 @@ has 'user_role' => (
 
 sub store {
     my $self = shift;
+    my $i18n = SGN::I18N::translate($self);
     my $bcs_schema = $self->bcs_schema();
     my $people_schema = $self->people_schema();
     my $metadata_schema = $self->metadata_schema();
@@ -382,13 +385,13 @@ sub store {
     my $model_type_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($bcs_schema, $analysis_model_type, 'protocol_type')->cvterm_id();
 
     if ($analysis_to_save_boolean eq 'yes' && !$analysis_name) {
-        return { error => "No analysis name given, but trying to save an analysis." };
+        return { error => SGN::I18N::translate($i18n, "analysis.interface.no_analysis_name_given_but_trying_to_save_an_analysis", "No analysis name given, but trying to save an analysis.") };
     }
 
     if (!$analysis_model_protocol_id) {
         $analysis_model_properties->{protocol} = $analysis_protocol;
 
-        my $mo = CXGN::AnalysisModel::SaveModel->new({
+        my $mo = CXGN::AnalysisModel::SaveModel->new({ i18n => $self->i18n,
             bcs_schema=>$bcs_schema,
             metadata_schema=>$metadata_schema,
             phenome_schema=>$phenome_schema,
@@ -481,7 +484,7 @@ sub store {
         my @composed_trait_names = values %composed_trait_map;
 
         #Project BUILD inserts project entry
-        my $a = CXGN::Analysis->new({
+        my $a = CXGN::Analysis->new({ i18n => $self->i18n,
             bcs_schema => $bcs_schema,
             people_schema => $people_schema,
             metadata_schema => $metadata_schema,
@@ -619,13 +622,13 @@ sub store {
 
         if ($@) {
             print STDERR "An error occurred storing analysis values ($@).\n";
-            return { error => "An error occurred storing the values ($@).\n" };
+            return { error => SGN::I18N::translate($i18n, "analysis.interface.an_error_occurred_storing_the_values_error", "An error occurred storing the values (%{error}).\n", {error => ("" . "$@")}) };
         }
 
         my $refresh = $self->_refresh_matviews($bcs_schema, 'fullview', 'concurrent');
     }
 
-    my $analysis_model = CXGN::AnalysisModel::GetModel->new({
+    my $analysis_model = CXGN::AnalysisModel::GetModel->new({ i18n => $self->i18n,
         bcs_schema=>$bcs_schema,
         metadata_schema=>$metadata_schema,
         phenome_schema=>$phenome_schema,
@@ -651,6 +654,7 @@ if ($analysis_model_file) {
 
 sub store_analysis_result_stock_names {
     my ($self, $bcs_schema, $stocks) = @_;
+    my $i18n = SGN::I18N::translate($self);
 
     my $stock_cvterm_id = SGN::Model::Cvterm
         ->get_cvterm_row($bcs_schema, 'analysis_result','stock_type')
@@ -670,7 +674,7 @@ sub store_analysis_result_stock_names {
 
     if ($@) {
             print STDERR "An error occurred storing analysis result stocks ($@).\n";
-            return { error => "An error occurred storing nalysis result stocks ($@).\n" };
+            return { error => SGN::I18N::translate($i18n, "analysis.interface.an_error_occurred_storing_nalysis_result_stocks_error", "An error occurred storing nalysis result stocks (%{error}).\n", {error => ("" . "$@")}) };
     } else {
         print STDERR "\nDONE storing new analysis result stocks!\n";
         my $refresh = $self->_refresh_matviews($bcs_schema, 'stockprop', 'concurrent');

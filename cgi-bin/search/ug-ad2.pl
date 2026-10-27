@@ -19,12 +19,15 @@ use CXGN::Tools::Text;
 use CXGN::DB::Connection;
 use CXGN::Unigene::Search;
 use CatalystX::GlobalContext '$c';
+use SGN::I18N;
+use HTML::Entities qw(encode_entities);
+my SGN::I18N $i18n = eval { $c && $c->i18n };
 
 
 #################################
 # Start a new SGN page.
-our $page = CXGN::Page->new( 'Unigene Advanced Search', 'Rob Buels');
-$page->header('Unigene Search Results'); #print out header immediately so users get 'in progress' message
+our $page = CXGN::Page->new( encode_entities(($i18n ? $i18n->p('global.ug-ad2.advanced_search', 'Unigene Advanced Search') : 'Unigene Advanced Search')), 'Rob Buels');
+$page->header(encode_entities(($i18n ? $i18n->p('global.ug-ad2.page_title', 'Unigene Search Results') : 'Unigene Search Results'))); #print out header immediately so users get 'in progress' message
 
 #create the search and query objects
 my $search = CXGN::Unigene::Search->new;
@@ -38,7 +41,7 @@ eval { #initialize the query object from the page parameters
   $query->from_request(\%params);
 }; if( $EVAL_ERROR ) {
   if($c->config->{'production_server'}) {
-    print "<b>Invalid search parameters.</b>\n";
+    print '<b>'.encode_entities(($i18n ? $i18n->p('global.ug-ad2.invalid_parameters', 'Invalid search parameters.') : 'Invalid search parameters.')).'</b>'."\n";
   } else {
     die $EVAL_ERROR; #die it on
   }
@@ -59,7 +62,7 @@ my $sql = $query->to_query_string();
 my $pagination_html = $search->pagination_buttons_html( $query, $result );
 
 
-my @tableheadings = ('Unigene','Build','Length (bp)','# Members');
+my @tableheadings = (encode_entities(($i18n ? $i18n->p('global.ug-ad2.unigene_heading', 'Unigene') : 'Unigene')), encode_entities(($i18n ? $i18n->p('global.ug-ad2.build_heading', 'Build') : 'Build')), encode_entities(($i18n ? $i18n->p('global.ug-ad2.length_heading', 'Length (bp)') : 'Length (bp)')), encode_entities(($i18n ? $i18n->p('global.ug-ad2.members_heading', '# Members') : '# Members')));
 my @tabledata;
 my $querystring = $query->to_query_string;
 while(my $ug = $result->next_result) {
@@ -80,11 +83,12 @@ EOH
 $pagination_html
 EOH
 
-print page_title_html('Unigene Search Results');
+print page_title_html(encode_entities(($i18n ? $i18n->p('global.ug-ad2.page_title', 'Unigene Search Results') : 'Unigene Search Results')));
 
-print blue_section_html('Unigene Search Results',sprintf('<span class="paginate_summary">%s matches (%0.1f seconds)</span>',commify_number($result->total_results),$result->time),$results_html);
+my $result_summary = encode_entities($i18n ? $i18n->p('global.ug-ad2.results_summary', '%{count} matches (%{seconds} seconds)', { count => commify_number($result->total_results), seconds => sprintf('%0.1f', $result->time) }) : sprintf('%s matches (%0.1f seconds)', commify_number($result->total_results), $result->time));
+print blue_section_html(encode_entities(($i18n ? $i18n->p('global.ug-ad2.page_title', 'Unigene Search Results') : 'Unigene Search Results')), '<span class="paginate_summary">' . $result_summary . '</span>', $results_html);
 
-print blue_section_html('Search Again',CXGN::Search::CannedForms::unigene_search_form($page,$query));
+print blue_section_html(encode_entities(($i18n ? $i18n->p('global.ug-ad2.search_again', 'Search Again') : 'Search Again')),CXGN::Search::CannedForms::unigene_search_form($page,$query));
 
 $page->footer();
 

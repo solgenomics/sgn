@@ -1,3 +1,6 @@
+<%once>
+use HTML::Entities ();
+</%once>
 <%args>
 $trial_id => undef
 $is_analysis => undef
@@ -6,7 +9,7 @@ $is_analysis => undef
 <& /util/import_javascript.mas, classes => [ ] &>
 
 <div class="well well-sm">
-    <button class="btn btn-primary" id="trial_detail_page_analysis_correlation_workflow">Find Correlation Between Saved Measurements</button>
+    <button class="btn btn-primary" id="trial_detail_page_analysis_correlation_workflow"><% $c->i18n->p("trial.correlation.title", "Find Correlation Between Saved Measurements") |h %></button>
 </div>
 <hr>
 
@@ -14,32 +17,32 @@ $is_analysis => undef
     <div class="modal-dialog modal-xl" role="document">
         <div class="modal-content">
             <div class="modal-header">
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                <h4 class="modal-title" id="trialAnalysisCorrelationWorkflowDialog">Find Correlation Between Saved Measurements</h4>
+                <button type="button" class="close" data-dismiss="modal" aria-label="<% $c->i18n->p("trial.correlation.close", "Close") |h %>"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="trialAnalysisCorrelationWorkflowDialog"><% $c->i18n->p("trial.correlation.title", "Find Correlation Between Saved Measurements") |h %></h4>
             </div>
             <div class="modal-body">
 
                 <&| /util/workflow.mas, id=> "trial_analysis_correlation_workflow_dialog_workflow" &>
-                    <&| /util/workflow.mas:step, title=> "Input" &>
-                        <& /page/page_title.mas, title=>"Select the input measurements to correlate" &>
+                    <&| /util/workflow.mas:step, title=> HTML::Entities::encode_entities($c->i18n->p("trial.correlation.step_input", "Input")) &>
+                        <& /page/page_title.mas, title=>HTML::Entities::encode_entities($c->i18n->p("trial.correlation.page_input", "Select the input measurements to correlate")) &>
                 
                         <div class="container-fluid">
                             <div class="form-horizontal">
 
                                 <div class="form-group">
-                                    <label class="col-sm-3 control-label">Observation Unit Level: </label>
+                                    <label class="col-sm-3 control-label"><% $c->i18n->p("trial.correlation.observation_level", "Observation Unit Level: ") |h %></label>
                                     <div class="col-sm-9" >
                                         <select class="form-control" id="trial_analysis_correlation_workflow_observation_level">
 %  if ($is_analysis) {
-                                            <option value="analysis_instance">Analysis Instance</option>
+                                            <option value="analysis_instance"><% $c->i18n->p("trial.correlation.level.analysis_instance", "Analysis Instance") |h %></option>
 %  } else {
-                                            <option value="plot">Plot</option>
+                                            <option value="plot"><% $c->i18n->p("trial.correlation.level.plot", "Plot") |h %></option>
 %  }
                                         </select>
                                     </div>
                                 </div>
                                 <div class="form-group">
-                                    <label class="col-sm-3 control-label">Correlation Method: </label>
+                                    <label class="col-sm-3 control-label"><% $c->i18n->p("trial.correlation.method", "Correlation Method: ") |h %></label>
                                     <div class="col-sm-9" >
                                         <select class="form-control" id="trial_analysis_correlation_workflow_correlation_type">
                                             <option value="pearson">Pearson</option>
@@ -49,7 +52,7 @@ $is_analysis => undef
                                     </div>
                                 </div>
                                 <div class="form-group">
-                                    <label class="col-sm-3 control-label">Trait(s): </label>
+                                    <label class="col-sm-3 control-label"><% $c->i18n->p("trial.correlation.traits", "Trait(s): ") |h %></label>
                                     <div class="col-sm-9" >
                                         <div id="trial_analysis_correlation_workflow_traits_div"></div>
                                     </div>
@@ -59,19 +62,19 @@ $is_analysis => undef
                             
                             <hr>
                             <center>
-                                <button type="button" class="btn btn-primary" name="trial_analysis_correlation_workflow_submit" id="trial_analysis_correlation_workflow_submit" title="Submit">Submit</button>
+                                <button type="button" class="btn btn-primary" name="trial_analysis_correlation_workflow_submit" id="trial_analysis_correlation_workflow_submit" title="<% $c->i18n->p("trial.correlation.submit", "Submit") |h %>"><% $c->i18n->p("trial.correlation.submit", "Submit") |h %></button>
                             </center>
                         </div>
                     </&>
-                    <&| /util/workflow.mas:step, title=> "Output" &>
-                        <& /page/page_title.mas, title=>"Results" &>
+                    <&| /util/workflow.mas:step, title=> HTML::Entities::encode_entities($c->i18n->p("trial.correlation.step_output", "Output")) &>
+                        <& /page/page_title.mas, title=>HTML::Entities::encode_entities($c->i18n->p("trial.correlation.results", "Results")) &>
 
                         <div id="trial_analysis_correlation_workflow_results_div"></div>
                     </&>
                 </&>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-default" data-dismiss="modal"><% $c->i18n->p("trial.correlation.close", "Close") |h %></button>
             </div>
         </div>
     </div>
@@ -92,7 +95,7 @@ jQuery(document).ready(function(){
         console.log(selected_trait_ids);
 
         if (!selected_trait_ids || selected_trait_ids.length < 1) {
-            alert('Please select at least one trait!');
+            alert(window.SGN && SGN.i18n ? SGN.i18n.p("trial.correlation.traits_required", "Please select at least one trait!") : "Please select at least one trait!");
             return false;
         }
         else {
@@ -129,7 +132,7 @@ jQuery(document).ready(function(){
                 },
                 error: function(response){
                     jQuery("#working_modal").modal("hide");
-                    alert('Error doing correlation!');
+                    alert(window.SGN && SGN.i18n ? SGN.i18n.p("trial.correlation.error", "Error doing correlation!") : "Error doing correlation!");
                 }
             });
         }

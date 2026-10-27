@@ -37,14 +37,14 @@ export function init(main_div, stock_id, stockprop_id) {
             success: function (r) {
                 if (r.error) { alert(r.error + r); }
                 else {
-                    alert("The entry has been saved. Thank you!");
+                    alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("accession.sequencing_ui.saved", "The entry has been saved. Thank you!") : "The entry has been saved. Thank you!"));
                     jQuery('#edit_sequencing_info_dialog').modal('toggle');
                     clear_dialog_entries();
                     jQuery('#sequenced_stocks_table').DataTable().ajax.reload();
                 }
             },
             error: function (r, e) {
-                alert("An error occurred. (" + r.responseText + ")");
+                alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("accession.sequencing_ui.save_error", "An error occurred. (%{details})", {details: String(r.responseText)}) : "An error occurred. (" + r.responseText + ")"));
                 var err = eval("(" + r.responseText + ")");
             }
         });
@@ -75,19 +75,19 @@ function clear_dialog_entries() {
 }
 
 export function delete_sequencing_info(stockprop_id) {
-    var answer = confirm("Are you sure you want to delete this entry? (stockprop_id= " + stockprop_id + "). This action cannot be undone.");
+    var answer = confirm((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("accession.sequencing_ui.delete_confirm", "Are you sure you want to delete this entry? (stockprop_id= %{stockprop_id}). This action cannot be undone.", {stockprop_id: String(stockprop_id)}) : "Are you sure you want to delete this entry? (stockprop_id= " + stockprop_id + "). This action cannot be undone."));
     if (answer) {
         jQuery.ajax({
             url: '/ajax/genomes/sequencing_info/delete/' + stockprop_id,
             success: function (r) {
                 if (r.error) { alert(r.error); }
                 else {
-                    alert("The entry has been deleted.");
+                    alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("accession.sequencing_ui.deleted", "The entry has been deleted.") : "The entry has been deleted."));
                     jQuery('#sequenced_stocks_table').DataTable().ajax.reload();
                 }
             },
             error: function (r) {
-                alert("An error occurred. The entry was not deleted.");
+                alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("accession.sequencing_ui.delete_error", "An error occurred. The entry was not deleted.") : "An error occurred. The entry was not deleted."));
             }
         });
     }
@@ -119,7 +119,7 @@ export function edit_sequencing_info(stockprop_id) {
                 jQuery('#edit_sequencing_info_dialog').modal("show");
             }
         },
-        error: function (r) { alert("an error occurred"); }
+        error: function (r) { alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("accession.sequencing_ui.read_error", "an error occurred") : "an error occurred")); }
     });
 
 

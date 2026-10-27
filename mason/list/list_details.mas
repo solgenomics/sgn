@@ -8,25 +8,29 @@ $list_size
 
 </%args>
 
+<%init>
+use HTML::Entities ();
+</%init>
+
 <& /util/import_javascript.mas, classes => [ 'jquery.iframe-post-form', 'jquery', 'jquery.dataTables', 'CXGN.List'] &>
 <& /util/import_css.mas, paths => ['/documents/inc/datatables/jquery.dataTables.css'] &>
 
-<& /page/page_title.mas, title => "Details for List '$list_name'" &>
+<& /page/page_title.mas, title => HTML::Entities::encode_entities($c->i18n->p('lists.details.title', "Details for List '%{name}'", {name => $list_name}), q{&<>"'}) &>
 
-<&| /page/info_section.mas, title=>"Details",  collapsible => 1, collapsed=>0,&>
+<&| /page/info_section.mas, title=>HTML::Entities::encode_entities($c->i18n->p('seedlots.ui.details', 'Details')),  collapsible => 1, collapsed=>0,&>
     <table class="table table-bordered table-hover">
-        <tr><td><b>List Name</b></td><td><% $list_name %></td></tr>
-        <tr><td><b>List ID</b></td><td><% $list_id %></td></tr>
-        <tr><td><b>Type</b></td><td><% $list_type %></td></tr>
-        <tr><td><b>Number of Items</b></td><td><% $list_size %></td></tr>
-        <tr><td><b>Description</b></td><td><% $list_description %></td></tr>
+        <tr><td><b><% $c->i18n->p('lists.details.name', 'List Name') |h %></b></td><td><% $list_name %></td></tr>
+        <tr><td><b><% $c->i18n->p('lists.details.id', 'List ID') |h %></b></td><td><% $list_id %></td></tr>
+        <tr><td><b><% $c->i18n->p('locations.table.type', 'Type') |h %></b></td><td><% $list_type %></td></tr>
+        <tr><td><b><% $c->i18n->p('lists.details.item_count', 'Number of Items') |h %></b></td><td><% $list_size %></td></tr>
+        <tr><td><b><% $c->i18n->p('accessions.column.description', 'Description') |h %></b></td><td><% $list_description %></td></tr>
     </table>
 </&>
 
-<&| /page/info_section.mas, title => 'List Items', collapsible=>1, collapsed=>0 &>
+<&| /page/info_section.mas, title => HTML::Entities::encode_entities($c->i18n->p('lists.details.items', 'List Items')), collapsible=>1, collapsed=>0 &>
     <div class = "well well-sm">
         <form id="download_list_details" action="/list/download_details" method="POST">
-            <button class="btn btn-primary" type="button" id="download_details_button">Download List Items</button>
+            <button class="btn btn-primary" type="button" id="download_details_button"><% $c->i18n->p('lists.details.download', 'Download List Items') |h %></button>
             <input type="hidden" id="list_download_token" name="list_download_token"/>
             <input name="list_id" id="list_id" type="hidden" value="<% $list_id %>">
         </form>
@@ -47,25 +51,27 @@ $list_size
 
 jQuery(document).ready( function() {
 
+    var listDetailsI18n = (window.SGN && window.SGN.i18n) || { p: function (context, source) { return source; } };
+
     var items_table = jQuery('#list_items_table').DataTable( {
         'autoWidth': false,
         'ajax': '/ajax/list/details/' + <% $list_id %>,
         'columns': [
-            { title: "Seedlot Name", "data": null, "render": function ( data, type, row ){return "<a href='/breeders/seedlot/"+row.seedlot_id+"'>"+row.seedlot_name+"</a>"}},
-            { title: "Content Name", "data": null, "render": function ( data, type, row ) {
+            { title: _sgnListEscapeHTML(listDetailsI18n.p('seedlots.ui.seedlot_name.8bbaf6d', 'Seedlot Name')), "data": null, "render": function ( data, type, row ){return "<a href='/breeders/seedlot/"+row.seedlot_id+"'>"+row.seedlot_name+"</a>"}},
+            { title: _sgnListEscapeHTML(listDetailsI18n.p('lists.details.content_name', 'Content Name')), "data": null, "render": function ( data, type, row ) {
                 if (row.content_type == 'accession'){
                     return "<a href='/stock/"+row.content_id+"/view'>"+row.content_name+"</a>"
                 } else if (row.content_type == 'cross') {
                     return "<a href='/cross/"+row.content_id+"'>"+row.content_name+"</a>"
                 }
             }},
-            { title: "Content Type", "data": "content_type" },
-            { title: "Material Type", "data": "material_type" },
-            { title: "Description", "data": "description" },
-            { title: "Box Name", "data": "box_name" },
-            { title: "Current Count", "data": "current_count" },
-            { title: "Current Weight", "data": "current_weight" },
-            { title: "Quality", "data": "quality" },
+            { title: _sgnListEscapeHTML(listDetailsI18n.p('seedlots.ui.content_type', 'Content Type')), "data": "content_type" },
+            { title: _sgnListEscapeHTML(listDetailsI18n.p('seedlots.ui.material_type.b9881bc', 'Material Type')), "data": "material_type" },
+            { title: _sgnListEscapeHTML(listDetailsI18n.p('accessions.column.description', 'Description')), "data": "description" },
+            { title: _sgnListEscapeHTML(listDetailsI18n.p('seedlots.ui.box_name.95fff30', 'Box Name')), "data": "box_name" },
+            { title: _sgnListEscapeHTML(listDetailsI18n.p('seedlots.ui.current_count.726d526', 'Current Count')), "data": "current_count" },
+            { title: _sgnListEscapeHTML(listDetailsI18n.p('lists.details.current_weight', 'Current Weight')), "data": "current_weight" },
+            { title: _sgnListEscapeHTML(listDetailsI18n.p('seedlots.ui.quality.e77b76f', 'Quality')), "data": "quality" },
         ],
     });
 

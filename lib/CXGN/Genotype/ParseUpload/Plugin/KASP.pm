@@ -1,6 +1,7 @@
 package CXGN::Genotype::ParseUpload::Plugin::KASP;
 
 use Moose::Role;
+use SGN::I18N ();
 use SGN::Model::Cvterm;
 use Data::Dumper;
 use Text::CSV;
@@ -50,6 +51,7 @@ has 'marker_info_keys' => (
 
 sub _validate_with_plugin {
     my $self = shift;
+    my $i18n = SGN::I18N::translate($self);
     my $filename = $self->get_filename();
     my $marker_info_filename = $self->get_filename_marker_info();
     my $protocol_id = $self->get_nd_protocol_id();
@@ -114,19 +116,19 @@ sub _validate_with_plugin {
         $position_header =~ s/^\s+|\s+$//g;
 
         if ($marker_name_header ne 'MarkerName'){
-            push @error_messages, 'Column 1 header must be "MarkerName" in the marker Info File.';
+            push @error_messages, SGN::I18N::translate($i18n, "genotype.file.column_column_header_must_be_field_in_the_marker_info_file", "Column %{column} header must be \"%{field}\" in the marker Info File.", {column => "1", field => "MarkerName"});
         }
         if ($Xallele_header ne 'Xallele'){
-            push @error_messages, 'Column 2 header must be "Xallele" in the marker Info File.';
+            push @error_messages, SGN::I18N::translate($i18n, "genotype.file.column_column_header_must_be_field_in_the_marker_info_file", "Column %{column} header must be \"%{field}\" in the marker Info File.", {column => "2", field => "Xallele"});
         }
         if ($Yallele_header ne 'Yallele'){
-            push @error_messages, 'Column 3 header must be "Yallele" in the marker Info File.';
+            push @error_messages, SGN::I18N::translate($i18n, "genotype.file.column_column_header_must_be_field_in_the_marker_info_file", "Column %{column} header must be \"%{field}\" in the marker Info File.", {column => "3", field => "Yallele"});
         }
         if ($chrom_header ne 'Chromosome'){
-            push @error_messages, 'Column 4 header must be "Chromosome" in the SNP Info File.';
+            push @error_messages, SGN::I18N::translate($i18n, "genotype.file.column_column_header_must_be_field_in_the_snp_info_file", "Column %{column} header must be \"%{field}\" in the SNP Info File.", {column => "4", field => "Chromosome"});
         }
         if ($position_header ne 'Position'){
-            push @error_messages, 'Column 5 header must be "Position" in the SNP Info File.';
+            push @error_messages, SGN::I18N::translate($i18n, "genotype.file.column_column_header_must_be_field_in_the_snp_info_file", "Column %{column} header must be \"%{field}\" in the SNP Info File.", {column => "5", field => "Position"});
         }
 
         my $facility_marker_name_column_location;
@@ -137,7 +139,7 @@ sub _validate_with_plugin {
                 $facility_marker_name_column_location = $i;
             }
             if (!$supported_marker_info{$each_header}){
-                push @error_messages, "Invalid  marker info type: $each_header";
+                push @error_messages, SGN::I18N::translate($i18n, "genotype.file.invalid_marker_info_type_each_header", "Invalid  marker info type: %{each_header}", {each_header => ("" . "$each_header")});
             } else {
                 if ($each_header eq 'Quality') {
                     push @marker_info_keys, 'qual';
@@ -179,7 +181,7 @@ sub _validate_with_plugin {
                 $facility_marker_name = $marker_line_info[$facility_marker_name_column_location];
                 $facility_marker_name =~ s/^\s+|\s+$//g;
                 if (!defined $facility_marker_name){
-                    push @error_messages, 'Facility marker name is required for all markers.';
+                    push @error_messages, SGN::I18N::translate($i18n, "genotype.file.facility_marker_name_is_required_for_all_markers", "Facility marker name is required for all markers.");
                 } else {
                     $seen_facility_marker_names{$facility_marker_name} = 1;
                     $marker_facility_link{$facility_marker_name} = $marker_name;
@@ -187,31 +189,31 @@ sub _validate_with_plugin {
             }
 
             if (!defined $marker_name){
-                push @error_messages, 'Marker name is required for all markers.';
+                push @error_messages, SGN::I18N::translate($i18n, "genotype.file.marker_name_is_required_for_all_markers", "Marker name is required for all markers.");
             } else {
                 $marker{'name'} = $marker_name;
             }
 
             if (!defined $Xallele){
-                push @error_messages, 'X allele info is required for all markers.';
+                push @error_messages, SGN::I18N::translate($i18n, "genotype.file.x_allele_info_is_required_for_all_markers", "X allele info is required for all markers.");
             } else {
                 $marker{'ref'} = $Xallele;
             }
 
             if (!defined $Yallele){
-                push @error_messages, 'Y allele info is required for all markers.';
+                push @error_messages, SGN::I18N::translate($i18n, "genotype.file.y_allele_info_is_required_for_all_markers", "Y allele info is required for all markers.");
             } else {
                 $marker{'alt'} = $Yallele;
             }
 
             if (!defined $chrom) {
-                push @error_messages, 'Chromosome is required for all markers.';
+                push @error_messages, SGN::I18N::translate($i18n, "genotype.file.chromosome_is_required_for_all_markers", "Chromosome is required for all markers.");
             } else {
                 $marker{'chrom'} = $chrom;
             }
 
             if (!defined $position) {
-                push @error_messages, 'Position is required for all markers.';
+                push @error_messages, SGN::I18N::translate($i18n, "genotype.file.position_is_required_for_all_markers", "Position is required for all markers.");
             } else {
                 $marker{'pos'} = $position;
             }
@@ -252,7 +254,7 @@ sub _validate_with_plugin {
     #if (defined $protocol_id) {
     #    foreach (@file_marker_names) {
     #        if (!exists($stored_marker_info{$_})) {
-    #            push @error_messages, "Marker $_ in the marker info file is not found in the selected protocol.";
+    #            push @error_messages, SGN::I18N::translate($i18n, "genotype.file.marker_item_in_the_marker_info_file_is_not_found_in_the", "Marker %{item} in the marker info file is not found in the selected protocol.", {item => ("" . "$_")});
     #        }
     #    }
     #}
@@ -291,27 +293,27 @@ sub _validate_with_plugin {
         $Yvalue_header =~ s/^\s+|\s+$//g;
 
         if (($marker_name_header ne 'MarkerName') && ($marker_name_header ne 'FacilityMarkerName')){
-            push @error_messages, 'Column 1 header must be "MarkerName" or "FacilityMarkerName" in the KASP result File.';
+            push @error_messages, SGN::I18N::translate($i18n, "genotype.file.column_column_header_must_be_field_or_field_2_in_the_kasp", "Column %{column} header must be \"%{field}\" or \"%{field_2}\" in the KASP result File.", {column => "1", field => "MarkerName", field_2 => "FacilityMarkerName"});
         } else {
             $marker_name_type = $marker_name_header;
         }
 
         if (($sample_name_header ne 'SampleName') && ($sample_name_header ne 'FacilitySampleName')){
-            push @error_messages, 'Column 2 header must be "SampleName" or "FacilitySampleName" in the KASP result File.';
+            push @error_messages, SGN::I18N::translate($i18n, "genotype.file.column_column_header_must_be_field_or_field_2_in_the_kasp", "Column %{column} header must be \"%{field}\" or \"%{field_2}\" in the KASP result File.", {column => "2", field => "SampleName", field_2 => "FacilitySampleName"});
         } else {
             $sample_name_type = $sample_name_header;
         }
 
         if ($snpcall_header ne 'SNPcall'){
-            push @error_messages, 'Column 3 header must be "SNPcall" in the KASP result File.';
+            push @error_messages, SGN::I18N::translate($i18n, "genotype.file.column_column_header_must_be_field_in_the_kasp_result_file", "Column %{column} header must be \"%{field}\" in the KASP result File.", {column => "3", field => "SNPcall"});
         }
 
         if ($Xvalue_header ne 'Xvalue'){
-            push @error_messages, 'Column 4 header must be "Xvalue" in the KASP result File.';
+            push @error_messages, SGN::I18N::translate($i18n, "genotype.file.column_column_header_must_be_field_in_the_kasp_result_file", "Column %{column} header must be \"%{field}\" in the KASP result File.", {column => "4", field => "Xvalue"});
         }
 
         if ($Yvalue_header ne 'Yvalue'){
-            push @error_messages, 'Column 5 header must be "Yvalue" in the KASP result File.';
+            push @error_messages, SGN::I18N::translate($i18n, "genotype.file.column_column_header_must_be_field_in_the_kasp_result_file", "Column %{column} header must be \"%{field}\" in the KASP result File.", {column => "5", field => "Yvalue"});
         }
 
         while (my $line = <$F>) {
@@ -333,9 +335,9 @@ sub _validate_with_plugin {
             $yvalue =~ s/^\s+|\s+$//g;
 
             if (!defined $m_name){
-                push @error_messages, 'Marker name or facility marker name is required for all rows.';
+                push @error_messages, SGN::I18N::translate($i18n, "genotype.file.marker_name_or_facility_marker_name_is_required_for_all_rows", "Marker name or facility marker name is required for all rows.");
             } elsif (!exists($seen_marker_names{$m_name}) && !exists($seen_facility_marker_names{$m_name})) {
-                push @error_messages, "Marker $m_name in the result file is not found in the marker info file.";
+                push @error_messages, SGN::I18N::translate($i18n, "genotype.file.marker_m_name_in_the_result_file_is_not_found_in_the", "Marker %{m_name} in the result file is not found in the marker info file.", {m_name => ("" . "$m_name")});
             } else {
                 if ($marker_name_type eq 'FacilityMarkerName') {
                     $marker_name = $marker_facility_link{$m_name};
@@ -345,7 +347,7 @@ sub _validate_with_plugin {
             }
 
             if (!defined $sample_name){
-                push @error_messages, 'Sample name or facility sample name is required for all rows.';
+                push @error_messages, SGN::I18N::translate($i18n, "genotype.file.sample_name_or_facility_sample_name_is_required_for_all_rows", "Sample name or facility sample name is required for all rows.");
             } else {
                 if ($sample_name_header eq 'SampleName') {
                     $seen_sample_names{$sample_name}++;
@@ -355,15 +357,15 @@ sub _validate_with_plugin {
             }
 
             if (!defined $snpcall){
-                push @error_messages, 'SNP call is required for all rows.';
+                push @error_messages, SGN::I18N::translate($i18n, "genotype.file.snp_call_is_required_for_all_rows", "SNP call is required for all rows.");
             }
 
             if (!defined $xvalue){
-                push @error_messages, 'X value is required for all rows.';
+                push @error_messages, SGN::I18N::translate($i18n, "genotype.file.x_value_is_required_for_all_rows", "X value is required for all rows.");
             }
 
             if (!defined $yvalue){
-                push @error_messages, 'Y value is required for all rows.';
+                push @error_messages, SGN::I18N::translate($i18n, "genotype.file.y_value_is_required_for_all_rows", "Y value is required for all rows.");
             }
 
             if ((defined $marker_name) && (defined $sample_name) && (defined $snpcall) && (defined $xvalue) && (defined $yvalue)) {
@@ -392,7 +394,7 @@ sub _validate_with_plugin {
         my @sample_missing = @{$sample_validator->validate($schema,$validate_type,\@all_sample_names)->{'missing'}};
 
         if (scalar(@sample_missing) > 0) {
-            push @error_messages, "The following sample names are not in the database, or are not in the database as uniquenames: ".join(',',@sample_missing);
+            push @error_messages, SGN::I18N::translate($i18n, "genotype.file.the_following_sample_names_are_not_in_the_database_or_are_not", "The following sample names are not in the database, or are not in the database as uniquenames: %{items}", {items => join(',',@sample_missing)});
         }
     } elsif ($sample_name_header eq 'FacilitySampleName') {
         my @all_facility_sample_names = keys %seen_facility_sample_names;
@@ -400,7 +402,7 @@ sub _validate_with_plugin {
         my @facility_sample_missing = @{$facility_sample_validator->validate($schema,'facility_identifiers',\@all_facility_sample_names)->{'missing'}};
 
         if (scalar(@facility_sample_missing) > 0) {
-            push @error_messages, "The following facility sample names are not in the database: ".join(',',@facility_sample_missing);
+            push @error_messages, SGN::I18N::translate($i18n, "genotype.file.the_following_facility_sample_names_are_not_in_the_database_items", "The following facility sample names are not in the database: %{items}", {items => join(',',@facility_sample_missing)});
         }
     }
 
@@ -428,6 +430,7 @@ sub _validate_with_plugin {
 
 sub _parse_with_plugin {
     my $self = shift;
+    my $i18n = SGN::I18N::translate($self);
     my $schema = $self->get_chado_schema();
     my $marker_facility_link_ref = $self->marker_facility_link;
     my %marker_facility_link = %{$marker_facility_link_ref};
@@ -496,7 +499,7 @@ sub _parse_with_plugin {
                         push @gt_vcf_genotype, './.';
                         push @alt_calls, './.';
                     } else {
-                        push @error_messages, "SNP Call Does Not Match X allele or Y allele for Sample: $sample Marker: $marker_name_key X allele: $ref Y allele: $alt Allele: $a";
+                        push @error_messages, SGN::I18N::translate($i18n, "genotype.file.snp_call_does_not_match_x_allele_or_y_allele_for_sample", "SNP Call Does Not Match X allele or Y allele for Sample: %{sample} Marker: %{marker_name_key} X allele: %{ref} Y allele: %{alt} Allele: %{a}", {sample => ("" . "$sample"), marker_name_key => ("" . "$marker_name_key"), ref => ("" . "$ref"), alt => ("" . "$alt"), a => ("" . "$a")});
                     }
                 }
 

@@ -27,8 +27,9 @@ $file
 <%perl>
 
 use File::Slurp qw | slurp |;
+use HTML::Entities ();
 
-my $contents = 'Content not available.';
+my $contents = HTML::Entities::encode_entities($c->i18n->p('shared.include_file.unavailable', 'Content not available.'));
 
 eval { 
   $contents = slurp($file);

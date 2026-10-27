@@ -18,35 +18,35 @@ sub n2a {
 
 </%perl>
 
-<center>
+<div class="sgn-file-viewer"><center>
 <br/>
-<h1>File Viewer</h1>
+<h1><% $c->i18n->p('file_viewer.ui.title', 'File Viewer') |h %></h1>
 <br/>
 </center>
 
 <div class="panel panel-info">
 	<div class="panel-heading">
-		<h3>File Info</h3>
+		<h3><% $c->i18n->p('file_viewer.ui.info', 'File Info') |h %></h3>
 	</div>
 	<div class="panel-body">
-		<table class="table">
+		<div class="table-responsive" tabindex="0" role="region" aria-label="<% $c->i18n->p('file_viewer.ui.info', 'File Info') |h %>"><table class="table">
 		<thead>
 		<tr>
-		<th>Filename</th>
-		<th>File Type</th>
-		<th>Number of Sheets</th>
-		<th>Parser</th>
+		<th><% $c->i18n->p('file_viewer.ui.filename', 'Filename') |h %></th>
+		<th><% $c->i18n->p('file_viewer.ui.type', 'File Type') |h %></th>
+		<th><% $c->i18n->p('file_viewer.ui.sheets', 'Number of Sheets') |h %></th>
+		<th><% $c->i18n->p('file_viewer.ui.parser', 'Parser') |h %></th>
 		</tr>
 		</thead>
 		<tbody>
 		<tr>
-		<td><% $filename %></td>
-		<td><% @$file_content[0]->[0]->{type} %></td>
-		<td><% @$file_content[0]->[0]->{sheets} %></td>
-		<td><% @$file_content[0]->[0]->{parser} %> (<% @$file_content[0]->[0]->{version} %>)</td>
+		<td><bdi dir="auto"><% $filename |h %></bdi></td>
+		<td><bdi dir="auto"><% @$file_content[0]->[0]->{type} |h %></bdi></td>
+		<td><bdi dir="ltr"><% @$file_content[0]->[0]->{sheets} |h %></bdi></td>
+		<td><bdi dir="ltr"><% @$file_content[0]->[0]->{parser} |h %> (<% @$file_content[0]->[0]->{version} |h %>)</bdi></td>
 		</tr>
 		</tbody>
-		</table>
+		</table></div>
 	</div>
 </div>
 
@@ -54,7 +54,7 @@ sub n2a {
 
 <div class="panel panel-info">
 	<div class="panel-heading">
-		<h3>File Contents</h3>
+		<h3><% $c->i18n->p('file_viewer.ui.contents', 'File Contents') |h %></h3>
 	</div>
 	<div class="panel-body">
 
@@ -66,9 +66,9 @@ sub n2a {
 % $sheet_label =~ s/\s+//g;
 
 % if ($s ==1 ){
-		<li role="presentation" class="active"><a href="#<% $sheet_label %>" aria-controls="<% $sheet_label %>" role="tab" data-toggle="tab"><% $sheet_label %></a></li>
+		<li role="presentation" class="active"><a href="#<% $sheet_label |h %>" aria-controls="<% $sheet_label |h %>" role="tab" data-toggle="tab"><bdi dir="auto"><% $sheet_label |h %></bdi></a></li>
 % } else {
-		<li role="presentation"><a href="#<% $sheet_label %>" aria-controls="<% $sheet_label %>" role="tab" data-toggle="tab"><% $sheet_label %></a></li>
+		<li role="presentation"><a href="#<% $sheet_label |h %>" aria-controls="<% $sheet_label |h %>" role="tab" data-toggle="tab"><bdi dir="auto"><% $sheet_label |h %></bdi></a></li>
 % }
 
 % }
@@ -86,18 +86,18 @@ sub n2a {
 % $sheet_label =~ s/\s+//g;
 
 % if ($i == 1) {
-		<div role="tabpanel" class="tab-pane fade in active" id="<% $sheet_label %>">
+		<div role="tabpanel" class="tab-pane fade in active" id="<% $sheet_label |h %>">
 % } else {
-		<div role="tabpanel" class="tab-pane fade" id="<% $sheet_label %>">
+		<div role="tabpanel" class="tab-pane fade" id="<% $sheet_label |h %>">
 % }
 
-			<table class="table table-hover table-bordered">
+			<div class="table-responsive" dir="ltr" tabindex="0" role="region" aria-label="<% $c->i18n->p('file_viewer.ui.sheet_region', 'Worksheet data') |h %>"><table class="table table-hover table-bordered" dir="ltr">
 				<thead>
 				<tr>
 
 % my $max_aa = n2a(@$file_content[0]->[$i]->{maxcol});
 % foreach ('A'..$max_aa) {
-				<th><% @$file_content[0]->[$i]->{$_.'1'} %></th>
+				<th><bdi dir="auto"><% @$file_content[0]->[$i]->{$_.'1'} |h %></bdi></th>
 % }
 				</tr>
 				</thead>
@@ -109,7 +109,7 @@ sub n2a {
 
 % foreach ('A'..$max_aa) {
 	
-				<td><% @$file_content[0]->[$i]->{$_.$j} %></td>
+				<td><bdi dir="auto"><% @$file_content[0]->[$i]->{$_.$j} |h %></bdi></td>
 
 % }
 				</tr>
@@ -117,7 +117,7 @@ sub n2a {
 % }
 
 				</tbody>
-			</table>
+			</table></div>
 		</div>
 % }
 
@@ -129,3 +129,12 @@ sub n2a {
 
 
 
+
+</div>
+<style>
+.sgn-file-viewer h1,
+.sgn-file-viewer .panel-heading h3,
+.sgn-file-viewer .nav-tabs > li > a { overflow-wrap: anywhere; }
+.sgn-file-viewer .nav-tabs > li { max-width: 100%; }
+.sgn-file-viewer > .panel > .panel-body > .table-responsive > table > thead th { text-align: start; }
+</style>

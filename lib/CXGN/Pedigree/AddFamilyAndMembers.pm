@@ -20,6 +20,8 @@ Titima Tantikanjana <tt15@cornell.edu>
 =cut
 
 use Moose;
+use SGN::I18N ();
+use CatalystX::GlobalContext '$c';
 use MooseX::FollowPBP;
 use Moose::Util::TypeConstraints;
 use Try::Tiny;
@@ -48,6 +50,7 @@ has 'family_type' => (isa => 'Str', is => 'rw', predicate => 'has_family_type', 
 
 sub add_family_and_members {
     my $self = shift;
+    my SGN::I18N $ui_add_family_and_members_i18n = SGN::I18N::translate($c);
     my $chado_schema = $self->get_chado_schema();
     my $phenome_schema = $self->get_phenome_schema();
     my $family_name = $self->get_family_name();
@@ -80,7 +83,7 @@ sub add_family_and_members {
        #Get stock of type cross matching cross name
         $cross_stock = $self->_get_cross($cross_name);
         if (!$cross_stock) {
-			push @{$return{error}},"Cross: $cross_name are not in database";
+			push @{$return{error}},(SGN::I18N::translate($ui_add_family_and_members_i18n, "cross.model.family_cross_missing", "Cross: %{cross_name} are not in database", {cross_name => "" . ($cross_name)}));
 			return \%return;
         }
 
@@ -116,7 +119,7 @@ sub add_family_and_members {
             my $stored_family_type = $chado_schema->resultset("Stock::Stockprop")->find({ stock_id => $family_name_rs->stock_id(), type_id => $family_type_cvterm->cvterm_id() })->value();
 
             if ($stored_family_type ne $family_type) {
-                push @{$return{error}},"The previously stored family type of family: $family_name is not the same as the selected family type";
+                push @{$return{error}},(SGN::I18N::translate($ui_add_family_and_members_i18n, "cross.model.family_type_mismatch", "The previously stored family type of family: %{family_name} is not the same as the selected family type", {family_name => "" . ($family_name)}));
                 return \%return;
             }
 
@@ -138,15 +141,15 @@ sub add_family_and_members {
 
             if ($family_type eq 'same_parents') {
                 if (($cross_female_id != $family_female_id) || ($cross_male_id != $family_male_id)) {
-                    push @{$return{error}},"Parents of cross: $cross_name are not the same as parents of family: $family_name";
+                    push @{$return{error}},(SGN::I18N::translate($ui_add_family_and_members_i18n, "cross.model.family_parents_mismatch", "Parents of cross: %{cross_name} are not the same as parents of family: %{family_name}", {cross_name => "" . ($cross_name), family_name => "" . ($family_name)}));
                     return \%return;
                 }
             } elsif ($family_type eq 'reciprocal_parents') {
                 if (($cross_female_id != $family_female_id) && ($cross_female_id != $family_male_id)) {
-                    push @{$return{error}},"Female parent of cross: $cross_name is neither female parent nor male parent of family: $family_name";
+                    push @{$return{error}},(SGN::I18N::translate($ui_add_family_and_members_i18n, "cross.model.family_female_mismatch", "Female parent of cross: %{cross_name} is neither female parent nor male parent of family: %{family_name}", {cross_name => "" . ($cross_name), family_name => "" . ($family_name)}));
                     return \%return;
                 } elsif (($cross_male_id != $family_female_id) && ($cross_male_id != $family_male_id)) {
-                    push @{$return{error}},"Male parent of cross: $cross_name is neither female parent nor male parent of family: $family_name";
+                    push @{$return{error}},(SGN::I18N::translate($ui_add_family_and_members_i18n, "cross.model.family_male_mismatch", "Male parent of cross: %{cross_name} is neither female parent nor male parent of family: %{family_name}", {cross_name => "" . ($cross_name), family_name => "" . ($family_name)}));
                     return \%return;
                 }
             }
@@ -211,7 +214,7 @@ sub add_family_and_members {
     };
 
     if ($transaction_error) {
-		$return{error} = "Error creating family $family_name: $transaction_error";
+		$return{error} = (SGN::I18N::translate($ui_add_family_and_members_i18n, "cross.model.family_create_error", "Error creating family %{family_name}: %{transaction_error}", {family_name => "" . ($family_name), transaction_error => "" . ($transaction_error)}));
 		return \%return;
     }
 

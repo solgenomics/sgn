@@ -1,3 +1,6 @@
+<%once>
+use HTML::Entities ();
+</%once>
 
 <%doc>
 
@@ -8,7 +11,7 @@
 
 </%args>
 
-<& '/page/page_title.mas', title => "Compare trials" &>
+<& '/page/page_title.mas', title => HTML::Entities::encode_entities($c->i18n->p("trial.comparison.title", "Compare trials")) &>
 
 <& /util/import_css.mas, paths => ['tools/trial_comparison.css'] &>
 
@@ -28,28 +31,28 @@
   <center class = "col-md-offset-2 col-md-8">
     <form class="tc-form">
       <div class="form-group">
-        <label for="trials_list_select">Choose a list of trials:</label>
+        <label for="trials_list_select"><% $c->i18n->p("trial.comparison.list_label", "Choose a list of trials:") |h %></label>
         <div id="trials_list_select_container">
           <select disabled class="form-control input-sm" id="trials_list_select">
-            <option selected="selected">Loading...</option>
+            <option selected="selected"><% $c->i18n->p("trial.comparison.loading", "Loading...") |h %></option>
           </select>
         </div>
-        <img hidden id="trials-loading-spinner" src="/img/wheel.gif" alt="loading">
+        <img hidden id="trials-loading-spinner" src="/img/wheel.gif" alt="<% $c->i18n->p("trial.comparison.loading_alt", "loading") |h %>">
       </div>
       <div class="form-group">
-        <label>Choose Observation Level</label>
+        <label><% $c->i18n->p("trial.comparison.observation_level", "Choose Observation Level") |h %></label>
         <select class="form-control input-sm" id="unit_select">
-          <option selected value="plot">Plot</option>
-          <option value="plant">Plant</option>
+          <option selected value="plot"><% $c->i18n->p("trial.comparison.level.plot", "Plot") |h %></option>
+          <option value="plant"><% $c->i18n->p("trial.comparison.level.plant", "Plant") |h %></option>
         </select>
       </div>
       <div class="form-group">
-        <label>Choose a trait to compare:</label>
+        <label><% $c->i18n->p("trial.comparison.trait_label", "Choose a trait to compare:") |h %></label>
         <select disabled class="form-control input-sm" id="trait_select">
           <option selected="selected" value=""> </option>
         </select>
       </div>
-      <img hidden id="results-loading-spinner" src="/img/wheel.gif" alt="loading">
+      <img hidden id="results-loading-spinner" src="/img/wheel.gif" alt="<% $c->i18n->p("trial.comparison.loading_alt", "loading") |h %>">
     </form>
   </center>
 </div>
@@ -73,12 +76,12 @@
       var select_html = list.listSelect('trials', ['trials'], ' ', undefined, undefined);
       $('#trials_list_select_container').html(select_html);
       if (d3.select('#trials_list_select').selectAll("option").size()<2){
-        d3.select('#trials_list_select').html("<option>No trial lists! (Create one using the wizard.)</option>");
+        d3.select('#trials_list_select').html('<option>' + jQuery('<div>').text(window.SGN && SGN.i18n ? SGN.i18n.p('trial.comparison.no_lists', 'No trial lists! (Create one using the wizard.)') : 'No trial lists! (Create one using the wizard.)').html() + '</option>');
       }
       $('#trials_list_select').change(call_change);
     }
     else {
-      $('#trials_list_select').html('<option selected="selected">You must be logged in to use lists.</option>');
+      $('#trials_list_select').html('<option selected="selected">' + jQuery('<div>').text(window.SGN && SGN.i18n ? SGN.i18n.p('trial.comparison.login_required', 'You must be logged in to use lists.') : 'You must be logged in to use lists.').html() + '</option>');
     }
   })
 
@@ -103,7 +106,7 @@
       var require_login = "<%  $c->get_conf('brapi_require_login') %>";
       if (require_login === '1'){
           auth_token = "<%  CXGN::Login->new($c->dbc->dbh)->get_login_cookie() %>";
-          if (!auth_token){ alert("Login required to display graphical filtering"); }
+          if (!auth_token){ alert(window.SGN && SGN.i18n ? SGN.i18n.p("trial.comparison.login_error", "Login required to display graphical filtering") : "Login required to display graphical filtering"); }
       } 
       BrAPI("/brapi/v2",'v2.0',auth_token)
         .search_observationunits({

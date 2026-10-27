@@ -26,7 +26,7 @@ my $is_curator = ($c->user && $c->user->check_roles('curator')) ? 1 : 0;
 </script>
 
 <& /util/import_javascript.mas, classes => ['jquery', 'jszip-min', 'CXGN.BreedersToolbox.HTMLSelect'], entries => ['trialallocation' ] &>
-<& /page/page_title.mas, title=>"Trial Allocation" &>
+<& /page/page_title.mas, title=>HTML::Entities::encode_entities($c->i18n->p("navigation.manage.trial_allocation", "Trial Allocation")) &>
 
 <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
   <style>
@@ -203,48 +203,48 @@ my $is_curator = ($c->user && $c->user->check_roles('curator')) ? 1 : 0;
 
 <div id="trial-allocation-page" class="bg-white text-gray-800 font-sans p-8 space-y-12">
 
-  <&| /page/info_section.mas, id=>"trial_summary_section", title=>"1 - Trial allocation summary", collapsible=>1, collapsed=>1 &>
-    <h2 class="text-2xl font-bold mb-4">Field Layout Workflow</h2>
+  <&| /page/info_section.mas, anchor_title => "1 - Trial allocation summary", id=>"trial_summary_section", title=>HTML::Entities::encode_entities($c->i18n->p("decision.root.1_trial_allocation_summary", "1 - Trial allocation summary")), collapsible=>1, collapsed=>1 &>
+    <h2 class="text-2xl font-bold mb-4"><% $c->i18n->p("decision.root.field_layout_workflow", "Field Layout Workflow") |h %></h2>
     <ol class="list-decimal pl-6 space-y-2 text-gray-700">
-      <li>Select the breeding program, location, year, season, field size, and plot dimensions.</li>
-      <li>Define the trials to allocate: create new trial designs in Trial Settings or add an existing experimental trial for the selected location and year.</li>
-      <li>Build the grid, then mark unused rows or columns before placing trials so plots are not allocated in unavailable field space.</li>
-      <li>Drag each trial box from the Trials panel into the field grid. Use the direction and rotate controls beside each trial to adjust plot order before placement.</li>
-      <li>Click a placed trial to select it, then use the cursor keys to move it. Use Shift + cursor key to move five plots at a time.</li>
-      <li>Use the grid tools to place borders, define border accessions, and review plot details by moving the cursor over each plot.</li>
-      <li>Save the layout view to store the complete multi-trial arrangement for the selected location, year, and season.</li>
-      <li>Use Save Layout Trials in Database to create new trials or update coordinates for included existing trials.</li>
-      <li>Open Planting Tool, define planter settings such as rows per plot, plants per plot, spacing, and planting direction, then download the planting map Excel file or generate layout graphics.</li>
+      <li><% $c->i18n->p("decision.root.select_the_breeding_program_location_year_season_field_size_and", "Select the breeding program, location, year, season, field size, and plot dimensions.") |h %></li>
+      <li><% $c->i18n->p("decision.root.define_the_trials_to_allocate_create_new_trial_designs_in", "Define the trials to allocate: create new trial designs in Trial Settings or add an existing experimental trial for the selected location and year.") |h %></li>
+      <li><% $c->i18n->p("decision.root.build_the_grid_then_mark_unused_rows_or_columns_before", "Build the grid, then mark unused rows or columns before placing trials so plots are not allocated in unavailable field space.") |h %></li>
+      <li><% $c->i18n->p("decision.root.drag_each_trial_box_from_the_trials_panel_into_the", "Drag each trial box from the Trials panel into the field grid. Use the direction and rotate controls beside each trial to adjust plot order before placement.") |h %></li>
+      <li><% $c->i18n->p("decision.root.click_a_placed_trial_to_select_it_then_use_the", "Click a placed trial to select it, then use the cursor keys to move it. Use Shift + cursor key to move five plots at a time.") |h %></li>
+      <li><% $c->i18n->p("decision.root.use_the_grid_tools_to_place_borders_define_border_accessions", "Use the grid tools to place borders, define border accessions, and review plot details by moving the cursor over each plot.") |h %></li>
+      <li><% $c->i18n->p("decision.root.save_the_layout_view_to_store_the_complete_multi_trial", "Save the layout view to store the complete multi-trial arrangement for the selected location, year, and season.") |h %></li>
+      <li><% $c->i18n->p("decision.root.use_save_layout_trials_in_database_to_create_new_trials", "Use Save Layout Trials in Database to create new trials or update coordinates for included existing trials.") |h %></li>
+      <li><% $c->i18n->p("decision.root.open_planting_tool_define_planter_settings_such_as_rows_per", "Open Planting Tool, define planter settings such as rows per plot, plants per plot, spacing, and planting direction, then download the planting map Excel file or generate layout graphics.") |h %></li>
     </ol>
   </&>
 
-  <&| /page/info_section.mas, id=>"farm_settings_section", title=>"2 - Location settings", collapsible=>1, collapsed=>0 &>
+  <&| /page/info_section.mas, anchor_title => "2 - Location settings", id=>"farm_settings_section", title=>HTML::Entities::encode_entities($c->i18n->p("decision.root.2_location_settings", "2 - Location settings")), collapsible=>1, collapsed=>0 &>
     <div class="space-y-4">
       <div class="grid grid-cols-4 gap-4">
-        <label>Breeding Program
+        <label><% $c->i18n->p("global.index_logged_in_user.breeding_program", "Breeding Program") |h %>
           <select id="breeding_program_dropdown" class="w-full border rounded px-2 py-1">
-            <option value="">Select Breeding Program</option>
+            <option value=""><% $c->i18n->p("cross.ui.select_breeding_program", "Select Breeding Program") |h %></option>
           </select>
         </label>
-        <label>Location
+        <label><% $c->i18n->p("global.search.features.location", "Location") |h %>
           <select id="farm_dropdown" class="w-full border rounded px-2 py-1">
-            <option value="">Select Location</option>
+            <option value=""><% $c->i18n->p("cross.ui.select_location", "Select Location") |h %></option>
           </select>
         </label>
-        <label>Year
+        <label><% $c->i18n->p("accession.sequencing.table.year", "Year") |h %>
           <input type="number" id="layout-year" min="1961" max="2099" step="1" inputmode="numeric" class="w-full border rounded px-2 py-1" />
         </label>
-        <label>Season
+        <label><% $c->i18n->p("decision.root.season", "Season") |h %>
           <select id="layout-season" class="w-full border rounded px-2 py-1">
-            <option value="">Select Season</option>
+            <option value=""><% $c->i18n->p("decision.root.select_season", "Select Season") |h %></option>
           </select>
         </label>
       </div>
       <div class="grid grid-cols-2 gap-4">
-        <label>Total Rows
+        <label><% $c->i18n->p("decision.root.total_rows", "Total Rows") |h %>
           <input type="number" id="farm-rows" class="w-full border rounded px-2 py-1" />
         </label>
-        <label>Total Columns
+        <label><% $c->i18n->p("decision.root.total_columns", "Total Columns") |h %>
           <input type="number" id="farm-cols" class="w-full border rounded px-2 py-1"/>
         </label>
       </div>
@@ -252,57 +252,57 @@ my $is_curator = ($c->user && $c->user->check_roles('curator')) ? 1 : 0;
   </&>
 
 
-  <&| /page/info_section.mas, id=>"trial_settings_section", title=>"3 - Trial Settings", collapsible=>1, collapsed=>0 &>
+  <&| /page/info_section.mas, anchor_title => "3 - Trial Settings", id=>"trial_settings_section", title=>HTML::Entities::encode_entities($c->i18n->p("decision.root.3_trial_settings", "3 - Trial Settings")), collapsible=>1, collapsed=>0 &>
     <div class="mb-6 flex items-center gap-3">
       <input type="hidden" id="num-trials" value="0" />
       <button type="button" id="add-trial-btn" class="bg-blue-700 text-white px-4 py-2 rounded hover:bg-blue-800 text-sm font-semibold">
-        Add Trial
+        <% $c->i18n->p("decision.root.add_trial", "Add Trial") |h %>
       </button>
-      <span id="trial-count-label" class="text-sm text-gray-600">No trials added yet.</span>
+      <span id="trial-count-label" class="text-sm text-gray-600"><% $c->i18n->p("decision.root.no_trials_added_yet", "No trials added yet.") |h %></span>
     </div>
     <div id="trial-details" class="mb-6"></div>
   </&>
 
-  <&| /page/info_section.mas, id=>"existing_project_section", title=>"4 - Include Existing Project", collapsible=>1, collapsed=>0 &>
+  <&| /page/info_section.mas, anchor_title => "4 - Include Existing Project", id=>"existing_project_section", title=>HTML::Entities::encode_entities($c->i18n->p("decision.root.4_include_existing_project", "4 - Include Existing Project")), collapsible=>1, collapsed=>0 &>
     <div class="grid grid-cols-3 gap-4 items-end">
-      <label class="col-span-2">Existing experimental trial for this location/year
+      <label class="col-span-2"><% $c->i18n->p("decision.root.existing_experimental_trial_for_this_location_year", "Existing experimental trial for this location/year") |h %>
         <select id="existing-trial-select" class="w-full border rounded px-2 py-1">
-          <option value="">Select location and year first</option>
+          <option value=""><% $c->i18n->p("decision.root.select_location_and_year_first", "Select location and year first") |h %></option>
         </select>
       </label>
       <button type="button" id="add-existing-trial-btn" class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">
-        Add Existing Trial
+        <% $c->i18n->p("decision.root.add_existing_trial", "Add Existing Trial") |h %>
       </button>
     </div>
   </&>
 
-  <&| /page/info_section.mas, id=>"layout_section", title=>"5 - Layout", collapsible=>1, collapsed=>0 &>
+  <&| /page/info_section.mas, anchor_title => "5 - Layout", id=>"layout_section", title=>HTML::Entities::encode_entities($c->i18n->p("decision.root.5_layout", "5 - Layout")), collapsible=>1, collapsed=>0 &>
     <label class="inline-flex items-center mb-4 space-x-2">
       <input type="checkbox" id="edit-toggle" />
-      <span class="font-semibold ml-1">Edit unused plots</span>
+      <span class="font-semibold ml-1"><% $c->i18n->p("decision.root.edit_unused_plots", "Edit unused plots") |h %></span>
     </label>
 
     <label class="inline-flex items-center mb-4 space-x-2 ml-4">
       <input type="checkbox" id="border-toggle" />
-      <span class="font-semibold ml-1">Place Borders</span>
+      <span class="font-semibold ml-1"><% $c->i18n->p("decision.root.place_borders", "Place Borders") |h %></span>
     </label>
 
     <label class="inline-flex items-center mb-4 ml-4">
-      <span class="font-semibold mr-2">Border accession</span>
+      <span class="font-semibold mr-2"><% $c->i18n->p("decision.root.border_accession", "Border accession") |h %></span>
       <select id="border-accession" class="border rounded px-2 py-1" style="width: 16rem;">
         <option value=""></option>
       </select>
     </label>
 
     <div id="layout-hint" class="text-sm text-gray-600 mb-4">
-      Click a placed trial to select it, then use arrow keys to move it. Use Shift + arrow to move five plots.
+      <% $c->i18n->p("decision.root.click_a_placed_trial_to_select_it_then_use_arrow", "Click a placed trial to select it, then use arrow keys to move it. Use Shift + arrow to move five plots.") |h %>
     </div>
 
     <div class="mb-6">
-      <label class="block mb-2">Unused Rows (comma-separated)
+      <label class="block mb-2"><% $c->i18n->p("decision.root.unused_rows_comma_separated", "Unused Rows (comma-separated)") |h %>
         <input id="unused-rows" class="w-full border rounded px-2 py-1" />
       </label>
-      <label class="block">Unused Columns (comma-separated)
+      <label class="block"><% $c->i18n->p("decision.root.unused_columns_comma_separated", "Unused Columns (comma-separated)") |h %>
         <input id="unused-cols" class="w-full border rounded px-2 py-1" />
       </label>
     </div>
@@ -312,7 +312,7 @@ my $is_curator = ($c->user && $c->user->check_roles('curator')) ? 1 : 0;
         <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
         <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path>
       </svg>
-      <span>Removing trial from layout...</span>
+      <span><% $c->i18n->p("decision.root.removing_trial_from_layout", "Removing trial from layout...") |h %></span>
     </div>
 
 
@@ -321,24 +321,24 @@ my $is_curator = ($c->user && $c->user->check_roles('curator')) ? 1 : 0;
         <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
         <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path>
       </svg>
-      <span>Building grid...</span>
+      <span><% $c->i18n->p("decision.root.building_grid", "Building grid...") |h %></span>
     </div>
 
     <div class="flex gap-8">
       <div class="w-1/4">
-        <h3 class="font-semibold mb-2">Trials</h3>
+        <h3 class="font-semibold mb-2"><% $c->i18n->p("accession.stock.trials.title", "Trials") |h %></h3>
         <div id="trial-boxes" class="space-y-4"></div>
-        <button id="save-trials-db-btn" class="mt-4 w-full bg-indigo-700 text-white px-5 py-4 rounded hover:bg-indigo-800 text-base font-bold">Save Layout Trials in Database</button>
+        <button id="save-trials-db-btn" class="mt-4 w-full bg-indigo-700 text-white px-5 py-4 rounded hover:bg-indigo-800 text-base font-bold"><% $c->i18n->p("decision.root.save_layout_trials_in_database", "Save Layout Trials in Database") |h %></button>
       </div>
 
       <div class="border p-4 rounded w-3/4 bg-green-50 relative">
         <div class="mb-2 flex flex-wrap items-center justify-between gap-2">
-          <h3 class="font-semibold">Location Field Grid</h3>
+          <h3 class="font-semibold"><% $c->i18n->p("decision.root.location_field_grid", "Location Field Grid") |h %></h3>
           <div class="flex flex-wrap gap-2">
-            <button id="save-layout-btn" class="bg-purple-600 text-white px-3 py-1 rounded hover:bg-purple-700 text-sm">Save Layout</button>
-            <button id="delete-layout-btn" class="<% $is_curator ? '' : 'hidden ' %>bg-red-700 text-white px-3 py-1 rounded hover:bg-red-800 text-sm">Delete View</button>
-            <button id="export-full-jpg-btn" class="bg-green-600 text-white px-2 py-1 rounded hover:bg-green-700 text-sm">Export FULL Grid</button>
-            <button id="export-jpg-btn" class="bg-blue-600 text-white px-2 py-1 rounded hover:bg-blue-700 text-sm">Export View as JPG</button>
+            <button id="save-layout-btn" class="bg-purple-600 text-white px-3 py-1 rounded hover:bg-purple-700 text-sm"><% $c->i18n->p("decision.root.save_layout", "Save Layout") |h %></button>
+            <button id="delete-layout-btn" class="<% $is_curator ? '' : 'hidden ' %>bg-red-700 text-white px-3 py-1 rounded hover:bg-red-800 text-sm"><% $c->i18n->p("decision.root.delete_view", "Delete View") |h %></button>
+            <button id="export-full-jpg-btn" class="bg-green-600 text-white px-2 py-1 rounded hover:bg-green-700 text-sm"><% $c->i18n->p("decision.root.export_full_grid", "Export FULL Grid") |h %></button>
+            <button id="export-jpg-btn" class="bg-blue-600 text-white px-2 py-1 rounded hover:bg-blue-700 text-sm"><% $c->i18n->p("decision.root.export_view_as_jpg", "Export View as JPG") |h %></button>
           </div>
         </div>
 
@@ -349,55 +349,55 @@ my $is_curator = ($c->user && $c->user->check_roles('curator')) ? 1 : 0;
         </div>
 
         <div class="mt-4">
-          <label for="zoom-slider" class="block font-semibold mb-1">Zoom Field Grid</label>
+          <label for="zoom-slider" class="block font-semibold mb-1"><% $c->i18n->p("decision.root.zoom_field_grid", "Zoom Field Grid") |h %></label>
           <input type="range" id="zoom-slider" min="0.5" max="2" step="0.1" value="1" class="w-1/2" />
         </div>
       </div>
     </div>
   </&>
 
-  <&| /page/info_section.mas, id=>"planting_map_section", title=>"6 - Planting Tool", collapsible=>1, collapsed=>0 &>
+  <&| /page/info_section.mas, anchor_title => "6 - Planting Tool", id=>"planting_map_section", title=>HTML::Entities::encode_entities($c->i18n->p("decision.root.6_planting_tool", "6 - Planting Tool")), collapsible=>1, collapsed=>0 &>
     <div class="grid grid-cols-3 gap-4">
-      <label>Rows per plot
+      <label><% $c->i18n->p("decision.root.rows_per_plot", "Rows per plot") |h %>
         <input id="planting-rows-per-plot" type="number" min="1" value="1" class="w-full border rounded px-2 py-1" />
       </label>
-      <label>Plants per plot
+      <label><% $c->i18n->p("decision.root.plants_per_plot", "Plants per plot") |h %>
         <input id="planting-plants-per-plot" type="number" min="1" value="1" class="w-full border rounded px-2 py-1" />
       </label>
-      <label>Plant spacing
+      <label><% $c->i18n->p("decision.root.plant_spacing", "Plant spacing") |h %>
         <input id="planting-plant-spacing" type="number" min="0" step="0.01" class="w-full border rounded px-2 py-1" placeholder="cm" />
       </label>
-      <label>Row spacing
+      <label><% $c->i18n->p("decision.root.row_spacing", "Row spacing") |h %>
         <input id="planting-row-spacing" type="number" min="0" step="0.01" class="w-full border rounded px-2 py-1" placeholder="cm" />
       </label>
-      <label>Alley between plots
+      <label><% $c->i18n->p("decision.root.alley_between_plots", "Alley between plots") |h %>
         <input id="planting-alley-spacing" type="number" min="0" step="0.01" class="w-full border rounded px-2 py-1" placeholder="cm" />
       </label>
-      <label>Planting direction
+      <label><% $c->i18n->p("decision.root.planting_direction", "Planting direction") |h %>
         <select id="planting-direction" class="w-full border rounded px-2 py-1">
-          <option value="row_col">Rows, left to right</option>
-          <option value="row_col_reverse">Rows, right to left</option>
-          <option value="serpentine">Serpentine by row</option>
-          <option value="col_row">Columns, top to bottom</option>
+          <option value="row_col"><% $c->i18n->p("decision.root.rows_left_to_right", "Rows, left to right") |h %></option>
+          <option value="row_col_reverse"><% $c->i18n->p("decision.root.rows_right_to_left", "Rows, right to left") |h %></option>
+          <option value="serpentine"><% $c->i18n->p("decision.root.serpentine_by_row", "Serpentine by row") |h %></option>
+          <option value="col_row"><% $c->i18n->p("decision.root.columns_top_to_bottom", "Columns, top to bottom") |h %></option>
         </select>
       </label>
-      <label class="col-span-3">Planting notes
-        <input id="planting-notes" type="text" class="w-full border rounded px-2 py-1" placeholder="Optional planter instructions" />
+      <label class="col-span-3"><% $c->i18n->p("decision.root.planting_notes", "Planting notes") |h %>
+        <input id="planting-notes" type="text" class="w-full border rounded px-2 py-1" placeholder="<% $c->i18n->p("decision.root.optional_planter_instructions", "Optional planter instructions") |h %>" />
       </label>
     </div>
     <div class="mt-4 flex flex-wrap gap-3">
-      <button id="download-planting-map-btn" class="bg-green-700 text-white px-4 py-2 rounded hover:bg-green-800 text-sm font-semibold">Download Planting Map Excel</button>
-      <button id="generate-layout-graphics-btn" class="bg-blue-700 text-white px-4 py-2 rounded hover:bg-blue-800 text-sm font-semibold">Generate Graphics</button>
+      <button id="download-planting-map-btn" class="bg-green-700 text-white px-4 py-2 rounded hover:bg-green-800 text-sm font-semibold"><% $c->i18n->p("decision.root.download_planting_map_excel", "Download Planting Map Excel") |h %></button>
+      <button id="generate-layout-graphics-btn" class="bg-blue-700 text-white px-4 py-2 rounded hover:bg-blue-800 text-sm font-semibold"><% $c->i18n->p("decision.root.generate_graphics", "Generate Graphics") |h %></button>
     </div>
 
     <div id="layout-graphics-panel" class="hidden mt-6 grid grid-cols-1 md:grid-cols-2 gap-6">
       <div class="border rounded p-4 bg-white">
-        <h3 class="font-semibold mb-3">Area by Trial</h3>
+        <h3 class="font-semibold mb-3"><% $c->i18n->p("decision.root.area_by_trial", "Area by Trial") |h %></h3>
         <canvas id="trial-area-chart" width="360" height="260" class="w-full max-w-md"></canvas>
         <div id="trial-area-legend" class="mt-3 text-sm space-y-1"></div>
       </div>
       <div class="border rounded p-4 bg-white">
-        <h3 class="font-semibold mb-3">Field Area Usage</h3>
+        <h3 class="font-semibold mb-3"><% $c->i18n->p("decision.root.field_area_usage", "Field Area Usage") |h %></h3>
         <canvas id="field-usage-chart" width="360" height="260" class="w-full max-w-md"></canvas>
         <div id="field-usage-legend" class="mt-3 text-sm space-y-1"></div>
       </div>
@@ -427,3 +427,7 @@ $(document).ready( function() {
   var trialallocation = window.jsMod['trialallocation'].init("trialallocation");
 });
 </script>
+
+<%once>
+use HTML::Entities ();
+</%once>

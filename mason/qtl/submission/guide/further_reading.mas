@@ -12,11 +12,15 @@ Isaak Y Tecle (iyt2@cornell.edu)
 
 </%doc>
 <&| /page/info_section.mas, 
-   title      => "Further reading",
+   title      => HTML::Entities::encode_entities($c->i18n->p("help.qtl.further_reading.heading", "Further reading")),
   collapsible => 1,
   collapsed   => 1
-&>
+, anchor_title => "Further reading" &>
 
-You can find detailed documentation of the tool here: <a href="http://www.biomedcentral.com/1471-2105/11/525/abstract">solQTL: a tool for QTL analysis, visualization and linking to genomes at SGN database</a>.
+<% $c->i18n->p("help.qtl.further_reading.intro", "You can find detailed documentation of the tool here: ") |h %><a href="http://www.biomedcentral.com/1471-2105/11/525/abstract">solQTL: a tool for QTL analysis, visualization and linking to genomes at SGN database</a>.
 
 </&>
+
+<%once>
+use HTML::Entities ();
+</%once>

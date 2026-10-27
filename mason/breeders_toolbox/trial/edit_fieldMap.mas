@@ -1,3 +1,6 @@
+<%once>
+use HTML::Entities ();
+</%once>
 <%args>
 $trial_id
 $trial_name
@@ -23,8 +26,8 @@ $trial_stock_type => undef
     <div class="modal-dialog " role="document">
         <div class="modal-content">
             <div class="modal-header" style="text-align: center">
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                <h4 class="modal-title" id="EditFieldMapDialog">Edit Field Map For <% $trial_name %></h4>
+                <button type="button" class="close" data-dismiss="modal" aria-label="<% $c->i18n->p("folder.ui.close", "Close") |h %>"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="EditFieldMapDialog"><% $c->i18n->p("trial.fieldmap_edit.title", "Edit Field Map For %{trial_name}", {trial_name => $trial_name}) |h %></h4>
             </div>
             <div class="modal-body">
                 <div class="container-fluid">
@@ -35,7 +38,7 @@ $trial_stock_type => undef
                 </div>
             </div>
             <div class="modal-footer">
-                <button id="close_edit_field_map_dialog" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                <button id="close_edit_field_map_dialog" type="button" class="btn btn-default" data-dismiss="modal"><% $c->i18n->p("trial.fieldmap_edit.close", "Close") |h %></button>
                 <button type="button" class="btn btn-primary" name="replace_trial_stock_submit" id="replace_trial_stock_submit"></button>
                 <!-- <button type="button" class="btn btn-primary" name="substitute_stock_submit" id="substitute_stock_submit"></button> -->
             </div>
@@ -47,7 +50,7 @@ $trial_stock_type => undef
     <div class="modal-dialog " role="document">
         <div class="modal-content">
             <div class="modal-header" style="text-align: center">
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <button type="button" class="close" data-dismiss="modal" aria-label="<% $c->i18n->p("folder.ui.close", "Close") |h %>"><span aria-hidden="true">&times;</span></button>
                 <h4 class="modal-title" id="replace_stocks_dialog"></h4>
             </div>
             <div class="modal-body">
@@ -73,7 +76,7 @@ $trial_stock_type => undef
                 </div>
             </div>
             <div class="modal-footer">
-                <button id="close_replace_trial_accession_dialog" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                <button id="close_replace_trial_accession_dialog" type="button" class="btn btn-default" data-dismiss="modal"><% $c->i18n->p("trial.fieldmap_edit.close", "Close") |h %></button>
                 <button type="button" class="btn btn-primary" name="replace_stock_submit" id="replace_stock_submit"></button>
             </div>
         </div>
@@ -85,7 +88,7 @@ $trial_stock_type => undef
     <div class="modal-dialog " role="document">
         <div class="modal-content">
             <div class="modal-header" style="text-align: center">
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <button type="button" class="close" data-dismiss="modal" aria-label="<% $c->i18n->p("folder.ui.close", "Close") |h %>"><span aria-hidden="true">&times;</span></button>
                 <h4 class="modal-title" id="substitute_plot_dialog"></h4>
             </div>
             <div class="modal-body">
@@ -94,14 +97,14 @@ $trial_stock_type => undef
                     <form class="form-horizontal" role="form" method="post" enctype="multipart/form-data" encoding="multipart/form-data" id="substitute_plot_accession_form" name="substitute_plot_accession_form">
 
 											<div class="form-group">
-												<label class="col-sm-3 control-label">Select Plot 1: </label>
+                                                <label class="col-sm-3 control-label"><% $c->i18n->p("trial.fieldmap_edit.select_plot_1", "Select Plot 1: ") |h %></label>
 												<div class="col-sm-9" id="plot_name_in_trial">
 
 												</div>
 											</div>
 
 											<div class="form-group">
-												<label class="col-sm-3 control-label">Select Plot 2: </label>
+                                                <label class="col-sm-3 control-label"><% $c->i18n->p("trial.fieldmap_edit.select_plot_2", "Select Plot 2: ") |h %></label>
 												<div class="col-sm-9" id="sub_plot_accession_in_trial">
 												</div>
 											</div>
@@ -110,7 +113,7 @@ $trial_stock_type => undef
                 </div>
             </div>
             <div class="modal-footer">
-                <button id="close_substitute_plot_accession_dialog" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                <button id="close_substitute_plot_accession_dialog" type="button" class="btn btn-default" data-dismiss="modal"><% $c->i18n->p("trial.fieldmap_edit.close", "Close") |h %></button>
                 <button type="button" class="btn btn-primary" name="substitute_plot_stock_submit" id="substitute_plot_stock_submit"></button>
             </div>
         </div>
@@ -122,7 +125,7 @@ $trial_stock_type => undef
     <div class="modal-dialog " role="document">
         <div class="modal-content">
             <div class="modal-header" style="text-align: center">
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <button type="button" class="close" data-dismiss="modal" aria-label="<% $c->i18n->p("folder.ui.close", "Close") |h %>"><span aria-hidden="true">&times;</span></button>
                 <h4 class="modal-title" id="replace_stock_message_title"></h4>
             </div>
             <div class="modal-body">
@@ -133,7 +136,7 @@ $trial_stock_type => undef
                 </div>
             </div>
             <div class="modal-footer">
-                <button id="close_replace_field_map_dialog" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                <button id="close_replace_field_map_dialog" type="button" class="btn btn-default" data-dismiss="modal"><% $c->i18n->p("trial.fieldmap_edit.close", "Close") |h %></button>
 
             </div>
         </div>
@@ -144,7 +147,7 @@ $trial_stock_type => undef
     <div class="modal-dialog " role="document">
         <div class="modal-content">
             <div class="modal-header" style="text-align: center">
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <button type="button" class="close" data-dismiss="modal" aria-label="<% $c->i18n->p("folder.ui.close", "Close") |h %>"><span aria-hidden="true">&times;</span></button>
                 <h4 class="modal-title" id="subs_stock_message_title"></h4>
             </div>
             <div class="modal-body">
@@ -155,7 +158,7 @@ $trial_stock_type => undef
                 </div>
             </div>
             <div class="modal-footer">
-                <button id="close_subs_field_map_dialog" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                <button id="close_subs_field_map_dialog" type="button" class="btn btn-default" data-dismiss="modal"><% $c->i18n->p("trial.fieldmap_edit.close", "Close") |h %></button>
 
             </div>
         </div>
@@ -167,43 +170,43 @@ $trial_stock_type => undef
     <div class="modal-dialog modal-lg " role="document">
         <div class="modal-content">
             <div class="modal-header" style="text-align: center">
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                <h4 class="modal-title" id="UsageFieldMapDialog">How to Use and Edit Field Map </h4>
+                <button type="button" class="close" data-dismiss="modal" aria-label="<% $c->i18n->p("folder.ui.close", "Close") |h %>"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="UsageFieldMapDialog"><% $c->i18n->p("trial.fieldmap_edit.usage_title", "How to Use and Edit Field Map") |h %> </h4>
             </div>
             <div class="modal-body">
                 <div class="container-fluid">
 
                 <h4>
-                  Background:
+                  <% $c->i18n->p("trial.fieldmap_edit.background", "Background:") |h %>
                 </h4>
-                  <center><p>Field map is a tool that enable users to view the physical layout of plots in a trial. Maps can be generated on the fly while adding a trial or uploading a trial. Field map coordinates can also be uploaded independently after trials have been added or uploaded. It is a very intuitive, flexible and user friendly tool for manipulation/making changes to field trial layouts before phenotypes are uploaded. </p></center>
+                  <center><p><% $c->i18n->p("trial.fieldmap_edit.help.background_help", "Field map is a tool that enable users to view the physical layout of plots in a trial. Maps can be generated on the fly while adding a trial or uploading a trial. Field map coordinates can also be uploaded independently after trials have been added or uploaded. It is a very intuitive, flexible and user friendly tool for manipulation/making changes to field trial layouts before phenotypes are uploaded.") |h %> </p></center>
 
                 <h4>
-                  Editing Options:
+                  <% $c->i18n->p("trial.fieldmap_edit.editing_options", "Editing Options:") |h %>
                 </h4>
                 <dl>
-                  <dt>Replace Plot Accession</dt>
-                  <dd>A plot accession can be replaced by an accession within or outside of the trial. To do this, <b>click on the plot</b> and <b>provide the name of the new accession</b> (must already exist in the database).</dd>
-                  <dt>Replace Trial Accession</dt>
-                  <dd>An accession used in a trial can be replaced by a new accession or another accession from the trial. When this replace option is used, it replaces every instances (plots and plants) of that accession in the trial. To do this, <b>click on the Edit Field Map link</b> by the top right of the physical trial layout section; <b>click on Replace Accession button</b>; <b>select accession</b> to replace from the trial and <b>provide a new accession</b> (must already exit in the database); <b>click on Replace Trial Accession button</b> to complete the operation.</dd>
-                  <dt>Change dimensions</dt>
-                  <dd>Click on the change dimensions button to alter the dimensions of the field map, and the respective row and column attributes of the plots in your trial. Clicking on this button will open a dialogue that prompts you to enter an accession name if the change you are making will result in dimensions that are larger than the amount of plots in your trial. The result is that the map will fill in the extra space with filler plots, and the filler plots will have the accession entered in input in the dialogue.</dd>
-                  <dt>Invert rows</dt>
-                  <dd>Check invert rows to observe your trial from the top down instead of the bottom up. This change is only present on your visualization, and the trial data will not be changed.</dd>
-                  <dt>Plot Layout</dt>
-                  <dd>You can select how you want your map to be ordered. The options include serpentine and zigzag.</dd>
-                  <dt>Download Harvesting Order</dt>
-                  <dd>This button allows you to download an excel file which has an incrementally ordered list of the harvesting order for your trial based on the current layout of the field map. You can play around with the four options given to experiment with the different traversal patterns available. The harvesting order file will omit border plots, but it will include filler plots.</dd>
-                  <dt>Download Planting Order</dt>
-                  <dd>This button allows you to download an excel file which has an incrementally ordered list of the planting order for your trial. It is very similar to the harvesting order, but since you will need to plant the borders too, it includes the border plots in the traversal of your map.</dd>
-                  <dt>Add Borders</dt>
-                  <dd>These checkboxes allow you to add borders around your field map on any sides you would like. These plots are purely visual and have no real data associated with them. They will not be included in the database, but you can see them in your harvesting order if they are present.</dd>
-                  <dt>Submit Field Layout</dt>
-                  <dd>This button allows you to update the databases with the changes you have made to your trial. You can continuously change your trial data, just remember to submit the changes when you are satisfied so that it is saved.</dd>
-                  <dt>HeatMap</dt>
-                  <dd>If your trial has trait data uploaded, you can view a heatmap of that data by selecting a trait from the dropdown menu. You will see a color weighting on the plots that corresponds with the value of each plot for a given trait.</dd>
-                  <dt>Transpose Fieldmap</dt>
-                  <dd>This button transposes the x and y coordinates of each plot in your map. Borders will adjust accordingly.</dd>
+                  <dt><% $c->i18n->p("trial.fieldmap_edit.replace_plot_accession", "Replace Plot Accession") |h %></dt>
+                  <dd><%perl> my $fieldmap_help_replace_plot_help = HTML::Entities::encode_entities($c->i18n->p("trial.fieldmap_edit.help.replace_plot_help", "A plot accession can be replaced by an accession within or outside of the trial. To do this, <b>click on the plot</b> and <b>provide the name of the new accession</b> (must already exist in the database).")); $fieldmap_help_replace_plot_help =~ s/&lt;b&gt;/<b>/g; $fieldmap_help_replace_plot_help =~ s/&lt;\/b&gt;/<\/b>/g; print $fieldmap_help_replace_plot_help; </%perl></dd>
+                  <dt><% $c->i18n->p("trial.fieldmap_edit.replace_trial_accession", "Replace Trial Accession") |h %></dt>
+                  <dd><%perl> my $fieldmap_help_replace_trial_help = HTML::Entities::encode_entities($c->i18n->p("trial.fieldmap_edit.help.replace_trial_help", "An accession used in a trial can be replaced by a new accession or another accession from the trial. When this replace option is used, it replaces every instances (plots and plants) of that accession in the trial. To do this, <b>click on the Edit Field Map link</b> by the top right of the physical trial layout section; <b>click on Replace Accession button</b>; <b>select accession</b> to replace from the trial and <b>provide a new accession</b> (must already exit in the database); <b>click on Replace Trial Accession button</b> to complete the operation.")); $fieldmap_help_replace_trial_help =~ s/&lt;b&gt;/<b>/g; $fieldmap_help_replace_trial_help =~ s/&lt;\/b&gt;/<\/b>/g; print $fieldmap_help_replace_trial_help; </%perl></dd>
+                  <dt><% $c->i18n->p("trial.fieldmap_edit.dimensions", "Change dimensions") |h %></dt>
+                  <dd><% $c->i18n->p("trial.fieldmap_edit.help.dimensions_help", "Click on the change dimensions button to alter the dimensions of the field map, and the respective row and column attributes of the plots in your trial. Clicking on this button will open a dialogue that prompts you to enter an accession name if the change you are making will result in dimensions that are larger than the amount of plots in your trial. The result is that the map will fill in the extra space with filler plots, and the filler plots will have the accession entered in input in the dialogue.") |h %></dd>
+                  <dt><% $c->i18n->p("trial.fieldmap_edit.invert_rows", "Invert rows") |h %></dt>
+                  <dd><% $c->i18n->p("trial.fieldmap_edit.help.invert_help", "Check invert rows to observe your trial from the top down instead of the bottom up. This change is only present on your visualization, and the trial data will not be changed.") |h %></dd>
+                  <dt><% $c->i18n->p("trial.fieldmap_edit.plot_layout", "Plot Layout") |h %></dt>
+                  <dd><% $c->i18n->p("trial.fieldmap_edit.help.layout_help", "You can select how you want your map to be ordered. The options include serpentine and zigzag.") |h %></dd>
+                  <dt><% $c->i18n->p("trial.fieldmap_edit.download_harvest_order", "Download Harvesting Order") |h %></dt>
+                  <dd><% $c->i18n->p("trial.fieldmap_edit.help.harvest_help", "This button allows you to download an excel file which has an incrementally ordered list of the harvesting order for your trial based on the current layout of the field map. You can play around with the four options given to experiment with the different traversal patterns available. The harvesting order file will omit border plots, but it will include filler plots.") |h %></dd>
+                  <dt><% $c->i18n->p("trial.fieldmap_edit.download_plant_order", "Download Planting Order") |h %></dt>
+                  <dd><% $c->i18n->p("trial.fieldmap_edit.help.plant_help", "This button allows you to download an excel file which has an incrementally ordered list of the planting order for your trial. It is very similar to the harvesting order, but since you will need to plant the borders too, it includes the border plots in the traversal of your map.") |h %></dd>
+                  <dt><% $c->i18n->p("trial.fieldmap_edit.add_borders", "Add Borders") |h %></dt>
+                  <dd><% $c->i18n->p("trial.fieldmap_edit.help.borders_help", "These checkboxes allow you to add borders around your field map on any sides you would like. These plots are purely visual and have no real data associated with them. They will not be included in the database, but you can see them in your harvesting order if they are present.") |h %></dd>
+                  <dt><% $c->i18n->p("trial.fieldmap_edit.submit_layout", "Submit Field Layout") |h %></dt>
+                  <dd><% $c->i18n->p("trial.fieldmap_edit.help.submit_help", "This button allows you to update the databases with the changes you have made to your trial. You can continuously change your trial data, just remember to submit the changes when you are satisfied so that it is saved.") |h %></dd>
+                  <dt><% $c->i18n->p("trial.fieldmap_edit.heatmap", "HeatMap") |h %></dt>
+                  <dd><% $c->i18n->p("trial.fieldmap_edit.help.heatmap_help", "If your trial has trait data uploaded, you can view a heatmap of that data by selecting a trait from the dropdown menu. You will see a color weighting on the plots that corresponds with the value of each plot for a given trait.") |h %></dd>
+                  <dt><% $c->i18n->p("trial.fieldmap_edit.transpose", "Transpose Fieldmap") |h %></dt>
+                  <dd><% $c->i18n->p("trial.fieldmap_edit.help.transpose_help", "This button transposes the x and y coordinates of each plot in your map. Borders will adjust accordingly.") |h %></dd>
                   <!--
                   <dt>Substitute Plot Accessions<dt>
                   <dd>This feature allows you to switch plot accessions between any two plots. To switch the accessions of two plots, <b>click on the Edit Field Map link</b>; <b>click on Substitute Accession button</b>; <b>select the plots to switch there accessions</b>; <b>click on Substitute Plot Accession</b> to switch the accession in those plots.</dd>
@@ -211,28 +214,28 @@ $trial_stock_type => undef
                 </dl>
 
                 <h4>
-                  Features:
+                  <% $c->i18n->p("trial.fieldmap_edit.features", "Features:") |h %>
                 </h4>
-                <dt>Mouse Over<dt>
-                <dd>Displays plot field information.</dd>
-                <dt>Double Click</dt>
-                <dd>Double clicking on a plot, opens the stock page for that plot.</dd>
-                <dt>Download Map<dt>
-                <dd>Field Map can be downloaded as image using the download button below the map.</dd>
-                <dt>Delete Map</dt>
-                <dd>Field Map can be deleted if the user have the right privilege.</dd>
+                <dt><% $c->i18n->p("trial.fieldmap_edit.mouse_over", "Mouse Over") |h %><dt>
+                <dd><% $c->i18n->p("trial.fieldmap_edit.help.mouse_over_help", "Displays plot field information.") |h %></dd>
+                <dt><% $c->i18n->p("trial.fieldmap_edit.double_click", "Double Click") |h %></dt>
+                <dd><% $c->i18n->p("trial.fieldmap_edit.help.double_click_help", "Double clicking on a plot, opens the stock page for that plot.") |h %></dd>
+                <dt><% $c->i18n->p("trial.fieldmap_edit.download_map", "Download Map") |h %><dt>
+                <dd><% $c->i18n->p("trial.fieldmap_edit.help.download_map_help", "Field Map can be downloaded as image using the download button below the map.") |h %></dd>
+                <dt><% $c->i18n->p("trial.fieldmap_edit.delete_map", "Delete Map") |h %></dt>
+                <dd><% $c->i18n->p("trial.fieldmap_edit.help.delete_map_help", "Field Map can be deleted if the user have the right privilege.") |h %></dd>
 
                 <h4>
-                  Note:
+                  <% $c->i18n->p("trial.fieldmap_edit.note", "Note:") |h %>
                 </h4>
-                <dd>- You have to be a <b>curator</b> or a <b>submitter and associated to the breeding program</b> of the trial to use the features of this tool.</dd>
-                <dd>- <b>Input boxes</b> used within the field map tool will automatically (<b>autocomplete</b>) give accession name options from the database when you start typing the accession name.</dd>
-                <dd>- <b>Changes can only be made to the physical layout when phenotypes are not yet upload for the trial.</b></dd>
+                <dd><%perl> my $fieldmap_help_roles_note = HTML::Entities::encode_entities($c->i18n->p("trial.fieldmap_edit.help.roles_note", "- You have to be a <b>curator</b> or a <b>submitter and associated to the breeding program</b> of the trial to use the features of this tool.")); $fieldmap_help_roles_note =~ s/&lt;b&gt;/<b>/g; $fieldmap_help_roles_note =~ s/&lt;\/b&gt;/<\/b>/g; print $fieldmap_help_roles_note; </%perl></dd>
+                <dd><%perl> my $fieldmap_help_autocomplete_note = HTML::Entities::encode_entities($c->i18n->p("trial.fieldmap_edit.help.autocomplete_note", "- <b>Input boxes</b> used within the field map tool will automatically (<b>autocomplete</b>) give accession name options from the database when you start typing the accession name.")); $fieldmap_help_autocomplete_note =~ s/&lt;b&gt;/<b>/g; $fieldmap_help_autocomplete_note =~ s/&lt;\/b&gt;/<\/b>/g; print $fieldmap_help_autocomplete_note; </%perl></dd>
+                <dd><%perl> my $fieldmap_help_phenotype_lock_note = HTML::Entities::encode_entities($c->i18n->p("trial.fieldmap_edit.help.phenotype_lock_note", "- <b>Changes can only be made to the physical layout when phenotypes are not yet upload for the trial.</b>")); $fieldmap_help_phenotype_lock_note =~ s/&lt;b&gt;/<b>/g; $fieldmap_help_phenotype_lock_note =~ s/&lt;\/b&gt;/<\/b>/g; print $fieldmap_help_phenotype_lock_note; </%perl></dd>
 
                 </div>
             </div>
             <div class="modal-footer">
-                <button id="close_usage_field_map_dialog" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                <button id="close_usage_field_map_dialog" type="button" class="btn btn-default" data-dismiss="modal"><% $c->i18n->p("trial.fieldmap_edit.close", "Close") |h %></button>
 
             </div>
         </div>
@@ -242,6 +245,7 @@ $trial_stock_type => undef
 
 
 <script>
+function _sgnB12FieldmapEditEscape(value) { return jQuery('<div>').text(value).html(); }
 
 jQuery(document).ready(function () {
 
@@ -279,7 +283,7 @@ jQuery(document).ready(function () {
             jQuery('#stocks_in_trial').html(trial_stocks_html);
         },
 	    error: function(response){
-            alert("Error retrieving stocks.");
+            alert(window.SGN && SGN.i18n ? SGN.i18n.p("trial.fieldmap_edit.retrieve_stocks_error", "Error retrieving stocks.") : "Error retrieving stocks.");
 	    }
 	});
 
@@ -302,12 +306,12 @@ var phenotype_file;
 var dataTableToPass;
 jQuery("#confirm_calculating_spatial_correction").click(async function() {
   try { //try is a block of code that will run and if it encounters an error it will run the catch block
-    jQuery("#calculate_spatial_correction_status_message").html("starting analysis");
+    jQuery("#calculate_spatial_correction_status_message").text((window.SGN && SGN.i18n ? SGN.i18n.p("trial.fieldmap_edit.analysis_starting", "starting analysis") : "starting analysis"));
 
     const response = await new Promise((resolve, reject) => {
       jQuery.ajax({
         beforeSend: function(xhr, settings) {
-          jQuery("#calculate_spatial_correction_status_message").html("starting analysis");
+          jQuery("#calculate_spatial_correction_status_message").text((window.SGN && SGN.i18n ? SGN.i18n.p("trial.fieldmap_edit.analysis_starting", "starting analysis") : "starting analysis"));
           jQuery('#working_modal').modal("show");
         },
         url: '/ajax/spatial_model/generate_results/' + trial_id,
@@ -321,11 +325,11 @@ jQuery("#confirm_calculating_spatial_correction").click(async function() {
     });
 
     jQuery('#working_modal').modal("hide");
-    jQuery("#calculate_spatial_correction_status_message").html("Analysis complete. Click below to correct spatial correlation on necessary traits.");
+    jQuery("#calculate_spatial_correction_status_message").text((window.SGN && SGN.i18n ? SGN.i18n.p("trial.fieldmap_edit.analysis_complete", "Analysis complete. Click below to correct spatial correlation on necessary traits.") : "Analysis complete. Click below to correct spatial correlation on necessary traits."));
 
     if (response.error) {
       alert(response.error);
-      alert("Error calculating spatial correction");
+      alert(window.SGN && SGN.i18n ? SGN.i18n.p("trial.fieldmap_edit.spatial_correction_error", "Error calculating spatial correction") : "Error calculating spatial correction");
     } else {
       //jQuery("#confirm_store_spatial_correction").prop("disabled", false);
       jQuery("#spatial_correction_results_buttons button").show();
@@ -345,10 +349,10 @@ jQuery("#confirm_calculating_spatial_correction").click(async function() {
         'paging':false,
         'data': response.data,
         'columns': [
-          { 'title': 'Trait' },
-          { 'title': 'Data Quality' },
-          { 'title': 'Moran P Value' },
-          { 'title': 'Spatial Correction Needed' },
+          { 'title': _sgnB12FieldmapEditEscape(window.SGN && SGN.i18n ? SGN.i18n.p('trial.fieldmap_edit.table.trait', 'Trait') : 'Trait') },
+          { 'title': _sgnB12FieldmapEditEscape(window.SGN && SGN.i18n ? SGN.i18n.p('trial.fieldmap_edit.table.data_quality', 'Data Quality') : 'Data Quality') },
+          { 'title': _sgnB12FieldmapEditEscape(window.SGN && SGN.i18n ? SGN.i18n.p('trial.fieldmap_edit.table.moran_p', 'Moran P Value') : 'Moran P Value') },
+          { 'title': _sgnB12FieldmapEditEscape(window.SGN && SGN.i18n ? SGN.i18n.p('trial.fieldmap_edit.table.correction_needed', 'Spatial Correction Needed') : 'Spatial Correction Needed') },
         ],
         'dom': 'Bfrtip',
         'buttons': [
@@ -376,7 +380,7 @@ jQuery("#confirm_calculating_spatial_correction").click(async function() {
     }
   } catch (error) {
     console.error('Error:', error);
-    jQuery('#calculate_spatial_correction_status_message').text("Error calculating spatial correction.");
+    jQuery("#calculate_spatial_correction_status_message").text((window.SGN && SGN.i18n ? SGN.i18n.p("trial.fieldmap_edit.spatial_correction_status_error", "Error calculating spatial correction.") : "Error calculating spatial correction."));
   }
 });
 
@@ -420,7 +424,7 @@ jQuery("#correct_spatial").click(function() {
       jQuery('#working_modal').modal('hide');
       if (response.error) {
         alert(response.error);
-        alert("Error calculating spatial correction");
+        alert(window.SGN && SGN.i18n ? SGN.i18n.p("trial.fieldmap_edit.spatial_correction_error", "Error calculating spatial correction") : "Error calculating spatial correction");
       } else {
         jQuery('#confirm_store_spatial_correction').prop('disabled', false);
         jQuery("#spatial_correction_blue_results_table").DataTable({
@@ -429,12 +433,12 @@ jQuery("#correct_spatial").click(function() {
           'data': response.result,
           'scrollX': true,
           'columns': [
-            { 'title': 'Plot' },
-            { 'title': 'Accession' },
-            { 'title': 'Trait' },
-            { 'title': 'Original' },
-            { 'title': 'Corrected' },
-            { 'title': 'Adjustment'}
+            { 'title': _sgnB12FieldmapEditEscape(window.SGN && SGN.i18n ? SGN.i18n.p('trial.fieldmap_edit.table.plot', 'Plot') : 'Plot') },
+            { 'title': _sgnB12FieldmapEditEscape(window.SGN && SGN.i18n ? SGN.i18n.p('trial.fieldmap_edit.table.accession', 'Accession') : 'Accession') },
+            { 'title': _sgnB12FieldmapEditEscape(window.SGN && SGN.i18n ? SGN.i18n.p('trial.fieldmap_edit.table.trait', 'Trait') : 'Trait') },
+            { 'title': _sgnB12FieldmapEditEscape(window.SGN && SGN.i18n ? SGN.i18n.p('trial.fieldmap_edit.table.original', 'Original') : 'Original') },
+            { 'title': _sgnB12FieldmapEditEscape(window.SGN && SGN.i18n ? SGN.i18n.p('trial.fieldmap_edit.table.corrected', 'Corrected') : 'Corrected') },
+            { 'title': _sgnB12FieldmapEditEscape(window.SGN && SGN.i18n ? SGN.i18n.p('trial.fieldmap_edit.table.adjustment', 'Adjustment') : 'Adjustment')}
           ],
           'dom': 'Bfrtip',
           'buttons': [
@@ -451,8 +455,8 @@ jQuery("#correct_spatial").click(function() {
           'data': response.moran_p_values,
           'scrollX': true,
           'columns': [
-            { 'title': 'Trait' },
-            { 'title': 'Moran P-value after spatial corrections' },
+            { 'title': _sgnB12FieldmapEditEscape(window.SGN && SGN.i18n ? SGN.i18n.p('trial.fieldmap_edit.table.trait', 'Trait') : 'Trait') },
+            { 'title': _sgnB12FieldmapEditEscape(window.SGN && SGN.i18n ? SGN.i18n.p('trial.fieldmap_edit.table.moran_after', 'Moran P-value after spatial corrections') : 'Moran P-value after spatial corrections') },
           ]
         });
       }
@@ -471,7 +475,7 @@ jQuery("#correct_spatial").click(function() {
     }, 
     error: function(error) {
       jQuery('#working_modal').modal('hide');
-      alert("Error calculating spatial corrections: "+error);
+      alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("trial.fieldmap.spatial_corrections_error_prefix", "Error calculating spatial corrections: ") : "Error calculating spatial corrections: ")+error);
     }
   });
 });
@@ -489,11 +493,11 @@ jQuery(document).on('click', '#confirm_store_spatial_correction', async function
         if (response.error) {
             alert(response.error);
         } else {
-            alert("Spatial corrections have been stored in association with this trial. You may also wish to save them as a standalone analysis for use in downstream analyses.\n");
+            alert(window.SGN && SGN.i18n ? SGN.i18n.p('trial.fieldmap_edit.spatial_saved', "Spatial corrections have been stored in association with this trial. You may also wish to save them as a standalone analysis for use in downstream analyses.\\n") : "Spatial corrections have been stored in association with this trial. You may also wish to save them as a standalone analysis for use in downstream analyses.\\n");
         }
         },
         'error' : function(error) {
-        alert("An error occurred: " + error);
+        alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("trial.subplots.error_prefix", "An error occurred: ") : "An error occurred: ") + error);
         }
     });
 
@@ -531,8 +535,8 @@ jQuery(document).on('click', '#confirm_store_spatial_correction', async function
 
   				  for (n=0; n<response.plot_name.length; n++){
   			 			for (i=0; i<response.plot_name[n].length; i++) {
-  			 		    trial_plot_name_html = trial_plot_name_html + "<option value=" + response.plot_id[n][i] + "," + response.acc[n][i] + ">" + "Plot:" + response.plot_name[n][i] + "," + " Number:" + response.plot_number[n][i] + "," +" Accession:"+ response.acc[n][i] +"</option>";
-  							trial_plot_number_html = trial_plot_number_html + "<option value=" + response.plot_id[n][i] + "," + response.acc[n][i] + ">" + "Plot:" + response.plot_name[n][i] + "," + " Number:" + response.plot_number[n][i] + "," +" Accession:"+ response.acc[n][i] + "</option>";
+                        trial_plot_name_html = trial_plot_name_html + "<option value=" + response.plot_id[n][i] + "," + response.acc[n][i] + ">" + _sgnB12FieldmapEditEscape((window.SGN && SGN.i18n ? SGN.i18n.p('trial.fieldmap_edit.plot_label.plot_prefix', 'Plot:') : 'Plot:')) + response.plot_name[n][i] + "," + _sgnB12FieldmapEditEscape((window.SGN && SGN.i18n ? SGN.i18n.p('trial.fieldmap_edit.plot_label.number_prefix', ' Number:') : ' Number:')) + response.plot_number[n][i] + "," +_sgnB12FieldmapEditEscape((window.SGN && SGN.i18n ? SGN.i18n.p('trial.fieldmap_edit.plot_label.accession_prefix', ' Accession:') : ' Accession:'))+ response.acc[n][i] +"</option>";
+                            trial_plot_number_html = trial_plot_number_html + "<option value=" + response.plot_id[n][i] + "," + response.acc[n][i] + ">" + _sgnB12FieldmapEditEscape((window.SGN && SGN.i18n ? SGN.i18n.p('trial.fieldmap_edit.plot_label.plot_prefix', 'Plot:') : 'Plot:')) + response.plot_name[n][i] + "," + _sgnB12FieldmapEditEscape((window.SGN && SGN.i18n ? SGN.i18n.p('trial.fieldmap_edit.plot_label.number_prefix', ' Number:') : ' Number:')) + response.plot_number[n][i] + "," +_sgnB12FieldmapEditEscape((window.SGN && SGN.i18n ? SGN.i18n.p('trial.fieldmap_edit.plot_label.accession_prefix', ' Accession:') : ' Accession:'))+ response.acc[n][i] + "</option>";
   				 		}
   					}
   					trial_plot_name_html = trial_plot_name_html + "</select>";
@@ -578,14 +582,14 @@ jQuery(document).on('click', '#confirm_store_spatial_correction', async function
                 jQuery('#working_modal').modal("hide");
 
                 if (response.error) {
-                    alert("Error Replacing Stock: "+response.error);
+                    alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("trial.fieldmap.replace_stock_error_prefix", "Error Replacing Stock: ") : "Error Replacing Stock: ")+response.error);
                 } else {
                     jQuery('#replace_stock_dialog_success_message').modal("show");
                 }
             },
             error: function() {
                 jQuery('#working_modal').modal("hide");
-                alert('An error occurred replacing stock');
+                alert(window.SGN && SGN.i18n ? SGN.i18n.p("trial.fieldmap_edit.replace_stock_network_error", "An error occurred replacing stock") : "An error occurred replacing stock");
             }
         });
     }
@@ -650,45 +654,45 @@ jQuery(document).on('click', '#confirm_store_spatial_correction', async function
     var subs_success_message = '';
 
     if (trial_stock_type == 'family_name') {
-        edit_dialog_title = 'Replace Trial Family Names Or Substitute Family Names Within A Trial Plots';
-        replace_button_label = 'Replace Family Name';
+        edit_dialog_title = (window.SGN && SGN.i18n ? SGN.i18n.p("trial.fieldmap_edit.stock.family_name.edit_dialog_title", "Replace Trial Family Names Or Substitute Family Names Within A Trial Plots") : "Replace Trial Family Names Or Substitute Family Names Within A Trial Plots");
+        replace_button_label = (window.SGN && SGN.i18n ? SGN.i18n.p("trial.fieldmap_edit.stock.family_name.replace_button_label", "Replace Family Name") : "Replace Family Name");
         substitute_button_label = 'Substitute Family Name';
-        replace_dialog_title = 'Replace Trial Family Name in '.concat(trial_name);
-        replace_stock_text1 = 'Select Family Name: ';
-        replace_stock_text2 = 'Enter New Family Name: ';
-        replace_button_submit = 'Replace Trial Family Name';
+        replace_dialog_title = (window.SGN && SGN.i18n ? SGN.i18n.p("trial.fieldmap_edit.stock.family_name.replace_dialog_title", "Replace Trial Family Name in %{trial_name}", {trial_name: String(trial_name)}) : "Replace Trial Family Name in ".concat(trial_name));
+        replace_stock_text1 = (window.SGN && SGN.i18n ? SGN.i18n.p("trial.fieldmap_edit.stock.family_name.replace_stock_text1", "Select Family Name: ") : "Select Family Name: ");
+        replace_stock_text2 = (window.SGN && SGN.i18n ? SGN.i18n.p("trial.fieldmap_edit.stock.family_name.replace_stock_text2", "Enter New Family Name: ") : "Enter New Family Name: ");
+        replace_button_submit = (window.SGN && SGN.i18n ? SGN.i18n.p("trial.fieldmap_edit.stock.family_name.replace_button_submit", "Replace Trial Family Name") : "Replace Trial Family Name");
         substitute_dialog_title = 'Substitute Plot Family Name in '.concat(trial_name);
         substitute_button_submit = 'Substitute Plot Family Name';
-        replace_message_title = 'Replace Trial Family Name';
-        replace_success_message = 'Family Name was replaced successfully.';
+        replace_message_title = (window.SGN && SGN.i18n ? SGN.i18n.p("trial.fieldmap_edit.stock.family_name.replace_message_title", "Replace Trial Family Name") : "Replace Trial Family Name");
+        replace_success_message = (window.SGN && SGN.i18n ? SGN.i18n.p("trial.fieldmap_edit.stock.family_name.replace_success_message", "Family Name was replaced successfully.") : "Family Name was replaced successfully.");
         subs_message_title = 'Substitute Plot Family Name';
         subs_success_message = 'Family Name was substituted successfully.';
     } else if (trial_stock_type == 'cross') {
-        edit_dialog_title = 'Replace Trial Cross Unique IDs Or Substitute Cross Unique IDs Within A Trial Plots';
-        replace_button_label = 'Replace Cross Unique ID';
+        edit_dialog_title = (window.SGN && SGN.i18n ? SGN.i18n.p("trial.fieldmap_edit.stock.cross.edit_dialog_title", "Replace Trial Cross Unique IDs Or Substitute Cross Unique IDs Within A Trial Plots") : "Replace Trial Cross Unique IDs Or Substitute Cross Unique IDs Within A Trial Plots");
+        replace_button_label = (window.SGN && SGN.i18n ? SGN.i18n.p("trial.fieldmap_edit.stock.cross.replace_button_label", "Replace Cross Unique ID") : "Replace Cross Unique ID");
         substitute_button_label = 'Substitute Cross Unique ID';
-        replace_dialog_title = 'Replace Trial Cross Unique ID in '.concat(trial_name);
-        replace_stock_text1 = 'Select Cross Unique ID: ';
-        replace_stock_text2 = 'Enter New Cross Unique ID: ';
-        replace_button_submit = 'Replace Trial Cross Unique ID';
+        replace_dialog_title = (window.SGN && SGN.i18n ? SGN.i18n.p("trial.fieldmap_edit.stock.cross.replace_dialog_title", "Replace Trial Cross Unique ID in %{trial_name}", {trial_name: String(trial_name)}) : "Replace Trial Cross Unique ID in ".concat(trial_name));
+        replace_stock_text1 = (window.SGN && SGN.i18n ? SGN.i18n.p("trial.fieldmap_edit.stock.cross.replace_stock_text1", "Select Cross Unique ID: ") : "Select Cross Unique ID: ");
+        replace_stock_text2 = (window.SGN && SGN.i18n ? SGN.i18n.p("trial.fieldmap_edit.stock.cross.replace_stock_text2", "Enter New Cross Unique ID: ") : "Enter New Cross Unique ID: ");
+        replace_button_submit = (window.SGN && SGN.i18n ? SGN.i18n.p("trial.fieldmap_edit.stock.cross.replace_button_submit", "Replace Trial Cross Unique ID") : "Replace Trial Cross Unique ID");
         substitute_dialog_title = 'Substitute Plot Cross Unique ID in '.concat(trial_name);
         substitute_button_submit = 'Substitute Plot Cross Unique ID';
-        replace_message_title = 'Replace Cross Unique ID';
-        replace_success_message = 'Cross Unique ID was replaced successfully.';
+        replace_message_title = (window.SGN && SGN.i18n ? SGN.i18n.p("trial.fieldmap_edit.stock.cross.replace_message_title", "Replace Cross Unique ID") : "Replace Cross Unique ID");
+        replace_success_message = (window.SGN && SGN.i18n ? SGN.i18n.p("trial.fieldmap_edit.stock.cross.replace_success_message", "Cross Unique ID was replaced successfully.") : "Cross Unique ID was replaced successfully.");
         subs_message_title = 'Substitute Cross Unique ID';
         subs_success_message = 'Crosss Unique ID was substituted successfully.';
     } else {
-        edit_dialog_title = 'Replace Trial Accessions Within A Trial Plots';
-        replace_button_label = 'Replace Accession';
+        edit_dialog_title = (window.SGN && SGN.i18n ? SGN.i18n.p("trial.fieldmap_edit.stock.accession.edit_dialog_title", "Replace Trial Accessions Within A Trial Plots") : "Replace Trial Accessions Within A Trial Plots");
+        replace_button_label = (window.SGN && SGN.i18n ? SGN.i18n.p("trial.fieldmap_edit.stock.accession.replace_button_label", "Replace Accession") : "Replace Accession");
         // substitute_button_label = 'Substitute Accession';
-        replace_dialog_title = 'Replace Trial Accession in '.concat(trial_name);
-        replace_stock_text1 = 'Select Accession: ';
-        replace_stock_text2 = 'Enter New Accession: ';
-        replace_button_submit = 'Replace Trial Accession';
+        replace_dialog_title = (window.SGN && SGN.i18n ? SGN.i18n.p("trial.fieldmap_edit.stock.accession.replace_dialog_title", "Replace Trial Accession in %{trial_name}", {trial_name: String(trial_name)}) : "Replace Trial Accession in ".concat(trial_name));
+        replace_stock_text1 = (window.SGN && SGN.i18n ? SGN.i18n.p("trial.fieldmap_edit.stock.accession.replace_stock_text1", "Select Accession: ") : "Select Accession: ");
+        replace_stock_text2 = (window.SGN && SGN.i18n ? SGN.i18n.p("trial.fieldmap_edit.stock.accession.replace_stock_text2", "Enter New Accession: ") : "Enter New Accession: ");
+        replace_button_submit = (window.SGN && SGN.i18n ? SGN.i18n.p("trial.fieldmap_edit.stock.accession.replace_button_submit", "Replace Trial Accession") : "Replace Trial Accession");
         // substitute_dialog_title = 'Substitute Plot Accession in '.concat(trial_name);
         // substitute_button_submit = 'Substitute Plot Accession';
-        replace_message_title = 'Replace Trial Accession';
-        replace_success_message = 'Accession was replaced successfully.';
+        replace_message_title = (window.SGN && SGN.i18n ? SGN.i18n.p("trial.fieldmap_edit.stock.accession.replace_message_title", "Replace Trial Accession") : "Replace Trial Accession");
+        replace_success_message = (window.SGN && SGN.i18n ? SGN.i18n.p("trial.fieldmap_edit.stock.accession.replace_success_message", "Accession was replaced successfully.") : "Accession was replaced successfully.");
         // subs_message_title = 'Substitute Plot Accession';
         // subs_success_message = 'Accession was substituted successfully.';
     }

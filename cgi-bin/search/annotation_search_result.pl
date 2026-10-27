@@ -1,4 +1,15 @@
 use strict;
+use CatalystX::GlobalContext '$c';
+use SGN::I18N;
+use HTML::Entities qw(encode_entities);
+my SGN::I18N $i18n = eval { $c && $c->i18n };
+my $render_i18n_html = sub {
+    my ($message, $slots) = @_;
+    my $html = encode_entities($message);
+    # One substitution pass: inserted data cannot become another markup slot.
+    $html =~ s/(__SGN_UI_[A-Z0-9_]+__)/exists $slots->{$1} ? $slots->{$1} : $1/ge;
+    return $html;
+};
 use CXGN::Page;
 use CXGN::DB::Connection;
 use CXGN::Tools::Text qw/to_tsquery_string/;
@@ -13,7 +24,7 @@ my $unig_link='/search/unigene.pl';
 my $show_all_unig_link='/search/all_unig_for_annot.pl';
 my $clone_link='/search/est.pl?request_type=8&amp;request_from=1&amp;request_id=';
 
-our $page = CXGN::Page->new( "Annotation Search Results", "Dan, mod by Rob");
+our $page = CXGN::Page->new( encode_entities(($i18n ? $i18n->p("global.final_caption.annotation_search_results", "Annotation Search Results") : "Annotation Search Results")), "Dan, mod by Rob");
 my $dbh = CXGN::DB::Connection->new;
 my $pg_version = $dbh->dbh_param("pg_server_version");
 my $pg_ts_rank = $pg_version >= 80300 ? 'ts_rank' : 'rank';
@@ -188,7 +199,9 @@ EOSQL
 	             . "<td align=\"left\" nowrap=\"nowrap\">$build_desc build $build_nr from $build_date</td><td></td></tr>";
 	$sort_field=$unig_build_id;
       } else {
-	$unig_desc="<tr><td></td><td align=\"left\" colspan=\"3\">The annotation is associated with clone <a href=\"$clone_link$clone_id\">$clone_name</a>, which has been censored from the current unigene builds.</td></tr>";
+        my $clone_link_html = '<a href="' . $clone_link . $clone_id . '">' . encode_entities($clone_name) . '</a>';
+        my $clone_sentence = $render_i18n_html->(($i18n ? $i18n->p("global.annotation_search_result.clone_censored_sentence", "The annotation is associated with clone %{clone_link}, which has been censored from the current unigene builds.", {clone_link => "__SGN_UI_CLONE_LINK__"}) : "The annotation is associated with clone __SGN_UI_CLONE_LINK__, which has been censored from the current unigene builds."), {"__SGN_UI_CLONE_LINK__" => $clone_link_html});
+	$unig_desc="<tr><td></td><td align=\"left\" colspan=\"3\">$clone_sentence</td></tr>";
 	$sort_field=$clone_id;
       }
 
@@ -280,6 +293,7 @@ EOH
     }
 }
 
+my $unigenes_containing_label = encode_entities($i18n ? $i18n->p('global.annotation_search_result.unigenes_containing_annotation', 'Unigenes containing this annotation:') : 'Unigenes containing this annotation:');
 #set up all the page navigation stuff
 
 my $nr_pages = int (($total_matches - 1)/$nr_to_show) + 1;
@@ -317,7 +331,8 @@ unless($nr_pages == 1){
     $pagination_print.="<tr><td colspan=\"2\" align=\"center\" bgcolor=\"#EEEEEE\">";
 
     if ($prev_page >= 0){
-	$pagination_print .= "<a href=\"annotation_search_result.pl?search_text=$search_text&amp;request_from=1&amp;search_type=$search_type&amp;results_page=$prev_page\">&lt; Previous</a> |";
+        my $previous = encode_entities($i18n ? $i18n->p('global.annotation_search_result.previous', 'Previous') : 'Previous');
+	$pagination_print .= "<a href=\"annotation_search_result.pl?search_text=$search_text&amp;request_from=1&amp;search_type=$search_type&amp;results_page=$prev_page\">&lt; $previous</a> |";
 	$start_skip and $pagination_print .= "| ... |";
     }
     else{
@@ -338,7 +353,8 @@ unless($nr_pages == 1){
     if ($next_page < $nr_pages){
 	
 	$end_skip and $pagination_print .= "| ... |";
-	$pagination_print.= "| <a href=\"annotation_search_result.pl?search_text=$search_text&amp;request_from=1&amp;search_type=$search_type&amp;results_page=$next_page\">Next &gt;</a>";
+        my $next = encode_entities($i18n ? $i18n->p('global.annotation_search_result.next', 'Next') : 'Next');
+	$pagination_print.= "| <a href=\"annotation_search_result.pl?search_text=$search_text&amp;request_from=1&amp;search_type=$search_type&amp;results_page=$next_page\">$next &gt;</a>";
     }
     else{
 	$pagination_print .= "|";
@@ -347,10 +363,13 @@ unless($nr_pages == 1){
     $pagination_print .= "</td></tr>";
 
     if($nr_pages > $pagination_range){
+      my $first_page = encode_entities($i18n ? $i18n->p('global.annotation_search_result.first_page', 'First Page') : 'First Page');
+      my $page_range = encode_entities($i18n ? $i18n->p('global.annotation_search_result.page_range', 'Page [1-%{pages}]', { pages => $nr_pages }) : "Page [1-$nr_pages]");
+      my $last_page_label = encode_entities($i18n ? $i18n->p('global.annotation_search_result.last_page', 'Last Page') : 'Last Page');
       $pagination_print .= <<EOH;
 <tr><td colspan="2" align="center" bgcolor="#EEEEEE">
   <table align="center" cellspacing="0" cellpadding="0" border="0">
-  <tr><td align="left" style="white-space: nowrap"><a href="annotation_search_result.pl?search_text=$search_text&amp;request_from=1&amp;search_type=$search_type&amp;results_page=0">&lt; First Page</a> || Page [1-$nr_pages]</td>
+  <tr><td align="left" style="white-space: nowrap"><a href="annotation_search_result.pl?search_text=$search_text&amp;request_from=1&amp;search_type=$search_type&amp;results_page=0">&lt; $first_page</a> || $page_range</td>
   <td align="center" style="white-space: nowrap">
   <form method="get" action="/search/annotation_search_result.pl">
   <input type="hidden" name="search_text" value="$search_text" />
@@ -361,7 +380,7 @@ unless($nr_pages == 1){
   <input name="get_page" type="submit" value="go" />
   </form>
   </td><td align="right" style="white-space: nowrap">
-  &nbsp;||&nbsp;<a href="annotation_search_result.pl?search_text=$search_text&amp;request_from=1&amp;search_type=$search_type&amp;results_page=$last_page">Last Page &gt;</a>
+  &nbsp;||&nbsp;<a href="annotation_search_result.pl?search_text=$search_text&amp;request_from=1&amp;search_type=$search_type&amp;results_page=$last_page">$last_page_label &gt;</a>
   </td></tr>
   </table>
 
@@ -373,13 +392,15 @@ EOH
 
 #beautify for screen
 if ($total_matches <= $nr_to_show){
-    $nr_show_to_print="Showing <b>all</b> matches";
+    $nr_show_to_print = $render_i18n_html->(($i18n ? $i18n->p("global.annotation_search_result.showing_all", "Showing %{all} matches", {all => "__SGN_UI_ALL__"}) : "Showing __SGN_UI_ALL__ matches"), {"__SGN_UI_ALL__" => '<b>' . encode_entities(($i18n ? $i18n->p("global.safe_caption.all", "all") : "all")) . '</b>'});
 }
 elsif ($end_at < 0){
-    $nr_show_to_print = "Showing last <b>" . ($total_matches - $start_at) . "</b> matches";
+    my $count = $total_matches - $start_at;
+    $nr_show_to_print = $render_i18n_html->(($i18n ? $i18n->p("global.annotation_search_result.showing_last", "Showing last %{count} matches", {count => "__SGN_UI_COUNT__"}) : "Showing last __SGN_UI_COUNT__ matches"), {"__SGN_UI_COUNT__" => '<b>' . encode_entities($count) . '</b>'});
 }
 else {
-    $nr_show_to_print= "Showing matches <b>" .($start_at + 1) ."</b> to <b>" . ($end_at) . "</b>";
+    my $start_display = $start_at + 1;
+    $nr_show_to_print = $render_i18n_html->(($i18n ? $i18n->p("global.annotation_search_result.showing_range", "Showing matches %{start} to %{end}", {start => "__SGN_UI_START__", end => "__SGN_UI_END__"}) : "Showing matches __SGN_UI_START__ to __SGN_UI_END__"), {"__SGN_UI_START__" => '<b>' . encode_entities($start_display) . '</b>', "__SGN_UI_END__" => '<b>' . encode_entities($end_at) . '</b>'});
 }
 
 
@@ -418,14 +439,15 @@ foreach my $match (@matches){
 	$_ or next;
 	$match_text =~ s/($_)/\<span class="hilite"\>$1\<\/span\>/ig;
     }
+    my $relevance = $i18n ? encode_entities($i18n->p('global.annotation_search_result.text_match_relevance', 'Text Match Relevance: %{score}', { score => $score })) : "Text Match Relevance: $score";
     my $web_format="
 	<tr><td bgcolor=\"$desc_colour\">$$match[1]</td>
-	<td align=\"right\" bgcolor=\"$desc_colour\">Text Match Relevance: $score</td></tr>
+	<td align=\"right\" bgcolor=\"$desc_colour\">$relevance</td></tr>
         <tr><td colspan=\"2\">$match_text</td></tr>";
 
     if (@unigene_info){
 	$web_format .= <<EOH;
-<tr><td colspan="2" align="left" nowrap="nowrap"><br />Unigenes containing this annotation:</td></tr>
+<tr><td colspan="2" align="left" nowrap="nowrap"><br />$unigenes_containing_label</td></tr>
 <tr><td colspan="2" align="left" nowrap="nowrap">
 <table align="left" cellspacing="2" cellpadding="0" border="0">
 EOH
@@ -441,12 +463,14 @@ EOH
 
 #show only a set nr of matches, add link to "Show More" if exceeded
 	    if($display_count >= $unig_display_nr){
+                my $showing_top = encode_entities($i18n ? $i18n->p('global.annotation_search_result.showing_top', 'Showing only top %{shown} of %{total}.', { shown => $unig_display_nr, total => $nr_unigenes }) : "Showing only top $unig_display_nr of $nr_unigenes.");
+                my $show_all_link = encode_entities($i18n ? $i18n->p('global.annotation_search_result.show_all_link', 'Show All') : 'Show All');
 		$web_format .= <<EOH;
                 <tr><td></td><td colspan="3">...</td></tr>
                 <tr><td></td><td colspan="3"></td></tr>
                 <tr><td></td><td align="left" colspan="3" style="white-space: nowrap">
-                Showing only top $unig_display_nr of $nr_unigenes.&nbsp;
-                [<a href="$show_all_unig_link?match_id=$annot_link_id&amp;search_type=$search_type" target="All_Unigenes">Show All</a>]
+                $showing_top.&nbsp;
+                [<a href="$show_all_unig_link?match_id=$annot_link_id&amp;search_type=$search_type" target="All_Unigenes">$show_all_link</a>]
                 </td></tr>
 EOH
 		last;
@@ -458,7 +482,8 @@ EOH
 	$web_format .="</table></td></tr>";	
     }
     else{
-	$web_format .= qq|<tr><td colspan="2" align="left" style="white-space: nowrap"><br />No unigenes contain this annotation</td></tr>|
+        my $no_unigenes = encode_entities($i18n ? $i18n->p('global.annotation_search_result.no_unigenes_contain', 'No unigenes contain this annotation') : 'No unigenes contain this annotation');
+	$web_format .= qq|<tr><td colspan="2" align="left" style="white-space: nowrap"><br />$no_unigenes</td></tr>|
 	}
 
     $web_format .= qq|<tr><td colspan="2">&nbsp;</td></tr>|;
@@ -469,9 +494,10 @@ EOH
 #start printing the page
 $page->header();
 
+my $search_summary = $render_i18n_html->(($i18n ? $i18n->p("global.annotation_search_result.search_summary", "Your search for %{term} in %{type} returned %{total} results", {term => "__SGN_UI_TERM__", type => "__SGN_UI_TYPE__", total => "__SGN_UI_TOTAL__"}) : "Your search for __SGN_UI_TERM__ in __SGN_UI_TYPE__ returned __SGN_UI_TOTAL__ results"), {"__SGN_UI_TERM__" => '<b>' . $search_text . '</b>', "__SGN_UI_TYPE__" => '<b>' . encode_entities($search_type_print) . '</b>', "__SGN_UI_TOTAL__" => '<b>' . $total_matches . '</b>'});
 print<<EOF
     <table align="center" cellspacing="0" cellpadding="2" border="0" width="100%">
-    <tr><td colspan="2" align="center" bgcolor="#EEEEEE">Your search for <b>$search_text</b> in <b>$search_type_print</b> returned <b>$total_matches</b> results</td></tr>
+    <tr><td colspan="2" align="center" bgcolor="#EEEEEE">$search_summary</td></tr>
     <tr><td colspan="2" align="center" bgcolor="#EEEEEE">$nr_show_to_print</td></tr>
     $pagination_print
     <tr><td colspan="2" bgcolor="#FFFFFF"><br /></td></tr>
@@ -489,14 +515,23 @@ $page->footer();
 
 
 sub no_matches {
+    my SGN::I18N $cgi_annotation_search_result_no_matches_i18n = eval { $c && $c->i18n };
+    my $render_i18n_html = sub {
+    my ($message, $slots) = @_;
+    my $html = encode_entities($message);
+    # One substitution pass: inserted data cannot become another markup slot.
+    $html =~ s/(__SGN_UI_[A-Z0-9_]+__)/exists $slots->{$1} ? $slots->{$1} : $1/ge;
+    return $html;
+};
+
   my ($search_text) = @_;
 
   $page->header();
 
+  my $no_match_message = $render_i18n_html->(($cgi_annotation_search_result_no_matches_i18n ? $cgi_annotation_search_result_no_matches_i18n->p("global.annotation_search_result.no_match_note", "Your search for %{term} did not find any relevant matches in our database. %{note} Keywords of less than 4 letters or those that occur in more than half the data are ignored by the search.", {term => "__SGN_UI_TERM__", note => "__SGN_UI_NOTE__"}) : "Your search for __SGN_UI_TERM__ did not find any relevant matches in our database. __SGN_UI_NOTE__ Keywords of less than 4 letters or those that occur in more than half the data are ignored by the search."), {"__SGN_UI_TERM__" => '<b>' . $search_text . '</b>', "__SGN_UI_NOTE__" => '<br /><br /><b>' . encode_entities(($cgi_annotation_search_result_no_matches_i18n ? $cgi_annotation_search_result_no_matches_i18n->p("global.safe_caption.note", "Note:") : "Note:")) . '</b>'});
   print <<EOF;
 
-  <p>Your search for <b>$search_text</b> did not find any relevant matches in our database.<br /><br />
-<b>Note:</b> Keywords of less than 4 letters or those that occur in more than half the data are ignored by the search.
+  <p>$no_match_message
 <br /><br />
 EOF
 
@@ -507,12 +542,15 @@ EOF
 
 
 sub null_request {
+    my SGN::I18N $cgi_annotation_search_result_null_request_i18n = eval { $c && $c->i18n };
+
 
   $page->header();
 
+  my $search_prompt = encode_entities($cgi_annotation_search_result_null_request_i18n ? $cgi_annotation_search_result_null_request_i18n->p('global.annotation_search_result.search_prompt', 'Please enter a search word or phrase and select the annotation type you want to search.') : 'Please enter a search word or phrase and select the annotation type you want to search.');
   print <<EOF;
 
-  <p><b>Please enter a search word or phrase and select the annotation type you want to search.</b>
+  <p><b>$search_prompt</b>
 
 EOF
 

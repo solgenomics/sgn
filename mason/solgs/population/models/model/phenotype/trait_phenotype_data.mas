@@ -24,8 +24,8 @@ $model_pheno_raw_descriptive_stat =>''
 
 <div id="tabs_phenotype" style="width:100%;height:100%;border-color:green;">
   <ul>
-    <li> <a href="#tabs_means_histogram">Accession phenotype means data distribution</a> </li>
-     <li> <a href="#tabs_raw_histogram">Raw phenotype data distribution</a> </li>
+    <li> <a href="#tabs_means_histogram"><% $c->i18n->p("solgs.interface.accession_phenotype_means_data_distribution", "Accession phenotype means data distribution") |h %></a> </li>
+     <li> <a href="#tabs_raw_histogram"><% $c->i18n->p("solgs.interface.raw_phenotype_data_distribution", "Raw phenotype data distribution") |h %></a> </li>
   </ul>
 
   <div id="tabs_raw_histogram">

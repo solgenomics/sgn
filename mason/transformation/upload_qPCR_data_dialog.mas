@@ -9,41 +9,41 @@ $vector_name
     <div class="modal-dialog modal-lg" role="document">
         <div class="modal-content">
             <div class="modal-header">
-                <button type="reset" class="close" id="upload_qPCR_data_dismiss_button_1" name="upload_qPCR_data_dismiss_button" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                <h4 class="modal-title" id="uploadqPCRDataDialog">Upload qPCR Data (Cq values)</h4>
+                <button type="reset" class="close" id="upload_qPCR_data_dismiss_button_1" name="upload_qPCR_data_dismiss_button" aria-label="<% $c->i18n->p("global.dataset_publish.close", "Close") |h %>"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="uploadqPCRDataDialog"><% $c->i18n->p("transformation.upload_qpcr_data_cq_values", "Upload qPCR Data (Cq values)") |h %></h4>
             </div>
             <div class="modal-body">
                 <div class="container-fluid">
                     <center>
-                        <&| /page/explanation.mas, title=>'Template Information' &>
+                        <&| /page/explanation.mas, title=>$c->i18n->p("cross.ui.template_information.bf8c643", 'Template Information') &>
                             <p>
-                                <b>File format information</b>
+                                <b><% $c->i18n->p("accessions.dialog.file_format", "File format information") |h %></b>
                                 <br>
-                                <a id="Cq_values_upload_spreadsheet_format_info">Spreadsheet Format</a>
+                                <a id="Cq_values_upload_spreadsheet_format_info"><% $c->i18n->p("cross.ui.spreadsheet_format.f1285ec", "Spreadsheet Format") |h %></a>
                             </p>
                         </&>
                     </center>
                     <form class="form-horizontal" role="form" method="post" enctype="multipart/form-data" encoding="multipart/form-data" id="upload_qPCR_data_form" name="upload_qPCR_data_form">
                         <div class="form-group">
-                            <label class="col-sm-4 control-label">Tissue Type: </label>
+                            <label class="col-sm-4 control-label"><% $c->i18n->p("transformation.tissue_type", "Tissue Type:") |h %> </label>
                             <div class="col-sm-8" >
                                 <div id="qPCR_tissue_type_div"></div>
                             </div>
                         </div>
                         <div class="form-group">
-                            <label class="col-sm-4 control-label">Endogenous Control: </label>
+                            <label class="col-sm-4 control-label"><% $c->i18n->p("transformation.endogenous_control", "Endogenous Control:") |h %> </label>
                             <div class="col-sm-8" >
                                 <div id="qPCR_endogenous_control_div"></div>
                             </div>
                         </div>
                         <div class="form-group">
-                            <label class="col-sm-4 control-label" >Assay Date: </label>
+                            <label class="col-sm-4 control-label" ><% $c->i18n->p("transformation.assay_date", "Assay Date:") |h %> </label>
                             <div class="col-sm-8">
                                 <input class="form-control" id="assay_date" name="assay_date" title="assay_date" type="text" />
                             </div>
                         </div>
                         <div class="form-group">
-                            <label class="col-sm-4 control-label">Normalization Method: </label>
+                            <label class="col-sm-4 control-label"><% $c->i18n->p("transformation.normalization_method", "Normalization Method:") |h %> </label>
                             <div class="col-sm-8" >
                                 <div id="qPCR_normalization_methods_div"></div>
                             </div>
@@ -51,13 +51,13 @@ $vector_name
                         <div id="normalization_method_description_div">
                         </div>
                         <div class="form-group">
-                            <label class="col-sm-4 control-label">Notes:</label>
+                            <label class="col-sm-4 control-label"><% $c->i18n->p("seedlots.ui.notes", "Notes:") |h %></label>
                             <div class="col-sm-8">
                                 <textarea class="form-control" id="qPCR_notes" name="qPCR_notes" ></textarea>
                             </div>
                         </div>
                         <div class="form-group">
-                            <label class="col-sm-4 control-label">Upload File (Cq values): </label>
+                            <label class="col-sm-4 control-label"><% $c->i18n->p("transformation.upload_file_cq_values", "Upload File (Cq values):") |h %> </label>
                             <div class="col-sm-8" >
                                 <input type="file" name="Cq_qPCR_data_file" id="Cq_qPCR_data_file" encoding="multipart/form-data" />
                                 <input name="qPCR_data_vector_id" id="qPCR_data_vector_id" type="hidden" value="<% $vector_id %>">
@@ -68,8 +68,8 @@ $vector_name
                 </div>
             </div>
             <div class="modal-footer">
-                <button id="upload_qPCR_data_dismiss_button_2" name="upload_qPCR_data_dismiss_button" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-                <button type="button" class="btn btn-primary" name="upload_qPCR_data_submit" id="upload_qPCR_data_submit">Upload</button>
+                <button id="upload_qPCR_data_dismiss_button_2" name="upload_qPCR_data_dismiss_button" type="button" class="btn btn-default" data-dismiss="modal"><% $c->i18n->p("global.dataset_publish.close", "Close") |h %></button>
+                <button type="button" class="btn btn-primary" name="upload_qPCR_data_submit" id="upload_qPCR_data_submit"><% $c->i18n->p("global.dataset_publish.action.upload", "Upload") |h %></button>
             </div>
         </div>
     </div>
@@ -79,19 +79,19 @@ $vector_name
     <div class="modal-dialog" role="document">
         <div class="modal-content">
             <div class="modal-header">
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                <h4 class="modal-title" id="qPCRDataSavedDialog">Success</h4>
+                <button type="button" class="close" data-dismiss="modal" aria-label="<% $c->i18n->p("global.dataset_publish.close", "Close") |h %>"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="qPCRDataSavedDialog"><% $c->i18n->p("cross.ui.success", "Success") |h %></h4>
             </div>
             <div class="modal-body">
                 <div class="container-fluid">
                     <p>
                         <span class="ui-icon ui-icon-circle-check" style="float: left; margin: 0 7px 50px 0;"></span>
-                        The qPCR data were saved successfully.
+                        <% $c->i18n->p("transformation.the_qpcr_data_were_saved_successfully", "The qPCR data were saved successfully.") |h %>
                     </p>
                 </div>
             </div>
             <div class="modal-footer">
-                <button id="dismiss_qPCR_data_saved_dialog" type="button" class="btn btn-default" data-dismiss="modal">Close & Reload</button>
+                <button id="dismiss_qPCR_data_saved_dialog" type="button" class="btn btn-default" data-dismiss="modal"><% $c->i18n->p("seedlots.ui.close_reload", "Close & Reload") |h %></button>
             </div>
         </div>
     </div>
@@ -101,8 +101,8 @@ $vector_name
     <div class="modal-dialog modal-lg" role="document">
         <div class="modal-content">
             <div class="modal-header">
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                <h4 class="modal-title" id="uploadqPCRDataErrorDialog">Upload qPCR Data Error</h4>
+                <button type="button" class="close" data-dismiss="modal" aria-label="<% $c->i18n->p("global.dataset_publish.close", "Close") |h %>"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="uploadqPCRDataErrorDialog"><% $c->i18n->p("transformation.upload_qpcr_data_error", "Upload qPCR Data Error") |h %></h4>
             </div>
             <div class="modal-body">
                 <div class="container-fluid">
@@ -112,7 +112,7 @@ $vector_name
                 </div>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-default" data-dismiss="modal"><% $c->i18n->p("global.dataset_publish.close", "Close") |h %></button>
             </div>
         </div>
     </div>
@@ -122,14 +122,14 @@ $vector_name
     <div class="modal-dialog modal-xl" role="document">
         <div class="modal-content">
             <div class="modal-header" style="text-align: center">
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                <h4 class="modal-title" id="uploadCQqPCRDataInfoDialog">Upload Template Information For qPCR Data (Cq values)</h4>
+                <button type="button" class="close" data-dismiss="modal" aria-label="<% $c->i18n->p("global.dataset_publish.close", "Close") |h %>"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="uploadCQqPCRDataInfoDialog"><% $c->i18n->p("transformation.upload_template_information_for_qpcr_data_cq_values", "Upload Template Information For qPCR Data (Cq values)") |h %></h4>
             </div>
             <div class="modal-body">
                 <div class="container-fluid">
-                    <b>Header:</b>
+                    <b><% $c->i18n->p("accessions.template.header", "Header:") |h %></b>
                     <br>
-                    The first row (header) should contain the following:
+                    <% $c->i18n->p("cross.ui.the_first_row_header_should_contain_the_following", "The first row (header) should contain the following:") |h %>
                     <br />
                     <table class="table table-hover table-bordered table-condensed" >
                         <thead></thead>
@@ -143,16 +143,16 @@ $vector_name
                         </tbody>
                     </table>
                     <br>
-                    <b>Required fields:</b>
+                    <b><% $c->i18n->p("cross.ui.required_fields", "Required fields:") |h %></b>
                     <ul>
-                        <li>accession_name (must exist in the database)</li>
-                        <li>replicate_number (If there is no replicate, please indicate 1. If any sample has replicates, the derived normalized value is an average value.)</li>
-                        <li>gene (gene names in the spreadsheet must be stored in the database as genes in the vector construct or the selected endogenous control. <b>Each vector construct can be associated with more than one gene by using comma-separated values (e.g., geneA,geneB,geneC).</b>)</li>
-                        <li>Cq (must be numeric values. Cq values are used to calculate normalized values, both Cq and the derived normalized values are stored in the database. If there is no Cq value, please use ND)</li>
+                        <li><% $c->i18n->p("transformation.accession_name_must_exist_in_the_database", "accession_name (must exist in the database)") |h %></li>
+                        <li><% $c->i18n->p("transformation.replicate_number_if_there_is_no_replicate_please_indicate_1", "replicate_number (If there is no replicate, please indicate 1. If any sample has replicates, the derived normalized value is an average value.)") |h %></li>
+                        <li><% $c->i18n->p("transformation.gene_gene_names_in_the_spreadsheet_must_be_stored_in", "gene (gene names in the spreadsheet must be stored in the database as genes in the vector construct or the selected endogenous control.") |h %> <b><% $c->i18n->p("transformation.each_vector_construct_can_be_associated_with_more_than_one", "Each vector construct can be associated with more than one gene by using comma-separated values (e.g., geneA,geneB,geneC).") |h %></b>)</li>
+                        <li><% $c->i18n->p("transformation.cq_must_be_numeric_values_cq_values_are_used_to", "Cq (must be numeric values. Cq values are used to calculate normalized values, both Cq and the derived normalized values are stored in the database. If there is no Cq value, please use ND)") |h %></li>
                     </ul>
                     <br>
-                    <b>For example:</b>
-                    Cq data of an endogenous control (geneA) and two targets (geneB and geneC). Each sample has two replicates. Note: there is no need to group the same replicate together as in the sample spreadsheet.
+                    <b><% $c->i18n->p("transformation.for_example", "For example:") |h %></b>
+                    <% $c->i18n->p("transformation.cq_data_of_an_endogenous_control_genea_and_two_targets", "Cq data of an endogenous control (geneA) and two targets (geneB and geneC). Each sample has two replicates. Note: there is no need to group the same replicate together as in the sample spreadsheet.") |h %>
                     <br />
                     <table class="table table-hover table-bordered table-condensed" >
                         <thead></thead>
@@ -239,10 +239,10 @@ $vector_name
                     </table>
 
                 </div>
-                <& /help/file_upload_type.mas, type => "qPCR Data", optional_column => 0 &>
+                <& /help/file_upload_type.mas, type => $c->i18n->p("transformation.qpcr_data", "qPCR Data"), optional_column => 0 &>
             </div>
             <div class="modal-footer">
-                <button id="close_relative_expression_data_info_upload_dialog" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                <button id="close_relative_expression_data_info_upload_dialog" type="button" class="btn btn-default" data-dismiss="modal"><% $c->i18n->p("global.dataset_publish.close", "Close") |h %></button>
             </div>
         </div>
     </div>
@@ -275,7 +275,7 @@ jQuery(document).ready(function(){
         let normalization_method = ''
         normalization_method = jQuery("#qPCR_normalization_method").val();
         if (normalization_method == "CASS_Delta_Cq"){
-            jQuery('#normalization_method_description_div').html('<br/><div class="well" style="text-align: center"><p>Normalized values are calculated using the formula:<br><b>2^Cq(Endogenous Control) / 2^Cq(Target)</b>.</p></div>');
+            jQuery('#normalization_method_description_div').html(("<br/><div class=\"well\" style=\"text-align: center\"><p>" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("transformation.normalized_values_are_calculated_using_the_formula", "Normalized values are calculated using the formula:") : "Normalized values are calculated using the formula:")).html() + "<br><b>2^Cq(Endogenous Control) / 2^Cq(Target)</b>.</p></div>"));
         } else {
             jQuery('#normalization_method_description_div').html('');
         }
@@ -297,27 +297,27 @@ jQuery(document).ready(function(){
         const normalization_method = jQuery("#qPCR_normalization_method").val();
 
         if (tissue_type === ''){
-            alert("Please select a tissue type");
+            alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("transformation.please_select_a_tissue_type", "Please select a tissue type") : "Please select a tissue type"));
             return;
         }
 
         if (endogenous_control === ''){
-            alert("Please select an endogenous control");
+            alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("transformation.please_select_an_endogenous_control", "Please select an endogenous control") : "Please select an endogenous control"));
             return;
         }
 
         if (assay_date === ''){
-            alert("Please provide assay date");
+            alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("transformation.please_provide_assay_date", "Please provide assay date") : "Please provide assay date"));
             return;
         }
 
         if (normalization_method === '') {
-            alert("Please select a normalization method");
+            alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("transformation.please_select_a_normalization_method", "Please select a normalization method") : "Please select a normalization method"));
             return;
         }
 
         if (Cq_upload_file === ''){
-            alert("Please select a file");
+            alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("global.manage_file_share_dump.select_file", "Please select a file") : "Please select a file"));
             return;
         }
 

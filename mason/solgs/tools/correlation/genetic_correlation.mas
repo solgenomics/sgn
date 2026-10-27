@@ -39,15 +39,15 @@ $training_pop_name
 <& /solgs/tools/base.mas &>
 
 <& /util/import_javascript.mas, classes => ["solGS.correlation", "solGS.scatterPlot", "solGS.olsLine", "statistics.simple_statistics"] &>
-<&| /page/info_section.mas,
+<&| /page/info_section.mas, anchor_title => "Genetic correlation analysis",
       collapsible => 1,
       collapsed   => 0,
-      title       => "Genetic correlation analysis"
+      title       => HTML::Entities::encode_entities($c->i18n->p("solgs.interface.genetic_correlation_analysis", "Genetic correlation analysis"))
   &>
 
     <div class="row">
       <div class="form-group col-sm-3" id="corr_pops_select_div" style="margin-right:35px"></div>
-      <input class="btn btn-success" type="submit" value="Run correlation" id="run_genetic_correlation" />
+      <input class="btn btn-success" type="submit" value="<% $c->i18n->p("solgs.interface.run_correlation", "Run correlation") |h %>" id="run_genetic_correlation" />
     </div>
     <div id="corr_canvas">
     <& /solgs/spinner/spinner.mas &>
@@ -64,3 +64,7 @@ $training_pop_name
   </div>
 
 </&>
+
+<%once>
+use HTML::Entities ();
+</%once>

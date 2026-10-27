@@ -251,7 +251,7 @@ sub trial_details_POST  {
     }
 
     if (!%{$details}) {
-      $c->stash->{rest} = { error => "No values were edited, so no changes could be made for this trial's details." };
+      $c->stash->{rest} = { error => $c->i18n->p('trial.details.no_changes', "No values were edited, so no changes could be made for this trial's details.") };
       return;
     }
     else {
@@ -261,7 +261,7 @@ sub trial_details_POST  {
     #check privileges
     print STDERR " curator status = ".$c->user()->check_roles('curator')." and submitter status = ".$c->user()->check_roles('submitter')."\n";
     if (!($c->user()->check_roles('curator') || $c->user()->check_roles('submitter'))) {
-      $c->stash->{rest} = { error => 'You do not have the required privileges to edit trial details, trial details can only be edited by accounts with submitter or curator privileges' };
+      $c->stash->{rest} = { error => $c->i18n->p('trial.details.privileges', 'You do not have the required privileges to edit trial details, trial details can only be edited by accounts with submitter or curator privileges') };
       return;
     }
 
@@ -285,7 +285,7 @@ sub trial_details_POST  {
     if (! ( (exists($has_roles{$breeding_program_name}) && exists($has_roles{submitter})) || exists($has_roles{curator}))) {
 
 #    if (!exists($has_roles{$breeding_program_name})) {
-      $c->stash->{rest} = { error => "You need to be either a curator, or a submitter associated with breeding program $breeding_program_name to change the details of this trial." };
+      $c->stash->{rest} = { error => $c->i18n->p('trial.details.program_privileges', 'You need to be either a curator, or a submitter associated with breeding program %{program} to change the details of this trial.', { program => $breeding_program_name }) };
       return;
     }
 
@@ -881,7 +881,7 @@ sub trial_used_seedlots_upload : Chained('trial') PathPart('upload_used_seedlots
         my $dbh = $c->dbc->dbh;
         my @user_info = CXGN::Login->new($dbh)->query_from_cookie($session_id);
         if (!$user_info[0]){
-            $c->stash->{rest} = {error=>'You must be logged in to upload this seedlot info!'};
+            $c->stash->{rest} = {error=>$c->i18n->p('seedlots.trial.login_required', 'You must be logged in to upload this seedlot info!')};
             $c->detach();
         }
         $user_id = $user_info[0];
@@ -890,7 +890,7 @@ sub trial_used_seedlots_upload : Chained('trial') PathPart('upload_used_seedlots
         $user_name = $p->get_username;
     } else{
         if (!$c->user){
-            $c->stash->{rest} = {error=>'You must be logged in to upload this seedlot info!'};
+            $c->stash->{rest} = {error=>$c->i18n->p('seedlots.trial.login_required', 'You must be logged in to upload this seedlot info!')};
             $c->detach();
         }
         $user_id = $c->user()->get_object()->get_sp_person_id();
@@ -919,11 +919,11 @@ sub trial_used_seedlots_upload : Chained('trial') PathPart('upload_used_seedlots
     my $archived_filename_with_path = $uploader->archive();
     my $md5 = $uploader->get_md5($archived_filename_with_path);
     if (!$archived_filename_with_path) {
-        $c->stash->{rest} = {error => "Could not save file $upload_original_name in archive",};
+        $c->stash->{rest} = {error => $c->i18n->p('seedlots.trial.archive_failed', 'Could not save file %{filename} in archive', {filename => "$upload_original_name"}),};
         $c->detach();
     }
     unlink $upload_tempfile;
-    my $parser = CXGN::Trial::ParseUpload->new(chado_schema => $schema, filename => $archived_filename_with_path, trial_id => $trial_id, trial_stock_type => $trial_stock_type);
+    my $parser = CXGN::Trial::ParseUpload->new(chado_schema => $schema, filename => $archived_filename_with_path, trial_id => $trial_id, trial_stock_type => $trial_stock_type, i18n => $c->i18n);
     $parser->load_plugin('TrialUsedSeedlotsGeneric');
     my $parsed_data = $parser->parse();
     #print STDERR Dumper $parsed_data;
@@ -932,7 +932,7 @@ sub trial_used_seedlots_upload : Chained('trial') PathPart('upload_used_seedlots
         my $return_error = '';
         my $parse_errors;
         if (!$parser->has_parse_errors() ){
-            $c->stash->{rest} = {error_string => "Could not get parsing errors"};
+            $c->stash->{rest} = {error_string => $c->i18n->p('seedlots.trial.parse_errors_missing', 'Could not get parsing errors')};
             $c->detach();
         } else {
             $parse_errors = $parser->get_parse_errors();

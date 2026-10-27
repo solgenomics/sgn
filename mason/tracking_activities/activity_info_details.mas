@@ -31,7 +31,7 @@ $vector_id => undef
 % my @column_headers = @$activity_headers;
 % my @activity_types = @$type_select_options;
 
-<& /page/page_title.mas, title => "Tracking Activities of '$identifier_name'" &>
+<& /page/page_title.mas, title => HTML::Entities::encode_entities($c->i18n->p("transformation.root.tracking_activities_of_name", "Tracking Activities of '%{name}'", {name => "" . $identifier_name})) &>
 
 <& /util/import_javascript.mas, classes => ['jquery','jquery.dataTables'] &>
 <& /util/import_css.mas, paths => ['/documents/inc/datatables/jquery.dataTables.css'] &>
@@ -44,25 +44,25 @@ $vector_id => undef
 % }
 
 <td>
-    <a href='/breeders/trial/<%$project_id%>'><p>Go to Project Page</p></a>
+    <a href='/breeders/trial/<%$project_id%>'><p><% $c->i18n->p("transformation.root.go_to_project_page", "Go to Project Page") |h %></p></a>
 </td>
 
-<&| /page/info_section.mas, title => 'Record', collapsible => 1, collapsed => 0, subtitle => '' &>
+<&| /page/info_section.mas, anchor_title => 'Record', title => HTML::Entities::encode_entities($c->i18n->p("seedlot_overdue.ui.record", 'Record')), collapsible => 1, collapsed => 0, subtitle => '' &>
     <div class="well ">
         <form class="form-horizontal" >
             <div class="form-group">
-                <label class="col-sm-3 control-label">Material: </label>
+                <label class="col-sm-3 control-label"><% $c->i18n->p("transformation.root.material", "Material:") |h %> </label>
                 <div class="col-sm-5">
                     <input class="form-control" id="material_info" name="material_info" type="text" disabled value="<%$material_name%>">
                 </div>
             </div>
 % if (!$updated_status_type) {
             <div class="form-group">
-                <label class="col-sm-3 control-label">Input Type: </label>
+                <label class="col-sm-3 control-label"><% $c->i18n->p("transformation.root.input_type", "Input Type:") |h %> </label>
                 <div class="col-sm-5">
 % if ($type_select_options) {
                     <select id="type_select">
-                        <option value="">Please select a type</option>
+                        <option value=""><% $c->i18n->p("seedlot.please_select_a_type", "Please select a type") |h %></option>
 % foreach my $type(@$type_select_options){
                         <option value="<%$type->[0]%>"><%$type->[1]%></option>
 % }
@@ -71,32 +71,32 @@ $vector_id => undef
                 </div>
             </div>
             <div class="form-group">
-                <label class="col-sm-3 control-label">Input: </label>
+                <label class="col-sm-3 control-label"><% $c->i18n->p("transformation.root.input", "Input:") |h %> </label>
                 <div class="col-sm-5">
                     <input class="form-control" id="selected_type_input" name="selected_type_input" type="text" value="">
                 </div>
             </div>
             <div class="form-group">
-                <label class="col-sm-3 control-label">Notes:</label>
+                <label class="col-sm-3 control-label"><% $c->i18n->p("seedlots.ui.notes", "Notes:") |h %></label>
                 <div class="col-sm-5">
                     <textarea class="form-control" id="selected_type_notes" name="selected_type_notes" ></textarea>
                 </div>
             </div>
             <div class="form-group" style="display:none">
-                <label class="col-sm-3 control-label">Timestamp: </label>
+                <label class="col-sm-3 control-label"><% $c->i18n->p("lists_datasets.download.timestamp", "Timestamp:") |h %> </label>
                 <div class="col-sm-5">
                     <input class="form-control" id="record_timestamp" name="record_timestamp" type="text" disabled value="<%$timestamp%>">
                 </div>
             </div>
             <center>
-                <button id="activity_info_submit" name="activity_info_submit" class="btn btn-primary">Save</button>
+                <button id="activity_info_submit" name="activity_info_submit" class="btn btn-primary"><% $c->i18n->p("account.quick_create.save", "Save") |h %></button>
             </center>
 % }
         </form>
     </div>
 </&>
 
-<&| /page/info_section.mas, title => 'Summary', collapsible => 1, collapsed => 0, subtitle => '' &>
+<&| /page/info_section.mas, anchor_title => 'Summary', title => HTML::Entities::encode_entities($c->i18n->p("global.family.summary", 'Summary')), collapsible => 1, collapsed => 0, subtitle => '' &>
     <div class = "well well-sm">
         <div class = "panel panel-default">
             <div class = "panel-body">
@@ -116,7 +116,7 @@ $vector_id => undef
     </div>
 </&>
 
-<&| /page/info_section.mas, title => 'Activity Details', collapsible => 1, collapsed => 0, subtitle => '' &>
+<&| /page/info_section.mas, anchor_title => 'Activity Details', title => HTML::Entities::encode_entities($c->i18n->p("transformation.root.activity_details", 'Activity Details')), collapsible => 1, collapsed => 0, subtitle => '' &>
     <div class = "well well-sm">
         <div class = "panel panel-default">
             <div class = "panel-body">
@@ -140,19 +140,19 @@ $vector_id => undef
     <div class="modal-dialog" role="document">
         <div class="modal-content">
             <div class="modal-header">
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                <h4 class="modal-title" id="infoSavedDialog">Success</h4>
+                <button type="button" class="close" data-dismiss="modal" aria-label="<% $c->i18n->p("global.dataset_publish.close", "Close") |h %>"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="infoSavedDialog"><% $c->i18n->p("cross.ui.success", "Success") |h %></h4>
             </div>
             <div class="modal-body">
                 <div class="container-fluid">
                     <p>
                         <span class="ui-icon ui-icon-circle-check" style="float: left; margin: 0 7px 50px 0;"></span>
-                        New information was saved.
+                        <% $c->i18n->p("transformation.root.new_information_was_saved", "New information was saved.") |h %>
                     </p>
                 </div>
             </div>
             <div class="modal-footer">
-                <button id="dismiss_info_saved_dialog" type="button" class="btn btn-default" data-dismiss="modal">Close & Reload</button>
+                <button id="dismiss_info_saved_dialog" type="button" class="btn btn-default" data-dismiss="modal"><% $c->i18n->p("seedlots.ui.close_reload", "Close & Reload") |h %></button>
             </div>
         </div>
     </div>
@@ -164,22 +164,22 @@ $vector_id => undef
 % }
 
 
-<&| /page/info_section.mas, title=>"Update Status",  collapsible => 1, collapsed=>1 &>
+<&| /page/info_section.mas, anchor_title => "Update Status", title=>HTML::Entities::encode_entities($c->i18n->p("seedlot.update_status", "Update Status")),  collapsible => 1, collapsed=>1 &>
 % if ($user_role eq "curator" ) {
     <div class="well well-sm">
         <div class="panel panel-default">
             <div class="panel-body">
-                <button class="btn btn-sm btn-default" style="margin:3px" id ="update_status_usage_link_tracking_page" name = "update_status_usage_link">Usage Help <span class="glyphicon glyphicon-question-sign"></span></button>
+                <button class="btn btn-sm btn-default" style="margin:3px" id ="update_status_usage_link_tracking_page" name = "update_status_usage_link"><% $c->i18n->p("cross.ui.usage_help", "Usage Help") |h %> <span class="glyphicon glyphicon-question-sign"></span></button>
 % if ($updated_status_type) {
-                <button class="btn btn-sm btn-primary" style="margin:3px" id="reverse_status_link_tracking_page" name="reverse_status_link">Reverse Status</button>
+                <button class="btn btn-sm btn-primary" style="margin:3px" id="reverse_status_link_tracking_page" name="reverse_status_link"><% $c->i18n->p("transformation.reverse_status", "Reverse Status") |h %></button>
 % } else {
-                <button class="btn btn-sm btn-primary" style="margin:3px" id="update_status_link_tracking_page" name="update_status_link">Update Status</button>
+                <button class="btn btn-sm btn-primary" style="margin:3px" id="update_status_link_tracking_page" name="update_status_link"><% $c->i18n->p("seedlot.update_status", "Update Status") |h %></button>
 % }
             </div>
         </div>
     </div>
 % } else {
-    You need to be logged in or you do not have sufficient privileges to update status of this tracking identifier.
+    <% $c->i18n->p("transformation.you_need_to_be_logged_in_or_you_do_not", "You need to be logged in or you do not have sufficient privileges to update status of this tracking identifier.") |h %>
 % }
 </&>
 
@@ -229,11 +229,11 @@ jQuery(document).ready( function() {
         var notes = jQuery('#selected_type_notes').val();
 
         if (selected_type == '') {
-            alert("Please select a type");
+            alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("seedlot.please_select_a_type", "Please select a type") : "Please select a type"));
             return;
         }
         if (input == '') {
-            alert("Please provide an input");
+            alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("transformation.root.please_provide_an_input", "Please provide an input") : "Please provide an input"));
             return;
         }
 
@@ -266,7 +266,7 @@ jQuery(document).ready( function() {
             },
             error: function(response){
                 jQuery('#working_modal').modal('hide');
-                alert('An error occurred saving new information');
+                alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("transformation.root.an_error_occurred_saving_new_information", "An error occurred saving new information") : 'An error occurred saving new information'));
             }
         });
     });
@@ -281,3 +281,7 @@ jQuery(document).ready( function() {
 });
 
 </script>
+
+<%once>
+use HTML::Entities ();
+</%once>

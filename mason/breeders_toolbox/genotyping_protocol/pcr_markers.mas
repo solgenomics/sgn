@@ -5,14 +5,14 @@ $protocol_id
 <table id="pcr_protocol_markers_table" class="table table-hover table-bordered">
     <thead>
         <tr>
-            <th>Marker Name</th>
-            <th>Product Sizes</th>
-            <th>Forword Primer</th>
-            <th>Reverse Primer</th>
-            <th>Annealing Temperature</th>
-            <th>Sequence Motif</th>
-            <th>Sequence Source</th>
-            <th>Linkage Group</th>
+            <th><% $c->i18n->p('genotype.protocol.pcr_markers.marker_name', 'Marker Name') |h %></th>
+            <th><% $c->i18n->p('genotype.protocol.pcr_markers.product_sizes', 'Product Sizes') |h %></th>
+            <th><% $c->i18n->p('genotype.protocol.pcr_markers.forward_primer', 'Forword Primer') |h %></th>
+            <th><% $c->i18n->p('genotype.protocol.pcr_markers.reverse_primer', 'Reverse Primer') |h %></th>
+            <th><% $c->i18n->p('genotype.protocol.pcr_markers.annealing_temperature', 'Annealing Temperature') |h %></th>
+            <th><% $c->i18n->p('genotype.protocol.pcr_markers.sequence_motif', 'Sequence Motif') |h %></th>
+            <th><% $c->i18n->p('genotype.protocol.pcr_markers.sequence_source', 'Sequence Source') |h %></th>
+            <th><% $c->i18n->p('genotype.protocol.pcr_markers.linkage_group', 'Linkage Group') |h %></th>
         </tr>
     </thead>
     </tbody>

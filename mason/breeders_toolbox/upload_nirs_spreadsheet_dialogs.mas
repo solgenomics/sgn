@@ -10,52 +10,52 @@
     <div class="modal-content">
       <div class="modal-header">
         <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-        <h4 class="modal-title" id="addSpreadsheetNIRSDialog">Upload NIRS Spreadsheet</h4>
+        <h4 class="modal-title" id="addSpreadsheetNIRSDialog"><% $c->i18n->p("nirs.ui.upload_nirs_spreadsheet", "Upload NIRS Spreadsheet") |h %></h4>
       </div>
       <div class="modal-body">
         <div class="container-fluid">
 
-            <&| /page/explanation.mas, title=>'Template Information' &>
+            <&| /page/explanation.mas, title=>$c->i18n->p("datacollector.ui.template_info", "Template Information") &>
                 <p>
-                <b>File format information</b>
+                <b><% $c->i18n->p("datacollector.ui.format_info", "File format information") |h %></b>
                 <br>
-                <a id="phenotype_upload_spreadsheet_format_info">Spreadsheet Format</a>
+                <a id="phenotype_upload_spreadsheet_format_info"><% $c->i18n->p("nirs.upload.spreadsheet_format", "Spreadsheet Format") |h %></a>
                 </p>
             </&>
 
             <form class="form-horizontal" role="form" method="post" enctype="multipart/form-data" encoding="multipart/form-data" id="upload_spreadsheet_phenotype_file_form" name="upload_spreadsheet_phenotype_file_form">
                 <div class="form-group">
-                    <label class="col-sm-3 control-label">Spreadsheet Format: </label>
+                    <label class="col-sm-3 control-label"><% $c->i18n->p("nirs.ui.spreadsheet_format", "Spreadsheet Format: ") |h %></label>
                     <div class="col-sm-9" >
-                        <b>General upload format.</b>
+                        <b><% $c->i18n->p("nirs.ui.general_upload_format", "General upload format.") |h %></b>
                         <select class="form-control" id="upload_spreadsheet_phenotype_file_format" name="upload_spreadsheet_phenotype_file_format">
-                            <option value="scio">NIRS all formats</option>
+                            <option value="scio"><% $c->i18n->p("nirs.upload.all_formats", "NIRS all formats") |h %></option>
                             <!-- <option value="nirs">General NIRS upload</option> -->
 
                         </select>
                     </div>
                 </div>
                 <div class="form-group">
-                    <label class="col-sm-3 control-label">Timestamps Included: </label>
+                    <label class="col-sm-3 control-label"><% $c->i18n->p("nirs.ui.timestamps_included", "Timestamps Included: ") |h %></label>
                     <div class="col-sm-9" >
                         <input type="checkbox" id="upload_spreadsheet_phenotype_timestamp_checkbox" name="upload_spreadsheet_phenotype_timestamp_checkbox" />
                     </div>
                 </div>
                 <div id="upload_spreadsheet_phenotype_data_level_div">
                     <div class="form-group">
-                        <label class="col-sm-3 control-label">Data Level: </label>
+                        <label class="col-sm-3 control-label"><% $c->i18n->p("nirs.ui.data_level", "Data Level: ") |h %></label>
                         <div class="col-sm-9" >
                             <select class="form-control" id="upload_spreadsheet_phenotype_data_level" name="upload_spreadsheet_phenotype_data_level">
-                                <option value="plots">Plots</option>
-                                <option value="plants">Plants</option>
-                                <option value="subplots">Subplots</option>
-                                <option value="tissue_samples">Tissue Samples</option>
+                                <option value="plots"><% $c->i18n->p("nirs.upload.level_plots", "Plots") |h %></option>
+                                <option value="plants"><% $c->i18n->p("nirs.upload.level_plants", "Plants") |h %></option>
+                                <option value="subplots"><% $c->i18n->p("nirs.upload.level_subplots", "Subplots") |h %></option>
+                                <option value="tissue_samples"><% $c->i18n->p("nirs.upload.level_tissue_samples", "Tissue Samples") |h %></option>
                             </select>
                         </div>
                     </div>
                 </div>
                 <div class="form-group">
-                    <label class="col-sm-3 control-label">NIRS Spreadsheet: </label>
+                    <label class="col-sm-3 control-label"><% $c->i18n->p("nirs.ui.nirs_spreadsheet", "NIRS Spreadsheet: ") |h %></label>
                     <div class="col-sm-9" >
                         <input type="file" id="upload_spreadsheet_phenotype_file_input" name="upload_spreadsheet_phenotype_file_input" encoding="multipart/form-data" />
                     </div>
@@ -69,9 +69,9 @@
         </div>
 
         <div class="modal-footer">
-            <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-            <button type="button" class="btn btn-info" name="upload_spreadsheet_phenotype_submit_verify" id="upload_spreadsheet_phenotype_submit_verify">Verify</button>
-            <button disabled type="button" class="btn btn-primary" name="upload_spreadsheet_phenotype_submit_store" id="upload_spreadsheet_phenotype_submit_store" title="First Verify Your File">Store</button>
+            <button type="button" class="btn btn-default" data-dismiss="modal"><% $c->i18n->p("nirs.ui.close", "Close") |h %></button>
+            <button type="button" class="btn btn-info" name="upload_spreadsheet_phenotype_submit_verify" id="upload_spreadsheet_phenotype_submit_verify"><% $c->i18n->p("datacollector.ui.verify", "Verify") |h %></button>
+            <button disabled type="button" class="btn btn-primary" name="upload_spreadsheet_phenotype_submit_store" id="upload_spreadsheet_phenotype_submit_store" title="First Verify Your File"><% $c->i18n->p("datacollector.ui.store", "Store") |h %></button>
         </div>
 
     </div>
@@ -83,24 +83,24 @@
     <div class="modal-content">
       <div class="modal-header">
         <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-        <h4 class="modal-title" id="phenotypeUploadInfoDialog">Template Information</h4>
+        <h4 class="modal-title" id="phenotypeUploadInfoDialog"><% $c->i18n->p("datacollector.ui.template_info", "Template Information") |h %></h4>
       </div>
       <div class="modal-body">
         <div class="container-fluid">
 
-            <h5>With this model is possible to upload NIRS data just need to follow these columns</h5>
+            <h5><% $c->i18n->p("nirs.upload.spreadsheet_intro", "With this model is possible to upload NIRS data just need to follow these columns") |h %></h5>
 
-            <h3>Upload NIRS .csv:</h3>
+            <h3><% $c->i18n->p("nirs.upload.csv_heading", "Upload NIRS .csv:") |h %></h3>
 
             <ul>
-                <li><strong>id</strong>: Optional identifier for each NIRS read. The id must be an integer.</li>
-                <li><strong>sampling_id</strong>: Optional identifier for each sample. Strings are allowed.</li>
-                <li><strong>sampling_date</strong>: Optional field. The format allowed is: YYYY-MM-DD.</li>
-                <li><strong>observationunit_name</strong>: Required field that matches with existing data in the database. It can be the plot name, subplots, plant name, or tissue sample, depending how your trial is designed.</li>
-                <li><strong>device_id</strong>: Optional field to identify your device. Strings are allowed.</li>
-                <li><strong>device_type</strong>: Required field. It is possible upload data for a single device type. They can be: <strong>SCiO, QST, Foss6500,FOSSDS2500, FOSSXDS, ASDQualityspec,ASDLabSpec,SpecimFX17, BunchiN500, InnoSpectraNIR-S-G1, LinkSquare, FTIR6X, or Viavi microNIR </strong>.</li>
-                <li><strong>comments</strong>: Optional field for general comments.</li>
-                <li>All other columns are required wavelengths. You can add how many columns you want upload -- there is no limit.</li>
+                <li><strong>id</strong>: <% $c->i18n->p("nirs.upload.read_id_help", "Optional identifier for each NIRS read. The id must be an integer.") |h %></li>
+                <li><strong>sampling_id</strong>: <% $c->i18n->p("nirs.upload.sampling_id_help", "Optional identifier for each sample. Strings are allowed.") |h %></li>
+                <li><strong>sampling_date</strong>: <% $c->i18n->p("nirs.upload.sampling_date_help", "Optional field. The format allowed is: YYYY-MM-DD.") |h %></li>
+                <li><strong>observationunit_name</strong>: <% $c->i18n->p("nirs.upload.observationunit_name_help", "Required field that matches with existing data in the database. It can be the plot name, subplots, plant name, or tissue sample, depending how your trial is designed.") |h %></li>
+                <li><strong>device_id</strong>: <% $c->i18n->p("nirs.upload.device_id_help", "Optional field to identify your device. Strings are allowed.") |h %></li>
+                <li><strong>device_type</strong>: <% $c->i18n->p("nirs.upload.device_type_help", "Required field. It is possible upload data for a single device type. They can be: ") |h %><strong>SCiO, QST, Foss6500,FOSSDS2500, FOSSXDS, ASDQualityspec,ASDLabSpec,SpecimFX17, BunchiN500, InnoSpectraNIR-S-G1, LinkSquare, FTIR6X, or Viavi microNIR </strong>.</li>
+                <li><strong>comments</strong>: <% $c->i18n->p("nirs.upload.comments_help", "Optional field for general comments.") |h %></li>
+                <li><% $c->i18n->p("nirs.upload.wavelength_columns_help", "All other columns are required wavelengths. You can add how many columns you want upload -- there is no limit.") |h %></li>
             </ul>
             <table class="table table-hover table-bordered table-condensed" >
                         <thead></thead>
@@ -117,15 +117,15 @@
                         </tbody>
                     </table>
 
-            <h3>Template for Upload NIRS .csv:</h3>
+            <h3><% $c->i18n->p("nirs.upload.template_heading", "Template for Upload NIRS .csv:") |h %></h3>
             <ul>
-                <li>The observationunit_name and device_type must be valid for BreedBase.</li>
-                <li><a href="https://docs.google.com/spreadsheets/d/1Zxxwhq6Dz1PvvUEMz3Xj3gBYTkchp4tGDfgsIHDNJB8/edit?usp=sharing">Upload NIRS .csv template</a></li>
+                <li><% $c->i18n->p("nirs.upload.valid_values_help", "The observationunit_name and device_type must be valid for BreedBase.") |h %></li>
+                <li><a href="https://docs.google.com/spreadsheets/d/1Zxxwhq6Dz1PvvUEMz3Xj3gBYTkchp4tGDfgsIHDNJB8/edit?usp=sharing"><% $c->i18n->p("nirs.upload.template_link_caption", "Upload NIRS .csv template") |h %></a></li>
             </ul>
         </div>
       </div>
       <div class="modal-footer">
-        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+        <button type="button" class="btn btn-default" data-dismiss="modal"><% $c->i18n->p("global.close", "Close") |h %></button>
       </div>
     </div>
   </div>

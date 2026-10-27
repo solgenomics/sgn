@@ -11,17 +11,17 @@ $editable_stock_props_definitions => {}
 
 <& /util/import_javascript.mas, classes => [ 'bootstrap_min.js', 'jquery.iframe-post-form','CXGN.List','CXGN.BreedersToolbox.Vector'] &>
 
-<& /page/page_title.mas, title=> 'Create a New Vector' &>
+<& /page/page_title.mas, title=> HTML::Entities::encode_entities($c->i18n->p("transformation.root.create_a_new_vector", 'Create a New Vector')) &>
 
 
-<&| /page/info_section.mas, title=>"Vector details"  &>
+<&| /page/info_section.mas, anchor_title => "Vector details", title=>HTML::Entities::encode_entities($c->i18n->p("transformation.root.vector_details", "Vector details"))  &>
 
 <& /breeders_toolbox/add_vectors_dialogs.mas, preferred_species=>$preferred_species, editable_vector_props=>$editable_vector_props, editable_stock_props_definitions=>$editable_stock_props_definitions &>
 
 <div class="infosectioncontent">
 
-<p>Add new vector and details.</p>
-<div style="margin-bottom:10px"><button style="float:right" class="btn btn-default" name="add_vectors_link"> Upload Vectors</button></div>
+<p><% $c->i18n->p("transformation.root.add_new_vector_and_details", "Add new vector and details.") |h %></p>
+<div style="margin-bottom:10px"><button style="float:right" class="btn btn-default" name="add_vectors_link"> <% $c->i18n->p("transformation.root.upload_vectors", "Upload Vectors") |h %></button></div>
 <div class="row">
   <div class="col-sm-12">
 
@@ -32,82 +32,82 @@ $editable_stock_props_definitions => {}
   <form class="form-horizontal" id="newVectorForm" action="#" onsubmit="handleSubmit();return false">
 
     <div class="form-group">
-      <label class="col-sm-3 control-label">Uniquename <font color="red">*</font>
+      <label class="col-sm-3 control-label"><% $c->i18n->p("transformation.root.uniquename", "Uniquename") |h %> <font color="red">*</font>
       </label>
       <div class="col-sm-6">
-        <input type="text" class="form-control" value="" name="uniqueName" id="uniqueName" placeholder="Required"/>
+        <input type="text" class="form-control" value="" name="uniqueName" id="uniqueName" placeholder="<% $c->i18n->p("seedlot_split.ui.required", "Required") |h %>"/>
       </div>
       <input class="col-sm-1" type="checkbox" id="uniqueNameAutoCheck" name="uniqueNameAutoCheck" value="uniqueNameAutoCheck" onclick="jqueryAutoUniqueName()">
-      <label class="col-sm-2" for="uniqueNameAutoCheck"> Auto generate uniquename</label><br>
+      <label class="col-sm-2" for="uniqueNameAutoCheck"> <% $c->i18n->p("transformation.root.auto_generate_uniquename", "Auto generate uniquename") |h %></label><br>
     </div>
     <div class="form-group">
-      <label class="col-sm-3 control-label">Cloning Organism Host</label>
+      <label class="col-sm-3 control-label"><% $c->i18n->p("transformation.root.cloning_organism_host", "Cloning Organism Host") |h %></label>
       <div class="col-sm-9">
         <input type="text" class="form-control" value="" id="CloningOrganism" name="CloningOrganism">
       </div>
     </div>
     <div class="form-group">
-      <label class="col-sm-3 control-label">Strain </label>
+      <label class="col-sm-3 control-label"><% $c->i18n->p("transformation.root.strain", "Strain") |h %> </label>
       <div class="col-sm-9">
         <input type="text" class="form-control" value="" id="Strain" name="Strain">
       </div>
     </div>
     <div class="form-group">
-      <label class="col-sm-3 control-label">Backbone </label>
+      <label class="col-sm-3 control-label"><% $c->i18n->p("transformation.root.backbone", "Backbone") |h %> </label>
       <div class="col-sm-9">
         <input type="text" class="form-control" value="" id="Backbone" name="Backbone">
       </div>
     </div>
     <div class="form-group">
-      <label class="col-sm-3 control-label">Inherent Marker </label>
+      <label class="col-sm-3 control-label"><% $c->i18n->p("transformation.root.inherent_marker", "Inherent Marker") |h %> </label>
       <div class="col-sm-9">
         <input type="text" class="form-control" value="" id="InherentMarker" name="InherentMarker">
       </div>
     </div>
     <div class="form-group">
-      <label class="col-sm-3 control-label">Selection Marker </label>
+      <label class="col-sm-3 control-label"><% $c->i18n->p("transformation.root.selection_marker", "Selection Marker") |h %> </label>
       <div class="col-sm-9">
         <input type="text" class="form-control" value="" id="SelectionMarker" name="SelectionMarker">
       </div>
     </div>
     <div class="form-group">
-      <label class="col-sm-3 control-label">Host Antibiotic Resistant Marker </label>
+      <label class="col-sm-3 control-label"><% $c->i18n->p("transformation.root.host_antibiotic_resistant_marker", "Host Antibiotic Resistant Marker") |h %> </label>
       <div class="col-sm-9">
         <input type="text" class="form-control" value="" id="PlantAntibioticResistantMarker" name="PlantAntibioticResistantMarker">
       </div>
     </div>
     <div class="form-group">
-      <label class="col-sm-3 control-label">Bacterial Resistant Marker </label>
+      <label class="col-sm-3 control-label"><% $c->i18n->p("transformation.root.bacterial_resistant_marker", "Bacterial Resistant Marker") |h %> </label>
       <div class="col-sm-9">
         <input type="text" class="form-control" value="" id="BacterialResistantMarker" name="BacterialResistantMarker">
       </div>
     </div>
     <div class="form-group">
-      <label class="col-sm-3 control-label">Cassette Name </label>
+      <label class="col-sm-3 control-label"><% $c->i18n->p("transformation.root.cassette_name", "Cassette Name") |h %> </label>
       <div class="col-sm-9">
         <input type="text" class="form-control" value="" id="CassetteName" name="CassetteName">
       </div>
     </div>
     <div class="form-group">
-      <label class="col-sm-3 control-label">Gene </label>
+      <label class="col-sm-3 control-label"><% $c->i18n->p("transformation.root.gene.ef7ea42", "Gene") |h %> </label>
       <div class="col-sm-9">
         <input type="text" class="form-control" value="" id="Gene" name="Gene">
       </div>
     </div>
     <div class="form-group">
-      <label class="col-sm-3 control-label">Promotors </label>
+      <label class="col-sm-3 control-label"><% $c->i18n->p("transformation.root.promotors", "Promotors") |h %> </label>
       <div class="col-sm-9">
         <input type="text" class="form-control" value="" id="Promotors" name="Promotors">
       </div>
     </div>
     <div class="form-group">
-      <label class="col-sm-3 control-label">Terminators </label>
+      <label class="col-sm-3 control-label"><% $c->i18n->p("transformation.root.terminators", "Terminators") |h %> </label>
       <div class="col-sm-9">
         <input type="text" class="form-control" value="" id="Terminators" name="Terminators">
       </div>
     </div>
   <hr>
-  <button style="float:right" class="btn btn-primary btn-lg" id="contact_form_submit">Add new vector</button>
+  <button style="float:right" class="btn btn-primary btn-lg" id="contact_form_submit"><% $c->i18n->p("transformation.root.add_new_vector", "Add new vector") |h %></button>
   <input type="reset" value="Reset" class="btn btn-primary btn-lg" style="float:right;background-color: white; color:black" />
   <br><br>
 
@@ -143,11 +143,11 @@ function handleSubmit() {
             alert(response.error);
           } else {
             jQuery('#uniqueName').val('');
-            alert('Saved!');
+            alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("transformation.root.saved", "Saved!") : 'Saved!'));
           }
         },
         error: function(response) {
-          alert( 'An Error occured while storing vectors.');
+          alert( (window.SGN && window.SGN.i18n ? window.SGN.i18n.p("transformation.root.an_error_occured_while_storing_vectors", "An Error occured while storing vectors.") : 'An Error occured while storing vectors.'));
         }
     });
 }
@@ -172,3 +172,7 @@ function handleSubmit() {
         });
     }
 </script>
+
+<%once>
+use HTML::Entities ();
+</%once>

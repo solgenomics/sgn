@@ -3,7 +3,7 @@ package SGN::Controller::solGS::Dataset;
 use Moose;
 use namespace::autoclean;
 
-use Carp qw/ carp confess croak /;
+use Carp qw/ carp confess croak /; use SGN::I18N ();
 use CXGN::Dataset;
 use File::Slurp qw /write_file read_file :edit prepend_file/;
 use JSON;
@@ -27,11 +27,11 @@ __PACKAGE__->config(
 
 
 sub get_dataset_trials :Path('/solgs/get/dataset/trials') Args(0) {
-    my ($self, $c)  = @_;
+    my ($self, $c)  = @_; my $ui_solgs_i18n = SGN::I18N::translate($c);
 
     my $dataset_id = $c->req->param('dataset_id');
 
-    croak "Dataset id missing." if !$dataset_id;
+    croak SGN::I18N::translate($ui_solgs_i18n, "solgs.server.dataset_id_missing", "Dataset id missing.") if !$dataset_id;
 
     $c->stash->{dataset_id} = $dataset_id;
     $self->get_dataset_trials_details($c);

@@ -10,7 +10,7 @@ $editable_vector_props => undef
 
 <div class="container-fluid">
 
-<& /page/page_title.mas, title=>'Search Vectors' &>
+<& /page/page_title.mas, title=>HTML::Entities::encode_entities($c->i18n->p("transformation.root.search_vectors", 'Search Vectors')) &>
 
 
 <%perl>
@@ -36,32 +36,32 @@ my $stock_type_select = simple_selectbox_html(
 
 </%perl>
 
-<&| /page/info_section.mas, title => 'Search', collapsible=>1, collapsed=>0 &>
+<&| /page/info_section.mas, anchor_title => 'Search', title => HTML::Entities::encode_entities($c->i18n->p("global.search.advanced_search.search", 'Search')), collapsible=>1, collapsed=>0 &>
 
 <div id="stock_search_form" class="well well-sm">
 
   <div class="row">
     <div class="col-sm-11">
       <div class="form-group form-group-sm">
-        <label class="col-sm-3 control-label">Keywords: </label>
+        <label class="col-sm-3 control-label"><% $c->i18n->p("transformation.root.keywords", "Keywords:") |h %> </label>
         <div class="col-sm-5" >
           <div class="form-group form-group-sm">
             <div class="input-group">
                 <span class="input-group-btn">
-                <input class="form-control" name="any_name" id="any_name" value="" size="30" type="text" placeholder="Type search here..."/>
+                <input class="form-control" name="any_name" id="any_name" value="" size="30" type="text" placeholder="<% $c->i18n->p("shared.match.search_placeholder", "Type search here...") |h %>"/>
               </span>
             </div>
           </div>
         </div>
       </div>
       <center>
-        <button class="btn btn-primary" id="submit_stock_search_all" />Search</button>
+        <button class="btn btn-primary" id="submit_stock_search_all" /><% $c->i18n->p("global.search.advanced_search.search", "Search") |h %></button>
       </center>
     </div>
   </div>
   <br><br>
 
-  <&| /page/info_section.mas, title => 'Vector search', collapsible=>1, collapsed=>1 &>
+  <&| /page/info_section.mas, anchor_title => 'Vector search', title => HTML::Entities::encode_entities($c->i18n->p("transformation.root.vector_search", 'Vector search')), collapsible=>1, collapsed=>1 &>
 
 
   <div class="row">
@@ -69,38 +69,38 @@ my $stock_type_select = simple_selectbox_html(
       <div class="form-group form-group-sm">
         <div class="col-sm-4" >
           <div class="form-group form-group-sm">
-            <label class="col-sm-1 control-label">Gene: </label><br>
+            <label class="col-sm-1 control-label"><% $c->i18n->p("transformation.root.gene.46dbe41", "Gene:") |h %> </label><br>
             <div class="input-group">
               <span class="input-group-btn" width="30%">
-                <input class="form-control" name="any_name_gene" id="any_name_gene" value="" size="30" type="text" placeholder="Type search here..."/>
+                <input class="form-control" name="any_name_gene" id="any_name_gene" value="" size="30" type="text" placeholder="<% $c->i18n->p("shared.match.search_placeholder", "Type search here...") |h %>"/>
               </span>
             </div>
           </div>
         </div>
         <div class="col-sm-4" >
           <div class="form-group form-group-sm">
-            <label class="col-sm-1 control-label">T-number: </label><br>
+            <label class="col-sm-1 control-label"><% $c->i18n->p("transformation.root.t_number", "T-number:") |h %> </label><br>
             <div class="input-group">
               <span class="input-group-btn" width="30%">
-                <input class="form-control" name="any_name_tnumber" id="any_name_tnumber" value="" size="30" type="text" placeholder="Type search here..."/>
+                <input class="form-control" name="any_name_tnumber" id="any_name_tnumber" value="" size="30" type="text" placeholder="<% $c->i18n->p("shared.match.search_placeholder", "Type search here...") |h %>"/>
               </span>
             </div>
           </div>
         </div>
       </div>
-      <center><button class="btn btn-primary" id="submit_stock_search_simple" />Search</button>
+      <center><button class="btn btn-primary" id="submit_stock_search_simple" /><% $c->i18n->p("global.search.advanced_search.search", "Search") |h %></button>
       </center><br/><br/>
     </div>
   </div>
   </&>
 
-  <&| /page/info_section.mas, title => 'Advanced Search', collapsible=>1, collapsed=>1 &>
+  <&| /page/info_section.mas, anchor_title => 'Advanced Search', title => HTML::Entities::encode_entities($c->i18n->p("stock_search.section.advanced", 'Advanced Search')), collapsible=>1, collapsed=>1 &>
 
   <hr>
   <div class="row">
     <div class="col-sm-11">
       <div class="form-group form-group-sm">
-        <label class="col-sm-3 control-label">Search fields: </label>
+        <label class="col-sm-3 control-label"><% $c->i18n->p("transformation.root.search_fields", "Search fields:") |h %> </label>
         <div class="col-sm-5" >
           <div class="form-group">
             <div class="input-group">
@@ -114,12 +114,12 @@ my $stock_type_select = simple_selectbox_html(
           <div class="form-group">
             <div class="input-group">
               <span class="input-group-btn">
-                <input type="text" class="form-control" name="editable_stockprop_search_inputs" id="field_input_id" data-property="field" placeholder="Type to Autocomplete"/>
+                <input type="text" class="form-control" name="editable_stockprop_search_inputs" id="field_input_id" data-property="field" placeholder="<% $c->i18n->p("stock_search.autocomplete_placeholder", "Type to Autocomplete") |h %>"/>
               </span>
             </div>
           </div>
         </div>
-        <center><button class="btn btn-primary" id="submit_stock_search" />Search</button></center> <br/><br/>
+        <center><button class="btn btn-primary" id="submit_stock_search" /><% $c->i18n->p("global.search.advanced_search.search", "Search") |h %></button></center> <br/><br/>
       </div>
           </div>
         </div>
@@ -133,14 +133,14 @@ my $stock_type_select = simple_selectbox_html(
 
 <br />
 
-<&| /page/info_section.mas, title => 'Search Results', collapsible=>1, collapsed=>0 &>
+<&| /page/info_section.mas, anchor_title => 'Search Results', title => HTML::Entities::encode_entities($c->i18n->p("global.search.annotation.genes.search_results", 'Search Results')), collapsible=>1, collapsed=>0 &>
 
 <div class="well well-sm">
 
   <div class="row">
     <div class="col-sm-11">
       <div class="form-group form-group-sm">
-        <label class="col-sm-4 control-label">View Another Property: </label>
+        <label class="col-sm-4 control-label"><% $c->i18n->p("transformation.root.view_another_property", "View Another Property:") |h %> </label>
         <div class="col-sm-8" >
           <div class="form-group">
             <div class="input-group">
@@ -152,8 +152,8 @@ my $stock_type_select = simple_selectbox_html(
                 </select>
               </span>
                 <span class="input-group-btn">
-                  <button class="btn btn-primary btn-sm" id="editable_stockprop_view_column_add">Add</button>
-                  <button class="btn btn-primary btn-sm" id="editable_stockprop_view_column_remove">Remove</button>
+                  <button class="btn btn-primary btn-sm" id="editable_stockprop_view_column_add"><% $c->i18n->p("global.search_wizard.add", "Add") |h %></button>
+                  <button class="btn btn-primary btn-sm" id="editable_stockprop_view_column_remove"><% $c->i18n->p("global.dataset_publish.action.remove", "Remove") |h %></button>
               </span>
             </div>
           </div>
@@ -168,11 +168,11 @@ my $stock_type_select = simple_selectbox_html(
               <table id="stock_search_results" width="100%" class="table table-hover table-striped">
               <thead>
                 <tr>
-                  <th>Vector Name</th>
-                  <th>Stock Type</th>
-                  <th>Organism</th>
-                  <th>Synonyms</th>
-                  <th>Submitters</th>
+                  <th><% $c->i18n->p("transformation.root.vector_name", "Vector Name") |h %></th>
+                  <th><% $c->i18n->p("accession.related_stock.header.stock_type", "Stock Type") |h %></th>
+                  <th><% $c->i18n->p("global.family.organism", "Organism") |h %></th>
+                  <th><% $c->i18n->p("accession.stock.additional_info.synonyms", "Synonyms") |h %></th>
+                  <th><% $c->i18n->p("seedlots.ui.submitters", "Submitters") |h %></th>
               </tr>
               </thead>
               </table>
@@ -232,7 +232,7 @@ my $stock_type_select = simple_selectbox_html(
                 stockprop_extra_columns_view[selected_property] = 1;
                 stockprop_extra_columns_view_array.push(selected_property);
 
-                var table_header_html = '<table id="stock_search_results" class="table table-hover table-striped"><thead><tr><th>Vector Name</th><th>Stock Type</th><th>Organism</th><th>Synonyms</th><th>Submitters</th>';
+                var table_header_html = ("<table id=\"stock_search_results\" class=\"table table-hover table-striped\"><thead><tr><th>" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("transformation.root.vector_name", "Vector Name") : "Vector Name")).html() + "</th><th>" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("accession.related_stock.header.stock_type", "Stock Type") : "Stock Type")).html() + "</th><th>" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("global.family.organism", "Organism") : "Organism")).html() + "</th><th>" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("accession.stock.additional_info.synonyms", "Synonyms") : "Synonyms")).html() + "</th><th>" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("seedlots.ui.submitters", "Submitters") : "Submitters")).html() + "</th>");
                 for (var i=0; i<stockprop_extra_columns_view_array.length; i++){
                     table_header_html = table_header_html + '<th>' + stockprop_extra_columns_view_array[i] + '</th>';
                 }
@@ -254,7 +254,7 @@ my $stock_type_select = simple_selectbox_html(
                 var index = stockprop_extra_columns_view_array.indexOf(selected_property);
                 stockprop_extra_columns_view_array.splice(index, 1);
 
-                var table_header_html = '<table id="stock_search_results" class="table table-hover table-striped"><thead><tr><th>Vector Name</th><th>Stock Type</th><th>Organism</th><th>Synonyms</th><th>Submitters</th>';
+                var table_header_html = ("<table id=\"stock_search_results\" class=\"table table-hover table-striped\"><thead><tr><th>" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("transformation.root.vector_name", "Vector Name") : "Vector Name")).html() + "</th><th>" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("accession.related_stock.header.stock_type", "Stock Type") : "Stock Type")).html() + "</th><th>" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("global.family.organism", "Organism") : "Organism")).html() + "</th><th>" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("accession.stock.additional_info.synonyms", "Synonyms") : "Synonyms")).html() + "</th><th>" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("seedlots.ui.submitters", "Submitters") : "Submitters")).html() + "</th>");
                 for (var i=0; i<stockprop_extra_columns_view_array.length; i++){
                     table_header_html = table_header_html + '<th>' + stockprop_extra_columns_view_array[i] + '</th>';
                 }
@@ -301,7 +301,7 @@ my $stock_type_select = simple_selectbox_html(
                 search_vectorprop = 1;
             }
             if(!any_name && !gene_name){
-                alert("Type a valid value!",any_name);
+                alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("transformation.root.type_a_valid_value", "Type a valid value!") : "Type a valid value!"),any_name);
             }
             _load_stock_search_results(stock_type, editable_stockprops_search, stockprop_extra_columns_view, stockprop_extra_columns_view_array,any_name,'and',search_vectorprop);
         });
@@ -376,3 +376,7 @@ my $stock_type_select = simple_selectbox_html(
     }
 
 </script>
+
+<%once>
+use HTML::Entities ();
+</%once>

@@ -1,11 +1,12 @@
 <%init>
 use File::Slurp qw/slurp/;
 use strict;
+use HTML::Entities ();
 </%init>
 <%perl>
 my $url = $c->get_conf('static_datasets_url')."/images/iotw/desc.txt";
 my $path = $c->get_conf('static_datasets_path')."/images/iotw/desc.txt";
-my $IOTW = "(no image currently available)";
+my $IOTW = HTML::Entities::encode_entities($c->i18n->p('global.image_of_the_week.unavailable', '(no image currently available)'));
 eval {
  $IOTW = slurp($path);
 };
@@ -21,5 +22,5 @@ eval {
 </div>
 -->
 
-<h4>Featured Image</h4>
+<h4><% $c->i18n->p('global.image_of_the_week.heading', 'Featured Image') |h %></h4>
 <% $IOTW %>

@@ -1,0 +1,13 @@
+% if ($c->config->{i18n_enabled}) {
+<form action="/i18n/language" method="post" class="form-inline" style="padding: .5em 1em; text-align: end">
+  <label for="sgn-language"><% $c->i18n->p('language.select', 'Language') |h %></label>
+  <select id="sgn-language" name="locale" class="form-control input-sm">
+% for my $choice ($c->i18n_locale_choices) {
+% my $locale = $choice->{locale};
+    <option value="<% $locale |h %>"<% lc($locale) eq lc($c->i18n->requested_locale) ? ' selected="selected"' : '' %> lang="<% $locale |h %>" dir="auto"><% $choice->{name} |h %></option>
+% }
+  </select>
+  <input type="hidden" name="return_to" value="<% $c->req->uri->path |h %>" />
+  <button class="btn btn-default btn-sm" type="submit"><% $c->i18n->p('language.apply', 'Apply') |h %></button>
+</form>
+% }

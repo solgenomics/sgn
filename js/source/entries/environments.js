@@ -24,7 +24,7 @@ export function init(main_div) {
     }
 
     if (typeof isLoggedIn === 'function' && !isLoggedIn()) {
-        alert('You must be logged in to use Environment Stratification');
+        alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("climate.interface.login_required", "You must be logged in to use Environment Stratification") : "You must be logged in to use Environment Stratification"));
         return;
     }
 
@@ -80,7 +80,7 @@ export function init(main_div) {
                 $('#environment_stratification_tempfile').html(response.tempfile);
             },
             error: function() {
-                alert("An error occurred while preparing the dataset.");
+                alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("climate.interface.dataset_prepare_error", "An error occurred while preparing the dataset.") : "An error occurred while preparing the dataset."));
             }
         });
     });
@@ -105,7 +105,7 @@ export function init(main_div) {
                 renderTraitSummary(response.data || [], trait);
             })
             .fail(function() {
-                alert("An error occurred while reading the phenotype file.");
+                alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("climate.interface.phenotype_file_read_error", "An error occurred while reading the phenotype file.") : "An error occurred while reading the phenotype file."));
             });
     });
 
@@ -118,11 +118,11 @@ export function init(main_div) {
             return;
         }
         if (!trait) {
-            alert("Please select a trait.");
+            alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("climate.interface.trait_required", "Please select a trait.") : "Please select a trait."));
             return;
         }
         if (isNaN(alpha) || alpha <= 0 || alpha >= 1) {
-            alert("Alpha must be a number between 0 and 1.");
+            alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("climate.interface.alpha_range_error", "Alpha must be a number between 0 and 1.") : "Alpha must be a number between 0 and 1."));
             return;
         }
 
@@ -136,7 +136,7 @@ export function init(main_div) {
             },
             beforeSend: function() {
                 clearResults();
-                $('#environment_stratification_message').html('<div class="alert alert-info">Running environment stratification...</div>');
+                $('#environment_stratification_message').html('<div class="alert alert-info">' + (window.SGN && window.SGN.i18n ? SGN.i18n.p("climate.interface.analysis_running", "Running environment stratification...") : "Running environment stratification...") + '</div>');
                 if ($('#working_modal').length) {
                     $('#working_modal').modal("show");
                 }
@@ -151,7 +151,7 @@ export function init(main_div) {
                     return;
                 }
 
-                $('#environment_stratification_message').html('<div class="alert alert-success">' + htmlEscape(response.message || 'Analysis finished.') + '</div>');
+                $('#environment_stratification_message').html('<div class="alert alert-success">' + htmlEscape(response.message || (window.SGN && window.SGN.i18n ? SGN.i18n.p("climate.interface.analysis_finished", "Analysis finished.") : "Analysis finished.")) + '</div>');
                 renderResults(response);
                 renderMap(response.map_locations || []);
             },
@@ -159,7 +159,7 @@ export function init(main_div) {
                 if ($('#working_modal').length) {
                     $('#working_modal').modal("hide");
                 }
-                $('#environment_stratification_message').html('<div class="alert alert-danger">An error occurred while running environment stratification.</div>');
+                $('#environment_stratification_message').html('<div class="alert alert-danger">' + (window.SGN && window.SGN.i18n ? SGN.i18n.p("climate.interface.analysis_run_error", "An error occurred while running environment stratification.") : "An error occurred while running environment stratification.") + '</div>');
             }
         });
     });
@@ -176,11 +176,11 @@ function getDatasetId() {
     });
 
     if (selected_datasets.length < 1) {
-        alert('Please select one dataset.');
+        alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("climate.interface.select_one_dataset", "Please select one dataset.") : "Please select one dataset."));
         return false;
     }
     if (selected_datasets.length > 1) {
-        alert('Please select only one dataset.');
+        alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("climate.interface.select_only_one_dataset", "Please select only one dataset.") : "Please select only one dataset."));
         return false;
     }
     return selected_datasets[0];
@@ -284,7 +284,7 @@ function renderResults(response) {
 
 function renderMap(mapLocations) {
     if (typeof L === 'undefined') {
-        $('#environment_stratification_map_message').html('<div class="alert alert-warning">Map library is not available.</div>');
+        $('#environment_stratification_map_message').html('<div class="alert alert-warning">' + (window.SGN && window.SGN.i18n ? SGN.i18n.p("climate.interface.map_library_unavailable", "Map library is not available.") : "Map library is not available.") + '</div>');
         return;
     }
 
@@ -302,7 +302,7 @@ function renderMap(mapLocations) {
 
     if (locationsWithCoordinates.length === 0) {
         if ((mapLocations || []).length > 0) {
-            $('#environment_stratification_map_message').html('<div class="alert alert-warning">No mapped locations have latitude and longitude coordinates.</div>');
+            $('#environment_stratification_map_message').html('<div class="alert alert-warning">' + (window.SGN && window.SGN.i18n ? SGN.i18n.p("climate.interface.no_mapped_locations_with_coordinates", "No mapped locations have latitude and longitude coordinates.") : "No mapped locations have latitude and longitude coordinates.") + '</div>');
         }
         environmentStratificationMap.setView([0, 0], 2);
         return;
@@ -331,7 +331,7 @@ function renderMap(mapLocations) {
 
         marker.bindTooltip(
             '<b>' + htmlEscape(row.location) + '</b><br>' +
-            'Trial: ' + htmlEscape(row.trial || ''),
+            htmlEscape((window.SGN && window.SGN.i18n ? SGN.i18n.p("climate.interface.trial_label", "Trial:") : "Trial:")) + ' ' + htmlEscape(row.trial || ''),
             {
                 direction: 'top',
                 sticky: true,
@@ -341,9 +341,9 @@ function renderMap(mapLocations) {
 
         marker.bindPopup(
             '<b>' + htmlEscape(row.location) + '</b><br>' +
-            'Group: ' + htmlEscape(row.group_label || row.group_id) + '<br>' +
-            'Environment: ' + htmlEscape(row.environment) + '<br>' +
-            'Trial: ' + htmlEscape(row.trial || '')
+            htmlEscape((window.SGN && window.SGN.i18n ? SGN.i18n.p("climate.interface.group_label", "Group:") : "Group:")) + ' ' + htmlEscape(row.group_label || row.group_id) + '<br>' +
+            htmlEscape((window.SGN && window.SGN.i18n ? SGN.i18n.p("climate.interface.environment_label", "Environment:") : "Environment:")) + ' ' + htmlEscape(row.environment) + '<br>' +
+            htmlEscape((window.SGN && window.SGN.i18n ? SGN.i18n.p("climate.interface.trial_label", "Trial:") : "Trial:")) + ' ' + htmlEscape(row.trial || '')
         );
         marker.addTo(environmentStratificationMapMarkers);
         bounds.push([lat, lng]);
@@ -364,7 +364,7 @@ function renderMap(mapLocations) {
         var missingNames = missingCoordinates.map(function(row) { return row.location; }).filter(function(value, index, arr) {
             return value && arr.indexOf(value) === index;
         });
-        $('#environment_stratification_map_message').html('<div class="alert alert-warning">Locations without coordinates are not shown: ' + htmlEscape(missingNames.join(', ')) + '</div>');
+        $('#environment_stratification_map_message').html('<div class="alert alert-warning">' + (window.SGN && window.SGN.i18n ? SGN.i18n.p("climate.interface.locations_without_coordinates", "Locations without coordinates are not shown:") : "Locations without coordinates are not shown:") + ' ' + htmlEscape(missingNames.join(', ')) + '</div>');
     }
 }
 
@@ -388,7 +388,7 @@ function renderMapLegend(colorByGroup) {
 
     var html = '';
     groups.forEach(function(groupId) {
-        var label = groupId === 'Ungrouped' ? 'Ungrouped or statistically distinct' : groupId + ' - not statistically different';
+        var label = groupId === 'Ungrouped' ? (window.SGN && window.SGN.i18n ? SGN.i18n.p("climate.interface.ungrouped_or_statistically_distinct", "Ungrouped or statistically distinct") : "Ungrouped or statistically distinct") : groupId + ' - ' + (window.SGN && window.SGN.i18n ? SGN.i18n.p("climate.interface.not_statistically_different", "not statistically different") : "not statistically different");
         html += '<span class="environment-stratification-map-legend-item">' +
             '<span class="environment-stratification-map-swatch" style="background-color:' + htmlEscape(colorByGroup[groupId]) + '"></span>' +
             htmlEscape(label) +
@@ -403,7 +403,7 @@ function renderTable(container, tableId, rows) {
     }
 
     if (!rows || rows.length === 0) {
-        $(container).html('<p>No rows to display.</p>');
+        $(container).html('<p>' + (window.SGN && window.SGN.i18n ? SGN.i18n.p("climate.interface.no_rows_to_display", "No rows to display.") : "No rows to display.") + '</p>');
         return;
     }
 
@@ -478,13 +478,13 @@ function htmlEscape(value) {
 function downloadTableXlsx(tableId, filename) {
     var table = document.getElementById(tableId);
     if (!table) {
-        alert('No results are available to download.');
+        alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("climate.interface.no_results_are_available_to_download", "No results are available to download.") : "No results are available to download."));
         return;
     }
 
     var JSZipConstructor = getJSZipConstructor();
     if (!JSZipConstructor) {
-        alert('XLSX export library is not available.');
+        alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("climate.interface.xlsx_export_library_is_not_available", "XLSX export library is not available.") : "XLSX export library is not available."));
         return;
     }
 
@@ -498,7 +498,7 @@ function downloadTableXlsx(tableId, filename) {
     });
 
     if (rows.length === 0) {
-        alert('No results are available to download.');
+        alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("climate.interface.no_results_are_available_to_download", "No results are available to download.") : "No results are available to download."));
         return;
     }
 
@@ -531,7 +531,7 @@ function generateXlsxBlob(workbook, callback) {
     };
 
     if (typeof workbook.generate !== 'function') {
-        alert('XLSX export library is not compatible with this page.');
+        alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("climate.interface.xlsx_export_library_is_not_compatible_with_this_page", "XLSX export library is not compatible with this page.") : "XLSX export library is not compatible with this page."));
         return;
     }
 

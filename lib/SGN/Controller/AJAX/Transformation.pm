@@ -1,5 +1,7 @@
 package SGN::Controller::AJAX::Transformation;
 
+use SGN::I18N ();
+
 use Moose;
 use Data::Dumper;
 use JSON;
@@ -44,6 +46,7 @@ sub add_transformation_project : Path('/ajax/transformation/add_transformation_p
 
 sub add_transformation_project_POST :Args(0){
     my ($self, $c) = @_;
+    my SGN::I18N $ui_add_transformation_project_POST_i18n = SGN::I18N::translate($c);
     my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
     my $dbh = $c->dbc->dbh;
     my $project_name = $c->req->param('project_name');
@@ -59,7 +62,7 @@ sub add_transformation_project_POST :Args(0){
     }
 
     if (!any { $_ eq "curator" || $_ eq "submitter" } ($c->user()->roles)){
-        $c->stash->{rest} = {error =>  "you have insufficient privileges to add a transformation project." };
+        $c->stash->{rest} = {error =>  (SGN::I18N::translate($ui_add_transformation_project_POST_i18n, 'transformation.helper.you_have_insufficient_privileges_to_add_a_transformation_project', 'you have insufficient privileges to add a transformation project.'))};
         return;
     }
 
@@ -69,7 +72,7 @@ sub add_transformation_project_POST :Args(0){
     map { $has_roles{$_} = 1; } @user_roles;
 
     if (! ( (exists($has_roles{$program_name}) && exists($has_roles{submitter})) || exists($has_roles{curator}))) {
-        $c->stash->{rest} = { error => "You need to be either a curator, or a submitter associated with breeding program $program_name to add new transformation project." };
+        $c->stash->{rest} = { error => (SGN::I18N::translate($ui_add_transformation_project_POST_i18n, 'transformation.helper.you_need_to_be_either_a_curator_or_a_submitter_associated_with_breed.c1ec515', 'You need to be either a curator, or a submitter associated with breeding program %{program_name} to add new transformation project.', {program_name => ("" . ("$program_name"))}))};
         return;
     }
 
@@ -78,7 +81,7 @@ sub add_transformation_project_POST :Args(0){
     my $geolocation_lookup = CXGN::Location::LocationLookup->new(schema =>$schema);
        $geolocation_lookup->set_location_name($location);
        if(!$geolocation_lookup->get_geolocation()){
-           $c->stash->{rest}={error => "Location not found"};
+           $c->stash->{rest}={error => (SGN::I18N::translate($ui_add_transformation_project_POST_i18n, 'cross.server.location_not_found', 'Location not found'))};
            return;
        }
 
@@ -101,7 +104,7 @@ sub add_transformation_project_POST :Args(0){
     };
 
     if (!$return){
-        $c->stash->{rest} = {error => "Error saving project",};
+        $c->stash->{rest} = {error => (SGN::I18N::translate($ui_add_transformation_project_POST_i18n, 'seedlot.server.error_saving_project', 'Error saving project')),};
         return;
     }
 
@@ -138,7 +141,7 @@ sub add_transformation_project_POST :Args(0){
 
         my $return = $add_tracking_project->save_activity_project();
         if (!$return){
-            $c->stash->{rest} = {error => "Error saving project",};
+            $c->stash->{rest} = {error => (SGN::I18N::translate($ui_add_transformation_project_POST_i18n, 'seedlot.server.error_saving_project', 'Error saving project')),};
             return;
         }
 
@@ -158,6 +161,7 @@ sub add_transformation_identifier : Path('/ajax/transformation/add_transformatio
 
 sub add_transformation_identifier_POST :Args(0){
     my ($self, $c) = @_;
+    my SGN::I18N $ui_add_transformation_identifier_POST_i18n = SGN::I18N::translate($c);
     my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema");
     my $dbh = $c->dbc->dbh;
     my $transformation_identifier = $c->req->param('transformation_identifier');
@@ -175,7 +179,7 @@ sub add_transformation_identifier_POST :Args(0){
     }
 
     if (!any { $_ eq "curator" || $_ eq "submitter" } ($c->user()->roles)){
-        $c->stash->{rest} = {error =>  "you have insufficient privileges to add a transformation ID." };
+        $c->stash->{rest} = {error =>  (SGN::I18N::translate($ui_add_transformation_identifier_POST_i18n, 'transformation.helper.you_have_insufficient_privileges_to_add_a_transformation_id', 'you have insufficient privileges to add a transformation ID.'))};
         return;
     }
 
@@ -184,7 +188,7 @@ sub add_transformation_identifier_POST :Args(0){
     map { $has_roles{$_} = 1; } @user_roles;
 
     if (! ( (exists($has_roles{$program_name}) && exists($has_roles{submitter})) || exists($has_roles{curator}))) {
-        $c->stash->{rest} = { error => "You need to be either a curator, or a submitter associated with breeding program $program_name to add transformation identifiers." };
+        $c->stash->{rest} = { error => (SGN::I18N::translate($ui_add_transformation_identifier_POST_i18n, 'transformation.helper.you_need_to_be_either_a_curator_or_a_submitter_associated_with_breed.e80a02f', 'You need to be either a curator, or a submitter associated with breeding program %{program_name} to add transformation identifiers.', {program_name => ("" . ("$program_name"))}))};
         return;
     }
 
@@ -195,17 +199,17 @@ sub add_transformation_identifier_POST :Args(0){
     my $vector_construct_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema,'vector_construct', 'stock_type')->cvterm_id();
 
     if ($schema->resultset("Stock::Stock")->find({uniquename => $transformation_identifier})){
-        $c->stash->{rest} = {error =>  "Transformation ID already exists. Please use another name" };
+        $c->stash->{rest} = {error =>  (SGN::I18N::translate($ui_add_transformation_identifier_POST_i18n, 'transformation.helper.transformation_id_already_exists_please_use_another_name', 'Transformation ID already exists. Please use another name'))};
         return;
     }
 
     if (! $schema->resultset("Stock::Stock")->find({uniquename => $plant_material, type_id => $accession_cvterm_id })){
-        $c->stash->{rest} = {error =>  "Plant material does not exist or does not exist as accession uniquename." };
+        $c->stash->{rest} = {error =>  (SGN::I18N::translate($ui_add_transformation_identifier_POST_i18n, 'transformation.helper.plant_material_does_not_exist_or_does_not_exist_as_accession_uniquen', 'Plant material does not exist or does not exist as accession uniquename.'))};
         return;
     }
 
     if (! $schema->resultset("Stock::Stock")->find({uniquename => $vector_construct, type_id => $vector_construct_cvterm_id })){
-        $c->stash->{rest} = {error =>  "vector construct does not exist or does not exist as vector construct uniquename." };
+        $c->stash->{rest} = {error =>  (SGN::I18N::translate($ui_add_transformation_identifier_POST_i18n, 'transformation.helper.vector_construct_does_not_exist_or_does_not_exist_as_vector_construc', 'vector construct does not exist or does not exist as vector construct uniquename.'))};
         return;
     }
 
@@ -253,7 +257,7 @@ sub add_transformation_identifier_POST :Args(0){
 
         my $return = $tracking_obj->store();
         if (!$return){
-            $c->stash->{rest} = {error => "Error generating tracking identifier",};
+            $c->stash->{rest} = {error => (SGN::I18N::translate($ui_add_transformation_identifier_POST_i18n, 'transformation.helper.error_generating_tracking_identifier', 'Error generating tracking identifier')),};
             return;
         } elsif ($return->{error}) {
             my $error = $return->{error};
@@ -272,6 +276,7 @@ sub upload_transformation_identifiers : Path('/ajax/transformation/upload_transf
 sub upload_transformation_identifiers_POST : Args(0) {
     my $self = shift;
     my $c = shift;
+    my SGN::I18N $ui_upload_transformation_identifiers_POST_i18n = SGN::I18N::translate($c);
     my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema");
     my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema");
     my $dbh = $c->dbc->dbh;
@@ -301,7 +306,7 @@ sub upload_transformation_identifiers_POST : Args(0) {
         my $dbh = $c->dbc->dbh;
         my @user_info = CXGN::Login->new($dbh)->query_from_cookie($session_id);
         if (!$user_info[0]){
-            $c->stash->{rest} = {error=>'You must be logged in to upload transformation identifiers!'};
+            $c->stash->{rest} = {error=>(SGN::I18N::translate($ui_upload_transformation_identifiers_POST_i18n, 'transformation.helper.you_must_be_logged_in_to_upload_transformation_identifers', 'You must be logged in to upload transformation identifiers!'))};
             $c->detach();
         }
         $user_id = $user_info[0];
@@ -310,7 +315,7 @@ sub upload_transformation_identifiers_POST : Args(0) {
         $user_name = $p->get_username;
     } else {
         if (!$c->user){
-            $c->stash->{rest} = {error=>'You must be logged in to upload transformation identifiers!'};
+            $c->stash->{rest} = {error=>(SGN::I18N::translate($ui_upload_transformation_identifiers_POST_i18n, 'transformation.helper.you_must_be_logged_in_to_upload_transformation_identifiers', 'You must be logged in to upload transformation identifiers!'))};
             $c->detach();
         }
         $user_id = $c->user()->get_object()->get_sp_person_id();
@@ -319,7 +324,7 @@ sub upload_transformation_identifiers_POST : Args(0) {
     }
 
     if (($user_role ne 'curator') && ($user_role ne 'submitter')) {
-        $c->stash->{rest} = {error=>'Only a submitter or a curator can upload transformation identifiers'};
+        $c->stash->{rest} = {error=>(SGN::I18N::translate($ui_upload_transformation_identifiers_POST_i18n, 'transformation.helper.only_a_submitter_or_a_curator_can_upload_transformation_identifiers', 'Only a submitter or a curator can upload transformation identifiers'))};
         $c->detach();
     }
 
@@ -335,7 +340,7 @@ sub upload_transformation_identifiers_POST : Args(0) {
     map { $has_roles{$_} = 1; } @user_roles;
 
     if (! ( (exists($has_roles{$breeding_program_name}) && exists($has_roles{submitter})) || exists($has_roles{curator}))) {
-      $c->stash->{rest} = { error => "You need to be either a curator, or a submitter associated with breeding program $breeding_program_name to upload transformation identifiers." };
+      $c->stash->{rest} = { error => (SGN::I18N::translate($ui_upload_transformation_identifiers_POST_i18n, 'transformation.helper.you_need_to_be_either_a_curator_or_a_submitter_associated_with_breed.0c75877', 'You need to be either a curator, or a submitter associated with breeding program %{breeding_program_name} to upload transformation identifiers.', {breeding_program_name => ("" . ("$breeding_program_name"))}))};
       return;
     }
 
@@ -354,14 +359,14 @@ sub upload_transformation_identifiers_POST : Args(0) {
     $archived_filename_with_path = $uploader->archive();
     $md5 = $uploader->get_md5($archived_filename_with_path);
     if (!$archived_filename_with_path) {
-        $c->stash->{rest} = {error => "Could not save file $upload_original_name in archive",};
+        $c->stash->{rest} = {error => (SGN::I18N::translate($ui_upload_transformation_identifiers_POST_i18n, 'accession.rename_server.archive', 'Could not save file %{upload_original_name} in archive', {upload_original_name => ("" . ("$upload_original_name"))})),};
         return;
     }
     unlink $upload_tempfile;
 
     #parse uploaded file with appropriate plugin
     my @stock_props = ('transformation_notes');
-    $parser = CXGN::Stock::ParseUpload->new(chado_schema => $schema, filename => $archived_filename_with_path, editable_stock_props=>\@stock_props);
+    $parser = CXGN::Stock::ParseUpload->new(i18n => $ui_upload_transformation_identifiers_POST_i18n, chado_schema => $schema, filename => $archived_filename_with_path, editable_stock_props=>\@stock_props);
 
     $parser->load_plugin('TransformationIdentifiersGeneric');
     $parsed_data = $parser->parse();
@@ -370,7 +375,7 @@ sub upload_transformation_identifiers_POST : Args(0) {
         my $return_error = '';
         my $parse_errors;
         if (!$parser->has_parse_errors() ){
-            $c->stash->{rest} = {error_string => "Could not get parsing errors"};
+            $c->stash->{rest} = {error_string => (SGN::I18N::translate($ui_upload_transformation_identifiers_POST_i18n, 'accessions.server.parse_errors_missing', 'Could not get parsing errors'))};
         } else {
             $parse_errors = $parser->get_parse_errors();
             #print STDERR Dumper $parse_errors;
@@ -453,6 +458,7 @@ sub get_active_transformations_in_project :Path('/ajax/transformation/active_tra
 sub get_inactive_transformation_ids_in_project :Path('/ajax/transformation/inactive_transformation_ids_in_project') :Args(1) {
     my $self = shift;
     my $c = shift;
+    my SGN::I18N $ui_get_inactive_transformation_ids_in_project_i18n = SGN::I18N::translate($c);
     my $project_id = shift;
     my $schema = $c->dbic_schema("Bio::Chado::Schema");
     my $dbh = $c->dbc->dbh;
@@ -466,9 +472,9 @@ sub get_inactive_transformation_ids_in_project :Path('/ajax/transformation/inact
         my ($transformation_id, $transformation_name, $plant_id, $plant_name, $vector_id, $vector_name, $notes, $is_a_control, $control_id, $control_name, $status_type) =@$r;
 
         if ($status_type eq 'terminated_metadata') {
-            $status_type = '<span style="color:red">'.'TERMINATED'.'</span>';
+            $status_type = '<span style="color:red">'.(SGN::I18N::translate($ui_get_inactive_transformation_ids_in_project_i18n, 'transformation.helper.terminated', 'TERMINATED')).'</span>';
         } elsif ($status_type eq 'completed_metadata') {
-            $status_type = '<span style="color:red">'.'COMPLETED'.'</span>';
+            $status_type = '<span style="color:red">'.(SGN::I18N::translate($ui_get_inactive_transformation_ids_in_project_i18n, 'transformation.helper.completed', 'COMPLETED')).'</span>';
         }
         my $transformation_obj = CXGN::Transformation::Transformation->new({schema=>$schema, dbh=>$dbh, transformation_stock_id=>$transformation_id});
         my $transformants = $transformation_obj->transformants();
@@ -493,6 +499,7 @@ sub add_transformants : Path('/ajax/transformation/add_transformants') : ActionC
 
 sub add_transformants_POST :Args(0){
     my ($self, $c) = @_;
+    my SGN::I18N $ui_add_transformants_POST_i18n = SGN::I18N::translate($c);
     my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema");
     my $dbh = $c->dbc->dbh;
     my $transformation_stock_id = $c->req->param('transformation_stock_id');
@@ -509,7 +516,7 @@ sub add_transformants_POST :Args(0){
     }
 
     if (!any { $_ eq "curator" || $_ eq "submitter" } ($c->user()->roles)){
-        $c->stash->{rest} = {error =>  "you have insufficient privileges to add new transformants." };
+        $c->stash->{rest} = {error =>  (SGN::I18N::translate($ui_add_transformants_POST_i18n, 'transformation.helper.you_have_insufficient_privileges_to_add_new_transformants', 'you have insufficient privileges to add new transformants.'))};
         return;
     }
 
@@ -518,7 +525,7 @@ sub add_transformants_POST :Args(0){
     map { $has_roles{$_} = 1; } @user_roles;
 
     if (! ( (exists($has_roles{$program_name}) && exists($has_roles{submitter})) || exists($has_roles{curator}))) {
-        $c->stash->{rest} = { error => "You need to be either a curator, or a submitter associated with breeding program $program_name to add new transformants." };
+        $c->stash->{rest} = { error => (SGN::I18N::translate($ui_add_transformants_POST_i18n, 'transformation.helper.you_need_to_be_either_a_curator_or_a_submitter_associated_with_breed.c067f25', 'You need to be either a curator, or a submitter associated with breeding program %{program_name} to add new transformants.', {program_name => ("" . ("$program_name"))}))};
         return;
     }
 
@@ -528,7 +535,7 @@ sub add_transformants_POST :Args(0){
     my $autogenerated_names = CXGN::Transformation::CreateTransformantAutogeneratedNames->new({schema => $schema, dbh => $dbh, breeding_program_id => $program_id, name_format => $name_format, number_of_names => $new_name_count, source_info => $source_info });
     my $return = $autogenerated_names->create_names();
     if (!$return){
-        $c->stash->{rest} = {error => "Error generating transformant names"};
+        $c->stash->{rest} = {error => (SGN::I18N::translate($ui_add_transformants_POST_i18n, 'transformation.helper.error_generating_transformant_names', 'Error generating transformant names'))};
         return;
     } elsif ($return->{error}) {
         $c->stash->{rest} = {error => $return->{error}};
@@ -590,7 +597,7 @@ sub add_transformants_POST :Args(0){
         });
         my $return = $add_activity_info->add_info();
         if (!$return){
-            $c->stash->{rest} = {error => "Error saving tracking information"};
+            $c->stash->{rest} = {error => (SGN::I18N::translate($ui_add_transformants_POST_i18n, 'transformation.helper.error_saving_tracking_information', 'Error saving tracking information'))};
             return;
         } elsif ($return->{error}) {
             $c->stash->{rest} = {error => $return->{error}};
@@ -608,6 +615,7 @@ sub add_transformants_using_list : Path('/ajax/transformation/add_transformants_
 sub add_transformants_using_list_POST : Args(0) {
     my $self = shift;
     my $c = shift;
+    my SGN::I18N $ui_add_transformants_using_list_POST_i18n = SGN::I18N::translate($c);
     my $program_name = $c->req->param("program_name");
 
     if (!$c->user()) {
@@ -616,7 +624,7 @@ sub add_transformants_using_list_POST : Args(0) {
     }
 
     if (!($c->user()->has_role('submitter') or $c->user()->has_role('curator'))) {
-        $c->stash->{rest} = { error_string => "You do not have sufficient privileges to add new transformants." };
+        $c->stash->{rest} = { error_string => (SGN::I18N::translate($ui_add_transformants_using_list_POST_i18n, 'transformation.helper.you_do_not_have_sufficient_privileges_to_add_new_transformants', 'You do not have sufficient privileges to add new transformants.'))};
         return;
     }
 
@@ -625,7 +633,7 @@ sub add_transformants_using_list_POST : Args(0) {
     map { $has_roles{$_} = 1; } @user_roles;
 
     if (! ( (exists($has_roles{$program_name}) && exists($has_roles{submitter})) || exists($has_roles{curator}))) {
-        $c->stash->{rest} = { error => "You need to be either a curator, or a submitter associated with breeding program $program_name to add new transformants." };
+        $c->stash->{rest} = { error => (SGN::I18N::translate($ui_add_transformants_using_list_POST_i18n, 'transformation.helper.you_need_to_be_either_a_curator_or_a_submitter_associated_with_breed.c067f25', 'You need to be either a curator, or a submitter associated with breeding program %{program_name} to add new transformants.', {program_name => ("" . ("$program_name"))}))};
         return;
     }
 
@@ -642,7 +650,8 @@ sub add_transformants_using_list_POST : Args(0) {
     my $transformation_stock_id;
     my $transformation_identifier_rs = $schema->resultset("Stock::Stock")->find( { uniquename => $transformation_name, type_id => $transformation_type_id });
     if (!$transformation_identifier_rs) {
-        $c->stash->{rest} = { error_string => "Error! Transformation Identifier: $transformation_name was not found in the database.\n" };
+        $c->stash->{rest} = { error_string => (SGN::I18N::translate($ui_add_transformants_using_list_POST_i18n, 'transformation.helper.error_transformation_identifier_transformation_name_was_not_found_in', 'Error! Transformation Identifier: %{transformation_name} was not found in the database.
+', {transformation_name => ("" . ("$transformation_name"))}))};
         return;
     } else {
         $transformation_stock_id = $transformation_identifier_rs->stock_id();
@@ -656,7 +665,7 @@ sub add_transformants_using_list_POST : Args(0) {
         'uniquename' => { -in => $new_transformant_names }
     });
     while (my $r=$rs->next){
-        push @error_messages, "Transformant name already exists in database: ".$r->uniquename;
+        push @error_messages, (SGN::I18N::translate($ui_add_transformants_using_list_POST_i18n, 'transformation.helper.transformant_name_already_exists_in_database_value1', 'Transformant name already exists in database: %{value1}', {value1 => ("" . ($r->uniquename))}));
     }
 
     if (scalar(@error_messages) >= 1) {
@@ -760,6 +769,7 @@ sub set_autogenerated_name_format : Path('/ajax/transformation/set_autogenerated
 
 sub set_autogenerated_name_format_POST :Args(0){
     my ($self, $c) = @_;
+    my SGN::I18N $ui_set_autogenerated_name_format_POST_i18n = SGN::I18N::translate($c);
     my $dbh = $c->dbc->dbh;
     my $project_id = $c->req->param('project_id');
     my $name_format = $c->req->param('name_format');
@@ -771,7 +781,7 @@ sub set_autogenerated_name_format_POST :Args(0){
     }
 
     if (!any { $_ eq "curator" || $_ eq "submitter" } ($c->user()->roles)){
-        $c->stash->{rest} = {error =>  "you have insufficient privileges to set autogenerated name format for this project." };
+        $c->stash->{rest} = {error =>  (SGN::I18N::translate($ui_set_autogenerated_name_format_POST_i18n, 'transformation.helper.you_have_insufficient_privileges_to_set_autogenerated_name_format_fo', 'you have insufficient privileges to set autogenerated name format for this project.'))};
         return;
     }
 
@@ -780,7 +790,7 @@ sub set_autogenerated_name_format_POST :Args(0){
     map { $has_roles{$_} = 1; } @user_roles;
 
     if (! ( (exists($has_roles{$program_name}) && exists($has_roles{submitter})) || exists($has_roles{curator}))) {
-        $c->stash->{rest} = { error => "You need to be either a curator, or a submitter associated with breeding program $program_name to set autogenerated name format for new transformants." };
+        $c->stash->{rest} = { error => (SGN::I18N::translate($ui_set_autogenerated_name_format_POST_i18n, 'transformation.helper.you_need_to_be_either_a_curator_or_a_submitter_associated_with_breed.c959ba8', 'You need to be either a curator, or a submitter associated with breeding program %{program_name} to set autogenerated name format for new transformants.', {program_name => ("" . ("$program_name"))}))};
         return;
     }
 
@@ -813,6 +823,7 @@ sub set_default_plant_material : Path('/ajax/transformation/set_default_plant_ma
 
 sub set_default_plant_material_POST :Args(0){
     my ($self, $c) = @_;
+    my SGN::I18N $ui_set_default_plant_material_POST_i18n = SGN::I18N::translate($c);
     my $dbh = $c->dbc->dbh;
     my $project_id = $c->req->param('transformation_project_id');
     my $default_plant_material_name = $c->req->param('default_plant_material');
@@ -824,7 +835,7 @@ sub set_default_plant_material_POST :Args(0){
     }
 
     if (!any { $_ eq "curator" || $_ eq "submitter" } ($c->user()->roles)){
-        $c->stash->{rest} = {error =>  "you have insufficient privileges to set default plant material for this project." };
+        $c->stash->{rest} = {error =>  (SGN::I18N::translate($ui_set_default_plant_material_POST_i18n, 'transformation.helper.you_have_insufficient_privileges_to_set_default_plant_material_for_t', 'you have insufficient privileges to set default plant material for this project.'))};
         return;
     }
 
@@ -833,7 +844,7 @@ sub set_default_plant_material_POST :Args(0){
     map { $has_roles{$_} = 1; } @user_roles;
 
     if (! ( (exists($has_roles{$program_name}) && exists($has_roles{submitter})) || exists($has_roles{curator}))) {
-        $c->stash->{rest} = { error => "You need to be either a curator, or a submitter associated with breeding program $program_name to set default plant material for transformation." };
+        $c->stash->{rest} = { error => (SGN::I18N::translate($ui_set_default_plant_material_POST_i18n, 'transformation.helper.you_need_to_be_either_a_curator_or_a_submitter_associated_with_breed.5f9634b', 'You need to be either a curator, or a submitter associated with breeding program %{program_name} to set default plant material for transformation.', {program_name => ("" . ("$program_name"))}))};
         return;
     }
 
@@ -846,7 +857,7 @@ sub set_default_plant_material_POST :Args(0){
     my $plant_material_stock_id;
     my $plant_material_rs = $schema->resultset("Stock::Stock")->find({uniquename => $default_plant_material_name, type_id => $accession_cvterm_id });
     if (!$plant_material_rs){
-        $c->stash->{rest} = {error =>  "Plant material does not exist or does not exist as accession uniquename." };
+        $c->stash->{rest} = {error =>  (SGN::I18N::translate($ui_set_default_plant_material_POST_i18n, 'transformation.helper.plant_material_does_not_exist_or_does_not_exist_as_accession_uniquen', 'Plant material does not exist or does not exist as accession uniquename.'))};
         return;
     } else {
         $plant_material_stock_id = $plant_material_rs->stock_id();
@@ -931,6 +942,7 @@ sub delete_transformation_id : Path('/ajax/transformation/delete') : ActionClass
 
 sub delete_transformation_id_POST :Args(0){
     my ($self, $c) = @_;
+    my SGN::I18N $ui_delete_transformation_id_POST_i18n = SGN::I18N::translate($c);
     my $dbh = $c->dbc->dbh;
     my $transformation_stock_id = $c->req->param('transformation_stock_id');
 
@@ -940,7 +952,7 @@ sub delete_transformation_id_POST :Args(0){
     }
 
     if (!$c->user()->check_roles("curator")) {
-        $c->stash->{rest} = { error => "You do not have the correct role to delete transformation ID. Please contact us." };
+        $c->stash->{rest} = { error => (SGN::I18N::translate($ui_delete_transformation_id_POST_i18n, 'transformation.helper.you_do_not_have_the_correct_role_to_delete_transformation_id_please_', 'You do not have the correct role to delete transformation ID. Please contact us.'))};
         $c->detach();
     }
 
@@ -951,7 +963,7 @@ sub delete_transformation_id_POST :Args(0){
     my $error = $transformation_obj->delete();
 
     if ($error) {
-	    $c->stash->{rest} = { error => "An error occurred attempting to delete the transformation ID. ($@)" };
+	    $c->stash->{rest} = { error => (SGN::I18N::translate($ui_delete_transformation_id_POST_i18n, 'transformation.helper.an_error_occurred_attempting_to_delete_the_transformation_id_error_d', 'An error occurred attempting to delete the transformation ID. (%{error_details})', {error_details => ("" . ("$@"))}))};
 	    return;
     }
 
@@ -963,6 +975,7 @@ sub set_transformation_control : Path('/ajax/transformation/set_transformation_c
 
 sub set_transformation_control_POST :Args(0){
     my ($self, $c) = @_;
+    my SGN::I18N $ui_set_transformation_control_POST_i18n = SGN::I18N::translate($c);
     my $dbh = $c->dbc->dbh;
     my $transformation_stock_id = $c->req->param('transformation_stock_id');
     my $control_stock_id = $c->req->param('control_stock_id');
@@ -974,7 +987,7 @@ sub set_transformation_control_POST :Args(0){
     }
 
     if (!any { $_ eq "curator" || $_ eq "submitter" } ($c->user()->roles)){
-        $c->stash->{rest} = {error =>  "you have insufficient privileges to set a control for this transformation ID." };
+        $c->stash->{rest} = {error =>  (SGN::I18N::translate($ui_set_transformation_control_POST_i18n, 'transformation.helper.you_have_insufficient_privileges_to_set_a_control_for_this_transform', 'you have insufficient privileges to set a control for this transformation ID.'))};
         return;
     }
 
@@ -983,7 +996,7 @@ sub set_transformation_control_POST :Args(0){
     map { $has_roles{$_} = 1; } @user_roles;
 
     if (! ( (exists($has_roles{$program_name}) && exists($has_roles{submitter})) || exists($has_roles{curator}))) {
-        $c->stash->{rest} = { error => "You need to be either a curator, or a submitter associated with breeding program $program_name to set a control for this transformation ID." };
+        $c->stash->{rest} = { error => (SGN::I18N::translate($ui_set_transformation_control_POST_i18n, 'transformation.helper.you_need_to_be_either_a_curator_or_a_submitter_associated_with_breed.8eae049', 'You need to be either a curator, or a submitter associated with breeding program %{program_name} to set a control for this transformation ID.', {program_name => ("" . ("$program_name"))}))};
         return;
     }
 
@@ -993,7 +1006,7 @@ sub set_transformation_control_POST :Args(0){
     my $transformation_obj = CXGN::Transformation::Transformation->new({schema=>$schema, dbh=>$dbh, transformation_stock_id=>$transformation_stock_id, transformation_control_stock_id=>$control_stock_id});
     my $error = $transformation_obj->set_transformation_control();
     if ($error) {
-	    $c->stash->{rest} = { error => "An error occurred attempting to set transformation control. ($@)" };
+	    $c->stash->{rest} = { error => (SGN::I18N::translate($ui_set_transformation_control_POST_i18n, 'transformation.helper.an_error_occurred_attempting_to_set_transformation_control_error_det', 'An error occurred attempting to set transformation control. (%{error_details})', {error_details => ("" . ("$@"))}))};
 	    return;
     }
 
@@ -1006,6 +1019,7 @@ sub set_as_control : Path('/ajax/transformation/set_as_control') : ActionClass('
 
 sub set_as_control_POST :Args(0){
     my ($self, $c) = @_;
+    my SGN::I18N $ui_set_as_control_POST_i18n = SGN::I18N::translate($c);
     my $dbh = $c->dbc->dbh;
     my $transformation_stock_id = $c->req->param('transformation_id');
     my $is_a_control = $c->req->param('is_a_control');
@@ -1017,7 +1031,7 @@ sub set_as_control_POST :Args(0){
     }
 
     if (!any { $_ eq "curator" || $_ eq "submitter" } ($c->user()->roles)){
-        $c->stash->{rest} = {error =>  "you have insufficient privileges to set this transformation ID as a control." };
+        $c->stash->{rest} = {error =>  (SGN::I18N::translate($ui_set_as_control_POST_i18n, 'transformation.helper.you_have_insufficient_privileges_to_set_this_transformation_id_as_a_', 'you have insufficient privileges to set this transformation ID as a control.'))};
         return;
     }
 
@@ -1026,7 +1040,7 @@ sub set_as_control_POST :Args(0){
     map { $has_roles{$_} = 1; } @user_roles;
 
     if (! ( (exists($has_roles{$program_name}) && exists($has_roles{submitter})) || exists($has_roles{curator}))) {
-        $c->stash->{rest} = { error => "You need to be either a curator, or a submitter associated with breeding program $program_name to set this transformation ID as a control." };
+        $c->stash->{rest} = { error => (SGN::I18N::translate($ui_set_as_control_POST_i18n, 'transformation.helper.you_need_to_be_either_a_curator_or_a_submitter_associated_with_breed.2abe0e7', 'You need to be either a curator, or a submitter associated with breeding program %{program_name} to set this transformation ID as a control.', {program_name => ("" . ("$program_name"))}))};
         return;
     }
 
@@ -1036,7 +1050,7 @@ sub set_as_control_POST :Args(0){
     my $transformation_obj = CXGN::Transformation::Transformation->new({schema=>$schema, dbh=>$dbh, transformation_stock_id=>$transformation_stock_id, is_a_control=>$is_a_control});
     my $error = $transformation_obj->set_as_control();
     if ($error) {
-        $c->stash->{rest} = { error => "An error occurred attempting to set the transformation ID as a control. ($@)" };
+        $c->stash->{rest} = { error => (SGN::I18N::translate($ui_set_as_control_POST_i18n, 'transformation.helper.an_error_occurred_attempting_to_set_the_transformation_id_as_a_contr', 'An error occurred attempting to set the transformation ID as a control. (%{error_details})', {error_details => ("" . ("$@"))}))};
         return;
     }
 
@@ -1193,6 +1207,7 @@ sub upload_transgenic_historical_data : Path('/ajax/transformation/upload_transg
 sub upload_transgenic_historical_data_POST : Args(0) {
     my $self = shift;
     my $c = shift;
+    my SGN::I18N $ui_upload_transgenic_historical_data_POST_i18n = SGN::I18N::translate($c);
     my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema");
     my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema");
     my $dbh = $c->dbc->dbh;
@@ -1226,7 +1241,7 @@ sub upload_transgenic_historical_data_POST : Args(0) {
         my $dbh = $c->dbc->dbh;
         my @user_info = CXGN::Login->new($dbh)->query_from_cookie($session_id);
         if (!$user_info[0]){
-            $c->stash->{rest} = {error=>'You must be logged in to upload transgenic historical data!'};
+            $c->stash->{rest} = {error=>(SGN::I18N::translate($ui_upload_transgenic_historical_data_POST_i18n, 'transformation.helper.you_must_be_logged_in_to_upload_transgenic_historical_data', 'You must be logged in to upload transgenic historical data!'))};
             $c->detach();
         }
         $user_id = $user_info[0];
@@ -1235,12 +1250,12 @@ sub upload_transgenic_historical_data_POST : Args(0) {
         $user_name = $p->get_username;
 
         if (($user_role ne 'curator') && ($user_role ne 'submitter')) {
-            $c->stash->{rest} = {error=>'Only a submitter or a curator can upload transgenic historical data'};
+            $c->stash->{rest} = {error=>(SGN::I18N::translate($ui_upload_transgenic_historical_data_POST_i18n, 'transformation.helper.only_a_submitter_or_a_curator_can_upload_transgenic_historical_data', 'Only a submitter or a curator can upload transgenic historical data'))};
             $c->detach();
         }
     } else {
         if (!$c->user){
-            $c->stash->{rest} = {error=>'You must be logged in to upload transgenic historical data!'};
+            $c->stash->{rest} = {error=>(SGN::I18N::translate($ui_upload_transgenic_historical_data_POST_i18n, 'transformation.helper.you_must_be_logged_in_to_upload_transgenic_historical_data', 'You must be logged in to upload transgenic historical data!'))};
             $c->detach();
         }
         $user_id = $c->user()->get_object()->get_sp_person_id();
@@ -1252,7 +1267,7 @@ sub upload_transgenic_historical_data_POST : Args(0) {
         map { $has_roles{$_} = 1; } @user_roles;
 
         if (! ( (exists($has_roles{$breeding_program_name}) && exists($has_roles{submitter})) || exists($has_roles{curator}))) {
-          $c->stash->{rest} = { error => "You need to be either a curator, or a submitter associated with breeding program $breeding_program_name to upload transgenic historical data." };
+          $c->stash->{rest} = { error => (SGN::I18N::translate($ui_upload_transgenic_historical_data_POST_i18n, 'transformation.helper.you_need_to_be_either_a_curator_or_a_submitter_associated_with_breed.3a55376', 'You need to be either a curator, or a submitter associated with breeding program %{breeding_program_name} to upload transgenic historical data.', {breeding_program_name => ("" . ("$breeding_program_name"))}))};
           return;
         }
 
@@ -1274,14 +1289,14 @@ sub upload_transgenic_historical_data_POST : Args(0) {
     $archived_filename_with_path = $uploader->archive();
     $md5 = $uploader->get_md5($archived_filename_with_path);
     if (!$archived_filename_with_path) {
-        $c->stash->{rest} = {error => "Could not save file $upload_original_name in archive",};
+        $c->stash->{rest} = {error => (SGN::I18N::translate($ui_upload_transgenic_historical_data_POST_i18n, 'accession.rename_server.archive', 'Could not save file %{upload_original_name} in archive', {upload_original_name => ("" . ("$upload_original_name"))})),};
         return;
     }
     unlink $upload_tempfile;
 
     #parse uploaded file with appropriate plugin
     my @stock_props = ('transformation_notes');
-    $parser = CXGN::Stock::ParseUpload->new(chado_schema => $schema, filename => $archived_filename_with_path, editable_stock_props=>\@stock_props);
+    $parser = CXGN::Stock::ParseUpload->new(i18n => $ui_upload_transgenic_historical_data_POST_i18n, chado_schema => $schema, filename => $archived_filename_with_path, editable_stock_props=>\@stock_props);
 
     $parser->load_plugin('TransgenicHistoricalDataGeneric');
     $parsed_data = $parser->parse();
@@ -1290,7 +1305,7 @@ sub upload_transgenic_historical_data_POST : Args(0) {
         my $return_error = '';
         my $parse_errors;
         if (!$parser->has_parse_errors() ){
-            $c->stash->{rest} = {error => "Could not get parsing errors"};
+            $c->stash->{rest} = {error => (SGN::I18N::translate($ui_upload_transgenic_historical_data_POST_i18n, 'accessions.server.parse_errors_missing', 'Could not get parsing errors'))};
         } else {
             $parse_errors = $parser->get_parse_errors();
             #print STDERR Dumper $parse_errors;
@@ -1312,7 +1327,7 @@ sub upload_transgenic_historical_data_POST : Args(0) {
                 my $vector_construct_info = $batch_info->{$vector_construct};
                 my @check_type = keys %$vector_construct_info;
                 if (scalar(@check_type) > 1) {
-                    $c->stash->{rest} = { error => "Error! Vector construct: $vector_construct in batch: $batch_number is assigned as both a control and a construct. Please check is_a_control column."};
+                    $c->stash->{rest} = { error => (SGN::I18N::translate($ui_upload_transgenic_historical_data_POST_i18n, 'transformation.helper.error_vector_construct_vector_construct_in_batch_batch_number_is_ass', 'Error! Vector construct: %{vector_construct} in batch: %{batch_number} is assigned as both a control and a construct. Please check is_a_control column.', {vector_construct => ("" . ("$vector_construct")), batch_number => ("" . ("$batch_number"))}))};
                     return;
                 }
 
@@ -1326,7 +1341,7 @@ sub upload_transgenic_historical_data_POST : Args(0) {
                 my $transformant_info = $vector_construct_info->{$type};
                 my @check_accession_type = keys %$transformant_info;
                 if (scalar(@check_accession_type) > 1) {
-                    $c->stash->{rest} = { error => "Error! All accessions in the same file should have the same accession type (either an existing accession in the database or new accession)."};
+                    $c->stash->{rest} = { error => (SGN::I18N::translate($ui_upload_transgenic_historical_data_POST_i18n, 'transformation.helper.error_all_accessions_in_the_same_file_should_have_the_same_accession', 'Error! All accessions in the same file should have the same accession type (either an existing accession in the database or new accession).'))};
                     return;
                 }
 
@@ -1352,13 +1367,13 @@ sub upload_transgenic_historical_data_POST : Args(0) {
                 my $add = $add_transformation->add_transformation_identifier();
                 my $add_transformation_id_error = $add->{error};
                 if ($add_transformation_id_error) {
-                    $c->stash->{rest} = { error => "Error! Cannot generate transformation identifier for vector construct: $vector_construct in batch: $batch_number. $add_transformation_id_error."};
+                    $c->stash->{rest} = { error => (SGN::I18N::translate($ui_upload_transgenic_historical_data_POST_i18n, 'transformation.helper.error_cannot_generate_transformation_identifier_for_vector_construct.f8408b0', 'Error! Cannot generate transformation identifier for vector construct: %{vector_construct} in batch: %{batch_number}. %{add_transformation_id_error}.', {vector_construct => ("" . ("$vector_construct")), batch_number => ("" . ("$batch_number")), add_transformation_id_error => ("" . ("$add_transformation_id_error"))}))};
                     return;
                 }
 
                 my $transformation_stock_id = $add->{transformation_id};
                 if (!$transformation_stock_id) {
-                    $c->stash->{rest} = { error => "Error! Cannot generate transformation identifier for vector construct: $vector_construct in batch: $batch_number."};
+                    $c->stash->{rest} = { error => (SGN::I18N::translate($ui_upload_transgenic_historical_data_POST_i18n, 'transformation.helper.error_cannot_generate_transformation_identifier_for_vector_construct.05673e1', 'Error! Cannot generate transformation identifier for vector construct: %{vector_construct} in batch: %{batch_number}.', {vector_construct => ("" . ("$vector_construct")), batch_number => ("" . ("$batch_number"))}))};
                     return;
                 }
 
@@ -1377,7 +1392,7 @@ sub upload_transgenic_historical_data_POST : Args(0) {
                         my $response = $add_transformants->add_transformant();
                         my $add_transformant_error = $response->{error};
                         if ($add_transformant_error){
-                            $c->stash->{rest} = {error => "Error adding new accessions for vector construct: $vector_construct in batch $batch_number."};
+                            $c->stash->{rest} = {error => (SGN::I18N::translate($ui_upload_transgenic_historical_data_POST_i18n, 'transformation.helper.error_adding_new_accessions_for_vector_contruct_vector_construct_in_', 'Error adding new accessions for vector construct: %{vector_construct} in batch %{batch_number}.', {vector_construct => ("" . ("$vector_construct")), batch_number => ("" . ("$batch_number"))}))};
                             return;
                         }
                     } elsif ($accession_type eq 'existing_accession') {
@@ -1391,7 +1406,7 @@ sub upload_transgenic_historical_data_POST : Args(0) {
                         my $response = $add_transformants->link_info();
                         my $add_transformant_error = $response->{error};
                         if ($add_transformant_error){
-                            $c->stash->{rest} = {error => "Error linking accession names with transformation info for vector construct: $vector_construct in batch $batch_number."};
+                            $c->stash->{rest} = {error => (SGN::I18N::translate($ui_upload_transgenic_historical_data_POST_i18n, 'transformation.helper.error_linking_accession_names_with_tansformation_info_for_vector_con', 'Error linking accession names with transformation info for vector construct: %{vector_construct} in batch %{batch_number}.', {vector_construct => ("" . ("$vector_construct")), batch_number => ("" . ("$batch_number"))}))};
                             return;
                         }
                     }
@@ -1411,7 +1426,7 @@ sub upload_transgenic_historical_data_POST : Args(0) {
                     my $transformation_obj = CXGN::Transformation::Transformation->new({schema=>$schema, dbh=>$dbh, transformation_stock_id=>$id, transformation_control_stock_id=>$control_transformation_id});
                     my $error = $transformation_obj->set_transformation_control();
                     if ($error) {
-                        $c->stash->{rest} = { error => "An error occurred attempting to set transformation control for batch: $batch_number. ($@)" };
+                        $c->stash->{rest} = { error => (SGN::I18N::translate($ui_upload_transgenic_historical_data_POST_i18n, 'transformation.helper.an_error_occurred_attempting_to_set_transformation_control_for_batch', 'An error occurred attempting to set transformation control for batch: %{batch_number}. (%{error_details})', {batch_number => ("" . ("$batch_number")), error_details => ("" . ("$@"))}))};
                         return;
                     }
                 }
@@ -1499,6 +1514,7 @@ sub upload_qPCR_data : Path('/ajax/transformation/upload_qPCR_data') : ActionCla
 sub upload_qPCR_data_POST : Args(0) {
     my $self = shift;
     my $c = shift;
+    my SGN::I18N $ui_upload_qPCR_data_POST_i18n = SGN::I18N::translate($c);
     my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema");
     my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema");
     my $dbh = $c->dbc->dbh;
@@ -1549,7 +1565,7 @@ sub upload_qPCR_data_POST : Args(0) {
         my $dbh = $c->dbc->dbh;
         my @user_info = CXGN::Login->new($dbh)->query_from_cookie($session_id);
         if (!$user_info[0]){
-            $c->stash->{rest} = {error=>'You must be logged in to upload relative expression data!'};
+            $c->stash->{rest} = {error=>(SGN::I18N::translate($ui_upload_qPCR_data_POST_i18n, 'transformation.helper.you_must_be_logged_in_to_upload_relative_expression_data', 'You must be logged in to upload relative expression data!'))};
             $c->detach();
         }
         $user_id = $user_info[0];
@@ -1558,7 +1574,7 @@ sub upload_qPCR_data_POST : Args(0) {
         $user_name = $p->get_username;
     } else {
         if (!$c->user){
-            $c->stash->{rest} = {error=>'You must be logged in to upload relative expression data!'};
+            $c->stash->{rest} = {error=>(SGN::I18N::translate($ui_upload_qPCR_data_POST_i18n, 'transformation.helper.you_must_be_logged_in_to_upload_relative_expression_data', 'You must be logged in to upload relative expression data!'))};
             $c->detach();
         }
         $user_id = $c->user()->get_object()->get_sp_person_id();
@@ -1567,7 +1583,7 @@ sub upload_qPCR_data_POST : Args(0) {
     }
 
     if (($user_role ne 'curator') && ($user_role ne 'submitter')) {
-        $c->stash->{rest} = {error=>'Only a submitter or a curator can upload relative expression data'};
+        $c->stash->{rest} = {error=>(SGN::I18N::translate($ui_upload_qPCR_data_POST_i18n, 'transformation.helper.only_a_submitter_or_a_curator_can_upload_relative_expression_data', 'Only a submitter or a curator can upload relative expression data'))};
         $c->detach();
     }
 
@@ -1589,7 +1605,7 @@ sub upload_qPCR_data_POST : Args(0) {
     $archived_filename_with_path = $uploader->archive();
     $md5 = $uploader->get_md5($archived_filename_with_path);
     if (!$archived_filename_with_path) {
-        $c->stash->{rest} = {error => "Could not save file $upload_original_name in archive",};
+        $c->stash->{rest} = {error => (SGN::I18N::translate($ui_upload_qPCR_data_POST_i18n, 'accession.rename_server.archive', 'Could not save file %{upload_original_name} in archive', {upload_original_name => ("" . ("$upload_original_name"))})),};
         return;
     }
     unlink $upload_tempfile;
@@ -1620,7 +1636,7 @@ sub upload_qPCR_data_POST : Args(0) {
         my $return_error = '';
         my $parse_errors;
         if (!$parser->has_parse_errors() ){
-            $c->stash->{rest} = {error_string => "Could not get parsing errors"};
+            $c->stash->{rest} = {error_string => (SGN::I18N::translate($ui_upload_qPCR_data_POST_i18n, 'accessions.server.parse_errors_missing', 'Could not get parsing errors'))};
         } else {
             $parse_errors = $parser->get_parse_errors();
             #print STDERR Dumper $parse_errors;
@@ -1670,7 +1686,7 @@ sub upload_qPCR_data_POST : Args(0) {
 
             my $return = $expression_data->store_qPCR_data();
             if (!$return){
-                $error = "The error storing qPCR data for: $transformant_name";
+                $error = (SGN::I18N::translate($ui_upload_qPCR_data_POST_i18n, 'transformation.helper.the_error_storing_qpcr_data_for_transformant_name', 'The error storing qPCR data for: %{transformant_name}', {transformant_name => ("" . ("$transformant_name"))}));
             }
             if ($return->{error}){
                 $error = $return->{error};
@@ -1865,6 +1881,7 @@ sub update_transformation_metadata : Path('/ajax/transformation/update_transform
 
 sub update_transformation_metadata_POST :Args(0){
     my ($self, $c) = @_;
+    my SGN::I18N $ui_update_transformation_metadata_POST_i18n = SGN::I18N::translate($c);
     my $dbh = $c->dbc->dbh;
     my $transformation_stock_id = $c->req->param('transformation_stock_id');
     my $new_transformation_name = $c->req->param('new_transformation_name');
@@ -1876,7 +1893,7 @@ sub update_transformation_metadata_POST :Args(0){
     }
 
     if (!any { $_ eq "curator" || $_ eq "submitter" } ($c->user()->roles)){
-        $c->stash->{rest} = {error =>  "you have insufficient privileges to edit this transformation metadata." };
+        $c->stash->{rest} = {error =>  (SGN::I18N::translate($ui_update_transformation_metadata_POST_i18n, 'transformation.helper.you_have_insufficient_privileges_to_edit_this_transformation_metadat', 'you have insufficient privileges to edit this transformation metadata.'))};
         return;
     }
 
@@ -1887,7 +1904,7 @@ sub update_transformation_metadata_POST :Args(0){
     my $error = $transformation_obj->update_transformation_metadata();
 
     if ($error) {
-        $c->stash->{rest} = { error => "Error: $error" };
+        $c->stash->{rest} = { error => (SGN::I18N::translate($ui_update_transformation_metadata_POST_i18n, 'program.roles.error.response', 'Error: %{error}', {error => ("" . ("$error"))}))};
         return;
     }
 
@@ -1901,6 +1918,7 @@ sub upload_transgenic_lines : Path('/ajax/transformation/upload_transgenic_lines
 sub upload_transgenic_lines_POST : Args(0) {
     my $self = shift;
     my $c = shift;
+    my SGN::I18N $ui_upload_transgenic_lines_i18n = SGN::I18N::translate($c);
     my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema");
     my $dbh = $c->dbc->dbh;
     my $breeding_program_name = $c->req->param('project_breeding_program_name');
@@ -1930,7 +1948,7 @@ sub upload_transgenic_lines_POST : Args(0) {
         my $dbh = $c->dbc->dbh;
         my @user_info = CXGN::Login->new($dbh)->query_from_cookie($session_id);
         if (!$user_info[0]){
-            $c->stash->{rest} = {error=>'You must be logged in to upload transgenic lines!'};
+            $c->stash->{rest} = {error => SGN::I18N::translate($ui_upload_transgenic_lines_i18n, 'transformation.transgenic_lines.login_required', 'You must be logged in to upload transgenic lines!')};
             $c->detach();
         }
         $user_id = $user_info[0];
@@ -1939,12 +1957,12 @@ sub upload_transgenic_lines_POST : Args(0) {
         $user_name = $p->get_username;
 
         if (($user_role ne 'curator') && ($user_role ne 'submitter')) {
-            $c->stash->{rest} = {error=>'Only a submitter or a curator can upload transgenic lines'};
+            $c->stash->{rest} = {error => SGN::I18N::translate($ui_upload_transgenic_lines_i18n, 'transformation.transgenic_lines.submitter_or_curator_required', 'Only a submitter or a curator can upload transgenic lines')};
             $c->detach();
         }
     } else {
         if (!$c->user){
-            $c->stash->{rest} = {error=>'You must be logged in to upload transgenic lines!'};
+            $c->stash->{rest} = {error => SGN::I18N::translate($ui_upload_transgenic_lines_i18n, 'transformation.transgenic_lines.login_required', 'You must be logged in to upload transgenic lines!')};
             $c->detach();
         }
         $user_id = $c->user()->get_object()->get_sp_person_id();
@@ -1956,7 +1974,7 @@ sub upload_transgenic_lines_POST : Args(0) {
         map { $has_roles{$_} = 1; } @user_roles;
 
         if (! ( (exists($has_roles{$breeding_program_name}) && exists($has_roles{submitter})) || exists($has_roles{curator}))) {
-          $c->stash->{rest} = { error => "You need to be either a curator, or a submitter associated with breeding program $breeding_program_name to upload transgenic lines." };
+          $c->stash->{rest} = { error => SGN::I18N::translate($ui_upload_transgenic_lines_i18n, 'transformation.transgenic_lines.program_role_required', 'You need to be either a curator, or a submitter associated with breeding program %{program} to upload transgenic lines.', {program => '' . $breeding_program_name}) };
           return;
         }
 
@@ -1978,12 +1996,12 @@ sub upload_transgenic_lines_POST : Args(0) {
     $archived_filename_with_path = $uploader->archive();
     $md5 = $uploader->get_md5($archived_filename_with_path);
     if (!$archived_filename_with_path) {
-        $c->stash->{rest} = {error => "Could not save file $upload_original_name in archive",};
+        $c->stash->{rest} = {error => SGN::I18N::translate($ui_upload_transgenic_lines_i18n, 'transformation.transgenic_lines.archive_failed', 'Could not save file %{filename} in archive', {filename => '' . $upload_original_name})};
         return;
     }
     unlink $upload_tempfile;
 
-    $parser = CXGN::Transformation::ParseUpload->new(chado_schema => $schema, filename => $archived_filename_with_path);
+    $parser = CXGN::Transformation::ParseUpload->new(chado_schema => $schema, filename => $archived_filename_with_path, i18n => $c->i18n);
 
     $parser->load_plugin('TransgenicLinesGeneric');
     $parsed_data = $parser->parse();
@@ -1991,12 +2009,13 @@ sub upload_transgenic_lines_POST : Args(0) {
         my $return_error = '';
         my $parse_errors;
         if (!$parser->has_parse_errors() ){
-            $c->stash->{rest} = {error_string => "Could not get parsing errors"};
+            $c->stash->{rest} = {error_string => SGN::I18N::translate($ui_upload_transgenic_lines_i18n, 'transformation.transgenic_lines.parse_errors_unavailable', 'Could not get parsing errors')};
         } else {
             $parse_errors = $parser->get_parse_errors();
             #print STDERR Dumper $parse_errors;
+            require HTML::Entities;
             foreach my $error_string (@{$parse_errors->{'error_messages'}}){
-                $return_error .= $error_string."<br>";
+                $return_error .= HTML::Entities::encode_entities($error_string, q{&<>"'}) . "<br>";
             }
         }
         $c->stash->{rest} = {error_string => $return_error};

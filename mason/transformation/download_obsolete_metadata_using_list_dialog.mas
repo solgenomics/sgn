@@ -6,14 +6,14 @@
     <div class="modal-dialog modal-lg" role="document">
         <div class="modal-content ">
             <div class="modal-header">
-                <button type="reset" class="close" id="download_obsolete_metadata_using_list_dismiss_button_1" name="download_obsolete_metadata_using_list_dismiss_button" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                <center><h4 class="modal-title" id="downloadObsoleteMetadataUsingList">Download Obsolete Metadata Using a List</h4></center>
+                <button type="reset" class="close" id="download_obsolete_metadata_using_list_dismiss_button_1" name="download_obsolete_metadata_using_list_dismiss_button" aria-label="<% $c->i18n->p("global.dataset_publish.close", "Close") |h %>"><span aria-hidden="true">&times;</span></button>
+                <center><h4 class="modal-title" id="downloadObsoleteMetadataUsingList"><% $c->i18n->p("transformation.root.download_obsolete_metadata_using_a_list", "Download Obsolete Metadata Using a List") |h %></h4></center>
             </div>
             <div class="modal-body">
                 <div class="container-fluid">
                     <form id="download_obsolete_metadata" action="/breeders/download_obsolete_metadata_action" method="POST">
                         <div class="form-group">
-                            <label class="col-sm-5 control-label">List of Obsoleted Stocks: </label>
+                            <label class="col-sm-5 control-label"><% $c->i18n->p("transformation.root.list_of_obsoleted_stocks", "List of Obsoleted Stocks:") |h %> </label>
                             <div class="col-sm-7" id="obsoleted_stock_list" name="obsoleted_stock_list">
                             </div>
                         </div>
@@ -22,8 +22,8 @@
             </div>
             <div class="modal-footer">
                 <input type="hidden" id="download_obsolete_metadata_token" name="download_obsolete_metadata_token"/>
-                <button type="button" class="btn btn-primary" id="download_obsoleted_stock_list_submit">Download</button>
-                <button id="download_obsolete_metadata_using_list_dismiss_button_2" name="download_obsolete_metadata_using_list_dismiss_button" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary" id="download_obsoleted_stock_list_submit"><% $c->i18n->p("global.est.download", "Download") |h %></button>
+                <button id="download_obsolete_metadata_using_list_dismiss_button_2" name="download_obsolete_metadata_using_list_dismiss_button" type="button" class="btn btn-default" data-dismiss="modal"><% $c->i18n->p("global.dataset_publish.close", "Close") |h %></button>
             </div>
         </div>
     </div>
@@ -38,17 +38,17 @@ jQuery(document).ready(function(){
     });
 
     var lo = new CXGN.List();
-    jQuery('#obsoleted_stock_list').html(lo.listSelect('obsoleted_stock_list', [ 'obsoleted_stocks' ], 'Please select', undefined, undefined));
+    jQuery('#obsoleted_stock_list').html(lo.listSelect('obsoleted_stock_list', [ 'obsoleted_stocks' ], (window.SGN && window.SGN.i18n ? window.SGN.i18n.p("lists.selector.please_select", "Please select") : 'Please select'), undefined, undefined));
 
     jQuery('#download_obsoleted_stock_list_submit').click(function() {
         var obsoleted_stock_list_id = jQuery('#obsoleted_stock_list_list_select').val();
         if (!obsoleted_stock_list_id) {
-            alert("Please select an obsoleted stock list!");
+            alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("lists_datasets.download_js.please_select_an_obsoleted_stock_list", "Please select an obsoleted stock list!") : "Please select an obsoleted stock list!"));
             return;
         } else {
             lo.validate(obsoleted_stock_list_id, 'obsoleted_stocks', true).then((r) => {
                 if (r.missing.length > 0) {
-                   alert("The obsoleted stock list did not pass validation. Please correct the list and try again");
+                   alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("lists_datasets.download_js.the_obsoleted_stock_list_did_not_pass_validation_please_correct_t", "The obsoleted stock list did not pass validation. Please correct the list and try again") : "The obsoleted stock list did not pass validation. Please correct the list and try again"));
                 } else {
                     var token = new Date().getTime(); //use the current timestamp as the token name and value
                     jQuery('#download_obsolete_metadata_token').val(token);

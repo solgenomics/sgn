@@ -1,5 +1,7 @@
 package CXGN::Stock::ParseUpload::Plugin::TransformationIdentifiersGeneric;
 
+use SGN::I18N ();
+
 use Moose::Role;
 use CXGN::File::Parse;
 use CXGN::Stock::StockLookup;
@@ -9,6 +11,7 @@ use CXGN::List::Validate;
 
 sub _validate_with_plugin {
     my $self = shift;
+    my SGN::I18N $ui__validate_with_plugin_i18n = SGN::I18N::translate($self);
 
     my $filename = $self->get_filename();
     my $schema = $self->get_chado_schema();
@@ -17,6 +20,7 @@ sub _validate_with_plugin {
     my %errors;
 
     my $parser = CXGN::File::Parse->new (
+        i18n => $ui__validate_with_plugin_i18n,
         file => $filename,
         required_columns => [ 'transformation_identifier', 'accession_name', 'vector_construct' ],
         optional_columns => [ 'notes', 'is_a_control' ],
@@ -43,8 +47,7 @@ sub _validate_with_plugin {
 
     if ( $additional_columns && scalar(@$additional_columns) > 0 ) {
         $errors{'error_messages'} = [
-            "The following columns are not recognized: " . join(', ', @$additional_columns) . ". Please check the spreadsheet format for the allowed columns."
-        ];
+            (SGN::I18N::translate($ui__validate_with_plugin_i18n, 'transformation.helper.the_following_columns_are_not_recognized_value1_please_check_the_spr', 'The following columns are not recognized: %{value1}. Please check the spreadsheet format for the allowed columns.', {value1 => ("" . (join(', ', @$additional_columns)))}))];
         $self->_set_parse_errors(\%errors);
         return;
     }
@@ -56,20 +59,20 @@ sub _validate_with_plugin {
     my $accession_validator = CXGN::List::Validate->new();
     my @accessions_missing = @{$accession_validator->validate($schema,'accessions', $seen_accession_names)->{'missing'}};
     if (scalar(@accessions_missing) > 0) {
-        push @error_messages, "The following accessions are not in the database, or are not in the database as uniquenames: ".join(',',@accessions_missing);
+        push @error_messages, (SGN::I18N::translate($ui__validate_with_plugin_i18n, 'transformation.helper.the_following_accessions_are_not_in_the_database_or_are_not_in_the_d', 'The following accessions are not in the database, or are not in the database as uniquenames: %{value1}', {value1 => ("" . (join(',',@accessions_missing)))}));
     }
 
     my $vector_construct_validator = CXGN::List::Validate->new();
     my @vector_constructs_missing = @{$vector_construct_validator->validate($schema,'vector_constructs', $seen_vector_constructs)->{'missing'}};
     if (scalar(@vector_constructs_missing) > 0) {
-        push @error_messages, "The following vector constructs are not in the database, or are not in the database as uniquenames: ".join(',',@vector_constructs_missing);
+        push @error_messages, (SGN::I18N::translate($ui__validate_with_plugin_i18n, 'transformation.helper.the_following_vector_constructs_are_not_in_the_database_or_are_not_i', 'The following vector constructs are not in the database, or are not in the database as uniquenames: %{value1}', {value1 => ("" . (join(',',@vector_constructs_missing)))}));
     }
 
     my $rs = $schema->resultset("Stock::Stock")->search({
         'uniquename' => { -in => $seen_transformation_identifiers }
     });
     while (my $r=$rs->next){
-        push @error_messages, "Transformation Identifier already exists in database: ".$r->uniquename;
+        push @error_messages, (SGN::I18N::translate($ui__validate_with_plugin_i18n, 'transformation.helper.transformation_identifier_already_exists_in_database_value1', 'Transformation Identifier already exists in database: %{value1}', {value1 => ("" . ($r->uniquename))}));
     }
 
     my %duplicated_transformation_ids;
@@ -78,7 +81,7 @@ sub _validate_with_plugin {
         my $transformation_id = $row->{'transformation_identifier'};
 
         if ($duplicated_transformation_ids{$transformation_id}) {
-            push @error_messages, "Cell A$row_num: duplicate transformation identifier: $transformation_id. Transformation Identifier must be unique.";
+            push @error_messages, (SGN::I18N::translate($ui__validate_with_plugin_i18n, 'transformation.helper.cell_a_row_num_duplicate_transformation_identifier_transformation_id', 'Cell A%{row_num}: duplicate transformation identifier: %{transformation_id}. Transformation Identifier must be unique.', {row_num => ("" . ("$row_num")), transformation_id => ("" . ("$transformation_id"))}));
         } else {
             $duplicated_transformation_ids{$transformation_id}++;
         }

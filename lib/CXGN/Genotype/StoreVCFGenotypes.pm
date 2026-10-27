@@ -251,6 +251,8 @@ $return = $store_genotypes->store_genotypeprop_table();
 use strict;
 use warnings;
 use Moose;
+use SGN::I18N ();
+has 'i18n' => (is => 'rw', isa => 'Maybe[Object]');
 use Try::Tiny;
 use File::Basename qw | basename dirname|;
 use Digest::MD5;
@@ -532,6 +534,7 @@ sub BUILD {
 
 sub validate {
     my $self = shift;
+    my $i18n = SGN::I18N::translate($self);
     my $schema = $self->bcs_schema;
     my $dbh = $schema->storage->dbh;
     my $organism_id = $self->organism_id;
@@ -549,13 +552,13 @@ sub validate {
 
     #to disntiguish genotyprop between old dosage only format and more info vcf format
     if ($self->archived_file_type && $self->archived_file_type ne 'genotype_vcf' && $self->archived_file_type ne 'genotype_dosage') {
-        push @error_messages, 'Archived filetype must be either genotype_vcf or genotype_dosage';
+        push @error_messages, SGN::I18N::translate($i18n, "genotype.validation.archived_filetype_must_be_either_field_or_field_2", "Archived filetype must be either %{field} or %{field_2}", {field => "genotype_vcf", field_2 => "genotype_dosage"});
         return {error_messages => \@error_messages};
     }
 
     #check if sample names are in the database.
     if (scalar(@$observation_unit_uniquenames) == 0){
-        push @error_messages, "No observtaion_unit_names in file";
+        push @error_messages, SGN::I18N::translate($i18n, "genotype.validation.no_field_in_file", "No %{field} in file", {field => "observtaion_unit_names"});
     }
 
     my $vcf_genotyping_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, $vcf_genotyping_type, 'genotype_property')->cvterm_id();
@@ -606,7 +609,7 @@ sub validate {
     my $stock_type_id;
     my @missing_stocks;
     my @missing_markers;
-    my $validator = CXGN::List::Validate->new();
+    my $validator = CXGN::List::Validate->new(i18n => $i18n);
     if ($stock_type eq 'tissue_sample'){
         @missing_stocks = @{$validator->validate($schema,'tissue_samples',\@observation_unit_uniquenames_stripped)->{'missing'}};
         $stock_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, $stock_type, 'stock_type')->cvterm_id();
@@ -639,7 +642,7 @@ sub validate {
             }
         }
     } else {
-        push @error_messages, "You can only upload genotype data for a tissue_sample OR accession (including synonyms) OR stocks!"
+        push @error_messages, SGN::I18N::translate($i18n, "genotype.file.you_can_only_upload_genotype_data_for_a_field_or_accession_including", "You can only upload genotype data for a %{field} OR %{accession} (including synonyms) OR %{stocks}!", {field => "tissue_sample", accession => "accession", stocks => "stocks"})
     }
 
     my %unique_stocks;
@@ -649,7 +652,7 @@ sub validate {
 
     @missing_stocks = sort keys %unique_stocks;
     if (scalar(@missing_stocks)>0){
-        push @error_messages, "The following stocks are not in the database: ".join(',',@missing_stocks);
+        push @error_messages, SGN::I18N::translate($i18n, "genotype.file.the_following_stocks_are_not_in_the_database_items", "The following stocks are not in the database: %{items}", {items => join(',',@missing_stocks)});
     }
 
     #check if protocol_info is correct
@@ -657,36 +660,36 @@ sub validate {
         while (my ($chromosome, $protocol_info_chrom) = each %{$protocol_info->{markers}}) {
             while (my ($marker_name, $marker_info) = each %{$protocol_info_chrom}) {
                 if (!$marker_name || !$marker_info){
-                    push @error_messages, "No genotype info provided";
+                    push @error_messages, SGN::I18N::translate($i18n, "genotype.validation.no_genotype_info_provided", "No genotype info provided");
                 }
                 foreach (keys %$marker_info){
                     if ($_ ne 'name' && $_ ne 'chrom' && $_ ne 'pos' && $_ ne 'ref' && $_ ne 'alt' && $_ ne 'qual' && $_ ne 'filter' && $_ ne 'info' && $_ ne 'format' && $_ ne 'intertek_name' && $_ ne 'sequence' && $_ ne 'facility_name'){
-                        push @error_messages, "protocol_info key not recognized: $_";
+                        push @error_messages, SGN::I18N::translate($i18n, "genotype.validation.field_key_not_recognized_item", "%{field} key not recognized: %{item}", {field => "protocol_info", item => ("" . "$_")});
                     }
                 }
                 if(!exists($marker_info->{'name'})){
-                    push @error_messages, "protocol_info missing name key";
+                    push @error_messages, SGN::I18N::translate($i18n, "genotype.validation.field_missing_name_key", "%{field} missing name key", {field => "protocol_info"});
                 }
                 if(!exists($marker_info->{'chrom'})){
-                    push @error_messages, "protocol_info missing chrom key";
+                    push @error_messages, SGN::I18N::translate($i18n, "genotype.validation.field_missing_chrom_key", "%{field} missing chrom key", {field => "protocol_info"});
                 }
                 if(!exists($marker_info->{'pos'})){
-                    push @error_messages, "protocol_info missing pos key";
+                    push @error_messages, SGN::I18N::translate($i18n, "genotype.validation.field_missing_pos_key", "%{field} missing pos key", {field => "protocol_info"});
                 }
                 if(!exists($marker_info->{'ref'})){
-                    push @error_messages, "protocol_info missing ref key";
+                    push @error_messages, SGN::I18N::translate($i18n, "genotype.validation.field_missing_ref_key", "%{field} missing ref key", {field => "protocol_info"});
                 }
                 if(!exists($marker_info->{'alt'})){
-                    push @error_messages, "protocol_info missing alt key";
+                    push @error_messages, SGN::I18N::translate($i18n, "genotype.validation.field_missing_alt_key", "%{field} missing alt key", {field => "protocol_info"});
                 }
             }
         }
         if (scalar(@{$protocol_info->{marker_names}}) == 0){
-            push @error_messages, "No marker info in file";
+            push @error_messages, SGN::I18N::translate($i18n, "genotype.validation.no_marker_info_in_file", "No marker info in file");
         }
         while (my ($chromosome, $protocol_info_chrom) = each %{$protocol_info->{markers_array}}) {
             if (scalar(@{$protocol_info_chrom}) == 0){
-                push @error_messages, "No marker info in markers_array file";
+                push @error_messages, SGN::I18N::translate($i18n, "genotype.validation.no_marker_info_in_field_file", "No marker info in %{field} file", {field => "markers_array"});
             }
         }
     }
@@ -703,7 +706,7 @@ sub validate {
 
         if (scalar(@not_stored_markers) > 0) {
             my $missing_markers = join(",", @not_stored_markers);
-            push @error_messages, "Error: some markers in SSR genotyping data are not in the selected protocol. Missing markers: $missing_markers";
+            push @error_messages, SGN::I18N::translate($i18n, "genotype.validation.error_some_markers_in_ssr_genotyping_data_are_not_in_the_selected", "Error: some markers in SSR genotyping data are not in the selected protocol. Missing markers: %{missing_markers}", {missing_markers => ("" . "$missing_markers")});
             @missing_markers = @not_stored_markers;
         }
     }
@@ -713,7 +716,7 @@ sub validate {
 
     while (my ($observation_unit_name, $marker_result) = each %$genotype_info){
         if (!$observation_unit_name || !$marker_result){
-            push @error_messages, "No geno info in genotype_info";
+            push @error_messages, SGN::I18N::translate($i18n, "genotype.validation.no_geno_info_in_field", "No geno info in %{field}", {field => "genotype_info"});
         }
     }
 
@@ -748,7 +751,7 @@ sub validate {
         my $uniquename = $r->uniquename;
         my $protocol_name = $r->get_column('protocol_name');
         my $project_name = $r->get_column('project_name');
-        push @warning_messages, "$uniquename in your file has already has genotype stored using the protocol $protocol_name in the project $project_name.";
+        push @warning_messages, SGN::I18N::translate($i18n, "genotype.validation.uniquename_in_your_file_has_already_has_genotype_stored_using_the_protocol", "%{uniquename} in your file has already has genotype stored using the protocol %{protocol_name} in the project %{project_name}.", {uniquename => ("" . "$uniquename"), protocol_name => ("" . "$protocol_name"), project_name => ("" . "$project_name")});
         $previous_genotypes_exist = 1;
     }
 

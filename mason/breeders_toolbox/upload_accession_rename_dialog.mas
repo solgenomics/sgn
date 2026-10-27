@@ -5,20 +5,20 @@
   <div class="modal-dialog" role="document">
     <div class="modal-content">
       <div class="modal-header">
-        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-        <h4 class="modal-title" id="uploadRenameAccessionValidateDialog">Results From Validation</h4>
+        <button type="button" class="close" data-dismiss="modal" aria-label="<% $c->i18n->p("global.dataset_publish.close", "Close") |h %>"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title" id="uploadRenameAccessionValidateDialog"><% $c->i18n->p("cross.ui.results_from_validation", "Results From Validation") |h %></h4>
       </div>
       <div class="modal-body">
         <div class="container-fluid">
-          <input type="checkbox" checked id="store_old_name_as_synonym" />&nbsp;Store old names as synonyms of the accessions</div>
+          <input type="checkbox" checked id="store_old_name_as_synonym" />&nbsp;<% $c->i18n->p("accession.forms.store_old_names_as_synonyms_of_the_accessions", "Store old names as synonyms of the accessions") |h %></div>
  	<table class="table table-hover">
     	  <tbody></tbody>
   	</table>
       </div>
 
       <div class="modal-footer">
-	<button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-	<button type="button" class="btn btn-primary" name="upload_rename_accessions_store" id="upload_rename_accessions_store" data-dismiss="modal">Rename and store</button>
+	<button type="button" class="btn btn-default" data-dismiss="modal"><% $c->i18n->p("global.dataset_publish.close", "Close") |h %></button>
+	<button type="button" class="btn btn-primary" name="upload_rename_accessions_store" id="upload_rename_accessions_store" data-dismiss="modal"><% $c->i18n->p("accession.forms.rename_and_store", "Rename and store") |h %></button>
       </div>
     </div>
   </div>
@@ -30,16 +30,16 @@
   <div class="modal-dialog" role="document">
     <div class="modal-content">
       <div class="modal-header">
-        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-        <h4 class="modal-title" id="uploadRenameAccessionsSuccessDialog">Upload Successful</h4>
+        <button type="button" class="close" data-dismiss="modal" aria-label="<% $c->i18n->p("global.dataset_publish.close", "Close") |h %>"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title" id="uploadRenameAccessionsSuccessDialog"><% $c->i18n->p("cross.ui.upload_successful", "Upload Successful") |h %></h4>
       </div>
       <div class="modal-body">
         <div class="container-fluid">
- 	  <h2>The accession renaming list upload was successful.</h2>
+          <h2><% $c->i18n->p("accession.forms.the_accession_renaming_list_upload_was_successful", "The accession renaming list upload was successful.") |h %></h2>
 	  
-	  Successfully renamed:<br />
+	  <% $c->i18n->p("accession.forms.successfully_renamed", "Successfully renamed:") |h %><br />
 	  <div class="bg-success" id="list_of_uploaded_rename_accessions">
-	       [loading...]
+	       <% $c->i18n->p("global.page.form.loading", "[loading...]") |h %>
 	  </div>
 	  <br />
 	  
@@ -48,7 +48,7 @@
         </div>
       </div>
       <div class="modal-footer">
-        <button type="button" id="rename_accessions_upload_success_dismiss" class="btn btn-default" data-dismiss="modal">Close</button>
+        <button type="button" id="rename_accessions_upload_success_dismiss" class="btn btn-default" data-dismiss="modal"><% $c->i18n->p("global.dataset_publish.close", "Close") |h %></button>
       </div>
     </div>
   </div>
@@ -59,28 +59,28 @@
   <div class="modal-dialog" role="document">
     <div class="modal-content">
       <div class="modal-header">
-        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-        <h4 class="modal-title" id="uploadRenameAccessionsDialog">Upload Rename Accessions Information</h4>
+        <button type="button" class="close" data-dismiss="modal" aria-label="<% $c->i18n->p("global.dataset_publish.close", "Close") |h %>"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title" id="uploadRenameAccessionsDialog"><% $c->i18n->p("accession.forms.upload_rename_accessions_information", "Upload Rename Accessions Information") |h %></h4>
       </div>
       <div class="modal-body">
         <div class="container-fluid">
-    	  <&| /page/explanation.mas, title=>'Template Information' &>
+          <&| /page/explanation.mas, title=>$c->i18n->p("cross.ui.template_information.bf8c643", "Template Information") &>
     	  <p>
-      	  <b>File format information</b>
+          <b><% $c->i18n->p("accessions.dialog.file_format", "File format information") |h %></b>
       	  <br>
-      	  <a id="rename_accessions_upload_spreadsheet_format_info_link" data-toggle='modal' data-target='#rename_accessions_upload_spreadsheet_format_info_dialog'>Spreadsheet Format</a>
+          <a id="rename_accessions_upload_spreadsheet_format_info_link" data-toggle='modal' data-target='#rename_accessions_upload_spreadsheet_format_info_dialog'><% $c->i18n->p("cross.ui.spreadsheet_format.f1285ec", "Spreadsheet Format") |h %></a>
     	  </p>
   	  </&>
 
   	  <form method="post" enctype="multipart/form-data" encoding="multipart/form-data" id="upload_rename_accessions_form" name="upload_rename_accessions_form">
-    	    <label for="rename_accession_uploaded_file" style="display: inline-block; width: 300px;">Upload Rename Accessions File:</label>
+            <label for="rename_accession_uploaded_file" style="display: inline-block; width: 300px;"><% $c->i18n->p("accession.forms.upload_rename_accessions_file", "Upload Rename Accessions File:") |h %></label>
     	    <input type="file" name="rename_accessions_uploaded_file" id="rename_accessions_uploaded_file" encoding="multipart/form-data" />
     	  </form>
         </div>
       </div>
       <div class="modal-footer">
-        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-	<button type="button" class="btn btn-primary" name="upload_rename_accessions_dialog_submit" id="upload_rename_accessions_dialog_submit">Validate</button>
+        <button type="button" class="btn btn-default" data-dismiss="modal"><% $c->i18n->p("global.dataset_publish.close", "Close") |h %></button>
+	<button type="button" class="btn btn-primary" name="upload_rename_accessions_dialog_submit" id="upload_rename_accessions_dialog_submit"><% $c->i18n->p("cross.ui.validate", "Validate") |h %></button>
       </div>
     </div>
   </div>
@@ -90,18 +90,18 @@
   <div class="modal-dialog" role="document">
     <div class="modal-content">
       <div class="modal-header">
-        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-        <h4 class="modal-title" id="renameAccessionsUploadInfoDialog">Template Information</h4>
+        <button type="button" class="close" data-dismiss="modal" aria-label="<% $c->i18n->p("global.dataset_publish.close", "Close") |h %>"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title" id="renameAccessionsUploadInfoDialog"><% $c->i18n->p("cross.ui.template_information.bf8c643", "Template Information") |h %></h4>
       </div>
       <div class="modal-body">
         <div class="container-fluid">
- 	  <b>Accession renaming information may be uploaded in tab-delimited text file format</b>
+          <b><% $c->i18n->p("accession.forms.accession_renaming_information_may_be_uploaded_in_tab_delimited_text", "Accession renaming information may be uploaded in tab-delimited text file format") |h %></b>
 	  <br>
-	  <p>(.xls or .xlsx formats are <b>NOT</b> supported)</p>
+	  <p><% $c->i18n->p("accession.forms.xls_or_xlsx_formats_are", "(.xls or .xlsx formats are") |h %> <b><% $c->i18n->p("accession.forms.not", "NOT") |h %></b> <% $c->i18n->p("accession.forms.supported", "supported)") |h %></p>
 	  <hr>
-	  <b>Header:</b>
+	  <b><% $c->i18n->p("accessions.template.header", "Header:") |h %></b>
 	  <br>
-	  <p>The first row (header) should contain the following:</p>
+	  <p><% $c->i18n->p("cross.ui.the_first_row_header_should_contain_the_following", "The first row (header) should contain the following:") |h %></p>
 	  
 	  <table class="table table-hover table-bordered">
   	    <body>
@@ -112,15 +112,15 @@
 	    </body>
 	  </table>
 	  
-	  <h4>Required fields:</h4>
+	  <h4><% $c->i18n->p("cross.ui.required_fields", "Required fields:") |h %></h4>
 	  <ul>
-            <li>old_name (exact name MUST exist in the database)</li>
-            <li>new_name (must NOT exist in the database)</li>
+            <li><% $c->i18n->p("accession.forms.old_name_exact_name_must_exist_in_the_database", "old_name (exact name MUST exist in the database)") |h %></li>
+            <li><% $c->i18n->p("accession.forms.new_name_must_not_exist_in_the_database", "new_name (must NOT exist in the database)") |h %></li>
 	  </ul>
 	</div>
       </div>
       <div class="modal-footer">
-	<button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+	<button type="button" class="btn btn-default" data-dismiss="modal"><% $c->i18n->p("global.dataset_publish.close", "Close") |h %></button>
       </div>
     </div>
   </div>

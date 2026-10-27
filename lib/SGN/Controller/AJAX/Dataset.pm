@@ -18,6 +18,7 @@ use JSON qw| decode_json encode_json |;
 use Time::HiRes qw| time |;
 use Digest::MD5;
 use Try::Tiny;
+use HTML::Entities ();
 use strict;
 use warnings;
 
@@ -33,7 +34,7 @@ sub store_dataset :Path('/ajax/dataset/save') Args(0) {
 
     my $user;
     if (!$c->user()) {
-	$c->stash->{rest} = { error => "Login required to perform requested action." };
+	$c->stash->{rest} = { error => $c->i18n->p("lists_datasets.api_dataset.login_required_to_perform_requested_action", "Login required to perform requested action.") };
 	return;
     }
 
@@ -46,7 +47,7 @@ sub store_dataset :Path('/ajax/dataset/save') Args(0) {
 
     my $people_schema =  $c->dbic_schema("CXGN::People::Schema", undef, $user_id);
     if (CXGN::Dataset->exists_dataset_name($people_schema, $dataset_name)) {
-	$c->stash->{rest} = { error => "The dataset with name $dataset_name already exists. Please choose another name." };
+	$c->stash->{rest} = { error => $c->i18n->p("lists_datasets.api_dataset.the_dataset_with_name_name_already_exists_please_choose_another_", "The dataset with name %{name} already exists. Please choose another name.", {name => "$dataset_name"}) };
 	return;
     }
 
@@ -73,7 +74,7 @@ sub store_dataset :Path('/ajax/dataset/save') Args(0) {
 
 
 
-    $c->stash->{rest} = { message => "Stored Dataset Successfully!", id => $new_id };
+    $c->stash->{rest} = { message => $c->i18n->p("lists_datasets.api_dataset.stored_dataset_successfully", "Stored Dataset Successfully!"), id => $new_id };
 }
 
 sub store_outliers_in_dataset :Path('/ajax/dataset/store_outliers') Args(1) {
@@ -215,7 +216,7 @@ sub get_rosners_test_outliers :Path('/ajax/dataset/rosner_test') Args(1) {
     my $aoa = csv (in => $stat_file_path);   # as array of hash
 
     $c->stash->{rest} = {
-        message            => "Rosners TEST Successfully!",
+        message            => $c->i18n->p("lists_datasets.api_dataset.rosners_test_successfully", "Rosners TEST Successfully!"),
         dataset_id         => $dataset_id,
         dataset_trait      => $dataset_trait,
         data               => \@columns,
@@ -231,7 +232,7 @@ sub retrieve_datasets_by_user :Path('/ajax/dataset/by_user') Args(0) {
 
     my $user = $c->user();
     if (!$user) {
-	$c->stash->{rest} = { error => "No logged in user to display dataset information for." };
+	$c->stash->{rest} = { error => $c->i18n->p("lists_datasets.api_dataset.no_logged_in_user_to_display_dataset_information_for", "No logged in user to display dataset information for.") };
 	return;
     }
 
@@ -251,7 +252,7 @@ sub get_datasets_by_user_html :Path('/ajax/dataset/by_user_html') Args(0) {
     my $user = $c->user();
     # display public datasets, even if the user is not logged in...
     # if (!$user) {
-    #     $c->stash->{rest} = { error => "No logged in user to display dataset information for." };
+    #     $c->stash->{rest} = { error => $c->i18n->p("lists_datasets.api_dataset.no_logged_in_user_to_display_dataset_information_for", "No logged in user to display dataset information for.") };
     #     return;
     # }
 
@@ -292,7 +293,7 @@ sub set_datasets_public :Path('/ajax/dataset/set_public') Args(1) {
 
     my $user = $c->user();
     if (!$user) {
-        $c->stash->{rest} = { error => "No logged in user error." };
+        $c->stash->{rest} = { error => $c->i18n->p("lists_datasets.api_dataset.no_logged_in_user_error", "No logged in user error.") };
         return;
     }
 
@@ -306,7 +307,7 @@ sub set_datasets_public :Path('/ajax/dataset/set_public') Args(1) {
         });
     print STDERR "Dataset owner: ".$dataset->sp_person_id.", logged in: $logged_in_user\n";
     if ($dataset->sp_person_id() != $logged_in_user) {
-        $c->stash->{rest} = { error => "Only the owner can change a dataset" };
+        $c->stash->{rest} = { error => $c->i18n->p("lists_datasets.api_dataset.only_the_owner_can_change_a_dataset", "Only the owner can change a dataset") };
         return;
     }
     print STDERR "set public dataset_id $dataset_id\n";
@@ -326,7 +327,7 @@ sub set_datasets_private :Path('/ajax/dataset/set_private') Args(1) {
 
     my $user = $c->user();
     if (!$user) {
-        $c->stash->{rest} = { error => "No logged in user error." };
+        $c->stash->{rest} = { error => $c->i18n->p("lists_datasets.api_dataset.no_logged_in_user_error", "No logged in user error.") };
         return;
     }
 
@@ -340,7 +341,7 @@ sub set_datasets_private :Path('/ajax/dataset/set_private') Args(1) {
         });
     print STDERR "Dataset owner: ".$dataset->sp_person_id.", logged in: $logged_in_user\n";
     if ($dataset->sp_person_id() != $logged_in_user) {
-        $c->stash->{rest} = { error => "Only the owner can change a dataset" };
+        $c->stash->{rest} = { error => $c->i18n->p("lists_datasets.api_dataset.only_the_owner_can_change_a_dataset", "Only the owner can change a dataset") };
         return;
     }
     print STDERR "set private dataset_id $dataset_id\n";
@@ -362,7 +363,7 @@ sub update_description :Path('/ajax/dataset/update_description') Args(1) {
 
     my $user = $c->user();
     if (!$user) {
-        $c->stash->{rest} = { error => "No logged in user error." };
+        $c->stash->{rest} = { error => $c->i18n->p("lists_datasets.api_dataset.no_logged_in_user_error", "No logged in user error.") };
         return;
     }
 
@@ -377,7 +378,7 @@ sub update_description :Path('/ajax/dataset/update_description') Args(1) {
     $dataset->description($dataset_description);
     print STDERR "Dataset owner: ".$dataset->sp_person_id.", logged in: $logged_in_user\n";
     if ($dataset->sp_person_id() != $logged_in_user) {
-        $c->stash->{rest} = { error => "Only the owner can change a dataset" };
+        $c->stash->{rest} = { error => $c->i18n->p("lists_datasets.api_dataset.only_the_owner_can_change_a_dataset", "Only the owner can change a dataset") };
         return;
     }
     my $error = $dataset->update_description($dataset_description);
@@ -428,11 +429,11 @@ sub get_child_analyses :Path('/ajax/dataset/get_child_analyses') Args(1) {
     };
 
     if ($@){
-        $c->stash->{rest} = {error => "Error retrieving analyses using this dataset. $@"};
+        $c->stash->{rest} = {error => do { my $dataset_api_error_detail = "$@"; $c->i18n->p("lists_datasets.api_dataset.error_retrieving_analyses_using_this_dataset_detail", "Error retrieving analyses using this dataset. %{detail}", {detail => $dataset_api_error_detail}) }};
     }
 
     if ($analysis_list eq "") {
-        $analysis_list = "(none)";
+        $analysis_list = HTML::Entities::encode_entities($c->i18n->p("lists.render.none_type", "(none)"));
     }
 
     print STDERR "Got the following list of accessions using this dataset: $analysis_list \n";
@@ -463,7 +464,7 @@ sub retrieve_dataset_dimension :Path('/ajax/dataset/retrieve') Args(2) {
 	$dimension_data = $dataset->$function_name();
     }
     else {
-	$c->stash->{rest} = { error => "The specified dimension '$dimension' does not exist" };
+	$c->stash->{rest} = { error => $c->i18n->p("lists_datasets.api_dataset.the_specified_dimension_dimension_does_not_exist", "The specified dimension '%{dimension}' does not exist", {dimension => "$dimension"}) };
 	return;
     }
 
@@ -524,11 +525,11 @@ sub calc_tool_compatibility :Path('/ajax/dataset/calc_tool_compatibility') Args(
 
     if ($@){
         $c->stash->{rest} = {
-            error => "Error calculating tool compatibility:\n$@"
+            error => do { my $dataset_api_error_detail = "$@"; $c->i18n->p("lists_datasets.api_dataset.error_calculating_tool_compatibility_detail", "Error calculating tool compatibility:\n%{detail}", {detail => $dataset_api_error_detail}) }
         };
     } else {
          $c->stash->{rest} = {
-            message => "Tool compatibility submitted. Check job logs for progress.\n",
+            message => $c->i18n->p("lists_datasets.api_dataset.tool_compatibility_submitted_check_job_logs_for_progress", "Tool compatibility submitted. Check job logs for progress.\n"),
             success => 1
          };
     }
@@ -540,7 +541,7 @@ sub delete_dataset :Path('/ajax/dataset/delete') Args(1) {
     my $dataset_id = shift;
 
     if (!$c->user()) {
-	$c->stash->{rest} = { error => "Deleting datasets requires login" };
+	$c->stash->{rest} = { error => $c->i18n->p("lists_datasets.api_dataset.deleting_datasets_requires_login", "Deleting datasets requires login") };
 	return;
     }
 
@@ -555,7 +556,7 @@ sub delete_dataset :Path('/ajax/dataset/delete') Args(1) {
 
 #    print STDERR "Dataset owner: ".$dataset->sp_person_id.", logged in: $logged_in_user\n";
     if ($dataset->sp_person_id() != $logged_in_user) {
-        $c->stash->{rest} = { error => "Only the owner can delete a dataset" };
+        $c->stash->{rest} = { error => $c->i18n->p("lists_datasets.api_dataset.only_the_owner_can_delete_a_dataset", "Only the owner can delete a dataset") };
         return;
     }
 
@@ -623,7 +624,7 @@ sub publish_dataset_connection_POST {
 
     my $config = $c->get_conf('dataset_archive_clients') || {};
     if ( ! exists $config->{$service} ) {
-        $c->stash->{rest} = { error => 'The selected service does not exist in the server configuration' };
+        $c->stash->{rest} = { error => $c->i18n->p("lists_datasets.controller.service_missing", "The selected service does not exist in the server configuration") };
         return;
     }
     my $selected = $config->{$service};
@@ -756,7 +757,7 @@ sub publish_dataset_articles : Path('/ajax/dataset/publish/articles') Args(1) {
 
     my $config = $c->get_conf('dataset_archive_clients') || {};
     if ( ! exists $config->{$service} ) {
-        $c->stash->{rest} = { error => 'The selected service does not exist in the server configuration' };
+        $c->stash->{rest} = { error => $c->i18n->p("lists_datasets.controller.service_missing", "The selected service does not exist in the server configuration") };
         return;
     }
     my $selected = $config->{$service};
@@ -786,7 +787,7 @@ sub publish_dataset_articles_details : Path('/ajax/dataset/publish/articles') Ar
 
     my $config = $c->get_conf('dataset_archive_clients') || {};
     if ( ! exists $config->{$service} ) {
-        $c->stash->{rest} = { error => 'The selected service does not exist in the server configuration' };
+        $c->stash->{rest} = { error => $c->i18n->p("lists_datasets.controller.service_missing", "The selected service does not exist in the server configuration") };
         return;
     }
     my $selected = $config->{$service};
@@ -822,13 +823,13 @@ sub publish_dataset_articles_new_POST {
     });
 
     if (!$c->user()) {
-        $c->stash->{rest} = { error => "Login required to perform requested action." };
+        $c->stash->{rest} = { error => $c->i18n->p("lists_datasets.api_dataset.login_required_to_perform_requested_action", "Login required to perform requested action.") };
         return;
     }
 
     my $user_id = $c->user()->get_object()->get_sp_person_id();
     if ($dataset->sp_person_id() != $user_id ) {
-        $c->stash->{rest} = { error => "Only the owner can publish a dataset" };
+        $c->stash->{rest} = { error => $c->i18n->p("lists_datasets.api_dataset.only_the_owner_can_publish_a_dataset", "Only the owner can publish a dataset") };
         return;
     }
 
@@ -840,7 +841,7 @@ sub publish_dataset_articles_new_POST {
     my $production_url = $c->get_conf('main_production_site_url');
     my $config = $c->get_conf('dataset_archive_clients') || {};
     if ( ! exists $config->{$service} ) {
-        $c->stash->{rest} = { error => 'The selected service does not exist in the server configuration' };
+        $c->stash->{rest} = { error => $c->i18n->p("lists_datasets.controller.service_missing", "The selected service does not exist in the server configuration") };
         return;
     }
     my $selected = $config->{$service};
@@ -873,7 +874,7 @@ sub publish_dataset_articles_new_POST {
     my $created = decode_json($resp->content || '{}');
 
     if ( ! exists $created->{entity_id} || exists $created->{message} ) {
-        $c->stash->{rest} = { error => $created->{message} || 'No entity id returned' };
+        $c->stash->{rest} = { error => $created->{message} || $c->i18n->p("lists_datasets.api_dataset.no_entity_id_returned", "No entity id returned") };
         return;
     }
 
@@ -943,7 +944,7 @@ sub publish_dataset_generate_POST {
         return;
     }
     else {
-        $c->stash->{rest} = { error => "Could not generate archive file" };
+        $c->stash->{rest} = { error => $c->i18n->p("lists_datasets.api_dataset.could_not_generate_archive_file", "Could not generate archive file") };
         return;
     }
 }
@@ -974,7 +975,7 @@ sub publish_dataset_submit_POST {
 
     my $config = $c->get_conf('dataset_archive_clients') || {};
     if ( ! exists $config->{$service} ) {
-        $c->stash->{rest} = { error => 'The selected service does not exist in the server configuration' };
+        $c->stash->{rest} = { error => $c->i18n->p("lists_datasets.controller.service_missing", "The selected service does not exist in the server configuration") };
         return;
     }
     my $selected = $config->{$service};
@@ -989,7 +990,7 @@ sub publish_dataset_submit_POST {
         if ( -f "$path" ) {
 
             # Get the MD5 checksum of the file contents
-            open (my $fh, '<', "$path") or return $c->stash->{rest} = { error => "Cannot open the $file file" };
+            open (my $fh, '<', "$path") or return $c->stash->{rest} = { error => $c->i18n->p("lists_datasets.api_dataset.cannot_open_the_file_file", "Cannot open the %{file} file", {file => "$file"}) };
             binmode($fh);
             my $md5 = Digest::MD5->new;
             my $checksum = Digest::MD5->new->addfile($fh)->hexdigest;
@@ -1011,7 +1012,7 @@ sub publish_dataset_submit_POST {
             );
             my $init = decode_json($init_resp->content || '{}');
             if ( ! exists $init->{location} ) {
-                $c->stash->{rest} = { error => "Could not initialize new file $file" };
+                $c->stash->{rest} = { error => $c->i18n->p("lists_datasets.api_dataset.could_not_initialize_new_file_file", "Could not initialize new file %{file}", {file => "$file"}) };
                 return;
             }
             my $api_location = $init->{location};
@@ -1023,7 +1024,7 @@ sub publish_dataset_submit_POST {
             );
             my $metadata = decode_json($metadata_resp->content || '{}');
             if ( ! exists $metadata->{upload_url} || ! exists $metadata->{id} ) {
-                $c->stash->{rest} = { error => "Could not get metadata for new file $file" };
+                $c->stash->{rest} = { error => $c->i18n->p("lists_datasets.api_dataset.could_not_get_metadata_for_new_file_file", "Could not get metadata for new file %{file}", {file => "$file"}) };
                 return;
             }
             my $upload_url = $metadata->{upload_url};
@@ -1036,7 +1037,7 @@ sub publish_dataset_submit_POST {
             );
             my $upload_metadata = decode_json($upload_metadata_resp->content || '{}');
             if ( ! exists $upload_metadata->{token} || ! exists $upload_metadata->{parts} ) {
-                $c->stash->{rest} = { error => "Could not get upload metadata for new file $file" };
+                $c->stash->{rest} = { error => $c->i18n->p("lists_datasets.api_dataset.could_not_get_upload_metadata_for_new_file_file", "Could not get upload metadata for new file %{file}", {file => "$file"}) };
                 return;
             }
             my $upload_token = $upload_metadata->{token};
@@ -1079,12 +1080,12 @@ sub publish_dataset_submit_POST {
             return;
         }
         else {
-            $c->stash->{rest} = { error => 'The specified file does not exist' };
+            $c->stash->{rest} = { error => $c->i18n->p("lists_datasets.api_dataset.the_specified_file_does_not_exist", "The specified file does not exist") };
             return;
         }
     }
     else {
-        $c->stash->{rest} = { error => 'The specified published metadata does not exist' };
+        $c->stash->{rest} = { error => $c->i18n->p("lists_datasets.api_dataset.the_specified_published_metadata_does_not_exist", "The specified published metadata does not exist") };
         return;
     }
 }
@@ -1118,7 +1119,7 @@ sub publish_dataset_upload_POST {
 
     my $config = $c->get_conf('dataset_archive_clients') || {};
     if ( ! exists $config->{$service} ) {
-        $c->stash->{rest} = { error => 'The selected service does not exist in the server configuration' };
+        $c->stash->{rest} = { error => $c->i18n->p("lists_datasets.controller.service_missing", "The selected service does not exist in the server configuration") };
         return;
     }
     my $selected = $config->{$service};
@@ -1150,7 +1151,7 @@ sub publish_dataset_upload_POST {
 
             # Check for a 200 OK status
             if ( !$upload_part_resp->is_success ) {
-                $c->stash->{rest} = { error => "Could not upload the file $file" };
+                $c->stash->{rest} = { error => $c->i18n->p("lists_datasets.api_dataset.could_not_upload_the_file_file", "Could not upload the file %{file}", {file => "$file"}) };
                 return;
             }
 
@@ -1163,12 +1164,12 @@ sub publish_dataset_upload_POST {
             return;
         }
         else {
-            $c->stash->{rest} = { error => 'The specified file does not exist' };
+            $c->stash->{rest} = { error => $c->i18n->p("lists_datasets.api_dataset.the_specified_file_does_not_exist", "The specified file does not exist") };
             return;
         }
     }
     else {
-        $c->stash->{rest} = { error => 'The specified published metadata does not exist' };
+        $c->stash->{rest} = { error => $c->i18n->p("lists_datasets.api_dataset.the_specified_published_metadata_does_not_exist", "The specified published metadata does not exist") };
         return;
     }
 }
@@ -1202,7 +1203,7 @@ sub publish_dataset_finalize_POST {
 
     my $config = $c->get_conf('dataset_archive_clients') || {};
     if ( ! exists $config->{$service} ) {
-        $c->stash->{rest} = { error => 'The selected service does not exist in the server configuration' };
+        $c->stash->{rest} = { error => $c->i18n->p("lists_datasets.controller.service_missing", "The selected service does not exist in the server configuration") };
         return;
     }
     my $selected = $config->{$service};
@@ -1221,7 +1222,7 @@ sub publish_dataset_finalize_POST {
 
     # Return an error if the upload was not completly successful
     if ( !$iscomplete ) {
-        $c->stash->{rest} = { error => "The upload for $type was not complete" };
+        $c->stash->{rest} = { error => $c->i18n->p("lists_datasets.api_dataset.the_upload_for_type_was_not_complete", "The upload for %{type} was not complete", {type => "$type"}) };
         return;
     }
 
@@ -1231,7 +1232,7 @@ sub publish_dataset_finalize_POST {
         "Authorization" => "Bearer $token"
     );
     if ( !$finalize_resp->is_success ) {
-        $c->stash->{rest} = { error => "Could not finalize the file upload for $type" };
+        $c->stash->{rest} = { error => $c->i18n->p("lists_datasets.api_dataset.could_not_finalize_the_file_upload_for_type", "Could not finalize the file upload for %{type}", {type => "$type"}) };
         return;
     }
 
@@ -1278,7 +1279,7 @@ sub publish_dataset_issues_publish : Path('/ajax/dataset/publish/issues/publish'
 
     my $issue = $dataset->published()->{$key};
     if ( !defined $issue ) {
-        $c->stash->{rest} = { error => 'The specified published metadata does not exist' };
+        $c->stash->{rest} = { error => $c->i18n->p("lists_datasets.api_dataset.the_specified_published_metadata_does_not_exist", "The specified published metadata does not exist") };
         return;
     }
     my $article_id = $issue->{article}->{id};
@@ -1291,7 +1292,7 @@ sub publish_dataset_issues_publish : Path('/ajax/dataset/publish/issues/publish'
 
     my $config = $c->get_conf('dataset_archive_clients') || {};
     if ( ! exists $config->{$s} ) {
-        $c->stash->{rest} = { error => 'The selected service does not exist in the server configuration' };
+        $c->stash->{rest} = { error => $c->i18n->p("lists_datasets.controller.service_missing", "The selected service does not exist in the server configuration") };
         return;
     }
     my $service = $config->{$s};
@@ -1303,7 +1304,7 @@ sub publish_dataset_issues_publish : Path('/ajax/dataset/publish/issues/publish'
     );
     my $published = decode_json($published_resp->content || '{}');
     if ( !defined $published || !defined $published->{location} ) {
-        $c->stash->{rest} = { error => 'Could not publish the selected article' };
+        $c->stash->{rest} = { error => $c->i18n->p("lists_datasets.api_dataset.could_not_publish_the_selected_article", "Could not publish the selected article") };
         return;
     }
 
@@ -1341,7 +1342,7 @@ sub publish_dataset_reserve_doi : Path('/ajax/dataset/publish/issues/reserveDOI'
 
     my $issue = $dataset->published()->{$key};
     if ( !defined $issue ) {
-        $c->stash->{rest} = { error => 'The specified published metadata does not exist' };
+        $c->stash->{rest} = { error => $c->i18n->p("lists_datasets.api_dataset.the_specified_published_metadata_does_not_exist", "The specified published metadata does not exist") };
         return;
     }
     my $article_id = $issue->{article}->{id};
@@ -1354,7 +1355,7 @@ sub publish_dataset_reserve_doi : Path('/ajax/dataset/publish/issues/reserveDOI'
 
     my $config = $c->get_conf('dataset_archive_clients') || {};
     if ( ! exists $config->{$s} ) {
-        $c->stash->{rest} = { error => 'The selected service does not exist in the server configuration' };
+        $c->stash->{rest} = { error => $c->i18n->p("lists_datasets.controller.service_missing", "The selected service does not exist in the server configuration") };
         return;
     }
     my $service = $config->{$s};
@@ -1366,7 +1367,7 @@ sub publish_dataset_reserve_doi : Path('/ajax/dataset/publish/issues/reserveDOI'
     );
     my $doi = decode_json($doi_resp->content || '{}');
     if ( !defined $doi || !defined $doi->{doi} ) {
-        $c->stash->{rest} = { error => 'Could not get a DOI for the selected article' };
+        $c->stash->{rest} = { error => $c->i18n->p("lists_datasets.api_dataset.could_not_get_a_doi_for_the_selected_article", "Could not get a DOI for the selected article") };
         return;
     }
 
@@ -1434,7 +1435,7 @@ sub publish_dataset_file : Path('/ajax/dataset/publish/file') Args(3) {
             $c->res->header('Content-Disposition', qq[attachment; filename="$file"]);
 
             my $output = "";
-            open(my $F, "< :raw", $path) || return { error => 'Cannot open file to read contents' };
+            open(my $F, "< :raw", $path) || return { error => $c->i18n->p("lists_datasets.api_dataset.cannot_open_file_to_read_contents", "Cannot open file to read contents") };
             while (<$F>) {
                 $output .= $_;
             }
@@ -1443,12 +1444,12 @@ sub publish_dataset_file : Path('/ajax/dataset/publish/file') Args(3) {
             $c->res->body($output);
         }
         else {
-            $c->stash->{rest} = { error => 'The specified file does not exist' };
+            $c->stash->{rest} = { error => $c->i18n->p("lists_datasets.api_dataset.the_specified_file_does_not_exist", "The specified file does not exist") };
             return;
         }
     }
     else {
-        $c->stash->{rest} = { error => 'The specified published metadata does not exist' };
+        $c->stash->{rest} = { error => $c->i18n->p("lists_datasets.api_dataset.the_specified_published_metadata_does_not_exist", "The specified published metadata does not exist") };
         return;
     }
 }
@@ -1472,12 +1473,12 @@ sub _setup_publish {
         });
 
         if (!$c->user()) {
-            return ( "Login required to perform requested action." );
+            return ( $c->i18n->p("lists_datasets.api_dataset.login_required_to_perform_requested_action", "Login required to perform requested action.") );
         }
 
         my $user_id = $c->user()->get_object()->get_sp_person_id();
         if ($dataset->sp_person_id() != $user_id ) {
-            return ( "Only the owner can publish a dataset" );
+            return ( $c->i18n->p("lists_datasets.api_dataset.only_the_owner_can_publish_a_dataset", "Only the owner can publish a dataset") );
         }
 
         return ( undef, $dataset, $user_id );
@@ -1486,4 +1487,4 @@ sub _setup_publish {
     }
 }
 
-1
+1;

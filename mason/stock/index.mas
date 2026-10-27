@@ -1,3 +1,6 @@
+<%once>
+use HTML::Entities ();
+</%once>
 <%doc>
 
 =head1 NAME
@@ -68,6 +71,26 @@ use CXGN::Chado::Publication;
 use CXGN::Cview::Map::SGN::Genotype;
 use CXGN::Cview::MapOverviews;
 use SGN::Image;
+my $ui_add_synonym = HTML::Entities::encode_entities($c->i18n->p("accession.stock.action.add_synonym", "Add Synonym"));
+my $ui_add_info = HTML::Entities::encode_entities($c->i18n->p("accession.stock.action.add_info", "Add Additional Info"));
+my $ui_login_add = HTML::Entities::encode_entities($c->i18n->p("accession.stock.tooltip.login_add", "Login to add info"));
+my $ui_download_all_phenotypes = HTML::Entities::encode_entities($c->i18n->p("accession.stock.action.download_all_phenotypes", "Download All Phenotypes"));
+my $ui_download_phenotypes = HTML::Entities::encode_entities($c->i18n->p("accession.stock.action.download_phenotypes", "Download Phenotypes"));
+my $ui_associate_publication = HTML::Entities::encode_entities($c->i18n->p("accession.stock.action.associate_publication", "Associate publication"));
+my $ui_add_ontology = HTML::Entities::encode_entities($c->i18n->p("accession.stock.action.add_ontology", "Add ontology annotations"));
+my $ui_add_phenotype = HTML::Entities::encode_entities($c->i18n->p("accession.stock.action.add_phenotype", "[Add phenotype]"));
+my $ui_direct_plot = HTML::Entities::encode_entities($c->i18n->p("accession.stock.action.direct_phenotyping", "Direct plot phenotyping"));
+my $ui_upload_qpcr = HTML::Entities::encode_entities($c->i18n->p("accession.stock.action.upload_qpcr", "Upload qPCR Data"));
+my $ui_add_family_members = HTML::Entities::encode_entities($c->i18n->p("accession.stock.action.add_family_members", "Add Family Members"));
+my $ui_add_sequencing = HTML::Entities::encode_entities($c->i18n->p("accession.stock.action.add_sequencing", "Add sequencing info"));
+my $ui_add_parent = HTML::Entities::encode_entities($c->i18n->p("accession.stock.action.add_parent", "Add parent"));
+my $ui_remove_parent = HTML::Entities::encode_entities($c->i18n->p("accession.stock.action.remove_parent", "Remove parent"));
+my $ui_add_image = HTML::Entities::encode_entities($c->i18n->p("accession.stock.action.add_image", "Add new image"));
+my $ui_compare_images = HTML::Entities::encode_entities($c->i18n->p("accession.stock.action.compare_images", "Compare Images"));
+my $ui_add_released_variety = HTML::Entities::encode_entities($c->i18n->p("accession.stock.action.add_released_variety", "Add released variety name"));
+my $ui_login_locus = HTML::Entities::encode_entities($c->i18n->p("accession.stock.action.login_locus", "[log-in to associate new locus]"));
+my $ui_new_qtl = HTML::Entities::encode_entities($c->i18n->p("accession.stock.action.new_qtl", "New QTL population"));
+my $ui_stock_search = HTML::Entities::encode_entities($c->i18n->p("accession.stock.action.stock_search", "Back to stock search"));
 
 my $trial_stock_type => undef;
 my $stock = $stockref->{stock};
@@ -136,7 +159,7 @@ $image_ids = \@valid_image_ids;
 #my $stock_descendants = $stockref->{stock_descendants};
 
 my $allele_div = "stock_alleles";
-my $new_locus_link = !$person_id ? qq|<a href="/user/login">[log-in to associate new locus]</a> | : '' ;
+my $new_locus_link = !$person_id ? qq|<a href="/user/login">$ui_login_locus</a> | : '' ;
 
 #owner
 my $owners = $stockref->{editor_info};
@@ -154,9 +177,13 @@ foreach my $o_id (@owner_ids){
   $owners_html .= qq|<a href="/solpeople/personal-info.pl?sp_person_id=$o_id">$first_name $last_name</a> |;
 }
 
+my $ui_header_editor = HTML::Entities::encode_entities($c->i18n->p("accession.stock.editor_table.editor", "Editor"));
+my $ui_header_timestamp = HTML::Entities::encode_entities($c->i18n->p("accession.stock.editor_table.timestamp", "Timestamp"));
+my $ui_header_modification_note = HTML::Entities::encode_entities($c->i18n->p("accession.stock.editor_table.modification_note", "Modification Note"));
+my $ui_header_obsolete_note = HTML::Entities::encode_entities($c->i18n->p("accession.stock.editor_table.obsolete_note", "Obsolete Note"));
 my $editor_link_table;
 if ($is_obsolete) {
-    $editor_link_table = "<table class='table table-bordered'><thead><tr><th>Editor</th><th>Timestamp</th><th>Modification Note</th><th>Obsolete Note</th></tr></thead><tbody>";
+    $editor_link_table = "<table class='table table-bordered'><thead><tr><th>$ui_header_editor</th><th>$ui_header_timestamp</th><th>$ui_header_modification_note</th><th>$ui_header_obsolete_note</th></tr></thead><tbody>";
     foreach my $o_id (@$owners) {
         my $person = CXGN::People::Person->new($dbh, $o_id->[0]);
         my $first_name = $person->get_first_name;
@@ -164,7 +191,7 @@ if ($is_obsolete) {
         $editor_link_table .= qq|<tr><td><a href="/solpeople/personal-info.pl?sp_person_id=$o_id->[0]">$first_name $last_name</a></td><td>$o_id->[1]</td><td>$o_id->[2]</td><td>$o_id->[3]</td></tr>|;
     }
 } else {
-    $editor_link_table = "<table class='table table-bordered'><thead><tr><th>Editor</th><th>Timestamp</th><th>Modification Note</th></tr></thead><tbody>";
+    $editor_link_table = "<table class='table table-bordered'><thead><tr><th>$ui_header_editor</th><th>$ui_header_timestamp</th><th>$ui_header_modification_note</th></tr></thead><tbody>";
     foreach my $o_id (@$owners) {
         my $person = CXGN::People::Person->new($dbh, $o_id->[0]);
         my $first_name = $person->get_first_name;
@@ -181,7 +208,7 @@ my $direct_phenotypes = $stockref->{direct_phenotypes} || undef;
 
 # get all phenotypes of subjects
 my $members_phenotypes = $stockref->{members_phenotypes};
-my $p_download_link = '<a class="btn btn-sm btn-default" style="margin:3px" target="_blank" href = "/breeders/trials/phenotype/download?format=csv&timestamp=1&dataLevel=all&'.$type_name.'_list=['.$stock_id.']&search_type=complete&">Download All Phenotypes</a>';
+my $p_download_link = '<a class="btn btn-sm btn-default" style="margin:3px" target="_blank" href = "/breeders/trials/phenotype/download?format=csv&timestamp=1&dataLevel=all&'.$type_name.'_list=['.$stock_id.']&search_type=complete&">' . $ui_download_all_phenotypes . '</a>';
 
 ############################
 my $map_html = $stockref->{map_html};
@@ -204,7 +231,7 @@ if ($stock_id) {
 my $has_qtl_data = $stockref->{has_qtl_data};
 
 
-my $new_pub_link = $curator || $submitter || $sequencer  ?   qq|<a class="btn btn-sm btn-default" style="margin:3px" href="/chado/add_publication.pl?type=stock&amp;type_id=$stock_id&amp;refering_page=$this_page&amp;action=new">Associate publication</a>| : qq|<span class=\"btn btn-sm btn-default ghosted\" style="margin:3px" disabled>Associate publication</span>| ;
+my $new_pub_link = $curator || $submitter || $sequencer  ?   qq|<a class="btn btn-sm btn-default" style="margin:3px" href="/chado/add_publication.pl?type=stock&amp;type_id=$stock_id&amp;refering_page=$this_page&amp;action=new">$ui_associate_publication</a>| : qq|<span class=\"btn btn-sm btn-default ghosted\" style="margin:3px" disabled>$ui_associate_publication</span>| ;
 
 ## EUSOL, tgrc (stock_dbxref)
 my $dbxrefs = $stockref->{dbxrefs};
@@ -218,10 +245,10 @@ foreach my $db_name ( keys %$dbxrefs ) {
 }
 
 my $ontology_subtitle = $curator || $submitter || $sequencer  ?
-  qq|<a class="btn btn-sm btn-default" style="margin:3px" href="javascript:Tools.toggleContent('associate_cvterm_form', 'stock_ontology')">Add ontology annotations</a> | :
-  qq |<span class = "btn btn-default btn-sm ghosted" style="margin:3px" disabled>Add ontology annotations</span> |;
+  qq|<a class="btn btn-sm btn-default" style="margin:3px" href="javascript:Tools.toggleContent('associate_cvterm_form', 'stock_ontology')">$ui_add_ontology</a> | :
+  qq |<span class = "btn btn-default btn-sm ghosted" style="margin:3px" disabled>$ui_add_ontology</span> |;
 
-my $add_phenotype_link =  $curator || $submitter || $sequencer  ? qq| <a href="javascript:Tools.toggleContent('add_phenotype_form', 'stock_phenotype')" >[Add phenotype]</a> | :   qq |<span class = "ghosted"> [Add phenotype]</span> |;
+my $add_phenotype_link =  $curator || $submitter || $sequencer  ? qq| <a href="javascript:Tools.toggleContent('add_phenotype_form', 'stock_phenotype')" >$ui_add_phenotype</a> | :   qq |<span class = "ghosted"> $ui_add_phenotype</span> |;
 
 my $edit_privs = $curator || $submitter || $sequencer;
 
@@ -232,9 +259,9 @@ my $test_url = "/" . $basepath . "/jbrowse.conf";
 my $jbrowse_url = $jbrowse_path . "%2Faccessions%2F" . $stock_id . "&tracks=DNA%2CGene%20exons%2C" . $uniquename . "_2015_V6_imputed&highlight=";
 
 
-my $released_variety_link = '<button class="btn btn-default btn-sm" style="margin:3px" id="released_variety_link" disabled>Add released variety name</button>';
+my $released_variety_link = '<button class="btn btn-default btn-sm" style="margin:3px" id="released_variety_link" disabled>' . $ui_add_released_variety . '</button>';
 
-if ($person_id && ($submitter || $curator || $sequencer)) { $released_variety_link = qq | <button class="btn btn-default btn-sm" style="margin:3px" id="released_variety_link" >Add released variety name</button> |; }
+if ($person_id && ($submitter || $curator || $sequencer)) { $released_variety_link = qq | <button class="btn btn-default btn-sm" style="margin:3px" id="released_variety_link" >$ui_add_released_variety</button> |; }
 
 </%perl>
 
@@ -256,10 +283,10 @@ function jqueryStuff() {
 </script>
 
 <div class="details-header">
-    <& /page/page_title.mas, title=> join( ': ', grep $_, ucfirst($type_name), $uniquename ) || 'Create a new stock' &>
+    <& /page/page_title.mas, title=> join( ': ', grep $_, ucfirst($type_name), $uniquename ) || HTML::Entities::encode_entities($c->i18n->p("accession.stock.page.new_stock", "Create a new stock")) &>
 </div>
 
-<&| /page/info_section.mas, title=>"Stock details" , collapsible=>1, collapsed=>0, subtitle => "<button class='btn btn-sm btn-default' style='margin:3px' name='stock_new_qtl_link'>New QTL population</button> <button class='btn btn-sm btn-default' style='margin:3px' name='stock_go_to_stock_search'>Back to stock search</button>"  &>
+<&| /page/info_section.mas, title=>HTML::Entities::encode_entities($c->i18n->p("accession.stock.section.details", "Stock details")) , collapsible=>1, collapsed=>0, subtitle => "<button class='btn btn-sm btn-default' style='margin:3px' name='stock_new_qtl_link'>$ui_new_qtl</button> <button class='btn btn-sm btn-default' style='margin:3px' name='stock_go_to_stock_search'>$ui_stock_search</button>"  &>
 
     <div class="panel panel-default">
         <div class="panel-body">
@@ -289,7 +316,7 @@ function jqueryStuff() {
                 </%perl>
                 <div class="col-sm-6">
                     <div style="position: relative;">
-                        <button class="btn btn-default btn-small" id="toggle_qr_code" style="position: absolute; right: 10px; top: 10px; z-index: 10;">Show QR Code</button>
+                        <button class="btn btn-default btn-small" id="toggle_qr_code" style="position: absolute; right: 10px; top: 10px; z-index: 10;"><% $c->i18n->p("accession.stock.action.show_qr", "Show QR Code") |h %></button>
                     </div>
                 </div>
 
@@ -325,7 +352,7 @@ function jqueryStuff() {
 
                         if (index($image_url, $no_img_url) != -1 || index($image_url, $no_img_url_test) != -1) {
                         </%perl>
-                        <p>No accession image to display</p>
+                        <p><% $c->i18n->p("accession.stock.image.none", "No accession image to display") |h %></p>
                         <%perl>
                             } else {
                         </%perl>
@@ -352,7 +379,7 @@ function jqueryStuff() {
 
 	    <div class="row">
               <div class="col-sm-6">
-		<&| /page/info_section.mas, title => "Released variety name", subtitle=>$released_variety_link, is_subsection => 1 &>
+		<&| /page/info_section.mas, title => HTML::Entities::encode_entities($c->i18n->p("accession.stock.section.released_variety", "Released variety name")), subtitle=>$released_variety_link, is_subsection => 1 &>
 		  <& /stock/stockprops.mas,
 		     stock_id  =>$stock_id,
 		    form_div_id => 'released_variety_link',
@@ -372,63 +399,63 @@ function jqueryStuff() {
        </div>
 </&>
 
-<&| /page/info_section.mas, title => "Navigator" , collapsible=> 1, collapsed=>0 &>
+<&| /page/info_section.mas, title => HTML::Entities::encode_entities($c->i18n->p("accession.stock.section.navigator", "Navigator")) , collapsible=> 1, collapsed=>0 &>
 
 % if ($type_name eq 'population') {
-    <& /page/detail_page_2_col_section.mas, stock_id => $stock_id, type_name => $type_name,  info_section_title => "<h4 style='display:inline'>Members</h4>", info_section_subtitle => 'View members in this population .', icon_class => "glyphicon glyphicon-list-alt", info_section_id => "population_members_section", info_section_collapsed => 0 &>
-    <& /page/detail_page_2_col_section.mas, stock_id => $stock_id, type_name => $type_name,  info_section_title => "<h4 style='display:inline'>Seedlot Info</h4>", info_section_subtitle => 'View seedlot information of each member in this population .', icon_class => "glyphicon glyphicon-retweet", info_section_id => "population_seedlot_info_section", info_section_collapsed => 1 &>
+    <& /page/detail_page_2_col_section.mas, stock_id => $stock_id, stock_uniquename => $uniquename, type_name => $type_name,  info_section_title => '<h4 style="display:inline">' . HTML::Entities::encode_entities($c->i18n->p("accession.stock.section.members", "Members")) . '</h4>', info_section_subtitle => HTML::Entities::encode_entities($c->i18n->p("accession.stock.section.members_help", "View members in this population .")), icon_class => "glyphicon glyphicon-list-alt", info_section_id => "population_members_section", info_section_collapsed => 0 &>
+    <& /page/detail_page_2_col_section.mas, stock_id => $stock_id, type_name => $type_name,  info_section_title => '<h4 style="display:inline">' . HTML::Entities::encode_entities($c->i18n->p("accession.stock.section.seedlot_info", "Seedlot Info")) . '</h4>', info_section_subtitle => HTML::Entities::encode_entities($c->i18n->p("accession.stock.section.seedlot_info_help", "View seedlot information of each member in this population .")), icon_class => "glyphicon glyphicon-retweet", info_section_id => "population_seedlot_info_section", info_section_collapsed => 1 &>
 % }
 
-% my $subtitle = $edit_privs ? "<button class=\"btn btn-sm btn-primary\" style=\"margin:3px\" id=\"stock_add_synonym\" >Add Synonym</button>" : "<button disabled class=\"btn btn-sm btn-primary\" style=\"margin:3px\" title=\"Login to add info\">Add Synonym</button>";
-% my $props_subtitle = $edit_privs ? "<button class=\"btn btn-sm btn-primary\" style=\"margin:3px\" id=\"stock_add_props\" >Add Additional Info</button>" : "<button disabled class=\"btn btn-sm btn-primary\" style=\"margin:3px\" title=\"Login to add info\">Add Additional Info</button>";
+% my $subtitle = $edit_privs ? '<button class="btn btn-sm btn-primary" style="margin:3px" id="stock_add_synonym" >' . $ui_add_synonym . '</button>' : '<button disabled class="btn btn-sm btn-primary" style="margin:3px" title="' . $ui_login_add . '">' . $ui_add_synonym . '</button>';
+% my $props_subtitle = $edit_privs ? '<button class="btn btn-sm btn-primary" style="margin:3px" id="stock_add_props" >' . $ui_add_info . '</button>' : '<button disabled class="btn btn-sm btn-primary" style="margin:3px" title="' . $ui_login_add . '">' . $ui_add_info . '</button>';
 
 % if ($type_name eq 'plot' || $type_name eq 'plant' || $type_name eq 'subplot' || $type_name eq 'tissue_sample') {
-    <& /page/detail_page_2_col_section.mas, stock_id => $stock_id, info_section_title => "<h4 style='display:inline'>Experiment Usage</h4>", info_section_subtitle => 'View experiments that this stock has been used in.', icon_class => "glyphicon glyphicon-leaf", info_section_id => "stock_trials_section" &>
-    <& /page/detail_page_2_col_section.mas, stock_id => $stock_id, info_section_title => "<h4 style='display:inline'>Related Stocks</h4>", info_section_subtitle => 'View any accession, plot, plant, and/or tissue_sample that are linked to this stock.', icon_class => "glyphicon glyphicon-retweet", info_section_id => "stock_related_stock_section", stock_uniquename => $uniquename, type_name => $type_name &>
-%   my $trait_assayed_buttons = $type_name eq 'plot' ? "<button class='btn btn-sm btn-primary' style='margin:3px' id='stock_download_phenotypes_button'>Download Phenotypes</button> $p_download_link <a class='btn btn-sm btn-default' style='margin:3px' target='_blank' href = '/breeders/plot_phenotyping?stock_id=$stock_id'>Direct plot phenotyping</a>" : "<button class='btn btn-sm btn-primary' style='margin:3px' id='stock_download_phenotypes_button'>Download Phenotypes</button> $p_download_link";
-    <& /page/detail_page_2_col_section.mas, stock_id => $stock_id, info_section_title => "<h4 style='display:inline'>Traits Assayed</h4>", info_section_subtitle => 'View and download phenotypic data for this stock.', icon_class => "glyphicon glyphicon-equalizer", info_section_id => "stock_traits_section", buttons_html => $trait_assayed_buttons &>
+    <& /page/detail_page_2_col_section.mas, stock_id => $stock_id, info_section_title => '<h4 style="display:inline">' . HTML::Entities::encode_entities($c->i18n->p("accession.stock.section.experiment_usage", "Experiment Usage")) . '</h4>', info_section_subtitle => HTML::Entities::encode_entities($c->i18n->p("accession.stock.section.experiment_usage_help", "View experiments that this stock has been used in.")), icon_class => "glyphicon glyphicon-leaf", info_section_id => "stock_trials_section" &>
+    <& /page/detail_page_2_col_section.mas, stock_id => $stock_id, info_section_title => '<h4 style="display:inline">' . HTML::Entities::encode_entities($c->i18n->p("accession.stock.section.related_stocks", "Related Stocks")) . '</h4>', info_section_subtitle => HTML::Entities::encode_entities($c->i18n->p("accession.stock.section.related_stocks_help", "View any accession, plot, plant, and/or tissue_sample that are linked to this stock.")), icon_class => "glyphicon glyphicon-retweet", info_section_id => "stock_related_stock_section", stock_uniquename => $uniquename, type_name => $type_name &>
+%   my $trait_assayed_buttons = $type_name eq 'plot' ? "<button class='btn btn-sm btn-primary' style='margin:3px' id='stock_download_phenotypes_button'>$ui_download_phenotypes</button> $p_download_link <a class='btn btn-sm btn-default' style='margin:3px' target='_blank' href = '/breeders/plot_phenotyping?stock_id=$stock_id'>$ui_direct_plot</a>" : "<button class='btn btn-sm btn-primary' style='margin:3px' id='stock_download_phenotypes_button'>$ui_download_phenotypes</button> $p_download_link";
+    <& /page/detail_page_2_col_section.mas, stock_id => $stock_id, info_section_title => '<h4 style="display:inline">' . HTML::Entities::encode_entities($c->i18n->p("accession.stock.section.traits_assayed", "Traits Assayed")) . '</h4>', info_section_subtitle => HTML::Entities::encode_entities($c->i18n->p("accession.stock.section.traits_help", "View and download phenotypic data for this stock.")), icon_class => "glyphicon glyphicon-equalizer", info_section_id => "stock_traits_section", buttons_html => $trait_assayed_buttons &>
 % }
 
 %if ($type_name eq 'family_name') {
-    <& /page/detail_page_2_col_section.mas, info_section_collapsed => 0, info_section_title => "<h4 style='display:inline'>Parents</h4>", info_section_subtitle => "$family_type_string", icon_class => "glyphicon glyphicon-random", info_section_id => "family_parents_section", family_id=>$stock_id, family_type=>$family_type  &>
-    <& /page/detail_page_2_col_section.mas, info_section_collapsed => 1, info_section_title => "<h4 style='display:inline'>Crosses in this family</h4>", info_section_subtitle => "", icon_class => "glyphicon glyphicon-list-alt",buttons_html => '<button class="btn btn-primary btn-sm" id="add_family_members_link" style="margin:3px">Add Family Members</button>', info_section_id => "crosses_in_family_section", family_id=>$stock_id, family_name=>$uniquename, family_type_string=>$family_type_string  &>
-    <& /page/detail_page_2_col_section.mas, info_section_collapsed => 1, info_section_title => "<h4 style='display:inline'>Progenies</h4>", info_section_subtitle => "Progenies delived from this family", icon_class => "glyphicon glyphicon-th", info_section_id => "progenies_from_family_section", family_id=>$stock_id  &>
+    <& /page/detail_page_2_col_section.mas, info_section_collapsed => 0, info_section_title => '<h4 style="display:inline">' . HTML::Entities::encode_entities($c->i18n->p("accession.stock.section.parents", "Parents")) . '</h4>', info_section_subtitle => "$family_type_string", icon_class => "glyphicon glyphicon-random", info_section_id => "family_parents_section", family_id=>$stock_id, family_type=>$family_type  &>
+    <& /page/detail_page_2_col_section.mas, info_section_collapsed => 1, info_section_title => '<h4 style="display:inline">' . HTML::Entities::encode_entities($c->i18n->p("accession.stock.section.family_crosses", "Crosses in this family")) . '</h4>', info_section_subtitle => "", icon_class => "glyphicon glyphicon-list-alt",buttons_html => '<button class="btn btn-primary btn-sm" id="add_family_members_link" style="margin:3px">' . $ui_add_family_members . '</button>', info_section_id => "crosses_in_family_section", family_id=>$stock_id, family_name=>$uniquename, family_type_string=>$family_type_string  &>
+    <& /page/detail_page_2_col_section.mas, info_section_collapsed => 1, info_section_title => '<h4 style="display:inline">' . HTML::Entities::encode_entities($c->i18n->p("accession.stock.section.progenies", "Progenies")) . '</h4>', info_section_subtitle => HTML::Entities::encode_entities($c->i18n->p("accession.stock.section.progenies_help", "Progenies delived from this family")), icon_class => "glyphicon glyphicon-th", info_section_id => "progenies_from_family_section", family_id=>$stock_id  &>
 % } else {
 % if ($type_name ne 'vector_construct'){
-    <& /page/detail_page_2_col_section.mas, stock_id => $stock_id, type_name => $type_name, stockref => $stockref, buttons_html => $subtitle.$props_subtitle, info_section_title => "<h4 style='display:inline'>Additional Info</h4>", info_section_subtitle => 'View and edit additional properties such as synonyms, editors, and all types of properties.', icon_class => "glyphicon glyphicon-info-sign", info_section_id => "stock_additional_info_section", stockprops => $stockprops, edit_privs => $edit_privs, editable_stock_props => \@editable_stock_props, editor_link => $editor_link_table, source_dbs => \%source_dbs, locus_add_uri => $locus_add_uri, new_locus_link => $new_locus_link, allele_div => $allele_div, is_owner => $is_owner, derived_accession_relationship => $derived_accession_relationship, related_stock_link => $related_stock_link, original_stock_link => $original_stock_link, info_section_collapsed => 0 &>
+    <& /page/detail_page_2_col_section.mas, stock_id => $stock_id, type_name => $type_name, stockref => $stockref, buttons_html => $subtitle.$props_subtitle, info_section_title => '<h4 style="display:inline">' . HTML::Entities::encode_entities($c->i18n->p("accession.stock.section.additional_info", "Additional Info")) . '</h4>', info_section_subtitle => HTML::Entities::encode_entities($c->i18n->p("accession.stock.section.additional_info_help", "View and edit additional properties such as synonyms, editors, and all types of properties.")), icon_class => "glyphicon glyphicon-info-sign", info_section_id => "stock_additional_info_section", stockprops => $stockprops, edit_privs => $edit_privs, editable_stock_props => \@editable_stock_props, editor_link => $editor_link_table, source_dbs => \%source_dbs, locus_add_uri => $locus_add_uri, new_locus_link => $new_locus_link, allele_div => $allele_div, is_owner => $is_owner, derived_accession_relationship => $derived_accession_relationship, related_stock_link => $related_stock_link, original_stock_link => $original_stock_link, info_section_collapsed => 0 &>
 % } else {
-    <& /page/detail_page_2_col_section.mas, stock_id => $stock_id, type_name => $type_name, stockref => $stockref, buttons_html => $subtitle.$props_subtitle, info_section_title => "<h4 style='display:inline'>Additional Info</h4>", info_section_subtitle => 'View and edit additional properties such as synonyms, editors, and all types of properties.', icon_class => "glyphicon glyphicon-info-sign", info_section_id => "stock_additional_info_section", stockprops => $stockprops, edit_privs => $edit_privs, editable_stock_props => \@editable_vector_props, editor_link => $editor_link_table, source_dbs => \%source_dbs, locus_add_uri => $locus_add_uri, new_locus_link => $new_locus_link, allele_div => $allele_div, is_owner => $is_owner, info_section_collapsed => 0 &>
+    <& /page/detail_page_2_col_section.mas, stock_id => $stock_id, type_name => $type_name, stockref => $stockref, buttons_html => $subtitle.$props_subtitle, info_section_title => '<h4 style="display:inline">' . HTML::Entities::encode_entities($c->i18n->p("accession.stock.section.additional_info", "Additional Info")) . '</h4>', info_section_subtitle => HTML::Entities::encode_entities($c->i18n->p("accession.stock.section.additional_info_help", "View and edit additional properties such as synonyms, editors, and all types of properties.")), icon_class => "glyphicon glyphicon-info-sign", info_section_id => "stock_additional_info_section", stockprops => $stockprops, edit_privs => $edit_privs, editable_stock_props => \@editable_vector_props, editor_link => $editor_link_table, source_dbs => \%source_dbs, locus_add_uri => $locus_add_uri, new_locus_link => $new_locus_link, allele_div => $allele_div, is_owner => $is_owner, info_section_collapsed => 0 &>
 %#    <& /page/detail_page_2_col_section.mas, stock_id => $stock_id, type_name => $type_name, stockref=> $stockref, info_section_title => "<h4 style='display:inline' >Vector Viewer</h4>", info_section_subtitle => "", info_section_id => "vector_view", edit_privs => $edit_privs,  is_owner => $is_owner, info_section_collapsed => 0 &>
-    <& /page/detail_page_2_col_section.mas, vector_id => $stock_id, info_section_title => "<h4 style='display:inline'>Transgenic Line Details</h4>", info_section_subtitle => 'View number of transgene insertions and qPCR data.',buttons_html => '<button class="btn btn-primary btn-sm" id="upload_qPCR_data_link_vector_page" name="upload_qPCR_data_link" style="margin:3px">Upload qPCR Data</button>', icon_class => "glyphicon glyphicon-list-alt", info_section_id => "transgenic_line_details_section", vector_name => $uniquename, type_name => $type_name, vector_related_genes => $vector_related_genes, vector_analyzed_tissue_types => $vector_analyzed_tissue_types &>
-    <& /page/detail_page_2_col_section.mas, info_section_title => "<h4 style='display:inline'>Obsoleted Transgenic Lines</h4>", info_section_subtitle => 'View obsoleted accessions (transgenic lines) and metadata.', icon_class => "glyphicon glyphicon-remove", info_section_id => "obsoleted_accessions_section", vector_id => $stock_id &>
+    <& /page/detail_page_2_col_section.mas, vector_id => $stock_id, info_section_title => '<h4 style="display:inline">' . HTML::Entities::encode_entities($c->i18n->p("accession.stock.section.transgenic_details", "Transgenic Line Details")) . '</h4>', info_section_subtitle => HTML::Entities::encode_entities($c->i18n->p("accession.stock.section.transgenic_help", "View number of transgene insertions and qPCR data.")),buttons_html => '<button class="btn btn-primary btn-sm" id="upload_qPCR_data_link_vector_page" name="upload_qPCR_data_link" style="margin:3px">' . $ui_upload_qpcr . '</button>', icon_class => "glyphicon glyphicon-list-alt", info_section_id => "transgenic_line_details_section", vector_name => $uniquename, type_name => $type_name, vector_related_genes => $vector_related_genes, vector_analyzed_tissue_types => $vector_analyzed_tissue_types &>
+    <& /page/detail_page_2_col_section.mas, info_section_title => '<h4 style="display:inline">' . HTML::Entities::encode_entities($c->i18n->p("accession.stock.section.obsoleted_lines", "Obsoleted Transgenic Lines")) . '</h4>', info_section_subtitle => HTML::Entities::encode_entities($c->i18n->p("accession.stock.section.obsoleted_lines_help", "View obsoleted accessions (transgenic lines) and metadata.")), icon_class => "glyphicon glyphicon-remove", info_section_id => "obsoleted_accessions_section", vector_id => $stock_id &>
 % }
 % }
 
 % if ($is_a_transgenic_line) {
-    <& /page/detail_page_2_col_section.mas, info_section_collapsed => 1, stock_id => $stock_id, info_section_title => "<h4 style='display:inline'>Transformation and Analyses</h4>", info_section_subtitle => 'View transformation, number of insertions, qPCR data and related transgenic lines.', icon_class => "glyphicon glyphicon-list-alt", info_section_id => "related_transformation_info_section", vector_related_genes => $vector_related_genes, number_of_insertions => $number_of_insertions &>
+    <& /page/detail_page_2_col_section.mas, info_section_collapsed => 1, stock_id => $stock_id, info_section_title => '<h4 style="display:inline">' . HTML::Entities::encode_entities($c->i18n->p("accession.stock.section.transformation", "Transformation and Analyses")) . '</h4>', info_section_subtitle => HTML::Entities::encode_entities($c->i18n->p("accession.stock.section.transformation_help", "View transformation, number of insertions, qPCR data and related transgenic lines.")), icon_class => "glyphicon glyphicon-list-alt", info_section_id => "related_transformation_info_section", vector_related_genes => $vector_related_genes, number_of_insertions => $number_of_insertions &>
 % }
 
 % if ($type_name eq 'accession' || $type_name eq 'family_name'){
-    <& /page/detail_page_2_col_section.mas, stock_id => $stock_id, type_name => $type_name, info_section_title => "<h4 style='display:inline'>Experiment Usage</h4>", info_section_subtitle => 'View experiments that this stock has been used in.', icon_class => "glyphicon glyphicon-leaf", info_section_id => "stock_trials_section" &>
-%    my $trait_assayed_buttons = $type_name eq 'plot' ? "<button class='btn btn-sm btn-primary' style='margin:3px' id='stock_download_phenotypes_button'>Download Phenotypes</button> $p_download_link <a class='btn btn-sm btn-default' style='margin:3px' target='_blank' href = '/breeders/plot_phenotyping?stock_id=$stock_id'>Direct plot phenotyping</a>" : "<button class='btn btn-sm btn-primary' style='margin:3px' id='stock_download_phenotypes_button'>Download Phenotypes</button> $p_download_link";
-    <& /page/detail_page_2_col_section.mas, stock_id => $stock_id, info_section_title => "<h4 style='display:inline'>Traits Assayed</h4>", info_section_subtitle => 'View and download phenotypic data for this stock.', icon_class => "glyphicon glyphicon-equalizer", info_section_id => "stock_traits_section", buttons_html => $trait_assayed_buttons &>
+    <& /page/detail_page_2_col_section.mas, stock_id => $stock_id, type_name => $type_name, info_section_title => '<h4 style="display:inline">' . HTML::Entities::encode_entities($c->i18n->p("accession.stock.section.experiment_usage", "Experiment Usage")) . '</h4>', info_section_subtitle => HTML::Entities::encode_entities($c->i18n->p("accession.stock.section.experiment_usage_help", "View experiments that this stock has been used in.")), icon_class => "glyphicon glyphicon-leaf", info_section_id => "stock_trials_section" &>
+%    my $trait_assayed_buttons = $type_name eq 'plot' ? "<button class='btn btn-sm btn-primary' style='margin:3px' id='stock_download_phenotypes_button'>$ui_download_phenotypes</button> $p_download_link <a class='btn btn-sm btn-default' style='margin:3px' target='_blank' href = '/breeders/plot_phenotyping?stock_id=$stock_id'>$ui_direct_plot</a>" : "<button class='btn btn-sm btn-primary' style='margin:3px' id='stock_download_phenotypes_button'>$ui_download_phenotypes</button> $p_download_link";
+    <& /page/detail_page_2_col_section.mas, stock_id => $stock_id, info_section_title => '<h4 style="display:inline">' . HTML::Entities::encode_entities($c->i18n->p("accession.stock.section.traits_assayed", "Traits Assayed")) . '</h4>', info_section_subtitle => HTML::Entities::encode_entities($c->i18n->p("accession.stock.section.traits_help", "View and download phenotypic data for this stock.")), icon_class => "glyphicon glyphicon-equalizer", info_section_id => "stock_traits_section", buttons_html => $trait_assayed_buttons &>
 % }
 
 % if ($type_name eq 'accession' || $type_name eq 'plant' || $type_name eq 'plot' || $type_name eq 'tissue_sample'){
 
 %   my $sequencing_status_button = '';
 %   if ($c->user) {
-%       $sequencing_status_button = '<button id="show_sequencing_info_dialog_button" class="btn btn-primary btn-sm" data-toggle="modal" style="margin:3px" data-target="#edit_sequencing_info_dialog">Add sequencing info</button>';
+%       $sequencing_status_button = '<button id="show_sequencing_info_dialog_button" class="btn btn-primary btn-sm" data-toggle="modal" style="margin:3px" data-target="#edit_sequencing_info_dialog">' . $ui_add_sequencing . '</button>';
 %   }
 %   else {
-%       $sequencing_status_button = '<button disabled id="show_sequencing_info_dialog_button" class="btn btn-primary btn-sm" data-toggle="modal" style="margin:3px" data-target="#edit_sequencing_info_dialog">Add sequencing info</button>';
+%       $sequencing_status_button = '<button disabled id="show_sequencing_info_dialog_button" class="btn btn-primary btn-sm" data-toggle="modal" style="margin:3px" data-target="#edit_sequencing_info_dialog">' . $ui_add_sequencing . '</button>';
 %   }
 
-      <& /page/detail_page_2_col_section.mas, stock_id => $stock_id, info_section_title => "<h4 style='display:inline'>Sequencing Status</h4>", info_section_subtitle => 'View and edit sequencing status info for this stock.', icon_class => "glyphicon glyphicon-inbox", info_section_id => "stock_sequencing_status_section", buttons_html => "$sequencing_status_button", map_html => $map_html &>
+      <& /page/detail_page_2_col_section.mas, stock_id => $stock_id, info_section_title => '<h4 style="display:inline">' . HTML::Entities::encode_entities($c->i18n->p("accession.stock.section.sequencing_status", "Sequencing Status")) . '</h4>', info_section_subtitle => HTML::Entities::encode_entities($c->i18n->p("accession.stock.section.sequencing_help", "View and edit sequencing status info for this stock.")), icon_class => "glyphicon glyphicon-inbox", info_section_id => "stock_sequencing_status_section", buttons_html => "$sequencing_status_button", map_html => $map_html &>
 
 	<!-- buttons_html => '<a class="btn btn-default btn-sm" style="margin:3px" href = "/stock/'.$stock_id.'/genotypes">Download All Genotypes</a>', -->
 
-    <& /page/detail_page_2_col_section.mas, stock_id => $stock_id, info_section_title => "<h4 style='display:inline'>Genotype Marker Data</h4>", info_section_subtitle => 'View and download phenotypic data for this stock.', icon_class => "glyphicon glyphicon-map-marker", info_section_id => "stock_genotypes_section",  map_html => $map_html &>
+    <& /page/detail_page_2_col_section.mas, stock_id => $stock_id, info_section_title => '<h4 style="display:inline">' . HTML::Entities::encode_entities($c->i18n->p("accession.stock.section.genotype", "Genotype Marker Data")) . '</h4>', info_section_subtitle => HTML::Entities::encode_entities($c->i18n->p("accession.stock.section.traits_help", "View and download phenotypic data for this stock.")), icon_class => "glyphicon glyphicon-map-marker", info_section_id => "stock_genotypes_section",  map_html => $map_html &>
 % }
 
 % if ($type_name eq 'accession'){
@@ -438,36 +465,36 @@ function jqueryStuff() {
         if ($has_pedigree==1) {
             $collapsible = 1;
         }
-        my $add_parent_link = '<button class="btn btn-primary btn-sm" style="margin:3px" id="add_parent_link" disabled>Add parent</button>';
-        if ($person_id && ($submitter || $curator || $sequencer)) { $add_parent_link = qq | <button class="btn btn-primary btn-sm" style="margin:3px" id="add_parent_link" >Add parent</button> |; }
+        my $add_parent_link = '<button class="btn btn-primary btn-sm" style="margin:3px" id="add_parent_link" disabled>' . $ui_add_parent . '</button>';
+        if ($person_id && ($submitter || $curator || $sequencer)) { $add_parent_link = qq | <button class="btn btn-primary btn-sm" style="margin:3px" id="add_parent_link" >$ui_add_parent</button> |; }
 
-        my $remove_parent_link = '<button class="btn btn-default btn-sm" style="margin:3px" id="remove_parent_link" disabled>Remove parent</button>';
-        if ($person_id && ($submitter || $curator || $sequencer)) { $remove_parent_link = qq | <button class="btn btn-default btn-sm" style="margin:3px" id="remove_parent_link">Remove parent</button> |; }
+        my $remove_parent_link = '<button class="btn btn-default btn-sm" style="margin:3px" id="remove_parent_link" disabled>' . $ui_remove_parent . '</button>';
+        if ($person_id && ($submitter || $curator || $sequencer)) { $remove_parent_link = qq | <button class="btn btn-default btn-sm" style="margin:3px" id="remove_parent_link">$ui_remove_parent</button> |; }
 </%perl>
 
-    <& /page/detail_page_2_col_section.mas, stock_id => $stock_id, info_section_title => "<h4 style='display:inline'>Pedigree</h4>", info_section_subtitle => 'View and edit pedigree information.', icon_class => "glyphicon glyphicon-random", info_section_id => "stock_pedigree_section", buttons_html => $add_parent_link.$remove_parent_link, has_pedigree => $has_pedigree, info_section_collapsed => 1 &>
-    <& /page/detail_page_2_col_section.mas, stock_id => $stock_id, info_section_title => "<h4 style='display:inline'>Related Stocks</h4>", info_section_subtitle => 'View any plots, plants, tissue_sample, and/or accessions that are linked to this stock.', icon_class => "glyphicon glyphicon-retweet", info_section_id => "stock_related_stock_section", stock_uniquename => $uniquename, type_name => $type_name &>
+    <& /page/detail_page_2_col_section.mas, stock_id => $stock_id, info_section_title => '<h4 style="display:inline">' . HTML::Entities::encode_entities($c->i18n->p("accession.stock.section.pedigree", "Pedigree")) . '</h4>', info_section_subtitle => HTML::Entities::encode_entities($c->i18n->p("accession.stock.section.pedigree_help", "View and edit pedigree information.")), icon_class => "glyphicon glyphicon-random", info_section_id => "stock_pedigree_section", buttons_html => $add_parent_link.$remove_parent_link, has_pedigree => $has_pedigree, info_section_collapsed => 1 &>
+    <& /page/detail_page_2_col_section.mas, stock_id => $stock_id, info_section_title => '<h4 style="display:inline">' . HTML::Entities::encode_entities($c->i18n->p("accession.stock.section.related_stocks", "Related Stocks")) . '</h4>', info_section_subtitle => HTML::Entities::encode_entities($c->i18n->p("accession.stock.section.related_stocks_help_variants", "View any plots, plants, tissue_sample, and/or accessions that are linked to this stock.")), icon_class => "glyphicon glyphicon-retweet", info_section_id => "stock_related_stock_section", stock_uniquename => $uniquename, type_name => $type_name &>
 
 % }
 
-    <& /page/detail_page_2_col_section.mas, stock_id => $stock_id, info_section_title => "<h4 style='display:inline'>Images</h4>", info_section_subtitle => 'View and add images of this stock and of related stocks.', icon_class => "glyphicon glyphicon-camera", info_section_id => "stock_images_section", image_ids => $image_ids, related_image_ids => $related_image_ids, dbh => $dbh, curator =>$curator, buttons_html => qq|<a id="add_new_image_button" class="btn btn-sm btn-default" style="margin:3px" href="/image/add?type_id=$stock_id&action=new&type=stock&refering_page=$this_page">Add new image</a><a class="btn btn-sm btn-default" style="margin:3px" id="stock_images_section_compare_images_button">Compare Images</a>| &>
+    <& /page/detail_page_2_col_section.mas, stock_id => $stock_id, info_section_title => '<h4 style="display:inline">' . HTML::Entities::encode_entities($c->i18n->p("accession.stock.section.images", "Images")) . '</h4>', info_section_subtitle => HTML::Entities::encode_entities($c->i18n->p("accession.stock.section.images_help", "View and add images of this stock and of related stocks.")), icon_class => "glyphicon glyphicon-camera", info_section_id => "stock_images_section", image_ids => $image_ids, related_image_ids => $related_image_ids, dbh => $dbh, curator =>$curator, buttons_html => qq|<a id="add_new_image_button" class="btn btn-sm btn-default" style="margin:3px" href="/image/add?type_id=$stock_id&action=new&type=stock&refering_page=$this_page">$ui_add_image</a><a class="btn btn-sm btn-default" style="margin:3px" id="stock_images_section_compare_images_button">$ui_compare_images</a>| &>
 
-    <& /page/detail_page_2_col_section.mas, stock_id => $stock_id, info_section_title => "<h4 style='display:inline'>Upload Data Files</h4>", info_section_subtitle => 'Upload any additional files for this Accession.', icon_class => "glyphicon glyphicon-cloud-upload", info_section_id => "stock_upload_files" &>
+    <& /page/detail_page_2_col_section.mas, stock_id => $stock_id, info_section_title => '<h4 style="display:inline">' . HTML::Entities::encode_entities($c->i18n->p("accession.stock.section.upload_files", "Upload Data Files")) . '</h4>', info_section_subtitle => HTML::Entities::encode_entities($c->i18n->p("accession.stock.section.upload_files_help", "Upload any additional files for this Accession.")), icon_class => "glyphicon glyphicon-cloud-upload", info_section_id => "stock_upload_files" &>
 
-    <& /page/detail_page_2_col_section.mas, stock_id => $stock_id, info_section_title => "<h4 style='display:inline'>Literature Annotation</h4>", info_section_subtitle => 'View annotations for this stock found in literatur and ontologies.', icon_class => "glyphicon glyphicon-book", info_section_id => "stock_literature_annotation_section", buttons_html => $new_pub_link.$ontology_subtitle, pubs => $pubs, cvterm_add_uri => $cvterm_add_uri, stockref => $stockref, trait_ontology_db_name => $trait_ontology_db_name, is_owner => $is_owner, dbh=>$dbh &>
+    <& /page/detail_page_2_col_section.mas, stock_id => $stock_id, info_section_title => '<h4 style="display:inline">' . HTML::Entities::encode_entities($c->i18n->p("accession.stock.section.literature", "Literature Annotation")) . '</h4>', info_section_subtitle => HTML::Entities::encode_entities($c->i18n->p("accession.stock.section.literature_help", "View annotations for this stock found in literatur and ontologies.")), icon_class => "glyphicon glyphicon-book", info_section_id => "stock_literature_annotation_section", buttons_html => $new_pub_link.$ontology_subtitle, pubs => $pubs, cvterm_add_uri => $cvterm_add_uri, stockref => $stockref, trait_ontology_db_name => $trait_ontology_db_name, is_owner => $is_owner, dbh=>$dbh &>
 % if ($type_name ne 'family_name' && $type_name ne 'cross') {
-    <& /page/detail_page_2_col_section.mas, stock_id => $stock_id, info_section_title => "<h4 style='display:inline'>JBrowse Genome Alignments</h4>", info_section_subtitle => 'View JBrowse tracks for this stock.', icon_class => "glyphicon glyphicon-align-left", info_section_id => "stock_jbrowse_section" &>
+    <& /page/detail_page_2_col_section.mas, stock_id => $stock_id, info_section_title => '<h4 style="display:inline">' . HTML::Entities::encode_entities($c->i18n->p("accession.stock.section.jbrowse", "JBrowse Genome Alignments")) . '</h4>', info_section_subtitle => HTML::Entities::encode_entities($c->i18n->p("accession.stock.section.jbrowse_help", "View JBrowse tracks for this stock.")), icon_class => "glyphicon glyphicon-align-left", info_section_id => "stock_jbrowse_section" &>
 % }
-    <& /page/detail_page_2_col_section.mas, stock_id => $stock_id, info_section_title => "<h4 style='display:inline'>Comments</h4>", info_section_subtitle => 'View and add comments to this stock.', icon_class => "glyphicon glyphicon-pencil", info_section_id => "stock_comments_section", referer => $this_page &>
+    <& /page/detail_page_2_col_section.mas, stock_id => $stock_id, info_section_title => '<h4 style="display:inline">' . HTML::Entities::encode_entities($c->i18n->p("accession.stock.section.comments", "Comments")) . '</h4>', info_section_subtitle => HTML::Entities::encode_entities($c->i18n->p("accession.stock.section.comments_help", "View and add comments to this stock.")), icon_class => "glyphicon glyphicon-pencil", info_section_id => "stock_comments_section", referer => $this_page &>
 
-    <& /page/detail_page_2_col_section.mas, stock_id => $stock_id, info_section_title => "<h4 style='display:inline'>Audit Table</h4>", info_section_subtitle => 'Track audit information for this stock.', icon_class => "glyphicon glyphicon-time", info_section_id => "audit_table_section", stock_uniquename => $uniquename, referer => $this_page &>
+    <& /page/detail_page_2_col_section.mas, stock_id => $stock_id, info_section_title => '<h4 style="display:inline">' . HTML::Entities::encode_entities($c->i18n->p("accession.stock.section.audit", "Audit Table")) . '</h4>', info_section_subtitle => HTML::Entities::encode_entities($c->i18n->p("accession.stock.section.audit_help", "Track audit information for this stock.")), icon_class => "glyphicon glyphicon-time", info_section_id => "audit_table_section", stock_uniquename => $uniquename, referer => $this_page &>
 
 % if ($edit_privs && $type_name eq 'population') {
-    <& /page/detail_page_2_col_section.mas, stock_id => $stock_id, stock_uniquename => $uniquename, info_section_title => "<h4 style='display:inline'>Delete This Stock</h4>", info_section_subtitle => 'Delete this population.', icon_class => "glyphicon glyphicon-trash", info_section_id => "population_delete_section" &>
+    <& /page/detail_page_2_col_section.mas, stock_id => $stock_id, stock_uniquename => $uniquename, info_section_title => '<h4 style="display:inline">' . HTML::Entities::encode_entities($c->i18n->p("accession.stock.section.delete", "Delete This Stock")) . '</h4>', info_section_subtitle => HTML::Entities::encode_entities($c->i18n->p("accession.stock.section.delete_help", "Delete this population.")), icon_class => "glyphicon glyphicon-trash", info_section_id => "population_delete_section" &>
 % } elsif ($edit_privs && $type_name eq 'family_name') {
-    <& /page/detail_page_2_col_section.mas, family_id => $stock_id, info_section_title => "<h4 style='display:inline'>Remove Cross members or Delete this Family</h4>", info_section_subtitle => '', icon_class => "glyphicon glyphicon-trash", info_section_id => "family_delete_section" &>
+    <& /page/detail_page_2_col_section.mas, family_id => $stock_id, info_section_title => '<h4 style="display:inline">' . HTML::Entities::encode_entities($c->i18n->p("accession.stock.section.delete_family", "Remove Cross members or Delete this Family")) . '</h4>', info_section_subtitle => '', icon_class => "glyphicon glyphicon-trash", info_section_id => "family_delete_section" &>
 % } elsif ($edit_privs) {
-    <& /page/detail_page_2_col_section.mas, stock_id => $stock_id, stock_uniquename => $uniquename, is_obsolete=> $is_obsolete, is_a_parent => $is_a_parent, info_section_title => "<h4 style='display:inline'>" . ($is_obsolete ? "Un-Obsolete This Stock" : "Obsolete This Stock") . "</h4>", info_section_subtitle => ($is_obsolete ? "Make a stock not obsolete so that it does show in searches" : "Make a stock obsolete so that it does not show in searches"), icon_class => "glyphicon glyphicon-trash", info_section_id => "stock_delete_section" &>
+    <& /page/detail_page_2_col_section.mas, stock_id => $stock_id, stock_uniquename => $uniquename, is_obsolete=> $is_obsolete, is_a_parent => $is_a_parent, info_section_title => '<h4 style="display:inline">' . HTML::Entities::encode_entities($is_obsolete ? $c->i18n->p("accession.stock.action.unobsolete", "Un-Obsolete This Stock") : $c->i18n->p("accession.stock.action.obsolete", "Obsolete This Stock")) . '</h4>', info_section_subtitle => HTML::Entities::encode_entities($is_obsolete ? $c->i18n->p("accession.stock.action.unobsolete_help", "Make a stock not obsolete so that it does show in searches") : $c->i18n->p("accession.stock.action.obsolete_help", "Make a stock obsolete so that it does not show in searches")), icon_class => "glyphicon glyphicon-trash", info_section_id => "stock_delete_section" &>
 % }
 
 </&>
@@ -475,13 +502,13 @@ function jqueryStuff() {
 <& /stock/download_stock_phenotypes_dialog.mas, stock_id => $stock_id, stock_name => $uniquename, stock_type => $type_name &>
 
 <div id="remove_parent_dialog">
-    Remove a parent (this will only remove the link to the parent, not the parent accession itself).
+    <% $c->i18n->p("accession.stock.remove_parent_help", "Remove a parent (this will only remove the link to the parent, not the parent accession itself).") |h %>
     <br /><br />
-    <div id="remove_parent_list">[loading parent list...]</div>
+    <div id="remove_parent_list"><% $c->i18n->p("accession.stock.parent_list_loading", "[loading parent list...]") |h %></div>
 </div>
 
 
-<&| /page/info_section.mas, title=>"Phenotype data " ,  subtitle=>$p_download_link ,  collapsible => 1, collapsed => 1 &>
+<&| /page/info_section.mas, title=>HTML::Entities::encode_entities($c->i18n->p("accession.stock.section.phenotype_data", "Phenotype data ")) ,  subtitle=>$p_download_link ,  collapsible => 1, collapsed => 1 &>
 % foreach my $project (keys %$direct_phenotypes) {
 %   my $rs = $direct_phenotypes->{$project} ;
 
@@ -506,7 +533,7 @@ function jqueryStuff() {
 % foreach my $key (keys %$members_phenotypes) {
 % my $m_rs = $members_phenotypes->{$key};
 <&| /page/info_section.mas,
-     title         => "Member phenotypes",
+     title         => HTML::Entities::encode_entities($c->i18n->p("accession.stock.section.member_phenotypes", "Member phenotypes")),
      subtitle      => $key,
      is_subsection => 1,
      collapsible   => 1,
@@ -523,7 +550,7 @@ function jqueryStuff() {
 <div id="stock_trials_info_popup">
     <table id="stock_trials_info_table" >
         <thead>
-            <tr><th>Trait</th><th>Average</th><th>Std dev</th><th>Count</th></tr>
+            <tr><th><% $c->i18n->p("accession.stock.phenotype.header.trait", "Trait") |h %></th><th><% $c->i18n->p("accession.stock.phenotype.header.average", "Average") |h %></th><th><% $c->i18n->p("accession.stock.phenotype.header.stddev", "Std dev") |h %></th><th><% $c->i18n->p("accession.stock.phenotype.header.count", "Count") |h %></th></tr>
         </thead>
     </table>
 </div>
@@ -562,14 +589,14 @@ function jqueryStuff() {
             url: "<% $test_url %>",
             success: function(response) {
                 if ( response.indexOf("Accession_<%$stock_id%>") > -1 ) {  // if dataset is found, create and display link
-                    jQuery('#jbrowse_check').replaceWith('<a id="jbrowse_link" href="<% $jbrowse_url %>">View the tracks for this accession in JBrowse</a>');
+                    jQuery('#jbrowse_check').replaceWith('<a id="jbrowse_link" href="<% $jbrowse_url %>">' + jQuery('<span>').text(window.SGN && window.SGN.i18n ? window.SGN.i18n.p("accession.stock.jbrowse.tracks", "View the tracks for this accession in JBrowse") : 'View the tracks for this accession in JBrowse').html() + '</a>');
                 }
                 else { // if not found, display message that dataset doesn't exist
-                    jQuery('#jbrowse_check').html(" <i>This accession does not have any data in Jbrowse.</i>");
+                    jQuery('#jbrowse_check').html(" <i>" + jQuery('<span>').text(window.SGN && window.SGN.i18n ? window.SGN.i18n.p("accession.stock.jbrowse.no_data", "This accession does not have any data in Jbrowse.") : 'This accession does not have any data in Jbrowse.').html() + "</i>");
                 }
             },
             error: function() {
-                jQuery('#jbrowse_check').html(" <i>Jbrowse has not been set up for this database.</i>");
+                jQuery('#jbrowse_check').html(" <i>" + jQuery('<span>').text(window.SGN && window.SGN.i18n ? window.SGN.i18n.p("accession.stock.jbrowse.not_configured", "Jbrowse has not been set up for this database.") : 'Jbrowse has not been set up for this database.').html() + "</i>");
             }
         });
 
@@ -579,9 +606,9 @@ function jqueryStuff() {
 
             qrCodeDisplay.toggle();
             if (qrCodeDisplay.is(':visible')) {
-                jQuery(this).text('Hide QR Code');
+                jQuery(this).text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p('accession.stock.action.hide_qr', 'Hide QR Code') : 'Hide QR Code'));
             } else {
-                jQuery(this).text('Show QR Code');
+                jQuery(this).text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p('accession.stock.action.show_qr', 'Show QR Code') : 'Show QR Code'));
             }
         });
 

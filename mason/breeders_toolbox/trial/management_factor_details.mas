@@ -9,62 +9,62 @@ $management_factor_type => undef
 
 <table class="table table-hover table-bordered" >
     <tr>
-    <td><b>Treatment Name</b></td>
+    <td><b><% $c->i18n->p("program.management_factor_details.name", "Treatment Name") |h %></b></td>
     <td>
         <div id="management_factor_name">
 % if ($trial_name) {
 %   print "$trial_name";
 % } else {
-%   print "[No Name]";
+%   print $c->i18n->p("program.management_factor_details.no_name", "[No Name]");
 % }
         </div>
     </td>
     </tr>
     <tr>
-    <td><b>Treatment Description</b></td>
+    <td><b><% $c->i18n->p("program.management_factor_details.description", "Treatment Description") |h %></b></td>
     <td>
         <div id="management_factor_description">
 % if ($trial_description) {
 %   print "$trial_description";
 % } else {
-%   print "[No Description]";
+%   print $c->i18n->p("program.management_factor_details.no_description", "[No Description]");
 % }
         </div>
     </td>
     </tr>
     <tr>
-    <td><b>Treatment Type</b></td>
+    <td><b><% $c->i18n->p("program.management_factor_details.type", "Treatment Type") |h %></b></td>
     <td>
         <div id="management_factor_type">
 % if ($management_factor_type) {
 %   print "$management_factor_type";
 % } else {
-%   print "[No Type]";
+%   print $c->i18n->p("program.management_factor_details.no_type", "[No Type]");
 % }
         </div>
     </td>
     </tr>
     <tr>
-    <td><b>Treatment Year</b></td>
+    <td><b><% $c->i18n->p("program.management_factor_details.year", "Treatment Year") |h %></b></td>
     <td>
         <div id="management_factor_year">
 % if ($year) {
 %   print "$year";
 % } else {
-%   print "[No Year]";
+%   print $c->i18n->p("program.management_factor_details.no_year", "[No Year]");
 % }
         </div>
     </td>
     </tr>
     </tr>
     <tr>
-    <td><b>Treatment Date</b></td>
+    <td><b><% $c->i18n->p("program.management_factor_details.date", "Treatment Date") |h %></b></td>
     <td>
         <div id="management_factor_date">
 % if ($management_factor_date) {
 %   print "$management_factor_date";
 % } else {
-%   print "[No Date]";
+%   print $c->i18n->p("program.management_factor_details.no_date", "[No Date]");
 % }
         </div>
     </td>

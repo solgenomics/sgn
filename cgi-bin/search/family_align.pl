@@ -3,15 +3,18 @@ use strict;
 use warnings;
 use CXGN::Page;
 use CXGN::Page::FormattingHelpers qw/  page_title_html
-                                       blue_section_html  /;
+                                       info_section_html  /;
 use CXGN::DB::Connection;
 use CXGN::Alignment;
 use File::Temp;
 use Bio::Seq;
 use Bio::SeqIO;
 use CatalystX::GlobalContext '$c';
+use SGN::I18N ();
+use HTML::Entities ();
+my SGN::I18N $ui_family_align_i18n = SGN::I18N::translate($c);
 
-our $page = CXGN::Page->new( "SGN Gene Family Alignment", "Chenwei Lin");
+our $page = CXGN::Page->new( HTML::Entities::encode_entities((SGN::I18N::translate($ui_family_align_i18n, "cross.sgn_gene_family_alignment", "SGN Gene Family Alignment"))), "Chenwei Lin");
 
 our $family_size_limit = 100;
 
@@ -181,15 +184,15 @@ my $total_align_member = int (@all_align_members);
 my @nonhidden_align_members = $family_align->get_nonhidden_member_ids();
 my $total_show_align_member = int (@nonhidden_align_members);
 
-$sum_content = "<tr><td colspan=\"2\"><a target=\"blank\" href=\"/about/fam_align_analysis.pl\">For help with how we made the alignment, please click here.</a></td></tr>";
-$sum_content .="<tr><th>Sequence Type</th><td>Nucleotide</td></tr>";
-$sum_content .= "<tr><th>Total Family Members</th><td>$total_member_nr</td></tr>";
-$sum_content .= "<tr><th>Available Member Sequences</th><td>$total_align_member</td></tr>";
-$sum_content .= "<tr><th>Show Member Sequences</th><td>$total_show_align_member</td></tr>";
-$sum_content .= "<tr><th>Range</th><td>$range_start - $range_end bp</td></tr>";
-$sum_content .= "<tr><th>Overlap</th><td>$overlap_len bp</td></tr>";
+$sum_content = "<tr><td colspan=\"2\"><a target=\"blank\" href=\"/about/fam_align_analysis.pl\">" . HTML::Entities::encode_entities((SGN::I18N::translate($ui_family_align_i18n, "cross.for_help_with_how_we_made_the_alignment_please_click_here", "For help with how we made the alignment, please click here."))) . "</a></td></tr>";
+$sum_content .="<tr><th>" . HTML::Entities::encode_entities((SGN::I18N::translate($ui_family_align_i18n, "cross.sequence_type", "Sequence Type"))) . "</th><td>Nucleotide</td></tr>";
+$sum_content .= "<tr><th>" . HTML::Entities::encode_entities((SGN::I18N::translate($ui_family_align_i18n, "cross.total_family_members", "Total Family Members"))) . "</th><td>$total_member_nr</td></tr>";
+$sum_content .= "<tr><th>" . HTML::Entities::encode_entities((SGN::I18N::translate($ui_family_align_i18n, "cross.available_member_sequences", "Available Member Sequences"))) . "</th><td>$total_align_member</td></tr>";
+$sum_content .= "<tr><th>" . HTML::Entities::encode_entities((SGN::I18N::translate($ui_family_align_i18n, "cross.show_member_sequences", "Show Member Sequences"))) . "</th><td>$total_show_align_member</td></tr>";
+$sum_content .= "<tr><th>" . HTML::Entities::encode_entities((SGN::I18N::translate($ui_family_align_i18n, "cross.range", "Range"))) . "</th><td>$range_start - $range_end bp</td></tr>";
+$sum_content .= "<tr><th>" . HTML::Entities::encode_entities((SGN::I18N::translate($ui_family_align_i18n, "cross.overlap", "Overlap"))) . "</th><td>$overlap_len bp</td></tr>";
 
-$sum_content .= "<tr><td colspan=\"2\" align=\"center\"><a target=\"blank\" href=\"/about/align_term.pl\">For an explanation of the terms, plase click here.</a></td></tr>";
+$sum_content .= "<tr><td colspan=\"2\" align=\"center\"><a target=\"blank\" href=\"/about/align_term.pl\">" . HTML::Entities::encode_entities((SGN::I18N::translate($ui_family_align_i18n, "cross.for_an_explanation_of_the_terms_plase_click_here", "For an explanation of the terms, plase click here."))) . "</a></td></tr>";
 
 #############################################################
 #Draw family_alignment image
@@ -211,7 +214,7 @@ close $tmp_image;
 $tmp_image =~ s/$html_root_path//;
 
 $align_content = "<tr><td><center><img src=\"$tmp_image\" usemap=\"#align_image_map\" alt=\"\" /></center></td></tr>";
-$align_content .= "<tr><td>To view details for a particular family member, click the member image or the identifier.</td></tr>";
+$align_content .= "<tr><td>" . HTML::Entities::encode_entities((SGN::I18N::translate($ui_family_align_i18n, "cross.to_view_details_for_a_particular_family_member_click_the_member_image_or_the_identifier", "To view details for a particular family member, click the member image or the identifier."))) . "</td></tr>";
 
 ###Write image map
 my $map_string = $family_align->write_image_map();
@@ -223,7 +226,7 @@ my ($ob_ref, $pi_ref, $sp_ref) = $family_align -> get_sv_candidates();
 my %ob = %$ob_ref;
 my %pi = %$pi_ref;
 my %species = %$sp_ref;
-$sv_content = "<tr><th>Species</th><th>Sequence id</th><th>Sequence id</th><th>Overlap Bases</th><th>%Identical</th></tr>";
+$sv_content = "<tr><th>" . HTML::Entities::encode_entities((SGN::I18N::translate($ui_family_align_i18n, "cross.species", "Species"))) . "</th><th>" . HTML::Entities::encode_entities((SGN::I18N::translate($ui_family_align_i18n, "cross.sequence_id", "Sequence id"))) . "</th><th>" . HTML::Entities::encode_entities((SGN::I18N::translate($ui_family_align_i18n, "cross.sequence_id", "Sequence id"))) . "</th><th>" . HTML::Entities::encode_entities((SGN::I18N::translate($ui_family_align_i18n, "cross.overlap_bases", "Overlap Bases"))) . "</th><th>" . HTML::Entities::encode_entities((SGN::I18N::translate($ui_family_align_i18n, "cross.identical", "%Identical"))) . "</th></tr>";
 foreach my $first_key (keys %ob) {
   foreach my $second_key (keys %{$ob{$first_key}}) {
     $sv_content .= "<tr><td>$species{$first_key}</td><td>$first_key</td><td>$second_key</td><td>$ob{$first_key}{$second_key}</td><td>$pi{$first_key}{$second_key}</td></tr>";
@@ -237,7 +240,7 @@ my ($al_ob_ref, $al_pi_ref, $al_sp_ref) = $family_align -> get_allele_candidates
 my %al_ob = %$al_ob_ref;
 my %al_pi = %$al_pi_ref;
 my %al_species = %$al_sp_ref;
-$al_content = "<tr><th>Species</th><th>Sequence id</th><th>Sequence id</th><th>Overlap Bases</th><th>%Identical</th></tr>";
+$al_content = "<tr><th>" . HTML::Entities::encode_entities((SGN::I18N::translate($ui_family_align_i18n, "cross.species", "Species"))) . "</th><th>" . HTML::Entities::encode_entities((SGN::I18N::translate($ui_family_align_i18n, "cross.sequence_id", "Sequence id"))) . "</th><th>" . HTML::Entities::encode_entities((SGN::I18N::translate($ui_family_align_i18n, "cross.sequence_id", "Sequence id"))) . "</th><th>" . HTML::Entities::encode_entities((SGN::I18N::translate($ui_family_align_i18n, "cross.overlap_bases", "Overlap Bases"))) . "</th><th>" . HTML::Entities::encode_entities((SGN::I18N::translate($ui_family_align_i18n, "cross.identical", "%Identical"))) . "</th></tr>";
 foreach my $first_key (keys %al_ob) {
   foreach my $second_key (keys %{$al_ob{$first_key}}) {
     $al_content .= "<tr><td>$al_species{$first_key}</td><td>$first_key</td><td>$second_key</td><td>$al_ob{$first_key}{$second_key}</td><td>$al_pi{$first_key}{$second_key}</td></tr>";
@@ -270,7 +273,7 @@ foreach (keys %ng) {
 }
 
 
-$seq_sum_content = "<tr><th>Sequence id</th><th>Species</th><th>Cover Range</th><th>Bases</th><th>Gaps</th><th>Medium</th><th>Overlap Score</th></tr>";
+$seq_sum_content = "<tr><th>" . HTML::Entities::encode_entities((SGN::I18N::translate($ui_family_align_i18n, "cross.sequence_id", "Sequence id"))) . "</th><th>" . HTML::Entities::encode_entities((SGN::I18N::translate($ui_family_align_i18n, "cross.species", "Species"))) . "</th><th>" . HTML::Entities::encode_entities((SGN::I18N::translate($ui_family_align_i18n, "cross.cover_range", "Cover Range"))) . "</th><th>" . HTML::Entities::encode_entities((SGN::I18N::translate($ui_family_align_i18n, "cross.bases", "Bases"))) . "</th><th>" . HTML::Entities::encode_entities((SGN::I18N::translate($ui_family_align_i18n, "cross.gaps", "Gaps"))) . "</th><th>" . HTML::Entities::encode_entities((SGN::I18N::translate($ui_family_align_i18n, "cross.medium", "Medium"))) . "</th><th>" . HTML::Entities::encode_entities((SGN::I18N::translate($ui_family_align_i18n, "cross.overlap_score", "Overlap Score"))) . "</th></tr>";
 
 foreach (@family_member_ids) { ##Access the align_seqs members this way, instead of by the keys of the hashes,  so that the sequences are grouped together
   $seq_sum_content .= "<tr><td><a target=\"blank\" href=\"$url{$)}\">$_</a></td><td>$species{$_}</td><td>$head{$_} - $tail{$_}</td><td>$ng{$_}</td><td>$gap{$_}</td><td>$medium{$_}</td><td>$ov_score{$_}</td></tr>";
@@ -308,7 +311,7 @@ if (defined $seq_ref) {
 
   $tmp_seq_file =~ s/$html_root_path//;
 
-  $seq_output_content = "<tr><td><a target=\"blank\" href=\"$tmp_seq_file\">All Sequences (No gap)</a></td></tr>";
+  $seq_output_content = "<tr><td><a target=\"blank\" href=\"$tmp_seq_file\">" . HTML::Entities::encode_entities((SGN::I18N::translate($ui_family_align_i18n, "cross.all_sequences_no_gap", "All Sequences (No gap)"))) . "</a></td></tr>";
 }
 
 
@@ -338,10 +341,10 @@ if (defined $align_seq_ref) {
 
   my $pass_tmp_align_seq_file = $html_root_path . $tmp_align_seq_file;
 
-  $seq_output_content .= "<tr><td><a target=\"blank\" href=\"$tmp_align_seq_file\">All Alignment Sequences (Padded with gap)</a></td>";
+  $seq_output_content .= "<tr><td><a target=\"blank\" href=\"$tmp_align_seq_file\">" . HTML::Entities::encode_entities((SGN::I18N::translate($ui_family_align_i18n, "cross.all_alignment_sequences_padded_with_gap", "All Alignment Sequences (Padded with gap)"))) . "</a></td>";
 
-  my $title = 'Family ' . $family_id;
-  $seq_output_content .= "<td><a target=\"blank\" href=\"/tools/align_viewer/show_align.pl?format='fasta'&amp;temp_file=$pass_tmp_align_seq_file&amp;type=nt&amp;start_value=1&amp;end_value=10000&amp;title=$title\">Analyze and Optimize with Alignment Viewer.</a></td></tr>";
+  my $title = (HTML::Entities::encode_entities((SGN::I18N::translate($ui_family_align_i18n, "cross.family_prefix", "Family "))) . $family_id);
+  $seq_output_content .= "<td><a target=\"blank\" href=\"/tools/align_viewer/show_align.pl?format='fasta'&amp;temp_file=$pass_tmp_align_seq_file&amp;type=nt&amp;start_value=1&amp;end_value=10000&amp;title=$title\">" . HTML::Entities::encode_entities((SGN::I18N::translate($ui_family_align_i18n, "cross.analyze_and_optimize_with_alignment_viewer", "Analyze and Optimize with Alignment Viewer."))) . "</a></td></tr>";
 }
 
 if ($overlap_len > 0) {
@@ -369,7 +372,7 @@ if ($overlap_len > 0) {
   close $tmp_ol_seq_file;
 
   $tmp_ol_seq_file =~ s/$html_root_path//;
-  $seq_output_content .= "<tr><td><a target=\"blank\" href=$tmp_ol_seq_file>Overlap Sequences</a></td></tr>";
+  $seq_output_content .= "<tr><td><a target=\"blank\" href=$tmp_ol_seq_file>" . HTML::Entities::encode_entities((SGN::I18N::translate($ui_family_align_i18n, "cross.overlap_sequences", "Overlap Sequences"))) . "</a></td></tr>";
 
 }
 
@@ -378,54 +381,51 @@ if ($overlap_len > 0) {
 #Retrieve tree information
 $family_tree_log_q->execute($family_id);
 if (my ($taxa_num, $ol_len, $lf_loc) = $family_tree_log_q->fetchrow_array()) {
-  $gene_tree_content = "<tr><td colspan=\"2\" align=\"center\"><a target=\"blank\" href=\"/about/fam_tree_analysis.pl\">For help with gene tree construction, please click here.</a></td></tr>";
-  $gene_tree_content .= "<tr><th>No. of Taxa</th><td>$taxa_num</td></tr>";
-  $gene_tree_content .= "<tr><th>No. of Characters</th><td>$ol_len</td></tr>";
-  $gene_tree_content .= "<tr><th>Log File</th><td><a href=\"$lf_loc\">View</a></td></tr>";
+  $gene_tree_content = "<tr><td colspan=\"2\" align=\"center\"><a target=\"blank\" href=\"/about/fam_tree_analysis.pl\">" . HTML::Entities::encode_entities((SGN::I18N::translate($ui_family_align_i18n, "cross.for_help_with_gene_tree_construction_please_click_here", "For help with gene tree construction, please click here."))) . "</a></td></tr>";
+  $gene_tree_content .= "<tr><th>" . HTML::Entities::encode_entities((SGN::I18N::translate($ui_family_align_i18n, "cross.no_of_taxa", "No. of Taxa"))) . "</th><td>$taxa_num</td></tr>";
+  $gene_tree_content .= "<tr><th>" . HTML::Entities::encode_entities((SGN::I18N::translate($ui_family_align_i18n, "cross.no_of_characters", "No. of Characters"))) . "</th><td>$ol_len</td></tr>";
+  $gene_tree_content .= "<tr><th>" . HTML::Entities::encode_entities((SGN::I18N::translate($ui_family_align_i18n, "cross.log_file", "Log File"))) . "</th><td><a href=\"$lf_loc\">" . HTML::Entities::encode_entities((SGN::I18N::translate($ui_family_align_i18n, "file_list.action.view", "View"))) . "</a></td></tr>";
 
   $family_tree_nw_q->execute($family_id);
   while (my ($tree_nr, $nw) = $family_tree_nw_q->fetchrow_array()) {
-    my $tree_title = 'Family ' . $family_id . ' Tree No. ' . $tree_nr;
-    $gene_tree_content .= "<tr><th>Tree No. $tree_nr</th><td>$nw<br><br><a target=\"blanc\" href=\"/tools/tree_browser/?tree_string=$nw&amp;title=$tree_title\">View in Tree Browser</a><br><br></td></tr>";
+    my $tree_title = (HTML::Entities::encode_entities((SGN::I18N::translate($ui_family_align_i18n, "cross.family_prefix", "Family "))) . $family_id . HTML::Entities::encode_entities((SGN::I18N::translate($ui_family_align_i18n, "cross.tree_no_middle", " Tree No. "))) . $tree_nr);
+    $gene_tree_content .= "<tr><th>" . (HTML::Entities::encode_entities((SGN::I18N::translate($ui_family_align_i18n, "cross.tree_no_prefix", "Tree No. "))) . $tree_nr) . "</th><td>$nw<br><br><a target=\"blanc\" href=\"/tools/tree_browser/?tree_string=$nw&amp;title=$tree_title\">" . HTML::Entities::encode_entities((SGN::I18N::translate($ui_family_align_i18n, "cross.view_in_tree_browser", "View in Tree Browser"))) . "</a><br><br></td></tr>";
   }
 }
 else {
-  $gene_tree_content = "<tr><td>No tree available</td></tr>";
+  $gene_tree_content = "<tr><td>" . HTML::Entities::encode_entities((SGN::I18N::translate($ui_family_align_i18n, "cross.no_tree_available", "No tree available"))) . "</td></tr>";
 }
 
 
 ######################################################
 #Page output
 $page->header();
-print page_title_html("Gene Family $family_id Alignment Details");
+print page_title_html((HTML::Entities::encode_entities((SGN::I18N::translate($ui_family_align_i18n, "cross.gene_family_prefix", "Gene Family "))) . $family_id . HTML::Entities::encode_entities((SGN::I18N::translate($ui_family_align_i18n, "cross.alignment_details_suffix", " Alignment Details")))));
 
-print blue_section_html('Family Sequence Alignment','<table width="100%" cellpadding="5" cellspacing="0" border="0">'.$align_content.'</table>');
+print info_section_html(title => HTML::Entities::encode_entities((SGN::I18N::translate($ui_family_align_i18n, "global.family.family_sequence_alignment", "Family Sequence Alignment"))), anchor_title => 'Family Sequence Alignment', contents => '<table width="100%" cellpadding="5" cellspacing="0" border="0">'.$align_content.'</table>');
 
-print blue_section_html('Summary','<table width="80%" cellpadding="5" cellspacing="0" border="0">'.$sum_content.'</table>');
+print info_section_html(title => HTML::Entities::encode_entities((SGN::I18N::translate($ui_family_align_i18n, "global.family.summary", "Summary"))), anchor_title => 'Summary', contents => '<table width="80%" cellpadding="5" cellspacing="0" border="0">'.$sum_content.'</table>');
 
-print blue_section_html('Putative Splice Variant Pairs','<table width="100%" cellpadding="5" cellspacing="0" border="0">'.$sv_content.'</table>');
+print info_section_html(title => HTML::Entities::encode_entities((SGN::I18N::translate($ui_family_align_i18n, "cross.putative_splice_variant_pairs", "Putative Splice Variant Pairs"))), anchor_title => 'Putative Splice Variant Pairs', contents => '<table width="100%" cellpadding="5" cellspacing="0" border="0">'.$sv_content.'</table>');
 
-print blue_section_html('Putative Allele Pairs','<table width="100%" cellpadding="5" cellspacing="0" border="0">'.$al_content.'</table>');
+print info_section_html(title => HTML::Entities::encode_entities((SGN::I18N::translate($ui_family_align_i18n, "cross.putative_allele_pairs", "Putative Allele Pairs"))), anchor_title => 'Putative Allele Pairs', contents => '<table width="100%" cellpadding="5" cellspacing="0" border="0">'.$al_content.'</table>');
 
-print blue_section_html('Aligment Analysis','<table width="100%" cellpadding="5" cellspacing="0" border="1">'.$seq_sum_content.'</table>');
+print info_section_html(title => HTML::Entities::encode_entities((SGN::I18N::translate($ui_family_align_i18n, "cross.aligment_analysis", "Aligment Analysis"))), anchor_title => 'Aligment Analysis', contents => '<table width="100%" cellpadding="5" cellspacing="0" border="1">'.$seq_sum_content.'</table>');
 
-print blue_section_html('Output Sequences','<table width="100%" cellpadding="5" cellspacing="0" border="0">'.$seq_output_content.'</table>');
+print info_section_html(title => HTML::Entities::encode_entities((SGN::I18N::translate($ui_family_align_i18n, "cross.output_sequences", "Output Sequences"))), anchor_title => 'Output Sequences', contents => '<table width="100%" cellpadding="5" cellspacing="0" border="0">'.$seq_output_content.'</table>');
 
-print blue_section_html('Family Gene Tree','<table width="100%" cellpadding="5" cellspacing="0" border="1">'.$gene_tree_content.'</table>');
+print info_section_html(title => HTML::Entities::encode_entities((SGN::I18N::translate($ui_family_align_i18n, "cross.family_gene_tree", "Family Gene Tree"))), anchor_title => 'Family Gene Tree', contents => '<table width="100%" cellpadding="5" cellspacing="0" border="1">'.$gene_tree_content.'</table>');
 
 
 $page->footer();
 
 sub empty_search {
   my ($page, $family_id) = @_;
+  my SGN::I18N $ui_family_align_empty_search_i18n = SGN::I18N::translate($c);
 
   $page->header();
 
-  print <<EOF;
-
-  <b>No family id specified</b>
-
-EOF
+  print "\n  <b>" . HTML::Entities::encode_entities((SGN::I18N::translate($ui_family_align_empty_search_i18n, "global.family.no_family_id", "No family id specified"))) . "</b>\n\n";
 
   $page->footer();
   exit 0;
@@ -433,14 +433,11 @@ EOF
 
 sub not_applicable {
   my ($page, $family_id, $num) = @_;
+  my SGN::I18N $ui_family_align_not_applicable_i18n = SGN::I18N::translate($c);
 
   $page->header();
 
-  print <<EOF;
-
-  <b>The specified $family_id has only $num valid member so that alignment is not applicable.</b>
-
-EOF
+  my %ui_caption_values = (FAMILY_ID => $family_id, COUNT => $num); my $ui_caption = (SGN::I18N::translate($ui_family_align_not_applicable_i18n, "cross.the_specified_family_id_has_only_num_valid_member_so_that_alignment_is_not_applicable", "The specified %{family_id} has only %{num} valid member so that alignment is not applicable.", {family_id => "__SGN_B20_FAMILY_ID__", num => "__SGN_B20_COUNT__"}, { fallback => "The specified $family_id has only $num valid member so that alignment is not applicable." })); if ($ui_family_align_not_applicable_i18n) { $ui_caption = HTML::Entities::encode_entities($ui_caption, '^\x00-\x7F'); $ui_caption =~ s/__SGN_B20_(FAMILY_ID|COUNT)__/$ui_caption_values{$1}/ge; } print "\n  <b>" . $ui_caption . "</b>\n\n";
 
   $page->footer();
   exit 0;
@@ -448,14 +445,11 @@ EOF
 
 sub large_size {
   my ($page, $family_id, $num) = @_;
+  my SGN::I18N $ui_family_align_large_size_i18n = SGN::I18N::translate($c);
 
   $page->header();
 
-  print <<EOF;
-
-  <b>The specified $family_id has $num valid members.  Alignment is available for families having up to $family_size_limit members.</b>
-
-EOF
+  my %ui_caption_values = (FAMILY_ID => $family_id, COUNT => $num, LIMIT => $family_size_limit); my $ui_caption = (SGN::I18N::translate($ui_family_align_large_size_i18n, "cross.the_specified_family_id_has_num_valid_members_alignment_is_available_for_families_having_up_to_", "The specified %{family_id} has %{num} valid members.  Alignment is available for families having up to %{family_size_limit} members.", {family_id => "__SGN_B20_FAMILY_ID__", num => "__SGN_B20_COUNT__", family_size_limit => "__SGN_B20_LIMIT__"}, { fallback => "The specified $family_id has $num valid members.  Alignment is available for families having up to $family_size_limit members." })); if ($ui_family_align_large_size_i18n) { $ui_caption = HTML::Entities::encode_entities($ui_caption, '^\x00-\x7F'); $ui_caption =~ s/__SGN_B20_(FAMILY_ID|COUNT|LIMIT)__/$ui_caption_values{$1}/ge; } print "\n  <b>" . $ui_caption . "</b>\n\n";
 
   $page->footer();
   exit 0;

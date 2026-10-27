@@ -1,3 +1,7 @@
+<%once>
+use HTML::Entities ();
+</%once>
+
 <%doc>
 QTL search form.
 </%doc>
@@ -29,13 +33,13 @@ foreach my $qtl_pop (@qtl_pops)
 
 <div class="container-fluid">
 
-<&| /page/info_section.mas, title => 'Search QTLs', collapsible=>1, collapsed=>0, subtitle=>'[<a href="/qtl/form">Submit QTL Data</a>]   [<a href="/qtl/submission/guide">Submission Guide</a>]   [<a href="/qtl/search/help">Search Help</a>]' &>
+<&| /page/info_section.mas, anchor_title => 'Search QTLs', title => HTML::Entities::encode_entities($c->i18n->p("phenotype.root.search_qtls", 'Search QTLs')), collapsible=>1, collapsed=>0, subtitle=>("[<a href=\"/qtl/form\">" . HTML::Entities::encode_entities($c->i18n->p("phenotype.root.submit_qtl_data", "Submit QTL Data")) . "</a>]   [<a href=\"/qtl/submission/guide\">" . HTML::Entities::encode_entities($c->i18n->p("phenotype.root.submission_guide", "Submission Guide")) . "</a>]   [<a href=\"/qtl/search/help\">" . HTML::Entities::encode_entities($c->i18n->p("phenotype.root.search_help", "Search Help")) . "</a>]") &>
 
 <form  action= "/qtl/search/results" method="post">
   <table align=center cellpadding=20px>
     <tr>
       <td>
-        <h4>Browse Traits With QTLs: <% $links %></h4>
+        <h4><% $c->i18n->p("phenotype.root.extra.browse_traits_with_qtls", "Browse Traits With QTLs:") |h %> <% $links %></h4>
       </td>
     </tr>
   </table>
@@ -43,18 +47,18 @@ foreach my $qtl_pop (@qtl_pops)
   <div class="well">
   <table align=center>
     <tr>
-      <td><h5>Search QTLs With Trait Name:</h5></td>
+      <td><h5><% $c->i18n->p("phenotype.root.search_qtls_with_trait_name", "Search QTLs With Trait Name:") |h %></h5></td>
     </tr>
     <tr>
       <td><input class="form-control" type="text" name="trait" >
-      <br/><input class="btn btn-primary" type="submit" value="Search"></td>
+      <br/><input class="btn btn-primary" type="submit" value="<% $c->i18n->p("global.search.advanced_search.search", "Search") |h %>"></td>
     </tr>
   </table>
   </div>
   <table align=center cellpadding=20px>
     <tr>
       <td>
-        <h4>Browse QTL Populations:</h4><br/><% $pop_links %>
+        <h4><% $c->i18n->p("phenotype.root.browse_qtl_populations", "Browse QTL Populations:") |h %></h4><br/><% $pop_links %>
       </td>
     </tr>
   </table>

@@ -10,6 +10,8 @@ $trial_id
 </div>
 
 <script>
+var _sgnB11ControlsEscape = function(value) { return jQuery('<div>').text(value).html(); };
+
 
 jQuery(document).ready(function () {
 
@@ -23,7 +25,7 @@ jQuery(document).ready(function () {
 	    success: function(response){
 	        console.log(response);
 		jQuery("#working_modal").modal("hide");
-		var trial_accessions_html = "<table class='table table-hover table-condensed table-bordered' id='trial_controls_table'><thead><tr><th>Unique Name</th></tr></thead><tbody>";
+		var trial_accessions_html = "<table class='table table-hover table-condensed table-bordered' id='trial_controls_table'><thead><tr><th>"+_sgnB11ControlsEscape(window.SGN && SGN.i18n ? SGN.i18n.p('trial.controls.unique_name', "Unique Name") : "Unique Name")+"</th></tr></thead><tbody>";
 		for (i=0; i<response.accessions[0].length; i++) {
 		    trial_accessions_html = trial_accessions_html + "<tr><td><a href='/stock/" + response.accessions[0][i].stock_id +"/view'>"+ response.accessions[0][i].accession_name + "</a></td></tr>";
 		}
@@ -34,7 +36,7 @@ jQuery(document).ready(function () {
 	    },
 	    error: function(response){
 	        jQuery("#working_modal").modal("hide");
-		alert("Error retrieving controls.");
+		alert((window.SGN && SGN.i18n ? SGN.i18n.p('trial.controls.retrieve_error', "Error retrieving controls.") : "Error retrieving controls."));
 	    }
 	});
     });

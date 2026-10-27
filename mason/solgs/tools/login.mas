@@ -1,3 +1,7 @@
+<%once>
+use HTML::Entities ();
+</%once>
+
 
 <%args>  
 $tool_url => $tool_url
@@ -6,8 +10,8 @@ $analysis_type => $analysis_type
 
 <%perl>
 
-my $login_msg = "To view your datasets and use this tool " .  
-"you need to <a href=\"/user/login?goto_url=$tool_url\">login</a>.";
+my $login_msg = $c->i18n->p("solgs.interface.to_view_your_datasets_and_use_this_tool", "To view your datasets and use this tool ") .
+("" . HTML::Entities::encode_entities($c->i18n->p("solgs.interface.you_need_to", "you need to")) . " <a href=\"/user/login?goto_url=$tool_url\">" . HTML::Entities::encode_entities($c->i18n->p("solgs.interface.login", "login")) . "</a>.");
 
 </%perl>
 

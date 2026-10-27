@@ -1,3 +1,6 @@
+<%once>
+use HTML::Entities ();
+</%once>
 
 <%args>
 $trial_id
@@ -8,42 +11,42 @@ $trial_name => undef
   <div class="modal-dialog modal-lg" role="document">
     <div class="modal-content">
       <div class="modal-header">
-        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-        <h4 class="modal-title" id="addPlantsDialog">Add plants to <% $trial_name %></h4>
+        <button type="button" class="close" data-dismiss="modal" aria-label="<% $c->i18n->p('trial.upload.dialog.close', "Close") |h %>"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title" id="addPlantsDialog"><% $c->i18n->p('trial.title.add_plants_per_plot.0', "Add plants to %{trial_name}", {trial_name => $trial_name}) |h %></h4>
       </div>
       <div class="modal-body">
         <div class="container-fluid">
 
 	       <form class="form-horizontal" role="form" method="post" id="add_plants_dialog_form" name="add_plants_dialog_form">
 	        <div class="form-group">
-      	      <label class="col-sm-5 control-label">Maximum number of plants per plot: </label>
+              <label class="col-sm-5 control-label"><% $c->i18n->p('trial.add_plants_per_plot.max_plants_plot', "Maximum number of plants per plot: ") |h %></label>
       	      <div class="col-sm-7" >
                 <input name="add_plants_per_plot_num" id="add_plants_per_plot_num" class="form-control" type="number" autofocus/>
               </div>
 	        </div>
             <div class="form-group">
-      	      <label class="col-sm-5 control-label">Inherits Treatment(s) From Plots: </label>
+              <label class="col-sm-5 control-label"><% $c->i18n->p('trial.entry.treatment_inheritance', "Inherits Treatment(s) From Plots: ") |h %></label>
       	      <div class="col-sm-7" >
                 <input name="add_plants_per_plot_inherit_treatments" id="add_plants_per_plot_inherit_treatments" type="checkbox" checked disabled/>
               </div>
 	        </div>
             <div class="form-group">
-      	      <label class="col-sm-5 control-label">Assign row and column data to plants within plots?</label>
+              <label class="col-sm-5 control-label"><% $c->i18n->p('trial.plant_coordinates.plot', "Assign row and column data to plants within plots?") |h %></label>
       	      <div class="col-sm-7" >
                 <input name="add_rows_and_columns_to_plants" id="add_rows_and_columns_to_plants" type="checkbox"/>
                 <div id="plant_row_column_format_dialog" style="display:none">
-                    <p><i>One plant per (row,column) coordinate. Rows and columns will be populated in a Cartesian pattern. Row and column numbers start at 1 within each plot. If adding additional plants, there must be enough spaces to accommodate both the previous plants and the new plants.</i></p>
+                    <p><i><% $c->i18n->p('trial.plant_coordinates.help.plot', "One plant per (row,column) coordinate. Rows and columns will be populated in a Cartesian pattern. Row and column numbers start at 1 within each plot. If adding additional plants, there must be enough spaces to accommodate both the previous plants and the new plants.") |h %></i></p>
                     <table style="width:60%">
                         <tr>
                             <td>
-                                <label>Number of rows per plot</label>
+                                <label><% $c->i18n->p('trial.add_plants_per_plot.rows_per_plot', "Number of rows per plot") |h %></label>
                             </td>
                             <td>
                                 <input name="rows_per_plot" id="rows_per_plot" type="number"/>
                             </td>
                         </tr><tr>
                             <td>
-                                <label>Number of columns per plot</label>
+                                <label><% $c->i18n->p('trial.add_plants_per_plot.cols_per_plot', "Number of columns per plot") |h %></label>
                             </td>
                             <td>
                                 <input name="cols_per_plot" id="cols_per_plot" type="number"/>
@@ -58,8 +61,8 @@ $trial_name => undef
         </div>
       </div>
       <div class="modal-footer">
-        <button type="button" class="btn btn-default" name="add_plants_cancel_button" id="add_plants_cancel_button" data-dismiss="modal">Close</button>
-	      <button type="button" class="btn btn-primary" name="add_plants_save_button" id="add_plants_save_button" title="Save">Save</button>
+        <button type="button" class="btn btn-default" name="add_plants_cancel_button" id="add_plants_cancel_button" data-dismiss="modal"><% $c->i18n->p('trial.upload.dialog.close', "Close") |h %></button>
+              <button type="button" class="btn btn-primary" name="add_plants_save_button" id="add_plants_save_button" title="<% $c->i18n->p('folder.new.save', "Save") |h %>"><% $c->i18n->p('folder.new.save', "Save") |h %></button>
       </div>
     </div>
   </div>
@@ -69,35 +72,35 @@ $trial_name => undef
     <div class="modal-dialog modal-lg" role="document">
         <div class="modal-content">
             <div class="modal-header">
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                <h4 class="modal-title" id="uploadPlantsDialog">Upload plants to <% $trial_name %></h4>
+                <button type="button" class="close" data-dismiss="modal" aria-label="<% $c->i18n->p('trial.upload.dialog.close', "Close") |h %>"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="uploadPlantsDialog"><% $c->i18n->p('trial.title.add_plants_per_plot.1', "Upload plants to %{trial_name}", {trial_name => $trial_name}) |h %></h4>
             </div>
             <div class="modal-body">
                 <div class="container-fluid">
 
-                    <&| /page/explanation.mas, title=>'Template information' &>
+                    <&| /page/explanation.mas, title => HTML::Entities::encode_entities($c->i18n->p("trial.common.template_info", "Template information")) &>
                         <p>
-                            <b>File format information</b>
+                            <b><% $c->i18n->p('trial.upload.dialog.file_format_info', "File format information") |h %></b>
                             <br>
-                            <a id="trial_upload_plants_spreadsheet_info_format">Spreadsheet format</a>
+                            <a id="trial_upload_plants_spreadsheet_info_format"><% $c->i18n->p('trial.upload.coordinates.spreadsheet', "Spreadsheet format") |h %></a>
                         </p>
                     </&>
 
                     <form class="form-horizontal" role="form" method="post" enctype="multipart/form-data" encoding="multipart/form-data" id="upload_plants_dialog_form" name="upload_plants_dialog_form">
                         <div class="form-group">
-                            <label class="col-sm-4 control-label">Upload File (.xls or .xlsx): </label>
+                            <label class="col-sm-4 control-label"><% $c->i18n->p('trial.entry.upload_file', "Upload File (.xls or .xlsx): ") |h %></label>
                             <div class="col-sm-8" >
                                 <input type="file" name="trial_upload_plants_file" id="trial_upload_plants_file" encoding="multipart/form-data" />
                             </div>
                         </div>
                         <div class="form-group">
-                            <label class="col-sm-4 control-label">Number of plants per plot: </label>
+                            <label class="col-sm-4 control-label"><% $c->i18n->p('trial.add_plants_per_plot.plants_per_plot', "Number of plants per plot: ") |h %></label>
                             <div class="col-sm-8" >
                                 <input name="upload_plants_per_plot_number" id="upload_plants_per_plot_number" class="form-control" type="number" />
                             </div>
                         </div>
                         <div class="form-group">
-                            <label class="col-sm-4 control-label">Inherits Treatment(s) From Plots: </label>
+                            <label class="col-sm-4 control-label"><% $c->i18n->p('trial.entry.treatment_inheritance', "Inherits Treatment(s) From Plots: ") |h %></label>
                             <div class="col-sm-8" >
                                 <input name="upload_plants_per_plot_inherit_treatments" id="upload_plants_per_plot_inherit_treatments" type="checkbox" checked disabled/>
                             </div>
@@ -106,8 +109,8 @@ $trial_name => undef
                 </div>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-default" name="upload_plants_cancel_button" id="upload_plants_cancel_button" data-dismiss="modal">Close</button>
-                <button type="button" class="btn btn-primary" name="upload_plants_save_button" id="upload_plants_save_button" title="Upload">Upload</button>
+                <button type="button" class="btn btn-default" name="upload_plants_cancel_button" id="upload_plants_cancel_button" data-dismiss="modal"><% $c->i18n->p('trial.upload.dialog.close', "Close") |h %></button>
+                <button type="button" class="btn btn-primary" name="upload_plants_save_button" id="upload_plants_save_button" title="<% $c->i18n->p('trial.upload.dialog.upload', "Upload") |h %>"><% $c->i18n->p('trial.upload.dialog.upload', "Upload") |h %></button>
             </div>
         </div>
     </div>
@@ -117,18 +120,18 @@ $trial_name => undef
     <div class="modal-dialog modal-lg" role="document">
         <div class="modal-content">
             <div class="modal-header" style="text-align: center">
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                <h4 class="modal-title" id="uploadPlantsInfoDialog">Upload Template Information</h4>
+                <button type="button" class="close" data-dismiss="modal" aria-label="<% $c->i18n->p('trial.upload.dialog.close', "Close") |h %>"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="uploadPlantsInfoDialog"><% $c->i18n->p('trial.upload.dialog.template_info', "Upload Template Information") |h %></h4>
             </div>
             <div class="modal-body">
                 <div class="container-fluid">
-                    <b>This is for recording individual plants in a plot.</b>
+                    <b><% $c->i18n->p('trial.add_plants_per_plot.template_plants_plot', "This is for recording individual plants in a plot.") |h %></b>
                     <br/>
-                    <b>Plant names may be uploaded in an Excel (.xls or .xlsx)</b>
+                    <b><% $c->i18n->p('trial.add_plants_per_plot.excel_plant_names', "Plant names may be uploaded in an Excel (.xls or .xlsx)") |h %></b>
                     <br />
-                    <b>Header:</b>
+                    <b><% $c->i18n->p('trial.upload.dialog.header_label', "Header:") |h %></b>
                     <br>
-                    The first row (header) should contain the following:
+                    <% $c->i18n->p('trial.add_plants_per_plot.first_header', "The first row (header) should contain the following:") |h %>
                     <br />
 
                     <table class="table table-hover table-bordered table-condensed" >
@@ -141,24 +144,24 @@ $trial_name => undef
                         </tbody>
                     </table>
 
-                    <b>Required fields:</b>
+                    <b><% $c->i18n->p('trial.upload.dialog.required_fields', "Required fields:") |h %></b>
                     <br/>
-                    - plot_name (must exist in the database already)
+                    - plot_name (<% $c->i18n->p('trial.add_plants_per_plot.plant_must_exist', "must exist in the database already") |h %>)
                     <br />
-                    - plant_name (must be globally unique. usually this is a concatenation of plot_name + plant_number, such as MyTrial_plot101_plant1)
+                    - plant_name (<% $c->i18n->p('trial.add_plants_per_plot.plant_name_unique', "must be globally unique. usually this is a concatenation of plot_name + plant_number, such as MyTrial_plot101_plant1") |h %>)
 
                     <br>
-                    <b>Optional fields:</b>
+                    <b><% $c->i18n->p("trial.plot.optional_fields", "Optional fields:") |h %></b>
                     <br>
                     - row_num
                     <br>
                     - col_num
                     <br>
-                    Rows and columns are at the plot level if each plot contains multiple plants. If including this data, both fields must be present.
+                    <% $c->i18n->p('trial.add_plants_per_plot.row_col_plot_help', "Rows and columns are at the plot level if each plot contains multiple plants. If including this data, both fields must be present.") |h %>
                 </div>
             </div>
             <div class="modal-footer">
-                <button id="close_upload_plants_info_dialog" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                <button id="close_upload_plants_info_dialog" type="button" class="btn btn-default" data-dismiss="modal"><% $c->i18n->p('trial.upload.dialog.close', "Close") |h %></button>
             </div>
         </div>
     </div>
@@ -169,35 +172,35 @@ $trial_name => undef
     <div class="modal-dialog modal-lg" role="document">
         <div class="modal-content">
             <div class="modal-header">
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                <h4 class="modal-title" id="uploadPlantsWithIndexNumberDialog">Upload plants to <% $trial_name %> with plant index number</h4>
+                <button type="button" class="close" data-dismiss="modal" aria-label="<% $c->i18n->p('trial.upload.dialog.close', "Close") |h %>"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="uploadPlantsWithIndexNumberDialog"><% $c->i18n->p('trial.title.add_plants_per_plot.upload_plants_plot_index', "Upload plants to %{trial_name} with plant index number", {trial_name => $trial_name}) |h %></h4>
             </div>
             <div class="modal-body">
                 <div class="container-fluid">
 
-                    <&| /page/explanation.mas, title=>'Template information' &>
+                    <&| /page/explanation.mas, title => HTML::Entities::encode_entities($c->i18n->p("trial.common.template_info", "Template information")) &>
                         <p>
-                            <b>File format information</b>
+                            <b><% $c->i18n->p('trial.upload.dialog.file_format_info', "File format information") |h %></b>
                             <br>
-                            <a id="trial_upload_plants_with_index_number_spreadsheet_info_format">Spreadsheet format</a>
+                            <a id="trial_upload_plants_with_index_number_spreadsheet_info_format"><% $c->i18n->p('trial.upload.coordinates.spreadsheet', "Spreadsheet format") |h %></a>
                         </p>
                     </&>
 
                     <form class="form-horizontal" role="form" method="post" enctype="multipart/form-data" encoding="multipart/form-data" id="upload_plants_with_index_number_dialog_form" name="upload_plants_with_index_number_dialog_form">
                         <div class="form-group">
-                            <label class="col-sm-4 control-label">Upload File (.xls or .xlsx): </label>
+                            <label class="col-sm-4 control-label"><% $c->i18n->p('trial.entry.upload_file', "Upload File (.xls or .xlsx): ") |h %></label>
                             <div class="col-sm-8" >
                                 <input type="file" name="trial_upload_plants_with_index_number_file" id="trial_upload_plants_with_index_number_file" encoding="multipart/form-data" />
                             </div>
                         </div>
                         <div class="form-group">
-                            <label class="col-sm-4 control-label">Maximum number of plants per plot: </label>
+                            <label class="col-sm-4 control-label"><% $c->i18n->p('trial.add_plants_per_plot.max_plants_plot', "Maximum number of plants per plot: ") |h %></label>
                             <div class="col-sm-8" >
                                 <input name="upload_plants_with_index_number_per_plot_number" id="upload_plants_with_index_number_per_plot_number" class="form-control" type="number" />
                             </div>
                         </div>
                         <div class="form-group">
-                            <label class="col-sm-4 control-label">Inherits Treatment(s) From Plots: </label>
+                            <label class="col-sm-4 control-label"><% $c->i18n->p('trial.entry.treatment_inheritance', "Inherits Treatment(s) From Plots: ") |h %></label>
                             <div class="col-sm-8" >
                                 <input name="upload_plants_with_index_number_inherit_treatments" id="upload_plants_with_index_number_inherit_treatments" type="checkbox" checked disabled/>
                             </div>
@@ -206,8 +209,8 @@ $trial_name => undef
                 </div>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-default" name="upload_plants_with_index_number_cancel_button" id="upload_plants_with_index_number_cancel_button" data-dismiss="modal">Close</button>
-                <button type="button" class="btn btn-primary" name="upload_plants_with_index_number_save_button" id="upload_plants_with_index_number_save_button" title="Upload">Upload</button>
+                <button type="button" class="btn btn-default" name="upload_plants_with_index_number_cancel_button" id="upload_plants_with_index_number_cancel_button" data-dismiss="modal"><% $c->i18n->p('trial.upload.dialog.close', "Close") |h %></button>
+                <button type="button" class="btn btn-primary" name="upload_plants_with_index_number_save_button" id="upload_plants_with_index_number_save_button" title="<% $c->i18n->p('trial.upload.dialog.upload', "Upload") |h %>"><% $c->i18n->p('trial.upload.dialog.upload', "Upload") |h %></button>
             </div>
         </div>
     </div>
@@ -217,18 +220,18 @@ $trial_name => undef
     <div class="modal-dialog modal-lg" role="document">
         <div class="modal-content">
             <div class="modal-header" style="text-align: center">
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                <h4 class="modal-title" id="uploadPlantsWithIndexNumberInfoDialog">Upload Template Information</h4>
+                <button type="button" class="close" data-dismiss="modal" aria-label="<% $c->i18n->p('trial.upload.dialog.close', "Close") |h %>"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="uploadPlantsWithIndexNumberInfoDialog"><% $c->i18n->p('trial.upload.dialog.template_info', "Upload Template Information") |h %></h4>
             </div>
             <div class="modal-body">
                 <div class="container-fluid">
-                    <b>This is for recording individual plants in a plot. The plant name will be saved as a concatenation of plot_name + _ + plant_index_number</b>
+                    <b><% $c->i18n->p('trial.plants.template_description.plot', "This is for recording individual plants in a plot. The plant name will be saved as a concatenation of plot_name + _ + plant_index_number") |h %></b>
                     <br/>
-                    <b>May be uploaded in an Excel file (.xls or .xlsx)</b>
+                    <b><% $c->i18n->p("trial.common.excel_upload_help", "May be uploaded in an Excel file (.xls or .xlsx)") |h %></b>
                     <br />
-                    <b>Header:</b>
+                    <b><% $c->i18n->p('trial.upload.dialog.header_label', "Header:") |h %></b>
                     <br>
-                    The first row (header) should contain the following:
+                    <% $c->i18n->p('trial.add_plants_per_plot.first_header', "The first row (header) should contain the following:") |h %>
                     <br />
 
                     <table class="table table-hover table-bordered table-condensed" >
@@ -241,23 +244,23 @@ $trial_name => undef
                         </tbody>
                     </table>
 
-                    <b>Required fields:</b>
+                    <b><% $c->i18n->p('trial.upload.dialog.required_fields', "Required fields:") |h %></b>
                     <br/>
-                    - plot_name (must exist in the database already)
+                    - plot_name (<% $c->i18n->p('trial.add_plants_per_plot.plant_must_exist', "must exist in the database already") |h %>)
                     <br />
-                    - plant_index_number (must be a number. the saved plant name will be a concatenation of plot_name + plant_index_number, such as MyTrial_plot101_plant1.)
+                    <% $c->i18n->p('trial.plant_plot.index_required_full', "- plant_index_number (must be a number. the saved plant name will be a concatenation of plot_name + plant_index_number, such as MyTrial_plot101_plant1.)") |h %>
                     <br>
-                    <b>Optional fields:</b>
+                    <b><% $c->i18n->p("trial.plot.optional_fields", "Optional fields:") |h %></b>
                     <br>
                     - row_num
                     <br>
                     - col_num
                     <br>
-                    Rows and columns are at the plot level if each plot contains multiple plants. If including this data, both fields must be present.
+                    <% $c->i18n->p('trial.add_plants_per_plot.row_col_plot_help', "Rows and columns are at the plot level if each plot contains multiple plants. If including this data, both fields must be present.") |h %>
                 </div>
             </div>
             <div class="modal-footer">
-                <button id="close_upload_plants_with_index_number_info_dialog" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                <button id="close_upload_plants_with_index_number_info_dialog" type="button" class="btn btn-default" data-dismiss="modal"><% $c->i18n->p('trial.upload.dialog.close', "Close") |h %></button>
             </div>
         </div>
     </div>
@@ -267,35 +270,35 @@ $trial_name => undef
     <div class="modal-dialog modal-lg" role="document">
         <div class="modal-content">
             <div class="modal-header">
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                <h4 class="modal-title" id="uploadPlantsWithNumPlantsPerPlotDialog">Upload plants to <% $trial_name %> with number of plants per plot</h4>
+                <button type="button" class="close" data-dismiss="modal" aria-label="<% $c->i18n->p('trial.upload.dialog.close', "Close") |h %>"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="uploadPlantsWithNumPlantsPerPlotDialog"><% $c->i18n->p('trial.title.add_plants_per_plot.upload_plants_plot_count', "Upload plants to %{trial_name} with number of plants per plot", {trial_name => $trial_name}) |h %></h4>
             </div>
             <div class="modal-body">
                 <div class="container-fluid">
 
-                    <&| /page/explanation.mas, title=>'Template information' &>
+                    <&| /page/explanation.mas, title => HTML::Entities::encode_entities($c->i18n->p("trial.common.template_info", "Template information")) &>
                         <p>
-                            <b>File format information</b>
+                            <b><% $c->i18n->p('trial.upload.dialog.file_format_info', "File format information") |h %></b>
                             <br>
-                            <a id="trial_upload_plants_with_num_plants_spreadsheet_info_format">Spreadsheet format</a>
+                            <a id="trial_upload_plants_with_num_plants_spreadsheet_info_format"><% $c->i18n->p('trial.upload.coordinates.spreadsheet', "Spreadsheet format") |h %></a>
                         </p>
                     </&>
 
                     <form class="form-horizontal" role="form" method="post" enctype="multipart/form-data" encoding="multipart/form-data" id="upload_plants_with_num_plants_dialog_form" name="upload_plants_with_num_plants_dialog_form">
                         <div class="form-group">
-                            <label class="col-sm-4 control-label">Upload File (.xls or .xlsx): </label>
+                            <label class="col-sm-4 control-label"><% $c->i18n->p('trial.entry.upload_file', "Upload File (.xls or .xlsx): ") |h %></label>
                             <div class="col-sm-8" >
                                 <input type="file" name="trial_upload_plants_with_number_of_plants_file" id="trial_upload_plants_with_number_of_plants_file" encoding="multipart/form-data" />
                             </div>
                         </div>
                         <div class="form-group">
-                            <label class="col-sm-4 control-label">Maximum number of plants per plot: </label>
+                            <label class="col-sm-4 control-label"><% $c->i18n->p('trial.add_plants_per_plot.max_plants_plot', "Maximum number of plants per plot: ") |h %></label>
                             <div class="col-sm-8" >
                                 <input name="upload_plants_with_num_plants_per_plot_number" id="upload_plants_with_num_plants_per_plot_number" class="form-control" type="number" />
                             </div>
                         </div>
                         <div class="form-group">
-                            <label class="col-sm-4 control-label">Inherits Treatment(s) From Plots: </label>
+                            <label class="col-sm-4 control-label"><% $c->i18n->p('trial.entry.treatment_inheritance', "Inherits Treatment(s) From Plots: ") |h %></label>
                             <div class="col-sm-8" >
                                 <input name="upload_plants_with_num_plants_inherit_treatments" id="upload_plants_with_num_plants_inherit_treatments" type="checkbox" checked disabled/>
                             </div>
@@ -304,8 +307,8 @@ $trial_name => undef
                 </div>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-default" name="upload_plants_with_num_plants_cancel_button" id="upload_plants_with_num_plants_cancel_button" data-dismiss="modal">Close</button>
-                <button type="button" class="btn btn-primary" name="upload_plants_with_num_plants_save_button" id="upload_plants_with_num_plants_save_button" title="Upload">Upload</button>
+                <button type="button" class="btn btn-default" name="upload_plants_with_num_plants_cancel_button" id="upload_plants_with_num_plants_cancel_button" data-dismiss="modal"><% $c->i18n->p('trial.upload.dialog.close', "Close") |h %></button>
+                <button type="button" class="btn btn-primary" name="upload_plants_with_num_plants_save_button" id="upload_plants_with_num_plants_save_button" title="<% $c->i18n->p('trial.upload.dialog.upload', "Upload") |h %>"><% $c->i18n->p('trial.upload.dialog.upload', "Upload") |h %></button>
             </div>
         </div>
     </div>
@@ -315,18 +318,18 @@ $trial_name => undef
     <div class="modal-dialog modal-lg" role="document">
         <div class="modal-content">
             <div class="modal-header" style="text-align: center">
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                <h4 class="modal-title" id="uploadPlantsWithNumPlantsInfoDialog">Upload Template Information</h4>
+                <button type="button" class="close" data-dismiss="modal" aria-label="<% $c->i18n->p('trial.upload.dialog.close', "Close") |h %>"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="uploadPlantsWithNumPlantsInfoDialog"><% $c->i18n->p('trial.upload.dialog.template_info', "Upload Template Information") |h %></h4>
             </div>
             <div class="modal-body">
                 <div class="container-fluid">
-                    <b>This is for recording individual plants in a plot. The plant name will be saved as a concatenation of plot_name + _ + plant_index_number for as many plants as specfied by num_plants_per_plot</b>
+                    <b><% $c->i18n->p('trial.plant_plot.index_count_full', "The plant name will be saved as a concatenation of plot_name + _ + plant_index_number for as many plants as specfied by num_plants_per_plot") |h %></b>
                     <br/>
-                    <b>May be uploaded in an Excel file (.xls or .xlsx)</b>
+                    <b><% $c->i18n->p("trial.common.excel_upload_help", "May be uploaded in an Excel file (.xls or .xlsx)") |h %></b>
                     <br />
-                    <b>Header:</b>
+                    <b><% $c->i18n->p('trial.upload.dialog.header_label', "Header:") |h %></b>
                     <br>
-                    The first row (header) should contain the following:
+                    <% $c->i18n->p('trial.add_plants_per_plot.first_header', "The first row (header) should contain the following:") |h %>
                     <br />
 
                     <table class="table table-hover table-bordered table-condensed" >
@@ -339,23 +342,23 @@ $trial_name => undef
                         </tbody>
                     </table>
 
-                    <b>Required fields:</b>
+                    <b><% $c->i18n->p('trial.upload.dialog.required_fields', "Required fields:") |h %></b>
                     <br/>
-                    - plot_name (must exist in the database already)
+                    - plot_name (<% $c->i18n->p('trial.add_plants_per_plot.plant_must_exist', "must exist in the database already") |h %>)
                     <br />
-                    - num_plants_per_plot (must be a number. the number of plants in the plot. the saved plant name will be a concatenation of plot_name + plant_number, such as MyTrial_plot101_plant1)
+                    <% $c->i18n->p('trial.plant_plot.count_required_full', "- num_plants_per_plot (must be a number. the number of plants in the plot. the saved plant name will be a concatenation of plot_name + plant_number, such as MyTrial_plot101_plant1)") |h %>
                     <br>
-                    <b>Optional fields:</b>
+                    <b><% $c->i18n->p("trial.plot.optional_fields", "Optional fields:") |h %></b>
                     <br>
                     - num_rows
                     <br>
                     - num_cols
                     <br>
-                    The number of spaces given by the rows and columns should be greater than or equal to the num_plants_per_plot. Plants will be assigned rows and columns in zigzag pattern, starting from (1,1).
+                    <% $c->i18n->p('trial.plant_plot.row_col_capacity', "The number of spaces given by the rows and columns should be greater than or equal to the num_plants_per_plot. Plants will be assigned rows and columns in zigzag pattern, starting from (1,1).") |h %>
                 </div>
             </div>
             <div class="modal-footer">
-                <button id="close_upload_plants_with_number_plants_info_dialog" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                <button id="close_upload_plants_with_number_plants_info_dialog" type="button" class="btn btn-default" data-dismiss="modal"><% $c->i18n->p('trial.upload.dialog.close', "Close") |h %></button>
             </div>
         </div>
     </div>
@@ -423,7 +426,7 @@ jQuery(document).ready(function() {
         var uploadFile = jQuery("#trial_upload_plants_file").val();
         jQuery('#upload_plants_dialog_form').attr("action", "/ajax/breeders/trial/<% $trial_id %>/upload_plants");
         if (uploadFile === '') {
-            alert("Please select a file");
+            alert((window.SGN && SGN.i18n ? SGN.i18n.p('trial.card.entry_numbers.select_file', "Please select a file") : "Please select a file"));
             return;
         }
         jQuery("#upload_plants_dialog_form").submit();
@@ -436,7 +439,7 @@ jQuery(document).ready(function() {
             jQuery('#working_modal').modal("show");
             if (uploadedPlantsFile === '') {
                 jQuery('#working_modal').modal("hide");
-                alert("No file selected");
+                alert((window.SGN && SGN.i18n ? SGN.i18n.p('trial.upload.no_file', "No file selected") : "No file selected"));
             }
         },
         complete: function (response) {
@@ -448,7 +451,7 @@ jQuery(document).ready(function() {
                 return;
             }
             if (response.success) {
-                alert("File uploaded successfully");
+                alert((window.SGN && SGN.i18n ? SGN.i18n.p('trial.upload.file_success', "File uploaded successfully") : "File uploaded successfully"));
                 window.location.replace('/breeders/trial/'+<% $trial_id %>);
             }
         }
@@ -458,7 +461,7 @@ jQuery(document).ready(function() {
         var uploadFile = jQuery("#trial_upload_plants_with_index_number_file").val();
         jQuery('#upload_plants_with_index_number_dialog_form').attr("action", "/ajax/breeders/trial/<% $trial_id %>/upload_plants_with_plant_index_number");
         if (uploadFile === '') {
-            alert("Please select a file");
+            alert((window.SGN && SGN.i18n ? SGN.i18n.p('trial.card.entry_numbers.select_file', "Please select a file") : "Please select a file"));
             return;
         }
         jQuery("#upload_plants_with_index_number_dialog_form").submit();
@@ -471,7 +474,7 @@ jQuery(document).ready(function() {
             jQuery('#working_modal').modal("show");
             if (uploadedPlantsFile === '') {
                 jQuery('#working_modal').modal("hide");
-                alert("No file selected");
+                alert((window.SGN && SGN.i18n ? SGN.i18n.p('trial.upload.no_file', "No file selected") : "No file selected"));
             }
         },
         complete: function (response) {
@@ -483,7 +486,7 @@ jQuery(document).ready(function() {
                 return;
             }
             if (response.success) {
-                alert("File uploaded successfully");
+                alert((window.SGN && SGN.i18n ? SGN.i18n.p('trial.upload.file_success', "File uploaded successfully") : "File uploaded successfully"));
                 window.location.replace('/breeders/trial/'+<% $trial_id %>);
             }
         }
@@ -493,7 +496,7 @@ jQuery(document).ready(function() {
         var uploadFile = jQuery("#trial_upload_plants_with_number_of_plants_file").val();
         jQuery('#upload_plants_with_num_plants_dialog_form').attr("action", "/ajax/breeders/trial/<% $trial_id %>/upload_plants_with_number_of_plants");
         if (uploadFile === '') {
-            alert("Please select a file");
+            alert((window.SGN && SGN.i18n ? SGN.i18n.p('trial.card.entry_numbers.select_file', "Please select a file") : "Please select a file"));
             return;
         }
         jQuery("#upload_plants_with_num_plants_dialog_form").submit();
@@ -506,7 +509,7 @@ jQuery(document).ready(function() {
             jQuery('#working_modal').modal("show");
             if (uploadedPlantsFile === '') {
                 jQuery('#working_modal').modal("hide");
-                alert("No file selected");
+                alert((window.SGN && SGN.i18n ? SGN.i18n.p('trial.upload.no_file', "No file selected") : "No file selected"));
             }
         },
         complete: function (response) {
@@ -518,7 +521,7 @@ jQuery(document).ready(function() {
                 return;
             }
             if (response.success) {
-                alert("File uploaded successfully");
+                alert((window.SGN && SGN.i18n ? SGN.i18n.p('trial.upload.file_success', "File uploaded successfully") : "File uploaded successfully"));
                 window.location.replace('/breeders/trial/'+<% $trial_id %>);
             }
         }
@@ -543,11 +546,11 @@ function add_plants_to_trial() {
         include_plant_coordinates = 1;
 
         if (num_rows == "" || num_cols == "" || num_rows * num_cols == 0) {
-            alert("You need to specify the number of rows and columns to give plant coordinates within plots.");
+            alert((window.SGN && SGN.i18n ? SGN.i18n.p('trial.plants.coordinates.required', "You need to specify the number of rows and columns to give plant coordinates within plots.") : "You need to specify the number of rows and columns to give plant coordinates within plots."));
             return;
         }
         if (num_rows * num_cols < plants_per_plot) {
-            alert("Only one plant per (row, column) coordinate is allowed. You must specify fewer plants per plot, or add rows and columns.");
+            alert((window.SGN && SGN.i18n ? SGN.i18n.p('trial.plants.coordinates.unique', "Only one plant per (row, column) coordinate is allowed. You must specify fewer plants per plot, or add rows and columns.") : "Only one plant per (row, column) coordinate is allowed. You must specify fewer plants per plot, or add rows and columns."));
             return;
         }
     }
@@ -571,14 +574,14 @@ function add_plants_to_trial() {
           alert(response.error);
         }
         else {
-          alert("Successfully created plant entries.");
+          alert((window.SGN && SGN.i18n ? SGN.i18n.p('trial.plants.create_success', "Successfully created plant entries.") : "Successfully created plant entries."));
           jQuery('#add_plants_dialog').modal("hide");
           window.location.replace('/breeders/trial/'+<% $trial_id %>);
         }
       },
       error: function(response) {
         disable_working_modal();
-        alert("An error occurred saving plant entries");
+        alert((window.SGN && SGN.i18n ? SGN.i18n.p('trial.plants.create_error', "An error occurred saving plant entries") : "An error occurred saving plant entries"));
       },
     });
 

@@ -53,7 +53,7 @@ sub create_phenotype_spreadsheet_POST : Args(0) {
     print STDERR "phenotype download controller\n";
     my ($self, $c) = @_;
     if (!$c->user()) {
-        $c->stash->{rest} = {error => "You need to be logged in to download a phenotype spreadsheet." };
+        $c->stash->{rest} = {error => do { local $_; local $@; local $!; $c->i18n->p("phenotype.server.you_need_to_be_logged_in_to_download", "You need to be logged in to download a phenotype spreadsheet.") } };
         return;
     }
 
@@ -80,19 +80,19 @@ sub create_phenotype_spreadsheet_POST : Args(0) {
 
         if ($data_level eq 'plants') {
             if (!$trial->has_plant_entries()) {
-                $c->stash->{rest} = { error => "The requested trial (".$trial->get_name().") does not have plant entries. Please create the plant entries first." };
+                $c->stash->{rest} = { error => do { my $ui_error_details = "" . ($trial->get_name()); local $_; local $@; local $!; $c->i18n->p("phenotype.server.the_requested_trial_value_does_not_have_plant", "The requested trial (%{value}) does not have plant entries. Please create the plant entries first.", {value => $ui_error_details}) } };
                 return;
             }
         }
         if ($data_level eq 'subplots' || $data_level eq 'plants_subplots') {
             if (!$trial->has_subplot_entries()) {
-                $c->stash->{rest} = { error => "The requested trial (".$trial->get_name().") does not have subplot entries." };
+                $c->stash->{rest} = { error => do { my $ui_error_details = "" . ($trial->get_name()); local $_; local $@; local $!; $c->i18n->p("phenotype.server.the_requested_trial_value_does_not_have_subplot", "The requested trial (%{value}) does not have subplot entries.", {value => $ui_error_details}) } };
                 return;
             }
         }
         if ($data_level eq 'tissue_samples') {
             if (!$trial->has_tissue_sample_entries()) {
-                $c->stash->{rest} = { error => "The requested trial (".$trial->get_name().") does not have tissue sample entries. Please create the tissue sample entries first." };
+                $c->stash->{rest} = { error => do { my $ui_error_details = "" . ($trial->get_name()); local $_; local $@; local $!; $c->i18n->p("phenotype.server.the_requested_trial_value_does_not_have_tissue", "The requested trial (%{value}) does not have tissue sample entries. Please create the tissue sample entries first.", {value => $ui_error_details}) } };
                 return;
             }
         }

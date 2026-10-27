@@ -1,5 +1,8 @@
 package CXGN::Stock::ParseUpload::Plugin::AccessionsXLS;
 
+use SGN::I18N ();
+use CatalystX::GlobalContext '$c';
+
 use Moose::Role;
 use Spreadsheet::ParseExcel;
 use Spreadsheet::ParseXLSX;
@@ -15,6 +18,7 @@ use CXGN::BreedersToolbox::OrganismFuzzySearch;
 #
 
 sub _validate_with_plugin {
+    my SGN::I18N $ui_validate_with_plugin_i18n = $c && $c->can('i18n') ? $c->i18n : undef;
     my $self = shift;
 
     my $filename = $self->get_filename();
@@ -47,7 +51,7 @@ sub _validate_with_plugin {
 
     my $worksheet = ( $excel_obj->worksheets() )[0]; #support only one worksheet
     if (!$worksheet) {
-        push @error_messages, "Spreadsheet must be on 1st tab in Excel (.xls) file";
+        push @error_messages, (SGN::I18N::translate($ui_validate_with_plugin_i18n, "accession.xls.error_1", "Spreadsheet must be on 1st tab in Excel (.xls) file"));
         $errors{'error_messages'} = \@error_messages;
         $self->_set_parse_errors(\%errors);
         return;
@@ -55,7 +59,7 @@ sub _validate_with_plugin {
     my ( $row_min, $row_max ) = $worksheet->row_range();
     my ( $col_min, $col_max ) = $worksheet->col_range();
     if (($col_max - $col_min)  < 1 || ($row_max - $row_min) < 1 ) { #must have header and at least one row of plot data
-        push @error_messages, "Spreadsheet is missing header or contains no rows";
+        push @error_messages, (SGN::I18N::translate($ui_validate_with_plugin_i18n, "accession.xls.error_2", "Spreadsheet is missing header or contains no rows"));
         $errors{'error_messages'} = \@error_messages;
         $self->_set_parse_errors(\%errors);
         return;
@@ -97,24 +101,24 @@ sub _validate_with_plugin {
             $stockprops_head  = $worksheet->get_cell(0,$i)->value();
         }
         if ($stockprops_head && !exists($allowed_stockprops_head{$stockprops_head})){
-            push @error_messages, "$stockprops_head is not a valid property to have in the header! Please check the spreadsheet format help.";
+            push @error_messages, (SGN::I18N::translate($ui_validate_with_plugin_i18n, "accession.xls.error_3", "%{stockprops_head} is not a valid property to have in the header! Please check the spreadsheet format help.", {stockprops_head => "" . ($stockprops_head)}));
         }
     }
 
     if (!$accession_name_head || $accession_name_head ne 'accession_name' ) {
-        push @error_messages, "Cell A1: accession_name is missing from the header";
+        push @error_messages, (SGN::I18N::translate($ui_validate_with_plugin_i18n, "accession.xls.error_4", "Cell A1: accession_name is missing from the header"));
     }
     if (!$species_name_head || $species_name_head ne 'species_name') {
-        push @error_messages, "Cell B1: species_name is missing from the header";
+        push @error_messages, (SGN::I18N::translate($ui_validate_with_plugin_i18n, "accession.xls.error_5", "Cell B1: species_name is missing from the header"));
     }
     if (!$population_name_head || $population_name_head ne 'population_name') {
-        push @error_messages, "Cell C1: population_name is missing from the header";
+        push @error_messages, (SGN::I18N::translate($ui_validate_with_plugin_i18n, "accession.xls.error_6", "Cell C1: population_name is missing from the header"));
     }
     if (!$organization_name_head || ($organization_name_head ne 'organization_name(s)' && $organization_name_head ne 'organization_name') ) {
-        push @error_messages, "Cell D1: organization_name is missing from the header";
+        push @error_messages, (SGN::I18N::translate($ui_validate_with_plugin_i18n, "accession.xls.error_7", "Cell D1: organization_name is missing from the header"));
     }
     if (!$synonyms_head || ($synonyms_head ne 'synonym(s)' && $synonyms_head ne 'synonym') ) {
-        push @error_messages, "Cell E1: synonym is missing from the header";
+        push @error_messages, (SGN::I18N::translate($ui_validate_with_plugin_i18n, "accession.xls.error_8", "Cell E1: synonym is missing from the header"));
     }
 
     my %seen_accession_names;
@@ -134,7 +138,7 @@ sub _validate_with_plugin {
         }
 
         if (!$accession_name || $accession_name eq '' ) {
-            push @error_messages, "Cell A$row_name: accession_name missing.";
+            push @error_messages, (SGN::I18N::translate($ui_validate_with_plugin_i18n, "accession.xls.error_9", "Cell A%{row_name}: accession_name missing.", {row_name => "" . ($row_name)}));
         }
         #elsif ($accession_name =~ /\s/ || $accession_name =~ /\// || $accession_name =~ /\\/ ) {
         #    push @error_messages, "Cell A$row_name: accession_name must not contain spaces or slashes.";
@@ -146,7 +150,7 @@ sub _validate_with_plugin {
         }
 
         if (!$species_name || $species_name eq '' ) {
-            push @error_messages, "Cell B$row_name: species_name missing.";
+            push @error_messages, (SGN::I18N::translate($ui_validate_with_plugin_i18n, "accession.xls.error_10", "Cell B%{row_name}: species_name missing.", {row_name => "" . ($row_name)}));
         }
         else {
             $species_name =~ s/^\s+|\s+$//g;
@@ -159,13 +163,13 @@ sub _validate_with_plugin {
     my @species_missing = @{$species_validator->validate($schema,'species',\@species)->{'missing'}};
 
     if (scalar(@species_missing) > 0) {
-        push @error_messages, "The following species are not in the database as species in the organism table: ".join(',',@species_missing);
+        push @error_messages, (SGN::I18N::translate($ui_validate_with_plugin_i18n, "accession.xls.error_11", "The following species are not in the database as species in the organism table: ")).join(',',@species_missing);
         $errors{'missing_species'} = \@species_missing;
     }
 
     foreach my $k (keys %accession_name_counts) {
 	if ($accession_name_counts{$k} > 1) {
-	    push @error_messages, "Accession $k occures $accession_name_counts{$k} times in the file. Accession names must be unique. Please remove duplicated accession names.";
+	    push @error_messages, (SGN::I18N::translate($ui_validate_with_plugin_i18n, "accession.xls.error_12", "Accession %{k} occures %{accession_name_counts_k} times in the file. Accession names must be unique. Please remove duplicated accession names.", {k => "" . ($k), accession_name_counts_k => "" . ($accession_name_counts{$k})}));
 	}
     }
 

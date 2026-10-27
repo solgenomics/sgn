@@ -8,7 +8,7 @@ var solGS = solGS || function solGS() {};
 
 solGS.genotypingProtocol = {
   setGenotypingProtocol: function (divPlace, protocol) {
-    var msg = "You are using genotyping protocol: <b>" + protocol.name + "</b>.";
+    var msg = (window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.protocol_label", "You are using genotyping protocol: ") : "You are using genotyping protocol: ") + "<b>" + protocol.name + "</b>.";
 
     if (divPlace) {
       divPlace = divPlace + " ";
@@ -116,7 +116,7 @@ jQuery(document).ready(function () {
           "#genotyping_protocols_progress .multi-spinner-container"
         ).hide();
       } else {
-        var message = "<p class='px-4'>No genotyping protocols found.</p>";
+        var message = "<p class='px-4'>" + (window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.no_protocols_found", "No genotyping protocols found.") : "No genotyping protocols found.") + "</p>";
 
         jQuery("#genotyping_protocols_message").html(message).show();
         jQuery(
@@ -129,7 +129,7 @@ jQuery(document).ready(function () {
       }
     })
     .fail(function (res) {
-      var message = "<p class='px-4'>No genotyping protocols found.</p>";
+      var message = "<p class='px-4'>" + (window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.no_protocols_found", "No genotyping protocols found.") : "No genotyping protocols found.") + "</p>";
 
       jQuery("#genotyping_protocols_message").html(message).show();
       jQuery("#genotyping_protocols_progress .multi-spinner-container").hide();

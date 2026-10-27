@@ -13,16 +13,16 @@ $design_name
     <div class="modal-dialog" role="document">
         <div class="modal-content">
             <div class="modal-header">
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                <h4 class="modal-title" id="updateTrialDesignTypeDialog">Update <% $trial_name %> Experimental Design Type</h4>
+                <button type="button" class="close" data-dismiss="modal" aria-label="<% $c->i18n->p('trial.upload.dialog.close', "Close") |h %>"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="updateTrialDesignTypeDialog"><% $c->i18n->p('trial.design_type.title', "Update %{trial_name} Experimental Design Type", {trial_name => $trial_name}) |h %></h4>
             </div>
             <div class="modal-body">
                 <div class="container-fluid">
                     <div class="form-group">
-                    <label class="control-label">Current Experimental Design type: <% $design_name %></label><br></div>
+                    <label class="control-label"><% $c->i18n->p('trial.design_type.current_type', "Current Experimental Design type: ") |h %><% $design_name |h %></label><br></div>
                     <form class="form-horizontal">
                         <div class="form-group">
-                            <label class="col-sm-6 control-label">Change to Experimental Design Type: </label>
+                            <label class="col-sm-6 control-label"><% $c->i18n->p('trial.design_type.change_type', "Change to Experimental Design Type: ") |h %></label>
                             <div class="col-sm-6" >
                                         <select class="form-control" id="select_design_method" name="select_design_method">
 % foreach my $type(@design_types){
@@ -61,8 +61,8 @@ $design_name
                 </div>
             </div>
             <div class="modal-footer">
-                <button id="close_trial_set_phenotypes_fully_loaded_modal" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-                <button type="button" class="btn btn-primary" name="update_trial_design_type_submit" id="update_trial_design_type_submit" >Update</button>
+                <button id="close_trial_set_phenotypes_fully_loaded_modal" type="button" class="btn btn-default" data-dismiss="modal"><% $c->i18n->p('trial.upload.dialog.close', "Close") |h %></button>
+                <button type="button" class="btn btn-primary" name="update_trial_design_type_submit" id="update_trial_design_type_submit" ><% $c->i18n->p('trial.design_type.update', "Update") |h %></button>
             </div>
         </div>
     </div>
@@ -72,19 +72,19 @@ $design_name
     <div class="modal-dialog" role="document">
         <div class="modal-content">
             <div class="modal-header">
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                <h4 class="modal-title" id="updateTrialDesignTypeMessage">Success</h4>
+                <button type="button" class="close" data-dismiss="modal" aria-label="<% $c->i18n->p('trial.upload.dialog.close', "Close") |h %>"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="updateTrialDesignTypeMessage"><% $c->i18n->p('trial.design_type.success', "Success") |h %></h4>
             </div>
             <div class="modal-body">
                 <div class="container-fluid">
                     <p>
                         <span class="ui-icon ui-icon-circle-check" style="float: left; margin: 0 7px 50px 0;"></span>
-                        Trial Design Type was updated successfully.
+                        <% $c->i18n->p('trial.design_type.updated_message', "Trial Design Type was updated successfully.") |h %>
                     </p>
                 </div>
             </div>
             <div class="modal-footer">
-                <button id="dismiss_update_message_dialog" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                <button id="dismiss_update_message_dialog" type="button" class="btn btn-default" data-dismiss="modal"><% $c->i18n->p('trial.upload.dialog.close', "Close") |h %></button>
             </div>
         </div>
     </div>
@@ -101,7 +101,7 @@ jQuery(document).ready(function(){
     jQuery("#update_trial_design_type_submit").click(function() {
         var trial_design_type = jQuery("#select_design_method").val();
         if (trial_design_type == 'Please select a design method') {
-            alert("Please select a design method");
+            alert((window.SGN && SGN.i18n ? SGN.i18n.p('trial.design_type.select_method', "Please select a design method") : "Please select a design method"));
             return;
         }
 
@@ -127,7 +127,7 @@ jQuery(document).ready(function(){
             },
             error: function(response){
                 jQuery('#working_modal').modal('hide');
-                alert('An error occurred updating trial status');
+                alert((window.SGN && SGN.i18n ? SGN.i18n.p('trial.design_type.update_error', "An error occurred updating trial status") : "An error occurred updating trial status"));
             }
         });
     });

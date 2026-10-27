@@ -14,13 +14,16 @@ Isaak Y Tecle (iyt2@cornell.edu)
 
 
 <br/> 
-<&| /page/info_section.mas, 
+<&| /page/info_section.mas, anchor_title => "Genotype ranking based on multiple traits performance (selection index)",
       collapsible => 1, 
       collapsed   => 0, 
-      title       => "Genotype ranking based on multiple traits performance (selection index)" 
+      title       => HTML::Entities::encode_entities($c->i18n->p("solgs.interface.genotype_ranking_based_on_multiple_traits_performance_selection_index", "Genotype ranking based on multiple traits performance (selection index)"))
   &>
 <div id="si_top_genotypes" style="display:none">
-<i>Top 10 genotypes</i>:
+<i><% $c->i18n->p("solgs.interface.top_10_genotypes", "Top 10 genotypes") |h %></i>:
 </div> 
 </&>
 
+<%once>
+use HTML::Entities ();
+</%once>

@@ -1,3 +1,7 @@
+<%once>
+use HTML::Entities ();
+</%once>
+
 
 <%args>
 </%args>
@@ -20,9 +24,9 @@ Displays a page with a table of all the analytics run by the currently logged in
 
 <& /util/import_javascript.mas, classes => [ 'jquery', 'jquery.dataTables' ], entries => [] &>
 
-<& /page/page_title.mas, title => "Your Analytics Protocols" &>
+<& /page/page_title.mas, title => HTML::Entities::encode_entities($c->i18n->p("analysis.interface.your_analytics_protocols", "Your Analytics Protocols")) &>
 
-<button class='btn btn-success' style='margin:3px;float:right' id='drone_imagery_analytics_link'>Drone Imagery Analytics</button><br />
+<button class='btn btn-success' style='margin:3px;float:right' id='drone_imagery_analytics_link'><% $c->i18n->p("analysis.interface.drone_imagery_analytics", "Drone Imagery Analytics") |h %></button><br />
 <hr>
 
 <& /breeders_toolbox/drone_imagery/drone_imagery_analytics.mas &>
@@ -31,10 +35,10 @@ Displays a page with a table of all the analytics run by the currently logged in
     <table class="table table-bordered table-hover" id="analytics_protocols_by_user_table">
         <thead>
             <tr>
-                <th>Analytics Protocol Name</th>
-                <th>Description</th>
-                <th>Type</th>
-                <th>Create Date</th>
+                <th><% $c->i18n->p("analysis.interface.analytics_protocol_name", "Analytics Protocol Name") |h %></th>
+                <th><% $c->i18n->p("global.dataset_cxgn_dataset.table.description", "Description") |h %></th>
+                <th><% $c->i18n->p("global.search.features.type.f65b938", "Type") |h %></th>
+                <th><% $c->i18n->p("cross.forms.create_date", "Create Date") |h %></th>
             </tr>
         </thead>
         <tbody>

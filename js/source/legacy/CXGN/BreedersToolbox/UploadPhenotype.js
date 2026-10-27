@@ -1,3 +1,25 @@
+var uploadPhenotypeI18n = (window.SGN && window.SGN.i18n) || {
+    p: function(context, source, vars) {
+        return String(source).replace(/%\{([A-Za-z_][A-Za-z0-9_]*)\}/g, function(marker, name) {
+            return vars && Object.prototype.hasOwnProperty.call(vars, name) ? String(vars[name]) : marker;
+        });
+    }
+};
+function uploadPhenotypeHTML(value) {
+    return String(value == null ? "" : value).replace(/[&<>"']/g, function(c) {
+        return {"&": "&amp;", "<": "&lt;", ">": "&gt;", "\"": "&quot;", "'": "&#39;"}[c];
+    });
+}
+
+function uploadPhenotypeLocaleHeaders(url) {
+    try {
+        var destination = new URL(url, window.location.href);
+        if (destination.origin !== window.location.origin) return {};
+        var locale = uploadPhenotypeI18n.requestedLocale || document.documentElement.getAttribute("data-sgn-locale") || "en";
+        return {"X-SGN-Locale": /^[A-Za-z]{2,8}(?:-[A-Za-z0-9]{1,8})*$/.test(locale) ? locale : "en"};
+    } catch (error) { return {}; }
+}
+
 
 jQuery( document ).ready( function() {
 
@@ -13,12 +35,13 @@ jQuery( document ).ready( function() {
 
         let file = jQuery(fileSelector).val();
         if ( !file || file === '' ) {
-            return alert("Please select a file");
+            return alert(uploadPhenotypeI18n.p("phenotype_upload.client.file_required", "Please select a file"));
         }
 
-        showPhenotypeUploadWorkingModal("Verifying file and data");
+        showPhenotypeUploadWorkingModal(uploadPhenotypeHTML(uploadPhenotypeI18n.p("phenotype_upload.client.verifying", "Verifying file and data")));
         jQuery.ajax({
             url: url,
+            headers: uploadPhenotypeLocaleHeaders(url),
             type: 'POST',
             data: new FormData(jQuery(formSelector)[0]),
             processData: false,
@@ -30,7 +53,7 @@ jQuery( document ).ready( function() {
             },
             error: function(response) {
                 hidePhenotypeUploadWorkingModal();
-                alert("An error occurred while trying to verify this file. Please check the formatting and try again");
+                alert(uploadPhenotypeI18n.p("phenotype_upload.client.verify_failed", "An error occurred while trying to verify this file. Please check the formatting and try again"));
             }
         });
     }
@@ -38,12 +61,13 @@ jQuery( document ).ready( function() {
     function storeData(formSelector, fileSelector, url, upload_type, div_type) {
         let file = jQuery(fileSelector).val();
         if ( !file || file === '' ) {
-            return alert("Please select a file");
+            return alert(uploadPhenotypeI18n.p("phenotype_upload.client.file_required", "Please select a file"));
         }
 
-        showPhenotypeUploadWorkingModal("Storing file and data");
+        showPhenotypeUploadWorkingModal(uploadPhenotypeHTML(uploadPhenotypeI18n.p("phenotype_upload.client.storing", "Storing file and data")));
         jQuery.ajax({
             url: url,
+            headers: uploadPhenotypeLocaleHeaders(url),
             type: 'POST',
             data: new FormData(jQuery(formSelector)[0]),
             processData: false,
@@ -55,7 +79,7 @@ jQuery( document ).ready( function() {
             },
             error: function(response) {
                 hidePhenotypeUploadWorkingModal();
-                alert("An error occurred while trying to store this file. Please check the formatting and try again");
+                alert(uploadPhenotypeI18n.p("phenotype_upload.client.store_failed", "An error occurred while trying to store this file. Please check the formatting and try again"));
             }
         });
     }
@@ -161,7 +185,7 @@ jQuery( document ).ready( function() {
     });
 
     jQuery('#delete_pheno_file_link').click(function() {
-        alert('Deleted successfully.');
+        alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("accession.phenome.deleted_successfully", "Deleted successfully.") : 'Deleted successfully.'));
     });
 
     jQuery('#phenotype_reset_dialog').click( function() {
@@ -232,12 +256,12 @@ function displayPhenotypeUploadVerifyResponse(response, upload_type, div_type) {
         if (warningarrayLength > 0) {
             message_text += "<li class='list-group-item list-group-item-warning'>";
             message_text += "<span class='badge'><span class='glyphicon glyphicon-asterisk'></span></span>";
-            message_text += "Warnings are shown in yellow. Either fix the file and try again or continue with storing the data.";
-            message_text += `<hr>To overwrite previously stored values instead: <input type='checkbox' id='${div_type}_upload_overwrite_values' name='phenotype_upload_overwrite_values' />`;
-            message_text += `<div id='${div_type}_upload_remove_values_div' style='display: none'>To remove previously stored values if left blank in your file: <input type='checkbox' id='${div_type}_upload_remove_values' name='${div_type}_upload_remove_values' /></div>`;
-            message_text += `<hr><div id='${div_type}_upload_details_default'>New values will be uploaded. Any previously stored values will be skipped.</div>`;
-            message_text += `<div id='${div_type}_upload_details_overwrite' style='display: none'>New values will be uploaded. Any previously stored values will be replaced by non-blank values.  Blank values in the upload file will be skipped.</div>`;
-            message_text += `<div id='${div_type}_upload_details_remove' style='display: none'>New values will be uploaded. Any previously stored values will be replaced by non-blank values.  Blank values in the upload file will remove any previously stored values.</div>`;
+            message_text += uploadPhenotypeHTML(uploadPhenotypeI18n.p("phenotype_upload.client.warnings_help", "Warnings are shown in yellow. Either fix the file and try again or continue with storing the data."));
+            message_text += `<hr>${uploadPhenotypeHTML(uploadPhenotypeI18n.p("phenotype_upload.client.overwrite", "To overwrite previously stored values instead: "))}<input type='checkbox' id='${div_type}_upload_overwrite_values' name='phenotype_upload_overwrite_values' />`;
+            message_text += `<div id='${div_type}_upload_remove_values_div' style='display: none'>${uploadPhenotypeHTML(uploadPhenotypeI18n.p("phenotype_upload.client.remove", "To remove previously stored values if left blank in your file: "))}<input type='checkbox' id='${div_type}_upload_remove_values' name='${div_type}_upload_remove_values' /></div>`;
+            message_text += `<hr><div id='${div_type}_upload_details_default'>${uploadPhenotypeHTML(uploadPhenotypeI18n.p("phenotype_upload.client.keep_existing", "New values will be uploaded. Any previously stored values will be skipped."))}</div>`;
+            message_text += `<div id='${div_type}_upload_details_overwrite' style='display: none'>${uploadPhenotypeHTML(uploadPhenotypeI18n.p("phenotype_upload.client.overwrite_help", "New values will be uploaded. Any previously stored values will be replaced by non-blank values.  Blank values in the upload file will be skipped."))}</div>`;
+            message_text += `<div id='${div_type}_upload_details_remove' style='display: none'>${uploadPhenotypeHTML(uploadPhenotypeI18n.p("phenotype_upload.client.remove_help", "New values will be uploaded. Any previously stored values will be replaced by non-blank values.  Blank values in the upload file will remove any previously stored values."))}</div>`;
             message_text += "<br>";
             message_text += "</li>";
             for (var i = 0; i < warningarrayLength; i++) {
@@ -300,10 +324,10 @@ function displayPhenotypeUploadStoreResponse(response, upload_type, div_type) {
             message_text += "</li>";
         }
         if (errorarrayLength == 0) {
-            message_text += "<li class='list-group-item list-group-item-success'><hr><h3>Upload Successful!</h3></li>";
+            message_text += "<li class='list-group-item list-group-item-success'><hr><h3>" + uploadPhenotypeHTML(uploadPhenotypeI18n.p("phenotype_upload.client.success", "Upload Successful!")) + "</h3></li>";
         }
     } else {
-        message_text += "<li class='list-group-item list-group-item-success'><hr><h3>Upload Successful!</h3></li>";
+        message_text += "<li class='list-group-item list-group-item-success'><hr><h3>" + uploadPhenotypeHTML(uploadPhenotypeI18n.p("phenotype_upload.client.success", "Upload Successful!")) + "</h3></li>";
     }
     message_text += "</ul>";
     jQuery(upload_phenotype_status).html(message_text);

@@ -1,3 +1,7 @@
+<%once>
+use HTML::Entities ();
+</%once>
+
 <%doc>
 
 =head1 NAME 
@@ -19,16 +23,16 @@ $guide
 
 <%perl>
 
-my $links = $guide . '|' .  qq | <a href="http://www.biomedcentral.com/1471-2105/11/525/abstract">Citation</a> |;
+my $links = $guide . '|' .  (qq | <a href="http://www.biomedcentral.com/1471-2105/11/525/abstract">| . HTML::Entities::encode_entities($c->i18n->p("analysis.qtl.ui.citation", "Citation")) . qq |</a> |);
 
 </%perl>
 
 <& /page/page_title.mas, 
-   title => "Step 0: Introduction" 
+   title => HTML::Entities::encode_entities($c->i18n->p("analysis.qtl.ui.step_0_introduction", "Step 0: Introduction"))
 &>
 
-<&| /page/info_section.mas, 
-    title    => "Introduction", 
+<&| /page/info_section.mas, anchor_title => "Introduction",
+    title    => HTML::Entities::encode_entities($c->i18n->p("cross.ui.introduction", "Introduction")),
     subtitle => $links 
 &>
  <form action="/phenome/qtl_load.pl" method="POST" enctype="MULTIPART/FORM-DATA">  
@@ -36,8 +40,7 @@ my $links = $guide . '|' .  qq | <a href="http://www.biomedcentral.com/1471-2105
 	<tr>
           <td>	   
             <& general_intro.mas, guide =>$guide &>
-              <p>If you have any problems uploading your data or remarks, 
-                please send your feedback to: 
+              <p><% $c->i18n->p("analysis.qtl.ui.if_you_have_any_problems_uploading_your_data_or_remarks", "If you have any problems uploading your data or remarks, \n                please send your feedback to:") |h %><% ' ' %>
                 <a href=mailto:sgn-feedback\@sgn.cornell.edu> 
                 sgn-feedback@sgn.cornell.edu</a>. 
               </p>      
@@ -45,7 +48,7 @@ my $links = $guide . '|' .  qq | <a href="http://www.biomedcentral.com/1471-2105
         </tr>
         <tr> 
           <td> <input type="hidden"  name = "type" value="begin"> </td>
-          <td> <input type="submit" value="Begin Uploading"> </td>
+          <td> <input type="submit" value="<% $c->i18n->p("analysis.qtl.ui.begin_uploading", "Begin Uploading") |h %>"> </td>
         </tr>
       </table>
  </form>

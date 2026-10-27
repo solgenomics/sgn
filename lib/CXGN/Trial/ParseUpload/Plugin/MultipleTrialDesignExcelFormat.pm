@@ -1,6 +1,8 @@
 package CXGN::Trial::ParseUpload::Plugin::MultipleTrialDesignExcelFormat;
 
 use Moose::Role;
+use SGN::I18N ();
+use HTML::Entities ();
 use Spreadsheet::ParseExcel;
 use Spreadsheet::ParseXLSX;
 use CXGN::Stock::StockLookup;
@@ -19,11 +21,23 @@ my @REQUIRED_COLUMNS = qw|trial_name breeding_program location year design_type 
 my @OPTIONAL_COLUMNS = qw|plot_name trial_type plot_width plot_length field_size planting_date transplanting_date harvest_date is_a_control rep_number range_number row_number col_number seedlot_name num_seed_per_plot weight_gram_seed_per_plot entry_number|;
 # Any additional columns that are not required or optional will be used as a treatment
 
+sub _multiple_trial_excel_message {
+  my ($text, $slots) = @_;
+  $text = HTML::Entities::encode_entities($text);
+  my %encoded_slots = map { HTML::Entities::encode_entities($_) => $slots->{$_} } keys %{$slots || {}};
+  if (%encoded_slots) {
+    my $pattern = join '|', map { quotemeta($_) } sort { length($b) <=> length($a) } keys %encoded_slots;
+    $text =~ s/($pattern)/$encoded_slots{$1}/ge;
+  }
+  return $text;
+}
+
 sub _validate_with_plugin {
 
   # print STDERR "Starting validation\t".localtime()."\n";
 
   my $self = shift;
+  my SGN::I18N $multi_excel_validate_i18n = $self->i18n;
   my $filename = $self->get_filename();
   my $schema = $self->get_chado_schema();
   my %errors;
@@ -57,7 +71,12 @@ sub _validate_with_plugin {
 
   $worksheet = ( $excel_obj->worksheets() )[0]; #support only one worksheet
   if (!$worksheet) {
-    push @error_messages, "Spreadsheet must be on 1st tab in Excel (.xls) file";
+    push @error_messages, _multiple_trial_excel_message(
+      $multi_excel_validate_i18n
+        ? $multi_excel_validate_i18n->p('trial.upload.multi.excel.first_tab', 'Spreadsheet must be on 1st tab in Excel (%{extension}) file', { extension => '__SGN_XLS__' })
+        : 'Spreadsheet must be on 1st tab in Excel (__SGN_XLS__) file',
+      { '__SGN_XLS__' => '.xls' }
+    );
     $errors{'error_messages'} = \@error_messages;
     $self->_set_parse_errors(\%errors);
     return;
@@ -65,13 +84,17 @@ sub _validate_with_plugin {
   my ( $row_min, $row_max ) = $worksheet->row_range();
   my ( $col_min, $col_max ) = $worksheet->col_range();
   if ( ($col_max - $col_min) < 2 || ($row_max - $row_min) < 1 ) { #must have header and at least one row of plot data
-    push @error_messages, "Spreadsheet is missing header or contains no rows";
+    push @error_messages, _multiple_trial_excel_message(
+      $multi_excel_validate_i18n
+        ? $multi_excel_validate_i18n->p('trial.upload.multi.excel.header_or_rows', 'Spreadsheet is missing header or contains no rows')
+        : 'Spreadsheet is missing header or contains no rows'
+    );
     $errors{'error_messages'} = \@error_messages;
     $self->_set_parse_errors(\%errors);
     return;
   }
 
-  my $headers = _parse_headers($worksheet);
+  my $headers = _parse_headers($worksheet, $multi_excel_validate_i18n);
   my %columns = %{$headers->{columns}};
   my @treatment_names = @{$headers->{treatments}};
   my @errors = @{$headers->{errors}};
@@ -287,7 +310,12 @@ sub _validate_with_plugin {
       foreach my $pn ( keys %seen_plot_numbers ) {
         my $count = $seen_plot_numbers{$pn};
         if ($count > 1) {
-          push @error_messages, "Plot number <b>$pn</b> must be unique within the trial. You used this plot number more than once in trial $trial_name";
+          push @error_messages, _multiple_trial_excel_message(
+            $multi_excel_validate_i18n
+              ? $multi_excel_validate_i18n->p('trial.upload.multi.excel.plot_number_duplicate_within_trial', 'Plot number %{plot_number} must be unique within the trial. You used this plot number more than once in trial %{trial_name}', { plot_number => '__SGN_PLOT_NUMBER__', trial_name => '__SGN_TRIAL_NAME__' })
+              : 'Plot number __SGN_PLOT_NUMBER__ must be unique within the trial. You used this plot number more than once in trial __SGN_TRIAL_NAME__',
+            { '__SGN_PLOT_NUMBER__' => '<b>'.$pn.'</b>', '__SGN_TRIAL_NAME__' => $trial_name }
+          );
         }
       }
       ## reset counting hash
@@ -296,13 +324,28 @@ sub _validate_with_plugin {
 
       ## TRIAL NAME CHECK
       if (!$trial_name || $trial_name eq '' ) {
-        push @error_messages, "Row $row_name: trial_name missing.";
+        push @error_messages, _multiple_trial_excel_message(
+          $multi_excel_validate_i18n
+            ? $multi_excel_validate_i18n->p('trial.upload.multi.excel.required_value', 'Row %{row}: %{field} missing.', { row => '__SGN_ROW__', field => '__SGN_FIELD__' })
+            : 'Row __SGN_ROW__: __SGN_FIELD__ missing.',
+          { '__SGN_ROW__' => $row_name, '__SGN_FIELD__' => 'trial_name' }
+        );
       }
       elsif ($trial_name =~ /\s/ ) {
-        push @error_messages, "Row $row_name: trial_name <b>$trial_name</b> must not contain spaces.";
+        push @error_messages, _multiple_trial_excel_message(
+          $multi_excel_validate_i18n
+            ? $multi_excel_validate_i18n->p('trial.upload.multi.excel.no_spaces', 'Row %{row}: %{field} %{value} must not contain spaces.', { row => '__SGN_ROW__', field => '__SGN_FIELD__', value => '__SGN_VALUE__' })
+            : 'Row __SGN_ROW__: __SGN_FIELD__ __SGN_VALUE__ must not contain spaces.',
+          { '__SGN_ROW__' => $row_name, '__SGN_FIELD__' => 'trial_name', '__SGN_VALUE__' => '<b>'.$trial_name.'</b>' }
+        );
       }
       elsif ($trial_name =~ /\// || $trial_name =~ /\\/) {
-        push @warning_messages, "Row $row_name: trial_name <b>$trial_name</b> contains slashes. Note that slashes can cause problems for third-party applications; however, plotnames can be saved with slashes.";
+        push @warning_messages, _multiple_trial_excel_message(
+          $multi_excel_validate_i18n
+            ? $multi_excel_validate_i18n->p('trial.upload.multi.excel.slashes_warning', 'Row %{row}: %{field} %{value} contains slashes. Note that slashes can cause problems for third-party applications; however, plotnames can be saved with slashes.', { row => '__SGN_ROW__', field => '__SGN_FIELD__', value => '__SGN_VALUE__' })
+            : 'Row __SGN_ROW__: __SGN_FIELD__ __SGN_VALUE__ contains slashes. Note that slashes can cause problems for third-party applications; however, plotnames can be saved with slashes.',
+          { '__SGN_ROW__' => $row_name, '__SGN_FIELD__' => 'trial_name', '__SGN_VALUE__' => '<b>'.$trial_name.'</b>' }
+        );
       } else {
         $trial_name =~ s/^\s+|\s+$//g; #trim whitespace from front and end...
         $seen_trial_names{$trial_name} = $row_name;
@@ -310,7 +353,12 @@ sub _validate_with_plugin {
 
       ## BREEDING PROGRAM CHECK
       if (!$breeding_program || $breeding_program eq '' ) {
-        push @error_messages, "Row $row_name: breeding_program missing.";
+        push @error_messages, _multiple_trial_excel_message(
+          $multi_excel_validate_i18n
+            ? $multi_excel_validate_i18n->p('trial.upload.multi.excel.required_value', 'Row %{row}: %{field} missing.', { row => '__SGN_ROW__', field => '__SGN_FIELD__' })
+            : 'Row __SGN_ROW__: __SGN_FIELD__ missing.',
+          { '__SGN_ROW__' => $row_name, '__SGN_FIELD__' => 'breeding_program' }
+        );
       }
       else {
         $breeding_program =~ s/^\s+|\s+$//g; #trim whitespace from front and end...
@@ -319,7 +367,12 @@ sub _validate_with_plugin {
 
       ## LOCATION CHECK
       if (!$location || $location eq '' ) {
-        push @error_messages, "Row $row_name: location missing.";
+        push @error_messages, _multiple_trial_excel_message(
+          $multi_excel_validate_i18n
+            ? $multi_excel_validate_i18n->p('trial.upload.multi.excel.required_value', 'Row %{row}: %{field} missing.', { row => '__SGN_ROW__', field => '__SGN_FIELD__' })
+            : 'Row __SGN_ROW__: __SGN_FIELD__ missing.',
+          { '__SGN_ROW__' => $row_name, '__SGN_FIELD__' => 'location' }
+        );
       }
       else {
         $location =~ s/^\s+|\s+$//g; #trim whitespace from front and end...
@@ -328,19 +381,34 @@ sub _validate_with_plugin {
 
       ## YEAR CHECK
       if (!($year =~ /^\d{4}$/)) {
-        push @error_messages, "Row $row_name: <b>$year</b> is not a valid year, must be a 4 digit positive integer.";
+        push @error_messages, _multiple_trial_excel_message(
+          $multi_excel_validate_i18n
+            ? $multi_excel_validate_i18n->p('trial.upload.multi.excel.invalid_year', 'Row %{row}: %{year} is not a valid year, must be a %{digits} digit positive integer.', { row => '__SGN_ROW__', year => '__SGN_YEAR__', digits => '__SGN_DIGITS__' })
+            : 'Row __SGN_ROW__: __SGN_YEAR__ is not a valid year, must be a __SGN_DIGITS__ digit positive integer.',
+          { '__SGN_ROW__' => $row_name, '__SGN_YEAR__' => '<b>'.$year.'</b>', '__SGN_DIGITS__' => '4' }
+        );
       }
 
       ## TRANSPLANTING DATE CHECK
       if ($transplanting_date) {
         unless ($calendar_funcs->check_value_format($transplanting_date)) {
-          push @error_messages, "Row $row_name: transplanting_date <b>$transplanting_date</b> must be in the format YYYY-MM-DD.";
+          push @error_messages, _multiple_trial_excel_message(
+            $multi_excel_validate_i18n
+              ? $multi_excel_validate_i18n->p('trial.upload.multi.excel.invalid_date', 'Row %{row}: %{field} %{value} must be in the format %{date_format}.', { row => '__SGN_ROW__', field => '__SGN_FIELD__', value => '__SGN_VALUE__', date_format => '__SGN_DATE_FORMAT__' })
+              : 'Row __SGN_ROW__: __SGN_FIELD__ __SGN_VALUE__ must be in the format __SGN_DATE_FORMAT__.',
+            { '__SGN_ROW__' => $row_name, '__SGN_FIELD__' => 'transplanting_date', '__SGN_VALUE__' => '<b>'.$transplanting_date.'</b>', '__SGN_DATE_FORMAT__' => 'YYYY-MM-DD' }
+          );
         }
       }
 
       ## DESIGN TYPE CHECK
       if (!$design_type || $design_type eq '' ) {
-        push @error_messages, "Row $row_name: design_type missing.";
+        push @error_messages, _multiple_trial_excel_message(
+          $multi_excel_validate_i18n
+            ? $multi_excel_validate_i18n->p('trial.upload.multi.excel.required_value', 'Row %{row}: %{field} missing.', { row => '__SGN_ROW__', field => '__SGN_FIELD__' })
+            : 'Row __SGN_ROW__: __SGN_FIELD__ missing.',
+          { '__SGN_ROW__' => $row_name, '__SGN_FIELD__' => 'design_type' }
+        );
       }
       else {
         $design_type =~ s/^\s+|\s+$//g; #trim whitespace from front and end...
@@ -349,7 +417,12 @@ sub _validate_with_plugin {
 
       ## DESCRIPTION CHECK
       if (!$description || $description eq '' ) {
-        push @error_messages, "Row $row_name: description missing.";
+        push @error_messages, _multiple_trial_excel_message(
+          $multi_excel_validate_i18n
+            ? $multi_excel_validate_i18n->p('trial.upload.multi.excel.required_value', 'Row %{row}: %{field} missing.', { row => '__SGN_ROW__', field => '__SGN_FIELD__' })
+            : 'Row __SGN_ROW__: __SGN_FIELD__ missing.',
+          { '__SGN_ROW__' => $row_name, '__SGN_FIELD__' => 'description' }
+        );
       }
 
       ## TRIAL TYPE CHECK
@@ -360,30 +433,55 @@ sub _validate_with_plugin {
 
       ## PLOT WIDTH CHECK
       if ($plot_width && !($plot_width =~ /^([\d]*)([\.]?)([\d]+)$/)){
-        push @error_messages, "Row $row_name: plot_width <b>$plot_width</b> must be a positive number.";
+        push @error_messages, _multiple_trial_excel_message(
+          $multi_excel_validate_i18n
+            ? $multi_excel_validate_i18n->p('trial.upload.multi.excel.positive_number', 'Row %{row}: %{field} %{value} must be a positive number.', { row => '__SGN_ROW__', field => '__SGN_FIELD__', value => '__SGN_VALUE__' })
+            : 'Row __SGN_ROW__: __SGN_FIELD__ __SGN_VALUE__ must be a positive number.',
+          { '__SGN_ROW__' => $row_name, '__SGN_FIELD__' => 'plot_width', '__SGN_VALUE__' => '<b>'.$plot_width.'</b>' }
+        );
       }
 
       ## PLOT LENGTH CHECK
       if ($plot_length && !($plot_length =~ /^([\d]*)([\.]?)([\d]+)$/)){
-        push @error_messages, "Row $row_name: plot_length <b>$plot_length</b> must be a positive number.";
+        push @error_messages, _multiple_trial_excel_message(
+          $multi_excel_validate_i18n
+            ? $multi_excel_validate_i18n->p('trial.upload.multi.excel.positive_number', 'Row %{row}: %{field} %{value} must be a positive number.', { row => '__SGN_ROW__', field => '__SGN_FIELD__', value => '__SGN_VALUE__' })
+            : 'Row __SGN_ROW__: __SGN_FIELD__ __SGN_VALUE__ must be a positive number.',
+          { '__SGN_ROW__' => $row_name, '__SGN_FIELD__' => 'plot_length', '__SGN_VALUE__' => '<b>'.$plot_length.'</b>' }
+        );
       }
 
       ## FIELD SIZE CHECK
       if ($field_size && !($field_size =~ /^([\d]*)([\.]?)([\d]+)$/)){
-        push @error_messages, "Row $row_name: field_size <b>$field_size</b> must be a positive number.";
+        push @error_messages, _multiple_trial_excel_message(
+          $multi_excel_validate_i18n
+            ? $multi_excel_validate_i18n->p('trial.upload.multi.excel.positive_number', 'Row %{row}: %{field} %{value} must be a positive number.', { row => '__SGN_ROW__', field => '__SGN_FIELD__', value => '__SGN_VALUE__' })
+            : 'Row __SGN_ROW__: __SGN_FIELD__ __SGN_VALUE__ must be a positive number.',
+          { '__SGN_ROW__' => $row_name, '__SGN_FIELD__' => 'field_size', '__SGN_VALUE__' => '<b>'.$field_size.'</b>' }
+        );
       }
 
       ## PLANTING DATE CHECK
       if ($planting_date) {
         unless ($calendar_funcs->check_value_format($planting_date)) {
-          push @error_messages, "Row $row_name: planting_date <b>$planting_date</b> must be in the format YYYY-MM-DD.";
+          push @error_messages, _multiple_trial_excel_message(
+            $multi_excel_validate_i18n
+              ? $multi_excel_validate_i18n->p('trial.upload.multi.excel.invalid_date', 'Row %{row}: %{field} %{value} must be in the format %{date_format}.', { row => '__SGN_ROW__', field => '__SGN_FIELD__', value => '__SGN_VALUE__', date_format => '__SGN_DATE_FORMAT__' })
+              : 'Row __SGN_ROW__: __SGN_FIELD__ __SGN_VALUE__ must be in the format __SGN_DATE_FORMAT__.',
+            { '__SGN_ROW__' => $row_name, '__SGN_FIELD__' => 'planting_date', '__SGN_VALUE__' => '<b>'.$planting_date.'</b>', '__SGN_DATE_FORMAT__' => 'YYYY-MM-DD' }
+          );
         }
       }
 
       ## HARVEST DATE CHECK
       if ($harvest_date) {
         unless ($calendar_funcs->check_value_format($harvest_date)) {
-          push @error_messages, "Row $row_name: harvest_date <b>$harvest_date</b> must be in the format YYYY-MM-DD.";
+          push @error_messages, _multiple_trial_excel_message(
+            $multi_excel_validate_i18n
+              ? $multi_excel_validate_i18n->p('trial.upload.multi.excel.invalid_date', 'Row %{row}: %{field} %{value} must be in the format %{date_format}.', { row => '__SGN_ROW__', field => '__SGN_FIELD__', value => '__SGN_VALUE__', date_format => '__SGN_DATE_FORMAT__' })
+              : 'Row __SGN_ROW__: __SGN_FIELD__ __SGN_VALUE__ must be in the format __SGN_DATE_FORMAT__.',
+            { '__SGN_ROW__' => $row_name, '__SGN_FIELD__' => 'harvest_date', '__SGN_VALUE__' => '<b>'.$harvest_date.'</b>', '__SGN_DATE_FORMAT__' => 'YYYY-MM-DD' }
+          );
         }
       }
 
@@ -395,22 +493,42 @@ sub _validate_with_plugin {
       $plot_name = _create_plot_name($current_trial_name, $plot_number);
     }
     elsif ($plot_name =~ /\s/ ) {
-      push @error_messages, "Row $row_name: plot name <b>$plot_name</b> must not contain spaces.";
+      push @error_messages, _multiple_trial_excel_message(
+        $multi_excel_validate_i18n
+          ? $multi_excel_validate_i18n->p('trial.upload.multi.excel.no_spaces', 'Row %{row}: %{field} %{value} must not contain spaces.', { row => '__SGN_ROW__', field => '__SGN_FIELD__', value => '__SGN_VALUE__' })
+          : 'Row __SGN_ROW__: __SGN_FIELD__ __SGN_VALUE__ must not contain spaces.',
+        { '__SGN_ROW__' => $row_name, '__SGN_FIELD__' => 'plot name', '__SGN_VALUE__' => '<b>'.$plot_name.'</b>' }
+      );
     }
     elsif ($plot_name =~ /\// || $plot_name =~ /\\/) {
-      push @warning_messages, "Row $row_name: plot name <b>$plot_name</b> contains slashes. Note that slashes can cause problems for third-party applications; however, plotnames can be saved with slashes.";
+      push @warning_messages, _multiple_trial_excel_message(
+        $multi_excel_validate_i18n
+          ? $multi_excel_validate_i18n->p('trial.upload.multi.excel.slashes_warning', 'Row %{row}: %{field} %{value} contains slashes. Note that slashes can cause problems for third-party applications; however, plotnames can be saved with slashes.', { row => '__SGN_ROW__', field => '__SGN_FIELD__', value => '__SGN_VALUE__' })
+          : 'Row __SGN_ROW__: __SGN_FIELD__ __SGN_VALUE__ contains slashes. Note that slashes can cause problems for third-party applications; however, plotnames can be saved with slashes.',
+        { '__SGN_ROW__' => $row_name, '__SGN_FIELD__' => 'plot name', '__SGN_VALUE__' => '<b>'.$plot_name.'</b>' }
+      );
     }
     else {
       $plot_name =~ s/^\s+|\s+$//g; #trim whitespace from front and end...
       if ($seen_plot_names{$plot_name}) {
-        push @error_messages, "Row $row_name: duplicate plot name <b>$plot_name</b> seen before at row ".$seen_plot_names{$plot_name}.".";
+        push @error_messages, _multiple_trial_excel_message(
+          $multi_excel_validate_i18n
+            ? $multi_excel_validate_i18n->p('trial.upload.multi.excel.duplicate_plot_name', 'Row %{row}: duplicate plot name %{plot_name} seen before at row %{previous_row}.', { row => '__SGN_ROW__', plot_name => '__SGN_PLOT_NAME__', previous_row => '__SGN_PREVIOUS_ROW__' })
+            : 'Row __SGN_ROW__: duplicate plot name __SGN_PLOT_NAME__ seen before at row __SGN_PREVIOUS_ROW__.',
+          { '__SGN_ROW__' => $row_name, '__SGN_PLOT_NAME__' => '<b>'.$plot_name.'</b>', '__SGN_PREVIOUS_ROW__' => $seen_plot_names{$plot_name} }
+        );
       }
       $seen_plot_names{$plot_name}=$row_name;
     }
 
     ## ACCESSSION NAME CHECK
     if (!$accession_name || $accession_name eq '') {
-      push @error_messages, "Row $row_name: accession name missing";
+      push @error_messages, _multiple_trial_excel_message(
+        $multi_excel_validate_i18n
+          ? $multi_excel_validate_i18n->p('trial.upload.multi.excel.required_value', 'Row %{row}: %{field} missing.', { row => '__SGN_ROW__', field => '__SGN_FIELD__' })
+          : 'Row __SGN_ROW__: __SGN_FIELD__ missing.',
+        { '__SGN_ROW__' => $row_name, '__SGN_FIELD__' => 'accession name' }
+      );
     } else {
       $accession_name =~ s/^\s+|\s+$//g; #trim whitespace from front and end...
       $seen_accession_names{$accession_name}++;
@@ -418,40 +536,85 @@ sub _validate_with_plugin {
 
     ## PLOT NUMBER CHECK
     if (!$plot_number || $plot_number eq '') {
-      push @error_messages, "Row $row_name: plot number missing";
+      push @error_messages, _multiple_trial_excel_message(
+        $multi_excel_validate_i18n
+          ? $multi_excel_validate_i18n->p('trial.upload.multi.excel.required_value_no_period', 'Row %{row}: %{field} missing', { row => '__SGN_ROW__', field => '__SGN_FIELD__' })
+          : 'Row __SGN_ROW__: __SGN_FIELD__ missing',
+        { '__SGN_ROW__' => $row_name, '__SGN_FIELD__' => 'plot number' }
+      );
     }
     if (!($plot_number =~ /^\d+?$/)) {
-      push @error_messages, "Row $row_name: plot number <b>$plot_number</b> is not a positive integer.";
+      push @error_messages, _multiple_trial_excel_message(
+        $multi_excel_validate_i18n
+          ? $multi_excel_validate_i18n->p('trial.upload.multi.excel.positive_integer_invalid', 'Row %{row}: %{field} %{value} is not a positive integer.', { row => '__SGN_ROW__', field => '__SGN_FIELD__', value => '__SGN_VALUE__' })
+          : 'Row __SGN_ROW__: __SGN_FIELD__ __SGN_VALUE__ is not a positive integer.',
+        { '__SGN_ROW__' => $row_name, '__SGN_FIELD__' => 'plot number', '__SGN_VALUE__' => '<b>'.$plot_number.'</b>' }
+      );
     }
     $seen_plot_numbers{$plot_number}++;
 
     ## BLOCK NUMBER CHECK
     if (!$block_number || $block_number eq '') {
-      push @error_messages, "Row $row_name: block number missing";
+      push @error_messages, _multiple_trial_excel_message(
+        $multi_excel_validate_i18n
+          ? $multi_excel_validate_i18n->p('trial.upload.multi.excel.required_value_no_period', 'Row %{row}: %{field} missing', { row => '__SGN_ROW__', field => '__SGN_FIELD__' })
+          : 'Row __SGN_ROW__: __SGN_FIELD__ missing',
+        { '__SGN_ROW__' => $row_name, '__SGN_FIELD__' => 'block number' }
+      );
     }
     if (!($block_number =~ /^\d+?$/)) {
-      push @error_messages, "Row $row_name: block number <b>$block_number</b> is not a positive integer.";
+      push @error_messages, _multiple_trial_excel_message(
+        $multi_excel_validate_i18n
+          ? $multi_excel_validate_i18n->p('trial.upload.multi.excel.positive_integer_invalid', 'Row %{row}: %{field} %{value} is not a positive integer.', { row => '__SGN_ROW__', field => '__SGN_FIELD__', value => '__SGN_VALUE__' })
+          : 'Row __SGN_ROW__: __SGN_FIELD__ __SGN_VALUE__ is not a positive integer.',
+        { '__SGN_ROW__' => $row_name, '__SGN_FIELD__' => 'block number', '__SGN_VALUE__' => '<b>'.$block_number.'</b>' }
+      );
     }
 
     ## IS A CONTROL CHECK
     if ($is_a_control) {
       if (!($is_a_control eq "yes" || $is_a_control eq "no" || $is_a_control eq "1" ||$is_a_control eq "0" || $is_a_control eq '')) {
-        push @error_messages, "Row $row_name: is_a_control <b>$is_a_control</b> is not either yes, no 1, 0, or blank.";
+        push @error_messages, _multiple_trial_excel_message(
+          $multi_excel_validate_i18n
+            ? $multi_excel_validate_i18n->p('trial.upload.multi.excel.control_value_invalid', 'Row %{row}: %{field} %{value} is not either %{yes}, %{no} %{one}, %{zero}, or %{blank}.', { row => '__SGN_ROW__', field => '__SGN_FIELD__', value => '__SGN_VALUE__', yes => '__SGN_YES__', no => '__SGN_NO__', one => '__SGN_ONE__', zero => '__SGN_ZERO__', blank => '__SGN_BLANK__' })
+            : 'Row __SGN_ROW__: __SGN_FIELD__ __SGN_VALUE__ is not either __SGN_YES__, __SGN_NO__ __SGN_ONE__, __SGN_ZERO__, or __SGN_BLANK__.',
+          { '__SGN_ROW__' => $row_name, '__SGN_FIELD__' => 'is_a_control', '__SGN_VALUE__' => '<b>'.$is_a_control.'</b>', '__SGN_YES__' => 'yes', '__SGN_NO__' => 'no', '__SGN_ONE__' => '1', '__SGN_ZERO__' => '0', '__SGN_BLANK__' => 'blank' }
+        );
       }
     }
 
     ## REP, ROW, RANGE AND COLUMN CHECKS
     if ($rep_number && !($rep_number =~ /^\d+?$/)){
-      push @error_messages, "Row $row_name: rep_number <b>$rep_number</b> must be a positive integer.";
+      push @error_messages, _multiple_trial_excel_message(
+        $multi_excel_validate_i18n
+          ? $multi_excel_validate_i18n->p('trial.upload.multi.excel.positive_integer', 'Row %{row}: %{field} %{value} must be a positive integer.', { row => '__SGN_ROW__', field => '__SGN_FIELD__', value => '__SGN_VALUE__' })
+          : 'Row __SGN_ROW__: __SGN_FIELD__ __SGN_VALUE__ must be a positive integer.',
+        { '__SGN_ROW__' => $row_name, '__SGN_FIELD__' => 'rep_number', '__SGN_VALUE__' => '<b>'.$rep_number.'</b>' }
+      );
     }
     if ($range_number && !($range_number =~ /^\d+?$/)){
-      push @error_messages, "Row $row_name: range_number <b>$range_number</b> must be a positive integer.";
+      push @error_messages, _multiple_trial_excel_message(
+        $multi_excel_validate_i18n
+          ? $multi_excel_validate_i18n->p('trial.upload.multi.excel.positive_integer', 'Row %{row}: %{field} %{value} must be a positive integer.', { row => '__SGN_ROW__', field => '__SGN_FIELD__', value => '__SGN_VALUE__' })
+          : 'Row __SGN_ROW__: __SGN_FIELD__ __SGN_VALUE__ must be a positive integer.',
+        { '__SGN_ROW__' => $row_name, '__SGN_FIELD__' => 'range_number', '__SGN_VALUE__' => '<b>'.$range_number.'</b>' }
+      );
     }
     if ($row_number && !($row_number =~ /^\d+?$/)){
-      push @error_messages, "Row $row_name: row_number <b>$row_number</b> must be a positive integer.";
+      push @error_messages, _multiple_trial_excel_message(
+        $multi_excel_validate_i18n
+          ? $multi_excel_validate_i18n->p('trial.upload.multi.excel.positive_integer', 'Row %{row}: %{field} %{value} must be a positive integer.', { row => '__SGN_ROW__', field => '__SGN_FIELD__', value => '__SGN_VALUE__' })
+          : 'Row __SGN_ROW__: __SGN_FIELD__ __SGN_VALUE__ must be a positive integer.',
+        { '__SGN_ROW__' => $row_name, '__SGN_FIELD__' => 'row_number', '__SGN_VALUE__' => '<b>'.$row_number.'</b>' }
+      );
     }
     if ($col_number && !($col_number =~ /^\d+?$/)){
-      push @error_messages, "Row $row_name: col_number <b>$col_number</b> must be a positive integer.";
+      push @error_messages, _multiple_trial_excel_message(
+        $multi_excel_validate_i18n
+          ? $multi_excel_validate_i18n->p('trial.upload.multi.excel.positive_integer', 'Row %{row}: %{field} %{value} must be a positive integer.', { row => '__SGN_ROW__', field => '__SGN_FIELD__', value => '__SGN_VALUE__' })
+          : 'Row __SGN_ROW__: __SGN_FIELD__ __SGN_VALUE__ must be a positive integer.',
+        { '__SGN_ROW__' => $row_name, '__SGN_FIELD__' => 'col_number', '__SGN_VALUE__' => '<b>'.$col_number.'</b>' }
+      );
     }
 
     ## SEEDLOT CHECKS
@@ -461,10 +624,20 @@ sub _validate_with_plugin {
       push @pairs, [$seedlot_name, $accession_name];
     }
     if (defined($num_seed_per_plot) && $num_seed_per_plot ne '' && !($num_seed_per_plot =~ /^\d+?$/)){
-      push @error_messages, "Row $row_name: num_seed_per_plot <b>$num_seed_per_plot</b> must be a positive integer.";
+      push @error_messages, _multiple_trial_excel_message(
+        $multi_excel_validate_i18n
+          ? $multi_excel_validate_i18n->p('trial.upload.multi.excel.positive_integer', 'Row %{row}: %{field} %{value} must be a positive integer.', { row => '__SGN_ROW__', field => '__SGN_FIELD__', value => '__SGN_VALUE__' })
+          : 'Row __SGN_ROW__: __SGN_FIELD__ __SGN_VALUE__ must be a positive integer.',
+        { '__SGN_ROW__' => $row_name, '__SGN_FIELD__' => 'num_seed_per_plot', '__SGN_VALUE__' => '<b>'.$num_seed_per_plot.'</b>' }
+      );
     }
     if (defined($weight_gram_seed_per_plot) && $weight_gram_seed_per_plot ne '' && !($weight_gram_seed_per_plot =~ /^\d+?$/)){
-      push @error_messages, "Row $row_name: weight_gram_seed_per_plot <b>$weight_gram_seed_per_plot</b> must be a positive integer.";
+      push @error_messages, _multiple_trial_excel_message(
+        $multi_excel_validate_i18n
+          ? $multi_excel_validate_i18n->p('trial.upload.multi.excel.positive_integer', 'Row %{row}: %{field} %{value} must be a positive integer.', { row => '__SGN_ROW__', field => '__SGN_FIELD__', value => '__SGN_VALUE__' })
+          : 'Row __SGN_ROW__: __SGN_FIELD__ __SGN_VALUE__ must be a positive integer.',
+        { '__SGN_ROW__' => $row_name, '__SGN_FIELD__' => 'weight_gram_seed_per_plot', '__SGN_VALUE__' => '<b>'.$weight_gram_seed_per_plot.'</b>' }
+      );
     }
 
     ## ENTRY NUMBER CHECK
@@ -473,12 +646,22 @@ sub _validate_with_plugin {
       my $ex_en = $seen_entry_numbers{$current_trial_name}->{by_acc}->{$accession_name};
       if ( $ex_acc ) {
         if ( $ex_acc ne $accession_name ) {
-          push @error_messages, "Row $row_name: entry number $entry_number has already been assigned to a different accession ($ex_acc).";
+          push @error_messages, _multiple_trial_excel_message(
+            $multi_excel_validate_i18n
+              ? $multi_excel_validate_i18n->p('trial.upload.multi.excel.entry_assigned_to_other_accession', 'Row %{row}: entry number %{entry_number} has already been assigned to a different accession (%{accession}).', { row => '__SGN_ROW__', entry_number => '__SGN_ENTRY_NUMBER__', accession => '__SGN_ACCESSION__' })
+              : 'Row __SGN_ROW__: entry number __SGN_ENTRY_NUMBER__ has already been assigned to a different accession (__SGN_ACCESSION__).',
+            { '__SGN_ROW__' => $row_name, '__SGN_ENTRY_NUMBER__' => $entry_number, '__SGN_ACCESSION__' => $ex_acc }
+          );
         }
       }
       elsif ( $ex_en ) {
         if ( $ex_en ne $entry_number ) {
-          push @error_messages, "Row $row_name: accession $accession_name has already been assigned a different entry number ($ex_en).";
+          push @error_messages, _multiple_trial_excel_message(
+            $multi_excel_validate_i18n
+              ? $multi_excel_validate_i18n->p('trial.upload.multi.excel.accession_assigned_other_entry', 'Row %{row}: accession %{accession} has already been assigned a different entry number (%{entry_number}).', { row => '__SGN_ROW__', accession => '__SGN_ACCESSION__', entry_number => '__SGN_ENTRY_NUMBER__' })
+              : 'Row __SGN_ROW__: accession __SGN_ACCESSION__ has already been assigned a different entry number (__SGN_ENTRY_NUMBER__).',
+            { '__SGN_ROW__' => $row_name, '__SGN_ACCESSION__' => $accession_name, '__SGN_ENTRY_NUMBER__' => $ex_en }
+          );
         }
       }
       else {
@@ -493,7 +676,12 @@ sub _validate_with_plugin {
       if($worksheet->get_cell($row,$treatment_col)){
         my $apply_treatment = $worksheet->get_cell($row,$treatment_col)->value();
         if ( ($apply_treatment ne '') && defined($apply_treatment) && $apply_treatment ne '1'){
-          push @error_messages, "Treatment value for treatment <b>$treatment_name</b> in row $row_name should be either 1 or empty";
+          push @error_messages, _multiple_trial_excel_message(
+            $multi_excel_validate_i18n
+              ? $multi_excel_validate_i18n->p('trial.upload.multi.excel.treatment_value_invalid', 'Treatment value for treatment %{treatment} in row %{row} should be either %{one} or %{empty}', { treatment => '__SGN_TREATMENT__', row => '__SGN_ROW__', one => '__SGN_ONE__', empty => '__SGN_EMPTY__' })
+              : 'Treatment value for treatment __SGN_TREATMENT__ in row __SGN_ROW__ should be either __SGN_ONE__ or __SGN_EMPTY__',
+            { '__SGN_TREATMENT__' => '<b>'.$treatment_name.'</b>', '__SGN_ROW__' => $row_name, '__SGN_ONE__' => '1', '__SGN_EMPTY__' => 'empty' }
+          );
         }
     }
   }
@@ -513,7 +701,13 @@ sub _validate_with_plugin {
   }
   if (scalar(@already_used_trial_names) > 0) {
     # $errors{'invalid_trial_names'} = \@already_used_trial_names;
-    push @error_messages, "Trial name(s) <b>".join(',',@already_used_trial_names)."</b> are invalid because they are already used in the database.";
+    my $used_trial_names = join(',', @already_used_trial_names);
+    push @error_messages, _multiple_trial_excel_message(
+      $multi_excel_validate_i18n
+        ? $multi_excel_validate_i18n->p('trial.upload.multi.excel.trial_names_already_used', 'Trial name(s) %{names} are invalid because they are already used in the database.', { names => '__SGN_NAMES__' })
+        : 'Trial name(s) __SGN_NAMES__ are invalid because they are already used in the database.',
+      { '__SGN_NAMES__' => '<b>'.$used_trial_names.'</b>' }
+    );
   }
 
   ## BREEDING PROGRAMS OVERALL VALIDATION
@@ -522,7 +716,13 @@ sub _validate_with_plugin {
   my @breeding_programs_missing = @{$breeding_programs_missing};
   if (scalar(@breeding_programs_missing) > 0) {
     # $errors{'missing_breeding_programs'} = \@breeding_programs_missing;
-    push @error_messages, "Breeding program(s) <b>".join(',',@breeding_programs_missing)."</b> are not in the database.";
+    my $missing_breeding_programs = join(',', @breeding_programs_missing);
+    push @error_messages, _multiple_trial_excel_message(
+      $multi_excel_validate_i18n
+        ? $multi_excel_validate_i18n->p('trial.upload.multi.excel.breeding_programs_missing', 'Breeding program(s) %{programs} are not in the database.', { programs => '__SGN_PROGRAMS__' })
+        : 'Breeding program(s) __SGN_PROGRAMS__ are not in the database.',
+      { '__SGN_PROGRAMS__' => '<b>'.$missing_breeding_programs.'</b>' }
+    );
   }
 
   ## LOCATIONS OVERALL VALIDATION
@@ -536,7 +736,12 @@ sub _validate_with_plugin {
     my $location_code = $code->[0];
     my $found_location_name = $code->[1];
     $location_code_map{$location_code} = $found_location_name;
-    push @warning_messages, "File Location '$location_code' matches the code for the location named '$found_location_name' and will be substituted if you ignore warnings.";
+    push @warning_messages, _multiple_trial_excel_message(
+      $multi_excel_validate_i18n
+        ? $multi_excel_validate_i18n->p('trial.upload.multi.excel.location_code_match', "File Location '%{code}' matches the code for the location named '%{location}' and will be substituted if you ignore warnings.", { code => '__SGN_CODE__', location => '__SGN_LOCATION__' })
+        : "File Location '__SGN_CODE__' matches the code for the location named '__SGN_LOCATION__' and will be substituted if you ignore warnings.",
+      { '__SGN_CODE__' => $location_code, '__SGN_LOCATION__' => $found_location_name }
+    );
   }
   $self->_set_location_code_map(\%location_code_map);
 
@@ -544,7 +749,13 @@ sub _validate_with_plugin {
   my @locations_missing = @{$locations_hashref->{'missing'}};
   my @locations_missing_no_codes = grep { !exists $location_code_map{$_} } @locations_missing;
   if (scalar(@locations_missing_no_codes) > 0) {
-    push @error_messages, "Location(s) <b>".join(',',@locations_missing_no_codes)."</b> are not in the database.";
+    my $missing_locations = join(',', @locations_missing_no_codes);
+    push @error_messages, _multiple_trial_excel_message(
+      $multi_excel_validate_i18n
+        ? $multi_excel_validate_i18n->p('trial.upload.multi.excel.locations_missing', 'Location(s) %{locations} are not in the database.', { locations => '__SGN_LOCATIONS__' })
+        : 'Location(s) __SGN_LOCATIONS__ are not in the database.',
+      { '__SGN_LOCATIONS__' => '<b>'.$missing_locations.'</b>' }
+    );
   }
 
   ## DESIGN TYPES OVERALL VALIDATION
@@ -574,7 +785,13 @@ sub _validate_with_plugin {
   }
   if (scalar(@design_types_missing) > 0) {
     # $errors{'missing_design_types'} = \@design_types_missing;
-    push @error_messages, "Design type(s) <b>".join(',',@design_types_missing)."</b> are not in the database.";
+    my $missing_design_types = join(',', @design_types_missing);
+    push @error_messages, _multiple_trial_excel_message(
+      $multi_excel_validate_i18n
+        ? $multi_excel_validate_i18n->p('trial.upload.multi.excel.design_types_missing', 'Design type(s) %{types} are not in the database.', { types => '__SGN_DESIGN_TYPES__' })
+        : 'Design type(s) __SGN_DESIGN_TYPES__ are not in the database.',
+      { '__SGN_DESIGN_TYPES__' => '<b>'.$missing_design_types.'</b>' }
+    );
   }
 
   ## TRIAL TYPES OVERALL VALIDATION
@@ -588,7 +805,13 @@ sub _validate_with_plugin {
   }
   if (scalar(@trial_types_missing) > 0) {
     # $errors{'missing_trial_types'} = \@trial_types_missing;
-    push @error_messages, "Trial type(s) <b>".join(',',@trial_types_missing)."</b> are not in the database.";
+    my $missing_trial_types = join(',', @trial_types_missing);
+    push @error_messages, _multiple_trial_excel_message(
+      $multi_excel_validate_i18n
+        ? $multi_excel_validate_i18n->p('trial.upload.multi.excel.trial_types_missing', 'Trial type(s) %{types} are not in the database.', { types => '__SGN_TRIAL_TYPES__' })
+        : 'Trial type(s) __SGN_TRIAL_TYPES__ are not in the database.',
+      { '__SGN_TRIAL_TYPES__' => '<b>'.$missing_trial_types.'</b>' }
+    );
   }
 
   ## ACCESSIONS OVERALL VALIDATION
@@ -601,7 +824,12 @@ sub _validate_with_plugin {
     my $found_acc_name_from_synonym = $synonym->{'uniquename'};
     my $matched_synonym = $synonym->{'synonym'};
 
-    push @warning_messages, "File Accession $matched_synonym is a synonym of database accession $found_acc_name_from_synonym ";
+    push @warning_messages, _multiple_trial_excel_message(
+      $multi_excel_validate_i18n
+        ? $multi_excel_validate_i18n->p('trial.upload.multi.excel.accession_synonym', 'File Accession %{file_accession} is a synonym of database accession %{database_accession} ', { file_accession => '__SGN_FILE_ACCESSION__', database_accession => '__SGN_DATABASE_ACCESSION__' })
+        : 'File Accession __SGN_FILE_ACCESSION__ is a synonym of database accession __SGN_DATABASE_ACCESSION__ ',
+      { '__SGN_FILE_ACCESSION__' => $matched_synonym, '__SGN_DATABASE_ACCESSION__' => $found_acc_name_from_synonym }
+    );
 
     @accessions = grep !/\Q$matched_synonym/, @accessions;
     push @accessions, $found_acc_name_from_synonym;
@@ -615,14 +843,26 @@ sub _validate_with_plugin {
 
   if (scalar(@accessions_missing) > 0) {
     # $errors{'missing_accessions'} = \@accessions_missing;
-    push @error_messages, "Accession(s) <b>".join(',',@accessions_missing)."</b> are not in the database as uniquenames or synonyms.";
+    my $missing_accessions = join(',', @accessions_missing);
+    push @error_messages, _multiple_trial_excel_message(
+      $multi_excel_validate_i18n
+        ? $multi_excel_validate_i18n->p('trial.upload.multi.excel.accessions_missing', 'Accession(s) %{accessions} are not in the database as uniquenames or synonyms.', { accessions => '__SGN_ACCESSIONS__' })
+        : 'Accession(s) __SGN_ACCESSIONS__ are not in the database as uniquenames or synonyms.',
+      { '__SGN_ACCESSIONS__' => '<b>'.$missing_accessions.'</b>' }
+    );
   }
   if (scalar(@multiple_synonyms) > 0) {
     my @msgs;
     foreach my $m (@multiple_synonyms) {
       push(@msgs, 'Name: ' . @$m[0] . ' = Synonym: ' . @$m[1]);
     }
-    push @error_messages, "Accession(s) <b>".join(',',@msgs)."</b> appear in the database as synonyms of more than one unique accession. Please change to the unique accession name or delete the multiple synonyms";
+    my $multiple_synonym_details = join(',', @msgs);
+    push @error_messages, _multiple_trial_excel_message(
+      $multi_excel_validate_i18n
+        ? $multi_excel_validate_i18n->p('trial.upload.multi.excel.multiple_accession_synonyms', 'Accession(s) %{details} appear in the database as synonyms of more than one unique accession. Please change to the unique accession name or delete the multiple synonyms', { details => '__SGN_SYNONYM_DETAILS__' })
+        : 'Accession(s) __SGN_SYNONYM_DETAILS__ appear in the database as synonyms of more than one unique accession. Please change to the unique accession name or delete the multiple synonyms',
+      { '__SGN_SYNONYM_DETAILS__' => '<b>'.$multiple_synonym_details.'</b>' }
+    );
   }
 
   ## SEEDLOTS OVERALL VALIDATION
@@ -632,7 +872,13 @@ sub _validate_with_plugin {
 
     if (scalar(@seedlots_missing) > 0) {
       # $errors{'missing_seedlots'} = \@seedlots_missing;
-      push @error_messages, "Seedlot(s) <b>".join(',',@seedlots_missing)."</b> are not in the database.";
+      my $missing_seedlots = join(',', @seedlots_missing);
+      push @error_messages, _multiple_trial_excel_message(
+        $multi_excel_validate_i18n
+          ? $multi_excel_validate_i18n->p('trial.upload.multi.excel.seedlots_missing', 'Seedlot(s) %{seedlots} are not in the database.', { seedlots => '__SGN_SEEDLOTS__' })
+          : 'Seedlot(s) __SGN_SEEDLOTS__ are not in the database.',
+        { '__SGN_SEEDLOTS__' => '<b>'.$missing_seedlots.'</b>' }
+      );
     }
 
     my $return = CXGN::Stock::Seedlot->verify_seedlot_accessions_crosses($schema, \@pairs);
@@ -650,7 +896,13 @@ sub _validate_with_plugin {
     'uniquename' => { -in => \@uniquenames }
   });
   while (my $r=$rs->next){
-    push @error_messages, "Plot name <b>".$r->uniquename."</b> already exists.";
+    my $existing_plot_name = $r->uniquename;
+    push @error_messages, _multiple_trial_excel_message(
+      $multi_excel_validate_i18n
+        ? $multi_excel_validate_i18n->p('trial.upload.multi.excel.plot_name_exists', 'Plot name %{plot_name} already exists.', { plot_name => '__SGN_PLOT_NAME__' })
+        : 'Plot name __SGN_PLOT_NAME__ already exists.',
+      { '__SGN_PLOT_NAME__' => '<b>'.$existing_plot_name.'</b>' }
+    );
   }
 
   ## PLOT POSITION OVERALL VALIDATION
@@ -660,7 +912,13 @@ sub _validate_with_plugin {
       my $count = scalar(@{$plots});
       if ( $count > 1 ) {
         my @pos = split('-', $pk);
-        push @warning_messages, "More than 1 plot is assigned to the position row=" . $pos[0] . " col=" . $pos[1] . " trial=" . $tk . " plots=" . join(',', @$plots);
+        my $position_details = "row=" . $pos[0] . " col=" . $pos[1] . " trial=" . $tk . " plots=" . join(',', @$plots);
+        push @warning_messages, _multiple_trial_excel_message(
+          $multi_excel_validate_i18n
+            ? $multi_excel_validate_i18n->p('trial.upload.multi.excel.overlapping_position', 'More than 1 plot is assigned to the position %{position}', { position => '__SGN_POSITION_DETAILS__' })
+            : 'More than 1 plot is assigned to the position __SGN_POSITION_DETAILS__',
+          { '__SGN_POSITION_DETAILS__' => $position_details }
+        );
       }
     }
   }
@@ -975,7 +1233,8 @@ sub _parse_with_plugin {
 }
 
 sub _parse_headers {
-  my $worksheet = shift;
+  my ($worksheet, $i18n) = @_;
+  my SGN::I18N $multi_excel_parse_headers_i18n = $i18n;
   my ( $col_min, $col_max ) = $worksheet->col_range();
   my %columns;
   my @treatments;
@@ -1003,7 +1262,10 @@ sub _parse_headers {
 
   foreach (@REQUIRED_COLUMNS) {
     if ( !exists $columns{$_} ) {
-      push(@errors, "Required column $_ is missing from the file!");
+      my $caption = $multi_excel_parse_headers_i18n
+        ? $multi_excel_parse_headers_i18n->p('trial.upload.multi.excel.required_column', 'Required column %{column} is missing from the file!', { column => '__SGN_COLUMN__' })
+        : 'Required column __SGN_COLUMN__ is missing from the file!';
+      push(@errors, _multiple_trial_excel_message($caption, { '__SGN_COLUMN__' => $_ }));
     }
   }
 

@@ -18,15 +18,15 @@ $trial_stock_type => undef
     <div class="modal-dialog modal-lg" role="document">
         <div class="modal-content">
             <div class="modal-header" style="text-align: center">
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                <h4 class="modal-title" id="generateTrialBarcodeDialog">Generate Stock Barcode</h4>
+                <button type="button" class="close" data-dismiss="modal" aria-label="<% $c->i18n->p("global.dataset_publish.close", "Close") |h %>"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="generateTrialBarcodeDialog"><% $c->i18n->p("barcode.mason.generate_stock_barcode", "Generate Stock Barcode") |h %></h4>
             </div>
             <div class="modal-body">
                 <div class="container-fluid">
                     <p id = "barcode_dialog_subtitle2">
                         <span class="ui-icon ui-icon-circle-check" style="float: left; margin: 0 7px 50px 0;"></span>
                     </p>
-                    OR   <button type="button" class="btn btn-primary" name="custom_barcode_trial_link" id="custom_barcode_trial_link">Design Custom Barcode</button>   ON LABEL DESIGNER PAGE!
+                    <% $c->i18n->p("seedlot_maintenance_table.ui.or", "OR") |h %>   <button type="button" class="btn btn-primary" name="custom_barcode_trial_link" id="custom_barcode_trial_link"><% $c->i18n->p("barcode.mason.design_custom_barcode", "Design Custom Barcode") |h %></button>   <% $c->i18n->p("barcode.mason.on_label_designer_page", "ON LABEL DESIGNER PAGE!") |h %>
                     <center>
                         <div class="well">
                             <& /util/barcode.mas, identifier => "$identifier", trial_id=> "$trial_id", trial_name=> "$trial_name", format=>"trial_qrcode"  &>
@@ -42,24 +42,24 @@ $trial_stock_type => undef
                             <form class="form-horizontal" role="form" enctype="multipart/form-data" method="post" action="/barcode/stock/download/pdf" >
 
                              <div class="form-group form-group-sm" >
-                               <label class="col-sm-4 control-label">List of Stock Names: </label>
+                               <label class="col-sm-4 control-label"><% $c->i18n->p("barcode.mason.list_of_stock_names", "List of Stock Names:") |h %> </label>
                                <div class="col-sm-8" id="trial_accessions">
                                </div>
                              </div>
 
                              <div class="form-group form-group-sm">
-                              <label class="col-sm-4 control-label">Barcode Type: </label>
+                              <label class="col-sm-4 control-label"><% $c->i18n->p("barcode.helper.barcode_type", "Barcode Type:") |h %> </label>
                               <div class="col-sm-8">
                                   <select class="form-control" id="select_barcode_type" name="select_barcode_type">
-                                    <option value="2D">2D Barcode</option>
-                                    <option value="1D">1D Barcode</option>
+                                    <option value="2D"><% $c->i18n->p("barcode.helper.2d_barcode", "2D Barcode") |h %></option>
+                                    <option value="1D"><% $c->i18n->p("barcode.helper.1d_barcode", "1D Barcode") |h %></option>
                                   </select>
                               </div>
                              </div>
 
                                <div id="2D_fieldbook_option" >
                                <div class="form-group form-group-sm" >
-                                 <label class="col-sm-4 control-label">Enable 2D Barcode For FieldBook: </label>
+                                 <label class="col-sm-4 control-label"><% $c->i18n->p("barcode.helper.enable_2d_barcode_for_fieldbook", "Enable 2D Barcode For FieldBook:") |h %> </label>
                                  <div class="col-sm-8">
                                    <input type="checkbox" id="enable_fieldbook_2d_barcode" name="enable_fieldbook_2d_barcode" value="enable_fieldbook_2d_barcode" checked/>
                                  </div>
@@ -179,17 +179,17 @@ $trial_stock_type => undef
                                </script>
 
                                <div class="form-group form-group-sm">
-                                 <label class="col-sm-4 control-label">Printing Format (Optional): </label>
+                                 <label class="col-sm-4 control-label"><% $c->i18n->p("barcode.helper.printing_format_optional", "Printing Format (Optional):") |h %> </label>
                                  <div class="col-sm-8">
                                      <select class="form-control" id="select_print_format" name="select_print_format">
                                        <!--<option selected disabled>select printing format</option>-->
-                                       <option value="">select printing format</option>
-                                       <option value="CASS">CASS printing format</option>
-                                       <option value="MUSA">MUSA printing format</option>
-                                       <option value="32A4">32 label Size Sticker Paper</option>
-                                       <option value="32_unique">32 Unique label Size Sticker Paper</option>
-                                       <option value="20A4">20 label Size Sticker Paper</option>
-                                       <option value="NCSU">NCSU printing format</option>
+                                       <option value=""><% $c->i18n->p("barcode.helper.select_printing_format", "select printing format") |h %></option>
+                                       <option value="CASS"><% $c->i18n->p("barcode.helper.cass_printing_format", "CASS printing format") |h %></option>
+                                       <option value="MUSA"><% $c->i18n->p("barcode.helper.musa_printing_format", "MUSA printing format") |h %></option>
+                                       <option value="32A4"><% $c->i18n->p("barcode.helper.32_label_size_sticker_paper", "32 label Size Sticker Paper") |h %></option>
+                                       <option value="32_unique"><% $c->i18n->p("barcode.helper.32_unique_label_size_sticker_paper", "32 Unique label Size Sticker Paper") |h %></option>
+                                       <option value="20A4"><% $c->i18n->p("barcode.helper.20_label_size_sticker_paper", "20 label Size Sticker Paper") |h %></option>
+                                       <option value="NCSU"><% $c->i18n->p("barcode.mason.ncsu_printing_format", "NCSU printing format") |h %></option>
                                        <option value="IITA-3">IITA-3-barcode</option>
                                        <option value="IITA-2">IITA-2-barcode</option>
                                        <option value="crossing">CROSS</option>
@@ -198,7 +198,7 @@ $trial_stock_type => undef
                                </div>
 
                                 <div class="form-group form-group-sm" style="display: none">
-                                  <label class="col-sm-4 control-label">Print Duplicate Labels Per Row: </label>
+                                  <label class="col-sm-4 control-label"><% $c->i18n->p("barcode.helper.print_duplicate_labels_per_row", "Print Duplicate Labels Per Row:") |h %> </label>
                                   <div class="col-sm-8">
                                     <input type="checkbox" name="duplicate_labels_per_row" checked="1" disabled="1" />
                                   </div>
@@ -229,8 +229,8 @@ $trial_stock_type => undef
             </div>
             <div class="modal-footer">
 
-                <button class="btn btn-primary type="submit" type="submit" value="Download Barcodes">Download Barcodes</button>
-                <button id="trial_barcode_dialog_ok_button" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                <button class="btn btn-primary type="submit" type="submit" value="Download Barcodes"><% $c->i18n->p("barcode.helper.download_barcodes", "Download Barcodes") |h %></button>
+                <button id="trial_barcode_dialog_ok_button" type="button" class="btn btn-default" data-dismiss="modal"><% $c->i18n->p("global.dataset_publish.close", "Close") |h %></button>
 
             </div>
         </form>
@@ -242,15 +242,15 @@ $trial_stock_type => undef
     <div class="modal-dialog modal-lg" role="document">
         <div class="modal-content">
             <div class="modal-header" style="text-align: center">
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                <h4 class="modal-title" id="barcodeDesignOptionDialog">Generate Barcode Label</h4>
+                <button type="button" class="close" data-dismiss="modal" aria-label="<% $c->i18n->p("global.dataset_publish.close", "Close") |h %>"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="barcodeDesignOptionDialog"><% $c->i18n->p("barcode.mason.generate_barcode_label", "Generate Barcode Label") |h %></h4>
             </div>
             <div class="modal-body">
             <div class="container-fluid">
                     <center>
-                    <button type="button" class="btn btn-primary" name="custom_barcode_trial_link" id="label_designer_link">Go To Label Designer (Recommended)</button>
+                    <button type="button" class="btn btn-primary" name="custom_barcode_trial_link" id="label_designer_link"><% $c->i18n->p("barcode.mason.go_to_label_designer_recommended", "Go To Label Designer (Recommended)") |h %></button>
                 <p id="legacy_barcode_btn">
-                    <button type="button" class="btn" name="generate_trial_barcode_link" id="generate_trial_barcode_link">Use Legacy Barcode Generator</button>
+                    <button type="button" class="btn" name="generate_trial_barcode_link" id="generate_trial_barcode_link"><% $c->i18n->p("barcode.mason.use_legacy_barcode_generator", "Use Legacy Barcode Generator") |h %></button>
                 </p>
                     <center>
             </div>
@@ -259,7 +259,7 @@ $trial_stock_type => undef
                 jQuery('#label_designer_link').click(function() {
                     var trialId = "<% $trial_id %>";
                     location.href = '/tools/label_designer?source_type=field_trials&source_id=' + encodeURIComponent(trialId);
-                });    
+                });
             });
             </script>
             </div>
@@ -271,8 +271,8 @@ $trial_stock_type => undef
     <div class="modal-dialog modal-lg" role="document">
         <div class="modal-content">
             <div class="modal-header" style="text-align: center">
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                <h4 class="modal-title" id="generateTrialBarcodeButtonDialog">Generate Stock Barcode</h4>
+                <button type="button" class="close" data-dismiss="modal" aria-label="<% $c->i18n->p("global.dataset_publish.close", "Close") |h %>"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="generateTrialBarcodeButtonDialog"><% $c->i18n->p("barcode.mason.generate_stock_barcode", "Generate Stock Barcode") |h %></h4>
             </div>
             <div class="modal-body">
             <div class="container-fluid">
@@ -284,17 +284,17 @@ $trial_stock_type => undef
                     <& /util/barcode.mas, identifier => "$identifier", trial_id=> "$trial_id", trial_name=> "$trial_name", format=>"trial_qrcode"  &>
                     </div>
                 <p>
-                    <button type="button" class="btn btn-primary" name="trial_plot_barcode" id="trial_plot_barcode">Plot Barcodes</button>
-                    <button type="button" class="btn btn-primary" name="trial_plant_barcode" id="trial_plant_barcode">Plant Barcodes</button>
+                    <button type="button" class="btn btn-primary" name="trial_plot_barcode" id="trial_plot_barcode"><% $c->i18n->p("barcode.mason.plot_barcodes", "Plot Barcodes") |h %></button>
+                    <button type="button" class="btn btn-primary" name="trial_plant_barcode" id="trial_plant_barcode"><% $c->i18n->p("barcode.mason.plant_barcodes", "Plant Barcodes") |h %></button>
                     <button type="button" class="btn btn-primary" name="trial_stock_barcode" id="trial_stock_barcode"></button>
-                    <button type="button" class="btn btn-primary" name="custom_barcode" id="custom_barcode">Custom Barcodes</button>
+                    <button type="button" class="btn btn-primary" name="custom_barcode" id="custom_barcode"><% $c->i18n->p("barcode.mason.custom_barcodes", "Custom Barcodes") |h %></button>
                 </p>
 
                       </center>
               </div>
           </div>
           <div class="modal-footer">
-              <button id="trial_barcode_dialog_ok_button" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+              <button id="trial_barcode_dialog_ok_button" type="button" class="btn btn-default" data-dismiss="modal"><% $c->i18n->p("global.dataset_publish.close", "Close") |h %></button>
 
           </div>
       </div>
@@ -306,37 +306,37 @@ $trial_stock_type => undef
     <div class="modal-dialog modal-lg" role="document">
         <div class="modal-content">
             <div class="modal-header" style="text-align: center">
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                <h4 class="modal-title" id="generateCrossingTrialBarcodeButtonDialog">Generate Barcode</h4>
+                <button type="button" class="close" data-dismiss="modal" aria-label="<% $c->i18n->p("global.dataset_publish.close", "Close") |h %>"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="generateCrossingTrialBarcodeButtonDialog"><% $c->i18n->p("barcode.mason.generate_barcode", "Generate Barcode") |h %></h4>
             </div>
             <div class="modal-body">
                 <div class="container-fluid">
                     <p>
                         <span class="ui-icon ui-icon-circle-check" style="float: left; margin: 0 7px 50px 0;"></span>
-                        Generate barcodes for cross unique ids, female parents and male parents in this crossing experiment.
+                        <% $c->i18n->p("barcode.mason.generate_barcodes_for_cross_unique_ids_female_parents_and_male", "Generate barcodes for cross unique ids, female parents and male parents in this crossing experiment.") |h %>
                     </p>
                     <center>
                         <div class="well">
                             <& /util/barcode.mas, identifier => "$identifier", trial_id=> "$trial_id", trial_name=> "$trial_name", format=>"trial_qrcode"  &>
                         </div>
                         <p>
-                            <button type="button" class="btn btn-primary" name="cross_barcodes" id="cross_barcodes">Cross Unique ID Barcodes</button>
+                            <button type="button" class="btn btn-primary" name="cross_barcodes" id="cross_barcodes"><% $c->i18n->p("barcode.mason.cross_unique_id_barcodes", "Cross Unique ID Barcodes") |h %></button>
                         </p>
                         <p>
-                            <button type="button" class="btn btn-primary" name="female_accession_barcodes" id="female_accession_barcodes">Female Accession Barcodes</button>
-                            <button type="button" class="btn btn-primary" name="female_plot_barcodes" id="female_plot_barcodes">Female Plot Barcodes</button>
-                            <button type="button" class="btn btn-primary" name="female_plant_barcodes" id="female_plant_barcodes">Female Plant Barcodes</button>
+                            <button type="button" class="btn btn-primary" name="female_accession_barcodes" id="female_accession_barcodes"><% $c->i18n->p("barcode.mason.female_accession_barcodes", "Female Accession Barcodes") |h %></button>
+                            <button type="button" class="btn btn-primary" name="female_plot_barcodes" id="female_plot_barcodes"><% $c->i18n->p("barcode.mason.female_plot_barcodes", "Female Plot Barcodes") |h %></button>
+                            <button type="button" class="btn btn-primary" name="female_plant_barcodes" id="female_plant_barcodes"><% $c->i18n->p("barcode.mason.female_plant_barcodes", "Female Plant Barcodes") |h %></button>
                         </p>
                         <p>
-                            <button type="button" class="btn btn-primary" name="male_accession_barcodes" id="male_accession_barcodes">Male Accession Barcodes</button>
-                            <button type="button" class="btn btn-primary" name="male_plot_barcodes" id="male_plot_barcodes">Male Plot Barcodes</button>
-                            <button type="button" class="btn btn-primary" name="male_plant_barcodes" id="male_plant_barcodes">Male Plant Barcodes</button>
+                            <button type="button" class="btn btn-primary" name="male_accession_barcodes" id="male_accession_barcodes"><% $c->i18n->p("barcode.mason.male_accession_barcodes", "Male Accession Barcodes") |h %></button>
+                            <button type="button" class="btn btn-primary" name="male_plot_barcodes" id="male_plot_barcodes"><% $c->i18n->p("barcode.mason.male_plot_barcodes", "Male Plot Barcodes") |h %></button>
+                            <button type="button" class="btn btn-primary" name="male_plant_barcodes" id="male_plant_barcodes"><% $c->i18n->p("barcode.mason.male_plant_barcodes", "Male Plant Barcodes") |h %></button>
                         </p>
                     </center>
                 </div>
             </div>
             <div class="modal-footer">
-                <button id="trial_barcode_dialog_ok_button" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                <button id="trial_barcode_dialog_ok_button" type="button" class="btn btn-default" data-dismiss="modal"><% $c->i18n->p("global.dataset_publish.close", "Close") |h %></button>
             </div>
         </div>
     </div>
@@ -353,51 +353,51 @@ jQuery(document).ready(function () {
     var barcode_button_label = '';
 
     if (trial_stock_type == 'family_name') {
-        dialog_subtitle = 'Generate barcodes for plots, plants and family names used in this trial.';
-        barcode_button_label = 'Family Name Barcodes';
+        dialog_subtitle = (window.SGN && window.SGN.i18n ? window.SGN.i18n.p("barcode.mason.generate_barcodes_for_plots_plants_and_family_names_used_in_this_trial", "Generate barcodes for plots, plants and family names used in this trial.") : 'Generate barcodes for plots, plants and family names used in this trial.');
+        barcode_button_label = (window.SGN && window.SGN.i18n ? window.SGN.i18n.p("barcode.mason.family_name_barcodes", "Family Name Barcodes") : 'Family Name Barcodes');
     } else if (trial_stock_type == 'cross') {
-        dialog_subtitle = 'Generate barcodes for plots, plants and cross unique ids used in this trial.';
-        barcode_button_label = 'Cross Unique ID Barcodes';
+        dialog_subtitle = (window.SGN && window.SGN.i18n ? window.SGN.i18n.p("barcode.mason.generate_barcodes_for_plots_plants_and_cross_unique_ids_used_in_this_trial", "Generate barcodes for plots, plants and cross unique ids used in this trial.") : 'Generate barcodes for plots, plants and cross unique ids used in this trial.');
+        barcode_button_label = (window.SGN && window.SGN.i18n ? window.SGN.i18n.p("barcode.mason.cross_unique_id_barcodes", "Cross Unique ID Barcodes") : 'Cross Unique ID Barcodes');
     } else {
-        dialog_subtitle = 'Generate barcodes for plots, plants and accessions used in this trial.';
-        barcode_button_label = 'Accession Barcodes';
+        dialog_subtitle = (window.SGN && window.SGN.i18n ? window.SGN.i18n.p("barcode.mason.generate_barcodes_for_plots_plants_and_accessions_used_in_this_trial", "Generate barcodes for plots, plants and accessions used in this trial.") : 'Generate barcodes for plots, plants and accessions used in this trial.');
+        barcode_button_label = (window.SGN && window.SGN.i18n ? window.SGN.i18n.p("barcode.mason.accession_barcodes", "Accession Barcodes") : 'Accession Barcodes');
     }
 
     jQuery('#barcode_dialog_subtitle').text(dialog_subtitle);
 
-    document.getElementById('trial_stock_barcode').innerHTML = barcode_button_label;
+    document.getElementById('trial_stock_barcode').textContent = barcode_button_label;
 
     jQuery('#trial_stock_barcode').click(function() {
 
         if (trial_stock_type == 'family_name') {
-            jQuery('#barcode_dialog_subtitle2').text('Generate barcodes for family names used in this trial');
+            jQuery('#barcode_dialog_subtitle2').text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("barcode.mason.generate_barcodes_for_family_names_used_in_this_trial", "Generate barcodes for family names used in this trial") : 'Generate barcodes for family names used in this trial'));
         } else if (trial_stock_type == 'cross') {
-            jQuery('#barcode_dialog_subtitle2').text('Generate barcodes for Cross unique ids used in this trial');
+            jQuery('#barcode_dialog_subtitle2').text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("barcode.mason.generate_barcodes_for_cross_unique_ids_used_in_this_trial", "Generate barcodes for Cross unique ids used in this trial") : 'Generate barcodes for Cross unique ids used in this trial'));
         } else {
-            jQuery('#barcode_dialog_subtitle2').text('Generate barcodes for accessions used in this trial');
+            jQuery('#barcode_dialog_subtitle2').text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("barcode.mason.generate_barcodes_for_accessions_used_in_this_trial", "Generate barcodes for accessions used in this trial") : 'Generate barcodes for accessions used in this trial'));
         }
 
-    	jQuery.ajax ( {
+	jQuery.ajax ( {
             url : '/ajax/breeders/trial/'+<% $trial_id %>+'/accessions',
             success: function(response) {
-        		var trial_accessions_html = '<textarea class="form-control" id="stock_names" name="stock_names" >';
+		var trial_accessions_html = '<textarea class="form-control" id="stock_names" name="stock_names" >';
 
-        		for (i=0; i<response.accessions[0].length; i++) {
-        		    trial_accessions_html = trial_accessions_html + response.accessions[0][i].accession_name + "\n";
-        		}
+		for (i=0; i<response.accessions[0].length; i++) {
+		    trial_accessions_html = trial_accessions_html + response.accessions[0][i].accession_name + "\n";
+		}
                 trial_accessions_html = trial_accessions_html + "</textarea>";
-        		jQuery('#trial_accessions').empty();
-        		jQuery('#trial_accessions').html(trial_accessions_html);
+		jQuery('#trial_accessions').empty();
+		jQuery('#trial_accessions').html(trial_accessions_html);
             },
             error: function(response){
-        		      alert("Error retrieving accessions.");
+		      alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("accession.forms.error_retrieving_accessions", "Error retrieving accessions.") : "Error retrieving accessions."));
             }
         });
     });
 
     jQuery('#trial_plot_barcode').click(function() {
 
-        jQuery('#barcode_dialog_subtitle2').text('Generate barcodes for plots used in this trial');
+        jQuery('#barcode_dialog_subtitle2').text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("barcode.mason.generate_barcodes_for_plots_used_in_this_trial", "Generate barcodes for plots used in this trial") : 'Generate barcodes for plots used in this trial'));
 
         jQuery.ajax ( {
             url : '/ajax/breeders/trial/'+<% $trial_id %>+'/plots',
@@ -412,21 +412,21 @@ jQuery(document).ready(function () {
                 jQuery('#trial_accessions').html(trial_plots_html);
             },
             error: function(response){
-                alert("Error retrieving plots.");
+                alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("seedlots.ui.error_retrieving_plots", "Error retrieving plots.") : "Error retrieving plots."));
             }
         });
     });
 
     jQuery('#trial_plant_barcode').click(function() {
 
-        jQuery('#barcode_dialog_subtitle2').text('Generate barcodes for plants used in this trial');
+        jQuery('#barcode_dialog_subtitle2').text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("barcode.mason.generate_barcodes_for_plants_used_in_this_trial", "Generate barcodes for plants used in this trial") : 'Generate barcodes for plants used in this trial'));
 
         jQuery.ajax ( {
             url : '/ajax/breeders/trial/'+<% $trial_id %>+'/plants',
 
             success: function(response){
                 if (response.plants == '') {
-                    alert("Trial has no plant entries.");
+                    alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("barcode.mason.trial_has_no_plant_entries", "Trial has no plant entries.") : "Trial has no plant entries."));
                 }
                 var trial_plants_html = '<textarea class="form-control" id="stock_names" name="stock_names" >';
                 for (i=0; i<response.plants[0].length; i++) {
@@ -437,7 +437,7 @@ jQuery(document).ready(function () {
                 jQuery('#trial_accessions').html(trial_plants_html);
             },
             error: function(response){
-                alert("Error retrieving plants.");
+                alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("barcode.mason.error_retrieving_plants", "Error retrieving plants.") : "Error retrieving plants."));
             }
 
         });
@@ -451,7 +451,7 @@ jQuery(document).ready(function () {
     jQuery('#cross_barcodes').click(function() {
         jQuery('#generate_crossing_experiment_barcode_dialog').modal("hide");
         jQuery('#generate_trial_barcode_dialog').modal("show");
-        jQuery('#barcode_dialog_subtitle2').text('Generate barcodes for cross unique ids');
+        jQuery('#barcode_dialog_subtitle2').text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("barcode.mason.generate_barcodes_for_cross_unique_ids", "Generate barcodes for cross unique ids") : 'Generate barcodes for cross unique ids'));
         jQuery.ajax ( {
             url : '/ajax/breeders/trial/'+<% $trial_id %>+'/get_crosses',
 
@@ -468,7 +468,7 @@ jQuery(document).ready(function () {
 
             },
             error: function(response){
-                alert("Error retrieving crosses.");
+                alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("barcode.mason.error_retrieving_crosses", "Error retrieving crosses.") : "Error retrieving crosses."));
             }
         });
     });
@@ -477,7 +477,7 @@ jQuery(document).ready(function () {
     jQuery('#female_accession_barcodes').click(function() {
         jQuery('#generate_crossing_experiment_barcode_dialog').modal("hide");
         jQuery('#generate_trial_barcode_dialog').modal("show");
-        jQuery('#barcode_dialog_subtitle2').text('Generate barcodes for female accessions');
+        jQuery('#barcode_dialog_subtitle2').text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("barcode.mason.generate_barcodes_for_female_accessions", "Generate barcodes for female accessions") : 'Generate barcodes for female accessions'));
 
         jQuery.ajax ( {
             url : '/ajax/breeders/trial/'+<% $trial_id %>+'/get_female_accessions',
@@ -495,7 +495,7 @@ jQuery(document).ready(function () {
 
             },
             error: function(response){
-                alert("Error retrieving female accessions.");
+                alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("barcode.mason.error_retrieving_female_accessions", "Error retrieving female accessions.") : "Error retrieving female accessions."));
             }
         });
     });
@@ -504,7 +504,7 @@ jQuery(document).ready(function () {
     jQuery('#male_accession_barcodes').click(function() {
         jQuery('#generate_crossing_experiment_barcode_dialog').modal("hide");
         jQuery('#generate_trial_barcode_dialog').modal("show");
-        jQuery('#barcode_dialog_subtitle2').text('Generate barcodes for male accessions');
+        jQuery('#barcode_dialog_subtitle2').text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("barcode.mason.generate_barcodes_for_male_accessions", "Generate barcodes for male accessions") : 'Generate barcodes for male accessions'));
 
         jQuery.ajax ( {
             url : '/ajax/breeders/trial/'+<% $trial_id %>+'/get_male_accessions',
@@ -522,7 +522,7 @@ jQuery(document).ready(function () {
 
             },
             error: function(response){
-                alert("Error retrieving male accessions.");
+                alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("barcode.mason.error_retrieving_male_accessions", "Error retrieving male accessions.") : "Error retrieving male accessions."));
             }
         });
     });
@@ -536,10 +536,10 @@ jQuery(document).ready(function () {
 
             success: function(response){
                 if (response.female_plots == '') {
-                    alert("This crossing experiment has no female plot entry.");
+                    alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("barcode.mason.this_crossing_experiment_has_no_female_plot_entry", "This crossing experiment has no female plot entry.") : "This crossing experiment has no female plot entry."));
                 } else {
                     jQuery('#generate_trial_barcode_dialog').modal("show");
-                    jQuery('#barcode_dialog_subtitle2').text('Generate barcodes for female plots');
+                    jQuery('#barcode_dialog_subtitle2').text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("barcode.mason.generate_barcodes_for_female_plots", "Generate barcodes for female plots") : 'Generate barcodes for female plots'));
                 }
                 var female_plots_html = '<textarea class="form-control" id="stock_names" name="stock_names" >';
 
@@ -553,7 +553,7 @@ jQuery(document).ready(function () {
 
             },
             error: function(response){
-                alert("Error retrieving female plots.");
+                alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("barcode.mason.error_retrieving_female_plots", "Error retrieving female plots.") : "Error retrieving female plots."));
             }
         });
     });
@@ -567,10 +567,10 @@ jQuery(document).ready(function () {
 
             success: function(response){
                 if (response.male_plots == '') {
-                    alert("This crossing experiment has no male plot entry.");
+                    alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("barcode.mason.this_crossing_experiment_has_no_male_plot_entry", "This crossing experiment has no male plot entry.") : "This crossing experiment has no male plot entry."));
                 } else {
                     jQuery('#generate_trial_barcode_dialog').modal("show");
-                    jQuery('#barcode_dialog_subtitle2').text('Generate barcodes for male plots');
+                    jQuery('#barcode_dialog_subtitle2').text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("barcode.mason.generate_barcodes_for_male_plots", "Generate barcodes for male plots") : 'Generate barcodes for male plots'));
                 }
                 var male_plots_html = '<textarea class="form-control" id="stock_names" name="stock_names" >';
 
@@ -584,7 +584,7 @@ jQuery(document).ready(function () {
 
             },
             error: function(response){
-                alert("Error retrieving male plots.");
+                alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("barcode.mason.error_retrieving_male_plots", "Error retrieving male plots.") : "Error retrieving male plots."));
             }
         });
     });
@@ -598,10 +598,10 @@ jQuery(document).ready(function () {
 
             success: function(response){
                 if (response.female_plants == '') {
-                    alert("This crossing experiment has no female plant entry.");
+                    alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("barcode.mason.this_crossing_experiment_has_no_female_plant_entry", "This crossing experiment has no female plant entry.") : "This crossing experiment has no female plant entry."));
                 } else {
                     jQuery('#generate_trial_barcode_dialog').modal("show");
-                    jQuery('#barcode_dialog_subtitle2').text('Generate barcodes for female plants');
+                    jQuery('#barcode_dialog_subtitle2').text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("barcode.mason.generate_barcodes_for_female_plants", "Generate barcodes for female plants") : 'Generate barcodes for female plants'));
                 }
                 var female_plants_html = '<textarea class="form-control" id="stock_names" name="stock_names" >';
 
@@ -615,7 +615,7 @@ jQuery(document).ready(function () {
 
             },
             error: function(response){
-                alert("Error retrieving female plants.");
+                alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("barcode.mason.error_retrieving_female_plants", "Error retrieving female plants.") : "Error retrieving female plants."));
             }
         });
     });
@@ -629,10 +629,10 @@ jQuery(document).ready(function () {
 
             success: function(response){
                 if (response.male_plants == '') {
-                    alert("This crossing experiment has no male plant entry.");
+                    alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("barcode.mason.this_crossing_experiment_has_no_male_plant_entry", "This crossing experiment has no male plant entry.") : "This crossing experiment has no male plant entry."));
                 } else {
                     jQuery('#generate_trial_barcode_dialog').modal("show");
-                    jQuery('#barcode_dialog_subtitle2').text('Generate barcodes for male plants');
+                    jQuery('#barcode_dialog_subtitle2').text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("barcode.mason.generate_barcodes_for_male_plants", "Generate barcodes for male plants") : 'Generate barcodes for male plants'));
                 }
                 var male_plants_html = '<textarea class="form-control" id="stock_names" name="stock_names" >';
 
@@ -646,7 +646,7 @@ jQuery(document).ready(function () {
 
             },
             error: function(response){
-                alert("Error retrieving male plants.");
+                alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("barcode.mason.error_retrieving_male_plants", "Error retrieving male plants.") : "Error retrieving male plants."));
             }
         });
     });

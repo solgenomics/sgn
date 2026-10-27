@@ -1,3 +1,6 @@
+<%once>
+use HTML::Entities ();
+</%once>
 <%args>
 $trial_id => undef
 $data_level => undef
@@ -6,7 +9,7 @@ $data_level => undef
 <& /util/import_javascript.mas, classes => [ ] &>
 
 <div class="well well-sm">
-    <button class="btn btn-primary" id="trial_detail_page_analysis_numerical_derivative_workflow">Numerical Derivatives Across Row and Columns On Saved Measurements</button>
+    <button class="btn btn-primary" id="trial_detail_page_analysis_numerical_derivative_workflow"><% $c->i18n->p("trial.numerical_derivative.launch", "Numerical Derivatives Across Row and Columns On Saved Measurements") |h %></button>
 </div>
 <hr>
 
@@ -14,20 +17,20 @@ $data_level => undef
     <div class="modal-dialog modal-xl" role="document">
         <div class="modal-content">
             <div class="modal-header">
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                <h4 class="modal-title" id="trialAnalysisNumericalDerivativeWorkflowDialog">Calculate Numerical Derivatives Across Row and Columns</h4>
+                <button type="button" class="close" data-dismiss="modal" aria-label="<% $c->i18n->p("trial.numerical_derivative.close", "Close") |h %>"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="trialAnalysisNumericalDerivativeWorkflowDialog"><% $c->i18n->p("trial.numerical_derivative.title", "Calculate Numerical Derivatives Across Row and Columns") |h %></h4>
             </div>
             <div class="modal-body">
 
                 <&| /util/workflow.mas, id=> "trial_analysis_numerical_derivative_workflow_dialog_workflow" &>
-                    <&| /util/workflow.mas:step, title=> "Traits" &>
-                        <& /page/page_title.mas, title=>"Select the input measurements to calculate derivatives for" &>
+                    <&| /util/workflow.mas:step, title=> HTML::Entities::encode_entities($c->i18n->p("trial.numerical_derivative.step", "Traits")) &>
+                        <& /page/page_title.mas, title=>HTML::Entities::encode_entities($c->i18n->p("trial.numerical_derivative.page_title", "Select the input measurements to calculate derivatives for")) &>
 
                         <div class="container-fluid">
                             <div class="form-horizontal">
 
                                 <div class="form-group">
-                                    <label class="col-sm-3 control-label">Derivative: </label>
+                                    <label class="col-sm-3 control-label"><% $c->i18n->p("trial.numerical_derivative.derivative", "Derivative: ") |h %></label>
                                     <div class="col-sm-9" >
                                         <select class="form-control" id="trial_analysis_numerical_derivative_workflow_derivative_div">
                                             <option value="first">First 2D Derivative</option>
@@ -35,7 +38,7 @@ $data_level => undef
                                     </div>
                                 </div>
                                 <div class="form-group">
-                                    <label class="col-sm-3 control-label">Trait(s): </label>
+                                    <label class="col-sm-3 control-label"><% $c->i18n->p("trial.numerical_derivative.traits", "Trait(s): ") |h %></label>
                                     <div class="col-sm-9" >
                                         <div id="trial_analysis_numerical_derivative_workflow_traits_div"></div>
                                     </div>
@@ -44,14 +47,14 @@ $data_level => undef
                             </div>
 
                             <center>
-                                <button class="btn btn-primary" id="trial_analysis_numerical_derivative_workflow_submit" >Compute and Save!</button>
+                                <button class="btn btn-primary" id="trial_analysis_numerical_derivative_workflow_submit" ><% $c->i18n->p("trial.numerical_derivative.submit", "Compute and Save!") |h %></button>
                             </center>
                         </div>
                     </&>
                 </&>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-default" data-dismiss="modal"><% $c->i18n->p("trial.numerical_derivative.close", "Close") |h %></button>
             </div>
         </div>
     </div>
@@ -73,7 +76,7 @@ jQuery(document).ready(function(){
         var derivative = jQuery('#trial_analysis_numerical_derivative_workflow_derivative_div').val();
 
         if (!selected_trait_ids || selected_trait_ids.length < 1) {
-            alert('Please select at least one trait!');
+            alert(window.SGN && SGN.i18n ? SGN.i18n.p("trial.numerical_derivative.traits_required", "Please select at least one trait!") : "Please select at least one trait!");
             return false;
         }
         else {
@@ -89,13 +92,13 @@ jQuery(document).ready(function(){
                         alert(response.error);
                     }
                     if (response.success) {
-                        alert('Computed derivative and saved!');
+                        alert(window.SGN && SGN.i18n ? SGN.i18n.p("trial.numerical_derivative.success", "Computed derivative and saved!") : "Computed derivative and saved!");
                     }
                     location.reload();
                 },
                 error: function(response){
                     jQuery("#working_modal").modal("hide");
-                    alert('Error doing numerical derivative!');
+                    alert(window.SGN && SGN.i18n ? SGN.i18n.p("trial.numerical_derivative.error", "Error doing numerical derivative!") : "Error doing numerical derivative!");
                 }
             });
         }

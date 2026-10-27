@@ -68,7 +68,7 @@ function listGenCorPopulations ()  {
     var trainingPopIdName = JSON.stringify(modelData);
    
     var  popsList =  '<dl id="qc_selected_population" class="qc_dropdown">'
-        + '<dt> <a href="#"><span>Choose a population</span></a></dt>'
+        + ("<dt> <a href=\"#\"><span>" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("analysis.interface.choose_a_population", "Choose a population") : "Choose a population")).html() + "</span></a></dt>")
         + '<dd>'
         + '<ul>'
         + '<li>'
@@ -181,14 +181,14 @@ function formatGenCorInputData (popId, type, indexFile) {
             } else {
                 jQuery(divPlace +" #qualityControl_message")
                     .css({"padding-left": '0px'})
-                    .html("This population has no valid traits to qclate.");
+                    .html((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("analysis.interface.this_population_has_no_valid_traits_to_qclate", "This population has no valid traits to qclate.") : "This population has no valid traits to qclate."));
         
             }
         },
         error: function(response) {
             jQuery(divPlace +"#qualityControl_message")
                 .css({"padding-left": '0px'})
-                .html("Error 3 occured preparing the additive genetic data for qualityControl analysis.");
+                .html((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("analysis.interface.error_3_occured_preparing_the_additive_genetic_data_for_qualitycontrol", "Error 3 occured preparing the additive genetic data for qualityControl analysis.") : "Error 3 occured preparing the additive genetic data for qualityControl analysis."));
              
             jQuery.unblockUI();
         }         
@@ -216,7 +216,7 @@ function phenotypicqualityControl () {
  
     var population = getPopulationDetails();
     
-    jQuery("#qualityControl_message").html("Running qualityControl... please wait...");
+    jQuery("#qualityControl_message").html((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("analysis.interface.running_qualitycontrol_please_wait", "Running qualityControl... please wait...") : "Running qualityControl... please wait..."));
          
     jQuery.ajax({
             type: 'POST',
@@ -231,7 +231,7 @@ function phenotypicqualityControl () {
                 } else {
                     jQuery("#qualityControl_message")
                         .css({"padding-left": '0px'})
-                        .html("This population has no phenotype data.");
+                        .html((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("analysis.interface.this_population_has_no_phenotype_data", "This population has no phenotype data.") : "This population has no phenotype data."));
 
 		    jQuery("#run_pheno_qualityControl").show();
                 }
@@ -239,7 +239,7 @@ function phenotypicqualityControl () {
             error: function(response) {
                 jQuery("#qualityControl_message")
                     .css({"padding-left": '0px'})
-                    .html("Error 1 occured preparing the phenotype data for qualityControl analysis.");
+                    .html((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("analysis.interface.error_1_occured_preparing_the_phenotype_data_for_qualitycontrol_analysis", "Error 1 occured preparing the phenotype data for qualityControl analysis.") : "Error 1 occured preparing the phenotype data for qualityControl analysis."));
 
 		jQuery("#run_pheno_qualityControl").show();
             }
@@ -261,7 +261,7 @@ function runPhenoqualityControlAnalysis () {
 		                plotqualityControl(response.data);
 		        
 		        var qcDownload = "<a href=\"/download/phenotypic/qualityControl/population/" 
-		                            + popId + "\">Download QC comments</a>";
+		                            + popId + ("\">" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("analysis.interface.download_qc_comments", "Download QC comments") : "Download QC comments")).html() + "</a>");
 
 		        jQuery("#qualityControl_canvas").append("<br />[ " + qcDownload + " ]").show();
 		        jQuery("#qualityControl_message").empty();
@@ -269,7 +269,7 @@ function runPhenoqualityControlAnalysis () {
             } else {
                 jQuery("#qualityControl_message")
                     .css({"padding-left": '0px'})
-                    .html("There is no qualityControl output for this dataset."); 
+                    .html((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("analysis.interface.there_is_no_qualitycontrol_output_for_this_dataset", "There is no qualityControl output for this dataset.") : "There is no qualityControl output for this dataset."));
         
 		jQuery("#run_pheno_qualityControl").show();
             }
@@ -277,7 +277,7 @@ function runPhenoqualityControlAnalysis () {
         error: function(response) {                          
             jQuery("#qualityControl_message")
                 .css({"padding-left": '0px'})
-                .html("Error 2 occured running the qualityControl analysis.");
+                .html((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("analysis.interface.error_2_occured_running_the_qualitycontrol_analysis", "Error 2 occured running the qualityControl analysis.") : "Error 2 occured running the qualityControl analysis."));
             
         jQuery("#run_pheno_qualityControl").show();
         }                
@@ -289,7 +289,7 @@ function createqualityControlTable (tableId) {
     
     var table = '<table id="' + tableId + '" class="table" style="width:100%;text-align:left">';
     table    += '<thead><tr>';
-    table    += '<th>Trait</th><th>QC - comments</t'; 
+    table    += ("<th>" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("accession.population_cgi.trait", "Trait") : "Trait")).html() + "</th><th>" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("analysis.interface.qc_comments", "QC - comments") : "QC - comments")).html() + "</t");
     table    += '</tr></thead>';
     table    += '</table>';
 

@@ -5,8 +5,8 @@
   <div class="modal-dialog" role="document">
     <div class="modal-content">
       <div class="modal-header">
-        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-        <h4 class="modal-title" id="uploadGraftValidateDialog">Results From Validation</h4>
+        <button type="button" class="close" data-dismiss="modal" aria-label="<% $c->i18n->p("global.dataset_publish.close", "Close") |h %>"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title" id="uploadGraftValidateDialog"><% $c->i18n->p("cross.ui.results_from_validation", "Results From Validation") |h %></h4>
       </div>
       <div class="modal-body">
         <div class="container-fluid">
@@ -17,8 +17,8 @@
         </div>
       </div>
       <div class="modal-footer">
-        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-        <button type="button" class="btn btn-primary" name="upload_graft_store" id="upload_graft_store" data-dismiss="modal">Store</button>
+        <button type="button" class="btn btn-default" data-dismiss="modal"><% $c->i18n->p("global.dataset_publish.close", "Close") |h %></button>
+        <button type="button" class="btn btn-primary" name="upload_graft_store" id="upload_graft_store" data-dismiss="modal"><% $c->i18n->p("cross.ui.store", "Store") |h %></button>
 	
       </div>
     </div>
@@ -30,19 +30,19 @@
   <div class="modal-dialog" role="document">
     <div class="modal-content">
       <div class="modal-header">
-        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-        <h4 class="modal-title" id="uploadGraftSuccessDialog">Upload Successful</h4>
+        <button type="button" class="close" data-dismiss="modal" aria-label="<% $c->i18n->p("global.dataset_publish.close", "Close") |h %>"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title" id="uploadGraftSuccessDialog"><% $c->i18n->p("cross.ui.upload_successful", "Upload Successful") |h %></h4>
       </div>
       <div class="modal-body">
         <div class="container-fluid">
- 	  <h2>The graft upload was successful.</h2>
+          <h2><% $c->i18n->p("transformation.root.the_graft_upload_was_successful", "The graft upload was successful.") |h %></h2>
 
-	  Successfully created:<br />
+	  <% $c->i18n->p("transformation.root.successfully_created", "Successfully created:") |h %><br />
 	  <textarea id="list_of_uploaded_grafts">
 	  </textarea>
 	  <br />
 	  
-	  Already in the system:<br />
+	  <% $c->i18n->p("transformation.root.already_in_the_system", "Already in the system:") |h %><br />
 	  <textarea id="list_of_already_uploaded_grafts">
 	  </textarea>
 
@@ -50,7 +50,7 @@
         </div>
       </div>
       <div class="modal-footer">
-        <button type="button" id="graft_upload_success_dismiss" class="btn btn-default" data-dismiss="modal">Close</button>
+        <button type="button" id="graft_upload_success_dismiss" class="btn btn-default" data-dismiss="modal"><% $c->i18n->p("global.dataset_publish.close", "Close") |h %></button>
       </div>
     </div>
   </div>
@@ -61,28 +61,28 @@
   <div class="modal-dialog" role="document">
     <div class="modal-content">
       <div class="modal-header">
-        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-        <h4 class="modal-title" id="uploadGraftDialog">Upload Grafting Information</h4>
+        <button type="button" class="close" data-dismiss="modal" aria-label="<% $c->i18n->p("global.dataset_publish.close", "Close") |h %>"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title" id="uploadGraftDialog"><% $c->i18n->p("transformation.root.upload_grafting_information", "Upload Grafting Information") |h %></h4>
       </div>
       <div class="modal-body">
         <div class="container-fluid">
-    	  <&| /page/explanation.mas, title=>'Template Information' &>
+          <&| /page/explanation.mas, title=>$c->i18n->p("cross.ui.template_information.bf8c643", 'Template Information') &>
     	  <p>
-      	  <b>File format information</b>
+          <b><% $c->i18n->p("accessions.dialog.file_format", "File format information") |h %></b>
       	  <br>
-      	  <a id="graft_upload_spreadsheet_format_info" data-toggle='modal' data-target='#graft_upload_spreadsheet_format_info_dialog'>Spreadsheet Format</a>
+          <a id="graft_upload_spreadsheet_format_info" data-toggle='modal' data-target='#graft_upload_spreadsheet_format_info_dialog'><% $c->i18n->p("cross.ui.spreadsheet_format.f1285ec", "Spreadsheet Format") |h %></a>
     	  </p>
   	  </&>
 
   	  <form method="post" enctype="multipart/form-data" encoding="multipart/form-data" id="upload_graft_form" name="upload_graft_form">
-    	    <label for="graft_uploaded_file" style="display: inline-block; width: 100px;">Upload Grafting File:</label>
+            <label for="graft_uploaded_file" style="display: inline-block; width: 100px;"><% $c->i18n->p("transformation.root.upload_grafting_file", "Upload Grafting File:") |h %></label>
     	    <input type="file" name="graft_uploaded_file" id="graft_uploaded_file" encoding="multipart/form-data" />
     	  </form>
         </div>
       </div>
       <div class="modal-footer">
-        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-	<button type="button" class="btn btn-primary" name="upload_graft_dialog_submit" id="upload_graft_dialog_submit">Validate</button>
+        <button type="button" class="btn btn-default" data-dismiss="modal"><% $c->i18n->p("global.dataset_publish.close", "Close") |h %></button>
+	<button type="button" class="btn btn-primary" name="upload_graft_dialog_submit" id="upload_graft_dialog_submit"><% $c->i18n->p("cross.ui.validate", "Validate") |h %></button>
       </div>
     </div>
   </div>
@@ -92,18 +92,18 @@
   <div class="modal-dialog" role="document">
     <div class="modal-content">
       <div class="modal-header">
-        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-        <h4 class="modal-title" id="graftUploadInfoDialog">Template Information</h4>
+        <button type="button" class="close" data-dismiss="modal" aria-label="<% $c->i18n->p("global.dataset_publish.close", "Close") |h %>"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title" id="graftUploadInfoDialog"><% $c->i18n->p("cross.ui.template_information.bf8c643", "Template Information") |h %></h4>
       </div>
       <div class="modal-body">
         <div class="container-fluid">
- 	  <b>Graft may be uploaded in tab-delimited text file format</b>
+          <b><% $c->i18n->p("transformation.root.graft_may_be_uploaded_in_tab_delimited_text_file_format", "Graft may be uploaded in tab-delimited text file format") |h %></b>
 	  <br>
-	  <p>(.xls or .xlsx formats are <b>NOT</b> supported)</p>
+	  <p><% $c->i18n->p("accession.forms.xls_or_xlsx_formats_are", "(.xls or .xlsx formats are") |h %> <b><% $c->i18n->p("accession.forms.not", "NOT") |h %></b> <% $c->i18n->p("accession.forms.supported", "supported)") |h %></p>
 	  <hr>
-	  <b>Header:</b>
+	  <b><% $c->i18n->p("accessions.template.header", "Header:") |h %></b>
 	  <br>
-	  <p>The first row (header) should contain the following:</p>
+	  <p><% $c->i18n->p("cross.ui.the_first_row_header_should_contain_the_following", "The first row (header) should contain the following:") |h %></p>
 	  
 	  <table class="table table-hover table-bordered">
   	  <body>
@@ -114,20 +114,20 @@
 	  </body>
 	  </table>
 	  
-	  <h4>Required fields:</h4>
+	  <h4><% $c->i18n->p("cross.ui.required_fields", "Required fields:") |h %></h4>
 	  <ul>
-            <li>scion accession (exact name must exist in the database)</li>
-            <li>rootstock accession (must exist in the database)</li>
+            <li><% $c->i18n->p("transformation.root.scion_accession_exact_name_must_exist_in_the_database", "scion accession (exact name must exist in the database)") |h %></li>
+            <li><% $c->i18n->p("transformation.root.rootstock_accession_must_exist_in_the_database", "rootstock accession (must exist in the database)") |h %></li>
 	  </ul>
 	  
-	  <h4>Notes</h4>
+	  <h4><% $c->i18n->p("cross.ui.notes", "Notes") |h %></h4>
 	  <ul>
-	    <li>The graft accession will be created in the database upon upload. The name of the graft will be "scion"+"rootstock", where "+" is the default graft separator character. The default separator can be changed before upload. The default can be changed in the sgn_local.conf, default_graft_separator key.
+	    <li><% $c->i18n->p("transformation.root.the_graft_accession_will_be_created_in_the_database_upon", "The graft accession will be created in the database upon upload. The name of the graft will be \"scion\"+\"rootstock\", where \"+\" is the default graft separator character. The default separator can be changed before upload. The default can be changed in the sgn_local.conf, default_graft_separator key.") |h %>
 	  </ul>
         </div>
 	
 	<div class="modal-footer">
-          <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+          <button type="button" class="btn btn-default" data-dismiss="modal"><% $c->i18n->p("global.dataset_publish.close", "Close") |h %></button>
 	</div>
       </div>
     </div>

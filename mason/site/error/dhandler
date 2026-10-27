@@ -1,8 +1,5 @@
-<h1 style="text-align: center">Server Error</h1>
+<h1 style="text-align: center"><% $c->i18n->p('common.error.title.server', 'Server Error') | h %></h1>
 
-<p>Our apologies, there was an error processing your request.  An error
-report has been sent to the SGN development team.</p>
+<p><% $c->i18n->p('common.error.processing', 'Our apologies, there was an error processing your request.') | h %>  <% $c->i18n->p('common.error.report_sent', 'An error report has been sent to the %{project_name} development team.', { project_name => 'SGN' }) | h %></p>
 
-<p>Please also feel free to contact us at sgn-feedback@sgn.cornell.edu
-and inform us of the error, and we will keep you informed of our
-progress in resolving it.</p>
+<p><% $c->i18n->p('common.error.contact.fallback', 'Please also feel free to contact us at %{email} and inform us of the error, and we will keep you informed of our progress in resolving it.', { email => 'sgn-feedback@sgn.cornell.edu' }) | h %></p>

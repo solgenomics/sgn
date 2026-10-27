@@ -1,3 +1,6 @@
+<%once>
+use HTML::Entities ();
+</%once>
 <%args>
 
 $program_id
@@ -11,89 +14,89 @@ $program_name
     <div class="modal-dialog modal-xl" role="document">
         <div class="modal-content">
             <div class="modal-header">
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                <h4 class="modal-title" id="uploadProfileDialog">Upload Product Profile</h4>
+                <button type="button" class="close" data-dismiss="modal" aria-label="<% $c->i18n->p("folder.ui.close", "Close") |h %>"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="uploadProfileDialog"><% $c->i18n->p("program.profile_upload.title", "Upload Product Profile") |h %></h4>
             </div>
             <div class="modal-body">
                 <div class="container-fluid">
                     <&| /util/workflow.mas, id=> "upload_profile_workflow" &>
-                        <&| /util/workflow.mas:step, title=> "Intro" &>
-                            <& /page/page_title.mas, title=>"Product Profile" &>
+                        <&| /util/workflow.mas:step, title=> HTML::Entities::encode_entities($c->i18n->p("program.profile_upload.step.intro", "Intro")) &>
+                            <& /page/page_title.mas, title=>HTML::Entities::encode_entities($c->i18n->p("program.profile_upload.product_profile", "Product Profile")) &>
                             <ul>
-                                <li>Product profiles can be stored in the database for downstream variety selection process for each breeding program.</li>
-                                <li>To facilitate data curation, targeted trait names and trait IDs can be retrieved directly from the database.</li>
-                                <li>Please use the product profile template generated from our database to fill out product profile details.</li>
-                                <li>You can find the link for creating the template in the product profile section, simply provide a file name and a list of traits.</li>
-                                <li>Instructions for filling out the form are on the next page</li>
+                                <li><% $c->i18n->p("program.profile_upload.intro.storage", "Product profiles can be stored in the database for downstream variety selection process for each breeding program.") |h %></li>
+                                <li><% $c->i18n->p("program.profile_upload.intro.traits", "To facilitate data curation, targeted trait names and trait IDs can be retrieved directly from the database.") |h %></li>
+                                <li><% $c->i18n->p("program.profile_upload.intro.template", "Please use the product profile template generated from our database to fill out product profile details.") |h %></li>
+                                <li><% $c->i18n->p("program.profile_upload.intro.create_template", "You can find the link for creating the template in the product profile section, simply provide a file name and a list of traits.") |h %></li>
+                                <li><% $c->i18n->p("program.profile_upload.intro.next_page", "Instructions for filling out the form are on the next page") |h %></li>
                             </ul>
                             <br/><br/>
                             <center>
-                                <button class="btn btn-primary" onclick="Workflow.complete(this);">Go to Next Step</button>
+                                <button class="btn btn-primary" onclick="Workflow.complete(this);"><% $c->i18n->p("program.profile_upload.next", "Go to Next Step") |h %></button>
                             </center>
                         </&>
-                        <&| /util/workflow.mas:step, title=> "File format" &>
-                            <& /page/page_title.mas, title=>"Make sure your file matches the correct file format" &>
+                        <&| /util/workflow.mas:step, title=> HTML::Entities::encode_entities($c->i18n->p("program.profile_upload.step.file_format", "File format")) &>
+                            <& /page/page_title.mas, title=>HTML::Entities::encode_entities($c->i18n->p("program.profile_upload.file_format.title", "Make sure your file matches the correct file format")) &>
                             <center>
-                                <&| /page/explanation.mas, title=>'Product Profile Spreadsheet' &>
+                                <&| /page/explanation.mas, title=>HTML::Entities::encode_entities($c->i18n->p("program.profile_upload.spreadsheet", "Product Profile Spreadsheet")) &>
                                     <p>
                                         <br>
-                                        <a id="product_profile_instructions">Instructions for Product Profile Spreadsheet</a>
+                                        <a id="product_profile_instructions"><% $c->i18n->p("program.profile_upload.instructions_link", "Instructions for Product Profile Spreadsheet") |h %></a>
                                         <br>
                                         <br>
                                     </p>
                                 </&>
-                                <button class="btn btn-primary" onclick="Workflow.complete(this);">Once you think your file matches, go to Next Step</button>
+                                <button class="btn btn-primary" onclick="Workflow.complete(this);"><% $c->i18n->p("program.profile_upload.format_next", "Once you think your file matches, go to Next Step") |h %></button>
                             </center>
                         </&>
-                        <&| /util/workflow.mas:step, title=> "Upload Product Profile" &>
-                            <& /page/page_title.mas, title=>"Provide basic information about the product profile and upload your file" &>
+                        <&| /util/workflow.mas:step, title=> HTML::Entities::encode_entities($c->i18n->p("program.profile_upload.step.upload", "Upload Product Profile")) &>
+                            <& /page/page_title.mas, title=>HTML::Entities::encode_entities($c->i18n->p("program.profile_upload.upload_title", "Provide basic information about the product profile and upload your file")) &>
                             <form class="form-horizontal" role="form" method="post" enctype="multipart/form-data" encoding="multipart/form-data" id="upload_profile_form" name="upload_profile_form">
                                 <div class="form-group">
-                                    <label class="col-sm-3 control-label">Breeding Program: </label>
+                                    <label class="col-sm-3 control-label"><% $c->i18n->p("cross.ui.breeding_program.2c9b17e", "Breeding Program:") |h %> </label>
                                     <div class="col-sm-9">
                                         <input class="form-control" name="profile_program_name" id="profile_program_name" disabled value="<% $program_name %>">
                                         <input name="profile_program_id" id="profile_program_id" type="hidden" value="<% $program_id %>">
                                     </div>
                                 </div>
                                 <div class="form-group">
-                                    <label class="col-sm-3 control-label">Product Profile Name: </label>
+                                    <label class="col-sm-3 control-label"><% $c->i18n->p("program.profile_upload.profile_name", "Product Profile Name: ") |h %></label>
                                     <div class="col-sm-9">
                                         <input class="form-control" id="new_profile_name" name="new_profile_name" type="text"/>
                                     </div>
                                 </div>
                                 <div class="form-group">
-                                    <label class="col-sm-3 control-label">Scope: </label>
+                                    <label class="col-sm-3 control-label"><% $c->i18n->p("program.profile_upload.scope", "Scope: ") |h %></label>
                                     <div class="col-sm-9">
                                         <input class="form-control" id="new_profile_scope" name="new_profile_scope" type="text"/>
                                     </div>
                                 </div>
                                 <div class="form-group">
-                                    <label class="col-sm-3 control-label">Upload File (.xls or .xlsx): </label>
+                                    <label class="col-sm-3 control-label"><% $c->i18n->p("program.profile_upload.file", "Upload File (.xls or .xlsx): ") |h %></label>
                                     <div class="col-sm-9" >
                                         <input type="file" name="profile_uploaded_file" id="profile_uploaded_file" encoding="multipart/form-data" />
                                     </div>
                                 </div>
                             </form>
                             <center>
-                                <button type="button" class="btn btn-lg btn-primary" onclick="Workflow.complete(this, false);" id ="upload_profile_submit" name="upload_profile_submit" >Upload Profile</button><br/><br/>
+                                <button type="button" class="btn btn-lg btn-primary" onclick="Workflow.complete(this, false);" id ="upload_profile_submit" name="upload_profile_submit" ><% $c->i18n->p("program.profile_upload.button", "Upload Profile") |h %></button><br/><br/>
                             </center>
                         </&>
-                        <&| /util/workflow.mas:complete, title=> "Complete" &>
-                            <& /page/page_title.mas, title=>"Finished! Your profile is now in the database" &>
+                        <&| /util/workflow.mas:complete, title=> HTML::Entities::encode_entities($c->i18n->p("program.profile_upload.step.complete", "Complete")) &>
+                            <& /page/page_title.mas, title=>HTML::Entities::encode_entities($c->i18n->p("program.profile_upload.finished", "Finished! Your profile is now in the database")) &>
                             <p>
                                 <span class="ui-icon ui-icon-circle-check" style="float: left; margin: 0 7px 50px 0;"></span>
-                                The profile file was uploaded successfully
+                                <% $c->i18n->p("program.profile_upload.success", "The profile file was uploaded successfully") |h %>
                             </p>
                             <br/>
                             <center>
-                                <button class="btn btn-primary" name="upload_profile_success_complete_button">The profile was saved to the database with no errors! Congrats Click Here</button><br/><br/>
+                                <button class="btn btn-primary" name="upload_profile_success_complete_button"><% $c->i18n->p("program.profile_upload.success_button", "The profile was saved to the database with no errors! Congrats Click Here") |h %></button><br/><br/>
                             </center>
                         </&>
                     </&>
                 </div>
             </div>
             <div class="modal-footer">
-                <button id="close_profile_upload_dialog" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                <button id="close_profile_upload_dialog" type="button" class="btn btn-default" data-dismiss="modal"><% $c->i18n->p("folder.ui.close", "Close") |h %></button>
             </div>
         </div>
     </div>
@@ -103,8 +106,8 @@ $program_name
     <div class="modal-dialog modal-lg" role="document">
         <div class="modal-content">
             <div class="modal-header">
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                <h4 class="modal-title" id="uploadProfileErrorDialog">Upload Profile File Error</h4>
+                <button type="button" class="close" data-dismiss="modal" aria-label="<% $c->i18n->p("folder.ui.close", "Close") |h %>"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="uploadProfileErrorDialog"><% $c->i18n->p("program.profile_upload.error_title", "Upload Profile File Error") |h %></h4>
             </div>
             <div class="modal-body">
                 <div class="container-fluid">
@@ -114,7 +117,7 @@ $program_name
                 </div>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-default" data-dismiss="modal"><% $c->i18n->p("folder.ui.close", "Close") |h %></button>
             </div>
         </div>
     </div>
@@ -124,22 +127,22 @@ $program_name
     <div class="modal-dialog modal-lg" role="document">
         <div class="modal-content">
             <div class="modal-header">
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                <h4 class="modal-title" id="profileInstructionDialog">Instructions for Product Profile Spreadsheet</h4>
+                <button type="button" class="close" data-dismiss="modal" aria-label="<% $c->i18n->p("folder.ui.close", "Close") |h %>"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="profileInstructionDialog"><% $c->i18n->p("program.profile_upload.instructions_title", "Instructions for Product Profile Spreadsheet") |h %></h4>
             </div>
             <div class="modal-body">
                 <div class="container-fluid">
                     <b>
-                        Product Profile Template
+                        <% $c->i18n->p("program.profile_upload.template_heading", "Product Profile Template") |h %>
                     </b>
                     <ul>
-                        <li>Product profile template is an Excel file (.xls)</li>
-                        <li>After filling out the product profile details, please also save the spreadsheet in the .xls format</li>
-                        <li>Please do not modify or delete any column header in the template.
+                        <li><% $c->i18n->p("program.profile_upload.template_xls", "Product profile template is an Excel file (.xls)") |h %></li>
+                        <li><% $c->i18n->p("program.profile_upload.save_xls", "After filling out the product profile details, please also save the spreadsheet in the .xls format") |h %></li>
+                        <li><% $c->i18n->p("program.profile_upload.do_not_change_headers", "Please do not modify or delete any column header in the template.") |h %>
                     </ul>
                     <br>
                     <b>
-                        Header:
+                        <% $c->i18n->p("program.profile_upload.header_label", "Header:") |h %>
                     </b>
                     <br>
                     <table class="table table-bordered table-hover">
@@ -155,24 +158,24 @@ $program_name
                         </tbody>
                     </table>
                     <b>
-                        Required columns:
+                        <% $c->i18n->p("program.profile_upload.required_columns", "Required columns:") |h %>
                     </b>
                     <ul>
-                        <li><b>Trait Name:</b> The template already contains trait names based on your trait list</li>
-                        <li><b>Target Value or Benchmark Variety:</b> Please indicates <b>either</b> a target value <b>or</b> a benchmark variety for each targeted trait. Benchmark variety must exist in the database.</li>
-                        <li><b>Performance:</b> Please specifies the performance of each targeted trait (equal, smaller or larger) compared to the target value or benchmark variety </li>
+                        <li><b>Trait Name:</b> <% $c->i18n->p("program.profile_upload.trait_names_help", "The template already contains trait names based on your trait list") |h %></li>
+                        <li><b>Target Value or Benchmark Variety:</b> <% $c->i18n->p("program.profile_upload.target_or_benchmark.open", "Please indicates ") |h %><b><% $c->i18n->p("program.profile_upload.target_or_benchmark.either", "either") |h %></b><% $c->i18n->p("program.profile_upload.target_or_benchmark.target", " a target value ") |h %><b><% $c->i18n->p("program.profile_upload.target_or_benchmark.or", "or") |h %></b><% $c->i18n->p("program.profile_upload.target_or_benchmark.close", " a benchmark variety for each targeted trait. Benchmark variety must exist in the database.") |h %></li>
+                        <li><b>Performance:</b> <% $c->i18n->p("program.profile_upload.performance_help", "Please specifies the performance of each targeted trait (equal, smaller or larger) compared to the target value or benchmark variety") |h %> </li>
                     </ul>
                     <b>
-                        Optional columns:
+                        <% $c->i18n->p("program.profile_upload.optional_columns", "Optional columns:") |h %>
                     </b>
                     <ul>
-                        <li><b>Weight:</b> Default is 1</li>
-                        <li><b>Trait Type:</b> e.g. basic trait, value-added trait</li>
+                        <li><b>Weight:</b> <% $c->i18n->p("program.profile_upload.weight_default", "Default is 1") |h %></li>
+                        <li><b>Trait Type:</b> <% $c->i18n->p("program.profile_upload.trait_type_examples", "e.g. basic trait, value-added trait") |h %></li>
                     </ul>
                 </div>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-default" data-dismiss="modal"><% $c->i18n->p("folder.ui.close", "Close") |h %></button>
             </div>
         </div>
     </div>
@@ -199,15 +202,15 @@ jQuery(document).ready(function(){
         jQuery('#upload_profile_form').attr("action", '/ajax/breeders/program/upload_profile');
 
         if (program_id === '') {
-            alert("Please choose a breeding program");
+            alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("program.profile_upload.required_program", "Please choose a breeding program") : "Please choose a breeding program"));
             return;
         }
         if (new_profile_name === '') {
-            alert("Please enter a profile name");
+            alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("program.profile_upload.required_profile_name", "Please enter a profile name") : "Please enter a profile name"));
             return;
         }
         if (new_profile_scope == '') {
-            alert("Please enter a scope");
+            alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("program.profile_upload.required_scope", "Please enter a scope") : "Please enter a scope"));
             return;
         }
         jQuery('#upload_profile_form').submit();
@@ -221,7 +224,7 @@ jQuery(document).ready(function(){
             jQuery('#working_modal').modal("show");
             if (profile_uploaded_file == '') {
                 jQuery('#working_modal').modal("hide");
-                alert("No file selected");
+                alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("program.profile_upload.no_file", "No file selected") : "No file selected"));
             }
         },
         complete: function(response) {

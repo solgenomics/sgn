@@ -23,7 +23,7 @@ $combo_pops_id => ''
 
 <div id="phenoPlot"></div>
       
-<button class="button" id="phenozoom-reset">Reset zoom</button>
+<button class="button" id="phenozoom-reset"><% $c->i18n->p("solgs.interface.reset_zoom", "Reset zoom") |h %></button>
 <br/>
 <br/>
 <!-- <h3 style="text-align:center">Overview</h3> -->

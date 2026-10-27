@@ -1,34 +1,38 @@
+<%once>
+use HTML::Entities ();
+</%once>
 
-<& /page/page_title.mas, title=>'Search Cross Details Using Male Parents / Populations' &>
+
+<& /page/page_title.mas, title=>HTML::Entities::encode_entities($c->i18n->p("cross.pages.search_cross_details_using_male_parents_populations", "Search Cross Details Using Male Parents / Populations")) &>
 <br>
-<&| /page/info_section.mas, title => 'Search', collapsible=>1, collapsed=>0&>
+<&| /page/info_section.mas, anchor_title => 'Search', title => HTML::Entities::encode_entities($c->i18n->p("global.search.advanced_search.search", "Search")), collapsible=>1, collapsed=>0&>
     <div class="row" id="cross_search_form" >
         <div class="col-sm-12 well">
             <div class="row">
                 <div class="col-sm-10">
                     <div class="form-horizontal">
                         <div class="form-group form-group-sm">
-                            <label class="control-label col-sm-3">Male Parent / Population:</label>
+                            <label class="control-label col-sm-3"><% $c->i18n->p("cross.pages.male_parent_population.bacba5a", "Male Parent / Population:") |h %></label>
                             <div class="col-sm-9">
                                 <div class="input-group">
-                                    <input type="text" class="form-control" id="cross_male" placeholder="Enter male parent">
+                                    <input type="text" class="form-control" id="cross_male" placeholder="<% $c->i18n->p("cross.pages.enter_male_parent", "Enter male parent") |h %>">
                                     <div class="input-group-btn">
-                                        <button class="btn btn-info" id="search_cross_female_parents"><i class="glyphicon glyphicon-search"></i> Female Parent</button>
-                                        <button class="btn btn-primary" id="search_all_crosses_using_male"><i class="glyphicon glyphicon-search"></i> All Crosses </button>
+                                        <button class="btn btn-info" id="search_cross_female_parents"><i class="glyphicon glyphicon-search"></i> <% $c->i18n->p("accession.related_stock.header.female_parent", "Female Parent") |h %></button>
+                                        <button class="btn btn-primary" id="search_all_crosses_using_male"><i class="glyphicon glyphicon-search"></i> <% $c->i18n->p("cross.pages.all_crosses", "All Crosses") |h %> </button>
                                     </div>
                                 </div>
                             </div>
                         </div>
                         <div class="form-group form-group-sm">
-                            <label class="control-label col-sm-3">Female Parent:</label>
+                            <label class="control-label col-sm-3"><% $c->i18n->p("cross.ui.female_parent.d4f10f0", "Female Parent:") |h %></label>
                             <div class="col-sm-9" >
                                 <div class="input-group">
                                     <select class="form-control" id="cross_female">
-                                        <option value="">Choose male parent first</option>
+                                        <option value=""><% $c->i18n->p("cross.pages.choose_male_parent_first", "Choose male parent first") |h %></option>
                                     </select>
                                     </select>
                                     <div class="input-group-btn">
-                                        <button class="btn btn-info" id="search_crosses_male_female"><i class="glyphicon glyphicon-search"></i> Cross Info </button>
+                                        <button class="btn btn-info" id="search_crosses_male_female"><i class="glyphicon glyphicon-search"></i> <% $c->i18n->p("cross.pages.cross_info", "Cross Info") |h %> </button>
                                     </div>
                                 </div>
                             </div>
@@ -39,7 +43,7 @@
         </div>
     </div>
 </&>
-<&| /page/info_section.mas, title => 'Search Results', collapsible=>1, collapsed=>0&>
+<&| /page/info_section.mas, anchor_title => 'Search Results', title => HTML::Entities::encode_entities($c->i18n->p("global.search.annotation.genes.search_results", "Search Results")), collapsible=>1, collapsed=>0&>
     <div class="well well-sm">
         <& /util/import_css.mas, paths => ['/documents/inc/datatables/jquery.dataTables.css'] &>
         <div class="panel panel-default">
@@ -47,12 +51,12 @@
                 <table id="cross_male_female_search_results" width="100%" class="table table-hover table-striped">
                     <thead>
                         <tr>
-                            <th>Female Parent</th>
-                            <th>Male Parent / Population</th>
-                            <th>Cross Unique ID</th>
-                            <th>Cross Type</th>
-                            <th>Family Name</th>
-                            <th>Crossing Experiment</th>
+                            <th><% $c->i18n->p("accession.related_stock.header.female_parent", "Female Parent") |h %></th>
+                            <th><% $c->i18n->p("cross.pages.male_parent_population.ec4f8dc", "Male Parent / Population") |h %></th>
+                            <th><% $c->i18n->p("cross.ui.cross_unique_id.923bfbc", "Cross Unique ID") |h %></th>
+                            <th><% $c->i18n->p("accession.related_stock.header.cross_type_upper", "Cross Type") |h %></th>
+                            <th><% $c->i18n->p("accession.forms.family_name", "Family Name") |h %></th>
+                            <th><% $c->i18n->p("cross.ui.crossing_experiment.1594653", "Crossing Experiment") |h %></th>
                         </tr>
                     </thead>
                 </table>
@@ -60,7 +64,7 @@
         </div>
         <div class="panel panel-default">
             <div class="panel-body">
-                <&| /page/info_section.mas, title => 'Copy crosses to a List', collapsible=>1, collapsed=>1, subtitle=>'<i>Copy the cross unique ids showing in table to a new or exisiting list</i>'&>
+                <&| /page/info_section.mas, anchor_title => 'Copy crosses to a List', title => HTML::Entities::encode_entities($c->i18n->p("cross.pages.copy_crosses_to_a_list", "Copy crosses to a List")), collapsible=>1, collapsed=>1, subtitle=>("<i>" . HTML::Entities::encode_entities($c->i18n->p("cross.pages.copy_the_cross_unique_ids_showing_in_table_to_a", "Copy the cross unique ids showing in table to a new or exisiting list")) . "</i>")&>
                     <div style="text-align:right" id="crosses_to_list_menu"></div>
                     <div id="cross_names" style="display: none;"></div>
                 </&>
@@ -96,14 +100,14 @@ jQuery(document).ready(function (){
                 console.log(html);
 
                 if(i ==''){
-                    alert("No female parent");
+                    alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("cross.pages.no_female_parent", "No female parent") : "No female parent"));
                     return;
                 }
 
                 jQuery('#cross_female').html(html);
             },
             error:function(response){
-                alert("An error occurred");
+                alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("folder.new.request_error", "An error occurred") : "An error occurred"));
             }
         });
     });

@@ -5,30 +5,30 @@ $stock_id
 <& /util/import_javascript.mas, classes => [ 'jquery.iframe-post-form' ] &>
 
 <div id="stock_additional_uploaded_files_div">
-[Loading...]
+<% $c->i18n->p("accession.files.loading", "[Loading...]") |h %>
 </div>
 
 <div class="modal fade" id="accession_upload_additional_file_dialog" name="stock_upload_additional_file_dialog" tabindex="-1" role="dialog" aria-labelledby="stockUploadAdditionalFileDialog">
     <div class="modal-dialog" role="document">
         <div class="modal-content">
             <div class="modal-header">
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                <h4 class="modal-title" id="stockUploadAdditionalFileDialog">Upload Additional File to Accession</h4>
+                <button type="button" class="close" data-dismiss="modal" aria-label="<% $c->i18n->p("folder.ui.close", "Close") |h %>"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="stockUploadAdditionalFileDialog"><% $c->i18n->p("accession.files.upload_title", "Upload Additional File to Accession") |h %></h4>
             </div>
             <div class="modal-body">
                 <div class="container-fluid">
-                    <&| /page/explanation.mas, title=>'Template information' &>
+                    <&| /page/explanation.mas, title=>HTML::Entities::encode_entities($c->i18n->p('accession.files.template_info', 'Template information')) &>
                         <p>
-                            <b>File upload information</b>
+                            <b><% $c->i18n->p("accession.files.file_upload_info", "File upload information") |h %></b>
                             <br>
-                            <a id="accession_upload_additional_file_format">Upload Information</a>
+                            <a id="accession_upload_additional_file_format"><% $c->i18n->p("accession.files.upload_info", "Upload Information") |h %></a>
                         </p>
                     </&>
 
                     <form class="form-horizontal" role="form" method="post" enctype="multipart/form-data" encoding="multipart/form-data" id="accession_upload_additional_file_form" name="accession_upload_additional_file_form">
 
                         <div class="form-group">
-                            <label class="col-sm-4 control-label">Upload File: </label>
+                            <label class="col-sm-4 control-label"><% $c->i18n->p("accession.files.upload_file", "Upload File: ") |h %></label>
                             <div class="col-sm-8" >
                                 <input type="file" name="accession_upload_additional_file" id="accession_upload_additional_file" encoding="multipart/form-data" />
                             </div>
@@ -38,8 +38,8 @@ $stock_id
                 </div>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-default" name="accession_upload_additional_file_cancel_button" id="accession_upload_additional_file_cancel_button"     data-dismiss="modal">Close</button>
-                <button type="button" class="btn btn-primary" name="accession_upload_additional_file_submit_button" id="accession_upload_additional_file_submit_button" title="Submit">Submit</button>
+                <button type="button" class="btn btn-default" name="accession_upload_additional_file_cancel_button" id="accession_upload_additional_file_cancel_button"     data-dismiss="modal"><% $c->i18n->p("folder.ui.close", "Close") |h %></button>
+                <button type="button" class="btn btn-primary" name="accession_upload_additional_file_submit_button" id="accession_upload_additional_file_submit_button" title="<% $c->i18n->p("trial.repetitive.submit", "Submit") |h %>"><% $c->i18n->p("trial.repetitive.submit", "Submit") |h %></button>
             </div>
         </div>
     </div>
@@ -49,24 +49,24 @@ $stock_id
     <div class="modal-dialog modal-lg" role="document">
         <div class="modal-content">
             <div class="modal-header" style="text-align: center">
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                <h4 class="modal-title" id="stockUploadAdditionalFileInfoDialog">Upload Information</h4>
+                <button type="button" class="close" data-dismiss="modal" aria-label="<% $c->i18n->p("folder.ui.close", "Close") |h %>"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="stockUploadAdditionalFileInfoDialog"><% $c->i18n->p("accession.files.upload_info", "Upload Information") |h %></h4>
             </div>
             <div class="modal-body">
                 <div class="container-fluid">
-                    <b>This is for uploading any additional files you may have for the accession.</b>
+                    <b><% $c->i18n->p("accession.files.intro", "This is for uploading any additional files you may have for the accession.") |h %></b>
                     <br/><br/>
-                    <p>Possible additional files inlude, but are not limited to:</p>
+                    <p><% $c->i18n->p("accession.files.possible_files", "Possible additional files inlude, but are not limited to:") |h %></p>
                     <ul>
-                        <li>Accession Related Images, such as a physical field image or an aerial picture of the field.</li>
-                        <li>Accession Related Documentation, such as protocols or permits for the accession.</li>
-                        <li>Accession Related Reports, such as supplementary information or publications.</li>
-                        <li>Accession Related Recordings, whether audio or video.</li>
+                        <li><% $c->i18n->p("accession.files.images_help", "Accession Related Images, such as a physical field image or an aerial picture of the field.") |h %></li>
+                        <li><% $c->i18n->p("accession.files.documentation_help", "Accession Related Documentation, such as protocols or permits for the accession.") |h %></li>
+                        <li><% $c->i18n->p("accession.files.reports_help", "Accession Related Reports, such as supplementary information or publications.") |h %></li>
+                        <li><% $c->i18n->p("accession.files.recordings_help", "Accession Related Recordings, whether audio or video.") |h %></li>
                     </ul>
                 </div>
             </div>
             <div class="modal-footer">
-                <button id="close_accession_upload_additional_file_info_dialog" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                <button id="close_accession_upload_additional_file_info_dialog" type="button" class="btn btn-default" data-dismiss="modal"><% $c->i18n->p("folder.ui.close", "Close") |h %></button>
             </div>
         </div>
     </div>
@@ -74,7 +74,8 @@ $stock_id
 
 <script>
 
-    jQuery(document).ready(function(){
+    function _sgnB15FilesEscape(value) { return jQuery("<div>").text(value).html(); }
+jQuery(document).ready(function(){
 
         display_stock_additional_upload_files();
 
@@ -91,7 +92,7 @@ $stock_id
             var uploadFile = jQuery("#accession_upload_additional_file").val();
 
             if (uploadFile === '') {
-                alert("Please select a file");
+                alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("accession.files.required_file", "Please select a file") : "Please select a file"));
                 return;
             }
             jQuery('#accession_upload_additional_file_form').attr("action", "/stock/"+<% $stock_id %>+"/upload_additional_file");
@@ -120,7 +121,7 @@ $stock_id
                     return;
                 }
                 if (response.success) {
-                    alert("File uploaded successfully");
+                    alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("accession.files.upload_success", "File uploaded successfully") : "File uploaded successfully"));
                     location.reload();
                 }
             }
@@ -131,38 +132,38 @@ $stock_id
             jQuery.ajax ({
                 url : '/stock/'+<% $stock_id %>+'/get_uploaded_additional_file',
                 beforeSend : function(){
-                    jQuery('#stock_additional_uploaded_files_div').html("[LOADING...]");
+                    jQuery('#stock_additional_uploaded_files_div').html(_sgnB15FilesEscape(window.SGN && window.SGN.i18n ? window.SGN.i18n.p("accession.files.loading_upper", "[LOADING...]") : "[LOADING...]"));
                 },
                 success: function(response){
                     console.log("response" ,response);
-                    var html = "<table class='table table-hover table-condensed table-bordered' id='stock_additional_uploaded_files_table'><thead><tr><th>Filename</th><th>Date Uploaded</th><th>Uploaded By</th><th>Options</th></tr></thead><tbody>";
+                    var html = "<table class='table table-hover table-condensed table-bordered' id='stock_additional_uploaded_files_table'><thead><tr><th>" + _sgnB15FilesEscape(window.SGN && window.SGN.i18n ? window.SGN.i18n.p("accession.files.files.header.filename", "Filename") : "Filename") + "</th><th>" + _sgnB15FilesEscape(window.SGN && window.SGN.i18n ? window.SGN.i18n.p("accession.files.files.header.date", "Date Uploaded") : "Date Uploaded") + "</th><th>" + _sgnB15FilesEscape(window.SGN && window.SGN.i18n ? window.SGN.i18n.p("accession.files.files.header.uploader", "Uploaded By") : "Uploaded By") + "</th><th>" + _sgnB15FilesEscape(window.SGN && window.SGN.i18n ? window.SGN.i18n.p("accession.files.files.header.options", "Options") : "Options") + "</th></tr></thead><tbody>";
                     for (i=0; i<response.files.length; i++) {
-                        html = html + '<tr><td>'+response.files[i][4]+'</td><td>'+response.files[i][1]+'</td><td><a href="/solpeople/profile/'+response.files[i][2]+'">'+response.files[i][3]+'</a></td><td><a href="/breeders/phenotyping/download/'+response.files[i][0]+'">Download</a> </td></tr>';
+                        html = html + '<tr><td>'+response.files[i][4]+'</td><td>'+response.files[i][1]+'</td><td><a href="/solpeople/profile/'+response.files[i][2]+'">'+response.files[i][3]+'</a></td><td><a href="/breeders/phenotyping/download/'+response.files[i][0]+'">' + _sgnB15FilesEscape(window.SGN && window.SGN.i18n ? window.SGN.i18n.p("accession.files.files.download", "Download") : "Download") + '</a> </td></tr>';
                     }
                     html = html + "</tbody></table>";
                     jQuery('#stock_additional_uploaded_files_div').html(html);
                     jQuery('#stock_additional_uploaded_files_table').DataTable();
                 },
                 error: function(response){
-                    alert("Error retrieving additional uploaded files.");
+                    alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("accession.files.files.retrieve_error", "Error retrieving additional uploaded files.") : "Error retrieving additional uploaded files."));
                 }
             });
         }                          
 
 
         function obsolete_additional_file(stock_id, file_id) {
-            var yes = confirm('Are you sure you want to obsolete this file? This operation cannot be undone.');
+            var yes = confirm((window.SGN && window.SGN.i18n ? window.SGN.i18n.p('accession.files.files.obsolete_confirm', 'Are you sure you want to obsolete this file? This operation cannot be undone.') : 'Are you sure you want to obsolete this file? This operation cannot be undone.'));
             if (yes) {
                 jQuery.ajax({
                     url: '/stock/'+stock_id+'/obsolete_uploaded_additional_file/'+file_id,
                     success: function(r) {
                         if (r.error) { alert(r.error); }
                         else {
-                            alert("The file has been obsoleted.");
+                            alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("accession.files.files.obsoleted", "The file has been obsoleted.") : "The file has been obsoleted."));
                             display_stock_additional_upload_files();
                         }
                     },
-                    error: function(r) {  alert("An error occurred!") }
+                    error: function(r) {  alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("accession.files.files.error", "An error occurred!") : "An error occurred!")) }
                 });
             }
         }

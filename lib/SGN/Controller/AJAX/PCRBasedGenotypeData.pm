@@ -14,6 +14,7 @@ SGN::Controller::AJAX::PCRBasedGenotypeData
 package SGN::Controller::AJAX::PCRBasedGenotypeData;
 
 use Moose;
+use SGN::I18N ();
 use Try::Tiny;
 use DateTime;
 use File::Slurp;
@@ -43,6 +44,7 @@ sub upload_ssr_protocol : Path('/ajax/genotype/upload_ssr_protocol') : ActionCla
 sub upload_ssr_protocol_POST : Args(0) {
     my $self = shift;
     my $c = shift;
+    my $i18n = SGN::I18N::translate($c);
     my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
     my $chado_schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado', $sp_person_id);
     my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema", undef, $sp_person_id);
@@ -74,7 +76,7 @@ sub upload_ssr_protocol_POST : Args(0) {
         my $dbh = $c->dbc->dbh;
         my @user_info = CXGN::Login->new($dbh)->query_from_cookie($session_id);
         if (!$user_info[0]){
-            $c->stash->{rest} = {error=>'You must be logged in to upload SSR marker info!'};
+            $c->stash->{rest} = {error=>SGN::I18N::translate($i18n, "genotype.file.you_must_be_logged_in_to_upload_ssr_marker_info", "You must be logged in to upload SSR marker info!")};
             $c->detach();
         }
         $user_id = $user_info[0];
@@ -83,7 +85,7 @@ sub upload_ssr_protocol_POST : Args(0) {
         $user_name = $p->get_username;
     } else {
         if (!$c->user){
-            $c->stash->{rest} = {error=>'You must be logged in to upload progenies!'};
+            $c->stash->{rest} = {error=>SGN::I18N::translate($i18n, "genotype.file.you_must_be_logged_in_to_upload_progenies", "You must be logged in to upload progenies!")};
             $c->detach();
         }
         $user_id = $c->user()->get_object()->get_sp_person_id();
@@ -105,7 +107,7 @@ sub upload_ssr_protocol_POST : Args(0) {
     $archived_filename_with_path = $uploader->archive();
     $md5 = $uploader->get_md5($archived_filename_with_path);
     if (!$archived_filename_with_path) {
-        $c->stash->{rest} = {error => "Could not save file $upload_original_name in archive",};
+        $c->stash->{rest} = {error => SGN::I18N::translate($i18n, "accession.rename_server.archive", "Could not save file %{upload_original_name} in archive", {upload_original_name => ("" . "$upload_original_name")}),};
         return;
     }
     unlink $upload_tempfile;
@@ -124,11 +126,11 @@ sub upload_ssr_protocol_POST : Args(0) {
         push @found_organisms, $organism_id;
     }
     if (scalar(@found_organisms) == 0){
-        $c->stash->{rest} = { error => 'The organism species you provided is not in the database! Please contact us.' };
+        $c->stash->{rest} = { error => SGN::I18N::translate($i18n, "genotype.file.the_organism_species_you_provided_is_not_in_the_database_please_contact", "The organism species you provided is not in the database! Please contact us.") };
         $c->detach();
     }
     if (scalar(@found_organisms) > 1){
-        $c->stash->{rest} = { error => 'The organism species you provided is not unique in the database! Please contact us.' };
+        $c->stash->{rest} = { error => SGN::I18N::translate($i18n, "genotype.file.the_organism_species_you_provided_is_not_unique_in_the_database_please", "The organism species you provided is not unique in the database! Please contact us.") };
         $c->detach();
     }
     my $organism_id = $found_organisms[0];
@@ -143,7 +145,7 @@ sub upload_ssr_protocol_POST : Args(0) {
     $upload_metadata{'date'}="$timestamp";
 
     #parse uploaded file with appropriate plugin
-    $parser = CXGN::Genotype::ParseUpload->new(chado_schema => $chado_schema, filename => $archived_filename_with_path, observation_unit_type_name => $sample_type);
+    $parser = CXGN::Genotype::ParseUpload->new(i18n => $i18n, chado_schema => $chado_schema, filename => $archived_filename_with_path, observation_unit_type_name => $sample_type);
     $parser->load_plugin($upload_type);
     $parsed_data = $parser->parse();
 #    print STDERR "PARSED DATA =". Dumper($parsed_data)."\n";

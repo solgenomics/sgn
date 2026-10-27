@@ -16,6 +16,8 @@
 use strict;
 use warnings;
 use CatalystX::GlobalContext '$c';
+use SGN::I18N;
+use HTML::Entities ();
 
 bulk_display->new($c)->display_page;
 
@@ -54,7 +56,10 @@ sub new {
     $args->{idType}      = $cgi->param("idType");
     $args->{summary}     = $cgi->param("summary");
     $args->{download}    = $cgi->param("download");
-    $args->{page} = CXGN::Page->new( "Browse Bulk Results", "Lukas Mueller" );
+    my SGN::I18N $bulk_display_new_i18n = eval { $c && $c->i18n };
+    $args->{i18n} = $bulk_display_new_i18n;
+    my $bulk_display_page_title = HTML::Entities::encode_entities($bulk_display_new_i18n ? $bulk_display_new_i18n->p('global.bulk.display.page_title', 'Browse Bulk Results') : 'Browse Bulk Results');
+    $args->{page} = CXGN::Page->new( $bulk_display_page_title, "Lukas Mueller" );
 
     return bless $args, $class;
 }
@@ -149,7 +154,9 @@ sub render_html_page {
 sub render_html_table_page {
     my $self = shift;
 
-    $self->{page}->header("Bulk download results");
+    my SGN::I18N $bulk_display_results_i18n = $self->{i18n};
+    my $bulk_display_results_title = HTML::Entities::encode_entities($bulk_display_results_i18n ? $bulk_display_results_i18n->p('global.bulk.display.results_title', 'Bulk download results') : 'Bulk download results');
+    $self->{page}->header($bulk_display_results_title);
 
     #
     # open the file
@@ -165,8 +172,11 @@ sub render_html_table_page {
     $self->{line_count} = $line_count;
     $self->debug("Line Count in the file: $line_count");
     if ( $line_count < 2 ) {
-        $self->{content} .=
-"No data was retrieved. Please verify your input parameters. Thanks.<br /><br />\n";
+        my SGN::I18N $bulk_display_empty_i18n = $self->{i18n};
+        my $bulk_display_empty_text = $bulk_display_empty_i18n ? $bulk_display_empty_i18n->p('global.bulk.display.no_data', 'No data was retrieved. Please verify your input parameters. Thanks.<br /><br />') : 'No data was retrieved. Please verify your input parameters. Thanks.<br /><br />';
+        $bulk_display_empty_text = HTML::Entities::encode_entities($bulk_display_empty_text);
+        $bulk_display_empty_text =~ s/&lt;br \/&gt;/<br \/>/g;
+        $self->{content} .= $bulk_display_empty_text . "\n";
     }
     else {
         open( F, "<" . $self->{tempdir} . "/" . $self->{dumpfile} )
@@ -198,8 +208,10 @@ sub render_html_table_page {
         $self->{content} .= "<table summary=\"\" border=\"1\">\n";
 
         # print table header
+        my SGN::I18N $bulk_display_line_i18n = $self->{i18n};
+        my $bulk_display_line_label = HTML::Entities::encode_entities($bulk_display_line_i18n ? $bulk_display_line_i18n->p('global.bulk.display.line', 'line') : 'line');
         $self->{content} .=
-            "<tr><td>line</td><td>"
+            "<tr><td>$bulk_display_line_label</td><td>"
           . ( join "</td><td>", @output_fields )
           . "</td></tr>";
 
@@ -495,7 +507,10 @@ sub render_fasta_page {
 sub buttons {
     my $self  = shift;
     my $pages = ( int( $self->{line_count} / $self->{page_size} ) ) + 1;
-    $self->{content} .= "<br />Page" . $self->{page_number} . " of $pages | ";
+    my SGN::I18N $bulk_display_buttons_i18n = $self->{i18n};
+    my $bulk_page_label = HTML::Entities::encode_entities($bulk_display_buttons_i18n ? $bulk_display_buttons_i18n->p('global.bulk.display.page', 'Page') : 'Page');
+    my $bulk_of_label = HTML::Entities::encode_entities($bulk_display_buttons_i18n ? $bulk_display_buttons_i18n->p('global.bulk.display.of', 'of') : 'of');
+    $self->{content} .= "<br />" . $bulk_page_label . $self->{page_number} . " " . $bulk_of_label . " $pages | ";
     $self->previousButton();
     $self->{content} .= " | ";
     $self->summaryButton();
@@ -518,6 +533,7 @@ sub buttons {
 
 sub nextButton {
     my $self = shift;
+    my SGN::I18N $bulk_display_next_i18n = $self->{i18n};
 
     # add next page button if there is a next page
     if ( ( $self->{line_count} + $self->{page_size} ) >
@@ -528,10 +544,10 @@ sub nextButton {
           . ( $self->{dumpfile} )
           . "&amp;page_number="
           . ( $self->{page_number} + 1 )
-          . "\">Next Page</a>";
+          . "\">" . HTML::Entities::encode_entities($bulk_display_next_i18n ? $bulk_display_next_i18n->p('lists_datasets.bulk.next_page', 'Next Page') : 'Next Page') . "</a>";
     }
     else {
-        $self->{content} .= "Next Page";
+        $self->{content} .= HTML::Entities::encode_entities($bulk_display_next_i18n ? $bulk_display_next_i18n->p('lists_datasets.bulk.next_page', 'Next Page') : 'Next Page');
     }
 }
 
@@ -547,16 +563,17 @@ sub nextButton {
 
 sub previousButton {
     my $self = shift;
+    my SGN::I18N $bulk_display_previous_i18n = $self->{i18n};
     if ( ( $self->{page_number} - 1 ) > 0 ) {
         $self->{content} .=
             "<a href=\"display.pl?dumpfile="
           . ( $self->{dumpfile} )
           . "&amp;page_number="
           . ( $self->{page_number} - 1 )
-          . "\">Previous Page</a>";
+          . "\">" . HTML::Entities::encode_entities($bulk_display_previous_i18n ? $bulk_display_previous_i18n->p('lists_datasets.bulk.previous_page', 'Previous Page') : 'Previous Page') . "</a>";
     }
     else {
-        $self->{content} .= "Previous Page";
+        $self->{content} .= HTML::Entities::encode_entities($bulk_display_previous_i18n ? $bulk_display_previous_i18n->p('lists_datasets.bulk.previous_page', 'Previous Page') : 'Previous Page');
     }
 }
 
@@ -572,12 +589,13 @@ sub previousButton {
 
 sub summaryButton {
     my $self = shift;
+    my SGN::I18N $bulk_display_summary_i18n = $self->{i18n};
     $self->{content} .=
         "<a href=\"display.pl?summary=1&amp;dumpfile="
       . ( $self->{dumpfile} )
       . "&amp;idType="
       . ( $self->{idType} )
-      . "\">Summary Page</a>";
+      . "\">" . HTML::Entities::encode_entities($bulk_display_summary_i18n ? $bulk_display_summary_i18n->p('lists_datasets.bulk.summary_page', 'Summary Page') : 'Summary Page') . "</a>";
 }
 
 =head2 newSearchButtons
@@ -592,7 +610,9 @@ sub summaryButton {
 
 sub newSearchButton {
     my $self = shift;
-    $self->{content} .= "<a href=\"input.pl\">New Search</a>";
+    my SGN::I18N $bulk_display_search_i18n = $self->{i18n};
+    my $bulk_new_search = HTML::Entities::encode_entities($bulk_display_search_i18n ? $bulk_display_search_i18n->p('global.bulk.display.new_search', 'New Search') : 'New Search');
+    $self->{content} .= "<a href=\"input.pl\">$bulk_new_search</a>";
 }
 
 =head2 getFileLines

@@ -26,7 +26,7 @@ jQuery(document).ready(function() {
                 return;
             };
 
-            jQuery('#trait_table_label').html('Traits and coefficients for <a href="/breeders_toolbox/trial/'+jQuery(this).val()+'">'+jQuery('option:selected', this).text()+'</a>:')
+            jQuery('#trait_table_label').html(("" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("phenotype.root.traits_and_coefficients_for", "Traits and coefficients for") : "Traits and coefficients for")).html() + " <a href=\"/breeders_toolbox/trial/")+jQuery(this).val()+'">'+jQuery('option:selected', this).text()+'</a>:')
 
             var trial_id = jQuery(this).val();
             var trial_name = jQuery("option:selected", this).text();
@@ -52,7 +52,7 @@ jQuery(document).ready(function() {
                 success: function(response) {
                     var list = response.list || 0;
                     if (!list) {
-                      trait_html = '<option id="select_message" value="" title="No trait measurements found.">No trait measurements found for '+trial_name+'.</option>\n';
+                      trait_html = ("<option id=\"select_message\" value=\"\" title=\"No trait measurements found.\">" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("phenotype.root.no_trait_measurements_found_for", "No trait measurements found for") : "No trait measurements found for")).html() + " ")+trial_name+'.</option>\n';
                       jQuery('#trait_list').html(trait_html);
                       return;
                     }
@@ -72,7 +72,7 @@ jQuery(document).ready(function() {
                         success: function(response) {
                             synonyms = response.synonyms;
                             //console.log("synonyms = " + JSON.stringify(synonyms));
-                            trait_html = '<option id="select_message" value="" title="Select a trait">Select a trait</option>\n';
+                            trait_html = ("<option id=\"select_message\" value=\"\" title=\"Select a trait\">" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("phenotype.root.select_a_trait", "Select a trait") : "Select a trait")).html() + "</option>\n");
                             for (i = 0; i < list.length; i++) {
                                 var trait_id = list[i][0];
                                 var trait_name = list[i][1];
@@ -88,12 +88,12 @@ jQuery(document).ready(function() {
 
                         },
                         error: function(response) {
-                            alert("An error occurred while retrieving synonyms for traits with ids " + trait_ids);
+                            alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("phenotype.root.an_error_occurred_while_retrieving_synonyms_for_traits_with_ids", "An error occurred while retrieving synonyms for traits with ids ") : "An error occurred while retrieving synonyms for traits with ids ") + trait_ids);
                         }
                     });
                 },
                 error: function(response) {
-                    alert("An error occurred while transforming the list " + list_id);
+                    alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("phenotype.root.an_error_occurred_while_transforming_the_list", "An error occurred while transforming the list ") : "An error occurred while transforming the list ") + list_id);
                 }
             });
 
@@ -122,9 +122,9 @@ jQuery(document).ready(function() {
                             var accessions = response.accessions;
                             var accession_html;
                             if (response.accessions[0].length == 0) {
-                                accession_html = '<option value="" title="Select a control">No controls found</a>\n';
+                                accession_html = ("<option value=\"\" title=\"Select a control\">" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("phenotype.root.no_controls_found", "No controls found") : "No controls found")).html() + "</a>\n");
                             } else {
-                                accession_html = '<option value="" title="Select a control">Select a control</a>\n';
+                                accession_html = ("<option value=\"\" title=\"Select a control\">" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("phenotype.root.select_a_control", "Select a control") : "Select a control")).html() + "</a>\n");
                                 for (i = 0; i < response.accessions[0].length; i++) {
                                     accession_html += '<option value="' + accessions[0][i].stock_id + '" title="' + response.accessions[0][i].stock_id + '">' + response.accessions[0][i].accession_name + '</a>\n';
                                 }
@@ -133,12 +133,12 @@ jQuery(document).ready(function() {
                             jQuery('#trait_list').focus();
                         },
                         error: function(response) {
-                            jQuery('#control_list').html('<option value="" title="Select a control">Error retrieving trial controls</a>');
+                            jQuery('#control_list').html(("<option value=\"\" title=\"Select a control\">" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("phenotype.root.error_retrieving_trial_controls", "Error retrieving trial controls") : "Error retrieving trial controls")).html() + "</a>"));
                         }
                     });
                 },
                 error: function(response) {
-                    jQuery('#control_list').html('<option value="" title="Select a control">Error retrieving trial design</a>');
+                    jQuery('#control_list').html(("<option value=\"\" title=\"Select a control\">" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("phenotype.root.error_retrieving_trial_design", "Error retrieving trial design") : "Error retrieving trial design")).html() + "</a>"));
                 }
             });
         });
@@ -152,9 +152,9 @@ jQuery(document).ready(function() {
             var trait_synonym = jQuery('option:selected', this).data("synonym");
             var list_name = jQuery('option:selected', this).data("list_name");
             var control_html = jQuery('#control_list').html();
-            var trait_html = "<tr id='" + trait_id + "_row'><td><a href='/cvterm/" + trait_id + "/view' data-list_name='" + list_name + "' data-value='" + trait_id + "'>" + trait_name + "</a></td><td><p id='" + trait_id + "_synonym'>" + trait_synonym + "<p></td><td><input type='text' id='" + coefficient_id + "' class='form-control' placeholder='Default is 1'></input></td><td><select class='form-control' id='" + control_id + "'>" + control_html + "</select></td><td align='center'><a title='Remove' id='" + trait_id + "_remove' href='javascript:remove_trait(" + trait_id + ")'><span class='glyphicon glyphicon-remove'></span></a></td></tr>";
+            var trait_html = "<tr id='" + trait_id + "_row'><td><a href='/cvterm/" + trait_id + "/view' data-list_name='" + list_name + "' data-value='" + trait_id + "'>" + trait_name + "</a></td><td><p id='" + trait_id + "_synonym'>" + trait_synonym + "<p></td><td><input type='text' id='" + coefficient_id + ("' class='form-control' placeholder='" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("program.profile_upload.weight_default", "Default is 1") : "Default is 1")).html() + "'></input></td><td><select class='form-control' id='") + control_id + "'>" + control_html + "</select></td><td align='center'><a title='Remove' id='" + trait_id + "_remove' href='javascript:remove_trait(" + trait_id + ")'><span class='glyphicon glyphicon-remove'></span></a></td></tr>";
             jQuery('#trait_table').append(trait_html);
-            jQuery('#select_message').text('Add another trait');
+            jQuery('#select_message').text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("phenotype.root.add_another_trait", "Add another trait") : 'Add another trait'));
             jQuery('#select_message').attr('selected', true);
             update_formula();
             jQuery('#' + coefficient_id).focus();
@@ -162,7 +162,7 @@ jQuery(document).ready(function() {
                 function() {
                   if (isNaN(jQuery(this).val())) {
                     jQuery(this).val('');
-                    document.getElementById('selection_index_error_message').innerHTML = "<center><li class='list-group-item list-group-item-danger'> Error.<br> Index coefficients must be a positive or negative number.</li></center>";
+                    document.getElementById('selection_index_error_message').innerHTML = ("<center><li class='list-group-item list-group-item-danger'> " + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("phenotype.root.error", "Error.") : "Error.")).html() + "<br> " + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("phenotype.root.index_coefficients_must_be_a_positive_or_negative_number", "Index coefficients must be a positive or negative number.") : "Index coefficients must be a positive or negative number.")).html() + "</li></center>");
                     jQuery('#selection_index_error_dialog').modal("show");
                   }
                   else {
@@ -179,7 +179,7 @@ jQuery(document).ready(function() {
 
     jQuery('#save_sin').click(function() {
       if (jQuery('#trait_table').children().length < 1) {
-        document.getElementById('selection_index_error_message').innerHTML = "<center><li class='list-group-item list-group-item-danger'> Formula not saved.<br> At least one trait must be selected before saving a SIN formula.</li></center>";
+        document.getElementById('selection_index_error_message').innerHTML = ("<center><li class='list-group-item list-group-item-danger'> " + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("phenotype.root.formula_not_saved", "Formula not saved.") : "Formula not saved.")).html() + "<br> " + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("phenotype.root.at_least_one_trait_must_be_selected_before_saving_a", "At least one trait must be selected before saving a SIN formula.") : "At least one trait must be selected before saving a SIN formula.")).html() + "</li></center>");
         jQuery('#selection_index_error_dialog').modal("show");
         return;
       }
@@ -216,7 +216,7 @@ jQuery(document).ready(function() {
             lo.setListType(list_id, 'dataset');
         }
         if (elementsAdded) {
-            alert("Saved SIN formula with name " + new_name);
+            alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("phenotype.root.saved_sin_formula_with_name", "Saved SIN formula with name ") : "Saved SIN formula with name ") + new_name);
         }
 
     });
@@ -233,7 +233,7 @@ jQuery(document).ready(function() {
     jQuery('#calculate_rankings').click(function() {
 
       if (jQuery('#trait_table').children().length < 1) {
-        document.getElementById('selection_index_error_message').innerHTML = "<center><li class='list-group-item list-group-item-danger'> Error.<br> A trial and at least one trait must be selected before calculating rankings.</li></center>";
+        document.getElementById('selection_index_error_message').innerHTML = ("<center><li class='list-group-item list-group-item-danger'> " + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("phenotype.root.error", "Error.") : "Error.")).html() + "<br> " + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("phenotype.root.a_trial_and_at_least_one_trait_must_be_selected", "A trial and at least one trait must be selected before calculating rankings.") : "A trial and at least one trait must be selected before calculating rankings.")).html() + "</li></center>");
         jQuery('#selection_index_error_dialog').modal("show");
         return;
       }
@@ -308,7 +308,7 @@ jQuery(document).ready(function() {
                 build_table(weighted_values, weighted_column_names, trial_name, 'weighted_values_div');
             },
             error: function(response) {
-                alert("An error occurred while retrieving average phenotypes");
+                alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("phenotype.root.an_error_occurred_while_retrieving_average_phenotypes", "An error occurred while retrieving average phenotypes") : "An error occurred while retrieving average phenotypes"));
             }
         });
 
@@ -319,9 +319,9 @@ function build_table(data, column_names, trial_name, target_div) {
 
     var table_id = target_div.replace("div", "table");
     var table_type = target_div.replace("_div", "");
-    var table_html = '<br><br><div class="table-responsive" style="margin-top: 10px;"><table id="' + table_id + '" class="table table-hover table-striped table-bordered" width="100%"><caption class="well well-sm" style="caption-side: bottom;margin-top: 10px;"><center> Table description: <i>' + table_type + ' for trial ' + trial_name + '.</i></center></caption></table></div>'
+    var table_html = '<br><br><div class="table-responsive" style="margin-top: 10px;"><table id="' + table_id + ("\" class=\"table table-hover table-striped table-bordered\" width=\"100%\"><caption class=\"well well-sm\" style=\"caption-side: bottom;margin-top: 10px;\"><center> " + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("phenotype.root.table_description", "Table description:") : "Table description:")).html() + " <i>") + table_type + ' for trial ' + trial_name + '.</i></center></caption></table></div>'
     if (table_type == 'weighted_values') {
-        table_html += '<div class="col-sm-12 col-md-12 col-lg-12"><hr><label>Save top ranked accessions to a list: </label><br><br><div class="col-sm-3 col-md-3 col-lg-3" style="display: inline-block"><label>By number:</label>&nbsp;<select class="form-control" id="top_number"></select></div><div class="col-sm-3 col-md-3 col-lg-3" style="display: inline-block"><label>Or percent:</label>&nbsp;<select class="form-control" id="top_percent"></select></div><div class="col-sm-6 col-md-6 col-lg-6"><div style="text-align:right" id="ranking_to_list_menu"></div><div id="top_ranked_names" style="display: none;"></div></div><br><br><br><br><br></div>';
+        table_html += ("<div class=\"col-sm-12 col-md-12 col-lg-12\"><hr><label>" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("phenotype.root.save_top_ranked_accessions_to_a_list", "Save top ranked accessions to a list:") : "Save top ranked accessions to a list:")).html() + " </label><br><br><div class=\"col-sm-3 col-md-3 col-lg-3\" style=\"display: inline-block\"><label>" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("phenotype.root.by_number", "By number:") : "By number:")).html() + "</label>&nbsp;<select class=\"form-control\" id=\"top_number\"></select></div><div class=\"col-sm-3 col-md-3 col-lg-3\" style=\"display: inline-block\"><label>" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("phenotype.root.or_percent", "Or percent:") : "Or percent:")).html() + "</label>&nbsp;<select class=\"form-control\" id=\"top_percent\"></select></div><div class=\"col-sm-6 col-md-6 col-lg-6\"><div style=\"text-align:right\" id=\"ranking_to_list_menu\"></div><div id=\"top_ranked_names\" style=\"display: none;\"></div></div><br><br><br><br><br></div>");
     }
 
     jQuery('#' + target_div).html(table_html);
@@ -329,24 +329,30 @@ function build_table(data, column_names, trial_name, target_div) {
     var export_message = 'Accession rankings calculated using a selection index at ' + window.location.href;
     var penultimate_column = column_names.length - 2;
 
-    jQuery('#' + table_id).DataTable({
+    var canonical_export_headers;
+    var canonical_export_options = {format: {header: function(data, column) { return canonical_export_headers[column]; }}};
+    var rendered_table = jQuery('#' + table_id).DataTable({
         dom: 'Bfrtip',
-        buttons: [ 'copy',
+        buttons: [ {extend: 'copy', exportOptions: canonical_export_options},
             {
                 extend: 'excelHtml5',
+                exportOptions: canonical_export_options,
                 title: trial_name +'_rankings'
             },
             {
                 extend: 'csvHtml5',
+                exportOptions: canonical_export_options,
                 title: trial_name +'_rankings'
             },
             {
                 extend: 'pdfHtml5',
+                exportOptions: canonical_export_options,
                 title: trial_name +'_rankings',
                 message: export_message
             },
             {
                 extend: 'print',
+                exportOptions: canonical_export_options,
                 message: export_message
             }
         ],
@@ -358,7 +364,7 @@ function build_table(data, column_names, trial_name, target_div) {
         ],
         lengthMenu: [
             [10, 25, 50, -1],
-            [10, 25, 50, "All"]
+            [10, 25, 50, (window.SGN && window.SGN.i18n ? window.SGN.i18n.p("global.search_wizard.all_levels", "All") : "All")]
         ],
         columns: column_names,
         order: [
@@ -366,12 +372,22 @@ function build_table(data, column_names, trial_name, target_div) {
         ],
     });
 
+    // Capture the pinned Buttons normalizer before localizing display-only headers.
+    canonical_export_headers = rendered_table.buttons.exportData({rows: []}).header;
+    column_names.forEach(function(column, index) {
+        if (index === 0 && column.title === 'Accession') {
+            jQuery(rendered_table.column(index).header()).text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("accession.sequencing.table.accession", "Accession") : "Accession"));
+        } else if (table_type === 'weighted_values' && index === column_names.length - 1 && column.title === 'SIN Rank') {
+            jQuery(rendered_table.column(index).header()).text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("phenotype.root.sin_rank", "SIN Rank") : "SIN Rank"));
+        }
+    });
+
     if (table_type == 'weighted_values') {
 
         var table = $('#weighted_values_table').DataTable();
         var name_links = table.column(0).data();
-        jQuery("#top_number").append('<option value="">Select a number</option>');
-        jQuery("#top_percent").append('<option value="">Select a percent</option>');
+        jQuery("#top_number").append(("<option value=\"\">" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("program.autoname.select_number", "Select a number") : "Select a number")).html() + "</option>"));
+        jQuery("#top_percent").append(("<option value=\"\">" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("phenotype.root.select_a_percent", "Select a percent") : "Select a percent")).html() + "</option>"));
 
         for (i = 1; i <= name_links.length; i++) {
             jQuery("#top_number").append('<option value=' + i + '>' + i + '</option>');
@@ -412,7 +428,7 @@ function build_table(data, column_names, trial_name, target_div) {
 function load_sin() { // update traits and selection index when a saved sin formula is picked
 
     if (!jQuery("#select_trial_for_selection_index option:selected").val()) {
-      document.getElementById('selection_index_error_message').innerHTML = "<center><li class='list-group-item list-group-item-danger'> Error.<br> A trial must be selected before loading a SIN formula.</li></center>";
+      document.getElementById('selection_index_error_message').innerHTML = ("<center><li class='list-group-item list-group-item-danger'> " + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("phenotype.root.error", "Error.") : "Error.")).html() + "<br> " + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("phenotype.root.a_trial_must_be_selected_before_loading_a_sin_formula", "A trial must be selected before loading a SIN formula.") : "A trial must be selected before loading a SIN formula.")).html() + "</li></center>");
       jQuery('#selection_index_error_dialog').modal("show");
       return;
     }
@@ -488,7 +504,7 @@ function load_sin() { // update traits and selection index when a saved sin form
         var trait_synonym = jQuery('#trait_list option[value=' + trait_id + ']').data("synonym");
         var control_html = jQuery('#control_list').html();
         //console.log("control html"+control_html);
-        var trait_html = "<tr id='" + trait_id + "_row'><td><a href='/cvterm/" + trait_id + "/view' data-value='" + trait_id + "'>" + trait_name + "</a></td><td><p id='" + trait_id + "_synonym'>" + trait_synonym + "<p></td><td><input type='text' id='" + coefficient_input_id + "' class='form-control' placeholder='Default is 1'></input></td><td><select class='form-control' id='" + control_select_id + "'>" + control_html + "</select></td><td align='center'><a title='Remove' id='" + trait_id + "_remove' href='javascript:remove_trait(" + trait_id + ")'><span class='glyphicon glyphicon-remove'></span></a></td></tr>";
+        var trait_html = "<tr id='" + trait_id + "_row'><td><a href='/cvterm/" + trait_id + "/view' data-value='" + trait_id + "'>" + trait_name + "</a></td><td><p id='" + trait_id + "_synonym'>" + trait_synonym + "<p></td><td><input type='text' id='" + coefficient_input_id + ("' class='form-control' placeholder='" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("program.profile_upload.weight_default", "Default is 1") : "Default is 1")).html() + "'></input></td><td><select class='form-control' id='") + control_select_id + "'>" + control_html + "</select></td><td align='center'><a title='Remove' id='" + trait_id + "_remove' href='javascript:remove_trait(" + trait_id + ")'><span class='glyphicon glyphicon-remove'></span></a></td></tr>";
 
         jQuery('#trait_table').append(trait_html);
         jQuery('#' + coefficient_input_id).val(coefficients[i]);
@@ -498,20 +514,20 @@ function load_sin() { // update traits and selection index when a saved sin form
             omitted_controls.push("<a href='/stock/" + control_id + "/view' data-value='" + control_id + "'>" + controls[i] + "</a>");
         }
     }
-    jQuery('#select_message').text('Add another trait');
+    jQuery('#select_message').text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("phenotype.root.add_another_trait", "Add another trait") : 'Add another trait'));
     jQuery('#select_message').attr('selected', true);
     update_formula();
 
     if (omitted_traits.length > 0 && omitted_controls.length > 0) {
-      document.getElementById('selection_index_error_message').innerHTML = "<center><li class='list-group-item list-group-item-danger'> The following parts of the saved SIN formula have been omitted because they were not found in this trial:</li></center><br><center><p>Traits: " + omitted_traits.join(", ") + "</p></center><br><center><p>Controls: " + omitted_controls.join(", ") + "</p></center>";
+      document.getElementById('selection_index_error_message').innerHTML = ("<center><li class='list-group-item list-group-item-danger'> " + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("phenotype.root.the_following_parts_of_the_saved_sin_formula_have_been", "The following parts of the saved SIN formula have been omitted because they were not found in this trial:") : "The following parts of the saved SIN formula have been omitted because they were not found in this trial:")).html() + "</li></center><br><center><p>" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("phenotype.root.traits", "Traits:") : "Traits:")).html() + " ") + omitted_traits.join(", ") + ("</p></center><br><center><p>" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("phenotype.root.controls", "Controls:") : "Controls:")).html() + " ") + omitted_controls.join(", ") + "</p></center>";
       jQuery('#selection_index_error_dialog').modal("show");
     }
     else if (omitted_traits.length > 0) {
-      document.getElementById('selection_index_error_message').innerHTML = "<center><li class='list-group-item list-group-item-danger'> The following parts of the saved SIN formula have been omitted because they were not found in this trial:</li></center><br><center><p>Traits: " + omitted_traits.join(", ") + "</p></center>";
+      document.getElementById('selection_index_error_message').innerHTML = ("<center><li class='list-group-item list-group-item-danger'> " + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("phenotype.root.the_following_parts_of_the_saved_sin_formula_have_been", "The following parts of the saved SIN formula have been omitted because they were not found in this trial:") : "The following parts of the saved SIN formula have been omitted because they were not found in this trial:")).html() + "</li></center><br><center><p>" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("phenotype.root.traits", "Traits:") : "Traits:")).html() + " ") + omitted_traits.join(", ") + "</p></center>";
       jQuery('#selection_index_error_dialog').modal("show");
     }
     else if (omitted_controls.length > 0) {
-      document.getElementById('selection_index_error_message').innerHTML = "<center><li class='list-group-item list-group-item-danger'> The following parts of the saved SIN formula have been omitted because they were not found in this trial:</li></center><br><center><p>Controls: " + omitted_controls.join(", ") + "</p></center>";
+      document.getElementById('selection_index_error_message').innerHTML = ("<center><li class='list-group-item list-group-item-danger'> " + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("phenotype.root.the_following_parts_of_the_saved_sin_formula_have_been", "The following parts of the saved SIN formula have been omitted because they were not found in this trial:") : "The following parts of the saved SIN formula have been omitted because they were not found in this trial:")).html() + "</li></center><br><center><p>" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("phenotype.root.controls", "Controls:") : "Controls:")).html() + " ") + omitted_controls.join(", ") + "</p></center>";
       jQuery('#selection_index_error_dialog').modal("show");
     }
 
@@ -526,7 +542,7 @@ function update_formula() {
     //console.log("updating formula....");
     var selected_trait_rows = jQuery('#trait_table').children();
     if (selected_trait_rows.length < 1) {
-        jQuery('#ranking_formula').html("<center><i>Select a trial, then pick traits and coefficients (or load a saved formula).</i></center>");
+        jQuery('#ranking_formula').html(("<center><i>" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("phenotype.root.select_a_trial_then_pick_traits_and_coefficients_or_load", "Select a trial, then pick traits and coefficients (or load a saved formula).") : "Select a trial, then pick traits and coefficients (or load a saved formula).")).html() + "</i></center>"));
         jQuery('#calculate_rankings').addClass('disabled');
         jQuery('#save_sin').addClass('disabled');
         return;

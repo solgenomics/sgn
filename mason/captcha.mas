@@ -3,9 +3,13 @@
     $goto_url => '/'
 </%args>
 
+<%init>
+use HTML::Entities ();
+</%init>
+
 <%perl>
     if ( !defined $config ) {
-        $m->comp("/generic_message.mas", message => "Captcha has not been enabled on this server");
+        $m->comp("/generic_message.mas", message => HTML::Entities::encode_entities($c->i18n->p('global.captcha.disabled', 'Captcha has not been enabled on this server')));
         $m->abort();
     }
 </%perl>
@@ -13,15 +17,15 @@
 <noscript>
     <div id="sgn-captcha-nojs" style="max-width: 400px; margin: 15px auto; text-align: center;">
         <p>
-            <strong>Verification Failed</strong>
+            <strong><% $c->i18n->p('global.captcha.verification_failed', 'Verification Failed') |h %></strong>
             <br />
-            Javascript is required for bot detection...
+            <% $c->i18n->p('global.captcha.javascript_required', 'Javascript is required for bot detection...') |h %>
         </p>
     </div>
 </noscript>
 
-<div id="sgn-captcha" style="display: none; max-width: 400px; min-height: 250px; margin: 15px auto; text-align: center;">
-    <p id="sgn-captcha-status">Verifying your request...</p>
+<div id="sgn-captcha" data-goto-url="<% $goto_url |h %>" style="display: none; max-width: 400px; min-height: 250px; margin: 15px auto; text-align: center;">
+    <p id="sgn-captcha-status"><% $c->i18n->p('global.captcha.verifying', 'Verifying your request...') |h %></p>
     <progress id="sgn-captcha-loader" max="100" value="0"></progress>
 </div>
 
@@ -31,6 +35,12 @@
     const container = document.getElementById("sgn-captcha");
     const status = document.getElementById("sgn-captcha-status");
     const loader = document.getElementById("sgn-captcha-loader");
+    const gotoUrl = container.dataset.gotoUrl;
+    const escapeHtml = (value) => {
+        const element = document.createElement("span");
+        element.textContent = String(value);
+        return element.innerHTML;
+    };
 
     // reset the display
     container.style.display = "block";
@@ -45,7 +55,7 @@
     // verify the token that has been returned
     // if the token is valid, redirect to the original URL
     cap.addEventListener("solve", (e) => {
-        status.innerHTML = "<strong>Saving verification token...</strong>";
+        status.innerHTML = `<strong>${escapeHtml(window.SGN && SGN.i18n ? SGN.i18n.p('global.captcha.saving', 'Saving verification token...') : 'Saving verification token...')}</strong>`;
         loader.removeAttribute("value");
 
         // Use fetch() rather than jQuery.ajax() here: this page is the gate shown
@@ -58,13 +68,22 @@
             .then((r) => r.json())
             .then((response) => {
                 if ( response?.error || response?.success !== 1 ) {
-                    status.innerHTML = `<strong>Could not save verification token</strong><br />${response.error}`;
+                    status.innerHTML = `<strong>${escapeHtml(window.SGN && SGN.i18n ? SGN.i18n.p('global.captcha.could_not_save', 'Could not save verification token') : 'Could not save verification token')}</strong><br />${escapeHtml(response.error)}`;
                     loader.style.display = "none";
                 }
                 else {
-                    status.innerHTML = "<strong>Saved verification token!</strong><br />You should now be redirected to <a href='<% $goto_url %>'><% $goto_url %></a>";
+                    const savedMessage = window.SGN && SGN.i18n ? SGN.i18n.p('global.captcha.saved', 'Saved verification token!') : 'Saved verification token!';
+                    const redirectMarker = '__SGN_CAPTCHA_REDIRECT__';
+                    const redirectNotice = window.SGN && SGN.i18n ? SGN.i18n.p('global.captcha.redirect_notice', 'You should now be redirected to %{link}', {link: redirectMarker}) : `You should now be redirected to ${redirectMarker}`;
+                    const redirectParts = redirectNotice.split(redirectMarker);
+                    const redirectLink = document.createElement('a');
+                    redirectLink.href = gotoUrl;
+                    redirectLink.textContent = gotoUrl;
+                    status.innerHTML = `<strong>${escapeHtml(savedMessage)}</strong><br />${escapeHtml(redirectParts[0])}`;
+                    status.appendChild(redirectLink);
+                    status.appendChild(document.createTextNode(redirectParts.slice(1).join(redirectMarker)));
                     loader.style.display = "none";
-                    const url = new URL("<% $goto_url %>", `${window.location.protocol}//${window.location.host}`);
+                    const url = new URL(gotoUrl, `${window.location.protocol}//${window.location.host}`);
                     if ( !url.searchParams.has("captcha") ) {
                         url.searchParams.append("captcha", "passed");
                         url.searchParams.delete("captcha-token");
@@ -73,20 +92,20 @@
                 }
             })
             .catch(() => {
-                status.innerHTML = "<strong>Could not save verification token</strong>";
+                status.innerHTML = `<strong>${escapeHtml(window.SGN && SGN.i18n ? SGN.i18n.p('global.captcha.could_not_save', 'Could not save verification token') : 'Could not save verification token')}</strong>`;
                 loader.style.display = "none";
             });
     });
 
     // Update the progress of the captcha solve routine...
     cap.addEventListener("progress", (e) => {
-        status.innerHTML = `<strong>Verifying your request...</strong>`;
+        status.innerHTML = `<strong>${escapeHtml(window.SGN && SGN.i18n ? SGN.i18n.p('global.captcha.verifying', 'Verifying your request...') : 'Verifying your request...')}</strong>`;
         loader.value = e.detail.progress;
     });
 
     // The captcha solve has failed...
     cap.addEventListener("error", (e) => {
-        status.innerHTML = `<strong>Could not verify the token</strong><br />${e.detail.message}`;
+        status.innerHTML = `<strong>${escapeHtml(window.SGN && SGN.i18n ? SGN.i18n.p('global.captcha.could_not_verify', 'Could not verify the token') : 'Could not verify the token')}</strong><br />${escapeHtml(e.detail.message)}`;
         loader.style.display = "none";
     });
 </script>

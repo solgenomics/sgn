@@ -3,6 +3,9 @@ package main;
 
 
 use strict;
+use SGN::I18N ();
+use CatalystX::GlobalContext qw( $c );
+my SGN::I18N $ui_i18n = SGN::I18N::translate($c);
 use CXGN::Page;
 use CXGN::Search::CannedForms;
 use CXGN::Page::FormattingHelpers qw/blue_section_html  page_title_html columnar_table_html/;
@@ -25,7 +28,7 @@ $form->from_request(\%params);
 #warn "name param is $params{w822_marker_name}\n";
 #warn "name param is ". $form->data('marker_name');
 
-$page->header('SGN: Marker search') unless $form->data('text');
+$page->header(SGN::I18N::translate($ui_i18n, "genotype.marker.sgn_marker_search", "SGN: Marker search", undef, {entities => ($ui_i18n && $ui_i18n->locale ne 'en' ? '<>&\x80-\x{10FFFF}' : '')})) unless $form->data('text');
 
 
 if($form->data('submit') && ($form->data('submit') eq 'Search') || ($form->data('random') && $form->data('random') eq 'yes')) {
@@ -162,9 +165,9 @@ if($form->data('submit') && ($form->data('submit') eq 'Search') || ($form->data(
     } else {
 
       if (@$resultset == 0){ 
-	print blue_section_html('No results',"Sorry, no results matched your search criteria.\n" ); 
+	print CXGN::Page::FormattingHelpers::info_section_html(title => SGN::I18N::translate($ui_i18n, "genotype.marker.no_results", "No results", undef, {entities => ($ui_i18n && $ui_i18n->locale ne 'en' ? '<>&\x80-\x{10FFFF}' : '')}), anchor_title => 'No results', contents => SGN::I18N::translate($ui_i18n, "genotype.marker.sorry_no_results_matched_your_search_criteria", "Sorry, no results matched your search criteria.\n", undef, {entities => ($ui_i18n && $ui_i18n->locale ne 'en' ? '<>&\x80-\x{10FFFF}' : '')}));
 	
-	print '<br /><br />', blue_section_html('Search Again', form_html($form));
+	print '<br /><br />', CXGN::Page::FormattingHelpers::info_section_html(title => SGN::I18N::translate($ui_i18n, "global.ug-ad2.search_again", "Search Again", undef, {entities => ($ui_i18n && $ui_i18n->locale ne 'en' ? '<>&\x80-\x{10FFFF}' : '')}), anchor_title => 'Search Again', contents => form_html($form));
 	
       } else {
 	
@@ -213,9 +216,9 @@ if($form->data('submit') && ($form->data('submit') eq 'Search') || ($form->data(
 	}
 	
 	my $link = $ENV{SCRIPT_NAME};
-	my $prevlink = qq{<a href="$link?$prevparams">\&laquo; Prev $resultsize</a>};
-	my $nextlink = qq{<a href="$link?$nextparams">Next $resultsize \&raquo;</a>};
-	my $textlink = qq{[Or <a href="$link?$textparams">download these results as a text file</a>]};
+	my $prevlink = (qq{<a href="$link?$prevparams">\&laquo; } . SGN::I18N::translate($ui_i18n, "seedlot_maintenance_table.ui.previous", "Prev", undef, {entities => ($ui_i18n && $ui_i18n->locale ne 'en' ? '<>&\x80-\x{10FFFF}' : '')}) . qq{ $resultsize</a>});
+	my $nextlink = (qq{<a href="$link?$nextparams">} . SGN::I18N::translate($ui_i18n, "global.annotation_search_result.next", "Next", undef, {entities => ($ui_i18n && $ui_i18n->locale ne 'en' ? '<>&\x80-\x{10FFFF}' : '')}) . qq{ $resultsize \&raquo;</a>});
+	my $textlink = (SGN::I18N::translate($ui_i18n, "genotype.marker.or", "[Or", undef, {entities => ($ui_i18n && $ui_i18n->locale ne 'en' ? '<>&\x80-\x{10FFFF}' : '')}) . qq{ <a href="$link?$textparams">} . SGN::I18N::translate($ui_i18n, "genotype.marker.download_these_results_as_a_text_file", "download these results as a text file", undef, {entities => ($ui_i18n && $ui_i18n->locale ne 'en' ? '<>&\x80-\x{10FFFF}' : '')}) . qq{</a>]});
 
 	#warn "link was $link?$textparams\n";
 
@@ -228,26 +231,24 @@ if($form->data('submit') && ($form->data('submit') eq 'Search') || ($form->data(
 	
 	if ($resultend >= $resultcount){
 	  # there's no next result
-	  $nextlink = qq{<span class="ghosted">Next $resultsize \&raquo;</span>};
+	  $nextlink = (qq{<span class="ghosted">} . SGN::I18N::translate($ui_i18n, "global.annotation_search_result.next", "Next", undef, {entities => ($ui_i18n && $ui_i18n->locale ne 'en' ? '<>&\x80-\x{10FFFF}' : '')}) . qq{ $resultsize \&raquo;</span>});
 	}
 	
 	if ($resultstart<=1){
 	  # there's no prev result
-	  $prevlink = qq{<span class="ghosted">\&laquo; Prev $resultsize</span>};
+	  $prevlink = (qq{<span class="ghosted">\&laquo; } . SGN::I18N::translate($ui_i18n, "seedlot_maintenance_table.ui.previous", "Prev", undef, {entities => ($ui_i18n && $ui_i18n->locale ne 'en' ? '<>&\x80-\x{10FFFF}' : '')}) . qq{ $resultsize</span>});
 	}
 	
 	$resultend = $resultcount if $resultend > $resultcount;
-	my $resultsummary = "Showing results $resultstart to $resultend of $resultcount. $textlink<br />$prevlink | $nextlink<br /><br />";
+	my $resultsummary = (SGN::I18N::translate($ui_i18n, "genotype.marker.showing_results", "Showing results", undef, {entities => ($ui_i18n && $ui_i18n->locale ne 'en' ? '<>&\x80-\x{10FFFF}' : '')}) . " $resultstart " . SGN::I18N::translate($ui_i18n, "global.search_wizard.to", "to", undef, {entities => ($ui_i18n && $ui_i18n->locale ne 'en' ? '<>&\x80-\x{10FFFF}' : '')}) . " $resultend " . SGN::I18N::translate($ui_i18n, "global.bulk.display.of", "of", undef, {entities => ($ui_i18n && $ui_i18n->locale ne 'en' ? '<>&\x80-\x{10FFFF}' : '')}) . " $resultcount. $textlink<br />$prevlink | $nextlink<br /><br />");
 	
 	# the form was submitted, so we should present some results.
-	print blue_section_html('Marker search results', 
-				"$resultcount results found in $timeelapsed seconds", 
-				$resultsummary
+	print CXGN::Page::FormattingHelpers::info_section_html(title => SGN::I18N::translate($ui_i18n, "genotype.marker.marker_search_results_3e9192", "Marker search results", undef, {entities => ($ui_i18n && $ui_i18n->locale ne 'en' ? '<>&\x80-\x{10FFFF}' : '')}), anchor_title => 'Marker search results', subtitle => SGN::I18N::translate($ui_i18n, "genotype.marker.results_found_duration", "%{count} results found in %{seconds} seconds", {count => ("" . $resultcount), seconds => ("" . $timeelapsed)}, {entities => ($ui_i18n && $ui_i18n->locale ne 'en' ? '<>&\x80-\x{10FFFF}' : '')}), contents => $resultsummary
 				. columnar_table_html(
-						      headings => ['Marker', 'Protocol', 'Map', 'Chromosome', 'Position', 'Confidence'],
+						      headings => [SGN::I18N::translate($ui_i18n, "genotype.marker.marker", "Marker", undef, {entities => ($ui_i18n && $ui_i18n->locale ne 'en' ? '<>&\x80-\x{10FFFF}' : '')}), SGN::I18N::translate($ui_i18n, "global.search_wizard.protocol", "Protocol", undef, {entities => ($ui_i18n && $ui_i18n->locale ne 'en' ? '<>&\x80-\x{10FFFF}' : '')}), SGN::I18N::translate($ui_i18n, "genotype.marker.map", "Map", undef, {entities => ($ui_i18n && $ui_i18n->locale ne 'en' ? '<>&\x80-\x{10FFFF}' : '')}), SGN::I18N::translate($ui_i18n, "global.search_wizard.chromosome", "Chromosome", undef, {entities => ($ui_i18n && $ui_i18n->locale ne 'en' ? '<>&\x80-\x{10FFFF}' : '')}), SGN::I18N::translate($ui_i18n, "genotype.marker.position", "Position", undef, {entities => ($ui_i18n && $ui_i18n->locale ne 'en' ? '<>&\x80-\x{10FFFF}' : '')}), SGN::I18N::translate($ui_i18n, "marker.detail.confidence", "Confidence", undef, {entities => ($ui_i18n && $ui_i18n->locale ne 'en' ? '<>&\x80-\x{10FFFF}' : '')})],
 						      data => $tabledata));
 	
-	print '<br /><br />', blue_section_html('Search again', form_html($form));
+	print '<br /><br />', CXGN::Page::FormattingHelpers::info_section_html(title => SGN::I18N::translate($ui_i18n, "global.gem_experiment_search.search_again", "Search again", undef, {entities => ($ui_i18n && $ui_i18n->locale ne 'en' ? '<>&\x80-\x{10FFFF}' : '')}), anchor_title => 'Search again', contents => form_html($form));
 	
       } # end of if-else text output
     } 

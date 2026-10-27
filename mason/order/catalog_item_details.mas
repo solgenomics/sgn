@@ -24,24 +24,24 @@ $main_page
 
 <& /page/page_title.mas, title => "Catalog Item Details for: $item_name" &>
 
-<&| /page/info_section.mas, title=>"Details",  collapsible => 1, collapsed=>0 &>
+<&| /page/info_section.mas, anchor_title => "Details", title=>HTML::Entities::encode_entities($c->i18n->p("accession.stock.trials.header.details", "Details")),  collapsible => 1, collapsed=>0 &>
 
     <div class="panel panel-default">
         <div class="panel-body">
             <div class="row">
                 <div class="col-sm-6">
                     <table class="table table-bordered table-hover">
-                        <tr><td><b>Item Type</b></td><td><% $item_type %> </td></tr>
-                        <tr><td><b>Species</b></td><td><% $species %> </td></tr>
-                        <tr><td><b>Variety</b></td><td><% $variety %> </td></tr>
-                        <tr><td><b>Material Type</b></td><td><% $material_type %> </td></tr>
-                        <tr><td><b>Category</b></td><td><% $category %></td></tr>
-                        <tr><td><b>Additional Info</b></td><td><% $additional_info %></td></tr>
-                        <tr><td><b>Material Source</b><td><% $material_source %></td></tr>
-                        <tr><td><b>Breeding Program</b></td><td><% $breeding_program %></td></tr>
-                        <tr><td><b>Availability</b></td><td><% $availability %></td></tr>
-                        <tr><td><b>Contact Person Username</b></td><td><% $contact_person_username %></td></tr>
-                        <tr><td><b>Main Detail Page</b></td><td><% $main_page %></td></tr>
+                        <tr><td><b><% $c->i18n->p("barcode.helper.item_type.a4a4ccf", "Item Type") |h %></b></td><td><% $item_type %> </td></tr>
+                        <tr><td><b><% $c->i18n->p("cross.species", "Species") |h %></b></td><td><% $species %> </td></tr>
+                        <tr><td><b><% $c->i18n->p("seedlot.variety", "Variety") |h %></b></td><td><% $variety %> </td></tr>
+                        <tr><td><b><% $c->i18n->p("seedlot_split.ui.material_type", "Material Type") |h %></b></td><td><% $material_type %> </td></tr>
+                        <tr><td><b><% $c->i18n->p("barcode.helper.category.df1f580", "Category") |h %></b></td><td><% $category %></td></tr>
+                        <tr><td><b><% $c->i18n->p("accession.stock.section.additional_info", "Additional Info") |h %></b></td><td><% $additional_info %></td></tr>
+                        <tr><td><b><% $c->i18n->p("barcode.helper.material_source.43ceb28", "Material Source") |h %></b><td><% $material_source %></td></tr>
+                        <tr><td><b><% $c->i18n->p("global.index_logged_in_user.breeding_program", "Breeding Program") |h %></b></td><td><% $breeding_program %></td></tr>
+                        <tr><td><b><% $c->i18n->p("barcode.helper.availability.797abcb", "Availability") |h %></b></td><td><% $availability %></td></tr>
+                        <tr><td><b><% $c->i18n->p("barcode.helper.contact_person_username.2319253", "Contact Person Username") |h %></b></td><td><% $contact_person_username %></td></tr>
+                        <tr><td><b><% $c->i18n->p("barcode.helper.main_detail_page", "Main Detail Page") |h %></b></td><td><% $main_page %></td></tr>
                     </table>
                 </div>
                 <div class="col-sm-6">
@@ -52,17 +52,17 @@ $main_page
                     <br /><br />
                 </div>
             </div>
-            <td><a href="/catalog/view"><p>Go to Catalog Page</p></a></td>
+            <td><a href="/catalog/view"><p><% $c->i18n->p("barcode.helper.go_to_catalog_page", "Go to Catalog Page") |h %></p></a></td>
         </div>
     </div>
 </&>
 
 % if ($check_vendor_role == 1) {
-    <&| /page/info_section.mas, title => 'Edit or Remove Catalog Item', collapsible=>1, collapsed=>0 &>
+    <&| /page/info_section.mas, anchor_title => 'Edit or Remove Catalog Item', title => HTML::Entities::encode_entities($c->i18n->p("barcode.helper.edit_or_remove_catalog_item", 'Edit or Remove Catalog Item')), collapsible=>1, collapsed=>0 &>
         <div class = "well well-sm">
             <div class="panel panel-default">
                 <div class="panel-body">
-                    <button id="edit_catalog_item_link" class="btn btn-primary btn-sm">Edit Catalog Item</button>
+                    <button id="edit_catalog_item_link" class="btn btn-primary btn-sm"><% $c->i18n->p("barcode.helper.edit_catalog_item", "Edit Catalog Item") |h %></button>
                     <!--
                     <button id="delete_catalog_item_button" class="btn btn-primary btn-sm">Delete Catalog Item</button>
                     -->
@@ -70,7 +70,7 @@ $main_page
             </div>
         </div>
     </&>
-    <&| /page/info_section.mas, title => 'Add or Remove Image', collapsible=>1, collapsed=>0 &>
+    <&| /page/info_section.mas, anchor_title => 'Add or Remove Image', title => HTML::Entities::encode_entities($c->i18n->p("barcode.helper.add_or_remove_image", 'Add or Remove Image')), collapsible=>1, collapsed=>0 &>
         <div class = "well well-sm">
             <div class = "panel panel-default">
                 <div class = "panel-body">
@@ -88,19 +88,19 @@ $main_page
     <div class="modal-dialog" role="document">
         <div class="modal-content">
             <div class="modal-header">
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                <h4 class="modal-title" id="deleteItemSuccessDialog">Success</h4>
+                <button type="button" class="close" data-dismiss="modal" aria-label="<% $c->i18n->p("global.dataset_publish.close", "Close") |h %>"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="deleteItemSuccessDialog"><% $c->i18n->p("cross.ui.success", "Success") |h %></h4>
             </div>
             <div class="modal-body">
                 <div class="container-fluid">
                     <p>
                         <span class="ui-icon ui-icon-circle-check" style="float: left; margin: 0 7px 50px 0;"></span>
-                        The catalog item was delete.
+                        <% $c->i18n->p("barcode.helper.the_catalog_item_was_delete", "The catalog item was delete.") |h %>
                     </p>
                 </div>
             </div>
             <div class="modal-footer">
-                <button id="dismiss_deleted_message_dialog" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                <button id="dismiss_deleted_message_dialog" type="button" class="btn btn-default" data-dismiss="modal"><% $c->i18n->p("global.dataset_publish.close", "Close") |h %></button>
             </div>
         </div>
     </div>
@@ -110,19 +110,19 @@ $main_page
     <div class="modal-dialog" role="document">
         <div class="modal-content">
             <div class="modal-header">
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                <h4 class="modal-title" id="addImageMessageDialog">Success</h4>
+                <button type="button" class="close" data-dismiss="modal" aria-label="<% $c->i18n->p("global.dataset_publish.close", "Close") |h %>"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="addImageMessageDialog"><% $c->i18n->p("cross.ui.success", "Success") |h %></h4>
             </div>
             <div class="modal-body">
                 <div class="container-fluid">
                     <p>
                         <span class="ui-icon ui-icon-circle-check" style="float: left; margin: 0 7px 50px 0;"></span>
-                        The image was added successfully.
+                        <% $c->i18n->p("barcode.helper.the_image_was_added_successfully", "The image was added successfully.") |h %>
                     </p>
                 </div>
             </div>
             <div class="modal-footer">
-                <button id="dismiss_add_image_message_dialog" type="button" class="btn btn-default" data-dismiss="modal">Close & Reload</button>
+                <button id="dismiss_add_image_message_dialog" type="button" class="btn btn-default" data-dismiss="modal"><% $c->i18n->p("seedlots.ui.close_reload", "Close & Reload") |h %></button>
             </div>
         </div>
     </div>
@@ -132,19 +132,19 @@ $main_page
     <div class="modal-dialog" role="document">
         <div class="modal-content">
             <div class="modal-header">
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                <h4 class="modal-title" id="removeImageMessageDialog">Success</h4>
+                <button type="button" class="close" data-dismiss="modal" aria-label="<% $c->i18n->p("global.dataset_publish.close", "Close") |h %>"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="removeImageMessageDialog"><% $c->i18n->p("cross.ui.success", "Success") |h %></h4>
             </div>
             <div class="modal-body">
                 <div class="container-fluid">
                     <p>
                         <span class="ui-icon ui-icon-circle-check" style="float: left; margin: 0 7px 50px 0;"></span>
-                        The image was removed from the catalog item.
+                        <% $c->i18n->p("barcode.helper.the_image_was_removed_from_the_catalog_item", "The image was removed from the catalog item.") |h %>
                     </p>
                 </div>
             </div>
             <div class="modal-footer">
-                <button id="dismiss_remove_image_message_dialog" type="button" class="btn btn-default" data-dismiss="modal">Close & Reload</button>
+                <button id="dismiss_remove_image_message_dialog" type="button" class="btn btn-default" data-dismiss="modal"><% $c->i18n->p("seedlots.ui.close_reload", "Close & Reload") |h %></button>
             </div>
         </div>
     </div>
@@ -165,21 +165,21 @@ jQuery(document).ready( function() {
             'searching': false,
             'ajax': '/ajax/catalog/image_list/' + <% $item_id %>,
             'columns': [
-                { title: "Name", "data": "image_name" },
-                { title: "Image", "data": "small_image" },
-                { title: "Description", "data": "image_description"},
-                { title: "Add or Remove Image", "data": "null", "render": function ( data, type, row ) {
+                { title: jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("global.library_search.name", "Name") : "Name")).html(), "data": "image_name" },
+                { title: jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("barcode.helper.image", "Image") : "Image")).html(), "data": "small_image" },
+                { title: jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("global.dataset_cxgn_dataset.table.description", "Description") : "Description")).html(), "data": "image_description"},
+                { title: jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("barcode.helper.add_or_remove_image", "Add or Remove Image") : "Add or Remove Image")).html(), "data": "null", "render": function ( data, type, row ) {
                     if (row.image_id == selected_image_id) {
-                        return "<a onclick='removeImage()' >Remove</a>"
+                        return ("<a onclick='removeImage()' >" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("global.dataset_publish.action.remove", "Remove") : "Remove")).html() + "</a>")
                     } else {
-                        return "<a onclick='addImage(\""+row.image_id+"\")' >Add</a>"
+                        return "<a onclick='addImage(\""+row.image_id+("\")' >" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("global.search_wizard.add", "Add") : "Add")).html() + "</a>")
                     }
                 }},
             ],
     });
 
     jQuery('#delete_catalog_item_button').click( function() {
-        var response = confirm('Really delete this catalog item? This action cannot be undone.');
+        var response = confirm((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("barcode.helper.really_delete_this_catalog_item_this_action_cannot_be_undone", "Really delete this catalog item? This action cannot be undone.") : 'Really delete this catalog item? This action cannot be undone.'));
         if (response) {
             jQuery.ajax({
                 url: '/ajax/catalog/delete',
@@ -239,7 +239,7 @@ function addImage(image_id){
         },
         error: function(response){
             jQuery('#working_modal').modal('hide');
-            alert('An error occurred adding image');
+            alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("barcode.helper.an_error_occurred_adding_image", "An error occurred adding image") : 'An error occurred adding image'));
         }
     });
 
@@ -279,7 +279,7 @@ function removeImage(){
         },
         error: function(response){
             jQuery('#working_modal').modal('hide');
-            alert('An error occurred removing image');
+            alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("barcode.helper.an_error_occurred_removing_image", "An error occurred removing image") : 'An error occurred removing image'));
         }
     });
 
@@ -291,3 +291,7 @@ function removeImage(){
 
 
 </script>
+
+<%once>
+use HTML::Entities ();
+</%once>

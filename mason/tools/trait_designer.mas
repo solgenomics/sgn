@@ -3,28 +3,28 @@
 </%args>
 
 <div style="text-align: center; margin: 2em 0">
-   <h2 style="margin-bottom: 1em">Design new traits</h2>
+   <h2 style="margin-bottom: 1em"><% $c->i18n->p("phenotype.root.design_new_traits", "Design new traits") |h %></h2>
 
-   <h4> Check the <a href='/search/traits'>trait search page</a> to see if your trait has already been made before designing new traits.</h4>
+   <h4> <% $c->i18n->p("phenotype.root.check_the", "Check the") |h %> <a href='/search/traits'><% $c->i18n->p("phenotype.root.trait_search_page", "trait search page") |h %></a> <% $c->i18n->p("phenotype.root.to_see_if_your_trait_has_already_been_made_before", "to see if your trait has already been made before designing new traits.") |h %></h4>
 
     <br>
 
    <div class="container-fluid">
         <form class="form-horizontal" role="form" method="post" id="new_trait_design_form" name="new_trait_design_form">
         <div class="form-group">
-                <label class="col-sm-3 control-label"> New trait name: </label>
+                <label class="col-sm-3 control-label"> <% $c->i18n->p("phenotype.root.new_trait_name", "New trait name:") |h %> </label>
                 <div class="col-sm-9">
-                    <input style="width:70%;" class="form-control" id="new_trait_name" name="new_trait_name" type="text" placeholder="Pipes (|)  will be removed from name."/>
+                    <input style="width:70%;" class="form-control" id="new_trait_name" name="new_trait_name" type="text" placeholder="<% $c->i18n->p("phenotype.root.pipes_will_be_removed_from_name", "Pipes (|)  will be removed from name.") |h %>"/>
                 </div>
             </div>
             <div class="form-group">
-                <label class="col-sm-3 control-label">Definition:</label>
+                <label class="col-sm-3 control-label"><% $c->i18n->p("phenotype.root.definition.17f9df6", "Definition:") |h %></label>
                 <div class="col-sm-9">
-                    <textarea style="width:70%;" class="form-control" id="new_trait_definition" name="new_trait_definition" placeholder="Make it descriptive. Be sure to describe category meanings if using categorical data."></textarea>
+                    <textarea style="width:70%;" class="form-control" id="new_trait_definition" name="new_trait_definition" placeholder="<% $c->i18n->p("phenotype.root.make_it_descriptive_be_sure_to_describe_category_meanings_if", "Make it descriptive. Be sure to describe category meanings if using categorical data.") |h %>"></textarea>
                 </div>
             </div>
             <div class="form-group">
-                <label class="col-sm-3 control-label"><span class="glyphicon glyphicon-question-sign" style="color:blue;font-size:18px" title="The ontology that the new term will belong to. This is separate from the parent term(s) that the new term is chained to."></span>&nbsp;Trait ontology:</label>
+                <label class="col-sm-3 control-label"><span class="glyphicon glyphicon-question-sign" style="color:blue;font-size:18px" title="<% $c->i18n->p("phenotype.root.the_ontology_that_the_new_term_will_belong_to_this", "The ontology that the new term will belong to. This is separate from the parent term(s) that the new term is chained to.") |h %>"></span>&nbsp;<% $c->i18n->p("phenotype.root.trait_ontology", "Trait ontology:") |h %></label>
                 <div class="col-sm-9">
                     <select style="width:70%;" class="form-control" id="new_trait_ontology_select" name="new_trait_ontology_select" type="select">
 %                   foreach my $ontology_db_name (grep { $_ } map { $_ =~ s/^\s+|\s+$//gr } split(",", $db_names)) {
@@ -34,55 +34,55 @@
                 </div>
             </div>
             <div class="form-group">
-                <label class="col-sm-3 control-label">Trait format:</label>
+                <label class="col-sm-3 control-label"><% $c->i18n->p("phenotype.root.trait_format", "Trait format:") |h %></label>
                 <div class="col-sm-9">
                     <select style="width:70%;" class="form-control" id="new_trait_format_select" name="new_trait_format_select" type="select">
-                        <option value="numeric" selected>Numeric</option>
-                        <option value="categorical">Categorical</option>
-                        <option value="percent">Percent</option>
-                        <option value="boolean">Boolean</option>
-                        <option value="date">Date</option>
-                        <option value="text">Text</option>
-                        <option value="counter">Counter</option>
-                        <option value="ontology">Ontology (parent to child terms)</option>
+                        <option value="numeric" selected><% $c->i18n->p("phenotype.root.numeric", "Numeric") |h %></option>
+                        <option value="categorical"><% $c->i18n->p("phenotype.root.categorical", "Categorical") |h %></option>
+                        <option value="percent"><% $c->i18n->p("phenotype.root.percent", "Percent") |h %></option>
+                        <option value="boolean"><% $c->i18n->p("phenotype.root.boolean", "Boolean") |h %></option>
+                        <option value="date"><% $c->i18n->p("global.file_dump_share_files.date", "Date") |h %></option>
+                        <option value="text"><% $c->i18n->p("lists_datasets.bulk.text", "Text") |h %></option>
+                        <option value="counter"><% $c->i18n->p("phenotype.root.counter", "Counter") |h %></option>
+                        <option value="ontology"><% $c->i18n->p("phenotype.root.ontology_parent_to_child_terms", "Ontology (parent to child terms)") |h %></option>
                     </select>
                 </div>
             </div>
             <div class="form-group" id="new_trait_repeat_select_container">
-                <label class="col-sm-3 control-label">Measurement type:</label>
+                <label class="col-sm-3 control-label"><% $c->i18n->p("phenotype.root.measurement_type", "Measurement type:") |h %></label>
                 <div class="col-sm-9">
                     <select style="width:70%;" class="form-control" id="new_trait_repeat_select" name="new_trait_repeat_select" type="select">
-                        <option value="single" selected>Single measurement</option>
-                        <option value="multiple">Repeated measurements</option>
-                        <option value="time_series">Time series</option>
+                        <option value="single" selected><% $c->i18n->p("phenotype.root.single_measurement", "Single measurement") |h %></option>
+                        <option value="multiple"><% $c->i18n->p("phenotype.root.repeated_measurements", "Repeated measurements") |h %></option>
+                        <option value="time_series"><% $c->i18n->p("phenotype.root.time_series", "Time series") |h %></option>
                     </select>
                 </div>
             </div>
             <div class="form-group" id="new_trait_default_value_container">
-                <label class="col-sm-3 control-label" id="new_trait_default_value_label">Default value:</label>
+                <label class="col-sm-3 control-label" id="new_trait_default_value_label"><% $c->i18n->p("phenotype.root.default_value", "Default value:") |h %></label>
                 <div class="col-sm-9">
-                    <input style="width:70%;" class="form-control" id="new_trait_default_value" name="new_trait_default_value" type="text" placeholder="(Optional)"/>
+                    <input style="width:70%;" class="form-control" id="new_trait_default_value" name="new_trait_default_value" type="text" placeholder="<% $c->i18n->p("phenotype.root.optional", "(Optional)") |h %>"/>
                 </div>
             </div>
             <div class="form-group" id="new_trait_minimum_value_container">
-                <label class="col-sm-3 control-label">Minimum value:</label>
+                <label class="col-sm-3 control-label"><% $c->i18n->p("phenotype.root.minimum_value", "Minimum value:") |h %></label>
                 <div class="col-sm-9">
-                    <input style="width:70%;" class="form-control" id="new_trait_min_value" name="new_trait_min_value" type="text" placeholder="(Optional)"/>
+                    <input style="width:70%;" class="form-control" id="new_trait_min_value" name="new_trait_min_value" type="text" placeholder="<% $c->i18n->p("phenotype.root.optional", "(Optional)") |h %>"/>
                 </div>
             </div>
             <div class="form-group" id="new_trait_maximum_value_container">
-                <label class="col-sm-3 control-label">Maximum value:</label>
+                <label class="col-sm-3 control-label"><% $c->i18n->p("phenotype.root.maximum_value", "Maximum value:") |h %></label>
                 <div class="col-sm-9">
-                    <input style="width:70%;" class="form-control" id="new_trait_max_value" name="new_trait_max_value" type="text" placeholder="(Optional)"/>
+                    <input style="width:70%;" class="form-control" id="new_trait_max_value" name="new_trait_max_value" type="text" placeholder="<% $c->i18n->p("phenotype.root.optional", "(Optional)") |h %>"/>
                 </div>
             </div>
             <div class="form-group" id="new_trait_add_categories_container" style="display:none;">
-                <label class="col-sm-3 control-label">Add categories:</label>
+                <label class="col-sm-3 control-label"><% $c->i18n->p("phenotype.root.add_categories", "Add categories:") |h %></label>
                 <div class="col-sm-9">
                     <table style="width:70%;">
                         <tr>
-                            <td><input class="form-control" id="new_trait_add_category" name="new_trait_add_category" type="text" placeholder="Optional. No special characters."/></td>
-                            <td style="width:25%"><input  class="form-control" id="new_trait_category_ordinal" name="new_trait_category_ordinal" type="number" placeholder="Ordinate"></td>
+                            <td><input class="form-control" id="new_trait_add_category" name="new_trait_add_category" type="text" placeholder="<% $c->i18n->p("phenotype.root.optional_no_special_characters", "Optional. No special characters.") |h %>"/></td>
+                            <td style="width:25%"><input  class="form-control" id="new_trait_category_ordinal" name="new_trait_category_ordinal" type="number" placeholder="<% $c->i18n->p("phenotype.root.ordinate", "Ordinate") |h %>"></td>
                             <td><button id="new_trait_add_category_btn" class="btn btn-small btn-success">+</button></td>
                         </tr>
                     </table>
@@ -92,12 +92,11 @@
                 </div>
             </div>
             <div class="form-group" id="chain_parent_term_container">
-                <label class="col-sm-3 control-label" id="chain_parent_term"><span class="glyphicon glyphicon-question-sign" style="color:blue;font-size:18px" title="Should not be a variable term.
-Will be the trait root term by default if none are added."></span>&nbsp;Chain to existing term(s):</label>
+                <label class="col-sm-3 control-label" id="chain_parent_term"><span class="glyphicon glyphicon-question-sign" style="color:blue;font-size:18px" title="<% $c->i18n->p("phenotype.root.should_not_be_a_variable_term_will_be_the_trait", "Should not be a variable term.\nWill be the trait root term by default if none are added.") |h %>"></span>&nbsp;<% $c->i18n->p("phenotype.root.chain_to_existing_term_s", "Chain to existing term(s):") |h %></label>
                 <div class="col-sm-9">
                     <table style="width:70%;">
                         <tr>
-                            <td><input class="form-control" id="new_trait_parent_term" name="new_trait_parent_term" type="text" placeholder="Full name, as in 'CGIAR cassava trait ontology|CO_334:0000000'"/></td>
+                            <td><input class="form-control" id="new_trait_parent_term" name="new_trait_parent_term" type="text" placeholder="<% $c->i18n->p("phenotype.root.full_name_as_in_cgiar_cassava_trait_ontology_co_334", "Full name, as in 'CGIAR cassava trait ontology|CO_334:0000000'") |h %>"/></td>
                             <td><button id="new_trait_add_parent_btn" class="btn btn-small btn-success">+</button></td>
                         </tr>
                     </table>
@@ -106,7 +105,7 @@ Will be the trait root term by default if none are added."></span>&nbsp;Chain to
                 </div>
             </div>
         </form>
-        <button class="btn btn-primary" id="new_trait_submit_btn">Submit</button>
+        <button class="btn btn-primary" id="new_trait_submit_btn"><% $c->i18n->p("global.manage_file_share_dump.submit", "Submit") |h %></button>
     </div>
 </div>
 
@@ -114,7 +113,7 @@ Will be the trait root term by default if none are added."></span>&nbsp;Chain to
     <tr>
         <td>
             <select id="trait_ontology_download_select" class="form-control">
-                <option value="">Download trait ontology...</option>
+                <option value=""><% $c->i18n->p("phenotype.root.download_trait_ontology", "Download trait ontology...") |h %></option>
             </select>
         </td>
         <td>
@@ -137,7 +136,7 @@ Will be the trait root term by default if none are added."></span>&nbsp;Chain to
 % 
 % my $root_nodes = $db_names =~ s/,/ /gr;
 % 
-<&| /page/info_section.mas, title=>"Trait terms", collapsible=>1 &>
+<&| /page/info_section.mas, anchor_title => "Trait terms", title=>HTML::Entities::encode_entities($c->i18n->p("phenotype.root.trait_terms", "Trait terms")), collapsible=>1 &>
     <& /ontology/browser.mas, root_nodes=>$root_nodes, expand=>0 &>
 </&>
 
@@ -193,14 +192,14 @@ Will be the trait root term by default if none are added."></span>&nbsp;Chain to
                     if (response.error) {
                         alert(response.error);
                     } else {
-                        alert("New trait saved.");
+                        alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("phenotype.root.new_trait_saved", "New trait saved.") : "New trait saved."));
                         window.location.reload();
                     }
                 },
                 error: function(response) {
                     jQuery('#working_modal').modal("hide");
                     console.log(response);
-                    alert("An error occurred, check console.");
+                    alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("phenotype.root.an_error_occurred_check_console", "An error occurred, check console.") : "An error occurred, check console."));
                 }
             });
         });
@@ -234,7 +233,7 @@ Will be the trait root term by default if none are added."></span>&nbsp;Chain to
                 jQuery('#new_trait_default_value_container').show();
                 jQuery('#new_trait_maximum_value_container').show();
                 jQuery('#new_trait_add_categories_container').hide();
-                jQuery('#new_trait_default_value_label').html("Default value:");
+                jQuery('#new_trait_default_value_label').html((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("phenotype.root.default_value", "Default value:") : "Default value:"));
                 jQuery('#new_trait_default_value').val('');
                 jQuery('#new_trait_min_value').val('');
                 jQuery('#new_trait_max_value').val('');
@@ -244,7 +243,7 @@ Will be the trait root term by default if none are added."></span>&nbsp;Chain to
                 jQuery('#new_trait_default_value_container').show();
                 jQuery('#new_trait_maximum_value_container').hide();
                 jQuery('#new_trait_add_categories_container').show();
-                jQuery('#new_trait_default_value_label').html("Default category:");
+                jQuery('#new_trait_default_value_label').html((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("phenotype.root.default_category", "Default category:") : "Default category:"));
                 jQuery('#new_trait_default_value').val('');
                 jQuery('#new_trait_min_value').val('');
                 jQuery('#new_trait_max_value').val('');
@@ -263,7 +262,7 @@ Will be the trait root term by default if none are added."></span>&nbsp;Chain to
                 jQuery('#new_trait_default_value_container').show();
                 jQuery('#new_trait_maximum_value_container').show();
                 jQuery('#new_trait_add_categories_container').hide();
-                jQuery('#new_trait_default_value_label').html("Default value:");
+                jQuery('#new_trait_default_value_label').html((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("phenotype.root.default_value", "Default value:") : "Default value:"));
                 jQuery('#new_trait_default_value').val('');
                 jQuery('#new_trait_min_value').val('0');
                 jQuery('#new_trait_max_value').val('100');
@@ -273,7 +272,7 @@ Will be the trait root term by default if none are added."></span>&nbsp;Chain to
                 jQuery('#new_trait_default_value_container').show();
                 jQuery('#new_trait_maximum_value_container').show();
                 jQuery('#new_trait_add_categories_container').hide();
-                jQuery('#new_trait_default_value_label').html("Default value:");
+                jQuery('#new_trait_default_value_label').html((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("phenotype.root.default_value", "Default value:") : "Default value:"));
                 jQuery('#new_trait_default_value').val('');
                 jQuery('#new_trait_min_value').val('0');
                 jQuery('#new_trait_max_value').val('');
@@ -283,7 +282,7 @@ Will be the trait root term by default if none are added."></span>&nbsp;Chain to
                 jQuery('#new_trait_default_value_container').show();
                 jQuery('#new_trait_maximum_value_container').show();
                 jQuery('#new_trait_add_categories_container').hide();
-                jQuery('#new_trait_default_value_label').html("Default value:");
+                jQuery('#new_trait_default_value_label').html((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("phenotype.root.default_value", "Default value:") : "Default value:"));
                 jQuery('#new_trait_default_value').val('');
                 jQuery('#new_trait_min_value').val('0');
                 jQuery('#new_trait_max_value').val('1');
@@ -315,12 +314,12 @@ Will be the trait root term by default if none are added."></span>&nbsp;Chain to
             let new_ordinal = jQuery('#new_trait_category_ordinal').val();
 
             if (! new_ordinal) {
-                alert("Assign an ordinal value to the new category.");
+                alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("phenotype.root.assign_an_ordinal_value_to_the_new_category", "Assign an ordinal value to the new category.") : "Assign an ordinal value to the new category."));
                 return;
             }
 
             if (new_category.includes('/') || new_category.includes('=')){
-                alert("No special characters.");
+                alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("phenotype.root.no_special_characters", "No special characters.") : "No special characters."));
                 return;
             }
 
@@ -401,7 +400,7 @@ Will be the trait root term by default if none are added."></span>&nbsp;Chain to
             let db_name = jQuery('#trait_ontology_download_select').val();
 
             if (!db_name || db_name == null || db_name == "") {
-                alert("Please select an ontology.");
+                alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("phenotype.root.please_select_an_ontology", "Please select an ontology.") : "Please select an ontology."));
                 return;
             }
 
@@ -422,7 +421,7 @@ Will be the trait root term by default if none are added."></span>&nbsp;Chain to
                 })
                 .catch(error => {
                     jQuery('#working_modal').modal("hide");
-                    alert("An error occurred: " + error);
+                    alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("trial.subplots.error_prefix", "An error occurred: ") : "An error occurred: ") + error);
                     console.error('Download failed:', error)
                 });
         });
@@ -448,3 +447,7 @@ Will be the trait root term by default if none are added."></span>&nbsp;Chain to
         }
     });
 </script>
+
+<%once>
+use HTML::Entities ();
+</%once>

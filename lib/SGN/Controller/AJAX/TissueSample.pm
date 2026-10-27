@@ -18,6 +18,7 @@ use JSON;
 use CXGN::People::Login;
 use CXGN::Trial::Search;
 use JSON;
+use SGN::I18N ();
 
 BEGIN { extends 'Catalyst::Controller::REST' }
 
@@ -32,6 +33,7 @@ sub tissue_sample_field_trials : Path('/ajax/tissue_samples/field_trials') : Act
 sub tissue_sample_field_trials_GET : Args(0) {
     my $self = shift;
     my $c = shift;
+    my SGN::I18N $i18n = SGN::I18N::translate($c);
     my $bcs_schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
 
     my $trial_search = CXGN::Trial::Search->new({
@@ -59,7 +61,7 @@ sub tissue_sample_field_trials_GET : Args(0) {
             $_->{design},
             $_->{project_planting_date},
             $_->{project_harvest_date},
-            "<a class='btn btn-sm btn-default' href='/breeders/trial/$_->{trial_id}/download/layout?format=csv&dataLevel=field_trial_tissue_samples&selected_columns=$selected_columns_json'>Download Layout</a>"
+            "<a class='btn btn-sm btn-default' href='/breeders/trial/$_->{trial_id}/download/layout?format=csv&dataLevel=field_trial_tissue_samples&selected_columns=$selected_columns_json'>".SGN::I18N::translate($i18n, 'genotype.sample.download_layout', 'Download Layout', undef, {entities => '<>&'})."</a>"
           ];
     }
     #print STDERR Dumper \@result;
@@ -72,6 +74,7 @@ sub tissue_sample_genotyping_trials : Path('/ajax/tissue_samples/genotyping_tria
 sub tissue_sample_genotyping_trials_GET : Args(0) {
     my $self = shift;
     my $c = shift;
+    my SGN::I18N $i18n = SGN::I18N::translate($c);
     my $bcs_schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
 
     my $trial_search = CXGN::Trial::Search->new({
@@ -96,7 +99,7 @@ sub tissue_sample_genotyping_trials_GET : Args(0) {
             $_->{genotyping_facility},
             $_->{genotyping_plate_format},
             $_->{genotyping_plate_sample_type},
-            "<a class='btn btn-sm btn-default' href='/breeders/trial/$_->{trial_id}/download/layout?format=csv&dataLevel=plate'>Download Layout</a>"
+            "<a class='btn btn-sm btn-default' href='/breeders/trial/$_->{trial_id}/download/layout?format=csv&dataLevel=plate'>".SGN::I18N::translate($i18n, 'genotype.sample.download_layout', 'Download Layout', undef, {entities => '<>&'})."</a>"
           ];
     }
     #print STDERR Dumper \@result;
@@ -109,6 +112,7 @@ sub tissue_sample_sampling_trials : Path('/ajax/tissue_samples/sampling_trials')
 sub tissue_sample_sampling_trials_GET : Args(0) {
     my $self = shift;
     my $c = shift;
+    my SGN::I18N $i18n = SGN::I18N::translate($c);
     my $bcs_schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
 
     my $trial_search = CXGN::Trial::Search->new({
@@ -132,7 +136,7 @@ sub tissue_sample_sampling_trials_GET : Args(0) {
             $_->{location_name},
             $_->{sampling_facility},
             $_->{sampling_trial_sample_type},
-            "<a class='btn btn-sm btn-default' href='/breeders/trial/$_->{trial_id}/download/layout?format=csv&dataLevel=samplingtrial'>Download Layout</a>"
+            "<a class='btn btn-sm btn-default' href='/breeders/trial/$_->{trial_id}/download/layout?format=csv&dataLevel=samplingtrial'>".SGN::I18N::translate($i18n, 'genotype.sample.download_layout', 'Download Layout', undef, {entities => '<>&'})."</a>"
           ];
     }
     #print STDERR Dumper \@result;

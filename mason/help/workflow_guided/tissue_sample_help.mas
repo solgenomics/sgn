@@ -7,49 +7,49 @@
     <div class="modal-dialog modal-xl" role="document">
         <div class="modal-content">
             <div class="modal-header">
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                <h4 class="modal-title" id="tissueSampleHelpDialog">Tissue Sampling</h4>
+                <button type="button" class="close" data-dismiss="modal" aria-label="<% $c->i18n->p("help.tissue.aria_close", "Close") |h %>"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="tissueSampleHelpDialog"><% $c->i18n->p("help.tissue.title", "Tissue Sampling") |h %></h4>
             </div>
             <div class="modal-body">
 
                 <div class="container-fluid">
 
                     <&| /util/workflow.mas, id=> "tissue_sample_help_workflow" &>
-                        <&| /util/workflow.mas:step, title=> "Intro" &>
-                            <& /page/page_title.mas, title=>"This workflow will guide you through tissue sampling an experiment" &>
-                            <p>Tissue samples collected from the field are linked to a single plant, which is in turn linked to a single plot.</p>
-                            <p>Many tissue samples can be created for each plant.</p>
-                            <p>Each tissue sample has a globally unique name.</p>
+                        <&| /util/workflow.mas:step, title=> $c->i18n->p("help.tissue.step.intro", "Intro") &>
+                            <& /page/page_title.mas, title=>HTML::Entities::encode_entities($c->i18n->p("help.tissue.intro.title", "This workflow will guide you through tissue sampling an experiment")) &>
+                            <p><% $c->i18n->p("help.tissue.intro.linkage", "Tissue samples collected from the field are linked to a single plant, which is in turn linked to a single plot.") |h %></p>
+                            <p><% $c->i18n->p("help.tissue.intro.many", "Many tissue samples can be created for each plant.") |h %></p>
+                            <p><% $c->i18n->p("help.tissue.intro.unique", "Each tissue sample has a globally unique name.") |h %></p>
                             <br/>
-                            <p>A unique tissue sample is present in each well of a genotyping plate (96 or 384 well plates).</p>
-                            <p>The tissue sample in a 96 well plate can originate from another tissue sample name, plant name, plot name, or accession name.</p>
+                            <p><% $c->i18n->p("help.tissue.intro.well", "A unique tissue sample is present in each well of a genotyping plate (96 or 384 well plates).") |h %></p>
+                            <p><% $c->i18n->p("help.tissue.intro.origin", "The tissue sample in a 96 well plate can originate from another tissue sample name, plant name, plot name, or accession name.") |h %></p>
 
                             <br/><br/>
                             <center>
-                            <button class="btn btn-primary" onclick="Workflow.complete(this); return false;">Go to Next Step</button>
+                            <button class="btn btn-primary" onclick="Workflow.complete(this); return false;"><% $c->i18n->p("help.tissue.next", "Go to Next Step") |h %></button>
                             </center>
                         </&>
 
-                        <&| /util/workflow.mas:step, title=> "Sampling Level" &>
-                            <& /page/page_title.mas, title=>"At which level do you plan to keep track of your sampling?" &>
+                        <&| /util/workflow.mas:step, title=> $c->i18n->p("help.tissue.step.level", "Sampling Level") &>
+                            <& /page/page_title.mas, title=>HTML::Entities::encode_entities($c->i18n->p("help.tissue.level.question", "At which level do you plan to keep track of your sampling?")) &>
 
-                            <input type="radio" name="tissue_sample_help_select_level" value="accession">&nbsp;&nbsp;&nbsp;Accession Level: The sample is not from a field trial entity and only the accession name is known.<br/>
-                            <input type="radio" name="tissue_sample_help_select_level" value="plot">&nbsp;&nbsp;&nbsp;Plot Level: Each plot in the field has a unique identifier, ideally with a barcode label.<br/>
-                            <input type="radio" name="tissue_sample_help_select_level" value="plant">&nbsp;&nbsp;&nbsp;Plant Level: Each plant in the field has a unique identifier, ideally with a barcode label.<br/>
-                            <input type="radio" name="tissue_sample_help_select_level" value="tissue_sample">&nbsp;&nbsp;&nbsp;Tissue Sample Level: Each tissue sample collected from the field has a unique identifier, ideally with a barcode label.
+                            <input type="radio" name="tissue_sample_help_select_level" value="accession">&nbsp;&nbsp;&nbsp;<% $c->i18n->p("help.tissue.level.accession", "Accession Level:") |h %> <% $c->i18n->p("help.tissue.level.accession_desc", "The sample is not from a field trial entity and only the accession name is known.") |h %><br/>
+                            <input type="radio" name="tissue_sample_help_select_level" value="plot">&nbsp;&nbsp;&nbsp;<% $c->i18n->p("help.tissue.level.plot", "Plot Level:") |h %> <% $c->i18n->p("help.tissue.level.plot_desc", "Each plot in the field has a unique identifier, ideally with a barcode label.") |h %><br/>
+                            <input type="radio" name="tissue_sample_help_select_level" value="plant">&nbsp;&nbsp;&nbsp;<% $c->i18n->p("help.tissue.level.plant", "Plant Level:") |h %> <% $c->i18n->p("help.tissue.level.plant_desc", "Each plant in the field has a unique identifier, ideally with a barcode label.") |h %><br/>
+                            <input type="radio" name="tissue_sample_help_select_level" value="tissue_sample">&nbsp;&nbsp;&nbsp;<% $c->i18n->p("help.tissue.level.tissue_sample", "Tissue Sample Level:") |h %> <% $c->i18n->p("help.tissue.level.sample_desc", "Each tissue sample collected from the field has a unique identifier, ideally with a barcode label.") |h %>
 
                             <br/><br/>
                             <center>
-                                <button class="btn btn-primary" id="tissue_sample_help_select_level_submit">Go to Next Step</button>
+                                <button class="btn btn-primary" id="tissue_sample_help_select_level_submit"><% $c->i18n->p("help.tissue.next", "Go to Next Step") |h %></button>
                             </center>
                         </&>
-                        <&| /util/workflow.mas:step, title=> "Select a field trial" &>
-                            <& /page/page_title.mas, title=>"Select a field trial" &>
+                        <&| /util/workflow.mas:step, title=> $c->i18n->p("help.tissue.field_trial_step", "Select a field trial") &>
+                            <& /page/page_title.mas, title=>HTML::Entities::encode_entities($c->i18n->p("help.tissue.field_trial_step", "Select a field trial")) &>
 
                             <div id="tissue_sample_help_trial_select_not_relevant" style="display:none">
-                                <h4>Field trial is not relevant for the type of tissue sampling you selected. Go to next step.</h4>
+                                <h4><% $c->i18n->p("help.tissue.field_trial_irrelevant", "Field trial is not relevant for the type of tissue sampling you selected. Go to next step.") |h %></h4>
                                 <center>
-                                <button class="btn btn-primary" onclick="Workflow.complete(this); return false;">Go to Next Step</button>
+                                <button class="btn btn-primary" onclick="Workflow.complete(this); return false;"><% $c->i18n->p("help.tissue.next", "Go to Next Step") |h %></button>
                                 </center>
                             </div>
                             <div id="tissue_sample_help_trial_select_relevant" style="display:none">
@@ -59,18 +59,18 @@
                                             <table id="tissue_sample_help_field_search_results" class="table table-hover table-striped">
                                                 <thead>
                                                     <tr>
-                                                        <th>Select</th>
-                                                        <th>Trial name</th>
-                                                        <th>Description</th>
-                                                        <th>Breeding program</th>
-                                                        <th>Folder</th>
-                                                        <th>Year</th>
-                                                        <th>Location</th>
-                                                        <th>Trial type</th>
-                                                        <th>Design</th>
-                                                        <th>Planting Date</th>
-                                                        <th>Harvest Date</th>
-                                                        <th>Download</th>
+                                                        <th><% $c->i18n->p("help.tissue.table.select", "Select") |h %></th>
+                                                        <th><% $c->i18n->p("help.tissue.table.trial_name", "Trial name") |h %></th>
+                                                        <th><% $c->i18n->p("help.tissue.table.description", "Description") |h %></th>
+                                                        <th><% $c->i18n->p("help.tissue.table.breeding_program", "Breeding program") |h %></th>
+                                                        <th><% $c->i18n->p("help.tissue.table.folder", "Folder") |h %></th>
+                                                        <th><% $c->i18n->p("help.tissue.table.year", "Year") |h %></th>
+                                                        <th><% $c->i18n->p("help.tissue.table.location", "Location") |h %></th>
+                                                        <th><% $c->i18n->p("help.tissue.table.trial_type", "Trial type") |h %></th>
+                                                        <th><% $c->i18n->p("help.tissue.table.design", "Design") |h %></th>
+                                                        <th><% $c->i18n->p("help.tissue.table.planting_date", "Planting Date") |h %></th>
+                                                        <th><% $c->i18n->p("help.tissue.table.harvest_date", "Harvest Date") |h %></th>
+                                                        <th><% $c->i18n->p("help.tissue.table.download", "Download") |h %></th>
                                                     </tr>
                                                 </thead>
                                             </table>
@@ -80,67 +80,67 @@
 
                                 <br/><br/>
                                 <center>
-                                    <button class="btn btn-primary" id="tissue_sample_help_select_trial_submit">Go to Next Step</button>
+                                    <button class="btn btn-primary" id="tissue_sample_help_select_trial_submit"><% $c->i18n->p("help.tissue.next", "Go to Next Step") |h %></button>
                                 </center>
                             </div>
 
                         </&>
-                        <&| /util/workflow.mas:step, title=> "Plant Entries" &>
-                            <& /page/page_title.mas, title=>"Plant entries in your field trial" &>
+                        <&| /util/workflow.mas:step, title=> $c->i18n->p("help.tissue.plant_entries_step", "Plant Entries") &>
+                            <& /page/page_title.mas, title=>HTML::Entities::encode_entities($c->i18n->p("help.tissue.plant_entries_title", "Plant entries in your field trial")) &>
 
                             <div id="tissue_sample_help_plant_entries_not_relevant" style="display:none">
-                                <h4>Plant entries not relevant for the type of tissue sampling you selected. Go to next step.</h4>
+                                <h4><% $c->i18n->p("help.tissue.plant_entries_irrelevant", "Plant entries not relevant for the type of tissue sampling you selected. Go to next step.") |h %></h4>
                                 <center>
-                                <button class="btn btn-primary" onclick="Workflow.complete(this); return false;">Go to Next Step</button>
+                                <button class="btn btn-primary" onclick="Workflow.complete(this); return false;"><% $c->i18n->p("help.tissue.next", "Go to Next Step") |h %></button>
                                 </center>
                             </div>
                             <div id="tissue_sample_help_plant_entries_exist_section" style="display:none">
-                                <h4>Plant entries exist for this trial. Go to next step.</h4>
+                                <h4><% $c->i18n->p("help.tissue.plant_entries_exist", "Plant entries exist for this trial. Go to next step.") |h %></h4>
                                 <center>
-                                <button class="btn btn-primary" onclick="Workflow.complete(this); return false;">Go to Next Step</button>
+                                <button class="btn btn-primary" onclick="Workflow.complete(this); return false;"><% $c->i18n->p("help.tissue.next", "Go to Next Step") |h %></button>
                                 </center>
                             </div>
                             <div id="tissue_sample_help_plant_entries_dont_exist_section" style="display:none">
-                                <h4>Please create plant entries for this trial.</h4>
+                                <h4><% $c->i18n->p("help.tissue.create_plant_entries", "Please create plant entries for this trial.") |h %></h4>
                                 <form class="form-horizontal">
                                     <div class="form-group">
-                                        <label class="col-sm-3 control-label">Number of plants per plot: </label>
+                                        <label class="col-sm-3 control-label"><% $c->i18n->p("help.tissue.plants_per_plot", "Number of plants per plot: ") |h %></label>
                                         <div class="col-sm-9" >
                                             <input name="tissue_sample_help_plants_per_plot_num" id="tissue_sample_help_plants_per_plot_num" class="form-control" type="number" autofocus/>
                                         </div>
                                     </div>
                                     <div class="form-group">
-                                        <label class="col-sm-3 control-label">Inherits Treatment(s) From Plots: </label>
+                                        <label class="col-sm-3 control-label"><% $c->i18n->p("help.tissue.inherit_treatments", "Inherits Treatment(s) From Plots:") |h %> </label>
                                         <div class="col-sm-9" >
                                             <input name="tissue_sample_help_plants_per_plot_inherit_treatments" id="tissue_sample_help_plants_per_plot_inherit_treatments" type="checkbox" checked disabled/>
                                         </div>
                                     </div>
                                 </form><br/>
                                 <center>
-                                    <button type="button" class="btn btn-primary" id="tissue_sample_help_plants_per_plot_submit">Submit</button>
+                                    <button type="button" class="btn btn-primary" id="tissue_sample_help_plants_per_plot_submit"><% $c->i18n->p("help.tissue.submit", "Submit") |h %></button>
                                 </center>
                             </div>
 
                         </&>
-                        <&| /util/workflow.mas:step, title=> "Create Tissue Sample Entries" &>
-                            <& /page/page_title.mas, title=>"Create tissue sample entries for this trial" &>
+                        <&| /util/workflow.mas:step, title=> $c->i18n->p("help.tissue.create_samples_step", "Create Tissue Sample Entries") &>
+                            <& /page/page_title.mas, title=>HTML::Entities::encode_entities($c->i18n->p("help.tissue.create_samples_title", "Create tissue sample entries for this trial")) &>
 
                             <div id="tissue_sample_help_tissue_samples_not_relevant" style="display:none">
-                                <h4>Field trial tissue sample entries not relevant for the type of tissue sampling you selected. Go to next step.</h4>
+                                <h4><% $c->i18n->p("help.tissue.samples_irrelevant", "Field trial tissue sample entries not relevant for the type of tissue sampling you selected. Go to next step.") |h %></h4>
                                 <center>
-                                <button class="btn btn-primary" onclick="Workflow.complete(this); return false;">Go to Next Step</button>
+                                <button class="btn btn-primary" onclick="Workflow.complete(this); return false;"><% $c->i18n->p("help.tissue.next", "Go to Next Step") |h %></button>
                                 </center>
                             </div>
                             <div id="tissue_sample_help_tissue_samples_exist_section" style="display:none">
-                                <h4>Tissue sample entries exist for this trial. Go to next step.</h4>
+                                <h4><% $c->i18n->p("help.tissue.samples_exist", "Tissue sample entries exist for this trial. Go to next step.") |h %></h4>
                                 <center>
-                                <button class="btn btn-primary" onclick="Workflow.complete(this); return false;">Go to Next Step</button>
+                                <button class="btn btn-primary" onclick="Workflow.complete(this); return false;"><% $c->i18n->p("help.tissue.next", "Go to Next Step") |h %></button>
                                 </center>
                             </div>
                             <div id="tissue_sample_help_tissue_samples_relevant" style="display:none">
                                 <form class="form-horizontal" >
                                     <div class="form-group">
-                                        <label class="col-sm-3 control-label"><span title="You can use the same tissue name, e.g. root and root, more than once below. The tissue name will still be unique because of a tissue index e.g. 1 and 2 added to the end." </span><span class="glyphicon glyphicon-info-sign"></span>&nbsp;&nbsp;Number of tissue samples per plant: </span></label>
+                                        <label class="col-sm-3 control-label"><span title="<% $c->i18n->p("help.tissue.sample_name_tooltip", "You can use the same tissue name, e.g. root and root, more than once below. The tissue name will still be unique because of a tissue index e.g. 1 and 2 added to the end.") |h %>" </span><span class="glyphicon glyphicon-info-sign"></span>&nbsp;&nbsp;<% $c->i18n->p("help.tissue.samples_per_plant", "Number of tissue samples per plant: ") |h %></span></label>
                                         <div class="col-sm-9" >
                                             <input name="tissue_sample_help_tissue_samples_per_plant_num" id="tissue_sample_help_tissue_samples_per_plant_num" class="form-control" type="number" autofocus/>
                                         </div>
@@ -150,7 +150,7 @@
                                     </div>
 
                                     <div class="form-group">
-                                        <label class="col-sm-3 control-label">Inherits Treatment(s) From Plots: </label>
+                                        <label class="col-sm-3 control-label"><% $c->i18n->p("help.tissue.inherit_treatments", "Inherits Treatment(s) From Plots:") |h %> </label>
                                         <div class="col-sm-9" >
                                             <input name="tissue_sample_help_per_plant_inherit_treatments" id="tissue_sample_help_per_plant_inherit_treatments" type="checkbox" checked disabled/>
                                         </div>
@@ -158,27 +158,27 @@
                                 </form><br/>
 
                                 <center>
-                                <button type="button" class="btn btn-primary" name="tissue_sample_help_per_plant_submit" id="tissue_sample_help_per_plant_submit">Submit</button>
+                                <button type="button" class="btn btn-primary" name="tissue_sample_help_per_plant_submit" id="tissue_sample_help_per_plant_submit"><% $c->i18n->p("help.tissue.submit", "Submit") |h %></button>
                                 </center>
                             </div>
                         </&>
-                        <&| /util/workflow.mas:complete, title=> "Complete" &>
-                            <& /page/page_title.mas, title=>"Complete! You have all the entities you need to conduct your sampling." &>
+                        <&| /util/workflow.mas:complete, title=> $c->i18n->p("help.tissue.step.complete", "Complete") &>
+                            <& /page/page_title.mas, title=>HTML::Entities::encode_entities($c->i18n->p("help.tissue.complete_title", "Complete! You have all the entities you need to conduct your sampling.")) &>
                             <ul>
-                                <li>All of the entities that you want to sample are saved in the database and available to use!</li>
-                                <li>You can print barcodes for the entities you intend to sample on. These barcodes can be attached to your collection vials/containers to assist during sampling.</li>
+                                <li><% $c->i18n->p("help.tissue.complete_entities", "All of the entities that you want to sample are saved in the database and available to use!") |h %></li>
+                                <li><% $c->i18n->p("help.tissue.print_barcodes", "You can print barcodes for the entities you intend to sample on. These barcodes can be attached to your collection vials/containers to assist during sampling.") |h %></li>
                             </ul>
                             <center>
-                                <button class="btn btn-primary" onclick="final_download_layout_button_click()">Download Field Trial Layout!</button>
+                                <button class="btn btn-primary" onclick="final_download_layout_button_click()"><% $c->i18n->p("help.tissue.download_layout", "Download Field Trial Layout!") |h %></button>
                             </center>
                             <br/>
 
                             <ul>
-                                <li>After you have finished sampling, you can use these entities as source material for a genotyping plate (96 or 384 well plate). Click the button below to create a genotyping plate now, if you will create a 96 or 384 well plate.</li>
-                                <li>The Android Coordinate application can help you create 96 or 384 well plates. Alternatively you can create your plate layout in Excel and upload it.</li>
+                                <li><% $c->i18n->p("help.tissue.create_genotyping", "After you have finished sampling, you can use these entities as source material for a genotyping plate (96 or 384 well plate). Click the button below to create a genotyping plate now, if you will create a 96 or 384 well plate.") |h %></li>
+                                <li><% $c->i18n->p("help.tissue.coordinate_app", "The Android Coordinate application can help you create 96 or 384 well plates. Alternatively you can create your plate layout in Excel and upload it.") |h %></li>
                             </ul>
                             <center>
-                                <button class="btn btn-primary" name="create_genotyping_trial_link">Create Genotyping Plate Now!</button>
+                                <button class="btn btn-primary" name="create_genotyping_trial_link"><% $c->i18n->p("help.tissue.create_plate_now", "Create Genotyping Plate Now!") |h %></button>
                             </center>
                         </&>
                     </&>
@@ -186,7 +186,7 @@
                 </div>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-default" data-dismiss="modal"><% $c->i18n->p("help.tissue.close", "Close") |h %></button>
             </div>
         </div>
     </div>
@@ -216,7 +216,7 @@ jQuery(document).ready(function(){
     jQuery('#tissue_sample_help_select_level_submit').click(function(){
         selected_level = jQuery('input[name="tissue_sample_help_select_level"]:checked').val();
         if (selected_level == '' || !selected_level){
-            alert('Please select one');
+            alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("help.tissue.js.select_one", "Please select one") : "Please select one"));
         } else {
             Workflow.complete('#tissue_sample_help_select_level_submit');
             if (selected_level == 'accession'){
@@ -252,7 +252,7 @@ jQuery(document).ready(function(){
         });
         selected_level = jQuery('input[name="tissue_sample_help_select_level"]:checked').val();
         if (selected.length !== 1){
-            alert('Only select one trial!');
+            alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("help.tissue.js.only_one_trial", "Only select one trial!") : "Only select one trial!"));
         } else {
             Workflow.complete('#tissue_sample_help_select_trial_submit');
             if (selected_level == 'plot'){
@@ -309,7 +309,7 @@ jQuery(document).ready(function(){
                                     },
                                     error: function () {
                                         jQuery("#working_modal").modal("hide");
-                                        alert('An error occurred checking trial for tissue samples.');
+                                        alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("help.tissue.js.error_check_samples", "An error occurred checking trial for tissue samples.") : "An error occurred checking trial for tissue samples."));
                                     }
                                 });
                             }
@@ -322,7 +322,7 @@ jQuery(document).ready(function(){
                     },
                     error: function () {
                         jQuery("#working_modal").modal("hide");
-                        alert('An error occurred checking trial for plants.');
+                        alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("help.tissue.js.error_check_plants", "An error occurred checking trial for plants.") : "An error occurred checking trial for plants."));
                     }
                 });
             }
@@ -352,7 +352,7 @@ jQuery(document).ready(function(){
                     alert(response.error);
                 }
                 else {
-                    alert("Successfully created plant entries.");
+                    alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("help.tissue.js.success_plants", "Successfully created plant entries.") : "Successfully created plant entries."));
                     Workflow.complete('#tissue_sample_help_plants_per_plot_submit');
                     if (selected_level == 'plant'){
                         jQuery('#tissue_sample_help_tissue_samples_not_relevant').show();
@@ -384,7 +384,7 @@ jQuery(document).ready(function(){
                             },
                             error: function () {
                                 jQuery("#working_modal").modal("hide");
-                                alert('An error occurred checking trial for tissue samples.');
+                                alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("help.tissue.js.error_check_samples", "An error occurred checking trial for tissue samples.") : "An error occurred checking trial for tissue samples."));
                             }
                         });
                     }
@@ -392,7 +392,7 @@ jQuery(document).ready(function(){
             },
             error: function(response) {
                 jQuery("#working_modal").modal("hide");
-                alert("An error occurred saving plant entries");
+                alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("help.tissue.js.error_save_plants", "An error occurred saving plant entries") : "An error occurred saving plant entries"));
             },
         });
     });
@@ -401,7 +401,7 @@ jQuery(document).ready(function(){
         var num_tissues = jQuery(this).val();
         var html = '';
         for (var i=1; i<=num_tissues; i++){
-            html = html + '<div class="form-group"><label class="col-sm-3 control-label"><span title="The sample names will be a combination of the plant name, the tissue name you give here, and the tissue number."><span class="glyphicon glyphicon-info-sign"></span>&nbsp;&nbsp;Tissue Name '+i+': </span></label><div class="col-sm-9" ><input name="tissue_sample_help_tissue_name" id="tissue_samples_help_tissue_name_'+i+'" class="form-control" type="text" placeholder="examples: leaf, root, stem, seed, fruit or tuber" /></div></div>';
+            html = html + ("<div class=\"form-group\"><label class=\"col-sm-3 control-label\"><span title=\"" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? SGN.i18n.p("help.tissue.js.sample_name_tooltip", "The sample names will be a combination of the plant name, the tissue name you give here, and the tissue number.") : "The sample names will be a combination of the plant name, the tissue name you give here, and the tissue number.")).html().replace(/"/g, "&quot;").replace(/'/g, "&#39;") + "\"><span class=\"glyphicon glyphicon-info-sign\"></span>&nbsp;&nbsp;") + jQuery("<span>").text((window.SGN && window.SGN.i18n ? SGN.i18n.p("help.tissue.js.sample_name_label", "Tissue Name %{number}: ", { number: i }) : "Tissue Name " + i + ": ")).html().replace(/"/g, "&quot;").replace(/'/g, "&#39;") + '</span></label><div class="col-sm-9" ><input name="tissue_sample_help_tissue_name" id="tissue_samples_help_tissue_name_'+i+("\" class=\"form-control\" type=\"text\" placeholder=\"" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? SGN.i18n.p("help.tissue.js.examples_prefix", "examples: ") : "examples: ")).html().replace(/"/g, "&quot;").replace(/'/g, "&#39;") + "leaf, root, stem, seed, fruit or tuber\" /></div></div>");
         }
         jQuery('#tissue_sample_help_tissue_samples_names_div').html(html);
     });
@@ -434,14 +434,14 @@ jQuery(document).ready(function(){
                     alert(response.error);
                 }
                 else {
-                    alert("Successfully created tissue sample entries.");
+                    alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("help.tissue.js.success_samples", "Successfully created tissue sample entries.") : "Successfully created tissue sample entries."));
                     Workflow.complete('#tissue_sample_help_per_plant_submit');
                     Workflow.focus("#tissue_sample_help_workflow", -1); //go to success
                 }
             },
             error: function(response) {
                 jQuery("#working_modal").modal("hide");
-                alert("An error occurred creating tissue sample entries");
+                alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("help.tissue.js.error_create_samples", "An error occurred creating tissue sample entries") : "An error occurred creating tissue sample entries"));
             },
         });
     });
@@ -450,7 +450,7 @@ jQuery(document).ready(function(){
 
 function final_download_layout_button_click(){
     if (selected_level == 'accession'){
-        alert('You selected to sample on the accession level, meaning that you wil not sample from a field trial. In this case there is no field layout to download!');
+        alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("help.tissue.js.no_layout", "You selected to sample on the accession level, meaning that you wil not sample from a field trial. In this case there is no field layout to download!") : "You selected to sample on the accession level, meaning that you wil not sample from a field trial. In this case there is no field layout to download!"));
     }
     if (selected_level == 'plot'){
         var selected_columns = {'plot_name':1,'plot_id':1,'block_number':1,'plot_number':1,'rep_number':1,'row_number':1,'col_number':1,'accession_name':1,'is_a_control':1};
@@ -470,3 +470,7 @@ function final_download_layout_button_click(){
 }
 
 </script>
+
+<%once>
+use HTML::Entities ();
+</%once>

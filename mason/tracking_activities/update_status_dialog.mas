@@ -13,10 +13,10 @@ $stock_type_page
 my $display_label;
 my $display_name;
 if ($stock_type_page eq 'tracking_id') {
-    $display_label = 'Tracking ID';
+    $display_label = $c->i18n->p("transformation.root.tracking_id", "Tracking ID");
     $display_name = $identifier_name;
 } elsif ($stock_type_page eq 'transformation_id') {
-    $display_label = 'Transformation ID';
+    $display_label = $c->i18n->p("transformation.transformation_id.6f39808", "Transformation ID");
     $display_name = $material_name;
 }
 </%perl>
@@ -26,8 +26,8 @@ if ($stock_type_page eq 'tracking_id') {
     <div class="modal-dialog modal-lg" role="document">
         <div class="modal-content">
             <div class="modal-header">
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                <h4 class="modal-title" id="updateStatusDialog">Mark this experiment as completed or terminated </h4>
+                <button type="button" class="close" data-dismiss="modal" aria-label="<% $c->i18n->p("global.dataset_publish.close", "Close") |h %>"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="updateStatusDialog"><% $c->i18n->p("transformation.root.mark_this_experiment_as_completed_or_terminated", "Mark this experiment as completed or terminated") |h %> </h4>
             </div>
             <div class="modal-body">
                 <div class="container-fluid">
@@ -39,27 +39,27 @@ if ($stock_type_page eq 'tracking_id') {
                             </div>
                         </div>
                         <div class="form-group">
-                            <label class="col-sm-4 control-label">Status Type: </label>
+                            <label class="col-sm-4 control-label"><% $c->i18n->p("transformation.root.status_type", "Status Type:") |h %> </label>
                             <div class="col-sm-8">
                                 <select class="form-control" id="status_type">
-                                    <option value="">Select a status type</option>
-                                    <option value="completed">completed</option>
-                                    <option value="terminated">terminated</option>
+                                    <option value=""><% $c->i18n->p("transformation.root.select_a_status_type", "Select a status type") |h %></option>
+                                    <option value="completed"><% $c->i18n->p("transformation.root.completed", "completed") |h %></option>
+                                    <option value="terminated"><% $c->i18n->p("transformation.root.terminated", "terminated") |h %></option>
                                 </select>
                             </div>
                         </div>
                         <div class="form-group">
-                            <label class="col-sm-4 control-label">Comments: </label>
+                            <label class="col-sm-4 control-label"><% $c->i18n->p("transformation.root.comments", "Comments:") |h %> </label>
                             <div class="col-sm-8" >
-                                <textarea class="form-control" id="comments_for_updating" name="comments_for_updating" placeholder="Optional"></textarea>
+                                <textarea class="form-control" id="comments_for_updating" name="comments_for_updating" placeholder="<% $c->i18n->p("accession.stock.optional", "Optional") |h %>"></textarea>
                             </div>
                         </div>
                     </form>
                 </div>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-                <button type="button" class="btn btn-primary" name="update_status_submit" id="update_status_submit">Submit</button>
+                <button type="button" class="btn btn-default" data-dismiss="modal"><% $c->i18n->p("global.dataset_publish.close", "Close") |h %></button>
+                <button type="button" class="btn btn-primary" name="update_status_submit" id="update_status_submit"><% $c->i18n->p("global.manage_file_share_dump.submit", "Submit") |h %></button>
             </div>
         </div>
     </div>
@@ -69,19 +69,19 @@ if ($stock_type_page eq 'tracking_id') {
     <div class="modal-dialog" role="document">
         <div class="modal-content">
             <div class="modal-header">
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                <h4 class="modal-title" id="updatedSavedDialog">Success</h4>
+                <button type="button" class="close" data-dismiss="modal" aria-label="<% $c->i18n->p("global.dataset_publish.close", "Close") |h %>"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="updatedSavedDialog"><% $c->i18n->p("cross.ui.success", "Success") |h %></h4>
             </div>
             <div class="modal-body">
                 <div class="container-fluid">
                     <p>
                         <span class="ui-icon ui-icon-circle-check" style="float: left; margin: 0 7px 50px 0;"></span>
-                        The status of this experiment has been updated.
+                        <% $c->i18n->p("transformation.root.the_status_of_this_experiment_has_been_updated", "The status of this experiment has been updated.") |h %>
                     </p>
                 </div>
             </div>
             <div class="modal-footer">
-                <button id="dismiss_updated_saved_dialog" type="button" class="btn btn-default" data-dismiss="modal">Close & Reload</button>
+                <button id="dismiss_updated_saved_dialog" type="button" class="btn btn-default" data-dismiss="modal"><% $c->i18n->p("seedlots.ui.close_reload", "Close & Reload") |h %></button>
             </div>
         </div>
     </div>
@@ -91,19 +91,19 @@ if ($stock_type_page eq 'tracking_id') {
     <div class="modal-dialog" role="document">
         <div class="modal-content">
             <div class="modal-header">
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                <h4 class="modal-title" id="reverseStatusDialog">Success</h4>
+                <button type="button" class="close" data-dismiss="modal" aria-label="<% $c->i18n->p("global.dataset_publish.close", "Close") |h %>"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="reverseStatusDialog"><% $c->i18n->p("cross.ui.success", "Success") |h %></h4>
             </div>
             <div class="modal-body">
                 <div class="container-fluid">
                     <p>
                         <span class="ui-icon ui-icon-circle-check" style="float: left; margin: 0 7px 50px 0;"></span>
-                        This experiment has been restored.
+                        <% $c->i18n->p("transformation.root.this_experiment_has_been_restored", "This experiment has been restored.") |h %>
                     </p>
                 </div>
             </div>
             <div class="modal-footer">
-                <button id="dismiss_reverse_status_dialog" type="button" class="btn btn-default" data-dismiss="modal">Close & Reload</button>
+                <button id="dismiss_reverse_status_dialog" type="button" class="btn btn-default" data-dismiss="modal"><% $c->i18n->p("seedlots.ui.close_reload", "Close & Reload") |h %></button>
             </div>
         </div>
     </div>
@@ -127,12 +127,12 @@ jQuery(document).ready(function(){
         var comments = jQuery('#comments_for_updating').val();
 
         if ((identifier_id === '') && (material_id === '')) {
-            alert("Error retrieving source info");
+            alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("transformation.root.error_retrieving_source_info", "Error retrieving source info") : "Error retrieving source info"));
             return;
         }
 
         if (status_type === '') {
-            alert("Please select a status type");
+            alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("transformation.root.please_select_a_status_type", "Please select a status type") : "Please select a status type"));
             return;
         }
 
@@ -162,7 +162,7 @@ jQuery(document).ready(function(){
             },
             error: function(response){
                 jQuery('#working_modal').modal('hide');
-                alert('An error occurred updating status');
+                alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("transformation.root.an_error_occurred_updating_status", "An error occurred updating status") : 'An error occurred updating status'));
             }
         });
     });
@@ -174,7 +174,7 @@ jQuery(document).ready(function(){
 
     jQuery("[name='reverse_status_link']").click(function() {
         var updated_status_type = "<% $updated_status_type %>";
-        var confirmation = confirm("Are you sure you want to reverse status of this <% $display_label %>?");
+        var confirmation = confirm(((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("transformation.root.are_you_sure_you_want_to_reverse_status_of_this", "Are you sure you want to reverse status of this ") : "Are you sure you want to reverse status of this ") + "<% $display_label %>" + "?"));
         if (confirmation) {
             jQuery.ajax({
                 url: '/ajax/tracking_activity/reverse_status',
@@ -200,7 +200,7 @@ jQuery(document).ready(function(){
                 },
                 error: function(response){
                     jQuery('#working_modal').modal('hide');
-                    alert('An error occurred processing your request');
+                    alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("seedlots.ui.an_error_occurred_processing_your_request", "An error occurred processing your request") : 'An error occurred processing your request'));
                 }
             });
         }

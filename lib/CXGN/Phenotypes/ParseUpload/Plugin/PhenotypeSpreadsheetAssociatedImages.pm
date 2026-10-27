@@ -16,6 +16,9 @@ package CXGN::Phenotypes::ParseUpload::Plugin::PhenotypeSpreadsheetAssociatedIma
 #)
 
 use Moose;
+use SGN::I18N ();
+use CatalystX::GlobalContext '$c';
+
 #use File::Slurp;
 use Spreadsheet::ParseExcel;
 use Spreadsheet::ParseXLSX;
@@ -31,6 +34,7 @@ sub name {
 }
 
 sub validate {
+    my SGN::I18N $ui_phenotypespreadsheetassociatedimages_validate_i18n = SGN::I18N::translate($c);
     my $self = shift;
     my $filename = shift;
     my $timestamp_included = shift;
@@ -70,13 +74,13 @@ sub validate {
     my ( $row_min, $row_max ) = $worksheet->row_range();
     my ( $col_min, $col_max ) = $worksheet->col_range();
     if (($col_max - $col_min)  < 1 || ($row_max - $row_min) < 1 ) { #must have header with at least observationunit_name and one trait, as well as one row of phenotypes
-        $parse_result{'error'} = "Spreadsheet is less than 2 columns or 2 rows.";
+        $parse_result{'error'} = (SGN::I18N::translate($ui_phenotypespreadsheetassociatedimages_validate_i18n, 'phenotype.upload.spreadsheet_is_less_than_2_columns_or_2_rows', 'Spreadsheet is less than 2 columns or 2 rows.'));
         print STDERR "Spreadsheet is missing header\n";
         return \%parse_result;
     }
 
     if ($worksheet->get_cell(0,0)->value() ne 'observationunit_name' && $worksheet->get_cell(0,1)->value() ne 'observationvariable_name' && $worksheet->get_cell(0,2)->value() ne 'phenotype_value' && $worksheet->get_cell(0,3)->value() ne 'phenotype_timestamp' && $worksheet->get_cell(0,4)->value() ne 'image_name' && $worksheet->get_cell(0,5)->value() ne 'username') {
-        $parse_result{'error'} = "Header row must be 'observationunit_name, observationvariable_name, phenotype_value, phenotype_timestamp, image_name, username'. It may help to recreate your spreadsheet from the website.";
+        $parse_result{'error'} = (SGN::I18N::translate($ui_phenotypespreadsheetassociatedimages_validate_i18n, 'phenotype.upload.header_row_must_be_observationunit_name_observationvariable_name_phenotype_', 'Header row must be \'observationunit_name, observationvariable_name, phenotype_value, phenotype_timestamp, image_name, username\'. It may help to recreate your spreadsheet from the website.'));
         print STDERR "Header not correct\n";
         return \%parse_result;
     }
@@ -84,7 +88,7 @@ sub validate {
     my $archived_zip = CXGN::ZipFile->new(archived_zipfile_path=>$image_zipfile);
     my $file_members = $archived_zip->file_members();
     if (!$file_members){
-        $parse_result{error} = 'Could not read your zipfile. Is it .zip format?';
+        $parse_result{error} = (SGN::I18N::translate($ui_phenotypespreadsheetassociatedimages_validate_i18n, 'phenotype.upload.could_not_read_your_zipfile_is_it_zip_format', 'Could not read your zipfile. Is it .zip format?'));
     }
     my %image_zip_contents;
     foreach my $file_member (@$file_members) {
@@ -101,7 +105,7 @@ sub validate {
             $observationunit_name = $worksheet->get_cell($row,0)->value();
         }
         else {
-            $parse_result{'error'} = "No observation unit name on row $row!";
+            $parse_result{'error'} = (SGN::I18N::translate($ui_phenotypespreadsheetassociatedimages_validate_i18n, 'phenotype.upload.no_observation_unit_name_on_row_row', 'No observation unit name on row %{row}!', {row => "$row"}));
             return \%parse_result;
         }
         my $observationvariable_name;
@@ -109,7 +113,7 @@ sub validate {
             $observationvariable_name = $worksheet->get_cell($row,1)->value();
         }
         else {
-            $parse_result{'error'} = "No observation variable name (trait) on row $row!";
+            $parse_result{'error'} = (SGN::I18N::translate($ui_phenotypespreadsheetassociatedimages_validate_i18n, 'phenotype.upload.no_observation_variable_name_trait_on_row_row', 'No observation variable name (trait) on row %{row}!', {row => "$row"}));
             return \%parse_result;
         }
         my $phenotype_value;
@@ -117,7 +121,7 @@ sub validate {
             $phenotype_value = $worksheet->get_cell($row,2)->value();
         }
         else {
-            $parse_result{'error'} = "No phenotype value on row $row!";
+            $parse_result{'error'} = (SGN::I18N::translate($ui_phenotypespreadsheetassociatedimages_validate_i18n, 'phenotype.upload.no_phenotype_value_on_row_row', 'No phenotype value on row %{row}!', {row => "$row"}));
             return \%parse_result;
         }
         my $phenotype_timestamp = $worksheet->get_cell($row,3) ? $worksheet->get_cell($row,3)->value() : '';
@@ -126,7 +130,7 @@ sub validate {
             $image_name = $worksheet->get_cell($row,4)->value();
         }
         else {
-            $parse_result{'error'} = "No image name on row $row!";
+            $parse_result{'error'} = (SGN::I18N::translate($ui_phenotypespreadsheetassociatedimages_validate_i18n, 'phenotype.upload.no_image_name_on_row_row', 'No image name on row %{row}!', {row => "$row"}));
             return \%parse_result;
         }
         my $username = $worksheet->get_cell($row,5) ? $worksheet->get_cell($row,5)->value() : '';
@@ -134,12 +138,12 @@ sub validate {
         $observationunits_seen{$observationunit_name}++;
 
         if (!$image_zip_contents{$image_name}) {
-            $parse_result{'error'} = "The image $image_name does not exist in the provided zipfile!";
+            $parse_result{'error'} = (SGN::I18N::translate($ui_phenotypespreadsheetassociatedimages_validate_i18n, 'phenotype.upload.the_image_image_name_does_not_exist_in_the_provided_zipfile', 'The image %{image_name} does not exist in the provided zipfile!', {image_name => "$image_name"}));
             return \%parse_result;
         }
 
         if ($phenotype_timestamp && !$phenotype_timestamp =~ m/(\d{4})-(\d{2})-(\d{2}) (\d{2}):(\d{2}):(\d{2})(\S)(\d{4})/) {
-            $parse_result{'error'} = "Timestamp needs to be of form YYYY-MM-DD HH:MM:SS-0000 or YYYY-MM-DD HH:MM:SS+0000";
+            $parse_result{'error'} = (SGN::I18N::translate($ui_phenotypespreadsheetassociatedimages_validate_i18n, 'phenotype.upload.timestamp_needs_to_be_of_form_yyyy_mm_dd_hh_mm_ss_0000_or_yyyy_mm_dd_hh_mm_.074cd0c', 'Timestamp needs to be of form YYYY-MM-DD HH:MM:SS-0000 or YYYY-MM-DD HH:MM:SS+0000'));
             return \%parse_result;
         }
     }
@@ -149,7 +153,7 @@ sub validate {
     my @missing_observation_units = @{$observationunit_validator->validate($schema,'plots_or_subplots_or_plants_or_tissue_samples',\@observation_units)->{'missing'}};
     if (scalar(@missing_observation_units) > 0) {
         my $missing_observationunit_string = join '<br>', @missing_observation_units;
-        $parse_result{'error'} = "The following observation unit names are not in the database: ".$missing_observationunit_string;
+        $parse_result{'error'} = (SGN::I18N::translate($ui_phenotypespreadsheetassociatedimages_validate_i18n, 'phenotype.upload.the_following_observation_unit_names_are_not_in_the_database_values', 'The following observation unit names are not in the database: %{values}', {values => "" . ($missing_observationunit_string)}));
         return \%parse_result;
     }
 

@@ -31,6 +31,8 @@ $marker
 </%args>
 
 <%perl>
+use SGN::I18N ();
+
   my $polymorphisms_html='';
 my $dbh = $marker->{dbh};
 
@@ -80,33 +82,33 @@ if($experiments and @{$experiments}) {
 	$fwd='<span class="sequence">'.$fwd.'</span>';
       }
       else {
-	$fwd='<span class="ghosted">Unknown</span>';
+	$fwd=('<span class="ghosted">' . SGN::I18N::translate($c->i18n, "marker.detail.pcr_unknown", "Unknown", undef, {entities => '<>&'}) . '</span>');
       }
       if($rev) {
 	$rev='<span class="sequence">'.$rev.'</span>';
       }
       else {
-	$rev='<span class="ghosted">Unknown</span>';
+	$rev=('<span class="ghosted">' . SGN::I18N::translate($c->i18n, "marker.detail.pcr_unknown", "Unknown", undef, {entities => '<>&'}) . '</span>');
       }  
-      my $enz=$pcr->enzyme()||'unknown enzyme';                 
+      my $enz=$pcr->enzyme()||SGN::I18N::translate($c->i18n, "marker.detail.pcr_unknown_enzyme", "unknown enzyme", undef, {entities => '<>&'});
       my $additional_enzymes= $pcr->additional_enzymes;
-      $temp||='<span class="ghosted">Unknown</span>';
-      $mg||='<span class="ghosted">Unknown</span>';
-      my $digest_title="Digested band sizes (using $enz)";
+      $temp||=('<span class="ghosted">' . SGN::I18N::translate($c->i18n, "marker.detail.pcr_unknown", "Unknown", undef, {entities => '<>&'}) . '</span>');
+      $mg||=('<span class="ghosted">' . SGN::I18N::translate($c->i18n, "marker.detail.pcr_unknown", "Unknown", undef, {entities => '<>&'}) . '</span>');
+      my $digest_title=SGN::I18N::translate($c->i18n, "marker.detail.digested_band_sizes", "Digested band sizes (using %{enzyme})", {enzyme => ("" . $enz)});
       unless($digest_bands_html) {
 	$digest_title='&nbsp;'; 
 	$digest_bands_html='&nbsp;'; 
       }
       $polymorphisms_html.=CXGN::Page::FormattingHelpers::info_table_html
 	(
-	 '__title'=>"PCR data&nbsp;&nbsp;&nbsp;<span class=\"tinytype\">Exp. ID ".$pcr->pcr_experiment_id."</span>",
-	 "Forward primer (5'-3')"=>"<span class=\"sequence\">$fwd</span>",
-	 "Reverse primer (5'-3')"=>"<span class=\"sequence\">$rev</span>",
-	 'Accessions and product sizes'=>$pcr_bands_html,
+	 '__title'=>(SGN::I18N::translate($c->i18n, "marker.detail.pcr_data", "PCR data", undef, {entities => '<>&'}) . "&nbsp;&nbsp;&nbsp;<span class=\"tinytype\">" . SGN::I18N::translate($c->i18n, "marker.detail.exp_id", "Exp. ID ", undef, {entities => '<>&'})).$pcr->pcr_experiment_id."</span>",
+	 SGN::I18N::translate($c->i18n, "marker.detail.forward_primer_direction", "Forward primer (5'-3')", undef, {entities => '<>&'})=>"<span class=\"sequence\">$fwd</span>",
+	 SGN::I18N::translate($c->i18n, "marker.detail.reverse_primer_direction", "Reverse primer (5'-3')", undef, {entities => '<>&'})=>"<span class=\"sequence\">$rev</span>",
+	 SGN::I18N::translate($c->i18n, "marker.detail.accessions_product_sizes", "Accessions and product sizes", undef, {entities => '<>&'})=>$pcr_bands_html,
 	 $digest_title=>$digest_bands_html,
-	 'Enzymes'               => $additional_enzymes,
-	 'Approximate temperature'=>$temp,
-	 'Mg<sup>+2</sup> concentration'=>$mg,
+	 SGN::I18N::translate($c->i18n, "marker.detail.enzymes", "Enzymes", undef, {entities => '<>&'})               => $additional_enzymes,
+	 SGN::I18N::translate($c->i18n, "marker.detail.approximate_temperature", "Approximate temperature", undef, {entities => '<>&'})=>$temp,
+	 SGN::I18N::translate($c->i18n, "marker.detail.mg_concentration", "Mg<sup>+2</sup> concentration")=>$mg,
 	 '__multicol'=>3,
 	 '__tableattrs'=>"width=\"100%\"",
 	);
@@ -115,7 +117,7 @@ if($experiments and @{$experiments}) {
   }
 }
 if($polymorphisms_html) {
- print  info_section_html(title=>'Other PCR data',contents=>'<table width="100%" cellspacing="0" cellpadding="0" border="0">'.$polymorphisms_html.'</table>');
+ print  info_section_html(title=>SGN::I18N::translate($c->i18n, "marker.detail.other_pcr_data", "Other PCR data", undef, {entities => '<>&'}), anchor_title => "Other PCR data",contents=>'<table width="100%" cellspacing="0" cellpadding="0" border="0">'.$polymorphisms_html.'</table>');
 }
 else {
   return '';

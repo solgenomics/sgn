@@ -3,7 +3,7 @@ $propagation_group_stock_id
 </%args>
 
 
-<&| /page/info_section.mas, title => 'Active Propagation IDs', collapsible=>1, collapsed=>0 &>
+<&| /page/info_section.mas, anchor_title => 'Active Propagation IDs', title => HTML::Entities::encode_entities($c->i18n->p("seedlot.active_propagation_ids", 'Active Propagation IDs')), collapsible=>1, collapsed=>0 &>
     <div class = "well well-sm">
         <div class = "panel panel-default">
             <div class = "panel-body">
@@ -20,8 +20,8 @@ $propagation_group_stock_id
     <div class="modal-dialog modal-lg" role="document">
         <div class="modal-content">
             <div class="modal-header">
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                <h4 class="modal-title" id="updatePropagationStatusDialog">Update Status</h4>
+                <button type="button" class="close" data-dismiss="modal" aria-label="<% $c->i18n->p("global.dataset_publish.close", "Close") |h %>"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="updatePropagationStatusDialog"><% $c->i18n->p("seedlot.update_status", "Update Status") |h %></h4>
             </div>
             <div class="modal-body">
                 <div class="container-fluid">
@@ -30,8 +30,8 @@ $propagation_group_stock_id
                 </div>
             </div>
             <div class="modal-footer">
-                <button type="reset" id="close_update_propagation_status_dialog" name="close_update_propagation_status_dialog" class="btn btn-default" >Close</button>
-                <button id="update_propagation_status_button" type="button" class="btn btn-primary" >Update</button>
+                <button type="reset" id="close_update_propagation_status_dialog" name="close_update_propagation_status_dialog" class="btn btn-default" ><% $c->i18n->p("global.dataset_publish.close", "Close") |h %></button>
+                <button id="update_propagation_status_button" type="button" class="btn btn-primary" ><% $c->i18n->p("lists.render.update", "Update") |h %></button>
             </div>
         </div>
     </div>
@@ -41,19 +41,19 @@ $propagation_group_stock_id
     <div class="modal-dialog" role="document">
         <div class="modal-content">
             <div class="modal-header">
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                <h4 class="modal-title" id="propagationUpdateSavedDialog">Success</h4>
+                <button type="button" class="close" data-dismiss="modal" aria-label="<% $c->i18n->p("global.dataset_publish.close", "Close") |h %>"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="propagationUpdateSavedDialog"><% $c->i18n->p("cross.ui.success", "Success") |h %></h4>
             </div>
             <div class="modal-body">
                 <div class="container-fluid">
                     <p>
                         <span class="ui-icon ui-icon-circle-check" style="float: left; margin: 0 7px 50px 0;"></span>
-                        The propagation status has been updated.
+                        <% $c->i18n->p("seedlot.the_propagation_status_has_been_updated", "The propagation status has been updated.") |h %>
                     </p>
                 </div>
             </div>
             <div class="modal-footer">
-                <button id="dismiss_propagation_update_saved_dialog" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                <button id="dismiss_propagation_update_saved_dialog" type="button" class="btn btn-default" data-dismiss="modal"><% $c->i18n->p("global.dataset_publish.close", "Close") |h %></button>
             </div>
         </div>
     </div>
@@ -69,19 +69,19 @@ jQuery(document).ready(function(){
         'ajax': '/ajax/propagation/active_propagation_ids_in_group/'+propagation_group_stock_id,
         'autoWidth': false,
         'columns': [
-            { title: "Propagation ID", "data": null, "render": function ( data, type, row ) { return "<a href='/stock/"+row.propagation_stock_id+"/view'>"+row.propagation_name+"</a>"; } },
-            { title: "Accession", "data": null, "render": function ( data, type, row ) { return "<a href='/stock/"+row.accession_stock_id+"/view'>"+row.accession_name+"</a>"; } },
-            { title: "Rootstock", "data": null, "render": function ( data, type, row ) {
+            { title: jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("seedlot.propagation_id.c146e1b", "Propagation ID") : "Propagation ID")).html(), "data": null, "render": function ( data, type, row ) { return "<a href='/stock/"+row.propagation_stock_id+"/view'>"+row.propagation_name+"</a>"; } },
+            { title: jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("global.index_logged_in_user.accession", "Accession") : "Accession")).html(), "data": null, "render": function ( data, type, row ) { return "<a href='/stock/"+row.accession_stock_id+"/view'>"+row.accession_name+"</a>"; } },
+            { title: jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("seedlot.rootstock", "Rootstock") : "Rootstock")).html(), "data": null, "render": function ( data, type, row ) {
                 if (row.rootstock_stock_id === null){
                     return ' '
                 } else {
                     return "<a href='/stock/"+row.rootstock_stock_id+"'>"+row.rootstock_name+"</a>"
                 }
             }},
-            { title: "Status", "data": "propagation_status" },
-            { title: "Updated Date", "data": "updated_date" },
-            { title: "Updated by", "data": "updated_by" },
-            { title: "Update Status", "data": "null", "render": function ( data, type, row ) { return "<a onclick='updatePropagationStatus("+row.propagation_stock_id+",\""+row.propagation_name+"\")'>Update</a>"; } },
+            { title: jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("global.dataset_publish.status.heading", "Status") : "Status")).html(), "data": "propagation_status" },
+            { title: jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("seedlot.updated_date", "Updated Date") : "Updated Date")).html(), "data": "updated_date" },
+            { title: jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("trial.card.status.updated_by", "Updated by") : "Updated by")).html(), "data": "updated_by" },
+            { title: jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("seedlot.update_status", "Update Status") : "Update Status")).html(), "data": "null", "render": function ( data, type, row ) { return "<a onclick='updatePropagationStatus("+row.propagation_stock_id+",\""+row.propagation_name+("\")'>" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("lists.render.update", "Update") : "Update")).html() + "</a>"); } },
 
         ],
 
@@ -93,12 +93,12 @@ jQuery(document).ready(function(){
         const inventory_identifier = jQuery('#propagation_inventory_identifier').val();
 
         if (!propagation_status) {
-            alert ("Please select a status");
+            alert ((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("trial.status_dialog.sentinel", "Please select a status") : "Please select a status"));
             return;
         }
 
         if ((propagation_status === 'Inventoried') && !inventory_identifier) {
-            alert ("Please provide Inventory Identifier");
+            alert ((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("seedlot.please_provide_inventory_identifier", "Please provide Inventory Identifier") : "Please provide Inventory Identifier"));
             return;
         }
 
@@ -129,7 +129,7 @@ jQuery(document).ready(function(){
             },
             error: function(response){
                 jQuery('#working_modal').modal('hide');
-                alert('An error occurred updating the propagation status');
+                alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("seedlot.an_error_occurred_updating_the_propagation_status", "An error occurred updating the propagation status") : 'An error occurred updating the propagation status'));
             }
         });
     });
@@ -147,16 +147,16 @@ jQuery(document).ready(function(){
 
 function updatePropagationStatus(propagation_stock_id, propagation_name){
     var html = '';
-    html += '<form class="form-horizontal"><div class="form-group"><label class="col-sm-3 control-label">Propagation ID: </label><div class="col-sm-9" ><input class="form-control" id="update_propagation_name" name="update_propagation_name" value="'+propagation_name+'" disabled></div></div>';
-    html += '<div class="form-group"><label class="col-sm-3 control-label">Status: </label><div class="col-sm-9" ><select class="form-control" id="update_propagation_status" name="update_propagation_status"><option disabled value="" selected hidden>Select a status</option>';
-    html += '<option value='+"inventoried"+'>'+"inventoried"+'</option>';
-    html += '<option value='+"in_trial"+'>'+"in trial"+'</option>';
-    html += '<option value='+"distributed"+'>'+"distributed"+'</option>';
-    html += '<option value='+"dead"+'>'+"dead"+'</option>';
-    html += '<option value='+"disposed"+'>'+"disposed"+'</option>';
+    html += ("<form class=\"form-horizontal\"><div class=\"form-group\"><label class=\"col-sm-3 control-label\">" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("seedlot.propagation_id.8a0189f", "Propagation ID:") : "Propagation ID:")).html() + " </label><div class=\"col-sm-9\" ><input class=\"form-control\" id=\"update_propagation_name\" name=\"update_propagation_name\" value=\"")+propagation_name+'" disabled></div></div>';
+    html += ("<div class=\"form-group\"><label class=\"col-sm-3 control-label\">" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("global.est.status", "Status:") : "Status:")).html() + " </label><div class=\"col-sm-9\" ><select class=\"form-control\" id=\"update_propagation_status\" name=\"update_propagation_status\"><option disabled value=\"\" selected hidden>" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("seedlot.select_a_status", "Select a status") : "Select a status")).html() + "</option>");
+    html += '<option value='+"inventoried"+'>'+(window.SGN && window.SGN.i18n ? window.SGN.i18n.p("seedlot.inventoried", "inventoried") : "inventoried")+'</option>';
+    html += '<option value='+"in_trial"+'>'+(window.SGN && window.SGN.i18n ? window.SGN.i18n.p("seedlot.in_trial", "in trial") : "in trial")+'</option>';
+    html += '<option value='+"distributed"+'>'+(window.SGN && window.SGN.i18n ? window.SGN.i18n.p("seedlot.distributed", "distributed") : "distributed")+'</option>';
+    html += '<option value='+"dead"+'>'+(window.SGN && window.SGN.i18n ? window.SGN.i18n.p("seedlot.dead", "dead") : "dead")+'</option>';
+    html += '<option value='+"disposed"+'>'+(window.SGN && window.SGN.i18n ? window.SGN.i18n.p("seedlot.disposed", "disposed") : "disposed")+'</option>';
     html += '</select></div></div>';
-    html += '<div class="form-group"><label class="col-sm-3 control-label">Notes: </label><div class="col-sm-9" ><input class="form-control" id="propagation_status_notes" placeholder="Optional"></div></div>'
-    html += '<div id="inventory_id_section" style="display:none"><div class="form-group"><label class="col-sm-3 control-label">Inventory ID: </label><div class="col-sm-9" ><input class="form-control" id="propagation_inventory_identifier" placeholder="must be globally unique"></div></div>'
+    html += ("<div class=\"form-group\"><label class=\"col-sm-3 control-label\">" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("seedlots.ui.notes", "Notes:") : "Notes:")).html() + " </label><div class=\"col-sm-9\" ><input class=\"form-control\" id=\"propagation_status_notes\" placeholder=\"" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("accession.stock.optional", "Optional") : "Optional")).html() + "\"></div></div>")
+    html += ("<div id=\"inventory_id_section\" style=\"display:none\"><div class=\"form-group\"><label class=\"col-sm-3 control-label\">" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("seedlot.inventory_id", "Inventory ID:") : "Inventory ID:")).html() + " </label><div class=\"col-sm-9\" ><input class=\"form-control\" id=\"propagation_inventory_identifier\" placeholder=\"" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("seedlot.must_be_globally_unique", "must be globally unique") : "must be globally unique")).html() + "\"></div></div>")
 
     html += '<div class="form-group" style="display:none" ><div class="col-sm-9" ><input class="form-control" id="propagation_stock_id" value="'+propagation_stock_id+'"></div></div></div></form>';
 
@@ -179,3 +179,7 @@ function updatePropagationStatus(propagation_stock_id, propagation_name){
 
 
 </script>
+
+<%once>
+use HTML::Entities ();
+</%once>

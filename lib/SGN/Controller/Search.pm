@@ -3,6 +3,7 @@ use Moose;
 use URI::FromHash 'uri';
 use namespace::autoclean;
 use Data::Dumper;
+use HTML::Entities ();
 
 use CXGN::Search::CannedForms;
 use CXGN::Page::Toolbar::SGN;
@@ -47,7 +48,8 @@ sub glossary : Path('/search/glossary') :Args() {
     if($term){
         my @defs = get_definitions($term);
         unless (@defs){
-            $response = "<p>Your term was not found. <br> The term you searched for was $term.</p>";
+            $response = '<p>' . HTML::Entities::encode_entities($c->i18n->p('global.glossary.not_found', 'Your term was not found. %{break} The term you searched for was %{term}.', {break => '__SGN_GLOSSARY_BREAK__', term => '__SGN_GLOSSARY_TERM__'})) . '</p>';
+            $response =~ s/(__SGN_GLOSSARY_BREAK__|__SGN_GLOSSARY_TERM__)/$1 eq '__SGN_GLOSSARY_BREAK__' ? '<br>' : HTML::Entities::encode_entities($term)/ge;
         } else {
             $response = "<hr /><dl><dt>$term</dt>";
             for my $d (@defs){
@@ -56,14 +58,17 @@ sub glossary : Path('/search/glossary') :Args() {
             $response .= "</dl>";
         }
     } else {
+        my $heading = HTML::Entities::encode_entities($c->i18n->p('global.glossary.heading', 'Glossary search'));
+        my $prompt = HTML::Entities::encode_entities($c->i18n->p('global.glossary.prompt', 'Search the glossary by term:'));
+        my $lookup = HTML::Entities::encode_entities($c->i18n->p('global.glossary.lookup', 'Lookup'));
         $response =<<DEFAULT;
 <hr />
-<h2>Glossary search</h2>
+<h2>$heading</h2>
 <form action="#" method='get' name='glossary'>
-<b>Search the glossary by term:</b>
+<b>$prompt</b>
 <input type = 'text' name = 'getTerm' size = '50' tabindex='0' />
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-<input type = 'submit' value = 'Lookup' /></form>
+<input type = 'submit' value = '$lookup' /></form>
 <script type="text/javascript" language="javascript">
 document.glossary.getTerm.focus();
 </script>

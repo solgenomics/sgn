@@ -77,22 +77,22 @@ export function init(vector_id) {
     });
     
     var columnDefs = [{
-	title: "Feature Name",
+	title: jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("transformation.helper.feature_name", "Feature Name") : "Feature Name")).html(),
 	type: "string-utf8",
     }, {
-	title: "Start Coord",
+	title: jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("transformation.helper.start_coord", "Start Coord") : "Start Coord")).html(),
 	type: "num",
     }, {
-	title: "End Coord",
+	title: jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("transformation.helper.end_coord", "End Coord") : "End Coord")).html(),
 	type: "num", 
     }, {
-	title: "Color",
+	title: jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("transformation.helper.color", "Color") : "Color")).html(),
 	type: "string-utf8",
     }, {
-	title: "Orientation",
+	title: jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("transformation.helper.orientation", "Orientation") : "Orientation")).html(),
 	type: "string-utf8"
     }, {
-        title: "Actions",
+        title: jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("global.dataset_cxgn_dataset.table.actions", "Actions") : "Actions")).html(),
         type: "string-utf8"
     }
 		     ];
@@ -179,7 +179,7 @@ export function init(vector_id) {
     //when someone clicks save the dialog is opened
     jQuery("#saveVector").click(function () {
 	//jQuery('#saveDialog').dialog('open');
-	var yes = confirm('Save current changes?');
+	var yes = confirm((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("transformation.helper.save_current_changes", "Save current changes?") : 'Save current changes?'));
 	if (yes) {
 	    var table_data = getFeatureDataFromDataTable();
 	    var re_sites_table = getREsitesDataFromDataTable();
@@ -210,8 +210,8 @@ export function init(vector_id) {
 		url: '/vectorviewer/' + vector_id + '/store?data='+string_data,
 		'method' : "POST"
 	    }).then(
-		function() {  alert('Sequence successfully saved!');},
-		function() { alert('An error occurred while trying to save the vector data.');
+		function() {  alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("transformation.helper.sequence_successfully_saved", "Sequence successfully saved!") : 'Sequence successfully saved!'));},
+		function() { alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("transformation.helper.an_error_occurred_while_trying_to_save_the_vector_data", "An error occurred while trying to save the vector data.") : 'An error occurred while trying to save the vector data.'));
 			   }
 	    );   
 	}	
@@ -247,8 +247,8 @@ export function init(vector_id) {
 	    url: '/vectorviewer/' + vector_id + '/store?data='+string_data,
 	    'method' : "POST"
 	}).then(
-	    function() {  modified = false; alert('Sequence successfully saved!');},
-	    function() { alert('An error occurred while trying to save the vector data.');
+	    function() {  modified = false; alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("transformation.helper.sequence_successfully_saved", "Sequence successfully saved!") : 'Sequence successfully saved!'));},
+	    function() { alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("transformation.helper.an_error_occurred_while_trying_to_save_the_vector_data", "An error occurred while trying to save the vector data.") : 'An error occurred while trying to save the vector data.'));
 		       }
 	);
 	
@@ -262,7 +262,7 @@ export function init(vector_id) {
 	jQuery('#feature_color_select').val("");
 	jQuery('#feature_orientation_select').val("");
 
-	jQuery('#manage_feature_dialog_title').html('Add feature');
+	jQuery('#manage_feature_dialog_title').html(jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("transformation.helper.add_feature", "Add feature") : 'Add feature')).html());
 
 
 	jQuery('#add_feature_dialog').modal('show');
@@ -327,7 +327,7 @@ export function init(vector_id) {
 	
     },
 	    function(r) {
-		alert('An error occurred! '+JSON.stringify(r));
+		alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("transformation.helper.an_error_occurred", "An error occurred! ") : 'An error occurred! ')+JSON.stringify(r));
 	    } );
     
     jQuery('#add_feature_data_submit_button').click( function() {
@@ -389,7 +389,7 @@ export function init(vector_id) {
 	jQuery('#feature_color_select').val(data[rowId][3]);
 	jQuery('#feature_orientation_select').val(data[rowId][4]);
 
-	jQuery('#manage_feature_dialog_title').html('Edit feature');
+	jQuery('#manage_feature_dialog_title').html(jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("transformation.helper.edit_feature", "Edit feature") : 'Edit feature')).html());
 
 	jQuery('#add_feature_dialog').modal("show");
 
@@ -401,7 +401,7 @@ export function init(vector_id) {
 
 	var data = jQuery(this).data();
 //	alert('RETRIEVED: '+JSON.stringify(data));
-	var yes = confirm('Are you sure that you would like to delete this row with id ? ');
+	var yes = confirm((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("transformation.helper.are_you_sure_that_you_would_like_to_delete_this_row_with_id", "Are you sure that you would like to delete this row with id ? ") : 'Are you sure that you would like to delete this row with id ? '));
 	if (yes) { 
 	    delete_re_table_row(jQuery(this).data('id'));
 	}
@@ -448,19 +448,19 @@ export function updateFeatureDataTable(table_data) {
 	data: formatted,
 	destroy: true,
 	columns: [
-	    { title: 'No.', data : 'no' },
-	    { title: 'Feature', data : 'feature' }, //data: table_data[0] },
-	    { title: 'Start', data: 'start' },
-	    { title: 'End', data: 'end' },
-	    { title: 'Color', data: 'color' },
-	    { title: 'Orientation', data: 'orientation' },
+	    { title: jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("transformation.helper.no", "No.") : 'No.')).html(), data : 'no' },
+	    { title: jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("transformation.helper.feature", "Feature") : 'Feature')).html(), data : 'feature' }, //data: table_data[0] },
+	    { title: jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("trial.entry_template.start", "Start") : 'Start')).html(), data: 'start' },
+	    { title: jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("transformation.helper.end", "End") : 'End')).html(), data: 'end' },
+	    { title: jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("transformation.helper.color", "Color") : 'Color')).html(), data: 'color' },
+	    { title: jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("transformation.helper.orientation", "Orientation") : 'Orientation')).html(), data: 'orientation' },
 	    { data: null,
 	      render: function(data, type, row) {
-		  var formatted = '<button class="edit_row_button" data-id="'+row.no+'">Edit</button>&nbsp;<button class="delete_row_button" data-id="'+row.no+'">Delete</button>';
+		  var formatted = '<button class="edit_row_button" data-id="'+row.no+("\">" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("accession.sequencing.action.edit", "Edit") : "Edit")).html() + "</button>&nbsp;<button class=\"delete_row_button\" data-id=\"")+row.no+("\">" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("accession.sequencing.action.delete", "Delete") : "Delete")).html() + "</button>");
 		  //alert('Formatted: '+formatted);
 		  return formatted;
 	      },
-	      title: "Actions",
+	      title: jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("global.dataset_cxgn_dataset.table.actions", "Actions") : "Actions")).html(),
 	    }
 	]
     });
@@ -502,7 +502,7 @@ export function re_site_datatable_add_row(row){
 
 export function delete_feature_table_row(row_no) {
     //alert('delete_feature_table_row!');
-    var yes = confirm('Delete row '+row_no+'?');
+    var yes = confirm((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("transformation.helper.delete_row", "Delete row ") : 'Delete row ')+row_no+'?');
     if (yes) {
 //	alert('Deleting it.');
 	var data = getFeatureDataFromDataTable();
@@ -517,7 +517,7 @@ export function delete_feature_table_row(row_no) {
 }
 
 export function delete_re_table_row(row_no) {
-    var yes = confirm('Delete row '+row_no+'?');
+    var yes = confirm((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("transformation.helper.delete_row", "Delete row ") : 'Delete row ')+row_no+'?');
     if (yes) { 
 	var data = getREsitesDataFromDataTable();
 	data.splice(row_no, 1);
@@ -584,7 +584,7 @@ export function getSequenceDataFromDataTable() {
 export function updateREsitesDataTable(re_sites) {
 //    alert('RESITES FOR TABLE: '+JSON.stringify(re_sites));
     for (var i=0; i < re_sites.length; i++) {
-	re_sites[i][2] = '<button class="edit_re_row_button" data-id="'+i+'">Edit</button>&nbsp;<button class="delete_re_row_button" data-id="'+i+'">Delete</button>';
+	re_sites[i][2] = '<button class="edit_re_row_button" data-id="'+i+("\">" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("accession.sequencing.action.edit", "Edit") : "Edit")).html() + "</button>&nbsp;<button class=\"delete_re_row_button\" data-id=\"")+i+("\">" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("accession.sequencing.action.delete", "Delete") : "Delete")).html() + "</button>");
 	//alert(JSON.stringify(re_sites[i]));
 	re_sites[i].unshift(i);
     }

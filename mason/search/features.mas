@@ -1,3 +1,6 @@
+<%init>
+use HTML::Entities ();
+</%init>
 <%args>
  $organisms         => undef
  $feature_types     => undef
@@ -10,7 +13,7 @@
 
 <div class="container-fluid">
 
-<& /page/page_title.mas, title=>'Search genomic sequences and annotations' &>
+<& /page/page_title.mas, title => HTML::Entities::encode_entities($c->i18n->p('global.search.features.search_genomic_sequences_and_annotations', 'Search genomic sequences and annotations')) &>
 
 <%perl>
 
@@ -28,12 +31,12 @@ my $organism_select = simple_selectbox_html(
 
 </%perl>
 
-<&| /page/info_section.mas, title => 'Search', collapsible=>1, collapsed=>0 &>
+<&| /page/info_section.mas, title => HTML::Entities::encode_entities($c->i18n->p('global.search.features.search', 'Search')), collapsible=>1, collapsed=>0 &>
   <div id="feature_search_form" class="form-horizontal well">
     <div class="row">
       <div class="col-sm-6">
 	<div class="form-group form-group-sm">
-	  <label class="col-sm-3 control-label">Organism: </label>
+	  <label class="col-sm-3 control-label"><% $c->i18n->p('global.search.features.organism.596dffa', 'Organism:') |h %> </label>
 	  <div class="col-sm-9" >
             <% $organism_select %>
 	  </div>
@@ -41,7 +44,7 @@ my $organism_select = simple_selectbox_html(
       </div>
       <div class="col-sm-6">
 	<div class="form-group form-group-sm">
-	  <label class="col-sm-3 control-label">Type: </label>
+	  <label class="col-sm-3 control-label"><% $c->i18n->p('global.search.features.type.3e685b2', 'Type:') |h %> </label>
 	  <div class="col-sm-9" >
             <% $f_type_select %>
 	  </div>
@@ -51,7 +54,7 @@ my $organism_select = simple_selectbox_html(
     <div class="row">
       <div class="col-sm-6">
 	<div class="form-group form-group-sm">
-	  <label class="col-sm-3 control-label">Name: </label>
+	  <label class="col-sm-3 control-label"><% $c->i18n->p('global.search.features.name.9cc4b7b', 'Name:') |h %> </label>
 	  <div class="col-sm-9" >
             <input type="text" class="form-control" id="name" />
 	  </div>
@@ -59,32 +62,32 @@ my $organism_select = simple_selectbox_html(
       </div>
       <div class="col-sm-6">
 	<div class="form-group form-group-sm">
-	  <label class="col-sm-3 control-label">Description: </label>
+	  <label class="col-sm-3 control-label"><% $c->i18n->p('global.search.features.description.26f0cba', 'Description:') |h %> </label>
 	  <div class="col-sm-9" >
             <input type="text" class="form-control" id="description" />
 	  </div>
 	</div>
       </div>
     </div>
- <button style="float:right" class="btn btn-primary" id="submit_feature_search" />Search</button>
+ <button style="float:right" class="btn btn-primary" id="submit_feature_search" /><% $c->i18n->p('global.search.features.search', 'Search') |h %></button>
     <br/><br/>
   </div>
   
 </&>
 
 
-<&| /page/info_section.mas, title => 'Search Results', collapsible=>1, collapsed=>0 &>
+<&| /page/info_section.mas, title => HTML::Entities::encode_entities($c->i18n->p('global.search.features.search_results', 'Search Results')), collapsible=>1, collapsed=>0 &>
 
 
 <div class="well">
 <table id="feature_search_results" class="display">
 <thead>
   <tr>
-    <th>Organism</th>
-    <th>Type</th>
-    <th>Name</th>
-    <th>Description</th>
-    <th>Location</th>
+    <th><% $c->i18n->p('global.search.features.organism.2f1e4a4', 'Organism') |h %></th>
+    <th><% $c->i18n->p('global.search.features.type.f65b938', 'Type') |h %></th>
+    <th><% $c->i18n->p('global.search.features.name.9ede896', 'Name') |h %></th>
+    <th><% $c->i18n->p('global.search.features.description.3692b15', 'Description') |h %></th>
+    <th><% $c->i18n->p('global.search.features.location', 'Location') |h %></th>
   </tr>
 </thead>
 </table>

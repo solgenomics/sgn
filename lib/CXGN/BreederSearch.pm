@@ -16,6 +16,9 @@ package CXGN::BreederSearch;
 use Moose;
 use Data::Dumper;
 use Try::Tiny;
+use SGN::I18N ();
+use Scalar::Util ();
+use HTML::Entities ();
 
 has 'dbh' => (
     is  => 'rw',
@@ -297,6 +300,9 @@ sub test_matviews {
   my $dbname = shift;
   my $dbuser = shift;
   my $dbpass = shift;
+  my $presentation = shift;
+  my SGN::I18N $test_matviews_i18n = Scalar::Util::blessed($presentation) && $presentation->isa('SGN::I18N') ? $presentation : undef;
+
   my ($status, %response_hash);
 
   try {
@@ -313,7 +319,7 @@ sub test_matviews {
     print STDERR "Populated views, now proceeding with query . . . .\n";
     return { status => "Populated views, query can proceed." };
   } elsif (%response_hash && $response_hash{'message'} eq 'Wizard update initiated.') {
-    return { error => "The search wizard is temporarily unavailable while database indexes are being repopulated. Please try again later." };
+    return { error => ($test_matviews_i18n ? $test_matviews_i18n->p('global.wizard.unavailable', 'The search wizard is temporarily unavailable while database indexes are being repopulated. Please try again later.') : "The search wizard is temporarily unavailable while database indexes are being repopulated. Please try again later.") };
   } elsif (%response_hash && $response_hash{'error'}) {
     return { error => $response_hash{'error'} };
   } else {
@@ -341,6 +347,9 @@ sub refresh_matviews {
     my $refresh_type = shift || 'concurrent';
     my $basepath = shift;
     my $async = shift;
+  my $presentation = shift;
+  my SGN::I18N $refresh_matviews_i18n = Scalar::Util::blessed($presentation) && $presentation->isa('SGN::I18N') ? $presentation : undef;
+
 
     if (!defined($async)) {
         $async = 1;
@@ -356,7 +365,7 @@ sub refresh_matviews {
     my $refreshing = $h->fetchrow_array();
 
     if ($refreshing) {
-        return { error => $materialized_view.' update already in progress . . . ' };
+        return { error => ($refresh_matviews_i18n ? $refresh_matviews_i18n->p('global.wizard.refresh_in_progress', '%{view} update already in progress . . . ', {view => $materialized_view}) : $materialized_view.' update already in progress . . . ') };
     }
     else {
         try {
@@ -388,13 +397,13 @@ sub refresh_matviews {
             }
 
             if ($refresh_finished) {
-                return { message => $materialized_view . ' update completed!', connection => $async_refresh };
+                return { message => ($refresh_matviews_i18n ? $refresh_matviews_i18n->p('global.wizard.refresh_completed', '%{view} update completed!', {view => $materialized_view}) : $materialized_view . ' update completed!'), connection => $async_refresh };
             } else {
-                return { message => $materialized_view.' update initiated.', connection => $async_refresh  };
+                return { message => ($refresh_matviews_i18n ? $refresh_matviews_i18n->p('global.wizard.refresh_initiated', '%{view} update initiated.', {view => $materialized_view}) : $materialized_view.' update initiated.'), connection => $async_refresh  };
             }
         } catch {
             print STDERR 'Error initiating '.$materialized_view.' update.' . $@ . "\n";
-            return { error => 'Error initiating '.$materialized_view.' update.' . $@ };
+            return { error => ($refresh_matviews_i18n ? $refresh_matviews_i18n->p('global.wizard.refresh_error', 'Error initiating %{view} update.%{error}', {view => $materialized_view, error => '' . $@}) : 'Error initiating '.$materialized_view.' update.' . $@) };
         }
     }
 }
@@ -413,6 +422,9 @@ Side Effects: none
 
 sub matviews_status {
   my $self = shift;
+  my $presentation = shift;
+  my SGN::I18N $matviews_status_i18n = Scalar::Util::blessed($presentation) && $presentation->isa('SGN::I18N') ? $presentation : undef;
+
   my $q = "SELECT currently_refreshing, last_refresh FROM public.matviews WHERE mv_id=?";
   my $h = $self->dbh->prepare($q);
   $h->execute(1);
@@ -421,11 +433,11 @@ sub matviews_status {
 
   if ($refreshing) {
     print STDERR "Wizard is already refreshing, current status: $refreshing \n";
-    return { refreshing => "<p id='wizard_status'>Wizard update in progress . . . </p>"};
+    return { refreshing => ($matviews_status_i18n ? "<p id='wizard_status'>" . HTML::Entities::encode_entities($matviews_status_i18n->p('global.wizard.status_updating', 'Wizard update in progress . . . ')) . "</p>" : "<p id='wizard_status'>Wizard update in progress . . . </p>")};
   }
   else {
     print STDERR "materialized views last updated $timestamp\n";
-    return { timestamp => "<p id='wizard_status'>Wizard last updated: $timestamp</p>" };
+    return { timestamp => ($matviews_status_i18n ? "<p id='wizard_status'>" . HTML::Entities::encode_entities($matviews_status_i18n->p('global.wizard.status_timestamp', 'Wizard last updated: %{timestamp}', {timestamp => $timestamp})) . "</p>" : "<p id='wizard_status'>Wizard last updated: $timestamp</p>") };
   }
 }
 

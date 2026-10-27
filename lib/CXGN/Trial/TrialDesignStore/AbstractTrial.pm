@@ -6,13 +6,23 @@ CXGN::Trial::TrialDesignStore::AbstractTrial - a class to provide function in co
 =cut
 
 package CXGN::Trial::TrialDesignStore::AbstractTrial;
+use SGN::I18N ();
+use HTML::Entities ();
 
 use Moose;
+use CatalystX::GlobalContext '$c';
 use MooseX::FollowPBP;
 use Try::Tiny;
 use Data::Dumper;
 use CXGN::Stock;
 use JSON;
+
+has 'i18n' => (
+    is => 'ro',
+    isa => 'Maybe[Object]',
+    reader => 'i18n',
+    default => sub { $c && $c->can('i18n') ? $c->i18n : undef }
+);
 
 =head1 ACCESSORS
 
@@ -408,6 +418,7 @@ sub validate_design {
 sub store {
     print STDERR "Saving design ".localtime()."\n";
     my $self = shift;
+    my SGN::I18N $abstract_store_i18n = $self->i18n;
     my $chado_schema = $self->get_bcs_schema;
     my $design_type = $self->get_design_type;
     my %design = %{$self->get_design};
@@ -663,7 +674,7 @@ sub store {
                 }
 
                 if (!$parent_stock) {
-                    die ("Error while saving trial layout: no accession or cross or family name found matching $stock_name");
+                    die (($abstract_store_i18n ? $abstract_store_i18n->p("trial.design_store.no_matching_material", "Error while saving trial layout: no accession or cross or family name found matching %{name}", {name => "$stock_name"}) : "Error while saving trial layout: no accession or cross or family name found matching $stock_name"));
                 }
 
                 $stock_id_checked = $parent_stock->stock_id();
@@ -772,7 +783,7 @@ sub store {
                     }
 
                     if ($parent_plot_rs->count > 1){
-                        die "Plot $stock_id_checked is linked to more than one accession/cross/family name!\n"
+                        die (($abstract_store_i18n ? $abstract_store_i18n->p("trial.design_store.plot_multiple_accession", "Plot %{id} is linked to more than one accession/cross/family name!", {id => "$stock_id_checked"}) : "Plot $stock_id_checked is linked to more than one accession/cross/family name!") . "\n")
                     }
 
                     if ($parent_plot_rs->count == 1){
@@ -809,7 +820,7 @@ sub store {
                     }
 
                     if ($parent_subplot_rs->count > 1){
-                        die "Subplot $stock_id_checked is linked to more than one accession/cross/family name!\n"
+                        die (($abstract_store_i18n ? $abstract_store_i18n->p("trial.design_store.subplot_multiple_accession", "Subplot %{id} is linked to more than one accession/cross/family name!", {id => "$stock_id_checked"}) : "Subplot $stock_id_checked is linked to more than one accession/cross/family name!") . "\n")
                     }
 
                     if ($parent_subplot_rs->count == 1){
@@ -846,7 +857,7 @@ sub store {
                     }
 
                     if ($parent_plant_rs->count > 1){
-                        die "Plant $stock_id_checked is linked to more than one accession/cross/family name!\n"
+                        die (($abstract_store_i18n ? $abstract_store_i18n->p("trial.design_store.plant_multiple_accession", "Plant %{id} is linked to more than one accession/cross/family name!", {id => "$stock_id_checked"}) : "Plant $stock_id_checked is linked to more than one accession/cross/family name!") . "\n")
                     }
                     if ($parent_plant_rs->count == 1){
                         push @plot_subjects, { type_id => $stock_rel_type_id, object_id => $parent_plant_rs->first->object_id };
@@ -857,7 +868,7 @@ sub store {
                         'object.type_id'=>$self->get_plot_cvterm_id
                     }, {join => "object"});
                     if ($parent_plot_of_plant_rs->count > 1){
-                        die "Plant $stock_id_checked is linked to more than one plot!\n"
+                        die (($abstract_store_i18n ? $abstract_store_i18n->p("trial.design_store.plant_multiple_plot", "Plant %{id} is linked to more than one plot!", {id => "$stock_id_checked"}) : "Plant $stock_id_checked is linked to more than one plot!") . "\n")
                     }
                     if ($parent_plot_of_plant_rs->count == 1){
                         push @plot_subjects, { type_id => $stock_rel_type_id, object_id => $parent_plot_of_plant_rs->first->object_id };
@@ -893,7 +904,7 @@ sub store {
                     }
 
                     if ($parent_tissue_sample_rs->count > 1){
-                        die "Tissue_sample $stock_id_checked is linked to more than one accession/cross/family name!\n"
+                        die (($abstract_store_i18n ? $abstract_store_i18n->p("trial.design_store.tissue_sample_multiple_accession", "Tissue_sample %{id} is linked to more than one accession/cross/family name!", {id => "$stock_id_checked"}) : "Tissue_sample $stock_id_checked is linked to more than one accession/cross/family name!") . "\n")
                     }
                     if ($parent_tissue_sample_rs->count == 1){
                         push @plot_subjects, { type_id => $stock_rel_type_id, object_id => $parent_tissue_sample_rs->first->object_id };
@@ -904,7 +915,7 @@ sub store {
                         'object.type_id'=>$self->get_plot_cvterm_id
                     }, {join => "object"});
                     if ($parent_plot_of_tissue_sample_rs->count > 1){
-                        die "Tissue_sample $stock_id_checked is linked to more than one plot!\n"
+                        die (($abstract_store_i18n ? $abstract_store_i18n->p("trial.design_store.tissue_sample_multiple_plot", "Tissue_sample %{id} is linked to more than one plot!", {id => "$stock_id_checked"}) : "Tissue_sample $stock_id_checked is linked to more than one plot!") . "\n")
                     }
                     if ($parent_plot_of_tissue_sample_rs->count == 1){
                         push @plot_subjects, { type_id => $stock_rel_type_id, object_id => $parent_plot_of_tissue_sample_rs->first->object_id };
@@ -915,7 +926,7 @@ sub store {
                         'object.type_id'=>$self->get_plant_cvterm_id
                     }, {join => "object"});
                     if ($parent_plant_of_tissue_sample_rs->count > 1){
-                        die "Tissue_sample $stock_id_checked is linked to more than one plant!\n"
+                        die (($abstract_store_i18n ? $abstract_store_i18n->p("trial.design_store.tissue_sample_multiple_plant", "Tissue_sample %{id} is linked to more than one plant!", {id => "$stock_id_checked"}) : "Tissue_sample $stock_id_checked is linked to more than one plant!") . "\n")
                     }
                     if ($parent_plant_of_tissue_sample_rs->count == 1){
                         push @plot_subjects, { type_id => $stock_rel_type_id, object_id => $parent_plant_of_tissue_sample_rs->first->object_id };
@@ -1088,7 +1099,7 @@ sub store {
                     }, {join => "subject"});
 
                     if ($parent_plot_of_plant_rs->count > 1){
-                        die "Plant $parent_plant_id is linked to more than one plot!\n"
+                        die (($abstract_store_i18n ? $abstract_store_i18n->p("trial.design_store.plant_multiple_plot", "Plant %{id} is linked to more than one plot!", {id => "$parent_plant_id"}) : "Plant $parent_plant_id is linked to more than one plot!") . "\n")
                     }
 
                     if ($parent_plot_of_plant_rs->count == 1){

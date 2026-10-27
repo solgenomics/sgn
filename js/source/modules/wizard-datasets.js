@@ -54,7 +54,7 @@ export function WizardDatasets(main_id,wizard){
                 details+= `\n    ${contents.length} ${cat}`;
 	    }
         })
-        if ( confirm(`Dataset ${name} contains\: ${details}\nAre you sure you would like to delete it? Deletion cannot be undone.`)) {
+        if ( confirm(window.SGN && SGN.i18n ? SGN.i18n.p("global.wizard_datasets.delete_confirm", "Dataset %{name} contains: %{details}\nAre you sure you would like to delete it? Deletion cannot be undone.", {name: name, details: details}) : `Dataset ${name} contains\: ${details}\nAre you sure you would like to delete it? Deletion cannot be undone.`)) {
             datasets.deleteDataset(val);
             load_datasets();
         }
@@ -101,7 +101,7 @@ export function WizardDatasets(main_id,wizard){
         return !c.type || c.items.filter(d=>d.selected).length<1
       });
       if(first_irrelevant_col==0) {
-          alert(`Dataset creation failed. No data is selected.`);
+          alert((window.SGN && SGN.i18n ? SGN.i18n.p("global.wizard_datasets.create_failed_empty", "Dataset creation failed. No data is selected.") : "Dataset creation failed. No data is selected."));
           d3.select(this).attr("disabled",null);
           return;
       }
@@ -122,12 +122,12 @@ export function WizardDatasets(main_id,wizard){
         body: params
       }).then(response => {
         if (!response.ok){
-          alert("Network error!");
+          alert((window.SGN && SGN.i18n ? SGN.i18n.p("global.wizard_datasets.network_error", "Network error!") : "Network error!"));
         }
         return response.json();
       }).then(data => {
           if (data.error) {
-            alert("Error storing dataset: "+data.error);
+            alert(window.SGN && SGN.i18n ? SGN.i18n.p("global.wizard_datasets.store_error", "Error storing dataset: %{error}", {error: String(data.error)}) : "Error storing dataset: "+data.error);
             return;
           }
           console.log("New dataset... got id:"+data.id);
@@ -136,16 +136,16 @@ export function WizardDatasets(main_id,wizard){
           cols.forEach(c=>{
             details+= `\n    ${c.items.filter(d=>d.selected).length} ${c.type}`;
           });
-        alert(`Dataset ${name} created with\: ${details}. \nCompatibility check will run in background.`);
+        alert(window.SGN && SGN.i18n ? SGN.i18n.p("global.wizard_datasets.create_success", "Dataset %{name} created with: %{details}. \nCompatibility check will run in background.", {name: name, details: details}) : `Dataset ${name} created with\: ${details}. \nCompatibility check will run in background.`);
         $.ajax({
           url: '/ajax/dataset/calc_tool_compatibility/'+id,
           success: function(res) {
             if (res.error) {
-              alert("Error storing tool compatibility: "+res.error);
+              alert(window.SGN && SGN.i18n ? SGN.i18n.p("global.wizard_datasets.compatibility_store_error", "Error storing tool compatibility: %{error}", {error: String(res.error)}) : "Error storing tool compatibility: "+res.error);
             } 
           },
           error: function(res) {
-            alert("Error storing tool compatibility, check console.");
+            alert((window.SGN && SGN.i18n ? SGN.i18n.p("global.wizard_datasets.compatibility_console_error", "Error storing tool compatibility, check console.") : "Error storing tool compatibility, check console."));
           }
         });
         load_datasets();
@@ -154,7 +154,7 @@ export function WizardDatasets(main_id,wizard){
           returnToSource();
         }
       }).catch(error => {
-        alert("Error storing dataset or checking tool compatibility: "+error);
+        alert(window.SGN && SGN.i18n ? SGN.i18n.p("global.wizard_datasets.create_compatibility_error", "Error storing dataset or checking tool compatibility: %{error}", {error: String(error)}) : "Error storing dataset or checking tool compatibility: "+error);
         console.error(error);
       });
     }

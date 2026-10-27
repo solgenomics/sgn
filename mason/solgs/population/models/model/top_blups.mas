@@ -19,10 +19,10 @@ $top_blups
 
 
 
-<i>Top 10 genotypes</i>:
+<i><% $c->i18n->p("solgs.interface.top_10_genotypes", "Top 10 genotypes") |h %></i>:
 
 <& /page/columnar_table.mas,
-  headings     => ["Genotypes", "GEBVs"],
+  headings     => [$c->i18n->p("solgs.interface.genotypes", "Genotypes"), "GEBVs"],
   data         => $top_blups,
   __alt_freq   => 2,
   __alt_width  => 1,

@@ -1,3 +1,7 @@
+<%once>
+use HTML::Entities ();
+</%once>
+
 <%doc>
 
 =head1 NAME
@@ -19,17 +23,17 @@ David Waring <djw64@cornell.edu>
 
 <& /util/import_javascript.mas, classes => [ 'jquery', 'jquery.dataTables' ] &>
 
-<& /page/page_title.mas, title=>"Marker Search Results" &>
+<& /page/page_title.mas, title=>HTML::Entities::encode_entities($c->i18n->p("genotype.marker.marker_search_results", "Marker Search Results")) &>
 
 
 <button id="btn-modify-search" class="btn btn-info">
-    <span class="glyphicon glyphicon-chevron-left"></span>&nbsp;Modify Marker Search
+    <span class="glyphicon glyphicon-chevron-left"></span>&nbsp;<% $c->i18n->p("genotype.marker.modify_marker_search", "Modify Marker Search") |h %>
 </button>
 
 <br /><br /><br />
 
 <div id="genotyped-markers" style="display: none">
-    <&| /page/info_section.mas, title=>'Markers From Genotype Projects', collapsible=>1, collapsed=>0 &>
+    <&| /page/info_section.mas, anchor_title => 'Markers From Genotype Projects', title=>HTML::Entities::encode_entities($c->i18n->p("genotype.marker.markers_from_genotype_projects", 'Markers From Genotype Projects')), collapsible=>1, collapsed=>0 &>
         <div id="genotyped-marker-results" class="well">
             <table id="genotyped-marker-results-table" class="display"></table>
             <br />
@@ -39,8 +43,8 @@ David Waring <djw64@cornell.edu>
                     <span id="genotyped-marker-results-pages"></span>
                 </span>
                 <div class="btn-group" style="float: right">
-                    <button id="genotyped-marker-page-prev" type="button" class="btn btn-default" disabled><span class="glyphicon glyphicon-chevron-left"></span>&nbsp;Prev</button>
-                    <button id="genotyped-marker-page-next" type="button" class="btn btn-default" disabled>Next&nbsp;<span class="glyphicon glyphicon-chevron-right"></span></button>
+                    <button id="genotyped-marker-page-prev" type="button" class="btn btn-default" disabled><span class="glyphicon glyphicon-chevron-left"></span>&nbsp;<% $c->i18n->p("seedlot_maintenance_table.ui.previous", "Prev") |h %></button>
+                    <button id="genotyped-marker-page-next" type="button" class="btn btn-default" disabled><% $c->i18n->p("global.annotation_search_result.next", "Next") |h %>&nbsp;<span class="glyphicon glyphicon-chevron-right"></span></button>
                 </div>
             </div>
             <br /><br />
@@ -51,7 +55,7 @@ David Waring <djw64@cornell.edu>
 
 
 <div id="mapped-markers" style="display: none">
-    <&| /page/info_section.mas, title=>'Markers from Maps', collapsible=>1, collapsed=>0 &>
+    <&| /page/info_section.mas, anchor_title => 'Markers from Maps', title=>HTML::Entities::encode_entities($c->i18n->p("genotype.marker.markers_from_maps", 'Markers from Maps')), collapsible=>1, collapsed=>0 &>
         <div id="mapped-marker-results" class="well">
             <table id="mapped-marker-results-table" class="display"></table>
             <br />
@@ -61,8 +65,8 @@ David Waring <djw64@cornell.edu>
                     <span id="mapped-marker-results-pages"></span>
                 </span>
                 <div class="btn-group" style="float: right">
-                    <button id="mapped-marker-page-prev" type="button" class="btn btn-default" disabled><span class="glyphicon glyphicon-chevron-left"></span>&nbsp;Prev</button>
-                    <button id="mapped-marker-page-next" type="button" class="btn btn-default" disabled>Next&nbsp;<span class="glyphicon glyphicon-chevron-right"></span></button>
+                    <button id="mapped-marker-page-prev" type="button" class="btn btn-default" disabled><span class="glyphicon glyphicon-chevron-left"></span>&nbsp;<% $c->i18n->p("seedlot_maintenance_table.ui.previous", "Prev") |h %></button>
+                    <button id="mapped-marker-page-next" type="button" class="btn btn-default" disabled><% $c->i18n->p("global.annotation_search_result.next", "Next") |h %>&nbsp;<span class="glyphicon glyphicon-chevron-right"></span></button>
                 </div>
             </div>
             <br /><br />
@@ -99,23 +103,23 @@ jQuery(document).ready(function() {
         data: [],
         columns: [
             { 
-                title: "Marker", 
+                title: jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("genotype.marker.marker", "Marker") : "Marker")).html(),
                 data: "marker_name",
                 render: function(data, type, row) {
                     return data && data !== "" ? "<strong><a href='/variant/" + row.variant_name + "/details'>" + data + "</a></strong>" : "";
                 }
             },
             { 
-                title: "Protocol", 
+                title: jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("global.search_wizard.protocol", "Protocol") : "Protocol")).html(),
                 data: "nd_protocol_name",
                 render: function(data, type, row) {
                     return data && data !== "" ? "<a href='/breeders_toolbox/protocol/" + row.nd_protocol_id + "'>" + data + "</a>" : "";
                 } 
             },
-            { title: "Species", data: "species_name" },
-            { title: "Reference Genome", data: "reference_genome_name" },
-            { title: "Chromosome", data: "chrom" },
-            { title: "Position", data: "pos" },
+            { title: jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("cross.species", "Species") : "Species")).html(), data: "species_name" },
+            { title: jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("genotype.plate.reference_genome", "Reference Genome") : "Reference Genome")).html(), data: "reference_genome_name" },
+            { title: jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("global.search_wizard.chromosome", "Chromosome") : "Chromosome")).html(), data: "chrom" },
+            { title: jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("genotype.marker.position", "Position") : "Position")).html(), data: "pos" },
             { title: "Ref", data: "ref" },
             { title: "Alt", data: "alt" }
         ],
@@ -133,18 +137,18 @@ jQuery(document).ready(function() {
         data: [],
         columns: [
             { 
-                title: "Marker", 
+                title: jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("genotype.marker.marker", "Marker") : "Marker")).html(),
                 data: "marker_name", 
                 render: function(data, type, row) {
                     return data && data !== "" ? "<strong><a href='/search/markers/markerinfo.pl?marker_id=" + row.marker_id + "'>" + data + "</a></strong>" : "";
                 }
             },
-            { title: "Protocol", data: "protocol" },
-            { title: "Species", data: "species_name" },
-            { title: "Map", data: "map_name" },
-            { title: "Chromosome", data: "lg_name" },
-            { title: "Position", data: "position" },
-            { title: "Map Units", data: "map_units" },
+            { title: jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("global.search_wizard.protocol", "Protocol") : "Protocol")).html(), data: "protocol" },
+            { title: jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("cross.species", "Species") : "Species")).html(), data: "species_name" },
+            { title: jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("genotype.marker.map", "Map") : "Map")).html(), data: "map_name" },
+            { title: jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("global.search_wizard.chromosome", "Chromosome") : "Chromosome")).html(), data: "lg_name" },
+            { title: jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("genotype.marker.position", "Position") : "Position")).html(), data: "position" },
+            { title: jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("genotype.marker.map_units", "Map Units") : "Map Units")).html(), data: "map_units" },
         ],
         order: [[ 0, "asc" ]]
     });
@@ -229,7 +233,7 @@ function searchGenotypedMarkers() {
     let dt = jQuery('#genotyped-marker-results-table').DataTable();
     dt.clear();
     dt.draw();
-    jQuery("#genotyped-marker-results-table .dataTables_empty").html("Searching...");
+    jQuery("#genotyped-marker-results-table .dataTables_empty").html((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("global.search.bulk.searching", "Searching...") : "Searching..."));
     jQuery("#genotyped-marker-page-prev").attr('disabled', true);
     jQuery("#genotyped-marker-page-next").attr('disabled', true);
 
@@ -254,7 +258,7 @@ function searchGenotypedMarkers() {
             displayGenotypedMarkers(dt, data);
         },
         error: function() {
-            alert("ERROR: Could not perform genotyped marker search");
+            alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("genotype.marker.error_could_not_perform_genotyped_marker_search", "ERROR: Could not perform genotyped marker search") : "ERROR: Could not perform genotyped marker search"));
         }
     });
 
@@ -317,8 +321,8 @@ function displayGenotypedMarkers(dt, data) {
     let displayed = start + " - " + end + " / " + total;
     let max_page = Math.ceil(total/GENOTYPED_MARKERS_LIMIT);
     let page = GENOTYPED_MARKERS_PAGE + " / " + max_page;
-    jQuery("#genotyped-marker-results-displayed").html("<strong>MARKERS:</strong> " + displayed);
-    jQuery("#genotyped-marker-results-pages").html("<strong>PAGE:</strong> " + page);
+    jQuery("#genotyped-marker-results-displayed").html(("<strong>" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("genotype.marker.markers", "MARKERS:") : "MARKERS:")).html() + "</strong> ") + displayed);
+    jQuery("#genotyped-marker-results-pages").html(("<strong>" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("genotype.marker.page", "PAGE:") : "PAGE:")).html() + "</strong> ") + page);
     jQuery("#genotyped-marker-page-prev").attr('disabled', GENOTYPED_MARKERS_PAGE === 1);
     jQuery("#genotyped-marker-page-next").attr('disabled', GENOTYPED_MARKERS_PAGE === max_page || max_page === 0);
     
@@ -344,7 +348,7 @@ function searchMappedMarkers() {
     let dt = jQuery('#mapped-marker-results-table').DataTable();
     dt.clear();
     dt.draw();
-    jQuery("#mapped-marker-results-table .dataTables_empty").html("Searching...");
+    jQuery("#mapped-marker-results-table .dataTables_empty").html((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("global.search.bulk.searching", "Searching...") : "Searching..."));
     jQuery("#mapped-marker-page-prev").attr('disabled', true);
     jQuery("#mapped-marker-page-next").attr('disabled', true);
 
@@ -368,7 +372,7 @@ function searchMappedMarkers() {
             displayMappedMarkers(dt, data);
         },
         error: function() {
-            alert("ERROR: Could not perform mapped marker search");
+            alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("genotype.marker.error_could_not_perform_mapped_marker_search", "ERROR: Could not perform mapped marker search") : "ERROR: Could not perform mapped marker search"));
         }
     });
 
@@ -423,8 +427,8 @@ function displayMappedMarkers(dt, data) {
     let displayed = start + " - " + end + " / " + total;
     let max_page = Math.ceil(total/MAPPED_MARKERS_LIMIT);
     let page = MAPPED_MARKERS_PAGE + " / " + max_page;
-    jQuery("#mapped-marker-results-displayed").html("<strong>MARKERS:</strong> " + displayed);
-    jQuery("#mapped-marker-results-pages").html("<strong>PAGE:</strong> " + page);
+    jQuery("#mapped-marker-results-displayed").html(("<strong>" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("genotype.marker.markers", "MARKERS:") : "MARKERS:")).html() + "</strong> ") + displayed);
+    jQuery("#mapped-marker-results-pages").html(("<strong>" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("genotype.marker.page", "PAGE:") : "PAGE:")).html() + "</strong> ") + page);
     jQuery("#mapped-marker-page-prev").attr('disabled', MAPPED_MARKERS_PAGE === 1);
     jQuery("#mapped-marker-page-next").attr('disabled', MAPPED_MARKERS_PAGE === max_page || max_page === 0);
 

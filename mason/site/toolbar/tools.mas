@@ -1,41 +1,41 @@
-<li class="dropdown"><a class="menu_click_dropdown dropdown-toggle" data-toggle="dropdown" >Tools</a>
+<li class="dropdown"><a class="menu_click_dropdown dropdown-toggle" data-toggle="dropdown"><% $c->i18n->p('global.tools.title', 'Tools') |h %></a>
 <!-- <li class="dropdown"><a class="dropdown-toggle" data-toggle="dropdown" href="#">Tools<span class="caret"></span></a> -->
   <ul class="dropdown-menu">
-    <li class="dropdown-header">Sequence Analysis</li>
+    <li class="dropdown-header"><% $c->i18n->p('global.tools.sequence_analysis', 'Sequence Analysis') |h %></li>
     <li><a href="/tools/blast/">BLAST</a></li>
-    <li><a href="http://vigs.solgenomics.net/">VIGS Tool</a></li>
-    <li><a href="/tools/align_viewer/">Alignment Analyzer</a></li>
-    <li><a href="/tools/tree_browser/">Tree Browser</a></li>
-    <li><a href="/tools/motifs_finder/">Motif Finder</a></li>
+    <li><a href="http://vigs.solgenomics.net/"><% $c->i18n->p('global.tools.vigs_tool', '%{tool} Tool', {tool => 'VIGS'}) |h %></a></li>
+    <li><a href="/tools/align_viewer/"><% $c->i18n->p('global.tools.alignment_analyzer', 'Alignment Analyzer') |h %></a></li>
+    <li><a href="/tools/tree_browser/"><% $c->i18n->p('global.tools.tree_browser', 'Tree Browser') |h %></a></li>
+    <li><a href="/tools/motifs_finder/"><% $c->i18n->p('global.tools.motif_finder', 'Motif Finder') |h %></a></li>
 
     <li role="separator" class="divider"></li>
-    <li class="dropdown-header">Mapping</li>
-    <li><a href="/jbrowse/">Genome Browser (Jbrowse)</a></li>
-    <li><a href="/cview/view_chromosome.pl?show_offsets=1&amp;show_ruler=1&amp;show_offsets=1">Comparative Map Viewer</a></li>
-    <li><a href="/tools/caps_designer/caps_input.pl">CAPS Designer</a></li>
-    <li><a href="/search/phenotypes/qtl">solQTL: QTL Mapping</a></li>
+    <li class="dropdown-header"><% $c->i18n->p('global.tools.mapping', 'Mapping') |h %></li>
+    <li><a href="/jbrowse/"><% $c->i18n->p('global.tools.genome_browser', 'Genome Browser (Jbrowse)') |h %></a></li>
+    <li><a href="/cview/view_chromosome.pl?show_offsets=1&amp;show_ruler=1&amp;show_offsets=1"><% $c->i18n->p('global.tools.comparative_map_viewer', 'Comparative Map Viewer') |h %></a></li>
+    <li><a href="/tools/caps_designer/caps_input.pl"><% $c->i18n->p('global.tools.caps_designer', '%{method} Designer', {method => 'CAPS'}) |h %></a></li>
+    <li><a href="/search/phenotypes/qtl"><% $c->i18n->p('global.tools.solqtl_mapping', '%{service}: QTL Mapping', {service => 'solQTL'}) |h %></a></li>
 
     <li role="separator" class="divider"></li>
-    <li class="dropdown-header">Molecular Biology</li>
-    <li><a href="/tools/in_silico_pcr">In Silico PCR</a></li>
+    <li class="dropdown-header"><% $c->i18n->p('global.tools.molecular_biology', 'Molecular Biology') |h %></li>
+    <li><a href="/tools/in_silico_pcr"><% $c->i18n->p('global.tools.in_silico_pcr', 'In Silico PCR') |h %></a></li>
     <li><a href="http://tea.solgenomics.net/">Tomato Expression Atlas (TEA)</a></li>    
     <li><a href="http://ted.bti.cornell.edu/">Tomato Expression Database (TED)</a></li>
 
     <li role="separator" class="divider"></li>
-    <li class="dropdown-header">Systems Biology</li>
-    <li><a href="/tools/solcyc/">SolCyc Biochemical Pathways</a></li>
-    <li><a href="/tools/interactomics">Coffee Interactomic Data</a></li>
-    <li><a href="/tools/onto/">SGN Ontology Browser</a></li>
+    <li class="dropdown-header"><% $c->i18n->p('global.tools.systems_biology', 'Systems Biology') |h %></li>
+    <li><a href="/tools/solcyc/"><% $c->i18n->p('global.tools.solcyc_pathways', '%{service} Biochemical Pathways', {service => 'SolCyc'}) |h %></a></li>
+    <li><a href="/tools/interactomics"><% $c->i18n->p('global.tools.coffee_interactomic_data', '%{crop} Interactomic Data', {crop => 'Coffee'}) |h %></a></li>
+    <li><a href="/tools/onto/"><% $c->i18n->p('global.tools.sgn_ontology_browser', '%{organization} Ontology Browser', {organization => 'SGN'}) |h %></a></li>
 
     <li role="separator" class="divider"></li>
-    <li class="dropdown-header">Breeder Tools</li>
+    <li class="dropdown-header"><% $c->i18n->p('global.tools.breeder_tools', 'Breeder Tools') |h %></li>
     <li><a href="/breeders/home">Breeders Toolbox</a></li>
 
     <li role="separator" class="divider"></li>
-    <li class="dropdown-header">Bulk Query</li>
-    <li><a href="/tools/bulk?mode=ftp">FTP Site</a></li>
-    <li><a href="/tools/bulk?mode=genes">Download Gene Sequences</a></li>
-    <li><a href="/tools/bulk">Clones, Arrays, Unigenes and BACs</a></li>
-    <li><a href="/tools/bulk?mode=converter">Unigene Converter</a></li>
+    <li class="dropdown-header"><% $c->i18n->p('global.tools.bulk_query', 'Bulk Query') |h %></li>
+    <li><a href="/tools/bulk?mode=ftp"><% $c->i18n->p('global.tools.ftp_site', 'FTP Site') |h %></a></li>
+    <li><a href="/tools/bulk?mode=genes"><% $c->i18n->p('global.tools.download_gene_sequences', 'Download Gene Sequences') |h %></a></li>
+    <li><a href="/tools/bulk"><% $c->i18n->p('global.tools.clones_arrays_unigenes_bacs', 'Clones, Arrays, Unigenes and BACs') |h %></a></li>
+    <li><a href="/tools/bulk?mode=converter"><% $c->i18n->p('global.tools.unigene_converter', 'Unigene Converter') |h %></a></li>
   </ul>
 </li>

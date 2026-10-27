@@ -4,48 +4,82 @@
 
 <& /util/import_javascript.mas, classes => [ 'bootstrap_min.js', 'jquery' ] &>
 
-<& /page/page_title.mas, title => 'Seedlot Maintenance' &>
+<%perl>
+    use HTML::Entities ();
 
-<&| /page/info_section.mas, title=>"About Seedlot Maintenance",  collapsible => 1, collapsed => 1 &>
+    # Catalog text is plain; only these component-owned slots produce markup.
+    my $render_help = sub {
+        my ($message, $slots, $fallback) = @_;
+        my %present;
+        $present{$1}++ while $message =~ /%\{([A-Za-z_][A-Za-z0-9_]*)\}/g;
+        # Repeated known placeholders are valid catalog data. A malformed local
+        # slot set falls back to the complete original prose, never a page error.
+        if ((grep { !exists $slots->{$_} } keys %present)
+                || (grep { !exists $present{$_} } keys %$slots)) {
+            $message = $fallback;
+        }
+        my $html = '';
+        for my $piece (split(/(%\{[A-Za-z_][A-Za-z0-9_]*\})/, $message, -1)) {
+            if ($piece =~ /\A%\{([A-Za-z_][A-Za-z0-9_]*)\}\z/ && exists $slots->{$1}) {
+                $html .= $slots->{$1};
+            }
+            else {
+                $html .= HTML::Entities::encode_entities($piece);
+            }
+        }
+        return $html;
+    };
+    my $record_help_label = HTML::Entities::encode_entities($c->i18n->p('seedlot_maintenance.ui.record_help_label', 'Record Maintenance'));
+    my $upload_label = HTML::Entities::encode_entities($c->i18n->p('seedlot_maintenance.ui.upload', 'Upload Maintenance'));
+    my $seedlots_label = HTML::Entities::encode_entities($c->i18n->p('seedlot_maintenance.ui.seedlots_link_label', 'Manage > Seedlots'));
+    my $download_label = HTML::Entities::encode_entities($c->i18n->p('seedlot_maintenance.ui.download_link_label', 'Manage > Download'));
+    my $record_help = $render_help->(
+        $c->i18n->p('seedlot_maintenance.ui.record_help', 'To record a new maintenance event for a particular Seedlot, use the %{record_button} button below to enter the event information directly on the website. You can also bulk upload maintenance events for one or more Seedlots using the %{upload_button} button.', {record_button => '%{record_button}', upload_button => '%{upload_button}'}),
+        {record_button => '<strong>' . $record_help_label . '</strong>', upload_button => '<strong>' . $upload_label . '</strong>'},
+        'To record a new maintenance event for a particular Seedlot, use the %{record_button} button below to enter the event information directly on the website. You can also bulk upload maintenance events for one or more Seedlots using the %{upload_button} button.'
+    );
+    my $view_help = $render_help->(
+        $c->i18n->p('seedlot_maintenance.ui.view_help', 'You can view the maintenance events for a single Seedlot on the Seedlot detail page by going to the %{seedlots_link} page, searching for the Seedlot, and clicking its name in the results table. You can also filter through all of the stored maintenance events using the search below. The events can then be downloaded from the table displaying the results or downloaded in bulk from the %{download_link} page using a list of Seedlots.', {seedlots_link => '%{seedlots_link}', download_link => '%{download_link}'}),
+        {seedlots_link => '<a href="/breeders/seedlots"><strong>' . $seedlots_label . '</strong></a>', download_link => '<a href="/breeders/download"><strong>' . $download_label . '</strong></a>'},
+        'You can view the maintenance events for a single Seedlot on the Seedlot detail page by going to the %{seedlots_link} page, searching for the Seedlot, and clicking its name in the results table. You can also filter through all of the stored maintenance events using the search below. The events can then be downloaded from the table displaying the results or downloaded in bulk from the %{download_link} page using a list of Seedlots.'
+    );
+</%perl>
+
+<& /page/page_title.mas, title => HTML::Entities::encode_entities($c->i18n->p('seedlot_maintenance.ui.title', 'Seedlot Maintenance')) &>
+
+<div id="seedlot-maintenance-main">
+<&| /page/info_section.mas, title=>HTML::Entities::encode_entities($c->i18n->p('seedlot_maintenance.ui.about', 'About Seedlot Maintenance')), anchor_title=>'About Seedlot Maintenance',  collapsible => 1, collapsed => 1 &>
     <div class="well well-sm">
         <div class="panel panel-default">
             <div class="panel-body">
-                <p>Seedlot Maintenance allows you to record and document certain actions and/or observations taken 
-                for the proper maintenance of your Seedlots.  The actions and observations are timestamped so you can 
-                clearly track the maintenance and state of your Seedlots over time.</p>
-                <p>To record a new maintenance event for a particular Seedlot, use the <strong>Record Maintenance</strong> 
-                button below to enter the event information directly on the website.  You can also bulk upload maintenance 
-                events for one or more Seedlots using the <strong>Upload Maintenance</strong> button.</p>
-                <p>You can view the maintenance events for a single Seedlot on the Seedlot detail page by going to the 
-                <a href='/breeders/seedlots'><strong>Manage &gt; Seedlots</strong></a> page, searching for the Seedlot, 
-                and clicking its name in the results table.  You can also filter through all of the stored maintenance 
-                events using the search below.  The events can then be downloaded from the table displaying the results or 
-                downloaded in bulk from the <a href='/breeders/download'><strong>Manage &gt; Download</strong></a>
-                page using a list of Seedlots.</p>
+                <p><% $c->i18n->p('seedlot_maintenance.ui.about_help', 'Seedlot Maintenance allows you to record and document certain actions and/or observations taken for the proper maintenance of your Seedlots. The actions and observations are timestamped so you can clearly track the maintenance and state of your Seedlots over time.') |h %></p>
+                <p><% $record_help %></p>
+                <p><% $view_help %></p>
             </div>
         </div>
     </div>
 </&>
 
 <!-- Additional crop-specific seedlot maintenance tools -->
-<&| /page/info_section.mas, title=>"Seedlot Maintenance Tools",  collapsible => 1, collapsed => !$tool &>
+<&| /page/info_section.mas, title=>HTML::Entities::encode_entities($c->i18n->p('seedlot_maintenance.ui.tools', 'Seedlot Maintenance Tools')), anchor_title=>'Seedlot Maintenance Tools',  collapsible => 1, collapsed => !$tool &>
     <& /breeders_toolbox/seedlot_maintenance/tools.mas, collapsed => !$tool &>
 </&>
 
 <%perl>
     my $seedlot_subtitle = '';
     if ( !$c->user() ) {
-        $seedlot_subtitle = "Login to add Seedlot maintenance events";
+        $seedlot_subtitle = HTML::Entities::encode_entities($c->i18n->p('seedlot_maintenance.ui.login', 'Login to add Seedlot maintenance events'));
     }
     elsif ( $c->user()->check_roles("curator") || $c->user()->check_roles("submitter") ) {
-        $seedlot_subtitle = '<button class="btn btn-sm btn-primary" style="margin:3px" id="record_events">Record Maintenace</button> <button class="btn btn-sm btn-primary" style="margin:3px" id="upload_events">Upload Maintenance</button>'
+        $seedlot_subtitle = '<button class="btn btn-sm btn-primary" style="margin:3px" id="record_events">' . HTML::Entities::encode_entities($c->i18n->p('seedlot_maintenance.ui.record', 'Record Maintenace')) . '</button> <button class="btn btn-sm btn-primary" style="margin:3px" id="upload_events">' . $upload_label . '</button>'
     }
 </%perl>
-<&| /page/info_section.mas, title=>"Seedlot Maintenance Events",  collapsible => 1, collapsed => !!$tool, subtitle => $seedlot_subtitle &>
+<&| /page/info_section.mas, title=>HTML::Entities::encode_entities($c->i18n->p('seedlot_maintenance.ui.events', 'Seedlot Maintenance Events')), anchor_title=>'Seedlot Maintenance Events',  collapsible => 1, collapsed => !!$tool, subtitle => $seedlot_subtitle &>
     
     <& /breeders_toolbox/seedlot_maintenance/table.mas &>
 
 </&>
+</div>
 
 
 <!-- Upload Workflow Dialog -->
@@ -64,3 +98,22 @@
     });
 
 </script>
+
+<style>
+    #seedlot-maintenance-main > table.infosectionhead {
+        width: 99%;
+        max-width: 99%;
+        table-layout: fixed;
+    }
+    #seedlot-maintenance-main > table.infosectionhead > tbody > tr > td.infosectiontitle,
+    #seedlot-maintenance-main > table.infosectionhead > tbody > tr > td.infosectionsubtitle {
+        width: 50%;
+        white-space: normal;
+        overflow-wrap: anywhere;
+    }
+    #seedlot-maintenance-main > table.infosectionhead > tbody > tr > td.infosectionsubtitle > button {
+        max-width: calc(100% - 6px);
+        white-space: normal;
+        overflow-wrap: anywhere;
+    }
+</style>

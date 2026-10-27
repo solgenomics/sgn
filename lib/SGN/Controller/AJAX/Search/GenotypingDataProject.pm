@@ -13,6 +13,7 @@ SGN::Controller::AJAX::Search::GenotypingDataProject - a REST controller class t
 package SGN::Controller::AJAX::Search::GenotypingDataProject;
 
 use Moose;
+use SGN::I18N ();
 use Data::Dumper;
 use JSON;
 use File::Slurp qw | read_file |;
@@ -149,6 +150,7 @@ sub genotyping_project_protocols : Path('/ajax/genotyping_project/protocols') : 
 sub genotyping_project_protocols_GET : Args(0) {
     my $self = shift;
     my $c = shift;
+    my $i18n = SGN::I18N::translate($c);
     my $bcs_schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
     my $genotyping_project_id = $c->req->param('genotyping_project_id');
 
@@ -160,7 +162,7 @@ sub genotyping_project_protocols_GET : Args(0) {
 #    print STDERR "ASSOCIATED PROTOCOL =".Dumper($associated_protocol)."\n";
     my @info;
     if ( defined $associated_protocol && scalar(@$associated_protocol)>1) {
-        $c->stash->{rest} = { error => "Each genotyping project should be associated with only one protocol" };
+        $c->stash->{rest} = { error => SGN::I18N::translate($i18n, "genotype.protocol.server.each_genotyping_project_should_be_associated_with_only_one_protocol", "Each genotyping project should be associated with only one protocol") };
         return;
     } elsif (defined $associated_protocol && scalar(@$associated_protocol) == 1) {
         push @info, {
@@ -179,6 +181,7 @@ sub genotyping_project_has_archived_vcf : Path('/ajax/genotyping_project/has_arc
 sub genotyping_project_has_archived_vcf_GET : Args(0) {
     my $self = shift;
     my $c = shift;
+    my $i18n = SGN::I18N::translate($c);
     my @project_ids = split(',', $c->req->param('genotyping_project_id'));
     my @protocol_ids = split(',', $c->req->param('genotyping_protocol_id'));
     my $limit = defined $c->req->param('limit');
@@ -203,7 +206,7 @@ sub genotyping_project_has_archived_vcf_GET : Args(0) {
 
     # Make sure there is at least 1 matching project
     if ( scalar(@project_ids) < 1 ) {
-        $c->stash->{rest} = { error => "No genotyping projects selected!" };
+        $c->stash->{rest} = { error => SGN::I18N::translate($i18n, "genotype.protocol.server.no_genotyping_projects_selected", "No genotyping projects selected!") };
         return;
     }
 
@@ -370,6 +373,7 @@ sub genotyping_project_accession_search : Path('/ajax/genotyping_project/search/
 sub genotyping_project_accession_search_POST : Args(0) {
     my $self = shift;
     my $c = shift;
+    my $i18n = SGN::I18N::translate($c);
     my $schema = $c->dbic_schema('Bio::Chado::Schema');
     my $dbh = $schema->storage->dbh();
     my $accession_list_id = $c->req->param('accession_list_id');
@@ -388,7 +392,7 @@ sub genotyping_project_accession_search_POST : Args(0) {
 
     # Make sure we have a list id or accessions ids
     if ( (!defined $accession_list_id || $accession_list_id eq "") && scalar @accession_ids == 0 ) {
-        $error = "You must define the accession_list_id or accession_ids!";
+        $error = SGN::I18N::translate($i18n, "genotype.protocol.server.you_must_define_the_accession_list_id_or_accession_ids", "You must define the accession_list_id or accession_ids!");
     }
 
     # Get Accession IDs from specified List
@@ -409,7 +413,7 @@ sub genotyping_project_accession_search_POST : Args(0) {
 
         }
         else {
-            $error = "List does not contain any list items!";
+            $error = SGN::I18N::translate($i18n, "genotype.protocol.server.list_does_not_contain_any_list_items", "List does not contain any list items!");
         }
 
     }

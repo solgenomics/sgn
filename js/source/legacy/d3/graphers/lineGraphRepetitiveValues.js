@@ -136,8 +136,8 @@
                 var e = d3.event;
                 tooltip
                     .html(
-                        "<strong>Value:</strong> " + d.value + "<br/>" +
-                        "<strong>Date:</strong> " + d3.timeFormat("%Y-%m-%d")(d.date)
+                        "<strong>" + (typeof window !== 'undefined' && window.SGN && window.SGN.i18n && window.jQuery ? jQuery('<span>').text(SGN.i18n.p("widgets.graph.value_label", "Value:")).html() : "Value:") + "</strong> " + d.value + "<br/>" +
+                        "<strong>" + (typeof window !== 'undefined' && window.SGN && window.SGN.i18n && window.jQuery ? jQuery('<span>').text(SGN.i18n.p("widgets.graph.date_label", "Date:")).html() : "Date:") + "</strong> " + d3.timeFormat("%Y-%m-%d")(d.date)
                     )
                     .style("left", (e.pageX + 10) + "px")
                     .style("top",  (e.pageY - 25) + "px")
@@ -161,7 +161,7 @@
             .attr("y", height + margin.bottom - 10)
             .attr("text-anchor", "middle")
             .style("font-size", "12px")
-            .text("Collect Date");
+            .text((typeof window !== 'undefined' && window.SGN && window.SGN.i18n ? SGN.i18n.p("widgets.graph.collect_date", "Collect Date") : "Collect Date"));
         }
  
         if (options.showYAxis) {

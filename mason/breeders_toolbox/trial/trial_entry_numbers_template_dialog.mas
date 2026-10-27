@@ -1,3 +1,6 @@
+<%once>
+use HTML::Entities ();
+</%once>
 
 <%args>
 $trial_id => undef
@@ -8,8 +11,8 @@ $trial_name => undef
   <div class="modal-dialog modal-lg" role="document">
     <div class="modal-content">
       <div class="modal-header">
-        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-        <h4 class="modal-title" id="setEntryNumbersDialog">Generate Entry Numbers Template</h4>
+        <button type="button" class="close" data-dismiss="modal" aria-label="<% $c->i18n->p('trial.upload.dialog.close', "Close") |h %>"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title" id="setEntryNumbersDialog"><% $c->i18n->p('trial.entry_template.title', "Generate Entry Numbers Template") |h %></h4>
       </div>
       <div class="modal-body">
         <div class="container-fluid">
@@ -17,24 +20,24 @@ $trial_name => undef
           <&| /util/workflow.mas, id=> "set_entry_numbers_workflow" &>
             
             <!-- Step 1: Intro -->
-            <&| /util/workflow.mas:step, title=> "Intro" &>
-              <& /page/page_title.mas, title=>"Generate Entry Numbers Template" &>
+            <&| /util/workflow.mas:step, title => HTML::Entities::encode_entities($c->i18n->p("trial.common.intro", "Intro")) &>
+              <& /page/page_title.mas, title=>HTML::Entities::encode_entities($c->i18n->p('trial.entry_template.title', "Generate Entry Numbers Template")) &>
               <div class="well">
-                  <p>This workflow will generate an Excel spreadsheet which can be used to upload entry numbers (numbers assigned to acccessions in a set of trials).  In the first step, select one or more trials you want to assign accession entry numbers.  Then, download the Excel template containing the selected trials' accessions.  Once you have the entry numbers filled in, use the <strong>Upload Template</strong> function to upload the accession numbers to the database.</p>
+                  <p><%perl> my $caption = HTML::Entities::encode_entities($c->i18n->p('trial.entry_template.workflow_help', "This workflow will generate an Excel spreadsheet which can be used to upload entry numbers (numbers assigned to acccessions in a set of trials).  In the first step, select one or more trials you want to assign accession entry numbers.  Then, download the Excel template containing the selected trials' accessions.  Once you have the entry numbers filled in, use the <strong>Upload Template</strong> function to upload the accession numbers to the database.")); $caption =~ s/&lt;strong&gt;/<strong>/g; $caption =~ s/&lt;\/strong&gt;/<\/strong>/g; print $caption; </%perl></p>
               </div>
 
               <div class="center">
-                <button class="btn btn-primary" id="set_entry_numbers_intro_step">Start</button>
+                <button class="btn btn-primary" id="set_entry_numbers_intro_step"><% $c->i18n->p('trial.entry_template.start', "Start") |h %></button>
               </div>
             </&>
             <!-- End Intro -->
 
             <!-- Step 2: Select Trials -->
-            <&| /util/workflow.mas:step, title=> "Select Trials" &>
-              <& /page/page_title.mas, title=>"Select Trial(s) to assign Entry Numbers" &>
+            <&| /util/workflow.mas:step, title => HTML::Entities::encode_entities($c->i18n->p("trial.common.select_trials", "Select Trials")) &>
+              <& /page/page_title.mas, title=>HTML::Entities::encode_entities($c->i18n->p('trial.entry_template.select_title', "Select Trial(s) to assign Entry Numbers")) &>
               <p>
-                <strong>Select Trial(s):</strong> 
-                Select one or more individual Trials or a List of Trials to assign entry numbers.
+                <strong><% $c->i18n->p('trial.entry_template.select_label', "Select Trial(s):") |h %></strong>
+                <% $c->i18n->p('trial.entry_template.select_help', "Select one or more individual Trials or a List of Trials to assign entry numbers.") |h %>
               </p>
 
 % if ( $trial_id && $trial_name ) {
@@ -46,7 +49,7 @@ $trial_name => undef
                     </select>
                   </div>
                   <div class="col-md-4">
-                    <button id="set_entry_numbers_selection_change" class="btn btn-primary btn-block">Change Trial Selections</button>
+                    <button id="set_entry_numbers_selection_change" class="btn btn-primary btn-block"><% $c->i18n->p('trial.entry_template.change_selection', "Change Trial Selections") |h %></button>
                   </div>
                 </div>
               </div>
@@ -57,27 +60,24 @@ $trial_name => undef
               <br /><br />
 
               <div class="center">
-                <button class="btn btn-primary" id="set_entry_numbers_select_trials_step">Go to Next Step</button>
+                <button class="btn btn-primary" id="set_entry_numbers_select_trials_step"><% $c->i18n->p('trial.entry_template.next_step', "Go to Next Step") |h %></button>
               </div>
             </&>
             <!-- End Select Trials -->
 
             <!-- Step 2: Generate Template -->
-            <&| /util/workflow.mas:step, title=> "Download Template" &>
-              <& /page/page_title.mas, title=>"Download Entry Number Template" &>
+            <&| /util/workflow.mas:step, title => HTML::Entities::encode_entities($c->i18n->p("trial.common.download_template", "Download Template")) &>
+              <& /page/page_title.mas, title=>HTML::Entities::encode_entities($c->i18n->p('trial.entry_template.download_title', "Download Entry Number Template")) &>
               <div id="set_entry_numbers_template_loading" style="max-width: 250px; margin: 50px auto; text-align: center;">
-                <p>Generating Template...</p>
+                <p><% $c->i18n->p('trial.entry_template.generating', "Generating Template...") |h %></p>
               </div>
 
               <div id="set_entry_numbers_template">
                 <div class="well">
-                  <p style="margin: 0">Download the generated template and fill in the <strong>entry_number</strong> column for each Accession 
-                  you want to assign an entry number to.  An entry number is not required for each Accession, but each entry number 
-                  should be unique for this set of Trial(s).  Once you have filled out the template, you can upload it to the database 
-                  using the <strong>Upload Template</strong> function.</p>
+                  <%perl> my $caption = HTML::Entities::encode_entities($c->i18n->p('trial.entry_template.download_help', "Download the generated template and fill in the <strong>entry_number</strong> column for each Accession \n                  you want to assign an entry number to.  An entry number is not required for each Accession, but each entry number \n                  should be unique for this set of Trial(s).  Once you have filled out the template, you can upload it to the database \n                  using the <strong>Upload Template</strong> function.")); $caption =~ s/&lt;strong&gt;/<strong>/g; $caption =~ s/&lt;\/strong&gt;/<\/strong>/g; print '<p style="margin: 0">'.$caption.'</p>'; </%perl>
                 </div>
                 <div style="max-width: 250px; margin: 50px auto; text-align: center">
-                  <button class="btn btn-primary" id="set_entry_numbers_template_download">Download Template</button>
+                  <button class="btn btn-primary" id="set_entry_numbers_template_download"><% $c->i18n->p('trial.common.download_template', "Download Template") |h %></button>
                 </div>
               </div>
             </&>
@@ -89,7 +89,7 @@ $trial_name => undef
         </div>
       </div>
       <div class="modal-footer">
-        <button type="button" class="btn btn-default" name="set_entry_numbers_cancel_button" id="set_entry_numbers_cancel_button" data-dismiss="modal">Close</button>
+        <button type="button" class="btn btn-default" name="set_entry_numbers_cancel_button" id="set_entry_numbers_cancel_button" data-dismiss="modal"><% $c->i18n->p('trial.upload.dialog.close', "Close") |h %></button>
       </div>
     </div>
   </div>
@@ -140,7 +140,7 @@ $trial_name => undef
   /**
    * Complete the Select Trials Step
    * - Verify at least one trial has been selected
-   * - Start Loading Trial Accessions
+   * - <% $c->i18n->p('trial.entry_template.start', "Start") |h %> Loading Trial Accessions
    */
   function complete_select_trials_step() {
 
@@ -160,7 +160,7 @@ $trial_name => undef
     
     // Verify at least one trial is selected
     if ( trials.length === 0 ) {
-      return alert("Please select at least one Trial");
+      return alert("<% $c->i18n->p('trial.entry_template.select_required', "Please select at least one Trial") |h %>");
     }
 
     // Generate the Upload Template
@@ -195,12 +195,12 @@ $trial_name => undef
       }
       else {
         console.log(resp);
-        alert("ERROR: Could not generate upload template!");
+        alert("<% $c->i18n->p('trial.entry_template.generate_error', "ERROR: Could not generate upload template!") |h %>");
       }
     })
     .fail(function() {
       jQuery("#set_entry_numbers_template_loading").hide();
-      alert("ERROR: Could not generate upload template!");
+      alert((window.SGN && SGN.i18n ? SGN.i18n.p('trial.entry_template.generate_error', "ERROR: Could not generate upload template!") : "ERROR: Could not generate upload template!"));
     });
   }
 </script>

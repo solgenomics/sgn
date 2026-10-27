@@ -1,6 +1,8 @@
 package CXGN::Trial::ParseUpload::Plugin::TrialPlotGPSCoordinatesXLS;
 
 use Moose::Role;
+use SGN::I18N ();
+use CatalystX::GlobalContext '$c';
 use Spreadsheet::ParseExcel;
 use Spreadsheet::ParseXLSX;
 use CXGN::Stock::StockLookup;
@@ -11,6 +13,7 @@ use Scalar::Util qw(looks_like_number);
 
 sub _validate_with_plugin {
     my $self = shift;
+    my SGN::I18N $ui_trialplotgpscoordinatesxls_i18n = $c && $c->can('i18n') ? $c->i18n : undef;
     my $args = shift || {};
     my $coord_type = $args->{coord_type} || 'Polygon';
     #print STDERR "COORD TYPE: $coord_type\n";
@@ -44,7 +47,7 @@ sub _validate_with_plugin {
 
     my $worksheet = ( $excel_obj->worksheets() )[0]; #support only one worksheet
     if (!$worksheet) {
-        push @error_messages, "Spreadsheet must be on 1st tab in Excel (.xls) file";
+        push @error_messages, (SGN::I18N::translate($ui_trialplotgpscoordinatesxls_i18n, "seedlot_maintenance_upload.parse.first_sheet", "Spreadsheet must be on 1st tab in Excel (.xls) file"));
         $errors{'error_messages'} = \@error_messages;
         $self->_set_parse_errors(\%errors);
         return;
@@ -52,7 +55,7 @@ sub _validate_with_plugin {
     my ( $row_min, $row_max ) = $worksheet->row_range();
     my ( $col_min, $col_max ) = $worksheet->col_range();
     if (($col_max - $col_min)  < 1 || ($row_max - $row_min) < 1 ) { #must have header and at least one row of plot data
-        push @error_messages, "Spreadsheet is missing header or contains no rows";
+        push @error_messages, (SGN::I18N::translate($ui_trialplotgpscoordinatesxls_i18n, "trial.upload.multi.excel.header_or_rows", "Spreadsheet is missing header or contains no rows"));
         $errors{'error_messages'} = \@error_messages;
         $self->_set_parse_errors(\%errors);
         return;
@@ -109,31 +112,31 @@ sub _validate_with_plugin {
         }
 
         if (!$plot_name_head || $plot_name_head ne 'plot_name' ) {
-            push @error_messages, "Cell A1: plot_name is missing from the header";
+            push @error_messages, (SGN::I18N::translate($ui_trialplotgpscoordinatesxls_i18n, "trial.parse.header_cell", "Cell %{cell}: %{field} is missing from the header", {cell => "A1", field => "plot_name"}));
         }
         if (!$WGS84_bottom_left_x_head || $WGS84_bottom_left_x_head ne 'WGS84_bottom_left_x') {
-            push @error_messages, "Cell B1: WGS84_bottom_left_x is missing from the header";
+            push @error_messages, (SGN::I18N::translate($ui_trialplotgpscoordinatesxls_i18n, "trial.parse.header_cell", "Cell %{cell}: %{field} is missing from the header", {cell => "B1", field => "WGS84_bottom_left_x"}));
         }
         if (!$WGS84_bottom_left_y_head || $WGS84_bottom_left_y_head ne 'WGS84_bottom_left_y') {
-            push @error_messages, "Cell C1: WGS84_bottom_left_y is missing from the header";
+            push @error_messages, (SGN::I18N::translate($ui_trialplotgpscoordinatesxls_i18n, "trial.parse.header_cell", "Cell %{cell}: %{field} is missing from the header", {cell => "C1", field => "WGS84_bottom_left_y"}));
         }
         if (!$WGS84_bottom_right_x_head || $WGS84_bottom_right_x_head ne 'WGS84_bottom_right_x') {
-            push @error_messages, "Cell D1: WGS84_bottom_right_x is missing from the header";
+            push @error_messages, (SGN::I18N::translate($ui_trialplotgpscoordinatesxls_i18n, "trial.parse.header_cell", "Cell %{cell}: %{field} is missing from the header", {cell => "D1", field => "WGS84_bottom_right_x"}));
         }
         if (!$WGS84_bottom_right_y_head || $WGS84_bottom_right_y_head ne 'WGS84_bottom_right_y') {
-            push @error_messages, "Cell E1: WGS84_bottom_right_y is missing from the header";
+            push @error_messages, (SGN::I18N::translate($ui_trialplotgpscoordinatesxls_i18n, "trial.parse.header_cell", "Cell %{cell}: %{field} is missing from the header", {cell => "E1", field => "WGS84_bottom_right_y"}));
         }
         if (!$WGS84_top_right_x_head || $WGS84_top_right_x_head ne 'WGS84_top_right_x') {
-            push @error_messages, "Cell F1: WGS84_top_right_x is missing from the header";
+            push @error_messages, (SGN::I18N::translate($ui_trialplotgpscoordinatesxls_i18n, "trial.parse.header_cell", "Cell %{cell}: %{field} is missing from the header", {cell => "F1", field => "WGS84_top_right_x"}));
         }
         if (!$WGS84_top_right_y_head || $WGS84_top_right_y_head ne 'WGS84_top_right_y') {
-            push @error_messages, "Cell G1: WGS84_top_right_y is missing from the header";
+            push @error_messages, (SGN::I18N::translate($ui_trialplotgpscoordinatesxls_i18n, "trial.parse.header_cell", "Cell %{cell}: %{field} is missing from the header", {cell => "G1", field => "WGS84_top_right_y"}));
         }
         if (!$WGS84_top_left_x_head || $WGS84_top_left_x_head ne 'WGS84_top_left_x') {
-            push @error_messages, "Cell H1: WGS84_top_left_x is missing from the header";
+            push @error_messages, (SGN::I18N::translate($ui_trialplotgpscoordinatesxls_i18n, "trial.parse.header_cell", "Cell %{cell}: %{field} is missing from the header", {cell => "H1", field => "WGS84_top_left_x"}));
         }
         if (!$WGS84_top_left_y_head || $WGS84_top_left_y_head ne 'WGS84_top_left_y') {
-            push @error_messages, "Cell I1: WGS84_top_left_y is missing from the header";
+            push @error_messages, (SGN::I18N::translate($ui_trialplotgpscoordinatesxls_i18n, "trial.parse.header_cell", "Cell %{cell}: %{field} is missing from the header", {cell => "I1", field => "WGS84_top_left_y"}));
         }
 
         for my $row ( 1 .. $row_max ) {
@@ -178,38 +181,38 @@ sub _validate_with_plugin {
             }
 
             if (!$plot_name || $plot_name eq '' ) {
-                push @error_messages, "Cell A$row_name: plot_name missing.";
+                push @error_messages, (SGN::I18N::translate($ui_trialplotgpscoordinatesxls_i18n, "trial.parse.cell_missing_dot", "Cell %{cell}: %{field} missing.", {cell => "A$row_name", field => "plot_name"}));
             }
             elsif ($plot_name =~ /\s/ || $plot_name =~ /\// || $plot_name =~ /\\/ ) {
-                push @error_messages, "Cell A$row_name: plot_name must not contain spaces or slashes.";
+                push @error_messages, (SGN::I18N::translate($ui_trialplotgpscoordinatesxls_i18n, "trial.parse.cell_spaces", "Cell %{cell}: %{field} must not contain spaces or slashes.", {cell => "A$row_name", field => "plot_name"}));
             }
             else {
                 $seen_plot_names{$plot_name}=$row_name;
             }
 
             if ($WGS84_bottom_left_x && !looks_like_number($WGS84_bottom_left_x)){
-                push @error_messages, "Cell B$row_name: WGS84_bottom_left_x must be a number.";
+                push @error_messages, (SGN::I18N::translate($ui_trialplotgpscoordinatesxls_i18n, "trial.parse.cell_number_dot", "Cell %{cell}: %{field} must be a number.", {cell => "B$row_name", field => "WGS84_bottom_left_x"}));
             }
             if ($WGS84_bottom_left_y && !looks_like_number($WGS84_bottom_left_y)){
-                push @error_messages, "Cell C$row_name: WGS84_bottom_left_y must be a number.";
+                push @error_messages, (SGN::I18N::translate($ui_trialplotgpscoordinatesxls_i18n, "trial.parse.cell_number_dot", "Cell %{cell}: %{field} must be a number.", {cell => "C$row_name", field => "WGS84_bottom_left_y"}));
             }
             if ($WGS84_bottom_right_x && !looks_like_number($WGS84_bottom_right_x)){
-                push @error_messages, "Cell D$row_name: WGS84_bottom_right_x must be a number.";
+                push @error_messages, (SGN::I18N::translate($ui_trialplotgpscoordinatesxls_i18n, "trial.parse.cell_number_dot", "Cell %{cell}: %{field} must be a number.", {cell => "D$row_name", field => "WGS84_bottom_right_x"}));
             }
             if ($WGS84_bottom_right_y && !looks_like_number($WGS84_bottom_right_y)){
-                push @error_messages, "Cell E$row_name: WGS84_bottom_right_y must be a number.";
+                push @error_messages, (SGN::I18N::translate($ui_trialplotgpscoordinatesxls_i18n, "trial.parse.cell_number_dot", "Cell %{cell}: %{field} must be a number.", {cell => "E$row_name", field => "WGS84_bottom_right_y"}));
             }
             if ($WGS84_top_right_x && !looks_like_number($WGS84_top_right_x)){
-                push @error_messages, "Cell F$row_name: WGS84_top_right_x must be a number.";
+                push @error_messages, (SGN::I18N::translate($ui_trialplotgpscoordinatesxls_i18n, "trial.parse.cell_number_dot", "Cell %{cell}: %{field} must be a number.", {cell => "F$row_name", field => "WGS84_top_right_x"}));
             }
             if ($WGS84_top_right_y && !looks_like_number($WGS84_top_right_y)){
-                push @error_messages, "Cell G$row_name: WGS84_top_right_y must be a number.";
+                push @error_messages, (SGN::I18N::translate($ui_trialplotgpscoordinatesxls_i18n, "trial.parse.cell_number_dot", "Cell %{cell}: %{field} must be a number.", {cell => "G$row_name", field => "WGS84_top_right_y"}));
             }
             if ($WGS84_top_left_x && !looks_like_number($WGS84_top_left_x)){
-                push @error_messages, "Cell H$row_name: WGS84_top_left_x must be a number.";
+                push @error_messages, (SGN::I18N::translate($ui_trialplotgpscoordinatesxls_i18n, "trial.parse.cell_number_dot", "Cell %{cell}: %{field} must be a number.", {cell => "H$row_name", field => "WGS84_top_left_x"}));
             }
             if ($WGS84_top_left_y && !looks_like_number($WGS84_top_left_y)){
-                push @error_messages, "Cell I$row_name: WGS84_top_left_y must be a number.";
+                push @error_messages, (SGN::I18N::translate($ui_trialplotgpscoordinatesxls_i18n, "trial.parse.cell_number_dot", "Cell %{cell}: %{field} must be a number.", {cell => "I$row_name", field => "WGS84_top_left_y"}));
             }
 
         }    
@@ -232,13 +235,13 @@ sub _validate_with_plugin {
         }
 
         if (!$plot_name_head || $plot_name_head ne 'plot_name' ) {
-            push @error_messages, "Cell A1: plot_name is missing from the header";
+            push @error_messages, (SGN::I18N::translate($ui_trialplotgpscoordinatesxls_i18n, "trial.parse.header_cell", "Cell %{cell}: %{field} is missing from the header", {cell => "A1", field => "plot_name"}));
         }
         if (!$WGS84_x_head || $WGS84_x_head ne 'WGS84_x') {
-            push @error_messages, "Cell B1: WGS84_x is missing from the header";
+            push @error_messages, (SGN::I18N::translate($ui_trialplotgpscoordinatesxls_i18n, "trial.parse.header_cell", "Cell %{cell}: %{field} is missing from the header", {cell => "B1", field => "WGS84_x"}));
         }
         if (!$WGS84_y_head || $WGS84_y_head ne 'WGS84_y') {
-            push @error_messages, "Cell C1: WGS84_y is missing from the header";
+            push @error_messages, (SGN::I18N::translate($ui_trialplotgpscoordinatesxls_i18n, "trial.parse.header_cell", "Cell %{cell}: %{field} is missing from the header", {cell => "C1", field => "WGS84_y"}));
         }
 
         for my $row ( 1 .. $row_max ) {
@@ -259,20 +262,20 @@ sub _validate_with_plugin {
             }
 
             if (!$plot_name || $plot_name eq '' ) {
-                push @error_messages, "Cell A$row_name: plot_name missing.";
+                push @error_messages, (SGN::I18N::translate($ui_trialplotgpscoordinatesxls_i18n, "trial.parse.cell_missing_dot", "Cell %{cell}: %{field} missing.", {cell => "A$row_name", field => "plot_name"}));
             }
             elsif ($plot_name =~ /\s/ || $plot_name =~ /\// || $plot_name =~ /\\/ ) {
-                push @error_messages, "Cell A$row_name: plot_name must not contain spaces or slashes.";
+                push @error_messages, (SGN::I18N::translate($ui_trialplotgpscoordinatesxls_i18n, "trial.parse.cell_spaces", "Cell %{cell}: %{field} must not contain spaces or slashes.", {cell => "A$row_name", field => "plot_name"}));
             }
             else {
                 $seen_plot_names{$plot_name}=$row_name;
             }
 
             if ($WGS84_x && !looks_like_number($WGS84_x)){
-                push @error_messages, "Cell B$row_name: WGS84_x must be a number.";
+                push @error_messages, (SGN::I18N::translate($ui_trialplotgpscoordinatesxls_i18n, "trial.parse.cell_number_dot", "Cell %{cell}: %{field} must be a number.", {cell => "B$row_name", field => "WGS84_x"}));
             }
             if ($WGS84_y && !looks_like_number($WGS84_y)){
-                push @error_messages, "Cell C$row_name: WGS84_y must be a number.";
+                push @error_messages, (SGN::I18N::translate($ui_trialplotgpscoordinatesxls_i18n, "trial.parse.cell_number_dot", "Cell %{cell}: %{field} must be a number.", {cell => "C$row_name", field => "WGS84_y"}));
             }
         }
     }
@@ -283,7 +286,7 @@ sub _validate_with_plugin {
     my @plots_missing = @{$plots_validator->validate($schema,'plots',\@plots)->{'missing'}};
 
     if (scalar(@plots_missing) > 0) {
-        push @error_messages, "The following plot_name are not in the database: ".join(',',@plots_missing);
+        push @error_messages, (SGN::I18N::translate($ui_trialplotgpscoordinatesxls_i18n, "trial.parse.parent_names_missing", "The following %{field} are not in the database: %{names}", {field => "plot_name", names => join(',',@plots_missing)}));
         $errors{'missing_plots'} = \@plots_missing;
     }
 

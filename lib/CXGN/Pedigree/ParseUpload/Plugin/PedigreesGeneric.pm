@@ -18,6 +18,7 @@ sub _validate_with_plugin {
     my %errors;
 
     my $parser = CXGN::File::Parse->new (
+        i18n => $self->i18n,
         file => $filename,
         required_columns => [ 'progeny name', 'female parent accession', 'type' ],
         optional_columns => [ 'male parent accession' ],
@@ -45,7 +46,7 @@ sub _validate_with_plugin {
 
     if ( $additional_columns && scalar(@$additional_columns) > 0 ) {
         $errors{'error_messages'} = [
-            "The following columns are not recognized: " . join(', ', @$additional_columns) . ". Please check the spreadsheet format for the allowed columns."
+            ($self->i18n ? $self->i18n->p('pedigree.parse.the_following_columns_are_not_recognized_columns_please_check_', 'The following columns are not recognized: %{columns}. Please check the spreadsheet format for the allowed columns.', {columns => join(', ', @$additional_columns)}) : "The following columns are not recognized: " . join(', ', @$additional_columns) . ". Please check the spreadsheet format for the allowed columns.")
         ];
         $self->_set_parse_errors(\%errors);
         return;
@@ -63,7 +64,7 @@ sub _validate_with_plugin {
 
     foreach my $type (@$seen_cross_types) {
         if (!exists $supported_cross_types{$type}) {
-            push @error_messages, "Cross type not supported: $type. Cross type should be biparental, self, open, sib, backcross, reselected, polycross, doubled_haploid or dihaploid_induction";
+            push @error_messages, ($self->i18n ? $self->i18n->p('pedigree.parse.cross_type_not_supported_type_cross_type_should_be_biparental_', 'Cross type not supported: %{type}. Cross type should be biparental, self, open, sib, backcross, reselected, polycross, doubled_haploid or dihaploid_induction', {type => $type}) : "Cross type not supported: $type. Cross type should be biparental, self, open, sib, backcross, reselected, polycross, doubled_haploid or dihaploid_induction");
         }
     }
 
@@ -72,7 +73,7 @@ sub _validate_with_plugin {
     my $cross_validator = CXGN::List::Validate->new();
     my @stocks_missing = @{$cross_validator->validate($schema,'crosses',\@accessions_missing)->{'missing'}};
     if (scalar(@stocks_missing) > 0) {
-        push @error_messages, "The following accessions are not in the database, or are not in the database as uniquenames: ".join(',',@stocks_missing);
+        push @error_messages, ($self->i18n ? $self->i18n->p('pedigree.parse.the_following_accessions_are_not_in_the_database_or_are_not_in', 'The following accessions are not in the database, or are not in the database as uniquenames: %{names}', {names => join(',', @stocks_missing)}) : "The following accessions are not in the database, or are not in the database as uniquenames: ".join(',',@stocks_missing));
     }
 
     my @pedigrees;
@@ -88,30 +89,30 @@ sub _validate_with_plugin {
 
         if ($female eq $male) {
             if ($cross_type ne 'self' && $cross_type ne 'sib' && $cross_type ne 'reselected' && $cross_type ne 'doubled_haploid' && $cross_type ne 'dihaploid_induction'){
-                push @error_messages, "Female parent and male parent are the same on line $line_number, but cross type is not self, sib, reselected, doubled_haploid or dihaploid_induction.";
+                push @error_messages, ($self->i18n ? $self->i18n->p('pedigree.parse.female_parent_and_male_parent_are_the_same_on_line_line_number', 'Female parent and male parent are the same on line %{line_number}, but cross type is not self, sib, reselected, doubled_haploid or dihaploid_induction.', {line_number => $line_number}) : "Female parent and male parent are the same on line $line_number, but cross type is not self, sib, reselected, doubled_haploid or dihaploid_induction.");
             }
         }
         if (($female && !$male) && ($cross_type ne 'open')) {
-            push @error_messages, "For $progeny on line number $line_number no male parent specified and cross_type is not open...";
+            push @error_messages, ($self->i18n ? $self->i18n->p('pedigree.parse.for_progeny_on_line_number_line_number_no_male_parent_specifie', 'For %{progeny} on line number %{line_number} no male parent specified and cross_type is not open...', {progeny => $progeny, line_number => $line_number}) : "For $progeny on line number $line_number no male parent specified and cross_type is not open...");
         }
         if ($cross_type eq 'biparental') {
             if (!$male){
-                push @error_messages, "For $progeny Cross Type is biparental, but no male parent given";
+                push @error_messages, ($self->i18n ? $self->i18n->p('pedigree.parse.for_progeny_cross_type_is_biparental_but_no_male_parent_given', 'For %{progeny} Cross Type is biparental, but no male parent given', {progeny => $progeny}) : "For $progeny Cross Type is biparental, but no male parent given");
             }
         }
         if($cross_type eq 'backcross') {
             if (!$male){
-                push @error_messages, "For $progeny Cross Type is backcross, but no male parent given";
+                push @error_messages, ($self->i18n ? $self->i18n->p('pedigree.parse.for_progeny_cross_type_is_backcross_but_no_male_parent_given', 'For %{progeny} Cross Type is backcross, but no male parent given', {progeny => $progeny}) : "For $progeny Cross Type is backcross, but no male parent given");
             }
         }
         elsif($cross_type eq "sib") {
             if (!$male){
-                push @error_messages, "For $progeny Cross Type is sib, but no male parent given";
+                push @error_messages, ($self->i18n ? $self->i18n->p('pedigree.parse.for_progeny_cross_type_is_sib_but_no_male_parent_given', 'For %{progeny} Cross Type is sib, but no male parent given', {progeny => $progeny}) : "For $progeny Cross Type is sib, but no male parent given");
             }
         }
         elsif($cross_type eq "polycross") {
             if (!$male){
-                push @error_messages, "For $progeny Cross Type is polycross, but no male parent given";
+                push @error_messages, ($self->i18n ? $self->i18n->p('pedigree.parse.for_progeny_cross_type_is_polycross_but_no_male_parent_given', 'For %{progeny} Cross Type is polycross, but no male parent given', {progeny => $progeny}) : "For $progeny Cross Type is polycross, but no male parent given");
             }
         }
     }
@@ -133,16 +134,16 @@ sub _parse_with_plugin {
     my $parsed = $self->_parsed_data();
     my $parsed_data = $parsed->{data};
 
-    my $pedigrees = CXGN::Pedigree::AddPedigrees->new({ schema => $schema });
+    my $pedigrees = CXGN::Pedigree::AddPedigrees->new({ i18n => $self->i18n, schema => $schema });
     my $generated_pedigrees = $pedigrees->generate_pedigrees($parsed_data);
 
-    my $validate = CXGN::Pedigree::AddPedigrees->new({ schema => $schema, pedigrees => $generated_pedigrees });
+    my $validate = CXGN::Pedigree::AddPedigrees->new({ i18n => $self->i18n, schema => $schema, pedigrees => $generated_pedigrees });
     my $error;
     my $pedigree_check = $validate->validate_pedigrees();
 
     my %return;
     if (!$pedigree_check){
-        $return{'error_messages'} = "There was a problem validating pedigrees. Pedigrees were not stored.";
+        $return{'error_messages'} = ($self->i18n ? $self->i18n->p('pedigree.parse.there_was_a_problem_validating_pedigrees_pedigrees_were_not_st', 'There was a problem validating pedigrees. Pedigrees were not stored.') : "There was a problem validating pedigrees. Pedigrees were not stored.");
         $self->_set_parse_errors(\%return);
         return;
     } else {

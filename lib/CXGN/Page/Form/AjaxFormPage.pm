@@ -1,4 +1,7 @@
 package CXGN::Page::Form::AjaxFormPage;
+use SGN::I18N ();
+use HTML::Entities ();
+use CatalystX::GlobalContext '$c';
 
 
 =head1 NAME
@@ -91,6 +94,8 @@ use base qw /CXGN::Debug/ ;
 sub new {
     my $class = shift;
     my $self = bless {}, $class;
+    $self->{i18n} = $c && $c->can('i18n') ? $c->i18n : undef;
+    my SGN::I18N $ajaxformpage_new_i18n = $self->{i18n};
     my $primary_key = shift;
 
     __PACKAGE__->SUPER::new();
@@ -123,12 +128,12 @@ sub new {
         $self->set_action("new");
     }
     if (!$self->get_object_id() && $self->get_action()!~/new|store|confirm_store/) {
-	$json_hash{error}='No identifier provided to display data of this page for action view.';
+	$json_hash{error}=($ajaxformpage_new_i18n ? $ajaxformpage_new_i18n->p("shared.form.no_identifier_view", "No identifier provided to display data of this page for action view.") : "No identifier provided to display data of this page for action view.");
 
     }
     else {
 	if ($self->get_action()!~/new|view|edit|store|delete|confirm_delete|confirm_store/) {
-	    $json_hash{error}='No identifier provided';
+	    $json_hash{error}=($ajaxformpage_new_i18n ? $ajaxformpage_new_i18n->p("shared.form.no_identifier", "No identifier provided") : "No identifier provided");
 	}
     }
 
@@ -183,6 +188,7 @@ sub new {
 
 sub check_modify_privileges {
     my $self = shift;
+    my SGN::I18N $ajaxformpage_privileges_i18n = $self->{i18n};
     my %json_hash= $self->get_json_hash();
     # implement quite strict access controls by default
     #
@@ -195,7 +201,7 @@ sub check_modify_privileges {
     if (!$person_id) { $json_hash{login} = 1 ;  }
     if ($user_type !~ /submitter|sequencer|curator/) {
         if (!$json_hash{error} ) {
-	    $json_hash{error} = "You must have an account of type submitter to be able to submit data. Please contact SGN to change your account type."; }
+	    $json_hash{error} = ($ajaxformpage_privileges_i18n ? $ajaxformpage_privileges_i18n->p("shared.form.submitter_account", "You must have an account of type submitter to be able to submit data. Please contact SGN to change your account type.") : "You must have an account of type submitter to be able to submit data. Please contact SGN to change your account type."); }
 	$self->set_json_hash(%json_hash);
 	return 0;
     }
@@ -204,7 +210,7 @@ sub check_modify_privileges {
     if ((@owners) && (!(grep { $_ =~ /^$person_id$/ } @owners) )) {
 	# check the owner only if the action is not new
 	#
-	$json_hash{error} = "You do not have rights to modify this database entry because you do not own it. [$person_id, @owners]";
+	$json_hash{error} = ($ajaxformpage_privileges_i18n ? $ajaxformpage_privileges_i18n->p("shared.form.not_owner", "You do not have rights to modify this database entry because you do not own it. [%{person}, %{owners}]", {person => $person_id, owners => "@owners"}) : "You do not have rights to modify this database entry because you do not own it. [$person_id, @owners]");
 
     } else {  $self->set_is_owner(1); }
 
@@ -233,6 +239,7 @@ sub check_modify_privileges {
 
 sub define_object {
     my $self = shift;
+    my SGN::I18N $ajax_define_i18n = $self->{i18n};
 
     my %json_hash= $self->get_json_hash();
     # in the subclass, instantiate your object here and  call
@@ -243,7 +250,7 @@ sub define_object {
     $self->set_owners();
 
     if ( $self->get_object()->get_obsolete() eq 't' ) {
-	$json_hash{error} = "Object is obsolete!";
+	$json_hash{error} = ($ajax_define_i18n ? $ajax_define_i18n->p("shared.form.object_obsolete", "Object is obsolete!") : "Object is obsolete!");
 	$self->set_json_hash(%json_hash);
 	$self->print_json();
     }
@@ -838,13 +845,13 @@ sub init_form {
     my $form_id = shift;
 
     if ($self->get_action() =~/edit|^store|new/) {
-	$self->set_form( CXGN::Page::Form::Editable -> new({no_buttons=>1, form_id=>$form_id} ) ) ;
+	$self->set_form( CXGN::Page::Form::Editable -> new({no_buttons=>1, form_id=>$form_id, i18n=>$self->{i18n}} ) ) ;
 
     }elsif ($self->get_action() =~/confirm_store/) {
-	$self->set_form( CXGN::Page::Form::ConfirmStore->new() ) ;
+	$self->set_form( CXGN::Page::Form::ConfirmStore->new({i18n => $self->{i18n}}) ) ;
 
     }else  {
-	$self->set_form( CXGN::Page::Form::Static -> new() );
+	$self->set_form( CXGN::Page::Form::Static -> new({i18n => $self->{i18n}}) );
     }
 
 }

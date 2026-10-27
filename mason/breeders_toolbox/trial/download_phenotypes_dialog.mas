@@ -6,6 +6,7 @@ $dialog_name => undef
 </%args>
 
 <%once>
+use HTML::Entities ();
     my $default_repeat_measurements = $c->get_conf('pheno_download_default_repeat_measurements');
     my $default_include_timestamps = $c->get_conf('pheno_download_default_include_timestamps');
     my $default_include_intercrop_accessions = $c->get_conf('pheno_download_default_include_intercrop_accessions');
@@ -19,24 +20,24 @@ $dialog_name => undef
   <div class="modal-dialog" role="document">
     <div class="modal-content">
       <div class="modal-header">
-        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-        <h4 class="modal-title" id="downloadTrialPhenotypesDialog">Download Phenotypes for <% $dialog_type %>  <% $dialog_name %></h4>
+        <button type="button" class="close" data-dismiss="modal" aria-label="<% $c->i18n->p("global.dataset_publish.close", "Close") |h %>"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title" id="downloadTrialPhenotypesDialog"><% $c->i18n->p("phenotype.download_phenotypes_for", "Download Phenotypes for") |h %> <% $dialog_type %>  <% $dialog_name %></h4>
       </div>
       <div class="modal-body">
         <div class="container-fluid">
 
 	       <form class="form-horizontal" role="form" method="post" >
                <div class="form-group">
-                   <label class="col-sm-3 control-label">Speed: </label>
+                   <label class="col-sm-3 control-label"><% $c->i18n->p("phenotype.speed", "Speed:") |h %> </label>
                    <div class="col-sm-9" >
                        <select class="form-control" id="download_trial_phenotypes_speed">
-                           <option selected value="Native">Default</option>
-                           <option value="MaterializedViewTable">Fast (Improves speed but may miss recent changes)</option>
+                           <option selected value="Native"><% $c->i18n->p("global.search_wizard.default", "Default") |h %></option>
+                           <option value="MaterializedViewTable"><% $c->i18n->p("global.search_wizard.fast_may_miss_recent", "Fast (Improves speed but may miss recent changes)") |h %></option>
                        </select>
                    </div>
                </div>
 	        <div class="form-group">
-                <label class="col-sm-3 control-label">Format: </label>
+                <label class="col-sm-3 control-label"><% $c->i18n->p("lists_datasets.download.format.39442ac", "Format:") |h %> </label>
                 <div class="col-sm-9" >
                     <select class="form-control" id="download_trial_phenotypes_format">
                         <option value="csv">CSV</option>
@@ -45,101 +46,101 @@ $dialog_name => undef
                 </div>
 	        </div>
             <div class="form-group">
-                <label class="col-sm-3 control-label">Data Level: </label>
+                <label class="col-sm-3 control-label"><% $c->i18n->p("lists_datasets.download.data_level", "Data Level:") |h %> </label>
                 <div class="col-sm-9" >
                     <select class="form-control" id="download_trial_phenotypes_level_option">
-                        <option value="all">All</option>
+                        <option value="all"><% $c->i18n->p("global.search_wizard.all_levels", "All") |h %></option>
 %  if ($dialog_type ne 'Analysis') {
-                        <option value="plot">Plots</option>
-                        <option value="plant">Plants</option>
-                        <option value="subplot">Subplots</option>
+                        <option value="plot"><% $c->i18n->p("global.graphical_filtering.plots", "Plots") |h %></option>
+                        <option value="plant"><% $c->i18n->p("global.graphical_filtering.plants", "Plants") |h %></option>
+                        <option value="subplot"><% $c->i18n->p("fieldbook.export.subplots", "Subplots") |h %></option>
 %  }
                     </select>
                 </div>
             </div>
             <div class="form-group">
-                <label class="col-sm-3 control-label">Traits:<br/><small>(Select none for all traits)</small></label>
+                <label class="col-sm-3 control-label"><% $c->i18n->p("phenotype.traits", "Traits:") |h %><br/><small><% $c->i18n->p("phenotype.select_none_for_all_traits", "(Select none for all traits)") |h %></small></label>
                 <div class="col-sm-9" >
                     <div id="download_trial_phenotypes_traits">
                     </div>
                 </div>
             </div>
             <div class="form-group">
-                <label class="col-sm-3 control-label">Trait Components:<br/><small>(Select none for all)</small></label>
+                <label class="col-sm-3 control-label"><% $c->i18n->p("phenotype.trait_components", "Trait Components:") |h %><br/><small><% $c->i18n->p("phenotype.select_none_for_all", "(Select none for all)") |h %></small></label>
                 <div class="col-sm-9" >
                     <div id="download_trial_phenotypes_trait_components">
                     </div>
                 </div>
             </div>
 
-<&| /page/info_section.mas, title=>"Additional Search Options",  collapsible => 1, collapsed=>1 &>
+<&| /page/info_section.mas, anchor_title => "Additional Search Options", title=>HTML::Entities::encode_entities($c->i18n->p("phenotype.additional_search_options", "Additional Search Options")),  collapsible => 1, collapsed=>1 &>
 
             <div class="form-group">
-                <label class="col-sm-7 control-label">For repeated measurements, return the: </label>
+                <label class="col-sm-7 control-label"><% $c->i18n->p("phenotype.for_repeated_measurements_return_the.3728e99", "For repeated measurements, return the:") |h %> </label>
                 <div class="col-sm-5">
                     <select class="form-control" id="download_trial_phenotypes_repetitive_measurements_option">
-                        <option value="first">First value</option>
-                        <option value="last">Last value</option>
-                        <option value="average">Averaged value</option>
-                        <option value="sum">Sum values</option>
-                        <option value="all_values_single_line">All Values Single Line</option>
-                        <option value="all_values_multiple_line">All Values Multiple Line</option>
+                        <option value="first"><% $c->i18n->p("global.search_wizard.first_value", "First value") |h %></option>
+                        <option value="last"><% $c->i18n->p("global.search_wizard.last_value", "Last value") |h %></option>
+                        <option value="average"><% $c->i18n->p("global.search_wizard.averaged_value", "Averaged value") |h %></option>
+                        <option value="sum"><% $c->i18n->p("global.search_wizard.sum_values", "Sum values") |h %></option>
+                        <option value="all_values_single_line"><% $c->i18n->p("global.search_wizard.all_values_single_line", "All Values Single Line") |h %></option>
+                        <option value="all_values_multiple_line"><% $c->i18n->p("global.search_wizard.all_values_multiple_line", "All Values Multiple Line") |h %></option>
                     </select>
                 </div>
             </div>
 
             <div class="form-group">
-                <label class="col-sm-7 control-label">Include Timestamps: </label>
+                <label class="col-sm-7 control-label"><% $c->i18n->p("phenotype.include_timestamps", "Include Timestamps:") |h %> </label>
                 <div class="col-sm-5" >
                     <select class="form-control" id="download_trial_phenotypes_timestamp_option">
-                        <option value="0">No</option>
-                        <option value="1">Yes</option>
+                        <option value="0"><% $c->i18n->p("global.search_wizard.no", "No") |h %></option>
+                        <option value="1"><% $c->i18n->p("global.search_wizard.yes", "Yes") |h %></option>
                     </select>
                 </div>
             </div>
 
             <div class="form-group">
-                <label class="col-sm-7 control-label">Include Intercrop Accessions: </label>
+                <label class="col-sm-7 control-label"><% $c->i18n->p("lists_datasets.download.include_intercrop_accessions", "Include Intercrop Accessions:") |h %> </label>
                 <div class="col-sm-5" >
                     <select class="form-control" id="download_trial_phenotypes_intercrop_option">
-                        <option value="0">No</option>
-                        <option value="1">Yes</option>
+                        <option value="0"><% $c->i18n->p("global.search_wizard.no", "No") |h %></option>
+                        <option value="1"><% $c->i18n->p("global.search_wizard.yes", "Yes") |h %></option>
                     </select>
                 </div>
             </div>
 
             <div class="form-group">
-                <label class="col-sm-7 control-label">Include Entry Numbers: </label>
+                <label class="col-sm-7 control-label"><% $c->i18n->p("phenotype.include_entry_numbers", "Include Entry Numbers:") |h %> </label>
                 <div class="col-sm-5" >
                     <select class="form-control" id="download_trial_phenotypes_entry_numbers_option">
-                        <option value="0">No</option>
-                        <option value="1">Yes</option>
+                        <option value="0"><% $c->i18n->p("global.search_wizard.no", "No") |h %></option>
+                        <option value="1"><% $c->i18n->p("global.search_wizard.yes", "Yes") |h %></option>
                     </select>
                 </div>
             </div>
 
             <div class="form-group">
-                <label class="col-sm-7 control-label">Include Trait Synonyms: </label>
+                <label class="col-sm-7 control-label"><% $c->i18n->p("phenotype.include_trait_synonyms", "Include Trait Synonyms:") |h %> </label>
                 <div class="col-sm-5" >
                     <select class="form-control" id="download_trial_phenotypes_trait_synonyms_option">
-                        <option value="0">No</option>
-                        <option value="1">Yes</option>
+                        <option value="0"><% $c->i18n->p("global.search_wizard.no", "No") |h %></option>
+                        <option value="1"><% $c->i18n->p("global.search_wizard.yes", "Yes") |h %></option>
                     </select>
                 </div>
             </div>
 
             <div class="form-group">
-                <label class="col-sm-7 control-label">Include Parents: </label>
+                <label class="col-sm-7 control-label"><% $c->i18n->p("lists_datasets.download.include_parents", "Include Parents:") |h %> </label>
                 <div class="col-sm-5" >
                     <select class="form-control" id="download_trial_phenotypes_pedigrees_option">
-                        <option value="0">No</option>
-                        <option value="1">Yes</option>
+                        <option value="0"><% $c->i18n->p("global.search_wizard.no", "No") |h %></option>
+                        <option value="1"><% $c->i18n->p("global.search_wizard.yes", "Yes") |h %></option>
                     </select>
                 </div>
             </div>
 
             <div class="form-group">
-                <label class="col-sm-7 control-label">Trait Name Contains: </label>
+                <label class="col-sm-7 control-label"><% $c->i18n->p("phenotype.trait_name_contains", "Trait Name Contains:") |h %> </label>
                 <div class="col-sm-5" >
                     <input id="download_trial_phenotype_trait_contains" name="download_trial_phenotype_trait_contains" type="text" class="form-control" placeholder="storage root,oxoglutarate" style="width: 100%"/>
                 </div>
@@ -148,7 +149,7 @@ $dialog_name => undef
             <div class="row">
                 <div class="col-sm-6">
                     <div class="form-group">
-                        <label class="col-sm-7 control-label">Min Phenotype Value: </label>
+                        <label class="col-sm-7 control-label"><% $c->i18n->p("phenotype.min_phenotype_value", "Min Phenotype Value:") |h %> </label>
                         <div class="col-sm-5" >
                             <input id="download_trial_phenotype_phenotype_min" name="download_trial_phenotype_phenotype_min" type="number" class="form-control" />
                         </div>
@@ -156,7 +157,7 @@ $dialog_name => undef
                 </div>
                 <div class="col-sm-6">
                     <div class="form-group">
-                        <label class="col-sm-7 control-label">Max Phenotype Value: </label>
+                        <label class="col-sm-7 control-label"><% $c->i18n->p("phenotype.max_phenotype_value", "Max Phenotype Value:") |h %> </label>
                         <div class="col-sm-5" >
                             <input id="download_trial_phenotype_phenotype_max" name="download_trial_phenotype_phenotype_max" type="number" class="form-control" />
                         </div>
@@ -165,11 +166,11 @@ $dialog_name => undef
             </div>
 
             <div class="form-group">
-                <label class="col-sm-7 control-label">Suppress User Defined Phenotype Outliers: </label>
+                <label class="col-sm-7 control-label"><% $c->i18n->p("phenotype.suppress_user_defined_phenotype_outliers", "Suppress User Defined Phenotype Outliers:") |h %> </label>
                 <div class="col-sm-5" >
                     <select class="form-control" id="download_trial_phenotypes_exclude_outliers">
-                        <option value="0">No</option>
-                        <option value="1">Yes</option>
+                        <option value="0"><% $c->i18n->p("global.search_wizard.no", "No") |h %></option>
+                        <option value="1"><% $c->i18n->p("global.search_wizard.yes", "Yes") |h %></option>
                     </select>
                 </div>
             </div>
@@ -179,8 +180,8 @@ $dialog_name => undef
         </div>
       </div>
       <div class="modal-footer">
-        <button type="button" class="btn btn-default" name="download_trial_phenotypes_cancel_button" id="download_trial_phenotypes_cancel_button" data-dismiss="modal">Close</button>
-        <button type="button" class="btn btn-primary" name="download_trial_phenotypes_submit_button" id="download_trial_phenotypes_submit_button" title="Submit">Submit</button>
+        <button type="button" class="btn btn-default" name="download_trial_phenotypes_cancel_button" id="download_trial_phenotypes_cancel_button" data-dismiss="modal"><% $c->i18n->p("global.dataset_publish.close", "Close") |h %></button>
+        <button type="button" class="btn btn-primary" name="download_trial_phenotypes_submit_button" id="download_trial_phenotypes_submit_button" title="<% $c->i18n->p("global.manage_file_share_dump.submit", "Submit") |h %>"><% $c->i18n->p("global.manage_file_share_dump.submit", "Submit") |h %></button>
       </div>
     </div>
   </div>

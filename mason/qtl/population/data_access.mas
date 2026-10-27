@@ -1,3 +1,7 @@
+<%once>
+use HTML::Entities ();
+</%once>
+
 <%doc>
 
 =head1 NAME 
@@ -18,17 +22,13 @@ $owner_page
 </%args>
 
 
-<&| /page/info_section.mas, 
+<&| /page/info_section.mas, anchor_title => "Data access",
   collapsible => 1, 
   collapsed   => 0, 
-  title       => "Data access" 
+  title       => HTML::Entities::encode_entities($c->i18n->p("analysis.qtl.ui.data_access", "Data access"))
 &>   
   <p>
-    The QTL data for this population is not public yet. If you are the 
-    data owner or SGN curator, login to access the data. 
-    Others who would like to know more about the data 
-    can contact the owner of the data: <b><% $owner_page %></b> or 
-    SGN: <a href=mailto:sgn-feedback@sgn.cornell.edu>
+    <% $c->i18n->p("analysis.qtl.ui.the_qtl_data_for_this_population_is_not_public_yet", "The QTL data for this population is not public yet. If you are the \n    data owner or SGN curator, login to access the data. \n    Others who would like to know more about the data \n    can contact the owner of the data:") |h %> <b><% $owner_page %></b> <% $c->i18n->p("analysis.qtl.ui.or_sgn", "or \n    SGN:") |h %> <a href=mailto:sgn-feedback@sgn.cornell.edu>
     sgn-feedback@sgn.cornell.edu</a>.
   </p>
 </&>

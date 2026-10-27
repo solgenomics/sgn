@@ -1,5 +1,8 @@
 package CXGN::Stock::ParseUpload::Plugin::DerivedAccessionsGeneric;
 
+use SGN::I18N ();
+use CatalystX::GlobalContext '$c';
+
 use Moose::Role;
 use CXGN::File::Parse;
 use SGN::Model::Cvterm;
@@ -7,6 +10,7 @@ use Data::Dumper;
 use CXGN::List::Validate;
 
 sub _validate_with_plugin {
+    my SGN::I18N $ui_validate_with_plugin_i18n = $c && $c->can('i18n') ? $c->i18n : undef;
     my $self = shift;
 
     my $filename = $self->get_filename();
@@ -40,7 +44,7 @@ sub _validate_with_plugin {
 
     if ( $additional_columns && scalar(@$additional_columns) > 0 ) {
         $errors{'error_messages'} = [
-            "The following columns are not recognized: " . join(', ', @$additional_columns) . ". Please check the spreadsheet format for the allowed columns."
+            (SGN::I18N::translate($ui_validate_with_plugin_i18n, "accessions.parse.unknown_columns", "The following columns are not recognized: %{columns}. Please check the spreadsheet format for the allowed columns.", {columns => "" . (join(', ', @$additional_columns))}))
         ];
         $self->_set_parse_errors(\%errors);
         return;
@@ -53,7 +57,7 @@ sub _validate_with_plugin {
     my @source_names_missing = @{$source_names_validator->validate($schema,'accessions_or_plants_or_tissue_samples',$seen_source_names)->{'missing'}};
 
     if (scalar(@source_names_missing) > 0) {
-        push @error_messages, "The following accessions or plants or tissue samples are not in the database: ".join(',',@source_names_missing);
+        push @error_messages, (SGN::I18N::translate($ui_validate_with_plugin_i18n, "accession.derived_parse.error_1", "The following accessions or plants or tissue samples are not in the database: ")).join(',',@source_names_missing);
     }
 
     my $rs = $schema->resultset("Stock::Stock")->search({
@@ -61,7 +65,7 @@ sub _validate_with_plugin {
     });
 
     while (my $r=$rs->next){
-        push @error_messages, "Derived accession name already exists in database: ".$r->uniquename;
+        push @error_messages, (SGN::I18N::translate($ui_validate_with_plugin_i18n, "accession.derived_parse.error_2", "Derived accession name already exists in database: ")).$r->uniquename;
     }
 
     if (scalar(@error_messages) >= 1) {

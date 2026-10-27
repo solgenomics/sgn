@@ -138,7 +138,7 @@ sub reset_password_form :Path('/user/reset_password_form') Args(0) {
     if ($token) {
 	my $person_id = CXGN::People::Login->get_login_by_token($c->dbc->dbh(), $token);
 	if (!$person_id) {
-	    $c->stash->{message} = "The provided password reset link is invalid. Please try again with another link.";
+	    $c->stash->{message} = encode_entities($c->i18n->p('account.server.invalid_reset_link', 'The provided password reset link is invalid. Please try again with another link.'));
 	    $c->stash->{template} = '/generic_message.mas';
 	    return;
 	}
@@ -150,7 +150,7 @@ sub reset_password_form :Path('/user/reset_password_form') Args(0) {
 	$c->stash->{template} = '/user/reset_password_form.mas';
     }
     else {
-	$c->stash->{message} = "No token provided. Please try again.";
+	$c->stash->{message} = encode_entities($c->i18n->p('account.server.missing_reset_token', 'No token provided. Please try again.'));
 	$c->stash->{template} = '/generic_message.mas';
     }
 

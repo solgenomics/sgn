@@ -1,3 +1,15 @@
+<%init>
+    use HTML::Entities ();
+    use JSON::PP ();
+    my $stock_search_js = sub {
+        my ($value) = @_;
+        my $literal = JSON::PP->new->ascii->encode(defined($value) ? "$value" : '');
+        $literal =~ s/</\\u003c/g;
+        $literal =~ s/>/\\u003e/g;
+        $literal =~ s/&/\\u0026/g;
+        return $literal;
+    };
+</%init>
 
 <%args>
 
@@ -23,7 +35,7 @@
 
 <div class="container-fluid">
 
-<& /page/page_title.mas, title=>'Search Accessions and Plots' &>
+<& /page/page_title.mas, title=>HTML::Entities::encode_entities($c->i18n->p('stock_search.title', 'Search Accessions and Plots')) &>
 
 
 <%perl>
@@ -39,52 +51,74 @@ for (my $i=0; $i< scalar(@$stock_types); $i++) {
      }
 }
 
-my $stock_type_select = simple_selectbox_html(
-  choices   => $stock_types,
-  id        => "stock_type_select",
-  selected => $accession_cvterm_id
+# CV IDs and names are data. Captions may later be translated without changing
+# request type values, list types or accession-only graphical filtering.
+use HTML::Entities ();
+my %stock_type_captions = (
+    'accession' => $c->i18n->p('stock_search.type.accession', 'accession'),
+    'plot' => $c->i18n->p('stock_search.type.plot', 'plot'),
+    'plant' => $c->i18n->p('stock_search.type.plant', 'plant'),
+    'tissue_sample' => $c->i18n->p('stock_search.type.tissue_sample', 'tissue_sample'),
+    'seedlot' => $c->i18n->p('stock_search.type.seedlot', 'seedlot'),
+    'population' => $c->i18n->p('stock_search.type.population', 'population'),
+    'cross' => $c->i18n->p('stock_search.type.cross', 'cross'),
+    'family_name' => $c->i18n->p('stock_search.type.family_name', 'family_name'),
+    'transformation' => $c->i18n->p('stock_search.type.transformation', 'transformation'),
+    'clone' => $c->i18n->p('stock_search.type.clone', 'clone'),
+    'graft' => $c->i18n->p('stock_search.type.graft', 'graft'),
+    'training population' => $c->i18n->p('stock_search.type.training_population', 'training population')
 );
+my $stock_type_select = '<select class="form-control" id="stock_type_select" name="">';
+for my $choice (@$stock_types) {
+    my ($type_id, $canonical_type) = @$choice;
+    my $selected = defined($accession_cvterm_id) && $accession_cvterm_id eq $type_id ? ' selected="selected" ' : '';
+    $stock_type_select .= '<option title="' . HTML::Entities::encode_entities($canonical_type)
+        . '" data-sgn-stock-type="' . HTML::Entities::encode_entities($canonical_type)
+        . '" value="' . HTML::Entities::encode_entities($type_id) . '"' . $selected . '>'
+        . HTML::Entities::encode_entities(exists($stock_type_captions{$canonical_type}) ? $stock_type_captions{$canonical_type} : $canonical_type) . '</option>';
+}
+$stock_type_select .= "</select>\n";
 
 my $organism_select = simple_selectbox_html(
-  choices  =>  $organisms   ,
+  choices => [map {[$_->[0], HTML::Entities::encode_entities($_->[1])]} @$organisms],
   id       => "organism_select",
 );
 
 my $breeding_programs_select = simple_selectbox_html(
-    choices => $breeding_programs,
+    choices => [map {[$_->[0], HTML::Entities::encode_entities($_->[1])]} @$breeding_programs],
     id      => "breeding_program" ,
 );
 
 </%perl>
 
-<&| /page/info_section.mas, title => 'Search', collapsible=>1, collapsed=>0 &>
+<&| /page/info_section.mas, title => HTML::Entities::encode_entities($c->i18n->p('stock_search.section.search', 'Search')), collapsible=>1, collapsed=>0 &>
 
   <div id="stock_search_form" class="well well-sm">
 
-    <&| /page/info_section.mas, title => 'Name Search', collapsible=>1, collapsed=>0 &>
+    <&| /page/info_section.mas, title => HTML::Entities::encode_entities($c->i18n->p('stock_search.section.name', 'Name Search')), collapsible=>1, collapsed=>0 &>
 
     <div class="row">
       <div class="col-sm-11">
         <div class="form-group form-group-sm">
-      	  <label class="col-sm-3 control-label">Stock Name or Description: </label>
+          <label class="col-sm-3 control-label"><% $c->i18n->p('stock_search.name_label', 'Stock Name or Description: ') |h %></label>
           <div class="col-sm-9" >
             <div class="form-group form-group-sm">
               <div class="input-group">
                 <span class="input-group-btn" width="20%">
                   <select class="form-control" id="any_name_matchtype" name="any_name_matchtype">
-                    <option title="starts_with" value="starts_with" selected="selected">starts with</option>
-                    <option title="contains" value="contains">contains</option>
-                    <option title="ends with" value="ends_with">ends with</option>
-                    <option title="exactly" value="exactly">exactly</option>
+                    <option title="starts_with" value="starts_with" selected="selected"><% $c->i18n->p('stock_search.match.starts', 'starts with') |h %></option>
+                    <option title="contains" value="contains"><% $c->i18n->p('stock_search.match.contains', 'contains') |h %></option>
+                    <option title="ends with" value="ends_with"><% $c->i18n->p('stock_search.match.ends', 'ends with') |h %></option>
+                    <option title="exactly" value="exactly"><% $c->i18n->p('stock_search.match.exact', 'exactly') |h %></option>
                   </select>
                 </span>
                   <span class="input-group-btn">
-                  <input class="form-control" name="any_name" id="any_name" value="" size="30" type="text" placeholder="Type search here..."/>
+                  <input class="form-control" name="any_name" id="any_name" value="" size="30" type="text" placeholder="<% $c->i18n->p('stock_search.name_placeholder', 'Type search here...') |h %>"/>
                 </span>
               </div>
             </div>
             <div class="form-group form-group-sm">
-              <label class="col-sm-3 control-label">Stock Type: </label>
+              <label class="col-sm-3 control-label"><% $c->i18n->p('stock_search.type_label', 'Stock Type: ') |h %></label>
               <div class="col-sm-9" >
                 <% $stock_type_select %>
               </div>
@@ -95,13 +129,13 @@ my $breeding_programs_select = simple_selectbox_html(
     </div>
     </&>
 
-    <&| /page/info_section.mas, title => 'Advanced Search', collapsible=>1, collapsed=>1, id=>'advanced_search_panel' &>
+    <&| /page/info_section.mas, title => HTML::Entities::encode_entities($c->i18n->p('stock_search.section.advanced', 'Advanced Search')), collapsible=>1, collapsed=>1, id=>'advanced_search_panel' &>
 
-    <&| /page/info_section.mas, title => 'Properties', collapsible=>1, collapsed=>1 &>
+    <&| /page/info_section.mas, title => HTML::Entities::encode_entities($c->i18n->p('stock_search.section.properties', 'Properties')), collapsible=>1, collapsed=>1 &>
 
     <div class="row">
       <div class="form-group form-group-sm">
-        <label class="col-sm-4 control-label">Organism:</label>
+        <label class="col-sm-4 control-label"><% $c->i18n->p('stock_search.organism_label', 'Organism:') |h %></label>
         <div class="col-sm-8" >
           <% $organism_select %>
         </div>
@@ -112,9 +146,9 @@ my $breeding_programs_select = simple_selectbox_html(
 
     <div class="row">
       <div class="form-group form-group-sm">
-        <label class="col-sm-4 control-label">Organization:</label>
+        <label class="col-sm-4 control-label"><% $c->i18n->p('stock_search.organization_label', 'Organization:') |h %></label>
         <div class="col-sm-8" >
-          <input type="text" class="form-control" id="organization" placeholder="Type to Autocomplete"/>
+          <input type="text" class="form-control" id="organization" placeholder="<% $c->i18n->p('stock_search.autocomplete_placeholder', 'Type to Autocomplete') |h %>"/>
         </div>
       </div>
     </div>
@@ -123,19 +157,19 @@ my $breeding_programs_select = simple_selectbox_html(
 
     <div class="row">
       <div class="form-group form-group-sm">
-        <label class="col-sm-4 control-label">Search By Another Property:</label>
+        <label class="col-sm-4 control-label"><% $c->i18n->p('stock_search.another_property', 'Search By Another Property:') |h %></label>
         <div class="col-sm-8" >
           <div class="form-group">
             <div class="input-group">
               <span class="input-group-btn">
                 <select class="form-control" id="editable_stockprop_search_term" name="editable_stockprop_search_term">
 %  foreach my $stockprop (sort {uc($a) cmp uc($b)} @$editable_stock_props){
-                  <option title="<% $stockprop %>" value="<% $stockprop %>" ><% $stockprop %></option>
+                  <option title="<% $stockprop |h %>" value="<% $stockprop |h %>" ><% $stockprop |h %></option>
 %  }
                 </select>
               </span>
               <span class="input-group-btn">
-                <button class="btn btn-primary btn-sm" id="editable_stockprop_search_add">Add</button>
+                <button class="btn btn-primary btn-sm" id="editable_stockprop_search_add"><% $c->i18n->p('stock_search.add', 'Add') |h %></button>
               </span>
             </div>
           </div>
@@ -148,13 +182,13 @@ my $breeding_programs_select = simple_selectbox_html(
     <br /><hr /><br />
     <div class="row">
       <div class="form-group form-group-sm">
-        <label class="col-sm-4 control-label">Is Obsolete?:</label>
+        <label class="col-sm-4 control-label"><% $c->i18n->p('stock_search.obsolete_label', 'Is Obsolete?:') |h %></label>
         <div class="col-sm-8" >
           <div class="form-group">
             <select class="form-control" id="obsolete_stock_search_term" name="obsolete_stock_search_term">
-              <option value="false" selected>Not Obsolete</option>
-              <option value="true">Is Obsolete</option>
-              <option value="include_obsolete">Include Obsolete</option>
+              <option value="false" selected><% $c->i18n->p('stock_search.obsolete.no', 'Not Obsolete') |h %></option>
+              <option value="true"><% $c->i18n->p('stock_search.obsolete.yes', 'Is Obsolete') |h %></option>
+              <option value="include_obsolete"><% $c->i18n->p('stock_search.obsolete.include', 'Include Obsolete') |h %></option>
             </select>
           </div>
         </div>
@@ -163,22 +197,22 @@ my $breeding_programs_select = simple_selectbox_html(
 % }
 
     </&>
-    <&| /page/info_section.mas, title => 'Usage', collapsible=>1, collapsed=>1 &>
+    <&| /page/info_section.mas, title => HTML::Entities::encode_entities($c->i18n->p('stock_search.section.usage', 'Usage')), collapsible=>1, collapsed=>1 &>
 
     <div class="row">
       <div class="col-sm-6">
         <div class="form-group form-group-sm">
-          <label class="col-sm-3 control-label">Project Name: </label>
+          <label class="col-sm-3 control-label"><% $c->i18n->p('stock_search.project_label', 'Project Name: ') |h %></label>
           <div class="col-sm-9" >
-            <input type="text" class="form-control" id="project" placeholder="Type to Autocomplete"/>
+            <input type="text" class="form-control" id="project" placeholder="<% $c->i18n->p('stock_search.autocomplete_placeholder', 'Type to Autocomplete') |h %>"/>
           </div>
         </div>
       </div>
       <div class="col-sm-6">
         <div class="form-group form-group-sm">
-          <label class="col-sm-3 control-label">Project Location: </label>
+          <label class="col-sm-3 control-label"><% $c->i18n->p('stock_search.location_label', 'Project Location: ') |h %></label>
           <div class="col-sm-9" >
-            <input type="text" class="form-control" id="location" placeholder="Type to Autocomplete"/>
+            <input type="text" class="form-control" id="location" placeholder="<% $c->i18n->p('stock_search.autocomplete_placeholder', 'Type to Autocomplete') |h %>"/>
           </div>
         </div>
       </div>
@@ -186,15 +220,15 @@ my $breeding_programs_select = simple_selectbox_html(
     <div class="row">
       <div class="col-sm-6">
         <div class="form-group form-group-sm">
-          <label class="col-sm-3 control-label">Project Year: </label>
+          <label class="col-sm-3 control-label"><% $c->i18n->p('stock_search.year_label', 'Project Year: ') |h %></label>
           <div class="col-sm-9" >
-            <input type="text" class="form-control" id="year" placeholder="Type to Autocomplete"/>
+            <input type="text" class="form-control" id="year" placeholder="<% $c->i18n->p('stock_search.autocomplete_placeholder', 'Type to Autocomplete') |h %>"/>
           </div>
         </div>
       </div>
       <div class="col-sm-6">
         <div class="form-group form-group-sm">
-          <label class="col-sm-3 control-label">Breeding Program: </label>
+          <label class="col-sm-3 control-label"><% $c->i18n->p('stock_search.program_label', 'Breeding Program: ') |h %></label>
           <div class="col-sm-9" >
             <% $breeding_programs_select %>
           </div>
@@ -203,20 +237,20 @@ my $breeding_programs_select = simple_selectbox_html(
     </div>
 
     </&>
-    <&| /page/info_section.mas, title => 'Phenotypes', collapsible=>1, collapsed=>1 &>
+    <&| /page/info_section.mas, title => HTML::Entities::encode_entities($c->i18n->p('stock_search.section.phenotypes', 'Phenotypes')), collapsible=>1, collapsed=>1 &>
 
     <div class="row">
         <div class="col-sm-6">
           <div class="form-group form-group-sm">
-            <label class="col-sm-3 control-label">Trait: </label>
+            <label class="col-sm-3 control-label"><% $c->i18n->p('stock_search.trait_label', 'Trait: ') |h %></label>
             <div class="col-sm-9" >
-              <input type="text" class="form-control" id="trait" placeholder="Type to Autocomplete"/>
+              <input type="text" class="form-control" id="trait" placeholder="<% $c->i18n->p('stock_search.autocomplete_placeholder', 'Type to Autocomplete') |h %>"/>
             </div>
           </div>
         </div>
       <div class="col-sm-6">
         <div class="form-group form-group-sm">
-          <label class="col-sm-3 control-label">Minimum Trait Value: </label>
+          <label class="col-sm-3 control-label"><% $c->i18n->p('stock_search.trait_min', 'Minimum Trait Value: ') |h %></label>
           <div class="col-sm-9" >
             <input type="text" class="form-control" id="minimum_trait_value" />
           </div>
@@ -226,7 +260,7 @@ my $breeding_programs_select = simple_selectbox_html(
       <div class="row">
       <div class="col-sm-6">
         <div class="form-group form-group-sm">
-          <label class="col-sm-3 control-label">Maximum Trait Value: </label>
+          <label class="col-sm-3 control-label"><% $c->i18n->p('stock_search.trait_max', 'Maximum Trait Value: ') |h %></label>
           <div class="col-sm-9" >
             <input type="text" class="form-control" id="maximum_trait_value" />
           </div>
@@ -235,16 +269,16 @@ my $breeding_programs_select = simple_selectbox_html(
     </div>
     </&>
 
-    <&| /page/info_section.mas, title => 'Search Accessions Using Genotypes', collapsible=>1, collapsed=>1 &>
+    <&| /page/info_section.mas, title => HTML::Entities::encode_entities($c->i18n->p('stock_search.section.genotypes', 'Search Accessions Using Genotypes')), collapsible=>1, collapsed=>1 &>
         <div class="row">
-            <a href="/search/stocks_using_genotypes"><p>Go to Search Accessions Using Genotypes Page.</p></a>
+            <a href="/search/stocks_using_genotypes"><p><% $c->i18n->p('stock_search.genotypes_link', 'Go to Search Accessions Using Genotypes Page.') |h %></p></a>
         </div>
     </&>
 
     </&> <!-- closes advanced search -->
 
     <center>
-    <button class="btn btn-primary" id="submit_stock_search" />Search</button>
+    <button class="btn btn-primary" id="submit_stock_search" /><% $c->i18n->p('stock_search.section.search', 'Search') |h %></button>
     </center>
     <br/><br/>
   </div>
@@ -252,26 +286,26 @@ my $breeding_programs_select = simple_selectbox_html(
 
 <br />
 
-<&| /page/info_section.mas, title => 'Search Results', collapsible=>1, collapsed=>0 &>
+<&| /page/info_section.mas, title => HTML::Entities::encode_entities($c->i18n->p('stock_search.section.results', 'Search Results')), collapsible=>1, collapsed=>0 &>
 
 <div class="well well-sm">
 
     <div class="row">
       <div class="col-sm-11">
         <div class="form-group form-group-sm">
-          <label class="col-sm-4 control-label">View Another Property: </label>
+          <label class="col-sm-4 control-label"><% $c->i18n->p('stock_search.view_property', 'View Another Property: ') |h %></label>
           <div class="col-sm-8" >
             <div class="form-group">
               <div class="input-group">
                 <span class="input-group-btn">
                   <select class="form-control" id="editable_stockprop_view_column_term" name="editable_stockprop_view_column_term">
 %  foreach my $stockprop (sort { "\L$a" cmp "\L$b" } @$editable_stock_props){
-                    <option title="<% $stockprop %>" value="<% $stockprop %>" ><% $stockprop %></option>
+                    <option title="<% $stockprop |h %>" value="<% $stockprop |h %>" ><% $stockprop |h %></option>
 %  }
                   </select>
                 </span>
                   <span class="input-group-btn">
-                    <button class="btn btn-primary btn-sm" id="editable_stockprop_view_column_add">Add</button>
+                    <button class="btn btn-primary btn-sm" id="editable_stockprop_view_column_add"><% $c->i18n->p('stock_search.add', 'Add') |h %></button>
                 </span>
               </div>
             </div>
@@ -286,12 +320,12 @@ my $breeding_programs_select = simple_selectbox_html(
                 <table id="stock_search_results" width="100%" class="table table-hover table-striped">
                 <thead>
                   <tr>
-                    <th>Stock Id</th>
-                    <th>Stock Name</th>
-                    <th>Stock Type</th>
-                    <th>Organism</th>
-                    <th>Synonyms</th>
-                    <th>Organization</th>
+                    <th><% $c->i18n->p('stock_search.column.id', 'Stock Id') |h %></th>
+                    <th><% $c->i18n->p('stock_search.column.name', 'Stock Name') |h %></th>
+                    <th><% $c->i18n->p('stock_search.column.type', 'Stock Type') |h %></th>
+                    <th><% $c->i18n->p('stock_search.column.organism', 'Organism') |h %></th>
+                    <th><% $c->i18n->p('stock_search.column.synonyms', 'Synonyms') |h %></th>
+                    <th><% $c->i18n->p('stock_search.column.organization', 'Organization') |h %></th>
                 </tr>
                 </thead>
 
@@ -302,10 +336,10 @@ my $breeding_programs_select = simple_selectbox_html(
 
     <div class="panel panel-default">
         <div class="panel-body">
-            <&| /page/info_section.mas, title => 'Copy Results to a List', collapsible=>1, collapsed=>0, subtitle=>'<i>Copy the stock names currently showing in the search results table to a new or exisiting list. Use "Show All entries" to capture all results.</i>'&>
+            <&| /page/info_section.mas, title => HTML::Entities::encode_entities($c->i18n->p('stock_search.section.copy', 'Copy Results to a List')), collapsible=>1, collapsed=>0, subtitle=>'<i>' . HTML::Entities::encode_entities($c->i18n->p('stock_search.copy_help', 'Copy the stock names currently showing in the search results table to a new or exisiting list. Use "Show All entries" to capture all results.')) . '</i>'&>
             <br>
             <div style="text-align:right" id="results_to_list_menu"></div>
-            <div id="search_result_names" style="display: none;"></div>
+            <textarea id="search_result_names" readonly aria-hidden="true" style="display: none;"></textarea>
             </&>
         </div>
     </div>
@@ -314,12 +348,67 @@ my $breeding_programs_select = simple_selectbox_html(
 
 </&>
 
-<& /page/detail_page_2_col_section.mas, info_section_title => "<h4 style='display:inline'>Graphical Filtering on Phenotype Performance</h4>", info_section_subtitle => 'Graphically filter an accessions average performance for combinations of traits', icon_class => "glyphicon glyphicon-equalizer", info_section_id => "stocks_search_graphical_filtering" &>
+<& /page/detail_page_2_col_section.mas, info_section_title => '<h4 style="display:inline">' . HTML::Entities::encode_entities($c->i18n->p('stock_search.graphical.title', 'Graphical Filtering on Phenotype Performance')) . '</h4>', info_section_subtitle => HTML::Entities::encode_entities($c->i18n->p('stock_search.graphical.subtitle', 'Graphically filter an accessions average performance for combinations of traits')), icon_class => "glyphicon glyphicon-equalizer", info_section_id => "stocks_search_graphical_filtering" &>
 
 
 </div>
 
 <script>
+
+// Plain request-language presentation. Scientific values and type codes stay raw.
+var stockSearchI18n = (window.SGN && window.SGN.i18n) || {
+    p: function (context, source, variables) {
+        return source.replace(/%\{([A-Za-z0-9_]+)\}/g, function (match, name) {
+            return variables && Object.prototype.hasOwnProperty.call(variables, name) ? String(variables[name]) : match;
+        });
+    }
+};
+function stockSearchHTML(value) {
+    return String(value).replace(/[&<>"']/g, function (character) {
+        return {'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'}[character];
+    });
+}
+function stockSearchTableText(value, type) {
+    return type === 'display' ? stockSearchHTML(value == null ? '' : value) : value;
+}
+function stockSearchLocaleHeaders() {
+    return {'X-SGN-Locale': document.documentElement.getAttribute('data-sgn-locale') || document.documentElement.lang || 'en'};
+}
+function stockSearchTableLanguage() {
+    return {
+        sEmptyTable: stockSearchHTML(stockSearchI18n.p("accessions.table.empty", "No data available in table")),
+        sInfo: stockSearchHTML(stockSearchI18n.p("accessions.table.info", "Showing %{start} to %{end} of %{total} entries", {start: '_START_', end: '_END_', total: '_TOTAL_'})),
+        sInfoEmpty: stockSearchHTML(stockSearchI18n.p("accessions.table.info_empty", "Showing 0 to 0 of 0 entries")),
+        sInfoFiltered: stockSearchHTML(stockSearchI18n.p("accessions.table.filtered", "(filtered from %{maximum} total entries)", {maximum: '_MAX_'})),
+        sLengthMenu: stockSearchHTML(stockSearchI18n.p("accessions.table.length", "Show %{menu} entries", {menu: '_MENU_'})),
+        sLoadingRecords: stockSearchHTML(stockSearchI18n.p("accessions.table.loading", "Loading...")),
+        sProcessing: stockSearchHTML(stockSearchI18n.p("accessions.table.processing", "Processing...")),
+        sSearch: stockSearchHTML(stockSearchI18n.p("accessions.table.search", "Search:")),
+        sZeroRecords: stockSearchHTML(stockSearchI18n.p("accessions.table.zero", "No matching records found")),
+        oPaginate: {
+            sFirst: stockSearchHTML(stockSearchI18n.p("accessions.table.first", "First")),
+            sLast: stockSearchHTML(stockSearchI18n.p("accessions.table.last", "Last")),
+            sNext: stockSearchHTML(stockSearchI18n.p("accessions.table.next", "Next")),
+            sPrevious: stockSearchHTML(stockSearchI18n.p("accessions.table.previous", "Previous"))
+        },
+        oAria: {
+            sSortAscending: stockSearchI18n.p("accessions.table.sort_ascending", ": activate to sort column ascending"),
+            sSortDescending: stockSearchI18n.p("accessions.table.sort_descending", ": activate to sort column descending")
+        }
+    };
+}
+
+function stockSearchCanonicalType() {
+    return jQuery('#stock_type_select option:selected').attr('data-sgn-stock-type') || '';
+}
+function stockSearchNameFromLink(html) {
+    // The same-origin renderer owns link escaping; decode its text exactly once.
+    // Entity-looking scientific names retain their literal text after this read.
+    var cell = document.createElement('div');
+    cell.innerHTML = html;
+    var anchor = cell.querySelector('a');
+    return anchor ? anchor.textContent : cell.textContent;
+}
 
 var stock_table;
 
@@ -339,11 +428,11 @@ jQuery(document).ready(function () {
       }
 
       var type_select = document.getElementById('stock_type_select');
-      type_select.selectedIndex = [...type_select.options].findIndex(elem => elem.text.trim().toLowerCase() == 'accession') ?? 1;
+      type_select.selectedIndex = [...type_select.options].findIndex(elem => (elem.getAttribute('data-sgn-stock-type') || '').trim().toLowerCase() == 'accession') ?? 1;
     });
 
 
-    const textFields = document.querySelectorAll('input[type="text"]');
+    const textFields = document.querySelectorAll('#stock_search_form input[type="text"]');
     // Loop through the text fields and set their values to an empty string
       textFields.forEach(textField => {
         textField.value = '';
@@ -352,7 +441,7 @@ jQuery(document).ready(function () {
      // Get all the dropdown select elements in the form
      // Reset all but 'stock_type_select' dropdown to zero value
      // Leave 'stock_type_select' with the default "selected" value from the mason file.
-     const selectFields = document.querySelectorAll('select');
+     const selectFields = document.querySelectorAll('#stock_search_form select');
      selectFields.forEach(selectField => {
         if (selectField.id != 'stock_type_select') {
           selectField.selectedIndex = 0;
@@ -360,13 +449,13 @@ jQuery(document).ready(function () {
      });
 
      jQuery("#person").autocomplete({
-        source: '<% $sp_person_autocomplete_uri %>'
+        source: <% $stock_search_js->($sp_person_autocomplete_uri) %>
      });
      jQuery("#trait").autocomplete({
-        source: '<% $trait_autocomplete_uri %>'
+        source: <% $stock_search_js->($trait_autocomplete_uri) %>
      });
      jQuery("#onto").autocomplete({
-        source: '<% $onto_autocomplete_uri %>' + "?db_name=" + '<% $trait_db_name %>'
+        source: <% $stock_search_js->($onto_autocomplete_uri) %> + "?db_name=" + <% $stock_search_js->($trait_db_name) %>
      });
      jQuery("#project").autocomplete({
         source: '/ajax/stock/project_autocomplete',
@@ -432,7 +521,7 @@ jQuery(document).ready(function () {
         jQuery('#editable_stockprop_search_div').html('');
         for (var property in editable_stockprops_search) {
             if (editable_stockprops_search.hasOwnProperty(property)) {
-                jQuery('#editable_stockprop_search_div').append('<div class="form-group form-group-sm"><label class="col-sm-4 control-label">'+property+': </label><div class="col-sm-8"><div class="form-group"><div class="input-group"><span class="input-group-btn" width="20%"><select class="form-control" id="editable_stockprop_matchtype" name="editable_stockprop_matchtype" data-property="'+property+'"><option title="contains" value="contains" selected="selected">contains</option><option title="starts with" value="starts_with">starts with</option><option title="ends with" value="ends_with">ends with</option><option title="exactly" value="exactly">exactly</option><option title="one of" value="one of">one of (separate multiple possibilities with commas)</option></select></span><span class="input-group-btn"><input type="text" class="form-control" name="editable_stockprop_search_inputs" id="'+property+'_input_id" data-property="'+property+'" placeholder="Type to Autocomplete"/></span><span class="input-group-btn"><button name="editable_stockprop_search_remove" data-property="'+property+'" class="btn"><span class="glyphicon glyphicon-remove"></span></button></span></div></div></div></div>');
+                jQuery('#editable_stockprop_search_div').append('<div class="form-group form-group-sm"><label class="col-sm-4 control-label">'+stockSearchHTML(property)+': </label><div class="col-sm-8"><div class="form-group"><div class="input-group"><span class="input-group-btn" width="20%"><select class="form-control" id="editable_stockprop_matchtype" name="editable_stockprop_matchtype" data-property="'+stockSearchHTML(property)+'"><option title="contains" value="contains" selected="selected">' + stockSearchHTML(stockSearchI18n.p("stock_search.match.contains", "contains")) + '</option><option title="starts with" value="starts_with">' + stockSearchHTML(stockSearchI18n.p("stock_search.match.starts", "starts with")) + '</option><option title="ends with" value="ends_with">' + stockSearchHTML(stockSearchI18n.p("stock_search.match.ends", "ends with")) + '</option><option title="exactly" value="exactly">' + stockSearchHTML(stockSearchI18n.p("stock_search.match.exact", "exactly")) + '</option><option title="one of" value="one of">' + stockSearchHTML(stockSearchI18n.p("stock_search.match.one_of", "one of (separate multiple possibilities with commas)")) + '</option></select></span><span class="input-group-btn"><input type="text" class="form-control" name="editable_stockprop_search_inputs" id="'+stockSearchHTML(property)+'_input_id" data-property="'+stockSearchHTML(property)+'" placeholder="' + stockSearchHTML(stockSearchI18n.p("stock_search.autocomplete_placeholder", "Type to Autocomplete")) + '"/></span><span class="input-group-btn"><button name="editable_stockprop_search_remove" data-property="'+stockSearchHTML(property)+'" class="btn" aria-label="' + stockSearchHTML(stockSearchI18n.p("stock_search.remove_property", "Remove property")) + '"><span class="glyphicon glyphicon-remove"></span></button></span></div></div></div></div>');
 
                 jQuery('#editable_stockprop_search_div').find("#"+property+"_input_id").autocomplete({
                    source: '/ajax/stock/stockproperty_autocomplete?property='+property,
@@ -453,13 +542,13 @@ jQuery(document).ready(function () {
             var table_header_html =
               '<table id="stock_search_results" class="table table-hover table-striped" width="100%">' +
                 '<thead><tr>' +
-                  '<th>Stock Id</th>' +
-                  '<th>Stock Name</th>' +
-                  '<th>Stock Type</th>' +
-                  '<th>Organism</th>' +
-                  '<th>Synonyms</th>';
+                  '<th>' + stockSearchHTML(stockSearchI18n.p("stock_search.column.id", "Stock Id")) + '</th>' +
+                  '<th>' + stockSearchHTML(stockSearchI18n.p("stock_search.column.name", "Stock Name")) + '</th>' +
+                  '<th>' + stockSearchHTML(stockSearchI18n.p("stock_search.column.type", "Stock Type")) + '</th>' +
+                  '<th>' + stockSearchHTML(stockSearchI18n.p("stock_search.column.organism", "Organism")) + '</th>' +
+                  '<th>' + stockSearchHTML(stockSearchI18n.p("stock_search.column.synonyms", "Synonyms")) + '</th>';
             for (var i = 0; i < stockprop_extra_columns_view_array.length; i++) {
-              table_header_html += '<th>' + stockprop_extra_columns_view_array[i] + '</th>';
+              table_header_html += '<th>' + stockSearchHTML(stockprop_extra_columns_view_array[i]) + '</th>';
             }
             table_header_html +=
                 '</tr></thead>' +
@@ -467,7 +556,7 @@ jQuery(document).ready(function () {
             jQuery('#stock_search_results_div').html(table_header_html);
         }
         stock_table.destroy();
-        _load_stock_search_results(jQuery('#stock_type_select option:selected').text(), editable_stockprops_search, stockprop_extra_columns_view, stockprop_extra_columns_view_array);
+        _load_stock_search_results(stockSearchCanonicalType(), editable_stockprops_search, stockprop_extra_columns_view, stockprop_extra_columns_view_array);
     });
 
     parseArgs(editable_stockprops_search);
@@ -476,7 +565,7 @@ jQuery(document).ready(function () {
         const name_links = stock_table.column(1).data();
         let names = [];
         for (let i = 0; i < name_links.length; i++) { //extract text from anchor tags
-            names.push(name_links[i].match(/<a [^>]+>([^<]+)<\/a>/)[1]+'\n');
+            names.push(stockSearchNameFromLink(name_links[i])+'\n');
         }
 
         let is_obsolete = '';
@@ -488,10 +577,10 @@ jQuery(document).ready(function () {
         } else if (is_obsolete == 'include_obsolete') {
             list_type = 'accessions_and_obsoleted_accessions';
         } else {
-            list_type = jQuery('#stock_type_select option:selected').text()+'s' || 'null';
+            list_type = stockSearchCanonicalType()+'s' || 'null';
         }
 
-        jQuery('#search_result_names').html(names);
+        jQuery('#search_result_names').val(names.join(''));
         addToListMenu('results_to_list_menu', 'search_result_names', {
             listType: list_type
         });
@@ -499,7 +588,7 @@ jQuery(document).ready(function () {
 
    jQuery('#submit_stock_search').click( function() {
         //stock_table.search("stock_search_results").draw();
-        _load_stock_search_results(jQuery('#stock_type_select option:selected').text(), editable_stockprops_search, stockprop_extra_columns_view, stockprop_extra_columns_view_array);
+        _load_stock_search_results(stockSearchCanonicalType(), editable_stockprops_search, stockprop_extra_columns_view, stockprop_extra_columns_view_array);
    });
 
    jQuery('#stock_search_form').keypress( function( e ) {
@@ -513,15 +602,16 @@ jQuery(document).ready(function () {
     // For graphical filtering, using same search params
     var run = false;
     jQuery('#stock_search_graphical_filter_onswitch').on("click", function(){
-        var stock_type = jQuery('#stock_type_select option:selected').text();
+        var stock_type = stockSearchCanonicalType();
         if (stock_type == 'accession'){
             jQuery.ajax ({
+                headers: stockSearchLocaleHeaders(),
                 url : '/ajax/search/stocks',
                 data : {
                     minimal_info : 1,
                     any_name : jQuery('#any_name').val(),
                     any_name_matchtype : jQuery('#any_name_matchtype').val(),
-                    stock_type : jQuery('#stock_type_select option:selected').text(),
+                    stock_type : stockSearchCanonicalType(),
                     organism : jQuery('#organism_select').val(),
                     person : jQuery('#person').val(),
                     trait : jQuery('#trait').val(),
@@ -535,7 +625,7 @@ jQuery(document).ready(function () {
                 },
                 beforeSend: function() {
                     jQuery("#working_modal").modal("show");
-                    jQuery('#stock_search_graphical_filter_div').html("[LOADING...]");
+                    jQuery('#stock_search_graphical_filter_div').text(stockSearchI18n.p("stock_search.graphical.loading", "[LOADING...]"));
                 },
                 success: function(response){
                     //console.log(response);
@@ -551,18 +641,18 @@ jQuery(document).ready(function () {
                     }
                     run = true;
                     params = {"germplasmDbIds" : stock_ids, "observationLevel" : 'plot'};
-                    loadBrAPIData("<% $c->config->{main_production_site_url} %>",params,function(response){
+                    loadBrAPIData(<% $stock_search_js->($c->config->{main_production_site_url}) %>,params,function(response){
                         useBrAPIData(response,true);
                     });
 
                 },
                 error: function(response){
                     jQuery("#working_modal").modal("hide");
-                    alert("Error retrieving accessions in graphical filtering.");
+                    alert(stockSearchI18n.p("stock_search.graphical.fetch_failed", "Error retrieving accessions in graphical filtering."));
                 }
             });
         } else {
-            jQuery('#stock_search_graphical_filter_div').html("Graphical Filtering only configured for accessions. Currently searching across "+stock_type+". Change your search to accesions to use graphical filtering.");
+            jQuery('#stock_search_graphical_filter_div').text(stockSearchI18n.p("stock_search.graphical.type_unavailable", "Graphical Filtering only configured for accessions. Currently searching across %{type}. Change your search to accesions to use graphical filtering.", {type: stock_type}));
         }
     });
 
@@ -577,7 +667,9 @@ function parseArgs(editable_stockprops_search) {
   }
   if ( params.has('stock_type') ) {
     var type = params.get('stock_type');
-    var value =  jQuery("#stock_type_select option[title="+ type +"]").val();
+    var value = jQuery('#stock_type_select option').filter(function () {
+        return jQuery(this).attr('data-sgn-stock-type') === type;
+    }).first().val();
     jQuery('#stock_type_select').val(value);
 
   }
@@ -606,14 +698,17 @@ function _load_stock_search_results(stock_type, editable_stockprops_search, stoc
         'ordering'  : false,
         'processing': true,
         'serverSide': true,
+        language: stockSearchTableLanguage(),
+        columnDefs: [{targets: [0, 2, 3, 4].concat(stockprop_extra_columns_view_array.map(function (item, index) { return index + 5; })), render: stockSearchTableText}],
         'lengthMenu': [
           [10,20,50,100,1000,10000,1000000000000000],
-          [10,20,50,100,1000,10000,'All']
+          [10,20,50,100,1000,10000,stockSearchI18n.p("stock_search.table.all", "All")]
         ],
         'iDisplayLength': 10000,
         'fixedFooter' : true,
         'scrollY' : '350px',
         'ajax': { 'url':  '/ajax/search/stocks',
+            headers: stockSearchLocaleHeaders(),
             'data': function(d) {
               d.any_name  = jQuery('#any_name').val();
               d.any_name_matchtype = jQuery('#any_name_matchtype').val();

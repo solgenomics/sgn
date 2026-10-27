@@ -30,6 +30,8 @@ $marker
 </%args>
 
 <%perl>
+use SGN::I18N ();
+
 
 use CXGN::Accession::Tools;
 
@@ -50,54 +52,54 @@ for my $additional_data_file(sort {$a cmp $b} @{$cosii_files}) {
   my $view_link='';
   if($additional_data_file=~/([^\/]+)$/){$display_name=$1;}
   if($display_name=~/\.blastx$/) {
-    $description = 'BLASTX result of original unigene sequences against Arabidopsis protein database';
+    $description = SGN::I18N::translate($c->i18n, "marker.detail.cosii.blastx_original_unigene_result", "BLASTX result of original unigene sequences against Arabidopsis protein database", undef, {entities => '<>&'});
     $html1.="<a href=\"$additional_data_file\">$description</a><br />";
   }
   elsif($display_name=~/[^FRfr]+\.cds\.fasta$/) {
-    $description = 'Alignment of Arabidopsis CDS and edited Asterid unigenes, FASTA';
+    $description = SGN::I18N::translate($c->i18n, "marker.detail.cosii.cds_asterid_alignment_fasta", "Alignment of Arabidopsis CDS and edited Asterid unigenes, FASTA", undef, {entities => '<>&'});
     $html2.="<a href=\"$additional_data_file\">$description</a><br />";
   }
   elsif($display_name=~/\.aligned2aa$/) {
-    $description= 'Alignment of DNA and translated peptides from Arabidopsis CDS and edited Asterid unigenes, plain text';
+    $description= SGN::I18N::translate($c->i18n, "marker.detail.cosii.dna_peptide_alignment_plain", "Alignment of DNA and translated peptides from Arabidopsis CDS and edited Asterid unigenes, plain text", undef, {entities => '<>&'});
     $html2.="<a href=\"$additional_data_file\">$description</a><br />";
   }
   elsif($display_name=~/\.pep\.aln$/) {
-    $description = 'Alignment of translated peptides from Arabidopsis CDS and edited Asterid unigenes, ClustalW';
+    $description = SGN::I18N::translate($c->i18n, "marker.detail.cosii.peptide_alignment_clustalw", "Alignment of translated peptides from Arabidopsis CDS and edited Asterid unigenes, ClustalW", undef, {entities => '<>&'});
     $html2.="<a href=\"$additional_data_file\">$description</a><br />";
   }
   elsif($display_name=~/\.pep\.fasta$/) {
-    $description='Alignment of translated peptides from Arabidopsis CDS and edited Asterid unigenes, FASTA';
+    $description=SGN::I18N::translate($c->i18n, "marker.detail.cosii.peptide_alignment_fasta", "Alignment of translated peptides from Arabidopsis CDS and edited Asterid unigenes, FASTA", undef, {entities => '<>&'});
     $html2.="<a href=\"$additional_data_file\">$description</a><br />";
   }
   elsif($display_name=~/\.cds\.nex$/) {
-    $description='Input file for PAUP, NEXUS format';
+    $description=SGN::I18N::translate($c->i18n, "marker.detail.cosii.paup_nexus_input", "Input file for PAUP, NEXUS format", undef, {entities => '<>&'});
     $html3.="<a href=\"$additional_data_file\">$description</a><br />";
   } 
   elsif($display_name=~/\.ml\.tre$/) {
-    $description='Phylogenetic tree';
+    $description=SGN::I18N::translate($c->i18n, "marker.detail.cosii.phylogenetic_tree", "Phylogenetic tree", undef, {entities => '<>&'});
     $html3.="<a href=\"$additional_data_file\">$description</a><br />";
     my $file_url=URI::Escape::uri_escape($additional_data_file);
-    $html3.="<a href=\"$additional_data_file\">$description</a>&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;&nbsp;<a href=\"/tools/tree_browser/?shared_file=$file_url\">[View]</a><br />"; 
+    $html3.=("<a href=\"$additional_data_file\">$description</a>&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;&nbsp;<a href=\"/tools/tree_browser/?shared_file=$file_url\">" . SGN::I18N::translate($c->i18n, "marker.detail.cosii.view", "[View]", undef, {entities => '<>&'}) . "</a><br />");
   }
   elsif($display_name=~/\.cds\.fasta$/) {
-    $description = 'Amplicon sequence alignment, FASTA';
+    $description = SGN::I18N::translate($c->i18n, "marker.detail.cosii.amplicon_alignment_fasta", "Amplicon sequence alignment, FASTA", undef, {entities => '<>&'});
     $html4.="<a href=\"$additional_data_file\">$description</a><br />";
   }
   elsif($display_name=~/\.txt$/ or $display_name=~/\.seq$/) {
-    $description=&_cosii_additional_description($dbh, $display_name).", plain text";
+    $description=&_cosii_additional_description($dbh, $display_name).SGN::I18N::translate($c->i18n, "marker.detail.cosii.comma_plain_text", ", plain text", undef, {entities => '<>&'});
     $html4.="<a href=\"$additional_data_file\">$description</a><br />";
   }
   elsif($display_name=~/\.pdf$/) {
-    $description=&_cosii_additional_description($dbh, $display_name).", PDF chromatogram";
+    $description=&_cosii_additional_description($dbh, $display_name).SGN::I18N::translate($c->i18n, "marker.detail.cosii.pdf_chromatogram", ", PDF chromatogram", undef, {entities => '<>&'});
     $html4.="<a href=\"$additional_data_file\">$description</a><br />";
   }
   elsif($display_name=~/\.ab1$/) {
-    $description=&_cosii_additional_description($dbh, $display_name).", AB1 chromatogram";
-    $view_link=" - <a href=\"/tools/trace_view.pl?file=$real_location\">[View]</a>";
+    $description=&_cosii_additional_description($dbh, $display_name).SGN::I18N::translate($c->i18n, "marker.detail.cosii.comma_ab1_chromatogram", ", AB1 chromatogram", undef, {entities => '<>&'});
+    $view_link=(" - <a href=\"/tools/trace_view.pl?file=$real_location\">" . SGN::I18N::translate($c->i18n, "marker.detail.cosii.view", "[View]", undef, {entities => '<>&'}) . "</a>");
     $html4.="<a href=\"$additional_data_file\">$description</a> $view_link<br />";
   }
   elsif($display_name=~/\.cds\.txt$/) {
-    $description = 'Original unigene seqs and Arabidopsis CDS seq, FASTA';
+    $description = SGN::I18N::translate($c->i18n, "marker.detail.cosii.original_unigene_arabidopsis_fasta", "Original unigene seqs and Arabidopsis CDS seq, FASTA", undef, {entities => '<>&'});
     #display nothing
   }
   else {
@@ -117,7 +119,7 @@ if($html6){$html.=$header.$html6;}
 if($html7){$html.=$html7;}
 if($html){$html.=$header;}
 if($html) {
-  print  CXGN::Page::FormattingHelpers::blue_section_html('Other COSII sequence data',$html);
+  print  CXGN::Page::FormattingHelpers::info_section_html(title => SGN::I18N::translate($c->i18n, "marker.detail.cosii.other_sequence_data", "Other COSII sequence data", undef, {entities => '<>&'}), anchor_title => "Other COSII sequence data", contents => $html);
 }
 else{ print '';}
 
@@ -172,11 +174,11 @@ sub get_information {
     
     my $ab1 = "$cosii_file/ab1/$marker-$ending$dashnumber.ab1";
     my $seq = "$cosii_file/seq/$marker-$ending$dashnumber.seq";
-    my $text = "Forward amplicon sequence for $organism$accession$plant$parennumber,";
+    my $text = SGN::I18N::translate($c->i18n, "marker.detail.cosii.forward_amplicon_sequence_for", "Forward amplicon sequence for %{organism}%{accession}%{plant}%{parennumber},", {organism => ("" . $organism), accession => ("" . $accession), plant => ("" . $plant), parennumber => ("" . $parennumber)});
 
-    $html .= "<a href=\"$ab1\">$text AB1 chromatogram</a> - "
-	. "<a href=\"/tools/trace_view.pl?file=$ab1\">[View]</a><br />"
-	. "<a href=\"$seq\">$text plain text</a><br />";
+    $html .= ("<a href=\"$ab1\">$text" . SGN::I18N::translate($c->i18n, "marker.detail.cosii.ab1_chromatogram", " AB1 chromatogram", undef, {entities => '<>&'}) . "</a> - ")
+	. ("<a href=\"/tools/trace_view.pl?file=$ab1\">" . SGN::I18N::translate($c->i18n, "marker.detail.cosii.view", "[View]", undef, {entities => '<>&'}) . "</a><br />")
+	. ("<a href=\"$seq\">$text" . SGN::I18N::translate($c->i18n, "marker.detail.cosii.plain_text", " plain text", undef, {entities => '<>&'}) . "</a><br />");
     $sth->finish;
     
     return $html;
@@ -189,16 +191,16 @@ sub _cosii_additional_description {
         my $direction=$1;
         my $accession_abbr=$2;
 
-        if($direction=~/[fF]/){$additional_description='Forward';}
-        if($direction=~/[rR]/){$additional_description='Reverse';}
+        if($direction=~/[fF]/){$additional_description=SGN::I18N::translate($c->i18n, "marker.detail.cosii.forward_direction", "Forward", undef, {entities => '<>&'});}
+        if($direction=~/[rR]/){$additional_description=SGN::I18N::translate($c->i18n, "marker.detail.cosii.reverse_direction", "Reverse", undef, {entities => '<>&'});}
         if($accession_abbr) {
             my @accession_ids=CXGN::Accession::Tools::partial_name_to_ids($dbh,$accession_abbr);
             if(@accession_ids==1) {
                 my $accession_object=CXGN::Accession->new($dbh,$accession_ids[0]);
-                $additional_description.=' amplicon sequence for '.$accession_object->verbose_name();
+                $additional_description.=SGN::I18N::translate($c->i18n, "marker.detail.cosii.amplicon_sequence_for", " amplicon sequence for ", undef, {entities => '<>&'}).$accession_object->verbose_name();
             }
             else {
-                $additional_description.=" sequence for $accession_abbr";
+                $additional_description.=(SGN::I18N::translate($c->i18n, "marker.detail.cosii.sequence_for", " sequence for ", undef, {entities => '<>&'}) . "$accession_abbr");
             }
         }
     }

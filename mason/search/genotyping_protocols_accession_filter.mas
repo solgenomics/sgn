@@ -1,29 +1,33 @@
+<%once>
+use HTML::Entities ();
+</%once>
+
 <& /util/import_javascript.mas, classes => [ 'CXGN.List', 'jquery', 'jquery.dataTables', 'jquery.dataTables-buttons-min', 'jszip-min', 'buttons.bootstrap-min', 'buttons.html5-min' ],  &>
 
-<p style="padding: 12px">Starting with a list of Accessions, this tool will identify the genotyping protocols that contain the highest number of your accessions.</p>
+<p style="padding: 12px"><% $c->i18n->p("genotype.marker.protocols_by_accessions.intro", "Starting with a list of Accessions, this tool will identify the genotyping protocols that contain the highest number of your accessions.") |h %></p>
 
 <div class="well well-sm" style="padding: 24px">
-    <p><strong>Filter Protocols by Accessions:</strong></p>
+    <p><strong><% $c->i18n->p("genotype.marker.filter_protocols_by_accessions", "Filter Protocols by Accessions:") |h %></strong></p>
 
     <div style="display: flex; gap: 12px">
         <select class="form-control" id="accession_list_select"></select>
-        <button class="btn btn-primary" id="genotyping_protocol_search">Search</button>
+        <button class="btn btn-primary" id="genotyping_protocol_search"><% $c->i18n->p("global.search.advanced_search.search", "Search") |h %></button>
     </div>
 
 
     <div id="genotyping_protocol_filter_results_container" style="display: none;">
 
-        <p style="margin-top: 48px"><strong>Best Genotyping Protocols</strong></p>
+        <p style="margin-top: 48px"><strong><% $c->i18n->p("genotype.marker.best_genotyping_protocols", "Best Genotyping Protocols") |h %></strong></p>
         <div class="panel panel-default">
             <div class="panel-body">
                 <div id="genotyping_protocol_filter_results"></div>
             </div>
         </div>
 
-        <p style="margin-top: 48px"><strong>Accession Usage Details</strong></p>
+        <p style="margin-top: 48px"><strong><% $c->i18n->p("genotype.marker.accession_usage_details", "Accession Usage Details") |h %></strong></p>
         <div class="panel panel-default">
             <div class="panel-body">
-                <table id="genotyping_protocol_filter_usage" class="table display"><thead></thead><tr><th>Accession</th></tr><tbody></tbody></table>
+                <table id="genotyping_protocol_filter_usage" class="table display"><thead></thead><tr><th><% $c->i18n->p("global.index_logged_in_user.accession", "Accession") |h %></th></tr><tbody></tbody></table>
             </div>
         </div>
 
@@ -34,7 +38,7 @@
     <div class="modal-dialog" role="document">
         <div class="modal-content">
             <div class="modal-header" style="text-align: center">
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <button type="button" class="close" data-dismiss="modal" aria-label="<% $c->i18n->p("global.close", "Close") |h %>"><span aria-hidden="true">&times;</span></button>
                 <h4 class="modal-title" id="genotypingProtocolAccessionsListDialog"></h4>
             </div>
             <div class="modal-body">
@@ -42,7 +46,7 @@
                     <pre><code id="genotyping_protocol_accessions_list_results"></code></pre>
                     <div class="panel panel-default">
                         <div class="panel-body">
-                            <&| /page/info_section.mas, title => 'Copy Results to a List', collapsible=>1, collapsed=>0, subtitle=>'' &>
+                            <&| /page/info_section.mas, anchor_title => 'Copy Results to a List', title => HTML::Entities::encode_entities($c->i18n->p("stock_search.section.copy", 'Copy Results to a List')), collapsible=>1, collapsed=>0, subtitle=>'' &>
                             <br>
                             <div style="text-align:right" id="gen_acc_results_to_list_menu"></div>
                             <div id="gen_acc_search_result_names" style="display: none;"></div>
@@ -52,7 +56,7 @@
                 </div>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-default" data-dismiss="modal"><% $c->i18n->p("global.close", "Close") |h %></button>
             </div>
         </div>
     </div>
@@ -65,7 +69,7 @@ var GENO_SEARCH_ACC_RESULTS = {};
 jQuery(document).ready(function() {
 
     var lo = new CXGN.List();
-    jQuery('#accession_list_select').html(lo.listSelect('accession_list_select', ['accessions'], 'Select a list of accessions', undefined, undefined));
+    jQuery('#accession_list_select').html(lo.listSelect('accession_list_select', ['accessions'], (window.SGN && window.SGN.i18n ? window.SGN.i18n.p("cross.pages.select_a_list_of_accessions.dd69e1f", "Select a list of accessions") : 'Select a list of accessions'), undefined, undefined));
 
     jQuery("#genotyping_protocol_search").click(() => {
         jQuery("#genotyping_protocol_search").attr("disabled", true);
@@ -82,7 +86,7 @@ jQuery(document).ready(function() {
                     alert(response.error);
                 }
                 if ( response?.results?.counts?.ranked_genotyping_protocols?.length === 0 ) {
-                    alert("No genotyping protocols found for accessions");
+                    alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("genotype.marker.no_genotyping_protocols_found_for_accessions", "No genotyping protocols found for accessions") : "No genotyping protocols found for accessions"));
                 }
                 else {
                     GENO_SEARCH_ACC_RESULTS = response?.results || {};
@@ -107,7 +111,7 @@ function displayResults(results) {
     // Display the top genotyping protocols
     if ( results?.counts?.ranked_genotyping_protocols ) {
         let ranked_gen_table = "<table class='table'>";
-        ranked_gen_table += `<thead><tr><th>Genotyping Protocol</th><th>Accession Count (total: ${results.counts.accessions_total})</th><th></th></tr></thead>`;
+        ranked_gen_table += `<thead><tr><th>${jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("lists_datasets.download.genotyping_protocol", "Genotyping Protocol") : "Genotyping Protocol")).html()}</th><th>${jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("genotype.marker.accession_count_total_count", "Accession Count (total: %{count})", {count: results.counts.accessions_total}) : `Accession Count (total: ${results.counts.accessions_total})`)).html()}</th><th></th></tr></thead>`;
         ranked_gen_table += "<tbody>";
         const display = results.counts.ranked_genotyping_protocols.length < 3 ? results.counts.ranked_genotyping_protocols.length : 3;
         for ( let i = 0; i < display; i++ ) {
@@ -118,8 +122,8 @@ function displayResults(results) {
             ranked_gen_table += `<td><a href="/breeders_toolbox/protocol/${gen_id}">${results.lookups.genotyping_protocols[gen_id]}</a></td>`;
             ranked_gen_table += `<td>${count_matches}</td>`;
             ranked_gen_table += '<td>';
-            ranked_gen_table += (count_matches > 0 ? `<a href='#' class='show_accessions_list' data-gen-id=${gen_id} data-list-type='matching'>View List of ${count_matches} Matching Accessions</a><br />` : '');
-            ranked_gen_table += (count_missing > 0 ? `<a href='#' class='show_accessions_list' data-gen-id=${gen_id} data-list-type='missing'>View List of ${count_missing} Missing Accessions</a>` : '');
+            ranked_gen_table += (count_matches > 0 ? `<a href='#' class='show_accessions_list' data-gen-id=${gen_id} data-list-type='matching'>${jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("genotype.marker.view_list_of_count_matching_accessions", "View List of %{count} Matching Accessions", {count: count_matches}) : `View List of ${count_matches} Matching Accessions`)).html()}</a><br />` : '');
+            ranked_gen_table += (count_missing > 0 ? `<a href='#' class='show_accessions_list' data-gen-id=${gen_id} data-list-type='missing'>${jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("genotype.marker.view_list_of_count_missing_accessions", "View List of %{count} Missing Accessions", {count: count_missing}) : `View List of ${count_missing} Missing Accessions`)).html()}</a>` : '');
             ranked_gen_table += '</td>';
             ranked_gen_table += "</tr>";
         }
@@ -130,7 +134,7 @@ function displayResults(results) {
 
     // Display the accession usage in the top protocols
     let table = "<thead><tr>";
-    table += "<th>Accession</th>";
+    table += ("<th>" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("global.index_logged_in_user.accession", "Accession") : "Accession")).html() + "</th>");
     for ( let gen_id in (results?.lookups?.genotyping_protocols || {}) ) {
         table += `<th>${(results?.lookups?.genotyping_protocols || {})[gen_id]}</th>`;
     }
@@ -199,7 +203,7 @@ function showAccessionsList() {
     acc_names.sort();
 
     // Show Dialog of Accessions List
-    jQuery("#genotypingProtocolAccessionsListDialog").html(list_type === "matching" ? `Accessions Found in Protocol ${gen_name}` : `Accessions Missing From Protocol ${gen_name}`);
+    jQuery("#genotypingProtocolAccessionsListDialog").html(list_type === "matching" ? `${jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("genotype.marker.accessions_found_in_protocol", "Accessions Found in Protocol ") : "Accessions Found in Protocol ")).html()}${gen_name}` : `${jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("genotype.marker.accessions_missing_from_protocol", "Accessions Missing From Protocol ") : "Accessions Missing From Protocol ")).html()}${gen_name}`);
     jQuery("#genotyping_protocol_accessions_list_results").html(acc_names.join("\n"));
     jQuery("#genotyping_protocol_accessions_list").modal("show");
 

@@ -1,6 +1,8 @@
 package CXGN::Trial::ParseUpload::Plugin::TrialExcelFormat;
 
 use Moose::Role;
+use SGN::I18N ();
+use HTML::Entities ();
 use Spreadsheet::ParseExcel;
 use Spreadsheet::ParseXLSX;
 use CXGN::Stock::StockLookup;
@@ -18,9 +20,21 @@ my @REQUIRED_COLUMNS = qw|plot_number block_number|;
 my @OPTIONAL_COLUMNS = qw|plot_name is_a_control rep_number range_number row_number col_number seedlot_name num_seed_per_plot weight_gram_seed_per_plot entry_number|;
 # Any additional columns that are not required or optional will be used as a treatment
 
+sub _single_trial_excel_message {
+  my ($text, $slots) = @_;
+  $text = HTML::Entities::encode_entities($text);
+  my %encoded_slots = map { HTML::Entities::encode_entities($_) => $slots->{$_} } keys %{$slots || {}};
+  if (%encoded_slots) {
+    my $pattern = join '|', map { quotemeta($_) } sort { length($b) <=> length($a) } keys %encoded_slots;
+    $text =~ s/($pattern)/$encoded_slots{$1}/ge;
+  }
+  return $text;
+}
+
 sub _validate_with_plugin {
   print STDERR "Check 3.1.1 ".localtime();
   my $self = shift;
+    my SGN::I18N $single_excel_validate_i18n = $self->i18n;
   my $filename = $self->get_filename();
   my $schema = $self->get_chado_schema();
   my $trial_stock_type = $self->get_trial_stock_type();
@@ -63,7 +77,12 @@ sub _validate_with_plugin {
 
   $worksheet = ( $excel_obj->worksheets() )[0]; #support only one worksheet
   if (!$worksheet) {
-    push @error_messages, "Spreadsheet must be on 1st tab in Excel (.xls) file";
+    push @error_messages, _single_trial_excel_message(
+      $single_excel_validate_i18n
+        ? $single_excel_validate_i18n->p('trial.upload.multi.excel.first_tab', 'Spreadsheet must be on 1st tab in Excel (%{extension}) file', { extension => '__SGN_XLS__' })
+        : 'Spreadsheet must be on 1st tab in Excel (__SGN_XLS__) file',
+      { '__SGN_XLS__' => '.xls' }
+    );
     $errors{'error_messages'} = \@error_messages;
     $self->_set_parse_errors(\%errors);
     return;
@@ -71,7 +90,11 @@ sub _validate_with_plugin {
   my ( $row_min, $row_max ) = $worksheet->row_range();
   my ( $col_min, $col_max ) = $worksheet->col_range();
   if ( ($col_max - $col_min) < 2 || ($row_max - $row_min) < 1 ) { #must have header and at least one row of plot data
-    push @error_messages, "Spreadsheet is missing header or contains no rows";
+    push @error_messages, _single_trial_excel_message(
+      $single_excel_validate_i18n
+        ? $single_excel_validate_i18n->p('trial.upload.multi.excel.header_or_rows', 'Spreadsheet is missing header or contains no rows')
+        : 'Spreadsheet is missing header or contains no rows'
+    );
     $errors{'error_messages'} = \@error_messages;
     $self->_set_parse_errors(\%errors);
     return;
@@ -87,7 +110,7 @@ sub _validate_with_plugin {
   }
   push @req_cols, $stock_column_name;
 
-  my $headers = _parse_headers($worksheet, \@req_cols, \@OPTIONAL_COLUMNS);
+  my $headers = _parse_headers($worksheet, \@req_cols, \@OPTIONAL_COLUMNS, $single_excel_validate_i18n);
   my %columns = %{$headers->{columns}};
   my @treatment_names = @{$headers->{treatments}};
   my @errors = @{$headers->{errors}};
@@ -99,7 +122,7 @@ sub _validate_with_plugin {
 
   # Check trial name for spaces
   elsif ($trial_name =~ /\s/ ) {
-    push @error_messages, "Trial name <b>$trial_name</b> must not contain spaces.";
+    push @error_messages, _single_trial_excel_message($single_excel_validate_i18n ? $single_excel_validate_i18n->p("trial.upload.single.excel.trial_spaces", "Trial name %{name} must not contain spaces.", {name => "__SGN_SINGLE_0__"}) : "Trial name __SGN_SINGLE_0__ must not contain spaces.", {"__SGN_SINGLE_0__" => "<b>$trial_name</b>"});
   }
 
   my @pairs;
@@ -177,16 +200,16 @@ sub _validate_with_plugin {
       $plot_name = _create_plot_name($trial_name, $plot_number);
     }
     elsif ($plot_name =~ /\s/ ) {
-      push @error_messages, "Row $row_name: plot name must not contain spaces.";
+      push @error_messages, _single_trial_excel_message($single_excel_validate_i18n ? $single_excel_validate_i18n->p("trial.upload.single.excel.plot_spaces", "Row %{row}: plot name must not contain spaces.", {row => "__SGN_SINGLE_0__"}) : "Row __SGN_SINGLE_0__: plot name must not contain spaces.", {"__SGN_SINGLE_0__" => $row_name});
     }
     elsif ($plot_name =~ /\// || $plot_name =~ /\\/) {
-      push @warning_messages, "Row $row_name: plot name contains slashes. Note that slashes can cause problems for third-party applications; however, plotnames can be saved with slashes.";
+      push @warning_messages, _single_trial_excel_message($single_excel_validate_i18n ? $single_excel_validate_i18n->p("trial.upload.single.excel.plot_slashes", "Row %{row}: plot name contains slashes. Note that slashes can cause problems for third-party applications; however, plotnames can be saved with slashes.", {row => "__SGN_SINGLE_0__"}) : "Row __SGN_SINGLE_0__: plot name contains slashes. Note that slashes can cause problems for third-party applications; however, plotnames can be saved with slashes.", {"__SGN_SINGLE_0__" => $row_name});
     }
     else {
       $plot_name =~ s/^\s+|\s+$//g; #trim whitespace from front and end...
       #file must not contain duplicate plot names
       if ($seen_plot_names{$plot_name}) {
-        push @error_messages, "Row $row_name: duplicate plot name at cell A".$seen_plot_names{$plot_name}.": $plot_name";
+        push @error_messages, _single_trial_excel_message($single_excel_validate_i18n ? $single_excel_validate_i18n->p("trial.upload.single.excel.plot_duplicate", "Row %{row}: duplicate plot name at cell A%{cell}: %{name}", {row => "__SGN_SINGLE_0__", cell => "__SGN_SINGLE_1__", name => "__SGN_SINGLE_2__"}) : "Row __SGN_SINGLE_0__: duplicate plot name at cell A__SGN_SINGLE_1__: __SGN_SINGLE_2__", {"__SGN_SINGLE_0__" => $row_name, "__SGN_SINGLE_1__" => $seen_plot_names{$plot_name}, "__SGN_SINGLE_2__" => $plot_name});
       }
       $seen_plot_names{$plot_name}=$row_name;
     }
@@ -195,7 +218,7 @@ sub _validate_with_plugin {
 
     #stock_name must not be blank and must exist in the database
     if (!$stock_name || $stock_name eq '') {
-      push @error_messages, "Row $row_name: entry name missing";
+      push @error_messages, _single_trial_excel_message($single_excel_validate_i18n ? $single_excel_validate_i18n->p("trial.upload.single.excel.entry_missing", "Row %{row}: entry name missing", {row => "__SGN_SINGLE_0__"}) : "Row __SGN_SINGLE_0__: entry name missing", {"__SGN_SINGLE_0__" => $row_name});
     } else {
       $stock_name =~ s/^\s+|\s+$//g; #trim whitespace from front and end...
       $seen_entry_names{$stock_name}++;
@@ -205,44 +228,54 @@ sub _validate_with_plugin {
 
     #plot number must not be blank
     if (!$plot_number || $plot_number eq '') {
-      push @error_messages, "Row $row_name: plot number missing";
+      push @error_messages, _single_trial_excel_message(
+        $single_excel_validate_i18n
+          ? $single_excel_validate_i18n->p('trial.upload.multi.excel.required_value_no_period', 'Row %{row}: %{field} missing', { row => '__SGN_ROW__', field => '__SGN_FIELD__' })
+          : 'Row __SGN_ROW__: __SGN_FIELD__ missing',
+        { '__SGN_ROW__' => $row_name, '__SGN_FIELD__' => 'plot number' }
+      );
     }
     #plot number must be a positive integer
     if (!($plot_number =~ /^\d+?$/)) {
-      push @error_messages, "Row $row_name: plot number is not a positive integer: $plot_number";
+      push @error_messages, _single_trial_excel_message($single_excel_validate_i18n ? $single_excel_validate_i18n->p("trial.upload.single.excel.plot_integer", "Row %{row}: plot number is not a positive integer: %{value}", {row => "__SGN_SINGLE_0__", value => "__SGN_SINGLE_1__"}) : "Row __SGN_SINGLE_0__: plot number is not a positive integer: __SGN_SINGLE_1__", {"__SGN_SINGLE_0__" => $row_name, "__SGN_SINGLE_1__" => $plot_number});
     }
     #plot number must be unique in file
     if (exists($seen_plot_numbers{$plot_number})){
-      push @error_messages, "Row $row_name: plot number must be unique in your file. You already used this plot number in C".$seen_plot_numbers{$plot_number};
+      push @error_messages, _single_trial_excel_message($single_excel_validate_i18n ? $single_excel_validate_i18n->p("trial.upload.single.excel.plot_number_duplicate", "Row %{row}: plot number must be unique in your file. You already used this plot number in C%{cell}", {row => "__SGN_SINGLE_0__", cell => "__SGN_SINGLE_1__"}) : "Row __SGN_SINGLE_0__: plot number must be unique in your file. You already used this plot number in C__SGN_SINGLE_1__", {"__SGN_SINGLE_0__" => $row_name, "__SGN_SINGLE_1__" => $seen_plot_numbers{$plot_number}});
     } else {
       $seen_plot_numbers{$plot_number} = $row_name;
     }
 
     #block number must not be blank
     if (!$block_number || $block_number eq '') {
-      push @error_messages, "Row $row_name: block number missing";
+      push @error_messages, _single_trial_excel_message(
+        $single_excel_validate_i18n
+          ? $single_excel_validate_i18n->p('trial.upload.multi.excel.required_value_no_period', 'Row %{row}: %{field} missing', { row => '__SGN_ROW__', field => '__SGN_FIELD__' })
+          : 'Row __SGN_ROW__: __SGN_FIELD__ missing',
+        { '__SGN_ROW__' => $row_name, '__SGN_FIELD__' => 'block number' }
+      );
     }
     #block number must be a positive integer
     if (!($block_number =~ /^\d+?$/)) {
-      push @error_messages, "Row $row_name: block number is not a positive integer: $block_number";
+      push @error_messages, _single_trial_excel_message($single_excel_validate_i18n ? $single_excel_validate_i18n->p("trial.upload.single.excel.block_integer", "Row %{row}: block number is not a positive integer: %{value}", {row => "__SGN_SINGLE_0__", value => "__SGN_SINGLE_1__"}) : "Row __SGN_SINGLE_0__: block number is not a positive integer: __SGN_SINGLE_1__", {"__SGN_SINGLE_0__" => $row_name, "__SGN_SINGLE_1__" => $block_number});
     }
     if ($is_a_control) {
       #is_a_control must be either yes, no 1, 0, or blank
       if (!($is_a_control eq "yes" || $is_a_control eq "no" || $is_a_control eq "1" ||$is_a_control eq "0" || $is_a_control eq '')) {
-        push @error_messages, "Row $row_name: is_a_control is not either yes, no 1, 0, or blank: $is_a_control";
+        push @error_messages, _single_trial_excel_message($single_excel_validate_i18n ? $single_excel_validate_i18n->p("trial.upload.single.excel.control", "Row %{row}: is_a_control is not either yes, no 1, 0, or blank: %{value}", {row => "__SGN_SINGLE_0__", value => "__SGN_SINGLE_1__"}) : "Row __SGN_SINGLE_0__: is_a_control is not either yes, no 1, 0, or blank: __SGN_SINGLE_1__", {"__SGN_SINGLE_0__" => $row_name, "__SGN_SINGLE_1__" => $is_a_control});
       }
     }
     if ($rep_number && !($rep_number =~ /^\d+?$/)){
-      push @error_messages, "Row $row_name: rep_number must be a positive integer: $rep_number";
+      push @error_messages, _single_trial_excel_message($single_excel_validate_i18n ? $single_excel_validate_i18n->p("trial.upload.single.excel.rep_number_integer", "Row %{row}: rep_number must be a positive integer: %{value}", {row => "__SGN_SINGLE_0__", value => "__SGN_SINGLE_1__"}) : "Row __SGN_SINGLE_0__: rep_number must be a positive integer: __SGN_SINGLE_1__", {"__SGN_SINGLE_0__" => $row_name, "__SGN_SINGLE_1__" => $rep_number});
     }
     if ($range_number && !($range_number =~ /^\d+?$/)){
-      push @error_messages, "Row $row_name: range_number must be a positive integer: $range_number";
+      push @error_messages, _single_trial_excel_message($single_excel_validate_i18n ? $single_excel_validate_i18n->p("trial.upload.single.excel.range_number_integer", "Row %{row}: range_number must be a positive integer: %{value}", {row => "__SGN_SINGLE_0__", value => "__SGN_SINGLE_1__"}) : "Row __SGN_SINGLE_0__: range_number must be a positive integer: __SGN_SINGLE_1__", {"__SGN_SINGLE_0__" => $row_name, "__SGN_SINGLE_1__" => $range_number});
     }
     if ($row_number && !($row_number =~ /^\d+?$/)){
-      push @error_messages, "Row $row_name: row_number must be a positive integer: $row_number";
+      push @error_messages, _single_trial_excel_message($single_excel_validate_i18n ? $single_excel_validate_i18n->p("trial.upload.single.excel.row_number_integer", "Row %{row}: row_number must be a positive integer: %{value}", {row => "__SGN_SINGLE_0__", value => "__SGN_SINGLE_1__"}) : "Row __SGN_SINGLE_0__: row_number must be a positive integer: __SGN_SINGLE_1__", {"__SGN_SINGLE_0__" => $row_name, "__SGN_SINGLE_1__" => $row_number});
     }
     if ($col_number && !($col_number =~ /^\d+?$/)){
-      push @error_messages, "Row $row_name: col_number must be a positive integer: $col_number";
+      push @error_messages, _single_trial_excel_message($single_excel_validate_i18n ? $single_excel_validate_i18n->p("trial.upload.single.excel.col_number_integer", "Row %{row}: col_number must be a positive integer: %{value}", {row => "__SGN_SINGLE_0__", value => "__SGN_SINGLE_1__"}) : "Row __SGN_SINGLE_0__: col_number must be a positive integer: __SGN_SINGLE_1__", {"__SGN_SINGLE_0__" => $row_name, "__SGN_SINGLE_1__" => $col_number});
     }
     if ($row_number && $col_number) {
       my $k = "$row_number-$col_number";
@@ -260,10 +293,10 @@ sub _validate_with_plugin {
       push @pairs, [$seedlot_name, $stock_name];
     }
     if (defined($num_seed_per_plot) && $num_seed_per_plot ne '' && !($num_seed_per_plot =~ /^\d+?$/)){
-      push @error_messages, "Row $row_name: num_seed_per_plot must be a positive integer: $num_seed_per_plot";
+      push @error_messages, _single_trial_excel_message($single_excel_validate_i18n ? $single_excel_validate_i18n->p("trial.upload.single.excel.num_seed_per_plot_integer", "Row %{row}: num_seed_per_plot must be a positive integer: %{value}", {row => "__SGN_SINGLE_0__", value => "__SGN_SINGLE_1__"}) : "Row __SGN_SINGLE_0__: num_seed_per_plot must be a positive integer: __SGN_SINGLE_1__", {"__SGN_SINGLE_0__" => $row_name, "__SGN_SINGLE_1__" => $num_seed_per_plot});
     }
     if (defined($weight_gram_seed_per_plot) && $weight_gram_seed_per_plot ne '' && !($weight_gram_seed_per_plot =~ /^\d+?$/)){
-      push @error_messages, "Row $row_name: weight_gram_seed_per_plot must be a positive integer: $weight_gram_seed_per_plot";
+      push @error_messages, _single_trial_excel_message($single_excel_validate_i18n ? $single_excel_validate_i18n->p("trial.upload.single.excel.weight_gram_seed_per_plot_integer", "Row %{row}: weight_gram_seed_per_plot must be a positive integer: %{value}", {row => "__SGN_SINGLE_0__", value => "__SGN_SINGLE_1__"}) : "Row __SGN_SINGLE_0__: weight_gram_seed_per_plot must be a positive integer: __SGN_SINGLE_1__", {"__SGN_SINGLE_0__" => $row_name, "__SGN_SINGLE_1__" => $weight_gram_seed_per_plot});
     }
 
     ## ENTRY NUMBER CHECK
@@ -272,12 +305,12 @@ sub _validate_with_plugin {
       my $ex_en = $seen_entry_numbers{by_acc}->{$stock_name};
       if ( $ex_acc ) {
         if ( $ex_acc ne $stock_name ) {
-          push @error_messages, "Row $row_name: entry number $entry_number has already been assigned to a different stock ($ex_acc).";
+          push @error_messages, _single_trial_excel_message($single_excel_validate_i18n ? $single_excel_validate_i18n->p("trial.upload.single.excel.entry_stock", "Row %{row}: entry number %{number} has already been assigned to a different stock (%{stock}).", {row => "__SGN_SINGLE_0__", number => "__SGN_SINGLE_1__", stock => "__SGN_SINGLE_2__"}) : "Row __SGN_SINGLE_0__: entry number __SGN_SINGLE_1__ has already been assigned to a different stock (__SGN_SINGLE_2__).", {"__SGN_SINGLE_0__" => $row_name, "__SGN_SINGLE_1__" => $entry_number, "__SGN_SINGLE_2__" => $ex_acc});
         }
       }
       elsif ( $ex_en ) {
         if ( $ex_en ne $entry_number ) {
-          push @error_messages, "Row $row_name: stock $stock_name has already been assigned a different entry number ($ex_en).";
+          push @error_messages, _single_trial_excel_message($single_excel_validate_i18n ? $single_excel_validate_i18n->p("trial.upload.single.excel.stock_entry", "Row %{row}: stock %{stock} has already been assigned a different entry number (%{number}).", {row => "__SGN_SINGLE_0__", stock => "__SGN_SINGLE_1__", number => "__SGN_SINGLE_2__"}) : "Row __SGN_SINGLE_0__: stock __SGN_SINGLE_1__ has already been assigned a different entry number (__SGN_SINGLE_2__).", {"__SGN_SINGLE_0__" => $row_name, "__SGN_SINGLE_1__" => $stock_name, "__SGN_SINGLE_2__" => $ex_en});
         }
       }
       else {
@@ -291,7 +324,7 @@ sub _validate_with_plugin {
       if($worksheet->get_cell($row,$treatment_col)){
         my $apply_treatment = $worksheet->get_cell($row,$treatment_col)->value();
         if ( ($apply_treatment ne '' ) && defined($apply_treatment) && $apply_treatment ne '1'){
-          push @error_messages, "Treatment value for $treatment_name in row $row_name should be either 1 or empty";
+          push @error_messages, _single_trial_excel_message($single_excel_validate_i18n ? $single_excel_validate_i18n->p("trial.upload.single.excel.treatment_binary", "Treatment value for %{treatment} in row %{row} should be either 1 or empty", {treatment => "__SGN_SINGLE_0__", row => "__SGN_SINGLE_1__"}) : "Treatment value for __SGN_SINGLE_0__ in row __SGN_SINGLE_1__ should be either 1 or empty", {"__SGN_SINGLE_0__" => $treatment_name, "__SGN_SINGLE_1__" => $row_name});
         }
       }
     }
@@ -304,7 +337,7 @@ sub _validate_with_plugin {
 
   if (scalar(@entry_names_missing) > 0) {
     $errors{'missing_stocks'} = \@entry_names_missing;
-    push @error_messages, "The following entry names are not in the database as uniquenames or synonyms: ".join(',',@entry_names_missing);
+    push @error_messages, _single_trial_excel_message($single_excel_validate_i18n ? $single_excel_validate_i18n->p("trial.upload.single.excel.missing_entries", "The following entry names are not in the database as uniquenames or synonyms: %{names}", {names => "__SGN_SINGLE_0__"}) : "The following entry names are not in the database as uniquenames or synonyms: __SGN_SINGLE_0__", {"__SGN_SINGLE_0__" => join(',',@entry_names_missing)});
   }
 
 
@@ -315,7 +348,7 @@ sub _validate_with_plugin {
 
     if (scalar(@seedlots_missing) > 0) {
       $errors{'missing_seedlots'} = \@seedlots_missing;
-      push @error_messages, "The following seedlots are not in the database or are marked as discarded: ".join(',',@seedlots_missing);
+      push @error_messages, _single_trial_excel_message($single_excel_validate_i18n ? $single_excel_validate_i18n->p("trial.upload.single.excel.missing_seedlots", "The following seedlots are not in the database or are marked as discarded: %{names}", {names => "__SGN_SINGLE_0__"}) : "The following seedlots are not in the database or are marked as discarded: __SGN_SINGLE_0__", {"__SGN_SINGLE_0__" => join(',',@seedlots_missing)});
     }
 
     my $return = CXGN::Stock::Seedlot->verify_seedlot_accessions_crosses($schema, \@pairs);
@@ -332,7 +365,7 @@ sub _validate_with_plugin {
     'uniquename' => { -in => \@plots }
   });
   while (my $r=$rs->next){
-    push @error_messages, "Row ".$seen_plot_names{$r->uniquename}.": plot name already exists: ".$r->uniquename;
+    push @error_messages, _single_trial_excel_message($single_excel_validate_i18n ? $single_excel_validate_i18n->p("trial.upload.single.excel.existing_plot", "Row %{row}: plot name already exists: %{name}", {row => "__SGN_SINGLE_0__", name => "__SGN_SINGLE_1__"}) : "Row __SGN_SINGLE_0__: plot name already exists: __SGN_SINGLE_1__", {"__SGN_SINGLE_0__" => $seen_plot_names{$r->uniquename}, "__SGN_SINGLE_1__" => $r->uniquename});
   }
 
   # check for multiple plots at the same position
@@ -341,7 +374,7 @@ sub _validate_with_plugin {
     my $count = scalar(@{$plots});
     if ( $count > 1 ) {
       my @pos = split('-', $key);
-      push @warning_messages, "More than 1 plot is assigned to the position row=" . $pos[0] . " col=" . $pos[1] . " plots=" . join(',', @$plots);
+      push @warning_messages, _single_trial_excel_message($single_excel_validate_i18n ? $single_excel_validate_i18n->p("trial.upload.single.excel.position", "More than 1 plot is assigned to the position row=%{row} col=%{col} plots=%{plots}", {row => "__SGN_SINGLE_0__", col => "__SGN_SINGLE_1__", plots => "__SGN_SINGLE_2__"}) : "More than 1 plot is assigned to the position row=__SGN_SINGLE_0__ col=__SGN_SINGLE_1__ plots=__SGN_SINGLE_2__", {"__SGN_SINGLE_0__" => $pos[0], "__SGN_SINGLE_1__" => $pos[1], "__SGN_SINGLE_2__" => join(',', @$plots)});
     }
   }
 
@@ -569,6 +602,7 @@ sub _parse_headers {
   my $worksheet = shift;
   my $req_cols = shift;
   my $opt_cols = shift;
+  my SGN::I18N $single_excel_headers_i18n = shift;
   my ( $col_min, $col_max ) = $worksheet->col_range();
   my %columns;
   my @treatments;
@@ -596,7 +630,7 @@ sub _parse_headers {
 
   foreach (@$req_cols) {
     if ( !exists $columns{$_} ) {
-      push(@errors, "Required column $_ is missing from the file!");
+      push(@errors, _single_trial_excel_message($single_excel_headers_i18n ? $single_excel_headers_i18n->p("trial.upload.multi.excel.required_column", "Required column %{column} is missing from the file!", {column => "__SGN_SINGLE_0__"}) : "Required column __SGN_SINGLE_0__ is missing from the file!", {"__SGN_SINGLE_0__" => $_}));
     }
   }
 

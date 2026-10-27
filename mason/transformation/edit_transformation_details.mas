@@ -11,14 +11,14 @@ $transformation_notes
     <div class="modal-dialog modal-lg" role="document">
         <div class="modal-content ui-front">
             <div class="modal-header text-center">
-                <button type="reset" class="close" id="edit_transformation_details_cancel_button_1" name="edit_transformation_details_cancel_button" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                <h4 class="modal-title" id="transformationDetailsEditDialog">Edit Transformation Details</h4>
+                <button type="reset" class="close" id="edit_transformation_details_cancel_button_1" name="edit_transformation_details_cancel_button" aria-label="<% $c->i18n->p("global.dataset_publish.close", "Close") |h %>"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="transformationDetailsEditDialog"><% $c->i18n->p("transformation.edit_transformation_details", "Edit Transformation Details") |h %></h4>
             </div>
             <div class="modal-body" id="edit_transformation_details_body">
                 <div class="container-fluid">
                     <form class="form-horizontal" role="form" method="post" enctype="multipart/form-data" encoding="multipart/form-data">
                         <div class="form-group">
-                            <label class="col-sm-3 control-label" for="edit_transformation_name">Transformation ID: </label>
+                            <label class="col-sm-3 control-label" for="edit_transformation_name"><% $c->i18n->p("transformation.transformation_id.2d7a636", "Transformation ID:") |h %> </label>
                             <div class="col-sm-8">
                                 <div class="input-group">
                                     <input class="form-control col-sm-8" id="edit_transformation_name" type="text" value="<%$transformation_name%>"/>
@@ -26,7 +26,7 @@ $transformation_notes
                             </div>
                         </div>
                         <div class="form-group">
-                            <label class="col-sm-3 control-label" for="edit_transformation_notes">Notes: </label>
+                            <label class="col-sm-3 control-label" for="edit_transformation_notes"><% $c->i18n->p("seedlots.ui.notes", "Notes:") |h %> </label>
                             <div class="col-sm-8">
                                 <div class="input-group">
                                     <textarea class="form-control" id="edit_transformation_notes" rows="5"><%$transformation_notes%></textarea>
@@ -37,9 +37,9 @@ $transformation_notes
                 </div>
             </div>
             <div class="modal-footer">
-                <p class="text-success vertical-align pull-left"><span class="glyphicon glyphicon-pencil"></span> Indicates pending change</p>
-                <button type="button" class="btn btn-default" data-dismiss="modal" id="edit_transformation_details_cancel_button_2" name="edit_transformation_details_cancel_button">Cancel</button>
-                <button type="button" class="btn btn-primary" id="save_transformation_details">Save Changes</button>
+                <p class="text-success vertical-align pull-left"><span class="glyphicon glyphicon-pencil"></span> <% $c->i18n->p("trial.details.pending", "Indicates pending change") |h %></p>
+                <button type="button" class="btn btn-default" data-dismiss="modal" id="edit_transformation_details_cancel_button_2" name="edit_transformation_details_cancel_button"><% $c->i18n->p("auth.legacy.cancel", "Cancel") |h %></button>
+                <button type="button" class="btn btn-primary" id="save_transformation_details"><% $c->i18n->p("trial.details.save", "Save Changes") |h %></button>
             </div>
         </div>
     </div>
@@ -49,14 +49,14 @@ $transformation_notes
     <div class="modal-dialog" role="document">
         <div class="modal-content ui-front">
             <div class="modal-header text-center">
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                <h4 class="modal-title" id="transformationDetailsSavedDialog">Details Saved</h4>
+                <button type="button" class="close" data-dismiss="modal" aria-label="<% $c->i18n->p("global.dataset_publish.close", "Close") |h %>"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="transformationDetailsSavedDialog"><% $c->i18n->p("trial.details.saved", "Details Saved") |h %></h4>
             </div>
             <div class="modal-body" id="transformation_details_saved_body">
                 <ul class="list-group" id="transformation_details_saved_message"></ul>
             </div>
             <div class="modal-footer">
-                <button id="transformation_details_saved_close_button" type="button" class="btn btn-default" data-dismiss="modal">Close & Reload</button>
+                <button id="transformation_details_saved_close_button" type="button" class="btn btn-default" data-dismiss="modal"><% $c->i18n->p("seedlots.ui.close_reload", "Close & Reload") |h %></button>
             </div>
         </div>
     </div>
@@ -66,8 +66,8 @@ $transformation_notes
     <div class="modal-dialog" role="document">
         <div class="modal-content ui-front">
             <div class="modal-header text-center">
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                <h4 class="modal-title" id="editTransformationDetailsErrorDialog">Error Saving Transformation Details</h4>
+                <button type="button" class="close" data-dismiss="modal" aria-label="<% $c->i18n->p("global.dataset_publish.close", "Close") |h %>"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="editTransformationDetailsErrorDialog"><% $c->i18n->p("transformation.error_saving_transformation_details", "Error Saving Transformation Details") |h %></h4>
             </div>
 
             <div class="modal-body">
@@ -78,7 +78,7 @@ $transformation_notes
                 </div>
             </div>
             <div class="modal-footer">
-                <button id="transformation_details_error_close_button" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                <button id="transformation_details_error_close_button" type="button" class="btn btn-default" data-dismiss="modal"><% $c->i18n->p("global.dataset_publish.close", "Close") |h %></button>
             </div>
         </div>
     </div>
@@ -111,12 +111,12 @@ jQuery(document).ready(function(){
             let type;
             if (id == 'edit_transformation_name') {
                 new_transformation_name = changed_elements[i].value;
-                type = 'Transformation ID';
-                success_message += "<li class='list-group-item list-group-item-success'> Changed "+type+" to: <b>"+new_transformation_name+"</b></li>";
+                type = (window.SGN && window.SGN.i18n ? window.SGN.i18n.p("transformation.transformation_id.6f39808", "Transformation ID") : 'Transformation ID');
+                success_message += ("<li class='list-group-item list-group-item-success'> " + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("transformation.changed", "Changed") : "Changed")).html() + " ")+type+(" " + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("transformation.to", "to:") : "to:")).html() + " <b>")+new_transformation_name+"</b></li>";
             } else if (id == 'edit_transformation_notes') {
                 new_transformation_notes = changed_elements[i].value;
-                type = 'Notes';
-                success_message += "<li class='list-group-item list-group-item-success'> Changed "+type+" to: <b>"+new_transformation_notes+"</b></li>";
+                type = (window.SGN && window.SGN.i18n ? window.SGN.i18n.p("cross.ui.notes", "Notes") : 'Notes');
+                success_message += ("<li class='list-group-item list-group-item-success'> " + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("transformation.changed", "Changed") : "Changed")).html() + " ")+type+(" " + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("transformation.to", "to:") : "to:")).html() + " <b>")+new_transformation_notes+"</b></li>";
             }
         }
 
@@ -149,7 +149,7 @@ jQuery(document).ready(function(){
             },
             error: function(response){
                 jQuery('#working_modal').modal('hide');
-                alert('An error occurred updating transformation ID details');
+                alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("transformation.an_error_occurred_updating_transformation_id_details", "An error occurred updating transformation ID details") : 'An error occurred updating transformation ID details'));
             }
         });
     });

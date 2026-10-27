@@ -11,7 +11,7 @@ $trial_id
             <table class="table table-hover table-bordered" id="crossing_experiments_from_field_trial_table">
                 <thead>
                     <tr>
-                        <th>Crossing Experiment(s) From This Field Trial</th>
+                        <th><% $c->i18n->p("cross.pages.crossing_experiment_s_from_this_field_trial", "Crossing Experiment(s) From This Field Trial") |h %></th>
                     </tr>
                 </thead>
             </table>

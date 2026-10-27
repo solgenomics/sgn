@@ -2,6 +2,8 @@
 package SGN::Controller::AJAX::SequencedAccessions;
 
 use Moose;
+use SGN::I18N ();
+use HTML::Entities ();
 
 use Data::Dumper;
 use DateTime;
@@ -27,7 +29,7 @@ sub get_all_sequenced_stocks :Path('/ajax/genomes/sequenced_stocks') {
 
     print STDERR "SEQeunced STOCKS: ".Dumper($sequenced_stocks);
     
-    my @info = $self->format_sequencing_infos($schema, $user_id, $sequenced_stocks);
+    my @info = $self->format_sequencing_infos($schema, $user_id, $sequenced_stocks, $c->i18n);
 
     $c->stash->{rest} = { data => \@info };
 }
@@ -43,7 +45,7 @@ sub get_all_sequenced_stocks :Path('/ajax/genomes/sequenced_stocks') {
      my $schema = $c->dbic_schema("Bio::Chado::Schema", undef, $user_id);
      my $sequenced_stocks = CXGN::Stock::SequencingInfo->get_props($schema, $stock_id);
 
-     my @info = $self->format_sequencing_infos($schema, $user_id, $sequenced_stocks);
+     my @info = $self->format_sequencing_infos($schema, $user_id, $sequenced_stocks, $c->i18n);
 
      print STDERR "SEQ INFOS: ".Dumper(\@info);
 
@@ -55,6 +57,7 @@ sub format_sequencing_infos {
     my $schema = shift;
     my $user_id = shift;
     my $sequencing_infos = shift;
+    my SGN::I18N $ui_sequencing_formatter_i18n = shift;
 
     my @data = ();
 
@@ -97,10 +100,10 @@ sub format_sequencing_infos {
 	my $delete_link_js = "window.jsMod['sequenced_accessions'].delete_sequencing_info(".$info->{prop_id}.");";
 	
 	my $edit_link_js = "window.jsMod['sequenced_accessions'].edit_sequencing_info(".$info->{prop_id}.");";
-	my $edit_delete_html = "Edit | Delete";
+	my $edit_delete_html = ($ui_sequencing_formatter_i18n ? HTML::Entities::encode_entities($ui_sequencing_formatter_i18n->p("accession.sequencing.action.edit", "Edit")) . " | " . HTML::Entities::encode_entities($ui_sequencing_formatter_i18n->p("accession.sequencing.action.delete", "Delete")) : "Edit | Delete");
 	
 	if ($user_id && ($info->{sp_person_id} == $user_id)) {
-	    $edit_delete_html = '<a href="javascript:'.$edit_link_js.'">Edit</a> | <a href="javascript:'.$delete_link_js.'">Delete</a>';
+	    $edit_delete_html = ($ui_sequencing_formatter_i18n ? '<a href="javascript:'.$edit_link_js.'">' . HTML::Entities::encode_entities($ui_sequencing_formatter_i18n->p("accession.sequencing.action.edit", "Edit")) . '</a> | <a href="javascript:'.$delete_link_js.'">' . HTML::Entities::encode_entities($ui_sequencing_formatter_i18n->p("accession.sequencing.action.delete", "Delete")) . '</a>' : '<a href="javascript:'.$edit_link_js.'">Edit</a> | <a href="javascript:'.$delete_link_js.'">Delete</a>');
 	}
 		
 	push @data, [
@@ -144,11 +147,11 @@ sub store_sequencing_info :Path('/ajax/genomes/store_sequencing_info') Args(0) {
     print STDERR "Params for store: ".Dumper($params);
 
     if (!$c->user()) {
-	$c->stash->{rest} = { error => "You need to be logged in to add sequencing information" };
+	$c->stash->{rest} = { error => $c->i18n->p("accession.sequencing.login", "You need to be logged in to add sequencing information") };
 	return;
     }
     if (!$c->user()->check_roles("curator")) {
-	$c->stash->{rest} = { error => "You need to be logged in as a curator to submit this information" };
+	$c->stash->{rest} = { error => $c->i18n->p("accession.sequencing.curator", "You need to be logged in as a curator to submit this information") };
 	return;
     }
 
@@ -174,7 +177,7 @@ sub store_sequencing_info :Path('/ajax/genomes/store_sequencing_info') Args(0) {
     };
     
     if ($@) {
-	$c->stash->{rest} = { error => "Error. The operation could not be completed. ($@)" };
+	$c->stash->{rest} = { error => $c->i18n->p("accession.sequencing.save_failed", "Error. The operation could not be completed. (%{details})", {details => "$@"}) };
 	return;
     }
     
@@ -191,8 +194,7 @@ sub delete_sequencing_info :Path('/ajax/genomes/sequencing_info/delete') Args(1)
     print STDERR "delete_sequencing_info...\n";
 
     if (!$c->user() && !$c->user()->check_roles("curator")) {
-	$c->stash->{rest} = { error => "Log in required for sequencing info dele
-tion." };
+	$c->stash->{rest} = { error => $c->i18n->p("accession.sequencing.delete_login", "Log in required for sequencing info dele\ntion.") };
 	return;
     }
 
@@ -204,7 +206,7 @@ tion." };
 	});
 
     if ($si->sp_person_id() && $si->sp_person_id() != $c->user()->get_object()->get_sp_person_id()) {
-	$c->stash->{rest} = { error => "You don't own this entry so it cannot be deleted." };
+	$c->stash->{rest} = { error => $c->i18n->p("accession.sequencing.delete_owner", "You don't own this entry so it cannot be deleted.") };
 	return;
     }
 
@@ -217,7 +219,7 @@ tion." };
 	};
 	if ($@) {
 	    print STDERR "An error occurred during deletion. Sorry.\n";
-	    $c->stash->{rest} = { error => "An error occurred while deleting sequencing info. ($@)" };
+	    $c->stash->{rest} = { error => $c->i18n->p("accession.sequencing.delete_failed", "An error occurred while deleting sequencing info. (%{details})", {details => "$@"}) };
 	    return;
 	}
     }
@@ -226,7 +228,7 @@ tion." };
 	$c->stash->{rest} = { success => 1 };
     }
     else {
-	$c->stash->{rest} = { error => "An error occurred during deletion." }
+	$c->stash->{rest} = { error => $c->i18n->p("accession.sequencing.delete_generic", "An error occurred during deletion.") }
     }
 }
 

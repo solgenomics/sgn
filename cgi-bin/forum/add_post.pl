@@ -12,6 +12,33 @@ A refering_page parameter can be used to generate a link back to the calling pag
 =cut
     
 use strict;
+use SGN::I18N ();
+use CatalystX::GlobalContext '$c';
+my SGN::I18N $ui_forum_i18n = SGN::I18N::translate($c);
+my %ui_forum = (
+    'community.forum.post_truncated_edit_hint' => SGN::I18N::translate($ui_forum_i18n, 'community.forum.post_truncated_edit_hint', 'Please use the \'go back\' button to edit your post, or submit to accept the', undef, { entities => '<>&\x{0080}-\x{10FFFF}', decode => 0 }),
+    'community.forum.store_post' => SGN::I18N::translate($ui_forum_i18n, 'community.forum.store_post', 'Store post', undef, { entities => '<>&\x{0080}-\x{10FFFF}', decode => 0 }),
+    'community.forum.truncated_version' => SGN::I18N::translate($ui_forum_i18n, 'community.forum.truncated_version', 'truncated version.', undef, { entities => '<>&\x{0080}-\x{10FFFF}', decode => 0 }),
+    'global.safe_caption.note' => SGN::I18N::translate($ui_forum_i18n, 'global.safe_caption.note', 'Note:', undef, { entities => '<>&\x{0080}-\x{10FFFF}', decode => 0 }),
+    'community.forum.add_post' => SGN::I18N::translate($ui_forum_i18n, 'community.forum.add_post', 'Add Post', undef, { entities => '<>&\x{0080}-\x{10FFFF}', decode => 0 }),
+    'community.forum.back_to_posts' => SGN::I18N::translate($ui_forum_i18n, 'community.forum.back_to_posts', 'Back to posts', undef, { entities => '<>&\x{0080}-\x{10FFFF}', decode => 0 }),
+    'community.forum.courtesy_notice_lower' => SGN::I18N::translate($ui_forum_i18n, 'community.forum.courtesy_notice_lower', 'this service is provided as a courtesy. SGN reserves the right to delete posts at any time for any reason.', undef, { entities => '<>&\x{0080}-\x{10FFFF}', decode => 0 }),
+    'community.forum.enter_comment_help' => SGN::I18N::translate($ui_forum_i18n, 'community.forum.enter_comment_help', 'Please enter your comment below. You can delete the post later if you are logged in.', undef, { entities => '<>&\x{0080}-\x{10FFFF}', decode => 0 }),
+    'community.forum.enter_post' => SGN::I18N::translate($ui_forum_i18n, 'community.forum.enter_post', 'Enter post', undef, { entities => '<>&\x{0080}-\x{10FFFF}', decode => 0 }),
+    'community.forum.example_link_explanation' => SGN::I18N::translate($ui_forum_i18n, 'community.forum.example_link_explanation', 'will appear as', undef, { entities => '<>&\x{0080}-\x{10FFFF}', decode => 0 }),
+    'community.forum.insufficient_post_data' => SGN::I18N::translate($ui_forum_i18n, 'community.forum.insufficient_post_data', 'Sorry, but there was insufficient data to add this post.', undef, { entities => '<>&\x{0080}-\x{10FFFF}', decode => 0 }),
+    'community.forum.modify_post' => SGN::I18N::translate($ui_forum_i18n, 'community.forum.modify_post', 'modify post', undef, { entities => '<>&\x{0080}-\x{10FFFF}', decode => 0 }),
+    'community.forum.parent_message_prefix' => SGN::I18N::translate($ui_forum_i18n, 'community.forum.parent_message_prefix', 'Your message will be attached to the following message:', undef, { entities => '<>&\x{0080}-\x{10FFFF}', decode => 0 }),
+    'community.forum.post_html_links_help' => SGN::I18N::translate($ui_forum_i18n, 'community.forum.post_html_links_help', 'HTML tags are not supported. You can add links to your post by using square brackets.  For example:', undef, { entities => '<>&\x{0080}-\x{10FFFF}', decode => 0 }),
+    'community.forum.post_review_explanation' => SGN::I18N::translate($ui_forum_i18n, 'community.forum.post_review_explanation', 'This is how the text of your post will appear. Please use the \'store post\' button for permanently adding the post
+    or the \'modify post\' button to go back and revise the post. To cancel, click on \'back to posts\'.', undef, { entities => '<>&\x{0080}-\x{10FFFF}', decode => 0 }),
+    'community.forum.post_stored_title' => SGN::I18N::translate($ui_forum_i18n, 'community.forum.post_stored_title', 'Your post was successfully stored', undef, { entities => '<>&\x{0080}-\x{10FFFF}', decode => 0 }),
+    'community.forum.post_text_label' => SGN::I18N::translate($ui_forum_i18n, 'community.forum.post_text_label', 'Post Text:', undef, { entities => '<>&\x{0080}-\x{10FFFF}', decode => 0 }),
+    'community.forum.review_post' => SGN::I18N::translate($ui_forum_i18n, 'community.forum.review_post', 'Review post', undef, { entities => '<>&\x{0080}-\x{10FFFF}', decode => 0 }),
+    'community.forum.review_post_title' => SGN::I18N::translate($ui_forum_i18n, 'community.forum.review_post_title', 'Review your post', undef, { entities => '<>&\x{0080}-\x{10FFFF}', decode => 0 }),
+    'community.forum.steps_label' => SGN::I18N::translate($ui_forum_i18n, 'community.forum.steps_label', 'Steps:', undef, { entities => '<>&\x{0080}-\x{10FFFF}', decode => 0 }),
+    'community.forum.store_post_lower' => SGN::I18N::translate($ui_forum_i18n, 'community.forum.store_post_lower', 'store post', undef, { entities => '<>&\x{0080}-\x{10FFFF}', decode => 0 })
+);
 
 use CXGN::Page;
 use CXGN::DB::Connection;
@@ -24,7 +51,7 @@ use CXGN::Page::FormattingHelpers qw/  page_title_html
 
 my $SIZELIMIT = 10000; # the maximal number of bytes in a post.
 
-my $page = CXGN::Page->new( "SGN Forum | Add Post", "Lukas");
+my $page = CXGN::Page->new( "SGN Forum | " . $ui_forum{'community.forum.add_post'}, "Lukas");
 my $dbh = CXGN::DB::Connection->new();
 
 #
@@ -70,15 +97,13 @@ if ($topic_id) {
     $parent_post_explain = "";
     $display_subject = "RE: $parent_subject";
     if ($parent_post_text) { 
-	$parent_post_explain = "Your message will be attached to the following message: 
-	<table summary=\"\" class=\"sgnblue\"><tr><td><pre>$parent_post_text</pre></td></tr></table>
-	<br />";
+	$parent_post_explain = $ui_forum{'community.forum.parent_message_prefix'} . " \n\t<table summary=\"\" class=\"sgnblue\"><tr><td><pre>$parent_post_text</pre></td></tr></table>\n\t<br />";
 	$subject_input = "<input type=\"text\" name=\"subject\" value=\"$display_subject\" /><br /><br /> ";
     }
 
     $topic = CXGN::People::Forum::Topic -> new($dbh, $topic_id);
     if (!$topic) { 
-	$page->error_page("No legal topic id was supplied. [topic_id=$topic_id]");
+	$page->error_page(SGN::I18N::translate($ui_forum_i18n, 'community.forum.invalid_topic_id', 'No legal topic id was supplied. [topic_id=%{topic_id}]', { 'topic_id' => "$topic_id" }, { entities => '' }));
     }
     $topic_name =  $topic -> get_topic_name();
 }
@@ -97,7 +122,7 @@ elsif ($page_type && $page_object_id) {
 }
 else
 {
-    $page->error_page("Sorry, but there was insufficient data to add this post.");    
+    $page->error_page($ui_forum{'community.forum.insufficient_post_data'});
 }
 
 #
@@ -116,10 +141,10 @@ my $formatted_post_text = $post->format_post_text($post_text);
 #
 my $link;
 if ($refering_page) { 
-    $link = "<a href=\"$refering_page\">Back to posts</a>"; 
+    $link = "<a href=\"$refering_page\">@{[$ui_forum{'community.forum.back_to_posts'}]}</a>";
 }
 else { 
-    $link = "<a href=\"posts.pl?topic_id=$topic_id\">Back to posts</a>";
+    $link = "<a href=\"posts.pl?topic_id=$topic_id\">@{[$ui_forum{'community.forum.back_to_posts'}]}</a>";
 }
 #
 # perform the appropriate action, depending on the
@@ -139,21 +164,18 @@ if ($action eq "review") {
     
     my $truncated_warning = "";
     if ($truncated) { 
-	$truncated_warning = "<b>Note:</b> Your post exceeds $SIZELIMIT characters and has been truncated.
-                Please use the 'go back' button to edit your post, or submit to accept the 
-                truncated version.<br /><br />\n";
+	$truncated_warning = "<b>" . $ui_forum{'global.safe_caption.note'} . "</b> " . SGN::I18N::translate($ui_forum_i18n, 'community.forum.post_exceeds_limit', 'Your post exceeds %{limit} characters and has been truncated.', { 'limit' => "$SIZELIMIT" }, { entities => '' }) . "\n                " . $ui_forum{'community.forum.post_truncated_edit_hint'} . " \n                " . $ui_forum{'community.forum.truncated_version'} . "<br /><br />\n";
     }
 
 
     $page -> header();
 
-    print page_title_html("Review your post");
+    print page_title_html($ui_forum{'community.forum.review_post_title'});
     
     print <<HTML;
     <div class="container-fluid">
-    Enter post -> <b>Review post</b> -> Store post<br /><br />
-    This is how the text of your post will appear. Please use the 'store post' button for permanently adding the post
-    or the 'modify post' button to go back and revise the post. To cancel, click on 'back to posts'.<br /><br />
+    @{[$ui_forum{'community.forum.enter_post'}]} -> <b>@{[$ui_forum{'community.forum.review_post'}]}</b> -> @{[$ui_forum{'community.forum.store_post'}]}<br /><br />
+    @{[$ui_forum{'community.forum.post_review_explanation'}]}<br /><br />
  
     $truncated_warning
 
@@ -169,7 +191,7 @@ if ($action eq "review") {
     <input type="hidden" name="refering_page" value="$refering_page" />
     <input type="hidden" name="action" value="input" />
     <input type="hidden" name="topic_id" value="$topic_id" />
-    <input class="btn btn-info" type="submit" value="modify post" />
+    <input class="btn btn-info" type="submit" value="@{[$ui_forum{'community.forum.modify_post'}]}" />
     </form>
     <td><td>
     $link
@@ -181,7 +203,7 @@ if ($action eq "review") {
     <input type="hidden" name="refering_page" value="$refering_page" />
     <input type="hidden" name="action" value="save" />
     <input type="hidden" name="topic_id" value="$topic_id" />
-    <input class="btn btn-primary" type="submit" value="store post" />
+    <input class="btn btn-primary" type="submit" value="@{[$ui_forum{'community.forum.store_post_lower'}]}" />
     </form>
     </td></tr></table>
     </div>
@@ -212,11 +234,11 @@ elsif ($action eq "save") {
 
     $page->header();
 
-    print page_title_html("Your post was successfully stored");
-    print "Enter post -> Review post -> <b>Store post</b></a><br /><br />\n";
+    print page_title_html($ui_forum{'community.forum.post_stored_title'});
+    print "@{[$ui_forum{'community.forum.enter_post'}]} -> @{[$ui_forum{'community.forum.review_post'}]} -> <b>@{[$ui_forum{'community.forum.store_post'}]}</b></a><br /><br />\n";
 
     if ($truncated) { 
-	print "<b>Note:</b>Your post has been truncated to $SIZELIMIT characters.<br />\n";
+	print "<b>" . $ui_forum{'global.safe_caption.note'} . "</b>" . SGN::I18N::translate($ui_forum_i18n, 'community.forum.post_truncated_notice', 'Your post has been truncated to %{limit} characters.', { 'limit' => "$SIZELIMIT" }, { entities => '<>&\x{0080}-\x{10FFFF}', decode => 0 }) . "<br />\n";
     }
 
     my $display_post_text = $post->format_post_text($post_text);
@@ -237,21 +259,23 @@ else {
     #
     $page -> header();
 
-    print page_title_html("Enter Post for topic \"$topic_name\"");
+    print page_title_html(SGN::I18N::translate($ui_forum_i18n, 'community.forum.enter_post_for_topic', 'Enter Post for topic "%{topic_name}"', { 'topic_name' => "$topic_name" }, { entities => '' }));
 
-    print <<HTML;
+    my $ui_post_size_limit = SGN::I18N::translate($ui_forum_i18n, 'community.forum.post_size_limit', 'Size limit per post is %{limit} characters, including spaces and punctuation.', { 'limit' => "$SIZELIMIT" }, { entities => '' });
+
+print <<HTML;
 
     <form method="post" action="add_post.pl">
 	
-	Steps: <b>Enter post</b> -> Review post -> Store post<br /><br /> 
+	@{[$ui_forum{'community.forum.steps_label'}]} <b>@{[$ui_forum{'community.forum.enter_post'}]}</b> -> @{[$ui_forum{'community.forum.review_post'}]} -> @{[$ui_forum{'community.forum.store_post'}]}<br /><br />\x20
 	$parent_post_explain<br />
 	
-	Please enter your comment below. You can delete the post later if you are logged in.<br />
-	HTML tags are not supported. You can add links to your post by using square brackets.  For example:<br />
-	<tt>[url]sgn.cornell.edu[/url]</tt> will appear as <a href="http://sgn.cornell.edu">sgn.cornell.edu</a> in the post.<br /><br />
+	@{[$ui_forum{'community.forum.enter_comment_help'}]}<br />
+	@{[$ui_forum{'community.forum.post_html_links_help'}]}<br />
+	<tt>[url]sgn.cornell.edu[/url]</tt> @{[$ui_forum{'community.forum.example_link_explanation'}]} <a href="http://sgn.cornell.edu">sgn.cornell.edu</a> in the post.<br /><br />
 
-	Size limit per post is $SIZELIMIT characters, including spaces and punctuation.<br /><br />
-	<b>Note:</b> this service is provided as a courtesy. SGN reserves the right to delete posts at any time for any reason.
+	$ui_post_size_limit<br /><br />
+	<b>Note:</b> @{[$ui_forum{'community.forum.courtesy_notice_lower'}]}
 	<br /><br />
 	<input type="hidden" name="parent_post_id" value="$parent_post_id" />
 	<input type="hidden" name="topic_id" value="$topic_id" />
@@ -261,14 +285,14 @@ else {
 	<input type="hidden" name="action" value="review" />
 	$subject_input
 
-	Post Text:<br />
+	@{[$ui_forum{'community.forum.post_text_label'}]}<br />
 	<textarea class="form-control" rows="12" cols="80" name="post_text">$post_text</textarea>
 	<br /><br />
 
 	<table width="100%"><tr><td align="left">
 	$link 
 	</td><td align="right">
-	<input class="btn btn-primary" type=submit value="Review post" />
+	<input class="btn btn-primary" type=submit value="@{[$ui_forum{'community.forum.review_post'}]}" />
 	</form>
 	</td></tr></table>
 

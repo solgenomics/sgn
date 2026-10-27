@@ -5,6 +5,39 @@ $user_id => undef
 @roles => ()
 </%args>
 
+<%perl>
+    use HTML::Entities ();
+    # Catalogs contain plain prose; only the original component owns markup.
+    my $propagation_help_html = sub {
+        my ($message, $slots, $fallback) = @_;
+        my %present;
+        $present{$1}++ while $message =~ /%\{([A-Za-z_][A-Za-z0-9_]*)\}/g;
+        if ((grep { !exists $slots->{$_} } keys %present)
+                || (grep { !exists $present{$_} } keys %$slots)) {
+            $message = $fallback;
+        }
+        my $html = '';
+        for my $piece (split(/(%\{[A-Za-z_][A-Za-z0-9_]*\})/, $message, -1)) {
+            if ($piece =~ /\A%\{([A-Za-z_][A-Za-z0-9_]*)\}\z/ && exists $slots->{$1}) {
+                $html .= $slots->{$1};
+            } else {
+                $html .= HTML::Entities::encode_entities($piece);
+            }
+        }
+        return $html;
+    };
+    my $propagation_details_help = $propagation_help_html->(
+        $c->i18n->p('propagation_landing.ui.open_details', 'Double click%{line_break}propagation project (%{project_icon}) or folder (%{folder_icon})%{line_break}to view detail page.', {line_break => '%{line_break}', project_icon => '%{project_icon}', folder_icon => '%{folder_icon}'}),
+        {line_break => '<br />', project_icon => '&nbsp;<span class="glyphicon glyphicon-tree-conifer text-success"></span>&nbsp;', folder_icon => '&nbsp;<span class="glyphicon glyphicon-folder-open text-danger"></span>&nbsp;'},
+        'Double click%{line_break}propagation project (%{project_icon}) or folder (%{folder_icon})%{line_break}to view detail page.'
+    );
+    my $propagation_programs_help = $propagation_help_html->(
+        $c->i18n->p('propagation_landing.ui.programs_help', 'Breeding programs (%{program_icon})', {program_icon => '%{program_icon}'}),
+        {program_icon => '&nbsp;<span class="glyphicon glyphicon-briefcase text-info"></span>&nbsp;'},
+        'Breeding programs (%{program_icon})'
+    );
+</%perl>
+
 <& /util/import_javascript.mas, classes => [ 'jquery.iframe-post-form', 'jstree.dist.jstree', 'CXGN.TrialTreeFolders'] &>
 
 <& /util/import_css.mas, paths => ['/static/documents/inc/jstree_theme/jstree-bstheme-min.css'] &>
@@ -19,28 +52,28 @@ $user_id => undef
 <table class="table table-bordered">
     <thead>
         <tr>
-            <th>Information</th>
-            <th>Breeding Programs -- Folders -- Propagation Projects&nbsp;&nbsp;&nbsp;&nbsp;<button class="btn btn-sm btn-default" id="refresh_propagation_project_jstree_html_trialtree_button" name="refresh_propagation_project_jstree_html">Refresh</button></th>
+            <th><% $c->i18n->p('propagation_landing.ui.information', 'Information') |h %></th>
+            <th><% $c->i18n->p('propagation_landing.ui.tree_heading', 'Breeding Programs -- Folders -- Propagation Projects') |h %>&nbsp;&nbsp;&nbsp;&nbsp;<button class="btn btn-sm btn-default" id="refresh_propagation_project_jstree_html_trialtree_button" name="refresh_propagation_project_jstree_html"><% $c->i18n->p('propagation_landing.ui.refresh', 'Refresh') |h %></button></th>
         </tr>
     </thead>
     <tbody>
         <tr>
             <td>
-                <h4>Search</h4>
-                <input type="text" class="form-control input-sm" id="propagation_tree_search" placeholder="Search" />
+                <h4><% $c->i18n->p('propagation_landing.ui.search', 'Search') |h %></h4>
+                <input type="text" class="form-control input-sm" id="propagation_tree_search" placeholder="<% $c->i18n->p('propagation_landing.ui.search', 'Search') |h %>" />
                 <hr>
 
-                <h5><i>Double click<br />propagation project (&nbsp;<span class="glyphicon glyphicon-tree-conifer text-success"></span>&nbsp;) or folder (&nbsp;<span class="glyphicon glyphicon-folder-open text-danger"></span>&nbsp;)<br/>to view detail page.</i></h5>
-                <h5><i>Breeding programs (&nbsp;<span class="glyphicon glyphicon-briefcase text-info"></span>&nbsp;)</i></h5>
+                <h5><i><% $propagation_details_help %></i></h5>
+                <h5><i><% $propagation_programs_help %></i></h5>
                 <hr>
-                <h4>Folders</h4>
-                <button class="btn btn-sm btn-default" id="new_folder_dialog_link">Create new folder</button><br/><br/>
-                <button class="btn btn-sm btn-default" id="open_folder_dialog_link">Move propagation project(s) to folder</button><br/><br/>
-                <button class="btn btn-sm btn-default" id="move_folder_dialog_link">Move folder</button>
+                <h4><% $c->i18n->p('propagation_landing.ui.folders', 'Folders') |h %></h4>
+                <button class="btn btn-sm btn-default" id="new_folder_dialog_link"><% $c->i18n->p('propagation_landing.ui.new_folder', 'Create new folder') |h %></button><br/><br/>
+                <button class="btn btn-sm btn-default" id="open_folder_dialog_link"><% $c->i18n->p('propagation_landing.ui.move_projects', 'Move propagation project(s) to folder') |h %></button><br/><br/>
+                <button class="btn btn-sm btn-default" id="move_folder_dialog_link"><% $c->i18n->p('propagation_landing.ui.move_folder', 'Move folder') |h %></button>
                 <div id="folder_edit_options" style="display:none">
                     <hr>
-                    <h5><i>Select multiple folders by holding 'Ctrl'.</i></h5>
-                    <button class="btn btn-primary" id="edit_folders_button" title="First Select Folder(s) to Edit">Edit Folder(s)</button>
+                    <h5><i><% $c->i18n->p('propagation_landing.ui.multi_select', 'Select multiple folders by holding \'Ctrl\'.') |h %></i></h5>
+                    <button class="btn btn-primary" id="edit_folders_button" title="<% $c->i18n->p('propagation_landing.ui.edit_title', 'First Select Folder(s) to Edit') |h %>"><% $c->i18n->p('propagation_landing.ui.edit_folders', 'Edit Folder(s)') |h %></button>
                     <br/>
                 </div>
 
@@ -48,7 +81,7 @@ $user_id => undef
                 <br />
             </td>
             <td>
-                <div id="propagation_projects_list" >[loading...]</div>
+                <div id="propagation_projects_list" ><% $c->i18n->p('propagation_landing.ui.loading', '[loading...]') |h %></div>
             </td>
         </tr>
     </tbody>
@@ -56,6 +89,10 @@ $user_id => undef
 
 
 <script>
+
+const propagationTreeI18n = window.SGN && window.SGN.i18n || {
+    p: function(context, text) { return String(text); }
+};
 
 jQuery.noConflict();
 
@@ -94,7 +131,7 @@ jQuery(document).ready(function($) {
             });
         },
         error: function(response) {
-            alert("An error occurred while loading the propagation project data.");
+            alert(propagationTreeI18n.p('propagation_landing.ui.load_error', 'An error occurred while loading the propagation project data.'));
           }
     });
 
@@ -129,3 +166,22 @@ jQuery(document).ready(function($) {
 });
 
 </script>
+
+<style>
+#add_propagation_project_link,
+#new_folder_dialog_link,
+#open_folder_dialog_link,
+#move_folder_dialog_link,
+#edit_folders_button,
+#refresh_propagation_project_jstree_html_trialtree_button {
+    max-width: 100%;
+    white-space: normal;
+    overflow-wrap: anywhere;
+}
+</style>
+
+<style>
+#add_propagation_project_link {
+    min-width: 16em;
+}
+</style>

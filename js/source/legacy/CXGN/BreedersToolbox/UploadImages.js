@@ -19,7 +19,7 @@ jQuery( document ).ready( function() {
             var imageFiles = document.getElementById('upload_images_file_input').files;
             if (imageFiles.length < 1) {
                 jQuery('#working_modal').modal("hide");
-                alert("Please select image files");
+                alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("drone_imaging.upload_select_images", "Please select image files") : "Please select image files"));
                 return false;
             }
 
@@ -57,14 +57,14 @@ jQuery( document ).ready( function() {
                 }
                 jQuery('#working_modal').modal("hide");
             }).fail(function() {
-                reportVerifyResult({ "error": ["Error ocurred during EXIF verification."]});
+                reportVerifyResult({ "error": [(window.SGN && window.SGN.i18n ? SGN.i18n.p("drone_imaging.upload.exif_verification_failure", "Error ocurred during EXIF verification.") : "Error ocurred during EXIF verification.")]});
                 jQuery('#working_modal').modal("hide");
             });
         } else if (type == 'images_with_barcodes') {
             var imageFiles = document.getElementById('upload_images_file_input').files;
             if (imageFiles.length < 1) {
                 jQuery('#working_modal').modal("hide");
-                alert("Please select image files");
+                alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("drone_imaging.upload_select_images", "Please select image files") : "Please select image files"));
                 return false;
             }
             var formData = new FormData();
@@ -83,7 +83,7 @@ jQuery( document ).ready( function() {
                 jQuery('#working_modal').modal("hide");
 
             }).fail(function() {
-                reportVerifyResult({ "error": ["Error ocurred during barcode scan"]});
+                reportVerifyResult({ "error": [(window.SGN && window.SGN.i18n ? SGN.i18n.p("drone_imaging.upload.barcode_scan_failure", "Error ocurred during barcode scan") : "Error ocurred during barcode scan")]});
                 jQuery('#working_modal').modal("hide");
             });
         } else { // verify associated phenotypes format
@@ -91,11 +91,11 @@ jQuery( document ).ready( function() {
             var zipFile =  document.getElementById('upload_images_zip_file_input').files[0];
             if (!(phenoFile instanceof File)) {
                 jQuery('#working_modal').modal("hide");
-                alert("Please select a phenotype spreadsheet");
+                alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("drone_imaging.upload_select_spreadsheet", "Please select a phenotype spreadsheet") : "Please select a phenotype spreadsheet"));
                 return false;
             } else if (!(zipFile instanceof File)) {
                 jQuery('#working_modal').modal("hide");
-                alert('Please select an image zipfile');
+                alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("drone_imaging.upload.zip_required", "Please select an image zipfile") : 'Please select an image zipfile'));
                 return false;
             }
             submitAssociatedPhenotypes(phenoFile, zipFile, "/ajax/phenotype/upload_verify/spreadsheet").done(function(result) {
@@ -111,7 +111,7 @@ jQuery( document ).ready( function() {
         if (type == 'images') {
             var imageFiles = document.getElementById('upload_images_file_input').files;
             //console.log("imageFiles", imageFiles);
-            jQuery('#progress_msg').text('Preparing images for upload');
+            jQuery('#progress_msg').text((window.SGN && window.SGN.i18n ? SGN.i18n.p("drone_imaging.upload_preparing", "Preparing images for upload") : 'Preparing images for upload'));
             jQuery('#progress_bar').css("width", "0%")
             .attr("aria-valuenow", 0)
             .text("0%");
@@ -189,7 +189,7 @@ jQuery( document ).ready( function() {
             }  
         } else if (type == "images_with_barcodes") {
             var imageFiles = document.getElementById('upload_images_file_input').files;
-            jQuery('#progress_msg').text('Preparing images for upload');
+            jQuery('#progress_msg').text((window.SGN && window.SGN.i18n ? SGN.i18n.p("drone_imaging.upload_preparing", "Preparing images for upload") : 'Preparing images for upload'));
             jQuery('#progress_bar').css("width", "0%")
             .attr("aria-valuenow", 0)
             .text("0%");
@@ -220,11 +220,11 @@ jQuery( document ).ready( function() {
             var zipFile =  document.getElementById('upload_images_zip_file_input').files[0];
             if (!(phenoFile instanceof File)) {
                 jQuery('#working_modal').modal("hide");
-                alert("Please select a phenotype spreadsheet");
+                alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("drone_imaging.upload_select_spreadsheet", "Please select a phenotype spreadsheet") : "Please select a phenotype spreadsheet"));
                 return false;
             } else if (!(zipFile instanceof File)) {
                 jQuery('#working_modal').modal("hide");
-                alert('Please select an image zipfile');
+                alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("drone_imaging.upload.zip_required", "Please select an image zipfile") : 'Please select an image zipfile'));
                 return false;
             }
 
@@ -290,7 +290,7 @@ function verifyExifData(result) {
         const imgErrors = [];
 
         if (img.status === "no_exif") {
-            errorMessages.push(`${imgName} does not have EXIF data`);
+            errorMessages.push((window.SGN && window.SGN.i18n ? SGN.i18n.p("drone_imaging.upload.no_exif", "%{image} does not have EXIF data", {"image": String(imgName)}) : `${imgName} does not have EXIF data`));
             invalidFilenames.push(imgName);
             nonExifFiles++;
             return;
@@ -308,46 +308,46 @@ function verifyExifData(result) {
         let traitName = obsVar.observation_variable_name;
 
         if (hasObsUnit) {
-            successMessages.push(`${imgName}: ObservationUnitDbId: ${obsUnit.observation_unit_db_id}`);
+            successMessages.push((window.SGN && window.SGN.i18n ? SGN.i18n.p("drone_imaging.upload.observation_unit_id_success", "%{image}: ObservationUnitDbId: %{id}", {"image": String(imgName), "id": String(obsUnit.observation_unit_db_id)}) : `${imgName}: ObservationUnitDbId: ${obsUnit.observation_unit_db_id}`));
         } else {
-            imgErrors.push(`${imgName}: Missing ObservationUnitDbId`);
+            imgErrors.push((window.SGN && window.SGN.i18n ? SGN.i18n.p("drone_imaging.upload.missing_observation_unit_id", "%{image}: Missing ObservationUnitDbId", {"image": String(imgName)}) : `${imgName}: Missing ObservationUnitDbId`));
         }
 
         // Specific: field missing entirely vs. present but empty/not found
         if (!obsVar) {
-            imgErrors.push(`${imgName}: No trait field found in EXIF data`);
+            imgErrors.push((window.SGN && window.SGN.i18n ? SGN.i18n.p("drone_imaging.upload.trait_field_missing", "%{image}: No trait field found in EXIF data", {"image": String(imgName)}) : `${imgName}: No trait field found in EXIF data`));
         } else if (!hasObsVar && !obsVar.external_db_id) {
-            imgErrors.push(`${imgName}: Trait field is present but is missing both a trait ID and trait name`);
+            imgErrors.push((window.SGN && window.SGN.i18n ? SGN.i18n.p("drone_imaging.upload.trait_field_incomplete", "%{image}: Trait field is present but is missing both a trait ID and trait name", {"image": String(imgName)}) : `${imgName}: Trait field is present but is missing both a trait ID and trait name`));
         } else {
-            successMessages.push(`${imgName}: Observation Variable: ${obsVar.observation_variable_name || obsVar.external_db_id}`);
+            successMessages.push((window.SGN && window.SGN.i18n ? SGN.i18n.p("drone_imaging.upload.observation_variable_success", "%{image}: Observation Variable: %{name}", {"image": String(imgName), "name": String((obsVar.observation_variable_name || obsVar.external_db_id))}) : `${imgName}: Observation Variable: ${obsVar.observation_variable_name || obsVar.external_db_id}`));
             if (!hasCvtermId) {
                 if (img.trait_lookup_type === "id") {
-                    imgErrors.push(`${imgName}: Trait ID "${img.trait_lookup_value}" does not exist in the database`);
+                    imgErrors.push((window.SGN && window.SGN.i18n ? SGN.i18n.p("drone_imaging.upload.trait_id_missing", "%{image}: Trait ID \"%{id}\" does not exist in the database", {"image": String(imgName), "id": String(img.trait_lookup_value)}) : `${imgName}: Trait ID "${img.trait_lookup_value}" does not exist in the database`));
                 } else if (img.trait_lookup_type === "name" || img.trait_lookup_type === "synonym") {
-                    imgErrors.push(`${imgName}: Trait name "${img.trait_lookup_value}" does not exist in the database`);
+                    imgErrors.push((window.SGN && window.SGN.i18n ? SGN.i18n.p("drone_imaging.upload.trait_name_missing", "%{image}: Trait name \"%{name}\" does not exist in the database", {"image": String(imgName), "name": String(img.trait_lookup_value)}) : `${imgName}: Trait name "${img.trait_lookup_value}" does not exist in the database`));
                 } else {
-                    imgErrors.push(`${imgName}: Associated trait does not exist in the database`);
+                    imgErrors.push((window.SGN && window.SGN.i18n ? SGN.i18n.p("drone_imaging.upload.associated_trait_invalid", "%{image}: Associated trait does not exist in the database", {"image": String(imgName)}) : `${imgName}: Associated trait does not exist in the database`));
                 }
             } else if (img.trait_lookup_type === "synonym") {
                 traitName = img.trait_matched_name;
-                successMessages.push(`${imgName}: Trait name "${img.trait_lookup_value}" matched via synonym to "${img.trait_matched_name}"`);
+                successMessages.push((window.SGN && window.SGN.i18n ? SGN.i18n.p("drone_imaging.upload.trait_synonym_match", "%{image}: Trait name \"%{query}\" matched via synonym to \"%{match}\"", {"image": String(imgName), "query": String(img.trait_lookup_value), "match": String(img.trait_matched_name)}) : `${imgName}: Trait name "${img.trait_lookup_value}" matched via synonym to "${img.trait_matched_name}"`));
             }
         }
 
         if (hasTimestamp) {
-            successMessages.push(`${imgName}: Timestamp: ${exif.timestamp}`);
+            successMessages.push((window.SGN && window.SGN.i18n ? SGN.i18n.p("drone_imaging.upload.timestamp_success", "%{image}: Timestamp: %{timestamp}", {"image": String(imgName), "timestamp": String(exif.timestamp)}) : `${imgName}: Timestamp: ${exif.timestamp}`));
         } else {
-            imgErrors.push(`${imgName}: Missing Timestamp`);
+            imgErrors.push((window.SGN && window.SGN.i18n ? SGN.i18n.p("drone_imaging.upload.timestamp_missing", "%{image}: Missing Timestamp", {"image": String(imgName)}) : `${imgName}: Missing Timestamp`));
         }
 
         if (img.stock_exists === "false") {
-            imgErrors.push(`${imgName}: ObservationUnitDbId ${obsUnit.observation_unit_db_id} does not exist in the database`);
+            imgErrors.push((window.SGN && window.SGN.i18n ? SGN.i18n.p("drone_imaging.upload.observation_unit_missing", "%{image}: ObservationUnitDbId %{id} does not exist in the database", {"image": String(imgName), "id": String(obsUnit.observation_unit_db_id)}) : `${imgName}: ObservationUnitDbId ${obsUnit.observation_unit_db_id} does not exist in the database`));
         } else if (hasObsUnit && !stockName) {
-            imgErrors.push(`${imgName}: Stock associated with ObservationUnitDbId ${obsUnit.observation_unit_db_id} could not be found`);
+            imgErrors.push((window.SGN && window.SGN.i18n ? SGN.i18n.p("drone_imaging.upload.stock_for_observation_unit_missing", "%{image}: Stock associated with ObservationUnitDbId %{id} could not be found", {"image": String(imgName), "id": String(obsUnit.observation_unit_db_id)}) : `${imgName}: Stock associated with ObservationUnitDbId ${obsUnit.observation_unit_db_id} could not be found`));
         }
 
         if (imgErrors.length === 0) {
-            finalSuccessMessage.push(`${imgName} has valid EXIF data. Associated stock: ${stockName}. Associated trait: ${traitName}. Ready to store image`);
+            finalSuccessMessage.push((window.SGN && window.SGN.i18n ? SGN.i18n.p("drone_imaging.upload.exif_valid_summary", "%{image} has valid EXIF data. Associated stock: %{stock}. Associated trait: %{trait}. Ready to store image", {"image": String(imgName), "stock": String(stockName), "trait": String(traitName)}) : `${imgName} has valid EXIF data. Associated stock: ${stockName}. Associated trait: ${traitName}. Ready to store image`));
             validFilenames.push(imgName);
         } else {
             errorMessages.push(...imgErrors);
@@ -364,7 +364,7 @@ function verifyExifData(result) {
     }
 
     if (exifFiles > 0 && nonExifFiles > 0) {
-        errorMessages.push("Please load files all containing EXIF data or with the same file naming pattern");
+        errorMessages.push((window.SGN && window.SGN.i18n ? SGN.i18n.p("drone_imaging.upload.exif_or_pattern_required", "Please load files all containing EXIF data or with the same file naming pattern") : "Please load files all containing EXIF data or with the same file naming pattern"));
     }
 
     jQuery('#upload_images_submit_store').attr('disabled', true);
@@ -452,12 +452,12 @@ function parseImageFilenames(imageFiles) {
                 "observationUnit" : justUnit
             };
         } else {
-            parseErrors.push("Filename <b>" + name + "</b> must start with a valid observationUnitName or observationUnitDbId.")
+            parseErrors.push((window.SGN && window.SGN.i18n ? SGN.i18n.p("drone_imaging.upload.filename_prefix", "Filename ") : "Filename ") + "<b>" + String(name) + "</b>" + (window.SGN && window.SGN.i18n ? SGN.i18n.p("drone_imaging.upload.filename_suffix", " must start with a valid observationUnitName or observationUnitDbId.") : " must start with a valid observationUnitName or observationUnitDbId."))
         }
     }
 
     if (id_count > 0 && name_count > 0) {
-        parseErrors.push("Image filenames include a mix of observationUnitDbIds and observationUnitNames. Please load files with only one naming pattern at a time.");
+        parseErrors.push((window.SGN && window.SGN.i18n ? SGN.i18n.p("drone_imaging.upload.mixed_unit_filename_patterns", "Image filenames include a mix of observationUnitDbIds and observationUnitNames. Please load files with only one naming pattern at a time.") : "Image filenames include a mix of observationUnitDbIds and observationUnitNames. Please load files with only one naming pattern at a time."));
     }
 
     if (id_count > 0) {
@@ -480,22 +480,22 @@ function verifyBarcodeData(result) {
         const imgName = img.filename || `Image ${index + 1}`;
 
         if (result.images[index].multiple_codes === "true") {
-            errorMessages.push(`Multiple barcodes found in ${imgName}. Please make sure each image only contains one barcode`);
+            errorMessages.push((window.SGN && window.SGN.i18n ? SGN.i18n.p("drone_imaging.upload.multiple_barcodes", "Multiple barcodes found in %{image}. Please make sure each image only contains one barcode", {"image": String(imgName)}) : `Multiple barcodes found in ${imgName}. Please make sure each image only contains one barcode`));
         }
         
         if (result.images[index].valid_barcode === "false") {
-            errorMessages.push(`Barcode not found for ${imgName}`);
+            errorMessages.push((window.SGN && window.SGN.i18n ? SGN.i18n.p("drone_imaging.upload.barcode_missing", "Barcode not found for %{image}", {"image": String(imgName)}) : `Barcode not found for ${imgName}`));
             return;
         }
 
         const stockId = result.images[index].stock_id;
 
         if (result.images[index].stock_exists === "false") {
-            errorMessages.push(`Stock ID ${stockId} found in ${imgName} does not exist in the database`);
+            errorMessages.push((window.SGN && window.SGN.i18n ? SGN.i18n.p("drone_imaging.upload.stock_id_missing", "Stock ID %{stock_id} found in %{image} does not exist in the database", {"stock_id": String(stockId), "image": String(imgName)}) : `Stock ID ${stockId} found in ${imgName} does not exist in the database`));
         }
 
         if (errorMessages.length === 0) {
-            finalSuccessMessage.push(`${imgName} barcode scanned successfully. Associated stock ID: ${stockId}. Ready to store image`);
+            finalSuccessMessage.push((window.SGN && window.SGN.i18n ? SGN.i18n.p("drone_imaging.upload.barcode_valid_summary", "%{image} barcode scanned successfully. Associated stock ID: %{stock_id}. Ready to store image", {"image": String(imgName), "stock_id": String(stockId)}) : `${imgName} barcode scanned successfully. Associated stock ID: ${stockId}. Ready to store image`));
         }
     })
 
@@ -580,7 +580,7 @@ function verifyImageFiles(fileData, unitType, transformType) {
           //console.log("Errors are "+errors);
           return { "error" : errors };
       } else {
-          var successText = "Verification complete. All image files match an existing observationUnit. Ready to store images.";
+          var successText = (window.SGN && window.SGN.i18n ? SGN.i18n.p("drone_imaging.upload.verification_complete", "Verification complete. All image files match an existing observationUnit. Ready to store images.") : "Verification complete. All image files match an existing observationUnit. Ready to store images.");
           return { "success" : successText };
       }
     }).fail(function(error){
@@ -628,7 +628,7 @@ function loadImagesSequentially(imageFiles, imageData, uploadStatus){
         // console.log("load single image response is: " +JSON.stringify(response));
 
         if (response.result) {
-            var msg = "Successfly uploaded image "+response.result.data[0].imageFileName;
+            var msg = (window.SGN && window.SGN.i18n ? SGN.i18n.p("drone_imaging.upload.image_upload_success", "Successfly uploaded image ") : "Successfly uploaded image ") + String(response.result.data[0].imageFileName);
             uploadStatus.success.push(msg);
         } else {
             // console.log("handling response errors: "+JSON.stringify(response.metadata.status));
@@ -661,7 +661,7 @@ function loadSingleImage(imageFiles, imageData, uploadStatus){
     //console.log("file", file);
 
     currentImage++;
-    jQuery('#progress_msg').html('<p class="form-group text-center">Working on image '+currentImage+' out of '+total+'</p>');
+    jQuery('#progress_msg').html('<p class="form-group text-center">' + (window.SGN && window.SGN.i18n ? SGN.i18n.p("drone_imaging.upload.image_progress", "Working on image %{current} out of %{total}", {"current": String(currentImage), "total": String(total)}) : "Working on image " + currentImage + " out of " + total) + '</p>');
     jQuery('#progress_msg').append('<p class="form-group text-center"><b>'+image.imageFileName+'</b></p>')
     var progress = Math.round((currentImage / total) * 100)
     jQuery('#progress_bar').css("width", progress + "%")

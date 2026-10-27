@@ -7,8 +7,76 @@ use CXGN::Chromatogram;
 use URI::Escape;
 use CXGN::Tools::Text qw | sanitize_string |;
 use CatalystX::GlobalContext '$c';
+use SGN::I18N;
+use HTML::Entities qw(encode_entities);
+my SGN::I18N $i18n = eval { $c && $c->i18n };
+my $est_version_explanation = encode_entities(($i18n ? $i18n->p("global.est_detail.version_explanation", "Note: Some unigenes listed here are assembled from different versions of the sequence displayed above. Note SGN-E# in left column. All versions were derived from the same chromatogram") : "Note: Some unigenes listed here are assembled from different versions of the sequence displayed above. Note SGN-E# in left column. All versions were derived from the same chromatogram"));
+my $render_i18n_html = sub {
+    my ($message, $slots) = @_;
+    my $html = encode_entities($message);
+    # One substitution pass: inserted data cannot become another markup slot.
+    $html =~ s/(__SGN_UI_[A-Z0-9_]+__)/exists $slots->{$1} ? $slots->{$1} : $1/ge;
+    return $html;
+};
+my $est_ui_not_found_title = encode_entities(($i18n ? $i18n->p("global.final_caption.direct_search_result_not_found", "Direct Search Result - Not Found") : "Direct Search Result - Not Found"));
+my $est_ui_invalid_title = encode_entities(($i18n ? $i18n->p("global.final_caption.not_found_search_invalid", "Not Found - Search Invalid") : "Not Found - Search Invalid"));
 use CXGN::DB::Connection;
 
+my $est_i18n_request = encode_entities($i18n ? $i18n->p('global.est.request', 'Request:') : 'Request:');
+my $est_i18n_match = encode_entities($i18n ? $i18n->p('global.est.match', 'Match:') : 'Match:');
+my $est_i18n_request_from = encode_entities($i18n ? $i18n->p('global.est.request_from', 'Request From:') : 'Request From:');
+my $est_i18n_match_type = encode_entities($i18n ? $i18n->p('global.est.match_type', 'Match Type:') : 'Match Type:');
+my $est_i18n_microarray = encode_entities($i18n ? $i18n->p('global.est.microarray', 'Microarray:') : 'Microarray:');
+my $est_i18n_order_clone = encode_entities($i18n ? $i18n->p('global.est.order_clone', 'Order Clone') : 'Order Clone');
+my $est_i18n_order = encode_entities($i18n ? $i18n->p('global.est.order', 'Order') : 'Order');
+my $est_i18n_ordering_not_available = encode_entities($i18n ? $i18n->p('global.est.ordering_not_available', 'Ordering Not Available') : 'Ordering Not Available');
+my $est_i18n_sgn_id = encode_entities($i18n ? $i18n->p('global.est.sgn_id', 'SGN ID:') : 'SGN ID:');
+my $est_i18n_sgn_trace_id = encode_entities($i18n ? $i18n->p('global.est.sgn_trace_id', 'SGN-ID:') : 'SGN-ID:');
+my $est_i18n_clone_name = encode_entities($i18n ? $i18n->p('global.est.clone_name', 'Clone name:') : 'Clone name:');
+my $est_i18n_library_name = encode_entities($i18n ? $i18n->p('global.est.library_name', 'Library Name:') : 'Library Name:');
+my $est_i18n_organism = encode_entities($i18n ? $i18n->p('global.est.organism', 'Organism:') : 'Organism:');
+my $est_i18n_tissue = encode_entities($i18n ? $i18n->p('global.est.tissue', 'Tissue:') : 'Tissue:');
+my $est_i18n_development_stage = encode_entities($i18n ? $i18n->p('global.est.development_stage', 'Development Stage:') : 'Development Stage:');
+my $est_i18n_funding_organization = encode_entities($i18n ? $i18n->p('global.est.funding_organization', 'Funding Organization:') : 'Funding Organization:');
+my $est_i18n_view = encode_entities($i18n ? $i18n->p('global.est.view', 'View') : 'View');
+my $est_i18n_download = encode_entities($i18n ? $i18n->p('global.est.download', 'Download') : 'Download');
+my $est_i18n_facility_assigned_id = encode_entities($i18n ? $i18n->p('global.est.facility_assigned_id', 'Facility Assigned ID:') : 'Facility Assigned ID:');
+my $est_i18n_submitter = encode_entities($i18n ? $i18n->p('global.est.submitter', 'Submitter:') : 'Submitter:');
+my $est_i18n_sequencing_facility = encode_entities($i18n ? $i18n->p('global.est.sequencing_facility', 'Sequencing Facility:') : 'Sequencing Facility:');
+my $est_i18n_clone = encode_entities($i18n ? $i18n->p('global.est.clone', 'Clone:') : 'Clone:');
+my $est_i18n_trace = encode_entities($i18n ? $i18n->p('global.est.trace', 'Trace:') : 'Trace:');
+my $est_i18n_est = encode_entities($i18n ? $i18n->p('global.est.est', 'EST:') : 'EST:');
+my $est_i18n_direction = encode_entities($i18n ? $i18n->p('global.est.direction', 'Direction:') : 'Direction:');
+my $est_i18n_facility = encode_entities($i18n ? $i18n->p('global.est.facility', 'Facility:') : 'Facility:');
+my $est_i18n_problems = encode_entities($i18n ? $i18n->p('global.est.problems', 'Problems:') : 'Problems:');
+my $est_i18n_processed_by = encode_entities($i18n ? $i18n->p('global.est.processed_by', 'Processed By:') : 'Processed By:');
+my $est_i18n_basecalling = encode_entities($i18n ? $i18n->p('global.est.basecalling', 'Basecalling Software:') : 'Basecalling Software:');
+my $est_i18n_vector_signature = encode_entities($i18n ? $i18n->p('global.est.vector_signature', 'Vector Signature:') : 'Vector Signature:');
+my $est_i18n_sequence_entropy = encode_entities($i18n ? $i18n->p('global.est.sequence_entropy', 'Sequence Entropy:') : 'Sequence Entropy:');
+my $est_i18n_expected_error = encode_entities($i18n ? $i18n->p('global.est.expected_error', 'Expected Error Rate:') : 'Expected Error Rate:');
+my $est_i18n_quality_trim = encode_entities($i18n ? $i18n->p('global.est.quality_trim', 'Quality Trim Threshold:') : 'Quality Trim Threshold:');
+my $est_i18n_sequence_id = encode_entities($i18n ? $i18n->p('global.est.sequence_id', 'Sequence Id:') : 'Sequence Id:');
+my $est_i18n_length = encode_entities($i18n ? $i18n->p('global.est.length', 'Length:') : 'Length:');
+my $est_i18n_status = encode_entities($i18n ? $i18n->p('global.est.status', 'Status:') : 'Status:');
+my $est_i18n_current_builds = encode_entities($i18n ? $i18n->p('global.est.current_builds', 'Current Unigene builds') : 'Current Unigene builds');
+my $est_i18n_unknown = encode_entities($i18n ? $i18n->p('global.est.unknown', 'Unknown') : 'Unknown');
+my $est_i18n_follow_unigene = encode_entities($i18n ? $i18n->p('global.est.follow_unigene', 'Follow SGN-U# link for detailed information and annotations') : 'Follow SGN-U# link for detailed information and annotations');
+my $est_i18n_search_info = encode_entities($i18n ? $i18n->p('global.est.search_info', 'Search information') : 'Search information');
+my $est_i18n_clone_info = encode_entities($i18n ? $i18n->p('global.est.clone_info', 'Clone information') : 'Clone information');
+my $est_i18n_additional_sequencing = encode_entities($i18n ? $i18n->p('global.est.additional_sequencing', 'Additional sequencing') : 'Additional sequencing');
+my $est_i18n_sequence = encode_entities($i18n ? $i18n->p('global.est.sequence', 'Sequence') : 'Sequence');
+my $est_i18n_unigenes = encode_entities($i18n ? $i18n->p('global.est.unigenes', 'Unigenes') : 'Unigenes');
+my $est_i18n_chromatogram = encode_entities($i18n ? $i18n->p('global.est.chromatogram', 'Chromatogram') : 'Chromatogram');
+my $est_i18n_quality_processing = encode_entities($i18n ? $i18n->p('global.est.quality_processing', 'Quality processing') : 'Quality processing');
+my $est_i18n_show_hierarchy = encode_entities($i18n ? $i18n->p('global.est.show_hierarchy', '[Show information hierarchy]') : '[Show information hierarchy]');
+my $est_i18n_information_hierarchy = encode_entities($i18n ? $i18n->p('global.est.information_hierarchy', 'Information Hierarchy') : 'Information Hierarchy');
+my $est_i18n_no_clone_info = encode_entities($i18n ? $i18n->p('global.est.no_clone_info', 'No clone information found') : 'No clone information found');
+my $est_i18n_no_chromatogram = encode_entities($i18n ? $i18n->p('global.est.no_chromatogram', 'No chromatogram information found for this sequence') : 'No chromatogram information found for this sequence');
+my $est_i18n_no_additional_reads = encode_entities($i18n ? $i18n->p('global.est.no_additional_reads', 'No additional reads found.') : 'No additional reads found.');
+my $est_i18n_microarray_missing = encode_entities($i18n ? $i18n->p('global.est.microarray_missing', 'This clone is not found on any microarray') : 'This clone is not found on any microarray');
+my $est_i18n_microarray_alt_missing = encode_entities($i18n ? $i18n->p('global.est.microarray_alt_missing', 'No alternative clones from any current unigene containing this EST are available on a microarray') : 'No alternative clones from any current unigene containing this EST are available on a microarray');
+my $est_i18n_map_missing = encode_entities($i18n ? $i18n->p('global.est.map_missing', 'There is no map position defined on SGN for this EST or others in the same unigene.') : 'There is no map position defined on SGN for this EST or others in the same unigene.');
+my $est_i18n_no_current_build = encode_entities($i18n ? $i18n->p('global.est.no_current_build', 'No current unigene builds incorporate this sequence') : 'No current unigene builds incorporate this sequence');
 my %current_unigene = ();
 my %previous_unigene = ();
 
@@ -21,7 +89,7 @@ our ($auto_idq, $request_typeq, $cloneq, $clone_read_idq,
     @known_request_from_types);
 
 
-our $page = CXGN::Page->new( "SGN EST Search Result", "Koni");
+our $page = CXGN::Page->new( encode_entities(($i18n ? $i18n->p("global.final_caption.sgn_est_search_result", "SGN EST Search Result") : "SGN EST Search Result")), "Koni");
 
 my $dbh = CXGN::DB::Connection->new;
 
@@ -128,10 +196,10 @@ $random = sanitize_string($random);
 
 
 
-# If the identifier is not given, or the identifier parameter is 
+# If the identifier is not given, or the identifier parameter is
 # screwed up, we want to give the right error instead of failing
 # later on for an unrelated reason.
-$page->message_page("No EST identifier specified") unless $request_id || ($random eq 'yes');
+$page->message_page(encode_entities($i18n ? $i18n->p("global.est.no_est_identifier", "No EST identifier specified") : "No EST identifier specified")) unless $request_id || ($random eq 'yes');
 
 
 if ($random eq "yes") {
@@ -184,7 +252,7 @@ if ($id_type eq "automatic") {
     }
     $auto_idq->execute($request_id);
     if ($auto_idq->rows == 0) {
-      not_found($page, "Identifier \"$id\" was not found in SGN's databases.");
+      not_found($page, encode_entities($i18n ? $i18n->p("global.est.identifier_not_found", "Identifier \"%{id}\" was not found in SGN's databases.", { id => $id }) : "Identifier \"$id\" was not found in SGN's databases."));
     }
 
     if ($auto_idq->rows > 1) {
@@ -209,12 +277,12 @@ my $est_id = "";
 my $match_id = "";
 if ($id_type == 7) {
   # This is an EST identifier already
-  invalid_search($page, "Invalid identifier \"$id\" for specified identifier type (SGN-E#)") if ($id !~ m/^(SGN-E|E|)([0-9]+)$/);
+  invalid_search($page, encode_entities($i18n ? $i18n->p("global.est.invalid_est_id", "Invalid identifier \"%{id}\" for specified identifier type (SGN-E#)", { id => $id }) : "Invalid identifier \"$id\" for specified identifier type (SGN-E#)")) if ($id !~ m/^(SGN-E|E|)([0-9]+)$/);
   $match_id = "SGN-E$2";
   $est_id = $2;
 
 } elsif ($id_type == 8) {
-  invalid_search($page, "Invalid identifier \"$id\" for specified identifier type (SGN-C#)") if ($id !~ m/^(SGN-C|C|)([0-9]+)$/);
+  invalid_search($page, encode_entities($i18n ? $i18n->p("global.est.invalid_clone_id", "Invalid identifier \"%{id}\" for specified identifier type (SGN-C#)", { id => $id }) : "Invalid identifier \"$id\" for specified identifier type (SGN-C#)")) if ($id !~ m/^(SGN-C|C|)([0-9]+)$/);
   # This is a clone internal identifier - find a trace, then find an EST
   if ($show_hierarchy) {
     hierarchy_requested($page, $id, $id_type);
@@ -223,7 +291,7 @@ if ($id_type == 7) {
   $est_id = by_clone($page, $2);
 } elsif ($id_type == 9) {
   # This is a trace identifier, find the most recent sequence for it
-  invalid_search($page, "Invalid identifier \"$id\" for specified identifier type (SGN-T#)") if ($id !~ m/^(SGN-T|T|)([0-9]+)$/);
+  invalid_search($page, encode_entities($i18n ? $i18n->p("global.est.invalid_trace_id", "Invalid identifier \"%{id}\" for specified identifier type (SGN-T#)", { id => $id }) : "Invalid identifier \"$id\" for specified identifier type (SGN-T#)")) if ($id !~ m/^(SGN-T|T|)([0-9]+)$/);
   $match_id = "SGN-T$2";
   $est_id = by_read($page, $2);
 } elsif ($id_type == 10) {
@@ -268,8 +336,8 @@ $clone_read_idq->execute($est_id);
 # Section containing information on what was searched for and what was found
 my $search_info = <<EOF;
 <$table>
-<tr><td width="50%"><b>Request:</b> $request_id</td><td><b>Match:</b> $match_id</td></tr>
-<tr><td><b>Request From:</b> $request_from</td><td><b>Match Type:</b> $id_type_name</td></tr>
+<tr><td width="50%"><b>$est_i18n_request</b> $request_id</td><td><b>$est_i18n_match</b> $match_id</td></tr>
+<tr><td><b>$est_i18n_request_from</b> $request_from</td><td><b>$est_i18n_match_type</b> $id_type_name</td></tr>
 </table>
 EOF
 
@@ -287,8 +355,8 @@ if ($clone_id ne "" && $cloneq->execute($clone_id) && $cloneq->rows>0) {
 
   # If there are nulls in the table we'll get undefs for these values, so we
   # set displayed values here.
-  $organism_name = "Unknown" if !defined($organism_name);
-  $tissue = "Unknown" if !defined($tissue);
+  $organism_name = $est_i18n_unknown if !defined($organism_name);
+  $tissue = $est_i18n_unknown if !defined($tissue);
 
   # If we have a clone group, seek out the replicate clone_ids so we can
   # search them below for alternative reads
@@ -312,21 +380,21 @@ if ($clone_id ne "" && $cloneq->execute($clone_id) && $cloneq->rows>0) {
       while (($chip_name, $version, $release, $spot_id) =
 	     $arrayq->fetchrow_array) {
 	if ($_->[0] != $clone_id) {
-	  $microarray .= qq{Alias clone <a href="/search/est.pl?request_id=$_->[0]&request_type=8&request_from=1">SGN-C$_->[0]</a> is on microarray $chip_name: SGN-S$version-$release-$spot_id\n};
+	  $microarray .= $render_i18n_html->(($i18n ? $i18n->p("global.est_detail.alias_microarray", "Alias clone %{link} is on microarray %{chip}: SGN-S%{spot}\n", {link => "__SGN_UI_LINK__", chip => "__SGN_UI_CHIP__", spot => "__SGN_UI_SPOT__"}) : "Alias clone __SGN_UI_LINK__ is on microarray __SGN_UI_CHIP__: SGN-S__SGN_UI_SPOT__\n"), {"__SGN_UI_LINK__" => '<a href="/search/est.pl?request_id=' . $_->[0] . '&request_type=8&request_from=1">SGN-C' . $_->[0] . '</a>', "__SGN_UI_CHIP__" => encode_entities($chip_name), "__SGN_UI_SPOT__" => encode_entities("$version-$release-$spot_id")});
 	} else {
-	  $microarray .= qq{SGN-C$_->[0] is on microarray $chip_name spot ID $version-$release-$spot_id [<a href="http://bti.cornell.edu/CGEP/CGEP.html">Order</a>] [<a href="http://ted.bti.cornell.edu/cgi-bin/array/basicsearch.cgi?arrayID=$version-$release-$spot_id">Tomato Microarray Database</a>]\n};
+	  $microarray .= $render_i18n_html->(($i18n ? $i18n->p("global.est_detail.microarray_spot", "SGN-C%{clone} is on microarray %{chip} spot ID %{spot} [%{order}] [%{database}]\n", {clone => "__SGN_UI_CLONE__", chip => "__SGN_UI_CHIP__", spot => "__SGN_UI_SPOT__", order => "__SGN_UI_ORDER__", database => "__SGN_UI_DATABASE__"}) : "SGN-C__SGN_UI_CLONE__ is on microarray __SGN_UI_CHIP__ spot ID __SGN_UI_SPOT__ [__SGN_UI_ORDER__] [__SGN_UI_DATABASE__]\n"), {"__SGN_UI_CLONE__" => $_->[0], "__SGN_UI_CHIP__" => encode_entities($chip_name), "__SGN_UI_SPOT__" => encode_entities("$version-$release-$spot_id"), "__SGN_UI_ORDER__" => '<a href="http://bti.cornell.edu/CGEP/CGEP.html">' . $est_i18n_order . '</a>', "__SGN_UI_DATABASE__" => '<a href="http://ted.bti.cornell.edu/cgi-bin/array/basicsearch.cgi?arrayID=' . "$version-$release-$spot_id" . '">Tomato Microarray Database</a>'});
 	}
       }
     }
-    $microarray ||= '<span class="ghosted">This clone is not found on any microarray</span>';
-    $microarray = "<b>Microarray:</b> $microarray<br />";
+    $microarray ||= '<span class="ghosted">' . $est_i18n_microarray_missing . '</span>';
+    $microarray = "<b>$est_i18n_microarray</b> $microarray<br />";
   }
 
   my $ordering;
   if ($order_routing_id) {
-    $ordering = qq{<table cellpadding="1" cellspacing="0" border="0"><tr><td><a href="/search/clone-order.pl?add_clone=$clone_name"><img src="/documents/img/sgn-cart.gif" border="0" alt="cart" /></a></td><td>Order Clone</td></tr></table>};
+    $ordering = qq{<table cellpadding="1" cellspacing="0" border="0"><tr><td><a href="/search/clone-order.pl?add_clone=$clone_name"><img src="/documents/img/sgn-cart.gif" border="0" alt="cart" /></a></td><td>$est_i18n_order_clone</td></tr></table>};
   } else {
-    $ordering = qq{<table cellpadding="1" cellspacing="0" border="0"><tr><td><img src="/documents/img/sgn-nocart.gif" border="0" alt="nocart" /></td><td><span class="ghosted">Ordering Not Available</span></td></tr></table>};
+    $ordering = qq{<table cellpadding="1" cellspacing="0" border="0"><tr><td><img src="/documents/img/sgn-nocart.gif" border="0" alt="nocart" /></td><td><span class="ghosted">$est_i18n_ordering_not_available</span></td></tr></table>};
   }
 
 # Section with information about the selected clone
@@ -339,20 +407,20 @@ if ($clone_id ne "" && $cloneq->execute($clone_id) && $cloneq->rows>0) {
 #       So much for organizing the script into little sections.
   $clone_info = <<EOF;
     <$table>
-    <tr><td width="40%"><b>SGN ID:</b> SGN-C$clone_id</td><td><b>Clone name:</b> $clone_name</td><td width="20%" rowspan="2">$ordering</td></tr>
-    <tr><td><b>Library Name:</b> $library_name</td><td><b>Organism:</b> $organism_name</td></tr>
+    <tr><td width="40%"><b>$est_i18n_sgn_id</b> SGN-C$clone_id</td><td><b>$est_i18n_clone_name</b> $clone_name</td><td width="20%" rowspan="2">$ordering</td></tr>
+    <tr><td><b>$est_i18n_library_name</b> $library_name</td><td><b>$est_i18n_organism</b> $organism_name</td></tr>
     </table>
     <br />
-    <b>Tissue:</b> $tissue<br />
-    <b>Development Stage:</b> $development_stage<br />
+    <b>$est_i18n_tissue</b> $tissue<br />
+    <b>$est_i18n_development_stage</b> $development_stage<br />
     <br />
     $microarray
 EOF
 
 } else {
   # no clone information was found
-  $clone_info = '<div><span class="ghosted">No clone information found</span></div>';
-  $clone_name = "clone name unknown";
+  $clone_info = '<div><span class="ghosted">' . $est_i18n_no_clone_info . '</span></div>';
+  $clone_name = encode_entities($i18n ? $i18n->p('global.est.clone_name_unknown', 'clone name unknown') : 'clone name unknown');
 }
 
 # Search for information on the chromatogram
@@ -367,46 +435,46 @@ if ($read_id && $readq->execute($read_id) && $readq->rows>0) {
    $submitter_name) = $readq->fetchrow_array();
 
   if (!defined($seqdir)) {
-    $seqdir = "Unknown";
+    $seqdir = $est_i18n_unknown;
   } elsif ($seqdir eq "5") {
     $seqdir = "5'";
   } elsif ($seqdir eq "3") {
     $seqdir = "3'";
   } else {
-    $seqdir = "Unknown";
+    $seqdir = $est_i18n_unknown;
   }
 
-  $submitter_name = '<span class="ghosted">None</span>' unless $submitter_name;
+  $submitter_name = '<span class="ghosted">' . encode_entities($i18n ? $i18n->p('global.est.none', 'None') : 'None') . '</span>' unless $submitter_name;
   $atb_display ||= $atb_organization;
   if ($atb_display) {
-    $atb_display = "<b>Funding Organization:</b>&nbsp;$atb_display";
+    $atb_display = "<b>$est_i18n_funding_organization</b>&nbsp;$atb_display";
   }
 
-  my $view_link='[<span class="ghosted">View</span>]';
-#  my $view_link=" [<a href=\"/tools/trace_view.pl?read_id=$read_id&est_id=$est_id\">View</a>]";
+  my $view_link='[<span class="ghosted">' . $est_i18n_view . '</span>]';
+#  my $view_link=" [<a href=\"/tools/trace_view.pl?read_id=$read_id&est_id=$est_id\">$est_i18n_view</a>]";
   my $tmp_tracename;
   if($tmp_tracename=CXGN::Chromatogram::has_abi_chromatogram($read_id))
   {
       my $path_to_remove = $c->path_to( $c->tempfiles_subdir('traceimages') );
       $tmp_tracename=~s/$path_to_remove//;
       my $file=URI::Escape::uri_escape("$tmp_tracename");
-      $view_link=" [<a href=\"/tools/trace_view.pl?file=$file&temp=yes\">View</a>]";
+      $view_link=" [<a href=\"/tools/trace_view.pl?file=$file&temp=yes\">$est_i18n_view</a>]";
   }
 
   $read_info = <<EOF;
     <$table>
-      <tr><td width="50%"><b>SGN-ID:</b> SGN-T$read_id [<a href="/search/trace_download.pl?read_id=$read_id">Download</a>]$view_link</td>
-          <td><b>Facility Assigned ID:</b> $chroma_name\n</td>
+      <tr><td width="50%"><b>$est_i18n_sgn_trace_id</b> SGN-T$read_id [<a href="/search/trace_download.pl?read_id=$read_id">$est_i18n_download</a>]$view_link</td>
+          <td><b>$est_i18n_facility_assigned_id</b> $chroma_name\n</td>
       </tr>
-      <tr><td><b>Submitter:</b> $submitter_name</td>
-          <td><b>Sequencing Facility:</b> $facility_name</td>
+      <tr><td><b>$est_i18n_submitter</b> $submitter_name</td>
+          <td><b>$est_i18n_sequencing_facility</b> $facility_name</td>
       </tr>
     </table>
 
   $atb_display
 EOF
 } else {
-  $read_info='<span class="ghosted">No chromatogram information found for this sequence</span>';
+  $read_info='<span class="ghosted">' . $est_i18n_no_chromatogram . '</span>';
 }
 
 # Find alternate reads for this clone group
@@ -431,18 +499,18 @@ foreach ( @clone_group ) {
     # This is hacked in here as an after thought, to draw the viewer's
     # attention to the additional sequencing section.
     if ($seqdir eq "5'" && $dir eq "3'") {
-      $see_also = "[See links to 3' reads above]";
+      $see_also = '[' . encode_entities($i18n ? $i18n->p("global.est.see_three_prime_reads", "See links to 3' reads above") : "See links to 3' reads above") . ']';
     } elsif ($seqdir eq "3'" && $dir eq "5'") {
-      $see_also = "[See links to 5' reads above]";
+      $see_also = '[' . encode_entities($i18n ? $i18n->p("global.est.see_five_prime_reads", "See links to 5' reads above") : "See links to 5' reads above") . ']';
     }
 
-    $facility = "Unknown" if !defined($facility);
+    $facility = $est_i18n_unknown if !defined($facility);
     $alt_reads .= <<EOF
-      <tr><td><b>Clone:</b> SGN-C$_->[0] [$clone_name]</td>
-	  <td><b>Trace:</b> SGN-T$trace_id</td>
-	  <td><b>EST:</b> <a href="/search/est.pl?request_id=$eid&amp;request_type=7&amp;request_from=1">SGN-E$eid</a></td>
-	  <td><b>Direction:</b> $dir</td>
-	  <td><b>Facility:</b> $facility</td>
+      <tr><td><b>$est_i18n_clone</b> SGN-C$_->[0] [$clone_name]</td>
+	  <td><b>$est_i18n_trace</b> SGN-T$trace_id</td>
+	  <td><b>$est_i18n_est</b> <a href="/search/est.pl?request_id=$eid&amp;request_type=7&amp;request_from=1">SGN-E$eid</a></td>
+	  <td><b>$est_i18n_direction</b> $dir</td>
+	  <td><b>$est_i18n_facility</b> $facility</td>
       </tr>
 EOF
   }
@@ -450,13 +518,13 @@ EOF
 if($alt_reads) {
   $alt_reads = "<table>$alt_reads</table>" ;
 } else {
-  $alt_reads = '<span class="ghosted">No additional reads found.</span>';
+  $alt_reads = '<span class="ghosted">' . $est_i18n_no_additional_reads . '</span>';
 }
 
 
 $estq->execute($est_id);
 if ($estq->rows == 0) {
-  not_found($page,"No database entry was found for EST identifier SGN-E$est_id");
+  not_found($page, encode_entities($i18n ? $i18n->p("global.est.no_est_database_entry", "No database entry was found for EST identifier SGN-E%{id}", { id => $est_id }) : "No database entry was found for EST identifier SGN-E$est_id"));
 }
 my ($basecaller,$version,$seq,$status,$flags,$start,$length,$entropy,$expected_error,$qtrim_threshold,$vs_status) = $estq->fetchrow_array();
 
@@ -487,28 +555,28 @@ $seq_display = html_break_string($seq,95);
 
 my $display_status = "";
 if ($status == 0) {
-  $display_status = "Current Version";
+  $display_status = encode_entities($i18n ? $i18n->p("global.est.status_current", "Current Version") : "Current Version");
 }
 if ($status & 0x1) {
-  $display_status .= "Legacy ";
+  $display_status .= encode_entities($i18n ? $i18n->p("global.est.status_legacy", "Legacy ") : "Legacy ");
 }
 if ($status & 0x2) {
-  $display_status .= "Discarded ";
+  $display_status .= encode_entities($i18n ? $i18n->p("global.est.status_discarded", "Discarded ") : "Discarded ");
 }
 if ($status & 0x4) {
-  $display_status .= "Deprecated ";
+  $display_status .= encode_entities($i18n ? $i18n->p("global.est.status_deprecated", "Deprecated ") : "Deprecated ");
 }
 if ($status & 0x8) {
-  $display_status .= "Censored ";
+  $display_status .= encode_entities($i18n ? $i18n->p("global.est.status_censored", "Censored ") : "Censored ");
 }
 if ($status & 0x10) {
-  $display_status .= "Vector/Quality trimming not applied ";
+  $display_status .= encode_entities($i18n ? $i18n->p("global.est.status_trim_not_applied", "Vector/Quality trimming not applied ") : "Vector/Quality trimming not applied ");
 }
 if ($status & 0x20) {
-  $display_status .= "Contaminants not assessed ";
+  $display_status .= encode_entities($i18n ? $i18n->p("global.est.status_contaminants_not_assessed", "Contaminants not assessed ") : "Contaminants not assessed ");
 }
 if ($status & 0x40) {
-  $display_status .= "Chimera not assessed ";
+  $display_status .= encode_entities($i18n ? $i18n->p("global.est.status_chimera_not_assessed", "Chimera not assessed ") : "Chimera not assessed ");
 }
 
 my $insert_recovery = "";
@@ -519,38 +587,39 @@ if (!($status & 0x11)) {
 
 
   my @vector_sig_strings =
-    ("5' sequence read -- flanking 3' vector arm detected.",
-     "3' sequence read -- flanking 5' vector arm detected.",
-     "5' sequence read, incomplete (flanking vector not found)",
-     "3' sequence read, incomplete (flanking vector not found)",
+    (encode_entities($i18n ? $i18n->p("global.est.vector_read_5", "5' sequence read -- flanking 3' vector arm detected.") : "5' sequence read -- flanking 3' vector arm detected."),
+     encode_entities($i18n ? $i18n->p("global.est.vector_read_3", "3' sequence read -- flanking 5' vector arm detected.") : "3' sequence read -- flanking 5' vector arm detected."),
+     encode_entities($i18n ? $i18n->p("global.est.vector_read_5_incomplete", "5' sequence read, incomplete (flanking vector not found)") : "5' sequence read, incomplete (flanking vector not found)"),
+     encode_entities($i18n ? $i18n->p("global.est.vector_read_3_incomplete", "3' sequence read, incomplete (flanking vector not found)") : "3' sequence read, incomplete (flanking vector not found)"),
      #make these red and bold
      (map {'<span style="color: red; font-weight: bold;">'.$_.'</span>'}
-      ('No vector sequence detected',
-       'Vector found but pattern inconsistent with a normal insert',
-       'Multiple cloning site sequence detected -- chimeric clone suspected.',
+      (encode_entities($i18n ? $i18n->p("global.est.vector_missing", "No vector sequence detected") : "No vector sequence detected"),
+       encode_entities($i18n ? $i18n->p("global.est.vector_pattern_inconsistent", "Vector found but pattern inconsistent with a normal insert") : "Vector found but pattern inconsistent with a normal insert"),
+       encode_entities($i18n ? $i18n->p("global.est.multiple_cloning_site", "Multiple cloning site sequence detected -- chimeric clone suspected.") : "Multiple cloning site sequence detected -- chimeric clone suspected."),
       )
      ),
     );
 
   $vector_signature = $vector_sig_strings[$vs_status]
-    || '<span class="ghosted">Not available</span>';
+    || '<span class="ghosted">' . encode_entities($i18n ? $i18n->p("global.est.not_available", "Not available") : "Not available") . '</span>';
 
 
   ### render any flags as html
-  my @flag_strings = ('Vector anomaly',
-		      'Possibly chimeric (anomalous insert into vector)',
-		      'Too short after trimming low-quality bases',
-		      'High expected error (low overall quality)',
-		      'Low complexity',
-		      'E. Coli (cloning host) sequence detected',
-		      'rRNA contamination detected',
-		      "Possibly chimeric (ends match significantly different genes in arabidopsis)",
-		      "Possibly chimeric, detected by unigene assembly preclustering",
-		      "Manually censored by SGN staff");
-		
+  my @flag_strings = (
+      encode_entities($i18n ? $i18n->p("global.est.vector_anomaly", "Vector anomaly") : "Vector anomaly"),
+      encode_entities($i18n ? $i18n->p("global.est.possibly_chimeric_vector", "Possibly chimeric (anomalous insert into vector)") : "Possibly chimeric (anomalous insert into vector)"),
+      encode_entities($i18n ? $i18n->p("global.est.too_short_after_trimming", "Too short after trimming low-quality bases") : "Too short after trimming low-quality bases"),
+      encode_entities($i18n ? $i18n->p("global.est.high_expected_error", "High expected error (low overall quality)") : "High expected error (low overall quality)"),
+      encode_entities($i18n ? $i18n->p("global.est.low_complexity", "Low complexity") : "Low complexity"),
+      encode_entities($i18n ? $i18n->p("global.est.ecoli_sequence", "E. Coli (cloning host) sequence detected") : "E. Coli (cloning host) sequence detected"),
+      encode_entities($i18n ? $i18n->p("global.est.rrna_contamination", "rRNA contamination detected") : "rRNA contamination detected"),
+      encode_entities($i18n ? $i18n->p("global.est.possibly_chimeric_arabidopsis", "Possibly chimeric (ends match significantly different genes in arabidopsis)") : "Possibly chimeric (ends match significantly different genes in arabidopsis)"),
+      encode_entities($i18n ? $i18n->p("global.est.possibly_chimeric_preclustering", "Possibly chimeric, detected by unigene assembly preclustering") : "Possibly chimeric, detected by unigene assembly preclustering"),
+      encode_entities($i18n ? $i18n->p("global.est.manually_censored", "Manually censored by SGN staff") : "Manually censored by SGN staff"));
+
   my $flags_display = "";
   if ($flags == 0) {
-    $flags_display = "Passed all screens and filters";
+    $flags_display = encode_entities($i18n ? $i18n->p("global.est.passed_screens", "Passed all screens and filters") : "Passed all screens and filters");
   } else {
     my @flags = ();
 
@@ -559,31 +628,31 @@ if (!($status & 0x11)) {
       push @flags,$str if $flags & (1<<$ind++);
     }
 
-    $flags_display = qq{<$table><tr><td width="10%"><b>Problems: </b></td><td>} . join("<br />",@flags) . "</td></tr></table>";
+    $flags_display = qq{<$table><tr><td width="10%"><b>$est_i18n_problems </b></td><td>} . join("<br />",@flags) . "</td></tr></table>";
   }
 
   $insert_recovery= <<EOF;
-<$table><tr><td width="50%"><b>Processed By:</b> SGN</td>
-            <td><b>Basecalling Software:</b> phred</td>
+<$table><tr><td width="50%"><b>$est_i18n_processed_by</b> SGN</td>
+            <td><b>$est_i18n_basecalling</b> phred</td>
        </tr>
 </table>
-<b>Vector Signature:</b> $vector_signature<br />
+<b>$est_i18n_vector_signature</b> $vector_signature<br />
 $flags_display
 <table cellspacing="0" cellpadding="0" border="0" width="90%" align="center">
-  <tr><td><b>Sequence Entropy:</b> $entropy</td>
-      <td><b>Expected Error Rate:</b> $expected_error</td>
-      <td><b>Quality Trim Threshold:</b> $qtrim_threshold</td>
+  <tr><td><b>$est_i18n_sequence_entropy</b> $entropy</td>
+      <td><b>$est_i18n_expected_error</b> $expected_error</td>
+      <td><b>$est_i18n_quality_trim</b> $qtrim_threshold</td>
   </tr>
 </table>
 EOF
 } else {
-  $insert_recovery = "<span class=\"ghosted\">Processing information not available for this sequence</span>";
+  $insert_recovery = '<span class="ghosted">' . encode_entities($i18n ? $i18n->p("global.est.processing_info_unavailable", "Processing information not available for this sequence") : "Processing information not available for this sequence") . '</span>';
 }
 
 my $sequence_info = <<END_HTML;
   <$table>
-  <tr><td width="50%"><b>Sequence Id:</b> SGN-E$est_id</td><td><b>Length:</b> $seq_length</td></tr>
-  <tr><td><b>Status:</b> $display_status</td><td><b>Direction:</b> $seqdir $see_also</td></tr>
+  <tr><td width="50%"><b>$est_i18n_sequence_id</b> SGN-E$est_id</td><td><b>$est_i18n_length</b> $seq_length</td></tr>
+  <tr><td><b>$est_i18n_status</b> $display_status</td><td><b>$est_i18n_direction</b> $seqdir $see_also</td></tr>
   </table>
   <div class="sequence" style="margin: 1em">
         $fasta_header
@@ -620,7 +689,9 @@ while(my ($unigene_id, $build_id, $og_name, $build_nr, $build_date,
 	last;
       }
       if ($alt_microarray_found) {
-	$alt_microarray .= qq{See unigene <a href="/search/unigene.pl?unigene_id=$unigene_id">SGN-U$unigene_id</a> for alternatives which are available on a microarray<br />};
+        my $unigene_link_html = '<a href="/search/unigene.pl?unigene_id=' . $unigene_id . '">' . encode_entities("SGN-U$unigene_id") . '</a>';
+        my $alternative_message = $render_i18n_html->(($i18n ? $i18n->p("global.est.microarray_alternatives", "See unigene %{link} for alternatives which are available on a microarray", {link => "__SGN_UI_LINK__"}) : "See unigene __SGN_UI_LINK__ for alternatives which are available on a microarray"), {"__SGN_UI_LINK__" => $unigene_link_html});
+	$alt_microarray .= $alternative_message . '<br />';
       }
     }
   }
@@ -628,7 +699,9 @@ while(my ($unigene_id, $build_id, $og_name, $build_nr, $build_date,
   $marker_mappingq->execute($clone_id);
   if ($marker_mappingq->rows > 0) {
     while (my ($marker_id, $alias) = $marker_mappingq->fetchrow_array()){
-      $alt_mapped .= qq{This clone has been mapped as <a href="/search/markers/markerinfo.pl?marker_id=$marker_id">$alias</a>.<br />} 
+      my $marker_link_html = '<a href="/search/markers/markerinfo.pl?marker_id=' . $marker_id . '">' . encode_entities($alias) . '</a>';
+      my $mapped_message = $render_i18n_html->(($i18n ? $i18n->p("global.est.clone_mapped_as", "This clone has been mapped as %{link}.", {link => "__SGN_UI_LINK__"}) : "This clone has been mapped as __SGN_UI_LINK__."), {"__SGN_UI_LINK__" => $marker_link_html});
+      $alt_mapped .= $mapped_message . '<br />';
     }
   } else {
     $mapped_memberq->execute($unigene_id);
@@ -639,45 +712,49 @@ while(my ($unigene_id, $build_id, $og_name, $build_nr, $build_date,
 	$alt_mapped_found = 1;
       }
       if ($alt_mapped_found) {
-	$alt_mapped .= qq{See unigene <a href="/search/unigene.pl?unigene_id=$unigene_id">SGN-U$unigene_id</a> for alternative clones/ESTs which are mapped};
+        my $unigene_link_html = '<a href="/search/unigene.pl?unigene_id=' . $unigene_id . '">' . encode_entities("SGN-U$unigene_id") . '</a>';
+        $alt_mapped .= $render_i18n_html->(($i18n ? $i18n->p("global.est.alternative_clones_mapped", "See unigene %{link} for alternative clones/ESTs which are mapped", {link => "__SGN_UI_LINK__"}) : "See unigene __SGN_UI_LINK__ for alternative clones/ESTs which are mapped"), {"__SGN_UI_LINK__" => $unigene_link_html});
       }
     }
   }
+  my $recent_build_caption = encode_entities(($i18n ? $i18n->p("global.est_detail.build_number", "Build %{number}", {number => $build_nr}) : "Build $build_nr"));
+  my $recent_est_count = encode_entities(($i18n ? $i18n->p("global.est_detail.ests_assembled", "%{count} ESTs assembled", {count => $nr_members}) : "$nr_members ESTs assembled"));
   push @recent, <<EOF;
   <tr><td>[SGN-E$eid]  </td>
       <td><a href="/search/unigene.pl?unigene_id=$unigene_id&amp;highlight=$eid">SGN-U$unigene_id</a></td>
       <td>$og_name        </td>
-      <td>Build $build_nr </td>
-      <td>$nr_members ESTs assembled</td>
+      <td>$recent_build_caption </td>
+      <td>$recent_est_count</td>
   </tr>
 EOF
 }
 
 if (!$alt_microarray &&
     ($organism_id == 1 || $organism_id == 2 || $organism_id == 3)) {
-  $alt_microarray = '<span class="ghosted">No alternative clones from any current unigene containing this EST are available on a microarray</span>';
+  $alt_microarray = '<span class="ghosted">' . $est_i18n_microarray_alt_missing . '</span>';
 }
 
-$alt_mapped ||= "<div><span class=\"ghosted\">There is no map position defined on SGN for this EST or others in the same unigene.</span></div>";
+$alt_mapped ||= "<div><span class=\"ghosted\">$est_i18n_map_missing</span></div>";
 
 
 
 $unigene_content = '<table align="center" cellspacing="0" cellpadding="0" border="0" width="100%">';
 
 if ($other_estid) {
-  $unigene_content .= qq{<tr><td colspan="6"><span class="ghosted">Note: Some unigenes listed here are assembled from different versions of the sequence displayed above. Note SGN-E# in left column. All versions were derived from the same chromatogram</span></td></tr><tr><td colspan="6"><br /></td></tr>};
+  my $unigene_version_note = encode_entities($i18n ? $i18n->p("global.est.unigene_version_note", "Note: Some unigenes listed here are assembled from different versions of the sequence displayed above. Note SGN-E# in left column. All versions were derived from the same chromatogram") : "Note: Some unigenes listed here are assembled from different versions of the sequence displayed above. Note SGN-E# in left column. All versions were derived from the same chromatogram");
+  $unigene_content .= qq{<tr><td colspan="6"><span class="ghosted">$unigene_version_note</span></td></tr><tr><td colspan="6"><br /></td></tr>};
 }
 
 if (@recent) {
   $unigene_content .= <<EOF;
-<tr><td colspan="6"><b>Current Unigene builds</b></td></tr>
+<tr><td colspan="6"><b>$est_i18n_current_builds</b></td></tr>
 @recent
-<tr><td colspan="6" align="center"><span class="ghosted">Follow SGN-U# link for detailed information and annotations</span></td></tr>
+<tr><td colspan="6" align="center"><span class="ghosted">$est_i18n_follow_unigene</span></td></tr>
 EOF
 } else {
   $unigene_content .= <<EOF;
-<tr><td align="left" colspan="6"><b>Current Unigene builds</b></td></tr>
-<tr><td colspan="6"><span class="ghosted">No current unigene builds incorporate this sequence</td></tr>
+<tr><td align="left" colspan="6"><b>$est_i18n_current_builds</b></td></tr>
+<tr><td colspan="6"><span class="ghosted">$est_i18n_no_current_build</td></tr>
 EOF
 }
 
@@ -685,23 +762,25 @@ $unigene_content .= "</table>";
 
 
 $page->header();
-print page_title_html("EST details &mdash; $match_id");
-print blue_section_html('Search information',$search_info);
-print blue_section_html('Clone information',<<EOH);
+my $est_page_title = $i18n ? $i18n->p('global.est.page_title', 'EST details &mdash; %{id}', { id => encode_entities($match_id) }) : "EST details &mdash; $match_id";
+print page_title_html($est_page_title);
+print blue_section_html($est_i18n_search_info,$search_info);
+print blue_section_html($est_i18n_clone_info,<<EOH);
 $clone_info
 $alt_microarray
 $alt_mapped
 EOH
-$alt_reads .= qq{<center style="margin-top: 0.8em"><a href="/search/est.pl?request_id=$clone_id&amp;request_type=8&amp;request_from=1&amp;show_hierarchy=1">[Show information hierarchy]</a></center>};
-print blue_section_html('Additional sequencing',$alt_reads);
-print blue_section_html('Sequence',$sequence_info);
-print blue_section_html('Unigenes',$unigene_content);
-print blue_section_html('Chromatogram',$read_info);
-print blue_section_html('Quality processing',$insert_recovery);
+$alt_reads .= qq{<center style="margin-top: 0.8em"><a href="/search/est.pl?request_id=$clone_id&amp;request_type=8&amp;request_from=1&amp;show_hierarchy=1">$est_i18n_show_hierarchy</a></center>};
+print blue_section_html($est_i18n_additional_sequencing,$alt_reads);
+print blue_section_html($est_i18n_sequence,$sequence_info);
+print blue_section_html($est_i18n_unigenes,$unigene_content);
+print blue_section_html($est_i18n_chromatogram,$read_info);
+print blue_section_html($est_i18n_quality_processing,$insert_recovery);
 
 $page->footer();
 
 sub by_clone {
+
   my ($page, $id) = @_;
 
   my $read_id = "";
@@ -742,6 +821,7 @@ sub by_clone_sort {
 }
 
 sub by_read {
+
   my ($page, $id) = @_;
 
   $by_read_idq->execute($id);
@@ -767,6 +847,7 @@ sub by_read_sort {
 }
 
 sub by_mspot {
+
   my ($page, $id) = @_;
 
   if ($id =~ m/([0-9]+)-([0-9])+-([0-9]+\.[0-9]+\.[0-9]+\.[0-9]+)/) {
@@ -791,6 +872,9 @@ sub by_mspot {
 }
 
 sub try_clone_group {
+    my SGN::I18N $cgi_est_try_clone_group_i18n = eval { $c && $c->i18n };
+    my $est_ui_not_found_title = encode_entities(($cgi_est_try_clone_group_i18n ? $cgi_est_try_clone_group_i18n->p("global.final_caption.direct_search_result_not_found", "Direct Search Result - Not Found") : "Direct Search Result - Not Found"));
+
   my ($page, $id) = @_;
 
   $page->header();
@@ -800,14 +884,16 @@ sub try_clone_group {
     $clones .= "<tr><td><a href=\"/search/est.pl?request_id=$clone_id&amp;request_from=1&amp;request_type=8\">SGN-C$clone_id</a></td><td>[$clone_name]</td></tr>";
   }
 
+  my $alias_group_message = encode_entities($cgi_est_try_clone_group_i18n ? $cgi_est_try_clone_group_i18n->p('global.est.alias_group_message', 'Your search resolved to a clone identifier (SGN-C%{id}) that has no associated reads. An alias group was detected, however. See links below for other clone ids/names that are expected to be from identical stock.', { id => $id }) : "Your search resolved to a clone identifier (SGN-C$id) that has no associated reads. An alias group was detected, however. See links below for other clone ids/names that are expected to be from identical stock.");
+  my $rearray_explanation = encode_entities($cgi_est_try_clone_group_i18n ? $cgi_est_try_clone_group_i18n->p('global.est.rearray_explanation', 'This may happen for cases where clones were "rearrayed" and resequenced, but the resequenced data has not been recovered yet or the reactions failed. In this case, the rearrayed clone identifier and name will have no associated sequence, but the original clone may have usable reads available in the database.') : 'This may happen for cases where clones were "rearrayed" and resequenced, but the resequenced data has not been recovered yet or the reactions failed. In this case, the rearrayed clone identifier and name will have no associated sequence, but the original clone may have usable reads available in the database.');
   print <<EOF;
   <center>
-  <h4>Direct Search Result - Not Found</h4>
+  <h4>$est_ui_not_found_title</h4>
   </center>
 
-  <p>Your search resolved to a clone identifier (SGN-C$id) that has no associated reads. An alias group was detected, however. See links below for other clone ids/names that are expected to be from identical stock. </p>
+  <p>$alias_group_message</p>
 
-  <p>This may happen for cases where clones were "rearrayed" and resequenced, but the resequenced data has not been recovered yet or the reactions failed. In this case, the rearrayed clone identifier and name will have no associated sequence, but the original clone may have usable reads available in the database.</p>
+  <p>$rearray_explanation</p>
   <br /><br />
   <$table>$clones</table>
   <br /><br />
@@ -819,6 +905,9 @@ EOF
 }
 
 sub invalid_search {
+    my SGN::I18N $cgi_est_invalid_search_i18n = eval { $c && $c->i18n };
+    my $est_ui_invalid_title = encode_entities(($cgi_est_invalid_search_i18n ? $cgi_est_invalid_search_i18n->p("global.final_caption.not_found_search_invalid", "Not Found - Search Invalid") : "Not Found - Search Invalid"));
+
   my ($page, $message) = @_;
 
   $page->header();
@@ -827,12 +916,12 @@ sub invalid_search {
 
   print <<EOF;
   <center>
-  <h4>Not Found - Search Invalid</h4>
+  <h4>$est_ui_invalid_title</h4>
   </center>
 EOF
 
 if ($message) {
-print <<EOF; 
+print <<EOF;
   <p>$message</p>
 EOF
 }
@@ -843,18 +932,21 @@ EOF
 }
 
 sub not_found {
+    my SGN::I18N $cgi_est_not_found_i18n = eval { $c && $c->i18n };
+    my $est_ui_not_found_title = encode_entities(($cgi_est_not_found_i18n ? $cgi_est_not_found_i18n->p("global.final_caption.direct_search_result_not_found", "Direct Search Result - Not Found") : "Direct Search Result - Not Found"));
+
   my ($page, $message) = @_;
 
   $page->header();
 
   print <<EOF;
   <center>
-  <h4>Direct Search Result - Not Found</h4>
+  <h4>$est_ui_not_found_title</h4>
   </center>
 EOF
 
 if ($message) {
-print <<EOF;  
+print <<EOF;
   <p>$message</p>
 EOF
 }
@@ -865,16 +957,20 @@ EOF
 }
 
 sub not_traceable_to_est {
+    my SGN::I18N $cgi_est_not_traceable_to_est_i18n = eval { $c && $c->i18n };
+    my $est_ui_not_found_title = encode_entities(($cgi_est_not_traceable_to_est_i18n ? $cgi_est_not_traceable_to_est_i18n->p("global.final_caption.direct_search_result_not_found", "Direct Search Result - Not Found") : "Direct Search Result - Not Found"));
+
   my ($page, $id) = @_;
 
   $page->header();
 
+  my $not_traceable = encode_entities(($cgi_est_not_traceable_to_est_i18n ? $cgi_est_not_traceable_to_est_i18n->p("global.final_caption.not_traceable", "The identifier %{id} of the specified type can not be traced to an EST in SGN's databases", {id => $id}) : "The identifier $id of the specified type can not be traced to an EST in SGN's databases"));
   print <<EOF;
   <center>
-  <h4>Direct Search Result - Not Found</h4>
+  <h4>$est_ui_not_found_title</h4>
   </center>
 
-  <p>The identifier $id of the specified type can not be traced to an EST in SGN\'s databases</p>
+  <p>$not_traceable</p>
   <br />
 EOF
 
@@ -884,6 +980,7 @@ EOF
 }
 
 sub show_list {
+
   my ($page, $id) = @_;
 
   my $content = build_tree($page, $id);
@@ -898,6 +995,9 @@ sub show_list {
 }
 
 sub hierarchy_requested {
+    my SGN::I18N $cgi_est_hierarchy_requested_i18n = eval { $c && $c->i18n };
+    my $est_i18n_information_hierarchy = encode_entities($cgi_est_hierarchy_requested_i18n ? $cgi_est_hierarchy_requested_i18n->p('global.est.information_hierarchy', 'Information Hierarchy') : 'Information Hierarchy');
+
   my ($page, $id, $id_type) = @_;
 
   if ($id_type != 8) {
@@ -907,23 +1007,26 @@ sub hierarchy_requested {
   my $content = build_hierarchy($page, $id);
 
   $page->header();
-  print page_title_html("Information Hierarchy for Clone $id");
+  my $hierarchy_title = encode_entities(($cgi_est_hierarchy_requested_i18n ? $cgi_est_hierarchy_requested_i18n->p('global.est.hierarchy_title', 'Information Hierarchy for Clone %{id}', { id => $id }) : "Information Hierarchy for Clone $id"));
+  print page_title_html($hierarchy_title);
 
   if (!$content) {
+    my $no_hierarchy_structure = encode_entities($cgi_est_hierarchy_requested_i18n ? $cgi_est_hierarchy_requested_i18n->p("global.est.no_hierarchy_structure", "No structure was found for identifier %{id}", { id => $id }) : "No structure was found for identifier $id");
     print <<EOF;
-    No structure was found for identifier $id
+    $no_hierarchy_structure
 EOF
     $page->footer();
   exit 0;
   }
 
-  print blue_section_html('Information Hierarchy',$content);
+  print blue_section_html($est_i18n_information_hierarchy,$content);
   $page->footer();
 
   exit 0;
 }
 
 sub build_hierarchy {
+
   my ($page, $clone_id) = @_;
   my $table = 'table cellpadding="0" cellspacing="1" border="0"';
 

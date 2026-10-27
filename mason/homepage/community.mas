@@ -1,6 +1,17 @@
 
+<%init>
+use HTML::Entities ();
+</%init>
+
+<%perl>
+my $contribute_token = '__SGN_COMMUNITY_CONTRIBUTE_LINK__';
+my $contribute_link_label = HTML::Entities::encode_entities($c->i18n->p('global.community.contribute_link', 'contribute to webpages for your favorite genes and mutant lines'));
+my $community_description = $c->i18n->p('global.community.description', 'As an SGN locus editor, %{contribute_link} and share relevant data and publications with the community.', {contribute_link => $contribute_token});
+$community_description = HTML::Entities::encode_entities($community_description);
+$community_description =~ s/\Q$contribute_token\E/<a href="\/phenome\/">$contribute_link_label<\/a>/;
+</%perl>
+
 <div class="boxbgcolor6"  style="margin-bottom:2px">
-<div class="boxheading">Community Annotation</div>
-<div class="boxcontent">As an SGN locus editor, <a href="/phenome/">contribute to webpages for your favorite genes and mutant lines</a> and share
-relevant data and publications with the community.<br ><a href="/phenome/">&gt;&gt;more...</a></div>
+<div class="boxheading"><% $c->i18n->p('global.community.heading', 'Community Annotation') |h %></div>
+<div class="boxcontent"><% $community_description |n %><br ><a href="/phenome/"><% $c->i18n->p('global.community.more', '>>more...') |h %></a></div>
 <!-- img src="/documents/img/submit_genes_and_phenotypes.png" height="117 " border="0" / --></center></div>

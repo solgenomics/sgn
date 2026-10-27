@@ -60,7 +60,7 @@ solGS.phenoHistogram =  {
 
         var phenoTypeHistoDivId = phenoTypeHistoDivId.replace(/#/, '');
         var histoDownloadBtn = "download_" + phenoTypeHistoDivId;
-        var histoPlotLink = "<a href='#'  onclick='event.preventDefault();' id='" + histoDownloadBtn + "'> Histogram</a>";
+        var histoPlotLink = "<a href='#'  onclick='event.preventDefault();' id='" + histoDownloadBtn + "'>" + (window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.phenotype_histogram_link", " Histogram") : " Histogram") + "</a>";
         var downloadLinks = `Download:  ${histoPlotLink}`;
 
         return downloadLinks;
@@ -94,10 +94,7 @@ jQuery(document).ready(function () {
            var variation = solGS.histogram.checkDataVariation(traitData);
 
             if (variation.uniq_count == 1) {
-                var msg = '<p> All of the valid observations '
-                                  + '('+ variation.obs_count +') ' + 'in this dataset have '
-                                  + 'a value of ' + variation.uniqValue
-                                  + '. No frequency distribution plot.</p>';
+                var msg = "<p>" + (window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.pheno_means_valid_observations", " All of the valid observations (%{count}) in this dataset have a value of %{value}. No frequency distribution plot.", {"count": String(variation.obs_count), "value": String(variation.uniqValue)}) : " All of the valid observations " + "(" + variation.obs_count + ") " + "in this dataset have " + "a value of " + variation.uniqValue + ". No frequency distribution plot.") + "</p>";
 
                 solGS.showMessage(histMsgId, msg);
 
@@ -115,14 +112,14 @@ jQuery(document).ready(function () {
 
             }
        } else {
-            var msg = "<p>This trait has no phenotype data to plot.</p>";
+            var msg = "<p>" + (window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.pheno_data_missing", "This trait has no phenotype data to plot.") : "This trait has no phenotype data to plot.") + "</p>";
             solGS.showMessage(histMsgId, msg);
        }
 
     });
 
     solGS.phenoHistogram.getTraitPhenoMeansData().fail(function(res) {
-        var msg = "<p>Error occured plotting histogram for this trait dataset.</p>";
+        var msg = "<p>" + (window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.pheno_histogram_error", "Error occured plotting histogram for this trait dataset.") : "Error occured plotting histogram for this trait dataset.") + "</p>";
         solGS.showMessage(histMsgId, msg);
     });
 
@@ -136,10 +133,7 @@ jQuery(document).ready(function () {
             var variationRaw = solGS.histogram.checkDataVariation(traitRawData);
 
              if (variationRaw.uniq_count == 1) {
-                 var msg = '<p> All of the valid observations '
-                                   + '('+ variationRaw.obs_count +') ' + 'in this dataset have '
-                                   + 'a value of ' + variationRaw.uniqValue
-                                   + '. No frequency distribution plot.</p>';
+                 var msg = "<p>" + (window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.pheno_raw_valid_observations", " All of the valid observations (%{count}) in this dataset have a value of %{value}. No frequency distribution plot.", {"count": String(variationRaw.obs_count), "value": String(variationRaw.uniqValue)}) : " All of the valid observations " + "(" + variationRaw.obs_count + ") " + "in this dataset have " + "a value of " + variationRaw.uniqValue + ". No frequency distribution plot.") + "</p>";
 
                  solGS.showMessage(histMsgIdRaw, msg);
 
@@ -157,14 +151,14 @@ jQuery(document).ready(function () {
 
              }
         } else {
-             var msg = "<p>This trait has no phenotype data to plot.</p>";
+             var msg = "<p>" + (window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.pheno_data_missing", "This trait has no phenotype data to plot.") : "This trait has no phenotype data to plot.") + "</p>";
              solGS.showMessage(histMsgIdRaw, msg);
         }
 
      });
 
      solGS.phenoHistogram.getTraitPhenoRawData().fail(function(res) {
-         var msg = "<p>Error occured plotting histogram for this trait dataset.</p>";
+         var msg = "<p>" + (window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.pheno_histogram_error", "Error occured plotting histogram for this trait dataset.") : "Error occured plotting histogram for this trait dataset.") + "</p>";
          solGS.showMessage(histMsgIdRaw, msg);
      });
 

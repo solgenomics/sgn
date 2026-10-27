@@ -6,10 +6,10 @@ $trial_id
     <table id="genotyping_project_archived_vcf_table" width="100%" class="table table-hover table-striped">
         <thead>
             <tr>
-                <th>File Name</th>
-                <th>Date Uploaded</th>
-                <th>Uploaded By</th>
-                <th>Options</th>
+                <th><% $c->i18n->p("global.file_dump_share_files.file_name", "File Name") |h %></th>
+                <th><% $c->i18n->p("accession.files.files.header.date", "Date Uploaded") |h %></th>
+                <th><% $c->i18n->p("accession.files.files.header.uploader", "Uploaded By") |h %></th>
+                <th><% $c->i18n->p("global.file_dump_share_files.options", "Options") |h %></th>
             </tr>
         </thead>
         <tbody id="genotyping_project_archived_vcf_table_body"></tbody>
@@ -35,10 +35,10 @@ jQuery(document).ready(function () {
           html += `<td>${data[i].create_date}</td>`;
           html += `<td><a href='/solpeople/profile/${data[i].uploader_id}'>${data[i].uploader_username}</a></td>`;
           if ( data[i].exists === "true" ) {
-            html += `<td><a href='/ajax/genotyping_project/download_archived_vcf?genotyping_project_id=<% $trial_id %>&basename=${data[i].basename}' target='_blank'>Download</a></td>`;
+            html += `<td><a href='/ajax/genotyping_project/download_archived_vcf?genotyping_project_id=<% $trial_id %>&basename=${data[i].basename}' target='_blank'>${jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("global.est.download", "Download") : "Download")).html()}</a></td>`;
           }
           else {
-            html += "<td>File not found</td>";
+            html += ("<td>" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("global.search_wizard.file_not_found", "File not found") : "File not found")).html() + "</td>");
           }
           html += "</tr>";
         }
@@ -46,7 +46,7 @@ jQuery(document).ready(function () {
       jQuery("#genotyping_project_archived_vcf_table_body").html(html);
     },
     error: function(response) {
-      alert('An error occurred');
+      alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("folder.new.request_error", "An error occurred") : 'An error occurred'));
     }
   });
 });

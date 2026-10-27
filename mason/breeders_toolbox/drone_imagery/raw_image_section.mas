@@ -4,7 +4,7 @@
 <table class="table table-bordered table-hover" id="raw_drone_image_datatable">
     <thead>
         <tr>
-            <th>Field Trials -> Imaging Events</th>
+            <th><% $c->i18n->p("drone.interface.field_trials", "Field Trials") |h %> -> <% $c->i18n->p("drone.interface.imaging_events", "Imaging Events") |h %></th>
         </tr>
     </thead>
 </table>
@@ -14,7 +14,8 @@ jQuery(document).ready(function(){
 
     var raw_drone_imagery_table = jQuery('#raw_drone_image_datatable').DataTable( {
         'ajax': '/api/drone_imagery/raw_drone_imagery_top',
-        'paging': false
+        'paging': false,
+        'rowCallback': function (row) { localizeDroneImageryCaptions(row); }
     });
     
     raw_drone_imagery_table.on( 'draw', function () {
@@ -22,11 +23,11 @@ jQuery(document).ready(function(){
             url : '/api/drone_imagery/raw_drone_imagery_plot_image_count',
             success: function(response){
                 //console.log(response);
-                jQuery('div[name="drone_run_band_total_plot_image_div"]').html('<div class="panel-group"><div class="panel panel-default"><div class="panel-heading"><h4 class="panel-title"><a data-toggle="collapse" >No Plot Images Saved</a></h4></div></div></div>');
+                jQuery('div[name="drone_run_band_total_plot_image_div"]').html('<div class="panel-group"><div class="panel panel-default"><div class="panel-heading"><h4 class="panel-title"><a data-toggle="collapse" >' + jQuery("<span>").text((window.SGN && window.SGN.i18n ? SGN.i18n.p("drone.interface.no_plot_images_saved", "No Plot Images Saved") : "No Plot Images Saved")).html() + '</a></h4></div></div></div>');
                 for (drone_run_project_id in response.data) {
-                    var html = '<div class="panel-group" id="drone_run_plot_polygons_table_accordion_'+drone_run_project_id+'" ><div class="panel panel-default"><div class="panel-heading"><h4 class="panel-title"><a data-toggle="collapse" data-parent="#drone_run_plot_polygons_table_accordion_'+drone_run_project_id+'" href="#drone_run_plot_polygons_table_accordion_one_'+drone_run_project_id+'" >View Plot Images Summary ('+response.data[drone_run_project_id]['total_plot_image_count']+')</a></h4></div><div id="drone_run_plot_polygons_table_accordion_one_'+drone_run_project_id+'" class="panel-collapse collapse"><div class="panel-body">';
+                    var html = '<div class="panel-group" id="drone_run_plot_polygons_table_accordion_'+drone_run_project_id+'" ><div class="panel panel-default"><div class="panel-heading"><h4 class="panel-title"><a data-toggle="collapse" data-parent="#drone_run_plot_polygons_table_accordion_'+drone_run_project_id+'" href="#drone_run_plot_polygons_table_accordion_one_'+drone_run_project_id+'" >' + jQuery("<span>").text((window.SGN && window.SGN.i18n ? SGN.i18n.p("drone.interface.view_plot_images_summary", "View Plot Images Summary") : "View Plot Images Summary")).html() + ' ('+response.data[drone_run_project_id]['total_plot_image_count']+')</a></h4></div><div id="drone_run_plot_polygons_table_accordion_one_'+drone_run_project_id+'" class="panel-collapse collapse"><div class="panel-body">';
                     delete response.data[drone_run_project_id]['total_plot_image_count'];
-                    html = html + "<table class='table table-bordered table-sm'><thead><tr><th>Plot Image Type</th><th>Count</th></tr></thead><tbody>";
+                    html = html + "<table class='table table-bordered table-sm'><thead><tr><th>" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? SGN.i18n.p("drone.interface.plot_image_type", "Plot Image Type") : "Plot Image Type")).html() + "</th><th>" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? SGN.i18n.p("drone.interface.count", "Count") : "Count")).html() + "</th></tr></thead><tbody>";
                     for (plot_image_type in response.data[drone_run_project_id]) {
                         html = html + "<tr><td>" + plot_image_type + "</td><td>" + response.data[drone_run_project_id][plot_image_type] + "</td></tr>";
                     }
@@ -43,7 +44,7 @@ jQuery(document).ready(function(){
 
     jQuery(document).on('click', 'span[name="drone_image_remove"]', function(){
         var image_id = jQuery(this).data('image_id');
-        if (confirm("Are you sure you want to remove this image?")) {
+        if (confirm((window.SGN && window.SGN.i18n ? SGN.i18n.p("drone.interface.confirm_remove_drone_image", "Are you sure you want to remove this image?") : "Are you sure you want to remove this image?"))) {
             jQuery.ajax({
                 url : '/api/drone_imagery/remove_image?image_id='+image_id,
                 beforeSend: function() {
@@ -56,7 +57,7 @@ jQuery(document).ready(function(){
                 },
                 error: function(response){
                     jQuery("#working_modal").modal("hide");
-                    alert('Error removing drone image!')
+                    alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("drone.interface.error_removing_drone_image", "Error removing drone image!") : "Error removing drone image!"))
                 }
             });
         }
@@ -73,12 +74,154 @@ function manageDroneImageryDroneRunBandDisplay(project_drone_run_band_id){
         success: function(response){
             console.log(response);
             jQuery('#drone_run_band_accordian_drone_run_band_div_'+project_drone_run_band_id).html(response.data[0]);
+            localizeDroneImageryCaptions(jQuery('#drone_run_band_accordian_drone_run_band_div_'+project_drone_run_band_id)[0]);
             jQuery("#working_modal").modal("hide");
         },
         error: function(response){
             jQuery("#working_modal").modal("hide");
-            alert('Error getting drone run band summary images!');
+            alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("drone.interface.error_getting_drone_run_band_summary_images", "Error getting drone run band summary images!") : "Error getting drone run band summary images!"));
         }
+    });
+}
+
+// Localize known server-authored labels after insertion; keep the API rows and data cells raw.
+function localizeDroneImageryCaptions(root) {
+    if (!root || !window.SGN || !SGN.i18n || SGN.i18n.locale === 'en') return;
+    var captions = {
+        "View TimeSeries": SGN.i18n.p("drone.display.view_timeseries", "View TimeSeries"),
+        "Imaging Event Name": SGN.i18n.p("drone.interface.imaging_event_name", "Imaging Event Name"),
+        "Imaging Event Type": SGN.i18n.p("drone.interface.imaging_event_type", "Imaging Event Type"),
+        "Description": SGN.i18n.p("global.trial_table.description", "Description"),
+        "Date": SGN.i18n.p("global.github_pullrequests.date", "Date"),
+        "Base Date": SGN.i18n.p("drone.display.base_date", "Base Date"),
+        "Camera Rig": SGN.i18n.p("drone.display.camera_rig", "Camera Rig"),
+        "Averaged Temperature Growing Degree Days": SGN.i18n.p("drone.display.averaged_temperature_growing_degree_days", "Averaged Temperature Growing Degree Days"),
+        "Recalculate GDD": SGN.i18n.p("drone.display.recalculate_gdd", "Recalculate GDD"),
+        "Growing Degree Days": SGN.i18n.p("drone.display.growing_degree_days", "Growing Degree Days"),
+        "Calculate GDD": SGN.i18n.p("drone.display.calculate_gdd", "Calculate GDD"),
+        "Averaged Precipitation Sum": SGN.i18n.p("drone.display.averaged_precipitation_sum", "Averaged Precipitation Sum"),
+        "Recalculate Precipitation Sum": SGN.i18n.p("drone.display.recalculate_precipitation_sum", "Recalculate Precipitation Sum"),
+        "Precipitation Sum": SGN.i18n.p("drone.display.precipitation_sum", "Precipitation Sum"),
+        "Calculate Precipitation Sum": SGN.i18n.p("drone.interface.calculate_precipitation_sum", "Calculate Precipitation Sum"),
+        "Growing Season Days": SGN.i18n.p("drone.display.growing_season_days", "Growing Season Days"),
+        "Field Trial": SGN.i18n.p("cross.pages.field_trial", "Field Trial"),
+        "Processing Images in Progress": SGN.i18n.p("drone.display.processing_images_in_progress", "Processing Images in Progress"),
+        "Processing Phenotypes in Progress": SGN.i18n.p("drone.display.processing_phenotypes_in_progress", "Processing Phenotypes in Progress"),
+        "Run Standard Process For": SGN.i18n.p("drone.display.run_standard_process_for", "Run Standard Process For"),
+        "Run Minimal Vegetitative Index Standard Process For": SGN.i18n.p("drone.display.run_minimal_vegetitative_index_standard_process_for", "Run Minimal Vegetitative Index Standard Process For"),
+        "Save Ground Control Points For": SGN.i18n.p("drone.display.save_ground_control_points_for", "Save Ground Control Points For"),
+        "Quality Control Plot Images For": SGN.i18n.p("drone.display.quality_control_plot_images_for", "Quality Control Plot Images For"),
+        "Delete Imaging Event": SGN.i18n.p("drone.interface.delete_imaging_event", "Delete Imaging Event"),
+        "Loading Plot Image Summary...": SGN.i18n.p("drone.display.loading_plot_image_summary", "Loading Plot Image Summary..."),
+        "Image Band(s)": SGN.i18n.p("drone.display.image_band_s", "Image Band(s)"),
+        "Images/Actions": SGN.i18n.p("drone.display.images_actions", "Images/Actions"),
+        "Name": SGN.i18n.p("global.search.bulk.name", "Name"),
+        "Type": SGN.i18n.p("global.search.features.type.f65b938", "Type"),
+        "View Images": SGN.i18n.p("drone.display.view_images", "View Images"),
+        "Raw Images": SGN.i18n.p("drone.display.raw_images", "Raw Images"),
+        "Assigned Plot-Polygon Images": SGN.i18n.p("drone.display.assigned_plot_polygon_images", "Assigned Plot-Polygon Images"),
+        "Stitched Image": SGN.i18n.p("drone.display.stitched_image", "Stitched Image"),
+        "By": SGN.i18n.p("drone.display.by", "By"),
+        "Rotated Image": SGN.i18n.p("drone.display.rotated_image", "Rotated Image"),
+        "Rotated Angle": SGN.i18n.p("drone.display.rotated_angle", "Rotated Angle"),
+        "Cropped Image": SGN.i18n.p("drone.display.cropped_image", "Cropped Image"),
+        "Cropped Polygon": SGN.i18n.p("drone.display.cropped_polygon", "Cropped Polygon"),
+        "Vegetative index cannot be calculated on an image with a single channel.": SGN.i18n.p("drone.display.vegetative_index_cannot_be_calculated_on_an_image_with_a_single_channel", "Vegetative index cannot be calculated on an image with a single channel."),
+        "You can merge bands into a multi-channel image using the \"Merge Drone Run Bands\" button below this table.": SGN.i18n.p("drone.display.you_can_merge_bands_into_a_multi_channel_image_using_the_merge_drone_run_bands_button_below_this_table", "You can merge bands into a multi-channel image using the \"Merge Drone Run Bands\" button below this table."),
+        "If the standard process was run and vegetative indices were selected, merged images should appear at the bottom of this table.": SGN.i18n.p("drone.display.if_the_standard_process_was_run_and_vegetative_indices_were_selected_merged_images_should_appear_at_the_bottom_of", "If the standard process was run and vegetative indices were selected, merged images should appear at the bottom of this table."),
+        "Denoised imagery not found. The standard process should have covered all supported image cases. Please try again or contact us.": SGN.i18n.p("drone.display.denoised_imagery_not_found_the_standard_process_should_have_covered_all_supported_image_cases_please_try_again_or", "Denoised imagery not found. The standard process should have covered all supported image cases. Please try again or contact us."),
+        "Cropped imagery not found. The standard process should have covered all supported image cases. Please try again or contact us.": SGN.i18n.p("drone.display.cropped_imagery_not_found_the_standard_process_should_have_covered_all_supported_image_cases_please_try_again_or", "Cropped imagery not found. The standard process should have covered all supported image cases. Please try again or contact us."),
+        "Rotated imagery not found. The standard process should have covered all supported image cases. Please try again or contact us.": SGN.i18n.p("drone.display.rotated_imagery_not_found_the_standard_process_should_have_covered_all_supported_image_cases_please_try_again_or", "Rotated imagery not found. The standard process should have covered all supported image cases. Please try again or contact us."),
+        "Threshold Value": SGN.i18n.p("drone.display.threshold_value", "Threshold Value"),
+        "Create/View Plot Polygons": SGN.i18n.p("drone.display.create_view_plot_polygons", "Create/View Plot Polygons"),
+        "Field Trial: ": SGN.i18n.p("drone.display.field_trial", "Field Trial: "),
+        "Imaging Events": SGN.i18n.p("drone.display.imaging_events", "Imaging Events"),
+        "No Plot Polygons Assigned": SGN.i18n.p("drone.display.no_plot_polygons_assigned", "No Plot Polygons Assigned"),
+        "Plot Polygons": SGN.i18n.p("drone.interface.plot_polygons", "Plot Polygons")
+    };
+    if (captions['Field Trial: '] === 'Field Trial: ' || captions['Imaging Events'] === 'Imaging Events') return;
+    function replaceText(node) {
+        if (!node || node.nodeType !== 3) return;
+        var match = /^(\s*)([\s\S]*?)(\s*)$/.exec(node.data);
+        if (Object.prototype.hasOwnProperty.call(captions, match[2]) && captions[match[2]] !== match[2]) {
+            node.data = match[1] + captions[match[2]] + match[3];
+        }
+    }
+    function firstText(element) {
+        Array.prototype.some.call(element.childNodes, function (node) {
+            if (node.nodeType !== 3 || !node.data.trim()) return false;
+            replaceText(node);
+            return true;
+        });
+    }
+    function isValueCell(element) {
+        return !!element.closest('.col-sm-7');
+    }
+    root.querySelectorAll('.row > .col-sm-5 > b, .col-sm-3 > b, .col-sm-6 > b, table thead th').forEach(function (element) {
+        if (!isValueCell(element)) firstText(element);
+    });
+    root.querySelectorAll('table td > b').forEach(function (element) {
+        if (isValueCell(element)) return;
+        var text = element.textContent;
+        var previous = element.previousSibling;
+        if ((text === 'Name' && element === element.parentNode.firstChild) ||
+            ((text === 'Description' || text === 'Type') && previous && previous.nodeName === 'BR')) firstText(element);
+    });
+    root.querySelectorAll('.well > .row > .col-sm-6 > h5').forEach(function (element) {
+        if (!isValueCell(element)) firstText(element);
+    });
+    var buttonCaptions = {
+        drone_runs_trial_view_timeseries: ['View TimeSeries'],
+        drone_imagery_drone_run_calculate_gdd: ['Recalculate GDD', 'Calculate GDD'],
+        drone_imagery_drone_run_calculate_precipitation_sum: ['Recalculate Precipitation Sum', 'Calculate Precipitation Sum'],
+        project_drone_imagery_standard_process: ['Run Standard Process For'],
+        project_drone_imagery_standard_process_minimal_vi: ['Run Minimal Vegetitative Index Standard Process For'],
+        project_drone_imagery_ground_control_points: ['Save Ground Control Points For'],
+        project_drone_imagery_quality_control_check: ['Quality Control Plot Images For'],
+        project_drone_imagery_delete_drone_run: ['Delete Imaging Event'],
+        project_drone_imagery_plot_polygons: ['Create/View Plot Polygons']
+    };
+    root.querySelectorAll('button[name], button.disabled').forEach(function (element) {
+        if (isValueCell(element)) {
+            var row = element.closest('.row');
+            var label = row && row.querySelector(':scope > .col-sm-5 > b');
+            var allowed = label && ['Averaged Temperature Growing Degree Days', 'Growing Degree Days', 'Averaged Precipitation Sum', 'Precipitation Sum'].some(function (source) {
+                return label.textContent === source || label.textContent === captions[source];
+            });
+            if (!allowed) return;
+        }
+        if (element.hasAttribute('name')) {
+            var allowedCaptions = buttonCaptions[element.getAttribute('name')];
+            var first = Array.prototype.find.call(element.childNodes, function (node) { return node.nodeType === 3 && node.data.trim(); });
+            if (allowedCaptions && first && allowedCaptions.indexOf(first.data.trim()) !== -1) replaceText(first);
+        } else {
+            Array.prototype.forEach.call(element.childNodes, replaceText);
+        }
+    });
+    root.querySelectorAll('span.label').forEach(function (element) {
+        if (!isValueCell(element)) Array.prototype.forEach.call(element.childNodes, replaceText);
+    });
+    root.querySelectorAll('a[onclick^="manageDroneImageryDroneRunBandDisplay"], div[name="drone_run_band_total_plot_image_div"] .panel-title > a').forEach(function (element) {
+        if (!isValueCell(element)) firstText(element);
+    });
+    root.querySelectorAll('a[data-parent^="#drone_runs_trial_accordion_table_wrapper_"]').forEach(function (element) {
+        if (isValueCell(element)) return;
+        var first = element.firstChild;
+        if (first && first.nodeType === 3 && first.data.indexOf('Field Trial: ') === 0) {
+            first.data = captions['Field Trial: '] + first.data.slice('Field Trial: '.length);
+        }
+        var last = element.lastChild;
+        var match = last && last.nodeType === 3 && /^([\s\S]*)\((\d+) Imaging Events\)(\s*)$/.exec(last.data);
+        if (match) last.data = match[1] + '(' + captions['Imaging Events'] + ': ' + match[2] + ')' + match[3];
+    });
+    root.querySelectorAll('button[name="project_drone_imagery_plot_polygons"]').forEach(function (button) {
+        if (isValueCell(button)) return;
+        Array.prototype.forEach.call(button.parentNode.childNodes, function (node) {
+            if (node.nodeType !== 3) return;
+            var match = /^(\s*)(\d+) Plot Polygons(\s*)$/.exec(node.data);
+            if (match && captions['Plot Polygons'] !== 'Plot Polygons') node.data = match[1] + captions['Plot Polygons'] + ': ' + match[2] + match[3];
+            else replaceText(node);
+        });
     });
 }
 

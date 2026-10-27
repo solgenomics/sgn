@@ -1,3 +1,6 @@
+<%once>
+use HTML::Entities ();
+</%once>
 
 <%args>
 $trial_id
@@ -8,21 +11,21 @@ $trial_name => undef
   <div class="modal-dialog modal-lg" role="document">
     <div class="modal-content">
       <div class="modal-header">
-        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-        <h4 class="modal-title" id="addSubplotsDialog">Add subplots to <% $trial_name %></h4>
+        <button type="button" class="close" data-dismiss="modal" aria-label="<% $c->i18n->p('trial.upload.dialog.close', "Close") |h %>"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title" id="addSubplotsDialog"><% $c->i18n->p('trial.title.add_subplots_per_plot.add_subplots_to_trial_name', "Add subplots to %{trial_name}", {trial_name => $trial_name}) |h %></h4>
       </div>
       <div class="modal-body">
         <div class="container-fluid">
 
 	       <form class="form-horizontal" role="form" method="post" id="add_subplots_dialog_form" name="add_subplots_dialog_form">
 	        <div class="form-group">
-      	      <label class="col-sm-4 control-label">Number of subplots per plot: </label>
+              <label class="col-sm-4 control-label"><% $c->i18n->p('trial.add_subplots_per_plot.subplots_per_plot', "Number of subplots per plot: ") |h %></label>
       	      <div class="col-sm-8" >
                 <input name="add_subplots_per_plot_num" id="add_subplots_per_plot_num" class="form-control" type="number" autofocus/>
               </div>
 	        </div>
             <div class="form-group">
-      	      <label class="col-sm-4 control-label">Inherits Treatment(s) From Plots: </label>
+              <label class="col-sm-4 control-label"><% $c->i18n->p('trial.entry.treatment_inheritance', "Inherits Treatment(s) From Plots: ") |h %></label>
       	      <div class="col-sm-8" >
                 <input name="add_subplots_per_plot_inherit_treatments" id="add_subplots_per_plot_inherit_treatments" type="checkbox" checked disabled/>
               </div>
@@ -32,8 +35,8 @@ $trial_name => undef
         </div>
       </div>
       <div class="modal-footer">
-        <button type="button" class="btn btn-default" name="add_subplots_cancel_button" id="add_subplots_cancel_button" data-dismiss="modal">Close</button>
-	      <button type="button" class="btn btn-primary" name="add_subplots_save_button" id="add_subplots_save_button" title="Save">Save</button>
+        <button type="button" class="btn btn-default" name="add_subplots_cancel_button" id="add_subplots_cancel_button" data-dismiss="modal"><% $c->i18n->p('trial.upload.dialog.close', "Close") |h %></button>
+              <button type="button" class="btn btn-primary" name="add_subplots_save_button" id="add_subplots_save_button" title="<% $c->i18n->p('folder.new.save', "Save") |h %>"><% $c->i18n->p('folder.new.save', "Save") |h %></button>
       </div>
     </div>
   </div>
@@ -43,35 +46,35 @@ $trial_name => undef
     <div class="modal-dialog modal-lg" role="document">
         <div class="modal-content">
             <div class="modal-header">
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                <h4 class="modal-title" id="uploadSubplotsDialog">Upload subplots to <% $trial_name %></h4>
+                <button type="button" class="close" data-dismiss="modal" aria-label="<% $c->i18n->p('trial.upload.dialog.close', "Close") |h %>"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="uploadSubplotsDialog"><% $c->i18n->p('trial.title.add_subplots_per_plot.upload_subplots_to_trial_name', "Upload subplots to %{trial_name}", {trial_name => $trial_name}) |h %></h4>
             </div>
             <div class="modal-body">
                 <div class="container-fluid">
 
-                    <&| /page/explanation.mas, title=>'Template information' &>
+                    <&| /page/explanation.mas, title => HTML::Entities::encode_entities($c->i18n->p("trial.common.template_info", "Template information")) &>
                         <p>
-                            <b>File format information</b>
+                            <b><% $c->i18n->p('trial.upload.dialog.file_format_info', "File format information") |h %></b>
                             <br>
-                            <a id="trial_upload_subplots_spreadsheet_info_format">Spreadsheet format</a>
+                            <a id="trial_upload_subplots_spreadsheet_info_format"><% $c->i18n->p('trial.upload.coordinates.spreadsheet', "Spreadsheet format") |h %></a>
                         </p>
                     </&>
 
                     <form class="form-horizontal" role="form" method="post" enctype="multipart/form-data" encoding="multipart/form-data" id="upload_subplots_dialog_form" name="upload_subplots_dialog_form">
                         <div class="form-group">
-                            <label class="col-sm-4 control-label">Upload File (.xls or .xlsx): </label>
+                            <label class="col-sm-4 control-label"><% $c->i18n->p('trial.entry.upload_file', "Upload File (.xls or .xlsx): ") |h %></label>
                             <div class="col-sm-8" >
                                 <input type="file" name="trial_upload_subplots_file" id="trial_upload_subplots_file" encoding="multipart/form-data" />
                             </div>
                         </div>
                         <div class="form-group">
-                            <label class="col-sm-4 control-label">Maximum number of subplots per plot: </label>
+                            <label class="col-sm-4 control-label"><% $c->i18n->p('trial.add_subplots_per_plot.max_subplots_plot', "Maximum number of subplots per plot: ") |h %></label>
                             <div class="col-sm-8" >
                                 <input name="upload_subplots_per_plot_number" id="upload_subplots_per_plot_number" class="form-control" type="number" />
                             </div>
                         </div>
                         <div class="form-group">
-                            <label class="col-sm-4 control-label">Inherits Treatment(s) From Plots: </label>
+                            <label class="col-sm-4 control-label"><% $c->i18n->p('trial.entry.treatment_inheritance', "Inherits Treatment(s) From Plots: ") |h %></label>
                             <div class="col-sm-8" >
                                 <input name="upload_subplots_per_plot_inherit_treatments" id="upload_subplots_per_plot_inherit_treatments" type="checkbox" checked disabled/>
                             </div>
@@ -80,8 +83,8 @@ $trial_name => undef
                 </div>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-default" name="upload_subplots_cancel_button" id="upload_subplots_cancel_button" data-dismiss="modal">Close</button>
-                <button type="button" class="btn btn-primary" name="upload_subplots_save_button" id="upload_subplots_save_button" title="Upload">Upload</button>
+                <button type="button" class="btn btn-default" name="upload_subplots_cancel_button" id="upload_subplots_cancel_button" data-dismiss="modal"><% $c->i18n->p('trial.upload.dialog.close', "Close") |h %></button>
+                <button type="button" class="btn btn-primary" name="upload_subplots_save_button" id="upload_subplots_save_button" title="<% $c->i18n->p('trial.upload.dialog.upload', "Upload") |h %>"><% $c->i18n->p('trial.upload.dialog.upload', "Upload") |h %></button>
             </div>
         </div>
     </div>
@@ -91,18 +94,18 @@ $trial_name => undef
     <div class="modal-dialog modal-lg" role="document">
         <div class="modal-content">
             <div class="modal-header" style="text-align: center">
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                <h4 class="modal-title" id="uploadSubplotsInfoDialog">Upload Template Information</h4>
+                <button type="button" class="close" data-dismiss="modal" aria-label="<% $c->i18n->p('trial.upload.dialog.close', "Close") |h %>"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="uploadSubplotsInfoDialog"><% $c->i18n->p('trial.upload.dialog.template_info', "Upload Template Information") |h %></h4>
             </div>
             <div class="modal-body">
                 <div class="container-fluid">
-                    <b>This is for recording individual subplots in a plot.</b>
+                    <b><% $c->i18n->p('trial.add_subplots_per_plot.template_subplots_plot', "This is for recording individual subplots in a plot.") |h %></b>
                     <br/>
-                    <b>Subplot names may be uploaded in an Excel file (.xls or .xlsx)</b>
+                    <b><% $c->i18n->p('trial.add_subplots_per_plot.excel_subplot_names', "Subplot names may be uploaded in an Excel file (.xls or .xlsx)") |h %></b>
                     <br />
-                    <b>Header:</b>
+                    <b><% $c->i18n->p('trial.upload.dialog.header_label', "Header:") |h %></b>
                     <br>
-                    The first row (header) should contain the following:
+                    <% $c->i18n->p('trial.add_subplots_per_plot.first_header', "The first row (header) should contain the following:") |h %>
                     <br />
 
                     <table class="table table-hover table-bordered table-condensed" >
@@ -115,15 +118,15 @@ $trial_name => undef
                         </tbody>
                     </table>
 
-                    <b>Required fields:</b>
+                    <b><% $c->i18n->p('trial.upload.dialog.required_fields', "Required fields:") |h %></b>
                     <br/>
-                    plot_name (must exist in the database already)
+                    plot_name (<% $c->i18n->p('trial.add_subplots_per_plot.plot_must_exist', "must exist in the database already") |h %>)
                     <br />
-                    subplot_name (must be globally unique. usually this is a concatenation of plot_name + subplot_number, such as MyTrial_plot101_subplot1)
+                    subplot_name (<% $c->i18n->p('trial.add_subplots_per_plot.subplot_name_unique', "must be globally unique. usually this is a concatenation of plot_name + subplot_number, such as MyTrial_plot101_subplot1") |h %>)
                 </div>
             </div>
             <div class="modal-footer">
-                <button id="close_upload_subplot_info_dialog" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                <button id="close_upload_subplot_info_dialog" type="button" class="btn btn-default" data-dismiss="modal"><% $c->i18n->p('trial.upload.dialog.close', "Close") |h %></button>
             </div>
         </div>
     </div>
@@ -133,35 +136,35 @@ $trial_name => undef
     <div class="modal-dialog modal-lg" role="document">
         <div class="modal-content">
             <div class="modal-header">
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                <h4 class="modal-title" id="uploadSubplotsWithIndexNumberDialog">Upload subplots to <% $trial_name %> with subplot index number</h4>
+                <button type="button" class="close" data-dismiss="modal" aria-label="<% $c->i18n->p('trial.upload.dialog.close', "Close") |h %>"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="uploadSubplotsWithIndexNumberDialog"><% $c->i18n->p('trial.title.add_subplots_per_plot.upload_subplots_to_trial_name_with_subplot_index_number', "Upload subplots to %{trial_name} with subplot index number", {trial_name => $trial_name}) |h %></h4>
             </div>
             <div class="modal-body">
                 <div class="container-fluid">
 
-                    <&| /page/explanation.mas, title=>'Template information' &>
+                    <&| /page/explanation.mas, title => HTML::Entities::encode_entities($c->i18n->p("trial.common.template_info", "Template information")) &>
                         <p>
-                            <b>File format information</b>
+                            <b><% $c->i18n->p('trial.upload.dialog.file_format_info', "File format information") |h %></b>
                             <br>
-                            <a id="trial_upload_subplots_with_index_number_spreadsheet_info_format">Spreadsheet format</a>
+                            <a id="trial_upload_subplots_with_index_number_spreadsheet_info_format"><% $c->i18n->p('trial.upload.coordinates.spreadsheet', "Spreadsheet format") |h %></a>
                         </p>
                     </&>
 
                     <form class="form-horizontal" role="form" method="post" enctype="multipart/form-data" encoding="multipart/form-data" id="upload_subplots_with_index_number_dialog_form" name="upload_subplots_with_index_number_dialog_form">
                         <div class="form-group">
-                            <label class="col-sm-4 control-label">Upload File (.xls or .xlsx): </label>
+                            <label class="col-sm-4 control-label"><% $c->i18n->p('trial.entry.upload_file', "Upload File (.xls or .xlsx): ") |h %></label>
                             <div class="col-sm-8" >
                                 <input type="file" name="trial_upload_subplots_with_index_number_file" id="trial_upload_subplots_with_index_number_file" encoding="multipart/form-data" />
                             </div>
                         </div>
                         <div class="form-group">
-                            <label class="col-sm-4 control-label">Maximum number of subplots per plot: </label>
+                            <label class="col-sm-4 control-label"><% $c->i18n->p('trial.add_subplots_per_plot.max_subplots_plot', "Maximum number of subplots per plot: ") |h %></label>
                             <div class="col-sm-8" >
                                 <input name="upload_subplots_with_index_number_per_plot_number" id="upload_subplots_with_index_number_per_plot_number" class="form-control" type="number" />
                             </div>
                         </div>
                         <div class="form-group">
-                            <label class="col-sm-4 control-label">Inherits Treatment(s) From Plots: </label>
+                            <label class="col-sm-4 control-label"><% $c->i18n->p('trial.entry.treatment_inheritance', "Inherits Treatment(s) From Plots: ") |h %></label>
                             <div class="col-sm-8" >
                                 <input name="upload_subplots_with_index_number_inherit_treatments" id="upload_subplots_with_index_number_inherit_treatments" type="checkbox" checked disabled/>
                             </div>
@@ -170,8 +173,8 @@ $trial_name => undef
                 </div>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-default" name="upload_subplots_with_index_number_cancel_button" id="upload_subplots_with_index_number_cancel_button" data-dismiss="modal">Close</button>
-                <button type="button" class="btn btn-primary" name="upload_subplots_with_index_number_save_button" id="upload_subplots_with_index_number_save_button" title="Upload">Upload</button>
+                <button type="button" class="btn btn-default" name="upload_subplots_with_index_number_cancel_button" id="upload_subplots_with_index_number_cancel_button" data-dismiss="modal"><% $c->i18n->p('trial.upload.dialog.close', "Close") |h %></button>
+                <button type="button" class="btn btn-primary" name="upload_subplots_with_index_number_save_button" id="upload_subplots_with_index_number_save_button" title="<% $c->i18n->p('trial.upload.dialog.upload', "Upload") |h %>"><% $c->i18n->p('trial.upload.dialog.upload', "Upload") |h %></button>
             </div>
         </div>
     </div>
@@ -181,18 +184,18 @@ $trial_name => undef
     <div class="modal-dialog modal-lg" role="document">
         <div class="modal-content">
             <div class="modal-header" style="text-align: center">
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                <h4 class="modal-title" id="uploadSubplotsWithIndexNumberInfoDialog">Upload Template Information</h4>
+                <button type="button" class="close" data-dismiss="modal" aria-label="<% $c->i18n->p('trial.upload.dialog.close', "Close") |h %>"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="uploadSubplotsWithIndexNumberInfoDialog"><% $c->i18n->p('trial.upload.dialog.template_info', "Upload Template Information") |h %></h4>
             </div>
             <div class="modal-body">
                 <div class="container-fluid">
-                    <b>This is for recording individual subplots in a plot. The subplot name will be saved as a concatenation of plot_name + _ + subplot_index_number</b>
+                    <b><% $c->i18n->p('trial.subplots.template_description.subplots', "This is for recording individual subplots in a plot. The subplot name will be saved as a concatenation of plot_name + _ + subplot_index_number") |h %></b>
                     <br/>
-                    <b>May be uploaded in an Excel file (.xls or .xlsx)</b>
+                    <b><% $c->i18n->p("trial.common.excel_upload_help", "May be uploaded in an Excel file (.xls or .xlsx)") |h %></b>
                     <br />
-                    <b>Header:</b>
+                    <b><% $c->i18n->p('trial.upload.dialog.header_label', "Header:") |h %></b>
                     <br>
-                    The first row (header) should contain the following:
+                    <% $c->i18n->p('trial.add_subplots_per_plot.first_header', "The first row (header) should contain the following:") |h %>
                     <br />
 
                     <table class="table table-hover table-bordered table-condensed" >
@@ -205,15 +208,15 @@ $trial_name => undef
                         </tbody>
                     </table>
 
-                    <b>Required fields:</b>
+                    <b><% $c->i18n->p('trial.upload.dialog.required_fields', "Required fields:") |h %></b>
                     <br/>
-                    plot_name (must exist in the database already)
+                    plot_name (<% $c->i18n->p('trial.add_subplots_per_plot.plot_must_exist', "must exist in the database already") |h %>)
                     <br />
-                    subplot_index_number (must be a number. the saved subplot name will be a concatenation of plot_name + subplot_index_number, such as MyTrial_plot101_subplot1.)
+                    <% $c->i18n->p('trial.subplot.index_required_full', "subplot_index_number (must be a number. the saved subplot name will be a concatenation of plot_name + subplot_index_number, such as MyTrial_plot101_subplot1.)") |h %>
                 </div>
             </div>
             <div class="modal-footer">
-                <button id="close_upload_subplots_with_index_number_info_dialog" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                <button id="close_upload_subplots_with_index_number_info_dialog" type="button" class="btn btn-default" data-dismiss="modal"><% $c->i18n->p('trial.upload.dialog.close', "Close") |h %></button>
             </div>
         </div>
     </div>
@@ -223,35 +226,35 @@ $trial_name => undef
     <div class="modal-dialog modal-lg" role="document">
         <div class="modal-content">
             <div class="modal-header">
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                <h4 class="modal-title" id="uploadSubplotsWithNumSubplotsPerPlotDialog">Upload subplots to <% $trial_name %> with number of subplots per plot</h4>
+                <button type="button" class="close" data-dismiss="modal" aria-label="<% $c->i18n->p('trial.upload.dialog.close', "Close") |h %>"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="uploadSubplotsWithNumSubplotsPerPlotDialog"><% $c->i18n->p('trial.title.add_subplots_per_plot.upload_subplots_to_trial_name_with_number_of_subplots_per_plot', "Upload subplots to %{trial_name} with number of subplots per plot", {trial_name => $trial_name}) |h %></h4>
             </div>
             <div class="modal-body">
                 <div class="container-fluid">
 
-                    <&| /page/explanation.mas, title=>'Template information' &>
+                    <&| /page/explanation.mas, title => HTML::Entities::encode_entities($c->i18n->p("trial.common.template_info", "Template information")) &>
                         <p>
-                            <b>File format information</b>
+                            <b><% $c->i18n->p('trial.upload.dialog.file_format_info', "File format information") |h %></b>
                             <br>
-                            <a id="trial_upload_subplots_with_num_subplots_spreadsheet_info_format">Spreadsheet format</a>
+                            <a id="trial_upload_subplots_with_num_subplots_spreadsheet_info_format"><% $c->i18n->p('trial.upload.coordinates.spreadsheet', "Spreadsheet format") |h %></a>
                         </p>
                     </&>
 
                     <form class="form-horizontal" role="form" method="post" enctype="multipart/form-data" encoding="multipart/form-data" id="upload_subplots_with_num_subplots_dialog_form" name="upload_subplots_with_num_subplots_dialog_form">
                         <div class="form-group">
-                            <label class="col-sm-4 control-label">Upload File (.xls or .xlsx): </label>
+                            <label class="col-sm-4 control-label"><% $c->i18n->p('trial.entry.upload_file', "Upload File (.xls or .xlsx): ") |h %></label>
                             <div class="col-sm-8" >
                                 <input type="file" name="trial_upload_subplots_with_number_of_subplots_file" id="trial_upload_subplots_with_number_of_subplots_file" encoding="multipart/form-data" />
                             </div>
                         </div>
                         <div class="form-group">
-                            <label class="col-sm-4 control-label">Maximum number of subplots per plot: </label>
+                            <label class="col-sm-4 control-label"><% $c->i18n->p('trial.add_subplots_per_plot.max_subplots_plot', "Maximum number of subplots per plot: ") |h %></label>
                             <div class="col-sm-8" >
                                 <input name="upload_subplots_with_num_subplots_per_plot_number" id="upload_subplots_with_num_subplots_per_plot_number" class="form-control" type="number" />
                             </div>
                         </div>
                         <div class="form-group">
-                            <label class="col-sm-4 control-label">Inherits Treatment(s) From Plots: </label>
+                            <label class="col-sm-4 control-label"><% $c->i18n->p('trial.entry.treatment_inheritance', "Inherits Treatment(s) From Plots: ") |h %></label>
                             <div class="col-sm-8" >
                                 <input name="upload_subplots_with_num_subplots_inherit_treatments" id="upload_subplots_with_num_subplots_inherit_treatments" type="checkbox" checked disabled/>
                             </div>
@@ -260,8 +263,8 @@ $trial_name => undef
                 </div>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-default" name="upload_subplots_with_num_subplots_cancel_button" id="upload_subplots_with_num_subplots_cancel_button" data-dismiss="modal">Close</button>
-                <button type="button" class="btn btn-primary" name="upload_subplots_with_num_subplots_save_button" id="upload_subplots_with_num_subplots_save_button" title="Upload">Upload</button>
+                <button type="button" class="btn btn-default" name="upload_subplots_with_num_subplots_cancel_button" id="upload_subplots_with_num_subplots_cancel_button" data-dismiss="modal"><% $c->i18n->p('trial.upload.dialog.close', "Close") |h %></button>
+                <button type="button" class="btn btn-primary" name="upload_subplots_with_num_subplots_save_button" id="upload_subplots_with_num_subplots_save_button" title="<% $c->i18n->p('trial.upload.dialog.upload', "Upload") |h %>"><% $c->i18n->p('trial.upload.dialog.upload', "Upload") |h %></button>
             </div>
         </div>
     </div>
@@ -271,18 +274,18 @@ $trial_name => undef
     <div class="modal-dialog modal-lg" role="document">
         <div class="modal-content">
             <div class="modal-header" style="text-align: center">
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                <h4 class="modal-title" id="uploadSubplotsWithNumSubplotsInfoDialog">Upload Template Information</h4>
+                <button type="button" class="close" data-dismiss="modal" aria-label="<% $c->i18n->p('trial.upload.dialog.close', "Close") |h %>"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="uploadSubplotsWithNumSubplotsInfoDialog"><% $c->i18n->p('trial.upload.dialog.template_info', "Upload Template Information") |h %></h4>
             </div>
             <div class="modal-body">
                 <div class="container-fluid">
-                    <b>This is for recording individual subplots in a plot. The subplot name will be saved as a concatenation of plot_name + _ + subplot_index_number for as many subplots as specfied by num_subplots_per_plot</b>
+                    <b><% $c->i18n->p('trial.subplot.index_count_full', "The subplot name will be saved as a concatenation of plot_name + _ + subplot_index_number for as many subplots as specfied by num_subplots_per_plot") |h %></b>
                     <br/>
-                    <b>May be uploaded in an Excel file (.xls or .xlsx)</b>
+                    <b><% $c->i18n->p("trial.common.excel_upload_help", "May be uploaded in an Excel file (.xls or .xlsx)") |h %></b>
                     <br />
-                    <b>Header:</b>
+                    <b><% $c->i18n->p('trial.upload.dialog.header_label', "Header:") |h %></b>
                     <br>
-                    The first row (header) should contain the following:
+                    <% $c->i18n->p('trial.add_subplots_per_plot.first_header', "The first row (header) should contain the following:") |h %>
                     <br />
 
                     <table class="table table-hover table-bordered table-condensed" >
@@ -295,15 +298,15 @@ $trial_name => undef
                         </tbody>
                     </table>
 
-                    <b>Required fields:</b>
+                    <b><% $c->i18n->p('trial.upload.dialog.required_fields', "Required fields:") |h %></b>
                     <br/>
-                    plot_name (must exist in the database already)
+                    plot_name (<% $c->i18n->p('trial.add_subplots_per_plot.plot_must_exist', "must exist in the database already") |h %>)
                     <br />
-                    num_subplots_per_plot (must be a number. the number of subplots in the plot. the saved subplot name will be a concatenation of plot_name + subplot_number, such as MyTrial_plot101_subplot1)
+                    <% $c->i18n->p('trial.subplot.count_required_full', "num_subplots_per_plot (must be a number. the number of subplots in the plot. the saved subplot name will be a concatenation of plot_name + subplot_number, such as MyTrial_plot101_subplot1)") |h %>
                 </div>
             </div>
             <div class="modal-footer">
-                <button id="close_upload_subplots_with_number_subplots_info_dialog" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                <button id="close_upload_subplots_with_number_subplots_info_dialog" type="button" class="btn btn-default" data-dismiss="modal"><% $c->i18n->p('trial.upload.dialog.close', "Close") |h %></button>
             </div>
         </div>
     </div>
@@ -383,14 +386,14 @@ jQuery(document).ready(function() {
                     alert(response.error);
                 }
                 else {
-                    alert("Successfully created subplot entries.");
+                    alert((window.SGN && SGN.i18n ? SGN.i18n.p('trial.subplots.create_success', "Successfully created subplot entries.") : "Successfully created subplot entries."));
                     jQuery('#add_subplots_dialog').modal("hide");
                     window.location.replace('/breeders/trial/'+<% $trial_id %>);
                 }
             },
             error: function(response) {
                 jQuery("#working_modal").modal("hide");
-                alert("An error occurred saving subplot entries");
+                alert((window.SGN && SGN.i18n ? SGN.i18n.p('trial.subplots.create_error', "An error occurred saving subplot entries") : "An error occurred saving subplot entries"));
             },
         });
 
@@ -401,7 +404,7 @@ jQuery(document).ready(function() {
         var uploadFile = jQuery("#trial_upload_subplots_file").val();
         jQuery('#upload_subplots_dialog_form').attr("action", "/ajax/breeders/trial/<% $trial_id %>/upload_subplots");
         if (uploadFile === '') {
-            alert("Please select a file");
+            alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("trial.card.entry_numbers.select_file", "Please select a file") : "Please select a file"));
             return;
         }
         jQuery("#upload_subplots_dialog_form").submit();
@@ -414,7 +417,7 @@ jQuery(document).ready(function() {
             jQuery('#working_modal').modal("show");
             if (uploadedSubplotsFile === '') {
                 jQuery('#working_modal').modal("hide");
-                alert("No file selected");
+                alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("trial.upload.no_file", "No file selected") : "No file selected"));
             }
         },
         complete: function (response) {
@@ -426,7 +429,7 @@ jQuery(document).ready(function() {
                 return;
             }
             if (response.success) {
-                alert("File uploaded successfully");
+                alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("trial.upload.file_success", "File uploaded successfully") : "File uploaded successfully"));
                 window.location.replace('/breeders/trial/'+<% $trial_id %>);
             }
         }
@@ -437,7 +440,7 @@ jQuery(document).ready(function() {
         var uploadFile = jQuery("#trial_upload_subplots_with_index_number_file").val();
         jQuery('#upload_subplots_with_index_number_dialog_form').attr("action", "/ajax/breeders/trial/<% $trial_id %>/upload_subplots_with_subplot_index_number");
         if (uploadFile === '') {
-            alert("Please select a file");
+            alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("trial.card.entry_numbers.select_file", "Please select a file") : "Please select a file"));
             return;
         }
         jQuery("#upload_subplots_with_index_number_dialog_form").submit();
@@ -450,7 +453,7 @@ jQuery(document).ready(function() {
             jQuery('#working_modal').modal("show");
             if (uploadedSubplotsFile === '') {
                 jQuery('#working_modal').modal("hide");
-                alert("No file selected");
+                alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("trial.upload.no_file", "No file selected") : "No file selected"));
             }
         },
         complete: function (response) {
@@ -462,7 +465,7 @@ jQuery(document).ready(function() {
                 return;
             }
             if (response.success) {
-                alert("File uploaded successfully");
+                alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("trial.upload.file_success", "File uploaded successfully") : "File uploaded successfully"));
                 window.location.replace('/breeders/trial/'+<% $trial_id %>);
             }
         }
@@ -473,7 +476,7 @@ jQuery(document).ready(function() {
         var uploadFile = jQuery("#trial_upload_subplots_with_number_of_subplots_file").val();
         jQuery('#upload_subplots_with_num_subplots_dialog_form').attr("action", "/ajax/breeders/trial/<% $trial_id %>/upload_subplots_with_number_of_subplots");
         if (uploadFile === '') {
-            alert("Please select a file");
+            alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("trial.card.entry_numbers.select_file", "Please select a file") : "Please select a file"));
             return;
         }
         jQuery("#upload_subplots_with_num_subplots_dialog_form").submit();
@@ -486,7 +489,7 @@ jQuery(document).ready(function() {
             jQuery('#working_modal').modal("show");
             if (uploadedSubplotsFile === '') {
                 jQuery('#working_modal').modal("hide");
-                alert("No file selected");
+                alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("trial.upload.no_file", "No file selected") : "No file selected"));
             }
         },
         complete: function (response) {
@@ -498,7 +501,7 @@ jQuery(document).ready(function() {
                 return;
             }
             if (response.success) {
-                alert("File uploaded successfully");
+                alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("trial.upload.file_success", "File uploaded successfully") : "File uploaded successfully"));
                 window.location.replace('/breeders/trial/'+<% $trial_id %>);
             }
         }

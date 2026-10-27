@@ -45,14 +45,14 @@ export function createAccessionTools({ qs }) {
       overlay.style.zIndex = 10050;
       overlay.innerHTML = `
         <div class="bg-white rounded shadow-lg p-4 w-full max-w-md">
-          <h3 class="text-lg font-semibold mb-3">Select filler accession</h3>
+          <h3 class="text-lg font-semibold mb-3">${jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("decision.js.select_filler_accession", "Select filler accession") : "Select filler accession")).html()}</h3>
           <select id="plot-filler-accession-dialog" class="w-full border rounded px-2 py-1">
             <option value=""></option>
           </select>
           <div class="mt-4 flex justify-end gap-2">
-            <button type="button" id="plot-filler-clear" class="px-3 py-1 border rounded">Clear</button>
-            <button type="button" id="plot-filler-cancel" class="px-3 py-1 border rounded">Cancel</button>
-            <button type="button" id="plot-filler-apply" class="px-3 py-1 bg-blue-600 text-white rounded">Apply</button>
+            <button type="button" id="plot-filler-clear" class="px-3 py-1 border rounded">${jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("global.search_wizard.clear", "Clear") : "Clear")).html()}</button>
+            <button type="button" id="plot-filler-cancel" class="px-3 py-1 border rounded">${jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("auth.legacy.cancel", "Cancel") : "Cancel")).html()}</button>
+            <button type="button" id="plot-filler-apply" class="px-3 py-1 bg-blue-600 text-white rounded">${jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("language.apply", "Apply") : "Apply")).html()}</button>
           </div>
         </div>
       `;
@@ -60,7 +60,7 @@ export function createAccessionTools({ qs }) {
 
       const select = qs('#plot-filler-accession-dialog');
       setAccessionSelectValue(select, currentValue);
-      initAccessionAutocomplete('#plot-filler-accession-dialog', 'Search accession', $(overlay).find('.bg-white'), '100%');
+      initAccessionAutocomplete('#plot-filler-accession-dialog', (window.SGN && window.SGN.i18n ? window.SGN.i18n.p("decision.js.search_accession", "Search accession") : 'Search accession'), $(overlay).find('.bg-white'), '100%');
 
       const close = value => {
         if (window.jQuery && $('#plot-filler-accession-dialog').data('select2')) {

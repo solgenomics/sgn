@@ -17,30 +17,30 @@ $sample_tissue_types => ()
 <& /breeders_toolbox/sampling_trials/create_sampling_trials_dialogs.mas, sampling_facilities=>$sampling_facilities, sample_tissue_types=>$sample_tissue_types &>
 
 <div class="well">
-<&| /page/info_section.mas, title=>'Uploaded NIRS Data', is_subsection=>1, collapsible=>1, collapsed=>1, subtitle=>'View and manage uploaded NIRS data files' &>
+<&| /page/info_section.mas, anchor_title => "Uploaded NIRS Data", title=>HTML::Entities::encode_entities($c->i18n->p("nirs.ui.uploaded_nirs_data", "Uploaded NIRS Data")), is_subsection=>1, collapsible=>1, collapsed=>1, subtitle=>HTML::Entities::encode_entities($c->i18n->p("nirs.ui.view_and_manage_uploaded_nirs_data_files", "View and manage uploaded NIRS data files")) &>
 
-    <&| /page/info_section.mas, title=>'Your Uploaded NIRS Data', is_subsection=>1, collapsible=>1, collapsed=>1 &>
+    <&| /page/info_section.mas, anchor_title => "Your Uploaded NIRS Data", title=>HTML::Entities::encode_entities($c->i18n->p("nirs.ui.your_uploaded_nirs_data", "Your Uploaded NIRS Data")), is_subsection=>1, collapsible=>1, collapsed=>1 &>
         <div class="panel panel-default">
             <div class="panel-body">
                 <& /breeders_toolbox/file_list.mas, files=>$nirs_files, allow_delete=>0 &>
             </div>
         </div>
     </&>
-    <&| /page/info_section.mas, title=>'Your Obsoleted NIRS Data', is_subsection=>1, collapsible=>1, collapsed=>1, subtitle=>'These are deleted NIRS files' &>
+    <&| /page/info_section.mas, anchor_title => "Your Obsoleted NIRS Data", title=>HTML::Entities::encode_entities($c->i18n->p("nirs.ui.your_obsoleted_nirs_data", "Your Obsoleted NIRS Data")), is_subsection=>1, collapsible=>1, collapsed=>1, subtitle=>HTML::Entities::encode_entities($c->i18n->p("nirs.ui.these_are_deleted_nirs_files", "These are deleted NIRS files")) &>
         <div class="panel panel-default">
             <div class="panel-body">
                 <& /breeders_toolbox/file_list.mas, files=>$deleted_nirs_files, allow_delete=>0 &>
             </div>
         </div>
     </&>
-    <&| /page/info_section.mas, title=>'All Uploaded NIRS Data', is_subsection=>1, collapsible=>1, collapsed=>1 &>
+    <&| /page/info_section.mas, anchor_title => "All Uploaded NIRS Data", title=>HTML::Entities::encode_entities($c->i18n->p("nirs.ui.all_uploaded_nirs_data", "All Uploaded NIRS Data")), is_subsection=>1, collapsible=>1, collapsed=>1 &>
         <div class="panel panel-default">
             <div class="panel-body">
                 <& /breeders_toolbox/file_list.mas, files=>$all_nirs_files, allow_delete=>0 &>
             </div>
         </div>
     </&>
-    <&| /page/info_section.mas, title=>'All Obsoleted NIRS Data', is_subsection=>1, collapsible=>1, collapsed=>1, subtitle=>'These are deleted NIRS files' &>
+    <&| /page/info_section.mas, anchor_title => "All Obsoleted NIRS Data", title=>HTML::Entities::encode_entities($c->i18n->p("nirs.ui.all_obsoleted_nirs_data", "All Obsoleted NIRS Data")), is_subsection=>1, collapsible=>1, collapsed=>1, subtitle=>HTML::Entities::encode_entities($c->i18n->p("nirs.ui.these_are_deleted_nirs_files", "These are deleted NIRS files")) &>
         <div class="panel panel-default">
             <div class="panel-body">
                 <& /breeders_toolbox/file_list.mas, files=>$all_deleted_nirs_files, allow_delete=>0 &>
@@ -51,29 +51,29 @@ $sample_tissue_types => ()
 </div>
 
 <div class="well">
-<&| /page/info_section.mas, title=>'NIRS Analyses', is_subsection=>1, collapsible=>1, collapsed=>1, subtitle=>'View and manage your NIRS analyses' &>
+<&| /page/info_section.mas, anchor_title => "NIRS Analyses", title=>HTML::Entities::encode_entities($c->i18n->p("nirs.ui.nirs_analyses", "NIRS Analyses")), is_subsection=>1, collapsible=>1, collapsed=>1, subtitle=>HTML::Entities::encode_entities($c->i18n->p("nirs.ui.view_and_manage_your_nirs_analyses", "View and manage your NIRS analyses")) &>
     <div class="panel panel-default">
         <div class="panel-body">
             <table class="table table-bordered table-hover" id="analyses_by_user_table">
               <thead>
               <tr>
                 <th>
-                  Analysis Name
+                  <% $c->i18n->p("nirs.manage.column_analysis_name", "Analysis Name") |h %>
                 </th>
                 <th>
-                  Description
+                  <% $c->i18n->p("nirs.manage.column_description", "Description") |h %>
                 </th>
                 <th>
-                  Model Type
+                  <% $c->i18n->p("nirs.manage.column_model_type", "Model Type") |h %>
                 </th>
                 <th>
-                  Protocol
+                  <% $c->i18n->p("nirs.ui.protocol", "Protocol") |h %>
                 </th>
                 <th>
-                  Application
+                  <% $c->i18n->p("nirs.manage.column_application", "Application") |h %>
                 </th>
                 <th>
-                  Language
+                  <% $c->i18n->p("nirs.manage.column_language", "Language") |h %>
                 </th>
               </tr>
               </thead>
@@ -87,29 +87,29 @@ $sample_tissue_types => ()
 
 
 <div class="well">
-<&| /page/info_section.mas, title=>'Trained NIRS Models', is_subsection=>1, collapsible=>1, collapsed=>1, subtitle=>'View and manage your NIRS models' &>
+<&| /page/info_section.mas, anchor_title => "Trained NIRS Models", title=>HTML::Entities::encode_entities($c->i18n->p("nirs.ui.trained_nirs_models", "Trained NIRS Models")), is_subsection=>1, collapsible=>1, collapsed=>1, subtitle=>HTML::Entities::encode_entities($c->i18n->p("nirs.ui.view_and_manage_your_nirs_models", "View and manage your NIRS models")) &>
     <div class="panel panel-default">
         <div class="panel-body">
             <table class="table table-bordered table-hover" id="models_by_user_table">
               <thead>
               <tr>
                 <th>
-                  Model Name
+                  <% $c->i18n->p("nirs.manage.column_model_name", "Model Name") |h %>
                 </th>
                 <th>
-                  Description
+                  <% $c->i18n->p("nirs.manage.column_description", "Description") |h %>
                 </th>
                 <th>
-                  Model Type
+                  <% $c->i18n->p("nirs.manage.column_model_type", "Model Type") |h %>
                 </th>
                 <th>
-                  Protocol
+                  <% $c->i18n->p("nirs.manage.column_protocol", "Protocol") |h %>
                 </th>
                 <th>
-                  Application
+                  <% $c->i18n->p("nirs.manage.column_application", "Application") |h %>
                 </th>
                 <th>
-                  Language
+                  <% $c->i18n->p("nirs.manage.column_language", "Language") |h %>
                 </th>
               </tr>
               </thead>
@@ -132,3 +132,7 @@ jQuery(document).ready(function(){
     });
 });
 </script>
+
+<%once>
+use HTML::Entities ();
+</%once>

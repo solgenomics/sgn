@@ -1,3 +1,7 @@
+<%once>
+use HTML::Entities ();
+</%once>
+
 <%doc>
 
 =head1 NAME
@@ -20,24 +24,19 @@ $guide
 </%args>
 
 <%perl>
- my $message = qq | <p> It appears that a population <b>$name</></b> already 
-                   exists in the database. To continue loading QTL data
-                   for a new population, try with a different population 
-                   name.</p>
+ my $message = (qq | <p> | . HTML::Entities::encode_entities($c->i18n->p("analysis.qtl.ui.it_appears_that_a_population", "It appears that a population")) . qq | <b>$name</></b> | . HTML::Entities::encode_entities($c->i18n->p("analysis.qtl.ui.already_exists_in_the_database_to_continue_loading_qtl_data", "already \n                   exists in the database. To continue loading QTL data\n                   for a new population, try with a different population \n                   name.")) . qq |</p>
                          
-                  <p>If you are trying to load more or change data to an 
-                  exising population contact us.</p>
+                  <p>| . HTML::Entities::encode_entities($c->i18n->p("analysis.qtl.ui.if_you_are_trying_to_load_more_or_change_data", "If you are trying to load more or change data to an \n                  exising population contact us.")) . qq |</p>
 
-                 <p>Please go <a href="javascript:history.go(-1)">back</a> 
-                  and try to use a different name or if you keep having 
-                  problem with it contact us.</p>
-                 |;
+                 <p>| . HTML::Entities::encode_entities($c->i18n->p("analysis.qtl.ui.please_go", "Please go")) . qq | <a href="javascript:history.go(-1)">| . HTML::Entities::encode_entities($c->i18n->p("analysis.qtl.ui.back", "back")) . qq |</a>\x20
+                  | . HTML::Entities::encode_entities($c->i18n->p("analysis.qtl.ui.and_try_to_use_a_different_name_or_if_you", "and try to use a different name or if you keep having \n                  problem with it contact us.")) . qq |</p>
+                 |);
 
 
 
 </%perl>
 
-<& /page/page_title.mas, title => 'QTL population' &>
-<&| /page/info_section.mas, title => '', subtitle => $guide &>
+<& /page/page_title.mas, title => HTML::Entities::encode_entities($c->i18n->p("analysis.qtl.ui.qtl_population", 'QTL population')) &>
+<&| /page/info_section.mas, anchor_title => '', title => '', subtitle => $guide &>
   <% $message %>  
 </&>

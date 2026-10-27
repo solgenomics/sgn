@@ -5,96 +5,96 @@
     <div class="modal-dialog modal-xl" role="document">
         <div class="modal-content">
             <div class="modal-header">
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                <h4 class="modal-title" id="addNewObservationVariableDialog">Add New Observation Variable</h4>
+                <button type="button" class="close" data-dismiss="modal" aria-label="<% $c->i18n->p("global.dataset_publish.close", "Close") |h %>"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="addNewObservationVariableDialog"><% $c->i18n->p("phenotype.add_new_observation_variable", "Add New Observation Variable") |h %></h4>
             </div>
             <div class="modal-body">
                 <div class="container-fluid">
 
                     <&| /util/workflow.mas, id=> "add_new_trait_workflow" &>
-                        <&| /util/workflow.mas:step, title=> "Intro" &>
-                            <& /page/page_title.mas, title=>"Need a new observation variable?" &>
+                        <&| /util/workflow.mas:step, title=> $c->i18n->p("cross.ui.intro", "Intro") &>
+                            <& /page/page_title.mas, title=>HTML::Entities::encode_entities($c->i18n->p("phenotype.need_a_new_observation_variable", "Need a new observation variable?")) &>
                             <ul>
-                                <li>Please be sure the observation variable does not currently exist in the database using the trait search.</li>
-                                <li>Having many observation variables that are in fact recording the same thing is dangerous and can cause the database data to become fragmented.</li>
-                                <li>An observation variable is composed of a trait for the attribute being observed, a method describing how the attribute was measured, and a scale indicating the units of the observation.</li>
-                                <li>Having descriptive observation variables is critical for downstream analysis.</li>
+                                <li><% $c->i18n->p("phenotype.please_be_sure_the_observation_variable_does_not_currently_exist", "Please be sure the observation variable does not currently exist in the database using the trait search.") |h %></li>
+                                <li><% $c->i18n->p("phenotype.having_many_observation_variables_that_are_in_fact_recording_the", "Having many observation variables that are in fact recording the same thing is dangerous and can cause the database data to become fragmented.") |h %></li>
+                                <li><% $c->i18n->p("phenotype.an_observation_variable_is_composed_of_a_trait_for_the", "An observation variable is composed of a trait for the attribute being observed, a method describing how the attribute was measured, and a scale indicating the units of the observation.") |h %></li>
+                                <li><% $c->i18n->p("phenotype.having_descriptive_observation_variables_is_critical_for_downstream_analysis", "Having descriptive observation variables is critical for downstream analysis.") |h %></li>
                             </ul>
 
                             <br/><br/>
                             <center>
-                                <button class="btn btn-primary" name="add_new_observation_variable_ontology_add_button">Need a new ontology? Click here first.</button>
+                                <button class="btn btn-primary" name="add_new_observation_variable_ontology_add_button"><% $c->i18n->p("phenotype.need_a_new_ontology_click_here_first", "Need a new ontology? Click here first.") |h %></button>
                             </center>
 
                             <br/><br/>
                             <center>
-                                <button class="btn btn-primary" onclick="Workflow.complete(this);">Go to Next Step</button>
+                                <button class="btn btn-primary" onclick="Workflow.complete(this);"><% $c->i18n->p("cross.ui.go_to_next_step", "Go to Next Step") |h %></button>
                             </center>
                         </&>
 
-                        <&| /util/workflow.mas:step, title=> "Observation Variable" &>
-                            <& /page/page_title.mas, title=>"Define your observation variable" &>
+                        <&| /util/workflow.mas:step, title=> $c->i18n->p("accession.usage.header.variable", "Observation Variable") &>
+                            <& /page/page_title.mas, title=>HTML::Entities::encode_entities($c->i18n->p("phenotype.define_your_observation_variable", "Define your observation variable")) &>
 
-                            <p>An observation variable is composed of a trait for the attribute being observed, a method describing how the attribute was measured, and a scale indicating the units of the observation.</p>
+                            <p><% $c->i18n->p("phenotype.an_observation_variable_is_composed_of_a_trait_for_the", "An observation variable is composed of a trait for the attribute being observed, a method describing how the attribute was measured, and a scale indicating the units of the observation.") |h %></p>
                             <hr>
 
                             <center>
-                                <button class="btn btn-primary" name="add_new_observation_variable_ontology_add_button">Need a new ontology? Click here first.</button>
+                                <button class="btn btn-primary" name="add_new_observation_variable_ontology_add_button"><% $c->i18n->p("phenotype.need_a_new_ontology_click_here_first", "Need a new ontology? Click here first.") |h %></button>
                             </center>
                             <br/><br/>
 
                             <form class="form-horizontal">
                                 <div class="form-group">
-                                    <label class="col-sm-3 control-label">Observation Variable Ontology Name: </label>
+                                    <label class="col-sm-3 control-label"><% $c->i18n->p("phenotype.observation_variable_ontology_name", "Observation Variable Ontology Name:") |h %> </label>
                                     <div class="col-sm-9">
                                         <div id="add_new_observation_variable_ontology_select_div">
                                         </div>
                                     </div>
                                 </div>
                                 <div class="form-group">
-                                    <label class="col-sm-3 control-label">New Observation Variable Name: </label>
+                                    <label class="col-sm-3 control-label"><% $c->i18n->p("phenotype.new_observation_variable_name", "New Observation Variable Name:") |h %> </label>
                                     <div class="col-sm-9">
-                                        <input class="form-control" id="add_new_observation_variable_name" name="add_new_observation_variable_name" type="text" placeholder="e.g. total mass of fruit harvest from a plant using MachineX in kilograms"/>
+                                        <input class="form-control" id="add_new_observation_variable_name" name="add_new_observation_variable_name" type="text" placeholder="<% $c->i18n->p("phenotype.e_g", "e.g.") |h %> total mass of fruit harvest from a plant using MachineX in kilograms"/>
                                     </div>
                                 </div>
                                 <div class="form-group">
-                                    <label class="col-sm-3 control-label">New Observation Variable Definition: </label>
+                                    <label class="col-sm-3 control-label"><% $c->i18n->p("phenotype.new_observation_variable_definition", "New Observation Variable Definition:") |h %> </label>
                                     <div class="col-sm-9">
-                                        <input class="form-control" id="add_new_observation_variable_definition" name="add_new_observation_variable_definition" type="text" placeholder="e.g. total mass of fruit harvest from a plant using MachineX in kilograms"/>
+                                        <input class="form-control" id="add_new_observation_variable_definition" name="add_new_observation_variable_definition" type="text" placeholder="<% $c->i18n->p("phenotype.e_g", "e.g.") |h %> total mass of fruit harvest from a plant using MachineX in kilograms"/>
                                     </div>
                                 </div>
                             </form>
                             <br/>
 
                             <center>
-                                <button class="btn btn-primary" id="add_new_trait_observation_variable_step">Go to Next Step</button>
+                                <button class="btn btn-primary" id="add_new_trait_observation_variable_step"><% $c->i18n->p("cross.ui.go_to_next_step", "Go to Next Step") |h %></button>
                             </center>
 
                         </&>
-                        <&| /util/workflow.mas:step, title=> "Trait" &>
-                            <& /page/page_title.mas, title=>"Define your trait" &>
+                        <&| /util/workflow.mas:step, title=> $c->i18n->p("accession.stock.phenotype.header.trait", "Trait") &>
+                            <& /page/page_title.mas, title=>HTML::Entities::encode_entities($c->i18n->p("phenotype.define_your_trait", "Define your trait")) &>
 
                             <ul>
-                                <li>A trait defines the attribute being measured. It is one component of an observation variable; the others are a method and a scale.</li>
-                                <li>Here you can select a trait that already exists in an ontology in the database or you can add a new trait into an ontology.</li>
+                                <li><% $c->i18n->p("phenotype.a_trait_defines_the_attribute_being_measured_it_is_one", "A trait defines the attribute being measured. It is one component of an observation variable; the others are a method and a scale.") |h %></li>
+                                <li><% $c->i18n->p("phenotype.here_you_can_select_a_trait_that_already_exists_in", "Here you can select a trait that already exists in an ontology in the database or you can add a new trait into an ontology.") |h %></li>
                             </ul>
                             <hr>
 
                             <center>
-                                <button class="btn btn-primary" name="add_new_observation_variable_ontology_add_button">Need a new ontology? Click here first.</button>
+                                <button class="btn btn-primary" name="add_new_observation_variable_ontology_add_button"><% $c->i18n->p("phenotype.need_a_new_ontology_click_here_first", "Need a new ontology? Click here first.") |h %></button>
                             </center>
                             <br/><br/>
 
                             <form class="form-horizontal">
                                 <div class="form-group">
-                                    <label class="col-sm-3 control-label">Trait Ontology Name: </label>
+                                    <label class="col-sm-3 control-label"><% $c->i18n->p("phenotype.trait_ontology_name", "Trait Ontology Name:") |h %> </label>
                                     <div class="col-sm-9">
                                         <div id="add_new_trait_ontology_select_div">
                                         </div>
                                     </div>
                                 </div>
                                 <div class="form-group">
-                                    <label class="col-sm-3 control-label">Existing Traits in Selected Ontology: </label>
+                                    <label class="col-sm-3 control-label"><% $c->i18n->p("phenotype.existing_traits_in_selected_ontology", "Existing Traits in Selected Ontology:") |h %> </label>
                                     <div class="col-sm-9">
                                         <div id="add_new_trait_existing_trait_select_div">
                                         </div>
@@ -103,47 +103,47 @@
                                 <hr>
 
                                 <div class="well">
-                                    <h3>If the trait does not exist in the ontology you selected above, you can add a new trait into the ontology here.</h3>
+                                    <h3><% $c->i18n->p("phenotype.if_the_trait_does_not_exist_in_the_ontology_you", "If the trait does not exist in the ontology you selected above, you can add a new trait into the ontology here.") |h %></h3>
                                 </div>
 
                                 <div class="form-group">
-                                    <label class="col-sm-3 control-label">New Trait Name: </label>
+                                    <label class="col-sm-3 control-label"><% $c->i18n->p("phenotype.new_trait_name", "New Trait Name:") |h %> </label>
                                     <div class="col-sm-9">
-                                        <input class="form-control" id="add_new_trait_name" name="add_new_trait_name" type="text" placeholder="e.g. harvested fruit mass per plant"/>
+                                        <input class="form-control" id="add_new_trait_name" name="add_new_trait_name" type="text" placeholder="<% $c->i18n->p("phenotype.e_g", "e.g.") |h %> harvested fruit mass per plant"/>
                                     </div>
                                 </div>
                                 <div class="form-group">
-                                    <label class="col-sm-3 control-label">New Trait Definition: </label>
+                                    <label class="col-sm-3 control-label"><% $c->i18n->p("phenotype.new_trait_definition", "New Trait Definition:") |h %> </label>
                                     <div class="col-sm-9">
-                                        <input class="form-control" id="add_new_trait_definition" name="add_new_trait_definition" type="text" placeholder="e.g. the total mass of fruit harvested from a plant"/>
+                                        <input class="form-control" id="add_new_trait_definition" name="add_new_trait_definition" type="text" placeholder="<% $c->i18n->p("phenotype.e_g", "e.g.") |h %> the total mass of fruit harvested from a plant"/>
                                     </div>
                                 </div>
                             </form>
 
                             <center>
-                                <button class="btn btn-primary" id="add_new_trait_trait_step">Go to Next Step</button>
+                                <button class="btn btn-primary" id="add_new_trait_trait_step"><% $c->i18n->p("cross.ui.go_to_next_step", "Go to Next Step") |h %></button>
                             </center>
 
                         </&>
-                        <&| /util/workflow.mas:step, title=> "Method" &>
-                            <p>A method defines the how it was measured measured. It is one component of an observation variable; the others are a trait and a scale.</p>
+                        <&| /util/workflow.mas:step, title=> $c->i18n->p("phenotype.method.c39272e", "Method") &>
+                            <p><% $c->i18n->p("phenotype.a_method_defines_the_how_it_was_measured_measured_it", "A method defines the how it was measured measured. It is one component of an observation variable; the others are a trait and a scale.") |h %></p>
                             <hr>
 
                             <center>
-                                <button class="btn btn-primary" name="add_new_observation_variable_ontology_add_button">Need a new ontology? Click here first.</button>
+                                <button class="btn btn-primary" name="add_new_observation_variable_ontology_add_button"><% $c->i18n->p("phenotype.need_a_new_ontology_click_here_first", "Need a new ontology? Click here first.") |h %></button>
                             </center>
                             <br/><br/>
 
                             <form class="form-horizontal">
                                 <div class="form-group">
-                                    <label class="col-sm-3 control-label">Method Ontology Name: </label>
+                                    <label class="col-sm-3 control-label"><% $c->i18n->p("phenotype.method_ontology_name", "Method Ontology Name:") |h %> </label>
                                     <div class="col-sm-9">
                                         <div id="add_new_trait_method_ontology_select_div">
                                         </div>
                                     </div>
                                 </div>
                                 <div class="form-group">
-                                    <label class="col-sm-3 control-label">Existing Methods in Selected Ontology: </label>
+                                    <label class="col-sm-3 control-label"><% $c->i18n->p("phenotype.existing_methods_in_selected_ontology", "Existing Methods in Selected Ontology:") |h %> </label>
                                     <div class="col-sm-9">
                                         <div id="add_new_trait_existing_method_select_div">
                                         </div>
@@ -152,46 +152,46 @@
                                 <hr>
 
                                 <div class="well">
-                                    <h3>If the method does not exist in the ontology you selected above, you can add a new method into the ontology here.</h3>
+                                    <h3><% $c->i18n->p("phenotype.if_the_method_does_not_exist_in_the_ontology_you", "If the method does not exist in the ontology you selected above, you can add a new method into the ontology here.") |h %></h3>
                                 </div>
 
                                 <div class="form-group">
-                                    <label class="col-sm-3 control-label">New Method Name: </label>
+                                    <label class="col-sm-3 control-label"><% $c->i18n->p("phenotype.new_method_name", "New Method Name:") |h %> </label>
                                     <div class="col-sm-9">
-                                        <input class="form-control" id="add_new_trait_method_name" name="add_new_trait_method_name" type="text" placeholder="e.g. BrandA Mass Balance 0.001g Accuracy"/>
+                                        <input class="form-control" id="add_new_trait_method_name" name="add_new_trait_method_name" type="text" placeholder="<% $c->i18n->p("phenotype.e_g", "e.g.") |h %> BrandA Mass Balance 0.001g Accuracy"/>
                                     </div>
                                 </div>
                                 <div class="form-group">
-                                    <label class="col-sm-3 control-label">New Method Definition: </label>
+                                    <label class="col-sm-3 control-label"><% $c->i18n->p("phenotype.new_method_definition", "New Method Definition:") |h %> </label>
                                     <div class="col-sm-9">
-                                        <input class="form-control" id="add_new_trait_method_definition" name="add_new_trait_method_definition" type="text" placeholder="e.g. BrandA MachineX Mass Balance 0.001g Accuracy"/>
+                                        <input class="form-control" id="add_new_trait_method_definition" name="add_new_trait_method_definition" type="text" placeholder="<% $c->i18n->p("phenotype.e_g", "e.g.") |h %> BrandA MachineX Mass Balance 0.001g Accuracy"/>
                                     </div>
                                 </div>
                             </form>
 
                             <center>
-                                <button type="button" class="btn btn-primary" id="add_new_trait_method_step">Go to Next Step</button>
+                                <button type="button" class="btn btn-primary" id="add_new_trait_method_step"><% $c->i18n->p("cross.ui.go_to_next_step", "Go to Next Step") |h %></button>
                             </center>
 
                         </&>
-                        <&| /util/workflow.mas:step, title=> "Scale" &>
-                            <& /page/page_title.mas, title=>"Define your scale" &>
+                        <&| /util/workflow.mas:step, title=> $c->i18n->p("phenotype.scale", "Scale") &>
+                            <& /page/page_title.mas, title=>HTML::Entities::encode_entities($c->i18n->p("phenotype.define_your_scale", "Define your scale")) &>
 
                             <center>
-                                <button class="btn btn-primary" name="add_new_observation_variable_ontology_add_button">Need a new ontology? Click here first.</button>
+                                <button class="btn btn-primary" name="add_new_observation_variable_ontology_add_button"><% $c->i18n->p("phenotype.need_a_new_ontology_click_here_first", "Need a new ontology? Click here first.") |h %></button>
                             </center>
                             <br/><br/>
 
                             <form class="form-horizontal">
                                 <div class="form-group">
-                                    <label class="col-sm-3 control-label">Scale Ontology Name: </label>
+                                    <label class="col-sm-3 control-label"><% $c->i18n->p("phenotype.scale_ontology_name", "Scale Ontology Name:") |h %> </label>
                                     <div class="col-sm-9">
                                         <div id="add_new_trait_scale_ontology_select_div">
                                         </div>
                                     </div>
                                 </div>
                                 <div class="form-group">
-                                    <label class="col-sm-3 control-label">Existing Scales in Selected Ontology: </label>
+                                    <label class="col-sm-3 control-label"><% $c->i18n->p("phenotype.existing_scales_in_selected_ontology", "Existing Scales in Selected Ontology:") |h %> </label>
                                     <div class="col-sm-9">
                                         <div id="add_new_trait_existing_scale_select_div">
                                         </div>
@@ -200,71 +200,71 @@
                                 <hr>
 
                                 <div class="well">
-                                    <h3>If the scale does not exist in the ontology you selected above, you can add a new scale into the ontology here.</h3>
+                                    <h3><% $c->i18n->p("phenotype.if_the_scale_does_not_exist_in_the_ontology_you", "If the scale does not exist in the ontology you selected above, you can add a new scale into the ontology here.") |h %></h3>
                                 </div>
 
                                 <div class="form-group">
-                                    <label class="col-sm-3 control-label">New Scale Name: </label>
+                                    <label class="col-sm-3 control-label"><% $c->i18n->p("phenotype.new_scale_name", "New Scale Name:") |h %> </label>
                                     <div class="col-sm-9">
-                                        <input class="form-control" id="add_new_trait_scale_name" name="add_new_trait_scale_name" type="text" placeholder="e.g. mass in kilograms"/>
+                                        <input class="form-control" id="add_new_trait_scale_name" name="add_new_trait_scale_name" type="text" placeholder="<% $c->i18n->p("phenotype.e_g", "e.g.") |h %> mass in kilograms"/>
                                     </div>
                                 </div>
                                 <div class="form-group">
-                                    <label class="col-sm-3 control-label">New Scale Definition: </label>
+                                    <label class="col-sm-3 control-label"><% $c->i18n->p("phenotype.new_scale_definition", "New Scale Definition:") |h %> </label>
                                     <div class="col-sm-9">
-                                        <input class="form-control" id="add_new_trait_scale_definition" name="add_new_trait_scale_definition" type="text" placeholder="e.g. the mass in kilograms"/>
+                                        <input class="form-control" id="add_new_trait_scale_definition" name="add_new_trait_scale_definition" type="text" placeholder="<% $c->i18n->p("phenotype.e_g", "e.g.") |h %> the mass in kilograms"/>
                                     </div>
                                 </div>
                                 <div class="form-group">
-                                    <label class="col-sm-3 control-label">New Scale Format: </label>
+                                    <label class="col-sm-3 control-label"><% $c->i18n->p("phenotype.new_scale_format", "New Scale Format:") |h %> </label>
                                     <div class="col-sm-9">
                                         <select class="form-control" id="add_new_trait_scale_format" name="add_new_trait_scale_format" >
-                                            <option value="">Select One</option>
-                                            <option value="qualitative">qualitative</option>
-                                            <option value="quantitative">quantitative</option>
+                                            <option value=""><% $c->i18n->p("phenotype.select_one", "Select One") |h %></option>
+                                            <option value="qualitative"><% $c->i18n->p("phenotype.qualitative", "qualitative") |h %></option>
+                                            <option value="quantitative"><% $c->i18n->p("phenotype.quantitative", "quantitative") |h %></option>
                                         </select>
                                     </div>
                                 </div>
                                 <div class="form-group">
-                                    <label class="col-sm-3 control-label">New Scale Minimum: </label>
+                                    <label class="col-sm-3 control-label"><% $c->i18n->p("phenotype.new_scale_minimum", "New Scale Minimum:") |h %> </label>
                                     <div class="col-sm-9">
-                                        <input class="form-control" id="add_new_trait_scale_minimum" name="add_new_trait_scale_minimum" type="text" placeholder="e.g. 1"/>
+                                        <input class="form-control" id="add_new_trait_scale_minimum" name="add_new_trait_scale_minimum" type="text" placeholder="<% $c->i18n->p("phenotype.e_g", "e.g.") |h %> 1"/>
                                     </div>
                                 </div>
                                 <div class="form-group">
-                                    <label class="col-sm-3 control-label">New Scale Maximum: </label>
+                                    <label class="col-sm-3 control-label"><% $c->i18n->p("phenotype.new_scale_maximum", "New Scale Maximum:") |h %> </label>
                                     <div class="col-sm-9">
-                                        <input class="form-control" id="add_new_trait_scale_maximum" name="add_new_trait_scale_maximum" type="text" placeholder="e.g. 10000"/>
+                                        <input class="form-control" id="add_new_trait_scale_maximum" name="add_new_trait_scale_maximum" type="text" placeholder="<% $c->i18n->p("phenotype.e_g", "e.g.") |h %> 10000"/>
                                     </div>
                                 </div>
                                 <div class="form-group">
-                                    <label class="col-sm-3 control-label">New Scale Categories ('/' separated): </label>
+                                    <label class="col-sm-3 control-label"><% $c->i18n->p("phenotype.new_scale_categories_separated", "New Scale Categories ('/' separated):") |h %> </label>
                                     <div class="col-sm-9">
-                                        <input class="form-control" id="add_new_trait_scale_categories" name="add_new_trait_scale_categories" type="text" placeholder="e.g. 1/3/5/7"/>
+                                        <input class="form-control" id="add_new_trait_scale_categories" name="add_new_trait_scale_categories" type="text" placeholder="<% $c->i18n->p("phenotype.e_g", "e.g.") |h %> 1/3/5/7"/>
                                     </div>
                                 </div>
                                 <div class="form-group">
-                                    <label class="col-sm-3 control-label">New Scale Default Value: </label>
+                                    <label class="col-sm-3 control-label"><% $c->i18n->p("phenotype.new_scale_default_value", "New Scale Default Value:") |h %> </label>
                                     <div class="col-sm-9">
-                                        <input class="form-control" id="add_new_trait_scale_default" name="add_new_trait_scale_default" type="text" placeholder="e.g. 5"/>
+                                        <input class="form-control" id="add_new_trait_scale_default" name="add_new_trait_scale_default" type="text" placeholder="<% $c->i18n->p("phenotype.e_g", "e.g.") |h %> 5"/>
                                     </div>
                                 </div>
                             </form>
 
                             <center>
-                                <button type="button" class="btn btn-primary" id="add_new_trait_scale_step">Go to Next Step</button>
+                                <button type="button" class="btn btn-primary" id="add_new_trait_scale_step"><% $c->i18n->p("cross.ui.go_to_next_step", "Go to Next Step") |h %></button>
                             </center>
 
                         </&>
-                        <&| /util/workflow.mas:step, title=> "Confirm" &>
-                            <& /page/page_title.mas, title=>"Confirm you are creating this observation variable in the database" &>
+                        <&| /util/workflow.mas:step, title=> $c->i18n->p("global.graphical_filtering.confirm", "Confirm") &>
+                            <& /page/page_title.mas, title=>HTML::Entities::encode_entities($c->i18n->p("phenotype.confirm_you_are_creating_this_observation_variable_in_the_database", "Confirm you are creating this observation variable in the database")) &>
 
                             <center>
-                                <button class="btn btn-primary" id="add_new_trait_submit_button">Submit</button>
+                                <button class="btn btn-primary" id="add_new_trait_submit_button"><% $c->i18n->p("global.manage_file_share_dump.submit", "Submit") |h %></button>
                             </center>
                         </&>
-                        <&| /util/workflow.mas:complete, title=> "Complete" &>
-                            <& /page/page_title.mas, title=>"Finished! Your observation variable is now in the database" &>
+                        <&| /util/workflow.mas:complete, title=> $c->i18n->p("cross.ui.complete", "Complete") &>
+                            <& /page/page_title.mas, title=>HTML::Entities::encode_entities($c->i18n->p("phenotype.finished_your_observation_variable_is_now_in_the_database", "Finished! Your observation variable is now in the database")) &>
 
                             <div id="add_new_trait_added_observation_variable_div">
                             </div>
@@ -275,7 +275,7 @@
                 </div>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-default" data-dismiss="modal"><% $c->i18n->p("global.dataset_publish.close", "Close") |h %></button>
             </div>
         </div>
     </div>
@@ -285,55 +285,55 @@
     <div class="modal-dialog modal-xl" role="document">
         <div class="modal-content">
             <div class="modal-header">
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                <h4 class="modal-title" id="addNewObservationVariableOntologyDialog">Add New Ontology</h4>
+                <button type="button" class="close" data-dismiss="modal" aria-label="<% $c->i18n->p("global.dataset_publish.close", "Close") |h %>"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="addNewObservationVariableOntologyDialog"><% $c->i18n->p("phenotype.add_new_ontology", "Add New Ontology") |h %></h4>
             </div>
             <div class="modal-body">
                 <div class="container-fluid">
 
                     <&| /util/workflow.mas, id=> "add_new_ontology_workflow" &>
-                        <&| /util/workflow.mas:step, title=> "Intro" &>
-                            <& /page/page_title.mas, title=>"Start a new ontology" &>
+                        <&| /util/workflow.mas:step, title=> $c->i18n->p("cross.ui.intro", "Intro") &>
+                            <& /page/page_title.mas, title=>HTML::Entities::encode_entities($c->i18n->p("phenotype.start_a_new_ontology", "Start a new ontology")) &>
                             <ul>
-                                <li>In this workflow you can add a new ontology to the database. Once an ontology is added, you can add terms into it from the add observation variables workflow.</li>
-                                <li>Ontologies are tagged as being either for traits, methods, or scales</li>
+                                <li><% $c->i18n->p("phenotype.in_this_workflow_you_can_add_a_new_ontology_to", "In this workflow you can add a new ontology to the database. Once an ontology is added, you can add terms into it from the add observation variables workflow.") |h %></li>
+                                <li><% $c->i18n->p("phenotype.ontologies_are_tagged_as_being_either_for_traits_methods_or", "Ontologies are tagged as being either for traits, methods, or scales") |h %></li>
                             </ul>
 
                             <br/><br/>
                             <center>
-                                <button class="btn btn-primary" onclick="Workflow.complete(this);">Go to Next Step</button>
+                                <button class="btn btn-primary" onclick="Workflow.complete(this);"><% $c->i18n->p("cross.ui.go_to_next_step", "Go to Next Step") |h %></button>
                             </center>
                         </&>
 
-                        <&| /util/workflow.mas:step, title=> "Ontology" &>
-                            <& /page/page_title.mas, title=>"Define your ontology" &>
+                        <&| /util/workflow.mas:step, title=> $c->i18n->p("phenotype.ontology", "Ontology") &>
+                            <& /page/page_title.mas, title=>HTML::Entities::encode_entities($c->i18n->p("phenotype.define_your_ontology", "Define your ontology")) &>
 
                             <form class="form-horizontal">
                                 <div class="form-group">
-                                    <label class="col-sm-3 control-label">New Ontology Name: </label>
+                                    <label class="col-sm-3 control-label"><% $c->i18n->p("phenotype.new_ontology_name", "New Ontology Name:") |h %> </label>
                                     <div class="col-sm-9">
-                                        <input class="form-control" id="add_new_observation_variable_ontology_name" name="add_new_observation_variable_ontology_name" type="text" placeholder="e.g. MyBreedingProgram Grape Ontology"/>
+                                        <input class="form-control" id="add_new_observation_variable_ontology_name" name="add_new_observation_variable_ontology_name" type="text" placeholder="<% $c->i18n->p("phenotype.e_g", "e.g.") |h %> MyBreedingProgram Grape Ontology"/>
                                     </div>
                                 </div>
                                 <div class="form-group">
-                                    <label class="col-sm-3 control-label">New Ontology Definition: </label>
+                                    <label class="col-sm-3 control-label"><% $c->i18n->p("phenotype.new_ontology_definition", "New Ontology Definition:") |h %> </label>
                                     <div class="col-sm-9">
-                                        <input class="form-control" id="add_new_observation_variable_ontology_definition" name="add_new_observation_variable_ontology_definition" type="text" placeholder="e.g. description of the ontology"/>
+                                        <input class="form-control" id="add_new_observation_variable_ontology_definition" name="add_new_observation_variable_ontology_definition" type="text" placeholder="<% $c->i18n->p("phenotype.e_g_description_of_the_ontology", "e.g. description of the ontology") |h %>"/>
                                     </div>
                                 </div>
                                 <div class="form-group">
-                                    <label class="col-sm-3 control-label">New Ontology Database Identifier: </label>
+                                    <label class="col-sm-3 control-label"><% $c->i18n->p("phenotype.new_ontology_database_identifier", "New Ontology Database Identifier:") |h %> </label>
                                     <div class="col-sm-9">
-                                        <input class="form-control" id="add_new_observation_variable_ontology_db_name" name="add_new_observation_variable_ontology_db_name" type="text" placeholder="a unique identifier for the terms in the ontology e.g. CO322"/>
+                                        <input class="form-control" id="add_new_observation_variable_ontology_db_name" name="add_new_observation_variable_ontology_db_name" type="text" placeholder="<% $c->i18n->p("phenotype.a_unique_identifier_for_the_terms_in_the_ontology_e", "a unique identifier for the terms in the ontology e.g. CO322") |h %>"/>
                                     </div>
                                 </div>
                                 <div class="form-group">
-                                    <label class="col-sm-3 control-label">Ontology Type: </label>
+                                    <label class="col-sm-3 control-label"><% $c->i18n->p("phenotype.ontology_type", "Ontology Type:") |h %> </label>
                                     <div class="col-sm-9">
                                         <select class="form-control" id="add_new_observation_variable_ontology_type" name="add_new_observation_variable_ontology_type"/>
-                                            <option value="trait_ontology">Trait or Observation Variable</option>
-                                            <option value="method_ontology">Method</option>
-                                            <option value="unit_ontology">Scale</option>
+                                            <option value="trait_ontology"><% $c->i18n->p("phenotype.trait_or_observation_variable", "Trait or Observation Variable") |h %></option>
+                                            <option value="method_ontology"><% $c->i18n->p("phenotype.method.c39272e", "Method") |h %></option>
+                                            <option value="unit_ontology"><% $c->i18n->p("phenotype.scale", "Scale") |h %></option>
                                         </select>
                                     </div>
                                 </div>
@@ -341,12 +341,12 @@
                             <br/>
 
                             <center>
-                                <button class="btn btn-primary" id="add_new_trait_observation_variable_ontology_step">Store Ontology</button>
+                                <button class="btn btn-primary" id="add_new_trait_observation_variable_ontology_step"><% $c->i18n->p("phenotype.store_ontology", "Store Ontology") |h %></button>
                             </center>
 
                         </&>
-                        <&| /util/workflow.mas:complete, title=> "Complete" &>
-                            <& /page/page_title.mas, title=>"Finished! Your ontology is now in the database. Add new terms into it from the add observation variable workflow." &>
+                        <&| /util/workflow.mas:complete, title=> $c->i18n->p("cross.ui.complete", "Complete") &>
+                            <& /page/page_title.mas, title=>HTML::Entities::encode_entities($c->i18n->p("phenotype.finished_your_ontology_is_now_in_the_database_add_new", "Finished! Your ontology is now in the database. Add new terms into it from the add observation variable workflow.")) &>
                         </&>
 
                     </&><!-- End of workflow -->
@@ -354,7 +354,7 @@
                 </div>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-default" data-dismiss="modal"><% $c->i18n->p("global.dataset_publish.close", "Close") |h %></button>
             </div>
         </div>
     </div>
@@ -382,11 +382,11 @@ jQuery(document).ready(function() {
     var add_new_trait_new_observation_variable_definition;
     jQuery('#add_new_trait_observation_variable_step').click(function() {
         if (jQuery('#add_new_observation_variable_name').val() == '') {
-            alert('Please give a new observation variable name!');
+            alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("phenotype.please_give_a_new_observation_variable_name", "Please give a new observation variable name!") : 'Please give a new observation variable name!'));
             return false;
         }
         if (jQuery('#add_new_observation_variable_definition').val() == '') {
-            alert('Please give a new observation variable definition!');
+            alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("phenotype.please_give_a_new_observation_variable_definition", "Please give a new observation variable definition!") : 'Please give a new observation variable definition!'));
             return false;
         }
         var selected = [];
@@ -394,9 +394,9 @@ jQuery(document).ready(function() {
             selected.push(jQuery(this).val());
         });
         if (selected.length < 1) {
-            alert('Please select one observation variable ontology!');
+            alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("phenotype.please_select_one_observation_variable_ontology", "Please select one observation variable ontology!") : 'Please select one observation variable ontology!'));
         } else if (selected.length > 1) {
-            alert('Only select one observation variable ontology!');
+            alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("phenotype.only_select_one_observation_variable_ontology", "Only select one observation variable ontology!") : 'Only select one observation variable ontology!'));
         } else {
             add_new_trait_new_observation_variable_name = jQuery('#add_new_observation_variable_name').val();
             add_new_trait_new_observation_variable_definition = jQuery('#add_new_observation_variable_definition').val();
@@ -414,7 +414,7 @@ jQuery(document).ready(function() {
             selected.push(jQuery(this).val());
         });
         if (selected.length > 1) {
-            alert('Only select one trait ontology!');
+            alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("phenotype.only_select_one_trait_ontology", "Only select one trait ontology!") : 'Only select one trait ontology!'));
         } else {
             add_new_trait_new_trait_db_id = selected[0];
             get_select_box('all_ontology_terms', 'add_new_trait_existing_trait_select_div', { 'selectbox_name':'add_new_trait_existing_trait_select',    'selectbox_id':'add_new_trait_existing_trait_select', 'empty':1, 'db_id':selected[0], 'exclude_top_term':1 });
@@ -428,7 +428,7 @@ jQuery(document).ready(function() {
             selected.push(jQuery(this).val());
         });
         if (selected.length > 1) {
-            alert('Only select one method ontology!');
+            alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("phenotype.only_select_one_method_ontology", "Only select one method ontology!") : 'Only select one method ontology!'));
         } else {
             add_new_trait_new_method_db_id = selected[0];
             get_select_box('all_ontology_terms', 'add_new_trait_existing_method_select_div', { 'selectbox_name':'add_new_trait_existing_method_select',    'selectbox_id':'add_new_trait_existing_method_select', 'empty':1, 'db_id':selected[0], 'exclude_top_term':1 });
@@ -442,7 +442,7 @@ jQuery(document).ready(function() {
             selected.push(jQuery(this).val());
         });
         if (selected.length > 1) {
-            alert('Only select one scale ontology!');
+            alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("phenotype.only_select_one_scale_ontology", "Only select one scale ontology!") : 'Only select one scale ontology!'));
         } else {
             add_new_trait_new_scale_db_id = selected[0];
             get_select_box('all_ontology_terms', 'add_new_trait_existing_scale_select_div', { 'selectbox_name':'add_new_trait_existing_scale_select',    'selectbox_id':'add_new_trait_existing_scale_select', 'empty':1, 'db_id':selected[0], 'exclude_top_term':1 });
@@ -458,11 +458,11 @@ jQuery(document).ready(function() {
             add_new_trait_selected_trait_val = '';
         }
         if (add_new_trait_selected_trait_val == '' && jQuery('#add_new_trait_name').val() == '') {
-            alert('Please select an existing trait or give a new trait name!');
+            alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("phenotype.please_select_an_existing_trait_or_give_a_new_trait.7698475", "Please select an existing trait or give a new trait name!") : 'Please select an existing trait or give a new trait name!'));
             return false;
         }
         if (add_new_trait_selected_trait_val != '' && jQuery('#add_new_trait_name').val() != '') {
-            alert('Please select an existing trait or give a new trait name, and not both!');
+            alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("phenotype.please_select_an_existing_trait_or_give_a_new_trait.388f24a", "Please select an existing trait or give a new trait name, and not both!") : 'Please select an existing trait or give a new trait name, and not both!'));
             return false;
         }
         var selected = [];
@@ -470,16 +470,16 @@ jQuery(document).ready(function() {
             selected.push(jQuery(this).val());
         });
         if (selected.length < 1) {
-            alert('Please select one trait ontology!');
+            alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("phenotype.please_select_one_trait_ontology", "Please select one trait ontology!") : 'Please select one trait ontology!'));
         } else if (selected.length > 1) {
-            alert('Only select one trait ontology!');
+            alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("phenotype.only_select_one_trait_ontology", "Only select one trait ontology!") : 'Only select one trait ontology!'));
         } else {
             if (add_new_trait_selected_trait_val == '') {
                 if (jQuery('#add_new_trait_name').val() == ''){
-                    alert('Please give a new trait name!');
+                    alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("phenotype.please_give_a_new_trait_name", "Please give a new trait name!") : 'Please give a new trait name!'));
                 }
                 else if (jQuery('#add_new_trait_definition').val() == ''){
-                    alert('Please give a new trait definition!');
+                    alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("phenotype.please_give_a_new_trait_definition", "Please give a new trait definition!") : 'Please give a new trait definition!'));
                 }
                 else {
                     add_new_trait_new_trait_name = jQuery('#add_new_trait_name').val();
@@ -505,11 +505,11 @@ jQuery(document).ready(function() {
             add_new_trait_selected_method_val = '';
         }
         if (add_new_trait_selected_method_val == '' && jQuery('#add_new_trait_method_name').val() == '') {
-            alert('Please select an existing method or give a new method name!');
+            alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("phenotype.please_select_an_existing_method_or_give_a_new_method.79bdf77", "Please select an existing method or give a new method name!") : 'Please select an existing method or give a new method name!'));
             return false;
         }
         if (add_new_trait_selected_method_val != '' && jQuery('#add_new_trait_method_name').val() != '') {
-            alert('Please select an existing method or give a new method name, and not both!');
+            alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("phenotype.please_select_an_existing_method_or_give_a_new_method.78cb11d", "Please select an existing method or give a new method name, and not both!") : 'Please select an existing method or give a new method name, and not both!'));
             return false;
         }
         var selected = [];
@@ -517,16 +517,16 @@ jQuery(document).ready(function() {
             selected.push(jQuery(this).val());
         });
         if (selected.length < 1) {
-            alert('Please select one method ontology!');
+            alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("phenotype.please_select_one_method_ontology", "Please select one method ontology!") : 'Please select one method ontology!'));
         } else if (selected.length > 1) {
-            alert('Only select one method ontology!');
+            alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("phenotype.only_select_one_method_ontology", "Only select one method ontology!") : 'Only select one method ontology!'));
         } else {
             if (add_new_trait_selected_method_val == '') {
                 if (jQuery('#add_new_trait_method_name').val() == ''){
-                    alert('Please give a new method name!');
+                    alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("phenotype.please_give_a_new_method_name", "Please give a new method name!") : 'Please give a new method name!'));
                 }
                 else if (jQuery('#add_new_trait_method_definition').val() == ''){
-                    alert('Please give a new method definition!');
+                    alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("phenotype.please_give_a_new_method_definition", "Please give a new method definition!") : 'Please give a new method definition!'));
                 }
                 else {
                     add_new_trait_new_method_name = jQuery('#add_new_trait_method_name').val();
@@ -557,11 +557,11 @@ jQuery(document).ready(function() {
             add_new_trait_selected_scale_val = '';
         }
         if (add_new_trait_selected_scale_val == '' && jQuery('#add_new_trait_scale_name').val() == '') {
-            alert('Please select an existing scale or give a new scale name!');
+            alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("phenotype.please_select_an_existing_scale_or_give_a_new_scale.4891887", "Please select an existing scale or give a new scale name!") : 'Please select an existing scale or give a new scale name!'));
             return false;
         }
         if (add_new_trait_selected_scale_val != '' && jQuery('#add_new_trait_scale_name').val() != '') {
-            alert('Please select an existing scale or give a new scale name, and not both!');
+            alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("phenotype.please_select_an_existing_scale_or_give_a_new_scale.c43bd91", "Please select an existing scale or give a new scale name, and not both!") : 'Please select an existing scale or give a new scale name, and not both!'));
             return false;
         }
         var selected = [];
@@ -569,25 +569,25 @@ jQuery(document).ready(function() {
             selected.push(jQuery(this).val());
         });
         if (selected.length < 1) {
-            alert('Please select one scale ontology!');
+            alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("phenotype.please_select_one_scale_ontology", "Please select one scale ontology!") : 'Please select one scale ontology!'));
         } else if (selected.length > 1) {
-            alert('Only select one scale ontology!');
+            alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("phenotype.only_select_one_scale_ontology", "Only select one scale ontology!") : 'Only select one scale ontology!'));
         } else {
             if (add_new_trait_selected_scale_val == '') {
                 if (jQuery('#add_new_trait_scale_name').val() == ''){
-                    alert('Please give a new scale name!');
+                    alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("phenotype.please_give_a_new_scale_name", "Please give a new scale name!") : 'Please give a new scale name!'));
                 }
                 else if (jQuery('#add_new_trait_scale_definition').val() == ''){
-                    alert('Please give a new scale definition!');
+                    alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("phenotype.please_give_a_new_scale_definition", "Please give a new scale definition!") : 'Please give a new scale definition!'));
                 }
                 else if (jQuery('#add_new_trait_scale_format').val() == ''){
-                    alert('Please give a new scale format!');
+                    alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("phenotype.please_give_a_new_scale_format", "Please give a new scale format!") : 'Please give a new scale format!'));
                 }
                 else if (jQuery('#add_new_trait_scale_minimum').val() == ''){
-                    alert('Please give a new scale minimum!');
+                    alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("phenotype.please_give_a_new_scale_minimum", "Please give a new scale minimum!") : 'Please give a new scale minimum!'));
                 }
                 else if (jQuery('#add_new_trait_scale_maximum').val() == ''){
-                    alert('Please give a new scale maximum!');
+                    alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("phenotype.please_give_a_new_scale_maximum", "Please give a new scale maximum!") : 'Please give a new scale maximum!'));
                 }
                 else {
                     add_new_trait_new_scale_name = jQuery('#add_new_trait_scale_name').val();
@@ -656,7 +656,7 @@ jQuery(document).ready(function() {
             },
             error: function(response){
                 jQuery("#working_modal").modal("hide");
-                alert("Error saving observation variable.");
+                alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("phenotype.error_saving_observation_variable", "Error saving observation variable.") : "Error saving observation variable."));
             }
         });
     });
@@ -691,9 +691,13 @@ jQuery(document).ready(function() {
             },
             error: function(response){
                 jQuery("#working_modal").modal("hide");
-                alert("Error saving ontology.");
+                alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("phenotype.error_saving_ontology", "Error saving ontology.") : "Error saving ontology."));
             }
         });
     });
 });
 </script>
+
+<%once>
+use HTML::Entities ();
+</%once>

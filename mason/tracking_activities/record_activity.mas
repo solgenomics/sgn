@@ -20,36 +20,36 @@ $vector_id => undef
 
 <& /util/import_javascript.mas, classes => [ 'jquery', 'jquery/dataTables', 'CXGN.BreedersToolbox.HTMLSelect.js', 'CXGN.List', 'flatpickr_min'] &>
 
-<& /page/page_title.mas, title=>"Record Activity" &>
+<& /page/page_title.mas, title=>HTML::Entities::encode_entities($c->i18n->p("transformation.root.record_activity", "Record Activity")) &>
 
 <div class="well ">
-    <center><label class="col-sm-12 control-label">Please scan a tracking identifier barcode</label></center>
+    <center><label class="col-sm-12 control-label"><% $c->i18n->p("transformation.root.please_scan_a_tracking_identifier_barcode", "Please scan a tracking identifier barcode") |h %></label></center>
     <br/>
     <form class="form-horizontal" >
     <br/>
         <div class="form-group">
-            <label class="col-sm-3 control-label">Identifier Name: </label>
+            <label class="col-sm-3 control-label"><% $c->i18n->p("transformation.root.identifier_name", "Identifier Name:") |h %> </label>
             <div class="col-sm-5">
                 <input class="form-control" id="record_page_identifier_name_input" name="record_page_identifier_name_input" type="text" value="">
             </div>
             <div class="col-sm-2">
-                <button id="identifier_name_barcode" class="btn btn-block btn-default"><span class="glyphicon glyphicon-qrcode"></span> Scan Barcode</button>
+                <button id="identifier_name_barcode" class="btn btn-block btn-default"><span class="glyphicon glyphicon-qrcode"></span> <% $c->i18n->p("transformation.root.scan_barcode", "Scan Barcode") |h %></button>
             </div>
         </div>
 
         <div class="form-group">
-            <label class="col-sm-3 control-label">Material Name: </label>
+            <label class="col-sm-3 control-label"><% $c->i18n->p("transformation.root.material_name", "Material Name:") |h %> </label>
             <div class="col-sm-5" >
                 <input class="form-control" name="record_page_material_name" id="record_page_material_name" disabled value="<% $material_name %>">
             </div>
         </div>
 
         <div class="form-group">
-            <label class="col-sm-3 control-label">Input Type: </label>
+            <label class="col-sm-3 control-label"><% $c->i18n->p("transformation.root.input_type", "Input Type:") |h %> </label>
             <div class="col-sm-5">
 % if ($type_select_options) {
                 <select id="record_page_type_select">
-                    <option value="">Please select a type</option>
+                    <option value=""><% $c->i18n->p("seedlot.please_select_a_type", "Please select a type") |h %></option>
 % foreach my $type(@$type_select_options){
                     <option value="<%$type->[0]%>"><%$type->[1]%></option>
 % }
@@ -58,25 +58,25 @@ $vector_id => undef
             </div>
         </div>
         <div class="form-group">
-            <label class="col-sm-3 control-label">Input: </label>
+            <label class="col-sm-3 control-label"><% $c->i18n->p("transformation.root.input", "Input:") |h %> </label>
             <div class="col-sm-5">
                 <input class="form-control" id="record_page_info_input" name="record_page_info_input" type="text" value="">
             </div>
         </div>
         <div class="form-group">
-            <label class="col-sm-3 control-label">Notes:</label>
+            <label class="col-sm-3 control-label"><% $c->i18n->p("seedlots.ui.notes", "Notes:") |h %></label>
             <div class="col-sm-5">
                 <textarea class="form-control" id="record_page_notes" name="record_page_notes" ></textarea>
             </div>
         </div>
         <div class="form-group" style="display:none">
-            <label class="col-sm-3 control-label">Timestamp: </label>
+            <label class="col-sm-3 control-label"><% $c->i18n->p("lists_datasets.download.timestamp", "Timestamp:") |h %> </label>
             <div class="col-sm-5">
                 <input class="form-control" id="record_timestamp_record_page" name="record_timestamp_record_page" type="text" disabled value="<%$timestamp%>">
             </div>
         </div>
         <center>
-            <button id="record_page_activity_info_submit" name="record_page_activity_info_submit" class="btn btn-primary">Save</button>
+            <button id="record_page_activity_info_submit" name="record_page_activity_info_submit" class="btn btn-primary"><% $c->i18n->p("account.quick_create.save", "Save") |h %></button>
         </center>
     </form>
 </div>
@@ -84,10 +84,10 @@ $vector_id => undef
 
 % if ($identifier_id) {
     <td>
-        <a href='/breeders/trial/<%$project_id%>'><p>Go to Project Page</p></a>
+        <a href='/breeders/trial/<%$project_id%>'><p><% $c->i18n->p("transformation.root.go_to_project_page", "Go to Project Page") |h %></p></a>
     </td>
 
-    <&| /page/info_section.mas, title => 'Summary', collapsible => 1, collapsed => 0, subtitle => '' &>
+    <&| /page/info_section.mas, anchor_title => 'Summary', title => HTML::Entities::encode_entities($c->i18n->p("global.family.summary", 'Summary')), collapsible => 1, collapsed => 0, subtitle => '' &>
         <div class = "well well-sm">
             <div class = "panel panel-default">
                 <div class = "panel-body">
@@ -106,7 +106,7 @@ $vector_id => undef
             </div>
         </div>
     </&>
-    <&| /page/info_section.mas, title => 'Activity Details', collapsible => 1, collapsed => 0, subtitle => '' &>
+    <&| /page/info_section.mas, anchor_title => 'Activity Details', title => HTML::Entities::encode_entities($c->i18n->p("transformation.root.activity_details", 'Activity Details')), collapsible => 1, collapsed => 0, subtitle => '' &>
         <div class = "well well-sm">
             <div class = "panel panel-default">
                 <div class = "panel-body">
@@ -136,19 +136,19 @@ $vector_id => undef
     <div class="modal-dialog" role="document">
         <div class="modal-content">
             <div class="modal-header">
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                <h4 class="modal-title" id="recordPageSavedDialog">Success</h4>
+                <button type="button" class="close" data-dismiss="modal" aria-label="<% $c->i18n->p("global.dataset_publish.close", "Close") |h %>"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="recordPageSavedDialog"><% $c->i18n->p("cross.ui.success", "Success") |h %></h4>
             </div>
             <div class="modal-body">
                 <div class="container-fluid">
                     <p>
                         <span class="ui-icon ui-icon-circle-check" style="float: left; margin: 0 7px 50px 0;"></span>
-                        New information was saved.
+                        <% $c->i18n->p("transformation.root.new_information_was_saved", "New information was saved.") |h %>
                     </p>
                 </div>
             </div>
             <div class="modal-footer">
-                <button id="record_page_dismiss_saved_dialog" type="button" class="btn btn-default" data-dismiss="modal">Close & Reload</button>
+                <button id="record_page_dismiss_saved_dialog" type="button" class="btn btn-default" data-dismiss="modal"><% $c->i18n->p("seedlots.ui.close_reload", "Close & Reload") |h %></button>
             </div>
         </div>
     </div>
@@ -220,16 +220,16 @@ $(window).ready( function() {
         var program_name = "<%$program_name%>";
 
         if (identifier_name == '') {
-            alert("Please scan an identifier name barcode");
+            alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("transformation.root.please_scan_an_identifier_name_barcode", "Please scan an identifier name barcode") : "Please scan an identifier name barcode"));
             return;
         }
 
         if (selected_type == '') {
-            alert("Please select a type");
+            alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("seedlot.please_select_a_type", "Please select a type") : "Please select a type"));
             return;
         }
         if (input == '') {
-            alert("Please provide an input");
+            alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("transformation.root.please_provide_an_input", "Please provide an input") : "Please provide an input"));
             return;
         }
 
@@ -262,7 +262,7 @@ $(window).ready( function() {
             },
             error: function(response){
                 jQuery('#working_modal').modal('hide');
-                alert('An error occurred saving new information');
+                alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("transformation.root.an_error_occurred_saving_new_information", "An error occurred saving new information") : 'An error occurred saving new information'));
             }
         });
     });
@@ -278,3 +278,7 @@ $(window).ready( function() {
 });
 
 </script>
+
+<%once>
+use HTML::Entities ();
+</%once>

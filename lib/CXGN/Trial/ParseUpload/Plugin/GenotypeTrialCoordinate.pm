@@ -22,7 +22,7 @@ sub _validate_with_plugin {
         or die "Could not open file '$filename' $!";
 
     if (!$fh) {
-        push @error_messages, "Could not read file. Make sure it is a valid CSV file.";
+        push @error_messages, ($self->i18n ? $self->i18n->p('genotype.parser.coordinate.read_failed', 'Could not read file. Make sure it is a valid %{file_format} file.', { 'file_format' => 'CSV' }) : "Could not read file. Make sure it is a valid CSV file.");
         $errors{'error_messages'} = \@error_messages;
         $self->_set_parse_errors(\%errors);
         return;
@@ -33,7 +33,7 @@ sub _validate_with_plugin {
     if ($csv->parse($header_row)) {
         @columns = $csv->fields();
     } else {
-        push @error_messages, "Could not parse header row. Make sure it is a valid CSV file.";
+        push @error_messages, ($self->i18n ? $self->i18n->p('genotype.parser.coordinate.header_parse', 'Could not parse header row. Make sure it is a valid %{file_format} file.', { 'file_format' => 'CSV' }) : "Could not parse header row. Make sure it is a valid CSV file.");
         $errors{'error_messages'} = \@error_messages;
         $self->_set_parse_errors(\%errors);
         return;
@@ -42,14 +42,14 @@ sub _validate_with_plugin {
     my $num_cols = scalar(@columns);
     if ($include_facility_identifiers){
         if ($num_cols != 12){
-            push @error_messages, 'Header row must contain: "date","plate_id","plate_name","sample_id","well_A01","well_01A","tissue_id","dna_person","notes","tissue_type","extraction", "facility_identifier"';
+            push @error_messages, ($self->i18n ? $self->i18n->p('genotype.parser.coordinate.header_facility', 'Header row must contain: %{headers}', { 'headers' => '"date","plate_id","plate_name","sample_id","well_A01","well_01A","tissue_id","dna_person","notes","tissue_type","extraction", "facility_identifier"' }) : 'Header row must contain: "date","plate_id","plate_name","sample_id","well_A01","well_01A","tissue_id","dna_person","notes","tissue_type","extraction", "facility_identifier"');
             $errors{'error_messages'} = \@error_messages;
             $self->_set_parse_errors(\%errors);
             return;
         }
     } else {
         if ($num_cols != 11){
-            push @error_messages, 'Header row must contain: "date","plate_id","plate_name","sample_id","well_A01","well_01A","tissue_id","dna_person","notes","tissue_type","extraction"';
+            push @error_messages, ($self->i18n ? $self->i18n->p('genotype.parser.coordinate.header', 'Header row must contain: %{headers}', { 'headers' => '"date","plate_id","plate_name","sample_id","well_A01","well_01A","tissue_id","dna_person","notes","tissue_type","extraction"' }) : 'Header row must contain: "date","plate_id","plate_name","sample_id","well_A01","well_01A","tissue_id","dna_person","notes","tissue_type","extraction"');
             $errors{'error_messages'} = \@error_messages;
             $self->_set_parse_errors(\%errors);
             return;
@@ -97,7 +97,7 @@ sub _validate_with_plugin {
             $tissue_type_header ne "tissue_type" ||
             $extraction_header ne "extraction" ||
             $facility_identifier_header ne "facility_identifier") {
-            push @error_messages, 'File contents incorrect. Header row must contain: "date","plate_id","plate_name","sample_id","well_A01","well_01A","tissue_id","dna_person","notes","tissue_type","extraction", "facility_identifier"';
+            push @error_messages, ($self->i18n ? $self->i18n->p('genotype.parser.coordinate.header_content_facility', 'File contents incorrect. Header row must contain: %{headers}', { 'headers' => '"date","plate_id","plate_name","sample_id","well_A01","well_01A","tissue_id","dna_person","notes","tissue_type","extraction", "facility_identifier"' }) : 'File contents incorrect. Header row must contain: "date","plate_id","plate_name","sample_id","well_A01","well_01A","tissue_id","dna_person","notes","tissue_type","extraction", "facility_identifier"');
             $errors{'error_messages'} = \@error_messages;
             $self->_set_parse_errors(\%errors);
             return;
@@ -114,7 +114,7 @@ sub _validate_with_plugin {
                 $notes_header ne "notes" ||
                 $tissue_type_header ne "tissue_type" ||
                 $extraction_header ne "extraction" ) {
-                push @error_messages, 'File contents incorrect. Header row must contain: "date","plate_id","plate_name","sample_id","well_A01","well_01A","tissue_id","dna_person","notes","tissue_type","extraction"';
+                push @error_messages, ($self->i18n ? $self->i18n->p('genotype.parser.coordinate.header_content', 'File contents incorrect. Header row must contain: %{headers}', { 'headers' => '"date","plate_id","plate_name","sample_id","well_A01","well_01A","tissue_id","dna_person","notes","tissue_type","extraction"' }) : 'File contents incorrect. Header row must contain: "date","plate_id","plate_name","sample_id","well_A01","well_01A","tissue_id","dna_person","notes","tissue_type","extraction"');
                 $errors{'error_messages'} = \@error_messages;
                 $self->_set_parse_errors(\%errors);
                 return;
@@ -130,49 +130,49 @@ sub _validate_with_plugin {
         if ($csv->parse($row)) {
             @columns = $csv->fields();
         } else {
-            push @error_messages, "Could not parse row $row.";
+            push @error_messages, ($self->i18n ? $self->i18n->p('genotype.parser.coordinate.row_parse', 'Could not parse row %{row}.', { 'row' => $row }) : "Could not parse row $row.");
             $errors{'error_messages'} = \@error_messages;
             $self->_set_parse_errors(\%errors);
             return;
         }
 
         if (scalar(@columns) != $num_cols){
-            push @error_messages, 'All lines must have same number of columns as header! Error on row: '.$row;
+            push @error_messages, ($self->i18n ? $self->i18n->p('genotype.parser.coordinate.column_count', 'All lines must have same number of columns as header! Error on row: %{row}', { 'row' => $row }) : 'All lines must have same number of columns as header! Error on row: '.$row);
             $errors{'error_messages'} = \@error_messages;
             $self->_set_parse_errors(\%errors);
             return;
         }
 
         if (!$columns[0] || $columns[0] eq ''){
-            push @error_messages, 'The first column must contain a date on row: '.$row;
+            push @error_messages, ($self->i18n ? $self->i18n->p('genotype.parser.coordinate.date_missing', 'The first column must contain a %{field_date} on row: %{row}', { 'row' => $row, 'field_date' => 'date' }) : 'The first column must contain a date on row: '.$row);
         } elsif (!$columns[0] =~ m/(\d{4})-(\d{2})-(\d{2})/) {
-            push @error_messages, "Date must be YYYY-MM-DD format";
+            push @error_messages, ($self->i18n ? $self->i18n->p('genotype.parser.coordinate.date_format', 'Date must be %{date_format} format', { 'date_format' => 'YYYY-MM-DD' }) : "Date must be YYYY-MM-DD format");
         }
         if (!$columns[1] || $columns[1] eq ''){
-            push @error_messages, 'The second column must contain a plate_id on row: '.$row;
+            push @error_messages, ($self->i18n ? $self->i18n->p('genotype.parser.coordinate.plate_id_missing', 'The second column must contain a %{field_plate_id} on row: %{row}', { 'row' => $row, 'field_plate_id' => 'plate_id' }) : 'The second column must contain a plate_id on row: '.$row);
         }
         if (!$columns[2] || $columns[2] eq ''){
-            push @error_messages, 'The third column must contain an plate_name on row: '.$row;
+            push @error_messages, ($self->i18n ? $self->i18n->p('genotype.parser.coordinate.plate_name_missing', 'The third column must contain an %{field_plate_name} on row: %{row}', { 'row' => $row, 'field_plate_name' => 'plate_name' }) : 'The third column must contain an plate_name on row: '.$row);
         }
         if (!$columns[3] || $columns[3] eq ''){
-            push @error_messages, 'The fourth column must contain an sample_id on row: '.$row;
+            push @error_messages, ($self->i18n ? $self->i18n->p('genotype.parser.coordinate.sample_missing', 'The fourth column must contain an %{field_sample_id} on row: %{row}', { 'row' => $row, 'field_sample_id' => 'sample_id' }) : 'The fourth column must contain an sample_id on row: '.$row);
         } else {
             if ($columns[3] =~ /\s/ || $columns[3] =~ /\// || $columns[3] =~ /\\/ ) {
-                push @error_messages, "Row: $row: sample_id name must not contain spaces or slashes.";
+                push @error_messages, ($self->i18n ? $self->i18n->p('genotype.parser.coordinate.sample_format', 'Row: %{row}: %{field_sample_id} name must not contain spaces or slashes.', { 'row' => $row, 'field_sample_id' => 'sample_id' }) : "Row: $row: sample_id name must not contain spaces or slashes.");
             }
             if ($seen_sample_ids{$columns[3]}){
-                push @error_messages, 'Duplicate sample_id in your file on row: '.$row;
+                push @error_messages, ($self->i18n ? $self->i18n->p('genotype.parser.coordinate.sample_duplicate', 'Duplicate %{field_sample_id} in your file on row: %{row}', { 'row' => $row, 'field_sample_id' => 'sample_id' }) : 'Duplicate sample_id in your file on row: '.$row);
             }
             $seen_sample_ids{$columns[3]} = $row;
         }
         if (!$columns[4] || $columns[4] eq ''){
-            push @error_messages, 'The fifth column must contain well_A01 on row: '.$row;
+            push @error_messages, ($self->i18n ? $self->i18n->p('genotype.parser.coordinate.well_missing', 'The fifth column must contain %{field_well_A01} on row: %{row}', { 'row' => $row, 'field_well_A01' => 'well_A01' }) : 'The fifth column must contain well_A01 on row: '.$row);
         }
         if (!$columns[5] || $columns[5] eq ''){
-            push @error_messages, 'The sixth column must contain well_01A on row: '.$row;
+            push @error_messages, ($self->i18n ? $self->i18n->p('genotype.parser.coordinate.well_reverse_missing', 'The sixth column must contain %{field_well_01A} on row: %{row}', { 'row' => $row, 'field_well_01A' => 'well_01A' }) : 'The sixth column must contain well_01A on row: '.$row);
         }
         if (!$columns[6] || $columns[6] eq ''){
-            push @error_messages, 'The seventh column must contain tissue_id on row: '.$row;
+            push @error_messages, ($self->i18n ? $self->i18n->p('genotype.parser.coordinate.source_cell_missing', 'The seventh column must contain %{field_tissue_id} on row: %{row}', { 'row' => $row, 'field_tissue_id' => 'tissue_id' }) : 'The seventh column must contain tissue_id on row: '.$row);
         } else {
             my $source_name = $columns[6];
             $source_name =~ s/^\s+|\s+$//g; #trim whitespace from front and end...
@@ -182,17 +182,17 @@ sub _validate_with_plugin {
             $seen_source_names{$source_name}++;
         }
         if (!$columns[7] || $columns[7] eq ''){
-            push @error_messages, 'The seventh column must contain dna_person on row: '.$row;
+            push @error_messages, ($self->i18n ? $self->i18n->p('genotype.parser.coordinate.person_missing', 'The seventh column must contain %{field_dna_person} on row: %{row}', { 'row' => $row, 'field_dna_person' => 'dna_person' }) : 'The seventh column must contain dna_person on row: '.$row);
         }
         if (!$columns[9] || $columns[9] eq '' || ($columns[9] ne 'leaf' && $columns[9] ne 'root' && $columns[9] ne 'stem')){
-            push @error_messages, 'The tenth column must contain tissue type of either leaf, root, or stem on row: '.$row;
+            push @error_messages, ($self->i18n ? $self->i18n->p('genotype.parser.coordinate.tissue_type', 'The tenth column must contain tissue type of either %{code_leaf}, %{code_root}, or %{code_stem} on row: %{row}', { 'row' => $row, 'code_stem' => 'stem', 'code_leaf' => 'leaf', 'code_root' => 'root' }) : 'The tenth column must contain tissue type of either leaf, root, or stem on row: '.$row);
         }
         if ($include_facility_identifiers) {
             if (!$columns[11] || $columns[11] eq ''){
-                push @error_messages, 'The twelfth column must contain facility identifier on row: '.$row;
+                push @error_messages, ($self->i18n ? $self->i18n->p('genotype.parser.coordinate.facility_missing', 'The twelfth column must contain facility identifier on row: %{row}', { 'row' => $row }) : 'The twelfth column must contain facility identifier on row: '.$row);
             } else {
                 if ($seen_facility_identifiers{$columns[11]}){
-                    push @error_messages, 'Duplicate facility identifier in your file on row: '.$row;
+                    push @error_messages, ($self->i18n ? $self->i18n->p('genotype.parser.coordinate.facility_duplicate', 'Duplicate facility identifier in your file on row: %{row}', { 'row' => $row }) : 'Duplicate facility identifier in your file on row: '.$row);
                 }
                 $seen_facility_identifiers{$columns[11]} = $row;
             }
@@ -205,7 +205,7 @@ sub _validate_with_plugin {
         'uniquename' => { -in => \@sample_ids }
     });
     while (my $r=$rs->next){
-        push @error_messages, "Row".$seen_sample_ids{$r->uniquename}.": sample_id already exists: ".$r->uniquename;
+        push @error_messages, ($self->i18n ? $self->i18n->p('genotype.parser.coordinate.sample_existing', 'Row%{row_number}: %{field_sample_id} already exists: %{sample}', { 'row_number' => $seen_sample_ids{$r->uniquename}, 'sample' => $r->uniquename, 'field_sample_id' => 'sample_id' }) : "Row".$seen_sample_ids{$r->uniquename}.": sample_id already exists: ".$r->uniquename);
     }
 
     if ($include_facility_identifiers) {
@@ -216,7 +216,7 @@ sub _validate_with_plugin {
             'value' => { -in => \@identifiers }
         });
         while (my $each_id=$identifier_rs->next){
-            push @error_messages, "Row".$seen_facility_identifiers{$each_id->value}.": facility identifier already exists: ".$each_id->value;
+            push @error_messages, ($self->i18n ? $self->i18n->p('genotype.parser.coordinate.facility_existing', 'Row%{row_number}: facility identifier already exists: %{identifier}', { 'row_number' => $seen_facility_identifiers{$each_id->value}, 'identifier' => $each_id->value }) : "Row".$seen_facility_identifiers{$each_id->value}.": facility identifier already exists: ".$each_id->value);
         }
     }
 
@@ -237,7 +237,7 @@ sub _validate_with_plugin {
     }
     foreach (@seen_source_observation_unit_names){
         if (!$found_source_observation_unit_names{$_}){
-            push @error_messages, "This source observation unit name is not in the database: $_ .";
+            push @error_messages, ($self->i18n ? $self->i18n->p('genotype.parser.coordinate.source_missing', 'This source observation unit name is not in the database: %{source} .', { 'source' => $_ }) : "This source observation unit name is not in the database: $_ .");
         }
     }
 
@@ -269,7 +269,7 @@ sub _parse_with_plugin {
         or die "Could not open file '$filename' $!";
 
     if (!$fh) {
-        push @error_messages, "Could not read file. Make sure it is a valid CSV file.";
+        push @error_messages, ($self->i18n ? $self->i18n->p('genotype.parser.coordinate.read_failed', 'Could not read file. Make sure it is a valid %{file_format} file.', { 'file_format' => 'CSV' }) : "Could not read file. Make sure it is a valid CSV file.");
         $errors{'error_messages'} = \@error_messages;
         $self->_set_parse_errors(\%errors);
         return;
@@ -280,7 +280,7 @@ sub _parse_with_plugin {
     if ($csv->parse($header_row)) {
         @header_columns = $csv->fields();
     } else {
-        push @error_messages, "Could not parse header row. Make sure it is a valid CSV file.";
+        push @error_messages, ($self->i18n ? $self->i18n->p('genotype.parser.coordinate.header_parse', 'Could not parse header row. Make sure it is a valid %{file_format} file.', { 'file_format' => 'CSV' }) : "Could not parse header row. Make sure it is a valid CSV file.");
         $errors{'error_messages'} = \@error_messages;
         $self->_set_parse_errors(\%errors);
         return;
@@ -294,7 +294,7 @@ sub _parse_with_plugin {
         if ($csv->parse($row)) {
             @columns = $csv->fields();
         } else {
-            push @error_messages, "Could not parse row $row.";
+            push @error_messages, ($self->i18n ? $self->i18n->p('genotype.parser.coordinate.row_parse', 'Could not parse row %{row}.', { 'row' => $row }) : "Could not parse row $row.");
             $errors{'error_messages'} = \@error_messages;
             $self->_set_parse_errors(\%errors);
             return;

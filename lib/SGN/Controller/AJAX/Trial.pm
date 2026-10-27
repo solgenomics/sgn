@@ -163,21 +163,21 @@ sub generate_experimental_design_POST : Args(0) {
     }
 
     if ( !$start_number ) {
-        $c->stash->{rest} = { error => "You need to select the starting plot number."};
+        $c->stash->{rest} = { error => $c->i18n->p('trial.create.server.start_number', 'You need to select the starting plot number.')};
 
     }
 
     if ($design_type eq 'Westcott'){
         if (!$westcott_check_1){
-            $c->stash->{rest} = { error => "You need to provide name of check 1 for westcott design."};
+            $c->stash->{rest} = { error => $c->i18n->p('trial.create.server.westcott_check_one', 'You need to provide name of check 1 for westcott design.')};
             return;
         }
         if (!$westcott_check_2){
-            $c->stash->{rest} = { error => "You need to provide name of check 2 for westcott design."};
+            $c->stash->{rest} = { error => $c->i18n->p('trial.create.server.westcott_check_two', 'You need to provide name of check 2 for westcott design.')};
             return;
         }
         if (!$westcott_col){
-            $c->stash->{rest} = { error => "You need to provide number of columns for westcott design."};
+            $c->stash->{rest} = { error => $c->i18n->p('trial.create.server.westcott_columns', 'You need to provide number of columns for westcott design.')};
             return;
         }
         push @control_names_crbd, $westcott_check_1;
@@ -186,22 +186,22 @@ sub generate_experimental_design_POST : Args(0) {
 
     if ($design_type eq 'splitplot'){
         if (scalar(keys(%{$treatments}))<1){
-            $c->stash->{rest} = { error => "You need to provide at least one treatment for a splitplot design."};
+            $c->stash->{rest} = { error => $c->i18n->p('trial.create.server.splitplot_treatment', 'You need to provide at least one treatment for a splitplot design.')};
             return;
         }
         if (!$num_plants_per_plot){
-            $c->stash->{rest} = { error => "You need to provide number of plants per treatment for a splitplot design."};
+            $c->stash->{rest} = { error => $c->i18n->p('trial.create.server.splitplot_plants', 'You need to provide number of plants per treatment for a splitplot design.')};
             return;
         }
         if ($num_plants_per_plot <1){
-            $c->stash->{rest} = { error => "You need to provide number of plants per treatment for a splitplot design."};
+            $c->stash->{rest} = { error => $c->i18n->p('trial.create.server.splitplot_plants', 'You need to provide number of plants per treatment for a splitplot design.')};
             return;
         }
     }
 
     if ($design_type eq 'RRC'){
         if (!$fieldmap_row_number){
-            $c->stash->{rest} = { error => "You need to provide number of rows for a resolvable row-column design."};
+            $c->stash->{rest} = { error => $c->i18n->p('trial.create.server.row_column_rows', 'You need to provide number of rows for a resolvable row-column design.')};
             return;
         }
     }
@@ -218,7 +218,7 @@ sub generate_experimental_design_POST : Args(0) {
 
     if ($design_type eq 'URDD'){
         if (!$row_in_design_number || !$col_in_design_number){
-            $c->stash->{rest} = { error => "You need to provide number of rows and cols for a unreplicated diagonal design."};
+            $c->stash->{rest} = { error => $c->i18n->p('trial.create.server.diagonal_dimensions', 'You need to provide number of rows and cols for a unreplicated diagonal design.')};
             return;
         }
     }
@@ -280,17 +280,17 @@ sub generate_experimental_design_POST : Args(0) {
     my $location_number = scalar(@locations);
 
     if (!$c->user()) {
-        $c->stash->{rest} = {error => "You need to be logged in to add a trial" };
+        $c->stash->{rest} = {error => $c->i18n->p('trial.create.server.login', 'You need to be logged in to add a trial') };
         return;
     }
 
     if (!any { $_ eq "curator" || $_ eq "submitter" } ($c->user()->roles)  ) {  #user must have privileges to add a trial
-        $c->stash->{rest} = {error =>  "You have insufficient privileges to add a trial." };
+        $c->stash->{rest} = {error =>  $c->i18n->p('trial.create.server.privileges', 'You have insufficient privileges to add a trial.') };
         return;
     }
     #print "TOTAL PLOTS $p_rep_total_plots AND CALCULATED PLOTS $calculated_total_plot\n";
     if($p_rep_total_plots != $calculated_total_plot){
-        $c->stash->{rest} = {error => "Treatment repeats do not equal number of plots in design" };
+        $c->stash->{rest} = {error => $c->i18n->p('trial.create.server.treatment_repeats', 'Treatment repeats do not equal number of plots in design') };
         return;
     }
 
@@ -304,7 +304,7 @@ sub generate_experimental_design_POST : Args(0) {
 
         $geolocation_lookup->set_location_name($location);
         if (!$geolocation_lookup->get_geolocation()){
-            $c->stash->{rest} = { error => "Trial location not found" };
+            $c->stash->{rest} = { error => $c->i18n->p('trial.create.server.location_missing', 'Trial location not found') };
             return;
         }
 
@@ -353,7 +353,7 @@ sub generate_experimental_design_POST : Args(0) {
             $trial_design->set_stock_list(\@stock_names);
             $design_info{'number_of_stocks'} = scalar(@stock_names);
         } else {
-            $c->stash->{rest} = {error => "No list of stocks supplied." };
+            $c->stash->{rest} = {error => $c->i18n->p('trial.create.server.no_stocks', 'No list of stocks supplied.') };
             return;
         }
         if ($seedlot_hash_json){
@@ -437,11 +437,11 @@ sub generate_experimental_design_POST : Args(0) {
             $trial_design->set_design_type($design_type);
             $design_info{'design_type'} = $design_type;
         } else {
-            $c->stash->{rest} = {error => "No design type supplied." };
+            $c->stash->{rest} = {error => $c->i18n->p('trial.create.server.no_design', 'No design type supplied.') };
             return;
         }
         if (!$trial_design->has_design_type()) {
-            $c->stash->{rest} = {error => "Design type not supported." };
+            $c->stash->{rest} = {error => $c->i18n->p('trial.create.server.unsupported_design', 'Design type not supported.') };
             return;
         }
         if ($fieldmap_col_number) {
@@ -485,7 +485,7 @@ sub generate_experimental_design_POST : Args(0) {
         try {
             $trial_design->calculate_design();
         } catch {
-            $c->stash->{rest} = {error => "Could not calculate design: $_"};
+            $c->stash->{rest} = {error => $c->i18n->p('trial.create.server.calculate_failed', 'Could not calculate design: %{detail}', { detail => $_ })};
             $error=1;
         };
         if ($error) {
@@ -494,16 +494,16 @@ sub generate_experimental_design_POST : Args(0) {
         if ($trial_design->get_design()) {
             %design = %{$trial_design->get_design()};
         } else {
-            $c->stash->{rest} = {error => "Could not generate design" };
+            $c->stash->{rest} = {error => $c->i18n->p('trial.create.server.generate_failed', 'Could not generate design') };
             return;
         }
 
         #For printing the table view of the generated design there are two designs that are different from the others:
         # 1. the greenhouse can use accessions or crosses, so the table should reflect that. the greenhouse generates plant and plot entries so the table should reflect that.
         # 2. the splitplot generates plots, subplots, and plant entries, so the table should reflect that.
-        $design_layout_view_html = design_layout_view(\%design, \%design_info, $design_type, $trial_stock_type);
-        $design_map_view = design_layout_map_view(\%design, $design_type);
-        $design_info_view_html = design_info_view(\%design, \%design_info, $trial_stock_type);
+        $design_layout_view_html = design_layout_view(\%design, \%design_info, $design_type, $trial_stock_type, $c->i18n);
+        $design_map_view = design_layout_map_view(\%design, $design_type, $c->i18n);
+        $design_info_view_html = design_info_view(\%design, \%design_info, $trial_stock_type, $c->i18n);
         my $design_json = $json->encode(\%design);
         push @design_array,  $design_json;
         push @design_layout_view_html_array, $design_layout_view_html;
@@ -516,9 +516,9 @@ sub generate_experimental_design_POST : Args(0) {
         my $total_area = $plot_width * $plot_length * $num_plots; #sq meters. 1 ha = 10000m2
         my $field_size_m = $field_size * 10000;
         if ($field_size_m < $total_area){
-            $warning_message = "The generated design would require atleast $total_area square meters, which is larger than the $field_size hectare ($field_size_m square meters) field size you indicated.";
+            $warning_message = $c->i18n->p('trial.create.server.field_too_small', 'The generated design would require atleast %{area} square meters, which is larger than the %{hectares} hectare (%{field_area} square meters) field size you indicated.', { area => $total_area, hectares => $field_size, field_area => $field_size_m });
         } else {
-            $warning_message = "The generated design would require atleast $total_area square meters and your field size is $field_size hectare ($field_size_m square meters).";
+            $warning_message = $c->i18n->p('trial.create.server.field_area', 'The generated design would require atleast %{area} square meters and your field size is %{hectares} hectare (%{field_area} square meters).', { area => $total_area, hectares => $field_size, field_area => $field_size_m });
         }
     }
 
@@ -561,11 +561,11 @@ sub save_experimental_design_POST : Args(0) {
     print STDERR "Saving trial... :-)\n";
 
     if (!$c->user()) {
-        $c->stash->{rest} = {error => "You need to be logged in to add a trial" };
+        $c->stash->{rest} = {error => $c->i18n->p('trial.create.server.login', 'You need to be logged in to add a trial') };
         return;
     }
     if (!any { $_ eq "curator" || $_ eq "submitter" } ($c->user()->roles)  ) {
-        $c->stash->{rest} = {error =>  "You have insufficient privileges to add a trial." };
+        $c->stash->{rest} = {error =>  $c->i18n->p('trial.create.server.privileges', 'You have insufficient privileges to add a trial.') };
         return;
     }
 
@@ -615,7 +615,7 @@ sub save_experimental_design_POST : Args(0) {
 
         my $existing = $schema->resultset("Project::Project")->find( { name => $trial_name });
         if ($existing) {
-            $c->stash->{rest} = { error => "A folder or trial with that name already exists in the database. Please select another name." };
+            $c->stash->{rest} = { error => $c->i18n->p('trial.create.server.duplicate_folder', 'A folder or trial with that name already exists in the database. Please select another name.') };
             return;
         }
 
@@ -698,7 +698,7 @@ sub save_experimental_design_POST : Args(0) {
         my $trial_create = CXGN::Trial::TrialCreate->new(\%trial_info_hash);
 
         if ($trial_create->trial_name_already_exists()) {
-            $c->stash->{rest} = {error => "Trial name \"".$trial_create->get_trial_name()."\" already exists" };
+            $c->stash->{rest} = {error => $c->i18n->p('trial.create.server.duplicate_trial', 'Trial name "%{name}" already exists', { name => $trial_create->get_trial_name() }) };
             return;
         }
 
@@ -717,7 +717,7 @@ sub save_experimental_design_POST : Args(0) {
                 my $delete_folder = $folder->delete_folder();
             }
             print STDERR "Error saving trial: ".$save->{'error'};
-            $c->stash->{rest} = {error => $save->{'error'}};
+            $c->stash->{rest} = {error => $c->i18n->p('trial.create.server.save_failed', 'Could not save trial: %{detail}', { detail => $save->{'error'} })};
             return;
         } elsif ($save->{'trial_id'}) {
 
@@ -751,7 +751,7 @@ sub save_experimental_design_POST : Args(0) {
         $trial_activity_obj->parent_id($trial_id);
         my $activity_prop_id = $trial_activity_obj->store();
         if (!$activity_prop_id) {
-            $c->stash->{rest} = {error => "Error saving trial activity info" };
+            $c->stash->{rest} = {error => $c->i18n->p('trial.create.server.activity_failed', 'Error saving trial activity info') };
             return;
         }
 
@@ -839,7 +839,8 @@ sub save_experimental_design_POST : Args(0) {
             }
             if ($verified_error) {
                 print STDERR "$verified_error\n";
-                $c->stash->{rest} = {error => "The trial was saved, but there was an issue applying treatments: $verified_error\n" };
+                $c->stash->{rest} = {error => $c->i18n->p('trial.create.server.treatments_failed', 'The trial was saved, but there was an issue applying treatments: %{detail}
+', { detail => $verified_error }) };
                 return;
             }
 
@@ -847,7 +848,8 @@ sub save_experimental_design_POST : Args(0) {
 
             if ($stored_phenotype_error) {
                 print STDERR "$stored_phenotype_error\n";
-                $c->stash->{rest} = {error => "The trial was saved, but there was an issue applying treatments: $stored_phenotype_error\n" };
+                $c->stash->{rest} = {error => $c->i18n->p('trial.create.server.treatments_failed', 'The trial was saved, but there was an issue applying treatments: %{detail}
+', { detail => $stored_phenotype_error }) };
                 return;
             }
         }
@@ -871,14 +873,14 @@ sub verify_trial_name_GET : Args(0) {
     my %errors;
 
     if (!$trial_name) {
-        $c->stash->{rest} = {error => "No trial name supplied"};
+        $c->stash->{rest} = {error => $c->i18n->p('trial.create.validation.no_name', 'No trial name supplied')};
         $c->detach;
     }
 
     my $project_rs = $schema->resultset('Project::Project')->find({name=>$trial_name});
 
     if ($project_rs){
-        my $error = 'The following trial name has aready been used. Please use a unique name';
+        my $error = $c->i18n->p('trial.create.validation.duplicate_name', 'The following trial name has aready been used. Please use a unique name');
         $c->stash->{rest} = {error => $error};
     } else {
         $c->stash->{rest} = {
@@ -901,7 +903,7 @@ sub verify_stock_list_POST : Args(0) {
     }
 
     if (!@stock_names) {
-        $c->stash->{rest} = {error => "No stock names supplied"};
+        $c->stash->{rest} = {error => $c->i18n->p('trial.create.server.no_stock_names', 'No stock names supplied')};
         $c->detach;
     }
 
@@ -914,7 +916,7 @@ sub verify_stock_list_POST : Args(0) {
     }
 
     if (scalar(@accessions_missing) > 0){
-        my $error = 'The following accessions are not valid in the database, so you must add them first: '.join ',', @accessions_missing;
+        my $error = $c->i18n->p('trial.create.server.missing_accessions', 'The following accessions are not valid in the database, so you must add them first: %{names}', { names => join(',', @accessions_missing) });
         $c->stash->{rest} = {error => $error};
     } else {
         $c->stash->{rest} = {
@@ -936,14 +938,14 @@ sub verify_cross_list_POST : Args(0) {
     }
 
     if (!@stock_names) {
-        $c->stash->{rest} = {error => "No stock names supplied"};
+        $c->stash->{rest} = {error => $c->i18n->p('trial.create.server.no_stock_names', 'No stock names supplied')};
         $c->detach;
     }
 
     my $lv = CXGN::List::Validate->new();
     my @crosses_missing = @{$lv->validate($schema,'crosses',\@stock_names)->{'missing'}};
     if (scalar(@crosses_missing) > 0){
-        my $error = 'The following crosses are not valid in the database, so you must add them first: '.join ',', @crosses_missing;
+        my $error = $c->i18n->p('trial.create.server.missing_crosses', 'The following crosses are not valid in the database, so you must add them first: %{names}', { names => join(',', @crosses_missing) });
         $c->stash->{rest} = {error => $error};
     } else {
         $c->stash->{rest} = {
@@ -965,14 +967,14 @@ sub verify_family_name_list_POST : Args(0) {
     }
 
     if (!@stock_names) {
-        $c->stash->{rest} = {error => "No stock names supplied"};
+        $c->stash->{rest} = {error => $c->i18n->p('trial.create.server.no_stock_names', 'No stock names supplied')};
         $c->detach;
     }
 
     my $lv = CXGN::List::Validate->new();
     my @family_names_missing = @{$lv->validate($schema,'family_names',\@stock_names)->{'missing'}};
     if (scalar(@family_names_missing) > 0){
-        my $error = 'The following family names are not valid in the database, so you must add them first: '.join ',', @family_names_missing;
+        my $error = $c->i18n->p('trial.create.server.missing_families', 'The following family names are not valid in the database, so you must add them first: %{names}', { names => join(',', @family_names_missing) });
         $c->stash->{rest} = {error => $error};
     } else {
         $c->stash->{rest} = {
@@ -999,7 +1001,7 @@ sub verify_seedlot_list_POST : Args(0) {
     my $return = CXGN::Stock::Seedlot->verify_seedlot_stock_lists($schema, $people_schema, $phenome_schema, \@stock_names, \@seedlot_names);
 
     if (exists($return->{error})){
-        $c->stash->{rest} = { error => $return->{error} };
+        $c->stash->{rest} = { error => $c->i18n->p('trial.create.server.seedlots_failed', 'Could not verify seedlot list: %{detail}', { detail => $return->{error} }) };
         $c->detach();
     }
     if (exists($return->{success})){

@@ -1,5 +1,8 @@
 package CXGN::Transformation::StoreTransgeneExpressionData;
 
+use SGN::I18N ();
+use CatalystX::GlobalContext '$c';
+
 =head1 NAME
 
 CXGN::Transformation::StoreTransgeneExpressionData - a module to store transgene expression data
@@ -102,6 +105,7 @@ has 'operator_id' => (
 
 sub store_qPCR_data {
     my $self = shift;
+    my SGN::I18N $ui_store_qPCR_data_i18n = SGN::I18N::translate($c);
     my $schema = $self->get_chado_schema();
     my $transaction_error;
     my $transformant_name = $self->get_transformant_name();
@@ -140,7 +144,7 @@ sub store_qPCR_data {
 		    type_id => $accession_cvterm->cvterm_id(),
 	    });
         if (!$transformant_stock) {
-            $return{error} = "Transgenic line cound not be found in the database: $transformant_name!";
+            $return{error} = (SGN::I18N::translate($ui_store_qPCR_data_i18n, 'transformation.transgenic_line_cound_not_be_found_in_the_database_transformant_name', 'Transgenic line cound not be found in the database: %{transformant_name}!', {transformant_name => ("" . ("$transformant_name"))}));
             return \%return;
         } else {
             $transformant_stock_id = $transformant_stock->stock_id();
@@ -151,7 +155,7 @@ sub store_qPCR_data {
 		    type_id => $vector_construct_cvterm->cvterm_id(),
 	    });
         if (!$vector_construct_stock) {
-            $return{error} = "Vector construct cound not be found in the database: $vector_construct_name!";
+            $return{error} = (SGN::I18N::translate($ui_store_qPCR_data_i18n, 'transformation.vector_construct_cound_not_be_found_in_the_database_vector_construct', 'Vector construct cound not be found in the database: %{vector_construct_name}!', {vector_construct_name => ("" . ("$vector_construct_name"))}));
             return \%return;
         } else {
 			$vector_construct_stock_id = $vector_construct_stock->stock_id();
@@ -188,7 +192,7 @@ sub store_qPCR_data {
             $updated_expression_data_json = encode_json $expression_data_hash;
             $previous_expression_data_stockprop_rs->first->update({value=>$updated_expression_data_json});
         } elsif ($previous_expression_data_stockprop_rs->count > 1) {
-            $return{error} = "More than one expression data stockprop found for: $transformant_name!";
+            $return{error} = (SGN::I18N::translate($ui_store_qPCR_data_i18n, 'transformation.more_than_one_expression_data_stockprop_found_for_transformant_name', 'More than one expression data stockprop found for: %{transformant_name}!', {transformant_name => ("" . ("$transformant_name"))}));
             return \%return;
         } else {
             if ($CT_expression_data) {
@@ -222,7 +226,7 @@ sub store_qPCR_data {
             $previous_assay_metadata_json = encode_json $previous_assay_metadata_hash;
             $previous_assay_metadata_stockprop_rs->first->update({value=>$previous_assay_metadata_json});
         } elsif ($previous_assay_metadata_stockprop_rs->count > 1) {
-            $return{error} = "More than one assay metadata stockprop found for vector construct: $vector_construct_name!";
+            $return{error} = (SGN::I18N::translate($ui_store_qPCR_data_i18n, 'transformation.more_than_one_assay_metadata_stockprop_found_for_vector_construct_ve', 'More than one assay metadata stockprop found for vector construct: %{vector_construct_name}!', {vector_construct_name => ("" . ("$vector_construct_name"))}));
             return \%return;
         } else {
             my $assay_metadata = {};
@@ -240,7 +244,8 @@ sub store_qPCR_data {
     };
 
     if ($transaction_error) {
-        $return{error} = "Transaction error storing qPCR data for $transformant_name: $transaction_error\n";
+        $return{error} = (SGN::I18N::translate($ui_store_qPCR_data_i18n, 'transformation.transaction_error_storing_qpcr_data_for_transformant_name_transactio', 'Transaction error storing qPCR data for %{transformant_name}: %{transaction_error}
+', {transformant_name => ("" . ("$transformant_name")), transaction_error => ("" . ("$transaction_error"))}));
         return \%return;
     } else {
         $return{success} = 1;
