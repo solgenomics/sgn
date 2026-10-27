@@ -38,6 +38,7 @@ sub section_call {
 }
 my @cases = (
     ['consent', read_text("$root/mason/brapi/authorize.mas")],
+    ['reset', read_text("$root/mason/user/reset_password_form.mas")],
     ['section', section_call('mason/barcode/index.mas', 'barcode.mason.generate_barcode')],
     ['links', section_call('mason/tools/heritability/index.mas', 'analysis.interface.table_8675')],
 );
@@ -49,17 +50,19 @@ for my $component ('page_title', 'info_section') {
 }
 for my $case (@cases) { save_text("$tmp/comp/$case->[0].mas", $case->[1]); }
 my $literal = '<img src=x onerror="window.injected=1"> & "caption"';
-my $name = 'Name_Жито_<img src=x onerror="data">_%{name}';
+my $name = 'Name_Жито_<img src=x onerror="data">_%{name}_&lt;literal&gt;';
 my %sources = (
     'integrations.consent.title' => 'BrAPI Client Authorization',
     'barcode.mason.generate_barcode' => 'Generate Barcode',
     'analysis.interface.table_8675' => 'Table&#8675;',
     'analysis.interface.basic_8675' => 'Basic&#8675;',
     'seedlot.details_for' => 'Details for ',
+    'auth.reset.password_for_user' => 'Enter new password for user %{username}',
 );
 for my $locale (qw(uk es ar)) {
     my %messages = map {
-        ($_ . "\x04" . $sources{$_}) => {plural => undef, forms => [$locale . ': ' . $literal . ($sources{$_} =~ /&#8675;/ ? '&#8675;' : '')]}
+        ($_ . "\x04" . $sources{$_}) => {plural => undef, forms => [$locale . ': ' . $literal . ($sources{$_} =~ /&#8675;/ ? '&#8675;' : '')
+            . ($_ eq 'auth.reset.password_for_user' ? ' %{username}' : '')]}
     } keys %sources;
     make_path("$tmp/catalog/$locale");
     open my $out, '>:raw', "$tmp/catalog/$locale/sgn.json" or die $!;
@@ -86,7 +89,8 @@ for my $locale (qw(en uk es ar)) {
             $interp->set_global('$trial_name', $name);
             srand(714);
             $interp->exec("/$case->[0].mas", user_name => $name, client_id => $name,
-                database_name => $name, authorize_url => '/native/authorize?token=synthetic&next=1', deny_url => '/native/deny');
+                database_name => $name, username => HTML::Entities::encode_entities($name),
+                person_id => 42, token => 'synthetic-token', authorize_url => '/native/authorize?token=synthetic&next=1', deny_url => '/native/deny');
             my (@bad, @anchors, @links, @texts, @ids);
             my $parser = HTML::Parser->new(api_version => 3,
                 start_h => [sub {
@@ -109,6 +113,8 @@ for my $locale (qw(en uk es ar)) {
             } elsif ($case->[0] eq 'links') {
                 ok(grep($_ eq 'javascript:download_table();', @links), 'Original download control retained');
                 like($text, qr/\x{21e3}/, 'Legacy numeric arrow entity retains its displayed symbol');
+            } elsif ($case->[0] eq 'reset') {
+                like($text, qr/\Q$name\E/, 'Pre-escaped username is displayed once and retains literal entities');
             } else {
                 like($text, qr/\Q$name\E/, 'Dynamic title suffix remains literal Unicode/name data');
             }
