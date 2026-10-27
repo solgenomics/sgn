@@ -48,7 +48,7 @@ sub compile_methods {
     my ($package,$text,@names) = @_;
     my $program = "package $package; use strict; use warnings; use Data::Dumper; use HTML::Entities qw(encode_entities); use SGN::I18N;\n";
     $program .= join("\n", map {method($text,$_)} @names) . "\n1;";
-    my $ok = eval $program; ## no critic (BuiltinFunctions::ProhibitStringyEval) # Compile controlled method source extracted from reviewed modules into the test fixture.
+    my $ok = eval $program; ## no critic (BuiltinFunctions::ProhibitStringyEval Lax::ProhibitStringyEval::ExceptForRequire) # Compile controlled method source extracted from reviewed modules into the test fixture.
     BAIL_OUT("Actual source method compilation failed: $@") unless $ok;
 }
 
@@ -123,7 +123,7 @@ for my $name (@producers) {
     my $body=method($controller,$name);
     my ($loop)=$body =~ /(foreach my \$error_string \(\@\{\$parse_errors->\{'error_messages'\}\}\)\s*\{[^\n]*\n[^\n]*\n[ \t]*\})/;
     BAIL_OUT("Missing actual HTML assembly loop in $name") unless $loop;
-    my $ok=eval 'package OwnedSeedlotHTML; sub '.$name.' { my ($parse_errors)=@_; my $return_error=""; '.$loop.' return $return_error; } 1;'; ## no critic (BuiltinFunctions::ProhibitStringyEval) # Compile the extracted production assembly loop into a controlled test-only package.
+    my $ok=eval 'package OwnedSeedlotHTML; sub '.$name.' { my ($parse_errors)=@_; my $return_error=""; '.$loop.' return $return_error; } 1;'; ## no critic (BuiltinFunctions::ProhibitStringyEval Lax::ProhibitStringyEval::ExceptForRequire) # Compile the extracted production assembly loop into a controlled test-only package.
     BAIL_OUT("Cannot compile actual assembly $name: $@") unless $ok;
 }
 

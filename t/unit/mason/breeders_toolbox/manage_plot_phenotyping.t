@@ -1,3 +1,4 @@
+package main;
 =head1 NAME
 
 t/unit/mason/breeders_toolbox/manage_plot_phenotyping.t - the plot phenotyping page renders its trials section

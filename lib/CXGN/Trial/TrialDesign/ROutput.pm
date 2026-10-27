@@ -44,7 +44,7 @@ sub _decoded_array {
         # and JSON types. LEAVE_SRC also keeps the inspected byte string intact.
         my $probe = $value;
         if ($probe =~ /[^\x00-\x7f]/) {
-            push @decoded, decode('UTF-8', $probe, FB_CROAK | LEAVE_SRC); ## no critic (ValuesAndExpressions::ProhibitBitwiseOperators) # Encode requires both strict-error and source-preservation flag bits.
+            push @decoded, decode('UTF-8', $probe, FB_CROAK | LEAVE_SRC); ## no critic (Bangs::ProhibitBitwiseOperators) # Encode requires both strict-error and source-preservation flag bits.
             $changed = 1;
         }
         else {

@@ -56,8 +56,8 @@ sub _json_query_variants {
         next if !defined($item) || ref($item);
         my $text = $item;
         next if $text !~ /[^\x00-\x7f]/;
-        my $octets = Encode::encode('UTF-8', $text, Encode::FB_CROAK | Encode::LEAVE_SRC); ## no critic (ValuesAndExpressions::ProhibitBitwiseOperators) # Encode expects these two error/source-preservation flag bits combined.
-        my $legacy = Encode::decode('ISO-8859-1', $octets, Encode::FB_CROAK | Encode::LEAVE_SRC); ## no critic (ValuesAndExpressions::ProhibitBitwiseOperators) # Encode expects these two error/source-preservation flag bits combined.
+        my $octets = Encode::encode('UTF-8', $text, Encode::FB_CROAK | Encode::LEAVE_SRC); ## no critic (Bangs::ProhibitBitwiseOperators) # Encode expects these two error/source-preservation flag bits combined.
+        my $legacy = Encode::decode('ISO-8859-1', $octets, Encode::FB_CROAK | Encode::LEAVE_SRC); ## no critic (Bangs::ProhibitBitwiseOperators) # Encode expects these two error/source-preservation flag bits combined.
         push @variants, $legacy;
         $expanded = 1;
     }

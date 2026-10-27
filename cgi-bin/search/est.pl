@@ -541,7 +541,7 @@ if (defined($start) && defined($length) && ($length > 10) ) {
   $seq = substr $seq,$start,$length;
   $seq_length = qq|${length} bp <span class="ghosted">(${untrim_length} bp untrimmed)</span>|;
 } else {
-  if ($status & 0x1) { ## no critic (ValuesAndExpressions::ProhibitBitwiseOperators) # $status is a legacy numeric bit mask; bitwise testing preserves its flag semantics.
+  if ($status & 0x1) { ## no critic (Bangs::ProhibitBitwiseOperators) # $status is a legacy numeric bit mask; bitwise testing preserves its flag semantics.
     $fasta_header = ">SGN-E$est_id [$clone_name] (called/trimmed by facility)<br />";
     $seq_length = "${untrim_length} bp (called/trimmed by facility)<br />";
   } else {
@@ -557,31 +557,31 @@ my $display_status = "";
 if ($status == 0) {
   $display_status = encode_entities($i18n ? $i18n->p("global.est.status_current", "Current Version") : "Current Version");
 }
-if ($status & 0x1) { ## no critic (ValuesAndExpressions::ProhibitBitwiseOperators) # $status is a legacy numeric bit mask; bitwise testing preserves its flag semantics.
+if ($status & 0x1) { ## no critic (Bangs::ProhibitBitwiseOperators) # $status is a legacy numeric bit mask; bitwise testing preserves its flag semantics.
   $display_status .= encode_entities($i18n ? $i18n->p("global.est.status_legacy", "Legacy ") : "Legacy ");
 }
-if ($status & 0x2) { ## no critic (ValuesAndExpressions::ProhibitBitwiseOperators) # $status is a legacy numeric bit mask; bitwise testing preserves its flag semantics.
+if ($status & 0x2) { ## no critic (Bangs::ProhibitBitwiseOperators) # $status is a legacy numeric bit mask; bitwise testing preserves its flag semantics.
   $display_status .= encode_entities($i18n ? $i18n->p("global.est.status_discarded", "Discarded ") : "Discarded ");
 }
-if ($status & 0x4) { ## no critic (ValuesAndExpressions::ProhibitBitwiseOperators) # $status is a legacy numeric bit mask; bitwise testing preserves its flag semantics.
+if ($status & 0x4) { ## no critic (Bangs::ProhibitBitwiseOperators) # $status is a legacy numeric bit mask; bitwise testing preserves its flag semantics.
   $display_status .= encode_entities($i18n ? $i18n->p("global.est.status_deprecated", "Deprecated ") : "Deprecated ");
 }
-if ($status & 0x8) { ## no critic (ValuesAndExpressions::ProhibitBitwiseOperators) # $status is a legacy numeric bit mask; bitwise testing preserves its flag semantics.
+if ($status & 0x8) { ## no critic (Bangs::ProhibitBitwiseOperators) # $status is a legacy numeric bit mask; bitwise testing preserves its flag semantics.
   $display_status .= encode_entities($i18n ? $i18n->p("global.est.status_censored", "Censored ") : "Censored ");
 }
-if ($status & 0x10) { ## no critic (ValuesAndExpressions::ProhibitBitwiseOperators) # $status is a legacy numeric bit mask; bitwise testing preserves its flag semantics.
+if ($status & 0x10) { ## no critic (Bangs::ProhibitBitwiseOperators) # $status is a legacy numeric bit mask; bitwise testing preserves its flag semantics.
   $display_status .= encode_entities($i18n ? $i18n->p("global.est.status_trim_not_applied", "Vector/Quality trimming not applied ") : "Vector/Quality trimming not applied ");
 }
-if ($status & 0x20) { ## no critic (ValuesAndExpressions::ProhibitBitwiseOperators) # $status is a legacy numeric bit mask; bitwise testing preserves its flag semantics.
+if ($status & 0x20) { ## no critic (Bangs::ProhibitBitwiseOperators) # $status is a legacy numeric bit mask; bitwise testing preserves its flag semantics.
   $display_status .= encode_entities($i18n ? $i18n->p("global.est.status_contaminants_not_assessed", "Contaminants not assessed ") : "Contaminants not assessed ");
 }
-if ($status & 0x40) { ## no critic (ValuesAndExpressions::ProhibitBitwiseOperators) # $status is a legacy numeric bit mask; bitwise testing preserves its flag semantics.
+if ($status & 0x40) { ## no critic (Bangs::ProhibitBitwiseOperators) # $status is a legacy numeric bit mask; bitwise testing preserves its flag semantics.
   $display_status .= encode_entities($i18n ? $i18n->p("global.est.status_chimera_not_assessed", "Chimera not assessed ") : "Chimera not assessed ");
 }
 
 my $insert_recovery = "";
 my $vector_signature = "";
-if (!($status & 0x11)) { ## no critic (ValuesAndExpressions::ProhibitBitwiseOperators) # $status is a legacy numeric bit mask; bitwise testing preserves its flag semantics.
+if (!($status & 0x11)) { ## no critic (Bangs::ProhibitBitwiseOperators) # $status is a legacy numeric bit mask; bitwise testing preserves its flag semantics.
   $expected_error = sprintf "%7.4f",$expected_error;
   $entropy = sprintf "%5.3f",$entropy;
 
@@ -625,7 +625,7 @@ if (!($status & 0x11)) { ## no critic (ValuesAndExpressions::ProhibitBitwiseOper
 
     my $ind = 0;
     foreach my $str (@flag_strings) {
-      push @flags,$str if $flags & (1<<$ind++); ## no critic (ValuesAndExpressions::ProhibitBitwiseOperators) # $flags uses the existing sequence-status bit mask.
+      push @flags,$str if $flags & (1<<$ind++); ## no critic (Bangs::ProhibitBitwiseOperators) # $flags uses the existing sequence-status bit mask.
     }
 
     $flags_display = qq{<$table><tr><td width="10%"><b>$est_i18n_problems </b></td><td>} . join("<br />",@flags) . "</td></tr></table>";
