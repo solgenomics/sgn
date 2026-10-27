@@ -1,7 +1,7 @@
 [codespell]
 check-hidden =
 # Translations and generated/opaque source registries are checked by the catalog compiler.
-skip = */package-lock.json,*.log,.git,locale/*/LC_MESSAGES/sgn.po,locale/sgn.pot,locale/sources.txt,locale/workflows.json
+skip = */package-lock.json,*.log,.git,locale/*/LC_MESSAGES/sgn.po,*/locale/*/LC_MESSAGES/sgn.po,locale/sgn.pot,*/locale/sgn.pot,locale/sources.txt,*/locale/sources.txt,locale/workflows.json,*/locale/workflows.json
 # Keep API/variable names, named placeholders, paths and semantic context IDs stable.
 ignore-regex = (?:->)?\{[A-Za-z_][A-Za-z0-9_]*\}|\b[A-Za-z_][A-Za-z0-9_]*(?=\s*=>)|\bisnt(?=\s*\()|\b[A-Za-z0-9_]*[a-z][A-Z][A-Za-z0-9_]*\b|\\[nrt][A-Za-z]+|[$@%][A-Za-z_][A-Za-z0-9_]*|%\{[A-Za-z][A-Za-z0-9_]*\}|\b[A-Za-z0-9]+(?:[._/][A-Za-z0-9_-]+)+\b
 
