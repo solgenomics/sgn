@@ -23,7 +23,7 @@ $response = decode_json $mech->content;
 print STDERR Dumper $response;
 is($response->{message}, 'Login successful');
 
-$mech->get_ok('http://localhost:3010/ajax/user/new?first_name=testfirst&last_name=testlast&username=testusername&password=testpass&confirm_password=testpass&email_address=test@testcassavabase.com');
+$mech->post_ok('http://localhost:3010/ajax/user/new', [ "first_name" => "testfirst", "last_name" => "testlast", "username" => "testusername", "password" => "testpass", "confirm_password" => "testpass", "email_address" => "test@testcassavabase.com" ]);
 $response = decode_json $mech->content;
 print STDERR Dumper $response;
 is_deeply($response, {'message' => 'Account was created with username "testusername".
@@ -32,7 +32,7 @@ To continue, you must confirm that we can reach you via email address "test@test
 
 You will be able to login once your account has been confirmed.'});
 
-$mech->get_ok('http://localhost:3010/ajax/user/new?first_name=testfirst&last_name=testlast&username=testusername&password=testpass&confirm_password=testpass&email_address=test@testcassavabase.com&organization=testorg');
+$mech->post_ok('http://localhost:3010/ajax/user/new', [ "first_name" => "testfirst", "last_name" => "testlast", "username" => "testusername", "password" => "testpass", "confirm_password" => "testpass", "email_address" => "test@testcassavabase.com", "organization" => "testorg" ]);
 $response = decode_json $mech->content;
 print STDERR Dumper $response;
 is_deeply($response, {'error' => 'Account creation failed for the following reason(s): Username "testusername" is already in use. Please pick a different username.'});
