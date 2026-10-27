@@ -43,6 +43,8 @@ Convenience accessors for driver functions:
 
 * find_element_ok() - wraps the find_element in an ok() test.
 
+* select_datatable_tab() - selects a DataTable tab by its target pane ID.
+
 For all other driver functions, use the driver() accessor, for example: $swd->driver->get_window_size().
 
 =head1 AUTHOR
@@ -169,6 +171,22 @@ sub find_element_ok {
     my $test_name = shift || print STDERR "You can provide a test name parameter for find_element_ok\n";
     ok(my $element = $self->find_element($name, $method), $test_name);
     return $element;
+}
+
+sub select_datatable_tab {
+    my ($self, $tab_id) = @_;
+    $tab_id =~ s/^#//;
+
+    my $selector = qq{//a[\@data-target="#$tab_id"]};
+    my $tab = $self->find_element_ok(
+        $selector,
+        'xpath',
+        "select DataTable tab $tab_id",
+    );
+    $tab->click();
+    sleep(5);
+
+    return $tab;
 }
 
 sub accept_alert { 

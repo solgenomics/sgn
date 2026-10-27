@@ -46,6 +46,7 @@ $d->while_logged_in_as("submitter", sub {
 
     sleep(2);
 
+    ########### dataset detail page ##########
     $d->get_ok('/dataset/' . $trials_dt->{dataset_id}, 'trials dataset page');
     sleep(5);
 
@@ -85,9 +86,15 @@ $d->while_logged_in_as("submitter", sub {
     sleep(5);
 
 
+    ########## correlation analysis page ##########
+
     $d->get_ok('/correlation/analysis', 'correlation home page');
     sleep(5);
+<<<<<<< HEAD
     $d->filter_datatable('corr_pops_table', $plots_list_name);
+=======
+    $d->select_datatable_tab('corr_private_lists');
+>>>>>>> master
     $d->find_element_ok('//tr[@id="' . $plots_list_id .'"]//*[starts-with(@id, "run_correlation")]', 'xpath', 'run correlation')->click();
     sleep(200);
     $d->find_element_ok('//div[@id="corr_canvas"]//*[contains(text(), "DMCP")]', 'xpath', 'check corr plot');
@@ -98,7 +105,11 @@ $d->while_logged_in_as("submitter", sub {
     $d->driver->refresh();
     sleep(5);
 
+<<<<<<< HEAD
     $d->filter_datatable('corr_pops_table', $trials_list_name);
+=======
+    $d->select_datatable_tab('corr_private_lists');
+>>>>>>> master
     $d->find_element_ok('//tr[@id="' . $trials_list_id .'"]//*[starts-with(@id, "run_correlation")]', 'xpath', 'run correlation')->click();
     sleep(200);
     $d->find_element_ok('//div[@id="corr_canvas"]//*[contains(text(), "DMCP")]', 'xpath', 'check corr plot');
@@ -109,7 +120,11 @@ $d->while_logged_in_as("submitter", sub {
     $d->driver->refresh();
     sleep(5);
 
+<<<<<<< HEAD
     $d->filter_datatable('corr_pops_table', $plots_dt_name);
+=======
+    $d->select_datatable_tab('corr_private_datasets');
+>>>>>>> master
     $d->find_element_ok('//tr[@id="' . $plots_dt_id .'"]//*[starts-with(@id, "run_correlation")]', 'xpath', 'run correlation')->click();
     sleep(200);
     $d->find_element_ok('//div[@id="corr_canvas"]//*[contains(text(), "DMCP")]', 'xpath', 'check corr plot');
@@ -123,7 +138,11 @@ $d->while_logged_in_as("submitter", sub {
     remove_tree($cache_dir, {safe => 1});
     sleep(5);
 
+<<<<<<< HEAD
     $d->filter_datatable('corr_pops_table', $trials_dt_name);
+=======
+    $d->select_datatable_tab('corr_private_datasets');
+>>>>>>> master
     $d->find_element_ok('//tr[@id="' . $trials_dt_id .'"]//*[starts-with(@id, "run_correlation")]', 'xpath', 'run correlation')->click();
     sleep(200);
     $d->find_element_ok('//div[@id="corr_canvas"]//*[contains(text(), "DMCP")]', 'xpath', 'check corr plot');
@@ -219,8 +238,8 @@ $d->while_logged_in_as("submitter", sub {
     sleep(10);
 
     # # ###############################################################
-      $d->get_ok('solgs/traits/all/population/139/traits/1971973596/gp/1', 'models page');
-      sleep(15);
+    # # $d->get_ok('solgs/traits/all/population/139/traits/1971973596/gp/1', 'models page');
+    # # sleep(15);
     # ######################################################################
     
     $d->find_element_ok('trial_search_box', 'id', 'population search form')->send_keys('trial2 NaCRRI');
@@ -283,7 +302,7 @@ $d->while_logged_in_as("submitter", sub {
     my $si = $d->find_element('//div[@id="si_canvas"]//*[contains(text(), "Index Name")]', 'xpath', 'scroll up');
     $d->driver->execute_script( "arguments[0].scrollIntoView(true);window.scrollBy(0,-100);", $si);
     sleep(5);
-   $d->find_element_ok('coefficients', 'partial_link_text',  'download corr coef table');
+    $d->find_element_ok('coefficients', 'partial_link_text',  'download corr coef table');
     sleep(2);
 
     remove_tree($cache_dir, {safe => 1});

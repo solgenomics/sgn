@@ -7,6 +7,7 @@ use Moose;
 use SGN::Model::Cvterm;
 use Data::Dumper;
 use JSON;
+use CXGN::JSONUtils qw(decode_stored_json);
 
 has 'bcs_schema' => ( isa => 'Bio::Chado::Schema',
 	is => 'rw',
@@ -163,7 +164,7 @@ sub BUILD {
 		} elsif ($folder_type_row->type_id() == $folder_for_propagations_cvterm_id) {
 			$self->folder_for_propagations(1);
 		} elsif ($folder_type_row->type_id() == $additional_info_cvterm_id) {
-			my $additional_info = decode_json($folder_type_row->value);
+			my $additional_info = decode_stored_json($folder_type_row->value);
 			$self->additional_info($additional_info);
 		}
 	}

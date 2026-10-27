@@ -1436,7 +1436,7 @@ sub remove_parent_GET : Path('/ajax/stock/parent/remove') Args(0) {
     }
 
     if (! ($c->user && ($c->user->check_roles('curator') || $c->user->check_roles('submitter'))))  {
-	$c->stash->{rest} = { error => "Log in is required, or insufficent privileges, for removing parents" };
+	$c->stash->{rest} = { error => "Log in is required, or insufficient privileges, for removing parents" };
 	return;
     }
 
@@ -1498,8 +1498,10 @@ sub add_stock_parent_GET :Args(0) {
 
     if ($error) {
 	$c->stash->{rest} = { error => $error };
+	return;
     }
 
+    $c->stash->{rest} = { success => 1 };
 }
 
 
@@ -2917,7 +2919,7 @@ sub upload_derived_accessions_file_POST : Args(0) {
         user_role => $user_role
     });
 
-    ## Store uploaded temporary file in arhive
+    ## Store uploaded temporary file in archive
     $archived_filename_with_path = $uploader->archive();
     $md5 = $uploader->get_md5($archived_filename_with_path);
     if (!$archived_filename_with_path) {
@@ -3002,12 +3004,15 @@ sub get_stocks_with_images_GET : Args(0) {
 }
 
 
-sub stock_obsolete_in_bulk : Path('/stock/obsolete_in_bulk') : ActionClass('REST') { }
+sub stock_obsolete_in_bulk : Path('/ajax/stock/obsolete_in_bulk') : ActionClass('REST') { }
 
 sub stock_obsolete_in_bulk_GET {
     my ( $self, $c ) = @_;
     my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
+    my $dbh = $c->dbc->dbh;
     my $program_name = $c->req->param('program_name');
+    my $stock_name_string = $c->req->param('stock_names');
+    my $accession_list_id  = $c->req->param('accession_list_id');
 
     if (!$c->user()){
         $c->stash->{rest} = { error => "You must be logged in to obsolete stocks" };
@@ -3017,18 +3022,31 @@ sub stock_obsolete_in_bulk_GET {
     my @user_roles = $c->user->roles();
     my %has_roles = ();
     map { $has_roles{$_} = 1; } @user_roles;
-
-    if (! ( (exists($has_roles{$program_name}) && exists($has_roles{submitter})) || exists($has_roles{curator}))) {
-        $c->stash->{rest} = { error => "You need to be either a curator, or a submitter associated with breeding program $program_name to obsolete stocks." };
-        return;
+    if ($stock_name_string) {
+        if (! ( (exists($has_roles{$program_name}) && exists($has_roles{submitter})) || exists($has_roles{curator}))) {
+            $c->stash->{rest} = { error => "You need to be either a curator, or a submitter associated with breeding program $program_name to obsolete stocks." };
+            return;
+        }
+    } elsif ($accession_list_id) {
+        if (! exists($has_roles{curator}) && ! exists($has_roles{submitter})) {
+            $c->stash->{rest} = { error => "You need to be a curator or a submitter to obsolete stocks." };
+            return;
+        }
     }
 
-    my $stock_name_string = $c->req->param('stock_names');
-    my $stock_name_array = decode_json $stock_name_string;
+    my $stock_name_array_ref;
+    if ($stock_name_string) {
+        $stock_name_array_ref = decode_json $stock_name_string;
+    }
+
+    if ($accession_list_id) {
+        my $list = CXGN::List->new( { dbh=>$dbh, list_id=>$accession_list_id });
+        $stock_name_array_ref = $list->elements();
+    }
     my $obsolete_note  = $c->req->param('obsolete_note');
     my $is_obsolete = '1';
 
-    foreach my $stock_name (@$stock_name_array) {
+    foreach my $stock_name (@$stock_name_array_ref) {
         my $stock = $schema->resultset("Stock::Stock")->find({ uniquename => $stock_name });
         if ($stock) {
             my $stock_id = $stock->stock_id();

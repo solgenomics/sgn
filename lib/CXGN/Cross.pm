@@ -31,6 +31,7 @@ use Moose;
 use SGN::Model::Cvterm;
 use Data::Dumper;
 use JSON;
+use CXGN::JSONUtils qw(decode_stored_json);
 
 extends 'CXGN::Stock';
 
@@ -1305,7 +1306,7 @@ sub get_cross_additional_info_trial {
     while(my($cross_id, $cross_name, $cross_combination, $cross_additional_info_json) = $h->fetchrow_array()){
       #print STDERR Dumper $cross_props;
         if ($cross_additional_info_json){
-            my $cross_additional_info_hash = decode_json$cross_additional_info_json;
+            my $cross_additional_info_hash = decode_stored_json($cross_additional_info_json);
             push @data, [$cross_id, $cross_name, $cross_combination, $cross_additional_info_hash]
         } else {
             push @data, [$cross_id, $cross_name, $cross_combination, $cross_additional_info_json]

@@ -4,7 +4,7 @@ use Moose;
 use namespace::autoclean;
 
 use File::Path qw /remove_tree/;
-use File::Spec::Functions;
+use File::Spec;
 use CXGN::Dataset;
 use JSON;
 #use Data::Dumper;
@@ -183,7 +183,7 @@ sub analysis_cache_dir {
         $analysis_dir = $c->stash->{"${analysis_type}_dir"};
     }
 
-    return catdir($analysis_dir, $data_id, 'cache');
+    return File::Spec->catdir($analysis_dir, $data_id, 'cache');
 }
 
 sub analysis_tempfiles_dir {
@@ -196,7 +196,7 @@ sub analysis_tempfiles_dir {
         $analysis_dir = $c->stash->{"${analysis_type}_dir"};
     }
 
-    return catdir($analysis_dir, $data_id, 'tempfiles');
+    return File::Spec->catdir($analysis_dir, $data_id, 'tempfiles');
 }
 
 

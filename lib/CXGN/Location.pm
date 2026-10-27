@@ -149,11 +149,11 @@ sub store_location {
     if (!$nd_geolocation_id && !$name) {
         return { error => "Cannot add a new location with an undefined name. A location name is required" };
     }
-    elsif (!$nd_geolocation_id && !$self->_is_valid_name($name)) { # can't add a new location with name that already exists
+    elsif (!$self->_is_valid_name($name, $nd_geolocation_id)) { # can't add a new location with name that already exists or update an existing location with a name already used by a different location
         return { error => "The location - $name - already exists. Please choose another name, or use the existing location" };
     }
 
-    if (!$nd_geolocation_id && $abbreviation && !$self->_is_valid_abbreviation($abbreviation)) {
+    if (!$self->_is_valid_abbreviation($abbreviation, $nd_geolocation_id)) {
        return { error => "Abbreviation $abbreviation already exists in the database. Please choose another abbreviation" };
     }
 
@@ -407,8 +407,13 @@ sub _remove_ndgeolocationprop {
 sub _is_valid_name {
     my $self = shift;
     my $name = shift;
+    my $id = shift;
     my $schema = $self->bcs_schema();
-    my $existing_name_count = $schema->resultset('NaturalDiversity::NdGeolocation')->search( { description => $name } )->count();
+
+    my $existing_name_count = defined $id ?
+        $schema->resultset('NaturalDiversity::NdGeolocation')->search({ description => $name, nd_geolocation_id => { '!=' => $id } })->count() :
+        $schema->resultset('NaturalDiversity::NdGeolocation')->search({ description => $name })->count();
+
     if ($existing_name_count > 0) {
         return 0;
     }
@@ -420,8 +425,13 @@ sub _is_valid_name {
 sub _is_valid_abbreviation {
     my $self = shift;
     my $abbreviation = shift;
+    my $id = shift;
     my $schema = $self->bcs_schema();
-    my $existing_abbreviation_count = $schema->resultset('NaturalDiversity::NdGeolocationprop')->search( { value => $abbreviation } )->count();
+
+    my $existing_abbreviation_count = defined $id ?
+        $schema->resultset('NaturalDiversity::NdGeolocationprop')->search({ value => $abbreviation, nd_geolocation_id => { '!=' => $id } })->count() :
+        $schema->resultset('NaturalDiversity::NdGeolocationprop')->search({ value => $abbreviation })->count();
+
     if ($existing_abbreviation_count > 0) {
         return 0;
     }

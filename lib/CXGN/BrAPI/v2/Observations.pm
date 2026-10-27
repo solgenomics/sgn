@@ -13,6 +13,7 @@ use CXGN::TimeUtils;
 use DateTime;
 use utf8;
 use JSON;
+use CXGN::JSONUtils qw(decode_stored_json);
 
 extends 'CXGN::BrAPI::v2::Common';
 
@@ -295,7 +296,7 @@ sub _search {
     my $counter = 0;
 
     foreach (@$data){
-        if ( ($_->{phenotype_value} && $_->{phenotype_value} ne "") || ($_->{phenotype_value} && $_->{phenotype_value} eq '0') ) {
+        if ( defined $_->{phenotype_value} && $_->{phenotype_value} ne "" ) {
             my $observation_id = "$_->{phenotype_id}";
             my $additional_info;
             my $external_references;
@@ -332,8 +333,8 @@ sub _search {
 
             if ($counter >= $start_index && $counter <= $end_index) {
                 push @data_window, {
-                    additionalInfo => $_->{phenotype_additional_info} ? decode_json($_->{phenotype_additional_info}) : undef,
-                    externalReferences => $_->{phenotype_external_references} ? decode_json($_->{phenotype_external_references}) : undef,
+                    additionalInfo => $_->{phenotype_additional_info} ? decode_stored_json($_->{phenotype_additional_info}) : undef,
+                    externalReferences => $_->{phenotype_external_references} ? decode_stored_json($_->{phenotype_external_references}) : undef,
                     germplasmDbId => qq|$_->{accession_stock_id}|,
                     germplasmName => $_->{accession_uniquename},
                     observationUnitDbId => qq|$_->{obsunit_stock_id}|,
@@ -345,6 +346,7 @@ sub _search {
                     season => \%season,
                     collector => $_->{operator},
                     studyDbId => qq|$_->{trial_id}|,
+                    trialDbId => $_-> {folder_id} ? qq|$_->{folder_id}| : undef,
                     uploadedBy=> $_->{operator},
                     value => qq|$_->{phenotype_value}|,
                     # geoCoordinates => undef #needs to be implemented for v2.1

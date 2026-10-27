@@ -2,8 +2,12 @@ use strict;
 
 use lib 't/lib';
 
+<<<<<<< HEAD
 use File::Spec::Functions qw / catfile catdir/;
 use File::Path qw /remove_tree/;
+=======
+use File::Spec;
+>>>>>>> master
 use Test::More;
 use SGN::Test::WWW::WebDriver;
 use SGN::Test::Fixture;
@@ -19,9 +23,16 @@ my $solgs_data = SGN::Test::solGSData->new({
     'user_id' => 40,
 });
 
+<<<<<<< HEAD
 my $cache_dir = $solgs_data->base_analyses_cache_dir();
 my $cluster_dir  = catdir($cache_dir, 'cluster');
 my $log_dir      = catdir($cache_dir, 'log');
+=======
+my $cache_dir    = $solgs_data->site_cluster_shared_dir();
+my $protocol_dir = $solgs_data->default_protocol_dir();
+my $cluster_dir  = File::Spec->catdir( $protocol_dir, 'cluster' );
+my $log_dir      = File::Spec->catdir( $protocol_dir, 'log' );
+>>>>>>> master
 
 my $accessions_list = $solgs_data->load_accessions_list();
 my $accessions_list_name = $accessions_list->{list_name};

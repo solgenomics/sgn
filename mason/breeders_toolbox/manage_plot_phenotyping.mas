@@ -97,7 +97,7 @@ $type_name => "plot"
 
 <&| /page/info_section.mas, id=>"stock_trials_section", title => "Trials", collapsible=> 1, collapsed=>1 &>
 
-  <& /stock/trials.mas, stock_id => $stock_id &>
+  <& /stock/trials.mas, stock_id => $stock_id, type_name => $type_name &>
 
 </&>
 

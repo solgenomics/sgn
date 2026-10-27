@@ -5,6 +5,7 @@ use File::Slurp;
 use CXGN::Tools::Run;
 use Moose::Role;
 use Data::Dumper;
+use SGN::Context;
 
 sub create_design {
   my $self = shift;
@@ -12,7 +13,7 @@ sub create_design {
   my $rbase = R::YapRI::Base->new();
   my $stock_list;
   my @stock_list;
-  my $control_list;
+  my $control_list = '';
   my $number_of_blocks;
   my $stock_data_matrix;
   my $control_data_matrix;
@@ -88,8 +89,9 @@ sub create_design {
 
   my $cmd = "R CMD BATCH  '--args paramfile=\"".$tempfile.".params\"' " .  " R/rrc_design.R ".$tempfile.".out";
 
-  my $backend = 'Slurm';
-  my $cluster_host = "localhost";
+  my $vhost_conf = SGN::Context->new;
+  my $backend = $vhost_conf->get_conf('backend');
+  my $cluster_host = $vhost_conf->get_conf('cluster_host');
 
   my $ctr = CXGN::Tools::Run->new( {
       backend => $self->get_backend(),
@@ -106,7 +108,9 @@ sub create_design {
 
 
   my $design_file = $tempfile.".design";
-  open my $design, $design_file or die "Could not open $design_file: $!";
+  unless (-e $design_file) {
+    die "R did not produce a design file ($design_file). Check the R log at $tempfile.out\n";
+  }
 
   if ( -e $design_file) {
       my @lines = read_file($design_file);
