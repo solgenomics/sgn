@@ -23,6 +23,8 @@ sub login : Path('/ajax/user/login') Args(0) {
     my $self = shift;
     my $c = shift;
 
+    return if !$self->_require_post($c);
+
     my $username = $c->req->param("username");
     my $password = $c->req->param("password");
     my $goto_url = $c->req->param("goto_url");

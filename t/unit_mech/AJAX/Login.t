@@ -18,12 +18,12 @@ my $schema = $f->bcs_schema;
 my $mech = Test::WWW::Mechanize->new;
 my $response;
 
-$mech->get_ok('http://localhost:3010/ajax/user/login?username=janedoe&password=secretpw');
+$mech->post_ok('http://localhost:3010/ajax/user/login', [ username => 'janedoe', password => 'secretpw' ]);
 $response = decode_json $mech->content;
 print STDERR Dumper $response;
 is($response->{message}, 'Login successful');
 
-$mech->post_ok('http://localhost:3010/ajax/user/new', [ "first_name" => "testfirst", "last_name" => "testlast", "username" => "testusername", "password" => "testpass", "confirm_password" => "testpass", "email_address" => "test@testcassavabase.com" ]);
+$mech->post_ok('http://localhost:3010/ajax/user/new', [ "first_name" => "testfirst", "last_name" => "testlast", "username" => "testusername", "password" => "testpass", "confirm_password" => "testpass", "email_address" => 'test@testcassavabase.com' ]);
 $response = decode_json $mech->content;
 print STDERR Dumper $response;
 is_deeply($response, {'message' => 'Account was created with username "testusername".
@@ -32,7 +32,7 @@ To continue, you must confirm that we can reach you via email address "test@test
 
 You will be able to login once your account has been confirmed.'});
 
-$mech->post_ok('http://localhost:3010/ajax/user/new', [ "first_name" => "testfirst", "last_name" => "testlast", "username" => "testusername", "password" => "testpass", "confirm_password" => "testpass", "email_address" => "test@testcassavabase.com", "organization" => "testorg" ]);
+$mech->post_ok('http://localhost:3010/ajax/user/new', [ "first_name" => "testfirst", "last_name" => "testlast", "username" => "testusername", "password" => "testpass", "confirm_password" => "testpass", "email_address" => 'test@testcassavabase.com', "organization" => "testorg" ]);
 $response = decode_json $mech->content;
 print STDERR Dumper $response;
 is_deeply($response, {'error' => 'Account creation failed for the following reason(s): Username "testusername" is already in use. Please pick a different username.'});
@@ -56,7 +56,7 @@ $response = decode_json $mech->content;
 print STDERR Dumper $response;
 is($response->{message}, 'Password reset email requested. If you have an account on this database with this email, you will receive a message with a password reset link.  If you do not have an account with this email address, you will not receive a message.');
 
-$mech->get_ok('http://localhost:3010/ajax/user/login?username=testusername&password=testpass');
+$mech->post_ok('http://localhost:3010/ajax/user/login', [ username => 'testusername', password => 'testpass' ]);
 $response = decode_json $mech->content;
 print STDERR Dumper $response;
 is($response->{message}, 'Login successful');
@@ -95,14 +95,14 @@ $mech->get_ok('http://localhost:3010/ajax/user/update?current_password=secretpw&
 
 # LOG OUT WRONG USER
 #
-$mech->get_ok('http://localhost:3010/ajax/user/login?logout=1');
+$mech->post_ok('http://localhost:3010/ajax/user/login', [ logout => 1 ]);
 $response = decode_json $mech->content();
 print STDERR "LOGOUT: ".Dumper($response);
 
 # CHECK UPDATES WITH CORRECT USER
 # login again as janedoe for update tests
 #
-$mech->get_ok('http://localhost:3010/ajax/user/login?username=janedoe&password=secretpw');
+$mech->post_ok('http://localhost:3010/ajax/user/login', [ username => 'janedoe', password => 'secretpw' ]);
 $response = decode_json $mech->content;
 print STDERR Dumper $response;
 is($response->{message}, 'Login successful');

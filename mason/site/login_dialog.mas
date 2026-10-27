@@ -372,6 +372,7 @@ jQuery(document).ready( function() {
         }
         jQuery.ajax( { 
             url: '/ajax/user/login',
+            method: 'POST',
             data: form_data,
             error: function(r) { alert('An error occurred! Sorry!');  },
             success: function(r) {
