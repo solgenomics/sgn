@@ -1,0 +1,407 @@
+{
+  "catalogs": {
+    "uk": {
+      "schema": 1,
+      "api": 1,
+      "locale": "uk",
+      "direction": "ltr",
+      "sourceRevision": "unit-fixture",
+      "nplurals": 3,
+      "pluralForms": "nplurals=3; plural=(n%10==1 && n%100!=11 ? 0 : n%10>=2 && n%10<=4 && (n%100<10 || n%100>=20) ? 1 : 2);",
+      "pluralAst": {
+        "type": "GROUP",
+        "expr": {
+          "type": "GROUP",
+          "expr": {
+            "type": "TERNARY",
+            "expr": {
+              "type": "AND",
+              "left": {
+                "type": "EQ",
+                "left": {
+                  "type": "MOD",
+                  "left": {
+                    "type": "VAR"
+                  },
+                  "right": {
+                    "type": "NUM",
+                    "val": 10
+                  }
+                },
+                "right": {
+                  "type": "NUM",
+                  "val": 1
+                }
+              },
+              "right": {
+                "type": "NEQ",
+                "left": {
+                  "type": "MOD",
+                  "left": {
+                    "type": "VAR"
+                  },
+                  "right": {
+                    "type": "NUM",
+                    "val": 100
+                  }
+                },
+                "right": {
+                  "type": "NUM",
+                  "val": 11
+                }
+              }
+            },
+            "truthy": {
+              "type": "NUM",
+              "val": 0
+            },
+            "falsey": {
+              "type": "TERNARY",
+              "expr": {
+                "type": "AND",
+                "left": {
+                  "type": "AND",
+                  "left": {
+                    "type": "GTE",
+                    "left": {
+                      "type": "MOD",
+                      "left": {
+                        "type": "VAR"
+                      },
+                      "right": {
+                        "type": "NUM",
+                        "val": 10
+                      }
+                    },
+                    "right": {
+                      "type": "NUM",
+                      "val": 2
+                    }
+                  },
+                  "right": {
+                    "type": "LTE",
+                    "left": {
+                      "type": "MOD",
+                      "left": {
+                        "type": "VAR"
+                      },
+                      "right": {
+                        "type": "NUM",
+                        "val": 10
+                      }
+                    },
+                    "right": {
+                      "type": "NUM",
+                      "val": 4
+                    }
+                  }
+                },
+                "right": {
+                  "type": "GROUP",
+                  "expr": {
+                    "type": "OR",
+                    "left": {
+                      "type": "LT",
+                      "left": {
+                        "type": "MOD",
+                        "left": {
+                          "type": "VAR"
+                        },
+                        "right": {
+                          "type": "NUM",
+                          "val": 100
+                        }
+                      },
+                      "right": {
+                        "type": "NUM",
+                        "val": 10
+                      }
+                    },
+                    "right": {
+                      "type": "GTE",
+                      "left": {
+                        "type": "MOD",
+                        "left": {
+                          "type": "VAR"
+                        },
+                        "right": {
+                          "type": "NUM",
+                          "val": 100
+                        }
+                      },
+                      "right": {
+                        "type": "NUM",
+                        "val": 20
+                      }
+                    }
+                  }
+                }
+              },
+              "truthy": {
+                "type": "NUM",
+                "val": 1
+              },
+              "falsey": {
+                "type": "NUM",
+                "val": 2
+              }
+            }
+          }
+        }
+      },
+      "messages": {
+        "trials.count\u0004%{count} trial found": {
+          "plural": "%{count} trials found",
+          "forms": [
+            "Знайдено %{count} дослід",
+            "Знайдено %{count} досліди",
+            "Знайдено %{count} дослідів"
+          ]
+        },
+        "controls.save\u0004Save": {
+          "plural": null,
+          "forms": [
+            "Зберегти"
+          ]
+        },
+        "seedlots.save\u0004Save": {
+          "plural": null,
+          "forms": [
+            "Зберегти партію"
+          ]
+        },
+        "\u0004Save": {
+          "plural": null,
+          "forms": [
+            "Зберегти без контексту"
+          ]
+        },
+        "trial.named\u0004Created trial %{name}.": {
+          "plural": null,
+          "forms": [
+            "Створено дослід %{name}."
+          ]
+        }
+      }
+    },
+    "ar": {
+      "schema": 1,
+      "api": 1,
+      "locale": "ar",
+      "direction": "rtl",
+      "sourceRevision": "unit-fixture",
+      "nplurals": 6,
+      "pluralForms": "nplurals=6; plural=(n==0 ? 0 : n==1 ? 1 : n==2 ? 2 : n%100>=3 && n%100<=10 ? 3 : n%100>=11 ? 4 : 5);",
+      "pluralAst": {
+        "type": "GROUP",
+        "expr": {
+          "type": "GROUP",
+          "expr": {
+            "type": "TERNARY",
+            "expr": {
+              "type": "EQ",
+              "left": {
+                "type": "VAR"
+              },
+              "right": {
+                "type": "NUM",
+                "val": 0
+              }
+            },
+            "truthy": {
+              "type": "NUM",
+              "val": 0
+            },
+            "falsey": {
+              "type": "TERNARY",
+              "expr": {
+                "type": "EQ",
+                "left": {
+                  "type": "VAR"
+                },
+                "right": {
+                  "type": "NUM",
+                  "val": 1
+                }
+              },
+              "truthy": {
+                "type": "NUM",
+                "val": 1
+              },
+              "falsey": {
+                "type": "TERNARY",
+                "expr": {
+                  "type": "EQ",
+                  "left": {
+                    "type": "VAR"
+                  },
+                  "right": {
+                    "type": "NUM",
+                    "val": 2
+                  }
+                },
+                "truthy": {
+                  "type": "NUM",
+                  "val": 2
+                },
+                "falsey": {
+                  "type": "TERNARY",
+                  "expr": {
+                    "type": "AND",
+                    "left": {
+                      "type": "GTE",
+                      "left": {
+                        "type": "MOD",
+                        "left": {
+                          "type": "VAR"
+                        },
+                        "right": {
+                          "type": "NUM",
+                          "val": 100
+                        }
+                      },
+                      "right": {
+                        "type": "NUM",
+                        "val": 3
+                      }
+                    },
+                    "right": {
+                      "type": "LTE",
+                      "left": {
+                        "type": "MOD",
+                        "left": {
+                          "type": "VAR"
+                        },
+                        "right": {
+                          "type": "NUM",
+                          "val": 100
+                        }
+                      },
+                      "right": {
+                        "type": "NUM",
+                        "val": 10
+                      }
+                    }
+                  },
+                  "truthy": {
+                    "type": "NUM",
+                    "val": 3
+                  },
+                  "falsey": {
+                    "type": "TERNARY",
+                    "expr": {
+                      "type": "GTE",
+                      "left": {
+                        "type": "MOD",
+                        "left": {
+                          "type": "VAR"
+                        },
+                        "right": {
+                          "type": "NUM",
+                          "val": 100
+                        }
+                      },
+                      "right": {
+                        "type": "NUM",
+                        "val": 11
+                      }
+                    },
+                    "truthy": {
+                      "type": "NUM",
+                      "val": 4
+                    },
+                    "falsey": {
+                      "type": "NUM",
+                      "val": 5
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "messages": {
+        "trials.count\u0004%{count} trial found": {
+          "plural": "%{count} trials found",
+          "forms": [
+            "ar[0] %{count}",
+            "ar[1] %{count}",
+            "ar[2] %{count}",
+            "ar[3] %{count}",
+            "ar[4] %{count}",
+            "ar[5] %{count}"
+          ]
+        }
+      }
+    },
+    "pt-BR": {
+      "schema": 1,
+      "api": 1,
+      "locale": "pt-BR",
+      "direction": "ltr",
+      "sourceRevision": "unit-fixture",
+      "nplurals": 2,
+      "pluralForms": "nplurals=2; plural=(n > 1);",
+      "pluralAst": {
+        "type": "GROUP",
+        "expr": {
+          "type": "GROUP",
+          "expr": {
+            "type": "GT",
+            "left": {
+              "type": "VAR"
+            },
+            "right": {
+              "type": "NUM",
+              "val": 1
+            }
+          }
+        }
+      },
+      "messages": {
+        "trials.count\u0004%{count} trial found": {
+          "plural": "%{count} trials found",
+          "forms": [
+            "pt-BR[0] %{count}",
+            "pt-BR[1] %{count}"
+          ]
+        }
+      }
+    },
+    "pt-PT": {
+      "schema": 1,
+      "api": 1,
+      "locale": "pt-PT",
+      "direction": "ltr",
+      "sourceRevision": "unit-fixture",
+      "nplurals": 2,
+      "pluralForms": "nplurals=2; plural=(n != 1);",
+      "pluralAst": {
+        "type": "GROUP",
+        "expr": {
+          "type": "GROUP",
+          "expr": {
+            "type": "NEQ",
+            "left": {
+              "type": "VAR"
+            },
+            "right": {
+              "type": "NUM",
+              "val": 1
+            }
+          }
+        }
+      },
+      "messages": {
+        "trials.count\u0004%{count} trial found": {
+          "plural": "%{count} trials found",
+          "forms": [
+            "pt-PT[0] %{count}",
+            "pt-PT[1] %{count}"
+          ]
+        }
+      }
+    }
+  }
+}
