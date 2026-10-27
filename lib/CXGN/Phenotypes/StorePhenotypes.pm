@@ -683,6 +683,12 @@ sub check_measurement {
                 }
             }
 
+            # A date trait stores whatever text it is given, and an existing value is compared as text,
+            # so 3/24/2026 and 2026-03-24 count as different values. Accept only ISO 8601 dates.
+            if ($self->check_trait_format->{$trait_cvterm_id} =~ m/^date$/i && !_is_iso_date($trait_value)) {
+                $error_message .= "<small>This trait value should be a date in the form YYYY-MM-DD: <br/>Plot Name: ".$plot_name."<br/>Trait Name: ".$trait_name."<br/>Value: ".$trait_value."</small><hr>";
+            }
+
             #check, if the trait value is an image
             if ($self->check_trait_format->{$trait_cvterm_id} eq 'image') {
                 $trait_value =~ s/^.*photos\///;
@@ -752,12 +758,13 @@ sub check_measurement {
         my $repeat_type = "single";
 
         if (exists($self->check_trait_repeat_type->{$trait_cvterm_id})) {
-            if (grep /$repeat_type/, ("single", "multiple", "time_series")) {
-                $repeat_type = $self->check_trait_repeat_type->{$trait_cvterm_id};
+            my $stored_repeat_type = $self->check_trait_repeat_type->{$trait_cvterm_id} // '';
+            if (grep { $_ eq $stored_repeat_type } ("single", "multiple", "time_series")) {
+                $repeat_type = $stored_repeat_type;
                 #print STDERR "Trait repeat type: $repeat_type\n";
             }
             else {
-                print STDERR "the trait repeat type of $self->check_trait_repeat_type->{$trait_cvterm_id} has no meaning. Assuming 'single'.\n";
+                print STDERR "the trait repeat type of $stored_repeat_type has no meaning. Assuming 'single'.\n";
             }
         }
 
@@ -1650,6 +1657,17 @@ sub _json_trait_entry_value {
     }
 
     return ref($entry) ? undef : $entry;
+}
+
+# True for a calendar date written YYYY-MM-DD, optionally followed by a time of day.
+sub _is_iso_date {
+    my $value = shift;
+    return 0 if !defined($value);
+    my ($year, $month, $day) = $value =~ m/^(\d{4})-(\d{2})-(\d{2})(?:[ T]\d{2}:\d{2}(?::\d{2})?)?$/ or return 0;
+    return 0 if $month < 1 || $month > 12 || $day < 1;
+    my $leap = ($year % 4 == 0 && $year % 100 != 0) || $year % 400 == 0;
+    my @days_in_month = (31, $leap ? 29 : 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31);
+    return $day <= $days_in_month[$month - 1] ? 1 : 0;
 }
 
 ###
