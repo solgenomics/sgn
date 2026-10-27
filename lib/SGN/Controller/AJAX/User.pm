@@ -678,7 +678,9 @@ sub quick_create_user :Path('/ajax/user/quick_create_account') Args(0) {
     my $self = shift;
     my $c = shift;
 
-     if (!$c->user()) {
+    return if !$self->_require_post($c);
+
+    if (!$c->user()) {
 	$c->stash->{rest} = { error => "Need to be logged in to use feature." };
 	return;
     }
