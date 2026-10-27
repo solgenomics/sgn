@@ -41,6 +41,7 @@ use Test::More;
 use CXGN::People::Login;
 use CXGN::People::Person;
 use SGN::Controller::AJAX::User;
+use SGN::I18N ();
 
 # ---------------------------------------------------------------------
 # a minimal stand-in for the parts of $c that reset_password() and
@@ -57,12 +58,14 @@ sub dbh { return $_[0]->{dbh}; }
 package Test::FakeContext;
 sub new {
     my ($class, %args) = @_;
-    return bless { req => $args{req}, dbc => $args{dbc}, config => $args{config}, stash => {} }, $class;
+    return bless { req => $args{req}, dbc => $args{dbc}, config => $args{config}, stash => {},
+        i18n => SGN::I18N->new(locale => 'en') }, $class;
 }
 sub req    { return $_[0]->{req}; }
 sub dbc    { return $_[0]->{dbc}; }
 sub config { return $_[0]->{config}; }
 sub stash  { return $_[0]->{stash}; }
+sub i18n   { return $_[0]->{i18n}; }
 
 package main;
 
