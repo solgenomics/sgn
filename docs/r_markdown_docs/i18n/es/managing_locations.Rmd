@@ -1,0 +1,19 @@
+# Gestión de ubicaciones {#managing-locations}
+
+Las ubicaciones de campo se gestionan en la página “**Gestionar ubicaciones**”. En ella, las ubicaciones de la base de datos se organizan por programa de mejoramiento. Cada ubicación enlaza a los ensayos realizados allí. Para añadir una ubicación, pulse el botón “Cargar nuevas ubicaciones”, que abre el formulario “Cargar ubicaciones”.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/image141.png')
+```
+
+La sección "Cargar ubicaciones" explica cómo preparar una hoja de cálculo con los datos de las ubicaciones que se cargarán. Son obligatorios: Name, abbreviation, country code, country name, program, type, latitute, longitude y elevation. NOAA station ID es opcional. Adjunte la hoja de cálculo al formulario y pulse "Cargar" para añadir esas ubicaciones a la base de datos.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/image187.png')
+```
+
+También puede ver y añadir ubicaciones en el mapa. Pase el cursor sobre un icono para ver los detalles de la ubicación y los ensayos asociados. Haga clic en el mapa para abrir el diálogo de nueva ubicación. Para añadirla, introduzca los mismos datos que en la hoja de cálculo.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/location_map.png')
+```

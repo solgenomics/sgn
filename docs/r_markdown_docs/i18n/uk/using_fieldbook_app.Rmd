@@ -1,0 +1,211 @@
+---
+output:
+  pdf_document: default
+  html_document: default
+---
+# Збір і зберігання даних за допомогою Field Book і BreedBase {#Using-Field-Book-with-BreedBase}
+
+```{r echo=FALSE, out.width='75%', fig.align='center'}
+knitr::include_graphics('assets/images/FB_Section_Header.png')
+```
+
+## Вступ {#introduction-1}
+
+**Field Book** — це програма з відкритим кодом для Android, створена для спрощення збору фенотипових даних. Вона замінює паперові польові журнали й зменшує помилки під час перенесення даних.
+
+**BreedBase** інтегрується з Field Book: користувачі можуть створювати файли схем поля й ознак у потрібному форматі, імпортувати зібрані дані та за бажанням обмінюватися ними через **BrAPI**.
+
+У цьому розділі наведено покрокові інструкції з підготовки Field Book до збору даних досліду, що зберігається в BreedBase: створення файлів, ручний імпорт файлів та експорт даних. Передбачається, що дані про ділянки досліду й визначення ознак уже є в BreedBase, а користувач має пристрій Android.
+
+[*Field Book User Manual*](https://fieldbook.phenoapps.org/#/)
+
+---
+
+## Встановлення Field Book {#installing-field-book}
+
+Field Book можна встановити на пристрій Android через Google Play Store або вручну з GitHub. Щоб отримувати найновіші функції та виправлення, регулярно перевіряйте наявність оновлень.
+
+
+### Варіант 1: завантаження з Google Play Store {#option-1-downloading-from-the-google-play-store}
+
+Завантажте Field Book безпосередньо з [Google Play Store](https://play.google.com/store/apps/details?id=com.fieldbook.tracker) або відскануйте QR-код нижче.
+
+```{r echo=FALSE, out.width='25%', fig.align='center'}
+knitr::include_graphics('assets/images/QR_FieldBook_PlayStore.png')
+```
+
+[**Покрокова інструкція: встановлення й налаштування**](https://scribehow.com/shared/Fieldbook_Installation_and_Initial_Setup__3E-cowQMRcOKhfRl_sqFDQ)
+
+<iframe src="https://scribehow.com/embed/Fieldbook_Installation_and_Initial_Setup__3E-cowQMRcOKhfRl_sqFDQ?as=scrollable" width="100%" height="320" allow="fullscreen" style="border: 0; min-height: 320px"></iframe>
+
+### Варіант 2: ручне встановлення з GitHub {#option-2-manual-installation-from-github}
+
+[**Покрокова інструкція: встановлення Field Book із GitHub**](https://scribehow.com/shared/Installing_Field_Book_from_GitHub__M0qchs3uThGb_ms2nDRg3A)
+
+<iframe src="https://scribehow.com/embed/Installing_Field_Book_from_GitHub__M0qchs3uThGb_ms2nDRg3A?as=scrollable" width="100%" height="320" allow="fullscreen" style="border: 0; min-height: 320px"></iframe>
+
+### Оновлення Field Book {#keeping-field-book-updated}
+
+Рекомендується регулярно встановлювати оновлення, щоб отримувати нові функції та виправлення помилок.
+
+[**Покрокова інструкція: оновлення Field Book**](https://scribehow.com/shared/Updating_the_Field_Book_App__qdTEMk1lSkadYj8zXgOYgA).
+
+<iframe src="https://scribehow.com/embed/Updating_the_Field_Book_App__qdTEMk1lSkadYj8zXgOYgA?as=scrollable" width="100%" height="320" allow="fullscreen" style="border: 0; min-height: 320px"></iframe>
+
+---
+
+## Підготовка файлів схеми поля в BreedBase {#preparing-field-layout-files-in-breedbase}
+
+Для Field Book потрібен **файл схеми поля** з унікальним ідентифікатором кожної ділянки або рослини, за якою спостерігатимуть. За потреби можна додати стовпці з рядком, стовпцем, родоводом або попередніми фенотиповими даними.
+
+BreedBase надає інструменти для створення файлів схем безпосередньо з метаданих досліду. Їх можна експортувати й завантажити до Field Book для збору даних.
+
+[**Покрокова інструкція: створення файла схеми поля в BreedBase**](https://scribehow.com/shared/Creating_a_Field_Layout_File_for_Field_Book_in_Breedbase__FDBwW83OS66kHXIvVsP-1A?referrer=documents)
+
+---
+
+## Імпорт файлів схеми поля до Field Book {#importing-field-layout-files-into-field-book}
+
+Файли схеми поля можна імпортувати до Field Book із хмарного сховища або безпосередньо з пристрою.
+
+### Варіант 1: імпорт із хмарного сховища {#option-1-import-from-cloud-storage}
+
+Вимоги:
+
+1. Створений файл схеми поля.
+2. Підключений на пристрої хмарний сервіс (наприклад, Google Drive).
+3. Файл, завантажений до облікового запису хмарного сервісу.
+
+[**Покрокова інструкція: імпорт із хмарного сховища**](https://scribehow.com/shared/Importing_Field_Layout_Files_to_Field_Book_from_Cloud_Storage__5JLV59I8TzCgDeTkUPbIdA)
+
+<iframe src="https://scribehow.com/embed/Importing_Field_Layout_Files_to_Field_Book_from_Cloud_Storage__5JLV59I8TzCgDeTkUPbIdA?as=scrollable" width="100%" height="320" allow="fullscreen" style="border: 0; min-height: 320px"></iframe>
+
+### Варіант 2: імпорт із локального сховища пристрою {#option-2-import-from-local-storage-device}
+
+Вимоги:
+
+1. Створений файл схеми поля.
+2. Файл, переданий до локального сховища пристрою Android.
+
+**Покрокова інструкція: імпорт із локального пристрою** (Зовнішню покрокову інструкцію ще не додано до англійського оригіналу.)
+
+---
+
+## Додавання ознак до Field Book за допомогою BreedBase {#adding-traits-to-field-book-using-breedbase}
+
+Щоб експортовані дані були сумісні з BreedBase, назви ознак у Field Book мають точно збігатися з назвами в базі даних.
+
+BreedBase дає змогу створювати **файли ознак** із назвами, типами, одиницями вимірювання та метаданими у належному форматі.
+
+### Створення файлів ознак у BreedBase {#creating-trait-files-in-breedbase}
+
+[**Покрокова інструкція: створення файлів ознак у BreedBase**](https://scribehow.com/shared/Creating_a_Field_Book_Trait_File_in_BreedBase__AQKYEuyXRzK1H1lRFm--3Q)
+
+<iframe src="https://scribehow.com/embed/Creating_a_Field_Book_Trait_File_in_BreedBase__AQKYEuyXRzK1H1lRFm--3Q?as=scrollable" width="100%" height="320" allow="fullscreen" style="border: 0; min-height: 320px"></iframe>
+
+### Імпорт файлів ознак до Field Book {#importing-trait-files-to-field-book}
+
+[**Покрокова інструкція: імпорт файлів ознак**](https://scribehow.com/shared/Importing_Trait_Files_into_Field_Book__LuVCpgtfQCeDtWEl7xbZVw)
+
+<iframe src="https://scribehow.com/embed/Importing_Trait_Files_into_Field_Book__LuVCpgtfQCeDtWEl7xbZVw?as=scrollable" width="100%" height="320" allow="fullscreen" style="border: 0; min-height: 320px"></iframe>
+
+---
+
+## Збір та експорт фенотипових даних {#collecting-and-exporting-phenotype-data}
+
+У цьому розділі описано запис і експорт фенотипових даних у Field Book. Передбачається, що потрібні файли схеми поля та ознак уже імпортовано до програми.
+
+Наведено інструкції із внесення фенотипових спостережень у полі та експорту зібраних даних у форматі, сумісному з подальшою обробкою й завантаженням до **BreedBase**. Стандартизований процес допомагає забезпечити цілісність і простежуваність даних та інтеграцію із селекційними базами.
+
+### Збір фенотипових даних у Field Book {#collecting-phenotype-data-in-field-book}
+
+Після завантаження файлів схеми поля й ознак можна починати збір даних. Field Book дає змогу переглядати записи ділянок і рослин, вводити значення ознак у структуровані форми та автоматично додавати до спостережень час і геотеги, якщо це дозволяють налаштування пристрою.
+
+[**Покрокова інструкція: збір даних у Field Book**](https://scribehow.com/shared/Collecting_Data_in_Fieldbook__hIsZkb9xSnKcLW65gN60lA)
+
+
+### Експорт фенотипових даних із Field Book та імпорт до BreedBase {#exporting-phenotype-data-from-field-book-and-importing-to-breedbase}
+
+Після завершення збору даних Field Book дає змогу експортувати їх у файл .csv. Потім цей файл можна завантажити до BreedBase для зберігання й аналізу.
+
+[**Покрокова інструкція: експорт фенотипових даних із Field Book**](https://scribehow.com/shared/Exporting_Phenotype_Data_in_FieldBook__ToUuuA3YTYGclEg7SDArLg)
+
+Після експорту файл .csv можна імпортувати до BreedBase через інтерфейс завантаження даних досліду. Завантажте фенотипові спостереження за інструкціями в розділі **Керування фенотиповими даними**.
+
+Важливо, щоб:
+
+- Назви ознак збігалися з визначеними в базі даних.
+- Ідентифікатори ділянок або рослин відповідали початковій схемі.
+
+---
+
+## Передавання даних між Field Book і BreedBase через BrAPI {#using-brapi-for-data-transfer-between-field-book-and-breedbase}
+
+Field Book підтримує інтеграцію з **BreedBase** за специфікацією **BrAPI (Breeding API)**. BrAPI дає змогу безпосередньо обмінюватися метаданими дослідів і фенотиповими спостереженнями між Field Book і BreedBase без ручного завантаження файлів.
+
+У цьому посібнику розглянуто такі дії:
+
+- Підключити Field Book до сервера BreedBase із підтримкою BrAPI
+- Імпортувати схему досліду й ознаки з BreedBase до Field Book
+- Експортувати зібрані фенотипові дані з Field Book до BreedBase
+
+**Передумови:**
+
+- Потрібен обліковий запис BreedBase із правами доступу до даних дослідів та ознак.
+- Екземпляр BreedBase має бути налаштований із робочими кінцевими точками BrAPI.
+- Застосунок Field Book має бути встановлений на пристрої Android із доступом до інтернету.
+
+**Переваги використання BrAPI:**
+
+- Зменшує кількість помилок під час роботи з файлами вручну.
+- Підтримує синхронізацію даних у реальному часі.
+- Дає змогу координувати роботу віддаленої команди та ефективніше виконувати процеси.
+
+### Підключення Field Book до сервера BrAPI {#connecting-field-book-to-a-brapi-server}
+
+[**Покрокова інструкція: підключення Field Book до сервера BreedBase із BrAPI**](https://scribehow.com/shared/Enable_BrAPI_for_Field_Book_using_the_Scannable_BrAPI_Configuration__SUXsC8xKQX-rLEG-4H6BIA)
+
+<iframe src="https://scribehow.com/embed/Enable_BrAPI_for_Field_Book_using_the_Scannable_BrAPI_Configuration__SUXsC8xKQX-rLEG-4H6BIA?as=scrollable" width="100%" height="320" allow="fullscreen" style="border: 0; min-height: 320px"></iframe>
+
+### Імпорт дослідів та ознак із BreedBase {#importing-trials-and-traits-from-breedbase}
+
+[**Покрокова інструкція: імпорт дослідів із BreedBase через BrAPI**](https://scribehow.com/shared/Import_Field_Trials_from_BreedBase_via_BrAPI__R4munb3fQ-OO5f-WAZRnKg)
+
+<iframe src="https://scribehow.com/embed/Import_Field_Trials_from_BreedBase_via_BrAPI__R4munb3fQ-OO5f-WAZRnKg?as=scrollable" width="100%" height="320" allow="fullscreen" style="border: 0; min-height: 320px"></iframe>
+
+[**Покрокова інструкція: імпорт ознак із BreedBase через BrAPI**](https://scribehow.com/shared/Import_Traits_from_BreedBase_via_BrAPI__aqvmCO8QS_eziilPrntOoA?referrer=documents)
+
+<iframe src="https://scribehow.com/embed/Import_Traits_from_BreedBase_via_BrAPI__aqvmCO8QS_eziilPrntOoA?as=scrollable" width="100%" height="320" allow="fullscreen" style="border: 0; min-height: 320px"></iframe>
+
+### Збір даних {#collecting-data}
+
+Вводьте фенотипові спостереження за інструкціями в розділі **Збір фенотипових даних у Field Book**.
+
+Переконайтеся, що:
+
+- Значення ознак відповідають очікуваним форматам (наприклад, числовому або категоріальному).
+- Спостереження регулярно зберігаються під час роботи в полі.
+
+### Експорт фенотипових даних до BreedBase через BrAPI {#exporting-phenotype-data-to-breedbase-via-brapi}
+
+[**Покрокова інструкція: надсилання фенотипових даних через BrAPI**](https://scribehow.com/shared/Exporting_Data_with_BrAPI__PaWGH98ESQWGrXIZk5lJTQ)
+
+<iframe src="https://scribehow.com/embed/Exporting_Data_with_BrAPI__PaWGH98ESQWGrXIZk5lJTQ?as=scrollable" width="100%" height="320" allow="fullscreen" style="border: 0; min-height: 320px"></iframe>
+
+### Перевірка даних у BreedBase {#verifying-data-in-breedbase}
+
+Після експорту даних до BreedBase через BrAPI перевірте безпосередньо в BreedBase, чи завершився експорт успішно.
+
+1. Увійдіть у свій екземпляр BreedBase.
+2. Перейдіть на сторінку “Керування дослідами” або відомостей про завантажений дослід.
+3. Переконайтеся, що:
+    - Дані ознак відображаються на вкладці “Фенотипові дані”.
+    - Точки даних відповідають очікуваним ідентифікаторам ділянок або рослин.
+    - Одиниці вимірювання та шкали ознак відповідають визначеним у базі даних.
+
+
+### Усунення несправностей {#troubleshooting}
+
+- Не вдається підключитися: перевірте URL сервера BrAPI та правильність облікових даних.
+- Ознаки не завантажуються: переконайтеся, що вони є в BreedBase.
+- Не вдається завантажити: перевірте підключення до інтернету, права користувача та форматування ознак.

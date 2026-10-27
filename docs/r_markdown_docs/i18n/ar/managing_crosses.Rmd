@@ -1,0 +1,239 @@
+# إدارة التهجينات {#managing-crosses}
+
+يمكن إدارة معلومات التهجينات من خيار “التهجينات” في قائمة “إدارة”.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/image148.png')
+```
+
+## تجربة التهجين {#crossing-experiment}
+
+تُجمع التهجينات المختلفة ضمن التجربة أو المشتل أو المشروع نفسه في “**تجربة تهجين**”. وتُنظم تجارب التهجين حسب برامج التربية. للعثور على تجربة، اكتب اسمها في مربع “بحث”، أو ابحث عنها ضمن برنامجها بالنقر على الرمز “**+**”. يمكن وضع تجارب التهجين مباشرةً في البرنامج أو تنظيمها في مجلدات. يتيح قسم “**المجلدات**” وضع التجارب في مجلدات ونقلها بينها وإعادة ترتيب المجلدات ضمن البرنامج.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/manage_crosses1.png')
+```
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/manage_crosses2.png')
+```
+
+### إضافة تجربة تهجين جديدة {#add-new-crossing-experiment}
+
+لإضافة تجربة تهجين جديدة، انقر رابط “إضافة تجربة تهجين”.
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/manage_crosses_crossingtrial.png')
+```
+
+المعلومات المطلوبة:
+
+• “**اسم تجربة التهجين**”: أدخل اسمًا غير موجود مسبقًا في قاعدة البيانات.
+
+• “**برنامج التربية**”: اختر برنامجًا متاحًا في قاعدة البيانات. ويمكن إضافة برامج جديدة من صفحة “برنامج التربية” في قائمة “إدارة”. *صفحة برنامج التربية*
+
+• “**الموقع**”: اختر موقع تجربة التهجين. ويمكن إضافة مواقع جديدة في صفحة “**المواقع**” ضمن قائمة “**إدارة**”. *صفحة المواقع*
+
+• “**السنة”**: اختر سنة.
+
+• “**الوصف**”: أدخل وصفًا لتجربة التهجين.
+
+بعد إدخال المعلومات، انقر “**إرسال**” لإنشاء تجربة التهجين.
+
+```{r echo=FALSE, out.width='75%', fig.align='center'}
+knitr::include_graphics('assets/images/add_crossingtrial.png')
+```
+
+## التهجين {#cross}
+
+### إضافة تهجينات جديدة {#add-new-crosses}
+
+#### إضافة تهجين باستخدام نافذة “إضافة تهجين جديد” {#add-a-cross-by-using-the-add-new-cross-dialog -}
+
+لإضافة تهجين واحد، انقر رابط “إضافة تهجين”.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/manage_crosses_addcross.png')
+```
+
+أدخل معلومات التهجين في نافذة الحوار المنبثقة.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/add_cross.png')
+```
+
+المعلومات المطلوبة:
+
+• “**تجربة التهجين**”: اختر تجربة متاحة في قاعدة البيانات.
+
+• “**الموقع**”: اختر موقعًا متاحًا في قاعدة البيانات.
+
+• “**اسم التهجين**”: أدخل اسمًا غير موجود مسبقًا في قاعدة البيانات.
+
+• “**نوع التهجين**”: القيم المتاحة هي: biparental وself وopen pollinated وbulk وbulk selfed وbulk and open pollinated وdouble haploid وpolycross وreciprocal وmulticross.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/new_cross_dialog_type.png')
+```
+
+• يتيح حقلا “**الأم**” و“**الأب**” الإكمال التلقائي للعينات الموجودة في قاعدة البيانات. وستُدرج الأصول المحددة في نسب العينات الجديدة الناتجة عن هذا التهجين.
+
+معلومات اختيارية:
+
+• “**قطعة الأب الأنثوي و/أو الذكري**”: يمكن إضافة القطع المحددة المستخدمة في التهجين إلى جانب أسماء العينات. للعثور على القطع المرتبطة بكل عينة أبوية، أدخل اسم التجربة ثم انقر “**بحث عن القطع**”. ستظهر قطع العينات الأبوية في قائمة منسدلة؛ اختر القطعة المستخدمة.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/new_cross_dialog2.png')
+```
+
+يمكن إدخال معلومات إضافية عند إضافة التهجين، مثل تاريخ التلقيح وعدد الأزهار والثمار والبذور. ويمكن تحديثها أو تعديلها مباشرةً في صفحة “**تفاصيل التهجين**”.
+
+إذا كنت تعرف عدد العينات الناتجة عن التهجين، فيمكن إنشاؤها فورًا في قاعدة البيانات بتحديد مربع “**إضافة عينات النسل**” وإدخال العدد.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/add_cross_info.png')
+```
+
+انقر “إرسال” لإنشاء التهجين.
+
+#### تحميل تهجينات جديدة {#upload-new-crosses -}
+
+لتحميل تهجينات جديدة من ملف Excel (.xls أو .xlsx)، انقر رابط “تحميل التهجينات”.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/manage_crosses_upload.png')
+```
+
+اختر من القوائم المنسدلة تجربة تهجين وموقعًا موجودين في قاعدة البيانات، وحدد الملف ثم انقر “**تحميل الملف**”.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/upload_crosses.png')
+```
+
+تحقق بعناية من تنسيق جدول البيانات. يجب أن يكون الملف بتنسيق Excel (.xls أو .xlsx).
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/cross_upload_format.png')
+```
+
+### تحديث التهجينات بالتحميل {#update-crosses-by-uploading}
+
+لتحميل النسل و/أو المعلومات التجريبية للتهجينات الموجودة، انتقل إلى صفحة “**إدارة - تحميل**”.
+
+توجد في قسم “**التهجينات**” روابط لتحميل النسل والمعلومات التجريبية.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/cross_upload_page.png')
+```
+
+تحقق بعناية من تنسيق جدول البيانات لكل رابط. يجب أن يكون الملف بتنسيق Excel (.xls أو .xlsx).
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/progenies_upload_spreadsheet.png')
+```
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/crossinfo_upload_spreadsheet.png')
+```
+
+ملاحظة: تُخصص المعلومات التجريبية للتهجين وفق احتياجات كل محصول. لذلك قد تختلف عناوين الأعمدة في قاعدة بياناتك عما ورد في هذا الدليل.
+
+## قائمة التهجينات المطلوبة {#cross-wishlist}
+
+يجري تطوير تطبيق ODK لنظام Android لتسجيل معلومات التهجين في الحقل. ويمكن استخدام قائمة التهجينات المطلوبة لإنشاء خطة وربط التطبيق المحمول بقاعدة البيانات.
+
+تتوفر الأداة في صفحة إدارة التهجينات، لكنها مدعومة حاليًا في بعض قواعد البيانات فقط. إذا لم تكن متاحة في قاعدة بياناتك، فسيظهر تنبيه عند النقر على الرابط.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/manage_cross_click_cross_wishlist.png')
+```
+
+### إنشاء قائمة التهجينات المطلوبة {#create-a-cross-wishlist}
+
+#### الخطوة 1. اختر العينات المراد تهجينها في التجربة {#step-1.-select-the-accessions-to-be-crossed-in-your-trial -}
+
+تتوفر في هذه الخطوة واجهتان: “بدون قوائم” و“باستخدام القوائم”. اختر وفقًا لما إذا كانت لديك قوائم جاهزة بالعينات الأنثوية والذكرية. والنتيجة واحدة في الحالتين.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/cross_wishlist_initial_dialog.png')
+```
+
+نبدأ بواجهة “بدون قوائم”. اختر التجربة التي ستُجرى فيها التهجينات. ستظهر جميع العينات المستخدمة في التجربة؛ اختر عينة أنثوية واحدة أو أكثر.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/cross_wishlist_not_using_list_01.png')
+```
+
+بعد اختيار العينات الأنثوية، يظهر جدول. يبدأ كل صف بالعينة الأنثوية المختارة ويتضمن قائمة بجميع عينات التجربة. اختر عينة ذكرية واحدة أو أكثر للتهجين.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/cross_wishlist_not_using_list_02.png')
+```
+
+بعد اختيار العينات الذكرية لكل عينة أنثوية، يظهر جدول الأولويات. تحدد الأولوية ترتيب المحاولات: يُنظر أولًا في الذكر الأعلى أولوية، وإذا تعذر التهجين فتُجرّب العينات التالية. ولا تحدد الأولويات المتساوية ترتيبًا بعينه.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/cross_wishlist_not_using_list_03.png')
+```
+
+يمكنك بدلًا من ذلك استخدام واجهة “باستخدام القوائم”. اختر التجربة وقدّم قائمة بالعينات التي ستُستخدم كأمهات وأخرى للآباء.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/cross_wishlist_using_list_01.png')
+```
+
+#### الخطوة 2. اختر القطع الأنثوية للتهجين {#step-2.-select-the-female-plots-to-be-considered-in-the-crosses -}
+
+بعد اختيار القوائم، يُملأ الجدول. يحتوي العمود الأول على العينات الأنثوية ويحتوي صف العناوين على العينات الذكرية. وتوضح الأولوية الذكور المراد النظر فيها لكل أنثى.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/cross_wishlist_using_list_02.png')
+```
+
+بعد اختيار العينات الأنثوية والذكرية، سواء باستخدام القوائم أو بدونها، انقر “التالي”. تتيح النافذة التالية اختيار القطع الأنثوية المحددة، مع عرض مخطط الحقل لكل عينة. ويعني تحديد جميع القطع التي توجد فيها العينة إجراء التهجين في كل تلك القطع.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/cross_wishlist_not_using_list_04.png')
+```
+
+#### الخطوة 3. نقل قائمة التهجينات إلى تطبيق التهجين المحمول {#step-3.-transfer-the-cross-wishlist-to-your-mobile-crossing-application -}
+
+يؤدي النقر على “إرسال قائمة التهجينات لاستخدام ODK” إلى إرسال الخطة إلى خادم ONA لتطبيق ODK المحمول. وبعد ذلك يمكن تنفيذ التهجينات وتسجيلها في الحقل ثم إعادتها إلى قاعدة البيانات وحفظها.
+
+## صفحة تفاصيل تجربة التهجين {#crossing-experiment-detail-page}
+
+تُجمع معلومات التهجينات ضمن تجربة واحدة في صفحة تفاصيل التجربة.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/crossingtrial_1.png')
+```
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/crossingtrial_2.png')
+```
+
+يرتبط اسم كل تهجين والأبوين والقطعتين الأنثوية والذكرية بصفحة تفاصيل خاصة تحتوي على المعلومات ذات الصلة.
+ملاحظة: تُخصص معلومات التهجين التجريبية وفق احتياجات كل محصول، لذا قد تختلف تفاصيل قاعدة بياناتك عما يعرضه هذا الدليل.
+
+## صفحة تفاصيل التهجين {#cross-detail-page}
+
+يمكن أيضًا الاطلاع على معلومات كل تهجين في صفحة تفاصيله.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/cross_page_1.png')
+```
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/cross_page_2.png')
+```
+
+ تتيح هذه الصفحة تحديث المعلومات التجريبية للتهجين أو تعديلها وإضافة النسل المرتبط به.
+ ملاحظة: تُخصص معلومات التهجين التجريبية وفق احتياجات كل محصول، لذا قد تختلف تفاصيل قاعدة بياناتك عما يعرضه هذا الدليل.
+
+```{r echo=FALSE, out.width='75%', fig.align='center'}
+knitr::include_graphics('assets/images/edit_cross_info.png')
+```
+
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/cross_add_progenies.png')
+```

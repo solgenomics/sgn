@@ -1,0 +1,62 @@
+# Gestión de placas de genotipado {#managing-genotyping-plates}
+
+Las placas de genotipado describen el contenido de una placa que se envía a un centro de genotipado, por ejemplo, las muestras ubicadas en pocillos concretos. Puede cargar esta información o dejar que la base de datos cree la placa.
+Una vez guardada la placa en la base de datos, puede exportar la información directamente a centros compatibles con BrAPI. El centro puede devolver información sobre el estado mediante BrAPI.
+
+Para empezar, vaya a Gestionar -> Placas de genotipado.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/manage_genotyping_trials.png')
+```
+
+Aquí las placas de genotipado están agrupadas por programa de mejoramiento. Pulse un programa para desplegar su sección.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/manage_genotyping_trials_expand.png')
+```
+
+## Añadir una placa de genotipado {#adding-a-new-genotyping-plate}
+
+Para comenzar, pulse “Añadir placa de genotipado”. El formulario tiene tres secciones: “Información de la placa”, “Información de los pocillos” y “Confirmar”. En la primera se indican datos de la placa, como el identificador y el formato (96 pocillos). En la segunda se especifican las muestras, sus nombres y concentraciones, y la posición en los pocillos. La última sección permite enviar la información.
+
+Todos los campos de “Información de la placa” son obligatorios.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/manage_genotyping_trials_add_trial.png')
+```
+
+En “Información de los pocillos” puede: 1) cargar una hoja XLS o XLSX con la distribución de las muestras o 2) dejar que la base de datos la cree.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/manage_genotyping_trials_add_trial_wells.png')
+```
+
+Si decide cargar una hoja XLS o XLSX, la plantilla requiere lo siguiente:
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/manage_genotyping_trials_upload_template.png')
+```
+
+En ambos casos, el identificador de la muestra suele combinar el nombre de la placa y la posición del pocillo, por ejemplo, MyGenotypingTrial1_A01.
+En ambos casos, debe proporcionar un "source_observation_unit_name" para cada muestra. Puede ser el nombre de una muestra de tejido, planta, parcela o accesión, pero el identificador ya debe existir en la base de datos. Así se vincula la muestra del pocillo con parcelas, plantas o muestras de tejido concretas. Si solo conoce la accesión presente en el pocillo, puede usar su nombre.
+
+En la sección “Confirmar” puede decidir si envía la información al centro de genotipado seleccionado. Para ello, el centro debe ser compatible con BrAPI.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/manage_genotyping_trials_add_trial_confirm.png')
+```
+
+## Página de detalles de la placa de genotipado {#genotyping-plate-detail-page}
+
+Al abrir una placa de genotipado, accederá a su página de detalles.
+Aquí puede ver las accesiones utilizadas en la placa. Si creó el ensayo y usó parcelas como source_observation_unit_names, también funcionará porque conocemos la accesión asociada a la parcela, planta o muestra de tejido.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/manage_genotyping_trials_detail_info.png')
+```
+
+Más abajo verá una representación gráfica de la placa y la posición de los pocillos. Según el formato, puede tener 96 o 384 pocillos.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/manage_genotyping_trials_detail_table.png')
+```

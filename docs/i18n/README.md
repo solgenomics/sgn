@@ -10,8 +10,8 @@ coverage; new or untranslated messages retain English.
 Stored names, identifiers, ontology terms, numeric values, units, scientific
 formulas, import/export headers and machine/API keys remain data. Translation
 objects do not change process locale, authentication, permissions or schema.
-Background solGS notification emails remain English. Translated user manuals
-are a separate documentation contribution.
+Background solGS notification emails remain English. Translated user manuals are included in the same contribution; see
+[manual sources and build commands](../r_markdown_docs/i18n/README.md).
 
 ## Enable a language pack
 

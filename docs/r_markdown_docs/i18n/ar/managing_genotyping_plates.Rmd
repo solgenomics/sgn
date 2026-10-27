@@ -1,0 +1,62 @@
+# إدارة صفائح التنميط الجيني {#managing-genotyping-plates}
+
+تصف صفيحة التنميط الجيني محتوى صفيحة تُرسل إلى مختبر التنميط، مثل العينات الموجودة في آبار محددة. ويمكن تحميل هذه المعلومات أو ترك قاعدة البيانات تنشئ الصفيحة.
+بعد حفظ الصفيحة في قاعدة البيانات، يمكن تصدير معلوماتها مباشرة إلى مختبرات متوافقة مع BrAPI. ويمكن للمختبر إرسال معلومات الحالة عبر BrAPI.
+
+للبدء، انتقل إلى إدارة -> صفائح التنميط الجيني.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/manage_genotyping_trials.png')
+```
+
+تُقسّم صفائح التنميط هنا حسب برنامج التربية. انقر برنامجًا لتوسيع قسمه.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/manage_genotyping_trials_expand.png')
+```
+
+## إضافة صفيحة تنميط جيني {#adding-a-new-genotyping-plate}
+
+للبدء، انقر “إضافة صفيحة تنميط جيني”. يتكون النموذج من ثلاثة أقسام: “معلومات الصفيحة” و“معلومات الآبار” و“تأكيد”. يحدد الأول بيانات الصفيحة، مثل المعرّف والتنسيق (96 بئرًا). ويحدد الثاني العينات وأسماءها وتركيزاتها ومواقعها في الآبار. أما القسم الأخير فيتيح إرسال المعلومات.
+
+جميع الحقول في قسم “معلومات الصفيحة” مطلوبة.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/manage_genotyping_trials_add_trial.png')
+```
+
+في قسم “معلومات الآبار” يمكنك: 1) تحميل جدول XLS أو XLSX يوضح توزيع العينات، أو 2) ترك قاعدة البيانات تنشئ التوزيع.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/manage_genotyping_trials_add_trial_wells.png')
+```
+
+إذا اخترت تحميل جدول XLS أو XLSX، فيجب أن يتضمن القالب ما يلي:
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/manage_genotyping_trials_upload_template.png')
+```
+
+في كلتا الحالتين، يتكون معرّف العينة عادةً من اسم الصفيحة وموضع البئر، مثل MyGenotypingTrial1_A01.
+في كلتا الحالتين، يجب توفير "source_observation_unit_name" لكل عينة. وقد يكون اسم عينة نسيج أو نبات أو قطعة أو عينة وراثية، لكن يجب أن يكون المعرّف موجودًا مسبقًا في قاعدة البيانات. وهذا يتيح ربط العينة في البئر بقطع أو نباتات أو عينات نسيج محددة. وإذا كنت تعرف العينة الوراثية الموجودة في البئر فقط، فاستخدم اسمها.
+
+في قسم “تأكيد” يمكنك تحديد ما إذا كنت سترسل المعلومات إلى مختبر التنميط المحدد. ويتطلب ذلك أن يكون المختبر متوافقًا مع BrAPI.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/manage_genotyping_trials_add_trial_confirm.png')
+```
+
+## صفحة تفاصيل صفيحة التنميط الجيني {#genotyping-plate-detail-page}
+
+عند فتح صفيحة تنميط جيني محددة، ستنتقل إلى صفحة تفاصيلها.
+يمكنك هنا رؤية العينات المستخدمة في الصفيحة. وإذا أنشأت التجربة واستخدمت القطع كقيم source_observation_unit_names، فسيظل الربط ممكنًا لأن العينة المرتبطة بالقطعة أو النبات أو عينة النسيج معروفة.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/manage_genotyping_trials_detail_info.png')
+```
+
+في الأسفل يظهر رسم للصفيحة يوضح مواقع الآبار. وقد تضم 96 أو 384 بئرًا حسب تنسيق الصفيحة.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/manage_genotyping_trials_detail_table.png')
+```

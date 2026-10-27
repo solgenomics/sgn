@@ -1,0 +1,211 @@
+---
+output:
+  pdf_document: default
+  html_document: default
+---
+# جمع البيانات وتخزينها باستخدام Field Book وBreedBase {#Using-Field-Book-with-BreedBase}
+
+```{r echo=FALSE, out.width='75%', fig.align='center'}
+knitr::include_graphics('assets/images/FB_Section_Header.png')
+```
+
+## مقدمة {#introduction-1}
+
+**Field Book** تطبيق مفتوح المصدر لنظام Android يسهّل جمع البيانات الظاهرية، ويستبدل دفاتر الحقل الورقية التقليدية ويقلل أخطاء النسخ.
+
+تتكامل **BreedBase** مع Field Book، إذ تتيح إنشاء ملفات تخطيط الحقل والصفات بالتنسيق المناسب واستيراد البيانات المجمعة وتبادلها اختياريًا عبر **BrAPI**.
+
+يقدم هذا القسم إرشادات خطوة بخطوة لإعداد Field Book لجمع بيانات التجارب المخزنة في BreedBase، بما في ذلك إنشاء الملفات واستيرادها يدويًا وتصدير البيانات. ويفترض أن بيانات قطع التجارب وتعريفات الصفات موجودة مسبقًا في BreedBase وأن المستخدم لديه جهاز Android.
+
+[*Field Book User Manual*](https://fieldbook.phenoapps.org/#/)
+
+---
+
+## تثبيت Field Book {#installing-field-book}
+
+يمكن تثبيت Field Book على جهاز Android من خلال Google Play Store أو يدويًا من GitHub. وللحصول على أحدث الميزات والإصلاحات، يُنصح بالتحقق من التحديثات بانتظام.
+
+
+### الخيار 1: التنزيل من Google Play Store {#option-1-downloading-from-the-google-play-store}
+
+نزّل Field Book مباشرةً من [Google Play Store](https://play.google.com/store/apps/details?id=com.fieldbook.tracker) أو امسح رمز QR أدناه.
+
+```{r echo=FALSE, out.width='25%', fig.align='center'}
+knitr::include_graphics('assets/images/QR_FieldBook_PlayStore.png')
+```
+
+[**دليل خطوة بخطوة: التثبيت والإعداد**](https://scribehow.com/shared/Fieldbook_Installation_and_Initial_Setup__3E-cowQMRcOKhfRl_sqFDQ)
+
+<iframe src="https://scribehow.com/embed/Fieldbook_Installation_and_Initial_Setup__3E-cowQMRcOKhfRl_sqFDQ?as=scrollable" width="100%" height="320" allow="fullscreen" style="border: 0; min-height: 320px"></iframe>
+
+### الخيار 2: التثبيت اليدوي من GitHub {#option-2-manual-installation-from-github}
+
+[**دليل خطوة بخطوة: تثبيت Field Book من GitHub**](https://scribehow.com/shared/Installing_Field_Book_from_GitHub__M0qchs3uThGb_ms2nDRg3A)
+
+<iframe src="https://scribehow.com/embed/Installing_Field_Book_from_GitHub__M0qchs3uThGb_ms2nDRg3A?as=scrollable" width="100%" height="320" allow="fullscreen" style="border: 0; min-height: 320px"></iframe>
+
+### تحديث Field Book {#keeping-field-book-updated}
+
+يُنصح بتحديث التطبيق بانتظام للحصول على الميزات الجديدة وإصلاحات الأخطاء.
+
+[**دليل خطوة بخطوة: تحديث تطبيق Field Book**](https://scribehow.com/shared/Updating_the_Field_Book_App__qdTEMk1lSkadYj8zXgOYgA).
+
+<iframe src="https://scribehow.com/embed/Updating_the_Field_Book_App__qdTEMk1lSkadYj8zXgOYgA?as=scrollable" width="100%" height="320" allow="fullscreen" style="border: 0; min-height: 320px"></iframe>
+
+---
+
+## إعداد ملفات تخطيط الحقل في BreedBase {#preparing-field-layout-files-in-breedbase}
+
+يتطلب Field Book **ملف تخطيط حقل** يتضمن معرّفًا فريدًا لكل قطعة أو نبات ستُجرى عليه الملاحظات. ويمكن إضافة أعمدة اختيارية للصف والعمود والنسب أو البيانات الظاهرية السابقة.
+
+توفر BreedBase أدوات لإنشاء ملفات التخطيط مباشرةً من البيانات الوصفية للتجربة. ويمكن تصدير هذه الملفات ثم تحميلها إلى Field Book لجمع البيانات.
+
+[**دليل خطوة بخطوة: إنشاء ملف تخطيط حقل في BreedBase**](https://scribehow.com/shared/Creating_a_Field_Layout_File_for_Field_Book_in_Breedbase__FDBwW83OS66kHXIvVsP-1A?referrer=documents)
+
+---
+
+## استيراد ملفات تخطيط الحقل إلى Field Book {#importing-field-layout-files-into-field-book}
+
+يمكن استيراد ملفات تخطيط الحقل إلى Field Book من التخزين السحابي أو مباشرةً من الجهاز.
+
+### الخيار 1: الاستيراد من التخزين السحابي {#option-1-import-from-cloud-storage}
+
+المتطلبات:
+
+1. ملف تخطيط حقل تم إنشاؤه.
+2. خدمة تخزين سحابي مرتبطة بالجهاز (مثل Google Drive).
+3. ملف تم تحميله إلى حساب التخزين السحابي.
+
+[**دليل خطوة بخطوة: الاستيراد من التخزين السحابي**](https://scribehow.com/shared/Importing_Field_Layout_Files_to_Field_Book_from_Cloud_Storage__5JLV59I8TzCgDeTkUPbIdA)
+
+<iframe src="https://scribehow.com/embed/Importing_Field_Layout_Files_to_Field_Book_from_Cloud_Storage__5JLV59I8TzCgDeTkUPbIdA?as=scrollable" width="100%" height="320" allow="fullscreen" style="border: 0; min-height: 320px"></iframe>
+
+### الخيار 2: الاستيراد من وحدة التخزين المحلية للجهاز {#option-2-import-from-local-storage-device}
+
+المتطلبات:
+
+1. ملف تخطيط حقل تم إنشاؤه.
+2. ملف منقول إلى وحدة التخزين المحلية بجهاز Android.
+
+**دليل خطوة بخطوة: الاستيراد من الجهاز المحلي** (لم يُضَف رابط هذا الدليل الخارجي إلى الأصل الإنجليزي بعد.)
+
+---
+
+## إضافة الصفات إلى Field Book باستخدام BreedBase {#adding-traits-to-field-book-using-breedbase}
+
+لكي تكون البيانات المصدرة متوافقة مع BreedBase، يجب أن تطابق أسماء الصفات في Field Book الأسماء المخزنة في قاعدة البيانات تمامًا.
+
+تتيح BreedBase إنشاء **ملفات الصفات** بأسماء وأنواع ووحدات وبيانات وصفية منسقة على نحو صحيح.
+
+### إنشاء ملفات الصفات في BreedBase {#creating-trait-files-in-breedbase}
+
+[**دليل خطوة بخطوة: إنشاء ملفات الصفات في BreedBase**](https://scribehow.com/shared/Creating_a_Field_Book_Trait_File_in_BreedBase__AQKYEuyXRzK1H1lRFm--3Q)
+
+<iframe src="https://scribehow.com/embed/Creating_a_Field_Book_Trait_File_in_BreedBase__AQKYEuyXRzK1H1lRFm--3Q?as=scrollable" width="100%" height="320" allow="fullscreen" style="border: 0; min-height: 320px"></iframe>
+
+### استيراد ملفات الصفات إلى Field Book {#importing-trait-files-to-field-book}
+
+[**دليل خطوة بخطوة: استيراد ملفات الصفات**](https://scribehow.com/shared/Importing_Trait_Files_into_Field_Book__LuVCpgtfQCeDtWEl7xbZVw)
+
+<iframe src="https://scribehow.com/embed/Importing_Trait_Files_into_Field_Book__LuVCpgtfQCeDtWEl7xbZVw?as=scrollable" width="100%" height="320" allow="fullscreen" style="border: 0; min-height: 320px"></iframe>
+
+---
+
+## جمع البيانات الظاهرية وتصديرها {#collecting-and-exporting-phenotype-data}
+
+يشرح هذا القسم كيفية تسجيل البيانات الظاهرية وتصديرها باستخدام Field Book. ويفترض أن ملفات تخطيط الحقل والصفات المطلوبة قد استُوردت إلى التطبيق.
+
+توضح الإرشادات كيفية إدخال الملاحظات الظاهرية في الحقل وتصدير البيانات بتنسيق متوافق مع المعالجة اللاحقة والتحميل إلى **BreedBase**. ويساعد سير العمل الموحد على ضمان سلامة البيانات وإمكانية تتبعها ودمجها بسلاسة مع قواعد بيانات التربية.
+
+### جمع البيانات الظاهرية في Field Book {#collecting-phenotype-data-in-field-book}
+
+بعد تحميل ملفات تخطيط الحقل والصفات، يمكن بدء جمع البيانات. يتيح Field Book عرض كل قطعة أو سجل نبات، وتسجيل قيم الصفات في نماذج منظمة، وإضافة الطابع الزمني والموقع الجغرافي تلقائيًا إذا سمحت إعدادات الجهاز.
+
+[**دليل خطوة بخطوة: جمع البيانات في Field Book**](https://scribehow.com/shared/Collecting_Data_in_Fieldbook__hIsZkb9xSnKcLW65gN60lA)
+
+
+### تصدير البيانات الظاهرية من Field Book واستيرادها إلى BreedBase {#exporting-phenotype-data-from-field-book-and-importing-to-breedbase}
+
+بعد اكتمال جمع البيانات، يتيح Field Book تصديرها في ملف .csv. ويمكن تحميل الملف إلى BreedBase لتخزين البيانات وتحليلها.
+
+[**دليل خطوة بخطوة: تصدير البيانات الظاهرية من Field Book**](https://scribehow.com/shared/Exporting_Phenotype_Data_in_FieldBook__ToUuuA3YTYGclEg7SDArLg)
+
+بعد التصدير، يمكن استيراد ملف .csv إلى BreedBase عبر واجهة تحميل بيانات التجربة. اتبع تعليمات تحميل الملاحظات الظاهرية في قسم **إدارة البيانات الظاهرية**.
+
+من المهم أن:
+
+- تطابق أسماء الصفات الأسماء المحددة في قاعدة البيانات.
+- تتطابق معرّفات القطع أو النباتات مع التخطيط الأصلي.
+
+---
+
+## نقل البيانات بين Field Book وBreedBase عبر BrAPI {#using-brapi-for-data-transfer-between-field-book-and-breedbase}
+
+يدعم Field Book التكامل مع **BreedBase** وفق مواصفات **BrAPI (Breeding API)**. وتتيح BrAPI تبادل البيانات الوصفية للتجارب والملاحظات الظاهرية مباشرةً بين Field Book وBreedBase دون الحاجة إلى تحميل الملفات يدويًا.
+
+يتناول هذا الدليل ما يلي:
+
+- ربط Field Book بخادم BreedBase يدعم BrAPI
+- استيراد تخطيط التجربة والصفات من BreedBase إلى Field Book
+- تصدير البيانات الظاهرية المجمعة من Field Book إلى BreedBase
+
+**المتطلبات المسبقة:**
+
+- يجب أن يكون لديك حساب BreedBase بصلاحيات الوصول إلى بيانات التجارب والصفات.
+- يجب تهيئة نسخة BreedBase الخاصة بك بنقاط نهاية BrAPI عاملة.
+- يجب تثبيت تطبيق Field Book على جهاز Android متصل بالإنترنت.
+
+**مزايا استخدام BrAPI:**
+
+- تقلل الأخطاء اليدوية الناتجة عن التعامل مع الملفات.
+- تدعم مزامنة البيانات في الوقت الفعلي.
+- تتيح تنسيق عمل الفريق عن بُعد وتحسين سير العمل.
+
+### ربط Field Book بخادم BrAPI {#connecting-field-book-to-a-brapi-server}
+
+[**دليل خطوة بخطوة: ربط Field Book بخادم BreedBase يدعم BrAPI**](https://scribehow.com/shared/Enable_BrAPI_for_Field_Book_using_the_Scannable_BrAPI_Configuration__SUXsC8xKQX-rLEG-4H6BIA)
+
+<iframe src="https://scribehow.com/embed/Enable_BrAPI_for_Field_Book_using_the_Scannable_BrAPI_Configuration__SUXsC8xKQX-rLEG-4H6BIA?as=scrollable" width="100%" height="320" allow="fullscreen" style="border: 0; min-height: 320px"></iframe>
+
+### استيراد التجارب والصفات من BreedBase {#importing-trials-and-traits-from-breedbase}
+
+[**دليل خطوة بخطوة: استيراد التجارب من BreedBase عبر BrAPI**](https://scribehow.com/shared/Import_Field_Trials_from_BreedBase_via_BrAPI__R4munb3fQ-OO5f-WAZRnKg)
+
+<iframe src="https://scribehow.com/embed/Import_Field_Trials_from_BreedBase_via_BrAPI__R4munb3fQ-OO5f-WAZRnKg?as=scrollable" width="100%" height="320" allow="fullscreen" style="border: 0; min-height: 320px"></iframe>
+
+[**دليل خطوة بخطوة: استيراد الصفات من BreedBase عبر BrAPI**](https://scribehow.com/shared/Import_Traits_from_BreedBase_via_BrAPI__aqvmCO8QS_eziilPrntOoA?referrer=documents)
+
+<iframe src="https://scribehow.com/embed/Import_Traits_from_BreedBase_via_BrAPI__aqvmCO8QS_eziilPrntOoA?as=scrollable" width="100%" height="320" allow="fullscreen" style="border: 0; min-height: 320px"></iframe>
+
+### جمع البيانات {#collecting-data}
+
+تابع إدخال الملاحظات الظاهرية كما هو موضح في قسم **جمع البيانات الظاهرية في Field Book**.
+
+تأكد من أن:
+
+- تتوافق قيم الصفات مع التنسيقات المتوقعة (مثل التنسيق الرقمي أو الفئوي).
+- تُحفظ الملاحظات بانتظام أثناء العمل الحقلي.
+
+### تصدير البيانات الظاهرية إلى BreedBase عبر BrAPI {#exporting-phenotype-data-to-breedbase-via-brapi}
+
+[**دليل خطوة بخطوة: إرسال البيانات الظاهرية باستخدام BrAPI**](https://scribehow.com/shared/Exporting_Data_with_BrAPI__PaWGH98ESQWGrXIZk5lJTQ)
+
+<iframe src="https://scribehow.com/embed/Exporting_Data_with_BrAPI__PaWGH98ESQWGrXIZk5lJTQ?as=scrollable" width="100%" height="320" allow="fullscreen" style="border: 0; min-height: 320px"></iframe>
+
+### التحقق من البيانات في BreedBase {#verifying-data-in-breedbase}
+
+بعد تصدير البيانات إلى BreedBase عبر BrAPI، تحقق مباشرةً من نجاح التصدير داخل BreedBase.
+
+1. سجّل الدخول إلى نسخة BreedBase الخاصة بك.
+2. انتقل إلى صفحة “إدارة التجارب” أو تفاصيل التجربة التي تم تحميلها.
+3. تأكد من أن:
+    - تظهر بيانات الصفات في تبويب “البيانات الظاهرية”.
+    - تتوافق نقاط البيانات مع معرّفات القطع أو النباتات المتوقعة.
+    - تطابق وحدات ومقاييس الصفات ما هو محدد في قاعدة البيانات.
+
+
+### استكشاف الأخطاء وإصلاحها {#troubleshooting}
+
+- فشل الاتصال: تحقق من صحة عنوان URL لخادم BrAPI وبيانات الاعتماد.
+- لا تُحمّل الصفات: تأكد من وجودها في BreedBase.
+- فشل التحميل: تحقق من الاتصال بالإنترنت وصلاحيات المستخدم وتنسيق الصفات.

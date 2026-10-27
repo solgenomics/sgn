@@ -1,0 +1,69 @@
+# Gestión de muestras de tejido {#managing-tissue-samples}
+
+Para acceder a esta página, vaya a Gestionar y luego a Muestras de tejido.
+
+## Muestras de tejido de ensayos de campo {#tissue-samples-from-field-trials}
+
+Un ensayo de campo contiene parcelas sembradas con una accesión específica. Cada parcela puede tener muchas plantas y cada planta puede aportar varias muestras de tejido.
+En la página de gestión de muestras de tejido se muestran los ensayos de campo que ya tienen muestras. Puede descargar la distribución de las muestras, como se ve a continuación.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/manage_tissue_samples_create_tissues_field_trial_download.png')
+```
+
+Si el ensayo del que desea recoger muestras no aparece en la tabla, pulse el botón resaltado a continuación.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/manage_tissue_samples_create_tissues_field_trial_button.png')
+```
+
+Al pulsar el botón, se abrirá un flujo de trabajo que comienza con la siguiente introducción.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/manage_tissue_samples_create_tissues_field_trial_intro.png')
+```
+
+Pulse “Siguiente” para seleccionar el ensayo.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/manage_tissue_samples_create_tissues_field_trial_select.png')
+```
+
+A continuación, si el ensayo solo tiene parcelas guardadas, se le pedirá que indique cuántas plantas hay en cada parcela.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/manage_tissue_samples_create_tissues_field_trial_num_plants.png')
+```
+
+Por último, indique cuántas muestras de tejido desea por planta. Puede añadir un texto al nombre de la muestra, como “hoja” o “raíz”.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/manage_tissue_samples_create_tissues_field_trial_num_tissues.png')
+```
+
+Después aparecerá el mensaje de éxito que indica que las muestras de tejido se guardaron.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/manage_tissue_samples_create_tissues_field_trial_submit.png')
+```
+
+## Muestras de tejido para placas de genotipado (96 o 384 pocillos) {#genotyping-plate-tissue-samples-96-or-384-well-plates}
+
+Una placa de genotipado tiene 96 o 384 pocillos. Puede crear su distribución con la aplicación Coordinate para Android, cargar una hoja Excel propia o pedir a la base de datos que la genere.
+Lo ideal es usar como "origen" de cada muestra en un pocillo el nombre de una muestra de tejido de un ensayo de campo, aunque también puede usar nombres de plantas, parcelas o accesiones.
+
+En la página de gestión de muestras de tejido puede ver las placas guardadas en la base de datos y descargar sus distribuciones, como se muestra abajo.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/manage_tissue_samples_create_tissues_genotyping_trial_download.png')
+```
+
+Para crear una placa de genotipado, pulse el botón de abajo. Se abrirá un flujo de trabajo para cargar o crear la distribución de la placa.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/manage_tissue_samples_create_tissues_genotyping_trial_button.png')
+```
+
+Los proveedores de genotipado requieren la distribución de la placa al enviar las muestras. Puede descargarla como se indicó arriba o abrir la página de detalles y descargar el archivo con formato Intertek.
+
+En el futuro podrá exportar directamente a los proveedores la distribución de la placa de genotipado.

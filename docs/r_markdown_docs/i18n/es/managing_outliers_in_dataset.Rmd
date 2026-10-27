@@ -1,0 +1,134 @@
+# Gestión de conjuntos de datos {#managing-datasets}
+
+## ¿Qué es un conjunto de datos? {#what-is-a-dataset}
+
+Al igual que las listas, los conjuntos de datos permiten guardar en su cuenta datos seleccionados de la base de datos para reutilizarlos o compartirlos. Una lista contiene elementos de un solo tipo (por ejemplo, accesiones), mientras que un conjunto reúne varios tipos (por ejemplo, accesiones, ubicaciones, ensayos de fenotipado y rasgos usados en un análisis). Los conjuntos pueden reutilizar selecciones del asistente de búsqueda, servir como entradas de herramientas de análisis, compartirse haciéndolos públicos y exportarse a FigShare para facilitar el acceso externo.
+
+## Gestionar conjuntos de datos {#managing-datasets-1}
+
+### Crear un conjunto de datos {#dataset-creation}
+
+Los conjuntos de datos se crean en el asistente de búsqueda:
+
+1. Primero, haga su selección en el asistente de búsqueda. Elija los tipos de datos que desea guardar y los elementos concretos de cada tipo.
+
+2. Escriba el nombre del nuevo conjunto y pulse “Crear” para guardarlo.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/dataset_creation.png')
+```
+
+### Conjuntos de datos existentes {#existing-datasets}
+
+Para usar un conjunto guardado en el asistente, seleccione su nombre en el menú desplegable debajo de las columnas y pulse “Cargar”. Se seleccionarán los tipos de datos y elementos incluidos en el conjunto.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/dataset_selection.png')
+```
+
+También puede ver una tabla con sus conjuntos guardados y los conjuntos públicos de otros usuarios pulsando “Conjuntos de datos” en la parte superior derecha de la barra.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/dataset_table.png')
+```
+
+En esta tabla puede seleccionar un conjunto para modificar sus propiedades (descripción, visibilidad, etc.), detectar valores atípicos, comprobar su compatibilidad con herramientas de análisis, ejecutar análisis y publicarlo en FigShare.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/dataset_detail.png')
+```
+
+## Detección de valores atípicos {#outlier-detection}
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/outliers_dataset_icon.png')
+```
+
+Como en el paso [El asistente de búsqueda]
+se puede crear un conjunto de datos.
+
+El conjunto de datos incluye una función para detectar valores atípicos, que pueden excluirse de un conjunto concreto. Estas exclusiones solo se aplican al conjunto y no eliminan datos de la base de datos. Además, la clasificación de valores atípicos puede modificarse en cualquier momento y los cambios se reflejan en otras funciones del sistema.
+
+Cada conjunto guarda su propio conjunto de valores atípicos, independiente de los demás. Los valores atípicos se determinan únicamente para rasgos del conjunto y solo abarcan datos fenotípicos. Si el conjunto no incluye rasgos seleccionados en el asistente, esta función no está disponible.
+
+Cada rasgo tiene su propio conjunto de valores atípicos definidos.
+
+### Acceder a la visualización del rasgo {#accessing-trait-visualization}
+
+Una vez seleccionado un rasgo, la aplicación web muestra una visualización de sus puntos de datos.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/outliers_dataset_basic_panel.png')
+```
+
+### Interpretar los elementos visuales {#interpreting-visual-elements}
+
+
+Una vez seleccionado un rasgo, la aplicación web muestra una visualización de sus puntos de datos.
+
+- **Puntos verdes**: según la leyenda, representan valores del rasgo seleccionado por debajo del umbral fijado con el control deslizante (no son valores atípicos).
+- **Puntos con contorno negro**: el borde negro indica que están marcados como valores atípicos en la base de datos.
+- **Puntos rojos**: indican los límites del valor de desviación permitido, establecidos con el control deslizante.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/outliers_dataset_full_visualisation.png')
+```
+
+### Elegir valores de corte {#choosing-cut-off-values}
+
+Dispone de dos opciones principales para fijar los límites:
+
+- **Mediana con MAD**: utiliza la mediana (valor central) y la desviación media absoluta (MAD) como referencia para determinar los límites.
+- **Media con desviación estándar**: también puede usar la media junto con la desviación estándar para fijar los límites.
+
+### Configurar el multiplicador de desviación {#setting-deviation-multiplier}
+
+El control deslizante permite especificar el multiplicador de desviación desde un punto central, lo que afecta a los límites.
+
+
+### Usar los controles del gráfico {#utilizing-graph-controls}
+
+Debajo del gráfico hay cuatro botones, cada uno con una función distinta:
+
+- **Añadir selección a valores atípicos**: guarda los límites actuales en la base de datos para usarlos posteriormente.
+- **Restablecer valores atípicos del rasgo actual**: restablece los valores atípicos del rasgo seleccionado.
+- **Restablecer todos los valores atípicos**: restablece los valores atípicos de todo el conjunto de datos.
+- **Descargar tabla de fenotipos sin valores atípicos**: permite descargar los datos fenotípicos en formato CSV excluyendo los valores atípicos del conjunto seleccionado.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/outliers_dataset_actions.png')
+```
+
+Estas herramientas permiten controlar y comprender mejor la visualización de datos y los valores atípicos.
+
+## Publicar un conjunto de datos {#publishing-a-dataset}
+
+El propietario de un conjunto de datos puede generar una instantánea estática de su contenido tal como está en el momento de crear el archivo. Se crean archivos de texto sin formato que se guardan en el servidor BreedBase y no cambian aunque cambien los datos de la base. Si está habilitado, el propietario también puede exportar la instantánea a un servicio externo, como FigShare, para facilitar el acceso. Además, puede generarse un DOI (identificador de objeto digital) como enlace persistente a los datos publicados y citarse en una publicación.
+
+Para publicar un conjunto de datos:
+
+1. **Generar los archivos del archivo**: crea una instantánea estática de los datos del conjunto en ese momento. No cambiará aunque se modifiquen los datos en la base. La instantánea contiene archivos de texto (.csv, .vcf, etc.) con los datos del conjunto y también incorpora tipos de datos relacionados que no se seleccionaron explícitamente. Por ejemplo, si se seleccionan ensayos de fenotipado sin ubicaciones ni rasgos, el archivo incluirá la información de las ubicaciones de esos ensayos y de todos los rasgos observados. Si se incluyen rasgos explícitamente, solo se archivarán los seleccionados.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/dataset_generate_archive.png')
+```
+
+2. **Cargar los archivos en un servicio externo**: se transferirán los archivos archivados al servicio. Podrá cargarlos en un conjunto nuevo o en uno existente.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/dataset_upload.png')
+```
+
+3. **Publicar el conjunto externo**: una vez cargados los archivos, puede hacerlo público para que otras personas lo encuentren. Los datos estarán disponibles para quienes tengan acceso al servicio externo; esto no cambia la visibilidad en BreedBase. **El conjunto externo no se puede eliminar después de publicarlo**.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/dataset_uploaded.png')
+```
+
+4. **Reservar un DOI**: genere un Digital Object Identifier (DOI) para citar el conjunto externo en publicaciones. Si aún es privado, el DOI se activará cuando se publique y se haga público.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/dataset_has_doi.png')
+```
+
+Puede modificar los metadatos y archivos del conjunto externo _hasta que se publique_. En el sitio del servicio encontrará más opciones de edición; pulse “Editar” para abrir esa página. Una vez publicado, los cambios nuevos se aplicarán a una versión nueva, que deberá publicarse para hacerlos públicos. Las versiones publicadas anteriormente se conservarán y seguirán disponibles. **El conjunto externo no se puede eliminar después de publicarlo**.

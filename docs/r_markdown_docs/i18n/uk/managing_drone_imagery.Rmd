@@ -1,0 +1,130 @@
+# Керування зображеннями з дрона {#managing-drone-imagery}
+
+## Панель фенотипування за зображеннями {#image-phenotyping-dashboard}
+
+1. Завантажте необроблені знімки в архіві (.zip) для створення ортофотомозаїки або вже зшиті растрові зображення ортофотомозаїки (.PNG, .JPG).
+2. На панелі показано всі польові досліди й завантажені події знімання у згортаних розділах.
+3. Виконайте стандартні процедури, щоб вручну створити шаблони та призначити зображення полігонів ділянок схемі польового досліду.
+4. Усі зображення показано за спектральною категорією у згортаних розділах. На рисунку зображено канал NIR.
+5. Застосуйте фільтрацію Fourier transform, thresholding і маскування за індексом рослинності. Показано зображення полігонів ділянок для всіх процесів обробки зображень.
+6. Витягніть та експортуйте фенотипові значення із зображень полігонів ділянок для аналізу й навчання моделей.
+
+## Введення зображень {#image-input}
+
+Натисніть “Завантажити зображення”, щоб відкрити наведене діалогове вікно.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/manage_image_phenotyping_upload_intro.png')
+```
+
+Необроблені знімки можна завантажити в архіві (.zip), щоб зібрати ортофотомозаїку. Якщо зшивати мозаїку не потрібно, завантажте растрові зображення (.PNG, .JPG). Наведено приклади необроблених 5-канальних мультиспектральних знімків Micasense RedEdge та зшитих ортофотомозаїк.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/manage_image_phenotyping_upload_field_trial.png')
+```
+
+Щоб почати завантаження зображень, виберіть польовий дослід, який уже збережено в базі даних. Інструкції з додавання досліду наведено в документації про польові досліди.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/manage_image_phenotyping_upload_drone_run.png')
+```
+
+Дані зображень додаються до події знімання (польоту дрона). Тут можна вибрати вже збережену подію або створити нову, вказавши назву, опис і дату.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/manage_image_phenotyping_upload_image_info_1.png')
+```
+
+Завантажувати можна необроблені знімки або готові растрові зображення. Тут укажіть, чи потрібно зшивати ортофотомозаїку.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/manage_image_phenotyping_upload_image_info_2.png')
+```
+
+Якщо потрібно зшити ортофотомозаїку, виберіть 'yes'. На наступному кроці завантажте zip-файл із необробленими знімками. Для необроблених знімків Micasense RedEdge додайте до zip-файла також зображення калібрувальних панелей Micasense.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/manage_image_phenotyping_upload_images_zipfile.png')
+```
+
+Якщо збирання ортофотомозаїки не потрібне, просто завантажте растрові зображення. Виберіть кількість каналів зображення, наприклад 5 для мультиспектральної камери з п’ятьма каналами.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/manage_image_phenotyping_upload_image_info_3.png')
+```
+
+Якщо зшивання ортофотомозаїки не потрібне, виберіть 'no'. На наступному кроці буде показано такі параметри:
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/manage_image_phenotyping_upload_images_rasters.png')
+```
+
+Завантажте зображення для кожного каналу, задавши унікальні назву, опис і спектральний тип.
+
+## Стандартна обробка {#standard-process}
+
+Після завантаження зображення з’являться на панелі під польовим дослідом. Натисніть “Запустити стандартну обробку”, щоб почати витягування фенотипових значень полігонів ділянок.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/manage_image_phenotyping_standard_process_button.png')
+```
+
+Натиснувши кнопку, відкриється наведене діалогове вікно.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/manage_image_phenotyping_standard_process_intro.png')
+```
+
+Виберіть канал знімання дрона для цієї обробки. Для 5-канальної мультиспектральної камери Micasense буде показано 5 каналів; у цьому випадку виберіть NIR, оскільки він має найвищий контраст. Для стандартних кольорових зображень доступний лише варіант RGB Color Image.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/manage_image_phenotyping_standard_process_drone_run_band.png')
+```
+
+Поверніть зображення так, щоб ділянки були розташовані у вигляді сітки. Схема поля може бути нахилена, як у наведеному прикладі.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/manage_image_phenotyping_standard_process_rotate.png')
+```
+
+Виконайте попереднє обрізання зображення, натиснувши чотири кути поля. Обрізання допомагає прибрати зайві частини зображення.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/manage_image_phenotyping_standard_process_cropping.png')
+```
+
+На цьому кроці показано гістограму обрізаного зображення. Стандартна обробка застосовує magnitude threshold до верхнього й нижнього країв розподілу.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/manage_image_phenotyping_standard_process_threshold_hist.png')
+```
+
+На цьому кроці шаблон полігонів ділянок пов’язується зі схемою поля на зображенні. Спершу задайте кількість рядків і стовпців у досліді. Потім натисніть чотири кути зображення відповідно до позицій top right, top left, bottom left і bottom right. Натисніть “Намалювати шаблон полігонів ділянок”. Перевірте шаблон і за потреби очистьте його та повторіть процес, доки він не збігатиметься зі схемою. Якщо в схемі поля є великі проміжки, шаблони можна “копіювати/вставляти”. Далі прокрутіть до розділу “Призначити полігони ділянок об’єктам польового досліду”. Виберіть розташування Plot Number 1 (“top left” або “top right”) і вкажіть, чи схема поля serpentine або zigzag. Натисніть “Створити призначення” та перевірте, чи правильно назви ділянок накладено на зображення. Після перевірки натисніть “Завершити й зберегти полігони для ділянок”.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/manage_image_phenotyping_standard_process_plot_polygon.png')
+```
+
+Діалогове вікно повідомить, що стандартну обробку буде повторено для всіх завантажених каналів зображення.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/manage_image_phenotyping_standard_process_apply.png')
+```
+
+Далі виберіть індекси рослинності для застосування.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/manage_image_phenotyping_standard_process_vegetation_index.png')
+```
+
+Далі виберіть фенотипові значення для витягування. Потрібно визначити часову точку для фенотипу. Якщо для досліду задано дату висаджування, часова точка автоматично обчислюється як дата зображення мінус дата висаджування.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/manage_image_phenotyping_standard_process_phenotypes.png')
+```
+
+Після завершення налаштування стандартна обробка виконуватиметься у фоновому режимі. Її стан можна перевірити на панелі.
+
+## Наземні контрольні точки {#ground-control-points}
+
+Наземні контрольні точки можна зберегти після стандартної обробки ортофотомозаїки події знімання. Потім їх можна використовувати для інших подій знімання того самого польового досліду, щоб автоматизувати всю стандартну обробку.

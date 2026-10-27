@@ -1,0 +1,749 @@
+# Gestión de ensayos de campo {#managing-field-trials}
+
+Para ver los detalles de los ensayos, pulse “Ensayos de campo” en el menú “Gestionar” de la barra de herramientas.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/image290.png')
+```
+
+El enlace “Ensayos de campo” abre la página “Gestionar ensayos”. Allí se organizan los ensayos por programa de mejoramiento. Para ver los detalles, pulse el icono + junto al programa.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/image153.png')
+```
+
+Los ensayos pueden estar directamente en el programa o dentro de carpetas. Pulse el nombre de un ensayo para abrir su página de detalles.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/image279.png')
+```
+
+## Página de detalles del ensayo {#trial-detail-page}
+
+La página muestra información importante del ensayo: programa de mejoramiento, ubicación, año, descripción, diseño y archivos asociados.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/trial_detail_page_start.png')
+```
+
+Debajo de los detalles encontrará menús para acceder a los datos del ensayo y modificarlos. Incluyen secciones para imprimir etiquetas de parcelas o plantas, registrar fenotipos, ver el diseño o la distribución, consultar fenotipos y realizar análisis.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics(c('assets/images/trial_detail_page_navigator_1.png', 'assets/images/trial_detail_page_navigator_2.png', 'assets/images/trial_detail_page_navigator_3.png'))
+```
+
+El campo “Fecha de trasplante” solo aparece si tiene un valor. Para añadirla después de crear el ensayo, cambie el parámetro show_transplanting_date de 0 a 1 en el archivo de configuración de SGN. Después podrá introducir la fecha pulsando “Editar detalles del ensayo” en la página del ensayo.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/add_transplanting_date.png')
+```
+
+## Añadir ensayos {#adding-trials}
+
+Solo los usuarios con estado de cuenta "submitter" pueden crear ensayos. Para cambiar el estado de "user" a "submitter", consulte la sección \@ref(managing-your-account).
+
+### Requisitos previos {#prerequisites}
+
+-   Todas las accesiones que usará en el ensayo deben existir en la base de datos antes de diseñarlo. Si faltan, consulte las instrucciones de [*Gestión de accesiones*](#managing-accessions).
+
+-   El programa de mejoramiento y la ubicación del ensayo también deben existir en la base de datos. Para añadirlos, consulte [*Gestión de programas de mejoramiento*](#managing-breeding-programs) y [*Gestión de ubicaciones*](#managing-locations).
+
+En “Gestionar ensayos” hay dos formas de crear un ensayo: seleccionar “Cargar ensayo(s) existente(s)” para crear uno o varios desde una hoja de cálculo, o “Diseñar nuevo ensayo” para introducir los datos manualmente.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/trial_create_manage_trials.png')
+```
+
+### Añadir un ensayo con el formulario “Diseñar nuevo ensayo” {#adding-a-trial-by-using-design-new-trial-form}
+
+#### Paso 1. Iniciar el flujo “Diseñar nuevo ensayo” {#step-1.-begin-the-design-new-trial-workflow -}
+
+Pulse “Diseñar nuevo ensayo” para comenzar.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/trial_create_open_form.png')
+```
+
+El primer paso es una introducción como la siguiente:
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/trial_create_form_1.png')
+```
+
+Aquí se indican los requisitos del ensayo, incluido que debe crear una lista de las accesiones que desea utilizar. Puede ver, crear y modificar listas con la herramienta “Listas” de la parte superior derecha. Para más información, pulse [aquí](#working-with-lists).
+
+#### Paso 2. Introducir información del ensayo {#step-2.-enter-trial-information -}
+
+Introduzca los datos básicos del ensayo, como el programa y la(s) ubicación(es), y seleccione un tipo de diseño, por ejemplo, Complete Block Design. El diseño determina cómo se distribuyen y aleatorizan los genotipos. Antes de continuar, pulse “Validar”.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/trial_create_form_2.png')
+```
+
+#### Paso 3. Introducir información del diseño {#step-3.-enter-design-information -}
+
+Indique la lista de accesiones que se usarán en el ensayo; debe ser una lista válida. También especifique los datos obligatorios del diseño, como el número de repeticiones y de bloques.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/trial_create_form_3.png')
+```
+
+#### Paso 4. Información de vinculación del ensayo (opcional) {#step-4.-enter-trial-linkage-information-optional -}
+
+En esta sección puede vincular el nuevo ensayo con otros ensayos de campo, ensayos de cruzamientos o placas de genotipado ya existentes. Es opcional y puede hacerse más adelante desde la página de detalles.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/trial_create_form_4.png')
+```
+
+#### Paso 5. Información del mapa de campo (opcional) {#step-5.-enter-field-map-information-optional -}
+
+Aquí puede especificar cómo se generarán los números de fila y columna de las parcelas, que indican su posición relativa en el campo. Si aún no conoce la distribución o el campo es irregular, puede omitir este paso. Después de guardar el ensayo podrá completar esta información en su página de detalles para reflejar la plantación real.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/trial_create_form_5.png')
+```
+
+#### Paso 6. Personalizar los nombres de parcela (opcional) {#step-6.-custom-plot-naming-optional -}
+
+En esta pantalla puede cambiar el formato con el que se generarán los nombres de las parcelas. Se recomienda omitir este paso y usar el formato predeterminado de la base de datos.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/trial_create_form_6.png')
+```
+
+#### Paso 7. Revisar el ensayo diseñado {#step-7.-review-designed-trial -}
+
+En esta pantalla puede revisar el ensayo generado por la base de datos.
+
+Verá una representación gráfica del ensayo. Los números de los cuadros corresponden a plot_number de cada parcela. Pase el cursor sobre un cuadro para ver más información.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/trial_create_form_7_top.png')
+```
+
+También verá una tabla con todas las parcelas y sus datos. Para repetir la aleatorización, pulse “Repetir aleatorización”.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/trial_create_form_7_middle.png')
+```
+
+Al final aparece un resumen breve del ensayo seguido de dos botones.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/trial_create_form_7_bottom.png')
+```
+
+
+#### Paso 7. Guardar el ensayo nuevo en la base de datos {#step-7.-saving-new-trial-in-the-database -}
+
+
+Cuando termine de revisar el ensayo, pulse “Confirmar” para guardarlo en la base de datos. Al guardarse, aparecerá la pantalla final:
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/trial_create_form_8.png')
+```
+
+### Añadir un ensayo desde un archivo cargado {#adding-a-trial-from-an-uploaded-file}
+
+Si ya tiene el diseño del ensayo en una hoja de cálculo, puede añadirlo a la base de datos con “Cargar ensayo(s) existente(s)” en la página *Gestionar ensayos*.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/trial_create_manage_trials.png')
+```
+
+Introduzca la información solicitada en el flujo de carga del ensayo desde una hoja de cálculo.
+
+#### Paso 1: {#step-1 -}
+
+Primero debe conocer el formato de carga. La distribución del campo representa las parcelas del ensayo. Cada parcela tiene un plot_name único globalmente y un plot_number secuencial, único dentro del ensayo (pero no global; por ejemplo, 101, 102 y 103 para tres parcelas), además de accession_name para el genotipo plantado y block_number para la repetición del diseño. row_number y column_number indican la posición relativa en la cuadrícula (por ejemplo, la parcela superior izquierda está en fila 1, columna 1; la siguiente, en fila 1, columna 2). Puede indicar la cantidad de semilla de un lote: seedlot_name identifica el paquete utilizado y num_seed_per_plot y weight_gram_seed_per_plot indican la cantidad transferida a la parcela. Las columnas adicionales de tratamientos usan 1 cuando se aplicó el tratamiento y una celda vacía cuando no se aplicó.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/manage_trials_upload_trial_1.png')
+```
+
+En la página siguiente podrá seleccionar un archivo, incluso para cargar varios ensayos a la vez. También puede consultar los requisitos para cargas de uno o varios ensayos.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics(c('assets/images/manage_trials_upload_trial_2.png','assets/images/manage_trials_upload_trial_template.png'))
+```
+
+
+##### Requisitos mínimos del archivo {#minimum-file-requirements -}
+
+-   Todas las accesiones del archivo deben existir en la base de datos. Consulte la sección sobre cómo añadir accesiones.
+
+-   El archivo puede ser Excel (.XLXS o .XLS), valores separados por comas (.CSV), tabuladores (.TSV) o punto y coma (.SSV).
+
+-   La primera fila (encabezado) debe incluir estos nombres de columna: plot_name accession_name plot_number block_number is_a_control rep_number range_number row_number col_number seedlot_name num_seed_per_plot weight_gram_seed_per_plot entry_number
+
+-   Solo son obligatorios accession_name, plot_number y block_number.
+
+Ejemplo mínimo:
+
+| **plot\_name** | **accession\_name** | **plot\_number** | **block\_number** | **is\_a\_control** | **rep\_number** | **range\_number** | **row\_number** | **col\_number** | **seedlot\_name** | **num\_seed\_per\_plot** | **weight\_gram\_seed\_per\_plot** | **entry\_number** |
+|----------------|---------------------|------------------|-------------------|--------------------|-----------------|-------------------|-----------------|-----------------|-------------------|--------------------------|-----------------------------------|------------------|
+| 2018plot1      | my_accession1       | 101              | 1                 | 1                  |                 |                   |                 |                 |                   |                          |                                   |                  |
+| 2018plot2      | my_accession2       | 201              | 2                 |                    |                 |                   |                 |                 |                   |                          |                                   |                  |
+| 2018plot3      | my_accession2       | 102              | 1                 |                    |                 |                   |                 |                 |                   |                          |                                   |                  |
+| 2018plot4      | my_accession1       | 202              | 2                 | 1                  |                 |                   |                 |                 |                   |                          |                                   |                  |
+
+Al cargar varios ensayos, se aplican los mismos requisitos, con estos encabezados adicionales para distinguirlos en el archivo: trial_name breeding_program location year transplanting_date design_type description trial_type trial_stock_type plot_width plot_length field_size planting_date harvest_date. También puede recibir un correo cuando termine la carga (consulte [Aviso por correo al cargar varios diseños de ensayo](#email-alert-for-multiple-trial-design-upload)).
+
+##### Validación del archivo {#file-validation -}
+
+-   Si el archivo tiene datos ausentes o no válidos, aparecerá una ventana con los errores que deben corregirse antes de completar la carga.
+
+##### Cargar un ensayo con tratamientos {#uploading-a-trial-with-treatments -}
+
+
+-   Puede cargar tratamientos añadiendo columnas. El encabezado será el nombre del tratamiento, por ejemplo, fertilizer, watering regime o inoculation. El valor 1 indica que se aplicó a la parcela y una celda vacía que no se aplicó.
+
+#### Paso 2: {#step-2 -}
+
+Cuando la distribución del ensayo tenga el formato correcto, pulse “Paso siguiente”. Complete el formulario que aparece:
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/manage_trials_upload_trial_3.png')
+```
+
+El nombre del ensayo debe ser único en toda la base de datos. Procure seguir las convenciones de nomenclatura de su grupo.
+
+#### Paso 3: {#step-3 -}
+
+Vaya a la página siguiente para vincular el ensayo con otros proyectos. Valide el formulario y pulse “Cargar ensayo”.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/manage_trials_upload_trial_4.png')
+```
+
+#### Paso 4: {#step-4 -}
+
+Si el archivo incluye accession_names que aún no existen en la base de datos, aparecerá esta pantalla. Si ya existen todos, se omitirá este paso.
+Las accesiones deben existir antes de crear el ensayo porque una misma accesión puede usarse en varios ensayos y debe ser una entidad independiente. Evite añadir accession_names duplicados por error. En esta pantalla puede crear una lista con los accession_names ausentes y pulsar “Añadir accesiones a la base de datos”. Cuando todas estén registradas, continúe al paso siguiente.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/manage_trials_upload_trial_5.png')
+```
+
+#### Paso 5: {#step-5 -}
+
+Si el archivo contiene seedlot_names que aún no existen en la base de datos, aparecerá la pantalla siguiente. Si todos los lotes ya existen, se omitirá este paso.
+Los lotes de semillas deben existir antes de añadir el ensayo porque un lote puede usarse en varios ensayos y debe ser una entidad independiente. Cuando todos estén en la base de datos, continúe al paso siguiente.
+
+#### Paso 6: {#step-6 -}
+
+Si hay otros errores —por ejemplo, plot_names duplicados en la base, plot_numbers repetidos en el ensayo o row_number no entero— aparecerán en el cuadro rojo. Corríjalos en el archivo: ábralo en Excel, haga los cambios y guárdelo. Después pulse “Enviar ensayo” para volver a enviarlo. Puede repetir la edición y el envío hasta que se acepte.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/manage_trials_upload_trial_7.png')
+```
+
+#### Pantalla de finalización {#completion-screen -}
+
+Tanto si pudo enviar el ensayo correctamente en el paso 2 como si necesitó varios intentos en el paso 5, una vez guardado aparecerá esta pantalla:
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/manage_trials_upload_trial_8.png')
+```
+
+
+### Ensayos en varias ubicaciones {#multi-location-trials}
+
+Para añadir ensayos en varias ubicaciones, seleccione varias ubicaciones en el formulario 'Añadir ensayo'.
+
+Se creará un ensayo independiente para cada ubicación, todos con el mismo diseño y agrupados en una carpeta.
+
+Por defecto, cada ensayo tendrá una aleatorización nueva. Si lo desea, marque “Usar la misma aleatorización para todas las ubicaciones”.
+
+
+#### Aviso por correo al cargar varios diseños de ensayo {#email-alert-for-multiple-trial-design-upload -}
+
+Al cargar varios ensayos desde un archivo, puede activar las notificaciones por correo con la casilla “Aviso por correo”. Se usará la dirección asociada a su cuenta, aunque puede indicar otra. Tras enviar el archivo, la carga se ejecuta en segundo plano y puede seguir usando la interfaz. Al terminar, recibirá un correo con los resultados.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/multiple_trial_upload_with_email.png')
+```
+
+### Ver la distribución de parcelas y el mapa de calor de rasgos {#viewing-plot-layout-and-trait-heatmap}
+
+#### Ver la distribución de parcelas {#viewing-plot-layout}
+
+En “Herramientas de distribución del campo y mapa de calor de fenotipos” se muestra por defecto la distribución física del ensayo. Las posiciones relativas se basan en las filas y columnas indicadas al crear o cargar el ensayo. Las parcelas se colorean según sus números de repetición y bloque y si sirven como control. Pase el cursor sobre una parcela para ver sus detalles.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/fieldmap_trial_layout.png')
+```
+
+#### Ver la distribución de parcelas de varios ensayos {#viewing-plot-layout-for-multiple-trials}
+
+Si se cultiva más de un ensayo en el mismo campo, sus distribuciones pueden mostrarse juntas si comparten estas características:
+
+<ul>
+  <li>Todos los ensayos tienen el mismo <strong>año</strong></li>
+  <li>Todos los ensayos tienen la misma <strong>ubicación</strong></li>
+  <li>El <strong>tipo de ubicación</strong> de los ensayos está configurado como <strong>Field</strong></li>
+  <li>Las posiciones de <strong>fila</strong> y <strong>columna</strong> de las parcelas de los ensayos relacionados no se superponen. Por ejemplo, el ensayo #1 comienza en la fila 1 y el ensayo #2 en la fila 10.</li>
+</ul>
+
+Si se cumplen estas condiciones y marca “Seleccionar ensayos en el mismo campo”, se mostrarán juntas las parcelas de todos los ensayos relacionados, con colores distintos por ensayo. Las descargas del orden de plantación y cosecha incluirán todas las parcelas mostradas, en su orden en el campo.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/fieldmap_multi_trial_layout.png')
+```
+
+#### Ver imágenes de parcelas en fieldMap {#tracking-plot-images-on-fieldmap -}
+
+Las imágenes de una parcela aparecen en fieldMap si hay alguna asociada a ella.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/fieldmap_plot_image.png')
+```
+
+Para ver imágenes, pulse una parcela. El diálogo muestra sus detalles, incluidos los materiales que contiene y su distribución, si corresponde. En la parte inferior puede cambiar el nombre de la parcela o la accesión y ver sus imágenes.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/fieldmap_view_plot_image.png')
+```
+
+En el diálogo, pulse “Ver imágenes de la parcela”. Si hay más de 2 imágenes, pulse “Ver más imágenes...”. Puede pulsar una imagen para verla en tamaño mediano.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/fieldmap_display_plot_image.png')
+```
+
+
+#### Ver el mapa de calor del rasgo medido {#viewing-assayed-trait-heatmap -}
+
+Para ver el mapa de calor, seleccione un rasgo medido en la lista desplegable. Al pasar el cursor sobre una parcela, se resalta en verde y se muestran sus datos de campo, incluido el valor del rasgo seleccionado.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/heatmap_assayed_trait_view.png')
+```
+
+#### Suprimir el fenotipo de una parcela {#suppressing-plot-phenotype -}
+
+Al pulsar una parcela del mapa de calor se abre un diálogo con un botón para suprimir el valor fenotípico de un rasgo. El valor suprimido puede excluirse del análisis del ensayo y de la descarga de fenotipos.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/trial_detail_page_suppress_phenotype.png')
+```
+
+#### Corregir la autocorrelación espacial {#correcting-spatial-autocorrelation}
+
+En ensayos con información espacial y fenotipos guardados, puede comprobar y corregir la autocorrelación espacial con “Calcular corrección espacial” sobre el mapa. Se abrirá el diálogo de correcciones espaciales. Para más información, consulte [*Herramientas de análisis de datos*](#data-analysis-tools).
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/heatmap_spatial_correction_button.png')
+```
+
+### Añadir información en la página *Detalles del ensayo* {#adding-additional-information-in-the-trial-detail-page}
+
+Después de añadir el ensayo a la base de datos, puede editar sus detalles o agregar información en la página *Detalles del ensayo*.
+
+#### Cargar la distribución física del ensayo {#uploading-physical-trial-layout -}
+
+Puede cargar la distribución física pulsando “Cargar distribución espacial” en la página *Detalles del ensayo*.
+
+```{r echo=FALSE, out.width='75%', fig.align='center'}
+knitr::include_graphics('assets/images/image332.png')
+```
+
+Compruebe cuidadosamente el formato del archivo. Puede consultar la información pulsando “Formato de hoja de cálculo” en la ventana “Cargar distribución espacial”.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/image340.png')
+```
+
+Formato de hoja de cálculo:
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/image190.png')
+```
+
+#### Requisitos del archivo de distribución física del ensayo {#physical-trial-layout-file-requirements -}
+
+-   Todos los nombres de parcela del archivo deben existir en la base de datos.
+
+-   El archivo debe ser txt delimitado por tabuladores.
+
+-   La primera fila (encabezado) debe contener los nombres de las columnas.
+
+Ejemplo:
+
+| plot\_name | row\_number | col\_number |
+|------------|-------------|-------------|
+| plot1      | 1           | 1           |
+| plot2      | 1           | 2           |
+| plot3      | 1           | 3           |
+
+Seleccione el archivo de coordenadas de distribución del ensayo y pulse “OK” para cargarlo.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/image79.png')
+```
+
+Después de cargar las coordenadas, aparece el siguiente mensaje.
+
+```{r echo=FALSE, out.width='50%', fig.align='center'}
+knitr::include_graphics('assets/images/image276.png')
+```
+
+<!--
+Para ver la distribución del campo, pulse “Sección de mapa de calor del ensayo” y abra el menú desplegable del mapa.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/heatmap_default_display.png')
+```
+-->
+
+#### Descargar la hoja de cálculo del mapa del campo {#downloading-field-map-spreadsheet -}
+
+Puede descargar la hoja del mapa si se han cargado coordenadas de campo (números de fila y columna) para las parcelas.
+Para descargarla, pulse “Descargar distribución de FieldMap” en la sección del mapa de calor.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/field_map_download_link.png')
+```
+
+<!--
+Aparecerá un diálogo; pulse “Enviar” para descargar el archivo.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/field_map_download_dialog.png')
+```
+
+Pulse para ver la hoja descargada.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/field_map_download_spreadsheet.png')
+```
+-->
+#### Editar la distribución física del ensayo {#editing-physical-trial-layout -}
+
+El botón “Ayuda de uso” incluye instrucciones para editar la distribución física.
+
+```{r echo=FALSE, out.width='75%', fig.align='center'}
+knitr::include_graphics('assets/images/spatial_layout_usage_help.png')
+```
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics(c('assets/images/spatial_layout_usage_help_1.png','assets/images/spatial_layout_usage_help_2.png','assets/images/spatial_layout_usage_help_3.png'))
+```
+
+Hay dos formas de editar la distribución del ensayo:
+
+-   Reemplazar la accesión de una parcela pulsando la parcela en la distribución.
+
+-   Reemplazar una accesión del ensayo con el botón “Editar distribución del campo”.
+
+
+Para editar una parcela, púlsela. Indique la nueva accesión en “Editar información de parcela” y pulse “Reemplazar accesión de parcela”.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics(c('assets/images/fieldmap_view_plot_image.png','assets/images/replace_plot_accession_form.png'))
+```
+
+Para reemplazar una accesión en todas sus parcelas o plantas, pulse “Editar distribución del campo”.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/image173.png')
+```
+
+En la ventana “Editar distribución del campo”, pulse “Reemplazar accesión”.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/image87.png')
+```
+
+Seleccione la accesión que desea reemplazar, indique la nueva y pulse “Reemplazar accesión del ensayo”.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/image85.png')
+```
+<!--
+Puede intercambiar las accesiones de dos parcelas con el botón “Sustituir accesión”.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/image162.png')
+```
+
+En “Sustituir accesión de parcela”, seleccione las dos parcelas que desea intercambiar y pulse “Sustituir accesión de parcela”.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/image282.png')
+```
+-->
+
+### Descargar la distribución desde *Detalles del ensayo* {#downloading-the-trial-layout-from-the-trial-detail-page}
+
+En la página *Detalles del ensayo*, en “Diseño experimental”, pulse “Descargar distribución”.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/image348.png')
+```
+
+La distribución incluye información de las unidades de observación: parcelas, plantas o subparcelas. Puede contener datos del diseño, como block_number y rep_number, y datos del mapa físico, como row_number y col_number, si están disponibles.
+La distribución también incluye información sobre los tratamientos aplicados en el campo.
+Opcionalmente, la distribución puede incluir el rendimiento global de las accesiones para una lista de rasgos.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/image347.png')
+```
+
+### Añadir regímenes de manejo {#adding-management-regimes}
+
+Además del diseño y la distribución, puede especificar cómo se manejó el ensayo en *Régimen de manejo*, dentro de la pestaña *Diseño experimental* de la página de detalles.
+
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/management_regime_section.png')
+```
+
+Aquí puede consultar datos sobre fertilización, riego y control de malezas. Los tipos de factores de manejo disponibles dependen de la configuración del servidor; consulte al administrador si tiene dudas.
+
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/management_regime_details.png')
+```
+
+Para añadir un factor de manejo, pulse 'Añadir factor de manejo' en la sección correspondiente. La mayoría de los datos son opcionales, pero debe indicar el tipo y la descripción. También puede especificar fechas de inicio y fin, el calendario del tratamiento y las aplicaciones concretas. Pulse 'Enviar' para añadirlo.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/add_management_factor_dialog.png')
+```
+
+Una vez añadido, puede editar el factor pulsando el icono verde del lápiz. Se abrirá el mismo diálogo con los datos actuales; haga los cambios y envíelos. Pulse la papelera roja para quitar el factor del ensayo.
+
+### Añadir tratamientos experimentales {#adding-experimental-treatments}
+
+A diferencia de los regímenes de manejo, que describen el ensayo en conjunto, puede guardar tratamientos aplicados de forma distinta a los materiales del ensayo. Se añaden en la sección *Tratamientos* de la pestaña *Diseño experimental*.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/trial_treatment_section.png')
+```
+
+Al abrir esta pestaña verá un resumen del número de materiales tratados y una tabla para buscar valores de tratamiento en distintos niveles de material.
+
+Añadir tratamientos es parecido a [cargar datos fenotípicos](#managing-phenotypic-data): pulse 'Añadir tratamientos' para abrir el diálogo de carga:
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/trial_add_treatment_dialog.png')
+```
+
+Al igual que para los fenotipos, puede proporcionar una hoja con materiales, tratamientos y marcas de tiempo opcionales. Compruebe los encabezados en la [página de búsqueda de tratamientos](#managing-observation-variables) o en el explorador de ontologías.
+
+A diferencia de los datos fenotípicos, los tratamientos se aplican automáticamente a los materiales descendientes. Si se trata una parcela, el tratamiento también se aplica a sus subparcelas, plantas y muestras de tejido.
+
+### Añadir plantas al ensayo {#adding-plant-entries-to-your-trial}
+
+Después de añadir un ensayo, puede agregar registros de plantas para fenotiparlas individualmente. Por lo general, es preferible guardar datos a nivel de planta, ya que siempre pueden calcularse los fenotipos de parcela a partir de ellos.
+
+Puede añadir registros de plantas de cuatro maneras:
+(1) Generados automáticamente por la base de datos. Solo debe indicar el número de plantas por parcela.
+(2) Cargarlos en un archivo XLS o XLSX, lo que permite asignar nombres específicos a las plantas.
+(3) Cargarlos con un índice de planta en lugar del nombre (el nombre se genera automáticamente).
+(4) Cargarlos indicando el número de plantas por parcela. A diferencia de la opción 1, puede variar entre parcelas.
+
+Si el ensayo tiene subparcelas, puede usar cualquiera de estas opciones para añadir plantas a ellas. Una vez creadas las subparcelas, no se pueden añadir plantas directamente a las parcelas; una vez añadidas las plantas, no se pueden crear subparcelas.
+
+Estas opciones están en “Registros de plantas”, en la pestaña “Diseño experimental” de la página *Detalles del ensayo*.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/trial_detail_page_add_plant_entries.png')
+```
+
+#### Generar registros de plantas automáticamente {#automatically-generate-plant-entries -}
+
+Al pulsar “Añadir registros de plantas” se abre un diálogo. Solo debe indicar cuántas plantas hay por parcela. Los nombres se forman concatenando plot_name y el índice de la planta, por ejemplo, plot_name_plant_1. Opcionalmente puede indicar filas y columnas para situar las plantas dentro de cada parcela.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/trial_detail_page_add_plant_entries_autogenerated.png')
+```
+
+#### Cargar registros de plantas {#upload-plant-entries -}
+
+También puede cargar un archivo XLS o XLSX con nombres de plantas, índices de planta o cantidad de plantas por parcela. Cada opción incluye un diálogo con el formato requerido.
+
+### Añadir muestras de tejido al ensayo {#adding-tissue-sample-entries-to-your-trial}
+
+En algunos ensayos se deben recoger muestras de tejido de las plantas. La base de datos generará sus identificadores y mantendrá las relaciones con plantas, parcelas, accesiones, etc. Para empezar, abra la página del ensayo y vaya a “Diseño” > “Registros de muestras de tejido”.
+Las muestras de tejido se vinculan directamente a las plantas; por tanto, el ensayo debe tener plantas antes de añadirlas.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/manage_trials_tissue_sample_default.png')
+```
+
+Al pulsar “Añadir registros de muestras de tejido”, indique cuántas muestras necesita por planta. Después puede añadir palabras para distinguirlas, como “raíz” o “tallo”, tal como se muestra abajo.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/manage_trials_tissue_sample_create.png')
+```
+
+Una vez añadidos, los registros de muestras aparecerán en la sección de diseño del ensayo, como se muestra abajo.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/manage_trials_tissue_samples.png')
+```
+
+Cada muestra de tejido tiene una página de detalles donde puede añadir información, por ejemplo, si está en tránsito o almacenada.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/manage_trials_tissue_sample_detail.png')
+```
+
+La sección de materiales relacionados, cerca del final de la página, muestra las relaciones entre todos ellos, incluidas las muestras de tejido.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/manage_trials_tissue_sample_related_stock.png')
+```
+
+### Cargar coordenadas GPS de parcelas {#uploading-gps-coordinates-for-plots}
+
+Puede cargar las coordenadas GPS de las parcelas del ensayo. El enlace está en la página de detalles, como se muestra abajo.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/trial_detail_page_add_plot_gps.png')
+```
+
+Al pulsar el enlace se abrirá este diálogo.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/trial_detail_page_add_plot_gps_dialog.png')
+```
+
+Aquí puede cargar un archivo XLS o XLSX. Para consultar el formato requerido, pulse “Formato de hoja de cálculo”; se abrirá el siguiente diálogo.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/trial_detail_page_add_plot_gps_upload_info.png')
+```
+
+El diálogo indica que el archivo debe ser XLS o XLSX y contener: plot_name	WGS84_bottom_left_x	WGS84_bottom_left_y	WGS84_bottom_right_x	WGS84_bottom_right_y	WGS84_top_right_x	WGS84_top_right_y	WGS84_top_left_x	WGS84_top_left_y
+Las coordenadas GPS deben estar en formato WGS84 y definir un polígono de cuatro puntos alrededor de la parcela.
+
+### Sección de mediciones repetidas {#repetitive-measurements-section}
+
+Si el ensayo contiene rasgos repetidos o series temporales, puede consultarlos y analizarlos en “Mediciones repetidas”. Seleccione el rasgo y defina el intervalo con el selector de fechas o el control deslizante. Luego elija cómo tratar las mediciones: First Value, Last Value, Averaged Value, Sum Values o All Values. “All Values” también visualiza la tendencia temporal para ayudar a detectar patrones.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/trial_detail_page_view_repetitive_measurements.png')
+```
+
+### Cargar archivos adicionales al ensayo {#uploading-additional-files-to-trial}
+
+Puede añadir documentos, imágenes o grabaciones al ensayo. Desplácese hasta “Archivos adicionales cargados” en la página de detalles; desde allí podrá verlos y descargarlos.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/trial_upload_additional_file.png')
+```
+
+Para cargar un archivo adicional, pulse “Cargar archivos adicionales” y seleccione el archivo en el diálogo. Para ver información, pulse “Información de carga”.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/trial_upload_additional_file_info.png')
+```
+
+## Actualizar datos del ensayo {#updating-trial-data}
+
+Para actualizar los metadatos de uno o varios ensayos (por ejemplo, fecha de plantación, diseño o descripción), pulse “Actualizar ensayo(s) existente(s)” en Gestionar > Ensayos de campo. También puede usar esta carga para cambiar nombres o mover ensayos a otro programa. Para actualizar un ensayo debe ser curator o submitter asociado al programa correspondiente.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/update_trial_metadata.png')
+```
+
+Aquí puede cargar un archivo con nuevos metadatos para ensayos existentes. La primera columna se llama 'trial_name' e incluye el nombre del ensayo. Añada columnas para los metadatos que desea actualizar. Las columnas omitidas y los valores vacíos no modificarán los metadatos existentes. Puede incluir:
+
+- new_trial_name: nombre nuevo para el ensayo; no debe existir ya en la base de datos
+- breeding_program: nombre del programa de mejoramiento responsable; debe existir en la base de datos.
+- location: nombre o abreviatura de la ubicación del ensayo; debe existir en la base de datos.
+- year: año del ensayo.
+- transplanting_date: fecha de trasplante del ensayo. Use el formato YYYY-MM-DD o 'remove' para quitarla.
+- planting_date: fecha de plantación en formato YYYY-MM-DD o 'remove' para quitarla.
+- harvest_date: fecha de cosecha en formato YYYY-MM-DD o 'remove' para quitarla.
+- design_type: abreviatura del tipo de diseño; debe existir en la base. Valores posibles: CRD: Completely Randomized Design, RCBD: Randomized Complete Block Design, RRC: Resolvable Row-Column, DRRC: Doubly-Resolvable Row-Column, ARC: Augmented Row-Column, Alpha: Alpha Lattice Design, Lattice: Lattice Design, Augmented: Augmented Design, MAD: Modified Augmented Design, greenhouse: undesigned Nursery/Greenhouse, splitplot: Split Plot, p-rep: Partially Replicated, Westcott: Westcott Design.
+- description: texto adicional con otra información relevante sobre el ensayo.
+- trial_type: el tipo de ensayo debe existir en la base de datos. Valores posibles: Seedling Nursery, phenotyping_trial, Advanced Yield Trial, Preliminary Yield Trial, Uniform Yield Trial, Variety Release Trial, Clonal Evaluation, genetic_gain_trial, storage_trial, heterosis_trial, health_status_trial, grafting_trial, Screen House, Seed Multiplication, crossing_block_trial, Specialty Trial.
+- plot_width: anchura de parcela en meters
+- plot_length: longitud de parcela en meters
+- field_size: superficie del campo en hectares
+
+## Eliminar datos del ensayo {#deleting-trial-data}
+
+Para eliminar datos del ensayo, abra “Eliminar datos del ensayo”. Encontrará enlaces para borrar datos de rasgos, distribución y registros del ensayo.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/trial_detail_page_delete_trait1.png')
+```
+
+Para borrar datos de rasgos medidos, pulse “Eliminar datos de rasgos”. Confirme con “Seleccionar rasgos para eliminar” y elija uno o varios rasgos del ensayo.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/trial_detail_page_delete_trait2.png')
+```
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/trial_detail_page_delete_trait3.png')
+```
+
+Para borrar los datos de distribución, pulse “Eliminar datos de distribución” y confirme en el diálogo.
+
+Para eliminar un registro del ensayo, pulse “Eliminar registro del ensayo” y confirme en el diálogo.
+
+## Compatibilidad con cultivos intercalados {#intercropping-support}
+
+Breedbase está incorporando compatibilidad con ensayos de cultivos intercalados: un ensayo puede incluir varios cultivos y una parcela puede asociarse a varias accesiones. Los cambios recientes también permiten almacenar varias ontologías de rasgos y mantener sus términos separados por cultivo.
+
+### Crear un ensayo {#trial-creation}
+
+Actualmente, los cultivos intercalados solo se admiten al cargar el diseño desde un archivo; todavía no se admiten en la herramienta interactiva.
+
+La plantilla de carga (para uno o varios ensayos) incluye la columna `accession_name`, que indica la accesión principal de cada parcela y es obligatoria. También admite la columna opcional `intercrop_accession_name` para añadir una o varias accesiones adicionales. Separe varias con comas o deje la celda vacía si no hay otra accesión intercalada.
+
+
+| trial_name  | plot_name             | plot_number | accession_name | intercrop_accession_name |
+|-------------|-----------------------|-------------|----------------|--------------------------|
+| B4I_2025_NY | B4I_2025_NY-PLOT_5001 | 5001        | IL22-5365      | NDP160034Y               |
+| B4I_2025_NY | B4I_2025_NY-PLOT_5002 | 5002        | IL22-5365      | NDP250123Y,NDP250155Y    |
+| B4I_2025_NY | B4I_2025_NY-PLOT_5003 | 5003        | IL21-4364      | NDP250178Y               |
+| B4I_2025_NY | B4I_2025_NY-PLOT_5004 | 5004        | IL21-4020      |                          |
+| B4I_2025_NY | B4I_2025_NY-PLOT_5005 | 5005        | IL23-1619      | NDP150221G               |
+
+**Ejemplo de plantilla para cargar varios ensayos con varias accesiones por parcela**
+
+*NOTA: se omiten algunas columnas obligatorias para mayor claridad*
+
+### Detalles del ensayo {#trial-details}
+
+Las accesiones intercaladas aparecen como metadatos en distintas partes de la página de detalles.
+
+La sección *Diseño experimental* muestra estas accesiones en las tablas de Accesiones y Parcelas.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/intercropping_plots_table.png')
+```
+
+La información emergente del mapa de campo muestra todas las accesiones de una parcela al pasar el cursor. La descarga de la distribución espacial también las incluye.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/intercropping_fieldmap_tooltip.png')
+```
+
+### Descargas de fenotipos {#phenotype-downloads}
+
+Las descargas de fenotipos (desde la página del ensayo, el asistente de búsqueda, etc.) conservan las columnas `germplasmDbId` y `germplasmName` con el ID y el nombre de la accesión principal. `intercropGermplasmDbId` e `intercropGermplasmName` contienen los ID y nombres de las accesiones intercaladas. Si no hay, las columnas quedan vacías; si hay varias, se separan por comas.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/intercropping_phenotype_download.png')
+```
+
+**Ejemplo de descarga de fenotipos con varias accesiones por parcela**
+
+*NOTA: se omiten algunas columnas para mayor claridad*
+
+### Ontologías de rasgos {#trait-ontologies}
+
+Puede cargarse una ontología de rasgos independiente para cada cultivo, lo que permite separar claramente sus definiciones.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/intercropping_trait_search.png')
+```

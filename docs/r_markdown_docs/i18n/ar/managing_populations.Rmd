@@ -1,0 +1,25 @@
+# إدارة المجموعات {#managing-populations}
+
+تُمثّل المجموعات على هيئة مجموعات من العينات، وقد يفيد هذا التجميع في التحليلات اللاحقة. لإدارتها، انتقل إلى “إدارة العينات” وانتقل إلى أسفل الصفحة.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/manage_populations.png')
+```
+
+لإضافة مجموعة، انقر “إنشاء مجموعة”. في النافذة، اختر قائمة العينات وأدخل اسمًا للمجموعة. ويمكنك أيضًا إنشاء مجموعة أثناء تحميل عينات جديدة إلى قاعدة البيانات.
+
+```{r echo=FALSE, out.width='75%', fig.align='center'}
+knitr::include_graphics('assets/images/manage_populations_add_population.png')
+```
+
+انقر زر الجمع (+) بجوار “المجموعات” لعرض المجموعات المتاحة. انقر اسم مجموعة لعرض العينات التي تضمها.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/manage_populations_expand_table.png')
+```
+
+من هنا يمكنك حذف عينات من المجموعة وإضافة عينات جديدة إليها.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/manage_populations_table.png')
+```

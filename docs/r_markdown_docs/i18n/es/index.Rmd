@@ -1,0 +1,43 @@
+---
+title: "Manual de usuario de Breedbase"
+subtitle: "Traducción automática. Pendiente de revisión especializada."
+author: "Breedbase team"
+date: "`r Sys.Date()`"
+knit: "bookdown::render_book"
+graphics: yes
+colorlinks: yes
+fontsize: 12pt
+description: "Manual de Breedbase: cómo crear una cuenta, buscar en la base de datos, gestionar distintos tipos de datos y analizarlos."
+url: 'https://solgenomics.github.io/'
+github-repo: solgenomics/sgn
+cover-image: assets/images/Breedbase_HighRes.png
+site: bookdown::bookdown_site
+lang: es
+dir: ltr
+---
+
+# Introducción {#introduction .unnumbered}
+
+¡Bienvenido al manual de Breedbase!
+
+::: {show-in="html"}
+Use el índice de la barra lateral izquierda para ir al tema que le interese.
+
+En cualquier momento puede seleccionar texto del manual para resaltarlo o anotarlo con [Hypothesis](https://web.hypothes.is/). Abra la barra lateral de Hypothesis a la derecha para ver las anotaciones existentes.
+
+También puede usar los controles de la parte superior de la pantalla para:
+
+<i class="fa fa-align-justify tab"></i> — contraer la barra lateral<br> <i class="fa fa-search tab"></i> — buscar un tema<br> <i class="fa fa-font tab"></i> — cambiar el tamaño o tipo de letra, o el tema del sitio<br> <i class="fa fa-file-pdf-o tab"></i> — descargar el manual en PDF
+
+También puede descargar aquí el manual en PDF. [<i class="fa fa-file-pdf-o"></i> Descargar](BreedbaseManual.pdf)
+:::
+
+Este manual está dirigido a los usuarios de la base de datos.\
+Si es desarrollador y busca detalles de implementación del software, consulte la wiki para desarrolladores: <https://github.com/solgenomics/sgn/wiki>
+
+````{=html}
+<!-- ```{js, echo = FALSE}
+title=document.getElementById('header');
+title.innerHTML = '<center><img src="assets/images/Breedbase_HighRes.png" style="max-width: 50%;" alt="Breedbase Logo"></center>' + title.innerHTML
+``` -->
+````

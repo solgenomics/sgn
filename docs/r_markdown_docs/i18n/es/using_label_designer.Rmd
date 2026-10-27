@@ -1,0 +1,66 @@
+# Usar el diseñador de etiquetas {#using-the-label-designer}
+
+Breedbase ofrece una herramienta interactiva para crear etiquetas personalizadas. Para abrirla, seleccione “Diseñador de etiquetas” en el menú “Gestionar”. Las secciones siguientes explican las opciones de cada paso del proceso de diseño.
+
+## Seleccionar un origen de datos {#select-a-data-source}
+
+Primero seleccione el origen de datos. En el menú desplegable “Origen de datos” puede elegir un ensayo de campo, de genotipado o de cruzamientos para incluir en las etiquetas la información del diseño. También puede elegir una lista y usar su contenido. Antes de seleccionar el origen, puede filtrar las opciones con el menú “Tipo de datos”.
+Después elija un nivel (parcela, planta, etc.) en el menú “Etiqueta para cada”. Para generar etiquetas de parcela de varios ensayos a la vez, seleccione una lista de ensayos como origen y parcela como nivel. Cuando termine, pulse 'Siguiente'.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+if (knitr:::is_latex_output()) {
+  knitr::include_graphics('assets/gifs/gif1.png')
+} else {
+  knitr::include_graphics('assets/gifs/gif1.gif')
+}
+```
+
+
+## Definir el tamaño de página y etiqueta {#set-page-and-label-size}
+
+Después de elegir el origen de datos, indique si desea crear un diseño nuevo o cargar uno guardado. Si selecciona “Nuevo”, deberá elegir el tamaño de página y de etiqueta.
+Si el tamaño de página o etiqueta no aparece, seleccione “Personalizado” en el menú correspondiente e introduzca las dimensiones deseadas en pixels (each pixel is 1/72nd of an inch).
+Si selecciona “Guardado”, deberá elegir un diseño guardado. Después irá directamente al paso de diseño con sus elementos ya cargados.
+
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+if (knitr:::is_latex_output()) {
+  knitr::include_graphics('assets/gifs/gif2.png')
+} else {
+  knitr::include_graphics('assets/gifs/gif2.gif')
+}
+```
+
+
+## Diseñar la etiqueta {#design-your-label}
+
+Después de definir los formatos de página y etiqueta, aparecerá el lienzo donde podrá añadir elementos. Seleccione el tipo, campo, tamaño y fuente; luego pulse “Añadir”.
+Puede añadir texto a un campo existente o crear uno personalizado con “Crear campo personalizado”.
+Una vez añadidos, puede arrastrar los elementos o eliminarlos pulsando el cuadro rojo de su esquina superior izquierda.
+También puede cambiar el tamaño de los códigos de barras arrastrando el cuadro verde de la esquina inferior derecha.
+Para las etiquetas de un ensayo, se recomienda incluir un código de barras que codifique los nombres de parcelas, plantas o muestras de tejido.
+Estos identificadores únicos deben incluirse en las mediciones fenotípicas o genotípicas que se carguen en la base de datos.
+Cuando esté conforme con el diseño, pulse “Siguiente”.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+if (knitr:::is_latex_output()) {
+  knitr::include_graphics('assets/gifs/gif3.png')
+} else {
+  knitr::include_graphics('assets/gifs/gif3.gif')
+}
+```
+
+## Ajustar el formato, guardar y descargar {#adjust-formatting-save-and-download}
+
+En el último paso puede ajustar el formato y la distribución de página, guardar el diseño o descargar las etiquetas.
+El diálogo “Configuración adicional” permite ajustar los márgenes de página y el espacio entre etiquetas. Las unidades son pixels (each pixel is 1/72nd of an inch). Se recomienda no cambiar estos ajustes antes de imprimir una página de prueba.
+También puede indicar el número de copias por etiqueta, filtrar por repetición o descargar solo la primera página para hacer una prueba.
+Para guardar el diseño, escriba un nombre único y pulse “Guardar”. Se almacenará en el administrador de listas, donde puede hacerlo público para compartirlo.
+Por último, pulse “Descargar” para generar y descargar las etiquetas.
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+if (knitr:::is_latex_output()) {
+  knitr::include_graphics('assets/gifs/gif4.png')
+} else {
+  knitr::include_graphics('assets/gifs/gif4.gif')
+}
+```
