@@ -651,6 +651,38 @@ sub get_transformation_controls {
 }
 
 
+sub get_control_transformant_details {
+    my $self = shift;
+    my $schema = $self->schema();
+    my $transformation_stock_id = $self->transformation_stock_id();
+    my $transformation_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, "transformation", "stock_type")->cvterm_id();
+    my $control_of_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'control_of', 'stock_relationship')->cvterm_id();
+    my $transformation_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, "transformation", "stock_type")->cvterm_id();
+    my $accession_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, "accession", "stock_type")->cvterm_id();
+    my $transformant_of_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, "transformant_of", "stock_relationship")->cvterm_id();
+    my $number_of_insertions_type_id =  SGN::Model::Cvterm->get_cvterm_row($schema, 'number_of_insertions', 'stock_property')->cvterm_id();
+
+    my $q = "SELECT transformation.stock_id, transformation.uniquename, transformant.stock_id, transformant.uniquename, stockprop.value
+        FROM stock_relationship AS control_relationship
+        JOIN stock AS transformation ON (control_relationship.subject_id = transformation.stock_id) AND control_relationship.type_id = ? AND transformation.type_id = ?
+        JOIN stock_relationship AS transformant_relationship ON (transformant_relationship.object_id = transformation.stock_id) AND transformant_relationship.type_id = ?
+        JOIN stock AS transformant ON (transformant_relationship.subject_id = transformant.stock_id) AND transformant.type_id = ?
+        LEFT JOIN stockprop ON (stockprop.stock_id = transformant.stock_id) AND stockprop.type_id = ?
+        Where control_relationship.object_id = ? ";
+
+    my $h = $schema->storage->dbh()->prepare($q);
+
+    $h->execute($control_of_type_id, $transformation_type_id, $transformant_of_type_id, $accession_type_id, $number_of_insertions_type_id, $transformation_stock_id);
+    my @control_transformants = ();
+    while (my ($control_transformation_stock_id, $control_transformation_name, $transformant_stock_id, $transformant_name, $number_of_insertions) = $h->fetchrow_array()){
+        push @control_transformants, [$transformant_stock_id, $transformant_name, $number_of_insertions, $control_transformation_stock_id, $control_transformation_name]
+    }
+
+    return \@control_transformants;
+
+}
+
+
 ###
 1;
 ###

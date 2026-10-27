@@ -1903,6 +1903,35 @@ sub update_transformation_metadata_POST :Args(0){
 }
 
 
+sub get_control_transgenic_line_details :Path('/ajax/transformation/control_transgenic_line_details') :Args(1) {
+    my $self = shift;
+    my $c = shift;
+    my $transformation_stock_id = shift;
+    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+    my $dbh = $c->dbc->dbh;
+
+    my $transformation_obj = CXGN::Transformation::Transformation->new({schema=>$schema, dbh=>$dbh, transformation_stock_id=>$transformation_stock_id});
+    my $result = $transformation_obj->get_control_transformant_details();
+    my @sorted_names = natkeysort {($_->[1])} @$result;
+
+    my @transformant_details;
+    foreach my $r (@sorted_names){
+        my ($stock_id, $stock_name, $number_of_insertions, $control_transformation_id, $control_transformation_name) =@$r;
+
+        push @transformant_details, {
+            transformant_id => $stock_id,
+            transformant_name => $stock_name,
+            number_of_insertions => $number_of_insertions,
+            transformation_id => $control_transformation_id,
+            transformation_name => $control_transformation_name
+        };
+    }
+
+    $c->stash->{rest} = { data => \@transformant_details };
+
+}
+
+
 ###
 1;#
 ###
