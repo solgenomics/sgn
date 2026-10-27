@@ -44,4 +44,5 @@ Generated HTML/PDF and tool dependencies are excluded from this contribution. So
 
 The existing upstream documentation workflow still renders the English manual.
 Run the explicit language commands above when publishing translated readers;
-this contribution does not change CI workflows or publish the documentation site.
+the fork-safe validation workflow does not publish them automatically.
+Documentation-site publication remains a separate maintainer action.
