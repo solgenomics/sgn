@@ -432,15 +432,28 @@ sub get_active_transformations_in_project :Path('/ajax/transformation/active_tra
 
     my @transformations;
     foreach my $r (@$result){
-        my ($transformation_id, $transformation_name, $plant_id, $plant_name, $vector_id, $vector_name, $notes, $is_a_control, $control_id, $control_name) =@$r;
+        my ($transformation_id, $transformation_name, $plant_id, $plant_name, $vector_id, $vector_name, $notes, $is_a_control) =@$r;
         my $transformation_obj = CXGN::Transformation::Transformation->new({schema=>$schema, dbh=>$dbh, transformation_stock_id=>$transformation_id});
         my $transformants = $transformation_obj->transformants();
         my $number_of_transformants = scalar(@$transformants);
+        my $transformation_controls = $transformation_obj->get_transformation_controls();
+
+        my $control_string;
+        if (scalar @$transformation_controls > 0) {
+            my @control_links;
+            foreach my $control (@$transformation_controls) {
+                my $control_stock_id = $control->[0];
+                my $control_name = $control->[1];
+                push @control_links, qq{<a href="/transformation/$control_stock_id">$control_name</a>}
+            }
+            $control_string = join("<br>", @control_links);
+        }
+
         my $control_column_info;
         if($is_a_control) {
             $control_column_info = 'is a control';
-        } elsif ($control_id) {
-            $control_column_info = qq{<a href="/transformation/$control_id">$control_name</a>};
+        } elsif ($control_string) {
+            $control_column_info = $control_string
         }
         push @transformations, [qq{<a href="/transformation/$transformation_id">$transformation_name</a>}, qq{<a href="/stock/$plant_id/view">$plant_name</a>}, qq{<a href="/stock/$vector_id/view">$vector_name</a>}, $notes, $control_column_info, $number_of_transformants];
     }
