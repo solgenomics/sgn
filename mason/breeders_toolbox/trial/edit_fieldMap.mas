@@ -580,9 +580,6 @@ jQuery(document).on('click', '#confirm_store_spatial_correction', async function
                 if (response.error) {
                     alert("Error Replacing Stock: "+response.error);
                 } else {
-                    if (response.plots_not_renamed && response.plots_not_renamed.length) {
-                        alert("The stock was replaced. These plot names contain the old name more than once and were left unchanged: "+response.plots_not_renamed.join(", "));
-                    }
                     jQuery('#replace_stock_dialog_success_message').modal("show");
                 }
             },
@@ -653,7 +650,7 @@ jQuery(document).on('click', '#confirm_store_spatial_correction', async function
     var subs_success_message = '';
 
     if (trial_stock_type == 'family_name') {
-        edit_dialog_title = 'Replace Trial Family Names Or Substitute Family Names Within A Trial Plots';
+        edit_dialog_title = 'Replace Trial Family Names Or Substitute Family Names Within Trial Plots';
         replace_button_label = 'Replace Family Name';
         substitute_button_label = 'Substitute Family Name';
         replace_dialog_title = 'Replace Trial Family Name in '.concat(trial_name);
@@ -667,7 +664,7 @@ jQuery(document).on('click', '#confirm_store_spatial_correction', async function
         subs_message_title = 'Substitute Plot Family Name';
         subs_success_message = 'Family Name was substituted successfully.';
     } else if (trial_stock_type == 'cross') {
-        edit_dialog_title = 'Replace Trial Cross Unique IDs Or Substitute Cross Unique IDs Within A Trial Plots';
+        edit_dialog_title = 'Replace Trial Cross Unique IDs Or Substitute Cross Unique IDs Within Trial Plots';
         replace_button_label = 'Replace Cross Unique ID';
         substitute_button_label = 'Substitute Cross Unique ID';
         replace_dialog_title = 'Replace Trial Cross Unique ID in '.concat(trial_name);
@@ -681,7 +678,7 @@ jQuery(document).on('click', '#confirm_store_spatial_correction', async function
         subs_message_title = 'Substitute Cross Unique ID';
         subs_success_message = 'Crosss Unique ID was substituted successfully.';
     } else {
-        edit_dialog_title = 'Replace Trial Accessions Within A Trial Plots';
+        edit_dialog_title = 'Replace Trial Accessions Within Trial Plots';
         replace_button_label = 'Replace Accession';
         // substitute_button_label = 'Substitute Accession';
         replace_dialog_title = 'Replace Trial Accession in '.concat(trial_name);

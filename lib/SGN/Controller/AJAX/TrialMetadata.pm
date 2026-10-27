@@ -3224,129 +3224,190 @@ sub delete_field_coord : Path('/ajax/phenotype/delete_field_coords') Args(0) {
 }
 
 sub replace_trial_stock : Chained('trial') PathPart('replace_stock') Args(0) {
-  my $self = shift;
-  my $c = shift;
-  my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
-  my $schema = $c->dbic_schema('Bio::Chado::Schema', undef, $sp_person_id);
-  my $old_stock_id = $c->req->param('old_stock_id');
-  my $new_stock = $c->req->param('new_stock');
-  my $trial_stock_type = $c->req->param('trial_stock_type');
-  my $trial_id = $c->stash->{trial_id};
+    my $self = shift;
+    my $c = shift;
+    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
+    my $schema = $c->dbic_schema('Bio::Chado::Schema', undef, $sp_person_id);
+    my $old_stock_id = $c->req->param('old_stock_id');
+    my $new_stock = $c->req->param('new_stock');
+    my $trial_stock_type = $c->req->param('trial_stock_type');
+    my $trial_id = $c->stash->{trial_id};
 
-  if ($self->privileges_denied($c)) {
-    $c->stash->{rest} = { error => "You have insufficient access privileges to edit this map." };
-    return;
-  }
-
-  if (!$new_stock){
-    $c->stash->{rest} = { error => "Provide new stock name." };
-    return;
-  }
-
-  my $replace_stock_fieldmap = CXGN::Trial::FieldMap->new({
-    bcs_schema => $schema,
-    trial_id => $trial_id,
-    trial_stock_type => $trial_stock_type,
-
-  });
-
-  my $return_error = $replace_stock_fieldmap->update_fieldmap_precheck();
-     if ($return_error) {
-       $c->stash->{rest} = { error => $return_error };
-       return;
-     }
-
-  my $old_stock_row = $schema->resultset("Stock::Stock")->find({ stock_id => $old_stock_id });
-  if (!$old_stock_row) {
-    $c->stash->{rest} = { error => "Could not find stock with id $old_stock_id." };
-    return;
-  }
-  if (!$schema->resultset("Stock::Stock")->search({ uniquename => $new_stock })->count()) {
-    $c->stash->{rest} = { error => "Could not find stock $new_stock." };
-    return;
-  }
-  my $old_stock_name = $old_stock_row->uniquename;
-
-  # Plots whose names carry the old accession name are renamed. The layout is
-  # read after regenerating its cache, because the cache may be stale.
-  $replace_stock_fieldmap->_regenerate_trial_layout_cache();
-  my $trial_layout_download = CXGN::Trial::TrialLayoutDownload->new({
-    schema => $schema,
-    trial_id => $trial_id,
-    data_level => 'plots',
-    selected_columns => {"plot_name"=>1,"plot_id"=>1,"accession_id"=>1},
-  });
-  my @layout_rows = @{$trial_layout_download->get_layout_output()->{output} || []};
-  my $layout_header = shift @layout_rows;
-  my %col_idx;
-  for my $i (0..$#{$layout_header || []}) { $col_idx{$layout_header->[$i]} = $i; }
-  my %plot_renames;
-  my @plots_not_renamed;
-  foreach my $plot_row (@layout_rows) {
-    next unless $plot_row->[$col_idx{accession_id}] == $old_stock_id;
-    my $plot_name = $plot_row->[$col_idx{plot_name}];
-    my $renamed = _plot_name_for_new_stock($plot_name, $old_stock_name, $new_stock);
-    if (!defined($renamed)) {
-      push @plots_not_renamed, $plot_name;
-      next;
+    if ($self->privileges_denied($c)) {
+        $c->stash->{rest} = { error => "You have insufficient access privileges to edit this map." };
+        return;
     }
-    $plot_renames{$plot_row->[$col_idx{plot_id}]} = [$plot_name, $renamed] if $renamed ne $plot_name;
-  }
-  foreach my $plot_id (keys %plot_renames) {
-    if ($schema->resultset("Stock::Stock")->search({ uniquename => $plot_renames{$plot_id}->[1] })->count()) {
-      $c->stash->{rest} = { error => "Plot name ".$plot_renames{$plot_id}->[1]." already exists in the database" };
-      return;
-    }
-  }
 
-  # The accession swap, the plot renames and the layout cache change together
-  # or not at all.
-  my $txn_error;
-  try {
-    $schema->txn_do(sub {
-      my $replace_return_error = $replace_stock_fieldmap->replace_trial_stock_fieldMap($new_stock, $old_stock_id);
-      die "$replace_return_error\n" if $replace_return_error;
-      foreach my $plot_id (sort { $a <=> $b } keys %plot_renames) {
-        my $rename_error = $replace_stock_fieldmap->replace_plot_name_fieldMap($plot_id, @{$plot_renames{$plot_id}});
-        die "$rename_error\n" if $rename_error;
-      }
-      $replace_stock_fieldmap->_regenerate_trial_layout_cache();
+    if (!$new_stock){
+        $c->stash->{rest} = { error => "Provide new stock name." };
+        return;
+    }
+
+    my $replace_stock_fieldmap = CXGN::Trial::FieldMap->new({
+        bcs_schema => $schema,
+        trial_id => $trial_id,
+        trial_stock_type => $trial_stock_type,
     });
-  } catch {
-    $txn_error = $_;
-  };
-  if ($txn_error) {
-    chomp($txn_error);
-    $c->stash->{rest} = { error => "Nothing was changed: $txn_error" };
-    return;
-  }
 
-  my $dbh = $c->dbc->dbh();
-  my $bs = CXGN::BreederSearch->new( { dbh=>$dbh, dbname=>$c->config->{dbname}, } );
-  my $refresh = $bs->refresh_matviews($c->config->{dbhost}, $c->config->{dbname}, $c->config->{dbuser}, $c->config->{dbpass}, 'phenotypes', 'concurrent', $c->config->{basepath});
+    my $return_error = $replace_stock_fieldmap->update_fieldmap_precheck();
+    if ($return_error) {
+        $c->stash->{rest} = { error => $return_error };
+        return;
+    }
 
-  my $rest = { success => 1 };
-  $rest->{plots_not_renamed} = [ sort @plots_not_renamed ] if @plots_not_renamed;
-  $c->stash->{rest} = $rest;
-}
+    my $old_stock_row = $schema->resultset("Stock::Stock")->find({ stock_id => $old_stock_id });
+    if (!$old_stock_row) {
+        $c->stash->{rest} = { error => "Could not find stock with id $old_stock_id." };
+        return;
+    }
+    my $new_stock_row = $schema->resultset("Stock::Stock")->search({ uniquename => $new_stock })->first();
+    if (!$new_stock_row) {
+        $c->stash->{rest} = { error => "Could not find stock $new_stock." };
+        return;
+    }
+    my $new_stock_id = $new_stock_row->stock_id;
 
-# The plot name with the old stock name replaced by the new one. The old name
-# must appear as a whole part of the plot name: at the start or after "-" or
-# "_", and at the end or before "-" or "_", as in the generated names
-# (TRIAL-rep1-ACCESSION_1, TRIAL_ACCESSION_1). Returns the name unchanged when
-# it does not contain the old name that way, and undef when it does more than
-# once (for example when the trial name contains the accession name), so that
-# such a name is left alone instead of being changed in the wrong place.
-sub _plot_name_for_new_stock {
-  my ($plot_name, $old_name, $new_name) = @_;
-  my @positions;
-  while ($plot_name =~ /(?:^|(?<=[-_]))\Q$old_name\E(?=[-_]|$)/g) {
-    push @positions, $-[0];
-  }
-  return $plot_name if !@positions;
-  return if @positions > 1;
-  substr($plot_name, $positions[0], length($old_name)) = $new_name;
-  return $plot_name;
+    my $trial_layout_download = CXGN::Trial::TrialLayoutDownload->new({
+        schema => $schema,
+        trial_id => $trial_id,
+        data_level => 'plots',
+        selected_columns => {"plot_name"=>1,"plot_id"=>1,"accession_name"=>1,"accession_id"=>1,"plot_number"=>1,"block_number"=>1,"rep_number"=>1,"range_number"=>1,"row_number"=>1,"col_number"=>1,"trial_name"=>1},
+    });
+    my @layout_rows = @{$trial_layout_download->get_layout_output()->{output}};
+    my $layout_header = shift @layout_rows;
+    my %col_idx;
+    for my $i (0..$#$layout_header) { $col_idx{$layout_header->[$i]} = $i; }
+
+    my $rep_hash = {};
+    my %plot_info;
+    my %swapped_plots;
+
+    foreach my $plot_row (@layout_rows) {
+        my $pname        = $plot_row->[$col_idx{plot_name}];
+        my $pid          = $plot_row->[$col_idx{plot_id}];
+        my $acc_name     = $plot_row->[$col_idx{accession_name}];
+        my $acc_id       = $plot_row->[$col_idx{accession_id}];
+        my $plot_number  = $plot_row->[$col_idx{plot_number}];
+        my $block_number = $plot_row->[$col_idx{block_number}];
+        my $range_number = $plot_row->[$col_idx{range_number}];
+        my $row_number   = $plot_row->[$col_idx{row_number}];
+        my $col_number   = $plot_row->[$col_idx{col_number}];
+        my $trial_name_v = $plot_row->[$col_idx{trial_name}];
+
+        $rep_hash->{$acc_id}->{'start'}->{$pid} = { plot_number => $plot_number };
+        $plot_info{$pid} = {
+            plot_name      => $pname,
+            accession_name => $acc_name,
+            plot_number    => $plot_number  // '',
+            block_number   => $block_number // '',
+            range_number   => $range_number // '',
+            row_number     => $row_number   // '',
+            col_number     => $col_number   // '',
+            trial_name     => $trial_name_v || '',
+        };
+
+        # every plot of the old stock moves to the new stock
+        if ($acc_id == $old_stock_id) {
+            $rep_hash->{$old_stock_id}->{'remove'}->{$pid} = { plot_number => $plot_number };
+            $rep_hash->{$new_stock_id}->{'add'}->{$pid} = { plot_number => $plot_number };
+            $swapped_plots{$pid} = $new_stock;
+        }
+    }
+
+    # Look up naming template for this trial
+    my ($template_name_attributes, $bp_name);
+    my $plot_name_template_cvterm = SGN::Model::Cvterm->get_cvterm_row($schema, 'plot_autogenerated_name_metadata', 'project_property');
+    if ($plot_name_template_cvterm) {
+        my $tmpl_rs = $schema->resultset("Project::Projectprop")->find({
+            project_id => $trial_id,
+            type_id    => $plot_name_template_cvterm->cvterm_id,
+        });
+        if ($tmpl_rs) {
+            my $tmpl = decode_json($tmpl_rs->value);
+            my ($fmt) = keys %$tmpl;
+            $template_name_attributes = $tmpl->{$fmt}->{name_attributes};
+            my $program_object = CXGN::BreedersToolbox::Projects->new({ schema => $schema });
+            my $bp_data = $program_object->get_breeding_programs_by_trial($trial_id);
+            $bp_name = $bp_data->[0]->[1] // '';
+        }
+    }
+
+    my $rep_number_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'replicate', 'stock_property')->cvterm_id();
+    my %valid_plot_attrs = map { $_ => 1 } qw(breedingProgram trialName accessionName plotNumber blockNumber rangeNumber repNumber rowNumber colNumber);
+
+    # The stock swap, the replicate numbers, the plot renames and the layout
+    # cache change together or not at all.
+    my $replace_trial_stock_txn = sub {
+        my $replace_return_error = $replace_stock_fieldmap->replace_trial_stock_fieldMap($new_stock, $old_stock_id);
+        die "$replace_return_error\n" if $replace_return_error;
+
+        $replace_stock_fieldmap->rebuild_trial_plot_replicates($rep_hash, $rep_number_id);
+
+        # new plot names for all rep-affected plots
+        my %affected_ids;
+        foreach my $acc_id (keys %$rep_hash) {
+            next unless $rep_hash->{$acc_id}->{add} || $rep_hash->{$acc_id}->{remove};
+            $affected_ids{$_}++ for keys %{$rep_hash->{$acc_id}->{start} // {}};
+            $affected_ids{$_}++ for keys %{$rep_hash->{$acc_id}->{add}   // {}};
+        }
+
+        foreach my $affected_id (keys %affected_ids) {
+            next unless $plot_info{$affected_id};
+            my $current_plot_name = $plot_info{$affected_id}->{plot_name};
+            my $effective_new_name;
+
+            if ($template_name_attributes) {
+                my $rep_row = $schema->resultset("Stock::Stockprop")->find({ type_id => $rep_number_id, stock_id => $affected_id });
+                my $new_rep_number = $rep_row ? $rep_row->value : '';
+                my $acc_name = exists $swapped_plots{$affected_id} ? $swapped_plots{$affected_id} : $plot_info{$affected_id}->{accession_name};
+                my %source = (
+                    breedingProgram => $bp_name,
+                    trialName       => $plot_info{$affected_id}->{trial_name},
+                    accessionName   => $acc_name,
+                    plotNumber      => $plot_info{$affected_id}->{plot_number},
+                    blockNumber     => $plot_info{$affected_id}->{block_number},
+                    repNumber       => $new_rep_number,
+                    rangeNumber     => $plot_info{$affected_id}->{range_number},
+                    rowNumber       => $plot_info{$affected_id}->{row_number},
+                    colNumber       => $plot_info{$affected_id}->{col_number},
+                );
+                my @parts = map { ref $_ eq 'HASH' ? ($_->{text} || '') : ($valid_plot_attrs{$_} ? ($source{$_} // '') : '') } @$template_name_attributes;
+                $effective_new_name = join('_', @parts);
+            } else {
+                my $old_acc_name = $plot_info{$affected_id}->{accession_name};
+                my $new_acc_name = exists $swapped_plots{$affected_id} ? $swapped_plots{$affected_id} : $old_acc_name;
+                if ($new_acc_name ne $old_acc_name) {
+                    (my $candidate = $current_plot_name) =~ s/\Q$old_acc_name\E/$new_acc_name/;
+                    $effective_new_name = $candidate if $candidate ne $current_plot_name;
+                }
+            }
+
+            if ($effective_new_name && $effective_new_name ne $current_plot_name) {
+                my $err = $replace_stock_fieldmap->replace_plot_name_fieldMap($affected_id, $current_plot_name, $effective_new_name);
+                die "$err\n" if $err;
+            }
+        }
+
+        $replace_stock_fieldmap->_regenerate_trial_layout_cache();
+    };
+
+    my $txn_error;
+    try {
+        $schema->txn_do($replace_trial_stock_txn);
+    } catch {
+        $txn_error = $_;
+    };
+    if ($txn_error) {
+        chomp($txn_error);
+        $c->stash->{rest} = { error => "Nothing was changed: $txn_error" };
+        return;
+    }
+
+    my $dbh = $c->dbc->dbh();
+    my $bs = CXGN::BreederSearch->new( { dbh=>$dbh, dbname=>$c->config->{dbname}, } );
+    my $refresh = $bs->refresh_matviews($c->config->{dbhost}, $c->config->{dbname}, $c->config->{dbuser}, $c->config->{dbpass}, 'phenotypes', 'concurrent', $c->config->{basepath});
+
+    $c->stash->{rest} = { success => 1 };
 }
 
 sub refresh_cache : Chained('trial') PathPart('refresh_cache') Args(0) {
