@@ -168,8 +168,10 @@ function compute_derived_trait() {
     jQuery('#working_modal').modal("show");
     var trait = jQuery('#derived_trait_select').val();
     var trialID = parseInt(jQuery('#trialIDDiv').text());
-    if (trait === '') {
+    if (!trait) {
+		jQuery('#working_modal').modal("hide");
 		alert("No trait selected");
+		return;
 	    }
 
      new jQuery.ajax({
@@ -179,6 +181,7 @@ function compute_derived_trait() {
 	 data: {
              'trial_id': trialID,
              'trait': trait,
+             'overwrite': jQuery('#derived_trait_overwrite').is(':checked') ? 1 : 0,
 	 },
 
 	 success: function (response) {
@@ -193,7 +196,7 @@ function compute_derived_trait() {
 		 jQuery('#open_derived_trait_dialog').dialog("close");
 		 jQuery('#working_modal').modal("hide");
 		 jQuery('derived_trait_saved_dialog_message');
-		 alert("Successfully derived and uploaded phenotype");
+		 alert("Successfully derived and uploaded phenotype" + (response.message ? "\n" + response.message.replace(/<br\s*\/?>/gi, "\n") : ""));
 		// alert("Successfully derived and uploaded ' "+trait+" ' values for this trial");
              }
 	 },
@@ -418,7 +421,12 @@ function trial_detail_page_setup_dialogs() {
 	modal: true,
 	autoResize:true,
 	width: 500,
-	position: ['top', 75],
+	// jQuery UI dropped the [x, y] form of position, which put the dialog in the page's top-left
+	// corner under the sticky trial title (z-index 1000), so its buttons could not be clicked.
+	position: { my: "center", at: "center", of: window },
+	open: function() {
+	    jQuery(this).closest('.ui-dialog').css('z-index', 1060);
+	},
 	modal: true,
 	buttons: {
 	    Cancel: function() {
@@ -459,7 +467,7 @@ function trial_detail_page_setup_dialogs() {
 		}
 		else {
 		    var html = "";
-		    if (response.derived_traits) {
+		    if (response.derived_traits && response.derived_traits.length > 0) {
 			var selected = 'selected="selected"';
 			for(var n=0; n<response.derived_traits.length; n++) {
 			    //alert("derived trait: +derived_traits"+response.derived_traits[n]);
@@ -468,7 +476,7 @@ function trial_detail_page_setup_dialogs() {
 
 		    }
 		    else {
-			html = '<option active="false">No derived trait available</option>';
+			html = '<option value="">No trait on this database has a formula for computing it</option>';
 		    }
 		}
 		jQuery('#derived_trait_select').html(html);
