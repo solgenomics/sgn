@@ -258,6 +258,8 @@ sub change_account_info_action :Path('/ajax/user/update') Args(0) {
     my $self = shift;
     my $c = shift;
 
+    return if !$self->_require_post($c);
+
     if (! $c->user() ) {
         $c->stash->{rest} = { error => "You must be logged in to use this page." };
 	return;

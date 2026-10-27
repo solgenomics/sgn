@@ -94,6 +94,7 @@ Please verify your current password to make changes. Select changes desired by c
        // alert(JSON.stringify(form_data));
        jQuery.ajax( { 
          url: '/ajax/user/update',
+         method: 'POST',
          data: form_data,
          error: function(r) { alert('An error occurred! Sorry!');  },
          success: function(r) {
