@@ -4,9 +4,8 @@ Baseline: `solgenomics/sgn` master at
 `4031ffe7503f0cbb2914f00b0f01d032c51a0dad` (2026-10-27).
 The upstream head was checked again after the port. Tests used the candidate
 SGN source first in the Perl include path and an offline dependency environment
-derived from the pinned BreedBase v2.23 recipe. This is local source validation;
-the full upstream fixture, hosted CI and full browser acceptance remain pending
-for this branch.
+derived from the pinned BreedBase v2.23 recipe. These are local source-validation results. The checks attached to the pull
+request record the full upstream fixture and browser CI status for each commit.
 
 ## Results
 
@@ -78,15 +77,17 @@ exercised in nine browser cases. PDFs are generated and reviewed outside Git.
 
 The existing documentation workflow still renders English only. The included
 commands build translated readers and their PDF downloads; maintainers must
-invoke them when publishing the multilingual documentation site. CI workflows
-are unchanged.
+invoke them when publishing the multilingual documentation site. The workflow
+checkout and publication restrictions are described below.
 
 ## CI portability repairs
 
 The JavaScript dependency unit test uses a controlled temporary mapping and the
 real candidate legacy resolver, so it does not require webpack output before
 CI builds it. Mason/browser harnesses supply the actual English translator and
-request/browser contexts. Python formatters share the same 120-column style;
+request/browser contexts. The password-reset fixture context also supplies the
+real English translator; its existing recipient and token security assertions
+are retained. Python formatters share the same 120-column style;
 strict JSON scalar checks intentionally reject bool and custom subclasses.
 
 Spelling corrections retain semantic contexts, API/data identifiers and all
