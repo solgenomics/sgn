@@ -440,6 +440,35 @@ $response = decode_json $mech->content;
 ok(!$response->{error}, 'for_trial has no error for a real trial') or diag Dumper $response;
 is(ref($response->{collections}), 'ARRAY', 'for_trial returns a collections array');
 
+# for_trial with collection_type=file: the FileSearch collection holds the fixture
+# file, which is linked to a trial through nd_experiment_md_files
+#
+my ($file_trial_id) = $dbh->selectrow_array(
+    "SELECT nep.project_id FROM nd_experiment_project AS nep
+     JOIN phenome.nd_experiment_md_files AS nemf ON (nemf.nd_experiment_id = nep.nd_experiment_id)
+     WHERE nemf.file_id = ? ORDER BY nep.project_id LIMIT 1",
+    undef, $fixture_file_id
+);
+ok($file_trial_id, 'found the trial of the fixture file');
+
+my $trial_file_collections = $cobj->get_collections_for_trial({ trial_id => $file_trial_id, collection_type => 'file' });
+$row = (grep { $_->{collection_id} == $file_collection_id } @$trial_file_collections)[0];
+
+ok($row, 'get_collections_for_trial finds the file collection');
+is($row->{n_trial_files}, 1, 'n_trial_files counts the trial file');
+ok(!(grep { $_->{collection_id} == $alpha_id } @$trial_file_collections), 'image collections are not returned for collection_type file');
+
+$trial_file_collections = $cobj->get_collections_for_trial({ trial_id => $file_trial_id, collection_type => 'image' });
+ok(!(grep { $_->{collection_id} == $file_collection_id } @$trial_file_collections), 'file collections are not returned for collection_type image');
+
+$mech->get_ok("http://localhost:3010/ajax/collection/for_trial?trial_id=$file_trial_id&collection_type=file");
+
+$response = decode_json $mech->content;
+$row = (grep { $_->{collection_id} == $file_collection_id } @{ $response->{collections} })[0];
+
+ok($row, 'for_trial with collection_type file returns the file collection');
+is($row->{n_trial_files}, 1, 'for_trial returns n_trial_files');
+
 # AJAX create with a breeding program
 #
 $mech->post_ok('http://localhost:3010/ajax/collection/create', [
@@ -582,6 +611,22 @@ $mech->post_ok('http://localhost:3010/ajax/collection/rename', [ collection_id =
 $response = decode_json $mech->content;
 
 ok(!$response->{error}, 'owner can rename') or diag Dumper $response;
+
+# the image and file collection pages, and the old combined page that redirects to them
+#
+$mech->get_ok('http://localhost:3010/collections/images', 'image collections page loads');
+$mech->content_contains('Image Collections', 'image collections page title');
+$mech->content_lacks('id="files_search_results"', 'image collections page has no file search');
+
+$mech->get_ok('http://localhost:3010/collections/files', 'file collections page loads');
+$mech->content_contains('File Collections', 'file collections page title');
+$mech->content_contains('id="files_search_results"', 'file collections page has the file search');
+
+$mech->get_ok('http://localhost:3010/collections?collection_type=file', 'old collections page with a type loads');
+like($mech->uri, qr{/collections/files$}, 'old collections page redirects to the file collections page');
+
+$mech->get_ok('http://localhost:3010/collections', 'old collections page loads');
+like($mech->uri, qr{/collections/images$}, 'old collections page redirects to the image collections page by default');
 
 # clean up: collections are not covered by clean_up_db, so remove them before
 # clean_up_db removes the test image and file they could reference

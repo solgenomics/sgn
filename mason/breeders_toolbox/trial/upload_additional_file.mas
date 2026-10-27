@@ -4,7 +4,7 @@ $trial_id => undef
 
 <& /util/import_javascript.mas, classes => [ ] &>
 
-<div id="trial_additional_uploaded_files_div">
+<div id="trial_additional_uploaded_files_div" class="table-responsive">
 [LOADING...]
 </div>
 
@@ -32,6 +32,41 @@ $trial_id => undef
                             <div class="col-sm-8" >
                                 <input type="file" name="trial_upload_additional_file" id="trial_upload_additional_file" encoding="multipart/form-data" />
                             </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="col-sm-4 control-label">Add to Collection: </label>
+                            <div class="col-sm-8" >
+                                <select class="form-control" id="trial_upload_additional_file_collection_mode">
+                                    <option value="none">Do not add to a collection</option>
+                                    <option value="existing">Add to an existing collection</option>
+                                    <option value="new">Create a new collection</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="form-group" id="trial_upload_additional_file_collection_existing_div" style="display:none">
+                            <label class="col-sm-4 control-label">Collection: </label>
+                            <div class="col-sm-8" >
+                                <select class="form-control" id="trial_upload_additional_file_collection_id"></select>
+                            </div>
+                        </div>
+                        <div id="trial_upload_additional_file_collection_new_div" style="display:none">
+                            <div class="form-group">
+                                <label class="col-sm-4 control-label">Collection Name: </label>
+                                <div class="col-sm-8" >
+                                    <input class="form-control" style="width:100%;" type="text" id="trial_upload_additional_file_collection_name" placeholder="e.g. Trial Protocols 2026" />
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label class="col-sm-4 control-label">Description: </label>
+                                <div class="col-sm-8" >
+                                    <input class="form-control" style="width:100%;" type="text" id="trial_upload_additional_file_collection_description" />
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <div class="col-sm-12" id="trial_upload_additional_file_status"></div>
                         </div>
 
                     </form>
@@ -79,12 +114,30 @@ jQuery(document).ready(function(){
     display_trial_additional_upload_files();
 
     jQuery('#trial_upload_additional_files_link').click( function(){
+        jQuery('#trial_upload_additional_file_status').html('');
         jQuery('#trial_upload_additional_file_dialog').modal('show');
+    });
+
+    jQuery('#trial_upload_additional_file').change( function(){
+        jQuery('#trial_upload_additional_file_status').html('');
     });
 
     jQuery('#trial_upload_additional_file_format').click( function(){
         jQuery('#trial_upload_additional_file_info_dialog').modal('show');
     });
+
+    jQuery('#trial_upload_additional_file_collection_mode').change(function () {
+        var mode = jQuery(this).val();
+        jQuery('#trial_upload_additional_file_collection_existing_div').toggle(mode == 'existing');
+        jQuery('#trial_upload_additional_file_collection_new_div').toggle(mode == 'new');
+        if (mode == 'existing') {
+            trial_upload_additional_file_load_collections();
+        }
+    });
+
+    // the collection chosen for the current upload, set before the form is
+    // submitted and read when the upload completes
+    var upload_collection = null;
 
     jQuery('#trial_upload_additional_file_submit_button').click(function () {
         trial_upload_additional_file_submit();
@@ -96,7 +149,15 @@ jQuery(document).ready(function(){
             alert("Please select a file");
             return;
         }
-        jQuery("#trial_upload_additional_file_form").submit();
+        // resolve (or create) the collection before uploading, so a bad
+        // collection name stops the upload instead of stranding the file
+        jQuery('#trial_upload_additional_file_status').html('');
+        trial_upload_additional_file_prepare_collection().then(function (collection) {
+            upload_collection = collection;
+            jQuery("#trial_upload_additional_file_form").submit();
+        }, function (error) {
+            jQuery('#trial_upload_additional_file_status').html(trial_upload_additional_file_format_message(error, 'error'));
+        });
     }
 
     jQuery('#trial_upload_additional_file_form').iframePostForm({
@@ -113,21 +174,176 @@ jQuery(document).ready(function(){
             console.log(response);
             jQuery('#working_modal').modal("hide");
 
+            var status = jQuery('#trial_upload_additional_file_status');
+
             if (response.error) {
-                alert(response.error);
+                status.html(trial_upload_additional_file_format_message(response.error, 'error'));
                 return;
             }
             if (response.error_string) {
-                alert(response.error_string);
+                status.html(trial_upload_additional_file_format_message(response.error_string, 'error'));
                 return;
             }
             if (response.success) {
-                alert("File uploaded successfully");
                 display_trial_additional_upload_files();
+                var file_input = document.getElementById('trial_upload_additional_file');
+                var file_name = file_input.files.length ? file_input.files[0].name : 'file';
+                var success = [ "Successfully uploaded " + jQuery('<div>').text(file_name).html() ];
+
+                trial_upload_additional_file_add_to_collection(response.file_id, upload_collection).then(function (outcome) {
+                    if (outcome && outcome.type == 'success') {
+                        success.push(outcome.message);
+                    }
+                    var html = trial_upload_additional_file_format_message(success, 'success');
+                    if (outcome && outcome.type == 'error') {
+                        html += trial_upload_additional_file_format_message(outcome.message, 'error');
+                    }
+                    status.html(html);
+                });
             }
         }
     });
-});		
+});
+
+// Returns a promise for the collection chosen in the upload dialog:
+// { collection_id, name } for an existing or newly created file collection,
+// or null when the file should not be added to a collection.
+function trial_upload_additional_file_prepare_collection() {
+    var mode = jQuery('#trial_upload_additional_file_collection_mode').val();
+
+    if (mode == 'existing') {
+        var collection_id = jQuery('#trial_upload_additional_file_collection_id').val();
+        if (!collection_id) {
+            return Promise.reject('Please select a collection to add the file to.');
+        }
+        return Promise.resolve({
+            collection_id: collection_id,
+            name: jQuery('#trial_upload_additional_file_collection_id option:selected').text()
+        });
+    }
+
+    if (mode == 'new') {
+        var name = jQuery.trim(jQuery('#trial_upload_additional_file_collection_name').val());
+        if (!name) {
+            return Promise.reject('Please enter a name for the new collection.');
+        }
+        // the request failure handler is the second argument to then(), so it
+        // only handles a failed request, not the error thrown for response.error
+        return Promise.resolve(jQuery.ajax({
+            url: '/ajax/collection/create',
+            method: 'POST',
+            data: {
+                name: name,
+                description: jQuery('#trial_upload_additional_file_collection_description').val(),
+                collection_type: 'file'
+            }
+        })).then(function (response) {
+            if (response.error) { throw response.error; }
+            // the collection now exists, so select it as an existing collection:
+            // another upload then adds to it instead of trying to create it
+            // again under the same name
+            trial_upload_additional_file_select_collection(response.collection_id);
+            return { collection_id: response.collection_id, name: name };
+        }, function () {
+            throw 'An error occurred creating the collection.';
+        });
+    }
+
+    return Promise.resolve(null);
+}
+
+// Adds the uploaded file to the chosen collection. Resolves with
+// { type: 'success' | 'error', message } describing the outcome, or null
+// when there is no collection.
+function trial_upload_additional_file_add_to_collection(file_id, collection) {
+    if (!collection || !file_id) {
+        return Promise.resolve(null);
+    }
+
+    var collection_link = "<a href='/collection/" + collection.collection_id + "'>" +
+        jQuery('<div>').text(collection.name).html() + "</a>";
+
+    return Promise.resolve(jQuery.ajax({
+        url: '/ajax/collection/add_items',
+        method: 'POST',
+        data: {
+            collection_id: collection.collection_id,
+            item_type: 'file',
+            item_ids_json: JSON.stringify([file_id])
+        }
+    })).then(function (response) {
+        if (response.error) {
+            return { type: 'error', message: "The file was stored, but could not be added to collection " + collection_link + ": " + response.error };
+        }
+        // refresh the trial's file collections table if it is on this page
+        if (typeof load_trial_file_collections === 'function') {
+            load_trial_file_collections();
+        }
+        return { type: 'success', message: "Added the file to collection " + collection_link };
+    }, function () {
+        return { type: 'error', message: "The file was stored, but an error occurred adding it to collection " + collection_link };
+    });
+}
+
+// Same markup as formatMessage in CXGN/BreedersToolbox/UploadImages.js, so
+// this dialog reports results the way the image upload dialog does.
+function trial_upload_additional_file_format_message(messages, type) {
+    var item_class = type == 'success' ? 'list-group-item-success' : 'list-group-item-danger';
+    var glyphicon = type == 'success' ? 'glyphicon glyphicon-ok' : 'glyphicon glyphicon-remove';
+    messages = Array.isArray(messages) ? messages : [messages];
+
+    var html = "<hr><ul class='list-group'>";
+    for (var i = 0; i < messages.length; i++) {
+        html += "<li class='list-group-item " + item_class + "'>";
+        html += "<span class='badge'><span class='" + glyphicon + "'></span></span>";
+        html += messages[i] + "</li>";
+    }
+    html += "</ul>";
+    return html;
+}
+
+function trial_upload_additional_file_select_collection(collection_id) {
+    jQuery('#trial_upload_additional_file_collection_mode').val('existing');
+    jQuery('#trial_upload_additional_file_collection_existing_div').show();
+    jQuery('#trial_upload_additional_file_collection_new_div').hide();
+    jQuery('#trial_upload_additional_file_collection_name').val('');
+    jQuery('#trial_upload_additional_file_collection_description').val('');
+    trial_upload_additional_file_load_collections(collection_id);
+}
+
+// fill the existing collection dropdown with the file collections the user
+// can add to, selecting selected_id if it is given
+function trial_upload_additional_file_load_collections(selected_id) {
+    var select = jQuery('#trial_upload_additional_file_collection_id');
+    select.html('<option value="">Loading collections...</option>');
+
+    jQuery.ajax({
+        url: '/ajax/collection/list',
+        data: { collection_type: 'file' },
+        success: function (response) {
+            select.empty();
+            if (response.error) {
+                select.append(jQuery('<option>').val('').text(response.error));
+                return;
+            }
+            var collections = (response.collections || []).filter(function (c) { return c.user_can_modify; });
+            if (!collections.length) {
+                select.append(jQuery('<option>').val('').text('No file collections available'));
+                return;
+            }
+            select.append(jQuery('<option>').val('').text('Select a collection'));
+            collections.forEach(function (c) {
+                select.append(jQuery('<option>').val(c.collection_id).text(c.name));
+            });
+            if (selected_id) {
+                select.val(selected_id);
+            }
+        },
+        error: function () {
+            select.html('<option value="">Could not load collections</option>');
+        }
+    });
+}
 
 function display_trial_additional_upload_files(){
     jQuery.ajax ({
@@ -137,13 +353,13 @@ function display_trial_additional_upload_files(){
         },
         success: function(response){
             //console.log(response);
-            var html = "<table class='table table-hover table-condensed table-bordered' id='trial_additional_uploaded_files_table'><thead><tr><th>Filename</th><th>Date Uploaded</th><th>Uploaded By</th><th>Options</th></tr></thead><tbody>";
+            var html = "<table class='table table-hover table-condensed table-bordered' id='trial_additional_uploaded_files_table' style='width:100%;'><thead><tr><th>Filename</th><th>Date Uploaded</th><th>Uploaded By</th><th>Options</th></tr></thead><tbody>";
             for (i=0; i<response.files.length; i++) {
-                html = html + '<tr><td>'+response.files[i][4]+'</td><td>'+response.files[i][1]+'</td><td><a href="/solpeople/profile/'+response.files[i][2]+'">'+response.files[i][3]+'</a></td><td><a href="/breeders/phenotyping/download/'+response.files[i][0]+'">Download</a> | <a href="javascript:obsolete_additional_file('+<% $trial_id %>+', '+response.files[i][0]+')">Remove</a></td></tr>';
+                html = html + '<tr><td style="word-break:break-all;">'+response.files[i][4]+'</td><td>'+response.files[i][1]+'</td><td><a href="/solpeople/profile/'+response.files[i][2]+'">'+response.files[i][3]+'</a></td><td><a href="/breeders/phenotyping/download/'+response.files[i][0]+'">Download</a> | <a href="javascript:obsolete_additional_file('+<% $trial_id %>+', '+response.files[i][0]+')">Remove</a></td></tr>';
             }
             html = html + "</tbody></table>";
             jQuery('#trial_additional_uploaded_files_div').html(html);
-            jQuery('#trial_additional_uploaded_files_table').DataTable();
+            jQuery('#trial_additional_uploaded_files_table').DataTable({ 'autoWidth': false });
         },
         error: function(response){
             alert("Error retrieving additional uploaded files.");

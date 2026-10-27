@@ -78,13 +78,13 @@
                         <div class="form-group">
                             <label class="col-sm-3 control-label">Collection Name: </label>
                             <div class="col-sm-9" >
-                                <input class="form-control" type="text" id="upload_images_collection_name" placeholder="e.g. Field Photos 2026" />
+                                <input class="form-control" style="width:100%;" type="text" id="upload_images_collection_name" placeholder="e.g. Field Photos 2026" />
                             </div>
                         </div>
                         <div class="form-group">
                             <label class="col-sm-3 control-label">Description: </label>
                             <div class="col-sm-9" >
-                                <input class="form-control" type="text" id="upload_images_collection_description" />
+                                <input class="form-control" style="width:100%;" type="text" id="upload_images_collection_description" />
                             </div>
                         </div>
                     </div>

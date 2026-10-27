@@ -112,7 +112,11 @@ function load_trial_file_collections() {
         url: '/ajax/collection/for_trial',
         data: { trial_id: <% $trial_id %>, collection_type: 'file' },
         success: function (response) {
+            // reset the previous state, since this also reloads the table
+            // after a file is added to a collection
             jQuery('#trial_file_collections_loading').hide();
+            jQuery('#trial_file_collections_empty').hide();
+            jQuery('#trial_file_collections_table').hide();
 
             if (response && response.error) {
                 jQuery('#trial_file_collections_empty').text(response.error).show();
