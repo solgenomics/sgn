@@ -130,7 +130,19 @@ background: white;
 
 <&| /page/info_section.mas, title=>"Associated objects" &>
 
-% print $image->get_associated_object_links();
+<div class="well well-sm table-responsive">
+  <table id="image_associated_objects" class="table table-hover table-striped">
+  <thead>
+    <tr>
+    <th>Object Type</th>
+    <th>Name</th>
+    <th>Stock Type</th>
+    </tr>
+  </thead>
+  </table>
+</div>
+
+% #print $image->get_associated_object_links();
 
 </&>
 
@@ -165,6 +177,18 @@ background: white;
           jQuery('#display_properties_div').html(html);
 	  
        }
+    });
+
+    jQuery('#image_associated_objects').DataTable({
+      ajax: {
+        url: '/ajax/image/<% $object_id %>/associated_objects',
+        dataSrc: ''
+      },
+      columns: [
+        { data: 'type' },
+        { data: 'name' },
+        { data: 'stock_type' }
+      ]
     });
 
   });

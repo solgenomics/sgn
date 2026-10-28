@@ -134,24 +134,9 @@ At the bottom there is a brief summary of the trial followed by two buttons.
 knitr::include_graphics('assets/images/trial_create_form_7_bottom.png')
 ```
 
-#### Step 8. Add Field Management Factors to your design (Optional) {-}
 
-You can add Field Management Factors by clicking "Add Field Management Factor(s) to Design". Clicking this opens a dialog to specify your factor. You can name this to account for fertilizer, watering regime, inoculation, or anything else. The types of management factors available is customizable in the SGN configuration file. This is optional and can be added from the trial detail page afterwards.
+#### Step 7. Saving new trial in the database {-}
 
-
-```{r echo=FALSE, out.width='95%', fig.align='center'}
-knitr::include_graphics('assets/images/add_management_factor_name_dialog.png')
-```
-
-
-Click "Continue" and a dialog will appear where you can specify plots or plants (if you added plants during trial creation) for which the factor was applied. There is a select all button as well.
-
-
-```{r echo=FALSE, out.width='95%', fig.align='center'}
-knitr::include_graphics('assets/images/add_management_factor_dialog.png')
-```
-
-#### Step 9. Saving new trial in the database {-}
 
 Once you are done reviewing the trial you can click "Confirm" to save the generated trial into the database. Once the trial has saved you will see the final completion screen:
 
@@ -272,7 +257,7 @@ This will create a separate trial for each selected location, but they will shar
 By default each trial design will have a fresh randomization, but if desired you may check the "Use same randomization for all locations" option.
 
 
-### Email alert for multiple trial design upload {-}
+#### Email alert for multiple trial design upload {-}
 
 When uploading multiple trials from a file, you have the option to receive email notifications by clicking the "Email Alert" checkbox. By default, the system will use the email address associated with your account, but you have the option to enter a different email address if you prefer. After submitting, the upload process runs in the background, allowing you to continue using the interface without interruptions. Once the process completes, you will receive an email with the upload results.
 
@@ -356,7 +341,7 @@ knitr::include_graphics('assets/images/heatmap_spatial_correction_button.png')
 
 After you added a new trial to the database, you can edit trial details or add more information for that trial through the *Trial Detail* page.
 
- #### Uploading Physical Trial Layout {-}
+#### Uploading Physical Trial Layout {-}
 
 You can upload physical trial layout by clicking on the “Upload Spatial Layout” button on the *Trial Detail* page.
 
@@ -489,6 +474,7 @@ On the “Substitute Plot Accession” form, selecting the two plots that you wa
 knitr::include_graphics('assets/images/image282.png')
 ```
 -->
+
 ### Downloading the Trial Layout from the *Trial Detail* page
 
 Click on "Download Layout" on the *Trial Detail* page under "Experimental Design".
@@ -504,6 +490,50 @@ Optionally, the layout can give information regarding accession's global perform
 ```{r echo=FALSE, out.width='95%', fig.align='center'}
 knitr::include_graphics('assets/images/image347.png')
 ```
+
+### Adding Management Regimes
+
+In addition to trial designs and trial layouts, you can specify the specific ways a trial was managed using the *Management Regime* section of the *Experimental Design* tab of the trial detail page.
+
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/management_regime_section.png')
+```
+
+Here, you can view information like fertilization, irrigation, and weed management regimes. The total set of allowed management factor types is a matter of server configuration - contact your server administrator with questions.
+
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/management_regime_details.png')
+```
+
+To add a new management factor, click on the 'Add management factor' button in the management regime section. Most of the data is optional, although the type and description must be filled. You may specify the start date, end date, and schedule of the treatment, and you may even record specific instances of the factor being applied if you choose. Click 'Submit' to add the factor. 
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/add_management_factor_dialog.png')
+```
+
+Once added, a management factor can be edited by clicking the green pen icon next to it. The same dialog as before will open pre-populated with that management factor's data, and you can make changes and submit them. Click on the red trash can to delete the management factor from the trial.
+
+### Adding Experimental Treatments
+
+In contrast to management regimes, which describe how a field trial as a whole was managed, you may wish to store information regarding treatments applied differentially to the stocks of a trial. Treatments may be added from the *Treatments* section of the *Experimental design* tab.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/trial_treatment_section.png')
+```
+
+Opening this tab gives a brief overview of the total number of stocks to which a treatment is applied and a table that allows you to search treatment values across different stock levels. 
+
+Adding treatments is very similar to [uploading phenotypic data](#managing-phenotypic-data): click on the 'Add Treatments' button to view the treatment upload dialog:
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/trial_add_treatment_dialog.png')
+```
+
+Just as with phenotype uploads, you can supply a spreadsheet specifying the stocks and the treatments with optional timestamps. To ensure the treatment column headers are correct, consult the [treatment search page](#managing-observation-variables) or the ontology browser. 
+
+Unlike phenotypic data, however, treatments are automatically applied to the child stocks of any stock receiving a treatment. That means if a plot receives a treatment, all the subplots, plants, and tissue samples in that plot receive the same treatment. 
 
 ### Adding Plant Entries To Your Trial
 
@@ -658,3 +688,62 @@ knitr::include_graphics('assets/images/trial_detail_page_delete_trait3.png')
 To delete trial layout data, click on the "Delete layout data" link. Confirm deletion on the appeared dialog.
 
 To Delete trial entry, click on "Delete trial entry" link. Confirm deletion on the appeared dialog.
+
+## Intercropping Support
+
+Breedbase has started to add support for intercropping trials, allowing for more than one crop to be grown in a trial and more than one accession to be associated with a plot.  Recent changes also allow for more than one trait ontology to be stored in the database, keeping the trait terms organized separately for each crop.
+
+### Trial Creation
+
+Currently, intercropping is only supported when uploading the trial design using a file (it is not yet supported in the interactive trial design tool).
+
+The trial upload template (both the single- and multiple-trial design formats) has an `accession_name` column, which is used to specify the name of the primary accession for each plot (each plot must have a primary accession).  The upload templates now support an optional `intercrop_accession_name` column, which can be used to add one or more additional accessions to a plot.  You can include more than one intercropping accession by separating their names with a comma or leave the column empty when there is no intercropped accession in the plot.
+
+
+| trial_name  | plot_name             | plot_number | accession_name | intercrop_accession_name |
+|-------------|-----------------------|-------------|----------------|--------------------------|
+| B4I_2025_NY | B4I_2025_NY-PLOT_5001 | 5001        | IL22-5365      | NDP160034Y               |
+| B4I_2025_NY | B4I_2025_NY-PLOT_5002 | 5002        | IL22-5365      | NDP250123Y,NDP250155Y    |
+| B4I_2025_NY | B4I_2025_NY-PLOT_5003 | 5003        | IL21-4364      | NDP250178Y               |
+| B4I_2025_NY | B4I_2025_NY-PLOT_5004 | 5004        | IL21-4020      |                          |
+| B4I_2025_NY | B4I_2025_NY-PLOT_5005 | 5005        | IL23-1619      | NDP150221G               |
+
+**An example multi-trial upload template that includes multiple accessions per plot**
+
+*NOTE: some required columns are left out for clarity*
+
+### Trial Details
+
+The intercropped accessions are displayed as metadata in various parts of the trial detail page.
+
+The *Experimental Design* section displays the intercropped accessions in the Accessions table as well as the Plots table.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/intercropping_plots_table.png')
+```
+
+The interactive field map tooltip (displayed when you hover the mouse pointer over a plot) will display all of the Accessions associated with the plot.  The spatial layout download will list all of the Accessions in the plot as well.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/intercropping_fieldmap_tooltip.png')
+```
+
+### Phenotype Downloads
+
+All of the phenotype trait data downloads (from the trial detail page, search wizard, etc) still include the `germplasmDbId` and `germplasmName` columns, which include the the database id and name of the primary accession.  The `intercropGermplasmDbId` and `intercropGermplasmName` columns will include the id(s) and name(s) of any intercropped germplasm added to the plots.  If there are no intercropped germplasm for a particular plot, the columns will be empty.  If there are more than one intercropped germplasm added to a plot, the IDs and names will be separated by a comma.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/intercropping_phenotype_download.png')
+```
+
+**An example phenotype download that includes multiple accessions per plot**
+
+*NOTE: some columns are left out for clarity*
+
+### Trait Ontologies
+
+A separate trait ontology for each crop can be loaded into the database.  This allows for the clear dilineation and separation of trait definitions between different crops.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/intercropping_trait_search.png')
+```

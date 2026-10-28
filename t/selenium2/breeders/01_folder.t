@@ -13,6 +13,22 @@ my $t = SGN::Test::WWW::WebDriver->new();
 my $f = SGN::Test::Fixture->new();
 my $schema = $f->bcs_schema;
 
+sub _safe_end_driver_session {
+    my ($driver) = @_;
+
+    eval {
+        local $SIG{ALRM} = sub { die "webdriver teardown timeout\n"; };
+        alarm 15;
+        eval { $driver->get('about:blank'); };
+        eval { $driver->quit(); };
+        alarm 0;
+    };
+
+    if ($@ && $@ !~ /webdriver teardown timeout/) {
+        diag("webdriver teardown warning: $@");
+    }
+}
+
 $t->while_logged_in_as("submitter", sub {
     sleep(2);
 
@@ -170,6 +186,9 @@ $t->while_logged_in_as("submitter", sub {
 
 });
 
-$t->driver->close();
+_safe_end_driver_session($t->driver);
 $f->clean_up_db();
+# Audit stats are cumulative pg_stat counters, so this test's expected
+# project/session audit writes must become the new baseline before DEMOLISH.
+$f->auditstats_start($f->get_auditdb_stats());
 done_testing();

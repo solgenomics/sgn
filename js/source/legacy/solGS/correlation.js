@@ -40,6 +40,7 @@ solGS.correlation = {
   getPhenoCorrArgs: function () {
     var corrPopId = jQuery("#corr_pop_id").val();
     var dataSetType = jQuery("#data_set_type").val();
+    var trainingPopId = jQuery("#training_pop_id").val();
     var dataStr = jQuery("#data_structure").val();
     var corrPopName = this.getCorrPopName();
     
@@ -58,6 +59,7 @@ solGS.correlation = {
       corr_pop_id: corrPopId,
       corr_pop_name: corrPopName,
       data_set_type: dataSetType,
+      training_pop_id: trainingPopId,
       data_structure: dataStr,
       dataset_id: datasetId,
       list_id: listId,
@@ -86,16 +88,14 @@ getCorrPopsRows: function(corrPops) {
 
 },
 
-getCorrPops: function () {
+getCorrPops: function (source, ownership) {
+  if (source === "list") {
+    var list = new solGSList();
+    var lists = list.getLists(["plots", "trials"], ownership);
+    return list.addDataStrAttr(lists);
+  }
 
-  var list = new solGSList();
-  var lists = list.getLists(["plots", "trials"]);
-  lists = list.addDataStrAttr(lists);
-
-  var datasets = solGS.dataset.getDatasetPops(["plots", "trials"]);
-  var corrPops = [lists, datasets];
-
-  return corrPops.flat();
+  return solGS.dataset.getDatasetPops(["plots", "trials"], ownership);
 
 },
 
@@ -247,8 +247,16 @@ getSelectedPopCorrArgs: function (runCorrElemId) {
       'info': false,
       'pageLength': 5,
       'rowId': function (a) {
-        return a[5]
-      }
+        return a[6]
+      },
+      columnDefs: [
+        {
+            targets: [1, 2, 3, 4, 5],
+            orderable: false
+        }
+    ],
+
+    order: [[0, "asc"]]
     });
   
     table.rows.add(data).draw();
@@ -303,6 +311,12 @@ getSelectedPopCorrArgs: function (runCorrElemId) {
       if (trialSelPopsList) {
         corrPops.push(trialSelPopsList);
       }
+    }
+
+    if (solGS.listTypeSelectionPopulation) {
+      corrPops.push(
+        solGS.listTypeSelectionPopulation.getPredictedSelectionPops()
+      );
     }
 
     var menu = new SelectMenu(this.corrPopsDiv, this.corrPopsSelectMenuId);
@@ -451,7 +465,7 @@ jQuery(document).ready(function () {
 
     var corrArgs;
     var corrPopId;
-    if (runCorrBtnId.match(/run_corr/)) {
+    if (runCorrBtnId.match(/run_correlation/)) {
         corrArgs = solGS.correlation.getPhenoCorrArgs();
         corrPopId = corrArgs.corr_pop_id;
 
@@ -476,34 +490,36 @@ jQuery(document).ready(function () {
         jQuery(corrMsgDiv).html("Running correlation... please wait...").show();
 
         solGS.correlation.runPhenoCorrelation(corrArgs).done(function (res) {
-        if (res.data) {
+        if (res.data || (res.status && res.status.match(/success/))) {
             corrArgs["corr_table_file"] = res.corre_table_file;
 
-            
             var corrDownload = solGS.correlation.createCorrDownloadLink(corrArgs);
+            var heatmapArgs = {
+              scatter_input_data: res.corr_input_data,
+              heatmap_input_data: res.corr_output_data,
+              canvas: canvas,
+              plot_div_id: corrPlotDivId,
+              download_links: corrDownload,
+              axis_mode: 'two',
+            };
 
-            solGS.heatmap.plot(res.data, canvas, corrPlotDivId, corrDownload);
-
-            jQuery(`${canvas} .multi-spinner-container`).hide();
-            jQuery(corrMsgDiv).empty();
-            jQuery(runCorrBtnId).show();
+            solGS.heatmap.plot(heatmapArgs);
         } else {
-            jQuery(`${canvas} .multi-spinner-container`).hide();
-
-            jQuery(corrMsgDiv).html("There is no correlation output for this dataset.").fadeOut(8400);
-
-            jQuery(runCorrBtnId).show();
+            jQuery(corrMsgDiv).html((res.status || "Error.") + " There is no correlation output for this dataset.").fadeOut(8400);
         }
-    });
 
-    solGS.correlation.runPhenoCorrelation(corrArgs).fail(function (res) {
-      jQuery(`${canvas} .multi-spinner-container`).hide();
-      jQuery(corrMsgDiv).html("Error occured running the correlation analysis.").fadeOut(8400);
-      jQuery(runCorrBtnId).show();
-    });
-  }});
+        jQuery(`${canvas} .multi-spinner-container`).hide();
+        jQuery(corrMsgDiv).empty();
+        jQuery(runCorrBtnId).show();
+      })
+      .fail(function (res) {
+        jQuery(`${canvas} .multi-spinner-container`).hide();
+        jQuery(corrMsgDiv).html(res.status + " Error occured running correlation analysis.").fadeOut(8400);
+        jQuery(runCorrBtnId).show();
+      });
+    }
+  });
 
-  
   jQuery(document).on("click", "#run_genetic_correlation", function () {
     var corrPopId = jQuery("#corr_selected_pop_id").val();
     var popType = jQuery("#corr_selected_pop_type").val();
@@ -527,9 +543,18 @@ jQuery(document).ready(function () {
         if (res.status.match(/success/)) {
           args["corr_table_file"] = res.corre_table_file;
           var corrDownload = solGS.correlation.createCorrDownloadLink(args);
-          solGS.heatmap.plot(res.data, canvas, corrPlotDivId, corrDownload);
-        } else {
-          jQuery(corrMsgDiv).html(res.status).fadeOut(8400);
+          var heatmapArgs = {
+            scatter_input_data: res.corr_input_data,
+            heatmap_input_data: res.corr_output_data,
+            canvas: canvas,
+            plot_div_id: corrPlotDivId,
+            download_links: corrDownload,
+            axis_mode: 'four',
+          };
+          solGS.heatmap.plot(heatmapArgs);
+        } else {        
+            jQuery(corrMsgDiv).html(res.status + " There is no correlation output for this dataset.").fadeOut(8400);
+            
         }
 
         jQuery(`${canvas} .multi-spinner-container`).hide();
@@ -537,7 +562,10 @@ jQuery(document).ready(function () {
         jQuery(runCorrBtnId).show();
       })
       .fail(function (res) {
-        jQuery(corrMsgDiv).html("Error occured running correlation analysis.").fadeOut(8400);
+        jQuery(`${canvas} .multi-spinner-container`).hide();
+        jQuery(corrMsgDiv).html(res.status + " Error occured running correlation analysis.").fadeOut(8400);
+        jQuery(runCorrBtnId).show();
+        
       });
   });
 });
@@ -560,17 +588,13 @@ jQuery(document).ready(function () {
 
 jQuery(document).ready(function () {
   if (location.pathname.match(/correlation\/analysis/)) {
-    corrPopsDataDiv = solGS.correlation.corrPopsDataDiv;
-    var tableId = 'corr_pops_table';
-    var corrPopsTable = solGS.correlation.createTable(tableId);
-    jQuery(corrPopsDataDiv).append(corrPopsTable).show();
-
-    var corrPops = solGS.correlation.getCorrPops();
-    var corrPopsRows = solGS.correlation.getCorrPopsRows(corrPops);
-
-    solGS.correlation.displayCorrPopsTable(tableId, corrPopsRows);
-
-    jQuery("#create_new_list_dataset").show();
+    solGS.dataTableTabs.initialize({
+      prefix: "corr",
+      createTable: function (tableId) { return solGS.correlation.createTable(tableId); },
+      getPopulations: function (source, ownership) { return solGS.correlation.getCorrPops(source, ownership); },
+      getRows: function (populations) { return solGS.correlation.getCorrPopsRows(populations); },
+      displayTable: function (tableId, rows) { solGS.correlation.displayCorrPopsTable(tableId, rows); }
+    });
 
   }
 });

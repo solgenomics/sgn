@@ -103,8 +103,8 @@ print STDERR "PLOT START NUMBER: $plot_start_number, #STOCK ".scalar(@stock_name
 #
 my $next_block_plot_number = $plot_start_number+((scalar(@stock_names)-1)+ 100); #next block
 print STDERR "INDEX = $next_block_plot_number\n";
-print STDERR "DESING OF : ".Dumper($design{$next_block_plot_number})."\n";
-print STDERR "LENGTH : ".$design{$next_block_plot_number}->{block_number}."\n"; # zero indexed, need to substract 1
+print STDERR "DESIGN OF : ".Dumper($design{$next_block_plot_number})."\n";
+print STDERR "LENGTH : ".$design{$next_block_plot_number}->{block_number}."\n"; # zero indexed, need to subtract 1
 
 my $length = $design{$next_block_plot_number}->{block_number};
 is($length, 2, "Block 1 is the right length");
@@ -200,5 +200,22 @@ ok($trial_design->calculate_design(), "Calculate Augmented trial design");
 #ok($trial_design->set_maximum_block_size($maximum_block_size), "Set maximum block size for trial design");
 #is_deeply($trial_design->get_maximum_block_size(),$maximum_block_size, "Get maximum block size for trial design");
 #ok($trial_design->calculate_design(), "Calculate Augmented trial design");
+
+# block based plot numbers: every rep must start at first + i * increment
+#
+my $numbering_design = CXGN::Trial::TrialDesign->new();
+$numbering_design->set_plot_numbering_scheme('block_based');
+foreach my $case ([5, 1, 10], [10, 101, 100], [100, 1001, 1000], [1000, 10001, 10000]) {
+    my ($plots_per_rep, $first, $step) = @$case;
+    my $reps = 6;
+    my @placeholder = (1 .. $plots_per_rep * $reps);
+    my @rep_numbers = map { my $r = $_; ($r) x $plots_per_rep } (1 .. $reps);
+    my $numbers = $numbering_design->_convert_plot_numbers(\@placeholder, \@rep_numbers, $reps);
+    is(scalar(@$numbers), $plots_per_rep * $reps, "Block based numbering with $plots_per_rep plots per rep returns one number per plot");
+    my @rep_starts = map { $numbers->[$_ * $plots_per_rep] } (0 .. $reps - 1);
+    my @expected_starts = map { $first + $_ * $step } (0 .. $reps - 1);
+    is_deeply(\@rep_starts, \@expected_starts, "Block based numbering with $plots_per_rep plots per rep: reps start at @expected_starts");
+    is($numbers->[-1], $expected_starts[-1] + $plots_per_rep - 1, "Block based numbering with $plots_per_rep plots per rep: last plot number is consecutive within the last rep");
+}
 
 done_testing();

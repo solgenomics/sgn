@@ -136,6 +136,19 @@ sub _search {
         %plant_parents = $self->_get_plants_plot_parent(\@plant_ids);
     }
     print STDERR "ObservationUnits call Checkpoint 3: ".DateTime->now()."\n";
+
+    # One external-reference query for the whole page instead of one per unit. An empty id list
+    # would drop the WHERE clause and read every stock's references, so it is skipped outright.
+    my @page_stock_ids = map { $_->{obsunit_stock_id} } @$data;
+    my $external_references_by_unit = @page_stock_ids
+        ? CXGN::BrAPI::v2::ExternalReferences->new({
+            bcs_schema => $self->bcs_schema,
+            table_name => 'stock',
+            table_id_key => 'stock_id',
+            id => \@page_stock_ids
+        })->search()
+        : {};
+
     foreach my $obs_unit (@$data){
 
         ## Formatting observations
@@ -148,43 +161,13 @@ sub _search {
 
         ## Formatting treatments
         my @brapi_treatments;
-
-        if ($c->config->{brapi_treatments_no_management_factor}) {
-            my $treatments = $obs_unit->{treatments};
-            foreach my $treatment (@$treatments) {
-                while (my ($factor, $modality) = each %$treatment) {
-                    my $modality = $modality ? $modality : undef;
-                    push @brapi_treatments, {
-                        factor   => $factor,
-                        modality => $modality,
-                    };
-                }
+        foreach my $treatment (@{$obs_unit->{treatments}}) {
+            while (my ($treatment_id, $treatment_data) = each %$treatment) {
+                push @brapi_treatments, {
+                    factor   => $treatment_data->{name}."|".$treatment_id." | value = ".$treatment_data->{value},
+                    modality => $treatment_data->{description},
+                };
             }
-        }
-
-        ## Getting gps coordinates
-        my $sp_rs ='';
-        eval {
-            $sp_rs = $self->bcs_schema->resultset("Stock::Stockprop")->search({ type_id => $plot_geo_json_type_id, stock_id => $obs_unit->{obsunit_stock_id} });
-        };
-        my %geolocation_lookup;
-        while( my $r = $sp_rs->next()){
-            $geolocation_lookup{$r->stock_id} = $r->value;
-        }
-        my $geo_coordinates_string = $geolocation_lookup{$obs_unit->{obsunit_stock_id}} ?$geolocation_lookup{$obs_unit->{obsunit_stock_id}} : undef;
-        my $geo_coordinates;
-
-        if ($geo_coordinates_string){
-            $geo_coordinates = decode_json $geo_coordinates_string;
-        }
-
-        ## Getting additional info
-        my $additional_info;
-
-        my $rs = $self->bcs_schema->resultset("Stock::Stockprop")->search({ type_id => $stock_additional_info_type_id, stock_id => $obs_unit->{obsunit_stock_id} });
-        if ($rs->count() > 0){
-            my $additional_info_json = $rs->first()->value();
-            $additional_info = $additional_info_json ? decode_json($additional_info_json) : undef;
         }
 
 	my %numbers;
@@ -207,6 +190,7 @@ sub _search {
         my $family_stock_id;
 
         my $family_name;
+        my $additional_info = $obs_unit->{additional_info};
 
         ## Following code lines add observationUnitParent to additionalInfo, useful for BI
         if ($obs_unit->{obsunit_type_name} eq 'plant') {
@@ -278,7 +262,7 @@ sub _search {
 
         my %observationUnitPosition = (
             entryType => $entry_type,
-            geoCoordinates => $geo_coordinates,
+            geoCoordinates => $obs_unit->{plot_geo_json},
             positionCoordinateX => $obs_unit->{col_number} ? $obs_unit->{col_number} + 0 : undef,
             positionCoordinateXType => 'GRID_COL',
             positionCoordinateY => $obs_unit->{row_number} ? $obs_unit->{row_number} + 0 : undef,
@@ -293,37 +277,25 @@ sub _search {
 
         my $brapi_observationUnitPosition = decode_json(encode_json \%observationUnitPosition);
 
-        #Get external references
-        my $references = CXGN::BrAPI::v2::ExternalReferences->new({
-            bcs_schema => $self->bcs_schema,
-            table_name => 'stock',
-            table_id_key => 'stock_id',
-            id => qq|$obs_unit->{obsunit_stock_id}|
-        });
-        my $external_references = $references->search();
-        my @formatted_external_references = %{$external_references} ? values %{$external_references} : [];
-
-        ## Get plot images
-        my @plot_image_ids;
-			eval {
-	            my $image_id = CXGN::Stock->new({
-	    			schema => $self->bcs_schema,
-	    			stock_id => $obs_unit->{obsunit_stock_id},
-	    		});
-	    		@plot_image_ids = $image_id->get_image_ids();
-	    	};
-            my @ids;
-            foreach my $arrayimage (@plot_image_ids){
-                push @ids, $arrayimage->[0];
-            }
+        #Get external references, already fetched for the whole page above
+        my $formatted_external_references = $external_references_by_unit->{$obs_unit->{obsunit_stock_id}} || [];
 
         if ($obs_unit->{family_stock_id}) {
             $additional_info->{familyDbId} = qq|$obs_unit->{family_stock_id}|;
             $additional_info->{familyName} = $obs_unit->{family_uniquename};
         }
 
+        ## Get intercropping accessions
+        if ($obs_unit->{intercrop_stocks}) {
+            my @intercrop;
+            foreach my $i (@{$obs_unit->{intercrop_stocks}}) {
+                push(@intercrop, { germplasmDbId => $i->{id}, germplasmName => $i->{name} });
+            }
+            $additional_info->{intercropGermplasm} = \@intercrop if scalar(@intercrop) > 0;
+        }
+
         push @data_window, {
-            externalReferences => @formatted_external_references,
+            externalReferences => $formatted_external_references,
             additionalInfo => $additional_info,
             germplasmDbId => $obs_unit->{germplasm_stock_id} ? qq|$obs_unit->{germplasm_stock_id}| : undef,
             germplasmName => $obs_unit->{germplasm_uniquename} ? qq|$obs_unit->{germplasm_uniquename}| : undef,
@@ -342,7 +314,7 @@ sub _search {
             seedLotName => $obs_unit->{seedlot_name} ? qq|$obs_unit->{seedlot_name}| : undef,
             studyDbId => qq|$obs_unit->{trial_id}|,
             studyName => $obs_unit->{trial_name},
-            plotImageDbIds => \@ids,
+            plotImageDbIds => $obs_unit->{image_ids},
             treatments => \@brapi_treatments,
             trialDbId => $obs_unit->{folder_id} ? qq|$obs_unit->{folder_id}| : qq|$obs_unit->{trial_id}|,
             trialName => $obs_unit->{folder_name} ? $obs_unit->{folder_name} : $obs_unit->{trial_name},
@@ -432,7 +404,7 @@ sub observationunits_update {
         my $observationUnit_position_arrayref = $params->{observationUnitPosition} ? $params->{observationUnitPosition} : undef;
         my $observationUnit_x_ref = $params->{externalReferences} ? $params->{externalReferences} : undef;
         my $seedlot_id = $params->{seedLotDbId} || ""; #not implemented yet
-        my $treatments = $params->{treatments} || ""; #not implemented yet
+        #my $treatments = $params->{treatments} || ""; #not implemented yet
 
         my $row_number = $params->{observationUnitPosition}->{positionCoordinateY} ? $params->{observationUnitPosition}->{positionCoordinateY} : undef;
         my $col_number = $params->{observationUnitPosition}->{positionCoordinateX} ? $params->{observationUnitPosition}->{positionCoordinateX} : undef;
@@ -842,8 +814,8 @@ sub observationunits_store {
                 nd_geolocation_id                 => $location_id,
                 # nd_experiment_id => $nd_experiment->nd_experiment_id(), #optional
                 is_genotyping                     => 0,
-                new_treatment_has_plant_entries   => 0,
-                new_treatment_has_subplot_entries => 0,
+                #new_treatment_has_plant_entries   => 0,
+                #new_treatment_has_subplot_entries => 0,
                 operator                          => $user_name,
                 trial_stock_type                  => 'accessions',
                 design_type                       => $design_type,

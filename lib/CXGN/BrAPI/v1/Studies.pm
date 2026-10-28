@@ -647,7 +647,7 @@ sub observation_units {
     my $page = $self->page;
     my $status = $self->status;
 
-    my $limit = $page_size*($page+1)-1;
+    my $limit = $page_size;
     my $offset = $page_size*$page;
 
     my $phenotypes_search = CXGN::Phenotypes::SearchFactory->instantiate(

@@ -33,6 +33,15 @@ sub dataset :Chained('/') Path('dataset') Args(1) {
 	    return;
     }
     
+    # Only show dataset if the user is the owner OR the dataset is public
+    my $user_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
+    my $owner_id = $dataset->sp_person_id;
+    if ( ! ($user_id == $owner_id || $dataset->is_public) ) {
+        $c->stash->{template} = 'generic_message.mas';
+        $c->stash->{message} = "You do not have access to this dataset.<br /><br />If you are the owner of this dataset, make sure you are logged in, or ask the owner to make it public.";
+        return;
+    }
+
     my $info = $dataset->get_dataset_data();
 
     my $dataset_info = {
@@ -80,16 +89,62 @@ sub dataset :Chained('/') Path('dataset') Args(1) {
     }
     $html .= "</table>";
 
-    # print STDERR "=======================================================\n";
-    # print STDERR "=======================================================\n";
+    my $owner = $people_schema->resultset("SpPerson")->find({ sp_person_id => $dataset->sp_person_id });
+    my $onwer_name = $owner->first_name." ".$owner->last_name();
 
     $c->stash->{dataset_name} = $dataset->name();
     $c->stash->{dataset_id} = $dataset_id;
     $c->stash->{dataset_description} = $dataset->description;
     $c->stash->{dataset_contents} = $html;
-    print STDERR "dataset name $dataset->name()\n";
+    $c->stash->{dataset_owner_id} = $dataset->sp_person_id;
+    $c->stash->{dataset_owner_name} = $onwer_name;
+    $c->stash->{dataset_is_public} = $dataset->is_public;
     $c->stash->{template} = '/dataset/index.mas';
     
+}
+
+sub publish_dataset_authorize_start : Path('/dataset/publish/authorize') Args(1) {
+    my $self = shift;
+    my $c = shift;
+    my $service = shift;
+
+    my $config = $c->get_conf('dataset_archive_clients') || {};
+    if ( ! exists $config->{$service} ) {
+        $c->stash->{template} = "generic_message.mas";
+        $c->stash->{message} = "The selected service does not exist in the server configuration";
+        return;
+    }
+    my $selected = $config->{$service};
+
+    my $url = $selected->{web_url} . $selected->{auth_path};
+    $url .= '?response_type=code';
+    $url .= '&scope=all';
+    $url .= '&client_id=' . $selected->{client_id};
+    $url .= '&redirect_uri=' . $c->get_conf('main_production_site_url') . $selected->{redirect_path};
+
+    $c->res->redirect($url);
+    return;
+}
+
+sub publish_dataset_authorize_finish : Path('/dataset/publish/authorize') Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $error = $c->req->param('error');
+    my $code = $c->req->param('code');
+
+    if ( !defined $code && !defined $error ) {
+        $error = "Authorization code not returned by the service";
+    }
+
+    if ( $error ) {
+        $c->stash->{template} = 'generic_message.mas';
+        $c->stash->{message} = "Could not authorize the appication: $error";
+        return;
+    }
+
+    $c->stash->{code} = $code;
+    $c->stash->{template} = '/dataset/authorize.mas';
+    return;
 }
 
 1;

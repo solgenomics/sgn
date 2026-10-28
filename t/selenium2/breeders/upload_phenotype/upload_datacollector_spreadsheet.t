@@ -65,7 +65,7 @@ $t->while_logged_in_as("submitter", sub {
     ok($verify_status =~ /All values in your file have been successfully processed!/, "Verify the positive validation");
     ok($verify_status =~ /0 previously stored values overwritten/, "Verify the positive validation");
     ok($verify_status =~ /Metadata saved for archived file./, "Verify the positive validation");
-    ok($verify_status =~ /Upload Successfull!/, "Verify the positive validation");
+    ok($verify_status =~ /Upload Successful!/, "Verify the positive validation");
 
     $t->get_ok('/breeders/trial/137');
     sleep(3);
@@ -120,7 +120,7 @@ $t->while_logged_in_as("submitter", sub {
     ok($verify_status =~ /0 previously stored values overwritten/, "Verify warnings after store validation - overwritten values");
     ok($verify_status =~ /Metadata saved for archived file./, "Verify warnings after store validation - metadata saved");
     ok($verify_status =~ /0 previously stored values removed/, "Verify warnings after store validation - removed values");
-    ok($verify_status =~ /Upload Successfull!/, "Verify warnings after store validation - upload successful");
+    ok($verify_status =~ /Upload Successful!/, "Verify warnings after store validation - upload successful");
 
     }
 );

@@ -1,9 +1,10 @@
 <%args>
 $trial_id
+$trial_stock_type
 </%args>
 
 <div class="modal fade" id="trial_upload_used_seedlot_dialog" name="trial_upload_used_seedlot_dialog" tabindex="-1" role="dialog" aria-labelledby="upload_trial_used_seedlot_dialog">
-    <div class="modal-dialog" role="document">
+    <div class="modal-dialog modal-lg" role="document">
         <div class="modal-content">
             <div class="modal-header">
                 <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
@@ -23,7 +24,7 @@ $trial_id
                     <form class="form-horizontal" role="form" method="post" enctype="multipart/form-data" encoding="multipart/form-data" id="trial_upload_used_seedlot_form" name="trial_upload_used_seedlot_form">
 
                         <div class="form-group">
-                            <label class="col-sm-4 control-label">Upload File (.xls or .xlsx): </label>
+                            <label class="col-sm-4 control-label">Upload File:</label>
                             <div class="col-sm-8" >
                                 <input type="file" name="trial_upload_used_seedlot_file" id="trial_upload_used_seedlot_file" encoding="multipart/form-data" />
                             </div>
@@ -51,7 +52,6 @@ $trial_id
                 <div class="container-fluid">
                     <b>This is for recording which seedlots were planted in which plots in this trial.</b>
                     <br/>
-                    <b>Seedlots may be uploaded in an Excel file (.xls or .xlsx)</b>
                     <br />
                     <b>Header:</b>
                     <br>
@@ -85,7 +85,12 @@ $trial_id
                     <ul>
                     <li>description (any additional information)</li>
                     </ul>
+                    <b>Notes:</b>
+                    <ul>
+                    <li>For plots of family name stock type, seedlots of cross members in the family can be used.</li>
+                    </ul>
                 </div>
+                <& /help/file_upload_type.mas, type => "Seedlots", optional_column => 1 &>
             </div>
             <div class="modal-footer">
                 <button id="close_seedlot_info_trial_upload_used_dialog" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
@@ -94,9 +99,34 @@ $trial_id
     </div>
 </div>
 
+<div class="modal fade" id="upload_trial_used_seedlot_saved_dialog_message" name="upload_trial_used_seedlot_saved_dialog_message" tabindex="-1" role="dialog" aria-labelledby="uploadTrialUsedSeedlotSavedDialog">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="uploadTrialUsedSeedlotSavedDialog">Success</h4>
+            </div>
+            <div class="modal-body">
+                <div class="container-fluid">
+                    <p>
+                        <span class="ui-icon ui-icon-circle-check" style="float: left; margin: 0 7px 50px 0;"></span>
+                        File uploaded successfully.
+                    </p>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button id="dismiss_upload_trial_used_seedlot_saved_dialog" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
 <script>
 
 jQuery(document).ready(function(){
+
+    var trial_stock_type = "<$trial_stock_type>";
 
     jQuery('#trial_upload_seedlot_button').click( function(){
         jQuery('#trial_upload_used_seedlot_dialog').modal('show');
@@ -107,12 +137,13 @@ jQuery(document).ready(function(){
     });
     function trial_upload_used_seedlot_submit() {
         var uploadFile = jQuery("#trial_upload_used_seedlot_file").val();
-        jQuery('#trial_upload_used_seedlot_form').attr("action", "/ajax/breeders/trial/<% $trial_id %>/upload_used_seedlots");
+        jQuery('#trial_upload_used_seedlot_form').attr("action", "/ajax/breeders/trial/<% $trial_id %>/upload_used_seedlots?trial_stock_type=<% $trial_stock_type %>");
         if (uploadFile === '') {
             alert("Please select a file");
             return;
         }
         jQuery("#trial_upload_used_seedlot_form").submit();
+        jQuery("#trial_upload_used_seedlot_dialog").modal("hide");
     }
 
     jQuery('#trial_upload_used_seedlot_form').iframePostForm({
@@ -134,7 +165,7 @@ jQuery(document).ready(function(){
                 return;
             }
             if (response.success) {
-                alert("File uploaded successfully");
+                jQuery('#upload_trial_used_seedlot_saved_dialog_message').modal("show");
             }
         }
     });

@@ -154,10 +154,10 @@ CXGN.Onto.Browser.prototype = {
     
     renderSearchById: function() {
 	var s = '<form name="search_id_form" style="margin-bottom:0" onSubmit="javascript:o.showParentage(this.ontology_browser_input.value); return false;" >';
-	s +=       '<div id="search_by_id" style="width:100%; margin-bottom:0" >';
-	s += '<table summary="" cellpadding="5" cellspacing="0" width="100%" ><tr><td>';
-	s += 'Find exact ID &nbsp; <input id="ontology_browser_input" name="ontology_browser_input_name" type="text"  size="12" style="margin-bottom:0" /><input id="ontology_browser_submit" value="Find" type="submit" style="margin-bottom:0" />';
-	s += '</td><td style="text-align: right; padding-left:10px"><input id="reset_hiliting" type="button" value="clear highlight" onClick="javascript:o.clearHiliting()" style="margin-bottom:0" /> | <input id="reset_tree" type="button" value="reset view" onClick="javascript:o.resetBrowser()" style="margin-bottom:0" /></td></tr></table>';
+	s += '<div id="search_by_id" style="width:100%; margin-bottom:0" >';
+	s += '<table summary="" cellpadding="5" cellspacing="0" width="100%" ><tr><td width="140px">';
+	s += 'Find exact ID</td><td width="160px"><input class="form-control" id="ontology_browser_input" name="ontology_browser_input_name" class="input" class="form-control" type="text"  size="12" style="margin-bottom:10px" /></td><td width="10px">&nbsp;</td><td><input id="ontology_browser_submit" value="Find" type="submit" class="btn btn-primary" style="margin-bottom:0" />';
+	s += '</td><td style="text-align: right; padding-left:10px"><input id="reset_hiliting" type="button" value="clear highlight" class="btn btn-secondary"  onClick="javascript:o.clearHiliting()" style="margin-bottom:0" /></td><td width="10px">&nbsp;</td><td><input id="reset_tree" class="btn btn-secondary" type="button" value="reset view" onClick="javascript:o.resetBrowser()" style="margin-bottom:0" /></td></tr></table>';
 	s +='</div></form>';
 	
 	var e = document.getElementById('ontology_browser_input');
@@ -174,8 +174,8 @@ CXGN.Onto.Browser.prototype = {
             var s = '<form style="margin-bottom:0" name="SearchByNameForm" onsubmit="javascript:o.getOntologies(\'' + nameSpace + '\', this.ontology_term_input.value); return false;" >';
         }
         s += '<div id="search_by_name"  style="margin-bottom:0" >';
-        s += '<table summary="" cellpadding="5" cellspacing="0"><tr><td >';
-	s += 'Search for text <input id="ontology_term_input" name="ontology_term_input_name" type="text" size="20"  />';
+        s += '<table summary="" cellpadding="5" cellspacing="0"><tr><td width="140px">';
+	s += 'Search for text</td><td width="160px"> <input id="ontology_term_input" name="ontology_term_input_name" class="form-control" type="text" size="20"  /></td><td width="10px">&nbsp;</td><td>';
 	
         // print the select drop-down only if you not rendering a specific cv
 	
@@ -184,13 +184,70 @@ CXGN.Onto.Browser.prototype = {
         } else {
             this.isSelected(nameSpace);
         }
-        s += '<input id="term_search" type="submit" value="Search"  />';
+        s += '</td><td width="10px">&nbsp;</td><td><input id="term_search" type="submit" value="Search" class="btn btn-primary"  />';
 	s += '</td></tr></table>';
 	s += '</div></form>';
-	
+
+	s += this.renderRebuildCvtermpath( nameSpace );
+
 	var e = document.getElementById('ontology_term_input');
 	e.innerHTML = s;
 	document.getElementById('ontology_term_input').value=(this.getSearchValue());
+    },
+
+    // Rendered below the search interface, inside the ontology browser input
+    // form table. The designer pages hide that whole table, so they do not get
+    // a second copy of the controls they already provide themselves.
+    renderRebuildCvtermpath: function( nameSpace ) {
+	var options = '<option value="">Select a CV...</option>';
+
+	// Offer the ontologies this browser was opened on, not every ontology in
+	// the site menu. rootNodes is whitespace separated, the same form that
+	// /ajax/onto/roots splits on.
+	var dbNames = nameSpace ? [ nameSpace ] : String(this.getRootNodes() || '').split(/\s+/);
+
+	for (var i=0; i<dbNames.length; i++) {
+	    var db_name = dbNames[i];
+	    if (db_name) {
+		options += '<option value="' + db_name + '">' + db_name + '</option>';
+	    }
+	}
+
+	var s = '<div id="cvtermpath_rebuild" style="margin-bottom:0" >';
+	s += '<table summary="" cellpadding="5" cellspacing="0"><tr><td width="140px">Rebuild Cvterm Paths</td><td width="160px">';
+	s += '<select id="cvtermpath_rebuild_select" class="form-control">' + options + '</select>';
+	s += '</td><td width="10px">&nbsp;</td><br><td>';
+	s += '<input id="cvtermpath_rebuild_btn" type="button" value="Rebuild paths" class="btn btn-primary btn-sm" onClick="javascript:o.rebuildCvtermpath()" />';
+	s += '</td></tr></table>';
+	s += '</div>';
+
+	return s;
+    },
+
+    rebuildCvtermpath: function() {
+	var db_name = document.getElementById('cvtermpath_rebuild_select').value;
+
+	if (!db_name) {
+	    alert('Please select a CV before rebuilding its cvterm paths.');
+	    return;
+	}
+
+	this.workingMessage(true);
+
+	jQuery.ajax({
+	    url: '/ajax/onto/make_cvtermpath/' + db_name,
+	    method: 'get',
+	    context: { o : this },
+	    success: function(response) {
+		this.o.workingMessage(false);
+		if (response.error) { alert(response.error); return; }
+		alert(response.success);
+	    },
+	    error: function(xhr, status, error) {
+		this.o.workingMessage(false);
+		alert('An error occurred starting the cvterm path rebuild: ' + error);
+	    }
+	});
     },
     
     render: function() {

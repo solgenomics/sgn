@@ -68,6 +68,14 @@ has 'parse_errors' => (
     predicate => 'has_parse_errors',
 );
 
+has 'parse_warnings' => (
+    is => 'ro',
+    isa => 'HashRef',
+    writer => '_set_parse_warnings',
+    reader => 'get_parse_warnings',
+    predicate => 'has_parse_warnings',
+);
+
 has '_parsed_data' => (
     is => 'ro',
     isa => 'HashRef',

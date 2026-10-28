@@ -25,7 +25,6 @@ use Try::Tiny;
 use CXGN::Phenome::Schema;
 use CXGN::Phenome::Allele;
 use CXGN::Stock;
-use CXGN::Stock::Plot;
 use CXGN::Page::FormattingHelpers qw/ columnar_table_html info_table_html html_alternate_show /;
 use CXGN::Phenome::DumpGenotypes;
 use CXGN::BreederSearch;
@@ -43,6 +42,7 @@ use DateTime;
 use SGN::Model::Cvterm;
 use CXGN::People::Person;
 use CXGN::Stock::StockLookup;
+use CXGN::Stock::Vector;
 use CXGN::Stock::AddDerivedAccession;
 
 BEGIN { extends 'Catalyst::Controller::REST' }
@@ -112,6 +112,7 @@ sub add_stockprop_POST {
         }
 
         try {
+	    print STDERR "CREATING THE STOCKPROP $prop_type $prop\n";
             $stock->create_stockprops( { $prop_type => $prop }, { autocreate => 1 } );
 
             my $stock = CXGN::Stock->new({
@@ -124,21 +125,26 @@ sub add_stockprop_POST {
             });
             my $added_stock_id = $stock->store();
 
-            my $dbh = $c->dbc->dbh();
-            my $bs = CXGN::BreederSearch->new( { dbh=>$dbh, dbname=>$c->config->{dbname}, } );
-            my $refresh = $bs->refresh_matviews($c->config->{dbhost}, $c->config->{dbname}, $c->config->{dbuser}, $c->config->{dbpass}, 'stockprop', 'concurrent', $c->config->{basepath});
+	    print STDERR "STOCK ADDED: $added_stock_id\n";
 
-            $c->stash->{rest} = { message => "$message Stock_id $stock_id and type_id $prop_type have been associated with value $prop. ".$refresh->{'message'} };
+            #my $dbh = $c->dbc->dbh();
+            #my $bs = CXGN::BreederSearch->new( { dbh=>$dbh, dbname=>$c->config->{dbname}, } );
+#            my $refresh = $bs->refresh_matviews($c->config->{dbhost}, $c->config->{dbname}, $c->config->{dbuser}, $c->config->{dbpass}, 'stockprop', 'concurrent', $c->config->{basepath});
+
+            $c->stash->{rest} = { message => "$message Stock_id $stock_id and type_id $prop_type have been associated with value $prop. " }; #.$refresh->{'message'} };
+
         } catch {
+	    print STDERR "AN ERROR OCCURRED: $_\n";
             $c->stash->{rest} = { error => "Failed: $_" }
         };
     } else {
+	print STDERR "CANNOT ASSOCIATE $prop_type $prop with $stock_id\n";
 	    $c->stash->{rest} = { error => "Cannot associate prop $prop_type: $prop with stock $stock_id " };
 	}
     } else {
 	$c->stash->{rest} = { error => 'user does not have a curator/sequencer/submitter account' };
     }
-    #$c->stash->{rest} = { message => 'success' };
+    $c->stash->{rest} = { message => 'success' };
 }
 
 sub add_stockprop_GET {
@@ -267,6 +273,7 @@ sub associate_locus_GET :Args(0) {
         # rightly) be counted as a server error
         if ($stock && $allele_id) {
             try {
+		print STDERR "TRY ASSOCIATE A LOCUS\n";
                 my $cxgn_stock = CXGN::Stock->new(schema => $schema, stock_id => $stock_id);
                 $cxgn_stock->associate_allele($allele_id, $c->user->get_object->get_sp_person_id);
 
@@ -1429,7 +1436,7 @@ sub remove_parent_GET : Path('/ajax/stock/parent/remove') Args(0) {
     }
 
     if (! ($c->user && ($c->user->check_roles('curator') || $c->user->check_roles('submitter'))))  {
-	$c->stash->{rest} = { error => "Log in is required, or insufficent privileges, for removing parents" };
+	$c->stash->{rest} = { error => "Log in is required, or insufficient privileges, for removing parents" };
 	return;
     }
 
@@ -1463,8 +1470,6 @@ sub add_stock_parent : Local : ActionClass('REST') { }
 
 sub add_stock_parent_GET :Args(0) {
     my ($self, $c) = @_;
-
-    print STDERR "Add_stock_parent function...\n";
     if (!$c->user()) {
 	print STDERR "User not logged in... not associating stocks.\n";
 	$c->stash->{rest} = {error => "You need to be logged in to add pedigree information." };
@@ -1480,68 +1485,23 @@ sub add_stock_parent_GET :Args(0) {
     my $stock_id = $c->req->param('stock_id');
     my $parent_name = $c->req->param('parent_name');
     my $parent_type = $c->req->param('parent_type');
+    my $cross_type = $c->req->param('cross_type');
 
     my $schema = $c->dbic_schema("Bio::Chado::Schema", "sgn_chado");
 
-    my $cvterm_name = "";
-    my $cross_type = "";
-    if ($parent_type eq "male") {
-        $cvterm_name = "male_parent";
-    }
-    elsif ($parent_type eq "female") {
-        $cvterm_name = "female_parent";
-        $cross_type = $c->req->param('cross_type');
-    }
+    my $stock = CXGN::Stock->new(
+        schema => $schema,
+        stock_id => $stock_id
+	);
 
-    my $type_id_row = SGN::Model::Cvterm->get_cvterm_row($schema, $cvterm_name, "stock_relationship" )->cvterm_id();
+    my $error = $stock->add_parent($parent_name, $parent_type, $cross_type);
 
-    # check if a parent of this parent_type is already associated with this stock
-    #
-    my $previous_parent = $schema->resultset("Stock::StockRelationship")->find({
-        type_id => $type_id_row,
-        object_id => $stock_id
-    });
-
-    if ($previous_parent) {
-	print STDERR "The stock ".$previous_parent->subject_id." is already associated with stock $stock_id - returning.\n";
-	$c->stash->{rest} = { error => "A $parent_type parent with id ".$previous_parent->subject_id." is already associated with this stock. Please specify another parent." };
+    if ($error) {
+	$c->stash->{rest} = { error => $error };
 	return;
     }
 
-    print STDERR "PARENT_NAME = $parent_name STOCK_ID $stock_id  $cvterm_name\n";
-
-    my $stock = $schema->resultset("Stock::Stock")->find( { stock_id => $stock_id });
-
-   my $parent = $schema->resultset("Stock::Stock")->find( { uniquename => $parent_name } );
-
-
-
-    if (!$stock) {
-	$c->stash->{rest} = { error => "Stock with $stock_id is not found in the database!"};
-	return;
-    }
-    if (!$parent) {
-	$c->stash->{rest} = { error => "Stock with uniquename $parent_name was not found, Either this is not unique name or it is not in the database!"};
-	return;     }
-
-    my $new_row = $schema->resultset("Stock::StockRelationship")->new(
-	{
-	    subject_id => $parent->stock_id,
-	    object_id  => $stock->stock_id,
-	    type_id    => $type_id_row,
-        value => $cross_type
-	});
-
-    eval {
-	$new_row->insert();
-    };
-
-    if ($@) {
-	$c->stash->{rest} = { error => "An error occurred: $@"};
-    }
-    else {
-	$c->stash->{rest} = { error => '', };
-    }
+    $c->stash->{rest} = { success => 1 };
 }
 
 
@@ -1881,7 +1841,7 @@ sub get_phenotypes_by_stock_and_trial :Chained('/stock/get_stock') PathPart('dat
     my $stock_type = $c->stash->{stock}->get_type()->name();
 
     my $q;
-    if ($stock_type eq 'accession'){
+    if ($stock_type eq 'accession' || $stock_type eq 'family_name' || $stock_type eq 'cross'){
         $q = "SELECT stock.stock_id, stock.uniquename, cvterm_id, cvterm.name, avg(phenotype.value::REAL), stddev(phenotype.value::REAL), count(phenotype.value::REAL) FROM stock JOIN stock_relationship ON (stock.stock_id=stock_relationship.object_id) JOIN  nd_experiment_stock ON (nd_experiment_stock.stock_id=stock_relationship.subject_id) JOIN nd_experiment_project ON (nd_experiment_stock.nd_experiment_id=nd_experiment_project.nd_experiment_id) JOIN nd_experiment_phenotype ON (nd_experiment_phenotype.nd_experiment_id=nd_experiment_project.nd_experiment_id) JOIN phenotype USING(phenotype_id) JOIN cvterm ON (phenotype.cvalue_id=cvterm.cvterm_id) WHERE project_id=? AND stock.stock_id=? GROUP BY stock.stock_id, stock.uniquename, cvterm_id, cvterm.name";
     } else {
         $q = "SELECT stock.stock_id, stock.uniquename, cvterm_id, cvterm.name, avg(phenotype.value::REAL), stddev(phenotype.value::REAL), count(phenotype.value::REAL) FROM stock JOIN nd_experiment_stock USING(stock_id) JOIN nd_experiment_project ON (nd_experiment_stock.nd_experiment_id=nd_experiment_project.nd_experiment_id) JOIN nd_experiment_phenotype ON (nd_experiment_phenotype.nd_experiment_id=nd_experiment_project.nd_experiment_id) JOIN phenotype USING(phenotype_id) JOIN cvterm ON (phenotype.cvalue_id=cvterm.cvterm_id) WHERE project_id=? AND stock.stock_id=? GROUP BY stock.stock_id, stock.uniquename, cvterm_id, cvterm.name";
@@ -2063,7 +2023,7 @@ sub stock_lookup_POST {
     $c->stash->{rest} = { $lookup_from_field => $value_to_lookup, $lookup_field => $value };
 }
 
-sub get_plot_contents : Path('/stock/get_plot_contents') Args(1) {
+sub get_child_stocks : Path('/stock/get_child_stocks') Args(1) {
     my $self = shift;
     my $c = shift;
     my $plot_id = shift;
@@ -2073,9 +2033,9 @@ sub get_plot_contents : Path('/stock/get_plot_contents') Args(1) {
     my $plot_contents;
 
     eval {
-        $plot = CXGN::Stock::Plot->new({schema => $schema, stock_id=>$plot_id});
+        $plot = CXGN::Stock->new({schema => $schema, stock_id=>$plot_id});
 
-        $plot_contents = $plot->get_plot_contents();
+        $plot_contents = $plot->get_child_stocks();
     };
 
     if ($@) {
@@ -2112,8 +2072,6 @@ sub get_trial_related_stock:Chained('/stock/get_stock') PathPart('datatables/tri
 
         if ($cvterm_name eq 'cross') {
             $url = qq{<a href = "/cross/$stock_id">$stock_name</a>};
-        } elsif ($cvterm_name eq 'family_name') {
-            $url = qq{<a href = "/family/$stock_id/">$stock_name</a>};
         } else {
             $url = qq{<a href = "/stock/$stock_id/view">$stock_name</a>};
         }
@@ -2655,61 +2613,6 @@ sub get_vector_related_accessions:Chained('/stock/get_stock') PathPart('datatabl
 }
 
 
-sub get_vector_obsoleted_accessions:Chained('/stock/get_stock') PathPart('datatables/vector_obsoleted_accessions') Args(0){
-    my $self = shift;
-    my $c = shift;
-    my $stock_id = $c->stash->{stock_row}->stock_id();
-
-    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
-    my $schema = $c->dbic_schema("Bio::Chado::Schema", 'sgn_chado', $sp_person_id);
-    my $dbh = $c->dbc->dbh;
-
-    my $related_stocks = CXGN::Stock::RelatedStocks->new({dbic_schema => $schema, stock_id =>$stock_id});
-    my $result = $related_stocks->get_vector_obsoleted_accessions();
-    my @obsoleted_accessions;
-
-    foreach my $r (@$result){
-        my ($transformant_id, $transformant_name, $plant_id, $plant_name, $transformation_id, $transformation_name, $obsolete_note, $obsolete_date, $sp_person_id) = @$r;
-        my $transformation_info;
-        if ($transformation_id) {
-            $transformation_info = qq{<a href="/transformation/$transformation_id">$transformation_name</a>};
-        } else {
-            $transformation_info = 'NA';
-        }
-        my $person= CXGN::People::Person->new($dbh, $sp_person_id);
-        my $full_name = $person->get_first_name()." ".$person->get_last_name();
-
-        push @obsoleted_accessions, [qq{<a href="/stock/$transformant_id/view">$transformant_name</a>}, $obsolete_note, $obsolete_date, $full_name, $transformation_info, $transformant_name];
-    }
-
-    $c->stash->{rest}={data=>\@obsoleted_accessions};
-}
-
-
-sub get_vector_transgenic_line_details:Chained('/stock/get_stock') PathPart('datatables/vector_transgenic_line_details') Args(0){
-    my $self = shift;
-    my $c = shift;
-    my $stock_id = $c->stash->{stock_row}->stock_id();
-
-    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
-    my $schema = $c->dbic_schema("Bio::Chado::Schema", 'sgn_chado', $sp_person_id);
-    my $related_stocks = CXGN::Stock::RelatedStocks->new({dbic_schema => $schema, stock_id =>$stock_id});
-    my $result = $related_stocks->get_vector_related_accessions();
-    my @transgenic_lines;
-
-    foreach my $r (@$result){
-        my ($transformant_id, $transformant_name, $plant_id, $plant_name, $transformation_id, $transformation_name, $number_of_insertions) = @$r;
-        push @transgenic_lines, {
-            transformant_id => $transformant_id,
-            transformant_name => $transformant_name,
-            number_of_insertions => $number_of_insertions
-        };
-    }
-
-    $c->stash->{rest}={data=>\@transgenic_lines};
-}
-
-
 =head2 set_display_image
 
 Usage: /stock/set_display_image
@@ -2763,6 +2666,108 @@ sub set_display_image_POST : Args(0) {
 
     $c->stash->{rest} = { success => 1 };
 
+}
+
+
+=head2 plot_autocomplete
+
+ Usage:
+ Desc:
+ Ret:
+ Args:
+ Side Effects:
+ Example:
+
+=cut
+
+sub plot_autocomplete : Local : ActionClass('REST') { }
+
+sub plot_autocomplete_GET :Args(0) {
+    my ($self, $c) = @_;
+
+    my $term = $c->req->param('term');
+
+    $term =~ s/(^\s+|\s+)$//g;
+    $term =~ s/\s+/ /g;
+
+    my @response_list;
+    my $q = "select distinct(stock.uniquename) from stock join cvterm on(type_id=cvterm_id) where stock.uniquename ilike ? and cvterm.name='plot' ORDER BY stock.uniquename LIMIT 20";
+    my $sth = $c->dbc->dbh->prepare($q);
+    $sth->execute('%'.$term.'%');
+    while (my ($stock_name) = $sth->fetchrow_array) {
+        push @response_list, $stock_name;
+    }
+
+    #print STDERR Dumper @response_list;
+    $c->stash->{rest} = \@response_list;
+}
+
+
+=head2 plant_autocomplete
+
+ Usage:
+ Desc:
+ Ret:
+ Args:
+ Side Effects:
+ Example:
+
+=cut
+
+sub plant_autocomplete : Local : ActionClass('REST') { }
+
+sub plant_autocomplete_GET :Args(0) {
+    my ($self, $c) = @_;
+
+    my $term = $c->req->param('term');
+
+    $term =~ s/(^\s+|\s+)$//g;
+    $term =~ s/\s+/ /g;
+
+    my @response_list;
+    my $q = "select distinct(stock.uniquename) from stock join cvterm on(type_id=cvterm_id) where stock.uniquename ilike ? and cvterm.name='plant' ORDER BY stock.uniquename LIMIT 20";
+    my $sth = $c->dbc->dbh->prepare($q);
+    $sth->execute('%'.$term.'%');
+    while (my ($stock_name) = $sth->fetchrow_array) {
+        push @response_list, $stock_name;
+    }
+
+    #print STDERR Dumper @response_list;
+    $c->stash->{rest} = \@response_list;
+}
+
+
+=head2 tissue_sample_autocomplete
+
+ Usage:
+ Desc:
+ Ret:
+ Args:
+ Side Effects:
+ Example:
+
+=cut
+
+sub tissue_sample_autocomplete : Local : ActionClass('REST') { }
+
+sub tissue_sample_autocomplete_GET :Args(0) {
+    my ($self, $c) = @_;
+
+    my $term = $c->req->param('term');
+
+    $term =~ s/(^\s+|\s+)$//g;
+    $term =~ s/\s+/ /g;
+
+    my @response_list;
+    my $q = "select distinct(stock.uniquename) from stock join cvterm on(type_id=cvterm_id) where stock.uniquename ilike ? and cvterm.name='tissue_sample' ORDER BY stock.uniquename LIMIT 20";
+    my $sth = $c->dbc->dbh->prepare($q);
+    $sth->execute('%'.$term.'%');
+    while (my ($stock_name) = $sth->fetchrow_array) {
+        push @response_list, $stock_name;
+    }
+
+    #print STDERR Dumper @response_list;
+    $c->stash->{rest} = \@response_list;
 }
 
 
@@ -2914,7 +2919,7 @@ sub upload_derived_accessions_file_POST : Args(0) {
         user_role => $user_role
     });
 
-    ## Store uploaded temporary file in arhive
+    ## Store uploaded temporary file in archive
     $archived_filename_with_path = $uploader->archive();
     $md5 = $uploader->get_md5($archived_filename_with_path);
     if (!$archived_filename_with_path) {
@@ -2999,12 +3004,15 @@ sub get_stocks_with_images_GET : Args(0) {
 }
 
 
-sub stock_obsolete_in_bulk : Path('/stock/obsolete_in_bulk') : ActionClass('REST') { }
+sub stock_obsolete_in_bulk : Path('/ajax/stock/obsolete_in_bulk') : ActionClass('REST') { }
 
 sub stock_obsolete_in_bulk_GET {
     my ( $self, $c ) = @_;
     my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
+    my $dbh = $c->dbc->dbh;
     my $program_name = $c->req->param('program_name');
+    my $stock_name_string = $c->req->param('stock_names');
+    my $accession_list_id  = $c->req->param('accession_list_id');
 
     if (!$c->user()){
         $c->stash->{rest} = { error => "You must be logged in to obsolete stocks" };
@@ -3014,18 +3022,31 @@ sub stock_obsolete_in_bulk_GET {
     my @user_roles = $c->user->roles();
     my %has_roles = ();
     map { $has_roles{$_} = 1; } @user_roles;
-
-    if (! ( (exists($has_roles{$program_name}) && exists($has_roles{submitter})) || exists($has_roles{curator}))) {
-        $c->stash->{rest} = { error => "You need to be either a curator, or a submitter associated with breeding program $program_name to obsolete stocks." };
-        return;
+    if ($stock_name_string) {
+        if (! ( (exists($has_roles{$program_name}) && exists($has_roles{submitter})) || exists($has_roles{curator}))) {
+            $c->stash->{rest} = { error => "You need to be either a curator, or a submitter associated with breeding program $program_name to obsolete stocks." };
+            return;
+        }
+    } elsif ($accession_list_id) {
+        if (! exists($has_roles{curator}) && ! exists($has_roles{submitter})) {
+            $c->stash->{rest} = { error => "You need to be a curator or a submitter to obsolete stocks." };
+            return;
+        }
     }
 
-    my $stock_name_string = $c->req->param('stock_names');
-    my $stock_name_array = decode_json $stock_name_string;
+    my $stock_name_array_ref;
+    if ($stock_name_string) {
+        $stock_name_array_ref = decode_json $stock_name_string;
+    }
+
+    if ($accession_list_id) {
+        my $list = CXGN::List->new( { dbh=>$dbh, list_id=>$accession_list_id });
+        $stock_name_array_ref = $list->elements();
+    }
     my $obsolete_note  = $c->req->param('obsolete_note');
     my $is_obsolete = '1';
 
-    foreach my $stock_name (@$stock_name_array) {
+    foreach my $stock_name (@$stock_name_array_ref) {
         my $stock = $schema->resultset("Stock::Stock")->find({ uniquename => $stock_name });
         if ($stock) {
             my $stock_id = $stock->stock_id();

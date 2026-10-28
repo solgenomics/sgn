@@ -266,6 +266,10 @@ sub get_db_stats {
     $rs = $self->metadata_schema()->resultset('MdImage')->search( {}, { columns => [ { image_id_max => { max => 'image_id' }} ] });
     $stats->{images} = defined $rs->get_column('image_id_max')->first() ? $rs->get_column('image_id_max')->first() :0;
 
+    # count dbxrefs
+    $rs = $self->bcs_schema()->resultset('General::Dbxref')->search( {}, { columns => [ { 'dbxref_id_max' => { max => 'dbxref_id' }} ] } );
+    $stats->{dbxrefs} = $rs->get_column('dbxref_id_max')->first();
+
     print STDERR "IMAGE STATS : $stats->{images}\n";
     
     # count metadata file entries
@@ -308,7 +312,10 @@ sub get_auditdb_stats {
   Usage:   $f->clean_up_db();
   Effects: removes any rows that were added to the database since the 
            currently running test started. Should be called at the end of the test
-  Note:    Will not revert deletions or updates occuring during the test
+  Note:    Will not revert deletions or updates occurring during the test
+  Note:    Deletes through the schema connections, which autocommit, so the
+           cleanup takes effect even if the test turned AutoCommit off on
+           $f->dbh. The test's own transaction on $f->dbh is left untouched.
 
 =cut
 
@@ -321,9 +328,9 @@ sub clean_up_db {
 
     my $stats = $self->get_db_stats();
 
-    if (! defined($self->dbstats_start())) { print STDERR "Can't clean up becaues dbstats were not run at the beginning of the test!\n"; }
+    if (! defined($self->dbstats_start())) { print STDERR "Can't clean up because dbstats were not run at the beginning of the test!\n"; }
 
-    my @deletion_order = ('stock_owners', 'stock_relationships', 'stockprops', 'stocks', 'project_owners', 'project_relationships', 'projectprops', 'project_images', 'projects', 'cvterms', 'cvtermprops', 'datasets', 'list_elements', 'lists', 'phenotypes', 'genotypes', 'locations', 'protocols', 'metadata_files', 'metadata', 'experiment_files', 'experiment_json', 'experiments', 'images');
+    my @deletion_order = ('stock_owners', 'stock_relationships', 'stockprops', 'stocks', 'project_owners', 'project_relationships', 'projectprops', 'project_images', 'projects', 'cvterms', 'cvtermprops', 'datasets', 'list_elements', 'lists', 'phenotypes', 'genotypes', 'locations', 'protocols', 'metadata_files', 'metadata', 'experiment_files', 'experiment_json', 'experiments', 'images', 'dbxrefs');
 
     foreach my $table (@deletion_order) {
 	    print STDERR "CLEANING $table...\n";
@@ -437,25 +444,40 @@ sub delete_table_entries {
 	#$rs = $self->metadata_schema()->resultset('MdFiles')->search( { file_id => { '>' => $previous_max_id }});
     }
 
+    if ($table eq "dbxrefs") {
+	$rs = $self->bcs_schema()->resultset('General::Dbxref')->search( { dbxref_id => { '>' => $previous_max_id } } );
+    }
+
     if ($table eq "metadata") {
+        # Delete through the metadata schema connection, which autocommits,
+        # not through $self->dbh. A test may have turned AutoCommit off on
+        # $self->dbh; these deletes, and the experiment file links removed by
+        # ON DELETE CASCADE, would then stay locked in the test's open
+        # transaction, and the experiment_files step below, which deletes the
+        # same links through the phenome schema connection, would wait forever.
+        my $dbh = $self->metadata_schema()->storage->dbh();
         # delete associated images first
 	my $iq = "DELETE FROM phenome.stock_image where metadata_id > ?";
-	my $ih = $self->dbh()->prepare($iq);
+	my $ih = $dbh->prepare($iq);
 	$ih->execute($previous_max_id);
 	    
         my $rs = undef;
         my $q = "DELETE FROM metadata.md_files where metadata_id > ?";
-        my $h = $self->dbh()->prepare($q);
+        my $h = $dbh->prepare($q);
         $h->execute($previous_max_id);
 
         my $q2 = "DELETE FROM metadata.md_metadata where metadata_id > ? ";
-        my $h2 = $self->dbh()->prepare($q2);
+        my $h2 = $dbh->prepare($q2);
         $h2->execute($previous_max_id);
     }
 
     if ($table eq "images") {
+        my $dbh = $self->metadata_schema()->storage->dbh();
+        # md_tag_image does not cascade when an image is deleted, so remove the
+        # tag links of new images first. Tags, and links to older images, stay.
+        $dbh->do("DELETE FROM metadata.md_tag_image WHERE image_id > ?", undef, $previous_max_id);
 	my $q = "DELETE FROM metadata.md_image where image_id > ?";
-	my $h = $self->dbh()->prepare($q);
+	my $h = $dbh->prepare($q);
 	$h->execute($previous_max_id);
     }
 

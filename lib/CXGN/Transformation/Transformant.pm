@@ -18,6 +18,7 @@ use Moose;
 use SGN::Model::Cvterm;
 use Data::Dumper;
 use JSON;
+use CXGN::Stock::Vector;
 
 has 'schema' => (
     isa => 'DBIx::Class::Schema',
@@ -35,39 +36,167 @@ has 'transformant_stock_id' => (
     is => 'rw',
 );
 
-sub get_transformant_experiment_info {
+has 'vector_construct' => (
+    isa => 'ArrayRef|Undef',
+    is => 'rw',
+    lazy => 1,
+    builder => '_get_vector_construct',
+);
+
+has 'plant_material' => (
+    isa => 'ArrayRef|Undef',
+    is => 'rw',
+    lazy => 1,
+    builder => '_get_plant_material',
+);
+
+has 'transgenes' => (
+    isa => 'ArrayRef|Undef',
+    is => 'rw',
+    lazy => 1,
+    builder => '_get_transgenes',
+);
+
+has 'transformation_identifier' => (
+    isa => 'ArrayRef|Undef',
+    is => 'rw',
+    lazy => 1,
+    builder => '_get_transformation_identifier',
+);
+
+sub get_transformant_qPCR_data {
     my $self = shift;
     my $schema = $self->schema();
     my $transformant_stock_id = $self->transformant_stock_id();
+    my $transgenes = $self->transgenes();
+    my $expression_data_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'transgene_expression_data', 'stock_property')->cvterm_id();
+    my $data = $schema->resultset("Stock::Stockprop")->find( {
+        stock_id => $transformant_stock_id,
+        type_id => $expression_data_cvterm_id,
+    });
 
+    my @qPCR_data = ();
+    if ($data) {
+        my $expression_data_string = $data->value();
+        if ($expression_data_string) {
+            my $expression_data = decode_json $expression_data_string;
+            foreach my $tissue_type (keys %$expression_data) {
+                my $tissue_type_data = $expression_data->{$tissue_type};
+                foreach my $assay_date (keys %$tissue_type_data) {
+                    my @gene_relative_values = ();
+                    foreach my $gene_name (@$transgenes) {
+                        my $number_of_replicates = "";
+                        my $standard_deviation = "";
+                        my @details = ();
+                        my $detail_string = "";
+                        my $qPCR_relative_values = $tissue_type_data->{$assay_date}->{$gene_name}->{'relative_expression_values'};
+                        if ($qPCR_relative_values) {
+                            push @details, $qPCR_relative_values->{'relative_expression'};
+
+                            if (($qPCR_relative_values->{'relative_expression'}) ne 'ND') {
+                                $number_of_replicates = $qPCR_relative_values->{'number_of_replicates'};
+                                if ($number_of_replicates == 1) {
+                                    push @details, $number_of_replicates."replicate";
+                                } else {
+                                    push @details, $number_of_replicates."replicates";
+                                }
+                                $standard_deviation = $qPCR_relative_values->{'stdevp'};
+                                push @details, "stdevp: ". $standard_deviation;
+                            }
+
+                            $detail_string = join("<br>", @details);
+                            push @gene_relative_values, $detail_string;
+                        } else {
+                            push @gene_relative_values, $detail_string;
+                        }
+                    }
+                    push @qPCR_data, [$tissue_type, $assay_date, @gene_relative_values ]
+                }
+            }
+        }
+    }
+    return \@qPCR_data;
+}
+
+sub _get_transformation_identifier {
+    my $self = shift;
+    my $schema = $self->schema();
+    my $transformant_stock_id = $self->transformant_stock_id();
     my $transformation_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, "transformation", "stock_type")->cvterm_id();
-    my $accession_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, "accession", "stock_type")->cvterm_id();
-    my $vector_construct_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, "vector_construct", "stock_type")->cvterm_id();
     my $transformant_of_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, "transformant_of", "stock_relationship")->cvterm_id();
-    my $female_parent_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'female_parent', 'stock_relationship')->cvterm_id();
-    my $male_parent_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'male_parent', 'stock_relationship')->cvterm_id();
 
-    my $q = "SELECT plant.stock_id, plant.uniquename, vector.stock_id, vector.uniquename, transformation.stock_id, transformation.uniquename
-        FROM stock AS transformant
-        JOIN stock_relationship AS plant_relationship ON (transformant.stock_id = plant_relationship.object_id) AND plant_relationship.type_id = ?
-        JOIN stock AS plant ON (plant_relationship.subject_id = plant.stock_id) AND plant.type_id = ?
-        JOIN stock_relationship AS vector_relationship ON (transformant.stock_id = vector_relationship.object_id) AND vector_relationship.type_id = ?
-        JOIN stock AS vector ON (vector_relationship.subject_id = vector.stock_id) AND vector.type_id = ?
-        LEFT JOIN stock_relationship AS transformation_relationship ON (transformation_relationship.subject_id = transformant.stock_id) AND transformation_relationship.type_id = ?
-        LEFT JOIN stock AS transformation ON (transformation_relationship.object_id = transformation.stock_id) AND transformation.type_id = ?
-        WHERE transformant.stock_id = ?";
+    my $q = "SELECT stock.stock_id, stock.uniquename
+        FROM stock_relationship
+        JOIN stock ON (stock_relationship.object_id = stock.stock_id) and stock_relationship.type_id = ?
+        WHERE stock_relationship.subject_id = ? AND stock.type_id = ?";
 
     my $h = $schema->storage->dbh()->prepare($q);
+    $h->execute($transformant_of_type_id, $transformant_stock_id, $transformation_type_id);
+    my @transformation_identifier = $h->fetchrow_array();
 
-    $h->execute($female_parent_type_id, $accession_type_id, $male_parent_type_id, $vector_construct_type_id, $transformant_of_type_id, $transformation_type_id, $transformant_stock_id);
+    $self->vector_construct(\@transformation_identifier);
+}
 
-    my @transformation_info = ();
-    while (my ($plant_id, $plant_name, $vector_id, $vector_name, $transformation_id, $transformation_name) = $h->fetchrow_array()){
-        push @transformation_info, [$plant_id, $plant_name, $vector_id, $vector_name, $transformation_id, $transformation_name]
+sub _get_vector_construct {
+    my $self = shift;
+    my $schema = $self->schema();
+    my $transformant_stock_id = $self->transformant_stock_id();
+    my $vector_construct_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, "vector_construct", "stock_type")->cvterm_id();
+    my $male_parent_type_id = SGN::Model::Cvterm->get_cvterm_row($schema,  'male_parent', 'stock_relationship')->cvterm_id();
+
+    my $q = "SELECT stock.stock_id, stock.uniquename
+        FROM stock_relationship
+        JOIN stock ON (stock_relationship.subject_id = stock.stock_id) and stock_relationship.type_id = ?
+        WHERE stock_relationship.object_id = ? AND stock.type_id = ?";
+
+    my $h = $schema->storage->dbh()->prepare($q);
+    $h->execute($male_parent_type_id, $transformant_stock_id, $vector_construct_type_id);
+    my @vector_construct = $h->fetchrow_array();
+
+    $self->vector_construct(\@vector_construct);
+}
+
+sub _get_plant_material {
+    my $self = shift;
+    my $schema = $self->schema();
+    my $transformant_stock_id = $self->transformant_stock_id();
+    my $accession_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, "accession", "stock_type")->cvterm_id();
+    my $female_parent_type_id = SGN::Model::Cvterm->get_cvterm_row($schema,  'female_parent', 'stock_relationship')->cvterm_id();
+
+    my $q = "SELECT stock.stock_id, stock.uniquename
+        FROM stock_relationship
+        JOIN stock ON (stock_relationship.subject_id = stock.stock_id) and stock_relationship.type_id = ?
+        where stock_relationship.object_id = ? and stock.type_id = ?";
+
+    my $h = $schema->storage->dbh()->prepare($q);
+    $h->execute($female_parent_type_id, $transformant_stock_id, $accession_type_id);
+    my @plant_material = $h->fetchrow_array();
+
+    $self->plant_material(\@plant_material);
+}
+
+sub _get_transgenes {
+    my $self = shift;
+    my $schema = $self->schema();
+    my $vector_construct = $self->vector_construct();
+    my @transgenes = ();
+    if ($vector_construct) {
+        my $vector_stock_id = $vector_construct->[0];
+        if ($vector_stock_id) {
+            my $vector_construct = CXGN::Stock::Vector->new(schema=>$schema, stock_id=>$vector_stock_id);
+            my $vector_related_genes = $vector_construct->Gene;
+            if ($vector_related_genes) {
+                my @genes_array = ();
+                @genes_array = split ',',$vector_related_genes;
+                foreach my $gene (@genes_array) {
+                    $gene =~ s/^\s+|\s+$//g;
+                    push @transgenes, $gene;
+                }
+            }
+        }
     }
 
-    return \@transformation_info;
-
+    $self->transgenes(\@transgenes);
 }
 
 

@@ -30,8 +30,12 @@ use Moose;
 use SGN::Model::Cvterm;
 use CXGN::Chado::Cvterm;
 use CXGN::Onto;
+use File::Spec;
 use Data::Dumper;
 use JSON;
+use CXGN::Job;
+use Encode;
+use Cwd;
 
 use namespace::autoclean;
 
@@ -42,6 +46,220 @@ __PACKAGE__->config(
     stash_key => 'rest',
     map       => { 'application/json' => 'JSON' },
    );
+
+=head2 download_obo
+
+Dumps a DB as a .obo file. Accepts db.name as an argument
+
+=cut
+
+sub download_obo: Path('/ajax/onto/download_obo') Args(1) {
+    my $self = shift;
+    my $c = shift;
+    my $db_name = shift;
+
+    my $dbhost = $c->config->{dbhost};
+    my $dbname = $c->config->{dbname};
+    my $dbuser = $c->config->{dbuser};
+    my $dbpass = $c->config->{dbpass};
+    my $basepath = $c->config->{basepath};
+
+    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
+    my $schema = $c->dbic_schema("Bio::Chado::Schema", undef, $sp_person_id);
+    my $people_schema = $c->dbic_schema("CXGN::People::Schema", undef, $sp_person_id);
+
+    my $temp_basedir = $c->config->{cluster_shared_tempdir};
+
+    if (! -d "$temp_basedir/obo_downloads") {
+        `mkdir $temp_basedir/obo_downloads`;
+    }
+
+    my $outdir = "$temp_basedir/obo_downloads";
+
+    my $cmd = "perl ./bin/download_obo.pl -i $db_name -H $dbhost -D $dbname -U $dbuser -P $dbpass -o $outdir";
+
+    print STDERR "Dumping OBO file at $outdir/$db_name.breedbase.obo\n";
+
+    my $obo_downloader;
+
+    eval {
+
+        $obo_downloader = CXGN::Job->new({
+            people_schema => $people_schema, 
+            schema => $schema,
+            dbhost => $dbhost,
+            dbname => $dbname,
+            dbuser => $dbuser,
+            dbpass => $dbpass,
+            basepath => $basepath,
+            sp_person_id => $sp_person_id,
+            cmd => $cmd,
+            name => "$db_name ontology download",
+            job_type => 'download',
+            submit_page => $c->req->path
+        });
+
+        $obo_downloader->submit();
+
+    };
+
+    if ($@) {
+        $c->stash->rest = {error => "An error occurred starting the download: $@"};
+        return;
+    }
+
+    $obo_downloader->wait();
+
+    $c->res->content_type('application/octet-stream');
+    $c->res->header('Content-Disposition' => "attachment; filename=\"$db_name.obo\"");
+    $c->res->body(do {
+        open my $f, '<', "$outdir/$db_name.breedbase.obo" or die "Can't open file: $!";
+        local $/; #this slurps a file I think
+        <$f>;
+    });
+}
+
+=head2 make_cvtermpath
+
+Recomputes the transitive closure (the cvtermpath table) for a single
+ontology, by running chado_tools/chado/bin/gmod_make_cvtermpath.pl as a
+background job.
+
+Accepts an ontology namespace (db.name), e.g. "CO_334". The cv to operate
+on is derived from the namespace by joining db to dbxref on db_id, and
+the first dbxref that has a cvterm to cvterm on dbxref_id, and taking
+that cvterm's cv_id. There is only one cv per db.name, so any
+cvterm-bearing dbxref of the db maps to the correct cv.
+
+Returns the sp_job_id of the submitted job. The closure can take a long
+time to compute on a large ontology, so the job is not waited on.
+
+=cut
+
+sub make_cvtermpath : Path('/ajax/onto/make_cvtermpath') Args(1) {
+    my $self = shift;
+    my $c = shift;
+    my $namespace = shift;
+
+    if (!$c->user()) {
+        $c->stash->{rest} = { error => "You must be logged in to recompute an ontology's cvtermpath." };
+        return;
+    }
+
+    if ($c->user->get_object->get_user_type() ne 'curator') {
+        $c->stash->{rest} = { error => "You have insufficient privileges to recompute an ontology's cvtermpath." };
+        return;
+    }
+
+    if (!defined($namespace)) {
+        $c->stash->{rest} = { error => "An ontology namespace is required." };
+        return;
+    }
+
+    # accept either the bare namespace ("CO_334") or the full root accession
+    # ("CO_334:0000000") and normalize to the bare namespace.
+    $namespace =~ s/^\s+|\s+$//g;
+    $namespace =~ s/:.*$//;
+
+    if (!$namespace) {
+        $c->stash->{rest} = { error => "An ontology namespace is required." };
+        return;
+    }
+
+    my $dbhost = $c->config->{dbhost};
+    my $dbname = $c->config->{dbname};
+    my $dbuser = $c->config->{dbuser};
+    my $dbpass = $c->config->{dbpass};
+    my $basepath = $c->config->{basepath};
+
+    my $sp_person_id = $c->user->get_object()->get_sp_person_id();
+    my $schema = $c->dbic_schema("Bio::Chado::Schema", undef, $sp_person_id);
+    my $people_schema = $c->dbic_schema("CXGN::People::Schema", undef, $sp_person_id);
+
+    # There is one db row per namespace, and one cv per namespace, so the cv
+    # can be derived from any of the db's dbxrefs (assuming it has a cvterm).
+    my $db = $schema->resultset('General::Db')->search(
+        { 'upper(me.name)' => uc($namespace) }
+        )->first();
+
+    if (!$db) {
+        $c->stash->{rest} = { error => "No db row found for ontology namespace $namespace. Cannot determine the cv name." };
+        return;
+    }
+
+    my $dbxref = $db->search_related('dbxrefs',
+        { 'cvterm.cvterm_id' => { '!=', undef } },
+        { join => 'cvterm', rows => 1 }
+        )->first();
+
+    if (!$dbxref) {
+        $c->stash->{rest} = { error => "No cvterms found for ontology namespace $namespace. Cannot determine the cv name." };
+        return;
+    }
+
+    my $cv_name = $dbxref->cvterm->cv->name();
+    my $cv_id = $dbxref->cvterm->cv_id();
+
+    # Don't queue a second build for a cv that is already being built. The
+    # script performs this check again when it starts, which is the check that
+    # actually guards the table; this one is here so the user finds out now
+    # instead of from a job that quietly exits.
+    my $build_status;
+
+    eval {
+        $build_status = $schema->storage->dbh()->selectrow_hashref(
+            "SELECT currently_building::int AS currently_building, build_start FROM public.cvtermpath_build WHERE cv_id = ?",
+            undef,
+            $cv_id
+        );
+    };
+
+    if ($@) {
+        $c->stash->{rest} = { error => "Could not check the cvtermpath build status for $cv_name: $@" };
+        return;
+    }
+
+    if ($build_status && $build_status->{currently_building}) {
+        $c->stash->{rest} = { error => "A transitive closure is already being built for $cv_name ($namespace), started at ".($build_status->{build_start} || 'an unknown time').". Please wait for it to finish before starting another one." };
+        return;
+    }
+
+    my $script = File::Spec->catfile($basepath, 'bin', 'sgn_gmod_make_cvtermpath.pl');
+
+    my $cmd = "perl $script -H $dbhost -D $dbname -d Pg -u $dbuser -p '$dbpass' -c '$cv_name'";
+
+    my $sp_job_id;
+
+    eval {
+        my $job = CXGN::Job->new({
+            people_schema => $people_schema,
+            schema => $schema,
+            dbhost => $dbhost,
+            dbname => $dbname,
+            dbuser => $dbuser,
+            dbpass => $dbpass,
+            basepath => $basepath,
+            sp_person_id => $sp_person_id,
+            cmd => $cmd,
+            name => "$cv_name cvtermpath calculation",
+            job_type => 'ontology_indexing',
+            submit_page => $c->req->path
+        });
+
+        $sp_job_id = $job->submit();
+    };
+
+    if ($@) {
+        $c->stash->{rest} = { error => "An error occurred submitting the cvtermpath job: $@" };
+        return;
+    }
+
+    $c->stash->{rest} = {
+        success => "Submitted a transitive closure calculation for $cv_name ($namespace).",
+        sp_job_id => $sp_job_id,
+        cv_name => $cv_name
+    };
+}
 
 =head2 compose_trait
 
@@ -57,12 +275,13 @@ sub compose_trait: Path('/ajax/onto/store_composed_term') Args(0) {
   #my @ids = $c->req->param("ids[]");
   #print STDERR "Ids array for composing in AJAX Onto = @ids\n";
 
-  my $new_trait_names = decode_json $c->req->param("new_trait_names");
+  my $new_trait_names = decode_json( encode("utf8", $c->req->param("new_trait_names")) );
+  my $term_type = $c->req->param("type") ? $c->req->param("type") : 'trait';
   #print STDERR Dumper $new_trait_names;
   my $new_terms;
   eval {
       my $onto = CXGN::Onto->new( { schema => $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado') } );
-      $new_terms = $onto->store_composed_term($new_trait_names);
+      $new_terms = $onto->store_composed_term($new_trait_names, $term_type);
   };
   if ($@) {
       $c->stash->{rest} = { error => "An error occurred saving the new trait details: $@" };
@@ -292,11 +511,12 @@ sub get_traits_from_component_categories: Path('/ajax/onto/get_traits_from_compo
   my @trait_ids = $c->req->param("trait_ids[]");
   my @tod_ids = $c->req->param("tod_ids[]");
   my @toy_ids = $c->req->param("toy_ids[]");
+  my @tiy_ids = $c->req->param("tiy_ids[]");
   my @gen_ids = $c->req->param("gen_ids[]");
   my @evt_ids = $c->req->param("evt_ids[]");
   my @meta_ids = $c->req->param("meta_ids[]");
 
-  print STDERR "Obj ids are @object_ids\n Attr ids are @attribute_ids\n Method ids are @method_ids\n unit ids are @unit_ids\n trait ids are @trait_ids\n tod ids are @tod_ids\n toy ids are @toy_ids\n gen ids are @gen_ids\n evt ids are @evt_ids\n metadata ids are @meta_ids\n";
+  print STDERR "Obj ids are @object_ids\n Attr ids are @attribute_ids\n Method ids are @method_ids\n unit ids are @unit_ids\n trait ids are @trait_ids\n tod ids are @tod_ids\n toy ids are @toy_ids\n tiy ids are @tiy_ids\n gen ids are @gen_ids\n evt ids are @evt_ids\n metadata ids are @meta_ids\n";
   my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
 
   my $traits = SGN::Model::Cvterm->get_traits_from_component_categories($schema, \@allowed_composed_cvs, $composable_cvterm_delimiter, $composable_cvterm_format, {
@@ -307,6 +527,7 @@ sub get_traits_from_component_categories: Path('/ajax/onto/get_traits_from_compo
       trait => \@trait_ids,
       tod => \@tod_ids,
       toy => \@toy_ids,
+      tiy => \@tiy_ids,
       gen => \@gen_ids,
       evt => \@evt_ids,
       meta => \@meta_ids,
@@ -344,7 +565,7 @@ sub children_GET {
 
     my ($db_name, $accession) = split ":", $c->request->param('node');
 
-    my $db = $schema->resultset('General::Db')->search({ name => uc($db_name) })->first();
+    my $db = $schema->resultset('General::Db')->search({ 'UPPER(name)' => uc($db_name) })->first();
     my $dbxref = $db->find_related('dbxrefs', { accession => $accession });
 
     my $cvterm = $dbxref->cvterm;
@@ -400,6 +621,12 @@ sub parents_GET  {
 	}
 	);
     my $db_id;
+
+    if ($db->count() == 0) {
+        $c->stash->{rest} = { error => "The term $db_name:$accession does not exist." };
+        $c->detach();
+    }
+    
     if (!$db || !$accession) {
 	#not sure we need here to send an error key, since cache is usually called after parents (? )
 	$response{error} = "Did not pass a legal ontology term ID! ( $db_name : $accession)";
@@ -478,7 +705,7 @@ sub menu_GET  {
     print STDERR "MENUDATA: $menudata\n";
     my @menuitems = split ",", $menudata;
 
-    my $menu = '<select name="cv_select">';
+    my $menu = '<select class="form-control" name="cv_select">';
 
     foreach my $mi (@menuitems) {
 	print STDERR "MENU ITEM: $mi\n";

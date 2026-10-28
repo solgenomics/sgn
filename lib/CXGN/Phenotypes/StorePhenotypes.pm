@@ -549,8 +549,8 @@ sub verify {
                 foreach my $value_array (@$measurements_array) {
                     # print STDERR "Value array = ".Dumper($value_array)."\n";
 		    my $multiple_values = 0;
-		    if (scalar(@$measurements_array) > 1) { $multiple_values = 1; } 
-                    ($warnings, $errors) = $self->check_measurement($plot_name, $trait_name, $value_array, $multiple_values); 
+		    if (scalar(@$measurements_array) > 1) { $multiple_values = 1; }
+                    ($warnings, $errors) = $self->check_measurement($plot_name, $trait_name, $value_array, $multiple_values);
                     $error_message .= $errors;
                     $warning_message .= $warnings;
                 }
@@ -609,7 +609,7 @@ sub check_measurement {
     my $trait_name = shift;
     my $value_array = shift;
     my $file_contains_multiple_values = shift;
-    
+
     my $error_message = "";
     my $warning_message = "";
 
@@ -620,7 +620,8 @@ sub check_measurement {
     if (ref($value_array) eq 'ARRAY') {
         # the entry represents trait + timestamp
         #
-        $trait_value = $value_array->[0];
+        $trait_value = _normalize_json_trait_value($value_array->[0]);
+        $value_array->[0] = $trait_value;
         $timestamp = $value_array->[1];
     }
     elsif (ref($value_array) eq "HASH") {
@@ -631,7 +632,7 @@ sub check_measurement {
     else {
         # it's a scalar. It really shouldn't be I guess?
         #
-        $trait_value = $value_array;
+        $trait_value = _normalize_json_trait_value($value_array);
     }
     #print STDERR "$plot_name, $trait_name, $trait_value\n";
     if ( $trait_name ne "notes" ) {
@@ -655,9 +656,9 @@ sub check_measurement {
         }
 
         #check that trait value is valid for trait name (but only if we have a trait_value)
-        if ((defined($trait_value) && $trait_value ne '' && $trait_value ne 'NA' && $trait_value ne '.') && exists($self->check_trait_format()->{$trait_cvterm_id})) { 
+        if ((defined($trait_value) && $trait_value ne '' && $trait_value ne 'NA' && $trait_value ne '.') && exists($self->check_trait_format()->{$trait_cvterm_id})) {
             # print STDERR "Trait minimum value checks if it exists: " . $self->check_trait_min_value->{$trait_cvterm_id} . "\n";
-            if ($self->check_trait_format()->{$trait_cvterm_id} eq 'numeric') {
+            if ($self->check_trait_format()->{$trait_cvterm_id} =~ m/numeric|counter|percent|boolean/i ) {
                 my $trait_format_checked = looks_like_number($trait_value);
                 if (!$trait_format_checked && $trait_value ne '') {
                     $error_message .= "<small>This trait value should be numeric: <br/>Plot Name: ".$plot_name."<br/>Trait Name: ".$trait_name."<br/>Value: ".$trait_value."</small><hr>";
@@ -705,8 +706,12 @@ sub check_measurement {
                     }
                 }
             } else {
-                # Catch everything else ## not sure what this is for
-                %trait_categories_hash = map { $_ => 1 } @trait_categories;
+                if (grep { m/=/ } @trait_categories) { #different style of categories where each value is 0=value/1=value/...
+                    %trait_categories_hash = map { $_ =~ m/(\d+)=/ => $_ =~ m/=(.*)/} @trait_categories;
+                } else {
+                    # Catch everything else ## not sure what this is for
+                    %trait_categories_hash = map { $_ => 1 } @trait_categories;
+                }
             }
 
             # print STDERR "TRAIT CATEGORIES: ".Dumper(\%trait_categories_hash)."\n";
@@ -714,7 +719,9 @@ sub check_measurement {
 
             my @check_values;
             if (exists($self->check_trait_category()->{$trait_cvterm_id}) &&
-                $self->check_trait_format->{$trait_cvterm_id} eq 'Multicat') {
+                ($self->check_trait_format->{$trait_cvterm_id} =~ m/multicat/i ||
+                $self->check_trait_format->{$trait_cvterm_id} =~ m/categorical/i ||
+                $self->check_trait_format->{$trait_cvterm_id} =~ m/qualitative/i)) {
 
                 # print STDERR "Dealing with a categorical trait!\n\n";
 
@@ -783,7 +790,7 @@ sub check_measurement {
 	    if ($file_contains_multiple_values  && (defined($trait_value) && $trait_value ne '')) {
 		$warning_message .= "Multiple values present in file for single repeat_type term $trait_name\n";
 	    }
-	    
+
             print STDERR "Processing this trait with value $trait_value as a single repeat type trait with overwrite_values set to ".$self->overwrite_values()."...\n";
             if (exists($self->unique_value_trait_stock->{$trait_value, $trait_cvterm_id, $stock_id})) {
                 my $prev = $self->unique_value_trait_stock->{$trait_value, $trait_cvterm_id, $stock_id};
@@ -990,7 +997,8 @@ sub store {
 
                         my $phenotype_object = CXGN::Phenotype->new( { schema => $schema });
 
-                        my $trait_value = $value_array->[0];
+                        my $trait_value = _normalize_json_trait_value($value_array->[0]);
+                        $value_array->[0] = $trait_value;
 
                         $phenotype_object->value($trait_value);
                         my $timestamp = $value_array->[1];
@@ -1612,6 +1620,36 @@ sub get_trait_props {
     }
     # print STDERR "PROPERTIES FROM $property_name: ".Dumper(\%property_by_cvterm_id);
     return \%property_by_cvterm_id;
+}
+
+sub _normalize_json_trait_value {
+    my $value = shift;
+    return $value if !defined($value) || $value !~ /^\s*[\[\{]/;
+
+    my $decoded = eval { decode_json($value) };
+    return $value if $@;
+
+    if (ref($decoded) eq "ARRAY") {
+        my @values = map { _json_trait_entry_value($_) } @$decoded;
+        @values = grep { defined($_) && $_ ne "" } @values;
+        return @values ? join(":", @values) : "";
+    }
+
+    my $decoded_value = _json_trait_entry_value($decoded);
+    return defined($decoded_value) ? $decoded_value : $value;
+}
+
+sub _json_trait_entry_value {
+    my $entry = shift;
+    return if !defined($entry);
+
+    if (ref($entry) eq "HASH") {
+        return $entry->{value} if defined($entry->{value});
+        return $entry->{label} if defined($entry->{label});
+        return;
+    }
+
+    return ref($entry) ? undef : $entry;
 }
 
 ###

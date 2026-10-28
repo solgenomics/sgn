@@ -20,6 +20,10 @@ library(blocksdesign)
 
 source(paramfile)
 
+## adjusting for trial allocation tool
+if (!exists("engine", inherits = FALSE)) engine <- "breedbase"
+if(engine == 'trial_allocation'){ treatments <- c(treatments, controls) }
+
 RRCblocks <- data.frame(
   block = gl(nRep,length(treatments)),
   row = gl(nRow,1),

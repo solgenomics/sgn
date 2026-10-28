@@ -124,7 +124,7 @@ $plot_data = {
     }
 }
 
-The data structure follows plot->(subplot->)(plant->)accession. If this stock is not a plot, undef is returned. 
+The data structure follows plot->(subplot->)(plant->(tissue_sample))accession. If this stock is not a plot, undef is returned. 
 
 =cut
 

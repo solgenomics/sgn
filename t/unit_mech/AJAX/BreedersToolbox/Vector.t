@@ -48,22 +48,15 @@ $mech->post_ok('http://localhost:3010/ajax/vector_list/fuzzy_options', [ "vector
 my $final_response = decode_json $mech->content;
 is_deeply($final_response, {'names_to_add' => ['test_vector_m','test_vector_y'],'success' => '1'}, 'check verify fuzzy options response content');
 
-$mech->get_ok('http://localhost:3010/organism/verify_name?species_name='.uri_encode("Manihot esculenta") );
-$response = decode_json $mech->content;
-print STDERR Dumper $response;
-
-is_deeply($response, {'success' => '1'});
-
 my @full_info;
 foreach (@{$final_response->{'names_to_add'}}){
     push @full_info, {
-        'species_name'=>'Manihot esculenta',
         'defaultDisplayName'=>$_,
         'uniqueName'=>$_,
     };
 }
 
-$mech->post_ok('http://localhost:3010/ajax/create_vector_construct', [ 'data'=>$json->encode(\@full_info), 'allowed_organisms'=>$json->encode(['Manihot esculenta']) ]);
+$mech->post_ok('http://localhost:3010/ajax/create_vector_construct', [ 'data'=>$json->encode(\@full_info)]);
 $response = decode_json $mech->content;
 print STDERR "\n\n response: " . Dumper $response;
 
@@ -109,19 +102,18 @@ my $message = $response->decoded_content;
 my $message_hash = decode_json $message;
 print STDERR "\n\n#Test line 118: " . Dumper $message_hash;
 
-is_deeply($message_hash->{'full_data'},  {'vector3' => {'germplasmName' => 'vector3','Strain' => 'St-XL1-Blue-MRF`','species_name' => 'Manihot esculenta','SelectionMarker' => 'Kan/Amp','CloningOrganism' => 'E. coli','VectorType' => 'Nitab','Gene' => 'gene3','Backbone' => 'CL','CassetteName' => 'Pr35S35S-Biogemma ExArabidopsis yeast -glg 2-like TeCaMV polyA-Biogemma','Terminators' => 'TeCaMV','uniqueName' => 'vector3','InherentMarker' => 'Tetracycline','Promotors' => 'Pr35S35S-Biogemma'},'vector2' => {'Backbone' => 'CL','CassetteName' => 'Pr35S35S-Biogemma ExArabidopsis  yeast-glg2-like  TeCaMV polyA-Biogemma','uniqueName' => 'vector2','InherentMarker' => 'Tetracycline','Promotors' => 'Pr35S35S-Biogemma','species_name' => 'Manihot esculenta','Strain' => 'St-XL1-Blue-MRF`','germplasmName' => 'vector2','SelectionMarker' => 'Kan/Amp','CloningOrganism' => 'E. coli','VectorType' => 'Nitab_constructs','Gene' => 'gene2'},'vector1' => {'uniqueName' => 'vector1','Promotors' => 'PrLEAF','InherentMarker' => 'Streptomycin','Backbone' => 'BNP','CassetteName' => 'PrLEAF Ex3\' subsequence of tobacco pol TeNOS','Terminators' => 'TeNOS','CloningOrganism' => 'A. tumefaciens','VectorType' => 'Nitab_constructs','Gene' => 'gene1','Strain' => 'St-LBA-4404','species_name' => 'Manihot esculenta','germplasmName' => 'vector1','SelectionMarker' => 'Kanamycin'}}, 'check parse vector file');
+is_deeply($message_hash->{'full_data'},  {'vector3' => {'germplasmName' => 'vector3','Strain' => 'St-XL1-Blue-MRF`', 'SelectionMarker' => 'Kan/Amp','CloningOrganism' => 'E. coli','VectorType' => 'Nitab','Gene' => 'gene3','Backbone' => 'CL','CassetteName' => 'Pr35S35S-Biogemma ExArabidopsis yeast -glg 2-like TeCaMV polyA-Biogemma','Terminators' => 'TeCaMV','uniqueName' => 'vector3','InherentMarker' => 'Tetracycline','Promotors' => 'Pr35S35S-Biogemma'},'vector2' => {'Backbone' => 'CL','CassetteName' => 'Pr35S35S-Biogemma ExArabidopsis  yeast-glg2-like  TeCaMV polyA-Biogemma','uniqueName' => 'vector2','InherentMarker' => 'Tetracycline','Promotors' => 'Pr35S35S-Biogemma','Strain' => 'St-XL1-Blue-MRF`','germplasmName' => 'vector2','SelectionMarker' => 'Kan/Amp','CloningOrganism' => 'E. coli','VectorType' => 'Nitab_constructs','Gene' => 'gene2'},'vector1' => {'uniqueName' => 'vector1','Promotors' => 'PrLEAF','InherentMarker' => 'Streptomycin','Backbone' => 'BNP','CassetteName' => 'PrLEAF Ex3\' subsequence of tobacco pol TeNOS','Terminators' => 'TeNOS','CloningOrganism' => 'A. tumefaciens','VectorType' => 'Nitab_constructs','Gene' => 'gene1','Strain' => 'St-LBA-4404', 'germplasmName' => 'vector1','SelectionMarker' => 'Kanamycin'}}, 'check parse vector file');
 
 is(scalar @{$message_hash->{'fuzzy'}}, 0, 'check verify fuzzy match response content');
 is_deeply($message_hash->{'found'}, [], 'check verify fuzzy match response content');
 is(scalar @{$message_hash->{'absent'}}, 3, 'check verify fuzzy match response content');
-is_deeply($message_hash->{'found_organisms'}, [{'unique_name' => 'Manihot esculenta','matched_string' => 'Manihot esculenta'}], 'check verify fuzzy match response content');
 
 my @full_info2;
 foreach (keys %{$message_hash->{'full_data'}}){
     push @full_info2, $message_hash->{'full_data'}->{$_};
 }
 
-$mech->post_ok('http://localhost:3010/ajax/create_vector_construct', [ 'data'=>$json->encode(\@full_info2), 'allowed_organisms'=>$json->encode(['Manihot esculenta']) ]);
+$mech->post_ok('http://localhost:3010/ajax/create_vector_construct', [ 'data'=>$json->encode(\@full_info2)]);
 $response = decode_json $mech->content;
 is(scalar @{$response->{'added'}}, 3);
 

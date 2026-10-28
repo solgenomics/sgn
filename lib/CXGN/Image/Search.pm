@@ -263,7 +263,8 @@ sub search {
     my $include_obsolete_image_tags = $self->include_obsolete_image_tags;
 
     my @where_clause;
-    my @or_clause;
+    my @and_clause;
+    my @image_descriptors_or_clause;
 
 
     my @question_mark_values;
@@ -288,8 +289,8 @@ sub search {
 	    push @question_mark_values, $name_sql;
         } else {
             foreach (@$image_name_list) {
-                push @or_clause, "image.name ilike ?";
-		push @question_mark_values, $_;
+                push @image_descriptors_or_clause, "image.name ilike ?";
+		push @question_mark_values, '%' . $_ . '%';
             }
         }
     }
@@ -301,8 +302,8 @@ sub search {
 	    push @question_mark_values, $name_sql;
         } else {
             foreach (@$original_filename_list) {
-                push @or_clause, "image.original_filename ilike ?";
-		push @question_mark_values, $_;
+                push @image_descriptors_or_clause, "image.original_filename ilike ?";
+		push @question_mark_values, '%' . $_ . '%';
             }
         }
     }
@@ -314,8 +315,8 @@ sub search {
 	    push @question_mark_values, $name_sql;
         } else {
             foreach (@$description_list) {
-                push @or_clause, "image.description ilike ?";
-		push @question_mark_values, $_;
+                push @image_descriptors_or_clause, "image.description ilike ?";
+		push @question_mark_values, '%' . $_ . '%';
             }
         }
     }
@@ -327,8 +328,8 @@ sub search {
 	    push @question_mark_values, $name_sql;
         } else {
             foreach (@$tag_list) {
-                push @or_clause, "tags.name ilike ?";
-		push @question_mark_values, $_;
+                push @and_clause, "tags.name ilike ?";
+		push @question_mark_values, '%' . $_ . '%';
             }
         }
         if (!$include_obsolete_tags) {
@@ -346,8 +347,8 @@ sub search {
 	    push @question_mark_values, $name_sql;
         } else {
             foreach (@$submitter_username_list) {
-                push @or_clause, "submitter.username ilike ?";
-		push @question_mark_values, $_;
+                push @and_clause, "submitter.username ilike ?";
+		push @question_mark_values, '%' . $_ . '%';
             }
         }
     }
@@ -359,8 +360,8 @@ sub search {
 	    push @question_mark_values, $name_sql;
         } else {
             foreach (@$submitter_first_name_list) {
-                push @or_clause, "submitter.first_name ilike ?";
-		push @question_mark_values, $_;
+                push @and_clause, "submitter.first_name ilike ?";
+		push @question_mark_values, '%' . $_ . '%';
             }
         }
     }
@@ -372,8 +373,8 @@ sub search {
 	    push @question_mark_values, $name_sql;
         } else {
             foreach (@$submitter_last_name_list) {
-                push @or_clause, "submitter.last_name ilike ?";
-		push @question_mark_values, $_;
+                push @and_clause, "submitter.last_name ilike ?";
+		push @question_mark_values, '%' . $_ . '%';
             }
         }
     }
@@ -383,21 +384,20 @@ sub search {
 	push @question_mark_values, $sql;
 	
     }
-    if ($stock_id_list && scalar(@$stock_id_list)>0) {
-        my $sql = join ("," , @$stock_id_list);
-        push @where_clause, "stock.stock_id in (?)";
-	push @question_mark_values, $sql;
+    if ($stock_id_list && scalar(@$stock_id_list) > 0) {
+        my $placeholders = join(",", ("?") x scalar(@$stock_id_list));
+        push @where_clause, "stock.stock_id in ($placeholders)";
+        push @question_mark_values, @$stock_id_list;
     }
-    if ($stock_name_list && scalar(@$stock_name_list)>0) {
+    if ($stock_name_list && scalar(@$stock_name_list) > 0) {
         if ($stock_names_exact) {
-            my $sql = join ("','" , @$stock_name_list);
-            my $name_sql = "'" . $sql . "'";
-            push @where_clause, "stock.uniquename in (?)";
-	    push @question_mark_values, $name_sql;
+            my $placeholders = join(",", ("?") x scalar(@$stock_name_list));
+            push @where_clause, "stock.uniquename in ($placeholders)";
+            push @question_mark_values, @$stock_name_list;
         } else {
             foreach (@$stock_name_list) {
-                push @or_clause, "stock.uniquename ilike ?";
-		push @question_mark_values, $_;
+                push @and_clause, "stock.uniquename ilike ?";
+                push @question_mark_values, '%' . $_ . '%';
             }
         }
     }
@@ -411,16 +411,46 @@ sub search {
         push @where_clause, "project.project_id in (?)";
 	push @question_mark_values, $sql;
     }
-    if ($project_name_list && scalar(@$project_name_list)>0) {
+    if ($project_name_list && scalar(@$project_name_list) > 0) {
         if ($project_names_exact) {
-            my $sql = join ("','" , @$project_name_list);
-            my $name_sql = "'" . $sql . "'";
-            push @where_clause, "project.name in (?)";
-	    push @question_mark_values, $name_sql;
+            my $placeholders = join(",", ("?") x scalar(@$project_name_list));
+
+            push @where_clause, "(
+                project.name IN ($placeholders)
+                OR EXISTS (
+                    SELECT 1
+                    FROM nd_experiment_stock nes_f
+                    JOIN nd_experiment ne_f ON ne_f.nd_experiment_id = nes_f.nd_experiment_id
+                        AND ne_f.type_id = (SELECT cvterm_id FROM cvterm WHERE name = 'field_layout' LIMIT 1)
+                    JOIN nd_experiment_project nep_f ON nep_f.nd_experiment_id = ne_f.nd_experiment_id
+                    JOIN project p_f ON p_f.project_id = nep_f.project_id
+                    WHERE nes_f.stock_id = stock.stock_id
+                    AND p_f.name IN ($placeholders)
+                )
+            )";
+            push @question_mark_values, @$project_name_list;
+            push @question_mark_values, @$project_name_list;
         } else {
-            foreach (@$project_name_list) {
-                push @or_clause, "project.name ilike ?";
-		push @question_mark_values, $_;
+            my @project_name_or;
+            foreach my $name (@$project_name_list) {
+                push @project_name_or, "(
+                    project.name ILIKE ?
+                    OR EXISTS (
+                        SELECT 1
+                        FROM nd_experiment_stock nes_f
+                        JOIN nd_experiment ne_f ON ne_f.nd_experiment_id = nes_f.nd_experiment_id
+                            AND ne_f.type_id = (SELECT cvterm_id FROM cvterm WHERE name = 'field_layout' LIMIT 1)
+                        JOIN nd_experiment_project nep_f ON nep_f.nd_experiment_id = ne_f.nd_experiment_id
+                        JOIN project p_f ON p_f.project_id = nep_f.project_id
+                        WHERE nes_f.stock_id = stock.stock_id
+                        AND p_f.name ILIKE ?
+                    )
+                )";
+                push @question_mark_values, '%' . $name . '%';
+                push @question_mark_values, '%' . $name . '%';
+            }
+            if (scalar(@project_name_or) > 0) {
+                push @where_clause, " ( " . join(" OR ", @project_name_or) . " ) ";
             }
         }
     }
@@ -432,8 +462,8 @@ sub search {
 	    push @question_mark_values, $name_sql;
         } else {
             foreach (@$project_md_image_type_name_list) {
-                push @or_clause, "project_image_type.name ilike ?";
-		push @question_mark_values, $_;
+                push @and_clause, "project_image_type.name ilike ?";
+		        push @question_mark_values, '%' . $_ . '%';
             }
         }
     }
@@ -441,10 +471,16 @@ sub search {
         push @where_clause, "image.obsolete = 'f'";
     }
 
-    if (scalar(@or_clause)>0) {
-        my $w = " ( ".(join (" OR ", @or_clause) )." ) ";
+    if (scalar(@image_descriptors_or_clause)>0) {
+        my $w = " ( ".(join (" OR ", @image_descriptors_or_clause) )." ) ";
         push @where_clause, $w;
     }
+
+    if (scalar(@and_clause)>0) {
+        my $w = " ( ".(join (" AND ", @and_clause) )." ) ";
+        push @where_clause, $w;
+    }
+
     my $where_clause = scalar(@where_clause)>0 ? " WHERE " . (join (" AND " , @where_clause)) : '';
 
     my $offset_clause = '';
@@ -460,6 +496,21 @@ sub search {
         to_char (image.create_date::timestamp at time zone current_setting('TIMEZONE'), 'YYYY-MM-DD\"T\"HH24:MI:SSOF:00') as create_date,
         to_char (image.modified_date::timestamp at time zone current_setting('TIMEZONE'), 'YYYY-MM-DD\"T\"HH24:MI:SSOF:00') as modified_date,
         image.obsolete, image.md5sum, stock.stock_id, stock.uniquename, stock_type.name, project.project_id, project.name, project_image.project_md_image_id, project_image_type.name,
+        (SELECT ftp.project_id
+            FROM nd_experiment_stock nes
+            JOIN nd_experiment ne ON ne.nd_experiment_id = nes.nd_experiment_id
+                AND ne.type_id = (SELECT cvterm_id FROM cvterm WHERE name = 'field_layout' LIMIT 1)
+            JOIN nd_experiment_project ftp ON ftp.nd_experiment_id = ne.nd_experiment_id
+            WHERE nes.stock_id = stock.stock_id
+            LIMIT 1) AS field_trial_id,
+        (SELECT p.name
+            FROM nd_experiment_stock nes
+            JOIN nd_experiment ne ON ne.nd_experiment_id = nes.nd_experiment_id
+                AND ne.type_id = (SELECT cvterm_id FROM cvterm WHERE name = 'field_layout' LIMIT 1)
+            JOIN nd_experiment_project ftp ON ftp.nd_experiment_id = ne.nd_experiment_id
+            JOIN project p ON p.project_id = ftp.project_id
+            WHERE nes.stock_id = stock.stock_id
+            LIMIT 1) AS field_trial_name,
         COALESCE(
             json_agg(jsonb_build_object('stock_id', related_stock.stock_id, 'uniquename', related_stock.uniquename)) 
             FILTER (WHERE related_stock.stock_id IS NOT NULL), '[]'
@@ -504,7 +555,7 @@ sub search {
 
     my @result;
     my $total_count = 0;
-    while (my ($image_id, $image_name, $image_description, $image_original_filename, $image_file_ext, $image_sp_person_id, $image_username, $image_create_date, $image_modified_date, $image_obsolete, $image_md5sum, $stock_id, $stock_uniquename, $stock_type_name, $project_id, $project_name, $project_md_image_id, $project_image_type_name, $related_stocks, $tags, $observations, $full_count) = $h->fetchrow_array()) {
+    while (my ($image_id, $image_name, $image_description, $image_original_filename, $image_file_ext, $image_sp_person_id, $image_username, $image_create_date, $image_modified_date, $image_obsolete, $image_md5sum, $stock_id, $stock_uniquename, $stock_type_name, $project_id, $project_name, $project_md_image_id, $project_image_type_name, $field_trial_id, $field_trial_name, $related_stocks, $tags, $observations, $full_count) = $h->fetchrow_array()) {
         push @result, {
             image_id => $image_id,
             image_name => $image_name,
@@ -524,6 +575,8 @@ sub search {
             project_name => $project_name,
             project_md_image_id => $project_md_image_id,
             project_image_type_name => $project_image_type_name,
+            field_trial_id => $field_trial_id,
+            field_trial_name => $field_trial_name,
             tags_array => decode_json $tags,
             observations_array => decode_json $observations,
             related_stocks_array =>decode_json $related_stocks,

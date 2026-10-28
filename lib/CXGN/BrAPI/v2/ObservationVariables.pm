@@ -479,15 +479,23 @@ sub observation_variable_ontologies {
     }
 
     #Using code pattern from SGN::Controller::AJAX::Onto->roots_GET
-    my $q = "SELECT cvterm.cvterm_id, cvterm.name, cvterm.definition, db.name, db.db_id, dbxref.accession, dbxref.version, dbxref.description, cv.cv_id, cv.name, cv.definition FROM cvterm JOIN dbxref USING(dbxref_id) JOIN db USING(db_id) JOIN cv USING(cv_id) JOIN cvprop USING(cv_id) LEFT JOIN cvterm_relationship ON (cvterm.cvterm_id=cvterm_relationship.subject_id) WHERE cvterm_relationship.subject_id IS NULL AND is_obsolete= 0 AND is_relationshiptype = 0 and db.name=? $composable_cv_prop_sql;";
+    my $q = "SELECT cvterm.cvterm_id, cvterm.name, cvterm.definition, db.name, db.db_id, dbxref.accession, dbxref.version, dbxref.description, cv.cv_id, cv.name, cv.definition FROM cvterm 
+    JOIN dbxref USING(dbxref_id) 
+    JOIN db USING(db_id) 
+    JOIN cv USING(cv_id) 
+    JOIN cvprop USING(cv_id) 
+    LEFT JOIN cvterm_relationship ON (cvterm.cvterm_id=cvterm_relationship.subject_id) 
+    WHERE cvterm_relationship.subject_id IS NULL AND is_obsolete= 0 AND is_relationshiptype = 0 and db.name=? $composable_cv_prop_sql;";
     my $sth = $self->bcs_schema->storage->dbh->prepare($q);
     foreach (@$name_spaces){
         $sth->execute($_);
         while (my ($cvterm_id, $cvterm_name, $cvterm_definition, $db_name, $db_id, $dbxref_accession, $dbxref_version, $dbxref_description, $cv_id, $cv_name, $cv_definition) = $sth->fetchrow_array()) {
             if ( $ontology_id &&  $ontology_id ne $db_id) { next; }
-            my $info;
+            my $info = {};
             if($dbxref_description){
-                $info = decode_json($dbxref_description);
+                # dbxref.description is free text; only use it when it holds a JSON object
+                my $decoded = eval { decode_json($dbxref_description) };
+                $info = $decoded if ref($decoded) eq 'HASH';
             }
             push @available, {
                 additionalInfo=>{},

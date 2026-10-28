@@ -23,6 +23,7 @@ sub BUILD {   # adjust the cvterm ids for phenotyping trials
         'num_seed_per_plot',
         'weight_gram_seed_per_plot',
         'stock_name',
+        'intercrop_stock_name',
         'tissue_sample_names',
         'plot_name',
         'plot_number',
@@ -34,7 +35,7 @@ sub BUILD {   # adjust the cvterm ids for phenotyping trials
         'col_number',
         'plant_names',
         'plot_num_per_block',
-        'subplots_names', #For splotplot
+        'subplots_names', #For splitplot
         'treatments', #For splitplot
         'subplots_plant_names', #For splitplot
         'additional_info', # For brapi additional info storage
@@ -50,10 +51,11 @@ sub validate_design {
     my $chado_schema = $self->get_bcs_schema;
     my $design_type = $self->get_design_type;
     my %design = %{$self->get_design};
+    my $allow_obsoleted_accessions = $self->get_allow_obsoleted_accessions;
     my $error = '';
 
     if (defined $design_type){
-        if ($design_type ne 'CRD' && $design_type ne 'Alpha' && $design_type ne 'MAD' && $design_type ne 'Lattice' && $design_type ne 'Augmented' && $design_type ne 'RCBD' && $design_type ne 'RRC' && $design_type ne 'DRRC' && $design_type ne 'URDD'&& $design_type ne 'ARC' && $design_type ne 'p-rep' && $design_type ne 'splitplot' && $design_type ne 'stripplot' && $design_type ne 'greenhouse' && $design_type ne 'Westcott' && $design_type ne 'Analysis'){
+        if ($design_type ne 'CRD' && $design_type ne 'Alpha' && $design_type ne 'MAD' && $design_type ne 'Lattice' && $design_type ne 'Augmented' && $design_type ne 'RCBD' && $design_type ne 'RRC' && $design_type ne 'DRRC' && $design_type ne 'URDD'&& $design_type ne 'ARC' && $design_type ne 'p-rep' && $design_type ne 'splitplot' && $design_type ne 'stripplot' && $design_type ne 'greenhouse' && $design_type ne 'Westcott' && $design_type ne 'Analysis' && $design_type ne 'Meeting'){
             $error .= "Design $design_type type must be either: CRD, Alpha, Augmented, Lattice, RCBD, RRC, DRRC, URDD, ARC, MAD, p-rep, greenhouse, Westcott, splitplot or stripplot";
             return $error;
         }
@@ -83,6 +85,12 @@ sub validate_design {
             if ($property eq 'stock_name') {
                 my $stock_name = $design{$stock}->{$property};
                 $seen_accession_names{$stock_name}++;
+            }
+            if ($property eq 'intercrop_stock_name') {
+                my $stock_names = $design{$stock}->{$property};
+                foreach my $stock_name (@$stock_names) {
+                    $seen_accession_names{$stock_name}++;
+                }
             }
             if ($property eq 'seedlot_name') {
                 my $stock_name = $design{$stock}->{$property};
@@ -160,21 +168,30 @@ sub validate_design {
     print STDERR "Source Stock types = ".join(", ",@source_stock_types)."\n";
     print STDERR "Accession names = ".join(", ", @accession_names)."\n";
 
-    my %found_data;
-    foreach my $a (@accession_names) {
-        my $rs = $chado_schema->resultset('Stock::Stock')->search({
-            'is_obsolete' => { '!=' => 't' },
-            'type_id' => { -in => \@source_stock_types },
-            'uniquename' => { ilike => $a } });
+    # Run one query to get all stocks matching the accession names
+    my %stock_search = (
+        'type_id'    => { -in => \@source_stock_types },
+        'uniquename' => { -in => \@accession_names },
+    );
 
-        while (my $s = $rs->next()) {
-            print STDERR "FOUND ".$s->uniquename()."\n";
-            $found_data{$s->uniquename} = 1;
-        }
+    if (!$allow_obsoleted_accessions) {
+        $stock_search{'is_obsolete'} = { '!=' => 't' };
     }
-    foreach (@accession_names){
-        if (!$found_data{$_}){
-            $error .= "The following name is not in the database: $_ .";
+
+    my $rs = $chado_schema->resultset('Stock::Stock')->search(\%stock_search);
+
+    # Record found names
+    my %found_data;
+    while (my $s = $rs->next) {
+        my $uname = $s->uniquename;
+        print STDERR "FOUND $uname\n";
+        $found_data{$uname} = 1;
+    }
+
+    # Report any missing names
+    foreach my $name (@accession_names) {
+        if (!$found_data{$name}) {
+            $error .= "The following name is not in the database: $name.\n";
         }
     }
 

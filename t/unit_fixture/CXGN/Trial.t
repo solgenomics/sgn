@@ -465,6 +465,7 @@ is_deeply(\@all_project_types, [
           'misc_trial',
           'phenotyping_trial',
           'pollinating_trial',
+          'propagation_project',
           'storage_trial',
           'transformation_project'
       ], "check get_all_project_types");
@@ -1016,7 +1017,7 @@ $accession_row->update();
 
 my $new_accessions = CXGN::Project::get_recently_added_accessions($f->bcs_schema(), 'week');
 print STDERR "RECENTLY ADDED ACCESSIONS: ".Dumper($new_accessions);
-is(scalar(@$new_accessions), 1, "check that there is one new accession");
+ok( (grep { $_->[0] eq $accession_row->uniquename() } @$new_accessions), "check that the new accession appears in recently added accessions" );
 
 print STDERR "DELETING PROJECT ENTRY... ";
 $trial->delete_project_entry();

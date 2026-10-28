@@ -406,57 +406,54 @@ sub replace_plot_accession_fieldMap {
         $error = "Plot entry does not exist in database.\n";
     }
 
-    my $plot = CXGN::Stock::Plot->new({
+    my $plot = CXGN::Stock->new({
         schema => $schema,
-        stock_id => $plot_id
+        stock_id => $plot_id,
+        type => 'plot'
     });
 
-    my @plants = @{$plot->plants()};
-    my @subplots = @{$plot->subplots()};
-    my @tissue_samples = @{$plot->get_tissue_samples()};
+    my $child_stocks = $plot->get_child_stocks_flat_list();
 
-    foreach my $plant (@plants) {
-        my $plant_id = $plant->{id};
-        my $plant_accession_rs = $schema->resultset("Stock::StockRelationship")->search({
-            subject_id => $plant_id,
-            object_id => $old_accession_id
-        });
-        if ($plant_accession_rs->count == 1) {
-            $plant_accession_rs->update({
+    foreach my $child (@$child_stocks) {
+        my $stock_id = $child->{stock_id};
+        if ($child->{type} eq "plant") {
+            my $plant_accession_rs = $schema->resultset("Stock::StockRelationship")->search({
+                subject_id => $stock_id,
+                object_id => $old_accession_id
+            });
+            if ($plant_accession_rs->count == 1) {
+                $plant_accession_rs->update({
+                    object_id => $new_accession_id
+                });
+            } else {
+                $error = "Strange: plant with id $stock_id has either no accession or multiple accessions.\n";
+            }
+        }
+        if ($child->{type} eq "subplot") {
+            my $subplot_accession_rs = $schema->resultset("Stock::StockRelationship")->search({
+                subject_id => $stock_id,
+                object_id => $old_accession_id
+            });
+            $subplot_accession_rs->update({
                 object_id => $new_accession_id
             });
-        } else {
-            $error = "Strange: plant with id $plant_id has either no accession or multiple accessions.\n";
+        }
+        if ($child->{type} eq "tissue_sample") {
+            my $ts_accession_rs = $schema->resultset("Stock::StockRelationship")->search({
+                subject_id => $stock_id,
+                object_id => $old_accession_id
+            });
+            if ($ts_accession_rs->count == 1) {
+                $ts_accession_rs->update({
+                    object_id => $new_accession_id
+                });
+            } else {    
+                $error = "Strange: tissue sample with id $stock_id has either no accession or multiple accessions.\n";
+            }
         }
     }
 
-    foreach my $subplot (@subplots) {
-        my $subplot_id = $subplot->{id};
-        my $subplot_accession_rs = $schema->resultset("Stock::StockRelationship")->search({
-            subject_id => $subplot_id,
-            object_id => $old_accession_id
-        });
-        $subplot_accession_rs->update({
-            object_id => $new_accession_id
-        });
-    }
-
-    foreach my $tissue_sample (@tissue_samples) {
-        my $ts_id = $tissue_sample->{id};
-        my $ts_accession_rs = $schema->resultset("Stock::StockRelationship")->search({
-            subject_id => $ts_id,
-            object_id => $old_accession_id
-        });
-        if ($ts_accession_rs->count == 1) {
-            $ts_accession_rs->update({
-                object_id => $new_accession_id
-            });
-        } else {    
-            $error = "Strange: tissue sample with id $ts_id has either no accession or multiple accessions.\n";
-        }
-    }
-
-    $self->_regenerate_trial_layout_cache();
+    # $self->_regenerate_trial_layout_cache();
 
     return $error;
 
@@ -485,55 +482,31 @@ sub replace_plot_name_fieldMap {
     	$stock_rs->update(
         {
             uniquename => $new_plot_name,
+            name => $new_plot_name
         });
     }
 
-    my $plot = CXGN::Stock::Plot->new({
+    my $plot = CXGN::Stock->new({
         schema => $schema,
-        stock_id => $plot_id
+        stock_id => $plot_id,
+        type => 'plot'
     });
 
-    my @plants = @{$plot->plants()};
-    my @subplots = @{$plot->subplots()};
-    my @tissue_samples = @{$plot->get_tissue_samples()};
+    my $child_stocks = $plot->get_child_stocks_flat_list();
 
-    foreach my $plant (@plants) {
-        my $plant_id = $plant->{id};
-        my $plant_rs = $schema->resultset("Stock::Stock")->search({
-            stock_id => $plant_id,
+    foreach my $child (@$child_stocks) {
+        my $stock_id = $child->{stock_id};
+        my $stock_rs = $schema->resultset("Stock::Stock")->search({
+            stock_id => $stock_id,
         });
-        my $new_name = $plant->{name} =~ s/$old_plot_name/$new_plot_name/r;
-        $plant_rs->update({
+        my $new_name = $child->{name} =~ s/$old_plot_name/$new_plot_name/r;
+        $stock_rs->update({
             name => $new_name,
             uniquename => $new_name
         });
     }
 
-    foreach my $subplot (@subplots) {
-        my $subplot_id = $subplot->{id};
-        my $subplot_rs = $schema->resultset("Stock::Stock")->search({
-            stock_id => $subplot_id,
-        });
-        my $new_name = $subplot->{name} =~ s/$old_plot_name/$new_plot_name/r;
-        $subplot_rs->update({
-            name => $new_name,
-            uniquename => $new_name
-        });
-    }
-
-    foreach my $tissue_sample (@tissue_samples) {
-        my $ts_id = $tissue_sample->{id};
-        my $ts_rs = $schema->resultset("Stock::Stock")->search({
-            stock_id => $ts_id,
-        });
-        my $new_name = $tissue_sample->{name} =~ s/$old_plot_name/$new_plot_name/r;
-        $ts_rs->update({
-            name => $new_name,
-            uniquename => $new_name
-        });
-    }
-
-    $self->_regenerate_trial_layout_cache();
+    # $self->_regenerate_trial_layout_cache();
 
     return $error;
 }
@@ -581,9 +554,56 @@ sub replace_trial_stock_fieldMap {
         $h_update->execute($new_stock_id,$accession_cvterm_id,$plot_of_cvterm_id,$plant_of_cvterm_id,$subplot_of_cvterm_id,$tissue_sample_of_cvterm_id,$trial_id,$field_trial_cvterm_id,$old_stock_id);
     }
 
-    $self->_regenerate_trial_layout_cache();
+    # $self->_regenerate_trial_layout_cache();
 
     return $error;
+}
+
+# The purpose of this function is to recalculate replicate numbers using plot numbers after an accession swap has occurred, then save the new rep numbers.
+# takes as argument a hash of accessions with the plot IDs and plot numbers of the plots with those accessions. Plots are sorted based on their plot number and 
+# assigned new rep numbers.
+# data structure generated in trial_change_plot_accessions_upload in TrialMetadata.pm. The structure is accession_id->{
+#   start -> {plot->{plot_number}...more plots...},
+#   add -> {...plots...},
+#   remove -> {...plots...}
+# }
+# If there is no add or remove, we can skip. We take the add and remove IDs and add/remove them from the start list to get the final list of plots using that accession.
+# Then we sort by plot_number and assign new rep numbers
+sub rebuild_trial_plot_replicates {
+    my $self = shift;
+    my $rep_hash = shift;
+    my $rep_number_id = shift;
+    my $trial_id = $self->trial_id();
+    my $schema = $self->bcs_schema;
+
+    foreach my $accession_id (keys(%$rep_hash)) {
+        my $accession_hash = $rep_hash->{$accession_id};
+        next if (!$accession_hash->{add} && !$accession_hash->{remove});
+        my $start_plots = $accession_hash->{start};
+        my $add_plots = $accession_hash->{add};
+        my $remove_plots = $accession_hash->{remove};
+        foreach my $plot_id (keys(%$remove_plots)) {
+            delete $start_plots->{$plot_id};
+        }
+        foreach my $plot_id (keys(%$add_plots)) {
+            $start_plots->{$plot_id} = $add_plots->{$plot_id};
+        }
+
+        #sort by plot number and set rep numbers
+        my @unsorted = map { {plot_id => $_, plot_number => $start_plots->{$_}->{plot_number}} } keys(%$start_plots);
+        my @sorted_plots = sort { $a->{plot_number} <=> $b->{plot_number}} @unsorted; 
+        my $i = 1;
+        foreach my $plot (@sorted_plots) {
+            my $row = $schema->resultset("Stock::Stockprop")->find({ type_id=>$rep_number_id, stock_id=>$plot->{plot_id}});
+            $row->update({
+                type_id=>$rep_number_id, 
+                stock_id=>$plot->{plot_id}, 
+                rank=>0, 
+                value=>$i 
+            });
+            $i += 1;
+        } 
+    }
 }
 
 sub _regenerate_trial_layout_cache {

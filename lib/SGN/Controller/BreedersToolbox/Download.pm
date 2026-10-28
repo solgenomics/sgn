@@ -52,6 +52,9 @@ use CXGN::People::Person;
 use CXGN::BreedersToolbox::Accessions;
 use CXGN::Cross;
 use Sort::Key::Natural qw(natkeysort);
+use Time::Piece;
+use Text::CSV qw(csv);
+
 
 sub breeder_download : Path('/breeders/download/') Args(0) {
     my $self = shift;
@@ -246,22 +249,37 @@ sub download_phenotypes_action : Path('/breeders/trials/phenotype/download') Arg
     my $data_level = $c->req->param("dataLevel") && $c->req->param("dataLevel") ne 'null' ? $c->req->param("dataLevel") : "plot";
     my $repetitive_measurements = $c->req->param("repetitive_measurements") || "average";
     my $timestamp_option = $c->req->param("timestamp") && $c->req->param("timestamp") ne 'null' ? $c->req->param("timestamp") : 0;
-    my $entry_numbers_option = $c->req->param("entry_numbers") && $c->req->param("entry_numbers") ne 'null' ? $c->req->param("entry_numbers") : 0;
     my $exclude_phenotype_outlier = $c->req->param("exclude_phenotype_outlier") && $c->req->param("exclude_phenotype_outlier") ne 'null' && $c->req->param("exclude_phenotype_outlier") ne 'undefined' ? $c->req->param("exclude_phenotype_outlier") : 0;
-    my $include_pedigree_parents = $c->req->param('include_pedigree_parents');
+    my $include_pedigree_parents = $c->req->param("include_pedigree_parents") && $c->req->param("include_pedigree_parents") ne 'null' && $c->req->param("include_pedigree_parents") ne 'undefined' ? $c->req->param("include_pedigree_parents") : 0;
+    my $include_intercrop_stocks = $c->req->param("intercrop") && $c->req->param("intercrop") ne 'null' && $c->req->param("intercrop") ne 'undefined' ? $c->req->param("intercrop") : 0;
+    my $include_entry_numbers = $c->req->param("entry_numbers") && $c->req->param("entry_numbers") ne 'null' ? $c->req->param("entry_numbers") : 0;
+    my $include_trait_synonyms = $c->req->param("trait_synonyms") && $c->req->param("trait_synonyms") ne 'null' ? $c->req->param("trait_synonyms") : 0;
     my $trait_list = $c->req->param("trait_list");
     my $trait_component_list = $c->req->param("trait_component_list");
     my $year_list = $c->req->param("year_list");
     my $location_list = $c->req->param("location_list");
     my $trial_list = $c->req->param("trial_list");
     my $accession_list = $c->req->param("accession_list");
+    my $family_list = $c->req->param("family_name_list");
+    my $cross_list = $c->req->param("cross_list");
+    if ($family_list && $family_list ne 'null') {
+        $accession_list = $family_list;
+    } elsif ($cross_list && $cross_list ne 'null') {
+        $accession_list = $cross_list;
+    }
+
     my $plot_list = $c->req->param("plot_list");
     my $plant_list = $c->req->param("plant_list");
+    my $protocol_list = $c->req->param("protocol_list");
+    my $instance_list = $c->req->param("instance_list");
     my $trait_contains = $c->req->param("trait_contains");
     my $phenotype_min_value = $c->req->param("phenotype_min_value") && $c->req->param("phenotype_min_value") ne 'null' ? $c->req->param("phenotype_min_value") : "";
     my $phenotype_max_value = $c->req->param("phenotype_max_value") && $c->req->param("phenotype_max_value") ne 'null' ? $c->req->param("phenotype_max_value") : "";
     my $phenotype_start_date = $c->req->param("phenotype_start_date");
     my $phenotype_end_date = $c->req->param("phenotype_end_date");
+    my $data_type = $c->req->param("data_type");
+    my $hdp_type = $c->req->param("hdp_type");
+    print STDERR "hdp type test: $hdp_type";
 
     my @trait_list;
     if ($trait_list && $trait_list ne 'null') {
@@ -307,6 +325,16 @@ sub download_phenotypes_action : Path('/breeders/trials/phenotype/download') Arg
     if ($plant_list && $plant_list ne 'null') {
 	print STDERR "plant list: ".Dumper $plant_list."\n";
 	@plant_list = @{_parse_list_from_json($plant_list)};
+    }
+    my @protocol_list;
+    if ($protocol_list && $protocol_list ne 'null') {
+    print STDERR "protocol list: ".Dumper $protocol_list."\n";
+    @protocol_list = @{_parse_list_from_json($protocol_list)};
+    }
+    my @instance_list;
+    if ($instance_list && $instance_list ne 'null') {
+    print STDERR "instance list: ".Dumper $instance_list."\n";
+    @instance_list = @{_parse_list_from_json($instance_list)};
     }
 
     #Input list arguments can be arrays of integer ids or strings; however, when fed to CXGN::Trial::Download, they must be arrayrefs of integer ids
@@ -399,12 +427,28 @@ sub download_phenotypes_action : Path('/breeders/trials/phenotype/download') Arg
         }
     }
 
-    my $plugin = "";
-    if ($format eq "xlsx") {
-        $plugin = $entry_numbers_option ? "TrialPhenotypeExcelEntryNumbers" : "TrialPhenotypeExcel";
+    my @protocol_list_int;
+    foreach (@protocol_list) {
+        if ($_ =~ m/^\d+$/) {
+            push @protocol_list_int, $_;
+        } else {
+            my $q = "SELECT nd_protocol.nd_protocol_id FROM nd_protocol AND nd_protocol.name = ?;";
+            my $h = $schema->storage->dbh()->prepare($q);
+            $h->execute($_);
+            my ($protocol_id) = $h->fetchrow_array();
+
+            if ($protocol_id) {
+                push @protocol_list_int, $protocol_id;
+            }
+        }
     }
-    if ($format eq "csv") {
-        $plugin = $entry_numbers_option ? "TrialPhenotypeCSVEntryNumbers" : "TrialPhenotypeCSV";
+
+    my $plugin;
+    if ($data_type && $data_type eq 'high_dimensional') {
+        $plugin = $format eq 'xlsx' ? "TrialHighDimensionalPhenotypeExcel" : "TrialHighDimensionalPhenotypeCSV";
+        $data_level = 'all';
+    } else {
+        $plugin = $format eq 'xlsx' ? "TrialPhenotypeExcel" : "TrialPhenotypeCSV";
     }
 
     my $temp_file_name;
@@ -434,11 +478,17 @@ sub download_phenotypes_action : Path('/breeders/trials/phenotype/download') Arg
         accession_list => \@accession_list_int,
         plot_list => \@plot_list_int,
         plant_list => \@plant_list_int,
+        protocol_list => \@protocol_list_int,
+        hdp_type => $hdp_type,
+        instance_list => \@instance_list,
         filename => $tempfile,
         format => $plugin,
         data_level => $data_level,
         include_timestamp => $timestamp_option,
         include_pedigree_parents=>$include_pedigree_parents,
+        include_intercrop_stocks => $include_intercrop_stocks,
+        include_entry_numbers => $include_entry_numbers,
+        include_trait_synonyms => $include_trait_synonyms,
         exclude_phenotype_outlier => $exclude_phenotype_outlier,
         trait_contains => \@trait_contains_list,
         phenotype_min_value => $phenotype_min_value,
@@ -532,7 +582,11 @@ sub download_action : Path('/breeders/download_action') Args(0) {
         $datalevel         = $c->req->param("metadata_datalevel");
     }
     my $exclude_phenotype_outlier = $c->req->param("exclude_phenotype_outlier") || 0;
+    my $include_intercrop_stocks = $c->req->param("intercrop") || 0;
+    my $include_entry_numbers = $c->req->param("entry_numbers") || 0;
+    my $include_trait_synonyms = $c->req->param("trait_synonyms") || 0;
     my $timestamp_included = $c->req->param("timestamp") || 0;
+    my $include_pedigree_parents = $c->req->param("pedigrees") || 0;
 
     # parameters for outliers download
     my @trait_ids     = split(',', $c->req->param("trait_ids_list"));
@@ -556,18 +610,45 @@ sub download_action : Path('/breeders/download_action') Args(0) {
 	    $trait_data = SGN::Controller::AJAX::List->retrieve_list($c, $trait_list_id);
     }
 
-    my $outliers;
-    if (defined $dataset_id) {
+    my $dataset_outliers;
+    my $dataset_accession_ids;
+    my $dataset_trait_ids;
+    my $dataset_trial_ids;
+    if (defined $dataset_id && $dataset_id ne '') {
         my $people_schema = $c->dbic_schema("CXGN::People::Schema");
         my $schema = $c->dbic_schema("Bio::Chado::Schema", "sgn_chado");
         my $dataset = CXGN::Dataset->new(people_schema => $people_schema, schema => $schema, sp_dataset_id => int($dataset_id), exclude_dataset_outliers => 1);
-        $outliers = $dataset->outliers();
+	die "Dataset not created" unless $dataset;
+
+	$dataset_outliers = $dataset->outliers();
+	$dataset_accession_ids = $dataset->retrieve_accessions();
+	$dataset_trait_ids     = $dataset->retrieve_traits();
+	$dataset_trial_ids = $dataset->retrieve_trials();
     }
 
+    # Build lookup sets from dataset results (keyed by name, column [1])
+    my %dataset_accessions = map { $_->[1] => 1 } @{ $dataset_accession_ids // [] };
+    my %dataset_traits     = map { $_->[1] => 1 } @{ $dataset_trait_ids     // [] };
+    my %dataset_trials     = map { $_->[1] => 1 } @{ $dataset_trial_ids     // [] };
 
-    my @accession_list = map { $_->[1] } @$accession_data;
-    my @trial_list = map { $_->[1] } @$trial_data;
-    my @trait_list = map { $_->[1] } @$trait_data;
+    my @accession_list;
+    if ($accession_list_id) {
+        @accession_list = map { $_->[1] } @$accession_data;
+    } else {
+	@accession_list = keys %dataset_accessions;
+    }
+    my @trial_list;
+    if ($trial_list_id) {
+        @trial_list = map { $_->[1] } @$trial_data;
+    } else {
+	@trial_list = keys %dataset_trials;
+    }
+    my @trait_list;
+    if ($trait_list_id) {
+        @trait_list = map { $_->[1] } @$trait_data;
+    } else {
+	@trait_list = keys %dataset_traits;
+    }
 
     my $tf = CXGN::List::Transform->new();
 
@@ -596,7 +677,7 @@ sub download_action : Path('/breeders/download_action') Args(0) {
 
     # if we work with dataset then @trait_ids we have directly from http request but we need reference/pointer to it
     # if we work with lists than we need to use result of transform method from class Transform - reference type to list
-    my $trait_list_ref = defined $dataset_id ? \@trait_ids : $trait_id_data->{transform},
+    my $trait_list_ref = defined $dataset_id ? \@trait_ids : $trait_id_data->{transform};
 
     my @data;
     if ($datalevel eq 'metadata'){
@@ -617,8 +698,12 @@ sub download_action : Path('/breeders/download_action') Args(0) {
     		accession_list=>$accession_id_data->{transform},
     		include_timestamp=>$timestamp_included,
             exclude_phenotype_outlier=>$exclude_phenotype_outlier,
-            dataset_excluded_outliers=>$outliers,
+            dataset_excluded_outliers=>$dataset_outliers,
+            include_intercrop_stocks=>$include_intercrop_stocks,
+            include_entry_numbers=>$include_entry_numbers,
+            include_trait_synonyms=>$include_trait_synonyms,
     		data_level=>$datalevel,
+            include_pedigree_parents=>$include_pedigree_parents,
     	);
     	@data = $phenotypes_search->get_phenotype_matrix();
     }
@@ -750,6 +835,8 @@ sub download_accession_properties_action : Path('/breeders/download_accession_pr
         return;
     }
 
+
+
     # Get accession IDs from list
     my $accession_data = SGN::Controller::AJAX::List->retrieve_list($c, $accession_list_id);
     my @accession_list = map { $_->[1] } @$accession_data;
@@ -759,13 +846,19 @@ sub download_accession_properties_action : Path('/breeders/download_accession_pr
     my $accession_id_hash = $t->transform($schema, $acc_t, \@accession_list);
     my @accession_ids = @{$accession_id_hash->{transform}};
 
+
+
     # Create tempfile
     my ($tempfile, $uri) = $c->tempfile(TEMPLATE => "download_accessions_XXXXX", UNLINK=> 0);
 
-    # Build Accession Info
-    my @editable_stock_props = split ',', $c->config->{editable_stock_props};
+    my $editable_properties_string = $c->config->{editable_stock_props};
+    my @editable_properties = split /\s*\,\s*/, $editable_properties_string;
 
-    my $rows = $self->build_accession_properties_info($dbh, \@accession_ids, \@editable_stock_props);
+    #print STDERR "DOWNLOADING PROPERTIES: ".join(", ", @editable_properties)."\n";
+
+    # Build Accession Info
+    my $BTAccessions = CXGN::BreedersToolbox::Accessions->new({ schema => $schema });
+    my $rows = $BTAccessions->export_properties(\@accession_ids, \@editable_properties);
 
     # Create and Return XLS and XLSX  file
     if ( $file_format eq ".xlsx" ) {
@@ -798,28 +891,7 @@ sub download_accession_properties_action : Path('/breeders/download_accession_pr
         my $file_name = basename($file_path);
 
         # Write to csv file
-        ## no critic (RequireBriefOpen)
-        open(my $csv_fh, "> :encoding(UTF-8)", $file_path) || die "Can't open file $file_path\n";
-        my @header =  @{$rows->[0]};
-        my $num_col = scalar(@header);
-
-        for ( my $line = 0; $line <= $#$rows; $line++ ) {
-            my $columns = $rows->[$line];
-            my $step = 1;
-            for ( my $i = 0; $i < $num_col; $i++ ) {
-                if ($columns->[$i]) {
-                    print $csv_fh "\"$columns->[$i]\"";
-                } else {
-                    print $csv_fh "\"\"";
-                }
-                if ($step < $num_col) {
-                    print $csv_fh ",";
-                }
-                $step++;
-            }
-            print $csv_fh "\n";
-        }
-        close $csv_fh;
+        csv(in => $rows, out => $file_path, sep_char => ",");
 
         # Return the csv file
         $c->res->content_type('text/csv');
@@ -838,76 +910,6 @@ sub download_accession_properties_action : Path('/breeders/download_accession_pr
         $c->res->body($output);
     }
 
-}
-
-#
-# Build Accession Properties Info
-#
-# Generate the rows in the accession info table for the specified Accessions
-#
-# Usage: my $rows = $self->build_accession_properties_info($dbh, \@accession_ids, \@editable_stock_props);
-# Returns: an arrayref where each array item is an array of accession properties
-#          the first item is an array of the header values
-#
-sub build_accession_properties_info {
-    my $self = shift;
-    my $dbh = shift;
-    my $accession_ids = shift;
-    my $editable_stock_props = shift;
-
-    # Setup Stock Props
-    my @stock_props = ("organization", "stock_synonym", "PUI");
-    foreach my $esp (@$editable_stock_props) {
-        if (!scalar grep { $_ eq $esp } @stock_props) {
-            push(@stock_props, $esp)
-        }
-    }
-
-    # Build Header
-    my @accession_headers = ("accession_name", "species_name", "population_name");
-    push(@accession_headers, @stock_props);
-
-    # Add Header to Rows
-    my @accession_rows = ();
-    push(@accession_rows, \@accession_headers);
-
-    # Start query blocks
-    my $select = "SELECT stock.uniquename AS accession_name, organism.species AS species_name, string_agg(distinct(rs.uniquename), ', ') AS population_name";
-    my $from = "FROM public.stock";
-    my $joins = "LEFT JOIN public.organism USING (organism_id)";
-    $joins .= " LEFT JOIN public.stock_relationship ON (stock.stock_id = stock_relationship.subject_id AND stock_relationship.type_id = (SELECT cvterm_id FROM cvterm WHERE name = 'member_of' AND cv_id = (SELECT cv_id FROM cv WHERE name = 'stock_relationship')))";
-    $joins .= " LEFT JOIN public.stock AS rs ON (stock_relationship.object_id = rs.stock_id)";
-    my $group = "GROUP BY stock.stock_id, organism.species";
-    my $order = "ORDER BY stock.uniquename ASC;";
-    my @params;
-
-    # Add each of the stock props
-    my $count = 0;
-    foreach my $sp (@stock_props) {
-        $count++;
-        my $table = "sp" . $count;
-        $select .= ", string_agg(distinct($table.value), ', ') AS \"$sp\"";
-        $joins .= " LEFT JOIN public.stockprop AS $table ON (stock.stock_id = $table.stock_id AND $table.type_id = (SELECT cvterm_id FROM cvterm WHERE name = '$sp' AND cv_id = (SELECT cv_id FROM cv WHERE name = 'stock_property')))";
-    }
-
-    # Build where block using accession ids
-    my $where = "WHERE stock.stock_id IN (" . join(',', ('?') x @$accession_ids) . ")";
-    push(@params, @$accession_ids);
-
-    # Put query together
-    my $q = "$select $from $joins $where $group $order";
-
-    #print STDERR "QUERY = $q\n";
-
-    # Execute the query and add results to accession rows
-    my $h = $dbh->prepare($q);
-    $h->execute(@params);
-    while (my @results = $h->fetchrow_array()) {
-        # print STDERR "RETRIEVED: ".join(",", @results)."\n";
-        push(@accession_rows, \@results);
-    }
-
-    return \@accession_rows;
 }
 
 # accession properties download -- end
@@ -1170,7 +1172,7 @@ sub download_gbs_action : Path('/breeders/download_gbs_action') {
         if ($accession_list_id) {
             $accession_data = SGN::Controller::AJAX::List->retrieve_list($c, $accession_list_id);
             @accession_list = map { $_->[1] } @$accession_data;
-        
+
             my $t = CXGN::List::Transform->new();
             my $acc_t = $t->can_transform("accessions", "accession_ids");
             my $accession_id_hash = $t->transform($schema, $acc_t, \@accession_list);
@@ -1258,7 +1260,7 @@ sub download_gbs_action : Path('/breeders/download_gbs_action') {
 
     my ($fh, $file_path) = tempfile("breedbase_grm_XXXXX", DIR => $c->config->{cluster_shared_tempdir});
     my $filename = basename($file_path);
-    
+
     if ($download_format eq 'VCF') {
         $filename .= '.vcf';
     }
@@ -1351,7 +1353,7 @@ sub download_grm_action : Path('/breeders/download_grm_action') {
 
     my ($fh, $file_path) = tempfile("breedbase_grm_XXXXX", DIR => $c->config->{cluster_shared_tempdir});
     my $filename = basename($file_path);
-    
+
     if ($download_format eq 'heatmap') {
         $filename .= '.pdf';
     }
@@ -1397,7 +1399,7 @@ sub download_gwas_action : Path('/breeders/download_gwas_action') {
     my $shared_cluster_dir_config = $c->config->{cluster_shared_tempdir};
     my $tmp_gwas_dir = $shared_cluster_dir_config."/tmp_genotype_download_gwas";
     mkdir $tmp_gwas_dir if ! -d $tmp_gwas_dir;
-    
+
     my $compute_from_parents = $c->req->param('compute_from_parents') eq 'true' ? 1 : 0;
 
     my ($gwas_tempfile_fh, $gwas_tempfile) = tempfile("wizard_download_gwas_XXXXX", DIR=> $tmp_gwas_dir);
@@ -1932,11 +1934,15 @@ sub download_obsolete_metadata_action : Path('/breeders/download_obsolete_metada
 
     my @download_rows = ();
     foreach my $obsolete_info (@$obsolete_metadata) {
-        my ($stock_id, $stock_name, $stock_type, $obsolete_note, $obsolete_date, $sp_person_id) =@$obsolete_info;
+        my ($stock_id, $stock_name, $create_date, $stock_type, $obsolete_note, $obsolete_date, $sp_person_id) =@$obsolete_info;
         my $person= CXGN::People::Person->new($dbh, $sp_person_id);
         my $full_name = $person->get_first_name()." ".$person->get_last_name();
+
+        my $create_date_obj = Time::Piece->strptime($create_date, "%Y-%m-%d %H:%M:%S");
+        my $download_create_date = $create_date_obj->strftime("%Y-%B-%d");
+
         if ($obsolete_date =~ /Obsolete/) {
-            push @download_rows, [$stock_name, $stock_type, $obsolete_note, $obsolete_date,$full_name];
+            push @download_rows, [$stock_name, $download_create_date, $stock_type, $obsolete_note, $obsolete_date,$full_name];
         }
     }
 
@@ -1948,7 +1954,7 @@ sub download_obsolete_metadata_action : Path('/breeders/download_obsolete_metada
     my $workbook = Excel::Writer::XLSX->new($file_path);
     my $worksheet = $workbook->add_worksheet();
 
-    my @header = ("Stock Name", "Stock Type", "Obsolete Note", "Obsolete Date", "Obsoleted by");
+    my @header = ("Stock Name", "Create Date", "Stock Type", "Obsolete Note", "Obsolete Date", "Obsoleted by");
     $worksheet->write_row(0, 0, \@header);
 
     my $row_count = 1;

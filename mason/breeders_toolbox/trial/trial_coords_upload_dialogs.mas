@@ -88,12 +88,9 @@ $trial_name
       <div class="modal-body">
         <div class="container-fluid">
 
-<b>
-trial coordinates may be uploaded in tab-delimited text file format
-</b>
+<& /help/file_upload_type.mas, type => "Trial Coordinates" &>
 <br>
-(.xls or .xlsx formats are NOT supported)
-<br><br>
+<br>
 <b>
   Header:
 </b>

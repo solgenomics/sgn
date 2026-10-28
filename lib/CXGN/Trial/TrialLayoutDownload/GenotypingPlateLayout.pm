@@ -102,11 +102,7 @@ sub retrieve {
                 } elsif ($_ eq 'pedigree'){
                     push @$line, $pedigree_strings->{$design_info->{"accession_name"}};
                 } elsif ($_ eq 'genotyping_project_name'){
-                    my $accession = CXGN::Stock->new({schema=>$schema, stock_id=>$design_info->{"accession_id"}});
-                    push @$line, $accession->get_pedigree_string('Parents');
-                } elsif ($_ eq 'pedigree'){
-                    my $accession = CXGN::Stock->new({schema=>$schema, stock_id=>$design_info->{"accession_id"}});
-                    push @$line, $accession->get_pedigree_string('Parents');
+                    push @$line, $genotyping_project_name;
                 }else {
                     push @$line, $design_info->{$_};
                 }

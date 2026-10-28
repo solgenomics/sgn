@@ -110,6 +110,7 @@
                                     <option value="Specim FX17">Specim FX17</option>
                                     <option value="FTIR6X">FT/IR-6X</option>
                                     <option value="InnoSpectraNIR-S-G1">InnoSpectraNIR-S-G1</option>
+                                    <option value="Viavi microNIR">Viavi microNIR</option>
                                 </select>
                             </div>
                         </div>

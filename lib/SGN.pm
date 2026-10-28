@@ -41,6 +41,7 @@ use Catalyst qw/
      SmartURI
      Authentication
      +SGN::Authentication::Store
+     +SGN::Authentication::Captcha
      Authorization::Roles
      +SGN::Role::Site::Config
      +SGN::Role::Site::DBConnector

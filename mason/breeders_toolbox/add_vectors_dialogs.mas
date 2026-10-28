@@ -52,13 +52,17 @@ $editable_stock_props_definitions
                                 <small>Note: Use the fuzzy search to match similar names to prevent uploading of duplicate vectors. Fuzzy searching is much slower than regular search. Only a curator can disable the fuzzy search.</small>
                             </div>
                         </div>
+                        <!--
                         <div class="form-group">
                             <label class="col-sm-4 control-label"> Auto generate uniquename</label><br>
                             <div class="col-sm-8">
                                 <input type="checkbox" id="autogenerate_uniquename" name="autogenerate_uniquename">
                             </div>
                         </div>
+                        -->
                     </form>
+                    <br>
+                    <& /help/file_upload_type.mas, type => "Vectors", optional_column => 1 &>
                 </div>
             </div>
         </div>
@@ -80,11 +84,10 @@ $editable_stock_props_definitions
             </div>
             <div class="modal-body">
                 <div class="container-fluid">
-                    <b>Vectors may be uploaded in an Excel file (.xls or .xlsx)</b>
                     <br /><br />
                     <b>Header:</b>
                     <br>
-                    The first row (header) should contain the following:
+                    The first row (header) must contain the uniquename column. Additional information can be included by selecting optional column(s) (see below). : 
                     <br />
 
                     <table class="table table-hover table-bordered table-condensed" >
@@ -92,7 +95,6 @@ $editable_stock_props_definitions
                         <tbody>
                             <tr>
                                 <td>uniquename </td>
-                                <td>species_name</td>
 %  foreach my $editable_stockprop (@$editable_vector_props) {
 %                               print "<td>$editable_stockprop</td>";
 % }
@@ -100,16 +102,9 @@ $editable_stock_props_definitions
                         </tbody>
                     </table>
 
-                    <b>Comma Separated Fields:</b>
-                    <ul>
-                    <li>The following fields can take comma-separated values to indicate there are several values for the accession: 
-                    </li>
-                    </ul>
-
                     <b>Required Fields:</b>
                     <ul>
-                    <li>name (must be unique)</li>
-                    <li>species_name (must exist in the database)</li>
+                    <li>uniquename (vector name must be unique)</li>
                     </ul>
                     <b>Optional Fields:</b>
                     <ul>
@@ -140,8 +135,6 @@ $editable_stock_props_definitions
       <div class="modal-body">
         <div class="container-fluid">
             <div id="add_vectors_using_list_inputs" style="display:none">
-                <label for="species_name_input">Species name for added vectors</label>
-                <input class="form-control" type="text" id="species_name_input" value="<% $preferred_species %>"></input>
                 <br><br>
                 <label for="population_name_input">Population name for added vectors (optional)</label>
                 <input class="form-control" type="text" id="population_name_input"></input>

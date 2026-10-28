@@ -16,6 +16,8 @@ $related_stock_link
 $original_stock_link
 </%args>
 
+% use Data::Dumper;
+% print STDERR "SOURCE DBS: ".Dumper($source_dbs);
 % if ($derived_accession_relationship) {
     <div class="panel panel-default">
         <div class="panel-body panel-body-sm">
@@ -84,7 +86,7 @@ $original_stock_link
         <ul>
 % foreach my $db_url (keys %$source_dbs) {
             <li>
-                <a href="<% $db_url %>" ><% $source_dbs->{$db_url} %></a>
+                <a href="<% $db_url %>" ><% $db_url %></a>
             </li>
 % }
         </ul>

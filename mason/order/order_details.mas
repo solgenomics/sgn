@@ -11,6 +11,7 @@ $order_properties => undef
 $order_values => undef
 $ordering_type => undef
 $check_vendor_role =>undef
+$tracking_order_activity => undef
 
 </%args>
 
@@ -39,11 +40,14 @@ $check_vendor_role =>undef
             <td><a href="/order/stocks/view"><p>Go to Manage Order Page</p></a></td>
         </div>
     </div>
-% if ($ordering_type eq 'single_step' && $order_status ne 'completed') {
+% if (($ordering_type eq 'single_step') && ($order_status ne 'completed') && ($check_vendor_role != 1)) {
     <button class="btn btn-sm btn-primary" style="margin:3px" id="re_order_link">Re-Order</button>
 %}
-% if ($ordering_type eq 'single_step' && $order_status eq 'completed') {
+% if (($ordering_type eq 'single_step') && ($order_status eq 'completed') && ($check_vendor_role != 1)) {
     <button class="btn btn-sm btn-primary" style="margin:3px" id="re_order_link">Re-Order</button><button class="btn btn-sm btn-primary" style="margin:3px" id="requester_re_open_link">Re-Open</button>
+%}
+% if (($ordering_type eq 'single_step') && ($order_status eq 'completed') && ($check_vendor_role == 1)) {
+    <button class="btn btn-sm btn-primary" style="margin:3px" id="requester_re_open_link">Re-Open</button>
 %}
 %if ($ordering_type ne 'single_step' && $order_status eq 'completed') {
     <button class="btn btn-sm btn-primary" style="margin:3px" id="re_open_link">Re-Open</button>
@@ -51,7 +55,7 @@ $check_vendor_role =>undef
 
 </&>
 
-% if ($check_vendor_role == 1) {
+% if (($check_vendor_role == 1) && $tracking_order_activity) {
     <&| /page/info_section.mas, title => 'Tracking Order Progress', collapsible=>1, collapsed=>0 &>
         <div class = "well well-sm">
             <div class = "panel panel-default">

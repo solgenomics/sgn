@@ -29,6 +29,7 @@ use File::Copy;
 use CXGN::Tools::Run;
 use CXGN::Job;
 use CXGN::Phenotypes::File;
+use SGN::Context;
 
 =head2 dependent_variables()
 
@@ -450,10 +451,15 @@ The result files will initially contain these R-based names as well. The convers
 
 sub run_model {
     my $self = shift;
-    my $backend = shift || 'Slurm';
-    my $cluster_host = shift || "localhost";
+    my $backend = shift;
+    my $cluster_host = shift;
     my $cluster_shared_tempdir = shift;
 	my $job_config = shift;
+
+    my $vhost_conf = SGN::Context->new;
+    $backend = $vhost_conf->get_conf('backend') if !defined $backend;
+    $cluster_host = $vhost_conf->get_conf('cluster_host') if !defined $cluster_host;
+    $cluster_shared_tempdir = $vhost_conf->get_conf('cluster_shared_tempdir') if !defined $cluster_shared_tempdir;
 
     my $random_factors = '"'.join('","', @{$self->random_factors()}).'"';
     my $fixed_factors = '"'.join('","',@{$self->fixed_factors()}).'"';
@@ -523,12 +529,16 @@ sub run_model {
 	my $job = CXGN::Job->new({
 		schema => $job_config->{schema},
 		people_schema => $job_config->{people_schema},
+		dbhost => $job_config->{dbhost},
+		dbname => $job_config->{dbname},
+		dbuser => $job_config->{dbuser},
+		dbpass => $job_config->{dbpass},
+		basepath => $job_config->{basepath},
 		sp_person_id => $job_config->{user},
 		cmd => $cmd,
 		cxgn_tools_run_config => $cxgn_tools_run_config,
 		name => $job_config->{name},
-		job_type => 'mixed_model_analysis',
-		finish_logfile => $job_config->{finish_logfile}
+		job_type => 'mixed_model_analysis'
 	});
 
 	$job->submit();
@@ -544,7 +554,7 @@ sub run_model {
 		sleep (1);
 	}
 
-	my $finished = $job->read_finish_timestamp();
+	my $finished = $job->retrieve_finish_timestamp();
 	if (!$finished) {
 		$job->update_status("failed");
 	} else {

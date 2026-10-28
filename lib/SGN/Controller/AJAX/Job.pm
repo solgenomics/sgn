@@ -51,7 +51,7 @@ sub retrieve_jobs_by_user :Path('/ajax/job/jobs_by_user') Args(1) {
                 {title => 'Results', data => 'results_page'},
                 {title => 'Actions', data => 'actions'},
             ],
-            order => [[3, 'asc']]
+            order => [[0, 'asc'], [3, 'desc']]
         };
     } else {
         $data = {
@@ -65,7 +65,7 @@ sub retrieve_jobs_by_user :Path('/ajax/job/jobs_by_user') Args(1) {
                 {title => 'Results', data => 'results_page'},
                 {title => 'Actions', data => 'actions'},
             ],
-            order => [[2, 'asc']]
+            order => [[2, 'desc']]
         };
     }
 
@@ -82,12 +82,11 @@ sub retrieve_jobs_by_user :Path('/ajax/job/jobs_by_user') Args(1) {
             $job = CXGN::Job->new({
                 schema => $bcs_schema,
                 people_schema => $people_schema,
-                sp_job_id => $job_id,
-                finish_logfile => $c->config->{job_finish_log}
+                sp_job_id => $job_id
             });
         };
         if ($@) {
-            print STDERR "$@\n";
+            print STDERR "ERROR CREATING JOB OBJECT: $@\n";
             if ($role eq "curator") {
                 $row = {
                     id => $job_id,
@@ -127,7 +126,7 @@ sub retrieve_jobs_by_user :Path('/ajax/job/jobs_by_user') Args(1) {
             $actions_html .= "<button id=\"cancel_job_$job_id\" onclick=\"jsMod['job'].cancel_job($job_id)\" class=\"btn btn-small btn-danger\">Cancel</button>";
             $results_page = "In progress";
         }
-        if ($status eq "finished") {
+        elsif ($status eq "finished") {
             $results_page = $job->results_page();
             if ($results_page) {
                 $results_page =~ s/http[s]*:\/\///;
@@ -136,7 +135,10 @@ sub retrieve_jobs_by_user :Path('/ajax/job/jobs_by_user') Args(1) {
             } else {
                 $results_page = '';
             }
+        } else {
+            $results_page = '';
         }
+        no warnings 'uninitialized';
         $create_timestamp = $job->create_timestamp() =~ s/(:\d{2}\+\d{2})$//r;
         $finish_timestamp = $job->finish_timestamp() =~ s/(:\d{2}\+\d{2})$//r;
         if ($role eq "curator") {
@@ -188,8 +190,7 @@ sub delete :Path('/ajax/job/delete') Args(1) {
     my $job = CXGN::Job->new({
             schema => $bcs_schema,
             people_schema => $people_schema,
-            sp_job_id => $sp_job_id,
-            finish_logfile => $c->config->{job_finish_log}
+            sp_job_id => $sp_job_id
     });
 
     if ($job->sp_person_id() ne $logged_user && $role ne "curator") {
@@ -214,8 +215,7 @@ sub cancel :Path('/ajax/job/cancel') Args(1) {
     my $job = CXGN::Job->new({
             schema => $bcs_schema,
             people_schema => $people_schema,
-            sp_job_id => $sp_job_id,
-            finish_logfile => $c->config->{job_finish_log}
+            sp_job_id => $sp_job_id
     });
 
     if ($job->sp_person_id() ne $logged_user && $role ne "curator") {
@@ -240,10 +240,13 @@ sub delete_dead_jobs :Path('/ajax/job/delete_dead_jobs') Args(1) {
         die "You do not have permission to delete these job logs.\n";
     }
 
+    my $is_curator = $role eq "curator" ? 1 : 0;
+
     CXGN::Job->delete_dead_jobs(
         $bcs_schema,
         $people_schema,
-        $sp_person_id
+        $sp_person_id,
+        $is_curator
     );
     $c->stash->{rest} = {success => 1};
 }
@@ -267,11 +270,14 @@ sub delete_older_than :Path('/ajax/job/delete_older_than') Args(2) {
         die "Invalid time selection: $older_than.\n";
     }
 
+    my $is_curator = $role eq "curator" ? 1 : 0;
+
     CXGN::Job->delete_jobs_older_than(
         $bcs_schema,
         $people_schema,
         $sp_person_id,
-        $older_than
+        $older_than,
+        $is_curator
     );
     $c->stash->{rest} = {success => 1};
 }
@@ -290,10 +296,13 @@ sub delete_finished :Path('/ajax/job/delete_finished') Args(1) {
         die "You do not have permission to delete these job logs.\n";
     }
 
+    my $is_curator = $role eq "curator" ? 1 : 0;
+
     CXGN::Job->delete_finished_jobs(
         $bcs_schema,
         $people_schema,
-        $sp_person_id
+        $sp_person_id,
+        $is_curator
     );
     $c->stash->{rest} = {success => 1};
 }

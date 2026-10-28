@@ -70,7 +70,7 @@ sub observation_variable_ontologies {
     my $self = shift;
 	my $inputs = shift;
 	my $name_spaces = $inputs->{name_spaces} || [];
-	my $cvprop_types = $inputs->{cvprop_type_names} || ['trait_ontology','method_ontology','unit_ontology','composed_trait_ontology','object_ontology','attribute_ontology','time_ontology'];
+	my $cvprop_types = $inputs->{cvprop_type_names} || ['trait_ontology','method_ontology','unit_ontology','composed_trait_ontology','object_ontology','attribute_ontology','time_ontology', 'experiment_treatment_ontology', 'composed_experiment_treatment_ontology'];
 	my $page_size = $self->page_size;
 	my $page = $self->page;
 	my $status = $self->status;
@@ -101,9 +101,11 @@ sub observation_variable_ontologies {
 	foreach (@$name_spaces){
 		$sth->execute($_);
 		while (my ($cvterm_id, $cvterm_name, $cvterm_definition, $db_name, $db_id, $dbxref_accession, $dbxref_version, $dbxref_description, $cv_id, $cv_name, $cv_definition) = $sth->fetchrow_array()) {
-			my $info;
+			my $info = {};
 			if($dbxref_description){
-				$info = decode_json($dbxref_description);
+				# dbxref.description is free text; only use it when it holds a JSON object
+				my $decoded = eval { decode_json($dbxref_description) };
+				$info = $decoded if ref($decoded) eq 'HASH';
 			}
 			push @available, {
                 ontologyDbId=>qq|$db_id|,
@@ -142,13 +144,16 @@ sub search {
 
 	my $join = '';
 	my @and_wheres;
+	my @bind_values;
 	if (scalar(@trait_ids)>0){
-		my $trait_ids_sql = join ',', @trait_ids;
+		my $trait_ids_sql = join ',', ('?') x scalar(@trait_ids);
 		push @and_wheres, "cvterm.id IN ($trait_ids_sql)";
+		push @bind_values, @trait_ids;
 	}
 	if (scalar(@db_names)>0){
 		foreach (@db_names){
-			push @and_wheres, "db.name = '$_'";
+			push @and_wheres, "db.name = ?";
+			push @bind_values, $_;
 		}
 	}
 	if (scalar(@dbxref_terms)>0){
@@ -160,21 +165,25 @@ sub search {
 			push @dbxref_accessions, $accession;
 		}
 		foreach (@db_names){
-			push @and_wheres, "db.name = '$_'";
+			push @and_wheres, "db.name = ?";
+			push @bind_values, $_;
 		}
 		foreach (@dbxref_accessions){
-			push @and_wheres, "dbxref.accession = '$_'";
+			push @and_wheres, "dbxref.accession = ?";
+			push @bind_values, $_;
 		}
 	}
 	if (scalar(@cvterm_names)>0){
 		foreach (@cvterm_names){
-			push @and_wheres, "cvterm.name = '$_'";
+			push @and_wheres, "cvterm.name = ?";
+			push @bind_values, $_;
 		}
 	}
 	if (scalar(@datatypes)>0){
 		$join = 'JOIN cvtermprop on (cvterm.cvterm_id=cvtermprop.cvterm_id)';
 		foreach (@datatypes){
-			push @and_wheres, "cvtermprop.value = '$_'";
+			push @and_wheres, "cvtermprop.value = ?";
+			push @bind_values, $_;
 		}
 	}
 
@@ -196,7 +205,7 @@ sub search {
 		ORDER BY cvterm.name ASC LIMIT $limit OFFSET $offset;";
 
 	my $sth = $self->bcs_schema->storage->dbh->prepare($q);
-	$sth->execute();
+	$sth->execute(@bind_values);
 
 	# Get values from our config
 	my $supported_crop = $c->config->{'supportedCrop'};

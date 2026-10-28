@@ -119,6 +119,10 @@ sub store_analysis_json_POST {
         $analysis_result_stock_names, 
         $is_analysis_result_stock_type
     );
+
+    my $dbh = $c->dbc->dbh();
+    my $bs = CXGN::BreederSearch->new( { dbh=>$dbh, dbname=>$c->config->{dbname}, } );
+    my $refresh = $bs->refresh_matviews($c->config->{dbhost}, $c->config->{dbname}, $c->config->{dbuser}, $c->config->{dbpass}, 'phenotypes', 'concurrent', $c->config->{basepath});
 }
 
 sub store_analysis_spreadsheet : Path('/ajax/analysis/store/spreadsheet') ActionClass("REST") Args(0) {}

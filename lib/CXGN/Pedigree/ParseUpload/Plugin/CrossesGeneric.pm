@@ -29,7 +29,8 @@ sub _validate_with_plugin {
             'female_parent' => ['female', 'female parent'],
             'male_parent' => ['male parent', 'male'],
             'cross_combination' => ['cross combination']
-        }
+        },
+        unique_only_columns => [ 'cross_unique_id' ]
     );
     my $parsed = $parser->parse();
     my $parsed_errors = $parsed->{errors};

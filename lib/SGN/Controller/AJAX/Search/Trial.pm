@@ -21,7 +21,7 @@ sub search : Path('/ajax/search/trials') Args(0) {
 
     my @location_ids;
     my $location_id = $c->req->param('location_id');
-    if ($location_id && $location_id ne 'not_provided'){
+    if ($location_id && $location_id =~ /^[0-9]+\z/){
         #print STDERR "location id: " . $location_id . "\n";
         push @location_ids, $location_id;
     }

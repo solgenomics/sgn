@@ -155,7 +155,7 @@ sub metadata_query {
     $full_query = join (" INTERSECT ", @queries);
   }
   $full_query .= " ORDER BY 2";
-  # print STDERR "FULL QUERY: $full_query\n";
+  print STDERR "FULL QUERY: $full_query\n";
   $h = $self->dbh->prepare($full_query);
   $h->execute();
 

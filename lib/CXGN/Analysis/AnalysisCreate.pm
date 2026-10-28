@@ -480,9 +480,6 @@ sub store {
         }
         my @composed_trait_names = values %composed_trait_map;
 
-
-        
-
         #Project BUILD inserts project entry
         my $a = CXGN::Analysis->new({
             bcs_schema => $bcs_schema,

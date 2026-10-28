@@ -106,7 +106,8 @@ $mech->post_ok(
         'length'=>10, 'start'=>0,
         "extra_stockprop_columns_view"      => encode_json({"organization"=>1}),
         "stockprop_extra_columns_view_array"=> encode_json(["organization"])
-    ]
+    ],
+    "basic stock search test"
 );
 $response = decode_json $mech->content;
 $response = _fix_response_links($response);
@@ -145,7 +146,8 @@ $mech->post_ok(
         "stock_type"=>'accession',
         "extra_stockprop_columns_view"      => encode_json({"organization"=>1}),
         "stockprop_extra_columns_view_array"=> encode_json(["organization"])
-    ]
+    ],
+    "search accession test"
 );
 $response = decode_json $mech->content;
 $response = _fix_response_links($response);
@@ -178,7 +180,9 @@ $mech->post_ok(
         "stock_type"=>"plot",
         "extra_stockprop_columns_view"      => encode_json({"organization"=>1}),
         "stockprop_extra_columns_view_array"=> encode_json(["organization"])
-    ]
+    ],
+    "search plot test"
+
 );
 $response = decode_json $mech->content;
 $response = _fix_response_links($response);
@@ -211,7 +215,8 @@ $mech->post_ok(
         "stock_type"=>"cross",
         "extra_stockprop_columns_view"      => encode_json({"organization"=>1}),
         "stockprop_extra_columns_view_array"=> encode_json(["organization"])
-    ]
+    ],
+    "stock search test with cross"
 );
 $response = decode_json $mech->content;
 $response = _fix_response_links($response);
@@ -329,7 +334,8 @@ $mech->post_ok(
         "breeding_program" => $test_bp_id,
         "extra_stockprop_columns_view"      => encode_json({"organization"=>1}),
         "stockprop_extra_columns_view_array"=> encode_json(["organization"])
-    ]
+    ],
+    "test search any type contains"
 );
 $response = decode_json $mech->content;
 $response = _fix_response_links($response);
@@ -363,7 +369,8 @@ $mech->post_ok(
         "project" => "test_trial",
         "extra_stockprop_columns_view"      => encode_json({"organization"=>1}),
         "stockprop_extra_columns_view_array"=> encode_json(["organization"])
-    ]
+    ],
+    "test contains with test_trial"
 );
 $response = decode_json $mech->content;
 $response = _fix_response_links($response);
@@ -588,8 +595,9 @@ $response = decode_json $mech->content;
 is($response->{'metadata'}->{'status'}->[2]->{'message'}, 'Login Successfull');
 
 $mech->post_ok('http://localhost:3010/stock/prop/add',["stock_id"=>"38842", "prop"=>"organization_name_1", "prop_type"=>"organization"] );
+print STDERR "CONTENTS: ".$mech->content;
 $response = decode_json $mech->content;
-print STDERR Dumper $response;
+print STDERR "AFTER ORGANIZATION ADD: ". Dumper $response;
 
 $mech->post_ok('http://localhost:3010/ajax/search/stocks',["editable_stockprop_values" => encode_json({"organization"=>{"matchtype"=>"contains", "value"=>"organization_name_1"}})] );
 $response = decode_json $mech->content;

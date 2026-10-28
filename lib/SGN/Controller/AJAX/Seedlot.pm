@@ -555,11 +555,11 @@ sub create_seedlot :Path('/ajax/breeders/seedlot-create/') :Args(0) {
 	return;
     }
 
-    if ( $no_refresh ne 1 ) {
-        my $dbh = $c->dbc->dbh();
-        my $bs = CXGN::BreederSearch->new( { dbh=>$dbh, dbname=>$c->config->{dbname}, } );
-        my $refresh = $bs->refresh_matviews($c->config->{dbhost}, $c->config->{dbname}, $c->config->{dbuser}, $c->config->{dbpass}, 'stockprop', 'concurrent', $c->config->{basepath});
-    }
+ #   if ( $no_refresh ne 1 ) {
+ #       my $dbh = $c->dbc->dbh();
+ #       my $bs = CXGN::BreederSearch->new( { dbh=>$dbh, dbname=>$c->config->{dbname}, } );
+#        my $refresh = $bs->refresh_matviews($c->config->{dbhost}, $c->config->{dbname}, $c->config->{dbuser}, $c->config->{dbpass}, 'stockprop', 'concurrent', $c->config->{basepath});
+ #   }
 
     $c->stash->{rest} = { success => 1, seedlot_id => $seedlot_id };
 }
@@ -818,9 +818,9 @@ sub upload_seedlots_POST : Args(0) {
         });
     }
 
-    my $dbh = $c->dbc->dbh();
-    my $bs = CXGN::BreederSearch->new( { dbh=>$dbh, dbname=>$c->config->{dbname}, } );
-    my $refresh = $bs->refresh_matviews($c->config->{dbhost}, $c->config->{dbname}, $c->config->{dbuser}, $c->config->{dbpass}, 'stockprop', 'concurrent', $c->config->{basepath});
+#    my $dbh = $c->dbc->dbh();
+#    my $bs = CXGN::BreederSearch->new( { dbh=>$dbh, dbname=>$c->config->{dbname}, } );
+#    my $refresh = $bs->refresh_matviews($c->config->{dbhost}, $c->config->{dbname}, $c->config->{dbuser}, $c->config->{dbpass}, 'stockprop', 'concurrent', $c->config->{basepath});
 
     $c->stash->{rest} = { success => 1, added_seedlot => \@added_stocks  };
 }
@@ -887,7 +887,7 @@ sub upload_seedlots_inventory_POST : Args(0) {
     }
     unlink $upload_tempfile;
     my $parser = CXGN::Stock::Seedlot::ParseUpload->new(chado_schema => $schema, filename => $archived_filename_with_path);
-    $parser->load_plugin('SeedlotInventoryCSV');
+    $parser->load_plugin('SeedlotInventoryGeneric');
     my $parsed_data = $parser->parse();
     #print STDERR Dumper $parsed_data;
 
@@ -907,46 +907,54 @@ sub upload_seedlots_inventory_POST : Args(0) {
         $c->stash->{rest} = {error_string => $return_error, missing_seedlots => $parse_errors->{'missing_seedlots'} };
         $c->detach();
     }
-
     eval {
         while (my ($key, $val) = each(%$parsed_data)){
             my $sl = CXGN::Stock::Seedlot->new(schema => $schema, seedlot_id => $val->{seedlot_id});
             $sl->box_name($val->{box_id});
-            $sl->description($val->{description});
-
-	    print STDERR "QUALITY: $val->{quality}\n";
-	    $sl->quality($val->{quality});
-
             my $return = $sl->store();
 
-	    my $current_stored_count = $sl->get_current_count_property();
+	        my $current_stored_count = $sl->get_current_count_property();
             my $current_stored_weight = $sl->get_current_weight_property();
-
-            my $weight_difference = $val->{weight_gram} - $current_stored_weight;
+            my $weight_difference;
+            my $amount_difference;
             my $factor;
-            if ($weight_difference >= 0){
-                $factor = 1;
-            } else {
-                $factor = -1;
-                $weight_difference = $weight_difference * -1; #Store positive values only
+            my $inventory_weight = $val->{weight_gram};
+            my $inventory_amount = $val->{amount};
+
+            if (defined $inventory_weight) {
+                $weight_difference = $inventory_weight - $current_stored_weight;
+                if ($weight_difference >= 0){
+                    $factor = 1;
+                } else {
+                    $factor = -1;
+                    $weight_difference = $weight_difference * -1; #Store positive values only
+                }
+            }
+
+            if (defined $inventory_amount) {
+                $amount_difference = $inventory_amount - $current_stored_count;
+                if ($amount_difference >= 0){
+                    $factor = 1;
+                } else {
+                    $factor = -1;
+                    $amount_difference = $amount_difference * -1; #Store positive values only
+                }
             }
 
             my $transaction = CXGN::Stock::Seedlot::Transaction->new(schema => $schema);
             $transaction->factor($factor);
 
-	    my $from_stock_id = $val->{seedlot_id};
-	    my $from_stock_name = $val->{seedlot_name};
-
-	    if ($val->{source_id}) {
-		$from_stock_id = $val->{source_id};
-		$from_stock_name = $val->{source};
-	    }
-
+            my $from_stock_id = $val->{seedlot_id};
+            my $from_stock_name = $val->{seedlot_name};
             $transaction->from_stock([ $from_stock_id, $from_stock_name ]);
             $transaction->to_stock([$val->{seedlot_id}, $val->{seedlot_name}]);
-            $transaction->weight_gram($weight_difference);
+            if (defined $inventory_weight) {
+                $transaction->weight_gram($weight_difference);
+            } elsif (defined $inventory_amount) {
+                $transaction->amount($amount_difference);
+            }
             $transaction->timestamp($val->{inventory_date});
-            $transaction->description('Seed inventory CSV upload.');
+            $transaction->description('Seed inventory upload.');
             $transaction->operator($val->{inventory_person});
             $transaction->store();
 
@@ -961,9 +969,9 @@ sub upload_seedlots_inventory_POST : Args(0) {
         $c->detach();
     }
 
-    my $dbh = $c->dbc->dbh();
-    my $bs = CXGN::BreederSearch->new( { dbh=>$dbh, dbname=>$c->config->{dbname}, } );
-    my $refresh = $bs->refresh_matviews($c->config->{dbhost}, $c->config->{dbname}, $c->config->{dbuser}, $c->config->{dbpass}, 'stockprop', 'concurrent', $c->config->{basepath});
+#    my $dbh = $c->dbc->dbh();
+#    my $bs = CXGN::BreederSearch->new( { dbh=>$dbh, dbname=>$c->config->{dbname}, } );
+#    my $refresh = $bs->refresh_matviews($c->config->{dbhost}, $c->config->{dbname}, $c->config->{dbuser}, $c->config->{dbpass}, 'stockprop', 'concurrent', $c->config->{basepath});
 
     $c->stash->{rest} = { success => 1 };
 }
@@ -1055,9 +1063,9 @@ sub edit_seedlot_transaction :Chained('seedlot_transaction_base') PathPart('edit
     }
 
     if ($transaction_id){
-        my $dbh = $c->dbc->dbh();
-        my $bs = CXGN::BreederSearch->new( { dbh=>$dbh, dbname=>$c->config->{dbname}, } );
-        my $refresh = $bs->refresh_matviews($c->config->{dbhost}, $c->config->{dbname}, $c->config->{dbuser}, $c->config->{dbpass}, 'stockprop', 'concurrent', $c->config->{basepath});
+#        my $dbh = $c->dbc->dbh();
+#        my $bs = CXGN::BreederSearch->new( { dbh=>$dbh, dbname=>$c->config->{dbname}, } );
+#        my $refresh = $bs->refresh_matviews($c->config->{dbhost}, $c->config->{dbname}, $c->config->{dbuser}, $c->config->{dbpass}, 'stockprop', 'concurrent', $c->config->{basepath});
 
         $c->stash->{rest} = { success => 1 };
     } else {
@@ -1202,10 +1210,14 @@ sub add_seedlot_transaction :Chained('seedlot_base') :PathPart('transaction/add'
                 $c->detach();
             }
 
-            my $from_sl = CXGN::Stock::Seedlot->new(schema => $schema, seedlot_id => $from_existing_seedlot_id);
-            my $new_seedlot_material_type = $from_sl->material_type();
-            if ((!$new_seedlot_material_type) && $default_seedlot_material_type) {
-                $new_seedlot_material_type = $default_seedlot_material_type;
+            my $from_stock_type = $schema->resultset('Stock::Stock')->find({stock_id=>$from_existing_seedlot_id})->type_id();
+            my $new_seedlot_material_type;
+            if ($from_stock_type == $seedlot_cvterm_id) {
+                my $from_sl = CXGN::Stock::Seedlot->new(schema => $schema, seedlot_id => $from_existing_seedlot_id);
+                $new_seedlot_material_type = $from_sl->material_type();
+                if ((!$new_seedlot_material_type) && $default_seedlot_material_type) {
+                    $new_seedlot_material_type = $default_seedlot_material_type;
+                }
             }
 
             my $sl = CXGN::Stock::Seedlot->new(schema => $schema);
@@ -1307,9 +1319,9 @@ sub add_seedlot_transaction :Chained('seedlot_base') :PathPart('transaction/add'
     $c->stash->{seedlot}->set_current_count_property();
     $c->stash->{seedlot}->set_current_weight_property();
 
-    my $dbh = $c->dbc->dbh();
-    my $bs = CXGN::BreederSearch->new( { dbh=>$dbh, dbname=>$c->config->{dbname}, } );
-    my $refresh = $bs->refresh_matviews($c->config->{dbhost}, $c->config->{dbname}, $c->config->{dbuser}, $c->config->{dbpass}, 'stockprop', 'concurrent', $c->config->{basepath});
+#    my $dbh = $c->dbc->dbh();
+#    my $bs = CXGN::BreederSearch->new( { dbh=>$dbh, dbname=>$c->config->{dbname}, } );
+#    my $refresh = $bs->refresh_matviews($c->config->{dbhost}, $c->config->{dbname}, $c->config->{dbuser}, $c->config->{dbpass}, 'stockprop', 'concurrent', $c->config->{basepath});
 
     $c->stash->{rest} = { success => 1, transaction_id => $transaction_id };
 }
@@ -1353,9 +1365,9 @@ sub delete_seedlot_transaction :Chained('seedlot_transaction_base') PathPart('de
     }
 
     if ($delete){
-        my $dbh = $c->dbc->dbh();
-        my $bs = CXGN::BreederSearch->new( { dbh=>$dbh, dbname=>$c->config->{dbname}, } );
-        my $refresh = $bs->refresh_matviews($c->config->{dbhost}, $c->config->{dbname}, $c->config->{dbuser}, $c->config->{dbpass}, 'stockprop', 'concurrent', $c->config->{basepath});
+#        my $dbh = $c->dbc->dbh();
+#        my $bs = CXGN::BreederSearch->new( { dbh=>$dbh, dbname=>$c->config->{dbname}, } );
+#        my $refresh = $bs->refresh_matviews($c->config->{dbhost}, $c->config->{dbname}, $c->config->{dbuser}, $c->config->{dbpass}, 'stockprop', 'concurrent', $c->config->{basepath});
         $c->stash->{rest} = { success => 1 };
     }
     else {
@@ -1741,7 +1753,7 @@ sub seedlot_maintenance_event_upload_POST : Args(0) {
             filename => $archived_filepath,
             event_ontology_root => $c->config->{seedlot_maintenance_event_ontology_root}
         );
-        $parser->load_plugin('SeedlotMaintenanceEventXLS');
+        $parser->load_plugin('SeedlotMaintenanceEventGeneric');
         my $parsed_data = $parser->parse();
 
         # No parsed data returned...
@@ -1859,8 +1871,8 @@ sub discard_seedlots : Path('/ajax/breeders/seedlot/discard') :Args(0) {
         }
     }
 
-    my $bs = CXGN::BreederSearch->new( { dbh=>$dbh, dbname=>$c->config->{dbname}, } );
-    my $refresh = $bs->refresh_matviews($c->config->{dbhost}, $c->config->{dbname}, $c->config->{dbuser}, $c->config->{dbpass}, 'stockprop', 'concurrent', $c->config->{basepath});
+#    my $bs = CXGN::BreederSearch->new( { dbh=>$dbh, dbname=>$c->config->{dbname}, } );
+#    my $refresh = $bs->refresh_matviews($c->config->{dbhost}, $c->config->{dbname}, $c->config->{dbuser}, $c->config->{dbpass}, 'stockprop', 'concurrent', $c->config->{basepath});
 
     $c->stash->{rest} = {success => "1",};
 
@@ -1896,8 +1908,8 @@ sub undo_discarded_seedlots : Path('/ajax/breeders/seedlot/undo_discard') :Args(
     $restored_seedlot->set_current_count_property();
     $restored_seedlot->set_current_weight_property();
 
-    my $bs = CXGN::BreederSearch->new( { dbh=>$dbh, dbname=>$c->config->{dbname}, } );
-    my $refresh = $bs->refresh_matviews($c->config->{dbhost}, $c->config->{dbname}, $c->config->{dbuser}, $c->config->{dbpass}, 'stockprop', 'concurrent', $c->config->{basepath});
+#    my $bs = CXGN::BreederSearch->new( { dbh=>$dbh, dbname=>$c->config->{dbname}, } );
+#    my $refresh = $bs->refresh_matviews($c->config->{dbhost}, $c->config->{dbname}, $c->config->{dbuser}, $c->config->{dbpass}, 'stockprop', 'concurrent', $c->config->{basepath});
 
     $c->stash->{rest} = { success => 1 };
 
@@ -1947,12 +1959,13 @@ sub upload_transactions_POST : Args(0) {
     my $upload_seedlots_to_new_seedlots = $c->req->upload('seedlots_to_new_seedlots_file');
     my $upload_seedlots_to_plots = $c->req->upload('seedlots_to_plots_file');
     my $upload_seedlots_to_unspecified_names = $c->req->upload('seedlots_to_unspecified_names_file');
+    my $upload_accessions_crosses_to_existing_seedlots = $c->req->upload('sources_to_existing_seedlots_file');
 
     my $new_seedlot_breeding_program_id = $c->req->param("new_seedlot_breeding_program_id");
     my $new_seedlot_location = $c->req->param("new_seedlot_location");
     my $new_seedlot_organization = $c->req->param("new_seedlot_organization_name");
 
-    if (!$upload_seedlots_to_seedlots && !$upload_seedlots_to_new_seedlots && !$upload_seedlots_to_plots && !$upload_seedlots_to_unspecified_names){
+    if (!$upload_seedlots_to_seedlots && !$upload_seedlots_to_new_seedlots && !$upload_seedlots_to_plots && !$upload_seedlots_to_unspecified_names && !$upload_accessions_crosses_to_existing_seedlots){
         $c->stash->{rest} = {error=>'You must upload a transaction file!'};
         $c->detach();
     }
@@ -1960,11 +1973,11 @@ sub upload_transactions_POST : Args(0) {
     my $parser_type;
     if (defined $upload_seedlots_to_seedlots){
         $upload = $upload_seedlots_to_seedlots;
-        $parser_type = 'SeedlotsToSeedlots';
+        $parser_type = 'SeedlotsToSeedlotsGeneric';
     }
     if (defined $upload_seedlots_to_new_seedlots){
         $upload = $upload_seedlots_to_new_seedlots;
-        $parser_type = 'SeedlotsToNewSeedlots';
+        $parser_type = 'SeedlotsToNewSeedlotsGeneric';
     }
     if (defined $upload_seedlots_to_plots){
         $upload = $upload_seedlots_to_plots;
@@ -1972,7 +1985,11 @@ sub upload_transactions_POST : Args(0) {
     }
     if (defined $upload_seedlots_to_unspecified_names){
         $upload = $upload_seedlots_to_unspecified_names;
-        $parser_type = 'SeedlotsToUnspecifiedNames';
+        $parser_type = 'SeedlotsToUnspecifiedNamesGeneric';
+    }
+    if (defined $upload_accessions_crosses_to_existing_seedlots){
+        $upload = $upload_accessions_crosses_to_existing_seedlots;
+        $parser_type = 'AccessionsCrossesToExistingSeedlotsGeneric';
     }
 
     my $subdirectory = "seedlot_transaction_upload";
@@ -2018,7 +2035,7 @@ sub upload_transactions_POST : Args(0) {
         $c->detach();
     }
 
-    if (defined $parsed_data && ($parser_type eq 'SeedlotsToSeedlots')) {
+    if (defined $parsed_data && ($parser_type eq 'SeedlotsToSeedlotsGeneric')) {
         my $transactions = $parsed_data->{transactions};
         my @all_transactions = @$transactions;
         eval {
@@ -2065,7 +2082,7 @@ sub upload_transactions_POST : Args(0) {
                 $current_from_seedlot->set_current_weight_property();
             }
         };
-    } elsif (defined $parsed_data && ($parser_type eq 'SeedlotsToNewSeedlots')) {
+    } elsif (defined $parsed_data && ($parser_type eq 'SeedlotsToNewSeedlotsGeneric')) {
         my @added_seedlots;
         my $transactions = $parsed_data->{transactions};
         my @all_transactions = @$transactions;
@@ -2129,29 +2146,52 @@ sub upload_transactions_POST : Args(0) {
                 });
             }
         };
-    } elsif (defined $parsed_data && ($parser_type eq 'SeedlotsToUnspecifiedNames')) {
-            my $transactions = $parsed_data->{transactions};
-            my @all_transactions = @$transactions;
-            eval {
-                foreach my $transaction_info (@all_transactions) {
-    #            print STDERR "EACH SEEDLOT TO UNSPECIFY NAME TRANSACTION INFO =".Dumper($transaction_info)."\n";
-                    my $transaction = CXGN::Stock::Seedlot::Transaction->new(schema => $schema);
-                    $transaction->from_stock([$transaction_info->{from_seedlot_id}, $transaction_info->{from_seedlot_name}]);
-                    $transaction->to_stock([$transaction_info->{from_seedlot_id}, $transaction_info->{from_seedlot_name}]);
-                    $transaction->amount($transaction_info->{amount});
-                    $transaction->weight_gram($transaction_info->{weight});
-                    $transaction->timestamp($timestamp);
-                    $transaction->description($transaction_info->{transaction_description});
-                    $transaction->operator($transaction_info->{operator});
-                    $transaction->factor(-1);
-                    my $transaction_id = $transaction->store();
+    } elsif (defined $parsed_data && ($parser_type eq 'SeedlotsToUnspecifiedNamesGeneric')) {
+        my $transactions = $parsed_data->{transactions};
+        my @all_transactions = @$transactions;
+        eval {
+            foreach my $transaction_info (@all_transactions) {
+#            print STDERR "EACH SEEDLOT TO UNSPECIFY NAME TRANSACTION INFO =".Dumper($transaction_info)."\n";
+                my $transaction = CXGN::Stock::Seedlot::Transaction->new(schema => $schema);
+                $transaction->from_stock([$transaction_info->{from_seedlot_id}, $transaction_info->{from_seedlot_name}]);
+                $transaction->to_stock([$transaction_info->{from_seedlot_id}, $transaction_info->{from_seedlot_name}]);
+                $transaction->amount($transaction_info->{amount});
+                $transaction->weight_gram($transaction_info->{weight});
+                $transaction->timestamp($timestamp);
+                $transaction->description($transaction_info->{transaction_description});
+                $transaction->operator($transaction_info->{operator});
+                $transaction->factor(-1);
+                my $transaction_id = $transaction->store();
 
-                    my $current_from_seedlot = CXGN::Stock::Seedlot->new(schema => $schema, seedlot_id => $transaction_info->{from_seedlot_id});
-                    $current_from_seedlot->set_current_count_property();
-                    $current_from_seedlot->set_current_weight_property();
-                }
-            };
+                my $current_from_seedlot = CXGN::Stock::Seedlot->new(schema => $schema, seedlot_id => $transaction_info->{from_seedlot_id});
+                $current_from_seedlot->set_current_count_property();
+                $current_from_seedlot->set_current_weight_property();
+            }
+        };
+    } elsif (defined $parsed_data && ($parser_type eq 'AccessionsCrossesToExistingSeedlotsGeneric')) {
+        my $transactions = $parsed_data->{transactions};
+        print STDERR "TRANSACTIONS =".Dumper($transactions)."\n";
+        my @all_transactions = @$transactions;
+        eval {
+            foreach my $transaction_info (@all_transactions) {
+                my $transaction = CXGN::Stock::Seedlot::Transaction->new(schema => $schema);
+                $transaction->from_stock([$transaction_info->{from_stock_id}, $transaction_info->{from_stock_name}]);
+                $transaction->to_stock([$transaction_info->{to_seedlot_id}, $transaction_info->{to_seedlot_name}]);
+                $transaction->amount($transaction_info->{amount});
+                $transaction->weight_gram($transaction_info->{weight});
+                $transaction->timestamp($timestamp);
+                $transaction->description($transaction_info->{transaction_description});
+                $transaction->operator($transaction_info->{operator});
+                $transaction->factor(1);
+                my $transaction_id = $transaction->store();
+
+                my $current_to_seedlot = CXGN::Stock::Seedlot->new(schema => $schema, seedlot_id => $transaction_info->{to_seedlot_id});
+                $current_to_seedlot->set_current_count_property();
+                $current_to_seedlot->set_current_weight_property();
+            }
+        };
     }
+
 
     if ($@) {
         $c->stash->{rest} = { error => $@ };
@@ -2159,9 +2199,9 @@ sub upload_transactions_POST : Args(0) {
         $c->detach();
     }
 
-    my $dbh = $c->dbc->dbh();
-    my $bs = CXGN::BreederSearch->new( { dbh=>$dbh, dbname=>$c->config->{dbname}, } );
-    my $refresh = $bs->refresh_matviews($c->config->{dbhost}, $c->config->{dbname}, $c->config->{dbuser}, $c->config->{dbpass}, 'stockprop', 'concurrent', $c->config->{basepath});
+#    my $dbh = $c->dbc->dbh();
+#    my $bs = CXGN::BreederSearch->new( { dbh=>$dbh, dbname=>$c->config->{dbname}, } );
+#    my $refresh = $bs->refresh_matviews($c->config->{dbhost}, $c->config->{dbname}, $c->config->{dbuser}, $c->config->{dbpass}, 'stockprop', 'concurrent', $c->config->{basepath});
 
     $c->stash->{rest} = { success => 1};
 }
@@ -2222,9 +2262,9 @@ sub add_transactions_using_list_POST : Args(0) {
     }
 
 
-    my $dbh = $c->dbc->dbh();
-    my $bs = CXGN::BreederSearch->new( { dbh=>$dbh, dbname=>$c->config->{dbname}, } );
-    my $refresh = $bs->refresh_matviews($c->config->{dbhost}, $c->config->{dbname}, $c->config->{dbuser}, $c->config->{dbpass}, 'stockprop', 'concurrent', $c->config->{basepath});
+#    my $dbh = $c->dbc->dbh();
+#    my $bs = CXGN::BreederSearch->new( { dbh=>$dbh, dbname=>$c->config->{dbname}, } );
+#    my $refresh = $bs->refresh_matviews($c->config->{dbhost}, $c->config->{dbname}, $c->config->{dbuser}, $c->config->{dbpass}, 'stockprop', 'concurrent', $c->config->{basepath});
 
 
     $c->stash->{rest} = { success => 1};

@@ -64,7 +64,7 @@ div.paginate_nav {
         source: '<% $trait_autocomplete_uri %>'
      });
      jQuery("#onto").autocomplete({
-        source: '<% $onto_autocomplete_uri %>' + "?db_name=" + '<% $trait_db_name %>'
+        source: '<% $onto_autocomplete_uri %>' + "?db_names=" + '<% $trait_db_name %>'
      });
      jQuery("#stock_name").autocomplete({
         source: '/ajax/stock/stock_autocomplete',

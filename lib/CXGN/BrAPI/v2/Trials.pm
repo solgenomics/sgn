@@ -7,6 +7,7 @@ use CXGN::Trial::Folder;
 use CXGN::BrAPI::Pagination;
 use CXGN::BrAPI::JSONResponse;
 use JSON;
+use CXGN::JSONUtils qw(decode_stored_json);
 use CXGN::BrAPI::v2::ExternalReferences;
 
 extends 'CXGN::BrAPI::v2::Common';
@@ -351,7 +352,7 @@ sub update {
     my @folder_studies;
     my %additional_info;
     my $folder_id = $folder->folder_id;
-    my $folder_description = $folder->name; #description doesn't exist 
+    my $folder_description = $self->bcs_schema->resultset('Project::Project')->find({ project_id => $folder_id })->description() // '';
     my $breeding_program_id = $folder->breeding_program->project_id();
 
     # external references
@@ -502,7 +503,7 @@ sub _get_folders {
     if ($trial_filter < 1){
         push @{$data}, {
             active=>JSON::true,
-            additionalInfo=>$self->{project_additional_info} ? decode_json($self->{project_additional_info}) : undef,
+            additionalInfo=>$self->{project_additional_info} ? decode_stored_json($self->{project_additional_info}) : undef,
             commonCropName=>$crop,
             contacts=>undef,
             datasetAuthorships=>undef,

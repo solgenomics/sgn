@@ -154,10 +154,6 @@
             </div>
             <div class="modal-body">
                 <div class="container-fluid">
-                    <b>Seedlots may be uploaded in a CSV file (.csv)</b>
-                    <br />
-                    (Excel .xls and .xlsx format not supported)
-                    <br /><br />
                     <b>Header:</b>
                     <br>
                     The first row (header) should contain the following:
@@ -175,17 +171,23 @@
                             </tr>
                         </tbody>
                     </table>
-
+                    <b>Note: If you would like to upload number of materials in seedlot instead of weight, you can replace the header 'weight_gram' with 'amount'</b>
+                    <br/>
+                    <br/>
                     <b>Required fields:</b>
                     <ul>
                     <li>box_id (the name of the box that the seedlot is in. also called box_name.)</li>
                     <li>seed_id (unique identifier for the seedlot. must exist in the database. also called seedlot_name)</li>
                     <li>inventory_date (a timestamp for when the seedlot was inventoried)</li>
                     <li>inventory_person (the name of the person doing the inventory. can be any name. also called operator_name)</li>
-                    <li>weight_gram (the weight in grams of the seedlot)</li>
+                    <li>weight_gram (the weight in grams of the seedlot)
+                    <br/><b>OR</b><br/>
+                    amount (number of materials in seedlot.)</li>
+
                     </ul>
 
                 </div>
+                <& /help/file_upload_type.mas, type => "Seedlot Inventory", optional_column => 0 &>
             </div>
             <div class="modal-footer">
                 <button id="close_seedlot_info_upload_inventory_dialog" type="button" class="btn btn-default" data-dismiss="modal">Close</button>

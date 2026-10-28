@@ -1,0 +1,140 @@
+<%args>
+
+</%args>
+
+
+<div class="modal fade" id="obsolete_accessions_using_list_dialog" name="obsolete_accessions_using_list_dialog" tabindex="-1" role="dialog" aria-labelledby="obsoleteAccessionsUsingListDialog">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content ">
+            <div class="modal-header">
+                <button type="reset" class="close" id="obsolete_accessions_using_list_dismiss_button_1" name="obsolete_accessions_using_list_dismiss_button" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <center><h4 class="modal-title" id="obsoleteAccessionsUsingList">Obsolete Accessions Using a List</h4></center>
+            </div>
+            <div class="modal-body">
+                <div class="container-fluid">
+                    <form class="form-horizontal" role="form" name="obsolete_accessions_using_list_form" id="obsolete_accessions_using_list_form">
+                        <div class="form-group">
+                            <label class="control-label col-sm-4">Select a List of Accessions:</label>
+                            <div class="col-sm-8" >
+                                <div class="input-group">
+                                    <select class="form-control" id="accession_list_to_obsolete_select"></select>
+                                </div>
+                            </div>
+                        </div>
+                        <br>
+                        <div class="form-group">
+                            <label class="col-sm-4 control-label">Note: </label>
+                            <div class="col-sm-6" >
+                                <textarea class="form-control" id="obsolete_accessions_note" name="obsolete_accessions_note" placeholder="Optional"></textarea>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary" id="obsolete_accessions_using_list_submit">Submit</button>
+                <button id="obsolete_accessions_using_list_dismiss_button_2" name="obsolete_accessions_using_list_dismiss_button" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="obsolete_accessions_using_list_success_dialog_message" name="obsolete_accessions_using_list_success_dialog_message" tabindex="-1" role="dialog" aria-labelledby="obsoleteAccessionsUsingListSuccessDialog">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="obsoleteAccessionsUsingListSuccessDialog">Success</h4>
+            </div>
+            <div class="modal-body">
+                <div class="container-fluid">
+                    <p>
+                        <span class="ui-icon ui-icon-circle-check" style="float: left; margin: 0 7px 50px 0;"></span>
+                        The accessions were obsoleted successfully.
+                    </p>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button id="dismiss_obsolete_accessions_using_list_success_dialog" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+
+jQuery(document).ready(function(){
+
+    const lo = new CXGN.List();
+
+    jQuery('#accession_list_to_obsolete_select').html(lo.listSelect('accession_list_to_obsolete_select', ['accessions'], 'Select a list', undefined, undefined));
+
+
+    jQuery('#obsolete_accessions_using_list_link').click(function(){
+        jQuery('#obsolete_accessions_using_list_dialog').modal('show');
+    });
+
+    jQuery("#obsolete_accessions_using_list_submit").click(function(){
+        const accession_list_id = jQuery('#accession_list_to_obsolete_select').val();
+        const obsolete_note = jQuery('#obsolete_accessions_note').val();
+
+        if (!accession_list_id) {
+            alert("Please select a list");
+            return;
+        }
+
+        lo.validate(accession_list_id, 'uniquenames', true).then((r) => {
+            if (r.obsoleted.length > 0) {
+                alert("One or more accessions in the list are already obsoleted. Please remove obsoleted accessions from the list :" + " " + r.obsoleted);
+                return;
+            } else if (r.missing.length > 0) {
+                alert("One or more accessions in the list are not in the database. Please check your accession names in the list :" + " " + r.missing);
+                return;
+            } else {
+                jQuery.ajax({
+                    url: '/ajax/stock/obsolete_in_bulk',
+                    data : {
+                        'accession_list_id' : accession_list_id,
+                        'obsolete_note': obsolete_note,
+                    },
+                    beforeSend: function(response){
+                        jQuery('#working_modal').modal('show');
+                    },
+                    success: function(response){
+                        console.log(response);
+                        jQuery('#working_modal').modal('hide');
+                        if (response.error) {
+                            alert(response.error);
+                        }
+                        if (response.success == 1) {
+                            jQuery('#obsolete_accessions_using_list_dialog').modal('hide');
+                            jQuery('#obsolete_accessions_using_list_success_dialog_message').modal('show');
+                        }
+                    },
+                    error: function(response){
+                        jQuery('#working_modal').modal('hide');
+                        alert("Error obsoleting accessions.");
+                    }
+                });
+            }
+        });
+    });
+
+    jQuery("#dismiss_obsolete_accessions_using_list_success_dialog").click(function(){
+        jQuery("#obsolete_accessions_using_list_success_dialog_message").modal("hide");
+        jQuery('#accession_list_to_obsolete_select').val('');
+        jQuery('#obsolete_accessions_note').val('');
+        location.reload();
+    });
+
+    jQuery("[name = 'obsolete_accessions_using_list_dismiss_button']").click(function() {
+        jQuery("#obsolete_accessions_using_list_dialog").modal("hide");
+        jQuery('#accession_list_to_obsolete_select').val('');
+        jQuery('#obsolete_accessions_note').val('');
+    });
+
+});
+
+
+
+</script>

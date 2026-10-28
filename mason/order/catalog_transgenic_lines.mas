@@ -1,0 +1,393 @@
+<%args>
+$order_properties => undef
+$order_properties_dialog => undef
+</%args>
+
+<& /util/import_javascript.mas, classes => [ 'jquery', 'jquery.dataTables', 'jqueryui', 'flatpickr_min','daterangepicker'] &>
+<& /util/import_css.mas, paths => ['/documents/inc/datatables/jquery.dataTables.css'] &>
+
+<td>
+    <a href="/order/stocks/view"><p>Go to Manage Order Page</p></a>
+</td>
+
+<&| /page/info_section.mas, title => 'Order Form', collapsible=>1, collapsed=>0 &>
+    <div class = "well well-sm">
+        <div class = "panel panel-default">
+            <center>
+                <div id="item_form_div"></div>
+            </center>
+            <div class = "panel-body">
+                <div id="request_form_div"></div>
+            </div>
+            <div class="modal-footer">
+                <center>
+                    <button id="submit_request_form_button" type="button" class="btn btn-primary" >Submit</button>
+                </center>
+            </div>
+        </div>
+    </div>
+</&>
+
+<&| /page/info_section.mas, title => 'Catalog Items (Accessions)', collapsible=>1, collapsed=>0 &>
+    <div class = "well well-sm">
+        <div class="row">
+            <div class="form-group">
+                <label class="col-sm-6 control-label">Filter by Item Type (wild type or transgenic plants): </label>
+                <div class="col-sm-4">
+                    <select class="form-control" id="filter_by_item_type">
+                        <option value="">Please Select</option>
+                        <option value="wild_type">Wild Type Plants</option>
+                        <option value="transgenic">Transgenic Plants</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+        </br>
+        <div id="vector_construct_section" style="display:none">
+            <div class="row">
+                <div class="form-group">
+                    <label class="col-sm-6 control-label">Filter by Vector Construct: </label>
+                    <div class="col-sm-4">
+                        <input class="form-control" type="text" id="filter_by_vector_construct" name="filter_by_vector_construct" placeholder="Type to Autocomplete"  />
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <center>
+                    <button id="filter_by_vector_construct_submit" type="button" class="btn btn-primary" >Get Transgenic lines</button>
+                </center>
+            </div>
+        </div>
+        </br>
+        <div class = "panel panel-default">
+            <div class = "panel-body">
+                <div style="overflow:scroll">
+                    <table id="catalog_transgenic_lines_table" width="100%" class="table table-hover table-striped">
+                        <thead>
+                            <tr>
+                                <th>Accession</th>
+                                <th>Vector Construct</th>
+                                <th>Plant Material</th>
+                                <th>Species</th>
+                                <th>Select</th>
+                            </tr>
+                        </thead>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</&>
+
+<div class="modal fade" id="request_form_dialog" name="request_form_dialog" tabindex="-1" role="dialog" aria-labelledby="requestFormDialog">
+    <div class="modal-dialog modal-xl" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <center><h4 class="modal-title" id="requestFormDialog">Request Form</h4></center>
+            </div>
+            <div class="modal-body">
+                <div class="container-fluid">
+                    <center>
+                        <div id="item_form_div"></div>
+                    </center>
+                    <div id="request_form_div"></div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button id="close_request_form_dialog" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                <button id="submit_request_form_button" type="button" class="btn btn-primary" >Submit</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="submit_response_dialog" name="submit_response_dialog" tabindex="-1" role="dialog" aria-labelledby="submitResponseDialog">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="submitResponseDialog">Your Request</h4>
+            </div>
+            <div class="modal-body">
+                <div class="container-fluid">
+                    <center><div id="submit_response_div"></div></center>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button id="dismiss_submit_response_dialog" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<script>
+
+jQuery(document).ready( function() {
+
+    var order_properties = "<% $order_properties %>";
+    var property_keys = order_properties.split(",");
+    var order_properties_dialog = "<% $order_properties_dialog %>";
+    var property_dialog_keys = order_properties_dialog.split(",");
+    var selected_items = [];
+    var item_info ={};
+    var item;
+    var item_quantity;
+    itemForm (selected_items, item_info);
+    requestForm(order_properties_dialog);
+
+    jQuery('#catalog_transgenic_lines_table').DataTable( {
+        'autoWidth': false,
+        'search':'applied',
+        'paging': false,
+        'scrollY': '500px',
+        'scrollX' : true,
+        'destroy': true,
+        'ajax': { 'url':  '/ajax/catalog/items',
+            'data': function(d) {
+              d.item_type  = 'all';
+            }
+        }
+    });
+
+    jQuery("#filter_by_vector_construct").autocomplete({
+       source: '/ajax/stock/vector_construct_autocomplete',
+    });
+
+    jQuery("#filter_by_item_type").val('');
+    jQuery("#filter_by_vector_construct").val('');
+
+    jQuery("#filter_by_item_type").change(function() {
+        var item_type = jQuery("#filter_by_item_type").val();
+        if (item_type == 'transgenic') {
+            jQuery("#vector_construct_section").show()
+        } else {
+            jQuery("#vector_construct_section").hide()
+        }
+    });
+
+    jQuery("#filter_by_item_type").change(function() {
+        var item_type = jQuery("#filter_by_item_type").val();
+        var catalog_table = jQuery('#catalog_transgenic_lines_table').DataTable( {
+            'autoWidth': false,
+            'search':'applied',
+            'paging': false,
+            'scrollY': '500px',
+            'scrollX' : true,
+            'destroy': true,
+            'ajax': { 'url':  '/ajax/catalog/items',
+                'data': function(d) {
+                  d.item_type  = item_type;
+                }
+            }
+        });
+
+        catalog_table.on('draw', function() {
+            const checkbox = document.getElementsByName("catalog_item_select");
+            for (const each_item of selected_items) {
+                jQuery('input[name="catalog_item_select"]').each(function() {
+                    let item_name = jQuery(this).val();
+                    if (item_name == each_item) {
+                        this.checked = true;
+                    }
+                });
+             }
+        });
+    });
+
+    jQuery("#filter_by_vector_construct_submit").click(function() {
+        var vector_construct = jQuery("#filter_by_vector_construct").val();
+        var item_type = 'transgenic';
+        jQuery('#catalog_transgenic_lines_table').DataTable( {
+            'autoWidth': false,
+            'search':'applied',
+            'paging': false,
+            'scrollY': '500px',
+            'scrollX' : true,
+            'destroy': true,
+            'ajax': { 'url':  '/ajax/catalog/items',
+                'data': function(d) {
+                  d.vector_construct  = vector_construct;
+                  d.item_type = item_type
+                }
+            }
+        });
+
+        catalog_table.on('draw', function() {
+            const checkbox = document.getElementsByName("catalog_item_select");
+            for (const each_item of selected_items) {
+                jQuery('input[name="catalog_item_select"]').each(function() {
+                    let item_name = jQuery(this).val();
+                    if (item_name == each_item) {
+                        this.checked = true;
+                    }
+                });
+             }
+        });
+    });
+
+    jQuery(document).on('focusin', function(e) {
+        if (jQuery(e.target).closest('.flatpickr-calendar').length) {
+            e.stopImmediatePropagation();
+        }
+    });
+
+    jQuery(document).on("change", "input[name='catalog_item_select']", function() {
+        var item_name;
+        var item_index;
+        item_name = jQuery(this).val();
+        item_index = selected_items.indexOf(item_name);
+        jQuery(this).is(":checked") ? selected_items.push(item_name) : selected_items.splice(item_index,1);
+        for(var i=0; i<selected_items.length; i++){
+            let each_quantity = jQuery('#quantity_'+ i +'').val();
+            item_info[selected_items[i]] = each_quantity;
+        }
+        itemForm (selected_items, item_info);
+    })
+
+    jQuery(document).on('click', '.selected_item_remove', function() {
+        jQuery(this).closest('tr').remove();
+        var remove_name = jQuery(this).data("selected-item-name");
+        var item_index = selected_items.indexOf(remove_name);
+        selected_items.splice(item_index,1);
+        if(selected_items.length == 0) {
+            jQuery('#request_form_dialog').modal('hide');
+        }
+
+        jQuery('input[name="catalog_item_select"]:checked').each(function() {
+            let item_name = jQuery(this).val();
+            if (item_name == remove_name) {
+                this.checked = false;
+            }
+        });
+    })
+
+    jQuery('#submit_request_form_button').click(function(){
+        var item_info = {};
+        var order_details = {};
+
+        for(var i=0; i<property_keys.length; i++){
+            let each_property_value = jQuery('#'+ i +'').val();
+            if (!(property_keys[i].includes('optional')) && !(property_keys[i].includes('if possible'))) {
+                if (!each_property_value || (each_property_value == 'Please Select')) {
+                    alert ('Please provide info for:' + " " + property_keys[i]);
+                    return;
+                } else {
+                    order_details[property_keys[i]] = each_property_value;
+                }
+            } else {
+                order_details[property_keys[i]] = each_property_value;
+            }
+        }
+
+        for(var i=0; i<selected_items.length; i++){
+            let each_quantity = jQuery('#quantity_'+ i +'').val();
+            item_info[selected_items[i]] = each_quantity;
+        }
+
+        const vendor_id = jQuery('#selected_vendor_id').val();
+        if (!vendor_id) {
+            alert ('Please select a vendor');
+            return;
+        }
+
+        jQuery.ajax({
+            url: '/ajax/order/request_form_submission',
+            dataType: "json",
+            type: 'POST',
+            data : {
+                'item_info': JSON.stringify(item_info),
+                'order_details': JSON.stringify(order_details),
+                'vendor_id': vendor_id,
+            },
+            beforeSend: function(response){
+                jQuery('#working_modal').modal('show');
+            },
+            success: function(response) {
+                jQuery('#working_modal').modal('hide');
+                if (response.success) {
+                    jQuery('#submit_response_div').html(response.success);
+
+                    jQuery('#submit_response_dialog').modal('show');
+                    jQuery('#request_form_dialog').modal('hide');
+                }
+                if (response.error_string) {
+                    alert(response.error_string);
+                }
+            },
+            error: function(response){
+                jQuery('#working_modal').modal('hide');
+                alert('An error occurred saving your request');
+            }
+        });
+    });
+
+    jQuery("#dismiss_submit_response_dialog").click(function(){
+        location.reload();
+    });
+
+});
+
+function itemForm (selected_items, item_info) {
+    var html;
+    if (selected_items.length === 0) {
+        html = '<body><h4 style="color:red;">Please select items that you would like to order from the catalog below</h4></body>';
+    } else {
+        var html = '<div class="well well-lg"><table class="table table-bordered" style="width: 70%;" id="item_info_table"><thead><tr><th>Accession Name</th><th>Quantity</th></tr></thead><tbody>';
+        for(var i=0; i<selected_items.length; i++){
+            item = selected_items[i];
+            item_quantity = item_info[item];
+            html = html + '<tr><td>' + selected_items[i] + '</td>';
+            if (item_quantity) {
+                html +=  '<td><input class="form-control" item_name="' + selected_items[i] + '" name ="quantity" id="quantity_'+ i +'" value="'+item_quantity+'"/></td>';
+            } else {
+                html +=  '<td><input class="form-control" item_name="' + selected_items[i] + '" name ="quantity" id="quantity_'+ i +'" value="" placeholder=""/></td>';
+            }
+            html += '<td><span data-selected-item-name="'+selected_items[i]+'" class="selected_item_remove btn btn-danger btn-xs"><span class="glyphicon glyphicon-trash"></span>&nbsp;&nbsp;Remove</span></td>'
+            html += '</tr>';
+        };
+        html = html + '</tbody></table></div>';
+    }
+
+    jQuery('#item_form_div').html(html);
+};
+
+function requestForm(order_properties_dialog){
+    var properties = order_properties_dialog.split(",");
+    var html = '';
+
+    html = html + '<form class="form-horizontal">';
+    for(var i=0; i<properties.length; i++){
+        var each_property_info = properties[i].split(":");
+        if (each_property_info.length == 1 && (properties[i].includes("Date"))) {
+            html = html + '<label class="col-sm-4 control-label">'+ properties[i] +'</label><div class="col-sm-8" ><input class="form-control date-picker" id= '+ i +' name= '+ i +' placeholder="YYYY-MM-DD"></div><br><br>';
+        } else if (each_property_info.length == 1) {
+            html = html + '<label class="col-sm-4 control-label">'+ properties[i] +'</label><div class="col-sm-8" ><input class="form-control" id= '+ i +' name= '+ i +' placeholder=""></div><br><br>';
+        } else {
+            html = html + '<label class="col-sm-4 control-label">'+ each_property_info[0] +'</label><div class="col-sm-8" ><select class="form-control" id= '+ i +' name= '+ i +'> ';
+            for (var j=1; j<each_property_info.length; j++) {
+                html = html + "<option value='"+each_property_info[j]+"'>" + each_property_info[j] + "</option>";
+            }
+            html = html + "</select></div><br><br>";
+        }
+    }
+    html = html + '<label class="col-sm-4 control-label">Send Request Form to</label><div class="col-sm-8" ><div id="vendor_list_div" name="vendor_list_div" ></div></div><br><br>';
+    html = html + '<p><center>If you would like to get notifications about your order, please include your email in your user profile.</center></p>';
+
+    html = html + '</div></div></form>';
+
+    jQuery('#request_form_div').html(html);
+
+    get_select_box('vendors', 'vendor_list_div', {'name' : 'selected_vendor_id', 'id' : 'selected_vendor_id', 'empty': 1 });
+
+    flatpickr(".date-picker", {
+        allowInput: true,
+        dateFormat: "Y-m-d",
+    });
+
+}
+
+
+
+</script>

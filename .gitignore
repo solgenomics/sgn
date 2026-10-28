@@ -29,6 +29,7 @@ logfile*.txt
 MANIFEST*
 ./cgi-bin/secretom
 MYMETA.json
+db/delete_nd_experiment_ids/
 tags
 .prove
 .Rhistory
@@ -49,5 +50,6 @@ docs/_site/
 .DS_Store
 sgn.iml
 docs/*
-!docs/r_markdown_docs
+!docs/r_markdown_docs/
+!docs/r_markdown_docs/**
 .idea/

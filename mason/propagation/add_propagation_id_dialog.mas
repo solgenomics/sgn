@@ -1,0 +1,126 @@
+<%args>
+$propagation_group_id
+$propagation_group_name
+$accession_stock_id
+
+</%args>
+
+<div class="modal fade" id="add_propagation_id_dialog" name="add_propagation_id_dialog" tabindex="-1" role="dialog" aria-labelledby="addPropagationIdDialog">
+    <div class="modal-dialog modal-xl" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4 class="modal-title" id="addPropagationIdDialog">Add New Propagation ID</h4>
+            </div>
+            <div class="modal-body" id = "propagation_id_dialog">
+                <div class="container-fluid">
+                    <form class="form-horizontal" role="form" method="post" id="add_new_propagation_id_form" name="add_new_propagation_id_form">
+                        <div class="form-group">
+                            <label class="col-sm-4 control-label">Group ID: </label>
+                            <div class="col-sm-8" >
+                                <input class="form-control" name="propagation_group_id" id="propagation_group_id" disabled value="<% $propagation_group_name %>">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="col-sm-4 control-label">Propagation Identifier: </label>
+                            <div class="col-sm-8" >
+                                <input class="form-control" type="text" id="new_propagation_identifier" name="new_propagation_identifier" placeholder="Must not exist in the database.">
+                            </div>
+                        </div>
+                        <div class="form-group" id = "get_propagation_rootstock_name">
+                            <label class="col-sm-4 control-label">Rootstock Name: </label>
+                            <div class="col-sm-8" >
+                                <input class="form-control" type="text" id="propagation_rootstock_name" name="propagation_rootstock_name" placeholder="Must exist in the database">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button id="add_propagation_id_dismiss_button" name="add_propagation_id_dismiss_button" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                    <button id="submit_new_propagation_id" type="button" class="btn btn-primary" >Add</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="add_propagation_id_saved_dialog_message" name="add_propagation_id_saved_dialog_message" tabindex="-1" role="dialog" aria-labelledby="addPropagationIdSavedDialog">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="addPropagationIdSavedDialog">Success</h4>
+            </div>
+            <div class="modal-body">
+                <div class="container-fluid">
+                    <p>
+                        <span class="ui-icon ui-icon-circle-check" style="float: left; margin: 0 7px 50px 0;"></span>
+                        The propagation identifier was saved successfully.
+                    </p>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button id="dismiss_propagation_id_saved_dialog" type="button" class="btn btn-default" data-dismiss="modal">Close & Reload</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<script>
+jQuery(document).ready(function(){
+
+    jQuery('#submit_new_propagation_id').click( function() {
+        const propagation_identifier = jQuery('#new_propagation_identifier').val();
+        const rootstock_name = jQuery('#propagation_rootstock_name').val();
+        const propagation_group_stock_id = "<%$propagation_group_id%>";
+
+        if (propagation_identifier == '') {
+            alert("Please provide a propagation identifier");
+            return;
+        }
+
+        jQuery.ajax({
+            url: '/ajax/propagation/add_propagation_identifier',
+            dataType: "json",
+            type: 'POST',
+            data : {
+                'propagation_identifier': propagation_identifier,
+                'rootstock_name': rootstock_name,
+                'propagation_group_stock_id': propagation_group_stock_id,
+            },
+            beforeSend: function(response){
+                jQuery('#working_modal').modal('show');
+            },
+            success: function(response) {
+                jQuery('#working_modal').modal('hide');
+                if (response.success == 1) {
+                    jQuery('#add_propagation_id_dialog').modal('hide');
+                    jQuery('#add_propagation_id_saved_dialog_message').modal("show");
+                }
+                if (response.error) {
+                    alert(response.error);
+                }
+            },
+            error: function(response){
+                jQuery('#working_modal').modal('hide');
+                alert('An error occurred adding propagation identifier');
+            }
+        });
+    });
+
+    jQuery("#add_propagation_id_dismiss_button").click(function() {
+        jQuery("#add_propagation_id_dialog").modal('hide');
+        jQuery('#new_propagation_identifier').val('');
+        jQuery('#propagation_rootstock_name').val('');
+    });
+
+    jQuery("#dismiss_propagation_id_saved_dialog").click(function() {
+        jQuery("#add_propagation_id_saved_dialog_message").modal('hide');
+        jQuery('#new_propagation_identifier').val('');
+        jQuery('#propagation_rootstock_name').val('');
+        location.reload();
+    });
+
+});
+
+</script>

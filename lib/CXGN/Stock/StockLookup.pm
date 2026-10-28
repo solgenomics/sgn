@@ -24,6 +24,8 @@ use MooseX::FollowPBP;
 use Moose::Util::TypeConstraints;
 use Try::Tiny;
 use SGN::Model::Cvterm;
+use Data::Dumper;
+
 
 has 'schema' => (
 		 is       => 'rw',
@@ -54,7 +56,9 @@ sub get_stock {
   my $self = shift;
   my $stock_type_id = shift;
   my $stock_organism_id = shift;
-  my $stock_rs = $self->_get_stock_resultset($stock_type_id, $stock_organism_id);
+  my $allow_obsoleted_accessions = shift;
+
+  my $stock_rs = $self->_get_stock_resultset($stock_type_id, $stock_organism_id, $allow_obsoleted_accessions);
   my $stock;
   if ($stock_rs->count > 0) {
     $stock = $stock_rs->first;
@@ -163,18 +167,33 @@ sub _get_stock_resultset {
   my $self = shift;
   my $stock_type_id = shift;
   my $stock_organism_id = shift;
+  my $allow_obsoleted_accessions = shift;
   my $schema = $self->get_schema();
   my $stock_name = $self->get_stock_name();
-  my $search_hash = {
-      'me.is_obsolete' => { '!=' => 't' },
-      -or => [
-          'lower(me.uniquename)' => { like => lc($stock_name) },
-          -and => [
-               'lower(type.name)'       => { like => '%synonym%' },
-               'lower(stockprops.value)' => { like => lc($stock_name) },
-              ],
-         ],
-  };
+  my $search_hash = {};
+  if ($allow_obsoleted_accessions) {
+	  $search_hash = {
+	      -or => [
+	          'lower(me.uniquename)' => { like => lc($stock_name) },
+	          -and => [
+	               'lower(type.name)'       => { like => '%synonym%' },
+	               'lower(stockprops.value)' => { like => lc($stock_name) },
+	              ],
+	         ],
+	  };
+  } else {
+	  $search_hash = {
+	      'me.is_obsolete' => { '!=' => 't' },
+	      -or => [
+	          'lower(me.uniquename)' => { like => lc($stock_name) },
+	          -and => [
+	               'lower(type.name)'       => { like => '%synonym%' },
+	               'lower(stockprops.value)' => { like => lc($stock_name) },
+	              ],
+	         ],
+	  };
+  }
+
   if ($stock_type_id){
       $search_hash->{'me.type_id'} = $stock_type_id;
   }

@@ -76,8 +76,7 @@ To add new treatments, There should be a key in the design called "treatments" s
     {
         "treatments" =>
             {
-                "fertilizer_10ml" => ["plot1", "plot2", "plot1_plant1", "plot2_plant1"],
-                "water" => ["plot1", "plot2"]
+                "treatment_name|EXPERIMENT_TREATMENT0000001" => ["plot1", "plot2", "plot1_plant1", "plot2_plant1"]
             }
     }
 

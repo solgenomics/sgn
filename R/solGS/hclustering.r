@@ -92,6 +92,7 @@ extractGenotype <- function(inputFiles) {
 
         genoData <- unique(genoData, by = "V1")
         genoData <- data.frame(genoData)
+        genoData <- genoData[!is.na(genoData$V1), ]
         genoData <- column_to_rownames(genoData, "V1")
     }
 

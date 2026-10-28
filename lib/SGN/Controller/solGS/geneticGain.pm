@@ -21,12 +21,12 @@ use namespace::autoclean;
 
 use File::Copy;
 use File::Basename;
-use File::Path qw / mkpath  /;
-use File::Spec::Functions;
+use File::Path qw / make_path /;
+use File::Spec;
 use File::Slurp qw /write_file read_file/;
 use JSON;
 use List::MoreUtils qw /uniq/;
-use String::CRC;
+use String::CRC32;
 use URI::FromHash 'uri';
 
 BEGIN { extends 'Catalyst::Controller::REST' }
@@ -110,7 +110,7 @@ sub genetic_gain_boxplot : Path('/solgs/genetic/gain/boxplot/') Args(0) {
     else {
         $c->stash->{rest}{Error} = 'Error occured plotting the boxplot(s).';
     }
-    
+
 }
 
 sub check_genetic_gain_output {
@@ -162,7 +162,7 @@ sub get_selection_pop_gebv_file {
     my $gebv_file;
 
     if ( $selection_pop_id && $trait_id && $training_pop_id ) {
-        
+
         $c->controller('solGS::Files')
           ->rrblup_selection_gebvs_file( $c, $training_pop_id,
             $selection_pop_id, $trait_id, $protocol_id);
@@ -183,7 +183,7 @@ sub boxplot_id {
 
     my $multi_traits = $c->stash->{training_traits_ids};
     if ($multi_traits && scalar(@$multi_traits) > 1 ) {
-        $trait_id = crc( join( '', @$multi_traits ) );
+        $trait_id = crc32( join( '', @$multi_traits ) );
     }
 
     $c->stash->{boxplot_id} =
@@ -212,11 +212,12 @@ sub boxplot_file {
     $self->boxplot_id($c);
     my $boxplot_id = $c->stash->{boxplot_id};
 
+    my $cache_dir = $c->controller('solGS::Files')->solgs_cache_dir($c, $boxplot_id);
     my $cache_data = {
         key       => "boxplot_${boxplot_id}",
         file      => "genetic_gain_plot_${boxplot_id}.png",
         stash_key => "boxplot_file",
-        cache_dir => $c->stash->{solgs_cache_dir},
+        cache_dir => $cache_dir,
     };
 
     $c->controller('solGS::Files')->cache_file( $c, $cache_data );
@@ -229,11 +230,12 @@ sub boxplot_data_file {
     $self->boxplot_id($c);
     my $boxplot_id = $c->stash->{boxplot_id};
 
+    my $cache_dir = $c->controller('solGS::Files')->solgs_cache_dir($c, $boxplot_id);
     my $cache_data = {
         key       => "boxplot_data_${boxplot_id}",
         file      => "genetic_gain_data_${boxplot_id}.txt",
         stash_key => "boxplot_data_file",
-        cache_dir => $c->stash->{solgs_cache_dir},
+        cache_dir => $cache_dir,
     };
 
     $c->controller('solGS::Files')->cache_file( $c, $cache_data );
@@ -260,7 +262,7 @@ sub boxplot_input_files {
 
     my $files = join( "\t", @files_list );
 
-    my $tmp_dir = $c->stash->{solgs_tempfiles_dir};
+    my $tmp_dir = $c->controller('solGS::Files')->solgs_tempfiles_dir($c);
 
     $self->boxplot_id($c);
     my $boxplot_id = $c->stash->{boxplot_id};
@@ -287,7 +289,7 @@ sub boxplot_output_files {
 
     my $file_list = join( "\t", $boxplot_file, $error_file, $data_file, );
 
-    my $tmp_dir = $c->stash->{solgs_tempfiles_dir};
+    my $tmp_dir = $c->controller('solGS::Files')->solgs_tempfiles_dir($c);
 
     $self->boxplot_id($c);
     my $boxplot_id = $c->stash->{boxplot_id};
@@ -306,9 +308,10 @@ sub boxplot_error_file {
 
     $self->boxplot_id($c);
     my $boxplot_id = $c->stash->{boxplot_id};
+    my $cache_dir = $c->controller('solGS::Files')->solgs_cache_dir($c, $boxplot_id);
 
     $c->stash->{file_id}       = $boxplot_id;
-    $c->stash->{cache_dir}     = $c->stash->{solgs_cache_dir};
+    $c->stash->{cache_dir}     = $cache_dir;
     $c->stash->{analysis_type} = 'boxplot';
 
     $c->controller('solGS::Files')->analysis_error_file($c);
@@ -327,7 +330,7 @@ sub run_boxplot {
     $self->boxplot_id($c);
     my $boxplot_id = $c->stash->{boxplot_id};
 
-    $c->stash->{analysis_tempfiles_dir} = $c->stash->{solgs_tempfiles_dir};
+    $c->stash->{analysis_tempfiles_dir} = $c->controller('solGS::Files')->solgs_tempfiles_dir($c);
 
     $c->stash->{input_files}  = $input_file;
     $c->stash->{output_files} = $output_file;
@@ -341,10 +344,10 @@ sub run_boxplot {
 sub boxplot_download_files {
     my ( $self, $c ) = @_;
 
-    my $tmp_dir = catfile( $c->config->{tempfiles_subdir}, 'genetic_gain' );
-    my $base_tmp_dir = catfile( $c->config->{basepath}, $tmp_dir );
+    my $tmp_dir = File::Spec->catfile( $c->config->{tempfiles_subdir}, 'genetic_gain' );
+    my $base_tmp_dir = File::Spec->catfile( $c->config->{basepath}, $tmp_dir );
 
-    mkpath( [$base_tmp_dir], 0, "0755" );
+    make_path($base_tmp_dir, {mode => "0755"});
 
     $self->boxplot_file($c);
     my $boxplot_file = $c->stash->{boxplot_file};
@@ -360,13 +363,13 @@ sub boxplot_download_files {
     $c->controller('solGS::Files')->copy_file( $data_file,    $base_tmp_dir );
 
     $boxplot_file = fileparse($boxplot_file);
-    $boxplot_file = catfile( $tmp_dir, $boxplot_file );
+    $boxplot_file = File::Spec->catfile( $tmp_dir, $boxplot_file );
 
     $error_file = fileparse($error_file);
-    $error_file = catfile( $tmp_dir, $error_file );
+    $error_file = File::Spec->catfile( $tmp_dir, $error_file );
 
     $data_file = fileparse($data_file);
-    $data_file = catfile( $tmp_dir, $data_file );
+    $data_file = File::Spec->catfile( $tmp_dir, $data_file );
 
     $c->stash->{download_boxplot} = $boxplot_file;
     $c->stash->{download_error}   = $error_file;

@@ -105,13 +105,14 @@ my $message_hash = JSON::XS->new()->decode($message);
 is_deeply($message_hash->{'success'}, 1);
 my $added_seedlot2 = $message_hash->{'added_seedlot'};
 
-$file = $f->config->{basepath}."/t/data/stock/seedlot_inventory_android_app";
+#test seedlot_inventory csv upload with weight info
+$file = $f->config->{basepath}."/t/data/stock/seedlot_inventory_android_app.csv";
 $ua = LWP::UserAgent->new;
 $response = $ua->post(
         'http://localhost:3010/ajax/breeders/seedlot-inventory-upload',
         Content_Type => 'form-data',
         Content => [
-            seedlot_uploaded_inventory_file => [ $file, 'seedlot_inventory_upload', Content_Type => 'application/vnd.ms-excel', ],
+            seedlot_uploaded_inventory_file => [ $file, 'seedlot_inventory_android_app.csv'],
             "sgn_session_id"=>$sgn_session_id
         ]
     );
@@ -120,8 +121,48 @@ $response = $ua->post(
 ok($response->is_success);
 $message = $response->decoded_content;
 $message_hash = JSON::XS->new()->decode($message);
-print STDERR Dumper $message_hash;
+#print STDERR Dumper $message_hash;
 is_deeply($message_hash, {'success' => 1});
+
+my $seedlot4_stock_id = $schema->resultset('Stock::Stock')->find({ name => 'test_accession4_001' })->stock_id();
+my $seedlot4 = CXGN::Stock::Seedlot->new(schema => $schema, seedlot_id => $seedlot4_stock_id);
+my $seedlot4_weight = $seedlot4->current_weight;
+is($seedlot4_weight, 10);
+
+my $seedlot3_stock_id = $schema->resultset('Stock::Stock')->find({ name => 'test_accession3_001' })->stock_id();
+my $seedlot3 = CXGN::Stock::Seedlot->new(schema => $schema, seedlot_id => $seedlot3_stock_id);
+my $seedlot3_weight = $seedlot3->current_weight;
+is($seedlot3_weight, 12);
+
+my $seedlot2_stock_id = $schema->resultset('Stock::Stock')->find({ name => 'test_accession2_001' })->stock_id();
+my $seedlot2 = CXGN::Stock::Seedlot->new(schema => $schema, seedlot_id => $seedlot2_stock_id);
+my $seedlot2_weight = $seedlot2->current_weight;
+is($seedlot2_weight, 0);
+
+#test seedlot_inventory xlsx upload with amount info
+$file = $f->config->{basepath}."/t/data/stock/seedlot_inventory_amount.xlsx";
+$ua = LWP::UserAgent->new;
+$response = $ua->post(
+        'http://localhost:3010/ajax/breeders/seedlot-inventory-upload',
+        Content_Type => 'form-data',
+        Content => [
+            seedlot_uploaded_inventory_file => [ $file, 'seedlot_inventory_amount.xlsx', Content_Type => 'application/vnd.ms-excel'],
+            "sgn_session_id"=>$sgn_session_id
+        ]
+    );
+
+ok($response->is_success);
+$message = $response->decoded_content;
+$message_hash = JSON::XS->new()->decode($message);
+is_deeply($message_hash, {'success' => 1});
+
+my $seedlot3_2 = CXGN::Stock::Seedlot->new(schema => $schema, seedlot_id => $seedlot3_stock_id);
+my $seedlot3_count = $seedlot3_2->current_count;
+is($seedlot3_count, 110);
+
+my $seedlot2_2 = CXGN::Stock::Seedlot->new(schema => $schema, seedlot_id => $seedlot2_stock_id);
+my $seedlot2_count = $seedlot2_2->current_count;
+is($seedlot2_count, 120);
 
 #test seedlot list details
 my $seedlot_list_id = CXGN::List::create_list($f->dbh(), 'test_seedlot_list', 'test_desc', 41);
@@ -306,6 +347,29 @@ is($seedlot_test2_1_after_removed->current_count, 38, "check current count after
 
 my $seedlot_test2_2_after_removed = CXGN::Stock::Seedlot->new(schema => $schema, seedlot_id => $seedlot_test2_2_id);
 is($seedlot_test2_2_after_removed->current_count, 23, "check current count after removing seeds");
+
+#from sources to existing seedlots
+my $file_5 = $f->config->{basepath}."/t/data/stock/from_sources_to_existing_seedlots.xlsx";
+my $ua_5 = LWP::UserAgent->new;
+my $response_5 = $ua_5->post(
+    'http://localhost:3010/ajax/breeders/upload_transactions',
+    Content_Type => 'form-data',
+    Content => [
+        sources_to_existing_seedlots_file => [ $file_5, "from_sources_to_existing_seedlots.xlsx", Content_Type => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'],
+        "sgn_session_id"=>$sgn_session_id
+    ]
+);
+
+ok($response_5->is_success);
+my $message_5 = $response_5->decoded_content;
+my $message_hash_5 = decode_json $message_5;
+is_deeply($message_hash_5, { 'success' => 1 });
+
+my $seedlot_test2_1_after_adding_more_seeds = CXGN::Stock::Seedlot->new(schema => $schema, seedlot_id => $seedlot_test2_1_id);
+is($seedlot_test2_1_after_adding_more_seeds->current_count, 48, "check current count after adding more seeds");
+
+my $seedlot_test2_2_after_adding_more_seeds = CXGN::Stock::Seedlot->new(schema => $schema, seedlot_id => $seedlot_test2_2_id);
+is($seedlot_test2_2_after_adding_more_seeds->current_count, 43, "check current count after adding more seeds");
 
 #test discarding seedlot
 my $seedlot_test1_rs = $schema->resultset('Stock::Stock')->find({ name => 'seedlot_test1' });

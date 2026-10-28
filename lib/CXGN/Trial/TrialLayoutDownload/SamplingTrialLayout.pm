@@ -43,7 +43,7 @@ sub retrieve {
     my $trial = $self->trial;
     my @output;
 
-    my @possible_cols = ('trial_name', 'year', 'location', 'sampling_facility', 'sampling_trial_sample_type', 'acquisition_date', 'tissue_sample_name', 'plot_number', 'rep_number', 'source_observation_unit_name', 'accession_name', 'synonyms', 'dna_person', 'notes', 'tissue_type', 'extraction', 'concentration', 'volume');
+    my @possible_cols = ('trial_name', 'year', 'planting_date', 'location', 'sampling_facility', 'sampling_trial_sample_type', 'acquisition_date', 'tissue_sample_name', 'plot_number', 'rep_number', 'source_observation_unit_name', 'accession_name', 'synonyms', 'dna_person', 'notes', 'tissue_type', 'extraction', 'concentration', 'volume', 'variety');
 
     my @header;
     foreach (@possible_cols){
@@ -56,12 +56,20 @@ sub retrieve {
     my $trial_name = $trial->get_name ? $trial->get_name : '';
     my $location_name = $trial->get_location ? $trial->get_location->[1] : '';
     my $trial_year = $trial->get_year ? $trial->get_year : '';
+    my $trial_planting_date = $trial->get_planting_date ? $trial->get_planting_date : '';
     my $sampling_facility_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'sampling_facility', 'project_property')->cvterm_id();
     my $sampling_trial_sample_type_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'sampling_trial_sample_type', 'project_property')->cvterm_id();
     my $sampling_facility = $schema->resultset("Project::Projectprop")->search({ project_id => $trial->get_trial_id(), type_id => $sampling_facility_cvterm_id } )->first->value();
     my $sampling_type = $schema->resultset("Project::Projectprop")->search({ project_id => $trial->get_trial_id(), type_id => $sampling_trial_sample_type_cvterm_id } )->first->value();
 
     my $pedigree_strings = $self->_get_all_pedigrees(\%design);
+
+    # for accession stockprops like synonym and variety, it is way too slow to create a CXGN::Stock::Accession for each plot.
+    # Instead, there needs to be one big call at the start to retrieve these stockprops and index them for the next loop
+    my %accessionprops = ();
+    if ($selected_cols{"variety"} || $selected_cols{"synonyms"}) {
+        %accessionprops = %{$self->_get_trial_accessionprops()};
+    }
 
     foreach my $key (sort { $a cmp $b} keys %design) {
         my $design_info = $design{$key};
@@ -72,6 +80,8 @@ sub retrieve {
                     push @$line, $trial_name;
                 } elsif ($_ eq 'year'){
                     push @$line, $trial_year;
+                } elsif ($_ eq 'planting_date') {
+                    push @$line, $trial_planting_date;
                 } elsif ($_ eq 'location'){
                     push @$line, $location_name;
                 } elsif ($_ eq 'sampling_facility'){
@@ -81,8 +91,9 @@ sub retrieve {
                 } elsif ($_ eq 'tissue_sample_name'){
                     push @$line, $design_info->{'plot_name'};
                 } elsif ($_ eq 'synonyms'){
-                    my $accession = CXGN::Stock::Accession->new({schema=>$schema, stock_id=>$design_info->{"accession_id"}});
-                    push @$line, join ',', @{$accession->synonyms}
+                    push @$line, $accessionprops{$design_info->{accession_id}}->{synonyms} // "";
+                } elsif ($_ eq 'variety'){
+                    push @$line, $accessionprops{$design_info->{accession_id}}->{variety} // "";
                 } elsif ($_ eq 'pedigree'){
                     push @$line, $pedigree_strings->{$design_info->{"accession_name"}};
                 } else {

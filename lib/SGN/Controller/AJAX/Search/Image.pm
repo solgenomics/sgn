@@ -91,6 +91,7 @@ sub image_search_POST : Args(0) {
         image_name_list=>\@descriptors,
         original_filename_list=>\@descriptors,
         description_list=>\@descriptors,
+        stock_names_exact => 1,
         stock_name_list=>\@stock_name_list,
         related_stock_list => \@related_stock_list,
         project_name_list=>\@project_name_list,
@@ -113,6 +114,13 @@ sub image_search_POST : Args(0) {
         my $observations = $_->{observations_array} ? join("\n", map { $_->{observationvariable_name} . " : " . $_->{value} } @{$_->{observations_array}}) : "";
         if ($_->{project_name}) {
             $associations = $_->{stock_id} ? $associations."<br/>Project (".$_->{project_image_type_name}."): <a href='/breeders/trial/".$_->{project_id}."' >".$_->{project_name}."</a>" : "Project (".$_->{project_image_type_name}."): <a href='/breeders/trial/".$_->{project_id}."' >".$_->{project_name}."</a>";
+        }
+        my $field_trial_assoc = "";
+        if ($_->{field_trial_id}) {
+            $field_trial_assoc = "Field trial: <a href='/breeders/trial/".$_->{field_trial_id}."'>".$_->{field_trial_name}."</a>";
+        }
+        if ($field_trial_assoc) {
+            $associations = $associations ? $associations."<br/>".$field_trial_assoc : $field_trial_assoc;
         }
         my @tags;
         foreach my $t (@{$_->{tags_array}}) {

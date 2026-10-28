@@ -65,13 +65,14 @@ jQuery(document).ready( function() {
             var downloadLinks = solGS.gebvPhenoRegression.createGebvPhenoDownloadLinks();
 
             var regressionData = {
-                    'breeding_values'     : res.gebv_data,
-                    'phenotype_values'    : res.pheno_data,
-                    'phenotype_deviations': res.pheno_deviations,
-                    'heritability'        : res.heritability,
-                    'gebv_pheno_regression_div_id':gebvPhenoRegPlotDivId,
-                    'canvas':canvas,
-                    'download_links': downloadLinks  
+                    'y_data': res.gebv_data,
+                    'y_label': 'GEBVs',
+                    'x_data': res.pheno_deviations,
+                    'x_label': 'Phenotypic deviations',
+                    'heritability': res.heritability,
+                    'plot_div_id': gebvPhenoRegPlotDivId,
+                    'canvas': canvas,
+                    'download_links': downloadLinks
             };
                             
             jQuery("#gebv_pheno_regression_message").empty();
@@ -84,7 +85,6 @@ jQuery(document).ready( function() {
     solGS.gebvPhenoRegression.getRegressionData(args).fail(function(res){ 
         jQuery("#gebvs_pheno_regression_message").html('Error occured requesting for theGEBVs vs observed phenotypes regression data.');
     });
-
 
     jQuery("#gebv_pheno_regression_canvas").on('click' , 'a', function(e) {
 		var buttonId = e.target.id;

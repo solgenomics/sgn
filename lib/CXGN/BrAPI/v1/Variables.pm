@@ -31,18 +31,22 @@ sub search {
    
     my $join = '';
     my @and_wheres;
+    my @bind_values;
     if (scalar(@trait_ids)>0){
-        my $trait_ids_sql = join ',', @trait_ids;
-        push @and_wheres, "cvterm.id IN ($trait_ids_sql)";
+        my $trait_ids_sql = join ',', ('?') x scalar(@trait_ids);
+        push @and_wheres, "cvterm.cvterm_id IN ($trait_ids_sql)";
+        push @bind_values, @trait_ids;
     }
     if (scalar(@db_names)>0){
         foreach (@db_names){
-            push @and_wheres, "db.name = '$_'";
+            push @and_wheres, "db.name = ?";
+            push @bind_values, $_;
         }
     }
     if (scalar(@db_ids)>0){
         foreach (@db_ids){
-            push @and_wheres, "db.db_id = '$_'";
+            push @and_wheres, "db.db_id = ?";
+            push @bind_values, $_;
         }
     }
     if (scalar(@dbxref_terms)>0){
@@ -54,21 +58,25 @@ sub search {
             push @dbxref_accessions, $accession;
         }
         foreach (@db_names){
-            push @and_wheres, "db.name = '$_'";
+            push @and_wheres, "db.name = ?";
+            push @bind_values, $_;
         }
         foreach (@dbxref_accessions){
-            push @and_wheres, "dbxref.accession = '$_'";
+            push @and_wheres, "dbxref.accession = ?";
+            push @bind_values, $_;
         }
     }
     if (scalar(@cvterm_names)>0){
         foreach (@cvterm_names){
-            push @and_wheres, "cvterm.name = '$_'";
+            push @and_wheres, "cvterm.name = ?";
+            push @bind_values, $_;
         }
     }
     if (scalar(@datatypes)>0){
         $join = 'JOIN cvtermprop on (cvterm.cvterm_id=cvtermprop.cvterm_id)';
         foreach (@datatypes){
-            push @and_wheres, "cvtermprop.value = '$_'";
+            push @and_wheres, "cvtermprop.value = ?";
+            push @bind_values, $_;
         }
     }
 
@@ -82,7 +90,7 @@ sub search {
     my $total_count = 0;
     my $q = "SELECT cvterm.cvterm_id, cvterm.name, cvterm.definition, db.name, db.db_id, dbxref.accession, count(cvterm.cvterm_id) OVER() AS full_count FROM cvterm JOIN dbxref USING(dbxref_id) JOIN db using(db_id) JOIN cvterm_relationship as rel on (rel.subject_id=cvterm.cvterm_id) JOIN cvterm as reltype on (rel.type_id=reltype.cvterm_id) $join WHERE $and_where_clause ORDER BY cvterm.name ASC LIMIT $limit OFFSET $offset;";
     my $sth = $self->bcs_schema->storage->dbh->prepare($q);
-    $sth->execute();
+    $sth->execute(@bind_values);
     while (my ($cvterm_id, $cvterm_name, $cvterm_definition, $db_name, $db_id, $accession, $count) = $sth->fetchrow_array()) {
         $total_count = $count;
         my $trait = CXGN::Trait->new({bcs_schema=>$self->bcs_schema, cvterm_id=>$cvterm_id});

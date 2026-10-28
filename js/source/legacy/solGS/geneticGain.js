@@ -223,6 +223,12 @@ solGS.geneticGain = {
       }
     }
 
+    if (solGS.listTypeSelectionPopulation) {
+      ggPops.push(
+        solGS.listTypeSelectionPopulation.getPredictedSelectionPops()
+      );
+    }
+
     var menu = new SelectMenu(this.ggPopsDiv, this.ggPopsSelectMenuId);
     
     if (newPop){

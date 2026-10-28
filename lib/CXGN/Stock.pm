@@ -41,6 +41,7 @@ use Bio::GeneticRelationships::Individual;
 use base qw / CXGN::DB::Object / ;
 use CXGN::Stock::StockLookup;
 use Try::Tiny;
+use Scalar::Util qw(refaddr);
 use CXGN::Metadata::Metadbdata;
 use File::Basename qw | basename dirname|;
 
@@ -389,7 +390,6 @@ has 'description' => (
 has 'is_obsolete' => (
     isa => 'Bool',
     is => 'rw',
-    default => 0,
 );
 
 =head2 accessor organization_name()
@@ -551,6 +551,9 @@ sub BUILD {
     $self->stock($stock);
     $self->stock_id($stock->stock_id);
     $self->create_date($stock->create_date);
+    if (!defined ($self->is_obsolete)) {
+        $self->is_obsolete($stock->is_obsolete);
+    }
 
     unless ($self->is_saving) {
         $self->organism_id($stock->organism_id);
@@ -619,7 +622,7 @@ sub store {
     my $stock = $self->stock;
     my $schema = $self->schema();
 
-    #no stock id . Check first if the name  exists in te database
+    #no stock id . Check first if the name  exists in the database
     my $exists;
     if ($self->check_name_exists){
         $exists= $self->exists_in_database();
@@ -656,7 +659,7 @@ sub store {
         }
     }
 
-    # ###Check first if the name  exists in te database
+    # ###Check first if the name  exists in the database
     # $exists = 0;
     # if ($self->check_name_exists){
     # 	print STDERR "Checking stock uniquename \n";
@@ -674,7 +677,7 @@ sub store {
                 description => $self->description(),
                 type_id => $self->type_id(),
                 organism_id => $self->organism_id(),
-                is_obsolete => $self->is_obsolete(),
+                is_obsolete => 0,
             });
             $new_row->insert();
 
@@ -982,6 +985,27 @@ sub get_stocks_with_images {
         $q .= " AND t.name = ?";
         push @query_values, $stock_type_name;
     }
+
+    $q .= "
+        UNION
+
+        SELECT DISTINCT acc.uniquename
+        FROM project AS p
+        JOIN nd_experiment_project AS nep ON nep.project_id = p.project_id
+        JOIN nd_experiment AS ne ON ne.nd_experiment_id = nep.nd_experiment_id
+        JOIN nd_experiment_stock AS nes ON nes.nd_experiment_id = ne.nd_experiment_id
+        JOIN stock AS plot ON plot.stock_id = nes.stock_id
+        JOIN stock_relationship AS sr ON sr.subject_id = plot.stock_id
+        JOIN cvterm AS srt ON srt.cvterm_id = sr.type_id AND srt.name = 'plot_of'
+        JOIN stock AS acc ON acc.stock_id = sr.object_id
+        JOIN cvterm AS acct ON acct.cvterm_id = acc.type_id AND acct.name = 'accession'
+        JOIN phenome.stock_image AS si2 ON si2.stock_id = acc.stock_id
+        JOIN metadata.md_image AS mi2 ON mi2.image_id = si2.image_id
+        JOIN phenome.project_md_image AS pmi ON pmi.image_id = mi2.image_id
+        JOIN cvterm AS pmit ON pmit.cvterm_id = pmi.type_id AND pmit.name = 'trial_associated_image'
+        WHERE p.project_id = ? AND mi2.obsolete = 'f' AND pmi.project_id = ?
+    ";
+    push @query_values, ($trial_id, $trial_id);
 
     my $h = $schema->storage->dbh()->prepare($q);
     $h->execute(@query_values);
@@ -1320,10 +1344,14 @@ sub get_trials {
     my $schema = $self->schema();
     my $dbh = $schema->storage()->dbh();
     my $stock_id = $self->stock_id();
+    my $type = $self->type();
+    my @where_clause;
 
     my $plot_type_id =  SGN::Model::Cvterm->get_cvterm_row($schema, 'plot', 'stock_type')->cvterm_id();
     my $tissue_sample_type_id =  SGN::Model::Cvterm->get_cvterm_row($schema, 'tissue_sample', 'stock_type')->cvterm_id();
     my $plot_of_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'plot_of', 'stock_relationship')->cvterm_id();
+    my $subplot_of_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'subplot_of', 'stock_relationship')->cvterm_id();
+    my $plant_of_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'plant_of', 'stock_relationship')->cvterm_id();
     my $tissue_sample_of_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'tissue_sample_of', 'stock_relationship')->cvterm_id();
     my $geolocation_type_id = SGN::Model::Cvterm->get_cvterm_row($self->schema(), 'project location', 'project_property')->cvterm_id();
 
@@ -1335,20 +1363,29 @@ sub get_trials {
     while (my ($nd_geolocation_id, $description) = $geolocation_h->fetchrow_array()) {
         $geolocations{$nd_geolocation_id} = $description;
     }
+    push @where_clause, "stock.type_id = $plot_type_id";
+    if ($type eq 'plot') {
+        push @where_clause, "stock.stock_id = $stock_id";
+    } elsif (($type eq 'accession') || ($type eq 'plant') || $type eq 'subplot' || $type eq 'cross' || $type eq 'family_name') {
+        push @where_clause, "stock_relationship_1.object_id = $stock_id";
+    } elsif ($type eq 'tissue_sample') {
+        push @where_clause, "stock_relationship_2.subject_id = $stock_id OR nd_experiment_stock.stock_id = $stock_id";
+    }
+
+    my $where_clause = scalar(@where_clause)>0 ? " WHERE " . (join (" AND " , @where_clause)) : '';
 
     my $q = "SELECT distinct(project.project_id), project.name, projectprop.value
-    FROM stock as accession
-    JOIN stock_relationship on (accession.stock_id=stock_relationship.object_id) AND stock_relationship.type_id IN (?,?)
-    JOIN stock on (stock.stock_id=stock_relationship.subject_id) AND stock.type_id IN (?,?)
-	JOIN nd_experiment_stock ON (stock.stock_id=nd_experiment_stock.stock_id)
-    JOIN nd_experiment_project USING (nd_experiment_id)
-	JOIN project USING (project_id)
-    LEFT JOIN projectprop ON (project.project_id=projectprop.project_id)
-	WHERE projectprop.type_id=? AND accession.stock_id=?;";
+    FROM stock
+    JOIN nd_experiment_stock ON (stock.stock_id=nd_experiment_stock.stock_id)
+    JOIN nd_experiment_project ON (nd_experiment_stock.nd_experiment_id = nd_experiment_project.nd_experiment_id)
+    JOIN project ON (nd_experiment_project.project_id = project.project_id)
+    JOIN projectprop ON (project.project_id=projectprop.project_id) AND projectprop.type_id = ?
+    LEFT JOIN stock_relationship AS stock_relationship_1 ON (stock.stock_id=stock_relationship_1.subject_id) AND stock_relationship_1.type_id IN (?,?,?)
+    LEFT JOIN stock_relationship AS stock_relationship_2 ON (stock.stock_id=stock_relationship_2.object_id) AND stock_relationship_2.type_id = ?
+    $where_clause;";
 
     my $h = $dbh->prepare($q);
-    $h->execute($plot_of_type_id, $tissue_sample_type_id, $plot_type_id, $tissue_sample_type_id, $geolocation_type_id, $stock_id);
-
+    $h->execute($geolocation_type_id, $plot_of_type_id, $subplot_of_type_id, $plant_of_type_id, $tissue_sample_of_type_id);
     my @trials;
     while (my ($project_id, $project_name, $nd_geolocation_id) = $h->fetchrow_array()) {
         push @trials, [ $project_id, $project_name, $nd_geolocation_id, $geolocations{$nd_geolocation_id} ];
@@ -1374,7 +1411,7 @@ sub get_ancestor_hash {
   push @$direct_descendant_ids, $stock_id; #excluded in parent retrieval to prevent loops
 
   my $stock = $self->schema->resultset("Stock::Stock")->find({stock_id => $stock_id});
-  #print STDERR "Stock ".$stock->uniquename()." decendants are: ".Dumper($direct_descendant_ids)."\n";
+  #print STDERR "Stock ".$stock->uniquename()." descendants are: ".Dumper($direct_descendant_ids)."\n";
   my %pedigree;
   $pedigree{'id'} = $stock_id;
   $pedigree{'name'} = $stock->uniquename();
@@ -1452,7 +1489,7 @@ sub get_descendant_hash {
 =head2 get_pedigree_rows()
 
  Usage:
- Desc:          get an array of pedigree rows from an array of stock ids, conatining female parent, male parent, and cross type if defined
+ Desc:          get an array of pedigree rows from an array of stock ids, containing female parent, male parent, and cross type if defined
  Ret:
  Args: $accession_ids, $format (either 'parents_only' or 'full'), $include (either 'ancestors' or 'ancestors_descendants')
  Side Effects:
@@ -1551,6 +1588,131 @@ sub get_pedigree_rows {
     return $pedigree_rows;
 }
 
+=head1 add_parent()
+
+=cut
+
+sub add_parent {
+    my $self = shift;
+    my $parent_name = shift;
+    my $parent_type = shift;
+    my $cross_type = shift;
+    
+    print STDERR "Add_stock_parent function...\n";
+
+    my $cvterm_name = "";
+    if ($parent_type eq "male") {
+        $cvterm_name = "male_parent";
+    }
+    elsif ($parent_type eq "female") {
+        $cvterm_name = "female_parent";	
+    }
+
+    my $type_id_row = SGN::Model::Cvterm->get_cvterm_row($self->schema(), $cvterm_name, "stock_relationship" )->cvterm_id();
+
+    # check if a parent of this parent_type is already associated with this stock
+    #
+    my $previous_parent = $self->schema()->resultset("Stock::StockRelationship")->find({
+        type_id => $type_id_row,
+        object_id => $self->stock_id(),
+    });
+
+    my $error;
+    
+    if ($previous_parent) {
+	print STDERR "The stock ".$previous_parent->subject_id." is already associated with stock ".$self->stock_id()." - returning.\n";
+	$error = "A $parent_type parent with id ".$previous_parent->subject_id." is already associated with this stock. Please specify another parent.";
+	return $error;
+    }
+
+    print STDERR "PARENT_NAME = $parent_name STOCK_ID ".$self->stock_id()."  $cvterm_name\n";
+
+#    my $stock = $self->schema()->resultset("Stock::Stock")->find( { stock_id => $self->stock_id() });
+
+   my $parent = $self->schema()->resultset("Stock::Stock")->find( { uniquename => $parent_name } );
+
+
+
+    if (!$self->stock_id()) {
+	$error = "Stock with ".$self->stock_id()." is not found in the database!";
+	return $error;
+    }
+    if (!$parent) {
+	$error = "Stock with uniquename $parent_name was not found, Either this is not unique name or it is not in the database!";
+	return $error;
+    }
+
+    my $new_row = $self->schema()->resultset("Stock::StockRelationship")->new(
+	{
+	    subject_id => $parent->stock_id,
+	    object_id  => $self->stock_id,
+	    type_id    => $type_id_row,
+	    value => $cross_type
+	});
+
+    eval {
+	$new_row->insert();
+    };
+
+    if ($@) {
+	$error = "An error occurred: $@";
+    }
+    else {
+	$error = undef;
+    }
+    return $error;
+}
+
+
+=head1 get_direct_parents()
+
+    Args: stock_id
+    Returns: a hash such as $parent{female}->[ stock_id, uniquename ]
+    Note: moved from CXGN::Chado::Stock with the return type changed to hash
+          from listref
+
+=cut
+
+sub get_direct_parents {
+    my $self = shift;
+    my $stock_id = shift || $self->stock_id();
+
+    print STDERR "get_direct_parents with $stock_id...\n";
+
+    my $female_parent_id;
+    my $male_parent_id;
+
+    eval {
+        $female_parent_id = $self->get_schema()->resultset("Cv::Cvterm")->find( { name => 'female_parent' })->cvterm_id();
+        $male_parent_id = $self->get_schema()->resultset("Cv::Cvterm")->find( { name => 'male_parent' }) ->cvterm_id();
+    };
+    if ($@) {
+        die "Cvterm for female_parent and/or male_parent seem to be missing in the database\n";
+    }
+
+    my $rs = $self->get_schema()->resultset("Stock::StockRelationship")->search( { object_id => $stock_id, type_id => { -in => [ $female_parent_id, $male_parent_id ] } });
+    my %parents;
+    while (my $row = $rs->next()) {
+        print STDERR "Found parent...\n";
+        my $prs = $self->get_schema()->resultset("Stock::Stock")->find( { stock_id => $row->subject_id() });
+        my $parent_type = "";
+        my $parent_id = $row->object_id();
+        if ($row->type_id() == $female_parent_id) {
+            $parent_type = "female";
+        }
+        if ($row->type_id() == $male_parent_id) {
+            $parent_type = "male";
+        }
+        $parents{$parent_type} = [ $prs->stock_id(), $prs->uniquename()];
+    }
+
+    print STDERR "PARENTS: ".Dumper(\%parents);
+
+    return %parents;
+}
+
+
+
 =head2 get_pedigree_string()
 
  Usage:
@@ -1583,6 +1745,7 @@ sub get_pedigree_string {
         my $pf_parent_string = $self->_get_parent_string($pedigree_hashref->{'male_parent'}->{'male_parent'});
         return "$mm_parent_string//$mf_parent_string///$pm_parent_string//$pf_parent_string";
     }
+    return "";
 }
 
 sub _get_parent_string {
@@ -1947,7 +2110,343 @@ sub add_synonym {
     $stock->create_stockprops({$synonym_cvterm->name() => $synonym});
 }
 
+=head2 get_child_stocks
 
+Usage: $self->get_child_stocks
+Desc: retrieves a structured hash of all child stocks (subplots, plants, tissue samples). Self is included at the top.
+Ret: a scalar hash
+Args:
+Side effects:
+Example:
+
+=cut
+
+sub get_child_stocks {
+    my $self = shift;
+    my $type = $self->type();
+    my $stock_id = $self->stock_id();
+    my $name = $self->uniquename();
+
+    if (!$type) {
+        die "Cannot get child stocks without knowing stock type!\n";
+    }
+
+    my $plot_and_plant_q = "SELECT stock.stock_id, stock.name,
+        (SELECT cvterm.name FROM cvterm WHERE cvterm_id=stock.type_id) AS stock_type,
+        (SELECT cvterm.name FROM cvterm WHERE cvterm_id=stock_relationship.type_id) AS relationship_type
+        FROM stock_relationship
+        JOIN stock ON (stock.stock_id=stock_relationship.object_id)
+        WHERE stock_relationship.subject_id=?"; #For plots, this returns accessions, subplots, and plants. For plants, this returns parent subplot and accessions. Also gives accessions for subplots.
+
+    my $subplot_q = "SELECT stock.stock_id, stock.name,
+        (SELECT cvterm.name FROM cvterm WHERE cvterm_id=stock.type_id) AS stock_type,
+        (SELECT cvterm.name FROM cvterm WHERE cvterm_id=stock_relationship.type_id) AS relationship_type
+        FROM stock_relationship
+        JOIN stock ON (stock.stock_id=stock_relationship.subject_id)
+        WHERE stock_relationship.object_id=?;"; #gets parent plot and child plants
+
+    my $stockprops_q = "SELECT cvterm.name, cvterm_id, value FROM stockprop
+        JOIN cvterm ON (cvterm.cvterm_id=stockprop.type_id)
+        WHERE stockprop.stock_id=?"; #gets all stockprops for any stock.
+
+    my $tissue_sample_q = "SELECT * FROM
+        (SELECT stock.stock_id, stock.name,
+        (SELECT cvterm.name FROM cvterm WHERE cvterm_id=stock.type_id) AS stock_type,
+        (SELECT cvterm.name FROM cvterm WHERE cvterm_id=stock_relationship.type_id) AS relationship_type
+        FROM stock_relationship
+        JOIN stock ON (stock.stock_id=stock_relationship.subject_id)
+        WHERE stock_relationship.object_id=?) AS tissue_samples_subquery
+        WHERE stock_type='tissue_sample'"; #only useful for plants, where it gives tissue samples.
+
+    my $stock_structure = {
+        stock_id => $stock_id,
+        type => $type,
+        name => $name,
+        attributes => {},
+        has => {}
+    };
+
+    my $h = $self->schema()->storage()->dbh()->prepare($stockprops_q);
+    $h->execute($stock_id);
+
+    while (my ($stockprop, $stockprop_id, $value) = $h->fetchrow_array()) {# get this stock's stockprops
+        $stock_structure->{attributes}->{$stockprop} = {
+            id => $stockprop_id,
+            value => $value
+        };
+    }
+
+    if ($type eq "plot") {
+        $h = $self->schema()->storage()->dbh()->prepare($plot_and_plant_q);
+        $h->execute($stock_id);
+
+        my @child_stocks = ();
+
+        while (my ($child_stock_id, $child_stock_name, $child_type, $relationship_type) = $h->fetchrow_array()){
+            push @child_stocks, {
+                stock_id => $child_stock_id,
+                name => $child_stock_name,
+                type => $child_type,
+                relationship_type => $relationship_type
+            };
+        }
+
+        my @has_subplots = grep {$_->{type} eq "subplot"} @child_stocks;
+        my @has_plants = grep {$_->{type} eq "plant"} @child_stocks;
+        my @accessions = grep {$_->{type} eq "accession"} @child_stocks;
+
+        if (@has_subplots) { #if there are subplots, we can safely assume that plants are children of the subplots
+            foreach my $subplot (@has_subplots) {
+                my $child_stock = CXGN::Stock->new({
+                    schema => $self->schema(),
+                    stock_id => $subplot->{stock_id},
+                    type => $subplot->{type}
+                });
+                $stock_structure->{has}->{"".$subplot->{name}.""} = $child_stock->get_child_stocks();
+            }
+        } elsif (@has_plants) {
+            foreach my $plant (@has_plants) {
+                my $child_stock = CXGN::Stock->new({
+                    schema => $self->schema(),
+                    stock_id => $plant->{stock_id},
+                    type => $plant->{type}
+                });
+                $stock_structure->{has}->{"".$plant->{name}.""} = $child_stock->get_child_stocks();
+            }
+        } else { # no plants or subplots, just accessions
+            foreach my $accession (@accessions) {
+                my $child_stock = CXGN::Stock->new({
+                    schema => $self->schema(),
+                    stock_id => $accession->{stock_id},
+                    type => $accession->{type}
+                });
+                $stock_structure->{has}->{''.$accession->{name}.""} = $child_stock->get_child_stocks();
+            }
+        }
+
+    } elsif ($type eq "subplot") {
+
+        my @child_stocks;
+
+        $h = $self->schema()->storage()->dbh()->prepare($plot_and_plant_q);
+        $h->execute($stock_id);
+
+        while (my ($child_stock_id, $child_stock_name, $child_type, $relationship_type) = $h->fetchrow_array()){
+            push @child_stocks, {
+                stock_id => $child_stock_id,
+                name => $child_stock_name,
+                type => $child_type,
+                relationship_type => $relationship_type
+            };
+        }
+
+        $h = $self->schema()->storage()->dbh()->prepare($subplot_q); # this will also grab parent plot, which will be filtered out
+        $h->execute($stock_id);
+
+        while (my ($child_stock_id, $child_stock_name, $child_type, $relationship_type) = $h->fetchrow_array()){
+            push @child_stocks, {
+                stock_id => $child_stock_id,
+                name => $child_stock_name,
+                type => $child_type,
+                relationship_type => $relationship_type
+            };
+        }
+
+        @child_stocks = grep {$_->{type} ne "plot"} @child_stocks; #remove parent plot
+
+        my @has_plants = grep {$_->{type} eq "plant"} @child_stocks;
+
+        if (@has_plants) {
+            foreach my $plant (@has_plants) {
+                my $child_stock = CXGN::Stock->new({
+                    schema => $self->schema(),
+                    stock_id => $plant->{stock_id},
+                    type => $plant->{type}
+                });
+                $stock_structure->{has}->{"".$plant->{name}.""} = $child_stock->get_child_stocks();
+            }
+        } else {# if no plants, subplots can only have accessions
+            foreach my $accession (@child_stocks) {
+                my $child_stock = CXGN::Stock->new({
+                    schema => $self->schema(),
+                    stock_id => $accession->{stock_id},
+                    type => $accession->{type}
+                });
+                $stock_structure->{has}->{"".$accession->{name}.""} = $child_stock->get_child_stocks();
+            }
+        }
+
+    } elsif ($type eq "plant") {
+
+        my @child_stocks;
+
+        $h = $self->schema()->storage()->dbh()->prepare($plot_and_plant_q);# this will also grab parent subplot, which will be filtered out
+        $h->execute($stock_id);
+
+        while (my ($child_stock_id, $child_stock_name, $child_type, $relationship_type) = $h->fetchrow_array()){
+            push @child_stocks, {
+                stock_id => $child_stock_id,
+                name => $child_stock_name,
+                type => $child_type,
+                relationship_type => $relationship_type
+            };
+        }
+
+        $h = $self->schema()->storage()->dbh()->prepare($tissue_sample_q);
+        $h->execute($stock_id);
+
+        while (my ($child_stock_id, $child_stock_name, $child_type, $relationship_type) = $h->fetchrow_array()){
+            push @child_stocks, {
+                stock_id => $child_stock_id,
+                name => $child_stock_name,
+                type => $child_type,
+                relationship_type => $relationship_type
+            };
+        }
+
+        @child_stocks = grep {$_->{type} ne "subplot"} @child_stocks; #remove parent subplot (if any)
+
+        # at this point, all child stocks are either tissue samples or accessions, which means we no longer care what is in them
+        foreach my $child (@child_stocks) {
+            my $child_stock = CXGN::Stock->new({
+                schema => $self->schema(),
+                stock_id => $child->{stock_id},
+                type => $child->{type}
+            });
+            $stock_structure->{has}->{"".$child->{name}.""} = $child_stock->get_child_stocks();
+        }
+
+    } elsif ($type eq "tissue_sample") {
+        delete $stock_structure->{has};
+        return $stock_structure;
+    } elsif ($type eq "accession") {
+        delete $stock_structure->{has};
+        return $stock_structure;
+    }
+
+    return $stock_structure;
+}
+
+=head2 get_child_stocks_flat_list
+
+Same as get_child_stocks, but returns just a flat listref and not a hierarchy. Stockprops are omitted.
+Listref elements are hashrefs with structure {stock_id, name, type}. Self is dropped in the list,
+unlike in get_child_stocks where it remains at the top of the hierarchy.
+
+=cut
+
+sub get_child_stocks_flat_list {
+    my $self = shift;
+    my $type = $self->type();
+    my $stock_id = $self->stock_id();
+    my $name = $self->uniquename();
+
+    if (!$type) {
+        die "Cannot get child stocks without knowing stock type!\n";
+    }
+
+    my $plot_and_plant_q = "SELECT stock.stock_id, stock.name,
+        (SELECT cvterm.name FROM cvterm WHERE cvterm_id=stock.type_id) AS stock_type,
+        (SELECT cvterm.name FROM cvterm WHERE cvterm_id=stock_relationship.type_id) AS relationship_type
+        FROM stock_relationship
+        JOIN stock ON (stock.stock_id=stock_relationship.object_id)
+        WHERE stock_relationship.subject_id=?"; #For plots, this returns accessions, subplots, and plants. For plants, this returns parent subplot and accessions. Also gives accessions for subplots.
+
+    my $subplot_q = "SELECT stock.stock_id, stock.name,
+        (SELECT cvterm.name FROM cvterm WHERE cvterm_id=stock.type_id) AS stock_type,
+        (SELECT cvterm.name FROM cvterm WHERE cvterm_id=stock_relationship.type_id) AS relationship_type
+        FROM stock_relationship
+        JOIN stock ON (stock.stock_id=stock_relationship.subject_id)
+        WHERE stock_relationship.object_id=?;"; #gets parent plot and child plants
+
+    my $tissue_sample_q = "SELECT * FROM
+        (SELECT stock.stock_id, stock.name,
+        (SELECT cvterm.name FROM cvterm WHERE cvterm_id=stock.type_id) AS stock_type,
+        (SELECT cvterm.name FROM cvterm WHERE cvterm_id=stock_relationship.type_id) AS relationship_type
+        FROM stock_relationship
+        JOIN stock ON (stock.stock_id=stock_relationship.subject_id)
+        WHERE stock_relationship.object_id=?) AS tissue_samples_subquery
+        WHERE stock_type='tissue_sample'"; #only useful for plants, where it gives tissue samples.
+
+    my $stock_structure = [];
+
+    my $h;
+
+    if ($type eq "plot") {
+        $h = $self->schema()->storage()->dbh()->prepare($plot_and_plant_q);
+        $h->execute($stock_id);
+
+        my @child_stocks = ();
+
+        while (my ($child_stock_id, $child_stock_name, $child_type, $relationship_type) = $h->fetchrow_array()){
+            next if ($child_type eq 'accession');
+            push @{$stock_structure}, {
+                stock_id => $child_stock_id,
+                name => $child_stock_name,
+                type => $child_type
+            };
+        }
+
+        my @has_plants = grep {$_->{type} eq "plant"} @{$stock_structure};
+
+        if (@has_plants) { #need to get possible tissue samples if there are plants
+            foreach my $plant (@has_plants) {
+                my $child_stock = CXGN::Stock->new({
+                    schema => $self->schema(),
+                    stock_id => $plant->{stock_id},
+                    type => $plant->{type}
+                });
+                push @{$stock_structure}, @{$child_stock->get_child_stocks_flat_list()};
+            }
+        }
+
+    } elsif ($type eq "subplot") {
+
+        $h = $self->schema()->storage()->dbh()->prepare($subplot_q); # this will also grab parent plot, which will be filtered out
+        $h->execute($stock_id);
+
+        while (my ($child_stock_id, $child_stock_name, $child_type, $relationship_type) = $h->fetchrow_array()){
+            next if ($child_type eq "plot");
+            push @{$stock_structure}, {
+                stock_id => $child_stock_id,
+                name => $child_stock_name,
+                type => $child_type
+            };
+        }
+
+        my @has_plants = grep {$_->{type} eq "plant"} @{$stock_structure};
+
+        if (@has_plants) {
+            foreach my $plant (@has_plants) {
+                my $child_stock = CXGN::Stock->new({
+                    schema => $self->schema(),
+                    stock_id => $plant->{stock_id},
+                    type => $plant->{type}
+                });
+                push @{$stock_structure}, @{$child_stock->get_child_stocks_flat_list()};
+            }
+        }
+    } elsif ($type eq "plant") {
+
+        $h = $self->schema()->storage()->dbh()->prepare($tissue_sample_q);
+        $h->execute($stock_id);
+
+        while (my ($child_stock_id, $child_stock_name, $child_type, $relationship_type) = $h->fetchrow_array()){
+            push @{$stock_structure}, {
+                stock_id => $child_stock_id,
+                name => $child_stock_name,
+                type => $child_type
+            };
+        }
+
+    } elsif ($type eq "tissue_sample") {
+        return [];
+    } elsif ($type eq "accession") {
+        return [];
+    }
+
+    return $stock_structure;
+}
 
 =head2 merge()
 
@@ -1966,6 +2465,8 @@ sub merge {
     my $other_stock_id = shift;
     my $delete_other_stock = shift;
 
+    print STDERR "IN SUB MERGE with stock id $other_stock_id and delete or not ? $delete_other_stock!\n";
+    
     if ($other_stock_id == $self->stock_id()) {
 	print STDERR "Trying to merge stock into itself ($other_stock_id) Skipping...\n";
 	return "Error: cannot merge stock into itself";
@@ -1993,21 +2494,21 @@ sub merge {
     # check if parents are the same
     my $other_stock = CXGN::Stock->new( { schema => $self->schema(), stock_id => $other_stock_id });
 
-    my $other_parents = $other_stock->get_parents();
-    my $this_parents = $self->get_parents();
+    my %other_parents = $other_stock->get_direct_parents();
+    my %this_parents = $self->get_direct_parents();
 
-    print STDERR "OTHER parents: ".Dumper($other_parents);
-    print STDERR "This parents: ".Dumper($this_parents);
+    print STDERR "OTHER parents: ".Dumper(\%other_parents);
+    print STDERR "This parents: ".Dumper(\%this_parents);
 
     my $skip_mother_comp = 0;
     my $skip_father_comp = 0;
 
-    if (! defined($other_parents->{mother_id}) || ! defined($this_parents->{mother_id})) {
+    if (! defined($other_parents{female})) {
 	print STDERR "Can't compare mothers for these accessions.\n";
 	$skip_mother_comp =1;
     }
 
-    if (! defined($other_parents->{father_id}) || ! defined($this_parents->{father_id})) {
+    if (! defined($other_parents{male})) {
 	print STDERR "Can't compare fathers for this accession.\n";
 	$skip_father_comp = 1;
     }
@@ -2015,27 +2516,31 @@ sub merge {
     my $mother_identical = 0;
     my $father_identical = 0;
     if (! $skip_mother_comp) {
-	if ( (defined($other_parents->{mother_id}) && defined($this_parents->{mother_id})) && ($other_parents->{mother_id} == $this_parents->{mother_id})) {
+	if ( (defined($other_parents{female}) && defined($this_parents{female}) && ($other_parents{female}->[0] == $this_parents{female}->[0]))) {
+	    print STDERR "MOTHER IDENTICAL!\n";
 	    $mother_identical = 1;
 	}
     }
     if (! $skip_father_comp) {
-	if ( (defined($other_parents->{father_id}) && defined($this_parents->{father_id})) && ( $other_parents->{father_id} == $this_parents->{father_id})) {
+	if ( (defined($other_parents{male}) && defined($this_parents{male})) && ( $other_parents{male}->[0] == $this_parents{male}->[0])) {
+	    print STDERR "FATHER IDENTICAL!\n";
 	    $father_identical = 1;
 	}
     }
 
     if ( (!$skip_mother_comp && $mother_identical) && (!$skip_father_comp && $father_identical)) {
-	print STDERR "Mother and Father between this and other match ($other_parents->{mother_id} vs $this_parents->{mother_id}).\n";
+	print STDERR "Mother and Father between this and other match ($other_parents{female}->[0] vs $this_parents{female}->[0]).\n";
     }
-    elsif ($skip_mother_comp && $father_identical || $skip_father_comp && $mother_identical) {
+    elsif ( ($skip_mother_comp && $father_identical)  || ($skip_father_comp && $mother_identical) ) {
 	print STDERR "One parent undefined, the other matches...\n";
     }
     elsif ($skip_mother_comp && $skip_father_comp) {
 	print STDERR "Skipping this comparison - not enough data! \n";
     }
     else {
-	return join ("\t", $self->uniquename(), $other_stock->uniquename(), "MOTHERS", $other_parents->{mother_id}, $other_parents->{mother}, $this_parents->{mother_id}, $this_parents->{mother}, "FATHERS", $other_parents->{father_id}, $other_parents->{father}, $this_parents->{father_id}, $this_parents->{father}, "PARENTS DO NOT MATCH!")."\n";
+	print STDERR "THIS: ".Dumper(\%this_parents);
+	print STDERR "THAT: ".Dumper(\%other_parents);
+	return join ("\t", $self->uniquename(), $other_stock->uniquename(), "MOTHERS", $other_parents{female}->[0], $other_parents{female}->[1], $this_parents{female}->[0], $this_parents{female}->[1], "FATHERS", $other_parents{male}->[0], $other_parents{male}->[1], $this_parents{male}->[0], $this_parents{male}->[1], "PARENTS DO NOT MATCH!")."\n";
     }
 
     # move stockprops
@@ -2062,7 +2567,6 @@ sub merge {
 	    my $type_id = $row->type_id();
 
 	    my $rank_rs = $schema->resultset("Stock::Stockprop")->search( { stock_id => $self->stock_id(), type_id => $type_id });
-
 	    my $rank;
 	    if ($rank_rs->count() > 0) {
 		$rank = $rank_rs->get_column("rank")->max();
@@ -2070,6 +2574,7 @@ sub merge {
 
 	    $rank++;
 	    $row->rank($rank);
+
 	    $row->stock_id($self->stock_id());
 
 	    $row->update();
@@ -2082,6 +2587,8 @@ sub merge {
 
     # move subject relationships
     #
+    print STDERR "MOVING SUBJECT RELATIONSHIPS...\n";
+    
     my $ssrs = $schema->resultset("Stock::StockRelationship")->search( { subject_id => $other_stock_id });
 
     while (my $row = $ssrs->next()) {
@@ -2090,10 +2597,10 @@ sub merge {
 	# Only if the info is not already there can we safely add it. This will for example
 	# prevent us from ending up with 4 parents etc.
 	#
-	my $this_subject_rel_rs = $schema->resultset("Stock::StockRelationship")->search( { subject_id => $self->stock_id(), object_id => $other_stock_id, type_id => $row->type_id() });
+	my $this_subject_rel_rs = $schema->resultset("Stock::StockRelationship")->search( { subject_id => $self->stock_id(), object_id => $row->object_id(), type_id => $row->type_id() });
 
-	if ($this_subject_rel_rs->count() != 0) { # this stock does not have the relationship
-	    print STDERR "Target object ".$row->uniquename()." already has this relationship (".$this_subject_rel_rs->count()." counts)\n";
+	if ($this_subject_rel_rs->count() > 0) { # this stock does not have the relationship
+	    print STDERR "Target object ".$row->subject_id()." already has this relationship of type ".$row->type_id()."(".$this_subject_rel_rs->count()." counts)\n";
 	}
 	else {
 	    # get the max rank
@@ -2111,12 +2618,14 @@ sub merge {
 	}
     }
 
+    print STDERR "MOVING OBJECT RELATIONSHIPS...\n";
+    
     my $osrs = $schema->resultset("Stock::StockRelationship")->search( { object_id => $other_stock_id });
     while (my $row = $osrs->next()) {
-	my $this_object_rel_rs = $schema->resultset("Stock::StockRelationship")->search( { object_id => $self->stock_id, subject_id => $other_stock_id, type_id => $row->type_id() });
+	my $this_object_rel_rs = $schema->resultset("Stock::StockRelationship")->search( { object_id => $self->stock_id, subject_id => $row->subject_id(), type_id => $row->type_id() });
 
-	if ($this_object_rel_rs->count() != 0) {
-	    print STDERR "Target object ".$row->uniquename()." already has this relationship with ".$this_object_rel_rs->count()." counts\n";;
+	if ($this_object_rel_rs->count() > 0) {
+	    print STDERR "Target object ".$row->object_id()." already has this relationship of ".$row->type_id()." with ".$this_object_rel_rs->count()." counts\n";
 	}
 	else {
 	    my $rank_rs = $schema->resultset("Stock::StockRelationship")->search( { object_id => $self->stock_id(), type_id => $row->type_id() });
@@ -2327,9 +2836,54 @@ sub hard_delete {
 
     # delete stock entry
     #
-    my $q = "DELETE FROM stock WHERE stock_id=?";
-    my $h = $self->schema()->storage()->dbh()->prepare($q);
+    $q = "DELETE FROM stock WHERE stock_id=?";
+    $h = $self->schema()->storage()->dbh()->prepare($q);
     $h->execute($self->stock_id());
+}
+
+=head2 bulk_hard_delete()
+
+Same behavior as hard_delete, but it is a class method that takes a list of stock_ids as an argument
+
+CXGN::Stock->bulk_hard_delete($schema, $stock_ids);
+
+=cut
+
+sub bulk_hard_delete {
+    my $class = shift;
+    my $schema = shift;
+    my $stock_ids = shift;
+
+    my $placeholders = join(',', ('?') x scalar(@{$stock_ids}));
+
+    my $q = "SELECT COUNT(DISTINCT(cvterm.cvterm_id)) FROM stock
+    JOIN nd_experiment_stock ON (stock.stock_id=nd_experiment_stock.stock_id)
+    JOIN nd_experiment_phenotype USING(nd_experiment_id)
+    JOIN phenotype USING (phenotype_id)
+    JOIN cvterm ON (phenotype.cvalue_id = cvterm.cvterm_id)
+    WHERE stock.stock_id IN ($placeholders)";
+    my $h = $schema->storage()->dbh()->prepare($q);
+    $h->execute(@{$stock_ids});
+    my ($count) = $h->fetchrow_array();
+    if ($count > 0) {
+        die "There are traits observed for these stock entries - delete phenotypes before deleting stocks.\n";
+    }
+
+    my $q = "DELETE FROM phenome.stock_owner WHERE stock_id IN ($placeholders)";
+    my $h = $schema->storage()->dbh()->prepare($q);
+    $h->execute(@{$stock_ids});
+
+    # delete sgn.stock_image entry
+    #
+    $q = "DELETE FROM phenome.stock_image WHERE stock_id IN ($placeholders)";
+    $h = $schema->storage()->dbh()->prepare($q);
+    $h->execute(@{$stock_ids});
+
+    # delete stock entry
+    #
+    $q = "DELETE FROM stock WHERE stock_id IN ($placeholders)";
+    $h = $schema->storage()->dbh()->prepare($q);
+    $h->execute(@{$stock_ids});
 }
 
 __PACKAGE__->meta->make_immutable;

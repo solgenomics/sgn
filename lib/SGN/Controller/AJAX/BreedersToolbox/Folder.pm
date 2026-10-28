@@ -37,6 +37,7 @@ sub create_folder :Path('/ajax/folder/new') Args(0) {
     my $folder_for_genotyping_projects;
     my $folder_for_tracking_activities;
     my $folder_for_transformations;
+    my $folder_for_propagations;
 
     my $project_type = $c->req->param("project_type");
     if ($project_type eq 'field_trial') {
@@ -51,6 +52,8 @@ sub create_folder :Path('/ajax/folder/new') Args(0) {
         $folder_for_tracking_activities = 1;
     } elsif ($project_type eq 'transformation_project') {
         $folder_for_transformations = 1;
+    } elsif ($project_type eq 'propagation_project') {
+        $folder_for_propagations = 1;
     }
 
     if (! $self->check_privileges($c)) {
@@ -75,6 +78,7 @@ sub create_folder :Path('/ajax/folder/new') Args(0) {
         folder_for_genotyping_projects => $folder_for_genotyping_projects,
         folder_for_tracking_activities => $folder_for_tracking_activities,
         folder_for_transformations => $folder_for_transformations,
+        folder_for_propagations => $folder_for_propagations,
 	});
 
     $c->stash->{rest} = {

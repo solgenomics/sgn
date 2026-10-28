@@ -2,6 +2,8 @@
 package SGN::Controller::AJAX::User;
 
 use Moose;
+use JSON;
+use URI::FromHash 'uri';
 use IO::File;
 use Data::Dumper;
 use HTML::Entities;
@@ -36,7 +38,7 @@ sub login : Path('/ajax/user/login') Args(0) {
 	return;
     }
     elsif (exists($login_info->{account_disabled}) && $login_info->{account_disabled}) {
-	$c->stash->{rest} = { error => "This account has been disabled due to $login_info->{account_disabled}. Please contact the database to fix this problem." };
+	$c->stash->{rest} = { error => "This account has been deactivated due to $login_info->{account_disabled}. Please contact the database administrator to re-instate the account." };
 	return;
     }
     else {
@@ -54,6 +56,20 @@ sub logout :Path('/ajax/user/logout') Args(0) {
     my $login = CXGN::Login->new($c->dbc->dbh());
     $login->logout_user();
 
+    $c->stash->{rest} = { message => "User successfully logged out." };
+}
+
+sub logout_externally :Path('/ajax/user/logout_externally') QueryParam('redirect_uri') {
+    my $self = shift;
+    my $c = shift;
+    $c->response->headers->header( "Access-Control-Allow-Origin" => '*' );
+    $c->response->headers->header( "Access-Control-Allow-Methods" => "POST, GET, PUT, DELETE" );
+    $c->response->headers->header( 'Access-Control-Allow-Headers' => 'DNT,X-CustomHeader,Keep-Alive,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,Content-Range,Range,Authorization');
+#    my $redirect_uri = $c->request->param( 'redirect_uri' );
+    my $login = CXGN::Login->new($c->dbc->dbh());
+    $login->logout_user();
+#    $c->stash->{redirect_uri} = $redirect_uri;
+#    $c->stash->{template} = '/site/toolbar/logout_externally.mas';
     $c->stash->{rest} = { message => "User successfully logged out." };
 }
 
@@ -282,7 +298,7 @@ sub change_account_info_action :Path('/ajax/user/update') Args(0) {
 	my $other_user = CXGN::People::Login->get_login($c->dbc->dbh(), $new_username);
 	if (defined $other_user->get_sp_person_id() &&
 	    ($person -> get_sp_person_id() != $other_user->get_sp_person_id())) {
-	    print STDERR "Username alread in use.\n";
+	    print STDERR "Username already in use.\n";
 	    $c->stash->{rest} = { error =>  "Username \"$new_username\" is already in use. Please select a different username." };
 	    return;
 	}
@@ -382,7 +398,7 @@ sub forgot_username : Path('/ajax/user/forgot_username') Args(0) {
     $self->send_forgot_username_email_message($c, $email, \@person_ids);
 
     $c->stash->{rest} = {
-        message => "Username email sent. Please check your email for a message containing the username(s) of any accounts associated with your email address."
+        message => "Username email requested. If you have an account on this database with this email, you will receive a message that includes the username associated with this email address.  If you do not have an account with this email address, you will not receive a message."
     };
 }
 
@@ -394,33 +410,20 @@ sub reset_password :Path('/ajax/user/reset_password') Args(0) {
     my $email = $c->req->param('password_reset_email');
 
     my @person_ids = CXGN::People::Login->get_login_by_email($c->dbc->dbh(), $email);
-
-    if (!@person_ids) {
-	$c->stash->{rest} = { error => "The provided email ($email) is not associated with any account." };
-	return;
-    }
-
-    if (@person_ids > 1) {
-	$c->stash->{rest} = { message => "The provided email ($email) is associated with multiple accounts. An email is sent for each account. Please notify the database team using the contact form to consolidate the accounts." };
-    }
-
-    my @reset_links;
-    my @reset_tokens;
     foreach my $pid (@person_ids) {
         my $email_reset_token = $self->tempname();
         my $reset_link = $c->config->{main_production_site_url}."/user/reset_password_form?reset_password_token=$email_reset_token";
         my $person = CXGN::People::Login->new( $c->dbc->dbh(), $pid);
         $person->update_confirm_code($email_reset_token);
-        print STDERR "Sending reset link $reset_link\n";
-        $self->send_reset_email_message($c, $pid, $email, $reset_link, $person->{username});
-        push @reset_links, $reset_link;
-        push @reset_tokens, $email_reset_token;
+        # Mail the link to the account's own stored address, never to the
+        # $email value from the request, which only has to match it
+        # case-insensitively (and, with older corelibs that matched with
+        # ILIKE, could be a look-alike address containing wildcards).
+        $self->send_reset_email_message($c, $pid, $person->get_private_email(), $reset_link, $person->{username});
     }
 
     $c->stash->{rest} = {
-        message => "Reset link sent. Please check your email and click on the link.",
-        reset_links => \@reset_links,
-        reset_tokens => \@reset_tokens
+        message => "Password reset email requested. If you have an account on this database with this email, you will receive a message with a password reset link.  If you do not have an account with this email address, you will not receive a message.",
     };
 }
 
@@ -428,9 +431,11 @@ sub process_reset_password_form :Path('/ajax/user/process_reset_password') Args(
     my $self = shift;
     my $c = shift;
 
-    my $token = $c->req->param("token");
-    my $confirm_password = $c->req->param("confirm_password");
-    my $new_password = $c->req->param("new_password");
+    return if !$self->_require_post($c);
+
+    my $token = $c->req->body_parameters->{token};
+    my $confirm_password = $c->req->body_parameters->{confirm_password};
+    my $new_password = $c->req->body_parameters->{new_password};
 
     if (length($new_password) < 7) {
         $c->stash->{rest} = { error => "Password is too short. Password must be 7 or more characters" };
@@ -442,20 +447,34 @@ sub process_reset_password_form :Path('/ajax/user/process_reset_password') Args(
         $c->detach();
     }
 
-    eval {
-        my $q = "SELECT sp_person_id FROM sgn_people.sp_person WHERE confirm_code=?;";
-        my $h = $c->dbc->dbh()->prepare($q);
-        $h->execute($token);
-        my ($person_id) = $h->fetchrow_array();
-        my $login = CXGN::People::Login->new($c->dbc->dbh(), $person_id);
-        $login->update_password($new_password);
-        $login->update_confirm_code("");
-    };
-    if ($@) {
-        $c->stash->{rest} = { error => $@ };
+    # Only accept a token in the format generated by tempname(). Anything
+    # else, such as an empty string or a fixed confirm_code value, must
+    # never be used to look up an account.
+    #
+    my $person_id;
+    if (defined($token) && !ref($token) && $token =~ m/^[A-Za-z0-9]{16}\z/) {
+        eval {
+            my $dbh = $c->dbc->dbh();
+            my $token_person_id = CXGN::People::Login->get_login_by_token($dbh, $token);
+            if ($token_person_id) {
+                # Set the new password and clear the token (NULL, not '') in
+                # one statement, so that a token can only be used once.
+                #
+                my $q = "UPDATE sgn_people.sp_person SET password = crypt(?, gen_salt('bf')), confirm_code = NULL WHERE sp_person_id = ? AND confirm_code = ? RETURNING sp_person_id";
+                ($person_id) = $dbh->selectrow_array($q, undef, $new_password, $token_person_id, $token);
+            }
+        };
+        if ($@) {
+            print STDERR "ERROR: password reset failed: $@\n";
+            $person_id = undef;
+        }
+    }
+
+    if ($person_id) {
+        $c->stash->{rest} = { message => "The password was successfully updated." };
     }
     else {
-        $c->stash->{rest} = { message => "The password was successfully updated." };
+        $c->stash->{rest} = { error => "The password reset link is invalid or has already been used. Please request a new password reset email." };
     }
 }
 
@@ -471,14 +490,16 @@ sub send_forgot_username_email_message {
         my $person = CXGN::People::Login->new( $c->dbc->dbh(), $pid);
         push(@usernames, $person->get_username());
     }
-    my $username_message = @usernames > 0 ? "The following username(s) are associated with your email address: " . join(', ', @usernames)
-        : "There are no accounts associated with your email address.";
 
-    my $project_name = $c->config->{project_name};
-    my $subject = "[$project_name] Forgot Username Request";
-    my $main_url = $c->config->{main_production_site_url};
+    # Only send a message if there is an account associated with the specified email address
+    if ( @usernames > 0 ) {
+        my $username_message = "The following username(s) are associated with your email address: " . join(', ', @usernames);
 
-    my $body = <<END_HEREDOC;
+        my $project_name = $c->config->{project_name};
+        my $subject = "[$project_name] Forgot Username Request";
+        my $main_url = $c->config->{main_production_site_url};
+
+        my $body = <<END_HEREDOC;
 
 Hi,
 
@@ -496,7 +517,8 @@ Your friends at $project_name
 
 END_HEREDOC
 
-   CXGN::Contact::send_email($subject, $body, $email);
+        CXGN::Contact::send_email($subject, $body, $email);
+    }
 }
 
 sub send_reset_email_message {
@@ -532,6 +554,24 @@ Your friends at $main_url
 END_HEREDOC
 
    CXGN::Contact::send_email($subject, $body, $private_email);
+}
+
+# Requests that carry passwords or reset tokens must be POSTed, so that the
+# credentials are sent in the request body and do not end up in browser
+# history or in proxy and web server access logs.
+#
+sub _require_post {
+    my $self = shift;
+    my $c = shift;
+
+    if ($c->req->method() eq 'POST') {
+        return 1;
+    }
+
+    $c->res->status(405);
+    $c->res->header('Allow' => 'POST');
+    $c->stash->{rest} = { error => "This request must be sent using POST." };
+    return 0;
 }
 
 sub tempname {
@@ -593,14 +633,18 @@ HTML
     my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
     my $username = $c->user->get_username();
     $html = <<HTML;
-      <div class="btn-group" role="group" aria-label="..." style="height:34px; margin: 1px 3px 0px 0px">
-	<button id="navbar_profile" class="btn btn-primary" type="button" onclick='location.href="/solpeople/profile/$sp_person_id"' style="margin: 7px 0px 0px 0px" title="My Profile">$username</button>
-	<button id="navbar_lists" name="lists_link" class="btn btn-info" style="margin:7px 0px 0px 0px" type="button" title="Lists" onClick="show_lists();">
-        Lists <span class="glyphicon glyphicon-list-alt" ></span></button>
-	<button id="navbar_datasets" name="lists_link" class="btn btn-info" style="margin:7px 0px 0px 0px" type="button" title="Datasets" onClick="window.location='/search/datasets';">
-              <span class="glyphicon glyphicon-list-alt" ></span>&nbsp;<span class="hidden-sm">Datasets</span></button>
-	<button id="navbar_personal_calendar" name="personal_calendar_link" class="btn btn-primary" style="margin:7px 0px 0px 0px" type="button" title="Your Calendar">Calendar&nbsp;<span class="glyphicon glyphicon-calendar" ></span></button>
-	<button id="navbar_logout" class="btn btn-default glyphicon glyphicon-log-out" style="margin:6px 0px 0px 0px" type="button" onclick="logout();" title="Logout"></button>
+    <div class="btn-group" role="group" aria-label="..." style="height:34px; margin: 1px 3px 0px 0px">
+        <button id="navbar_profile" class="btn btn-primary" type="button" onclick='location.href="/solpeople/profile/$sp_person_id"' style="margin: 7px 0px 0px 0px" title="My Profile">$username</button>
+        <button id="navbar_lists" name="lists_link" class="btn btn-info" style="margin:7px 0px 0px 0px" type="button" title="Lists" onClick="show_lists();">
+            <span class="glyphicon glyphicon-align-justify" ></span>&nbsp;<span class="hidden-sm">Lists</span>
+        </button>
+        <button id="navbar_datasets" name="lists_link" class="btn btn-info" style="margin:7px 0px 0px 0px" type="button" title="Datasets" onClick="window.location='/search/datasets';">
+            <span class="glyphicon glyphicon-list" style="transform: rotate(90deg)"></span>&nbsp;<span class="hidden-sm">Datasets</span>
+        </button>
+        <button id="navbar_personal_calendar" name="personal_calendar_link" class="btn btn-primary" style="margin:7px 0px 0px 0px" type="button" title="Your Calendar">
+            Calendar&nbsp;<span class="glyphicon glyphicon-calendar" ></span>
+        </button>
+        <button id="navbar_logout" class="btn btn-default glyphicon glyphicon-log-out" style="margin:6px 0px 0px 0px" type="button" onclick="logout();" title="Logout"></button>
       </div>
 HTML
 
@@ -688,7 +732,7 @@ ername.";}
     $new_user_login->set_password($password);
 
     $new_user_login->store();
-    
+
     my $new_user_person_id=$new_user_login->get_sp_person_id();
     my $new_user = CXGN::People::Person->new($c->dbc->dbh, $new_user_person_id);
 
@@ -698,7 +742,7 @@ ername.";}
 	$new_user->set_user_type(encode_entities($new_user_type));
 	$new_user->set_first_name(encode_entities($first_name));
 	$new_user->set_last_name(encode_entities($last_name));
-	
+
 	$new_user->store();
     };
 
