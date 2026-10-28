@@ -23,36 +23,27 @@ my $cache_dir = $solgs_data->base_analyses_cache_dir();
 my $accessions_list =  $solgs_data->load_accessions_list();
 my $accessions_list_name = $accessions_list->{list_name};
 my $accessions_list_id = 'list_' . $accessions_list->{list_id};
-print STDERR "\naccessions list: $accessions_list_name -- $accessions_list_id\n";
+
 my $plots_list =  $solgs_data->load_plots_list();
 my $plots_list_name = $plots_list->{list_name};
 my $plots_list_id = 'list_' . $plots_list->{list_id};
 
-print STDERR "\nadding trials list\n";
 my $trials_list =  $solgs_data->load_trials_list();
 my $trials_list_name = $trials_list->{list_name};
 my $trials_list_id = 'list_' . $trials_list->{list_id};
-print STDERR "\nadding trials dataset\n";
+
 my $trials_dt = $solgs_data->load_trials_dataset();
 my $trials_dt_name = $trials_dt->{dataset_name};
 my $trials_dt_id = 'dataset_' . $trials_dt->{dataset_id};
-print STDERR "\nadding accessions dataset\n";
+
 my $accessions_dt = $solgs_data->load_accessions_dataset();
 my $accessions_dt_name = $accessions_dt->{dataset_name};
 my $accessions_dt_id = 'dataset_' . $accessions_dt->{dataset_id};
 
-print STDERR "\nadding plots dataset\n";
 my $plots_dt = $solgs_data->load_plots_dataset();
 my $plots_dt_name = $plots_dt->{dataset_name};
 my $plots_dt_id = 'dataset_' . $plots_dt->{dataset_id};
 
-print STDERR "\ntrials dt: $trials_dt_name -- $trials_dt_id\n";
-print STDERR "\naccessions dt: $accessions_dt_name -- $accessions_dt_id\n";
-print STDERR "\nplots dt: $plots_dt_name -- $plots_dt_id\n";
-
-print STDERR "\ntrials list: $trials_list_name -- $trials_list_id\n";
-print STDERR "\naccessions list: $accessions_list_name -- $accessions_list_id\n";
-print STDERR "\nplots list: $plots_list_name -- $plots_list_id\n";
 
 remove_tree($cache_dir, {safe => 1});
 sleep(5);
@@ -63,6 +54,7 @@ $d->while_logged_in_as("submitter", sub {
     sleep(5);
 
     $d->select_datatable_tab('list_type_training_private_lists');
+    $d->filter_datatable('list_type_training_private_list_table', $plots_list_name);
     $d->find_element_ok('//tr[@id="' . $plots_list_id .'"]//*[starts-with(@id, "run_solgs")]', 'xpath', 'query plots list tr pop')->click();
     sleep(5);
     $d->find_element_ok('queue_job', 'id', 'no job queueing')->click();
@@ -78,6 +70,7 @@ $d->while_logged_in_as("submitter", sub {
     sleep(5);
 
     $d->select_datatable_tab('list_type_training_private_lists');
+    $d->filter_datatable('list_type_training_private_list_table', $plots_list_name);
     $d->find_element_ok('//tr[@id="' . $plots_list_id .'"]//*[starts-with(@id, "run_solgs")]', 'xpath', 'open plots list tr pop')->click();
     sleep(5);
     
@@ -146,6 +139,7 @@ $d->while_logged_in_as("submitter", sub {
     my $elem = $d->driver->execute_script( "arguments[0].scrollIntoView(true);window.scrollBy(0,-70);", $sel_pred);
     sleep(10);
     $d->select_datatable_tab('list_type_selection_private_lists');
+    $d->filter_datatable('list_type_selection_private_list_table', $accessions_list_name);
     $d->find_element_ok('//tr[@id="' . $accessions_list_id .'"]//*[contains(text(), "Predict")]', 'xpath', 'accessions list sel pred')->click();
     sleep(5);
     $d->find_element_ok('queue_job', 'id', 'job queueing')->click();
@@ -159,6 +153,7 @@ $d->while_logged_in_as("submitter", sub {
     $d->find_element_ok('Go back', 'partial_link_text', 'go back')->click();
     sleep(5);
     $d->select_datatable_tab('list_type_selection_private_lists');
+    $d->filter_datatable('list_type_selection_private_list_table', $accessions_list_name);
     $d->find_element_ok('//tr[@id="' . $accessions_list_id .'"]//*[contains(text(), "Predict")]', 'xpath', 'accessions list sel pred')->click();
     sleep(5);
     $d->find_element_ok('//tr[@id="' . $accessions_list_id .'"]//*[contains(text(), "DMCP")]', 'xpath', 'click list sel pred')->click();
@@ -171,6 +166,7 @@ $d->while_logged_in_as("submitter", sub {
     my $elem = $d->driver->execute_script( "arguments[0].scrollIntoView(true);window.scrollBy(0,-70);", $sel_pred);
     sleep(5);
     $d->select_datatable_tab('list_type_selection_private_datasets');
+    $d->filter_datatable('list_type_selection_private_dataset_table', $accessions_dt_name);
     $d->find_element_ok('//tr[@id="' . $accessions_dt_id .'"]//*[contains(text(), "Predict")]', 'xpath', 'accessions dataset sel pred')->click();
     sleep(5);
     $d->find_element_ok('queue_job', 'id', 'job queueing')->click();
@@ -188,6 +184,7 @@ $d->while_logged_in_as("submitter", sub {
     my $elem = $d->driver->execute_script( "arguments[0].scrollIntoView(true);window.scrollBy(0,-70);", $sel_pred);
     sleep(5);
     $d->select_datatable_tab('list_type_selection_private_datasets');
+    $d->filter_datatable('list_type_selection_private_dataset_table', $accessions_dt_name);
     $d->find_element_ok('//tr[@id="' . $accessions_dt_id .'"]//*[contains(text(), "Predict")]', 'xpath', 'accessions list sel pred')->click();
     sleep(5);
     $d->find_element_ok('//tr[@id="' . $accessions_dt_id .'"]//*[contains(text(), "DMCP")]', 'xpath', 'dataset accessions sel pred result')->click();
@@ -248,6 +245,7 @@ $d->while_logged_in_as("submitter", sub {
     sleep(5);
 
     $d->select_datatable_tab('list_type_selection_private_lists');
+    $d->filter_datatable('list_type_selection_private_list_table', $accessions_list_name);
     $d->find_element_ok('//tr[@id="' . $accessions_list_id .'"]//*[contains(text(), "Predict")]', 'xpath', 'accessions list sel multi traits pred')->click();
     sleep(5);
     $d->find_element_ok('queue_job', 'id', 'job queueing')->click();
@@ -261,6 +259,7 @@ $d->while_logged_in_as("submitter", sub {
     $d->find_element_ok('Go back', 'partial_link_text', 'go back')->click();
     sleep(5);
     $d->select_datatable_tab('list_type_selection_private_lists');
+    $d->filter_datatable('list_type_selection_private_list_table', $accessions_list_name);
     $d->find_element_ok('//tr[@id="' . $accessions_list_id .'"]//*[contains(text(), "Predict")]', 'xpath', 'accessions list sel pred')->click();
     sleep(5);
 
@@ -271,6 +270,7 @@ $d->while_logged_in_as("submitter", sub {
     sleep(5);
 
     $d->select_datatable_tab('list_type_selection_private_datasets');
+    $d->filter_datatable('list_type_selection_private_dataset_table', $accessions_dt_name);
     $d->find_element_ok('//tr[@id="' . $accessions_dt_id .'"]//*[contains(text(), "Predict")]', 'xpath', 'accessions dataset sel multi traits pred')->click();
     sleep(5);
     $d->find_element_ok('queue_job', 'id', 'no job queueing')->click();
@@ -288,6 +288,7 @@ $d->while_logged_in_as("submitter", sub {
     my $elem = $d->driver->execute_script( "arguments[0].scrollIntoView(true);window.scrollBy(0,-70);", $sel_pred);
     sleep(5);
     $d->select_datatable_tab('list_type_selection_private_datasets');
+    $d->filter_datatable('list_type_selection_private_dataset_table', $accessions_dt_name);
     $d->find_element_ok('//tr[@id="' . $accessions_dt_id .'"]//*[contains(text(), "Predict")]', 'xpath', 'accessions list sel pred')->click();
     sleep(5);
     $d->find_element_ok('//tr[@id="' . $accessions_dt_id .'"]//*[contains(text(), "FRW")]', 'xpath', 'accessions dataset dmcp-frw pred')->click();
@@ -304,6 +305,7 @@ $d->while_logged_in_as("submitter", sub {
     sleep(4);
 
     $d->select_datatable_tab('list_type_training_private_lists');
+    $d->filter_datatable('list_type_training_private_list_table', $trials_list_name);
     $d->find_element_ok('//tr[@id="' . $trials_list_id .'"]//*[starts-with(@id, "run_solgs")]', 'xpath', 'trials list sel pred')->click(); 
     sleep(3);
     $d->find_element_ok('queue_job', 'id', 'no job queueing')->click();
@@ -319,6 +321,7 @@ $d->while_logged_in_as("submitter", sub {
     sleep(10);
 
     $d->select_datatable_tab('list_type_training_private_lists');
+    $d->filter_datatable('list_type_training_private_list_table', $trials_list_name);
     $d->find_element_ok('//tr[@id="' . $trials_list_id .'"]//*[starts-with(@id, "run_solgs")]', 'xpath', 'trials list sel pred')->click();
     sleep(10);
 
@@ -381,6 +384,7 @@ $d->while_logged_in_as("submitter", sub {
     # sleep(5);
 
     $d->select_datatable_tab('list_type_training_private_datasets');
+    $d->filter_datatable('list_type_training_private_dataset_table', $trials_dt_name);
     $d->find_element_ok('//tr[@id="' . $trials_dt_id .'"]//*[starts-with(@id, "run_solgs")]', 'xpath', 'create trials dataset tr pop')->click();
     sleep(3);
     $d->find_element_ok('queue_job', 'id', 'no job queueing')->click();
@@ -396,6 +400,7 @@ $d->while_logged_in_as("submitter", sub {
     sleep(10);
 
     $d->select_datatable_tab('list_type_training_private_datasets');
+    $d->filter_datatable('list_type_training_private_dataset_table', $trials_dt_name);
     $d->find_element_ok('//tr[@id="' . $trials_dt_id .'"]//*[starts-with(@id, "run_solgs")]', 'xpath', 'go to trials dataset tr pop')->click();
     sleep(5);
     $d->find_element_ok('dry matter', 'partial_link_text',  'build model')->click();
