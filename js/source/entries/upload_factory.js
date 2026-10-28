@@ -90,13 +90,14 @@ export var archived_files_list = [];
 
 export var job_dict = {};
 
-export function load_archived_files_table(user_id) {
+export function load_archived_files_table(user_id, interval) {
 
     jQuery.ajax({
         url: '/ajax/tools/documents/user_archive/',
         type : 'POST',
         data : {
-            'user_id': user_id
+            'user_id': user_id,
+            'interval':interval
         },
         success: function(response) {
             if (response.error) {

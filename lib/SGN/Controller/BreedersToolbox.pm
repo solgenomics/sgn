@@ -599,10 +599,11 @@ sub manage_phenotyping_download : Path("/breeders/phenotyping/download") Args(1)
     my $self =shift;
     my $c = shift;
     my $file_id = shift;
+    my $archive_path = $c->config->{archive_path};
 
     my $metadata_schema = $c->dbic_schema('CXGN::Metadata::Schema');
     my $file_row = $metadata_schema->resultset("MdFiles")->find({file_id => $file_id});
-    my $file_destination =  File::Spec->catfile($file_row->dirname, $file_row->basename);
+    my $file_destination =  File::Spec->catfile($archive_path, $file_row->dirname, $file_row->basename);
     #print STDERR "\n\n\nfile name:".$file_row->basename."\n";
     my $contents = read_file($file_destination);
     my $file_name = $file_row->basename;

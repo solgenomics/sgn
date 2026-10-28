@@ -67,6 +67,20 @@ $allowed_upload_types => undef
                             </form>
                         </div>
                     </td>
+                </tr>
+                <tr>
+                    <td>
+                        <select id="file_time_interval_select" style="width: auto" class="form-control form-control-sm">
+                            <option value="1 week">Show files from this week</option>
+                            <option value="1 month">Show files from this month</option>
+                            <option value="3 months" selected>Show files from the last three months</option>
+                            <option value="6 months">Show files from the last six months</option>
+                            <option value="1 year">Show files from the last year</option>
+                            <option value="all time">Show all archived files</option>
+                        </select>
+                    </td>
+                </tr>
+            </table>
             <table id="upload_factory_archived_files_table">
                 <thead>
                 </thead>
@@ -258,7 +272,7 @@ function fire_refresh() {
 
 jQuery(document).ready(function(){
 
-    jsMod["upload_factory"].load_archived_files_table('<% $sp_person_id %>');
+    jsMod["upload_factory"].load_archived_files_table('<% $sp_person_id %>', '3 months');
     jsMod["upload_factory"].refresh_upload_tables('<% $sp_person_id %>');
 
     setInterval(fire_refresh, 120000);
@@ -412,6 +426,11 @@ jQuery(document).ready(function(){
                 alert("An error occurred dismissing failed and timed out uploads, check console.");
             }
         });
+    });
+
+    jQuery('#file_time_interval_select').on('change', function(){
+        let interval = jQuery('#file_time_interval_select option:selected').val();
+        jsMod["upload_factory"].load_archived_files_table('<% $sp_person_id %>', interval);
     });
 
     // jQuery('#check_file_format_select').html(upload_type_options());

@@ -95,6 +95,8 @@ sub search_document_POST : Args(0) {
     my $file_ids = $c->req->param("file_ids");
     my $search = $c->req->param("search");
 
+    my $archive_path = $c->config->{archive_path};
+
     my $file_ids_ref;
     if ($file_ids){
         $file_ids_ref = decode_json $file_ids;
@@ -106,7 +108,7 @@ sub search_document_POST : Args(0) {
     while(my $r = $file_rs->next()){
         my $dirname = $r->dirname();
         my $basename = $r->basename();
-        my $file_path = $dirname. "/" .$basename;
+        my $file_path = File::Spec->catfile($archive_path, $dirname, $basename);
         push @files, $file_path;
     }
 
@@ -132,6 +134,22 @@ sub user_archived_files_POST : Args(0) {
     my $self = shift;
     my $c = shift;
     my $user_id = $c->req->param("user_id") || undef;
+    my $interval = $c->req->param("interval") || "3 months";
+
+    my %valid_intervals = (
+        "1 week" => 1,
+        "1 month" => 1,
+        "3 months" => 1,
+        "6 months" => 1,
+        "1 year" => 1,
+        "all time" => 1
+    );
+
+    if (!exists($valid_intervals{$interval})) {
+        $c->stash->{rest} = {error => "\"$interval\" is not a valid time interval.\n"} ;
+        return;
+    }
+
 
     my $logged_user = $c->user->get_object()->get_sp_person_id();
     my $role = $c->user->get_object()->get_user_type();
@@ -148,9 +166,9 @@ sub user_archived_files_POST : Args(0) {
     my $data;
 
     if ($role eq "curator") {
-        $data = CXGN::File->get_all_archived_files($bcs_schema);
+        $data = CXGN::File->get_all_archived_files($bcs_schema, $interval);
     } else {
-        $data = CXGN::File->get_user_archived_files($bcs_schema, $user_id);
+        $data = CXGN::File->get_user_archived_files($bcs_schema, $user_id, $interval);
     }
 
     $c->stash->{rest} = {success => 1, data => $data};

@@ -494,16 +494,26 @@ sub get_user_archived_files {
     my $class = shift;
     my $schema = shift;
     my $user_id = shift;
+    my $interval = shift;
 
     my $q = "SELECT file_id, basename, filetype, tags FROM metadata.md_files
         JOIN metadata.md_metadata ON (md_files.metadata_id=md_metadata.metadata_id)
         JOIN sgn_people.sp_person ON (sp_person.sp_person_id=md_metadata.create_person_id)
         WHERE sp_person_id=? 
-        AND basename != 'none'
-        AND create_timestamp > NOW() - '3 months' :: interval";
+        AND basename != 'none'";
+
+    my $time_restrict_q = " AND create_timestamp > NOW() - ? :: interval";
+
+    my @q_params = ($user_id);
+
+    if ($interval ne "all time") { # add time restriction to query if supplied
+        $q .= $time_restrict_q;
+        push @q_params, $interval;
+    }
 
     my $h = $schema->storage()->dbh()->prepare($q);
-    $h->execute($user_id);
+    
+    $h->execute(@q_params);
 
     my @data;
 
@@ -530,15 +540,24 @@ Retrieves all archived files. Typically used by a curator.
 sub get_all_archived_files {
     my $class = shift;
     my $schema = shift;
+    my $interval = shift;
 
     my $q = "SELECT file_id, basename, sp_person_id, first_name, last_name, filetype, tags FROM metadata.md_files
         JOIN metadata.md_metadata ON (md_files.metadata_id=md_metadata.metadata_id)
         JOIN sgn_people.sp_person ON (sp_person.sp_person_id=md_metadata.create_person_id)
-        WHERE basename != 'none'
-        AND create_timestamp > NOW() - '3 months' :: interval";
+        WHERE basename != 'none'";
+
+    my $time_restrict_q = " AND create_timestamp > NOW() - ? :: interval";
+
+    my @q_params = ();
+
+    if ($interval ne "all time") { # add time restriction to query if supplied
+        $q .= $time_restrict_q;
+        push @q_params, $interval;
+    }
 
     my $h = $schema->storage()->dbh()->prepare($q);
-    $h->execute();
+    $h->execute(@q_params);
 
     my @data;
 
