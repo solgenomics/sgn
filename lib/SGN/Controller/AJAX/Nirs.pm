@@ -94,9 +94,12 @@ sub generate_spectral_plot_POST : Args(0) {
         print $train_json_outfile $training_data_input_json;
     close($train_json_outfile);
 
-    my $cmd_s = "Rscript ".$c->config->{basepath} . "/R/Nirs/nirs_visualize_spectra.R '$filter_json_filepath' '$output_plot_filepath' ";
+    open STDOUT, '>', '/dev/null' or die "Can't redirect STDOUT: $!";
+
+    my $cmd_s = "Rscript ".$c->config->{basepath} . "/R/Nirs/nirs_visualize_spectra.R '$filter_json_filepath' '$output_plot_filepath'  ";
     print STDERR $cmd_s;
     my $cmd_status = system($cmd_s);
+    close(STDOUT);
 
     $c->stash->{rest} = {figure => $output_plot_filepath_string};
 }
@@ -382,9 +385,12 @@ sub generate_results_POST : Args(0) {
     # $cmd->is_cluster(1);
     # $cmd->wait;
 
+    open STDOUT, '>', '/dev/null' or die "Can't redirect STDOUT: $!";
     my $cmd_s = "Rscript ".$c->config->{basepath} . "/R/Nirs/nirs.R '$seltrait' '$preprocessing_boolean' '$niter_id' '$algo_id' '$tune_id' '$rf_var_imp' '$cv_scheme' '$train_json_filepath' '$test_json_filepath' 'TRUE' '$output_model_filepath' '$output_table2_filepath' '$output_figure2_filepath' '$output_table_filepath' '$output_figure_filepath' ";
-    print STDERR $cmd_s;
+
     my $cmd_status = system($cmd_s);
+    close(STDOUT);
+    print STDERR "RAND PREPROCESS COMMAND: $cmd_s\n";
 
     my @aux_files = (
         {
@@ -622,10 +628,12 @@ sub generate_predictions_POST : Args(0) {
         print $train_json_outfile $training_data_input_json;
     close($train_json_outfile);
 
+    open STDERR, '>', '/dev/null' or die "Can't redirect STDOUT: $!";
     my $cmd_s = "Rscript ".$c->config->{basepath} . "/R/Nirs/predict_NIRS.R '$input_json_filepath' '$performance_file' '$model_file' $algorithm '$output_results_filepath' ";
-    print STDERR $cmd_s;
-    my $cmd_status = system($cmd_s);
 
+    my $cmd_status = system($cmd_s);
+    close(STDERR);
+    print STDERR "RAN COMMAND: ".$cmd_s;
     my $csv = Text::CSV->new({ sep_char => "," });
     my $time = DateTime->now();
     my $timestamp = $time->ymd()."_".$time->hms();
