@@ -46,8 +46,15 @@ my $items_title  = $is_file_type ? 'Files in this collection' : 'Images in this 
 
 <&| /page/info_section.mas, title => $items_title, collapsible => 1, collapsed => 0 &>
 
-% if ($user_can_modify) {
   <div style="margin-bottom:10px;">
+    <button class="btn btn-default btn-sm" id="download_all_button">
+      <span class="glyphicon glyphicon-download-alt"></span> Download all <% $is_file_type ? 'files' : 'images' %>
+    </button>
+    <button class="btn btn-default btn-sm" id="download_selected_button" style="display:none;">
+      <span class="glyphicon glyphicon-download-alt"></span> Download selected <% $is_file_type ? 'files' : 'images' %>
+      (<span id="download_selected_count">0</span>)
+    </button>
+% if ($user_can_modify) {
 % if ($is_file_type) {
     <button class="btn btn-primary btn-sm" id="open_add_files_modal_button">
       <span class="glyphicon glyphicon-plus"></span> Add Files
@@ -60,16 +67,14 @@ my $items_title  = $is_file_type ? 'Files in this collection' : 'Images in this 
     <button class="btn btn-danger btn-sm" id="remove_selected_button">
       Remove selected <% $is_file_type ? 'files' : 'images' %> from collection
     </button>
-  </div>
 % }
+  </div>
 
 % if ($is_file_type) {
   <table id="collection_files_table" class="table table-hover table-condensed" style="width:100%">
     <thead>
       <tr>
-% if ($user_can_modify) {
         <th></th>
-% }
         <th>File Name</th><th>Type</th><th>Comment</th><th>Uploader</th><th>Added</th>
       </tr>
     </thead>
@@ -78,9 +83,7 @@ my $items_title  = $is_file_type ? 'Files in this collection' : 'Images in this 
   <table id="collection_images_table" class="table table-hover table-condensed" style="width:100%">
     <thead>
       <tr>
-% if ($user_can_modify) {
         <th></th>
-% }
         <th>Image</th><th>Filename</th><th>Description</th>
         <th>Submitter</th><th>Associations</th><th>Accession</th>
         <th>Observations</th><th>Tags</th>
@@ -227,10 +230,12 @@ jQuery(document).ready(function () {
     var contents_table = null;
 
     if (item_type === 'image') {
-        var images_ajax_data = { collection_id_list: collection_id };
-        if (can_modify) {
-            images_ajax_data.html_select_box = 'collection_image_select';
-        }
+        // every viewer gets the checkboxes, for downloading selected images;
+        // removing them is still limited to people who can modify the collection
+        var images_ajax_data = {
+            collection_id_list: collection_id,
+            html_select_box: 'collection_image_select'
+        };
         contents_table = jQuery('#collection_images_table').DataTable({
             'ajax': {
                 'url':  '/ajax/search/images',
@@ -257,10 +262,10 @@ jQuery(document).ready(function () {
         });
     }
     else {
-        var files_ajax_data = { collection_id: collection_id };
-        if (can_modify) {
-            files_ajax_data.html_select_box = 'collection_file_select';
-        }
+        var files_ajax_data = {
+            collection_id: collection_id,
+            html_select_box: 'collection_file_select'
+        };
         contents_table = jQuery('#collection_files_table').DataTable({
             'ajax': {
                 'url':  '/ajax/search/files',
@@ -272,27 +277,41 @@ jQuery(document).ready(function () {
             'searching':  true,
             'lengthMenu': [20, 50, 100],
             'ordering':   false,
-            'columns':
-% if ($user_can_modify) {
-                [
-                    { 'data': 0, 'orderable': false, 'searchable': false },
-                    { 'data': 1 },
-                    { 'data': 2 },
-                    { 'data': 3 },
-                    { 'data': 4 },
-                    { 'data': 5 }
-                ]
-% } else {
-                [
-                    { 'data': 0 },
-                    { 'data': 1 },
-                    { 'data': 2 },
-                    { 'data': 3 },
-                    { 'data': 4 }
-                ]
-% }
+            'columns': [
+                { 'data': 0, 'orderable': false, 'searchable': false },
+                { 'data': 1 },
+                { 'data': 2 },
+                { 'data': 3 },
+                { 'data': 4 },
+                { 'data': 5 }
+            ]
         });
     }
+
+    // download
+
+    function update_download_selected_button() {
+        var count = selectedIds().length;
+        jQuery('#download_selected_count').text(count);
+        jQuery('#download_selected_button').toggle(count > 0);
+    }
+
+    jQuery('#collection_images_table, #collection_files_table')
+        .on('change', 'input[type="checkbox"]', update_download_selected_button);
+
+    // changing the page redraws the rows, which clears their checkboxes
+    contents_table.on('draw', update_download_selected_button);
+
+    jQuery('#download_all_button').click(function () {
+        window.location.href = '/collection/download/' + collection_id;
+    });
+
+    jQuery('#download_selected_button').click(function () {
+        var ids = selectedIds();
+        if (!ids.length) { return; }
+        window.location.href = '/collection/download/' + collection_id +
+            '?item_type=' + item_type + '&item_ids=' + ids.join(',');
+    });
 
     function selectedIds() {
         var name = item_type === 'file' ? 'collection_file_select' : 'collection_image_select';

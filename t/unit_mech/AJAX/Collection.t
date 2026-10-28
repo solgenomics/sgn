@@ -469,6 +469,22 @@ $row = (grep { $_->{collection_id} == $file_collection_id } @{ $response->{colle
 ok($row, 'for_trial with collection_type file returns the file collection');
 is($row->{n_trial_files}, 1, 'for_trial returns n_trial_files');
 
+# download a collection as a zip. The fixture file's archive path does not exist
+# on the test server, so it is reported in missing_files.txt inside the zip.
+#
+$mech->get_ok("http://localhost:3010/collection/download/$file_collection_id", 'download all items of the file collection');
+is($mech->response->header('Content-Type'), 'application/zip', 'download is a zip');
+like($mech->response->header('Content-Disposition'), qr/TestCollection_FileSearch\.zip/, 'zip is named after the collection');
+like($mech->content, qr/missing_files\.txt/, 'missing files are listed in the zip');
+
+$mech->get_ok("http://localhost:3010/collection/download/$file_collection_id?item_type=file&item_ids=$fixture_file_id", 'download selected items');
+like($mech->response->header('Content-Disposition'), qr/TestCollection_FileSearch_selected\.zip/, 'selected download is named as such');
+
+# an item that is not in the collection is not downloaded
+#
+$mech->get_ok("http://localhost:3010/collection/download/$file_collection_id?item_type=file&item_ids=$second_file_id", 'download an item from outside the collection');
+$mech->content_contains('There is nothing to download', 'items outside the collection are not downloaded');
+
 # AJAX create with a breeding program
 #
 $mech->post_ok('http://localhost:3010/ajax/collection/create', [
