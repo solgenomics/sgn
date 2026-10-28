@@ -49,14 +49,14 @@ $drone_run_date => undef
 
 <br/>
 
-<& /page/page_title.mas, title=>"Imaging Event Project: ".$trial_name &>
+<& /page/page_title.mas, title=> HTML::Entities::encode_entities($c->i18n->p("drone.interface.imaging_event_project_label_variant_9", "Imaging Event Project: ")).HTML::Entities::encode_entities($trial_name) &>
 
-<& /page/detail_page_2_col_section.mas, info_section_collapsed => 0, trial_id => $trial_id, info_section_title => "<h4 style='display:inline'>Imaging Event Details</h4>", info_section_subtitle => 'View basic information about the imaging event project.', buttons_html => '<button class="btn btn-primary btn-sm" id="edit_drone_run_details" style="margin:3px">Edit Imaging Event Details</button>', icon_class => "glyphicon glyphicon-dashboard", info_section_id => "drone_run_project_details", trial_name => $trial_name, trial_description => $trial_description, identifier_prefix => $identifier_prefix, drone_run_date=>$drone_run_date &>
+<& /page/detail_page_2_col_section.mas, info_section_collapsed => 0, trial_id => $trial_id, info_section_title => "<h4 style='display:inline'>" . $c->i18n->p("drone.interface.imaging_event_details", "Imaging Event Details") . "</h4>", info_section_anchor_title => "Imaging Event Details", info_section_subtitle => $c->i18n->p("drone.interface.view_basic_information_about_the_imaging_event_project", "View basic information about the imaging event project."), buttons_html => '<button class="btn btn-primary btn-sm" id="edit_drone_run_details" style="margin:3px">' . $c->i18n->p("drone.interface.edit_imaging_event_details", "Edit Imaging Event Details") . '</button>', icon_class => "glyphicon glyphicon-dashboard", info_section_id => "drone_run_project_details", trial_name => $trial_name, trial_description => $trial_description, identifier_prefix => $identifier_prefix, drone_run_date=>$drone_run_date &>
 
-% my $data_agreement_link = '<button class="btn btn-sm btn-primary" disabled style="margin:3px">Add/edit data agreement</button>';
-% if ($user_can_modify) { $data_agreement_link = '<button class="btn btn-sm btn-primary" style="margin:3px" id="add_data_agreement">Add/edit data agreement</button>'; }
+% my $data_agreement_link = '<button class="btn btn-sm btn-primary" disabled style="margin:3px">' . $c->i18n->p("drone.interface.add_edit_data_agreement", "Add/edit data agreement") . '</button>';
+% if ($user_can_modify) { $data_agreement_link = '<button class="btn btn-sm btn-primary" style="margin:3px" id="add_data_agreement">' . $c->i18n->p("drone.interface.add_edit_data_agreement", "Add/edit data agreement") . '</button>'; }
 
-<& /page/detail_page_2_col_section.mas, trial_id => $trial_id, info_section_title => "<h4 style='display:inline'>Data Agreement License</h4>", info_section_subtitle => 'View and edit the public data agreement on this experiment.', icon_class => "glyphicon glyphicon-inbox", info_section_id => "trial_data_agreement_section", buttons_html => $data_agreement_link &>
+<& /page/detail_page_2_col_section.mas, trial_id => $trial_id, info_section_title => "<h4 style='display:inline'>" . $c->i18n->p("drone.interface.data_agreement_license", "Data Agreement License") . "</h4>", info_section_anchor_title => "Data Agreement License", info_section_subtitle => $c->i18n->p("drone.interface.view_and_edit_the_public_data_agreement_on_this_experiment", "View and edit the public data agreement on this experiment."), icon_class => "glyphicon glyphicon-inbox", info_section_id => "trial_data_agreement_section", buttons_html => $data_agreement_link &>
 
 <& /breeders_toolbox/add_data_agreement_dialogs.mas, trial_id => $trial_id &>
 
@@ -65,14 +65,14 @@ $drone_run_date => undef
 <div class="modal-dialog modal-xl" role="document">
     <div class="modal-content ui-front">
         <div class="modal-header text-center">
-            <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-            <h4 class="modal-title" id="droneRunDetailsEditDialog">Edit Imaging Event Details</h4>
+            <button type="button" class="close" data-dismiss="modal" aria-label="<% $c->i18n->p("nirs.ui.close", "Close") |h %>"><span aria-hidden="true">&times;</span></button>
+            <h4 class="modal-title" id="droneRunDetailsEditDialog"><% $c->i18n->p("drone.interface.edit_imaging_event_details", "Edit Imaging Event Details") |h %></h4>
         </div>
         <div class="modal-body" id="drone_run_details_edit_body">
             <div class="container-fluid">
             <form class="form-horizontal" role="form" method="post" enctype="multipart/form-data" encoding="multipart/form-data">
                 <div class="form-group">
-                    <label class="col-sm-3 control-label" for="edit_drone_run_name">Imaging Event Name: </label>
+                    <label class="col-sm-3 control-label" for="edit_drone_run_name"><% $c->i18n->p("drone.interface.imaging_event_name_label_variant_8", "Imaging Event Name:") |h %> </label>
                     <div class="col-sm-8">
                       <div class="input-group">
                         <input class="form-control col-sm-8" id="edit_drone_run_name" title="name" type="text" value="<%$trial_name%>"/>
@@ -80,7 +80,7 @@ $drone_run_date => undef
                     </div>
                 </div>
                 <div class="form-group">
-                    <label class="col-sm-3 control-label" for="edit_trial_description">Description: </label>
+                    <label class="col-sm-3 control-label" for="edit_trial_description"><% $c->i18n->p("drone.interface.description_label_variant_8", "Description:") |h %> </label>
                     <div class="col-sm-8">
                       <div class="input-group">
                         <textarea class="form-control" id="edit_drone_run_description" title="description" rows="5" maxlength="250"><% $trial_description %></textarea>
@@ -91,8 +91,8 @@ $drone_run_date => undef
             </div>
         </div>
         <div class="modal-footer">
-            <button type="button" class="btn btn-default" data-dismiss="modal" id="edit_drone_run_details_cancel_button">Cancel</button>
-            <button type="button" class="btn btn-primary" id="save_drone_run_details">Save Changes</button>
+            <button type="button" class="btn btn-default" data-dismiss="modal" id="edit_drone_run_details_cancel_button"><% $c->i18n->p("trial.details.cancel", "Cancel") |h %></button>
+            <button type="button" class="btn btn-primary" id="save_drone_run_details"><% $c->i18n->p("trial.details.save", "Save Changes") |h %></button>
         </div>
     </div>
 </div>
@@ -123,12 +123,12 @@ jQuery(document).ready(function () {
           },
           success: function(response){
             if (response.success) {
-                alert('Details saved!');
+                alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("drone.interface.details_saved", "Details saved!") : "Details saved!"));
             }
             location.reload();
           },
           error: function(response){
-              alert('Error saving details');
+              alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("drone.interface.error_saving_details", "Error saving details") : "Error saving details"));
           }
 
       });
@@ -137,3 +137,7 @@ jQuery(document).ready(function () {
 });
 
 </script>
+
+<%once>
+use HTML::Entities ();
+</%once>

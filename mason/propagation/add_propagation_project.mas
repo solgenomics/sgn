@@ -10,43 +10,43 @@ $locations
     <div class="modal-dialog modal-xl" role="document">
         <div class="modal-content ui-front">
             <div class="modal-header">
-                <button type="reset" class="close" id="add_propagation_project_dismiss_button_1" name="add_propagation_project_dismiss_button" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                <center><h4 class="modal-title" id="addPropagationProjectDialog">Add New Propagation Project</h4></center>
+                <button type="reset" class="close" id="add_propagation_project_dismiss_button_1" name="add_propagation_project_dismiss_button" aria-label="<% $c->i18n->p("global.dataset_publish.close", "Close") |h %>"><span aria-hidden="true">&times;</span></button>
+                <center><h4 class="modal-title" id="addPropagationProjectDialog"><% $c->i18n->p("seedlot.add_new_propagation_project", "Add New Propagation Project") |h %></h4></center>
             </div>
             <div class="modal-body">
                 <div class="container-fluid">
 
                     <&| /util/workflow.mas, id=> "add_propagation_project_workflow" &>
-                        <&| /util/workflow.mas:step, title=> "Intro" &>
-                            <& /page/page_title.mas, title=>"What are Propagation Projects?" &>
-                            <p>Propagation Project page acts as a centralized page for different propagation processes .</p>
+                        <&| /util/workflow.mas:step, title=> $c->i18n->p("cross.ui.intro", "Intro") &>
+                            <& /page/page_title.mas, title=>HTML::Entities::encode_entities($c->i18n->p("seedlot.what_are_propagation_projects", "What are Propagation Projects?")) &>
+                            <p><% $c->i18n->p("seedlot.propagation_project_page_acts_as_a_centralized_page_for_different", "Propagation Project page acts as a centralized page for different propagation processes .") |h %></p>
                             <ul>
-                                <li>Each project page may be used to group propagation processes having the same propagation type, objective or done in the same year.</li>
-                                <li>Metadata for each propagation process (e.g., accession name, material type, date, operator) is linked to a globally unique <b>Propagation Group Identifier</b>.</li>
-                                <li>Within each Propagation Group, the progress of each plant produced is tracked by a globally unique <b>Propagation Identifier</b>.</li>
+                                <li><% $c->i18n->p("seedlot.each_project_page_may_be_used_to_group_propagation_processes", "Each project page may be used to group propagation processes having the same propagation type, objective or done in the same year.") |h %></li>
+                                <li><% $c->i18n->p("seedlot.metadata_for_each_propagation_process_e_g_accession_name_material", "Metadata for each propagation process (e.g., accession name, material type, date, operator) is linked to a globally unique") |h %> <b><% $c->i18n->p("seedlot.propagation_group_identifier.dc30c92", "Propagation Group Identifier") |h %></b>.</li>
+                                <li><% $c->i18n->p("seedlot.within_each_propagation_group_the_progress_of_each_plant_produced", "Within each Propagation Group, the progress of each plant produced is tracked by a globally unique") |h %> <b><% $c->i18n->p("seedlot.propagation_identifier.e403673", "Propagation Identifier") |h %></b>.</li>
                             </ul>
                             <hr>
                             <center>
-                                <button id="next_step_add_new_propagation_project" class="btn btn-primary" onclick="Workflow.complete(this);">Go to Next Step</button>
+                                <button id="next_step_add_new_propagation_project" class="btn btn-primary" onclick="Workflow.complete(this);"><% $c->i18n->p("cross.ui.go_to_next_step", "Go to Next Step") |h %></button>
                             </center>
                         </&>
 
                         <form class="form-horizontal" role="form" name="add_propagation_project_form" id="add_propagation_project_form">
-                            <&| /util/workflow.mas:step, title=> "Add a propagation project" &>
-                                <& /page/page_title.mas, title=>"Enter basic information about the propagation project" &>
+                            <&| /util/workflow.mas:step, title=> $c->i18n->p("seedlot.add_a_propagation_project", "Add a propagation project") &>
+                                <& /page/page_title.mas, title=>HTML::Entities::encode_entities($c->i18n->p("seedlot.enter_basic_information_about_the_propagation_project", "Enter basic information about the propagation project")) &>
                                     <br/>
                                     <div class="form-group">
-                                        <label class="col-sm-3 control-lable">Project Name: </label>
+                                        <label class="col-sm-3 control-lable"><% $c->i18n->p("seedlot.project_name", "Project Name:") |h %> </label>
                                         <div class="col-sm-9">
                                             <input class="form-control" type="text" id="propagation_project_name" name="propagation_project_name"  />
                                         </div>
                                     </div><br/>
 
                                     <div class="form-group">
-                                        <label class="col-sm-3 control-label">Propagation Type: </label>
+                                        <label class="col-sm-3 control-label"><% $c->i18n->p("seedlot.propagation_type.53e3cdf", "Propagation Type:") |h %> </label>
                                         <div class="col-sm-9">
                                             <select class="form-control" id="propagation_type" name="propagation_type">
-                                                <option value="Macropropagation">Macropropagation</option>
+                                                <option value="Macropropagation"><% $c->i18n->p("seedlot.macropropagation", "Macropropagation") |h %></option>
                                                 <!--
                                                 <option value="">Select a Type</option>
                                                 <option value="Micropropagation">Micropropagation</option>
@@ -55,10 +55,10 @@ $locations
                                         </div>
                                     </div><br/>
                                     <div class="form-group">
-                                        <label class="col-sm-3 control-label">Breeding Program: </label>
+                                        <label class="col-sm-3 control-label"><% $c->i18n->p("cross.ui.breeding_program.2c9b17e", "Breeding Program:") |h %> </label>
                                         <div class="col-sm-9">
                                             <select class="form-control" id="propagation_project_program" name="propagation_project_program">
-                                                <option value="">Select Breeding Program</option>
+                                                <option value=""><% $c->i18n->p("cross.ui.select_breeding_program", "Select Breeding Program") |h %></option>
 <%perl>
 foreach my $program (@$programs) {
     if (@$program[3]) {
@@ -72,10 +72,10 @@ foreach my $program (@$programs) {
                                         </div>
                                     </div><br/>
                                     <div class="form-group">
-                                        <label class="col-sm-3 control-label">Location: </label>
+                                        <label class="col-sm-3 control-label"><% $c->i18n->p("seedlot_record.ui.location", "Location:") |h %> </label>
                                         <div class="col-sm-9">
                                             <select class="form-control" id="propagation_project_location" name="propagation_project_location">
-                                                <option value="">Select Location</option>
+                                                <option value=""><% $c->i18n->p("cross.ui.select_location", "Select Location") |h %></option>
 <%perl>
     foreach my $location_hashref (@$locations) {
         my $properties = $location_hashref->{'properties'};
@@ -88,13 +88,13 @@ foreach my $program (@$programs) {
                                         </div>
                                     </div><br/>
                                     <div class="form-group">
-                                        <label class="col-sm-3 control-label">Year:</label>
+                                        <label class="col-sm-3 control-label"><% $c->i18n->p("cross.ui.year.c9410fe", "Year:") |h %></label>
                                         <div class="col-sm-9">
                                             <div id="propagation_project_year" name="propagation_project_year" ></div>
                                         </div>
                                     </div><br/>
                                     <div class="form-group">
-                                        <label class="col-sm-3 control-label">Description:</label>
+                                        <label class="col-sm-3 control-label"><% $c->i18n->p("global.dataset_publish.description", "Description:") |h %></label>
                                         <div class="col-sm-9">
                                             <textarea class="form-control" id="propagation_project_description" name="propagation_project_description" ></textarea>
                                         </div>
@@ -103,15 +103,15 @@ foreach my $program (@$programs) {
                                 <br/>
                                 <br/>
                                 <center>
-                                    <button type="button" class="btn btn-primary" onclick="Workflow.complete(this, false);" name="add_propagation_project_submit" id="add_propagation_project_submit">Submit</button>
+                                    <button type="button" class="btn btn-primary" onclick="Workflow.complete(this, false);" name="add_propagation_project_submit" id="add_propagation_project_submit"><% $c->i18n->p("global.manage_file_share_dump.submit", "Submit") |h %></button>
                                 </center>
                             </&>
                         </form>
 
-                        <&| /util/workflow.mas:complete, title=> "Complete" &>
-                            <& /page/page_title.mas, title=>"Finished! Your propagation project is now in the database" &>
+                        <&| /util/workflow.mas:complete, title=> $c->i18n->p("cross.ui.complete", "Complete") &>
+                            <& /page/page_title.mas, title=>HTML::Entities::encode_entities($c->i18n->p("seedlot.finished_your_propagation_project_is_now_in_the_database", "Finished! Your propagation project is now in the database")) &>
                             <ul>
-                                <li>Please click on 'Refresh' button to view your newly created project on the manage page.</li>
+                                <li><% $c->i18n->p("seedlot.please_click_on_refresh_button_to_view_your_newly_created", "Please click on 'Refresh' button to view your newly created project on the manage page.") |h %></li>
                             </ul>
                             <br/>
                         </&>
@@ -119,7 +119,7 @@ foreach my $program (@$programs) {
                 </div>
             </div>
             <div class="modal-footer">
-                <button id="add_propagation_project_dismiss_button_2" name="add_propagation_project_dismiss_button" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                <button id="add_propagation_project_dismiss_button_2" name="add_propagation_project_dismiss_button" type="button" class="btn btn-default" data-dismiss="modal"><% $c->i18n->p("global.dataset_publish.close", "Close") |h %></button>
             </div>
         </div>
     </div>
@@ -150,37 +150,37 @@ jQuery(document).ready(function(){
     jQuery('#add_propagation_project_submit').click(function() {
         var propagation_project_name = jQuery("#propagation_project_name").val();
         if (!propagation_project_name) {
-            alert("Project name is required");
+            alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("seedlot.project_name_is_required", "Project name is required") : "Project name is required"));
             return;
         }
 
         var propagation_type = jQuery("#propagation_type").val();
         if (!propagation_type) {
-            alert ("Propagation Type is required");
+            alert ((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("seedlot.propagation_type_is_required", "Propagation Type is required") : "Propagation Type is required"));
             return;
         }
 
         var selectedProgram = jQuery("#propagation_project_program").val();
         if (!selectedProgram) {
-            alert("Breeding program is required");
+            alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("cross.ui.breeding_program_is_required", "Breeding program is required") : "Breeding program is required"));
             return;
         }
 
         var propagation_project_location = jQuery("#propagation_project_location").val();
         if (!propagation_project_location) {
-            alert ("Location is required");
+            alert ((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("seedlots.ui.location_is_required", "Location is required") : "Location is required"));
             return;
         }
 
         var year = jQuery("#propagation_project_year_select").val();
         if (!year) {
-            alert ("Year is required");
+            alert ((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("genotype.project.validation.year_required", "Year is required") : "Year is required"));
             return;
         }
 
         var project_description = jQuery('textarea#propagation_project_description').val();
         if (!project_description) {
-            alert ("Description is required");
+            alert ((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("genotype.project.validation.description_required", "Description is required") : "Description is required"));
             return;
         }
 
@@ -200,11 +200,11 @@ jQuery(document).ready(function(){
                 jQuery("#working_modal").modal("show");
             },
             error: function(response) {
-                alert("An error occurred!" + JSON.stringify(response));
+                alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("accession.files.files.error", "An error occurred!") : "An error occurred!") + JSON.stringify(response));
                 return;
             },
             parseerror: function(response) {
-                alert("A parse error occurred!" + response);
+                alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("seedlot.a_parse_error_occurred", "A parse error occurred!") : "A parse error occurred!") + response);
                 return;
             },
             success: function(response) {
@@ -225,3 +225,7 @@ jQuery(document).ready(function(){
 });
 
 </script>
+
+<%once>
+use HTML::Entities ();
+</%once>

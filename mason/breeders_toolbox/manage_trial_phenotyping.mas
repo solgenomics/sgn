@@ -1,10 +1,14 @@
+<%once>
+use HTML::Entities ();
+</%once>
+
 <%args>
 $trial_id
 $trial_name
 $trial_stock_type => undef
 </%args>
 
-<& /page/page_title.mas, title=>"Manage Phenotyping for $trial_name" &>
+<& /page/page_title.mas, title=>HTML::Entities::encode_entities($c->i18n->p("phenotype.manage_phenotyping_for_name", "Manage Phenotyping for %{name}", {name => "" . $trial_name})) &>
 <& /breeders_toolbox/trial/download_phenotypes_dialog.mas, trial_ids => $trial_id &>
 
 <div class="well well-sm">
@@ -15,7 +19,7 @@ $trial_stock_type => undef
 
         <form class="form-horizontal" role="form" action="/barcode/direct_trial_phenotyping">
             <div class="form-group form-group-sm">
-                <label class="col-sm-4 control-label">Plot Name: </label>
+                <label class="col-sm-4 control-label"><% $c->i18n->p("trial.fieldmap_js.tooltip.plot_name", "Plot Name:") |h %> </label>
                 <div class="col-sm-8" id="plot_name_1">
 
                 </div>
@@ -27,19 +31,19 @@ $trial_stock_type => undef
                 </div>
             </div>
             <div class="form-group form-group-sm">
-                <label class="col-sm-4 control-label">Plot No: </label>
+                <label class="col-sm-4 control-label"><% $c->i18n->p("phenotype.plot_no", "Plot No:") |h %> </label>
                 <div class="col-sm-8" id="plot_no">
 
                 </div>
             </div>
             <div class="form-group form-group-sm">
-                <label class="col-sm-4 control-label">Block No: </label>
+                <label class="col-sm-4 control-label"><% $c->i18n->p("phenotype.block_no", "Block No:") |h %> </label>
                 <div class="col-sm-8" id="block_no">
 
                 </div>
             </div>
             <div class="form-group form-group-sm">
-                <label class="col-sm-4 control-label">Rep No: </label>
+                <label class="col-sm-4 control-label"><% $c->i18n->p("phenotype.rep_no", "Rep No:") |h %> </label>
                 <div class="col-sm-8" id="rep_no">
 
                 </div>
@@ -59,14 +63,14 @@ $trial_stock_type => undef
     <div class="col-md-10 col-lg-10">
 
         <div class="form-group form-group-sm" id="all_traits">
-          <label class="col-sm-4 control-label" for="select_traits_for_trait_file">Select trait: </label>
+          <label class="col-sm-4 control-label" for="select_traits_for_trait_file"><% $c->i18n->p("phenotype.select_trait", "Select trait:") |h %> </label>
           <div class="col-sm-8">
             <select class="form-control" id="select_traits_for_trait_file"></select>
           </div>
         </div>
 
         <div class="form-group form-group-sm">
-          <label class="col-sm-4 control-label">Or Use Trait List: </label>
+          <label class="col-sm-4 control-label"><% $c->i18n->p("phenotype.or_use_trait_list", "Or Use Trait List:") |h %> </label>
             <div class="col-sm-8">
               <input type="checkbox"  id="use_trait_list" value="use_trait_list"/>
           </div>
@@ -76,7 +80,7 @@ $trial_stock_type => undef
 
         <div id="show_trait_textbox" style="display: none">
           <div class="form-group form-group-sm" >
-              <label class="col-sm-4 control-label">Enter a List of Trait Names: </label>
+              <label class="col-sm-4 control-label"><% $c->i18n->p("phenotype.enter_a_list_of_trait_names", "Enter a List of Trait Names:") |h %> </label>
               <div class="col-sm-8" id="show_trait_selectbox">
 
               </div>
@@ -86,12 +90,12 @@ $trial_stock_type => undef
 
         <div id="show_trait_list_box" style="display: none">
             <div class="form-group form-group-sm">
-              <label class="col-sm-4 control-label">Or Paste From a List: </label>
+              <label class="col-sm-4 control-label"><% $c->i18n->p("phenotype.or_paste_from_a_list", "Or Paste From a List:") |h %> </label>
               <div class="col-sm-8">
                   <div id="list_menu_traits"></div>
                   <script defer="defer">
                     jQuery(document).ready(function() {
-                        pasteTraitListMenu('show_trait_selectbox', 'list_menu_traits', 'Paste Trait List');
+                        pasteTraitListMenu('show_trait_selectbox', 'list_menu_traits', (window.SGN && window.SGN.i18n ? window.SGN.i18n.p("phenotype.paste_trait_list", "Paste Trait List") : 'Paste Trait List'));
 
                         function pasteTraitListMenu (div_name, menu_div, button_name) {
                             var list = new CXGN.List();
@@ -108,7 +112,7 @@ $trial_stock_type => undef
         </div>
         <br /><br />
         <div class="form-group form-group-sm" id = "new_pheno_input" style="display: none">
-            <label class="col-sm-4 control-label">Enter trait value: </label>
+            <label class="col-sm-4 control-label"><% $c->i18n->p("phenotype.enter_trait_value", "Enter trait value:") |h %> </label>
             <div class="col-sm-3">
                 <input type="number" class="form-control" id="select_pheno_value" name="select_pheno_value"></input>
             </div>
@@ -123,7 +127,7 @@ $trial_stock_type => undef
             </div>
         </div>
         <div class="form-group form-group-sm" id = "stored_pheno_input" style="display: none">
-            <label class="col-sm-4 control-label">Stored trait value: </label>
+            <label class="col-sm-4 control-label"><% $c->i18n->p("phenotype.stored_trait_value", "Stored trait value:") |h %> </label>
             <div class="col-sm-3">
                 <input class="form-control" name="stored_pheno_value" id="stored_pheno_value" disabled ></input>
             </div>
@@ -139,7 +143,7 @@ $trial_stock_type => undef
     <div id="virtualKeyboard"></div>
     <hr>
 </div>-->
-<&| /page/info_section.mas, id=> "trial_detail_traits_assayed", title => "Traits assayed", collapsible=>1, collapsed=>1, hide_if_empty=>1, subtitle=>"[<a id='trial_download_phenotypes_button'>Download Trial Data</a>]" &>
+<&| /page/info_section.mas, anchor_title => "Traits assayed", id=> "trial_detail_traits_assayed", title => HTML::Entities::encode_entities($c->i18n->p("phenotype.traits_assayed", "Traits assayed")), collapsible=>1, collapsed=>1, hide_if_empty=>1, subtitle=>("[<a id='trial_download_phenotypes_button'>" . HTML::Entities::encode_entities($c->i18n->p("trial.card.page.action_download", "Download Trial Data")) . "</a>]") &>
 
     <& /breeders_toolbox/trial/phenotype_summary.mas, trial_id => $trial_id, trial_stock_type => $trial_stock_type &>
 
@@ -165,7 +169,7 @@ var trial_info_object = [];
            success: function(response) {
                 trial_info_object = response.trial_info;
                if (response.error){
-                 alert("Error Retrieving Trial Information: "+response.error);
+                 alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("phenotype.error_retrieving_trial_information", "Error Retrieving Trial Information: ") : "Error Retrieving Trial Information: ")+response.error);
                }
 
                var trial_plot_name_html = "<select class='form-control' id='plot_name' >";
@@ -206,7 +210,7 @@ var trial_info_object = [];
 
               },
               error: function() {
-                alert('An error occurred retrieving trial information');
+                alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("phenotype.an_error_occurred_retrieving_trial_information", "An error occurred retrieving trial information") : 'An error occurred retrieving trial information'));
               }
 
       });
@@ -287,7 +291,7 @@ var trial_info_object = [];
         success: function (response) {
           jQuery("#loading-trial-phenotype").hide();
           if (response.error){
-            alert("Error Saving Trait Value: "+response.error);
+            alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("phenotype.error_saving_trait_value", "Error Saving Trait Value: ") : "Error Saving Trait Value: ")+response.error);
             jQuery("#error-trial-phenotype").show();
           }
           else {
@@ -295,7 +299,7 @@ var trial_info_object = [];
           }
         },
           error: function() {
-            alert('An error occurred saving trait value');
+            alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("phenotype.an_error_occurred_saving_trait_value", "An error occurred saving trait value") : 'An error occurred saving trait value'));
             jQuery("#loading-trial-phenotype").hide();
             jQuery("#error-trial-phenotype").show();
           },
@@ -330,7 +334,7 @@ var trial_info_object = [];
                 var value = response.trait_value;
                 var red = {'color': 'red'};
                 if (response.error){
-                    alert("Error Retrieving Trait Value: "+response.error);
+                    alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("phenotype.error_retrieving_trait_value", "Error Retrieving Trait Value: ") : "Error Retrieving Trait Value: ")+response.error);
                 } else if (value) {
                     jQuery('#new_pheno_input').hide();
                     jQuery("#stored_pheno_value").css(red);
@@ -344,7 +348,7 @@ var trial_info_object = [];
                 }
             },
             error: function() {
-                alert('An error occurred retrieving trait value');
+                alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("phenotype.an_error_occurred_retrieving_trait_value", "An error occurred retrieving trait value") : 'An error occurred retrieving trait value'));
             }
         });
     }
@@ -401,11 +405,11 @@ var trial_info_object = [];
     var manage_phenotyping_label = '';
 
     if (trial_stock_type == 'family_name') {
-        manage_phenotyping_label = 'Family Name :';
+        manage_phenotyping_label = (window.SGN && window.SGN.i18n ? window.SGN.i18n.p("phenotype.family_name", "Family Name :") : 'Family Name :');
     } else if (trial_stock_type == 'cross') {
-        manage_phenotyping_label = 'Cross Unique ID :';
+        manage_phenotyping_label = (window.SGN && window.SGN.i18n ? window.SGN.i18n.p("phenotype.cross_unique_id", "Cross Unique ID :") : 'Cross Unique ID :');
     } else {
-        manage_phenotyping_label = 'Accession Name :';
+        manage_phenotyping_label = (window.SGN && window.SGN.i18n ? window.SGN.i18n.p("phenotype.accession_name", "Accession Name :") : 'Accession Name :');
     }
 
     jQuery('#manage_phenotyping_stock_type').text(manage_phenotyping_label);

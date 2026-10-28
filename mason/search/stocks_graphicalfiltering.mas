@@ -1,3 +1,7 @@
+<%init>
+    use HTML::Entities ();
+    use JSON::PP ();
+</%init>
 <%args>
 </%args>
 
@@ -5,14 +9,14 @@
 
 <& /util/import_javascript.mas, classes => [ 'CXGN.List', 'd3.d3v4Min', 'brapi.BrAPI', 'brapi.GraphicalFilter' ] &>
 
-<&| /page/info_section.mas, id=>"stock_search_graphical_filter", title => 'Graphical Filter Accessions By Traits (Includes all Search Criteria From Above Search Form)', collapsible=>1, collapsed=>1&>
+<&| /page/info_section.mas, id=>"stock_search_graphical_filter", title => HTML::Entities::encode_entities($c->i18n->p('stock_search.graphical.section', 'Graphical Filter Accessions By Traits (Includes all Search Criteria From Above Search Form)')), collapsible=>1, collapsed=>1&>
 
 <div class="well well-sm">
 
 <div class="panel panel-default">
     <div class="panel-body">
         <div id="stock_search_graphical_filter_div" style="margin:1em">
-        [LOADING...]
+        <% $c->i18n->p('stock_search.graphical.loading', '[LOADING...]') |h %>
         </div>
     </div>
 </div>
@@ -30,9 +34,9 @@
 
 <br/>
 
-<&| /page/info_section.mas, title => 'Copy Filtered Accessions to a List', collapsible=>1, collapsed=>0, subtitle=>'<i>Copy the accession names in table to a new or exisiting list</i>'&>
+<&| /page/info_section.mas, title => HTML::Entities::encode_entities($c->i18n->p('stock_search.graphical.copy', 'Copy Filtered Accessions to a List')), collapsible=>1, collapsed=>0, subtitle=>'<i>' . HTML::Entities::encode_entities($c->i18n->p('stock_search.graphical.copy_help', 'Copy the accession names in table to a new or existing list')) . '</i>'&>
 <div style="text-align:right" id="graphical_filter_results_to_list_menu"></div>
-<div id="graphical_filter_result_names" style="display: none;"></div>
+<textarea id="graphical_filter_result_names" readonly aria-hidden="true" style="display: none;"></textarea>
 </&>
 
 
@@ -46,13 +50,14 @@ jQuery(document).ready(function () {
 
 });
 
+var stockSearchGraphicalI18n = (window.SGN && window.SGN.i18n) || {p: function (context, source) {return source;}};
 var currentGFilter = null;
 function loadBrAPIData(server,parameters,success){
       var auth_token;
       var require_login = "<%  $c->get_conf('brapi_require_login') %>";
       if (require_login === '1'){
           auth_token = "<%  CXGN::Login->new($c->dbc->dbh)->get_login_cookie() %>";
-          if (!auth_token){ alert("Login required to display graphical filtering"); }
+          if (!auth_token){ alert(stockSearchGraphicalI18n.p("stock_search.graphical.login", "Login required to display graphical filtering")); }
       }
 
     var data = {
@@ -87,7 +92,8 @@ function loadBrAPIData(server,parameters,success){
         ["Accession"],
         function(d) {
           return d.germplasmDbId
-        }
+        },
+        {columnLabels: {Accession: stockSearchGraphicalI18n.p("stock_search.graphical.accession", "Accession")}}
       );
 
     currentGFilter.draw("#stock_search_graphical_filter_div","#stock_search_graphical_filter_results_div");
@@ -102,7 +108,7 @@ function loadBrAPIData(server,parameters,success){
             var displayed_index = displayed_rows[i];
             names.push(data[displayed_index].nTr.firstChild.innerText+'\n');
         }
-        jQuery('#graphical_filter_result_names').html(names);
+        jQuery('#graphical_filter_result_names').val(names.join(''));
         addToListMenu('graphical_filter_results_to_list_menu', 'graphical_filter_result_names', {
             listType: 'accessions'
         });

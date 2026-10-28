@@ -126,7 +126,12 @@ For genotyping_layout trials, the design should be a HashRef of HashRefs like:
 
 
 use Moose;
+use SGN::I18N ();
+use CatalystX::GlobalContext '$c';
 use MooseX::FollowPBP;
+
+has 'i18n' => (is => 'ro', isa => 'Maybe[Object]', reader => 'i18n',
+    default => sub { $c && $c->can('i18n') ? $c->i18n : undef });
 use Moose::Util::TypeConstraints;
 use Try::Tiny;
 use CXGN::Stock::StockLookup;
@@ -240,6 +245,7 @@ sub get_breeding_program_id {
 sub save_trial {
     print STDERR "Check 4.1: ".localtime();
     my $self = shift;
+    my SGN::I18N $trial_create_i18n = $self->i18n;
     my $chado_schema = $self->get_chado_schema();
     my %design = %{$self->get_design()};
     my $trial_name = $self->get_trial_name();
@@ -252,17 +258,17 @@ sub save_trial {
 
 	if (!$trial_name) {
 		print STDERR "Trial not saved: Can't create trial without a trial name\n";
-		return { error => "Trial not saved: Can't create trial without a trial name" };
+		return { error => ($trial_create_i18n ? $trial_create_i18n->p("trial.create.no_name", "Trial not saved: Can't create trial without a trial name") : "Trial not saved: Can't create trial without a trial name") };
 	}
 
     if ($self->trial_name_already_exists()) {
 		print STDERR "Can't create trial: Trial name already exists\n";
-		return { error => "Trial not saved: Trial name already exists" };
+		return { error => ($trial_create_i18n ? $trial_create_i18n->p("trial.create.duplicate", "Trial not saved: Trial name already exists") : "Trial not saved: Trial name already exists") };
 	}
 
 	if (!$self->get_breeding_program_id()) {
 		print STDERR "Can't create trial: Breeding program does not exist\n";
-		return { error => "Trial not saved: breeding program does not exist" };
+		return { error => ($trial_create_i18n ? $trial_create_i18n->p("trial.create.no_program", "Trial not saved: breeding program does not exist") : "Trial not saved: breeding program does not exist") };
 	}
 
 	#lookup user by name
@@ -281,7 +287,7 @@ sub save_trial {
 	$geolocation = $geolocation_lookup->get_geolocation();
 	if (!$geolocation) {
 		print STDERR "Can't create trial: Location not found: ".$self->get_trial_location()."\n";
-		return { error => "Trial not saved: location not found" };
+		return { error => ($trial_create_i18n ? $trial_create_i18n->p("trial.create.no_location", "Trial not saved: location not found") : "Trial not saved: location not found") };
 	}
 
     my $project_year_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'project year', 'project_property');
@@ -307,7 +313,7 @@ sub save_trial {
     my $project;
     if ($self->has_trial_id()) {
         $project = $chado_schema->resultset('Project::Project')->find( { project_id => $self->get_trial_id() });
-        if (! $project) {  die "The specified project id ".$self->get_trial_id()." does not exit in the database\n"; }
+        if (! $project) {  die (($trial_create_i18n ? $trial_create_i18n->p("trial.create.project_missing", "The specified project id %{id} does not exit in the database", {id => $self->get_trial_id()}) : "The specified project id ".$self->get_trial_id()." does not exit in the database") . "\n"); }
     }
     else {
         $project = $chado_schema->resultset('Project::Project')
@@ -480,6 +486,7 @@ sub save_trial {
     print STDERR "NOW CALLING TRIAl DESIGN STORE...\n";
     my $trial_design_store = CXGN::Trial::TrialDesignStore->new({
         bcs_schema => $chado_schema,
+        i18n => $self->i18n,
         trial_id => $project->project_id(),
         trial_name => $trial_name,
         nd_geolocation_id => $geolocation->nd_geolocation_id(),
@@ -497,7 +504,7 @@ sub save_trial {
     my $validate_design_error = $trial_design_store->validate_design();
     if ($validate_design_error) {
         print STDERR "ERROR: $validate_design_error\n";
-        return { error => "Error validating trial design: $validate_design_error." };
+        return { error => ($trial_create_i18n ? $trial_create_i18n->p("trial.create.design_error", "Error validating trial design: %{detail}.", {detail => "$validate_design_error"}) : "Error validating trial design: $validate_design_error.") };
     } else {
 	try {
 	    $error = $trial_design_store->store();

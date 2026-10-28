@@ -1,5 +1,7 @@
 package CXGN::List::Transform::Plugin::Crosses2CrossIds;
 
+use SGN::I18N ();
+use CatalystX::GlobalContext '$c';
 use Moose;
 
 sub name {
@@ -7,7 +9,8 @@ sub name {
 }
 
 sub display_name {
-    return "crosses to cross IDs";
+    my SGN::I18N $ui_display_name_i18n = $c && $c->can('i18n') ? $c->i18n : undef;
+    return (SGN::I18N::translate($ui_display_name_i18n, "cross.transform.ids", "crosses to cross IDs"));
 }
 
 sub can_transform {

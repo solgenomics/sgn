@@ -1,3 +1,4 @@
+package main;
 =head1 NAME
 
 t/unit/mason/breeders_toolbox/manage_plot_phenotyping.t - the plot phenotyping page renders its trials section
@@ -23,6 +24,13 @@ use Cwd qw | abs_path |;
 use File::Path qw | make_path |;
 use File::Temp qw | tempdir |;
 use HTML::Mason::Interp;
+use SGN::I18N ();
+
+{
+    package Local::PlotPhenotyping::Context;
+    sub new { bless {i18n => $_[1]}, $_[0] }
+    sub i18n { $_[0]->{i18n} }
+}
 
 my $mason_root = abs_path('mason');
 
@@ -51,8 +59,11 @@ my $interp = HTML::Mason::Interp->new(
     comp_root => [ [ stubs => $stub_root ], [ main => $mason_root ] ],
     data_dir => $data_dir,
     autohandler_name => '',
+    allow_globals => ['$c'],
     preamble => "use utf8; ",
 );
+my $c = Local::PlotPhenotyping::Context->new(SGN::I18N->new(locale => 'en'));
+$interp->set_global('$c', $c);
 
 sub render {
     my %args = @_;

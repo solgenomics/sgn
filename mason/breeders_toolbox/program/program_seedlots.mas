@@ -9,20 +9,71 @@ $program_id
 <table id="program_seedlot_table" class="display">
     <thead>
         <tr>
-            <th>Seedlot Name</th>
-            <th>Content</th>
-            <th>Content Type</th>
+            <th><% $c->i18n->p('seedlots.ui.seedlot_name.8bbaf6d', 'Seedlot Name') |h %></th>
+            <th><% $c->i18n->p('seedlots.ui.content', 'Content') |h %></th>
+            <th><% $c->i18n->p('seedlots.ui.content_type', 'Content Type') |h %></th>
         </tr>
     </thead>
 </table>
 
 <script>
+// Optional language assets preserve the native workflow and raw data values.
+var seedlotI18n = (window.SGN && window.SGN.i18n) || {
+    p: function (context, source, variables) {
+        return source.replace(/%\{([A-Za-z0-9_]+)\}/g, function (match, name) {
+            return variables && Object.prototype.hasOwnProperty.call(variables, name) ? String(variables[name]) : match;
+        });
+    },
+    np: function (context, one, many, count, variables) {
+        return this.p(context, count === 1 ? one : many, variables);
+    }
+};
+function seedlotHTML(value) {
+    return String(value == null ? '' : value).replace(/[&<>"']/g, function (character) {
+        return {'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'}[character];
+    });
+}
+// The locale is carried only by these source-traced, same-origin core routes.
+function _sgnSeedlotLocaleHeaders(url) {
+    try {
+        var guardedURL = new URL(url, window.location.href);
+        if (guardedURL.origin !== window.location.origin) return {};
+        var admitted = /^\/ajax\/breeders\/(?:seedlots|seedlot\/[0-9]+(?:\/(?:edit|delete|transactions|transaction\/(?:add|[0-9]+(?:\/(?:edit|delete))?)))?|seedlot\/(?:discard|undo_discard)|seedlot-create|seedlot-upload|seedlot-inventory-upload|upload_transactions|add_transactions_using_list)\/?$/.test(guardedURL.pathname)
+            || /^\/ajax\/seedlots\/(?:verify_delete_by_list|confirm_delete_by_list)$/.test(guardedURL.pathname)
+            || /^\/ajax\/stock\/stock_related_seedlots\/[0-9]+$/.test(guardedURL.pathname)
+            || /^\/ajax\/manage_accessions\/population_seedlots\/[0-9]+$/.test(guardedURL.pathname)
+            || /^\/ajax\/accessions\/possible_seedlots$/.test(guardedURL.pathname)
+            || /^\/ajax\/breeders\/program\/[0-9]+\/seedlots$/.test(guardedURL.pathname)
+            || /^\/ajax\/breeders\/trial\/[0-9]+\/(?:seedlots_from_crossingtrial|seedlots|upload_used_seedlots)$/.test(guardedURL.pathname)
+            || guardedURL.pathname === '/breeders/download_population_seedlots_action';
+        if (!admitted) return {};
+        var root = typeof document !== 'undefined' && document.documentElement;
+        var runtime = window.SGN && window.SGN.i18n;
+        var requested = root && typeof root.getAttribute === 'function' && root.getAttribute('data-sgn-locale');
+        var locale = requested || (runtime && runtime.requestedLocale) || (root && root.lang) || (runtime && runtime.locale) || 'en';
+        return {'X-SGN-Locale': typeof locale === 'string' && /^[A-Za-z]{2,8}(?:-[A-Za-z0-9]{1,8})*$/.test(locale) ? locale : 'en'};
+    } catch (error) {
+        return {};
+    }
+}
+function _sgnSeedlotLocaleURL(url) {
+    try {
+        var headers = _sgnSeedlotLocaleHeaders(url);
+        if (!headers['X-SGN-Locale']) return url;
+        var guardedURL = new URL(url, window.location.href);
+        guardedURL.searchParams.set('lang', headers['X-SGN-Locale']);
+        return guardedURL.pathname + guardedURL.search + guardedURL.hash;
+    } catch (error) {
+        return url;
+    }
+}
+
 
 jQuery(document).ready(function () {
 
     jQuery('#program_seedlot_table').DataTable( {
         'autoWidth': false,
-        'ajax': '/ajax/breeders/program/'+ <% $program_id %> + '/seedlots',
+        'ajax': {url: '/ajax/breeders/program/'+ <% $program_id %> + '/seedlots', headers: _sgnSeedlotLocaleHeaders('/ajax/breeders/program/'+ <% $program_id %> + '/seedlots')},
     });
 
 });

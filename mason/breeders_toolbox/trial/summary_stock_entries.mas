@@ -10,7 +10,7 @@ $trial_stock_type
     <div class="panel panel-default">
         <form id="download_summary_stock_entries" action="/breeders/download_summary_stock_entries" method="POST">
             <div class="panel-body">
-                <button class="btn btn-primary" id="download_summary_stock_entries_button">Download Entries</button>
+                <button class="btn btn-primary" id="download_summary_stock_entries_button"><% $c->i18n->p('trial.summary_stock.download', "Download Entries") |h %></button>
                 <input name ="stock_entries_trial_id" id="stock_entries_trial_id" type="hidden" value="<% $trial_id %>" />
                 <input type="hidden" id="trial_stock_entries_download_token" name="trial_stock_entries_download_token" />
             </div>
@@ -22,15 +22,15 @@ $trial_stock_type
                     <thead>
                         <tr>
 % if ($trial_stock_type eq 'cross') {
-                            <th>Cross Unique ID</th>
+                            <th><% $c->i18n->p('trial.summary_stock.cross_id', "Cross Unique ID") |h %></th>
 % } elsif ($trial_stock_type eq 'family_name') {
-                            <th>Family Name</th>
+                            <th><% $c->i18n->p('trial.summary_stock.family_name', "Family Name") |h %></th>
 % } else {
-                            <th>Accession</th>
+                            <th><% $c->i18n->p('trial.summary_stock.accession', "Accession") |h %></th>
 % }
-                            <th>Plot</th>
-                            <th>Plant</th>
-                            <th>Tissue Sample</th>
+                            <th><% $c->i18n->p('trial.summary_stock.plot', "Plot") |h %></th>
+                            <th><% $c->i18n->p('trial.summary_stock.plant', "Plant") |h %></th>
+                            <th><% $c->i18n->p('trial.summary_stock.tissue_sample', "Tissue Sample") |h %></th>
                         </tr>
                     </thead>
                 </table>

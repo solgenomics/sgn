@@ -15,14 +15,14 @@ Isaak Y Tecle (iyt2@cornell.edu)
 
 <div id= 'associateTaxonForm' style="display: none">
   <div id= "organism_search">
-    Common name:
+    <% $c->i18n->p("analysis.qtl.ui.common_name", "Common name:") |h %>
     <input type="text"
            style="width: 50%"
            id="organism_name"
            onkeyup="Qtl.getTaxons(this.value)">
     <input type="button"
            id="associate_taxon_button"
-           value="associate organism"
+           value="<% $c->i18n->p("analysis.qtl.ui.associate_organism", "associate organism") |h %>"
            disabled="true"	  
            onclick="Qtl.associateTaxon();this.disabled=false;">
     <select id="taxon_select"

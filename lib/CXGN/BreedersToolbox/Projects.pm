@@ -2,6 +2,9 @@
 package CXGN::BreedersToolbox::Projects;
 
 use Moose;
+
+use SGN::I18N ();
+use CatalystX::GlobalContext '$c';
 use Data::Dumper;
 use Try::Tiny;
 use SGN::Model::Cvterm;
@@ -550,6 +553,7 @@ sub get_accessions_by_breeding_program {
 }
 
 sub store_breeding_program {
+    my SGN::I18N $projects_store_breeding_program_i18n = $c && $c->can('i18n') ? $c->i18n : undef;
     my $self = shift;
     my $schema = $self->schema();
     my $error;
@@ -562,12 +566,12 @@ sub store_breeding_program {
     my $type_id = $self->get_breeding_program_cvterm_id();
 
     if (!$name) {
-        return { error => "Cannot save a breeding program with an undefined name. A name is required." };
+        return { error => ($projects_store_breeding_program_i18n ? $projects_store_breeding_program_i18n->p("trial.model.program.name_required", "Cannot save a breeding program with an undefined name. A name is required.") : "Cannot save a breeding program with an undefined name. A name is required.") };
     }
 
     my $existing_name_rs = $schema->resultset("Project::Project")->search({ name => $name });
     if (!$id && $existing_name_rs->count() > 0) {
-        return { error => "A breeding program with name '$name' already exists.",
+        return { error => ($projects_store_breeding_program_i18n ? $projects_store_breeding_program_i18n->p("trial.model.program.name_exists", "A breeding program with name '%{name}' already exists.", {name => "$name"}) : "A breeding program with name '$name' already exists."),
             nameExists => 1
         };
     }
@@ -627,7 +631,7 @@ sub store_breeding_program {
             return { error => $error };
         } else {
             print STDERR "Breeding program $name was added successfully with description $description and id $id\n";
-            return { success => "Breeding program $name was added successfully with description $description\n", id => $id };
+            return { success => ($projects_store_breeding_program_i18n ? $projects_store_breeding_program_i18n->p("trial.model.program.added_success", "Breeding program %{name} was added successfully with description %{description}\n", {name => "$name", description => "$description"}) : "Breeding program $name was added successfully with description $description\n"), id => $id };
         }
     }
     # Edit existing program if id supplied
@@ -681,7 +685,7 @@ sub store_breeding_program {
             return { error => $error };
         } else {
             print STDERR "Breeding program $name was updated successfully with description $description and id $id\n";
-            return { success => "Breeding program $name was updated successfully with description $description\n", id => $id };
+            return { success => ($projects_store_breeding_program_i18n ? $projects_store_breeding_program_i18n->p("trial.model.program.updated_success", "Breeding program %{name} was updated successfully with description %{description}\n", {name => "$name", description => "$description"}) : "Breeding program $name was updated successfully with description $description\n"), id => $id };
         }
     }
 }

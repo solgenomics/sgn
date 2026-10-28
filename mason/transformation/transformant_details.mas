@@ -1,3 +1,7 @@
+<%once>
+use HTML::Entities ();
+</%once>
+
 
 <%args>
 $transformation_id => undef
@@ -10,7 +14,7 @@ $program_name
 
 <form class="form-horizontal" >
     <div class="form-group">
-        <label class="col-sm-2" for="analyzed_tissue_type">Tissue Type: </label>
+        <label class="col-sm-2" for="analyzed_tissue_type"><% $c->i18n->p("transformation.tissue_type", "Tissue Type:") |h %> </label>
         <div class="col-sm-3">
             <select class="form-control" id="analyzed_tissue_types_select">
 % my @tissue_types = split ',',$vector_analyzed_tissue_types;
@@ -21,7 +25,7 @@ $program_name
         </div>
     </div>
     <div class="form-group">
-        <label class="col-sm-2 control-label">Assay Date: </label>
+        <label class="col-sm-2 control-label"><% $c->i18n->p("transformation.assay_date", "Assay Date:") |h %> </label>
         <div class="col-sm-3" >
             <div id="assay_date_select_div">
             </div>
@@ -34,16 +38,16 @@ $program_name
     <table class="table table-hover table-bordered display" id="vector_transgenic_line_details_table">
         <thead>
             <tr>
-                <th>Accession</th>
-                <th>Number of Insertions</th>
+                <th><% $c->i18n->p("global.index_logged_in_user.accession", "Accession") |h %></th>
+                <th><% $c->i18n->p("transformation.number_of_insertions", "Number of Insertions") |h %></th>
 % my @column_header = split ',',$vector_related_genes;
 % foreach my $column_header(@column_header) {
-                <th><%$column_header. " ".'(Relative)'%></th>
+                <th><%$column_header. " ".$c->i18n->p("transformation.relative", "(Relative)")%></th>
 %}
-                <th>qPCR Tissue Type</th>
-                <th>qPCR Assay Date</th>
+                <th><% $c->i18n->p("transformation.qpcr_tissue_type", "qPCR Tissue Type") |h %></th>
+                <th><% $c->i18n->p("transformation.qpcr_assay_date", "qPCR Assay Date") |h %></th>
 % if (!$transformation_id) {
-                <th>Transformation ID</th>
+                <th><% $c->i18n->p("transformation.transformation_id.6f39808", "Transformation ID") |h %></th>
 % }
             </tr>
         </thead>
@@ -52,7 +56,7 @@ $program_name
 
 <div class="panel panel-default">
     <div class="panel-body">
-        <&| /page/info_section.mas, title => 'Copy accessions to a List', collapsible=>1, collapsed=>0, subtitle=>'<i>Copy the accession names to a new or exisiting list</i>'&>
+        <&| /page/info_section.mas, anchor_title => 'Copy accessions to a List', title => HTML::Entities::encode_entities($c->i18n->p("accessions.section.copy_list", 'Copy accessions to a List')), collapsible=>1, collapsed=>0, subtitle=>("<i>" . HTML::Entities::encode_entities($c->i18n->p("accessions.section.copy_list_help", "Copy the accession names to a new or existing list")) . "</i>")&>
         <br>
         <div id="transformant_names" style="display:none"></div>
         <div id="transformants_to_list_menu"></div>
@@ -114,7 +118,7 @@ jQuery(document).ready(function(){
             "fnInitComplete": function(oSettings, json) {
                 //console.log(json);
                 if (!isLoggedIn()) {
-                    jQuery('#transformants_to_list_menu').html("<div class='well well-sm'><h3>Please login to use lists!</h3></div>");
+                    jQuery('#transformants_to_list_menu').html(("<div class='well well-sm'><h3>" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("accession.related_stock.login_lists", "Please login to use lists!") : "Please login to use lists!")).html() + "</h3></div>"));
                 } else {
                     var html = "";
                     for(var i=0; i<json.data.length; i++){

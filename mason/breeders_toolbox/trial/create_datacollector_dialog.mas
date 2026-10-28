@@ -10,26 +10,26 @@ $trial_stock_type => undef
   <div class="modal-dialog" role="document">
     <div class="modal-content">
       <div class="modal-header">
-        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-        <h4 class="modal-title" id="downloadDatacollectorDialog">Download Datacollector for <% $trial_name %></h4>
+        <button type="button" class="close" data-dismiss="modal" aria-label="<% $c->i18n->p('accession.sequencing.close', 'Close') |h %>"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title" id="downloadDatacollectorDialog"><% $c->i18n->p('collection.download_datacollector_for', 'Download Datacollector for ') |h %><% $trial_name %></h4>
       </div>
       <div class="modal-body">
         <div class="container-fluid">
 
 	       <form class="form-horizontal" role="form" method="post" >
 	        <div class="form-group">
-                <label class="col-sm-3 control-label">Trait List: </label>
+                <label class="col-sm-3 control-label"><% $c->i18n->p('collection.trait_list', 'Trait List: ') |h %></label>
                 <div class="col-sm-9" >
                     <div id ="trait_list_dc">
                     </div>
                 </div>
 	        </div>
             <div class="form-group">
-                <label class="col-sm-3 control-label">Data Level: </label>
+                <label class="col-sm-3 control-label"><% $c->i18n->p('fieldbook.export.data_level', 'Data Level: ') |h %></label>
                 <div class="col-sm-9" >
                     <select class="form-control" id="download_datacollector_data_level">
-                        <option value="plots">Plots</option>
-                        <option value="plants">Plants</option>
+                        <option value="plots"><% $c->i18n->p('fieldbook.export.plots', 'Plots') |h %></option>
+                        <option value="plants"><% $c->i18n->p('fieldbook.export.plants', 'Plants') |h %></option>
                     </select>
                 </div>
 	        </div>
@@ -38,8 +38,8 @@ $trial_stock_type => undef
         </div>
       </div>
       <div class="modal-footer">
-        <button type="button" class="btn btn-default" name="download_datacollector_cancel_button" id="download_datacollector_cancel_button" data-dismiss="modal">Close</button>
-        <button type="button" class="btn btn-primary" name="create_DataCollector_submit_button" id="create_DataCollector_submit_button" title="Submit">Submit</button>
+        <button type="button" class="btn btn-default" name="download_datacollector_cancel_button" id="download_datacollector_cancel_button" data-dismiss="modal"><% $c->i18n->p('accession.sequencing.close', 'Close') |h %></button>
+        <button type="button" class="btn btn-primary" name="create_DataCollector_submit_button" id="create_DataCollector_submit_button" title="<% $c->i18n->p('cross.ui.submit', 'Submit') |h %>"><% $c->i18n->p('cross.ui.submit', 'Submit') |h %></button>
       </div>
     </div>
   </div>
@@ -70,7 +70,7 @@ function create_DataCollector() {
         trait_list = JSON.stringify(list.getList(trait_list_id));
     }
     else {
-        alert("You must select a Trait List first");
+        alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("trial.spreadsheet.trait_list_required", "You must select a Trait List first") : "You must select a Trait List first"));
         return;
     }
     var trial_stock_type = "<% $trial_stock_type %>";
@@ -92,7 +92,7 @@ function create_DataCollector() {
             jQuery('#working_modal').modal("hide");
 
             if (response.error) {
-                alert("Error: "+response.error);
+                alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("trial.card.error_prefix", "Error: ") : "Error: ")+response.error);
                 jQuery('#download_datacollector_dialog').modal("hide");
             } else {
                 //alert("success: "+response.filename);
@@ -103,7 +103,7 @@ function create_DataCollector() {
         },
         error: function () {
             jQuery('#working_modal').modal("hide");
-            alert('An error occurred creating a DataCollector file.');
+            alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("collection.an_error_occurred_creating_a_datacollector_file", "An error occurred creating a DataCollector file.") : 'An error occurred creating a DataCollector file.'));
             jQuery('#download_datacollector_dialog').modal("hide");
         }
     });

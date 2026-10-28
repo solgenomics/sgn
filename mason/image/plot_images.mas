@@ -17,12 +17,12 @@ $stockref => undef
     <table id="plot_images_results" class="table table-hover table-striped">
     <thead>
         <tr>
-        <th>Image</th>
-        <th>File Name/Details</th>
-        <th>Description</th>
-        <th>Submitter</th>
-        <th>Associations</th>
-        <th>Accession Name</th>
+        <th><% $c->i18n->p("community.image.image", "Image") |h %></th>
+        <th><% $c->i18n->p("community.image.file_name_details", "File Name/Details") |h %></th>
+        <th><% $c->i18n->p("community.image.description", "Description") |h %></th>
+        <th><% $c->i18n->p("community.image.submitter_907ccd8", "Submitter") |h %></th>
+        <th><% $c->i18n->p("community.image.associations", "Associations") |h %></th>
+        <th><% $c->i18n->p("community.image.accession_name", "Accession Name") |h %></th>
     </tr>
     </thead>
     </table>
@@ -94,7 +94,7 @@ function getStocksWithImages() {
             _load_stock_image_results();
         },
         error: function(response) {
-            alert('Error fetching stock names');
+            alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("community.image.error_fetching_stock_names", "Error fetching stock names") : "Error fetching stock names"));
         }
     });
 }

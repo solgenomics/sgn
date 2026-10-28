@@ -163,11 +163,11 @@ export function initTrialAllocation() {
     const colNumber = Number.isNaN(Number(box.dataset.col)) ? 'Not available' : Number(box.dataset.col) + 1;
 
     return `
-      <div><span class="tooltip-label">Plot number:</span> ${plotNumber || 'Not available'}</div>
-      <div><span class="tooltip-label">Row:</span> ${rowNumber}</div>
-      <div><span class="tooltip-label">Column:</span> ${colNumber}</div>
-      <div><span class="tooltip-label">Accession:</span> ${accession}</div>
-      <div><span class="tooltip-label">Type:</span> ${plotTypeLabel(box)}</div>
+      <div><span class="tooltip-label">${jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("decision.js.plot_number", "Plot number:") : "Plot number:")).html()}</span> ${plotNumber || 'Not available'}</div>
+      <div><span class="tooltip-label">${jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("decision.js.row", "Row:") : "Row:")).html()}</span> ${rowNumber}</div>
+      <div><span class="tooltip-label">${jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("decision.js.column", "Column:") : "Column:")).html()}</span> ${colNumber}</div>
+      <div><span class="tooltip-label">${jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("decision.js.accession", "Accession:") : "Accession:")).html()}</span> ${accession}</div>
+      <div><span class="tooltip-label">${jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("global.search.features.type.3e685b2", "Type:") : "Type:")).html()}</span> ${plotTypeLabel(box)}</div>
     `;
   }
 
@@ -184,27 +184,27 @@ export function initTrialAllocation() {
 
     if (isBorder) {
       return `
-        <div><span class="tooltip-label">Type:</span> Border</div>
-        <div><span class="tooltip-label">Row:</span> ${rowNumber}</div>
-        <div><span class="tooltip-label">Column:</span> ${colNumber}</div>
-        <div><span class="tooltip-label">Accession:</span> ${border?.accession || 'Blank border'}</div>
+        <div><span class="tooltip-label">${jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("global.search.features.type.3e685b2", "Type:") : "Type:")).html()}</span> ${jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("decision.js.border", "Border") : "Border")).html()}</div>
+        <div><span class="tooltip-label">${jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("decision.js.row", "Row:") : "Row:")).html()}</span> ${rowNumber}</div>
+        <div><span class="tooltip-label">${jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("decision.js.column", "Column:") : "Column:")).html()}</span> ${colNumber}</div>
+        <div><span class="tooltip-label">${jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("decision.js.accession", "Accession:") : "Accession:")).html()}</span> ${border?.accession || 'Blank border'}</div>
       `;
     }
 
     if (filler) {
       return `
-        <div><span class="tooltip-label">Type:</span> Filler</div>
-        <div><span class="tooltip-label">Row:</span> ${rowNumber}</div>
-        <div><span class="tooltip-label">Column:</span> ${colNumber}</div>
-        <div><span class="tooltip-label">Accession:</span> ${filler.accession || 'Not available'}</div>
+        <div><span class="tooltip-label">${jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("global.search.features.type.3e685b2", "Type:") : "Type:")).html()}</span> ${jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("decision.js.filler", "Filler") : "Filler")).html()}</div>
+        <div><span class="tooltip-label">${jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("decision.js.row", "Row:") : "Row:")).html()}</span> ${rowNumber}</div>
+        <div><span class="tooltip-label">${jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("decision.js.column", "Column:") : "Column:")).html()}</span> ${colNumber}</div>
+        <div><span class="tooltip-label">${jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("decision.js.accession", "Accession:") : "Accession:")).html()}</span> ${filler.accession || 'Not available'}</div>
       `;
     }
 
     if (isUnused) {
       return `
-        <div><span class="tooltip-label">Type:</span> Unutilized region</div>
-        <div><span class="tooltip-label">Row:</span> ${rowNumber}</div>
-        <div><span class="tooltip-label">Column:</span> ${colNumber}</div>
+        <div><span class="tooltip-label">${jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("global.search.features.type.3e685b2", "Type:") : "Type:")).html()}</span> ${jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("decision.js.unutilized_region", "Unutilized region") : "Unutilized region")).html()}</div>
+        <div><span class="tooltip-label">${jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("decision.js.row", "Row:") : "Row:")).html()}</span> ${rowNumber}</div>
+        <div><span class="tooltip-label">${jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("decision.js.column", "Column:") : "Column:")).html()}</span> ${colNumber}</div>
       `;
     }
 
@@ -243,7 +243,7 @@ export function initTrialAllocation() {
     const yearInput = qs('#layout-year');
     const year = String(yearInput?.value || '').trim();
     if (isValidLayoutYear(year)) return true;
-    alert('Year must be in YYYY format, greater than 1960 and smaller than 2100.');
+    alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("decision.js.year_must_be_in_yyyy_format_greater_than_1960_and_smaller_than_2100", "Year must be in YYYY format, greater than 1960 and smaller than 2100.") : 'Year must be in YYYY format, greater than 1960 and smaller than 2100.'));
     yearInput?.focus();
     return false;
   }
@@ -260,7 +260,7 @@ export function initTrialAllocation() {
     Array.from(scope.querySelectorAll('select[id^="ttype"]')).forEach(select => {
       const trialIndex = +(select.id.replace('ttype', '') || 0);
       const selected = select.value || lockedTrialForms.get(trialIndex)?.type || '';
-      select.innerHTML = '<option value="">Select type</option>';
+      select.innerHTML = ("<option value=\"\">" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("decision.js.select_type", "Select type") : "Select type")).html() + "</option>");
       availableTrialTypes.forEach(type => {
         select.appendChild(new Option(type.name, type.name));
       });
@@ -271,7 +271,7 @@ export function initTrialAllocation() {
     Array.from(scope.querySelectorAll('select[id^="tdesign"]')).forEach(select => {
       const trialIndex = +(select.id.replace('tdesign', '') || 0);
       const selected = select.value || lockedTrialForms.get(trialIndex)?.design || '';
-      select.innerHTML = '<option value="">Select design</option>';
+      select.innerHTML = ("<option value=\"\">" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("decision.js.select_design", "Select design") : "Select design")).html() + "</option>");
       availableTrialDesigns.forEach(design => {
         select.appendChild(new Option(design.name, design.value));
       });
@@ -400,7 +400,7 @@ export function initTrialAllocation() {
     const remove = document.createElement('button');
     remove.type = 'button';
     remove.className = 'px-2 py-1 bg-red-600 text-white rounded hover:bg-red-700 text-xs';
-    remove.textContent = 'Remove';
+    remove.textContent = (window.SGN && window.SGN.i18n ? window.SGN.i18n.p("global.dataset_publish.action.remove", "Remove") : 'Remove');
     remove.title = 'Remove this existing trial from the layout list';
     remove.disabled = false;
     remove.readOnly = false;
@@ -658,7 +658,7 @@ export function initTrialAllocation() {
   colLabelContainer.style.pointerEvents = 'none';
   headerLayer.appendChild(colLabelContainer);
 
-  /* pools the renderer can re-use */
+  /* pools the renderer can reuse */
   const rowLabelPool = [], colLabelPool = [];
   for (let i = 0; i < VISIBLE_ROWS; i++) {
     const d = document.createElement('div');
@@ -908,7 +908,7 @@ export function initTrialAllocation() {
 
     if (tool === 'unused') {
       if (isCellOccupied(r, c) || manualBorders.has(k)) {
-        alert('This plot already contains a trial, filler, or border.');
+        alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("decision.js.this_plot_already_contains_a_trial_filler_or_border", "This plot already contains a trial, filler, or border.") : 'This plot already contains a trial, filler, or border.'));
         return;
       }
       if (cellIsUnused(r, c)) {
@@ -922,7 +922,7 @@ export function initTrialAllocation() {
 
     if (tool === 'border') {
       if (!manualBorders.has(k) && isCellOccupied(r, c)) {
-        alert('Borders cannot be placed on trial or filler plots.');
+        alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("decision.js.borders_cannot_be_placed_on_trial_or_filler_plots", "Borders cannot be placed on trial or filler plots.") : 'Borders cannot be placed on trial or filler plots.'));
         return;
       }
       if (manualBorders.has(k)) {
@@ -935,7 +935,7 @@ export function initTrialAllocation() {
     }
 
     if (tool === 'filler') {
-      alert('Select a trial plot to place a filler inside the trial.');
+      alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("decision.js.select_a_trial_plot_to_place_a_filler_inside_the_trial", "Select a trial plot to place a filler inside the trial.") : 'Select a trial plot to place a filler inside the trial.'));
       return;
     }
 
@@ -990,96 +990,96 @@ export function initTrialAllocation() {
     const generateDesignHtml = showGenerateDesign ?
       "<div class='mt-4 text-right' data-generate-design-container='" + i + "'>" +
         "<button onclick='generateDesign(" + i + ", 0, 0, this)' class='px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700'>" +
-          "Generate Design" +
+          (window.SGN && window.SGN.i18n ? window.SGN.i18n.p("decision.js.generate_design", "Generate Design") : "Generate Design") +
         "</button>" +
       "</div>" : '';
     d.innerHTML = `
       <div class='flex items-center justify-between mb-2'>
-        <h4 class='font-semibold'>Trial ${i}</h4>
+        <h4 class='font-semibold'>${jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("global.index_logged_in_user.trial", "Trial") : "Trial")).html()} ${i}</h4>
         <span data-existing-trial-remove-container='${i}'></span>
       </div>
-      <label class='block mb-2'>Name
+      <label class='block mb-2'>${jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("accession.related_stock.header.name", "Name") : "Name")).html()}
         <input id='tname${i}' class='w-full border rounded px-2 py-1' />
       </label>
 
-      <label class='block mb-4'>Description
+      <label class='block mb-4'>${jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("accessions.column.description", "Description") : "Description")).html()}
         <textarea id='tdesc${i}' class='w-full border rounded px-2 py-1' rows='2'></textarea>
       </label>
 
       <div class='grid grid-cols-2 gap-4 mb-4'>
-        <label>Trial Type
+        <label>${jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("global.index_logged_in_user.trial_type", "Trial Type") : "Trial Type")).html()}
           <select id='ttype${i}' class='w-full border rounded px-2 py-1'>
-            <option value="">Loading...</option>
+            <option value="">${jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("accessions.table.loading", "Loading...") : "Loading...")).html()}</option>
           </select>
         </label>
-        <label>Trial Design
+        <label>${jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("decision.js.trial_design", "Trial Design") : "Trial Design")).html()}
           <select id='tdesign${i}' class='w-full border rounded px-2 py-1'>
-            <option value="">Loading...</option>
+            <option value="">${jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("accessions.table.loading", "Loading...") : "Loading...")).html()}</option>
           </select>
         </label>
       </div>
 
       <div class='mb-4'>
-        <label>Layout Type
+        <label>${jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("decision.js.layout_type", "Layout Type") : "Layout Type")).html()}
           <select id='tlayout${i}' class='w-full border rounded px-2 py-1'>
-            <option value="serpentine">Serpentine</option>
-            <option value="cartesian">Cartesian</option>
+            <option value="serpentine">${jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("trial.create.field_map.serpentine", "Serpentine") : "Serpentine")).html()}</option>
+            <option value="cartesian">${jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("decision.js.cartesian", "Cartesian") : "Cartesian")).html()}</option>
           </select>
         </label>
       </div>
 
       <div class='grid grid-cols-2 gap-4 mb-4'>
-        <label>Start Plot Number
+        <label>${jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("decision.js.start_plot_number", "Start Plot Number") : "Start Plot Number")).html()}
           <select id='tstartplot${i}' class='w-full border rounded px-2 py-1'>
             <option value="1">1</option>
             <option value="101">101</option>
             <option value="1001">1001</option>
           </select>
         </label>
-        <label>Plot Numbering
+        <label>${jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("decision.js.plot_numbering", "Plot Numbering") : "Plot Numbering")).html()}
           <select id='tplotnumbering${i}' class='w-full border rounded px-2 py-1'>
-            <option value="continuous">Continuous across blocks</option>
-            <option value="block_prefix">Start with block number</option>
+            <option value="continuous">${jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("decision.js.continuous_across_blocks", "Continuous across blocks") : "Continuous across blocks")).html()}</option>
+            <option value="block_prefix">${jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("decision.js.start_with_block_number", "Start with block number") : "Start with block number")).html()}</option>
           </select>
         </label>
       </div>
 
       <div class='grid grid-cols-2 gap-4 mb-4'>
-        <label>Accessions List
+        <label>${jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("decision.js.accessions_list", "Accessions List") : "Accessions List")).html()}
           <select id='ttreatments${i}' class='w-full border rounded px-2 py-1'>
-            <option value="">Loading...</option>
+            <option value="">${jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("accessions.table.loading", "Loading...") : "Loading...")).html()}</option>
           </select>
         </label>
-        <label>Controls List
+        <label>${jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("decision.js.controls_list", "Controls List") : "Controls List")).html()}
           <select id='tcontrols${i}' class='w-full border rounded px-2 py-1'>
-            <option value="">-- Select a list --</option>
+            <option value="">${jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("decision.js.select_a_list", "-- Select a list --") : "-- Select a list --")).html()}</option>
           </select>
         </label>
       </div>
 
       <div id='repsblocks-container${i}' class='grid grid-cols-2 gap-4 mb-4'>
-        <label>Reps
+        <label>${jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("decision.js.reps", "Reps") : "Reps")).html()}
           <input id='treps${i}' type='number' min='1' class='w-full border rounded px-2 py-1' />
         </label>
-        <label>Blocks
+        <label>${jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("decision.js.blocks", "Blocks") : "Blocks")).html()}
           <input id='tblocks${i}' type='number' min='1' class='w-full border rounded px-2 py-1' />
         </label>
       </div>
 
       <div id='rowcol-container${i}' class='grid grid-cols-2 gap-4'>
-        <label>Rows
+        <label>${jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("decision.js.rows", "Rows") : "Rows")).html()}
           <input id='trows${i}' type='number' value='1' min='1' class='w-full border rounded px-2 py-1' />
         </label>
-        <label>Cols
+        <label>${jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("decision.js.cols", "Cols") : "Cols")).html()}
           <input id='tcols${i}' type='number' value='1' min='1' class='w-full border rounded px-2 py-1' />
         </label>
       </div>
 
       <div class='grid grid-cols-2 gap-4 mt-4'>
-        <label>Plot Width
+        <label>${jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("trial.card.design.label.plot_width", "Plot Width") : "Plot Width")).html()}
           <input id='tplotwidth${i}' type='number' min='0' step='0.01' class='w-full border rounded px-2 py-1' />
         </label>
-        <label>Plot Length
+        <label>${jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("trial.card.design.label.plot_length", "Plot Length") : "Plot Length")).html()}
           <input id='tplotlength${i}' type='number' min='0' step='0.01' class='w-full border rounded px-2 py-1' />
         </label>
       </div>
@@ -1104,7 +1104,7 @@ export function initTrialAllocation() {
       /* REPS / BLOCKS PANEL */
       if (isRCBD) {
         repsblocks.innerHTML = `
-          <label>Reps / Blocks
+          <label>${jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("decision.js.reps_blocks", "Reps / Blocks") : "Reps / Blocks")).html()}
             <input id='trepsblocks${i}' type='number' min='1' value='1'
                    class='w-full border rounded px-2 py-1' />
           </label>
@@ -1115,11 +1115,11 @@ export function initTrialAllocation() {
       } else {
         // all other designs (Row-Column, DRRC, etc.)
         repsblocks.innerHTML = `
-          <label>Reps
+          <label>${jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("decision.js.reps", "Reps") : "Reps")).html()}
             <input id='treps${i}' type='number' min='1'
                    class='w-full border rounded px-2 py-1' />
           </label>
-          <label>Blocks
+          <label>${jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("decision.js.blocks", "Blocks") : "Blocks")).html()}
             <input id='tblocks${i}' type='number' min='1'
                    class='w-full border rounded px-2 py-1' />
           </label>`;
@@ -1128,7 +1128,7 @@ export function initTrialAllocation() {
       /* ROW / COL PANEL */
       if (isRCBD) {
         rowcol.innerHTML = `
-          <label>Number of Rows per Block
+          <label>${jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("decision.js.number_of_rows_per_block", "Number of Rows per Block") : "Number of Rows per Block")).html()}
             <input id='tblockrows${i}' type='number' min='1' value='1'
                    class='w-full border rounded px-2 py-1' />
           </label>
@@ -1136,30 +1136,30 @@ export function initTrialAllocation() {
       } else if (isAugRC) {
         // four inputs: super-rows, super-cols, rows, cols
         rowcol.innerHTML = `
-          <label>Rows per block  
+          <label>${jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("decision.js.rows_per_block", "Rows per block") : "Rows per block")).html()}
             <input id='tblockrows${i}' type='number' min='1'
                    class='w-full border rounded px-2 py-1' />
           </label>
-          <label>Cols per block
+          <label>${jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("decision.js.cols_per_block", "Cols per block") : "Cols per block")).html()}
             <input id='tblockcols${i}' type='number' min='1'
                    class='w-full border rounded px-2 py-1' />
           </label>
-          <label>Total rows in trial
+          <label>${jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("decision.js.total_rows_in_trial", "Total rows in trial") : "Total rows in trial")).html()}
             <input id='tsuperrows${i}' type='number' min='1'
                    class='w-full border rounded px-2 py-1' />
           </label>
-          <label>Total cols in trial
+          <label>${jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("decision.js.total_cols_in_trial", "Total cols in trial") : "Total cols in trial")).html()}
             <input id='tsupercols${i}' type='number' min='1'
                    class='w-full border rounded px-2 py-1' />
           </label>`;
       } else {
         // default two-input panel
         rowcol.innerHTML = `
-          <label>Rows
+          <label>${jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("decision.js.rows", "Rows") : "Rows")).html()}
             <input id='trows${i}' type='number' min='1'
                    class='w-full border rounded px-2 py-1' />
           </label>
-          <label>Cols
+          <label>${jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("decision.js.cols", "Cols") : "Cols")).html()}
             <input id='tcols${i}' type='number' min='1'
                    class='w-full border rounded px-2 py-1' />
           </label>`;
@@ -1178,7 +1178,7 @@ export function initTrialAllocation() {
     const $select = $('#farm_dropdown');
 
     // Show loading state
-    $select.html('<option value="">Loading...</option>');
+    $select.html(("<option value=\"\">" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("accessions.table.loading", "Loading...") : "Loading...")).html() + "</option>"));
 
     $.ajax({
       url: '/ajax/trialallocation/farms',
@@ -1186,7 +1186,7 @@ export function initTrialAllocation() {
       dataType: 'json',
       success: function(data) {
         if (!data.success || !Array.isArray(data.farms)) {
-          $select.html('<option value="">Failed to load locations</option>');
+          $select.html(("<option value=\"\">" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("decision.js.failed_to_load_locations", "Failed to load locations") : "Failed to load locations")).html() + "</option>"));
           return;
         }
 
@@ -1202,7 +1202,7 @@ export function initTrialAllocation() {
 
         // Initialize Select2 *after* data is populated
         $select.select2({
-          placeholder: 'Select or type a location',
+          placeholder: (window.SGN && window.SGN.i18n ? window.SGN.i18n.p("decision.js.select_or_type_a_location", "Select or type a location") : 'Select or type a location'),
           allowClear: true,
           width: '100%',
           dropdownParent: $('#farm_dropdown').closest('div')
@@ -1212,7 +1212,7 @@ export function initTrialAllocation() {
       },
       error: function(xhr, status, error) {
         console.error('Failed to load global location list:', error);
-        $select.html('<option value="">Failed to load</option>');
+        $select.html(("<option value=\"\">" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("decision.js.failed_to_load.e98285b", "Failed to load") : "Failed to load")).html() + "</option>"));
       }
     });
   }
@@ -1221,7 +1221,7 @@ export function initTrialAllocation() {
     const $select = $('#breeding_program_dropdown');
     if ($select.length === 0) return;
 
-    $select.html('<option value="">Loading...</option>');
+    $select.html(("<option value=\"\">" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("accessions.table.loading", "Loading...") : "Loading...")).html() + "</option>"));
 
     $.ajax({
       url: '/ajax/trialallocation/breeding_programs',
@@ -1229,7 +1229,7 @@ export function initTrialAllocation() {
       dataType: 'json',
       success: function(data) {
         if (!data.success || !Array.isArray(data.programs)) {
-          $select.html('<option value="">Failed to load programs</option>');
+          $select.html(("<option value=\"\">" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("decision.js.failed_to_load_programs", "Failed to load programs") : "Failed to load programs")).html() + "</option>"));
           return;
         }
 
@@ -1239,7 +1239,7 @@ export function initTrialAllocation() {
         });
 
         $select.select2({
-          placeholder: 'Select a breeding program',
+          placeholder: (window.SGN && window.SGN.i18n ? window.SGN.i18n.p("decision.js.select_a_breeding_program", "Select a breeding program") : 'Select a breeding program'),
           allowClear: true,
           width: '100%',
           dropdownParent: $('#breeding_program_dropdown').closest('div')
@@ -1248,7 +1248,7 @@ export function initTrialAllocation() {
       },
       error: function(xhr, status, error) {
         console.error('Failed to load breeding programs:', error);
-        $select.html('<option value="">Failed to load</option>');
+        $select.html(("<option value=\"\">" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("decision.js.failed_to_load.e98285b", "Failed to load") : "Failed to load")).html() + "</option>"));
       }
     });
   }
@@ -1258,14 +1258,14 @@ export function initTrialAllocation() {
     if (!select) return;
 
     const selected = select.value;
-    select.innerHTML = '<option value="">Loading...</option>';
+    select.innerHTML = ("<option value=\"\">" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("accessions.table.loading", "Loading...") : "Loading...")).html() + "</option>");
 
     $.ajax({
       url: '/ajax/trialallocation/seasons',
       method: 'GET',
       dataType: 'json',
       success: function(data) {
-        select.innerHTML = '<option value="">Select Season</option>';
+        select.innerHTML = ("<option value=\"\">" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("decision.root.select_season", "Select Season") : "Select Season")).html() + "</option>");
         const seasons = data.success && Array.isArray(data.seasons) ? data.seasons : [];
         seasons.forEach(season => {
           select.appendChild(new Option(season, season));
@@ -1275,7 +1275,7 @@ export function initTrialAllocation() {
       },
       error: function(_, __, error) {
         console.error('Failed to load seasons:', error);
-        select.innerHTML = '<option value="">Select Season</option>';
+        select.innerHTML = ("<option value=\"\">" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("decision.root.select_season", "Select Season") : "Select Season")).html() + "</option>");
         ['summer', 'winter'].forEach(season => select.appendChild(new Option(season, season)));
         if (selected) select.value = selected;
         if (layoutContextLocked) lockControl('layout-season', true);
@@ -1323,28 +1323,28 @@ export function initTrialAllocation() {
 
     const { locationId, year } = currentLayoutContext();
     if (!locationId || !year) {
-      select.innerHTML = '<option value="">Select location and year first</option>';
+      select.innerHTML = ("<option value=\"\">" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("decision.root.select_location_and_year_first", "Select location and year first") : "Select location and year first")).html() + "</option>");
       if (window.jQuery && $('#existing-trial-select').data('select2')) {
         $('#existing-trial-select').val('').trigger('change.select2');
       }
       return;
     }
     if (!isValidLayoutYear(year)) {
-      select.innerHTML = '<option value="">Enter a valid YYYY year</option>';
+      select.innerHTML = ("<option value=\"\">" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("decision.js.enter_a_valid_yyyy_year", "Enter a valid YYYY year") : "Enter a valid YYYY year")).html() + "</option>");
       if (window.jQuery && $('#existing-trial-select').data('select2')) {
         $('#existing-trial-select').val('').trigger('change.select2');
       }
       return;
     }
 
-    select.innerHTML = '<option value="">Loading trials...</option>';
+    select.innerHTML = ("<option value=\"\">" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("decision.js.loading_trials", "Loading trials...") : "Loading trials...")).html() + "</option>");
     $.ajax({
       url: '/ajax/trialallocation/existing_trials',
       method: 'GET',
       dataType: 'json',
       data: { location_id: locationId, year },
       success: function(data) {
-        select.innerHTML = '<option value="">Select an existing trial</option>';
+        select.innerHTML = ("<option value=\"\">" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("decision.js.select_an_existing_trial", "Select an existing trial") : "Select an existing trial")).html() + "</option>");
         const trials = data.success && Array.isArray(data.trials) ? data.trials : [];
         const placedExistingProjects = placedExistingProjectIds();
         trials
@@ -1364,7 +1364,7 @@ export function initTrialAllocation() {
           const $select = $('#existing-trial-select');
           if ($select.data('select2')) $select.select2('destroy');
           $select.select2({
-            placeholder: 'Select an existing trial',
+            placeholder: (window.SGN && window.SGN.i18n ? window.SGN.i18n.p("decision.js.select_an_existing_trial", "Select an existing trial") : 'Select an existing trial'),
             allowClear: true,
             width: '100%',
             dropdownParent: $select.closest('label')
@@ -1373,7 +1373,7 @@ export function initTrialAllocation() {
       },
       error: function(_, __, error) {
         console.error('Failed to load existing trials:', error);
-        select.innerHTML = '<option value="">Could not load existing trials</option>';
+        select.innerHTML = ("<option value=\"\">" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("decision.js.could_not_load_existing_trials", "Could not load existing trials") : "Could not load existing trials")).html() + "</option>");
       }
     });
   }
@@ -1407,11 +1407,11 @@ export function initTrialAllocation() {
     const select = qs('#existing-trial-select');
     const projectId = select?.value || '';
     if (!projectId) {
-      alert('Select an existing trial first.');
+      alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("decision.js.select_an_existing_trial_first", "Select an existing trial first.") : 'Select an existing trial first.'));
       return;
     }
     if (selectedExistingTrialAlreadyAdded(projectId)) {
-      alert('This existing trial is already included in the layout.');
+      alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("decision.js.this_existing_trial_is_already_included_in_the_layout", "This existing trial is already included in the layout.") : 'This existing trial is already included in the layout.'));
       return;
     }
 
@@ -1419,7 +1419,7 @@ export function initTrialAllocation() {
     const btn = qs('#add-existing-trial-btn');
     if (btn) {
       btn.disabled = true;
-      btn.textContent = 'Adding...';
+      btn.textContent = (window.SGN && window.SGN.i18n ? window.SGN.i18n.p("decision.js.adding", "Adding...") : 'Adding...');
     }
 
     $.ajax({
@@ -1429,7 +1429,7 @@ export function initTrialAllocation() {
       data: { trial_id: projectId },
       success: function(response) {
         if (!response.success || !response.trial) {
-          alert(response.error || 'Could not load the selected trial design.');
+          alert(response.error || (window.SGN && window.SGN.i18n ? window.SGN.i18n.p("decision.js.could_not_load_the_selected_trial_design", "Could not load the selected trial design.") : "Could not load the selected trial design."));
           return;
         }
 
@@ -1479,16 +1479,16 @@ export function initTrialAllocation() {
         restoreTrialFormValues(form);
         lockExistingProjectForm(index);
         enablePal(index);
-        alert(`Existing trial "${form.name}" was added to the trial list.`);
+        alert(`${(window.SGN && window.SGN.i18n ? window.SGN.i18n.p("decision.js.existing_trial", "Existing trial \"") : "Existing trial \"")}${form.name}${(window.SGN && window.SGN.i18n ? window.SGN.i18n.p("decision.js.was_added_to_the_trial_list", "\" was added to the trial list.") : "\" was added to the trial list.")}`);
       },
       error: function(xhr, __, error) {
         console.error('Failed to add existing trial:', error, xhr?.responseText);
-        alert('Could not add the selected existing trial.');
+        alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("decision.js.could_not_add_the_selected_existing_trial", "Could not add the selected existing trial.") : 'Could not add the selected existing trial.'));
       },
       complete: function() {
         if (btn) {
           btn.disabled = false;
-          btn.textContent = 'Add Existing Trial';
+          btn.textContent = (window.SGN && window.SGN.i18n ? window.SGN.i18n.p("decision.root.add_existing_trial", "Add Existing Trial") : 'Add Existing Trial');
         }
       }
     });
@@ -1506,7 +1506,7 @@ export function initTrialAllocation() {
     const box = document.createElement('div');
     box.id = `palette${i}`;
     box.className = `trial-box ${colourFor(i)} bg-opacity-60 mb-2`;
-    box.textContent = `Trial ${i}`;
+    box.textContent = `${(window.SGN && window.SGN.i18n ? window.SGN.i18n.p("global.index_logged_in_user.trial", "Trial") : "Trial")} ${i}`;
     box.dataset.trial = i;
     box.draggable = true;
     box.ondragstart = startDrag;
@@ -1532,16 +1532,16 @@ export function initTrialAllocation() {
     const controls = document.createElement('div');
     controls.className = 'grid grid-cols-2 gap-2 text-xs';
     controls.innerHTML = `
-      <label>Horizontal
+      <label>${jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("decision.js.horizontal", "Horizontal") : "Horizontal")).html()}
         <select id="grid-direction-horizontal${i}" class="w-full border rounded px-1 py-1">
-          <option value="ltr">Left to right</option>
-          <option value="rtl">Right to left</option>
+          <option value="ltr">${jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("decision.js.left_to_right", "Left to right") : "Left to right")).html()}</option>
+          <option value="rtl">${jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("decision.js.right_to_left", "Right to left") : "Right to left")).html()}</option>
         </select>
       </label>
-      <label>Vertical
+      <label>${jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("decision.js.vertical", "Vertical") : "Vertical")).html()}
         <select id="grid-direction-vertical${i}" class="w-full border rounded px-1 py-1">
-          <option value="ttb">Top to bottom</option>
-          <option value="btt">Bottom to top</option>
+          <option value="ttb">${jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("decision.js.top_to_bottom", "Top to bottom") : "Top to bottom")).html()}</option>
+          <option value="btt">${jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("decision.js.bottom_to_top", "Bottom to top") : "Bottom to top")).html()}</option>
         </select>
       </label>
       <button type="button" id="rotate-trial-cw${i}" class="h-8 px-2 bg-gray-700 text-white rounded hover:bg-gray-800 text-lg leading-none" title="Rotate clockwise" aria-label="Rotate clockwise">
@@ -1569,13 +1569,13 @@ export function initTrialAllocation() {
   function rotateTrialFromPalette(i, direction = 'cw') {
     const roots = [...new Set(qsa(`.trial-group[data-trial="${i}"]`).map(group => group.dataset.root))];
     if (!roots.length) {
-      alert('Place this trial in the grid before rotating it.');
+      alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("decision.js.place_this_trial_in_the_grid_before_rotating_it", "Place this trial in the grid before rotating it.") : 'Place this trial in the grid before rotating it.'));
       return;
     }
 
     const root = roots[0];
     if (isLockedRoot(root)) {
-      alert('This trial is part of a saved layout and cannot be rotated.');
+      alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("decision.js.this_trial_is_part_of_a_saved_layout_and_cannot_be_rotated", "This trial is part of a saved layout and cannot be rotated.") : 'This trial is part of a saved layout and cannot be rotated.'));
       return;
     }
 
@@ -1588,7 +1588,7 @@ export function initTrialAllocation() {
     if ($select.length === 0) return;
 
     const pendingValue = selectedListId || $select[0].dataset.pendingValue || lockedTrialForms.get(i)?.treatment_list_id || '';
-    $select.html(`<option value="">Loading...</option>`);
+    $select.html(`<option value="">${jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("accessions.table.loading", "Loading...") : "Loading...")).html()}</option>`);
 
     $.ajax({
       url: '/ajax/trialallocation/accession_lists',
@@ -1596,12 +1596,12 @@ export function initTrialAllocation() {
       dataType: 'json',
       success: function(data) {
         if (!data.success) {
-          $select.html(`<option value="">Failed to load</option>`);
-          alert("Could not load Accessions List");
+          $select.html(`<option value="">${jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("decision.js.failed_to_load.e98285b", "Failed to load") : "Failed to load")).html()}</option>`);
+          alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("decision.js.could_not_load_accessions_list", "Could not load Accessions List") : "Could not load Accessions List"));
           return;
         }
 
-        $select.empty().append(`<option value="">-- Select a list --</option>`);
+        $select.empty().append(`<option value="">${jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("decision.js.select_a_list", "-- Select a list --") : "-- Select a list --")).html()}</option>`);
 
         data.lists.forEach(function(list) {
           const selected = (pendingValue && String(list.list_id) === String(pendingValue)) ? 'selected' : '';
@@ -1619,7 +1619,7 @@ export function initTrialAllocation() {
 
         if ($select.data('select2')) $select.select2('destroy');
         $select.select2({
-          placeholder: 'Select an accessions list',
+          placeholder: (window.SGN && window.SGN.i18n ? window.SGN.i18n.p("decision.js.select_an_accessions_list", "Select an accessions list") : 'Select an accessions list'),
           allowClear: true,
           width: '100%',
           dropdownParent: $select.closest('label')
@@ -1638,8 +1638,8 @@ export function initTrialAllocation() {
       },
       error: function(xhr, status, error) {
         console.error("Error loading Accessions List:", status, error);
-        $select.html(`<option value="">Failed to load</option>`);
-        alert("Error loading Accessions List.");
+        $select.html(`<option value="">${jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("decision.js.failed_to_load.e98285b", "Failed to load") : "Failed to load")).html()}</option>`);
+        alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("decision.js.error_loading_accessions_list", "Error loading Accessions List.") : "Error loading Accessions List."));
       }
     });
   }
@@ -1649,7 +1649,7 @@ export function initTrialAllocation() {
     if ($select.length === 0) return;
 
     const pendingValue = $select[0].dataset.pendingValue || lockedTrialForms.get(i)?.control_list_id || '';
-    $select.html(`<option value="">Loading...</option>`);
+    $select.html(`<option value="">${jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("accessions.table.loading", "Loading...") : "Loading...")).html()}</option>`);
 
     $.ajax({
       url: '/ajax/trialallocation/accession_lists',
@@ -1657,12 +1657,12 @@ export function initTrialAllocation() {
       dataType: 'json',
       success: function(data) {
         if (!data.success) {
-          $select.html(`<option value="">Failed to load</option>`);
-          alert("Could not load Controls List");
+          $select.html(`<option value="">${jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("decision.js.failed_to_load.e98285b", "Failed to load") : "Failed to load")).html()}</option>`);
+          alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("decision.js.could_not_load_controls_list", "Could not load Controls List") : "Could not load Controls List"));
           return;
         }
 
-        $select.empty().append(`<option value="">-- Select a list --</option>`);
+        $select.empty().append(`<option value="">${jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("decision.js.select_a_list", "-- Select a list --") : "-- Select a list --")).html()}</option>`);
 
         data.lists.forEach(function(list) {
           const label = `${list.name} (${list.is_public ? 'Public' : 'Private'})`;
@@ -1674,7 +1674,7 @@ export function initTrialAllocation() {
         }
         if ($select.data('select2')) $select.select2('destroy');
         $select.select2({
-          placeholder: 'Select a controls list',
+          placeholder: (window.SGN && window.SGN.i18n ? window.SGN.i18n.p("decision.js.select_a_controls_list", "Select a controls list") : 'Select a controls list'),
           allowClear: true,
           width: '100%',
           dropdownParent: $select.closest('label')
@@ -1688,18 +1688,18 @@ export function initTrialAllocation() {
       },
       error: function(xhr, status, error) {
         console.error("Error loading Controls List:", status, error);
-        $select.html(`<option value="">Failed to load</option>`);
-        alert("Error loading Controls List.");
+        $select.html(`<option value="">${jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("decision.js.failed_to_load.e98285b", "Failed to load") : "Failed to load")).html()}</option>`);
+        alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("decision.js.error_loading_controls_list", "Error loading Controls List.") : "Error loading Controls List."));
       }
     });
   }
 
-  /******** Gereate trial Design *************/
+  /******** Generate trial Design *************/
   window.generateDesign = function(i, rowStart = 0, colStart = 0, btn) {
     const formEl = qs('#tname' + i)?.closest('.border.rounded');
     if (existingProjectTrials.has(+i) || lockedTrialForms.has(+i) || databaseSavedTrialIndexes.has(String(i)) || formEl?.dataset.existingProject === '1' || formEl?.dataset.locked === '1') {
       if (btn) btn.disabled = true;
-      alert('Generate Design is not available for existing saved trials.');
+      alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("decision.js.generate_design_is_not_available_for_existing_saved_trials", "Generate Design is not available for existing saved trials.") : 'Generate Design is not available for existing saved trials.'));
       return;
     }
     const design  = $(`#tdesign${i}`).val();
@@ -1747,7 +1747,7 @@ export function initTrialAllocation() {
     if (btn) {
       btn.classList.remove('bg-green-600', 'hover:bg-green-700', 'bg-red-600', 'hover:bg-red-700');
       btn.classList.add('bg-blue-600', 'hover:bg-blue-700');
-      btn.textContent = 'Generating...';
+      btn.textContent = (window.SGN && window.SGN.i18n ? window.SGN.i18n.p("seedlot_split.ui.generating", "Generating...") : 'Generating...');
     }
 
     return $.ajax({
@@ -1761,15 +1761,15 @@ export function initTrialAllocation() {
         if (btn) {
           btn.classList.remove('bg-blue-600', 'hover:bg-blue-700');
           btn.classList.add('bg-red-600', 'hover:bg-red-700');
-          btn.textContent = 'Error';
+          btn.textContent = (window.SGN && window.SGN.i18n ? window.SGN.i18n.p("common.error.title.client", "Error") : 'Error');
         }
-        alert(response.error || 'Error generating design.');
+        alert(response.error || (window.SGN && window.SGN.i18n ? window.SGN.i18n.p("decision.js.error_generating_design", "Error generating design.") : "Error generating design."));
         return;
       }
       if (btn) {
         btn.classList.remove('bg-blue-600', 'hover:bg-blue-700');
         btn.classList.add('bg-green-600', 'hover:bg-green-700');
-        btn.textContent = 'Design Ready/Re-Run?';
+        btn.textContent = (window.SGN && window.SGN.i18n ? window.SGN.i18n.p("decision.js.design_ready_re_run", "Design Ready/Re-Run?") : 'Design Ready/Re-Run?');
         enablePal(i);
       }
       trialDesignCache[i] = {
@@ -1783,11 +1783,11 @@ export function initTrialAllocation() {
       if (btn) {
         btn.classList.remove('bg-blue-600', 'hover:bg-blue-700');
         btn.classList.add('bg-red-600', 'hover:bg-red-700');
-        btn.textContent = 'Error';
+        btn.textContent = (window.SGN && window.SGN.i18n ? window.SGN.i18n.p("common.error.title.client", "Error") : 'Error');
       }
       console.error('Design generation failed:', err);
       const response = err?.responseJSON || {};
-      alert(response.error || 'Error generating design.');
+      alert(response.error || (window.SGN && window.SGN.i18n ? window.SGN.i18n.p("decision.js.error_generating_design", "Error generating design.") : "Error generating design."));
     });
   };
 
@@ -1799,7 +1799,7 @@ export function initTrialAllocation() {
     const fromPal = el.id.startsWith('palette');
     if (!fromPal && isLockedRoot(el.dataset.root)) {
       e.preventDefault();
-      alert('This trial is part of a saved layout and cannot be moved.');
+      alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("decision.js.this_trial_is_part_of_a_saved_layout_and_cannot_be_moved", "This trial is part of a saved layout and cannot be moved.") : 'This trial is part of a saved layout and cannot be moved.'));
       return;
     }
     const rect = el.getBoundingClientRect();
@@ -1828,7 +1828,7 @@ export function initTrialAllocation() {
     e.preventDefault();
 
     if (!gridReady) {
-      alert('Grid is still loading. Please wait.');
+      alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("decision.js.grid_is_still_loading_please_wait", "Grid is still loading. Please wait.") : 'Grid is still loading. Please wait.'));
       return;
     }
 
@@ -1845,7 +1845,7 @@ export function initTrialAllocation() {
 
     if (col < 0 || row < 0) return;
     if (src === 'grid' && isLockedRoot(root)) {
-      alert('This trial is part of a saved layout and cannot be moved.');
+      alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("decision.js.this_trial_is_part_of_a_saved_layout_and_cannot_be_moved", "This trial is part of a saved layout and cannot be moved.") : 'This trial is part of a saved layout and cannot be moved.'));
       return;
     }
 
@@ -1855,7 +1855,7 @@ export function initTrialAllocation() {
     /* request design from server */
     const cached = trialDesignCache[tn];
     if (!cached) {
-      alert("Please click 'Generate Design' before placing the trial.");
+      alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("decision.js.please_click_generate_design_before_placing_the_trial", "Please click 'Generate Design' before placing the trial.") : "Please click 'Generate Design' before placing the trial."));
       return;
     }
 
@@ -1887,7 +1887,7 @@ export function initTrialAllocation() {
 
     const loading = qs('#grid-loader');
     if (loading) {
-      loading.querySelector('span').textContent = 'Placing trial...';
+      loading.querySelector('span').textContent = (window.SGN && window.SGN.i18n ? window.SGN.i18n.p("decision.js.placing_trial", "Placing trial...") : 'Placing trial...');
       loading.classList.remove('hidden');
     }
 
@@ -1946,7 +1946,7 @@ export function initTrialAllocation() {
     })
       .fail(function (xhr, status, error) {
         console.error('AJAX error:', error);
-        alert('Error generating design.');
+        alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("decision.js.error_generating_design", "Error generating design.") : 'Error generating design.'));
       });
   }
 
@@ -1984,7 +1984,7 @@ export function initTrialAllocation() {
     const box = e.currentTarget;
     const root = box.closest('.trial-group')?.dataset.root;
     if (isLockedRoot(root)) {
-      alert('This trial is part of a saved layout and cannot be changed.');
+      alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("decision.js.this_trial_is_part_of_a_saved_layout_and_cannot_be_changed", "This trial is part of a saved layout and cannot be changed.") : 'This trial is part of a saved layout and cannot be changed.'));
       return;
     }
     const useStandard = qs('#standard-filler-toggle')?.checked;
@@ -2094,11 +2094,11 @@ export function initTrialAllocation() {
     moveSelectedTrial(delta[0], delta[1]);
   });
 
-  /************* grab coodinates from grd ****************/
+  /************* grab coordinates from grd ****************/
 
   function clearTrialCache(i) {
     delete trialDesignCache[i];
-    alert(`Trial ${i} design cache cleared.`);
+    alert(`${(window.SGN && window.SGN.i18n ? window.SGN.i18n.p("global.index_logged_in_user.trial", "Trial") : "Trial")} ${i} ${(window.SGN && window.SGN.i18n ? window.SGN.i18n.p("decision.js.design_cache_cleared", "design cache cleared.") : "design cache cleared.")}`);
   }
 
   function getTrialCoordinates(trialName) {
@@ -2194,7 +2194,7 @@ export function initTrialAllocation() {
     }
 
     if (rowStart < 0 || colStart < 0 || rowStart >= totalRows || colStart >= totalCols) {
-      alert('Could not place trial: starting plot is outside the field.');
+      alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("decision.js.could_not_place_trial_starting_plot_is_outside_the_field", "Could not place trial: starting plot is outside the field.") : 'Could not place trial: starting plot is outside the field.'));
       return;
     }
 
@@ -2234,12 +2234,12 @@ export function initTrialAllocation() {
     }
 
     if (blockingConflict) {
-      alert('Could not place trial: the selected path contains another trial, border, or filler plot.');
+      alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("decision.js.could_not_place_trial_the_selected_path_contains_another_trial_border_or", "Could not place trial: the selected path contains another trial, border, or filler plot.") : 'Could not place trial: the selected path contains another trial, border, or filler plot.'));
       return;
     }
 
     if (coords.length < total) {
-      alert('Could not place trial: not enough available plots from this starting position.');
+      alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("decision.js.could_not_place_trial_not_enough_available_plots_from_this_starting_posi", "Could not place trial: not enough available plots from this starting position.") : 'Could not place trial: not enough available plots from this starting position.'));
       return;
     }
 
@@ -2592,7 +2592,7 @@ export function initTrialAllocation() {
   /* Rotate 90 degrees in either direction around the current footprint. */
   function transposeTrial(root, direction = 'cw'){
     if (isLockedRoot(root)) {
-      alert('This trial is part of a saved layout and cannot be changed.');
+      alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("decision.js.this_trial_is_part_of_a_saved_layout_and_cannot_be_changed", "This trial is part of a saved layout and cannot be changed.") : 'This trial is part of a saved layout and cannot be changed.'));
       return;
     }
     const parts = [...document.querySelectorAll(`.trial-group[data-root="${root}"]`)];
@@ -2600,7 +2600,7 @@ export function initTrialAllocation() {
 
     const rotation = rotatedTrialCells(root, direction === 'ccw' ? 'ccw' : 'cw');
     if (!rotation || rotationHasConflict(rotation.cells, root)) {
-      alert('Cannot rotate - no free space at current position.');
+      alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("decision.js.cannot_rotate_no_free_space_at_current_position", "Cannot rotate - no free space at current position.") : 'Cannot rotate - no free space at current position.'));
       return;
     }
 
@@ -2676,7 +2676,7 @@ export function initTrialAllocation() {
     const n = Math.max(+qs('#num-trials')?.value || 0, lockedMax, existingMax);
     setInputValue('num-trials', n);
     const countLabel = qs('#trial-count-label');
-    if (countLabel) countLabel.textContent = n ? `${n} trial${n === 1 ? '' : 's'} added.` : 'No trials added yet.';
+    if (countLabel) countLabel.textContent = n ? (window.SGN && window.SGN.i18n ? window.SGN.i18n.np("decision.js.trials_added_count", "%{count} trial added.", "%{count} trials added.", n, {count: n}) : `${n} trial${n === 1 ? '' : 's'} added.`) : (window.SGN && window.SGN.i18n ? window.SGN.i18n.p("decision.root.no_trials_added_yet", "No trials added yet.") : "No trials added yet.");
     for(let i=1;i<=n;i++){
       addTrialForm(i);
       addPaletteBox(i);
@@ -3096,12 +3096,12 @@ export function initTrialAllocation() {
     if (!trialIndex) return;
 
     if (lockedTrialForms.has(trialIndex) && !existingProjectTrials.has(trialIndex)) {
-      alert('This trial is part of a saved layout. Remove it from the saved layout view on the grid instead.');
+      alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("decision.js.this_trial_is_part_of_a_saved_layout_remove_it_from_the_saved_layout_vie", "This trial is part of a saved layout. Remove it from the saved layout view on the grid instead.") : 'This trial is part of a saved layout. Remove it from the saved layout view on the grid instead.'));
       return;
     }
 
     const hasPlacedTrial = !!qs(`.trial-group[data-trial="${trialIndex}"]`);
-    if (hasPlacedTrial && !window.confirm('Remove this trial from the layout list and field grid? This does not delete an existing trial from the database.')) {
+    if (hasPlacedTrial && !window.confirm((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("decision.js.remove_this_trial_from_the_layout_list_and_field_grid_this_does_not_dele", "Remove this trial from the layout list and field grid? This does not delete an existing trial from the database.") : 'Remove this trial from the layout list and field grid? This does not delete an existing trial from the database.'))) {
       return;
     }
 
@@ -3187,7 +3187,7 @@ export function initTrialAllocation() {
 
     const loading = qs('#grid-loader');
     if (loading) {
-      loading.querySelector('span').textContent = 'Removing trial...';
+      loading.querySelector('span').textContent = (window.SGN && window.SGN.i18n ? window.SGN.i18n.p("decision.js.removing_trial", "Removing trial...") : 'Removing trial...');
       loading.classList.remove('hidden');
       setTimeout(() => {
         removeTrialRootFromView(root, trialIndex);
@@ -3210,16 +3210,16 @@ export function initTrialAllocation() {
 
   function deleteSavedTrialFromLayout(root, trialIndex) {
     if (!userIsCurator) {
-      alert('Only curators can remove saved trials from a layout.');
+      alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("decision.js.only_curators_can_remove_saved_trials_from_a_layout", "Only curators can remove saved trials from a layout.") : 'Only curators can remove saved trials from a layout.'));
       return;
     }
 
     const layout = collectLayoutJson();
     if (!layout.farm.location_id || !layout.year) {
-      alert('Select location and year before removing a saved trial.');
+      alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("decision.js.select_location_and_year_before_removing_a_saved_trial", "Select location and year before removing a saved trial.") : 'Select location and year before removing a saved trial.'));
       return;
     }
-    if (!window.confirm('Remove this trial from the saved layout view? This does not delete the trial from the database.')) {
+    if (!window.confirm((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("decision.js.remove_this_trial_from_the_saved_layout_view_this_does_not_delete_the_tr", "Remove this trial from the saved layout view? This does not delete the trial from the database.") : 'Remove this trial from the saved layout view? This does not delete the trial from the database.'))) {
       return;
     }
 
@@ -3238,30 +3238,30 @@ export function initTrialAllocation() {
         if (response.success) {
           removeTrialRootFromView(root, trialIndex);
           loadExistingTrialsForContext();
-          alert('Trial removed from the saved layout view.');
+          alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("decision.js.trial_removed_from_the_saved_layout_view", "Trial removed from the saved layout view.") : 'Trial removed from the saved layout view.'));
         } else {
-          alert(response.error || 'Could not remove trial from the saved layout view.');
+          alert(response.error || (window.SGN && window.SGN.i18n ? window.SGN.i18n.p("decision.js.could_not_remove_trial_from_the_saved_layout_view", "Could not remove trial from the saved layout view.") : "Could not remove trial from the saved layout view."));
         }
       },
       error: function(_, __, error) {
         console.error('Delete saved trial failed:', error);
-        alert('Could not remove trial from the saved layout view.');
+        alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("decision.js.could_not_remove_trial_from_the_saved_layout_view", "Could not remove trial from the saved layout view.") : 'Could not remove trial from the saved layout view.'));
       }
     });
   }
 
   function deleteCurrentLayoutView() {
     if (!userIsCurator) {
-      alert('Only curators can delete a saved layout view.');
+      alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("decision.server.only_curators_can_delete_a_saved_layout_view", "Only curators can delete a saved layout view.") : 'Only curators can delete a saved layout view.'));
       return;
     }
 
     const layout = collectLayoutJson();
     if (!layout.farm.location_id || !layout.year) {
-      alert('Select location and year before deleting the layout view.');
+      alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("decision.js.select_location_and_year_before_deleting_the_layout_view", "Select location and year before deleting the layout view.") : 'Select location and year before deleting the layout view.'));
       return;
     }
-    if (!window.confirm('Delete the whole saved layout view for this location, year, and season? This does not delete the trials from the database.')) {
+    if (!window.confirm((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("decision.js.delete_the_whole_saved_layout_view_for_this_location_year_and_season_thi", "Delete the whole saved layout view for this location, year, and season? This does not delete the trials from the database.") : 'Delete the whole saved layout view for this location, year, and season? This does not delete the trials from the database.'))) {
       return;
     }
 
@@ -3285,14 +3285,14 @@ export function initTrialAllocation() {
           lockLayoutContext(false);
           makeTrials();
           loadExistingTrialsForContext();
-          alert('Saved layout view deleted.');
+          alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("decision.js.saved_layout_view_deleted", "Saved layout view deleted.") : 'Saved layout view deleted.'));
         } else {
-          alert(response.error || 'Could not delete the saved layout view.');
+          alert(response.error || (window.SGN && window.SGN.i18n ? window.SGN.i18n.p("decision.js.could_not_delete_the_saved_layout_view", "Could not delete the saved layout view.") : "Could not delete the saved layout view."));
         }
       },
       error: function(_, __, error) {
         console.error('Delete layout failed:', error);
-        alert('Could not delete the saved layout view.');
+        alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("decision.js.could_not_delete_the_saved_layout_view", "Could not delete the saved layout view.") : 'Could not delete the saved layout view.'));
       }
     });
   }
@@ -3465,7 +3465,7 @@ export function initTrialAllocation() {
   function saveCurrentLayout() {
     const layout = collectLayoutJson();
     if (!layout.farm.location_id || !layout.year) {
-      alert('Select location and year before saving the layout.');
+      alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("decision.js.select_location_and_year_before_saving_the_layout", "Select location and year before saving the layout.") : 'Select location and year before saving the layout.'));
       return;
     }
     if (!requireValidLayoutYear()) return;
@@ -3473,15 +3473,15 @@ export function initTrialAllocation() {
     saveLayoutView(layout)
       .done(function(response) {
         if (!response.success) {
-          alert(response.error || 'Could not save layout.');
+          alert(response.error || (window.SGN && window.SGN.i18n ? window.SGN.i18n.p("decision.js.could_not_save_layout", "Could not save layout.") : "Could not save layout."));
           return;
         }
         markLayoutViewSaved(layout);
-        alert('Layout saved.');
+        alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("decision.server.layout_saved", "Layout saved.") : 'Layout saved.'));
       })
       .fail(function(_, __, error) {
         console.error('Save layout failed:', error);
-        alert('Could not save layout.');
+        alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("decision.js.could_not_save_layout", "Could not save layout.") : 'Could not save layout.'));
       });
   }
 
@@ -3508,7 +3508,7 @@ export function initTrialAllocation() {
   function restoreSaveTrialsButton(saveButton) {
     if (saveButton) {
       saveButton.disabled = false;
-      saveButton.textContent = 'Save Layout Trials in Database';
+      saveButton.textContent = (window.SGN && window.SGN.i18n ? window.SGN.i18n.p("decision.root.save_layout_trials_in_database", "Save Layout Trials in Database") : 'Save Layout Trials in Database');
       saveButton.classList.remove('opacity-70', 'cursor-wait');
     }
   }
@@ -3532,20 +3532,20 @@ export function initTrialAllocation() {
     lockPlacedTrials(true, savedRoots);
 
     const message = trialSaveSuccessMessage(response);
-    if (saveButton) saveButton.textContent = 'Saving Layout...';
+    if (saveButton) saveButton.textContent = (window.SGN && window.SGN.i18n ? window.SGN.i18n.p("decision.js.saving_layout", "Saving Layout...") : 'Saving Layout...');
 
     saveLayoutView(layout)
       .done(function(layoutResponse) {
         if (layoutResponse.success) {
           markLayoutViewSaved(layout);
-          alert(`${message}\n\nLayout view saved.`);
+          alert(`${message}${(window.SGN && window.SGN.i18n ? window.SGN.i18n.p("decision.js.layout_view_saved", "\n\nLayout view saved.") : "\n\nLayout view saved.")}`);
         } else {
-          alert(`${message}\n\nCould not save layout view: ${layoutResponse.error || 'Unknown error'}`);
+          alert(`${message}${(window.SGN && window.SGN.i18n ? window.SGN.i18n.p("decision.js.could_not_save_layout_view.9752f5d", "\n\nCould not save layout view:") : "\n\nCould not save layout view:")} ${layoutResponse.error || 'Unknown error'}`);
         }
       })
       .fail(function(xhr, __, error) {
         console.error('Save layout after trial database save failed:', error, xhr?.responseText);
-        alert(`${message}\n\nCould not save layout view.`);
+        alert(`${message}${(window.SGN && window.SGN.i18n ? window.SGN.i18n.p("decision.js.could_not_save_layout_view.01a4518", "\n\nCould not save layout view.") : "\n\nCould not save layout view.")}`);
       })
       .always(function() {
         restoreSaveTrialsButton(saveButton);
@@ -3558,17 +3558,17 @@ export function initTrialAllocation() {
     const saveButton = qs('#save-trials-db-btn');
 
     if (!layout.farm.location_id || !layout.year) {
-      alert('Select location and year before saving the trials.');
+      alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("decision.js.select_location_and_year_before_saving_the_trials", "Select location and year before saving the trials.") : 'Select location and year before saving the trials.'));
       return;
     }
     if (!requireValidLayoutYear()) return;
     const hasNewTrialToCreate = (newTrialLayout.placed_trials || []).some(trial => !trial.existing_project_id);
     if (hasNewTrialToCreate && !layout.breeding_program.program_id) {
-      alert('Select a breeding program before saving the trials.');
+      alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("decision.js.select_a_breeding_program_before_saving_the_trials", "Select a breeding program before saving the trials.") : 'Select a breeding program before saving the trials.'));
       return;
     }
     if (!newTrialLayout.placed_trials.length) {
-      alert('There are no new trials or existing-trial coordinate updates to save in the database.');
+      alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("decision.js.there_are_no_new_trials_or_existing_trial_coordinate_updates_to_save_in_", "There are no new trials or existing-trial coordinate updates to save in the database.") : 'There are no new trials or existing-trial coordinate updates to save in the database.'));
       return;
     }
     const placedTrialIndexes = new Set(newTrialLayout.placed_trials.map(trial => String(trial.trial_index)));
@@ -3578,16 +3578,16 @@ export function initTrialAllocation() {
       .filter(form => !placedTrialIndexes.has(String(form.trial_index)));
     if (missingTrials.length) {
       const names = missingTrials.map(form => sanitizeTrialName(form.name) || `Trial ${form.trial_index}`).join(', ');
-      alert(`These trials are not placed in the grid yet: ${names}. Place all trials before saving them in the database.`);
+      alert(`${(window.SGN && window.SGN.i18n ? window.SGN.i18n.p("decision.js.these_trials_are_not_placed_in_the_grid_yet", "These trials are not placed in the grid yet:") : "These trials are not placed in the grid yet:")} ${names}${(window.SGN && window.SGN.i18n ? window.SGN.i18n.p("decision.js.place_all_trials_before_saving_them_in_the_database", ". Place all trials before saving them in the database.") : ". Place all trials before saving them in the database.")}`);
       return;
     }
-    if (!window.confirm('Save new trial(s) and update coordinates for placed existing trial(s) in the database?')) {
+    if (!window.confirm((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("decision.js.save_new_trial_s_and_update_coordinates_for_placed_existing_trial_s_in_t", "Save new trial(s) and update coordinates for placed existing trial(s) in the database?") : 'Save new trial(s) and update coordinates for placed existing trial(s) in the database?'))) {
       return;
     }
 
     if (saveButton) {
       saveButton.disabled = true;
-      saveButton.textContent = 'Saving Trials...';
+      saveButton.textContent = (window.SGN && window.SGN.i18n ? window.SGN.i18n.p("decision.js.saving_trials", "Saving Trials...") : 'Saving Trials...');
       saveButton.classList.add('opacity-70', 'cursor-wait');
     }
 
@@ -3600,13 +3600,13 @@ export function initTrialAllocation() {
         if (response.success) {
           finishTrialsDatabaseSave(layout, newTrialLayout, response, saveButton);
         } else {
-          alert(response.error || 'Could not save trials in the database.');
+          alert(response.error || (window.SGN && window.SGN.i18n ? window.SGN.i18n.p("decision.js.could_not_save_trials_in_the_database", "Could not save trials in the database.") : "Could not save trials in the database."));
           restoreSaveTrialsButton(saveButton);
         }
       },
       error: function(xhr, __, error) {
         console.error('Save trials failed:', error, xhr?.responseText);
-        alert('Could not save trials in the database.');
+        alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("decision.js.could_not_save_trials_in_the_database", "Could not save trials in the database.") : 'Could not save trials in the database.'));
         restoreSaveTrialsButton(saveButton);
       }
     });
@@ -3638,7 +3638,7 @@ export function initTrialAllocation() {
         }
 
         const hasCurrentLayout = qsa('.trial-group').length > 0;
-        if (hasCurrentLayout && !window.confirm('A layout is already saved for this location, year, and season. Load it and replace the current grid view?')) {
+        if (hasCurrentLayout && !window.confirm((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("decision.js.a_layout_is_already_saved_for_this_location_year_and_season_load_it_and_", "A layout is already saved for this location, year, and season. Load it and replace the current grid view?") : 'A layout is already saved for this location, year, and season. Load it and replace the current grid view?'))) {
           return;
         }
         applySavedLayout(response.layout);
@@ -3657,8 +3657,8 @@ export function initTrialAllocation() {
     loadTrialTypes();
     loadTrialDesigns();
     initDownloadTools();
-    initAccessionAutocomplete('#border-accession', 'Search border accession');
-    initAccessionAutocomplete('#filler-accession', 'Search filler accession');
+    initAccessionAutocomplete('#border-accession', (window.SGN && window.SGN.i18n ? window.SGN.i18n.p("decision.allocation.search_border_accession", "Search border accession") : 'Search border accession'));
+    initAccessionAutocomplete('#filler-accession', (window.SGN && window.SGN.i18n ? window.SGN.i18n.p("decision.allocation.search_filler_accession", "Search filler accession") : 'Search filler accession'));
     loadExistingTrialsForContext();
     makeTrials();
     drawGrid();
@@ -3699,7 +3699,7 @@ export function initTrialAllocation() {
       });
 
       if (conflict) {
-        alert("It is not possible to turn entire row or column unutilized because there is a trial or border already placed.");
+        alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("decision.js.it_is_not_possible_to_turn_entire_row_or_column_unutilized_because_there", "It is not possible to turn entire row or column unutilized because there is a trial or border already placed.") : "It is not possible to turn entire row or column unutilized because there is a trial or border already placed."));
         e.target.value = lastUnusedRows;
         return;
       }
@@ -3724,7 +3724,7 @@ export function initTrialAllocation() {
       });
 
       if (conflict) {
-        alert("It is not possible to turn entire row or column unutilized because there is a trial or border already placed.");
+        alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("decision.js.it_is_not_possible_to_turn_entire_row_or_column_unutilized_because_there", "It is not possible to turn entire row or column unutilized because there is a trial or border already placed.") : "It is not possible to turn entire row or column unutilized because there is a trial or border already placed."));
         e.target.value = lastUnusedCols;
         return;
       }

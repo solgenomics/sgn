@@ -7,67 +7,67 @@
   <div class="modal-dialog modal-xl" role="document">
     <div class="modal-content">
       <div class="modal-header">
-        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-        <h4 class="modal-title" id="droneImageryCalculateStatisticsDialog">Calculate statistics on aerial image phenotypes</h4>
+        <button type="button" class="close" data-dismiss="modal" aria-label="<% $c->i18n->p("global.close", "Close") |h %>"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title" id="droneImageryCalculateStatisticsDialog"><% $c->i18n->p("drone.interface.calculate_statistics_on_aerial_image_phenotypes", "Calculate statistics on aerial image phenotypes") |h %></h4>
       </div>
       <div class="modal-body">
         <div class="container-fluid">
 
             <&| /util/workflow.mas, id=> "drone_imagery_calculate_statistics_workflow" &>
-                <&| /util/workflow.mas:step, title=> "Intro" &>
-                    <& /page/page_title.mas, title=>"Select the type of analysis to perform" &>
+                <&| /util/workflow.mas:step, title=> $c->i18n->p("nirs.ui.intro", "Intro") &>
+                    <& /page/page_title.mas, title=>HTML::Entities::encode_entities($c->i18n->p("drone.interface.select_the_type_of_analysis_to_perform", "Select the type of analysis to perform")) &>
                     <center>
-                    <button class="btn btn-default" id="drone_imagery_calculate_statistics_intro_single_trial_select_step">Single Trial Field Analysis</button>
+                    <button class="btn btn-default" id="drone_imagery_calculate_statistics_intro_single_trial_select_step"><% $c->i18n->p("drone.interface.single_trial_field_analysis", "Single Trial Field Analysis") |h %></button>
                     </center>
                     <br/>
                     <!--center>
                     <button class="btn btn-default" id="drone_imagery_calculate_statistics_intro_single_trial_multiseason_select_step">Single Trial Multi-Season Field Analysis</button>
                     </center-->
                 </&>
-                <&| /util/workflow.mas:step, title=> "Field Trial" &>
-                    <& /page/page_title.mas, title=>"Select the field trial you are interested in. Select only one." &>
+                <&| /util/workflow.mas:step, title=> $c->i18n->p("cross.pages.field_trial", "Field Trial") &>
+                    <& /page/page_title.mas, title=>HTML::Entities::encode_entities($c->i18n->p("drone.interface.select_the_field_trial_you_are_interested_in_select_only_one", "Select the field trial you are interested in. Select only one.")) &>
                     <br/><br/>
                     <form class="form-horizontal">
                         <div class="form-group">
-                            <label class="col-sm-3 control-label">Field Trial(s): </label>
+                            <label class="col-sm-3 control-label"><% $c->i18n->p("analysis.interface.field_trial_s", "Field Trial(s):") |h %> </label>
                             <div class="col-sm-9" >
                                 <div id="drone_imagery_calculate_statistics_trial_select_div"></div>
                             </div>
                         </div>
                     </form>
                     <center>
-                    <button class="btn btn-primary" id="drone_imagery_calculate_statistics_field_trial_select_step">Go to Next Step</button>
+                    <button class="btn btn-primary" id="drone_imagery_calculate_statistics_field_trial_select_step"><% $c->i18n->p("global.workflow.next_step", "Go to Next Step") |h %></button>
                     </center>
                 </&>
-                <&| /util/workflow.mas:step, title=> "Trait Selection" &>
-                    <& /page/page_title.mas, title=>"Select the observation variable(s) you are interested in" &>
+                <&| /util/workflow.mas:step, title=> $c->i18n->p("analysis.interface.trait_selection", "Trait Selection") &>
+                    <& /page/page_title.mas, title=>HTML::Entities::encode_entities($c->i18n->p("drone.interface.select_the_observation_variable_s_you_are_interested_in", "Select the observation variable(s) you are interested in")) &>
                     <br/><br/>
                     <form class="form-horizontal">
                         <div class="form-group">
-                            <label class="col-sm-3 control-label">Observation Variable Type: </label>
+                            <label class="col-sm-3 control-label"><% $c->i18n->p("drone.interface.observation_variable_type", "Observation Variable Type:") |h %> </label>
                             <div class="col-sm-9" >
                                 <select class="form-control" id="drone_imagery_calculate_statistics_select_observation_variable_type">
-                                    <option value="time_ontology">Time Series</option>
-                                    <option value="">Single Trait</option>
+                                    <option value="time_ontology"><% $c->i18n->p("drone.interface.time_series", "Time Series") |h %></option>
+                                    <option value=""><% $c->i18n->p("drone.interface.single_trait", "Single Trait") |h %></option>
                                 </select>
                             </div>
                         </div>
                         <div class="form-group">
-                            <label class="col-sm-3 control-label">Observation Variables Phenotyped in the Selected Field Trial: </label>
+                            <label class="col-sm-3 control-label"><% $c->i18n->p("drone.interface.observation_variables_phenotyped_in_the_selected_field_trial", "Observation Variables Phenotyped in the Selected Field Trial:") |h %> </label>
                             <div class="col-sm-9" >
                                 <div id="drone_imagery_calculate_statistics_trait_select_div"></div>
                             </div>
                         </div>
                     </form>
                     <center>
-                    <button class="btn btn-primary" id="drone_imagery_calculate_statistics_trait_select_step">Go to Next Step</button>
+                    <button class="btn btn-primary" id="drone_imagery_calculate_statistics_trait_select_step"><% $c->i18n->p("global.workflow.next_step", "Go to Next Step") |h %></button>
                     </center>
                 </&>
-                <&| /util/workflow.mas:step, title=> "Statistics" &>
-                    <& /page/page_title.mas, title=>"Select statistics to calculate" &>
+                <&| /util/workflow.mas:step, title=> $c->i18n->p("analysis.interface.statistics", "Statistics") &>
+                    <& /page/page_title.mas, title=>HTML::Entities::encode_entities($c->i18n->p("analysis.interface.select_statistics_to_calculate", "Select statistics to calculate")) &>
 
                     <select class="form-control" id="drone_imagery_calculate_statistics_select_input">
-                        <option value="">Select A Model</option>
+                        <option value=""><% $c->i18n->p("analysis.interface.select_a_model_ba25d3", "Select A Model") |h %></option>
                         <!--option value="lmer_germplasmname_replicate">LMER BLUPs y~replicate+1|Germplasm. Univariate genetic effects</option-->
 
                         <option value="sommer_grm_genetic_blups">Sommer GBLUPs Y~replicate+GRM. Multivariate genetic effects using GRM</option>
@@ -91,12 +91,12 @@
                         <hr>
                         <div class="form-horizontal">
                             <div class="form-group">
-                                <label class="col-sm-3 control-label">Relationship Matrix Type: </label>
+                                <label class="col-sm-3 control-label"><% $c->i18n->p("analysis.interface.relationship_matrix_type", "Relationship Matrix Type:") |h %> </label>
                                 <div class="col-sm-9" >
                                     <select class="form-control" id="drone_imagery_calculate_statistics_relationship_matrix_type_select_div">
                                         <option value="">Identity</option>
-                                        <option value="htp_phenotypes">High-throughput Phenotyping Data</option>
-                                        <option value="genotypes">Genotyping Data</option>
+                                        <option value="htp_phenotypes"><% $c->i18n->p("analysis.interface.high_throughput_phenotyping_data", "High-throughput Phenotyping Data") |h %></option>
+                                        <option value="genotypes"><% $c->i18n->p("genotype.plate.genotyping_data", "Genotyping Data") |h %></option>
                                     </select>
                                 </div>
                             </div>
@@ -106,35 +106,35 @@
                     <div id="drone_imagery_calculate_statistics_genotyping_protocol_div" class="well well-sm" style="display:none">
                         <div class="form-horizontal">
                             <div class="form-group">
-                                <label class="col-sm-3 control-label">Genotyping Protocol To Calculate Genomic Relationship Matrix (optional. If none selected, an identity matrix is used): </label>
+                                <label class="col-sm-3 control-label"><% $c->i18n->p("analysis.interface.genotyping_protocol_to_calculate_genomic_relationship_matrix_optional_if_none", "Genotyping Protocol To Calculate Genomic Relationship Matrix (optional. If none selected, an identity matrix is used):") |h %> </label>
                                 <div class="col-sm-9" >
                                     <div id="drone_imagery_calculate_statistics_genotyping_protocol_select_div"></div>
                                 </div>
                             </div>
                             <div class="form-group">
-                                <label class="col-sm-3 control-label">Compute Genotypes From Parents: </label>
+                                <label class="col-sm-3 control-label"><% $c->i18n->p("analysis.interface.compute_genotypes_from_parents", "Compute Genotypes From Parents:") |h %> </label>
                                 <div class="col-sm-9" >
                                     <select class="form-control" id="drone_image_calculate_statistics_genotyping_protocol_compute_from_parents_select">
-                                        <option value="no">No</option>
-                                        <option value="yes">Yes</option>
+                                        <option value="no"><% $c->i18n->p("global.search_wizard.no", "No") |h %></option>
+                                        <option value="yes"><% $c->i18n->p("global.search_wizard.yes", "Yes") |h %></option>
                                     </select>
                                 </div>
                             </div>
                             <div class="form-group" id="drone_image_calculate_statistics_genotyping_protocol_use_parental_grms_select_div" style="display:none">
-                                <label class="col-sm-3 control-label">Use Parental Relationship Matrices: </label>
+                                <label class="col-sm-3 control-label"><% $c->i18n->p("drone.interface.use_parental_relationship_matrices", "Use Parental Relationship Matrices:") |h %> </label>
                                 <div class="col-sm-9" >
                                     <select class="form-control" id="drone_image_calculate_statistics_genotyping_protocol_use_parental_grms_select">
-                                        <option value="no">No</option>
-                                        <option value="yes">Yes</option>
+                                        <option value="no"><% $c->i18n->p("global.search_wizard.no", "No") |h %></option>
+                                        <option value="yes"><% $c->i18n->p("global.search_wizard.yes", "Yes") |h %></option>
                                     </select>
                                 </div>
                             </div>
                             <div class="form-group" id="drone_image_calculate_statistics_genotyping_protocol_include_pedigree_select_div" style="display:none">
-                                <label class="col-sm-3 control-label">Include Pedigree Info Into Relationship Matrix: </label>
+                                <label class="col-sm-3 control-label"><% $c->i18n->p("drone.interface.include_pedigree_info_into_relationship_matrix", "Include Pedigree Info Into Relationship Matrix:") |h %> </label>
                                 <div class="col-sm-9" >
                                     <select class="form-control" id="drone_image_calculate_statistics_genotyping_protocol_include_pedigree_select">
-                                        <option value="no">No</option>
-                                        <option value="yes">Yes</option>
+                                        <option value="no"><% $c->i18n->p("global.search_wizard.no", "No") |h %></option>
+                                        <option value="yes"><% $c->i18n->p("global.search_wizard.yes", "Yes") |h %></option>
                                     </select>
                                 </div>
                             </div>
@@ -144,7 +144,7 @@
                     <div id="drone_imagery_calculate_statistics_htp_phenotypes_rel_matrix_div" class="well well-sm" style="display:none">
                         <div class="form-horizontal">
                             <div class="form-group">
-                                <label class="col-sm-3 control-label">How to calculate the relationship matrix with high-throughput phenotypes: </label>
+                                <label class="col-sm-3 control-label"><% $c->i18n->p("analysis.interface.how_to_calculate_the_relationship_matrix_with_high_throughput_phenotypes", "How to calculate the relationship matrix with high-throughput phenotypes:") |h %> </label>
                                 <div class="col-sm-9" >
                                     <select class="form-control" id="drone_image_calculate_statistics_htp_phenotypes_rel_matrix_select">
                                         <option value="correlations">Correlations</option>
@@ -153,19 +153,19 @@
                                 </div>
                             </div>
                             <div class="form-group">
-                                <label class="col-sm-3 control-label">Time Points to Use: </label>
+                                <label class="col-sm-3 control-label"><% $c->i18n->p("analysis.interface.time_points_to_use", "Time Points to Use:") |h %> </label>
                                 <div class="col-sm-9" >
                                     <select class="form-control" id="drone_image_calculate_statistics_htp_phenotypes_rel_matrix_times_select">
-                                        <option value="all">All Available</option>
-                                        <option value="latest_trait">Up to the latest date selected in traits</option>
-                                        <option value="vegetative" disabled>Vegetative Growth Stage</option>
-                                        <option value="reproductive" disabled>Reproductive Growth Stage</option>
-                                        <option value="mature" disabled>Mature Growth Stage</option>
+                                        <option value="all"><% $c->i18n->p("analysis.interface.all_available", "All Available") |h %></option>
+                                        <option value="latest_trait"><% $c->i18n->p("drone.interface.up_to_the_latest_date_selected_in_traits", "Up to the latest date selected in traits") |h %></option>
+                                        <option value="vegetative" disabled><% $c->i18n->p("analysis.interface.vegetative_growth_stage", "Vegetative Growth Stage") |h %></option>
+                                        <option value="reproductive" disabled><% $c->i18n->p("analysis.interface.reproductive_growth_stage", "Reproductive Growth Stage") |h %></option>
+                                        <option value="mature" disabled><% $c->i18n->p("analysis.interface.mature_growth_stage", "Mature Growth Stage") |h %></option>
                                     </select>
                                 </div>
                             </div>
                             <div class="form-group" id="drone_image_calculate_statistics_htp_phenotypes_rel_matrix_inversion_select_div" style="display:none">
-                                <label class="col-sm-3 control-label">HTP BLUEs Inversion Tolerance: </label>
+                                <label class="col-sm-3 control-label"><% $c->i18n->p("analysis.interface.htp_blues_inversion_tolerance", "HTP BLUEs Inversion Tolerance:") |h %> </label>
                                 <div class="col-sm-9" >
                                     <select class="form-control" id="drone_image_calculate_statistics_htp_phenotypes_rel_matrix_inversion_select">
                                         <option value="0.00001">0.00001</option>
@@ -184,11 +184,11 @@
                         <hr>
                         <div class="form-horizontal">
                             <div class="form-group">
-                                <label class="col-sm-3 control-label">Use Cumulative Area-Under-Curve Phenotype in Analysis: </label>
+                                <label class="col-sm-3 control-label"><% $c->i18n->p("drone.interface.use_cumulative_area_under_curve_phenotype_in_analysis", "Use Cumulative Area-Under-Curve Phenotype in Analysis:") |h %> </label>
                                 <div class="col-sm-9" >
                                     <select class="form-control" id="drone_image_calculate_statistics_use_area_under_curve_select">
-                                        <option value="no">No</option>
-                                        <option value="yes">Yes</option>
+                                        <option value="no"><% $c->i18n->p("global.search_wizard.no", "No") |h %></option>
+                                        <option value="yes"><% $c->i18n->p("global.search_wizard.yes", "Yes") |h %></option>
                                     </select>
                                 </div>
                             </div>
@@ -199,7 +199,7 @@
                         <hr>
                         <div class="form-horizontal">
                             <div class="form-group">
-                                <label class="col-sm-3 control-label">Inversion Tolerance: </label>
+                                <label class="col-sm-3 control-label"><% $c->i18n->p("analysis.interface.inversion_tolerance", "Inversion Tolerance:") |h %> </label>
                                 <div class="col-sm-9" >
                                     <select class="form-control" id="drone_image_calculate_statistics_tolparinv_select">
                                         <option value="0.000001">0.000001</option>
@@ -222,7 +222,7 @@
                         <hr>
                         <div class="form-horizontal">
                             <div class="form-group">
-                                <label class="col-sm-3 control-label">Legendre Polynomial Order: </label>
+                                <label class="col-sm-3 control-label"><% $c->i18n->p("drone.interface.legendre_polynomial_order", "Legendre Polynomial Order:") |h %> </label>
                                 <div class="col-sm-9" >
                                     <select class="form-control" id="drone_image_calculate_statistics_legendre_order_number_select">
                                         <option value="1">1</option>
@@ -240,8 +240,8 @@
                         $$x_t = Bx_{t-1} + u + w_t\\ w_t \sim MVN(0,Q)\\ y_t = Zx_t + a + v_t\\ v_t \sim MVN(0,R)\\ x_0 \sim MVN(\pi, \Lambda)$$
                         <hr>
                         <select class="form-control" id="drone_imagery_calculate_statistics_select_marss" name="drone_imagery_calculate_statistics_select_marss">
-                            <option value="marss_predict_last_time_point">Predict Last Time Point</option>
-                            <option value="marss_predict_last_two_time_points">Predict Last Two Time Point</option>
+                            <option value="marss_predict_last_time_point"><% $c->i18n->p("drone.interface.predict_last_time_point", "Predict Last Time Point") |h %></option>
+                            <option value="marss_predict_last_two_time_points"><% $c->i18n->p("drone.interface.predict_last_two_time_point", "Predict Last Two Time Point") |h %></option>
                         </select>
                     </div>
 
@@ -249,7 +249,7 @@
                         <hr>
                         <div class="form-horizontal">
                             <div class="form-group">
-                                <label class="col-sm-3 control-label">Permanent Environment Structure: </label>
+                                <label class="col-sm-3 control-label"><% $c->i18n->p("drone.interface.permanent_environment_structure", "Permanent Environment Structure:") |h %> </label>
                                 <div class="col-sm-9" >
                                     <select class="form-control" id="drone_image_calculate_statistics_permanent_env_structure_select">
                                         <option value="identity">Identity Matrix</option>
@@ -263,7 +263,7 @@
                         <div id="drone_imagery_calculate_statistics_permanent_env_structure_phenotype_correlation_div" style="display:none">
                             <div class="form-horizontal">
                                 <div class="form-group">
-                                    <label class="col-sm-3 control-label">Phenotypes For Correlation Matrix: </label>
+                                    <label class="col-sm-3 control-label"><% $c->i18n->p("drone.interface.phenotypes_for_correlation_matrix", "Phenotypes For Correlation Matrix:") |h %> </label>
                                     <div class="col-sm-9" >
                                         <div id="drone_imagery_calculate_statistics_permanent_env_structure_phenotype_correlation_select_div"></div>
                                     </div>
@@ -275,19 +275,19 @@
 
                     <br/><br/>
                     <center>
-                    <button class="btn btn-primary" id="drone_imagery_calculate_statistics_select_step">Submit</button>
+                    <button class="btn btn-primary" id="drone_imagery_calculate_statistics_select_step"><% $c->i18n->p("global.submit", "Submit") |h %></button>
                     </center>
                 </&>
-                <&| /util/workflow.mas:step, title=> "Results" &>
-                    <& /page/page_title.mas, title=>"Statistics results" &>
+                <&| /util/workflow.mas:step, title=> $c->i18n->p("global.library_search.results", "Results") &>
+                    <& /page/page_title.mas, title=>HTML::Entities::encode_entities($c->i18n->p("analysis.interface.statistics_results", "Statistics results")) &>
 
                     <hr>
-                    <button class="btn btn-primary" id="drone_imagery_calculate_statistics_analysis_save_blups_genetic_pe_residual" style="display:none">Go To Save Analysis Results For Genetic and Environment BLUPS and Residuals</button>
-                    <button class="btn btn-primary" id="drone_imagery_calculate_statistics_analysis_save_blups_genetic" style="display:none">Go To Save Analysis Results For Genetic BLUPS</button>
-                    <button class="btn btn-primary" id="drone_imagery_calculate_statistics_analysis_save_blups_spatial" style="display:none">Go To Save Analysis Results For Spatial BLUPS</button>
-                    <button class="btn btn-primary" id="drone_imagery_calculate_statistics_analysis_save_blups_pe" style="display:none">Go To Save Analysis Results For Permanent Environmental BLUPS</button>
-                    <button class="btn btn-primary" id="drone_imagery_calculate_statistics_analysis_save_residuals" style="display:none">Go To Save Analysis Results For Residuals</button>
-                    <button class="btn btn-primary" id="drone_imagery_calculate_statistics_analysis_save_fitted" style="display:none">Go To Save Analysis Results For Fitted Values</button>
+                    <button class="btn btn-primary" id="drone_imagery_calculate_statistics_analysis_save_blups_genetic_pe_residual" style="display:none"><% $c->i18n->p("analysis.interface.go_to_save_analysis_results_for_genetic_and_environment_blups", "Go To Save Analysis Results For Genetic and Environment BLUPS and Residuals") |h %></button>
+                    <button class="btn btn-primary" id="drone_imagery_calculate_statistics_analysis_save_blups_genetic" style="display:none"><% $c->i18n->p("analysis.interface.go_to_save_analysis_results_for_genetic_blups", "Go To Save Analysis Results For Genetic BLUPS") |h %></button>
+                    <button class="btn btn-primary" id="drone_imagery_calculate_statistics_analysis_save_blups_spatial" style="display:none"><% $c->i18n->p("analysis.interface.go_to_save_analysis_results_for_spatial_blups", "Go To Save Analysis Results For Spatial BLUPS") |h %></button>
+                    <button class="btn btn-primary" id="drone_imagery_calculate_statistics_analysis_save_blups_pe" style="display:none"><% $c->i18n->p("drone.interface.go_to_save_analysis_results_for_permanent_environmental_blups", "Go To Save Analysis Results For Permanent Environmental BLUPS") |h %></button>
+                    <button class="btn btn-primary" id="drone_imagery_calculate_statistics_analysis_save_residuals" style="display:none"><% $c->i18n->p("analysis.interface.go_to_save_analysis_results_for_residuals", "Go To Save Analysis Results For Residuals") |h %></button>
+                    <button class="btn btn-primary" id="drone_imagery_calculate_statistics_analysis_save_fitted" style="display:none"><% $c->i18n->p("analysis.interface.go_to_save_analysis_results_for_fitted_values", "Go To Save Analysis Results For Fitted Values") |h %></button>
                     <hr>
 
                     <div id ="drone_imagery_calculate_statistics_result_div">
@@ -299,7 +299,7 @@
 
       </div>
       <div class="modal-footer">
-        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+        <button type="button" class="btn btn-default" data-dismiss="modal"><% $c->i18n->p("global.close", "Close") |h %></button>
       </div>
     </div>
   </div>
@@ -309,48 +309,48 @@
   <div class="modal-dialog modal-xl" role="document">
     <div class="modal-content">
       <div class="modal-header">
-        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-        <h4 class="modal-title" id="droneImageryCalculateStatisticsSingleTrialMultiSeasonDialog">Calculate statistics on aerial image phenotypes</h4>
+        <button type="button" class="close" data-dismiss="modal" aria-label="<% $c->i18n->p("global.close", "Close") |h %>"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title" id="droneImageryCalculateStatisticsSingleTrialMultiSeasonDialog"><% $c->i18n->p("drone.interface.calculate_statistics_on_aerial_image_phenotypes", "Calculate statistics on aerial image phenotypes") |h %></h4>
       </div>
       <div class="modal-body">
         <div class="container-fluid">
 
             <&| /util/workflow.mas, id=> "drone_imagery_calculate_statistics_single_trial_multiseason_workflow" &>
-                <&| /util/workflow.mas:step, title=> "Field Trial" &>
-                    <& /page/page_title.mas, title=>"Select the field trial you are interested in. Select only one." &>
+                <&| /util/workflow.mas:step, title=> $c->i18n->p("cross.pages.field_trial", "Field Trial") &>
+                    <& /page/page_title.mas, title=>HTML::Entities::encode_entities($c->i18n->p("drone.interface.select_the_field_trial_you_are_interested_in_select_only_one", "Select the field trial you are interested in. Select only one.")) &>
                     <br/><br/>
                     <form class="form-horizontal">
                         <div class="form-group">
-                            <label class="col-sm-3 control-label">Field Trial(s): </label>
+                            <label class="col-sm-3 control-label"><% $c->i18n->p("analysis.interface.field_trial_s", "Field Trial(s):") |h %> </label>
                             <div class="col-sm-9" >
                                 <div id="drone_imagery_calculate_statistics_multiseason_trial_select_div"></div>
                             </div>
                         </div>
                     </form>
                     <center>
-                    <button class="btn btn-primary" id="drone_imagery_calculate_statistics_multiseason_field_trial_select_step">Go to Next Step</button>
+                    <button class="btn btn-primary" id="drone_imagery_calculate_statistics_multiseason_field_trial_select_step"><% $c->i18n->p("global.workflow.next_step", "Go to Next Step") |h %></button>
                     </center>
                 </&>
-                <&| /util/workflow.mas:step, title=> "Trait Selection" &>
-                    <& /page/page_title.mas, title=>"Select the observation variable(s) you are interested in" &>
+                <&| /util/workflow.mas:step, title=> $c->i18n->p("analysis.interface.trait_selection", "Trait Selection") &>
+                    <& /page/page_title.mas, title=>HTML::Entities::encode_entities($c->i18n->p("drone.interface.select_the_observation_variable_s_you_are_interested_in", "Select the observation variable(s) you are interested in")) &>
                     <br/><br/>
                     <form class="form-horizontal">
                         <div class="form-group">
-                            <label class="col-sm-3 control-label">Observation Variables Phenotyped in the Selected Field Trial: </label>
+                            <label class="col-sm-3 control-label"><% $c->i18n->p("drone.interface.observation_variables_phenotyped_in_the_selected_field_trial", "Observation Variables Phenotyped in the Selected Field Trial:") |h %> </label>
                             <div class="col-sm-9" >
                                 <div id="drone_imagery_calculate_statistics_multiseason_trait_select_div"></div>
                             </div>
                         </div>
                     </form>
                     <center>
-                    <button class="btn btn-primary" id="drone_imagery_calculate_statistics_multiseason_trait_select_step">Go to Next Step</button>
+                    <button class="btn btn-primary" id="drone_imagery_calculate_statistics_multiseason_trait_select_step"><% $c->i18n->p("global.workflow.next_step", "Go to Next Step") |h %></button>
                     </center>
                 </&>
-                <&| /util/workflow.mas:step, title=> "Statistics" &>
-                    <& /page/page_title.mas, title=>"Select statistics to calculate" &>
+                <&| /util/workflow.mas:step, title=> $c->i18n->p("analysis.interface.statistics", "Statistics") &>
+                    <& /page/page_title.mas, title=>HTML::Entities::encode_entities($c->i18n->p("analysis.interface.select_statistics_to_calculate", "Select statistics to calculate")) &>
 
                     <select class="form-control" id="drone_imagery_calculate_statistics_multiseason_select_input">
-                        <option value="">Select A Model</option>
+                        <option value=""><% $c->i18n->p("analysis.interface.select_a_model_ba25d3", "Select A Model") |h %></option>
 
                         <option value="sommer_grm_genetic_blups">Sommer GBLUPs Y~replicate+GRM. Multivariate genetic effects using GRM</option>
                         <option value="sommer_grm_spatial_genetic_blups">Sommer Spatial GBLUPs Y~replicate+GRM+spatial. Multivariate genetic + 2Dspl spatial effects</option>
@@ -359,12 +359,12 @@
                     <hr>
                     <div class="form-horizontal">
                         <div class="form-group">
-                            <label class="col-sm-3 control-label">Relationship Matrix Type: </label>
+                            <label class="col-sm-3 control-label"><% $c->i18n->p("analysis.interface.relationship_matrix_type", "Relationship Matrix Type:") |h %> </label>
                             <div class="col-sm-9" >
                                 <select class="form-control" id="drone_imagery_calculate_statistics_multiseason_relationship_matrix_type_select_div">
                                     <option value="">Identity</option>
-                                    <option value="htp_phenotypes">High-throughput Phenotyping Data</option>
-                                    <option value="genotypes">Genotyping Data</option>
+                                    <option value="htp_phenotypes"><% $c->i18n->p("analysis.interface.high_throughput_phenotyping_data", "High-throughput Phenotyping Data") |h %></option>
+                                    <option value="genotypes"><% $c->i18n->p("genotype.plate.genotyping_data", "Genotyping Data") |h %></option>
                                 </select>
                             </div>
                         </div>
@@ -373,35 +373,35 @@
                     <div id="drone_imagery_calculate_statistics_multiseason_genotyping_protocol_div" class="well well-sm" style="display:none">
                         <div class="form-horizontal">
                             <div class="form-group">
-                                <label class="col-sm-3 control-label">Genotyping Protocol To Calculate Genomic Relationship Matrix (optional. If none selected, an identity matrix is used): </label>
+                                <label class="col-sm-3 control-label"><% $c->i18n->p("analysis.interface.genotyping_protocol_to_calculate_genomic_relationship_matrix_optional_if_none", "Genotyping Protocol To Calculate Genomic Relationship Matrix (optional. If none selected, an identity matrix is used):") |h %> </label>
                                 <div class="col-sm-9" >
                                     <div id="drone_imagery_calculate_statistics_multiseason_genotyping_protocol_select_div"></div>
                                 </div>
                             </div>
                             <div class="form-group">
-                                <label class="col-sm-3 control-label">Compute Genotypes From Parents: </label>
+                                <label class="col-sm-3 control-label"><% $c->i18n->p("analysis.interface.compute_genotypes_from_parents", "Compute Genotypes From Parents:") |h %> </label>
                                 <div class="col-sm-9" >
                                     <select class="form-control" id="drone_image_calculate_statistics_multiseason_genotyping_protocol_compute_from_parents_select">
-                                        <option value="no">No</option>
-                                        <option value="yes">Yes</option>
+                                        <option value="no"><% $c->i18n->p("global.search_wizard.no", "No") |h %></option>
+                                        <option value="yes"><% $c->i18n->p("global.search_wizard.yes", "Yes") |h %></option>
                                     </select>
                                 </div>
                             </div>
                             <div class="form-group" id="drone_image_calculate_statistics_multiseason_genotyping_protocol_use_parental_grms_select_div" style="display:none">
-                                <label class="col-sm-3 control-label">Use Parental Relationship Matrices: </label>
+                                <label class="col-sm-3 control-label"><% $c->i18n->p("drone.interface.use_parental_relationship_matrices", "Use Parental Relationship Matrices:") |h %> </label>
                                 <div class="col-sm-9" >
                                     <select class="form-control" id="drone_image_calculate_statistics_multiseason_genotyping_protocol_use_parental_grms_select">
-                                        <option value="no">No</option>
-                                        <option value="yes">Yes</option>
+                                        <option value="no"><% $c->i18n->p("global.search_wizard.no", "No") |h %></option>
+                                        <option value="yes"><% $c->i18n->p("global.search_wizard.yes", "Yes") |h %></option>
                                     </select>
                                 </div>
                             </div>
                             <div class="form-group" id="drone_image_calculate_statistics_multiseason_genotyping_protocol_include_pedigree_select_div" style="display:none">
-                                <label class="col-sm-3 control-label">Include Pedigree Info Into Relationship Matrix: </label>
+                                <label class="col-sm-3 control-label"><% $c->i18n->p("drone.interface.include_pedigree_info_into_relationship_matrix", "Include Pedigree Info Into Relationship Matrix:") |h %> </label>
                                 <div class="col-sm-9" >
                                     <select class="form-control" id="drone_image_calculate_statistics_multiseason_genotyping_protocol_include_pedigree_select">
-                                        <option value="no">No</option>
-                                        <option value="yes">Yes</option>
+                                        <option value="no"><% $c->i18n->p("global.search_wizard.no", "No") |h %></option>
+                                        <option value="yes"><% $c->i18n->p("global.search_wizard.yes", "Yes") |h %></option>
                                     </select>
                                 </div>
                             </div>
@@ -411,7 +411,7 @@
                     <div id="drone_imagery_calculate_statistics_multiseason_htp_phenotypes_rel_matrix_div" class="well well-sm" style="display:none">
                         <div class="form-horizontal">
                             <div class="form-group">
-                                <label class="col-sm-3 control-label">How to calculate the relationship matrix with high-throughput phenotypes: </label>
+                                <label class="col-sm-3 control-label"><% $c->i18n->p("analysis.interface.how_to_calculate_the_relationship_matrix_with_high_throughput_phenotypes", "How to calculate the relationship matrix with high-throughput phenotypes:") |h %> </label>
                                 <div class="col-sm-9" >
                                     <select class="form-control" id="drone_image_calculate_statistics_multiseason_htp_phenotypes_rel_matrix_select">
                                         <option value="correlations">Correlations</option>
@@ -420,19 +420,19 @@
                                 </div>
                             </div>
                             <div class="form-group">
-                                <label class="col-sm-3 control-label">Time Points to Use: </label>
+                                <label class="col-sm-3 control-label"><% $c->i18n->p("analysis.interface.time_points_to_use", "Time Points to Use:") |h %> </label>
                                 <div class="col-sm-9" >
                                     <select class="form-control" id="drone_image_calculate_statistics_multiseason_htp_phenotypes_rel_matrix_times_select">
-                                        <option value="all">All Available</option>
-                                        <option value="latest_trait">Up to the latest date selected in traits</option>
-                                        <option value="vegetative" disabled>Vegetative Growth Stage</option>
-                                        <option value="reproductive" disabled>Reproductive Growth Stage</option>
-                                        <option value="mature" disabled>Mature Growth Stage</option>
+                                        <option value="all"><% $c->i18n->p("analysis.interface.all_available", "All Available") |h %></option>
+                                        <option value="latest_trait"><% $c->i18n->p("drone.interface.up_to_the_latest_date_selected_in_traits", "Up to the latest date selected in traits") |h %></option>
+                                        <option value="vegetative" disabled><% $c->i18n->p("analysis.interface.vegetative_growth_stage", "Vegetative Growth Stage") |h %></option>
+                                        <option value="reproductive" disabled><% $c->i18n->p("analysis.interface.reproductive_growth_stage", "Reproductive Growth Stage") |h %></option>
+                                        <option value="mature" disabled><% $c->i18n->p("analysis.interface.mature_growth_stage", "Mature Growth Stage") |h %></option>
                                     </select>
                                 </div>
                             </div>
                             <div class="form-group" id="drone_image_calculate_statistics_multiseason_htp_phenotypes_rel_matrix_inversion_select_div" style="display:none">
-                                <label class="col-sm-3 control-label">HTP BLUEs Inversion Tolerance: </label>
+                                <label class="col-sm-3 control-label"><% $c->i18n->p("analysis.interface.htp_blues_inversion_tolerance", "HTP BLUEs Inversion Tolerance:") |h %> </label>
                                 <div class="col-sm-9" >
                                     <select class="form-control" id="drone_image_calculate_statistics_multiseason_htp_phenotypes_rel_matrix_inversion_select">
                                         <option value="0.00001">0.00001</option>
@@ -450,7 +450,7 @@
                     <hr>
                     <div class="form-horizontal">
                         <div class="form-group">
-                            <label class="col-sm-3 control-label">Inversion Tolerance: </label>
+                            <label class="col-sm-3 control-label"><% $c->i18n->p("analysis.interface.inversion_tolerance", "Inversion Tolerance:") |h %> </label>
                             <div class="col-sm-9" >
                                 <select class="form-control" id="drone_image_calculate_statistics_multiseason_tolparinv_select">
                                     <option value="0.000001">0.000001</option>
@@ -472,7 +472,7 @@
                         <hr>
                         <div class="form-horizontal">
                             <div class="form-group">
-                                <label class="col-sm-3 control-label">Legendre Polynomial Order: </label>
+                                <label class="col-sm-3 control-label"><% $c->i18n->p("drone.interface.legendre_polynomial_order", "Legendre Polynomial Order:") |h %> </label>
                                 <div class="col-sm-9" >
                                     <select class="form-control" id="drone_image_calculate_statistics_multiseason_legendre_order_number_select">
                                         <option value="1">1</option>
@@ -490,7 +490,7 @@
                         <hr>
                         <div class="form-horizontal">
                             <div class="form-group">
-                                <label class="col-sm-3 control-label">Permanent Environment Structure: </label>
+                                <label class="col-sm-3 control-label"><% $c->i18n->p("drone.interface.permanent_environment_structure", "Permanent Environment Structure:") |h %> </label>
                                 <div class="col-sm-9" >
                                     <select class="form-control" id="drone_image_calculate_statistics_multiseason_permanent_env_structure_select">
                                         <option value="identity">Identity Matrix</option>
@@ -504,7 +504,7 @@
                         <div id="drone_imagery_calculate_statistics_multiseason_permanent_env_structure_phenotype_correlation_div" style="display:none">
                             <div class="form-horizontal">
                                 <div class="form-group">
-                                    <label class="col-sm-3 control-label">Phenotypes For Correlation Matrix: </label>
+                                    <label class="col-sm-3 control-label"><% $c->i18n->p("drone.interface.phenotypes_for_correlation_matrix", "Phenotypes For Correlation Matrix:") |h %> </label>
                                     <div class="col-sm-9" >
                                         <div id="drone_imagery_calculate_statistics_multiseason_permanent_env_structure_phenotype_correlation_select_div"></div>
                                     </div>
@@ -516,11 +516,11 @@
 
                     <br/><br/>
                     <center>
-                    <button class="btn btn-primary" id="drone_imagery_calculate_statistics_multiseason_select_step">Submit</button>
+                    <button class="btn btn-primary" id="drone_imagery_calculate_statistics_multiseason_select_step"><% $c->i18n->p("global.submit", "Submit") |h %></button>
                     </center>
                 </&>
-                <&| /util/workflow.mas:step, title=> "Results" &>
-                    <& /page/page_title.mas, title=>"Statistics results" &>
+                <&| /util/workflow.mas:step, title=> $c->i18n->p("global.library_search.results", "Results") &>
+                    <& /page/page_title.mas, title=>HTML::Entities::encode_entities($c->i18n->p("analysis.interface.statistics_results", "Statistics results")) &>
 
                     <div id ="drone_imagery_calculate_statistics_multiseason_result_div">
                     </div>
@@ -531,7 +531,7 @@
 
       </div>
       <div class="modal-footer">
-        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+        <button type="button" class="btn btn-default" data-dismiss="modal"><% $c->i18n->p("global.close", "Close") |h %></button>
       </div>
     </div>
   </div>
@@ -601,14 +601,14 @@ jQuery(document).ready(function() {
         manage_drone_imagery_calculate_statistics_field_trial_id_array = jQuery('#drone_imagery_calculate_statistics_field_trial_id').val();
 
         if (manage_drone_imagery_calculate_statistics_field_trial_id_array.length > 1) {
-            alert('Please only select a single field trial for now!');
+            alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("drone.interface.please_only_select_a_single_field_trial_for_now", "Please only select a single field trial for now!") : "Please only select a single field trial for now!"));
             return false;
         }
 
         manage_drone_imagery_calculate_statistics_field_trial_id_string = manage_drone_imagery_calculate_statistics_field_trial_id_array.join(",");
         manage_drone_imagery_calculate_statistics_observation_variable_type = jQuery('#drone_imagery_calculate_statistics_select_observation_variable_type').val();
         if (manage_drone_imagery_calculate_statistics_field_trial_id_string == '') {
-            alert('Please select a field trial first!');
+            alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("analysis.interface.please_select_a_field_trial_first", "Please select a field trial first!") : "Please select a field trial first!"));
         } else {
             if (manage_drone_imagery_calculate_statistics_observation_variable_type == 'time_ontology') {
                 get_select_box('traits', 'drone_imagery_calculate_statistics_trait_select_div', { 'name' : 'drone_imagery_calculate_statistics_trait_id_select', 'id' : 'drone_imagery_calculate_statistics_trait_id_select', 'empty':1, 'multiple':1, 'size': 20, 'trial_ids':manage_drone_imagery_calculate_statistics_field_trial_id_string, 'stock_type':'plot', 'contains_composable_cv_type':manage_drone_imagery_calculate_statistics_observation_variable_type, 'select_format':'component_table_select' });
@@ -631,7 +631,7 @@ jQuery(document).ready(function() {
         manage_drone_imagery_calculate_statistics_multiseason_field_trial_id_array = jQuery('#drone_imagery_calculate_statistics_multiseason_field_trial_id').val();
 
         if (manage_drone_imagery_calculate_statistics_multiseason_field_trial_id_array.length > 1) {
-            alert('Please only select a single field trial for now!');
+            alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("drone.interface.please_only_select_a_single_field_trial_for_now", "Please only select a single field trial for now!") : "Please only select a single field trial for now!"));
             return false;
         }
 
@@ -660,13 +660,13 @@ jQuery(document).ready(function() {
         else {
             manage_drone_imagery_calculate_statistics_trait_ids = jQuery('#drone_imagery_calculate_statistics_trait_id_select').val();
             if (manage_drone_imagery_calculate_statistics_trait_ids == null || manage_drone_imagery_calculate_statistics_trait_ids == undefined) {
-                alert('Please select at least one observation variable!');
+                alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("drone.interface.please_select_at_least_one_observation_variable", "Please select at least one observation variable!") : "Please select at least one observation variable!"));
                 return false;
             }
         }
 
         if (manage_drone_imagery_calculate_statistics_trait_ids.length < 1){
-            alert('Please select at least one observation variable!');
+            alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("drone.interface.please_select_at_least_one_observation_variable", "Please select at least one observation variable!") : "Please select at least one observation variable!"));
         } else {
             Workflow.complete("#drone_imagery_calculate_statistics_trait_select_step");
             Workflow.focus('#drone_imagery_calculate_statistics_workflow', 3);
@@ -866,15 +866,15 @@ jQuery(document).ready(function() {
         manage_drone_imagery_calculate_statistics_select = jQuery('#drone_imagery_calculate_statistics_select_input').val();
 
         if (manage_drone_imagery_calculate_statistics_select == 'marss_germplasmname_block' && manage_drone_imagery_calculate_statistics_observation_variable_type != 'time_ontology') {
-            alert('The MARSS model fit and prediction only works for Time Series traits! Please go to Trait Selection and select time series traits.');
+            alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("drone.interface.the_marss_model_fit_and_prediction_only_works_for_time_series_traits_please_go_to_trait_selection_and_select_time", "The MARSS model fit and prediction only works for Time Series traits! Please go to Trait Selection and select time series traits.") : "The MARSS model fit and prediction only works for Time Series traits! Please go to Trait Selection and select time series traits."));
             return false;
         }
         if (jQuery('#drone_image_calculate_statistics_genotyping_protocol_include_pedigree_select').val() == 'yes' && jQuery('#drone_image_calculate_statistics_genotyping_protocol_compute_from_parents_select').val() != 'yes') {
-            alert('You can only use pedigree info in the relationship matrix if you will compute the genotypes from the parents!');
+            alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("drone.interface.you_can_only_use_pedigree_info_in_the_relationship_matrix_if_you_will_compute_the_genotypes_from_the_parents", "You can only use pedigree info in the relationship matrix if you will compute the genotypes from the parents!") : "You can only use pedigree info in the relationship matrix if you will compute the genotypes from the parents!"));
             return false;
         }
         if (jQuery('#drone_image_calculate_statistics_genotyping_protocol_use_parental_grms_select').val() == 'yes' && jQuery('#drone_image_calculate_statistics_genotyping_protocol_compute_from_parents_select').val() != 'yes') {
-            alert('You can only use parental relationship matrices if you will compute the genotypes from the parents!');
+            alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("drone.interface.you_can_only_use_parental_relationship_matrices_if_you_will_compute_the_genotypes_from_the_parents", "You can only use parental relationship matrices if you will compute the genotypes from the parents!") : "You can only use parental relationship matrices if you will compute the genotypes from the parents!"));
             return false;
         }
 
@@ -882,7 +882,7 @@ jQuery(document).ready(function() {
         if (jQuery('#drone_image_calculate_statistics_permanent_env_structure_select').val() == 'phenotype_correlation') {
             manage_drone_imagery_calculate_statistics_rr_structure_phenotype_correlation = jQuery('#drone_imagery_calculate_statistics_permanent_env_structure_phenotype_correlation_select').val();
             if (!manage_drone_imagery_calculate_statistics_rr_structure_phenotype_correlation || manage_drone_imagery_calculate_statistics_rr_structure_phenotype_correlation.length < 3) {
-                alert('Please select at least three phenotypes to use in random regression phenotype correlation structure!');
+                alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("drone.interface.please_select_at_least_three_phenotypes_to_use_in_random_regression_phenotype_correlation_structure", "Please select at least three phenotypes to use in random regression phenotype correlation structure!") : "Please select at least three phenotypes to use in random regression phenotype correlation structure!"));
                 return false;
             }
         }
@@ -924,7 +924,7 @@ jQuery(document).ready(function() {
 
                     var html = '';
                     if (response.sum_square_residual) {
-                        html = html + '<h4>Sum square residual: '+response.sum_square_residual+'</h4><hr>';
+                        html = html + ("<h4>" + (window.SGN && window.SGN.i18n ? SGN.i18n.p("analysis.interface.sum_square_residual", "Sum square residual:") : "Sum square residual:") + " ")+response.sum_square_residual+'</h4><hr>';
                     }
                     if (response.genetic_effects_line_plot) {
                         html = html + '<img src="'+response.genetic_effects_line_plot+'"><hr>';
@@ -938,7 +938,7 @@ jQuery(document).ready(function() {
                         manage_drone_imagery_calculate_statistics_phenotype_training_file = response.stats_tempfile;
                         manage_drone_imagery_calculate_statistics_grm_training_file = response.grm_file;
 
-                        html = html + '<table class="table table-bordered table-hover"><thead><tr><th>Accessions</th>';
+                        html = html + ("<table class=\"table table-bordered table-hover\"><thead><tr><th>" + (window.SGN && window.SGN.i18n ? SGN.i18n.p("seedlots.ui.accessions", "Accessions") : "Accessions") + "</th>");
                         for (var i=0; i<manage_drone_imagery_calculate_statistics_trait_names.length; i++) {
                             html = html + '<th>'+manage_drone_imagery_calculate_statistics_trait_names[i]+'</th>';
                         }
@@ -951,7 +951,7 @@ jQuery(document).ready(function() {
                                     html = html + '<td>'+response.result_blup_genetic_data[acc][manage_drone_imagery_calculate_statistics_trait_names[i]][0]+'</td>';
                                 }
                                 else {
-                                    html = html + '<td>NA</td>';
+                                    html = html + ("<td>" + (window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.job_result_na_alt", "NA") : "NA") + "</td>");
                                 }
                             }
                             html = html + '</tr>';
@@ -963,7 +963,7 @@ jQuery(document).ready(function() {
                         manage_drone_imagery_calculate_statistics_plot_names = response.unique_plots;
                         manage_drone_imagery_calculate_statistics_trait_names = response.unique_traits;
 
-                        html = html + '<table class="table table-bordered table-hover"><thead><tr><th>Plots</th>';
+                        html = html + ("<table class=\"table table-bordered table-hover\"><thead><tr><th>" + (window.SGN && window.SGN.i18n ? SGN.i18n.p("global.search_wizard.plots", "Plots") : "Plots") + "</th>");
                         for (var i=0; i<response.unique_traits.length; i++) {
                             html = html + '<th>'+response.unique_traits[i]+'</th>';
                         }
@@ -983,7 +983,7 @@ jQuery(document).ready(function() {
                         manage_drone_imagery_calculate_statistics_plot_names = response.unique_plots;
                         manage_drone_imagery_calculate_statistics_trait_names = response.unique_traits;
 
-                        html = html + '<table class="table table-bordered table-hover"><thead><tr><th>Plots</th>';
+                        html = html + ("<table class=\"table table-bordered table-hover\"><thead><tr><th>" + (window.SGN && window.SGN.i18n ? SGN.i18n.p("global.search_wizard.plots", "Plots") : "Plots") + "</th>");
                         for (var i=0; i<response.unique_traits.length; i++) {
                             html = html + '<th>'+response.unique_traits[i]+'</th>';
                         }
@@ -996,7 +996,7 @@ jQuery(document).ready(function() {
                                     html = html + '<td>'+response.result_blup_pe_data[plot][response.unique_traits[i]][0]+'</td>';
                                 }
                                 else {
-                                    html = html + '<td>NA</td>';
+                                    html = html + ("<td>" + (window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.job_result_na_alt", "NA") : "NA") + "</td>");
                                 }
                             }
                             html = html + '</tr>';
@@ -1005,17 +1005,17 @@ jQuery(document).ready(function() {
                     }
 
                     if (response.results.length > 0) {
-                        html = '<table class="table table-bordered table-hover"><thead><tr><th>Observation Variable</th><th>Statistics</th><th>Plot</th></tr></thead><tbody>';
+                        html = ("<table class=\"table table-bordered table-hover\"><thead><tr><th>" + (window.SGN && window.SGN.i18n ? SGN.i18n.p("accession.usage.header.variable", "Observation Variable") : "Observation Variable") + "</th><th>" + (window.SGN && window.SGN.i18n ? SGN.i18n.p("analysis.interface.statistics", "Statistics") : "Statistics") + "</th><th>" + (window.SGN && window.SGN.i18n ? SGN.i18n.p("nirs.trial.plot", "Plot") : "Plot") + "</th></tr></thead><tbody>");
                         for (var i=0; i<response.results.length; i++) {
                             html = html + '<tr><td>'+response.results[i][0]+'</td><td>'+response.results[i][1]+'</td><td><img src="'+response.results[i][2]+'"></td></tr>';
                         }
                         html = html + '</tbody></table>';
                     }
 
-                    html = html + '<hr><a href="'+response.stats_out_tempfile_string+'.log" target=_blank>Stats file or log</a>';
+                    html = html + '<hr><a href="'+response.stats_out_tempfile_string+(".log\" target=_blank>" + (window.SGN && window.SGN.i18n ? SGN.i18n.p("analysis.interface.stats_file_or_log", "Stats file or log") : "Stats file or log") + "</a>");
 
                     if (jQuery('#drone_imagery_calculate_statistics_relationship_matrix_type_select_div').val() == 'htp_phenotypes') {
-                        html = html + '<hr><a href="'+response.stats_out_htp_rel_tempfile_out_string+'" target=_blank>HTP Relationship Matrix</a>';
+                        html = html + '<hr><a href="'+response.stats_out_htp_rel_tempfile_out_string+("\" target=_blank>" + (window.SGN && window.SGN.i18n ? SGN.i18n.p("analysis.interface.htp_relationship_matrix", "HTP Relationship Matrix") : "HTP Relationship Matrix") + "</a>");
                     }
 
                     jQuery('#drone_imagery_calculate_statistics_result_div').html(html);
@@ -1026,7 +1026,7 @@ jQuery(document).ready(function() {
             },
             error: function(response){
                 jQuery("#working_modal").modal("hide");
-                alert('Error calculating statistics!')
+                alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("analysis.interface.error_calculating_statistics", "Error calculating statistics!") : "Error calculating statistics!"))
             }
         });
     });
@@ -1042,15 +1042,15 @@ jQuery(document).ready(function() {
         var generic_save_analysis_template_breeding_program_id = jQuery('#generic_save_analysis_template_breeding_program_id').val();
 
         if (generic_save_analysis_template_analysis_name == '') {
-            alert('Please give an analysis template name');
+            alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("analysis.interface.please_give_an_analysis_template_name", "Please give an analysis template name") : "Please give an analysis template name"));
             return false;
         }
         if (generic_save_analysis_template_analysis_description == '') {
-            alert('Please give an analysis template description');
+            alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("analysis.interface.please_give_an_analysis_template_description", "Please give an analysis template description") : "Please give an analysis template description"));
             return false;
         }
         if (generic_save_analysis_template_analysis_year == '') {
-            alert('Please give an analysis template year');
+            alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("analysis.interface.please_give_an_analysis_template_year", "Please give an analysis template year") : "Please give an analysis template year"));
             return false;
         }
 
@@ -1327,10 +1327,10 @@ jQuery(document).ready(function() {
                 if (response.success) {
                     var html = '<center>';
                     if (response.model_id) {
-                        html = html + '<p>Go to saved <a href="/analyses_model/'+response.model_id+'" target=_blank >model</a></p>';
+                        html = html + ("<p>" + (window.SGN && window.SGN.i18n ? SGN.i18n.p("analysis.interface.go_to_saved", "Go to saved") : "Go to saved") + " <a href=\"/analyses_model/")+response.model_id+("\" target=_blank >" + (window.SGN && window.SGN.i18n ? SGN.i18n.p("analysis.interface.model_9372c4", "model") : "model") + "</a></p>");
                     }
                     if (response.analysis_id) {
-                        html = html + '<p>Go to saved <a href="/analyses/'+response.analysis_id+'" target=_blank >GBLUP analysis</a></p>';
+                        html = html + ("<p>" + (window.SGN && window.SGN.i18n ? SGN.i18n.p("analysis.interface.go_to_saved", "Go to saved") : "Go to saved") + " <a href=\"/analyses/")+response.analysis_id+("\" target=_blank >" + (window.SGN && window.SGN.i18n ? SGN.i18n.p("analysis.interface.gblup_analysis", "GBLUP analysis") : "GBLUP analysis") + "</a></p>");
                     }
                     html = html + '</center>';
                     jQuery('#generic_save_analysis_template_response_div').html(html);
@@ -1486,10 +1486,10 @@ jQuery(document).ready(function() {
                                 html = html + '<center>';
                                 if (response.analysis_id) {
                                     if (manage_drone_imagery_calculate_statistics_select == 'sommer_grm_spatial_genetic_blups') {
-                                        html = html + '<p>Go to saved <a href="/analyses/'+response.analysis_id+'" target=_blank >spatial BLUP analysis</a></p>';
+                                        html = html + ("<p>" + (window.SGN && window.SGN.i18n ? SGN.i18n.p("analysis.interface.go_to_saved", "Go to saved") : "Go to saved") + " <a href=\"/analyses/")+response.analysis_id+("\" target=_blank >" + (window.SGN && window.SGN.i18n ? SGN.i18n.p("analysis.interface.spatial_blup_analysis", "spatial BLUP analysis") : "spatial BLUP analysis") + "</a></p>");
                                     }
                                     else {
-                                        html = html + '<p>Go to saved <a href="/analyses/'+response.analysis_id+'" target=_blank >permanent environment BLUP analysis</a></p>';
+                                        html = html + ("<p>" + (window.SGN && window.SGN.i18n ? SGN.i18n.p("analysis.interface.go_to_saved", "Go to saved") : "Go to saved") + " <a href=\"/analyses/")+response.analysis_id+("\" target=_blank >" + (window.SGN && window.SGN.i18n ? SGN.i18n.p("drone.interface.permanent_environment_blup_analysis", "permanent environment BLUP analysis") : "permanent environment BLUP analysis") + "</a></p>");
                                     }
                                 }
                                 html = html + '</center>';
@@ -1598,7 +1598,7 @@ jQuery(document).ready(function() {
 
                                 if (manage_drone_imagery_calculate_statistics_select == 'sommer_grm_spatial_genetic_blups') {
                                     jQuery('#working_modal').modal('hide');
-                                    alert('Analysis and/or model saved!');
+                                    alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("analysis.interface.analysis_and_or_model_saved", "Analysis and/or model saved!") : "Analysis and/or model saved!"));
                                     return false;
                                 }
 
@@ -1643,30 +1643,30 @@ jQuery(document).ready(function() {
                                             alert(response.error);
                                         }
                                         if (response.success) {
-                                            alert('Analysis and/or model saved!');
+                                            alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("analysis.interface.analysis_and_or_model_saved", "Analysis and/or model saved!") : "Analysis and/or model saved!"));
                                             html = html + '<center>';
                                             if (response.analysis_id) {
-                                                html = html + '<p>Go to saved <a href="/analyses/'+response.analysis_id+'" target=_blank >residuals analysis</a></p>';
+                                                html = html + ("<p>" + (window.SGN && window.SGN.i18n ? SGN.i18n.p("analysis.interface.go_to_saved", "Go to saved") : "Go to saved") + " <a href=\"/analyses/")+response.analysis_id+("\" target=_blank >" + (window.SGN && window.SGN.i18n ? SGN.i18n.p("analysis.interface.residuals_analysis", "residuals analysis") : "residuals analysis") + "</a></p>");
                                             }
                                             html = html + '</center>';
                                             jQuery('#generic_save_analysis_template_response_div').html(html);
                                         }
                                     },
                                     error: function(response){
-                                        alert('Error saving analysis multiple!');
+                                        alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("analysis.interface.error_saving_analysis_multiple", "Error saving analysis multiple!") : "Error saving analysis multiple!"));
                                     }
                                 });
                             }
                         },
                         error: function(response){
-                            alert('Error saving analysis multiple!');
+                            alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("analysis.interface.error_saving_analysis_multiple", "Error saving analysis multiple!") : "Error saving analysis multiple!"));
                         }
                     });
                 }
             },
             error: function(response){
                 jQuery('#working_modal').modal('hide');
-                alert('Error saving analysis multiple!');
+                alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("analysis.interface.error_saving_analysis_multiple", "Error saving analysis multiple!") : "Error saving analysis multiple!"));
             }
         });
     });
@@ -1926,7 +1926,7 @@ jQuery(document).ready(function() {
 
     jQuery('#drone_imagery_calculate_statistics_analysis_save_blups_spatial').click(function(){
         if (manage_drone_imagery_calculate_statistics_field_trial_id_array.length>1) {
-            alert('Saving spatial BLUPs currently only implemented for a single trial, so only select one field trial in your analysis');
+            alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("analysis.interface.saving_spatial_blups_currently_only_implemented_for_a_single_trial", "Saving spatial BLUPs currently only implemented for a single trial, so only select one field trial in your analysis") : "Saving spatial BLUPs currently only implemented for a single trial, so only select one field trial in your analysis"));
             return false;
         }
 
@@ -1983,7 +1983,7 @@ jQuery(document).ready(function() {
 
     jQuery('#drone_imagery_calculate_statistics_analysis_save_blups_pe').click(function(){
         if (manage_drone_imagery_calculate_statistics_field_trial_id_array.length>1) {
-            alert('Saving spatial BLUPs currently only implemented for a single trial, so only select one field trial in your analysis');
+            alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("analysis.interface.saving_spatial_blups_currently_only_implemented_for_a_single_trial", "Saving spatial BLUPs currently only implemented for a single trial, so only select one field trial in your analysis") : "Saving spatial BLUPs currently only implemented for a single trial, so only select one field trial in your analysis"));
             return false;
         }
 
@@ -2296,3 +2296,7 @@ jQuery(document).ready(function() {
 });
 
 </script>
+
+<%once>
+use HTML::Entities ();
+</%once>

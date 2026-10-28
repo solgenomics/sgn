@@ -1,3 +1,15 @@
+<%init>
+use HTML::Entities ();
+# Escape catalog text first; only fixed component-owned markup replaces markers.
+my $genotype_linked_text = sub {
+    my ($text, $replacements) = @_;
+    my $html = HTML::Entities::encode_entities($text, q{&<>"'});
+    for my $marker (sort { length($b) <=> length($a) } keys %$replacements) {
+        $html =~ s/\Q$marker\E/$replacements->{$marker}/g;
+    }
+    return $html;
+};
+</%init>
 <%args>
 @programs => ()
 @locations => ()
@@ -20,29 +32,29 @@ $facilities
 <table class="table table-bordered">
     <thead>
         <tr>
-            <th>Information</th>
-            <th>Breeding Programs -- Folders -- Genotyping Projects&nbsp;&nbsp;&nbsp;&nbsp;<button class="btn btn-sm btn-default" id="refresh_genotyping_project_jstree_html_button" name="refresh_genotyping_project_jstree_html">Refresh</button></th>
+            <th><% $c->i18n->p('genotype.tree.information', 'Information') |h %></th>
+            <th><% $c->i18n->p('genotype.tree.hierarchy', 'Breeding Programs -- Folders -- Genotyping Projects') |h %>&nbsp;&nbsp;&nbsp;&nbsp;<button class="btn btn-sm btn-default" id="refresh_genotyping_project_jstree_html_button" name="refresh_genotyping_project_jstree_html"><% $c->i18n->p('genotype.tree.refresh', 'Refresh') |h %></button></th>
         </tr>
     </thead>
     <tbody>
         <tr>
             <td>
-                <h4>Search</h4>
-                <input type="text" class="form-control input-sm" id="genotyping_project_tree_search" placeholder="Search" />
+                <h4><% $c->i18n->p('genotype.tree.search', 'Search') |h %></h4>
+                <input type="text" class="form-control input-sm" id="genotyping_project_tree_search" placeholder="<% $c->i18n->p('genotype.tree.search', 'Search') |h %>" />
                 <hr>
 
-                <h5><i>Double click<br />genotyping project (&nbsp;<span class="glyphicon glyphicon-align-left text-warning"></span>&nbsp;) or folder (&nbsp;<span class="glyphicon glyphicon-folder-open text-danger"></span>&nbsp;)<br/>to view detail page.</i></h5>
-                <h5><i>Breeding programs (&nbsp;<span class="glyphicon glyphicon-briefcase text-info"></span>&nbsp;)</i></h5>
+                <h5><i><% $genotype_linked_text->($c->i18n->p('genotype.tree.open_details', 'Double click%{break_one}genotyping project (%{project_icon}) or folder (%{folder_icon})%{break_two}to view detail page.', {break_one => '__SGN_GENO_BREAK_ONE__', project_icon => '__SGN_GENO_PROJECT_ICON__', folder_icon => '__SGN_GENO_FOLDER_ICON__', break_two => '__SGN_GENO_BREAK_TWO__'}), {'__SGN_GENO_BREAK_ONE__' => '<br />', '__SGN_GENO_PROJECT_ICON__' => '&nbsp;<span class="glyphicon glyphicon-align-left text-warning"></span>&nbsp;', '__SGN_GENO_FOLDER_ICON__' => '&nbsp;<span class="glyphicon glyphicon-folder-open text-danger"></span>&nbsp;', '__SGN_GENO_BREAK_TWO__' => '<br/>'}) %></i></h5>
+                <h5><i><% $genotype_linked_text->($c->i18n->p('genotype.tree.programs', 'Breeding programs (%{program_icon})', {program_icon => '__SGN_GENO_PROGRAM_ICON__'}), {'__SGN_GENO_PROGRAM_ICON__' => '&nbsp;<span class="glyphicon glyphicon-briefcase text-info"></span>&nbsp;'}) %></i></h5>
                 <hr>
-                <h4>Folders</h4>
-                <button class="btn btn-sm btn-default" id="new_folder_dialog_link">Create new folder</button><br/><br/>
-                <button class="btn btn-sm btn-default" id="open_folder_dialog_link">Move genotyping project(s) to folder</button><br/><br/>
-                <button class="btn btn-sm btn-default" id="move_folder_dialog_link">Move folder</button>
+                <h4><% $c->i18n->p('genotype.tree.folders', 'Folders') |h %></h4>
+                <button class="btn btn-sm btn-default" id="new_folder_dialog_link"><% $c->i18n->p('genotype.tree.create_folder', 'Create new folder') |h %></button><br/><br/>
+                <button class="btn btn-sm btn-default" id="open_folder_dialog_link"><% $c->i18n->p('genotype.tree.move_projects', 'Move genotyping project(s) to folder') |h %></button><br/><br/>
+                <button class="btn btn-sm btn-default" id="move_folder_dialog_link"><% $c->i18n->p('genotype.tree.move_folder', 'Move folder') |h %></button>
 
                 <div id="folder_edit_options" style="display:none">
                     <hr>
-                    <h5><i>Select multiple folders by holding 'Ctrl'.</i></h5>
-                    <button class="btn btn-primary" id="edit_folders_button" title="First Select Folder(s) to Edit">Edit Folder(s)</button>
+                    <h5><i><% $c->i18n->p('genotype.tree.select_folders', 'Select multiple folders by holding \'Ctrl\'.') |h %></i></h5>
+                    <button class="btn btn-primary" id="edit_folders_button" title="<% $c->i18n->p('genotype.tree.edit_hint', 'First Select Folder(s) to Edit') |h %>"><% $c->i18n->p('genotype.tree.edit', 'Edit Folder(s)') |h %></button>
                     <br/>
                 </div>
 
@@ -50,7 +62,7 @@ $facilities
                 <br />
             </td>
             <td>
-                <div id="genotyping_project_list" >[loading...]</div>
+                <div id="genotyping_project_list" ><% $c->i18n->p('genotype.tree.loading', '[loading...]') |h %></div>
             </td>
         </tr>
     </tbody>
@@ -91,7 +103,7 @@ jQuery(document).ready(function($) {
             });
         },
         error: function(response) {
-            alert("An error occurred while loading the genotyping projects.");
+            alert(window.SGN && SGN.i18n ? SGN.i18n.p('genotype.tree.load_error', 'An error occurred while loading the genotyping projects.') : 'An error occurred while loading the genotyping projects.');
         }
     });
 

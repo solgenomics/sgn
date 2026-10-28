@@ -1,3 +1,6 @@
+<%once>
+use HTML::Entities ();
+</%once>
 <%doc>
 
 =head1 NAME
@@ -28,15 +31,15 @@ $trait_name = ucfirst($trait_name);
 </%perl>
 
 <& /page/page_title.mas, 
-   title => "$trait_name in $trial_name"
+   title => HTML::Entities::encode_entities($c->i18n->p("trial.trait.title", "%{trait} in %{trial}", {trait => $trait_name, trial => $trial_name}))
 &>
 
 <&| /page/info_section.mas,
-   title => "Trait phenotype data frequency distribution from $trial_name"
+   title => HTML::Entities::encode_entities($c->i18n->p("trial.trait.frequency_title", "Trait phenotype data frequency distribution from %{trial}", {trial => $trial_name}))
 &>
  
   <div id="histogram_message"  style="font-weight:bold;text-align:center;color:#A7C942">
-    <p>Loading frequency distribution graph...</p>
+    <p><% $c->i18n->p("trial.trait.loading", "Loading frequency distribution graph...") |h %></p>
   </div>
 
  

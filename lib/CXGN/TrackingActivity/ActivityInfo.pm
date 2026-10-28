@@ -1,9 +1,12 @@
 package CXGN::TrackingActivity::ActivityInfo;
 
+use SGN::I18N ();
+use CatalystX::GlobalContext '$c';
+
 
 =head1 NAME
 
-CXGN::TrackingActivity::ActivityInfo - a modul to handle tracking activity info
+CXGN::TrackingActivity::ActivityInfo - a module to handle tracking activity info
 
 =head1 USAGE
 
@@ -74,6 +77,7 @@ has 'activity_type' => (
 
 sub add_info {
     my $self = shift;
+    my SGN::I18N $ui_add_info_i18n = SGN::I18N::translate($c);
     my $schema = $self->get_schema();
     my $tracking_identifier = $self->get_tracking_identifier();
     my $selected_type = $self->get_selected_type();
@@ -96,7 +100,7 @@ sub add_info {
 
         my $tracking_identifier_stock = $self->_get_tracking_identifier($tracking_identifier);
         if (!$tracking_identifier_stock) {
-            return { error => "$tracking_identifier could not be found." };
+            return { error => (SGN::I18N::translate($ui_add_info_i18n, 'transformation.tracking_identifier_could_not_be_found', '%{tracking_identifier} could not be found.', {tracking_identifier => ("" . ("$tracking_identifier"))}))};
         }
 
         my $info_json_string;
@@ -137,7 +141,8 @@ sub add_info {
     };
 
     if ($error) {
-        return { error => "Error storing tracking information: $error\n" };
+        return { error => (SGN::I18N::translate($ui_add_info_i18n, 'transformation.error_storing_tracking_information_error', 'Error storing tracking information: %{error}
+', {error => ("" . ("$error"))}))};
     } else {
         return { success => 1};
     }

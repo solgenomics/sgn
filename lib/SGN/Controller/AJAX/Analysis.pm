@@ -1,6 +1,7 @@
 package SGN::Controller::AJAX::Analysis;
 
 use Moose;
+use SGN::I18N ();
 
 use File::Slurp;
 use Data::Dumper;
@@ -35,6 +36,7 @@ sub store_analysis_json : Path('/ajax/analysis/store/json') ActionClass("REST") 
 sub store_analysis_json_POST {
     my $self = shift;
     my $c = shift;
+    my $i18n = SGN::I18N::translate($c);
     my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
     my $schema = $c->dbic_schema("Bio::Chado::Schema", undef, $sp_person_id);
     print STDERR Dumper $c->req->params();
@@ -72,13 +74,13 @@ sub store_analysis_json_POST {
     my ($user_id, $user_name, $user_role) = _check_user_login($c);
 
     if ($analysis_to_save_boolean eq 'yes' && !$analysis_name) {
-        $c->stash->{rest} = {error => "You are trying to save an analysis, but no name was given."};
+        $c->stash->{rest} = {error => SGN::I18N::translate($i18n, "analysis.interface.you_are_trying_to_save_an_analysis_but_no_name", "You are trying to save an analysis, but no name was given.")};
         return;
     }
     if ($analysis_name) {
         my $check_name = $schema->resultset("Project::Project")->find({ name => $analysis_name });
         if ($check_name) {
-            $c->stash->{rest} = {error => "An analysis with name $analysis_name already exists in the database. Please choose another name."};
+            $c->stash->{rest} = {error => SGN::I18N::translate($i18n, "analysis.interface.an_analysis_with_name_analysis_name_already_exists_in_the", "An analysis with name %{analysis_name} already exists in the database. Please choose another name.", {analysis_name => ("" . "$analysis_name")})};
             return;
         }
     }
@@ -130,6 +132,7 @@ sub store_analysis_spreadsheet : Path('/ajax/analysis/store/spreadsheet') Action
 sub store_analysis_spreadsheet_POST {
     my $self = shift;
     my $c = shift;
+    my $i18n = SGN::I18N::translate($c);
     my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
     my $schema = $c->dbic_schema("Bio::Chado::Schema", undef, $sp_person_id);
     print STDERR Dumper $c->req->params();
@@ -173,7 +176,7 @@ sub store_analysis_spreadsheet_POST {
 
     my $check_name = $schema->resultset("Project::Project")->find({ name => $analysis_name });
     if ($check_name) {
-        $c->stash->{rest} = {error => "An analysis with name $analysis_name already exists in the database. Please choose another name."};
+        $c->stash->{rest} = {error => SGN::I18N::translate($i18n, "analysis.interface.an_analysis_with_name_analysis_name_already_exists_in_the", "An analysis with name %{analysis_name} already exists in the database. Please choose another name.", {analysis_name => ("" . "$analysis_name")})};
         $c->detach();
     }
 
@@ -198,7 +201,7 @@ sub store_analysis_spreadsheet_POST {
         my $archived_filename_with_path = $uploader->archive();
         my $md5 = $uploader->get_md5($archived_filename_with_path);
         if (!$archived_filename_with_path) {
-            $c->stash->{rest} = {error => "Could not save file $upload_original_name in archive."};
+            $c->stash->{rest} = {error => SGN::I18N::translate($i18n, "genotype.file.could_not_save_file_upload_original_name_in_archive", "Could not save file %{upload_original_name} in archive.", {upload_original_name => ("" . "$upload_original_name")})};
             $c->detach();
         }
         unlink $upload_tempfile;
@@ -224,7 +227,7 @@ sub store_analysis_spreadsheet_POST {
         my $archived_filename_with_path = $uploader->archive();
         my $md5 = $uploader->get_md5($archived_filename_with_path);
         if (!$archived_filename_with_path) {
-            $c->stash->{rest} = {error => "Could not save file $upload_original_name in archive."};
+            $c->stash->{rest} = {error => SGN::I18N::translate($i18n, "genotype.file.could_not_save_file_upload_original_name_in_archive", "Could not save file %{upload_original_name} in archive.", {upload_original_name => ("" . "$upload_original_name")})};
             $c->detach();
         }
         unlink $upload_tempfile;
@@ -250,7 +253,7 @@ sub store_analysis_spreadsheet_POST {
         my $archived_filename_with_path = $uploader->archive();
         my $md5 = $uploader->get_md5($archived_filename_with_path);
         if (!$archived_filename_with_path) {
-            $c->stash->{rest} = {error => "Could not save file $upload_original_name in archive."};
+            $c->stash->{rest} = {error => SGN::I18N::translate($i18n, "genotype.file.could_not_save_file_upload_original_name_in_archive", "Could not save file %{upload_original_name} in archive.", {upload_original_name => ("" . "$upload_original_name")})};
             $c->detach();
         }
         unlink $upload_tempfile;
@@ -278,7 +281,7 @@ sub store_analysis_spreadsheet_POST {
         my $archived_filename_with_path = $uploader->archive();
         my $md5 = $uploader->get_md5($archived_filename_with_path);
         if (!$archived_filename_with_path) {
-            $c->stash->{rest} = {error => "Could not save file $upload_original_name in archive."};
+            $c->stash->{rest} = {error => SGN::I18N::translate($i18n, "genotype.file.could_not_save_file_upload_original_name_in_archive", "Could not save file %{upload_original_name} in archive.", {upload_original_name => ("" . "$upload_original_name")})};
             $c->detach();
         }
         unlink $upload_tempfile;
@@ -303,7 +306,7 @@ sub store_analysis_spreadsheet_POST {
         my $archived_filename_with_path = $uploader->archive();
         my $md5 = $uploader->get_md5($archived_filename_with_path);
         if (!$archived_filename_with_path) {
-            $c->stash->{rest} = {error => "Could not save file $upload_original_name in archive."};
+            $c->stash->{rest} = {error => SGN::I18N::translate($i18n, "genotype.file.could_not_save_file_upload_original_name_in_archive", "Could not save file %{upload_original_name} in archive.", {upload_original_name => ("" . "$upload_original_name")})};
             $c->detach();
         }
         unlink $upload_tempfile;
@@ -319,7 +322,7 @@ sub store_analysis_spreadsheet_POST {
         $data_level = 'accession';
     }
     else {
-        $c->stash->{rest} = {error => "Analysis result type not accepted!"};
+        $c->stash->{rest} = {error => SGN::I18N::translate($i18n, "analysis.interface.analysis_result_type_not_accepted", "Analysis result type not accepted!")};
         $c->detach();
     }
 
@@ -359,7 +362,7 @@ sub store_analysis_spreadsheet_POST {
     my $archived_filename_with_path = $uploader->archive();
     my $md5 = $uploader->get_md5($archived_filename_with_path);
     if (!$archived_filename_with_path) {
-        $c->stash->{rest} = {error => "Could not save file $upload_original_name in archive."};
+        $c->stash->{rest} = {error => SGN::I18N::translate($i18n, "genotype.file.could_not_save_file_upload_original_name_in_archive", "Could not save file %{upload_original_name} in archive.", {upload_original_name => ("" . "$upload_original_name")})};
         $c->detach();
     }
     unlink $upload_tempfile;
@@ -369,7 +372,7 @@ sub store_analysis_spreadsheet_POST {
     my $parser = CXGN::Phenotypes::ParseUpload->new();
     my $validate_file = $parser->validate($validate_type, $archived_filename_with_path, undef, $data_level, $schema, undef, undef);
     if (!$validate_file) {
-        push @error_status, "Archived file not valid: $upload_original_name.";
+        push @error_status, SGN::I18N::translate($i18n, "analysis.interface.archived_file_not_valid_upload_original_name", "Archived file not valid: %{upload_original_name}.", {upload_original_name => ("" . "$upload_original_name")});
         $c->stash->{rest} = {error_messages => \@error_status};
         $c->detach();
     }
@@ -384,7 +387,7 @@ sub store_analysis_spreadsheet_POST {
 
     my $parsed_file = $parser->parse($validate_type, $archived_filename_with_path, undef, $data_level, $schema, undef, $user_id, $c, undef);
     if (!$parsed_file) {
-        push @error_status, "Error parsing file $upload_original_name.";
+        push @error_status, SGN::I18N::translate($i18n, "analysis.interface.error_parsing_file_upload_original_name", "Error parsing file %{upload_original_name}.", {upload_original_name => ("" . "$upload_original_name")});
         $c->stash->{rest} = {error_messages => \@error_status};
         $c->detach();
     }
@@ -534,7 +537,7 @@ sub store_data {
     my $dir = $c->tempfiles_subdir('/delete_nd_experiment_ids');
     my $temp_file_nd_experiment_id = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'delete_nd_experiment_ids/fileXXXX');
 
-    my $m = CXGN::Analysis::AnalysisCreate->new({
+    my $m = CXGN::Analysis::AnalysisCreate->new({ i18n => $c->i18n,
         bcs_schema=>$bcs_schema,
         people_schema=>$people_schema,
         metadata_schema=>$metadata_schema,
@@ -714,7 +717,7 @@ sub retrieve_analysis_data :Chained("ajax_analysis") PathPart('retrieve') :Args(
     my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema", undef, $sp_person_id);
     my ($user_id, $user_name, $user_role) = _check_user_login($c);
 
-    my $a = CXGN::Analysis->new({
+    my $a = CXGN::Analysis->new({ i18n => $c->i18n,
             bcs_schema => $bcs_schema,
             people_schema => $people_schema,
             metadata_schema => $metadata_schema,
@@ -776,6 +779,7 @@ sub retrieve_analysis_data :Chained("ajax_analysis") PathPart('retrieve') :Args(
 sub analysis_model_delete :Path('/ajax/analysis_model/delete') Args(0) {
     my $self = shift;
     my $c = shift;
+    my $i18n = SGN::I18N::translate($c);
 
     my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
     my $schema = $c->dbic_schema("Bio::Chado::Schema", undef, $sp_person_id);
@@ -787,11 +791,11 @@ sub analysis_model_delete :Path('/ajax/analysis_model/delete') Args(0) {
     my $model_id = $c->req->param('model_id');
     my $analysis_by_model = CXGN::AnalysisModel::GetModel::get_analyses_by_model($schema, $model_id);
     if (scalar(@$analysis_by_model) > 0) {
-        $c->stash->{rest} = {error=>'This model still has analyses associated! Please delete the analyses before deleting this model!'};
+        $c->stash->{rest} = {error=>SGN::I18N::translate($i18n, "analysis.interface.this_model_still_has_analyses_associated_please_delete_the_analyses", "This model still has analyses associated! Please delete the analyses before deleting this model!")};
         $c->detach();
     }
 
-    my $m = CXGN::AnalysisModel::GetModel->new({
+    my $m = CXGN::AnalysisModel::GetModel->new({ i18n => $c->i18n,
         bcs_schema=>$schema,
         metadata_schema=>$metadata_schema,
         phenome_schema=>$phenome_schema,
@@ -814,6 +818,7 @@ sub analysis_model_delete :Path('/ajax/analysis_model/delete') Args(0) {
 
 sub _check_user_login {
     my $c = shift;
+    my $i18n = SGN::I18N::translate($c);
     my $role_check = shift;
     my $user_id;
     my $user_name;
@@ -824,7 +829,7 @@ sub _check_user_login {
         my $dbh = $c->dbc->dbh;
         my @user_info = CXGN::Login->new($dbh)->query_from_cookie($session_id);
         if (!$user_info[0]){
-            $c->stash->{rest} = {error=>'You must be logged in to do this!'};
+            $c->stash->{rest} = {error=>SGN::I18N::translate($i18n, "lists_datasets.fileshare_api.login_required", "You must be logged in to do this!")};
             $c->detach();
         }
         $user_id = $user_info[0];
@@ -833,7 +838,7 @@ sub _check_user_login {
         $user_name = $p->get_username;
     } else{
         if (!$c->user){
-            $c->stash->{rest} = {error=>'You must be logged in to do this!'};
+            $c->stash->{rest} = {error=>SGN::I18N::translate($i18n, "lists_datasets.fileshare_api.login_required", "You must be logged in to do this!")};
             $c->detach();
         }
         $user_id = $c->user()->get_object()->get_sp_person_id();
@@ -841,7 +846,7 @@ sub _check_user_login {
         $user_role = $c->user->get_object->get_user_type();
     }
     if ($role_check && $user_role ne $role_check) {
-        $c->stash->{rest} = {error=>'You must have permission to do this! Please contact us!'};
+        $c->stash->{rest} = {error=>SGN::I18N::translate($i18n, "analysis.interface.you_must_have_permission_to_do_this_please_contact_us", "You must have permission to do this! Please contact us!")};
         $c->detach();
     }
     return ($user_id, $user_name, $user_role);

@@ -53,11 +53,11 @@ jQuery(window).load( function() {
   
         var phenoData = phenoDataRenderer();          
         if (phenoData == 'undefined') {
-            var message = 'There is no phenotype data to plot. Please report this problem';  
+            var message = (window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.legacy_no_phenotype_data", "There is no phenotype data to plot. Please report this problem") : 'There is no phenotype data to plot. Please report this problem');
             jQuery('#phenoHistogram').append(message).show();
         } else {        
             var graph = jQuery.jqplot('phenoHistogram', {
-                    title: "Phenotype data",
+                    title: (window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.legacy_phenotype_plot_title", "Phenotype data") : "Phenotype data"),
                     dataRenderer: phenoDataRenderer,
                     seriesDefaults: {
                         showLine: false,
@@ -94,7 +94,7 @@ jQuery(window).load( function() {
                                 fontSize:5,
                             },
                             labelRenderer: jQuery.jqplot.CanvasAxisLabelRenderer,
-                            label: 'Genotypes',
+                            label: (window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.legacy_genotypes_axis", "Genotypes") : 'Genotypes'),
                         },
                         yaxis: {
                             tickRenderer: jQuery.jqplot.CanvasAxisTickRenderer,
@@ -102,7 +102,7 @@ jQuery(window).load( function() {
                                 fontSize: 10,
                             },                           
                             labelRenderer: jQuery.jqplot.CanvasAxisLabelRenderer,
-                            label: 'Trait values',
+                            label: (window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.legacy_trait_values_axis", "Trait values") : 'Trait values'),
                         },
                     }
                 });

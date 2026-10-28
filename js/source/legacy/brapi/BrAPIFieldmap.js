@@ -186,7 +186,7 @@
 	    // the behaviour: using options, listening to events, or extending.
 	    L$$1.Editable = L$$1.Evented.extend({
 
-	        statics: {
+	        statics: { // codespell:ignore statics (Leaflet API property)
 	            FORWARD: 1,
 	            BACKWARD: -1
 	        },
@@ -2117,6 +2117,12 @@
 	  };
 	}
 
+function _sgnB13FieldmapEscapeHTML(value) {
+  return String(value).replace(/[&<>"']/g, function(character) {
+    return {'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'}[character];
+  });
+}
+
 	const NO_POLYGON_ERROR = "Please select the area that contain the plots";
 
 	const DEFAULT_OPTS = {
@@ -2187,7 +2193,7 @@
 	            self.polygon = self.map.editTools.startPolygon();
 	            return self.polygon;
 	          },
-	          title: 'Creates a new polygon',
+	          title: (typeof window !== "undefined" && window.SGN && window.SGN.i18n ? window.SGN.i18n.p("brapi.fieldmap.control.new_polygon", "Creates a new polygon") : "Creates a new polygon"),
 	          html: String.fromCodePoint(0x25B1)
 	        }
 	      });
@@ -2198,7 +2204,7 @@
 	            self.polygon = self.map.editTools.startRectangle();
 	            return self.polygon;
 	          },
-	          title: 'Creates a new rectangle',
+	          title: (typeof window !== "undefined" && window.SGN && window.SGN.i18n ? window.SGN.i18n.p("brapi.fieldmap.control.new_rectangle", "Creates a new rectangle") : "Creates a new rectangle"),
 	          html: String.fromCodePoint(0x25AD)
 	        }
 	      });
@@ -2208,7 +2214,7 @@
 	          callback: function () {
 	            self.map.editTools.featuresLayer.clearLayers();
 	          },
-	          title: 'Clears all polygons',
+	          title: (typeof window !== "undefined" && window.SGN && window.SGN.i18n ? window.SGN.i18n.p("brapi.fieldmap.control.clear_polygons", "Clears all polygons") : "Clears all polygons"),
 	          html: String.fromCodePoint(0x1F6AB)
 	        }
 	      });
@@ -2265,7 +2271,7 @@
 	      .style("width", "100%")
 	      .style("background", "#FFC107")
 	      .style("display", "none")
-	      .html("<p style='margin: 10px; text-align: center; font-weight: bold'>Loading Plots...</p>");
+	      .html("<p style='margin: 10px; text-align: center; font-weight: bold'>" + _sgnB13FieldmapEscapeHTML((typeof window !== "undefined" && window.SGN && window.SGN.i18n ? window.SGN.i18n.p("brapi.fieldmap.loading", "Loading Plots...") : "Loading Plots...")) + "</p>");
 
 	    this.onLoading = (loading) => {
 	      this.loading.style("display", loading ? 'block' : 'none');
@@ -2325,11 +2331,11 @@
 	          if(levels.levelName == 'replicate'){ ou.replicate = levels.levelCode;}
 	        else if(levels.levelName == 'block'){ ou.blockNumber = levels.levelCode;}
 	        else if(levels.levelName == 'plot'){ ou.plotNumber = levels.levelCode;}});
-	      this.info.html(`<div style="padding: 5px"><div>Germplasm: ${ou.germplasmName}</div>
-       <div>Replicate: ${ou.replicate}</div>
-       <div>    Block: ${ou.blockNumber}</div>
-       <div>  Row,Col: ${ou._row},${ou._col}</div>
-       <div>   Plot #: ${ou.plotNumber}</div></div>`);
+	      this.info.html(`<div style="padding: 5px"><div>${_sgnB13FieldmapEscapeHTML((typeof window !== "undefined" && window.SGN && window.SGN.i18n ? window.SGN.i18n.p("brapi.fieldmap.label.germplasm", "Germplasm:") : "Germplasm:"))} ${ou.germplasmName}</div>
+       <div>${_sgnB13FieldmapEscapeHTML((typeof window !== "undefined" && window.SGN && window.SGN.i18n ? window.SGN.i18n.p("brapi.fieldmap.label.replicate", "Replicate:") : "Replicate:"))} ${ou.replicate}</div>
+       <div>    ${_sgnB13FieldmapEscapeHTML((typeof window !== "undefined" && window.SGN && window.SGN.i18n ? window.SGN.i18n.p("brapi.fieldmap.label.block", "Block:") : "Block:"))} ${ou.blockNumber}</div>
+       <div>  ${_sgnB13FieldmapEscapeHTML((typeof window !== "undefined" && window.SGN && window.SGN.i18n ? window.SGN.i18n.p("brapi.fieldmap.label.row_col", "Row,Col:") : "Row,Col:"))} ${ou._row},${ou._col}</div>
+       <div>   ${_sgnB13FieldmapEscapeHTML((typeof window !== "undefined" && window.SGN && window.SGN.i18n ? window.SGN.i18n.p("brapi.fieldmap.label.plot_number", "Plot #:") : "Plot #:"))} ${ou.plotNumber}</div></div>`);
 	    }).on('mouseout', ()=>{
 	      this.info.html("");
 	    }).addTo(this.map);
@@ -2572,11 +2578,11 @@
 		// Notify on missing
 		if (this.opts.viewOnly) {
 		  if (plots_polygons.length + plots_points.length === 0) {
-			let html = "This trial does not have any plots with geo coordinates assigned.";
+			let html = _sgnB13FieldmapEscapeHTML((typeof window !== "undefined" && window.SGN && window.SGN.i18n ? window.SGN.i18n.p("brapi.fieldmap.no_geo_assigned", "This trial does not have any plots with geo coordinates assigned.") : "This trial does not have any plots with geo coordinates assigned."));
 			this.missing_plots.style("display", "block").html(html);
 			throw NO_POLYGON_ERROR;
 		  } else if (plots_missing.length > 0) {
-			let html = "Plots with no geo coordinates:";
+			let html = _sgnB13FieldmapEscapeHTML((typeof window !== "undefined" && window.SGN && window.SGN.i18n ? window.SGN.i18n.p("brapi.fieldmap.plots_missing_geo", "Plots with no geo coordinates:") : "Plots with no geo coordinates:"));
 			html += "<ul style='padding-left: 25px; margin-bottom: 0'>";
 			plots_missing.forEach(p => html += `<li>${p.observationUnitName}</li>`);
 			html += "</ul>";

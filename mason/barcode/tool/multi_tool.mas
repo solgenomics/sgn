@@ -20,25 +20,25 @@ my $size = "small";
 
 
 <center>
-<h1>CASSAVABASE MULTI-BARCODE SHEET</h1>
+<h1><% $c->i18n->p("barcode.mason.cassavabase_multi_barcode_sheet", "CASSAVABASE MULTI-BARCODE SHEET") |h %></h1>
 
 <br />
 <br />
 <div class="boxbgcolor5">
-Scan the following barcodes once
+<% $c->i18n->p("barcode.mason.scan_the_following_barcodes_once", "Scan the following barcodes once") |h %>
 </div>
 
 <table>
-<tr><td><font size="4">Operator</font></td>
+<tr><td><font size="4"><% $c->i18n->p("cross.ui.operator", "Operator") |h %></font></td>
 
 <td><img src="/barcode/image/?code=O:<% $encoded_operator %>&size=<% $size %>" /></td></tr>
 
-<tr><td><font size="4">Today's Date</font></td>
+<tr><td><font size="4"><% $c->i18n->p("barcode.mason.today_s_date", "Today's Date") |h %></font></td>
 <td><img src="/barcode/image/?code=D:<% $encoded_date %>&size=<% $size %>" /></td></tr>
-<tr><td><font size="4">Project</font></td>
+<tr><td><font size="4"><% $c->i18n->p("global.search_wizard.project", "Project") |h %></font></td>
 
 <td><img src="/barcode/image/?code=P:<% $project %>&size=<% $size %>" /></td></tr>
-<tr><td><font size="4">Location</font></td>
+<tr><td><font size="4"><% $c->i18n->p("global.search.features.location", "Location") |h %></font></td>
 <td><img src="/barcode/image/?code=L:<% $location %>&size=<% $size %>" /></td></tr>
 </table>
 
@@ -47,7 +47,7 @@ Scan the following barcodes once
 
 
 <div class="boxbgcolor5">
-Scan the barcode for the plant to be phenotyped, then scan the phenotype barcode, then enter the number on the keypad
+<% $c->i18n->p("barcode.mason.scan_the_barcode_for_the_plant_to_be_phenotyped_then", "Scan the barcode for the plant to be phenotyped, then scan the phenotype barcode, then enter the number on the keypad") |h %>
 </div>
 
 

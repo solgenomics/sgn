@@ -1,11 +1,15 @@
 
 package CXGN::Trial::TrialDesign::Plugin::Lattice;
 
+use CXGN::Trial::TrialDesign::ROutput qw(read_rbase_utf8);
+
 use Moose::Role;
+use SGN::I18N ();
 use List::Util qw| max |;
 
 sub create_design {
     my $self = shift;
+    my SGN::I18N $design_i18n = $self->i18n;
     my %lattice_design;
     my $rbase = R::YapRI::Base->new();
     my @stock_list;
@@ -29,14 +33,14 @@ sub create_design {
     if ($self->has_stock_list()) {
 	@stock_list = @{$self->get_stock_list()};
     } else {
-	die "No stock list specified\n";
+	die (($design_i18n ? $design_i18n->p("genotype.generation.no_stock_list", "No stock list specified") : "No stock list specified") . "\n");
     }
     
     my $block_number_calculated = sqrt(scalar(@stock_list));
     if ($block_number_calculated =~ /^\d+$/ ){
 	$number_of_blocks = $block_number_calculated;
     } else {
-	die "Square root of Number of stocks (".scalar(@stock_list).") for lattice design should give a whole number.\n";
+	die (($design_i18n ? $design_i18n->p("trial.design.lattice_square", "Square root of Number of stocks (%{stocks}) for lattice design should give a whole number.", {stocks => scalar(@stock_list)}) : "Square root of Number of stocks (".scalar(@stock_list).") for lattice design should give a whole number.") . "\n");
     }
     
     if ($self->has_control_list_crbd()) {
@@ -49,10 +53,10 @@ sub create_design {
 	$number_of_reps = $self->get_number_of_reps();
 	if ($number_of_reps == 2 || $number_of_reps == 3){
 	} else {
-	    die "Number of reps should be 2 for SIMPLE and 3 for TRIPLE lattice design.\n";
+	    die (($design_i18n ? $design_i18n->p("trial.design.lattice_reps", "Number of reps should be 2 for SIMPLE and 3 for TRIPLE lattice design.") : "Number of reps should be 2 for SIMPLE and 3 for TRIPLE lattice design.") . "\n");
 	}
     } else {
-	die "Number of reps not specified\n";
+	die (($design_i18n ? $design_i18n->p("trial.design.reps_missing", "Number of reps not specified") : "Number of reps not specified") . "\n");
     }
     
     if ($self->has_fieldmap_col_number()) {
@@ -100,7 +104,7 @@ sub create_design {
     
     $r_block->run_block();
     
-    $result_matrix = R::YapRI::Data::Matrix->read_rbase( $rbase,'r_block','lattice_book');
+    $result_matrix = read_rbase_utf8( $rbase,'r_block','lattice_book');
     @plot_numbers = $result_matrix->get_column("plots");
     #print STDERR Dumper(@plot_numbers);
     @block_numbers = $result_matrix->get_column("block");

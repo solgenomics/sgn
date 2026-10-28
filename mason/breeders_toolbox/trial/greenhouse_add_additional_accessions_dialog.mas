@@ -20,25 +20,25 @@ $trial_stock_type
 % my $list_label = '';
 % my $table_header = '';
 % if ($trial_stock_type eq 'cross') {
-%    $title = 'Add Additional Crosses or Plants in This Greenhouse Trial';
-%    $list_label = 'Cross List:';
-%    $table_header = 'Cross Name';
+%    $title = $c->i18n->p("accession.forms.add_additional_crosses_or_plants_in_this_greenhouse_trial", "Add Additional Crosses or Plants in This Greenhouse Trial");
+%    $list_label = $c->i18n->p("accession.forms.cross_list", "Cross List:");
+%    $table_header = $c->i18n->p("accession.forms.cross_name", "Cross Name");
 % } elsif ($trial_stock_type eq 'family_name') {
-%    $title = 'Add Additional Families or Plants in This Greenhouse Trial';
-%    $list_label = 'Family Name List:';
-%    $table_header = 'Family Name';
+%    $title = $c->i18n->p("accession.forms.add_additional_families_or_plants_in_this_greenhouse_trial", "Add Additional Families or Plants in This Greenhouse Trial");
+%    $list_label = $c->i18n->p("accession.forms.family_name_list", "Family Name List:");
+%    $table_header = $c->i18n->p("accession.forms.family_name", "Family Name");
 % } else {
-%    $title = 'Add Additional Accessions or Plants in This Greenhouse Trial';
-%    $list_label = 'Accession List:';
-%    $table_header = 'Accession Name';
+%    $title = $c->i18n->p("accession.forms.add_additional_accessions_or_plants_in_this_greenhouse_trial", "Add Additional Accessions or Plants in This Greenhouse Trial");
+%    $list_label = $c->i18n->p("accession.forms.accession_list", "Accession List:");
+%    $table_header = $c->i18n->p("accession.related_stock.header.accession_name", "Accession Name");
 % }
 
 <div class="modal fade" id="add_additional_stocks_using_list_dialog" name="add_additional_stocks_using_list_dialog" tabindex="-1" role="dialog" aria-labelledby="addAdditionalStocksUsingListDialog">
     <div class="modal-dialog modal-lg" role="document">
         <div class="modal-content">
             <div class="modal-header">
-                <button type="reset" class="close" id="add_additional_stocks_dismiss_button_1" name="add_additional_stocks_dismiss_button" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                <h4 class="modal-title" id="addAdditionalStocksUsingListDialog"><%$title%></h4>
+                <button type="reset" class="close" id="add_additional_stocks_dismiss_button_1" name="add_additional_stocks_dismiss_button" aria-label="<% $c->i18n->p("global.dataset_publish.close", "Close") |h %>"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="addAdditionalStocksUsingListDialog"><% $title |h %></h4>
             </div>
             <div class="modal-body">
                 <div class="container-fluid">
@@ -46,17 +46,17 @@ $trial_stock_type
                         <div class="col-sm-11">
                             <div class="form-horizontal">
                                 <div class="form-group">
-                                    <label class="col-sm-4 control-label">Addition Type: </label>
+                                    <label class="col-sm-4 control-label"><% $c->i18n->p("accession.forms.addition_type", "Addition Type:") |h %> </label>
                                     <div class="col-sm-7">
                                         <select class="form-control" id="addition_type">
-                                            <option value="">Select a type</option>
-                                            <option value="new_accessions">add additional accessions</option>
-                                            <option value="additional_plants">add additional plants for accessions already in the greenhouse</option>
+                                            <option value=""><% $c->i18n->p("accession.forms.select_a_type", "Select a type") |h %></option>
+                                            <option value="new_accessions"><% $c->i18n->p("accession.forms.add_additional_accessions", "add additional accessions") |h %></option>
+                                            <option value="additional_plants"><% $c->i18n->p("accession.forms.add_additional_plants_for_accessions_already_in_the_greenhouse", "add additional plants for accessions already in the greenhouse") |h %></option>
                                         </select>
                                     </div>
                                 </div>
                                 <div class="form-group">
-                                    <label class="control-label col-sm-4"><%$list_label%></label>
+                                    <label class="control-label col-sm-4"><% $list_label |h %></label>
                                     <div class="col-sm-7" >
                                         <div class="input-group">
                                             <select class="form-control" id="additional_stock_list_select"></select>
@@ -64,7 +64,7 @@ $trial_stock_type
                                     </div>
                                 </div>
                                 <div class="form-group">
-                                    <label class="col-sm-4 control-label">Default Number of Plants: </label>
+                                    <label class="col-sm-4 control-label"><% $c->i18n->p("trial.create.design.default_plants", "Default Number of Plants:") |h %> </label>
                                     <div class="col-sm-7" >
                                         <input class="form-control" type="text" id="default_number_plants_per_stock" placeholder="1" value="1" />
                                     </div>
@@ -76,8 +76,8 @@ $trial_stock_type
                     </div>
                     </br>
                     <div class="modal-footer">
-                        <button class="btn btn-primary" id="add_additional_stocks_submit" name="add_additional_stocks_submit">Add</button>
-                        <button id="add_additional_stocks_dismiss_button_2" name="add_additional_stocks_dismiss_button" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                        <button class="btn btn-primary" id="add_additional_stocks_submit" name="add_additional_stocks_submit"><% $c->i18n->p("global.search_wizard.add", "Add") |h %></button>
+                        <button id="add_additional_stocks_dismiss_button_2" name="add_additional_stocks_dismiss_button" type="button" class="btn btn-default" data-dismiss="modal"><% $c->i18n->p("global.dataset_publish.close", "Close") |h %></button>
                     </div>
                 </div>
             </div>
@@ -89,19 +89,19 @@ $trial_stock_type
     <div class="modal-dialog" role="document">
         <div class="modal-content">
             <div class="modal-header">
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                <h4 class="modal-title" id="addAdditionalStocksMessage"><%$title%></h4>
+                <button type="button" class="close" data-dismiss="modal" aria-label="<% $c->i18n->p("global.dataset_publish.close", "Close") |h %>"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="addAdditionalStocksMessage"><% $title |h %></h4>
             </div>
             <div class="modal-body">
                 <div class="container-fluid">
                     <p>
                         <span class="ui-icon ui-icon-circle-check" style="float: left; margin: 0 7px 50px 0;"></span>
-                        The additional stocks were added successfully.
+                        <% $c->i18n->p("accession.forms.the_additional_stocks_were_added_successfully", "The additional stocks were added successfully.") |h %>
                     </p>
                 </div>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-default" name="add_additional_stocks_close_button" id="add_additional_stocks_close_button" data-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-default" name="add_additional_stocks_close_button" id="add_additional_stocks_close_button" data-dismiss="modal"><% $c->i18n->p("global.dataset_publish.close", "Close") |h %></button>
             </div>
         </div>
     </div>
@@ -132,7 +132,7 @@ jQuery(document).ready(function(){
         validate_type = 'uniquenames';
     }
 
-    jQuery('#additional_stock_list_select').html(lo.listSelect('additional_stock_list_select', [list_type], 'Select a list', undefined, undefined));
+    jQuery('#additional_stock_list_select').html(lo.listSelect('additional_stock_list_select', [list_type], (window.SGN && window.SGN.i18n ? window.SGN.i18n.p("fieldbook.trait.client.select_list", "Select a list") : "Select a list"), undefined, undefined));
 
     let stock_list_id = '';
     let default_number_plants = '';
@@ -143,7 +143,7 @@ jQuery(document).ready(function(){
             let stock_validation = 1;
             stock_validation = lo.legacy_validate(stock_list_id, validate_type, true);
             if (stock_validation != 1) {
-                alert("The list did not pass validation. Names in the list must be in the database");
+                alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("accession.forms.the_list_did_not_pass_validation_names_in_the_list.16a96e9", "The list did not pass validation. Names in the list must be in the database") : "The list did not pass validation. Names in the list must be in the database"));
                 return;
             } else {
                 additional_stocks_form(stock_list_id, default_number_plants);
@@ -161,7 +161,7 @@ jQuery(document).ready(function(){
 
     function additional_stocks_form (stock_list_id, default_number_plants) {
         var stock_list = lo.getList(stock_list_id);
-        var html = '<table class="table table-bordered" id="additional_stocks_table"><thead><tr><th><%$table_header%></th><th>Number of Plants</th></tr></thead><tbody>';
+        var html = ("<table class=\"table table-bordered\" id=\"additional_stocks_table\"><thead><tr><th><% $table_header |h %></th><th>" + jQuery("<div>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("accession.forms.number_of_plants", "Number of Plants") : "Number of Plants")).html() + "</th></tr></thead><tbody>");
         for(var i=0; i<stock_list.length; i++){
             html = html + '<tr><td>' + stock_list[i] + '</td><td><input class="form-control" stock_name="' + stock_list[i] + '" name ="stock_plant_number" id="stock_plant_number_'+ i +'" placeholder="'+default_number_plants+'" value="'+default_number_plants+'"/></td></tr>';
         };
@@ -177,12 +177,12 @@ jQuery(document).ready(function(){
 
         const addition_type = jQuery('#addition_type').val();
         if (!addition_type) {
-            alert("Please select an addition type");
+            alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("accession.forms.please_select_an_addition_type", "Please select an addition type") : "Please select an addition type"));
             return;
         }
 
         if (!stock_list_id) {
-            alert("Please select a list");
+            alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("seedlots.ui.please_select_a_list", "Please select a list") : "Please select a list"));
             return;
         }
 
@@ -216,7 +216,7 @@ jQuery(document).ready(function(){
             },
             error: function() {
                 jQuery("#working_modal").modal("hide");
-                alert('An error occurred storing additional accessions for greenhouse trial.');
+                alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("accession.forms.an_error_occurred_storing_additional_accessions_for_greenhouse_trial", "An error occurred storing additional accessions for greenhouse trial.") : "An error occurred storing additional accessions for greenhouse trial."));
                 jQuery('#add_additional_stocks_using_list_dialog').modal("hide");
             },
         });

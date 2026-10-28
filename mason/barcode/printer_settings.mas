@@ -4,34 +4,34 @@
 </%args>
 
 <div class="panel panel-info">
-<div class="panel-heading">Printer Settings</div>
+<div class="panel-heading"><% $c->i18n->p("barcode.mason.printer_settings", "Printer Settings") |h %></div>
 <table class="table table-condensed">
   <tbody>
     <tr>
-      <td>Number of Label Rows:</td>
+      <td><% $c->i18n->p("barcode.mason.number_of_label_rows", "Number of Label Rows:") |h %></td>
       <td><input type="number" class="form-control" id="label_rows" name="label_rows" value="10" /></td>
-      <td>Number of Label Columns Per Page:</td>
+      <td><% $c->i18n->p("barcode.mason.number_of_label_columns_per_page", "Number of Label Columns Per Page:") |h %></td>
       <td><input type="text" class="form-control" id="label_cols" name="label_cols" value="3" /></td>
     </tr>
     <tr>
-      <td>Page Format:</td>
+      <td><% $c->i18n->p("barcode.mason.page_format", "Page Format:") |h %></td>
       <td><select class="form-control" id="page_format" name="page_format">
           <option value="letter" selected="1">Letter</option>
   	      <option value="A4">A4</option>
 	  </select>
       </td>
-      <td>Add text to label, e.g. location:  </td><td><input type="text" class="form-control" id="text_margin" name="text_margin"  ></td>
+      <td><% $c->i18n->p("barcode.mason.add_text_to_label_e_g_location.02dfc38", "Add text to label, e.g. location:") |h %>  </td><td><input type="text" class="form-control" id="text_margin" name="text_margin"  ></td>
     </tr>
     <tr>
-      <td>Top Margin (mm):</td>
+      <td><% $c->i18n->p("barcode.mason.top_margin_mm", "Top Margin (mm):") |h %></td>
       <td><input type="number" class="form-control" id="tops_margin" name="tops_margin" value="12" /></td>
-      <td>Left Margin (mm):</td>
+      <td><% $c->i18n->p("barcode.mason.left_margin_mm", "Left Margin (mm):") |h %></td>
       <td><input type="number" class="form-control" id="left_margin" name="left_margin" value="70" /></td>
     </tr>
     <tr>
-      <td>Bottom Margin (mm):</td>
+      <td><% $c->i18n->p("barcode.mason.bottom_margin_mm", "Bottom Margin (mm):") |h %></td>
       <td><input type="number" class="form-control" id="bottom_margin" name="bottom_margin" value="12" /></td>
-      <td>Right Margin (mm):</td>
+      <td><% $c->i18n->p("barcode.mason.right_margin_mm", "Right Margin (mm):") |h %></td>
       <td><input type="number" class="form-control" id="right_margin" name="right_margin" value="20" /></td>
     </tr>
   </tbody>

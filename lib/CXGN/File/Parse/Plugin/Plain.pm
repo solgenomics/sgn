@@ -14,6 +14,7 @@ sub type {
 sub parse {
   my $self = shift;
   my $super = shift;
+  my $i18n = $super->i18n();
   my $file = $super->file();
   my $type = $super->type();
   my $column_arrays = $super->column_arrays();
@@ -41,7 +42,7 @@ sub parse {
     $sep = ';';
   }
   else {
-    push @{$rtn{errors}}, "Invalid type $type for plain parse plugin";
+    push @{$rtn{errors}}, ($i18n ? $i18n->p('file.parse.plain_type', 'Invalid type %{type} for plain parse plugin', {type => $type}) : "Invalid type $type for plain parse plugin");
     return \%rtn;
   }
 
@@ -58,7 +59,7 @@ sub parse {
     allow_whitespace => 1,
     auto_diag => 2
   });
-  open my $fh, "<:encoding(utf8)", $file or die "Could not read file: $!";
+  open my $fh, "<:encoding(utf8)", $file or die ($i18n ? $i18n->p('file.parse.open_failed', 'Could not read file: %{detail}', {detail => "$!"}) : "Could not read file: $!");
   while ( my $row = $csv->getline($fh) ) {
     push @rows, $row;
   }
@@ -80,7 +81,7 @@ sub parse {
     if ( $v && $v ne '' ) {
       # check for duplicated column header
       if ( exists $seen_column_headers{$v} && !exists $column_arrays->{$v} ) {
-        push @{$rtn{errors}}, "The column header $v was duplicated in column " . ($col+1) . " of your file and should only be included once.";
+        push @{$rtn{errors}}, ($i18n ? $i18n->p('file.parse.duplicate_header', 'The column header %{header} was duplicated in column %{column} of your file and should only be included once.', {header => $v, column => $col + 1}) : "The column header $v was duplicated in column " . ($col+1) . " of your file and should only be included once.");
       }
       $seen_column_headers{$v}++;
 

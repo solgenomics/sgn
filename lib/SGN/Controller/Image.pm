@@ -1,6 +1,7 @@
 package SGN::Controller::Image;
 
 use Moose;
+use SGN::I18N;
 use namespace::autoclean;
 use File::Basename;
 use SGN::Image;
@@ -20,7 +21,7 @@ sub view :Path('/image/view/') Args(1) {
         SGN::Image->new( $dbh, $image_id+0, $c );
 
     $image->get_original_filename
-        or $c->throw_404('Image not found.');
+        or $c->throw_404(SGN::I18N::translate($c)->p("community.image.image_not_found", "Image not found."));
 
     $c->forward('get_user');
 
@@ -53,7 +54,7 @@ sub confirm :Path('/image/confirm') {
     $c->forward('require_logged_in');
 
     my $upload = $c->req->upload('file')
-        or $c->throw( public_message => 'No image file uploaded.', is_client_error => 1 );
+        or $c->throw( public_message => SGN::I18N::translate($c)->p("community.image.no_image_file_uploaded", "No image file uploaded."), is_client_error => 1 );
     my $filename = $upload->filename();
     my $tempfile = $upload->tempname();
     #print STDERR "FILENAME: $filename TEMPNAME: $tempfile\n";
@@ -67,9 +68,19 @@ sub confirm :Path('/image/confirm') {
 
         unlink $tempfile;  # remove upload! prevents more errors on item we have rejected
 
+        my SGN::I18N $ui_i18n = SGN::I18N::translate($c);
+        my $display_validation_msg = $filename_validation_msg;
+        if ($display_validation_msg =~ /\AInvalid characters found in filename, must not contain\n        characters (.*)\z/s) {
+            $display_validation_msg = $ui_i18n->p("community.image.invalid_filename_characters", "Invalid characters found in filename, must not contain\n        characters %{characters}", { characters => $1 });
+        }
+        elsif ($display_validation_msg eq "File Type must be one of: .png, .jpg, .jpeg, .gif, .pdf, .ps, or .eps") {
+            $display_validation_msg = $ui_i18n->p("community.image.allowed_file_types", "File Type must be one of: .png, .jpg, .jpeg, .gif, .pdf, .ps, or .eps");
+        }
+        my $problem_label = $ui_i18n->p("community.image.selected_file_problem", "There is a problem with the image file you selected: ");
+        my $error_label = $ui_i18n->p("community.image.error_prefix", "Error: ");
         $c->throw( public_message => <<EOM, is_client_error => 1 );
-There is a problem with the image file you selected: $filename <br />
-Error: $filename_validation_msg <br />
+$problem_label$filename <br />
+$error_label$display_validation_msg <br />
 EOM
 
     }
@@ -191,7 +202,7 @@ sub send_image_email :Private {
     my $sp_person_id = shift;
     my $refering_page=shift;
     my $type= shift;  #locus or...?
-    my $type_id = shift; #the database id of the refering object (locus..)
+    my $type_id = shift; #the database id of the referring object (locus..)
 
     my $image_id = $image->get_image_id();
 

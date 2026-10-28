@@ -2,6 +2,8 @@
 package SGN::Controller::People;
 
 use Moose;
+use SGN::I18N ();
+
 
 use URI::FromHash 'uri';
 use CXGN::Login;
@@ -27,6 +29,17 @@ sub people_search : Path('/search/people') Args(0) {
 sub people_top_level : Path('/solpeople/profile') Args(1) {
     my $self = shift;
     my $c = shift;
+    my SGN::I18N $ui_people_i18n = SGN::I18N::translate($c);
+    my %ui_people_text = (
+        your_current_user_status_is => SGN::I18N::translate($ui_people_i18n, 'community.people.your_current_user_status_is', 'Your current user status is '),
+        you_have_the_maximum_user_privileges_on_sgn => SGN::I18N::translate($ui_people_i18n, 'community.people.you_have_the_maximum_user_privileges_on_sgn', 'You have the maximum user privileges on SGN.'),
+        you_have_maximum_user_privileges_on_sgn => SGN::I18N::translate($ui_people_i18n, 'community.people.you_have_maximum_user_privileges_on_sgn', 'You have maximum user privileges on SGN.'),
+        please_contact => SGN::I18N::translate($ui_people_i18n, 'community.people.please_contact', 'Please contact '),
+        to_upgrade_to_a => SGN::I18N::translate($ui_people_i18n, 'community.people.to_upgrade_to_a', ' to upgrade to a '),
+        account_with_more_privileges_submitters_can_upload_user_maps_est_data_and_become_locus_editors => SGN::I18N::translate($ui_people_i18n, 'community.people.account_with_more_privileges_submitters_can_upload_user_maps_est_data_and_become_locus_editors', ' account with more privileges. Submitters can upload user maps, EST data, and become locus editors.'),
+        if_you_would_like_to_change_your_user_status => SGN::I18N::translate($ui_people_i18n, 'community.people.if_you_would_like_to_change_your_user_status', ' if you would like to change your user status.'),
+    );
+
     my $person_id = shift;
     my $dbh = $c->dbc->dbh;
 
@@ -122,11 +135,11 @@ sub people_top_level : Path('/solpeople/profile') Args(1) {
 
         #User status section
         my $user_info = {
-            user => qq{ Your current user status is <b>$user_type</b>. Please contact <a href="mailto:sgn-feedback\@sgn.cornell.edu">SGN</a> to upgrade to a <b>submitter</b> account with more privileges. Submitters can upload user maps, EST data, and become locus editors. },
-            submitter => qq{ Your current user status is <b>$user_type</b>. You have the maximum user privileges on SGN. Please contact <a href="mailto:sgn-feedback\@sgn.cornell.edu">SGN</a> if you would like to change your user status.},
-            curator => qq{ Your current user status is <b>$user_type</b>. },
-            sequencer => qq{ Your current user status is <b>$user_type</b>. You have maximum user privileges on SGN. },
-            genefamily_editor => qq{ Your current user status is <b>$user_type</b>. },
+            user => qq{ $ui_people_text{your_current_user_status_is}<b>$user_type</b>. $ui_people_text{please_contact}<a href="mailto:sgn-feedback\@sgn.cornell.edu">SGN</a>$ui_people_text{to_upgrade_to_a}<b>submitter</b>$ui_people_text{account_with_more_privileges_submitters_can_upload_user_maps_est_data_and_become_locus_editors} },
+            submitter => qq{ $ui_people_text{your_current_user_status_is}<b>$user_type</b>. $ui_people_text{you_have_the_maximum_user_privileges_on_sgn} $ui_people_text{please_contact}<a href="mailto:sgn-feedback\@sgn.cornell.edu">SGN</a>$ui_people_text{if_you_would_like_to_change_your_user_status}},
+            curator => qq{ $ui_people_text{your_current_user_status_is}<b>$user_type</b>. },
+            sequencer => qq{ $ui_people_text{your_current_user_status_is}<b>$user_type</b>. $ui_people_text{you_have_maximum_user_privileges_on_sgn} },
+            genefamily_editor => qq{ $ui_people_text{your_current_user_status_is}<b>$user_type</b>. },
         };
         $c->stash->{user_status} = $user_info->{$user_type};
     }

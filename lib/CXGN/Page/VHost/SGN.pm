@@ -1,4 +1,6 @@
 package CXGN::Page::VHost::SGN;
+use SGN::I18N ();
+use HTML::Entities ();
 use strict;
 use warnings;
 
@@ -51,18 +53,34 @@ EOHTMLEIEIO
 
 sub bar_top {
     my $self     = shift;
+    my SGN::I18N $vhost_bar_i18n = $self->{page} && $self->{page}->{i18n};
+    my $bar_mirror_login = HTML::Entities::encode_entities($vhost_bar_i18n ? $vhost_bar_i18n->p("shared.vhost.mirror_login", "Mirror site does not support login") : "Mirror site does not support login");
+    my $bar_mirror_new_user = HTML::Entities::encode_entities($vhost_bar_i18n ? $vhost_bar_i18n->p("shared.vhost.mirror_new_user", "Mirror site does not support new user") : "Mirror site does not support new user");
+    my $bar_login = HTML::Entities::encode_entities($vhost_bar_i18n ? $vhost_bar_i18n->p("shared.vhost.login", "log in") : "log in");
+    my $bar_new_user = HTML::Entities::encode_entities($vhost_bar_i18n ? $vhost_bar_i18n->p("shared.vhost.new_user", "new user") : "new user");
+    my $bar_logout = HTML::Entities::encode_entities($vhost_bar_i18n ? $vhost_bar_i18n->p("shared.vhost.logout", "log out") : "log out");
+    my $bar_my_sgn = HTML::Entities::encode_entities($vhost_bar_i18n ? $vhost_bar_i18n->p("shared.vhost.my_sgn", "My SGN") : "My SGN");
+    my $bar_home_alt = HTML::Entities::encode_entities($vhost_bar_i18n ? $vhost_bar_i18n->p("shared.vhost.home_alt", "SGN Home") : "SGN Home");
+    my $bar_home_title = HTML::Entities::encode_entities($vhost_bar_i18n ? $vhost_bar_i18n->p("shared.vhost.home_title", "Sol Genomics Network Home") : "Sol Genomics Network Home");
+    my $bar_cart = HTML::Entities::encode_entities($vhost_bar_i18n ? $vhost_bar_i18n->p("shared.vhost.cart", "clone(s) in cart") : "clone(s) in cart");
+    my $bar_order = HTML::Entities::encode_entities($vhost_bar_i18n ? $vhost_bar_i18n->p("shared.vhost.order", "order") : "order");
+    my $bar_home = HTML::Entities::encode_entities($vhost_bar_i18n ? $vhost_bar_i18n->p("shared.vhost.home", "home") : "home");
+    my $bar_forum = HTML::Entities::encode_entities($vhost_bar_i18n ? $vhost_bar_i18n->p("shared.vhost.forum", "forum") : "forum");
+    my $bar_contact = HTML::Entities::encode_entities($vhost_bar_i18n ? $vhost_bar_i18n->p("shared.vhost.contact", "contact") : "contact");
+    my $bar_help = HTML::Entities::encode_entities($vhost_bar_i18n ? $vhost_bar_i18n->p("shared.vhost.help", "help") : "help");
+    my $bar_developer = HTML::Entities::encode_entities($vhost_bar_i18n ? $vhost_bar_i18n->p("shared.vhost.developer", "devbar") : "devbar");
     my $ret_html = '';
     my $welcome  = '';
     my $login_logout = '';
 
     our $vhost ||= SGN::Context->new;
     if ($vhost->get_conf('is_mirror')) { 
-	$login_logout = qq | <a class="ghosted" style="text-decoration: none" title="Mirror site does not support login">log in</a> \| <a class="ghosted" style="text-decoration: none" title="Mirror site does not support new user">new user</span> |; 
+	$login_logout = qq | <a class="ghosted" style="text-decoration: none" title="$bar_mirror_login">$bar_login</a> \| <a class="ghosted" style="text-decoration: none" title="$bar_mirror_new_user">$bar_new_user</span> |;
     }
     else { 
 	
-	$login_logout = '<a class="toplink" style="text-decoration: underline" href="/user/login">log in</a> | 
-<a class="toplink" style="text-decoration: underline" href="/solpeople/new-account.pl">new user</a>';
+	$login_logout = qq{<a class="toplink" style="text-decoration: underline" href="/user/login">$bar_login</a> |
+<a class="toplink" style="text-decoration: underline" href="/solpeople/new-account.pl">$bar_new_user</a>};
     }
 #this code will not work when database connectivity is lost, or when these modules are broken.
 #since the page header is highly important and we ALWAYS expect it to work, we must continue even when that other stuff is broken.
@@ -80,8 +98,8 @@ sub bar_top {
                 $welcome      = "<b>$fname $lname</b>";
                 $login_logout = <<HTML
 
-(<a class="toplink" style="text-decoration: underline" href="/user/logout">log out</a>)
-<a class="mytools" href="/solpeople/profile/$person_id">My SGN</a>
+(<a class="toplink" style="text-decoration: underline" href="/user/logout">$bar_logout</a>)
+<a class="mytools" href="/solpeople/profile/$person_id">$bar_my_sgn</a>
 HTML
             }
         }
@@ -98,7 +116,7 @@ HTML
     my $showtimes = $vhost->get_conf('production_server') ? 0 : 1;
 
     my $tb      = CXGN::Page::Toolbar::SGN->new();
-    my $tb_html = $tb->as_html();
+    my $tb_html = $tb->as_html($self->{page} && $self->{page}->{i18n});
 
     my $devbar_style = "display:none";
     $ret_html .= <<EOHTMLEIEIO;
@@ -106,26 +124,26 @@ HTML
 <table id="siteheader" cellpadding="0" cellspacing="0">
 <tr>
   <td rowspan="3" width="10" class="sunlogo">
-    <a href="/"><img src="/img/sgn_logo_icon.png" width="70" height="69" border="0" alt="SGN Home" title="Sol Genomics Network Home" id="sgnlogo" /></a>
+    <a href="/"><img src="/img/sgn_logo_icon.png" width="70" height="69" border="0" alt="$bar_home_alt" title="$bar_home_title" id="sgnlogo" /></a>
   </td>
   <td style="vertical-align: bottom">
-    <a href="/"><img id="sgntext" src="/img/sgn_logo_text.png" width="230" height="21" border="0" alt="SGN Home" title="Sol Genomics Network Home" /></a>
+    <a href="/"><img id="sgntext" src="/img/sgn_logo_text.png" width="230" height="21" border="0" alt="$bar_home_alt" title="$bar_home_title" /></a>
   </td>
   <td width="50%" class="clonecart">
      <div id="clone_shoppingcart">
          <script language="JavaScript" type="text/javascript">
          count_clones();
          </script>
-         clone(s) in cart (<a class="toplink" style="text-decoration: underline" href="/search/clone-order.pl">order</a>)
+         $bar_cart (<a class="toplink" style="text-decoration: underline" href="/search/clone-order.pl">$bar_order</a>)
      </div>
   </td>
   <td class="toplink" width="50%">
-          <a class="toplink" href="/">home</a>
-        | <a class="toplink" href="/forum/topics.pl">forum</a>
-        | <a class="toplink" href="/contact/form">contact</a>
-        | <a class="toplink" href="/help/index.pl">help</a>
+          <a class="toplink" href="/">$bar_home</a>
+        | <a class="toplink" href="/forum/topics.pl">$bar_forum</a>
+        | <a class="toplink" href="/contact/form">$bar_contact</a>
+        | <a class="toplink" href="/help/index.pl">$bar_help</a>
 		<span id="open_developer_toolbar" style="$devbar_style">
-		| <a class="toplink" href="#" onclick="openDeveloperToolbar(); return false">devbar</a>
+		| <a class="toplink" href="#" onclick="openDeveloperToolbar(); return false">$bar_developer</a>
 		</span>
   </td>
 </tr>
@@ -157,7 +175,7 @@ EOHTMLEIEIO
 sub toolbar {
     my $self    = shift;
     my $tb      = CXGN::Page::Toolbar::SGN->new();
-    my $tb_html = $tb->as_html();
+    my $tb_html = $tb->as_html($self->{page} && $self->{page}->{i18n});
 
     return div({ id => 'site_toolbar' },
                comment('begin toolbar'),
@@ -175,10 +193,21 @@ SCRIPT
 }
 
 sub footer_html {
+    my $self = shift;
+    my SGN::I18N $vhost_footer_i18n = ref($self) && $self->{page} ? $self->{page}->{i18n} : undef;
 
+    my $footer_validate = HTML::Entities::encode_entities($vhost_footer_i18n ? $vhost_footer_i18n->p("shared.vhost.footer.validate", "[Validate this page]") : "[Validate this page]");
+    my $footer_cite = HTML::Entities::encode_entities($vhost_footer_i18n ? $vhost_footer_i18n->p("shared.vhost.footer.cite", "Cite SGN using") : "Cite SGN using");
+    my $footer_support = HTML::Entities::encode_entities($vhost_footer_i18n ? $vhost_footer_i18n->p("shared.vhost.footer.support", "SGN is supported by the") : "SGN is supported by the");
+    my $footer_hosted = HTML::Entities::encode_entities($vhost_footer_i18n ? $vhost_footer_i18n->p("shared.vhost.footer.hosted", "and hosted at the") : "and hosted at the");
+    my $footer_subscribe = HTML::Entities::encode_entities($vhost_footer_i18n ? $vhost_footer_i18n->p("shared.vhost.footer.subscribe", "Subscribe to the") : "Subscribe to the");
+    my $footer_mailing_list = HTML::Entities::encode_entities($vhost_footer_i18n ? $vhost_footer_i18n->p("shared.vhost.footer.mailing_list", "sgn-announce mailing list") : "sgn-announce mailing list");
+    my $footer_updates = HTML::Entities::encode_entities($vhost_footer_i18n ? $vhost_footer_i18n->p("shared.vhost.footer.updates", "for updates") : "for updates");
+    my $footer_feedback = HTML::Entities::encode_entities($vhost_footer_i18n ? $vhost_footer_i18n->p("shared.vhost.footer.feedback", "Send comments and feedback to") : "Send comments and feedback to");
+    my $footer_disclaimer = HTML::Entities::encode_entities($vhost_footer_i18n ? $vhost_footer_i18n->p("shared.vhost.footer.disclaimer", "Disclaimer") : "Disclaimer");
     #add a link to do xhtml validation on this page, if the viewer is on the developer subnet
     my ( undef, $cornell_client_name ) = CXGN::Apache::Request::client_name();
-    my $validation_link = a({href => "http://validator.w3.org/check?uri=referer"},'[Validate this page]');
+    my $validation_link = a({href => "http://validator.w3.org/check?uri=referer"},$footer_validate);
 
     return
         table({ id => 'pagefooter', width => '100%', cellpadding => 0, cellspacing => 0 },
@@ -237,13 +266,13 @@ td(
 
                  td({style => 'text-align: right; font-size: smaller'},
                     <<EOHTML,
-Cite SGN using <a class="footer" href="http://www.plantphysiol.org/cgi/content/abstract/138/3/1310"> Mueller et al. (2005).</a><br />
-SGN is supported by the <a class="footer" href="/about/tomato_project/">NSF (\#0116076)</a>,<br />
-<a class="footer" href="http://www.usda.gov">USDA CSREES</a> and hosted at the <a class="footer" href="http://bti.cornell.edu">Boyce Thompson Institute.</a><br />
+$footer_cite <a class="footer" href="http://www.plantphysiol.org/cgi/content/abstract/138/3/1310"> Mueller et al. (2005).</a><br />
+$footer_support <a class="footer" href="/about/tomato_project/">NSF (\#0116076)</a>,<br />
+<a class="footer" href="http://www.usda.gov">USDA CSREES</a> $footer_hosted <a class="footer" href="http://bti.cornell.edu">Boyce Thompson Institute.</a><br />
 <br />
-Subscribe to the <a class="footer" href="http://rubisco.sgn.cornell.edu/mailman/listinfo/sgn-announce/">sgn-announce mailing list</a> for updates<br />
-Send comments and feedback to <a class="footer" href="mailto:sgn-feedback\@solgenomics.net">sgn-feedback\@solgenomics.net</a><br />
-<a href="/legal.pl">Disclaimer</a>
+$footer_subscribe <a class="footer" href="http://rubisco.sgn.cornell.edu/mailman/listinfo/sgn-announce/">$footer_mailing_list</a> $footer_updates<br />
+$footer_feedback <a class="footer" href="mailto:sgn-feedback\@solgenomics.net">sgn-feedback\@solgenomics.net</a><br />
+<a href="/legal.pl">$footer_disclaimer</a>
 EOHTML
                    ),
                 ),

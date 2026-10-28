@@ -1,6 +1,8 @@
 
 package SGN::Controller::AJAX::Search::Treatment;
 
+use SGN::I18N ();
+
 use Moose;
 use Data::Dumper;
 use CXGN::Trait;
@@ -19,6 +21,7 @@ __PACKAGE__->config(
 sub search : Path('/ajax/search/treatments') Args(0) {
     my $self = shift;
     my $c    = shift;
+    my SGN::I18N $ui_search_i18n = SGN::I18N::translate($c);
     my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;    
     my $schema = $c->dbic_schema("Bio::Chado::Schema", undef, $sp_person_id);
     my $params = $c->req->params() || {};
@@ -115,7 +118,7 @@ sub search : Path('/ajax/search/treatments') Args(0) {
         my $accession = $_->{accession};
         my $treatment_id = $_->{trait_id};
         my $treatment_accession = $db_name .":". $accession ;
-        my $treatment_usage = "<em>None</em>";
+        my $treatment_usage = ("<em>" . SGN::I18N::translate($ui_search_i18n, 'global.dataset_cxgn_dataset.none', 'None') . "</em>");
 
         # Get the number of trials that applied the treatment
         my $trial_criteria_list  = ['traits', 'trials'];
@@ -150,7 +153,7 @@ sub search : Path('/ajax/search/treatments') Args(0) {
             my $plots = $plot_results_ref->{results};
             my $plot_count = $#{$plots} + 1;
 
-            $treatment_usage = "Trials:&nbsp;$trial_count<br />Plots:&nbsp;$plot_count";
+            $treatment_usage = (SGN::I18N::translate($ui_search_i18n, 'transformation.helper.trials', 'Trials:') . "&nbsp;$trial_count<br />" . SGN::I18N::translate($ui_search_i18n, 'transformation.helper.plots', 'Plots:') . "&nbsp;$plot_count");
         }
 
 

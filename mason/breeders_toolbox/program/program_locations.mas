@@ -1,3 +1,6 @@
+<%once>
+use HTML::Entities ();
+</%once>
 <%args>
 $program_id
 </%args>
@@ -9,7 +12,7 @@ $program_id
 <div class="well well-sm">
     <div class="panel panel-default">
         <div class="panel-body">
-            <&| /page/info_section.mas, title=>"Location Info", is_subsection => 1, collapsible=>1, collapsed=>0 &>
+            <&| /page/info_section.mas, title => HTML::Entities::encode_entities($c->i18n->p("program.locations.section", "Location Info")), is_subsection => 1, collapsible=>1, collapsed=>0 &>
                 <table class="table table-hover table-bordered" id="program_location_table">
                     <thead>
                         <tr>

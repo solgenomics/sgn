@@ -1,3 +1,6 @@
+<%once>
+use JSON ();
+</%once>
 <%args>
 $trial_id
 $trial_name => undef
@@ -8,15 +11,15 @@ $trial_type
   <div class="modal-dialog" role="document">
     <div class="modal-content">
       <div class="modal-header">
-        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-        <h4 class="modal-title" id="editTrialNameDialog">Edit Name for <% $trial_type %></h4>
+        <button type="button" class="close" data-dismiss="modal" aria-label="<% $c->i18n->p('folder.ui.close', 'Close') |h %>"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title" id="editTrialNameDialog"><% $c->i18n->p('folder.edit_name.edit_title', 'Edit Name for %{type}', {type => $trial_type}) |h %></h4>
       </div>
       <div class="modal-body">
         <div class="container-fluid">
 
 	       <form class="form-horizontal" role="form" method="post" id="new_folder_dialog_form" name="new_folder_dialog_form">
 	        <div class="form-group">
-      	      <label class="col-sm-3 control-label"><% $trial_type %> Name: </label>
+                <label class="col-sm-3 control-label"><% $c->i18n->p('folder.edit_name.name_label', '%{type} Name:', {type => $trial_type}) |h %></label>
       	      <div class="col-sm-9" >
                 <input name="trial_name_input" placeholder="<% $trial_name %>" id="trial_name_input" class="form-control" type="text" autofocus/>
                 <input type="hidden" id="edit_trial_name_trial_id" value="<% $trial_id %>" />
@@ -27,8 +30,8 @@ $trial_type
         </div>
       </div>
       <div class="modal-footer">
-        <button type="button" class="btn btn-default" name="edit_name_cancel_button" id="edit_name_cancel_button" data-dismiss="modal">Close</button>
-	      <button type="button" class="btn btn-primary" name="edit_name_save_button" id="edit_name_save_button" title="Save">Save</button>
+        <button type="button" class="btn btn-default" name="edit_name_cancel_button" id="edit_name_cancel_button" data-dismiss="modal"><% $c->i18n->p('folder.edit_name.close', 'Close') |h %></button>
+	      <button type="button" class="btn btn-primary" name="edit_name_save_button" id="edit_name_save_button" title="<% $c->i18n->p('folder.edit_name.save', 'Save') |h %>"><% $c->i18n->p('folder.edit_name.save', 'Save') |h %></button>
       </div>
     </div>
   </div>
@@ -62,13 +65,16 @@ function save_trial_name() {
         alert(response.error);
       }
       else {
-        alert("Successfully updated folder name");
+        alert(window.SGN && SGN.i18n ? SGN.i18n.p("folder.edit_name.update_success", "Successfully updated folder name") : "Successfully updated folder name");
         jQuery('#edit_trial_name_dialog').modal("hide");
-        jQuery('#pagetitle').html("<h3><% $trial_type %> detail for "+new_name+"</h3>");
+        var detailTitle = window.SGN && SGN.i18n
+          ? SGN.i18n.p('folder.edit_name.detail_title', '%{type} detail for %{name}', {type: <% JSON::encode_json($trial_type) %>, name: new_name})
+          : <% JSON::encode_json($trial_type) %> + ' detail for ' + new_name;
+        jQuery('#pagetitle').empty().append(jQuery('<h3>').text(detailTitle));
       }
     },
     error: function(response) {
-      alert("An error occurred updating the folder name");
+      alert(window.SGN && SGN.i18n ? SGN.i18n.p("folder.edit_name.update_error", "An error occurred updating the folder name") : "An error occurred updating the folder name");
     },
   });
 }

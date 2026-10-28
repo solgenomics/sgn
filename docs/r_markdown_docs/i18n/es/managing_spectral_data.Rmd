@@ -1,0 +1,50 @@
+# Gestión de datos espectrales {#managing-spectral-data}
+
+Breedbase cuenta con un protocolo flexible para almacenar datos espectrales, independientemente del espectrómetro utilizado. Para almacenar y analizar estos datos, Breedbase usa el paquete de R *waves* para identificar valores atípicos, generar gráficos, agregar muestras y entrenar modelos de predicción.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/waves_breedbase_schema.png')
+```
+
+---
+## Cargar datos espectrales {#upload-spectral-data}
+Los datos espectrales pueden incorporarse en un archivo CSV con los metadatos en las primeras columnas y una columna por medición espectral a continuación. Cada fila representa un escaneo o muestra y tiene un ID único que debe coincidir con observationUnitName en Breedbase. La futura transferencia mediante [BrAPI](https://brapi.org) permitirá interoperar con programas de recopilación de datos.
+
+Para cargar un conjunto de datos espectrales, abra la página 'Gestionar datos NIRS' seleccionando 'NIRS' en el menú 'Gestionar', y pulse el botón azul 'Cargar NIRS'. Se abrirá el flujo de carga. El cuadro informativo azul claro contiene un enlace al formato requerido y un archivo .csv de ejemplo; abajo se muestra otro ejemplo.
+
+* **id**: Identificador opcional de cada lectura NIRS. El valor id debe ser un entero.
+* **sampling_id**: Identificador opcional de cada muestra. Se permiten valores de tipo cadena.
+* **sampling_date**: Campo opcional. El formato permitido es YYYY-MM-DD.
+* **observationunit_name**: Campo obligatorio que debe coincidir con un elemento existente en la base de datos. Puede ser el nombre de una parcela, subparcelas, planta o muestra de tejido, según el diseño del ensayo.
+* **device_id**: Campo opcional para identificar el dispositivo. Se permiten valores de tipo cadena.
+* **device_type**: Campo obligatorio. Solo se pueden cargar datos de un tipo de dispositivo. Los tipos disponibles son: SCiO, QST, Foss6500, BunchiN500 o LinkSquare.
+* **comments**: Campo opcional para comentarios generales.
+Las demás columnas corresponden a longitudes de onda obligatorias. Puede añadir tantas columnas como necesite.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/manage_NIRS_main_display.png')
+```
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/upload_NIRS_example_format.png')
+```
+
+## Evaluar y eliminar valores atípicos {#evaluate-and-remove-outliers}
+Los valores atípicos pueden afectar considerablemente los modelos de calibración espectral, ya se deban a artefactos del espectrómetro o a errores del usuario. La distancia de Mahalanobis (Mahalanobis, 1936) mide la distancia entre una observación y una distribución más amplia y se usa habitualmente para detectar valores atípicos en espacios multivariados (Des Maesschalck et al., 2000). La función *FilterSpectra()* del paquete R [*waves*](https://CRAN.R-project.org/package=waves) calcula esa distancia para cada observación de una matriz espectral mediante *stats::mahalanobis()*. Se identifican valores atípicos cuando la distancia al cuadrado supera el percentil 95 de una distribución $\chi$^2^- con *p* grados de libertad, donde *p* es el número de columnas (longitudes de onda) de la matriz (Johnson y Wichern, 2007). En Breedbase, el procedimiento se aplica por conjunto de datos durante la carga y los valores atípicos reciben la etiqueta binaria "Outlier."
+
+## Graficar espectros {#plot-spectra}
+Tras identificar los valores atípicos, la función *PlotSpectra()* de [*waves*](https://CRAN.R-project.org/package=waves) genera un gráfico. Usa los espectros filtrados y *ggplot2::ggplot()* para crear un gráfico de líneas con los valores atípicos resaltados en color. Debajo aparece la lista de filas identificadas. Los gráficos se guardan en archivos .png y se vinculan a los conjuntos de datos originales. Puede descargar las imágenes mediante el botón "Descargar gráfico" del flujo de carga.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/upload_NIRS_plot_example.png')
+```
+
+## Agregar espectros {#aggregate-spectra}
+Para obtener un perfil espectral estable y fiable, la mayoría de fabricantes recomienda realizar varios escaneos por muestra. Algunos espectrómetros los agregan internamente; otros requieren que el usuario lo haga antes del análisis. Durante la carga, Breedbase filtra los datos y llama a *AggregateSpectra()* de [*waves*](https://CRAN.R-project.org/package=waves), guardando los escaneos agregados para consultarlos después mediante el asistente de búsqueda. Los escaneos se agregan por media de muestra (por ejemplo, a nivel de parcela) según el campo observationUnitName. Al terminar, el usuario sale del flujo de carga y el archivo bruto se guarda en el archivo de cargas.
+
+## Referencias {#references}
+* De Maesschalck, R., Jouan-Rimbaud, D., and Massart, D. L. (2000). The Mahalanobis distance. Chemom. Intell. Lab. Syst. 50(1): 1-18.
+* Johnson, R. A. \& Wichern, D. W. (2007). Applied Multivariate Statistical Analysis (6th Edition). p 773.
+* Mahalanobis, P. C. (1936). On the generalized distance in statistics. National Institute of Science of India.
+
+[**Documentación de la herramienta de análisis**](#spectral-analysis)

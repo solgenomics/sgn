@@ -304,9 +304,9 @@
       var html =
         '<div id="dm-topbar" class="row" style="margin-top:5px;margin-bottom:10px; align-items:center;">' +
           '<div class="col-sm-6" style="display:flex; gap:8px; align-items:center;">' +
-            '<label class="control-label" for="dm_list_sel">Accession List</label>' +
-            '<select id="dm_list_sel" class="form-control" style="width:auto; min-width:220px;"><option value="">(choose a list)</option></select>' +
-            '<button id="dm_clear_filters" class="btn btn-default">Clear</button>' +
+            ("<label class=\"control-label\" for=\"dm_list_sel\">" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("decision.js.accession_list", "Accession List") : "Accession List")).html() + "</label>") +
+            ("<select id=\"dm_list_sel\" class=\"form-control\" style=\"width:auto; min-width:220px;\"><option value=\"\">" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("decision.js.choose_a_list", "(choose a list)") : "(choose a list)")).html() + "</option></select>") +
+            ("<button id=\"dm_clear_filters\" class=\"btn btn-default\">" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("global.search_wizard.clear", "Clear") : "Clear")).html() + "</button>") +
           '</div>' +
           '<div class="col-sm-6 text-right"></div>' +
         '</div>';
@@ -351,14 +351,14 @@
         if ($target.length) {
           $target.after(
             '<div id="dm-saveall-wrap">' +
-              '<button type="button" id="dm_download_template_btn" class="btn btn-default">Download Excel template</button>' +
-              '<button type="button" id="dm_upload_template_btn" class="btn btn-default">Upload Excel decisions</button>' +
-              '<button type="button" id="dm_save_all_btn" class="btn btn-primary">Save all decisions</button>' +
+              ("<button type=\"button\" id=\"dm_download_template_btn\" class=\"btn btn-default\">" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("decision.js.download_excel_template", "Download Excel template") : "Download Excel template")).html() + "</button>") +
+              ("<button type=\"button\" id=\"dm_upload_template_btn\" class=\"btn btn-default\">" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("decision.js.upload_excel_decisions", "Upload Excel decisions") : "Upload Excel decisions")).html() + "</button>") +
+              ("<button type=\"button\" id=\"dm_save_all_btn\" class=\"btn btn-primary\">" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("decision.js.save_all_decisions", "Save all decisions") : "Save all decisions")).html() + "</button>") +
               '<input type="file" id="dm_upload_template_file" accept=".xls,.xlsx" style="display:none;">' +
             '</div>'
           );
           $target.after(
-            '<div id="dm-upload-hint">Excel columns: Accession, Breeding Program, Previous Stage, Decision, New Stage, Notes, Comment.</div>'
+            ("<div id=\"dm-upload-hint\">" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("decision.js.excel_columns", "Excel columns: ") : "Excel columns: ")).html() + "Accession, Breeding Program, Previous Stage, Decision, New Stage, Notes, Comment.</div>")
           );
         }
       }
@@ -369,31 +369,31 @@
           + '  <div class="dm-save-dialog-header">'
           + '    <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;">'
           + '      <div>'
-          + '        <div style="font-size:20px;font-weight:700;">Decision report before saving</div>'
-          + '        <div style="font-size:13px;color:#666;">Review the meeting data and add comments for each accession before sending to the controller.</div>'
+          + ("        <div style=\"font-size:20px;font-weight:700;\">" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("decision.js.decision_report_before_saving", "Decision report before saving") : "Decision report before saving")).html() + "</div>")
+          + ("        <div style=\"font-size:13px;color:#666;\">" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("decision.js.review_the_meeting_data_and_add_comments_for_each_accession_before_sendi", "Review the meeting data and add comments for each accession before sending to the controller.") : "Review the meeting data and add comments for each accession before sending to the controller.")).html() + "</div>")
           + '      </div>'
-          + '      <button type="button" id="dm_save_dialog_close_x" class="btn btn-default">Close</button>'
+          + ("      <button type=\"button\" id=\"dm_save_dialog_close_x\" class=\"btn btn-default\">" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("accession.sequencing.close", "Close") : "Close")).html() + "</button>")
           + '    </div>'
           + '  </div>'
           + '  <div class="dm-save-dialog-body">'
           + '    <div class="dm-save-meta-grid">'
-          + '      <div class="dm-save-meta-box"><span class="dm-save-meta-label">Meeting</span><div id="dm-save-meeting-name" class="dm-save-meta-value"></div></div>'
-          + '      <div class="dm-save-meta-box"><span class="dm-save-meta-label">Date</span><div id="dm-save-meeting-date" class="dm-save-meta-value"></div></div>'
-          + '      <div class="dm-save-meta-box"><span class="dm-save-meta-label">Attendees</span><div id="dm-save-meeting-attendees" class="dm-save-meta-value"></div></div>'
+          + ("      <div class=\"dm-save-meta-box\"><span class=\"dm-save-meta-label\">" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("decision.root.meeting", "Meeting") : "Meeting")).html() + "</span><div id=\"dm-save-meeting-name\" class=\"dm-save-meta-value\"></div></div>")
+          + ("      <div class=\"dm-save-meta-box\"><span class=\"dm-save-meta-label\">" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("global.file_dump_share_files.date", "Date") : "Date")).html() + "</span><div id=\"dm-save-meeting-date\" class=\"dm-save-meta-value\"></div></div>")
+          + ("      <div class=\"dm-save-meta-box\"><span class=\"dm-save-meta-label\">" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("decision.root.attendees", "Attendees") : "Attendees")).html() + "</span><div id=\"dm-save-meeting-attendees\" class=\"dm-save-meta-value\"></div></div>")
           + '    </div>'
-          + '    <label for="dm-save-meeting-notes" style="font-weight:600; margin-bottom:6px;">Meeting notes</label>'
-          + '    <textarea id="dm-save-meeting-notes" class="form-control" placeholder="Meeting notes to send with this report"></textarea>'
+          + ("    <label for=\"dm-save-meeting-notes\" style=\"font-weight:600; margin-bottom:6px;\">" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("decision.js.meeting_notes", "Meeting notes") : "Meeting notes")).html() + "</label>")
+          + ("    <textarea id=\"dm-save-meeting-notes\" class=\"form-control\" placeholder=\"" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("decision.js.meeting_notes_to_send_with_this_report", "Meeting notes to send with this report") : "Meeting notes to send with this report")).html() + "\"></textarea>")
           + '    <div class="dm-save-report-wrap">'
           + '      <table id="dm-save-report-table">'
           + '        <thead>'
           + '          <tr>'
-          + '            <th>Accession</th>'
-          + '            <th>Breeding Program</th>'
-          + '            <th>Previous Stage</th>'
-          + '            <th>Decision</th>'
-          + '            <th>New Stage</th>'
-          + '            <th>Current Notes</th>'
-          + '            <th>Meeting Comments</th>'
+          + ("            <th>" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("accession.sequencing.table.accession", "Accession") : "Accession")).html() + "</th>")
+          + ("            <th>" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("cross.ui.breeding_program.2f6b84b", "Breeding Program") : "Breeding Program")).html() + "</th>")
+          + ("            <th>" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("decision.server.previous_stage", "Previous Stage") : "Previous Stage")).html() + "</th>")
+          + ("            <th>" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("decision.root.decision", "Decision") : "Decision")).html() + "</th>")
+          + ("            <th>" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("decision.root.new_stage", "New Stage") : "New Stage")).html() + "</th>")
+          + ("            <th>" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("decision.server.current_notes", "Current Notes") : "Current Notes")).html() + "</th>")
+          + ("            <th>" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("decision.js.meeting_comments", "Meeting Comments") : "Meeting Comments")).html() + "</th>")
           + '          </tr>'
           + '        </thead>'
           + '        <tbody></tbody>'
@@ -401,8 +401,8 @@
           + '    </div>'
           + '  </div>'
           + '  <div class="dm-save-dialog-footer" style="display:flex;justify-content:flex-end;gap:8px;">'
-          + '    <button type="button" id="dm_save_dialog_cancel" class="btn btn-default">Cancel</button>'
-          + '    <button type="button" id="dm_confirm_save_all_btn" class="btn btn-primary">Confirm and save</button>'
+          + ("    <button type=\"button\" id=\"dm_save_dialog_cancel\" class=\"btn btn-default\">" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("auth.legacy.cancel", "Cancel") : "Cancel")).html() + "</button>")
+          + ("    <button type=\"button\" id=\"dm_confirm_save_all_btn\" class=\"btn btn-primary\">" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("decision.js.confirm_and_save", "Confirm and save") : "Confirm and save")).html() + "</button>")
           + '  </div>'
           + '</dialog>';
         $('body').append(html);
@@ -452,7 +452,7 @@
         }
         if (!ct.includes('application/json')) {
           var txt2 = await r.text().catch(function(){ return ''; });
-          throw new Error('Non-JSON response for ' + url + ': ' + txt2.slice(0, 120) + '…');
+          throw new Error((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("decision.js.non_json_response_for", "Non-JSON response for ") : 'Non-JSON response for ') + url + ': ' + txt2.slice(0, 120) + '…');
         }
         return r.json();
       });
@@ -465,7 +465,7 @@
         if (!$holder.find('select').length) {
           $holder.html(
             '<select id="dm_dataset_sel" class="form-control input-sm" style="min-width:240px;">' +
-              '<option value="">dataset ...</option>' +
+              ("<option value=\"\">" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("decision.js.dataset", "dataset ...") : "dataset ...")).html() + "</option>") +
             '</select>'
           );
         }
@@ -568,7 +568,7 @@
       $tbody.empty();
 
       if (!(rows || []).length) {
-        $tbody.append('<tr><td colspan="6" class="text-center">No data found for this dataset.</td></tr>');
+        $tbody.append(("<tr><td colspan=\"6\" class=\"text-center\">" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("decision.js.no_data_found_for_this_dataset", "No data found for this dataset.") : "No data found for this dataset.")).html() + "</td></tr>"));
         return;
       }
 
@@ -594,7 +594,7 @@
           return;
         }
 
-        $sel.empty().append('<option value="">dataset ...</option>');
+        $sel.empty().append(("<option value=\"\">" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("decision.js.dataset", "dataset ...") : "dataset ...")).html() + "</option>"));
 
         ((resp && resp.datasets) || []).forEach(function(ds){
           var id   = ds.dataset_id || ds.sp_dataset_id || '';
@@ -628,7 +628,7 @@
         }
       } else {
         $tbody.html(
-          '<tr><td colspan="6" class="text-center">Loading dataset summary...</td></tr>'
+          ("<tr><td colspan=\"6\" class=\"text-center\">" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("decision.js.loading_dataset_summary", "Loading dataset summary...") : "Loading dataset summary...")).html() + "</td></tr>")
         );
       }
 
@@ -642,7 +642,7 @@
             $table.DataTable().clear().draw();
           } else {
             $tbody.html(
-              '<tr><td colspan="6" class="text-center">Failed to load dataset.</td></tr>'
+              ("<tr><td colspan=\"6\" class=\"text-center\">" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("decision.js.failed_to_load_dataset", "Failed to load dataset.") : "Failed to load dataset.")).html() + "</td></tr>")
             );
           }
         });
@@ -677,7 +677,7 @@
         s.id = 'dm-plotly-loader';
         s.src = 'https://cdn.plot.ly/plotly-2.35.2.min.js';
         s.onload = function(){ resolve(window.Plotly); };
-        s.onerror = function(){ reject(new Error('Could not load Plotly')); };
+        s.onerror = function(){ reject(new Error((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("decision.js.could_not_load_plotly", "Could not load Plotly") : 'Could not load Plotly'))); };
         document.head.appendChild(s);
       });
     }
@@ -702,17 +702,17 @@
       var html = ''
         + '<div id="dm-plots-wrap" style="margin-top:20px;">'
         + '  <div class="panel panel-default">'
-        + '    <div class="panel-heading"><strong>Boxplot</strong></div>'
+        + ("    <div class=\"panel-heading\"><strong>" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("decision.js.boxplot", "Boxplot") : "Boxplot")).html() + "</strong></div>")
         + '    <div class="panel-body">'
         + '      <div class="row" style="margin-bottom:12px;">'
         + '        <div class="col-sm-4">'
-        + '          <label for="dm_box_trait_sel">Trait</label>'
+        + ("          <label for=\"dm_box_trait_sel\">" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("accession.stock.phenotype.header.trait", "Trait") : "Trait")).html() + "</label>")
         + '          <select id="dm_box_trait_sel" class="form-control input-sm">'
-        + '            <option value="">(select trait)</option>'
+        + ("            <option value=\"\">" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("decision.js.select_trait", "(select trait)") : "(select trait)")).html() + "</option>")
         + '          </select>'
         + '        </div>'
         + '        <div class="col-sm-8">'
-        + '          <label for="dm_box_highlight_sel">Highlight accession(s)</label>'
+        + ("          <label for=\"dm_box_highlight_sel\">" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("decision.js.highlight_accession_s", "Highlight accession(s)") : "Highlight accession(s)")).html() + "</label>")
         + '          <select id="dm_box_highlight_sel" class="form-control input-sm" multiple size="5"></select>'
         + '        </div>'
         + '      </div>'
@@ -720,17 +720,17 @@
         + '    </div>'
         + '  </div>'
         + '  <div class="panel panel-default" style="margin-top:20px;">'
-        + '    <div class="panel-heading"><strong>Barplot</strong></div>'
+        + ("    <div class=\"panel-heading\"><strong>" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("decision.js.barplot", "Barplot") : "Barplot")).html() + "</strong></div>")
         + '    <div class="panel-body">'
         + '      <div class="row" style="margin-bottom:12px;">'
         + '        <div class="col-sm-4">'
-        + '          <label for="dm_bar_trait_sel">Trait</label>'
+        + ("          <label for=\"dm_bar_trait_sel\">" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("accession.stock.phenotype.header.trait", "Trait") : "Trait")).html() + "</label>")
         + '          <select id="dm_bar_trait_sel" class="form-control input-sm">'
-        + '            <option value="">(select trait)</option>'
+        + ("            <option value=\"\">" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("decision.js.select_trait", "(select trait)") : "(select trait)")).html() + "</option>")
         + '          </select>'
         + '        </div>'
         + '        <div class="col-sm-8">'
-        + '          <label for="dm_bar_highlight_sel">Highlight accession(s)</label>'
+        + ("          <label for=\"dm_bar_highlight_sel\">" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("decision.js.highlight_accession_s", "Highlight accession(s)") : "Highlight accession(s)")).html() + "</label>")
         + '          <select id="dm_bar_highlight_sel" class="form-control input-sm" multiple size="5"></select>'
         + '        </div>'
         + '      </div>'
@@ -744,8 +744,8 @@
 
     function clearPlots(){
       ensurePlotPanels();
-      $('#dm_boxplot').html('<div class="text-muted">Select a dataset and trait.</div>');
-      $('#dm_barplot').html('<div class="text-muted">Select a dataset and trait.</div>');
+      $('#dm_boxplot').html(("<div class=\"text-muted\">" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("decision.js.select_a_dataset_and_trait", "Select a dataset and trait.") : "Select a dataset and trait.")).html() + "</div>"));
+      $('#dm_barplot').html(("<div class=\"text-muted\">" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("decision.js.select_a_dataset_and_trait", "Select a dataset and trait.") : "Select a dataset and trait.")).html() + "</div>"));
     }
 
     function populateSelect($sel, items, placeholder){
@@ -825,7 +825,7 @@
       ensurePlotPanels();
 
       if (!datasetId || !trait) {
-        $('#dm_boxplot').html('<div class="text-muted">Select a dataset and trait.</div>');
+        $('#dm_boxplot').html(("<div class=\"text-muted\">" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("decision.js.select_a_dataset_and_trait", "Select a dataset and trait.") : "Select a dataset and trait.")).html() + "</div>"));
         return Promise.resolve();
       }
 
@@ -834,7 +834,7 @@
           return fetchDatasetPlotData(datasetId, trait).then(function(resp){
             var rows = (resp && resp.rows) || [];
             if (!rows.length) {
-              $('#dm_boxplot').html('<div class="text-muted">No plot data found.</div>');
+              $('#dm_boxplot').html(("<div class=\"text-muted\">" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("decision.js.no_plot_data_found", "No plot data found.") : "No plot data found.")).html() + "</div>"));
               return;
             }
 
@@ -887,7 +887,7 @@
           });
         })
         .catch(function(){
-          $('#dm_boxplot').html('<div class="text-danger">Failed to render boxplot.</div>');
+          $('#dm_boxplot').html(("<div class=\"text-danger\">" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("decision.js.failed_to_render_boxplot", "Failed to render boxplot.") : "Failed to render boxplot.")).html() + "</div>"));
         });
     }
 
@@ -895,7 +895,7 @@
       ensurePlotPanels();
 
       if (!datasetId || !trait) {
-        $('#dm_barplot').html('<div class="text-muted">Select a dataset and trait.</div>');
+        $('#dm_barplot').html(("<div class=\"text-muted\">" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("decision.js.select_a_dataset_and_trait", "Select a dataset and trait.") : "Select a dataset and trait.")).html() + "</div>"));
         return Promise.resolve();
       }
 
@@ -904,7 +904,7 @@
           return fetchDatasetPlotData(datasetId, trait).then(function(resp){
             var summary = (resp && resp.accession_summary) || [];
             if (!summary.length) {
-              $('#dm_barplot').html('<div class="text-muted">No plot data found.</div>');
+              $('#dm_barplot').html(("<div class=\"text-muted\">" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("decision.js.no_plot_data_found", "No plot data found.") : "No plot data found.")).html() + "</div>"));
               return;
             }
 
@@ -959,7 +959,7 @@
           });
         })
         .catch(function(){
-          $('#dm_barplot').html('<div class="text-danger">Failed to render barplot.</div>');
+          $('#dm_barplot').html(("<div class=\"text-danger\">" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("decision.js.failed_to_render_barplot", "Failed to render barplot.") : "Failed to render barplot.")).html() + "</div>"));
         });
     }
 
@@ -980,7 +980,7 @@
       return ajaxJSON('/lists', { type:'accessions' }).then(function(resp){
         var $sel = $('#dm_list_sel');
         if (!$sel.length) return;
-        $sel.empty().append('<option value="">(choose a list)</option>');
+        $sel.empty().append(("<option value=\"\">" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("decision.js.choose_a_list", "(choose a list)") : "(choose a list)")).html() + "</option>"));
         ((resp && resp.lists) || []).forEach(function(li){
           var id = li.list_id || '';
           var name = li.name || ('List ' + id);
@@ -1049,7 +1049,7 @@
         '<select class="dm-decision-select form-control input-sm ' + colorClass(cur) + '" ' +
                 'data-acc="' + escapeHtml(acc) + '" ' +
                 'data-bp="' + escapeHtml(bp) + '">' +
-          '<option value="">(select)</option>' +
+          ("<option value=\"\">" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("decision.js.select", "(select)") : "(select)")).html() + "</option>") +
           '<option value="drop"' +    (cur === 'drop'    ? ' selected' : '') + '>Drop</option>' +
           '<option value="hold"' +    (cur === 'hold'    ? ' selected' : '') + '>Hold</option>' +
           '<option value="advance"' + (cur === 'advance' ? ' selected' : '') + '>Advance</option>' +
@@ -1141,12 +1141,12 @@
       var html = ''
         + '<dialog id="dm_stage_dialog" class="dm-stage-dialog">'
         + '  <form method="dialog" style="min-width:320px;max-width:420px;padding:18px 18px 12px 18px;">'
-        + '    <div style="font-size:18px;font-weight:600;margin-bottom:6px;">Select target stage</div>'
+        + ("    <div style=\"font-size:18px;font-weight:600;margin-bottom:6px;\">" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("decision.js.select_target_stage", "Select target stage") : "Select target stage")).html() + "</div>")
         + '    <div id="dm_stage_dialog_subtitle" style="font-size:12px;color:#666;margin-bottom:12px;"></div>'
         + '    <div id="dm_stage_dialog_options" style="max-height:280px;overflow:auto;border:1px solid #ddd;border-radius:6px;padding:10px;"></div>'
         + '    <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:14px;">'
-        + '      <button type="button" id="dm_stage_cancel" class="btn btn-default">Cancel</button>'
-        + '      <button type="button" id="dm_stage_ok" class="btn btn-primary">OK</button>'
+        + ("      <button type=\"button\" id=\"dm_stage_cancel\" class=\"btn btn-default\">" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("auth.legacy.cancel", "Cancel") : "Cancel")).html() + "</button>")
+        + ("      <button type=\"button\" id=\"dm_stage_ok\" class=\"btn btn-primary\">" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("cross.ui.ok", "OK") : "OK")).html() + "</button>")
         + '    </div>'
         + '  </form>'
         + '</dialog>';
@@ -1175,7 +1175,7 @@
         var $options = $('#dm_stage_dialog_options');
 
         $subtitle.text(
-          'Accession: ' + accession +
+          (window.SGN && window.SGN.i18n ? window.SGN.i18n.p("trial.card.coords.accession", "Accession: ") : 'Accession: ') + accession +
           (meetingDate ? ' | Meeting date: ' + meetingDate : '') +
           (currentStage ? ' | Current stage: ' + currentStage : '')
         );
@@ -1364,12 +1364,12 @@
       if (!$th.length) return;
       if ($th.find('#dm_bp_header_filter').length) return;
 
-      var labelText = ($th.text() || 'Breeding Program').trim().split('\n')[0] || 'Breeding Program';
+      var labelText = ($th.text() || (window.SGN && window.SGN.i18n ? window.SGN.i18n.p("cross.ui.breeding_program.2f6b84b", "Breeding Program") : "Breeding Program")).trim().split('\n')[0] || (window.SGN && window.SGN.i18n ? window.SGN.i18n.p("cross.ui.breeding_program.2f6b84b", "Breeding Program") : "Breeding Program");
       $th.html(
         '<div style="display:flex;flex-direction:column;">' +
           '<div>' + escapeHtml(labelText) + '</div>' +
           '<select id="dm_bp_header_filter" class="form-control input-sm dm-bp-header-select">' +
-             '<option value="">(All programs)</option>' +
+             ("<option value=\"\">" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("decision.js.all_programs", "(All programs)") : "(All programs)")).html() + "</option>") +
           '</select>' +
         '</div>'
       );
@@ -1518,7 +1518,7 @@
 
       if (!payload.accessions.length) {
         $tbody.append(
-          '<tr><td colspan="7" class="text-center dm-save-empty">No accession decisions available to save.</td></tr>'
+          ("<tr><td colspan=\"7\" class=\"text-center dm-save-empty\">" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("decision.js.no_accession_decisions_available_to_save", "No accession decisions available to save.") : "No accession decisions available to save.")).html() + "</td></tr>")
         );
         return;
       }
@@ -1541,18 +1541,18 @@
     function buildSavePayloadFromState(){
       var meetingCtx = getSelectedMeetingContext();
       if (!meetingCtx) {
-        alert('Please select one meeting first.');
+        alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("decision.js.please_select_one_meeting_first", "Please select one meeting first.") : 'Please select one meeting first.'));
         return null;
       }
 
       if (!STATE.list_id) {
-        alert('Please select one accession list first.');
+        alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("decision.js.please_select_one_accession_list_first", "Please select one accession list first.") : 'Please select one accession list first.'));
         return null;
       }
 
       var accessions = getDecisionRowsForSave();
       if (!accessions.length) {
-        alert('There are no accession decisions to save.');
+        alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("decision.js.there_are_no_accession_decisions_to_save", "There are no accession decisions to save.") : 'There are no accession decisions to save.'));
         return null;
       }
 
@@ -1587,7 +1587,7 @@
     async function saveAllDecisionsToController(payload){
       var $btn = $('#dm_confirm_save_all_btn');
       var originalText = $btn.text();
-      $btn.prop('disabled', true).text('Saving...');
+      $btn.prop('disabled', true).text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("trial.fieldmap.saving", "Saving...") : 'Saving...'));
 
       try {
         payload.meeting_notes = $.trim($('#dm-save-meeting-notes').val() || '');
@@ -1624,9 +1624,9 @@
           detail: { meeting_id: payload.meeting_id }
         }));
 
-        alert((data && (data.message || data.detail)) || 'All decisions were saved successfully.');
+        alert((data && (data.message || data.detail)) || (window.SGN && window.SGN.i18n ? window.SGN.i18n.p("decision.js.all_decisions_were_saved_successfully", "All decisions were saved successfully.") : "All decisions were saved successfully."));
       } catch (e) {
-        alert('Failed to save all decisions: ' + (e && e.message ? e.message : e));
+        alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("decision.js.failed_to_save_all_decisions", "Failed to save all decisions: ") : 'Failed to save all decisions: ') + (e && e.message ? e.message : e));
       } finally {
         $btn.prop('disabled', false).text(originalText);
       }
@@ -1635,12 +1635,12 @@
     function getRequiredMeetingAndListContext(){
       var meetingCtx = getSelectedMeetingContext();
       if (!meetingCtx) {
-        alert('Please select one meeting first.');
+        alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("decision.js.please_select_one_meeting_first", "Please select one meeting first.") : 'Please select one meeting first.'));
         return null;
       }
 
       if (!STATE.list_id) {
-        alert('Please select one accession list first.');
+        alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("decision.js.please_select_one_accession_list_first", "Please select one accession list first.") : 'Please select one accession list first.'));
         return null;
       }
 
@@ -1671,7 +1671,7 @@
 
       var $btn = $('#dm_upload_template_btn');
       var originalText = $btn.text();
-      $btn.prop('disabled', true).text('Uploading...');
+      $btn.prop('disabled', true).text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("decision.js.uploading", "Uploading...") : 'Uploading...'));
 
       try {
         var resp = await fetch((window.DM_API_BASE || '/ajax/decisionmeeting') + '/upload_decision_template', {
@@ -1687,7 +1687,7 @@
 
         replaceDecisionRows(data.rows || []);
       } catch (e) {
-        alert('Failed to upload decision Excel file: ' + (e && e.message ? e.message : e));
+        alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("decision.js.failed_to_upload_decision_excel_file", "Failed to upload decision Excel file: ") : 'Failed to upload decision Excel file: ') + (e && e.message ? e.message : e));
       } finally {
         $btn.prop('disabled', false).text(originalText);
         $('#dm_upload_template_file').val('');
@@ -1699,7 +1699,7 @@
         var id = $(this).val() || '';
 
         if (id && !getSelectedMeetingContext()) {
-          alert('Please select one meeting first.');
+          alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("decision.js.please_select_one_meeting_first", "Please select one meeting first.") : 'Please select one meeting first.'));
           $(this).val('');
           STATE.list_id = '';
           STATE.rows = [];
@@ -1868,7 +1868,7 @@
         }
 
         if (!meetingDate || !meetingYearFull) {
-          alert('Please select one meeting first so the year can be taken from the meeting date.');
+          alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("decision.js.please_select_one_meeting_first_so_the_year_can_be_taken_from_the_meetin", "Please select one meeting first so the year can be taken from the meeting date.") : 'Please select one meeting first so the year can be taken from the meeting date.'));
           this.value = '';
           applyDecisionColor(this);
           STATE.decisionsMap.set(keyFor(acc, bp), '');
@@ -1895,7 +1895,7 @@
               var allowedStages = Array.isArray(resp && resp.allowed_stages) ? resp.allowed_stages : [];
 
               if (!allowedStages.length) {
-                alert((resp && resp.warning) || 'No valid target stages available for this accession.');
+                alert((resp && resp.warning) || (window.SGN && window.SGN.i18n ? window.SGN.i18n.p("decision.js.no_valid_target_stages_available_for_this_accession", "No valid target stages available for this accession.") : "No valid target stages available for this accession."));
                 updateNewStageValue('', v);
                 return;
               }
@@ -2034,7 +2034,7 @@
   }
 
   function showErr(msg){
-    $('#create-meeting-error').text(msg || 'Unexpected error').show();
+    $('#create-meeting-error').text(msg || (window.SGN && window.SGN.i18n ? window.SGN.i18n.p("decision.js.unexpected_error", "Unexpected error") : "Unexpected error")).show();
   }
 
   function hideErr(){
@@ -2075,7 +2075,7 @@
         if ($sel.data('select2')) $sel.select2('destroy');
         $sel.select2({
           width: '100%',
-          placeholder: 'Select breeding program(s)',
+          placeholder: (window.SGN && window.SGN.i18n ? window.SGN.i18n.p("decision.js.select_breeding_program_s", "Select breeding program(s)") : 'Select breeding program(s)'),
           closeOnSelect: false
         });
         return;
@@ -2213,7 +2213,7 @@
 
   function dm_updateSelectedAttendeeCount() {
     const count = PEOPLE_SELECTED.size;
-    $('#people_selected_count').text(count + ' selected');
+    $('#people_selected_count').text(count + (window.SGN && window.SGN.i18n ? window.SGN.i18n.p("decision.js.selected", " selected") : ' selected'));
   }
 
   function normPerson(p){
@@ -2247,7 +2247,7 @@
   function buildPager(total, page, pageSize){
     const totalPages = Math.max(1, Math.ceil(total / pageSize));
     const cur = Math.min(Math.max(1, page), totalPages);
-    let html = '<nav id="people_pager" aria-label="Attendees pagination"><ul class="pagination pagination-sm" style="margin:6px 0;">';
+    let html = ("<nav id=\"people_pager\" aria-label=\"" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("decision.js.attendees_pagination", "Attendees pagination") : "Attendees pagination")).html() + "\"><ul class=\"pagination pagination-sm\" style=\"margin:6px 0;\">");
     html += `<li class="page-item${cur===1?' disabled':''}"><a class="page-link" href="#" data-page="${cur-1}" aria-label="Previous">&laquo;</a></li>`;
     const span = 2;
     const start = Math.max(1, cur - span);
@@ -2270,7 +2270,7 @@
     if (PEOPLE_PAGE > totalPages) PEOPLE_PAGE = totalPages;
 
     if (!total) {
-      $tbody.html('<tr><td colspan="4">No people found.</td></tr>');
+      $tbody.html(("<tr><td colspan=\"4\">" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("decision.js.no_people_found", "No people found.") : "No people found.")).html() + "</td></tr>"));
       $('#people_pager').remove();
       dm_syncSelectAllState();
       dm_updateSelectedAttendeeCount();
@@ -2295,7 +2295,7 @@
             + `<input type="checkbox" class="person-check attendee-check" id="${id}"`
               + ` data-key="${safeKey}" data-email="${safeEmail}" data-first="${safeFirst}" data-last="${safeLast}"${checked}>`
           + '</td>'
-          + `<td><label for="${id}" class="sr-only">Select ${safeFirst || 'person'}</label>${safeFirst}</td>`
+          + `<td><label for="${id}" class="sr-only">${jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("styleguide.demo.trial_table.select", "Select") : "Select")).html()} ${safeFirst || 'person'}</label>${safeFirst}</td>`
           + `<td>${safeLast}</td>`
           + `<td>${safeEmail}</td>`
         + '</tr>'
@@ -2334,7 +2334,7 @@
     if (typeof API_BASE === 'undefined' || !API_BASE) return;
 
     const term = $.trim($('#people_search').val() || '');
-    $tbody.html('<tr><td colspan="4">Loading…</td></tr>');
+    $tbody.html(("<tr><td colspan=\"4\">" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("decision.js.loading", "Loading…") : "Loading…")).html() + "</td></tr>"));
 
     $.ajax({
       url: API_BASE + '/people',
@@ -2347,7 +2347,7 @@
       applyPeopleSearch();
     })
     .fail(function(){
-      $tbody.html('<tr><td colspan="4">Failed to load.</td></tr>');
+      $tbody.html(("<tr><td colspan=\"4\">" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("decision.js.failed_to_load.4e3e44d", "Failed to load.") : "Failed to load.")).html() + "</td></tr>"));
     });
   }
 
@@ -2658,7 +2658,7 @@
 
   function meetingCheckboxHtml(id, name, date, saved){
     if (saved) {
-      return '<span class="dm-meeting-select-disabled" title="This meeting has already been saved.">Saved</span>';
+      return ("<span class=\"dm-meeting-select-disabled\" title=\"" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("decision.js.this_meeting_has_already_been_saved", "This meeting has already been saved.") : "This meeting has already been saved.")).html() + "\">" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("decision.js.saved", "Saved") : "Saved")).html() + "</span>");
     }
     return '<input type="checkbox" class="dm-meeting-check" ' +
            'data-meeting-id="' + escAttr(id) + '" ' +
@@ -2670,7 +2670,7 @@
     return '<button type="button" class="btn btn-sm btn-default dm-meeting-download-btn" ' +
            'data-meeting-id="' + escAttr(id) + '" ' +
            'data-meeting-saved="' + (saved ? '1' : '0') + '">' +
-           'Download</button>';
+           ("" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("accession.files.files.download", "Download") : "Download")).html() + "</button>");
   }
 
   function getSelectedMeeting(){
@@ -2688,7 +2688,7 @@
   window.requireSelectedDecisionMeeting = function(){
     var sel = getSelectedMeeting();
     if (!sel) {
-      alert('Please select one meeting first.');
+      alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("decision.js.please_select_one_meeting_first", "Please select one meeting first.") : 'Please select one meeting first.'));
       return null;
     }
     return sel;
@@ -2711,13 +2711,13 @@
       scrollCollapse: true,
       deferRender: true,
       columns: [
-        { title:'Select',    className:'text-center', orderable:false, searchable:false },
-        { title:'Meeting',   className:'text-left'   },
-        { title:'Programs',  className:'text-left'   },
-        { title:'Date',      className:'text-nowrap' },
-        { title:'Location',  className:'text-left'   },
-        { title:'Attendees', className:'text-left'   },
-        { title:'Download',  className:'text-center', orderable:false, searchable:false }
+        { title:(window.SGN && window.SGN.i18n ? window.SGN.i18n.p("styleguide.demo.trial_table.select", "Select") : 'Select'),    className:'text-center', orderable:false, searchable:false },
+        { title:(window.SGN && window.SGN.i18n ? window.SGN.i18n.p("decision.root.meeting", "Meeting") : 'Meeting'),   className:'text-left'   },
+        { title:(window.SGN && window.SGN.i18n ? window.SGN.i18n.p("decision.root.programs", "Programs") : 'Programs'),  className:'text-left'   },
+        { title:(window.SGN && window.SGN.i18n ? window.SGN.i18n.p("global.file_dump_share_files.date", "Date") : 'Date'),      className:'text-nowrap' },
+        { title:(window.SGN && window.SGN.i18n ? window.SGN.i18n.p("accession.stock.trials.header.location", "Location") : 'Location'),  className:'text-left'   },
+        { title:(window.SGN && window.SGN.i18n ? window.SGN.i18n.p("decision.root.attendees", "Attendees") : 'Attendees'), className:'text-left'   },
+        { title:(window.SGN && window.SGN.i18n ? window.SGN.i18n.p("accession.files.files.download", "Download") : 'Download'),  className:'text-center', orderable:false, searchable:false }
       ],
       drawCallback: function () {
         var api = this.api();
@@ -2802,7 +2802,7 @@
     var reportWindow = window.open('', '_blank');
 
     if (!reportWindow) {
-      throw new Error('Your browser blocked the report window. Allow pop-ups for this site and try again.');
+      throw new Error((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("decision.js.your_browser_blocked_the_report_window_allow_pop_ups_for_this_site_and_t", "Your browser blocked the report window. Allow pop-ups for this site and try again.") : 'Your browser blocked the report window. Allow pop-ups for this site and try again.'));
     }
     reportWindow.opener = null;
 
@@ -2873,16 +2873,16 @@
       var original = $btn.text();
 
       if (!meetingId) {
-        alert('Meeting ID not found.');
+        alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("decision.js.meeting_id_not_found", "Meeting ID not found.") : 'Meeting ID not found.'));
         return;
       }
 
-      $btn.prop('disabled', true).text('Preparing...');
+      $btn.prop('disabled', true).text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("decision.js.preparing", "Preparing...") : 'Preparing...'));
 
       try {
         await downloadMeetingReport(meetingId);
       } catch (e) {
-        alert(e && e.message ? e.message : 'Could not open the meeting report.');
+        alert(e && e.message ? e.message : (window.SGN && window.SGN.i18n ? window.SGN.i18n.p("decision.js.could_not_open_the_meeting_report", "Could not open the meeting report.") : "Could not open the meeting report."));
       } finally {
         $btn.prop('disabled', false).text(original);
       }

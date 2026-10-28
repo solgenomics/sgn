@@ -15,6 +15,7 @@ Running Genotype QC from an allele matrix file (Intertek format)
 package SGN::Controller::AJAX::GenotypingQC;
 
 use Moose;
+use SGN::I18N ();
 use Try::Tiny;
 use DateTime;
 use File::Slurp;
@@ -43,6 +44,7 @@ __PACKAGE__->config(
 sub upload_genotype_qc_verify :  Path('/ajax/genotype_qc/upload') : ActionClass('REST') { }
 sub upload_genotype_qc_verify_POST : Args(0) {
     my ($self, $c) = @_;
+    my $i18n = SGN::I18N::translate($c);
     my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;    
     my $schema = $c->dbic_schema("Bio::Chado::Schema", "sgn_chado", $sp_person_id);
     my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema", undef, $sp_person_id);
@@ -60,7 +62,7 @@ sub upload_genotype_qc_verify_POST : Args(0) {
         my $dbh = $c->dbc->dbh;
         my @user_info = CXGN::Login->new($dbh)->query_from_cookie($session_id);
         if (!$user_info[0]){
-            $c->stash->{rest} = {error=>'You must be logged in to upload this seedlot info!'};
+            $c->stash->{rest} = {error=>SGN::I18N::translate($i18n, "accessions.server.file_login", "You must be logged in to upload this seedlot info!")};
             $c->detach();
         }
         $user_id = $user_info[0];
@@ -69,7 +71,7 @@ sub upload_genotype_qc_verify_POST : Args(0) {
         $user_name = $p->get_username;
     } else{
         if (!$c->user){
-            $c->stash->{rest} = {error=>'You must be logged in to upload this seedlot info!'};
+            $c->stash->{rest} = {error=>SGN::I18N::translate($i18n, "accessions.server.file_login", "You must be logged in to upload this seedlot info!")};
             $c->detach();
         }
         $user_id = $c->user()->get_object()->get_sp_person_id();
@@ -78,7 +80,7 @@ sub upload_genotype_qc_verify_POST : Args(0) {
     }
 
     if ($user_role ne 'submitter' && $user_role ne 'curator') {
-        $c->stash->{rest} = { error => 'Must have correct permissions to upload VCF genotypes! Please contact us.' };
+        $c->stash->{rest} = { error => SGN::I18N::translate($i18n, "genotype.protocol.server.must_have_correct_permissions_to_upload_vcf_genotypes_please_contact_us", "Must have correct permissions to upload VCF genotypes! Please contact us.") };
         $c->detach();
     }
 
@@ -87,7 +89,7 @@ sub upload_genotype_qc_verify_POST : Args(0) {
     my $protocol_id = $c->req->param('genotype_qc_protocol_id');
 
     if (!defined($upload_file)) {
-        $c->stash->{rest} = { error => 'Please provide a genotype qc file.' };
+        $c->stash->{rest} = { error => SGN::I18N::translate($i18n, "genotype.protocol.server.please_provide_a_genotype_qc_file", "Please provide a genotype qc file.") };
         $c->detach();
     }
 
@@ -112,14 +114,15 @@ sub upload_genotype_qc_verify_POST : Args(0) {
     my $archived_filename_with_path = $uploader->archive();
     my $md5 = $uploader->get_md5($archived_filename_with_path);
     if (!$archived_filename_with_path) {
-        push @error_status, "Could not save file $upload_original_name in archive.";
+        push @error_status, SGN::I18N::translate($i18n, "genotype.protocol.qc.archive_error", "Could not save file %{filename} in archive.", {filename => ("" . $upload_original_name)});
         return (\@success_status, \@error_status);
     } else {
-        push @success_status, "File $upload_original_name saved in archive.";
+        push @success_status, SGN::I18N::translate($i18n, "genotype.protocol.qc.archived", "File %{filename} saved in archive.", {filename => ("" . $upload_original_name)});
     }
     unlink $upload_tempfile;
 
     my $parser = CXGN::Genotype::ParseUpload->new({
+        i18n => $i18n,
         chado_schema => $schema,
         filename => $archived_filename_with_path,
         observation_unit_type_name => 'accession',
@@ -131,7 +134,7 @@ sub upload_genotype_qc_verify_POST : Args(0) {
     if (!$parsed_data) {
         my $return_error = '';
         if (!$parser->has_parse_errors() ){
-            $return_error = "Could not get parsing errors";
+            $return_error = SGN::I18N::translate($i18n, "accessions.server.parse_errors_missing", "Could not get parsing errors");
             $c->stash->{rest} = {error_string => $return_error,};
         } else {
             $parse_errors = $parser->get_parse_errors();

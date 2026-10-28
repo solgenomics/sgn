@@ -1,6 +1,9 @@
 #!/usr/bin/perl -w
 
 use strict;
+use SGN::I18N ();
+use CatalystX::GlobalContext qw( $c );
+my SGN::I18N $ui_i18n = SGN::I18N::translate($c);
 use CXGN::Page;
 use CXGN::DB::Connection;
 
@@ -31,8 +34,8 @@ $ssr_sth->execute;
 while (my ($ssr_id, $marker_id, $ssr_name, $est_trace, $start_primer, $end_primer, $pcr_length, $ann_high, $ann_low) = $ssr_sth->fetchrow_array) {
     $ann_high ||= "n/a";
     $ann_low ||= "n/a";
-    $marker_id || &local_abort("No marker_id detected for $ssr_name.\n");
-    $ssr_id || &local_abort("No ssr_id detected for $ssr_name.\n");
+    $marker_id || &local_abort((SGN::I18N::translate($ui_i18n, "genotype.marker.no_field_detected_for", "No %{field} detected for ", {field => "marker_id"}, {entities => ($ui_i18n && $ui_i18n->locale ne 'en' ? '<>&\x80-\x{10FFFF}' : '')}) . ("" . "$ssr_name") . ".\n"));
+    $ssr_id || &local_abort((SGN::I18N::translate($ui_i18n, "genotype.marker.no_field_detected_for", "No %{field} detected for ", {field => "ssr_id"}, {entities => ($ui_i18n && $ui_i18n->locale ne 'en' ? '<>&\x80-\x{10FFFF}' : '')}) . ("" . "$ssr_name") . ".\n"));
     # Get the repeat motifs.
     my @repeat_motifs=();
     my @repeat_numbers=();
@@ -60,32 +63,32 @@ while (my ($ssr_id, $marker_id, $ssr_name, $est_trace, $start_primer, $end_prime
     unless (defined($mapped)) {$mapped='';}
 
     push @ssr_list, "<tr><td><a href='$ssr_page$marker_id'>" . $ssr_name . 
-	"</a></td><td align='center'>" . ($est_trace ? "<a href='$est_page$est_trace'>$est_trace</a>" : "unknown") . "</td>" .  
+	"</a></td><td align='center'>" . ($est_trace ? "<a href='$est_page$est_trace'>$est_trace</a>" : SGN::I18N::translate($ui_i18n, "cross.pages.unknown", "unknown", undef, {entities => ($ui_i18n && $ui_i18n->locale ne 'en' ? '<>&\x80-\x{10FFFF}' : '')})) . "</td>" .
 	    "<td>" . ($unigene_matches[$ssr_id] ? "<a href='$ssr_page$ssr_id'>$unigene_matches[$ssr_id]</a>" : "0") . "</td>" . 
 		"<td>" . join("<br />", @repeat_motifs) .
 		    "</td><td align='center'>" . join("<br />", @repeat_numbers) .
-			"</td><td><b>fwd (5'->3'):</b> " . ($start_primer || "unknown") . "<br /><b>rev (5'->3'):</b> " . ($end_primer || "unknown") .
-			    "</td><td align='center'>" . ($pcr_length || "unknown") .
-				"</td><td>low: " . $ann_low . "<br />high: " . $ann_high .
-				    "</td><td align='center'>" . ($mapped ? "mapped" : "not mapped") . "</td></tr>\n";
+			("</td><td><b>" . SGN::I18N::translate($ui_i18n, "genotype.marker.fwd_5_3", "fwd (5'->3'):", undef, {entities => ($ui_i18n && $ui_i18n->locale ne 'en' ? '<>&\x80-\x{10FFFF}' : '')}) . "</b> ") . ($start_primer || SGN::I18N::translate($ui_i18n, "cross.pages.unknown", "unknown", undef, {entities => ($ui_i18n && $ui_i18n->locale ne 'en' ? '<>&\x80-\x{10FFFF}' : '')})) . ("<br /><b>" . SGN::I18N::translate($ui_i18n, "genotype.marker.rev_5_3", "rev (5'->3'):", undef, {entities => ($ui_i18n && $ui_i18n->locale ne 'en' ? '<>&\x80-\x{10FFFF}' : '')}) . "</b> ") . ($end_primer || SGN::I18N::translate($ui_i18n, "cross.pages.unknown", "unknown", undef, {entities => ($ui_i18n && $ui_i18n->locale ne 'en' ? '<>&\x80-\x{10FFFF}' : '')})) .
+			    "</td><td align='center'>" . ($pcr_length || SGN::I18N::translate($ui_i18n, "cross.pages.unknown", "unknown", undef, {entities => ($ui_i18n && $ui_i18n->locale ne 'en' ? '<>&\x80-\x{10FFFF}' : '')})) .
+				("</td><td>" . SGN::I18N::translate($ui_i18n, "genotype.marker.low", "low:", undef, {entities => ($ui_i18n && $ui_i18n->locale ne 'en' ? '<>&\x80-\x{10FFFF}' : '')}) . " ") . $ann_low . ("<br />" . SGN::I18N::translate($ui_i18n, "genotype.marker.high", "high:", undef, {entities => ($ui_i18n && $ui_i18n->locale ne 'en' ? '<>&\x80-\x{10FFFF}' : '')}) . " ") . $ann_high .
+				    "</td><td align='center'>" . ($mapped ? SGN::I18N::translate($ui_i18n, "genotype.marker.mapped", "mapped", undef, {entities => ($ui_i18n && $ui_i18n->locale ne 'en' ? '<>&\x80-\x{10FFFF}' : '')}) : "not mapped") . "</td></tr>\n";
     
 }
 $locs_sth->finish;
 $repeats_sth->finish;
  
 # Print the page.
-$page->header( "SSR Markers" );
+$page->header( SGN::I18N::translate($ui_i18n, "genotype.marker.ssr_markers", "SSR Markers", undef, {entities => ($ui_i18n && $ui_i18n->locale ne 'en' ? '<>&\x80-\x{10FFFF}' : '')}) );
 
 print "<table summary=\"\" border=\"2\" width=\"710\" align=\"center\">\n";
-print "<tr>\n<td width=\"60\"><b>SSR name</b></td>\n";
-print "<td width=\"60\" align=\"center\"><b>EST trace</b></td>\n";
-print "<td width=\"100\" align=\"center\"><b>Unigene BLAST matches</b></td>\n";
-print "<td width=\"120\" align=\"center\"><b>Repeat motifs</b></td>\n";
-print "<td width=\"35\" align=\"center\"><b>Repeat number</b></td>\n";
-print "<td width=\"50\" align=\"center\"><b>PCR primers</b></td>\n";
-print "<td width=\"35\" align=\"center\"><b>PCR product length</b></td>\n";
-print "<td width=\"50\" align=\"center\"><b>Annealing temperature</b></td>\n";
-print "<td width=\"50\" align=\"center\"><b>Mapped</b></td>\n</tr>\n";
+print ("<tr>\n<td width=\"60\"><b>" . SGN::I18N::translate($ui_i18n, "genotype.marker.ssr_name", "SSR name", undef, {entities => ($ui_i18n && $ui_i18n->locale ne 'en' ? '<>&\x80-\x{10FFFF}' : '')}) . "</b></td>\n");
+print ("<td width=\"60\" align=\"center\"><b>" . SGN::I18N::translate($ui_i18n, "genotype.marker.est_trace", "EST trace", undef, {entities => ($ui_i18n && $ui_i18n->locale ne 'en' ? '<>&\x80-\x{10FFFF}' : '')}) . "</b></td>\n");
+print ("<td width=\"100\" align=\"center\"><b>" . SGN::I18N::translate($ui_i18n, "genotype.marker.unigene_blast_matches", "Unigene BLAST matches", undef, {entities => ($ui_i18n && $ui_i18n->locale ne 'en' ? '<>&\x80-\x{10FFFF}' : '')}) . "</b></td>\n");
+print ("<td width=\"120\" align=\"center\"><b>" . SGN::I18N::translate($ui_i18n, "genotype.marker.repeat_motifs", "Repeat motifs", undef, {entities => ($ui_i18n && $ui_i18n->locale ne 'en' ? '<>&\x80-\x{10FFFF}' : '')}) . "</b></td>\n");
+print ("<td width=\"35\" align=\"center\"><b>" . SGN::I18N::translate($ui_i18n, "phenotype.repeat_number", "Repeat number", undef, {entities => ($ui_i18n && $ui_i18n->locale ne 'en' ? '<>&\x80-\x{10FFFF}' : '')}) . "</b></td>\n");
+print ("<td width=\"50\" align=\"center\"><b>" . SGN::I18N::translate($ui_i18n, "genotype.marker.pcr_primers", "PCR primers", undef, {entities => ($ui_i18n && $ui_i18n->locale ne 'en' ? '<>&\x80-\x{10FFFF}' : '')}) . "</b></td>\n");
+print ("<td width=\"35\" align=\"center\"><b>" . SGN::I18N::translate($ui_i18n, "genotype.marker.pcr_product_length", "PCR product length", undef, {entities => ($ui_i18n && $ui_i18n->locale ne 'en' ? '<>&\x80-\x{10FFFF}' : '')}) . "</b></td>\n");
+print ("<td width=\"50\" align=\"center\"><b>" . SGN::I18N::translate($ui_i18n, "genotype.marker.annealing_temperature", "Annealing temperature", undef, {entities => ($ui_i18n && $ui_i18n->locale ne 'en' ? '<>&\x80-\x{10FFFF}' : '')}) . "</b></td>\n");
+print ("<td width=\"50\" align=\"center\"><b>" . SGN::I18N::translate($ui_i18n, "genotype.marker.mapped_879a69", "Mapped", undef, {entities => ($ui_i18n && $ui_i18n->locale ne 'en' ? '<>&\x80-\x{10FFFF}' : '')}) . "</b></td>\n</tr>\n");
 
 print @ssr_list;
 
@@ -104,13 +107,13 @@ sub local_abort {
 
     my ($errstrn) = @_;
     if (not $errstrn) {
-	$errstrn = "Error reading SSR data"; 
+	$errstrn = SGN::I18N::translate($ui_i18n, "genotype.marker.error_reading_ssr_data_140275", "Error reading SSR data", undef, {entities => ($ui_i18n && $ui_i18n->locale ne 'en' ? '<>&\x80-\x{10FFFF}' : '')});
     }
-    $page->header( "Error reading SSR data." ,"Error reading SSR data." );
+    $page->header( SGN::I18N::translate($ui_i18n, "genotype.marker.error_reading_ssr_data", "Error reading SSR data.", undef, {entities => ($ui_i18n && $ui_i18n->locale ne 'en' ? '<>&\x80-\x{10FFFF}' : '')}) ,SGN::I18N::translate($ui_i18n, "genotype.marker.error_reading_ssr_data", "Error reading SSR data.", undef, {entities => ($ui_i18n && $ui_i18n->locale ne 'en' ? '<>&\x80-\x{10FFFF}' : '')}) );
     if ($errstrn) {
 	print "$errstrn\n";
     } else {
-	print "<I>There has been an error generating data.<br />Please email Robert Ahrens at <a href='mailto:ra97\@cornell.edu'>ra97\@cornell.edu</a> to let him know you are experiencing difficulties.</I>";
+	print ("<I>" . SGN::I18N::translate($ui_i18n, "genotype.marker.there_has_been_an_error_generating_data", "There has been an error generating data.", undef, {entities => ($ui_i18n && $ui_i18n->locale ne 'en' ? '<>&\x80-\x{10FFFF}' : '')}) . "<br />" . SGN::I18N::translate($ui_i18n, "genotype.marker.please_email_robert_ahrens_at", "Please email Robert Ahrens at", undef, {entities => ($ui_i18n && $ui_i18n->locale ne 'en' ? '<>&\x80-\x{10FFFF}' : '')}) . " <a href='mailto:ra97\@cornell.edu'>ra97\@cornell.edu</a> " . SGN::I18N::translate($ui_i18n, "genotype.marker.to_let_him_know_you_are_experiencing_difficulties", "to let him know you are experiencing difficulties.", undef, {entities => ($ui_i18n && $ui_i18n->locale ne 'en' ? '<>&\x80-\x{10FFFF}' : '')}) . "</I>");
     }
     $page->footer();
     exit;

@@ -7,6 +7,9 @@ CXGN::Transformation::AddTransformationProject - a module for adding transformat
 
 package CXGN::Transformation::AddTransformationProject;
 
+use SGN::I18N ();
+use CatalystX::GlobalContext '$c';
+
 use Moose;
 use MooseX::FollowPBP;
 use Moose::Util::TypeConstraints;
@@ -71,14 +74,15 @@ sub existing_transformation_project {
 
 sub save_transformation_project {
     my $self = shift;
+    my SGN::I18N $ui_save_transformation_project_i18n = SGN::I18N::translate($c);
     my $schema = $self->get_chado_schema();
 
     if ($self->existing_transformation_project()){
-        return {error => "Transformation project not saved: Project name already exists"};
+        return {error => (SGN::I18N::translate($ui_save_transformation_project_i18n, 'transformation.transformation_project_not_saved_project_name_already_exists', 'Transformation project not saved: Project name already exists'))};
     }
 
     if (!$self->get_breeding_program_id()){
-        return {error => "Transformation project not saved: Breeding program does not exist"};
+        return {error => (SGN::I18N::translate($ui_save_transformation_project_i18n, 'transformation.transformation_project_not_saved_breeding_program_does_not_exist', 'Transformation project not saved: Breeding program does not exist'))};
     }
 
     my $project_year_cvterm = SGN::Model::Cvterm->get_cvterm_row($schema,'project year', 'project_property');

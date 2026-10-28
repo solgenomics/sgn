@@ -26,7 +26,7 @@ $user_can_modify
 </style>
 
 <div class="well well-sm" id="phenotypes_recorded_observation_level">
-	<center><h4>Traits recorded across observation levels</h4></center></hr>
+	<center><h4><% $c->i18n->p('trial.card.raw_data.levels_title', 'Traits recorded across observation levels') |h %></h4></center></hr>
 	<div id="phenotypes_measured_per_observation_level">
 		<div class="row">
 			<div class="col-sm-8">
@@ -34,15 +34,15 @@ $user_can_modify
 				<table id="phenotypes_measured_per_observation_level" style= "text-align:left; width:100%;">
 					<thead>
 						<tr>
-							<th>Observation Level </th>
-							<th>Number of Traits Measured</th>
+							<th><% $c->i18n->p('trial.card.raw_data.header.level', 'Observation Level ') |h %></th>
+							<th><% $c->i18n->p('trial.card.raw_data.header.trait_count', 'Number of Traits Measured') |h %></th>
 						</tr>
 					</thead>
 					<tbody>
-						<tr><td>Plot</td><td id="phenotypes_per_plot"></td></tr>
-						<tr><td>Plant</td><td id="phenotypes_per_plant"></td></tr>
-						<tr><td>Sub plot</td><td id="phenotypes_per_subplot"></td></tr>
-						<tr><td>Tissue sample</td><td id="phenotypes_per_tissue_sample"></td></tr>
+						<tr><td><% $c->i18n->p('trial.card.raw_data.level.plot', 'Plot') |h %></td><td id="phenotypes_per_plot"></td></tr>
+						<tr><td><% $c->i18n->p('trial.card.raw_data.level.plant', 'Plant') |h %></td><td id="phenotypes_per_plant"></td></tr>
+						<tr><td><% $c->i18n->p('trial.card.raw_data.level.subplot', 'Sub plot') |h %></td><td id="phenotypes_per_subplot"></td></tr>
+						<tr><td><% $c->i18n->p('trial.card.raw_data.level.tissue_sample', 'Tissue sample') |h %></td><td id="phenotypes_per_tissue_sample"></td></tr>
 					</tbody>
 				</table>
 				</form>
@@ -52,26 +52,26 @@ $user_can_modify
 </div>
 
 <div class="well well-sm" id="raw_phenotypic_data">
-	<h4 style= "text-align:center">Choose trait and observation level</h4>
+	<h4 style= "text-align:center"><% $c->i18n->p('trial.card.raw_data.choose_trait_level', 'Choose trait and observation level') |h %></h4>
 	<br/>
 
 	<table>
 	<tr>
 	    <td>
 			<div class="form-group">
-				<label for="trait_selector_for_raw_data"> Trait:</label>
-	    	  <div id="trait_selector_for_raw_data">[Loading...]</div>
+				<label for="trait_selector_for_raw_data"> <% $c->i18n->p('trial.card.raw_data.trait_label', 'Trait:') |h %></label>
+            <div id="trait_selector_for_raw_data"><% $c->i18n->p('trial.card.raw_data.loading', '[Loading...]') |h %></div>
 			</div>
 	    </td>
 	    <td width="30"></td>
 	    <td>
 			<div class="form-group">
-				<label for="raw_data_observation_level">Observation Level:</label>
+				<label for="raw_data_observation_level"><% $c->i18n->p('trial.card.raw_data.observation_level', 'Observation Level:') |h %></label>
 				<select class="form-control" id="raw_data_observation_level">
-					<option value="plot">Plots</option>
-					<option value="plant">Plants</option>
-					<option value="subplot">Subplots</option>
-					<option value="tissue_sample">Tissue samples</option>
+					<option value="plot"><% $c->i18n->p('trial.card.raw_data.level.plots', 'Plots') |h %></option>
+					<option value="plant"><% $c->i18n->p('trial.card.raw_data.level.plants', 'Plants') |h %></option>
+					<option value="subplot"><% $c->i18n->p('trial.card.raw_data.level.subplots', 'Subplots') |h %></option>
+					<option value="tissue_sample"><% $c->i18n->p('trial.card.raw_data.level.tissue_samples', 'Tissue samples') |h %></option>
 	      		</select>
 			</div>
 	    </td>
@@ -85,7 +85,7 @@ $user_can_modify
 				views are updated before analyses or
 				data downloads.
 				"></span> &nbsp;
-				<button id="refresh_phenoview_btn" class="btn btn-primary btn-sm">Refresh Materialized Phenotype View</button>
+				<button id="refresh_phenoview_btn" class="btn btn-primary btn-sm"><% $c->i18n->p('trial.card.raw_data.refresh_view', 'Refresh Materialized Phenotype View') |h %></button>
 			</div>
 		</td>
 	</tr>
@@ -93,14 +93,14 @@ $user_can_modify
 	<!--
 	    <td>
 			<div class="form-group">
-				<label for="raw_data_start_date">Start Date:</label>
+				<label for="raw_data_start_date"><% $c->i18n->p('trial.card.raw_data.start_date', 'Start Date:') |h %></label>
 				<input type="text" id="raw_data_start_date" title="raw_data_start_date"/>
 			</div>
 		</td>
 		<td width="30"></td>
 	    <td>
 			<div class="form-group">
-				<label for="raw_data_end_date"> End Date:</label>
+				<label for="raw_data_end_date"> <% $c->i18n->p('trial.card.raw_data.end_date', 'End Date:') |h %></label>
 				<input type="text" id="raw_data_end_date" title="raw_data_end_date"/>
 			</div>
 	    </td>
@@ -108,7 +108,7 @@ $user_can_modify
 	</tr>
 	<tr>
 	    <td colspan="4", style="text-align: center;">
-	      <button id="raw_data_trait_select_button" class="btn btn-primary">Submit</button>
+	      <button id="raw_data_trait_select_button" class="btn btn-primary"><% $c->i18n->p('trial.card.raw_data.submit', 'Submit') |h %></button>
 	    </td>
 	</tr>
 	</table>
@@ -170,7 +170,7 @@ function save_single_observation(observation_id) {
 		},
 		error : function() {
 			jQuery('#working_modal').modal("hide");
-			alert("Server error, check console.");
+			alert(window.SGN && SGN.i18n ? SGN.i18n.p('trial.card.raw_data.server_console_error', 'Server error, check console.') : 'Server error, check console.');
 		}
 	});
 }
@@ -240,7 +240,7 @@ jQuery(window).ready( function() {
 	   	})
         .fail(() => {
             jQuery('#working_modal').modal('hide');
-            alert('An error occurred while processing the request.');
+            alert(window.SGN && SGN.i18n ? SGN.i18n.p('trial.card.raw_data.request_error', 'An error occurred while processing the request.') : 'An error occurred while processing the request.');
         });;
     });
 	/*

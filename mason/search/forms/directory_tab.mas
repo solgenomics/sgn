@@ -26,7 +26,7 @@ Lukas Mueller <lam87@cornell.edu>
 </%perl>
 
   <table class="search_form_title"><tr><td>
-    <span class="search_form_title">Directory search</span>
+    <span class="search_form_title"><% $c->i18n->p('global.search.forms.directory_tab.directory_search', 'Directory search') |h %></span>
   </td>
   </tr>
   </table>

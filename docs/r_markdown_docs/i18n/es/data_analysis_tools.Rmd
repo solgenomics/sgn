@@ -1,0 +1,639 @@
+# Herramientas de análisis de datos {#data-analysis-tools}
+
+Las bases de datos SGN ofrecen herramientas para analizar datos fenotípicos, selección asistida por marcadores, análisis de secuencias y expresión, además de un explorador de ontologías. Estas herramientas están en el menú “Analizar”.
+
+```{r echo=FALSE, out.width="95%", fig.align="center"}
+knitr::include_graphics("assets/images/image114.png")
+```
+
+## Índice de selección {#selection-index}
+
+Para clasificar accesiones según varias características deseables, las bases de datos SGN ofrecen la herramienta “Índice de selección”, que permite asignar un peso a cada rasgo. Para abrirla, seleccione “Índice de selección” en el menú “Analizar”.
+
+```{r echo=FALSE, out.width="95%", fig.align="center"}
+knitr::include_graphics("assets/images/image251.png")
+```
+
+En la página “Índice de selección”, seleccione el ensayo que desea analizar.
+
+```{r echo=FALSE, out.width="95%", fig.align="center"}
+knitr::include_graphics("assets/images/image95.png")
+```
+
+Después de elegir el ensayo, en el cuadro “Rasgo” aparecerán los rasgos medidos en él.
+
+```{r echo=FALSE, out.width="95%", fig.align="center"}
+knitr::include_graphics("assets/images/image78.png")
+```
+
+Al seleccionar un rasgo para el análisis, se abre un diálogo con el rasgo elegido y un campo para asignarle un “Peso”. Después puede añadir otro rasgo con el enlace “Añadir otro rasgo”.
+
+```{r echo=FALSE, out.width="95%", fig.align="center"}
+knitr::include_graphics("assets/images/image304.png")
+```
+
+Al seleccionar otro rasgo, la página se actualizará y mostrará todos los rasgos incluidos en el análisis.
+
+```{r echo=FALSE, out.width="95%", fig.align="center"}
+knitr::include_graphics("assets/images/image76.png")
+```
+
+También puede elegir una accesión de referencia, incluir accesiones con fenotipos ausentes y escalar los valores respecto de la accesión de referencia. Cuando termine de configurar, pulse “Calcular clasificaciones”.
+
+```{r echo=FALSE, out.width="95%", fig.align="center"}
+knitr::include_graphics("assets/images/image343.png")
+```
+
+La herramienta genera una clasificación de accesiones según los parámetros indicados. Puede copiar los resultados, convertir la tabla a CSV o imprimirlos.
+
+```{r echo=FALSE, out.width="95%", fig.align="center"}
+knitr::include_graphics("assets/images/image326.png")
+```
+
+Al pulsar “Promedio sin ajustar” se mostrarán los valores fenotípicos promedio de las accesiones clasificadas.
+
+```{r echo=FALSE, out.width="95%", fig.align="center"}
+knitr::include_graphics("assets/images/image150.png")
+```
+
+La herramienta también permite guardar las accesiones mejor clasificadas directamente en “Listas”. Puede seleccionar una cantidad o un porcentaje.
+
+```{r echo=FALSE, out.width="95%", fig.align="center"}
+knitr::include_graphics("assets/images/image156.png")
+```
+
+## Selección genómica {#genomic-selection}
+
+La predicción del valor de mejora de un rasgo requiere uno o dos pasos, según la etapa del ciclo de mejoramiento. Primero se construye un modelo predictivo con una población de entrenamiento de clones con datos fenotípicos y genotípicos. Si aún no ha elegido progenitores para el primer ciclo de selección, puede usar los valores de mejora de la población de entrenamiento. En etapas posteriores, aplique el modelo a la población de selección. Todos los clones de ambas poblaciones deben existir en la base de datos.
+
+Para usar la selección genómica en [*cassavabase.org*](http://cassavabase.org/), seleccione “Selección genómica” en el menú desplegable “Analizar”.
+
+```{r echo=FALSE, out.width="95%", fig.align="center"}
+knitr::include_graphics("assets/images/image247.png")
+```
+
+Hay tres formas de crear un modelo para un rasgo.
+
+### Crear un modelo - Método 1: {#method-1}
+
+Una forma de crear un modelo es buscar, por nombre del rasgo, los ensayos en los que se fenotipó y usar uno o varios como población de entrenamiento. Por ejemplo, al buscar "mosaic disease severity" aparecerá una lista de ensayos que puede utilizar.
+
+```{r echo=FALSE, out.width="95%", fig.align="center"}
+knitr::include_graphics("assets/images/image160.png")
+```
+
+Aparecerá una lista de ensayos en los que se fenotipó el rasgo. Puede usar un solo ensayo como población de entrenamiento o combinar varios. Por ejemplo, puede crear una población con individuos de "cassava ibadan 2001/02" y "cassava ibadan 02/03" y construir un modelo de "cassava mosaic disease severity" con todos sus clones.
+
+```{r echo=FALSE, out.width="95%", fig.align="center"}
+knitr::include_graphics("assets/images/image249.png")
+```
+
+Seleccione los ensayos que desea combinar (del mismo color), pulse ‘Terminar la selección’ y luego “Combinar ensayos y crear el modelo”. Se generará el modelo y sus resultados. En la página de detalles puede consultar la descripción de los datos de entrada, los resultados y una interfaz para buscar poblaciones de selección a las que aplicar el modelo. La descripción incluye el número de clones fenotipados y marcadores, gráficos de dispersión y distribución de frecuencias de los fenotipos, la relación entre fenotipos y GEBVs y la estructura poblacional. Los resultados incluyen parámetros del modelo, heredabilidad del rasgo, precisión de predicción, GEBVs de los individuos de entrenamiento y efectos de marcadores.
+
+```{r echo=FALSE, out.width="95%", fig.align="center"}
+knitr::include_graphics("assets/images/image330.png")
+```
+
+Expanda cada sección para ver la información detallada.
+
+Al expandir ‘Datos fenotípicos del rasgo’, verá gráficos para explorar los datos fenotípicos del modelo. Puede evaluarlos con gráficos de dispersión, histogramas y estadísticas descriptivas.
+
+```{r echo=FALSE, out.width="95%", fig.align="center"}
+knitr::include_graphics("assets/images/image244.png")
+```
+
+```{r echo=FALSE, out.width="95%", fig.align="center"}
+knitr::include_graphics("assets/images/image263.png")
+```
+
+La recta de regresión entre fenotipos observados y GEBVs muestra la relación entre ambos.
+
+```{r echo=FALSE, out.width="95%", fig.align="center"}
+knitr::include_graphics("assets/images/image83.png")
+```
+
+También puede usar PCA para explorar si hay subgrupos en la población de entrenamiento.
+
+```{r echo=FALSE, out.width="95%", fig.align="center"}
+knitr::include_graphics("assets/images/image93.png")
+```
+
+Para comprobar la precisión mediante una validación cruzada de 10 pliegues, expanda la sección ‘precisión del modelo’.
+
+```{r echo=FALSE, out.width="95%", fig.align="center"}
+knitr::include_graphics("assets/images/image328.png")
+```
+
+También puede descargar los efectos de marcadores. Expanda ‘Efectos de marcadores’ y pulse ‘Descargar todos los efectos de marcadores’ para obtener un archivo delimitado por tabuladores.
+
+```{r echo=FALSE, out.width="95%", fig.align="center"}
+knitr::include_graphics("assets/images/image74.png")
+```
+
+Los valores de mejora de los individuos de entrenamiento se muestran en un gráfico. Pase el cursor sobre un punto para ver el clon y su valor de mejora. Puede ampliar una zona seleccionándola en el gráfico. También puede descargarlos con el enlace “Descargar todos los GEBVs”.
+
+```{r echo=FALSE, out.width="95%", fig.align="center"}
+knitr::include_graphics("assets/images/image147.png")
+```
+
+
+#### Estimar valores de mejora en una población de selección {#estimating-breeding-values-in-a-selection-population -}
+
+Si ya existe una población de selección en la base, puede aplicar el modelo desde la misma página y estimar los valores de mejora de todos sus clones. Busque la población con la interfaz de búsqueda o cree una lista propia mediante la [*interfaz de listas*](#working-with-lists). Al pulsar “Buscar todas las poblaciones de selección pertinentes” verá todas las poblaciones pertinentes, pero la búsqueda puede tardar debido al gran número de poblaciones y al filtrado. Por eso, suele ser más rápido buscar cada población por nombre. Si ha iniciado sesión, también verá su lista personalizada de clones genotipados.
+
+```{r echo=FALSE, out.width="95%", fig.align="center"}
+knitr::include_graphics("assets/images/image338.png")
+```
+
+Para aplicar el modelo a una población de selección, pulse su nombre o “Predecir ahora” para obtener los valores de mejora predichos. Siga el enlace del nombre o acrónimo del rasgo para ver un gráfico interactivo y descargar los valores de la población.
+
+```{r echo=FALSE, out.width="95%", fig.align="center"}
+knitr::include_graphics("assets/images/image334.png")
+```
+
+### Crear un modelo - Método 2 {#method-2}
+
+Otra forma de crear un modelo es seleccionar un ensayo en lugar de buscar un rasgo específico. Resulta útil cuando conoce un ensayo pertinente para el ambiente al que desea adaptar el material. Este método permite crear modelos y predecir valores genómicos estimados de mejora (GEBVs) para varios rasgos de un ensayo a la vez. También puede calcular un índice de selección para los clones cuando se estiman GEBVs de varios rasgos.
+
+Para ello, seleccione “Selección genómica” en el menú “Analizar”. Se abrirá la misma página inicial que en el Método 1. En lugar de introducir una búsqueda en “Buscar un rasgo”, pulse “Usar un rasgo como población de ensayo”. Se desplegará un menú con los ensayos disponibles.
+
+```{r echo=FALSE, out.width="95%", fig.align="center"}
+knitr::include_graphics("assets/images/image344.png")
+```
+
+```{r echo=FALSE, out.width="25%", fig.align="center"}
+knitr::include_graphics("assets/images/image329.png")
+```
+
+```{r echo=FALSE, out.width="95%", fig.align="center"}
+knitr::include_graphics("assets/images/image341.png")
+```
+
+Para crear el modelo, seleccione un ensayo existente. En este ejemplo se usan los datos del ensayo "Cassava Ibadan 2002/03". Al pulsarlo, accederá a una página con información como el número de marcadores y clones fenotipados.
+
+```{r echo=FALSE, out.width="95%", fig.align="center"}
+knitr::include_graphics("assets/images/image322.png")
+```
+
+Además del número de clones fenotipados y marcadores, la página del ensayo muestra información y gráficos de correlación fenotípica entre los rasgos. Pase el cursor sobre el gráfico para consultar los valores de correlación entre dos rasgos. Debajo encontrará una leyenda con los nombres y acrónimos de los rasgos.
+
+```{r echo=FALSE, out.width="95%", fig.align="center"}
+knitr::include_graphics("assets/images/image151.png")
+```
+
+Debajo de “Resumen de la población de entrenamiento” está la pestaña “Rasgos”, que muestra los rasgos disponibles en el ensayo. Seleccione uno o varios rasgos y pulse “Crear modelo” para crear el modelo. En este ejemplo se eligieron "cassava bacterial blight severity" y "cassava mosaic disease severity".
+
+```{r echo=FALSE, out.width="95%", fig.align="center"}
+knitr::include_graphics("assets/images/image69.png")
+```
+
+Al pulsar “Crear modelo” se abrirá una página con los resultados de los modelos para los rasgos. En la pestaña “Resultados del modelo de selección genómica” puede consultar los resultados y la precisión. Pulse un rasgo para ver los resultados del modelo para ese rasgo en el ensayo y la información detallada de [*Método 1*](#method-1).
+
+```{r echo=FALSE, out.width="95%", fig.align="center"}
+knitr::include_graphics("assets/images/image336.png")
+```
+
+Puede aplicar los modelos para predecir simultáneamente GEBVs de los rasgos correspondientes en una población de selección pulsando “Predecir ahora” o el nombre de la población. También puede aplicarlos a cualquier conjunto de clones genotipados creado con la función “listas”. Consulte [*aquí*](#working-with-lists). Siga el enlace del rasgo para ver y descargar sus GEBVs predichos.
+
+```{r echo=FALSE, out.width="95%", fig.align="center"}
+knitr::include_graphics("assets/images/image171.png")
+```
+
+Para comparar clones según varios rasgos, calcule índices de selección con el formulario. En el menú desplegable, elija la población con GEBVs predichos y asigne un peso relativo a cada rasgo. El peso debe estar entre 0 - 1: 0 indica la menor importancia y 1, la mayor.
+
+En este ejemplo se usa la población "Cassava Ibadan 2002/03" y se asignan valores a cada rasgo. Al final de la página encontrará una lista de acrónimos y nombres de rasgos. Introduzca los valores deseados y pulse “Calcular”. Se generará una lista con los 10 genotipos que más se ajustan a los criterios. Aparecerá debajo de la pestaña “Índice de selección”. Puede descargarla con “Descargar índices de selección”, bajo la lista de genotipos e índices.
+
+```{r echo=FALSE, out.width="95%", fig.align="center"}
+knitr::include_graphics("assets/images/image81.png")
+```
+
+### Crear un modelo - Método 3 {#building-a-model---method-3}
+
+Además de buscar rasgos o ensayos existentes por nombre, puede crear un modelo a partir de su propia lista de clones. Para ello se usa o crea una población de entrenamiento.
+
+La página del tercer método es la misma que la de los otros dos. Seleccione “Selección genómica” en el menú “Analizar” de la barra principal. En la página inicial verá los tres métodos. Para usar el Método 3, desplácese y pulse “Crear una población de entrenamiento”. Se abrirán herramientas para usar una lista existente o crear otra.
+
+```{r echo=FALSE, out.width="95%", fig.align="center"}
+knitr::include_graphics("assets/images/image138.png")
+```
+
+En la pestaña “Crear una población de entrenamiento”, puede usar una lista existente o crear otra. Consulte [*aquí*](#working-with-lists) cómo crear listas. El enlace “Crear una lista nueva de parcelas” abre el asistente de búsqueda.
+
+Nota: el Método 3 solo admite listas de parcelas y ensayos. Una lista de otro tipo (por ejemplo, rasgos o ubicaciones) no aparecerá ni podrá usarse como población de entrenamiento. Si usa una lista de ensayos, sus datos se combinarán en un conjunto de entrenamiento.
+
+Para usar su lista de parcelas o ensayos como población de entrenamiento, selecciónela y pulse “Ir”. Se abrirá la página de detalles de la población.
+
+```{r echo=FALSE, out.width="95%", fig.align="center"}
+knitr::include_graphics("assets/images/image181.png")
+```
+
+A partir de aquí puede crear modelos y predecir valores de mejora como se describe en [*Método 2*](#method-2)**.**
+
+## Explorar el genoma {#genome-browsing}
+
+Puede consultar la información genotípica de dos formas: desde la página de detalles de una accesión o desde la de un ensayo.
+
+### Consultar datos de genotipo por accesión {#browsing-genotype-data-by-accession}
+
+Para consultar el genotipo de una accesión, por ejemplo ‘BAHKYEHEMAA’, abra su página de detalles.
+
+```{r echo=FALSE, out.width="50%", fig.align="center"}
+knitr::include_graphics("assets/images/image152.png")
+```
+
+Cerca del final de la página hay una sección desplegable llamada “JBrowse de la accesión”.
+
+```{r echo=FALSE, out.width="50%", fig.align="center"}
+knitr::include_graphics("assets/images/image20.png")
+```
+
+Si hay datos de genotipo disponibles, esta sección incluirá un enlace a JBrowse de la accesión. Al abrirlo, podrá consultar los datos como una pista VCF alineada con la versión más reciente del genoma.
+
+```{r echo=FALSE, out.width="95%", fig.align="center"}
+knitr::include_graphics("assets/images/image318.png")
+```
+
+### Consultar datos de genotipo por ensayo {#browsing-genotype-data-by-trial}
+
+Para consultar los genotipos de las accesiones de un ensayo, abra la página de detalles del ensayo.
+
+```{r echo=FALSE, out.width="50%", fig.align="center"}
+knitr::include_graphics("assets/images/image277.png")
+```
+
+A mitad de la página encontrará la sección desplegable “JBrowse del ensayo”. Contendrá un enlace a JBrowse del ensayo si hay datos de genotipo para al menos dos accesiones plantadas en él.
+
+```{r echo=FALSE, out.width="50%", fig.align="center"}
+knitr::include_graphics("assets/images/image268.png")
+```
+
+Al abrir el enlace, podrá consultar los datos de genotipo como pistas VCF alineadas con la versión más reciente del genoma.
+
+```{r echo=FALSE, out.width="95%", fig.align="center"}
+knitr::include_graphics("assets/images/image327.png")
+```
+
+## Análisis de componentes principales (PCA) {#principal-component-analysis-pca}
+
+El análisis de componentes principales ayuda a estimar y visualizar subgrupos de individuos dentro de un conjunto de datos según varias variables. Actualmente puede ejecutar PCA en conjuntos con datos de marcadores.
+
+Puede ejecutar PCA desde varios lugares del sitio. Para aplicar PCA a:
+
+(1) Individuos de un ensayo: abra su página de detalles y busque PCA en “Herramientas de análisis”.
+
+(2) Individuos de una población de entrenamiento usada en un modelo GS: cree el modelo y busque PCA en la página de resultados.
+
+(3) Individuos de las poblaciones de entrenamiento y selección a las que aplicó el modelo: cree el modelo, aplíquelo a la población de selección y busque PCA en la página de resultados de predicción.
+
+(4) Individuos de una lista de accesiones que creó, por ejemplo, con el asistente de búsqueda: vaya a “Analizar”, seleccione “Estructura poblacional”, elija la lista y ejecute PCA.
+
+(5) Individuos de varios ensayos: cree una lista con el asistente de búsqueda, vaya a “Analizar”, seleccione “Estructura poblacional”, elija la lista y ejecute PCA.
+
+```{r echo=FALSE, out.width="95%", fig.align="center"}
+knitr::include_graphics("assets/images/pca_iita_naccri_trials.png")
+```
+
+En todos los casos se genera un gráfico interactivo de los dos PC que explican la mayor varianza. Pase el cursor sobre un punto para ver el nombre y las puntuaciones PC del individuo. Con ‘Descargar todos los PC’ puede descargar las puntuaciones de los 10 PC en formato de texto.
+
+
+## ANOVA {#anova}
+
+Actualmente, ANOVA se aplica a un solo ensayo (un año y una ubicación) con diseños RCBD, CRD, Alpha y Augmented. Se usa un modelo lineal de efectos mixtos: los genotipos son efectos fijos y las repeticiones y bloques, aleatorios. La significación del efecto fijo se calcula con "lmer" del paquete de R "lmeTest".
+
+Puede ejecutar ANOVA desde los detalles del ensayo o de la población de entrenamiento. En ambos casos, los datos fenotípicos deben proceder de diseños compatibles:
+
+-- Vaya a la sección ANOVA de la página del ensayo o de la población de entrenamiento.
+
+-- Seleccione el rasgo que desea analizar con ANOVA.
+
+-- Pulse “Ejecutar ANOVA” y espere el resultado.
+
+```{r echo=FALSE, out.width="95%", fig.align="center"}
+knitr::include_graphics("assets/images/anova-dm.png")
+```
+
+## Agrupamiento (K-Means, jerárquico) {#clustering-k-means-hierarchical}
+
+El método K-Means divide el conjunto de datos en grupos (el número se indica con K). El agrupamiento jerárquico aglomerativo permite explorar la similitud y visualizar sus niveles entre muestras en una estructura de árbol (dendrograma). Puede agrupar según marcadores, fenotipos o GEBVs. Con datos fenotípicos, primero se calculan promedios por clon y rasgo. Ambos métodos usan la distancia euclidiana como medida de similitud. El agrupamiento jerárquico emplea complete-linkage (vecino más lejano) para unir los grupos.
+
+Hay tres formas de usar esta herramienta.
+
+(1) Si tiene datos en una lista o conjunto creado en el asistente de búsqueda:
+
+   (A) -- vaya al menú “Analizar” y seleccione la opción de agrupamiento.
+
+   (B) -- asegúrese de haber iniciado sesión.
+
+   (C) -- si agrupa con datos de genotipo, seleccione el protocolo de genotipado correspondiente.
+
+   (D) -- seleccione la lista o conjunto de datos y pulse “Ir”.
+
+   (E) -- seleccione el tipo de agrupamiento.
+
+   (F) -- seleccione el tipo de datos.
+
+   (G) -- para K-Means, indique el número de grupos (K). Si deja el campo vacío, se determinará un número óptimo para el conjunto de datos.
+
+   (H) -- pulse “Ejecutar agrupamiento” y espere a que termine el análisis, o encole la solicitud y espere un correo con los resultados.
+
+   (I) -- puede descargar los resultados mediante los enlaces de descarga.
+
+(2) Desde la página de detalles del ensayo:
+
+   (A) -- vaya a “Herramientas de análisis”.
+
+   (B) -- siga los pasos D a G del apartado (1).
+
+(3) En el flujo solGS:
+
+   (A) -- en la página de resultados del modelo encontrará una sección para agrupar de la misma manera descrita arriba (opción 2).
+
+Agrupamiento K-Means:
+
+```{r echo=FALSE, out.width="95%", fig.align="center"}
+knitr::include_graphics("assets/images/k-means-cluster.png")
+```
+
+Agrupamiento jerárquico:
+
+```{r echo=FALSE, out.width="95%", fig.align="center"}
+knitr::include_graphics("assets/images/hclustering.png")
+```
+
+## Ganancia genética {#genetic-gain}
+
+Puede evaluar la ganancia genética comparando los GEBVs de las poblaciones de entrenamiento y selección. En el flujo solGS, cree un modelo y aplíquelo para predecir GEBVs de una población de selección. En “Comprobar ganancia genética”, seleccione la población que comparará con la de entrenamiento y pulse “Comprobar ganancia genética”. El resultado se muestra en diagramas de caja. Puede descargar los diagramas y los datos GEBVs usados.
+
+```{r echo=FALSE, out.width="95%", fig.align="center"}
+knitr::include_graphics("assets/images/genetic-gain.png")
+```
+
+
+## Coeficientes de parentesco y consanguinidad {#kinship-and-inbreeding-coefficients}
+
+Esta herramienta permite estimar la relación genética entre dos individuos (kinship), la homocigosidad de un individuo entre loci (coeficiente de consanguinidad) y la similitud genética de un individuo con el resto de la población (kinship promedio).
+
+Hay tres formas de usar esta herramienta.
+
+ <strong>(1)</strong> Si tiene una lista o conjunto de clones creado en el asistente de búsqueda:
+
+   (A) -- vaya al menú “Analizar” y seleccione parentesco y consanguinidad.
+
+   (B) -- asegúrese de haber iniciado sesión.
+
+   (C) -- seleccione el protocolo de genotipado de los marcadores.
+
+   (D) -- elija la lista o conjunto de clones y pulse “Ir”.
+
+   (F) -- pulse “Calcular parentesco” y espere a que termine el análisis; según el tamaño de los datos, puede tardar unos minutos. Puede enviar el análisis y esperar un aviso por correo o esperar a que finalice.
+
+   (G) -- puede descargar los resultados mediante los enlaces.
+
+<strong>(2)</strong> Desde la página de detalles del ensayo:
+
+   (A) -- vaya a “Herramientas de análisis”.
+
+   (B) -- siga los pasos C a G del apartado (1).
+
+<strong>(3)</strong> En el flujo solGS:
+
+   (A) -- en la página de resultados del modelo, desplácese hasta “Parentesco y consanguinidad” y calcule kinship.
+
+```{r echo=FALSE, out.width="95%", fig.align="center"}
+knitr::include_graphics("assets/images/kinship-inbreeding.png")
+```
+
+## Crear grupos de cruzamiento {#creating-crossing-groups}
+
+Si calcula un índice de selección con GEBVs de varios rasgos y desea elegir una proporción de los individuos (por ejemplo, el 10% superior o el 10% inferior) y dividirlos en grupos según sus genotipos, puede usar k-means.
+
+Procedimiento:
+
+(1) prediga GEBVs para 2 o más rasgos.
+
+(2) En la página de resultados, calcule los índices de selección y anote el nombre del conjunto de datos de índices.
+
+(3) vaya a la sección de agrupamiento:
+
+   -- seleccione los datos del índice;
+
+   -- seleccione “K-means”;
+
+   -- seleccione “Genotype”;
+
+   -- indique en K-numbers cuántos grupos desea crear;
+
+   -- indique en la proporción de selección qué fracción de los individuos clasificados desea elegir; por ejemplo, 15 para el 15% superior. Para elegir los de menor rendimiento, anteponga un signo menos (por ejemplo, -15).
+
+   -- ejecute el agrupamiento y espere el resultado.
+
+```{r echo=FALSE, out.width="95%", fig.align="center"}
+knitr::include_graphics("assets/images/selection_proportion_clustering.png")
+```
+
+## Descargar la matriz de relaciones genómicas (GRM) desde el asistente de búsqueda {#search-wizard-genomic-relationship-matrix-grm-download}
+
+La matriz de relaciones genómicas (GRM) ayuda a comprender la estructura de la población. Breedbase puede calcularla con rrBLUP. Primero seleccione accesiones en el asistente y, opcionalmente, un protocolo de genotipado. Si no selecciona ninguno, se usará el protocolo predeterminado del sistema (definido en sgn_local.conf). Configure los filtros de frecuencia del alelo menor, datos de marcadores ausentes e individuos ausentes. La GRM puede devolverse como matriz (.tsv) con las relaciones por pares o en formato de tres columnas (.tsv), útil en programas externos como ASReml. También puede obtenerse como mapa de calor de correlación (.pdf). Si los progenitores están genotipados, la GRM puede calcularse a partir de ellos marcando "compute from parents"; esto es útil cuando se genotipan líneas parentales y luego se crean y evalúan híbridos en el campo.
+
+```{r echo=FALSE, out.width="95%", fig.align="center"}
+knitr::include_graphics("assets/images/search_wizard_genotype_analyses_grm.png")
+```
+
+
+## Estudio de asociación del genoma completo (GWAS) en el asistente de búsqueda {#search-wizard-genome-wide-association-study-gwas}
+
+Un estudio de asociación del genoma completo (GWAS) permite identificar marcadores genotípicos asociados significativamente con rasgos fenotípicos. Breedbase puede calcular GWAS con rrBLUP. Seleccione accesiones y rasgos en el asistente y, opcionalmente, un protocolo de genotipado. Si no elige protocolo, se usará el predeterminado del sistema (definido en sgn_local.conf). Puede seleccionar varios rasgos. Si no son mediciones repetidas, elija "no" para obtener resultados GWAS independientes por rasgo. Si son mediciones repetidas, seleccione "yes" para realizar un solo análisis con todos los registros fenotípicos. Configure los filtros de frecuencia del alelo menor, marcadores ausentes e individuos ausentes. Los resultados pueden devolverse en una tabla (.tsv) con valores -log10(p-values) o como gráficos Manhattan y QQ. Si los progenitores están genotipados, puede calcular GWAS a partir de ellos marcando "compute from parents", útil para programas que genotipan líneas parentales y luego crean y evalúan híbridos en el campo.
+
+GWAS filtra los datos según MAF y los filtros de datos ausentes especificados. Después, los datos se imputan con el método "EM" de rrBLUP. La matriz de parentesco (GRM) se calcula a partir de los datos genotípicos imputados y se usa en el modelo GWAS. El modelo incluye efectos fijos para los distintos ensayos de campo y repeticiones de los datos fenotípicos.
+
+```{r echo=FALSE, out.width="95%", fig.align="center"}
+knitr::include_graphics("assets/images/search_wizard_genotype_analyses_gwas.png")
+```
+
+```{r echo=FALSE, out.width="95%", fig.align="center"}
+knitr::include_graphics("assets/images/search_wizard_genotype_analyses_manhattan_plot.png")
+```
+
+```{r echo=FALSE, out.width="95%", fig.align="center"}
+knitr::include_graphics("assets/images/search_wizard_genotype_analyses_qq_plot.png")
+```
+
+
+## Análisis espectral {#spectral-analysis}
+
+Los modelos estadísticos permiten relacionar la espectroscopia visible e infrarroja cercana (vis-NIRS) con fenotipos de referencia y predecir con precisión los fenotipos de muestras no observadas, aumentando el rendimiento del fenotipado. Esta técnica se usa en programas de mejoramiento para predecir, por ejemplo, almidón total, proteína, carotenoides y contenido de agua. Breedbase implementa el paquete de R [*waves*](https://CRAN.R-project.org/package=waves) para entrenar, evaluar, almacenar y usar modelos vis-NIRS con diversos espectrómetros y fenotipos.
+
+```{r echo=FALSE, out.width="95%", fig.align="center"}
+knitr::include_graphics("assets/images/waves_breedbase_schema.png")
+```
+
+### Selección del conjunto de datos {#dataset-selection}
+Para iniciar el análisis, seleccione uno o varios conjuntos de datos mediante \@ref(search-wizard). Un conjunto de Breedbase puede contener metadatos del ensayo y datos fenotípicos de uno o varios ensayos al nivel observationUnit (parcela, planta o muestra). En la página “NIRS” de la pestaña “Gestionar”, inicie el análisis y elija un conjunto como entrada de entrenamiento. En el segundo paso puede seleccionar opcionalmente un conjunto de prueba.
+
+```{r echo=FALSE, out.width="95%", fig.align="center"}
+knitr::include_graphics("assets/images/manage_NIRS_prediction_workflow_intro.png")
+```
+
+```{r echo=FALSE, out.width="95%", fig.align="center"}
+knitr::include_graphics("assets/images/manage_NIRS_prediction_workflow_dataset.png")
+```
+
+### Validación cruzada {#cross-validation}
+Para este análisis hay cinco esquemas de validación cruzada que representan situaciones habituales en el mejoramiento vegetal. Se incluyen CV1, CV2, CV0 y CV00, descritos en detalle por Jarquín et al. (2017), además de muestreo aleatorio y aleatorio estratificado con una división de 70% para entrenamiento y 30% para validación. En los esquemas de Jarquín et al. (2017), los conjuntos de entrada deben elegirse según la relación entre genotipos y ambientes. Opciones de validación cruzada:
+* **Muestreo aleatorio** (70% para entrenamiento / 30% para validación)
+* **Muestreo aleatorio estratificado**, con estratificación según el fenotipo (70% para entrenamiento / 30% para validación)
+* **CV1**, líneas no probadas en ambientes probados
+* **CV2**, líneas probadas en ambientes probados
+* **CV0**, líneas probadas en ambientes no probados
+* **CV00**, líneas no probadas en ambientes no probados
+
+```{r echo=FALSE, out.width="95%", fig.align="center"}
+knitr::include_graphics("assets/images/manage_NIRS_cv.png")
+```
+
+### Preprocesamiento {#preprocessing}
+El preprocesamiento se usa a menudo para aumentar la relación señal/ruido en conjuntos vis-NIR. La función *DoPreprocessing()* de *waves* aplica funciones de los paquetes *stats* y *prospectr* para métodos habituales de preprocesamiento espectral con estas opciones:
+* Datos sin procesar (predeterminado)
+* Primera derivada
+* Segunda derivada
+* Derivada de segmento con intervalo
+* Standard normal variate (SNV; Barnes et al., 1989)
+* Savitzky-Golay polynomial smoothing (Savitzky and Golay, 1964)
+
+Para más información sobre los métodos y su implementación, consulte el manual de [*waves*](https://CRAN.R-project.org/package=waves), disponible en CRAN: [waves.pdf](https://cran.r-project.org/web/packages/waves/waves.pdf).
+
+```{r echo=FALSE, out.width="95%", fig.align="center"}
+knitr::include_graphics("assets/images/manage_NIRS_snv.png")
+```
+
+### Algoritmos {#algorithms}
+El paquete [*waves*](https://CRAN.R-project.org/package=waves) ofrece varios algoritmos para desarrollar modelos de calibración en Breedbase. La función *TrainSpectralModel()* ajusta los hiperparámetros cuando corresponde y combina estos algoritmos con validación cruzada y funciones de entrenamiento del paquete *caret*. Actualmente solo hay algoritmos de regresión; los de clasificación, como PLS-DA y SVM, están en desarrollo.
+* **Partial least squares regression** (PLSR; Wold et al., 1982; Wold et al., 1984) es un método común de calibración espectral que admite datos muy colineales. Reduce la dimensionalidad a variables latentes ortogonales (componentes), relacionadas después con la respuesta mediante un modelo lineal (véase Wold et al., 2001). Para evitar el sobreajuste, el número de componentes del modelo final debe ajustarse para cada caso. waves implementa el algoritmo PLSR del paquete *pls*.
+* **Random Forest regression** (RF; Ho, 1995) es un algoritmo de aprendizaje automático basado en árboles de decisión. El número de árboles y las decisiones en cada nodo son hiperparámetros que deben ajustarse para cada modelo. También permite extraer medidas de importancia de variables del modelo ajustado (Breiman, 2001). En Breedbase, se implementa el algoritmo RF del paquete randomForest mediante TrainSpectralModel() de waves. La función devuelve estadísticas de rendimiento y una tabla descargable de importancia para cada longitud de onda. El cálculo es intensivo, por lo que los resultados pueden tardar; Breedbase seguirá procesando en segundo plano y los mostrará al terminar.
+* **Support vector machine regression** (SVM; Vapnik, 2000) es otro algoritmo útil para datos no lineales de alta dimensión, aplicable a clasificación y regresión. waves implementa SVM con núcleos lineales y de función de base radial mediante el paquete kernlab.
+
+### Resultados: estadísticas de resumen habituales del modelo {#output-common-model-summary-statistics}
+Después del entrenamiento, las estadísticas de rendimiento se muestran en la página de resultados y pueden descargarse en formato .csv. Las calcula *TrainSpectralModel()* de [*waves*](https://CRAN.R-project.org/package=waves) mediante los paquetes *caret* y *spectacles*. Se incluyen:
+* Parámetros ajustados según el algoritmo del modelo
+	* **Best.n.comp**, número óptimo de componentes para incluir en un modelo PLSR
+	* **Best.ntree**, número óptimo de árboles en un modelo RF
+	* **Best.mtry**, número óptimo de variables en cada punto de decisión de un modelo RF
+* **RMSECV**, raíz del error cuadrático medio de validación cruzada
+* **R<sup>2</sup><sub>cv</sub>**, coeficiente de determinación múltiple de validación cruzada para modelos PLSR
+* **RMSEP**, raíz del error cuadrático medio de predicción
+* **R<sup>2</sup><sub>p</sub>**, correlación de Pearson al cuadrado entre los valores predichos y observados del conjunto de prueba
+* **RPD**, relación entre la desviación estándar de los valores observados del conjunto de prueba y RMSEP
+* **RPIQ**, relación entre rendimiento y distancia intercuartílica
+* **CCC**, coeficiente de correlación de concordancia
+* **Bias**, diferencia promedio entre los valores predichos y observados
+* **SEP**, error estándar de predicción
+* **R<sup>2</sup><sub>sp</sub>**, correlación de rangos de Spearman al cuadrado entre los valores predichos y observados del conjunto de prueba
+
+### Guardar el modelo para usarlo después {#export-model-for-later-use}
+Una vez entrenado, el modelo puede guardarse para usarlo posteriormente. Esta acción llama a *SaveModel()* de [*waves*](https://CRAN.R-project.org/package=waves). En la base de datos, junto con el objeto del modelo se guardan los metadatos del conjunto de entrenamiento y los demás parámetros especificados al iniciar el entrenamiento.
+
+```{r echo=FALSE, out.width="95%", fig.align="center"}
+knitr::include_graphics("assets/images/manage_NIRS_export_model.png")
+```
+
+### Predecir fenotipos con un modelo guardado (uso habitual) {#predict-phenotypes-from-an-exported-model-routine-use}
+Para predecir fenotipos, seleccione un conjunto de datos y luego un modelo de la base que se haya entrenado con el mismo tipo de espectrómetro. Los fenotipos predichos se guardan como tales y se etiquetan con un término de ontología que indica que son predicciones, no mediciones directas. También se almacenan los metadatos del modelo utilizado. Después pueden usarse en otras herramientas de análisis de Breedbase, como el índice de selección y GWAS.
+
+```{r echo=FALSE, out.width="95%", fig.align="center"}
+knitr::include_graphics("assets/images/manage_NIRS_select_model.png")
+```
+
+```{r echo=FALSE, out.width="95%", fig.align="center"}
+knitr::include_graphics("assets/images/manage_NIRS_prediction_results.png")
+```
+
+### Preguntas frecuentes {#faq}
+La herramienta de análisis espectral de Breedbase no permite crear modelos predictivos que combinen datos de varios tipos de espectrómetro a la vez.
+
+Referencias
+* Barnes, R.J., M.S. Dhanoa, and S.J. Lister. 1989. Standard normal variate transformation and de-trending of near-infrared diffuse reflectance spectra. Appl. Spectrosc. 43(5): 772-777. doi: 10.1366/0003702894202201.
+* Breiman, L. 2001. Random forests. Mach. Learn. 45: 5-32. doi: 10.1201/9780429469275-8.
+* Ho, T.K. 1995. Random decision forests. Proc. Int. Conf. Doc. Anal. Recognition, ICDAR 1: 278-282. doi: 10.1109/ICDAR.1995.598994.
+* Jarquín, D., C. Lemes da Silva, R.C. Gaynor, J. Poland, A. Fritz, et al. 2017. Increasing Genomic-Enabled Prediction Accuracy by Modeling Genotype x Environment Interactions in Kansas Wheat. Plant Genome 10(2): plantgenome2016.12.0130. doi: 10.3835/plantgenome2016.12.0130.
+* Johnson, R.A., and D.W. Wichern. 2007. Applied Multivariate Statistical Analysis (6th Edition).
+De Maesschalck, R., D. Jouan-Rimbaud, and D.L. Massart. 2000. The Mahalanobis distance. Chemom. Intell. Lab. Syst. 50(1): 1-18. doi: 10.1016/S0169-7439(99)00047-7.
+* Mahalanobis, P.C. 1936. On the generalized distance in statistics. Natl. Inst. Sci. India.
+* Savitzky, A., and M.J.E. Golay. 1964. Smoothing and Differentiation of Data by Simplified Least Squares Procedures. Anal. Chem. 36(8): 1627-1639. doi: 10.1021/ac60214a047.
+* Shrestha, R., L. Matteis, M. Skofic, A. Portugal, G. McLaren, et al. 2012. Bridging the phenotypic and genetic data useful for integrated breeding through a data annotation using the Crop Ontology developed by the crop communities of practice. Front. Physiol. 3 AUG(August): 1-10. doi: 10.3389/fphys.2012.00326.
+* Vapnik, V.N. 2000. The Nature of Statistical Learning Theory. Springer New York, New York, NY.
+* Wold, S., A. Ruhe, H. Wold, and W.J. Dunn, III. 1984. The Collinearity Problem in Linear Regression. The Partial Least Squares (PLS) Approach to Generalized Inverses. SIAM J. Sci. Stat. Comput. 5(3): 735-743. doi: 10.1137/0905052.
+* Wold, S., M. Sjöström, and L. Eriksson. 2001. PLS-regression: a basic tool of chemometrics. Chemom. Intell. Lab. Syst. 58(2): 109-130. doi: 10.1016/S0169-7439(01)00155-1.
+
+
+## Herramienta de modelo mixto general {#general-mixed-model-tool}
+
+La herramienta de modelo mixto general está disponible en <a href="/tools/mixedmodels">/tools/mixedmodels</a> y también hay un enlace en el menú Analizar.
+
+Para usar la herramienta de modelo mixto, cree primero con el asistente un conjunto de datos que contenga la información que desea analizar.
+
+Seleccione “Modelo mixto” en el menú Analizar.
+
+Se abrirá un flujo de trabajo. En el primer paso, seleccione el conjunto de datos que desea analizar y pulse “Elegir conjunto de datos” para continuar.
+
+En el segundo paso aparecen los rasgos del conjunto de datos; puede seleccionar uno o varios con los botones de selección. Si elige un solo rasgo, se mostrará un gráfico de barras de su distribución. Pulse “Next step” para continuar.
+
+```{r echo=FALSE, out.width="95%", fig.align="center"}
+knitr::include_graphics("assets/images/mixedmodel_tool_model_build_step.png")
+```
+
+En la pantalla de construcción aparecen todos los factores del conjunto como botones azules. Arrástrelos a las áreas correspondientes para formar la ecuación del modelo mixto. Las áreas corresponden a Fixed factors, Random factors y, opcionalmente, a factores más complejos, como efectos fijos con interacción o pendiente/intersección variable. Para calcular BLUPs de germoplasma, arrastre germplasmName a “Random factors”; para BLUEs, a “Fixed factors”. Cada factor debe tener varios niveles; por ejemplo, si el conjunto contiene un solo ensayo, no puede usarse como factor. Pulse “Ejecutar el análisis e ir al paso siguiente” para ejecutar el modelo y mostrar los resultados.
+
+La vista de resultados tiene dos pestañas: una con datos sin ajustar (BLUPS o BLUEs) y otra con las medias ajustadas.
+
+Puede guardar los resultados en la base de datos como un análisis con el botón situado encima de los datos.
+
+
+## Predicción genómica del rendimiento de cruzamientos (GPCP) {#genomic-prediction-of-cross-performance-gpcp}
+
+La herramienta GPCP está disponible en <a href="/tools/gcpc">/tools/gcpc</a> y también hay un enlace en el menú Analizar.
+La herramienta GCPC implementa predicción genómica del rendimiento de cruzamientos con efectos aditivos y de dominancia direccional en un modelo lineal mixto.
+
+Antes de usar la herramienta, cree con el asistente un conjunto de datos para analizar. El conjunto debe incluir genotyping_protocols.
+Después, cree índices de selección para los rasgos con “Índice de selección” en el menú Analizar.
+
+Para usarla, seleccione GPCP en el menú Analizar.
+
+Seleccione el conjunto que contiene genotyping_protocols y pulse “Continuar a la selección de factores” para cargar los factores disponibles para el modelo.
+
+Seleccione los factores que incluirá en el modelo como Fixed o Random. Para omitir un factor, pulse “None”. Tenga en cuenta que germplasmName se configura como Random de forma predeterminada.
+
+En el siguiente paso, seleccione el índice de selección de sus rasgos en el menú desplegable.
+
+Al terminar, pulse “Ejecutar GPCP” para ejecutar el modelo. El resultado se presenta en una tabla con "ID", "Parent1", "Parent2" y el mérito predicho del cruzamiento, ordenado de mayor a menor.
+Los resultados también incluirán el sexo si la base de datos dispone de esa información para las plantas.
+
+## Compatibilidad con herramientas {#tool-compatibility}
+
+La definición del conjunto de datos permite determinar si puede usarse con varias herramientas de análisis.
+
+Al crear un conjunto, el sitio evalúa automáticamente su compatibilidad con las herramientas de análisis disponibles y muestra los resultados en la página de detalles.
+
+```{r echo=FALSE, out.width="95%", fig.align="center"}
+knitr::include_graphics("assets/images/tool_compatibility_details.png")
+```
+
+La tabla indica qué rasgos pueden analizarse con datos fenotípicos y qué tipos de análisis están disponibles para cada herramienta. Algunas muestran una advertencia si el conjunto es compatible, pero quizá tenga pocas muestras. Pase el cursor sobre el símbolo para ver el motivo.
+
+Debajo de la tabla hay un botón para recalcular la compatibilidad. Puede ser útil si se creó el conjunto antes de cargar fenotipos en un ensayo, ya que estos datos se usan para determinarla. Aunque la página parezca bloqueada, la comprobación continuará en segundo plano y podrá consultarla más tarde.
+
+```{r echo=FALSE, out.width="95%", fig.align="center"}
+knitr::include_graphics("assets/images/tool_compatibility_data_summary.png")
+```
+
+Debajo de la compatibilidad se resume qué datos contiene el conjunto y los criterios usados para evaluarla. Se aplican de la siguiente manera:
+- Correlation: el conjunto puede usarse para analizar correlaciones si hay muchas mediciones fenotípicas de distintos rasgos en una misma accesión.
+- Population Structure (PCA): puede ejecutarse PCA de genotipos si muchas accesiones se genotiparon con el mismo protocolo. PCA de fenotipos requiere que muchas accesiones tengan mediciones de varios rasgos.
+- Clustering: al igual que PCA, puede aplicarse a datos fenotípicos o genotípicos y tiene los mismos requisitos.
+- Kinship & Inbreeding: un conjunto con muchas accesiones genotipadas con el mismo protocolo puede usarse para analizar parentesco.
+- Stability: puede usarse un conjunto con muchas accesiones y un mismo rasgo medido en varias ubicaciones para analizar estabilidad.
+- Heritability: requiere uno o varios ensayos donde se haya medido el mismo rasgo en la misma accesión.
+- Mixed Models: requiere suficientes accesiones, mediciones de rasgos y diseños de ensayo.
+- GWAS: el conjunto es compatible si muchas accesiones se genotiparon con el mismo protocolo y este tiene suficientes marcadores. Además, cada accesión debe tener datos fenotípicos de un rasgo.
+- Boxplotter: debe haber suficientes mediciones del rasgo para generar un diagrama de caja.
+
+La compatibilidad también puede aparecer en las pantallas de selección de conjuntos de las herramientas de análisis. Las advertencias no bloquean el uso: puede intentar analizar un conjunto aunque se marque como no compatible. Pase el cursor sobre el aviso para saber por qué quizá no tenga potencia estadística suficiente. En análisis con varios modos, como agrupamiento y PCA, pase el cursor sobre la marca de compatibilidad para ver si aplica a datos fenotípicos o genotípicos.

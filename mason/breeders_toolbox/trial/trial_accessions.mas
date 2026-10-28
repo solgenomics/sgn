@@ -24,10 +24,10 @@ jQuery(document).ready(function () {
                 // console.log(response);
                 jQuery("#working_modal").modal("hide");
 
-                html = '<table class="table borderless" alt="breeder search" border="0" ><tr><td><select multiple class="form-control" id="accessions_data" name="1" size="10" style="min-width: 200px;overflow:auto;"></select></td></tr>'
+                html = ("<table class=\"table borderless\" alt=\"" + jQuery("<div>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("accession.forms.breeder_search", "breeder search") : "breeder search")).html() + "\" border=\"0\" ><tr><td><select multiple class=\"form-control\" id=\"accessions_data\" name=\"1\" size=\"10\" style=\"min-width: 200px;overflow:auto;\"></select></td></tr>")
 
-                html += '<tr><td><button class="btn btn-default btn-sm" id="accessions_select_all" name="1">Select All</button><br><br>'
-                html += '<div class="well well-sm"><div id="accessions_data_count" name="1">No Selection</div></div>'
+                html += ("<tr><td><button class=\"btn btn-default btn-sm\" id=\"accessions_select_all\" name=\"1\">" + jQuery("<div>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("global.search_wizard.select_all", "Select All") : "Select All")).html() + "</button><br><br>")
+                html += ("<div class=\"well well-sm\"><div id=\"accessions_data_count\" name=\"1\">" + jQuery("<div>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("cross.ui.no_selection", "No Selection") : "No Selection")).html() + "</div></div>")
                 html += '<div id="accessions_to_list_menu"></div><td><tr></table>'
 
                 jQuery('#trial_accessions_html').html(html);
@@ -78,7 +78,7 @@ jQuery(document).ready(function () {
             },
             error: function(response){
                 jQuery("#working_modal").modal("hide");
-                alert("Error retrieving accessions.");
+                alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("accession.forms.error_retrieving_accessions", "Error retrieving accessions.") : "Error retrieving accessions."));
             }
         });
     });

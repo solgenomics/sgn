@@ -10,7 +10,7 @@ $analysis_metadata
         <table class="table table-hover table-bordered" >
 
         <tr>
-            <td><b>Model Name</b></td>
+            <td><b><% $c->i18n->p("analysis.interface.model_name", "Model Name") |h %></b></td>
             <td>
                 <div id="model_name">
                 </div>
@@ -18,7 +18,7 @@ $analysis_metadata
         </tr>
 
         <tr>
-            <td><b>Model Description</b></td>
+            <td><b><% $c->i18n->p("analysis.interface.model_description", "Model Description") |h %></b></td>
             <td>
                 <div id="model_description">
                 </div>
@@ -26,7 +26,7 @@ $analysis_metadata
         </tr>
 
         <tr>
-            <td><b>Model Type</b></td>
+            <td><b><% $c->i18n->p("analysis.interface.model_type", "Model Type") |h %></b></td>
             <td>
                 <div id="model_type">
                 </div>
@@ -34,7 +34,7 @@ $analysis_metadata
         </tr>
 
         <tr>
-            <td><b>Model Properties</b></td>
+            <td><b><% $c->i18n->p("analysis.interface.model_properties", "Model Properties") |h %></b></td>
             <td>
                 <div id="model_properties">
                 </div>
@@ -42,7 +42,7 @@ $analysis_metadata
         </tr>
 
         <tr>
-            <td><b>Model Files</b></td>
+            <td><b><% $c->i18n->p("analysis.interface.model_files", "Model Files") |h %></b></td>
             <td>
                 <div id="model_files">
                 </div>
@@ -87,7 +87,7 @@ jQuery(document).ready(function(){
                 for (var key in response.model_info.model_file_ids) {
                     if (response.model_info.model_file_ids.hasOwnProperty(key)) {
                         if (key) {
-                            model_files_string = model_files_string + response.model_info.model_file_ids[key] + " : <a href='/breeders/phenotyping/download/" + key + "'>Download</a><br/>";
+                            model_files_string = model_files_string + response.model_info.model_file_ids[key] + " : <a href='/breeders/phenotyping/download/" + key + ("'>" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("global.download", "Download") : "Download")).html() + "</a><br/>");
                         }
                     }
                 }
@@ -96,7 +96,7 @@ jQuery(document).ready(function(){
         },
         error: function(response){
             jQuery('#working_modal').modal('hide');
-            alert('Error getting analysis details!');
+            alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("analysis.interface.error_getting_analysis_details", "Error getting analysis details!") : 'Error getting analysis details!'));
         }
     });
 

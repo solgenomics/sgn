@@ -31,34 +31,34 @@ $design_types => ()
 <table class="table table-bordered">
   <thead>
     <tr>
-      <th>Information</th>
-      <th>Breeding Programs -- Folders -- Trials&nbsp;&nbsp;&nbsp;&nbsp;<button class="btn btn-sm btn-default" id="refresh_jstree_html_trialtree_button" name="refresh_jstree_html">Refresh</button></th>
+      <th><% $c->i18n->p('trial.tree.information', 'Information') |h %></th>
+      <th><% $c->i18n->p('trial.tree.hierarchy', 'Breeding Programs -- Folders -- Trials') |h %>&nbsp;&nbsp;&nbsp;&nbsp;<button class="btn btn-sm btn-default" id="refresh_jstree_html_trialtree_button" name="refresh_jstree_html"><% $c->i18n->p('trial.tree.refresh', 'Refresh') |h %></button></th>
     </tr>
   </thead>
   <tbody>
   <tr>
     <td>
-        <h4>Search</h4>
-        <input type="text" class="form-control input-sm" id="trial_tree_search" placeholder="Search" />
+        <h4><% $c->i18n->p('trial.tree.search', 'Search') |h %></h4>
+        <input type="text" class="form-control input-sm" id="trial_tree_search" placeholder="<% $c->i18n->p('trial.tree.search', 'Search') |h %>" />
         <hr>
-      <h4>Download Trial Phenotypes</h4>
-      <h5><i>Select multiple trials by holding 'Ctrl'.</i></h5>
-      <button class="btn btn-primary" id="trials_download_phenotypes_button" disabled="disabled" title="First Select Trial(s) to Download">Download Phenotypes</button>
+      <h4><% $c->i18n->p('trial.tree.download_heading', 'Download Trial Phenotypes') |h %></h4>
+      <h5><i><% $c->i18n->p('trial.tree.select_trials', 'Select multiple trials by holding \'Ctrl\'.') |h %></i></h5>
+      <button class="btn btn-primary" id="trials_download_phenotypes_button" disabled="disabled" title="<% $c->i18n->p('trial.tree.download_hint', 'First Select Trial(s) to Download') |h %>"><% $c->i18n->p('trial.tree.download', 'Download Phenotypes') |h %></button>
       <hr>
-      <h5><i>Double click<br />trial (&nbsp;<span class="glyphicon glyphicon-leaf text-success"></span>&nbsp;) or folder (&nbsp;<span class="glyphicon glyphicon-folder-open text-danger"></span>&nbsp;)<br/>to view detail page.</i></h5>
-      <h5><i>Breeding programs (&nbsp;<span class="glyphicon glyphicon-briefcase text-info"></span>&nbsp;)</i></h5>
-      <h5><i>Analyses (&nbsp;<span class="glyphicon glyphicon-stats text-success"></span>&nbsp;)</i></h5>
-      <h5><i>Sampling trials (&nbsp;<span class="glyphicon glyphicon-th text-success"></span>&nbsp;)</i></h5>
+      <h5><i><% $c->i18n->p('trial.tree.open_details', 'Double click a trial or folder to view its detail page.') |h %><br /><% $c->i18n->p('trial.tree.trial', 'Trial') |h %> (&nbsp;<span class="glyphicon glyphicon-leaf text-success"></span>&nbsp;)&nbsp;&nbsp;<% $c->i18n->p('trial.tree.folder', 'Folder') |h %> (&nbsp;<span class="glyphicon glyphicon-folder-open text-danger"></span>&nbsp;)</i></h5>
+      <h5><i><% $c->i18n->p('trial.tree.programs', 'Breeding programs') |h %> (&nbsp;<span class="glyphicon glyphicon-briefcase text-info"></span>&nbsp;)</i></h5>
+      <h5><i><% $c->i18n->p('trial.tree.analyses', 'Analyses') |h %> (&nbsp;<span class="glyphicon glyphicon-stats text-success"></span>&nbsp;)</i></h5>
+      <h5><i><% $c->i18n->p('trial.tree.sampling', 'Sampling trials') |h %> (&nbsp;<span class="glyphicon glyphicon-th text-success"></span>&nbsp;)</i></h5>
       <hr>
-      <h4>Folders</h4>
-      <button class="btn btn-sm btn-default" id="new_folder_dialog_link">Create new folder</button><br/><br/>
-      <button class="btn btn-sm btn-default" id="open_folder_dialog_link">Move trial(s) to folder</button><br/><br/>
-      <button class="btn btn-sm btn-default" id="move_folder_dialog_link">Move folder</button>
+      <h4><% $c->i18n->p('trial.tree.folders', 'Folders') |h %></h4>
+      <button class="btn btn-sm btn-default" id="new_folder_dialog_link"><% $c->i18n->p('trial.tree.create_folder', 'Create new folder') |h %></button><br/><br/>
+      <button class="btn btn-sm btn-default" id="open_folder_dialog_link"><% $c->i18n->p('trial.tree.move_trials', 'Move trial(s) to folder') |h %></button><br/><br/>
+      <button class="btn btn-sm btn-default" id="move_folder_dialog_link"><% $c->i18n->p('trial.tree.move_folder', 'Move folder') |h %></button>
 
       <div id="folder_edit_options" style="display:none">
           <hr>
-          <h5><i>Select multiple folders by holding 'Ctrl'.</i></h5>
-          <button class="btn btn-primary" id="edit_folders_button" title="First Select Folder(s) to Edit">Edit Folder(s)</button>
+          <h5><i><% $c->i18n->p('trial.tree.select_folders', 'Select multiple folders by holding \'Ctrl\'.') |h %></i></h5>
+          <button class="btn btn-primary" id="edit_folders_button" title="<% $c->i18n->p('trial.tree.edit_hint', 'First Select Folder(s) to Edit') |h %>"><% $c->i18n->p('trial.tree.edit', 'Edit Folder(s)') |h %></button>
           <br/>
       </div>
 
@@ -66,7 +66,7 @@ $design_types => ()
       <br />
     </td>
     <td>
-        <div id="trial_list" >[loading...]</div>
+        <div id="trial_list" ><% $c->i18n->p('trial.tree.loading', '[loading...]') |h %></div>
     </td>
   </tr>
   </tbody>
@@ -153,6 +153,12 @@ $design_types => ()
     }
 
     function loadTrialTree(forceRefresh) {
+      // Refresh replaces the native jstree instance. Cancel work scheduled for
+      // the old instance before requesting or rebuilding the tree.
+      if (trialTreeSearchTimer) {
+        clearTimeout(trialTreeSearchTimer);
+        trialTreeSearchTimer = null;
+      }
       var url = '/ajax/breeders/get_trials_with_folders_cached?type=trial';
 
       if (forceRefresh) {
@@ -167,7 +173,7 @@ $design_types => ()
         },
         error: function(xhr) {
           console.log('Trial tree load failed:', xhr.status, xhr.responseText);
-          alert("An error occurred while loading the trial data.");
+          alert(window.SGN && SGN.i18n ? SGN.i18n.p('trial.tree.load_error', 'An error occurred while loading the trial data.') : 'An error occurred while loading the trial data.');
         }
       });
     }
@@ -180,14 +186,15 @@ $design_types => ()
 
     $('#trial_tree_search').off('keyup').on('keyup', function() {
       var v = $(this).val();
-      var tree = $.jstree.reference('#trial_list');
 
       if (trialTreeSearchTimer) {
         clearTimeout(trialTreeSearchTimer);
       }
 
       trialTreeSearchTimer = setTimeout(function() {
-        if (tree && tree._model && tree._model.data) {
+        trialTreeSearchTimer = null;
+        var tree = $.jstree.reference('#trial_list');
+        if (tree && tree.element && tree._model && tree._model.data) {
           tree.search(v);
         }
       }, 150);

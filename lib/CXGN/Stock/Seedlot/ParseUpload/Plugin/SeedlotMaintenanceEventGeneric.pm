@@ -21,7 +21,7 @@ sub _validate_with_plugin {
 
     # Get cvterm_id of ontology root
     if ( !$event_ontology_root || $event_ontology_root eq '' ) {
-        push(@error_messages, "Seedlot Maintenance Event ontology not set!");
+        push(@error_messages, ($self->i18n ? $self->i18n->p('seedlots.maintenance.ontology_not_set', 'Seedlot Maintenance Event ontology not set!') : "Seedlot Maintenance Event ontology not set!"));
         $errors{'error_messages'} = \@error_messages;
         $self->_set_parse_errors(\%errors);
         return;
@@ -50,6 +50,7 @@ sub _validate_with_plugin {
 
     my $parser = CXGN::File::Parse->new (
         file => $filename,
+        i18n => $self->i18n,
         required_columns => [ 'seedlot', 'type', 'value', 'operator', 'timestamp'],
         optional_columns => ['notes'],
         column_aliases => {
@@ -73,7 +74,7 @@ sub _validate_with_plugin {
 
     if ( $additional_columns && scalar(@$additional_columns) > 0 ) {
         $errors{'error_messages'} = [
-            "The following columns are not recognized: " . join(', ', @$additional_columns) . ". Please check the spreadsheet format for the allowed columns."
+            ($self->i18n ? $self->i18n->p('seedlots.parse.unrecognized_columns', 'The following columns are not recognized: %{columns}. Please check the spreadsheet format for the allowed columns.', {columns => join(', ', @$additional_columns)}) : "The following columns are not recognized: " . join(', ', @$additional_columns) . ". Please check the spreadsheet format for the allowed columns.")
         ];
         $self->_set_parse_errors(\%errors);
         return;
@@ -95,11 +96,11 @@ sub _validate_with_plugin {
     }
 
     if (scalar(@seedlots_missing) > 0) {
-        push @error_messages, "The following seedlots are not in the database: ".join(',',@seedlots_missing);
+        push @error_messages, ($self->i18n ? $self->i18n->p('seedlots.parse.seedlots_not_found', 'The following seedlots are not in the database: %{names}', {names => join(',', @seedlots_missing)}) : "The following seedlots are not in the database: ".join(',',@seedlots_missing));
     }
 
     if (scalar(@seedlots_discarded) > 0) {
-        push @error_messages, "The following seedlots are marked as DISCARDED: ".join(',',@seedlots_discarded);
+        push @error_messages, ($self->i18n ? $self->i18n->p('seedlots.parse.seedlots_discarded', 'The following seedlots are marked as %{status}: %{names}', {status => 'DISCARDED', names => join(',', @seedlots_discarded)}) : "The following seedlots are marked as DISCARDED: ".join(',',@seedlots_discarded));
     }
 
     my $seen_events = $parsed_values->{'type'};
@@ -110,7 +111,7 @@ sub _validate_with_plugin {
         }
     }
     if (scalar(@events_missing) > 0) {
-        push(@error_messages, "The following events are not valid: ".join(',',@events_missing));
+        push(@error_messages, ($self->i18n ? $self->i18n->p('seedlots.maintenance.events_not_valid', 'The following events are not valid: %{events}', {events => join(',', @events_missing)}) : "The following events are not valid: ".join(',',@events_missing)));
         $errors{'missing_events'} = \@events_missing;
     }
 
@@ -118,12 +119,12 @@ sub _validate_with_plugin {
         my $row_num = $row->{_row};
         my $seedlot = $row->{'seedlot'};
         if ($seedlot =~ /\s/ || $seedlot =~ /\// || $seedlot =~ /\\/) {
-            push(@error_messages, "Row: $row_num: seedlot must not contain spaces or slashes.");
+            push(@error_messages, ($self->i18n ? $self->i18n->p('seedlots.maintenance.seedlot_spaces_or_slashes', 'Row: %{row}: %{field} must not contain spaces or slashes.', {row => '' . $row_num, field => 'seedlot'}) : "Row: $row_num: seedlot must not contain spaces or slashes."));
         }
 
         my $timestamp = $row->{'timestamp'};
         if ( $timestamp !~ /^[0-9]{4}-[0-9]{2}-[0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2}$/ ) {
-            push(@error_messages, "Row: $row_num: timestamp not valid format [YYYY-MM-DD HH:MM:SS]");
+            push(@error_messages, ($self->i18n ? $self->i18n->p('seedlots.maintenance.timestamp_format', 'Row: %{row}: timestamp not valid format [%{format}]', {row => '' . $row_num, format => 'YYYY-MM-DD HH:MM:SS'}) : "Row: $row_num: timestamp not valid format [YYYY-MM-DD HH:MM:SS]"));
         }
 
         # check to make sure values are valid, if specific values are defined by the ontology
@@ -131,7 +132,7 @@ sub _validate_with_plugin {
         my $value = $row->{value};
         my $valid_values = $valid_events{$event};
         if ( keys %$valid_values > 0 && !exists $valid_values->{$value} ) {
-            push(@error_messages, "Row: $row_num: the event value $value is not valid for the event type of $event [" . join(', ', keys %$valid_values) . "]");
+            push(@error_messages, ($self->i18n ? $self->i18n->p('seedlots.maintenance.event_value_not_valid', 'Row: %{row}: the event value %{value} is not valid for the event type of %{event} [%{valid_values}]', {row => '' . $row_num, value => $value, event => $event, valid_values => join(', ', keys %$valid_values)}) : "Row: $row_num: the event value $value is not valid for the event type of $event [" . join(', ', keys %$valid_values) . "]"));
         }
     }
 

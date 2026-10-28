@@ -1,4 +1,6 @@
-<%doc>
+<%once>
+use HTML::Entities ();
+</%once><%doc>
 
 =head1 NAME 
 
@@ -12,24 +14,24 @@ Isaak Y Tecle (iyt2@cornell.edu)
 
 </%doc>
 
-<&| /page/info_section.mas, 
-   title      => "Step 4: Genotype dataset",
+<&| /page/info_section.mas, anchor_title => "Step 4: Genotype dataset",
+   title      => HTML::Entities::encode_entities($c->i18n->p("genotype.interface.step_4_genotype_dataset", "Step 4: Genotype dataset")),
   collapsible => 1,
   collapsed   => 1
 &>
 
-The genotype dataset should be in a text file and in the following format. The plant names in the genotype dataset must be exactly the same as the ones submitted in the phenotype dataset file in the previous step.
+<% $c->i18n->p("genotype.interface.the_genotype_dataset_should_be_in_a_text_file_and", "The genotype dataset should be in a text file and in the following format. The plant names in the genotype dataset must be exactly the same as the ones submitted in the phenotype dataset file in the previous step.") |h %>
 <ul>
-  <li><strong>First row</strong>: first column refers to the label of the rows of lines. The rest of the columns are marker names.
+  <li><strong><% $c->i18n->p("genotype.interface.first_row", "First row") |h %></strong><% $c->i18n->p("genotype.interface.first_column_refers_to_the_label_of_the_rows_of", ": first column refers to the label of the rows of lines. The rest of the columns are marker names.") |h %>
 </li>
 <li>
-<strong>Second row</strong>: first column is empty. The rest of the columns are chromosome names for the corresponding markers. 
+<strong><% $c->i18n->p("genotype.interface.second_row", "Second row") |h %></strong><% $c->i18n->p("genotype.interface.first_column_is_empty_the_rest_of_the_columns_are", ": first column is empty. The rest of the columns are chromosome names for the corresponding markers.") |h %><% ' ' %>
 </li>
 <li>
-<p><strong>Third row</strong>: first column is empty. The rest of the columns are marker positions in their respective chromosomes.
+<p><strong><% $c->i18n->p("genotype.interface.third_row", "Third row") |h %></strong><% $c->i18n->p("genotype.interface.first_column_is_empty_the_rest_of_the_columns_are_0e02eb", ": first column is empty. The rest of the columns are marker positions in their respective chromosomes.") |h %>
 </li>
 <li>
-<p><strong>The rest of the rows</strong>: first column is the genotype name and the rest are the genotype values for each marker. 
+<p><strong><% $c->i18n->p("genotype.interface.the_rest_of_the_rows", "The rest of the rows") |h %></strong><% $c->i18n->p("genotype.interface.first_column_is_the_genotype_name_and_the_rest_are", ": first column is the genotype name and the rest are the genotype values for each marker.") |h %><% ' ' %>
 </li></ul>
   
 <pre>

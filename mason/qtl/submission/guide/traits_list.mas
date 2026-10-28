@@ -13,12 +13,12 @@ Isaak Y Tecle (iyt2@cornell.edu)
 </%doc>
 
 <&| /page/info_section.mas, 
-   title      => "Step 2: Traits list",
+   title      => HTML::Entities::encode_entities($c->i18n->p("help.qtl.traits_heading", "Step 2: Traits list")),
   collapsible => 1,
   collapsed   => 1
-&>
+, anchor_title => "Step 2: Traits list" &>
 
-The traits list file needs to be in a text file and should look like the following format.<br/>
+<% $c->i18n->p("help.qtl.traits_intro", "The traits list file needs to be in a text file and should look like the following format.") |h %><br/>
 
 <pre>
   traits             definition                            unit
@@ -28,7 +28,11 @@ The traits list file needs to be in a text file and should look like the followi
 </pre>
 
 
-The definition and unit are optional but would make the phenotype data more informative to users of the database.<br/>
+<% $c->i18n->p("help.qtl.traits_optional", "The definition and unit are optional but would make the phenotype data more informative to users of the database.") |h %><br/>
 
-Use of the Solanaceae Phenotype Ontology is highly encouraged to allow cross-study comparative analysis but not required. <br/>  
+<% $c->i18n->p("help.qtl.traits_ontology", "Use of the Solanaceae Phenotype Ontology is highly encouraged to allow cross-study comparative analysis but not required.") |h %> <br/>
 </&>
+
+<%once>
+use HTML::Entities ();
+</%once>

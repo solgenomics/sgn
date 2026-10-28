@@ -10,55 +10,55 @@ $locations
     <div class="modal-dialog modal-xl" role="document">
         <div class="modal-content ui-front">
             <div class="modal-header">
-                <button type="reset" class="close" id="add_activity_project_dismiss_button_1" name="add_activity_project_dismiss_button" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                <center><h4 class="modal-title" id="creatActivityProjectDialog">Add New Tracking Activities Project</h4></center>
+                <button type="reset" class="close" id="add_activity_project_dismiss_button_1" name="add_activity_project_dismiss_button" aria-label="<% $c->i18n->p("global.dataset_publish.close", "Close") |h %>"><span aria-hidden="true">&times;</span></button>
+                <center><h4 class="modal-title" id="creatActivityProjectDialog"><% $c->i18n->p("transformation.root.add_new_tracking_activities_project", "Add New Tracking Activities Project") |h %></h4></center>
             </div>
             <div class="modal-body">
                 <div class="container-fluid">
 
                     <&| /util/workflow.mas, id=> "add_tracking_activity_project_workflow" &>
-                        <&| /util/workflow.mas:step, title=> "Intro" &>
-                            <& /page/page_title.mas, title=>"Tracking Activities Tool" &>
-                            <p>You can use tracking tool to track and record activity information related to materials stored in the database (i.e. tracking tissue culture process of an accession). Data types of each process can be customized (please contact us).</p>
+                        <&| /util/workflow.mas:step, title=> $c->i18n->p("cross.ui.intro", "Intro") &>
+                            <& /page/page_title.mas, title=>HTML::Entities::encode_entities($c->i18n->p("transformation.root.tracking_activities_tool", "Tracking Activities Tool")) &>
+                            <p><% $c->i18n->p("transformation.root.you_can_use_tracking_tool_to_track_and_record_activity", "You can use tracking tool to track and record activity information related to materials stored in the database (i.e. tracking tissue culture process of an accession). Data types of each process can be customized (please contact us).") |h %></p>
                             <ul>
-                                <li>Tracking identifier is a globally unique name assigned to each material for capturing tracking information.</li>
-                                <li>Tracking identifiers are organized using Tracking Activities projects</li>
-                                <li>You can generate tracking identifiers by using a link on the Tracking Activities project page</li>
-                                <li>Record page allows you to record inputs of different data types. The link can be found on the project page. To record new information, you can retrieve any tracking identifier by scanning a barcode.</li>
-                                <li>Each tracking identifier has its own details page. In addition to the record page, you can record data directly using this details page. Tracking Identifier details page displays details of each data entry including an input, operator and timestamp as well as a summary of multiple entries of the same data type</li>
-                                <li>If you would like to track preparation process for requested items from ordering tool, ordering tool can be connected with tracking tool (please contact us).</li>
+                                <li><% $c->i18n->p("transformation.root.tracking_identifier_is_a_globally_unique_name_assigned_to_each.4ceedb3", "Tracking identifier is a globally unique name assigned to each material for capturing tracking information.") |h %></li>
+                                <li><% $c->i18n->p("transformation.root.tracking_identifiers_are_organized_using_tracking_activities_projects", "Tracking identifiers are organized using Tracking Activities projects") |h %></li>
+                                <li><% $c->i18n->p("transformation.root.you_can_generate_tracking_identifiers_by_using_a_link_on", "You can generate tracking identifiers by using a link on the Tracking Activities project page") |h %></li>
+                                <li><% $c->i18n->p("transformation.root.record_page_allows_you_to_record_inputs_of_different_data", "Record page allows you to record inputs of different data types. The link can be found on the project page. To record new information, you can retrieve any tracking identifier by scanning a barcode.") |h %></li>
+                                <li><% $c->i18n->p("transformation.root.each_tracking_identifier_has_its_own_details_page_in_addition", "Each tracking identifier has its own details page. In addition to the record page, you can record data directly using this details page. Tracking Identifier details page displays details of each data entry including an input, operator and timestamp as well as a summary of multiple entries of the same data type") |h %></li>
+                                <li><% $c->i18n->p("transformation.root.if_you_would_like_to_track_preparation_process_for_requested", "If you would like to track preparation process for requested items from ordering tool, ordering tool can be connected with tracking tool (please contact us).") |h %></li>
                             </ul>
                             <hr>
                             <center>
-                                <button id="next_step_add_new_project" class="btn btn-primary" onclick="Workflow.complete(this);">Go to Next Step</button>
+                                <button id="next_step_add_new_project" class="btn btn-primary" onclick="Workflow.complete(this);"><% $c->i18n->p("cross.ui.go_to_next_step", "Go to Next Step") |h %></button>
                             </center>
                         </&>
 
                         <form class="form-horizontal" role="form" name="create_activity_project_form" id="create_activity_project_form">
-                            <&| /util/workflow.mas:step, title=> "Add project info" &>
-                                <& /page/page_title.mas, title=>"Enter basic information about the project" &>
+                            <&| /util/workflow.mas:step, title=> $c->i18n->p("transformation.root.add_project_info", "Add project info") &>
+                                <& /page/page_title.mas, title=>HTML::Entities::encode_entities($c->i18n->p("transformation.root.enter_basic_information_about_the_project", "Enter basic information about the project")) &>
                                     <br/>
                                     <div class="form-group">
-                                        <label class="col-sm-3 control-lable">Project Name: </label>
+                                        <label class="col-sm-3 control-lable"><% $c->i18n->p("seedlot.project_name", "Project Name:") |h %> </label>
                                         <div class="col-sm-9">
                                             <input class="form-control" type="text" id="activity_project_name" name="activity_project_name"  />
                                         </div>
                                     </div><br/>
                                     <div class="form-group">
-                                        <label class="col-sm-3 control-label">Activity Type: </label>
+                                        <label class="col-sm-3 control-label"><% $c->i18n->p("transformation.root.activity_type", "Activity Type:") |h %> </label>
                                         <div class="col-sm-9">
                                             <select class="form-control" id="activity_type" name="activity_type">
-                                                <option value="">Select an activity type</option>
-                                                <option value="tissue_culture">Tissue Culture</option>
-                                                <option value="transformation">Transformation</option>                                                
+                                                <option value=""><% $c->i18n->p("transformation.root.select_an_activity_type", "Select an activity type") |h %></option>
+                                                <option value="tissue_culture"><% $c->i18n->p("transformation.root.tissue_culture", "Tissue Culture") |h %></option>
+                                                <option value="transformation"><% $c->i18n->p("transformation.root.transformation", "Transformation") |h %></option>
                                             </select>
                                         </div>
                                     </div><br/>
                                     <div class="form-group">
-                                        <label class="col-sm-3 control-label">Breeding Program: </label>
+                                        <label class="col-sm-3 control-label"><% $c->i18n->p("cross.ui.breeding_program.2c9b17e", "Breeding Program:") |h %> </label>
                                         <div class="col-sm-9">
                                             <select class="form-control" id="activity_project_program" name="activity_project_program">
-                                                <option value="">Select Breeding Program</option>
+                                                <option value=""><% $c->i18n->p("cross.ui.select_breeding_program", "Select Breeding Program") |h %></option>
 <%perl>
 foreach my $program (@$programs) {
     if (@$program[3]) {
@@ -72,10 +72,10 @@ foreach my $program (@$programs) {
                                         </div>
                                     </div><br/>
                                     <div class="form-group">
-                                        <label class="col-sm-3 control-label">Location of this project: </label>
+                                        <label class="col-sm-3 control-label"><% $c->i18n->p("transformation.root.location_of_this_project", "Location of this project:") |h %> </label>
                                         <div class="col-sm-9">
                                             <select class="form-control" id="activity_project_location" name="activity_project_location">
-                                                <option value="">Select Location</option>
+                                                <option value=""><% $c->i18n->p("cross.ui.select_location", "Select Location") |h %></option>
 <%perl>
     foreach my $location_hashref (@$locations) {
         my $properties = $location_hashref->{'properties'};
@@ -88,13 +88,13 @@ foreach my $program (@$programs) {
                                         </div>
                                     </div><br/>
                                     <div class="form-group">
-                                        <label class="col-sm-3 control-label">Year:</label>
+                                        <label class="col-sm-3 control-label"><% $c->i18n->p("cross.ui.year.c9410fe", "Year:") |h %></label>
                                         <div class="col-sm-9">
                                             <div id="activity_project_year" name="activity_project_year" ></div>
                                         </div>
                                     </div><br/>
                                     <div class="form-group">
-                                        <label class="col-sm-3 control-label">Description:</label>
+                                        <label class="col-sm-3 control-label"><% $c->i18n->p("global.dataset_publish.description", "Description:") |h %></label>
                                         <div class="col-sm-9">
                                             <textarea class="form-control" id="activity_project_description" name="activity_project_description" ></textarea>
                                         </div>
@@ -103,15 +103,15 @@ foreach my $program (@$programs) {
                                 <br/>
                                 <br/>
                                 <center>
-                                    <button type="button" class="btn btn-primary" onclick="Workflow.complete(this, false);" name="create_activity_project_submit" id="create_activity_project_submit">Submit</button>
+                                    <button type="button" class="btn btn-primary" onclick="Workflow.complete(this, false);" name="create_activity_project_submit" id="create_activity_project_submit"><% $c->i18n->p("global.manage_file_share_dump.submit", "Submit") |h %></button>
                                 </center>
                             </&>
                         </form>
 
-                        <&| /util/workflow.mas:complete, title=> "Complete" &>
-                            <& /page/page_title.mas, title=>"Your project is now in the database" &>
+                        <&| /util/workflow.mas:complete, title=> $c->i18n->p("cross.ui.complete", "Complete") &>
+                            <& /page/page_title.mas, title=>HTML::Entities::encode_entities($c->i18n->p("transformation.root.your_project_is_now_in_the_database", "Your project is now in the database")) &>
                             <ul>
-                                <center><li>Please use "Generate Tracking Identifiers" link on your tracking activities project page to generate tracking identifiers for each project.</li></center>
+                                <center><li><% $c->i18n->p("transformation.root.please_use_generate_tracking_identifiers_link_on_your_tracking_activities", "Please use \"Generate Tracking Identifiers\" link on your tracking activities project page to generate tracking identifiers for each project.") |h %></li></center>
                             </ul>
                             <br/>
                         </&>
@@ -119,7 +119,7 @@ foreach my $program (@$programs) {
                 </div>
             </div>
             <div class="modal-footer">
-                <button id="add_activity_project_dismiss_button_2" name="add_activity_project_dismiss_button" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                <button id="add_activity_project_dismiss_button_2" name="add_activity_project_dismiss_button" type="button" class="btn btn-default" data-dismiss="modal"><% $c->i18n->p("global.dataset_publish.close", "Close") |h %></button>
             </div>
         </div>
     </div>
@@ -149,37 +149,37 @@ jQuery(document).ready(function(){
     jQuery('#create_activity_project_submit').click(function() {
         var project_name = jQuery("#activity_project_name").val();
         if (!project_name) {
-            alert("Project name is required");
+            alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("seedlot.project_name_is_required", "Project name is required") : "Project name is required"));
             return;
         }
 
         var activity_type = jQuery("#activity_type").val();
         if (!activity_type) {
-            alert("Activity type is required");
+            alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("transformation.root.activity_type_is_required", "Activity type is required") : "Activity type is required"));
             return;
         }
 
         var breeding_program = jQuery("#activity_project_program").val();
         if (!breeding_program) {
-            alert("Breeding program is required");
+            alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("cross.ui.breeding_program_is_required", "Breeding program is required") : "Breeding program is required"));
             return;
         }
 
         var project_location = jQuery("#activity_project_location").val();
         if (!project_location) {
-            alert ("Location is required");
+            alert ((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("seedlots.ui.location_is_required", "Location is required") : "Location is required"));
             return;
         }
 
         var year = jQuery("#activity_project_year_select").val();
         if (!year) {
-            alert ("Year is required");
+            alert ((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("genotype.project.validation.year_required", "Year is required") : "Year is required"));
             return;
         }
 
         var project_description = jQuery("#activity_project_description").val();
         if (!project_description) {
-            alert ("Description is required");
+            alert ((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("genotype.project.validation.description_required", "Description is required") : "Description is required"));
             return;
         }
 
@@ -211,7 +211,7 @@ jQuery(document).ready(function(){
             },
             error: function(response){
                 jQuery('#working_modal').modal('hide');
-                alert('An error occurred saving new tracking activities project');
+                alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("transformation.root.an_error_occurred_saving_new_tracking_activities_project", "An error occurred saving new tracking activities project") : 'An error occurred saving new tracking activities project'));
             }
         });
     });
@@ -219,3 +219,7 @@ jQuery(document).ready(function(){
 });
 
 </script>
+
+<%once>
+use HTML::Entities ();
+</%once>

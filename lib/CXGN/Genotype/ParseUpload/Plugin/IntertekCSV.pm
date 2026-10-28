@@ -1,6 +1,7 @@
 package CXGN::Genotype::ParseUpload::Plugin::IntertekCSV;
 
 use Moose::Role;
+use SGN::I18N ();
 use SGN::Model::Cvterm;
 use Data::Dumper;
 use Text::CSV;
@@ -9,6 +10,7 @@ use CXGN::Genotype::Protocol;
 # Check that all sample IDs are in the database already
 sub _validate_with_plugin {
     my $self = shift;
+    my $i18n = SGN::I18N::translate($self);
     my $filename = $self->get_filename();
     my $marker_info_filename = $self->get_filename_marker_info();
     my $protocol_id = $self->get_nd_protocol_id();
@@ -72,22 +74,22 @@ sub _validate_with_plugin {
 
         # Check that the columns in the marker info file are what we expect
         if ($intertek_snp_id_header ne 'IntertekSNPID'){
-            push @error_messages, 'Column 1 header must be "IntertekSNPID" in the SNP Info File.';
+            push @error_messages, SGN::I18N::translate($i18n, "genotype.file.column_column_header_must_be_field_in_the_snp_info_file", "Column %{column} header must be \"%{field}\" in the SNP Info File.", {column => "1", field => "IntertekSNPID"});
         }
         if ($customer_snp_id_header ne 'CustomerSNPID'){
-            push @error_messages, 'Column 2 header must be "CustomerSNPID" in the SNP Info File.';
+            push @error_messages, SGN::I18N::translate($i18n, "genotype.file.column_column_header_must_be_field_in_the_snp_info_file", "Column %{column} header must be \"%{field}\" in the SNP Info File.", {column => "2", field => "CustomerSNPID"});
         }
         if ($ref_header ne 'Reference'){
-            push @error_messages, 'Column 3 header must be "Reference" in the SNP Info File.';
+            push @error_messages, SGN::I18N::translate($i18n, "genotype.file.column_column_header_must_be_field_in_the_snp_info_file", "Column %{column} header must be \"%{field}\" in the SNP Info File.", {column => "3", field => "Reference"});
         }
         if ($alt_header ne 'Alternate'){
-            push @error_messages, 'Column 4 header must be "Alternate" in the SNP Info File.';
+            push @error_messages, SGN::I18N::translate($i18n, "genotype.file.column_column_header_must_be_field_in_the_snp_info_file", "Column %{column} header must be \"%{field}\" in the SNP Info File.", {column => "4", field => "Alternate"});
         }
         if ($chrom_header ne 'Chromosome'){
-            push @error_messages, 'Column 5 header must be "Chromosome" in the SNP Info File.';
+            push @error_messages, SGN::I18N::translate($i18n, "genotype.file.column_column_header_must_be_field_in_the_snp_info_file", "Column %{column} header must be \"%{field}\" in the SNP Info File.", {column => "5", field => "Chromosome"});
         }
         if ($position_header ne 'Position'){
-            push @error_messages, 'Column 6 header must be "Position" in the SNP Info File.';
+            push @error_messages, SGN::I18N::translate($i18n, "genotype.file.column_column_header_must_be_field_in_the_snp_info_file", "Column %{column} header must be \"%{field}\" in the SNP Info File.", {column => "6", field => "Position"});
         }
 
         for my $i (6 .. $#marker_header_info){
@@ -95,7 +97,7 @@ sub _validate_with_plugin {
             $each_header =~ s/^\s+|\s+$//g;
 
             if (!$supported_marker_info{$each_header}){
-                push @error_messages, "Invalid  marker info type: $each_header";
+                push @error_messages, SGN::I18N::translate($i18n, "genotype.file.invalid_marker_info_type_each_header", "Invalid  marker info type: %{each_header}", {each_header => ("" . "$each_header")});
             }
         }
 
@@ -116,19 +118,19 @@ sub _validate_with_plugin {
             $chrom =~ s/^\s+|\s+$//g;
 
             if (!$intertek_snp_id){
-                push @error_messages, 'Intertek snp id is required for all markers.';
+                push @error_messages, SGN::I18N::translate($i18n, "genotype.file.intertek_snp_id_is_required_for_all_markers", "Intertek snp id is required for all markers.");
             }
             if (!$customer_snp_id){
-                push @error_messages, 'Customer snp id is required for all markers.';
+                push @error_messages, SGN::I18N::translate($i18n, "genotype.file.customer_snp_id_is_required_for_all_markers", "Customer snp id is required for all markers.");
             }
             if (!$ref){
-                push @error_messages, 'Reference is required for all markers.';
+                push @error_messages, SGN::I18N::translate($i18n, "genotype.file.reference_is_required_for_all_markers", "Reference is required for all markers.");
             }
             if (!$alt){
-                push @error_messages, 'Alternate is required for all markers.';
+                push @error_messages, SGN::I18N::translate($i18n, "genotype.file.alternate_is_required_for_all_markers", "Alternate is required for all markers.");
             }
 	    if (!defined($chrom) || $chrom eq '') {
-                push @error_messages, 'Chromosome is required for all markers.';
+                push @error_messages, SGN::I18N::translate($i18n, "genotype.file.chromosome_is_required_for_all_markers", "Chromosome is required for all markers.");
             }
             $marker_names{$customer_snp_id} = 1;
         }
@@ -140,7 +142,7 @@ sub _validate_with_plugin {
     #if (defined $protocol_id) {
     #    foreach (@file_marker_names) {
     #        if (!exists($stored_marker_info{$_})) {
-    #            push @error_messages, "Marker $_ in the marker info file is not found in the selected protocol.";
+    #            push @error_messages, SGN::I18N::translate($i18n, "genotype.file.marker_item_in_the_marker_info_file_is_not_found_in_the", "Marker %{item} in the marker info file is not found in the selected protocol.", {item => ("" . "$_")});
     #        }
     #    }
     #}
@@ -165,7 +167,7 @@ sub _validate_with_plugin {
 
         foreach (@markers) {
             if (!exists($marker_names{$_})) {
-                push @error_messages, "Marker $_ in the SNP grid file is not found in the marker info file.";
+                push @error_messages, SGN::I18N::translate($i18n, "genotype.file.marker_item_in_the_snp_grid_file_is_not_found_in_the", "Marker %{item} in the SNP grid file is not found in the marker info file.", {item => ("" . "$_")});
             }
         }
 
@@ -186,7 +188,7 @@ sub _validate_with_plugin {
 
     # Check that the first column in the header is equal to 'SampleName.LabID'
     if ($fields[0] ne 'SampleName.LabID'){
-        push @error_messages, 'Column 1 header must be "SampleName.LabID" in the Grid File.';
+        push @error_messages, SGN::I18N::translate($i18n, "genotype.file.column_column_header_must_be_field_in_the_grid_file", "Column %{column} header must be \"%{field}\" in the Grid File.", {column => "1", field => "SampleName.LabID"});
     }
 
     my $number_observation_units = scalar(@observation_unit_names);
@@ -222,7 +224,7 @@ sub _validate_with_plugin {
     } elsif ($stock_type eq 'stocks'){
         @missing_stocks = @{$validator->validate($schema,'stocks',$observation_unit_names)->{'missing'}};
     } else {
-        push @error_messages, "You can only upload genotype data for a tissue_sample OR accession (including synonyms) OR stocks!"
+        push @error_messages, SGN::I18N::translate($i18n, "genotype.file.you_can_only_upload_genotype_data_for_a_field_or_accession_including", "You can only upload genotype data for a %{field} OR %{accession} (including synonyms) OR %{stocks}!", {field => "tissue_sample", accession => "accession", stocks => "stocks"})
     }
 
     my %unique_stocks;
@@ -250,7 +252,7 @@ sub _validate_with_plugin {
     # If there are missing sample names, they will be returned along with an error message
     if (scalar(@missing_stocks_return)>0){
         $errors{'missing_stocks'} = \@missing_stocks_return;
-        push @error_messages, "The following stocks are not in the database: ".join(',',@missing_stocks_return);
+        push @error_messages, SGN::I18N::translate($i18n, "genotype.file.the_following_stocks_are_not_in_the_database_items", "The following stocks are not in the database: %{items}", {items => join(',',@missing_stocks_return)});
     }
 
     #store any errors found in the parsed file to parse_errors accessor
@@ -266,6 +268,7 @@ sub _validate_with_plugin {
 # After validation, the file data is actually parsed into the expected object
 sub _parse_with_plugin {
     my $self = shift;
+    my $i18n = SGN::I18N::translate($self);
     my $filename = $self->get_filename();
     my $marker_info_filename = $self->get_filename_marker_info();
     my $schema = $self->get_chado_schema();
@@ -427,7 +430,7 @@ sub _parse_with_plugin {
                             push @gt_vcf_genotype, './.';
                             push @alt_calls, './.';
                         } else {
-                            push @error_messages, "Allele Call Does Not Match Ref or Alt for Sample: $sample_id_with_lab_id Marker: $marker_name Alt: $alt Ref: $ref Allele: $a";
+                            push @error_messages, SGN::I18N::translate($i18n, "genotype.file.allele_call_does_not_match_ref_or_alt_for_sample_sample_id", "Allele Call Does Not Match Ref or Alt for Sample: %{sample_id_with_lab_id} Marker: %{marker_name} Alt: %{alt} Ref: %{ref} Allele: %{a}", {sample_id_with_lab_id => ("" . "$sample_id_with_lab_id"), marker_name => ("" . "$marker_name"), alt => ("" . "$alt"), ref => ("" . "$ref"), a => ("" . "$a")});
                         }
                     }
 

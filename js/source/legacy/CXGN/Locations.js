@@ -2,12 +2,136 @@
  *  Common JS functions used by the table and map in the Manage Locations page
  */
 
+// Optional locale assets must not block the native location interaction.
+var locationI18n = (window.SGN && window.SGN.i18n) || {
+    p: function (context, source, variables) {
+        return source.replace(/%\{([A-Za-z0-9_]+)\}/g, function (match, name) {
+            return variables && Object.prototype.hasOwnProperty.call(variables, name) ? String(variables[name]) : match;
+        });
+    },
+    np: function (context, one, many, count, variables) {
+        return this.p(context, count === 1 ? one : many, variables);
+    }
+};
+// Carry the page language only on these reviewed same-origin requests.
+function _sgnLocationLocaleHeaders(url) {
+    try {
+        var target = new URL(url, window.location.href);
+        if (target.origin !== window.location.origin || !/^\/ajax\/location\/(?:all|store|delete\/[0-9]+)$/.test(target.pathname)) return {};
+        var runtime = window.SGN && window.SGN.i18n;
+        var root = typeof document !== 'undefined' && document.documentElement;
+        var requested = root && typeof root.getAttribute === 'function' && root.getAttribute('data-sgn-locale');
+        return {'X-SGN-Locale': requested || (runtime && runtime.requestedLocale)
+            || (root && root.lang) || (runtime && runtime.locale) || 'en'};
+    } catch (error) {
+        return {};
+    }
+}
+
+function locationHTML(value) {
+    return String(value == null ? '' : value).replace(/[&<>"']/g, function (character) {
+        return {'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'}[character];
+    });
+}
+function locationTableText(value, type) {
+    return type === 'display' || type === 'filter' ? locationHTML(value) : value;
+}
+function locationTypeCaption(value) {
+    switch (value) {
+    case 'Town': return locationI18n.p('locations.type.town', 'Town');
+    case 'Farm': return locationI18n.p('locations.type.farm', 'Farm');
+    case 'Field': return locationI18n.p('locations.type.field', 'Field');
+    case 'Greenhouse': return locationI18n.p('locations.type.greenhouse', 'Greenhouse');
+    case 'Screenhouse': return locationI18n.p('locations.type.screenhouse', 'Screenhouse');
+    case 'Lab': return locationI18n.p('locations.type.lab', 'Lab');
+    case 'Storage': return locationI18n.p('locations.type.storage', 'Storage');
+    case 'Other': return locationI18n.p('locations.type.other', 'Other');
+    default: return value;
+    }
+}
+function locationPopupCaption(key) {
+    switch (key) {
+    case 'Abbreviation': return locationI18n.p('locations.table.abbreviation', 'Abbreviation');
+    case 'Program': return locationI18n.p('locations.table.program', 'Program');
+    case 'Type': return locationI18n.p('locations.table.type', 'Type');
+    case 'Trials': return locationI18n.p('locations.table.trials', 'Trials');
+    default: return key;
+    }
+}
+function locationTableLanguage() {
+    return {
+        sEmptyTable: locationHTML(locationI18n.p('accessions.table.empty', 'No data available in table')),
+        sInfo: locationHTML(locationI18n.p('accessions.table.info', 'Showing %{start} to %{end} of %{total} entries', {start: '_START_', end: '_END_', total: '_TOTAL_'})),
+        sInfoEmpty: locationHTML(locationI18n.p('accessions.table.info_empty', 'Showing 0 to 0 of 0 entries')),
+        sInfoFiltered: locationHTML(locationI18n.p('accessions.table.filtered', '(filtered from %{maximum} total entries)', {maximum: '_MAX_'})),
+        sLengthMenu: locationHTML(locationI18n.p('accessions.table.length', 'Show %{menu} entries', {menu: '_MENU_'})),
+        sLoadingRecords: locationHTML(locationI18n.p('accessions.table.loading', 'Loading...')),
+        sProcessing: locationHTML(locationI18n.p('accessions.table.processing', 'Processing...')),
+        sSearch: locationHTML(locationI18n.p('accessions.table.search', 'Search:')),
+        sZeroRecords: locationHTML(locationI18n.p('accessions.table.zero', 'No matching records found')),
+        oPaginate: {
+            sFirst: locationHTML(locationI18n.p('accessions.table.first', 'First')),
+            sLast: locationHTML(locationI18n.p('accessions.table.last', 'Last')),
+            sNext: locationHTML(locationI18n.p('accessions.table.next', 'Next')),
+            sPrevious: locationHTML(locationI18n.p('accessions.table.previous', 'Previous'))
+        },
+        oAria: {
+            sSortAscending: locationI18n.p('accessions.table.sort_ascending', ': activate to sort column ascending'),
+            sSortDescending: locationI18n.p('accessions.table.sort_descending', ': activate to sort column descending')
+        },
+        buttons: {
+            copyTitle: locationHTML(locationI18n.p('locations.table.copy_title', 'Copy to clipboard')),
+            copyKeys: locationHTML(locationI18n.p('locations.table.copy_keys', 'Press %{control} or %{meta} + %{key} to copy the table data to your system clipboard. To cancel, click this message or press %{escape}.', {control: 'ctrl', meta: '⌘', key: 'C', escape: 'escape'}))
+        }
+    };
+}
+// DataTables uses a two-slot object for its copy callback; delegate only that
+// table call to the bounded translator so Arabic/Ukrainian get their full rule.
+// The native clipboard/fallback action is preserved and the method is restored.
+function locationCopyAction(event, dt, node, config) {
+    var original = dt.i18n;
+    dt.i18n = function (key, fallback, count) {
+        if (key === 'buttons.copySuccess') {
+            return locationHTML(locationI18n.np('locations.table.copy_success', 'Copied %{count} row to clipboard', 'Copied %{count} rows to clipboard', count, {count: count}));
+        }
+        return original.apply(this, arguments);
+    };
+    try {
+        var buttons = jQuery.fn.dataTable.ext.buttons;
+        var nativeName = typeof buttons.copy === 'function' ? buttons.copy(dt, config) : 'copyHtml5';
+        var nativeButton = typeof nativeName === 'string' ? buttons[nativeName] : nativeName;
+        return nativeButton.action.call(this, event, dt, node, config);
+    } finally {
+        dt.i18n = original;
+    }
+}
+// These are the original real export column names, independent of visible UI.
+var locationCanonicalHeaders = ['Id', 'Name', 'Abbreviation', 'Country', 'Program', 'Type', 'Lat', 'Long', 'Altitude(m)', 'Trials', 'Nearest NOAA Station ID', 'Edit'];
+function locationCanonicalExports() {
+    return {
+        columns: ':visible',
+        orthogonal: 'export',
+        format: {
+            header: function (value, column) { return locationCanonicalHeaders[column]; },
+            body: function (value, row, column) {
+                // Only this legacy server-owned Trials field is an HTML link.
+                // Other values are canonical plain data, including literal <>/&.
+                if (column === 9) {
+                    var container = document.createElement('div');
+                    container.innerHTML = value;
+                    return container.textContent;
+                }
+                return value;
+            }
+        }
+    };
+}
+
 var table;
 var mymap;
 
 var lo = new CXGN.List();
-jQuery('#locations_list').html(lo.listSelect('locations_list', [ 'locations' ], 'select', undefined, undefined));
-jQuery('#locations_list').on('change', 'select', updateLocationsTable);
+
 
 jQuery('#add_location_link').click( function() {
     jQuery('#add_location_dialog').modal("show");
@@ -47,6 +171,7 @@ function has_coordinates(feature) {
 function updateLocations(callback) {
     jQuery.ajax({
         url: '/ajax/location/all',
+        headers: _sgnLocationLocaleHeaders('/ajax/location/all'),
         success: function(response) {
             var locations = response?.data || [];
             locations = locations.filter(function(loc) {
@@ -55,7 +180,7 @@ function updateLocations(callback) {
             if ( callback ) callback(locations);
         },
         error: function(response) {
-            alert("An error occurred");
+            alert(locationI18n.p("locations.load_failed", "An error occurred"));
         }
     });
 }
@@ -73,16 +198,21 @@ function refreshLocationTableAndMap() {
 
 
 function initialize_table() {
+    // The Mason filter container exists now; it is absent during head scripts.
+    var locationsList = jQuery('#locations_list');
+    locationsList.html(lo.listSelect('locations_list', [ 'locations' ], locationI18n.p('locations.table.select_list', 'select'), undefined, undefined));
+    locationsList.off('change.locationList', 'select').on('change.locationList', 'select', updateLocationsTable);
     createLocationsTable();
     updateLocationsTable();
 }
 
 function createLocationsTable() {
-    var export_message = 'Location data from ' + window.location.href;
+    var export_message = locationI18n.p('locations.table.export_message', 'Location data from %{url}', {url: window.location.href});
     table = jQuery('#location_table').DataTable({
         data: [],
         dom: 'Bfrtip',
         rowId: 'properties.Id',
+        language: locationTableLanguage(),
         "columns": [
             { "data": "properties.Id" },
             { "data": "properties.Name", "render": render_text },
@@ -93,12 +223,14 @@ function createLocationsTable() {
                 }
             },
             { "data": "properties.Program", "render": render_text },
-            { "data": "properties.Type", "render": render_text },
+            { "data": "properties.Type", "render": function(data, type) {
+                return render_text(type === 'display' ? locationTypeCaption(data) : data, type);
+            } },
             { "data": "properties.Latitude" },
             { "data": "properties.Longitude" },
             { "data": "properties.Altitude" },
             { "data": "properties.Trials" },
-            { "data": "properties.NOAAStationID",
+            { "data": "properties.NOAAStationID", "type": "string",
                 "render":function(data, type, full, meta) {
                     var station_id = location_html_escape(full.properties.NOAAStationID);
                     return station_id ? "<a href='https://www.ncdc.noaa.gov/cdo-web/datasets/GHCND/stations/" + station_id + "/detail' target=_blank>"+ station_id + "</a>" : "";
@@ -107,33 +239,33 @@ function createLocationsTable() {
             {
                 "data": "properties.Id",
                 "render": function(data, type, full, meta) {
-                    return `[<a href="javascript:;" onclick="edit_location(${full.properties.Id})">Edit</a>] [<a href="javascript:;" onclick="delete_location(${full.properties.Id})">Delete</a>]`;
+                    if (type !== 'display') return '[Edit] [Delete]';
+                    return `[<a href="javascript:;" onclick="edit_location(${full.properties.Id})">${locationHTML(locationI18n.p('locations.edit.action', 'Edit'))}</a>] [<a href="javascript:;" onclick="delete_location(${full.properties.Id})">${locationHTML(locationI18n.p('locations.delete.action', 'Delete'))}</a>]`;
                 }
             }
         ],
-        buttons: [ 'colvis',
+        buttons: [ {extend: 'colvis', text: locationHTML(locationI18n.p('locations.table.columns', 'Column visibility'))},
             {
                 extend: 'copy',
-                exportOptions: {
-                    columns: ':visible'
-                }
+                text: locationHTML(locationI18n.p('locations.table.copy', 'Copy')),
+                action: locationCopyAction,
+                exportOptions: locationCanonicalExports()
             },
             {
                 extend: 'excelHtml5',
+                text: locationHTML(locationI18n.p('locations.table.excelHtml5', 'Excel')),
                 title: document.title +'_locations',
-                exportOptions: {
-                    columns: ':visible'
-                }
+                exportOptions: locationCanonicalExports()
             },
             {
                 extend: 'csvHtml5',
+                text: locationHTML(locationI18n.p('locations.table.csvHtml5', 'CSV')),
                 title: document.title +'_locations',
-                exportOptions: {
-                    columns: ':visible'
-                }
+                exportOptions: locationCanonicalExports()
             },
             {
                 extend: 'pdfHtml5',
+                text: locationHTML(locationI18n.p('locations.table.pdfHtml5', 'PDF')),
                 title: document.title +'_locations',
                 exportOptions: {
                     columns: ':visible'
@@ -142,6 +274,7 @@ function createLocationsTable() {
             },
             {
                 extend: 'print',
+                text: locationHTML(locationI18n.p('locations.table.print', 'Print')),
                 exportOptions: {
                     columns: ':visible',
                     // The escaped display value already contains entities (e.g. &lt;img&gt;).
@@ -192,8 +325,11 @@ function updateLocationsTable() {
 
 
 function initialize_map(id = "location_map") {
+    // A recreated map must not leave a table callback pointing to removed layers.
+    jQuery('#location_table').off('draw.dt.locationMap');
     updateLocations((locationJSON) => {
         if ( mymap ) {
+            mymap.stop();
             mymap.off();
             mymap.remove();
         }
@@ -211,9 +347,9 @@ function initialize_map(id = "location_map") {
         });
 
         var baseMaps = {
-            "Street (Default)": streetmap,
-            "Topographical": topomap,
-            "Satellite": satellite
+            [locationHTML(locationI18n.p('locations.map.street', 'Street (Default)'))]: streetmap,
+            [locationHTML(locationI18n.p('locations.map.topographical', 'Topographical'))]: topomap,
+            [locationHTML(locationI18n.p('locations.map.satellite', 'Satellite'))]: satellite
         };
 
         var location_layer = L.geoJSON(locationJSON, {
@@ -225,7 +361,7 @@ function initialize_map(id = "location_map") {
         });
 
         var overlayMaps = {
-            "Locations": location_layer
+            [locationHTML(locationI18n.p('locations.map.locations', 'Locations'))]: location_layer
         };
 
         mymap = L.map( id, {
@@ -238,7 +374,7 @@ function initialize_map(id = "location_map") {
 
                 container.style.backgroundColor = 'white';
                 container.style.cursor = "pointer";
-                container.title = 'Zoom to my location';
+                container.title = locationI18n.p('locations.map.zoom', 'Zoom to my location');
                 container.style.width = '30px';
                 container.style.height = '30px';
 
@@ -267,7 +403,7 @@ function initialize_map(id = "location_map") {
             popup
                 .setLatLng(e.latlng)
                 .setContent(
-                    'Add a new location here?<br><center><a href="javascript:;" onclick="add_from_map(\''+e.latlng.lat+','+e.latlng.lng+'\')">Add Location</a></center>'
+                    locationHTML(locationI18n.p('locations.map.add_here', 'Add a new location here?')) + '<br><center><a href="javascript:;" onclick="add_from_map(\''+e.latlng.lat+','+e.latlng.lng+'\')">' + locationHTML(locationI18n.p('locations.map.add', 'Add Location')) + '</a></center>'
                 )
                 .openOn(mymap);
         }
@@ -286,7 +422,7 @@ function initialize_map(id = "location_map") {
 
         if ( jQuery("#location_table").length ) {
             var table = jQuery('#location_table').DataTable();
-            table.on('draw.dt', function () {  // recreate location layer based on filtered table contents
+            table.on('draw.dt.locationMap', function () {  // recreate location layer based on filtered table contents
                 location_layer.clearLayers();
                 var ids = {};
                 table.column(0,  { search:'applied' } ).data().each(function(value, index) {
@@ -303,7 +439,7 @@ function initialize_map(id = "location_map") {
                 onEachFeature: onEachFeature
                 });
 
-                layerControl.addOverlay(location_layer, "Locations");
+                layerControl.addOverlay(location_layer, locationHTML(locationI18n.p('locations.map.locations', 'Locations')));
                 location_layer.addTo(mymap);
                 if ( location_layer.getBounds().isValid() ) {
                     mymap.fitBounds(location_layer.getBounds());
@@ -324,7 +460,7 @@ function style(feature) {
 
     var townMarker = L.ExtraMarkers.icon({
         icon: 'fa-number',
-        innerHTML: '<div style="color: white; position: relative; top: 50%; transform: translateY(-50%); font-size: 80%">'+label+'</div>',
+        innerHTML: '<div style="color: white; position: relative; top: 50%; transform: translateY(-50%); font-size: 80%">'+locationHTML(label)+'</div>',
         markerColor: 'purple',
         shape: 'circle',
         prefix: ''
@@ -333,7 +469,7 @@ function style(feature) {
     var farmMarker = L.ExtraMarkers.icon({
         icon: 'fa-number',
         // number: feature.properties.Id,
-        innerHTML: '<div style="color: white; position: relative; top: 50%; transform: translateY(-50%); font-size: 80%">'+label+'</div>',
+        innerHTML: '<div style="color: white; position: relative; top: 50%; transform: translateY(-50%); font-size: 80%">'+locationHTML(label)+'</div>',
         markerColor: 'red',
         shape: 'circle',
         prefix: ''
@@ -342,7 +478,7 @@ function style(feature) {
     var fieldMarker = L.ExtraMarkers.icon({
         icon: 'fa-number',
         // number: feature.properties.Id,
-        innerHTML: '<div style="color: white; position: relative; top: 50%; transform: translateY(-50%); font-size: 80%">'+label+'</div>',
+        innerHTML: '<div style="color: white; position: relative; top: 50%; transform: translateY(-50%); font-size: 80%">'+locationHTML(label)+'</div>',
         markerColor: 'orange',
         shape: 'circle',
         prefix: ''
@@ -351,7 +487,7 @@ function style(feature) {
     var defaultMarker = L.ExtraMarkers.icon({
         icon: 'fa-number',
         // number: feature.properties.Id,
-        innerHTML: '<div style="color: white; position: relative; top: 50%; transform: translateY(-50%); font-size: 80%">'+label+'</div>',
+        innerHTML: '<div style="color: white; position: relative; top: 50%; transform: translateY(-50%); font-size: 80%">'+locationHTML(label)+'</div>',
         markerColor: 'cyan',
         shape: 'circle',
         prefix: ''
@@ -360,7 +496,7 @@ function style(feature) {
     var greenhouseMarker = L.ExtraMarkers.icon({
         icon: 'fa-number',
         // number: feature.properties.Id,
-        innerHTML: '<div style="color: white; position: relative; top: 50%; transform: translateY(-50%); font-size: 80%">'+label+'</div>',
+        innerHTML: '<div style="color: white; position: relative; top: 50%; transform: translateY(-50%); font-size: 80%">'+locationHTML(label)+'</div>',
         markerColor: 'green-light',
         shape: 'penta',
         prefix: ''
@@ -369,7 +505,7 @@ function style(feature) {
     var screenhouseMarker = L.ExtraMarkers.icon({
         icon: 'fa-number',
         // number: feature.properties.Id,
-        innerHTML: '<div style="color: white; position: relative; top: 50%; transform: translateY(-50%); font-size: 80%">'+label+'</div>',
+        innerHTML: '<div style="color: white; position: relative; top: 50%; transform: translateY(-50%); font-size: 80%">'+locationHTML(label)+'</div>',
         markerColor: 'white',
         shape: 'penta',
         prefix: ''
@@ -378,7 +514,7 @@ function style(feature) {
     var labMarker = L.ExtraMarkers.icon({
         icon: 'fa-number',
         // number: feature.properties.Id,
-        innerHTML: '<div style="color: white; position: relative; top: 50%; transform: translateY(-50%); font-size: 80%">'+label+'</div>',
+        innerHTML: '<div style="color: white; position: relative; top: 50%; transform: translateY(-50%); font-size: 80%">'+locationHTML(label)+'</div>',
         markerColor: 'blue',
         shape: 'square',
         prefix: ''
@@ -387,7 +523,7 @@ function style(feature) {
     var storageMarker = L.ExtraMarkers.icon({
         icon: 'fa-number',
         // number: feature.properties.Id,
-        innerHTML: '<div style="color: white; position: relative; top: 50%; transform: translateY(-50%); font-size: 80%">'+label+'</div>',
+        innerHTML: '<div style="color: white; position: relative; top: 50%; transform: translateY(-50%); font-size: 80%">'+locationHTML(label)+'</div>',
         markerColor: 'purple',
         shape: 'square',
         prefix: ''
@@ -396,7 +532,7 @@ function style(feature) {
     var otherMarker = L.ExtraMarkers.icon({
         icon: 'fa-number',
         // number: feature.properties.Id,
-        innerHTML: '<div style="color: white; position: relative; top: 50%; transform: translateY(-50%); font-size: 80%">'+label+'</div>',
+        innerHTML: '<div style="color: white; position: relative; top: 50%; transform: translateY(-50%); font-size: 80%">'+locationHTML(label)+'</div>',
         markerColor: 'pink',
         shape: 'circle',
         prefix: ''
@@ -421,11 +557,13 @@ function onEachFeature(feature, layer) {
     var popupContent = '<table class="table table-sm"><caption style="text-align: center;"><font id="'+feature.properties.Id+'_name" size="3" color="black">'+location_html_escape(feature.properties.Name)+'</font></caption><tbody>';
     for (var i = 0; i < keys.length; i++) {
         // Trials is a link built by the server, the other fields are user-entered text
-        var value = keys[i] === 'Trials' ? feature.properties[keys[i]] : location_html_escape(feature.properties[keys[i]]);
-        popupContent += '<tr><th>'+keys[i]+'</th><td>'+value+'</td></tr>';
+        var rawValue = feature.properties[keys[i]];
+        var value = keys[i] === 'Type' ? locationTypeCaption(rawValue) : rawValue;
+        var displayValue = keys[i] === 'Trials' ? value : location_html_escape(value);
+        popupContent += '<tr><th>'+location_html_escape(locationPopupCaption(keys[i]))+'</th><td>'+displayValue+'</td></tr>';
     }
-    var options = '[<a href="javascript:;" onclick="edit_location('+feature.properties.Id+')">Edit</a>]&nbsp[<a href="javascript:;" onclick="delete_location('+feature.properties.Id+')">Delete</a>]';
-    popupContent += '<tr><th>Options</th><td>'+options+'</td></tr></tbody></table>';
+    var options = '[<a href="javascript:;" onclick="edit_location('+feature.properties.Id+')">'+locationHTML(locationI18n.p('locations.edit.action', 'Edit'))+'</a>]&nbsp[<a href="javascript:;" onclick="delete_location('+feature.properties.Id+')">'+locationHTML(locationI18n.p('locations.delete.action', 'Delete'))+'</a>]';
+    popupContent += '<tr><th>'+locationHTML(locationI18n.p('locations.map.options', 'Options'))+'</th><td>'+options+'</td></tr></tbody></table>';
     layer.bindPopup(popupContent);
     layer.on('mouseover', function (e) {
         this.openPopup();
@@ -482,7 +620,7 @@ function add_from_map(coordinate_string) {
 function edit_location(id) {
     updateLocations((locations) => {
         var matches = locations.filter((e) => e.properties.Id === id);
-        if ( matches.length !== 1) return alert("Could not find matching location");
+        if ( matches.length !== 1) return alert(locationI18n.p('locations.not_found', 'Could not find matching location'));
         var loc_data = matches[0];
 
         //console.log("Data for location to edit: "+JSON.stringify(loc_data));
@@ -520,17 +658,18 @@ function edit_location(id) {
 function delete_location(id) {
     updateLocations((locations) => {
         var matches = locations.filter((e) => e.properties.Id === id);
-        if ( matches.length !== 1) return alert("Could not find matching location");
+        if ( matches.length !== 1) return alert(locationI18n.p('locations.not_found', 'Could not find matching location'));
         var loc_data = matches[0];
 
         var name = loc_data.properties.Name;
-        var yes = confirm('Are you sure you want to delete location '+name+'? ');
+        var yes = confirm(locationI18n.p('locations.delete.confirm', 'Are you sure you want to delete location %{name}? ', {name: name}));
 
         if (! yes) { return; }
 
         new jQuery.ajax( {
             type: 'POST',
             url: '/ajax/location/delete/'+id,
+            headers: _sgnLocationLocaleHeaders('/ajax/location/delete/'+id),
             success: function(response) {
                 if (response.error) { alert(response.error); }
                 else {
@@ -539,7 +678,7 @@ function delete_location(id) {
                 }
             },
             error: function(response) {
-                alert("An error occurred");
+                alert(locationI18n.p("locations.load_failed", "An error occurred"));
             }
         });
     });

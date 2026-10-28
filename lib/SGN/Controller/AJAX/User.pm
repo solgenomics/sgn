@@ -34,16 +34,16 @@ sub login : Path('/ajax/user/login') Args(0) {
     my $login_info = $login->login_user($username, $password);
 
     if (exists($login_info->{incorrect_password}) && $login_info->{incorrect_password} == 1) {
-	$c->stash->{rest} = { error => "Login credentials are incorrect. Please try again." };
+	$c->stash->{rest} = { error => $c->i18n->p('account.server.incorrect_credentials', 'Login credentials are incorrect. Please try again.') };
 	return;
     }
     elsif (exists($login_info->{account_disabled}) && $login_info->{account_disabled}) {
-	$c->stash->{rest} = { error => "This account has been deactivated due to $login_info->{account_disabled}. Please contact the database administrator to re-instate the account." };
+	$c->stash->{rest} = { error => $c->i18n->p('account.server.disabled_account', 'This account has been deactivated due to %{reason}. Please contact the database administrator to re-instate the account.', {reason => $login_info->{account_disabled}}) };
 	return;
     }
     else {
 	$c->stash->{rest} = {
-	    message => "Login successful",
+	    message => $c->i18n->p('account.server.login_success', 'Login successful'),
 	    goto_url => $goto_url
 	};
     }
@@ -56,7 +56,7 @@ sub logout :Path('/ajax/user/logout') Args(0) {
     my $login = CXGN::Login->new($c->dbc->dbh());
     $login->logout_user();
 
-    $c->stash->{rest} = { message => "User successfully logged out." };
+    $c->stash->{rest} = { message => $c->i18n->p('account.server.logout_success', 'User successfully logged out.') };
 }
 
 sub logout_externally :Path('/ajax/user/logout_externally') QueryParam('redirect_uri') {
@@ -70,7 +70,7 @@ sub logout_externally :Path('/ajax/user/logout_externally') QueryParam('redirect
     $login->logout_user();
 #    $c->stash->{redirect_uri} = $redirect_uri;
 #    $c->stash->{template} = '/site/toolbar/logout_externally.mas';
-    $c->stash->{rest} = { message => "User successfully logged out." };
+    $c->stash->{rest} = { message => $c->i18n->p('account.server.logout_success', 'User successfully logged out.') };
 }
 
 sub new_account :Path('/ajax/user/new') Args(0) {
@@ -82,7 +82,7 @@ sub new_account :Path('/ajax/user/new') Args(0) {
     print STDERR "Adding new account...\n";
     if ($c->config->{is_mirror}) {
 	$c->stash->{template} = '/system_message.mas';
-	$c->stash->{message} = "This site is a mirror site and does not support adding users. Please go to the main site to create an account.";
+	$c->stash->{message} = $c->i18n->p('account.server.mirror_registration', 'This site is a mirror site and does not support adding users. Please go to the main site to create an account.');
 	return;
     }
 
@@ -109,47 +109,47 @@ sub new_account :Path('/ajax/user/new') Args(0) {
 	#
 	my @fail = ();
 	if (length($username) < 7) {
-	    push @fail, "Username is too short. Username must be 7 or more characters";
+	    push @fail, $c->i18n->p('account.server.username_short', 'Username is too short. Username must be %{minimum} or more characters', {minimum => 7});
 	} elsif ( $username =~ /\s/ ) {
-        push @fail, "Username must not contain spaces";
+        push @fail, $c->i18n->p('account.server.username_spaces', 'Username must not contain spaces');
     } else {
 	    # does user already exist?
 	    #
 	    my $existing_login = CXGN::People::Login -> get_login($c->dbc()->dbh(), $username);
 
 	    if ($existing_login->get_username()) {
-		push @fail, "Username \"$username\" is already in use. Please pick a different username.";
+		push @fail, $c->i18n->p('account.server.username_exists', 'Username "%{username}" is already in use. Please pick a different username.', {username => $username});
 	    }
 
 	}
 	if (length($password) < 7) {
-	    push @fail, "Password is too short. Password must be 7 or more characters";
+	    push @fail, $c->i18n->p('account.server.password_short', 'Password is too short. Password must be %{minimum} or more characters', {minimum => 7});
 	}
 	if ("$password" ne "$confirm_password") {
-	    push @fail, "Password and confirm password do not match.";
+	    push @fail, $c->i18n->p('account.server.password_mismatch', 'Password and confirm password do not match.');
 	}
 
 	if ($password eq $username) {
-	    push @fail, "Password must not be the same as your username.";
+	    push @fail, $c->i18n->p('account.server.password_username', 'Password must not be the same as your username.');
 	}
 	if ($email_address !~ m/[^\@]+\@[^\@]+/) {
-	    push @fail, "Email address is invalid.";
+	    push @fail, $c->i18n->p('account.server.email_invalid', 'Email address is invalid.');
 	}
     if ( $email_address ) {
         my @person_ids = CXGN::People::Login->get_login_by_email($c->dbc()->dbh(), $email_address);
         if ( scalar(@person_ids) > 0 ) {
-            push @fail, "Email address is already associated with an account.";
+            push @fail, $c->i18n->p('account.server.email_exists', 'Email address is already associated with an account.');
         }
     }
 	unless($first_name) {
-	    push @fail,"You must enter a first name or initial.";
+	    push @fail,$c->i18n->p('account.server.first_name_required', 'You must enter a first name or initial.');
 	}
 	unless($last_name) {
-	    push @fail,"You must enter a last name.";
+	    push @fail,$c->i18n->p('account.server.last_name_required', 'You must enter a last name.');
 	}
 
 	if (@fail) {
-	    $c->stash->{rest} = { error => "Account creation failed for the following reason(s): ".(join ", ", @fail) };
+	    $c->stash->{rest} = { error => $c->i18n->p('account.server.creation_failed', 'Account creation failed for the following reason(s): %{reasons}', {reasons => join(", ", @fail)}) };
 	    return;
 	}
     }
@@ -234,17 +234,21 @@ END_HEREDOC
     my $message = "";
     if ( $c->config->{user_registration_admin_confirmation} && $c->config->{user_registration_admin_confirmation_email} ) {
         CXGN::Contact::send_email($subject,$body,'user_registration_admin_confirmation_email');
-        $message = "Your account has been created but first must be confirmed by the site administrators.  You will receive an email once your account has been confirmed.";
+        $message = $c->i18n->p('account.server.admin_confirmation', 'Your account has been created but first must be confirmed by the site administrators.  You will receive an email once your account has been confirmed.');
     }
 
     # Send confirmation email to user
     else {
         CXGN::Contact::send_email($subject,$body,$email_address);
-        $message = "To continue, you must confirm that we can reach you via email address \"$email_address\". An email has been sent with a URL to confirm this address. Please check your email for this message and use the link to confirm your email address.";
+        $message = $c->i18n->p('account.server.email_confirmation', 'To continue, you must confirm that we can reach you via email address "%{email}". An email has been sent with a URL to confirm this address. Please check your email for this message and use the link to confirm your email address.', {email => $email_address});
     }
 
     $c->stash->{rest} = {
-        message => "Account was created with username \"$username\".\n\n$message\n\nYou will be able to login once your account has been confirmed."
+        message => $c->i18n->p('account.server.account_created', 'Account was created with username "%{username}".
+
+%{confirmation}
+
+You will be able to login once your account has been confirmed.', {username => $username, confirmation => $message})
     };
 }
 
@@ -398,7 +402,7 @@ sub forgot_username : Path('/ajax/user/forgot_username') Args(0) {
     $self->send_forgot_username_email_message($c, $email, \@person_ids);
 
     $c->stash->{rest} = {
-        message => "Username email requested. If you have an account on this database with this email, you will receive a message that includes the username associated with this email address.  If you do not have an account with this email address, you will not receive a message."
+        message => $c->i18n->p('account.server.forgot_requested', 'Username email requested. If you have an account on this database with this email, you will receive a message that includes the username associated with this email address.  If you do not have an account with this email address, you will not receive a message.')
     };
 }
 
@@ -423,7 +427,7 @@ sub reset_password :Path('/ajax/user/reset_password') Args(0) {
     }
 
     $c->stash->{rest} = {
-        message => "Password reset email requested. If you have an account on this database with this email, you will receive a message with a password reset link.  If you do not have an account with this email address, you will not receive a message.",
+        message => $c->i18n->p('account.server.reset_requested', 'Password reset email requested. If you have an account on this database with this email, you will receive a message with a password reset link.  If you do not have an account with this email address, you will not receive a message.'),
     };
 }
 
@@ -438,12 +442,12 @@ sub process_reset_password_form :Path('/ajax/user/process_reset_password') Args(
     my $new_password = $c->req->body_parameters->{new_password};
 
     if (length($new_password) < 7) {
-        $c->stash->{rest} = { error => "Password is too short. Password must be 7 or more characters" };
+        $c->stash->{rest} = { error => $c->i18n->p('account.server.password_short', 'Password is too short. Password must be %{minimum} or more characters', {minimum => 7}) };
         $c->detach();
     }
 
     if ($confirm_password ne $new_password){
-        $c->stash->{rest} = { error => "Please enter the same password in the confirm password field!" };
+        $c->stash->{rest} = { error => $c->i18n->p('account.server.reset_confirm_mismatch', 'Please enter the same password in the confirm password field!') };
         $c->detach();
     }
 
@@ -471,7 +475,7 @@ sub process_reset_password_form :Path('/ajax/user/process_reset_password') Args(
     }
 
     if ($person_id) {
-        $c->stash->{rest} = { message => "The password was successfully updated." };
+        $c->stash->{rest} = { message => $c->i18n->p('account.server.password_updated', 'The password was successfully updated.') };
     }
     else {
         $c->stash->{rest} = { error => "The password reset link is invalid or has already been used. Please request a new password reset email." };
@@ -600,17 +604,30 @@ sub get_login_button_html :Path('/ajax/user/login_button_html') Args(0) {
     my $self = shift;
     my $c = shift;
     eval {
-	my $production_site = $c->config->{main_production_site_url};
+	# Escape translated labels at their HTML sink. Authentication and routes
+	# remain owned by the existing controller branches below.
+	my %labels = (
+            login => encode_entities($c->i18n->p('navigation.login.sign_in', 'Login')),
+            main_site => encode_entities($c->i18n->p('navigation.login.main_site', 'main site')),
+            main_site_title => encode_entities($c->i18n->p('navigation.login.main_site_title', 'log in on main site')),
+            profile => encode_entities($c->i18n->p('navigation.login.profile', 'My Profile')),
+            lists => encode_entities($c->i18n->p('navigation.login.lists', 'Lists')),
+            datasets => encode_entities($c->i18n->p('navigation.login.datasets', 'Datasets')),
+            calendar_title => encode_entities($c->i18n->p('navigation.login.calendar_title', 'Your Calendar')),
+            calendar => encode_entities($c->i18n->p('navigation.login.calendar', 'Calendar')),
+            logout => encode_entities($c->i18n->p('navigation.login.sign_out', 'Logout')),
+        );
+	my $production_site = encode_entities($c->config->{main_production_site_url} || '');
 	my $html = "";
 	# if the site is a mirror, gray out the login/logout links
 	if( $c->config->{'is_mirror'} ) {
 	    print STDERR "generating login button for mirror site...\n";
 	    $html = <<HTML;
-	    <a style="line-height: 1.2; text-decoration: underline; background: none" href="$production_site" title="log in on main site">main site</a>
+	    <a style="line-height: 1.2; text-decoration: underline; background: none" href="$production_site" title="$labels{main_site_title}">$labels{main_site}</a>
 	} elsif ( $c->config->{disable_login} ) {
 	    <li class="dropdown">
 		<div class="btn-group" role="group" aria-label="..." style="height:34px; margin: 1px 0px 0px 0px" >
-		<button class="btn btn-primary disabled" type="button" style="margin: 7px 7px 0px 0px">Login</button>
+		<button class="btn btn-primary disabled" type="button" style="margin: 7px 7px 0px 0px">$labels{login}</button>
 		</div>
 		</li>
 
@@ -622,7 +639,7 @@ HTML
   <li class="dropdown">
       <div class="btn-group" role="group" aria-label="..." style="height:34px; margin: 1px 0px 0px 0px" >
 	<a href="/user/login">
-          <button class="btn btn-primary" type="button" style="margin: 7px 7px 0px 0px">Login</button>
+          <button class="btn btn-primary" type="button" style="margin: 7px 7px 0px 0px">$labels{login}</button>
 	</a>
       </div>
   </li>
@@ -631,20 +648,20 @@ HTML
 } elsif ( $c->user_exists ) {
     print STDERR "Generate login button for logged in user...\n";
     my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
-    my $username = $c->user->get_username();
+    my $username = encode_entities($c->user->get_username());
     $html = <<HTML;
     <div class="btn-group" role="group" aria-label="..." style="height:34px; margin: 1px 3px 0px 0px">
-        <button id="navbar_profile" class="btn btn-primary" type="button" onclick='location.href="/solpeople/profile/$sp_person_id"' style="margin: 7px 0px 0px 0px" title="My Profile">$username</button>
-        <button id="navbar_lists" name="lists_link" class="btn btn-info" style="margin:7px 0px 0px 0px" type="button" title="Lists" onClick="show_lists();">
-            <span class="glyphicon glyphicon-align-justify" ></span>&nbsp;<span class="hidden-sm">Lists</span>
+        <button id="navbar_profile" class="btn btn-primary" type="button" onclick='location.href="/solpeople/profile/$sp_person_id"' style="margin: 7px 0px 0px 0px" title="$labels{profile}">$username</button>
+        <button id="navbar_lists" name="lists_link" class="btn btn-info" style="margin:7px 0px 0px 0px" type="button" title="$labels{lists}" onClick="show_lists();">
+            <span class="glyphicon glyphicon-align-justify" ></span>&nbsp;<span class="hidden-sm">$labels{lists}</span>
         </button>
-        <button id="navbar_datasets" name="lists_link" class="btn btn-info" style="margin:7px 0px 0px 0px" type="button" title="Datasets" onClick="window.location='/search/datasets';">
-            <span class="glyphicon glyphicon-list" style="transform: rotate(90deg)"></span>&nbsp;<span class="hidden-sm">Datasets</span>
+        <button id="navbar_datasets" name="lists_link" class="btn btn-info" style="margin:7px 0px 0px 0px" type="button" title="$labels{datasets}" onClick="window.location='/search/datasets';">
+            <span class="glyphicon glyphicon-list" style="transform: rotate(90deg)"></span>&nbsp;<span class="hidden-sm">$labels{datasets}</span>
         </button>
-        <button id="navbar_personal_calendar" name="personal_calendar_link" class="btn btn-primary" style="margin:7px 0px 0px 0px" type="button" title="Your Calendar">
-            Calendar&nbsp;<span class="glyphicon glyphicon-calendar" ></span>
+        <button id="navbar_personal_calendar" name="personal_calendar_link" class="btn btn-primary" style="margin:7px 0px 0px 0px" type="button" title="$labels{calendar_title}">
+            $labels{calendar}&nbsp;<span class="glyphicon glyphicon-calendar" ></span>
         </button>
-        <button id="navbar_logout" class="btn btn-default glyphicon glyphicon-log-out" style="margin:6px 0px 0px 0px" type="button" onclick="logout();" title="Logout"></button>
+        <button id="navbar_logout" class="btn btn-default glyphicon glyphicon-log-out" style="margin:6px 0px 0px 0px" type="button" onclick="logout();" title="$labels{logout}"></button>
       </div>
 HTML
 
@@ -653,7 +670,7 @@ HTML
       $html = qq |
       <li class="dropdown">
         <div class="btn-group" role="group" aria-label="..." style="height:34px; margin: 1px 0px 0px 0px" >
-            <button id="site_login_button" name="site_login_button" class="btn btn-primary" type="button" style="margin: 7px 7px 0px 0px; position-absolute: 10,10,100,10">Login</button>
+            <button id="site_login_button" name="site_login_button" class="btn btn-primary" type="button" style="margin: 7px 7px 0px 0px; position-absolute: 10,10,100,10">$labels{login}</button>
         </div>
       </li>
  |;

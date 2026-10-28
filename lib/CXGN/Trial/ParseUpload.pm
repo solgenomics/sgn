@@ -1,12 +1,19 @@
 package CXGN::Trial::ParseUpload;
 
 use Moose;
+use CatalystX::GlobalContext '$c';
 use Data::Dumper;
 use MooseX::FollowPBP;
 use Moose::Util::TypeConstraints;
 
 with 'MooseX::Object::Pluggable';
 
+has 'i18n' => (
+    is => 'ro',
+    isa => 'Maybe[Object]',
+    reader => 'i18n',
+    default => sub { $c && $c->can('i18n') ? $c->i18n : undef }
+);
 
 has 'chado_schema' => (
     is       => 'ro',

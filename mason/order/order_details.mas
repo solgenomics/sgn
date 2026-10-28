@@ -21,42 +21,42 @@ $tracking_order_activity => undef
 
 <& /page/page_title.mas, title => "Details for Order Number: $order_id" &>
 
-<&| /page/info_section.mas, title=>"Details",  collapsible => 1, collapsed=>0 &>
+<&| /page/info_section.mas, anchor_title => "Details", title=>HTML::Entities::encode_entities($c->i18n->p("accession.stock.trials.header.details", "Details")),  collapsible => 1, collapsed=>0 &>
 
     <div class="panel panel-default">
         <div class="panel-body">
             <div class="row">
                 <div class="col-sm-6">
                     <table class="table table-bordered table-hover">
-                        <tr><td><b>Ordered by</b></td><td><% $order_from %></td></tr>
-                        <tr><td><b>Submitted Date</b></td><td><% $create_date %></td></tr>
-                        <tr><td><b>Items</b></td><td><% $item_list %></td></tr>
-                        <tr><td><b>Sent Order to</b></td><td><% $order_to %></td></tr>
-                        <tr><td><b>Status</b><td><% $order_status %></td></tr>
-                        <tr><td><b>Comments</b></td><td><% $comments %></td></tr>
+                        <tr><td><b><% $c->i18n->p("barcode.helper.ordered_by.826ddab", "Ordered by") |h %></b></td><td><% $order_from %></td></tr>
+                        <tr><td><b><% $c->i18n->p("barcode.helper.submitted_date", "Submitted Date") |h %></b></td><td><% $create_date %></td></tr>
+                        <tr><td><b><% $c->i18n->p("barcode.helper.items", "Items") |h %></b></td><td><% $item_list %></td></tr>
+                        <tr><td><b><% $c->i18n->p("barcode.helper.sent_order_to", "Sent Order to") |h %></b></td><td><% $order_to %></td></tr>
+                        <tr><td><b><% $c->i18n->p("global.dataset_publish.status.heading", "Status") |h %></b><td><% $order_status %></td></tr>
+                        <tr><td><b><% $c->i18n->p("accession.stock.section.comments", "Comments") |h %></b></td><td><% $comments %></td></tr>
                     </table>
                 </div>
             </div>
-            <td><a href="/order/stocks/view"><p>Go to Manage Order Page</p></a></td>
+            <td><a href="/order/stocks/view"><p><% $c->i18n->p("barcode.helper.go_to_manage_order_page", "Go to Manage Order Page") |h %></p></a></td>
         </div>
     </div>
 % if (($ordering_type eq 'single_step') && ($order_status ne 'completed') && ($check_vendor_role != 1)) {
-    <button class="btn btn-sm btn-primary" style="margin:3px" id="re_order_link">Re-Order</button>
+    <button class="btn btn-sm btn-primary" style="margin:3px" id="re_order_link"><% $c->i18n->p("barcode.helper.re_order", "Re-Order") |h %></button>
 %}
 % if (($ordering_type eq 'single_step') && ($order_status eq 'completed') && ($check_vendor_role != 1)) {
-    <button class="btn btn-sm btn-primary" style="margin:3px" id="re_order_link">Re-Order</button><button class="btn btn-sm btn-primary" style="margin:3px" id="requester_re_open_link">Re-Open</button>
+    <button class="btn btn-sm btn-primary" style="margin:3px" id="re_order_link"><% $c->i18n->p("barcode.helper.re_order", "Re-Order") |h %></button><button class="btn btn-sm btn-primary" style="margin:3px" id="requester_re_open_link"><% $c->i18n->p("barcode.helper.re_open", "Re-Open") |h %></button>
 %}
 % if (($ordering_type eq 'single_step') && ($order_status eq 'completed') && ($check_vendor_role == 1)) {
-    <button class="btn btn-sm btn-primary" style="margin:3px" id="requester_re_open_link">Re-Open</button>
+    <button class="btn btn-sm btn-primary" style="margin:3px" id="requester_re_open_link"><% $c->i18n->p("barcode.helper.re_open", "Re-Open") |h %></button>
 %}
 %if ($ordering_type ne 'single_step' && $order_status eq 'completed') {
-    <button class="btn btn-sm btn-primary" style="margin:3px" id="re_open_link">Re-Open</button>
+    <button class="btn btn-sm btn-primary" style="margin:3px" id="re_open_link"><% $c->i18n->p("barcode.helper.re_open", "Re-Open") |h %></button>
 %}
 
 </&>
 
 % if (($check_vendor_role == 1) && $tracking_order_activity) {
-    <&| /page/info_section.mas, title => 'Tracking Order Progress', collapsible=>1, collapsed=>0 &>
+    <&| /page/info_section.mas, anchor_title => 'Tracking Order Progress', title => HTML::Entities::encode_entities($c->i18n->p("barcode.helper.tracking_order_progress", 'Tracking Order Progress')), collapsible=>1, collapsed=>0 &>
         <div class = "well well-sm">
             <div class = "panel panel-default">
                 <div class = "panel-body">
@@ -64,7 +64,7 @@ $tracking_order_activity => undef
                     <button id="download_item_file_button" class="btn btn-primary">Download Item File</button>
                     <button id="download_ontology_file_button" class="btn btn-primary">Download Data Collection Ontologies</button>
                     -->
-                    <button id="generate_item_barcode_button" class="btn btn-primary">Generate Item Barcode</button>
+                    <button id="generate_item_barcode_button" class="btn btn-primary"><% $c->i18n->p("barcode.helper.generate_item_barcode", "Generate Item Barcode") |h %></button>
                 </div>
             </div>
         </div>
@@ -76,3 +76,7 @@ $tracking_order_activity => undef
 <& /order/create_item_file_dialog.mas, order_id => $order_id &>
 <& /order/create_ontology_file_dialog.mas &>
 <& /order/generate_identifier_barcode_dialog.mas, identifier => "", order_id=> "$order_id" &>
+
+<%once>
+use HTML::Entities ();
+</%once>

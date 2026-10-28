@@ -18,10 +18,10 @@ Isaak Y Tecle (iyt2@cornell.edu)
 <& /solgs/tools/base.mas &>
 <& /util/import_javascript.mas, classes => [  "solGS.gebvs", "solGS.histogram"] &>
 
-<&|  /page/info_section.mas,
+<&|  /page/info_section.mas, anchor_title => "Genomic estimated breeding values (GEBVs) - GBLUP method",
   collapsible => 1,
   collapsed   => 0,
-  title     => "Genomic estimated breeding values (GEBVs) - GBLUP method"
+  title     => HTML::Entities::encode_entities($c->i18n->p("solgs.interface.genomic_estimated_breeding_values_gebvs_gblup_method", "Genomic estimated breeding values (GEBVs) - GBLUP method"))
 &>
 
 <div id="gebvs">
@@ -30,3 +30,7 @@ Isaak Y Tecle (iyt2@cornell.edu)
 </div>
 
 </&>
+
+<%once>
+use HTML::Entities ();
+</%once>

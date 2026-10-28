@@ -3,20 +3,21 @@
 </%args>
 
 <%init>
+use SGN::I18N ();
+
     if ( !$variant_name ) {
-        print "<p><strong>ERROR: </strong>Missing variant name!</p>";
+        print ("<p><strong>" . SGN::I18N::translate($c->i18n, "marker.detail.error_label", "ERROR:", undef, {entities => '<>&'}) . " </strong>" . SGN::I18N::translate($c->i18n, "marker.detail.error_missing_variant_name", "Missing variant name!", undef, {entities => '<>&'}) . "</p>");
     }
 </%init>
 
-<p><strong>Related Genotyped Markers:</strong> These genotyped markers share either the same <em>name</em> as one or more markers at this variant or 
-are located at the same <em>position</em> but have different allele values</p>
+<p><strong><% $c->i18n->p("marker.detail.related_genotyped_markers", "Related Genotyped Markers:") |h %></strong> <% $c->i18n->p("marker.detail.these_genotyped_markers_share_either_the_same", "These genotyped markers share either the same") |h %> <em><% $c->i18n->p("seedlot_maintenance_table.ui.property_name", "name") |h %></em> <% $c->i18n->p("marker.detail.as_one_or_more_markers_at_this_variant_or_are", "as one or more markers at this variant or \nare located at the same") |h %> <em><% $c->i18n->p("marker.detail.position_5a4524", "position") |h %></em> <% $c->i18n->p("marker.detail.but_have_different_allele_values", "but have different allele values") |h %></p>
 <div id="related-variants">
-    <em>Loading...</em><br /><br />
+    <em><% $c->i18n->p("global.dataset_publish.loading", "Loading...") |h %></em><br /><br />
 </div>
 
-<p><strong>Related Mapped Markers:</strong> These mapped markers have the same name as a marker at this variant</p>
+<p><strong><% $c->i18n->p("marker.detail.related_mapped_markers", "Related Mapped Markers:") |h %></strong> <% $c->i18n->p("marker.detail.these_mapped_markers_have_the_same_name_as_a_marker", "These mapped markers have the same name as a marker at this variant") |h %></p>
 <div id="related-mapped-markers">
-    <em>Loading...</em><br />
+    <em><% $c->i18n->p("global.dataset_publish.loading", "Loading...") |h %></em><br />
 </div>
 
 
@@ -38,7 +39,7 @@ function getRelatedVariants() {
             let html = "";
             if ( response && response.related_variants && !jQuery.isEmptyObject(response.related_variants) ) {
                 html += "<table class='table table-striped'>";
-                html += "<thead><tr><th>Marker</th><th>Protocol</th><th>Species</th><th>Reference</th><th>Chromosome</th><th>Position</th><th>Ref</th><th>Alt</th></tr></thead>";
+                html += ("<thead><tr><th>" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("genotype.marker.marker", "Marker") : "Marker")).html() + "</th><th>" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("global.search_wizard.protocol", "Protocol") : "Protocol")).html() + "</th><th>" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("cross.species", "Species") : "Species")).html() + "</th><th>" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("marker.detail.reference", "Reference") : "Reference")).html() + "</th><th>" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("global.search_wizard.chromosome", "Chromosome") : "Chromosome")).html() + "</th><th>" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("marker.detail.position", "Position") : "Position")).html() + "</th><th>Ref</th><th>Alt</th></tr></thead>");
                 html += "<tbody>";
                 for ( let variant_name in response.related_variants ) {
                     if ( response.related_variants.hasOwnProperty(variant_name) ) {
@@ -57,7 +58,7 @@ function getRelatedVariants() {
                 html += "</table>";
             }
             else {
-                html += "<em>No related genotyed markers found</em><br /><br />";
+                html += ("<em>" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("marker.detail.no_related_genotyed_markers_found", "No related genotyed markers found") : "No related genotyed markers found")).html() + "</em><br /><br />");
             }
             jQuery("#related-variants").html(html);
         },
@@ -79,7 +80,7 @@ function getRelatedMappedMarkers() {
             let html = "";
             if ( response && response.related_mapped_markers && response.related_mapped_markers.length > 0 ) {
                 html += "<table class='table table-striped'>";
-                html += "<thead><tr><th>Marker</th><th>Protocol</th><th>Species</th><th>Map</th><th>Chromosome</th><th>Position</th></tr></thead>";
+                html += ("<thead><tr><th>" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("genotype.marker.marker", "Marker") : "Marker")).html() + "</th><th>" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("global.search_wizard.protocol", "Protocol") : "Protocol")).html() + "</th><th>" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("cross.species", "Species") : "Species")).html() + "</th><th>" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("marker.detail.map", "Map") : "Map")).html() + "</th><th>" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("global.search_wizard.chromosome", "Chromosome") : "Chromosome")).html() + "</th><th>" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("marker.detail.position", "Position") : "Position")).html() + "</th></tr></thead>");
                 html += "<tbody>";
                 let ms = response.related_mapped_markers;
                 for ( let i = 0; i < ms.length; i++ ) {
@@ -91,7 +92,7 @@ function getRelatedMappedMarkers() {
                 }
             }
             else {
-                html += "<em>No related mapped markers found</em><br />";
+                html += ("<em>" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("marker.detail.no_related_mapped_markers_found", "No related mapped markers found") : "No related mapped markers found")).html() + "</em><br />");
             }
             jQuery("#related-mapped-markers").html(html);
         },

@@ -1,0 +1,21 @@
+# Керування завантаженнями {#managing-downloads}
+
+За допомогою “Списків” можна завантажити з бази даних на комп’ютер файли фенотипів, метадані дослідів, родовід, генотипи GBS та файли контролю якості генотипів GBS. Для цього виберіть “Завантаження” в меню “Керування”.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/image255.png')
+```
+
+Для кожної категорії виберіть у “Списках” список зразків, щоб завантажити їхні фенотипи, родовід, генотипи GBS або дані контролю якості генотипів GBS. Для метаданих потрібен список дослідів; для фенотипів і контролю якості GBS можна також вибрати список дослідів або ознак.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/trial_meta_data_download.png')
+```
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/image287.png')
+```
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/image182.png')
+```

@@ -11,7 +11,7 @@ $debug => ''
   Args: n/a
   Ret : unigene tab format
 
-  Defines the format of the unigene tab using html, perl and perl dbi. Speicfies
+  Defines the format of the unigene tab using html, perl and perl dbi. Specifies
   information fields available for searching unigenes. Prints the debug
   checkbox when debug parameter is set to one.
 
@@ -43,14 +43,14 @@ sub unigene_search {
 <table summary="" cellpadding="10" width="100%"><tr><td valign="top" bgcolor="#EEEEEE" width="320">
 
 <br />
-Enter a list of identifiers or upload a file containing one identifer separated by whitespace (returns, spaces or tabs):<br />
+<% $c->i18n->p("lists_datasets.bulk.enter_a_list_of_identifiers_or_upload_a_file_containing_one_identifer_separate", "Enter a list of identifiers or upload a file containing one identifier separated by whitespace (returns, spaces or tabs):") |h %><br />
 
 
 <table summary="" width="100%" cellpadding="0"><tr><td>
 <textarea name="ids" rows="5" cols="20"></textarea>
 </td>
 <td>
-<i>Example:</i>
+<i><% $c->i18n->p("lists_datasets.bulk.example", "Example:") |h %></i>
 <pre style="border: 1px solid gray; width: 10em; height: 5em">
 SGN-U268057
 SGN-U562661
@@ -60,47 +60,47 @@ SGN-U196026
 <br />
 <br />
 
-And/or upload list file: <br /><input type="file" name="file" />
+<% $c->i18n->p("lists_datasets.bulk.and_or_upload_list_file", "And/or upload list file:") |h %> <br /><input type="file" name="file" />
 <br />
 <br />
 
 </td><td valign="top" bgcolor="#EEEEEE" width="320">
 
- <input type="checkbox" name="convert_to_current" checked="checked" /><label for="convert_to_current"><a class="stealth" title="Check this box to convert each unigene in the list to its equivalent in the most current corresponding unigene build(s), if available"><img src="/documents/img/new.gif" />convert unigene list to current build</a></label>
+ <input type="checkbox" name="convert_to_current" checked="checked" /><label for="convert_to_current"><a class="stealth" title="Check this box to convert each unigene in the list to its equivalent in the most current corresponding unigene build(s), if available"><img src="/documents/img/new.gif" /><% $c->i18n->p("lists_datasets.bulk.convert_unigene_list_to_current_build", "convert unigene list to current build") |h %></a></label>
 
  <hr />
 
-<input type="radio" name="unigene_mode" value="unigene_info" checked="checked" /> <b>Download unigene information</b>:<br />
+<input type="radio" name="unigene_mode" value="unigene_info" checked="checked" /> <b><% $c->i18n->p("lists_datasets.bulk.download_unigene_information", "Download unigene information") |h %></b>:<br />
 <!-- SGN_U for Unigene Info -->
 <div style="padding-left: 1em">
-    <input type="checkbox" name="SGN_U_U" checked="checked" /> unigene id (SGN-U)<br />
-    <input type="checkbox" name="automatic_annotation" checked="checked" /> automatic (BLAST) annotation<br />
-    <input type="checkbox" name="best_genbank_match" checked="checked" /> best genbank match<br />
-    <input type="checkbox" name="best_arabidopsis_match" checked="checked" /> best arabidopsis match<br />
-    <input type="checkbox" name="associated_loci" checked="checked" /> associated loci<br />
-    <input type="checkbox" name = "uni_seq" checked="checked" onclick="check_fasta_option()"/> sequence<br />
+    <input type="checkbox" name="SGN_U_U" checked="checked" /> <% $c->i18n->p("lists_datasets.bulk.unigene_id_sgn_u", "unigene id (SGN-U)") |h %><br />
+    <input type="checkbox" name="automatic_annotation" checked="checked" /> <% $c->i18n->p("lists_datasets.bulk.automatic_blast_annotation", "automatic (BLAST) annotation") |h %><br />
+    <input type="checkbox" name="best_genbank_match" checked="checked" /> <% $c->i18n->p("lists_datasets.bulk.best_genbank_match", "best genbank match") |h %><br />
+    <input type="checkbox" name="best_arabidopsis_match" checked="checked" /> <% $c->i18n->p("lists_datasets.bulk.best_arabidopsis_match", "best arabidopsis match") |h %><br />
+    <input type="checkbox" name="associated_loci" checked="checked" /> <% $c->i18n->p("lists_datasets.bulk.associated_loci", "associated loci") |h %><br />
+    <input type="checkbox" name = "uni_seq" checked="checked" onclick="check_fasta_option()"/> <% $c->i18n->p("lists_datasets.bulk.sequence", "sequence") |h %><br />
     <div style="padding-left: 1em">
-         <input type="radio" name="seq_mode" value="unigene_seq" checked="checked" /> unigene nucleotide sequence<br />
-         <input type="radio" name="seq_mode" value="estscan_seq" /> estscan predicted proteins<br />
-         <input type="radio" name="seq_mode" value="longest6frame_seq" /> longest ORF from 6-frame translation<br />
-         <input type="radio" name="seq_mode" value="preferred_protein_seq" /> preferred sequence<br />
+         <input type="radio" name="seq_mode" value="unigene_seq" checked="checked" /> <% $c->i18n->p("lists_datasets.bulk.unigene_nucleotide_sequence", "unigene nucleotide sequence") |h %><br />
+         <input type="radio" name="seq_mode" value="estscan_seq" /> <% $c->i18n->p("lists_datasets.bulk.estscan_predicted_proteins", "estscan predicted proteins") |h %><br />
+         <input type="radio" name="seq_mode" value="longest6frame_seq" /> <% $c->i18n->p("lists_datasets.bulk.longest_orf_from_6_frame_translation", "longest ORF from 6-frame translation") |h %><br />
+         <input type="radio" name="seq_mode" value="preferred_protein_seq" /> <% $c->i18n->p("lists_datasets.bulk.preferred_sequence", "preferred sequence") |h %><br />
     </div>
 </div>
 
-<input type="radio" name="unigene_mode" value="member_info" /> <b>Download member information</b>:
+<input type="radio" name="unigene_mode" value="member_info" /> <b><% $c->i18n->p("lists_datasets.bulk.download_member_information", "Download member information") |h %></b>:
 <div style="padding-left: 1em">
-    <input type="checkbox" name="clone_name" checked="checked" /> clone name<br />
-    <input type="checkbox" name="SGN_C" checked="checked" /> clone id (SGN-C)<br />
-    <input type="checkbox" name="SGN_T" checked="checked" /> sequence read id (SGN-T)<br />
-    <input type="checkbox" name="SGN_E" checked="checked" /> est id (SGN-E)<br />
-    <input type="checkbox" name="build_nr" checked="checked" /> unigene build number<br />
+    <input type="checkbox" name="clone_name" checked="checked" /> <% $c->i18n->p("lists_datasets.bulk.clone_name", "clone name") |h %><br />
+    <input type="checkbox" name="SGN_C" checked="checked" /> <% $c->i18n->p("lists_datasets.bulk.clone_id_sgn_c", "clone id (SGN-C)") |h %><br />
+    <input type="checkbox" name="SGN_T" checked="checked" /> <% $c->i18n->p("lists_datasets.bulk.sequence_read_id_sgn_t", "sequence read id (SGN-T)") |h %><br />
+    <input type="checkbox" name="SGN_E" checked="checked" /> <% $c->i18n->p("lists_datasets.bulk.est_id_sgn_e", "est id (SGN-E)") |h %><br />
+    <input type="checkbox" name="build_nr" checked="checked" /> <% $c->i18n->p("lists_datasets.bulk.unigene_build_number", "unigene build number") |h %><br />
     <!-- SGN_U for Member Info -->
-    <input type="checkbox" name="SGN_U_M" checked="checked" /> unigene id (SGN-U)<br />
-    <input type="checkbox" name="chipname" checked="checked" /> chipname<br />
-    <input type="checkbox" name="SGN_S" checked="checked" /> microarray spot id (SGN-S)<br />
-    <input type="checkbox" name="TUS" checked="checked" /> TUS number<br />
-    <input type="checkbox" name="manual_annotation" /> manual annotation<br />
-    <input type="checkbox" name="est_seq" checked="checked" /> EST sequence<br />
+    <input type="checkbox" name="SGN_U_M" checked="checked" /> <% $c->i18n->p("lists_datasets.bulk.unigene_id_sgn_u", "unigene id (SGN-U)") |h %><br />
+    <input type="checkbox" name="chipname" checked="checked" /> <% $c->i18n->p("lists_datasets.bulk.chipname", "chipname") |h %><br />
+    <input type="checkbox" name="SGN_S" checked="checked" /> <% $c->i18n->p("lists_datasets.bulk.microarray_spot_id_sgn_s", "microarray spot id (SGN-S)") |h %><br />
+    <input type="checkbox" name="TUS" checked="checked" /> <% $c->i18n->p("lists_datasets.bulk.tus_number", "TUS number") |h %><br />
+    <input type="checkbox" name="manual_annotation" /> <% $c->i18n->p("lists_datasets.bulk.manual_annotation", "manual annotation") |h %><br />
+    <input type="checkbox" name="est_seq" checked="checked" /> <% $c->i18n->p("lists_datasets.bulk.est_sequence", "EST sequence") |h %><br />
 </div>
 </td></tr></table>
 
@@ -109,7 +109,7 @@ And/or upload list file: <br /><input type="file" name="file" />
 %    }
 
 	<input type=hidden name="idType" value="unigene" />
-	<input type="reset" />&nbsp;&nbsp;
-<input type="submit" value="Submit" /><br />
+	<input type="reset"  value="<% $c->i18n->p("lists_datasets.bulk.reset", "Reset") |h %>"/>&nbsp;&nbsp;
+<input type="submit" value="<% $c->i18n->p("lists_datasets.bulk.submit", "Submit") |h %>" /><br />
 </form>
 

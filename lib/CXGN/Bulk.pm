@@ -19,6 +19,9 @@ use Carp;
 use File::Temp;
 use File::Spec::Functions;
 use Cache::File;
+use SGN::I18N ();
+use Scalar::Util ();
+use HTML::Entities ();
 
 use File::Slurp qw/slurp/;
 
@@ -174,19 +177,28 @@ sub result_summary {
 
 sub error_message {
     my $self = shift;
+    my $presentation = shift;
+    my SGN::I18N $bulk_error_i18n = Scalar::Util::blessed($presentation) && $presentation->isa('SGN::I18N') ? $presentation : undef;
+    my $bulk_error_caption_0 = HTML::Entities::encode_entities($bulk_error_i18n ? $bulk_error_i18n->p("lists_datasets.bulk.error_title", "Bulk download error") : "Bulk download error");
+    my $bulk_error_caption_1 = HTML::Entities::encode_entities($bulk_error_i18n ? $bulk_error_i18n->p("lists_datasets.bulk.error_intro", "I could not process your input.  Possible reasons for this include:") : "I could not process your input.  Possible reasons for this include:");
+    my $bulk_error_caption_2 = HTML::Entities::encode_entities($bulk_error_i18n ? $bulk_error_i18n->p("lists_datasets.bulk.error_no_ids", "You may not have entered any identifiers for download") : "You may not have entered any identifiers for download");
+    my $bulk_error_caption_3 = HTML::Entities::encode_entities($bulk_error_i18n ? $bulk_error_i18n->p("lists_datasets.bulk.error_unknown_ids", "You may not have entered any identifiers that exist") : "You may not have entered any identifiers that exist");
+    my $bulk_error_caption_4 = HTML::Entities::encode_entities($bulk_error_i18n ? $bulk_error_i18n->p("lists_datasets.bulk.error_format", "Your identifiers may not be one-per-line, with no quotation marks, etc (see input example)") : "Your identifiers may not be one-per-line, with no quotation marks, etc (see input example)");
+    my $bulk_error_caption_5 = HTML::Entities::encode_entities($bulk_error_i18n ? $bulk_error_i18n->p("lists_datasets.bulk.error_limit", "The input set may be larger than the limit of 10,000 identifiers") : "The input set may be larger than the limit of 10,000 identifiers");
+    my $bulk_error_caption_6 = HTML::Entities::encode_entities($bulk_error_i18n ? $bulk_error_i18n->p("lists_datasets.bulk.error_back", "Please check your input and use your browser's \"back\" button to go back and try again!") : "Please check your input and use your browser's \"back\" button to go back and try again!");
 
 
     my $html = $self ->{content} . "\n";
     $html .= <<EOH;
-<h3>Bulk download error</h3>
-I could not process your input.  Possible reasons for this include:
+<h3>$bulk_error_caption_0</h3>
+$bulk_error_caption_1
 <ul>
-<li>You may not have entered any identifiers for download</li>
-<li>You may not have entered any identifiers that exist</li>
-<li>Your identifiers may not be one-per-line, with no quotation marks, etc (see input example)</li>
-<li>The input set may be larger than the limit of 10,000 identifiers</li>
+<li>$bulk_error_caption_2</li>
+<li>$bulk_error_caption_3</li>
+<li>$bulk_error_caption_4</li>
+<li>$bulk_error_caption_5</li>
 </ul>
-Please check your input and use your browser\'s "back" button to go back and try again!
+$bulk_error_caption_6
 EOH
 
 return $html;
@@ -205,7 +217,7 @@ return $html;
 sub get_file_lines {
     my $self   = shift;
     my $file   = shift;
-    open my $f, $file or die "$! opening $file";
+    open my $f, '<', $file or die "$! opening $file";
     my $cnt = 0;
     $cnt++ while <$f>;
     close $f;

@@ -24,9 +24,9 @@ $dumpfile
 %if ( ( $line_count + $page_size ) >
 %( ( $page_number + 1 ) * $page_size ) )
 %{
-<a href="display.pl?dumpfile=<% $dumpfile %>&amp;page_number=<% $page_number %>">Next Page</a>
+<a href="display.pl?dumpfile=<% $dumpfile %>&amp;page_number=<% $page_number %>"><% $c->i18n->p("lists_datasets.bulk.next_page", "Next Page") |h %></a>
 %}
 %else {
-   Next Page
+   <% $c->i18n->p("lists_datasets.bulk.next_page", "Next Page") |h %>
 %}
 

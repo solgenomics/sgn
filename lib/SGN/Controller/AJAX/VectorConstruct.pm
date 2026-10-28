@@ -14,6 +14,8 @@ Nicolas Morales <nm529@cornell.edu>
 
 package SGN::Controller::AJAX::VectorConstruct;
 
+use SGN::I18N ();
+
 use Moose;
 use JSON -support_by_pp;
 use List::MoreUtils qw /any /;
@@ -94,12 +96,13 @@ sub create_vector_construct: Path('/ajax/create_vector_construct') Args(0) Actio
 sub create_vector_construct_POST {
     my $self = shift;
     my $c = shift;
+    my SGN::I18N $ui_create_vector_construct_POST_i18n = SGN::I18N::translate($c);
     my $status = '';
     my $vector_list;
     my $user_id = $c->user ? $c->user->get_object()->get_sp_person_id():undef;
 
     if (!$user_id){
-        $status = sprintf('You must be logged in to add a vector!');
+        $status = sprintf((SGN::I18N::translate($ui_create_vector_construct_POST_i18n, 'transformation.helper.you_must_be_logged_in_to_add_a_vector', 'You must be logged in to add a vector!')));
         $c->stash->{rest} = {error=>$status};
         return;
     }
@@ -173,7 +176,7 @@ sub create_vector_construct_POST {
     };
 
     if ($transaction_error){
-        $status = sprintf('There was an error storing vector %s', $transaction_error);
+        $status = sprintf((SGN::I18N::translate($ui_create_vector_construct_POST_i18n, 'transformation.helper.there_was_an_error_storing_vector_s', 'There was an error storing vector %s')), $transaction_error);
     }
 
     if (scalar(@added_stocks) > 0){
@@ -192,6 +195,7 @@ sub create_vector_construct_POST {
 sub verify_vectors_file : Path('/ajax/vectors/verify_vectors_file') : ActionClass('REST') { }
 sub verify_vectors_file_POST : Args(0) {
     my ($self, $c) = @_;
+    my SGN::I18N $ui_verify_vectors_file_POST_i18n = SGN::I18N::translate($c);
 
     my $user_id;
     my $user_name;
@@ -202,7 +206,7 @@ sub verify_vectors_file_POST : Args(0) {
         my $dbh = $c->dbc->dbh;
         my @user_info = CXGN::Login->new($dbh)->query_from_cookie($session_id);
         if (!$user_info[0]){
-            $c->stash->{rest} = {error=>'You must be logged in to upload this vector info!'};
+            $c->stash->{rest} = {error=>(SGN::I18N::translate($ui_verify_vectors_file_POST_i18n, 'transformation.helper.you_must_be_logged_in_to_upload_this_vector_info', 'You must be logged in to upload this vector info!'))};
             $c->detach();
         }
         $user_id = $user_info[0];
@@ -211,7 +215,7 @@ sub verify_vectors_file_POST : Args(0) {
         $user_name = $p->get_username;
     } else {
         if (!$c->user){
-            $c->stash->{rest} = {error=>'You must be logged in to upload this vector info!'};
+            $c->stash->{rest} = {error=>(SGN::I18N::translate($ui_verify_vectors_file_POST_i18n, 'transformation.helper.you_must_be_logged_in_to_upload_this_vector_info', 'You must be logged in to upload this vector info!'))};
             $c->detach();
         }
         $user_id = $c->user()->get_object()->get_sp_person_id();
@@ -225,13 +229,13 @@ sub verify_vectors_file_POST : Args(0) {
     my $autogenerate_uniquename = !$c->req->param('autogenerate_uniquename') ? 0 : 1;
 
     if ($user_role ne 'curator' && !$do_fuzzy_search) {
-        $c->stash->{rest} = {error=>'Only a curator can add vectors without using the fuzzy search!'};
+        $c->stash->{rest} = {error=>(SGN::I18N::translate($ui_verify_vectors_file_POST_i18n, 'transformation.helper.only_a_curator_can_add_vectors_without_using_the_fuzzy_search', 'Only a curator can add vectors without using the fuzzy search!'))};
         $c->detach();
     }
 
     # These roles are required by CXGN::UploadFile
     if ($user_role ne 'curator' && $user_role ne 'submitter' && $user_role ne 'sequencer' ) {
-        $c->stash->{rest} = {error=>'Only a curator, submitter or sequencer can upload a file'};
+        $c->stash->{rest} = {error=>(SGN::I18N::translate($ui_verify_vectors_file_POST_i18n, 'accessions.server.file_privileges', 'Only a curator, submitter or sequencer can upload a file'))};
         $c->detach();
     }
 
@@ -254,7 +258,7 @@ sub verify_vectors_file_POST : Args(0) {
     my $archived_filename_with_path = $uploader->archive();
     my $md5 = $uploader->get_md5($archived_filename_with_path);
     if (!$archived_filename_with_path) {
-        $c->stash->{rest} = {error => "Could not save file $upload_original_name in archive",};
+        $c->stash->{rest} = {error => (SGN::I18N::translate($ui_verify_vectors_file_POST_i18n, 'accession.rename_server.archive', 'Could not save file %{upload_original_name} in archive', {upload_original_name => ("" . ("$upload_original_name"))})),};
         $c->detach();
     }
     unlink $upload_tempfile;
@@ -268,7 +272,7 @@ sub verify_vectors_file_POST : Args(0) {
         my $return_error = '';
         my $parse_errors;
         if (!$parser->has_parse_errors() ){
-            $c->stash->{rest} = {error_string => "Could not get parsing errors"};
+            $c->stash->{rest} = {error_string => (SGN::I18N::translate($ui_verify_vectors_file_POST_i18n, 'accessions.server.parse_errors_missing', 'Could not get parsing errors'))};
             $c->detach();
         } else {
             $parse_errors = $parser->get_parse_errors();

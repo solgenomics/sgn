@@ -7,42 +7,42 @@ $stock_id
   <div class="modal-dialog modal-xl" role="document">
     <div class="modal-content">
       <div class="modal-header">
-        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-        <h4 class="modal-title" id="stockDetailPageCompareImagesDialog">Compare Images</h4>
+        <button type="button" class="close" data-dismiss="modal" aria-label="<% $c->i18n->p("community.image.close", "Close") |h %>"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title" id="stockDetailPageCompareImagesDialog"><% $c->i18n->p("community.image.compare_images", "Compare Images") |h %></h4>
       </div>
       <div class="modal-body">
         <div class="container-fluid">
 
             <&| /util/workflow.mas, id=> "stock_detail_page_compare_images_workflow" &>
-                <&| /util/workflow.mas:step, title=> "Comparison" &>
-                    <& /page/page_title.mas, title=>"Select the comparison you are interested in" &>
+                <&| /util/workflow.mas:step, title=>$c->i18n->p("community.image.comparison_5715273", "Comparison") &>
+                    <& /page/page_title.mas, title=>HTML::Entities::encode_entities($c->i18n->p("community.image.select_the_comparison_you_are_interested_in", "Select the comparison you are interested in")) &>
                     <form class="form-horizontal">
                         <div class="form-group">
-                            <label class="col-sm-3 control-label">Comparison: </label>
+                            <label class="col-sm-3 control-label"><% $c->i18n->p("community.image.comparison", "Comparison:") |h %> </label>
                             <div class="col-sm-9" >
                                 <select id="stock_detail_page_compare_images_comparison_select" class="form-control">
-                                    <option value="compare_pixel_values_two_images">Compare pixel values for two different images</option>
+                                    <option value="compare_pixel_values_two_images"><% $c->i18n->p("community.image.compare_pixel_values_for_two_different_images", "Compare pixel values for two different images") |h %></option>
                                 </select>
                             </div>
                         </div>
                     </form>
                     <center>
-                    <button class="btn btn-primary" id="stock_detail_page_compare_images_comparison_select_step">Go to Next Step</button>
+                    <button class="btn btn-primary" id="stock_detail_page_compare_images_comparison_select_step"><% $c->i18n->p("community.image.go_to_next_step", "Go to Next Step") |h %></button>
                     </center>
                 </&>
-                <&| /util/workflow.mas:step, title=> "Image Selection" &>
-                    <& /page/page_title.mas, title=>"Select the images you are interested in comparing" &>
+                <&| /util/workflow.mas:step, title=>$c->i18n->p("community.image.image_selection", "Image Selection") &>
+                    <& /page/page_title.mas, title=>HTML::Entities::encode_entities($c->i18n->p("community.image.select_the_images_you_are_interested_in_comparing", "Select the images you are interested in comparing")) &>
 
                     <table class="table table-bordered table-hover" id="stock_detail_page_compare_images_images_type_table">
                         <thead>
                             <tr>
-                                <th>Select</th>
-                                <th>Image</th>
-                                <th>Field Trial</th>
-                                <th>Drone Run Name</th>
-                                <th>Drone Run Band Name</th>
-                                <th>Drone Run Band Type</th>
-                                <th>Plot Polygon Type</th>
+                                <th><% $c->i18n->p("community.image.select", "Select") |h %></th>
+                                <th><% $c->i18n->p("community.image.image", "Image") |h %></th>
+                                <th><% $c->i18n->p("community.image.field_trial", "Field Trial") |h %></th>
+                                <th><% $c->i18n->p("community.image.drone_run_name", "Drone Run Name") |h %></th>
+                                <th><% $c->i18n->p("community.image.drone_run_band_name", "Drone Run Band Name") |h %></th>
+                                <th><% $c->i18n->p("community.image.drone_run_band_type", "Drone Run Band Type") |h %></th>
+                                <th><% $c->i18n->p("community.image.plot_polygon_type", "Plot Polygon Type") |h %></th>
                             </tr>
                         </thead>
                     </table>
@@ -50,11 +50,11 @@ $stock_id
                     <br/><br/>
 
                     <center>
-                    <button class="btn btn-primary" id="stock_detail_page_compare_images_images_select_step">Go to Next Step</button>
+                    <button class="btn btn-primary" id="stock_detail_page_compare_images_images_select_step"><% $c->i18n->p("community.image.go_to_next_step", "Go to Next Step") |h %></button>
                     </center>
                 </&>
-                <&| /util/workflow.mas:step, title=> "Result" &>
-                    <& /page/page_title.mas, title=>"Image comparison results" &>
+                <&| /util/workflow.mas:step, title=>$c->i18n->p("community.image.result", "Result") &>
+                    <& /page/page_title.mas, title=>HTML::Entities::encode_entities($c->i18n->p("community.image.image_comparison_results", "Image comparison results")) &>
 
                     <div id="stock_detail_page_compare_images_result_div"></div>
                 </&>
@@ -64,7 +64,7 @@ $stock_id
 
       </div>
       <div class="modal-footer">
-        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+        <button type="button" class="btn btn-default" data-dismiss="modal"><% $c->i18n->p("community.image.close", "Close") |h %></button>
       </div>
     </div>
   </div>
@@ -95,7 +95,7 @@ jQuery(document).ready(function() {
             compare_images_selected_image_ids.push(jQuery(this).val());
         });
         if (compare_images_selected_image_ids.length != 2){
-            alert('Please select two image types!');
+            alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("community.image.please_select_two_image_types", "Please select two image types!") : "Please select two image types!"));
             return false;
         } else {
     
@@ -116,7 +116,7 @@ jQuery(document).ready(function() {
                 },
                 error: function(response){
                     jQuery("#working_modal").modal("hide");
-                    alert('Error comparing images!')
+                    alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("community.image.error_comparing_images", "Error comparing images!") : "Error comparing images!"))
                 }
             });
         }
@@ -124,3 +124,7 @@ jQuery(document).ready(function() {
 
 });
 </script>
+
+<%once>
+use HTML::Entities ();
+</%once>

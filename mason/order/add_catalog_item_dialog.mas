@@ -7,58 +7,58 @@ $ordering_type => undef
     <div class="modal-dialog modal-lg" role="document">
         <div class="modal-content">
             <div class="modal-header">
-                <h4 class="modal-title" id="addCatalogItemDialog">Add New Catalog Item</h4>
+                <h4 class="modal-title" id="addCatalogItemDialog"><% $c->i18n->p("barcode.helper.add_new_catalog_item", "Add New Catalog Item") |h %></h4>
             </div>
             <div class="modal-body" id = "catalog_dialog">
                 <div class="container-fluid">
                     <form class="form-horizontal" role="form" method="post" id="add_new_catalog_item_form" name="add_new_catalog_form">
                         <div class="form-group" id = "get_item_name">
-                            <label class="col-sm-3 control-label">Item Name: </label>
+                            <label class="col-sm-3 control-label"><% $c->i18n->p("barcode.helper.item_name.b8d89d2", "Item Name:") |h %> </label>
                             <div class="col-sm-9" >
-                                <input class="form-control" type="text" id="item_name" name="item_name" placeholder="Item name must be in the database">
+                                <input class="form-control" type="text" id="item_name" name="item_name" placeholder="<% $c->i18n->p("barcode.helper.item_name_must_be_in_the_database", "Item name must be in the database") |h %>">
                             </div>
                         </div>
                         <div class="form-group">
-                            <label class="col-sm-3 control-label">Category: </label>
+                            <label class="col-sm-3 control-label"><% $c->i18n->p("barcode.helper.category.8a9c378", "Category:") |h %> </label>
                             <div class="col-sm-9">
                                 <select class="form-control" id="item_category">
-                                    <option value="">Please select a category</option>
-                                    <option value="released variety">released variety</option>
-                                    <option value="pathogen assay ">pathogen assay</option>
-                                    <option value="control">control</option>
-                                    <option value="transgenic line">transgenic line</option>
+                                    <option value=""><% $c->i18n->p("barcode.helper.please_select_a_category", "Please select a category") |h %></option>
+                                    <option value="released variety"><% $c->i18n->p("barcode.helper.released_variety", "released variety") |h %></option>
+                                    <option value="pathogen assay "><% $c->i18n->p("barcode.helper.pathogen_assay", "pathogen assay") |h %></option>
+                                    <option value="control"><% $c->i18n->p("barcode.helper.control", "control") |h %></option>
+                                    <option value="transgenic line"><% $c->i18n->p("barcode.helper.transgenic_line", "transgenic line") |h %></option>
                                 </select>
                             </div>
                         </div>
                         <div class="form-group">
-                            <label class="col-sm-3 control-label">Additional Info: </label>
+                            <label class="col-sm-3 control-label"><% $c->i18n->p("barcode.helper.additional_info.fc45f9a", "Additional Info:") |h %> </label>
                             <div class="col-sm-9" >
-                                <input class="form-control" id="item_additional_info" placeholder="optional">
+                                <input class="form-control" id="item_additional_info" placeholder="<% $c->i18n->p("seedlot.optional", "optional") |h %>">
                             </div>
                         </div>
                         <div class="form-group">
-                            <label class="col-sm-3 control-label">Material Source: </label>
+                            <label class="col-sm-3 control-label"><% $c->i18n->p("barcode.helper.material_source.765771b", "Material Source:") |h %> </label>
                             <div class="col-sm-9" >
-                                <input class="form-control" id="item_material_source" placeholder="optional">
+                                <input class="form-control" id="item_material_source" placeholder="<% $c->i18n->p("seedlot.optional", "optional") |h %>">
                             </div>
                         </div>
                         <div class="form-group">
-                            <label class="col-sm-3 control-label">Breeding Program: </label>
+                            <label class="col-sm-3 control-label"><% $c->i18n->p("cross.ui.breeding_program.2c9b17e", "Breeding Program:") |h %> </label>
                             <div class="col-sm-9" >
                                 <div id="item_breeding_program_div"></div>
                             </div>
                         </div>
                         <div class="form-group">
-                            <label class="col-sm-3 control-label">Contact Person Username: </label>
+                            <label class="col-sm-3 control-label"><% $c->i18n->p("barcode.helper.contact_person_username.25d672d", "Contact Person Username:") |h %> </label>
                             <div class="col-sm-9" >
-                                <input class="form-control" id="contact_person_name" placeholder="Please provide contact person username">
+                                <input class="form-control" id="contact_person_name" placeholder="<% $c->i18n->p("barcode.helper.please_provide_contact_person_username", "Please provide contact person username") |h %>">
                             </div>
                         </div>
                     </div>
                 </div>
                 <div class="modal-footer">
-                    <button type="reset" id="close_add_item_dialog" name="close_add_item_dialog" class="btn btn-default" >Close</button>
-                    <button id="submit_catalog_item" type="button" class="btn btn-primary" >Add</button>
+                    <button type="reset" id="close_add_item_dialog" name="close_add_item_dialog" class="btn btn-default" ><% $c->i18n->p("global.dataset_publish.close", "Close") |h %></button>
+                    <button id="submit_catalog_item" type="button" class="btn btn-primary" ><% $c->i18n->p("global.search_wizard.add", "Add") |h %></button>
                 </div>
             </form>
         </div>
@@ -69,19 +69,19 @@ $ordering_type => undef
     <div class="modal-dialog" role="document">
         <div class="modal-content">
             <div class="modal-header">
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                <h4 class="modal-title" id="addItemSavedDialog">Success</h4>
+                <button type="button" class="close" data-dismiss="modal" aria-label="<% $c->i18n->p("global.dataset_publish.close", "Close") |h %>"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="addItemSavedDialog"><% $c->i18n->p("cross.ui.success", "Success") |h %></h4>
             </div>
             <div class="modal-body">
                 <div class="container-fluid">
                     <p>
                         <span class="ui-icon ui-icon-circle-check" style="float: left; margin: 0 7px 50px 0;"></span>
-                        The catalog item was saved successfully.
+                        <% $c->i18n->p("barcode.helper.the_catalog_item_was_saved_successfully", "The catalog item was saved successfully.") |h %>
                     </p>
                 </div>
             </div>
             <div class="modal-footer">
-                <button id="dismiss_item_saved_dialog" type="button" class="btn btn-default" data-dismiss="modal">Close & Reload</button>
+                <button id="dismiss_item_saved_dialog" type="button" class="btn btn-default" data-dismiss="modal"><% $c->i18n->p("seedlots.ui.close_reload", "Close & Reload") |h %></button>
             </div>
         </div>
     </div>
@@ -112,19 +112,19 @@ jQuery(document).ready(function(){
         var contact_person = jQuery('#contact_person_name').val();
 
         if (name == '') {
-            alert("Please provide a name");
+            alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("seedlots.ui.please_provide_a_name", "Please provide a name") : "Please provide a name"));
             return;
         }
         if (category == '') {
-            alert("Please select a category");
+            alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("barcode.helper.please_select_a_category", "Please select a category") : "Please select a category"));
             return;
         }
         if (breeding_program == '') {
-            alert("Please select a program");
+            alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("locations.select.program", "Please select a program") : "Please select a program"));
             return;
         }
         if (contact_person == '') {
-            alert("Please provide contact username");
+            alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("barcode.helper.please_provide_contact_username", "Please provide contact username") : "Please provide contact username"));
             return;
         }
 
@@ -155,7 +155,7 @@ jQuery(document).ready(function(){
             },
             error: function(response){
                 jQuery('#working_modal').modal('hide');
-                alert('An error occurred adding item');
+                alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("barcode.helper.an_error_occurred_adding_item", "An error occurred adding item") : 'An error occurred adding item'));
             }
         });
     });

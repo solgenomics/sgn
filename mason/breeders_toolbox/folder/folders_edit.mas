@@ -1,3 +1,6 @@
+<%once>
+use JSON ();
+</%once>
 <%args>
 $folder_tree_type
 $folder_tree_identifier
@@ -8,33 +11,33 @@ $folder_tree_refresh_name
   <div class="modal-dialog" role="document">
     <div class="modal-content">
       <div class="modal-header">
-        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-        <h4 class="modal-title" id="editFoldersDialog">Edit Selected Folder(s)</h4>
+        <button type="button" class="close" data-dismiss="modal" aria-label="<% $c->i18n->p('folder.ui.close', 'Close') |h %>"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title" id="editFoldersDialog"><% $c->i18n->p('folder.edit_categories.title', 'Edit Selected Folder(s)') |h %></h4>
       </div>
       <div class="modal-body">
         <div class="container-fluid">
 
 	       <form class="form-horizontal" role="form" method="post" id="edit_folders_category_dialog_form" name="edit_folders_category_dialog_form">
 	        <div class="form-group">
-      	      <label class="col-sm-3 control-label">Folder(s) for Trials:</label>
+                <label class="col-sm-3 control-label"><% $c->i18n->p('folder.edit_categories.trials', 'Folder(s) for Trials:') |h %></label>
       	      <div class="col-sm-9" >
                 <input name="edit_folders_for_trials" id="edit_folders_for_trials" type="checkbox"/>
               </div>
 	        </div>
             <div class="form-group">
-      	      <label class="col-sm-3 control-label">Folder(s) for Crosses:</label>
+                <label class="col-sm-3 control-label"><% $c->i18n->p('folder.edit_categories.crosses', 'Folder(s) for Crosses:') |h %></label>
       	      <div class="col-sm-9" >
                 <input name="edit_folders_for_crosses" id="edit_folders_for_crosses" type="checkbox"/>
               </div>
 	        </div>
             <div class="form-group">
-      	      <label class="col-sm-3 control-label">Folder(s) for Genotyping Plates:</label>
+                <label class="col-sm-3 control-label"><% $c->i18n->p('folder.edit_categories.genotyping_plates', 'Folder(s) for Genotyping Plates:') |h %></label>
       	      <div class="col-sm-9" >
                 <input name="edit_folders_for_genotyping_trials" id="edit_folders_for_genotyping_trials" type="checkbox"/>
               </div>
 	        </div>
             <div class="form-group">
-      	      <label class="col-sm-3 control-label">Folder(s) for Genotyping Projects:</label>
+                <label class="col-sm-3 control-label"><% $c->i18n->p('folder.edit_categories.genotyping_projects', 'Folder(s) for Genotyping Projects:') |h %></label>
       	      <div class="col-sm-9" >
                 <input name="edit_folders_for_genotyping_projects" id="edit_folders_for_genotyping_projects" type="checkbox"/>
               </div>
@@ -44,8 +47,8 @@ $folder_tree_refresh_name
         </div>
       </div>
       <div class="modal-footer">
-        <button type="button" class="btn btn-default" name="edit_folders_categories_cancel_button" id="edit_folders_categories_cancel_button" data-dismiss="modal">Close</button>
-	      <button type="button" class="btn btn-primary" name="edit_folders_categories_save_button" id="edit_folders_categories_save_button" title="Save">Save</button>
+        <button type="button" class="btn btn-default" name="edit_folders_categories_cancel_button" id="edit_folders_categories_cancel_button" data-dismiss="modal"><% $c->i18n->p('folder.edit_categories.close', 'Close') |h %></button>
+	      <button type="button" class="btn btn-primary" name="edit_folders_categories_save_button" id="edit_folders_categories_save_button" title="<% $c->i18n->p('folder.edit_categories.save', 'Save') |h %>"><% $c->i18n->p('folder.edit_categories.save', 'Save') |h %></button>
       </div>
     </div>
   </div>
@@ -95,9 +98,9 @@ function save_folders_categories() {
         });
     }
     if (error == 1){
-        alert('Error setting folder categories!');
+        alert(window.SGN && SGN.i18n ? SGN.i18n.p('folder.edit_categories.error', 'Error setting folder categories!') : 'Error setting folder categories!');
     } else {
-        if(confirm('Categories set for folder(s)! Refresh <% $folder_tree_type %> Tree?')){
+        if(confirm(window.SGN && SGN.i18n ? SGN.i18n.p('folder.edit_categories.success', 'Categories set for folder(s)! Refresh %{tree_type} Tree?', {tree_type: <% JSON::encode_json($folder_tree_type) %>}) : 'Categories set for folder(s)! Refresh <% $folder_tree_type %> Tree?')){
             jQuery("[name='<% $folder_tree_refresh_name %>']").trigger("click");
         }
     }

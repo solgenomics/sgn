@@ -138,7 +138,7 @@ export function init(main_div) {
                             $(this)
                                 //.addClass( "ui-state-highlight" )
                                 .find("p")
-                                .html("Dropped!");
+                                .html((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("analysis.interface.dropped", "Dropped!") : "Dropped!"));
                             var droppable = $(this);
                             var draggable = ui.draggable;
                             // Move draggable into droppable
@@ -159,7 +159,7 @@ export function init(main_div) {
                             $(this)
                                 //.addClass( "ui-state-highlight" )
                                 .find("p")
-                                .html("Dropped!");
+                                .html((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("analysis.interface.dropped", "Dropped!") : "Dropped!"));
                             var droppable = $(this);
                             var draggable = ui.draggable;
                             // Move draggable into droppable
@@ -177,7 +177,7 @@ export function init(main_div) {
 
                 },
                 error: function (r) {
-                    alert("ERROR!!!!!");
+                    alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("analysis.interface.error_1e7938", "ERROR!!!!!") : "ERROR!!!!!"));
                 }
             });
         }
@@ -270,7 +270,7 @@ export function init(main_div) {
         });
 
         if (trait_selected.length > 1 || trait_selected.length == 0) {
-            jQuery('#trait_histogram').html('Please select only one trait at a time to see the histogram!');
+            jQuery('#trait_histogram').html((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("analysis.interface.please_select_only_one_trait_at_a_time_to_see", "Please select only one trait at a time to see the histogram!") : 'Please select only one trait at a time to see the histogram!'));
         } else {
 
             var trait = trait_selected[0];
@@ -304,7 +304,7 @@ export function init(main_div) {
                 },
 
 
-                error: function (e) { alert('error!'); }
+                error: function (e) { alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("analysis.interface.error", "error!") : 'error!')); }
             });
 
         }
@@ -408,10 +408,10 @@ function get_dataset_id() {
         selected_datasets.push(jQuery(this).val());
     });
     if (selected_datasets.length < 1) {
-        alert('Please select at least one dataset!');
+        alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("analysis.interface.please_select_at_least_one_dataset", "Please select at least one dataset!") : 'Please select at least one dataset!'));
         return false;
     } else if (selected_datasets.length > 1) {
-        alert('Please select only one dataset!');
+        alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("analysis.interface.please_select_only_one_dataset", "Please select only one dataset!") : 'Please select only one dataset!'));
         return false;
     } else {
         var dataset_id = selected_datasets[0];
@@ -546,7 +546,7 @@ function get_model_string() {
 	method: 'POST',
 	data : params,
 	error: function(e) {
-	    alert("An error occurred"+e);
+	    alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("folder.new.request_error", "An error occurred") : "An error occurred")+e);
 	},
 	success: function(r) {
 	    if (r.error) {

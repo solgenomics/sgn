@@ -1,7 +1,7 @@
 
 =head1 SGN::Controller::AJAX::HTMLSelect - a resource to dynamically obtain html selects for a number of widely used data types
 
-=head1 SYNOPSYS
+=head1 SYNOPSIS
 
 get_location_select()
 
@@ -22,6 +22,7 @@ package SGN::Controller::AJAX::HTMLSelect;
 use Moose;
 
 use Data::Dumper;
+use HTML::Entities qw(encode_entities);
 use CXGN::BreedersToolbox::Projects;
 use CXGN::Page::FormattingHelpers qw | simple_selectbox_html simple_checkbox_html |;
 use Scalar::Util qw | looks_like_number |;
@@ -67,7 +68,7 @@ sub get_location_select : Path('/ajax/html/select/locations') Args(0) {
 
     my $locations = CXGN::BreedersToolbox::Projects->new( { schema => $c->dbic_schema("Bio::Chado::Schema", undef, $sp_person_id) } )->get_all_locations();
 
-    if ($empty) { unshift @$locations, [ "", "Select Location" ] }
+    if ($empty) { unshift @$locations, [ "", encode_entities($c->i18n->p('locations.select.location', 'Select Location')) ] }
 
     my $default = $c->req->param("default") || @$locations[0]->[0];
 
@@ -91,13 +92,16 @@ sub get_breeding_program_select : Path('/ajax/html/select/breeding_programs') Ar
 
     my $breeding_programs = CXGN::BreedersToolbox::Projects->new( { schema => $c->dbic_schema("Bio::Chado::Schema", undef, $sp_person_id) } )->get_breeding_programs();
 
-    if ($empty) { unshift @$breeding_programs, [ "", "Please select a program" ]; }
+    if ($empty) { unshift @$breeding_programs, [ "", $c->i18n->p('locations.select.program', 'Please select a program') ]; }
     my $default = $c->req->param("default") || @$breeding_programs[0]->[0];
+
+    my $display_programs = [map { [$_->[0], encode_entities($_->[1])] } @$breeding_programs];
 
     my $html = simple_selectbox_html(
       name => $name,
       id => $id,
-      choices => $breeding_programs,
+      choices => $display_programs,
+      params => ($empty ? {'data-canonical-empty-label' => 'Please select a program'} : {}),
       selected => $default
     );
     $c->stash->{rest} = { select => $html };
@@ -170,7 +174,7 @@ sub get_trial_folder_select : Path('/ajax/html/select/folders') Args(0) {
     }
 
     if ($empty) {
-      unshift @folders, [ 0, "None" ];
+      unshift @folders, [ 0, $c->i18n->p("global.select.synthetic_none", "None") ];
     }
 #    print STDERR "FOLDERS =".Dumper(\@folders)."\n";
 
@@ -215,7 +219,7 @@ sub get_trial_type_select : Path('/ajax/html/select/trial_types') Args(0) {
     #print STDERR "types after sort: ".Dumper(\@types);
 
     if ($empty) {
-        unshift @types, [ '', "None" ];
+        unshift @types, [ '', $c->i18n->p("global.select.synthetic_none", "None") ];
     }
 
     my $default = $c->req->param("default") || $types[0]->[0];
@@ -324,7 +328,7 @@ sub get_projects_select : Path('/ajax/html/select/projects') Args(0) {
                 push @all_projects, @trials;
             }
             if ($excluded_plates_in_project_id && scalar(@genotyping_plate_ids)>0) {
-                print STDERR "SUBSTRACTING..."."\n";
+                print STDERR "SUBTRACTING..."."\n";
                 foreach my $project (@all_projects) {
                     next if ($project->[0] ~~ @genotyping_plate_ids);
                     push @projects, $project;
@@ -368,11 +372,11 @@ sub get_projects_select : Path('/ajax/html/select/projects') Args(0) {
 #    if ($empty) { unshift @projects, [ "", "Please select a trial" ]; }
     if ($empty) {
         if ($get_crossing_trials) {
-            unshift @projects, [ "", "Please select a crossing experiment" ];
+            unshift @projects, [ "", encode_entities($c->i18n->p('projects.select.crossing_experiment', 'Please select a crossing experiment'), q{&<>"'}) ];
         } elsif ($get_genotyping_projects) {
-            unshift @projects, [ "", "Please select a genotyping project" ];
+            unshift @projects, [ "", encode_entities($c->i18n->p('projects.select.genotyping_project', 'Please select a genotyping project'), q{&<>"'}) ];
         } else {
-            unshift @projects, [ "", "Please select a trial" ];
+            unshift @projects, [ "", encode_entities($c->i18n->p('projects.select.trial', 'Please select a trial'), q{&<>"'}) ];
         }
     }
 #    print STDERR "PROJECTS =".Dumper(\@projects)."\n";
@@ -474,7 +478,7 @@ sub get_trials_select : Path('/ajax/html/select/trials') Args(0) {
         }
     }
 
-    if ($empty) { unshift @trials, [ "", "Please select a trial" ]; }
+    if ($empty) { unshift @trials, [ "", $c->i18n->p("projects.select.trial", "Please select a trial") ]; }
 
     my $html = simple_selectbox_html(
       multiple => $multiple,
@@ -521,7 +525,7 @@ sub get_genotyping_trials_select : Path('/ajax/html/select/genotyping_trials') A
     }
     @trials = sort { $a->[1] cmp $b->[1] } @trials;
 
-    if ($empty) { unshift @trials, [ "", "Please select a trial" ]; }
+    if ($empty) { unshift @trials, [ "", $c->i18n->p("projects.select.trial", "Please select a trial") ]; }
 
     my $html = simple_selectbox_html(
       multiple => $multiple,
@@ -541,12 +545,12 @@ sub get_label_data_source_types_select : Path('/ajax/html/select/label_data_sour
     my $id = $c->req->param("id") || "label_data_source_types_select";
     my $name = $c->req->param("name") || "label_data_source_types_select";
     my @types = (
-        ["any", "Any Data Type..."],
-        ["field_trials", "Field Trials"],
-        ["genotyping_plates", "Genotyping Plates"],
-        ["crossing_experiments", "Crossing Experiments"],
-        ["lists", "Lists"],
-        ["public_lists", "Public Lists"]
+        ["any", encode_entities($c->i18n->p('barcode.final_selector.a77649f', 'Any Data Type...'))],
+        ["field_trials", encode_entities($c->i18n->p('navigation.manage.field_trials', 'Field Trials'))],
+        ["genotyping_plates", encode_entities($c->i18n->p('folder.detail.tab.genotyping_plates', 'Genotyping Plates'))],
+        ["crossing_experiments", encode_entities($c->i18n->p('folder.detail.tab.crossing_experiments', 'Crossing Experiments'))],
+        ["lists", encode_entities($c->i18n->p('navigation.login.lists', 'Lists'))],
+        ["public_lists", encode_entities($c->i18n->p('lists_datasets.shared.public_lists', 'Public Lists'))]
     );
 
     my $html = simple_selectbox_html(
@@ -640,6 +644,21 @@ sub get_label_data_source_select : Path('/ajax/html/select/label_data_sources') 
       params => $live_search,
       selected_params => 'hidden'
     );
+
+    # Preserve canonical source-type keys while localizing optgroup presentation.
+    if ($c->i18n->locale ne 'en') {
+        my %label_captions = (
+            'Field Trials' => $c->i18n->p('navigation.manage.field_trials', 'Field Trials'),
+            'Genotyping Plates' => $c->i18n->p('folder.detail.tab.genotyping_plates', 'Genotyping Plates'),
+            'Crossing Experiments' => $c->i18n->p('folder.detail.tab.crossing_experiments', 'Crossing Experiments'),
+            'Lists' => $c->i18n->p('navigation.login.lists', 'Lists'),
+            'Public Lists' => $c->i18n->p('lists_datasets.shared.public_lists', 'Public Lists'),
+        );
+        for my $canonical (sort keys %label_captions) {
+            my $caption = encode_entities($label_captions{$canonical});
+            $html =~ s{<optgroup label="\Q$canonical\E">}{<optgroup data-sgn-source-type="$canonical" label="$caption">}g;
+        }
+    }
 
     $c->stash->{rest} = { select => $html };
 }
@@ -826,6 +845,7 @@ sub get_seedlots_select : Path('/ajax/html/select/seedlots') Args(0) {
     my $empty = $c->req->param("empty") || "";
     my $data_related = $c->req->param("data-related") || "";
     my @stocks;
+    my %unspecified_caption_ids;
     foreach my $r (@seedlots) {
         if ($exclude_discarded == 1) {
             if ($exclude_self == 1) {
@@ -836,6 +856,7 @@ sub get_seedlots_select : Path('/ajax/html/select/seedlots') Args(0) {
                 if ($r->{count} ne 'DISCARDED') {
                     if ($r->{seedlot_stock_id} == $seedlot_id) {
                         push @stocks, [ $r->{seedlot_stock_id}, 'unspecified'];
+                        $unspecified_caption_ids{$r->{seedlot_stock_id}} = 1;
                     } else {
                         push @stocks, [ $r->{seedlot_stock_id}, $r->{seedlot_stock_uniquename} ];
                     }
@@ -864,12 +885,23 @@ sub get_seedlots_select : Path('/ajax/html/select/seedlots') Args(0) {
 
     if ($empty) { unshift @stocks, [ "", "Please select a stock" ]; }
 
+    # Sort by the original names before translating control captions.
+    my @display_stocks = map {
+        my ($value, $caption) = @$_;
+        if ($value eq '') {
+            $caption = $c->i18n->p('seedlots.select.stock', 'Please select a stock');
+        } elsif ($unspecified_caption_ids{$value}) {
+            $caption = $c->i18n->p('seedlots.select.unspecified', 'unspecified');
+        }
+        [$value, encode_entities($caption, q{<>&"'})]
+    } @stocks;
+
     my $html = simple_selectbox_html(
         multiple => $multiple,
         name => $name,
         id => $id,
         size => $size,
-        choices => \@stocks,
+        choices => \@display_stocks,
         data_related => $data_related
     );
     $c->stash->{rest} = { select => $html };
@@ -1233,7 +1265,7 @@ sub get_analysis_models : Path('/ajax/html/select/models') Args(0) {
     my $empty = $c->req->param("empty");
 
     @models = sort { $a->[1] cmp $b->[1] } @models;
-    if ($empty) { unshift @models, [ "", "Please select a model" ]; }
+    if ($empty) { unshift @models, [ "", $c->i18n->p("analysis.interface.please_select_a_model", "Please select a model") ]; }
 
     my $html = simple_selectbox_html(
         name => $name,
@@ -1440,7 +1472,7 @@ sub get_traits_select : Path('/ajax/html/select/traits') Args(0) {
     }
 
     @traits = sort { $a->[1] cmp $b->[1] } @traits;
-    if ($empty) { unshift @traits, [ "", "Please select a trait" ]; }
+    if ($empty) { unshift @traits, [ "", $c->i18n->p("analysis.interface.please_select_a_trait", "Please select a trait") ]; }
 
     my $html = simple_selectbox_html(
       multiple => $multiple,
@@ -1578,7 +1610,7 @@ sub get_genotyping_protocol_select : Path('/ajax/html/select/genotyping_protocol
     }
 
     if ($empty){
-        unshift@$gt_protocols, ['', "Select a genotyping protocol"]
+        unshift@$gt_protocols, ['', $c->i18n->p("genotype.marker.protocol.prompt", "Select a genotyping protocol")]
     }
 
     my $html = simple_selectbox_html(
@@ -1666,7 +1698,7 @@ sub ontology_children_select : Path('/ajax/html/select/ontology_children') Args(
     @ontology_children = sort { ncmp($a->[1], $b->[1]) } @ontology_children;
 
     if ($empty) {
-        unshift @ontology_children, [ 0, "None" ];
+        unshift @ontology_children, [ 0, $c->i18n->p("global.select.synthetic_none", "None") ];
     }
     #print STDERR Dumper \@ontology_children;
     my $html = simple_selectbox_html(
@@ -1711,7 +1743,7 @@ sub all_ontology_terms_select : Path('/ajax/html/select/all_ontology_terms') Arg
 
     #@ontology_terms = sort { $a->[1] cmp $b->[1] } @ontology_terms;
     if ($empty) {
-        unshift @ontology_terms, [ 0, "None" ];
+        unshift @ontology_terms, [ 0, $c->i18n->p("global.select.synthetic_none", "None") ];
     }
     #print STDERR Dumper \@ontology_children;
     my $html = simple_selectbox_html(
@@ -1776,7 +1808,7 @@ sub get_datasets_select :Path('/ajax/html/select/datasets') Args(0) {
                     }
 
                     if (!$stored_tool_compatibility && !$analysis_compatibility) {
-                        $tool_compatibility = '(not calculated)';
+                        $tool_compatibility = $c->i18n->p("analysis.interface.not_calculated", "(not calculated)");
                     } elsif (!$analysis_compatibility || $analysis_compatibility->{'compatible'} == 0) {
                         $tool_compatibility = '<b><span class="glyphicon glyphicon-remove" style="color:red"></span></b>';
                     } else {
@@ -1815,17 +1847,29 @@ sub get_datasets_select :Path('/ajax/html/select/datasets') Args(0) {
         'genotyping_protocols' => 'nd_protocol_ids_2_protocols'
     );
 
+    my %category_labels = (
+        accessions => $c->i18n->p("accessions.section.accessions", "Accessions"),
+        plots => $c->i18n->p("global.graphical_filtering.plots", "Plots"),
+        plants => $c->i18n->p("global.graphical_filtering.plants", "Plants"),
+        trials => $c->i18n->p("accession.stock.trials.title", "Trials"),
+        traits => $c->i18n->p("genotype.comparison.step.traits", "Traits"),
+        years => $c->i18n->p("analysis.interface.years", "Years"),
+        breeding_programs => $c->i18n->p("analysis.interface.breeding_programs", "Breeding_programs"),
+        locations => $c->i18n->p("locations.map.locations", "Locations"),
+        genotyping_protocols => $c->i18n->p("analysis.interface.genotyping_protocols", "Genotyping_protocols"),
+    );
+
     my $compatibility_header;
     if ($show_compatibility){
-        $compatibility_header = '<th>Compatibility</th>';
+        $compatibility_header = '<th>'.$c->i18n->p("analysis.interface.compatibility", "Compatibility").'</th>';
     }
-    my $html = '<table class="table table-bordered table-hover" id="html-select-dataset-table-'.$num.'"><thead><tr><th>Select</th><th>Dataset Name</th><th>Contents</th>'.$compatibility_header.'</tr></thead><tbody>';
+    my $html = '<table class="table table-bordered table-hover" id="html-select-dataset-table-'.$num.'"><thead><tr><th>'.$c->i18n->p("global.select", "Select").'</th><th>'.$c->i18n->p("global.dataset_cxgn_dataset.table.dataset_name", "Dataset Name").'</th><th>'.$c->i18n->p("lists_datasets.pages.contents", "Contents").'</th>'.$compatibility_header.'</tr></thead><tbody>';
     foreach my $ds (@datasets) {
         $html .= '<tr><td><input type="checkbox" name="'.$checkbox_name.'" value="'.$ds->{id}.'"></td><td><a href="/dataset/'.$ds->{id}.'">'.$ds->{name}.'</a></td><td>';
 
         $html .= '<table class="table-bordered"><thead><tr>';
         foreach my $cat (@{$ds->{info}->{category_order}}) {
-            $html .= '<th>'.ucfirst($cat).'</th>';
+            $html .= '<th>'.(exists $category_labels{$cat} ? $category_labels{$cat} : ucfirst($cat)).'</th>';
         }
         $html .= '</tr></thead><tbody><tr>';
         foreach my $cat (@{$ds->{info}->{category_order}}) {
@@ -1859,7 +1903,8 @@ sub get_datasets_select :Path('/ajax/html/select/datasets') Args(0) {
 
     $html .= "</tbody></table>";
 
-    $html .= "<script>jQuery(document).ready(function() { jQuery('#html-select-dataset-table-".$num."').DataTable({ 'lengthMenu': [[2, 4, 6, 8, 10, 25, 50, -1], [2, 4, 6, 8, 10, 25, 50, 'All']] }); } );</script>";
+    my $all_option = ($c->i18n->locale eq "en" ? "'All'" : JSON->new->allow_nonref->encode($c->i18n->p("global.search_wizard.all_levels", "All")));
+    $html .= "<script>jQuery(document).ready(function() { jQuery('#html-select-dataset-table-".$num."').DataTable({ 'lengthMenu': [[2, 4, 6, 8, 10, 25, 50, -1], [2, 4, 6, 8, 10, 25, 50, ".$all_option."]] }); } );</script>";
 
     $c->stash->{rest} = { select => $html };
 }
@@ -2863,10 +2908,23 @@ sub get_material_types_select : Path('/ajax/html/select/material_types') Args(0)
     push @material_types, ['tissue culture', 'tissue culture'];
     push @material_types, ['gametophyte', 'gametophyte'];
 
+    my %material_captions = (
+        '' => $c->i18n->p('seedlots.select.material', 'Please select a material type'),
+        'seed' => $c->i18n->p('seedlots.select.material.seed', 'seed'),
+        'root' => $c->i18n->p('seedlots.select.material.root', 'root'),
+        'clone' => $c->i18n->p('seedlots.select.material.clone', 'clone'),
+        'plant' => $c->i18n->p('seedlots.select.material.plant', 'plant'),
+        'tissue culture' => $c->i18n->p('seedlots.select.material.tissue_culture', 'tissue culture'),
+        'gametophyte' => $c->i18n->p('seedlots.select.material.gametophyte', 'gametophyte'),
+    );
+    my @display_material_types = map {
+        [$_->[0], encode_entities($material_captions{$_->[0]}, q{<>&"'})]
+    } @material_types;
+
     my $html = simple_selectbox_html(
         name => $name,
         id => $id,
-        choices => \@material_types,
+        choices => \@display_material_types,
         selected => $default
     );
     $c->stash->{rest} = { select => $html };

@@ -22,113 +22,113 @@ $trial_owner
         <table class="table table-hover table-bordered" >
 
             <tr>
-                <td><b>Crossing Experiment Name</b></td>
+                <td><b><% $c->i18n->p('cross.ui.crossing_experiment_name.c83dfee', 'Crossing Experiment Name') |h %></b></td>
                 <td>
                     <div id="trial_name">
 % if ($trial_name) {
 %   print "$trial_name";
 % } else {
-%   print "<span class='text-danger'>[No Crossing Experiment Name]</span>";
+%   print '<span class=\'text-danger\'>' . HTML::Entities::encode_entities($c->i18n->p('cross.ui.no_crossing_experiment_name', '[No Crossing Experiment Name]')) . '</span>';
 % }
                     </div>
                 </td>
             </tr>
 
             <tr>
-                <td><b>Breeding Program </b></td>
+                <td><b><% $c->i18n->p('cross.ui.breeding_program.2f6b84b', 'Breeding Program') |h %> </b></td>
                 <td>
                     <span id="breeding_program">
 % if ($breeding_program_name) {
 %  print "$breeding_program_name";
 % }
 % else {
-%  print "<span class='text-danger'>[No Breeding Program]</span>";
+%  print '<span class=\'text-danger\'>' . HTML::Entities::encode_entities($c->i18n->p('cross.ui.no_breeding_program', '[No Breeding Program]')) . '</span>';
 % }
                     </span>
                 </td>
             </tr>
 
             <tr>
-                <td><b>Location</b></td>
+                <td><b><% $c->i18n->p('cross.ui.location', 'Location') |h %></b></td>
                 <td>
                     <div id="trial_location">
 % if ($location_name) {
 %  print "$location_name ( $country_name )";
 % } else {
-%  print "<span class='text-danger'>[No Location]</span>";
+%  print '<span class=\'text-danger\'>' . HTML::Entities::encode_entities($c->i18n->p('cross.ui.no_location', '[No Location]')) . '</span>';
 % }
                     </div>
                 </td>
             </tr>
 
             <tr>
-                <td><b>Year</b></td>
+                <td><b><% $c->i18n->p('cross.ui.year.6813944', 'Year') |h %></b></td>
                 <td>
                     <div id="trial_year">
 % if ($year) {
 %  print "$year";
 % } else {
-%  print "<span class='text-danger'>[No Year]</span>";
+%  print '<span class=\'text-danger\'>' . HTML::Entities::encode_entities($c->i18n->p('cross.ui.no_year', '[No Year]')) . '</span>';
 % }
                     </div>
                 </td>
             </tr>
 
             <tr>
-                <td><b>Planting Date</b></td>
+                <td><b><% $c->i18n->p('cross.ui.planting_date', 'Planting Date') |h %></b></td>
                 <td>
                     <div id="planting_date">
 % if ($planting_date) {
 <a href="/breeders/trial/<% $trial_id %>?currentDate=<% $planting_date %>" ><% $planting_date %></a>
 % } else {
-%  print "<span class='text-danger'>[No Planting Date]</span>";
+%  print '<span class=\'text-danger\'>' . HTML::Entities::encode_entities($c->i18n->p('cross.ui.no_planting_date', '[No Planting Date]')) . '</span>';
 % }
                     </div>
                 </td>
             </tr>
 
             <tr>
-                <td><b>Harvest Date</b></td>
+                <td><b><% $c->i18n->p('cross.ui.harvest_date', 'Harvest Date') |h %></b></td>
                 <td>
                     <div id="harvest_date">
 % if ($harvest_date) {
 <a href="/breeders/trial/<% $trial_id %>?currentDate=<% $harvest_date %>" ><% $harvest_date %></a>
 % } else {
-%  print "<span class='text-danger'>[No Harvest Date]</span>";
+%  print '<span class=\'text-danger\'>' . HTML::Entities::encode_entities($c->i18n->p('cross.ui.no_harvest_date', '[No Harvest Date]')) . '</span>';
 % }
                     </div>
                 </td>
             </tr>
 
-            <tr><td><b>Description</b></td>
+            <tr><td><b><% $c->i18n->p('cross.ui.description.7f85a32', 'Description') |h %></b></td>
                 <td>
                     <div id="trial_description">
 % if ($trial_description) {
 %  print "$trial_description";
 % } else {
-%  print "<span class='text-danger'>[No Description]</span>";
+%  print '<span class=\'text-danger\'>' . HTML::Entities::encode_entities($c->i18n->p('cross.ui.no_description', '[No Description]')) . '</span>';
 % }
                     </div>
                 </td>
             </tr>
 
             <tr>
-                <td><b>Folder</b></td>
+                <td><b><% $c->i18n->p('cross.ui.folder', 'Folder') |h %></b></td>
                 <td>
                     <span id="trial_folder_div"><a href="/folder/<% $folder_id %>"><% $folder_name %></a></span>
                     <br/><br/>
-                    <button class="btn btn-sm btn-default" style="margin:3px" id="new_folder_dialog_link">New Folder</button> <button class="btn btn-sm btn-default" style="margin:3px" id="open_folder_dialog_link">Change Folder</button>
+                    <button class="btn btn-sm btn-default" style="margin:3px" id="new_folder_dialog_link"><% $c->i18n->p('cross.ui.new_folder', 'New Folder') |h %></button> <button class="btn btn-sm btn-default" style="margin:3px" id="open_folder_dialog_link"><% $c->i18n->p('cross.ui.change_folder', 'Change Folder') |h %></button>
                 </td>
             </tr>
 
             <tr>
-                <td><b>Created by</b></td>
+                <td><b><% $c->i18n->p('cross.ui.created_by', 'Created by') |h %></b></td>
                 <td>
                     <div id="trial_owner">
 % if ($trial_owner) {
 %  print "$trial_owner";
 % } else {
-%  print "<span class='text-danger'>[N/A]</span>";
+%  print '<span class=\'text-danger\'>' . HTML::Entities::encode_entities($c->i18n->p('cross.ui.n_a', '[N/A]')) . '</span>';
 % }
                     </div>
                 </td>
@@ -142,4 +142,4 @@ $trial_owner
         </div>
     </div>
 </div>
-<button class="btn btn-sm btn-primary" style="margin:3px" id="upload_new_crosses_link">Upload New Crosses</button><a href="/breeders/trial/<% $trial_id %>/download/crosses?format=crossing_experiment_xls&dataLevel=cross" class="btn btn-sm btn-default">Download Crosses in this Crossing Experiment</a>
+<button class="btn btn-sm btn-primary" style="margin:3px" id="upload_new_crosses_link"><% $c->i18n->p('cross.ui.upload_new_crosses', 'Upload New Crosses') |h %></button><a href="/breeders/trial/<% $trial_id %>/download/crosses?format=crossing_experiment_xls&dataLevel=cross" class="btn btn-sm btn-default"><% $c->i18n->p('cross.ui.download_crosses_in_this_crossing_experiment', 'Download Crosses in this Crossing Experiment') |h %></a>

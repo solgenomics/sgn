@@ -7,25 +7,25 @@ $user_id => undef
 <br>
 
 <div style="display: flex; justify-content: flex-end; align-items: baseline; gap: 15px;">
-    <p><strong>Filter Locations by List:</strong></p>
+    <p><strong><% $c->i18n->p('locations.table.list_filter', 'Filter Locations by List:') |h %></strong></p>
     <div id="locations_list"></div>
 </div>
 <div class="table-responsive" style="margin-top: 10px;">
     <table id="location_table" class="table table-hover table-striped table-bordered" width="100%">
         <thead>
             <tr>
-                <th>Id</th>
-                <th>Name</th>
-                <th>Abbreviation</th>
-                <th>Country</th>
-                <th>Program</th>
-                <th>Type</th>
-                <th>Lat</th>
-                <th>Long</th>
-                <th>Altitude(m)</th>
-                <th>Trials</th>
-                <th>Nearest NOAA Station ID</th>
-                <th>Edit</th>
+                <th><% $c->i18n->p('locations.table.id', 'Id') |h %></th>
+                <th><% $c->i18n->p('locations.table.name', 'Name') |h %></th>
+                <th><% $c->i18n->p('locations.table.abbreviation', 'Abbreviation') |h %></th>
+                <th><% $c->i18n->p('locations.table.country', 'Country') |h %></th>
+                <th><% $c->i18n->p('locations.table.program', 'Program') |h %></th>
+                <th><% $c->i18n->p('locations.table.type', 'Type') |h %></th>
+                <th><% $c->i18n->p('locations.table.latitude', 'Lat') |h %></th>
+                <th><% $c->i18n->p('locations.table.longitude', 'Long') |h %></th>
+                <th><% $c->i18n->p('locations.table.altitude', 'Altitude(%{unit})', {unit => 'm'}) |h %></th>
+                <th><% $c->i18n->p('locations.table.trials', 'Trials') |h %></th>
+                <th><% $c->i18n->p('locations.table.noaa', 'Nearest NOAA Station ID') |h %></th>
+                <th><% $c->i18n->p('locations.table.edit', 'Edit') |h %></th>
             </tr>
         </thead>
         <!-- <caption class="well well-sm" style="caption-side: bottom;margin-top: 10px;"><center> Locations </center></caption> -->

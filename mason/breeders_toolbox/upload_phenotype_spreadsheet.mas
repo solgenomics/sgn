@@ -8,51 +8,51 @@
   <div class="modal-dialog" role="document">
     <div class="modal-content">
       <div class="modal-header">
-        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-        <h4 class="modal-title" id="addSpreadsheetPhenotypeDialog">Upload Phenotype Spreadsheet</h4>
+        <button type="button" class="close" data-dismiss="modal" aria-label="<% $c->i18n->p('phenotype_upload.ui.close', 'Close') |h %>"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title" id="addSpreadsheetPhenotypeDialog"><% $c->i18n->p('phenotype_upload.ui.title', 'Upload Phenotype Spreadsheet') |h %></h4>
       </div>
       <div class="modal-body">
         <div class="container-fluid">
 
             <&| /page/explanation.mas, title=>'Template Information' &>
                 <p>
-                <b>File format information</b>
+                <b><% $c->i18n->p('phenotype_upload.ui.format_info', 'File format information') |h %></b>
                 <br>
-                <a id="phenotype_upload_spreadsheet_format_info">Spreadsheet Format</a>
+                <a id="phenotype_upload_spreadsheet_format_info"><% $c->i18n->p('phenotype_upload.ui.spreadsheet_format', 'Spreadsheet Format') |h %></a>
                 </p>
             </&>
 
             <form class="form-horizontal" role="form" method="post" enctype="multipart/form-data" encoding="multipart/form-data" id="upload_spreadsheet_phenotype_file_form" name="upload_spreadsheet_phenotype_file_form">
                 <div class="form-group">
-                    <label class="col-sm-6 control-label">Spreadsheet Format: </label>
+                    <label class="col-sm-6 control-label"><% $c->i18n->p('phenotype_upload.ui.format', 'Spreadsheet Format: ') |h %></label>
                     <div class="col-sm-6" >
                         <select class="form-control" id="upload_spreadsheet_phenotype_file_format" name="upload_spreadsheet_phenotype_file_format">
-                            <option value="detailed">Detailed</option>
-                            <option value="simple">Simple</option>
+                            <option value="detailed"><% $c->i18n->p('phenotype_upload.ui.detailed', 'Detailed') |h %></option>
+                            <option value="simple"><% $c->i18n->p('phenotype_upload.ui.simple', 'Simple') |h %></option>
                         </select>
                     </div>
                 </div>
                 <div class="form-group">
-                    <label class="col-sm-6 control-label">Timestamps Included: </label>
+                    <label class="col-sm-6 control-label"><% $c->i18n->p('phenotype_upload.ui.timestamps', 'Timestamps Included: ') |h %></label>
                     <div class="col-sm-6" >
                         <input type="checkbox" id="upload_spreadsheet_phenotype_timestamp_checkbox" name="upload_spreadsheet_phenotype_timestamp_checkbox" />
                     </div>
                 </div>
                 <div id="upload_spreadsheet_phenotype_data_level_div">
                     <div class="form-group">
-                        <label class="col-sm-6 control-label">Data Level: </label>
+                        <label class="col-sm-6 control-label"><% $c->i18n->p('phenotype_upload.ui.data_level', 'Data Level: ') |h %></label>
                         <div class="col-sm-6" >
                             <select class="form-control" id="upload_spreadsheet_phenotype_data_level" name="upload_spreadsheet_phenotype_data_level">
-                                <option value="plots">Plots</option>
-                                <option value="plants">Plants</option>
-                                <option value="subplots">Subplots</option>
-                                <option value="tissue_samples">Tissue Samples</option>
+                                <option value="plots"><% $c->i18n->p('phenotype_upload.ui.plots', 'Plots') |h %></option>
+                                <option value="plants"><% $c->i18n->p('phenotype_upload.ui.plants', 'Plants') |h %></option>
+                                <option value="subplots"><% $c->i18n->p('phenotype_upload.ui.subplots', 'Subplots') |h %></option>
+                                <option value="tissue_samples"><% $c->i18n->p('phenotype_upload.ui.tissue_samples', 'Tissue Samples') |h %></option>
                             </select>
                         </div>
                     </div>
                 </div>
                 <div class="form-group">
-                    <label class="col-sm-6 control-label">Phenotype Spreadsheet: </label>
+                    <label class="col-sm-6 control-label"><% $c->i18n->p('phenotype_upload.ui.file', 'Phenotype Spreadsheet: ') |h %></label>
                     <div class="col-sm-6" >
                         <input type="file" id="upload_spreadsheet_phenotype_file_input" name="upload_spreadsheet_phenotype_file_input" encoding="multipart/form-data" />
                     </div>
@@ -69,10 +69,10 @@
         </div>
 
         <div class="modal-footer">
-	    <button type="button" class="btn btn-default" name="reset_dialog" id="phenotype_reset_dialog">Reset form</button>
-            <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-            <button type="button" class="btn btn-info" name="upload_spreadsheet_phenotype_submit_verify" id="upload_spreadsheet_phenotype_submit_verify">Verify</button>
-            <button disabled type="button" class="btn btn-primary" name="upload_spreadsheet_phenotype_submit_store" id="upload_spreadsheet_phenotype_submit_store" title="First Verify Your File">Store</button>
+	    <button type="button" class="btn btn-default" name="reset_dialog" id="phenotype_reset_dialog"><% $c->i18n->p('phenotype_upload.ui.reset', 'Reset form') |h %></button>
+            <button type="button" class="btn btn-default" data-dismiss="modal"><% $c->i18n->p('phenotype_upload.ui.close', 'Close') |h %></button>
+            <button type="button" class="btn btn-info" name="upload_spreadsheet_phenotype_submit_verify" id="upload_spreadsheet_phenotype_submit_verify"><% $c->i18n->p('phenotype_upload.ui.verify', 'Verify') |h %></button>
+            <button disabled type="button" class="btn btn-primary" name="upload_spreadsheet_phenotype_submit_store" id="upload_spreadsheet_phenotype_submit_store" title="<% $c->i18n->p('phenotype_upload.ui.verify_first', 'First Verify Your File') |h %>"><% $c->i18n->p('phenotype_upload.ui.store', 'Store') |h %></button>
         </div>
 
     </div>
@@ -83,44 +83,44 @@
   <div class="modal-dialog" role="document">
     <div class="modal-content">
       <div class="modal-header">
-        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-        <h4 class="modal-title" id="phenotypeUploadInfoDialog">Template Information</h4>
+        <button type="button" class="close" data-dismiss="modal" aria-label="<% $c->i18n->p('phenotype_upload.ui.close', 'Close') |h %>"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title" id="phenotypeUploadInfoDialog"><% $c->i18n->p('phenotype_upload.ui.template_info', 'Template Information') |h %></h4>
       </div>
       <div class="modal-body">
         <div class="container-fluid">
 
-            <h4>Phenotype spreadsheet must be uploaded in .xls or .xlsx excel file format</h4>
-            <p>(tab-delimited text formats are NOT supported)</p>
+            <h4><% $c->i18n->p('phenotype_upload.help.excel_required', 'Phenotype spreadsheet must be uploaded in %{xls} or %{xlsx} excel file format', {xls => '.xls', xlsx => '.xlsx'}) |h %></h4>
+            <p><% $c->i18n->p('phenotype_upload.help.no_text', '(tab-delimited text formats are NOT supported)') |h %></p>
 
             <hr>
-            <button class="btn btn-primary" name="create_spreadsheet_link">Create Phenotyping Spreadsheet for Trial</button>
+            <button class="btn btn-primary" name="create_spreadsheet_link"><% $c->i18n->p('phenotype_upload.help.create', 'Create Phenotyping Spreadsheet for Trial') |h %></button>
             <hr>
 
-            <h4>Required Data:</h4>
+            <h4><% $c->i18n->p('phenotype_upload.help.required', 'Required Data:') |h %></h4>
             <ul>
-                <li>Please click the above button to generate the required phenotype spreadsheet.</li>
+                <li><% $c->i18n->p('phenotype_upload.help.generate_note', 'Please click the above button to generate the required phenotype spreadsheet.') |h %></li>
             </ul>
 
-            <h4>Notes:</h4>
+            <h4><% $c->i18n->p('phenotype_upload.help.notes', 'Notes:') |h %></h4>
             <ul>
-                <li>For <i>"sprouting proportion"</i>, <i>"trait name|trait id"</i><br> should be written as <i>"sprouting proportion|CO_334:0000008"</i>.</li>
-                <li>If spreadsheet file was not generated from the database, </br>consult the <i>Trait Ontology</i> to ensure you have the correct trait id.</li>
-                <li>Two or more traits can be uploaded at the same time.</li>
+                <li><% $c->i18n->p('phenotype_upload.help.trait_example', 'For %{trait}, %{column} should be written as %{example}.', {trait => '"sprouting proportion"', column => '"trait name|trait id"', example => '"sprouting proportion|CO_334:0000008"'}) |h %></li>
+                <li><% $c->i18n->p('phenotype_upload.help.ontology_note', 'If spreadsheet file was not generated from the database, consult the Trait Ontology to ensure you have the correct trait id.') |h %></li>
+                <li><% $c->i18n->p('phenotype_upload.help.multiple_traits', 'Two or more traits can be uploaded at the same time.') |h %></li>
             </ul>
 
-            <h4>Simple and Detailed Spreadsheet Format:</h4>
+            <h4><% $c->i18n->p('phenotype_upload.help.formats', 'Simple and Detailed Spreadsheet Format:') |h %></h4>
             <ul>
-                <li>The "Simple" format requires only a column called 'observationunit_name' followed by your trait columns.  Other acceptable headers for the first column include: 'plot_name', 'subplot_name', 'plant_name', 'observationUnitName', 'observationUnitDbId', 'plotName', 'sublotName', 'plantName'</li>
-                <li>The "Detailed" format includes a special header as well as additional columns for design information.</li>
-                <li>The "NIRS" format is built on top of the simple format - a column called 'observationunit_name' followed by trait columns derived from the NIR spectra, followed by columns of NIR spectra data themselves. Trait column names must come form the trait ontology but NIR spectra column names should simply be copied from whateve standard output file the NIR device produces.</li>
+                <li><% $c->i18n->p('phenotype_upload.help.simple', 'The "Simple" format requires only a column called %{column} followed by your trait columns.  Other acceptable headers for the first column include: %{alternatives}', {column => '\'observationunit_name\'', alternatives => '\'plot_name\', \'subplot_name\', \'plant_name\', \'observationUnitName\', \'observationUnitDbId\', \'plotName\', \'sublotName\', \'plantName\''}) |h %></li>
+                <li><% $c->i18n->p('phenotype_upload.help.detailed', 'The "Detailed" format includes a special header as well as additional columns for design information.') |h %></li>
+                <li><% $c->i18n->p('phenotype_upload.help.nirs', 'The "NIRS" format is built on top of the simple format - a column called %{column} followed by trait columns derived from the NIR spectra, followed by columns of NIR spectra data themselves. Trait column names must come form the trait ontology but NIR spectra column names should simply be copied from whateve standard output file the NIR device produces.', {column => '\'observationunit_name\''}) |h %></li>
             </ul>
 
-            <h4>Timestamps:</h4>
+            <h4><% $c->i18n->p('phenotype_upload.help.timestamps', 'Timestamps:') |h %></h4>
             <ul>
-                <li>To include timestamp information for your measurements, click the checkbox "Includes Timestamps".</li>
-                <li>For timestamps, values should be recorded as <i>"Value,Timestamp"</i>.<br/>For no timestamps, values should be recorded as <i>"Value"</i>.</li>
-                <li>Timestamp format must be YYYY-MM-DD HH:MM:SS-0000 or YYYY-MM-DD HH:MM:SS+0000</li><br/>
-                <li>Example with timestamps: <br/><br/>
+                <li><% $c->i18n->p('phenotype_upload.help.timestamp_help', 'To include timestamp information for your measurements, click the checkbox "Includes Timestamps".') |h %></li>
+                <li><% $c->i18n->p('phenotype_upload.help.timestamp_values', 'For timestamps, values should be recorded as %{with_timestamp}. For no timestamps, values should be recorded as %{without_timestamp}.', {with_timestamp => '"Value,Timestamp"', without_timestamp => '"Value"'}) |h %></li>
+                <li><% $c->i18n->p('phenotype_upload.help.timestamp_format', 'Timestamp format must be %{negative} or %{positive}', {negative => 'YYYY-MM-DD HH:MM:SS-0000', positive => 'YYYY-MM-DD HH:MM:SS+0000'}) |h %></li><br/>
+                <li><% $c->i18n->p('phenotype_upload.help.timestamp_example', 'Example with timestamps: ') |h %><br/><br/>
                 <table class="table table-hover table-bordered">
                     <thead>
                         <tr>
@@ -134,7 +134,7 @@
                     </tbody>
                 </table>
                 </li>
-                <li>Example without timestamps: <br/><br/>
+                <li><% $c->i18n->p('phenotype_upload.help.plain_example', 'Example without timestamps: ') |h %><br/><br/>
                 <table class="table table-hover table-bordered">
                     <thead>
                         <tr>
@@ -153,7 +153,7 @@
         </div>
       </div>
       <div class="modal-footer">
-        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+        <button type="button" class="btn btn-default" data-dismiss="modal"><% $c->i18n->p('phenotype_upload.ui.close', 'Close') |h %></button>
       </div>
     </div>
   </div>

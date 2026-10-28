@@ -34,7 +34,7 @@ Isaak Y Tecle (iyt2@cornell.edu)
 	 class="form-group  col-sm-2">
       <input class="form-control"
     	     type="text"
-    	     placeholder="selection %?"
+<% "    \t     " %>placeholder="<% $c->i18n->p("solgs.interface.selection", "selection %?") |h %>"
     	     id="selection_proportion_input"/>
     </div>
 
@@ -50,7 +50,7 @@ Isaak Y Tecle (iyt2@cornell.edu)
 	 class=" form-group  col-sm-1">
       <input class="btn btn-success"
 	     type="submit"
-	     value="Run"
+	     value="<% $c->i18n->p("solgs.interface.run", "Run") |h %>"
 	     id="run_cluster"/>
     </div>
 

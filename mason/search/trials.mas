@@ -1,3 +1,6 @@
+<%once>
+use HTML::Entities ();
+</%once>
 
 <%args>
 $location_id => 'not_provided'
@@ -5,7 +8,7 @@ $location_id => 'not_provided'
 
 <& /util/import_javascript.mas, classes => [ 'jquery', 'jquery.dataTables' ] &>
 
-<& /page/page_title.mas, title => "Trial Search" &>
+<& /page/page_title.mas, title => HTML::Entities::encode_entities($c->i18n->p("trial.search.title", "Trial Search")) &>
 
 <div class="well well-sm">
     <div class="panel panel-default">
@@ -13,17 +16,17 @@ $location_id => 'not_provided'
             <table id="trial_search_results" width="100%" class="table table-hover table-striped">
             <thead>
               <tr>
-                <th>Trial name</th>
-                <th>Description</th>
-                <th>Breeding program</th>
-                <th>Folder</th>
-                <th>Year</th>
-                <th>Location</th>
-                <th>Trial type</th>
-                <th>Design</th>
-                <th>Planting Date</th>
-                <th>Harvest Date</th>
-                <th>Download</th>
+                <th><% $c->i18n->p("trial.search.trial_name", "Trial name") |h %></th>
+                <th><% $c->i18n->p("trial.search.description", "Description") |h %></th>
+                <th><% $c->i18n->p("trial.search.breeding_program", "Breeding program") |h %></th>
+                <th><% $c->i18n->p("trial.search.folder", "Folder") |h %></th>
+                <th><% $c->i18n->p("trial.search.year", "Year") |h %></th>
+                <th><% $c->i18n->p("trial.search.location", "Location") |h %></th>
+                <th><% $c->i18n->p("trial.search.trial_type", "Trial type") |h %></th>
+                <th><% $c->i18n->p("trial.search.design", "Design") |h %></th>
+                <th><% $c->i18n->p("trial.search.planting_date", "Planting Date") |h %></th>
+                <th><% $c->i18n->p("trial.search.harvest_date", "Harvest Date") |h %></th>
+                <th><% $c->i18n->p("trial.search.download", "Download") |h %></th>
             </tr>
             </thead>
             </table>
@@ -33,7 +36,7 @@ $location_id => 'not_provided'
     <div class="panel panel-default">
         <div class="panel-body">
             <br><br>
-            <&| /page/info_section.mas, title => 'Copy Results to a List', collapsible=>1, collapsed=>0, subtitle=>'<i>Copy the trial names currently showing in the search results table to a new or existing list</i>'&>
+            <&| /page/info_section.mas, title => HTML::Entities::encode_entities($c->i18n->p("trial.search.copy_title", "Copy Results to a List")), collapsible=>1, collapsed=>0, subtitle=>'<i>' . HTML::Entities::encode_entities($c->i18n->p("trial.search.copy_help", "Copy the trial names currently showing in the search results table to a new or existing list")) . '</i>'&>
                 <br>
                 <div style="text-align:right" id="trials_to_list_menu"></div>
                 <div id="trial_result_names" style="display: none;"></div>

@@ -16,16 +16,40 @@ $accuracy_report
 
 </%args>
 
+<%perl>
+my %display_labels = (
+    "No. of K-folds" => $c->i18n->p("solgs.interface.no_of_k_folds", "No. of K-folds"),
+    "Replications" => $c->i18n->p("solgs.interface.replications", "Replications"),
+    "Total cross-validation runs" => $c->i18n->p("solgs.interface.total_cross_validation_runs", "Total cross-validation runs"),
+    "Minimum accuracy" => $c->i18n->p("solgs.interface.minimum_accuracy", "Minimum accuracy"),
+    "Maximum accuracy" => $c->i18n->p("solgs.interface.maximum_accuracy", "Maximum accuracy"),
+    "Standard deviation" => $c->i18n->p("solgs.interface.standard_deviation", "Standard deviation"),
+    "Coefficient of variation" => $c->i18n->p("solgs.interface.coefficient_of_variation", "Coefficient of variation"),
+    "Median accuracy" => $c->i18n->p("solgs.interface.median_accuracy", "Median accuracy"),
+    "Mean accuracy" => $c->i18n->p("solgs.interface.mean_accuracy", "Mean accuracy"),
+    "Validation file doesn't exist." => $c->i18n->p("solgs.interface.validation_file_doesn_t_exist", "Validation file doesn't exist."),
+    "There is no cross-validation output report." => $c->i18n->p("solgs.interface.there_is_no_cross_validation_output_report", "There is no cross-validation output report.")
+);
+my $display_rows = ref($accuracy_report) eq "ARRAY" ? [map {
+    if (ref($_) eq "ARRAY") {
+        my @row = @$_;
+        $row[0] = $display_labels{$row[0]} if defined($row[0]) && exists($display_labels{$row[0]});
+        \@row;
+    } else { $_; }
+} @$accuracy_report] : $accuracy_report;
+</%perl>
 
-<&| /page/info_section.mas, 
+
+
+<&| /page/info_section.mas, anchor_title => "Model accuracy statistics -- K-fold cross-validation method",
   collapsible => 1, 
   collapsed   => 0, 
-  title       => "Model accuracy statistics -- K-fold cross-validation method" 
+  title       => HTML::Entities::encode_entities($c->i18n->p("solgs.interface.model_accuracy_statistics_k_fold_cross_validation_method", "Model accuracy statistics -- K-fold cross-validation method"))
 &> 
 
 <& /page/columnar_table.mas,
   headings     => [" ", " "], 
-  data         => $accuracy_report,
+  data         => $display_rows,
   __alt_freq   => 2,
   __alt_width  => 1,
   __alt_offset => 3,
@@ -35,3 +59,7 @@ $accuracy_report
 <div id="validation_download"></div>
 <div id="valdiation_download_message"  class="message"></div>
 </&>
+
+<%once>
+use HTML::Entities ();
+</%once>

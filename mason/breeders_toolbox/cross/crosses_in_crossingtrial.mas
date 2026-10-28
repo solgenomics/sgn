@@ -11,7 +11,7 @@ $trial_id
 </div>
 <div class="panel panel-default">
     <div class="panel-body">
-        <&| /page/info_section.mas, title => 'Add Crosses to a List', collapsible=>1, collapsed=>0, subtitle=>'<i>Adding crosses in this crossing experiment to a new or exisiting list</i>'&>
+        <&| /page/info_section.mas, anchor_title => HTML::Entities::encode_entities('Add Crosses to a List'), title => HTML::Entities::encode_entities($c->i18n->p('cross.ui.add_crosses_to_a_list', 'Add Crosses to a List')), collapsible=>1, collapsed=>0, subtitle=>'<i>' . HTML::Entities::encode_entities($c->i18n->p('cross.ui.adding_crosses_in_this_crossing_experiment_to_a_new_or_exisiti', 'Adding crosses in this crossing experiment to a new or existing list')) . '</i>'&>
         <br>
         <div id="crosses_to_new_list" style="display:none"></div>
         <div id="crosses_add_to_list"></div>
@@ -21,49 +21,68 @@ $trial_id
 
 
 <script>
+// Optional locale assets never block the native crossing workflow.
+var crossI18n = (window.SGN && window.SGN.i18n) || {
+    p: function (context, source, variables) {
+        return source.replace(/%\{([A-Za-z0-9_]+)\}/g, function (match, name) {
+            return variables && Object.prototype.hasOwnProperty.call(variables, name) ? String(variables[name]) : match;
+        });
+    },
+    np: function (context, one, many, count, variables) {
+        return this.p(context, count === 1 ? one : many, variables);
+    }
+};
+function crossHTML(value) {
+    return String(value == null ? '' : value).replace(/[&<>"']/g, function (character) {
+        return {'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'}[character];
+    });
+}
+
+
 
 jQuery(document).ready(function(){
 
     jQuery('#crosses_in_crossingtrial_section_onswitch').click(function(){
         jQuery('#crosses_in_crossingtrial_table').DataTable({
+            language: {sEmptyTable: crossHTML(crossI18n.p("accessions.table.empty", "No data available in table")), sLoadingRecords: crossHTML(crossI18n.p("accessions.table.loading", "Loading...")), sProcessing: crossHTML(crossI18n.p("accessions.table.processing", "Processing..."))},
             'destroy': true,
             'ajax':'/ajax/breeders/trial/'+ <% $trial_id %> + '/crosses_and_details_in_trial',
             columns: [
-                { title: "Cross Unique ID", "data": null, "render": function ( data, type, row ) { return "<a href='/cross/"+row.cross_id+"'>"+row.cross_name+"</a>"; } },
-                { title: "Cross Combination", "data": "cross_combination" },
-                { title: "Cross Type", "data": "cross_type" },
-                { title: "Female Parent", "data": null, "render": function ( data, type, row ) { return "<a href='/stock/"+row.female_parent_id+"/view'>"+row.female_parent_name+"</a>"; } },
-                { title: "Female Ploidy", "data": "female_ploidy_level" },
-                { title: "Male Parent", "data": null, "render": function ( data, type, row ) {
+                { title: crossI18n.p("cross.ui.cross_unique_id.923bfbc", "Cross Unique ID"), "data": null, "render": function ( data, type, row ) { return "<a href='/cross/"+row.cross_id+"'>"+row.cross_name+"</a>"; } },
+                { title: crossI18n.p("cross.ui.cross_combination", "Cross Combination"), "data": "cross_combination" },
+                { title: crossI18n.p("cross.ui.cross_type.cb2564a", "Cross Type"), "data": "cross_type" },
+                { title: crossI18n.p("cross.ui.female_parent.ed89c1c", "Female Parent"), "data": null, "render": function ( data, type, row ) { return "<a href='/stock/"+row.female_parent_id+"/view'>"+row.female_parent_name+"</a>"; } },
+                { title: crossI18n.p("cross.ui.female_ploidy", "Female Ploidy"), "data": "female_ploidy_level" },
+                { title: crossI18n.p("cross.ui.male_parent.7df4e67", "Male Parent"), "data": null, "render": function ( data, type, row ) {
                     if (row.male_parent_id === null){
                         return 'NA';
                     } else {
                         return "<a href='/stock/"+row.male_parent_id+"/view'>"+row.male_parent_name+"</a>";
                     }
                 }},
-                { title: "Male Ploidy", "data": "male_ploidy_level" },
-                { title: "Female Plot", "data": null, "render": function ( data, type, row ) {
+                { title: crossI18n.p("cross.ui.male_ploidy", "Male Ploidy"), "data": "male_ploidy_level" },
+                { title: crossI18n.p("cross.ui.female_plot", "Female Plot"), "data": null, "render": function ( data, type, row ) {
                     if (row.female_plot_id === null){
                         return 'NA';
                     } else {
                         return "<a href='/stock/"+row.female_plot_id+"/view'>"+row.female_plot_name+"</a>";
                     }
                 }},
-                { title: "Male Plot", "data": null, "render": function ( data, type, row ) {
+                { title: crossI18n.p("cross.ui.male_plot", "Male Plot"), "data": null, "render": function ( data, type, row ) {
                     if (row.male_plot_id === null){
                         return 'NA';
                     } else {
                         return "<a href='/stock/"+row.male_plot_id+"/view'>"+row.male_plot_name+"</a>";
                     }
                 }},
-                { title: "Female Plant", "data": null, "render": function ( data, type, row ) {
+                { title: crossI18n.p("cross.ui.female_plant", "Female Plant"), "data": null, "render": function ( data, type, row ) {
                     if (row.female_plant_id === null){
                         return 'NA';
                     } else {
                         return "<a href='/stock/"+row.female_plant_id+"/view'>"+row.female_plant_name+"</a>";
                     }
                 }},
-                { title: "Male Plant", "data": null, "render": function ( data, type, row ) {
+                { title: crossI18n.p("cross.ui.male_plant", "Male Plant"), "data": null, "render": function ( data, type, row ) {
                     if (row.male_plant_id === null){
                         return 'NA';
                     } else {
@@ -74,7 +93,7 @@ jQuery(document).ready(function(){
             "fnInitComplete": function(oSettings, json) {
                 //console.log(json);
                 if (!isLoggedIn()) {
-                    jQuery('#crosses_add_to_list').html("<div class='well well-sm'><h3>Please login to use lists!</h3></div>");
+                    jQuery('#crosses_add_to_list').html("<div class='well well-sm'><h3>" + crossHTML(crossI18n.p("cross.ui.please_login_to_use_lists", "Please login to use lists!")) + "</h3></div>");
                 } else {
                     var html = "";
                     for(var i=0; i<json.data.length; i++){

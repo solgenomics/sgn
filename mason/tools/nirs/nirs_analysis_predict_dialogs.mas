@@ -6,56 +6,56 @@
     <div class="modal-content">
       <div class="modal-header">
         <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-        <h4 class="modal-title" id="nirsAnalysisPredictionDialog">Predict Phenotypes From Spectral Model</h4>
+        <h4 class="modal-title" id="nirsAnalysisPredictionDialog"><% $c->i18n->p("nirs.ui.predict_phenotypes_from_spectral_model", "Predict Phenotypes From Spectral Model") |h %></h4>
       </div>
       <div class="modal-body">
         <div class="container-fluid">
 
             <&| /util/workflow.mas, id=> "nirs_analysis_prediction_workflow" &>
-                <&| /util/workflow.mas:step, title=> "Intro" &>
-                    <& /page/page_title.mas, title=>"This workflow will guide you through predicting phenotypes from trained spectral models in the database." &>
+                <&| /util/workflow.mas:step, title=>$c->i18n->p("nirs.ui.intro", "Intro") &>
+                    <& /page/page_title.mas, title=>HTML::Entities::encode_entities($c->i18n->p("nirs.predict.intro", "This workflow will guide you through predicting phenotypes from trained spectral models in the database.")) &>
                     <br/><br/>
                     <center>
-                    <button class="btn btn-primary" onclick="Workflow.complete(this); return false;">Go to Next Step</button>
+                    <button class="btn btn-primary" onclick="Workflow.complete(this); return false;"><% $c->i18n->p("global.workflow.next_step", "Go to Next Step") |h %></button>
                     </center>
                 </&>
-                <&| /util/workflow.mas:step, title=> "Test Dataset" &>
-                    <& /page/page_title.mas, title=>"Select the dataset you are interested in predicting phenotypes for (the accessions or plots or tissues samples in the dataset need to have spectra uploaded):" &>
+                <&| /util/workflow.mas:step, title=>$c->i18n->p("nirs.ui.test_dataset", "Test Dataset") &>
+                    <& /page/page_title.mas, title=>HTML::Entities::encode_entities($c->i18n->p("nirs.predict.dataset_prompt", "Select the dataset you are interested in predicting phenotypes for (the accessions or plots or tissues samples in the dataset need to have spectra uploaded):")) &>
                     <br/><br/>
                     <form class="form-horizontal">
                         <div class="form-group">
-                            <label class="col-sm-1 control-label">Dataset: </label>
+                            <label class="col-sm-1 control-label"><% $c->i18n->p("nirs.predict.dataset_label", "Dataset:") |h %> </label>
                             <div class="col-sm-11" >
                                 <div id="nirs_analysis_prediction_dataset_select_div"></div>
                             </div>
                         </div>
                     </form>
                     <center>
-                    <button class="btn btn-primary" id="nirs_analysis_prediction_dataset_select_step">Go to Next Step</button>
+                    <button class="btn btn-primary" id="nirs_analysis_prediction_dataset_select_step"><% $c->i18n->p("global.workflow.next_step", "Go to Next Step") |h %></button>
                     </center>
                 </&>
-                <&| /util/workflow.mas:step, title=> "Spectral Model" &>
-                    <& /page/page_title.mas, title=>"Select the spectral model to use in predictions" &>
+                <&| /util/workflow.mas:step, title=>$c->i18n->p("nirs.ui.spectral_model", "Spectral Model") &>
+                    <& /page/page_title.mas, title=>HTML::Entities::encode_entities($c->i18n->p("nirs.ui.select_the_spectral_model_to_use_in_predictions", "Select the spectral model to use in predictions")) &>
 
                     <center>
-                    <button class="btn btn-info" id="nirs_analysis_prediction_dataset_info">More Info</button>
+                    <button class="btn btn-info" id="nirs_analysis_prediction_dataset_info"><% $c->i18n->p("nirs.ui.more_info", "More Info") |h %></button>
                     </center>
                     <hr>
 
                     <div id="nirs_analysis_prediction_model_select_div"></div>
 
                     <center>
-                    <button class="btn btn-primary" id="nir_analysis_prediction_model_step">Predict</button>
+                    <button class="btn btn-primary" id="nir_analysis_prediction_model_step"><% $c->i18n->p("nirs.predict.run_button", "Predict") |h %></button>
                     </center>
                 </&>
-                <&| /util/workflow.mas:step, title=> "Summary" &>
-                    <& /page/page_title.mas, title=>"Summary of the predictions" &>
+                <&| /util/workflow.mas:step, title=>$c->i18n->p("nirs.ui.summary", "Summary") &>
+                    <& /page/page_title.mas, title=>HTML::Entities::encode_entities($c->i18n->p("nirs.ui.summary_of_the_predictions", "Summary of the predictions")) &>
 
                     <div class="form-horizontal">
                         <div class="form-group">
-                            <label class="col-sm-3 control-label">Do you want to save the prediction results?: </label>
+                            <label class="col-sm-3 control-label"><% $c->i18n->p("nirs.ui.do_you_want_to_save_the_prediction_results", "Do you want to save the prediction results?: ") |h %></label>
                             <div class="col-sm-9" >
-                                <button class="btn btn-primary" id="nir_analysis_prediction_analysis_save_step">Save the Results</button>
+                                <button class="btn btn-primary" id="nir_analysis_prediction_analysis_save_step"><% $c->i18n->p("nirs.ui.save_the_results", "Save the Results") |h %></button>
                             </div>
                         </div>
                     </div>
@@ -69,7 +69,7 @@
 
       </div>
       <div class="modal-footer">
-        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+        <button type="button" class="btn btn-default" data-dismiss="modal"><% $c->i18n->p("nirs.ui.close", "Close") |h %></button>
       </div>
     </div>
   </div>
@@ -80,17 +80,17 @@
     <div class="modal-content">
       <div class="modal-header">
         <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-        <h4 class="modal-title" id="nirsAnalysisPredictionInfoDialog">Predict Phenotypes from Spectral Model</h4>
+        <h4 class="modal-title" id="nirsAnalysisPredictionInfoDialog"><% $c->i18n->p("nirs.predict.more_dialog_title", "Predict Phenotypes from Spectral Model") |h %></h4>
       </div>
       <div class="modal-body">
         <div class="container-fluid">
 
-            <h1>More </h1>
+            <h1><% $c->i18n->p("nirs.ui.more", "More ") |h %></h1>
 
         </div>
       </div>
       <div class="modal-footer">
-        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+        <button type="button" class="btn btn-default" data-dismiss="modal"><% $c->i18n->p("global.close", "Close") |h %></button>
       </div>
     </div>
   </div>
@@ -117,7 +117,7 @@ jQuery(document).ready(function(){
         });
 
         if(selected.length > 1 || selected.length == 0) {
-            alert('Please select one dataset!');
+            alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("nirs.predict.dataset_required", "Please select one dataset!") : "Please select one dataset!"));
             return false;
         }
         else {
@@ -139,7 +139,7 @@ jQuery(document).ready(function(){
         });
 
         if(selected.length > 1 || selected.length == 0) {
-            alert('Please select one model!');
+            alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("nirs.predict.model_required", "Please select one model!") : "Please select one model!"));
             return false;
         }
         else {
@@ -164,7 +164,7 @@ jQuery(document).ready(function(){
                         return false;
                     }
 
-                    var html = "<table class='table table-bordered table-hover'><thead><tr><th>Stock</th><th>Prediction</th></tr></thead><tbody>";
+                    var html = "<table class='table table-bordered table-hover'><thead><tr><th>" + (window.SGN && window.SGN.i18n ? SGN.i18n.p("nirs.ui.stock", "Stock") : "Stock") + "</th><th>" + (window.SGN && window.SGN.i18n ? SGN.i18n.p("nirs.ui.prediction", "Prediction") : "Prediction") + "</th></tr></thead><tbody>";
                     for (var i=0; i<response.unique_plots.length; i++) {
                         html = html + '<tr><td>'+response.unique_plots[i]+'</td><td>'+response.result_predictions[response.unique_plots[i]][response.unique_traits[0]][0]+'</td></tr>';
                     }
@@ -196,7 +196,7 @@ jQuery(document).ready(function(){
                     window.scrollTo(0,0);
                 },
                 error: function(response){
-                    alert('Error predicting phenotypes from NIRS!');
+                    alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("nirs.predict.failure", "Error predicting phenotypes from NIRS!") : "Error predicting phenotypes from NIRS!"));
                     jQuery('#working_modal').modal('hide');
                 }
             });
@@ -209,3 +209,7 @@ jQuery(document).ready(function(){
 
 });
 </script>
+
+<%once>
+use HTML::Entities ();
+</%once>

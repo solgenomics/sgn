@@ -1,3 +1,6 @@
+<%once>
+use HTML::Entities ();
+</%once>
 <%args>
 $trial_id
 </%args>
@@ -7,7 +10,7 @@ $trial_id
 
 
 
-<&| /page/info_section.mas, title => "Trial Soil Data", collapsible=>1, collapsed=>0 &>
+<&| /page/info_section.mas, title=>HTML::Entities::encode_entities($c->i18n->p('trial.soil_table.title', "Trial Soil Data")), collapsible=>1, collapsed=>0 &>
     <div class = "well well-sm">
         <div class = "panel panel-default">
             <div class = "panel-body">
@@ -21,6 +24,8 @@ $trial_id
 </&>
 
 <script defer="defer">
+var _sgnB11SoilTableEscape = function(value) { return jQuery('<div>').text(value).html(); };
+
 
 jQuery(document).ready(function () {
 
@@ -30,21 +35,21 @@ jQuery(document).ready(function () {
         'autoWidth': false,
         'ajax':'/ajax/breeders/trial/'+ <% $trial_id %> + '/all_soil_data',
         columns: [
-            { title: "Soil Data ID", "data": "prop_id" },
-            { title: "Description", "data": "description" },
-            { title: "Date", "data": "date" },
-            { title: "GPS", "data": "gps" },
-            { title: "Type of Sampling", "data": "type_of_sampling" },
-            { title: "Soil Data", "data": "soil_data" },
-            { title: "Download", "data": "download_link" },
-            { title: "Delete", "data": "null", "render": function ( data, type, row ) { return "<a onclick='deleteSoilData("+row.prop_id+")'>Delete</a>"; } },
+            { title: _sgnB11SoilTableEscape(window.SGN && SGN.i18n ? SGN.i18n.p('trial.soil_table.soil_id', "Soil Data ID") : "Soil Data ID"), "data": "prop_id" },
+            { title: _sgnB11SoilTableEscape(window.SGN && SGN.i18n ? SGN.i18n.p('trial.soil_table.description', "Description") : "Description"), "data": "description" },
+            { title: _sgnB11SoilTableEscape(window.SGN && SGN.i18n ? SGN.i18n.p('trial.soil_table.date', "Date") : "Date"), "data": "date" },
+            { title: _sgnB11SoilTableEscape(window.SGN && SGN.i18n ? SGN.i18n.p('trial.soil_table.gps', "GPS") : "GPS"), "data": "gps" },
+            { title: _sgnB11SoilTableEscape(window.SGN && SGN.i18n ? SGN.i18n.p('trial.soil_table.type_sampling', "Type of Sampling") : "Type of Sampling"), "data": "type_of_sampling" },
+            { title: _sgnB11SoilTableEscape(window.SGN && SGN.i18n ? SGN.i18n.p('trial.soil_table.soil_data', "Soil Data") : "Soil Data"), "data": "soil_data" },
+            { title: _sgnB11SoilTableEscape(window.SGN && SGN.i18n ? SGN.i18n.p('trial.soil_table.download', "Download") : "Download"), "data": "download_link" },
+            { title: _sgnB11SoilTableEscape(window.SGN && SGN.i18n ? SGN.i18n.p('trial.soil_table.delete', "Delete") : "Delete"), "data": "null", "render": function ( data, type, row ) { return "<a onclick='deleteSoilData("+row.prop_id+")'>" + _sgnB11SoilTableEscape(window.SGN && SGN.i18n ? SGN.i18n.p('trial.soil_table.delete', "Delete") : "Delete") + "</a>"; } },
         ]
     });
 
 });
 
 function deleteSoilData(prop_id){
-    var confirmation = confirm('Are you sure you want to delete this soil data id. The deletion cannot be undone.');
+    var confirmation = confirm((window.SGN && SGN.i18n ? SGN.i18n.p('trial.soil_table.delete_confirm', "Are you sure you want to delete this soil data id. The deletion cannot be undone.") : "Are you sure you want to delete this soil data id. The deletion cannot be undone."));
 
     if (confirmation) {
         jQuery.ajax({
@@ -61,7 +66,7 @@ function deleteSoilData(prop_id){
             success: function(response) {
                 jQuery('#working_modal').modal('hide');
                 if (response.success == 1) {
-                    alert('Deletion was successful');
+                    alert((window.SGN && SGN.i18n ? SGN.i18n.p('trial.soil_table.delete_success', "Deletion was successful") : "Deletion was successful"));
                     location.reload();
                 }
                 if (response.error) {
@@ -70,7 +75,7 @@ function deleteSoilData(prop_id){
             },
             error: function(response) {
                 jQuery('#working_modal').modal('hide');
-                alert('An error occurred during deletion');
+                alert((window.SGN && SGN.i18n ? SGN.i18n.p('trial.soil_table.delete_error', "An error occurred during deletion") : "An error occurred during deletion"));
             }
         });
     }

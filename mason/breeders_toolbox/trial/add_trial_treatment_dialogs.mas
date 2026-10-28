@@ -7,51 +7,51 @@
   <div class="modal-dialog" role="document">
     <div class="modal-content">
       <div class="modal-header">
-        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-        <h4 class="modal-title" id="addSpreadsheetTreatmentDialog">Upload Treatment Spreadsheet</h4>
+        <button type="button" class="close" data-dismiss="modal" aria-label="<% $c->i18n->p('trial.treatment.close', 'Close') |h %>"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title" id="addSpreadsheetTreatmentDialog"><% $c->i18n->p('trial.treatment.upload_title', 'Upload Treatment Spreadsheet') |h %></h4>
       </div>
       <div class="modal-body">
         <div class="container-fluid">
 
-            <&| /page/explanation.mas, title=>'Template Information' &>
+            <&| /page/explanation.mas, title=>encode_entities($c->i18n->p('trial.treatment.template_information', 'Template Information')) &>
                 <p>
-                <b>File format information</b>
+                <b><% $c->i18n->p('trial.treatment.file_format', 'File format information') |h %></b>
                 <br>
-                <a id="treatment_upload_spreadsheet_format_info">Spreadsheet Format</a>
+                <a id="treatment_upload_spreadsheet_format_info"><% $c->i18n->p('trial.treatment.format_link', 'Spreadsheet Format') |h %></a>
                 </p>
             </&>
 
             <form class="form-horizontal" role="form" method="POST" enctype="multipart/form-data" encoding="multipart/form-data" id="upload_spreadsheet_treatment_file_form" name="upload_spreadsheet_treatment_file_form">
                 <div class="form-group">
-                    <label class="col-sm-6 control-label">Spreadsheet Format: </label>
+                    <label class="col-sm-6 control-label"><% $c->i18n->p('trial.treatment.format_label', 'Spreadsheet Format:') |h %> </label>
                     <div class="col-sm-6" >
                         <select class="form-control" id="upload_spreadsheet_treatment_file_format" name="upload_spreadsheet_treatment_file_format">
-                            <option value="detailed">Detailed</option>
-                            <option value="simple">Simple</option>
+                            <option value="detailed"><% $c->i18n->p('trial.treatment.format_detailed', 'Detailed') |h %></option>
+                            <option value="simple"><% $c->i18n->p('trial.treatment.format_simple', 'Simple') |h %></option>
                         </select>
                     </div>
                 </div>
                 <div class="form-group">
-                    <label class="col-sm-6 control-label">Timestamps Included: </label>
+                    <label class="col-sm-6 control-label"><% $c->i18n->p('trial.treatment.timestamps_label', 'Timestamps Included:') |h %> </label>
                     <div class="col-sm-6" >
                         <input type="checkbox" id="upload_spreadsheet_treatment_timestamp_checkbox" name="upload_spreadsheet_treatment_timestamp_checkbox" />
                     </div>
                 </div>
                 <div id="upload_spreadsheet_treatment_data_level_div">
                     <div class="form-group">
-                        <label class="col-sm-6 control-label">Data Level: </label>
+                        <label class="col-sm-6 control-label"><% $c->i18n->p('trial.treatment.data_level', 'Data Level:') |h %> </label>
                         <div class="col-sm-6" >
                             <select class="form-control" id="upload_spreadsheet_treatment_data_level" name="upload_spreadsheet_treatment_data_level">
-                                <option value="plots">Plots</option>
-                                <option value="plants">Plants</option>
-                                <option value="subplots">Subplots</option>
-                                <option value="tissue_samples">Tissue Samples</option>
+                                <option value="plots"><% $c->i18n->p('trial.treatment.plots', 'Plots') |h %></option>
+                                <option value="plants"><% $c->i18n->p('trial.treatment.plants', 'Plants') |h %></option>
+                                <option value="subplots"><% $c->i18n->p('trial.treatment.subplots', 'Subplots') |h %></option>
+                                <option value="tissue_samples"><% $c->i18n->p('trial.treatment.tissue_samples', 'Tissue Samples') |h %></option>
                             </select>
                         </div>
                     </div>
                 </div>
                 <div class="form-group">
-                    <label class="col-sm-6 control-label">Treatment Spreadsheet: </label>
+                    <label class="col-sm-6 control-label"><% $c->i18n->p('trial.treatment.spreadsheet_label', 'Treatment Spreadsheet:') |h %> </label>
                     <div class="col-sm-6" >
                         <input type="file" id="upload_spreadsheet_treatment_file_input" name="upload_spreadsheet_treatment_file_input" encoding="multipart/form-data" />
                     </div>
@@ -61,7 +61,7 @@
                 </div>
 
                 <div id="upload_treatment_spreadsheet_info" style="display: none">
-                    <& /help/file_upload_type.mas, type => "Simple treatment spreadsheets" &>
+                    <& /help/file_upload_type.mas, type => $c->i18n->p('trial.treatment.file_type', 'Simple treatment spreadsheets') &>
                 </div>
 
             </form><br/>
@@ -69,10 +69,10 @@
         </div>
 
         <div class="modal-footer">
-	    <button type="button" class="btn btn-default" name="reset_dialog" id="treatment_reset_dialog">Reset form</button>
-            <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-            <button type="button" class="btn btn-info" name="upload_spreadsheet_treatment_submit_verify" id="upload_spreadsheet_treatment_submit_verify">Verify</button>
-            <button disabled type="button" class="btn btn-primary" name="upload_spreadsheet_treatment_submit_store" id="upload_spreadsheet_treatment_submit_store" title="First Verify Your File">Store</button>
+	    <button type="button" class="btn btn-default" name="reset_dialog" id="treatment_reset_dialog"><% $c->i18n->p('trial.treatment.reset', 'Reset form') |h %></button>
+            <button type="button" class="btn btn-default" data-dismiss="modal"><% $c->i18n->p('trial.treatment.close', 'Close') |h %></button>
+            <button type="button" class="btn btn-info" name="upload_spreadsheet_treatment_submit_verify" id="upload_spreadsheet_treatment_submit_verify"><% $c->i18n->p('trial.treatment.verify', 'Verify') |h %></button>
+            <button disabled type="button" class="btn btn-primary" name="upload_spreadsheet_treatment_submit_store" id="upload_spreadsheet_treatment_submit_store" title="<% $c->i18n->p('trial.treatment.verify_first', 'First Verify Your File') |h %>"><% $c->i18n->p('trial.treatment.store', 'Store') |h %></button>
         </div>
 
     </div>
@@ -83,42 +83,42 @@
   <div class="modal-dialog" role="document">
     <div class="modal-content">
       <div class="modal-header">
-        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-        <h4 class="modal-title" id="treatmentUploadInfoDialog">Template Information</h4>
+        <button type="button" class="close" data-dismiss="modal" aria-label="<% $c->i18n->p('trial.treatment.close', 'Close') |h %>"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title" id="treatmentUploadInfoDialog"><% $c->i18n->p('trial.treatment.template_information', 'Template Information') |h %></h4>
       </div>
       <div class="modal-body">
         <div class="container-fluid">
 
-            <h4>Treatment spreadsheet must be uploaded in .xls or .xlsx excel file format</h4>
-            <p>(tab-delimited text formats are NOT supported)</p>
+            <h4><% $c->i18n->p('trial.treatment.excel_required', 'Treatment spreadsheet must be uploaded in .xls or .xlsx excel file format') |h %></h4>
+            <p><% $c->i18n->p('trial.treatment.text_unsupported', '(tab-delimited text formats are NOT supported)') |h %></p>
 
             <hr>
-            <button class="btn btn-primary" name="create_spreadsheet_link">Create Treatment Spreadsheet for Trial</button>
+            <button class="btn btn-primary" name="create_spreadsheet_link"><% $c->i18n->p('trial.treatment.create_spreadsheet', 'Create Treatment Spreadsheet for Trial') |h %></button>
             <hr>
 
-            <h4>Required Data:</h4>
+            <h4><% $c->i18n->p('trial.treatment.required_data', 'Required Data:') |h %></h4>
             <ul>
-                <li>Please click the above button to generate the required treatment spreadsheet. Note that treatment lists can be made just like trait lists.</li>
+                <li><% $c->i18n->p('trial.treatment.generate_help', 'Please click the above button to generate the required treatment spreadsheet. Note that treatment lists can be made just like trait lists.') |h %></li>
             </ul>
 
-            <h4>Notes:</h4>
+            <h4><% $c->i18n->p('trial.treatment.notes', 'Notes:') |h %></h4>
             <ul>
-                <li>For  a hypothetical term <i>"light intensity"</i>, <i>"treatment name|treatment id"</i><br> should be written as <i>"light intensity|EXPERIMENT_TREATMENT:00000XX"</i>.</li>
-                <li>Two or more treatments can be uploaded at the same time.</li>
+                <li><% $c->i18n->p('trial.treatment.header_example', 'For a hypothetical term %{term}, %{header_format} should be written as %{header_example}.', { term => '"light intensity"', header_format => '"treatment name|treatment id"', header_example => '"light intensity|EXPERIMENT_TREATMENT:00000XX"' }) |h %></li>
+                <li><% $c->i18n->p('trial.treatment.multiple', 'Two or more treatments can be uploaded at the same time.') |h %></li>
             </ul>
 
-            <h4>Simple and Detailed Spreadsheet Format:</h4>
+            <h4><% $c->i18n->p('trial.treatment.formats_heading', 'Simple and Detailed Spreadsheet Format:') |h %></h4>
             <ul>
-                <li>The "Simple" format requires only a column called 'observationunit_name' followed by your treatment columns.  Other acceptable headers for the first column include: 'plot_name', 'subplot_name', 'plant_name', 'observationUnitName', 'plotName', 'sublotName', 'plantName'</li>
-                <li>The "Detailed" format includes a special header as well as additional columns for design information.</li>
+                <li><% $c->i18n->p('trial.treatment.simple_headers', 'The "Simple" format requires only a column called %{required_header} followed by your treatment columns. Other acceptable headers for the first column include: %{alternative_headers}', { required_header => '\'observationunit_name\'', alternative_headers => '\'plot_name\', \'subplot_name\', \'plant_name\', \'observationUnitName\', \'plotName\', \'sublotName\', \'plantName\'' }) |h %></li>
+                <li><% $c->i18n->p('trial.treatment.detailed_help', 'The "Detailed" format includes a special header as well as additional columns for design information.') |h %></li>
             </ul>
 
-            <h4>Timestamps:</h4>
+            <h4><% $c->i18n->p('trial.treatment.timestamps_heading', 'Timestamps:') |h %></h4>
             <ul>
-                <li>To include timestamp information for your measurements, click the checkbox "Includes Timestamps".</li>
-                <li>For timestamps, values should be recorded as <i>"Value,Timestamp"</i>.<br/>For no timestamps, values should be recorded as <i>"Value"</i>.</li>
-                <li>Timestamp format must be YYYY-MM-DD HH:MM:SS-0000 or YYYY-MM-DD HH:MM:SS+0000</li><br/>
-                <li>Example with timestamps: <br/><br/>
+                <li><% $c->i18n->p('trial.treatment.timestamps_enable', 'To include timestamp information for your measurements, click the checkbox "Includes Timestamps".') |h %></li>
+                <li><% $c->i18n->p('trial.treatment.values_format', 'With timestamps, record values as %{timestamp_format}. Without timestamps, record values as %{value_format}.', { timestamp_format => '"Value,Timestamp"', value_format => '"Value"' }) |h %></li>
+                <li><% $c->i18n->p('trial.treatment.timestamp_format', 'Timestamp format must be %{negative_offset_format} or %{positive_offset_format}', { negative_offset_format => 'YYYY-MM-DD HH:MM:SS-0000', positive_offset_format => 'YYYY-MM-DD HH:MM:SS+0000' }) |h %></li><br/>
+                <li><% $c->i18n->p('trial.treatment.timestamps_example', 'Example with timestamps:') |h %> <br/><br/>
                 <table class="table table-hover table-bordered">
                     <thead>
                         <tr>
@@ -132,7 +132,7 @@
                     </tbody>
                 </table>
                 </li>
-                <li>Example without timestamps: <br/><br/>
+                <li><% $c->i18n->p('trial.treatment.no_timestamps_example', 'Example without timestamps:') |h %> <br/><br/>
                 <table class="table table-hover table-bordered">
                     <thead>
                         <tr>
@@ -151,7 +151,7 @@
         </div>
       </div>
       <div class="modal-footer">
-        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+        <button type="button" class="btn btn-default" data-dismiss="modal"><% $c->i18n->p('trial.treatment.close', 'Close') |h %></button>
       </div>
     </div>
   </div>
@@ -165,3 +165,7 @@ jQuery(document).ready(function () {
     });
 });
 </script>
+
+<%init>
+use HTML::Entities qw(encode_entities);
+</%init>

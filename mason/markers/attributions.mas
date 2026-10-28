@@ -30,6 +30,8 @@ $marker
 </%args>
 
 <%perl>
+use SGN::I18N ();
+
 
 my $marker_id = $marker->marker_id();
 
@@ -44,13 +46,13 @@ my @a = $att -> get_attributions();
 my $html = "";
 foreach my $a (@a) { 
   if ($a->{role}) { $html .= "<h4>$a->{role}</h4>"; }
-  if ($a->{person}->get_last_name()) { $html .= "<b>Name:</b> ".$a->{person}->get_first_name()." ".$a->{person}->get_last_name()."<br />"; }
-  if ($a->{organization}) { $html .= "<b>Organization:</b> ".$a->{organization}." <br />"; }
-  if ($a->{project}) { $html .= "<b>Project:</b> ".$a->{project}." <br /><br />"; }
+  if ($a->{person}->get_last_name()) { $html .= ("<b>" . SGN::I18N::translate($c->i18n, "marker.detail.attribution.name", "Name:", undef, {entities => '<>&'}) . "</b> ").$a->{person}->get_first_name()." ".$a->{person}->get_last_name()."<br />"; }
+  if ($a->{organization}) { $html .= ("<b>" . SGN::I18N::translate($c->i18n, "marker.detail.attribution.organization", "Organization:", undef, {entities => '<>&'}) . "</b> ").$a->{organization}." <br />"; }
+  if ($a->{project}) { $html .= ("<b>" . SGN::I18N::translate($c->i18n, "marker.detail.attribution.project", "Project:", undef, {entities => '<>&'}) . "</b> ").$a->{project}." <br /><br />"; }
 }
 
 if($html) {
-  $html =  CXGN::Page::FormattingHelpers::blue_section_html("Marker Submitted By", $html);
+  $html =  CXGN::Page::FormattingHelpers::info_section_html(title => SGN::I18N::translate($c->i18n, "marker.detail.attribution.submitted_by", "Marker Submitted By", undef, {entities => '<>&'}), anchor_title => "Marker Submitted By", contents => $html);
 }
 else {
   return'';

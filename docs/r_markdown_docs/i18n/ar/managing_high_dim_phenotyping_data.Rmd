@@ -1,0 +1,51 @@
+# إدارة بيانات الأنماط الظاهرية عالية الأبعاد {#managing-high-dimensional-phenotyping-data}
+
+## إدارة البيانات النسخية {#managing-transcriptomic-data}
+
+### تحميل البيانات النسخية {#uploading-transcriptomic-data}
+
+لتحميل البيانات النسخية، افتح صفحة البيانات النسخية بالنقر على “البيانات النسخية” ضمن تبويب الإدارة.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/transcriptomics_menu.png')
+```
+
+انقر “تحميل البيانات النسخية” لفتح خطوات التحميل. في الخطوة الثانية “العينات”، تأكد من وجود عيناتك في قاعدة البيانات. راجع فصل “إدارة عينات الأنسجة” لمعرفة كيفية إنشاء تجربة أخذ العينات. بعد إنشائها أو التأكد من وجود العينات، انتقل إلى خطوة “معلومات البروتوكول”. اختر بروتوكولًا موجودًا أو انقر “البروتوكول غير معروض. إنشاء بروتوكول جديد”. أدخل معلوماته ثم انقر “الانتقال إلى الخطوة التالية”.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/create_transcriptomics_protocol.png')
+```
+
+ستحتاج إلى ملفي csv لتحميل البيانات النسخية. الأول ملف مصفوفة البيانات، ويجب أن يحتوي على العناوين التالية:
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/data_matrix_headers.png')
+```
+
+يجب أن تطابق أسماء عمود sample_name أسماء العينات التي أنشأتها في ملف تجربة أخذ العينات. استبدل العنوان transcript_name_columns بأسماء النسخ المراد تحميلها، بحيث يكون لكل اسم عمود مستقل وتوضع قيمة التعبير المقابلة تحته. مثال:
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/data_matrix_example.png')
+```
+
+الملف الثاني هو ملف تفاصيل النسخ، ويجب أن يحتوي على العناوين التالية:
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/transcript_details_headers.png')
+```
+
+يجب أن يحتوي كل صف في عمود transcript_name على اسم نسخة من ملف مصفوفة البيانات. مثال:
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/transcript_details_example.png')
+```
+
+بعد تحميل الملفين، انقر “تحقق” للتأكد من صحة التنسيق ووجود العينات. إذا لم تظهر أخطاء، فانقر “حفظ” لتخزين البيانات النسخية.
+
+### تنزيل البيانات النسخية {#downloading-transcriptomics-data}
+
+لتنزيل بياناتك، افتح القائمة المنسدلة “البيانات النسخية المحمّلة” في صفحة البيانات النسخية. ثم افتح “بياناتك النسخية المحمّلة”، واعثر على البيانات المطلوبة وانقر زر “تنزيل” بجوارها.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/download_transcriptomics.png')
+```

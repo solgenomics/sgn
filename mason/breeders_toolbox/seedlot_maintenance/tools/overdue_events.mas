@@ -3,20 +3,36 @@
     my $datestr = strftime("%Y-%m-%d", localtime());
 </%perl>
 
-<div class="panel panel-default">
+<style>
+.seedlot-overdue-tool #overdue_events_find_seedlots {
+    max-inline-size: 100%;
+    max-width: 100%;
+    white-space: normal;
+    overflow-wrap: anywhere;
+}
+.seedlot-overdue-tool .control-label {
+    overflow-wrap: anywhere;
+}
+.seedlot-overdue-tool .form-group::after {
+    content: "";
+    display: table;
+    clear: both;
+}
+</style>
+
+<div class="panel panel-default seedlot-overdue-tool">
     <div class="panel-heading">
-        <h5 class="panel-title">Overdue Events</h5>
+        <h5 class="panel-title"><% $c->i18n->p('seedlot_overdue.ui.title', 'Overdue Events') |h %></h5>
     </div>
     <div class="panel-body">
 
-        <p>This search will return any Seedlots from the selected list that have not had the specified 
-        event performed on or after the selected date.</p>
+        <p><% $c->i18n->p('seedlot_overdue.ui.intro', 'This search will return any Seedlots from the selected list that have not had the specified event performed on or after the selected date.') |h %></p>
 
         <br />
         
         <!-- Seedlots -->
         <div class="form-group">
-            <label class="col-sm-3 control-label" style="text-align: right">Seedlots</label>
+            <label class="col-sm-3 control-label" style="text-align: right"><% $c->i18n->p('seedlot_overdue.ui.seedlots', 'Seedlots') |h %></label>
             <div class="col-sm-9">
                 <div id="overdue_events_seedlot_list"></div>
             </div>
@@ -26,10 +42,10 @@
 
         <!-- Event -->
         <div class="form-group">
-            <label class="col-sm-3 control-label" style="text-align: right">Event</label>
+            <label class="col-sm-3 control-label" style="text-align: right"><% $c->i18n->p('seedlot_overdue.ui.event', 'Event') |h %></label>
             <div class="col-sm-9">
                 <select class="form-control input-sm" id="overdue_events_event_select" disabled>
-                    <option value="">Loading...</option>
+                    <option value=""><% $c->i18n->p('seedlot_overdue.ui.loading', 'Loading...') |h %></option>
                 </select>
             </div>
         </div>
@@ -38,7 +54,7 @@
 
         <!-- Date -->
         <div class="form-group">
-            <label class="col-sm-3 control-label" style="text-align: right">Date</label>
+            <label class="col-sm-3 control-label" style="text-align: right"><% $c->i18n->p('seedlot_overdue.ui.date', 'Date') |h %></label>
             <div class="col-sm-9">
                 <input class="form-control input-sm" type="date" id="overdue_events_date" name="overdue_events_date" value="<% $datestr %>" max="<% $datestr %>">
             </div>
@@ -47,7 +63,7 @@
         <br /><br />
 
         <div style="margin: 0 auto; max-width: 400px">
-            <button id="overdue_events_find_seedlots" class="btn btn-primary btn-block">Find Seedlots</button>
+            <button id="overdue_events_find_seedlots" class="btn btn-primary btn-block"><% $c->i18n->p('seedlot_overdue.ui.find', 'Find Seedlots') |h %></button>
         </div>
 
 
@@ -57,12 +73,12 @@
 
             <br /><br />
             
-            <h4>Overdue Seedlots</h4>
+            <h4><% $c->i18n->p('seedlot_overdue.ui.overdue_seedlots', 'Overdue Seedlots') |h %></h4>
             <table class="table table-striped" style="width: 100%">
                 <thead>
                     <tr>
-                        <th style="width: 50%">Seedlot</th>
-                        <th style="width: 50%">Record</th>
+                        <th style="width: 50%"><% $c->i18n->p('seedlot_overdue.ui.seedlot', 'Seedlot') |h %></th>
+                        <th style="width: 50%"><% $c->i18n->p('seedlot_overdue.ui.record', 'Record') |h %></th>
                     </tr>
                 </thead>
                 <tbody id="overdue_events_results_overdue"></tbody>
@@ -70,12 +86,12 @@
 
             <br /><br />
 
-            <h4>Not Overdue Seedlots</h4>
+            <h4><% $c->i18n->p('seedlot_overdue.ui.not_overdue_seedlots', 'Not Overdue Seedlots') |h %></h4>
             <table class="table table-striped" style="width: 100%">
                 <thead>
                     <tr>
-                        <th style="width: 50%">Seedlot</th>
-                        <th style="width: 50%">Last Recorded Event</th>
+                        <th style="width: 50%"><% $c->i18n->p('seedlot_overdue.ui.seedlot', 'Seedlot') |h %></th>
+                        <th style="width: 50%"><% $c->i18n->p('seedlot_overdue.ui.last_recorded_event', 'Last Recorded Event') |h %></th>
                     </tr>
                 </thead>
                 <tbody id="overdue_events_results_not_overdue"></tbody>
@@ -89,13 +105,35 @@
 
 <script type="text/javascript">
 
+// Optional browser language assets preserve the canonical list/event data.
+var overdueI18n = (window.SGN && window.SGN.i18n) || {
+    p: function (context, source, variables) {
+        return source.replace(/%\{([A-Za-z0-9_]+)\}/g, function (match, name) {
+            return variables && Object.prototype.hasOwnProperty.call(variables, name) ? String(variables[name]) : match;
+        });
+    }
+};
+function overdueRequestedLocale() {
+    var root = document.documentElement;
+    var runtime = window.SGN && window.SGN.i18n;
+    var locale = root.getAttribute('data-sgn-locale') || (runtime && runtime.requestedLocale) || root.lang || (runtime && runtime.locale) || 'en';
+    return typeof locale === 'string' && /^[A-Za-z]{2,8}(?:-[A-Za-z0-9]{1,8})*$/.test(locale) ? locale : 'en';
+}
+function overdueLocaleHeaders(url) {
+    try {
+        var target = new URL(url, window.location.href);
+        if (target.origin !== window.location.origin || !/^\/ajax\/breeders\/seedlot\/maintenance\/(?:ontology|overdue)$/.test(target.pathname)) return {};
+        return {'X-SGN-Locale': overdueRequestedLocale()};
+    } catch (error) { return {}; }
+}
+
 let TOOLS_LO = new CXGN.List();
 let TOOLS_ONTOLOGY = [];
 
 jQuery(document).ready(function() {
 
     // Set seedlot list select
-    jQuery('#overdue_events_seedlot_list').html(TOOLS_LO.listSelect('overdue_events_filter_seedlot', [ 'seedlots' ], 'select', undefined, undefined));
+    jQuery('#overdue_events_seedlot_list').html(TOOLS_LO.listSelect('overdue_events_filter_seedlot', [ 'seedlots' ], overdueI18n.p("seedlot_overdue.ui.list_select", "select"), undefined, undefined));
 
     // Get event ontology and set events
     getToolsEventOntology(function() {
@@ -116,17 +154,18 @@ function getToolsEventOntology(callback) {
         type: 'GET',
         dataType: 'json',
         url: '/ajax/breeders/seedlot/maintenance/ontology',
+        headers: overdueLocaleHeaders('/ajax/breeders/seedlot/maintenance/ontology'),
         success: function(data) {
             if ( data && data.ontology ) {
                 TOOLS_ONTOLOGY = data.ontology;
                 if ( callback ) return callback();
             }
             else {
-                alert("ERROR: Could not fetch ontology terms");
+                alert(overdueI18n.p("seedlot_overdue.ui.ontology_error", "ERROR: Could not fetch ontology terms"));
             }
         },
         error: function() {
-            alert("ERROR: Could not fetch ontology terms");
+            alert(overdueI18n.p("seedlot_overdue.ui.ontology_error", "ERROR: Could not fetch ontology terms"));
         }
     });
 }
@@ -136,18 +175,19 @@ function getToolsEventOntology(callback) {
 * - Parse the ONTOLOGY array into option groups and options
 */
 function setOverdueEventsSelect() {
-    let html = "<option value=''>...Select Maintenance Event...</option>";
+    const select = jQuery("#overdue_events_event_select").empty();
+    select.append(jQuery('<option>').val('').text(overdueI18n.p("seedlot_overdue.ui.event_select", "...Select Maintenance Event...")));
     for ( let i = 0; i < TOOLS_ONTOLOGY.length; i++ ) {
-        html += "<optgroup label='" + TOOLS_ONTOLOGY[i].name + "'>";
+        // Ontology labels and IDs are canonical scientific values, not UI messages.
+        const group = jQuery('<optgroup>').attr('label', TOOLS_ONTOLOGY[i].name);
         if ( TOOLS_ONTOLOGY[i].children ) {
             for ( let j = 0; j < TOOLS_ONTOLOGY[i].children.length; j++ ) {
-                html += "<option value='" + TOOLS_ONTOLOGY[i].children[j].cvterm_id + "'>" + TOOLS_ONTOLOGY[i].children[j].name + "</option>";
+                group.append(jQuery('<option>').val(TOOLS_ONTOLOGY[i].children[j].cvterm_id).text(TOOLS_ONTOLOGY[i].children[j].name));
             }
         }
-        html += "</optgroup>";
+        select.append(group);
     }
-    jQuery("#overdue_events_event_select").html(html);
-    jQuery("#overdue_events_event_select").prop("disabled", false);
+    select.prop("disabled", false);
 }
 
 /**
@@ -161,20 +201,20 @@ function findOverdueSeedlots() {
 
     // Check required parameters
     if ( !list_id || list_id === '' ) {
-        alert("Select a list of seedlots");
+        alert(overdueI18n.p("seedlot_overdue.ui.list_required", "Select a list of seedlots"));
         return false;
     }
     if ( !event_id || event_id === '' ) {
-        alert("Select a maintenance event");
+        alert(overdueI18n.p("seedlot_overdue.ui.event_required", "Select a maintenance event"));
         return false;
     }
     if ( !date || date === '' ) {
-        alert("Select a date");
+        alert(overdueI18n.p("seedlot_overdue.ui.date_required", "Select a date"));
         return false;
     }
     let regex = /^[0-9]{4}-[0-9]{2}-[0-9]{2}$/;
     if ( !date.match(regex) ) {
-        alert("Incorrect date format - the date must be in the format of YYYY-MM-DD");
+        alert(overdueI18n.p("seedlot_overdue.ui.date_format", "Incorrect date format - the date must be in the format of YYYY-MM-DD"));
         return false;
     }
 
@@ -191,6 +231,7 @@ function findOverdueSeedlots() {
     jQuery.ajax({
         type: 'POST',
         url: '/ajax/breeders/seedlot/maintenance/overdue',
+        headers: overdueLocaleHeaders('/ajax/breeders/seedlot/maintenance/overdue'),
         data: JSON.stringify(body),
         contentType: "application/json; charset=utf-8",
         dataType: "json",
@@ -199,11 +240,11 @@ function findOverdueSeedlots() {
                 overdue_seedlots = data.results;
             }
             else {
-                alert("ERROR: Could not find overdue seedlots!");
+                alert(overdueI18n.p("seedlot_overdue.ui.overdue_error", "ERROR: Could not find overdue seedlots!"));
             }
         },
         error: function() {
-            alert("ERROR: Could not find overdue seedlots!");
+            alert(overdueI18n.p("seedlot_overdue.ui.overdue_error", "ERROR: Could not find overdue seedlots!"));
         },
         complete: function() {
             jQuery("#overdue_events_find_seedlots").attr("disabled", false);
@@ -219,34 +260,28 @@ function findOverdueSeedlots() {
  * @param {Object[]} seedlots Array of seedlot status info
  */
 function displayOverdueSeedlots(seedlots) {
-    
-    // Build tables
-    let overdue = "";
-    let not_overdue = "";
+    const overdue = jQuery("#overdue_events_results_overdue").empty();
+    const not_overdue = jQuery("#overdue_events_results_not_overdue").empty();
     for ( let i = 0; i < seedlots.length; i++ ) {
+        const row = jQuery('<tr>').append(jQuery('<td>').text(seedlots[i].seedlot));
         if ( seedlots[i].overdue === 1 ) {
-            overdue += "<tr><td>" + seedlots[i].seedlot + "</td>";
-            overdue += "<td><a href='/breeders/seedlot/maintenance/record?seedlot_name=" + seedlots[i].seedlot + "' target='_blank'>Record Maintenance Event</a></td></tr>"; 
+            const query = new URLSearchParams({seedlot_name: seedlots[i].seedlot, lang: overdueRequestedLocale()});
+            const link = jQuery('<a>').attr('href', '/breeders/seedlot/maintenance/record?' + query.toString()).attr('target', '_blank').text(overdueI18n.p("seedlot_overdue.ui.record_event", "Record Maintenance Event"));
+            row.append(jQuery('<td>').append(link)).appendTo(overdue);
         }
         else {
-            not_overdue += "<tr><td>" + seedlots[i].seedlot + "</td>";
-            not_overdue += "<td>" + parseTS(seedlots[i].timestamp) + "</td></tr>";
+            row.append(jQuery('<td>').text(parseTS(seedlots[i].timestamp))).appendTo(not_overdue);
         }
     }
-
-    // Update tables
-    jQuery("#overdue_events_results_overdue").html(overdue);
-    jQuery("#overdue_events_results_not_overdue").html(not_overdue);
     jQuery("#overdue_events_results").css("display", "block");
-
 }
 
 /**
  * Parse a YYYY-MM-DD HH:MM:SS timestamp into a human-friendly form
  */
 function parseTS(ts) {
-    let dow = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
-    let month = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+    let dow = [overdueI18n.p("seedlot_overdue.ui.weekday_sun", "Sun"), overdueI18n.p("seedlot_overdue.ui.weekday_mon", "Mon"), overdueI18n.p("seedlot_overdue.ui.weekday_tue", "Tue"), overdueI18n.p("seedlot_overdue.ui.weekday_wed", "Wed"), overdueI18n.p("seedlot_overdue.ui.weekday_thu", "Thu"), overdueI18n.p("seedlot_overdue.ui.weekday_fri", "Fri"), overdueI18n.p("seedlot_overdue.ui.weekday_sat", "Sat")];
+    let month = [overdueI18n.p("seedlot_overdue.ui.month_jan", "Jan"), overdueI18n.p("seedlot_overdue.ui.month_feb", "Feb"), overdueI18n.p("seedlot_overdue.ui.month_mar", "Mar"), overdueI18n.p("seedlot_overdue.ui.month_apr", "Apr"), overdueI18n.p("seedlot_overdue.ui.month_may", "May"), overdueI18n.p("seedlot_overdue.ui.month_jun", "Jun"), overdueI18n.p("seedlot_overdue.ui.month_jul", "Jul"), overdueI18n.p("seedlot_overdue.ui.month_aug", "Aug"), overdueI18n.p("seedlot_overdue.ui.month_sep", "Sep"), overdueI18n.p("seedlot_overdue.ui.month_oct", "Oct"), overdueI18n.p("seedlot_overdue.ui.month_nov", "Nov"), overdueI18n.p("seedlot_overdue.ui.month_dec", "Dec")];
     let d = new Date(ts);
     let h = d.getHours();
     let m = d.getMinutes();

@@ -1,3 +1,6 @@
+<%once>
+use HTML::Entities ();
+</%once>
 <%args>
 $folder_id
 $folder_name => undef
@@ -11,15 +14,15 @@ $folder_for_genotyping_projects => undef
     <div class="modal-dialog" role="document">
         <div class="modal-content">
             <div class="modal-header">
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                <h4 class="modal-title" id="editFolderCategoryDialog">Add additional folder type for <% $folder_name %></h4>
+                <button type="button" class="close" data-dismiss="modal" aria-label="<% $c->i18n->p("folder.ui.close", "Close") |h %>"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="editFolderCategoryDialog"><% $c->i18n->p("trial.folder.category.title", "Add additional folder type for %{folder_name}", {folder_name => $folder_name}) |h %></h4>
             </div>
             <div class="modal-body">
                 <div class="container-fluid">
 
                     <form class="form-horizontal" role="form" method="post" id="edit_folder_category_dialog_form" name="edit_folder_category_dialog_form">
                         <div class="form-group">
-                            <label class="col-sm-5 control-label">Folder for Trials:</label>
+                            <label class="col-sm-5 control-label"><% $c->i18n->p("trial.folder.category.trials", "Folder for Trials:") |h %></label>
                             <div class="col-sm-7" >
 % if($folder_for_trials) {
                                 <span class="glyphicon glyphicon-ok"></span>
@@ -29,7 +32,7 @@ $folder_for_genotyping_projects => undef
                             </div>
                         </div>
                         <div class="form-group">
-                            <label class="col-sm-5 control-label">Folder for Crosses:</label>
+                            <label class="col-sm-5 control-label"><% $c->i18n->p("trial.folder.category.crosses", "Folder for Crosses:") |h %></label>
                             <div class="col-sm-7" >
 % if($folder_for_crosses){
                                 <span class="glyphicon glyphicon-ok"></span>
@@ -39,7 +42,7 @@ $folder_for_genotyping_projects => undef
                             </div>
                         </div>
                         <div class="form-group">
-                            <label class="col-sm-5 control-label">Folder for Genotyping Plates:</label>
+                            <label class="col-sm-5 control-label"><% $c->i18n->p("trial.folder.category.genotyping_plates", "Folder for Genotyping Plates:") |h %></label>
                             <div class="col-sm-7" >
 % if ($folder_for_genotyping_trials) {
                                 <span class="glyphicon glyphicon-ok"></span>
@@ -49,7 +52,7 @@ $folder_for_genotyping_projects => undef
                             </div>
                         </div>
                         <div class="form-group">
-                            <label class="col-sm-5 control-label">Folder for Genotyping Projects:</label>
+                            <label class="col-sm-5 control-label"><% $c->i18n->p("trial.folder.category.genotyping_projects", "Folder for Genotyping Projects:") |h %></label>
                             <div class="col-sm-7" >
 % if ($folder_for_genotyping_projects) {
                                 <span class="glyphicon glyphicon-ok"></span>
@@ -63,8 +66,8 @@ $folder_for_genotyping_projects => undef
                 </div>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-default" name="edit_folder_categories_cancel_button" id="edit_folder_categories_cancel_button" data-dismiss="modal">Close</button>
-                <button type="button" class="btn btn-primary" name="edit_folder_categories_save_button" id="edit_folder_categories_save_button" title="Save">Save</button>
+                <button type="button" class="btn btn-default" name="edit_folder_categories_cancel_button" id="edit_folder_categories_cancel_button" data-dismiss="modal"><% $c->i18n->p("folder.ui.close", "Close") |h %></button>
+                <button type="button" class="btn btn-primary" name="edit_folder_categories_save_button" id="edit_folder_categories_save_button" title="<% $c->i18n->p("folder.edit_categories.save", "Save") |h %>"><% $c->i18n->p("folder.edit_categories.save", "Save") |h %></button>
             </div>
         </div>
     </div>
@@ -124,12 +127,12 @@ function save_folder_categories() {
             if (response.error){
                 alert(response.error);
             }
-            else if(confirm('Categories set for folder!')){
+            else if(confirm((window.SGN && SGN.i18n ? SGN.i18n.p("trial.folder.category.confirm", "Categories set for folder!") : "Categories set for folder!"))){
                 location.reload();
             }
         },
         error: function(response) {
-            alert('An error occurred');
+            alert(window.SGN && SGN.i18n ? SGN.i18n.p("trial.folder.category.error", "An error occurred") : "An error occurred");
         }
     });
 }

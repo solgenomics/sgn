@@ -1,6 +1,6 @@
 
 <!-- 
-    DATASET CREATION PIPELINE FOR SEACH WIZARD:
+    DATASET CREATION PIPELINE FOR SEARCH WIZARD:
     When provided with the proper query params, the search wizard will walk the user through 
     creating a dataset with the required parameters, save the dataset, and return to the 
     originating page.
@@ -32,6 +32,12 @@
     let DSP_ENABLED = false;    // Flag to enable the dataset creation pipeline
     let DSP_COLS = [];          // Allowed dataset column types
     let DSP_RETURN;             // Return URL for dataset creation
+
+    function escapeDatasetHelpText(value) {
+        const element = document.createElement('span');
+        element.textContent = String(value);
+        return element.innerHTML;
+    }
 
     jQuery(document).ready(function() {
 
@@ -102,7 +108,7 @@
 
     /**
      * Setup the selections and instructions for selecting items from the specified column
-     * @param {int} col Column indx
+     * @param {int} col Column index
      */
     function setCol(col) {
         
@@ -158,9 +164,19 @@
 
             // Update Instructions
             let step = col+1;
-            let html = "<strong>Step " + step + ":</strong> Choose items of type <strong>" + valid_col_types.join(" or ") + "</strong> from column " + step + ".";
+            const stepToken = '__SGN_DSP_STEP_LABEL__';
+            const typesToken = '__SGN_DSP_TYPES__';
+            const stepLabel = window.SGN && SGN.i18n
+                ? SGN.i18n.p('global.dataset_overlay.step_label', 'Step %{step}:', {step: step})
+                : 'Step ' + step + ':';
+            const instruction = window.SGN && SGN.i18n
+                ? SGN.i18n.p('global.dataset_overlay.choose_items', '%{step_label} Choose items of type %{types} from column %{step}.', {step_label: stepToken, types: typesToken, step: step})
+                : stepToken + ' Choose items of type ' + typesToken + ' from column ' + step + '.';
+            const html = escapeDatasetHelpText(instruction)
+                .replace(stepToken, '<strong>' + escapeDatasetHelpText(stepLabel) + '</strong>')
+                .replace(typesToken, '<strong>' + escapeDatasetHelpText(valid_col_types.join(' ' + (window.SGN && SGN.i18n ? SGN.i18n.p('global.dataset_overlay.or', 'or') : 'or') + ' ')) + '</strong>');
             jQuery('#dsp-help-instructions').html(html);
-            jQuery('#dsp-help-next-label').html("Next");
+            jQuery('#dsp-help-next-label').html(window.SGN && SGN.i18n ? SGN.i18n.p('global.dataset_overlay.next', 'Next') : 'Next');
             jQuery("#dsp-help-next").prop('disabled', true);
             jQuery('#dsp-help-next').css('display', 'block');
             jQuery('#dsp-help-next').off('click').on('click', function() {
@@ -190,7 +206,18 @@
         jQuery('.wizard-dataset-name').focus();
 
         // Update Instructions
-        let html = "<strong>Step " + step + ":</strong> Enter a name for your dataset and click the <strong>Create</strong> button.";
+        const stepToken = '__SGN_DSP_STEP_LABEL__';
+        const createToken = '__SGN_DSP_CREATE_BUTTON__';
+        const stepLabel = window.SGN && SGN.i18n
+            ? SGN.i18n.p('global.dataset_overlay.step_label', 'Step %{step}:', {step: step})
+            : 'Step ' + step + ':';
+        const createLabel = window.SGN && SGN.i18n ? SGN.i18n.p('global.dataset_overlay.create', 'Create') : 'Create';
+        const instruction = window.SGN && SGN.i18n
+            ? SGN.i18n.p('global.dataset_overlay.name_dataset', '%{step_label} Enter a name for your dataset and click the %{create_button} button.', {step_label: stepToken, create_button: createToken})
+            : stepToken + ' Enter a name for your dataset and click the ' + createToken + ' button.';
+        const html = escapeDatasetHelpText(instruction)
+            .replace(stepToken, '<strong>' + escapeDatasetHelpText(stepLabel) + '</strong>')
+            .replace(createToken, '<strong>' + escapeDatasetHelpText(createLabel) + '</strong>');
         jQuery('#dsp-help-instructions').html(html);
         jQuery('#dsp-help-next').css('display', 'none');
 
@@ -205,12 +232,20 @@
         jQuery('.wizard-datasets > .panel').removeClass('wizard-panel-selected');
 
         // Update Instructions
-        let html = "<strong>Dataset Created:</strong> Return to the Analysis tool";
+        const createdToken = '__SGN_DSP_CREATED_LABEL__';
+        const returnToken = '__SGN_DSP_RETURN_TO_TOOL__';
+        const returnLabel = window.SGN && SGN.i18n ? SGN.i18n.p('global.dataset_overlay.return_to_tool', 'Return to the Analysis tool') : 'Return to the Analysis tool';
+        const instruction = window.SGN && SGN.i18n
+            ? SGN.i18n.p('global.dataset_overlay.dataset_created', '%{created_label} %{return_to_tool}', {created_label: createdToken, return_to_tool: returnToken})
+            : createdToken + ' ' + returnToken;
+        const html = escapeDatasetHelpText(instruction)
+            .replace(createdToken, '<strong>' + escapeDatasetHelpText(window.SGN && SGN.i18n ? SGN.i18n.p('global.dataset_overlay.created_label', 'Dataset Created:') : 'Dataset Created:') + '</strong>')
+            .replace(returnToken, escapeDatasetHelpText(returnLabel));
         jQuery('#dsp-help-instructions').html(html);
 
         // Set Return Button
         if ( DSP_RETURN ) {
-            jQuery('#dsp-help-next-label').html("Return");
+            jQuery('#dsp-help-next-label').html(window.SGN && SGN.i18n ? SGN.i18n.p('global.dataset_overlay.return', 'Return') : 'Return');
             jQuery('#dsp-help-next').off('click').on('click', function() {
                 window.location = DSP_RETURN;
                 return false;
@@ -241,7 +276,7 @@
      * Disable the dataset creation pipeline and restore the normal search wizard
      */
     function disableDatasetPipeline() {
-        var r = confirm("Are you sure you want to close the dataset creation help?");
+        var r = confirm(window.SGN && SGN.i18n ? SGN.i18n.p('global.dataset_overlay.confirm_close', 'Are you sure you want to close the dataset creation help?') : 'Are you sure you want to close the dataset creation help?');
         if ( r == true ) {
             DSP_ENABLED = false;
             jQuery("#dsp-help").css('display', 'none');

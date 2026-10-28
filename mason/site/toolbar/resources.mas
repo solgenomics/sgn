@@ -1,4 +1,4 @@
-<li class="dropdown"><a class="dropdown-toggle" data-toggle="dropdown" href="#">Resources</a>
+<li class="dropdown"><a class="dropdown-toggle" data-toggle="dropdown" href="#"><% $c->i18n->p('global.resources.title', 'Resources') |h %></a>
 <!-- <li class="dropdown"><a class="dropdown-toggle" data-toggle="dropdown" href="#">Resources<span class="caret"></span></a> -->
   <ul class="dropdown-menu">
     <li><a href="#">Page 1-1</a></li>

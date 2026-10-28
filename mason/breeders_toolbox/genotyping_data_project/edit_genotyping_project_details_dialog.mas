@@ -15,14 +15,14 @@ $has_plate => undef
     <div class="modal-dialog modal-xl" role="document">
         <div class="modal-content ui-front">
             <div class="modal-header text-center">
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                <h4 class="modal-title" id="editGenotypingProjectDetailsDialog">Edit Genotyping Project Details</h4>
+                <button type="button" class="close" data-dismiss="modal" aria-label="<% $c->i18n->p("global.dataset_publish.close", "Close") |h %>"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="editGenotypingProjectDetailsDialog"><% $c->i18n->p("genotype.plate.edit_genotyping_project_details", "Edit Genotyping Project Details") |h %></h4>
             </div>
             <div class="modal-body" id="edit_genotyping_project_details_body">
                 <div class="container-fluid">
                     <form class="form-horizontal" role="form" method="post" enctype="multipart/form-data" encoding="multipart/form-data">
                         <div class="form-group">
-                            <label class="col-sm-3 control-label" for="edit_genotyping_project_name">Genotyping Project Name: </label>
+                            <label class="col-sm-3 control-label" for="edit_genotyping_project_name"><% $c->i18n->p("genotype.plate.genotyping_project_name", "Genotyping Project Name:") |h %> </label>
                             <div class="col-sm-8">
                                 <div class="input-group">
                                     <input class="form-control col-sm-8" id="edit_genotyping_project_name" title="name" type="text" value="<%$trial_name%>" aria-describedby="edit_genotyping_project_name_status"/>
@@ -30,7 +30,7 @@ $has_plate => undef
                             </div>
                         </div>
                         <div class="form-group">
-                            <label class="col-sm-3 control-label" for="edit_genotyping_project_breeding_program">Breeding Program: </label>
+                            <label class="col-sm-3 control-label" for="edit_genotyping_project_breeding_program"><% $c->i18n->p("cross.ui.breeding_program.2c9b17e", "Breeding Program:") |h %> </label>
                             <div class="col-sm-8">
                                 <div class="input-group">
                                     <select class="form-control" id="edit_genotyping_project_breeding_program" title="breeding_program" value="<%$breeding_program_name%>"></select>
@@ -38,7 +38,7 @@ $has_plate => undef
                             </div>
                         </div>
                         <div class="form-group">
-                            <label class="col-sm-3 control-label" for="edit_genotyping_project_year">Year: </label>
+                            <label class="col-sm-3 control-label" for="edit_genotyping_project_year"><% $c->i18n->p("cross.ui.year.c9410fe", "Year:") |h %> </label>
                             <div class="col-sm-8">
                                 <div class="input-group">
                                     <select class="form-control" id="edit_genotyping_project_year" title="year" value="<%$year%>"></select>
@@ -47,7 +47,7 @@ $has_plate => undef
                         </div>
 %if($has_plate eq 'none') {
                         <div class="form-group">
-                            <label class="col-sm-3 control-label" for="edit_genotyping_project_facility">Genotyping Facility: </label>
+                            <label class="col-sm-3 control-label" for="edit_genotyping_project_facility"><% $c->i18n->p("genotype.plate.genotyping_facility_733343", "Genotyping Facility:") |h %> </label>
                             <div class="col-sm-8">
                                 <div class="input-group">
                                     <select class="form-control" id="edit_genotyping_project_facility" title="facility" type="text" value="<%$genotyping_facility%>"></select>
@@ -56,7 +56,7 @@ $has_plate => undef
                         </div>
 %}
                         <div class="form-group">
-                            <label class="col-sm-3 control-label" for="edit_genotyping_project_description">Description: </label>
+                            <label class="col-sm-3 control-label" for="edit_genotyping_project_description"><% $c->i18n->p("global.dataset_publish.description", "Description:") |h %> </label>
                             <div class="col-sm-8">
                                 <div class="input-group">
                                     <textarea class="form-control" id="edit_genotyping_project_description" title="description" rows="5"><% $trial_description %></textarea>
@@ -67,9 +67,9 @@ $has_plate => undef
                 </div>
             </div>
             <div class="modal-footer">
-                <p class="text-success vertical-align pull-left"><span class="glyphicon glyphicon-pencil"></span> Indicates pending change</p>
-                <button type="button" class="btn btn-default" data-dismiss="modal" id="edit_genotyping_project_details_cancel_button">Cancel</button>
-                <button type="button" class="btn btn-primary" id="save_genotyping_project_details">Save Changes</button>
+                <p class="text-success vertical-align pull-left"><span class="glyphicon glyphicon-pencil"></span> <% $c->i18n->p("trial.details.pending", "Indicates pending change") |h %></p>
+                <button type="button" class="btn btn-default" data-dismiss="modal" id="edit_genotyping_project_details_cancel_button"><% $c->i18n->p("auth.legacy.cancel", "Cancel") |h %></button>
+                <button type="button" class="btn btn-primary" id="save_genotyping_project_details"><% $c->i18n->p("trial.details.save", "Save Changes") |h %></button>
             </div>
         </div>
     </div>
@@ -79,14 +79,14 @@ $has_plate => undef
     <div class="modal-dialog" role="document">
         <div class="modal-content ui-front">
             <div class="modal-header text-center">
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                <h4 class="modal-title" id="genotypingProjectDetailsSavedDialog">Details Saved</h4>
+                <button type="button" class="close" data-dismiss="modal" aria-label="<% $c->i18n->p("global.dataset_publish.close", "Close") |h %>"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="genotypingProjectDetailsSavedDialog"><% $c->i18n->p("trial.details.saved", "Details Saved") |h %></h4>
             </div>
             <div class="modal-body" id="genotyping_project_details_saved_body">
                 <ul class="list-group" id="genotyping_project_details_saved_message"></ul>
             </div>
             <div class="modal-footer">
-                <button id="genotyping_project_details_saved_close_button" type="button" class="btn btn-default" data-dismiss="modal">Close & Reload</button>
+                <button id="genotyping_project_details_saved_close_button" type="button" class="btn btn-default" data-dismiss="modal"><% $c->i18n->p("seedlots.ui.close_reload", "Close & Reload") |h %></button>
             </div>
         </div>
     </div>
@@ -96,14 +96,14 @@ $has_plate => undef
     <div class="modal-dialog" role="document">
         <div class="modal-content ui-front">
             <div class="modal-header text-center">
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                <h4 class="modal-title" id="genotypingProjectDetailsErrorDialog">Error Saving Genotyping Project Details</h4>
+                <button type="button" class="close" data-dismiss="modal" aria-label="<% $c->i18n->p("global.dataset_publish.close", "Close") |h %>"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="genotypingProjectDetailsErrorDialog"><% $c->i18n->p("genotype.plate.error_saving_genotyping_project_details", "Error Saving Genotyping Project Details") |h %></h4>
             </div>
             <div class="modal-body" id="genotyping_project_details_error_body">
                 <ul class="list-group" id="genotyping_project_details_error_message"></ul>
             </div>
             <div class="modal-footer">
-                <button id="genotyping_project_details_error_close_button" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                <button id="genotyping_project_details_error_close_button" type="button" class="btn btn-default" data-dismiss="modal"><% $c->i18n->p("global.dataset_publish.close", "Close") |h %></button>
             </div>
         </div>
     </div>
@@ -156,7 +156,7 @@ function edit_genotyping_project_details(){
             if(jQuery('#'+id).is("select")){
                 new_value = changed_elements[i].options[changed_elements[i].selectedIndex].text
             }
-            success_message += "<li class='list-group-item list-group-item-success'> Changed "+type+" to: <b>"+new_value+"</b></li>";
+            success_message += ("<li class='list-group-item list-group-item-success'> " + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("transformation.changed", "Changed") : "Changed")).html() + " ")+type+(" " + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("transformation.to", "to:") : "to:")).html() + " <b>")+new_value+"</b></li>";
         }
 
         save_genotyping_project_details(categories, new_details, success_message);
@@ -192,7 +192,7 @@ function save_genotyping_project_details (categories, new_details, success_messa
             }
         },
         error: function(response) {
-            document.getElementById('genotyping_project_details_error_message').innerHTML = "<li class='list-group-item list-group-item-danger'> Genotyping project detail update AJAX request failed. Update not completed.</li>";
+            document.getElementById('genotyping_project_details_error_message').innerHTML = ("<li class='list-group-item list-group-item-danger'> " + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("genotype.plate.genotyping_project_detail_update_ajax_request_failed_update_not_completed", "Genotyping project detail update AJAX request failed. Update not completed.") : "Genotyping project detail update AJAX request failed. Update not completed.")).html() + "</li>");
             jQuery('#genotyping_project_details_error_dialog').modal("show");
         },
     });

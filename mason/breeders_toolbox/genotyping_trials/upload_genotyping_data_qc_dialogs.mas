@@ -1,3 +1,7 @@
+<%once>
+use HTML::Entities ();
+</%once>
+
 <%args>
 $facilities
 </%args>
@@ -8,8 +12,8 @@ $facilities
     <div class="modal-dialog modal-xl" role="document">
         <div class="modal-content">
             <div class="modal-header">
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                <h4 class="modal-title" id="uploadGenotypesQCDialog">Upload Genotypes QC</h4>
+                <button type="button" class="close" data-dismiss="modal" aria-label="<% $c->i18n->p("global.dataset_publish.close", "Close") |h %>"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="uploadGenotypesQCDialog"><% $c->i18n->p("genotype.plate.upload_genotypes_qc", "Upload Genotypes QC") |h %></h4>
             </div>
             <div class="modal-body">
                 <form class="form-horizontal" role="form" method="post" enctype="multipart/form-data" encoding="multipart/form-data" id="upload_genotypes_qc_form" name="upload_genotypes_qc_form" action="/ajax/genotype_qc/upload">
@@ -17,26 +21,26 @@ $facilities
                     <div class="container-fluid">
 
                         <&| /util/workflow.mas, id=> "upload_genotypes_qc_workflow" &>
-                            <&| /util/workflow.mas:step, title=> "Intro" &>
-                                <& /page/page_title.mas, title=>"This workflow will guide you through genotype QC" &>
+                            <&| /util/workflow.mas:step, title=> HTML::Entities::encode_entities($c->i18n->p("cross.ui.intro", "Intro")) &>
+                                <& /page/page_title.mas, title=>HTML::Entities::encode_entities($c->i18n->p("genotype.plate.this_workflow_will_guide_you_through_genotype_qc", "This workflow will guide you through genotype QC")) &>
 
                                 <ul>
-                                    <li>Genotype QC does not save your genotypes in the database, it only scans them against genotyping protocols already saved in the database.</li>
-                                    <li>To actually store data into the database, please use "Upload Genotyping Data".</li>
-                                    <li>The marker names should be exactly the marker names that you want to compare against and not any other ID</li>
+                                    <li><% $c->i18n->p("genotype.plate.genotype_qc_does_not_save_your_genotypes_in_the_database", "Genotype QC does not save your genotypes in the database, it only scans them against genotyping protocols already saved in the database.") |h %></li>
+                                    <li><% $c->i18n->p("genotype.plate.to_actually_store_data_into_the_database_please_use_upload", "To actually store data into the database, please use \"Upload Genotyping Data\".") |h %></li>
+                                    <li><% $c->i18n->p("genotype.plate.the_marker_names_should_be_exactly_the_marker_names_that", "The marker names should be exactly the marker names that you want to compare against and not any other ID") |h %></li>
                                 </ul>
 
                                 <br/><br/>
                                 <div style="text-align: center">
-                                    <button class="btn btn-primary" onclick="Workflow.complete(this); return false;">Go to Next Step</button>
+                                    <button class="btn btn-primary" onclick="Workflow.complete(this); return false;"><% $c->i18n->p("cross.ui.go_to_next_step", "Go to Next Step") |h %></button>
                                 </div>
                             </&>
 
-                            <&| /util/workflow.mas:step, title=> "Genotype Protocol" &>
-                                <& /page/page_title.mas, title=>"Select the genotyping protocol you want to compare against" &>
+                            <&| /util/workflow.mas:step, title=> HTML::Entities::encode_entities($c->i18n->p("genotype.plate.genotype_protocol", "Genotype Protocol")) &>
+                                <& /page/page_title.mas, title=>HTML::Entities::encode_entities($c->i18n->p("genotype.plate.select_the_genotyping_protocol_you_want_to_compare_against", "Select the genotyping protocol you want to compare against")) &>
 
                                 <ul>
-                                    <li>Select a genotyping protocol in the database against which you want to compare genotypes against.</li>
+                                    <li><% $c->i18n->p("genotype.plate.select_a_genotyping_protocol_in_the_database_against_which_you", "Select a genotyping protocol in the database against which you want to compare genotypes against.") |h %></li>
                                 </ul>
                                 <br/><br/>
 
@@ -45,21 +49,21 @@ $facilities
 
                                 <br/><br/>
                                 <div style="text-align: center">
-                                    <button class="btn btn-primary" onclick="Workflow.complete(this); return false;">Go to Next Step</button>
+                                    <button class="btn btn-primary" onclick="Workflow.complete(this); return false;"><% $c->i18n->p("cross.ui.go_to_next_step", "Go to Next Step") |h %></button>
                                 </div>
                             </&>
 
-                            <&| /util/workflow.mas:step, title=> "Genotype Info" &>
-                                <& /page/page_title.mas, title=>"Provide genotype information" &>
+                            <&| /util/workflow.mas:step, title=> HTML::Entities::encode_entities($c->i18n->p("genotype.plate.genotype_info", "Genotype Info")) &>
+                                <& /page/page_title.mas, title=>HTML::Entities::encode_entities($c->i18n->p("genotype.plate.provide_genotype_information", "Provide genotype information")) &>
                                 <br/><br/>
 
                                 <div class="row">
                                     <div class="col-sm-4">
-                                        <&| /page/explanation.mas, title=>'Template information' &>
+                                        <&| /page/explanation.mas, title=>HTML::Entities::encode_entities($c->i18n->p("accession.files.template_info", 'Template information')) &>
                                             <p>
-                                                <b>File format information</b>
+                                                <b><% $c->i18n->p("accessions.dialog.file_format", "File format information") |h %></b>
                                                 <br>
-                                                <a id="upload_genotype_qc_spreadsheet_info_format">File format</a>
+                                                <a id="upload_genotype_qc_spreadsheet_info_format"><% $c->i18n->p("program.profile_upload.step.file_format", "File format") |h %></a>
                                             </p>
                                         </&>
                                     </div>
@@ -68,7 +72,7 @@ $facilities
                                         <div class="panel panel-default">
                                             <div class="panel-body">
                                                 <div class="form-group">
-                                                    <label class="col-sm-6 control-label">Select File: </label>
+                                                    <label class="col-sm-6 control-label"><% $c->i18n->p("genotype.plate.select_file", "Select File:") |h %> </label>
                                                     <div class="col-sm-6">
                                                         <input type="file" name="upload_genotype_qc_file_input" id="upload_genotype_qc_file_input" encoding="multipart/form-data" />
                                                     </div>
@@ -80,11 +84,11 @@ $facilities
 
                                 <br/><br/>
                                 <div style="text-align: center">
-                                    <button class="btn btn-primary" id="genotype_qc_upload_submit_button">Submit</button>
+                                    <button class="btn btn-primary" id="genotype_qc_upload_submit_button"><% $c->i18n->p("global.manage_file_share_dump.submit", "Submit") |h %></button>
                                 </div>
                             </&>
-                            <&| /util/workflow.mas:step, title=> "Results" &>
-                                <& /page/page_title.mas, title=>"A similarity matrix between the samples in your file and the saved genotypes for the protocol you selected" &>
+                            <&| /util/workflow.mas:step, title=> HTML::Entities::encode_entities($c->i18n->p("global.gem_experiment_search.results", "Results")) &>
+                                <& /page/page_title.mas, title=>HTML::Entities::encode_entities($c->i18n->p("genotype.plate.a_similarity_matrix_between_the_samples_in_your_file_and", "A similarity matrix between the samples in your file and the saved genotypes for the protocol you selected")) &>
 
                                 <div id="genotype_qc_result_div"></div>
 
@@ -95,7 +99,7 @@ $facilities
                 </form>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-default" data-dismiss="modal"><% $c->i18n->p("global.dataset_publish.close", "Close") |h %></button>
             </div>
         </div>
     </div>
@@ -105,17 +109,17 @@ $facilities
     <div class="modal-dialog modal-xl" role="document">
         <div class="modal-content">
             <div class="modal-header" style="text-align: center">
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                <h4 class="modal-title" id="uploadGenotypeQCInfoDialog">Upload Genotype QC Template Information</h4>
+                <button type="button" class="close" data-dismiss="modal" aria-label="<% $c->i18n->p("global.dataset_publish.close", "Close") |h %>"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="uploadGenotypeQCInfoDialog"><% $c->i18n->p("genotype.plate.upload_genotype_qc_template_information", "Upload Genotype QC Template Information") |h %></h4>
             </div>
             <div class="modal-body">
                 <div class="container-fluid">
-                    <b>This is for uploading genotype QC data.</b>
+                    <b><% $c->i18n->p("genotype.plate.this_is_for_uploading_genotype_qc_data", "This is for uploading genotype QC data.") |h %></b>
                     <br/>
-                    <b>Please use CSV formatted files</b>
+                    <b><% $c->i18n->p("genotype.plate.please_use_csv_formatted_files_66cd69", "Please use CSV formatted files") |h %></b>
                     <p>
                     <br />
-                    <b>Header:</b>
+                    <b><% $c->i18n->p("accessions.template.header", "Header:") |h %></b>
                     <br>
 
                     <table class="table table-hover table-bordered table-condensed" >
@@ -131,7 +135,7 @@ $facilities
                 </div>
             </div>
             <div class="modal-footer">
-                <button id="close_upload_genotyping_qc_spreadsheet_info_dialog" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                <button id="close_upload_genotyping_qc_spreadsheet_info_dialog" type="button" class="btn btn-default" data-dismiss="modal"><% $c->i18n->p("global.dataset_publish.close", "Close") |h %></button>
             </div>
         </div>
     </div>
@@ -175,7 +179,7 @@ jQuery(document).ready(function(){
             jQuery('#working_modal').modal('hide');
             if (response.success) {
 
-                var html = '<table class="table table-hover"><thead><tr><th>Samples In File</th>';
+                var html = ("<table class=\"table table-hover\"><thead><tr><th>" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("genotype.plate.samples_in_file", "Samples In File") : "Samples In File")).html() + "</th>");
                 for(var i=0; i<response.protocol_stock_names.length; i++) {
                     html = html + '<th>'+response.protocol_stock_names[i]+'</th>';
                 }

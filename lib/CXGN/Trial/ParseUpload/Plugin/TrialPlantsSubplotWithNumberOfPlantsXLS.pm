@@ -1,6 +1,8 @@
 package CXGN::Trial::ParseUpload::Plugin::TrialPlantsSubplotWithNumberOfPlantsXLS;
 
 use Moose::Role;
+use SGN::I18N ();
+use CatalystX::GlobalContext '$c';
 use Spreadsheet::ParseExcel;
 use Spreadsheet::ParseXLSX;
 use CXGN::Stock::StockLookup;
@@ -10,6 +12,7 @@ use CXGN::List::Validate;
 
 sub _validate_with_plugin {
     my $self = shift;
+    my SGN::I18N $ui_trialplantssubplotwithnumberofplantsxls_i18n = $c && $c->can('i18n') ? $c->i18n : undef;
 
     my $filename = $self->get_filename();
     my $schema = $self->get_chado_schema();
@@ -40,7 +43,7 @@ sub _validate_with_plugin {
 
     my $worksheet = ( $excel_obj->worksheets() )[0]; #support only one worksheet
     if (!$worksheet) {
-        push @error_messages, "Spreadsheet must be on 1st tab in Excel (.xls) file";
+        push @error_messages, (SGN::I18N::translate($ui_trialplantssubplotwithnumberofplantsxls_i18n, "seedlot_maintenance_upload.parse.first_sheet", "Spreadsheet must be on 1st tab in Excel (.xls) file"));
         $errors{'error_messages'} = \@error_messages;
         $self->_set_parse_errors(\%errors);
         return;
@@ -48,7 +51,7 @@ sub _validate_with_plugin {
     my ( $row_min, $row_max ) = $worksheet->row_range();
     my ( $col_min, $col_max ) = $worksheet->col_range();
     if (($col_max - $col_min)  < 1 || ($row_max - $row_min) < 1 ) { #must have header and at least one row of plot data
-        push @error_messages, "Spreadsheet is missing header or contains no rows";
+        push @error_messages, (SGN::I18N::translate($ui_trialplantssubplotwithnumberofplantsxls_i18n, "trial.upload.multi.excel.header_or_rows", "Spreadsheet is missing header or contains no rows"));
         $errors{'error_messages'} = \@error_messages;
         $self->_set_parse_errors(\%errors);
         return;
@@ -69,10 +72,10 @@ sub _validate_with_plugin {
         $num_plants_per_subplot_head =~ s/^\s+|\s+$//g;
     }
     if (!$subplot_name_head || $subplot_name_head ne 'subplot_name' ) {
-        push @error_messages, "Cell A1: subplot_name is missing from the header";
+        push @error_messages, (SGN::I18N::translate($ui_trialplantssubplotwithnumberofplantsxls_i18n, "trial.parse.header_cell", "Cell %{cell}: %{field} is missing from the header", {cell => "A1", field => "subplot_name"}));
     }
     if (!$num_plants_per_subplot_head || $num_plants_per_subplot_head ne 'num_plants_per_subplot') {
-        push @error_messages, "Cell B1: num_plants_per_subplot is missing from the header";
+        push @error_messages, (SGN::I18N::translate($ui_trialplantssubplotwithnumberofplantsxls_i18n, "trial.parse.header_cell", "Cell %{cell}: %{field} is missing from the header", {cell => "B1", field => "num_plants_per_subplot"}));
     }
     if ($worksheet->get_cell(0,2)) {
         $row_num_head  = $worksheet->get_cell(0,2)->value();
@@ -83,7 +86,7 @@ sub _validate_with_plugin {
         $col_num_head =~ s/^\s+|\s+$//g;
     }
     if (($row_num_head && $row_num_head ne "num_rows")||($col_num_head && $col_num_head ne "num_cols")) {
-        push @error_messages, "If including row and column data, cells C1 and D1 must be num_rows and num_cols respectively.";
+        push @error_messages, (SGN::I18N::translate($ui_trialplantssubplotwithnumberofplantsxls_i18n, "trial.parse.coordinate_headers", "If including row and column data, cells C1 and D1 must be %{row_field} and %{col_field} respectively.", {row_field => "num_rows", col_field => "num_cols"}));
     }
 
     my %seen_subplot_names;
@@ -109,35 +112,35 @@ sub _validate_with_plugin {
             $coords_given = 1;
         }
         if ($coords_given && (!$num_rows || !$num_cols)) {
-            push @error_messages, "Number of rows and columns given, but missing for plot $subplot_name.";
+            push @error_messages, (SGN::I18N::translate($ui_trialplantssubplotwithnumberofplantsxls_i18n, "trial.parse.grid_missing", "Number of rows and columns given, but missing for plot %{name}.", {name => "$subplot_name"}));
         }
         if($coords_given && $num_rows * $num_cols < $num_plants_per_subplot) {
-            push @error_messages, "Number of rows and columns not sufficient for the number of plants in $subplot_name.";
+            push @error_messages, (SGN::I18N::translate($ui_trialplantssubplotwithnumberofplantsxls_i18n, "trial.parse.grid_insufficient", "Number of rows and columns not sufficient for the number of plants in %{name}.", {name => "$subplot_name"}));
         }
 
         if (!$subplot_name || $subplot_name eq '' ) {
-            push @error_messages, "Cell A$row_name: subplot_name missing.";
+            push @error_messages, (SGN::I18N::translate($ui_trialplantssubplotwithnumberofplantsxls_i18n, "trial.parse.cell_missing_dot", "Cell %{cell}: %{field} missing.", {cell => "A$row_name", field => "subplot_name"}));
         }
         elsif ($subplot_name =~ /\s/ || $subplot_name =~ /\// || $subplot_name =~ /\\/ ) {
-            push @error_messages, "Cell A$row_name: subplot_name must not contain spaces or slashes.";
+            push @error_messages, (SGN::I18N::translate($ui_trialplantssubplotwithnumberofplantsxls_i18n, "trial.parse.cell_spaces", "Cell %{cell}: %{field} must not contain spaces or slashes.", {cell => "A$row_name", field => "subplot_name"}));
         }
         else {
             $seen_subplot_names{$subplot_name}=$row_name;
         }
 
         if (!$num_plants_per_subplot || $num_plants_per_subplot eq '') {
-            push @error_messages, "Cell B$row_name: num_plants_per_subplot missing";
+            push @error_messages, (SGN::I18N::translate($ui_trialplantssubplotwithnumberofplantsxls_i18n, "trial.parse.cell_missing", "Cell %{cell}: %{field} missing", {cell => "B$row_name", field => "num_plants_per_subplot"}));
         } if (!($num_plants_per_subplot =~ /^\d+?$/)) {
-            push @error_messages, "Cell B$row_name: num_plants_per_subplot must be a number";
+            push @error_messages, (SGN::I18N::translate($ui_trialplantssubplotwithnumberofplantsxls_i18n, "trial.parse.cell_number", "Cell %{cell}: %{field} must be a number", {cell => "B$row_name", field => "num_plants_per_subplot"}));
         } else {
             #file must not contain duplicate plant names
             for my $i (1 .. $num_plants_per_subplot) {
                 my $plant_name = $subplot_name."_plant_".$i;
                 if ($seen_plant_names{$plant_name}) {
-                    push @error_messages, "Cell B$row_name: duplicate plant_name at cell A".$seen_plant_names{$plant_name}.": $plant_name";
+                    push @error_messages, (SGN::I18N::translate($ui_trialplantssubplotwithnumberofplantsxls_i18n, "trial.parse.duplicate_cell", "Cell %{cell}: duplicate %{field} at cell %{previous}: %{name}", {cell => "B$row_name", field => "plant_name", previous => "A".$seen_plant_names{$plant_name}, name => "$plant_name"}));
                 }
                 if (!$plant_name){
-                    push @error_messages, "CellB$row_name: No plant name could be made!";
+                    push @error_messages, (SGN::I18N::translate($ui_trialplantssubplotwithnumberofplantsxls_i18n, "trial.parse.plant_name_unavailable", "CellB%{row}: No plant name could be made!", {row => "$row_name"}));
                 }
                 $seen_plant_names{$plant_name}++;
             }
@@ -150,14 +153,14 @@ sub _validate_with_plugin {
     my @subplots_missing = @{$subplots_validator->validate($schema,'subplots',\@subplots)->{'missing'}};
 
     if (scalar(@subplots_missing) > 0) {
-        push @error_messages, "The following subplot_name are not in the database: ".join(',',@subplots_missing);
+        push @error_messages, (SGN::I18N::translate($ui_trialplantssubplotwithnumberofplantsxls_i18n, "trial.parse.parent_names_missing", "The following %{field} are not in the database: %{names}", {field => "subplot_name", names => join(',',@subplots_missing)}));
         $errors{'missing_subplots'} = \@subplots_missing;
     }
 
     my @plants = keys %seen_plant_names;
     my $plant_rs = $schema->resultset('Stock::Stock')->search({ 'uniquename' => {-in => \@plants} });
     while (my $r = $plant_rs->next){
-        push @error_messages, "The following plant_name is already in the database and is not unique ".$r->uniquename;
+        push @error_messages, (SGN::I18N::translate($ui_trialplantssubplotwithnumberofplantsxls_i18n, "trial.parse.name_not_unique", "The following %{field} is already in the database and is not unique %{name}", {field => "plant_name", name => "" . ($r->uniquename)}));
     }
 
     #store any errors found in the parsed file to parse_errors accessor

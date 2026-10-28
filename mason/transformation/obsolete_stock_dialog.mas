@@ -6,7 +6,7 @@
     <div class="modal-dialog modal-lg" role="document">
         <div class="modal-content">
             <div class="modal-header">
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <button type="button" class="close" data-dismiss="modal" aria-label="<% $c->i18n->p("global.dataset_publish.close", "Close") |h %>"><span aria-hidden="true">&times;</span></button>
                 <h4 class="modal-title" id="obsoleteStockDialog"></h4>
             </div>
             <div class="modal-body">
@@ -15,7 +15,7 @@
                 </div>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-default" data-dismiss="modal"><% $c->i18n->p("global.dataset_publish.close", "Close") |h %></button>
                 <button id="obsolete_stock_submit" type="button" class="btn btn-primary"></button>
             </div>
         </div>
@@ -26,19 +26,19 @@
     <div class="modal-dialog" role="document">
         <div class="modal-content">
             <div class="modal-header">
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                <h4 class="modal-title" id="obsoleteStockMessageDialog">Success</h4>
+                <button type="button" class="close" data-dismiss="modal" aria-label="<% $c->i18n->p("global.dataset_publish.close", "Close") |h %>"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="obsoleteStockMessageDialog"><% $c->i18n->p("cross.ui.success", "Success") |h %></h4>
             </div>
             <div class="modal-body">
                 <div class="container-fluid">
                     <p>
                         <span class="ui-icon ui-icon-circle-check" style="float: left; margin: 0 7px 50px 0;"></span>
-                        Success!
+                        <% $c->i18n->p("trial.card.entry_numbers.delete_success", "Success!") |h %>
                     </p>
                 </div>
             </div>
             <div class="modal-footer">
-                <button id="dismiss_obsolete_stock_message_dialog" type="button" class="btn btn-default" data-dismiss="modal">Close & Reload</button>
+                <button id="dismiss_obsolete_stock_message_dialog" type="button" class="btn btn-default" data-dismiss="modal"><% $c->i18n->p("seedlots.ui.close_reload", "Close & Reload") |h %></button>
             </div>
         </div>
     </div>

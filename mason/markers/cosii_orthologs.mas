@@ -1,4 +1,6 @@
-
+<%once>
+use HTML::Entities ();
+</%once>
 <%doc>
 
 =head1 NAME
@@ -30,6 +32,8 @@ $marker
 </%args>
 
 <%perl>
+use SGN::I18N ();
+
 
 use CXGN::Unigene::Tools;
 
@@ -39,15 +43,15 @@ return '' unless $marker->is_in_collection('COSII');
 my $cosii_data_files = cosii_data_files($marker, $c);
 my @unigenes = $marker->cosii_unigenes();
 
-my $table_headings = [ 'Species', 'Copies', 'Sequence ID', 'CDS/Edited sequence', 'Peptide sequence', 'Predicted introns' ];
+my $table_headings = [ 'Species', SGN::I18N::translate($c->i18n, "marker.detail.ortholog_copies", "Copies", undef, {entities => '<>&'}), SGN::I18N::translate($c->i18n, "marker.detail.sequence_id", "Sequence ID", undef, {entities => '<>&'}), SGN::I18N::translate($c->i18n, "marker.detail.cds_edited_sequence", "CDS/Edited sequence", undef, {entities => '<>&'}), SGN::I18N::translate($c->i18n, "marker.detail.peptide_sequence", "Peptide sequence", undef, {entities => '<>&'}), SGN::I18N::translate($c->i18n, "marker.detail.predicted_introns", "Predicted introns", undef, {entities => '<>&'}) ];
 my $table_data = [];
 
 for my $unigene (@unigenes) {
 
   $unigene->{copies} = {
-         S => 'Single',
-         M => 'Multiple',
-  }->{ $unigene->{copies} } || 'No copy data found';
+         S => SGN::I18N::translate($c->i18n, "marker.detail.cosii.single_copy", "Single", undef, {entities => '<>&'}),
+         M => SGN::I18N::translate($c->i18n, "marker.detail.cosii.multiple_copies", "Multiple", undef, {entities => '<>&'}),
+  }->{ $unigene->{copies} } || SGN::I18N::translate($c->i18n, "marker.detail.cosii.no_copy_data", "No copy data found", undef, {entities => '<>&'});
 
   $unigene->{sequence_name} ||= CXGN::Marker::Tools::cosii_to_arab_name( $marker_name );
 
@@ -66,11 +70,11 @@ for my $unigene (@unigenes) {
     }
   }
   else {
-    $unigene->{unigene_id} = 'Not available';
+    $unigene->{unigene_id} = SGN::I18N::translate($c->i18n, "marker.detail.cosii.original_sequence_not_available", "Not available", undef, {entities => '<>&'});
   }
 
   my $organism_name_for_uri = URI::Escape::uri_escape( $unigene->{organism} );
-  my( $ed_desc, $pep_desc, $int_desc ) = ( 'Edited', 'Peptide', 'Introns' );
+  my( $ed_desc, $pep_desc, $int_desc ) = ( SGN::I18N::translate($c->i18n, "marker.detail.cosii.edited", "Edited", undef, {entities => '<>&'}), SGN::I18N::translate($c->i18n, "marker.detail.cosii.peptide", "Peptide", undef, {entities => '<>&'}), SGN::I18N::translate($c->i18n, "marker.detail.cosii.introns", "Introns", undef, {entities => '<>&'}) );
 
   my @row_data;
 
@@ -79,9 +83,9 @@ for my $unigene (@unigenes) {
 
   if( $unigene->{organism}=~/Arabidopsis/i ) {
     push @row_data, CXGN::Marker::Tools::tair_gene_search_link($unigene->{sequence_name});
-    $ed_desc  = 'CDS from TAIR';
-    $pep_desc = 'Peptide from TAIR';
-    $int_desc = 'Introns from TAIR';
+    $ed_desc  = SGN::I18N::translate($c->i18n, "marker.detail.cosii.cds_from_tair", "CDS from TAIR", undef, {entities => '<>&'});
+    $pep_desc = SGN::I18N::translate($c->i18n, "marker.detail.cosii.peptide_from_tair", "Peptide from TAIR", undef, {entities => '<>&'});
+    $int_desc = SGN::I18N::translate($c->i18n, "marker.detail.cosii.introns_from_tair", "Introns from TAIR", undef, {entities => '<>&'});
   }
   else {
     push @row_data, $unigene->{unigene_id};
@@ -156,6 +160,6 @@ sub cosii_data_files {
 
 </%perl>
 
-<&| /page/info_section.mas, title=>"Orthologs in this COSII group" &>
+<&| /page/info_section.mas, anchor_title => "Orthologs in this COSII group", title=>HTML::Entities::encode_entities($c->i18n->p("marker.detail.orthologs_in_this_cosii_group", "Orthologs in this COSII group")) &>
   <& /page/columnar_table.mas, headings => $table_headings, data => $table_data, __align => 'llcccc' &>
 </&>

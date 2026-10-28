@@ -1,3 +1,7 @@
+<%once>
+use HTML::Entities ();
+</%once>
+
 
 <%doc>
 </%doc>
@@ -23,19 +27,19 @@
 <script src="https://d3js.org/d3.v5.min.js"></script>
 
 
-<& /page/page_title.mas, title=>"Stability" &>
+<& /page/page_title.mas, title=>HTML::Entities::encode_entities($c->i18n->p("analysis.interface.stability", "Stability")) &>
 
 
-<&| /page/info_section.mas, id=>"input_dataset_section", title=>"Select Input Data", collapsible=>1, collapsed=>0, subtitle=>'<a class="btn btn-link pull-right" href="/help/stability" target="_blank">Help <span class="glyphicon glyphicon-question-sign"></span></a>' &>
+<&| /page/info_section.mas, anchor_title => "Select Input Data", id=>"input_dataset_section", title=>HTML::Entities::encode_entities($c->i18n->p("analysis.interface.select_input_data", "Select Input Data")), collapsible=>1, collapsed=>0, subtitle=>("<a class=\"btn btn-link pull-right\" href=\"/help/stability\" target=\"_blank\">" . HTML::Entities::encode_entities($c->i18n->p("global.search.datasets.help", "Help")) . " <span class=\"glyphicon glyphicon-question-sign\"></span></a>") &>
   <input type="hidden" name="outformat" value="0" />
   <div class="form-group form-inline">
-    <label for="dataset_select">Available Datasets: </label><div id="dataset_select"></div>
+    <label for="dataset_select"><% $c->i18n->p("analysis.interface.available_datasets", "Available Datasets:") |h %> </label><div id="dataset_select"></div>
     <br>
-    <button class="btn btn-primary" id="selectDataset" type="submit" name="selectDataset" value="selectDataset">Select Dataset</button>
+    <button class="btn btn-primary" id="selectDataset" type="submit" name="selectDataset" value="selectDataset"><% $c->i18n->p("analysis.interface.select_dataset", "Select Dataset") |h %></button>
     <br>
     </div>
         <div class="form-group form-inline">
-          <label class="blast_select_label" for = pheno_select>Available&nbspTraits:&nbsp; </label>
+          <label class="blast_select_label" for = pheno_select><% $c->i18n->p("analysis.interface.available_nbsptraits", "Available&nbspTraits:") %>&nbsp; </label>
           <& /page/html_select.mas, name=>'pheno_select', id=>'pheno_select', params=>"class\=\"form-control input-sm blast_select_box\"", choices=>"" &>
           <!-- <label class="blast_select_label" for="pheno_select">Available&nbspTraits:&nbsp; </label>
         <& /page/html_select.mas, name=>'pheno_select', id=>'pheno_select', params=>"class\=\"form-control input-sm blast_select_box\"", choices=>"" &>
@@ -52,9 +56,9 @@
         </div>
       <div class = "form-group form-inline">
        <input type="checkbox" id="dataset_trait_outliers" />
-       <label>Exclude dataset outliers &nbsp; </label>
+       <label><% $c->i18n->p("analysis.interface.exclude_dataset_outliers", "Exclude dataset outliers") |h %> &nbsp; </label>
        <br>      
-       <label for = select_method>Available Methods: </label>
+       <label for = select_method><% $c->i18n->p("analysis.interface.available_methods", "Available Methods:") |h %> </label>
        <select class="form-control input-sm" id="select_method">
         <option selected value="method_empty"></option>
         <option value="ammi">AMMI</option>
@@ -64,47 +68,47 @@
       </div>
     </div>
       <div class = "form-group form-inline">
-       <label for = select_imput>Phenotype Impute: </label>
+       <label for = select_imput><% $c->i18n->p("analysis.interface.phenotype_impute", "Phenotype Impute:") |h %> </label>
        <select class="form-control input-sm" id="select_imput">
         <option selected value="imput_empty"></option>
-        <option value="imput_yes">yes</option>
-        <option value="imput_no">no</option>
+        <option value="imput_yes"><% $c->i18n->p("trial.summary.plan.yes", "yes") |h %></option>
+        <option value="imput_no"><% $c->i18n->p("trial.summary.plan.no", "no") |h %></option>
        </select>
        <div id = "select_method">
       </div>
       <br>
 
             <div style="text-align: center">
-              <button class="btn btn-primary" id="runAMMI" type="submit" name="runAMMI" value="runAMMI">Run Stability</button>
+              <button class="btn btn-primary" id="runAMMI" type="submit" name="runAMMI" value="runAMMI"><% $c->i18n->p("analysis.interface.run_stability", "Run Stability") |h %></button>
             </div>
             <br />
     <div id="tempfile" style="display:none" >
     </div>
 </&>
-<&| /page/info_section.mas, title=>"Instructions", collapsible=>1, collapsed=>1, subtitle=>'<a id="download_table" class="download_tag" target="_blank" href="javascript:download_table();" title="Download results in tabular format">Table&#8675;</a>&nbsp;&nbsp;<a id="download_basic" class="download_tag" target="_blank" href="javascript:download();" title="Download results in basic format">Basic&#8675;</a>' &>
+<&| /page/info_section.mas, anchor_title => "Instructions", title=>HTML::Entities::encode_entities($c->i18n->p("trial.fieldmap.instructions", "Instructions")), collapsible=>1, collapsed=>1, subtitle=>("<a id=\"download_table\" class=\"download_tag\" target=\"_blank\" href=\"javascript:download_table();\" title=\"" . HTML::Entities::encode_entities($c->i18n->p("analysis.interface.download_results_in_tabular_format", "Download results in tabular format")) . "\">" . HTML::Entities::encode_entities(HTML::Entities::decode_entities($c->i18n->p("analysis.interface.table_8675", "Table&#8675;"))) . "</a>&nbsp;&nbsp;<a id=\"download_basic\" class=\"download_tag\" target=\"_blank\" href=\"javascript:download();\" title=\"" . HTML::Entities::encode_entities($c->i18n->p("analysis.interface.download_results_in_basic_format", "Download results in basic format")) . "\">" . HTML::Entities::encode_entities(HTML::Entities::decode_entities($c->i18n->p("analysis.interface.basic_8675", "Basic&#8675;"))) . "</a>") &>
 <center>
     <div id="sgn_blast_graph" style="display:none">
         <div id="myCanvas">
-          Your browser does not support the HTML5 canvas
+          <% $c->i18n->p("analysis.interface.your_browser_does_not_support_the_html5_canvas", "Your browser does not support the HTML5 canvas") |h %>
         </div>
     </div>
   </center>
   <br>
-  <h5><b>Preparing Dataset:</b></h5> 
-  <h5> 1. Dataset must have at least trials and trait(s).</h5>
-  <h5> 2. Trials must be placed in more than 1 location. </h5>
-  <h5> 3. Accessions must be placed in all locations with replications. Check the trial design to make sure it has replications. </h5>
-  <h5> 4. The same trait must be available in all selected locations. Missing data is acceptable for some replications, however the model wont work if it is missing data in all replications. </h5>
-  <h5><b>Impuation:</b></h5>
-  <h5> Imputation is based on genotypes average using the R package mice. The imputation accuracy is processed by subsetting the data and calculating the correlation between imputed and original data. </h5>
-  <h5><b>Output:</b></h5>
-  <h5>The AMMI graphic shows stable varieties with horizintal lines. The slope is proportional to their stability index.</h5>
+  <h5><b><% $c->i18n->p("analysis.interface.preparing_dataset", "Preparing Dataset:") |h %></b></h5><% ' ' %>
+  <h5> <% $c->i18n->p("analysis.interface.1_dataset_must_have_at_least_trials_and_trait_s", "1. Dataset must have at least trials and trait(s).") |h %></h5>
+  <h5> <% $c->i18n->p("analysis.interface.2_trials_must_be_placed_in_more_than_1_location", "2. Trials must be placed in more than 1 location.") |h %> </h5>
+  <h5> <% $c->i18n->p("analysis.interface.3_accessions_must_be_placed_in_all_locations_with_replications", "3. Accessions must be placed in all locations with replications. Check the trial design to make sure it has replications.") |h %> </h5>
+  <h5> <% $c->i18n->p("analysis.interface.4_the_same_trait_must_be_available_in_all_selected", "4. The same trait must be available in all selected locations. Missing data is acceptable for some replications, however the model won't work if it is missing data in all replications.") |h %> </h5>
+  <h5><b><% $c->i18n->p("analysis.interface.impuation", "Impuation:") |h %></b></h5>
+  <h5> <% $c->i18n->p("analysis.interface.imputation_is_based_on_genotypes_average_using_the_r_package", "Imputation is based on genotypes average using the R package mice. The imputation accuracy is processed by subsetting the data and calculating the correlation between imputed and original data.") |h %> </h5>
+  <h5><b><% $c->i18n->p("analysis.interface.output", "Output:") |h %></b></h5>
+  <h5><% $c->i18n->p("analysis.interface.the_ammi_graphic_shows_stable_varieties_with_horizintal_lines_the", "The AMMI graphic shows stable varieties with horizontal lines. The slope is proportional to their stability index.") |h %></h5>
   
   <center>
     <div id="stability_summary"></div>
   </center>
 </&>
-<&| /page/info_section.mas, title=>"Output", collapsible=>1, collapsed=>0, subtitle=>'<a id="download_table" class="download_tag" target="_blank" href="javascript:download_table();" title="Download results in tabular format">Table&#8675;</a>&nbsp;&nbsp;<a id="download_basic" class="download_tag" target="_blank" href="javascript:download();" title="Download results in basic format">Basic&#8675;</a>' &>
+<&| /page/info_section.mas, anchor_title => "Output", title=>HTML::Entities::encode_entities($c->i18n->p("genotype.comparison.step.output", "Output")), collapsible=>1, collapsed=>0, subtitle=>("<a id=\"download_table\" class=\"download_tag\" target=\"_blank\" href=\"javascript:download_table();\" title=\"" . HTML::Entities::encode_entities($c->i18n->p("analysis.interface.download_results_in_tabular_format", "Download results in tabular format")) . "\">" . HTML::Entities::encode_entities(HTML::Entities::decode_entities($c->i18n->p("analysis.interface.table_8675", "Table&#8675;"))) . "</a>&nbsp;&nbsp;<a id=\"download_basic\" class=\"download_tag\" target=\"_blank\" href=\"javascript:download();\" title=\"" . HTML::Entities::encode_entities($c->i18n->p("analysis.interface.download_results_in_basic_format", "Download results in basic format")) . "\">" . HTML::Entities::encode_entities(HTML::Entities::decode_entities($c->i18n->p("analysis.interface.basic_8675", "Basic&#8675;"))) . "</a>") &>
   <br>
 <div id="stability_message_container">
     <div id="stability_message"></div>
@@ -114,13 +118,13 @@
     <div id="stability_output"></div>
       <br>
     <br>
-    <button class="btn btn-primary" id="download-button">Download CSV</button>
+    <button class="btn btn-primary" id="download-button"><% $c->i18n->p("analysis.interface.download_csv", "Download CSV") |h %></button>
   </center>
 </&>
-  <&| /page/info_section.mas, title=>"Graphics", collapsible=>1, collapsed=>1, subtitle=>'<a id="download_graphics" class="download_tag" target="_blank" href="javascript:download_table();" title="Download results in tabular format">Table&#8675;</a>&nbsp;&nbsp;<a id="download_basic" class="download_tag" target="_blank" href="javascript:download();" title="Download results in basic format">Basic&#8675;</a>' &>
+  <&| /page/info_section.mas, anchor_title => "Graphics", title=>HTML::Entities::encode_entities($c->i18n->p("analysis.interface.graphics", "Graphics")), collapsible=>1, collapsed=>1, subtitle=>("<a id=\"download_graphics\" class=\"download_tag\" target=\"_blank\" href=\"javascript:download_table();\" title=\"" . HTML::Entities::encode_entities($c->i18n->p("analysis.interface.download_results_in_tabular_format", "Download results in tabular format")) . "\">" . HTML::Entities::encode_entities(HTML::Entities::decode_entities($c->i18n->p("analysis.interface.table_8675", "Table&#8675;"))) . "</a>&nbsp;&nbsp;<a id=\"download_basic\" class=\"download_tag\" target=\"_blank\" href=\"javascript:download();\" title=\"" . HTML::Entities::encode_entities($c->i18n->p("analysis.interface.download_results_in_basic_format", "Download results in basic format")) . "\">" . HTML::Entities::encode_entities(HTML::Entities::decode_entities($c->i18n->p("analysis.interface.basic_8675", "Basic&#8675;"))) . "</a>") &>
   <div style="display: flex;">
     <div>
-      <p>Press control (or cmd) to select multiple accessions.</p>
+      <p><% $c->i18n->p("analysis.interface.press_control_or_cmd_to_select_multiple_accessions", "Press control (or cmd) to select multiple accessions.") |h %></p>
       <select id="accession_select" multiple size="15" style="height: 200px;">
         <!-- Options for accessions will be added dynamically -->
       </select>
@@ -141,7 +145,7 @@
 var require_login = "<%  $c->get_conf('brapi_require_login') %>";
 if (require_login === '1'){
     auth_token = "<%  CXGN::Login->new($c->dbc->dbh)->get_login_cookie() %>";
-    if (!auth_token){ alert("Login required to display heritability"); }
+    if (!auth_token){ alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("analysis.interface.login_required_to_display_heritability", "Login required to display heritability") : "Login required to display heritability")); }
 }
 
 var check_outliers = "<% $c->get_conf('exclude_phenotype_outliers') || 0 %>";
@@ -155,7 +159,7 @@ jQuery(document).ready(function() {
     get_select_box("datasets", "dataset_select", {"checkbox_name":"dataset_select_checkbox", "analysis_type":"Stability", "show_compatibility":"yes"});
   }
   else {
-    alert('You must be logged in to use Stability');
+    alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("analysis.interface.you_must_be_logged_in_to_use_stability", "You must be logged in to use Stability") : 'You must be logged in to use Stability'));
   }
   $('#pheno_select').attr("disabled",true).html('');
   jQuery('#dataset_select').click(function() {
@@ -182,7 +186,7 @@ jQuery(document).ready(function() {
     }
         },
         error: function(response) {
-          alert("An error occurred, please check the datase.");
+          alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("analysis.interface.an_error_occurred_please_check_the_datase", "An error occurred, please check the datase.") : "An error occurred, please check the datase."));
       }
     });
   });
@@ -217,7 +221,7 @@ $(document).ready(function(){
 
                         // Generate and append the table HTML
                         var tableHtml = '<table id="summaryTable">';
-                        tableHtml += '<thead class="bg-light-blue"><tr><th>Trait</th><th>Mean</th><th>Minimum</th><th>Maximum</th><th>Std Dev</th><th>Percent Missing</th></tr></thead>';
+                        tableHtml += ("<thead class=\"bg-light-blue\"><tr><th>" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("accession.population_cgi.trait", "Trait") : "Trait")).html() + "</th><th>" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("accession.usage.header.mean", "Mean") : "Mean")).html() + "</th><th>" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("accession.population_cgi.min", "Minimum") : "Minimum")).html() + "</th><th>" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("accession.population_cgi.max", "Maximum") : "Maximum")).html() + "</th><th>" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("accession.usage.header.stddev", "Std Dev") : "Std Dev")).html() + "</th><th>" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("phenotype.percent_missing", "Percent Missing") : "Percent Missing")).html() + "</th></tr></thead>");
                         tableHtml += '<tbody>';
                         tableHtml += '<tr><td>' + pheno_select + '</td><td>' + mean + '</td><td>' + min + '</td><td>' + max + '</td><td>' + standardDeviation + '</td><td>' + missingPercentage + '</td></tr>';
                         tableHtml += '</tbody>';
@@ -315,12 +319,12 @@ function calculateMissingPercentage(data) {
 
 jQuery('#runAMMI').click( function () {
     if (!jQuery('#pheno_select').val()) {
-        alert("Please select a dataset and trait.")
+        alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("analysis.interface.please_select_a_dataset_and_trait", "Please select a dataset and trait.") : "Please select a dataset and trait."))
         $('#stability_files').empty();
     } else if (jQuery('#select_imput').val() == "imput_empty") {
-        alert("Please select if phenotype imputation is required.")
+        alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("analysis.interface.please_select_if_phenotype_imputation_is_required", "Please select if phenotype imputation is required.") : "Please select if phenotype imputation is required."))
     } else if (jQuery('#select_method').val() == "method_empty"){
-        alert("Please select the stability method.")
+        alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("analysis.interface.please_select_the_stability_method", "Please select the stability method.") : "Please select the stability method."))
     } else {
         $('#stability_files').empty();
         if ($('#pheno_select').val() != ""){
@@ -363,19 +367,19 @@ jQuery('#runAMMI').click( function () {
                                     var firstLine = parsedData[0];
                                     var imputAcc = firstLine.imputAcc;
                                     imputAcc = imputAcc.toFixed(3);
-                                    var message = "<p>The imputation accuracy (correlation) is " + imputAcc + ".</p>";
+                                    var message = ("<p>" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("analysis.interface.the_imputation_accuracy_correlation_is", "The imputation accuracy (correlation) is") : "The imputation accuracy (correlation) is")).html() + " ") + imputAcc + ".</p>";
                                     $('#stability_message').html(message);
                                 }else{
-                                    var message = "<p>Analysis processed with no phenotypic imputation.</p>";
+                                    var message = ("<p>" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("analysis.interface.analysis_processed_with_no_phenotypic_imputation", "Analysis processed with no phenotypic imputation.") : "Analysis processed with no phenotypic imputation.")).html() + "</p>");
                                     $('#stability_message').html(message);
                                 }
 
                                 var table = '<table id="myTable">';
                                 if (method_id == "ammi") {
-                                  table += '<thead class="bg-light-blue"><tr><th>Accession</th><th>Location</th><th>Effect</th><th>Stability Rank</th><th>Means</th></tr></thead>';
+                                  table += ("<thead class=\"bg-light-blue\"><tr><th>" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("global.index_logged_in_user.accession", "Accession") : "Accession")).html() + "</th><th>" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("analysis.interface.location", "Location") : "Location")).html() + "</th><th>" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("analysis.interface.effect", "Effect") : "Effect")).html() + "</th><th>" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("analysis.interface.stability_rank", "Stability Rank") : "Stability Rank")).html() + "</th><th>" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("analysis.interface.means", "Means") : "Means")).html() + "</th></tr></thead>");
 
                                 } else {
-                                  table += '<thead class="bg-light-blue"><tr><th>Accession</th><th>Location</th><th>Means</th><th>Location Rank</th><th>Genotype Rank</th></tr></thead>';
+                                  table += ("<thead class=\"bg-light-blue\"><tr><th>" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("global.index_logged_in_user.accession", "Accession") : "Accession")).html() + "</th><th>" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("analysis.interface.location", "Location") : "Location")).html() + "</th><th>" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("analysis.interface.means", "Means") : "Means")).html() + "</th><th>" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("analysis.interface.location_rank", "Location Rank") : "Location Rank")).html() + "</th><th>" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("analysis.interface.genotype_rank", "Genotype Rank") : "Genotype Rank")).html() + "</th></tr></thead>");
                                 }
 
                                 if ( method_id == "ammi"){
@@ -462,7 +466,7 @@ jQuery('#runAMMI').click( function () {
                                     var link = document.createElement("a");
                                     link.setAttribute("href", encodedUri);
                                     link.setAttribute("download", "stability_data.csv");
-                                    link.innerHTML = "Download CSV";
+                                    link.innerHTML = (window.SGN && window.SGN.i18n ? window.SGN.i18n.p("analysis.interface.download_csv", "Download CSV") : "Download CSV");
 
                                     // Trigger the click event to download the file
                                     link.click();
@@ -532,7 +536,7 @@ jQuery('#runAMMI').click( function () {
             }
           },
           error: function(response) {
-            alert("An error occurred, the service may temporarily be unavailable");
+            alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("analysis.interface.an_error_occurred_the_service_may_temporarily_be_unavailable", "An error occurred, the service may temporarily be unavailable") : "An error occurred, the service may temporarily be unavailable"));
           }
         });
       }
@@ -598,7 +602,7 @@ function createChart(data) {
             tooltip.transition()
                 .duration(200)
                 .style("opacity", .9);
-            tooltip.html("Accession: " + d.key) // Display accession name in the tooltip
+            tooltip.html((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("trial.card.coords.accession", "Accession: ") : "Accession: ") + d.key) // Display accession name in the tooltip
                 .style("left", (event.pageX + 10) + "px")
                 .style("top", (event.pageY - 20) + "px");
         })
@@ -657,7 +661,7 @@ function createChart(data) {
         .attr("x", width / 2)
         .attr("y", height + margin.bottom)
         .style("text-anchor", "middle")
-        .text("Number of Locations");
+        .text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("analysis.interface.number_of_locations", "Number of Locations") : "Number of Locations"));
 
     svg.append("text")
         .attr("class", "y-label")
@@ -666,7 +670,7 @@ function createChart(data) {
         .attr("y", -margin.left)
         .attr("dy", "1em")
         .style("text-anchor", "middle")
-        .text("Scaled Stability");
+        .text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("analysis.interface.scaled_stability", "Scaled Stability") : "Scaled Stability"));
 
     return svg; // Return the SVG node
 }
@@ -778,7 +782,7 @@ function deviationLinePlot(data) {
         .attr("x", width / 2)
         .attr("y", height + margin.bottom)
         .style("text-anchor", "middle")
-        .text("Location");
+        .text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("analysis.interface.location", "Location") : "Location"));
 
     svg.append("text")
         .attr("class", "y-label")
@@ -787,7 +791,7 @@ function deviationLinePlot(data) {
         .attr("y", -margin.left)
         .attr("dy", "1em")
         .style("text-anchor", "middle")
-        .text("Mean");
+        .text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("accession.usage.header.mean", "Mean") : "Mean"));
 
     return svg; // Return the SVG node
 }
@@ -799,10 +803,10 @@ function get_dataset_id() {
           selected_datasets.push(jQuery(this).val());
       });
       if (selected_datasets.length < 1){
-          alert('Please select at least one dataset!');
+          alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("analysis.interface.please_select_at_least_one_dataset", "Please select at least one dataset!") : 'Please select at least one dataset!'));
           return false;
       } else if (selected_datasets.length > 1){
-          alert('Please select only one dataset!');
+          alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("analysis.interface.please_select_only_one_dataset", "Please select only one dataset!") : 'Please select only one dataset!'));
           return false;
       } else {
       var dataset_id=selected_datasets[0];

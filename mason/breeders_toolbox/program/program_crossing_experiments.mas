@@ -9,8 +9,8 @@ $program_id
 <table id="program_crossing_experiments" class="display">
     <thead>
         <tr>
-            <th>Crossing Experiment Name</th>
-            <th>Description</th>
+            <th><% $c->i18n->p("cross.ui.crossing_experiment_name.c83dfee", "Crossing Experiment Name") |h %></th>
+            <th><% $c->i18n->p("global.dataset_cxgn_dataset.table.description", "Description") |h %></th>
         </tr>
     </thead>
 </table>

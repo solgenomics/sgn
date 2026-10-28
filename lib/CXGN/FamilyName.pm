@@ -17,6 +17,8 @@ CXGN::FamilyName - an object representing a family name in the database
 
 package CXGN::FamilyName;
 
+use SGN::I18N ();
+use CatalystX::GlobalContext '$c';
 use Moose;
 use SGN::Model::Cvterm;
 use Data::Dumper;
@@ -260,7 +262,7 @@ sub remove_family_member {
     if ($@) {
 	    print STDERR "An error occurred while deleting family member "."$@\n";
 	    $dbh->rollback();
-	    return $@;
+	    return do { my $ui_return_details = $@; local $_; local $@; my SGN::I18N $ui_remove_family_member_i18n = $c && $c->can('i18n') ? $c->i18n : undef; if ($ui_remove_family_member_i18n && defined($ui_return_details) && !ref($ui_return_details)) { if (index($ui_return_details, "This family is used in a trial. Cannot remove any member.\n") == 0) { substr($ui_return_details, 0, length("This family is used in a trial. Cannot remove any member.\n")) = $ui_remove_family_member_i18n->p("cross.family.family_used_remove", "This family is used in a trial. Cannot remove any member.\n"); } if (index($ui_return_details, "This cross is not a family member. Cannot delete.\n") == 0) { substr($ui_return_details, 0, length("This cross is not a family member. Cannot delete.\n")) = $ui_remove_family_member_i18n->p("cross.family.cross_not_member", "This cross is not a family member. Cannot delete.\n"); } } $ui_return_details; };
     } else {
 	    $dbh->commit();
 	    return 0;
@@ -304,7 +306,7 @@ sub delete_family {
     if ($@) {
 	    print STDERR "An error occurred while deleting family id ".$family_id."$@\n";
 	    $dbh->rollback();
-	    return $@;
+	    return do { my $ui_return_details = $@; local $_; local $@; my SGN::I18N $ui_delete_family_i18n = $c && $c->can('i18n') ? $c->i18n : undef; if ($ui_delete_family_i18n && defined($ui_return_details) && !ref($ui_return_details)) { if (index($ui_return_details, "This family is used in a trial. Cannot delete.\n") == 0) { substr($ui_return_details, 0, length("This family is used in a trial. Cannot delete.\n")) = $ui_delete_family_i18n->p("cross.family.family_used_delete", "This family is used in a trial. Cannot delete.\n"); } if (index($ui_return_details, "This stock id is not a family. Cannot delete.\n") == 0) { substr($ui_return_details, 0, length("This stock id is not a family. Cannot delete.\n")) = $ui_delete_family_i18n->p("cross.family.stock_not_family", "This stock id is not a family. Cannot delete.\n"); } } $ui_return_details; };
     } else {
 	    $dbh->commit();
 	    return 0;

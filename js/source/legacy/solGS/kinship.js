@@ -121,12 +121,12 @@ solGS.kinship = {
   createTable: function (tableId) {
     var kinshipTable =
       `<table id="${tableId}" class="table table-striped"><thead><tr>` +
-      "<th>Population</th>" +
-      "<th>Data structure</th>" +
-      "<th>Compatibility</th>" + 
-      "<th>Ownership</th>" +
-      "<th>Data type</th>" +
-      "<th>Run Kinship</th>" +
+      "<th>" + (window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.kinship_header_population", "Population") : "Population") + "</th>" +
+      "<th>" + (window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.kinship_header_structure", "Data structure") : "Data structure") + "</th>" +
+      "<th>" + (window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.kinship_header_compatibility", "Compatibility") : "Compatibility") + "</th>" +
+      "<th>" + (window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.kinship_header_ownership", "Ownership") : "Ownership") + "</th>" +
+      "<th>" + (window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.kinship_header_data_type", "Data type") : "Data type") + "</th>" +
+      "<th>" + (window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.kinship_header_run", "Run Kinship") : "Run Kinship") + "</th>" +
       "</tr></thead></table>";
 
     return kinshipTable;
@@ -191,13 +191,13 @@ solGS.kinship = {
     var runKinshipBtnId = this.getRunKinshipBtnId(kinshipPopId);
     var runKinshipBtn =
       `<button type="button" id=${runKinshipBtnId}` +
-      ` class="btn btn-success" data-selected-pop='${kinshipArgs}'>Run kinship</button>`;
+      ` class="btn btn-success" data-selected-pop='${kinshipArgs}'>${(window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.run_kinship", "Run kinship") : "Run kinship")}</button>`;
 
     var compatibility_message = '';
     if (dataStr.match(/dataset/)) {
       popName = `<a href="/dataset/${popId}">${popName}</a>`;
       if (tool_compatibility == null || tool_compatibility == "(not calculated)"){
-        compatibility_message = "(not calculated)";
+        compatibility_message = (window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.compatibility_not_calculated", "(not calculated)") : "(not calculated)");
       } else {
           if (tool_compatibility["Kinship & Inbreeding"]['compatible'] == 0) {
           compatibility_message = '<b><span class="glyphicon glyphicon-remove" style="color:red"></span></b>'
@@ -211,7 +211,7 @@ solGS.kinship = {
       }
     }
     var rowData = [popName,
-      dataStr, compatibility_message, kinshipPop.owner, dataTypeOpts, runKinshipBtn, `${dataStr}_${popId}`];
+      solGS.dataCaption(dataStr), compatibility_message, solGS.dataCaption(kinshipPop.owner), dataTypeOpts, runKinshipBtn, `${dataStr}_${popId}`];
 
     return rowData;
   },
@@ -358,22 +358,22 @@ solGS.kinship = {
     var fileNameInbreeding = inbreedingFile.split("/").pop();
 
     kinshipFile =
-      '<a href="' + kinshipFile + '" download=' + fileNameKinship + ">Kinship matrix</a>";
+      '<a href="' + kinshipFile + '" download=' + fileNameKinship + ">" + (window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.kinship_matrix_link", "Kinship matrix") : "Kinship matrix") + "</a>";
 
-    aveFile = '<a href="' + aveFile + '" download=' + fileNameAve + ">Average kinship</a>";
+    aveFile = '<a href="' + aveFile + '" download=' + fileNameAve + ">" + (window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.average_kinship_link", "Average kinship") : "Average kinship") + "</a>";
 
     inbreedingFile =
       '<a href="' +
       inbreedingFile +
       '" download=' +
       fileNameInbreeding +
-      ">Inbreeding coefficients</a>";
+      ">" + (window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.inbreeding_coefficients_link", "Inbreeding coefficients") : "Inbreeding coefficients") + "</a>";
 
     var kinDownloadBtn = "download_" + "kinship_plot_" + kinFileId;
     var kinPlotLink =
-      "<a href='#'  onclick='event.preventDefault();' id='" + kinDownloadBtn + "'> plot</a>";
+      "<a href='#'  onclick='event.preventDefault();' id='" + kinDownloadBtn + "'>" + (window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.kinship_plot_link", " plot") : " plot") + "</a>";
 
-    var links = "<strong>Download:</strong> ";
+    var links = "<strong>" + (window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.download_caption", "Download:") : "Download:") + "</strong> ";
 
     if (popName) {
       links = links + popName + " ";
@@ -413,7 +413,7 @@ jQuery(document).ready(function () {
     
         jQuery(`#${runKinshipBtnId}`).hide();
         var kinshipMsgDiv = solGS.kinship.kinshipMsgDiv;
-        jQuery(kinshipMsgDiv).text("Running kinship... please wait...it may take minutes.").show();
+        jQuery(kinshipMsgDiv).text((window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.running_kinship_wait", "Running kinship... please wait...it may take minutes.") : "Running kinship... please wait...it may take minutes.")).show();
         jQuery(`${canvas} .multi-spinner-container`).show();
 
         var kinshipArgs = solGS.kinship.getKinshipArgs();
@@ -438,7 +438,7 @@ jQuery(document).ready(function () {
             .checkCachedKinship(kinshipUrl, kinshipArgs)
             .done(function (res) {
             if (res.kinship_output_data) {
-                jQuery(kinshipMsgDiv).html("Generating heatmap... please wait...").show();
+                jQuery(kinshipMsgDiv).html((window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.generating_heatmap_wait", "Generating heatmap... please wait...") : "Generating heatmap... please wait...")).show();
 
                 kinshipPlotDivId = `${kinshipPlotDivId}_${res.kinship_file_id}`;
 
@@ -461,8 +461,7 @@ jQuery(document).ready(function () {
                 jQuery(kinshipMsgDiv).empty();
 
                 var title =
-                "<p>This analysis may take a long time. " +
-                "Do you want to submit the analysis and get an email when it completes?</p>";
+                "<p>" + (window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.analysis_may_take_time", "This analysis may take a long time. ") : "This analysis may take a long time. ") + (window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.submit_analysis_email_prompt", "Do you want to submit the analysis and get an email when it completes?") : "Do you want to submit the analysis and get an email when it completes?") + "</p>";
 
                 var jobSubmit = '<div id= "kinship_submit">' + title + "</div>";
 
@@ -472,10 +471,10 @@ jQuery(document).ready(function () {
                 height: "auto",
                 width: "auto",
                 modal: true,
-                title: "Kinship job submission",
+                title: (window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.kinship_job_submission_title", "Kinship job submission") : "Kinship job submission"),
                 buttons: {
                     OK: {
-                    text: "Yes",
+                    text: (window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.yes", "Yes") : "Yes"),
                     class: "btn btn-success",
                     id: "queue_job",
                     click: function () {
@@ -486,13 +485,13 @@ jQuery(document).ready(function () {
                     },
 
                     No: {
-                    text: "No, I will wait till it completes.",
+                    text: (window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.job_no_wait", "No, I will wait till it completes.") : "No, I will wait till it completes."),
                     class: "btn btn-warning",
                     id: "no_queue",
                     click: function () {
                         jQuery(this).dialog("close");
 
-                        jQuery(kinshipMsgDiv).text("Running kinship... please wait...it may take minutes.").show();
+                        jQuery(kinshipMsgDiv).text((window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.running_kinship_wait", "Running kinship... please wait...it may take minutes.") : "Running kinship... please wait...it may take minutes.")).show();
                         jQuery(`${canvas} .multi-spinner-container`).show();
 
                         solGS.kinship
@@ -500,7 +499,7 @@ jQuery(document).ready(function () {
                         .done(function (res) {
                             if (res.kinship_output_data) {
                             jQuery(kinshipMsgDiv)
-                                .html("Generating heatmap... please wait...")
+                                .html((window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.generating_heatmap_wait", "Generating heatmap... please wait...") : "Generating heatmap... please wait..."))
                                 .show();
 
                             kinshipPlotDivId = `${kinshipPlotDivId}_${res.kinship_file_id}`;
@@ -524,7 +523,7 @@ jQuery(document).ready(function () {
                                 .css({
                                 "padding-left": "0px",
                                 })
-                                .html("This population has no kinship output data.")
+                                .html((window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.no_kinship_output", "This population has no kinship output data.") : "This population has no kinship output data."))
                                 .fadeOut(8400);
 
                             jQuery(runKinshipBtnId).show();
@@ -532,7 +531,7 @@ jQuery(document).ready(function () {
                         })
                         .fail(function () {
                             jQuery(kinshipMsgDiv)
-                            .html("Error occured running the kinship.")
+                            .html((window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.kinship_analysis_error", "Error occurred running the kinship.") : "Error occurred running the kinship."))
                             .show()
                             .fadeOut(8400);
 
@@ -543,7 +542,7 @@ jQuery(document).ready(function () {
                     },
 
                     Cancel: {
-                    text: "Cancel",
+                    text: (window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.cancel", "Cancel") : "Cancel"),
                     class: "btn btn-info",
                     id: "cancel_queue_info",
                     click: function () {
@@ -556,7 +555,7 @@ jQuery(document).ready(function () {
             }
             })
             .fail(function () {
-            jQuery(kinshipMsgDiv).html("Error occured running the kinship.").show().fadeOut(8400);
+            jQuery(kinshipMsgDiv).html((window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.kinship_analysis_error", "Error occurred running the kinship.") : "Error occurred running the kinship.")).show().fadeOut(8400);
             jQuery(`${canvas} .multi-spinner-container`).hide();
             jQuery(runKinshipBtnId).show();
             });
@@ -579,7 +578,7 @@ jQuery(document).ready(function () {
           var kinshipMsgDiv = solGS.kinship.kinshipMsgDiv;
           var canvas = solGS.kinship.canvas;
 
-          jQuery(kinshipMsgDiv).html("Generating heatmap... please wait...").show();
+          jQuery(kinshipMsgDiv).html((window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.generating_heatmap_wait", "Generating heatmap... please wait...") : "Generating heatmap... please wait...")).show();
           jQuery(`${canvas} .multi-spinner-container`).show();
 
           var kinshipPlotDivId = solGS.kinship.kinshipPlotDivPrefix;

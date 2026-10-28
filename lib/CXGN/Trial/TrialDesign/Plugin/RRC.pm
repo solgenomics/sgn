@@ -4,11 +4,13 @@ package CXGN::Trial::TrialDesign::Plugin::RRC;
 use File::Slurp;
 use CXGN::Tools::Run;
 use Moose::Role;
+use SGN::I18N ();
 use Data::Dumper;
 use SGN::Context;
 
 sub create_design {
   my $self = shift;
+    my SGN::I18N $design_i18n = $self->i18n;
   my %rrc_design;
   my $rbase = R::YapRI::Base->new();
   my $stock_list;
@@ -37,7 +39,7 @@ sub create_design {
     @stock_list = @{$self->get_stock_list()};
     $stock_list = '"'.join('","', @stock_list).'"';
   } else {
-    die "No stock list specified\n";
+    die (($design_i18n ? $design_i18n->p("genotype.generation.no_stock_list", "No stock list specified") : "No stock list specified") . "\n");
   }
   if ($self->has_control_list_crbd()) {
     $control_list = '"'.join('","',@{$self->get_control_list_crbd()}).'"';
@@ -47,7 +49,7 @@ sub create_design {
   if ($self->has_number_of_blocks()) {
     $number_of_blocks = $self->get_number_of_blocks();
   } else {
-    die "Number of blocks not specified\n";
+    die (($design_i18n ? $design_i18n->p("trial.design.blocks_missing", "Number of blocks not specified") : "Number of blocks not specified") . "\n");
   }
 
   if ($self->has_fieldmap_col_number()) {

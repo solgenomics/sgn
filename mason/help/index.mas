@@ -1,21 +1,21 @@
-<& /page/page_title.mas, title=>"Breedbase Help" &>
+<& /page/page_title.mas, title=>HTML::Entities::encode_entities($c->i18n->p("help.index.title", "Breedbase Help")) &>
 
-<div>Breedbase is a comprehensive breeding management and analysis software. It can be used to design field layouts, collect <a href="https://phenoapps.org">phenotypic and other information using Phenoapps software</a>, support the collection of genotyping samples in a field, store large amounts of high density genotypic information, and provide Genomic Selection related analyses and predictions. Breedbase supports the <a href="https://brapi.org">BrAPI standard</a>.
+<div><% $c->i18n->p("help.index.intro", "Breedbase is a comprehensive breeding management and analysis software. It can be used to design field layouts, collect ") |h %><a href="https://phenoapps.org"><% $c->i18n->p("help.index.phenotyping_link", "phenotypic and other information using Phenoapps software") |h %></a><% $c->i18n->p("help.index.intro_tail", ", support the collection of genotyping samples in a field, store large amounts of high density genotypic information, and provide Genomic Selection related analyses and predictions. Breedbase supports the ") |h %><a href="https://brapi.org"><% $c->i18n->p("help.index.brapi_standard", "BrAPI standard") |h %></a>.
 </div>
 <br />
 <div class="panel panel-default">
 <div class="panel-body">
 <ul>
-<li>The complete Breedbase help is available from the <a href="https://solgenomics.github.io/sgn/" target="_new">Breedbase and SGN manual</a>.</li>
-<li>Video Tutorials are available on <a href="https://www.youtube.com/channel/UC3jrvvzGKKEHzOriDBgnj0A" target="_new">YouTube</a>.</li> 
-<li>A guide for <a href="https://github.com/solgenomics/sgn/wiki/" target="_new">developers is also available</a>.</li>
+<li><% $c->i18n->p("help.index.manual_prefix", "The complete Breedbase help is available from the ") |h %><a href="https://solgenomics.github.io/sgn/" target="_new"><% $c->i18n->p("help.index.manual_link", "Breedbase and SGN manual") |h %></a>.</li>
+<li><% $c->i18n->p("help.index.video_prefix", "Video Tutorials are available on ") |h %><a href="https://www.youtube.com/channel/UC3jrvvzGKKEHzOriDBgnj0A" target="_new">YouTube</a>.</li>
+<li><% $c->i18n->p("help.index.developer_prefix", "A guide for ") |h %><a href="https://github.com/solgenomics/sgn/wiki/" target="_new"><% $c->i18n->p("help.index.developer_link", "developers is also available") |h %></a>.</li>
 </ul>
 </div>
 </div>
 
 <div class="panel panel-default">
 <div class="panel-body">
-     To cite Breedbase, use the following publication:<br />
+     <% $c->i18n->p("help.index.citation_intro", "To cite Breedbase, use the following publication:") |h %><br />
 <br />
 <b>Breedbase: a digital ecosystem for modern plant breeding</b>
 Nicolas Morales, Alex C Ogbonna, Bryan J Ellerbrock, Guillaume J Bauchet, Titima Tantikanjana, Isaak Y Tecle, Adrian F Powell, David Lyon, Naama Menda, Christiano C Simoes, Surya Saha, Prashant Hosmani, Mirella Flores, Naftali Panitz, Ryan S Preble, Afolabi Agbona, Ismail Rabbi, Peter Kulakow, Prasad Peteti, Robert Kawuki, Williams Esuma, Micheal Kanaabi, Doreen M Chelangat, Ezenwanyi Uba, Adeyemi Olojede, Joseph Onyeka, Trushar Shah, Margaret Karanja, Chiedozie Egesi, Hale Tufan, Agre Paterne, Asrat Asfaw, Jean-Luc Jannink, Marnin Wolfe, Clay L Birkett, David J Waring, Jenna M Hershberger, Michael A Gore, Kelly R Robbins, Trevor Rife, Chaney Courtney, Jesse Poland, Elizabeth Arnaud, Marie-Angélique Laporte, Heneriko Kulembeka, Kasele Salum, Emmanuel Mrema, Allan Brown, Stanley Bayo, Brigitte Uwimana, Violet Akech, Craig Yencho, Bert de Boeck, Hugo Campos, Rony Swennen, Jeremy D Edwards, Lukas A Mueller.
@@ -23,3 +23,6 @@ Nicolas Morales, Alex C Ogbonna, Bryan J Ellerbrock, Guillaume J Bauchet, Titima
 </div>
 </div>
 
+<%once>
+use HTML::Entities ();
+</%once>

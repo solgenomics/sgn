@@ -1,3 +1,6 @@
+<%once>
+use HTML::Entities ();
+</%once>
 <%doc>
 =head1 NAME
 
@@ -30,6 +33,6 @@ a Bio::Chado::Schema::Stock::Stock object
     /chado/relations.mas,
     principle         => $stock,
     relationship_name => 'stock_relationship',
-    object_type_text  => 'Stock',
+    object_type_text => HTML::Entities::encode_entities($c->i18n->p('accession.related_stocks.object_type', 'Stock')),
     list_component => '/stock/stock_table.mas',
 &>

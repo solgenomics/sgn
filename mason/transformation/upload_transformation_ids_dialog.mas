@@ -7,21 +7,21 @@ $trial_name
     <div class="modal-dialog modal-lg" role="document">
         <div class="modal-content">
             <div class="modal-header">
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                <h4 class="modal-title" id="uploadTransformationIDsDialog">Upload Transformation IDs</h4>
+                <button type="button" class="close" data-dismiss="modal" aria-label="<% $c->i18n->p("global.dataset_publish.close", "Close") |h %>"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="uploadTransformationIDsDialog"><% $c->i18n->p("transformation.upload_transformation_ids", "Upload Transformation IDs") |h %></h4>
             </div>
             <div class="modal-body">
                 <div class="container-fluid">
-                    <&| /page/explanation.mas, title=>'Template Information' &>
+                    <&| /page/explanation.mas, title=>$c->i18n->p("cross.ui.template_information.bf8c643", 'Template Information') &>
                         <p>
-                            <b>File format information</b>
+                            <b><% $c->i18n->p("accessions.dialog.file_format", "File format information") |h %></b>
                             <br>
-                            <a id="transformation_ids_upload_spreadsheet_format_info">Spreadsheet Format</a>
+                            <a id="transformation_ids_upload_spreadsheet_format_info"><% $c->i18n->p("cross.ui.spreadsheet_format.f1285ec", "Spreadsheet Format") |h %></a>
                         </p>
                     </&>
                     <form method="post" enctype="multipart/form-data" encoding="multipart/form-data" id="upload_transformation_ids_form" name="upload_transformation_ids_form">
                         <div class="form-group">
-                            <label class="col-sm-3 control-label">Upload File: </label>
+                            <label class="col-sm-3 control-label"><% $c->i18n->p("cross.ui.upload_file.9798051", "Upload File:") |h %> </label>
                             <div class="col-sm-9" >
                                 <input type="file" name="transformation_ids_file" id="transformation_ids_file" encoding="multipart/form-data" />
                                 <input name="transformation_project_id" id="transformation_project_id" type="hidden" value="<% $trial_id %>">
@@ -31,8 +31,8 @@ $trial_name
                 </div>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-                <button type="button" class="btn btn-primary" name="upload_transformation_ids_submit" id="upload_transformation_ids_submit">Upload</button>
+                <button type="button" class="btn btn-default" data-dismiss="modal"><% $c->i18n->p("global.dataset_publish.close", "Close") |h %></button>
+                <button type="button" class="btn btn-primary" name="upload_transformation_ids_submit" id="upload_transformation_ids_submit"><% $c->i18n->p("global.dataset_publish.action.upload", "Upload") |h %></button>
             </div>
         </div>
     </div>
@@ -42,19 +42,19 @@ $trial_name
     <div class="modal-dialog" role="document">
         <div class="modal-content">
             <div class="modal-header">
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                <h4 class="modal-title" id="transformationIdsSavedDialog">Success</h4>
+                <button type="button" class="close" data-dismiss="modal" aria-label="<% $c->i18n->p("global.dataset_publish.close", "Close") |h %>"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="transformationIdsSavedDialog"><% $c->i18n->p("cross.ui.success", "Success") |h %></h4>
             </div>
             <div class="modal-body">
                 <div class="container-fluid">
                     <p>
                         <span class="ui-icon ui-icon-circle-check" style="float: left; margin: 0 7px 50px 0;"></span>
-                        The transformation identifiers were saved successfully.
+                        <% $c->i18n->p("transformation.the_transformation_identifiers_were_saved_successfully", "The transformation identifiers were saved successfully.") |h %>
                     </p>
                 </div>
             </div>
             <div class="modal-footer">
-                <button id="dismiss_transformation_ids_saved_dialog" type="button" class="btn btn-default" data-dismiss="modal">Close & Reload</button>
+                <button id="dismiss_transformation_ids_saved_dialog" type="button" class="btn btn-default" data-dismiss="modal"><% $c->i18n->p("seedlots.ui.close_reload", "Close & Reload") |h %></button>
             </div>
         </div>
     </div>
@@ -64,8 +64,8 @@ $trial_name
     <div class="modal-dialog modal-lg" role="document">
         <div class="modal-content">
             <div class="modal-header">
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                <h4 class="modal-title" id="uploadTransformationIdsErrorDialog">Upload Transformation Identifiers Error</h4>
+                <button type="button" class="close" data-dismiss="modal" aria-label="<% $c->i18n->p("global.dataset_publish.close", "Close") |h %>"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="uploadTransformationIdsErrorDialog"><% $c->i18n->p("transformation.upload_transformation_identifiers_error", "Upload Transformation Identifiers Error") |h %></h4>
             </div>
             <div class="modal-body">
                 <div class="container-fluid">
@@ -75,7 +75,7 @@ $trial_name
                 </div>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-default" data-dismiss="modal"><% $c->i18n->p("global.dataset_publish.close", "Close") |h %></button>
             </div>
         </div>
     </div>
@@ -85,14 +85,14 @@ $trial_name
     <div class="modal-dialog modal-xl" role="document">
         <div class="modal-content">
             <div class="modal-header" style="text-align: center">
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                <h4 class="modal-title" id="uploadTransformationIDInfoDialog">Upload Template Information For Transformation Identifiers</h4>
+                <button type="button" class="close" data-dismiss="modal" aria-label="<% $c->i18n->p("global.dataset_publish.close", "Close") |h %>"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="uploadTransformationIDInfoDialog"><% $c->i18n->p("transformation.upload_template_information_for_transformation_identifiers", "Upload Template Information For Transformation Identifiers") |h %></h4>
             </div>
             <div class="modal-body">
                 <div class="container-fluid">
-                    <b>Header:</b>
+                    <b><% $c->i18n->p("accessions.template.header", "Header:") |h %></b>
                     <br>
-                    The first row (header) should contain the following:
+                    <% $c->i18n->p("cross.ui.the_first_row_header_should_contain_the_following", "The first row (header) should contain the following:") |h %>
                     <br />
 
                     <table class="table table-hover table-bordered table-condensed" >
@@ -108,23 +108,23 @@ $trial_name
                         </tbody>
                     </table>
 
-                    <b>Required fields:</b>
+                    <b><% $c->i18n->p("cross.ui.required_fields", "Required fields:") |h %></b>
                     <ul>
-                        <li>transformation_identifier (must be unique)</li>
-                        <li>accession_name (must exist in the database)</li>
-                        <li>vector_construct (must exist in the database)</li>
+                        <li><% $c->i18n->p("transformation.transformation_identifier_must_be_unique", "transformation_identifier (must be unique)") |h %></li>
+                        <li><% $c->i18n->p("transformation.accession_name_must_exist_in_the_database", "accession_name (must exist in the database)") |h %></li>
+                        <li><% $c->i18n->p("transformation.vector_construct_must_exist_in_the_database", "vector_construct (must exist in the database)") |h %></li>
                     </ul>
 
-                    <b>Optional fields:</b>
+                    <b><% $c->i18n->p("seedlots.ui.optional_fields", "Optional fields:") |h %></b>
                     <ul>
-                        <li>notes (additional information about transformation identifier)</li>
-                        <li>is_a_control (if you would like to set any transformation identifier <b>as a control</b>, please indicate "1" for the "is_a_control" column. To <b>set a control</b> for any transformation ID, please use the link "Set Transformation Control" on the transformation ID detail page.)</li>
+                        <li><% $c->i18n->p("transformation.notes_additional_information_about_transformation_identifier", "notes (additional information about transformation identifier)") |h %></li>
+                        <li><% $c->i18n->p("transformation.is_a_control_if_you_would_like_to_set_any.5bd8d71", "is_a_control (if you would like to set any transformation identifier") |h %> <b><% $c->i18n->p("transformation.as_a_control", "as a control") |h %></b><% $c->i18n->p("transformation.please_indicate_1_for_the_is_a_control_column_to", ", please indicate \"1\" for the \"is_a_control\" column. To") |h %> <b><% $c->i18n->p("transformation.set_a_control", "set a control") |h %></b> <% $c->i18n->p("transformation.for_any_transformation_id_please_use_the_link_set_transformation", "for any transformation ID, please use the link \"Set Transformation Control\" on the transformation ID detail page.)") |h %></li>
                     </ul>
                 </div>
-                <& /help/file_upload_type.mas, type => "Transformation Identifiers", optional_column => 1 &>
+                <& /help/file_upload_type.mas, type => $c->i18n->p("transformation.transformation_identifiers", "Transformation Identifiers"), optional_column => 1 &>
             </div>
             <div class="modal-footer">
-                <button id="close_transformation_id_info_upload_dialog" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                <button id="close_transformation_id_info_upload_dialog" type="button" class="btn btn-default" data-dismiss="modal"><% $c->i18n->p("global.dataset_publish.close", "Close") |h %></button>
             </div>
         </div>
     </div>
@@ -149,7 +149,7 @@ jQuery(document).ready(function(){
         jQuery('#upload_transformation_ids_form').attr("action", "/ajax/transformation/upload_transformation_identifiers");
 
         if (uploadFile === ''){
-            alert("Please select a file");
+            alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("global.manage_file_share_dump.select_file", "Please select a file") : "Please select a file"));
             return;
         }
 

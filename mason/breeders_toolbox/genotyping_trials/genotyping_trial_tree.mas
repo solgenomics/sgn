@@ -14,19 +14,19 @@
 <table class="table table-bordered">
     <thead>
         <tr>
-            <th>Information</th>
-            <th>Breeding Programs -- Folders -- Genotyping Plates&nbsp;&nbsp;&nbsp;&nbsp;<button class="btn btn-sm btn-default" id="refresh_genotyping_trial_jstree_html_trialtree_button" name="refresh_genotyping_trial_jstree_html">Refresh</button></th>
+            <th><% $c->i18n->p("cross.ui.information", "Information") |h %></th>
+            <th><% $c->i18n->p("genotype.plate.breeding_programs_folders_genotyping_plates", "Breeding Programs -- Folders -- Genotyping Plates") |h %>&nbsp;&nbsp;&nbsp;&nbsp;<button class="btn btn-sm btn-default" id="refresh_genotyping_trial_jstree_html_trialtree_button" name="refresh_genotyping_trial_jstree_html"><% $c->i18n->p("cross.ui.refresh", "Refresh") |h %></button></th>
         </tr>
     </thead>
     <tbody>
         <tr>
             <td>
-                <h4>Search</h4>
-                <input type="text" class="form-control input-sm" id="genotyping_trial_tree_search" placeholder="Search" />
+                <h4><% $c->i18n->p("global.search.advanced_search.search", "Search") |h %></h4>
+                <input type="text" class="form-control input-sm" id="genotyping_trial_tree_search" placeholder="<% $c->i18n->p("global.search.advanced_search.search", "Search") |h %>" />
                 <hr>
 
-                <h5><i>Double click<br />genotyping plate (&nbsp;<span class="glyphicon glyphicon-th text-success"></span>&nbsp;) or folder (&nbsp;<span class="glyphicon glyphicon-folder-open text-danger"></span>&nbsp;)<br/>to view detail page.</i></h5>
-                <h5><i>Breeding programs (&nbsp;<span class="glyphicon glyphicon-briefcase text-info"></span>&nbsp;)</i></h5>
+                <h5><i><% $c->i18n->p("cross.ui.double_click", "Double click") |h %><br /><% $c->i18n->p("genotype.plate.genotyping_plate_761a1b", "genotyping plate (") |h %>&nbsp;<span class="glyphicon glyphicon-th text-success"></span>&nbsp;<% $c->i18n->p("transformation.or_folder", ") or folder (") |h %>&nbsp;<span class="glyphicon glyphicon-folder-open text-danger"></span>&nbsp;)<br/><% $c->i18n->p("cross.ui.to_view_detail_page", "to view detail page.") |h %></i></h5>
+                <h5><i><% $c->i18n->p("transformation.breeding_programs", "Breeding programs (") |h %>&nbsp;<span class="glyphicon glyphicon-briefcase text-info"></span>&nbsp;)</i></h5>
                 <hr>
 
 <!--
@@ -47,7 +47,7 @@
                 <br />
             </td>
             <td>
-                <div id="genotyping_trial_list" >[loading...]</div>
+                <div id="genotyping_trial_list" ><% $c->i18n->p("global.page.form.loading", "[loading...]") |h %></div>
             </td>
         </tr>
     </tbody>
@@ -90,7 +90,7 @@ jQuery(document).ready(function($) {
 
       },
       error: function(response) {
-        alert("An error occurred while loading the trial data.");
+        alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("cross.ui.an_error_occurred_while_loading_the_trial_data", "An error occurred while loading the trial data.") : "An error occurred while loading the trial data."));
       }
   });
 

@@ -1,3 +1,7 @@
+<%once>
+use HTML::Entities ();
+</%once>
+
 <%args>
 $stock_id
 $stock_uniquename => undef
@@ -5,17 +9,17 @@ $vector_related_genes => undef
 $number_of_insertions => undef
 </%args>
 
-<&| /page/info_section.mas, id=>'transformation_experiment', title => 'Transformation Experiment', collapsible=>1, collapsed=>0 &>
+<&| /page/info_section.mas, anchor_title => 'Transformation Experiment', id=>'transformation_experiment', title => HTML::Entities::encode_entities($c->i18n->p("transformation.root.transformation_experiment", 'Transformation Experiment')), collapsible=>1, collapsed=>0 &>
     <div class="well well-sm">
         <div class="panel panel-default">
             <div class="panel-body">
                 <table id = "transformant_experiment_info" class="table table-hover table-striped">
                     <thead>
                         <tr>
-                            <th>Vector Construct</th>
-                            <th>Plant Material</th>
-                            <th>Transformation ID</th>
-                            <th>Project</th>
+                            <th><% $c->i18n->p("transformation.vector_construct.d77fa05", "Vector Construct") |h %></th>
+                            <th><% $c->i18n->p("transformation.plant_material", "Plant Material") |h %></th>
+                            <th><% $c->i18n->p("transformation.transformation_id.6f39808", "Transformation ID") |h %></th>
+                            <th><% $c->i18n->p("global.search_wizard.project", "Project") |h %></th>
                         </tr>
                     </thead>
                 </table>
@@ -24,20 +28,20 @@ $number_of_insertions => undef
     </div>
 </&>
 
-<&| /page/info_section.mas, id=>'analysis_data', title => 'Number of Insertions and Expression Data', collapsible=>1, collapsed=>0 &>
+<&| /page/info_section.mas, anchor_title => 'Number of Insertions and Expression Data', id=>'analysis_data', title => HTML::Entities::encode_entities($c->i18n->p("transformation.root.number_of_insertions_and_expression_data", 'Number of Insertions and Expression Data')), collapsible=>1, collapsed=>0 &>
     <div class="well well-sm">
         <div class="panel panel-default">
             <div class="panel-body">
                 <div class="col-sm-6">
                     <table id = "transformant_number_of_insertions" class="table table-hover table-striped">
-                        <tr><td><b>Number of Insertions:</b></td><td><%$number_of_insertions%></td></tr>
+                        <tr><td><b><% $c->i18n->p("transformation.root.number_of_insertions", "Number of Insertions:") |h %></b></td><td><%$number_of_insertions%></td></tr>
                     </table>
                 </div>
                 <table id = "transformant_qPCR_data" class="table table-hover table-striped">
                     <thead>
                         <tr>
-                            <th>qPCR Tissue Type</th>
-                            <th>qPCR Assay Date</th>
+                            <th><% $c->i18n->p("transformation.qpcr_tissue_type", "qPCR Tissue Type") |h %></th>
+                            <th><% $c->i18n->p("transformation.qpcr_assay_date", "qPCR Assay Date") |h %></th>
 % my @column_header = split ',',$vector_related_genes;
 % foreach my $column_header(@column_header) {
                             <th><%$column_header. " ".'(Relative)'%></th>
@@ -50,7 +54,7 @@ $number_of_insertions => undef
     </div>
 </&>
 
-<&| /page/info_section.mas, title => 'Transformants (Accessions) Derived from the same Transformation ID', collapsible=>1, collapsed=>0 &>
+<&| /page/info_section.mas, anchor_title => 'Transformants (Accessions) Derived from the same Transformation ID', title => HTML::Entities::encode_entities($c->i18n->p("transformation.root.transformants_accessions_derived_from_the_same_transformation_id", 'Transformants (Accessions) Derived from the same Transformation ID')), collapsible=>1, collapsed=>0 &>
     <div class = "well well-sm">
         <div class = "panel panel-default">
             <div class = "panel-body">
@@ -60,7 +64,7 @@ $number_of_insertions => undef
                 </div>
                 <div class="panel panel-default">
                     <div class="panel-body">
-                        <&| /page/info_section.mas, title => 'Add accession names to a List', collapsible=>1, collapsed=>1, subtitle=>'<i>Adding accession names to a new or exisiting list</i>'&>
+                        <&| /page/info_section.mas, anchor_title => 'Add accession names to a List', title => HTML::Entities::encode_entities($c->i18n->p("transformation.root.add_accession_names_to_a_list", 'Add accession names to a List')), collapsible=>1, collapsed=>1, subtitle=>("<i>" . HTML::Entities::encode_entities($c->i18n->p("transformation.root.adding_accession_names_to_a_new_or_exisiting_list", "Adding accession names to a new or existing list")) . "</i>")&>
                             <br>
                             <div id="related_transformants_to_new_list" style="display:none"></div>
                             <div id="related_transformants_add_to_list"></div>
@@ -72,7 +76,7 @@ $number_of_insertions => undef
     </div>
 </&>
 
-<&| /page/info_section.mas, title => 'Control Transformants (Accessions)', collapsible=>1, collapsed=>0 &>
+<&| /page/info_section.mas, anchor_title => 'Control Transformants (Accessions)', title => HTML::Entities::encode_entities($c->i18n->p("transformation.root.control_transformants_accessions", 'Control Transformants (Accessions)')), collapsible=>1, collapsed=>0 &>
     <div class = "well well-sm">
         <div class = "panel panel-default">
             <div class = "panel-body">
@@ -82,7 +86,7 @@ $number_of_insertions => undef
                 </div>
                 <div class="panel panel-default">
                     <div class="panel-body">
-                        <&| /page/info_section.mas, title => 'Add accession names to a List', collapsible=>1, collapsed=>1, subtitle=>'<i>Adding accession names to a new or exisiting list</i>'&>
+                        <&| /page/info_section.mas, anchor_title => 'Add accession names to a List', title => HTML::Entities::encode_entities($c->i18n->p("transformation.root.add_accession_names_to_a_list", 'Add accession names to a List')), collapsible=>1, collapsed=>1, subtitle=>("<i>" . HTML::Entities::encode_entities($c->i18n->p("transformation.root.adding_accession_names_to_a_new_or_exisiting_list", "Adding accession names to a new or existing list")) . "</i>")&>
                             <br>
                             <div id="control_transformants_to_new_list" style="display:none"></div>
                             <div id="control_transformants_add_to_list"></div>
@@ -126,13 +130,13 @@ jQuery(document).ready(function(){
             'autoWidth': false,
             'order': false,
             'columns': [
-                { title: "Accession", "data": null, "render": function ( data, type, row ) { return "<a href='/stock/"+row.related_transformant_id+"/view'>"+row.related_transformant_name+"</a>"; } },
+                { title: jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("global.index_logged_in_user.accession", "Accession") : "Accession")).html(), "data": null, "render": function ( data, type, row ) { return "<a href='/stock/"+row.related_transformant_id+"/view'>"+row.related_transformant_name+"</a>"; } },
             ],
 
             "fnInitComplete": function(oSettings, json) {
                 //console.log(json);
                 if (!isLoggedIn()) {
-                    jQuery('#related_transformants_add_to_list').html("<div class='well well-sm'><h3>Please login to use lists!</h3></div>");
+                    jQuery('#related_transformants_add_to_list').html(("<div class='well well-sm'><h3>" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("accession.related_stock.login_lists", "Please login to use lists!") : "Please login to use lists!")).html() + "</h3></div>"));
                 } else {
                     let html = "";
                     for(let i=0; i<json.data.length; i++){
@@ -153,13 +157,13 @@ jQuery(document).ready(function(){
             'autoWidth': false,
             'order': false,
             'columns': [
-                { title: "Accession", "data": null, "render": function ( data, type, row ) { return "<a href='/stock/"+row.control_transformant_id+"/view'>"+row.control_transformant_name+"</a>"; } },
+                { title: jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("global.index_logged_in_user.accession", "Accession") : "Accession")).html(), "data": null, "render": function ( data, type, row ) { return "<a href='/stock/"+row.control_transformant_id+"/view'>"+row.control_transformant_name+"</a>"; } },
             ],
 
             "fnInitComplete": function(oSettings, json) {
                 //console.log(json);
                 if (!isLoggedIn()) {
-                    jQuery('#control_transformants_add_to_list').html("<div class='well well-sm'><h3>Please login to use lists!</h3></div>");
+                    jQuery('#control_transformants_add_to_list').html(("<div class='well well-sm'><h3>" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("accession.related_stock.login_lists", "Please login to use lists!") : "Please login to use lists!")).html() + "</h3></div>"));
                 } else {
                     let html = "";
                     for(let i=0; i<json.data.length; i++){

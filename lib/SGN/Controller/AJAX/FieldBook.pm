@@ -66,11 +66,11 @@ sub create_fieldbook_from_trial_POST : Args(0) {
 
     chomp($trial_id);
     if (!$c->user()) {
-        $c->stash->{rest} = {error => "You need to be logged in to create a field book" };
+        $c->stash->{rest} = {error => $c->i18n->p('fieldbook.server.login_required', 'You need to be logged in to create a field book') };
         return;
     }
     if (!any { $_ eq "curator" || $_ eq "submitter" } ($c->user()->roles)  ) {
-        $c->stash->{rest} = {error =>  "You have insufficient privileges to create a field book." };
+        $c->stash->{rest} = {error =>  $c->i18n->p('fieldbook.server.permission', 'You have insufficient privileges to create a field book.') };
         return;
     }
     if (!$trial_id) {
@@ -184,11 +184,11 @@ sub create_trait_file_for_field_book_POST : Args(0) {
     my ($self, $c) = @_;
 
     if (!$c->user()) {
-	$c->stash->{rest} = {error => "You need to be logged in to create a field book" };
+	$c->stash->{rest} = {error => $c->i18n->p('fieldbook.server.login_required', 'You need to be logged in to create a field book') };
 	return;
     }
     if (!any { $_ eq "curator" || $_ eq "submitter" } ($c->user()->roles)  ) {
-	$c->stash->{rest} = { error =>  "You have insufficient privileges to create a field book." };
+	$c->stash->{rest} = { error =>  $c->i18n->p('fieldbook.server.permission', 'You have insufficient privileges to create a field book.') };
 	return;
     }
 

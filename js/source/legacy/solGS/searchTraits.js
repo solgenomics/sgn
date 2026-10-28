@@ -40,14 +40,14 @@ function searchTraits (name) {
 		    window.location = '/solgs/search/result/traits/' + name + '/gp/' + protocolId;
 		} else {		    
 		    jQuery("#search_trait_message")
-			.html('There are no entries for trait: ' + name)
+			.html((window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.no_trait_entries", "There are no entries for trait: %{name}", {name: String(name)}) : 'There are no entries for trait: ' + name))
 			.show()
 			.fadeOut(5000);
 		}
 	    },	    
 	    error: function () {
 		jQuery("#search_trait_message")
-	    	    .html('Error occured searching for trait ' + name)
+                    .html((window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.trait_search_error", "Error occurred searching for trait %{name}", {name: String(name)}) : 'Error occurred searching for trait ' + name))
 	    	    .show()
 		    .fadeOut(5000);
 		

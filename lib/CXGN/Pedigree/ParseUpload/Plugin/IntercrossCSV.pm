@@ -3,6 +3,7 @@ package CXGN::Pedigree::ParseUpload::Plugin::IntercrossCSV;
 use File::Slurp;
 use Text::CSV;
 use Moose::Role;
+use SGN::I18N ();
 use CXGN::Stock::StockLookup;
 use SGN::Model::Cvterm;
 use Data::Dumper;
@@ -11,6 +12,7 @@ use CXGN::List::Validate;
 
 sub _validate_with_plugin {
     my $self = shift;
+    my SGN::I18N $ui_intercrosscsv_i18n = SGN::I18N::translate($self);
     my $filename = $self->get_filename();
     my $schema = $self->get_chado_schema();
     my $delimiter = ',';
@@ -20,10 +22,10 @@ sub _validate_with_plugin {
     my $csv = Text::CSV->new({ sep_char => ',' });
 
     open(my $fh, '<', $filename)
-        or die "Could not open file '$filename' $!";
+        or die (SGN::I18N::translate($ui_intercrosscsv_i18n, "cross.could_not_open_file_filename_error", "Could not open file '%{filename}' %{error}", {filename => "" . ($filename), error => "" . ($!)}));
 
     if (!$fh) {
-        $errors{'error_messages'} = "Could not read file.";
+        $errors{'error_messages'} = (SGN::I18N::translate($ui_intercrosscsv_i18n, "phenotype_upload.fieldbook_error.unreadable", "Could not read file."));
         $self->_set_parse_errors(\%errors);
         return;
     }
@@ -33,50 +35,50 @@ sub _validate_with_plugin {
     if ($csv->parse($header_row)) {
         @columns = $csv->fields();
     } else {
-        $errors{'error_messages'} = "Could not parse header row.";
+        $errors{'error_messages'} = (SGN::I18N::translate($ui_intercrosscsv_i18n, "cross.could_not_parse_header_row", "Could not parse header row."));
         $self->_set_parse_errors(\%errors);
         return;
     }
 
     #  Check headers
     if ($columns[0] ne 'crossDbId'){
-        push @error_messages, "File contents incorrect. The first column must be crossDbId.";
+        push @error_messages, (SGN::I18N::translate($ui_intercrosscsv_i18n, "cross.file_contents_incorrect_the_first_column_must_be_crossdbid", "File contents incorrect. The first column must be crossDbId."));
     }
 
     if ($columns[1] ne 'femaleObsUnitDbId'){
-        push @error_messages, "File contents incorrect. The second column must be femaleObsUnitDbId.";
+        push @error_messages, (SGN::I18N::translate($ui_intercrosscsv_i18n, "cross.file_contents_incorrect_the_second_column_must_be_femaleobsunitdbid", "File contents incorrect. The second column must be femaleObsUnitDbId."));
     }
 
     if ($columns[2] ne 'maleObsUnitDbId'){
-        push @error_messages, "File contents incorrect. The third column must be maleObsUnitDbId.";
+        push @error_messages, (SGN::I18N::translate($ui_intercrosscsv_i18n, "cross.file_contents_incorrect_the_third_column_must_be_maleobsunitdbid", "File contents incorrect. The third column must be maleObsUnitDbId."));
     }
 
     if ($columns[3] ne 'timestamp'){
-        push @error_messages, "File contents incorrect. The fourth column must be timestamp.";
+        push @error_messages, (SGN::I18N::translate($ui_intercrosscsv_i18n, "cross.file_contents_incorrect_the_fourth_column_must_be_timestamp", "File contents incorrect. The fourth column must be timestamp."));
     }
 
     if ($columns[4] ne 'person'){
-        push @error_messages, "File contents incorrect. The fifth column must be person.";
+        push @error_messages, (SGN::I18N::translate($ui_intercrosscsv_i18n, "cross.file_contents_incorrect_the_fifth_column_must_be_person", "File contents incorrect. The fifth column must be person."));
     }
 
     if ($columns[5] ne 'experiment'){
-        push @error_messages, "File contents incorrect. The sixth column must be experiment.";
+        push @error_messages, (SGN::I18N::translate($ui_intercrosscsv_i18n, "cross.file_contents_incorrect_the_sixth_column_must_be_experiment", "File contents incorrect. The sixth column must be experiment."));
     }
 
     if ($columns[6] ne 'type'){
-        push @error_messages, "File contents incorrect. The seventh column must be type.";
+        push @error_messages, (SGN::I18N::translate($ui_intercrosscsv_i18n, "cross.file_contents_incorrect_the_seventh_column_must_be_type", "File contents incorrect. The seventh column must be type."));
     }
 
     if ($columns[7] ne 'fruits'){
-        push @error_messages, "File contents incorrect. The eighth column must be fruits.";
+        push @error_messages, (SGN::I18N::translate($ui_intercrosscsv_i18n, "cross.file_contents_incorrect_the_eighth_column_must_be_fruits", "File contents incorrect. The eighth column must be fruits."));
     }
 
     if ($columns[8] ne 'flowers'){
-        push @error_messages, "File contents incorrect. The ninth column must be flowers.";
+        push @error_messages, (SGN::I18N::translate($ui_intercrosscsv_i18n, "cross.file_contents_incorrect_the_ninth_column_must_be_flowers", "File contents incorrect. The ninth column must be flowers."));
     }
 
     if ($columns[9] ne 'seeds'){
-        push @error_messages, "File contents incorrect. The tenth column must be seeds.";
+        push @error_messages, (SGN::I18N::translate($ui_intercrosscsv_i18n, "cross.file_contents_incorrect_the_tenth_column_must_be_seeds", "File contents incorrect. The tenth column must be seeds."));
     }
 
     my %parent_names;
@@ -86,7 +88,7 @@ sub _validate_with_plugin {
         if ($csv->parse($row)) {
             @column_values = $csv->fields();
         } else {
-            $errors{'error_messages'} = "Could not parse row $row.";
+            $errors{'error_messages'} = (SGN::I18N::translate($ui_intercrosscsv_i18n, "cross.could_not_parse_row_row", "Could not parse row %{row}.", {row => "" . ($row)}));
             $self->_set_parse_errors(\%errors);
             return;
         }
@@ -96,7 +98,7 @@ sub _validate_with_plugin {
         my $crossing_experiment_rs = $schema->resultset("Project::Project")->find( { name => $crossing_experiment_name });
 
         if (!$crossing_experiment_rs) {
-            push @error_messages, "Error! Crossing experiment: $crossing_experiment_name was not found in the database.\n";
+            push @error_messages, (SGN::I18N::translate($ui_intercrosscsv_i18n, "cross.error_crossing_experiment_crossing_experiment_name_was_not_found_in_the_database", "Error! Crossing experiment: %{crossing_experiment_name} was not found in the database.\n", {crossing_experiment_name => "" . ($crossing_experiment_name)}));
     	}
 
         my $female_parent = $column_values[1];
@@ -109,7 +111,7 @@ sub _validate_with_plugin {
 
     my @experiment_list = keys %experiment;
     if (scalar(@experiment_list) > 1) {
-        push @error_messages, "All of the crosses in each Intercross file should be in the same crossing_experiment";
+        push @error_messages, (SGN::I18N::translate($ui_intercrosscsv_i18n, "cross.all_of_the_crosses_in_each_intercross_file_should_be_in_the_same_crossing_experiment", "All of the crosses in each Intercross file should be in the same crossing_experiment"));
     }
 
     my @parent_list = keys %parent_names;
@@ -118,7 +120,7 @@ sub _validate_with_plugin {
     my @parents_missing = @{$parent_validator->validate($schema,'accessions_or_populations_or_crosses_or_plots_or_plants',\@parent_list)->{'missing'}};
 
     if (scalar(@parents_missing) > 0) {
-        push @error_messages, "The following parents are not in the database, or are not in the database as accession names, population names, cross unique ids, plot names or plant names: ".join(',',@parents_missing);
+        push @error_messages, (SGN::I18N::translate($ui_intercrosscsv_i18n, "cross.the_following_parents_are_not_in_the_database_or_are_not_in_the_database_as_accession_names_pop", "The following parents are not in the database, or are not in the database as accession names, population names, cross unique ids, plot names or plant names: %{value0}", {value0 => "" . (join(',',@parents_missing))}));
     }
 
     if (scalar(@error_messages) >= 1) {
@@ -133,6 +135,7 @@ sub _validate_with_plugin {
 
 sub _parse_with_plugin {
     my $self = shift;
+    my SGN::I18N $ui_intercrosscsv_i18n_parse = SGN::I18N::translate($self);
     my $filename = $self->get_filename();
     my $schema = $self->get_chado_schema();
     my $delimiter = ',';
@@ -141,7 +144,7 @@ sub _parse_with_plugin {
     my %data;
 
     open(my $fh, '<', $filename)
-        or die "Could not open file '$filename' $!";
+        or die (SGN::I18N::translate($ui_intercrosscsv_i18n_parse, "cross.could_not_open_file_filename_error", "Could not open file '%{filename}' %{error}", {filename => "" . ($filename), error => "" . ($!)}));
 
     if (!$fh) {
         return;

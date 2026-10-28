@@ -13,6 +13,7 @@ SGN::Controller::AJAX::Search::Genotype - a REST controller class to provide sea
 package SGN::Controller::AJAX::Search::Genotype;
 
 use Moose;
+use SGN::I18N ();
 use Data::Dumper;
 use JSON;
 use CXGN::People::Login;
@@ -294,6 +295,7 @@ sub pcr_genotyping_data_download : Path('/ajax/pcr_genotyping_data/download') : 
 sub pcr_genotyping_data_download_POST : Args(0) {
     my $self = shift;
     my $c = shift;
+    my $i18n = SGN::I18N::translate($c);
     my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
     my $people_schema = $c->dbic_schema("CXGN::People::Schema");
     my $clean_inputs = _clean_inputs($c->req->params);
@@ -325,7 +327,7 @@ sub pcr_genotyping_data_download_POST : Args(0) {
 #    print STDERR "TEMPFILE : $tempfile\n";
 
     if (!$c->user()) {
-        $c->stash->{rest} = {error => "You need to be logged in to download genotype data" };
+        $c->stash->{rest} = {error => SGN::I18N::translate($i18n, "genotype.validation.you_need_to_be_logged_in_to_download_genotype_data", "You need to be logged in to download genotype data") };
         return;
     }
     my $metadata_schema = $c->dbic_schema('CXGN::Metadata::Schema');

@@ -13,6 +13,7 @@ SGN::Controller::AJAX::Search::GenotypingProtocol - a REST controller class to p
 package SGN::Controller::AJAX::Search::GenotypingProtocol;
 
 use Moose;
+use SGN::I18N ();
 use Data::Dumper;
 use CXGN::People::Login;
 use CXGN::Genotype::Protocol;
@@ -209,6 +210,7 @@ sub genotyping_protocol_accession_search : Path('/ajax/genotyping_protocol/searc
 sub genotyping_protocol_accession_search_POST : Args(0) {
     my $self = shift;
     my $c = shift;
+    my $i18n = SGN::I18N::translate($c);
     my $schema = $c->dbic_schema('Bio::Chado::Schema');
     my $dbh = $schema->storage->dbh();
     my $accession_list_id = $c->req->param('accession_list_id');
@@ -227,7 +229,7 @@ sub genotyping_protocol_accession_search_POST : Args(0) {
 
     # Make sure we have a list id or accessions ids
     if ( (!defined $accession_list_id || $accession_list_id eq "") && scalar @accession_ids == 0 ) {
-        $error = "You must define the accession_list_id or accession_ids!";
+        $error = SGN::I18N::translate($i18n, "genotype.protocol.server.you_must_define_the_accession_list_id_or_accession_ids", "You must define the accession_list_id or accession_ids!");
     }
 
     # Get Accession IDs from specified List
@@ -248,7 +250,7 @@ sub genotyping_protocol_accession_search_POST : Args(0) {
 
         }
         else {
-            $error = "List does not contain any list items!";
+            $error = SGN::I18N::translate($i18n, "genotype.protocol.server.list_does_not_contain_any_list_items", "List does not contain any list items!");
         }
 
     }

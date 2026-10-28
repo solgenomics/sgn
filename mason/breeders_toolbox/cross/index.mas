@@ -23,9 +23,9 @@ $identifier_prefix => ''
 % my $cross_additional_info_string = $c->config->{cross_additional_info};
 % my @cross_additional_info = split ',',$cross_additional_info_string;
 
-<& /page/page_title.mas, title => "Details for cross '$cross_name'" &>
+<& /page/page_title.mas, title => HTML::Entities::encode_entities($c->i18n->p('cross.ui.details_for_cross_name', 'Details for cross \'%{name}\'', {name => $cross_name})) &>
 
-<&| /page/info_section.mas, title => "Cross information" &>
+<&| /page/info_section.mas, anchor_title => HTML::Entities::encode_entities('Cross information'), title => HTML::Entities::encode_entities($c->i18n->p('cross.ui.cross_information', 'Cross information')) &>
 
     <div class="panel panel-default">
         <div class="panel-body">
@@ -68,7 +68,7 @@ $identifier_prefix => ''
 <& /util/import_javascript.mas, classes => ['jquery','jquery.dataTables'] &>
 <& /util/import_css.mas, paths => ['/documents/inc/datatables/jquery.dataTables.css'] &>
 
-<&| /page/info_section.mas, title => 'Member of', collapsible=>1, collapsed=>0 &>
+<&| /page/info_section.mas, anchor_title => HTML::Entities::encode_entities('Member of'), title => HTML::Entities::encode_entities($c->i18n->p('cross.ui.member_of', 'Member of')), collapsible=>1, collapsed=>0 &>
     <div class = "well well-sm">
         <div class = "panel panel-default">
             <div class = "panel-body">
@@ -76,9 +76,9 @@ $identifier_prefix => ''
                     <table id = "membership_table" class="table table-hover table-striped">
                         <thead>
                             <tr>
-                                <th>Crossing Experiment</th>
-                                <th>Description</th>
-                                <th>Family Name</th>
+                                <th><% $c->i18n->p('cross.ui.crossing_experiment.1594653', 'Crossing Experiment') |h %></th>
+                                <th><% $c->i18n->p('cross.ui.description.7f85a32', 'Description') |h %></th>
+                                <th><% $c->i18n->p('cross.ui.family_name', 'Family Name') |h %></th>
                             </tr>
                         </thead>
                     </table>
@@ -88,7 +88,7 @@ $identifier_prefix => ''
     </div>
 </&>
 
-<&| /page/info_section.mas, title => 'Parents', collapsible=>1, collapsed=>0 &>
+<&| /page/info_section.mas, anchor_title => HTML::Entities::encode_entities('Parents'), title => HTML::Entities::encode_entities($c->i18n->p('cross.ui.parents', 'Parents')), collapsible=>1, collapsed=>0 &>
     <div class = "well well-sm">
         <div class = "panel panel-default">
             <div class = "panel-body">
@@ -96,16 +96,16 @@ $identifier_prefix => ''
                     <table id = "parent_information" class="table table-hover table-striped">
                         <thead>
                             <tr>
-                                <th>Cross Combination</th>
-                                <th>Cross Type</th>
-                                <th>Female Accession</th>
-                                <th>Female Ploidy</th>
-                                <th>Male Accession</th>
-                                <th>Male Ploidy</th>
-                                <th>Female Plot</th>
-                                <th>Male Plot</th>
-                                <th>Female Plant</th>
-                                <th>Male Plant</th>
+                                <th><% $c->i18n->p('cross.ui.cross_combination', 'Cross Combination') |h %></th>
+                                <th><% $c->i18n->p('cross.ui.cross_type.cb2564a', 'Cross Type') |h %></th>
+                                <th><% $c->i18n->p('cross.ui.female_accession', 'Female Accession') |h %></th>
+                                <th><% $c->i18n->p('cross.ui.female_ploidy', 'Female Ploidy') |h %></th>
+                                <th><% $c->i18n->p('cross.ui.male_accession', 'Male Accession') |h %></th>
+                                <th><% $c->i18n->p('cross.ui.male_ploidy', 'Male Ploidy') |h %></th>
+                                <th><% $c->i18n->p('cross.ui.female_plot', 'Female Plot') |h %></th>
+                                <th><% $c->i18n->p('cross.ui.male_plot', 'Male Plot') |h %></th>
+                                <th><% $c->i18n->p('cross.ui.female_plant', 'Female Plant') |h %></th>
+                                <th><% $c->i18n->p('cross.ui.male_plant', 'Male Plant') |h %></th>
                             </tr>
                         </thead>
                     </table>
@@ -115,8 +115,8 @@ $identifier_prefix => ''
     </div>
 </&>
 
-% my $edit_additional_info_link = "[Edit]";
-% if ($user_id) { $edit_additional_info_link = '<a id="edit_additional_info_link">[Edit]</a>'; }
+% my $edit_additional_info_link = HTML::Entities::encode_entities($c->i18n->p('cross.ui.edit', '[Edit]'));
+% if ($user_id) { $edit_additional_info_link = '<a id="edit_additional_info_link">' . HTML::Entities::encode_entities($c->i18n->p('cross.ui.edit', '[Edit]')) . '</a>'; }
 
 <div id="edit_additional_info_dialog">
     <select id="additional_info_select">
@@ -125,11 +125,11 @@ $identifier_prefix => ''
 %}
     </select>
     <input id="additional_info_value" />
-    <button id="edit_additional_info_submit" >Save</button>
+    <button id="edit_additional_info_submit" ><% $c->i18n->p('cross.ui.save', 'Save') |h %></button>
 </div>
 
 
-<&| /page/info_section.mas, title => 'Additional Parent Info', collapsible => 1, collapsed => 0, subtitle => $edit_additional_info_link &>
+<&| /page/info_section.mas, anchor_title => HTML::Entities::encode_entities('Additional Parent Info'), title => HTML::Entities::encode_entities($c->i18n->p('cross.ui.additional_parent_info', 'Additional Parent Info')), collapsible => 1, collapsed => 0, subtitle => $edit_additional_info_link &>
     <div class = "well well-sm">
         <div class = "panel panel-default">
             <div class = "panel-body">
@@ -149,10 +149,10 @@ $identifier_prefix => ''
     </div>
 </&>
 
-% my $edit_link = "[Edit]";
-% if ($user_id) { $edit_link = '<a id="edit_properties_link">[Edit]</a>'; }
+% my $edit_link = HTML::Entities::encode_entities($c->i18n->p('cross.ui.edit', '[Edit]'));
+% if ($user_id) { $edit_link = '<a id="edit_properties_link">' . HTML::Entities::encode_entities($c->i18n->p('cross.ui.edit', '[Edit]')) . '</a>'; }
 
-<&| /page/info_section.mas, title => 'Field Crossing Data', collapsible => 1, collapsed => 0, subtitle => $edit_link &>
+<&| /page/info_section.mas, anchor_title => HTML::Entities::encode_entities('Field Crossing Data'), title => HTML::Entities::encode_entities($c->i18n->p('cross.ui.field_crossing_data', 'Field Crossing Data')), collapsible => 1, collapsed => 0, subtitle => $edit_link &>
     <div class = "well well-sm">
         <div class = "panel panel-default">
             <div class = "panel-body">
@@ -182,13 +182,13 @@ $identifier_prefix => ''
 
     <input id="property_value" />
 
-    <button id="property_submit" >Save</button>
+    <button id="property_submit" ><% $c->i18n->p('cross.ui.save', 'Save') |h %></button>
 
-    <p><b>WARNING!</b>&nbsp;Changing the parameters can have unpredicatable results in downstream analyses if they are inconsistent with other data.</p>
+    <p><b><% $c->i18n->p('cross.ui.warning', 'WARNING!') |h %></b><% $c->i18n->p('cross.ui.changing_the_parameters_can_have_unpredicatable_results_in_dow', ' Changing the parameters can have unpredictable results in downstream analyses if they are inconsistent with other data.') |h %></p>
 
 </div>
 
-<&| /page/info_section.mas, title => 'Cross Transactions', collapsible => 1, collapsed => 0, subtitle => 'View crossing activities of this cross'&>
+<&| /page/info_section.mas, anchor_title => HTML::Entities::encode_entities('Cross Transactions'), title => HTML::Entities::encode_entities($c->i18n->p('cross.ui.cross_transactions', 'Cross Transactions')), collapsible => 1, collapsed => 0, subtitle => HTML::Entities::encode_entities($c->i18n->p('cross.ui.view_crossing_activities_of_this_cross', 'View crossing activities of this cross'))&>
     <div class = "well well-sm">
         <div class = "panel panel-default">
             <div class = "panel-body">
@@ -196,12 +196,12 @@ $identifier_prefix => ''
                     <table id = "cross_transactions" class="table table-hover table-striped">
                         <thead>
                             <tr>
-                                <th>Transaction ID</th>
-                                <th>Operator</th>
-                                <th>Timestamp</th>
-                                <th>Number of Flowers</th>
-                                <th>Number of Fruits</th>
-                                <th>Number of Seeds</th>
+                                <th><% $c->i18n->p('cross.ui.transaction_id', 'Transaction ID') |h %></th>
+                                <th><% $c->i18n->p('cross.ui.operator', 'Operator') |h %></th>
+                                <th><% $c->i18n->p('cross.ui.timestamp', 'Timestamp') |h %></th>
+                                <th><% $c->i18n->p('cross.ui.number_of_flowers', 'Number of Flowers') |h %></th>
+                                <th><% $c->i18n->p('cross.ui.number_of_fruits', 'Number of Fruits') |h %></th>
+                                <th><% $c->i18n->p('cross.ui.number_of_seeds', 'Number of Seeds') |h %></th>
                             </tr>
                         </thead>
                     </table>
@@ -212,7 +212,7 @@ $identifier_prefix => ''
 </&>
 
 % if ($odk_crossing_data_service_name eq 'ONA') {
-    <&| /page/info_section.mas, id=>'tissue_culture_summary_section', title => 'Tissue culture IDs of this Cross', collapsible=>1, collapsed=>1, subtitle => 'View tissue culture IDs in each step (e.g., embryo IDs, subculture IDs, rooting IDs, weaning1 IDs)'&>
+    <&| /page/info_section.mas, id=>'tissue_culture_summary_section', anchor_title => HTML::Entities::encode_entities('Tissue culture IDs of this Cross'), title => HTML::Entities::encode_entities($c->i18n->p('cross.ui.tissue_culture_ids_of_this_cross', 'Tissue culture IDs of this Cross')), collapsible=>1, collapsed=>1, subtitle => HTML::Entities::encode_entities($c->i18n->p('cross.ui.view_tissue_culture_ids_in_each_step_e_g_embryo_ids_subculture', 'View tissue culture IDs in each step (e.g., embryo IDs, subculture IDs, rooting IDs, weaning1 IDs)'))&>
         <div class="well well-sm">
             <div class="panel panel-default">
                 <div class="panel-body">
@@ -220,14 +220,14 @@ $identifier_prefix => ''
                         <table id="tissue_culture_summary_table" class="table table-hover table-striped">
                             <thead>
                                 <tr>
-                                    <th>Embryo IDs</th>
-                                    <th>Subculture IDs</th>
-                                    <th>Rooting IDs</th>
-                                    <th>Weaning1 IDs</th>
-                                    <th>Weaning2 IDs</th>
-                                    <th>Screenhouse IDs</th>
-                                    <th>Hardening IDs</th>
-                                    <th>Openfield IDs</th>
+                                    <th><% $c->i18n->p('cross.ui.embryo_ids', 'Embryo IDs') |h %></th>
+                                    <th><% $c->i18n->p('cross.ui.subculture_ids', 'Subculture IDs') |h %></th>
+                                    <th><% $c->i18n->p('cross.ui.rooting_ids', 'Rooting IDs') |h %></th>
+                                    <th><% $c->i18n->p('cross.ui.weaning1_ids', 'Weaning1 IDs') |h %></th>
+                                    <th><% $c->i18n->p('cross.ui.weaning2_ids', 'Weaning2 IDs') |h %></th>
+                                    <th><% $c->i18n->p('cross.ui.screenhouse_ids', 'Screenhouse IDs') |h %></th>
+                                    <th><% $c->i18n->p('cross.ui.hardening_ids', 'Hardening IDs') |h %></th>
+                                    <th><% $c->i18n->p('cross.ui.openfield_ids', 'Openfield IDs') |h %></th>
                                 </tr>
                             </thead>
                         </table>
@@ -240,48 +240,67 @@ $identifier_prefix => ''
 
 <& /breeders_toolbox/seedlots_section.mas, stock_id=>$cross_id, stock_type=>'cross', stock_uniquename=>$cross_name &>
 
-% my $add_progeny_link = "[add progeny]";
-% if ($user_id) { $add_progeny_link= '<a id="add_more_progeny_link">[add progeny]</a>'; }
+% my $add_progeny_link = HTML::Entities::encode_entities($c->i18n->p('cross.ui.add_progeny', '[add progeny]'));
+% if ($user_id) { $add_progeny_link= '<a id="add_more_progeny_link">' . HTML::Entities::encode_entities($c->i18n->p('cross.ui.add_progeny', '[add progeny]')) . '</a>'; }
 
-<&|  /page/info_section.mas, title => "Progeny", collapsible => 1, collapsed => 0, subtitle => $add_progeny_link   &>
+<&|  /page/info_section.mas, anchor_title => HTML::Entities::encode_entities('Progeny'), title => HTML::Entities::encode_entities($c->i18n->p('cross.ui.progeny', 'Progeny')), collapsible => 1, collapsed => 0, subtitle => $add_progeny_link   &>
 
     <div id="progeny_information_div">
-        [loading...]
+        <% $c->i18n->p('cross.ui.loading', '[loading...]') |h %>
     </div>
 
     <div id="add_more_progeny_dialog">
         <table>
-            <tr><td>Basename</td><td><input type="input" id="basename" name="basename" value="<% $basename %>" /></td></tr>
-            <tr><td>Start number</td><td><input type="input" id="start_number" name="start_number" size="5" value="<% $progeny_count + 1 %>" /></td></tr>
-            <tr><td>How many?</td><td><input type="input" id="progeny_count" name="progeny_count" size="5" /></td></tr>
+            <tr><td><% $c->i18n->p('cross.ui.basename', 'Basename') |h %></td><td><input type="input" id="basename" name="basename" value="<% $basename %>" /></td></tr>
+            <tr><td><% $c->i18n->p('cross.ui.start_number', 'Start number') |h %></td><td><input type="input" id="start_number" name="start_number" size="5" value="<% $progeny_count + 1 %>" /></td></tr>
+            <tr><td><% $c->i18n->p('cross.ui.how_many', 'How many?') |h %></td><td><input type="input" id="progeny_count" name="progeny_count" size="5" /></td></tr>
         </table>
     </div>
 
 
 </&>
 
-<&|  /page/info_section.mas, title => "Delete cross", collapsible => 1, collapsed => 0, subtitle => '<font color="red">Deletion cannot be undone</font>'  &>
+<&|  /page/info_section.mas, anchor_title => HTML::Entities::encode_entities('Delete cross'), title => HTML::Entities::encode_entities($c->i18n->p('cross.ui.delete_cross', 'Delete cross')), collapsible => 1, collapsed => 0, subtitle => '<font color="red">' . HTML::Entities::encode_entities($c->i18n->p('cross.ui.deletion_cannot_be_undone', 'Deletion cannot be undone')) . '</font>'  &>
 
-<button id="delete_cross_button" class="btn btn-default">Delete</button>
+<button id="delete_cross_button" class="btn btn-default"><% $c->i18n->p('cross.ui.delete', 'Delete') |h %></button>
 
 </&>
 
 <script>
+// Optional locale assets never block the native crossing workflow.
+var crossI18n = (window.SGN && window.SGN.i18n) || {
+    p: function (context, source, variables) {
+        return source.replace(/%\{([A-Za-z0-9_]+)\}/g, function (match, name) {
+            return variables && Object.prototype.hasOwnProperty.call(variables, name) ? String(variables[name]) : match;
+        });
+    },
+    np: function (context, one, many, count, variables) {
+        return this.p(context, count === 1 ? one : many, variables);
+    }
+};
+function crossHTML(value) {
+    return String(value == null ? '' : value).replace(/[&<>"']/g, function (character) {
+        return {'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'}[character];
+    });
+}
+
+
 
 jQuery(document).ready( function() {
     jQuery('#delete_cross_button').click( function() {
-        var response = confirm('Really delete this cross? This action cannot be undone.');
+        var response = confirm(crossI18n.p("cross.ui.really_delete_this_cross_this_action_cannot_be_undone", "Really delete this cross? This action cannot be undone."));
         if (response) {
             jQuery.ajax( {
                 url: '/ajax/cross/delete',
+                headers: crossLocaleHeaders('/ajax/cross/delete'),
                 data: { 'cross_id' : <% $cross_id %>},
                 method: 'POST',
-                error: function(r) { alert('An error occurred.'); },
+                error: function(r) { alert(crossI18n.p("cross.ui.an_error_occurred", "An error occurred.")); },
                 success: function(r) {
                     if (r.error) {
                         alert(r.error);
                     } else {
-                        alert('Deletion was successful.');
+                        alert(crossI18n.p("cross.ui.deletion_was_successful", "Deletion was successful."));
                     }
                 }
             });

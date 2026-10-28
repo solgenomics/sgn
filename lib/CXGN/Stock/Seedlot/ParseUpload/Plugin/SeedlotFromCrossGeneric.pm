@@ -17,6 +17,7 @@ sub _validate_with_plugin {
     my %missing_accessions;
 
     my $parser = CXGN::File::Parse->new (
+        i18n => $self->i18n,
         file => $filename,
         required_columns => [ 'seedlot_name', 'cross_unique_id', 'operator_name', 'box_name' ],
         optional_columns => ['description', 'quality', 'amount', 'weight_gram'],
@@ -45,7 +46,7 @@ sub _validate_with_plugin {
 
     if ( $additional_columns && scalar(@$additional_columns) > 0 ) {
         $errors{'error_messages'} = [
-            "The following columns are not recognized: " . join(', ', @$additional_columns) . ". Please check the spreadsheet format for the allowed columns."
+            ($self->i18n ? $self->i18n->p('seedlots.parse.the_following_columns_are_not_recognized_columns_please_check_the_spread', 'The following columns are not recognized: %{columns}. Please check the spreadsheet format for the allowed columns.', {columns => join(', ', @$additional_columns)}) : "The following columns are not recognized: " . join(', ', @$additional_columns) . ". Please check the spreadsheet format for the allowed columns.")
         ];
         $self->_set_parse_errors(\%errors);
         return;
@@ -58,7 +59,7 @@ sub _validate_with_plugin {
         my $weight = $row->{'weight_gram'};
 
         if ($seedlot_name =~ /\s/ || $seedlot_name =~ /\// || $seedlot_name =~ /\\/ ) {
-            push @error_messages, "Cell A$row_num: seedlot_name must not contain spaces or slashes.";
+            push @error_messages, ($self->i18n ? $self->i18n->p('seedlots.parse.cell_cell_column_must_not_contain_spaces_or_slashes', 'Cell %{cell}: %{column} must not contain spaces or slashes.', {cell => "A$row_num", column => 'seedlot_name'}) : "Cell A$row_num: seedlot_name must not contain spaces or slashes.");
         }
 
         if (!$amount || $amount eq '') {
@@ -68,7 +69,7 @@ sub _validate_with_plugin {
         }
 
         if ($amount eq 'NA' && $weight eq 'NA') {
-            push @error_messages, "On row:$row_num you must provide either a weight in grams or a seed count amount.";
+            push @error_messages, ($self->i18n ? $self->i18n->p('seedlots.parse.on_row_row_you_must_provide_either_a_weight_in_grams_or_a_seed_count_amo.ea4edcb', 'On row:%{row} you must provide either a weight in grams or a seed count amount.', {row => '' . ($row_num)}) : "On row:$row_num you must provide either a weight in grams or a seed count amount.");
         }
 
     }
@@ -80,7 +81,7 @@ sub _validate_with_plugin {
     my @crosses_missing = @{$cross_validator->validate($schema,'crosses',$seen_cross_names)->{'missing'}};
 
     if (scalar(@crosses_missing) > 0) {
-        push @error_messages, "The following cross unique ids are not in the database as uniquenames: ".join(',',@crosses_missing);
+        push @error_messages, ($self->i18n ? $self->i18n->p('seedlots.parse.the_following_cross_unique_ids_are_not_in_the_database_as_uniquenames_na', 'The following cross unique ids are not in the database as uniquenames: %{names}', {names => join(',', @crosses_missing)}) : "The following cross unique ids are not in the database as uniquenames: ".join(',',@crosses_missing));
     }
 
     my $rs = $schema->resultset("Stock::Stock")->search({
@@ -89,7 +90,7 @@ sub _validate_with_plugin {
 
     while (my $r = $rs->next) {
         if ( $r->type->name ne 'seedlot' ) {
-            push @error_messages, "Seedlot name already exists in database: ".$r->uniquename.".  The seedlot name must be unique.";
+            push @error_messages, ($self->i18n ? $self->i18n->p('seedlots.parse.seedlot_name_already_exists_in_database_name_the_seedlot_name_must_be_un', 'Seedlot name already exists in database: %{name}.  The seedlot name must be unique.', {name => '' . ($r->uniquename)}) : "Seedlot name already exists in database: ".$r->uniquename.".  The seedlot name must be unique.");
         }
     }
 

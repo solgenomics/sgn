@@ -16,16 +16,61 @@ if (!CXGN) CXGN = function() {};
 if (!CXGN.Page) CXGN.Page = function() {};
 if (!CXGN.Page.Form) CXGN.Page.Form = function() {};
 
+// Caption-only fallback; action names, roles and form values are canonical.
+function _sgnStockFormI18n() {
+    return (window.SGN && window.SGN.i18n) || {
+        p: function (context, source, vars) {
+            vars = vars || {};
+            return source.replace(/%\{([A-Za-z_][A-Za-z0-9_]*)\}/g, function (marker, name) {
+                return Object.prototype.hasOwnProperty.call(vars, name) ? String(vars[name]) : marker;
+            });
+        }
+    };
+}
+
+function _sgnStockFormCaptionHTML(value) {
+    return String(value).replace(/[&<>"']/g, function (character) {
+        return {'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'}[character];
+    });
+}
+
+function _sgnStockFormEditCaption() {
+    var stockFormI18n = (window.SGN && window.SGN.i18n) || {
+        p: function (context, source, vars) {
+            vars = vars || {};
+            return source.replace(/%\{([A-Za-z_][A-Za-z0-9_]*)\}/g, function (marker, name) {
+                return Object.prototype.hasOwnProperty.call(vars, name) ? String(vars[name]) : marker;
+            });
+        }
+    };
+    return _sgnStockFormCaptionHTML(stockFormI18n.p('locations.edit.action', 'Edit'));
+}
+
+function _sgnStockFormLocaleHeaders(url, action) {
+    try {
+        var target = new URL(url, window.location.href);
+        if (target.origin !== window.location.origin
+            || target.pathname !== '/phenome/stock/stock_ajax_form.pl'
+            || (action !== 'view' && action !== 'edit' && action !== 'new')) return {};
+        var root = document.documentElement;
+        var runtime = window.SGN && window.SGN.i18n;
+        return {'X-SGN-Locale': root.getAttribute('data-sgn-locale')
+            || (runtime && runtime.requestedLocale) || root.lang
+            || (runtime && runtime.locale) || 'en'};
+    } catch (error) { return {}; }
+}
+
+
 /**
    CXGN.Page.Form.JSFormPage
    The javascript form constructor
    usually called from mason/page/form.mas
    'new CXGN.Page.Form.JSFormPage'
-   args are in the following order: (variabe names are not important, just the order)
+   args are in the following order: (variable names are not important, just the order)
    object_id (a database id)
    object_type (the name of the object, usually the table name. e.g. 'locus')
    server_side_script (the script where the form is defined. e.g. '/phenome/stock/stock_ajax_form.pl')
-   form_id (the div_id of hte form)
+   form_id (the div_id of the form)
    js_object_name (a name for this Javascript object. Allows using multiple form objects in one page)
    page_url (the url for the page. Used for reloading a new page for a new empty object)
 
@@ -100,7 +145,7 @@ CXGN.Page.Form.JSFormPage.prototype = {
 		else { form.printForm("view"); }
 	    },
 	    error: function(response) {
-		alert("Action '" + action +"'  failed for storing this " + this.getObjectName() + "!!" ) ;
+		alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("shared.form.action_store_failed", "Action '%{action}'  failed for storing this %{object_name}!!", { action: ("" + action), object_name: ("" + this.getObjectName()) }) : "Action '" + action +"'  failed for storing this " + this.getObjectName() + "!!"));
 		
 	    }
 	});
@@ -122,13 +167,14 @@ CXGN.Page.Form.JSFormPage.prototype = {
 	if (!action) action = 'view';
         if ( this.getObjectId() == 0 ) action = 'new';
 	if (!action || !this.getObjectName() || !this.getAjaxScript() )  {
-	    alert("Cannot print from without a objectName, action, and ajaxScript name ! ");
+	    alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("shared.form.print_configuration_required", "Cannot print from without a objectName, action, and ajaxScript name ! ") : "Cannot print from without a objectName, action, and ajaxScript name ! "));
 	} else if  (action == 'delete') { 
 	    this.printDeleteDialog();
 	}
 	else {    
 	    jQuery.ajax({
 		url: this.getAjaxScript(),
+                headers: _sgnStockFormLocaleHeaders(this.getAjaxScript(), action),
 		method: "get",
 		data: {  'object_id': this.getObjectId(), 'action': action },
 		success: function(response) {
@@ -145,7 +191,7 @@ CXGN.Page.Form.JSFormPage.prototype = {
 			window.location =  '/user/login' ;
 			x.error = undef;
 		    }
-		    if (x.error) { alert("error: " + x.error); }
+		    if (x.error) { alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("shared.form.error_prefix_lower", "error: ") : "error: ") + x.error); }
 		    else if (response.reload) {  
 			window.location.reload(); } 
 		    else {
@@ -161,7 +207,7 @@ CXGN.Page.Form.JSFormPage.prototype = {
 		    }
 		},
 		error: function(response) {
-		    alert("Action '" + action +"'  failed for storing this " + this.getObjectName() + "!!" ) ;
+		    alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("shared.form.action_store_failed", "Action '%{action}'  failed for storing this %{object_name}!!", { action: ("" + action), object_name: ("" + this.getObjectName()) }) : "Action '" + action +"'  failed for storing this " + this.getObjectName() + "!!"));
 		},
 	    });
 	}
@@ -173,9 +219,17 @@ CXGN.Page.Form.JSFormPage.prototype = {
        clicking 'delete' calls printForm('confirm_delete') which will call the server side (should take care of deleting/obsoleting the object.
      */
     printDeleteDialog: function() {
+        var stockFormI18n = (window.SGN && window.SGN.i18n) || {
+            p: function (context, source, vars) {
+                vars = vars || {};
+                return source.replace(/%\{([A-Za-z_][A-Za-z0-9_]*)\}/g, function (marker, name) {
+                    return Object.prototype.hasOwnProperty.call(vars, name) ? String(vars[name]) : marker;
+                });
+            }
+        };
 	var deleteDialog =  
-	'<br/><b>Delete this ' + this.getObjectName() + ' ' +this.getObjectId()  + '?</b> ';
-	deleteDialog += '<input id=\"'+this.getJsObjectName()+'_delete_button\" class=\"btn btn-primary btn-sm\" type =\"button\" onClick=\"javascript:' + this.getJsObjectName() + '.printForm(\'confirm_delete\')\" value=\"Confirm delete\"/><br><br>';
+	'<br/><b>' + _sgnStockFormCaptionHTML(stockFormI18n.p('stock.form.delete_confirmation', 'Delete this %{object} %{id}?', {object: this.getObjectName(), id: this.getObjectId()})) + '</b> ';
+	deleteDialog += '<input id=\"'+this.getJsObjectName()+'_delete_button\" class=\"btn btn-primary btn-sm\" type =\"button\" onClick=\"javascript:' + this.getJsObjectName() + '.printForm(\'confirm_delete\')\" value=\"' + _sgnStockFormCaptionHTML(stockFormI18n.p('stock.form.confirm_delete', 'Confirm delete')) + '\"/><br><br>';
 	this.printEditLinks('delete');
 	document.getElementById(this.getFormId() ).innerHTML = deleteDialog;
 
@@ -188,21 +242,29 @@ CXGN.Page.Form.JSFormPage.prototype = {
        and ghosted New, Edit, Delete buttons (should be used if the logged in user does not have the related privileges. Should be defined in the backend)
      */
     defineButtons: function() { 
-	this.setNewButton('<a class=\"btn btn-sm btn-default\" href= \"javascript:onClick=' +  this.getJsObjectName() + '.reloadNewPage()  \">New</a> ');
+        var stockFormI18n = (window.SGN && window.SGN.i18n) || {
+            p: function (context, source, vars) {
+                vars = vars || {};
+                return source.replace(/%\{([A-Za-z_][A-Za-z0-9_]*)\}/g, function (marker, name) {
+                    return Object.prototype.hasOwnProperty.call(vars, name) ? String(vars[name]) : marker;
+                });
+            }
+        };
+	this.setNewButton('<a class=\"btn btn-sm btn-default\" href= \"javascript:onClick=' +  this.getJsObjectName() + '.reloadNewPage()  \">' + _sgnStockFormCaptionHTML(stockFormI18n.p('stock.form.new', 'New')) + '</a> ');
 
-	this.setGhostedNewButton(' <span class="btn btn-sm btn-default ghosted">New</span> ');
+	this.setGhostedNewButton(' <span class="btn btn-sm btn-default ghosted">' + _sgnStockFormCaptionHTML(stockFormI18n.p('stock.form.new', 'New')) + '</span> ');
 
-	this.setEditButton(' <a class=\"btn btn-sm btn-default\" href=\"javascript:onClick=' + this.getJsObjectName() + '.printForm(\'edit\')\">Edit</a> ');
+	this.setEditButton(' <a class=\"btn btn-sm btn-default\" href=\"javascript:onClick=' + this.getJsObjectName() + '.printForm(\'edit\')\">' + _sgnStockFormEditCaption() + '</a> ');
 
-	this.setGhostedEditButton(' <span class=\"btn btn-sm btn-default ghosted\">Edit</span> ');
+	this.setGhostedEditButton(' <span class=\"btn btn-sm btn-default ghosted\">' + _sgnStockFormEditCaption() + '</span> ');
 
-	this.setCancelEditButton(' <a class=\"btn btn-sm btn-default\" href= \"javascript:onClick='+this.getJsObjectName()+'.render() \">Cancel</a> ');
+	this.setCancelEditButton(' <a class=\"btn btn-sm btn-default\" href= \"javascript:onClick='+this.getJsObjectName()+'.render() \">' + _sgnStockFormCaptionHTML(stockFormI18n.p('cross.ui.cancel', 'Cancel')) + '</a> ');
 
-	this.setDeleteButton(' <a class=\"btn btn-sm btn-default\" href=\"javascript:onClick=' + this.getJsObjectName() + '.printForm(\'delete\')\">Delete</a> ');
+	this.setDeleteButton(' <a class=\"btn btn-sm btn-default\" href=\"javascript:onClick=' + this.getJsObjectName() + '.printForm(\'delete\')\">' + _sgnStockFormCaptionHTML(stockFormI18n.p('locations.delete.action', 'Delete')) + '</a> ');
 
-	this.setCancelDeleteButton(' <a class=\"btn btn-sm btn-default\" href=\"javascript:onClick=' + this.getJsObjectName() + '.render()\">Cancel Delete</a> ');
+	this.setCancelDeleteButton(' <a class=\"btn btn-sm btn-default\" href=\"javascript:onClick=' + this.getJsObjectName() + '.render()\">' + _sgnStockFormCaptionHTML(stockFormI18n.p('stock.form.cancel_delete', 'Cancel Delete')) + '</a> ');
 
-	this.setGhostedDeleteButton(' <span class=\"btn btn-sm btn-default ghosted\">Delete</span> ');
+	this.setGhostedDeleteButton(' <span class=\"btn btn-sm btn-default ghosted\">' + _sgnStockFormCaptionHTML(stockFormI18n.p('locations.delete.action', 'Delete')) + '</span> ');
     },
 
 
@@ -212,12 +274,20 @@ CXGN.Page.Form.JSFormPage.prototype = {
        prints 'store' and 'reset form' buttons for 'editable' and 'new' forms
      */
     printFormButtons: function() {
+        var stockFormI18n = (window.SGN && window.SGN.i18n) || {
+            p: function (context, source, vars) {
+                vars = vars || {};
+                return source.replace(/%\{([A-Za-z_][A-Za-z0-9_]*)\}/g, function (marker, name) {
+                    return Object.prototype.hasOwnProperty.call(vars, name) ? String(vars[name]) : marker;
+                });
+            }
+        };
 	var action = this.getAction();
 	var buttons='';
 	//if ((this.getUserType() == "curator") || this.getIsOwner() == 1 ) {
 	if (action == 'edit' ||  action == 'new' ) { 
-	    buttons = '<input id=\"'+this.getJsObjectName()+'_submit_button\" class=\"btn btn-primary btn-sm\" type=\"button\" onClick=\"javascript:' + this.getJsObjectName() + '.store()\" value=\"Store\"/>&nbsp;&nbsp;&nbsp;';
-	    buttons +='<input id=\"'+this.getJsObjectName()+'_reset_button\"class=\"btn btn-default btn-sm\" type=\"button\" onClick=\"javascript:' + this.getJsObjectName() + '.render( \'edit\' )\" value=\"Reset form\"/><br/><br/>';
+	    buttons = '<input id=\"'+this.getJsObjectName()+'_submit_button\" class=\"btn btn-primary btn-sm\" type=\"button\" onClick=\"javascript:' + this.getJsObjectName() + '.store()\" value=\"' + _sgnStockFormCaptionHTML(stockFormI18n.p('cross.ui.store', 'Store')) + '\"/>&nbsp;&nbsp;&nbsp;';
+	    buttons +='<input id=\"'+this.getJsObjectName()+'_reset_button\"class=\"btn btn-default btn-sm\" type=\"button\" onClick=\"javascript:' + this.getJsObjectName() + '.render( \'edit\' )\" value=\"' + _sgnStockFormCaptionHTML(stockFormI18n.p('trial.treatment.reset', 'Reset form')) + '\"/><br/><br/>';
 
 	    //}
 	}
@@ -263,60 +333,84 @@ CXGN.Page.Form.JSFormPage.prototype = {
     /////////////////////
 
     printNewButton: function() {
+        var stockFormI18n = (window.SGN && window.SGN.i18n) || {
+            p: function (context, source, vars) {
+                vars = vars || {};
+                return source.replace(/%\{([A-Za-z_][A-Za-z0-9_]*)\}/g, function (marker, name) {
+                    return Object.prototype.hasOwnProperty.call(vars, name) ? String(vars[name]) : marker;
+                });
+            }
+        };
 	//new link
 	var action = this.getAction();
 
-	var newLink = '<a class=\"btn btn-sm btn-default\" href= \"javascript:onClick=' +  this.getJsObjectName() + '.reloadNewPage()  \">New</a>';
+	var newLink = '<a class=\"btn btn-sm btn-default\" href= \"javascript:onClick=' +  this.getJsObjectName() + '.reloadNewPage()  \">' + _sgnStockFormCaptionHTML(stockFormI18n.p('stock.form.new', 'New')) + '</a>';
 
 	if (action == "edit" || action == "delete") { 
- 	    newLink = ' <span class="btn btn-sm btn-default ghosted">New</span> ';
+        newLink = ' <span class="btn btn-sm btn-default ghosted">' + _sgnStockFormCaptionHTML(stockFormI18n.p('stock.form.new', 'New')) + '</span> ';
  	}
  	if (action == "new"   && (( this.getUserType() == "curator") || this.getIsOwner() ==1 )) { 
-	    newLink = '<a class=\"btn btn-sm btn-default\" href= \"javascript:history.back(1) \">Cancel</a> ';
+	    newLink = '<a class=\"btn btn-sm btn-default\" href= \"javascript:history.back(1) \">' + _sgnStockFormCaptionHTML(stockFormI18n.p('cross.ui.cancel', 'Cancel')) + '</a> ';
  	}
 	this.setNewButton(newLink);
 
     },
 
     printEditButton: function() {
+        var stockFormI18n = (window.SGN && window.SGN.i18n) || {
+            p: function (context, source, vars) {
+                vars = vars || {};
+                return source.replace(/%\{([A-Za-z_][A-Za-z0-9_]*)\}/g, function (marker, name) {
+                    return Object.prototype.hasOwnProperty.call(vars, name) ? String(vars[name]) : marker;
+                });
+            }
+        };
 	//edit link
 	var action = this.getAction();
  	var editLink;
 	if ((this.getUserType() == "curator") || this.getIsOwner() ==1 ) {
-	    editLink = ' <a class=\"btn btn-sm btn-default\" href=\"javascript:onClick=' + this.getJsObjectName() + '.printForm(\'edit\')\">Edit</a>' ;
+	    editLink = ' <a class=\"btn btn-sm btn-default\" href=\"javascript:onClick=' + this.getJsObjectName() + '.printForm(\'edit\')\">' + _sgnStockFormEditCaption() + '</a>' ;
 
 	}else {
-	    editLink = ' <span class=\"btn btn-sm btn-default ghosted\">Edit</span> ';
+	    editLink = ' <span class=\"btn btn-sm btn-default ghosted\">' + _sgnStockFormEditCaption() + '</span> ';
 	}
 
 	if (action == "edit") { 
-	    editLink = ' <a class=\"btn btn-sm btn-default\" href=\"javascript:onClick=' + this.getJsObjectName() + '.printForm( \'view\')\">Cancel edit</a> ';
+	    editLink = ' <a class=\"btn btn-sm btn-default\" href=\"javascript:onClick=' + this.getJsObjectName() + '.printForm( \'view\')\">' + _sgnStockFormCaptionHTML(stockFormI18n.p('stock.form.cancel_edit', 'Cancel edit')) + '</a> ';
 	}
 
 	if (action ==  "new" || action == "delete") { 
-	    editLink = ' <span class=\"btn btn-sm btn-default ghosted\">Edit</span> ';
+	    editLink = ' <span class=\"btn btn-sm btn-default ghosted\">' + _sgnStockFormEditCaption() + '</span> ';
 	}
 	this.setEditButton(editLink);
 
     },
 
     printDeleteButton: function() {
+        var stockFormI18n = (window.SGN && window.SGN.i18n) || {
+            p: function (context, source, vars) {
+                vars = vars || {};
+                return source.replace(/%\{([A-Za-z_][A-Za-z0-9_]*)\}/g, function (marker, name) {
+                    return Object.prototype.hasOwnProperty.call(vars, name) ? String(vars[name]) : marker;
+                });
+            }
+        };
 	//delete link
 	var action = this.getAction();
  	var deleteLink;
 	// if ((this.getUserType() ==  "curator") || this.getIsOwner() ) {
 	if ((this.getUserType() == "curator") || this.getIsOwner() ==1 ) {
-	    deleteLink = ' <a class=\"btn btn-sm btn-default\" href=\"javascript:onClick=' + this.getJsObjectName() + '.printForm(\'delete\')\">Delete</a>' ;
+	    deleteLink = ' <a class=\"btn btn-sm btn-default\" href=\"javascript:onClick=' + this.getJsObjectName() + '.printForm(\'delete\')\">' + _sgnStockFormCaptionHTML(stockFormI18n.p('locations.delete.action', 'Delete')) + '</a>' ;
 
 	}else {
-	    deleteLink = ' <span class=\"btn btn-sm btn-default ghosted\">Delete</span> ';
+	    deleteLink = ' <span class=\"btn btn-sm btn-default ghosted\">' + _sgnStockFormCaptionHTML(stockFormI18n.p('locations.delete.action', 'Delete')) + '</span> ';
 	}
 
 	if (action ==  "edit" || action == "new" ) { 
-	    deleteLink = ' <span class=\"btn btn-sm btn-default ghosted\">Delete</span> ';
+	    deleteLink = ' <span class=\"btn btn-sm btn-default ghosted\">' + _sgnStockFormCaptionHTML(stockFormI18n.p('locations.delete.action', 'Delete')) + '</span> ';
 	}
 	if (action == "delete" )
-	    deleteLink = ' <a class=\"btn btn-sm btn-default\" href=\"javascript:onClick=' + this.getJsObjectName() + '.render()\">Cancel Delete</a>';
+	    deleteLink = ' <a class=\"btn btn-sm btn-default\" href=\"javascript:onClick=' + this.getJsObjectName() + '.render()\">' + _sgnStockFormCaptionHTML(stockFormI18n.p('stock.form.cancel_delete', 'Cancel Delete')) + '</a>';
 	// 	////////////////////
 	this.setDeleteButton(deleteLink);
 

@@ -15,7 +15,7 @@ Module to format layout info for trial based on which columns user wants to see.
 'tissue_sample_name','tissue_sample_id','plant_name','plant_id','subplot_name','subplot_id','plot_name','plot_id','accession_name','accession_id','plot_number','block_number','is_a_control','range_number','rep_number','row_number','col_number','seedlot_name','seed_transaction_operator','num_seed_per_plot','subplot_number','plant_number','tissue_sample_number','pedigree','location_name','trial_name','year','synonyms','tier','plot_geo_json'
 
 This module can also optionally include treatments into the output.
-This module can also optionally include accession trait performace summaries into the output.
+This module can also optionally include accession trait performance summaries into the output.
 
 This module is used from CXGN::Trial::Download::Plugin::TrialLayoutExcel, CXGN::Trial::Download::Plugin::TrialLayoutCSV, CXGN::Fieldbook::DownloadFile, CXGN::Trial->get_plots, CXGN::Trial->get_plants, CXGN::Trial->get_subplots, CXGN::Trial->get_tissue_samples
 
@@ -50,6 +50,8 @@ Data Level can be plots, plants, subplots (for splitplot design), field_trial_ti
 
 
 use Moose;
+use SGN::I18N ();
+use CatalystX::GlobalContext '$c';
 use Moose::Util::TypeConstraints;
 use Try::Tiny;
 use Data::Dumper;
@@ -187,6 +189,7 @@ has 'plot_start' => (
 
 sub get_layout_output {
     my $self = shift;
+    my SGN::I18N $layout_export_i18n = $c && $c->can('i18n') ? $c->i18n : undef;
     my $trial_id = $self->trial_id();
     my $schema = $self->schema();
     my $data_level = $self->data_level();
@@ -234,14 +237,14 @@ sub get_layout_output {
     };
     if (!$trial_layout) {
         #print STDERR "Trial does not have valid field design.\n";
-        push @error_messages, "Trial does not have valid field design.";
+        push @error_messages, ($layout_export_i18n ? $layout_export_i18n->p("trial.layout_export.invalid_design", "Trial does not have valid field design.") : "Trial does not have valid field design.");
         $errors{'error_messages'} = \@error_messages;
         return \%errors;
     }
-    print STDERR "TrialLayoutDownload retrieving deisgn ".localtime."\n";
+    print STDERR "TrialLayoutDownload retrieving design ".localtime."\n";
     my $design = $trial_layout->get_design();
     if (!$design){
-        push @error_messages, "Trial does not have valid field design. Please contact us.";
+        push @error_messages, ($layout_export_i18n ? $layout_export_i18n->p("trial.layout_export.invalid_design_contact", "Trial does not have valid field design. Please contact us.") : "Trial does not have valid field design. Please contact us.");
         $errors{'error_messages'} = \@error_messages;
         return \%errors;
     }
@@ -301,7 +304,7 @@ sub get_layout_output {
         $exact_performance_hash = $exact->search(); #this gets treatments too!
     } elsif ($data_level eq 'plants') {
         if (!$has_plants){
-            push @error_messages, "Trial does not have plants, so you should not try to download a plant level layout.";
+            push @error_messages, ($layout_export_i18n ? $layout_export_i18n->p("trial.layout_export.no_plants", "Trial does not have plants, so you should not try to download a plant level layout.") : "Trial does not have plants, so you should not try to download a plant level layout.");
             $errors{'error_messages'} = \@error_messages;
             return \%errors;
         }
@@ -313,7 +316,7 @@ sub get_layout_output {
         $exact_performance_hash = $exact->search();
     } elsif ($data_level eq 'subplots') {
         if (!$has_subplots){
-            push @error_messages, "Trial does not have subplots, so you should not try to download a subplot level layout.";
+            push @error_messages, ($layout_export_i18n ? $layout_export_i18n->p("trial.layout_export.no_subplots", "Trial does not have subplots, so you should not try to download a subplot level layout.") : "Trial does not have subplots, so you should not try to download a subplot level layout.");
             $errors{'error_messages'} = \@error_messages;
             return \%errors;
         }
@@ -325,7 +328,7 @@ sub get_layout_output {
         $exact_performance_hash = $exact->search();
     } elsif ($data_level eq 'field_trial_tissue_samples') {
         if (!$has_tissue_samples){
-            push @error_messages, "Trial does not have tissue samples, so you should not try to download a tissue sample level layout.";
+            push @error_messages, ($layout_export_i18n ? $layout_export_i18n->p("trial.layout_export.no_tissue_samples", "Trial does not have tissue samples, so you should not try to download a tissue sample level layout.") : "Trial does not have tissue samples, so you should not try to download a tissue sample level layout.");
             $errors{'error_messages'} = \@error_messages;
             return \%errors;
         }

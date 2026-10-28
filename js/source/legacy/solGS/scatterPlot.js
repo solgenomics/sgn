@@ -6,8 +6,8 @@ solGS.scatterPlot = {
 
         var xData = regData.x_data;
         var yData = regData.y_data;
-        var yLabel = regData.y_label || 'Y values';
-        var xLabel = regData.x_label || 'X values';
+        var yLabel = regData.y_label || (window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.scatter_y_values", "Y values") : "Y values");
+        var xLabel = regData.x_label || (window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.scatter_x_values", "X values") : "X values");
         var regPlotDivId = regData.plot_div_id;
         var corrValues = regData.corr_values || null;
         var axisMode = regData.axis_mode || regData.quadrants || "auto";

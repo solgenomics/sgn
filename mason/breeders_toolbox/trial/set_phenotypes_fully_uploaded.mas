@@ -8,18 +8,18 @@ $trial_name => undef
     <div class="modal-dialog" role="document">
         <div class="modal-content">
             <div class="modal-header" style="text-align: center">
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                <h4 class="modal-title" id="setPhenotypesFullyUploadedDialog"><% $trial_name %> Phenotypes Fully Uploaded</h4>
+                <button type="button" class="close" data-dismiss="modal" aria-label="<% $c->i18n->p("global.dataset_publish.close", "Close") |h %>"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="setPhenotypesFullyUploadedDialog"><% $trial_name %> <% $c->i18n->p("phenotype.phenotypes_fully_uploaded.7fe7e77", "Phenotypes Fully Uploaded") |h %></h4>
             </div>
             <div class="modal-body">
                 <div class="container-fluid">
                     <form class="form-horizontal">
                         <div class="form-group">
-                            <label class="col-sm-6 control-label">Phenotypes Fully Uploaded?: </label>
+                            <label class="col-sm-6 control-label"><% $c->i18n->p("phenotype.phenotypes_fully_uploaded.df8aeb8", "Phenotypes Fully Uploaded?:") |h %> </label>
                             <div class="col-sm-6" >
                                 <select class="form-control" id="trial_set_phenotypes_fully_loaded_select">
-                                    <option value="1">Yes</option>
-                                    <option value="0">No</option>
+                                    <option value="1"><% $c->i18n->p("global.search_wizard.yes", "Yes") |h %></option>
+                                    <option value="0"><% $c->i18n->p("global.search_wizard.no", "No") |h %></option>
                                 </select>
                             </div>
                         </div>
@@ -27,8 +27,8 @@ $trial_name => undef
                 </div>
             </div>
             <div class="modal-footer">
-                <button id="close_trial_set_phenotypes_fully_loaded_modal" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-                <button type="button" class="btn btn-primary" name="trial_set_phenotypes_fully_loaded_submit" id="trial_set_phenotypes_fully_loaded_submit" >Save</button>
+                <button id="close_trial_set_phenotypes_fully_loaded_modal" type="button" class="btn btn-default" data-dismiss="modal"><% $c->i18n->p("global.dataset_publish.close", "Close") |h %></button>
+                <button type="button" class="btn btn-primary" name="trial_set_phenotypes_fully_loaded_submit" id="trial_set_phenotypes_fully_loaded_submit" ><% $c->i18n->p("account.quick_create.save", "Save") |h %></button>
             </div>
         </div>
     </div>
@@ -54,12 +54,12 @@ jQuery(document).ready(function() {
                     alert(response.error);
                 }
                 else {
-                    alert('Successfully saved');
+                    alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("phenotype.successfully_saved", "Successfully saved") : 'Successfully saved'));
                     location.reload();
                 }
             },
             error: function(response) {
-                alert('An error occurred trying to set phenotypes fully uploaded.');
+                alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("phenotype.an_error_occurred_trying_to_set_phenotypes_fully_uploaded", "An error occurred trying to set phenotypes fully uploaded.") : 'An error occurred trying to set phenotypes fully uploaded.'));
             }
         });
     });

@@ -4,9 +4,9 @@ $code => undef
 
 <p id="authorize-status">
 % if ( defined $code ) {
-    Connecting account...
+    <% $c->i18n->p("lists_datasets.authorize.connecting", "Connecting account...") |h %>
 % } else {
-    ERROR: Authorization code not returned
+    <% $c->i18n->p("lists_datasets.authorize.no_code", "ERROR: Authorization code not returned") |h %>
 % }
 </p>
 
@@ -25,15 +25,15 @@ function storeConnection(code) {
             data: { code, service: service.key },
             success: (resp) => {
                 if ( resp?.error ) {
-                    alert("Could not store connection info [" + resp.error + "]");
+                    alert((window.SGN && SGN.i18n ? SGN.i18n.p("lists_datasets.authorize.store_error_detail", "Could not store connection info [%{error}]", {error:resp.error}) : "Could not store connection info [" + resp.error + "]"));
                 }
                 else {
-                    jQuery("#authorize-status").html("Accounts connected - you may close this window");
+                    jQuery("#authorize-status").text((window.SGN && SGN.i18n ? SGN.i18n.p("lists_datasets.authorize.connected", "Accounts connected - you may close this window") : "Accounts connected - you may close this window"));
                     window.close();
                 }
             },
             error: () => {
-                alert("Could not store connection info");
+                alert((window.SGN && SGN.i18n ? SGN.i18n.p("lists_datasets.authorize.store_error", "Could not store connection info") : "Could not store connection info"));
             }
         });
     }

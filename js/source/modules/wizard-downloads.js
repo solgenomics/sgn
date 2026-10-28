@@ -5,7 +5,7 @@ import "../legacy/CXGN/Dataset.js";
  * WizardDownloads - Creates a new WizardDownloads object.
  *
  * @class
- * @classdesc links to a wizard and manages showing relavant related data
+ * @classdesc links to a wizard and manages showing relevant related data
  * @param  {type} main_id div to draw within
  * @param  {type} wizard wizard to link to
  * @returns {Object}
@@ -57,7 +57,7 @@ export function WizardDownloads(main_id,wizard){
       selections["genotyping_projects"]:
       [];
     main.select(".wizard-download-genotypes-info")
-      .attr("value",`${accessions.length||"Too few"} accessions`);
+      .attr("value", window.SGN && SGN.i18n ? SGN.i18n.p("global.wizard_downloads.accessions_count", "%{count} accessions", {count: accessions.length || SGN.i18n.p("global.wizard_downloads.too_few", "Too few")}) : `${accessions.length||"Too few"} accessions`);
     main.selectAll(".wizard-download-genotypes")
       .attr("disabled",accessions.length<1?true:null)
       .on("click",()=>{
@@ -74,7 +74,7 @@ export function WizardDownloads(main_id,wizard){
         var include_duplicate_genotypes = d3.select(".wizard-download-genotypes-duplicates-include").property("checked");
         var marker_set_list_id = d3.select(".wizard-download-genotypes-marker-set-list-id").node().value;
         if(chromosome_number && marker_set_list_id) {
-            alert(`Please indicate either chromosome or markerset, not both.`);
+            alert((window.SGN && SGN.i18n ? SGN.i18n.p("global.wizard_downloads.chromosome_markerset_conflict", "Please indicate either chromosome or markerset, not both.") : "Please indicate either chromosome or markerset, not both."));
             d3.select(this).attr("disabled",null);
             return;
         }
@@ -151,7 +151,7 @@ export function WizardDownloads(main_id,wizard){
     // Download Trial Metadata
     var trials = categories.indexOf("trials")!=-1 ? selections["trials"] : [];
     main.selectAll(".wizard-download-tmetadata-info")
-      .attr("value",`${trials.length||"Too few"} trials`);
+      .attr("value", window.SGN && SGN.i18n ? SGN.i18n.p("global.wizard_downloads.trials_count", "%{count} trials", {count: trials.length || SGN.i18n.p("global.wizard_downloads.too_few", "Too few")}) : `${trials.length||"Too few"} trials`);
     main.selectAll(".wizard-download-tmetadata")
       .attr("disabled",trials.length>0?null:true)
       .on("click",()=>{
@@ -176,7 +176,7 @@ export function WizardDownloads(main_id,wizard){
 
 
     main.selectAll(".wizard-download-phenotypes-info")
-      .attr("value",`${trials.length||"Too few"} trials`);
+      .attr("value", window.SGN && SGN.i18n ? SGN.i18n.p("global.wizard_downloads.trials_count", "%{count} trials", {count: trials.length || SGN.i18n.p("global.wizard_downloads.too_few", "Too few")}) : `${trials.length||"Too few"} trials`);
     main.selectAll(".wizard-download-phenotypes")
       .attr("disabled",trials.length>0?null:true)
       .on("click",()=>{
@@ -248,9 +248,9 @@ export function WizardDownloads(main_id,wizard){
     var instances = categories.indexOf("instances")!=-1 ? selections["instances"] : [];
 
     main.selectAll(".wizard-download-high-dim-phenotypes-info")
-      .attr("value",`${trials.length||"Too few"} trials`);
+      .attr("value", window.SGN && SGN.i18n ? SGN.i18n.p("global.wizard_downloads.trials_count", "%{count} trials", {count: trials.length || SGN.i18n.p("global.wizard_downloads.too_few", "Too few")}) : `${trials.length||"Too few"} trials`);
     main.selectAll(".wizard-download-high-dim-phenotypes-protocol-info")
-      .attr("value", hdp_protocols.length === 1 ? `${hdp_protocols.length} protocols` : hdp_protocols.length > 1 ? "Please select only 1 protocol" : "No protocol selected");
+      .attr("value", hdp_protocols.length === 1 ? (window.SGN && SGN.i18n ? SGN.i18n.p("global.wizard_downloads.protocols_count", "%{count} protocols", {count: hdp_protocols.length}) : `${hdp_protocols.length} protocols`) : hdp_protocols.length > 1 ? (window.SGN && SGN.i18n ? SGN.i18n.p("global.wizard_downloads.protocol_select_one", "Please select only 1 protocol") : "Please select only 1 protocol") : (window.SGN && SGN.i18n ? SGN.i18n.p("global.wizard_downloads.no_protocol_selected", "No protocol selected") : "No protocol selected"));
     main.selectAll(".wizard-download-high-dim-phenotypes")
       .attr("disabled",trials.length>0 && hdp_protocols.length<=1 ? null:true)
       .on("click",()=>{

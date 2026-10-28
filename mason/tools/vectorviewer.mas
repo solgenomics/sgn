@@ -31,10 +31,10 @@ $edit_privs
 <!-- <center> -->
 <div style="text-align: center;">
     <!DOCTYPE html>
-<h1>Vector Viewer</h1>
+<h1><% $c->i18n->p("transformation.root.vector_viewer", "Vector Viewer") |h %></h1>
 
 <!-- Add a bit of text -->
-<p>Go wild!</p>
+<p><% $c->i18n->p("transformation.root.go_wild", "Go wild!") |h %></p>
 
 <!-- Add a svg shape. Note that the 'target' class is attributed to the circle -->
 <!-- svg> 
@@ -76,9 +76,9 @@ $edit_privs
 <br />
 <!-- <button id="saveButton" style="btn"> Save Vector </button> -->
 <!-- <button id="loadButton" style="btn"> Load Vector </button> -->
-<button id="saveVector" style="btn"> Save Vector </button>
-<button id="loadVector" style="btn"> Load Vector </button>
-<button id="update_vector" style="btn">Update/Reset</button>
+<button id="saveVector" style="btn"> <% $c->i18n->p("transformation.root.save_vector.2e65205", "Save Vector") |h %> </button>
+<button id="loadVector" style="btn"> <% $c->i18n->p("transformation.root.load_vector", "Load Vector") |h %> </button>
+<button id="update_vector" style="btn"><% $c->i18n->p("transformation.root.update_reset", "Update/Reset") |h %></button>
 <button id="zoomIn" style="btn"> + </button>
 <button id="zoomOut" style="btn"> - </button>
 
@@ -88,7 +88,7 @@ $edit_privs
 <br />
 
 <table id="vector_table" width="80%" class="display table table-hover table-striped">
-<thead><td>Name</td><td>Start Coord</td><td>End Coord</td><td>Color</td><td>Orientation</td></thead></table>
+<thead><td><% $c->i18n->p("global.library_search.name", "Name") |h %></td><td><% $c->i18n->p("transformation.root.start_coord.c39b242", "Start Coord") |h %></td><td><% $c->i18n->p("transformation.root.end_coord.22a497a", "End Coord") |h %></td><td><% $c->i18n->p("transformation.root.color", "Color") |h %></td><td><% $c->i18n->p("transformation.root.orientation", "Orientation") |h %></td></thead></table>
 <br />
 <br />
 <br />
@@ -96,7 +96,7 @@ $edit_privs
 <!-- Add a svg area, empty -->
 
 <table id="vector_table2" width="20%" class="display table table-hover table-striped">
-<thead><td>RE Site</td><td>Cut Coord</td></thead></table>
+<thead><td><% $c->i18n->p("transformation.root.re_site", "RE Site") |h %></td><td><% $c->i18n->p("transformation.root.cut_coord.bd2974e", "Cut Coord") |h %></td></thead></table>
 
 <br />
 <br />
@@ -202,7 +202,7 @@ function updateVector() {
     }
     
 
-    //Convert the data from table_data into a useable form inside the "data" dataset
+    //Convert the data from table_data into a usable form inside the "data" dataset
     data.push({
       name: table_data[i][0],
       startAngle: table_data[i][1] / vectorLength * Math.PI * 2,
@@ -218,12 +218,12 @@ function updateVector() {
 
   }
 
-  //Anoter for each loop, this time for the RE sites
+  //Another for each loop, this time for the RE sites
     for (var i = 0; i < table_data_RESites.length; i++) {
   var name = table_data_RESites[i][0];
   var cutCoord = table_data_RESites[i][1];
 
-    //Convert the data from table_data_RESites into a useable form inside the "re_sites" dataset
+    //Convert the data from table_data_RESites into a usable form inside the "re_sites" dataset
       re_sites.push({
     name: name,
     cutCoord: cutCoord
@@ -256,19 +256,19 @@ $(document).ready(function () {
 
 
    var columnDefs = [{
-      title: "Feature Name",
+      title: jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("transformation.root.feature_name", "Feature Name") : "Feature Name")).html(),
       type: "text"
     }, {
-      title: "Start Coord",
+      title: jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("transformation.root.start_coord.c39b242", "Start Coord") : "Start Coord")).html(),
       type: "text"
     }, {
-      title: "End Coord"
+      title: jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("transformation.root.end_coord.22a497a", "End Coord") : "End Coord")).html()
       //no type = text
     }, {
-      title: "Color",
+      title: jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("transformation.root.color", "Color") : "Color")).html(),
       type: "text"
     }, {
-      title: "Orientation",
+      title: jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("transformation.root.orientation", "Orientation") : "Orientation")).html(),
       type: "text"
     }];
 
@@ -283,17 +283,17 @@ $(document).ready(function () {
       altEditor: true,     // Enable altEditor
       buttons: [
           {
-          text: 'Add',
+          text: jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("global.search_wizard.add", "Add") : 'Add')).html(),
           name: 'add'        // do not change name
           },
           {
           extend: 'selected', // Bind to Selected row
-          text: 'Edit',
+          text: jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("accession.sequencing.action.edit", "Edit") : 'Edit')).html(),
           name: 'edit'        // do not change name
           },
           {
           extend: 'selected', // Bind to Selected row
-          text: 'Delete',
+          text: jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("global.dataset_cxgn_dataset.delete", "Delete") : 'Delete')).html(),
           name: 'delete'      // do not change name
           }
       ]
@@ -305,10 +305,10 @@ $(document).ready(function () {
 
     //RE sites table
     var columnDefs2 = [{
-      title: "Restriction Enzyme Site",
+      title: jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("transformation.root.restriction_enzyme_site", "Restriction Enzyme Site") : "Restriction Enzyme Site")).html(),
       type: "text"
     }, {
-      title: "Cut Coord",
+      title: jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("transformation.root.cut_coord.bd2974e", "Cut Coord") : "Cut Coord")).html(),
       type: "text"
     }];
  
@@ -324,17 +324,17 @@ $(document).ready(function () {
       altEditor: true,     // Enable altEditor
       buttons: [
           {
-          text: 'Add',
+          text: jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("global.search_wizard.add", "Add") : 'Add')).html(),
           name: 'add'        // do not change name
           },
           {
           extend: 'selected', // Bind to Selected row
-          text: 'Edit',
+          text: jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("accession.sequencing.action.edit", "Edit") : 'Edit')).html(),
           name: 'edit'        // do not change name
           },
           {
           extend: 'selected', // Bind to Selected row
-          text: 'Delete',
+          text: jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("global.dataset_cxgn_dataset.delete", "Delete") : 'Delete')).html(),
           name: 'delete'      // do not change name
           }
       ]
@@ -422,18 +422,18 @@ jQuery("#loadVector").click(function () {
 
 </div>
 
-<div id="saveDialog" title="Save Vector">
+<div id="saveDialog" title="<% $c->i18n->p("transformation.root.save_vector.2e65205", "Save Vector") |h %>">
 
 <input id="saveInput" ></input>
 
-<button id="dialogSaveButton"> Save </button>
+<button id="dialogSaveButton"> <% $c->i18n->p("account.quick_create.save", "Save") |h %> </button>
 
 </div>
 
-<div id="loadDialog" title="Load Vector">
+<div id="loadDialog" title="<% $c->i18n->p("transformation.root.load_vector", "Load Vector") |h %>">
 
 <input id="loadInput" ></input>
 
-<button id="dialogLoadButton"> Load </button>
+<button id="dialogLoadButton"> <% $c->i18n->p("global.search_wizard.load", "Load") |h %> </button>
 
 </div>

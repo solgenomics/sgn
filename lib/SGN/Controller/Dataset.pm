@@ -6,6 +6,7 @@ use CXGN::Dataset;
 use Data::Dumper;
 use strict;
 use warnings;
+use HTML::Entities ();
 
 BEGIN { extends 'Catalyst::Controller'; }
 
@@ -29,7 +30,7 @@ sub dataset :Chained('/') Path('dataset') Args(1) {
     if ($@) {
         print STDERR "Dataset retrieval error: $@ \n";
         $c->stash->{template} = 'generic_message.mas';
-	    $c->stash->{message} = "The requested dataset does not exist or has been deleted.";
+	    $c->stash->{message} = HTML::Entities::encode_entities($c->i18n->p("lists_datasets.controller.not_found", "The requested dataset does not exist or has been deleted."));
 	    return;
     }
     
@@ -38,7 +39,9 @@ sub dataset :Chained('/') Path('dataset') Args(1) {
     my $owner_id = $dataset->sp_person_id;
     if ( ! ($user_id == $owner_id || $dataset->is_public) ) {
         $c->stash->{template} = 'generic_message.mas';
-        $c->stash->{message} = "You do not have access to this dataset.<br /><br />If you are the owner of this dataset, make sure you are logged in, or ask the owner to make it public.";
+        my $access_message = HTML::Entities::encode_entities($c->i18n->p("lists_datasets.controller.no_access", "You do not have access to this dataset.%{break}%{break}If you are the owner of this dataset, make sure you are logged in, or ask the owner to make it public.", {break => "__SGN_DATASET_BREAK__"}));
+        $access_message =~ s/__SGN_DATASET_BREAK__/<br \/>/g;
+        $c->stash->{message} = $access_message;
         return;
     }
 
@@ -111,7 +114,7 @@ sub publish_dataset_authorize_start : Path('/dataset/publish/authorize') Args(1)
     my $config = $c->get_conf('dataset_archive_clients') || {};
     if ( ! exists $config->{$service} ) {
         $c->stash->{template} = "generic_message.mas";
-        $c->stash->{message} = "The selected service does not exist in the server configuration";
+        $c->stash->{message} = HTML::Entities::encode_entities($c->i18n->p("lists_datasets.controller.service_missing", "The selected service does not exist in the server configuration"));
         return;
     }
     my $selected = $config->{$service};
@@ -133,12 +136,12 @@ sub publish_dataset_authorize_finish : Path('/dataset/publish/authorize') Args(0
     my $code = $c->req->param('code');
 
     if ( !defined $code && !defined $error ) {
-        $error = "Authorization code not returned by the service";
+        $error = $c->i18n->p("lists_datasets.controller.no_code", "Authorization code not returned by the service");
     }
 
     if ( $error ) {
         $c->stash->{template} = 'generic_message.mas';
-        $c->stash->{message} = "Could not authorize the appication: $error";
+        $c->stash->{message} = HTML::Entities::encode_entities($c->i18n->p("lists_datasets.controller.authorization_failed", "Could not authorize the application: %{error}", {error => $error}));
         return;
     }
 

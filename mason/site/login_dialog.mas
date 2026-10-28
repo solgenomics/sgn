@@ -1,4 +1,30 @@
 
+<!-- Translation labels remain readable inside the native narrow dialogs. -->
+<style>
+  #site_login_dialog .btn,
+  #site_login_forgot_username_dialog .btn,
+  #site_login_reset_password_dialog .btn,
+  #site_login_new_user_dialog .btn,
+  #post_email_reset_password_dialog .btn {
+    max-width: 100%;
+    white-space: normal;
+    overflow-wrap: anywhere;
+  }
+  /* Bootstrap's icon cells have 1% width; their buttons need intrinsic width. */
+  #site_login_dialog .input-group-btn > .btn {
+    max-width: none;
+    white-space: nowrap;
+    overflow-wrap: normal;
+  }
+  #site_login_dialog .modal-title,
+  #site_login_forgot_username_dialog .modal-title,
+  #site_login_reset_password_dialog .modal-title,
+  #site_login_new_user_dialog .modal-title,
+  #post_email_reset_password_dialog .modal-title {
+    overflow-wrap: anywhere;
+  }
+</style>
+
 <!-- Login Dialog -->
 
 <%args>
@@ -6,6 +32,14 @@ $goto_url => '/'
 </%args>
 
 <%init>
+    use HTML::Entities ();
+    use JSON::PP ();
+    my $directory_notice = HTML::Entities::encode_entities(
+        $c->i18n->p('auth.registration.existing_account_notice', 'Before creating a new account, please check if you already have an account using the %{directory_search}.', { directory_search => "__SGN_DIRECTORY_SEARCH_LINK__" })
+    );
+    my $directory_anchor = '<a href="/search/direct_search.pl?search=directory">'
+        . HTML::Entities::encode_entities($c->i18n->p('auth.registration.directory_search', 'directory search')) . '</a>';
+    $directory_notice =~ s/__SGN_DIRECTORY_SEARCH_LINK__/$directory_anchor/g;
     my $join_breeding_programs = eval{ $c->get_conf('user_registration_join_breeding_programs') };
     my $random_factor = int rand(5);
     my $minimum = int(rand(10)) * 10**$random_factor;
@@ -19,58 +53,58 @@ $goto_url => '/'
         <div class="modal-content">
             <div class="modal-header" style="text-align:center">
 %  if (!$c->config->{require_login}) {
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <button type="button" class="close" data-dismiss="modal" aria-label="<% $c->i18n->p('auth.common.close', 'Close') |h %>"><span aria-hidden="true">&times;</span></button>
 %  }
-                <h3 class="modal-title" id="site_login_dialog_title">Login</h3>
+                <h3 class="modal-title" id="site_login_dialog_title"><% $c->i18n->p('auth.login.title', 'Login') |h %></h3>
             </div>
             <div class="modal-body">
                 <form id="login_form" name="login_form">
                     <div class="container-fluid">
 
 % if ($c->config->{default_login_janedoe}) {
-                        <input class="form-control" style="width:240px" id="username" name="username" placeholder="Username" type="text" value="janedoe"/>
+                        <input class="form-control" style="width:240px" id="username" name="username" placeholder="<% $c->i18n->p('auth.login.username', 'Username') |h %>" aria-label="<% $c->i18n->p('auth.login.username', 'Username') |h %>" type="text" value="janedoe"/>
                         <br />
-                        <input class="form-control" style="width:240px" id="password" name="password" placeholder="Password" type="password" value="secretpw"/>
+                        <input class="form-control" style="width:240px" id="password" name="password" placeholder="<% $c->i18n->p('auth.login.password', 'Password') |h %>" aria-label="<% $c->i18n->p('auth.login.password', 'Password') |h %>" type="password" value="secretpw"/>
 % } else {
                         <div class="input-group">
-                            <input class="form-control" id="username" name="username" placeholder="Username" type="text" tabindex="1" />
+                            <input class="form-control" id="username" name="username" placeholder="<% $c->i18n->p('auth.login.username', 'Username') |h %>" aria-label="<% $c->i18n->p('auth.login.username', 'Username') |h %>" type="text" tabindex="1" />
                             <span class="input-group-btn">
-                                <button id="forgot_username_modal_show" class="btn btn-default" type="button" tabindex="4">&nbsp;<span class="glyphicon glyphicon-question-sign"></span>&nbsp;</button>
+                                <button id="forgot_username_modal_show" aria-label="<% $c->i18n->p('auth.login.forgot_username', 'Forgot Username') |h %>" class="btn btn-default" type="button" tabindex="4">&nbsp;<span class="glyphicon glyphicon-question-sign"></span>&nbsp;</button>
                             </span>
                         </div>
                         <br />
                         <div class="input-group">
-                            <input class="form-control" id="password" name="password" placeholder="Password" type="password" tabindex="2" />
+                            <input class="form-control" id="password" name="password" placeholder="<% $c->i18n->p('auth.login.password', 'Password') |h %>" aria-label="<% $c->i18n->p('auth.login.password', 'Password') |h %>" type="password" tabindex="2" />
                             <span class="input-group-btn">
-                                <button id="reset_password_modal_show" class="btn btn-default" type="button" tabindex="5">&nbsp;<span class="glyphicon glyphicon-question-sign"></span>&nbsp;</button>
+                                <button id="reset_password_modal_show" aria-label="<% $c->i18n->p('auth.login.reset_password', 'Reset Password') |h %>" class="btn btn-default" type="button" tabindex="5">&nbsp;<span class="glyphicon glyphicon-question-sign"></span>&nbsp;</button>
                             </span>
                         </div>
 % }
                         <br />
 
                         <div>
-                            <input type="checkbox" id="show_password"> Show Password
+                            <input type="checkbox" id="show_password"> <% $c->i18n->p('auth.login.show_password', 'Show Password') |h %>
                         </div>
                         <br />
 
-                        <input type="hidden" value="<% $goto_url %>" id="goto_url" name="goto_url" />
+                        <input type="hidden" value="<% $goto_url |h %>" id="goto_url" name="goto_url" />
 
                         <div>
-                            <button class="btn btn-default" id="new_user_modal_show" style="float:left" tabindex="6">New User</button>
-                            <button class="btn btn-primary" id="submit_password" name="submit_password" type="submit" style="float:right" tabindex="3">Login</button>
+                            <button class="btn btn-default" id="new_user_modal_show" style="float:left" tabindex="6"><% $c->i18n->p('auth.login.new_user', 'New User') |h %></button>
+                            <button class="btn btn-primary" id="submit_password" name="submit_password" type="submit" style="float:right" tabindex="3"><% $c->i18n->p('auth.login.title', 'Login') |h %></button>
                         </div>
                     </div>
                 </form>
 % if ($c->config->{oidc_client}){
                 <div class="container-fluid" style="display: grid; margin-top: 20px;">
 % for my $provider (sort { $a <=> $b} keys %{$c->config->{oidc_client}}) {
-                    <button class="btn btn-default" id="login_with_<% $provider %>" name="login_with_<% $provider %>" onclick="location.href = '/authenticate/oidc/<% $provider %>/login';" style="margin-bottom: 20px;">
+                    <button class="btn btn-default" id="login_with_<% $provider |h %>" name="login_with_<% $provider |h %>" onclick="location.href = <% JSON::PP->new->ascii->encode('/authenticate/oidc/' . $provider . '/login') |h %>;" style="margin-bottom: 20px;">
 % if ($provider =~ 'google') {
-                        <img style="width:20px" src="/documents/img/Google_logo.png"/>
+                        <img style="width:20px" src="/documents/img/Google_logo.png" alt="Google"/>
 % } elsif ($provider =~ 'keycloak') {
-                        <img style="width:20px" src="/documents/img/Keycloak_logo.png"/>
+                        <img style="width:20px" src="/documents/img/Keycloak_logo.png" alt="Keycloak"/>
 % }
-                        <% ucfirst($provider) %>
+                        <% ucfirst($provider) |h %>
                     </button>
 % }
                 </div>
@@ -78,7 +112,7 @@ $goto_url => '/'
             </div>
             <div class="modal-footer">
 %  if (!$c->config->{require_login}) {
-                <button id="close_site_login_dialog_button" type="button" class="btn btn-default" data-dismiss="modal" style="float:left">Close</button>
+                <button id="close_site_login_dialog_button" type="button" class="btn btn-default" data-dismiss="modal" style="float:left"><% $c->i18n->p('auth.common.close', 'Close') |h %></button>
 %  }
             </div>
         </div>
@@ -89,26 +123,26 @@ $goto_url => '/'
     <div class="modal-dialog" role="document">
         <div class="modal-content">
             <div class="modal-header" style="text-align:center">
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                <h3 class="modal-title" id="site_login_forgot_username_dialog_title">Forgot Username</h3>
+                <button type="button" class="close" data-dismiss="modal" aria-label="<% $c->i18n->p('auth.common.close', 'Close') |h %>"><span aria-hidden="true">&times;</span></button>
+                <h3 class="modal-title" id="site_login_forgot_username_dialog_title"><% $c->i18n->p('auth.login.forgot_username', 'Forgot Username') |h %></h3>
             </div>
             <div class="modal-body">
                 <div>
-                    If you've forgotten your username, enter your email address below. An email will be sent with any account username(s) associated with your email address.
+                    <% $c->i18n->p('auth.recovery.username_help', 'If you\'ve forgotten your username, enter your email address below. An email will be sent with any account username(s) associated with your email address.') |h %>
                 </div>
                 <br />
                 <div style="white-space:nowrap">
                     <form id="forgot_username_form" name="forgot_username_form" style="white-space:nowrap">
                         <div style="white-space:nowrap; align:center">
-                            <label class="textlabel">Email Address</label>
+                            <label class="textlabel"><% $c->i18n->p('auth.common.email', 'Email Address') |h %></label>
                             <input class="form-control" style="width:200px; white-space:nowrap; float:center" id="forgot_username_email" name="forgot_username_email" /><br />
-                            <button type="submit" class="btn btn-primary" id="submit_forgot_username_email" style="float:center" >Get Username(s)</button>
+                            <button type="submit" class="btn btn-primary" id="submit_forgot_username_email" style="float:center" ><% $c->i18n->p('auth.recovery.get_usernames', 'Get Username(s)') |h %></button>
                         </div>
                     </form>
                 </div>
             </div>
             <div class="modal-footer">
-                <button id="close_site_login_forgot_username_dialog_button" type="button" class="btn btn-default" data-dismiss="modal" style="float:left">Close</button>
+                <button id="close_site_login_forgot_username_dialog_button" type="button" class="btn btn-default" data-dismiss="modal" style="float:left"><% $c->i18n->p('auth.common.close', 'Close') |h %></button>
             </div>
         </div>
     </div>
@@ -118,26 +152,26 @@ $goto_url => '/'
     <div class="modal-dialog" role="document">
         <div class="modal-content">
             <div class="modal-header" style="text-align:center">
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                <h3 class="modal-title" id="site_login_reset_password_dialog_title">Reset Password</h3>
+                <button type="button" class="close" data-dismiss="modal" aria-label="<% $c->i18n->p('auth.common.close', 'Close') |h %>"><span aria-hidden="true">&times;</span></button>
+                <h3 class="modal-title" id="site_login_reset_password_dialog_title"><% $c->i18n->p('auth.login.reset_password', 'Reset Password') |h %></h3>
             </div>
             <div class="modal-body">
                 <div>
-                    To reset your password, please enter your email address. A link will be sent to that address with a link that will enable you to reset your password.
+                    <% $c->i18n->p('auth.recovery.password_help', 'To reset your password, please enter your email address. A link will be sent to that address with a link that will enable you to reset your password.') |h %>
                 </div>
                 <br />
                 <div style="white-space:nowrap">
                     <form id="password_reset_form" name="password_reset_form" style="white-space:nowrap">
                         <div style="white-space:nowrap; align:center">
-                            <label class="textlabel">Email Address</label>
+                            <label class="textlabel"><% $c->i18n->p('auth.common.email', 'Email Address') |h %></label>
                             <input class="form-control" style="width:200px; white-space:nowrap; float:center" id="password_reset_email" name="password_reset_email" /><br />
-                            <button type="submit" class="btn btn-primary" id="submit_password_reset_email" style="float:center" >Get link</button>
+                            <button type="submit" class="btn btn-primary" id="submit_password_reset_email" style="float:center" ><% $c->i18n->p('auth.recovery.get_link', 'Get link') |h %></button>
                         </div>
                     </form>
                 </div>
             </div>
             <div class="modal-footer">
-                <button id="close_site_login_reset_password_dialog_button" type="button" class="btn btn-default" data-dismiss="modal" style="float:left">Close</button>
+                <button id="close_site_login_reset_password_dialog_button" type="button" class="btn btn-default" data-dismiss="modal" style="float:left"><% $c->i18n->p('auth.common.close', 'Close') |h %></button>
             </div>
         </div>
     </div>
@@ -147,8 +181,8 @@ $goto_url => '/'
     <div class="modal-dialog modal-lg" role="document">
         <div class="modal-content">
             <div class="modal-header" style="text-align:center">
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                <h3 class="modal-title" id="site_login_new_user_dialog_title">Create New User</h3>
+                <button type="button" class="close" data-dismiss="modal" aria-label="<% $c->i18n->p('auth.common.close', 'Close') |h %>"><span aria-hidden="true">&times;</span></button>
+                <h3 class="modal-title" id="site_login_new_user_dialog_title"><% $c->i18n->p('auth.registration.title', 'Create New User') |h %></h3>
             </div>
             <div class="modal-body">
                 <div class="row">
@@ -157,83 +191,83 @@ $goto_url => '/'
                         <form id="new_account_form">
                             <div class="container-fluid">
                                 <div class="panel panel-danger">
-                                    <div class="panel-heading">Notice</div>
+                                    <div class="panel-heading"><% $c->i18n->p('auth.registration.notice', 'Notice') |h %></div>
                                     <div class="panel-body">
                                         <ul>
-                                            <li><b>Before</b> creating a new account, please check if you <b>already have an account</b> using the <a href="/search/direct_search.pl?search=directory">directory search</a>. </li>
-                                            <li>A link will be emailed to you. Please click on it to activate the account.</li>
-                                            <li><b>All fields are required.</b></li>
+                                            <li><% $directory_notice %></li>
+                                            <li><% $c->i18n->p('auth.registration.activation_notice', 'A link will be emailed to you. Please click on it to activate the account.') |h %></li>
+                                            <li><b><% $c->i18n->p('auth.registration.required_notice', 'All fields are required.') |h %></b></li>
                                         </ul>
                                     </div>
                                 </div>
 
                                 <div class="form-horizontal">
                                     <div class="form-group">
-                                        <label class="col-sm-3 control-label">First Name: </label>
+                                        <label class="col-sm-3 control-label"><% $c->i18n->p('auth.registration.first_name', 'First Name: ') |h %></label>
                                         <div class="col-sm-9">
                                             <input class="form-control" type="text" name="first_name" value="" />
                                         </div>
                                     </div>
                                     <div class="form-group">
-                                        <label class="col-sm-3 control-label">Last Name: </label>
+                                        <label class="col-sm-3 control-label"><% $c->i18n->p('auth.registration.last_name', 'Last Name: ') |h %></label>
                                         <div class="col-sm-9">
                                             <input class="form-control" type="text" name="last_name" value="" />
                                         </div>
                                     </div>
 % if ( $join_breeding_programs ) { 
                                     <div class="form-group">
-                                        <label class="col-sm-3 control-label">Breeding Program(s): </label>
+                                        <label class="col-sm-3 control-label"><% $c->i18n->p('auth.registration.programs', 'Breeding Program(s): ') |h %></label>
                                         <div class="col-sm-9">
                                             <div id="breeding_programs_div"></div>
                                       </div>
                                     </div>
 % } else {  
                                     <div class="form-group">
-                                        <label class="col-sm-3 control-label">Organization: </label>
+                                        <label class="col-sm-3 control-label"><% $c->i18n->p('auth.registration.organization', 'Organization: ') |h %></label>
                                         <div class="col-sm-9">
                                             <input class="form-control" type="text" name="organization" value="" />
                                         </div>
                                     </div>
 % }
                                     <div class="form-group">
-                                        <label class="col-sm-3 control-label">Username: </label>
+                                        <label class="col-sm-3 control-label"><% $c->i18n->p('auth.registration.username', 'Username: ') |h %></label>
                                         <div class="col-sm-9">
                                             <input class="form-control" type="text" name="username" value="" />
-                                            <p class="help-block">Username must be at least 7 characters long.</p>
+                                            <p class="help-block"><% $c->i18n->p('auth.registration.username_help', 'Username must be at least 7 characters long.') |h %></p>
                                         </div>
                                     </div>
                                     <div class="form-group">
-                                        <label class="col-sm-3 control-label">Password: </label>
+                                        <label class="col-sm-3 control-label"><% $c->i18n->p('auth.registration.password', 'Password: ') |h %></label>
                                         <div class="col-sm-9">
                                             <input class="form-control" type="password" name="password" value="" />
-                                            <p class="help-block">Password must be at least 7 characters long and different from your username.</p>
+                                            <p class="help-block"><% $c->i18n->p('auth.registration.password_help', 'Password must be at least 7 characters long and different from your username.') |h %></p>
                                         </div>
                                     </div>
                                     <div class="form-group">
-                                        <label class="col-sm-3 control-label">Confirm Password: </label>
+                                        <label class="col-sm-3 control-label"><% $c->i18n->p('auth.registration.confirm_password', 'Confirm Password: ') |h %></label>
                                         <div class="col-sm-9">
                                             <input class="form-control" type="password" name="confirm_password" value="" />
-                                            <p class="help-block">Password must be at least 7 characters long and different from your username.</p>
+                                            <p class="help-block"><% $c->i18n->p('auth.registration.password_help', 'Password must be at least 7 characters long and different from your username.') |h %></p>
                                         </div>
                                     </div>
                                     <div class="form-group">
-                                        <label class="col-sm-3 control-label">Email Address: </label>
+                                        <label class="col-sm-3 control-label"><% $c->i18n->p('auth.registration.email', 'Email Address: ') |h %></label>
                                         <div class="col-sm-9">
                                             <input class="form-control" type="text" name="email_address" value="" />
-                                            <p class="help-block">An email will be sent to this address requiring you to confirm its receipt to activate your account.</p>
+                                            <p class="help-block"><% $c->i18n->p('auth.registration.email_help', 'An email will be sent to this address requiring you to confirm its receipt to activate your account.') |h %></p>
                                         </div>
                                     </div>
                                     <div class="form-group">
-                                        <label class="col-sm-3 control-label">Are you Human? </label>
+                                        <label class="col-sm-3 control-label"><% $c->i18n->p('auth.registration.human', 'Are you Human? ') |h %></label>
                                         <div class="col-sm-9">
-                                            <p style="padding-top: 7px">What is <% $challenge_question %>?</p>
+                                            <p style="padding-top: 7px"><% $c->i18n->p('auth.registration.challenge', 'What is %{question}?', { question => $challenge_question }) |h %></p>
                                             <input class="form-control" type="text" name="challenge_response" value="" />
                                         </div>
                                     </div>
 
                                     <div align="right">
-                                        <button class="btn btn-default btn-lg" type="reset" >Reset</button>
-                                        <button class="btn btn-primary btn-lg" type="submit" name="create_account" >Create Account</button>
+                                        <button class="btn btn-default btn-lg" type="reset" ><% $c->i18n->p('auth.registration.reset', 'Reset') |h %></button>
+                                        <button class="btn btn-primary btn-lg" type="submit" name="create_account" ><% $c->i18n->p('auth.registration.create_account', 'Create Account') |h %></button>
                                     </div>
                                 </div>
                             </div>
@@ -243,7 +277,7 @@ $goto_url => '/'
                 </div>
             </div>
             <div class="modal-footer">
-                <button id="close_site_login_new_user_dialog_button" type="button" class="btn btn-default" data-dismiss="modal" style="float:left">Close</button>
+                <button id="close_site_login_new_user_dialog_button" type="button" class="btn btn-default" data-dismiss="modal" style="float:left"><% $c->i18n->p('auth.common.close', 'Close') |h %></button>
             </div>
         </div>
     </div>
@@ -267,8 +301,9 @@ jQuery(document).ready( function() {
         var form_data = jQuery('#forgot_username_form').serialize();
         jQuery.ajax( {
             url: '/ajax/user/forgot_username',
+            headers: {'X-SGN-Locale': document.documentElement.getAttribute('data-sgn-locale') || document.documentElement.lang || 'en'},
             data: form_data,
-            error: function(r) { alert('An error occurred! Sorry!');  },
+            error: function(r) { alert((window.SGN && SGN.i18n ? SGN.i18n.p("auth.network_error", "An error occurred! Sorry!") : "An error occurred! Sorry!"));  },
             success: function(r) {
                 if (r.error) { alert(r.error); }
                 else { 
@@ -279,7 +314,7 @@ jQuery(document).ready( function() {
         });
     });
 
-    jQuery('#reset_password_modal_show').click(function(){
+    jQuery('#reset_password_modal_show').click(function(event){
         event.preventDefault();
         jQuery('#site_login_reset_password_dialog').modal('show');
     });
@@ -289,8 +324,9 @@ jQuery(document).ready( function() {
         var form_data = jQuery('#password_reset_form').serialize();
         jQuery.ajax( {
             url: '/ajax/user/reset_password',
+            headers: {'X-SGN-Locale': document.documentElement.getAttribute('data-sgn-locale') || document.documentElement.lang || 'en'},
             data: form_data,
-            error: function(r) { alert('An error occurred! Sorry!');  },
+            error: function(r) { alert((window.SGN && SGN.i18n ? SGN.i18n.p("auth.network_error", "An error occurred! Sorry!") : "An error occurred! Sorry!"));  },
             success: function(r) {
                 if (r.error) { alert(r.error); }
                 else { 
@@ -311,7 +347,7 @@ jQuery(document).ready( function() {
         }
     });
 
-    jQuery('#new_user_modal_show').click(function(){
+    jQuery('#new_user_modal_show').click(function(event){
         event.preventDefault();
         jQuery('#site_login_new_user_dialog').modal('show');
     });
@@ -327,12 +363,13 @@ jQuery(document).ready( function() {
         // Check bot challenge response and answer
         var response = jQuery("input[name='challenge_response']").val();
         if ( response !== "<% $challenge_answer %>" ) {
-            alert("Are you a bot?  The response to the 'Are you Human?' question did not match the answer.  Try again!");
+            alert((window.SGN && SGN.i18n ? SGN.i18n.p("auth.registration.challenge_error", "Are you a bot?  The response to the 'Are you Human?' question did not match the answer.  Try again!") : "Are you a bot?  The response to the 'Are you Human?' question did not match the answer.  Try again!"));
             return;
         }
 
         jQuery.ajax({
             url: '/ajax/user/new',
+            headers: {'X-SGN-Locale': document.documentElement.getAttribute('data-sgn-locale') || document.documentElement.lang || 'en'},
             beforeSend: function(){
                 jQuery('#working_modal').modal('show');
             },
@@ -342,7 +379,7 @@ jQuery(document).ready( function() {
                 console.log(r);
                 if (r.error) { alert(r.error); }
                 else {
-                    let message = r.message || 'New account added. Check your email for the confirmation link - you must confirm your account before you can login.';
+                    let message = r.message || (window.SGN && SGN.i18n ? SGN.i18n.p("auth.registration.account_added", "New account added. Check your email for the confirmation link - you must confirm your account before you can login.") : "New account added. Check your email for the confirmation link - you must confirm your account before you can login.");
                     alert(message);
                     jQuery('#site_login_new_user_dialog').modal('hide');
                     jQuery('#site_login_dialog').modal('hide');
@@ -362,13 +399,14 @@ jQuery(document).ready( function() {
         event.preventDefault();
         var form_data = jQuery('#login_form').serialize();
         if (!jQuery('#username').val() || !jQuery('#password').val()) { 
-            alert('Please enter a username and password');
+            alert((window.SGN && SGN.i18n ? SGN.i18n.p("auth.login.credentials_missing", "Please enter a username and password") : "Please enter a username and password"));
             return;
         }
         jQuery.ajax( { 
             url: '/ajax/user/login',
+            headers: {'X-SGN-Locale': document.documentElement.getAttribute('data-sgn-locale') || document.documentElement.lang || 'en'},
             data: form_data,
-            error: function(r) { alert('An error occurred! Sorry!');  },
+            error: function(r) { alert((window.SGN && SGN.i18n ? SGN.i18n.p("auth.network_error", "An error occurred! Sorry!") : "An error occurred! Sorry!"));  },
             success: function(r) {
                 if (r.error) { 
                     alert(r.error);

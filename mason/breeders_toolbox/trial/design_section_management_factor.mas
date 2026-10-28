@@ -1,3 +1,6 @@
+<%once>
+use HTML::Entities ();
+</%once>
 <%args>
 $trial_id
 $trial_name
@@ -9,29 +12,29 @@ $design_name
 
 <div class="well well-sm">
 
-    <&| /page/info_section.mas, id => "trial_accessions", title=>"Accessions Planted", is_subsection => 1, collapsible=>1, collapsed=>1 &>
+    <&| /page/info_section.mas, id => "trial_accessions", title => HTML::Entities::encode_entities($c->i18n->p("program.design_section.accessions", "Accessions Planted")), is_subsection => 1, collapsible=>1, collapsed=>1 &>
         <& /breeders_toolbox/trial/trial_accessions.mas, trial_id => $trial_id &>
     </&>
-    <&| /page/info_section.mas, id => "trial_controls", title=>"Controls",  is_subsection => 1, collapsible=>1, collapsed=>1 &>
+    <&| /page/info_section.mas, id => "trial_controls", title => HTML::Entities::encode_entities($c->i18n->p("program.design_section.controls", "Controls")),  is_subsection => 1, collapsible=>1, collapsed=>1 &>
         <& /breeders_toolbox/trial/trial_controls.mas, trial_id => $trial_id &>
     </&>
 
-    <&| /page/info_section.mas, id => "trial_plots", title=>"Plots",  is_subsection => 1, collapsible=>1, collapsed=>1 &>
+    <&| /page/info_section.mas, id => "trial_plots", title => HTML::Entities::encode_entities($c->i18n->p("program.design_section.plots", "Plots")),  is_subsection => 1, collapsible=>1, collapsed=>1 &>
         <& /breeders_toolbox/trial/trial_plots.mas, trial_id => $trial_id &>
     </&>
 
 % if ($has_subplot_entries) {
-    <&| /page/info_section.mas, id => "trial_subplots", title=>"Subplots",  is_subsection => 1, collapsible=>1, collapsed=>1 &>
+    <&| /page/info_section.mas, id => "trial_subplots", title => HTML::Entities::encode_entities($c->i18n->p("program.design_section.subplots", "Subplots")),  is_subsection => 1, collapsible=>1, collapsed=>1 &>
         <& /breeders_toolbox/trial/trial_subplots.mas, trial_id => $trial_id &>
     </&>
 % }
 % if ($has_plant_entries) {
-    <&| /page/info_section.mas, id => "trial_plants", title=>"Plant Entries", is_subsection => 1, collapsible=> 1, collapsed=>1 &>
+    <&| /page/info_section.mas, id => "trial_plants", title => HTML::Entities::encode_entities($c->i18n->p("program.design_section.plants", "Plant Entries")), is_subsection => 1, collapsible=> 1, collapsed=>1 &>
         <& /breeders_toolbox/trial/trial_plants.mas, trial_id => $trial_id &>
     </&>
 % }
 % if ($has_tissue_sample_entries) {
-    <&| /page/info_section.mas, id => "trial_tissue_samples", title=>"Tissue Sample Entries", is_subsection => 1, collapsible=> 1, collapsed=>1 &>
+    <&| /page/info_section.mas, id => "trial_tissue_samples", title => HTML::Entities::encode_entities($c->i18n->p("program.design_section.tissue_samples", "Tissue Sample Entries")), is_subsection => 1, collapsible=> 1, collapsed=>1 &>
         <& /breeders_toolbox/trial/trial_tissue_samples.mas, trial_id => $trial_id &>
     </&>
 % }

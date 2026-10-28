@@ -87,7 +87,7 @@ function plotGebvScatter() {
     var plotData    = allData.bothAxisValues;
             
     if (plotData == 'undefined') {
-        var message = 'There is no GEBV data to plot. Please report this problem';  
+        var message = (window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.legacy_no_gebv_data", "There is no GEBV data to plot. Please report this problem") : 'There is no GEBV data to plot. Please report this problem');
         jQuery('#gebvPlot2').append(message).show();
     } else {
         var options = { 
@@ -149,7 +149,7 @@ function plotGebvScatter() {
                 xaxis: { 
                     ticks: [], 
                     mode: "categories", 
-                    label: 'Genotypes',
+                    label: (window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.legacy_genotypes_axis", "Genotypes") : 'Genotypes'),
                 },                  
                 selection: { 
                     mode: "xy", 
@@ -263,7 +263,7 @@ function plotGebvScatter() {
                      mode: 'categories',                 
                      ticks: '',
                      tickColor: '#ffffff',
-                     axisLabel: 'Genotypes',
+                     axisLabel: (window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.legacy_genotypes_axis", "Genotypes") : 'Genotypes'),
                      position: 'bottom',
                      axisLabelPadding: 20,
                      color: '#0066CC',
@@ -274,7 +274,7 @@ function plotGebvScatter() {
                  yaxis: {                                
                      min: null,
                      max: null, 
-                     axisLabel: 'Trait GEBVs',
+                     axisLabel: (window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.legacy_trait_gebvs_axis", "Trait GEBVs") : 'Trait GEBVs'),
                      position: 'left',
                      color: '#0066CC',                    
                  },

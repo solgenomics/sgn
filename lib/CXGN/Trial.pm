@@ -50,6 +50,8 @@ Lukas Mueller <lam87@cornell.edu> and many others
 package CXGN::Trial;
 
 use Moose;
+use SGN::I18N ();
+use CatalystX::GlobalContext '$c';
 use Data::Dumper;
 use Try::Tiny;
 use CXGN::Trial::Folder;
@@ -287,6 +289,7 @@ sub get_all_phenotype_metadata {
 
 sub get_sorted_plots {
     my $class = shift;
+    my SGN::I18N $ui_trial_get_sorted_plots_i18n = $c && $c->can('i18n') ? $c->i18n : undef;
     my $schema = shift;
     my $trials = shift;
     my $order = shift || 'by_row_serpentine';
@@ -328,12 +331,12 @@ sub get_sorted_plots {
 
                 # Check for undefined row and column positions
                 if ( !defined($row) || !defined($col) ) {
-                    return { error => "One or more plots do not have a row and/or column defined!" };
+                    return { error => (SGN::I18N::translate($ui_trial_get_sorted_plots_i18n, "trial.model.coordinates_missing", "One or more plots do not have a row and/or column defined!")) };
                 }
 
                 # Check for duplicate positions (plots with the same row / col positions)
                 if ( exists $seen_row_cols{$key} ) {
-                    return { error => "One or more plots share the same row and column position!" };
+                    return { error => (SGN::I18N::translate($ui_trial_get_sorted_plots_i18n, "trial.model.coordinates_duplicate", "One or more plots share the same row and column position!")) };
                 }
 
                 # Set the min/max row/col

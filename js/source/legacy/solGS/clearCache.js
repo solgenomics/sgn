@@ -20,7 +20,7 @@ jQuery(document).ready(function() {
                 }            
             },
             error: function() {
-                alert('Error occurred while clearing cache');
+                alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.clear_cache_error", "Error occurred while clearing cache") : 'Error occurred while clearing cache'));
             }
         });
     });

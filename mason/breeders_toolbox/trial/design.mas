@@ -8,7 +8,7 @@ $trial_id
 
 <div id="trial_design_html" >
 <div class="well">
-[LOADING...]
+<% $c->i18n->p('trial.card.design.loading', "[LOADING...]") |h %>
 <br/>
 </div>
 </div>
@@ -20,18 +20,20 @@ jQuery(document).ready(function () {
 	jQuery.ajax ( {
 		url : '/ajax/breeders/trial/'+<% $trial_id %>+'/design',
 		success: function(response){
+			var caption = function(value) { return jQuery('<div>').text(value).html(); };
 			if (!response.design_type) {
 				jQuery('#trial_design_html').empty();
-				var html = "<div class='well well-sm'>There is no design data for this trial.</div>";
+				var noDesign = window.SGN && SGN.i18n ? SGN.i18n.p('trial.card.design.no_data', 'There is no design data for this trial.') : 'There is no design data for this trial.';
+				var html = "<div class='well well-sm'>"+caption(noDesign)+"</div>";
 					jQuery('#trial_design_html').html(html);
 	    	} else {
-				var trial_design_html = "<table class='table table-hover table-condensed table-bordered table-striped' id='trial_controls_table'><thead><tr><th>Attribute</th><th>Value</th></tr></thead><tbody><tr><td>Design</td><td><b>"+response.design_type+"</b></td></tr><tr><td>Number of Blocks</td><td>"+response.num_blocks+"</td></tr><tr><td>Number of Replicates</td><td>"+response.num_reps+"</td></tr><tr><td>Plot Length</td><td>"+response.plot_length+"</td></tr><tr><td>Plot Width</td><td>"+response.plot_width+"</td></tr><tr><td>Subplots Per Plot</td><td>"+response.subplots_per_plot+"</td></tr><tr><td>Plants Per Plot</td><td>"+response.plants_per_plot+"</td></tr></tbody></table>";
+				var trial_design_html = "<table class='table table-hover table-condensed table-bordered table-striped' id='trial_controls_table'><thead><tr><th>"+caption(window.SGN && SGN.i18n ? SGN.i18n.p('trial.card.design.header.attribute', 'Attribute') : 'Attribute')+"</th><th>"+caption(window.SGN && SGN.i18n ? SGN.i18n.p('trial.card.design.header.value', 'Value') : 'Value')+"</th></tr></thead><tbody><tr><td>"+caption(window.SGN && SGN.i18n ? SGN.i18n.p('trial.card.design.label.design', 'Design') : 'Design')+"</td><td><b>"+response.design_type+"</b></td></tr><tr><td>"+caption(window.SGN && SGN.i18n ? SGN.i18n.p('trial.card.design.label.blocks', 'Number of Blocks') : 'Number of Blocks')+"</td><td>"+response.num_blocks+"</td></tr><tr><td>"+caption(window.SGN && SGN.i18n ? SGN.i18n.p('trial.card.design.label.replicates', 'Number of Replicates') : 'Number of Replicates')+"</td><td>"+response.num_reps+"</td></tr><tr><td>"+caption(window.SGN && SGN.i18n ? SGN.i18n.p('trial.card.design.label.plot_length', 'Plot Length') : 'Plot Length')+"</td><td>"+response.plot_length+"</td></tr><tr><td>"+caption(window.SGN && SGN.i18n ? SGN.i18n.p('trial.card.design.label.plot_width', 'Plot Width') : 'Plot Width')+"</td><td>"+response.plot_width+"</td></tr><tr><td>"+caption(window.SGN && SGN.i18n ? SGN.i18n.p('trial.card.design.label.subplots_per_plot', 'Subplots Per Plot') : 'Subplots Per Plot')+"</td><td>"+response.subplots_per_plot+"</td></tr><tr><td>"+caption(window.SGN && SGN.i18n ? SGN.i18n.p('trial.card.design.label.plants_per_plot', 'Plants Per Plot') : 'Plants Per Plot')+"</td><td>"+response.plants_per_plot+"</td></tr></tbody></table>";
 				jQuery('#trial_design_html').empty();
 				jQuery('#trial_design_html').html(trial_design_html);
 			}
 		},
 		error: function(response){
-			alert("Error retrieving design.");
+			alert(window.SGN && SGN.i18n ? SGN.i18n.p('trial.card.design.error.retrieve', 'Error retrieving design.') : 'Error retrieving design.');
 		}
 	});
 });

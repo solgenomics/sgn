@@ -1,0 +1,13 @@
+# Керування селекційними програмами {#managing-breeding-programs}
+
+Щоб додати селекційну програму, натисніть кнопку “Додати нову програму” на сторінці “Керування селекційними програмами”.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/breeding_programs_screenshot.png')
+```
+
+Натисніть “Додати нову програму”, щоб відкрити порожню форму. Вкажіть назву й опис програми, яку потрібно додати, а потім натисніть “Додати селекційну програму”.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/new_program_screenshot.png')
+```

@@ -10,7 +10,7 @@ $genotyping_plate_format => '96'
 
 <div id="trial_plate_layout_html1">
 <div class="well">
-[LOADING...]
+<% $c->i18n->p("accession.files.loading_upper", "[LOADING...]") |h %>
 </div>
 </div>
 
@@ -26,7 +26,7 @@ jQuery(document).ready(function () {
         success: function(response){
             // console.log(response);
             jQuery("#working_modal").modal("hide");
-            var trial_plate_layout_html = "<table class='table table-hover table-condensed table-bordered' id='trial_plate_layout_table1'><thead><tr><th>Well</th><th>Accession Name</th><th>Sample Name</th><th>Volume (ul)</th><th>Concentration(ng)</th></tr></thead><tbody>";
+            var trial_plate_layout_html = ("<table class='table table-hover table-condensed table-bordered' id='trial_plate_layout_table1'><thead><tr><th>" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("genotype.plate.well", "Well") : "Well")).html() + "</th><th>" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("accession.related_stock.header.accession_name", "Accession Name") : "Accession Name")).html() + "</th><th>" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("genotype.plate.sample_name", "Sample Name") : "Sample Name")).html() + "</th><th>" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("genotype.plate.volume_ul", "Volume (ul)") : "Volume (ul)")).html() + "</th><th>" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("genotype.plate.concentration_ng", "Concentration(ng)") : "Concentration(ng)")).html() + "</th></tr></thead><tbody>");
 
             var col_max = 1;
             if (<% $genotyping_plate_format %> == '96'){
@@ -67,7 +67,7 @@ jQuery(document).ready(function () {
         },
         error: function(response){
             jQuery("#working_modal").modal("hide");
-            alert("Error retrieving plate layout.");
+            alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("genotype.plate.error_retrieving_plate_layout", "Error retrieving plate layout.") : "Error retrieving plate layout."));
         }
     });
 

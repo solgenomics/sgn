@@ -7,13 +7,13 @@
   <div class="modal-dialog modal-lg" role="document">
     <div class="modal-content">
       <div class="modal-header">
-        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-        <h4 class="modal-title" id="uploadLocationsDialog">Upload Locations</h4>
+        <button type="button" class="close" data-dismiss="modal" aria-label="<% $c->i18n->p("trial.upload.dialog.close", "Close") |h %>"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title" id="uploadLocationsDialog"><% $c->i18n->p("program.location.upload.upload_locations", "Upload Locations") |h %></h4>
       </div>
       <div class="modal-body">
         <div class="container-fluid">
-                <b>Header:</b><br>
-                The first row (header) must contain the following:
+                <b><% $c->i18n->p("trial.upload.dialog.header_label", "Header:") |h %></b><br>
+                <% $c->i18n->p("trial.card.entry_numbers.header_help", "The first row (header) must contain the following:") |h %>
                 <br>
                 <table class="table table-bordered table-hover">
                   <tbody>
@@ -31,29 +31,29 @@
                   </tr>
                   </tbody>
                 </table>
-                <b>Required values:</b><br>
-                <b>Name:</b> must not conflict with an existing location name<br>
-                <b>Abbreviation:</b> used in the map and in uploads, must not conflict with an existing abbreviation<br>
-                <b>Country Code:</b> must be an <a href="https://en.wikipedia.org/wiki/ISO_3166-1_alpha-3">ISO Alpha-3 country code</a><br>
-                <b>Country Name:</b> must be an uppercase english short name from the <a href="https://en.wikipedia.org/wiki/ISO_3166-1_alpha-3">ISO standard</a><br>
-                <b>Program:</b> must be an exisiting Breeding Program in the database, or multiple breeding programs separated by '&'<br>
-                <b>Type:</b> must be one of the following: Town, Farm, Field, Greenhouse, Screenhouse, Lab, Storage, Other<br>
-                <b>Latitude:</b> (in degrees) must be a number between 90 and -90.<br>
-                <b>Longitude:</b> (in degrees) must be a number between 180 and -180.<br>
-                <b>Elevation:</b> (in meters) must be a number between -418 (Dead Sea) and 8,848 (Mt. Everest).<br>
-                <br><b>Optional values:</b><br>
-                <b>NOAA Station ID:</b> The NOAA Station ID that is nearest and most relevant to the location. <a href="https://www.ncdc.noaa.gov/cdo-web/search" target="_blank">Search Here</a><br>
+                <b><% $c->i18n->p("program.location.upload.required", "Required values:") |h %></b><br>
+                <b>Name:</b> <% $c->i18n->p("program.location.upload.name_help", "must not conflict with an existing location name") |h %><br>
+                <b>Abbreviation:</b> <% $c->i18n->p("program.location.upload.abbreviation_help", "used in the map and in uploads, must not conflict with an existing abbreviation") |h %><br>
+                <b>Country Code:</b> <% $c->i18n->p("program.location.upload.country_code_help", "must be an ") |h %><a href="https://en.wikipedia.org/wiki/ISO_3166-1_alpha-3"><% $c->i18n->p("program.location.upload.iso_country_code", "ISO Alpha-3 country code") |h %></a><br>
+                <b>Country Name:</b> <% $c->i18n->p("program.location.upload.country_name_help", "must be an uppercase english short name from the ") |h %><a href="https://en.wikipedia.org/wiki/ISO_3166-1_alpha-3"><% $c->i18n->p("program.location.upload.iso_standard", "ISO standard") |h %></a><br>
+                <b>Program:</b> <% $c->i18n->p("program.location.upload.program_help", "must be an existing Breeding Program in the database, or multiple breeding programs separated by '&'") |h %><br>
+                <b>Type:</b> <% $c->i18n->p("program.location.upload.type_help", "must be one of the following: Town, Farm, Field, Greenhouse, Screenhouse, Lab, Storage, Other") |h %><br>
+                <b>Latitude:</b> <% $c->i18n->p("program.location.upload.latitude_help", "(in degrees) must be a number between 90 and -90.") |h %><br>
+                <b>Longitude:</b> <% $c->i18n->p("program.location.upload.longitude_help", "(in degrees) must be a number between 180 and -180.") |h %><br>
+                <b>Elevation:</b> <% $c->i18n->p("program.location.upload.elevation_help", "(in meters) must be a number between -418 (Dead Sea) and 8,848 (Mt. Everest).") |h %><br>
+                <br><b><% $c->i18n->p("trial.upload.template.optional_meta_heading", "Optional values:") |h %></b><br>
+                <b>NOAA Station ID:</b> <% $c->i18n->p("program.location.upload.station_help", "The NOAA Station ID that is nearest and most relevant to the location. ") |h %><a href="https://www.ncdc.noaa.gov/cdo-web/search" target="_blank"><% $c->i18n->p("locations.search_here", "Search Here") |h %></a><br>
 
           <& /help/file_upload_type.mas, type => "Locations" , optional_column => 1 &>
           <form method="post" enctype="multipart/form-data" encoding="multipart/form-data" id="upload_locations_form" name="upload_locations_form">
-    <label for="locations_upload_file" style="display: inline-block;">Location File:</label>
+    <label for="locations_upload_file" style="display: inline-block;"><% $c->i18n->p("program.location.upload.location_file", "Location File:") |h %></label>
     <input type="file" name="locations_upload_file" id="locations_upload_file" encoding="multipart/form-data" />
   </form>
         </div>
       </div>
       <div class="modal-footer">
-        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-	<button type="button" class="btn btn-primary" name="upload_locations_dialog_submit" id="upload_locations_dialog_submit">Upload</button>
+        <button type="button" class="btn btn-default" data-dismiss="modal"><% $c->i18n->p("trial.upload.dialog.close", "Close") |h %></button>
+	<button type="button" class="btn btn-primary" name="upload_locations_dialog_submit" id="upload_locations_dialog_submit"><% $c->i18n->p("trial.upload.dialog.upload", "Upload") |h %></button>
       </div>
     </div>
   </div>
@@ -63,13 +63,13 @@
     <div class="modal-dialog modal-lg" role="document">
         <div class="modal-content ui-front">
             <div class="modal-header text-center">
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                <h4 class="modal-title" id="locationsResultDialog">Results</h4>
+                <button type="button" class="close" data-dismiss="modal" aria-label="<% $c->i18n->p("trial.upload.dialog.close", "Close") |h %>"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="locationsResultDialog"><% $c->i18n->p("trial.correlation.results", "Results") |h %></h4>
             </div>
             <div id="locations_result_body" class="container-fluid">
             </div>
             <div class="modal-footer">
-                <button id="locations_result_close_button" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                <button id="locations_result_close_button" type="button" class="btn btn-default" data-dismiss="modal"><% $c->i18n->p("trial.upload.dialog.close", "Close") |h %></button>
             </div>
         </div>
     </div>
@@ -87,7 +87,7 @@ jQuery(document).ready(function() {
         var uploadFile = jQuery("#locations_upload_file").val();
         jQuery('#upload_locations_form').attr("action", "/ajax/locations/upload");
         if (uploadFile === '') {
-            alert("Please select a file");
+            alert((window.SGN && SGN.i18n ? SGN.i18n.p("trial.upload.ui.file", "Please select a file") : "Please select a file"));
             return;
         }
         jQuery("#upload_locations_form").submit();
@@ -110,7 +110,7 @@ jQuery(document).ready(function() {
                 for (i = 0; i < response.error.length; i++) {
                     errors.push( '<p>'+response.error[i]+'</p>');
                 }
-                var html = '<br><center><b>Upload failed.</b><br><b>Please fix the following errors in </b>'+response.filename+'<b> and try again:</b></center><br>';
+                var html = '<br><center><b>' + jQuery("<div>").text(window.SGN && SGN.i18n ? SGN.i18n.p("program.location.upload.failed", "Upload failed.") : "Upload failed.").html() + '</b><br><b>' + jQuery("<div>").text(window.SGN && SGN.i18n ? SGN.i18n.p("program.location.upload.fix_errors", "Please fix the following errors in ") : "Please fix the following errors in ").html() + '</b>'+response.filename+'<b>' + jQuery("<div>").text(window.SGN && SGN.i18n ? SGN.i18n.p("program.location.upload.try_again", " and try again:") : " and try again:").html() + '</b></center><br>';
                 html += errors.join('') + '<br>';
                 document.getElementById('locations_result_body').innerHTML = html;
                 jQuery('#locations_result_dialog').modal("show");
@@ -131,7 +131,7 @@ jQuery(document).ready(function() {
         },
         error: function(response) {
             jQuery('#working_modal').modal("hide");
-            alert("An error occurred");
+            alert((window.SGN && SGN.i18n ? SGN.i18n.p("trial.card.ajax.error", "An error occurred") : "An error occurred"));
         }
     });
 

@@ -7,7 +7,7 @@
    <% $file->basename |h %> (<% Number::Bytes::Human::format_bytes( $stat->size ) %>b)
 </a>
 % } else {
-<span class="ghosted" style="cursor: pointer" title="file temporarily unavailable"><% $file->basename |h %> (temporarily unavailable)</span>\
+<span class="ghosted" style="cursor: pointer" title="<% $c->i18n->p('metadata.file.unavailable_title', 'file temporarily unavailable') |h %>"><% $file->basename |h %> <% $c->i18n->p('metadata.file.unavailable_caption', '(temporarily unavailable)') |h %></span>\
 %}
 <%once>
   use Number::Bytes::Human;

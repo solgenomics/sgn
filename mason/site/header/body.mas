@@ -1,12 +1,20 @@
+<%perl>
+use HTML::Entities ();
+my $cart_order = HTML::Entities::encode_entities($c->i18n->p('global.header.cart_order', 'order'));
+my $cart_caption = HTML::Entities::encode_entities($c->i18n->p('global.header.cart_caption', '%{count} clone(s) in cart (%{order})', {count => '__SGN_CART_COUNT__', order => '__SGN_CART_ORDER__'}));
+$cart_caption =~ s/__SGN_CART_COUNT__/<span id="clone_cart_count"><\/span>/;
+$cart_caption =~ s/__SGN_CART_ORDER__/<a class="toplink" style="text-decoration: underline" href="\/search\/clone-order.pl">$cart_order<\/a>/;
+</%perl>
 <div id="outercontainer">
   <a name="top"></a>
 
   <div id="clone_shoppingcart" style="display: none">
-    <span id="clone_cart_count"></span> clone(s) in cart (<a class="toplink" style="text-decoration: underline" href="/search/clone-order.pl">order</a>)
+    <% $cart_caption |n %>
   </div>
 
   <& /site/header/browser_alert.mas &>
   <& /site/toolbar.mas &>
+  <& /i18n/language_selector.mas &>
   <& /system_message.mas &>
 % if ( $c->req->uri->path_query =~ "logout=yes") {  
   <!-- & /logout_message.mas & -->

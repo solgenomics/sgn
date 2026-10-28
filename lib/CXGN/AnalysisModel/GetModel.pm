@@ -25,6 +25,8 @@ Nicolas Morales <nm529@cornell.edu>
 =cut
 
 use Moose;
+use SGN::I18N ();
+has 'i18n' => (is => 'rw', isa => 'Maybe[Object]');
 use Data::Dumper;
 use DateTime;
 use CXGN::UploadFile;
@@ -98,6 +100,7 @@ sub get_model {
 
 sub store_analysis_model_files {
     my $self = shift;
+    my $i18n = SGN::I18N::translate($self);
     my $obj = shift;
     my $schema = $self->bcs_schema();
     my $phenome_schema = $self->phenome_schema();
@@ -146,7 +149,7 @@ sub store_analysis_model_files {
         my $archived_filename_with_path = $uploader->archive();
         my $md5 = $uploader->get_md5($archived_filename_with_path);
         if (!$archived_filename_with_path) {
-            return { error => "Could not save file $model_original_name in archive." };
+            return { error => SGN::I18N::translate($i18n, "analysis.interface.could_not_save_file_model_original_name_in_archive", "Could not save file %{model_original_name} in archive.", {model_original_name => ("" . "$model_original_name")}) };
         }
         print STDERR "Archived Model File: $archived_filename_with_path\n";
 
@@ -184,7 +187,7 @@ sub store_analysis_model_files {
     my $archived_aux_filename_with_path = $uploader_autoencoder->archive();
     my $md5_aux = $uploader_autoencoder->get_md5($archived_aux_filename_with_path);
     if (!$archived_aux_filename_with_path) {
-        return { error => "Could not save file $model_aux_original_name in archive." };
+        return { error => SGN::I18N::translate($i18n, "analysis.interface.could_not_save_file_model_aux_original_name_in_archive", "Could not save file %{model_aux_original_name} in archive.", {model_aux_original_name => ("" . "$model_aux_original_name")}) };
     }
     print STDERR "Archived Auxiliary Model File: $archived_aux_filename_with_path\n";
 
@@ -223,7 +226,7 @@ sub store_analysis_model_files {
             my $archived_aux_filename_with_path = $uploader_autoencoder->archive();
             my $md5_aux = $uploader_autoencoder->get_md5($archived_aux_filename_with_path);
             if (!$archived_aux_filename_with_path) {
-                return { error => "Could not save file $model_aux_original_name in archive." };
+                return { error => SGN::I18N::translate($i18n, "analysis.interface.could_not_save_file_model_aux_original_name_in_archive", "Could not save file %{model_aux_original_name} in archive.", {model_aux_original_name => ("" . "$model_aux_original_name")}) };
             }
             print STDERR "Archived Auxiliary Model File: $archived_aux_filename_with_path\n";
 

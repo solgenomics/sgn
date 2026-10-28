@@ -5,11 +5,11 @@ $locations => undef
 
 <& /util/import_javascript.mas, classes => [ ] &>
 
-<& /page/page_title.mas, title=>"Analyze NOAA NCDC Weather Data" &>
+<& /page/page_title.mas, title=>HTML::Entities::encode_entities($c->i18n->p("climate.noaa.analyze_noaa_ncdc_weather_data", "Analyze NOAA NCDC Weather Data")) &>
 
 <div class="form-horizontal">
     <div class="form-group">
-        <label class="col-sm-4 control-label">Select Location: </label>
+        <label class="col-sm-4 control-label"><% $c->i18n->p("climate.noaa.select_location", "Select Location: ") |h %></label>
         <div class="col-sm-8" >
             <div id="noaa_ncdc_analysis_location_select"></div>
         </div>
@@ -19,7 +19,7 @@ $locations => undef
 <div id="noaa_ncdc_analysis_input_div" style="display:none">
     <div class="form-horizontal">
         <div class="form-group">
-            <label class="col-sm-4 control-label">Start Date (YYYY-MM-DD): </label>
+            <label class="col-sm-4 control-label"><% $c->i18n->p("climate.noaa.start_date_yyyy_mm_dd", "Start Date (YYYY-MM-DD): ") |h %></label>
             <div class="col-sm-8" >
                 <input class="form-control" id="noaa_ncdc_analysis_start_date" name="noaa_ncdc_analysis_start_date" type="text" />
             </div>
@@ -27,7 +27,7 @@ $locations => undef
     </div>
     <div class="form-horizontal">
         <div class="form-group">
-            <label class="col-sm-4 control-label">End Date (YYYY-MM-DD): </label>
+            <label class="col-sm-4 control-label"><% $c->i18n->p("climate.noaa.end_date_yyyy_mm_dd", "End Date (YYYY-MM-DD): ") |h %></label>
             <div class="col-sm-8" >
                 <input class="form-control" id="noaa_ncdc_analysis_end_date" name="noaa_ncdc_analysis_end_date" type="text" />
             </div>
@@ -35,28 +35,28 @@ $locations => undef
     </div>
     <div class="form-horizontal">
         <div class="form-group">
-            <label class="col-sm-4 control-label">Results: </label>
+            <label class="col-sm-4 control-label"><% $c->i18n->p("climate.noaa.results", "Results: ") |h %></label>
             <div class="col-sm-8" >
                 <select class="form-control" id="noaa_ncdc_analysis_type">
-                    <option value="daily_temp_prec">Daily Temperature and Precipitation Chart</option>
+                    <option value="daily_temp_prec"><% $c->i18n->p("climate.noaa.daily_temperature_and_precipitation_chart", "Daily Temperature and Precipitation Chart") |h %></option>
                 </select>
             </div>
         </div>
     </div>
     <div class="form-horizontal">
         <div class="form-group">
-            <label class="col-sm-4 control-label">Cumulative Values by Year: </label>
+            <label class="col-sm-4 control-label"><% $c->i18n->p("climate.noaa.cumulative_values_by_year", "Cumulative Values by Year: ") |h %></label>
             <div class="col-sm-8" >
                 <select class="form-control" id="noaa_ncdc_analysis_cumulative_year">
-                    <option value="no">No</option>
-                    <option value="yes">Yes</option>
+                    <option value="no"><% $c->i18n->p("global.search_wizard.no", "No") |h %></option>
+                    <option value="yes"><% $c->i18n->p("global.search_wizard.yes", "Yes") |h %></option>
                 </select>
             </div>
         </div>
     </div>
     <div class="form-horizontal">
         <div class="form-group">
-            <label class="col-sm-4 control-label">Window Start (YYYY-MM-DD) (Optional): </label>
+            <label class="col-sm-4 control-label"><% $c->i18n->p("climate.noaa.window_start_yyyy_mm_dd_optional", "Window Start (YYYY-MM-DD) (Optional): ") |h %></label>
             <div class="col-sm-8" >
                 <input class="form-control" id="noaa_ncdc_analysis_window_start_date" name="noaa_ncdc_analysis_window_start_date" type="text" />
             </div>
@@ -64,7 +64,7 @@ $locations => undef
     </div>
     <div class="form-horizontal">
         <div class="form-group">
-            <label class="col-sm-4 control-label">Window End (YYYY-MM-DD) (Optional): </label>
+            <label class="col-sm-4 control-label"><% $c->i18n->p("climate.noaa.window_end_yyyy_mm_dd_optional", "Window End (YYYY-MM-DD) (Optional): ") |h %></label>
             <div class="col-sm-8" >
                 <input class="form-control" id="noaa_ncdc_analysis_window_end_date" name="noaa_ncdc_analysis_window_end_date" type="text" />
             </div>
@@ -72,7 +72,7 @@ $locations => undef
     </div>
     <br/><br/>
     <center>
-        <button class="btn btn-primary" type="button" id="noaa_ncdc_analysis_submit" name="noaa_ncdc_analysis_submit">Submit</button>
+        <button class="btn btn-primary" type="button" id="noaa_ncdc_analysis_submit" name="noaa_ncdc_analysis_submit"><% $c->i18n->p("global.submit", "Submit") |h %></button>
     </center>
 </div>
 
@@ -94,7 +94,7 @@ jQuery(document).ready(function() {
     var noaa_ncdc_token = '<% $c->config->{noaa_ncdc_access_token} %>';
 
     if (noaa_ncdc_token == 'NULL') {
-        alert(`Configuration variable 'noaa_ncdc_access_token' is undefined. Data from station `+noaa_station_id+` can't be accessed without a token.\r\nPlease visit https://www.ncdc.noaa.gov/cdo-web/token to generate a valid access token, then include the token in sgn_local.conf`);
+        alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("climate.noaa.configuration_variable_noaa_ncdc_access_token_is_undefined_data_from_station", "Configuration variable 'noaa_ncdc_access_token' is undefined. Data from station ") : "Configuration variable 'noaa_ncdc_access_token' is undefined. Data from station ")+noaa_station_id+(window.SGN && window.SGN.i18n ? SGN.i18n.p("climate.noaa.can_t_be_accessed_without_a_token_please_visit_https_www_ncdc_noaa_gov_cdo_web_token_to_generate_a_valid_ac", " can't be accessed without a token.\r\nPlease visit https://www.ncdc.noaa.gov/cdo-web/token to generate a valid access token, then include the token in sgn_local.conf") : " can't be accessed without a token.\r\nPlease visit https://www.ncdc.noaa.gov/cdo-web/token to generate a valid access token, then include the token in sgn_local.conf"));
     }
 
     jQuery(document).on('change', '#noaa_ncdc_analysis_location_id', function(){
@@ -112,27 +112,27 @@ jQuery(document).ready(function() {
                         success: function(response) {
                             console.log(response);
                             if (response.name) {
-                                alert('Found a valid NOAA Station for this location: '+response.name);
+                                alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("climate.noaa.found_a_valid_noaa_station_for_this_location", "Found a valid NOAA Station for this location: ") : "Found a valid NOAA Station for this location: ")+response.name);
                                 jQuery('#noaa_ncdc_analysis_input_div').show();
                             }
                             else {
-                                alert('Could not verify the NOAA StationID you provided. Go to Manage->Locations and make sure your location has a valid NOAA station id!');
+                                alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("climate.noaa.could_not_verify_the_noaa_stationid_you_provided_go_to_manage_locations_and_make_sure_your_location_has_a_v", "Could not verify the NOAA StationID you provided. Go to Manage->Locations and make sure your location has a valid NOAA station id!") : "Could not verify the NOAA StationID you provided. Go to Manage->Locations and make sure your location has a valid NOAA station id!"));
                                 jQuery('#noaa_ncdc_analysis_input_div').hide();
                             }
                         },
                         error: function() {
-                            alert('The NOAA NCDC authorization token may not be valid! We could not verify your NOAA StationID. Please contact us!');
+                            alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("locations.edit.noaa_failed", "The NOAA NCDC authorization token may not be valid! We could not verify your NOAA StationID. Please contact us!") : "The NOAA NCDC authorization token may not be valid! We could not verify your NOAA StationID. Please contact us!"));
                             jQuery('#noaa_ncdc_analysis_input_div').hide();
                         }
                     });
                 }
                 else {
-                    alert('No NOAA NCDC station id for this location. Go to Manage->Locations and edit your location to add a valid NOAA station id!');
+                    alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("climate.noaa.no_noaa_ncdc_station_id_for_this_location_go_to_manage_locations_and_edit_your_location_to_add_a_valid_noaa", "No NOAA NCDC station id for this location. Go to Manage->Locations and edit your location to add a valid NOAA station id!") : "No NOAA NCDC station id for this location. Go to Manage->Locations and edit your location to add a valid NOAA station id!"));
                     jQuery('#noaa_ncdc_analysis_input_div').hide();
                 }
             },
             error: function(response){
-                alert('Error getting NOAA NCDC ID for location!');
+                alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("climate.noaa.error_getting_noaa_ncdc_id_for_location", "Error getting NOAA NCDC ID for location!") : "Error getting NOAA NCDC ID for location!"));
                 jQuery('#noaa_ncdc_analysis_input_div').hide();
             }
         });
@@ -146,11 +146,11 @@ jQuery(document).ready(function() {
         noaa_ncdc_analysis_window_end_date = jQuery('#noaa_ncdc_analysis_window_end_date').val();
         noaa_ncdc_analysis_cumulative_year = jQuery('#noaa_ncdc_analysis_cumulative_year').val();
         if (noaa_ncdc_analysis_start_date == '') {
-            alert('Please give a start date!');
+            alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("climate.noaa.please_give_a_start_date", "Please give a start date!") : "Please give a start date!"));
             return false;
         }
         if (noaa_ncdc_analysis_end_date == '') {
-            alert('Please give a end date!');
+            alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("climate.noaa.please_give_a_end_date", "Please give a end date!") : "Please give a end date!"));
             return false;
         }
 
@@ -166,11 +166,11 @@ jQuery(document).ready(function() {
                     jQuery('#noaa_ndcd_analysis_result').html(html);
                 }
                 else {
-                    alert('There was an error getting NOAA analysis!');
+                    alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("climate.noaa.there_was_an_error_getting_noaa_analysis", "There was an error getting NOAA analysis!") : "There was an error getting NOAA analysis!"));
                 }
             },
             error: function(response){
-                alert('Error getting NOAA NCDC analysis!');
+                alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("climate.noaa.error_getting_noaa_ncdc_analysis", "Error getting NOAA NCDC analysis!") : "Error getting NOAA NCDC analysis!"));
             }
         });
     });
@@ -178,3 +178,7 @@ jQuery(document).ready(function() {
 });
 
 </script>
+
+<%once>
+use HTML::Entities ();
+</%once>

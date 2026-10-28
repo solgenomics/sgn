@@ -43,7 +43,7 @@ jQuery(document).ready(function ($) {
             $('#working_modal').modal("show");
             if (uploadedGraftsFile === '') {
                 $('#working_modal').modal("hide");
-                alert("No file selected");
+                alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("cross.ui.no_file_selected", "No file selected") : "No file selected"));
             }
         },
         complete: function (r) {
@@ -56,7 +56,7 @@ jQuery(document).ready(function ($) {
             var html;
 
             if (response.error) {
-                html = '<h3>The Following Issues Were Identified</h3><p class="bg-warning">'+response.error+'</p>';
+                html = ("<h3>" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("accession.rename.issues", "The Following Issues Were Identified") : "The Following Issues Were Identified")).html() + "</h3><p class=\"bg-warning\">")+response.error+'</p>';
 		$('#upload_graft_store').prop("disabled", true);
             }
             else {
@@ -64,7 +64,7 @@ jQuery(document).ready(function ($) {
                 archived_filename = response.archived_filename_with_path;
 
 		$('#upload_graft_store').prop("disabled", false);
-                html = '<h3>There Were No Issues Identified</h3>Please click the "Store" button to save the grafts to the database.';
+                html = ("<h3>" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("accession.rename.no_issues", "There Were No Issues Identified") : "There Were No Issues Identified")).html() + "</h3>" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("transformation.helper.please_click_the_store_button_to_save_the_grafts_to_the_database", "Please click the \"Store\" button to save the grafts to the database.") : "Please click the \"Store\" button to save the grafts to the database.")).html() + "");
             }
             $("#upload_graft_validate_display tbody").html(html);
             $("#upload_graft_validate_display").modal('show');
@@ -75,7 +75,7 @@ jQuery(document).ready(function ($) {
         var uploadFile = $("#graft_uploaded_file").val();
         $('#upload_graft_form').attr("action", "/ajax/grafts/upload_verify");
         if (uploadFile === '') {
-            alert("Please select a file");
+            alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("accession.files.required_file", "Please select a file") : "Please select a file"));
             return;
         }
         $("#upload_graft_form").submit();
@@ -98,7 +98,7 @@ jQuery(document).ready(function ($) {
             success: function(response) {
                 jQuery('#working_modal').modal('hide');
                 if (response.error) {
-                    alert('An Error Occured: No grafts were saved! Try Fixing Your File For The Issues Identified In the Validation. '+response.error);
+                    alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("transformation.helper.an_error_occured_no_grafts_were_saved_try_fixing_your_file_for_the_i", "An Error Occurred: No grafts were saved! Try Fixing Your File For The Issues Identified In the Validation. ") : 'An Error Occurred: No grafts were saved! Try Fixing Your File For The Issues Identified In the Validation. ')+response.error);
                 }
                 else {
 		    //alert("RESPONSE: "+JSON.stringify(response));
@@ -110,7 +110,7 @@ jQuery(document).ready(function ($) {
             error: function(response) {
                 jQuery('#working_modal').modal('hide');
 		jQuery('#list_of_grafts_with_problems').html(response.list_of_grafts_with_problems);
-                alert('An error occurred storing the grafts. None were uploaded.'+response.responseText);
+                alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("transformation.helper.an_error_occurred_storing_the_grafts_none_were_uploaded", "An error occurred storing the grafts. None were uploaded.") : 'An error occurred storing the grafts. None were uploaded.')+response.responseText);
             }
         });
     });

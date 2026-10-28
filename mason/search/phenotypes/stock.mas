@@ -11,9 +11,10 @@
   $trait_db_name              => 'SP'
 </%args>
 
-<& /page/page_title.mas, title => "Search Accessions and Plots" &>
+<& /page/page_title.mas, title => HTML::Entities::encode_entities($c->i18n->p("stock_search.title", "Search Accessions and Plots")) &>
 
 <%once>
+use HTML::Entities ();
   use Number::Format;
   use CXGN::Page::FormattingHelpers qw/ columnar_table_html /;
   use SGN::View::Stock qw/stock_link stock_organisms stock_types /;
@@ -24,7 +25,9 @@
 
 $form_opts = { stock_types => stock_types($schema), organisms=>stock_organisms($schema)}
 if (!$form_opts) ;
-my $new_stock_link = qq| <a href="/stock/0/new">Submit new stock</a> \| <a href=../../phenome/qtl_form.pl>QTL Population</a>|;
+my $ui_submit_stock = HTML::Entities::encode_entities($c->i18n->p("phenotype.root.extra.submit_new_stock", "Submit new stock"));
+my $ui_qtl_population = HTML::Entities::encode_entities($c->i18n->p("phenotype.root.extra.qtl_population", "QTL Population"));
+my $new_stock_link = qq| <a href="/stock/0/new">$ui_submit_stock</a> \| <a href=../../phenome/qtl_form.pl>$ui_qtl_population</a>|;
 
 </%perl>
 
@@ -36,11 +39,11 @@ my $new_stock_link = qq| <a href="/stock/0/new">Submit new stock</a> \| <a href=
 % if( $results ) {
 %   my $pager = $results->pager;
 
-  <&| /page/info_section.mas, title    => 'Search results',
-                              subtitle => 'results '
+  <&| /page/info_section.mas, anchor_title => 'Search results', title    => HTML::Entities::encode_entities($c->i18n->p("phenotype.root.search_results", 'Search results')),
+                              subtitle => HTML::Entities::encode_entities($c->i18n->p("phenotype.root.results", 'results '))
                                           .$pager->first
                                           .'-'.$pager->last
-                                          .' of '.Number::Format->new->format_number($pager->total_entries)
+                                          .HTML::Entities::encode_entities($c->i18n->p("phenotype.root.extra.of", " of ")).Number::Format->new->format_number($pager->total_entries)
    &>
 % my @data =();	
 %   if( $results->count ) {
@@ -54,16 +57,16 @@ my $new_stock_link = qq| <a href="/stock/0/new">Submit new stock</a> \| <a href=
 %            ] } $results->all;
 
      <% columnar_table_html(
-            headings => ['Stock Name','Stock Type', 'Organism'],
+            headings => [HTML::Entities::encode_entities($c->i18n->p("global.search.annotation.genes.stock_name", "Stock Name")),HTML::Entities::encode_entities($c->i18n->p("accession.related_stock.header.stock_type", "Stock Type")), HTML::Entities::encode_entities($c->i18n->p("global.family.organism", "Organism"))],
             data     => [ @data ],
         )
       %>
 %   } else {
-     <h3 style="text-align: center">no matching results found</h3>
+     <h3 style="text-align: center"><% $c->i18n->p("phenotype.root.no_matching_results_found", "no matching results found") |h %></h3>
 %   }
 
 <div style="text-align:right">
-Copy items on this page to list: 
+<% $c->i18n->p("phenotype.root.copy_items_on_this_page_to_list", "Copy items on this page to list:") |h %>
 <span id="item_list_menu">
 </span>
 
@@ -85,7 +88,7 @@ Copy items on this page to list:
       addToListMenu('item_list_menu', 'item_list', 'div');
     }
     else { 
-      jQuery('#item_list_menu').html('Log in to use lists.');
+      jQuery('#item_list_menu').html((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("phenotype.root.log_in_to_use_lists", "Log in to use lists.") : 'Log in to use lists.'));
     }
   });
 
@@ -96,7 +99,7 @@ Copy items on this page to list:
 
   <& /page/pagination_control.mas, pager => $pager, link_maker => $pagination_link_maker &>
 % }
-<&| /page/info_section.mas, title => 'Search' , subtitle => $new_stock_link &>
+<&| /page/info_section.mas, anchor_title => 'Search', title => HTML::Entities::encode_entities($c->i18n->p("global.search.advanced_search.search", 'Search')) , subtitle => $new_stock_link &>
   <& /stock/stock_search_form.mas,
     form                       => $form,
     opts                       => $form_opts,

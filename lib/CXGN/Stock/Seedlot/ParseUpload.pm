@@ -7,6 +7,12 @@ use Moose::Util::TypeConstraints;
 
 with 'MooseX::Object::Pluggable';
 
+# Optional presentation dependency. Parsing/data contracts remain locale-free.
+has 'i18n' => (
+    is => 'ro',
+    isa => 'Maybe[Object]',
+    reader => 'i18n',
+);
 
 has 'chado_schema' => (
     is       => 'ro',

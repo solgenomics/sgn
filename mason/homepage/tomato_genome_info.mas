@@ -9,7 +9,7 @@ Takes no arguments.
 % if( -r $file ) {
   <% $m->file( $file ) %>
 % } else {
- <div class="ghosted">Tomato genome information temporarily unavailable</div>
+ <div class="ghosted"><% $c->i18n->p('global.tomato_genome_info.unavailable', '%{crop} genome information temporarily unavailable', {crop => 'Tomato'}) |h %></div>
 % }
 
 

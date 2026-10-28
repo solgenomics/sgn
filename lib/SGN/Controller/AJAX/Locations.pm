@@ -59,12 +59,12 @@ sub store_location :Path("/ajax/location/store") Args(0) {
     my $noaa_station_id = $params->{noaa_station_id} || undef;
 
     if (! $c->user()) {
-        $c->stash->{rest} = { error => 'You must be logged in to add or edit a location.' };
+        $c->stash->{rest} = { error => $c->i18n->p('locations.server.login_store', 'You must be logged in to add or edit a location.') };
         return;
     }
 
     if (! $c->user->check_roles("submitter") && !$c->user->check_roles("curator")) {
-        $c->stash->{rest} = { error => 'You do not have the necessary privileges to add or edit locations.' };
+        $c->stash->{rest} = { error => $c->i18n->p('locations.server.privilege_store', 'You do not have the necessary privileges to add or edit locations.') };
         return;
     }
 
@@ -82,7 +82,8 @@ sub store_location :Path("/ajax/location/store") Args(0) {
         latitude => $latitude,
         longitude => $longitude,
         altitude => $altitude,
-        noaa_station_id => $noaa_station_id
+        noaa_station_id => $noaa_station_id,
+        i18n => $c->i18n
     });
 
     my $store = $location->store_location();
@@ -102,22 +103,23 @@ sub delete_location :Path('/ajax/location/delete') Args(1) {
     my $location_id = shift;
 
     if (!$c->user) {  # require login
-        $c->stash->{rest} = { error => "You need to be logged in to delete a location." };
+        $c->stash->{rest} = { error => $c->i18n->p('locations.server.login_delete', 'You need to be logged in to delete a location.') };
         return;
     }
 
     if (! ($c->user->check_roles('curator') || $c->user->check_roles('submitter'))) { # require curator or submitter roles
-        $c->stash->{rest} = { error => "You don't have the privileges to delete a location." };
+        $c->stash->{rest} = { error => $c->i18n->p('locations.server.privilege_delete', 'You don\'t have the privileges to delete a location.') };
         return;
     }
 
     my $location_to_delete = CXGN::Location->new( {
         bcs_schema => $c->dbic_schema("Bio::Chado::Schema"),
-        nd_geolocation_id => $location_id
+        nd_geolocation_id => $location_id,
+        i18n => $c->i18n
     } );
 
     if ($location_to_delete->name() eq '[Computation]') {
-	$c->stash->{rest} = { error => "The location [Computation] is needed by the system to store analyses and cannot be deleted." };
+	$c->stash->{rest} = { error => $c->i18n->p('locations.server.computation_protected', 'The location [Computation] is needed by the system to store analyses and cannot be deleted.') };
 	return;
     }
     
@@ -230,7 +232,7 @@ sub get_noaa_station_id :Path("/ajax/location/get_noaa_station_id") Args(1) {
     my $location_id = shift;
 
     if (! $c->user()) {
-        $c->stash->{rest} = { error => 'You must be logged in to add or edit a location.' };
+        $c->stash->{rest} = { error => $c->i18n->p('locations.server.login_store', 'You must be logged in to add or edit a location.') };
         return;
     }
 
@@ -261,7 +263,7 @@ sub noaa_ncdc_analysis :Path("/ajax/location/noaa_ncdc_analysis") Args(0) {
     my $schema = $c->dbic_schema("Bio::Chado::Schema");
 
     if (! $c->user()) {
-        $c->stash->{rest} = { error => 'You must be logged in to add or edit a location.' };
+        $c->stash->{rest} = { error => $c->i18n->p('locations.server.login_store', 'You must be logged in to add or edit a location.') };
         return;
     }
 

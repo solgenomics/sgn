@@ -3,6 +3,6 @@
 $file
 </%args>
 
-Download unique barcodes as a PDF file:
+<% $c->i18n->p("barcode.mason.download_unique_barcodes_as_a_pdf_file", "Download unique barcodes as a PDF file:") |h %>
 
-<a href="<% $file %>">Download</a>
+<a href="<% $file %>"><% $c->i18n->p("global.est.download", "Download") |h %></a>

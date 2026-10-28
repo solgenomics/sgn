@@ -30,7 +30,7 @@ solGS.combinedTrials = {
 	     .filter(':has(:checkbox:checked)')
              .bind('click',  function() {
 
-		 jQuery("#select_trials_btn").val('Done selecting');
+		 jQuery("#select_trials_btn").val((window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.done_selecting", "Done selecting") : 'Done selecting'));
 		 var td =  jQuery(this).html();
 
 		 var selectedTrial = '<tr>' + td + '</tr>';
@@ -70,7 +70,7 @@ solGS.combinedTrials = {
 		jQuery("#selected_trials").hide();
 		jQuery("#combine_trials_div").hide();
 		jQuery("#search_again_div").hide();
-		jQuery("#select_trials_btn").val('Select');
+		jQuery("#select_trials_btn").val((window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.select", "Select") : 'Select'));
 
 		//  searchAgain();
         }
@@ -110,7 +110,7 @@ solGS.combinedTrials = {
 	var selectedPops = trId + "=" + trialIds + '&' + 'combine=combine';
 
 	jQuery.blockUI.defaults.applyPlatformOpacityRules = false;
-	jQuery.blockUI({message: 'Please wait..'});
+	jQuery.blockUI({message: (window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.please_wait", "Please wait..") : 'Please wait..')});
 
 	jQuery.ajax({
             type: 'POST',
@@ -140,9 +140,7 @@ solGS.combinedTrials = {
 		} else {
 
                     if (res.not_matching_pops){
-			alert('populations ' + res.not_matching_pops +
-                              ' were genotyped using different marker sets. ' +
-                              'Please make new selections to combine.' );
+			alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.marker_sets_population_prefix", "populations ") : "populations ") + res.not_matching_pops + (window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.marker_sets_mismatch", " were genotyped using different marker sets. Please make new selections to combine.") : " were genotyped using different marker sets. Please make new selections to combine."));
 			window.location.href =  '/solgs/search/result/populations/' + trId;
                     }
 
@@ -201,7 +199,7 @@ solGS.combinedTrials = {
 
 		},
 		error: function(res) {
-    		    alert('Error occured getting combined trials unique id');
+                    alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.combined_trials_id_error", "Error occurred getting combined trials unique id") : 'Error occurred getting combined trials unique id'));
 		}
 
 	    });
@@ -303,8 +301,8 @@ solGS.combinedTrials = {
             },
             error: function(res) {
 		jQuery.unblockUI();
-		alert('An error occured retrieving phenotype' +
-                      'and genotype data for trials..');
+		alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.trial_phenotype_genotype_retrieval_error", "An error occurred retrieving phenotypeand genotype data for trials..") : 'An error occurred retrieving phenotype' +
+                      'and genotype data for trials..'));
             }
 	});
 
@@ -341,7 +339,7 @@ solGS.combinedTrials = {
     	if (comboPopsId) {
             window.location = page;
     	} else {
-	    alert('combined Trials id missing.')
+	    alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.combined_trials_id_missing", "combined Trials id missing.") : 'combined Trials id missing.'))
 	}
     },
 

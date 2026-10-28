@@ -7,23 +7,45 @@ $preferred_species => undef
 $editable_stock_props => {}
 </%args>
 
+<%init>
+use HTML::Entities ();
+</%init>
+
+<%perl>
+my %home_tokens = map { $_ => '__SGN_HOME_' . uc($_) . '__' } qw(team cassava sweet_potato banana rice solanaceae youtube);
+my $team_link_label = HTML::Entities::encode_entities($c->i18n->p('global.index.team_link', 'Breedbase development team'));
+my $contact_description = $c->i18n->p('global.index.contact_description', 'Breedbase is a web application that only requires a browser. To get your Breedbase instance, contact the %{team_link}.', {team_link => $home_tokens{team}});
+$contact_description = HTML::Entities::encode_entities($contact_description);
+$contact_description =~ s/\Q$home_tokens{team}\E/<a href="\/contact\/form">$team_link_label<\/a>/;
+my $crop_description = $c->i18n->p('global.index.crops_description', 'There are a number of instances running for diverse crops, including %{cassava_link}, %{sweet_potato_link}, %{banana_link}, %{rice_link}, %{solanaceae_link} and many others.', {cassava_link => $home_tokens{cassava}, sweet_potato_link => $home_tokens{sweet_potato}, banana_link => $home_tokens{banana}, rice_link => $home_tokens{rice}, solanaceae_link => $home_tokens{solanaceae}});
+$crop_description = HTML::Entities::encode_entities($crop_description);
+$crop_description =~ s/\Q$home_tokens{cassava}\E/Cassava (<a href="https:\/\/cassavabase.org\/">https:\/\/cassavabase.org<\/a>)/;
+$crop_description =~ s/\Q$home_tokens{sweet_potato}\E/sweet potato (<a href="https:\/\/sweetpotatobase.org\/">https:\/\/sweetpotatobase.org<\/a>)/;
+$crop_description =~ s/\Q$home_tokens{banana}\E/banana (<a href="https:\/\/musabase.org\/">https:\/\/musabase.org<\/a>)/;
+$crop_description =~ s/\Q$home_tokens{rice}\E/rice (<a href="https:\/\/ricebase.org\/">https:\/\/ricebase.org<\/a>)/;
+$crop_description =~ s/\Q$home_tokens{solanaceae}\E/tomato and other Solanaceae (<a href="https:\/\/solgenomics.net">https:\/\/solgenomics.net\/<\/a>)/;
+my $workshops_description = $c->i18n->p('global.index.workshops_description', 'You can watch the Breedbase workshops on %{youtube_link}, covering topics such as ontologies, trial design, data collection using fieldbook, data analysis, and genomic selection.', {youtube_link => $home_tokens{youtube}});
+$workshops_description = HTML::Entities::encode_entities($workshops_description);
+$workshops_description =~ s/\Q$home_tokens{youtube}\E/<a href="https:\/\/www.youtube.com\/channel\/UC3jrvvzGKKEHzOriDBgnj0A">Youtube<\/a>/;
+</%perl>
+
       <div style="border:0px solid;text-align:center;">
             <!-- span style="font-face:arial;font-size:48pt;color:darkgreen;font-weight:light;">BREE<b>DB</b>ASE</span -->
 	    <img src="/img/Breedbase_HighRes.png" width="400" />
       </div>
 
       <div>
-	<h3>What is Breedbase?</h3>
-	Breedbase is a comprehensive breeding management and analysis software. It can be used to design field layouts, collect phenotypic information using tablets, support the collection of genotyping samples in a field, store large amounts of high density genotypic information, and provide Genomic Selection related analyses and predictions. Breedbase supports the BrAPI standard.
-	<h3>How can I use Breedbase?</h3>
-	Breedbase is a web application that only requires a browser. To get your Breedbase instance, contact the <a href="/contact/form">Breedbase development team</a>.
-	<h3>What crops are using Breedbase?</h3>
-	There are a number of instances running for diverse crops, including Cassava (<a href="https://cassavabase.org/">https://cassavabase.org</a>), sweet potato (<a href="https://sweetpotatobase.org/">https://sweetpotatobase.org</a>), banana (<a href="https://musabase.org/">https://musabase.org</a>), rice (<a href="https://ricebase.org/">https://ricebase.org</a>), tomato and other Solanaceae (<a href="https://solgenomics.net">https://solgenomics.net/</a>) and many others.
+	<h3><% $c->i18n->p('global.index.what_is_breedbase', 'What is Breedbase?') |h %></h3>
+	<% $c->i18n->p('global.index.product_description', 'Breedbase is a comprehensive breeding management and analysis software. It can be used to design field layouts, collect phenotypic information using tablets, support the collection of genotyping samples in a field, store large amounts of high density genotypic information, and provide Genomic Selection related analyses and predictions. Breedbase supports the BrAPI standard.') |h %>
+	<h3><% $c->i18n->p('global.index.how_to_use', 'How can I use Breedbase?') |h %></h3>
+	<% $contact_description |n %>
+	<h3><% $c->i18n->p('global.index.crops_heading', 'What crops are using Breedbase?') |h %></h3>
+	<% $crop_description |n %>
       </div>
 
-      <h3>How can I learn more about Breedbase?</h3>
+      <h3><% $c->i18n->p('global.index.learn_more', 'How can I learn more about Breedbase?') |h %></h3>
 
-      You can watch the Breedbase workshops on <a href="https://www.youtube.com/channel/UC3jrvvzGKKEHzOriDBgnj0A">Youtube</a>, covering topics such as ontologies, trial design, data collection using fieldbook, data analysis, and genomic selection. 
+      <% $workshops_description |n %>
       
       
 <div class="container-fluid">

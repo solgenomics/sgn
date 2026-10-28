@@ -12,7 +12,7 @@ $stock_type => undef
     <& /breeders_toolbox/add_seedlot_dialogs.mas, cross_uniquename=>$stock_uniquename &>
 % }
 
-<&| /page/info_section.mas, id=>'related_seedlots_to_accessions', title => 'Seedlots of this '.ucfirst($stock_type), collapsible=>1, collapsed=>1, subtitle=>"<button class='btn btn-sm btn-primary' style='margin:3px' name='add_seedlot_button' >Create New Seedlot</button>" &>
+<&| /page/info_section.mas, id=>'related_seedlots_to_accessions', anchor_title => 'Seedlots of this '.ucfirst($stock_type), title => HTML::Entities::encode_entities($c->i18n->p('seedlots.ui.seedlots_of_this_stock_type', 'Seedlots of this %{stock_type}', {stock_type => ({accession => $c->i18n->p('seedlots.ui.accession', 'Accession'), cross => $c->i18n->p('seedlots.ui.cross', 'Cross')}->{$stock_type} || ucfirst($stock_type))})), collapsible=>1, collapsed=>1, subtitle=>"<button class='btn btn-sm btn-primary' style='margin:3px' name='add_seedlot_button' >" . HTML::Entities::encode_entities($c->i18n->p('seedlots.ui.create_new_seedlot', 'Create New Seedlot')) . "</button>" &>
     <div class="well well-sm">
         <div class="panel panel-default">
             <div class="panel-body" style="overflow:scroll">
@@ -21,16 +21,67 @@ $stock_type => undef
             </div>
         </div>
         <br>
-        <&| /page/info_section.mas, title => 'Copy Seedlots to a List', collapsible=>1, collapsed=>1, subtitle=>'<i>Copy the seedlot names showing in table to a new or exisiting list</i>'&>
+        <&| /page/info_section.mas, anchor_title => 'Copy Seedlots to a List', title => HTML::Entities::encode_entities($c->i18n->p('seedlots.ui.copy_seedlots_to_a_list', 'Copy Seedlots to a List')), collapsible=>1, collapsed=>1, subtitle=>'<i>' . HTML::Entities::encode_entities($c->i18n->p('seedlots.ui.copy_the_seedlot_names_showing_in_table_to_a_new_or_exisiting_li', 'Copy the seedlot names showing in table to a new or existing list')) . '</i>'&>
             <br/>
-            <div style="text-align:right" id="accession_seedlots_to_list_menu">[LOADING...]</div>
-            <div id="accession_seedlot_names" style="display: none;"></div>
+            <div style="text-align:right" id="accession_seedlots_to_list_menu"><% $c->i18n->p('seedlots.ui.loading', '[LOADING...]') |h %></div>
+            <textarea readonly id="accession_seedlot_names" style="display: none;"></textarea>
         </&>
     </div>
 </&>
 
 
 <script>
+// Optional language assets preserve the native workflow and raw data values.
+var seedlotI18n = (window.SGN && window.SGN.i18n) || {
+    p: function (context, source, variables) {
+        return source.replace(/%\{([A-Za-z0-9_]+)\}/g, function (match, name) {
+            return variables && Object.prototype.hasOwnProperty.call(variables, name) ? String(variables[name]) : match;
+        });
+    },
+    np: function (context, one, many, count, variables) {
+        return this.p(context, count === 1 ? one : many, variables);
+    }
+};
+function seedlotHTML(value) {
+    return String(value == null ? '' : value).replace(/[&<>"']/g, function (character) {
+        return {'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'}[character];
+    });
+}
+// The locale is carried only by these source-traced, same-origin core routes.
+function _sgnSeedlotLocaleHeaders(url) {
+    try {
+        var guardedURL = new URL(url, window.location.href);
+        if (guardedURL.origin !== window.location.origin) return {};
+        var admitted = /^\/ajax\/breeders\/(?:seedlots|seedlot\/[0-9]+(?:\/(?:edit|delete|transactions|transaction\/(?:add|[0-9]+(?:\/(?:edit|delete))?)))?|seedlot\/(?:discard|undo_discard)|seedlot-create|seedlot-upload|seedlot-inventory-upload|upload_transactions|add_transactions_using_list)\/?$/.test(guardedURL.pathname)
+            || /^\/ajax\/seedlots\/(?:verify_delete_by_list|confirm_delete_by_list)$/.test(guardedURL.pathname)
+            || /^\/ajax\/stock\/stock_related_seedlots\/[0-9]+$/.test(guardedURL.pathname)
+            || /^\/ajax\/manage_accessions\/population_seedlots\/[0-9]+$/.test(guardedURL.pathname)
+            || /^\/ajax\/accessions\/possible_seedlots$/.test(guardedURL.pathname)
+            || /^\/ajax\/breeders\/program\/[0-9]+\/seedlots$/.test(guardedURL.pathname)
+            || /^\/ajax\/breeders\/trial\/[0-9]+\/(?:seedlots_from_crossingtrial|seedlots|upload_used_seedlots)$/.test(guardedURL.pathname)
+            || guardedURL.pathname === '/breeders/download_population_seedlots_action';
+        if (!admitted) return {};
+        var root = typeof document !== 'undefined' && document.documentElement;
+        var runtime = window.SGN && window.SGN.i18n;
+        var requested = root && typeof root.getAttribute === 'function' && root.getAttribute('data-sgn-locale');
+        var locale = requested || (runtime && runtime.requestedLocale) || (root && root.lang) || (runtime && runtime.locale) || 'en';
+        return {'X-SGN-Locale': typeof locale === 'string' && /^[A-Za-z]{2,8}(?:-[A-Za-z0-9]{1,8})*$/.test(locale) ? locale : 'en'};
+    } catch (error) {
+        return {};
+    }
+}
+function _sgnSeedlotLocaleURL(url) {
+    try {
+        var headers = _sgnSeedlotLocaleHeaders(url);
+        if (!headers['X-SGN-Locale']) return url;
+        var guardedURL = new URL(url, window.location.href);
+        guardedURL.searchParams.set('lang', headers['X-SGN-Locale']);
+        return guardedURL.pathname + guardedURL.search + guardedURL.hash;
+    } catch (error) {
+        return url;
+    }
+}
+
 
 jQuery(document).ready(function(){
 
@@ -39,17 +90,17 @@ jQuery(document).ready(function(){
         var seedlots_table = jQuery('#seedlots_of_accession_table').DataTable({
             'destroy' : true,
             'autoWidth': false,
-            'ajax': '/ajax/stock/stock_related_seedlots/'+ "<% $stock_id %>",
+            'ajax': {url: '/ajax/stock/stock_related_seedlots/'+ "<% $stock_id %>", headers: _sgnSeedlotLocaleHeaders('/ajax/stock/stock_related_seedlots/'+ "<% $stock_id %>")},
             'columns': [
-                { title: "Seedlot Name", "data": null, "render": function ( data, type, row ) { return "<a href='/breeders/seedlot/"+row.seedlot_stock_id+"'>"+row.seedlot_stock_uniquename+"</a>"; } },
-                { title: "Breeding Program", "data": "breeding_program_name" },
-                { title: "Contents", "data": "contents_html" },
-                { title: "Seedlot Location", "data": "location" },
-                { title: "Count", "data": "count" },
-                { title: "Weight(g)", "data": "weight_gram" },
-                { title: "Box Name", "data": "box" },
-                { title: "Quality", "data": "seedlot_quality" },
-                { title: "Material Type", "data": "material_type"},
+                { title: seedlotHTML(seedlotI18n.p("seedlots.ui.seedlot_name.8bbaf6d", "Seedlot Name")), "data": null, "render": function ( data, type, row ) { return "<a href='/breeders/seedlot/"+row.seedlot_stock_id+"'>"+seedlotHTML(row.seedlot_stock_uniquename)+"</a>"; } },
+                { title: seedlotHTML(seedlotI18n.p("seedlots.ui.breeding_program.a79d70a", "Breeding Program")), "data": "breeding_program_name" },
+                { title: seedlotHTML(seedlotI18n.p("seedlots.ui.contents.d1ce6ee", "Contents")), "data": "contents_html" },
+                { title: seedlotHTML(seedlotI18n.p("seedlots.ui.seedlot_location", "Seedlot Location")), "data": "location" },
+                { title: seedlotHTML(seedlotI18n.p("seedlots.ui.count", "Count")), "data": "count" },
+                { title: seedlotHTML(seedlotI18n.p("seedlots.ui.weight_g.7547b01", "Weight(g)")), "data": "weight_gram" },
+                { title: seedlotHTML(seedlotI18n.p("seedlots.ui.box_name.95fff30", "Box Name")), "data": "box" },
+                { title: seedlotHTML(seedlotI18n.p("seedlots.ui.quality.e77b76f", "Quality")), "data": "seedlot_quality" },
+                { title: seedlotHTML(seedlotI18n.p("seedlots.ui.material_type.b9881bc", "Material Type")), "data": "material_type"},
                 { title: "", "data": "seedlot_stock_uniquename"}
             ],
         });
@@ -65,7 +116,7 @@ jQuery(document).ready(function(){
                 names += seedlot_names[i]+'\n';
             }
 
-            jQuery('#accession_seedlot_names').html(names);
+            jQuery('#accession_seedlot_names').val(names);
             addToListMenu('accession_seedlots_to_list_menu', 'accession_seedlot_names', {
                 listType: 'seedlots'
             });

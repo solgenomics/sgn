@@ -7,6 +7,7 @@ function isLoggedIn() {
 
     jQuery.ajax( {
 	url: '/user/logged_in',
+	headers: {'X-SGN-Locale': document.documentElement.getAttribute('data-sgn-locale') || document.documentElement.lang || 'en'},
 	async: false,
 	success: function(response) {
 	    if (response.error) {
@@ -18,7 +19,7 @@ function isLoggedIn() {
 	    }
 	},
 	error: function(response) {
-	    alert("An error occurred. "+response);
+	    alert((window.SGN && SGN.i18n ? SGN.i18n.p("auth.legacy.network_error", "An error occurred. %{error}", {error: String(response)}) : 'An error occurred. ' + response));
 	}
     }
 
@@ -33,6 +34,7 @@ function getUserRoles() {
 
     jQuery.ajax( {
 	url: '/user/get_roles',
+	headers: {'X-SGN-Locale': document.documentElement.getAttribute('data-sgn-locale') || document.documentElement.lang || 'en'},
 	async: false,
 	success: function(response) {
 	    if (response.error) {
@@ -44,7 +46,7 @@ function getUserRoles() {
 	    }
 	},
 	error: function(response) {
-	    alert("An error occurred. "+response);
+	    alert((window.SGN && SGN.i18n ? SGN.i18n.p("auth.legacy.network_error", "An error occurred. %{error}", {error: String(response)}) : 'An error occurred. ' + response));
 	}
     }
 
@@ -66,11 +68,17 @@ function logout() {
 
 function setUpLogin() {
 
+ var loginButtons = [
+    { text: (window.SGN && SGN.i18n ? SGN.i18n.p("auth.login.title", "Login") : "Login"), click: function() { login(); } },
+    { text: (window.SGN && SGN.i18n ? SGN.i18n.p("auth.legacy.cancel", "Cancel") : "Cancel"), click: function() { jQuery('#login_window').dialog('close'); } }
+ ];
+
  jQuery('#working').dialog( {
     height: 80,
     width: 100,
     modal: true,
-    title: "Working...",
+    closeText: (window.SGN && SGN.i18n ? SGN.i18n.p("auth.common.close", "Close") : "Close"),
+    title: (window.SGN && SGN.i18n ? SGN.i18n.p("auth.legacy.working", "Working...") : "Working..."),
     closeOnEscape: false,
     autoOpen: false
   });
@@ -79,18 +87,10 @@ jQuery('#login_window').dialog( {
     height: 180,
     width: 300,
     modal: true,
-    title: 'Login',
+    closeText: (window.SGN && SGN.i18n ? SGN.i18n.p("auth.common.close", "Close") : "Close"),
+    title: (window.SGN && SGN.i18n ? SGN.i18n.p("auth.login.title", "Login") : "Login"),
     autoOpen: false,
-    buttons: {
-      "Login" :
-        function() {
-          login();
-        },
-      "Cancel":
-        function() {
-          jQuery('#login_window').dialog("close");
-        }
-    }
+    buttons: loginButtons
 
 
   });

@@ -5,6 +5,9 @@
 ######################################################################
 
 use strict;
+use SGN::I18N ();
+use CatalystX::GlobalContext qw( $c );
+my SGN::I18N $ui_i18n = SGN::I18N::translate($c);
 use CXGN::Page;
 use CXGN::DB::Connection;
 
@@ -68,28 +71,28 @@ while (my ($rflp_id, $mrkr_id, $rflp_name, $library_name, $insert_size, $vector,
 			"</td><td align=\"center\">" . $drug_resist . "</td><td align=\"center\">" .
 			    (length $fwd_seq) . "</td><td align=\"center\">" .
 				(length $rev_seq) . "</td><td>" .
-				    ($mapped ? "mapped" : "unmapped") .
+				    ($mapped ? SGN::I18N::translate($ui_i18n, "genotype.marker.mapped", "mapped", undef, {entities => ($ui_i18n && $ui_i18n->locale ne 'en' ? '<>&\x80-\x{10FFFF}' : '')}) : SGN::I18N::translate($ui_i18n, "genotype.marker.unmapped", "unmapped", undef, {entities => ($ui_i18n && $ui_i18n->locale ne 'en' ? '<>&\x80-\x{10FFFF}' : '')})) .
 					"</td><td align=\"center\">" . ($num_fwd_unigenes[$rflp_id] || "0") ."/" . ($num_rev_unigenes[$rflp_id] || "0") . "</td></tr>\n";
     }
 }
 $sth->finish;
 
 # Print the page.
-$page->header("Restriction Fragment Length Polymorphism Markers on SGN");
+$page->header(SGN::I18N::translate($ui_i18n, "genotype.marker.restriction_fragment_length_polymorphism_markers_on_sgn", "Restriction Fragment Length Polymorphism Markers on SGN", undef, {entities => ($ui_i18n && $ui_i18n->locale ne 'en' ? '<>&\x80-\x{10FFFF}' : '')}));
  
-print "<center><h2>Restriction Fragment Length Polymorphism Markers on SGN</h2></center>\n";
+print ("<center><h2>" . SGN::I18N::translate($ui_i18n, "genotype.marker.restriction_fragment_length_polymorphism_markers_on_sgn", "Restriction Fragment Length Polymorphism Markers on SGN", undef, {entities => ($ui_i18n && $ui_i18n->locale ne 'en' ? '<>&\x80-\x{10FFFF}' : '')}) . "</h2></center>\n");
 print "\n<table summary=\"\" width=\"100%\" align=\"center\" border=\"2\">\n<tr>\n";
-print "<td><b>RFLP<br />Marker</b></td>\n";
+print ("<td><b>RFLP<br />" . SGN::I18N::translate($ui_i18n, "genotype.marker.marker", "Marker", undef, {entities => ($ui_i18n && $ui_i18n->locale ne 'en' ? '<>&\x80-\x{10FFFF}' : '')}) . "</b></td>\n");
 # NO library info in db at this time.  Therefore, DON'T show it on the table.
 #print "<td><b>Library</b></td>\n";
-print "<td><b>Insert<br />size</b></td>\n";
-print "<td><b>Vector</b></td>\n";
-print "<td><b>Cutting<br />Site</b></td>\n";
-print "<td><b>Drug<br />Resistance</b></td>\n";
-print "<td><b>Forward<br />sequence<br />length (bp)</b></td>\n";
-print "<td><b>Reverse<br />sequence<br />length (bp)</b></td>\n";
-print "<td><b>Mapped</b></td>\n";
-print "<td><b>Unigne matches<br />fwd / rev</b></td>\n";
+print ("<td><b>" . SGN::I18N::translate($ui_i18n, "genotype.marker.insert", "Insert", undef, {entities => ($ui_i18n && $ui_i18n->locale ne 'en' ? '<>&\x80-\x{10FFFF}' : '')}) . "<br />" . SGN::I18N::translate($ui_i18n, "genotype.marker.size", "size", undef, {entities => ($ui_i18n && $ui_i18n->locale ne 'en' ? '<>&\x80-\x{10FFFF}' : '')}) . "</b></td>\n");
+print ("<td><b>" . SGN::I18N::translate($ui_i18n, "marker.detail.vector", "Vector", undef, {entities => ($ui_i18n && $ui_i18n->locale ne 'en' ? '<>&\x80-\x{10FFFF}' : '')}) . "</b></td>\n");
+print ("<td><b>" . SGN::I18N::translate($ui_i18n, "genotype.marker.cutting", "Cutting", undef, {entities => ($ui_i18n && $ui_i18n->locale ne 'en' ? '<>&\x80-\x{10FFFF}' : '')}) . "<br />" . SGN::I18N::translate($ui_i18n, "genotype.marker.site", "Site", undef, {entities => ($ui_i18n && $ui_i18n->locale ne 'en' ? '<>&\x80-\x{10FFFF}' : '')}) . "</b></td>\n");
+print ("<td><b>" . SGN::I18N::translate($ui_i18n, "genotype.marker.drug", "Drug", undef, {entities => ($ui_i18n && $ui_i18n->locale ne 'en' ? '<>&\x80-\x{10FFFF}' : '')}) . "<br />" . SGN::I18N::translate($ui_i18n, "genotype.marker.resistance", "Resistance", undef, {entities => ($ui_i18n && $ui_i18n->locale ne 'en' ? '<>&\x80-\x{10FFFF}' : '')}) . "</b></td>\n");
+print ("<td><b>" . SGN::I18N::translate($ui_i18n, "global.unigene_estscan_detail.forward", "Forward", undef, {entities => ($ui_i18n && $ui_i18n->locale ne 'en' ? '<>&\x80-\x{10FFFF}' : '')}) . "<br />" . SGN::I18N::translate($ui_i18n, "lists_datasets.bulk.sequence", "sequence", undef, {entities => ($ui_i18n && $ui_i18n->locale ne 'en' ? '<>&\x80-\x{10FFFF}' : '')}) . "<br />" . SGN::I18N::translate($ui_i18n, "genotype.marker.length_bp", "length (bp)", undef, {entities => ($ui_i18n && $ui_i18n->locale ne 'en' ? '<>&\x80-\x{10FFFF}' : '')}) . "</b></td>\n");
+print ("<td><b>" . SGN::I18N::translate($ui_i18n, "global.unigene_estscan_detail.reverse", "Reverse", undef, {entities => ($ui_i18n && $ui_i18n->locale ne 'en' ? '<>&\x80-\x{10FFFF}' : '')}) . "<br />" . SGN::I18N::translate($ui_i18n, "lists_datasets.bulk.sequence", "sequence", undef, {entities => ($ui_i18n && $ui_i18n->locale ne 'en' ? '<>&\x80-\x{10FFFF}' : '')}) . "<br />" . SGN::I18N::translate($ui_i18n, "genotype.marker.length_bp", "length (bp)", undef, {entities => ($ui_i18n && $ui_i18n->locale ne 'en' ? '<>&\x80-\x{10FFFF}' : '')}) . "</b></td>\n");
+print ("<td><b>" . SGN::I18N::translate($ui_i18n, "genotype.marker.mapped_879a69", "Mapped", undef, {entities => ($ui_i18n && $ui_i18n->locale ne 'en' ? '<>&\x80-\x{10FFFF}' : '')}) . "</b></td>\n");
+print ("<td><b>" . SGN::I18N::translate($ui_i18n, "genotype.marker.unigne_matches", "Unigne matches", undef, {entities => ($ui_i18n && $ui_i18n->locale ne 'en' ? '<>&\x80-\x{10FFFF}' : '')}) . "<br />" . SGN::I18N::translate($ui_i18n, "genotype.marker.fwd_rev", "fwd / rev", undef, {entities => ($ui_i18n && $ui_i18n->locale ne 'en' ? '<>&\x80-\x{10FFFF}' : '')}) . "</b></td>\n");
 print "</tr>\n";
 
 print @rflplist;

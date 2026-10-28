@@ -12,6 +12,7 @@ and summarized in the marker materialized view).
 package SGN::Controller::Variant;
 
 use strict;
+use SGN::I18N ();
 use Moose;
 use CXGN::Marker::SearchMatView;
 
@@ -40,7 +41,8 @@ sub get_variant_details: Chained('get_variant') PathPart('details') :Args(0) {
     # No markers found
     if ( !$markers ) {
         $c->stash->{template} = "generic_message.mas";
-	    $c->stash->{message} = "<strong>No Markers Found</strong> for variant $variant_name<br />You can view and search for markers from the <a href='/search/variants'>Marker Search Page</a>";
+	    my SGN::I18N $variant_ui_i18n = SGN::I18N::translate($c);
+        $c->stash->{message} = "<strong>" . SGN::I18N::translate($variant_ui_i18n, "unassigned.variant.empty.title", "No Markers Found", undef, { entities => '<>&\x{0080}-\x{10FFFF}', decode => 0 }) . "</strong>" . SGN::I18N::translate($variant_ui_i18n, "unassigned.variant.empty.variant_prefix", " for variant ", undef, { entities => '<>&\x{0080}-\x{10FFFF}', decode => 0 }) . $variant_name . "<br />" . SGN::I18N::translate($variant_ui_i18n, "unassigned.variant.empty.explanation", "You can view and search for markers from the ", undef, { entities => '<>&\x{0080}-\x{10FFFF}', decode => 0 }) . "<a href='/search/variants'>" . SGN::I18N::translate($variant_ui_i18n, "unassigned.variant.empty.search_link", "Marker Search Page", undef, { entities => '<>&\x{0080}-\x{10FFFF}', decode => 0 }) . "</a>";
         $c->detach();
     }
 

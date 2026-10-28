@@ -20,11 +20,11 @@ my $contents = CXGN::Tools::File::get_sections($file);
 </div>
 -->
 
-<h4>Featured Lab</h4>
+<h4><% $c->i18n->p('global.labs.featured_heading', 'Featured Lab') |h %></h4>
 
 <% $contents %>
 
-<button class="btn btn-info btn-sm" onclick='location.href="/community/feature/index.pl"'>See all featured labs...</button>
+<button class="btn btn-info btn-sm" onclick='location.href="/community/feature/index.pl"'><% $c->i18n->p('global.labs.see_all', 'See all featured labs...') |h %></button>
 
 
 

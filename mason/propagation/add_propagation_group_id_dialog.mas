@@ -11,95 +11,95 @@ $date
     <div class="modal-dialog modal-xl" role="document">
         <div class="modal-content">
             <div class="modal-header">
-                <h4 class="modal-title" id="addPropagationGroupIdDialog">Add New Propagation Group ID</h4>
+                <h4 class="modal-title" id="addPropagationGroupIdDialog"><% $c->i18n->p("seedlot.add_new_propagation_group_id", "Add New Propagation Group ID") |h %></h4>
             </div>
             <div class="modal-body" id = "propagation_group_id_dialog">
                 <div class="container-fluid">
                     <form class="form-horizontal" role="form" method="post" id="add_new_propagation_group_id_form" name="add_new_propagation_group_id_form">
                         <div class="form-group">
-                            <label class="col-sm-4 control-label">Propagation Project: </label>
+                            <label class="col-sm-4 control-label"><% $c->i18n->p("seedlot.propagation_project", "Propagation Project:") |h %> </label>
                             <div class="col-sm-8" >
                                 <input class="form-control" name="propagation_project" id="propagation_project" disabled value="<% $trial_name %>">
                             </div>
                         </div>
                         <div class="form-group">
-                            <label class="col-sm-4 control-label">Propagation Group Identifier: </label>
+                            <label class="col-sm-4 control-label"><% $c->i18n->p("seedlot.propagation_group_identifier.7f632c8", "Propagation Group Identifier:") |h %> </label>
                             <div class="col-sm-8" >
-                                <input class="form-control" type="text" id="new_propagation_group_identifier" name="new_propagation_group_identifier" placeholder="Must be unique in the database">
+                                <input class="form-control" type="text" id="new_propagation_group_identifier" name="new_propagation_group_identifier" placeholder="<% $c->i18n->p("seedlot.must_be_unique_in_the_database", "Must be unique in the database") |h %>">
                             </div>
                         </div>
                         <div class="form-group" id = "get_propagation_accession_name">
-                            <label class="col-sm-4 control-label">Accession Name: </label>
+                            <label class="col-sm-4 control-label"><% $c->i18n->p("trial.fieldmap_js.tooltip.accession_name", "Accession Name:") |h %> </label>
                             <div class="col-sm-8" >
-                                <input class="form-control" type="text" id="propagation_accession_name" name="propagation_accession_name" placeholder="Must be in the database">
+                                <input class="form-control" type="text" id="propagation_accession_name" name="propagation_accession_name" placeholder="<% $c->i18n->p("seedlot.must_be_in_the_database", "Must be in the database") |h %>">
                             </div>
                         </div>
                         <div class="form-group">
-                            <label class="col-sm-4 control-label">Material Type: </label>
+                            <label class="col-sm-4 control-label"><% $c->i18n->p("seedlots.ui.material_type.21ab872", "Material Type:") |h %> </label>
                             <div class="col-sm-8">
                                 <select class="form-control" id="propagation_material_type">
-                                    <option value="">Please select a type</option>
-                                    <option value="budwood">budwood</option>
-                                    <option value="stem">stem</option>
-                                    <option value="shoot">shoot</option>
-                                    <option value="root">root</option>
-                                    <option value="corm">corm</option>
-                                    <option value="plant">plant</option>
-                                    <option value="seed">seed</option>
+                                    <option value=""><% $c->i18n->p("seedlot.please_select_a_type", "Please select a type") |h %></option>
+                                    <option value="budwood"><% $c->i18n->p("seedlot.budwood", "budwood") |h %></option>
+                                    <option value="stem"><% $c->i18n->p("seedlot.stem", "stem") |h %></option>
+                                    <option value="shoot"><% $c->i18n->p("seedlot.shoot", "shoot") |h %></option>
+                                    <option value="root"><% $c->i18n->p("seedlots.select.material.root", "root") |h %></option>
+                                    <option value="corm"><% $c->i18n->p("seedlot.corm", "corm") |h %></option>
+                                    <option value="plant"><% $c->i18n->p("seedlots.select.material.plant", "plant") |h %></option>
+                                    <option value="seed"><% $c->i18n->p("seedlots.select.material.seed", "seed") |h %></option>
                                 </select>
                             </div>
                         </div>
                         <div class="form-group">
-                            <label class="col-sm-4 control-label">Source Type: </label>
+                            <label class="col-sm-4 control-label"><% $c->i18n->p("seedlot.source_type.e05cc87", "Source Type:") |h %> </label>
                             <div class="col-sm-8">
                                 <select class="form-control" id="propagation_material_source_type">
-                                    <option value="">Please select a type (optional)</option>
-                                    <option value="plot">plot</option>
-                                    <option value="subplot">subplot</option>
-                                    <option value="plant">plant</option>
-                                    <option value="seedlot">seedlot</option>
-                                    <option value="new">new</option>
+                                    <option value=""><% $c->i18n->p("seedlot.please_select_a_type_optional", "Please select a type (optional)") |h %></option>
+                                    <option value="plot"><% $c->i18n->p("stock_search.type.plot", "plot") |h %></option>
+                                    <option value="subplot"><% $c->i18n->p("seedlot.subplot", "subplot") |h %></option>
+                                    <option value="plant"><% $c->i18n->p("seedlots.select.material.plant", "plant") |h %></option>
+                                    <option value="seedlot"><% $c->i18n->p("stock_search.type.seedlot", "seedlot") |h %></option>
+                                    <option value="new"><% $c->i18n->p("seedlot.new", "new") |h %></option>
                                 </select>
                             </div>
                         </div>
 
                         <div class="form-group" id = "get_propagation_source_name">
-                            <label class="col-sm-4 control-label">Source Name: </label>
+                            <label class="col-sm-4 control-label"><% $c->i18n->p("seedlot.source_name", "Source Name:") |h %> </label>
                             <div class="col-sm-8" >
-                                <input class="form-control" type="text" id="propagation_source_name" name="propagation_source_name" placeholder="optional (source name must be in the database)">
+                                <input class="form-control" type="text" id="propagation_source_name" name="propagation_source_name" placeholder="<% $c->i18n->p("seedlot.optional_source_name_must_be_in_the_database", "optional (source name must be in the database)") |h %>">
                             </div>
                         </div>
                         <div class="form-group">
-                            <label class="col-sm-4 control-label">Sub-Location: </label>
+                            <label class="col-sm-4 control-label"><% $c->i18n->p("seedlot.sub_location.dd235cd", "Sub-Location:") |h %> </label>
                             <div class="col-sm-8" >
-                                <input class="form-control" type="text" id="propagation_sub_location" name="propagation_sub_location" placeholder="optional">
+                                <input class="form-control" type="text" id="propagation_sub_location" name="propagation_sub_location" placeholder="<% $c->i18n->p("seedlot.optional", "optional") |h %>">
                             </div>
                         </div>
                         <div class="form-group">
-                            <label class="col-sm-4 control-label">Date (YYYY-MM-DD): </label>
+                            <label class="col-sm-4 control-label"><% $c->i18n->p("seedlot.date_yyyy_mm_dd", "Date (YYYY-MM-DD):") |h %> </label>
                             <div class="col-sm-8" >
                                 <input class="form-control" name="propagation_date" id="propagation_date" value="<%$date%>">
                             </div>
                         </div>
                         <div class="form-group">
-                            <label class="col-sm-4 control-label">Purpose: </label>
+                            <label class="col-sm-4 control-label"><% $c->i18n->p("seedlot.purpose.fa07902", "Purpose:") |h %> </label>
                             <div class="col-sm-8">
                                 <select class="form-control" id="propagation_purpose">
-                                    <option value="">Please select (optional)</option>
-                                    <option value="replicate">replicate</option>
-                                    <option value="backup">backup</option>
-                                    <option value="replacement">replacement</option>
+                                    <option value=""><% $c->i18n->p("seedlot.please_select_optional", "Please select (optional)") |h %></option>
+                                    <option value="replicate"><% $c->i18n->p("seedlot.replicate", "replicate") |h %></option>
+                                    <option value="backup"><% $c->i18n->p("seedlot.backup", "backup") |h %></option>
+                                    <option value="replacement"><% $c->i18n->p("seedlot.replacement", "replacement") |h %></option>
                                 </select>
                             </div>
                         </div>
                         <div class="form-group">
-                            <label class="col-sm-4 control-label">Description:</label>
+                            <label class="col-sm-4 control-label"><% $c->i18n->p("global.dataset_publish.description", "Description:") |h %></label>
                             <div class="col-sm-8">
                                 <textarea class="form-control" id="propagation_description" name="propagation_description" ></textarea>
                             </div>
                         </div>
                         <div class="form-group">
-                            <label class="col-sm-4 control-label">Operator: </label>
+                            <label class="col-sm-4 control-label"><% $c->i18n->p("seedlot_maintenance_table.ui.operator", "Operator:") |h %> </label>
                             <div class="col-sm-8" >
                                 <input class="form-control" type="text" id="propagation_operator" name="propagation_operator" value="<%$logged_in_name%>" >
                             </div>
@@ -107,8 +107,8 @@ $date
                     </div>
                 </div>
                 <div class="modal-footer">
-                    <button type="reset" id="close_add_propagation_group_id_dialog" name="close_add_propagation_group_id_dialog" class="btn btn-default" >Close</button>
-                    <button id="submit_new_propagation_group_id" type="button" class="btn btn-primary" >Add</button>
+                    <button type="reset" id="close_add_propagation_group_id_dialog" name="close_add_propagation_group_id_dialog" class="btn btn-default" ><% $c->i18n->p("global.dataset_publish.close", "Close") |h %></button>
+                    <button id="submit_new_propagation_group_id" type="button" class="btn btn-primary" ><% $c->i18n->p("global.search_wizard.add", "Add") |h %></button>
                 </div>
             </form>
         </div>
@@ -119,19 +119,19 @@ $date
     <div class="modal-dialog" role="document">
         <div class="modal-content">
             <div class="modal-header">
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                <h4 class="modal-title" id="addPropagationGroupIdSavedDialog">Success</h4>
+                <button type="button" class="close" data-dismiss="modal" aria-label="<% $c->i18n->p("global.dataset_publish.close", "Close") |h %>"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="addPropagationGroupIdSavedDialog"><% $c->i18n->p("cross.ui.success", "Success") |h %></h4>
             </div>
             <div class="modal-body">
                 <div class="container-fluid">
                     <p>
                         <span class="ui-icon ui-icon-circle-check" style="float: left; margin: 0 7px 50px 0;"></span>
-                        The propagation group identifier was saved successfully.
+                        <% $c->i18n->p("seedlot.the_propagation_group_identifier_was_saved_successfully", "The propagation group identifier was saved successfully.") |h %>
                     </p>
                 </div>
             </div>
             <div class="modal-footer">
-                <button id="dismiss_propagation_group_id_saved_dialog" type="button" class="btn btn-default" data-dismiss="modal">Close & Reload</button>
+                <button id="dismiss_propagation_group_id_saved_dialog" type="button" class="btn btn-default" data-dismiss="modal"><% $c->i18n->p("seedlots.ui.close_reload", "Close & Reload") |h %></button>
             </div>
         </div>
     </div>
@@ -156,27 +156,27 @@ jQuery(document).ready(function(){
         const propagation_project_id = "<%$trial_id%>";
 
         if (propagation_group_identifier == '') {
-            alert("Please provide a propagation group identifier");
+            alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("seedlot.please_provide_a_propagation_group_identifier", "Please provide a propagation group identifier") : "Please provide a propagation group identifier"));
             return;
         }
         if (accession_name == '') {
-            alert("Please provide accession name");
+            alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("seedlot.please_provide_accession_name", "Please provide accession name") : "Please provide accession name"));
             return;
         }
         if (material_type == '') {
-            alert("Please provide material type");
+            alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("seedlot.please_provide_material_type", "Please provide material type") : "Please provide material type"));
             return;
         }
         if (date == '') {
-            alert("Please provide date");
+            alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("seedlot.please_provide_date", "Please provide date") : "Please provide date"));
             return;
         }
         if (description == '') {
-            alert("Please provide description");
+            alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("trial.soil_upload.description_required", "Please provide description") : "Please provide description"));
             return;
         }
         if (operator_name == '') {
-            alert("Please provide operator name");
+            alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("seedlot.please_provide_operator_name", "Please provide operator name") : "Please provide operator name"));
             return;
         }
 
@@ -213,7 +213,7 @@ jQuery(document).ready(function(){
             },
             error: function(response){
                 jQuery('#working_modal').modal('hide');
-                alert('An error occurred adding propagation group identifier');
+                alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("seedlot.an_error_occurred_adding_propagation_group_identifier", "An error occurred adding propagation group identifier") : 'An error occurred adding propagation group identifier'));
             }
         });
     });

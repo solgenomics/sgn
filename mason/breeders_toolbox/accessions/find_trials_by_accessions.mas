@@ -7,13 +7,13 @@
 <form id="accession_list_selector">
 <table class="table borderless" cellpadding="10" border="0" >
   <tbody>
-  <p>Select accession list:</p>
+  <p><% $c->i18n->p('accessions.find_trials.select_list', 'Select accession list:') |h %></p>
     <td>
       <div id="accession_list">
       </div>
     </td>
     <td>
-      <input class="btn btn-primary" type="button" id="find_trials" value="Find Trials" />
+      <input class="btn btn-primary" type="button" id="find_trials" value="<% $c->i18n->p('accessions.find_trials.find', 'Find Trials') |h %>" />
     </td>
   </tbody>
   </table>
@@ -22,9 +22,9 @@
 <table id="trial_summary_data" style="margin-top: 50px;" class="display">
 <thead>
   <tr>
-    <th>Accession name</th>
-    <th>Number of associated trials</th>
-    <th>Trial list</th>
+    <th><% $c->i18n->p('accessions.find_trials.accession', 'Accession name') |h %></th>
+    <th><% $c->i18n->p('accessions.find_trials.trial_count', 'Number of associated trials') |h %></th>
+    <th><% $c->i18n->p('accessions.find_trials.trial_list', 'Trial list') |h %></th>
   </tr>
 </thead>
 
@@ -34,7 +34,7 @@
 <tbody>
 	<tr>
 	<td>
-	<p style="font-size:14px"><b>Use the trials in common in lists:</b></p>
+	<p style="font-size:14px"><b><% $c->i18n->p('accessions.find_trials.shared_lists', 'Use the trials in common in lists:') |h %></b></p>
 	</td>
        </tr>
        <tr>
@@ -45,13 +45,13 @@
 	</td>
 	<td>
 		<hr style="margin-top:4px;margin-bottom:4px" />
-		<div class="well well-sm"><div id="c1_data_count">No Selection</div></div>
+		<div class="well well-sm"><div id="c1_data_count"><% $c->i18n->p('cross.ui.no_selection', 'No Selection') |h %></div></div>
 		<div id="c1_to_list_menu" align="center"></div>
 	</td>
 	</tr>
 	<tr>
 	<td>
-		<button class="btn btn-default btn-sm" id="c1_select_all" name ="1" align="center"/>Select All</button>
+		<button class="btn btn-default btn-sm" id="c1_select_all" name ="1" align="center"/><% $c->i18n->p('cross.ui.select_all', 'Select All') |h %></button>
 	</td>
 </tr>
 </tbody>
@@ -66,9 +66,10 @@ jQuery(document).ready(function() {
 jQuery('#trial_summary_data').hide();
 jQuery('#shared_trials_2_lists').hide();
 
+    var findTrialsI18n = (window.SGN && window.SGN.i18n) || { p: function (context, source) { return source; } };
     var lo = new CXGN.List();
 
-    jQuery('#accession_list').html(lo.listSelect('accession_list', [ 'accessions' ], 'select', undefined, undefined));
+    jQuery('#accession_list').html(lo.listSelect('accession_list', [ 'accessions' ], findTrialsI18n.p('locations.table.select_list', 'select'), undefined, undefined));
 
     addToListMenu('c1_to_list_menu', 'c1_data', {
 		selectText: true,
@@ -86,13 +87,13 @@ jQuery('#shared_trials_2_lists').hide();
 
 	if (!accession_list_id) {
       	    enable_ui();
-      	    alert("You need to select an accession list!");
+            alert(findTrialsI18n.p('cross.ui.you_need_to_select_an_accession_list', 'You need to select an accession list!'));
 	    return;
       	    }
 
       	if (accession_validation != 1) {
       	    enable_ui();
-      	    alert("Accession list did not pass validation. Please correct the list and try again");
+            alert(findTrialsI18n.p('accessions.find_trials.validation_failed', 'Accession list did not pass validation. Please correct the list and try again'));
 	    return;
       	    }
 
@@ -123,7 +124,7 @@ jQuery('#shared_trials_2_lists').hide();
 			});
 		    }
 	    	    },
-	    error: function(response) { alert("An error occurred while transforming the list "+list_id); }
+	    error: function(response) { alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("accession.find_trials.transform_failed", "An error occurred while transforming the list %{id}", {id: String(list_id)}) : "An error occurred while transforming the list "+list_id)); }
 	    });
   });
 
@@ -143,7 +144,7 @@ jQuery('#shared_trials_2_lists').hide();
 	}
 	return html;
     }
-    return "no data";
+    return (window.SGN && window.SGN.i18n ? window.SGN.i18n.p("seedlots.ui.no_data", "no data") : "no data");
   }
 
 });

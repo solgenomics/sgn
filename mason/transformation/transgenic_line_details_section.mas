@@ -1,3 +1,7 @@
+<%once>
+use HTML::Entities ();
+</%once>
+
 <%args>
 $transformation_id
 $program_name
@@ -5,7 +9,7 @@ $can_obsolete
 </%args>
 
 
-<&| /page/info_section.mas, title => 'Transgenic Lines (Accessions)', collapsible=>1, collapsed=>0 &>
+<&| /page/info_section.mas, anchor_title => 'Transgenic Lines (Accessions)', title => HTML::Entities::encode_entities($c->i18n->p("transformation.transgenic_lines_accessions", 'Transgenic Lines (Accessions)')), collapsible=>1, collapsed=>0 &>
     <div class = "well well-sm">
         <div class = "panel panel-default">
             <div class = "panel-body">
@@ -15,7 +19,7 @@ $can_obsolete
                 </div>
                 <div class="panel panel-default">
                     <div class="panel-body">
-                        <&| /page/info_section.mas, title => 'Add accessions to a List', collapsible=>1, collapsed=>1, subtitle=>'<i>Adding transgenic lines (accessions) to a new or exisiting list</i>'&>
+                        <&| /page/info_section.mas, anchor_title => 'Add accessions to a List', title => HTML::Entities::encode_entities($c->i18n->p("transformation.add_accessions_to_a_list", 'Add accessions to a List')), collapsible=>1, collapsed=>1, subtitle=>("<i>" . HTML::Entities::encode_entities($c->i18n->p("transformation.adding_transgenic_lines_accessions_to_a_new_or_exisiting_list", "Adding transgenic lines (accessions) to a new or existing list")) . "</i>")&>
                             <br>
                             <div id="transgenic_lines_to_new_list" style="display:none"></div>
                             <div id="transgenic_lines_add_to_list"></div>
@@ -23,7 +27,7 @@ $can_obsolete
                     </div>
                 </div>
 % if($can_obsolete) {
-                <button class="btn btn-sm btn-primary" style="margin:3px" id="obsolete_transgenic_lines_in_bulk_link">Obsolete Accessions in Bulk</button>
+                <button class="btn btn-sm btn-primary" style="margin:3px" id="obsolete_transgenic_lines_in_bulk_link"><% $c->i18n->p("transformation.obsolete_accessions_in_bulk", "Obsolete Accessions in Bulk") |h %></button>
 % }
             </div>
         </div>
@@ -43,12 +47,12 @@ jQuery(document).ready(function(){
         'autoWidth': false,
         'order': false,
         'columns': [
-            { title: "Accession", "data": null, "render": function ( data, type, row ) { return "<a href='/stock/"+row.transformant_id+"/view'>"+row.transformant_name+"</a>"; } },
-            { title: "Number of Insertions", "data": "number_of_insertions" },
-            { title: "Obsolete Accession", "data": null, "render": function ( data, type, row ) {
+            { title: jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("global.index_logged_in_user.accession", "Accession") : "Accession")).html(), "data": null, "render": function ( data, type, row ) { return "<a href='/stock/"+row.transformant_id+"/view'>"+row.transformant_name+"</a>"; } },
+            { title: jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("transformation.number_of_insertions", "Number of Insertions") : "Number of Insertions")).html(), "data": "number_of_insertions" },
+            { title: jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("transformation.obsolete_accession", "Obsolete Accession") : "Obsolete Accession")).html(), "data": null, "render": function ( data, type, row ) {
                 if (can_obsolete) {
                     if (row.is_a_parent) {
-                        return 'Used as a parent, cannot obsolete';
+                        return (window.SGN && window.SGN.i18n ? window.SGN.i18n.p("transformation.used_as_a_parent_cannot_obsolete", "Used as a parent, cannot obsolete") : 'Used as a parent, cannot obsolete');
                     } else {
                         return "<a onclick='obsoleteStock("+row.transformant_id+",\""+row.transformant_name+"\")'>X</a>";
                     }
@@ -61,7 +65,7 @@ jQuery(document).ready(function(){
         "fnInitComplete": function(oSettings, json) {
             //console.log(json);
             if (!isLoggedIn()) {
-                jQuery('#transgenic_lines_add_to_list').html("<div class='well well-sm'><h3>Please login to use lists!</h3></div>");
+                jQuery('#transgenic_lines_add_to_list').html(("<div class='well well-sm'><h3>" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("accession.related_stock.login_lists", "Please login to use lists!") : "Please login to use lists!")).html() + "</h3></div>"));
             } else {
                 let html = "";
                 for(let i=0; i<json.data.length; i++){

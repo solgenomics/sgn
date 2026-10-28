@@ -1,3 +1,7 @@
+<%once>
+use HTML::Entities ();
+</%once>
+
 <%doc>
 
 =head1 NAME
@@ -32,15 +36,15 @@ $trait_name
 <p>&nbsp</p>
 
 <& /page/page_title.mas,
-    title => "GS populations evaluated for $trait_name" ,
+    title => HTML::Entities::encode_entities($c->i18n->p("solgs.interface.gs_populations_evaluated_for_trait_name", "GS populations evaluated for %{trait_name}", {trait_name => "" . ($trait_name // "")})) ,
 &>
 
  <& /solgs/genotyping_protocol/index.mas &>
 
-<&| /page/info_section.mas,
+<&| /page/info_section.mas, anchor_title => "Select a training population or create a new one using one or more trials",
     collapsible => 1,
     collapsed   => 0,
-    title       => "Select a training population or create a new one using one or more trials",
+    title       => HTML::Entities::encode_entities($c->i18n->p("solgs.interface.select_a_training_population_or_create_a_new_one_using", "Select a training population or create a new one using one or more trials")),
 &>
 
   <& /solgs/search/trials_search_result.mas &>

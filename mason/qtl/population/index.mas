@@ -1,3 +1,7 @@
+<%once>
+use HTML::Entities ();
+</%once>
+
 <%args>
 
 $pop
@@ -21,7 +25,7 @@ $genetic_map
 <%perl>
 
 my $title = $pop->get_name();
-my $submit_new = qq | <a href="/qtl/form">Submit QTL population</a> |;
+my $submit_new = (qq | <a href="/qtl/form">| . HTML::Entities::encode_entities($c->i18n->p("analysis.qtl.ui.submit_qtl_population", "Submit QTL population")) . qq |</a> |);
 
 </%perl>
 
@@ -29,10 +33,10 @@ my $submit_new = qq | <a href="/qtl/form">Submit QTL population</a> |;
    title => $title
 &>
 
-<&| /page/info_section.mas, 
+<&| /page/info_section.mas, anchor_title => "Population summary",
   collapsible => 1, 
   collapsed   => 0, 
-  title       => "Population summary",
+  title       => HTML::Entities::encode_entities($c->i18n->p("analysis.qtl.ui.population_summary", "Population summary")),
   subtitle    => $submit_new
   &>
  
@@ -45,10 +49,10 @@ my $submit_new = qq | <a href="/qtl/form">Submit QTL population</a> |;
 
 % if ($show_data) 
 %{
-  <&| /page/info_section.mas, 
+  <&| /page/info_section.mas, anchor_title => "Set statistical parameters",
     collapsible => 1, 
     collapsed   => 0, 
-    title       => "Set statistical parameters"
+    title       => HTML::Entities::encode_entities($c->i18n->p("analysis.qtl.ui.set_statistical_parameters", "Set statistical parameters"))
   &>   
   <& stat_tools.mas, 
     pop_id     => $pop->get_population_id(), 
@@ -78,14 +82,14 @@ my $submit_new = qq | <a href="/qtl/form">Submit QTL population</a> |;
    acronym_download   => $acronym_download,
 &>
 
-<&| /page/info_section.mas, 
+<&| /page/info_section.mas, anchor_title => "Trait acronyms",
     collapsible => 1, 
     collapsed   => 1, 
-    title       => "Trait acronyms"
+    title       => HTML::Entities::encode_entities($c->i18n->p("analysis.qtl.ui.trait_acronyms", "Trait acronyms"))
   &>   
  
   <& /page/columnar_table.mas,
-     headings     => ["Trait name", "Acronym"],
+     headings     => [("" . HTML::Entities::encode_entities($c->i18n->p("phenotype.root.trait_name.4f3e5b7", "Trait name")) . ""), ("" . HTML::Entities::encode_entities($c->i18n->p("accession.population_cgi.acronym", "Acronym")) . "")],
      data         => $trait_acronym_pairs,
      __alt_freq   => 2,
      __alt_width  => 1,

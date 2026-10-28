@@ -13,7 +13,7 @@ $design_types => ()
 
 <& /util/import_javascript.mas, classes => [ 'bootstrap_min.js', 'jquery.iframe-post-form','CXGN.List', 'CXGN.BreedersToolbox.AddTrial','CXGN.BreedersToolbox.UploadTrial','CXGN.BreedersToolbox.Trial', 'CXGN.Trial','CXGN.BreedersToolbox.GenotypingTrial','CXGN.BreedersToolbox.Accessions', 'CXGN.BreedersToolbox.UploadPedigrees','CXGN.BreedersToolbox.Crosses','CXGN.BreedersToolbox.FieldBook','CXGN.BreedersToolbox.UploadPhenotype', 'CXGN.BreederSearch', 'CXGN.Trial','CXGN.TrialTreeFolders' ] &>
 
-<& /page/page_title.mas, title=>"Upload Data" &>
+<& /page/page_title.mas, title=>HTML::Entities::encode_entities($c->i18n->p('collection.upload_data', 'Upload Data')) &>
 
 <style>
 .ui-autocomplete {
@@ -24,21 +24,21 @@ $design_types => ()
 <div class="container-fluid">
 
 <div class="well well-sm">
-<h1>Traits</h1><br/>
+<h1><% $c->i18n->p('lists_datasets.download.traits', 'Traits') |h %></h1><br/>
 <table class="table table-bordered">
 <thead>
-<tr><th>Add</th><th>Manage</th><th>Search</th></tr>
+<tr><th><% $c->i18n->p('global.search_wizard.add', 'Add') |h %></th><th><% $c->i18n->p('accession.sequencing.table.manage', 'Manage') |h %></th><th><% $c->i18n->p('cross.ui.search', 'Search') |h %></th></tr>
 </thead>
 <tbody>
 <tr>
 <td>
-<a href="http://submit.rtbbase.org"><p>Go To Trait Request Form</p></a>
+<a href="http://submit.rtbbase.org"><p><% $c->i18n->p('collection.go_to_trait_request_form', 'Go To Trait Request Form') |h %></p></a>
 </td>
 <td>
-<a href="/tools/onto"><p>Go To Ontology Browser</p></a>
+<a href="/tools/onto"><p><% $c->i18n->p('collection.go_to_ontology_browser', 'Go To Ontology Browser') |h %></p></a>
 </td>
 <td>
-<a href="/search/traits"><p>Go To Trait Search</p></a>
+<a href="/search/traits"><p><% $c->i18n->p('collection.go_to_trait_search', 'Go To Trait Search') |h %></p></a>
 </td>
 </tr>
 </tbody>
@@ -46,22 +46,22 @@ $design_types => ()
 </div>
 
 <div class="well well-sm">
-<h1>Field Trials</h1><br/>
+<h1><% $c->i18n->p('navigation.manage.field_trials', 'Field Trials') |h %></h1><br/>
 <table class="table table-bordered">
 <thead>
-<tr><th>Add</th><th>Manage</th><th>Search</th></tr>
+<tr><th><% $c->i18n->p('global.search_wizard.add', 'Add') |h %></th><th><% $c->i18n->p('accession.sequencing.table.manage', 'Manage') |h %></th><th><% $c->i18n->p('cross.ui.search', 'Search') |h %></th></tr>
 </thead>
 <tbody>
 <tr>
 <td>
-<a name="upload_trial_link"><p>Upload An Existing Trial</p></a>
-<a id="add_project_link"><p>Design A New Trial</p></a>
+<a name="upload_trial_link"><p><% $c->i18n->p('collection.upload_an_existing_trial', 'Upload An Existing Trial') |h %></p></a>
+<a id="add_project_link"><p><% $c->i18n->p('collection.design_a_new_trial', 'Design A New Trial') |h %></p></a>
 </td>
 <td>
-<a href="/breeders/trials"><p>Go To Manage Trials</p></a>
+<a href="/breeders/trials"><p><% $c->i18n->p('program.project_section.manage_trials', 'Go To Manage Trials') |h %></p></a>
 </td>
 <td>
-<a href="/search/trials"><p>Go To Trial Search</p></a>
+<a href="/search/trials"><p><% $c->i18n->p('collection.go_to_trial_search', 'Go To Trial Search') |h %></p></a>
 </td>
 </tr>
 </tbody>
@@ -71,21 +71,21 @@ $design_types => ()
 <& /breeders_toolbox/trial/trial_upload_dialogs.mas, locations => $geojson_locations, breeding_programs => $breeding_programs, design_types => $design_types &>
 
 <div class="well well-sm">
-<h1>Genotyping Plates</h1><br/>
+<h1><% $c->i18n->p('folder.detail.tab.genotyping_plates', 'Genotyping Plates') |h %></h1><br/>
 <table class="table table-bordered">
 <thead>
-<tr><th>Add</th><th>Manage</th><th>Search</th></tr>
+<tr><th><% $c->i18n->p('global.search_wizard.add', 'Add') |h %></th><th><% $c->i18n->p('accession.sequencing.table.manage', 'Manage') |h %></th><th><% $c->i18n->p('cross.ui.search', 'Search') |h %></th></tr>
 </thead>
 <tbody>
 <tr>
 <td>
-<a name="create_genotyping_trial_link"><p>Create An IGD Genotyping Plate</p></a>
+<a name="create_genotyping_trial_link"><p><% $c->i18n->p('collection.create_an_igd_genotyping_plate', 'Create An IGD Genotyping Plate') |h %></p></a>
 </td>
 <td>
-<a href="/breeders/genotyping"><p>Go To Manage Genotyping Plates</p></a>
+<a href="/breeders/genotyping"><p><% $c->i18n->p('program.project_section.manage_plates', 'Go To Manage Genotyping Plates') |h %></p></a>
 </td>
 <td>
-<a href="/search/trials"><p>Go To Trial Search</p></a>
+<a href="/search/trials"><p><% $c->i18n->p('collection.go_to_trial_search', 'Go To Trial Search') |h %></p></a>
 </td>
 </tr>
 </tbody>
@@ -94,21 +94,21 @@ $design_types => ()
 <& /breeders_toolbox/genotyping_trials/create_genotyping_trial_dialogs.mas, facilities => $facilities &>
 
 <div class="well well-sm">
-<h1>Locations</h1><br/>
+<h1><% $c->i18n->p('locations.map.locations', 'Locations') |h %></h1><br/>
 <table class="table table-bordered">
 <thead>
-<tr><th>Add</th><th>Manage</th><th>Search</th></tr>
+<tr><th><% $c->i18n->p('global.search_wizard.add', 'Add') |h %></th><th><% $c->i18n->p('accession.sequencing.table.manage', 'Manage') |h %></th><th><% $c->i18n->p('cross.ui.search', 'Search') |h %></th></tr>
 </thead>
 <tbody>
 <tr>
 <td>
-<a id="upload_locations_link"><p>Upload Many New Locations</p></a>
+<a id="upload_locations_link"><p><% $c->i18n->p('collection.upload_many_new_locations', 'Upload Many New Locations') |h %></p></a>
 </td>
 <td>
-<a href="/breeders/locations"><p>Go To Manage Locations</p></a>
+<a href="/breeders/locations"><p><% $c->i18n->p('collection.go_to_manage_locations', 'Go To Manage Locations') |h %></p></a>
 </td>
 <td>
-<a href="/breeders/locations"><p>Go To Manage Locations</p></a>
+<a href="/breeders/locations"><p><% $c->i18n->p('collection.go_to_manage_locations', 'Go To Manage Locations') |h %></p></a>
 </td>
 </tr>
 </tbody>
@@ -117,21 +117,21 @@ $design_types => ()
 <& /breeders_toolbox/upload_locations_dialogs.mas &>
 
 <div class="well well-sm">
-<h1>Accessions</h1><br/>
+<h1><% $c->i18n->p('accessions.section.accessions', 'Accessions') |h %></h1><br/>
 <table class="table table-bordered">
 <thead>
-<tr><th>Add</th><th>Manage</th><th>Search</th></tr>
+<tr><th><% $c->i18n->p('global.search_wizard.add', 'Add') |h %></th><th><% $c->i18n->p('accession.sequencing.table.manage', 'Manage') |h %></th><th><% $c->i18n->p('cross.ui.search', 'Search') |h %></th></tr>
 </thead>
 <tbody>
 <tr>
 <td>
-<a name="add_accessions_link"><p>Add Accessions Using List</p></a>
+<a name="add_accessions_link"><p><% $c->i18n->p('collection.add_accessions_using_list', 'Add Accessions Using List') |h %></p></a>
 </td>
 <td>
-<a href="/breeders/accessions"><p>Go To Manage Accessions Page</p></a>
+<a href="/breeders/accessions"><p><% $c->i18n->p('collection.go_to_manage_accessions_page', 'Go To Manage Accessions Page') |h %></p></a>
 </td>
 <td>
-<a href="/search/stocks"><p>Go To Accessions Search</p></a>
+<a href="/search/stocks"><p><% $c->i18n->p('collection.go_to_accessions_search', 'Go To Accessions Search') |h %></p></a>
 </td>
 </tr>
 </tbody>
@@ -140,21 +140,21 @@ $design_types => ()
 <& /breeders_toolbox/add_accessions_dialogs.mas, preferred_species=>$preferred_species, editable_stock_props=>$editable_stock_props, editable_stock_props_definitions=>$editable_stock_props_definitions &>
 
 <div class="well well-sm">
-<h1>Populations</h1><br/>
+<h1><% $c->i18n->p('accessions.section.populations', 'Populations') |h %></h1><br/>
 <table class="table table-bordered">
 <thead>
-<tr><th>Add</th><th>Manage</th><th>Search</th></tr>
+<tr><th><% $c->i18n->p('global.search_wizard.add', 'Add') |h %></th><th><% $c->i18n->p('accession.sequencing.table.manage', 'Manage') |h %></th><th><% $c->i18n->p('cross.ui.search', 'Search') |h %></th></tr>
 </thead>
 <tbody>
 <tr>
 <td>
-<a id="manage_accessions_populations_new"><p>Add New Population</p></a>
+<a id="manage_accessions_populations_new"><p><% $c->i18n->p('collection.add_new_population', 'Add New Population') |h %></p></a>
 </td>
 <td>
-<a href="/breeders/accessions"><p>Go To Manage Accessions Page</p></a>
+<a href="/breeders/accessions"><p><% $c->i18n->p('collection.go_to_manage_accessions_page', 'Go To Manage Accessions Page') |h %></p></a>
 </td>
 <td>
-<a href="/search/stocks"><p>Go To Stock Search</p></a>
+<a href="/search/stocks"><p><% $c->i18n->p('collection.go_to_stock_search', 'Go To Stock Search') |h %></p></a>
 </td>
 </tr>
 </tbody>
@@ -164,22 +164,22 @@ $design_types => ()
 
 
 <div class="well well-sm">
-<h1>Seedlots</h1><br/>
+<h1><% $c->i18n->p('lists_datasets.download.seedlots', 'Seedlots') |h %></h1><br/>
 <table class="table table-bordered">
 <thead>
-<tr><th>Add</th><th>Manage</th><th>Search</th></tr>
+<tr><th><% $c->i18n->p('global.search_wizard.add', 'Add') |h %></th><th><% $c->i18n->p('accession.sequencing.table.manage', 'Manage') |h %></th><th><% $c->i18n->p('cross.ui.search', 'Search') |h %></th></tr>
 </thead>
 <tbody>
 <tr>
 <td>
-<a name="seedlot_bulk_upload"><p>Upload Many Seedlots</p></a>
-<a name="add_seedlot_button"><p>Add A Seedlot</p></a>
+<a name="seedlot_bulk_upload"><p><% $c->i18n->p('collection.upload_many_seedlots', 'Upload Many Seedlots') |h %></p></a>
+<a name="add_seedlot_button"><p><% $c->i18n->p('collection.add_a_seedlot', 'Add A Seedlot') |h %></p></a>
 </td>
 <td>
-<a href="/breeders/seedlots"><p>Go To Manage Seedlots Page</p></a>
+<a href="/breeders/seedlots"><p><% $c->i18n->p('collection.go_to_manage_seedlots_page', 'Go To Manage Seedlots Page') |h %></p></a>
 </td>
 <td>
-<a href="/breeders/seedlots"><p>Go To Manage Seedlots Page</p></a>
+<a href="/breeders/seedlots"><p><% $c->i18n->p('collection.go_to_manage_seedlots_page', 'Go To Manage Seedlots Page') |h %></p></a>
 </td>
 </tr>
 </tbody>
@@ -189,21 +189,21 @@ $design_types => ()
 <& /breeders_toolbox/add_seedlot_dialogs.mas, timestamp=>$timestamp &>
 
 <div class="well well-sm">
-<h1>Pedigrees</h1><br/>
+<h1><% $c->i18n->p('collection.pedigrees', 'Pedigrees') |h %></h1><br/>
 <table class="table table-bordered">
 <thead>
-<tr><th>Add</th><th>Manage</th><th>Search</th></tr>
+<tr><th><% $c->i18n->p('global.search_wizard.add', 'Add') |h %></th><th><% $c->i18n->p('accession.sequencing.table.manage', 'Manage') |h %></th><th><% $c->i18n->p('cross.ui.search', 'Search') |h %></th></tr>
 </thead>
 <tbody>
 <tr>
 <td>
-<a id="upload_pedigrees_link"><p>Upload Many Pedigrees</p></a>
+<a id="upload_pedigrees_link"><p><% $c->i18n->p('collection.upload_many_pedigrees', 'Upload Many Pedigrees') |h %></p></a>
 </td>
 <td>
-<a href="/breeders/accessions"><p>Go To Manage Accessions Page</p></a>
+<a href="/breeders/accessions"><p><% $c->i18n->p('collection.go_to_manage_accessions_page', 'Go To Manage Accessions Page') |h %></p></a>
 </td>
 <td>
-<a href="/search/cross"><p>Go To Search Crosses</p></a>
+<a href="/search/cross"><p><% $c->i18n->p('collection.go_to_search_crosses', 'Go To Search Crosses') |h %></p></a>
 </td>
 </tr>
 </tbody>
@@ -212,29 +212,29 @@ $design_types => ()
 <& /breeders_toolbox/upload_pedigrees_dialogs.mas &>
 
 <div class="well well-sm">
-<h1>Crosses</h1><br/>
+<h1><% $c->i18n->p('cross.ui.crosses', 'Crosses') |h %></h1><br/>
 <table class="table table-bordered">
 <thead>
-<tr><th>Plan</th><th>Add</th><th>Manage</th><th>Search</th></tr>
+<tr><th><% $c->i18n->p('collection.plan', 'Plan') |h %></th><th><% $c->i18n->p('global.search_wizard.add', 'Add') |h %></th><th><% $c->i18n->p('accession.sequencing.table.manage', 'Manage') |h %></th><th><% $c->i18n->p('cross.ui.search', 'Search') |h %></th></tr>
 </thead>
 <tbody>
 <tr>
 <td>
-<a id="create_cross_wishlist" >Create Cross Wishlist</a>
+<a id="create_cross_wishlist" ><% $c->i18n->p('cross.forms.create_cross_wishlist', 'Create Cross Wishlist') |h %></a>
 </td>
 <td>
-<a name="upload_crosses_link"><p>Upload Many New Crosses</p></a>
-<a name="create_cross_link"><p>Add A Cross</p></a>
-<a name="upload_cross_info"><p>Upload Cross Info of Existing Crosses</p></a>
-<a name="upload_progenies_new_accessions_link"><p>Upload progeny names that are NOT in database</p></a>
-<a name="upload_progenies_existing_accessions_link"><p>Upload progeny names that already EXIST in database</p></a>
-<a name="upload_family_names_link"><p>Upload Family Names</p></a>
+<a name="upload_crosses_link"><p><% $c->i18n->p('collection.upload_many_new_crosses', 'Upload Many New Crosses') |h %></p></a>
+<a name="create_cross_link"><p><% $c->i18n->p('collection.add_a_cross', 'Add A Cross') |h %></p></a>
+<a name="upload_cross_info"><p><% $c->i18n->p('cross.forms.upload_cross_info_of_existing_crosses', 'Upload Cross Info of Existing Crosses') |h %></p></a>
+<a name="upload_progenies_new_accessions_link"><p><% $c->i18n->p('collection.upload_progeny_names_that_are_not_in_database', 'Upload progeny names that are NOT in database') |h %></p></a>
+<a name="upload_progenies_existing_accessions_link"><p><% $c->i18n->p('cross.pages.upload_progeny_names_that_already_exist_in_database', 'Upload progeny names that already EXIST in database') |h %></p></a>
+<a name="upload_family_names_link"><p><% $c->i18n->p('collection.upload_family_names', 'Upload Family Names') |h %></p></a>
 </td>
 <td>
-<a href="/breeders/crosses"><p>Go To Manage Crosses Page</p></a>
+<a href="/breeders/crosses"><p><% $c->i18n->p('collection.go_to_manage_crosses_page', 'Go To Manage Crosses Page') |h %></p></a>
 </td>
 <td>
-<a href="/search/cross"><p>Go To Search Crosses</p></a>
+<a href="/search/cross"><p><% $c->i18n->p('collection.go_to_search_crosses', 'Go To Search Crosses') |h %></p></a>
 </td>
 </tr>
 </tbody>
@@ -247,27 +247,27 @@ $design_types => ()
 <& /breeders_toolbox/cross/add_progenies_dialogs.mas &>
 
 <div class="well well-sm">
-<h1>Phenotypes</h1><br/>
+<h1><% $c->i18n->p('global.search.advanced_search.phenotypes', 'Phenotypes') |h %></h1><br/>
 <table class="table table-bordered">
 <thead>
-<tr><th>Collection</th><th>Add</th><th>Manage</th><th>Search</th></tr>
+<tr><th><% $c->i18n->p('collection.collection', 'Collection') |h %></th><th><% $c->i18n->p('global.search_wizard.add', 'Add') |h %></th><th><% $c->i18n->p('accession.sequencing.table.manage', 'Manage') |h %></th><th><% $c->i18n->p('cross.ui.search', 'Search') |h %></th></tr>
 </thead>
 <tbody>
 <tr>
 <td>
-<a name="create_fieldbook_link"><p>Create Fieldbook Layout File</p></a>
-<a id="create_new_trait_file_link"><p>Create Fieldbook Trait File</p></a>
-<a name="create_spreadsheet_link"><p>Create Phenotyping Spreadsheet</p></a>
+<a name="create_fieldbook_link"><p><% $c->i18n->p('collection.create_fieldbook_layout_file', 'Create Fieldbook Layout File') |h %></p></a>
+<a id="create_new_trait_file_link"><p><% $c->i18n->p('collection.create_fieldbook_trait_file', 'Create Fieldbook Trait File') |h %></p></a>
+<a name="create_spreadsheet_link"><p><% $c->i18n->p('collection.create_phenotyping_spreadsheet', 'Create Phenotyping Spreadsheet') |h %></p></a>
 </td>
 <td>
-<a id="upload_fieldbook_phenotypes_link"><p>Upload Fieldbook Database File</p></a>
-<a id="upload_spreadsheet_phenotypes_link"><p>Upload Phenotyping Spreadsheet</p></a>
+<a id="upload_fieldbook_phenotypes_link"><p><% $c->i18n->p('collection.upload_fieldbook_database_file', 'Upload Fieldbook Database File') |h %></p></a>
+<a id="upload_spreadsheet_phenotypes_link"><p><% $c->i18n->p('collection.upload_phenotyping_spreadsheet', 'Upload Phenotyping Spreadsheet') |h %></p></a>
 </td>
 <td>
-<a href="/breeders/phenotyping"><p>Go To Manage Phenotypes Page</p></a>
+<a href="/breeders/phenotyping"><p><% $c->i18n->p('collection.go_to_manage_phenotypes_page', 'Go To Manage Phenotypes Page') |h %></p></a>
 </td>
 <td>
-<a href="/breeders/search"><p>Go To Search Wizard</p></a>
+<a href="/breeders/search"><p><% $c->i18n->p('collection.go_to_search_wizard', 'Go To Search Wizard') |h %></p></a>
 </td>
 </tr>
 </tbody>
@@ -280,3 +280,7 @@ $design_types => ()
 <& /breeders_toolbox/trial/create_spreadsheet_dialog.mas &>
 
 </div>
+
+<%once>
+use HTML::Entities ();
+</%once>

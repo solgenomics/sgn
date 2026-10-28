@@ -10,6 +10,8 @@ $trial_id
 </div>
 
 <script>
+var _sgnB11TissueSourcesEscape = function(value) { return jQuery('<div>').text(value).html(); };
+
 
 jQuery(document).ready(function () {
 
@@ -26,8 +28,8 @@ jQuery(document).ready(function () {
 
                 html = '<table class="table borderless" alt="breeder search" border="0" ><tr><td><select multiple class="form-control" id="tissue_sources_data" name="1" size="10" style="min-width: 200px;overflow:auto;"></select></td></tr>'
 
-                html += '<tr><td><button class="btn btn-default btn-sm" id="tissue_sources_select_all" name="1">Select All</button><br><br>'
-                html += '<div class="well well-sm"><div id="tissue_sources_data_count" name="1">No Selection</div></div>'
+                html += '<tr><td><button class="btn btn-default btn-sm" id="tissue_sources_select_all" name="1">' + _sgnB11TissueSourcesEscape(window.SGN && SGN.i18n ? SGN.i18n.p('global.search_wizard.select_all', 'Select All') : 'Select All') + '</button><br><br>'
+                html += '<div class="well well-sm"><div id="tissue_sources_data_count" name="1">' + _sgnB11TissueSourcesEscape(window.SGN && SGN.i18n ? SGN.i18n.p('trial.tissue_sources.no_selection', "No Selection") : "No Selection") + '</div></div>'
                 html += '<div id="tissue_sources_to_list_menu"></div><td><tr></table>'
 
                 jQuery('#trial_tissue_sources_html').html(html);
@@ -80,7 +82,7 @@ jQuery(document).ready(function () {
             },
             error: function(response){
                 jQuery("#working_modal").modal("hide");
-                alert("Error retrieving tissue sources.");
+                alert((window.SGN && SGN.i18n ? SGN.i18n.p('trial.tissue_sources.retrieve_error', "Error retrieving tissue sources.") : "Error retrieving tissue sources."));
             }
         });
     });

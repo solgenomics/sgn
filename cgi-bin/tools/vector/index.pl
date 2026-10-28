@@ -1,5 +1,8 @@
 
 use strict;
+use SGN::I18N ();
+use HTML::Entities ();
+
 use warnings;
 
 use File::Temp qw/tempfile/;
@@ -18,9 +21,11 @@ use CXGN::Cview::Marker::VectorFeature;
 use CXGN::Tools::WebImageCache;
 use CXGN::Cview::VectorViewer;
 use CatalystX::GlobalContext '$c';
+my SGN::I18N $ui_vector_script_i18n = SGN::I18N::translate($c);
+
 ###############################################################################
 
-my $p = CXGN::Page->new("Vector drawing application", "VeDraw");
+my $p = CXGN::Page->new(SGN::I18N::translate($ui_vector_script_i18n, 'transformation.vector_drawing_application', 'Vector drawing application', undef, { entities => '<>&\x{0080}-\x{10FFFF}', decode => 0 }), "VeDraw");
 my ($action, $format, $name, $insert_sequence, $insert_coord, $show_re, $del_start ,$del_end, $native_file, $edit_commands) = $p->get_arguments("action", "format", "name" , "insert_sequence", "insert_coord", "show_re", "del_start", "del_end", "native_file", "edit_commands");
 
 ###############################################################################
@@ -162,38 +167,21 @@ display_results($p, $image_html, $seq, $commands_ref, $show_re, $base_temp);
 ###############################################################################
 
 sub display_form { 
+    my SGN::I18N $ui_display_form_i18n = SGN::I18N::translate($c);
     my $p = shift;
     
 # display form
 #
-$p->header("Vector drawing application", "Vector drawing application");
+$p->header(SGN::I18N::translate($ui_display_form_i18n, 'transformation.vector_drawing_application', 'Vector drawing application', undef, { entities => '<>&\x{0080}-\x{10FFFF}', decode => 0 }), SGN::I18N::translate($ui_display_form_i18n, 'transformation.vector_drawing_application', 'Vector drawing application', undef, { entities => '<>&\x{0080}-\x{10FFFF}', decode => 0 }));
 
-print <<HTML;
-
-<form enctype="multipart/form-data" method="post" >
-Vector name <input type="text" name="name" value="" size="8" /><br /><br />
-Upload a genbank file <input type="file" name="genbank_record" /><br /><br />
-<b>Format:</b><br />
-<input type="radio" name="format" value="genbank" checked="1" /> Genbank<br />
-<input type="radio" name="format" value="native" /> Native<br /><br />
-<b>Show restriction sites</b><br />
-<input type="radio" name="show_re" value="all" /> all (not recommended)<br />
-<input type="radio" name="show_re" value="unique" /> unique cutters<br />
-<input type="radio" name="show_re" value="popular6bp" /> popular 6bp cutters<br />
-<input type="radio" name="show_re" value="popular4bp" /> popular 4bp cutters<br />
-<br /><br />
-<input type="submit" value="upload" />
-<input type="hidden" name="action" value="upload" />
-</form>
-
-
-HTML
+print ("\n<form enctype=\"multipart/form-data\" method=\"post\" >\n" . SGN::I18N::translate($ui_display_form_i18n, 'transformation.vector_name', 'Vector name', undef, { entities => '<>&\x{0080}-\x{10FFFF}', decode => 0 }) . " <input type=\"text\" name=\"name\" value=\"\" size=\"8\" /><br /><br />\n" . SGN::I18N::translate($ui_display_form_i18n, 'transformation.upload_a_genbank_file', 'Upload a genbank file', undef, { entities => '<>&\x{0080}-\x{10FFFF}', decode => 0 }) . " <input type=\"file\" name=\"genbank_record\" /><br /><br />\n<b>" . SGN::I18N::translate($ui_display_form_i18n, 'lists_datasets.download.format.39442ac', 'Format:', undef, { entities => '<>&\x{0080}-\x{10FFFF}', decode => 0 }) . "</b><br />\n<input type=\"radio\" name=\"format\" value=\"genbank\" checked=\"1\" /> Genbank<br />\n<input type=\"radio\" name=\"format\" value=\"native\" /> Native<br /><br />\n<b>" . SGN::I18N::translate($ui_display_form_i18n, 'transformation.show_restriction_sites', 'Show restriction sites', undef, { entities => '<>&\x{0080}-\x{10FFFF}', decode => 0 }) . "</b><br />\n<input type=\"radio\" name=\"show_re\" value=\"all\" /> " . SGN::I18N::translate($ui_display_form_i18n, 'transformation.all_not_recommended', 'all (not recommended)', undef, { entities => '<>&\x{0080}-\x{10FFFF}', decode => 0 }) . "<br />\n<input type=\"radio\" name=\"show_re\" value=\"unique\" /> " . SGN::I18N::translate($ui_display_form_i18n, 'transformation.unique_cutters', 'unique cutters', undef, { entities => '<>&\x{0080}-\x{10FFFF}', decode => 0 }) . "<br />\n<input type=\"radio\" name=\"show_re\" value=\"popular6bp\" /> " . SGN::I18N::translate($ui_display_form_i18n, 'transformation.popular_6bp_cutters', 'popular 6bp cutters', undef, { entities => '<>&\x{0080}-\x{10FFFF}', decode => 0 }) . "<br />\n<input type=\"radio\" name=\"show_re\" value=\"popular4bp\" /> " . SGN::I18N::translate($ui_display_form_i18n, 'transformation.popular_4bp_cutters', 'popular 4bp cutters', undef, { entities => '<>&\x{0080}-\x{10FFFF}', decode => 0 }) . "<br />\n<br /><br />\n<input type=\"submit\" value=\"" . SGN::I18N::translate($ui_display_form_i18n, 'transformation.upload', 'upload', undef, { entities => undef, decode => 0 }) . "\" />\n<input type=\"hidden\" name=\"action\" value=\"upload\" />\n</form>\n\n\n");
 
 $p->footer();
 
 }
 
 sub display_results { 
+    my SGN::I18N $ui_display_results_i18n = SGN::I18N::translate($c);
     
     my $p = shift;
     my $image_html = shift;
@@ -201,16 +189,9 @@ sub display_results {
     my $commands = shift;
     my $show_re = shift;
     my $native_file =shift;
-    $p->header("Vector Drawing", "Vector Drawing");
+    $p->header(SGN::I18N::translate($ui_display_results_i18n, 'transformation.vector_drawing', 'Vector Drawing', undef, { entities => '<>&\x{0080}-\x{10FFFF}', decode => 0 }), SGN::I18N::translate($ui_display_results_i18n, 'transformation.vector_drawing', 'Vector Drawing', undef, { entities => '<>&\x{0080}-\x{10FFFF}', decode => 0 }));
 
-    print <<HTML;
-    
-      
-<center>
-      $image_html
-</center>
-
-HTML
+    print ("    \n      \n<center>\n      $image_html\n</center>\n\n");
 
 my $html = qq{
     
@@ -229,43 +210,23 @@ my $html = qq{
     $html .= $native_commands;
     $html .=  qq { </textarea><br /><input type="submit" /></center></form> };
 
-    my $edit_native = info_section_html( title=> "Edit", contents=>$html, collapsible=>1, collapsed=>1);
+    my $edit_native = info_section_html( anchor_title => 'Edit', title => SGN::I18N::translate($ui_display_results_i18n, 'accession.sequencing.action.edit', 'Edit', undef, { entities => '<>&\x{0080}-\x{10FFFF}', decode => 0 }), contents=>$html, collapsible=>1, collapsed=>1);
 
     print $edit_native;
 
 
-    my $insert_html = <<HTML;
-<form method="post">
-Insert Sequence <br /><br /><textarea name="insert_sequence" value="" rows = "4" cols="80" /></textarea><br />
-Insert at position <input type="text" name="insert_coord" value="0" size="4" /><br />
-<input type="hidden" name="action" value="insert" />
+    my $insert_html = ("<form method=\"post\">\n" . SGN::I18N::translate($ui_display_results_i18n, 'transformation.insert_sequence.926ec50', 'Insert Sequence', undef, { entities => '<>&\x{0080}-\x{10FFFF}', decode => 0 }) . " <br /><br /><textarea name=\"insert_sequence\" value=\"\" rows = \"4\" cols=\"80\" /></textarea><br />\n" . SGN::I18N::translate($ui_display_results_i18n, 'transformation.insert_at_position', 'Insert at position', undef, { entities => '<>&\x{0080}-\x{10FFFF}', decode => 0 }) . " <input type=\"text\" name=\"insert_coord\" value=\"0\" size=\"4\" /><br />\n<input type=\"hidden\" name=\"action\" value=\"insert\" />\n\n<input type=\"hidden\" name=\"native_file\" value=\"$native_file\" />\n<input type=\"hidden\" name=\"show_re\" value=\"$show_re\" />\n<input type=\"submit\" />\n</form>\n\n");
 
-<input type="hidden" name="native_file" value="$native_file" />
-<input type="hidden" name="show_re" value="$show_re" />
-<input type="submit" />
-</form>
+print info_section_html( anchor_title => 'Insert sequence', title => SGN::I18N::translate($ui_display_results_i18n, 'transformation.insert_sequence.f1cd3f7', 'Insert sequence', undef, { entities => '<>&\x{0080}-\x{10FFFF}', decode => 0 }), contents=>$insert_html, collapsible=>1, collapsed=>1);
 
-HTML
+    my $delete_html = ("<form method=\"post\">\n" . SGN::I18N::translate($ui_display_results_i18n, 'transformation.delete_sequence.9004e80', 'Delete Sequence', undef, { entities => '<>&\x{0080}-\x{10FFFF}', decode => 0 }) . "<br /><br />\n" . SGN::I18N::translate($ui_display_results_i18n, 'transformation.from_position', 'From position', undef, { entities => '<>&\x{0080}-\x{10FFFF}', decode => 0 }) . " <input type=\"text\" name=\"del_start\" /> \n" . SGN::I18N::translate($ui_display_results_i18n, 'transformation.to_position', 'to position', undef, { entities => '<>&\x{0080}-\x{10FFFF}', decode => 0 }) . " <input type=\"text\" name=\"del_end\" />\n<input type=\"hidden\" name=\"action\" value=\"delete\" />\n<input type=\"hidden\" name=\"native_file\" value=\"$native_file\" />\n<input type=\"hidden\" name=\"show_re\" value=\"$show_re\" />\n<input type=\"submit\" />\n");
 
-print info_section_html( title=>"Insert sequence", contents=>$insert_html, collapsible=>1, collapsed=>1);
-
-    my $delete_html = <<HTML;
-<form method="post">
-Delete Sequence<br /><br />
-From position <input type="text" name="del_start" /> 
-to position <input type="text" name="del_end" />
-<input type="hidden" name="action" value="delete" />
-<input type="hidden" name="native_file" value="$native_file" />
-<input type="hidden" name="show_re" value="$show_re" />
-<input type="submit" />
-HTML
-
-print info_section_html (title=>"Delete sequence", contents=>$delete_html, collapsible=>1, collapsed=>1);
+print info_section_html (anchor_title => 'Delete sequence', title => SGN::I18N::translate($ui_display_results_i18n, 'transformation.delete_sequence.6d6e1a9', 'Delete sequence', undef, { entities => '<>&\x{0080}-\x{10FFFF}', decode => 0 }), contents=>$delete_html, collapsible=>1, collapsed=>1);
 
     my $split_seq = html_break_string($seq, 100, "\n");
     my $sequence_html = qq { <pre><div id="sequence_display">$split_seq</div></pre> };
 
-    print info_section_html( title=>"View sequence", contents=>$sequence_html, collapsible=>1, collapsed=>1);
+    print info_section_html( anchor_title => 'View sequence', title => SGN::I18N::translate($ui_display_results_i18n, 'transformation.view_sequence', 'View sequence', undef, { entities => '<>&\x{0080}-\x{10FFFF}', decode => 0 }), contents=>$sequence_html, collapsible=>1, collapsed=>1);
 
     $p->footer();
     

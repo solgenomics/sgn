@@ -8,6 +8,7 @@ stocks (e.g. accession, population, etc.)
 =cut
 
 use Moose;
+use HTML::Entities ();
 use namespace::autoclean;
 use YAML::Any qw/LoadFile/;
 
@@ -185,7 +186,7 @@ sub view_stock : Chained('get_stock') PathPart('view') Args(0) {
 	my $stock_id = $stock ? $stock->get_stock_id : undef ;
 
     if (!$stock_id) {
-        $c->stash->{message} = "The requested stock does not exist or has been deleted.";
+        $c->stash->{message} = $c->i18n->p("accession.server.stock_missing", "The requested stock does not exist or has been deleted.");
         $c->stash->{template} = 'generic_message.mas';
         return;
     }
@@ -223,7 +224,7 @@ sub view_stock : Chained('get_stock') PathPart('view') Args(0) {
 	    #     );
 
 	    $c->stash->{template} = "generic_message.mas";
-	    $c->stash->{message}  = "You do not have sufficient privileges to view the page of stock with database id $stock_id. You may need to log in to view this page.";
+	    $c->stash->{message}  = $c->i18n->p("accession.server.stock_forbidden", "You do not have sufficient privileges to view the page of stock with database id %{id}. You may need to log in to view this page.", {id => "$stock_id"});
 	    return;
 	}
 
@@ -240,7 +241,7 @@ sub view_stock : Chained('get_stock') PathPart('view') Args(0) {
 	    #    );
 
 	    $c->stash->{template} = "generic_message.mas";
-	    $c->stash->{message}  = "The stock with database id $stock_id has been deleted. It can no longer be viewed.";
+	    $c->stash->{message}  = $c->i18n->p("accession.server.stock_deleted", "The stock with database id %{id} has been deleted. It can no longer be viewed.", {id => "$stock_id"});
 	    return;
 	}
 	# print message if stock_id does not exist
@@ -520,8 +521,8 @@ sub download_genotypes : Chained('get_stock') PathPart('genotypes') Args(0) {
     if (!$genotype_id || $genotype_id !~ /^[0-9]+\z/) {
 
 	my $referer = $c->req->referer;
-	my $message = "<p>Genotype data download for the stock is missing an associated genotype id. <br/>"
-	    .  "<a href=\"$referer\">[ Go back ]</a></p>";
+	my $message = "<p>" . HTML::Entities::encode_entities($c->i18n->p("accession.server.genotype_id_missing", "Genotype data download for the stock is missing an associated genotype id. ")) . "<br/>"
+	    . "<a href=\"$referer\">" . HTML::Entities::encode_entities($c->i18n->p("accession.server.go_back", "[ Go back ]")) . "</a></p>";
 
 	$c->stash->{message} = $message;
 	$c->stash->{template} = "/generic_message.mas";
@@ -675,7 +676,7 @@ sub search_stock : Private {
     # NO MATCH FOUND
     if ( $count == 0 ) {
         $c->stash->{template} = "generic_message.mas";
-        $c->stash->{message} = "<strong>No Matching Stock Found</strong> ($stock_query $organism_query)<br />You can view and search for stocks from the <a href='/search/stocks'>Stock Search Page</a>";
+        $c->stash->{message} = "<strong>" . HTML::Entities::encode_entities($c->i18n->p("accession.server.no_match", "No Matching Stock Found")) . "</strong> ($stock_query $organism_query)<br />" . HTML::Entities::encode_entities($c->i18n->p("accession.server.search_help", "You can view and search for stocks from the ")) . "<a href='/search/stocks'>" . HTML::Entities::encode_entities($c->i18n->p("accession.server.search_link", "Stock Search Page")) . "</a>";
     }
 
     # MULTIPLE MATCHES FOUND
@@ -690,7 +691,7 @@ sub search_stock : Private {
         }
         $list.="</ul>";
         $c->stash->{template} = "generic_message.mas";
-        $c->stash->{message} = "<strong>Multiple Stocks Found</strong><br />" . $list;
+        $c->stash->{message} = "<strong>" . HTML::Entities::encode_entities($c->i18n->p("accession.server.multiple_matches", "Multiple Stocks Found")) . "</strong><br />" . $list;
     }
 
     # 1 MATCH FOUND - FORWARD TO VIEW STOCK
@@ -1210,7 +1211,7 @@ sub _stock_has_descendants {
 
 sub _validate_pair {
     my ($self,$c,$key,$value) = @_;
-    $c->throw( is_client_error => 1, public_message => "$value is not a valid value for $key" )
+    $c->throw( is_client_error => 1, public_message => $c->i18n->p("accession.server.invalid_pair", "%{value} is not a valid value for %{key}", {value => "$value", key => "$key"}) )
         if ($key =~ m/_id$/ and $value !~ m/\d+/);
 }
 

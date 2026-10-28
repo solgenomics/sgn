@@ -10,18 +10,18 @@ $allow_delete => 0
 % if (scalar(@$files)>0) {
 <table class="table table-bordered files_datatables" alt="">
 <thead>
-  <tr><th>Filename</th><th>Date Uploaded</th><th>Options</th></tr>
+  <tr><th><% $c->i18n->p('file_list.header.filename', 'Filename') |h %></th><th><% $c->i18n->p('file_list.header.date_uploaded', 'Date Uploaded') |h %></th><th><% $c->i18n->p('file_list.header.options', 'Options') |h %></th></tr>
 </thead>
 <tbody>
-% foreach my $f (@$files) { 
+% foreach my $f (@$files) {
   <tr>
-    <td><% $f->{basename} %></td>
-    <td><% $f->{create_date} %></td>
+    <td><bdi dir="auto"><% $f->{basename} |h %></bdi></td>
+    <td><bdi dir="ltr"><% $f->{create_date} |h %></bdi></td>
     <td>
 % if ($allow_delete){
-    <button class="btn btn-default btn-sm" name="delete_pheno_file_link" data-file_id="<% $f->{file_id} %>" >Delete</button> | 
+    <button class="btn btn-default btn-sm" name="delete_pheno_file_link" data-file_id="<% $f->{file_id} %>" ><% $c->i18n->p('file_list.action.delete', 'Delete') |h %></button> |
 % }
-    <a href="/breeders/phenotyping/view/<% $f->{file_id} %>">View</a> | <a href="/breeders/phenotyping/download/<% $f->{file_id} %>">Download</a></td>
+    <a href="/breeders/phenotyping/view/<% $f->{file_id} %>"><% $c->i18n->p('file_list.action.view', 'View') |h %></a> | <a href="/breeders/phenotyping/download/<% $f->{file_id} %>"><% $c->i18n->p('file_list.action.download', 'Download') |h %></a></td>
   </tr>
 % }
 </tbody>
@@ -32,8 +32,99 @@ $allow_delete => 0
 
 jQuery(document).ready(function() {
 
-    jQuery('.files_datatables').DataTable();
+    var fileListI18n = (window.SGN && window.SGN.i18n) || {
+        p: function(context, source, vars) {
+            return String(source).replace(/%\{([A-Za-z_][A-Za-z0-9_]*)\}/g, function(marker, key) {
+                return vars && Object.prototype.hasOwnProperty.call(vars, key) ? String(vars[key]) : marker;
+            });
+        }
+    };
+    function fileListScroll(table) {
+        var node = jQuery(table);
+        node.closest('.dataTables_wrapper').addClass('sgn-file-list-widget');
+        if (!node.parent().hasClass('sgn-file-list-scroll')) {
+            node.wrap(jQuery('<div>').addClass('sgn-file-list-scroll').attr({
+                tabindex: 0, role: 'region',
+                'aria-label': fileListI18n.p('file_list.ui.scroll_region', 'File table')
+            }));
+        }
+    }
+    jQuery('.files_datatables').each(function() {
+        if (jQuery.fn.dataTable.isDataTable(this)) {
+            jQuery(this).DataTable();
+            fileListScroll(this);
+            return;
+        }
+        // Opaque per-table variables keep catalog-supplied _DT_ strings literal.
+        var prefix = '\uE000SGNFILELIST' + Date.now().toString(36) + Math.random().toString(36).slice(2) + 'X';
+        var suffix = '\uE001';
+        var markers = {start: prefix + 'start' + suffix, end: prefix + 'end' + suffix,
+            total: prefix + 'total' + suffix, max: prefix + 'max' + suffix, menu: prefix + 'menu' + suffix};
+        var macros = {start: '_START_', end: '_END_', total: '_TOTAL_', max: '_MAX_', menu: '_MENU_'};
+        function checked(value, expected) {
+            value = String(value);
+            Object.keys(markers).forEach(function(key) {
+                var count = value.split(markers[key]).length - 1;
+                var required = expected.indexOf(key) !== -1;
+                if ((!required && count !== 0) || (required && count < 1) || (key === 'menu' && required && count !== 1)) {
+                    throw new Error('Invalid file-list DataTables variable: ' + key);
+                }
+            });
+            if (/%\{[A-Za-z_][A-Za-z0-9_]*\}/.test(value)) {
+                throw new Error('Unexpanded file-list DataTables variable');
+            }
+            var residual = value;
+            Object.keys(markers).forEach(function(key) { residual = residual.split(markers[key]).join(''); });
+            if (residual.indexOf(prefix) !== -1) throw new Error('Unexpected file-list DataTables marker');
+            return value;
+        }
+        function html(value, expected) {
+            // DataTables uses HTML for labels and substitutes macros before insertion.
+            value = checked(value, expected || []).replace(/[&<>"']/g, function(c) {
+                return {'&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;'}[c];
+            }).replace(/_/g, '&#95;');
+            Object.keys(markers).forEach(function(key) { value = value.split(markers[key]).join(macros[key]); });
+            return value;
+        }
+        jQuery(this).DataTable({language: {
+            emptyTable: html(fileListI18n.p('file_list.datatable.empty', 'No data available in table')),
+            info: html(fileListI18n.p('file_list.datatable.info', 'Showing %{start} to %{end} of %{total} entries', {start:markers.start, end:markers.end, total:markers.total}), ['start','end','total']),
+            infoEmpty: html(fileListI18n.p('file_list.datatable.info_empty', 'Showing 0 to 0 of 0 entries')),
+            infoFiltered: html(fileListI18n.p('file_list.datatable.info_filtered', '(filtered from %{max} total entries)', {max:markers.max}), ['max']),
+            lengthMenu: html(fileListI18n.p('file_list.datatable.length_menu', 'Show %{menu} entries', {menu:markers.menu}), ['menu']),
+            loadingRecords: html(fileListI18n.p('file_list.datatable.loading', 'Loading...')),
+            processing: html(fileListI18n.p('file_list.datatable.processing', 'Processing...')),
+            search: html(fileListI18n.p('file_list.datatable.search', 'Search:')),
+            zeroRecords: html(fileListI18n.p('file_list.datatable.zero', 'No matching records found')),
+            paginate: {
+                first: html(fileListI18n.p('file_list.datatable.first', 'First')),
+                last: html(fileListI18n.p('file_list.datatable.last', 'Last')),
+                next: html(fileListI18n.p('file_list.datatable.next', 'Next')),
+                previous: html(fileListI18n.p('file_list.datatable.previous', 'Previous'))
+            },
+            aria: {
+                sortAscending: checked(fileListI18n.p('file_list.datatable.aria_ascending', ': activate to sort column ascending'), []),
+                sortDescending: checked(fileListI18n.p('file_list.datatable.aria_descending', ': activate to sort column descending'), [])
+            }
+        }});
+        fileListScroll(this);
+    });
 
 });
 
 </script>
+
+<style>
+.sgn-file-list-scroll { max-width: 100%; overflow-x: auto; }
+.sgn-file-list-widget .dataTables_length,
+.sgn-file-list-widget .dataTables_filter,
+.sgn-file-list-widget .dataTables_info,
+.sgn-file-list-widget .dataTables_paginate,
+.sgn-file-list-widget .dataTables_paginate .paginate_button {
+    max-width: 100%;
+    overflow-wrap: anywhere;
+    white-space: normal;
+}
+.sgn-file-list-widget .dataTables_filter input { max-width: 100%; }
+.sgn-file-list-widget table.files_datatables th { text-align: start; }
+</style>

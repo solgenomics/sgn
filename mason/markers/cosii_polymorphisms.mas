@@ -1,4 +1,6 @@
-
+<%once>
+use HTML::Entities ();
+</%once>
 <%doc>
 
 =head1 NAME
@@ -30,6 +32,8 @@ $marker
 </%args>
 
 <%perl>
+use SGN::I18N ();
+
 
   my $marker_name = $marker->get_name();
 my $dbh = $marker->{dbh};
@@ -37,7 +41,7 @@ my $dbh = $marker->{dbh};
 unless($marker->is_in_collection('COSII')) {
   return'';
 }
-my $html='<span class="ghosted">No additional PCR data found.</span>';
+my $html=('<span class="ghosted">' . SGN::I18N::translate($c->i18n, "marker.detail.cosii.no_additional_pcr_data", "No additional PCR data found.", undef, {entities => '<>&'}) . '</span>');
 
 #if we have some experiments, and they are an arrayref, and there is at least one location in them
 my $experiments=$marker->upa_experiments();
@@ -154,16 +158,16 @@ if($experiments and @{$experiments}) {
     }
   $html="<table border=\"1\" cellpadding=\"2\" cellspacing=\"0\" width=\"720\">";
     $html.="<tr>";
-    $html.="<td><b>Testing intronic and exonic universal primers for Asterid species</b></td>";
+    $html.=("<td><b>" . SGN::I18N::translate($c->i18n, "marker.detail.cosii.testing_universal_primers", "Testing intronic and exonic universal primers for Asterid species", undef, {entities => '<>&'}) . "</b></td>");
     $html.="<td colspan=\"3\">";
     if($fwd_iupa) {
-    $html.="<b>Forward <a href=\"/markers/cosii_markers.pl\">Intronic UPA</a> (5'-3'):</b> <span class=\"sequence\">$fwd_iupa</span><br />";
+    $html.=("<b>" . SGN::I18N::translate($c->i18n, "marker.detail.cosii.forward", "Forward ", undef, {entities => '<>&'}) . "<a href=\"/markers/cosii_markers.pl\">" . SGN::I18N::translate($c->i18n, "marker.detail.cosii.intronic_upa", "Intronic UPA", undef, {entities => '<>&'}) . "</a> (5'-3'):</b> <span class=\"sequence\">$fwd_iupa</span><br />");
   }
     else {
       $html.="&nbsp;<br /><br />";
   }
     if($rev_iupa) {
-      $html.="<b>Reverse <a href=\"/markers/cosii_markers.pl\">Intronic UPA</a> (5'-3'):</b> <span class=\"sequence\">$rev_iupa</span><br />";
+      $html.=("<b>" . SGN::I18N::translate($c->i18n, "marker.detail.cosii.reverse", "Reverse ", undef, {entities => '<>&'}) . "<a href=\"/markers/cosii_markers.pl\">" . SGN::I18N::translate($c->i18n, "marker.detail.cosii.intronic_upa", "Intronic UPA", undef, {entities => '<>&'}) . "</a> (5'-3'):</b> <span class=\"sequence\">$rev_iupa</span><br />");
     }
     else {
     $html.="&nbsp;<br /><br />";
@@ -172,20 +176,20 @@ if($experiments and @{$experiments}) {
     $html.="<td colspan=\"3\">";
     if($fwd_eupa)
       {
-	$html.="<b>Forward <a href=\"/markers/cosii_markers.pl\">Exonic UPA</a> (5'-3'):</b> <span class=\"sequence\">$fwd_eupa</span><br />";
+	$html.=("<b>" . SGN::I18N::translate($c->i18n, "marker.detail.cosii.forward", "Forward ", undef, {entities => '<>&'}) . "<a href=\"/markers/cosii_markers.pl\">" . SGN::I18N::translate($c->i18n, "marker.detail.cosii.exonic_upa", "Exonic UPA", undef, {entities => '<>&'}) . "</a> (5'-3'):</b> <span class=\"sequence\">$fwd_eupa</span><br />");
     }
     else {
       $html.="&nbsp;<br /><br />";
     }
     if($rev_eupa) {
-      $html.="<b>Reverse <a href=\"/markers/cosii_markers.pl\">Exonic UPA</a> (5'-3'):</b> <span class=\"sequence\">$rev_eupa</span><br />";
+      $html.=("<b>" . SGN::I18N::translate($c->i18n, "marker.detail.cosii.reverse", "Reverse ", undef, {entities => '<>&'}) . "<a href=\"/markers/cosii_markers.pl\">" . SGN::I18N::translate($c->i18n, "marker.detail.cosii.exonic_upa", "Exonic UPA", undef, {entities => '<>&'}) . "</a> (5'-3'):</b> <span class=\"sequence\">$rev_eupa</span><br />");
     }
     else {
     $html.="&nbsp;<br /><br />";
   }
     $html.="</td>";
     $html.="</tr>";
-    $html.="<tr><td><b>Accession</b></td><td><b>PCR size(s)</b></td><td><b>Anneal temp.</b></td><td><b>Mg<sup>+2</sup> conc. (mM)</b></td><td><b>PCR size(s)</b></td><td><b>Anneal temp.</b></td><td><b>Mg<sup>+2</sup> conc. (mM)</b></td></tr>";
+    $html.=("<tr><td><b>" . SGN::I18N::translate($c->i18n, "marker.detail.cosii.accession_header", "Accession", undef, {entities => '<>&'}) . "</b></td><td><b>" . SGN::I18N::translate($c->i18n, "marker.detail.cosii.pcr_sizes_header", "PCR size(s)", undef, {entities => '<>&'}) . "</b></td><td><b>" . SGN::I18N::translate($c->i18n, "marker.detail.cosii.anneal_temp_header", "Anneal temp.", undef, {entities => '<>&'}) . "</b></td><td><b>" . SGN::I18N::translate($c->i18n, "marker.detail.cosii.mg_conc_header", "Mg<sup>+2</sup> conc. (mM)") . "</b></td><td><b>" . SGN::I18N::translate($c->i18n, "marker.detail.cosii.pcr_sizes_header", "PCR size(s)", undef, {entities => '<>&'}) . "</b></td><td><b>" . SGN::I18N::translate($c->i18n, "marker.detail.cosii.anneal_temp_header", "Anneal temp.", undef, {entities => '<>&'}) . "</b></td><td><b>" . SGN::I18N::translate($c->i18n, "marker.detail.cosii.mg_conc_header", "Mg<sup>+2</sup> conc. (mM)") . "</b></td></tr>");
     for my $accession_name(sort {$a cmp $b} keys(%display_hash)) {
       $display_hash{$accession_name}->{iUPA}->{bands}||='&nbsp;';
     $display_hash{$accession_name}->{iUPA}->{temp}||='&nbsp;';
@@ -209,7 +213,7 @@ if($experiments and @{$experiments}) {
 
 </%perl>
 
-<&| /page/info_section.mas, title=>'Universal primers for Asterid species'&>
+<&| /page/info_section.mas, anchor_title => 'Universal primers for Asterid species', title=>HTML::Entities::encode_entities($c->i18n->p("marker.detail.universal_primers_for_asterid_species", 'Universal primers for Asterid species'))&>
   <% $html %>
 </&>
 

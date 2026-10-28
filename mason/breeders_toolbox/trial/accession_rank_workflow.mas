@@ -6,7 +6,7 @@ $data_level => undef
 <& /util/import_javascript.mas, classes => [ ] &>
 
 <div class="well well-sm">
-    <button class="btn btn-primary" id="trial_detail_page_analysis_accession_rank_workflow">Rank Accessions On Saved Measurements</button>
+    <button class="btn btn-primary" id="trial_detail_page_analysis_accession_rank_workflow"><% $c->i18n->p("accession.forms.rank_accessions_on_saved_measurements", "Rank Accessions On Saved Measurements") |h %></button>
 </div>
 <hr>
 
@@ -14,20 +14,20 @@ $data_level => undef
     <div class="modal-dialog modal-xl" role="document">
         <div class="modal-content">
             <div class="modal-header">
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                <h4 class="modal-title" id="trialAnalysisAccessionsRankWorkflowDialog">Rank Accessions</h4>
+                <button type="button" class="close" data-dismiss="modal" aria-label="<% $c->i18n->p("global.dataset_publish.close", "Close") |h %>"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="trialAnalysisAccessionsRankWorkflowDialog"><% $c->i18n->p("accession.forms.rank_accessions", "Rank Accessions") |h %></h4>
             </div>
             <div class="modal-body">
 
                 <&| /util/workflow.mas, id=> "trial_analysis_accessions_rank_workflow_dialog_workflow" &>
-                    <&| /util/workflow.mas:step, title=> "Traits" &>
-                        <& /page/page_title.mas, title=>"Select the input measurements to use in ranking" &>
+                    <&| /util/workflow.mas:step, title=> $c->i18n->p("lists_datasets.download.traits", "Traits") &>
+                        <& /page/page_title.mas, title=>HTML::Entities::encode_entities($c->i18n->p("accession.forms.select_the_input_measurements_to_use_in_ranking", "Select the input measurements to use in ranking")) &>
 
                         <div class="container-fluid">
                             <div class="form-horizontal">
 
                                 <div class="form-group">
-                                    <label class="col-sm-3 control-label">Trait(s): </label>
+                                    <label class="col-sm-3 control-label"><% $c->i18n->p("trial.card.deletion.traits", "Trait(s):") |h %> </label>
                                     <div class="col-sm-9" >
                                         <div id="trial_analysis_accessions_rank_workflow_traits_div"></div>
                                     </div>
@@ -36,18 +36,18 @@ $data_level => undef
                             </div>
 
                             <center>
-                                <button class="btn btn-primary" onclick="Workflow.complete(this); return false;" >Go to Next Step</button>
+                                <button class="btn btn-primary" onclick="Workflow.complete(this); return false;" ><% $c->i18n->p("cross.ui.go_to_next_step", "Go to Next Step") |h %></button>
                             </center>
                         </div>
                     </&>
-                    <&| /util/workflow.mas:step, title=> "Accessions" &>
-                        <& /page/page_title.mas, title=>"Select the accessions to rank" &>
+                    <&| /util/workflow.mas:step, title=> $c->i18n->p("accessions.section.accessions", "Accessions") &>
+                        <& /page/page_title.mas, title=>HTML::Entities::encode_entities($c->i18n->p("accession.forms.select_the_accessions_to_rank", "Select the accessions to rank")) &>
 
                         <div class="container-fluid">
                             <div class="form-horizontal">
 
                                 <div class="form-group">
-                                    <label class="col-sm-3 control-label">Accessions (Leave empty for all): </label>
+                                    <label class="col-sm-3 control-label"><% $c->i18n->p("accession.forms.accessions_leave_empty_for_all", "Accessions (Leave empty for all):") |h %> </label>
                                     <div class="col-sm-9" >
                                         <div id="trial_analysis_accessions_rank_workflow_accessions_div"></div>
                                     </div>
@@ -56,31 +56,31 @@ $data_level => undef
                             </div>
 
                             <center>
-                                <button type="button" class="btn btn-primary" name="trial_analysis_accessions_rank_accessions_submit" id="trial_analysis_accessions_rank_accessions_submit" >Next Step</button>
+                                <button type="button" class="btn btn-primary" name="trial_analysis_accessions_rank_accessions_submit" id="trial_analysis_accessions_rank_accessions_submit" ><% $c->i18n->p("accession.forms.next_step", "Next Step") |h %></button>
                             </center>
                         </div>
                     </&>
-                    <&| /util/workflow.mas:step, title=> "Trait Weightings" &>
-                        <& /page/page_title.mas, title=>"Give weightings for traits" &>
+                    <&| /util/workflow.mas:step, title=> $c->i18n->p("accession.forms.trait_weightings", "Trait Weightings") &>
+                        <& /page/page_title.mas, title=>HTML::Entities::encode_entities($c->i18n->p("accession.forms.give_weightings_for_traits", "Give weightings for traits")) &>
 
                         <div class="container-fluid">
 
                             <div id="trial_analysis_accessions_rank_trait_weights_div"></div>
 
                             <center>
-                                <button type="button" class="btn btn-primary" name="trial_analysis_accessions_rank_workflow_submit" id="trial_analysis_accessions_rank_workflow_submit" title="Submit">Submit</button>
+                                <button type="button" class="btn btn-primary" name="trial_analysis_accessions_rank_workflow_submit" id="trial_analysis_accessions_rank_workflow_submit" title="<% $c->i18n->p("global.manage_file_share_dump.submit", "Submit") |h %>"><% $c->i18n->p("global.manage_file_share_dump.submit", "Submit") |h %></button>
                             </center>
                         </div>
                     </&>
-                    <&| /util/workflow.mas:step, title=> "Output" &>
-                        <& /page/page_title.mas, title=>"Results" &>
+                    <&| /util/workflow.mas:step, title=> $c->i18n->p("lists_datasets.bulk.output", "Output") &>
+                        <& /page/page_title.mas, title=>HTML::Entities::encode_entities($c->i18n->p("global.gem_experiment_search.results", "Results")) &>
 
                         <div id="trial_analysis_accessions_rank_workflow_results_div"></div>
                     </&>
                 </&>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-default" data-dismiss="modal"><% $c->i18n->p("global.dataset_publish.close", "Close") |h %></button>
             </div>
         </div>
     </div>
@@ -108,11 +108,11 @@ jQuery(document).ready(function(){
         console.log(trial_analysis_accessions_rank_workflow_accessions_ids);
 
         if ( !trial_analysis_accessions_rank_workflow_trait_ids || trial_analysis_accessions_rank_workflow_trait_ids.length < 1) {
-            alert('Please select at least one trait!');
+            alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("trial.correlation.traits_required", "Please select at least one trait!") : "Please select at least one trait!"));
             return false;
         }
         else {
-            var html = '<table class="table table-bordered table-hover"><thead><tr><th>Trait</th><th>Weighting</th></tr></thead><tbody>';
+            var html = ("<table class=\"table table-bordered table-hover\"><thead><tr><th>" + jQuery("<div>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("accession.stock.phenotype.header.trait", "Trait") : "Trait")).html() + "</th><th>" + jQuery("<div>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("accession.forms.weighting", "Weighting") : "Weighting")).html() + "</th></tr></thead><tbody>");
             for (var i=0; i<trial_analysis_accessions_rank_workflow_trait_ids.length; i++) {
                 html = html + '<tr><td>'+trial_analysis_accessions_rank_workflow_trait_ids[i]+'</td><td><input type="text" name="trial_analysis_accessions_rank_workflow_trait_weights" data-trait_id="'+trial_analysis_accessions_rank_workflow_trait_ids[i]+'" class="form-control" value="1"></td></tr>';
             }
@@ -128,13 +128,13 @@ jQuery(document).ready(function(){
         var trial_analysis_accessions_rank_workflow_trait_weights_values = [];
         jQuery('input[name="trial_analysis_accessions_rank_workflow_trait_weights"]').each(function() {
             if (jQuery(this).val() == '') {
-                alert('Please give weights!');
+                alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("accession.forms.please_give_weights", "Please give weights!") : "Please give weights!"));
                 return false;
             }
             trial_analysis_accessions_rank_workflow_trait_weights_values.push([jQuery(this).data('trait_id'), jQuery(this).val()]);
         });
         if (trial_analysis_accessions_rank_workflow_trait_weights_values.length != trial_analysis_accessions_rank_workflow_trait_ids.length) {
-            alert('Please give weights!');
+            alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("accession.forms.please_give_weights", "Please give weights!") : "Please give weights!"));
             return false;
         }
         else {
@@ -150,7 +150,7 @@ jQuery(document).ready(function(){
                         alert(response.error);
                     }
                     else {
-                        var html = '<table class="table table-hover table-bordered"><thead><tr><th>Rank</th><th>Accession Name</th><th>Value</th></tr></thead><tbody>';
+                        var html = ("<table class=\"table table-hover table-bordered\"><thead><tr><th>" + jQuery("<div>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("accession.forms.rank", "Rank") : "Rank")).html() + "</th><th>" + jQuery("<div>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("accession.related_stock.header.accession_name", "Accession Name") : "Accession Name")).html() + "</th><th>" + jQuery("<div>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("seedlot_maintenance_table.ui.value_header", "Value") : "Value")).html() + "</th></tr></thead><tbody>");
                         for (var i=0; i<response.sorted_accessions.length; i++) {
                             var accession_name = response.sorted_accessions[i];
                             var value = response.sorted_values[i];
@@ -166,7 +166,7 @@ jQuery(document).ready(function(){
                 },
                 error: function(response){
                     jQuery("#working_modal").modal("hide");
-                    alert('Error doing accessions rank!');
+                    alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("accession.forms.error_doing_accessions_rank", "Error doing accessions rank!") : "Error doing accessions rank!"));
                 }
             });
         }
@@ -175,3 +175,7 @@ jQuery(document).ready(function(){
 });
 
 </script>
+
+<%once>
+use HTML::Entities ();
+</%once>

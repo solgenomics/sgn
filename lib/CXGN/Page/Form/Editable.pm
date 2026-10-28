@@ -26,17 +26,20 @@ use CXGN::Page::Form::EditableRadioList;
 use CXGN::Page::Form::EditableMultiSelect;
 
 package CXGN::Page::Form::Editable;
+use SGN::I18N ();
+use HTML::Entities ();
 
 use base qw / CXGN::Page::Form::Static /;
 
 sub new {
 	my $class = shift;
 	my $self = $class->SUPER::new(@_);
+    my SGN::I18N $editable_new_i18n = $self->{i18n};
 	my $args=shift;
 	$self->set_form_id($args->{form_id}); #optional. Set a form id. Required for javasctipt forms
 	$self->set_no_buttons($args->{no_buttons}); #optional. Used in javascript forms, which should generate their own 'store' and 'reset form' buttons.
-	$self->set_reset_button_text("Reset form");
-	$self->set_submit_button_text("Store");
+	$self->set_reset_button_text(HTML::Entities::encode_entities($editable_new_i18n ? $editable_new_i18n->p("account.change.reset", "Reset form") : "Reset form"));
+	$self->set_submit_button_text(HTML::Entities::encode_entities($editable_new_i18n ? $editable_new_i18n->p("cross.ui.store", "Store") : "Store"));
 	$self->set_submit_method(); #use hardcoded default
 
 	return $self;
@@ -168,7 +171,8 @@ sub validate {
 =cut
 
 sub store { 
-    my $self = shift; 
+    my $self = shift;
+    my SGN::I18N $editable_store_i18n = $self->{i18n};
     my %args = @_;
       
     $self->propagate_input(%args);
@@ -190,7 +194,7 @@ sub store {
       if ($obj->can("exists_in_database")) { 
 	  	my $message = $obj->exists_in_database; #message is optional
 	 if ($message) { 
-	 	my $text = 	"This object (" . ref($distinct_objects{$k}) . ") already seems to exist in the database and violates constraints. Please correct your input.\n";
+        my $text = HTML::Entities::encode_entities($editable_store_i18n ? $editable_store_i18n->p("shared.form.already_exists", "This object (%{class}) already seems to exist in the database and violates constraints. Please correct your input.", {class => ref($distinct_objects{$k})}) : "This object (" . ref($distinct_objects{$k}) . ") already seems to exist in the database and violates constraints. Please correct your input.") . "\n";
 		$message = "" unless ($message =~ /[a-zA-Z]/);
  	    CXGN::Page->new()->message_page($text, $message);
 	}
@@ -230,7 +234,7 @@ sub add_field {
 
     my $self = shift;
     my %args = @_;
-    my $field = CXGN::Page::Form::EditableField->new(%args);
+    my $field = CXGN::Page::Form::EditableField->new(%args, i18n => $self->{i18n});
     if(exists $args{validate})
     {
     	$field->set_validate($args{validate});
@@ -264,7 +268,7 @@ sub add_password_field {
 
     my $self = shift;
     my %args = @_;
-    my $field = CXGN::Page::Form::EditablePasswordField->new(%args);
+    my $field = CXGN::Page::Form::EditablePasswordField->new(%args, i18n => $self->{i18n});
     if(exists $args{validate})
     {
     	$field->set_validate($args{validate});
@@ -296,7 +300,7 @@ sub add_password_field {
 sub add_textarea {
     my $self = shift;
     my %args = @_;
-    my $field = CXGN::Page::Form::EditableTextArea->new(%args);
+    my $field = CXGN::Page::Form::EditableTextArea->new(%args, i18n => $self->{i18n});
     if(exists $args{validate})
     {
     	$field->set_validate($args{validate});
@@ -331,7 +335,7 @@ sub add_select {
     my %args = @_;
     
     #foreach my $k (keys %args) { print "Args to add_select $k, $args{$k}\n<br />"; }
-    my $select = CXGN::Page::Form::EditableSelect->new(%args);
+    my $select = CXGN::Page::Form::EditableSelect->new(%args, i18n => $self->{i18n});
     if(exists $args{validate})
     {
     	$select->set_validate($args{validate});
@@ -355,7 +359,7 @@ sub add_hidden {
     my $self = shift;
     my %args = @_;
     
-    my $hidden = CXGN::Page::Form::EditableHidden->new(%args);
+    my $hidden = CXGN::Page::Form::EditableHidden->new(%args, i18n => $self->{i18n});
     if(exists $args{validate})
     {
     	$hidden->set_validate($args{validate});
@@ -379,7 +383,7 @@ sub add_checkbox
     my $self = shift;
     my %args = @_;
     
-    my $checkbox = CXGN::Page::Form::EditableCheckbox->new(%args);
+    my $checkbox = CXGN::Page::Form::EditableCheckbox->new(%args, i18n => $self->{i18n});
     $self->add_field_obj($checkbox);
 }
 
@@ -399,7 +403,7 @@ sub add_radio_list
 	my $self = shift;
     my %args = @_;
 
-    my $radio = CXGN::Page::Form::EditableRadioList->new(%args);
+    my $radio = CXGN::Page::Form::EditableRadioList->new(%args, i18n => $self->{i18n});
     $self->add_field_obj($radio);
 }
 
@@ -419,7 +423,7 @@ sub add_multiselect
 	my $self = shift;
     my %args = @_;
 
-    my $radio = CXGN::Page::Form::EditableMultiSelect->new(%args);
+    my $radio = CXGN::Page::Form::EditableMultiSelect->new(%args, i18n => $self->{i18n});
     $self->add_field_obj($radio);
 }
 
@@ -518,6 +522,7 @@ sub set_submit_button_text
 
 sub as_table_string {
     my $self = shift;
+    my SGN::I18N $editable_as_table_string_i18n = $self->{i18n};
     my $string = "";
 
     my %error_hash = $self->get_error_hash();
@@ -557,7 +562,8 @@ sub as_table_string {
 	}
     }
     if ($has_required_field) { 
-	$string .= qq { (<font color="red">*</font> denotes required field.)<br /><br /> };
+	my $required_hint = HTML::Entities::encode_entities($editable_as_table_string_i18n ? $editable_as_table_string_i18n->p("shared.form.required_hint", "denotes required field.") : "denotes required field.");
+	$string .= qq { (<font color="red">*</font> $required_hint)<br /><br /> };
     }
     $string .= qq { </td></tr></table></div> };
     $string .= $self->get_form_end();

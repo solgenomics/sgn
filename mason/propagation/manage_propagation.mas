@@ -7,16 +7,17 @@ $user_id
 </%args>
 
 <%perl>
+    use HTML::Entities ();
     my $subtitle;
-    $subtitle = '<button class="btn btn-sm btn-primary" style="margin:3px" id="add_propagation_project_link">Add Propagation Project</button>';
+    $subtitle = '<button class="btn btn-sm btn-primary" style="margin:3px" id="add_propagation_project_link">' . HTML::Entities::encode_entities($c->i18n->p('propagation_landing.ui.add_project', 'Add Propagation Project')) . '</button>';
 </%perl>
 
 <br />
-<& /page/page_title.mas, title => "Manage Propagations" &>
+<& /page/page_title.mas, title => HTML::Entities::encode_entities($c->i18n->p('propagation_landing.ui.title', 'Manage Propagations')) &>
 
 <div class="container-fluid">
 
-        <&| /page/info_section.mas, title=>"Propagation" , collapsible=>1, collapsed=>0, subtitle=> $subtitle &>
+        <&| /page/info_section.mas, title=>HTML::Entities::encode_entities($c->i18n->p('propagation_landing.ui.section', 'Propagation')), anchor_title=>'Propagation' , collapsible=>1, collapsed=>0, subtitle=> $subtitle &>
         <& /propagation/propagation_project_tree.mas, user_id=>$user_id, locations=>$locations, programs=>$programs, roles=>$roles,  &>
     </&>
 

@@ -1,4 +1,8 @@
 use strict;
+use CatalystX::GlobalContext '$c';
+use SGN::I18N;
+use HTML::Entities qw(encode_entities);
+my SGN::I18N $i18n = eval { $c && $c->i18n };
 use warnings;
 
 use CXGN::Publication;
@@ -19,14 +23,14 @@ use CXGN::Chado::Publication;
 
 # Start a new SGN page.
 
-my $page = CXGN::Page->new( "SGN publcation search results", "Naama" );
+my $page = CXGN::Page->new( encode_entities(($i18n ? $i18n->p("global.final_caption.sgn_publcation_search_results", "SGN publication search results") : "SGN publication search results")), "Naama" );
 
 $page->jsan_use("jquery");
 $page->jsan_use("CXGN.Phenome.Publication");
 
 $page->header();
 
-print page_title_html('SGN Publication search');
+print page_title_html(encode_entities(($i18n ? $i18n->p('global.pub_search.page_title', 'SGN Publication search') : 'SGN Publication search')));
 my $dbh = CXGN::DB::Connection->new;
 
 #create the search and query objects
@@ -80,14 +84,14 @@ if (%params) {
         my @stat_options = ( "curated", "pending", "irrelevant", "no gene" );
         my $stat_options = qq|<option value=""></option>|;
         foreach my $s (@stat_options) {
-            my $selected = qq|selected="selected"| if $s eq $stat || '';
+            my $selected = qq|selected="selected"| if $s eq $stat || ''; ## no critic (Variables::ProhibitConditionalDeclarations) # Preserve the original conditional declaration lifetime.
             $stat_options .= qq|<option value="$s" $selected >$s</option>|;
         }
         my $stats = $stat;
         $stats =
 qq|<select id="pub_stat" onchange="Publication.updatePubCuratorStat(this.value, $pub_id)">
                     $stat_options
-                    </select> 
+                    </select>
                    | if $has_permission;
 
         my @curators = CXGN::People::Person::get_curators($dbh);
@@ -97,7 +101,7 @@ qq|<select id="pub_stat" onchange="Publication.updatePubCuratorStat(this.value, 
         my $curator_options = qq|<option value=""></option>|;
         for my $curator_id ( keys %names ) {
             my $curator  = $names{$curator_id};
-            my $selected = qq|selected="selected"| if $curator_id == $assigned_to_id || '';
+            my $selected = qq|selected="selected"| if $curator_id == $assigned_to_id || ''; ## no critic (Variables::ProhibitConditionalDeclarations) # Preserve the original conditional declaration lifetime.
             $curator_options .=
               qq|<option value="$curator_id" $selected>$curator</option>|;
         }
@@ -126,7 +130,7 @@ qq|<select id="pub_curator_select" onchange="Publication.updatePubCuratorAssigne
 EOH
 
     $results_html .= columnar_table_html(
-        headings   => [ 'Title', 'Status', 'Assigned to', 'Stored' ],
+        headings   => [ encode_entities(($i18n ? $i18n->p('global.pub_search.title', 'Title') : 'Title')), 'Status', encode_entities(($i18n ? $i18n->p('global.pub_search.assigned_to', 'Assigned to') : 'Assigned to')), encode_entities(($i18n ? $i18n->p('global.pub_search.stored', 'Stored') : 'Stored')) ],
         data       => \@results,
         __alt_freq => 2,
         __align    => 'llll'
@@ -140,22 +144,20 @@ $pagination_html
 EOH
 
     if (@results) {
+        my $match_summary = encode_entities($i18n ? $i18n->p('global.pub_search.results_summary', '%{count} matches ', { count => $result->total_results }) : sprintf('%s matches ', $result->total_results));
         print blue_section_html(
-            'Publication search results',
+            encode_entities(($i18n ? $i18n->p('global.pub_search.results', 'Publication search results') : 'Publication search results')),
             ,
-            sprintf(
-                '<span class="paginate_summary">%s matches </span>',
-                $result->total_results, $result->time
-            ),
+            '<span class="paginate_summary">' . $match_summary . '</span>',
             $results_html
         );
     }
     else {
-        print '<h4>No matches found</h4>';
+        print '<h4>'.encode_entities(($i18n ? $i18n->p('global.pub_search.no_matches', 'No matches found') : 'No matches found')).'</h4>';
     }
 
     print info_section_html(
-        title => 'Search again',
+        title => encode_entities(($i18n ? $i18n->p('global.pub_search.search_again', 'Search again') : 'Search again')),
         contents =>
           CXGN::Search::CannedForms::publication_search_form( $page, $query )
     );

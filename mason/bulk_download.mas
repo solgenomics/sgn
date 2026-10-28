@@ -6,14 +6,14 @@
     $bulk_download_success
 </%args>
 <% $bulk_js_menu %>
-<h1>Feature Download Summary</h1>
+<h1><% $c->i18n->p("lists_datasets.bulk.feature_download_summary", "Feature Download Summary") |h %></h1>
 
 % if($bulk_download_success) {
-    Your query was successful.<br>
+    <% $c->i18n->p("lists_datasets.bulk.your_query_was_successful", "Your query was successful.") |h %><br>
 <div id="bulk_download_stats">
 <% $bulk_download_stats %>
 </div>
-Download as <a href="/bulk/feature/download/<% $sha1 %>.fasta">Fasta</a>
+<% $c->i18n->p("lists_datasets.bulk.download_as", "Download as") |h %> <a href="/bulk/feature/download/<% $sha1 %>.fasta">Fasta</a>
 % } else {
-    Your query did not contain any valid identifiers. Please try again.
+    <% $c->i18n->p("lists_datasets.bulk.your_query_did_not_contain_any_valid_identifiers_please_try_again", "Your query did not contain any valid identifiers. Please try again.") |h %>
 % }

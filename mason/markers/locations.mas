@@ -1,4 +1,6 @@
-<%doc>
+<%once>
+use HTML::Entities ();
+</%once><%doc>
 
 =head1 NAME
 
@@ -30,6 +32,8 @@ $marker
 </%args>
 
 <%perl>
+use SGN::I18N ();
+
 use CXGN::Cview::MapFactory;
 use CXGN::Cview::ChrMarkerImage;
 
@@ -73,7 +77,7 @@ if (    $experiments
                         $protocol = 'RFLP';
                     }
                     else {
-                        $protocol = '<span class="ghosted">Unknown</span>';
+                        $protocol = ('<span class="ghosted">' . SGN::I18N::translate($c->i18n, "marker.detail.pcr_unknown", "Unknown", undef, {entities => '<>&'}) . '</span>');
                     }
                 }
 
@@ -109,24 +113,24 @@ if (    $experiments
                 }
                 else {
                     $map_url =
-                      '<span class="ghosted">Map data not available</span>';
+                      ('<span class="ghosted">' . SGN::I18N::translate($c->i18n, "marker.detail.map_not_available", "Map data not available", undef, {entities => '<>&'}) . '</span>');
                 }
                 my $multicol = 1;
                 my $width    = "300px";
                 if ( $subscript and $multicol > 1 ) { $multicol++; }
                 my @locations = (
                     '__title' =>
-"<b>Map:</b> $map_url&nbsp;&nbsp;&nbsp;",
+("<b>" . SGN::I18N::translate($c->i18n, "marker.detail.map_label_colon", "Map:", undef, {entities => '<>&'}) . "</b> $map_url&nbsp;&nbsp;&nbsp;"),
                     '__tableattrs' => "width=\"$width\"",
                     '__multicol'   => $multicol,
-		    'Map version'  => $map_version_id." (location: ".$loc->location_id().")",
+		    SGN::I18N::translate($c->i18n, "marker.detail.map_version", "Map version", undef, {entities => '<>&'})  => $map_version_id.(" (" . SGN::I18N::translate($c->i18n, "marker.detail.location_label", "location: ", undef, {entities => '<>&'})).$loc->location_id().")",
 		    'Chromosome'   => $loc->lg_name(),
-                    'Position    ' => sprintf( '%.2f', $loc->position() )." ".$map->get_units(),
-                    'Confidence'   => $loc->confidence(),
+                    SGN::I18N::translate($c->i18n, "marker.detail.position_padded", "Position    ", undef, {entities => '<>&'}) => sprintf( '%.2f', $loc->position() )." ".$map->get_units(),
+                    SGN::I18N::translate($c->i18n, "marker.detail.confidence", "Confidence", undef, {entities => '<>&'})   => $loc->confidence(),
                     'Protocol'     => $protocol
                 );
                 if ($subscript) {
-                    push( @locations, ( 'Subscript' => $subscript ) );
+                    push( @locations, ( SGN::I18N::translate($c->i18n, "marker.detail.subscript", "Subscript", undef, {entities => '<>&'}) => $subscript ) );
                 }
                 $locations_html .= '<td width = "25%">';
                 $locations_html .=
@@ -208,15 +212,15 @@ qq|<img src="$image_url" usemap="#map$count" border="0" alt="" />|;
                     }
                     $locations_html .= '<td>';
                     my $fwd = $pcr->fwd_primer()
-                      || '<span class="ghosted">Unknown</span>';
+                      || ('<span class="ghosted">' . SGN::I18N::translate($c->i18n, "marker.detail.pcr_unknown", "Unknown", undef, {entities => '<>&'}) . '</span>');
                     my $rev = $pcr->rev_primer()
-                      || '<span class="ghosted">Unknown</span>';
-                    my $enz = $pcr->enzyme()  || 'unknown enzyme' ;
+                      || ('<span class="ghosted">' . SGN::I18N::translate($c->i18n, "marker.detail.pcr_unknown", "Unknown", undef, {entities => '<>&'}) . '</span>');
+                    my $enz = $pcr->enzyme()  || SGN::I18N::translate($c->i18n, "marker.detail.pcr_unknown_enzyme", "unknown enzyme", undef, {entities => '<>&'}) ;
 		    my $additional_enzymes = $pcr->additional_enzymes();
                     my $dcaps = $pcr->dcaps_primer();
-                    $temp ||= '<span class="ghosted">Unknown</span>';
-                    $mg   ||= '<span class="ghosted">Unknown</span>';
-                    my $digest_title = "Digested band sizes (using $enz)";
+                    $temp ||= ('<span class="ghosted">' . SGN::I18N::translate($c->i18n, "marker.detail.pcr_unknown", "Unknown", undef, {entities => '<>&'}) . '</span>');
+                    $mg   ||= ('<span class="ghosted">' . SGN::I18N::translate($c->i18n, "marker.detail.pcr_unknown", "Unknown", undef, {entities => '<>&'}) . '</span>');
+                    my $digest_title = SGN::I18N::translate($c->i18n, "marker.detail.digested_band_sizes", "Digested band sizes (using %{enzyme})", {enzyme => ("" . $enz)});
 
                     unless ($digest_bands_html) {
                         $digest_title      = '&nbsp;';
@@ -227,7 +231,7 @@ qq|<img src="$image_url" usemap="#map$count" border="0" alt="" />|;
                     my ( $dcaps_left, $dcaps_right );
 
                     if ($dcaps) {
-                      $dcaps_left  = "dCAPS primer (5'-3')";
+                      $dcaps_left  = SGN::I18N::translate($c->i18n, "marker.detail.dcaps_primer_direction", "dCAPS primer (5'-3')", undef, {entities => '<>&'});
                       $dcaps_right = "<span class=\"sequence\">$dcaps</span>";
                     }
                     ###########
@@ -236,56 +240,56 @@ qq|<img src="$image_url" usemap="#map$count" border="0" alt="" />|;
                     my ($aspe, $aspe_primers);
                     $aspe_primers = join ('<BR>' ,  @{ $pcr_seq->{ASPE_primer} }  ) if  $pcr_seq->{ASPE_primer}  ;
                     if ($aspe_primers) {
-                      $aspe = "ASPE primers (5'-3')";
+                      $aspe = SGN::I18N::translate($c->i18n, "marker.detail.aspe_primers_direction", "ASPE primers (5'-3')", undef, {entities => '<>&'});
                       $aspe_primers = "<span class=\"snp\">$aspe_primers</span>"
                     }
                     my ($snp, $snp_nuc);
                     $snp_nuc = join ('<BR>' ,  @{ $pcr_seq->{SNP} }  ) if  $pcr_seq->{SNP}  ;
                     if ($snp_nuc) {
-                      $snp = "SNP nucleotide";
+                      $snp = SGN::I18N::translate($c->i18n, "marker.detail.snp_nucleotide", "SNP nucleotide", undef, {entities => '<>&'});
                       $snp_nuc = "<span class=\"snp\">$snp_nuc</span>"
                     }
                     my ($three_prime, $seq3);
                     $seq3 = join ('<BR>' ,  @{ $pcr_seq->{three_prime_flanking_region} }  ) if  $pcr_seq->{three_prime_flanking_region}  ;
                     if ($seq3) {
-                      $three_prime = "3' flanking region";
+                      $three_prime = SGN::I18N::translate($c->i18n, "marker.detail.three_prime_flanking_region", "3' flanking region", undef, {entities => '<>&'});
                       $seq3 = "<span class=\"assay\">$seq3</span>"
                     }
                     my ($five_prime, $seq5);
                     $seq5 = join ('<BR>' ,  @{ $pcr_seq->{five_prime_flanking_region} }  ) if  $pcr_seq->{five_prime_flanking_region}  ;
                     if ($seq5) {
-                      $five_prime = "5' flanking region";
+                      $five_prime = SGN::I18N::translate($c->i18n, "marker.detail.five_prime_flanking_region", "5' flanking region", undef, {entities => '<>&'});
                       $seq5 = "<span class=\"assay\">$seq5</span>"
                     }
                     my ($indel, $indel_seq);
                     $indel_seq = join ('<BR>' ,  @{ $pcr_seq->{indel} }  ) if  $pcr_seq->{indel}  ;
                     if ($indel_seq) {
-                      $indel = "Indel";
+                      $indel = SGN::I18N::translate($c->i18n, "marker.detail.indel", "Indel", undef, {entities => '<>&'});
                       $indel_seq = "<span class=\"indel\">$indel_seq</span>"
                     }
 		    $locations_html .= '<br />';
                     $locations_html .=
                       CXGN::Page::FormattingHelpers::info_table_html(
                         '__title' =>
-"PCR data&nbsp;&nbsp;&nbsp;<span class=\"tinytype\">Exp. ID "
+(SGN::I18N::translate($c->i18n, "marker.detail.pcr_data", "PCR data", undef, {entities => '<>&'}) . "&nbsp;&nbsp;&nbsp;<span class=\"tinytype\">" . SGN::I18N::translate($c->i18n, "marker.detail.pcr_data_exp_id", "Exp. ID", undef, {entities => '<>&'}) . " ")
                           . $pcr->pcr_experiment_id()
                           . "</span>",
-                        "Forward primer (5'-3')" =>
+                        SGN::I18N::translate($c->i18n, "marker.detail.forward_primer_direction", "Forward primer (5'-3')", undef, {entities => '<>&'}) =>
                           "<span class=\"sequence\">$fwd</span>",
-                        "Reverse primer (5'-3')" =>
+                        SGN::I18N::translate($c->i18n, "marker.detail.reverse_primer_direction", "Reverse primer (5'-3')", undef, {entities => '<>&'}) =>
                           "<span class=\"sequence\">$rev</span>",
                         $dcaps_left                     => $dcaps_right,
-                       'Accessions and product sizes'  => $pcr_bands_html,
+                       SGN::I18N::translate($c->i18n, "marker.detail.accessions_product_sizes", "Accessions and product sizes", undef, {entities => '<>&'})  => $pcr_bands_html,
                         $digest_title                   => $digest_bands_html,
-			'Enzymes'                       => $additional_enzymes,
-                        'Approximate temperature'       => $temp,
-                        'Mg<sup>+2</sup> concentration' => $mg,
+			SGN::I18N::translate($c->i18n, "marker.detail.enzymes", "Enzymes", undef, {entities => '<>&'})                       => $additional_enzymes,
+                        SGN::I18N::translate($c->i18n, "marker.detail.approximate_temperature", "Approximate temperature", undef, {entities => '<>&'})       => $temp,
+                        SGN::I18N::translate($c->i18n, "marker.detail.mg_concentration", "Mg<sup>+2</sup> concentration") => $mg,
                         '__multicol'                    => 3,
                         '__tableattrs'                  => "width=\"100%\"",
                       ) if ($protocol ne 'SNP');
                     my ($snpdb_format, $snpdb);
                     if ($snp_nuc) {
-                      $snpdb = "SNPdb format";
+                      $snpdb = SGN::I18N::translate($c->i18n, "marker.detail.snpdb_format", "SNPdb format", undef, {entities => '<>&'});
                       my @fives = @{ $pcr_seq->{five_prime_flanking_region} } ;
                       my @threes = @{ $pcr_seq->{three_prime_flanking_region} } ;
                       my @snps  =  @{ $pcr_seq->{SNP} };
@@ -320,6 +324,6 @@ qq|<img src="$image_url" usemap="#map$count" border="0" alt="" />|;
 
 </%perl>
 
-<&| /page/info_section.mas, title=>'Mapped locations', collapsible=>1, collapsed=>0 &>
+<&| /page/info_section.mas, anchor_title => 'Mapped locations', title=>HTML::Entities::encode_entities($c->i18n->p("marker.detail.mapped_locations", 'Mapped locations')), collapsible=>1, collapsed=>0 &>
   <% $locations_html %>
 </&>

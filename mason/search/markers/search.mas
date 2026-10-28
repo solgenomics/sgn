@@ -1,3 +1,7 @@
+<%once>
+use HTML::Entities ();
+</%once>
+
 <%doc>
 
 =head1 NAME
@@ -17,28 +21,28 @@ David Waring <djw64@cornell.edu>
 
 </%doc>
 
-<& /page/page_title.mas, title=>"Marker Search" &>
+<& /page/page_title.mas, title=>HTML::Entities::encode_entities($c->i18n->p("genotype.marker.marker_search", "Marker Search")) &>
 
 
 
 
 <!-- FILTER BY NAME -->
-<&| /page/info_section.mas, title=>'Filter By Name', collapsible=>1, collapsed=>0 &>
+<&| /page/info_section.mas, anchor_title => 'Filter By Name', title=>HTML::Entities::encode_entities($c->i18n->p("genotype.marker.filter_by_name", 'Filter By Name')), collapsible=>1, collapsed=>0 &>
     <div class="well">
 
         <!-- Marker Name -->
         <div class="form-group">
-            <label class="col-sm-3 control-label">Marker Name: </label>
+            <label class="col-sm-3 control-label"><% $c->i18n->p("genotype.marker.marker_name", "Marker Name:") |h %> </label>
             <div class="col-sm-4">
                 <select id="marker-name-match" class="form-control">
-                    <option value="exactly">Exactly</option>
-                    <option value="contains">Contains</option>
-                    <option value="starts_with">Starts With</option>
-                    <option value="ends_with">Ends With</option>
+                    <option value="exactly"><% $c->i18n->p("genotype.marker.exactly", "Exactly") |h %></option>
+                    <option value="contains"><% $c->i18n->p("global.search_wizard.contains", "Contains") |h %></option>
+                    <option value="starts_with"><% $c->i18n->p("genotype.marker.starts_with", "Starts With") |h %></option>
+                    <option value="ends_with"><% $c->i18n->p("genotype.marker.ends_with", "Ends With") |h %></option>
                 </select>
             </div>
             <div class="col-sm-5">
-                <input id="marker-name" class="form-control" type="text" placeholder="Any Name" />
+                <input id="marker-name" class="form-control" type="text" placeholder="<% $c->i18n->p("genotype.marker.any_name", "Any Name") |h %>" />
             </div>
         </div>
 
@@ -50,15 +54,15 @@ David Waring <djw64@cornell.edu>
 
 
 <!-- FILTER BY POSITION -->
-<&| /page/info_section.mas, title=>'Filter By Position', collapsible=>1, collapsed=>0 &>
+<&| /page/info_section.mas, anchor_title => 'Filter By Position', title=>HTML::Entities::encode_entities($c->i18n->p("genotype.marker.filter_by_position", 'Filter By Position')), collapsible=>1, collapsed=>0 &>
     <div class="well">
 
         <!-- Reference Genome / Map -->
         <div class="form-group">
-            <label class="col-sm-3 control-label">Reference Genome / Map: </label>
+            <label class="col-sm-3 control-label"><% $c->i18n->p("genotype.marker.reference_genome_map", "Reference Genome / Map:") |h %> </label>
             <div class="col-sm-9">
                 <select id="marker-refmap" class="form-control" disabled>
-                    <option>Loading...</option>
+                    <option><% $c->i18n->p("global.dataset_publish.loading", "Loading...") |h %></option>
                 </select>
             </div>
         </div>
@@ -67,10 +71,10 @@ David Waring <djw64@cornell.edu>
 
         <!-- Chromosome -->
         <div class="form-group">
-            <label class="col-sm-3 control-label">Chromosome: </label>
+            <label class="col-sm-3 control-label"><% $c->i18n->p("genotype.marker.chromosome", "Chromosome:") |h %> </label>
             <div class="col-sm-9">
                 <select id="marker-chromosome" class="form-control" disabled>
-                    <option>Loading...</option>
+                    <option><% $c->i18n->p("global.dataset_publish.loading", "Loading...") |h %></option>
                 </select>
             </div>
         </div>
@@ -79,14 +83,14 @@ David Waring <djw64@cornell.edu>
 
         <!-- Start / End Position -->
         <div class="form-group">
-            <label class="col-sm-3 control-label">Start: </label>
+            <label class="col-sm-3 control-label"><% $c->i18n->p("genotype.marker.start", "Start:") |h %> </label>
             <div class="col-sm-4">
                 <div class="input-group">
                     <input id="marker-position-start" class="form-control" type="text" disabled />
                     <span class="input-group-addon marker-position-units"></span>
                 </div>
             </div>
-            <label class="col-sm-1 control-label">End: </label>
+            <label class="col-sm-1 control-label"><% $c->i18n->p("genotype.marker.end", "End:") |h %> </label>
             <div class="col-sm-4">
                 <div class="input-group">
                     <input id="marker-position-end" class="form-control" type="text" disabled />
@@ -103,15 +107,15 @@ David Waring <djw64@cornell.edu>
 
 
 <!-- ADDITIONAL FILTERS -->
-<&| /page/info_section.mas, title=>'Additional Filters', collapsible=>1, collapsed=>0 &>
+<&| /page/info_section.mas, anchor_title => 'Additional Filters', title=>HTML::Entities::encode_entities($c->i18n->p("genotype.marker.additional_filters", 'Additional Filters')), collapsible=>1, collapsed=>0 &>
     <div class="well">
 
         <!-- Species -->
         <div class="form-group">
-            <label class="col-sm-3 control-label">Species: </label>
+            <label class="col-sm-3 control-label"><% $c->i18n->p("barcode.helper.species", "Species:") |h %> </label>
             <div class="col-sm-9">
                 <select id="marker-species" class="form-control" disabled>
-                    <option value=''>Loading...</option>
+                    <option value=''><% $c->i18n->p("global.dataset_publish.loading", "Loading...") |h %></option>
                 </select>
             </div>
         </div>
@@ -120,10 +124,10 @@ David Waring <djw64@cornell.edu>
 
         <!-- Protocol -->
         <div class="form-group">
-            <label class="col-sm-3 control-label">Protocol: </label>
+            <label class="col-sm-3 control-label"><% $c->i18n->p("genotype.marker.protocol", "Protocol:") |h %> </label>
             <div class="col-sm-9">
                 <select id="marker-protocol" class="form-control" disabled>
-                    <option value=''>Loading...</option>
+                    <option value=''><% $c->i18n->p("global.dataset_publish.loading", "Loading...") |h %></option>
                 </select>
             </div>
         </div>
@@ -134,7 +138,7 @@ David Waring <djw64@cornell.edu>
 </&>
 
 
-<button class="btn btn-primary btn-block marker-search-button">Search</button>
+<button class="btn btn-primary btn-block marker-search-button"><% $c->i18n->p("global.search.advanced_search.search", "Search") |h %></button>
 
 
 
@@ -244,7 +248,7 @@ function getReferences(callback) {
             return callback(data && data.reference_genomes ? data.reference_genomes : []);
         },
         error: function() {
-            alert("ERROR: Could not get reference genomes");
+            alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("genotype.marker.error_could_not_get_reference_genomes", "ERROR: Could not get reference genomes") : "ERROR: Could not get reference genomes"));
         }
     });
 }
@@ -262,7 +266,7 @@ function getMaps(callback) {
             return callback(data && data.maps ? data.maps : []);
         },
         error: function() {
-            alert("ERROR: Could not get maps");
+            alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("genotype.marker.error_could_not_get_maps", "ERROR: Could not get maps") : "ERROR: Could not get maps"));
         }
     });
 }
@@ -313,7 +317,7 @@ function getGenotypedChromosomes(callback) {
             return callback(data && data.chromosomes ? data.chromosomes : []);
         },
         error: function() {
-            alert("ERROR: Could not get genotyped chromosomes");
+            alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("genotype.marker.error_could_not_get_genotyped_chromosomes", "ERROR: Could not get genotyped chromosomes") : "ERROR: Could not get genotyped chromosomes"));
         }
     });
 }
@@ -332,7 +336,7 @@ function getMappedChromosomes(callback) {
             return callback(data && data.chromosomes ? data.chromosomes : []);
         },
         error: function() {
-            alert("ERROR: Could not get mapped chromosomes");
+            alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("genotype.marker.error_could_not_get_mapped_chromosomes", "ERROR: Could not get mapped chromosomes") : "ERROR: Could not get mapped chromosomes"));
         }
     });
 }
@@ -383,7 +387,7 @@ function getGenotypedProtocols(callback) {
             return callback(data && data.protocols ? data.protocols : []);
         },
         error: function() {
-            alert("ERROR: Could not get genotyped protocols");
+            alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("genotype.marker.error_could_not_get_genotyped_protocols", "ERROR: Could not get genotyped protocols") : "ERROR: Could not get genotyped protocols"));
         }
     });
 }
@@ -402,7 +406,7 @@ function getMappedProtocols(callback) {
             return callback(data && data.protocols ? data.protocols : []);
         },
         error: function() {
-            alert("ERROR: Could not get mapped protocols");
+            alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("genotype.marker.error_could_not_get_mapped_protocols", "ERROR: Could not get mapped protocols") : "ERROR: Could not get mapped protocols"));
         }
     });
 }
@@ -430,12 +434,12 @@ function updateRefMaps() {
     SPECIES = [];
 
     let ad = protocol_refmap && !Array.isArray(protocol_refmap) || (Array.isArray(protocol_refmap) && protocol_refmap.length === 1) ? 'disabled' : '';
-    let html = "<option value='' " + ad + ">Any Reference Genome / Map</option>";
+    let html = "<option value='' " + ad + (">" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("genotype.marker.any_reference_genome_map", "Any Reference Genome / Map") : "Any Reference Genome / Map")).html() + "</option>");
 
     // Add Genotype Reference Genomes
     html += "<optgroup label='Reference Genomes of Genotyped Markers'>";
     let gd = (protocol_type && protocol_type !== 'genotyped') || protocol_refmap ? 'disabled' : '';
-    html += "<option value='' data-type='genotyped' " + gd + ">Any Reference Genome</option>";
+    html += "<option value='' data-type='genotyped' " + gd + (">" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("genotype.marker.any_reference_genome", "Any Reference Genome") : "Any Reference Genome")).html() + "</option>");
     for ( let i = 0; i < references.length; i++ ) {
         let d = (protocol_refmap && protocol_refmap !== references[i].reference_genome_name) 
             || (protocol_type && protocol_type !== 'genotyped') 
@@ -456,7 +460,7 @@ function updateRefMaps() {
     // Add Maps
     html += "<optgroup label='Maps of Mapped Markers'>";
     let md = (protocol_type && protocol_type !== 'mapped') || protocol_refmap ? 'disabled' : '';
-    html += "<option value='' data-type='mapped' " + md + ">Any Map</option>";
+    html += "<option value='' data-type='mapped' " + md + (">" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("genotype.marker.any_map", "Any Map") : "Any Map")).html() + "</option>");
     for ( let i = 0; i < maps.length; i++ ) {
         let d = (protocol_type === 'mapped' && protocol_refmap && !protocol_refmap.includes(maps[i].map_id+'')) 
             || (protocol_type && protocol_type !== 'mapped') 
@@ -476,7 +480,7 @@ function updateRefMaps() {
     jQuery("#marker-refmap").html(html);
     jQuery("#marker-refmap").attr('disabled', false);
 
-    // Set intial value, if not already set
+    // Set initial value, if not already set
     if ( SEL_REFMAP ) {
         jQuery("#marker-refmap").val(SEL_REFMAP);
         SEL_REFMAP = undefined;
@@ -508,7 +512,7 @@ function updateChromosomes() {
                 chroms = CHROMOSOMES.mapped[map];
             }
         }
-        html += "<option value=''>Any Chromosome</option>";
+        html += ("<option value=''>" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("genotype.marker.any_chromosome", "Any Chromosome") : "Any Chromosome")).html() + "</option>");
         for ( let i = 0; i < chroms.length; i++ ) {
             let s = chrom && chroms[i] === chrom ? 'selected' : '';
             html += "<option value='" + chroms[i] + "' " + s + ">" + chroms[i] + "</option>";
@@ -517,7 +521,7 @@ function updateChromosomes() {
         jQuery("#marker-chromosome").html(html);
         jQuery("#marker-chromosome").attr("disabled", false);
 
-        // Set intial value, if not already set
+        // Set initial value, if not already set
         if ( SEL_CHROM ) {
             jQuery("#marker-chromosome").val(SEL_CHROM);
             SEL_CHROM = undefined;
@@ -528,7 +532,7 @@ function updateChromosomes() {
 
 
 /**
- * Update the start/end postions based on the selected ref/map and chrom
+ * Update the start/end positions based on the selected ref/map and chrom
  * - update position units
  * - enable fields only when ref/map and chrom have been selected
  */
@@ -537,7 +541,7 @@ function updatePositions() {
     let chrom = jQuery("#marker-chromosome").val();
     let units = jQuery("#marker-refmap option:selected").data("units");
 
-    let pos_disabled = refmap === '' || chrom === null || ['', 'Loading...'].includes(chrom);
+    let pos_disabled = refmap === '' || chrom === null || ['', (window.SGN && window.SGN.i18n ? window.SGN.i18n.p("global.dataset_publish.loading", "Loading...") : 'Loading...')].includes(chrom);
     jQuery(".marker-position-units").html(units ? units : '&nbsp;&nbsp;');
     jQuery("#marker-position-start").attr("disabled", pos_disabled);
     jQuery("#marker-position-end").attr("disabled", pos_disabled);
@@ -561,7 +565,7 @@ function updateSpecies() {
             || (protocol_species && !Array.isArray(protocol_species)) 
             || (protocol_species && Array.isArray(protocol_species) && protocol_species.length === 1) 
             ? 'disabled' : '';
-        let html = "<option value='' " + ad + ">Any Species</option>";
+        let html = "<option value='' " + ad + (">" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("genotype.marker.any_species", "Any Species") : "Any Species")).html() + "</option>");
         for ( let i = 0; i < SPECIES.length; i++ ) {
             let d = (refmap_species && refmap_species !== SPECIES[i]) 
                 || (protocol_species && !Array.isArray(protocol_species) && protocol_species !== SPECIES[i])
@@ -576,7 +580,7 @@ function updateSpecies() {
         jQuery("#marker-species").html(html);
         jQuery("#marker-species").attr("disabled", false);
 
-        // Set intial value, if not already set
+        // Set initial value, if not already set
         if ( SEL_SPECIES ) {
             jQuery("#marker-species").val(SEL_SPECIES);
             SEL_SPECIES = undefined;
@@ -596,7 +600,7 @@ function updateProtocols() {
 
     if ( PROTOCOLS ) {
         let html = "";
-        html += "<option value=''>Any Protocol</option>";        
+        html += ("<option value=''>" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("genotype.marker.any_protocol", "Any Protocol") : "Any Protocol")).html() + "</option>");
         
         html += "<optgroup label='Protocols of Genotyped Markers'>";
         for ( let i = 0; i < PROTOCOLS.genotyped.length; i++ ) {
@@ -619,12 +623,12 @@ function updateProtocols() {
             let ss_str = JSON.stringify(ss);
             let ms = PROTOCOLS.mapped[i].maps;
             let mns = [];
-            let mis = [];
+            let mis = []; // codespell:ignore mis (local map-id array)
             for ( let j = 0; j < ms.length; j++ ) {
                 mns.push(ms[j].map_name);
                 mis.push(ms[j].map_id+'');
             }
-            let mis_str = JSON.stringify(mis);
+            let mis_str = JSON.stringify(mis); // codespell:ignore mis (local map-id array)
 
             let d = (type && type !== 'mapped') || (refmap && !mis.includes(refmap)) || (species && !ss.includes(species)) ? 'disabled' : '';
             let s = d !== 'disabled' && protocol && protocol === pn ? 'selected' : '';
@@ -636,7 +640,7 @@ function updateProtocols() {
         jQuery("#marker-protocol").html(html);
         jQuery("#marker-protocol").attr("disabled", false);
 
-        // Set intial value, if not already set
+        // Set initial value, if not already set
         if ( SEL_PROTOCOL ) {
             jQuery("#marker-protocol").val(SEL_PROTOCOL);
             SEL_PROTOCOL = undefined;
@@ -673,7 +677,7 @@ function search() {
 
     // Check for required params
     if ( (start && !end) || (end && !start) ) {
-        alert("Both the start and end position are required when filtering by position");
+        alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("genotype.marker.both_the_start_and_end_position_are_required_when_filtering", "Both the start and end position are required when filtering by position") : "Both the start and end position are required when filtering by position"));
         return;
     }
 
@@ -684,7 +688,7 @@ function search() {
     if ( refmap_type || protocol_type ) params.type = refmap_type || protocol_type;
     if ( refmap ) params.refmap = refmap;
     if ( refmap_species || species ) params.species = refmap_species || species;
-    if ( chrom && chrom !== 'Loading...' ) params.chrom = chrom;
+    if ( chrom && chrom !== (window.SGN && window.SGN.i18n ? window.SGN.i18n.p("global.dataset_publish.loading", "Loading...") : 'Loading...') ) params.chrom = chrom;
     if ( start ) params.start = start;
     if ( end ) params.end = end;
     if ( protocol ) params.protocol = protocol;

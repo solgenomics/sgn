@@ -6,6 +6,8 @@ use Moose;
 BEGIN { extends 'Catalyst::Controller::REST' };
 
 use Data::Dumper;
+use Encode ();
+use HTML::Entities qw(encode_entities);
 use DateTime;
 use DateTime::Format::Strptime;
 use CXGN::Stock::Seedlot;
@@ -15,6 +17,7 @@ use SGN::Model::Cvterm;
 use CXGN::Stock::Seedlot::ParseUpload;
 use CXGN::Login;
 use JSON;
+use JSON::MaybeXS ();
 use CXGN::BreederSearch;
 use CXGN::Onto;
 use CXGN::List;
@@ -25,7 +28,13 @@ use CXGN::Stock::RelatedStocks;
 __PACKAGE__->config(
     default   => 'application/json',
     stash_key => 'rest',
-    map       => { 'application/json' => 'JSON', 'text/html' => 'JSON'  },
+    map       => {
+        'application/json' => 'JSON',
+        'text/html' => ['Callback', {
+            serialize => \&_sgn_seedlot_iframe_json,
+            deserialize => \&_sgn_seedlot_iframe_decode,
+        }],
+    },
    );
 
 sub list_seedlots :Path('/ajax/breeders/seedlots') :Args(0) {
@@ -97,10 +106,10 @@ sub list_seedlots :Path('/ajax/breeders/seedlots') :Args(0) {
         my $source_stock = $sl->{source_stocks};
         my $contents_html = '';
         if ($source_stock->[0]->[2] eq 'accession'){
-            $contents_html .= '<a href="/stock/'.$source_stock->[0]->[0].'/view">'.$source_stock->[0]->[1].'</a> ('.$source_stock->[0]->[2].') ';
+            $contents_html .= '<a href="/stock/'.$source_stock->[0]->[0].'/view">'._sgn_seedlot_html($source_stock->[0]->[1]).'</a> ('._sgn_seedlot_html($c->i18n->p('seedlots.server.accession', 'accession')).') ';
         }
         if ($source_stock->[0]->[2] eq 'cross'){
-            $contents_html .= '<a href="/cross/'.$source_stock->[0]->[0].'">'.$source_stock->[0]->[1].'</a> ('.$source_stock->[0]->[2].') ';
+            $contents_html .= '<a href="/cross/'.$source_stock->[0]->[0].'">'._sgn_seedlot_html($source_stock->[0]->[1]).'</a> ('._sgn_seedlot_html($c->i18n->p('seedlots.server.cross', 'cross')).') ';
         }
         push @seedlots, {
             breeding_program_id => $sl->{breeding_program_id},
@@ -133,7 +142,7 @@ sub seedlot_base : Chained('/') PathPart('ajax/breeders/seedlot') CaptureArgs(1)
     $c->stash->{phenome_schema} = $c->dbic_schema("CXGN::Phenome::Schema");
     $c->stash->{seedlot_id} = $seedlot_id;
     $c->stash->{seedlot} = CXGN::Stock::Seedlot->new(
-        schema => $c->stash->{schema},
+        i18n => $c->i18n, schema => $c->stash->{schema},
         phenome_schema => $c->stash->{phenome_schema},
         seedlot_id => $c->stash->{seedlot_id},
     );
@@ -167,11 +176,11 @@ sub seedlot_edit :Chained('seedlot_base') PathPart('edit') Args(0) {
     my $c = shift;
 
     if (!$c->user()){
-        $c->stash->{rest} = { error => "You must be logged in to edit seedlot details" };
+        $c->stash->{rest} = { error => $c->i18n->p('seedlots.server.you_must_be_logged_in_to_edit_seedlot_details', 'You must be logged in to edit seedlot details') };
         $c->detach();
     }
     if (!$c->user()->check_roles("curator")) {
-        $c->stash->{rest} = { error => "You do not have the correct role to edit seedlot detail. Please contact us." };
+        $c->stash->{rest} = { error => $c->i18n->p('seedlots.server.you_do_not_have_the_correct_role_to_edit_seedlot.5b5ff4b', 'You do not have the correct role to edit seedlot detail. Please contact us.') };
         $c->detach();
     }
     my $seedlot = $c->stash->{seedlot};
@@ -191,7 +200,7 @@ sub seedlot_edit :Chained('seedlot_base') PathPart('edit') Args(0) {
     my $schema = $c->stash->{schema};
     my $breeding_program = $schema->resultset('Project::Project')->find({name=>$breeding_program_name});
     if (!$breeding_program){
-        $c->stash->{rest} = { error => "The breeding program $breeding_program_name does not exist in the database. Please add it first or choose another." };
+        $c->stash->{rest} = { error => $c->i18n->p('seedlots.server.the_breeding_program_breeding_program_name_does_', 'The breeding program %{breeding_program_name} does not exist in the database. Please add it first or choose another.', {breeding_program_name => '' . ($breeding_program_name)}) };
         $c->detach();
     }
     my $breeding_program_id = $breeding_program->project_id();
@@ -204,7 +213,7 @@ sub seedlot_edit :Chained('seedlot_base') PathPart('edit') Args(0) {
        #make sure the seedlot name is unique across the entire stock table
         my $previous_seedlot = $schema->resultset('Stock::Stock')->find({uniquename=>$seedlot_name }); #type_id=>$seedlot_cvterm_id});
         if ($previous_seedlot){
-            $c->stash->{rest} = {error=>'The given seedlot uniquename has been taken. Please use another name or use the existing seedlot.'};
+            $c->stash->{rest} = {error=>$c->i18n->p('seedlots.server.the_given_seedlot_uniquename_has_been_taken_plea', 'The given seedlot uniquename has been taken. Please use another name or use the existing seedlot.')};
             $c->detach();
         }
     }
@@ -217,19 +226,19 @@ sub seedlot_edit :Chained('seedlot_base') PathPart('edit') Args(0) {
         $cross_id = $schema->resultset('Stock::Stock')->find({uniquename=>$cross_uniquename, type_id=>$cross_cvterm_id})->stock_id();
     }
     if ($accession_uniquename && !$accession_id){
-        $c->stash->{rest} = {error=>'The given accession name is not in the database! Seedlots can only be added onto existing accessions.'};
+        $c->stash->{rest} = {error=>$c->i18n->p('seedlots.server.the_given_accession_name_is_not_in_the_database_', 'The given accession name is not in the database! Seedlots can only be added onto existing accessions.')};
         $c->detach();
     }
     if ($cross_uniquename && !$cross_id){
-        $c->stash->{rest} = {error=>'The given cross name is not in the database! Seedlots can only be added onto existing crosses.'};
+        $c->stash->{rest} = {error=>$c->i18n->p('seedlots.server.the_given_cross_name_is_not_in_the_database_seed', 'The given cross name is not in the database! Seedlots can only be added onto existing crosses.')};
         $c->detach();
     }
     if ($accession_id && $cross_id){
-        $c->stash->{rest} = {error=>'A seedlot must have either an accession OR a cross as contents. Not both.'};
+        $c->stash->{rest} = {error=>$c->i18n->p('seedlots.server.a_seedlot_must_have_either_an_accession_or_a_cro.ebc1b5b', 'A seedlot must have either an accession OR a cross as contents. Not both.')};
         $c->detach();
     }
     if (!$accession_id && !$cross_id){
-        $c->stash->{rest} = {error=>'A seedlot must have either an accession or a cross as contents.'};
+        $c->stash->{rest} = {error=>$c->i18n->p('seedlots.server.a_seedlot_must_have_either_an_accession_or_a_cro.45a7dc8', 'A seedlot must have either an accession or a cross as contents.')};
         $c->detach();
     }
 
@@ -258,11 +267,11 @@ sub seedlot_delete :Chained('seedlot_base') PathPart('delete') Args(0) {
     my $c = shift;
 
     if (!$c->user()){
-        $c->stash->{rest} = { error => "You must be logged in the delete seedlots" };
+        $c->stash->{rest} = { error => $c->i18n->p('seedlots.server.you_must_be_logged_in_the_delete_seedlots', 'You must be logged in the delete seedlots') };
         $c->detach();
     }
     if (!$c->user()->check_roles("curator")) {
-        $c->stash->{rest} = { error => "You do not have the correct role to delete seedlots. Please contact us." };
+        $c->stash->{rest} = { error => $c->i18n->p('seedlots.server.you_do_not_have_the_correct_role_to_delete_seedl.a757c42', 'You do not have the correct role to delete seedlots. Please contact us.') };
         $c->detach();
     }
 
@@ -282,11 +291,11 @@ sub seedlot_verify_delete_by_list :Path('/ajax/seedlots/verify_delete_by_list') 
     my $list_id = $c->req->param("list_id");
 
     if (!$c->user()){
-        $c->stash->{rest} = { error => "You must be logged in the delete seedlots" };
+        $c->stash->{rest} = { error => $c->i18n->p('seedlots.server.you_must_be_logged_in_the_delete_seedlots', 'You must be logged in the delete seedlots') };
         $c->detach();
     }
     if (!$c->user()->check_roles("curator")) {
-        $c->stash->{rest} = { error => "You do not have the correct role to delete seedlots. Please contact us." };
+        $c->stash->{rest} = { error => $c->i18n->p('seedlots.server.you_do_not_have_the_correct_role_to_delete_seedl.a757c42', 'You do not have the correct role to delete seedlots. Please contact us.') };
         $c->detach();
     }
 
@@ -294,7 +303,7 @@ sub seedlot_verify_delete_by_list :Path('/ajax/seedlots/verify_delete_by_list') 
 
     my $schema = $c->dbic_schema("Bio::Chado::Schema");
     my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema");
-    my ($ok, $errors) = CXGN::Stock::Seedlot->delete_verify_using_list($schema, $phenome_schema, $list_id);
+    my ($ok, $errors) = CXGN::Stock::Seedlot->delete_verify_using_list($schema, $phenome_schema, $list_id, $c->i18n);
 
     $c->stash->{rest} = { errors => \@$errors, ok => \@$ok };
 
@@ -307,17 +316,17 @@ sub seedlot_confirm_delete_by_list :Path('/ajax/seedlots/confirm_delete_by_list'
     my $list_id = $c->req->param("list_id");
 
     if (!$c->user()){
-        $c->stash->{rest} = { error => "You must be logged in the delete seedlots" };
+        $c->stash->{rest} = { error => $c->i18n->p('seedlots.server.you_must_be_logged_in_the_delete_seedlots', 'You must be logged in the delete seedlots') };
         $c->detach();
     }
     if (!$c->user()->check_roles("curator")) {
-        $c->stash->{rest} = { error => "You do not have the correct role to delete seedlots. Please contact us." };
+        $c->stash->{rest} = { error => $c->i18n->p('seedlots.server.you_do_not_have_the_correct_role_to_delete_seedl.a757c42', 'You do not have the correct role to delete seedlots. Please contact us.') };
         $c->detach();
     }
 
     my $schema = $c->dbic_schema("Bio::Chado::Schema");
     my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema");
-    my ($total_count, $delete_count, $errors) = CXGN::Stock::Seedlot->delete_using_list($schema, $phenome_schema, $list_id);
+    my ($total_count, $delete_count, $errors) = CXGN::Stock::Seedlot->delete_using_list($schema, $phenome_schema, $list_id, $c->i18n);
 
     if (@$errors) {
 	$c->stash->{rest} = { error => join("\n", @$errors), total_count => $total_count, delete_count => $delete_count }
@@ -333,11 +342,11 @@ sub create_seedlot :Path('/ajax/breeders/seedlot-create/') :Args(0) {
     my $self = shift;
     my $c = shift;
     if (!$c->user){
-        $c->stash->{rest} = {error=>'You must be logged in to add a seedlot transaction!'};
+        $c->stash->{rest} = {error=>$c->i18n->p('seedlots.server.you_must_be_logged_in_to_add_a_seedlot_transacti', 'You must be logged in to add a seedlot transaction!')};
         $c->detach();
     }
     if (!($c->user()->check_roles('curator') || $c->user()->check_roles('submitter'))) {
-        $c->stash->{rest} = { error => "You do not have the correct submitter or curator role to add seedlots. Please contact us." };
+        $c->stash->{rest} = { error => $c->i18n->p('seedlots.server.you_do_not_have_the_correct_submitter_or_curator', 'You do not have the correct submitter or curator role to add seedlots. Please contact us.') };
         $c->detach();
     }
     my $schema = $c->dbic_schema("Bio::Chado::Schema");
@@ -361,7 +370,7 @@ sub create_seedlot :Path('/ajax/breeders/seedlot-create/') :Args(0) {
 
     my $previous_seedlot = $schema->resultset('Stock::Stock')->find({uniquename=>$seedlot_uniquename }); #type_id=>$seedlot_cvterm_id});
     if ($previous_seedlot){
-        $c->stash->{rest} = {error=>'The given seedlot uniquename has been taken. Please use another name or use the existing seedlot.'};
+        $c->stash->{rest} = {error=>$c->i18n->p('seedlots.server.the_given_seedlot_uniquename_has_been_taken_plea', 'The given seedlot uniquename has been taken. Please use another name or use the existing seedlot.')};
         $c->detach();
     }
     my $accession_id;
@@ -370,7 +379,7 @@ sub create_seedlot :Path('/ajax/breeders/seedlot-create/') :Args(0) {
         my $stock_lookup = CXGN::Stock::StockLookup->new({ schema => $schema, stock_name=>$accession_uniquename });
         my $stock_lookup_rs = $stock_lookup->get_stock($accession_cvterm_id);
         if (!$stock_lookup_rs){
-            $c->stash->{rest} = {error=>'The accession name you provided does not match to a unique accession. Please make sure you are using the correct name or contact us.'};
+            $c->stash->{rest} = {error=>$c->i18n->p('seedlots.server.the_accession_name_you_provided_does_not_match_t', 'The accession name you provided does not match to a unique accession. Please make sure you are using the correct name or contact us.')};
             $c->detach();
         }
         $accession_id = $stock_lookup_rs->stock_id();
@@ -380,7 +389,7 @@ sub create_seedlot :Path('/ajax/breeders/seedlot-create/') :Args(0) {
     if ($cross_uniquename){
         my $rs = $schema->resultset('Stock::Stock')->find({uniquename=>$cross_uniquename, type_id=>$cross_cvterm_id});
         if (!$rs){
-            $c->stash->{rest} = {error=>'The cross name you provided does not match an existing cross name in the database.  Please make sure you are using the correct name or contact us.'};
+            $c->stash->{rest} = {error=>$c->i18n->p('seedlots.server.the_cross_name_you_provided_does_not_match_an_ex', 'The cross name you provided does not match an existing cross name in the database.  Please make sure you are using the correct name or contact us.')};
             $c->detach();
         }
         $cross_id = $rs->stock_id();
@@ -390,7 +399,7 @@ sub create_seedlot :Path('/ajax/breeders/seedlot-create/') :Args(0) {
     if ($seedlot_source) {
         my $rs = $schema->resultset('Stock::Stock')->find({uniquename=>$seedlot_source, type_id => { -in => [ $seedlot_cvterm_id, $plot_cvterm_id, $subplot_cvterm_id, $plant_cvterm_id ] }});
         if ( !$rs ) {
-            $c->stash->{rest} = {error=>'The given seedlot source name does not match an existing entry in the database. Seedlot sources must be an existing seedlot, plot, subplot, or plant name.'};
+            $c->stash->{rest} = {error=>$c->i18n->p('seedlots.server.the_given_seedlot_source_name_does_not_match_an_', 'The given seedlot source name does not match an existing entry in the database. Seedlot sources must be an existing seedlot, plot, subplot, or plant name.')};
             $c->detach();
         }
         $source_id = $rs->stock_id();
@@ -399,15 +408,15 @@ sub create_seedlot :Path('/ajax/breeders/seedlot-create/') :Args(0) {
         # Check the contents of the source seedlot against the new seedlots contents
         if ( $type_id eq $seedlot_cvterm_id ) {
             $source_is_seedlot = 1;
-            my $source_seedlot = CXGN::Stock::Seedlot->new(schema => $schema, seedlot_id => $source_id);
+            my $source_seedlot = CXGN::Stock::Seedlot->new(i18n => $c->i18n, schema => $schema, seedlot_id => $source_id);
             my $source_accession_name = $source_seedlot->accession() ? $source_seedlot->accession()->[1] : undef;
             my $source_cross_name = $source_seedlot->cross() ? $source_seedlot->cross()->[1] : undef;
             if ( $accession_uniquename && $accession_uniquename ne $source_accession_name ) {
-                    $c->stash->{rest} = { error => "The source seedlot contents accession ($source_accession_name) does not match the new seedlot contents accession ($accession_uniquename)." };
+                    $c->stash->{rest} = { error => $c->i18n->p('seedlots.server.the_source_seedlot_contents_accession_source_acc', 'The source seedlot contents accession (%{source_accession_name}) does not match the new seedlot contents accession (%{accession_uniquename}).', {source_accession_name => '' . ($source_accession_name), accession_uniquename => '' . ($accession_uniquename)}) };
                     $c->detach();
             }
             elsif ( $cross_uniquename && $cross_uniquename ne $source_cross_name ) {
-                    $c->stash->{rest} = { error => "The source seedlot contents cross ($source_cross_name) does not match the new seedlot contents cross ($cross_uniquename)." };
+                    $c->stash->{rest} = { error => $c->i18n->p('seedlots.server.the_source_seedlot_contents_cross_source_cross_n', 'The source seedlot contents cross (%{source_cross_name}) does not match the new seedlot contents cross (%{cross_uniquename}).', {source_cross_name => '' . ($source_cross_name), cross_uniquename => '' . ($cross_uniquename)}) };
                     $c->detach();
             }
         }
@@ -432,41 +441,41 @@ sub create_seedlot :Path('/ajax/breeders/seedlot-create/') :Args(0) {
             }
             if ( $source_stock_type eq 'accession' ) {
                 if ( $accession_uniquename ne $source_stock_name ) {
-                    $c->stash->{rest} = { error => "The source stock accession ($source_stock_name) does not match the seedlot contents accession ($accession_uniquename)." };
+                    $c->stash->{rest} = { error => $c->i18n->p('seedlots.server.the_source_stock_accession_source_stock_name_doe', 'The source stock accession (%{source_stock_name}) does not match the seedlot contents accession (%{accession_uniquename}).', {source_stock_name => '' . ($source_stock_name), accession_uniquename => '' . ($accession_uniquename)}) };
                     $c->detach();
                 }
             }
             elsif ( $source_stock_type eq 'cross' ) {
                 if ( $cross_uniquename ne $source_stock_name ) {
-                    $c->stash->{rest} = { error => "The source stock cross ($source_stock_name) does not match the seedlot contents cross ($cross_uniquename)." };
+                    $c->stash->{rest} = { error => $c->i18n->p('seedlots.server.the_source_stock_cross_source_stock_name_does_no', 'The source stock cross (%{source_stock_name}) does not match the seedlot contents cross (%{cross_uniquename}).', {source_stock_name => '' . ($source_stock_name), cross_uniquename => '' . ($cross_uniquename)}) };
                     $c->detach();
                 }
             }
             else {
-                $c->stash->{rest} = { error => "Could not check seedlot source due to undefined source stock type" };
+                $c->stash->{rest} = { error => $c->i18n->p('seedlots.server.could_not_check_seedlot_source_due_to_undefined_', 'Could not check seedlot source due to undefined source stock type') };
                 $c->detach();
             }
         }
 
         else {
-            $c->stash->{rest} = {error => 'Unsupported seedlot source type'};
+            $c->stash->{rest} = {error => $c->i18n->p('seedlots.server.unsupported_seedlot_source_type', 'Unsupported seedlot source type')};
             $c->detach();
         }
     }
     if ($accession_uniquename && !$accession_id){
-        $c->stash->{rest} = {error=>'The given accession name is not in the database! Seedlots can only be added onto existing accessions.'};
+        $c->stash->{rest} = {error=>$c->i18n->p('seedlots.server.the_given_accession_name_is_not_in_the_database_', 'The given accession name is not in the database! Seedlots can only be added onto existing accessions.')};
         $c->detach();
     }
     if ($cross_uniquename && !$cross_id){
-        $c->stash->{rest} = {error=>'The given cross name is not in the database! Seedlots can only be added onto existing crosses.'};
+        $c->stash->{rest} = {error=>$c->i18n->p('seedlots.server.the_given_cross_name_is_not_in_the_database_seed', 'The given cross name is not in the database! Seedlots can only be added onto existing crosses.')};
         $c->detach();
     }
     if ($accession_id && $cross_id){
-        $c->stash->{rest} = {error=>'A seedlot must have either an accession OR a cross as contents. Not both.'};
+        $c->stash->{rest} = {error=>$c->i18n->p('seedlots.server.a_seedlot_must_have_either_an_accession_or_a_cro.ebc1b5b', 'A seedlot must have either an accession OR a cross as contents. Not both.')};
         $c->detach();
     }
     if (!$accession_id && !$cross_id){
-        $c->stash->{rest} = {error=>'A seedlot must have either an accession or a cross as contents.'};
+        $c->stash->{rest} = {error=>$c->i18n->p('seedlots.server.a_seedlot_must_have_either_an_accession_or_a_cro.45a7dc8', 'A seedlot must have either an accession or a cross as contents.')};
         $c->detach();
     }
 
@@ -481,12 +490,12 @@ sub create_seedlot :Path('/ajax/breeders/seedlot-create/') :Args(0) {
     my $breeding_program_id = $c->req->param("seedlot_breeding_program_id");
 
     if (!$timestamp){
-        $c->stash->{rest} = {error=>'A seedlot must have a timestamp for the transaction.'};
+        $c->stash->{rest} = {error=>$c->i18n->p('seedlots.server.a_seedlot_must_have_a_timestamp_for_the_transact', 'A seedlot must have a timestamp for the transaction.')};
         $c->detach();
     }
 
     if (!$breeding_program_id){
-        $c->stash->{rest} = {error=>'A seedlot must have a breeding program.'};
+        $c->stash->{rest} = {error=>$c->i18n->p('seedlots.server.a_seedlot_must_have_a_breeding_program', 'A seedlot must have a breeding program.')};
         $c->detach();
     }
 
@@ -499,7 +508,7 @@ sub create_seedlot :Path('/ajax/breeders/seedlot-create/') :Args(0) {
     my $seedlot_id;
 
     eval {
-        my $sl = CXGN::Stock::Seedlot->new(schema => $schema);
+        my $sl = CXGN::Stock::Seedlot->new(i18n => $c->i18n, schema => $schema);
         $sl->uniquename($seedlot_uniquename);
         $sl->material_type($seedlot_material_type);
         $sl->description($description);
@@ -533,12 +542,12 @@ sub create_seedlot :Path('/ajax/breeders/seedlot-create/') :Args(0) {
         $transaction->operator($operator);
         $transaction->store();
 
-        my $sl_new = CXGN::Stock::Seedlot->new(schema => $schema, seedlot_id=>$seedlot_id);
+        my $sl_new = CXGN::Stock::Seedlot->new(i18n => $c->i18n, schema => $schema, seedlot_id=>$seedlot_id);
         $sl_new->set_current_count_property();
         $sl_new->set_current_weight_property();
 
         if ( $source_is_seedlot ) {
-            my $sl_origin = CXGN::Stock::Seedlot->new(schema => $schema, seedlot_id => $source_id);
+            my $sl_origin = CXGN::Stock::Seedlot->new(i18n => $c->i18n, schema => $schema, seedlot_id => $source_id);
             $sl_origin->set_current_count_property();
             $sl_origin->set_current_weight_property();
         }
@@ -579,7 +588,7 @@ sub upload_seedlots_POST : Args(0) {
         my $dbh = $c->dbc->dbh;
         my @user_info = CXGN::Login->new($dbh)->query_from_cookie($session_id);
         if (!$user_info[0]){
-            $c->stash->{rest} = {error=>'You must be logged in to upload seedlots!'};
+            $c->stash->{rest} = {error=>$c->i18n->p('seedlots.server.you_must_be_logged_in_to_upload_seedlots', 'You must be logged in to upload seedlots!')};
             $c->detach();
         }
         $user_id = $user_info[0];
@@ -588,7 +597,7 @@ sub upload_seedlots_POST : Args(0) {
         $user_name = $p->get_username;
     } else{
         if (!$c->user){
-            $c->stash->{rest} = {error=>'You must be logged in to upload seedlots!'};
+            $c->stash->{rest} = {error=>$c->i18n->p('seedlots.server.you_must_be_logged_in_to_upload_seedlots', 'You must be logged in to upload seedlots!')};
             $c->detach();
         }
         $user_id = $c->user()->get_object()->get_sp_person_id();
@@ -597,7 +606,7 @@ sub upload_seedlots_POST : Args(0) {
     }
 
     if (($user_role ne 'curator') && ($user_role ne 'submitter')) {
-        $c->stash->{rest} = {error=>'Only a submitter or a curator can upload seedlots'};
+        $c->stash->{rest} = {error=>$c->i18n->p('seedlots.server.only_a_submitter_or_a_curator_can_upload_seedlot.9aa377b', 'Only a submitter or a curator can upload seedlots')};
         $c->detach();
     }
 
@@ -618,7 +627,7 @@ sub upload_seedlots_POST : Args(0) {
     my $upload_from_accessions = $c->req->upload('seedlot_uploaded_file');
     my $upload_harvested_from_crosses = $c->req->upload('seedlot_harvested_uploaded_file');
     if (!$upload_from_accessions && !$upload_harvested_from_crosses){
-        $c->stash->{rest} = {error=>'You must upload a seedlot file!'};
+        $c->stash->{rest} = {error=>$c->i18n->p('seedlots.server.you_must_upload_a_seedlot_file', 'You must upload a seedlot file!')};
         $c->detach();
     }
     my $upload;
@@ -651,11 +660,11 @@ sub upload_seedlots_POST : Args(0) {
     my $archived_filename_with_path = $uploader->archive();
     my $md5 = $uploader->get_md5($archived_filename_with_path);
     if (!$archived_filename_with_path) {
-        $c->stash->{rest} = {error => "Could not save file $upload_original_name in archive",};
+        $c->stash->{rest} = {error => $c->i18n->p('seedlots.server.could_not_save_file_upload_original_name_in_arch', 'Could not save file %{upload_original_name} in archive', {upload_original_name => '' . ($upload_original_name)}),};
         $c->detach();
     }
     unlink $upload_tempfile;
-    my $parser = CXGN::Stock::Seedlot::ParseUpload->new(chado_schema => $schema, filename => $archived_filename_with_path);
+    my $parser = CXGN::Stock::Seedlot::ParseUpload->new(i18n => $c->i18n, chado_schema => $schema, filename => $archived_filename_with_path);
     $parser->load_plugin($parser_type);
     my $parsed_data = $parser->parse();
 
@@ -663,12 +672,12 @@ sub upload_seedlots_POST : Args(0) {
         my $return_error = '';
         my $parse_errors;
         if (!$parser->has_parse_errors() ){
-            $c->stash->{rest} = {error_string => "Could not get parsing errors"};
+            $c->stash->{rest} = {error_string => $c->i18n->p('seedlots.server.could_not_get_parsing_errors', 'Could not get parsing errors')};
         } else {
             $parse_errors = $parser->get_parse_errors();
 
             foreach my $error_string (@{$parse_errors->{'error_messages'}}){
-                $return_error .= $error_string."<br>";
+                $return_error .= _sgn_seedlot_error_html($error_string)."<br>";
             }
         }
         $c->stash->{rest} = {error_string => $return_error, missing_accessions => $parse_errors->{'missing_accessions'}, missing_crosses => $parse_errors->{'missing_crosses'}};
@@ -687,9 +696,9 @@ sub upload_seedlots_POST : Args(0) {
             }
 
             if (defined($val->{seedlot_id})){
-                $sl = CXGN::Stock::Seedlot->new(schema => $schema, seedlot_id=>$val->{seedlot_id}); #this allows update of existing seedlot
+                $sl = CXGN::Stock::Seedlot->new(i18n => $c->i18n, schema => $schema, seedlot_id=>$val->{seedlot_id}); #this allows update of existing seedlot
             } else {
-                $sl = CXGN::Stock::Seedlot->new(schema => $schema);
+                $sl = CXGN::Stock::Seedlot->new(i18n => $c->i18n, schema => $schema);
             }
 
             $sl->uniquename($key);
@@ -739,7 +748,7 @@ sub upload_seedlots_POST : Args(0) {
             my $transaction_weight;
             # If seedlot already exists in database, the system will update so that the current weight and current count match what was uploaded.
             if (defined($val->{seedlot_id})){
-                my $sl = CXGN::Stock::Seedlot->new(schema => $schema, seedlot_id => $val->{seedlot_id});
+                my $sl = CXGN::Stock::Seedlot->new(i18n => $c->i18n, schema => $schema, seedlot_id => $val->{seedlot_id});
                 my $current_stored_count = $sl->get_current_count_property() && $sl->get_current_count_property() ne 'NA' ? $sl->get_current_count_property() : 0;
                 my $current_stored_weight = $sl->get_current_weight_property() && $sl->get_current_weight_property() ne 'NA' ? $sl->get_current_weight_property() : 0;
 
@@ -799,7 +808,7 @@ sub upload_seedlots_POST : Args(0) {
                 $transaction->store();
             }
 
-            my $sl_new = CXGN::Stock::Seedlot->new(schema => $schema, seedlot_id=>$seedlot_id);
+            my $sl_new = CXGN::Stock::Seedlot->new(i18n => $c->i18n, schema => $schema, seedlot_id=>$seedlot_id);
             $sl_new->set_current_count_property();
             $sl_new->set_current_weight_property();
             push @added_stocks, $seedlot_id;
@@ -838,7 +847,7 @@ sub upload_seedlots_inventory_POST : Args(0) {
         my $dbh = $c->dbc->dbh;
         my @user_info = CXGN::Login->new($dbh)->query_from_cookie($session_id);
         if (!$user_info[0]){
-            $c->stash->{rest} = {error=>'You must be logged in to upload seedlot inventory!'};
+            $c->stash->{rest} = {error=>$c->i18n->p('seedlots.server.you_must_be_logged_in_to_upload_seedlot_inventor', 'You must be logged in to upload seedlot inventory!')};
             $c->detach();
         }
         $user_id = $user_info[0];
@@ -847,7 +856,7 @@ sub upload_seedlots_inventory_POST : Args(0) {
         $user_name = $p->get_username;
     } else{
         if (!$c->user){
-            $c->stash->{rest} = {error=>'You must be logged in to upload seedlot inventory!'};
+            $c->stash->{rest} = {error=>$c->i18n->p('seedlots.server.you_must_be_logged_in_to_upload_seedlot_inventor', 'You must be logged in to upload seedlot inventory!')};
             $c->detach();
         }
         $user_id = $c->user()->get_object()->get_sp_person_id();
@@ -856,7 +865,7 @@ sub upload_seedlots_inventory_POST : Args(0) {
     }
 
     if (($user_role ne 'curator') && ($user_role ne 'submitter')) {
-        $c->stash->{rest} = {error=>'Only a submitter or a curator can upload seedlot inventory'};
+        $c->stash->{rest} = {error=>$c->i18n->p('seedlots.server.only_a_submitter_or_a_curator_can_upload_seedlot.8fa843b', 'Only a submitter or a curator can upload seedlot inventory')};
         $c->detach();
     }
 
@@ -882,11 +891,11 @@ sub upload_seedlots_inventory_POST : Args(0) {
     my $archived_filename_with_path = $uploader->archive();
     my $md5 = $uploader->get_md5($archived_filename_with_path);
     if (!$archived_filename_with_path) {
-        $c->stash->{rest} = {error => "Could not save file $upload_original_name in archive",};
+        $c->stash->{rest} = {error => $c->i18n->p('seedlots.server.could_not_save_file_upload_original_name_in_arch', 'Could not save file %{upload_original_name} in archive', {upload_original_name => '' . ($upload_original_name)}),};
         $c->detach();
     }
     unlink $upload_tempfile;
-    my $parser = CXGN::Stock::Seedlot::ParseUpload->new(chado_schema => $schema, filename => $archived_filename_with_path);
+    my $parser = CXGN::Stock::Seedlot::ParseUpload->new(i18n => $c->i18n, chado_schema => $schema, filename => $archived_filename_with_path);
     $parser->load_plugin('SeedlotInventoryGeneric');
     my $parsed_data = $parser->parse();
     #print STDERR Dumper $parsed_data;
@@ -895,13 +904,13 @@ sub upload_seedlots_inventory_POST : Args(0) {
         my $return_error = '';
         my $parse_errors;
         if (!$parser->has_parse_errors() ){
-            $c->stash->{rest} = {error_string => "Could not get parsing errors"};
+            $c->stash->{rest} = {error_string => $c->i18n->p('seedlots.server.could_not_get_parsing_errors', 'Could not get parsing errors')};
         } else {
             $parse_errors = $parser->get_parse_errors();
             #print STDERR Dumper $parse_errors;
 
             foreach my $error_string (@{$parse_errors->{'error_messages'}}){
-                $return_error .= $error_string."<br>";
+                $return_error .= _sgn_seedlot_error_html($error_string)."<br>";
             }
         }
         $c->stash->{rest} = {error_string => $return_error, missing_seedlots => $parse_errors->{'missing_seedlots'} };
@@ -909,7 +918,7 @@ sub upload_seedlots_inventory_POST : Args(0) {
     }
     eval {
         while (my ($key, $val) = each(%$parsed_data)){
-            my $sl = CXGN::Stock::Seedlot->new(schema => $schema, seedlot_id => $val->{seedlot_id});
+            my $sl = CXGN::Stock::Seedlot->new(i18n => $c->i18n, schema => $schema, seedlot_id => $val->{seedlot_id});
             $sl->box_name($val->{box_id});
             my $return = $sl->store();
 
@@ -958,7 +967,7 @@ sub upload_seedlots_inventory_POST : Args(0) {
             $transaction->operator($val->{inventory_person});
             $transaction->store();
 
-            my $sl_new = CXGN::Stock::Seedlot->new(schema => $schema, seedlot_id => $val->{seedlot_id});
+            my $sl_new = CXGN::Stock::Seedlot->new(i18n => $c->i18n, schema => $schema, seedlot_id => $val->{seedlot_id});
             $sl_new->set_current_count_property();
             $sl_new->set_current_weight_property();
         }
@@ -1020,11 +1029,11 @@ sub edit_seedlot_transaction :Chained('seedlot_transaction_base') PathPart('edit
     my $schema = $c->dbic_schema("Bio::Chado::Schema");
 
     if (!$c->user()){
-        $c->stash->{rest} = { error => "You must be logged in to edit seedlot transactions" };
+        $c->stash->{rest} = { error => $c->i18n->p('seedlots.server.you_must_be_logged_in_to_edit_seedlot_transactio', 'You must be logged in to edit seedlot transactions') };
         $c->detach();
     }
     if (!$c->user()->check_roles("curator")) {
-        $c->stash->{rest} = { error => "You do not have the correct role to edit seedlot transactions. Please contact us." };
+        $c->stash->{rest} = { error => $c->i18n->p('seedlots.server.you_do_not_have_the_correct_role_to_edit_seedlot.9462c37', 'You do not have the correct role to edit seedlot transactions. Please contact us.') };
         $c->detach();
     }
 
@@ -1051,13 +1060,13 @@ sub edit_seedlot_transaction :Chained('seedlot_transaction_base') PathPart('edit
     my $seedlot_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'seedlot', 'stock_type')->cvterm_id();
 
     if ($from_stock_type == $seedlot_cvterm_id) {
-        my $from_stock_update = CXGN::Stock::Seedlot->new(schema => $schema, seedlot_id => $from_stock_id);
+        my $from_stock_update = CXGN::Stock::Seedlot->new(i18n => $c->i18n, schema => $schema, seedlot_id => $from_stock_id);
         $from_stock_update->set_current_count_property();
         $from_stock_update->set_current_weight_property();
     }
 
     if ($to_stock_type == $seedlot_cvterm_id) {
-        my $to_stock_update = CXGN::Stock::Seedlot->new(schema => $schema, seedlot_id => $to_stock_id);
+        my $to_stock_update = CXGN::Stock::Seedlot->new(i18n => $c->i18n, schema => $schema, seedlot_id => $to_stock_id);
         $to_stock_update->set_current_count_property();
         $to_stock_update->set_current_weight_property();
     }
@@ -1069,7 +1078,7 @@ sub edit_seedlot_transaction :Chained('seedlot_transaction_base') PathPart('edit
 
         $c->stash->{rest} = { success => 1 };
     } else {
-        $c->stash->{rest} = { error => "Something went wrong with the transaction update" };
+        $c->stash->{rest} = { error => $c->i18n->p('seedlots.server.something_went_wrong_with_the_transaction_update', 'Something went wrong with the transaction update') };
     }
 }
 
@@ -1112,22 +1121,22 @@ sub list_seedlot_transactions :Chained('seedlot_base') :PathPart('transactions')
         my $from_url;
         my $to_url;
         if ($t->from_stock()->[2] == $type_id){
-            $from_url = '<a href="/breeders/seedlot/'.$t->from_stock()->[0].'" >'.$t->from_stock()->[1].'</a> ('.$types_hash{$t->from_stock()->[2]}.')';
+            $from_url = '<a href="/breeders/seedlot/'.$t->from_stock()->[0].'" >'._sgn_seedlot_html($t->from_stock()->[1]).'</a> ('.$types_hash{$t->from_stock()->[2]}.')';
         } elsif ($t->from_stock()->[2] == $cross_type_id){
-            $from_url = '<a href="/cross/'.$t->from_stock()->[0].'" >'.$t->from_stock()->[1].'</a> ('.$types_hash{$t->from_stock()->[2]}.')';
+            $from_url = '<a href="/cross/'.$t->from_stock()->[0].'" >'._sgn_seedlot_html($t->from_stock()->[1]).'</a> ('.$types_hash{$t->from_stock()->[2]}.')';
         } else {
-            $from_url = '<a href="/stock/'.$t->from_stock()->[0].'/view" >'.$t->from_stock()->[1].'</a> ('.$types_hash{$t->from_stock()->[2]}.')';
+            $from_url = '<a href="/stock/'.$t->from_stock()->[0].'/view" >'._sgn_seedlot_html($t->from_stock()->[1]).'</a> ('.$types_hash{$t->from_stock()->[2]}.')';
         }
 
         if ($t->from_stock()->[0] == $t->to_stock()->[0]) {
             $to_url = 'NA';
         } else {
             if ($t->to_stock()->[2] == $type_id){
-                $to_url = '<a href="/breeders/seedlot/'.$t->to_stock()->[0].'" >'.$t->to_stock()->[1].'</a> ('.$types_hash{$t->to_stock()->[2]}.')';
+                $to_url = '<a href="/breeders/seedlot/'.$t->to_stock()->[0].'" >'._sgn_seedlot_html($t->to_stock()->[1]).'</a> ('.$types_hash{$t->to_stock()->[2]}.')';
             } elsif ($t->from_stock()->[2] == $cross_type_id){
-                $to_url = '<a href="/cross/'.$t->to_stock()->[0].'" >'.$t->to_stock()->[1].'</a> ('.$types_hash{$t->to_stock()->[2]}.')';
+                $to_url = '<a href="/cross/'.$t->to_stock()->[0].'" >'._sgn_seedlot_html($t->to_stock()->[1]).'</a> ('.$types_hash{$t->to_stock()->[2]}.')';
             } else {
-                $to_url = '<a href="/stock/'.$t->to_stock()->[0].'/view" >'.$t->to_stock()->[1].'</a> ('.$types_hash{$t->to_stock()->[2]}.')';
+                $to_url = '<a href="/stock/'.$t->to_stock()->[0].'/view" >'._sgn_seedlot_html($t->to_stock()->[1]).'</a> ('.$types_hash{$t->to_stock()->[2]}.')';
             }
         }
         push @transactions, { "transaction_id"=>$t->transaction_id(), "timestamp"=>$t->timestamp(), "from"=>$from_url, "to"=>$to_url, "value"=>$value_field, "weight"=>$weight_value_field, "operator"=>$t->operator, "description"=>$t->description() };
@@ -1144,12 +1153,12 @@ sub add_seedlot_transaction :Chained('seedlot_base') :PathPart('transaction/add'
     my $default_seedlot_material_type = $c->config->{default_seedlot_material_type};
 
     if (!$c->user){
-        $c->stash->{rest} = {error=>'You must be logged in to add a seedlot transaction!'};
+        $c->stash->{rest} = {error=>$c->i18n->p('seedlots.server.you_must_be_logged_in_to_add_a_seedlot_transacti', 'You must be logged in to add a seedlot transaction!')};
         $c->detach();
     }
 
     if (!($c->user()->check_roles('curator') || $c->user()->check_roles('submitter'))) {
-        $c->stash->{rest} = { error => 'Only a submitter or a curator can add seedlot transaction' };
+        $c->stash->{rest} = { error => $c->i18n->p('seedlots.server.only_a_submitter_or_a_curator_can_add_seedlot_tr.ec2ed2c', 'Only a submitter or a curator can add seedlot transaction') };
         $c->detach();
     }
 
@@ -1182,7 +1191,7 @@ sub add_seedlot_transaction :Chained('seedlot_base') :PathPart('transaction/add'
 
             my $previous_seedlot = $schema->resultset('Stock::Stock')->find({uniquename=>$stock_uniquename, type_id=>$seedlot_cvterm_id});
             if ($previous_seedlot){
-                $c->stash->{rest} = {error=>'The given seedlot uniquename has been taken. Please use another name or use the existing seedlot.'};
+                $c->stash->{rest} = {error=>$c->i18n->p('seedlots.server.the_given_seedlot_uniquename_has_been_taken_plea', 'The given seedlot uniquename has been taken. Please use another name or use the existing seedlot.')};
                 $c->detach();
             }
             my $accession_id;
@@ -1194,33 +1203,33 @@ sub add_seedlot_transaction :Chained('seedlot_base') :PathPart('transaction/add'
                 $cross_id = $schema->resultset('Stock::Stock')->find({uniquename=>$cross_uniquename, type_id=>$cross_cvterm_id})->stock_id();
             }
             if ($accession_uniquename && !$accession_id){
-                $c->stash->{rest} = {error=>'The given accession name is not in the database! Seedlots can only be added onto existing accessions.'};
+                $c->stash->{rest} = {error=>$c->i18n->p('seedlots.server.the_given_accession_name_is_not_in_the_database_', 'The given accession name is not in the database! Seedlots can only be added onto existing accessions.')};
                 $c->detach();
             }
             if ($cross_uniquename && !$cross_id){
-                $c->stash->{rest} = {error=>'The given cross name is not in the database! Seedlots can only be added onto existing crosses.'};
+                $c->stash->{rest} = {error=>$c->i18n->p('seedlots.server.the_given_cross_name_is_not_in_the_database_seed', 'The given cross name is not in the database! Seedlots can only be added onto existing crosses.')};
                 $c->detach();
             }
             if ($accession_id && $cross_id){
-                $c->stash->{rest} = {error=>'A seedlot must have either an accession OR a cross as contents. Not both.'};
+                $c->stash->{rest} = {error=>$c->i18n->p('seedlots.server.a_seedlot_must_have_either_an_accession_or_a_cro.ebc1b5b', 'A seedlot must have either an accession OR a cross as contents. Not both.')};
                 $c->detach();
             }
             if (!$accession_id && !$cross_id){
-                $c->stash->{rest} = {error=>'A seedlot must have either an accession or a cross as contents.'};
+                $c->stash->{rest} = {error=>$c->i18n->p('seedlots.server.a_seedlot_must_have_either_an_accession_or_a_cro.45a7dc8', 'A seedlot must have either an accession or a cross as contents.')};
                 $c->detach();
             }
 
             my $from_stock_type = $schema->resultset('Stock::Stock')->find({stock_id=>$from_existing_seedlot_id})->type_id();
             my $new_seedlot_material_type;
             if ($from_stock_type == $seedlot_cvterm_id) {
-                my $from_sl = CXGN::Stock::Seedlot->new(schema => $schema, seedlot_id => $from_existing_seedlot_id);
+                my $from_sl = CXGN::Stock::Seedlot->new(i18n => $c->i18n, schema => $schema, seedlot_id => $from_existing_seedlot_id);
                 $new_seedlot_material_type = $from_sl->material_type();
                 if ((!$new_seedlot_material_type) && $default_seedlot_material_type) {
                     $new_seedlot_material_type = $default_seedlot_material_type;
                 }
             }
 
-            my $sl = CXGN::Stock::Seedlot->new(schema => $schema);
+            my $sl = CXGN::Stock::Seedlot->new(i18n => $c->i18n, schema => $schema);
             $sl->uniquename($to_new_seedlot_name);
             $sl->location_code($location_code);
             $sl->box_name($box_name);
@@ -1251,7 +1260,7 @@ sub add_seedlot_transaction :Chained('seedlot_base') :PathPart('transaction/add'
             $transaction->operator($operator);
             $transaction->store();
 
-            my $sl_new = CXGN::Stock::Seedlot->new(schema => $schema, seedlot_id=>$seedlot_id);
+            my $sl_new = CXGN::Stock::Seedlot->new(i18n => $c->i18n, schema => $schema, seedlot_id=>$seedlot_id);
             $new_sl = $sl_new;
 
             $phenome_schema->resultset("StockOwner")->find_or_create({
@@ -1271,7 +1280,7 @@ sub add_seedlot_transaction :Chained('seedlot_base') :PathPart('transaction/add'
         $stock_id = $from_existing_seedlot_id;
         $stock_uniquename = $schema->resultset('Stock::Stock')->find({stock_id=>$stock_id})->uniquename();
         $existing_sl = CXGN::Stock::Seedlot->new(
-            schema => $c->stash->{schema},
+            i18n => $c->i18n, schema => $c->stash->{schema},
             seedlot_id => $stock_id,
         );
     }
@@ -1280,7 +1289,7 @@ sub add_seedlot_transaction :Chained('seedlot_base') :PathPart('transaction/add'
         $stock_id = $to_existing_seedlot_id;
         $stock_uniquename = $schema->resultset('Stock::Stock')->find({stock_id=>$stock_id})->uniquename();
         $existing_sl = CXGN::Stock::Seedlot->new(
-            schema => $c->stash->{schema},
+            i18n => $c->i18n, schema => $c->stash->{schema},
             seedlot_id => $stock_id,
         );
     }
@@ -1333,11 +1342,11 @@ sub delete_seedlot_transaction :Chained('seedlot_transaction_base') PathPart('de
     my $schema = $c->dbic_schema("Bio::Chado::Schema");
 
     if (!$c->user()){
-        $c->stash->{rest} = { error => "You must be logged in to delete seedlot transactions" };
+        $c->stash->{rest} = { error => $c->i18n->p('seedlots.server.you_must_be_logged_in_to_delete_seedlot_transact', 'You must be logged in to delete seedlot transactions') };
         $c->detach();
     }
     if (!$c->user()->check_roles("curator")) {
-        $c->stash->{rest} = { error => "You do not have the correct role to delete seedlot transactions. Please contact us." };
+        $c->stash->{rest} = { error => $c->i18n->p('seedlots.server.you_do_not_have_the_correct_role_to_delete_seedl.7ecb101', 'You do not have the correct role to delete seedlot transactions. Please contact us.') };
         $c->detach();
     }
 
@@ -1353,13 +1362,13 @@ sub delete_seedlot_transaction :Chained('seedlot_transaction_base') PathPart('de
     my $seedlot_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'seedlot', 'stock_type')->cvterm_id();
 
     if ($from_stock_type == $seedlot_cvterm_id) {
-        my $from_stock_update = CXGN::Stock::Seedlot->new(schema => $schema, seedlot_id => $from_stock_id);
+        my $from_stock_update = CXGN::Stock::Seedlot->new(i18n => $c->i18n, schema => $schema, seedlot_id => $from_stock_id);
         $from_stock_update->set_current_count_property();
         $from_stock_update->set_current_weight_property();
     }
 
     if ($to_stock_type == $seedlot_cvterm_id) {
-        my $to_stock_update = CXGN::Stock::Seedlot->new(schema => $schema, seedlot_id => $to_stock_id);
+        my $to_stock_update = CXGN::Stock::Seedlot->new(i18n => $c->i18n, schema => $schema, seedlot_id => $to_stock_id);
         $to_stock_update->set_current_count_property();
         $to_stock_update->set_current_weight_property();
     }
@@ -1371,7 +1380,7 @@ sub delete_seedlot_transaction :Chained('seedlot_transaction_base') PathPart('de
         $c->stash->{rest} = { success => 1 };
     }
     else {
-        $c->stash->{rest} = { error => "An error occured deleting the seedlot transaction" };
+        $c->stash->{rest} = { error => $c->i18n->p('seedlots.server.an_error_occured_deleting_the_seedlot_transactio', 'An error occurred deleting the seedlot transaction') };
     }
 }
 
@@ -1401,7 +1410,7 @@ sub seedlot_maintenance_ontology : Path('/ajax/breeders/seedlot/maintenance/onto
 
     # Make sure ontology is set in the conf file
     if ( !defined $c->config->{seedlot_maintenance_event_ontology_root} || $c->config->{seedlot_maintenance_event_ontology_root} eq '' ) {
-        $c->stash->{rest} = { error => 'Seedlot Maintenance Events are not enabled on this server!' };
+        $c->stash->{rest} = { error => $c->i18n->p('seedlot_maintenance.server.disabled', 'Seedlot Maintenance Events are not enabled on this server!') };
         $c->detach();
     }
 
@@ -1429,7 +1438,7 @@ sub seedlot_maintenance_ontology : Path('/ajax/breeders/seedlot/maintenance/onto
 # PARAMS:
 #   filters: an array of filter properties, with the following keys:
 #       - names: an array of seedlot names
-#       - dates: an array of date filter properies:
+#       - dates: an array of date filter properties:
 #           - date: date in YYYY-MM-DD format
 #           - comp: date comparison type ('=', '<=', '<', '>=', '>')
 #       - types: an array of event type/value filter properties
@@ -1549,7 +1558,7 @@ sub seedlot_maintenance_events_GET {
 # Add one or more Maintenance Events to the specified Seedlot
 # PATH: POST /ajax/breeders/seedlot/{seedlot id}/maintenance
 # PARAMS:
-#   events: the events to store in the databsae, an array of objects with the following keys:
+#   events: the events to store in the database, an array of objects with the following keys:
 #       - cvterm_id: id of seedlot maintenance event ontology term
 #       - value: value of the seedlot maintenance event
 #       - notes: (optional) additional notes/comments about the event
@@ -1574,13 +1583,13 @@ sub seedlot_maintenance_events_POST {
 
     # Require user login
     if (!$c->user){
-        $c->stash->{rest} = {error => 'You must be logged in to add a seedlot transaction!'};
+        $c->stash->{rest} = {error => $c->i18n->p('seedlots.server.you_must_be_logged_in_to_add_a_seedlot_transacti', 'You must be logged in to add a seedlot transaction!')};
         $c->detach();
     }
 
     # Get user information and check role
     if (!($c->user()->check_roles('curator') || $c->user()->check_roles('submitter'))) {
-        $c->stash->{rest} = { error => 'You do not have the required privileges to seedlot maintenance events.' };
+        $c->stash->{rest} = { error => $c->i18n->p('seedlot_record.server.event_privileges', 'You do not have the required privileges to seedlot maintenance events.') };
         $c->detach();
     }
 
@@ -1588,7 +1597,7 @@ sub seedlot_maintenance_events_POST {
     my $body = $c->request->data;
     my $events = $body->{events};
     if ( !defined $events || $events eq '' || ref $events ne 'ARRAY' ) {
-        $c->stash->{rest} = {error => 'Event parameters not provided!'};
+        $c->stash->{rest} = {error => $c->i18n->p('seedlot_record.server.events_required', 'Event parameters not provided!')};
         $c->detach();
     }
 
@@ -1629,7 +1638,8 @@ sub seedlot_maintenance_events_POST {
         $c->stash->{rest} = { events => $processed_events };
     };
     if ($@) {
-        $c->stash->{rest} = {error => "Could not store seedlot maintenance events [$@]!"};
+        my $seedlot_event_diagnostic = $@;
+        $c->stash->{rest} = {error => $c->i18n->p('seedlot_record.server.store_failed', 'Could not store seedlot maintenance events [%{diagnostic}]!', {diagnostic => '' . $seedlot_event_diagnostic})};
         $c->detach();
     }
 }
@@ -1707,20 +1717,20 @@ sub seedlot_maintenance_event_upload_POST : Args(0) {
 
     # Check Logged In Status
     if (!$c->user){
-        $c->stash->{rest} = {error => 'You must be logged in to do this!'};
+        $c->stash->{rest} = {error => $c->i18n->p('seedlot_maintenance_upload.server.login_required', 'You must be logged in to do this!')};
         $c->detach();
     }
     my $user_id = $c->user()->get_object()->get_sp_person_id();
     my $user_role = $c->user->get_object->get_user_type();
     if ( $user_role ne 'submitter' && $user_role ne 'curator' ) {
-        $c->stash->{rest} = {error => 'You do not have permission in the database to do this! Please contact us.'};
+        $c->stash->{rest} = {error => $c->i18n->p('seedlot_maintenance_upload.server.permission', 'You do not have permission in the database to do this! Please contact us.')};
         $c->detach();
     }
 
     # Archive upload file
     my $upload = $c->req->upload('file');
     if ( !defined $upload || $upload eq '' ) {
-        $c->stash->{rest} = {error => 'You must provide the upload file!'};
+        $c->stash->{rest} = {error => $c->i18n->p('seedlot_maintenance_upload.server.file_required', 'You must provide the upload file!')};
         $c->detach();
     }
     else {
@@ -1742,13 +1752,14 @@ sub seedlot_maintenance_event_upload_POST : Args(0) {
         });
         my $archived_filepath = $uploader->archive();
         if (!$archived_filepath) {
-            $c->stash->{rest} = {error => "Could not save file $upload_original_name in archive",};
+            $c->stash->{rest} = {error => $c->i18n->p('seedlot_maintenance_upload.server.archive_failed', 'Could not save file %{filename} in archive', {filename => $upload_original_name}),};
             $c->detach();
         }
         unlink $upload_tempfile;
 
         # Parse the file
         my $parser = CXGN::Stock::Seedlot::ParseUpload->new(
+            i18n => $c->i18n,
             chado_schema => $schema,
             filename => $archived_filepath,
             event_ontology_root => $c->config->{seedlot_maintenance_event_ontology_root}
@@ -1759,7 +1770,7 @@ sub seedlot_maintenance_event_upload_POST : Args(0) {
         # No parsed data returned...
         if (!$parsed_data) {
             if (!$parser->has_parse_errors()) {
-                $c->stash->{rest} = { error => "An unknown error occurred" };
+                $c->stash->{rest} = { error => $c->i18n->p('seedlot_maintenance_upload.server.unknown', 'An unknown error occurred') };
                 $c->detach();
             }
             else {
@@ -1810,11 +1821,11 @@ sub discard_seedlots : Path('/ajax/breeders/seedlot/discard') :Args(0) {
     my $discard_date = $time->ymd();
 
     if (!$c->user()){
-        $c->stash->{rest} = { error_string => "You must be logged in to discard seedlot" };
+        $c->stash->{rest} = { error_string => $c->i18n->p('seedlots.server.you_must_be_logged_in_to_discard_seedlot', 'You must be logged in to discard seedlot') };
         return;
     }
     if (!$c->user()->check_roles("curator")) {
-        $c->stash->{rest} = { error_string => "You do not have the correct role to discard seedlot. Please contact us." };
+        $c->stash->{rest} = { error_string => $c->i18n->p('seedlots.server.you_do_not_have_the_correct_role_to_discard_seed', 'You do not have the correct role to discard seedlot. Please contact us.') };
         return;
     }
 
@@ -1829,7 +1840,7 @@ sub discard_seedlots : Path('/ajax/breeders/seedlot/discard') :Args(0) {
         my @seedlots_missing = @{$seedlot_validator->validate($schema,'seedlots',\@seedlots_to_discard)->{'missing'}};
 
         if (scalar(@seedlots_missing) > 0){
-            $c->stash->{rest} = { error_string => "The following seedlots are not in the database or are marked as discarded : ".join(',',@seedlots_missing) };
+            $c->stash->{rest} = { error_string => $c->i18n->p('seedlots.server.the_following_seedlots_are_not_in_the_database_o', 'The following seedlots are not in the database or are marked as discarded : %{names}', {names => '' . (join(',',@seedlots_missing))}) };
             return;
         }
     } elsif (defined $seedlot_name) {
@@ -1866,7 +1877,7 @@ sub discard_seedlots : Path('/ajax/breeders/seedlot/discard') :Args(0) {
         $seedlot_to_discard->store();
 
         if (!$seedlot_to_discard->store()){
-            $c->stash->{rest} = {error_string => "Error discarding seedlot",};
+            $c->stash->{rest} = {error_string => $c->i18n->p('seedlots.server.error_discarding_seedlot', 'Error discarding seedlot'),};
             return;
         }
     }
@@ -1887,11 +1898,11 @@ sub undo_discarded_seedlots : Path('/ajax/breeders/seedlot/undo_discard') :Args(
     my $seedlot_id = $c->req->param("seedlot_id");
 
     if (!$c->user()){
-        $c->stash->{rest} = { error_string => "You must be logged in to undo discading this seedlot" };
+        $c->stash->{rest} = { error_string => $c->i18n->p('seedlots.server.you_must_be_logged_in_to_undo_discading_this_see', 'You must be logged in to undo discading this seedlot') };
         return;
     }
     if (!$c->user()->check_roles("curator")) {
-        $c->stash->{rest} = { error_string => "You do not have the correct role to undo discarding this seedlot. Please contact us." };
+        $c->stash->{rest} = { error_string => $c->i18n->p('seedlots.server.you_do_not_have_the_correct_role_to_undo_discard', 'You do not have the correct role to undo discarding this seedlot. Please contact us.') };
         return;
     }
 
@@ -1904,7 +1915,7 @@ sub undo_discarded_seedlots : Path('/ajax/breeders/seedlot/undo_discard') :Args(
         $discarded_rs->delete();
     }
 
-    my $restored_seedlot = CXGN::Stock::Seedlot->new(schema => $schema, seedlot_id => $seedlot_id);
+    my $restored_seedlot = CXGN::Stock::Seedlot->new(i18n => $c->i18n, schema => $schema, seedlot_id => $seedlot_id);
     $restored_seedlot->set_current_count_property();
     $restored_seedlot->set_current_weight_property();
 
@@ -1931,7 +1942,7 @@ sub upload_transactions_POST : Args(0) {
         my $dbh = $c->dbc->dbh;
         my @user_info = CXGN::Login->new($dbh)->query_from_cookie($session_id);
         if (!$user_info[0]){
-            $c->stash->{rest} = {error=>'You must be logged in to upload seedlots!'};
+            $c->stash->{rest} = {error=>$c->i18n->p('seedlots.server.you_must_be_logged_in_to_upload_seedlots', 'You must be logged in to upload seedlots!')};
             $c->detach();
         }
         $user_id = $user_info[0];
@@ -1940,7 +1951,7 @@ sub upload_transactions_POST : Args(0) {
         $user_name = $p->get_username;
     } else {
         if (!$c->user){
-            $c->stash->{rest} = {error=>'You must be logged in to upload seedlots!'};
+            $c->stash->{rest} = {error=>$c->i18n->p('seedlots.server.you_must_be_logged_in_to_upload_seedlots', 'You must be logged in to upload seedlots!')};
             $c->detach();
         }
         $user_id = $c->user()->get_object()->get_sp_person_id();
@@ -1949,7 +1960,7 @@ sub upload_transactions_POST : Args(0) {
     }
 
     if (($user_role ne 'curator') && ($user_role ne 'submitter')) {
-        $c->stash->{rest} = {error=>'Only a submitter or a curator can upload seedlot transactions'};
+        $c->stash->{rest} = {error=>$c->i18n->p('seedlots.server.only_a_submitter_or_a_curator_can_upload_seedlot.e675113', 'Only a submitter or a curator can upload seedlot transactions')};
         $c->detach();
     }
 
@@ -1966,7 +1977,7 @@ sub upload_transactions_POST : Args(0) {
     my $new_seedlot_organization = $c->req->param("new_seedlot_organization_name");
 
     if (!$upload_seedlots_to_seedlots && !$upload_seedlots_to_new_seedlots && !$upload_seedlots_to_plots && !$upload_seedlots_to_unspecified_names && !$upload_accessions_crosses_to_existing_seedlots){
-        $c->stash->{rest} = {error=>'You must upload a transaction file!'};
+        $c->stash->{rest} = {error=>$c->i18n->p('seedlots.server.you_must_upload_a_transaction_file', 'You must upload a transaction file!')};
         $c->detach();
     }
     my $upload;
@@ -2011,11 +2022,11 @@ sub upload_transactions_POST : Args(0) {
     my $archived_filename_with_path = $uploader->archive();
     my $md5 = $uploader->get_md5($archived_filename_with_path);
     if (!$archived_filename_with_path) {
-        $c->stash->{rest} = {error => "Could not save file $upload_original_name in archive",};
+        $c->stash->{rest} = {error => $c->i18n->p('seedlots.server.could_not_save_file_upload_original_name_in_arch', 'Could not save file %{upload_original_name} in archive', {upload_original_name => '' . ($upload_original_name)}),};
         $c->detach();
     }
     unlink $upload_tempfile;
-    my $parser = CXGN::Stock::Seedlot::ParseUpload->new(chado_schema => $schema, filename => $archived_filename_with_path);
+    my $parser = CXGN::Stock::Seedlot::ParseUpload->new(i18n => $c->i18n, chado_schema => $schema, filename => $archived_filename_with_path);
     $parser->load_plugin($parser_type);
     my $parsed_data = $parser->parse();
 
@@ -2023,12 +2034,12 @@ sub upload_transactions_POST : Args(0) {
         my $return_error = '';
         my $parse_errors;
         if (!$parser->has_parse_errors() ){
-            $c->stash->{rest} = {error_string => "Could not get parsing errors"};
+            $c->stash->{rest} = {error_string => $c->i18n->p('seedlots.server.could_not_get_parsing_errors', 'Could not get parsing errors')};
         } else {
             $parse_errors = $parser->get_parse_errors();
 
             foreach my $error_string (@{$parse_errors->{'error_messages'}}){
-                $return_error .= $error_string."<br>";
+                $return_error .= _sgn_seedlot_error_html($error_string)."<br>";
             }
         }
         $c->stash->{rest} = {error_string => $return_error};
@@ -2051,11 +2062,11 @@ sub upload_transactions_POST : Args(0) {
                 $transaction->operator($transaction_info->{operator});
                 my $transaction_id = $transaction->store();
 
-                my $current_from_seedlot = CXGN::Stock::Seedlot->new(schema => $schema, seedlot_id => $transaction_info->{from_seedlot_id});
+                my $current_from_seedlot = CXGN::Stock::Seedlot->new(i18n => $c->i18n, schema => $schema, seedlot_id => $transaction_info->{from_seedlot_id});
                 $current_from_seedlot->set_current_count_property();
                 $current_from_seedlot->set_current_weight_property();
 
-                my $current_to_seedlot = CXGN::Stock::Seedlot->new(schema => $schema, seedlot_id => $transaction_info->{to_seedlot_id});
+                my $current_to_seedlot = CXGN::Stock::Seedlot->new(i18n => $c->i18n, schema => $schema, seedlot_id => $transaction_info->{to_seedlot_id});
                 $current_to_seedlot->set_current_count_property();
                 $current_to_seedlot->set_current_weight_property();
             }
@@ -2077,7 +2088,7 @@ sub upload_transactions_POST : Args(0) {
                 $transaction->operator($transaction_info->{operator});
                 my $transaction_id = $transaction->store();
 
-                my $current_from_seedlot = CXGN::Stock::Seedlot->new(schema => $schema, seedlot_id => $transaction_info->{from_seedlot_id});
+                my $current_from_seedlot = CXGN::Stock::Seedlot->new(i18n => $c->i18n, schema => $schema, seedlot_id => $transaction_info->{from_seedlot_id});
                 $current_from_seedlot->set_current_count_property();
                 $current_from_seedlot->set_current_weight_property();
             }
@@ -2097,13 +2108,13 @@ sub upload_transactions_POST : Args(0) {
                 my $new_seedlot_box_name = $new_seedlot_info->[3];
                 my $new_seedlot_quality = $new_seedlot_info->[4];
 
-                my $from_sl = CXGN::Stock::Seedlot->new(schema => $schema, seedlot_id => $from_seedlot_id);
+                my $from_sl = CXGN::Stock::Seedlot->new(i18n => $c->i18n, schema => $schema, seedlot_id => $from_seedlot_id);
                 my $new_seedlot_material_type = $from_sl->material_type();
                 if ((!$new_seedlot_material_type) && $default_seedlot_material_type) {
                     $new_seedlot_material_type = $default_seedlot_material_type;
                 }
 
-                my $new_seedlot = CXGN::Stock::Seedlot->new(schema => $schema);
+                my $new_seedlot = CXGN::Stock::Seedlot->new(i18n => $c->i18n, schema => $schema);
                 $new_seedlot->uniquename($new_seedlot_name);
                 $new_seedlot->location_code($new_seedlot_location);
                 $new_seedlot->box_name($new_seedlot_box_name);
@@ -2130,11 +2141,11 @@ sub upload_transactions_POST : Args(0) {
 
                 my $transaction_id = $transaction->store();
 
-                my $current_from_seedlot = CXGN::Stock::Seedlot->new(schema => $schema, seedlot_id => $transaction_info->{from_seedlot_id});
+                my $current_from_seedlot = CXGN::Stock::Seedlot->new(i18n => $c->i18n, schema => $schema, seedlot_id => $transaction_info->{from_seedlot_id});
                 $current_from_seedlot->set_current_count_property();
                 $current_from_seedlot->set_current_weight_property();
 
-                my $to_new_seedlot = CXGN::Stock::Seedlot->new(schema => $schema, seedlot_id => $new_seedlot_id);
+                my $to_new_seedlot = CXGN::Stock::Seedlot->new(i18n => $c->i18n, schema => $schema, seedlot_id => $new_seedlot_id);
                 $to_new_seedlot->set_current_count_property();
                 $to_new_seedlot->set_current_weight_property();
             }
@@ -2163,7 +2174,7 @@ sub upload_transactions_POST : Args(0) {
                 $transaction->factor(-1);
                 my $transaction_id = $transaction->store();
 
-                my $current_from_seedlot = CXGN::Stock::Seedlot->new(schema => $schema, seedlot_id => $transaction_info->{from_seedlot_id});
+                my $current_from_seedlot = CXGN::Stock::Seedlot->new(i18n => $c->i18n, schema => $schema, seedlot_id => $transaction_info->{from_seedlot_id});
                 $current_from_seedlot->set_current_count_property();
                 $current_from_seedlot->set_current_weight_property();
             }
@@ -2185,7 +2196,7 @@ sub upload_transactions_POST : Args(0) {
                 $transaction->factor(1);
                 my $transaction_id = $transaction->store();
 
-                my $current_to_seedlot = CXGN::Stock::Seedlot->new(schema => $schema, seedlot_id => $transaction_info->{to_seedlot_id});
+                my $current_to_seedlot = CXGN::Stock::Seedlot->new(i18n => $c->i18n, schema => $schema, seedlot_id => $transaction_info->{to_seedlot_id});
                 $current_to_seedlot->set_current_count_property();
                 $current_to_seedlot->set_current_weight_property();
             }
@@ -2214,12 +2225,12 @@ sub add_transactions_using_list_POST : Args(0) {
     my $schema = $c->dbic_schema("Bio::Chado::Schema");
 
     if (!$c->user){
-        $c->stash->{rest} = {error=>'You must be logged in to add seedlot transactions!'};
+        $c->stash->{rest} = {error=>$c->i18n->p('seedlots.server.you_must_be_logged_in_to_add_seedlot_transaction', 'You must be logged in to add seedlot transactions!')};
         $c->detach();
     }
 
     if (!($c->user()->check_roles('curator') || $c->user()->check_roles('submitter'))) {
-        $c->stash->{rest} = { error => 'Only a submitter or a curator can add seedlot transactions' };
+        $c->stash->{rest} = { error => $c->i18n->p('seedlots.server.only_a_submitter_or_a_curator_can_add_seedlot_tr.378acfa', 'Only a submitter or a curator can add seedlot transactions') };
         $c->detach();
     }
 
@@ -2228,7 +2239,11 @@ sub add_transactions_using_list_POST : Args(0) {
     my $time = DateTime->now();
     my $timestamp = $time->ymd()."_".$time->hms();
 
-    my $new_transaction_data = decode_json $c->req->param('new_transaction_data');
+    my $transaction_json = $c->req->param('new_transaction_data');
+    # The existing JSON decoder consumes UTF-8 octets; Catalyst may supply
+    # decoded characters. Keep byte callers and every scientific value exact.
+    my $new_transaction_data = decode_json(utf8::is_utf8($transaction_json)
+        ? Encode::encode('UTF-8', $transaction_json) : $transaction_json);
 #    print STDERR "NEW TRANSACTION DATA =".Dumper($new_transaction_data)."\n";
 
     foreach my $each_transaction (@$new_transaction_data) {
@@ -2256,7 +2271,7 @@ sub add_transactions_using_list_POST : Args(0) {
         my $transaction_id = $transaction->store();
 #        print STDERR "TRANSACTION ID =".Dumper($transaction_id)."\n";
 
-        my $seedlot_rs = CXGN::Stock::Seedlot->new(schema => $schema, seedlot_id => $seedlot_stock_id);
+        my $seedlot_rs = CXGN::Stock::Seedlot->new(i18n => $c->i18n, schema => $schema, seedlot_id => $seedlot_stock_id);
         $seedlot_rs->set_current_count_property();
         $seedlot_rs->set_current_weight_property();
     }
@@ -2277,3 +2292,44 @@ sub add_transactions_using_list_POST : Args(0) {
 
 no Moose;
 __PACKAGE__->meta->make_immutable;
+
+# Display escaping only; raw names and stock values stay canonical.
+sub _sgn_seedlot_html {
+    my $value = shift;
+    return encode_entities(defined($value) ? "$value" : '', q{&<>"'});
+}
+
+# Plain validation messages enter HTML only after escaping.
+sub _sgn_seedlot_error_html {
+    my $escaped = _sgn_seedlot_html(shift);
+    $escaped =~ s/\n/<br>/g;
+    return $escaped;
+}
+
+
+# Preserve the native JSON codec/options. HTML iframe documents must not parse
+# JSON data as markup or decode its HTML error-string entities before JSON.parse.
+sub _sgn_seedlot_iframe_json {
+    my ($entity, $controller, $c) = @_;
+    my $json = JSON::MaybeXS::JSON()->new->utf8->convert_blessed;
+    if (my $options = $controller->{json_options_encode}) {
+        foreach my $option (keys %$options) {
+            $json->$option($options->{$option});
+        }
+    }
+    my $output = $json->encode($entity);
+    $output =~ s/([<>&])/sprintf('\\u%04x', ord($1))/ge;
+    return $output;
+}
+
+# The same map handles incoming text/html JSON: retain native decoding exactly.
+sub _sgn_seedlot_iframe_decode {
+    my ($body, $controller, $c) = @_;
+    my $json = JSON::MaybeXS::JSON()->new->utf8;
+    if (my $options = $controller->{json_options}) {
+        foreach my $option (keys %$options) {
+            $json->$option($options->{$option});
+        }
+    }
+    return $json->decode($body);
+}

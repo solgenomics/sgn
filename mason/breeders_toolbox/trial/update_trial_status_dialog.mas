@@ -9,30 +9,37 @@ $user_name
 % my $activities = $c->config->{'trial_activities'};
 % my @all_activities = ('Please select a status');
 % my @activity_list= split ',',$activities;
+% my %activity_display_labels = (
+%     'Please select a status' => $c->i18n->p('trial.status_dialog.sentinel', 'Please select a status'),
+%     "Started Phenotyping" => $c->i18n->p('trial.status_dialog.activity.started_phenotyping', "Started Phenotyping"),
+%     "Phenotyping Completed" => $c->i18n->p('trial.status_dialog.activity.phenotyping_completed', "Phenotyping Completed"),
+%     "Data Cleaning Completed" => $c->i18n->p('trial.status_dialog.activity.data_cleaning_completed', "Data Cleaning Completed"),
+%     "Data Analysis Completed" => $c->i18n->p('trial.status_dialog.activity.data_analysis_completed', "Data Analysis Completed"),
+% );
 % push @all_activities, @activity_list;
 
 <div class="modal fade" id="update_trial_status_dialog" name="update_trial_status_dialog" tabindex="-1" role="dialog" aria-labelledby="updateTrialStatusDialog">
     <div class="modal-dialog" role="document">
         <div class="modal-content">
             <div class="modal-header">
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                <h4 class="modal-title" id="updateTrialStatusDialog">Update <% $trial_name %> Status</h4>
+                <button type="button" class="close" data-dismiss="modal" aria-label="<% $c->i18n->p('trial.upload.dialog.close', "Close") |h %>"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="updateTrialStatusDialog"><% $c->i18n->p('trial.status_dialog.title', "Update %{trial_name} Status", {trial_name => $trial_name}) |h %></h4>
             </div>
             <div class="modal-body">
                 <div class="container-fluid">
                     <form class="form-horizontal">
                         <div class="form-group">
-                            <label class="col-sm-4 control-label">Trial Status: </label>
+                            <label class="col-sm-4 control-label"><% $c->i18n->p('trial.status_dialog.status_label', "Trial Status: ") |h %></label>
                             <div class="col-sm-6" >
                                 <select class="form-control" id="trial_status_select">
 % foreach my $activity(@all_activities){
-                                    <option value="<%$activity%>"><%$activity%></option>
+                                    <option value="<%$activity%>"><% (exists $activity_display_labels{$activity} ? $activity_display_labels{$activity} : $activity) |h %></option>
 %}
                                 </select>
                             </div>
                         </div>
                         <div class="form-group">
-                            <label class="col-sm-4 control-label" for="trial_activity_date">Trial Activity Date: </label>
+                            <label class="col-sm-4 control-label" for="trial_activity_date"><% $c->i18n->p('trial.status_dialog.date_label', "Trial Activity Date: ") |h %></label>
                             <div class="col-sm-6">
                                 <input class="form-control" id="trial_activity_date" title="activity_date" type="text" value=""/>
                             </div>
@@ -41,8 +48,8 @@ $user_name
                 </div>
             </div>
             <div class="modal-footer">
-                <button id="close_trial_set_phenotypes_fully_loaded_modal" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-                <button type="button" class="btn btn-primary" name="update_trial_status_submit" id="update_trial_status_submit" >Update</button>
+                <button id="close_trial_set_phenotypes_fully_loaded_modal" type="button" class="btn btn-default" data-dismiss="modal"><% $c->i18n->p('trial.upload.dialog.close', "Close") |h %></button>
+                <button type="button" class="btn btn-primary" name="update_trial_status_submit" id="update_trial_status_submit" ><% $c->i18n->p('trial.status_dialog.update', "Update") |h %></button>
             </div>
         </div>
     </div>
@@ -52,19 +59,19 @@ $user_name
     <div class="modal-dialog" role="document">
         <div class="modal-content">
             <div class="modal-header">
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                <h4 class="modal-title" id="updateTrialStatusMessage">Success</h4>
+                <button type="button" class="close" data-dismiss="modal" aria-label="<% $c->i18n->p('trial.upload.dialog.close', "Close") |h %>"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="updateTrialStatusMessage"><% $c->i18n->p('trial.status_dialog.success', "Success") |h %></h4>
             </div>
             <div class="modal-body">
                 <div class="container-fluid">
                     <p>
                         <span class="ui-icon ui-icon-circle-check" style="float: left; margin: 0 7px 50px 0;"></span>
-                        Trial status was updated successfully.
+                        <% $c->i18n->p('trial.status_dialog.success_message', "Trial status was updated successfully.") |h %>
                     </p>
                 </div>
             </div>
             <div class="modal-footer">
-                <button id="dismiss_update_message_dialog" type="button" class="btn btn-default" data-dismiss="modal">Close & Reload</button>
+                <button id="dismiss_update_message_dialog" type="button" class="btn btn-default" data-dismiss="modal"><% $c->i18n->p('trial.status_dialog.close_reload', "Close & Reload") |h %></button>
             </div>
         </div>
     </div>
@@ -94,13 +101,13 @@ jQuery(document).ready(function(){
     jQuery("#update_trial_status_submit").click(function() {
         var trial_status = jQuery("#trial_status_select").val();
         if (trial_status == 'Please select a status') {
-            alert("Please select a status");
+            alert(window.SGN && SGN.i18n ? SGN.i18n.p('trial.status_dialog.sentinel', 'Please select a status') : 'Please select a status');
             return;
         }
 
         var activity_date = jQuery("#trial_activity_date").val();
         if (activity_date == '') {
-            alert("Please select a date");
+            alert(window.SGN && SGN.i18n ? SGN.i18n.p('trial.status_dialog.select_date', 'Please select a date') : 'Please select a date');
             return;
         }
 
@@ -129,7 +136,7 @@ jQuery(document).ready(function(){
             },
             error: function(response){
                 jQuery('#working_modal').modal('hide');
-                alert('An error occurred updating trial status');
+                alert(window.SGN && SGN.i18n ? SGN.i18n.p('trial.status_dialog.update_error', 'An error occurred updating trial status') : 'An error occurred updating trial status');
             }
         });
     });

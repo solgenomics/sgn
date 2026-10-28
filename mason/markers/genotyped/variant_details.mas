@@ -1,4 +1,6 @@
-<%doc>
+<%once>
+use HTML::Entities ();
+</%once><%doc>
 =head1 NAME
 
 Variant Detail Page
@@ -34,11 +36,13 @@ A hashref containing the variants and the markers related to one or more of the 
 </%args>
 
 <%init>
+use SGN::I18N ();
+
     if ( !$variant_name ) {
-        print "<p><strong>ERROR: </strong>Missing variant name!</p>";
+        print ("<p><strong>" . SGN::I18N::translate($c->i18n, "marker.detail.error_label", "ERROR:", undef, {entities => '<>&'}) . " </strong>" . SGN::I18N::translate($c->i18n, "marker.detail.error_missing_variant_name", "Missing variant name!", undef, {entities => '<>&'}) . "</p>");
     }
     if ( !$markers ) {
-        print "<p><strong>ERROR: </strong>Missing variant markers!</p>";
+        print ("<p><strong>" . SGN::I18N::translate($c->i18n, "marker.detail.error_label", "ERROR:", undef, {entities => '<>&'}) . " </strong>" . SGN::I18N::translate($c->i18n, "marker.detail.error_missing_variant_markers", "Missing variant markers!", undef, {entities => '<>&'}) . "</p>");
     }
 
     # Set variant properties
@@ -88,7 +92,7 @@ A hashref containing the variants and the markers related to one or more of the 
 
 
 <!-- VARIANT DETAILS TABLE -->
-<&| /page/info_section.mas, title=>'Genotype locations', collapsible=>1, collapsed=>0 &>
+<&| /page/info_section.mas, anchor_title => 'Genotype locations', title=>HTML::Entities::encode_entities($c->i18n->p("marker.detail.genotype_locations", 'Genotype locations')), collapsible=>1, collapsed=>0 &>
     <& /markers/genotyped/genotype_locations.mas, markers => $markers &>
 </&>
 
@@ -96,7 +100,7 @@ A hashref containing the variants and the markers related to one or more of the 
 
 <!-- FLANKING SEQUENCE -->
 % if (defined $flanking_sequence_blast_db) {
-<&| /page/info_section.mas, title=>'Flanking Sequence', collapsible=>1, collapsed=>0 &>
+<&| /page/info_section.mas, anchor_title => 'Flanking Sequence', title=>HTML::Entities::encode_entities($c->i18n->p("marker.detail.flanking_sequence", 'Flanking Sequence')), collapsible=>1, collapsed=>0 &>
     <& /markers/genotyped/flanking_sequence.mas, blast_db => $flanking_sequence_blast_db, chrom => $chrom, pos => $pos &>
 </&>
 % }
@@ -104,21 +108,21 @@ A hashref containing the variants and the markers related to one or more of the 
 
 
 <!-- RELATED VARIANTS LINKS -->
-<&| /page/info_section.mas, title=>'Related Markers', collapsible=>1, collapsed=>0 &>
+<&| /page/info_section.mas, anchor_title => 'Related Markers', title=>HTML::Entities::encode_entities($c->i18n->p("marker.detail.related_markers", 'Related Markers')), collapsible=>1, collapsed=>0 &>
     <& /markers/genotyped/related_markers.mas, variant_name => $variant_name &>
 </&>
 
 
 
 <!-- EXTERNAL LINKS -->
-<&| /page/info_section.mas, title=>'External Links', collapsible=>1, collapsed=>0 &>
+<&| /page/info_section.mas, anchor_title => 'External Links', title=>HTML::Entities::encode_entities($c->i18n->p("accession.organism.external_links", 'External Links')), collapsible=>1, collapsed=>0 &>
     <& /markers/genotyped/external_links.mas, markers => $markers &>
 </&>
 
 
 
 <!-- JBROWSE LINKS -->
-<&| /page/info_section.mas, title=>'Genome Browser', collapsible=>1 &>
+<&| /page/info_section.mas, anchor_title => 'Genome Browser', title=>HTML::Entities::encode_entities($c->i18n->p("marker.detail.genome_browser", 'Genome Browser')), collapsible=>1 &>
     <& /feature/jbrowse_exact_match.mas, feature=> $jbrowse_location, src_feature=> $ref &>
 </&>
 
@@ -126,7 +130,7 @@ A hashref containing the variants and the markers related to one or more of the 
 
 
 <!-- SEQUENCE METADATA RESULTS -->
-<&| /page/info_section.mas, title=>'Sequence Metadata', collapsible=>1, collapsed=>0 &>
+<&| /page/info_section.mas, anchor_title => 'Sequence Metadata', title=>HTML::Entities::encode_entities($c->i18n->p("marker.detail.sequence_metadata", 'Sequence Metadata')), collapsible=>1, collapsed=>0 &>
   <& /tools/sequence_metadata/quick_query_sequence_metadata.mas, params=>\%smd_params &>
 </&>
 

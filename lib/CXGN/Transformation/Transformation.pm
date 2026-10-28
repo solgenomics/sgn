@@ -15,6 +15,9 @@ CXGN::Transformation::Transformation - an object representing transformation in 
 
 package CXGN::Transformation::Transformation;
 
+use SGN::I18N ();
+use CatalystX::GlobalContext '$c';
+
 use Moose;
 use SGN::Model::Cvterm;
 use Data::Dumper;
@@ -474,7 +477,13 @@ sub delete {
     if ($@) {
 	    print STDERR "An error occurred while deleting transformation id ".$transformation_stock_id."$@\n";
 	    $dbh->rollback();
-	    return $@;
+	    return do { my $ui_delete_error = $@; local $_; local $@; local $!; my SGN::I18N $ui_delete_error_i18n = $c && $c->can('i18n') ? $c->i18n : undef; if ($ui_delete_error_i18n && defined($ui_delete_error) && !ref($ui_delete_error)) { if (index($ui_delete_error, 'Transformation ID has associated transformants. Cannot delete.
+') == 0) { substr($ui_delete_error, 0, length('Transformation ID has associated transformants. Cannot delete.
+')) = $ui_delete_error_i18n->p('transformation.transformation_id_has_associated_transformants_cannot_delete', 'Transformation ID has associated transformants. Cannot delete.
+'); } elsif (index($ui_delete_error, 'This stock id is not a transformation ID. Cannot delete.
+') == 0) { substr($ui_delete_error, 0, length('This stock id is not a transformation ID. Cannot delete.
+')) = $ui_delete_error_i18n->p('transformation.this_stock_id_is_not_a_transformation_id_cannot_delete', 'This stock id is not a transformation ID. Cannot delete.
+'); } } $ui_delete_error; };
     } else {
 	    $dbh->commit();
 	    return 0;
@@ -547,7 +556,10 @@ sub set_as_control {
 
     if ($@) {
 	    print STDERR "An error occurred while setting transformation as a control for stock id ".$transformation_stock_id."$@\n";
-	    return $@;
+	    return do { my $ui_set_as_control_error = $@; local $_; local $@; local $!; my SGN::I18N $ui_set_as_control_error_i18n = $c && $c->can('i18n') ? $c->i18n : undef; if ($ui_set_as_control_error_i18n && defined($ui_set_as_control_error) && !ref($ui_set_as_control_error)) { if (index($ui_set_as_control_error, 'This transformation ID has already been set as a control.
+') == 0) { substr($ui_set_as_control_error, 0, length('This transformation ID has already been set as a control.
+')) = $ui_set_as_control_error_i18n->p('transformation.this_transformation_id_has_already_been_set_as_a_control.5ebf206', 'This transformation ID has already been set as a control.
+'); } } $ui_set_as_control_error; };
     } else {
 	    return 0;
     }
@@ -616,7 +628,10 @@ sub update_transformation_metadata {
 
     if ($@) {
         print STDERR "An error occurred while updating information for transformation stock id ".$transformation_stock_id."$@\n";
-        return $@;
+        return do { my $ui_update_transformation_metadata_error = $@; local $_; local $@; local $!; my SGN::I18N $ui_update_transformation_metadata_error_i18n = $c && $c->can('i18n') ? $c->i18n : undef; if ($ui_update_transformation_metadata_error_i18n && defined($ui_update_transformation_metadata_error) && !ref($ui_update_transformation_metadata_error)) { if (index($ui_update_transformation_metadata_error, 'This new transformation ID already exists in the database. Please use another name.
+') == 0) { substr($ui_update_transformation_metadata_error, 0, length('This new transformation ID already exists in the database. Please use another name.
+')) = $ui_update_transformation_metadata_error_i18n->p('transformation.this_new_transformation_id_already_exists_in_the_database_please_use', 'This new transformation ID already exists in the database. Please use another name.
+'); } } $ui_update_transformation_metadata_error; };
     } else {
         return 0;
     }

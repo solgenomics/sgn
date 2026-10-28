@@ -1,3 +1,7 @@
+<%once>
+use HTML::Entities ();
+</%once>
+
 <%doc>
 
 =head1 NAME 
@@ -32,18 +36,14 @@ if ($pop_id)  {
 
 </%perl>
 
-<& /page/page_title.mas, title => "Step 6: Confirmation" &>
-<&| /page/info_section.mas, title => "Confirmation", subtitle => $guide &>
+<& /page/page_title.mas, title => HTML::Entities::encode_entities($c->i18n->p("analysis.qtl.ui.step_6_confirmation", "Step 6: Confirmation")) &>
+<&| /page/info_section.mas, anchor_title => "Confirmation", title => HTML::Entities::encode_entities($c->i18n->p("analysis.qtl.ui.confirmation", "Confirmation")), subtitle => $guide &>
  <form action="/phenome/qtl_load.pl" method="POST" enctype="MULTIPART/FORM-DATA">  
     <table cellspacing=20>
     <tr>
-      <td><b><p>You have successfully uploaded your QTL data.</p> 
-           <p>On the next page you will see the population data summary. 
-             The qtl analysis is performed on-the-fly and you need to click the 
-             graph icon  corresponding to the trait of your interest to proceed 
-             with the QTL mapping analysis. The QTL analysis takes a few minutes, 
-             so please be patient. </p>
-          <p>To continue to the QTL analysis page, follow the link below:</p>
+      <td><b><p><% $c->i18n->p("analysis.qtl.ui.you_have_successfully_uploaded_your_qtl_data", "You have successfully uploaded your QTL data.") |h %></p><% ' ' %>
+           <p><% $c->i18n->p("analysis.qtl.ui.on_the_next_page_you_will_see_the_population_data", "On the next page you will see the population data summary. \n             The qtl analysis is performed on-the-fly and you need to click the \n             graph icon  corresponding to the trait of your interest to proceed \n             with the QTL mapping analysis. The QTL analysis takes a few minutes, \n             so please be patient.") |h %> </p>
+          <p><% $c->i18n->p("analysis.qtl.ui.to_continue_to_the_qtl_analysis_page_follow_the_link", "To continue to the QTL analysis page, follow the link below:") |h %></p>
           <% $pop_link %></b>
       </td>
      </tr>

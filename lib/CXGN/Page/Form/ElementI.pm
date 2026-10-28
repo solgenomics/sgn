@@ -71,6 +71,7 @@ sub new {
     my $class = shift;
     my $self = bless {}, $class;
     my %args = @_;
+    $self->{i18n} = $args{i18n};
     if (!$args{field_name}) {
 	my $args_list = "";
 	foreach my $k (keys %args) {

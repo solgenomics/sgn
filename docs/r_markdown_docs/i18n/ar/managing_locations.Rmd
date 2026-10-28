@@ -1,0 +1,19 @@
+# إدارة المواقع {#managing-locations}
+
+يمكن إدارة مواقع الحقول من صفحة “**إدارة المواقع**”. تُرتب المواقع في قاعدة البيانات حسب برامج التربية، ولكل موقع رابط إلى التجارب التي أُجريت فيه. لإضافة موقع، انقر زر “تحميل مواقع جديدة” الذي يفتح نموذج “تحميل المواقع”.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/image141.png')
+```
+
+يوضح قسم "تحميل المواقع" كيفية إعداد جدول بيانات بمعلومات المواقع لرفعها. الحقول المطلوبة هي: Name وabbreviation وcountry code وcountry name وprogram وtype وlatitute وlongitude وelevation. أما NOAA station ID فاختياري. أرفق جدول البيانات بالنموذج واضغط "رفع" لإضافة المواقع إلى قاعدة البيانات.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/image187.png')
+```
+
+يمكن أيضًا عرض المواقع وإضافتها عبر الخريطة. مرر المؤشر فوق أيقونة لعرض تفاصيل الموقع والتجارب المرتبطة به. انقر الخريطة لفتح نافذة الموقع الجديد. أدخل المعلومات نفسها المستخدمة في جدول البيانات لإضافة الموقع.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/location_map.png')
+```

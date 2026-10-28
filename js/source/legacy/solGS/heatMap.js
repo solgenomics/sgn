@@ -18,7 +18,7 @@ solGS.heatmap = {
     var axisMode = heatmapArgs.axis_mode || 2;
 
     if (heatmapCanvasDiv == null) {
-      alert("The heatmap canvas div element is missing.");
+      alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.heatmap_canvas_missing", "The heatmap canvas div element is missing.") : "The heatmap canvas div element is missing."));
     }
 
     if (jQuery(heatmapPlotDivId).length == 0) {
@@ -58,7 +58,7 @@ solGS.heatmap = {
     if (heatmapInputData) {
         parsedHeatmaprInputData = JSON.parse(heatmapInputData);
     } else {
-        alert(`The heatmap output data is missing: ${heatmapInputData}`);
+        alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.heatmap_output_missing", "The heatmap output data is missing: %{data}", {"data": String(heatmapInputData)}) : `The heatmap output data is missing: ${heatmapInputData}`));
         return;
     }
 
@@ -277,7 +277,7 @@ solGS.heatmap = {
 
           if (parsedScatterInputData) {
             jQuery("#" + scatterPlotMsgDivId)
-              .html("Scatter plot: " + rowLabel + " vs. " + colLabel)
+              .html((window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.heatmap_scatter_title", "Scatter plot: %{row} vs. %{column}", {"row": String(rowLabel), "column": String(colLabel)}) : "Scatter plot: " + rowLabel + " vs. " + colLabel))
               .show();
 
             var xData = [];
@@ -343,8 +343,8 @@ solGS.heatmap = {
 
     if (heatmapCanvasDiv.match(/kinship/)) {
       legendValues.push(
-        [legendValues.length + 1, "Diag: inbreeding coefficients"],
-        [legendValues.length + 2, "Off-diag: kinship coefficients"]
+        [legendValues.length + 1, (window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.heatmap_diagonal_legend", "Diag: inbreeding coefficients") : "Diag: inbreeding coefficients")],
+        [legendValues.length + 2, (window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.heatmap_offdiagonal_legend", "Off-diag: kinship coefficients") : "Off-diag: kinship coefficients")]
       );
     }
 

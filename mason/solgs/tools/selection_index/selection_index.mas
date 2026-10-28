@@ -26,7 +26,7 @@ $training_pop_name
 <%perl>
 
  my $pop_type = $training_pop_id =~ /[A-Za-z]/ ? 'list_training' : 'training';
- my $si_tooltip = 'The input form takes numbers, including multiplication formulas, e.g., 2*1.5*2.3';
+ my $si_tooltip = $c->i18n->p("solgs.interface.the_input_form_takes_numbers_including_multiplication_formulas_e_g_2_1_5_2_3", "The input form takes numbers, including multiplication formulas, e.g., 2*1.5*2.3");
 </%perl>
 
 <& /util/import_javascript.mas, classes => [ "solGS.selectionIndex", "solGS.histogram"] &>
@@ -34,17 +34,17 @@ $training_pop_name
 <link rel="stylesheet" type="text/css" href="https://stackpath.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" />
 
 
-<&| /page/info_section.mas,
+<&| /page/info_section.mas, anchor_title => "Selection index calculator",
   collapsible => 1,
   collapsed  => 0,
-  title      => "Selection index calculator"
+  title      => HTML::Entities::encode_entities($c->i18n->p("solgs.interface.selection_index_calculator", "Selection index calculator"))
   &>
 
   <div id="si_canvas">
 
     <div class="row">
       <div class="form-group col-sm-3" id="si_select_pops_div" style="margin-right:35px"></div>
-      <div id="si_help"><p> And assign relative weights to traits.<i style="color:#5cb85c;" class="fa fa-question-circle" id="si_tooltip" title="<% $si_tooltip %>"> </i></p></div>
+      <div id="si_help"><p><% $c->i18n->p("solgs.interface.and_assign_relative_weights_to_traits", " And assign relative weights to traits.") |h %><i style="color:#5cb85c;" class="fa fa-question-circle" id="si_tooltip" title="<% $si_tooltip %>"> </i></p></div>
     </div>
 
    
@@ -70,3 +70,7 @@ $training_pop_name
   </div>
 
 </&>
+
+<%once>
+use HTML::Entities ();
+</%once>

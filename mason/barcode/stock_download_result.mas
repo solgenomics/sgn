@@ -8,13 +8,13 @@ $file => ''
 $filetype => ''
 </%args>
 
-<& /page/page_title.mas, title=>'Download Barcodes' &>
+<& /page/page_title.mas, title=>HTML::Entities::encode_entities($c->i18n->p("barcode.helper.download_barcodes", 'Download Barcodes')) &>
 
 % if (!@not_found && !$error) {
-  All stocks in the list have been found in the database. Please click the link below to download the barcode label file.<br />
+  <% $c->i18n->p("barcode.helper.all_stocks_in_the_list_have_been_found_in_the", "All stocks in the list have been found in the database. Please click the link below to download the barcode label file.") |h %><br />
 % }
 % elsif ($error){
-    <b>Download Plot Phenotyping Barcode </b>is <%$error%> For general barcode printing use <b>Download Stock Barcodes section.</b>
+    <b><% $c->i18n->p("barcode.helper.download_plot_phenotyping_barcode", "Download Plot Phenotyping Barcode") |h %> </b>is <%$error%> For general barcode printing use <b><% $c->i18n->p("barcode.helper.download_stock_barcodes_section", "Download Stock Barcodes section.") |h %></b>
 % }
 % else {
   The following <% scalar(@not_found) %> stocks were not found in the database:<br />
@@ -30,7 +30,7 @@ $filetype => ''
 
 %   }
 %   else {
-    No stocks were found. Please verify your input and try again.
+    <% $c->i18n->p("barcode.helper.no_stocks_were_found_please_verify_your_input_and_try", "No stocks were found. Please verify your input and try again.") |h %>
 %   }
 
 
@@ -40,3 +40,7 @@ $filetype => ''
 <br /><br />
 <a target="_blank" href="<% $file %>" >Download <% $filetype %> file</a>
 %}
+
+<%once>
+use HTML::Entities ();
+</%once>

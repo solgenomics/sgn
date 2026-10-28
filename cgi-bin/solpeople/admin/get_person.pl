@@ -10,5 +10,5 @@ my $sth = $dbh->prepare("select username, last_access_time from sp_person where 
 die "Id is not integer." unless $id > 0;
 $sth->execute("$id");
 my ($name, $time) = $sth->fetchrow_array();
-print "<tr><td>$name</td><td>$time</tr>"
+print "<tr><td>$name</td><td>$time</tr>";
   

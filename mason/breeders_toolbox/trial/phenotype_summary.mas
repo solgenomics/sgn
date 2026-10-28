@@ -1,3 +1,7 @@
+<%once>
+use HTML::Entities ();
+</%once>
+
 
 <%args>
 $trial_id
@@ -51,23 +55,23 @@ input[type="text"] {
     <form class="form-horizontal" role="form" >
         <div style="display: flex; align-items: flex-start; gap: 25px; width: max-content; margin: 0 auto;">
             <div>
-                <label for="summary_start_date">Start Date: </label>
+                <label for="summary_start_date"><% $c->i18n->p("trial.repetitive.start_date", "Start Date:") |h %> </label>
 	            <input type="text" id="summary_start_date" title="summary_start_date" />
             </div>
             <div>
-                <label for="summary_end_date">End Date: </label>
+                <label for="summary_end_date"><% $c->i18n->p("trial.card.raw_data.end_date", "End Date:") |h %> </label>
 	            <input type="text" id="summary_end_date" title="summary_end_date" />
             </div>
             <div>
-                <label>Data Level: </label>
+                <label><% $c->i18n->p("lists_datasets.download.data_level", "Data Level:") |h %> </label>
                 <div style="margin-top: 4px;">
 % if ($trial_stock_type eq 'analysis_instance') {
-                    <div><input type="radio" name="pheno_summary_table_data_level" id="pheno_summary_analysis_level" value="analysis_instance" checked> <label for="pheno_summary_analysis_level">Analysis values</label></div>
+                    <div><input type="radio" name="pheno_summary_table_data_level" id="pheno_summary_analysis_level" value="analysis_instance" checked> <label for="pheno_summary_analysis_level"><% $c->i18n->p("phenotype.analysis_values", "Analysis values") |h %></label></div>
 % } else {
-                    <div><input type="radio" name="pheno_summary_table_data_level" id="pheno_summary_plot_level" value="plots" checked> <label for="pheno_summary_plot_level">Plots</label></div>
-                    <div><input type="radio" name="pheno_summary_table_data_level" id="pheno_summary_subplot_level" value="subplots"> <label for="pheno_summary_subplot_level">Subplots</label></div>
-                    <div><input type="radio" name="pheno_summary_table_data_level" id="pheno_summary_plant_level" value="plants"> <label for="pheno_summary_plant_level">Plants</label></div>
-                    <div><input type="radio" name="pheno_summary_table_data_level" id="pheno_summary_tissue_sample_level" value="tissue_samples"> <label for="pheno_summary_tissue_sample_level">Tissue Samples</label></div>
+                    <div><input type="radio" name="pheno_summary_table_data_level" id="pheno_summary_plot_level" value="plots" checked> <label for="pheno_summary_plot_level"><% $c->i18n->p("global.graphical_filtering.plots", "Plots") |h %></label></div>
+                    <div><input type="radio" name="pheno_summary_table_data_level" id="pheno_summary_subplot_level" value="subplots"> <label for="pheno_summary_subplot_level"><% $c->i18n->p("fieldbook.export.subplots", "Subplots") |h %></label></div>
+                    <div><input type="radio" name="pheno_summary_table_data_level" id="pheno_summary_plant_level" value="plants"> <label for="pheno_summary_plant_level"><% $c->i18n->p("global.graphical_filtering.plants", "Plants") |h %></label></div>
+                    <div><input type="radio" name="pheno_summary_table_data_level" id="pheno_summary_tissue_sample_level" value="tissue_samples"> <label for="pheno_summary_tissue_sample_level"><% $c->i18n->p("fieldbook.export.tissue_samples", "Tissue Samples") |h %></label></div>
 % }
                 </div>
             </div>
@@ -75,11 +79,11 @@ input[type="text"] {
             <div style="display: flex; flex-direction: column; gap: 10px;">
                 <div style="display: flex; align-items: center; gap: 6px;">
                     <input type="checkbox" id="group_by_accession_check" title="group_by_accession_check" />
-                    <label for="group_by_accession_check">Group by accession</label>
+                    <label for="group_by_accession_check"><% $c->i18n->p("phenotype.group_by_accession", "Group by accession") |h %></label>
                 </div>
                 <div style="display: flex; align-items: center; gap: 6px;">
                     <input type="checkbox" id="group_by_treatments_check" title="group_by_treatments_check" />
-                    <label for="group_by_treatments_check">Group by treatments</label>
+                    <label for="group_by_treatments_check"><% $c->i18n->p("phenotype.group_by_treatments", "Group by treatments") |h %></label>
                 </div>
             </div>
 % }
@@ -87,7 +91,7 @@ input[type="text"] {
     </form>
     <br>
     <div style="display:flex; align-items:center; white-space:nowrap; width:70%; margin-center: auto;">
-        <label for="summary_phenotype_slider_range" style="margin-right: 10px;">Choose Date Range:</label>
+        <label for="summary_phenotype_slider_range" style="margin-right: 10px;"><% $c->i18n->p("phenotype.choose_date_range", "Choose Date Range:") |h %></label>
         <div id="summary_phenotype_slider_range" style="width: 80%; margin: 10px auto;"></div>
     </div>
     <hr>
@@ -112,16 +116,16 @@ input[type="text"] {
         </table>
     </div>
     <div>
-        <button type="button" class="selectAll-dt">Select All</button>
-        <button type="button" class="deselectAll-dt">Deselect All</button>
+        <button type="button" class="selectAll-dt"><% $c->i18n->p("global.search_wizard.select_all", "Select All") |h %></button>
+        <button type="button" class="deselectAll-dt"><% $c->i18n->p("phenotype.deselect_all", "Deselect All") |h %></button>
     </div>
     <br>
     <div class="panel panel-default">
         <div class="panel-body">
 
-            <&| /page/info_section.mas, title => 'Copy Selected Results to a List', collapsible=>1, collapsed=>0, subtitle=>'<i>Copy the names currently selected in the first column of the summary table to a new or exisiting list</i>'&>
+            <&| /page/info_section.mas, anchor_title => 'Copy Selected Results to a List', title => HTML::Entities::encode_entities($c->i18n->p("phenotype.copy_selected_results_to_a_list", 'Copy Selected Results to a List')), collapsible=>1, collapsed=>0, subtitle=>("<i>" . HTML::Entities::encode_entities($c->i18n->p("phenotype.copy_the_names_currently_selected_in_the_first_column_of", "Copy the names currently selected in the first column of the summary table to a new or existing list")) . "</i>")&>
             <br>
-            <p><em><span id="selected_row_count">0</span> row(s) selected.</em></p>
+            <p><em><span id="selected_row_count">0</span> <% $c->i18n->p("phenotype.row_s_selected", "row(s) selected.") |h %></em></p>
             <div style="text-align:right" id="names_to_list_menu"></div>
             <div id="selected_names" style="display: none;"></div>
             </&>
@@ -131,29 +135,29 @@ input[type="text"] {
 </div>
 
 <div class="well well-sm" id="raw_data_histogram_well">
-    <center><h4>Raw Data Histogram</h4></center><hr>
+    <center><h4><% $c->i18n->p("phenotype.raw_data_histogram", "Raw Data Histogram") |h %></h4></center><hr>
     <div id="trial_summary_hist_div">
         <div class="row">
             <div class="col-sm-8">
                 <form class="form-horizontal">
                     <div class="form-group form-group-sm">
-                        <label for="trial_summary_hist_dropdown" class="col-sm-2 control-label">Select:</label>
+                        <label for="trial_summary_hist_dropdown" class="col-sm-2 control-label"><% $c->i18n->p("phenotype.select", "Select:") |h %></label>
                         <div class="col-sm-10">
                             <div id="traits_assayed_dropdown">
                             </div>
                         </div>
                     </div>
                     <div class="form-group form-group-sm">
-                        <label class="col-sm-2 control-label">Data level: </label>
+                        <label class="col-sm-2 control-label"><% $c->i18n->p("phenotype.data_level", "Data level:") |h %> </label>
                         <div class="col-sm-10" >
                             <select class="form-control" id="display_trial_phenosummary_hist">
 %  if ($trial_stock_type eq 'analysis_instance') {
-                                <option id="phenosummary_hist_analysis_instance_level" value="analysis_instance">Values for Analysis</option>
+                                <option id="phenosummary_hist_analysis_instance_level" value="analysis_instance"><% $c->i18n->p("phenotype.values_for_analysis", "Values for Analysis") |h %></option>
 %  } else {
-                                <option id="phenosummary_hist_plot_level" value="plot">Plots</option>
-                                <option id="phenosummary_hist_plant_level" value="plant">Plants</option>
-                                <option id="phenosummary_hist_subplot_level" value="subplot">Subplots</option>
-                                <option id="phenosummary_hist_tissue_sample_level" value="tissue_sample">Tissue Samples</option>
+                                <option id="phenosummary_hist_plot_level" value="plot"><% $c->i18n->p("global.graphical_filtering.plots", "Plots") |h %></option>
+                                <option id="phenosummary_hist_plant_level" value="plant"><% $c->i18n->p("global.graphical_filtering.plants", "Plants") |h %></option>
+                                <option id="phenosummary_hist_subplot_level" value="subplot"><% $c->i18n->p("fieldbook.export.subplots", "Subplots") |h %></option>
+                                <option id="phenosummary_hist_tissue_sample_level" value="tissue_sample"><% $c->i18n->p("fieldbook.export.tissue_samples", "Tissue Samples") |h %></option>
 %  }
                             </select>
                         </div>
@@ -265,7 +269,7 @@ input[type="text"] {
                 }
             });
 	    }).fail( function(xhr, status, error) { 
-            alert('An error occurred!' + xhr.responseText);
+            alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("accession.files.files.error", "An error occurred!") : 'An error occurred!') + xhr.responseText);
             console.error("the status:", xhr.status);
             console.error("the error:", error);
         });
@@ -371,17 +375,17 @@ input[type="text"] {
         var tissue_samples_stock_text = '';
 
         if (type == 'family_name') {
-            plots_stock_text = 'Plots grouped by Family Name';
-            plants_stock_text = 'Plants grouped by Family Name';
-            tissue_samples_stock_text = 'Tissue Samples grouped by Family Name';
+            plots_stock_text = (window.SGN && window.SGN.i18n ? window.SGN.i18n.p("phenotype.plots_grouped_by_family_name", "Plots grouped by Family Name") : 'Plots grouped by Family Name');
+            plants_stock_text = (window.SGN && window.SGN.i18n ? window.SGN.i18n.p("phenotype.plants_grouped_by_family_name", "Plants grouped by Family Name") : 'Plants grouped by Family Name');
+            tissue_samples_stock_text = (window.SGN && window.SGN.i18n ? window.SGN.i18n.p("phenotype.tissue_samples_grouped_by_family_name", "Tissue Samples grouped by Family Name") : 'Tissue Samples grouped by Family Name');
         } else if (type == 'cross') {
-            plots_stock_text = 'Plots grouped by Cross Unique ID';
-            plants_stock_text = 'Plants grouped by Cross Unique ID';
-            tissue_samples_stock_text = 'Tissue Samples grouped by Cross Unique ID';
+            plots_stock_text = (window.SGN && window.SGN.i18n ? window.SGN.i18n.p("phenotype.plots_grouped_by_cross_unique_id", "Plots grouped by Cross Unique ID") : 'Plots grouped by Cross Unique ID');
+            plants_stock_text = (window.SGN && window.SGN.i18n ? window.SGN.i18n.p("phenotype.plants_grouped_by_cross_unique_id", "Plants grouped by Cross Unique ID") : 'Plants grouped by Cross Unique ID');
+            tissue_samples_stock_text = (window.SGN && window.SGN.i18n ? window.SGN.i18n.p("phenotype.tissue_samples_grouped_by_cross_unique_id", "Tissue Samples grouped by Cross Unique ID") : 'Tissue Samples grouped by Cross Unique ID');
         } else {
-            plots_stock_text = 'Plots grouped by Accession';
-            plants_stock_text = 'Plants grouped by Accession';
-            tissue_samples_stock_text = 'Tissue Samples grouped by Accession';
+            plots_stock_text = (window.SGN && window.SGN.i18n ? window.SGN.i18n.p("phenotype.plots_grouped_by_accession", "Plots grouped by Accession") : 'Plots grouped by Accession');
+            plants_stock_text = (window.SGN && window.SGN.i18n ? window.SGN.i18n.p("phenotype.plants_grouped_by_accession", "Plants grouped by Accession") : 'Plants grouped by Accession');
+            tissue_samples_stock_text = (window.SGN && window.SGN.i18n ? window.SGN.i18n.p("phenotype.tissue_samples_grouped_by_accession", "Tissue Samples grouped by Accession") : 'Tissue Samples grouped by Accession');
         }
         jQuery('#plots_stock_option').text(plots_stock_text);
         jQuery('#plants_stock_option').text(plants_stock_text);
@@ -396,6 +400,14 @@ input[type="text"] {
         var group_by_accession = jQuery('#group_by_accession_check').prop('checked') ? 1 : 0;
 
         //alert('datatables_display_phenosummary: START: '+start_date+' END: '+end_date);
+        var b22_summary_canonical_headers;
+        var b22_summary_export_options = {
+            format: {
+                header: function(data, column, node) {
+                    return b22_summary_canonical_headers[column];
+                }
+            }
+        };
         var summary_table = jQuery('#phenotype_summary_data').DataTable( {
             "lengthMenu": [ 10, 20, 50, 100, 500, 1000 ],
             "retrieve": true,
@@ -409,14 +421,40 @@ input[type="text"] {
                 'style':    'multi'
             },
             "buttons":  [
-                'pageLength','copy', 'excel', 'csv', 'pdf'
+                'pageLength',
+                { extend: 'copy', exportOptions: b22_summary_export_options },
+                { extend: 'excel', exportOptions: b22_summary_export_options },
+                { extend: 'csv', exportOptions: b22_summary_export_options },
+                { extend: 'pdf', exportOptions: b22_summary_export_options }
             ],
             "ajax": '/ajax/breeders/trial/'+ trial_id + '/phenotypes?display='+jQuery('input[name="pheno_summary_table_data_level"]:checked').val() + '&trial_stock_type='+type + '&start_date='+start_date+'&end_date='+end_date+'&include_dateless_items=1&group_by_treatments='+group_by_treatments+'&group_by_accession='+group_by_accession,
             "processing": true,
             'language':{
-                "zeroRecords": "No data available",
-                "processing": "Loading..."
+                "zeroRecords": jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("phenotype.no_data_available", "No data available") : "No data available")).html(),
+                "processing": jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("global.dataset_publish.loading", "Loading...") : "Loading...")).html()
             }
+        });
+
+        b22_summary_canonical_headers = summary_table.buttons.exportData({rows: []}).header;
+        var b22_summary_display_headers = [
+            (window.SGN && window.SGN.i18n ? window.SGN.i18n.p("accession.stock.phenotype.header.trait", "Trait") : "Trait"),
+            (window.SGN && window.SGN.i18n ? window.SGN.i18n.p("accession.usage.header.mean", "Mean") : "Mean"),
+            (window.SGN && window.SGN.i18n ? window.SGN.i18n.p("accession.usage.header.min", "Min") : "Min"),
+            (window.SGN && window.SGN.i18n ? window.SGN.i18n.p("accession.usage.header.max", "Max") : "Max"),
+            (window.SGN && window.SGN.i18n ? window.SGN.i18n.p("accession.usage.header.stddev", "Std Dev") : "Std Dev"),
+            "CV",
+            (window.SGN && window.SGN.i18n ? window.SGN.i18n.p("accession.stock.phenotype.header.count", "Count") : "Count"),
+            (window.SGN && window.SGN.i18n ? window.SGN.i18n.p("phenotype.percent_missing", "Percent Missing") : "Percent Missing"),
+            (window.SGN && window.SGN.i18n ? window.SGN.i18n.p("phenotype.histogram", "Histogram") : "Histogram")
+        ];
+        if (group_by_treatments) {
+            b22_summary_display_headers.unshift((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("phenotype.treatment", "Treatment") : "Treatment"));
+        }
+        if (group_by_accession) {
+            b22_summary_display_headers.unshift(type === 'family_name' ? (window.SGN && window.SGN.i18n ? window.SGN.i18n.p("accession.forms.family_name", "Family Name") : "Family Name") : type === 'cross' ? (window.SGN && window.SGN.i18n ? window.SGN.i18n.p("cross.ui.cross_unique_id.923bfbc", "Cross Unique ID") : "Cross Unique ID") : (window.SGN && window.SGN.i18n ? window.SGN.i18n.p("global.index_logged_in_user.accession", "Accession") : "Accession"));
+        }
+        summary_table.columns().every(function(column) {
+            jQuery(this.header()).text(b22_summary_display_headers[column]);
         });
 
         summary_table.clear().draw();
@@ -518,7 +556,7 @@ input[type="text"] {
                       trait_summary_hist_change(this.value);
                     });
 
-                    jQuery('#traits_assayed_histogram_cvterm_link').html("<a href='/cvterm/"+response.traits_assayed[0][0][0]+"/view'>Definition</a>");
+                    jQuery('#traits_assayed_histogram_cvterm_link').html("<a href='/cvterm/"+response.traits_assayed[0][0][0]+("/view'>" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("phenotype.definition", "Definition") : "Definition")).html() + "</a>"));
 
 
                 let trait_value = jQuery('#trial_summary_hist_dropdown').val();
@@ -537,7 +575,7 @@ input[type="text"] {
                                 alert(response.error);
                             }
                             else if (response.status!="success"){
-                                alert("Problem loading plant/plot data: "+response.status);
+                                alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("phenotype.problem_loading_plant_plot_data", "Problem loading plant/plot data: ") : "Problem loading plant/plot data: ")+response.status);
                             }
                             else {
                                 draw_histogram(response.data, d3.select("#trial_summary_hist").node());
@@ -545,18 +583,18 @@ input[type="text"] {
                         },
                         error: function(response) {
                             jQuery("#working_modal").modal("hide");
-                            alert('An error occured retrieving trait histogram data.');
+                            alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("phenotype.an_error_occured_retrieving_trait_histogram_data", "An error occurred retrieving trait histogram data.") : 'An error occurred retrieving trait histogram data.'));
                         }
                     });
                 } else {
                     jQuery("#working_modal").modal("hide");
-                    jQuery("#trial_summary_hist").html("<center><h4>There is no data to plot.</h4></center>");
+                    jQuery("#trial_summary_hist").html(("<center><h4>" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("phenotype.there_is_no_data_to_plot", "There is no data to plot.") : "There is no data to plot.")).html() + "</h4></center>"));
                 }
 
             },
             error: function(response){
                 jQuery("#working_modal").modal("hide");
-                alert('Error retrieving traits assayed in this trial');
+                alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("phenotype.error_retrieving_traits_assayed_in_this_trial", "Error retrieving traits assayed in this trial") : 'Error retrieving traits assayed in this trial'));
             }
 
         });
@@ -601,7 +639,7 @@ input[type="text"] {
 
     function trait_summary_hist_change(value) {
         jQuery("#trial_summary_hist_dropdown").val(value);
-        jQuery('#traits_assayed_histogram_cvterm_link').html("<a href='/cvterm/"+value+"/view'>Definition</a>");
+        jQuery('#traits_assayed_histogram_cvterm_link').html("<a href='/cvterm/"+value+("/view'>" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("phenotype.definition", "Definition") : "Definition")).html() + "</a>"));
         var start_date = jQuery('#summary_start_date').val();
         var end_date = jQuery('#summary_end_date').val();
     
@@ -618,7 +656,7 @@ input[type="text"] {
                     alert(response.error);
                 }
                 else if (response.status!="success"){
-                    alert("Problem loading plant/plot data: "+response.status);
+                    alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("phenotype.problem_loading_plant_plot_data", "Problem loading plant/plot data: ") : "Problem loading plant/plot data: ")+response.status);
                 }
                 else {
                     draw_histogram(response.data, d3.select("#trial_summary_hist").node());
@@ -626,7 +664,7 @@ input[type="text"] {
             },
             error: function(response) {
                 jQuery("#working_modal").modal("hide");
-                alert('An error occured retrieving trait histogram data.');
+                alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("phenotype.an_error_occured_retrieving_trait_histogram_data", "An error occurred retrieving trait histogram data.") : 'An error occurred retrieving trait histogram data.'));
             }
         });
     }

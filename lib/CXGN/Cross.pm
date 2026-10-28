@@ -28,6 +28,8 @@ CXGN::Cross - an object representing a Cross in the database
 package CXGN::Cross;
 
 use Moose;
+use SGN::I18N ();
+use CatalystX::GlobalContext '$c';
 use SGN::Model::Cvterm;
 use Data::Dumper;
 use JSON;
@@ -999,7 +1001,31 @@ sub delete {
     if ($@) {
 	print STDERR "An error occurred while deleting cross id ".$self->cross_stock_id()."$@\n";
 	$dbh->rollback();
-	return $@;
+	return do {
+            my $ui_delete_error = $@;
+            local $_;
+            local $@;
+            local $!;
+            my SGN::I18N $ui_delete_i18n = $c && $c->can('i18n') ? $c->i18n : undef;
+            if ($ui_delete_i18n && defined($ui_delete_error) && !ref($ui_delete_error)) {
+                if ($ui_delete_error =~ /\ACross has associated seedlot: (.*)\. Cannot delete\.\n/s) {
+                    my $ui_delete_name = $1;
+                    my $ui_delete_length = length($&);
+                    substr($ui_delete_error, 0, $ui_delete_length) = $ui_delete_i18n->p("cross.model.cross_delete_seedlot", "Cross has associated seedlot: %{name}. Cannot delete.\n", {name => "" . $ui_delete_name});
+                } elsif ($ui_delete_error =~ /\ACross has associated trial: (.*)\. Cannot delete\.\n/s) {
+                    my $ui_delete_name = $1;
+                    my $ui_delete_length = length($&);
+                    substr($ui_delete_error, 0, $ui_delete_length) = $ui_delete_i18n->p("cross.model.cross_delete_trial", "Cross has associated trial: %{name}. Cannot delete.\n", {name => "" . $ui_delete_name});
+                } elsif ($ui_delete_error =~ /\ACross has associated data\. \((.*?) trials, (.*?) traits and (.*?) genotypes\. Cannot delete\.\.\.\n/s) {
+                    my ($ui_delete_trials, $ui_delete_traits, $ui_delete_genotypes) = ($1, $2, $3);
+                    my $ui_delete_length = length($&);
+                    substr($ui_delete_error, 0, $ui_delete_length) = $ui_delete_i18n->p("cross.model.cross_delete_data", "Cross has associated data. (%{trials} trials, %{traits} traits and %{genotypes} genotypes. Cannot delete...\n", {trials => "" . $ui_delete_trials, traits => "" . $ui_delete_traits, genotypes => "" . $ui_delete_genotypes});
+                } elsif (index($ui_delete_error, "This stock id is not a cross. Cannot delete.\n") == 0) {
+                    substr($ui_delete_error, 0, length("This stock id is not a cross. Cannot delete.\n")) = $ui_delete_i18n->p("cross.model.cross_delete_type", "This stock id is not a cross. Cannot delete.\n");
+                }
+            }
+            $ui_delete_error;
+        };
     }
     else {
 	$dbh->commit();
@@ -1084,7 +1110,7 @@ sub get_cross_tissue_culture_samples {
 =head2 get_pedigree_male_parents
 
     Class method.
-    Returns all male parents that were crossed with a spefified female parent.
+    Returns all male parents that were crossed with a specified female parent.
     Example: my @male_parents = CXGN::Cross->get_pedigree_male_parents($schema, $pedigree_female_parent)
 
 =cut
@@ -1123,7 +1149,7 @@ sub get_pedigree_male_parents {
 =head2 get_pedigree_female_parents
 
     Class method.
-    Returns all female parents that were crossed with a spefified male parent.
+    Returns all female parents that were crossed with a specified male parent.
     Example: my @female_parents = CXGN::Cross->get_pedigree_female_parents($schema, $pedigree_male_parent)
 
 =cut
@@ -1163,7 +1189,7 @@ sub get_pedigree_female_parents {
 =head2 get_cross_male_parents
 
     Class method.
-    Returns all male parents that were crossed with a spefified male parent.
+    Returns all male parents that were crossed with a specified male parent.
     Example: my @male_parents = CXGN::Cross->get_cross_male_parents($schema, $cross_female_parent)
 
 =cut
@@ -1203,7 +1229,7 @@ sub get_cross_male_parents {
 =head2 get_cross_female_parents
 
     Class method.
-    Returns all female parents that were crossed with a spefified male parent.
+    Returns all female parents that were crossed with a specified male parent.
     Example: my @male_parents = CXGN::Cross->get_cross_male_parents($schema, $cross_female_parent)
 
 =cut

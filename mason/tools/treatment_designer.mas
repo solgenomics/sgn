@@ -3,77 +3,77 @@
 </%args>
 
 <div style="text-align: center; margin: 2em 0">
-   <h2 style="margin-bottom: 1em">Design new experimental treatments</h2>
-   <h4>Experimental treatments are applied to the stocks of a trial. Subplots, plants, and tissue samples inherit treatments from their parent stocks.</h4>
+   <h2 style="margin-bottom: 1em"><% $c->i18n->p("transformation.root.design_new_experimental_treatments", "Design new experimental treatments") |h %></h2>
+   <h4><% $c->i18n->p("transformation.root.experimental_treatments_are_applied_to_the_stocks_of_a_trial", "Experimental treatments are applied to the stocks of a trial. Subplots, plants, and tissue samples inherit treatments from their parent stocks.") |h %></h4>
 
-   <h4> Check the <a href='/search/treatments'>treatment search page</a> to see if your treatment has already been made before designing new treatments.</h4>
+   <h4> <% $c->i18n->p("phenotype.root.check_the", "Check the") |h %> <a href='/search/treatments'><% $c->i18n->p("transformation.root.treatment_search_page", "treatment search page") |h %></a> <% $c->i18n->p("transformation.root.to_see_if_your_treatment_has_already_been_made_before", "to see if your treatment has already been made before designing new treatments.") |h %></h4>
 
     <br>
 
    <div class="container-fluid">
         <form class="form-horizontal" role="form" method="post" id="new_treatment_design_form" name="new_treatment_design_form">
         <div class="form-group">
-                <label class="col-sm-3 control-label"> New treatment name: </label>
+                <label class="col-sm-3 control-label"> <% $c->i18n->p("transformation.root.new_treatment_name", "New treatment name:") |h %> </label>
                 <div class="col-sm-9">
-                    <input style="width:70%;" class="form-control" id="new_treatment_name" name="new_treatment_name" type="text" placeholder="Pipes (|)  will be removed from name."/>
+                    <input style="width:70%;" class="form-control" id="new_treatment_name" name="new_treatment_name" type="text" placeholder="<% $c->i18n->p("phenotype.root.pipes_will_be_removed_from_name", "Pipes (|)  will be removed from name.") |h %>"/>
                 </div>
             </div>
             <div class="form-group">
-                <label class="col-sm-3 control-label">Definition:</label>
+                <label class="col-sm-3 control-label"><% $c->i18n->p("phenotype.root.definition.17f9df6", "Definition:") |h %></label>
                 <div class="col-sm-9">
-                    <textarea style="width:70%;" class="form-control" id="new_treatment_definition" name="new_treatment_definition" placeholder="Make it descriptive. Be sure to describe category meanings if using categorical data."></textarea>
+                    <textarea style="width:70%;" class="form-control" id="new_treatment_definition" name="new_treatment_definition" placeholder="<% $c->i18n->p("phenotype.root.make_it_descriptive_be_sure_to_describe_category_meanings_if", "Make it descriptive. Be sure to describe category meanings if using categorical data.") |h %>"></textarea>
                 </div>
             </div>
             <div class="form-group">
-                <label class="col-sm-3 control-label">Treatment format:</label>
+                <label class="col-sm-3 control-label"><% $c->i18n->p("transformation.root.treatment_format", "Treatment format:") |h %></label>
                 <div class="col-sm-9">
                     <select style="width:70%;" class="form-control" id="new_treatment_format_select" name="new_treatment_format_select" type="select">
-                        <option value="numeric" selected>Numeric</option>
-                        <option value="categorical">Categorical</option>
-                        <option value="percent">Percent</option>
-                        <option value="boolean">Boolean</option>
-                        <option value="date">Date</option>
-                        <option value="text">Text</option>
-                        <option value="counter">Counter</option>
-                        <option value="ontology">Ontology (parent to child terms)</option>
+                        <option value="numeric" selected><% $c->i18n->p("phenotype.root.numeric", "Numeric") |h %></option>
+                        <option value="categorical"><% $c->i18n->p("phenotype.root.categorical", "Categorical") |h %></option>
+                        <option value="percent"><% $c->i18n->p("phenotype.root.percent", "Percent") |h %></option>
+                        <option value="boolean"><% $c->i18n->p("phenotype.root.boolean", "Boolean") |h %></option>
+                        <option value="date"><% $c->i18n->p("global.file_dump_share_files.date", "Date") |h %></option>
+                        <option value="text"><% $c->i18n->p("lists_datasets.bulk.text", "Text") |h %></option>
+                        <option value="counter"><% $c->i18n->p("phenotype.root.counter", "Counter") |h %></option>
+                        <option value="ontology"><% $c->i18n->p("phenotype.root.ontology_parent_to_child_terms", "Ontology (parent to child terms)") |h %></option>
                     </select>
                 </div>
             </div>
             <div class="form-group" id="new_treatment_repeat_select_container">
-                <label class="col-sm-3 control-label">Application type:</label>
+                <label class="col-sm-3 control-label"><% $c->i18n->p("transformation.root.application_type", "Application type:") |h %></label>
                 <div class="col-sm-9">
                     <select style="width:70%;" class="form-control" id="new_treatment_repeat_select" name="new_treatment_repeat_select" type="select">
-                        <option value="single" selected>Single application</option>
-                        <option value="multiple">Repeated application</option>
-                        <option value="time_series">Time series</option>
+                        <option value="single" selected><% $c->i18n->p("transformation.root.single_application", "Single application") |h %></option>
+                        <option value="multiple"><% $c->i18n->p("transformation.root.repeated_application", "Repeated application") |h %></option>
+                        <option value="time_series"><% $c->i18n->p("phenotype.root.time_series", "Time series") |h %></option>
                     </select>
                 </div>
             </div>
             <div class="form-group" id="new_treatment_default_value_container">
-                <label class="col-sm-3 control-label" id="new_treatment_default_value_label">Default value:</label>
+                <label class="col-sm-3 control-label" id="new_treatment_default_value_label"><% $c->i18n->p("phenotype.root.default_value", "Default value:") |h %></label>
                 <div class="col-sm-9">
-                    <input style="width:70%;" class="form-control" id="new_treatment_default_value" name="new_treatment_default_value" type="text" placeholder="(Optional)"/>
+                    <input style="width:70%;" class="form-control" id="new_treatment_default_value" name="new_treatment_default_value" type="text" placeholder="<% $c->i18n->p("phenotype.root.optional", "(Optional)") |h %>"/>
                 </div>
             </div>
             <div class="form-group" id="new_treatment_minimum_value_container">
-                <label class="col-sm-3 control-label">Minimum value:</label>
+                <label class="col-sm-3 control-label"><% $c->i18n->p("phenotype.root.minimum_value", "Minimum value:") |h %></label>
                 <div class="col-sm-9">
-                    <input style="width:70%;" class="form-control" id="new_treatment_min_value" name="new_treatment_min_value" type="text" placeholder="(Optional)"/>
+                    <input style="width:70%;" class="form-control" id="new_treatment_min_value" name="new_treatment_min_value" type="text" placeholder="<% $c->i18n->p("phenotype.root.optional", "(Optional)") |h %>"/>
                 </div>
             </div>
             <div class="form-group" id="new_treatment_maximum_value_container">
-                <label class="col-sm-3 control-label">Maximum value:</label>
+                <label class="col-sm-3 control-label"><% $c->i18n->p("phenotype.root.maximum_value", "Maximum value:") |h %></label>
                 <div class="col-sm-9">
-                    <input style="width:70%;" class="form-control" id="new_treatment_max_value" name="new_treatment_max_value" type="text" placeholder="(Optional)"/>
+                    <input style="width:70%;" class="form-control" id="new_treatment_max_value" name="new_treatment_max_value" type="text" placeholder="<% $c->i18n->p("phenotype.root.optional", "(Optional)") |h %>"/>
                 </div>
             </div>
             <div class="form-group" id="new_treatment_add_categories_container" style="display:none;">
-                <label class="col-sm-3 control-label">Add categories:</label>
+                <label class="col-sm-3 control-label"><% $c->i18n->p("phenotype.root.add_categories", "Add categories:") |h %></label>
                 <div class="col-sm-9">
                     <table style="width:70%;">
                         <tr>
-                            <td><input class="form-control" id="new_treatment_add_category" name="new_treatment_add_category" type="text" placeholder="Optional. No special characters."/></td>
-                            <td style="width:25%"><input  class="form-control" id="new_treatment_category_ordinal" name="new_treatment_category_ordinal" type="number" placeholder="Ordinate"></td>
+                            <td><input class="form-control" id="new_treatment_add_category" name="new_treatment_add_category" type="text" placeholder="<% $c->i18n->p("phenotype.root.optional_no_special_characters", "Optional. No special characters.") |h %>"/></td>
+                            <td style="width:25%"><input  class="form-control" id="new_treatment_category_ordinal" name="new_treatment_category_ordinal" type="number" placeholder="<% $c->i18n->p("phenotype.root.ordinate", "Ordinate") |h %>"></td>
                             <td><button id="new_treatment_add_category_btn" class="btn btn-small btn-success">+</button></td>
                         </tr>
                     </table>
@@ -83,12 +83,11 @@
                 </div>
             </div>
             <div class="form-group" id="chain_parent_term_container">
-                <label class="col-sm-3 control-label" id="chain_parent_term"><span class="glyphicon glyphicon-question-sign" style="color:blue;font-size:18px" title="Should not be a variable term.
-Will be the treatment root term by default if none are added."></span>&nbsp;Chain to existing term(s):</label>
+                <label class="col-sm-3 control-label" id="chain_parent_term"><span class="glyphicon glyphicon-question-sign" style="color:blue;font-size:18px" title="<% $c->i18n->p("transformation.root.should_not_be_a_variable_term_will_be_the_treatment", "Should not be a variable term.\nWill be the treatment root term by default if none are added.") |h %>"></span>&nbsp;<% $c->i18n->p("phenotype.root.chain_to_existing_term_s", "Chain to existing term(s):") |h %></label>
                 <div class="col-sm-9">
                     <table style="width:70%;">
                         <tr>
-                            <td><input class="form-control" id="new_treatment_parent_term" name="new_treatment_parent_term" type="text" placeholder="Full name, as in 'Legacy experiment treatment|EXPERIMENT_TREATMENT:0000001'"/></td>
+                            <td><input class="form-control" id="new_treatment_parent_term" name="new_treatment_parent_term" type="text" placeholder="<% $c->i18n->p("transformation.root.full_name_as_in_legacy_experiment_treatment_experiment_treatment", "Full name, as in 'Legacy experiment treatment|EXPERIMENT_TREATMENT:0000001'") |h %>"/></td>
                             <td><button id="new_treatment_add_parent_btn" class="btn btn-small btn-success">+</button></td>
                         </tr>
                     </table>
@@ -97,22 +96,22 @@ Will be the treatment root term by default if none are added."></span>&nbsp;Chai
                 </div>
             </div>
         </form>
-        <button class="btn btn-primary" id="new_treatment_submit_btn">Submit</button>
+        <button class="btn btn-primary" id="new_treatment_submit_btn"><% $c->i18n->p("global.manage_file_share_dump.submit", "Submit") |h %></button>
     </div>
 </div>
 
-<button id="download_ontology_btn" class="btn btn-primary">Download Treatment Ontology</button>
+<button id="download_ontology_btn" class="btn btn-primary"><% $c->i18n->p("transformation.root.download_treatment_ontology", "Download Treatment Ontology") |h %></button>
 &nbsp;&nbsp;&nbsp;&nbsp;
 <select id="treatment_cvtermpath_rebuild_select" class="form-control" style="display:inline-block;width:auto;vertical-align:middle;margin-left:2em;">
-    <option value="">Select an ontology...</option>
+    <option value=""><% $c->i18n->p("treatment.select_ontology", "Select an ontology...") |h %></option>
 </select>
-<button id="treatment_rebuild_cvtermpath_btn" class="btn btn-primary btn-sm">Rebuild cvterm paths</button>
+<button id="treatment_rebuild_cvtermpath_btn" class="btn btn-primary btn-sm"><% $c->i18n->p("treatment.rebuild_paths", "Rebuild cvterm paths") |h %></button>
 <br>
 <br>
 % 
 % my $root_nodes = $db_name =~ s/,/ /gr; # should just be EXPERIMENT_TREATMENT
 % 
-<&| /page/info_section.mas, title=>"Treatment terms", collapsible=>1 &>
+<&| /page/info_section.mas, anchor_title => "Treatment terms", title=>HTML::Entities::encode_entities($c->i18n->p("transformation.root.treatment_terms", "Treatment terms")), collapsible=>1 &>
     <& /ontology/browser.mas, root_nodes=>$root_nodes, expand=>0 &>
 </&>
 
@@ -165,14 +164,14 @@ Will be the treatment root term by default if none are added."></span>&nbsp;Chai
                     if (response.error) {
                         alert(response.error);
                     } else {
-                        alert("New treatment saved.");
+                        alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("transformation.root.new_treatment_saved", "New treatment saved.") : "New treatment saved."));
                         window.location.reload();
                     }
                 },
                 error: function(response) { 
                     jQuery('#working_modal').modal("hide");
                     console.log(response);
-                    alert("An error occurred, check console.");
+                    alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("phenotype.root.an_error_occurred_check_console", "An error occurred, check console.") : "An error occurred, check console."));
                 }
             });
         });
@@ -206,7 +205,7 @@ Will be the treatment root term by default if none are added."></span>&nbsp;Chai
                 jQuery('#new_treatment_default_value_container').show();
                 jQuery('#new_treatment_maximum_value_container').show();
                 jQuery('#new_treatment_add_categories_container').hide();
-                jQuery('#new_treatment_default_value_label').html("Default value:");
+                jQuery('#new_treatment_default_value_label').html((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("phenotype.root.default_value", "Default value:") : "Default value:"));
                 jQuery('#new_treatment_default_value').val('');
                 jQuery('#new_treatment_min_value').val('');
                 jQuery('#new_treatment_max_value').val('');
@@ -216,7 +215,7 @@ Will be the treatment root term by default if none are added."></span>&nbsp;Chai
                 jQuery('#new_treatment_default_value_container').show();
                 jQuery('#new_treatment_maximum_value_container').hide();
                 jQuery('#new_treatment_add_categories_container').show();
-                jQuery('#new_treatment_default_value_label').html("Default category:");
+                jQuery('#new_treatment_default_value_label').html((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("phenotype.root.default_category", "Default category:") : "Default category:"));
                 jQuery('#new_treatment_default_value').val('');
                 jQuery('#new_treatment_min_value').val('');
                 jQuery('#new_treatment_max_value').val('');
@@ -235,7 +234,7 @@ Will be the treatment root term by default if none are added."></span>&nbsp;Chai
                 jQuery('#new_treatment_default_value_container').show();
                 jQuery('#new_treatment_maximum_value_container').show();
                 jQuery('#new_treatment_add_categories_container').hide();
-                jQuery('#new_treatment_default_value_label').html("Default value:");
+                jQuery('#new_treatment_default_value_label').html((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("phenotype.root.default_value", "Default value:") : "Default value:"));
                 jQuery('#new_treatment_default_value').val('');
                 jQuery('#new_treatment_min_value').val('0');
                 jQuery('#new_treatment_max_value').val('100');
@@ -245,7 +244,7 @@ Will be the treatment root term by default if none are added."></span>&nbsp;Chai
                 jQuery('#new_treatment_default_value_container').show();
                 jQuery('#new_treatment_maximum_value_container').show();
                 jQuery('#new_treatment_add_categories_container').hide();
-                jQuery('#new_treatment_default_value_label').html("Default value:");
+                jQuery('#new_treatment_default_value_label').html((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("phenotype.root.default_value", "Default value:") : "Default value:"));
                 jQuery('#new_treatment_default_value').val('');
                 jQuery('#new_treatment_min_value').val('0');
                 jQuery('#new_treatment_max_value').val('');
@@ -255,7 +254,7 @@ Will be the treatment root term by default if none are added."></span>&nbsp;Chai
                 jQuery('#new_treatment_default_value_container').show();
                 jQuery('#new_treatment_maximum_value_container').show();
                 jQuery('#new_treatment_add_categories_container').hide();
-                jQuery('#new_treatment_default_value_label').html("Default value:");
+                jQuery('#new_treatment_default_value_label').html((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("phenotype.root.default_value", "Default value:") : "Default value:"));
                 jQuery('#new_treatment_default_value').val('');
                 jQuery('#new_treatment_min_value').val('0');
                 jQuery('#new_treatment_max_value').val('1');
@@ -287,12 +286,12 @@ Will be the treatment root term by default if none are added."></span>&nbsp;Chai
             let new_ordinal = jQuery('#new_treatment_category_ordinal').val();
 
             if (! new_ordinal) {
-                alert("Assign an ordinal value to the new category.");
+                alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("phenotype.root.assign_an_ordinal_value_to_the_new_category", "Assign an ordinal value to the new category.") : "Assign an ordinal value to the new category."));
                 return;
             }
 
             if (new_category.includes('/') || new_category.includes('=')){
-                alert("No special characters.");
+                alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("phenotype.root.no_special_characters", "No special characters.") : "No special characters."));
                 return;
             }
 
@@ -384,7 +383,7 @@ Will be the treatment root term by default if none are added."></span>&nbsp;Chai
                 })
                 .catch(error => {
                     jQuery('#working_modal').modal("hide");
-                    alert("An error occurred: " + error);
+                    alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("trial.subplots.error_prefix", "An error occurred: ") : "An error occurred: ") + error);
                     console.error('Download failed:', error)
                 });
         });
@@ -410,3 +409,7 @@ Will be the treatment root term by default if none are added."></span>&nbsp;Chai
         }
     });
 </script>
+
+<%once>
+use HTML::Entities ();
+</%once>

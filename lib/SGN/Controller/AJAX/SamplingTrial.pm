@@ -8,6 +8,7 @@ use Try::Tiny;
 use List::MoreUtils qw /any /;
 use CXGN::People::Person;
 use CXGN::Login;
+use SGN::I18N ();
 
 BEGIN { extends 'Catalyst::Controller::REST' }
 
@@ -21,9 +22,10 @@ sub generate_sampling_trial : Path('/ajax/breeders/generatesamplingtrial') Actio
 sub generate_sampling_trial_POST : Args(0) {
     my $self = shift;
     my $c = shift;
+    my $i18n = SGN::I18N::translate($c);
 
     if (!($c->user()->check_roles('curator') || $c->user()->check_roles('submitter'))) {
-        $c->stash->{rest} = { error => 'You do not have the required privileges to create a sampling trial.' };
+        $c->stash->{rest} = { error => SGN::I18N::translate($i18n, 'genotype.sampling.server.create_privileges', 'You do not have the required privileges to create a sampling trial.') };
         $c->detach();
     }
 
@@ -33,23 +35,23 @@ sub generate_sampling_trial_POST : Args(0) {
     print STDERR Dumper $sampling_data;
 
     if ( !$sampling_data->{elements} || !$sampling_data->{description} || !$sampling_data->{location} || !$sampling_data->{year} || !$sampling_data->{name} || !$sampling_data->{breeding_program} || !$sampling_data->{sampling_facility} || !$sampling_data->{sample_type} ) {
-        $c->stash->{rest} = { error => "Please provide all parameters in the basic sampling trial information section" };
+        $c->stash->{rest} = { error => SGN::I18N::translate($i18n, 'genotype.sampling.server.basic_information_required', 'Please provide all parameters in the basic sampling trial information section') };
         $c->detach();
     }
     if ( !$sampling_data->{replicates}) {
-        $c->stash->{rest} = { error => "Please provide number of replicates" };
+        $c->stash->{rest} = { error => SGN::I18N::translate($i18n, 'genotype.sampling.server.replicates_required', 'Please provide number of replicates') };
         $c->detach();
     }
 
     my $location = $schema->resultset("NaturalDiversity::NdGeolocation")->find( { nd_geolocation_id => $sampling_data->{location} } );
     if (!$location) {
-        $c->stash->{rest} = { error => "Unknown location" };
+        $c->stash->{rest} = { error => SGN::I18N::translate($i18n, 'genotype.sampling.server.unknown_location', 'Unknown location') };
         $c->detach();
     }
 
     my $breeding_program = $schema->resultset("Project::Project")->find( { project_id => $sampling_data->{breeding_program} });
     if (!$breeding_program) {
-        $c->stash->{rest} = { error => "Unknown breeding program" };
+        $c->stash->{rest} = { error => SGN::I18N::translate($i18n, 'genotype.sampling.server.unknown_breeding_program', 'Unknown breeding program') };
         $c->detach();
     }
 
@@ -65,7 +67,7 @@ sub generate_sampling_trial_POST : Args(0) {
     };
 
     if ($@) {
-        $c->stash->{rest} = { error => "Design failed. Error: $@" };
+        $c->stash->{rest} = { error => SGN::I18N::translate($i18n, 'genotype.sampling.server.design_failed', 'Design failed. Error: %{error}', {error => ("" . "$@")}) };
         print STDERR "Design failed because of $@\n";
         $c->detach();
     }
@@ -101,6 +103,7 @@ sub generate_sampling_trial_POST : Args(0) {
 sub parse_sampling_trial_file : Path('/ajax/breeders/parsesamplingtrial') : ActionClass('REST') { }
 sub parse_sampling_trial_file_POST : Args(0) {
     my ($self, $c) = @_;
+    my $i18n = SGN::I18N::translate($c);
 
     my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
     my $chado_schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado', $sp_person_id);
@@ -110,11 +113,11 @@ sub parse_sampling_trial_file_POST : Args(0) {
     my $sampling_trial_name = $c->req->param('sampling_trial_name');
     my $upload_xls = $c->req->upload('sampling_trial_layout_upload');
     if (!$upload_xls ){
-        $c->stash->{rest} = {error => "You must upload a sampling trial file!" };
+        $c->stash->{rest} = {error => SGN::I18N::translate($i18n, 'genotype.sampling.server.upload_file_required', 'You must upload a sampling trial file!') };
         return;
     }
     if (!$sampling_trial_name){
-        $c->stash->{rest} = {error => 'Sampling trial name must be given!'};
+        $c->stash->{rest} = {error => SGN::I18N::translate($i18n, 'genotype.sampling.server.trial_name_required', 'Sampling trial name must be given!')};
         return;
     }
     my $sample_tissue_types_string = $c->config->{sample_tissue_types};
@@ -140,7 +143,7 @@ sub parse_sampling_trial_file_POST : Args(0) {
 
     if ($upload_original_name =~ /\s/ || $upload_original_name =~ /\// || $upload_original_name =~ /\\/ ) {
         print STDERR "File name must not have spaces or slashes.\n";
-        $c->stash->{rest} = {error => "Uploaded file name must not contain spaces or slashes." };
+        $c->stash->{rest} = {error => SGN::I18N::translate($i18n, 'genotype.sampling.server.filename_restriction', 'Uploaded file name must not contain spaces or slashes.') };
         return;
     }
 
@@ -153,7 +156,7 @@ sub parse_sampling_trial_file_POST : Args(0) {
         my $dbh = $c->dbc->dbh;
         my @user_info = CXGN::Login->new($dbh)->query_from_cookie($session_id);
         if (!$user_info[0]){
-            $c->stash->{rest} = {error=>'You must be logged in to upload sampling trial!'};
+            $c->stash->{rest} = {error=>SGN::I18N::translate($i18n, 'genotype.sampling.server.login_required_upload', 'You must be logged in to upload sampling trial!')};
             $c->detach();
         }
         $user_id = $user_info[0];
@@ -162,7 +165,7 @@ sub parse_sampling_trial_file_POST : Args(0) {
         $user_name = $p->get_username;
     } else{
         if (!$c->user){
-            $c->stash->{rest} = {error=>'You must be logged in to upload sampling trial!'};
+            $c->stash->{rest} = {error=>SGN::I18N::translate($i18n, 'genotype.sampling.server.login_required_upload', 'You must be logged in to upload sampling trial!')};
             $c->detach();
         }
         $user_id = $c->user()->get_object()->get_sp_person_id();
@@ -171,7 +174,7 @@ sub parse_sampling_trial_file_POST : Args(0) {
     }
 
     if ($user_role ne 'curator' && $user_role ne 'submitter') {
-        $c->stash->{rest} = {error =>  "You have insufficient privileges to upload a sampling trial. Please contact us." };
+        $c->stash->{rest} = {error =>  SGN::I18N::translate($i18n, 'genotype.sampling.server.upload_privileges_contact', 'You have insufficient privileges to upload a sampling trial. Please contact us.') };
         $c->detach();
     }
 
@@ -188,7 +191,7 @@ sub parse_sampling_trial_file_POST : Args(0) {
     $archived_filename_with_path = $uploader->archive();
     $md5 = $uploader->get_md5($archived_filename_with_path);
     if (!$archived_filename_with_path) {
-        $c->stash->{rest} = {error => "Could not save file $upload_original_name in archive",};
+        $c->stash->{rest} = {error => SGN::I18N::translate($i18n, 'genotype.sampling.server.archive_failed', 'Could not save file %{filename} in archive', {filename => ("" . "$upload_original_name")}),};
         return;
     }
     unlink $upload_tempfile;
@@ -196,7 +199,7 @@ sub parse_sampling_trial_file_POST : Args(0) {
     #Parse of Coordinate Template formatted file requires the plate name to be passed, so that a unique sample name can be created by concatenating the plate name to the well position.
 
     #parse uploaded file with appropriate plugin
-    $parser = CXGN::Trial::ParseUpload->new(chado_schema => $chado_schema, filename => $archived_filename_with_path, allowed_tissue_list => $sample_tissue_types_string);
+    $parser = CXGN::Trial::ParseUpload->new(chado_schema => $chado_schema, filename => $archived_filename_with_path, allowed_tissue_list => $sample_tissue_types_string, i18n => $c->i18n);
     $parser->load_plugin($upload_type);
     $parsed_data = $parser->parse();
 
@@ -204,7 +207,7 @@ sub parse_sampling_trial_file_POST : Args(0) {
         my $return_error = '';
 
         if (! $parser->has_parse_errors() ){
-            $return_error = "Could not get parsing errors";
+            $return_error = SGN::I18N::translate($i18n, 'genotype.sampling.server.parsing_errors_unavailable', 'Could not get parsing errors');
             $c->stash->{rest} = {error_string => $return_error,};
         }
         else {
@@ -249,6 +252,7 @@ sub store_sampling_trial : Path('/ajax/breeders/storesamplingtrial') ActionClass
 sub store_sampling_trial_POST : Args(0) {
     my $self = shift;
     my $c = shift;
+    my $i18n = SGN::I18N::translate($c);
 
     my $user_id;
     my $user_name;
@@ -259,7 +263,7 @@ sub store_sampling_trial_POST : Args(0) {
         my $dbh = $c->dbc->dbh;
         my @user_info = CXGN::Login->new($dbh)->query_from_cookie($session_id);
         if (!$user_info[0]){
-            $c->stash->{rest} = {error=>'You must be logged in to upload sampling trial!'};
+            $c->stash->{rest} = {error=>SGN::I18N::translate($i18n, 'genotype.sampling.server.login_required_upload', 'You must be logged in to upload sampling trial!')};
             $c->detach();
         }
         $user_id = $user_info[0];
@@ -268,7 +272,7 @@ sub store_sampling_trial_POST : Args(0) {
         $user_name = $p->get_username;
     } else{
         if (!$c->user){
-            $c->stash->{rest} = {error=>'You must be logged in to upload a sampling trial!'};
+            $c->stash->{rest} = {error=>SGN::I18N::translate($i18n, 'genotype.sampling.server.login_required_upload_article', 'You must be logged in to upload a sampling trial!')};
             $c->detach();
         }
         $user_id = $c->user()->get_object()->get_sp_person_id();
@@ -277,7 +281,7 @@ sub store_sampling_trial_POST : Args(0) {
     }
 
     if ($user_role ne 'curator' && $user_role ne 'submitter') {
-        $c->stash->{rest} = {error =>  "You have insufficient privileges to upload a sampling trial." };
+        $c->stash->{rest} = {error =>  SGN::I18N::translate($i18n, 'genotype.sampling.server.upload_privileges', 'You have insufficient privileges to upload a sampling trial.') };
         $c->detach();
     }
 
@@ -285,19 +289,19 @@ sub store_sampling_trial_POST : Args(0) {
     my $sampling_data = decode_json $c->req->param("sampling_data");
     #print STDERR Dumper $plate_info;
     if ( !$sampling_data->{design} || !$sampling_data->{description} || !$sampling_data->{location} || !$sampling_data->{year} || !$sampling_data->{name} || !$sampling_data->{breeding_program} || !$sampling_data->{sampling_facility} || !$sampling_data->{sample_type} ) {
-        $c->stash->{rest} = { error => "Please provide all parameters in the sampling trial information section" };
+        $c->stash->{rest} = { error => SGN::I18N::translate($i18n, 'genotype.sampling.server.trial_information_required', 'Please provide all parameters in the sampling trial information section') };
         $c->detach();
     }
 
     my $location = $schema->resultset("NaturalDiversity::NdGeolocation")->find( { nd_geolocation_id => $sampling_data->{location} } );
     if (!$location) {
-        $c->stash->{rest} = { error => "Unknown location" };
+        $c->stash->{rest} = { error => SGN::I18N::translate($i18n, 'genotype.sampling.server.unknown_location', 'Unknown location') };
         $c->detach();
     }
 
     my $breeding_program = $schema->resultset("Project::Project")->find( { project_id => $sampling_data->{breeding_program} });
     if (!$breeding_program) {
-        $c->stash->{rest} = { error => "Unknown breeding program" };
+        $c->stash->{rest} = { error => SGN::I18N::translate($i18n, 'genotype.sampling.server.unknown_breeding_program', 'Unknown breeding program') };
         $c->detach();
     }
 
@@ -350,7 +354,7 @@ sub store_sampling_trial_POST : Args(0) {
         $schema->txn_do($coderef);
     } catch {
         print STDERR "Transaction Error: $_\n";
-        $c->stash->{rest} = {error => "Error saving sampling trial in the database: $_"};
+        $c->stash->{rest} = {error => SGN::I18N::translate($i18n, 'genotype.sampling.server.database_save_failed', 'Error saving sampling trial in the database: %{error}', {error => ("" . "$_")})};
         $c->detach;
     };
 
@@ -359,7 +363,7 @@ sub store_sampling_trial_POST : Args(0) {
         $error = $message->{'error'};
     }
     if ($error){
-        $c->stash->{rest} = {error => "Error saving sampling trial in the database: $error"};
+        $c->stash->{rest} = {error => SGN::I18N::translate($i18n, 'genotype.sampling.server.database_save_failed', 'Error saving sampling trial in the database: %{error}', {error => ("" . "$error")})};
         $c->detach;
     }
     #print STDERR Dumper(%message);
@@ -373,7 +377,7 @@ sub store_sampling_trial_POST : Args(0) {
     #print STDERR Dumper $saved_design;
 
     $c->stash->{rest} = {
-        message => "Successfully stored the sampling trial.",
+        message => SGN::I18N::translate($i18n, 'genotype.sampling.server.stored_success', 'Successfully stored the sampling trial.'),
         trial_id => $message->{trial_id},
         saved_design => $saved_design
     };

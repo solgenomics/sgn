@@ -22,6 +22,7 @@ use Path::Class;
 use Bio::Chado::Schema;
 use CXGN::Phenome::Qtl;
 use CXGN::Phenome::Population;
+use SGN::I18N ();
 
 BEGIN { extends 'Catalyst::Controller'}  
 
@@ -34,6 +35,7 @@ sub view : Path('/qtl/view') Args(1) {
 
 sub population : Path('/qtl/population') Args(1) {
     my ( $self, $c, $id) = @_;
+    my $ui_qtl_population_i18n = SGN::I18N::translate($c);
     
     if ( $id )
     {
@@ -64,20 +66,21 @@ sub population : Path('/qtl/population') Args(1) {
             } 
             else 
             {
-                $c->throw_404("$id is not a QTL population.");
+                $c->throw_404(SGN::I18N::translate($ui_qtl_population_i18n, "analysis.qtl.server.population_not_qtl", "%{population_id} is not a QTL population.", {population_id => "" . ($id // "")}));
             }
     }
     else 
     {
-            $c->throw_404("There is no QTL population for $id");
+            $c->throw_404(SGN::I18N::translate($ui_qtl_population_i18n, "analysis.qtl.server.no_population_for_id", "There is no QTL population for %{population_id}", {population_id => "" . ($id // "")}));
     }
 
 }
 
 sub download_phenotype : Path('/qtl/download/phenotype') Args(1) {
     my ($self, $c, $id) = @_;
+    my $ui_qtl_download_phenotype_i18n = SGN::I18N::translate($c);
     
-    $c->throw_404("<strong>$id</strong> is not a valid population id") if  $id =~ m/\D/;
+    $c->throw_404("<strong>$id</strong> " . SGN::I18N::translate($ui_qtl_download_phenotype_i18n, "analysis.qtl.server.invalid_population_id", "is not a valid population id")) if  $id =~ m/\D/;
     
     $self->is_qtl_pop($c, $id);
     if ($c->stash->{is_qtl_pop})   
@@ -99,14 +102,15 @@ sub download_phenotype : Path('/qtl/download/phenotype') Args(1) {
     }
     else
     {
-        $c->throw_404("<strong>$id</strong> is not a QTL population id");   
+        $c->throw_404("<strong>$id</strong> " . SGN::I18N::translate($ui_qtl_download_phenotype_i18n, "analysis.qtl.server.population_not_qtl_id", "is not a QTL population id"));
     }       
 }
 
 sub download_genotype : Path('/qtl/download/genotype') Args(1) {
     my ($self, $c, $id) = @_;
+    my $ui_qtl_download_genotype_i18n = SGN::I18N::translate($c);
     
-    $c->throw_404("<strong>$id</strong> is not a valid population id") if  $id =~ m/\D/;
+    $c->throw_404("<strong>$id</strong> " . SGN::I18N::translate($ui_qtl_download_genotype_i18n, "analysis.qtl.server.invalid_population_id", "is not a valid population id")) if  $id =~ m/\D/;
    
     $self->is_qtl_pop($c, $id);
     if ($c->stash->{is_qtl_pop})
@@ -129,14 +133,15 @@ sub download_genotype : Path('/qtl/download/genotype') Args(1) {
     }
     else
     {
-        $c->throw_404("<strong>$id</strong> is not a QTL population id");   
+        $c->throw_404("<strong>$id</strong> " . SGN::I18N::translate($ui_qtl_download_genotype_i18n, "analysis.qtl.server.population_not_qtl_id", "is not a QTL population id"));
     }       
 }
 
 sub download_correlation : Path('/qtl/download/correlation') Args(1) {
     my ($self, $c, $id) = @_;
+    my $ui_qtl_download_correlation_i18n = SGN::I18N::translate($c);
     
-    $c->throw_404("<strong>$id</strong> is not a valid population id") if $id =~ m/\D/;
+    $c->throw_404("<strong>$id</strong> " . SGN::I18N::translate($ui_qtl_download_correlation_i18n, "analysis.qtl.server.invalid_population_id", "is not a valid population id")) if $id =~ m/\D/;
 
     $self->is_qtl_pop($c, $id);
     if ($c->stash->{is_qtl_pop})
@@ -163,14 +168,15 @@ sub download_correlation : Path('/qtl/download/correlation') Args(1) {
     }  
     else
     {
-        $c->throw_404("<strong>$id</strong> is not a QTL population id");   
+        $c->throw_404("<strong>$id</strong> " . SGN::I18N::translate($ui_qtl_download_correlation_i18n, "analysis.qtl.server.population_not_qtl_id", "is not a QTL population id"));
     }       
 }
 
 sub download_acronym : Path('/qtl/download/acronym') Args(1) {
     my ($self, $c, $id) = @_;
+    my $ui_qtl_download_acronym_i18n = SGN::I18N::translate($c);
 
-    $c->throw_404("<strong>$id</strong> is not a valid population id") if  $id =~ m/\D/;
+    $c->throw_404("<strong>$id</strong> " . SGN::I18N::translate($ui_qtl_download_acronym_i18n, "analysis.qtl.server.invalid_population_id", "is not a valid population id")) if  $id =~ m/\D/;
     
     $self->is_qtl_pop($c, $id);
     if ($c->stash->{is_qtl_pop})
@@ -184,7 +190,7 @@ sub download_acronym : Path('/qtl/download/acronym') Args(1) {
     }
     else
     {
-        $c->throw_404("<strong>$id</strong> is not a QTL population id");   
+        $c->throw_404("<strong>$id</strong> " . SGN::I18N::translate($ui_qtl_download_acronym_i18n, "analysis.qtl.server.population_not_qtl_id", "is not a QTL population id"));
     }       
 }
 
@@ -401,6 +407,7 @@ sub is_qtl_pop {
 
 sub _link {
     my ($self, $c) = @_;
+    my $ui_qtl_links_i18n = SGN::I18N::translate($c);
     my $pop_id     = $c->stash->{pop}->get_population_id();
     
     {
@@ -409,7 +416,7 @@ sub _link {
         my $cvterm_id  = $c->stash->{cvterm_id};
         my $trait_name = $c->stash->{trait_name};
         my $term_id    = $trait_id ? $trait_id : $cvterm_id;
-        my $graph_icon = qq | <img src="/documents/img/pop_graph.png" alt="run solqtl"/> |;
+        my $graph_icon = qq | <img src="/documents/img/pop_graph.png" alt="| . SGN::I18N::translate($ui_qtl_links_i18n, "analysis.qtl.server.run_solqtl_alt", "run solqtl") . qq |"/> |;
     
         $self->_get_owner_details($c);
         my $owner_name = $c->stash->{owner_name};
@@ -418,11 +425,11 @@ sub _link {
         $c->stash( cvterm_page        => qq |<a href="/cvterm/$cvterm_id/view">$trait_name</a> |,
                    trait_page         => qq |<a href="/phenome/trait.pl?trait_id=$trait_id">$trait_name</a> |,
                    owner_page         => qq |<a href="/solpeople/personal-info.pl?sp_person_id=$owner_id">$owner_name</a> |,
-                   guideline          => qq |<a href="/qtl/submission/guide">Guideline</a> |,
-                   phenotype_download => qq |<a href="/qtl/download/phenotype/$pop_id">Phenotype data</a> |,
-                   genotype_download  => qq |<a href="/qtl/download/genotype/$pop_id">Genotype data</a> |,
-                   corre_download     => qq |<a href="/download/phenotypic/correlation/population/$pop_id">Correlation data</a> |,
-                   acronym_download   => qq |<a href="/qtl/download/acronym/$pop_id">Trait-acronym key</a> |,
+                   guideline          => qq |<a href="/qtl/submission/guide">| . SGN::I18N::translate($ui_qtl_links_i18n, "analysis.qtl.server.guideline", "Guideline") . qq |</a> |,
+                   phenotype_download => qq |<a href="/qtl/download/phenotype/$pop_id">| . SGN::I18N::translate($ui_qtl_links_i18n, "analysis.qtl.server.phenotype_data", "Phenotype data") . qq |</a> |,
+                   genotype_download  => qq |<a href="/qtl/download/genotype/$pop_id">| . SGN::I18N::translate($ui_qtl_links_i18n, "analysis.qtl.server.genotype_data", "Genotype data") . qq |</a> |,
+                   corre_download     => qq |<a href="/download/phenotypic/correlation/population/$pop_id">| . SGN::I18N::translate($ui_qtl_links_i18n, "analysis.qtl.server.correlation_data", "Correlation data") . qq |</a> |,
+                   acronym_download   => qq |<a href="/qtl/download/acronym/$pop_id">| . SGN::I18N::translate($ui_qtl_links_i18n, "analysis.qtl.server.trait_acronym_key", "Trait-acronym key") . qq |</a> |,
                    qtl_analysis_page  => qq |<a href="/phenome/qtl_analysis.pl?population_id=$pop_id&amp;cvterm_id=$term_id" onclick="Qtl.waitPage()">$graph_icon</a> |,
             );
     }
@@ -514,6 +521,7 @@ sub stat_options_file {
     
 sub qtl_form : PathPart('qtl/form') Chained Args {
     my ($self, $c, $type, $pop_id) = @_;  
+    my $ui_qtl_form_i18n = SGN::I18N::translate($c);
     
     my $userid;
     $userid = $c->user()->get_object->get_sp_person_id() if $c->user;
@@ -527,20 +535,21 @@ sub qtl_form : PathPart('qtl/form') Chained Args {
    
     if (!$pop_id and $type !~ /intro|pop_form/ ) 
     {
-     $c->throw_404("Population id argument is missing");   
+     $c->throw_404(SGN::I18N::translate($ui_qtl_form_i18n, "analysis.qtl.server.population_id_missing", "Population id argument is missing"));
     }
 
     if ($pop_id and $pop_id !~ /^([0-9]+)$/)  
     {
-        $c->throw_404("<strong>$pop_id</strong> is not an accepted argument. 
-                        This form expects an all digit population id, instead of 
-                        <strong>$pop_id</strong>"
-                     );   
+        $c->throw_404("<strong>$pop_id</strong> "
+            . SGN::I18N::translate($ui_qtl_form_i18n, "analysis.qtl.server.population_id_unaccepted", "is not an accepted argument.")
+            . " \n                        "
+            . SGN::I18N::translate($ui_qtl_form_i18n, "analysis.qtl.server.population_id_expected_digits", "This form expects an all digit population id, instead of")
+            . " \n                        <strong>$pop_id</strong>");
     }
 
     $c->stash( template => $self->get_template($c, $type),
                pop_id   => $pop_id,
-               guide    => qq |<a href="/qtl/submission/guide">Guideline</a> |,
+               guide    => qq |<a href="/qtl/submission/guide">| . SGN::I18N::translate($ui_qtl_form_i18n, "analysis.qtl.server.guideline", "Guideline") . qq |</a> |,
                referer  => $c->req->path,
                userid   => $userid
             );   

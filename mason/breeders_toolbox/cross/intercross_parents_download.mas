@@ -10,24 +10,24 @@ $trial_id
     <div class="modal-dialog modal-lg" role="document">
         <div class="modal-content">
             <div class="modal-header">
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                <h4 class="modal-title" id="intercrossParentsDownloaddialog">Download Intercross Parents File</h4>
+                <button type="button" class="close" data-dismiss="modal" aria-label="<% $c->i18n->p("cross.ui.close", "Close") |h %>"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="intercrossParentsDownloaddialog"><% $c->i18n->p("cross.forms.download_intercross_parents_file", "Download Intercross Parents File") |h %></h4>
             </div>
             <div class="modal-body">
                 <div class="container-fluid">
                     <div class="row">
                         <div class="col-sm-11">
-                            <&| /page/explanation.mas, title=>'File Information' &>
+                            <&| /page/explanation.mas, title=>HTML::Entities::encode_entities($c->i18n->p("cross.forms.file_information", "File Information")) &>
                                 <p>
-                                    <b>File Information</b>
+                                    <b><% $c->i18n->p("cross.forms.file_information", "File Information") |h %></b>
                                     <br>
-                                    <a id="intercross_parents_file_info">Intercross Parents</a>
+                                    <a id="intercross_parents_file_info"><% $c->i18n->p("cross.forms.intercross_parents", "Intercross Parents") |h %></a>
                                     <br>
                                 </p>
                             </&>
                             <div class="form-horizontal">
                                 <div class="form-group">
-                                    <label class="control-label col-sm-3">Female parents:</label>
+                                    <label class="control-label col-sm-3"><% $c->i18n->p("cross.forms.female_parents.825c42d", "Female parents:") |h %></label>
                                     <div class="col-sm-7" >
                                         <div class="input-group">
                                             <select class="form-control" id="female_parents_list_select"></select>
@@ -35,7 +35,7 @@ $trial_id
                                     </div>
                                 </div>
                                 <div class="form-group">
-                                    <label class="control-label col-sm-3">Male parents:</label>
+                                    <label class="control-label col-sm-3"><% $c->i18n->p("cross.forms.male_parents.ec42ef3", "Male parents:") |h %></label>
                                     <div class="col-sm-7" >
                                         <div class="input-group">
                                             <select class="form-control" id="male_parents_list_select"></select>
@@ -48,7 +48,7 @@ $trial_id
                 </div>
             </div>
             <div class="modal-footer">
-                <button id="download_intercross_parents_submit" type="button" class="btn btn-primary" >Download</button>
+                <button id="download_intercross_parents_submit" type="button" class="btn btn-primary" ><% $c->i18n->p("global.est.download", "Download") |h %></button>
                 <input type="hidden" id="intercross_parents_download_token" name="intercross_parents_download_token"/>
             </div>
         </div>
@@ -59,22 +59,22 @@ $trial_id
     <div class="modal-dialog" role="document">
         <div class="modal-content">
             <div class="modal-header">
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                <h4 class="modal-title" id="intercrossParentsDownloadMessage">Intercross Parents File Created</h4>
+                <button type="button" class="close" data-dismiss="modal" aria-label="<% $c->i18n->p("cross.ui.close", "Close") |h %>"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="intercrossParentsDownloadMessage"><% $c->i18n->p("cross.forms.intercross_parents_file_created", "Intercross Parents File Created") |h %></h4>
             </div>
             <div class="modal-body">
                 <div class="container-fluid">
                     <p>
                         <span class="ui-icon ui-icon-circle-check" style="float: left; margin: 0 7px 50px 0;"></span>
-                        The Intercross parents file was created successfully.
+                        <% $c->i18n->p("cross.forms.the_intercross_parents_file_was_created_successfully", "The Intercross parents file was created successfully.") |h %>
                     </p>
                     <p>
-                        <a id="intercross_parents_download_link">Download Intercross Parents</a>
+                        <a id="intercross_parents_download_link"><% $c->i18n->p("cross.forms.download_intercross_parents", "Download Intercross Parents") |h %></a>
                     </p>
                 </div>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-default" name="intercross_parents_download_close_button" id="intercross_parents_download_close_button" data-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-default" name="intercross_parents_download_close_button" id="intercross_parents_download_close_button" data-dismiss="modal"><% $c->i18n->p("cross.ui.close", "Close") |h %></button>
             </div>
         </div>
     </div>
@@ -84,24 +84,24 @@ $trial_id
     <div class="modal-dialog modal-lg" role="document">
         <div class="modal-content">
             <div class="modal-header">
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                <h4 class="modal-title" id="intercrossParentsFileInfoDialog">Intercross Parents</h4>
+                <button type="button" class="close" data-dismiss="modal" aria-label="<% $c->i18n->p("cross.ui.close", "Close") |h %>"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="intercrossParentsFileInfoDialog"><% $c->i18n->p("cross.forms.intercross_parents", "Intercross Parents") |h %></h4>
             </div>
             <div class="modal-body">
                 <div class="container-fluid">
                     <b>
-                        Names in the list must be uniquenames.
+                        <% $c->i18n->p("cross.forms.names_in_the_list_must_be_uniquenames", "Names in the list must be uniquenames.") |h %>
                     </b>
                     <br>
-                        Intercross Parents file is a CSV file (.csv).
+                        <% $c->i18n->p("cross.forms.intercross_parents_file_is_a_csv_file_csv", "Intercross Parents file is a CSV file (.csv).") |h %>
                     <br>
-                        The file can be used directly with Intercross app.
+                        <% $c->i18n->p("cross.forms.the_file_can_be_used_directly_with_intercross_app", "The file can be used directly with Intercross app.") |h %>
                     <br><br>
                     <b>
-                        Header:
+                        <% $c->i18n->p("cross.ui.header", "Header:") |h %>
                     </b>
                     <br>
-                        The first row (header) contains the following:
+                        <% $c->i18n->p("cross.forms.the_first_row_header_contains_the_following", "The first row (header) contains the following:") |h %>
                     <br>
                     <table class="table table-bordered table-hover">
                         <tbody>
@@ -113,17 +113,17 @@ $trial_id
                         </tbody>
                     </table>
                     <b>
-                        Column Information:
+                        <% $c->i18n->p("cross.forms.column_information", "Column Information:") |h %>
                     </b>
                     <ul>
-                        <li><b>codeId:</b> stock_ids in the database.</li>
-                        <li><b>sex:</b> 0 (female), 1 (male)</li>
-                        <li><b>name:</b> uniquenames in the database.</li>
+                        <li><b>codeId:</b> <% $c->i18n->p("cross.forms.stock_ids_in_the_database", "stock_ids in the database.") |h %></li>
+                        <li><b>sex:</b> <% $c->i18n->p("cross.forms.0_female_1_male", "0 (female), 1 (male)") |h %></li>
+                        <li><b>name:</b> <% $c->i18n->p("cross.forms.uniquenames_in_the_database", "uniquenames in the database.") |h %></li>
                     </ul>
                 </div>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-default" data-dismiss="modal"><% $c->i18n->p("cross.ui.close", "Close") |h %></button>
             </div>
         </div>
     </div>
@@ -137,8 +137,8 @@ jQuery(document).ready(function(){
     var crossing_experiment_id = "<% $trial_id %>";
     var lo = new CXGN.List();
 
-    jQuery('#female_parents_list_select').html(lo.listSelect('female_parents_list_select', ['accessions'], 'Select a list of female parents', undefined, undefined));
-    jQuery('#male_parents_list_select').html(lo.listSelect('male_parents_list_select', ['accessions'], 'Select a list of male parents', undefined, undefined));
+    jQuery('#female_parents_list_select').html(lo.listSelect('female_parents_list_select', ['accessions'], (window.SGN && window.SGN.i18n ? window.SGN.i18n.p("cross.forms.select_a_list_of_female_parents", "Select a list of female parents") : "Select a list of female parents"), undefined, undefined));
+    jQuery('#male_parents_list_select').html(lo.listSelect('male_parents_list_select', ['accessions'], (window.SGN && window.SGN.i18n ? window.SGN.i18n.p("cross.forms.select_a_list_of_male_parents", "Select a list of male parents") : "Select a list of male parents"), undefined, undefined));
 
     jQuery('#download_intercross_parents').click(function(){
         jQuery('#intercross_parents_download_dialog').modal("show");
@@ -154,12 +154,12 @@ jQuery(document).ready(function(){
         var male_list_id = jQuery('#male_parents_list_select').val();
 
         if (!female_list_id) {
-            alert("Please choose a list of female parents");
+            alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("cross.forms.please_choose_a_list_of_female_parents", "Please choose a list of female parents") : "Please choose a list of female parents"));
             return;
         }
 
         if (!male_list_id) {
-            alert("Please choose a list of male parents");
+            alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("cross.forms.please_choose_a_list_of_male_parents", "Please choose a list of male parents") : "Please choose a list of male parents"));
             return;
         }
 
@@ -187,7 +187,7 @@ jQuery(document).ready(function(){
             },
             error: function() {
                 jQuery("#working_modal").modal("hide");
-                alert('An error occurred creating the parents file.');
+                alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("cross.forms.an_error_occurred_creating_the_parents_file", "An error occurred creating the parents file.") : "An error occurred creating the parents file."));
                 jQuery('#intercross_parents_download_dialog').modal("hide");
             },
         });

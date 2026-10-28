@@ -20,103 +20,103 @@ my @sequencing_center_options = split ",", $c->config->{genotyping_facilities};
   <div class="modal-dialog modal-xl" role="document">
     <div class="modal-content">
       <div class="modal-header">
-        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-        <h4 class="modal-title" id="addHighDimDataDialog">Upload High-Dimensional Phenotype Data</h4>
+        <button type="button" class="close" data-dismiss="modal" aria-label="<% $c->i18n->p("global.dataset_publish.close", "Close") |h %>"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title" id="addHighDimDataDialog"><% $c->i18n->p("phenotype.upload_high_dimensional_phenotype_data", "Upload High-Dimensional Phenotype Data") |h %></h4>
       </div>
       <div class="modal-body">
         <div class="container-fluid">
 
             <&| /util/workflow.mas, id=> "high_dim_data_upload_workflow" &>
-                <&| /util/workflow.mas:step, title=> "Intro" &>
-                    <& /page/page_title.mas, title=>"This workflow will guide you through uploading high-dimensional data into the database." &>
+                <&| /util/workflow.mas:step, title=> $c->i18n->p("cross.ui.intro", "Intro") &>
+                    <& /page/page_title.mas, title=>HTML::Entities::encode_entities($c->i18n->p("phenotype.this_workflow_will_guide_you_through_uploading_high_dimensional_data", "This workflow will guide you through uploading high-dimensional data into the database.")) &>
 
                     <center>
                         <div class="well">
-                            <h4>High-dimensional phenotype data includes:</h4>
+                            <h4><% $c->i18n->p("phenotype.high_dimensional_phenotype_data_includes", "High-dimensional phenotype data includes:") |h %></h4>
                             <p>NIRS</p>
-                            <p>Transcriptomics</p>
-                            <p>Metabolomics</p>
+                            <p><% $c->i18n->p("navigation.manage.transcriptomics", "Transcriptomics") |h %></p>
+                            <p><% $c->i18n->p("phenotype.metabolomics", "Metabolomics") |h %></p>
                         </div>
                     </center>
 
                     <center>
-                    <button class="btn btn-primary" onclick="Workflow.complete(this); return false;">Go to Next Step</button>
+                    <button class="btn btn-primary" onclick="Workflow.complete(this); return false;"><% $c->i18n->p("cross.ui.go_to_next_step", "Go to Next Step") |h %></button>
                     </center>
                 </&>
-                <&| /util/workflow.mas:step, title=> "Samples" &>
-                    <& /page/page_title.mas, title=>"Make sure your samples are already in the database." &>
+                <&| /util/workflow.mas:step, title=> $c->i18n->p("phenotype.samples", "Samples") &>
+                    <& /page/page_title.mas, title=>HTML::Entities::encode_entities($c->i18n->p("phenotype.make_sure_your_samples_are_already_in_the_database", "Make sure your samples are already in the database.")) &>
 
                     <center>
                         <div class="well">
-                            <h4>The samples for which you are uploading high-dimensional phenotypes must exist in the database already. They can be field trial entities such as plot names, plant names, and tissue sample names. They can be genotyping plate well tissue sample names. They can also be sample names from a sampling trial in the database.</h4>
-                            <p>Go to <a href="/breeders/samples">Manage Tissue Samples</a> for more guidance.</p>
-                            <p>You can upload or create a new sampling trial <button class="btn btn-sm btn-primary" style="margin:3px" name="create_sampling_trial_button">Create new sampling trial</button></p>
+                            <h4><% $c->i18n->p("phenotype.the_samples_for_which_you_are_uploading_high_dimensional_phenotypes", "The samples for which you are uploading high-dimensional phenotypes must exist in the database already. They can be field trial entities such as plot names, plant names, and tissue sample names. They can be genotyping plate well tissue sample names. They can also be sample names from a sampling trial in the database.") |h %></h4>
+                            <p><% $c->i18n->p("phenotype.go_to", "Go to") |h %> <a href="/breeders/samples"><% $c->i18n->p("phenotype.manage_tissue_samples", "Manage Tissue Samples") |h %></a> <% $c->i18n->p("phenotype.for_more_guidance", "for more guidance.") |h %></p>
+                            <p><% $c->i18n->p("phenotype.you_can_upload_or_create_a_new_sampling_trial", "You can upload or create a new sampling trial") |h %> <button class="btn btn-sm btn-primary" style="margin:3px" name="create_sampling_trial_button"><% $c->i18n->p("phenotype.create_new_sampling_trial", "Create new sampling trial") |h %></button></p>
                         </div>
                     </center>
 
                     <center>
-                    <button class="btn btn-primary" onclick="Workflow.complete(this); return false;">Go to Next Step</button>
+                    <button class="btn btn-primary" onclick="Workflow.complete(this); return false;"><% $c->i18n->p("cross.ui.go_to_next_step", "Go to Next Step") |h %></button>
                     </center>
                 </&>
-                <&| /util/workflow.mas:step, title=> "Data Type" &>
-                    <& /page/page_title.mas, title=>"Select the type of high-dimensional data being uploaded" &>
+                <&| /util/workflow.mas:step, title=> $c->i18n->p("global.dataset_publish.data_type", "Data Type") &>
+                    <& /page/page_title.mas, title=>HTML::Entities::encode_entities($c->i18n->p("phenotype.select_the_type_of_high_dimensional_data_being_uploaded", "Select the type of high-dimensional data being uploaded")) &>
                     <br/><br/>
                     <form class="form-horizontal">
                         <div class="form-group">
-                            <label class="col-sm-3 control-label">Data Type: </label>
+                            <label class="col-sm-3 control-label"><% $c->i18n->p("phenotype.data_type", "Data Type:") |h %> </label>
                             <div class="col-sm-9" >
                                 <select class="form-control" id="high_dim_data_upload_type_select">
 %  if ($high_dimensional_phenotype_type eq 'NIRS') {
-                                    <option value="">Select One</option>
+                                    <option value=""><% $c->i18n->p("phenotype.select_one", "Select One") |h %></option>
                                     <option value="NIRS">NIRS</option>
-                                    <option disabled value="Transcriptomics">Transcriptomics</option>
-                                    <option disabled value="Metabolomics">Metabolomics</option>
+                                    <option disabled value="Transcriptomics"><% $c->i18n->p("navigation.manage.transcriptomics", "Transcriptomics") |h %></option>
+                                    <option disabled value="Metabolomics"><% $c->i18n->p("phenotype.metabolomics", "Metabolomics") |h %></option>
 %  } elsif ($high_dimensional_phenotype_type eq 'Transcriptomics') {
-                                    <option value="">Select One</option>
-                                    <option value="Transcriptomics">Transcriptomics</option>
+                                    <option value=""><% $c->i18n->p("phenotype.select_one", "Select One") |h %></option>
+                                    <option value="Transcriptomics"><% $c->i18n->p("navigation.manage.transcriptomics", "Transcriptomics") |h %></option>
                                     <option disabled value="NIRS">NIRS</option>
-                                    <option disabled value="Metabolomics">Metabolomics</option>
+                                    <option disabled value="Metabolomics"><% $c->i18n->p("phenotype.metabolomics", "Metabolomics") |h %></option>
 %  } elsif ($high_dimensional_phenotype_type eq 'Metabolomics') {
-                                    <option value="">Select One</option>
-                                    <option value="Metabolomics">Metabolomics</option>
-                                    <option disabled value="Transcriptomics">Transcriptomics</option>
+                                    <option value=""><% $c->i18n->p("phenotype.select_one", "Select One") |h %></option>
+                                    <option value="Metabolomics"><% $c->i18n->p("phenotype.metabolomics", "Metabolomics") |h %></option>
+                                    <option disabled value="Transcriptomics"><% $c->i18n->p("navigation.manage.transcriptomics", "Transcriptomics") |h %></option>
                                     <option disabled value="NIRS">NIRS</option>
 %  } else {
-                                    <option value="">Select One</option>
+                                    <option value=""><% $c->i18n->p("phenotype.select_one", "Select One") |h %></option>
                                     <option value="NIRS">NIRS</option>
-                                    <option value="Transcriptomics">Transcriptomics</option>
-                                    <option value="Metabolomics">Metabolomics</option>
+                                    <option value="Transcriptomics"><% $c->i18n->p("navigation.manage.transcriptomics", "Transcriptomics") |h %></option>
+                                    <option value="Metabolomics"><% $c->i18n->p("phenotype.metabolomics", "Metabolomics") |h %></option>
 %  }
                                 </select>
                             </div>
                         </div>
                     </form>
                     <center>
-                    <button class="btn btn-primary" id="high_dim_data_upload_data_type_step">Go to Next Step</button>
+                    <button class="btn btn-primary" id="high_dim_data_upload_data_type_step"><% $c->i18n->p("cross.ui.go_to_next_step", "Go to Next Step") |h %></button>
                     </center>
                 </&>
-                <&| /util/workflow.mas:step, title=> "Protocol Info" &>
-                    <& /page/page_title.mas, title=>"Select a protocol for how your data was generated or create a new protocol" &>
+                <&| /util/workflow.mas:step, title=> $c->i18n->p("phenotype.protocol_info", "Protocol Info") &>
+                    <& /page/page_title.mas, title=>HTML::Entities::encode_entities($c->i18n->p("phenotype.select_a_protocol_for_how_your_data_was_generated_or", "Select a protocol for how your data was generated or create a new protocol")) &>
 
                     <div id="high_dim_data_upload_protocol_select">
                     </div>
 
                     <hr>
                     <center>
-                    <button class="btn btn-primary" id="high_dim_data_upload_new_protocol">Protocol Not Shown. Create a New Protocol</button>
+                    <button class="btn btn-primary" id="high_dim_data_upload_new_protocol"><% $c->i18n->p("phenotype.protocol_not_shown_create_a_new_protocol", "Protocol Not Shown. Create a New Protocol") |h %></button>
                     </center>
                     <br/><br/>
 
                     <div id="high_dim_data_upload_protocol_div" style="display:none">
                         <div class="form-horizontal">
                             <div class="form-group">
-                                <label class="col-sm-3 control-label">Protocol Name: </label>
+                                <label class="col-sm-3 control-label"><% $c->i18n->p("phenotype.protocol_name", "Protocol Name:") |h %> </label>
                                 <div class="col-sm-9" >
                                     <input class="form-control" id="high_dim_data_upload_protocol_name" type="text">
                                 </div>
                             </div>
                             <div class="form-group">
-                                <label class="col-sm-3 control-label">Protocol Description: </label>
+                                <label class="col-sm-3 control-label"><% $c->i18n->p("phenotype.protocol_description", "Protocol Description:") |h %> </label>
                                 <div class="col-sm-9" >
                                     <input class="form-control" id="high_dim_data_upload_protocol_desc"  type="text">
                                 </div>
@@ -127,7 +127,7 @@ my @sequencing_center_options = split ",", $c->config->{genotyping_facilities};
                     <div id="high_dim_data_upload_nirs_protocol_div" style="display:none">
                         <div class="form-horizontal">
                             <div class="form-group">
-                                <label class="col-sm-3 control-label">NIRS Device: </label>
+                                <label class="col-sm-3 control-label"><% $c->i18n->p("phenotype.nirs_device", "NIRS Device:") |h %> </label>
                                 <div class="col-sm-9" >
                                     <select class="form-control" id="high_dim_data_upload_nirs_device_type_select">
                                         <option value="SCIO">SCIO</option>
@@ -152,7 +152,7 @@ my @sequencing_center_options = split ",", $c->config->{genotyping_facilities};
                     <div id="high_dim_data_upload_transcriptomics_protocol_div" style="display:none">
                         <div class="form-horizontal">
                             <div class="form-group">
-                                <label class="col-sm-3 control-label">Transcriptomics Unit: </label>
+                                <label class="col-sm-3 control-label"><% $c->i18n->p("phenotype.transcriptomics_unit", "Transcriptomics Unit:") |h %> </label>
                                 <div class="col-sm-9" >
                                     <select class="form-control" id="high_dim_data_upload_transcriptomics_unit_select">
                                     <option value="RPKM">RPKM</option>
@@ -165,21 +165,21 @@ my @sequencing_center_options = split ",", $c->config->{genotyping_facilities};
                             </div>
 
                             <div class="form-group">
-                                <label class="col-sm-3 control-label">Genome Version: </label>
+                                <label class="col-sm-3 control-label"><% $c->i18n->p("phenotype.genome_version", "Genome Version:") |h %> </label>
                                 <div class="col-sm-9" >
-                                    <input class="form-control" id="high_dim_data_upload_transcriptomics_genome_version_select" type="text" placeholder="e.g. v6.1, v7.0, v8.0">
+                                    <input class="form-control" id="high_dim_data_upload_transcriptomics_genome_version_select" type="text" placeholder="<% $c->i18n->p("phenotype.e_g", "e.g.") |h %> v6.1, v7.0, v8.0">
                                 </div>
                             </div>
 
                             <div class="form-group">
-                                <label class="col-sm-3 control-label">Genome Annotation Version: </label>
+                                <label class="col-sm-3 control-label"><% $c->i18n->p("phenotype.genome_annotation_version", "Genome Annotation Version:") |h %> </label>
                                 <div class="col-sm-9" >
-                                    <input class="form-control" id="high_dim_data_upload_transcriptomics_genome_annotation_version_select" type="text" placeholder="e.g. v6.0, v6.1, v7.0">
+                                    <input class="form-control" id="high_dim_data_upload_transcriptomics_genome_annotation_version_select" type="text" placeholder="<% $c->i18n->p("phenotype.e_g", "e.g.") |h %> v6.0, v6.1, v7.0">
                                 </div>
                             </div>
 
                             <div class="form-group">
-                                <label class="col-sm-3 control-label">Instrument Model: </label>
+                                <label class="col-sm-3 control-label"><% $c->i18n->p("phenotype.instrument_model", "Instrument Model:") |h %> </label>
                                 <div class="col-sm-9" >
                                     <select class="form-control" id="high_dim_data_upload_transcriptomics_instrument_model_select">
                                     <option value="blank"></option>
@@ -195,9 +195,9 @@ my @sequencing_center_options = split ",", $c->config->{genotyping_facilities};
                             </div>
 
                             <div class="form-group">
-                                <label class="col-sm-3 control-label">Layout: </label>
+                                <label class="col-sm-3 control-label"><% $c->i18n->p("phenotype.layout", "Layout:") |h %> </label>
                                 <div class="col-sm-9" >
-                                    <select class="form-control" id="high_dim_data_upload_transcriptomics_layout_select" type = "text" placeholder="e.g. Paired end">
+                                    <select class="form-control" id="high_dim_data_upload_transcriptomics_layout_select" type = "text" placeholder="<% $c->i18n->p("phenotype.e_g", "e.g.") |h %> Paired end">
                                     <option value="blank"></option>
                                     <%perl>
                                     foreach my $option (@layout_options) {
@@ -211,7 +211,7 @@ my @sequencing_center_options = split ",", $c->config->{genotyping_facilities};
                             </div>
 
                             <div class="form-group">
-                                <label class="col-sm-3 control-label">Library Method: </label>
+                                <label class="col-sm-3 control-label"><% $c->i18n->p("phenotype.library_method", "Library Method:") |h %> </label>
                                 <div class="col-sm-9" >
                                     <select class="form-control" id="high_dim_data_upload_transcriptomics_library_method_select">
                                     <option value="blank"></option>
@@ -227,16 +227,16 @@ my @sequencing_center_options = split ",", $c->config->{genotyping_facilities};
                             </div>
 
                             <div class="form-group">
-                                <label class="col-sm-3 control-label">Library Comments: </label>
+                                <label class="col-sm-3 control-label"><% $c->i18n->p("phenotype.library_comments", "Library Comments:") |h %> </label>
                                 <div class="col-sm-9" >
-                                    <input class="form-control" id="high_dim_data_upload_transcriptomics_library_comments_select" type = "text" placeholder="e.g. Used the 3'RNA-seq method">
+                                    <input class="form-control" id="high_dim_data_upload_transcriptomics_library_comments_select" type = "text" placeholder="<% $c->i18n->p("phenotype.e_g", "e.g.") |h %> Used the 3'RNA-seq method">
                                 </div>
                             </div>
 
                             <div class="form-group">
-                                <label class="col-sm-3 control-label">Mapping Software: </label>
+                                <label class="col-sm-3 control-label"><% $c->i18n->p("phenotype.mapping_software", "Mapping Software:") |h %> </label>
                                 <div class="col-sm-9" >
-                                    <select class="form-control" id="high_dim_data_upload_transcriptomics_mapping_software_select" type = "text" placeholder="e.g. HISAT2">
+                                    <select class="form-control" id="high_dim_data_upload_transcriptomics_mapping_software_select" type = "text" placeholder="<% $c->i18n->p("phenotype.e_g", "e.g.") |h %> HISAT2">
                                     <option value="blank"></option>
                                     <%perl>
                                     foreach my $option (@mapping_software_options) {
@@ -250,9 +250,9 @@ my @sequencing_center_options = split ",", $c->config->{genotyping_facilities};
                             </div>
 
                             <div class="form-group">
-                                <label class="col-sm-3 control-label">Sequencing Center: </label>
+                                <label class="col-sm-3 control-label"><% $c->i18n->p("phenotype.sequencing_center", "Sequencing Center:") |h %> </label>
                                 <div class="col-sm-9" >
-                                    <select class="form-control" id="high_dim_data_upload_transcriptomics_sequencing_center_select" type = "text" placeholder="e.g. Cornell University Institute of Biotechnology">
+                                    <select class="form-control" id="high_dim_data_upload_transcriptomics_sequencing_center_select" type = "text" placeholder="<% $c->i18n->p("phenotype.e_g", "e.g.") |h %> Cornell University Institute of Biotechnology">
                                     <option value="blank"></option>
                                     <%perl>
                                     foreach my $option (@sequencing_center_options) {
@@ -266,9 +266,9 @@ my @sequencing_center_options = split ",", $c->config->{genotyping_facilities};
                             </div>
                             
                             <div class="form-group">
-                                <label class="col-sm-3 control-label">Sequencing Platform: </label>
+                                <label class="col-sm-3 control-label"><% $c->i18n->p("phenotype.sequencing_platform", "Sequencing Platform:") |h %> </label>
                                 <div class="col-sm-9" >
-                                    <select class="form-control" id="high_dim_data_upload_transcriptomics_sequencing_platform_select" type = "text" placeholder="e.g. Illumina">
+                                    <select class="form-control" id="high_dim_data_upload_transcriptomics_sequencing_platform_select" type = "text" placeholder="<% $c->i18n->p("phenotype.e_g", "e.g.") |h %> Illumina">
                                     <option value="blank"></option>
                                     <%perl>
                                     foreach my $option (@sequencing_platform_options) {
@@ -282,16 +282,16 @@ my @sequencing_center_options = split ",", $c->config->{genotyping_facilities};
                             </div>
 
                             <div class="form-group">
-                                <label class="col-sm-3 control-label">Read Length: </label>
+                                <label class="col-sm-3 control-label"><% $c->i18n->p("phenotype.read_length", "Read Length:") |h %> </label>
                                 <div class="col-sm-9" >
-                                    <input class="form-control" id="high_dim_data_upload_transcriptomics_read_length_select" type = "text" placeholder="e.g. 5x depth with 150 bp reads">
+                                    <input class="form-control" id="high_dim_data_upload_transcriptomics_read_length_select" type = "text" placeholder="<% $c->i18n->p("phenotype.e_g", "e.g.") |h %> 5x depth with 150 bp reads">
                                 </div>
                             </div>
 
                             <div class="form-group">
-                                <label class="col-sm-3 control-label">Nucleic Acid Extraction Method: </label>
+                                <label class="col-sm-3 control-label"><% $c->i18n->p("phenotype.nucleic_acid_extraction_method", "Nucleic Acid Extraction Method:") |h %> </label>
                                 <div class="col-sm-9" >
-                                    <select class="form-control" id="high_dim_data_upload_transcriptomics_nucleic_acid_extraction_method_select" type = "text" placeholder="e.g. Hot borate">
+                                    <select class="form-control" id="high_dim_data_upload_transcriptomics_nucleic_acid_extraction_method_select" type = "text" placeholder="<% $c->i18n->p("phenotype.e_g", "e.g.") |h %> Hot borate">
                                     <option value="blank"></option>
                                     <%perl>
                                     foreach my $option (@na_extraction_method_options) {
@@ -310,7 +310,7 @@ my @sequencing_center_options = split ",", $c->config->{genotyping_facilities};
                     <div id="high_dim_data_upload_metabolomics_protocol_div" style="display:none">
                         <div class="form-horizontal">
                             <div class="form-group">
-                                <label class="col-sm-3 control-label">Equipment Type: </label>
+                                <label class="col-sm-3 control-label"><% $c->i18n->p("phenotype.equipment_type", "Equipment Type:") |h %> </label>
                                 <div class="col-sm-9" >
                                     <select class="form-control" id="high_dim_data_upload_metabolomics_equipment_type">
                                         <option value="NMR">NMR</option>
@@ -319,49 +319,49 @@ my @sequencing_center_options = split ",", $c->config->{genotyping_facilities};
                                 </div>
                             </div>
                             <div class="form-group">
-                                <label class="col-sm-3 control-label">Targeted: </label>
+                                <label class="col-sm-3 control-label"><% $c->i18n->p("phenotype.targeted", "Targeted:") |h %> </label>
                                 <div class="col-sm-9" >
                                 <select class="form-control" id="high_dim_data_upload_metabolomics_targeted">
-                                    <option value="True">True</option>
-                                    <option value="False">False</option>
+                                    <option value="True"><% $c->i18n->p("phenotype.true", "True") |h %></option>
+                                    <option value="False"><% $c->i18n->p("phenotype.false", "False") |h %></option>
                                 </select>
                                 </div>
                             </div>
                             <div class="form-group">
-                                <label class="col-sm-3 control-label">Phenotype Protocol: </label>
+                                <label class="col-sm-3 control-label"><% $c->i18n->p("phenotype.phenotype_protocol", "Phenotype Protocol:") |h %> </label>
                                 <div class="col-sm-9" >
-                                    <input class="form-control" id="high_dim_data_upload_metabolomics_phenotype_type" type="text" placeholder="e.g. relative abundance, BLUP, drBLUP, concentration">
+                                    <input class="form-control" id="high_dim_data_upload_metabolomics_phenotype_type" type="text" placeholder="<% $c->i18n->p("phenotype.e_g", "e.g.") |h %> relative abundance, BLUP, drBLUP, concentration">
                                 </div>
                             </div>
                             <div class="form-group">
-                                <label class="col-sm-3 control-label">Phenotype Units: </label>
+                                <label class="col-sm-3 control-label"><% $c->i18n->p("phenotype.phenotype_units", "Phenotype Units:") |h %> </label>
                                 <div class="col-sm-9" >
-                                    <input class="form-control" id="high_dim_data_upload_metabolomics_phenotype_units" type="text" placeholder="e.g. ug/g">
+                                    <input class="form-control" id="high_dim_data_upload_metabolomics_phenotype_units" type="text" placeholder="<% $c->i18n->p("phenotype.e_g", "e.g.") |h %> ug/g">
                                 </div>
                             </div>
 
                             <div class="form-group">
-                                <label class="col-sm-3 control-label">Sample Collection protocol: </label>
+                                <label class="col-sm-3 control-label"><% $c->i18n->p("phenotype.sample_collection_protocol", "Sample Collection protocol:") |h %> </label>
                                 <div class="col-sm-9" >
-                                    <input class="form-control" id="high_dim_data_upload_metabolomics_sample_collection_protocol" type="text" placeholder="e.g. mature dehulled oat seeds">
+                                    <input class="form-control" id="high_dim_data_upload_metabolomics_sample_collection_protocol" type="text" placeholder="<% $c->i18n->p("phenotype.e_g", "e.g.") |h %> mature dehulled oat seeds">
                                 </div>
                             </div>
                             <div class="form-group">
-                                <label class="col-sm-3 control-label">Sample Extraction Protocol: </label>
+                                <label class="col-sm-3 control-label"><% $c->i18n->p("phenotype.sample_extraction_protocol", "Sample Extraction Protocol:") |h %> </label>
                                 <div class="col-sm-9" >
-                                    <input class="form-control" id="high_dim_data_upload_metabolomics_sample_extraction_protocol" type="text" placeholder="e.g. describe extraction protocol used">
+                                    <input class="form-control" id="high_dim_data_upload_metabolomics_sample_extraction_protocol" type="text" placeholder="<% $c->i18n->p("phenotype.e_g_describe_extraction_protocol_used", "e.g. describe extraction protocol used") |h %>">
                                 </div>
                             </div>
                             <div class="form-group">
-                                <label class="col-sm-3 control-label">RawData Transformation Protocol: </label>
+                                <label class="col-sm-3 control-label"><% $c->i18n->p("phenotype.rawdata_transformation_protocol", "RawData Transformation Protocol:") |h %> </label>
                                 <div class="col-sm-9" >
-                                    <input class="form-control" id="high_dim_data_upload_metabolomics_rawdata_transformation_protocol" type="text" placeholder="e.g. describe the raw data transformation protocol used">
+                                    <input class="form-control" id="high_dim_data_upload_metabolomics_rawdata_transformation_protocol" type="text" placeholder="<% $c->i18n->p("phenotype.e_g_describe_the_raw_data_transformation_protocol_used", "e.g. describe the raw data transformation protocol used") |h %>">
                                 </div>
                             </div>
                             <div class="form-group">
-                                <label class="col-sm-3 control-label">Metabolite Identification Protocol: </label>
+                                <label class="col-sm-3 control-label"><% $c->i18n->p("phenotype.metabolite_identification_protocol", "Metabolite Identification Protocol:") |h %> </label>
                                 <div class="col-sm-9" >
-                                    <input class="form-control" id="high_dim_data_upload_metabolomics_metabolite_identification_protocol" type="text" placeholder="e.g. describe the metabolomics identification protocol used">
+                                    <input class="form-control" id="high_dim_data_upload_metabolomics_metabolite_identification_protocol" type="text" placeholder="<% $c->i18n->p("phenotype.e_g_describe_the_metabolomics_identification_protocol_used", "e.g. describe the metabolomics identification protocol used") |h %>">
                                 </div>
                             </div>
                         </div>
@@ -369,7 +369,7 @@ my @sequencing_center_options = split ",", $c->config->{genotyping_facilities};
                         <div id="high_dim_data_upload_metabolomics_protocol_ms_div" style="display:none">
                             <div class="form-horizontal">
                                 <div class="form-group">
-                                    <label class="col-sm-3 control-label">Chromatography Type: </label>
+                                    <label class="col-sm-3 control-label"><% $c->i18n->p("phenotype.chromatography_type", "Chromatography Type:") |h %> </label>
                                     <div class="col-sm-9" >
                                         <select class="form-control" id="high_dim_data_upload_metabolomics_chromatography_type">
                                             <option value="LCMS">LCMS</option>
@@ -378,73 +378,73 @@ my @sequencing_center_options = split ",", $c->config->{genotyping_facilities};
                                     </div>
                                 </div>
                                 <div class="form-group">
-                                    <label class="col-sm-3 control-label">Chromatography Instrument: </label>
+                                    <label class="col-sm-3 control-label"><% $c->i18n->p("phenotype.chromatography_instrument", "Chromatography Instrument:") |h %> </label>
                                     <div class="col-sm-9" >
-                                        <input class="form-control" id="high_dim_data_upload_metabolomics_chromatography_system_brand" type="text" placeholder="e.g. ThermoFisher MS100 System">
+                                        <input class="form-control" id="high_dim_data_upload_metabolomics_chromatography_system_brand" type="text" placeholder="<% $c->i18n->p("phenotype.e_g", "e.g.") |h %> ThermoFisher MS100 System">
                                     </div>
                                 </div>
                                 <div class="form-group">
-                                    <label class="col-sm-3 control-label">Chromatography AutoSampler Model: </label>
+                                    <label class="col-sm-3 control-label"><% $c->i18n->p("phenotype.chromatography_autosampler_model", "Chromatography AutoSampler Model:") |h %> </label>
                                     <div class="col-sm-9" >
-                                        <input class="form-control" id="high_dim_data_upload_metabolomics_chromatography_AutoSampler_Model" type="text" placeholder="e.g. write the name of AutoSampler Model used">
+                                        <input class="form-control" id="high_dim_data_upload_metabolomics_chromatography_AutoSampler_Model" type="text" placeholder="<% $c->i18n->p("phenotype.e_g_write_the_name_of_autosampler_model_used", "e.g. write the name of AutoSampler Model used") |h %>">
                                     </div>
                                 </div>
                                 <div class="form-group">
-                                    <label class="col-sm-3 control-label">Chromatography Column Model: </label>
+                                    <label class="col-sm-3 control-label"><% $c->i18n->p("phenotype.chromatography_column_model", "Chromatography Column Model:") |h %> </label>
                                     <div class="col-sm-9" >
-                                        <input class="form-control" id="high_dim_data_upload_metabolomics_chromatography_column_brand" type="text" placeholder="e.g. ThermoFisher MS100 Column">
+                                        <input class="form-control" id="high_dim_data_upload_metabolomics_chromatography_column_brand" type="text" placeholder="<% $c->i18n->p("phenotype.e_g", "e.g.") |h %> ThermoFisher MS100 Column">
                                     </div>
                                 </div>
                                 <div class="form-group">
-                                    <label class="col-sm-3 control-label">Chromatography Column Type: </label>
+                                    <label class="col-sm-3 control-label"><% $c->i18n->p("phenotype.chromatography_column_type", "Chromatography Column Type:") |h %> </label>
                                     <div class="col-sm-9" >
-                                        <input class="form-control" id="high_dim_data_upload_metabolomics_chromatography_column_type" type="text" placeholder="e.g. high polarity">
+                                        <input class="form-control" id="high_dim_data_upload_metabolomics_chromatography_column_type" type="text" placeholder="<% $c->i18n->p("phenotype.e_g", "e.g.") |h %> high polarity">
                                     </div>
                                 </div>
                                 <div class="form-group">
-                                    <label class="col-sm-3 control-label">Chromatography Protocol: </label>
+                                    <label class="col-sm-3 control-label"><% $c->i18n->p("phenotype.chromatography_protocol", "Chromatography Protocol:") |h %> </label>
                                     <div class="col-sm-9" >
-                                        <input class="form-control" id="high_dim_data_upload_metabolomics_chromatography_protocol" type="text" placeholder="e.g. describe chromatography protocol used">
+                                        <input class="form-control" id="high_dim_data_upload_metabolomics_chromatography_protocol" type="text" placeholder="<% $c->i18n->p("phenotype.e_g_describe_chromatography_protocol_used", "e.g. describe chromatography protocol used") |h %>">
                                     </div>
                                 </div>
                                 <div class="form-group">
-                                    <label class="col-sm-3 control-label">Mass Spectrometry Protocol: </label>
+                                    <label class="col-sm-3 control-label"><% $c->i18n->p("phenotype.mass_spectrometry_protocol", "Mass Spectrometry Protocol:") |h %> </label>
                                     <div class="col-sm-9" >
-                                        <input class="form-control" id="high_dim_data_upload_metabolomics_mass_spectrometry_protocol" type="text" placeholder="e.g. describe mass spectrometry protocol used">
+                                        <input class="form-control" id="high_dim_data_upload_metabolomics_mass_spectrometry_protocol" type="text" placeholder="<% $c->i18n->p("phenotype.e_g_describe_mass_spectrometry_protocol_used", "e.g. describe mass spectrometry protocol used") |h %>">
                                     </div>
                                 </div>
                                 <div class="form-group">
-                                    <label class="col-sm-3 control-label">MS Instrument: </label>
+                                    <label class="col-sm-3 control-label"><% $c->i18n->p("phenotype.ms_instrument", "MS Instrument:") |h %> </label>
                                     <div class="col-sm-9" >
-                                        <input class="form-control" id="high_dim_data_upload_metabolomics_ms_brand" type="text" placeholder="e.g. ThermoFisher MS100">
+                                        <input class="form-control" id="high_dim_data_upload_metabolomics_ms_brand" type="text" placeholder="<% $c->i18n->p("phenotype.e_g", "e.g.") |h %> ThermoFisher MS100">
                                     </div>
                                 </div>
                                 <div class="form-group">
-                                    <label class="col-sm-3 control-label">MS Mass Analyzer: </label>
+                                    <label class="col-sm-3 control-label"><% $c->i18n->p("phenotype.ms_mass_analyzer", "MS Mass Analyzer:") |h %> </label>
                                     <div class="col-sm-9" >
-                                        <input class="form-control" id="high_dim_data_upload_metabolomics_ms_mass_analyzer" type="text" placeholder="e.g. single quadropole">
+                                        <input class="form-control" id="high_dim_data_upload_metabolomics_ms_mass_analyzer" type="text" placeholder="<% $c->i18n->p("phenotype.e_g", "e.g.") |h %> single quadropole">
                                     </div>
                                 </div>
                                 <div class="form-group">
-                                    <label class="col-sm-3 control-label">MS Ion Source: </label>
+                                    <label class="col-sm-3 control-label"><% $c->i18n->p("phenotype.ms_ion_source", "MS Ion Source:") |h %> </label>
                                     <div class="col-sm-9" >
-                                        <input class="form-control" id="high_dim_data_upload_metabolomics_ms_ion_source" type="text" placeholder="e.g. EI, ESI, APCI, MALDI">
+                                        <input class="form-control" id="high_dim_data_upload_metabolomics_ms_ion_source" type="text" placeholder="<% $c->i18n->p("phenotype.e_g", "e.g.") |h %> EI, ESI, APCI, MALDI">
                                     </div>
                                 </div>
                                 <div class="form-group">
-                                    <label class="col-sm-3 control-label">MS Scan Polarity: </label>
+                                    <label class="col-sm-3 control-label"><% $c->i18n->p("phenotype.ms_scan_polarity", "MS Scan Polarity:") |h %> </label>
                                     <div class="col-sm-9" >
                                         <select class="form-control" id="high_dim_data_upload_metabolomics_ms_scan_polarity">
-                                            <option value="negative">Negative</option>
-                                            <option value="positive">Positive</option>
-                                            <option value="both">Both</option>
+                                            <option value="negative"><% $c->i18n->p("phenotype.negative", "Negative") |h %></option>
+                                            <option value="positive"><% $c->i18n->p("phenotype.positive", "Positive") |h %></option>
+                                            <option value="both"><% $c->i18n->p("phenotype.both", "Both") |h %></option>
                                         </select>
                                     </div>
                                 </div>
                                 <div class="form-group">
-                                    <label class="col-sm-3 control-label">MS Scan MZ Range: </label>
+                                    <label class="col-sm-3 control-label"><% $c->i18n->p("phenotype.ms_scan_mz_range", "MS Scan MZ Range:") |h %> </label>
                                     <div class="col-sm-9" >
-                                        <input class="form-control" id="high_dim_data_upload_metabolomics_ms_scan_MZ_Range" type="text" placeholder="e.g. 60-800">
+                                        <input class="form-control" id="high_dim_data_upload_metabolomics_ms_scan_MZ_Range" type="text" placeholder="<% $c->i18n->p("phenotype.e_g", "e.g.") |h %> 60-800">
                                     </div>
                                 </div>
                             </div>
@@ -452,50 +452,50 @@ my @sequencing_center_options = split ",", $c->config->{genotyping_facilities};
 
                         <div class="form-horizontal">
                             <div class="form-group">
-                                <label class="col-sm-3 control-label">Equipment Description: </label>
+                                <label class="col-sm-3 control-label"><% $c->i18n->p("phenotype.equipment_description", "Equipment Description:") |h %> </label>
                                 <div class="col-sm-9" >
-                                    <input class="form-control" id="high_dim_data_upload_metabolomics_equipment_description" type="text" placeholder="e.g. ThermoFisher MS100 Electron Ionization TOF Negative Ion Mode">
+                                    <input class="form-control" id="high_dim_data_upload_metabolomics_equipment_description" type="text" placeholder="<% $c->i18n->p("phenotype.e_g", "e.g.") |h %> ThermoFisher MS100 Electron Ionization TOF Negative Ion Mode">
                                 </div>
                             </div>
                             <div class="form-group">
-                                <label class="col-sm-3 control-label">Data Process Description: </label>
+                                <label class="col-sm-3 control-label"><% $c->i18n->p("phenotype.data_process_description", "Data Process Description:") |h %> </label>
                                 <div class="col-sm-9" >
-                                    <textarea rows="10" class="form-control" id="high_dim_data_upload_metabolomics_data_process_description" placeholder="e.g. This describes mode, instrument settings, calibration procedure. Also, describes how the files from the LCMS machine were transformed into peak area. Finally, describes how metabolite annotations were assinged to peaks"></textarea>
+                                    <textarea rows="10" class="form-control" id="high_dim_data_upload_metabolomics_data_process_description" placeholder="<% $c->i18n->p("phenotype.e_g_this_describes_mode_instrument_settings_calibration_procedure_also", "e.g. This describes mode, instrument settings, calibration procedure. Also, describes how the files from the LCMS machine were transformed into peak area. Finally, describes how metabolite annotations were assigned to peaks") |h %>"></textarea>
                                 </div>
                             </div>
                             <div class="form-group">
-                                <label class="col-sm-3 control-label">Publication: </label>
+                                <label class="col-sm-3 control-label"><% $c->i18n->p("phenotype.publication", "Publication:") |h %> </label>
                                 <div class="col-sm-9" >
-                                    <input class="form-control" id="high_dim_data_upload_metabolomics_publication" type="text" placeholder="e.g. https://doi.org/10.3389/fgene.2021.643733">
+                                    <input class="form-control" id="high_dim_data_upload_metabolomics_publication" type="text" placeholder="<% $c->i18n->p("phenotype.e_g", "e.g.") |h %> https://doi.org/10.3389/fgene.2021.643733">
                                 </div>
                             </div>
                         </div>
                     </div>
 
                     <center>
-                    <button class="btn btn-primary" id="high_dim_data_upload_data_protocol_step">Go to Next Step</button>
+                    <button class="btn btn-primary" id="high_dim_data_upload_data_protocol_step"><% $c->i18n->p("cross.ui.go_to_next_step", "Go to Next Step") |h %></button>
                     </center>
                 </&>
-                <&| /util/workflow.mas:step, title=> "Template Info" &>
-                    <& /page/page_title.mas, title=>"High-dimensional data must be uploaded using the template information provided" &>
+                <&| /util/workflow.mas:step, title=> $c->i18n->p("phenotype.template_info", "Template Info") &>
+                    <& /page/page_title.mas, title=>HTML::Entities::encode_entities($c->i18n->p("phenotype.high_dimensional_data_must_be_uploaded_using_the_template_information", "High-dimensional data must be uploaded using the template information provided")) &>
 
                     <center>
-                    <&| /page/explanation.mas, title=>'Data Matrix Spreadsheet Template Information' &>
+                    <&| /page/explanation.mas, title=>$c->i18n->p("phenotype.data_matrix_spreadsheet_template_information", 'Data Matrix Spreadsheet Template Information') &>
                         <p>
-                        <b>File format information</b>
+                        <b><% $c->i18n->p("accessions.dialog.file_format", "File format information") |h %></b>
                         <br>
-                        <a id="high_dim_data_spreadsheet_format_info">Data Matrix Spreadsheet Format</a>
+                        <a id="high_dim_data_spreadsheet_format_info"><% $c->i18n->p("phenotype.data_matrix_spreadsheet_format", "Data Matrix Spreadsheet Format") |h %></a>
                         </p>
                     </&>
                     </center>
 
                     <div id="high_dim_data_upload_transcriptomics_protocol_template_div">
                         <center>
-                        <&| /page/explanation.mas, title=>'Transcript Details Spreadsheet Template Information' &>
+                        <&| /page/explanation.mas, title=>$c->i18n->p("phenotype.transcript_details_spreadsheet_template_information", 'Transcript Details Spreadsheet Template Information') &>
                             <p>
-                            <b>File format information</b>
+                            <b><% $c->i18n->p("accessions.dialog.file_format", "File format information") |h %></b>
                             <br>
-                            <a id="high_dim_data_spreadsheet_transcripts_format_info">Functional Annotation Spreadsheet Format</a>
+                            <a id="high_dim_data_spreadsheet_transcripts_format_info"><% $c->i18n->p("phenotype.functional_annotation_spreadsheet_format", "Functional Annotation Spreadsheet Format") |h %></a>
                             </p>
                         </&>
                         </center>
@@ -503,22 +503,22 @@ my @sequencing_center_options = split ",", $c->config->{genotyping_facilities};
 
                     <div id="high_dim_data_upload_metabolomics_protocol_template_div">
                         <center>
-                        <&| /page/explanation.mas, title=>'Metabolite Details Spreadsheet Template Information' &>
+                        <&| /page/explanation.mas, title=>$c->i18n->p("phenotype.metabolite_details_spreadsheet_template_information", 'Metabolite Details Spreadsheet Template Information') &>
                             <p>
-                            <b>File format information</b>
+                            <b><% $c->i18n->p("accessions.dialog.file_format", "File format information") |h %></b>
                             <br>
-                            <a id="high_dim_data_spreadsheet_metabolites_format_info">Metabolite Details Spreadsheet Format</a>
+                            <a id="high_dim_data_spreadsheet_metabolites_format_info"><% $c->i18n->p("phenotype.metabolite_details_spreadsheet_format", "Metabolite Details Spreadsheet Format") |h %></a>
                             </p>
                         </&>
                         </center>
                     </div>
 
                     <center>
-                    <button class="btn btn-primary" onclick="Workflow.complete(this); return false;">Go to Next Step</button>
+                    <button class="btn btn-primary" onclick="Workflow.complete(this); return false;"><% $c->i18n->p("cross.ui.go_to_next_step", "Go to Next Step") |h %></button>
                     </center>
                 </&>
-                <&| /util/workflow.mas:step, title=> "Upload" &>
-                    <& /page/page_title.mas, title=>"Select your high-dimensional data file to upload" &>
+                <&| /util/workflow.mas:step, title=> $c->i18n->p("global.dataset_publish.action.upload", "Upload") &>
+                    <& /page/page_title.mas, title=>HTML::Entities::encode_entities($c->i18n->p("phenotype.select_your_high_dimensional_data_file_to_upload", "Select your high-dimensional data file to upload")) &>
 
                     <div id="high_dim_data_upload_nirs_div" style="display:none">
                         <form class="form-horizontal" role="form" method="post" enctype="multipart/form-data" encoding="multipart/form-data" id="upload_nirs_spreadsheet_file_form" name="upload_nirs_spreadsheet_file_form">
@@ -533,7 +533,7 @@ my @sequencing_center_options = split ",", $c->config->{genotyping_facilities};
                             </div>
                             -->
                             <div class="form-group">
-                                <label class="col-sm-3 control-label">NIRS Spreadsheet: </label>
+                                <label class="col-sm-3 control-label"><% $c->i18n->p("phenotype.nirs_spreadsheet", "NIRS Spreadsheet:") |h %> </label>
                                 <div class="col-sm-9" >
                                     <input type="file" id="upload_nirs_spreadsheet_file_input" name="upload_nirs_spreadsheet_file_input" encoding="multipart/form-data" />
                                 </div>
@@ -547,8 +547,8 @@ my @sequencing_center_options = split ",", $c->config->{genotyping_facilities};
 
                         <hr>
                         <center>
-                            <button type="button" class="btn btn-info" name="upload_nirs_spreadsheet_submit_verify" id="upload_nirs_spreadsheet_submit_verify">Verify</button>
-                            <button disabled type="button" class="btn btn-primary" name="upload_nirs_spreadsheet_submit_store" id="upload_nirs_spreadsheet_submit_store" title="First Verify Your File">Store</button>
+                            <button type="button" class="btn btn-info" name="upload_nirs_spreadsheet_submit_verify" id="upload_nirs_spreadsheet_submit_verify"><% $c->i18n->p("fieldbook_upload.ui.verify", "Verify") |h %></button>
+                            <button disabled type="button" class="btn btn-primary" name="upload_nirs_spreadsheet_submit_store" id="upload_nirs_spreadsheet_submit_store" title="<% $c->i18n->p("fieldbook_upload.ui.verify_first", "First Verify Your File") |h %>"><% $c->i18n->p("cross.ui.store", "Store") |h %></button>
                         </center>
 
                         <div id="upload_nirs_spreadsheet_verify_status"></div>
@@ -568,13 +568,13 @@ my @sequencing_center_options = split ",", $c->config->{genotyping_facilities};
                             </div>
                             -->
                             <div class="form-group">
-                                <label class="col-sm-3 control-label">Transcriptomics Data Matrix Spreadsheet: </label>
+                                <label class="col-sm-3 control-label"><% $c->i18n->p("phenotype.transcriptomics_data_matrix_spreadsheet", "Transcriptomics Data Matrix Spreadsheet:") |h %> </label>
                                 <div class="col-sm-9" >
                                     <input type="file" id="upload_transcriptomics_spreadsheet_file_input" name="upload_transcriptomics_spreadsheet_file_input" encoding="multipart/form-data" />
                                 </div>
                             </div>
                             <div class="form-group">
-                                <label class="col-sm-3 control-label">Transcripts Details Spreadsheet: </label>
+                                <label class="col-sm-3 control-label"><% $c->i18n->p("phenotype.transcripts_details_spreadsheet", "Transcripts Details Spreadsheet:") |h %> </label>
                                 <div class="col-sm-9" >
                                     <input type="file" id="upload_transcriptomics_transcript_metadata_spreadsheet_file_input" name="upload_transcriptomics_transcript_metadata_spreadsheet_file_input" encoding="multipart/form-data" />
                                 </div>
@@ -599,8 +599,8 @@ my @sequencing_center_options = split ",", $c->config->{genotyping_facilities};
 
                         <hr>
                         <center>
-                            <button type="button" class="btn btn-info" name="upload_transcriptomics_spreadsheet_submit_verify" id="upload_transcriptomics_spreadsheet_submit_verify">Verify</button>
-                            <button disabled type="button" class="btn btn-primary" name="upload_transcriptomics_spreadsheet_submit_store" id="upload_transcriptomics_spreadsheet_submit_store" title="First Verify Your File">Store</button>
+                            <button type="button" class="btn btn-info" name="upload_transcriptomics_spreadsheet_submit_verify" id="upload_transcriptomics_spreadsheet_submit_verify"><% $c->i18n->p("fieldbook_upload.ui.verify", "Verify") |h %></button>
+                            <button disabled type="button" class="btn btn-primary" name="upload_transcriptomics_spreadsheet_submit_store" id="upload_transcriptomics_spreadsheet_submit_store" title="<% $c->i18n->p("fieldbook_upload.ui.verify_first", "First Verify Your File") |h %>"><% $c->i18n->p("cross.ui.store", "Store") |h %></button>
                         </center>
 
                         <div id="upload_transcriptomics_spreadsheet_verify_status"></div>
@@ -609,21 +609,21 @@ my @sequencing_center_options = split ",", $c->config->{genotyping_facilities};
                     <div id="high_dim_data_upload_metabolomics_div" style="display:none">
                         <form class="form-horizontal" role="form" method="post" enctype="multipart/form-data" encoding="multipart/form-data" id="upload_metabolomics_spreadsheet_file_form" name="upload_metabolomics_spreadsheet_file_form">
                             <div class="form-group">
-                                <label class="col-sm-3 control-label">Data Level: </label>
+                                <label class="col-sm-3 control-label"><% $c->i18n->p("lists_datasets.download.data_level", "Data Level:") |h %> </label>
                                 <div class="col-sm-9" >
                                     <select class="form-control" id="upload_metabolomics_spreadsheet_data_level" name="upload_metabolomics_spreadsheet_data_level">
-                                        <option value="tissue_samples">Tissue Samples</option>
+                                        <option value="tissue_samples"><% $c->i18n->p("fieldbook.export.tissue_samples", "Tissue Samples") |h %></option>
                                     </select>
                                 </div>
                             </div>
                             <div class="form-group">
-                                <label class="col-sm-3 control-label">Metabolomics Data Matrix Spreadsheet: </label>
+                                <label class="col-sm-3 control-label"><% $c->i18n->p("phenotype.metabolomics_data_matrix_spreadsheet", "Metabolomics Data Matrix Spreadsheet:") |h %> </label>
                                 <div class="col-sm-9" >
                                     <input type="file" id="upload_metabolomics_spreadsheet_file_input" name="upload_metabolomics_spreadsheet_file_input" encoding="multipart/form-data" />
                                 </div>
                             </div>
                             <div class="form-group">
-                                <label class="col-sm-3 control-label">Metabolites Details Spreadsheet: </label>
+                                <label class="col-sm-3 control-label"><% $c->i18n->p("phenotype.metabolites_details_spreadsheet", "Metabolites Details Spreadsheet:") |h %> </label>
                                 <div class="col-sm-9" >
                                     <input type="file" id="upload_metabolomics_metabolite_details_spreadsheet_file_input" name="upload_metabolomics_metabolite_details_spreadsheet_file_input" encoding="multipart/form-data" />
                                 </div>
@@ -664,8 +664,8 @@ my @sequencing_center_options = split ",", $c->config->{genotyping_facilities};
 
                         <hr>
                         <center>
-                            <button type="button" class="btn btn-info" name="upload_metabolomics_spreadsheet_submit_verify" id="upload_metabolomics_spreadsheet_submit_verify">Verify</button>
-                            <button disabled type="button" class="btn btn-primary" name="upload_metabolomics_spreadsheet_submit_store" id="upload_metabolomics_spreadsheet_submit_store" title="First Verify Your File">Store</button>
+                            <button type="button" class="btn btn-info" name="upload_metabolomics_spreadsheet_submit_verify" id="upload_metabolomics_spreadsheet_submit_verify"><% $c->i18n->p("fieldbook_upload.ui.verify", "Verify") |h %></button>
+                            <button disabled type="button" class="btn btn-primary" name="upload_metabolomics_spreadsheet_submit_store" id="upload_metabolomics_spreadsheet_submit_store" title="<% $c->i18n->p("fieldbook_upload.ui.verify_first", "First Verify Your File") |h %>"><% $c->i18n->p("cross.ui.store", "Store") |h %></button>
                         </center>
 
                         <div id="upload_metabolomics_spreadsheet_verify_status"></div>
@@ -676,7 +676,7 @@ my @sequencing_center_options = split ",", $c->config->{genotyping_facilities};
         </div>
       </div>
       <div class="modal-footer">
-        <button type="button" name="met_close_refresh" id="met_close_refresh" class="btn btn-default" data-dismiss="modal">Close</button>
+        <button type="button" name="met_close_refresh" id="met_close_refresh" class="btn btn-default" data-dismiss="modal"><% $c->i18n->p("global.dataset_publish.close", "Close") |h %></button>
       </div>
     </div>
   </div>
@@ -686,19 +686,19 @@ my @sequencing_center_options = split ",", $c->config->{genotyping_facilities};
   <div class="modal-dialog modal-lg" role="document">
     <div class="modal-content">
       <div class="modal-header">
-        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-        <h4 class="modal-title" id="nirsUploadInfoDialog">Template Information</h4>
+        <button type="button" class="close" data-dismiss="modal" aria-label="<% $c->i18n->p("global.dataset_publish.close", "Close") |h %>"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title" id="nirsUploadInfoDialog"><% $c->i18n->p("cross.ui.template_information.bf8c643", "Template Information") |h %></h4>
       </div>
       <div class="modal-body">
         <div class="container-fluid">
 
-            <h3>Upload NIRS in a tabular spreadsheet (.csv) format with the following columns:</h3>
+            <h3><% $c->i18n->p("phenotype.upload_nirs_in_a_tabular_spreadsheet_csv_format_with_the", "Upload NIRS in a tabular spreadsheet (.csv) format with the following columns:") |h %></h3>
 
             <ul>
-                <li><strong>sample_name</strong>: This should be a sample name that exists in the database. The sample can come from a sampling trial or a field trial or a genotyping plate.</li>
-                <li><strong>device_id</strong>: Optional identifier to differentiate device (e.g. serial number). Can be numeric or letter.</li>
-                <li><strong>comments</strong>: Optional comments for any information to include. Can include specific sample preparation for measurement.</li>
-                <li>All other columns are <strong>wavelengths</strong> (e.g. 100, 400, 2000, etc). You can add as many columns as you want to upload, there isn't a limit.</li>
+                <li><strong>sample_name</strong><% $c->i18n->p("phenotype.this_should_be_a_sample_name_that_exists_in_the", ": This should be a sample name that exists in the database. The sample can come from a sampling trial or a field trial or a genotyping plate.") |h %></li>
+                <li><strong>device_id</strong><% $c->i18n->p("phenotype.optional_identifier_to_differentiate_device_e_g_serial_number_can", ": Optional identifier to differentiate device (e.g. serial number). Can be numeric or letter.") |h %></li>
+                <li><strong>comments</strong><% $c->i18n->p("phenotype.optional_comments_for_any_information_to_include_can_include_specific", ": Optional comments for any information to include. Can include specific sample preparation for measurement.") |h %></li>
+                <li><% $c->i18n->p("phenotype.all_other_columns_are", "All other columns are") |h %> <strong><% $c->i18n->p("phenotype.wavelengths", "wavelengths") |h %></strong> <% $c->i18n->p("phenotype.e_g_100_400_2000_etc_you_can_add_as", "(e.g. 100, 400, 2000, etc). You can add as many columns as you want to upload, there isn't a limit.") |h %></li>
             </ul>
             <table class="table table-hover table-bordered table-condensed" >
                 <thead></thead>
@@ -715,7 +715,7 @@ my @sequencing_center_options = split ",", $c->config->{genotyping_facilities};
         </div>
       </div>
       <div class="modal-footer">
-        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+        <button type="button" class="btn btn-default" data-dismiss="modal"><% $c->i18n->p("global.dataset_publish.close", "Close") |h %></button>
       </div>
     </div>
   </div>
@@ -726,20 +726,20 @@ my @sequencing_center_options = split ",", $c->config->{genotyping_facilities};
   <div class="modal-dialog modal-lg" role="document">
     <div class="modal-content">
       <div class="modal-header">
-        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-        <h4 class="modal-title" id="transcriptomicsUploadInfoDialog">Template Information</h4>
+        <button type="button" class="close" data-dismiss="modal" aria-label="<% $c->i18n->p("global.dataset_publish.close", "Close") |h %>"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title" id="transcriptomicsUploadInfoDialog"><% $c->i18n->p("cross.ui.template_information.bf8c643", "Template Information") |h %></h4>
       </div>
       <div class="modal-body">
         <div class="container-fluid">
 
-            <h3>Upload Transcriptomics in a tabular spreadsheet (.csv) format with the following columns:</h3>
+            <h3><% $c->i18n->p("phenotype.upload_transcriptomics_in_a_tabular_spreadsheet_csv_format_with_the", "Upload Transcriptomics in a tabular spreadsheet (.csv) format with the following columns:") |h %></h3>
 
             <ul>
 
-                <li><strong>sample_name</strong>: This should be a sample name that exists in the database. The sample can come from a sampling trial or a field trial or a genotyping plate.</li>
-                <li><strong>device_id</strong>: Optional identifier to differentiate device (e.g. serial number). Can be numeric or letter.</li>
-                <li><strong>comments</strong>: Optional comments for any information to include. Can include specific sample preparation for measurement.</li>
-                <li>All other columns are <strong>gene ids</strong>. You can add as many columns as you want to upload, there isn't a limit.</li>
+                <li><strong>sample_name</strong><% $c->i18n->p("phenotype.this_should_be_a_sample_name_that_exists_in_the", ": This should be a sample name that exists in the database. The sample can come from a sampling trial or a field trial or a genotyping plate.") |h %></li>
+                <li><strong>device_id</strong><% $c->i18n->p("phenotype.optional_identifier_to_differentiate_device_e_g_serial_number_can", ": Optional identifier to differentiate device (e.g. serial number). Can be numeric or letter.") |h %></li>
+                <li><strong>comments</strong><% $c->i18n->p("phenotype.optional_comments_for_any_information_to_include_can_include_specific", ": Optional comments for any information to include. Can include specific sample preparation for measurement.") |h %></li>
+                <li><% $c->i18n->p("phenotype.all_other_columns_are", "All other columns are") |h %> <strong><% $c->i18n->p("phenotype.gene_ids", "gene ids") |h %></strong><% $c->i18n->p("phenotype.you_can_add_as_many_columns_as_you_want_to", ". You can add as many columns as you want to upload, there isn't a limit.") |h %></li>
             </ul>
             <table class="table table-hover table-bordered table-condensed" >
                 <thead></thead>
@@ -756,7 +756,7 @@ my @sequencing_center_options = split ",", $c->config->{genotyping_facilities};
         </div>
       </div>
       <div class="modal-footer">
-        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+        <button type="button" class="btn btn-default" data-dismiss="modal"><% $c->i18n->p("global.dataset_publish.close", "Close") |h %></button>
       </div>
     </div>
   </div>
@@ -766,19 +766,19 @@ my @sequencing_center_options = split ",", $c->config->{genotyping_facilities};
   <div class="modal-dialog modal-lg" role="document">
     <div class="modal-content">
       <div class="modal-header">
-        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-        <h4 class="modal-title" id="metabolomicsUploadInfoDialog">Template Information</h4>
+        <button type="button" class="close" data-dismiss="modal" aria-label="<% $c->i18n->p("global.dataset_publish.close", "Close") |h %>"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title" id="metabolomicsUploadInfoDialog"><% $c->i18n->p("cross.ui.template_information.bf8c643", "Template Information") |h %></h4>
       </div>
       <div class="modal-body">
         <div class="container-fluid">
 
-            <h3>Upload Metabolomics in a tabular spreadsheet (.csv) format with the following columns:</h3>
+            <h3><% $c->i18n->p("phenotype.upload_metabolomics_in_a_tabular_spreadsheet_csv_format_with_the", "Upload Metabolomics in a tabular spreadsheet (.csv) format with the following columns:") |h %></h3>
 
             <ul>
-                <li><strong>sample_name</strong>: This should be a sample name that exists in the database. The sample can come from a sampling trial or a field trial or a genotyping plate.</li>
-                <li><strong>device_id</strong>: Optional identifier to differentiate device (e.g. serial number). Can be numeric or letter.</li>
-                <li><strong>comments</strong>: Optional comments for any information to include. Can include specific sample preparation for measurement.</li>
-                <li>All other columns are <strong>metabolite names</strong>. You can add as many columns as you want to upload, there isn't a limit.</li>
+                <li><strong>sample_name</strong><% $c->i18n->p("phenotype.this_should_be_a_sample_name_that_exists_in_the", ": This should be a sample name that exists in the database. The sample can come from a sampling trial or a field trial or a genotyping plate.") |h %></li>
+                <li><strong>device_id</strong><% $c->i18n->p("phenotype.optional_identifier_to_differentiate_device_e_g_serial_number_can", ": Optional identifier to differentiate device (e.g. serial number). Can be numeric or letter.") |h %></li>
+                <li><strong>comments</strong><% $c->i18n->p("phenotype.optional_comments_for_any_information_to_include_can_include_specific", ": Optional comments for any information to include. Can include specific sample preparation for measurement.") |h %></li>
+                <li><% $c->i18n->p("phenotype.all_other_columns_are", "All other columns are") |h %> <strong><% $c->i18n->p("phenotype.metabolite_names", "metabolite names") |h %></strong><% $c->i18n->p("phenotype.you_can_add_as_many_columns_as_you_want_to", ". You can add as many columns as you want to upload, there isn't a limit.") |h %></li>
             </ul>
             <table class="table table-hover table-bordered table-condensed" >
                 <thead></thead>
@@ -795,7 +795,7 @@ my @sequencing_center_options = split ",", $c->config->{genotyping_facilities};
         </div>
       </div>
       <div class="modal-footer">
-        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+        <button type="button" class="btn btn-default" data-dismiss="modal"><% $c->i18n->p("global.dataset_publish.close", "Close") |h %></button>
       </div>
     </div>
   </div>
@@ -805,21 +805,21 @@ my @sequencing_center_options = split ",", $c->config->{genotyping_facilities};
   <div class="modal-dialog modal-lg" role="document">
     <div class="modal-content">
       <div class="modal-header">
-        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-        <h4 class="modal-title" id="transcriptomicsDetailsUploadInfoDialog">Template Information</h4>
+        <button type="button" class="close" data-dismiss="modal" aria-label="<% $c->i18n->p("global.dataset_publish.close", "Close") |h %>"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title" id="transcriptomicsDetailsUploadInfoDialog"><% $c->i18n->p("cross.ui.template_information.bf8c643", "Template Information") |h %></h4>
       </div>
       <div class="modal-body">
         <div class="container-fluid">
 
-            <h3>Upload details about the transcripts in a tabular spreadsheet (.csv) format with the following columns:</h3>
+            <h3><% $c->i18n->p("phenotype.upload_details_about_the_transcripts_in_a_tabular_spreadsheet_csv", "Upload details about the transcripts in a tabular spreadsheet (.csv) format with the following columns:") |h %></h3>
 
             <ul>
-                <li>gene_id (required): This should be the same name as present in a column in your transcriptomics data matrix file.</li>
-                <li>chromosome (required): The chromosome where the transcript exists.</li>
-                <li>pos_left (required): The start position in base pairs of where the transcript begins.</li>
-                <li>pos_right (required): The end position in base pairs of where the transcript ends.</li>
-                <li>functional_annotation (optional): Descriptors for gene annotations.</li>
-                <li>notes (optional): Any additional descrptions.</li>
+                <li><% $c->i18n->p("phenotype.gene_id_required_this_should_be_the_same_name_as", "gene_id (required): This should be the same name as present in a column in your transcriptomics data matrix file.") |h %></li>
+                <li><% $c->i18n->p("phenotype.chromosome_required_the_chromosome_where_the_transcript_exists", "chromosome (required): The chromosome where the transcript exists.") |h %></li>
+                <li><% $c->i18n->p("phenotype.pos_left_required_the_start_position_in_base_pairs_of", "pos_left (required): The start position in base pairs of where the transcript begins.") |h %></li>
+                <li><% $c->i18n->p("phenotype.pos_right_required_the_end_position_in_base_pairs_of", "pos_right (required): The end position in base pairs of where the transcript ends.") |h %></li>
+                <li><% $c->i18n->p("phenotype.functional_annotation_optional_descriptors_for_gene_annotations", "functional_annotation (optional): Descriptors for gene annotations.") |h %></li>
+                <li><% $c->i18n->p("phenotype.notes_optional_any_additional_descrptions", "notes (optional): Any additional descriptions.") |h %></li>
             </ul>
             <table class="table table-hover table-bordered table-condensed" >
                 <thead></thead>
@@ -837,7 +837,7 @@ my @sequencing_center_options = split ",", $c->config->{genotyping_facilities};
         </div>
       </div>
       <div class="modal-footer">
-        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+        <button type="button" class="btn btn-default" data-dismiss="modal"><% $c->i18n->p("global.dataset_publish.close", "Close") |h %></button>
       </div>
     </div>
   </div>
@@ -847,36 +847,36 @@ my @sequencing_center_options = split ",", $c->config->{genotyping_facilities};
   <div class="modal-dialog modal-lg" role="document">
     <div class="modal-content">
       <div class="modal-header">
-        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-        <h4 class="modal-title" id="metabolomicsDetailsUploadInfoDialog">Template Information</h4>
+        <button type="button" class="close" data-dismiss="modal" aria-label="<% $c->i18n->p("global.dataset_publish.close", "Close") |h %>"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title" id="metabolomicsDetailsUploadInfoDialog"><% $c->i18n->p("cross.ui.template_information.bf8c643", "Template Information") |h %></h4>
       </div>
       <div class="modal-body">
         <div class="container-fluid">
 
-            <h3>Upload details about the metabolites in a tabular spreadsheet (.csv) format with the following columns:</h3>
+            <h3><% $c->i18n->p("phenotype.upload_details_about_the_metabolites_in_a_tabular_spreadsheet_csv", "Upload details about the metabolites in a tabular spreadsheet (.csv) format with the following columns:") |h %></h3>
 
             <ul>
-                <li><strong>metabolite_name (required)</strong>: This should be the same name as present in a column in your metabolomics data matrix file.</li>
-                <li><strong>chebi_id (optional)</strong>: Standard formula (e.g., CHEBI:16971) identifier for the metabolite.</li>
-                <li><strong>inchi_id (optional)</strong>: The International Chemical Identifier (e.g, InChI=1S/C6H6O3/c7-4-1-2-5(8)6(9)3-4/h1-3,7-9H) for the metabolite.</li>
-                <li><strong>inchi_key (optional)</strong>: The International Chemical Identifier (shortened version of inchi_id) for the metabolite.</li>
-                <li><strong>pubchem_id (optional)</strong>: Standard formula (e.g., https://www.ebi.ac.uk/chebi/searchId.do?chebiId=CHEBI:75854) identifier for the metabolite.</li>
-                <li><strong>smiles_id (optional)</strong>: Standard identifier (eg., Oc1ccc(O)c(O)c1) for the metabolite.</li>
-                <li><strong>chemical_formula (required)</strong>: Chemical formula of the metabolite (e.g., C6H6O3).</li>
-                <li><strong>putative_metabolite_identification (required)</strong>: e.g., Phenylalanine, sucrose, avenanthramide.</li>
-                <li><strong>putative_metabolite_identification_synonyms (optional)</strong>: Metabolite synonyms, alternate names of any of the above.</li>
-                <li><strong>mass_to_charge (required)</strong>: M/Z ratio, standard from output, should be a number.</li>
-                <li><strong>retention_time (required)</strong>: Retention time, also standard from machine output; users should confirm that unit is 'seconds'.</li>
-                <li><strong>charge (optional)</strong>: Could be negative or positive.</li>
-                <li><strong>fragmentation (optional)</strong>: e.g. (239:3349 240:1454 342:3557 343:1562).</li>
-                <li><strong>modifications (optional)</strong>: This is if the metabolite was modified to make it easier to measure on the instrument, and what it was modified too (e.g. trimethylsilation).</li>
-                <li><strong>metabolite_species (optional)</strong>: e.g., Acid, alcohol.</li>
-                <li><strong>met_database (required)</strong>: Metabolomics database (e.g., gmd.mpimp-golm.mpg.de).</li>
-                <li><strong>met_database_version (required)</strong>: Metabolomics database version (e.g., var5 alk 161212).</li>
-                <li><strong>met_reliability (required)</strong>: A number 1 through 5, related to  dx.doi.org/10.1021/es5002105.</li>
-                <li><strong>met_search_engine (required)</strong>: e.g., TagFinder4.1 manual supervised annotation.</li>
-                <li><strong>met_search_engine_score (required)</strong>: Score given by search engine.</li>
-                <li><strong>compound_name (optional)</strong>: Name for the compound.</li>
+                <li><strong><% $c->i18n->p("phenotype.metabolite_name_required", "metabolite_name (required)") |h %></strong><% $c->i18n->p("phenotype.this_should_be_the_same_name_as_present_in_a", ": This should be the same name as present in a column in your metabolomics data matrix file.") |h %></li>
+                <li><strong><% $c->i18n->p("phenotype.chebi_id_optional", "chebi_id (optional)") |h %></strong><% $c->i18n->p("phenotype.standard_formula_e_g_chebi_16971_identifier_for_the_metabolite", ": Standard formula (e.g., CHEBI:16971) identifier for the metabolite.") |h %></li>
+                <li><strong><% $c->i18n->p("phenotype.inchi_id_optional", "inchi_id (optional)") |h %></strong><% $c->i18n->p("phenotype.the_international_chemical_identifier_e_g_inchi_1s_c6h6o3_c7", ": The International Chemical Identifier (e.g, InChI=1S/C6H6O3/c7-4-1-2-5(8)6(9)3-4/h1-3,7-9H) for the metabolite.") |h %></li>
+                <li><strong><% $c->i18n->p("phenotype.inchi_key_optional", "inchi_key (optional)") |h %></strong><% $c->i18n->p("phenotype.the_international_chemical_identifier_shortened_version_of_inchi_id_for", ": The International Chemical Identifier (shortened version of inchi_id) for the metabolite.") |h %></li>
+                <li><strong><% $c->i18n->p("phenotype.pubchem_id_optional", "pubchem_id (optional)") |h %></strong><% $c->i18n->p("phenotype.standard_formula_e_g_https_www_ebi_ac_uk_chebi", ": Standard formula (e.g., https://www.ebi.ac.uk/chebi/searchId.do?chebiId=CHEBI:75854) identifier for the metabolite.") |h %></li>
+                <li><strong><% $c->i18n->p("phenotype.smiles_id_optional", "smiles_id (optional)") |h %></strong><% $c->i18n->p("phenotype.standard_identifier_eg_oc1ccc_o_c_o_c1_for_the", ": Standard identifier (eg., Oc1ccc(O)c(O)c1) for the metabolite.") |h %></li>
+                <li><strong><% $c->i18n->p("phenotype.chemical_formula_required", "chemical_formula (required)") |h %></strong><% $c->i18n->p("phenotype.chemical_formula_of_the_metabolite_e_g_c6h6o3", ": Chemical formula of the metabolite (e.g., C6H6O3).") |h %></li>
+                <li><strong><% $c->i18n->p("phenotype.putative_metabolite_identification_required", "putative_metabolite_identification (required)") |h %></strong>: <% $c->i18n->p("phenotype.e_g", "e.g.") |h %>, Phenylalanine, sucrose, avenanthramide.</li>
+                <li><strong><% $c->i18n->p("phenotype.putative_metabolite_identification_synonyms_optional", "putative_metabolite_identification_synonyms (optional)") |h %></strong><% $c->i18n->p("phenotype.metabolite_synonyms_alternate_names_of_any_of_the_above", ": Metabolite synonyms, alternate names of any of the above.") |h %></li>
+                <li><strong><% $c->i18n->p("phenotype.mass_to_charge_required", "mass_to_charge (required)") |h %></strong><% $c->i18n->p("phenotype.m_z_ratio_standard_from_output_should_be_a_number", ": M/Z ratio, standard from output, should be a number.") |h %></li>
+                <li><strong><% $c->i18n->p("phenotype.retention_time_required", "retention_time (required)") |h %></strong><% $c->i18n->p("phenotype.retention_time_also_standard_from_machine_output_users_should_confirm", ": Retention time, also standard from machine output; users should confirm that unit is 'seconds'.") |h %></li>
+                <li><strong><% $c->i18n->p("phenotype.charge_optional", "charge (optional)") |h %></strong><% $c->i18n->p("phenotype.could_be_negative_or_positive", ": Could be negative or positive.") |h %></li>
+                <li><strong><% $c->i18n->p("phenotype.fragmentation_optional", "fragmentation (optional)") |h %></strong>: <% $c->i18n->p("phenotype.e_g", "e.g.") |h %> (239:3349 240:1454 342:3557 343:1562).</li>
+                <li><strong><% $c->i18n->p("phenotype.modifications_optional", "modifications (optional)") |h %></strong><% $c->i18n->p("phenotype.this_is_if_the_metabolite_was_modified_to_make_it", ": This is if the metabolite was modified to make it easier to measure on the instrument, and what it was modified too (e.g. trimethylsilation).") |h %></li>
+                <li><strong><% $c->i18n->p("phenotype.metabolite_species_optional", "metabolite_species (optional)") |h %></strong>: <% $c->i18n->p("phenotype.e_g", "e.g.") |h %>, Acid, alcohol.</li>
+                <li><strong><% $c->i18n->p("phenotype.met_database_required", "met_database (required)") |h %></strong><% $c->i18n->p("phenotype.metabolomics_database_e_g_gmd_mpimp_golm_mpg_de", ": Metabolomics database (e.g., gmd.mpimp-golm.mpg.de).") |h %></li>
+                <li><strong><% $c->i18n->p("phenotype.met_database_version_required", "met_database_version (required)") |h %></strong><% $c->i18n->p("phenotype.metabolomics_database_version_e_g_var5_alk", ": Metabolomics database version (e.g., var5 alk 161212).") |h %></li>
+                <li><strong><% $c->i18n->p("phenotype.met_reliability_required", "met_reliability (required)") |h %></strong><% $c->i18n->p("phenotype.a_number_1_through_5_related_to_dx_doi_org", ": A number 1 through 5, related to  dx.doi.org/10.1021/es5002105.") |h %></li>
+                <li><strong><% $c->i18n->p("phenotype.met_search_engine_required", "met_search_engine (required)") |h %></strong>: <% $c->i18n->p("phenotype.e_g", "e.g.") |h %>, TagFinder4.1 manual supervised annotation.</li>
+                <li><strong><% $c->i18n->p("phenotype.met_search_engine_score_required", "met_search_engine_score (required)") |h %></strong><% $c->i18n->p("phenotype.score_given_by_search_engine", ": Score given by search engine.") |h %></li>
+                <li><strong><% $c->i18n->p("phenotype.compound_name_optional", "compound_name (optional)") |h %></strong><% $c->i18n->p("phenotype.name_for_the_compound", ": Name for the compound.") |h %></li>
             </ul>
             <table class="table table-hover table-bordered table-condensed" >
                 <thead></thead>
@@ -909,7 +909,7 @@ my @sequencing_center_options = split ",", $c->config->{genotyping_facilities};
         </div>
       </div>
       <div class="modal-footer">
-        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+        <button type="button" class="btn btn-default" data-dismiss="modal"><% $c->i18n->p("global.dataset_publish.close", "Close") |h %></button>
       </div>
     </div>
   </div>
@@ -944,7 +944,7 @@ jQuery(document).ready(function() {
         high_dim_data_upload_type = jQuery('#high_dim_data_upload_type_select').val();
 
         if (high_dim_data_upload_type == '') {
-            alert('Please select a data type first!');
+            alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("phenotype.please_select_a_data_type_first", "Please select a data type first!") : 'Please select a data type first!'));
             return false;
         }
 
@@ -1056,7 +1056,7 @@ jQuery(document).ready(function() {
             selected.push(jQuery(this).val());
         });
         if(selected.length > 1) {
-            alert('Please select only one protocol!');
+            alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("phenotype.please_select_only_one_protocol", "Please select only one protocol!") : 'Please select only one protocol!'));
             return false;
         }
 
@@ -1064,15 +1064,15 @@ jQuery(document).ready(function() {
         var high_dim_protocol_desc = jQuery('#high_dim_data_upload_protocol_desc').val();
 
         if (selected.length>0 && high_dim_protocol_name != '') {
-            alert('Please select a protocol or give a name for a new one! Not both!');
+            alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("phenotype.please_select_a_protocol_or_give_a_name_for_a", "Please select a protocol or give a name for a new one! Not both!") : 'Please select a protocol or give a name for a new one! Not both!'));
             return false;
         }
         if (selected.length==0 && high_dim_protocol_name == '') {
-            alert('Please select a protocol or create a new one!');
+            alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("phenotype.please_select_a_protocol_or_create_a_new_one", "Please select a protocol or create a new one!") : 'Please select a protocol or create a new one!'));
             return false;
         }
         if (selected.length==0 && high_dim_protocol_desc == '') {
-            alert('Please select a protocol or create a new one with a description!');
+            alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("phenotype.please_select_a_protocol_or_create_a_new_one_with", "Please select a protocol or create a new one with a description!") : 'Please select a protocol or create a new one with a description!'));
             return false;
         }
 
@@ -1142,11 +1142,11 @@ jQuery(document).ready(function() {
     jQuery('#upload_nirs_spreadsheet_submit_verify').click(function(){
         var file_input = jQuery("#upload_nirs_spreadsheet_file_input").val();
         if (file_input === '') {
-            alert("Please select a file");
+            alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("global.manage_file_share_dump.select_file", "Please select a file") : "Please select a file"));
             return false;
         }
         else {
-            jQuery('#working_msg').html("Verifying NIRS File and Data");
+            jQuery('#working_msg').html((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("phenotype.verifying_nirs_file_and_data", "Verifying NIRS File and Data") : "Verifying NIRS File and Data"));
             jQuery('#working_modal').modal("show");
             jQuery('#upload_nirs_spreadsheet_file_form').attr("action", '/ajax/highdimensionalphenotypes/nirs_upload_verify');
             jQuery('#upload_nirs_spreadsheet_file_form').submit();
@@ -1166,7 +1166,7 @@ jQuery(document).ready(function() {
             var submit_store_button = "#upload_nirs_spreadsheet_submit_store";
             var upload_phenotype_status = "#upload_nirs_spreadsheet_verify_status";
 
-            jQuery('#upload_nirs_spreadsheet_verify_figure').html('<div class="well well-sm"><h3>Plot of Spectra: </h3><img width="80%" height="80%" src="'+response.figure+'"></div>');
+            jQuery('#upload_nirs_spreadsheet_verify_figure').html(("<div class=\"well well-sm\"><h3>" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("phenotype.plot_of_spectra", "Plot of Spectra:") : "Plot of Spectra:")).html() + " </h3><img width=\"80%\" height=\"80%\" src=\"")+response.figure+'"></div>');
 
             jQuery(submit_verify_button).attr('disabled', true);
             var message_text = "<hr><ul class='list-group'>";
@@ -1197,7 +1197,7 @@ jQuery(document).ready(function() {
                 if (warningarrayLength > 0) {
                     message_text += "<li class='list-group-item list-group-item-warning'>";
                     message_text += "<span class='badge'><span class='glyphicon glyphicon-asterisk'></span></span>";
-                    message_text += "Warnings are shown in yellow. Either fix the file and try again or continue with storing the data.<hr>If you continue, by default any new values will be uploaded and any previously stored values will be skipped.<hr>To overwrite previously stored values instead: <input type='checkbox' id='phenotype_upload_overwrite_values' name='phenotype_upload_overwrite_values' /><br><br>";
+                    message_text += ("" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("phenotype_upload.client.warnings_help", "Warnings are shown in yellow. Either fix the file and try again or continue with storing the data.") : "Warnings are shown in yellow. Either fix the file and try again or continue with storing the data.")).html() + "<hr>" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("phenotype.if_you_continue_by_default_any_new_values_will_be", "If you continue, by default any new values will be uploaded and any previously stored values will be skipped.") : "If you continue, by default any new values will be uploaded and any previously stored values will be skipped.")).html() + "<hr>" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("phenotype.to_overwrite_previously_stored_values_instead", "To overwrite previously stored values instead:") : "To overwrite previously stored values instead:")).html() + " <input type='checkbox' id='phenotype_upload_overwrite_values' name='phenotype_upload_overwrite_values' /><br><br>");
                     message_text += "</li>";
                     for (var i = 0; i < warningarrayLength; i++) {
                         message_text += "<li class='list-group-item list-group-item-warning'>";
@@ -1213,11 +1213,11 @@ jQuery(document).ready(function() {
             jQuery("#upload_nirs_spreadsheet_submit_store").click( function() {
                 var file_input = jQuery("#upload_nirs_spreadsheet_file_input").val();
                 if (file_input === '') {
-                    alert("Please select a file");
+                    alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("global.manage_file_share_dump.select_file", "Please select a file") : "Please select a file"));
                     return false;
                 }
                 else {
-                    jQuery('#working_msg').html("Storing NIRS File and Data");
+                    jQuery('#working_msg').html((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("phenotype.storing_nirs_file_and_data", "Storing NIRS File and Data") : "Storing NIRS File and Data"));
                     jQuery('#working_modal').modal("show");
                     jQuery('#upload_nirs_spreadsheet_file_form').attr("action", '/ajax/highdimensionalphenotypes/nirs_upload_store');
                     jQuery('#upload_nirs_spreadsheet_file_form').submit();
@@ -1253,10 +1253,10 @@ jQuery(document).ready(function() {
                             message_text += "</li>";
                         }
                         if (errorarrayLength == 0) {
-                            message_text += "<li class='list-group-item list-group-item-success'><hr><h3>Upload Successfull!</h3></li>";
+                            message_text += ("<li class='list-group-item list-group-item-success'><hr><h3>" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("phenotype.upload_successfull", "Upload Successful!") : "Upload Successful!")).html() + "</h3></li>");
                         }
                     } else {
-                        message_text += "<li class='list-group-item list-group-item-success'><hr><h3>Upload Successfull!</h3></li>";
+                        message_text += ("<li class='list-group-item list-group-item-success'><hr><h3>" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("phenotype.upload_successfull", "Upload Successful!") : "Upload Successful!")).html() + "</h3></li>");
                     }
                     message_text += "</ul>";
                     jQuery(upload_phenotype_status).html(message_text);
@@ -1275,11 +1275,11 @@ jQuery(document).ready(function() {
     jQuery('#upload_transcriptomics_spreadsheet_submit_verify').click(function(){
         var file_input = jQuery("#upload_transcriptomics_spreadsheet_file_input").val();
         if (file_input === '') {
-            alert("Please select a file");
+            alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("global.manage_file_share_dump.select_file", "Please select a file") : "Please select a file"));
             return false;
         }
         else {
-            jQuery('#working_msg').html("Verifying Transcriptomics File and Data");
+            jQuery('#working_msg').html((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("phenotype.verifying_transcriptomics_file_and_data", "Verifying Transcriptomics File and Data") : "Verifying Transcriptomics File and Data"));
             jQuery('#working_modal').modal("show");
             jQuery('#upload_transcriptomics_spreadsheet_file_form').data("flag", "verify");
             jQuery('#upload_transcriptomics_spreadsheet_file_form').attr("action", '/ajax/highdimensionalphenotypes/transcriptomics_upload_verify');
@@ -1290,11 +1290,11 @@ jQuery(document).ready(function() {
     jQuery("#upload_transcriptomics_spreadsheet_submit_store").click( function() {
         var file_input = jQuery("#upload_transcriptomics_spreadsheet_file_input").val();
         if (file_input === '') {
-            alert("Please select a file");
+            alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("global.manage_file_share_dump.select_file", "Please select a file") : "Please select a file"));
             return false;
         }
         else {
-            jQuery('#working_msg').html("Storing Transcriptomics File and Data");
+            jQuery('#working_msg').html((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("phenotype.storing_transcriptomics_file_and_data", "Storing Transcriptomics File and Data") : "Storing Transcriptomics File and Data"));
             jQuery('#working_modal').modal("show");
             jQuery('#upload_transcriptomics_spreadsheet_file_form').data("flag", "store");
             jQuery('#upload_transcriptomics_spreadsheet_file_form').attr("action", '/ajax/highdimensionalphenotypes/transcriptomics_upload_store');
@@ -1345,7 +1345,7 @@ jQuery(document).ready(function() {
                     if (warningarrayLength > 0) {
                         message_text += "<li class='list-group-item list-group-item-warning'>";
                         message_text += "<span class='badge'><span class='glyphicon glyphicon-asterisk'></span></span>";
-                        message_text += "Warnings are shown in yellow. Either fix the file and try again or continue with storing the data.<hr>If you continue, by default any new values will be uploaded and any previously stored values will be skipped.<hr>To overwrite previously stored values instead: <input type='checkbox' id='phenotype_upload_overwrite_values' name='phenotype_upload_overwrite_values' /><br><br>";
+                        message_text += ("" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("phenotype_upload.client.warnings_help", "Warnings are shown in yellow. Either fix the file and try again or continue with storing the data.") : "Warnings are shown in yellow. Either fix the file and try again or continue with storing the data.")).html() + "<hr>" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("phenotype.if_you_continue_by_default_any_new_values_will_be", "If you continue, by default any new values will be uploaded and any previously stored values will be skipped.") : "If you continue, by default any new values will be uploaded and any previously stored values will be skipped.")).html() + "<hr>" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("phenotype.to_overwrite_previously_stored_values_instead", "To overwrite previously stored values instead:") : "To overwrite previously stored values instead:")).html() + " <input type='checkbox' id='phenotype_upload_overwrite_values' name='phenotype_upload_overwrite_values' /><br><br>");
                         message_text += "</li>";
                         for (var i = 0; i < warningarrayLength; i++) {
                             message_text += "<li class='list-group-item list-group-item-warning'>";
@@ -1378,10 +1378,10 @@ jQuery(document).ready(function() {
                         message_text += "</li>";
                     }
                     if (errorarrayLength == 0) {
-                        message_text += "<li class='list-group-item list-group-item-success'><hr><h3>Upload Successfull!</h3></li>";
+                        message_text += ("<li class='list-group-item list-group-item-success'><hr><h3>" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("phenotype.upload_successfull", "Upload Successful!") : "Upload Successful!")).html() + "</h3></li>");
                     }
                 } else {
-                    message_text += "<li class='list-group-item list-group-item-success'><hr><h3>Upload Successfull!</h3></li>";
+                    message_text += ("<li class='list-group-item list-group-item-success'><hr><h3>" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("phenotype.upload_successfull", "Upload Successful!") : "Upload Successful!")).html() + "</h3></li>");
                 }
             }
             message_text += "</ul>";
@@ -1398,11 +1398,11 @@ jQuery(document).ready(function() {
     jQuery('#upload_metabolomics_spreadsheet_submit_verify').click(function(){
         var file_input = jQuery("#upload_metabolomics_spreadsheet_file_input").val();
         if (file_input === '') {
-            alert("Please select a file");
+            alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("global.manage_file_share_dump.select_file", "Please select a file") : "Please select a file"));
             return false;
         }
         else {
-            jQuery('#working_msg').html("Verifying Metabolomics File and Data");
+            jQuery('#working_msg').html((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("phenotype.verifying_metabolomics_file_and_data", "Verifying Metabolomics File and Data") : "Verifying Metabolomics File and Data"));
             jQuery('#working_modal').modal("show");
             jQuery('#upload_metabolomics_spreadsheet_file_form').attr("action", '/ajax/highdimensionalphenotypes/metabolomics_upload_verify');
             jQuery('#upload_metabolomics_spreadsheet_file_form').submit();
@@ -1451,7 +1451,7 @@ jQuery(document).ready(function() {
                 if (warningarrayLength > 0) {
                     message_text += "<li class='list-group-item list-group-item-warning'>";
                     message_text += "<span class='badge'><span class='glyphicon glyphicon-asterisk'></span></span>";
-                    message_text += "Warnings are shown in yellow. Either fix the file and try again or continue with storing the data.<hr>If you continue, by default any new values will be uploaded and any previously stored values will be skipped.<hr>To overwrite previously stored values instead: <input type='checkbox' id='phenotype_upload_overwrite_values' name='phenotype_upload_overwrite_values' /><br><br>";
+                    message_text += ("" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("phenotype_upload.client.warnings_help", "Warnings are shown in yellow. Either fix the file and try again or continue with storing the data.") : "Warnings are shown in yellow. Either fix the file and try again or continue with storing the data.")).html() + "<hr>" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("phenotype.if_you_continue_by_default_any_new_values_will_be", "If you continue, by default any new values will be uploaded and any previously stored values will be skipped.") : "If you continue, by default any new values will be uploaded and any previously stored values will be skipped.")).html() + "<hr>" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("phenotype.to_overwrite_previously_stored_values_instead", "To overwrite previously stored values instead:") : "To overwrite previously stored values instead:")).html() + " <input type='checkbox' id='phenotype_upload_overwrite_values' name='phenotype_upload_overwrite_values' /><br><br>");
                     message_text += "</li>";
                     for (var i = 0; i < warningarrayLength; i++) {
                         message_text += "<li class='list-group-item list-group-item-warning'>";
@@ -1467,11 +1467,11 @@ jQuery(document).ready(function() {
             jQuery("#upload_metabolomics_spreadsheet_submit_store").click( function() {
                 var file_input = jQuery("#upload_metabolomics_spreadsheet_file_input").val();
                 if (file_input === '') {
-                    alert("Please select a file");
+                    alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("global.manage_file_share_dump.select_file", "Please select a file") : "Please select a file"));
                     return false;
                 }
                 else {
-                    jQuery('#working_msg').html("Storing Metabolomics File and Data");
+                    jQuery('#working_msg').html((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("phenotype.storing_metabolomics_file_and_data", "Storing Metabolomics File and Data") : "Storing Metabolomics File and Data"));
                     jQuery('#working_modal').modal("show");
                     jQuery('#upload_metabolomics_spreadsheet_file_form').attr("action", '/ajax/highdimensionalphenotypes/metabolomics_upload_store');
                     jQuery('#upload_metabolomics_spreadsheet_file_form').submit();
@@ -1507,10 +1507,10 @@ jQuery(document).ready(function() {
                             message_text += "</li>";
                         }
                         if (errorarrayLength == 0) {
-                            message_text += "<li class='list-group-item list-group-item-success'><hr><h3>Upload Successfull!</h3></li>";
+                            message_text += ("<li class='list-group-item list-group-item-success'><hr><h3>" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("phenotype.upload_successfull", "Upload Successful!") : "Upload Successful!")).html() + "</h3></li>");
                         }
                     } else {
-                        message_text += "<li class='list-group-item list-group-item-success'><hr><h3>Upload Successfull!</h3></li>";
+                        message_text += ("<li class='list-group-item list-group-item-success'><hr><h3>" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("phenotype.upload_successfull", "Upload Successful!") : "Upload Successful!")).html() + "</h3></li>");
                     }
                     message_text += "</ul>";
                     jQuery(upload_phenotype_status).html(message_text);
@@ -1526,3 +1526,7 @@ jQuery(document).ready(function() {
 
 });
 </script>
+
+<%once>
+use HTML::Entities ();
+</%once>

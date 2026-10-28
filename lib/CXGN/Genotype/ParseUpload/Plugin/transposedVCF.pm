@@ -24,6 +24,7 @@ CXGN::Genotype::ParseUpload::Plugin::transposedVCF - plugin to load transposed V
 package CXGN::Genotype::ParseUpload::Plugin::transposedVCF;
 
 use Moose::Role;
+use SGN::I18N ();
 use SGN::Model::Cvterm;
 use Data::Dumper;
 use Scalar::Util qw(looks_like_number);
@@ -47,6 +48,7 @@ has '_fh' => (is => 'rw', isa => 'Ref');
 
 sub _validate_with_plugin {
     my $self = shift;
+    my $i18n = SGN::I18N::translate($self);
     my $filename = $self->get_filename();
     my $schema = $self->get_chado_schema();
     my %errors;
@@ -82,7 +84,7 @@ sub _validate_with_plugin {
     my @chroms = split /\t/, $chroms;
     foreach (@chroms) {
         if ($_ eq '' || !defined($_)) {
-            push @error_messages, 'Chromosome (chrom) must be defined for all markers!';
+            push @error_messages, SGN::I18N::translate($i18n, "genotype.file.chromosome_chrom_must_be_defined_for_all_markers", "Chromosome (chrom) must be defined for all markers!");
         }
     }
     $self->chroms(\@chroms);
@@ -92,7 +94,7 @@ sub _validate_with_plugin {
     my @pos = split /\t/, $pos;
     foreach (@pos) {
         if ($_ eq '' || !defined($_)) {
-            push @error_messages, 'Positions (pos) must be defined for all markers!';
+            push @error_messages, SGN::I18N::translate($i18n, "genotype.file.positions_pos_must_be_defined_for_all_markers", "Positions (pos) must be defined for all markers!");
         }
     }
     $self->pos(\@pos);
@@ -103,7 +105,7 @@ sub _validate_with_plugin {
     my @ids = split /\t/, $ids;
     foreach (@ids) {
         if ($_ eq '' || !defined($_)) {
-            push @error_messages, 'Identifiers (id) must be defined for all markers (or .)!';
+            push @error_messages, SGN::I18N::translate($i18n, "genotype.file.identifiers_id_must_be_defined_for_all_markers_or", "Identifiers (id) must be defined for all markers (or .)!");
         }
     }
     $self->ids(\@ids);
@@ -148,31 +150,31 @@ sub _validate_with_plugin {
     print STDERR "marker count = ".scalar(@ids)."\n";
 
     if ($chroms[0] ne '#CHROM'){
-        push @error_messages, 'Line 1 must start with "#CHROM".';
+        push @error_messages, SGN::I18N::translate($i18n, "genotype.file.line_line_must_start_with_field", "Line %{line} must start with \"%{field}\".", {line => "1", field => "#CHROM"});
     }
     if ($pos[0] ne 'POS'){
-        push @error_messages, 'Line 2 must start with "POS".';
+        push @error_messages, SGN::I18N::translate($i18n, "genotype.file.line_line_must_start_with_field", "Line %{line} must start with \"%{field}\".", {line => "2", field => "POS"});
     }
     if ($ids[0] ne 'ID'){
-        push @error_messages, 'Line 3 must start with "ID".';
+        push @error_messages, SGN::I18N::translate($i18n, "genotype.file.line_line_must_start_with_field", "Line %{line} must start with \"%{field}\".", {line => "3", field => "ID"});
     }
     if ($refs[0] ne 'REF'){
-        push @error_messages, 'Line 4 must start with "REF".';
+        push @error_messages, SGN::I18N::translate($i18n, "genotype.file.line_line_must_start_with_field", "Line %{line} must start with \"%{field}\".", {line => "4", field => "REF"});
     }
     if ($alts[0] ne 'ALT'){
-        push @error_messages, 'Line 5 must start with "ALT".';
+        push @error_messages, SGN::I18N::translate($i18n, "genotype.file.line_line_must_start_with_field", "Line %{line} must start with \"%{field}\".", {line => "5", field => "ALT"});
     }
     if ($qual[0] ne 'QUAL'){
-        push @error_messages, 'Line 6 must start with "QUAL".';
+        push @error_messages, SGN::I18N::translate($i18n, "genotype.file.line_line_must_start_with_field", "Line %{line} must start with \"%{field}\".", {line => "6", field => "QUAL"});
     }
     if ($filter[0] ne 'FILTER'){
-        push @error_messages, 'Line 7 must start with "FILTER".';
+        push @error_messages, SGN::I18N::translate($i18n, "genotype.file.line_line_must_start_with_field", "Line %{line} must start with \"%{field}\".", {line => "7", field => "FILTER"});
     }
     if ($info[0] ne 'INFO'){
-        push @error_messages, 'Line 8 must start with "INFO".';
+        push @error_messages, SGN::I18N::translate($i18n, "genotype.file.line_line_must_start_with_field", "Line %{line} must start with \"%{field}\".", {line => "8", field => "INFO"});
     }
     if ($format[0] ne 'FORMAT'){
-        push @error_messages, 'Line 9 must start with "FORMAT".';
+        push @error_messages, SGN::I18N::translate($i18n, "genotype.file.line_line_must_start_with_field", "Line %{line} must start with \"%{field}\".", {line => "9", field => "FORMAT"});
     }
 
     my @observation_unit_names;
@@ -223,7 +225,7 @@ sub _validate_with_plugin {
     } elsif ($stock_type eq 'stocks'){
         @missing_stocks = @{$validator->validate($schema,'stocks',$observation_unit_names)->{'missing'}};
     } else {
-        push @error_messages, "You can only upload genotype data for a tissue_sample OR accession (including synonyms) OR stocks!"
+        push @error_messages, SGN::I18N::translate($i18n, "genotype.file.you_can_only_upload_genotype_data_for_a_field_or_accession_including", "You can only upload genotype data for a %{field} OR %{accession} (including synonyms) OR %{stocks}!", {field => "tissue_sample", accession => "accession", stocks => "stocks"})
     }
 
     my %unique_stocks;
@@ -249,7 +251,7 @@ sub _validate_with_plugin {
 
     if (scalar(@missing_stocks_return)>0){
         $errors{'missing_stocks'} = \@missing_stocks_return;
-        push @error_messages, "The following stocks are not in the database: ".join(',',@missing_stocks_return);
+        push @error_messages, SGN::I18N::translate($i18n, "genotype.file.the_following_stocks_are_not_in_the_database_items", "The following stocks are not in the database: %{items}", {items => join(',',@missing_stocks_return)});
     }
 
     #store any errors found in the parsed file to parse_errors accessor

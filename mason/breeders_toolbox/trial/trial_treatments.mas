@@ -7,7 +7,7 @@ $user_can_modify
 <& /util/import_javascript.mas, classes => [ ] &>
 
 % if ($user_can_modify) {
-    <button class="btn btn-sm btn-primary" style="margin:3px" id="trial_detail_page_add_treatment">Add Treatments</button>
+    <button class="btn btn-sm btn-primary" style="margin:3px" id="trial_detail_page_add_treatment"><% $c->i18n->p('trial.card.treatments.add', 'Add Treatments') |h %></button>
 % }
 
 <div id="trial_treatments_html">
@@ -18,12 +18,12 @@ $user_can_modify
     <select id="trial_treatment_to_stock_select">
     </select>
     <select id="trial_treatment_level_applied_select">
-        <option value="plot">Plot</option>
-        <option value="subplot">Subplot</option>
-        <option value="plant">Plant</option>
-        <option value="tissue_sample">Tissue Sample</option>
+        <option value="plot"><% $c->i18n->p('trial.card.treatments.level.plot', 'Plot') |h %></option>
+        <option value="subplot"><% $c->i18n->p('trial.card.treatments.level.subplot', 'Subplot') |h %></option>
+        <option value="plant"><% $c->i18n->p('trial.card.treatments.level.plant', 'Plant') |h %></option>
+        <option value="tissue_sample"><% $c->i18n->p('trial.card.treatments.level.tissue_sample', 'Tissue Sample') |h %></option>
     </select>
-    <button class="btn btn-sm btn-primary" id="treatments_get_raw_data_btn">Get treatment data</button>
+    <button class="btn btn-sm btn-primary" id="treatments_get_raw_data_btn"><% $c->i18n->p('trial.card.treatments.get_data', 'Get treatment data') |h %></button>
     <br>
     <table id="trial_treatments_raw_data">
     </table>
@@ -104,7 +104,7 @@ jQuery(document).ready(function () {
             },
             error: function(response){
                 jQuery("#working_modal").modal("hide");
-                alert("Error retrieving treatments.");
+                alert(window.SGN && SGN.i18n ? SGN.i18n.p('trial.card.treatments.retrieve_error', 'Error retrieving treatments.') : 'Error retrieving treatments.');
             }
         });
     }
@@ -189,7 +189,7 @@ jQuery(document).ready(function () {
         let splits = this_id.split('_');
         let treatment_id = splits[2];
 
-        if (confirm("Delete treatment data from all stocks?")) {
+        if (confirm(window.SGN && SGN.i18n ? SGN.i18n.p('trial.card.treatments.confirm_delete', 'Delete treatment data from all stocks?') : 'Delete treatment data from all stocks?')) {
             jQuery.ajax({
                 url : '/ajax/breeders/trial/'+<% $trial_id %>+'/remove_treatment',
                 data : {
@@ -203,14 +203,14 @@ jQuery(document).ready(function () {
                     if (response.error) {
                         alert(response.error);
                     } else {
-                        alert("Treatment data removed.");
+                        alert(window.SGN && SGN.i18n ? SGN.i18n.p('trial.card.treatments.removed', 'Treatment data removed.') : 'Treatment data removed.');
                         window.location.reload();
                     }
                 },
                 error : function(response) {
                     jQuery('#working_modal').modal("hide");
                     console.log(response);
-                    alert("An error occurred deleting treatment data.");
+                    alert(window.SGN && SGN.i18n ? SGN.i18n.p('trial.card.treatments.delete_error', 'An error occurred deleting treatment data.') : 'An error occurred deleting treatment data.');
                 }
             });
         }

@@ -19,9 +19,9 @@ $dumpfile
 </%perl>
 
 % if ( ( $page_number - 1 ) > 0 ) {
-<a href="display.pl?dumpfile=<% $dumpfile %>&amp;page_number=<% $page_number - 1 %>">Previous Page</a>
+<a href="display.pl?dumpfile=<% $dumpfile %>&amp;page_number=<% $page_number - 1 %>"><% $c->i18n->p("lists_datasets.bulk.previous_page", "Previous Page") |h %></a>
 % }
 % else {
-  Previous Page
+  <% $c->i18n->p("lists_datasets.bulk.previous_page", "Previous Page") |h %>
 % }
 

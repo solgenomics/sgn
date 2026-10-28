@@ -3,11 +3,12 @@
 </%args>
 
 <& /page/columnar_table.mas,
-  headings => [ "Type", "Name" ],
+  headings => [ HTML::Entities::encode_entities($c->i18n->p("accession.stock.table.type", "Type")), HTML::Entities::encode_entities($c->i18n->p("accession.stock.table.name", "Name")) ],
   data     => SGN::View::Stock::stock_table( $objects ),
 &>
 
 <%once>
+use HTML::Entities ();
     use SGN::View::Stock ();
 </%once>
 

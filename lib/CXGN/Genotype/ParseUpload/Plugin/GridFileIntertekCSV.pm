@@ -1,6 +1,7 @@
 package CXGN::Genotype::ParseUpload::Plugin::GridFileIntertekCSV;
 
 use Moose::Role;
+use SGN::I18N ();
 use SGN::Model::Cvterm;
 use Data::Dumper;
 use Text::CSV;
@@ -8,6 +9,7 @@ use Text::CSV;
 # Check that all sample IDs are in the database already
 sub _validate_with_plugin {
     my $self = shift;
+    my $i18n = SGN::I18N::translate($self);
     my $filename = $self->get_filename();
     my $protocol_id = $self->get_nd_protocol_id();
     my $schema = $self->get_chado_schema();
@@ -53,7 +55,7 @@ sub _validate_with_plugin {
     my $column_1_header = $fields[0];
     $column_1_header =~ s/^\s+|\s+$//g;
     if ($column_1_header ne 'SampleName.LabID'){
-        push @error_messages, 'Column 1 header must be "SampleName.LabID" in the Grid File.';
+        push @error_messages, SGN::I18N::translate($i18n, "genotype.file.column_column_header_must_be_field_in_the_grid_file", "Column %{column} header must be \"%{field}\" in the Grid File.", {column => "1", field => "SampleName.LabID"});
     }
 
     my $number_observation_units = scalar(@observation_unit_names);
@@ -83,7 +85,7 @@ sub _validate_with_plugin {
     } elsif ($stock_type eq 'stocks'){
         @missing_stocks = @{$validator->validate($schema,'stocks',$observation_unit_names)->{'missing'}};
     } else {
-        push @error_messages, "You can only upload genotype data for a tissue_sample OR accession (including synonyms) OR stocks!"
+        push @error_messages, SGN::I18N::translate($i18n, "genotype.file.you_can_only_upload_genotype_data_for_a_field_or_accession_including", "You can only upload genotype data for a %{field} OR %{accession} (including synonyms) OR %{stocks}!", {field => "tissue_sample", accession => "accession", stocks => "stocks"})
     }
 
     my %unique_stocks;
@@ -128,13 +130,13 @@ sub _validate_with_plugin {
     #If there are markers in the uploaded file that are not saved in the protocol, they will be returned along in the error message
     if (scalar(@markers_not_in_protocol)>0){
         $errors{'missing_markers'} = \@markers_not_in_protocol;
-        push @error_messages, "The following markers are not in the database for the selected protocol: ".join(',',@markers_not_in_protocol);
+        push @error_messages, SGN::I18N::translate($i18n, "genotype.file.the_following_markers_are_not_in_the_database_for_the_selected_protocol", "The following markers are not in the database for the selected protocol: %{items}", {items => join(',',@markers_not_in_protocol)});
     }
 
     # If there are missing sample names, they will be returned along with an error message
     if (scalar(@missing_stocks_return)>0){
         $errors{'missing_stocks'} = \@missing_stocks_return;
-        push @error_messages, "The following stocks are not in the database: ".join(',',@missing_stocks_return);
+        push @error_messages, SGN::I18N::translate($i18n, "genotype.file.the_following_stocks_are_not_in_the_database_items", "The following stocks are not in the database: %{items}", {items => join(',',@missing_stocks_return)});
     }
 
     #store any errors found in the parsed file to parse_errors accessor
@@ -150,6 +152,7 @@ sub _validate_with_plugin {
 # After validation, the file data is actually parsed into the expected object
 sub _parse_with_plugin {
     my $self = shift;
+    my $i18n = SGN::I18N::translate($self);
     my $filename = $self->get_filename();
     my $protocol_id = $self->get_nd_protocol_id();
     my $schema = $self->get_chado_schema();
@@ -239,7 +242,7 @@ sub _parse_with_plugin {
                             push @gt_vcf_genotype, './.';
                             push @alt_calls, './.';
                         } else {
-                            push @error_messages, "Allele Call Does Not Match Ref or Alt for Sample: $sample_id_with_lab_id Marker: $marker_name Alt: $alt Ref: $ref Allele: $a";
+                            push @error_messages, SGN::I18N::translate($i18n, "genotype.file.allele_call_does_not_match_ref_or_alt_for_sample_sample_id", "Allele Call Does Not Match Ref or Alt for Sample: %{sample_id_with_lab_id} Marker: %{marker_name} Alt: %{alt} Ref: %{ref} Allele: %{a}", {sample_id_with_lab_id => ("" . "$sample_id_with_lab_id"), marker_name => ("" . "$marker_name"), alt => ("" . "$alt"), ref => ("" . "$ref"), a => ("" . "$a")});
                         }
                     }
 

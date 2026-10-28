@@ -6,6 +6,8 @@ BEGIN { extends 'Catalyst::Controller' }
 
 use Class::MOP;
 use HTML::Entities;
+use SGN::I18N ();
+use Scalar::Util ();
 use List::MoreUtils 'uniq';
 use Time::HiRes 'time';
 use URI::FromHash 'uri';
@@ -116,7 +118,7 @@ sub quick_search: Path('/search/quick') {
     $term =~ s/^\s*|\s*$//g;
 
     defined $term && length $term
-        or $c->throw_client_error( public_message => 'Must provide a search term' );
+        or $c->throw_client_error( public_message => $c->i18n->p('global.quick_search.missing_term', 'Must provide a search term') );
 
     $c->stash(
         quick_search_term => $term,
@@ -200,6 +202,7 @@ sub execute_predefined_searches: Private {
              %$search,
              term => $c->stash->{term},
 	     schema => $c->dbic_schema("Bio::Chado::Schema", undef, $sp_person_id),
+             i18n => $c->i18n,
           );
         $c->stash->{results}{$search_name} = {
              result => $searchresults,
@@ -223,19 +226,26 @@ sub search_with_xrefs: Private {
 #WWWSearch-implementing search
 sub do_quick_search {
     my ( $self, $db, %args ) = @_;
+    my SGN::I18N $do_quick_search_i18n = Scalar::Util::blessed($args{i18n}) && $args{i18n}->isa('SGN::I18N') ? $args{i18n} : undef;
 
     if ($args{function}) { #just run legacy functions and return their results
 	my $result;
         try {
-	    $result = $args{function}->($self, $db, $args{term}, $args{schema})
+	    $result = $args{function}->($self, $db, $args{term}, $args{schema}, $do_quick_search_i18n)
         } catch {
 	    warn "Search failed for term '$args{term}': $_";
-            $result = [undef, "0 results"];
+            $result = [undef, ($do_quick_search_i18n ? $do_quick_search_i18n->p('global.quick_search.zero_results', '0 results') : "0 results")];
         };
         return $result;
     } else {
         my $classname = $args{sf_class} or die 'Must provide a class name';
 	my $result_desc = $args{result_desc} or die "Must provide result_desc";
+        my $display_desc = $result_desc;
+        if ($result_desc eq 'people') { $display_desc = ($do_quick_search_i18n ? $do_quick_search_i18n->p('global.quick_search.type_0', 'people') : $result_desc); }
+        elsif ($result_desc eq 'cDNA libraries') { $display_desc = ($do_quick_search_i18n ? $do_quick_search_i18n->p('global.quick_search.type_1', 'cDNA libraries') : $result_desc); }
+        elsif ($result_desc eq 'unigene identifiers') { $display_desc = ($do_quick_search_i18n ? $do_quick_search_i18n->p('global.quick_search.type_2', 'unigene identifiers') : $result_desc); }
+        elsif ($result_desc eq 'images') { $display_desc = ($do_quick_search_i18n ? $do_quick_search_i18n->p('global.quick_search.type_3', 'images') : $result_desc); }
+        elsif ($result_desc eq 'locus or allele identifiers') { $display_desc = ($do_quick_search_i18n ? $do_quick_search_i18n->p('global.quick_search.type_4', 'locus or allele identifiers') : $result_desc); }
 
         Class::Load::load_class( $classname );
         $classname->isa( 'CXGN::Search::SearchI' )
@@ -255,18 +265,19 @@ sub do_quick_search {
 
             if ($count > 0) {
                 my $qstr = encode_entities($query->to_query_string());
-                return [ "$args{search_path}?$qstr", "$count $result_desc" ];
+                return [ "$args{search_path}?$qstr", ($do_quick_search_i18n ? $do_quick_search_i18n->p('global.quick_search.count_results', '%{count} %{type}', {count => $count, type => $display_desc}) : "$count $result_desc") ];
             }
         }
-        return [undef, "0 $result_desc"];
+        return [undef, ($do_quick_search_i18n ? $do_quick_search_i18n->p('global.quick_search.count_results', '%{count} %{type}', {count => 0, type => $display_desc}) : "0 $result_desc")];
     }
 }
 
 ###################### LEGACY QUICK SEARCH FUNCTIONS ##########################
 
 sub quick_est_search {
+    my SGN::I18N $quick_est_search_i18n = Scalar::Util::blessed($_[4]) && $_[4]->isa('SGN::I18N') ? $_[4] : undef;
     my ( $self, $db, $term ) = @_;
-    my $est_link = [ undef, "0 EST identifiers" ];
+    my $est_link = [ undef, ($quick_est_search_i18n ? $quick_est_search_i18n->p('global.quick_search.count_est_identifiers', '%{count} EST identifiers', {count => 0}) : "0 EST identifiers") ];
 
     # the est quick search should support identifiers of the form SGN-E999999, SGN_E999999, SGNE999999
     # and also E999999, as well as straight number (999999).
@@ -278,7 +289,7 @@ sub quick_est_search {
       if ($count != 0) {
           $est_link = [
               "/search/est.pl?request_id=$id_term&request_from=0&request_type=7&search=Search",
-              "$count EST identifiers",
+              ($quick_est_search_i18n ? $quick_est_search_i18n->p('global.quick_search.count_est_identifiers', '%{count} EST identifiers', {count => $count}) : "$count EST identifiers"),
             ];
       }
     }
@@ -286,6 +297,7 @@ sub quick_est_search {
 }
 
 sub quick_clone_search {
+    my SGN::I18N $quick_clone_search_i18n = Scalar::Util::blessed($_[4]) && $_[4]->isa('SGN::I18N') ? $_[4] : undef;
     my ( $self, $db, $term ) = @_;
 
     # adjust if EST
@@ -311,11 +323,11 @@ sub quick_clone_search {
     my $query = "SELECT clone_id FROM sgn.clone $where_clause";
     my ($clone_id) = $db->selectrow_array($query, undef, $term);
 
-    my $clone_link = [undef, "0 cDNA clone identifiers"];
+    my $clone_link = [undef, ($quick_clone_search_i18n ? $quick_clone_search_i18n->p('global.quick_search.count_cdna_clone_identifiers', '%{count} cDNA clone identifiers', {count => 0}) : "0 cDNA clone identifiers")];
     if ($clone_id) {
 	$clone_link = [
             "/search/est.pl?request_id=SGN-C$clone_id&request_from=0&request_type=automatic&search=Search",
-            "1 cDNA clone identifier",
+            ($quick_clone_search_i18n ? $quick_clone_search_i18n->p('global.quick_search.one_clone', '1 cDNA clone identifier') : "1 cDNA clone identifier"),
           ];
     }
     return $clone_link;
@@ -324,12 +336,13 @@ sub quick_clone_search {
 # For quick_search queries without the Version#-Release#- prefix, the version and release are
 # assumed to both be one. This is hardcoded below in two variables $version and $release.
 sub quick_array_search {
+    my SGN::I18N $quick_array_search_i18n = Scalar::Util::blessed($_[4]) && $_[4]->isa('SGN::I18N') ? $_[4] : undef;
     my ( $self, $db, $term ) = @_;
     my $version = 1; # default version is 1
     my $release = 1; # default release is 1
     my $spot = "";
 
-    my $array_link = [ undef, "0 array identifiers" ];
+    my $array_link = [ undef, ($quick_array_search_i18n ? $quick_array_search_i18n->p('global.quick_search.count_array_identifiers', '%{count} array identifiers', {count => 0}) : "0 array identifiers") ];
 
     # the array quick search should support the following formats:
     # 1-1-1.1.1.1 (proper), -1-1.1.1.1, 1-1.1.1.1, -1.1.1.1 and 1.1.1.1
@@ -352,7 +365,7 @@ sub quick_array_search {
 	if ($count != 0) {
 	    $array_link = [
                 "/search/est.pl?request_id=$id_term&request_from=0&request_type=14&search=Search",
-                "$count array identifiers",
+                ($quick_array_search_i18n ? $quick_array_search_i18n->p('global.quick_search.count_array_identifiers', '%{count} array identifiers', {count => $count}) : "$count array identifiers"),
               ];
 	}
     }
@@ -360,39 +373,42 @@ sub quick_array_search {
 }
 
 sub quick_phenotype_search {
+    my SGN::I18N $quick_phenotype_search_i18n = Scalar::Util::blessed($_[4]) && $_[4]->isa('SGN::I18N') ? $_[4] : undef;
     my ($self, $db, $term) = @_;
     my $q = "select count (distinct stock_id ) from stock left join stockprop using (stock_id) left join cvterm on stockprop.type_id = cvterm.cvterm_id where stock.name ilike ? or stock.uniquename ilike ? or (stockprop.value ilike ? and cvterm.name ilike ? ) " ;
     my $count = sql_query_count( $db , $q , "\%$term\%","\%$term\%","\%$term\%", "\%synonym\%" );
-    my $pheno_link = [ undef , "0 phenotype identifiers"];
+    my $pheno_link = [ undef , ($quick_phenotype_search_i18n ? $quick_phenotype_search_i18n->p('global.quick_search.count_phenotype_identifiers', '%{count} phenotype identifiers', {count => 0}) : "0 phenotype identifiers")];
     if ($count>0) {
         $pheno_link = ["/search/stocks?any_name=$term" ,
-                       "$count phenotype identifiers" ];
+                       ($quick_phenotype_search_i18n ? $quick_phenotype_search_i18n->p('global.quick_search.count_phenotype_identifiers', '%{count} phenotype identifiers', {count => $count}) : "$count phenotype identifiers") ];
     }
     return $pheno_link;
 }
 
 sub quick_marker_search {
+    my SGN::I18N $quick_marker_search_i18n = Scalar::Util::blessed($_[4]) && $_[4]->isa('SGN::I18N') ? $_[4] : undef;
     my ( $self, $db, $term ) = @_;
 
     # adjust if EST
     $term =~ s/([a-z]{4})(\d{1,2})([a-z]\d{1,2})/$1-$2-$3/i;
 
-    my $marker_link = [undef, "0 marker identifiers"];
+    my $marker_link = [undef, ($quick_marker_search_i18n ? $quick_marker_search_i18n->p('global.quick_search.count_marker_identifiers', '%{count} marker identifiers', {count => 0}) : "0 marker identifiers")];
     my $count = CXGN::Marker::Tools::marker_name_to_ids($db,$term);
     if ($count != 0) {
 	$marker_link = [
             "/search/markers/markersearch.pl?w822_nametype=starts+with&w822_marker_name=$term&w822_submit=Search&w822_mapped=off&w822_species=Any&w822_protos=Any&w822_chromos=Any&w822_pos_start=&w822_pos_end=&w822_confs=Any&w822_maps=Any",
-            "$count marker identifiers"
+            ($quick_marker_search_i18n ? $quick_marker_search_i18n->p('global.quick_search.count_marker_identifiers', '%{count} marker identifiers', {count => $count}) : "$count marker identifiers")
           ];
     }
     return $marker_link;
 }
 
 sub quick_mapped_geno_marker_search {
+    my SGN::I18N $quick_mapped_geno_marker_search_i18n = Scalar::Util::blessed($_[4]) && $_[4]->isa('SGN::I18N') ? $_[4] : undef;
     my ( $self, $db, $term, $schema ) = @_;
 
     my $count = 0;
-    my $marker_link = [undef, "0 marker identifiers"];
+    my $marker_link = [undef, ($quick_mapped_geno_marker_search_i18n ? $quick_mapped_geno_marker_search_i18n->p('global.quick_search.count_marker_identifiers', '%{count} marker identifiers', {count => 0}) : "0 marker identifiers")];
 
     # Get count of mapped markers
     my $mapped_count = CXGN::Marker::Tools::marker_name_to_ids($db,$term);
@@ -407,7 +423,7 @@ sub quick_mapped_geno_marker_search {
     if ( $count != 0 ) {
         $marker_link = [
             "/search/variants/results?marker_name=$term&marker_name_match=exactly",
-            "$count marker identifiers"
+            ($quick_mapped_geno_marker_search_i18n ? $quick_mapped_geno_marker_search_i18n->p('global.quick_search.count_marker_identifiers', '%{count} marker identifiers', {count => $count}) : "$count marker identifiers")
         ];
     }
 
@@ -415,6 +431,7 @@ sub quick_mapped_geno_marker_search {
 }
 
 sub quick_manual_annotation_search {
+    my SGN::I18N $quick_manual_annotation_search_i18n = Scalar::Util::blessed($_[4]) && $_[4]->isa('SGN::I18N') ? $_[4] : undef;
     my ( $self, $db, $term ) = @_;
 
     # It's a syntax error for whitespace to occur in tsquery query strings.  Replace with ampersands.
@@ -444,16 +461,17 @@ EOSQL
     };
 
     return
-      $count > 0 ? ["/search/annotation_search_result.pl?search_text=$term&Submit=search&request_from=0&search_type=manual_search", "$count manual annotations on $unigene_count unigenes"]
-                 : [undef, "0 manual annotations"];
+      $count > 0 ? ["/search/annotation_search_result.pl?search_text=$term&Submit=search&request_from=0&search_type=manual_search", ($quick_manual_annotation_search_i18n ? $quick_manual_annotation_search_i18n->p('global.quick_search.count_manual_annotations_unigenes', '%{count} manual annotations on %{unigenes} unigenes', {count => $count, unigenes => $unigene_count}) : "$count manual annotations on $unigene_count unigenes")]
+                 : [undef, ($quick_manual_annotation_search_i18n ? $quick_manual_annotation_search_i18n->p('global.quick_search.count_manual_annotations', '%{count} manual annotations', {count => 0}) : "0 manual annotations")];
 }
 
 sub quick_automatic_annotation_search {
+    my SGN::I18N $quick_automatic_annotation_search_i18n = Scalar::Util::blessed($_[4]) && $_[4]->isa('SGN::I18N') ? $_[4] : undef;
     my ( $self, $db, $term ) = @_;
     my $cleaned_term = to_tsquery_string($term);
     my $count = sql_query_count($db, "select count(*) from blast_defline where defline_fulltext @@ to_tsquery(?)",$cleaned_term);
 
-    my $unigene_count = "(not determined -- number of annotations too large)";
+    my $unigene_count = ($quick_automatic_annotation_search_i18n ? $quick_automatic_annotation_search_i18n->p('global.quick_search.undetermined', '(not determined -- number of annotations too large)') : "(not determined -- number of annotations too large)");
     if ($count < 10000) {
       $unigene_count = sql_query_count($db, <<EOSQL,$cleaned_term);
 SELECT COUNT(DISTINCT(unigene.unigene_id))
@@ -468,9 +486,9 @@ WHERE defline_fulltext @@ to_tsquery(?)
   AND blast_annotations.apply_type=15
 EOSQL
     }
-    my $automatic_annotation_link = [undef, "0 automatic annotations"];
+    my $automatic_annotation_link = [undef, ($quick_automatic_annotation_search_i18n ? $quick_automatic_annotation_search_i18n->p('global.quick_search.count_automatic_annotations', '%{count} automatic annotations', {count => 0}) : "0 automatic annotations")];
     if ($count !=0) {
-      $automatic_annotation_link = [ "/search/annotation_search_result.pl?search_text=$term&Submit=search&request_from=0&search_type=blast_search", "$count automatic annotations on $unigene_count unigenes" ];
+      $automatic_annotation_link = [ "/search/annotation_search_result.pl?search_text=$term&Submit=search&request_from=0&search_type=blast_search", ($quick_automatic_annotation_search_i18n ? $quick_automatic_annotation_search_i18n->p('global.quick_search.count_automatic_annotations_unigenes', '%{count} automatic annotations on %{unigenes} unigenes', {count => $count, unigenes => $unigene_count}) : "$count automatic annotations on $unigene_count unigenes") ];
     }
     return $automatic_annotation_link;
 }
@@ -493,6 +511,7 @@ sub sql_query_count {
 
 sub google_search {
   my( $self, $site_title, $term, $site_address ) = @_;
+  my SGN::I18N $google_search_i18n = Scalar::Util::blessed($_[4]) && $_[4]->isa('SGN::I18N') ? $_[4] : undef;
 
   print STDERR "Googling...\n";
   my $google_url = uri( scheme   => 'http',
@@ -524,9 +543,9 @@ sub google_search {
 
   print STDERR "Returning search results...\n";
   if( $count ) {
-      return [ $google_url, "$count pages on $site_title" ];
+      return [ $google_url, ($google_search_i18n ? $google_search_i18n->p('global.quick_search.count_pages', '%{count} pages on %{site}', {count => $count, site => $site_title}) : "$count pages on $site_title") ];
   } else {
-      return [ undef, "0 pages on $site_title" ];
+      return [ undef, ($google_search_i18n ? $google_search_i18n->p('global.quick_search.count_pages', '%{count} pages on %{site}', {count => 0, site => $site_title}) : "0 pages on $site_title") ];
   }
 }
 
@@ -547,59 +566,64 @@ sub stock_search {
 }
 
 sub quick_accession_search {
+    my SGN::I18N $quick_accession_search_i18n = Scalar::Util::blessed($_[4]) && $_[4]->isa('SGN::I18N') ? $_[4] : undef;
     my ( $self, $db, $term, $schema ) = @_;
 
     my ($id, $name) = $self->stock_search($schema, 'accession', $term);
     if ($id) {
 	print STDERR "Found accession $id, $name\n";
-	return [ '/stock/'.$id.'/view', "1 accession: ".$name ];
+	return [ '/stock/'.$id.'/view', ($quick_accession_search_i18n ? $quick_accession_search_i18n->p('global.quick_search.one_accession', '1 accession: %{name}', {name => $name}) : "1 accession: ".$name) ];
     }
     else {
 	print STDERR "Found no accession... ???\n";
-	return [ '', "0 accession identifiers" ];
+	return [ '', ($quick_accession_search_i18n ? $quick_accession_search_i18n->p('global.quick_search.0_accession_identifiers', '0 accession identifiers') : "0 accession identifiers") ];
     }
 }
 
 sub quick_vector_search {
+    my SGN::I18N $quick_vector_search_i18n = Scalar::Util::blessed($_[4]) && $_[4]->isa('SGN::I18N') ? $_[4] : undef;
     my ( $self, $db, $term, $schema ) = @_;
 
     my ($id, $name) = $self->stock_search($schema, 'vector_construct', $term);
     if ($id) {
 	print STDERR "Found vector_construct $id, $name\n";
-	return [ '/stock/'.$id.'/view', "1 vector construct: ".$name ];
+	return [ '/stock/'.$id.'/view', ($quick_vector_search_i18n ? $quick_vector_search_i18n->p('global.quick_search.one_vector', '1 vector construct: %{name}', {name => $name}) : "1 vector construct: ".$name) ];
     }
     else {
 	print STDERR "Found no vector construct\n";
-	return [ '', "0 vectors" ];
+	return [ '', ($quick_vector_search_i18n ? $quick_vector_search_i18n->p('global.quick_search.0_vectors', '0 vectors') : "0 vectors") ];
     }
 }
 
 
 sub quick_plot_search {
+    my SGN::I18N $quick_plot_search_i18n = Scalar::Util::blessed($_[4]) && $_[4]->isa('SGN::I18N') ? $_[4] : undef;
     my ( $self, $db, $term, $schema ) = @_;
     my ($id, $name) = $self->stock_search($schema, 'plot', $term);
 
     if ($id) {
-	return [ '/stock/'.$id."/view", "1 plot: ".$name ];
+	return [ '/stock/'.$id."/view", ($quick_plot_search_i18n ? $quick_plot_search_i18n->p('global.quick_search.one_plot', '1 plot: %{name}', {name => $name}) : "1 plot: ".$name) ];
     }
     else {
-	return [ '', "plots: No exact match." ];
+	return [ '', ($quick_plot_search_i18n ? $quick_plot_search_i18n->p('global.quick_search.plots_no_exact_match', 'plots: No exact match.') : "plots: No exact match.") ];
     }
 }
 
 sub quick_populations_search {
+    my SGN::I18N $quick_populations_search_i18n = Scalar::Util::blessed($_[4]) && $_[4]->isa('SGN::I18N') ? $_[4] : undef;
     my ( $self, $db, $term, $schema ) = @_;
     my ($id, $name) = $self->stock_search($schema, 'population', $term);
 
     if ($id) {
-	return [ '/stock/'.$id."/view", "1 population: ".$name ];
+	return [ '/stock/'.$id."/view", ($quick_populations_search_i18n ? $quick_populations_search_i18n->p('global.quick_search.one_population', '1 population: %{name}', {name => $name}) : "1 population: ".$name) ];
     }
     else {
-	return [ '', "0 populations." ];
+	return [ '', ($quick_populations_search_i18n ? $quick_populations_search_i18n->p('global.quick_search.0_populations', '0 populations.') : "0 populations.") ];
     }
 }
 
 sub quick_trials_search {
+    my SGN::I18N $quick_trials_search_i18n = Scalar::Util::blessed($_[4]) && $_[4]->isa('SGN::I18N') ? $_[4] : undef;
     my ( $self, $db, $term, $schema ) = @_;
 
     my $cv_rs = $schema->resultset("Cv::Cv")->search( { 'me.name' => 'project_type' }, { join => 'cvterms', '+select' => [ 'cvterms.name', 'cvterms.cvterm_id' ], '+as' => [ 'cvterm_name', 'cvterm_id' ]  });
@@ -620,14 +644,15 @@ sub quick_trials_search {
 	$name = $row->name();
     }
     if ($id) { 
-	return [ '/breeders/trial/'.$id, "1 trial: ".$name ];
+	return [ '/breeders/trial/'.$id, ($quick_trials_search_i18n ? $quick_trials_search_i18n->p('global.quick_search.one_trial', '1 trial: %{name}', {name => $name}) : "1 trial: ".$name) ];
     }
     else {
-	return [ '', "0 trials" ];
+	return [ '', ($quick_trials_search_i18n ? $quick_trials_search_i18n->p('global.quick_search.0_trials', '0 trials') : "0 trials") ];
     }
 }
 
 sub quick_locations_search {
+    my SGN::I18N $quick_locations_search_i18n = Scalar::Util::blessed($_[4]) && $_[4]->isa('SGN::I18N') ? $_[4] : undef;
     my ( $self, $db, $term, $schema ) = @_;
 
     print STDERR "LOCATION SEARCH!\n";
@@ -643,14 +668,15 @@ sub quick_locations_search {
 	print STDERR "LOCATION HAS ".$rs->count()." MATCHES!!!!\n";
     }
     if ($id) {
-	return [ '/breeders/locations/', '1 location: '.$name ]; # just link to generic locations page
+	return [ '/breeders/locations/', ($quick_locations_search_i18n ? $quick_locations_search_i18n->p('global.quick_search.one_location', '1 location: %{name}', {name => $name}) : '1 location: '.$name) ]; # just link to generic locations page
     }
     else {
-	return [ '', '0 locations' ];
+	return [ '', ($quick_locations_search_i18n ? $quick_locations_search_i18n->p('global.quick_search.0_locations', '0 locations') : '0 locations') ];
     }
 }
 
 sub quick_traits_search {
+    my SGN::I18N $quick_traits_search_i18n = Scalar::Util::blessed($_[4]) && $_[4]->isa('SGN::I18N') ? $_[4] : undef;
     my ( $self, $db, $term, $schema ) = @_;
 
     my $trait_search = CXGN::Trait::Search->new({
@@ -661,20 +687,21 @@ sub quick_traits_search {
     my ($data, $records_total) = $trait_search->search();
 
     if ($records_total == 0 ) {
-        return [ '', '0 traits' ];
+        return [ '', ($quick_traits_search_i18n ? $quick_traits_search_i18n->p('global.quick_search.0_traits', '0 traits') : '0 traits') ];
     }
     elsif ($records_total == 1) {
         my $t = ${$data}[0];
         my $id = $t->{trait_id};
         my $name = $t->{trait_name};
-        return [ '/cvterm/'.$id.'/view', '1 trait: '.$name ];
+        return [ '/cvterm/'.$id.'/view', ($quick_traits_search_i18n ? $quick_traits_search_i18n->p('global.quick_search.one_trait', '1 trait: %{name}', {name => $name}) : '1 trait: '.$name) ];
     }
     else {
-        return [ "/search/traits?name=$term", "$records_total traits" ];
+        return [ "/search/traits?name=$term", ($quick_traits_search_i18n ? $quick_traits_search_i18n->p('global.quick_search.count_traits', '%{count} traits', {count => $records_total}) : "$records_total traits") ];
     }
 }
 
 sub quick_bp_search {
+    my SGN::I18N $quick_bp_search_i18n = Scalar::Util::blessed($_[4]) && $_[4]->isa('SGN::I18N') ? $_[4] : undef;
     my ( $self, $db, $term, $schema ) = @_;
 
     print STDERR "breeding program search... \n";
@@ -696,7 +723,7 @@ sub quick_bp_search {
 	while (my $row = $rs->next()) {
 	    print STDERR join("\t", $row->name(), $row->project_id())."\n";
 	}
-	return [ undef, 'too many hits' ];
+	return [ undef, ($quick_bp_search_i18n ? $quick_bp_search_i18n->p('global.quick_search.too_many_hits', 'too many hits') : 'too many hits') ];
     }
 
     elsif ($rs->count() == 1) {
@@ -710,25 +737,27 @@ sub quick_bp_search {
     }
 
     if ($id) {
-	return [ '/breeders/program/'.$id, "1 breeding program: $name" ];
+	return [ '/breeders/program/'.$id, ($quick_bp_search_i18n ? $quick_bp_search_i18n->p('global.quick_search.one_program', '1 breeding program: %{name}', {name => $name}) : "1 breeding program: $name") ];
     }
     else { 
-	return [ undef, '0 breeding programs' ];
+	return [ undef, ($quick_bp_search_i18n ? $quick_bp_search_i18n->p('global.quick_search.0_breeding_programs', '0 breeding programs') : '0 breeding programs') ];
     }
 
 }
 
 sub quick_web_search {
+    my SGN::I18N $quick_web_search_i18n = Scalar::Util::blessed($_[4]) && $_[4]->isa('SGN::I18N') ? $_[4] : undef;
   my ($self, undef, $term) = @_;
-  # works the same way as quick_page_search, except that the domain contraint is removed from the
+  # works the same way as quick_page_search, except that the domain constraint is removed from the
   # search.
   print STDERR "Performing web search... ";
-  return $self->google_search('the entire web',$term);
+  return $self->google_search(($quick_web_search_i18n ? $quick_web_search_i18n->p('global.quick_search.entire_web', 'the entire web') : 'the entire web'),$term,undef,$quick_web_search_i18n);
 }
 
 sub quick_page_search {
+    my SGN::I18N $quick_page_search_i18n = Scalar::Util::blessed($_[4]) && $_[4]->isa('SGN::I18N') ? $_[4] : undef;
   my ($self, undef,$term) = @_;
-  return $self->google_search('SGN',$term,'solgenomics.net');
+  return $self->google_search('SGN',$term,'solgenomics.net',$quick_page_search_i18n);
 }
 
 __PACKAGE__->meta->make_immutable;

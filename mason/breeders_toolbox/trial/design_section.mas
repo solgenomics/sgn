@@ -1,3 +1,6 @@
+<%once>
+use HTML::Entities ();
+</%once>
 <%args>
 $trial_id
 $trial_name
@@ -19,15 +22,15 @@ $curator => undef
     <& /breeders_toolbox/trial/design.mas, trial_id => $trial_id &>
 % my $stock_label = '';
 % if ($trial_stock_type eq 'family_name') {
-%     $stock_label = 'Family Names';
+%     $stock_label = $c->i18n->p('trial.card.design_section.stock_family_names', 'Family Names');
 % } elsif ($trial_stock_type eq 'cross') {
-%     $stock_label = 'Cross Unique IDs';
+%     $stock_label = $c->i18n->p('trial.card.design_section.stock_cross_unique_ids', 'Cross Unique IDs');
 % } else {
-%     $stock_label = 'Accessions' ;
+%     $stock_label = $c->i18n->p('trial.card.design_section.stock_accessions', 'Accessions') ;
 
 % }
 
-  <&| /page/info_section.mas, id => "management_regime", title=> 'Management Regime', subtitle => '<div class="col-sm-4"><div id="management_factors">How this trial was managed</div></div>',is_subsection => 1, collapsible=>1, collapsed=>1 &>
+  <&| /page/info_section.mas, anchor_title => 'Management Regime',  id => "management_regime", title=> HTML::Entities::encode_entities($c->i18n->p('trial.card.design_section.management_regime', "Management Regime")), subtitle => '<div class="col-sm-4"><div id="management_factors">'.HTML::Entities::encode_entities($c->i18n->p('trial.card.design_section.management_help', 'How this trial was managed')).'</div></div>',is_subsection => 1, collapsible=>1, collapsed=>1 &>
 
       <& /breeders_toolbox/trial/design_section_management_regime.mas, trial_id => $trial_id,management_factor_types => $management_factor_types, user_can_modify => $user_can_modify &>
 
@@ -41,42 +44,42 @@ $curator => undef
   </&>
 
 
-    <&| /page/info_section.mas, id => "trial_seedlots", title=>"Seedlots", subtitle => '<div class="col-sm-4"><div id="seedlots_counts"></div></div>', is_subsection => 1, collapsible=>1, collapsed=>1 &>
+    <&| /page/info_section.mas, anchor_title => 'Seedlots',  id => "trial_seedlots", title=>HTML::Entities::encode_entities($c->i18n->p('trial.card.design_section.seedlots', "Seedlots")), subtitle => '<div class="col-sm-4"><div id="seedlots_counts"></div></div>', is_subsection => 1, collapsible=>1, collapsed=>1 &>
         <& /breeders_toolbox/trial/trial_seedlots.mas, trial_id => $trial_id &>
         <& /breeders_toolbox/trial/trial_seedlots_count.mas, trial_id => $trial_id &>
     </&>
 
 
-    <&| /page/info_section.mas, id => "trial_controls", title=>"Controls", subtitle => '<div class="col-sm-4"><div id="controls_counts"></div></div>', is_subsection => 1, collapsible=>1, collapsed=>1 &>
+    <&| /page/info_section.mas, anchor_title => 'Controls',  id => "trial_controls", title=>HTML::Entities::encode_entities($c->i18n->p('trial.card.design_section.controls', "Controls")), subtitle => '<div class="col-sm-4"><div id="controls_counts"></div></div>', is_subsection => 1, collapsible=>1, collapsed=>1 &>
         <& /breeders_toolbox/trial/trial_controls.mas, trial_id => $trial_id &>
         <& /breeders_toolbox/trial/trial_controls_count.mas, trial_id => $trial_id &>
     </&>
 
 
-    <&| /page/info_section.mas, id => "trial_plots", title=>"Plots", subtitle => '<div class="col-sm-4"><div id="plots_counts"></div></div>', is_subsection => 1, collapsible=>1, collapsed=>1 &>
+    <&| /page/info_section.mas, anchor_title => 'Plots',  id => "trial_plots", title=>HTML::Entities::encode_entities($c->i18n->p('trial.card.design_section.plots', "Plots")), subtitle => '<div class="col-sm-4"><div id="plots_counts"></div></div>', is_subsection => 1, collapsible=>1, collapsed=>1 &>
         <& /breeders_toolbox/trial/trial_plots.mas, trial_id => $trial_id &>
         <& /breeders_toolbox/trial/trial_plots_count.mas, trial_id => $trial_id &>
     </&>
 
-    <&| /page/info_section.mas, id => "trial_subplots", title=>"Subplots",  is_subsection => 1, collapsible=>1, collapsed=>1 &>
+    <&| /page/info_section.mas, anchor_title => 'Subplots',  id => "trial_subplots", title=>HTML::Entities::encode_entities($c->i18n->p('trial.card.design_section.subplots', "Subplots")),  is_subsection => 1, collapsible=>1, collapsed=>1 &>
 
         <div id="subplot_entries_section">
 
 % if (!$has_subplot_entries && !$has_plant_entries) {
-            <button class="btn btn-default" id="create_subplot_entries_button">Add subplot entries</button>
-            <button class="btn btn-default" id="upload_subplot_entries_button">Upload subplot entries using subplot_name</button>
-            <button class="btn btn-default" id="upload_subplot_entries_with_index_number_button">Upload subplot entries using subplot index number</button>
-            <button class="btn btn-default" id="trial_upload_subplots_with_num_subplots_button">Upload subplot entries using number of subplots per plot</button>
+            <button class="btn btn-default" id="create_subplot_entries_button"><% $c->i18n->p('trial.card.design_section.add_subplot', "Add subplot entries") |h %></button>
+            <button class="btn btn-default" id="upload_subplot_entries_button"><% $c->i18n->p('trial.card.design_section.upload_subplot_name', "Upload subplot entries using subplot_name") |h %></button>
+            <button class="btn btn-default" id="upload_subplot_entries_with_index_number_button"><% $c->i18n->p('trial.card.design_section.upload_subplot_index', "Upload subplot entries using subplot index number") |h %></button>
+            <button class="btn btn-default" id="trial_upload_subplots_with_num_subplots_button"><% $c->i18n->p('trial.card.design_section.upload_subplot_count', "Upload subplot entries using number of subplots per plot") |h %></button>
 % } elsif ($has_plant_entries && !$has_subplot_entries) {
-            <p>Subplots cannot be added to trials that already contain plant entries.</p>
+            <p><% $c->i18n->p('trial.card.design_section.subplot_existing_plants', "Subplots cannot be added to trials that already contain plant entries.") |h %></p>
 % } else {
             <& /breeders_toolbox/trial/trial_subplots.mas, trial_id => $trial_id, curator => $curator &>     
 % if ($curator) {
             <br>
-            <button class="btn btn-default" id="create_subplot_entries_button">Add subplot entries</button>
-            <button class="btn btn-default" id="upload_subplot_entries_button">Upload subplot entries using subplot_name</button>
-            <button class="btn btn-default" id="upload_subplot_entries_with_index_number_button">Upload subplot entries using subplot index number</button>
-            <button class="btn btn-default" id="trial_upload_subplots_with_num_subplots_button">Upload subplot entries using number of subplots per plot</button>
+            <button class="btn btn-default" id="create_subplot_entries_button"><% $c->i18n->p('trial.card.design_section.add_subplot', "Add subplot entries") |h %></button>
+            <button class="btn btn-default" id="upload_subplot_entries_button"><% $c->i18n->p('trial.card.design_section.upload_subplot_name', "Upload subplot entries using subplot_name") |h %></button>
+            <button class="btn btn-default" id="upload_subplot_entries_with_index_number_button"><% $c->i18n->p('trial.card.design_section.upload_subplot_index', "Upload subplot entries using subplot index number") |h %></button>
+            <button class="btn btn-default" id="trial_upload_subplots_with_num_subplots_button"><% $c->i18n->p('trial.card.design_section.upload_subplot_count', "Upload subplot entries using number of subplots per plot") |h %></button>
 % }
 % }
 
@@ -89,35 +92,35 @@ $curator => undef
         <div id="plant_entries_section">
 
 % if (!$has_plant_entries && !$has_subplot_entries) {
-           <p><strong>Add Plants to Plots:</strong></p>
-           <button class="btn btn-default" id="create_plant_entries_button">Add plant entries</button>
-           <button class="btn btn-default" id="upload_plant_entries_button">Upload plant entries using plant_name</button>
-           <button class="btn btn-default" id="upload_plant_entries_with_index_number_button">Upload plant entries using plant index number</button>
-           <button class="btn btn-default" id="trial_upload_plants_with_num_plants_button">Upload plant entries using number of plants per plot</button>
+           <p><strong><% $c->i18n->p('trial.card.design_section.add_plants_plots', "Add Plants to Plots:") |h %></strong></p>
+           <button class="btn btn-default" id="create_plant_entries_button"><% $c->i18n->p('trial.card.design_section.add_plant', "Add plant entries") |h %></button>
+           <button class="btn btn-default" id="upload_plant_entries_button"><% $c->i18n->p('trial.card.design_section.upload_plant_name', "Upload plant entries using plant_name") |h %></button>
+           <button class="btn btn-default" id="upload_plant_entries_with_index_number_button"><% $c->i18n->p('trial.card.design_section.upload_plant_index', "Upload plant entries using plant index number") |h %></button>
+           <button class="btn btn-default" id="trial_upload_plants_with_num_plants_button"><% $c->i18n->p('trial.card.design_section.upload_plant_count_plot', "Upload plant entries using number of plants per plot") |h %></button>
 
 % } elsif ($has_subplot_entries && !$has_plant_entries) {
 
            <br />
-           <p><strong>Add Plants to Subplots:</strong></p>
-           <button class="btn btn-default" id="create_plant_entries_subplots_button">Add plant entries</button>
-           <button class="btn btn-default" id="upload_plant_entries_subplots_button">Upload plant entries using plant_name</button>
-           <button class="btn btn-default" id="upload_plant_entries_with_index_number_subplots_button">Upload plant entries using plant index number</button>
-           <button class="btn btn-default" id="trial_upload_plants_with_num_plants_subplots_button">Upload plant entries using number of plants per subplot</button>
+           <p><strong><% $c->i18n->p('trial.card.design_section.add_plants_subplots', "Add Plants to Subplots:") |h %></strong></p>
+           <button class="btn btn-default" id="create_plant_entries_subplots_button"><% $c->i18n->p('trial.card.design_section.add_plant', "Add plant entries") |h %></button>
+           <button class="btn btn-default" id="upload_plant_entries_subplots_button"><% $c->i18n->p('trial.card.design_section.upload_plant_name', "Upload plant entries using plant_name") |h %></button>
+           <button class="btn btn-default" id="upload_plant_entries_with_index_number_subplots_button"><% $c->i18n->p('trial.card.design_section.upload_plant_index', "Upload plant entries using plant index number") |h %></button>
+           <button class="btn btn-default" id="trial_upload_plants_with_num_plants_subplots_button"><% $c->i18n->p('trial.card.design_section.upload_plant_count_subplot', "Upload plant entries using number of plants per subplot") |h %></button>
 % } else { # if this executes, there's definitely no plants
             <& /breeders_toolbox/trial/trial_plants.mas, trial_id => $trial_id, curator => $curator &>
 %       if ($curator && $has_subplot_entries) {
-            <p><strong>Add Plants to Subplots:</strong></p>
-           <button class="btn btn-default" id="create_plant_entries_subplots_button">Add plant entries</button>
-           <button class="btn btn-default" id="upload_plant_entries_subplots_button">Upload plant entries using plant_name</button>
-           <button class="btn btn-default" id="upload_plant_entries_with_index_number_subplots_button">Upload plant entries using plant index number</button>
-           <button class="btn btn-default" id="trial_upload_plants_with_num_plants_subplots_button">Upload plant entries using number of plants per subplot</button>
+            <p><strong><% $c->i18n->p('trial.card.design_section.add_plants_subplots', "Add Plants to Subplots:") |h %></strong></p>
+           <button class="btn btn-default" id="create_plant_entries_subplots_button"><% $c->i18n->p('trial.card.design_section.add_plant', "Add plant entries") |h %></button>
+           <button class="btn btn-default" id="upload_plant_entries_subplots_button"><% $c->i18n->p('trial.card.design_section.upload_plant_name', "Upload plant entries using plant_name") |h %></button>
+           <button class="btn btn-default" id="upload_plant_entries_with_index_number_subplots_button"><% $c->i18n->p('trial.card.design_section.upload_plant_index', "Upload plant entries using plant index number") |h %></button>
+           <button class="btn btn-default" id="trial_upload_plants_with_num_plants_subplots_button"><% $c->i18n->p('trial.card.design_section.upload_plant_count_subplot', "Upload plant entries using number of plants per subplot") |h %></button>
 %       }
 %       if ($curator && !$has_subplot_entries) {
-            <p><strong>Add Plants to Plots:</strong></p>
-           <button class="btn btn-default" id="create_plant_entries_button">Add plant entries</button>
-           <button class="btn btn-default" id="upload_plant_entries_button">Upload plant entries using plant_name</button>
-           <button class="btn btn-default" id="upload_plant_entries_with_index_number_button">Upload plant entries using plant index number</button>
-           <button class="btn btn-default" id="trial_upload_plants_with_num_plants_button">Upload plant entries using number of plants per plot</button>
+            <p><strong><% $c->i18n->p('trial.card.design_section.add_plants_plots', "Add Plants to Plots:") |h %></strong></p>
+           <button class="btn btn-default" id="create_plant_entries_button"><% $c->i18n->p('trial.card.design_section.add_plant', "Add plant entries") |h %></button>
+           <button class="btn btn-default" id="upload_plant_entries_button"><% $c->i18n->p('trial.card.design_section.upload_plant_name', "Upload plant entries using plant_name") |h %></button>
+           <button class="btn btn-default" id="upload_plant_entries_with_index_number_button"><% $c->i18n->p('trial.card.design_section.upload_plant_index', "Upload plant entries using plant index number") |h %></button>
+           <button class="btn btn-default" id="trial_upload_plants_with_num_plants_button"><% $c->i18n->p('trial.card.design_section.upload_plant_count_plot', "Upload plant entries using number of plants per plot") |h %></button>
 %       }
 % }
 
@@ -130,10 +133,10 @@ $curator => undef
         <div id="tissue_sample_entries_section">
 
 % if (!$has_tissue_sample_entries) {
-           <button class="btn btn-default" id="create_tissue_sample_entries_button">Add tissue sample entries</button>
+           <button class="btn btn-default" id="create_tissue_sample_entries_button"><% $c->i18n->p('trial.card.design_section.add_tissue', "Add tissue sample entries") |h %></button>
            <& /breeders_toolbox/trial/add_tissue_sample_per_plant.mas, trial_id => $trial_id, trial_name => $trial_name, trial_has_plants => $has_plant_entries &>
 % } else {
-		   <button class="btn btn-default" id="create_tissue_sample_entries_button">Add tissue sample entries</button>
+		   <button class="btn btn-default" id="create_tissue_sample_entries_button"><% $c->i18n->p('trial.card.design_section.add_tissue', "Add tissue sample entries") |h %></button>
            <& /breeders_toolbox/trial/add_tissue_sample_per_plant.mas, trial_id => $trial_id, trial_name => $trial_name, trial_has_plants => $has_plant_entries &>
            <& /breeders_toolbox/trial/trial_tissue_samples.mas, trial_id => $trial_id &>
 % }

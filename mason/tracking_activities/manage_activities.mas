@@ -1,3 +1,7 @@
+<%once>
+use HTML::Entities ();
+</%once>
+
 <%args>
 $locations
 $programs
@@ -7,15 +11,15 @@ $user_id
 
 <%perl>
     my $subtitle;
-    $subtitle = '<button class="btn btn-sm btn-primary" style="margin:3px" id="create_activity_project_link" name="create_activity_project_link">Add Tracking Activities Project</button> ';
+    $subtitle = ("<button class=\"btn btn-sm btn-primary\" style=\"margin:3px\" id=\"create_activity_project_link\" name=\"create_activity_project_link\">" . HTML::Entities::encode_entities($c->i18n->p("transformation.root.add_tracking_activities_project", "Add Tracking Activities Project")) . "</button> ");
 </%perl>
 
 <br />
-<& /page/page_title.mas, title => "Tracking Activities" &>
+<& /page/page_title.mas, title => HTML::Entities::encode_entities($c->i18n->p("folder.detail.tab.tracking_activities", "Tracking Activities")) &>
 
 <div class="container-fluid">
 
-<&| /page/info_section.mas, title=>"Tracking Activities" , collapsible=>1, collapsed=>0, subtitle=> $subtitle &>
+<&| /page/info_section.mas, anchor_title => "Tracking Activities", title=>HTML::Entities::encode_entities($c->i18n->p("folder.detail.tab.tracking_activities", "Tracking Activities")) , collapsible=>1, collapsed=>0, subtitle=> $subtitle &>
 
 <& /tracking_activities/activity_project_tree.mas, user_id=>$user_id, locations=>$locations, programs=>$programs, roles=>$roles &>
 

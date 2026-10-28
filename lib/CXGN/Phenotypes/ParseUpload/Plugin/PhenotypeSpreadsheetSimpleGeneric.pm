@@ -16,6 +16,9 @@ package CXGN::Phenotypes::ParseUpload::Plugin::PhenotypeSpreadsheetSimpleGeneric
 #)
 
 use Moose;
+use SGN::I18N ();
+use CatalystX::GlobalContext '$c';
+
 #use File::Slurp;
 use CXGN::File::Parse;
 use CXGN::List::Transform;
@@ -88,6 +91,7 @@ sub name {
 }
 
 sub validate {
+    my SGN::I18N $ui_phenotypespreadsheetsimplegeneric_validate_i18n = SGN::I18N::translate($c);
     my $self = shift;
     my $filename = shift;
     my $timestamp_included = shift;
@@ -119,7 +123,7 @@ sub validate {
 
     # File has no traits
     if ( scalar(@$trait_columns) < 1 ) {
-        $parse_result{'error'} = "Spreadsheet must have at least one trait in the header.";
+        $parse_result{'error'} = (SGN::I18N::translate($ui_phenotypespreadsheetsimplegeneric_validate_i18n, 'phenotype.upload.spreadsheet_must_have_at_least_one_trait_in_the_header', 'Spreadsheet must have at least one trait in the header.'));
         return \%parse_result;
     }
 
@@ -133,7 +137,7 @@ sub validate {
                     my ($value, $timestamp) = @$measurement;
                     next if !$timestamp;
                     if ($timestamp !~ m/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}(:\d{2})?(?:[+-]\d{4})?$/) {
-                        $parse_result{'error'} = "Timestamp needs to be of form YYYY-MM-DD HH:MM:SS-0000 or YYYY-MM-DD HH:MM:SS+0000 or YYYY-MM-DD HH:MM format";
+                        $parse_result{'error'} = (SGN::I18N::translate($ui_phenotypespreadsheetsimplegeneric_validate_i18n, 'phenotype.upload.timestamp_needs_to_be_of_form_yyyy_mm_dd_hh_mm_ss_0000_or_yyyy_mm_dd_hh_mm_.c94f12a', 'Timestamp needs to be of form YYYY-MM-DD HH:MM:SS-0000 or YYYY-MM-DD HH:MM:SS+0000 or YYYY-MM-DD HH:MM format'));
                         return \%parse_result;
                     }
                 }
@@ -145,6 +149,7 @@ sub validate {
 }
 
 sub parse {
+    my SGN::I18N $ui_phenotypespreadsheetsimplegeneric_parse_i18n = SGN::I18N::translate($c);
     my $self = shift;
     my $filename = shift;
     my $timestamp_included = shift;
@@ -183,8 +188,7 @@ sub parse {
         # If name-based also fails, return the errors
         if ( $parsed->{errors} && scalar( @{ $parsed->{errors} } ) > 0 ) {
             return _error_result(
-                "File must have a plot name or observationUnitDbId column. Errors: "
-                  . join( ", ", @{ $parsed->{errors} } )
+                (SGN::I18N::translate($ui_phenotypespreadsheetsimplegeneric_parse_i18n, 'phenotype.upload.file_must_have_a_plot_name_or_observationunitdbid_column_errors_values', 'File must have a plot name or observationUnitDbId column. Errors: %{values}', {values => "" . (join( ", ", @{ $parsed->{errors} } ))}))
             );
         }
     }
@@ -194,17 +198,17 @@ sub parse {
     my $columns = $parsed->{columns};
 
     if ( !grep { $_ eq 'observationunit_id' || $_ eq 'observationunit_name' } @$columns ) {
-        return _error_result("File must have a plot name or observationUnitDbId column.");
+        return _error_result((SGN::I18N::translate($ui_phenotypespreadsheetsimplegeneric_parse_i18n, 'phenotype.upload.file_must_have_a_plot_name_or_observationunitdbid_column', 'File must have a plot name or observationUnitDbId column.')));
     }
 
     if ( scalar(@$trait_columns) < 1 ) {
-        return _error_result("Spreadsheet must have at least one trait in the header.");
+        return _error_result((SGN::I18N::translate($ui_phenotypespreadsheetsimplegeneric_parse_i18n, 'phenotype.upload.spreadsheet_must_have_at_least_one_trait_in_the_header', 'Spreadsheet must have at least one trait in the header.')));
     }
 
     # If IDs used, convert to uniquenames
     my %id_to_name;
     if ( $observationunit_type eq 'id' ) {
-        return _error_result("A database schema is required to parse observationUnitDbId values.")
+        return _error_result((SGN::I18N::translate($ui_phenotypespreadsheetsimplegeneric_parse_i18n, 'phenotype.upload.a_database_schema_is_required_to_parse_observationunitdbid_values', 'A database schema is required to parse observationUnitDbId values.')))
           if !$schema;
 
         # Collect all stock ids from the parsed data
@@ -218,7 +222,7 @@ sub parse {
         }
 
         if ( !@stock_ids ) {
-            return _error_result("No valid observationUnitDbId values found in the file.");
+            return _error_result((SGN::I18N::translate($ui_phenotypespreadsheetsimplegeneric_parse_i18n, 'phenotype.upload.no_valid_observationunitdbid_values_found_in_the_file', 'No valid observationUnitDbId values found in the file.')));
         }
 
         my $transform_plugin = CXGN::List::Transform->new();
@@ -226,8 +230,7 @@ sub parse {
 
         if ( $transform_result->{missing} && @{ $transform_result->{missing} } ) {
             return _error_result(
-                "The following observationUnitDbId values could not be found in the database: "
-                  . join( ", ", @{ $transform_result->{missing} } )
+                (SGN::I18N::translate($ui_phenotypespreadsheetsimplegeneric_parse_i18n, 'phenotype.upload.the_following_observationunitdbid_values_could_not_be_found_in_the_database', 'The following observationUnitDbId values could not be found in the database: %{values}', {values => "" . (join( ", ", @{ $transform_result->{missing} } ))}))
             );
         }
 

@@ -1,0 +1,199 @@
+# Buscar en la base de datos {#searching-the-database}
+
+Puede buscar información en la base de datos con estas opciones: Asistente de búsqueda, que combina los criterios seleccionados; Accesiones y parcelas; Ensayos; Marcadores; Imágenes; Personas; FAQ.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/image267.png')
+```
+
+## Asistente de búsqueda {#search-wizard}
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/wizard_interface.png')
+```
+
+### Cómo funciona el Asistente de búsqueda {#how-the-search-wizard-works}
+
+El Asistente de búsqueda muestra varios cuadros de selección, inicialmente vacíos. Para empezar, elija una categoría de datos en el menú desplegable situado sobre el primer cuadro de la izquierda.
+
+Al elegir una categoría, la base de datos recupera todas sus opciones y las muestra en el primer cuadro. Seleccione una o más opciones allí para activar el segundo menú desplegable.
+
+Después puede elegir una categoría en el segundo menú y repetir el proceso en los cuatro menús y cuadros de selección.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/wizard_interface_selections.png')
+```
+
+- En el ejemplo anterior se eligió la categoría “Ubicaciones” en el primer menú desplegable. El primer cuadro mostró todas las ubicaciones disponibles en la base y se seleccionó Ibadan.
+
+- Esto activó el segundo menú desplegable. Allí se eligió la categoría “Años”. El segundo cuadro mostró todos los años vinculados en la base de datos a Ibadan; se seleccionaron 2011 y 2012.
+
+- Esto activó el tercer menú desplegable. Se eligió la categoría “Accesiones”. El tercer cuadro mostró las 3847 accesiones de la base de datos vinculadas a Ibadan en 2011 o 2012.
+
+Además de las operaciones básicas de búsqueda descritas, hay otras dos funciones:
+
+**Cargar selección desde una lista**
+
+```{r echo=FALSE, out.width='25%', fig.align='center'}
+knitr::include_graphics('assets/images/wizard_select_list.png')
+```
+
+- En lugar de elegir una categoría en el primer menú, puede cargar el primer cuadro desde una lista: desplácese hasta “Cargar selección desde una lista” y elija una lista. Esto permite iniciar la consulta con una lista de parcelas, categoría que no aparece en el primer menú.
+
+Alternar **ANY/MIN/ALL**
+
+```{r echo=FALSE, out.width='25%', fig.align='center'}
+knitr::include_graphics('assets/images/wizard_any_min_all_toggle.jpg')
+```
+
+- De forma predeterminada, el asistente combina las opciones de una categoría mediante una consulta OR. En el ejemplo, el tercer panel muestra las accesiones vinculadas a “Ibadan” en **ANY** de los años “2011 **OR** 2012”.
+
+- Si cambia el control bajo el segundo cuadro a **ALL** antes de elegir accesiones en el tercer menú, el asistente mostrará las vinculadas a “Ibadan” tanto en 2011 **AND** 2012. El conjunto será menor porque se excluirán las usadas solo en 2011 o solo en 2012.
+
+- Para una búsqueda más avanzada, puede usar el control **MIN**. Permite fijar un mínimo de coincidencias en la columna seleccionada, como valor intermedio entre ANY y ALL. El mínimo puede expresarse como porcentaje (%) o cantidad de elementos (#). Por ejemplo, si en la segunda columna selecciona 2011, 2012 y 2013, introduzca “2” y elija “#” como tipo de coincidencia. La tercera columna mostrará las accesiones usadas en al menos 2 de esos años.<br />
+
+```{r echo=FALSE, out.width='25%', fig.align='center'}
+knitr::include_graphics('assets/images/wizard_any_min_all_toggle_min_details.jpg')
+```
+
+### Cómo usar los datos obtenidos {#how-to-use-retrieved-data}
+
+#### Más información {#getting-more-info -}
+
+Puede pulsar cualquier opción de los cuadros del asistente (excepto los años) para abrir una página con más detalles. Se abrirá en una pestaña nueva.
+
+#### Guardar en una lista {#saving-to-a-list -}
+
+Puede guardar en listas los elementos seleccionados en cualquier cuadro usando los campos y botones que están justo debajo. **Debe iniciar sesión para trabajar con listas.**
+
+```{r echo=FALSE, out.width='50%', fig.align='center'}
+knitr::include_graphics('assets/images/add_create_list.png')
+```
+
+- Para **añadir elementos a una lista existente**, selecciónela en el menú “Añadir a la lista...” de la izquierda y pulse “Añadir”. Una ventana emergente confirmará la acción e indicará cuántos elementos se añadieron.
+
+- Para **guardar elementos en una lista nueva**, escriba su nombre en el campo “Crear una lista nueva...” de la izquierda y pulse “Crear”. Una ventana emergente confirmará la acción e indicará cuántos elementos se añadieron.
+
+#### Descargar datos {#downloading-data -}
+
+Puede descargar metadatos de ensayos, fenotipos y genotipos asociados a los elementos seleccionados. Use los botones de la sección de descargas al pie de la página. **Debe iniciar sesión para descargar datos.**
+
+```{r echo=FALSE, out.width='75%', fig.align='center'}
+knitr::include_graphics('assets/images/wizard_download_options.png')
+```
+
+##### Metadatos {#metadata -}
+
+Puede descargar metadatos de un subconjunto de ensayos o según las categorías de búsqueda. Pulse “Metadatos de ensayos relacionados”; en el diálogo, seleccione el formato y pulse “Metadatos” para completar la descarga.
+
+```{r echo=FALSE, out.width='75%', fig.align='center'}
+knitr::include_graphics('assets/images/wizard_related_metadata_download.png')
+```
+
+##### Fenotipos {#phenotypes -}
+
+La descarga de fenotipos es flexible y permite obtener un subconjunto de los datos de los ensayos según las categorías y opciones seleccionadas. Pulse “Fenotipos de ensayos relacionados”, revise y ajuste los parámetros, y luego elija “Descargar fenotipos”.
+
+```{r echo=FALSE, out.width='75%', fig.align='center'}
+knitr::include_graphics('assets/images/wizard_related_phenotypes_download.png')
+```
+
+##### Genotipos {#genotypes -}
+
+La descarga de genotipos tiene requisitos más estrictos: seleccione al menos una accesión y un protocolo de genotipado en los cuadros del asistente. El campo de texto de la sección de descargas muestra la selección. Pulse “Descargar genotipos” para obtener el archivo de las accesiones seleccionadas.
+
+#### Guardar la selección del asistente {#saving-the-wizard-selections -}
+
+Como se explicó, las selecciones de cada cuadro del asistente pueden guardarse por separado en listas y usarse en otras herramientas. Si una selección lleva mucho tiempo y resulta engorroso restaurarla desde cuatro listas, guárdela junta en un conjunto de datos con un nombre para recuperarla después. Se hace en la sección “Cargar/crear conjuntos de datos”, debajo de los dos primeros cuadros. Para recuperar uno existente, elija “Cargar conjunto de datos” y pulse “Cargar”. Para crear uno, introduzca su nombre en “Crear conjunto de datos” y pulse “Crear”.
+
+```{r echo=FALSE, out.width='75%', fig.align='center'}
+knitr::include_graphics('assets/images/wizard_load_create_dataset.png')
+```
+
+### Actualizar el Asistente de búsqueda {#updating-the-wizard}
+
+El asistente usa una copia de la base de datos, o caché, para devolver resultados con rapidez. Si faltan datos, normalmente hay que actualizar la caché. Los usuarios con privilegios submitter o superiores pueden hacerlo con “Actualizar el Asistente de búsqueda”. “Actualizar listas” refresca las listas disponibles.
+
+```{r echo=FALSE, out.width='75%', fig.align='center'}
+knitr::include_graphics('assets/images/wizard_update_list_refresh.png')
+```
+
+En bases pequeñas tarda unos segundos, pero en bases grandes puede tardar varias horas.
+
+## Buscar accesiones y parcelas {#accessions-and-plot-search}
+
+Puede buscar accesiones y tipos de material relacionados (cross, plant, plot, population, tissue\_sample, training population) en la página “Accesiones y parcelas”. El tipo de material predeterminado es “accession”; para cambiarlo, seleccione otra opción en la lista desplegable.
+En esta página puede crear consultas detalladas para los tipos de material. Por ejemplo, con las secciones “Uso”, “Propiedades” y “Fenotipos” puede buscar accesiones diploides usadas en un año y ubicación determinados y fenotipadas para altura. También puede buscar por propiedades genéticas, como la posición de una introgresión en un cromosoma específico.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/search_accessions.png')
+```
+
+Puede consultar cualquiera de las propiedades disponibles, como "ploidy_level", "country of origin", "introgression_chromosome", etc.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/search_accessions_properties_search.png')
+```
+
+En la tabla de resultados puede seleccionar cualquiera de las propiedades disponibles para verla.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/search_accessions_properties_view.png')
+```
+
+En la parte inferior de la búsqueda de accesiones hay una herramienta gráfica para filtrar fenotipos. Permite filtrar accesiones según combinaciones de rendimiento de rasgos y guardar los resultados en una lista.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/search_accessions_graphical_filtering.png')
+```
+
+Para obtener información sobre cómo añadir accesiones, consulte “Gestionar accesiones”.
+Para saber cómo añadir a la base parcelas, plantas, muestras de tejido y subparcelas de un ensayo de campo, consulte “Gestionar ensayos de campo”.
+
+## Buscar ensayos {#trials-search}
+
+Puede buscar ensayos en la base de datos por nombre, descripción, programa de mejoramiento, año, ubicación, tipo y diseño del ensayo, fecha de plantación y fecha de cosecha.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/trial_search.png')
+```
+
+## Buscar rasgos {#trait-search}
+
+En la página “Buscar rasgos” (opción del menú `Search > Traits`) puede buscar rasgos de la base por ID, nombre o descripción. También puede elegir una lista inicial de rasgos para filtrar los resultados.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/trait-search-default.png')
+```
+
+Puede añadir los rasgos seleccionados de los resultados a una lista de rasgos o crear una lista nueva con ellos.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/trait-search.png')
+```
+
+## Explorador de ontologías {#ontology-browser}
+
+La herramienta avanzada para buscar rasgos es el explorador de ontologías, disponible en Analizar → Explorador de ontologías. Allí puede buscar ontologías y ver las clasificaciones de términos en forma de árbol.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/ontology_browser.png')
+```
+
+En Trait Search de la versión 2.4 solo aparecen términos variables. El explorador de ontologías los distingue de los términos de agrupación con la etiqueta VARIABLE_OF, como se muestra en la imagen.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/ontology_browser_variable.png')
+```
+
+## Buscar lotes de semillas {#search-seedlots}
+
+Los lotes de semillas se diferencian de las accesiones porque representan semillas físicas que se evalúan en un ensayo. Pueden incluir ubicación de almacenamiento y cantidad de semillas, datos que no corresponden a la accesión. Para buscar lotes disponibles, vaya a Gestionar → Lotes de semillas. Pulse Buscar lotes de semillas para especificar los criterios. Los resultados aparecerán en la tabla bajo el formulario.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/search_seedlots.png')
+```
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/manage_seedlots.png')
+```

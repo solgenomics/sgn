@@ -1,6 +1,9 @@
 
-<html>
-<head>
+% my $header_locale = $c->i18n->locale;
+% my $header_attributes = $header_locale eq 'en' ? '' : ' lang="' . $header_locale . '" dir="' . $c->i18n->dir . '"';
+% my $header_charset = $header_locale eq 'en' ? '' : '<meta charset="UTF-8" />';
+<html<% $header_attributes %>>
+<head><% $header_charset %>
 <link rel="stylesheet" href="/css/sgn.css" type="text/css" />
 </head>
 

@@ -1,3 +1,7 @@
+<%once>
+use HTML::Entities ();
+</%once>
+
 <%doc>
 
 =head1 NAME 
@@ -22,9 +26,9 @@ $owner_page
   <tr>
     <td>
       <& /page/columnar_table.mas,
-         data         => [['Name', $pop->get_name],
-                          ['Description', $pop->get_description],
-                          ['Owner', $owner_page],
+         data         => [[HTML::Entities::encode_entities($c->i18n->p("global.library_search.name", "Name")), $pop->get_name],
+                          [HTML::Entities::encode_entities($c->i18n->p("global.dataset_cxgn_dataset.table.description", "Description")), $pop->get_description],
+                          [HTML::Entities::encode_entities($c->i18n->p("global.search.datasets.owner", "Owner")), $owner_page],
                          ],
          __alt_freq   => 0,
          __align      => "l",
@@ -33,8 +37,8 @@ $owner_page
     </td>    
     <td>
       <& /page/columnar_table.mas,        
-         data       => [['No. of lines', scalar $pop->get_individuals],
-                        ['No. of traits', scalar $pop->get_cvterms],
+         data       => [[HTML::Entities::encode_entities($c->i18n->p("accession.population_cgi.lines", "No. of lines")), scalar $pop->get_individuals],
+                        [HTML::Entities::encode_entities($c->i18n->p("analysis.qtl.ui.no_of_traits", "No. of traits")), scalar $pop->get_cvterms],
                        ],
         __alt_freq  => 1,
         __align     => "l",

@@ -112,7 +112,7 @@ var Qtl = {
     waitPage: function() 
     {
         jQuery.blockUI.defaults.applyPlatformOpacityRules = false;
-        jQuery.blockUI({message: 'Running QTL Analysis...Please wait...'});
+        jQuery.blockUI({message: (window.SGN && window.SGN.i18n ? window.SGN.i18n.p("analysis.qtl.browser.running_qtl_analysis_please_wait", "Running QTL Analysis...Please wait...") : 'Running QTL Analysis...Please wait...')});
             
         if(location.reload()) 
             {
@@ -123,7 +123,7 @@ var Qtl = {
      genericWaitPage: function() 
     {
         jQuery.blockUI.defaults.applyPlatformOpacityRules = false;
-        jQuery.blockUI({message: 'Please wait....'});
+        jQuery.blockUI({message: (window.SGN && window.SGN.i18n ? window.SGN.i18n.p("analysis.qtl.browser.please_wait", "Please wait....") : 'Please wait....')});
                        
         if(location.reload()) 
             {

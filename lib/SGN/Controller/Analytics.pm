@@ -2,6 +2,7 @@
 package SGN::Controller::Analytics;
 
 use Moose;
+use SGN::I18N ();
 use URI::FromHash 'uri';
 use Data::Dumper;
 use JSON::XS;
@@ -29,6 +30,7 @@ sub view_analytics_protocols :Path('/analytics_protocols') Args(0) {
 sub analytics_protocol_detail :Path('/analytics_protocols') Args(1) {
     my $self = shift;
     my $c = shift;
+    my $i18n = SGN::I18N::translate($c);
     my $analytics_protocol_id = shift;
     my $schema = $c->dbic_schema("Bio::Chado::Schema");
     my $user = $c->user();
@@ -57,7 +59,7 @@ sub analytics_protocol_detail :Path('/analytics_protocols') Args(1) {
 
     if (! $name) {
         $c->stash->{template} = '/generic_message.mas';
-        $c->stash->{message} = 'The requested analytics protocol ID does not exist in the database.';
+        $c->stash->{message} = SGN::I18N::translate($i18n, "analysis.interface.the_requested_analytics_protocol_id_does_not_exist_in_the", "The requested analytics protocol ID does not exist in the database.");
         return;
     }
 

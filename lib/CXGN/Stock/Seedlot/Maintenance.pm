@@ -9,7 +9,7 @@ CXGN::Stock::Seedlot::Maintenance - a class to manage Seedlot Maintenance Events
 This class is used to store and retrieve maintenance actions and/or observations performed 
 for the proper maintenance of a particular Seedlot.
 
-Seedlot maintenance events are stored as JSON stock props, where each maintanence event 
+Seedlot maintenance events are stored as JSON stock props, where each maintenance event
 has an associated cvterm_id of a cvterm from a 'seedlot maintenance' ontology.  This 
 ontology defines that types of maintenance events that can be associated with a Seedlot.
 
@@ -39,6 +39,49 @@ has 'value' => (isa => 'Str|Num', is => 'rw');
 has 'notes' => (isa => 'Maybe[Str]', is => 'rw');
 has 'operator' => (isa => 'Str', is => 'rw');
 has 'timestamp' => (isa => 'Str', is => 'rw');
+
+# Existing JSON writers store UTF-8 octets as Latin1 characters; imports may
+# store proper characters. Match the same raw scientific string in either
+# representation without changing the caller's DTO or ASCII query behavior.
+use Encode ();
+
+sub _json_query_variants {
+    my ($value) = @_;
+    return if ref($value) && ref($value) ne 'ARRAY';
+    my @items = ref($value) eq 'ARRAY' ? @$value : ($value);
+    my @variants;
+    my $expanded = 0;
+    for my $item (@items) {
+        push @variants, $item;
+        next if !defined($item) || ref($item);
+        my $text = $item;
+        next if $text !~ /[^\x00-\x7f]/;
+        my $octets = Encode::encode('UTF-8', $text, Encode::FB_CROAK | Encode::LEAVE_SRC); ## no critic (Bangs::ProhibitBitwiseOperators) # Encode expects these two error/source-preservation flag bits combined.
+        my $legacy = Encode::decode('ISO-8859-1', $octets, Encode::FB_CROAK | Encode::LEAVE_SRC); ## no critic (Bangs::ProhibitBitwiseOperators) # Encode expects these two error/source-preservation flag bits combined.
+        push @variants, $legacy;
+        $expanded = 1;
+    }
+    return $expanded ? \@variants : undef;
+}
+
+sub _json_query_not_equal {
+    my ($field, $value) = @_;
+    my $variants = _json_query_variants($value);
+    return {$field => {'!=' => $value}} if !defined($variants);
+    my @items = ref($value) eq 'ARRAY' ? @$value : ($value);
+    my @conditions;
+    for my $item (@items) {
+        my $item_variants = ref($item) ? undef : _json_query_variants($item);
+        if (defined($item_variants)) {
+            push @conditions, {'-and' => [map {{$field => {'!=' => $_}}} @$item_variants]};
+        }
+        else {
+            push @conditions, {$field => {'!=' => $item}};
+        }
+    }
+    # The pinned original != array means OR across original items, not NOT IN.
+    return ref($value) eq 'ARRAY' ? {'-or' => \@conditions} : $conditions[0];
+}
 
 sub BUILD {
     my $self = shift;
@@ -126,14 +169,14 @@ sub filter_events {
             if ( $f->{values} ) {
                 my @c = (
                     { "value::json->>'cvterm_id'" => $f->{cvterm_id} },
-                    { "value::json->>'value'" => $f->{values} }
+                    { "value::json->>'value'" => (_json_query_variants($f->{values}) // $f->{values}) }
                 );
                 push(@or, { "-and" => \@c });
             }
             elsif ( $f->{ignore} ) {
                 my @c = (
                     { "value::json->>'cvterm_id'" => $f->{cvterm_id} },
-                    { "value::json->>'value'" => { "!=" => $f->{ignore} } }
+                    _json_query_not_equal("value::json->>'value'", $f->{ignore})
                 );
                 push(@or, { "-and" => \@c });
             }
@@ -143,7 +186,7 @@ sub filter_events {
         }
     }
     if ( defined $filters && defined $filters->{'operators'} && scalar(@{$filters->{'operators'}}) > 0 ) {
-        push(@and, { "value::json->>'operator'" => $filters->{'operators'} });
+        push(@and, { "value::json->>'operator'" => (_json_query_variants($filters->{'operators'}) // $filters->{'operators'}) });
     }
 
     # Build conditions

@@ -27,8 +27,8 @@ Isaak Y Tecle (iyt2@cornell.edu)
 <table class="table bin_elements_table" style="text-align: left;">
   <thead>
     <tr>
-      <th>Genotypes in the selected bin</th>
-      <th>Values</th>
+      <th><% $c->i18n->p("solgs.interface.genotypes_in_the_selected_bin", "Genotypes in the selected bin") |h %></th>
+      <th><% $c->i18n->p("solgs.interface.values", "Values") |h %></th>
     </tr>
   </thead>
 </table>

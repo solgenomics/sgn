@@ -128,21 +128,21 @@ jQuery(document).ready(function () {
 
         solGS.selectionPopulation.displaySelectionPopulations(res.data);
       } else {
-        var msg = "No cached trial for selection prediction found.";
+        var msg = (window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.no_cached_selection_trials", "No cached trial for selection prediction found.") : "No cached trial for selection prediction found.");
         solGS.selectionPopulation.feedbackOnFail(msg);
       }
 
       // jQuery(searchBtn).show();
     })
     .fail(function () {
-      var msg = "Errro occured querying for selection populations";
+      var msg = (window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.selection_population_query_error", "Error occurred querying for selection populations") : "Error occurred querying for selection populations");
       solGS.selectionPopulation.feedbackOnFail(msg);
       // jQuery(searchBtn).show();
     });
 
   jQuery(searchAllSelPops).click(function () {
     var msg =
-      "<br/><br/>Searching for all selection populations relevant to this model...please wait...";
+      "<br/><br/>" + (window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.searching_selection_populations", "Searching for all selection populations relevant to this model...please wait...") : "Searching for all selection populations relevant to this model...please wait...");
     jQuery(msgDiv).html(msg).show();
 
     solGS.selectionPopulation
@@ -154,16 +154,13 @@ jQuery(document).ready(function () {
           jQuery(searchAllSelPops).hide();
           jQuery(this.msgDiv).hide();
         } else {
-          var msg =
-            "<p>There are no relevant selection populations in the database." +
-            "If you have or want to make your own set of selection candidates" +
-            "use the form below.</p>";
+          var msg = "<p>" + (window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.no_relevant_selection_populations", "There are no relevant selection populations in the database.If you have or want to make your own set of selection candidatesuse the form below.") : "There are no relevant selection populations in the database.If you have or want to make your own set of selection candidatesuse the form below.") + "</p>";
 
           jQuery(this.msgDiv).html(msg).show().fadeOut(8000);
         }
       })
       .fail(function () {
-        var msg = "Error occured searching for the selection populations.";
+        var msg = (window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.selection_population_search_error", "Error occurred searching for the selection populations.") : "Error occurred searching for the selection populations.");
         jQuery(this.msgDiv).html(msg).show().fadeOut(8000);
       });
   });
@@ -187,11 +184,11 @@ jQuery(document).ready(function () {
 
       if (selPopExists) {
         jQuery(searchBtn).show();
-        var msg = `${popName} is already in the search result table`;
+        var msg = (window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.selection_population_already_listed", "%{name} is already in the search result table", {name: String(popName)}) : `${popName} is already in the search result table`);
         solGS.selectionPopulation.feedbackOnFail(msg);
       } else {
         jQuery(msgDiv)
-          .html(`Checking if the model can be used on ${popName} ...please wait...`)
+          .html((window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.check_model_population", "Checking if the model can be used on %{name} ...please wait...", {name: String(popName)}) : `Checking if the model can be used on ${popName} ...please wait...`))
           .show();
         jQuery(`${selPopsDiv} .multi-spinner-container`).show();
 
@@ -209,18 +206,18 @@ jQuery(document).ready(function () {
                     solGS.selectionPopulation.displaySelectionPopulations(res.selection_pop_data);
                   }
                 } else {
-                  var msg = `${popName} is genotyped by a marker set different  
-                  from the one used for the training population. Therefore you can not predict its GEBVs using this model.`;
+                  var msg = (window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.selection_population_marker_mismatch", "%{name} is genotyped by a marker set different  \n                  from the one used for the training population. Therefore you can not predict its GEBVs using this model.", {name: String(popName)}) : `${popName} is genotyped by a marker set different\x20\x20
+                  from the one used for the training population. Therefore you can not predict its GEBVs using this model.`);
 
                   solGS.selectionPopulation.feedbackOnFail(msg);
                 }
               } else {
-                var msg = `${popName} is the same population as the the training population. Please select a different selection population.`;
+                var msg = (window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.selection_population_is_training", "%{name} is the same population as the the training population. Please select a different selection population.", {name: String(popName)}) : `${popName} is the same population as the the training population. Please select a different selection population.`);
 
                 solGS.selectionPopulation.feedbackOnFail(msg);
               }
             } else {
-              var msg = `${popName} does not exist in the database.`;
+              var msg = (window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.selection_population_missing", "%{name} does not exist in the database.", {name: String(popName)}) : `${popName} does not exist in the database.`);
               solGS.selectionPopulation.feedbackOnFail(msg);
             }
 
@@ -228,7 +225,7 @@ jQuery(document).ready(function () {
             jQuery(`${selPopsDiv} .multi-spinner-container`).hide();
           })
           .fail(function () {
-            var msg = "Error occured processing the query.";
+            var msg = (window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.selection_population_process_error", "Error occurred processing the query.") : "Error occurred processing the query.");
             solGS.selectionPopulation.feedbackOnFail(msg);
             jQuery(searchBtn).show();
             jQuery(`${selPopsDiv} .multi-spinner-container`).hide();
@@ -237,7 +234,7 @@ jQuery(document).ready(function () {
     } else {
       jQuery(searchBox).css("border", "solid #FF0000");
 
-      jQuery(searchFormFeedBack).text("Please enter trial name.");
+      jQuery(searchFormFeedBack).text((window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.enter_trial_name", "Please enter trial name.") : "Please enter trial name."));
       jQuery(searchBtn).show();
     }
   });

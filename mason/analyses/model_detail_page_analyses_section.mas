@@ -5,8 +5,8 @@ $model_id
 <table class="table table-hover table-bordered" id="analyses_by_model_table">
     <thead>
         <tr>
-            <th>Analysis Name</th>
-            <th>Analysis Description</th>
+            <th><% $c->i18n->p("analysis.interface.analysis_name", "Analysis Name") |h %></th>
+            <th><% $c->i18n->p("analysis.interface.analysis_description", "Analysis Description") |h %></th>
         </tr>
     </thead>
     <tbody>

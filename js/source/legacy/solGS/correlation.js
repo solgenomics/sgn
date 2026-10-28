@@ -158,12 +158,12 @@ getSelectedPopCorrArgs: function (runCorrElemId) {
   createTable: function (tableId) {
     var table =
     `<table id="${tableId}" class="table table-striped"><thead><tr>` +
-      "<th>Name</th>" +
-      "<th>Data structure</th>" +
-      "<th>Compatibility</th>" + 
-      "<th>Ownership</th>" +
-      "<th>Data type</th>" +
-      "<th>Run correlation</th>" +
+      "<th>" + (window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.correlation_header_name", "Name") : "Name") + "</th>" +
+      "<th>" + (window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.correlation_header_data_structure", "Data structure") : "Data structure") + "</th>" +
+      "<th>" + (window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.correlation_header_compatibility", "Compatibility") : "Compatibility") + "</th>" +
+      "<th>" + (window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.correlation_header_ownership", "Ownership") : "Ownership") + "</th>" +
+      "<th>" + (window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.correlation_header_data_type", "Data type") : "Data type") + "</th>" +
+      "<th>" + (window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.correlation_header_run", "Run correlation") : "Run correlation") + "</th>" +
       "</tr>" +
       "</thead></table>";
 
@@ -211,13 +211,13 @@ getSelectedPopCorrArgs: function (runCorrElemId) {
   
     var runCorrBtn =
       `<button type="button" id=${runCorrBtnId}` +
-      ` class="btn btn-success" data-selected-pop='${corrArgs}'>Run Correlation</button>`;
+      ` class="btn btn-success" data-selected-pop='${corrArgs}'>${(window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.run_correlation", "Run Correlation") : "Run Correlation")}</button>`;
   
     var compatibility_message = '';
     if (dataStr.match(/dataset/)) {
       popName = `<a href="/dataset/${popId}">${popName}</a>`;
       if (tool_compatibility == null || tool_compatibility["Correlation"] == null || tool_compatibility == "(not calculated)"){
-        compatibility_message = "(not calculated)";
+        compatibility_message = (window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.compatibility_not_calculated", "(not calculated)") : "(not calculated)");
       } else {        
           if (tool_compatibility["Correlation"]['compatible'] == 0) {
           compatibility_message = '<b><span class="glyphicon glyphicon-remove" style="color:red"></span></b>'
@@ -232,7 +232,7 @@ getSelectedPopCorrArgs: function (runCorrElemId) {
     }
 
     var rowData = [popName,
-      dataStr, compatibility_message, corrPop.owner, dataTypeOpts, runCorrBtn, `${dataStr}_${popId}`];
+      solGS.dataCaption(dataStr), compatibility_message, solGS.dataCaption(corrPop.owner), dataTypeOpts, runCorrBtn, `${dataStr}_${popId}`];
     
     return rowData;
   },
@@ -394,21 +394,21 @@ getSelectedPopCorrArgs: function (runCorrElemId) {
     var corrFile = corrArgs.corr_table_file;
     var corrFileName = corrFile.split("/").pop();
     var corrCoefLink =
-      '<a href="' + corrFile + '" download=' + corrFileName + '">' + "coefficients" + "</a>";
+      '<a href="' + corrFile + '" download=' + corrFileName + '">' + (window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.correlation_file_link", "coefficients") : "coefficients") + "</a>";
 
     var corrDivs = this.getCorrDivs(corrArgs.corr_pop_id, corrArgs.sindex_name);
 
     corrPlotDivId = corrDivs.corr_plot_div.replace("#", "");
     var corrDownloadBtn = "download_" + corrPlotDivId;
     var corrPlotLink =
-      "<a href='#'  onclick='event.preventDefault();' id='" + corrDownloadBtn + "'> plot</a>";
+      "<a href='#'  onclick='event.preventDefault();' id='" + corrDownloadBtn + "'>" + (window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.correlation_plot_link", " plot") : " plot") + "</a>";
 
     var popName = corrArgs.corr_pop_name;
     if (!popName) {
       popName = this.getCorrPopName();
     }
 
-    var downloadLinks = `Download <b>${popName}</b> correlation: ` + corrCoefLink + " | " + corrPlotLink;
+    var downloadLinks = `${(window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.download_correlation_prefix", "Download ") : "Download ")}<b>${popName}</b>${(window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.download_correlation_suffix", " correlation: ") : " correlation: ")}` + corrCoefLink + " | " + corrPlotLink;
     return downloadLinks;
   },
 
@@ -487,7 +487,7 @@ jQuery(document).ready(function () {
         runCorrBtnId = `#${runCorrBtnId}`;
         jQuery(runCorrBtnId).hide();
         jQuery(`${canvas} .multi-spinner-container`).show();
-        jQuery(corrMsgDiv).html("Running correlation... please wait...").show();
+        jQuery(corrMsgDiv).html((window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.running_correlation_wait", "Running correlation... please wait...") : "Running correlation... please wait...")).show();
 
         solGS.correlation.runPhenoCorrelation(corrArgs).done(function (res) {
         if (res.data || (res.status && res.status.match(/success/))) {
@@ -505,7 +505,7 @@ jQuery(document).ready(function () {
 
             solGS.heatmap.plot(heatmapArgs);
         } else {
-            jQuery(corrMsgDiv).html((res.status || "Error.") + " There is no correlation output for this dataset.").fadeOut(8400);
+            jQuery(corrMsgDiv).html((res.status || (window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.generic_error_fallback", "Error.") : "Error.")) + (window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.no_correlation_suffix", " There is no correlation output for this dataset.") : " There is no correlation output for this dataset.")).fadeOut(8400);
         }
 
         jQuery(`${canvas} .multi-spinner-container`).hide();
@@ -514,7 +514,7 @@ jQuery(document).ready(function () {
       })
       .fail(function (res) {
         jQuery(`${canvas} .multi-spinner-container`).hide();
-        jQuery(corrMsgDiv).html(res.status + " Error occured running correlation analysis.").fadeOut(8400);
+        jQuery(corrMsgDiv).html(res.status + (window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.correlation_error_suffix", " Error occurred running correlation analysis.") : " Error occurred running correlation analysis.")).fadeOut(8400);
         jQuery(runCorrBtnId).show();
       });
     }
@@ -534,7 +534,7 @@ jQuery(document).ready(function () {
     var corrMsgDiv = args.corr_msg_div;
 
     jQuery(`${canvas} .multi-spinner-container`).show();
-    var msg = "Running genetic correlation analysis...please wait...";
+    var msg = (window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.running_genetic_correlation", "Running genetic correlation analysis...please wait...") : "Running genetic correlation analysis...please wait...");
     jQuery(corrMsgDiv).html(msg).show();
 
     solGS.correlation
@@ -553,7 +553,7 @@ jQuery(document).ready(function () {
           };
           solGS.heatmap.plot(heatmapArgs);
         } else {        
-            jQuery(corrMsgDiv).html(res.status + " There is no correlation output for this dataset.").fadeOut(8400);
+            jQuery(corrMsgDiv).html(res.status + (window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.no_correlation_suffix", " There is no correlation output for this dataset.") : " There is no correlation output for this dataset.")).fadeOut(8400);
             
         }
 
@@ -563,7 +563,7 @@ jQuery(document).ready(function () {
       })
       .fail(function (res) {
         jQuery(`${canvas} .multi-spinner-container`).hide();
-        jQuery(corrMsgDiv).html(res.status + " Error occured running correlation analysis.").fadeOut(8400);
+        jQuery(corrMsgDiv).html(res.status + (window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.correlation_error_suffix", " Error occurred running correlation analysis.") : " Error occurred running correlation analysis.")).fadeOut(8400);
         jQuery(runCorrBtnId).show();
         
       });

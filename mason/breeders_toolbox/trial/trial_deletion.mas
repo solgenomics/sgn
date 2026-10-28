@@ -3,28 +3,28 @@
 $trial_id
 </%args>
 
-<button class="btn btn-default" id="delete_phenotype_data_by_trial_id" role="button">1. Delete trait data</button><br/><br/>
-<button class="btn btn-default" id="delete_layout_data_by_trial_id" role="button">2. Delete layout data and trial entry completely</button><br/><br/>
+<button class="btn btn-default" id="delete_phenotype_data_by_trial_id" role="button"><% $c->i18n->p('trial.card.deletion.trait_data', '%{step}. Delete trait data', { step => '1' }) |h %></button><br/><br/>
+<button class="btn btn-default" id="delete_layout_data_by_trial_id" role="button"><% $c->i18n->p('trial.card.deletion.layout_data', '%{step}. Delete layout data and trial entry completely', { step => '2' }) |h %></button><br/><br/>
 
 <div class="modal  fade" id="delete_phenotype_data_dialog" name="delete_phenotype_data_dialog" tabindex="-1" role="dialog" aria-labelledby="DeletePhenoDataDialog">
     <div class="modal-dialog " role="document">
         <div class="modal-content">
             <div class="modal-header" style="text-align: center">
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                <h4 class="modal-title" id="DeletePhenoDataDialog">Delete Trial Phenotype Data </h4>
+                <button type="button" class="close" data-dismiss="modal" aria-label="<% $c->i18n->p('trial.create.close', 'Close') |h %>"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="DeletePhenoDataDialog"><% $c->i18n->p('trial.card.deletion.title', 'Delete Trial Phenotype Data ') |h %></h4>
             </div>
             <div class="modal-body">
                 <div class="container-fluid">
 
                     <center>
-                    <p3> Are you sure you want to delete assayed traits data for this trial? <br> Proceed with deletion below...</p3>
+                    <p3> <% $c->i18n->p('trial.card.deletion.confirm_traits', 'Are you sure you want to delete assayed traits data for this trial?') |h %> <br> <% $c->i18n->p('trial.card.deletion.proceed', 'Proceed with deletion below...') |h %></p3>
                     </center></br>
 
                 </div>
             </div>
             <div class="modal-footer">
-                <button id="close_delete_trait_pheno_dialog" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-                <button type="button" class="btn btn-primary" name="delete_single_phenotype_data_dialog_submit" id="delete_single_phenotype_data_dialog_submit">Select Traits For Deletion</button>
+                <button id="close_delete_trait_pheno_dialog" type="button" class="btn btn-default" data-dismiss="modal"><% $c->i18n->p('trial.create.close', 'Close') |h %></button>
+                <button type="button" class="btn btn-primary" name="delete_single_phenotype_data_dialog_submit" id="delete_single_phenotype_data_dialog_submit"><% $c->i18n->p('trial.card.deletion.select_traits', 'Select Traits For Deletion') |h %></button>
                 <!--<button type="button" class="btn btn-primary" name="delete_all_phenotype_data_dialog_submit" id="delete_all_phenotype_data_dialog_submit">Delete All Traits</button>-->
             </div>
         </div>
@@ -35,8 +35,8 @@ $trial_id
     <div class="modal-dialog modal-xl" role="document">
         <div class="modal-content">
             <div class="modal-header" style="text-align: center">
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                <h4 class="modal-title" id="DeleteIndividualPhenoDataDialog">Delete Trial Phenotype Data </h4>
+                <button type="button" class="close" data-dismiss="modal" aria-label="<% $c->i18n->p('trial.create.close', 'Close') |h %>"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="DeleteIndividualPhenoDataDialog"><% $c->i18n->p('trial.card.deletion.title', 'Delete Trial Phenotype Data ') |h %></h4>
             </div>
             <div class="modal-body">
                 <div class="container-fluid">
@@ -44,7 +44,7 @@ $trial_id
                     <form class="form-horizontal" role="form" method="post" enctype="multipart/form-data" encoding="multipart/form-data" id="delete_individual_trait_data_form" name="delete_individual_trait_data_form">
                     
                     <div class="form-group">
-                        <label class="col-sm-2 control-label">Trait(s):<br/><small>(Select traits to delete)</small></label>
+                        <label class="col-sm-2 control-label"><% $c->i18n->p('trial.card.deletion.traits', 'Trait(s):') |h %><br/><small><% $c->i18n->p('trial.card.deletion.select_traits_help', '(Select traits to delete)') |h %></small></label>
                         <div class="col-sm-10" >
                             <div id="retrieve_assayed_trial_traits">
                             </div>
@@ -55,8 +55,8 @@ $trial_id
                 </div>
             </div>
             <div class="modal-footer">
-                <button id="close_delete_indiv_trait_data_dialog" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-                <button type="button" class="btn btn-danger" name="delete_individual_phenotype_data_dialog_submit" id="delete_individual_phenotype_data_dialog_submit">Delete Traits Data</button>
+                <button id="close_delete_indiv_trait_data_dialog" type="button" class="btn btn-default" data-dismiss="modal"><% $c->i18n->p('trial.create.close', 'Close') |h %></button>
+                <button type="button" class="btn btn-danger" name="delete_individual_phenotype_data_dialog_submit" id="delete_individual_phenotype_data_dialog_submit"><% $c->i18n->p('trial.card.deletion.delete_traits', 'Delete Traits Data') |h %></button>
             </div>
         </div>
     </div>
@@ -66,21 +66,21 @@ $trial_id
     <div class="modal-dialog " role="document">
         <div class="modal-content">
             <div class="modal-header" style="text-align: center">
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                <h4 class="modal-title" id="TraitsDeletionDialog"><b>Assayed Trait Deletion</b></h4>
+                <button type="button" class="close" data-dismiss="modal" aria-label="<% $c->i18n->p('trial.create.close', 'Close') |h %>"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="TraitsDeletionDialog"><b><% $c->i18n->p('trial.card.deletion.success_title', 'Assayed Trait Deletion') |h %></b></h4>
             </div>
             <div class="modal-body">
                 <div class="container-fluid">
 
                     <form class="form-horizontal" role="form" method="post" enctype="multipart/form-data" encoding="multipart/form-data" id="delete_traits_form" name="delete_traits_form">
 
-                    <p3>Trait deletion was successfully completed</p3>
+                    <p3><% $c->i18n->p('trial.card.deletion.success', 'Trait deletion was successfully completed') |h %></p3>
 
                     </form>
                 </div>
             </div>
             <div class="modal-footer">
-                <button id="close_traits_delete_dialog" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                <button id="close_traits_delete_dialog" type="button" class="btn btn-default" data-dismiss="modal"><% $c->i18n->p('trial.create.close', 'Close') |h %></button>
 
             </div>
         </div>
@@ -98,7 +98,7 @@ jQuery(document).ready(function() {
     jQuery('#delete_individual_phenotype_data_dialog_submit').click( function() {
         traits = jQuery('#retrieve_assayed_trial_traits_select').val();
         if (!traits){
-            alert("No trait selected");
+            alert(window.SGN && SGN.i18n ? SGN.i18n.p('trial.card.deletion.no_trait_selected', 'No trait selected') : 'No trait selected');
         } else {
             delete_selected_assayed_traits();
         }
@@ -126,14 +126,14 @@ function delete_selected_assayed_traits() {
       success: function(response){
           jQuery("#working_modal").modal("hide");
           if (response.error){
-              alert("Error deleting trait:" +response.error);
+              alert((window.SGN && SGN.i18n ? SGN.i18n.p('trial.card.deletion.error_prefix', 'Error deleting trait:') : 'Error deleting trait:') + response.error);
           }else{
               jQuery("#delete_traits_dialog_success_message").modal("show");
           }
       },
       error: function(){
           jQuery('#working_modal').modal("hide");
-          alert('An error occurred deleting trait');
+          alert(window.SGN && SGN.i18n ? SGN.i18n.p('trial.card.deletion.network_error', 'An error occurred deleting trait') : 'An error occurred deleting trait');
       }
   });
 

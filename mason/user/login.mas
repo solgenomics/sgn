@@ -3,6 +3,10 @@
    $goto_url
 </%args>
 
+<%init>
+    use HTML::Entities ();
+</%init>
+
 <style>
 .textlabel {
   width: 200px;
@@ -24,11 +28,11 @@
 
 </style>
 
-<& /page/page_title.mas, title=>"Login" &>
+<& /page/page_title.mas, title=>HTML::Entities::encode_entities($c->i18n->p('auth.login.title', 'Login')) &>
 
-<div>
+<div id="login_page" data-goto-url="<% $goto_url |h %>">
 <center>
-<a href="javascript:history.back();"><button class="btn btn-primary">Go back</button></a>
+<a href="javascript:history.back();"><button class="btn btn-primary"><% $c->i18n->p('auth.login.go_back', 'Go back') |h %></button></a>
 </center>
 </div>
 
@@ -36,7 +40,7 @@
 
   jQuery(document).ready( function() {  
     
-    jQuery('#goto_url').val('<% $goto_url %>');
+    jQuery('#goto_url').val(document.getElementById('login_page').getAttribute('data-goto-url'));
 
 
     jQuery('#site_login_dialog').modal('show'); 

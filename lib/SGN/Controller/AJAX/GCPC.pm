@@ -3,6 +3,7 @@ use strict;
 package SGN::Controller::AJAX::GCPC;
 
 use Moose;
+use SGN::I18N ();
 use Data::Dumper;
 use File::Temp qw | tempfile |;
 use File::Slurp;
@@ -146,13 +147,14 @@ sub get_method: Path('/ajax/gcpc/get_method') : {
     my $method_1 = $c->req->param('method_id');
     print STDERR Dumper($method_1);
     $method_id = $method_1;
-    print "The vairable method_id is $method_id \n";
+    print "The variable method_id is $method_id \n";
 }
 
 
 sub extract_trait_data :Path('/ajax/gcpc/getdata') Args(0) {
     my $self = shift;
     my $c = shift;
+    my $i18n = SGN::I18N::translate($c);
 
     my $file = $c->req->param("file");
     my $trait = $c->req->param("trait");
@@ -165,7 +167,7 @@ sub extract_trait_data :Path('/ajax/gcpc/getdata') Args(0) {
 
     my $F;
     if (! open($F, "<", $temppath)) {
-	$c->stash->{rest} = { error => "Can't find data." };
+	$c->stash->{rest} = { error => SGN::I18N::translate($i18n, "analysis.interface.can_t_find_data", "Can't find data.") };
 	return;
     }
 
@@ -175,6 +177,7 @@ sub extract_trait_data :Path('/ajax/gcpc/getdata') Args(0) {
 sub generate_results: Path('/ajax/gcpc/generate_results') : {
     my $self = shift;
     my $c = shift;
+    my $i18n = SGN::I18N::translate($c);
     my $dataset_id = $c->req->param('dataset_id');
     #my $method = $c->req->param('method_id');
     my $sin_list_id = $c->req->param('sin_list_id');
@@ -348,19 +351,19 @@ sub generate_results: Path('/ajax/gcpc/generate_results') : {
     }
 
     if (scalar(@missing_traits) == scalar(@si_r_traits)) {
-	$c->stash->{rest} = { error => "None of the traits in the selection index are present in the dataset. Please choose another selection index." };
+	$c->stash->{rest} = { error => SGN::I18N::translate($i18n, "analysis.interface.none_of_the_traits_in_the_selection_index_are_present", "None of the traits in the selection index are present in the dataset. Please choose another selection index.") };
 	return ;
     }
 
     if (scalar(@missing_traits) < scalar(@si_r_traits)) {
-	$c->stash->{rest} = { message => "Some of the traits in the selection index are not in the dataset (".join(",", @missing_traits)."). Their weights will be ignored." };
+	$c->stash->{rest} = { message => SGN::I18N::translate($i18n, "analysis.interface.some_of_the_traits_in_the_selection_index_are_not", "Some of the traits in the selection index are not in the dataset (%{missing_traits}). Their weights will be ignored.", {missing_traits => join(",", @missing_traits)}) };
     }
 
     my $genotyping_protocols = $ds->retrieve_genotyping_protocols();
 
     print STDERR "Genotyping protocols: ".Dumper($genotyping_protocols);
 
-    if (scalar(@$genotyping_protocols) == 0) { die "No genotyping protocols found in this dataset! Please choose another dataset!"; }
+    if (scalar(@$genotyping_protocols) == 0) { die SGN::I18N::translate($i18n, "analysis.interface.no_genotyping_protocols_found_in_this_dataset_please_choose_another", "No genotyping protocols found in this dataset! Please choose another dataset!"); }
 
     my $protocol = shift @$genotyping_protocols;
 

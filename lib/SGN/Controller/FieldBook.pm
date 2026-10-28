@@ -2,6 +2,7 @@
 package SGN::Controller::FieldBook;
 
 use Moose;
+use SGN::I18N ();
 
 use JSON qw| encode_json |;
 use Imager::QRCode;
@@ -25,7 +26,7 @@ sub field_book :Path("/fieldbook") Args(0) {
 
     if (!$c->user()) {
 	# redirect to login page
-	$c->res->redirect( uri( path => '/user/login', query => { goto_url => $c->req->uri->path_query } ) );
+	$c->res->redirect( uri( path => '/user/login', query => { goto_url => $c->req->uri->path_query, lang => $c->i18n->requested_locale } ) );
 	return;
     }
     my $user_id = $c->user()->get_object()->get_sp_person_id();
@@ -187,16 +188,17 @@ sub tablet_trait_file_download : Path('/fieldbook/trait_file_download/') Args(1)
 sub trial_field_book_download_old : Path('/fieldbook/trial_download_old/') Args(1) {
     my $self  =shift;
     my $c = shift;
+    my SGN::I18N $ui_trial_field_book_download_old_i18n = SGN::I18N::translate($c);
     my $trial_id = shift;
-    die "No trial id supplied" if !$trial_id;
+    die SGN::I18N::translate($ui_trial_field_book_download_old_i18n, "collection.server.no_trial_id_supplied", "No trial id supplied") if !$trial_id;
     my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
     my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado', $sp_person_id);
     my $trial = $schema->resultset('Project::Project')->find({project_id => $trial_id});
-    die "Trial does not exist with id $trial_id" if !$trial;
+    die SGN::I18N::translate($ui_trial_field_book_download_old_i18n, "collection.server.trial_does_not_exist_with_id_trial_id", "Trial does not exist with id %{trial_id}", {trial_id => ("" . ($trial_id))}) if !$trial;
     my $dir = $c->tempfiles_subdir('/other');
     my $tempfile = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'other/excelXXXX');
     my $wb = Spreadsheet::WriteExcel->new($tempfile);
-    die "Could not create excel file " if !$wb;
+    die SGN::I18N::translate($ui_trial_field_book_download_old_i18n, "collection.server.could_not_create_excel_file", "Could not create excel file ") if !$wb;
     my $ws = $wb->add_worksheet();
     my $trial_layout = CXGN::Trial::TrialLayout->new({schema => $schema, trial_id => $trial_id, experiment_type => 'field_layout' });
     my $trial_name =  $trial_layout->get_trial_name();

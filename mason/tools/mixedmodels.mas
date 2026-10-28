@@ -1,3 +1,7 @@
+<%once>
+use HTML::Entities ();
+</%once>
+
 
 <%args>
 
@@ -10,7 +14,7 @@
 <script src="https://cdn.jsdelivr.net/npm/vega-embed@3"></script>
 
 
-<& /page/page_title.mas, title=>"Mixed Model Analysis" &>
+<& /page/page_title.mas, title=>HTML::Entities::encode_entities($c->i18n->p("analysis.interface.mixed_model_analysis", "Mixed Model Analysis")) &>
 
 <& /analyses/store_new_analysis_values_and_model.mas &>
 
@@ -71,59 +75,59 @@
       <div class="container-fluid">
 
         <&| /util/workflow.mas, id=> "mixed_model_analysis_workflow" &>
-          <&| /util/workflow.mas:step, title=> "Choose Dataset" &>
-            <& /page/page_title.mas, title=>"Choose the dataset for your analysis" &>
+          <&| /util/workflow.mas:step, title=> HTML::Entities::encode_entities($c->i18n->p("analysis.interface.choose_dataset", "Choose Dataset")) &>
+            <& /page/page_title.mas, title=>HTML::Entities::encode_entities($c->i18n->p("analysis.interface.choose_the_dataset_for_your_analysis", "Choose the dataset for your analysis")) &>
 
 
-	      1. Choose a dataset
+	      <% $c->i18n->p("analysis.interface.1_choose_a_dataset", "1. Choose a dataset") |h %>
 
 	      <span style="width:240px" id="mixed_model_dataset_select">
 	      </span>
 	      <div>
 		<div style="float:right">
-		  <button class="btn btn-main" id="mixed_model_analysis_prepare_button" 	onclick="Workflow.complete(this);">Choose Dataset and continue</button>
+		  <button class="btn btn-main" id="mixed_model_analysis_prepare_button" 	onclick="Workflow.complete(this);"><% $c->i18n->p("analysis.interface.choose_dataset_and_continue", "Choose Dataset and continue") |h %></button>
 		</div>
 	      </div>
 	      <br />
         <input type="checkbox" id="dataset_trait_outliers" />
-        <label>Use validated trials &nbsp; </label>          
+        <label><% $c->i18n->p("analysis.interface.use_validated_trials", "Use validated trials") |h %> &nbsp; </label><% '          ' %>
         <br>
 	      <br />
 
 </&>
 
-<&| /util/workflow.mas:step, title=> "Choose Dependent Variable" &>
-  <& /page/page_title.mas, title=>"Choose the dependent variable for your analysis" &>
+<&| /util/workflow.mas:step, title=> HTML::Entities::encode_entities($c->i18n->p("analysis.interface.choose_dependent_variable", "Choose Dependent Variable")) &>
+  <& /page/page_title.mas, title=>HTML::Entities::encode_entities($c->i18n->p("analysis.interface.choose_the_dependent_variable_for_your_analysis", "Choose the dependent variable for your analysis")) &>
 
 
     <div id="dependent_variable" style="margin-bottom:50px">
     </div>
 
     <div id="trait_histogram">
-      [Histogram]
+      <% $c->i18n->p("analysis.interface.histogram", "[Histogram]") |h %>
     </div>
 
     <div>
       <div style="float:right">
-	<button class="btn btn-main" id="mixed_model_analysis_fishished_choose_variable" 	onclick="Workflow.complete(this);">Next step</button>
+	<button class="btn btn-main" id="mixed_model_analysis_fishished_choose_variable" 	onclick="Workflow.complete(this);"><% $c->i18n->p("analysis.interface.next_step", "Next step") |h %></button>
       </div>
     </div>
 </&>
 
 
-<&| /util/workflow.mas:step, title=> "Build Model" &>
-  <& /page/page_title.mas, title=>"Build mixed model" &>
+<&| /util/workflow.mas:step, title=> HTML::Entities::encode_entities($c->i18n->p("analysis.interface.build_model", "Build Model")) &>
+  <& /page/page_title.mas, title=>HTML::Entities::encode_entities($c->i18n->p("analysis.interface.build_mixed_model", "Build mixed model")) &>
 
     <div class="container form-check form-switch">
-      <h4>Choose engine</h4>
+      <h4><% $c->i18n->p("analysis.interface.choose_engine", "Choose engine") |h %></h4>
       <input class="form-check-input" type="radio" id="select_engine_lme4" name="select_engine" value="lme4" checked="1" > lme4</input> |
       <input class="form-check-input" type="radio" id="select_engine_sommer" name="select_engine" value="sommer"> sommer</input> |
-      <input class="form-check-input" type="radio" id="select_engine_sommer" name="select_engine" value="spl2D"> sommer with spatial correction spl2D</input>
+      <input class="form-check-input" type="radio" id="select_engine_sommer" name="select_engine" value="spl2D"> <% $c->i18n->p("analysis.interface.sommer_with_spatial_correction_spl2d", "sommer with spatial correction spl2D") |h %></input>
 	<br /><br />
     </div>
 
     <div class="model_bg" >
-      <div id="model_string" style="margin-top:10px;margin-bottom:10px;text-align:center;font-weight:bold">[model will appear here in lme4 format]</div>
+      <div id="model_string" style="margin-top:10px;margin-bottom:10px;text-align:center;font-weight:bold"><% $c->i18n->p("analysis.interface.model_will_appear_here_in_lme4_format", "[model will appear here in lme4 format]") |h %></div>
       <!--  button id="store_model_formula" class="btn btn-default btn-sm">Save model</button -->
     </div>
 
@@ -135,16 +139,16 @@
         <div id="left-margin" class="col-md-2"></div>
 	<div class="col-md-4">
 	  <div class="panel panel-default" style="border-width:0px">
-	    <div class="panel panel-header" style="border-width:0px">Available Factors</div>
+	    <div class="panel panel-header" style="border-width:0px"><% $c->i18n->p("analysis.interface.available_factors", "Available Factors") |h %></div>
 	    <hr />
             <div id="factors" class="panel panel-body" style="border-style:dotted;border-width:0px;">
-	      [ Choose dataset and dependent variable first ]
+	      <% $c->i18n->p("analysis.interface.choose_dataset_and_dependent_variable_first", "[ Choose dataset and dependent variable first ]") |h %>
             </div>
           </div>
 	</div>
         <div class="col-md-4">
           <div  id="fixed_factors_panel" style="border-width:0;" class="panel panel-default">
-	    <div class="panel-header">Fixed factors</div>
+	    <div class="panel-header"><% $c->i18n->p("analysis.interface.fixed_factors", "Fixed factors") |h %></div>
 	    <div id="fixed_factors" class="panel-body factor_panel">
 
 	      <!-- style="background-color:lightyellow;min-height:100px;height:auto;border-style:dotted;border-width:5px;color:grey" --></div>
@@ -153,8 +157,8 @@
 	  <div id="interaction_factor_collection_panel" class="panel panel-default factor_interaction_panel">
 	    <!-- style="border-style:dotted;border-width:0px;margin-top:20px;height:auto;z-index:1" -->
             <div class="panel-header">
-	      Fixed factors with interaction<br />
-              <button  id="add_interaction_factor_button">add new interaction</button>
+	      <% $c->i18n->p("analysis.interface.fixed_factors_with_interaction", "Fixed factors with interaction") |h %><br />
+              <button  id="add_interaction_factor_button"><% $c->i18n->p("analysis.interface.add_new_interaction", "add new interaction") |h %></button>
 	    </div>
 	    <div id="interaction_factors_collection" name="interaction_factors_collection" class="panel-body">
 	    </div>
@@ -164,8 +168,8 @@
 	    <!--    style="border-style:dotted;border-width:0px;margin-top:20px;height:auto;z-index:1" -->
 
             <div class="panel-header">
-              Random factors with variable slope/intersects<br />
-              <button  id="add_variable_slope_intersect_button">add new variable slope/intersect</button>
+              <% $c->i18n->p("analysis.interface.random_factors_with_variable_slope_intersects", "Random factors with variable slope/intersects") |h %><br />
+              <button  id="add_variable_slope_intersect_button"><% $c->i18n->p("analysis.interface.add_new_variable_slope_intersect", "add new variable slope/intersect") |h %></button>
 	    </div>
 	    <div id="variable_slope_intersect_collection" class="panel-body">
 
@@ -174,7 +178,7 @@
 
 	  <div style="height:30">&nbsp;</div>
           <div id="random_factors_panel" class="panel panel-default" style="border-width:0px">
-            <div class="panel-header">Random factors</div>
+            <div class="panel-header"><% $c->i18n->p("analysis.interface.random_factors", "Random factors") |h %></div>
 	    <div id="random_factors" class="panel-body factor_panel">
 
 	      <!-- style="background-color:lightyellow;min-height:100px;height:auto;border-style:dotted;border-width:5px;color:grey" -->
@@ -190,52 +194,52 @@
 
     <div>
       <div style="float:right">
-	<button style="position:relative;" id="run_mixed_model_button" class="btn btn-main" 	onclick="Workflow.complete(this)" >Run analysis and go to next step</button>
+	<button style="position:relative;" id="run_mixed_model_button" class="btn btn-main" 	onclick="Workflow.complete(this)" ><% $c->i18n->p("analysis.interface.run_analysis_and_go_to_next_step", "Run analysis and go to next step") |h %></button>
       </div>
     </div>
     <hr />
 
 </&>
 
-<&| /util/workflow.mas:step, title=> "Results" &>
+<&| /util/workflow.mas:step, title=> HTML::Entities::encode_entities($c->i18n->p("global.gem_experiment_search.results", "Results")) &>
 
-<& /page/page_title.mas, title=>"Analysis Results" &>
+<& /page/page_title.mas, title=>HTML::Entities::encode_entities($c->i18n->p("analysis.interface.analysis_results", "Analysis Results")) &>
 
   <div>
     <ul class="nav nav-tabs">
-      <li class="active"><a data-toggle="tab" id="adjusted_blups_tab_link" href="#adjusted_blups_tab">Adjusted means (BLUPs)</a></li>
+      <li class="active"><a data-toggle="tab" id="adjusted_blups_tab_link" href="#adjusted_blups_tab"><% $c->i18n->p("analysis.interface.adjusted_means_blups", "Adjusted means (BLUPs)") |h %></a></li>
       <li><a data-toggle="tab" id="blups_tab_link" href="#blups_tab">BLUPs</a></li>
-      <li><a data-toggle="tab" id="adjusted_blues_tab_link" href="#adjusted_blues_tab">Adjusted means (BLUEs)</a></li>
+      <li><a data-toggle="tab" id="adjusted_blues_tab_link" href="#adjusted_blues_tab"><% $c->i18n->p("analysis.interface.adjusted_means_blues", "Adjusted means (BLUEs)") |h %></a></li>
       <li><a data-toggle="tab" id="blues_tab_link" href="#blues_tab">BLUEs</a></li>
     </ul>
     <div class="tab-content">
       <div id="adjusted_blups_tab" class="tab-pane fade in active">
 	<br />
-	  <button id="open_store_adjusted_blups_dialog_button" class="btn btn-primary" data-toggle="modal" data-analysis_type="adjusted_means">Save adjusted means</button>
+	  <button id="open_store_adjusted_blups_dialog_button" class="btn btn-primary" data-toggle="modal" data-analysis_type="adjusted_means"><% $c->i18n->p("analysis.interface.save_adjusted_means", "Save adjusted means") |h %></button>
 
 	  <!-- button class="btn btn-primary">Download</button -->
 	  <br />
-	  <div id="mixed_models_adjusted_blups_results_div">[loading...]</div>
+	  <div id="mixed_models_adjusted_blups_results_div"><% $c->i18n->p("global.loading", "[loading...]") |h %></div>
       </div>
 
       <div id="blups_tab" class="tab-pane fade">
 	<br />
-	<button id="open_store_blups_dialog_button" class="btn btn-primary" data-toggle="modal" data-analysis_type="blup" data-target="#generic_save_analysis_dialog">Save BLUPs</button>
-	<div id="mixed_models_blups_results_div">[not available]</div>
+	<button id="open_store_blups_dialog_button" class="btn btn-primary" data-toggle="modal" data-analysis_type="blup" data-target="#generic_save_analysis_dialog"><% $c->i18n->p("analysis.interface.save_blups", "Save BLUPs") |h %></button>
+	<div id="mixed_models_blups_results_div"><% $c->i18n->p("analysis.interface.not_available", "[not available]") |h %></div>
       </div>
 
       <div id="adjusted_blues_tab" class="tab-pane fade">
 	<br />
-	<button id="open_store_adjusted_blues_dialog_button" class="btn btn-primary" data-toggle="modal" data-analysis_type="blues">Save adjusted BLUEs</button>
+	<button id="open_store_adjusted_blues_dialog_button" class="btn btn-primary" data-toggle="modal" data-analysis_type="blues"><% $c->i18n->p("analysis.interface.save_adjusted_blues", "Save adjusted BLUEs") |h %></button>
 
-	<div id="mixed_models_adjusted_blues_results_div">[loading...]</div>
+	<div id="mixed_models_adjusted_blues_results_div"><% $c->i18n->p("global.loading", "[loading...]") |h %></div>
       </div>
 
       <div id="blues_tab" class="tab-pane fade">
 	<br />
-	<button id="open_store_blues_dialog_button" class="btn btn-primary" data-toggle="modal" data-analysis_type="blues">Save BLUEs</button>
+	<button id="open_store_blues_dialog_button" class="btn btn-primary" data-toggle="modal" data-analysis_type="blues"><% $c->i18n->p("analysis.interface.save_blues", "Save BLUEs") |h %></button>
 
-	<div id="mixed_models_blues_results_div">[loading...]</div>
+	<div id="mixed_models_blues_results_div"><% $c->i18n->p("global.loading", "[loading...]") |h %></div>
       </div>
     </div> <!-- results_tab div -->
   </div>

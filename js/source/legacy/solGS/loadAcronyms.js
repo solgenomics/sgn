@@ -45,7 +45,7 @@ solGS.acronyms = {
     showError: function() {
         jQuery('#trait_acronyms_table').hide();
         jQuery('#acronyms_message')
-            .html('Error occurred loading acronyms')
+            .html((window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.acronyms_load_error", "Error occurred loading acronyms") : 'Error occurred loading acronyms'))
             .show()
             .fadeOut(5000);
     },

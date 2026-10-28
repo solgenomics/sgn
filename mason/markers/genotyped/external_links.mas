@@ -22,7 +22,7 @@
 
 
 <div id="external-links">
-    <div id="external-links-table"><p><em>Loading...</em></p></div>
+    <div id="external-links-table"><p><em><% $c->i18n->p("global.dataset_publish.loading", "Loading...") |h %></em></p></div>
     <div id="external-links-flankingseq"></div>
 </div>
 
@@ -66,7 +66,7 @@
      * @param  {Object[]} props A list of marker_name props
      */
     function renderLinks(props) {
-        let html = "<p><em>No external links found</em></p>";
+        let html = ("<p><em>" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("marker.detail.no_external_links_found", "No external links found") : "No external links found")).html() + "</em></p>");
         if ( props && props.length > 0 ) {
             html = "<table style=\"border-spacing: 10px; border-collapse: separate;\">";
             for ( let i = 0; i < props.length; i++ ) {

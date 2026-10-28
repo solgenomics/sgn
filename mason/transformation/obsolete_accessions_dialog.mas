@@ -11,8 +11,8 @@ $program_name
     <div class="modal-dialog modal-lg" role="document">
         <div class="modal-content ui-front">
             <div class="modal-header text-center">
-                <button type="reset" class="close" id="obsolete_accessions_dismiss_button_1" name="absolete_accessions_dismiss_button" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                <h4 class="modal-title" id="obsoleteAccessionsInBulkDialog">Obsolete Accessions</h4>
+                <button type="reset" class="close" id="obsolete_accessions_dismiss_button_1" name="absolete_accessions_dismiss_button" aria-label="<% $c->i18n->p("global.dataset_publish.close", "Close") |h %>"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="obsoleteAccessionsInBulkDialog"><% $c->i18n->p("transformation.obsolete_accessions", "Obsolete Accessions") |h %></h4>
             </div>
             <div class="modal-body" id="obsolete_accessions_body">
                 <div class="container-fluid">
@@ -20,8 +20,8 @@ $program_name
                         <table class="table table-hover table-bordered" id="select_transformants_table">
                         <thead>
                             <tr>
-                                <th>Select</th>
-                                <th>Accession Name</th>
+                                <th><% $c->i18n->p("styleguide.demo.trial_table.select", "Select") |h %></th>
+                                <th><% $c->i18n->p("accession.related_stock.header.accession_name", "Accession Name") |h %></th>
                             </tr>
                         </thead>
 
@@ -29,16 +29,16 @@ $program_name
                     </div>
                     <br>
                     <div class="form-group">
-                        <label class="col-sm-3 control-label">Note: </label>
+                        <label class="col-sm-3 control-label"><% $c->i18n->p("global.bulk.input.note_label", "Note:") |h %> </label>
                         <div class="col-sm-9" >
-                            <textarea class="form-control" id="bulk_obsolete_note" name="bulk_obsolete_note" placeholder="Optional"></textarea>
+                            <textarea class="form-control" id="bulk_obsolete_note" name="bulk_obsolete_note" placeholder="<% $c->i18n->p("accession.stock.optional", "Optional") |h %>"></textarea>
                         </div>
                     </div>
                 </div>
             </div>
             <div class="modal-footer">
-                <button id="absolete_accessions_dismiss_button_2" name="obsolete_accessions_dismiss_button" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-                <button type="button" class="btn btn-primary" id="obsolete_stocks_submit">Obsolete</button>
+                <button id="absolete_accessions_dismiss_button_2" name="obsolete_accessions_dismiss_button" type="button" class="btn btn-default" data-dismiss="modal"><% $c->i18n->p("global.dataset_publish.close", "Close") |h %></button>
+                <button type="button" class="btn btn-primary" id="obsolete_stocks_submit"><% $c->i18n->p("accession.stock.obsolete_button", "Obsolete") |h %></button>
             </div>
         </div>
     </div>
@@ -48,19 +48,19 @@ $program_name
     <div class="modal-dialog" role="document">
         <div class="modal-content">
             <div class="modal-header">
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                <h4 class="modal-title" id="obsoleteAccessionsInBulkMessageDialog">Success</h4>
+                <button type="button" class="close" data-dismiss="modal" aria-label="<% $c->i18n->p("global.dataset_publish.close", "Close") |h %>"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="obsoleteAccessionsInBulkMessageDialog"><% $c->i18n->p("cross.ui.success", "Success") |h %></h4>
             </div>
             <div class="modal-body">
                 <div class="container-fluid">
                     <p>
                         <span class="ui-icon ui-icon-circle-check" style="float: left; margin: 0 7px 50px 0;"></span>
-                        Success!
+                        <% $c->i18n->p("trial.card.entry_numbers.delete_success", "Success!") |h %>
                     </p>
                 </div>
             </div>
             <div class="modal-footer">
-                <button id="dismiss_obsolete_accessions_in_bulk_message_dialog" type="button" class="btn btn-default" data-dismiss="modal">Close & Reload</button>
+                <button id="dismiss_obsolete_accessions_in_bulk_message_dialog" type="button" class="btn btn-default" data-dismiss="modal"><% $c->i18n->p("seedlots.ui.close_reload", "Close & Reload") |h %></button>
             </div>
         </div>
     </div>
@@ -93,7 +93,7 @@ jQuery(document).ready(function(){
         });
 
         if (selected_stocks.length == 0){
-            alert('Please select accessions that you would like to obsolete');
+            alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("transformation.root.please_select_accessions_that_you_would_like_to_obsolete", "Please select accessions that you would like to obsolete") : 'Please select accessions that you would like to obsolete'));
         } else {
             stock_name_string = JSON.stringify(selected_stocks);
             formatted_stock_names = selected_stocks.join('\n');
@@ -101,7 +101,7 @@ jQuery(document).ready(function(){
 
         const obsolete_note = jQuery('#bulk_obsolete_note').val();
 
-        const confirmation = confirm('Are you sure you want to obsolete these accessions:' + "\n" + formatted_stock_names);
+        const confirmation = confirm((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("transformation.root.are_you_sure_you_want_to_obsolete_these_accessions", "Are you sure you want to obsolete these accessions:") : 'Are you sure you want to obsolete these accessions:') + "\n" + formatted_stock_names);
 
         if (confirmation) {
             jQuery.ajax({
@@ -127,7 +127,7 @@ jQuery(document).ready(function(){
                 },
                 error: function(response){
                     jQuery('#working_modal').modal('hide');
-                    alert("Error obsoleting accessions.");
+                    alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("transformation.root.error_obsoleting_accessions", "Error obsoleting accessions.") : "Error obsoleting accessions."));
                 }
             });
         }

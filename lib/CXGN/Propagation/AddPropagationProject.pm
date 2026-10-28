@@ -8,6 +8,8 @@ CXGN::Propagation::AddPropagationProject - a module for adding propagation proje
 package CXGN::Propagation::AddPropagationProject;
 
 use Moose;
+use SGN::I18N ();
+use CatalystX::GlobalContext '$c';
 use MooseX::FollowPBP;
 use Moose::Util::TypeConstraints;
 use Try::Tiny;
@@ -83,14 +85,15 @@ sub existing_propagation_project {
 
 sub save_propagation_project {
     my $self = shift;
+    my SGN::I18N $ui_i18n = SGN::I18N::translate($c);
     my $schema = $self->get_chado_schema();
 
     if ($self->existing_propagation_project()){
-        return {error => "Propagation project not saved: Project name already exists"};
+        return {error => (SGN::I18N::translate($ui_i18n, "seedlot.server.propagation_project_not_saved_project_name_already_exists", "Propagation project not saved: Project name already exists"))};
     }
 
     if (!$self->get_breeding_program_id()){
-        return {error => "Propagation project not saved: Breeding program does not exist"};
+        return {error => (SGN::I18N::translate($ui_i18n, "seedlot.server.propagation_project_not_saved_breeding_program_does_not", "Propagation project not saved: Breeding program does not exist"))};
     }
 
     my $project_year_cvterm = SGN::Model::Cvterm->get_cvterm_row($schema,'project year', 'project_property');

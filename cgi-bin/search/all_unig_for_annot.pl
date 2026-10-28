@@ -1,4 +1,15 @@
 use strict;
+use CatalystX::GlobalContext '$c';
+use SGN::I18N;
+use HTML::Entities qw(encode_entities);
+my SGN::I18N $i18n = eval { $c && $c->i18n };
+my $render_i18n_html = sub {
+    my ($message, $slots) = @_;
+    my $html = encode_entities($message);
+    # One substitution pass: inserted data cannot become another markup slot.
+    $html =~ s/(__SGN_UI_[A-Z0-9_]+__)/exists $slots->{$1} ? $slots->{$1} : $1/ge;
+    return $html;
+};
 use CXGN::Page;
 use CXGN::DB::Connection;
 
@@ -17,7 +28,7 @@ my $blast_matches_q = $dbh->prepare ("select bt.db_name, bd.defline, bt.blast_pr
 
 my $blast_unig_link_q = $dbh->prepare("select u.unigene_id, g.comment, bh.score, bh.evalue, bh.identity_percentage, bh.apply_start, bh.apply_end from blast_defline as bd left join blast_hits as bh on (bd.defline_id=bh.defline_id) left join blast_annotations as ba using (blast_annotation_id) left join unigene as u on (ba.apply_id=u.unigene_id) left join unigene_build as ub using (unigene_build_id) left join groups as g on (ub.organism_group_id=g.group_id) where apply_type='15' and ub.status='C' and bd.defline_id=?");
 
-my $page = CXGN::Page->new( "Annotation Search Results", "Dan");
+my $page = CXGN::Page->new( encode_entities(($i18n ? $i18n->p("global.final_caption.annotation_search_results", "Annotation Search Results") : "Annotation Search Results")), "Dan");
 
 my $desc_colour='#EEEEEE';
 my $unig_link='/search/unigene.pl?unigene_id=';
@@ -55,7 +66,7 @@ if ($search_type eq 'manual_search'){
 
     my ($type_desc, $annot_text, $author_name, $last_updated) = $manual_annot_matches_q->fetchrow_array();
 
-    my $annot_target_desc = "$type_desc by $author_name on $last_updated";
+    my $annot_target_desc = encode_entities(($i18n ? $i18n->p("global.final_caption.manual_attribution", "%{type} by %{author} on %{date}", {type => $type_desc, author => $author_name, date => $last_updated}) : "$type_desc by $author_name on $last_updated"));
     @match_detail = ($annot_target_desc, $annot_text);
 
 
@@ -94,7 +105,7 @@ elsif($search_type eq 'blast_search'){
     }
 
     my ($blast_target_db, $defline, $blast_program) = $blast_matches_q->fetchrow_array();
-    my $annot_target_desc = "Unigene <b>$blast_program</b> search against <b>$blast_target_db</b>";
+    my $annot_target_desc = $render_i18n_html->(($i18n ? $i18n->p("global.all_unig_for_annot.blast_target_desc", "Unigene %{program} search against %{database}", {program => "__SGN_UI_PROGRAM__", database => "__SGN_UI_DATABASE__"}) : "Unigene __SGN_UI_PROGRAM__ search against __SGN_UI_DATABASE__"), {"__SGN_UI_PROGRAM__" => '<b>' . encode_entities($blast_program) . '</b>', "__SGN_UI_DATABASE__" => '<b>' . encode_entities($blast_target_db) . '</b>'});
     @match_detail = ($annot_target_desc, $defline);
 
 
@@ -123,7 +134,7 @@ my $match_text=$match_detail[1];
 
 #strip <br /> tags.
 #this is for the current specific version of manual annotation
-#it is a kludge, there should be a text only searcheable field
+#it is a kludge, there should be a text only searchable field
 # and a separate html enhanced text display field in the db
 
 $match_text =~ s/\<br\>/  /g;
@@ -131,13 +142,14 @@ $match_text =~ s/\<br\>/  /g;
 #insert <br /> in front of genbank id tags to break up long deflines
 $match_text =~ s/(gi\|)/<br \/>$1/g;
 
+my $unigenes_containing = encode_entities($i18n ? $i18n->p('global.all_unig_for_annot.unigenes_containing_annotation', 'Unigenes containing this annotation') : 'Unigenes containing this annotation');
 my $web_format="
 	<tr><td bgcolor=\"$desc_colour\" align=\"left\" nowrap=\"nowrap\">$match_detail[0]</td></tr>
         <tr><td colspan=\"2\">$match_text</td></tr>";
 
 if (@unigene_list){
     $web_format .= "
-<tr><td colspan=\"2\" align=\"left\" nowrap=\"nowrap\"><br />Unigenes containing this annotation:</td></tr>
+<tr><td colspan=\"2\" align=\"left\" nowrap=\"nowrap\"><br />$unigenes_containing:</td></tr>
 <tr><td colspan=\"2\" align=\"left\" nowrap=\"nowrap\">
 <table align=\"left\" cellspacing=\"2\" cellpadding=\"0\" border=\"0\">
 ";
@@ -177,6 +189,7 @@ $page->footer();
 
 
 sub no_matches {
+
   my ($match_id) = @_;
 
   $page->header();
@@ -192,6 +205,7 @@ EOF
 }
 
 sub too_many_matches {
+
   my ($match_id) = @_;
 
   $page->header();
@@ -208,6 +222,7 @@ EOF
 }
 
 sub null_request {
+
 
   $page->header();
 

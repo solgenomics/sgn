@@ -10,7 +10,7 @@ $breeding_program_name => undef
 </%args>
 
 <& /util/import_javascript.mas, classes => [ 'CXGN.TrialTreeFolders' ] &>
-% my $dialog_type;
+% my $dialog_type = ''; # Generic folders retain the legacy blank type caption.
 % my $folder_for_trials;
 % my $folder_for_crosses;
 % my $folder_for_genotyping_trials;
@@ -30,48 +30,48 @@ $breeding_program_name => undef
   <div class="modal-dialog modal-lg" role="document">
     <div class="modal-content">
       <div class="modal-header">
-        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-        <h4 class="modal-title" id="moveFolderDialog">Move a <% $dialog_type %> folder</h4>
+        <button type="button" class="close" data-dismiss="modal" aria-label="<% $c->i18n->p('folder.ui.close', 'Close') |h %>"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title" id="moveFolderDialog"><% $c->i18n->p('folder.move.move_title', 'Move a %{type} folder', {type => $dialog_type}) |h %></h4>
       </div>
       <div class="modal-body">
         <div class="container-fluid">
 
 	       <form class="form-horizontal" role="form" method="post" id="move_folder_dialog_form" name="move_folder_dialog_form">
           <div class="form-group">
-             <label class="col-sm-4 control-label">Breeding Program: </label>
+                <label class="col-sm-4 control-label"><% $c->i18n->p('folder.move.breeding_program', 'Breeding Program:') |h %></label>
              <div class="col-sm-8" >
                <div id="move_folder_breeding_program_select_div">
 % if ($breeding_program_id) {
                <input type="text" class="form-control" value="<% $breeding_program_name %>" disabled/>
                <input type="hidden" id="move_folder_breeding_program_id" name="move_folder_breeding_program_id" value="<% $breeding_program_id %>" />
 % } else {
- [Loading...]
+ <% $c->i18n->p('folder.move.loading', '[Loading...]') |h %>
 % }
                </div>
              </div>
           </div>
           <div class="form-group">
-      	      <label class="col-sm-4 control-label">Parent Folder: </label>
+                <label class="col-sm-4 control-label"><% $c->i18n->p('folder.move.parent_folder', 'Parent Folder:') |h %></label>
       	      <div class="col-sm-8" >
                 <div id="move_folder_parent_folder_select_div">
 % if ($parent_folder_id) {
                   <input type="text" class="form-control" value="<% $parent_folder_name %>" disabled/>
                   <input type="hidden" id="move_folder_parent_folder_id" name="move_folder_parent_folder_id" value="<% $parent_folder_id %>" />
 % } else {
-  [Loading...]
+  <% $c->i18n->p('folder.move.loading', '[Loading...]') |h %>
 % }
                 </div>
               </div>
 	        </div>
 	        <div class="form-group">
-      	      <label class="col-sm-4 control-label">Folder Name: </label>
+                <label class="col-sm-4 control-label"><% $c->i18n->p('folder.move.folder_name', 'Folder Name:') |h %></label>
       	      <div class="col-sm-8" >
                 <div id="move_folder_select_div">
 % if ($folder_id) {
               <input type="text" class="form-control" value="<% $folder_name %>" disabled/>
               <input type="hidden" id="move_folder_id" name="move_folder_id" value="<% $folder_id %>" />
 % } else {
-[Loading...]
+<% $c->i18n->p('folder.move.loading', '[Loading...]') |h %>
 % }
                 </div>
               </div>
@@ -80,8 +80,8 @@ $breeding_program_name => undef
         </div>
       </div>
       <div class="modal-footer">
-        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-	      <button type="button" class="btn btn-primary" name="move_folder_submit" id="move_folder_submit" title="Move folder">Save</button>
+        <button type="button" class="btn btn-default" data-dismiss="modal"><% $c->i18n->p('folder.ui.close', 'Close') |h %></button>
+	      <button type="button" class="btn btn-primary" name="move_folder_submit" id="move_folder_submit" title="<% $c->i18n->p('folder.detail.move_folder', 'Move folder') |h %>"><% $c->i18n->p('folder.move.save', 'Save') |h %></button>
       </div>
     </div>
   </div>
@@ -91,19 +91,19 @@ $breeding_program_name => undef
     <div class="modal-dialog" role="document">
         <div class="modal-content">
             <div class="modal-header" style="text-align: center">
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                <h4 class="modal-title" id="moveFolderSuccessDialog">Folder Move Successful</h4>
+                <button type="button" class="close" data-dismiss="modal" aria-label="<% $c->i18n->p('folder.ui.close', 'Close') |h %>"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="moveFolderSuccessDialog"><% $c->i18n->p('folder.move.move_title_success', 'Folder Move Successful') |h %></h4>
             </div>
             <div class="modal-body">
                 <div class="container-fluid">
                     <p>
                         <span class="ui-icon ui-icon-circle-check" style="float: left; margin: 0 7px 50px 0;"></span>
-                        The folder was moved successfully
+                        <% $c->i18n->p('folder.move.move_success', 'The folder was moved successfully') |h %>
                     </p>
                 </div>
             </div>
             <div class="modal-footer">
-                <button id="close_move_folder_success_dialog" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                <button id="close_move_folder_success_dialog" type="button" class="btn btn-default" data-dismiss="modal"><% $c->i18n->p('folder.ui.close', 'Close') |h %></button>
             </div>
         </div>
     </div>
@@ -217,7 +217,7 @@ function move_folder() {
   //console.log(parent_folder_id);
   //console.log(folder_id);
   if (parent_folder_id == folder_id) {
-    alert("Cannot make a folder its own parent.");
+    alert(window.SGN && SGN.i18n ? SGN.i18n.p('folder.move.self_parent', 'Cannot make a folder its own parent.') : 'Cannot make a folder its own parent.');
     return;
   }
   jQuery.ajax( {
@@ -234,7 +234,7 @@ function move_folder() {
       }
     },
     error: function(response) {
-      alert('An error occurred trying to move folder.');
+      alert(window.SGN && SGN.i18n ? SGN.i18n.p('folder.move.move_error', 'An error occurred trying to move folder.') : 'An error occurred trying to move folder.');
       jQuery('#move_folder_dialog').modal("hide");
     }
   });

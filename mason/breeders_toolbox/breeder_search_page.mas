@@ -3,6 +3,10 @@
 $dataset_id => undef
 </%args>
 
+<%init>
+use HTML::Entities ();
+</%init>
+
 <%once>
   my $default_repeat_measurements = $c->get_conf('pheno_download_default_repeat_measurements');
   my $default_include_timestamps = $c->get_conf('pheno_download_default_include_timestamps');
@@ -19,12 +23,12 @@ $dataset_id => undef
 <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.min.js"></script>
 <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.css" />
 
-<& /page/page_title.mas, title=>"Search Wizard" &>
+<& /page/page_title.mas, title=>HTML::Entities::encode_entities($c->i18n->p('global.search_wizard.title', 'Search Wizard')) &>
 
 <div class="row">
   <div class="col-md-12" style="margin-bottom:1em; text-align:right;">
-    Don't see your data? <button id="update_wizard_lists" class="btn btn-default">Refresh Lists</button>
-    <button id="update_wizard_show" class="btn btn-default">Update Wizard</button>
+    <% $c->i18n->p('global.search_wizard.no_data', "Don't see your data?") |h %> <button id="update_wizard_lists" class="btn btn-default"><% $c->i18n->p('global.search_wizard.refresh_lists', 'Refresh Lists') |h %></button>
+    <button id="update_wizard_show" class="btn btn-default"><% $c->i18n->p('global.search_wizard.update_wizard', 'Update Wizard') |h %></button>
   </div>
 </div>
 
@@ -54,18 +58,18 @@ $dataset_id => undef
 
           <div class="panel-heading">
             <select class="wizard-type-select form-control input-sm form-inline">
-              <option value="" disabled selected>Select Column Type</option>
+              <option value="" disabled selected><% $c->i18n->p('global.search_wizard.select_column_type', 'Select Column Type') |h %></option>
               <optgroup class="wizard-types-group" label="--------------------"></optgroup>
-              <optgroup class="wizard-lists-group" label="Load Selection from List:"></optgroup>
+              <optgroup class="wizard-lists-group" label="<% $c->i18n->p('global.search_wizard.load_selection_from_list', 'Load Selection from List:') |h %>"></optgroup>
             </select>
           </div>
 
           <div class="wizard-search-container">
-            <textarea class="wizard-search form-control" placeholder="Search"></textarea>
+            <textarea class="wizard-search form-control" placeholder="<% $c->i18n->p('global.search_wizard.search', 'Search') |h %>"></textarea>
             <div class="wizard-search-options">
               <div class="wizard-search-options-group btn-group" role="group">
-                <button type="button" class="btn btn-xs btn-primary active wizard-search-options-btn wizard-search-options-contains">Contains</button>
-                <button type="button" class="btn btn-xs btn-default wizard-search-options-btn wizard-search-options-exact">Exact</button>
+                <button type="button" class="btn btn-xs btn-primary active wizard-search-options-btn wizard-search-options-contains"><% $c->i18n->p('global.search_wizard.contains', 'Contains') |h %></button>
+                <button type="button" class="btn btn-xs btn-default wizard-search-options-btn wizard-search-options-exact"><% $c->i18n->p('global.search_wizard.exact', 'Exact') |h %></button>
               </div>
               <div class="btn-group" role="group">
                 <button type="button" class="btn btn-xs btn-danger wizard-search-options-clear">
@@ -82,11 +86,11 @@ $dataset_id => undef
 
             <div class="wizard-btn-center">
               <div class="btn-group">
-                <button class="wizard-select-all btn btn-default btn-xs">Select All</button
+                <button class="wizard-select-all btn btn-default btn-xs"><% $c->i18n->p('global.search_wizard.select_all', 'Select All') |h %></button
                 ><button class="wizard-btn-tag btn btn-primary btn-xs">
                   <span class="wizard-count-selected">0</span>/<span class="wizard-count-all">0</span>
                 </button
-                ><button class="wizard-select-clear btn btn-default btn-xs">Clear</button>
+                ><button class="wizard-select-clear btn btn-default btn-xs"><% $c->i18n->p('global.search_wizard.clear', 'Clear') |h %></button>
               </div>
             </div>
 
@@ -98,10 +102,10 @@ $dataset_id => undef
 
             <div class="wizard-btn-center wizard-union-toggle">
               <div class="btn-group wizard-union-toggle-btn-group">
-                <button type="button" class="btn btn-xs btn-default disabled">Match</button>
-                <button type="button" class="btn btn-xs wizard-union-toggle-btn wizard-union-toggle-btn-any btn-primary active">ANY</button>
-                <button type="button" class="btn btn-xs wizard-union-toggle-btn wizard-union-toggle-btn-min btn-default">MIN</button>
-                <button type="button" class="btn btn-xs wizard-union-toggle-btn wizard-union-toggle-btn-all btn-default">ALL</button>
+                <button type="button" class="btn btn-xs btn-default disabled"><% $c->i18n->p('global.search_wizard.match', 'Match') |h %></button>
+                <button type="button" class="btn btn-xs wizard-union-toggle-btn wizard-union-toggle-btn-any btn-primary active"><% $c->i18n->p('global.search_wizard.any', 'ANY') |h %></button>
+                <button type="button" class="btn btn-xs wizard-union-toggle-btn wizard-union-toggle-btn-min btn-default"><% $c->i18n->p('global.search_wizard.min', 'MIN') |h %></button>
+                <button type="button" class="btn btn-xs wizard-union-toggle-btn wizard-union-toggle-btn-all btn-default"><% $c->i18n->p('global.search_wizard.all', 'ALL') |h %></button>
               </div>
               <div class="input-group input-group-sm wizard-union-toggle-min-group">
                 <span class="input-group-btn">
@@ -122,26 +126,26 @@ $dataset_id => undef
               <tr>
                 <td>
                   <select class="wizard-add-to-list-id form-control input-sm">
-                    <option selected value="" disabled>Add to List...</option>
+                    <option selected value="" disabled><% $c->i18n->p('global.search_wizard.add_to_list_option', 'Add to List...') |h %></option>
                     <optgroup class="wizard-lists-group" label="--------------------"></optgroup>
                   </select>
                 </td>
                 <td>
-                  <button class="wizard-add-to-list btn btn-sm btn-primary btn-block">Add</button>
+                  <button class="wizard-add-to-list btn btn-sm btn-primary btn-block"><% $c->i18n->p('global.search_wizard.add', 'Add') |h %></button>
                 </td>
               </tr>
               <tr>
                 <td>
-                  <input class="wizard-create-list-name form-control input-sm" type="text" placeholder="Create New List..."></input>
+                  <input class="wizard-create-list-name form-control input-sm" type="text" placeholder="<% $c->i18n->p('global.search_wizard.create_new_list', 'Create New List...') |h %>"></input>
                 </td>
                 <td>
-                  <button class="wizard-create-list btn btn-primary btn-sm btn-block">Create</button>
+                  <button class="wizard-create-list btn btn-primary btn-sm btn-block"><% $c->i18n->p('global.search_wizard.create', 'Create') |h %></button>
                 </td>
               </tr>
             </&>
             <&| /util/user.mas:logged_out &>
               <tr>
-                <td><button class="btn btn-xs btn-primary" name="site_login_button">Log In</button> to save lists.</td>
+                <td><button class="btn btn-xs btn-primary" name="site_login_button"><% $c->i18n->p('global.search_wizard.log_in', 'Log In') |h %></button> <% $c->i18n->p('global.search_wizard.to_save_lists', 'to save lists.') |h %></td>
               </tr>
             </&>
           </table>
@@ -157,28 +161,33 @@ $dataset_id => undef
   <div class="wizard-datasets panel-group col-sm-12 col-md-6">
     <div class="panel panel-default wizard-panel">
       <div class="panel-heading">
-        <&| /util/user.mas:logged_out &><button class="btn btn-xs btn-primary" name="site_login_button">Log In</button> to</&>
-        Load/Create Datasets using <button class="btn btn-xs btn-default disabled wizard-btn-tag">Match</button> Columns
+        <&| /util/user.mas:logged_out &><button class="btn btn-xs btn-primary" name="site_login_button"><% $c->i18n->p('global.search_wizard.log_in', 'Log In') |h %></button> <% $c->i18n->p('global.search_wizard.to', 'to') |h %></&>
+% my $match_button_token = '__SGN_SEARCH_WIZARD_MATCH_BUTTON__';
+% my $dataset_columns_text = $c->i18n->p('global.search_wizard.dataset_columns_instruction', 'Load/Create Datasets using %{match_button} Columns', {match_button => $match_button_token});
+% $dataset_columns_text = HTML::Entities::encode_entities($dataset_columns_text);
+% my $match_button_label = HTML::Entities::encode_entities($c->i18n->p('global.search_wizard.match', 'Match'));
+% $dataset_columns_text =~ s/\Q$match_button_token\E/<button class="btn btn-xs btn-default disabled wizard-btn-tag">$match_button_label<\/button>/;
+<% $dataset_columns_text |n %>
       </div>
       <&| /util/user.mas:logged_in &>
         <div class="panel-body">
           <div class="input-group">
             <select class="form-control input-sm wizard-dataset-select">
-              <option selected value="" disabled>Load Dataset</option>
+              <option selected value="" disabled><% $c->i18n->p('global.search_wizard.load_dataset', 'Load Dataset') |h %></option>
               <optgroup class="wizard-dataset-group" label="--------------------"></optgroup>
             </select>
             <span class="input-group-btn">
-              <span><button style="width:5em;margin-left:4px;" class="btn btn-sm btn-primary wizard-dataset-load">Load</button></span>
-              <span><button style="width:9em;margin-left:4px;" class="btn btn-sm btn-primary wizard-dataset-public">Make Public</button></span>
-              <span><button style="width:5em;margin-left:4px;" class="btn btn-sm btn-danger wizard-dataset-delete">Delete</button></span>
+              <span><button style="width:5em;margin-left:4px;" class="btn btn-sm btn-primary wizard-dataset-load"><% $c->i18n->p('global.search_wizard.load', 'Load') |h %></button></span>
+              <span><button style="width:9em;margin-left:4px;" class="btn btn-sm btn-primary wizard-dataset-public"><% $c->i18n->p('global.search_wizard.make_public', 'Make Public') |h %></button></span>
+              <span><button style="width:5em;margin-left:4px;" class="btn btn-sm btn-danger wizard-dataset-delete"><% $c->i18n->p('global.search_wizard.delete', 'Delete') |h %></button></span>
             </span>
           </div>
         </div>
         <div class="panel-body" style="margin-top:-1px;">
           <div class="input-group">
-            <input type="text" placeholder="Create New Dataset" class="form-control input-sm wizard-dataset-name" />
+            <input type="text" placeholder="<% $c->i18n->p('global.search_wizard.create_new_dataset', 'Create New Dataset') |h %>" class="form-control input-sm wizard-dataset-name" />
             <span class="input-group-btn">
-              <span><button style="width:5em;margin-left:4px;" class="btn btn-sm btn-primary wizard-dataset-create">Create</button></span>
+              <span><button style="width:5em;margin-left:4px;" class="btn btn-sm btn-primary wizard-dataset-create"><% $c->i18n->p('global.search_wizard.create', 'Create') |h %></button></span>
             </span>
           </div>
         </div>
@@ -190,30 +199,42 @@ $dataset_id => undef
     <&| /util/user.mas:logged_out &>
       <div class="panel panel-default">
         <div class="panel-heading">
-          <button class="btn btn-xs btn-primary" name="site_login_button">Log In</button> to download related data.
+          <button class="btn btn-xs btn-primary" name="site_login_button"><% $c->i18n->p('global.search_wizard.log_in', 'Log In') |h %></button> <% $c->i18n->p('global.search_wizard.to_download_related_data', 'to download related data.') |h %>
         </div>
       </div>
     </&>
     <&| /util/user.mas:logged_in &>
       <div class="panel panel-default">
         <div class="panel-heading" role="button" data-toggle="collapse" data-parent="#wiz-down-group" href="#wiz-down-1-c" aria-controls="wiz-down-1-c">
-          <span class="btnn btn-link">Related Genotype Data</span>
+          <span class="btnn btn-link"><% $c->i18n->p('global.search_wizard.related_genotype_data', 'Related Genotype Data') |h %></span>
         </div>
         <div id="wiz-down-1-c" class="panel-collapse collapse" role="tabpanel">
-          <p style="margin: 15px; text-color: #999; font-size: 90%">Download matching genotype records from the database.  Select a <strong>single genotyping protocol</strong> and <strong>one or more accessions</strong> to download the matching genotype data.</p>
+<%perl>
+my $protocol_choice_token = '__SGN_WIZARD_PROTOCOL_CHOICE__';
+my $accessions_choice_token = '__SGN_WIZARD_ACCESSIONS_CHOICE__';
+my $genotype_download_help = $c->i18n->p('global.search_wizard.genotype_download_help', 'Download matching genotype records from the database.  Select a %{protocol_choice} and %{accessions_choice} to download the matching genotype data.', {protocol_choice => $protocol_choice_token, accessions_choice => $accessions_choice_token});
+$genotype_download_help = HTML::Entities::encode_entities($genotype_download_help);
+$genotype_download_help =~ s/\Q$protocol_choice_token\E/<strong>single genotyping protocol<\/strong>/;
+$genotype_download_help =~ s/\Q$accessions_choice_token\E/<strong>one or more accessions<\/strong>/;
+my $archived_choice_token = '__SGN_WIZARD_ARCHIVED_SELECTION__';
+my $archived_genotype_help = $c->i18n->p('global.search_wizard.archived_genotype_help', 'Download the original archived VCF files of entire genotyping projects.  Select %{selection} to download a VCF file of any matching project(s).', {selection => $archived_choice_token});
+$archived_genotype_help = HTML::Entities::encode_entities($archived_genotype_help);
+$archived_genotype_help =~ s/\Q$archived_choice_token\E/<strong>one or more genotyping projects and\/or genotyping protocols<\/strong>/;
+</%perl>
+          <p style="margin: 15px; text-color: #999; font-size: 90%"><% $genotype_download_help |n %></p>
           <table class="table">
             <tr>
               <td colspan="4">
-                <span class="glyphicon glyphicon-info-sign" title="To download related genotype data, select 1 or more Accessions and optionally no more than 1 Genotyping Protocol in the wizard. If no genotyping protocol is selected, the database default protocol will be used. Click the checkbox here to compute genotypes for the selected accessions from genotypes of parents; this works for downloading genotypes, downloading the GRM, and performing GWAS."></span>
-                <span>Download Genotype Data</span>
+                <span class="glyphicon glyphicon-info-sign" title="<% $c->i18n->p('global.search_wizard.tip_related_genotype', 'To download related genotype data, select 1 or more Accessions and optionally no more than 1 Genotyping Protocol in the wizard. If no genotyping protocol is selected, the database default protocol will be used. Click the checkbox here to compute genotypes for the selected accessions from genotypes of parents; this works for downloading genotypes, downloading the GRM, and performing GWAS.') |h %>"></span>
+                <span><% $c->i18n->p('global.search_wizard.download_genotype_data', 'Download Genotype Data') |h %></span>
                 <input class="wizard-download-genotypes-info form-control input-sm" type="text" disabled></input>
               </td>
               <td colspan="4">
-                  <span>Compute From Parents</span><br/>
+                  <span><% $c->i18n->p('global.search_wizard.compute_from_parents', 'Compute From Parents') |h %></span><br/>
                   <input type="checkbox" class="wizard-download-genotypes-parents-compute">
               </td>
               <td colspan="4">
-                  <span>Include Duplicate Genotypes</span><br/>
+                  <span><% $c->i18n->p('global.search_wizard.include_duplicate_genotypes', 'Include Duplicate Genotypes') |h %></span><br/>
                   <input type="checkbox" class="wizard-download-genotypes-duplicates-include">
               </td>
             </tr>
@@ -222,40 +243,40 @@ $dataset_id => undef
             <table class="table">
                 <tr>
                     <td colspan="12">
-                        <span class="glyphicon glyphicon-info-sign" title="You can use either chromosome or marker alleles to filter genotyping data. You cannot use both criteria at the same time."></span>
-                        <span>Filter by Chromosome or Marker Alleles</span>
+                        <span class="glyphicon glyphicon-info-sign" title="<% $c->i18n->p('global.search_wizard.tip_chromosome_marker', 'You can use either chromosome or marker alleles to filter genotyping data. You cannot use both criteria at the same time.') |h %>"></span>
+                        <span><% $c->i18n->p('global.search_wizard.filter_chromosome_or_marker_alleles', 'Filter by Chromosome or Marker Alleles') |h %></span>
                     </td>
                 </tr>
                 <tr>
                     <td colspan="4">
-                        <span>Chromosome</span>
+                        <span><% $c->i18n->p('global.search_wizard.chromosome', 'Chromosome') |h %></span>
                         <select class="wizard-download-genotypes-chromosome-number form-control input-sm"></select>
                     </td>
                     <td colspan="4">
-                        <span>Start Position</span>
+                        <span><% $c->i18n->p('global.search_wizard.start_position', 'Start Position') |h %></span>
                         <input placeholder="" type="number" class="wizard-download-genotypes-start-position form-control input-sm">
                     </td>
                     <td colspan="4">
-                        <span>End Position</span>
+                        <span><% $c->i18n->p('global.search_wizard.end_position', 'End Position') |h %></span>
                         <input placeholder="" type="number" class="wizard-download-genotypes-end-position form-control input-sm">
                     </td>
                 </tr>
                 <tr>
                     <td colspan="6">
-                        <span>Marker Allele Filter</span>
+                        <span><% $c->i18n->p('global.search_wizard.marker_allele_filter', 'Marker Allele Filter') |h %></span>
                         <select class="wizard-download-genotypes-marker-set-list-id form-control input-sm" id="wizard-download-genotypes-marker-set-list-id"></select>
                     </td>
                     <td colspan="6">
                         <br/>
-                        <button class="btn btn-sm btn-default" onClick="window.open('/breeders/markers', '_blank');">Manage Marker Alleles</button>
+                        <button class="btn btn-sm btn-default" onClick="window.open('/breeders/markers', '_blank');"><% $c->i18n->p('global.search_wizard.manage_marker_alleles', 'Manage Marker Alleles') |h %></button>
                     </td>
                 </tr>
                 <tr>
                     <td colspan="6">
-                        <span>Genotypes Download Format</span>
+                        <span><% $c->i18n->p('global.search_wizard.genotypes_download_format', 'Genotypes Download Format') |h %></span>
                         <select class="wizard-download-genotypes-format form-control input-sm" >
-                            <option value="VCF">VCF File Format</option>
-                            <option value="DosageMatrix">Dosage Matrix File Format (.tsv)</option>
+                            <option value="VCF"><% $c->i18n->p('global.search_wizard.vcf_file_format', 'VCF File Format') |h %></option>
+                            <option value="DosageMatrix"><% $c->i18n->p('global.search_wizard.dosage_matrix_file_format', 'Dosage Matrix File Format (.tsv)') |h %></option>
                         </select>
                     </td>
                     <td colspan="6">
@@ -263,11 +284,11 @@ $dataset_id => undef
                 </tr>
                 <tr>
                     <td colspan="8">
-                        <span class="glyphicon glyphicon-info-sign" title="Select accessions, and optionally a genotyping protocol. If no genotyping protocol is selected, the default genotyping protocol is used in your system. If you want to filter genotypes, use the chromosome, start position, end position, or marker alleles. Can compute genotypes from parents if the parents of the accessions you selected have genotypes by checking the checkbox. Genotypes can be downloaded in VCF and Dosage Matrix Formats."></span>
-                        <span>Download Genotypes</span><br/>
+                        <span class="glyphicon glyphicon-info-sign" title="<% $c->i18n->p('global.search_wizard.tip_genotypes', 'Select accessions, and optionally a genotyping protocol. If no genotyping protocol is selected, the default genotyping protocol is used in your system. If you want to filter genotypes, use the chromosome, start position, end position, or marker alleles. Can compute genotypes from parents if the parents of the accessions you selected have genotypes by checking the checkbox. Genotypes can be downloaded in VCF and Dosage Matrix Formats.') |h %>"></span>
+                        <span><% $c->i18n->p('global.search_wizard.download_genotypes', 'Download Genotypes') |h %></span><br/>
                         <button class="wizard-download-genotypes btn btn-sm btn-primary">
                             <span class="glyphicon glyphicon-download" aria-hidden="true"></span>
-                            Download Genotypes
+                            <% $c->i18n->p('global.search_wizard.download_genotypes', 'Download Genotypes') |h %>
                         </button>
                         <input class="wizard-download-genotypes-info2 form-control btn-warning" type="text"></input>  <!-- warn too many genotype protocols-->
                         <input class="wizard-download-genotypes-info3 form-control btn-warning" type="text"></input>  <!-- show default protocol -->
@@ -282,60 +303,60 @@ $dataset_id => undef
             <table class="table">
                 <tr>
                     <td colspan="6">
-                      <span>Minor Allele Frequency</span>
+                      <span><% $c->i18n->p('global.search_wizard.minor_allele_frequency', 'Minor Allele Frequency') |h %></span>
                       <input placeholder="0.05" value="0.05" type="number" class="wizard-download-genotypes-grm-maf form-control input-sm">
                     </td>
                     <td colspan="3">
-                      <span>Marker Filter</span>
+                      <span><% $c->i18n->p('global.search_wizard.marker_filter', 'Marker Filter') |h %></span>
                       <input placeholder="0.60" value="0.60" type="number" class="wizard-download-genotypes-grm-marker-filter form-control input-sm">
                     </td>
                     <td colspan="3">
-                      <span>Individuals Filter</span>
+                      <span><% $c->i18n->p('global.search_wizard.individuals_filter', 'Individuals Filter') |h %></span>
                       <input placeholder="0.80" value="0.80" type="number" class="wizard-download-genotypes-grm-individuals-filter form-control input-sm">
                     </td>
                 </tr>
               <tr>
                 <td colspan="12">
-                  <span>Genomic Relationship Matrix (GRM) Download Format</span>
+                  <span><% $c->i18n->p('global.search_wizard.grm_download_format', 'Genomic Relationship Matrix (GRM) Download Format') |h %></span>
                   <select class="wizard-download-genotypes-grm-format form-control input-sm" >
-                      <option value="matrix_uniquenames">Matrix Stock Names (.tsv)</option>
-                      <option value="three_column_uniquenames">3-Column Stock Names (.tsv)</option>
-                      <option value="three_column_reciprocal_uniquenames">3-Column Reciprocal Stock Names (.tsv)</option>
-                      <option value="heatmap">Heatmap (.pdf)</option>
-                      <option value="matrix">Matrix Stock IDs (.tsv)</option>
-                      <option value="three_column">3-Column Stock IDs(.tsv)</option>
-                      <option value="three_column_stock_id_integer">3-Column Stock IDs Integer (.tsv)</option>
-                      <option value="three_column_reciprocal">3-Column Reciprocal Stock IDs (.tsv)</option>
-                      <option value="three_column_reciprocal_stock_id_integer">3-Column Reciprocal Stock IDs Integer (.tsv)</option>
+                      <option value="matrix_uniquenames"><% $c->i18n->p('global.search_wizard.matrix_stock_names', 'Matrix Stock Names (.tsv)') |h %></option>
+                      <option value="three_column_uniquenames"><% $c->i18n->p('global.search_wizard.three_column_stock_names', '3-Column Stock Names (.tsv)') |h %></option>
+                      <option value="three_column_reciprocal_uniquenames"><% $c->i18n->p('global.search_wizard.three_column_reciprocal_stock_names', '3-Column Reciprocal Stock Names (.tsv)') |h %></option>
+                      <option value="heatmap"><% $c->i18n->p('global.search_wizard.heatmap_format', 'Heatmap (.pdf)') |h %></option>
+                      <option value="matrix"><% $c->i18n->p('global.search_wizard.matrix_stock_ids', 'Matrix Stock IDs (.tsv)') |h %></option>
+                      <option value="three_column"><% $c->i18n->p('global.search_wizard.three_column_stock_ids', '3-Column Stock IDs(.tsv)') |h %></option>
+                      <option value="three_column_stock_id_integer"><% $c->i18n->p('global.search_wizard.three_column_stock_ids_integer', '3-Column Stock IDs Integer (.tsv)') |h %></option>
+                      <option value="three_column_reciprocal"><% $c->i18n->p('global.search_wizard.three_column_reciprocal_stock_ids', '3-Column Reciprocal Stock IDs (.tsv)') |h %></option>
+                      <option value="three_column_reciprocal_stock_id_integer"><% $c->i18n->p('global.search_wizard.three_column_reciprocal_stock_ids_integer', '3-Column Reciprocal Stock IDs Integer (.tsv)') |h %></option>
                   </select>
                   <br/>
-                    <span class="glyphicon glyphicon-info-sign" title="Select accessions, and optionally a genotyping protocol. If no genotyping protocol is selected, the default genotyping protocol is used in your system. Specify minor allele frequency (MAF), marker filter, and individuals filter. Can compute genotypes from parents if the parents of the accessions you selected have genotypes by checking the checkbox. GRM can be downloaded in a matrix format (.tsv) and a three column format."></span>
-                    <span>Download GRM</span><br/>
+                    <span class="glyphicon glyphicon-info-sign" title="<% $c->i18n->p('global.search_wizard.tip_grm', 'Select accessions, and optionally a genotyping protocol. If no genotyping protocol is selected, the default genotyping protocol is used in your system. Specify minor allele frequency (MAF), marker filter, and individuals filter. Can compute genotypes from parents if the parents of the accessions you selected have genotypes by checking the checkbox. GRM can be downloaded in a matrix format (.tsv) and a three column format.') |h %>"></span>
+                    <span><% $c->i18n->p('global.search_wizard.download_grm', 'Download GRM') |h %></span><br/>
                     <button class="wizard-download-genetic-relationship-matrix btn btn-sm btn-primary">
                         <span class="glyphicon glyphicon-download" aria-hidden="true"></span>
-                        Download GRM
+                        <% $c->i18n->p('global.search_wizard.download_grm', 'Download GRM') |h %>
                     </button>
                 </td>
               </tr>
               <tr>
                   <td colspan="12">
-                    <span>Genome Wide Association Study (GWAS) Download Format</span>
+                    <span><% $c->i18n->p('global.search_wizard.gwas_download_format', 'Genome Wide Association Study (GWAS) Download Format') |h %></span>
                     <select class="wizard-download-genotypes-gwas-format form-control input-sm" >
-                        <option value="manhattan_qq_plots">Manhattan + QQ Plots (.pdf)</option>
-                        <option value="results_tsv">GWAS Results (.tsv)</option>
+                        <option value="manhattan_qq_plots"><% $c->i18n->p('global.search_wizard.manhattan_qq_format', 'Manhattan + QQ Plots (.pdf)') |h %></option>
+                        <option value="results_tsv"><% $c->i18n->p('global.search_wizard.gwas_results_format', 'GWAS Results (.tsv)') |h %></option>
                     </select>
                     <br/>
-                    <span>Selected Traits Are All Repeated Measurements</span>
+                    <span><% $c->i18n->p('global.search_wizard.repeated_traits_label', 'Selected Traits Are All Repeated Measurements') |h %></span>
                     <select class="wizard-download-genotypes-gwas-repeated-measurements form-control input-sm" >
-                        <option value="no">No</option>
-                        <option value="yes">Yes</option>
+                        <option value="no"><% $c->i18n->p('global.search_wizard.no', 'No') |h %></option>
+                        <option value="yes"><% $c->i18n->p('global.search_wizard.yes', 'Yes') |h %></option>
                     </select>
                     <br/>
-                        <span class="glyphicon glyphicon-info-sign" title="Select accessions, traits, and optionally a genotyping protocol. If no genotyping protocol is selected, the default genotyping protocol is used in your system. When many traits are selected and these traits are not treated as repeated measurements, the traits are treated separately and distinct results are returned e.g. several Manhattan plots are returned. If the selected traits are in fact repeated measurements, then select 'yes'; a single GWAS will be run against all of the phenotypes e.g. a single Manhattan plot is returned. Specify minor allele frequency (MAF), marker filter, and individuals filter. Can compute genotypes from parents if the parents of the accessions you selected have genotypes by checking the checkbox. GWAS uses a fixed effect for different field trials and a fixed effect for replicate. GWAS uses Kinship matrix calculated from the genotype data. MAF and missing data used to filter prior to GWAS and Kinship matrix calculation. Can select whether to return results in Manhattan and QQ Plot (.pdf) form or as the tabular results (.tsv)."></span>
-                        <span>Run GWAS</span><br/>
+                        <span class="glyphicon glyphicon-info-sign" title="<% $c->i18n->p('global.search_wizard.tip_gwas', 'Select accessions, traits, and optionally a genotyping protocol. If no genotyping protocol is selected, the default genotyping protocol is used in your system. When many traits are selected and these traits are not treated as repeated measurements, the traits are treated separately and distinct results are returned e.g. several Manhattan plots are returned. If the selected traits are in fact repeated measurements, then select \'yes\'; a single GWAS will be run against all of the phenotypes e.g. a single Manhattan plot is returned. Specify minor allele frequency (MAF), marker filter, and individuals filter. Can compute genotypes from parents if the parents of the accessions you selected have genotypes by checking the checkbox. GWAS uses a fixed effect for different field trials and a fixed effect for replicate. GWAS uses Kinship matrix calculated from the genotype data. MAF and missing data used to filter prior to GWAS and Kinship matrix calculation. Can select whether to return results in Manhattan and QQ Plot (.pdf) form or as the tabular results (.tsv).') |h %>"></span>
+                        <span><% $c->i18n->p('global.search_wizard.run_gwas', 'Run GWAS') |h %></span><br/>
                       <button class="wizard-download-gwas btn btn-sm btn-primary">
                           <span class="glyphicon glyphicon-download" aria-hidden="true"></span>
-                          Download GWAS
+                          <% $c->i18n->p('global.search_wizard.download_gwas', 'Download GWAS') |h %>
                       </button>
                   </td>
               </tr>
@@ -347,27 +368,27 @@ $dataset_id => undef
 
       <div class="panel panel-default">
         <div class="panel-heading" role="button" data-toggle="collapse" data-parent="#wiz-down-group" href="#wiz-down-1-c-a" aria-controls="wiz-down-1-c-a">
-          <span class="btnn btn-link">Archived Genotype Data</span>
+          <span class="btnn btn-link"><% $c->i18n->p('global.search_wizard.archived_genotype_data', 'Archived Genotype Data') |h %></span>
         </div>
         <div id="wiz-down-1-c-a" class="panel-collapse collapse" role="tabpanel">
-          <p style="margin: 15px; text-color: #999; font-size: 90%">Download the original archived VCF files of entire genotyping projects.  Select <strong>one or more genotyping projects and/or genotyping protocols</strong> to download a VCF file of any matching project(s).</p>
+          <p style="margin: 15px; text-color: #999; font-size: 90%"><% $archived_genotype_help |n %></p>
           <div id="wiz-down-1-c-a-body" style="min-height: 50px"></div>
         </div>
       </div>
 
       <div class="panel panel-default">
         <div class="panel-heading" role="button" data-toggle="collapse" data-parent="#wiz-down-group" href="#wiz-down-2-c" aria-controls="wiz-down-2-c">
-          <span class="btnn btn-link">Related Trial Metadata</span>
+          <span class="btnn btn-link"><% $c->i18n->p('global.search_wizard.related_trial_metadata', 'Related Trial Metadata') |h %></span>
         </div>
         <div id="wiz-down-2-c" class="panel-collapse collapse" role="tabpanel">
           <table class="table">
             <tr>
               <td>
-                <input class="wizard-download-tmetadata-info form-control input-sm" type="text" disabled value="No Trials Selected"></input>
+                <input class="wizard-download-tmetadata-info form-control input-sm" type="text" disabled value="<% $c->i18n->p('global.search_wizard.no_trials_selected', 'No Trials Selected') |h %>"></input>
               </td>
               <td>
                 <select class="wizard-download-tmetadata-format form-control input-sm">
-                  <option value="" disabled>Format</option>
+                  <option value="" disabled><% $c->i18n->p('global.search_wizard.format', 'Format') |h %></option>
                   <option selected value="csv">CSV</option>
                   <option value="xlsx">XLSX</option>
                 </select>
@@ -377,7 +398,7 @@ $dataset_id => undef
           <div class="panel-footer" style="border-top: 1px solid #ddd;">
             <button class="wizard-download-tmetadata btn btn-sm btn-primary">
                 <span class="glyphicon glyphicon-download" aria-hidden="true"></span>
-                Metadata
+                <% $c->i18n->p('global.search_wizard.metadata', 'Metadata') |h %>
             </button>
           </div>
         </div>
@@ -385,7 +406,7 @@ $dataset_id => undef
 
       <div class="panel panel-default">
         <div class="panel-heading" role="button" data-toggle="collapse" data-parent="#wiz-down-group" href="#wiz-down-3-c" aria-controls="wiz-down-3-c">
-          <span class="btnn btn-link">Related Trial Phenotypes</span>
+          <span class="btnn btn-link"><% $c->i18n->p('global.search_wizard.related_trial_phenotypes', 'Related Trial Phenotypes') |h %></span>
         </div>
         <div id="wiz-down-3-c" class="panel-collapse collapse" role="tabpanel">
           <table class="table">
@@ -397,24 +418,24 @@ $dataset_id => undef
             <tr>
             <td colspan="1">
               <select class="wizard-download-phenotypes-speed form-control input-sm">
-                <option value="" disabled>Download Type</option>
-                <option selected value="Native">Default</option>
-                <option value="MaterializedViewTable">Fast (Improves speed but may miss recent changes)</option>
+                <option value="" disabled><% $c->i18n->p('global.search_wizard.download_type', 'Download Type') |h %></option>
+                <option selected value="Native"><% $c->i18n->p('global.search_wizard.default', 'Default') |h %></option>
+                <option value="MaterializedViewTable"><% $c->i18n->p('global.search_wizard.fast_may_miss_recent', 'Fast (Improves speed but may miss recent changes)') |h %></option>
               </select>
             </td>
               <td colspan="1">
                 <select class="wizard-download-phenotypes-format form-control input-sm">
-                  <option value="" disabled>Download Format</option>
+                  <option value="" disabled><% $c->i18n->p('global.search_wizard.download_format', 'Download Format') |h %></option>
                   <option selected value="csv">CSV</option>
                   <option value="xlsx">XLSX</option>
                 </select>
               </td>
               <td colspan="1">
                 <select class="wizard-download-phenotypes-level form-control input-sm">
-                  <option value="" disabled>Data Level</option>
-                  <option selected value="all">All</option>
-                  <option value="plot">Plots</option>
-                  <option value="plant">Plants</option>
+                  <option value="" disabled><% $c->i18n->p('global.search_wizard.data_level', 'Data Level') |h %></option>
+                  <option selected value="all"><% $c->i18n->p('global.search_wizard.all_levels', 'All') |h %></option>
+                  <option value="plot"><% $c->i18n->p('global.search_wizard.plots', 'Plots') |h %></option>
+                  <option value="plant"><% $c->i18n->p('global.search_wizard.plants', 'Plants') |h %></option>
                 </select>
               </td>
             </tr>
@@ -423,7 +444,7 @@ $dataset_id => undef
                 <div class="checkbox">
                   <label>
                     <input class="wizard-download-phenotypes-timestamp" type="checkbox" />
-                    Include timestamps
+                    <% $c->i18n->p('global.search_wizard.include_timestamps', 'Include timestamps') |h %>
                   </label>
                 </div>
               </td>
@@ -431,7 +452,7 @@ $dataset_id => undef
                 <div class="checkbox">
                   <label>
                     <input class="wizard-download-phenotypes-entry-numbers" type="checkbox" />
-                    Include accession entry numbers
+                    <% $c->i18n->p('global.search_wizard.include_accession_entry_numbers', 'Include accession entry numbers') |h %>
                   </label>
                 </div>
               </td>
@@ -441,7 +462,7 @@ $dataset_id => undef
                 <div class="checkbox">
                   <label>
                     <input class="wizard-download-phenotypes-trait-synonyms" type="checkbox" />
-                    Include trait synonyms
+                    <% $c->i18n->p('global.search_wizard.include_trait_synonyms', 'Include trait synonyms') |h %>
                   </label>
                 </div>
               </td>
@@ -449,7 +470,7 @@ $dataset_id => undef
                 <div class="checkbox">
                   <label>
                     <input class="wizard-download-phenotypes-intercrop" type="checkbox" />
-                    Include intercrop accessions
+                    <% $c->i18n->p('global.search_wizard.include_intercrop_accessions', 'Include intercrop accessions') |h %>
                   </label>
                 </div>
               </td>
@@ -459,49 +480,49 @@ $dataset_id => undef
                 <div class="checkbox">
                   <label>
                     <input class="wizard-download-phenotypes-pedigree_parents" type="checkbox" />
-                    Include parents
+                    <% $c->i18n->p('global.search_wizard.include_parents', 'Include parents') |h %>
                   </label>
                 </div>
               </td>
             </tr>
             <tr>
               <td colspan="3">
-                Repetitive measurements: <br />
+                <% $c->i18n->p('global.search_wizard.repetitive_measurements', 'Repetitive measurements:') |h %> <br />
                 <select class="wizard-download-repetitive-measurements-type form-control" >
-                  <option value="first">First value</option>
-                  <option value="last">Last value</option>
-                  <option value="average">Averaged value</option>
-                  <option value="sum">Sum values</option>
-                  <option value="all_values_single_line">All Values Single Line</option>
-                  <option value="all_values_multiple_line">All Values Multiple Line</option>
+                  <option value="first"><% $c->i18n->p('global.search_wizard.first_value', 'First value') |h %></option>
+                  <option value="last"><% $c->i18n->p('global.search_wizard.last_value', 'Last value') |h %></option>
+                  <option value="average"><% $c->i18n->p('global.search_wizard.averaged_value', 'Averaged value') |h %></option>
+                  <option value="sum"><% $c->i18n->p('global.search_wizard.sum_values', 'Sum values') |h %></option>
+                  <option value="all_values_single_line"><% $c->i18n->p('global.search_wizard.all_values_single_line', 'All Values Single Line') |h %></option>
+                  <option value="all_values_multiple_line"><% $c->i18n->p('global.search_wizard.all_values_multiple_line', 'All Values Multiple Line') |h %></option>
                 </select>
               </td>
             </tr>
             <tr>
               <td style="border-top: none; padding-top: 0">
-                From:<br /><input type="text" class="wizard-download-start-date form-control" id="phenotype_start_date" title="phenotype_start_date"  />
+                <% $c->i18n->p('global.search_wizard.from', 'From:') |h %><br /><input type="text" class="wizard-download-start-date form-control" id="phenotype_start_date" title="phenotype_start_date"  />
               </td>
               <td style="border-top: none; padding-top: 0" colspan="2">
-                To:<br /><input type="text" class="wizard-download-end-date form-control" id="phenotype_end_date" title="phenotype_end_date" />
+                <% $c->i18n->p('global.search_wizard.date_to', 'To:') |h %><br /><input type="text" class="wizard-download-end-date form-control" id="phenotype_end_date" title="phenotype_end_date" />
               </td>
             </tr>
             <tr>
               <td style="border-top: none; padding-top: 0">
                 <input type="checkbox" id="include_dateless_items" checked="1" />
-                Include items without a date
+                <% $c->i18n->p('global.search_wizard.include_dateless', 'Include items without a date') |h %>
               </td>
             </tr>
             <tr>
               <td>
-                <span>Trait Name Contains</span>
+                <span><% $c->i18n->p('global.search_wizard.trait_name_contains', 'Trait Name Contains') |h %></span>
                 <input placeholder="e.g. plant height" type="text" class="wizard-download-phenotypes-name form-control">
               </td>
               <td>
-                <span>Min Value</span>
+                <span><% $c->i18n->p('global.search_wizard.min_value', 'Min Value') |h %></span>
                 <input placeholder="-&#8734;" type="text" class="wizard-download-phenotypes-min form-control">
               </td>
               <td>
-                <span>Max Value</span>
+                <span><% $c->i18n->p('global.search_wizard.max_value', 'Max Value') |h %></span>
                 <input placeholder="&#8734;" type="text" class="wizard-download-phenotypes-max form-control">
               </td>
             </tr>
@@ -510,7 +531,7 @@ $dataset_id => undef
                 <div class="checkbox">
                   <label>
                     <input class="wizard-download-phenotypes-outliers" type="checkbox" />
-                    Supress user defined phenotype outliers
+                    <% $c->i18n->p('global.search_wizard.suppress_outliers', 'Supress user defined phenotype outliers') |h %>
                   </label>
                 </div>
               </td>
@@ -519,7 +540,7 @@ $dataset_id => undef
           <div class="panel-footer" style="border-top: 1px solid #ddd;">
             <button class="wizard-download-phenotypes btn btn-sm btn-primary">
                 <span class="glyphicon glyphicon-download" aria-hidden="true"></span>
-                Download Phenotypes
+                <% $c->i18n->p('global.search_wizard.download_phenotypes', 'Download Phenotypes') |h %>
             </button>
           </div>
         </div>
@@ -527,7 +548,7 @@ $dataset_id => undef
 
       <div class="panel panel-default">
         <div class="panel-heading" role="button" data-toggle="collapse" data-parent="#wiz-down-group" href="#wiz-down-4-c" aria-controls="wiz-down-4-c">
-          <span class="btnn btn-link">Related Trial High Dimensional Phenotypes</span>
+          <span class="btnn btn-link"><% $c->i18n->p('global.search_wizard.related_trial_high_dimensional_phenotypes', 'Related Trial High Dimensional Phenotypes') |h %></span>
         </div>
         <div id="wiz-down-4-c" class="panel-collapse collapse" role="tabpanel">
           <table class="table">
@@ -540,14 +561,14 @@ $dataset_id => undef
             <tr>
             <td colspan="1">
               <select class="wizard-download-high-dim-phenotypes-speed form-control input-sm">
-                <option value="" disabled>Download Type</option>
-                <option selected value="Native">Default</option>
-                <option value="MaterializedViewTable">Fast (Improves speed but may miss recent changes)</option>
+                <option value="" disabled><% $c->i18n->p('global.search_wizard.download_type', 'Download Type') |h %></option>
+                <option selected value="Native"><% $c->i18n->p('global.search_wizard.default', 'Default') |h %></option>
+                <option value="MaterializedViewTable"><% $c->i18n->p('global.search_wizard.fast_may_miss_recent', 'Fast (Improves speed but may miss recent changes)') |h %></option>
               </select>
             </td>
               <td colspan="1">
                 <select class="wizard-download-high-dim-phenotypes-format form-control input-sm">
-                  <option value="" disabled>Download Format</option>
+                  <option value="" disabled><% $c->i18n->p('global.search_wizard.download_format', 'Download Format') |h %></option>
                   <option selected value="csv">CSV</option>
                   <option value="xlsx">XLSX</option>
                 </select>
@@ -558,7 +579,7 @@ $dataset_id => undef
                 <div class="checkbox">
                   <label>
                     <input class="wizard-download-high-dim-phenotypes-timestamp" type="checkbox" />
-                    Include timestamps
+                    <% $c->i18n->p('global.search_wizard.include_timestamps', 'Include timestamps') |h %>
                   </label>
                 </div>
               </td>
@@ -566,7 +587,7 @@ $dataset_id => undef
                 <div class="checkbox">
                   <label>
                     <input class="wizard-download-high-dim-phenotypes-entry-numbers" type="checkbox" checked />
-                    Include accession entry numbers
+                    <% $c->i18n->p('global.search_wizard.include_accession_entry_numbers', 'Include accession entry numbers') |h %>
                   </label>
                 </div>
               </td>
@@ -577,7 +598,7 @@ $dataset_id => undef
                 <div class="checkbox">
                   <label>
                     <input class="wizard-download-high-dim-phenotypes-outliers" type="checkbox" />
-                    Supress user defined phenotype outliers
+                    Suppress user defined phenotype outliers
                   </label>
                 </div>
               </td>
@@ -586,7 +607,7 @@ $dataset_id => undef
                 <div class="checkbox">
                   <label>
                     <input class="wizard-download-high-dim-phenotypes-intercrop" type="checkbox" checked />
-                    Include intercrop accessions
+                    <% $c->i18n->p('global.search_wizard.include_intercrop_accessions', 'Include intercrop accessions') |h %>
                   </label>
                 </div>
               </td>
@@ -608,29 +629,29 @@ $dataset_id => undef
             !-->
             <tr>
               <td style="border-top: none; padding-top: 0">
-                From:<br /><input type="text" class="wizard-download-start-date form-control" id="phenotype_start_date" title="phenotype_start_date"  />
+                <% $c->i18n->p('global.search_wizard.from', 'From:') |h %><br /><input type="text" class="wizard-download-start-date form-control" id="phenotype_start_date" title="phenotype_start_date"  />
               </td>
               <td style="border-top: none; padding-top: 0">
-                To:<br /><input type="text" class="wizard-download-end-date form-control" id="phenotype_end_date" title="phenotype_end_date" />
+                <% $c->i18n->p('global.search_wizard.date_to', 'To:') |h %><br /><input type="text" class="wizard-download-end-date form-control" id="phenotype_end_date" title="phenotype_end_date" />
               </td>
               <td style="border-top: none; padding-top: 0">
                 <input type="checkbox" id="include_dateless_items" checked="1" />
-                Include items without a date
+                <% $c->i18n->p('global.search_wizard.include_dateless', 'Include items without a date') |h %>
               </td>
             </tr>
             <tr>
               <td>
-                <span>High Dimensional Phenotype</span>
+                <span><% $c->i18n->p('global.search_wizard.high_dimensional_phenotype', 'High Dimensional Phenotype') |h %></span>
               <select class="wizard-download-high-dim-phenotypes-type form-control input-sm">
                 <option selected value="NIRS">NIRS</option>
               </select>
               </td>
               <td>
-                <span>Min Wavelength</span>
+                <span><% $c->i18n->p('global.search_wizard.min_wavelength', 'Min Wavelength') |h %></span>
                 <input placeholder="-&#8734;" type="text" class="wizard-download-high-dim-phenotypes-min form-control">
               </td>
               <td>
-                <span>Max Wavelength</span>
+                <span><% $c->i18n->p('global.search_wizard.max_wavelength', 'Max Wavelength') |h %></span>
                 <input placeholder="&#8734;" type="text" class="wizard-download-high-dim-phenotypes-max form-control">
               </td>
             </tr>
@@ -638,7 +659,7 @@ $dataset_id => undef
           <div class="panel-footer" style="border-top: 1px solid #ddd;">
             <button class="wizard-download-high-dim-phenotypes btn btn-sm btn-primary">
                 <span class="glyphicon glyphicon-download" aria-hidden="true"></span>
-                Download Phenotypes
+                <% $c->i18n->p('global.search_wizard.download_phenotypes', 'Download Phenotypes') |h %>
             </button>
           </div>
         </div>
@@ -657,19 +678,19 @@ $dataset_id => undef
     <div class="modal-content">
       <div class="modal-header">
         <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-        <h3 class="modal-title" id="updateWizardDialog">Update Search Wizard</h3>
+        <h3 class="modal-title" id="updateWizardDialog"><% $c->i18n->p('global.search_wizard.update_search_wizard', 'Update Search Wizard') |h %></h3>
       </div>
       <div class="modal-body">
         <div class="container-fluid">
-	     <h4>How the wizard works</h4>
-	     	     <p>For the search wizard to be fast and flexible, it avoids querying the database directly. Instead, it stores a copy of the data from the database in a temporary format that is optimized for the types of queries the wizard makes.</p><p>For this to be practical, the copy must be updated regularly. Updates usually start every time new data is uploaded, however users with submitter status or higher can also initiate them manually.</p><p>If an update isn't already in progress, you can initiate one below. It will run independently on the server without any additional input required from the user. Depending on the size of the database, it will take from a few minutes to a few hours to complete.</p>
-	<div><h4>Current status:</h4><p id="wizard_status"></p></div>
+	     <h4><% $c->i18n->p('global.search_wizard.how_works', 'How the wizard works') |h %></h4>
+        <p><% $c->i18n->p('global.search_wizard.about_paragraph_one', 'For the search wizard to be fast and flexible, it avoids querying the database directly. Instead, it stores a copy of the data from the database in a temporary format that is optimized for the types of queries the wizard makes.') |h %></p><p><% $c->i18n->p('global.search_wizard.about_paragraph_two', 'For this to be practical, the copy must be updated regularly. Updates usually start every time new data is uploaded, however users with submitter status or higher can also initiate them manually.') |h %></p><p><% $c->i18n->p('global.search_wizard.about_paragraph_three', 'If an update isn\'t already in progress, you can initiate one below. It will run independently on the server without any additional input required from the user. Depending on the size of the database, it will take from a few minutes to a few hours to complete.') |h %></p>
+	<div><h4><% $c->i18n->p('global.search_wizard.current_status', 'Current status:') |h %></h4><p id="wizard_status"></p></div>
         </div>
       </div>
       <div class="modal-footer">
         <div class="well well-sm" id="update_wizard_error" style="display:none;"></div>
-        <button type="button" class="btn btn-primary wiz-update" name="update_wizard" data-loading-text="Working..." id="update_wizard">Update search wizard</button>
-        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+        <button type="button" class="btn btn-primary wiz-update" name="update_wizard" data-loading-text="<% $c->i18n->p('global.search_wizard.working', 'Working...') |h %>" id="update_wizard"><% $c->i18n->p('global.search_wizard.update_search_wizard_button', 'Update search wizard') |h %></button>
+        <button type="button" class="btn btn-default" data-dismiss="modal"><% $c->i18n->p('global.search_wizard.close', 'Close') |h %></button>
       </div>
     </div>
   </div>
@@ -677,6 +698,16 @@ $dataset_id => undef
 
 <script>
 
+  function wizardEscapeHtml(value) {
+    var element = document.createElement('span');
+    element.textContent = String(value);
+    return element.innerHTML;
+  }
+  function wizardSafeText(value, slots) {
+    var html = wizardEscapeHtml(value);
+    Object.keys(slots).forEach(function (token) { html = html.split(token).join(slots[token]); });
+    return html;
+  }
   jQuery(document).ready(function (){
 %  if ($dataset_id){
       document.getElementsByClassName("wizard-dataset-select")[0].value = <% $dataset_id %>;
@@ -712,12 +743,12 @@ $dataset_id => undef
       .then(function(isLoading){
         if(isLoading) {
           d3.select("#update_wizard")
-          .attr("title","A search wizard update is already in progress...")
+          .attr("title",window.SGN && SGN.i18n ? SGN.i18n.p('global.search_wizard.update_in_progress', 'A search wizard update is already in progress...') : 'A search wizard update is already in progress...')
           .attr("disabled",true);
         }
         else {
           d3.select("#update_wizard")
-          .attr("title","Refresh the search wizard to include newly uploaded data")
+          .attr("title",window.SGN && SGN.i18n ? SGN.i18n.p('global.search_wizard.refresh_includes_new_data', 'Refresh the search wizard to include newly uploaded data') : 'Refresh the search wizard to include newly uploaded data')
           .attr("disabled",null)
         }
       });
@@ -766,17 +797,22 @@ $dataset_id => undef
   function updateArchivedVCFFiles({ no_geno_selected = false, loading = false, error = false, data = {} } = {}) {
     let html = '';
     if ( no_geno_selected ) {
-      html += "<p style='text-align: center; margin: 15px; font-size: 90%'>Select one or more <em>genotyping protocols</em> and/or <em>genotyping projects</em>...</p>";
+      var protocolsToken = '__SGN_WIZARD_PROTOCOLS__';
+      var projectsToken = '__SGN_WIZARD_PROJECTS__';
+      var selectionNotice = window.SGN && SGN.i18n
+        ? SGN.i18n.p('global.search_wizard.select_archived_files', 'Select one or more %{protocols} and/or %{projects}...', {protocols: protocolsToken, projects: projectsToken})
+        : 'Select one or more ' + protocolsToken + ' and/or ' + projectsToken + '...';
+      html += "<p style='text-align: center; margin: 15px; font-size: 90%'>" + wizardSafeText(selectionNotice, { [protocolsToken]: '<em>genotyping protocols</em>', [projectsToken]: '<em>genotyping projects</em>' }) + "</p>";
     }
     else if ( loading ) {
-      html += "<p style='text-align: center; margin: 15px'>Loading...</p>";
+      html += "<p style='text-align: center; margin: 15px'>" + wizardEscapeHtml(window.SGN && SGN.i18n ? SGN.i18n.p('global.search_wizard.loading', 'Loading...') : 'Loading...') + "</p>";
     }
     else if ( error ) {
-      html += "<p style='text-align: center; margin: 15px'>Error: Could not check for archived files</p>";
+      html += "<p style='text-align: center; margin: 15px'>" + wizardEscapeHtml(window.SGN && SGN.i18n ? SGN.i18n.p('global.search_wizard.archived_files_error', 'Error: Could not check for archived files') : 'Error: Could not check for archived files') + "</p>";
     }
     else if ( data ) {
       html += "<table class='table table-hover table-striped'>";
-      html += "<thead><tr><th>Protocol</th><th>Project</th><th>VCF File</th></tr></thead>";
+      html += "<thead><tr><th>" + wizardEscapeHtml(window.SGN && SGN.i18n ? SGN.i18n.p('global.search_wizard.protocol', 'Protocol') : 'Protocol') + "</th><th>" + wizardEscapeHtml(window.SGN && SGN.i18n ? SGN.i18n.p('global.search_wizard.project', 'Project') : 'Project') + "</th><th>" + wizardEscapeHtml(window.SGN && SGN.i18n ? SGN.i18n.p('global.search_wizard.vcf_file', 'VCF File') : 'VCF File') + "</th></tr></thead>";
       html += "<tbody>";
       Object.keys(data).forEach((proj_id) => {
         const files = data[proj_id];
@@ -785,10 +821,10 @@ $dataset_id => undef
           html += `<td><a href="/breeders_toolbox/protocol/${file.genotyping_protocol_id}" target="_blank">${file.genotyping_protocol_name}</td>`;
           html += `<td><a href="/breeders/trial/${file.genotyping_project_id}" target="_blank">${file.genotyping_project_name}</td>`;
           if ( file.exists === 'true' ) {
-            html += `<td><a href="/ajax/genotyping_project/download_archived_vcf?genotyping_project_id=${file.genotyping_project_id}&basename=${file.basename}" target="_blank">Download</a></td>`;
+            html += '<td><a href="/ajax/genotyping_project/download_archived_vcf?genotyping_project_id=' + file.genotyping_project_id + '&basename=' + file.basename + '" target="_blank">' + wizardEscapeHtml(window.SGN && SGN.i18n ? SGN.i18n.p('global.search_wizard.download', 'Download') : 'Download') + '</a></td>';
           }
           else {
-            html += "<td>File not found</td>";
+            html += "<td>" + wizardEscapeHtml(window.SGN && SGN.i18n ? SGN.i18n.p('global.search_wizard.file_not_found', 'File not found') : 'File not found') + "</td>";
           }
           html += "</tr>";
         });
@@ -855,7 +891,7 @@ $dataset_id => undef
       }
       if ( selected_genotyping_protocols.length > 1 ) {
         $(".wizard-download-genotypes-info2").show();
-        $(".wizard-download-genotypes-info2").val("too many genotype protocols");
+        $(".wizard-download-genotypes-info2").val(window.SGN && SGN.i18n ? SGN.i18n.p('global.search_wizard.too_many_protocols', 'too many genotype protocols') : 'too many genotype protocols');
       } else {
         $(".wizard-download-genotypes-info2").hide();
       }
@@ -883,7 +919,7 @@ $dataset_id => undef
               // console.log(genotyping_protocol[0]["protocol_name"]);
               if ( selected_genotyping_protocols.length < 1 ) {
                 $(".wizard-download-genotypes-info3").show();
-                $(".wizard-download-genotypes-info3").val("genotype protocol \"" + genotyping_protocol[0]["protocol_name"] + "\"");
+                $(".wizard-download-genotypes-info3").val(window.SGN && SGN.i18n ? SGN.i18n.p('global.search_wizard.protocol_status', 'genotype protocol "%{protocol}"', {protocol: genotyping_protocol[0]["protocol_name"]}) : 'genotype protocol "' + genotyping_protocol[0]["protocol_name"] + '"');
               }
             }
             jQuery.ajax({
@@ -929,7 +965,7 @@ $dataset_id => undef
     } else {
       var protocol_name = '<% $c->config->{default_genotyping_protocol} %>';
       $(".wizard-download-genotypes-info3").show();
-      $(".wizard-download-genotypes-info3").val("genotype protocol \"" + protocol_name + "\"");
+      $(".wizard-download-genotypes-info3").val(window.SGN && SGN.i18n ? SGN.i18n.p('global.search_wizard.protocol_status', 'genotype protocol "%{protocol}"', {protocol: protocol_name}) : 'genotype protocol "' + protocol_name + '"');
       jQuery.ajax({
           url: '/get/genotyping/protocols/',
           method: "POST",
@@ -970,7 +1006,7 @@ $dataset_id => undef
       download_units = parseInt((num_markers * selected_accessions) / 1000000);
       if (download_units > 1) {
             $(".wizard-download-genotypes-info4").show();
-            $(".wizard-download-genotypes-info4").val(download_units + "M values, download will be slow");
+            $(".wizard-download-genotypes-info4").val(window.SGN && SGN.i18n ? SGN.i18n.p('global.search_wizard.slow_download_warning', '%{units}M values, download will be slow', {units: download_units}) : download_units + "M values, download will be slow");
             // console.log("download units " + download_units);
       } else {
             $(".wizard-download-genotypes-info4").hide();
@@ -984,7 +1020,7 @@ $dataset_id => undef
   function updateChromosomeNames(names) {
     var html = "";
     if ( names )  {
-      html += "<option value=''>All</option>";
+      html += "<option value=''><% $c->i18n->p('global.search_wizard.all_levels', 'All') |h %></option>";
       for ( var i = 0; i < names.length; i++ ) {
         html += "<option value='" + names[i] + "'>" + names[i] + "</option>";
       }

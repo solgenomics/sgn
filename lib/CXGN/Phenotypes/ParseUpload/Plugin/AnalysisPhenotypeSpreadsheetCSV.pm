@@ -16,6 +16,9 @@ package CXGN::Phenotypes::ParseUpload::Plugin::AnalysisPhenotypeSpreadsheetCSV;
 #)
 
 use Moose;
+use SGN::I18N ();
+use CatalystX::GlobalContext '$c';
+
 use JSON;
 use Data::Dumper;
 use Text::CSV;
@@ -26,6 +29,7 @@ sub name {
 }
 
 sub validate {
+    my SGN::I18N $ui_analysisphenotypespreadsheetcsv_validate_i18n = SGN::I18N::translate($c);
     my $self = shift;
     my $filename = shift;
     my $timestamp_included = shift;
@@ -43,7 +47,7 @@ sub validate {
         or die "Could not open file '$filename' $!";
 
     if (!$fh) {
-        $parse_result{'error'} = "Could not read file.";
+        $parse_result{'error'} = (SGN::I18N::translate($ui_analysisphenotypespreadsheetcsv_validate_i18n, 'phenotype_upload.fieldbook_error.unreadable', 'Could not read file.'));
         print STDERR "Could not read file.\n";
         return \%parse_result;
     }
@@ -53,14 +57,14 @@ sub validate {
     if ($csv->parse($header_row)) {
         @columns = $csv->fields();
     } else {
-        $parse_result{'error'} = "Could not parse header row.";
+        $parse_result{'error'} = (SGN::I18N::translate($ui_analysisphenotypespreadsheetcsv_validate_i18n, 'cross.could_not_parse_header_row', 'Could not parse header row.'));
         print STDERR "Could not parse header.\n";
         return \%parse_result;
     }
 
     my $num_cols = scalar(@columns);
     if ($num_cols < 2){
-        $parse_result{'error'} = 'Header row must contain:  "stock_names" followed by at least one trait.';
+        $parse_result{'error'} = (SGN::I18N::translate($ui_analysisphenotypespreadsheetcsv_validate_i18n, 'phenotype.upload.header_row_must_contain_stock_names_followed_by_at_least_one_trait', 'Header row must contain:  "stock_names" followed by at least one trait.'));
         print STDERR "Incorrect header.\n";
         return \%parse_result;
     }
@@ -69,7 +73,7 @@ sub validate {
     $stock_names_header =~ s/^\s+|\s+$//g;
 
     if ( $stock_names_header ne "stock_names" ) {
-            $parse_result{'error'} = 'File contents incorrect. Header row must contain: "stock_names" followed by all measured traits.';
+            $parse_result{'error'} = (SGN::I18N::translate($ui_analysisphenotypespreadsheetcsv_validate_i18n, 'phenotype.upload.file_contents_incorrect_header_row_must_contain_stock_names_followed_by_all', 'File contents incorrect. Header row must contain: "stock_names" followed by all measured traits.'));
             print STDERR "File contents incorrect.\n";
             return \%parse_result;
     }
@@ -86,13 +90,13 @@ sub validate {
         if ($csv->parse($row)) {
             @columns = $csv->fields();
         } else {
-            $parse_result{'error'} = "Could not parse row $row.";
+            $parse_result{'error'} = (SGN::I18N::translate($ui_analysisphenotypespreadsheetcsv_validate_i18n, 'cross.could_not_parse_row_row', 'Could not parse row %{row}.', {row => "$row"}));
             print STDERR "Could not parse row $row.\n";
             return \%parse_result;
         }
 
         if (scalar(@columns) != $num_cols){
-            $parse_result{'error'} = 'All lines must have same number of columns as header! Error on row: '.$row;
+            $parse_result{'error'} = (SGN::I18N::translate($ui_analysisphenotypespreadsheetcsv_validate_i18n, 'seedlot.server.all_lines_must_have_same_number_of_columns', 'All lines must have same number of columns as header! Error on row: %{row}', {row => "" . ($row)}));
             print STDERR "Line $row does not have complete columns.\n";
             return \%parse_result;
         }
@@ -107,7 +111,7 @@ sub validate {
             if ($timestamp_included) {
                 my ($value, $timestamp) = split /,/, $value_string;
                 if (!$timestamp =~ m/(\d{4})-(\d{2})-(\d{2}) (\d{2}):(\d{2}):(\d{2})(\S)(\d{4})/) {
-                    $parse_result{'error'} = "Timestamp needs to be of form YYYY-MM-DD HH:MM:SS-0000 or YYYY-MM-DD HH:MM:SS+0000";
+                    $parse_result{'error'} = (SGN::I18N::translate($ui_analysisphenotypespreadsheetcsv_validate_i18n, 'phenotype.upload.timestamp_needs_to_be_of_form_yyyy_mm_dd_hh_mm_ss_0000_or_yyyy_mm_dd_hh_mm_.074cd0c', 'Timestamp needs to be of form YYYY-MM-DD HH:MM:SS-0000 or YYYY-MM-DD HH:MM:SS+0000'));
                     print STDERR "value: $timestamp\n";
                     return \%parse_result;
                 }
@@ -121,7 +125,7 @@ sub validate {
 
     if (scalar(@stocks_missing) > 0) {
         $parse_result{'missing_stocks'} = \@stocks_missing;
-        $parse_result{'error'} = "The following stocks are not in the database as uniquenames or synonyms: ".join(',',@stocks_missing);
+        $parse_result{'error'} = (SGN::I18N::translate($ui_analysisphenotypespreadsheetcsv_validate_i18n, 'phenotype.upload.the_following_stocks_are_not_in_the_database_as_uniquenames_or_synonyms_val', 'The following stocks are not in the database as uniquenames or synonyms: %{values}', {values => "" . (join(',',@stocks_missing))}));
         return \%parse_result;
     }
 
@@ -131,7 +135,7 @@ sub validate {
 
     if (scalar(@traits_missing) > 0) {
         $parse_result{'missing_traits'} = \@traits_missing;
-        $parse_result{'error'} = "The following traits are not in the database: ".join(',',@traits_missing);
+        $parse_result{'error'} = (SGN::I18N::translate($ui_analysisphenotypespreadsheetcsv_validate_i18n, 'phenotype.upload.the_following_traits_are_not_in_the_database_values', 'The following traits are not in the database: %{values}', {values => "" . (join(',',@traits_missing))}));
         return \%parse_result;
     }
 
@@ -139,6 +143,7 @@ sub validate {
 }
 
 sub parse {
+    my SGN::I18N $ui_analysisphenotypespreadsheetcsv_parse_i18n = SGN::I18N::translate($c);
     my $self = shift;
     my $filename = shift;
     my $timestamp_included = shift;
@@ -167,7 +172,7 @@ sub parse {
         or die "Could not open file '$filename' $!";
 
     if (!$fh) {
-        $parse_result{'error'} = "Could not read file.";
+        $parse_result{'error'} = (SGN::I18N::translate($ui_analysisphenotypespreadsheetcsv_parse_i18n, 'phenotype_upload.fieldbook_error.unreadable', 'Could not read file.'));
         print STDERR "Could not read file.\n";
         return \%parse_result;
     }
@@ -177,7 +182,7 @@ sub parse {
     if ($csv->parse($header_row)) {
         @header_columns = $csv->fields();
     } else {
-        $parse_result{'error'} = "Could not parse header row.";
+        $parse_result{'error'} = (SGN::I18N::translate($ui_analysisphenotypespreadsheetcsv_parse_i18n, 'cross.could_not_parse_header_row', 'Could not parse header row.'));
         print STDERR "Could not parse header row.\n";
         return \%parse_result;
     }
@@ -189,7 +194,7 @@ sub parse {
         if ($csv->parse($row)) {
             @columns = $csv->fields();
         } else {
-            $parse_result{'error'} = "Could not parse row $row.";
+            $parse_result{'error'} = (SGN::I18N::translate($ui_analysisphenotypespreadsheetcsv_parse_i18n, 'cross.could_not_parse_row_row', 'Could not parse row %{row}.', {row => "$row"}));
             print STDERR "Could not parse row $row.\n";
             return \%parse_result;
         }
@@ -226,7 +231,7 @@ sub parse {
                         $data{$observation_unit_name}->{$trait_name} = [$value, $timestamp];
                     }
                 } else {
-                    $parse_result{'error'} = "Value or timestamp missing.";
+                    $parse_result{'error'} = (SGN::I18N::translate($ui_analysisphenotypespreadsheetcsv_parse_i18n, 'phenotype.upload.value_or_timestamp_missing', 'Value or timestamp missing.'));
                     return \%parse_result;
                 }
             }

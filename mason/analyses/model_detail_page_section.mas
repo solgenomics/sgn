@@ -1,3 +1,7 @@
+<%once>
+use HTML::Entities ();
+</%once>
+
 <%args>
 $model_id => undef
 $model_name => undef
@@ -15,32 +19,32 @@ $identifier_prefix
         <table class="table table-hover table-bordered" >
 
             <tr>
-                <td><b>Model Name</b></td>
+                <td><b><% $c->i18n->p("analysis.interface.model_name", "Model Name") |h %></b></td>
                 <td>
                     <div id="model_name">
 % if ($model_name) {
 %   print "<a href=\"/analyses_model/$model_id\">$model_name</a>";
 % } else {
-%   print "<span class='text-danger'>[No Model Name]</span>";
+%   print ("<span class='text-danger'>" . HTML::Entities::encode_entities($c->i18n->p("analysis.interface.no_model_name", "[No Model Name]")) . "</span>");
 % }
                     </div>
                 </td>
             </tr>
 
-            <tr><td><b>Description</b></td>
+            <tr><td><b><% $c->i18n->p("global.dataset_cxgn_dataset.table.description", "Description") |h %></b></td>
                 <td>
                     <div id="model_description">
 % if ($model_description) {
 %  print "$model_description";
 % } else {
-%  print "<span class='text-danger'>[No Description]</span>";
+%  print ("<span class='text-danger'>" . HTML::Entities::encode_entities($c->i18n->p("cross.ui.no_description", "[No Description]")) . "</span>");
 % }
                     </div>
                 </td>
             </tr>
 
             <tr>
-                <td><b>Model Type</b></td>
+                <td><b><% $c->i18n->p("analysis.interface.model_type", "Model Type") |h %></b></td>
                 <td>
                     <div id="model_type">
 %  print "$model_type_name";
@@ -49,7 +53,7 @@ $identifier_prefix
             </tr>
 
             <tr>
-                <td><b>Model Properties</b></td>
+                <td><b><% $c->i18n->p("analysis.interface.model_properties", "Model Properties") |h %></b></td>
                 <td>
                     <div id="model_properties">
 %  my $model_properties_string = '';
@@ -62,7 +66,7 @@ $identifier_prefix
             </tr>
 
             <tr>
-                <td><b>Model Files</b></td>
+                <td><b><% $c->i18n->p("analysis.interface.model_files", "Model Files") |h %></b></td>
                 <td>
                     <div id="model_files">
 %  my $model_files_string = '';

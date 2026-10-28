@@ -49,14 +49,14 @@ $person_id
 
 
 <div id="associateStockForm" style="display: none">
-  Accession name:
+  <% $c->i18n->p("accession.phenome.accession_name", "Accession name:") |h %>
   <input type="text"
          style="width: 50%"
          id="locus_name"
          onkeyup="Locus.getStocks(this.value, '<% $locus_id %>');">
   <input type="button"
          id="associate_stock_button"
-         value="associate accession"
+         value="<% $c->i18n->p("accession.phenome.associate", "associate accession") |h %>"
 	 disabled="true"
          onclick="Locus.associateAllele('<% $person_id %>');this.disabled=true;">
   <select id="stock_select"
@@ -65,7 +65,7 @@ $person_id
           size=10>
   </select>
   
-  <b>Would you Like to specify an allele?</b>
+  <b><% $c->i18n->p("accession.phenome.allele_prompt", "Would you Like to specify an allele?") |h %></b>
   <select id="allele_select"
           style="width: 100%">
   </select>

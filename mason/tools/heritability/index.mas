@@ -1,3 +1,7 @@
+<%once>
+use HTML::Entities ();
+</%once>
+
 
 <%doc>
 </%doc>
@@ -18,18 +22,18 @@
 <script src="https://cdn.jsdelivr.net/npm/vega-lite@2"></script>
 <script src="https://cdn.jsdelivr.net/npm/vega-embed@4"></script>
 
-<& /page/page_title.mas, title=>"Heritability" &>
+<& /page/page_title.mas, title=>HTML::Entities::encode_entities($c->i18n->p("navigation.analyze.heritability", "Heritability")) &>
 
 
-<&| /page/info_section.mas, id=>"input_dataset_section", title=>"Select Input Data", collapsible=>1, collapsed=>0, subtitle=>'<a class="btn btn-link pull-right" href="/help/heritability" target="_blank">Help <span class="glyphicon glyphicon-question-sign"></span></a>' &>
+<&| /page/info_section.mas, anchor_title => "Select Input Data", id=>"input_dataset_section", title=>HTML::Entities::encode_entities($c->i18n->p("analysis.interface.select_input_data", "Select Input Data")), collapsible=>1, collapsed=>0, subtitle=>("<a class=\"btn btn-link pull-right\" href=\"/help/heritability\" target=\"_blank\">" . HTML::Entities::encode_entities($c->i18n->p("global.search.datasets.help", "Help")) . " <span class=\"glyphicon glyphicon-question-sign\"></span></a>") &>
   <input type="hidden" name="outformat" value="0" />
 
 
   <div class="form-group form-inline">
-    <label for="dataset_select">Available Datasets: </label><div id="dataset_select"></div>
+    <label for="dataset_select"><% $c->i18n->p("analysis.interface.available_datasets", "Available Datasets:") |h %> </label><div id="dataset_select"></div>
     <br>
 
-    <button class="btn btn-primary" id="selectDataset" type="submit" name="selectDataset" value="selectDataset">Select Dataset</button>
+    <button class="btn btn-primary" id="selectDataset" type="submit" name="selectDataset" value="selectDataset"><% $c->i18n->p("analysis.interface.select_dataset", "Select Dataset") |h %></button>
     <br>
     <br>
 
@@ -37,13 +41,13 @@
 
 
       <div class="form-group form-inline">
-        <label class="blast_select_label" for="pheno_select">Available&nbspTraits:&nbsp; </label>
+        <label class="blast_select_label" for="pheno_select"><% $c->i18n->p("analysis.interface.available_nbsptraits", "Available&nbspTraits:") %>&nbsp; </label>
       <& /page/html_select.mas, name=>'pheno_select', id=>'pheno_select', params=>"class\=\"form-control input-sm blast_select_box\"", choices=>"" &>
-      <button class="btn btn-primary" id="preview_trait_histogram_btn" type="submit" name="preview_trait_histogram_btn" value="preview_trait_histogram_btn">View Trait Histogram</button>
+      <button class="btn btn-primary" id="preview_trait_histogram_btn" type="submit" name="preview_trait_histogram_btn" value="preview_trait_histogram_btn"><% $c->i18n->p("analysis.interface.view_trait_histogram", "View Trait Histogram") |h %></button>
       <img id="loading-spinner" src="/img/wheel.gif" alt="loading" style="visibility: hidden;">
       <br>
       <input type="checkbox" id="dataset_trait_outliers" />
-      <label>Exclude dataset outliers &nbsp; </label>          
+      <label><% $c->i18n->p("analysis.interface.exclude_dataset_outliers", "Exclude dataset outliers") |h %> &nbsp; </label><% '          ' %>
       <br>
       <br>
       <br>
@@ -63,7 +67,7 @@
         </div>
 
             <div style="text-align: center">
-              <button class="btn btn-primary" id="runH2" type="submit" name="runH2" value="runH2">Run Heritability</button>
+              <button class="btn btn-primary" id="runH2" type="submit" name="runH2" value="runH2"><% $c->i18n->p("analysis.interface.run_heritability", "Run Heritability") |h %></button>
             </div>
             <br />
 
@@ -78,37 +82,37 @@
 
 
 
-<&| /page/info_section.mas, title=>"Instructions", collapsible=>1, collapsed=>1, subtitle=>'<a id="download_table" class="download_tag" target="_blank" href="javascript:download_table();" title="Download results in tabular format">Table&#8675;</a>&nbsp;&nbsp;<a id="download_basic" class="download_tag" target="_blank" href="javascript:download();" title="Download results in basic format">Basic&#8675;</a>' &>
+<&| /page/info_section.mas, anchor_title => "Instructions", title=>HTML::Entities::encode_entities($c->i18n->p("trial.fieldmap.instructions", "Instructions")), collapsible=>1, collapsed=>1, subtitle=>("<a id=\"download_table\" class=\"download_tag\" target=\"_blank\" href=\"javascript:download_table();\" title=\"" . HTML::Entities::encode_entities($c->i18n->p("analysis.interface.download_results_in_tabular_format", "Download results in tabular format")) . "\">" . HTML::Entities::encode_entities(HTML::Entities::decode_entities($c->i18n->p("analysis.interface.table_8675", "Table&#8675;"))) . "</a>&nbsp;&nbsp;<a id=\"download_basic\" class=\"download_tag\" target=\"_blank\" href=\"javascript:download();\" title=\"" . HTML::Entities::encode_entities($c->i18n->p("analysis.interface.download_results_in_basic_format", "Download results in basic format")) . "\">" . HTML::Entities::encode_entities(HTML::Entities::decode_entities($c->i18n->p("analysis.interface.basic_8675", "Basic&#8675;"))) . "</a>") &>
 
 
 
   <center>
     <div id="sgn_blast_graph" style="display:none">
         <div id="myCanvas">
-          Your browser does not support the HTML5 canvas
+          <% $c->i18n->p("analysis.interface.your_browser_does_not_support_the_html5_canvas", "Your browser does not support the HTML5 canvas") |h %>
         </div>
     </div>
   </center>
   <br>
-  <h5><b>Dataset:</b></h5>
-  <h5>1. The dataset must contain trails and numerical traits. Inclusion of accession, plots, locations, and years is optional.</h5>
-  <h5>2. The model will adapt to your dataset. For instance, if the dataset has more than one location, then the model will take the interaction among locations and accessions.</h5>
-  <h5>3. Traits with more than 60% of missing data are removed from the analysis.</h5>
-  <h5>4. Outliers can be removed by accessing the <a href="/search/datasets" target="_blank"> Datasets tab </a>. </h5>
-  <h5>5. Selecting the 'Exclude dataset outliers', heritability is calculated using filtered data.</h5>
+  <h5><b><% $c->i18n->p("analysis.interface.dataset", "Dataset:") |h %></b></h5>
+  <h5><% $c->i18n->p("analysis.interface.1_the_dataset_must_contain_trails_and_numerical_traits_inclusion", "1. The dataset must contain trails and numerical traits. Inclusion of accession, plots, locations, and years is optional.") |h %></h5>
+  <h5><% $c->i18n->p("analysis.interface.2_the_model_will_adapt_to_your_dataset_for_instance", "2. The model will adapt to your dataset. For instance, if the dataset has more than one location, then the model will take the interaction among locations and accessions.") |h %></h5>
+  <h5><% $c->i18n->p("analysis.interface.3_traits_with_more_than_60_of_missing_data_are", "3. Traits with more than 60% of missing data are removed from the analysis.") |h %></h5>
+  <h5><% $c->i18n->p("analysis.interface.4_outliers_can_be_removed_by_accessing_the", "4. Outliers can be removed by accessing the") |h %> <a href="/search/datasets" target="_blank"> <% $c->i18n->p("analysis.interface.datasets_tab", "Datasets tab") |h %> </a>. </h5>
+  <h5><% $c->i18n->p("analysis.interface.5_selecting_the_exclude_dataset_outliers_heritability_is_calculated_using", "5. Selecting the 'Exclude dataset outliers', heritability is calculated using filtered data.") |h %></h5>
 
 
 </&>
 
 
-<&| /page/info_section.mas, title=>"Output", collapsible=>1, collapsed=>0, subtitle=>'<a id="download_table" class="download_tag" target="_blank" href="javascript:download_table();" title="Download results in tabular format">Table&#8675;</a>&nbsp;&nbsp;<a id="download_basic" class="download_tag" target="_blank" href="javascript:download();" title="Download results in basic format">Basic&#8675;</a>' &>
+<&| /page/info_section.mas, anchor_title => "Output", title=>HTML::Entities::encode_entities($c->i18n->p("genotype.comparison.step.output", "Output")), collapsible=>1, collapsed=>0, subtitle=>("<a id=\"download_table\" class=\"download_tag\" target=\"_blank\" href=\"javascript:download_table();\" title=\"" . HTML::Entities::encode_entities($c->i18n->p("analysis.interface.download_results_in_tabular_format", "Download results in tabular format")) . "\">" . HTML::Entities::encode_entities(HTML::Entities::decode_entities($c->i18n->p("analysis.interface.table_8675", "Table&#8675;"))) . "</a>&nbsp;&nbsp;<a id=\"download_basic\" class=\"download_tag\" target=\"_blank\" href=\"javascript:download();\" title=\"" . HTML::Entities::encode_entities($c->i18n->p("analysis.interface.download_results_in_basic_format", "Download results in basic format")) . "\">" . HTML::Entities::encode_entities(HTML::Entities::decode_entities($c->i18n->p("analysis.interface.basic_8675", "Basic&#8675;"))) . "</a>") &>
 
 
 
   <center>
     <div id="sgn_blast_graph" style="display:none">
         <div id="myCanvas">
-          Your browser does not support the HTML5 canvas
+          <% $c->i18n->p("analysis.interface.your_browser_does_not_support_the_html5_canvas", "Your browser does not support the HTML5 canvas") |h %>
         </div>
     </div>
   </center>
@@ -116,7 +120,7 @@
   <center>
     <div id="heritability_output"></div>
     <br>
-    <button class="btn btn-primary" id="download-button">Download CSV</button>
+    <button class="btn btn-primary" id="download-button"><% $c->i18n->p("analysis.interface.download_csv", "Download CSV") |h %></button>
   </center>
   <div id="Overview_output"></div>
   <div id="Coverage_output"></div>
@@ -131,7 +135,7 @@
 var require_login = "<%  $c->get_conf('brapi_require_login') %>";
 if (require_login === '1'){
     auth_token = "<%  CXGN::Login->new($c->dbc->dbh)->get_login_cookie() %>";
-    if (!auth_token){ alert("Login required to display heritability"); }
+    if (!auth_token){ alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("analysis.interface.login_required_to_display_heritability", "Login required to display heritability") : "Login required to display heritability")); }
 }
 
 var check_outliers = "<% $c->get_conf('exclude_phenotype_outliers') || 0 %>";
@@ -145,7 +149,7 @@ jQuery(document).ready(function() {
     get_select_box("datasets", "dataset_select", {"checkbox_name":"dataset_select_checkbox", "analysis_type":"Heritability", "show_compatibility":"yes"});
   }
   else {
-    alert('You must be logged in to use Heritability');
+    alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("analysis.interface.you_must_be_logged_in_to_use_heritability", "You must be logged in to use Heritability") : 'You must be logged in to use Heritability'));
   }
   $('#pheno_select').attr("disabled",true).html('');
   jQuery('#dataset_select').click(function() {
@@ -187,7 +191,7 @@ jQuery(document).ready(function() {
 
       },
       error: function(response) {
-        alert("An error occurred, the service may temporarily be unavailable, ponto 1 selectDataset ");
+        alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("analysis.interface.an_error_occurred_the_service_may_temporarily_be_unavailable_ponto", "An error occurred, the service may temporarily be unavailable, ponto 1 selectDataset ") : "An error occurred, the service may temporarily be unavailable, ponto 1 selectDataset "));
         document.getElementById("preview_trait_histogram_btn").disabled = false;
         document.getElementById("loading-spinner").style.visibility = 'hidden';
       }
@@ -196,7 +200,7 @@ jQuery(document).ready(function() {
 
   jQuery('#preview_trait_histogram_btn').on('click', function() {
     if (!jQuery('#pheno_select').val()) {
-      alert("Please select a dataset and trait.")
+      alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("analysis.interface.please_select_a_dataset_and_trait", "Please select a dataset and trait.") : "Please select a dataset and trait."))
     } else {
       //alert("Inside trait preview");
       var tempfile = jQuery('#tempfile').html();
@@ -228,7 +232,7 @@ jQuery(document).ready(function() {
             };
             vegaEmbed("#trait_histogram_plot", v);
           },
-        error: function(e) { alert('error!'); }
+        error: function(e) { alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("analysis.interface.error", "error!") : 'error!')); }
       });
     };
   });
@@ -250,7 +254,7 @@ jQuery(document).ready(function() {
       success: function(response) {
         if (response.error) {
           $('#dataset_select').val('ERROR');          
-          alert("An error occurred, the is some problem with data");          
+          alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("analysis.interface.an_error_occurred_the_is_some_problem_with_data", "An error occurred, the is some problem with data") : "An error occurred, the is some problem with data"));
           document.getElementById("loading-spinner").style.visibility = 'hidden';
         }
         else {	        
@@ -260,7 +264,7 @@ jQuery(document).ready(function() {
 	      }
       },
       error: function(response) {
-        alert("An error occurred, the service may temporarily be unavailable");
+        alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("analysis.interface.an_error_occurred_the_service_may_temporarily_be_unavailable", "An error occurred, the service may temporarily be unavailable") : "An error occurred, the service may temporarily be unavailable"));
         document.getElementById("preview_trait_histogram_btn").disabled = false; 
         document.getElementById("loading-spinner").style.visibility = 'hidden';
       }
@@ -271,7 +275,7 @@ jQuery(document).ready(function() {
 
   jQuery('#runH2').click( function () {
     if (!jQuery('#pheno_select').val()) {
-      alert("Please select a dataset and trait.");
+      alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("analysis.interface.please_select_a_dataset_and_trait", "Please select a dataset and trait.") : "Please select a dataset and trait."));
       $('#heritability_output').empty();      
     } else {
       $('#heritability_output').empty();
@@ -312,7 +316,7 @@ jQuery(document).ready(function() {
 				var herit = ''; 
 
 				var table = '<table>';
-				table += '<thead><tr><th>Trait</th><th>Vg</th><th>Ve</th><th>Vres</th><th>Heritability</th></tr></thead>';
+				table += ("<thead><tr><th>" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("accession.population_cgi.trait", "Trait") : "Trait")).html() + "</th><th>Vg</th><th>Ve</th><th>Vres</th><th>" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("navigation.analyze.heritability", "Heritability") : "Heritability")).html() + "</th></tr></thead>");
 				table += '<tbody>';
 
 				for (var i = 0; i < parsedData.length; i++) {
@@ -352,7 +356,7 @@ jQuery(document).ready(function() {
 					var link = document.createElement("a");
 					link.setAttribute("href", encodedUri);
 					link.setAttribute("download", "heritability_data.csv");
-					link.innerHTML = "Download CSV";
+					link.innerHTML = (window.SGN && window.SGN.i18n ? window.SGN.i18n.p("analysis.interface.download_csv", "Download CSV") : "Download CSV");
 
 					// Trigger the click event to download the file
 					link.click();
@@ -377,10 +381,10 @@ function get_dataset_id() {
           selected_datasets.push(jQuery(this).val());
       });
       if (selected_datasets.length < 1){
-          alert('Please select at least one dataset!');
+          alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("analysis.interface.please_select_at_least_one_dataset", "Please select at least one dataset!") : 'Please select at least one dataset!'));
           return false;
       } else if (selected_datasets.length > 1){
-          alert('Please select only one dataset!');
+          alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("analysis.interface.please_select_only_one_dataset", "Please select only one dataset!") : 'Please select only one dataset!'));
           return false;
       } else {
     var dataset_id=selected_datasets[0];

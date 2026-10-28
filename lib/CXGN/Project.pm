@@ -9,7 +9,7 @@ CXGN::Project is the root object for information stored in the project table, su
 
 It should rarely be necessary to be instantiated on its own. Use the CXGN::Trial factory object to generate the appropriate object from a project_id.
 
-=head1 SYNOPSYS
+=head1 SYNOPSIS
 
  my $project = CXGN::Project->new( { bcs_schema => $schema, trial_id => $trial_id });
  $trial->set_description("yield trial with promising varieties");
@@ -26,6 +26,9 @@ Lukas Mueller <lam87@cornell.edu>
 package CXGN::Project;
 
 use Moose;
+
+use SGN::I18N ();
+use CatalystX::GlobalContext '$c';
 
 use Data::Dumper;
 use Try::Tiny;
@@ -109,6 +112,7 @@ has 'additional_info' => (
 
 
 sub BUILD {
+    my SGN::I18N $project_build_i18n = $c && $c->can('i18n') ? $c->i18n : undef;
     my $self = shift;
     my $args = shift;
 
@@ -126,14 +130,14 @@ sub BUILD {
     }
 
     if ($args->{trial_id} && ! $row) {
-	    die "The trial ".$args->{trial_id}." does not exist - aborting.";
+	    die ($project_build_i18n ? $project_build_i18n->p("trial.model.build.trial_missing", "The trial %{trial_id} does not exist - aborting.", {trial_id => "$args->{trial_id}"}) : "The trial ".$args->{trial_id}." does not exist - aborting.");
     }
 
     $row = $self->bcs_schema()->resultset("Project::Project")->find( { name => $args->{name } } );
 
 
     if (! $args->{trial_id} && $row) {
-	    die "A trial with the name $args->{name} already exists. Please choose another name.";
+	    die ($project_build_i18n ? $project_build_i18n->p("trial.model.build.duplicate_trial", "A trial with the name %{name} already exists. Please choose another name.", {name => "$args->{name}"}) : "A trial with the name $args->{name} already exists. Please choose another name.");
     }
 
     if (! $args->{trial_id} && ! $row) {
@@ -361,6 +365,7 @@ sub set_description {
 =cut
 
 sub get_nd_experiment_id {
+    my SGN::I18N $project_nd_experiment_i18n = $c && $c->can('i18n') ? $c->i18n : undef;
     my $self = shift;
     my $nd_experiment_field_layout_type_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'field_layout', 'experiment_type')->cvterm_id();
     my $nd_experiment_genotyping_layout_type_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'genotyping_layout', 'experiment_type')->cvterm_id();
@@ -369,12 +374,12 @@ sub get_nd_experiment_id {
         { 'join' => {'nd_experiment_projects'=>'project'}}
     );
     if ($nd_experiment_rs->count > 1){
-        return {error => "A trial cannot have more than one nd_experiment entry of type field_layout. Please contact us."};
+        return {error => ($project_nd_experiment_i18n ? $project_nd_experiment_i18n->p("trial.model.nd_experiment.multiple_field_layout", "A trial cannot have more than one nd_experiment entry of type field_layout. Please contact us.") : "A trial cannot have more than one nd_experiment entry of type field_layout. Please contact us.")};
     }
     if ($nd_experiment_rs == 1){
         return {success => 1, nd_experiment_id => $nd_experiment_rs->first->nd_experiment_id};
     } else {
-        return {error => "This trial does not have an nd_experiment entry of type field_layout. Please contact us."}
+        return {error => ($project_nd_experiment_i18n ? $project_nd_experiment_i18n->p("trial.model.nd_experiment.missing_field_layout", "This trial does not have an nd_experiment entry of type field_layout. Please contact us.") : "This trial does not have an nd_experiment entry of type field_layout. Please contact us.")}
     }
 }
 
@@ -418,12 +423,13 @@ sub get_location {
 =cut
 
 sub set_location {
+    my SGN::I18N $project_location_i18n = $c && $c->can('i18n') ? $c->i18n : undef;
     my $self = shift;
     my $location_id = shift;
     my $schema = $self->bcs_schema();
 
     if (!looks_like_number($location_id)) {
-        die "Location_id $location_id not an integer!\n";
+        die ($project_location_i18n ? $project_location_i18n->p("trial.model.location_id.invalid", "Location_id %{location_id} not an integer!\n", {location_id => "$location_id"}) : "Location_id $location_id not an integer!\n");
     }
 
 	my $project_id = $self->get_trial_id();
@@ -1052,11 +1058,12 @@ sub get_breeding_program {
 }
 
 sub set_breeding_program {
+    my SGN::I18N $project_breeding_program_i18n = $c && $c->can('i18n') ? $c->i18n : undef;
 	my $self = shift;
 	my $breeding_program_id = shift;
 
     if (!looks_like_number($breeding_program_id)) {
-        die "Breeding_program_id $breeding_program_id is not an integer!\n";
+        die ($project_breeding_program_i18n ? $project_breeding_program_i18n->p("trial.model.breeding_program_id.invalid", "Breeding_program_id %{breeding_program_id} is not an integer!\n", {breeding_program_id => "$breeding_program_id"}) : "Breeding_program_id $breeding_program_id is not an integer!\n");
     }
 
 	my $trial_id = $self->get_trial_id();
@@ -1084,7 +1091,7 @@ sub set_breeding_program {
 
 	if ($@) {
 		print STDERR "ERROR: $@\n";
-		return { error => "An error occurred while setting the trial's breeding program." };
+		return { error => ($project_breeding_program_i18n ? $project_breeding_program_i18n->p("trial.model.set_breeding_program.error", "An error occurred while setting the trial's breeding program.") : "An error occurred while setting the trial's breeding program.") };
 	}
 	return {};
 }
@@ -2464,6 +2471,7 @@ sub delete_metadata {
 
 
 sub _delete_field_layout_experiment {
+    my SGN::I18N $project_field_layout_delete_i18n = $c && $c->can('i18n') ? $c->i18n : undef;
     my $self = shift;
 
     my $trial_id = $self->get_trial_id();
@@ -2474,7 +2482,7 @@ sub _delete_field_layout_experiment {
     #
     if ($self->phenotype_count() > 0) {
         print STDERR "Attempt to delete field layout that still has associated phenotype data.\n";
-        die "cannot delete because of associated phenotypes\n";
+        die ($project_field_layout_delete_i18n ? $project_field_layout_delete_i18n->p("trial.model.delete.field_layout_has_phenotypes", "cannot delete because of associated phenotypes\n") : "cannot delete because of associated phenotypes\n");
         return { error => "Trial still has associated phenotyping experiment, cannot delete." };
     }
 
@@ -2556,6 +2564,7 @@ sub _delete_field_layout_experiment {
 }
 
 sub _delete_management_factors_experiments { # DEPRECATED
+    my SGN::I18N $project_management_delete_i18n = $c && $c->can('i18n') ? $c->i18n : undef;
     my $self = shift;
     my $management_factor_type_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'treatment_experiment', 'experiment_type')->cvterm_id();
     my $management_factors = $self->get_treatment_projects; #$self->get_treatments
@@ -2568,7 +2577,7 @@ sub _delete_management_factors_experiments { # DEPRECATED
         });
         my $nde_rs = $self->bcs_schema()->resultset("NaturalDiversity::NdExperiment")->search({ 'me.type_id'=>$management_factor_type_id, 'project.project_id'=>$m->get_trial_id }, {'join'=>{'nd_experiment_projects'=>'project'}});
         if ($nde_rs->count != 1){
-            die "Treatment ".$m->get_name." does not have exactly one ndexperiment of type treatment_experiment!"
+            die ($project_management_delete_i18n ? $project_management_delete_i18n->p("trial.model.delete.treatment_experiment_count", "Treatment %{treatment} does not have exactly one ndexperiment of type treatment_experiment!", {treatment => "" . $m->get_name()}) : "Treatment ".$m->get_name." does not have exactly one ndexperiment of type treatment_experiment!")
         }
         while( my $r = $nde_rs->next){
             $r->delete();
@@ -2622,6 +2631,7 @@ sub get_management_regime {
 }
 
 sub remove_management_factor {
+    my SGN::I18N $project_management_remove_i18n = $c && $c->can('i18n') ? $c->i18n : undef;
     my $self = shift;
     my $management_factor = shift;
     my $schema = $self->bcs_schema();
@@ -2646,7 +2656,7 @@ sub remove_management_factor {
             value => $management_regime
         });
     } else {
-        die "No management regime to edit.";
+        die ($project_management_remove_i18n ? $project_management_remove_i18n->p("trial.model.management_regime.missing", "No management regime to edit.") : "No management regime to edit.");
     }
 }
 
@@ -3273,6 +3283,7 @@ sub get_project_start_date_cvterm_id {
 =cut
 
 sub create_plant_entities { 
+    my SGN::I18N $project_create_plant_i18n = $c && $c->can('i18n') ? $c->i18n : undef;
     my $self = shift;
     my $plants_per_plot = shift || 30;
     my $inherits_plot_treatments = shift;
@@ -3361,7 +3372,7 @@ sub create_plant_entities {
                 if ($additional_plants) {
                     my $total_capacity = $rows_per_plot * $cols_per_plot;
                     if ($existing_count + $plants_per_plot > $total_capacity) {
-                        die "Cannot add $plants_per_plot plant(s) to plot $design->{$plot}->{plot_name}: $existing_count plant(s) already exist and the grid capacity is $total_capacity ($rows_per_plot rows x $cols_per_plot cols).";
+                        die ($project_create_plant_i18n ? $project_create_plant_i18n->p("trial.model.plants.capacity_plot", "Cannot add %{count} plant(s) to plot %{plot}: %{existing_count} plant(s) already exist and the grid capacity is %{capacity} (%{rows} rows x %{columns} cols).", {count => "$plants_per_plot", plot => "$design->{$plot}->{plot_name}", existing_count => "$existing_count", capacity => "$total_capacity", rows => "$rows_per_plot", columns => "$cols_per_plot"}) : "Cannot add $plants_per_plot plant(s) to plot $design->{$plot}->{plot_name}: $existing_count plant(s) already exist and the grid capacity is $total_capacity ($rows_per_plot rows x $cols_per_plot cols).");
                     }
                     my %occupied_coords;
                     my $existing_plants_ref = $design->{$plot}->{plant_names} // [];
@@ -3379,14 +3390,14 @@ sub create_plant_entities {
                     }
                     @plant_coords = grep { !$occupied_coords{$_} } @plant_coords;
                     if (scalar(@plant_coords) < $plants_per_plot) {
-                        die "Cannot add $plants_per_plot plant(s) to plot $design->{$plot}->{plot_name}: only " . scalar(@plant_coords) . " unoccupied grid position(s) available within the ${rows_per_plot}x${cols_per_plot} grid.";
+                        die ($project_create_plant_i18n ? $project_create_plant_i18n->p("trial.model.plants.positions_plot", "Cannot add %{count} plant(s) to plot %{plot}: only %{available} unoccupied grid position(s) available within the %{rows}x%{columns} grid.", {count => "$plants_per_plot", plot => "$design->{$plot}->{plot_name}", available => "" . scalar(@plant_coords), rows => "$rows_per_plot", columns => "$cols_per_plot"}) : "Cannot add $plants_per_plot plant(s) to plot $design->{$plot}->{plot_name}: only " . scalar(@plant_coords) . " unoccupied grid position(s) available within the ${rows_per_plot}x${cols_per_plot} grid.");
                     }
                 }
             }
 
             if (! $plot_row) {
                 print STDERR "The plot $plot is not found in the database\n";
-                die "The plot $plot is not yet in the database. Cannot create plant entries.";
+                die ($project_create_plant_i18n ? $project_create_plant_i18n->p("trial.model.plants.plot_missing", "The plot %{plot} is not yet in the database. Cannot create plant entries.", {plot => "$plot"}) : "The plot $plot is not yet in the database. Cannot create plant entries.");
             }
 
             my $parent_plot = $plot_row->stock_id();
@@ -3466,13 +3477,13 @@ sub create_plant_entities {
             my ($stored_phenotype_error, $stored_phenotype_success) = $store_phenotypes->store();
 
             if ($stored_phenotype_error) {
-                die "An error occurred inheriting treatments: $stored_phenotype_error\n";
+                die ($project_create_plant_i18n ? $project_create_plant_i18n->p("trial.model.plants.inherit_treatments_error", "An error occurred inheriting treatments: %{details}\n", {details => "$stored_phenotype_error"}) : "An error occurred inheriting treatments: $stored_phenotype_error\n");
             }
         }
     };
     if ($@) {
         print STDERR "An error occurred creating the plant entities. $@\n";
-        return {error => "An error occurred creating the plant entities. $@"};
+        return {error => ($project_create_plant_i18n ? $project_create_plant_i18n->p("trial.model.plants.create_error", "An error occurred creating the plant entities. %{details}", {details => "$@"}) : "An error occurred creating the plant entities. $@")};
     }
 
     print STDERR "Plant entities created.\n";
@@ -3494,6 +3505,7 @@ sub create_plant_entities {
 =cut
 
 sub save_plant_entries {
+    my SGN::I18N $project_save_plant_i18n = $c && $c->can('i18n') ? $c->i18n : undef;
     my $self = shift;
     my $parsed_data = shift;
     my $plants_per_plot = shift;
@@ -3575,7 +3587,7 @@ sub save_plant_entries {
 
             if (!$plot_row) {
                 print STDERR "The plot $plot_name is not found in the database\n";
-                die "The plot $plot_name is not yet in the database. Cannot create plant entries.";
+                die ($project_save_plant_i18n ? $project_save_plant_i18n->p("trial.model.plants.plot_missing", "The plot %{plot} is not yet in the database. Cannot create plant entries.", {plot => "$plot_name"}) : "The plot $plot_name is not yet in the database. Cannot create plant entries.");
             }
 
             my $parent_plot = $plot_row->stock_id();
@@ -3605,7 +3617,7 @@ sub save_plant_entries {
                     }
                     my @filtered_coords = grep { !$occupied_coords{$_} } @{$val->{plant_coords}};
                     if (scalar(@filtered_coords) < scalar(@{$val->{plant_names}})) {
-                        die "Cannot add plants to plot $parent_plot_name: insufficient unoccupied grid positions after filtering occupied coordinates.";
+                        die ($project_save_plant_i18n ? $project_save_plant_i18n->p("trial.model.plants.positions_existing", "Cannot add plants to plot %{plot}: insufficient unoccupied grid positions after filtering occupied coordinates.", {plot => "$parent_plot_name"}) : "Cannot add plants to plot $parent_plot_name: insufficient unoccupied grid positions after filtering occupied coordinates.");
                     }
                     $val->{plant_coords} = \@filtered_coords;
                 }
@@ -3685,7 +3697,7 @@ sub save_plant_entries {
             my ($stored_phenotype_error, $stored_phenotype_success) = $store_phenotypes->store();
 
             if ($stored_phenotype_error) {
-                die "An error occurred inheriting treatments: $stored_phenotype_error\n";
+                die ($project_save_plant_i18n ? $project_save_plant_i18n->p("trial.model.plants.inherit_treatments_error", "An error occurred inheriting treatments: %{details}\n", {details => "$stored_phenotype_error"}) : "An error occurred inheriting treatments: $stored_phenotype_error\n");
             }
         }
 
@@ -3712,6 +3724,7 @@ sub save_plant_entries {
 =cut
 
 sub create_plant_subplot_entities {
+    my SGN::I18N $project_create_subplot_plant_i18n = $c && $c->can('i18n') ? $c->i18n : undef;
     my $self = shift;
     my $plants_per_subplot = shift || 10;
     my $inherits_plot_treatments = shift;
@@ -3797,7 +3810,7 @@ sub create_plant_subplot_entities {
 
             if (! $plot_row) {
                 print STDERR "The plot $plot is not found in the database\n";
-                die "The plot $plot is not yet in the database. Cannot create plant entries.";
+                die ($project_create_subplot_plant_i18n ? $project_create_subplot_plant_i18n->p("trial.model.plants.plot_missing", "The plot %{plot} is not yet in the database. Cannot create plant entries.", {plot => "$plot"}) : "The plot $plot is not yet in the database. Cannot create plant entries.");
             }
 
             my $parent_plot = $plot_row->stock_id();
@@ -3811,7 +3824,7 @@ sub create_plant_subplot_entities {
                 my $subplot_row = $chado_schema->resultset("Stock::Stock")->find({ uniquename => $subplot, type_id => $subplot_cvterm });
                 if ( !$subplot_row ) {
                     print STDERR "The subplot $subplot is not found in the database\n";
-                    die "The subplot $subplot is not yet in the database. Cannot create plant entries.";
+                    die ($project_create_subplot_plant_i18n ? $project_create_subplot_plant_i18n->p("trial.model.plants.subplot_missing", "The subplot %{subplot} is not yet in the database. Cannot create plant entries.", {subplot => "$subplot"}) : "The subplot $subplot is not yet in the database. Cannot create plant entries.");
                 }
 
                 my $parent_subplot = $subplot_row->stock_id();
@@ -3833,7 +3846,7 @@ sub create_plant_subplot_entities {
                     if ($additional_plants) {
                         my $total_capacity = $rows_per_subplot * $cols_per_subplot;
                         if ($existing_count + $plants_per_subplot > $total_capacity) {
-                            die "Cannot add $plants_per_subplot plant(s) to subplot $subplot: $existing_count plant(s) already exist and the grid capacity is $total_capacity ($rows_per_subplot rows x $cols_per_subplot cols).";
+                            die ($project_create_subplot_plant_i18n ? $project_create_subplot_plant_i18n->p("trial.model.plants.capacity_subplot", "Cannot add %{count} plant(s) to subplot %{subplot}: %{existing_count} plant(s) already exist and the grid capacity is %{capacity} (%{rows} rows x %{columns} cols).", {count => "$plants_per_subplot", subplot => "$subplot", existing_count => "$existing_count", capacity => "$total_capacity", rows => "$rows_per_subplot", columns => "$cols_per_subplot"}) : "Cannot add $plants_per_subplot plant(s) to subplot $subplot: $existing_count plant(s) already exist and the grid capacity is $total_capacity ($rows_per_subplot rows x $cols_per_subplot cols).");
                         }
                         # Query the actual row/col coordinates of existing plants so we exclude
                         # only the slots that are genuinely occupied (the old grid may have had
@@ -3854,7 +3867,7 @@ sub create_plant_subplot_entities {
                         }
                         @plant_coords = grep { !$occupied_coords{$_} } @plant_coords;
                         if (scalar(@plant_coords) < $plants_per_subplot) {
-                            die "Cannot add $plants_per_subplot plant(s) to subplot $subplot: only " . scalar(@plant_coords) . " unoccupied grid position(s) available within the ${rows_per_subplot}x${cols_per_subplot} grid.";
+                            die ($project_create_subplot_plant_i18n ? $project_create_subplot_plant_i18n->p("trial.model.plants.positions_subplot", "Cannot add %{count} plant(s) to subplot %{subplot}: only %{available} unoccupied grid position(s) available within the %{rows}x%{columns} grid.", {count => "$plants_per_subplot", subplot => "$subplot", available => "" . scalar(@plant_coords), rows => "$rows_per_subplot", columns => "$cols_per_subplot"}) : "Cannot add $plants_per_subplot plant(s) to subplot $subplot: only " . scalar(@plant_coords) . " unoccupied grid position(s) available within the ${rows_per_subplot}x${cols_per_subplot} grid.");
                         }
                     }
                 }
@@ -3933,13 +3946,13 @@ sub create_plant_subplot_entities {
             my ($stored_phenotype_error, $stored_phenotype_success) = $store_phenotypes->store();
 
             if ($stored_phenotype_error) {
-                die "An error occurred inheriting treatments: $stored_phenotype_error\n";
+                die ($project_create_subplot_plant_i18n ? $project_create_subplot_plant_i18n->p("trial.model.plants.inherit_treatments_error", "An error occurred inheriting treatments: %{details}\n", {details => "$stored_phenotype_error"}) : "An error occurred inheriting treatments: $stored_phenotype_error\n");
             }
         }
     };
     if ($@) {
         print STDERR "An error occurred creating the plant entities. $@\n";
-        return {error => "An error occurred creating the plant entities. $@"};
+        return {error => ($project_create_subplot_plant_i18n ? $project_create_subplot_plant_i18n->p("trial.model.plants.create_error", "An error occurred creating the plant entities. %{details}", {details => "$@"}) : "An error occurred creating the plant entities. $@")};
     }
 
     print STDERR "Plant entities created.\n";
@@ -3962,6 +3975,7 @@ sub create_plant_subplot_entities {
 =cut
 
 sub save_plant_subplot_entries {
+    my SGN::I18N $project_save_subplot_plant_i18n = $c && $c->can('i18n') ? $c->i18n : undef;
     my $self = shift;
     my $parsed_data = shift;
     my $plants_per_subplot = shift;
@@ -4057,7 +4071,7 @@ sub save_plant_subplot_entries {
             my $subplot_row = $chado_schema->resultset("Stock::Stock")->find( { stock_id=>$subplot_stock_id });
             if (!$subplot_row) {
                 print STDERR "The subplot $subplot_name is not found in the database\n";
-                die "The subplot $subplot_name is not yet in the database. Cannot create plant entries.";
+                die ($project_save_subplot_plant_i18n ? $project_save_subplot_plant_i18n->p("trial.model.plants.subplot_missing", "The subplot %{subplot} is not yet in the database. Cannot create plant entries.", {subplot => "$subplot_name"}) : "The subplot $subplot_name is not yet in the database. Cannot create plant entries.");
             }
 
             my $plot_relationship_row = $chado_schema->resultset("Stock::StockRelationship")->find({
@@ -4066,12 +4080,12 @@ sub save_plant_subplot_entries {
             });
             if (!$plot_relationship_row) {
                 print STDERR "The subplot $subplot_name does not have a defined plot relationship in the database\n";
-                die "The subplot $subplot_name does not have a defined plot relationship in the database. Cannot create plant entries.";
+                die ($project_save_subplot_plant_i18n ? $project_save_subplot_plant_i18n->p("trial.model.plants.subplot_relationship_missing", "The subplot %{subplot} does not have a defined plot relationship in the database. Cannot create plant entries.", {subplot => "$subplot_name"}) : "The subplot $subplot_name does not have a defined plot relationship in the database. Cannot create plant entries.");
             }
             my $plot_row = $chado_schema->resultset("Stock::Stock")->find({ stock_id => $plot_relationship_row->subject_id() });
             if (!$plot_row) {
                 print STDERR "The parent plot of subplot $subplot_name is not found in the database\n";
-                die "The parent plot of subplot $subplot_name is not yet in the database. Cannot create plant entries.";
+                die ($project_save_subplot_plant_i18n ? $project_save_subplot_plant_i18n->p("trial.model.plants.parent_plot_missing", "The parent plot of subplot %{subplot} is not yet in the database. Cannot create plant entries.", {subplot => "$subplot_name"}) : "The parent plot of subplot $subplot_name is not yet in the database. Cannot create plant entries.");
             }
 
             my $parent_plot = $plot_row->stock_id();
@@ -4100,7 +4114,7 @@ sub save_plant_subplot_entries {
                     }
                     my @filtered_coords = grep { !$occupied_coords{$_} } @{$val->{plant_coords}};
                     if (scalar(@filtered_coords) < scalar(@{$val->{plant_names}})) {
-                        die "Cannot add plants to subplot $subplot_name: insufficient unoccupied grid positions after filtering occupied coordinates.";
+                        die ($project_save_subplot_plant_i18n ? $project_save_subplot_plant_i18n->p("trial.model.plants.positions_existing_subplot", "Cannot add plants to subplot %{subplot}: insufficient unoccupied grid positions after filtering occupied coordinates.", {subplot => "$subplot_name"}) : "Cannot add plants to subplot $subplot_name: insufficient unoccupied grid positions after filtering occupied coordinates.");
                     }
                     $val->{plant_coords} = \@filtered_coords;
                 }
@@ -4185,7 +4199,7 @@ sub save_plant_subplot_entries {
             my ($stored_phenotype_error, $stored_phenotype_success) = $store_phenotypes->store();
 
             if ($stored_phenotype_error) {
-                die "An error occurred inheriting treatments: $stored_phenotype_error\n";
+                die ($project_save_subplot_plant_i18n ? $project_save_subplot_plant_i18n->p("trial.model.plants.inherit_treatments_error", "An error occurred inheriting treatments: %{details}\n", {details => "$stored_phenotype_error"}) : "An error occurred inheriting treatments: $stored_phenotype_error\n");
             }
         }
     };
@@ -4199,6 +4213,7 @@ sub save_plant_subplot_entries {
 }
 
 sub _save_plant_entry {
+    my SGN::I18N $project_save_plant_entry_i18n = $c && $c->can('i18n') ? $c->i18n : undef;
     my $self = shift;
     my $chado_schema = shift;
     my $accession_cvterm = shift;
@@ -4289,7 +4304,7 @@ sub _save_plant_entry {
     #the plant has a relationship to the accession
     my $plot_accession_rs = $self->bcs_schema()->resultset("Stock::StockRelationship")->search({'me.subject_id'=>$parent_plot, 'me.type_id'=>$plot_relationship_cvterm, 'object.type_id'=>[$accession_cvterm, $cross_cvterm, $family_name_cvterm] }, {'join'=>'object'});
     if ($plot_accession_rs->count != 1){
-        die "There is not 1 stock_relationship of type plot_of between the plot $parent_plot and an accession, a cross or a family_name.";
+        die ($project_save_plant_entry_i18n ? $project_save_plant_entry_i18n->p("trial.model.stock_relationship.plot_accession", "There is not 1 stock_relationship of type plot_of between the plot %{plot} and an accession, a cross or a family_name.", {plot => "$parent_plot"}) : "There is not 1 stock_relationship of type plot_of between the plot $parent_plot and an accession, a cross or a family_name.");
     }
     $stock_relationship = $self->bcs_schema()->resultset("Stock::StockRelationship")->create({
         subject_id => $plant->stock_id(),
@@ -4347,6 +4362,7 @@ sub has_plant_entries {
 =cut
 
 sub create_tissue_samples {
+    my SGN::I18N $project_create_tissue_i18n = $c && $c->can('i18n') ? $c->i18n : undef;
     my $self = shift;
     my $tissue_names = shift;
     my $inherits_plot_treatments = shift;
@@ -4430,7 +4446,7 @@ sub create_tissue_samples {
 
                 if (! $plant_row) {
                     print STDERR "The plant $plant_name is not found in the database\n";
-                    die "The plant $plant_name is not yet in the database. Cannot create tissue entries.";
+                    die ($project_create_tissue_i18n ? $project_create_tissue_i18n->p("trial.model.tissue.plant_missing", "The plant %{plant} is not yet in the database. Cannot create tissue entries.", {plant => "$plant_name"}) : "The plant $plant_name is not yet in the database. Cannot create tissue entries.");
                 }
 
                 my $parent_plant = $plant_row->stock_id();
@@ -4463,7 +4479,7 @@ sub create_tissue_samples {
 
                     my $plant_accession_rs = $self->bcs_schema()->resultset("Stock::StockRelationship")->search({'me.subject_id'=>$parent_plant, 'me.type_id'=>$plant_relationship_cvterm, 'object.type_id'=>[$accession_cvterm, $cross_cvterm, $family_name_cvterm]}, {'join'=>'object'});
                     if ($plant_accession_rs->count != 1){
-                        die "There is not 1 stock_relationship of type plant_of between the plant $parent_plant and an accession, a cross or a family_name.";
+                        die ($project_create_tissue_i18n ? $project_create_tissue_i18n->p("trial.model.stock_relationship.plant_accession", "There is not 1 stock_relationship of type plant_of between the plant %{plant} and an accession, a cross or a family_name.", {plant => "$parent_plant"}) : "There is not 1 stock_relationship of type plant_of between the plant $parent_plant and an accession, a cross or a family_name.");
                     }
 
                     my @tissue_stock_props;
@@ -4554,7 +4570,7 @@ sub create_tissue_samples {
             my ($stored_phenotype_error, $stored_phenotype_success) = $store_phenotypes->store();
 
             if ($stored_phenotype_error) {
-                die "An error occurred inheriting treatments: $stored_phenotype_error\n";
+                die ($project_create_tissue_i18n ? $project_create_tissue_i18n->p("trial.model.plants.inherit_treatments_error", "An error occurred inheriting treatments: %{details}\n", {details => "$stored_phenotype_error"}) : "An error occurred inheriting treatments: $stored_phenotype_error\n");
             }
         }
     };
@@ -4653,6 +4669,7 @@ sub has_tissue_sample_entries {
 =cut
 
 sub create_subplot_entities {
+    my SGN::I18N $project_create_subplot_i18n = $c && $c->can('i18n') ? $c->i18n : undef;
     my $self = shift;
     my $subplots_per_plot = shift;
     my $inherits_plot_treatments = shift;
@@ -4722,7 +4739,7 @@ sub create_subplot_entities {
 
             if (! $plot_row) {
                 print STDERR "The plot $plot is not found in the database\n";
-                die "The plot $plot is not yet in the database. Cannot create subplot entries.";
+                die ($project_create_subplot_i18n ? $project_create_subplot_i18n->p("trial.model.subplots.plot_missing", "The plot %{plot} is not yet in the database. Cannot create subplot entries.", {plot => "$plot"}) : "The plot $plot is not yet in the database. Cannot create subplot entries.");
             }
 
             my $parent_plot = $plot_row->stock_id();
@@ -4801,7 +4818,7 @@ sub create_subplot_entities {
             my ($stored_phenotype_error, $stored_phenotype_success) = $store_phenotypes->store();
 
             if ($stored_phenotype_error) {
-                die "An error occurred inheriting treatments: $stored_phenotype_error\n";
+                die ($project_create_subplot_i18n ? $project_create_subplot_i18n->p("trial.model.plants.inherit_treatments_error", "An error occurred inheriting treatments: %{details}\n", {details => "$stored_phenotype_error"}) : "An error occurred inheriting treatments: $stored_phenotype_error\n");
             }
         }
     };
@@ -4830,6 +4847,7 @@ sub create_subplot_entities {
 =cut
 
 sub save_subplot_entries {
+    my SGN::I18N $project_save_subplot_i18n = $c && $c->can('i18n') ? $c->i18n : undef;
     my $self = shift;
     my $parsed_data = shift;
     my $subplots_per_plot = shift;
@@ -4904,7 +4922,7 @@ sub save_subplot_entries {
 
             if (!$plot_row) {
                 print STDERR "The plot $plot_name is not found in the database\n";
-                die "The plot $plot_name is not yet in the database. Cannot create subplot entries.";
+                die ($project_save_subplot_i18n ? $project_save_subplot_i18n->p("trial.model.subplots.plot_missing", "The plot %{plot} is not yet in the database. Cannot create subplot entries.", {plot => "$plot_name"}) : "The plot $plot_name is not yet in the database. Cannot create subplot entries.");
             }
 
             my $parent_plot = $plot_row->stock_id();
@@ -4985,7 +5003,7 @@ sub save_subplot_entries {
             my ($stored_phenotype_error, $stored_phenotype_success) = $store_phenotypes->store();
 
             if ($stored_phenotype_error) {
-                die "An error occurred inheriting treatments: $stored_phenotype_error\n";
+                die ($project_save_subplot_i18n ? $project_save_subplot_i18n->p("trial.model.plants.inherit_treatments_error", "An error occurred inheriting treatments: %{details}\n", {details => "$stored_phenotype_error"}) : "An error occurred inheriting treatments: $stored_phenotype_error\n");
             }
         }
     };
@@ -4999,6 +5017,7 @@ sub save_subplot_entries {
 }
 
 sub _save_subplot_entry {
+    my SGN::I18N $project_save_subplot_entry_i18n = $c && $c->can('i18n') ? $c->i18n : undef;
     my $self = shift;
     my $chado_schema = shift;
     my $accession_cvterm = shift;
@@ -5060,7 +5079,7 @@ sub _save_subplot_entry {
     #the subplot has a relationship to the accession
     my $plot_accession_rs = $self->bcs_schema()->resultset("Stock::StockRelationship")->search({'me.subject_id'=>$parent_plot, 'me.type_id'=>$plot_relationship_cvterm, 'object.type_id'=>[$accession_cvterm, $cross_cvterm, $family_name_cvterm] }, {'join'=>'object'});
     if ($plot_accession_rs->count != 1){
-        die "There is not 1 stock_relationship of type plot_of between the plot $parent_plot and an accession, a cross or a family_name.";
+        die ($project_save_subplot_entry_i18n ? $project_save_subplot_entry_i18n->p("trial.model.stock_relationship.plot_accession", "There is not 1 stock_relationship of type plot_of between the plot %{plot} and an accession, a cross or a family_name.", {plot => "$parent_plot"}) : "There is not 1 stock_relationship of type plot_of between the plot $parent_plot and an accession, a cross or a family_name.");
     }
     $stock_relationship = $self->bcs_schema()->resultset("Stock::StockRelationship")->create({
         subject_id => $subplot->stock_id(),
@@ -5672,7 +5691,7 @@ sub get_treatments {
 
 =cut
 
-sub get_treatment_projects { #WARNING: THIS FUNCTION IS DEPRECATD AND SHOULD NOT BE USED
+sub get_treatment_projects { #WARNING: THIS FUNCTION IS DEPRECATED AND SHOULD NOT BE USED
     my $self = shift;
 
     my @plants;
@@ -5691,7 +5710,7 @@ sub get_treatment_projects { #WARNING: THIS FUNCTION IS DEPRECATD AND SHOULD NOT
 =head2 get_trial_contacts
 
  Usage:        my $contacts = $t->get_trial_contacts();
- Desc:         Returns an arrayref of hashrefs that contain all sp_person info fpr sp_person_ids saved as projectprops to this trial
+ Desc:         Returns an arrayref of hashrefs that contain all sp_person info for sp_person_ids saved as projectprops to this trial
  Ret:          an arrayref containing
                { sp_person_id => 1, salutation => 'Mr.', first_name => 'joe', last_name => 'doe', email => 'j@d.com' }
  Args:         none
@@ -5948,6 +5967,7 @@ sub cross_count {
 =cut
 
 sub delete_genotyping_plate_from_field_trial_linkage {
+    my SGN::I18N $project_delete_genotyping_linkage_i18n = $c && $c->can('i18n') ? $c->i18n : undef;
     my $self = shift;
     my $field_trial_id = shift;
     my $role = shift;
@@ -5957,7 +5977,7 @@ sub delete_genotyping_plate_from_field_trial_linkage {
 
     #Make sure to have the right access to delete
     if ($role ne "curator") {
-        push @errors, "Only a curator can delete this linkage.";
+        push @errors, ($project_delete_genotyping_linkage_i18n ? $project_delete_genotyping_linkage_i18n->p("trial.model.genotyping_linkage.curator_only", "Only a curator can delete this linkage.") : "Only a curator can delete this linkage.");
         return { errors => \@errors };
     }
 
@@ -5977,10 +5997,10 @@ sub delete_genotyping_plate_from_field_trial_linkage {
             $uh->execute($project_relationship_id,$genotyping_trial_from_field_trial_cvterm_id);
         }
         else {
-            push @errors, "An error occurred during deletion.";
+            push @errors, ($project_delete_genotyping_linkage_i18n ? $project_delete_genotyping_linkage_i18n->p("trial.model.genotyping_linkage.deletion_error", "An error occurred during deletion.") : "An error occurred during deletion.");
         }
     } else {
-        push @errors, "Project relationship does not exists or has more than 1 occurrence.";
+        push @errors, ($project_delete_genotyping_linkage_i18n ? $project_delete_genotyping_linkage_i18n->p("trial.model.genotyping_linkage.relationship_count", "Project relationship does not exists or has more than 1 occurrence.") : "Project relationship does not exists or has more than 1 occurrence.");
     }
 
     if (@errors >0) {

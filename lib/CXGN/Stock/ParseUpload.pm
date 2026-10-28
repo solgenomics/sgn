@@ -8,6 +8,17 @@ use Moose::Util::TypeConstraints;
 with 'MooseX::Object::Pluggable';
 
 
+# Optional presentation translator; it never controls parsing or data cleaning.
+has 'i18n' => (
+    is => 'ro',
+    isa => 'Maybe[Object]',
+    reader => 'i18n',
+    trigger => sub {
+        my ($self, $translator) = @_;
+        die 'Presentation translator must implement p' if defined($translator) && !$translator->can('p');
+    },
+);
+
 has 'chado_schema' => (
 		       is       => 'ro',
 		       isa      => 'DBIx::Class::Schema',

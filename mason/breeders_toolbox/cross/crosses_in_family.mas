@@ -1,3 +1,7 @@
+<%once>
+use HTML::Entities ();
+</%once>
+
 <%args>
 $family_id
 $family_name
@@ -13,7 +17,7 @@ $family_type_string
     </div>
     <div class="panel panel-default">
         <div class="panel-body">
-            <&| /page/info_section.mas, title => 'Add Crosses to a List', collapsible=>1, collapsed=>1, subtitle=>'<i>Adding crosses in this family to a new or exisiting list</i>'&>
+            <&| /page/info_section.mas, anchor_title => 'Add Crosses to a List', title => HTML::Entities::encode_entities($c->i18n->p("cross.ui.add_crosses_to_a_list", "Add Crosses to a List")), collapsible=>1, collapsed=>1, subtitle=>("<i>" . HTML::Entities::encode_entities($c->i18n->p("cross.pages.adding_crosses_in_this_family_to_a_new_or_exisiting", "Adding crosses in this family to a new or existing list")) . "</i>")&>
                 <br>
                 <div id="members_to_new_list" style="display:none"></div>
                 <div id="members_add_to_list"></div>
@@ -33,15 +37,15 @@ jQuery(document).ready(function(){
         'destroy': true,
         'autoWidth': false,
         columns: [
-            { title: "Cross Unique ID", "data": null, "render": function ( data, type, row ) { return "<a href='/cross/"+row.cross_id+"'>"+row.cross_name+"</a>"; } },
-            { title: "Cross Type", "data": "cross_type" },
-            { title: "Number of Progenies", "data": "progeny_number" },
-            { title: "Crossing Experiment", "data": null, "render": function ( data, type, row ) { return "<a href='/breeders/trial/"+row.crossing_experiment_id+"'>"+row.crossing_experiment_name+"</a>"; } },
+            { title: jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("cross.ui.cross_unique_id.923bfbc", "Cross Unique ID") : "Cross Unique ID")).html(), "data": null, "render": function ( data, type, row ) { return "<a href='/cross/"+row.cross_id+"'>"+row.cross_name+"</a>"; } },
+            { title: jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("accession.related_stock.header.cross_type_upper", "Cross Type") : "Cross Type")).html(), "data": "cross_type" },
+            { title: jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("accession.usage.header.progenies", "Number of Progenies") : "Number of Progenies")).html(), "data": "progeny_number" },
+            { title: jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("cross.ui.crossing_experiment.1594653", "Crossing Experiment") : "Crossing Experiment")).html(), "data": null, "render": function ( data, type, row ) { return "<a href='/breeders/trial/"+row.crossing_experiment_id+"'>"+row.crossing_experiment_name+"</a>"; } },
         ],
         "fnInitComplete": function(oSettings, json) {
             //console.log(json);
             if (!isLoggedIn()) {
-                jQuery('#members_add_to_list').html("<div class='well well-sm'><h3>Please login to use lists!</h3></div>");
+                jQuery('#members_add_to_list').html(("<div class='well well-sm'><h3>" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("accession.related_stock.login_lists", "Please login to use lists!") : "Please login to use lists!")).html() + "</h3></div>"));
             } else {
                 var html = "";
                 for(var i=0; i<json.data.length; i++){

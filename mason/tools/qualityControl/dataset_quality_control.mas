@@ -1,3 +1,7 @@
+<%once>
+use HTML::Entities ();
+</%once>
+
 <%args>
 
 </%args>
@@ -9,7 +13,7 @@
 <script src="https://cdn.jsdelivr.net/npm/vega-embed@3"></script>
 
 
-<& /page/page_title.mas, title=>"Quality Control" &>
+<& /page/page_title.mas, title=>HTML::Entities::encode_entities($c->i18n->p("analysis.interface.quality_control", "Quality Control")) &>
 
 
 <div id="qualitycontrol_tool">
@@ -78,13 +82,13 @@
     <div class="col-md-12">
       <div class="container-fluid">
         <&| /util/workflow.mas, id=> "quality_control_analysis_workflow" &>
-          <&| /util/workflow.mas:step, title=> "Choose Dataset" &>
-            <& /page/page_title.mas, title=>"Choose the dataset for QC" &>
+          <&| /util/workflow.mas:step, title=> HTML::Entities::encode_entities($c->i18n->p("analysis.interface.choose_dataset", "Choose Dataset")) &>
+            <& /page/page_title.mas, title=>HTML::Entities::encode_entities($c->i18n->p("analysis.interface.choose_the_dataset_for_qc", "Choose the dataset for QC")) &>
         <span style="width:240px" id="qc_dataset_select">
         </span>
         <div>
           <div style="float:right">
-            <button class="btn btn-main" id="qc_analysis_prepare_button"   onclick="Workflow.complete(this);">Choose Dataset and continue</button>
+            <button class="btn btn-main" id="qc_analysis_prepare_button"   onclick="Workflow.complete(this);"><% $c->i18n->p("analysis.interface.choose_dataset_and_continue", "Choose Dataset and continue") |h %></button>
           </div>
         </div>
         <br />
@@ -93,14 +97,14 @@
         </&>
 
 
-        <&| /util/workflow.mas:step, title=> "Select Trait" &>
-        <& /page/page_title.mas, title=>"Select a Trait for QC" &>
+        <&| /util/workflow.mas:step, title=> HTML::Entities::encode_entities($c->i18n->p("lists_datasets.pages.select_trait", "Select Trait")) &>
+        <& /page/page_title.mas, title=>HTML::Entities::encode_entities($c->i18n->p("analysis.interface.select_a_trait_for_qc", "Select a Trait for QC")) &>
 
         <!-- Existing checkboxes (dynamic options) -->
         <div id="selected_variable" style="margin-bottom:50px">
-          <label for="trait_select">Select Trait:</label>
+          <label for="trait_select"><% $c->i18n->p("trial.repetitive.trait", "Select Trait:") |h %></label>
           <select id="trait_select" name="trait_select" class="form-control">
-              <option disabled selected value>Select a trait</option>
+              <option disabled selected value><% $c->i18n->p("phenotype.root.select_a_trait", "Select a trait") |h %></option>
           </select>
         </div>
 
@@ -110,7 +114,7 @@
         </div>
 
         <div class="col-md-12 well" style="margin-top: 10px;">  
-            <h3>Outliers Range</h3>   
+            <h3><% $c->i18n->p("analysis.interface.outliers_range", "Outliers Range") |h %></h3><% '   ' %>
             <div class="col-md-8">
                 <div id="outliers_range">
                     <div id="custom-handle" class="ui-slider-handle"></div>
@@ -121,20 +125,20 @@
         <hr style="border: 1px solid gray; margin: 20px 0;">
         <div class="col-md-12 collapsible">
             <div class="content">
-                <h4><b>Selecting this box, it will set fixed minimum and maximum for all locations.</b></h4>
+                <h4><b><% $c->i18n->p("analysis.interface.selecting_this_box_it_will_set_fixed_minimum_and_maximum", "Selecting this box, it will set fixed minimum and maximum for all locations.") |h %></b></h4>
                 <br>
                 <div style="display: flex; align-items: center; gap: 10px; margin-top: 10px;">
-                    <label for="min-limit">Minimum limit:</label>
-                    <input type="number" id="min-limit" name="min-limit" placeholder="Enter minimum" class="form-control" style="width: auto;">
+                    <label for="min-limit"><% $c->i18n->p("analysis.interface.minimum_limit", "Minimum limit:") |h %></label>
+                    <input type="number" id="min-limit" name="min-limit" placeholder="<% $c->i18n->p("analysis.interface.enter_minimum", "Enter minimum") |h %>" class="form-control" style="width: auto;">
 
-                    <label for="max-limit">Maximum limit:</label>
-                    <input type="number" id="max-limit" name="max-limit" placeholder="Enter maximum" class="form-control" style="width: auto;">
+                    <label for="max-limit"><% $c->i18n->p("analysis.interface.maximum_limit", "Maximum limit:") |h %></label>
+                    <input type="number" id="max-limit" name="max-limit" placeholder="<% $c->i18n->p("analysis.interface.enter_maximum", "Enter maximum") |h %>" class="form-control" style="width: auto;">
                 </div>
                 <br>
                 <br>
                 <div style="display: flex; align-items: center; gap: 10px;">
                     <button id="fixed-min-max" style="margin-right: 5px;">
-                        Select Fixed Min and Max
+                        <% $c->i18n->p("analysis.interface.select_fixed_min_and_max", "Select Fixed Min and Max") |h %>
                     </button>
                 </div>
             </div>
@@ -144,17 +148,17 @@
         <hr style="border: 1px solid gray; margin: 20px 0;">
 
         <div id="outlier_table_container">
-            <h3>Raw Data Available</h3>
+            <h3><% $c->i18n->p("analysis.interface.raw_data_available", "Raw Data Available") |h %></h3>
             <table id="outlier_table" class="table table-bordered table-striped">
                 <thead>
                     <tr>
-                        <th>Location ID</th>
-                        <th>Location Name</th>
-                        <th>Trial Name</th>
-                        <th>Min</th>
-                        <th>Max</th>
-                        <th>Mean</th>
-                        <th>SD</th>
+                        <th><% $c->i18n->p("analysis.interface.location_id", "Location ID") |h %></th>
+                        <th><% $c->i18n->p("analysis.interface.location_name", "Location Name") |h %></th>
+                        <th><% $c->i18n->p("folder.detail.trial_name", "Trial Name") |h %></th>
+                        <th><% $c->i18n->p("accession.usage.header.min", "Min") |h %></th>
+                        <th><% $c->i18n->p("accession.usage.header.max", "Max") |h %></th>
+                        <th><% $c->i18n->p("accession.usage.header.mean", "Mean") |h %></th>
+                        <th><% $c->i18n->p("analysis.interface.sd", "SD") |h %></th>
                         <th>CV</th>
                     </tr>
                 </thead>
@@ -163,17 +167,17 @@
         </div>
 
         <div id="cleaned_table_container">
-        <h3>Data After Filtering</h3>
+        <h3><% $c->i18n->p("analysis.interface.data_after_filtering", "Data After Filtering") |h %></h3>
         <table id="clean_table" class="table table-bordered table-striped">
             <thead>
                 <tr>
-                    <th>Location ID</th>
-                    <th>Location Name</th>
-                    <th>Trial Name</th>
-                    <th>Min</th>
-                    <th>Max</th>
-                    <th>Mean</th>
-                    <th>SD</th>
+                    <th><% $c->i18n->p("analysis.interface.location_id", "Location ID") |h %></th>
+                    <th><% $c->i18n->p("analysis.interface.location_name", "Location Name") |h %></th>
+                    <th><% $c->i18n->p("folder.detail.trial_name", "Trial Name") |h %></th>
+                    <th><% $c->i18n->p("accession.usage.header.min", "Min") |h %></th>
+                    <th><% $c->i18n->p("accession.usage.header.max", "Max") |h %></th>
+                    <th><% $c->i18n->p("accession.usage.header.mean", "Mean") |h %></th>
+                    <th><% $c->i18n->p("analysis.interface.sd", "SD") |h %></th>
                     <th>CV</th>
                 </tr>
             </thead>
@@ -182,38 +186,38 @@
         <br>
         </div>
         <div style="float:right">
-            <button class="btn btn-main" id="qc_choose_variable"  onclick="Workflow.complete(this);">Next step</button>
+            <button class="btn btn-main" id="qc_choose_variable"  onclick="Workflow.complete(this);"><% $c->i18n->p("analysis.interface.next_step", "Next step") |h %></button>
         </div>
       </&>
 
-      <&| /util/workflow.mas:step, title=> "Other Traits as Outlier" &>
-        <& /page/page_title.mas, title=>"Set Plot as Outlier for Other Traits" &>
+      <&| /util/workflow.mas:step, title=> HTML::Entities::encode_entities($c->i18n->p("analysis.interface.other_traits_as_outlier", "Other Traits as Outlier")) &>
+        <& /page/page_title.mas, title=>HTML::Entities::encode_entities($c->i18n->p("analysis.interface.set_plot_as_outlier_for_other_traits", "Set Plot as Outlier for Other Traits")) &>
 
       <div style="text-align: center;">
-          <p>This is an option to set selected plots as outliers for other traits as well.</p>
-          <p>Clicking on <b>'Select Other Traits'</b> you will see available traits in your dataset.</p>
-          <p>If you want to ignore this step, please click on <b>'Next step'</b> button.</p>
-          <button id="select_traits_button">Select Other Traits</button>
+          <p><% $c->i18n->p("analysis.interface.this_is_an_option_to_set_selected_plots_as_outliers", "This is an option to set selected plots as outliers for other traits as well.") |h %></p>
+          <p><% $c->i18n->p("analysis.interface.clicking_on", "Clicking on") |h %> <b><% $c->i18n->p("analysis.interface.select_other_traits", "'Select Other Traits'") |h %></b> <% $c->i18n->p("analysis.interface.you_will_see_available_traits_in_your_dataset", "you will see available traits in your dataset.") |h %></p>
+          <p><% $c->i18n->p("analysis.interface.if_you_want_to_ignore_this_step_please_click_on", "If you want to ignore this step, please click on") |h %> <b><% $c->i18n->p("analysis.interface.next_step_095272", "'Next step'") |h %></b> <% $c->i18n->p("analysis.interface.button", "button.") |h %></p>
+          <button id="select_traits_button"><% $c->i18n->p("analysis.interface.select_other_traits_048bad", "Select Other Traits") |h %></button>
           <div id="other_traits" style="margin-top: 20px; margin-bottom: 50px;">
               <!-- Dynamically populated checkboxes will appear here -->
           </div>
           <br>
       </div>
       <div style="float:right">
-          <button class="btn btn-main" id="qc_other_traits"  onclick="Workflow.complete(this);">Next step</button>
+          <button class="btn btn-main" id="qc_other_traits"  onclick="Workflow.complete(this);"><% $c->i18n->p("analysis.interface.next_step", "Next step") |h %></button>
       </div>
 
       </&>
 
-      <&| /util/workflow.mas:step, title=> "Save Outliers" &>
-        <& /page/page_title.mas, title=>"Save Outliers" &>
+      <&| /util/workflow.mas:step, title=> HTML::Entities::encode_entities($c->i18n->p("analysis.interface.save_outliers", "Save Outliers")) &>
+        <& /page/page_title.mas, title=>HTML::Entities::encode_entities($c->i18n->p("analysis.interface.save_outliers", "Save Outliers")) &>
       <div>
         <div style="text-align: center;">
-          <p>This is the validation process. Trials cleaned of outliers can be used in downstream analysis.</p>
-          <p>To validate a dataset you will need privilieges as <b>CURATOR</b> or <b>BREEDER</b>.</p>
-          <p>Only <b>CURATORS</b> are allowed to restore the dataset to original values.</p>
-          <button class="btn btn-main" id="restore_outliers_button"   onclick="Workflow.complete(this);">Restore</button>
-          <button class="btn btn-main" id="store_outliers_button"   onclick="Workflow.complete(this);">Validate</button>
+          <p><% $c->i18n->p("analysis.interface.this_is_the_validation_process_trials_cleaned_of_outliers_can", "This is the validation process. Trials cleaned of outliers can be used in downstream analysis.") |h %></p>
+          <p><% $c->i18n->p("analysis.interface.to_validate_a_dataset_you_will_need_privilieges_as", "To validate a dataset you will need privilieges as") |h %> <b><% $c->i18n->p("analysis.interface.curator", "CURATOR") |h %></b> <% $c->i18n->p("global.dataset_overlay.or", "or") |h %> <b><% $c->i18n->p("analysis.interface.breeder", "BREEDER") |h %></b>.</p>
+          <p><% $c->i18n->p("analysis.interface.only", "Only") |h %> <b><% $c->i18n->p("analysis.interface.curators", "CURATORS") |h %></b> <% $c->i18n->p("analysis.interface.are_allowed_to_restore_the_dataset_to_original_values", "are allowed to restore the dataset to original values.") |h %></p>
+          <button class="btn btn-main" id="restore_outliers_button"   onclick="Workflow.complete(this);"><% $c->i18n->p("analysis.interface.restore", "Restore") |h %></button>
+          <button class="btn btn-main" id="store_outliers_button"   onclick="Workflow.complete(this);"><% $c->i18n->p("cross.ui.validate", "Validate") |h %></button>
         </div>
       </&>
         <div id="tempfile" style="display:none"></div>

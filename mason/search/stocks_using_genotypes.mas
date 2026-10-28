@@ -1,3 +1,7 @@
+<%once>
+use HTML::Entities ();
+</%once>
+
 <%args>
 
 
@@ -5,7 +9,7 @@
 
 <& /util/import_javascript.mas, classes => [ 'jquery', 'jquery.dataTables' ] &>
 
-<& /page/page_title.mas, title=>'Search Accessions Containing Specific Genotypes' &>
+<& /page/page_title.mas, title=>HTML::Entities::encode_entities($c->i18n->p("genotype.marker.search_accessions_containing_specific_genotypes", 'Search Accessions Containing Specific Genotypes')) &>
 
 <!--
 <&| /page/info_section.mas, title=>'Step 1: Select a set of accessiions (dataset)'&>
@@ -19,7 +23,7 @@
 </&>
 -->
 
-<&| /page/info_section.mas, title=>'Step 1:'&>
+<&| /page/info_section.mas, anchor_title => 'Step 1:', title=>HTML::Entities::encode_entities($c->i18n->p("genotype.marker.step_1", 'Step 1:'))&>
     <div class="row" id="search_form_1" >
         <div class="col-sm-1">
         </div>
@@ -28,11 +32,11 @@
                 <div class="col-sm-11">
                     <div class="form-horizontal">
                         <div class="form-group">
-                            <label class="control-label col-sm-4">Select a list of accessions:</label>
+                            <label class="control-label col-sm-4"><% $c->i18n->p("cross.pages.select_a_list_of_accessions.961bcd8", "Select a list of accessions:") |h %></label>
                             <div class="col-sm-8" >
                                 <div class="input-group">
                                     <select class="form-control" id="stock_list_select">
-                                        <option value="">Select a list of accessions</option>
+                                        <option value=""><% $c->i18n->p("cross.pages.select_a_list_of_accessions.dd69e1f", "Select a list of accessions") |h %></option>
                                     </select>
                                 </div>
                             </div>
@@ -45,7 +49,7 @@
 </&>
 
 <br>
-<&| /page/info_section.mas, title=>'Step 2:'&>
+<&| /page/info_section.mas, anchor_title => 'Step 2:', title=>HTML::Entities::encode_entities($c->i18n->p("genotype.marker.step_2", 'Step 2:'))&>
     <div class="row" id="search_form_2" >
         <div class="col-sm-1">
         </div>
@@ -54,11 +58,11 @@
                 <div class="col-sm-11">
                     <div class="form-horizontal">
                         <div class="form-group">
-                            <label class="control-label col-sm-4">Select a list of marker alleles:</label>
+                            <label class="control-label col-sm-4"><% $c->i18n->p("genotype.marker.allele_list.label", "Select a list of marker alleles:") |h %></label>
                             <div class="col-sm-8" >
                                 <div class="input-group">
                                     <select class="form-control" id="markerset_select">
-                                        <option value="">Select a list of marker alleles</option>
+                                        <option value=""><% $c->i18n->p("genotype.marker.allele_list.prompt", "Select a list of marker alleles") |h %></option>
                                     </select>
                                 </div>
                             </div>
@@ -66,7 +70,7 @@
                         <div class="form-group">
                             <label class="control-label col-sm-4"></label>
                             <div class="col-sm-8" >
-                                <a href="/breeders/markers"><p>Need to create a list of marker alleles.</p></a>
+                                <a href="/breeders/markers"><p><% $c->i18n->p("genotype.marker.need_to_create_a_list_of_marker_alleles", "Need to create a list of marker alleles.") |h %></p></a>
                             </div>
                         </div>
                     </div>
@@ -76,7 +80,7 @@
     </div>
 </&>
 <br>
-<&| /page/info_section.mas, title=>'Step 3:'&>
+<&| /page/info_section.mas, anchor_title => 'Step 3:', title=>HTML::Entities::encode_entities($c->i18n->p("genotype.marker.step_3", 'Step 3:'))&>
     <div class="row" id="search_form_3" >
         <div class="col-sm-1">
         </div>
@@ -87,7 +91,7 @@
                         <div class="form-group">
                             <label class="control-label col-sm-4"></label>
                             <div class="col-sm-8" >
-                                <button class="btn btn-primary" id="search_accessions_using_markerset"><i class="glyphicon glyphicon-search"></i> Search Accessions</button>
+                                <button class="btn btn-primary" id="search_accessions_using_markerset"><i class="glyphicon glyphicon-search"></i> <% $c->i18n->p("accessions.actions.search", "Search Accessions") |h %></button>
                             </div>
                         </div>
                     </div>
@@ -98,7 +102,7 @@
  </&>
 
 
-<&| /page/info_section.mas, title => 'Search Results' , collapsible=>1, collapsed=>0 &>
+<&| /page/info_section.mas, anchor_title => 'Search Results', title => HTML::Entities::encode_entities($c->i18n->p("global.search.annotation.genes.search_results", 'Search Results')) , collapsible=>1, collapsed=>0 &>
 
     <link rel="stylesheet" type="text/css" href="/documents/inc/datatables/jquery.dataTables.css">
 
@@ -115,9 +119,9 @@ jQuery(document).ready(function (){
     var lo = new CXGN.List();
 
 //    get_select_box('datasets', 'dataset_accessions', {"checkbox_name":"dataset_accessions_checkbox"});
-    jQuery('#stock_list_select').html(lo.listSelect('stock_list_select', ['accessions'], 'Select a list of accessions', undefined, undefined));
+    jQuery('#stock_list_select').html(lo.listSelect('stock_list_select', ['accessions'], (window.SGN && window.SGN.i18n ? window.SGN.i18n.p("cross.pages.select_a_list_of_accessions.dd69e1f", "Select a list of accessions") : 'Select a list of accessions'), undefined, undefined));
 
-    jQuery('#markerset_select').html(lo.listSelect('markerset_select', ['markers'], 'Select a list of marker alleles', undefined, undefined));
+    jQuery('#markerset_select').html(lo.listSelect('markerset_select', ['markers'], (window.SGN && window.SGN.i18n ? window.SGN.i18n.p("genotype.marker.allele_list.prompt", "Select a list of marker alleles") : 'Select a list of marker alleles'), undefined, undefined));
 
     jQuery("#search_accessions_using_markerset").click(function(){
 
@@ -140,14 +144,14 @@ jQuery(document).ready(function (){
         var stock_list_id = jQuery('#stock_list_select').val();
 
         if (!stock_list_id) {
-            alert("Please choose a list of accessions");
+            alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("genotype.marker.please_choose_a_list_of_accessions", "Please choose a list of accessions") : "Please choose a list of accessions"));
             return;
         }
 
         var markerset_id = jQuery('#markerset_select').val();
 
         if (!markerset_id) {
-            alert("Please choose a list of marker alleles");
+            alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("genotype.marker.please_choose_a_list_of_marker_alleles", "Please choose a list of marker alleles") : "Please choose a list of marker alleles"));
             return;
         }
 
@@ -161,21 +165,21 @@ jQuery(document).ready(function (){
             },
             columns: [
                 {
-                    title: "Accession Name",
+                    title: jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("accession.related_stock.header.accession_name", "Accession Name") : "Accession Name")).html(),
                     data: null,
                     render: function(data, type, row){return "<a href='/stock/"+row.stock_id+"/view'>"+row.stock_name+"</a>";}
                 },
                 {
-                    title: "Sample Name",
+                    title: jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("genotype.plate.sample_name", "Sample Name") : "Sample Name")).html(),
                     data: null,
                     render: function(data, type, row){return "<a href='/stock/"+row.sample_id+"/view'>"+row.sample_name+"</a>";}
                 },
                 {
-                    title: "Sample Type",
+                    title: jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("genotype.plate.sample_type", "Sample Type") : "Sample Type")).html(),
                     data: "sample_type",
                 },
                 {
-                    title: "Genotypes",
+                    title: jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("genotype.marker.genotypes", "Genotypes") : "Genotypes")).html(),
                     data: "genotypes",
                     render: function(data, type,row){
                         var parsed = JSON.parse(data);

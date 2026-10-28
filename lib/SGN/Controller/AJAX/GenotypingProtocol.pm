@@ -13,6 +13,7 @@ SGN::Controller::AJAX::Search::GenotypingProtocol - a REST controller class to p
 package SGN::Controller::AJAX::GenotypingProtocol;
 
 use Moose;
+use SGN::I18N ();
 use Data::Dumper;
 use JSON;
 use CXGN::People::Login;
@@ -38,6 +39,7 @@ sub genotyping_protocol_delete : Path('/ajax/genotyping_protocol/delete') : Acti
 sub genotyping_protocol_delete_GET : Args(1) {
     my $self = shift;
     my $c = shift;
+    my $i18n = SGN::I18N::translate($c);
     my $protocol_id = shift;
 
     #print STDERR Dumper $c->req->params();
@@ -68,7 +70,7 @@ sub genotyping_protocol_delete_GET : Args(1) {
     }
 
     if ($user_role ne 'curator') {
-        $c->stash->{rest} = { error => 'Must have correct permissions to delete genotypes! Please contact us.' };
+        $c->stash->{rest} = { error => SGN::I18N::translate($i18n, "genotype.protocol.server.must_have_correct_permissions_to_delete_genotypes_please_contact_us", "Must have correct permissions to delete genotypes! Please contact us.") };
         $c->detach();
     }
 
@@ -145,6 +147,7 @@ sub genotyping_protocol_details : Path('/ajax/genotyping_protocol/details') : Ac
 sub genotyping_protocol_details_POST : Args(0) {
     my $self = shift;
     my $c = shift;
+    my $i18n = SGN::I18N::translate($c);
     my $session_id = $c->req->param("sgn_session_id");
     my $protocol_id = $c->req->param("protocol_id");
     my @categories = $c->req->param("categories[]");
@@ -160,7 +163,7 @@ sub genotyping_protocol_details_POST : Args(0) {
         my $dbh = $c->dbc->dbh;
         my @user_info = CXGN::Login->new($dbh)->query_from_cookie($session_id);
         if (!$user_info[0]){
-            $c->stash->{rest} = {error=>'You must be logged in to edit genotyping protocol'};
+            $c->stash->{rest} = {error=>SGN::I18N::translate($i18n, "genotype.protocol.server.you_must_be_logged_in_to_edit_genotyping_protocol", "You must be logged in to edit genotyping protocol")};
             $c->detach();
         }
         $user_id = $user_info[0];
@@ -169,7 +172,7 @@ sub genotyping_protocol_details_POST : Args(0) {
         $user_name = $p->get_username;
     } else {
         if (!$c->user){
-            $c->stash->{rest} = {error=>'You must be logged in to edit genotyping protocol'};
+            $c->stash->{rest} = {error=>SGN::I18N::translate($i18n, "genotype.protocol.server.you_must_be_logged_in_to_edit_genotyping_protocol", "You must be logged in to edit genotyping protocol")};
             $c->detach();
         }
         $user_id = $c->user()->get_object()->get_sp_person_id();
@@ -178,7 +181,7 @@ sub genotyping_protocol_details_POST : Args(0) {
     }
 
     if ($user_role ne 'submitter' && $user_role ne 'curator') {
-        $c->stash->{rest} = { error => 'Must have correct permissions to edit genotyping protocol! Please contact us.' };
+        $c->stash->{rest} = { error => SGN::I18N::translate($i18n, "genotype.protocol.server.must_have_correct_permissions_to_edit_genotyping_protocol_please_contact_us", "Must have correct permissions to edit genotyping protocol! Please contact us.") };
         $c->detach();
     }
 
@@ -196,7 +199,7 @@ sub genotyping_protocol_details_POST : Args(0) {
     map { $has_roles{$_} = 1; } @user_roles;
 
     if (! ( (exists($has_roles{$breeding_program_name}) && exists($has_roles{submitter})) || exists($has_roles{curator}))) {
-      $c->stash->{rest} = { error => "You need to be either a curator, or a submitter associated with breeding program $breeding_program_name to change the details of this protocol." };
+      $c->stash->{rest} = { error => SGN::I18N::translate($i18n, "genotype.protocol.server.program_permission", "You need to be either a curator, or a submitter associated with breeding program %{program} to change the details of this protocol.", {program => ("" . $breeding_program_name)}) };
       $c->detach();
     }
 
@@ -210,7 +213,7 @@ sub genotyping_protocol_details_POST : Args(0) {
         });
         if ($existing_protocol_name) {
             print STDERR "Can't use this new protocol name: Protocol name already exists\n";
-            $c->stash->{rest} = {error => "New protocol name not saved: Protocol name already exists"};
+            $c->stash->{rest} = {error => SGN::I18N::translate($i18n, "genotype.protocol.server.new_protocol_name_not_saved_protocol_name_already_exists", "New protocol name not saved: Protocol name already exists")};
             $c->detach();
         }
     }
@@ -230,11 +233,11 @@ sub genotyping_protocol_details_POST : Args(0) {
             push @found_organisms, $organism_id;
         }
         if (scalar(@found_organisms) == 0){
-            $c->stash->{rest} = { error => 'The species name you provided is not in the database! Please contact us.' };
+            $c->stash->{rest} = { error => SGN::I18N::translate($i18n, "genotype.protocol.server.the_species_name_you_provided_is_not_in_the_database_please_contact", "The species name you provided is not in the database! Please contact us.") };
             $c->detach();
         }
         if (scalar(@found_organisms) > 1){
-            $c->stash->{rest} = { error => 'The species name you provided is not unique in the database! Please contact us.' };
+            $c->stash->{rest} = { error => SGN::I18N::translate($i18n, "genotype.protocol.server.the_species_name_you_provided_is_not_unique_in_the_database_please", "The species name you provided is not unique in the database! Please contact us.") };
             $c->detach();
         }
 
@@ -275,7 +278,7 @@ sub genotyping_protocol_details_POST : Args(0) {
     };
 
     if ($@) {
-        $c->stash->{rest} = { error => "An error occurred setting the new protocol details: $@" };
+        $c->stash->{rest} = { error => SGN::I18N::translate($i18n, "genotype.protocol.server.update_error", "An error occurred setting the new protocol details: %{error}", {error => ("" . "$@")}) };
     }
     else {
         $c->stash->{rest} = { success => 1 };
@@ -289,6 +292,7 @@ sub genotyping_protocol_add_marker_metadata : Path('/ajax/genotyping_protocol/ad
 sub genotyping_protocol_add_marker_metadata_POST : Args(1) {
     my $self = shift;
     my $c = shift;
+    my $i18n = SGN::I18N::translate($c);
     my $protocol_id = shift;
     my $schema = $c->dbic_schema("Bio::Chado::Schema");
     my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema");
@@ -304,7 +308,7 @@ sub genotyping_protocol_add_marker_metadata_POST : Args(1) {
 
     if (!$c->user()) {
         print STDERR "User not logged in... not uploading marker metadata.\n";
-        push @errors, "You need to be logged in to upload marker metadata.";
+        push @errors, SGN::I18N::translate($i18n, "genotype.protocol.server.you_need_to_be_logged_in_to_upload_marker_metadata", "You need to be logged in to upload marker metadata.");
         $c->stash->{rest} = {filename => $upload_original_name, error => \@errors };
         return;
     }
@@ -326,7 +330,7 @@ sub genotyping_protocol_add_marker_metadata_POST : Args(1) {
     my $archived_filename_with_path = $uploader->archive();
     my $md5 = $uploader->get_md5($archived_filename_with_path);
     if (!$archived_filename_with_path) {
-        push @errors, "Could not save file $upload_original_name in archive";
+        push @errors, SGN::I18N::translate($i18n, "genotype.protocol.server.archive_error", "Could not save file %{filename} in archive", {filename => ("" . $upload_original_name)});
         $c->stash->{rest} = {filename => $upload_original_name, error => \@errors };
         return;
     }
@@ -341,6 +345,7 @@ sub genotyping_protocol_add_marker_metadata_POST : Args(1) {
         marker_metadata_trait_ontology_root => $c->config->{marker_metadata_trait_ontology_root}
     });
     $parser->load_plugin('MarkerMetadata');
+    $parser->set_i18n($i18n);
     my $parsed_data = $parser->parse();
 
     if ( $parser->has_parse_errors() ) {
@@ -364,7 +369,7 @@ sub genotyping_protocol_add_marker_metadata_POST : Args(1) {
     }
 
     if (!$parsed_data) {
-        $c->stash->{rest} = {error_string => 'The parser did not return any data!'};
+        $c->stash->{rest} = {error_string => SGN::I18N::translate($i18n, "genotype.protocol.server.the_parser_did_not_return_any_data", "The parser did not return any data!")};
         return;
     }
 
@@ -406,6 +411,7 @@ sub genotyping_protocol_update_marker_metadata : Path('/ajax/genotyping_protocol
 sub genotyping_protocol_update_marker_metadata_POST : Args(1) {
     my $self = shift;
     my $c = shift;
+    my $i18n = SGN::I18N::translate($c);
     my $protocol_id = shift;
     my $locus_id = $c->req->param('locus_id');
     my $marker = $c->req->param('marker');
@@ -419,7 +425,7 @@ sub genotyping_protocol_update_marker_metadata_POST : Args(1) {
     # Must be logged in
     if (!$c->user()) {
         print STDERR "User not logged in... not deleting marker metadata.\n";
-        $c->stash->{rest} = {error => "You need to be logged in to update marker metadata." };
+        $c->stash->{rest} = {error => SGN::I18N::translate($i18n, "genotype.protocol.server.you_need_to_be_logged_in_to_update_marker_metadata", "You need to be logged in to update marker metadata.") };
         return;
     }
 
@@ -427,7 +433,7 @@ sub genotyping_protocol_update_marker_metadata_POST : Args(1) {
     my $user_id = $c->user()->get_object()->get_sp_person_id();
     my $user_role = $c->user->get_object->get_user_type();
     if ($user_role ne 'curator') {
-        $c->stash->{rest} = { error => "You must be a curator to update marker metadata." };
+        $c->stash->{rest} = { error => SGN::I18N::translate($i18n, "genotype.protocol.server.you_must_be_a_curator_to_update_marker_metadata", "You must be a curator to update marker metadata.") };
         return;
     }
 
@@ -458,7 +464,7 @@ sub genotyping_protocol_update_marker_metadata_POST : Args(1) {
         if ( defined $db_name && defined $entity && $db_name ne '' && $entity ne '' ) {
             my $db_name_lc = lc($db_name);
             if ( ! exists $existing_dbs{$db_name_lc} ) {
-                $c->stash->{rest} = { error => "DB name $db_name not found in the database" };
+                $c->stash->{rest} = { error => SGN::I18N::translate($i18n, "genotype.protocol.server.database_missing", "DB name %{database} not found in the database", {database => ("" . $db_name)}) };
                 return;
             }
             my $rh = {
@@ -489,6 +495,7 @@ sub genotyping_protocol_delete_marker_metadata : Path('/ajax/genotyping_protocol
 sub genotyping_protocol_delete_marker_metadata_DELETE : Args(1) {
     my $self = shift;
     my $c = shift;
+    my $i18n = SGN::I18N::translate($c);
     my $protocol_id = shift;
     my $locus_id = $c->req->param("locus_id");
     my $schema = $c->dbic_schema("Bio::Chado::Schema");
@@ -497,14 +504,14 @@ sub genotyping_protocol_delete_marker_metadata_DELETE : Args(1) {
     # Must be logged in
     if (!$c->user()) {
         print STDERR "User not logged in... not deleting marker metadata.\n";
-        $c->stash->{rest} = {error => "You need to be logged in to delete marker metadata." };
+        $c->stash->{rest} = {error => SGN::I18N::translate($i18n, "genotype.protocol.server.you_need_to_be_logged_in_to_delete_marker_metadata", "You need to be logged in to delete marker metadata.") };
         return;
     }
 
     # Must be a curator
     my $user_role = $c->user->get_object->get_user_type();
     if ($user_role ne 'curator') {
-        $c->stash->{rest} = { error => "You must be a curator to delete marker metadata." };
+        $c->stash->{rest} = { error => SGN::I18N::translate($i18n, "genotype.protocol.server.you_must_be_a_curator_to_delete_marker_metadata", "You must be a curator to delete marker metadata.") };
         return;
     }
 
@@ -551,6 +558,7 @@ sub empty_protocol_delete : Path('/ajax/breeders/empty_protocol_delete') : Actio
 sub empty_protocol_delete_GET : Args(0) {
     my $self = shift;
     my $c = shift;
+    my $i18n = SGN::I18N::translate($c);
     my $empty_protocol_id = $c->req->param("empty_protocol_id");
 
     #print STDERR Dumper $c->req->params();
@@ -581,16 +589,16 @@ sub empty_protocol_delete_GET : Args(0) {
     }
 
     if ($user_role ne 'curator') {
-        $c->stash->{rest} = { error => 'Must have correct permissions to delete genotyping protocol! Please contact us.' };
+        $c->stash->{rest} = { error => SGN::I18N::translate($i18n, "genotype.protocol.server.must_have_correct_permissions_to_delete_genotyping_protocol_please_contact_us", "Must have correct permissions to delete genotyping protocol! Please contact us.") };
         $c->detach();
     }
 
     my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado', $user_id);
-    my $protocol = CXGN::Genotype::Delete->new( { bcs_schema => $schema, empty_protocol_id => $empty_protocol_id });
+    my $protocol = CXGN::Genotype::Delete->new( { i18n => $c->i18n, bcs_schema => $schema, empty_protocol_id => $empty_protocol_id });
     my $error = $protocol->delete_empty_protocol();
 
     if ($error) {
-        $c->stash->{rest} = { error => "An error occurred attempting to delete genotyping data. ($@)" };
+        $c->stash->{rest} = { error => SGN::I18N::translate($i18n, "genotype.protocol.server.delete_error", "An error occurred attempting to delete genotyping data. (%{error})", {error => ("" . "$@")}) };
         return;
     }
 

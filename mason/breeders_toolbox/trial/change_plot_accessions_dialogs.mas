@@ -8,11 +8,11 @@ $trial_stock_type
 
 % my $title = '';
 % if ($trial_stock_type eq 'cross') {
-%    $title = 'Change Cross Unique IDs or Accessions';
+%    $title = $c->i18n->p("accession.forms.change_cross_unique_ids_or_accessions", "Change Cross Unique IDs or Accessions");
 % } elsif ($trial_stock_type eq 'family_name') {
-%    $title = 'Change Family Names or Accessions';
+%    $title = $c->i18n->p("accession.forms.change_family_names_or_accessions", "Change Family Names or Accessions");
 % } else {
-%    $title = 'Change Accessions';
+%    $title = $c->i18n->p("trial.card.page.change_accessions", "Change Accessions");
 % }
 
 
@@ -20,22 +20,22 @@ $trial_stock_type
     <div class="modal-dialog modal-lg" role="document">
         <div class="modal-content">
             <div class="modal-header" style="text-align: center">
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                <h4 class="modal-title" id="trialDesignChangeAccessionsDialog"><%$title%></h4>
+                <button type="button" class="close" data-dismiss="modal" aria-label="<% $c->i18n->p("global.dataset_publish.close", "Close") |h %>"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="trialDesignChangeAccessionsDialog"><% $title |h %></h4>
             </div>
             <div class="modal-body">
                 <div class="container-fluid">
 
                     <div class="well well-sm">
-                        <& /help/file_upload_type.mas, type => "Accession exchanges", optional_column => 0 &>
+                        <& /help/file_upload_type.mas, type => $c->i18n->p("accession.forms.accession_exchanges", "Accession exchanges"), optional_column => 0 &>
                         <br/>
 
                         <div class="panel panel-default">
                             <div class="panel-body">
-                                <b>Header:</b><br>
-                                The first row (header) must contain the columns 'plot_name' and 'accession_name' or 'cross_unique_id' or 'family_name', depending on the stock type in this trial.<br>
-                                An optional additional column, 'new_plot_name' can be added to change the plot names.<br>
-                                Alternatively, if a plot name template has been saved in association with this trial, 'new_plot_name' can be left blank and the template will be used to rename the plot.<br>
+                                <b><% $c->i18n->p("accessions.template.header", "Header:") |h %></b><br>
+                                <% $c->i18n->p("accession.forms.the_first_row_header_must_contain_the_columns_plot_name", "The first row (header) must contain the columns 'plot_name' and 'accession_name' or 'cross_unique_id' or 'family_name', depending on the stock type in this trial.") |h %><br>
+                                <% $c->i18n->p("accession.forms.an_optional_additional_column_new_plot_name_can_be_added", "An optional additional column, 'new_plot_name' can be added to change the plot names.") |h %><br>
+                                <% $c->i18n->p("accession.forms.alternatively_if_a_plot_name_template_has_been_saved_in", "Alternatively, if a plot name template has been saved in association with this trial, 'new_plot_name' can be left blank and the template will be used to rename the plot.") |h %><br>
 
                                 <table style="margin-top: 3%;" class="table table-bordered table-hover">
                                   <tbody>
@@ -48,19 +48,19 @@ $trial_stock_type
                                 </table>
                             </div>
                         </div>
-                        <b>Required columns:</b><br>
-                        <b>plot_name:</b> name of plot to change the accession for<br>
-                        <b>accession_name or cross_unique_id or family_name:</b> name of the accession or cross unique id or family name that the plot should be connected to.<br>
-                        <br><b>Optional column:</b><br>
-                        <b>new_plot_name:</b> new name for plot.<br>
+                        <b><% $c->i18n->p("cross.ui.required_columns", "Required columns:") |h %></b><br>
+                        <b>plot_name:</b> <% $c->i18n->p("accession.forms.name_of_plot_to_change_the_accession_for", "name of plot to change the accession for") |h %><br>
+                        <b>accession_name or cross_unique_id or family_name:</b> <% $c->i18n->p("accession.forms.name_of_the_accession_or_cross_unique_id_or_family", "name of the accession or cross unique id or family name that the plot should be connected to.") |h %><br>
+                        <br><b><% $c->i18n->p("accession.forms.optional_column", "Optional column:") |h %></b><br>
+                        <b>new_plot_name:</b> <% $c->i18n->p("accession.forms.new_name_for_plot", "new name for plot.") |h %><br>
                         <div class="list-group-item-warning" >
-                          <p><i>Warning: the new plot name will replace the old plot name in subplots, plants, and tissue samples if possible. Changing plot accessions/cross_unique_ids/family_names may change plot replicate numbers. You may need to reprint labels after the changes are applied.</i></p>
+                          <p><i><% $c->i18n->p("accession.forms.warning_the_new_plot_name_will_replace_the_old_plot", "Warning: the new plot name will replace the old plot name in subplots, plants, and tissue samples if possible. Changing plot accessions/cross_unique_ids/family_names may change plot replicate numbers. You may need to reprint labels after the changes are applied.") |h %></i></p>
                         </div>
                     </div>
 
                     <form class="form-horizontal" method="post" enctype="multipart/form-data" encoding="multipart/form-data" id="trial_design_change_accessions_form" name="trial_design_change_accessions_form">
                         <div class="form-group">
-                            <label class="col-sm-3 control-label">Upload File: </label>
+                            <label class="col-sm-3 control-label"><% $c->i18n->p("cross.ui.upload_file.9798051", "Upload File:") |h %> </label>
                             <div class="col-sm-9" >
                                 <input type="file" name="trial_design_change_accessions_file" id="trial_design_change_accessions_file" encoding="multipart/form-data" />
                             </div>
@@ -70,8 +70,8 @@ $trial_stock_type
                 </div>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-primary" id="trial_design_change_accessions_submit" >Submit</button>
-                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary" id="trial_design_change_accessions_submit" ><% $c->i18n->p("global.manage_file_share_dump.submit", "Submit") |h %></button>
+                <button type="button" class="btn btn-default" data-dismiss="modal"><% $c->i18n->p("global.dataset_publish.close", "Close") |h %></button>
             </div>
         </div>
     </div>
@@ -81,8 +81,8 @@ $trial_stock_type
     <div class="modal-dialog" role="document">
         <div class="modal-content">
             <div class="modal-header" style="text-align: center">
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                <h4 class="modal-title" id="tDDialog"><b>Warning!</b></h4>
+                <button type="button" class="close" data-dismiss="modal" aria-label="<% $c->i18n->p("global.dataset_publish.close", "Close") |h %>"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="tDDialog"><b><% $c->i18n->p("accession.forms.warning", "Warning!") |h %></b></h4>
             </div>
             <div class="modal-body">
                 <div class="container-fluid">
@@ -90,16 +90,16 @@ $trial_stock_type
                     <big>
                         <span>&#9888;</span>
                         <p3>
-                            One or more traits have been assayed for this trial; <br>
-                            It is not recommended to change accessions/cross_unique_ids/family_names at this point. Are you sure?
+                            <% $c->i18n->p("accession.forms.one_or_more_traits_have_been_assayed_for_this_trial", "One or more traits have been assayed for this trial;") |h %> <br>
+                            <% $c->i18n->p("accession.forms.it_is_not_recommended_to_change_accessions_cross_unique_ids", "It is not recommended to change accessions/cross_unique_ids/family_names at this point. Are you sure?") |h %>
                         </p3>
                     </big>
 
                 </div>
             </div>
             <div class="modal-footer">
-                <button id="td_override_accession_warning" type="button" class="btn btn-primary" >Yes</button>
-                <button id="close_tdfieldmap_dialog" type="button" class="btn btn-default" data-dismiss="modal">No</button>
+                <button id="td_override_accession_warning" type="button" class="btn btn-primary" ><% $c->i18n->p("global.search_wizard.yes", "Yes") |h %></button>
+                <button id="close_tdfieldmap_dialog" type="button" class="btn btn-default" data-dismiss="modal"><% $c->i18n->p("global.search_wizard.no", "No") |h %></button>
 
             </div>
         </div>
@@ -111,18 +111,18 @@ $trial_stock_type
     <div class="modal-dialog " role="document">
         <div class="modal-content">
             <div class="modal-header" style="text-align: center">
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                <h4 class="modal-title" id="tDDialog"><b>Replace Plot Accessions</b></h4>
+                <button type="button" class="close" data-dismiss="modal" aria-label="<% $c->i18n->p("global.dataset_publish.close", "Close") |h %>"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="tDDialog"><b><% $c->i18n->p("trial.card.coords.replace_title", "Replace Plot Accessions") |h %></b></h4>
             </div>
             <div class="modal-body">
                 <div class="container-fluid">
 
-                    <p3> Plot accession was replaced successfully.</p3>
+                    <p3> <% $c->i18n->p("accession.forms.plot_accession_was_replaced_successfully", "Plot accession was replaced successfully.") |h %></p3>
 
                 </div>
             </div>
             <div class="modal-footer">
-                <button id="close_replace_accession_dialog" type="button" onclick=location.reload() class="btn btn-default" data-dismiss="modal">Close</button>
+                <button id="close_replace_accession_dialog" type="button" onclick=location.reload() class="btn btn-default" data-dismiss="modal"><% $c->i18n->p("global.dataset_publish.close", "Close") |h %></button>
             </div>
         </div>
     </div>
@@ -133,12 +133,12 @@ $trial_stock_type
     <div class="modal-dialog " role="document">
         <div class="modal-content">
             <div class="modal-header" style="text-align: center">
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                <h4 class="modal-title" id="change_accsn_err_dialog"><b>Error Changing Plot Accessions</b></h4>
+                <button type="button" class="close" data-dismiss="modal" aria-label="<% $c->i18n->p("global.dataset_publish.close", "Close") |h %>"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="change_accsn_err_dialog"><b><% $c->i18n->p("accession.forms.error_changing_plot_accessions", "Error Changing Plot Accessions") |h %></b></h4>
             </div>
             <div class="modal-body">
                 <div class="container-fluid">
-                    <p3> Accessions were not changed due to these errors:</p3><br><br>
+                    <p3> <% $c->i18n->p("accession.forms.accessions_were_not_changed_due_to_these_errors", "Accessions were not changed due to these errors:") |h %></p3><br><br>
                     <div style="background-color: light-gray;" class="well well-sm">
                         <table>
                             <tbody></tbody>
@@ -147,7 +147,7 @@ $trial_stock_type
                 </div>
             </div>
             <div class="modal-footer">
-                <button id="close_error_change_accsn" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                <button id="close_error_change_accsn" type="button" class="btn btn-default" data-dismiss="modal"><% $c->i18n->p("global.dataset_publish.close", "Close") |h %></button>
 
             </div>
         </div>
@@ -168,7 +168,7 @@ jQuery(document).ready(function () {
         var uploadFile = jQuery("#trial_design_change_accessions_file").val();
         jQuery('#trial_design_change_accessions_form').attr("action", "/ajax/breeders/trial/<% $trial_id %>/change_plot_accessions_using_file/check");
         if (uploadFile === '') {
-            alert("Please select a file");
+            alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("global.manage_file_share_dump.select_file", "Please select a file") : "Please select a file"));
             return;
         }
         jQuery("#trial_design_change_accessions_form").submit();
@@ -203,7 +203,7 @@ jQuery(document).ready(function () {
             jQuery('#trial_design_change_accessions_dialog').modal("hide");
             jQuery('#td_replace_accession_curator_warning_message').modal("hide");
             jQuery('#working_modal').modal("hide");
-            alert("An error occurred changing plot accessions");
+            alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("accession.forms.an_error_occurred_changing_plot_accessions", "An error occurred changing plot accessions") : "An error occurred changing plot accessions"));
         }
     });
 

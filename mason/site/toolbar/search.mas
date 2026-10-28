@@ -2,9 +2,9 @@
 <li style="height:100%">
   <form id="toolbar_search_form" class="navbar-form navbar-left form-inline" role="search" action="/search/quick_search.pl" style="padding-right: 2px;height:100%">
     <div class="input-group">
-      <span id="advanced_search_li" class="btn btn-default input-group-addon" style="display:none" onclick="location.href='/search';">Advanced</span>
-      <input id="quick_search_input" style="display:none;" type="text" name="term" class="form-control" placeholder="">
-      <span id="quick_search_icon" class="btn btn-default" style="height:34px; font-size:16; padding-top:8px;" title="Search"><span class="glyphicon glyphicon-search" aria-hidden="true"></span></span>
+      <span id="advanced_search_li" class="btn btn-default input-group-addon" style="display:none" onclick="location.href='/search';"><% $c->i18n->p('navigation.quick_search.advanced', 'Advanced') |h %></span>
+      <input id="quick_search_input" style="display:none;" type="text" name="term" class="form-control" placeholder="" aria-label="<% $c->i18n->p('navigation.quick_search.label', 'Search') |h %>">
+      <span id="quick_search_icon" class="btn btn-default" style="height:34px; font-size:16; padding-top:8px;" title="<% $c->i18n->p('navigation.quick_search.label', 'Search') |h %>"><span class="glyphicon glyphicon-search" aria-hidden="true"></span></span>
     </div>
   </form>
 </li>
@@ -16,7 +16,7 @@
       
       //open the search box
       if (jQuery('#quick_search_input').attr("placeholder") == "") {
-        jQuery('#quick_search_input').attr("placeholder","Search");
+        jQuery('#quick_search_input').attr("placeholder", window.SGN && SGN.i18n ? SGN.i18n.p('navigation.quick_search.label', 'Search') : 'Search');
         
         jQuery('#quick_search_icon').addClass("input-group-addon");
         

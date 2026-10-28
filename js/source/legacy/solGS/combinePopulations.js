@@ -29,7 +29,7 @@ var getPopIds =  function() {
                   eP  = existingPopIds.split(",");
                 }
         if (eP.length <= 1) {
-            jQuery("#select_done input").val('Select');
+            jQuery("#select_done input").val((window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.select", "Select") : 'Select'));
         }
 
         if (jQuery(this).attr('checked')) {
@@ -58,7 +58,7 @@ var getPopIds =  function() {
                    if (cookieArrayData.length === 1) {
                        jQuery("#select_done input").val('Select');
                    } else if (cookieArrayData.length > 1 )  {
-                        jQuery("#select_done input").val('Combine');
+                        jQuery("#select_done input").val((window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.combine", "Combine") : 'Combine'));
                     }
 
                     jQuery.cookie(cookieName, cookieArrayData, {path: '/'});
@@ -102,7 +102,7 @@ var selectedPops = function () {
         var redirectUrl =  '/solgs/trait/' + trId + '/population/' + cookieData;
 
         jQuery.blockUI.defaults.applyPlatformOpacityRules = false;
-        jQuery.blockUI({message: 'Please wait..'});
+        jQuery.blockUI({message: (window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.please_wait", "Please wait..") : 'Please wait..')});
 
         jQuery.ajax({
             type: 'POST',
@@ -145,8 +145,8 @@ var selectedPops = function () {
         });
     }
     else {
-        alert('No populations were selected.' +
-              'Please make your selections.'
+        alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.no_populations_selected", "No populations were selected.Please make your selections.") : 'No populations were selected.' +
+              'Please make your selections.')
              );
 
     }
@@ -192,9 +192,7 @@ var confirmSelections =  function() {
                 } else {
 
                     if(res.not_matching_pops ){
-                        alert('populations ' + res.not_matching_pops +
-                              ' were genotyped using different marker sets. ' +
-                              'Please make new selections to combine.' );
+                        alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.marker_sets_population_prefix", "populations ") : "populations ") + res.not_matching_pops + (window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.marker_sets_mismatch", " were genotyped using different marker sets. Please make new selections to combine.") : " were genotyped using different marker sets. Please make new selections to combine."));
                         window.location.href =  '/solgs/search/result/populations/' + trId;
                     }
 

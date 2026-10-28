@@ -21,23 +21,27 @@ Lukas Mueller &st;lam87@cornell.edu&gt;. Based on Perl code by Rob Buels.
 
 </%doc>
 
-<& /page/page_title.mas, title => 'Search' &>
+<%init>
+use HTML::Entities ();
+</%init>
+
+<& /page/page_title.mas, title => HTML::Entities::encode_entities($c->i18n->p('search.tabs.heading', 'Search')) &>
 
 <& /page/mode_buttons.mas, buttons => [
 
-    ['/breeders/search', 'Wizard' ],
-    ['/search/phenotypes/stock','Accessions and plots'],
-    ['/search/organisms','Organisms'],
-    ['/search/cross','Progenies, Parents, Crosses'],
-    ['/search/trials', 'Field Trials' ],
-    ['/search/genotyping_trials', 'Genotyping Plates' ],
-    ['/search/genotyping_data_projects', 'Genotyping Projects' ],
-    ['/search/genotyping_protocols', 'Genotyping Protocols' ],
-    ['/search/traits', 'Traits' ],
-    ['/search/treatments', 'Treatments' ],
+    ['/breeders/search', HTML::Entities::encode_entities($c->i18n->p('navigation.search.wizard', 'Wizard')) ],
+    ['/search/phenotypes/stock',HTML::Entities::encode_entities($c->i18n->p('search.tabs.accessions_plots', 'Accessions and plots'))],
+    ['/search/organisms',HTML::Entities::encode_entities($c->i18n->p('navigation.search.organisms', 'Organisms'))],
+    ['/search/cross',HTML::Entities::encode_entities($c->i18n->p('navigation.search.crosses', 'Progenies, Parents, Crosses'))],
+    ['/search/trials', HTML::Entities::encode_entities($c->i18n->p('navigation.search.field_trials', 'Field Trials')) ],
+    ['/search/genotyping_trials', HTML::Entities::encode_entities($c->i18n->p('navigation.search.genotyping_plates', 'Genotyping Plates')) ],
+    ['/search/genotyping_data_projects', HTML::Entities::encode_entities($c->i18n->p('navigation.search.genotyping_projects', 'Genotyping Projects')) ],
+    ['/search/genotyping_protocols', HTML::Entities::encode_entities($c->i18n->p('navigation.search.genotyping_protocols', 'Genotyping Protocols')) ],
+    ['/search/traits', HTML::Entities::encode_entities($c->i18n->p('navigation.search.traits', 'Traits')) ],
+    ['/search/treatments', HTML::Entities::encode_entities($c->i18n->p('navigation.search.treatments', 'Treatments')) ],
     #['/search/markers','Markers'],
-    ['/search/images','Images'],
-    ['/search/people', 'People' ],
+    ['/search/images',HTML::Entities::encode_entities($c->i18n->p('navigation.search.images', 'Images'))],
+    ['/search/people', HTML::Entities::encode_entities($c->i18n->p('navigation.search.people', 'People')) ],
 
    ]
 &>

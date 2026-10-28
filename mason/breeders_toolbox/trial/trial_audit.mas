@@ -42,15 +42,15 @@ $project_id
             jQuery('#audit_results').DataTable({
               data: json_object,
               columns: [
-                  { title: 'Timestamp' },
-                    { title: 'Operation' },
-                    { title: 'Username' },
-                    { title: 'Logged in User' },
-                    { title: 'Before' },
-                    { title: 'After' },
-                    { title: 'Transaction Code'},
-                    { title: 'Primary Key'},
-                    { title: 'Is Undo'},
+                  { title: window.SGN && SGN.i18n ? SGN.i18n.p('trial.card.audit.timestamp', 'Timestamp') : 'Timestamp' },
+                    { title: window.SGN && SGN.i18n ? SGN.i18n.p('trial.card.audit.operation', 'Operation') : 'Operation' },
+                    { title: window.SGN && SGN.i18n ? SGN.i18n.p('trial.card.audit.username', 'Username') : 'Username' },
+                    { title: window.SGN && SGN.i18n ? SGN.i18n.p('trial.card.audit.logged_in_user', 'Logged in User') : 'Logged in User' },
+                    { title: window.SGN && SGN.i18n ? SGN.i18n.p('trial.card.audit.before', 'Before') : 'Before' },
+                    { title: window.SGN && SGN.i18n ? SGN.i18n.p('trial.card.audit.after', 'After') : 'After' },
+                    { title: window.SGN && SGN.i18n ? SGN.i18n.p('trial.card.audit.transaction_code', 'Transaction Code') : 'Transaction Code'},
+                    { title: window.SGN && SGN.i18n ? SGN.i18n.p('trial.card.audit.primary_key', 'Primary Key') : 'Primary Key'},
+                    { title: window.SGN && SGN.i18n ? SGN.i18n.p('trial.card.audit.is_undo', 'Is Undo') : 'Is Undo'},
               ],
               "rowCallback" : function (row, data, index){
                     if(data[1] == "INSERT"){

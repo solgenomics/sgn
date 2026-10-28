@@ -1,3 +1,7 @@
+<%once>
+use HTML::Entities ();
+</%once>
+
 <%args>
 
 
@@ -5,10 +9,10 @@
 
 <& /util/import_javascript.mas, classes => [ 'jquery', 'jquery.dataTables' ] &>
 
-<& /page/page_title.mas, title=>'Search Progenies, Parents and Crosses' &>
+<& /page/page_title.mas, title=>HTML::Entities::encode_entities($c->i18n->p("cross.pages.search_progenies_parents_and_crosses", "Search Progenies, Parents and Crosses")) &>
 
 
-<& /page/detail_page_2_col_section.mas, info_section_collapsed => 1, info_section_title => "<h4 style='display:inline'>Search Progenies</h4>", info_section_subtitle => 'Search progenies of female or male parents.', icon_class => "glyphicon glyphicon-random", info_section_id => "progeny_search_section" &>
-<& /page/detail_page_2_col_section.mas, info_section_collapsed => 1, info_section_title => "<h4 style='display:inline'>Search Parents</h4>", info_section_subtitle => 'Search common parents by using a list of accessions.', icon_class => "glyphicon glyphicon-menu-up", info_section_id => "parent_search_section" &>
-<& /page/detail_page_2_col_section.mas, info_section_collapsed => 1, info_section_title => "<h4 style='display:inline'>Search Crosses</h4>", info_section_subtitle => 'Search cross details of female or male parents.', icon_class => "glyphicon glyphicon-move", info_section_id => "cross_search_section" &>
-<& /page/detail_page_2_col_section.mas, info_section_collapsed => 1, info_section_title => "<h4 style='display:inline'>All Cross Entries</h4>", info_section_subtitle => 'All cross entries in the database', icon_class => "glyphicon glyphicon-list-alt", info_section_id => "all_cross_entries_section" &>
+<& /page/detail_page_2_col_section.mas, info_section_anchor_title => "<h4 style='display:inline'>Search Progenies</h4>", info_section_collapsed => 1, info_section_title => ("<h4 style='display:inline'>" . HTML::Entities::encode_entities($c->i18n->p("cross.pages.search_progenies", "Search Progenies")) . "</h4>"), info_section_subtitle => $c->i18n->p("cross.pages.search_progenies_of_female_or_male_parents", "Search progenies of female or male parents."), icon_class => "glyphicon glyphicon-random", info_section_id => "progeny_search_section" &>
+<& /page/detail_page_2_col_section.mas, info_section_anchor_title => "<h4 style='display:inline'>Search Parents</h4>", info_section_collapsed => 1, info_section_title => ("<h4 style='display:inline'>" . HTML::Entities::encode_entities($c->i18n->p("cross.pages.search_parents", "Search Parents")) . "</h4>"), info_section_subtitle => $c->i18n->p("cross.pages.search_common_parents_by_using_a_list_of_accessions", "Search common parents by using a list of accessions."), icon_class => "glyphicon glyphicon-menu-up", info_section_id => "parent_search_section" &>
+<& /page/detail_page_2_col_section.mas, info_section_anchor_title => "<h4 style='display:inline'>Search Crosses</h4>", info_section_collapsed => 1, info_section_title => ("<h4 style='display:inline'>" . HTML::Entities::encode_entities($c->i18n->p("cross.pages.search_crosses", "Search Crosses")) . "</h4>"), info_section_subtitle => $c->i18n->p("cross.pages.search_cross_details_of_female_or_male_parents", "Search cross details of female or male parents."), icon_class => "glyphicon glyphicon-move", info_section_id => "cross_search_section" &>
+<& /page/detail_page_2_col_section.mas, info_section_anchor_title => "<h4 style='display:inline'>All Cross Entries</h4>", info_section_collapsed => 1, info_section_title => ("<h4 style='display:inline'>" . HTML::Entities::encode_entities($c->i18n->p("cross.pages.all_cross_entries", "All Cross Entries")) . "</h4>"), info_section_subtitle => $c->i18n->p("cross.pages.all_cross_entries_in_the_database", "All cross entries in the database"), icon_class => "glyphicon glyphicon-list-alt", info_section_id => "all_cross_entries_section" &>

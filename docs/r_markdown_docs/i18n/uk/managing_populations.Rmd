@@ -1,0 +1,25 @@
+# Керування популяціями {#managing-populations}
+
+Популяції подано як групи зразків. Таке групування може бути корисним для подальшого аналізу. Щоб керувати популяціями, відкрийте “Керування зразками” та прокрутіть сторінку донизу.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/manage_populations.png')
+```
+
+Щоб додати популяцію, натисніть “Створити популяцію”. У діалоговому вікні виберіть список зразків і задайте назву популяції. Популяцію також можна створити під час завантаження нових зразків до бази даних.
+
+```{r echo=FALSE, out.width='75%', fig.align='center'}
+knitr::include_graphics('assets/images/manage_populations_add_population.png')
+```
+
+Натисніть кнопку плюс (+) біля “Популяції”, щоб переглянути доступні популяції. Натисніть назву популяції, щоб побачити зразки, які до неї входять.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/manage_populations_expand_table.png')
+```
+
+Тут можна вилучати зразки з популяції та додавати до неї нові.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/manage_populations_table.png')
+```

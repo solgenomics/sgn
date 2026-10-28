@@ -54,7 +54,7 @@ my $collapsed = 0;
 my $collapsible = 0;
 
 if ($url !~ /correlation\/analysis/) {
-  $title = 'Phenotypic correlation analysis (Pearson)';
+  $title = $c->i18n->p("solgs.interface.phenotypic_correlation_analysis_pearson", "Phenotypic correlation analysis (Pearson)");
   $collapsible = 1;
   $collapsed = 1 if $url =~ /breeders\/trial/;
 }
@@ -66,12 +66,12 @@ if ($url !~ /correlation\/analysis/) {
 % if ($url =~ /correlation\/analysis/) {
 
 <& /page/page_title.mas,
-   title => "Correlation Analysis"
+   title => HTML::Entities::encode_entities($c->i18n->p("solgs.interface.correlation_analysis", "Correlation Analysis"))
   &>
   
 %}
 
-<&| /page/info_section.mas,
+<&| /page/info_section.mas, anchor_title => defined($title) ? "Phenotypic correlation analysis (Pearson)" : undef,
   collapsible => $collapsible,
   collapsed   => $collapsed,
   title       => $title
@@ -87,7 +87,7 @@ if ($url !~ /correlation\/analysis/) {
     &>
 
 %} else {
-    <input id="run_correlation" class="btn btn-success" type="button" value="Run correlation" />
+    <input id="run_correlation" class="btn btn-success" type="button" value="<% $c->i18n->p("solgs.interface.run_correlation", "Run correlation") |h %>" />
 %}
 
 <& plot.mas,
@@ -102,5 +102,6 @@ if ($url !~ /correlation\/analysis/) {
 </div>
 </&>
 
-
-
+<%once>
+use HTML::Entities ();
+</%once>

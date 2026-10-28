@@ -1,6 +1,7 @@
 package CXGN::Pedigree::ParseUpload::Plugin::CrossesSimplifiedParentInfoExcel;
 
 use Moose::Role;
+use SGN::I18N ();
 use Spreadsheet::ParseExcel;
 use Spreadsheet::ParseXLSX;
 use CXGN::Stock::StockLookup;
@@ -12,6 +13,7 @@ use CXGN::List::Validate;
 
 sub _validate_with_plugin {
     my $self = shift;
+    my SGN::I18N $ui_crossessimplifiedparentinfoexcel_i18n = SGN::I18N::translate($self);
     my $filename = $self->get_filename();
     my $schema = $self->get_chado_schema();
     my $cross_additional_info = $self->get_cross_additional_info();
@@ -57,7 +59,7 @@ sub _validate_with_plugin {
 
     $worksheet = ( $excel_obj->worksheets() )[0]; #support only one worksheet
     if (!$worksheet) {
-        push @error_messages, "Spreadsheet must be on 1st tab in Excel (.xls) file";
+        push @error_messages, (SGN::I18N::translate($ui_crossessimplifiedparentinfoexcel_i18n, "accession.catalog.error_1", "Spreadsheet must be on 1st tab in Excel (.xls) file"));
         $errors{'error_messages'} = \@error_messages;
         $self->_set_parse_errors(\%errors);
         return;
@@ -65,7 +67,7 @@ sub _validate_with_plugin {
     my ( $row_min, $row_max ) = $worksheet->row_range();
     my ( $col_min, $col_max ) = $worksheet->col_range();
     if (($col_max - $col_min)  < 4 || ($row_max - $row_min) < 1 ) { #must have header and at least one row of crosses
-        push @error_messages, "Spreadsheet is missing header or contains no row";
+        push @error_messages, (SGN::I18N::translate($ui_crossessimplifiedparentinfoexcel_i18n, "cross.spreadsheet_is_missing_header_or_contains_no_row", "Spreadsheet is missing header or contains no row"));
         $errors{'error_messages'} = \@error_messages;
         $self->_set_parse_errors(\%errors);
         return;
@@ -101,19 +103,19 @@ sub _validate_with_plugin {
 
 
     if (!$cross_name_head || $cross_name_head ne 'cross_unique_id' ) {
-        push @error_messages, "Cell A1: cross_unique_id is missing from the header";
+        push @error_messages, (SGN::I18N::translate($ui_crossessimplifiedparentinfoexcel_i18n, "cross.cell_a1_cross_unique_id_is_missing_from_the_header", "Cell A1: cross_unique_id is missing from the header"));
     }
     if (!$cross_combination_head || $cross_combination_head ne 'cross_combination') {
-        push @error_messages, "Cell B1: cross_combination is missing from the header";
+        push @error_messages, (SGN::I18N::translate($ui_crossessimplifiedparentinfoexcel_i18n, "cross.cell_b1_cross_combination_is_missing_from_the_header", "Cell B1: cross_combination is missing from the header"));
     }
     if (!$cross_type_head || $cross_type_head ne 'cross_type') {
-        push @error_messages, "Cell C1: cross_type is missing from the header";
+        push @error_messages, (SGN::I18N::translate($ui_crossessimplifiedparentinfoexcel_i18n, "cross.cell_c1_cross_type_is_missing_from_the_header", "Cell C1: cross_type is missing from the header"));
     }
     if (!$female_parent_head || $female_parent_head ne 'female_parent') {
-        push @error_messages, "Cell D1: female_parent is missing from the header";
+        push @error_messages, (SGN::I18N::translate($ui_crossessimplifiedparentinfoexcel_i18n, "cross.cell_d1_female_parent_is_missing_from_the_header", "Cell D1: female_parent is missing from the header"));
     }
     if (!$male_parent_head || $male_parent_head ne 'male_parent') {
-        push @error_messages, "Cell E1: male_parent is missing from the header";
+        push @error_messages, (SGN::I18N::translate($ui_crossessimplifiedparentinfoexcel_i18n, "cross.cell_e1_male_parent_is_missing_from_the_header", "Cell E1: male_parent is missing from the header"));
     }
 
     my %valid_additional_info;
@@ -128,7 +130,7 @@ sub _validate_with_plugin {
             $header_string =~ s/^\s+|\s+$//g;
 
             if (($header_string) && (!$valid_additional_info{$header_string})){
-                push @error_messages, "Invalid info type: $header_string";
+                push @error_messages, (SGN::I18N::translate($ui_crossessimplifiedparentinfoexcel_i18n, "cross.invalid_info_type_header_string", "Invalid info type: %{header_string}", {header_string => "" . ($header_string)}));
             }
         }
     }
@@ -168,32 +170,32 @@ sub _validate_with_plugin {
 
         #cross name must not be blank
         if (!$cross_name || $cross_name eq '') {
-            push @error_messages, "Cell A$row_name: cross unique id missing";
+            push @error_messages, (SGN::I18N::translate($ui_crossessimplifiedparentinfoexcel_i18n, "cross.cell_a_row_name_cross_unique_id_missing", "Cell A%{row_name}: cross unique id missing", {row_name => "" . ($row_name)}));
         } else {
             $cross_name =~ s/^\s+|\s+$//g; #trim whitespace from front and end.
         }
 #        } elsif ($cross_name =~ /\s/ || $cross_name =~ /\// || $cross_name =~ /\\/ ) {
 #            push @error_messages, "Cell A$row_name: cross_name must not contain spaces or slashes.";
         if ($seen_cross_names{$cross_name}) {
-            push @error_messages, "Cell A$row_name: duplicate cross unique id: $cross_name";
+            push @error_messages, (SGN::I18N::translate($ui_crossessimplifiedparentinfoexcel_i18n, "cross.cell_a_row_name_duplicate_cross_unique_id_cross_name", "Cell A%{row_name}: duplicate cross unique id: %{cross_name}", {row_name => "" . ($row_name), cross_name => "" . ($cross_name)}));
         }
 
         #cross type must not be blank
         if (!$cross_type || $cross_type eq '') {
-            push @error_messages, "Cell C$row_name: cross type missing";
+            push @error_messages, (SGN::I18N::translate($ui_crossessimplifiedparentinfoexcel_i18n, "cross.cell_c_row_name_cross_type_missing", "Cell C%{row_name}: cross type missing", {row_name => "" . ($row_name)}));
         } elsif (!$supported_cross_types{$cross_type}){
-            push @error_messages, "Cell C$row_name: cross type not supported: $cross_type";
+            push @error_messages, (SGN::I18N::translate($ui_crossessimplifiedparentinfoexcel_i18n, "cross.cell_c_row_name_cross_type_not_supported_cross_type", "Cell C%{row_name}: cross type not supported: %{cross_type}", {row_name => "" . ($row_name), cross_type => "" . ($cross_type)}));
         }
 
         #female parent must not be blank
         if (!$female_parent || $female_parent eq '') {
-            push @error_messages, "Cell D$row_name: female parent missing";
+            push @error_messages, (SGN::I18N::translate($ui_crossessimplifiedparentinfoexcel_i18n, "cross.cell_d_row_name_female_parent_missing", "Cell D%{row_name}: female parent missing", {row_name => "" . ($row_name)}));
         }
 
         #male parent must not be blank if type is biparental, sib, polycross or bulk
         if (!$male_parent || $male_parent eq '') {
             if ($cross_type eq ( 'biparental' || 'bulk' || 'sib' || 'polycross' || 'backcross' )) {
-                push @error_messages, "Cell E$row_name: male parent required for biparental, sib, polycross, backcross and bulk cross types";
+                push @error_messages, (SGN::I18N::translate($ui_crossessimplifiedparentinfoexcel_i18n, "cross.cell_e_row_name_male_parent_required_for_biparental_sib_polycross_backcross_and_bulk_cross_type", "Cell E%{row_name}: male parent required for biparental, sib, polycross, backcross and bulk cross types", {row_name => "" . ($row_name)}));
             }
         }
 
@@ -219,7 +221,7 @@ sub _validate_with_plugin {
     my @parents_missing = @{$parent_validator->validate($schema,'accessions_or_populations_or_plots_or_plants',\@parent_list)->{'missing'}};
 
     if (scalar(@parents_missing) > 0) {
-        push @error_messages, "The following parents are not in the database, or are not in the database as accession names, plot names or plant names: ".join(',',@parents_missing);
+        push @error_messages, (SGN::I18N::translate($ui_crossessimplifiedparentinfoexcel_i18n, "cross.the_following_parents_are_not_in_the_database_or_are_not_in_the_database_as_accession_names_plo", "The following parents are not in the database, or are not in the database as accession names, plot names or plant names: %{value0}", {value0 => "" . (join(',',@parents_missing))}));
     }
 
     my @crosses = keys %seen_cross_names;
@@ -228,7 +230,7 @@ sub _validate_with_plugin {
         'uniquename' => { -in => \@crosses }
     });
     while (my $r=$rs->next){
-        push @error_messages, "Cross unique id already exists in database: ".$r->uniquename;
+        push @error_messages, (SGN::I18N::translate($ui_crossessimplifiedparentinfoexcel_i18n, "cross.cross_unique_id_already_exists_in_database_value0", "Cross unique id already exists in database: %{value0}", {value0 => "" . ($r->uniquename)}));
     }
 
     #store any errors found in the parsed file to parse_errors accessor

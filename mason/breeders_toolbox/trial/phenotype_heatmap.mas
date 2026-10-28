@@ -124,34 +124,68 @@ $trial_stock_type => undef
     }
 
     
+
+
+    /* Keep translated spatial-export controls within their existing containers. */
+    #download_field_layout_modal .modal-title,
+    #download_field_layout_modal .control-label,
+    #download_field_layout_modal .checkbox label,
+    #download_field_layout_modal .modal-footer .btn,
+    #trial_fieldmap_download_layout_button,
+    #trial_download_layout_button {
+        overflow-wrap: anywhere;
+    }
+    #download_field_layout_modal .checkbox label {
+        white-space: normal;
+    }
+    html[dir="rtl"] #download_field_layout_modal .checkbox label {
+        padding-left: 0;
+        padding-right: 20px;
+    }
+    html[dir="rtl"] #download_field_layout_modal .checkbox input[type="checkbox"] {
+        margin-left: 0;
+        margin-right: -20px;
+    }
+    #download_field_layout_modal .modal-footer .btn,
+    #trial_fieldmap_download_layout_button,
+    #trial_download_layout_button {
+        max-width: 100%;
+        white-space: normal;
+    }
+    @media (min-width: 768px) {
+        html[dir="rtl"] #download_field_layout_modal .form-horizontal .col-sm-3,
+        html[dir="rtl"] #download_field_layout_modal .form-horizontal .col-sm-9 {
+            float: right;
+        }
+    }
 </style>
 
 
 <div class="well well-sm">
     <div style="display: flex; gap: 25px">
         <div class="form-group form-group-sm" id="traitdiv" style="display:inline-block">
-            <label for="trait_list_dropdown" class="col-sm-2 control-label">Select:</label><br />
+            <label for="trait_list_dropdown" class="col-sm-2 control-label"><% $c->i18n->p("phenotype.select", "Select:") |h %></label><br />
             <div class="col-sm-12">
                 <div id="heatmap_traits_assayed_dropdown">
-                    Loading Traits Assayed...
+                    <% $c->i18n->p("trial.heatmap.loading_traits_assayed", "Loading Traits Assayed...") |h %>
                 </div>
             </div>
         </div>
         <div id="include_linked_trials" class="form-group form-group-sm">
-            <label for="include_linked_trials_checkmark" class="control-label">Display Trials in Same Field:</label><br />
+            <label for="include_linked_trials_checkmark" class="control-label"><% $c->i18n->p("trial.heatmap.display_linked_trials", "Display Trials in Same Field:") |h %></label><br />
             <input type="checkbox" id="include_linked_trials_checkmark" name="include_linked_trials_checkmark">
             <div id="include_linked_trials_list_container" style="margin-top: 10px; display: none">
-                <p><strong>Trials in Same Field:</strong></p>
+                <p><strong><% $c->i18n->p("trial.heatmap.linked_trials_heading", "Trials in Same Field:") |h %></strong></p>
                 <ul id="include_linked_trials_list">
-                    <p>Loading...</p>
+                    <p><% $c->i18n->p("trial.fieldmap.loading", "Loading...") |h %></p>
                 </ul>
             </div>
         </div>
     </div>
 </div>
 
-<div class="form-group form-group-sm" id="ctrldiv" style="diaplay:none">
-    <label for="check_list_dropdown" class="col-sm-2 control-label">View Check Plots:</label><br />
+<div class="form-group form-group-sm" id="ctrldiv" style="diaplay:none"><!-- codespell:ignore diaplay (preserve existing CSS value; do not change behavior) -->
+    <label for="check_list_dropdown" class="col-sm-2 control-label"><% $c->i18n->p("trial.heatmap.view_check_plots", "View Check Plots:") |h %></label><br />
     <div class="col-sm-12">
         <div id="heatmap_trial_checks_dropdown">
         </div>
@@ -162,7 +196,7 @@ $trial_stock_type => undef
 </div>
 
 <div id="view_ctrl_button" style="display:none">
-  <a id="view_ctrl_button_link"><button class="btn btn-primary"  type="button" id="view_ctrl_id_button" value="delete_cords" >View Controls</button></a>
+  <a id="view_ctrl_button_link"><button class="btn btn-primary"  type="button" id="view_ctrl_id_button" value="delete_cords" ><% $c->i18n->p("trial.heatmap.view_controls", "View Controls") |h %></button></a>
 </div>
 
 <div id="container_heatmap" ></div>
@@ -170,16 +204,16 @@ $trial_stock_type => undef
 <div id="container_legend">
 
     <ul id='legend_list' class="legend">
-        <li><span class="border_plots"></span> Border Plots and Filler Plots </li>
-        <li><span class="block_even_number"></span> Even Block Numbers (e.g. 2,4,...) </li>
-        <li><span class="block_odd_number"></span> Odd Block Numbers (e.g. 1,3,...)</li>
-        <li><span class="checks"></span> Checks</li>
-        <li><span class="rep_odd_number"></span> Odd Rep Numbers (e.g. 1,3,...) </li>
-        <li><span class="rep_even_number"></span> Even Rep Numbers (e.g. 2,4,...) </li>
-        <li><span class="overlapping_plot"></span> Overlapping Plots (2+ plots at some position)  </li>
-        <li> <img src="/static/css/images/plot_images.png" alt="Camera" height="20" width="20"> Plot Has Image </li>
-        <li><span class="trait_not_measured"></span>No measurement </li>
-        <li style='display:flex'><div>Low trait value</div> <span class="value_scale" id="pheno_color_scale"></span> <div>High trait value</div></li>
+        <li><span class="border_plots"></span> <% $c->i18n->p("trial.heatmap.legend_border_filler_plots", "Border Plots and Filler Plots") |h %> </li>
+        <li><span class="block_even_number"></span> <% $c->i18n->p("trial.heatmap.legend_even_blocks", "Even Block Numbers (e.g. 2,4,...)") |h %> </li>
+        <li><span class="block_odd_number"></span> <% $c->i18n->p("trial.heatmap.legend_odd_blocks", "Odd Block Numbers (e.g. 1,3,...)") |h %></li>
+        <li><span class="checks"></span> <% $c->i18n->p("trial.heatmap.legend_checks", "Checks") |h %></li>
+        <li><span class="rep_odd_number"></span> <% $c->i18n->p("trial.heatmap.legend_odd_replicates", "Odd Rep Numbers (e.g. 1,3,...)") |h %> </li>
+        <li><span class="rep_even_number"></span> <% $c->i18n->p("trial.heatmap.legend_even_replicates", "Even Rep Numbers (e.g. 2,4,...)") |h %> </li>
+        <li><span class="overlapping_plot"></span> <% $c->i18n->p("trial.heatmap.legend_overlapping_plots", "Overlapping Plots (2+ plots at some position)") |h %>  </li>
+        <li> <img src="/static/css/images/plot_images.png" alt="<% $c->i18n->p("trial.heatmap.camera_alt", "Camera") |h %>" height="20" width="20"> <% $c->i18n->p("trial.heatmap.legend_plot_has_image", "Plot Has Image") |h %> </li>
+        <li><span class="trait_not_measured"></span><% $c->i18n->p("trial.heatmap.legend_no_measurement", "No measurement") |h %> </li>
+        <li style='display:flex'><div><% $c->i18n->p("trial.heatmap.legend_low_value", "Low trait value") |h %></div> <span class="value_scale" id="pheno_color_scale"></span> <div><% $c->i18n->p("trial.heatmap.legend_high_value", "High trait value") |h %></div></li>
     </ul>
 </div>
 <br><br>
@@ -188,47 +222,47 @@ $trial_stock_type => undef
     <div style="margin-top: 2%; position: relative">
         <div style="display: flex; flex-wrap: wrap; gap: 25px">
             <div class="form-inline">
-                <label>Plot Layout</label>
+                <label><% $c->i18n->p("trial.fieldmap_edit.plot_layout", "Plot Layout") |h %></label>
                 <select class="form-control fieldmap_edit" name="plot_layout" id="plot_layout">
-                    <option value="">--Select Plot Layout--</option>
-                    <option value="serpentine">Serpentine</option>
-                    <option value="zigzag">Zigzag</option>
+                    <option value=""><% $c->i18n->p("trial.heatmap.select_plot_layout", "--Select Plot Layout--") |h %></option>
+                    <option value="serpentine"><% $c->i18n->p("trial.create.field_map.serpentine", "Serpentine") |h %></option>
+                    <option value="zigzag"><% $c->i18n->p("trial.heatmap.zigzag", "Zigzag") |h %></option>
                 </select>
             </div>
             <div clas="form-inline">
-                <label for="invert_row_checkmark">Invert Rows</label>
+                <label for="invert_row_checkmark"><% $c->i18n->p("trial.heatmap.invert_rows", "Invert Rows") |h %></label>
                 <input type="checkbox" id="invert_row_checkmark" name="invert_row_checkmark" value="yes">
             </div>
         </div>
         <br />
         <div style="display: flex; flex-wrap: wrap; gap: 25px">
             <div class="form-inline">
-                <label for="top_border_selection">Top Border</label>
+                <label for="top_border_selection"><% $c->i18n->p("trial.heatmap.top_border", "Top Border") |h %></label>
                 <input type="checkbox" id="top_border_selection" name="top_border_selection" value="yes" class="fieldmap_edit">
             </div>
             <div class="form-inline">
-                <label for="left_border_selection">Left Border</label>
+                <label for="left_border_selection"><% $c->i18n->p("trial.heatmap.left_border", "Left Border") |h %></label>
                 <input type="checkbox" id="left_border_selection" name="left_border_selection" value="yes" class="fieldmap_edit">
             </div>
             <div class="form-inline">
-                <label for="right_border_selection">Right Border</label>
+                <label for="right_border_selection"><% $c->i18n->p("trial.heatmap.right_border", "Right Border") |h %></label>
                 <input type="checkbox" id="right_border_selection" name="right_border_selection" value="yes" class="fieldmap_edit">
             </div>
             <div class="form-inline">
-                <label for="bottom_border_selection">Bottom Border</label>
+                <label for="bottom_border_selection"><% $c->i18n->p("trial.heatmap.bottom_border", "Bottom Border") |h %></label>
                 <input type="checkbox" id="bottom_border_selection" name="bottom_border_selection" value="yes" class="fieldmap_edit">
             </div>
         </div>
         <div id="fieldmap_edit_info" style="display: none">
-            <p style="font-style: italic">NOTE: Field Map cannot be modified and borders are not shown when linked trials are displayed.</p>
+            <p style="font-style: italic"><% $c->i18n->p("trial.heatmap.linked_trials_note", "NOTE: Field Map cannot be modified and borders are not shown when linked trials are displayed.") |h %></p>
         </div>
         <br>
         <div class="interactive_fieldmap_buttons">
-            <button type="button" class="btn btn-primary fieldmap_edit" id="transpose_fieldmap">Transpose</button>
-            <button type="button" class="btn btn-primary fieldmap_edit" id="change_dimensions_button">Change Dimensions</button>
-            <button type="button" class="btn btn-primary fieldmap_edit" id ="remove_fillers">Remove Filler Plots</button>
-            <button type="button" id="print_fieldmap" name="print_fieldmap" class="btn btn-primary fieldmap_edit">Print Fieldmap</button>
-            <button type="button" id="submit_fieldmap" name="submit_fieldmap" class="btn btn-success fieldmap_edit">Submit Field Layout</button>
+            <button type="button" class="btn btn-primary fieldmap_edit" id="transpose_fieldmap"><% $c->i18n->p("trial.heatmap.transpose", "Transpose") |h %></button>
+            <button type="button" class="btn btn-primary fieldmap_edit" id="change_dimensions_button"><% $c->i18n->p("trial.heatmap.change_dimensions", "Change Dimensions") |h %></button>
+            <button type="button" class="btn btn-primary fieldmap_edit" id ="remove_fillers"><% $c->i18n->p("trial.heatmap.remove_filler_plots", "Remove Filler Plots") |h %></button>
+            <button type="button" id="print_fieldmap" name="print_fieldmap" class="btn btn-primary fieldmap_edit"><% $c->i18n->p("trial.heatmap.print_fieldmap", "Print Fieldmap") |h %></button>
+            <button type="button" id="submit_fieldmap" name="submit_fieldmap" class="btn btn-success fieldmap_edit"><% $c->i18n->p("trial.fieldmap_edit.submit_layout", "Submit Field Layout") |h %></button>
         </div>
     </div>
     <div id="fieldmap_wrapper">
@@ -236,98 +270,98 @@ $trial_stock_type => undef
     </div>
 % if ( $has_col_and_row_numbers ) {
     <div style="margin-top: 40px" class="well well-sm">
-        <h3 style="margin: 0 0 10px 0">Download Plot Order</h3>
+        <h3 style="margin: 0 0 10px 0"><% $c->i18n->p("trial.heatmap.download_plot_order", "Download Plot Order") |h %></h3>
         <div style="display: flex; flex-wrap: wrap; gap: 25px; justify-content: space-around; align-items: center">
             <div>
-                <label>Download Type:</label>
+                <label><% $c->i18n->p("trial.heatmap.download_type", "Download Type:") |h %></label>
                 <select class="form-control" name="plot_download_type" id="plot_download_type">
-                    <option value="">--Select Type--</option>
-                    <option value="planting">Planting Order</option>
-                    <option value="collection">Collection Order</option>
-                    <option value="harvest">Harvest Order</option>
+                    <option value=""><% $c->i18n->p("trial.heatmap.select_type", "--Select Type--") |h %></option>
+                    <option value="planting"><% $c->i18n->p("trial.heatmap.planting_order", "Planting Order") |h %></option>
+                    <option value="collection"><% $c->i18n->p("trial.heatmap.collection_order", "Collection Order") |h %></option>
+                    <option value="harvest"><% $c->i18n->p("trial.heatmap.harvest_order", "Harvest Order") |h %></option>
                     <option value="harvestmaster">HarvestMaster</option>
                 </select>
             </div>
             <div>
-                <label>Plot Order:</label>
+                <label><% $c->i18n->p("fieldbook.export.plot_order", "Plot Order:") |h %></label>
                 <select class="form-control" name="plot_download_order" id="plot_download_order" style="max-width: 300px">
-                    <option value="">--Select Plot Order--</option>
-                    <option value="by_col_serpentine">By Column: Serpentine</option>
-                    <option value="by_col_zigzag">By Column: Zigzag</option>
-                    <option value="by_row_serpentine">By Row: Serpentine</option>
-                    <option value="by_row_zigzag">By Row: Zigzag</option>
+                    <option value=""><% $c->i18n->p("trial.heatmap.select_plot_order", "--Select Plot Order--") |h %></option>
+                    <option value="by_col_serpentine"><% $c->i18n->p("fieldbook.export.column_serpentine", "By Column: Serpentine") |h %></option>
+                    <option value="by_col_zigzag"><% $c->i18n->p("fieldbook.export.column_zigzag", "By Column: Zigzag") |h %></option>
+                    <option value="by_row_serpentine"><% $c->i18n->p("fieldbook.export.row_serpentine", "By Row: Serpentine") |h %></option>
+                    <option value="by_row_zigzag"><% $c->i18n->p("fieldbook.export.row_zigzag", "By Row: Zigzag") |h %></option>
                 </select>
             </div>
             <div>
-                <label>Starting Plot:</label>
+                <label><% $c->i18n->p("fieldbook.export.starting_plot", "Starting Plot:") |h %></label>
                 <select class="form-control" id="plot_download_start" name="plot_download_start" style="max-width: 300px">
-                    <option value="bottom_left">Bottom Left</option>
-                    <option value="top_left">Top Left</option>
-                    <option value="top_right">Top Right</option>
-                    <option value="bottom_right">Bottom Right</option>
+                    <option value="bottom_left"><% $c->i18n->p("fieldbook.export.bottom_left", "Bottom Left") |h %></option>
+                    <option value="top_left"><% $c->i18n->p("fieldbook.export.top_left", "Top Left") |h %></option>
+                    <option value="top_right"><% $c->i18n->p("fieldbook.export.top_right", "Top Right") |h %></option>
+                    <option value="bottom_right"><% $c->i18n->p("fieldbook.export.bottom_right", "Bottom Right") |h %></option>
                 </select>
             </div>
             <div style="display: flex; flex-direction: column; justify-content: end; text-align: right">
                 <div>
-                    <label for="plot_download_borders">Include Borders</label>
+                    <label for="plot_download_borders"><% $c->i18n->p("trial.heatmap.include_borders", "Include Borders") |h %></label>
                     <input type="checkbox" id="plot_download_borders" name="plot_download_borders" value="no">
                 </div>
                 <div>
-                    <label for="plot_download_gaps">Include Gaps</label>
+                    <label for="plot_download_gaps"><% $c->i18n->p("trial.heatmap.include_gaps", "Include Gaps") |h %></label>
                     <input type="checkbox" id="plot_download_gaps" name="plot_download_gaps" value="no">
                 </div>
 % if ( $has_subplot_entries ) {
                 <div>
-                    <label for="plot_download_subplots">Include Subplots</label>
+                    <label for="plot_download_subplots"><% $c->i18n->p("trial.heatmap.include_subplots", "Include Subplots") |h %></label>
                     <input type="checkbox" id="plot_download_subplots" name="plot_download_subplots" value="no">
                 </div>
 % }
 % if ( $has_plant_entries ) {
                 <div>
-                    <label for="plot_download_plants">Include Plants</label>
+                    <label for="plot_download_plants"><% $c->i18n->p("trial.heatmap.include_plants", "Include Plants") |h %></label>
                     <input type="checkbox" id="plot_download_plants" name="plot_download_plants" value="no">
                 </div>
 % }
             </div>
         </div>
         <div id="plot_download_harvestmaster_options" style="display: none; padding: 15px">
-            <p><strong>HarvestMaster Options:</strong></p>
+            <p><strong><% $c->i18n->p("trial.heatmap.harvestmaster_options", "HarvestMaster Options:") |h %></strong></p>
             <div style="display: flex; flex-wrap: wrap; gap: 25px; justify-content: space-around; align-items: center">
                 <div>
-                    <label>HarvestMaster PLTID:</label>
+                    <label><% $c->i18n->p("trial.heatmap.harvestmaster_pltid", "HarvestMaster PLTID:") |h %></label>
                     <select class="form-control" id="hm_pltid" name="hm_pltid" style="max-width: 400px">
-                        <option value="plot_id" selected>Plot Database ID</option>
-                        <option value="plot_name">Plot Name</option>
-                        <option value="plot_number">Plot Number</option>
+                        <option value="plot_id" selected><% $c->i18n->p("trial.heatmap.plot_database_id", "Plot Database ID") |h %></option>
+                        <option value="plot_name"><% $c->i18n->p("trial.design.header.plot_name", "Plot Name") |h %></option>
+                        <option value="plot_number"><% $c->i18n->p("trial.design.header.plot_number", "Plot Number") |h %></option>
                     </select>
                 </div>
                 <div>
-                    <label>HarvestMaster Range:</label>
+                    <label><% $c->i18n->p("trial.heatmap.harvestmaster_range", "HarvestMaster Range:") |h %></label>
                     <select class="form-control" id="hm_range" name="hm_range" style="max-width: 400px">
-                        <option value="col_number">Breedbase Column</option>
-                        <option value="row_number" selected>Breedbase Row</option>
+                        <option value="col_number"><% $c->i18n->p("trial.heatmap.breedbase_column", "Breedbase Column") |h %></option>
+                        <option value="row_number" selected><% $c->i18n->p("trial.heatmap.breedbase_row", "Breedbase Row") |h %></option>
                     </select>
                 </div>
                 <div>
-                    <label>HarvestMaster Row:</label>
+                    <label><% $c->i18n->p("trial.heatmap.harvestmaster_row", "HarvestMaster Row:") |h %></label>
                     <select class="form-control" id="hm_row" name="hm_row" style="max-width: 400px">
-                        <option value="col_number" selected>Breedbase Column</option>
-                        <option value="row_number">Breedbase Row</option>
+                        <option value="col_number" selected><% $c->i18n->p("trial.heatmap.breedbase_column", "Breedbase Column") |h %></option>
+                        <option value="row_number"><% $c->i18n->p("trial.heatmap.breedbase_row", "Breedbase Row") |h %></option>
                     </select>
                 </div>
             </div>
         </div>
         <div style="padding: 15px 50px; text-align: center">
-            <button class="btn btn-primary" id="plot_download_button">Download</button>
+            <button class="btn btn-primary" id="plot_download_button"><% $c->i18n->p("trial.spatial_export.download", "Download") |h %></button>
         </div>
     </div>
 </div>
 % }
 
 
-<div id="trait_heatmap" >loading...</div>
+<div id="trait_heatmap" ><% $c->i18n->p("trial.heatmap.loading_heatmap", "loading...") |h %></div>
 <div id="container_heatmap_geo" ></div>
-<div id="trial_no_phenoMSG" >Upload trial phenotypes to view trait assayed heatmap</div>
+<div id="trial_no_phenoMSG" ><% $c->i18n->p("trial.heatmap.upload_trial_phenotypes", "Upload trial phenotypes to view trait assayed heatmap") |h %></div>
 <div class="container" id="trial_no_rowColMSG">
     <div class="well">
     <!--    <centre><div id="trial_no_rowColMSG2" ><b>Trial plots have no row and column number to display heatmap</b></div></centre> -->
@@ -342,9 +376,9 @@ $trial_stock_type => undef
 </div> -->
 
 
-<div id="delete_field_map_dialog" title="Physical Field Map Deletion" style="display:none;">
+<div id="delete_field_map_dialog" title="<% $c->i18n->p("trial.card.coords.delete_title", "Physical Field Map Deletion") |h %>" style="display:none;">
    <div id="trait_list_dc" name="trait_list">
-       <label id="trait_list_label_dc" for="trait_list_list_select" style="display: inline-block; width: 300px;">Please, confirm field map deletion... <br />
+       <label id="trait_list_label_dc" for="trait_list_list_select" style="display: inline-block; width: 300px;"><% $c->i18n->p("trial.card.coords.confirm_delete", "Please, confirm field map deletion...") |h %> <br />
 
        </label>
 
@@ -355,8 +389,8 @@ $trial_stock_type => undef
     <div class="modal-dialog " role="document">
         <div class="modal-content">
             <div class="modal-header" style="text-align: center">
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                <h4 class="modal-title" id="SuppressPlotPhenoDialog">Suppress Plot Phenotype Measurement </h4>
+                <button type="button" class="close" data-dismiss="modal" aria-label="<% $c->i18n->p("global.dataset_publish.close", "Close") |h %>"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="SuppressPlotPhenoDialog"><% $c->i18n->p("trial.heatmap.suppress_plot_phenotype", "Suppress Plot Phenotype Measurement") |h %> </h4>
             </div>
             <div class="modal-body">
                 <div class="container-fluid">
@@ -364,31 +398,31 @@ $trial_stock_type => undef
                     <form class="form-horizontal" role="form" method="post" enctype="multipart/form-data" encoding="multipart/form-data" id="suppress_plot_pheno_form" name="suppress_plot_pheno_form">
 
                     <center>
-                    <p3> Suppressed measurement will be seen as an outlier and can be excluded during phenotype analysis and download.</p3>
+                    <p3> <% $c->i18n->p("trial.heatmap.suppressed_measurement_help", "Suppressed measurement will be seen as an outlier and can be excluded during phenotype analysis and download.") |h %></p3>
                     </center></br>
                         <div class="form-group">
-                            <label class="col-sm-3 control-label">Plot Name:</label>
+                            <label class="col-sm-3 control-label"><% $c->i18n->p("trial.heatmap.plot_name_label", "Plot Name:") |h %></label>
                             <div class="col-sm-8" id="myplot_name">
 
                             </div>
                         </div>
 
                         <div class="form-group">
-                            <label class="col-sm-3 control-label">Phenotype Value: </label>
+                            <label class="col-sm-3 control-label"><% $c->i18n->p("trial.heatmap.phenotype_value", "Phenotype Value:") |h %> </label>
                             <div class="col-sm-8" id="pheno_value">
 
                             </div>
                         </div>
 
                         <div class="form-group">
-                            <label class="col-sm-3 control-label">Phenotype ID: </label>
+                            <label class="col-sm-3 control-label"><% $c->i18n->p("trial.heatmap.phenotype_id", "Phenotype ID:") |h %> </label>
                             <div class="col-sm-8" id="mypheno_id">
 
                             </div>
                         </div>
 
                         <div class="form-group">
-                            <label class="col-sm-3 control-label">Trait ID: </label>
+                            <label class="col-sm-3 control-label"><% $c->i18n->p("trial.heatmap.trait_id", "Trait ID:") |h %> </label>
                             <div class="col-sm-8" id="mytrait_id">
 
                             </div>
@@ -398,8 +432,8 @@ $trial_stock_type => undef
                 </div>
             </div>
             <div class="modal-footer">
-                <button id="close_suppress_plot_pheno_dialog" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-                <button type="button" class="btn btn-primary" name="suppress_plot_pheno_dialog_submit" id="suppress_plot_pheno_dialog_submit">Suppress Phenotype</button>
+                <button id="close_suppress_plot_pheno_dialog" type="button" class="btn btn-default" data-dismiss="modal"><% $c->i18n->p("global.dataset_publish.close", "Close") |h %></button>
+                <button type="button" class="btn btn-primary" name="suppress_plot_pheno_dialog_submit" id="suppress_plot_pheno_dialog_submit"><% $c->i18n->p("trial.heatmap.suppress_phenotype_button", "Suppress Phenotype") |h %></button>
             </div>
         </div>
     </div>
@@ -409,21 +443,21 @@ $trial_stock_type => undef
     <div class="modal-dialog " role="document">
         <div class="modal-content">
             <div class="modal-header" style="text-align: center">
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                <h4 class="modal-title" id="SuppressPhenoDialog">Suppress Phenotype For Plot </h4>
+                <button type="button" class="close" data-dismiss="modal" aria-label="<% $c->i18n->p("global.dataset_publish.close", "Close") |h %>"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="SuppressPhenoDialog"><% $c->i18n->p("trial.heatmap.suppress_phenotype_for_plot", "Suppress Phenotype For Plot ") |h %></h4>
             </div>
             <div class="modal-body">
                 <div class="container-fluid">
 
                     <form class="form-horizontal" role="form" method="post" enctype="multipart/form-data" encoding="multipart/form-data" id="suppress_plotPheno_form" name="suppress_plotPheno_form">
 
-                    <p3> Phenotype was suppressed successfully...</p3>
+                    <p3> <% $c->i18n->p("trial.heatmap.phenotype_suppressed_success", "Phenotype was suppressed successfully...") |h %></p3>
 
                     </form>
                 </div>
             </div>
             <div class="modal-footer">
-                <button id="close_suppress_plot_pheno_dialog" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                <button id="close_suppress_plot_pheno_dialog" type="button" class="btn btn-default" data-dismiss="modal"><% $c->i18n->p("global.dataset_publish.close", "Close") |h %></button>
 
             </div>
         </div>
@@ -434,23 +468,23 @@ $trial_stock_type => undef
     <div class="modal-dialog " role="document">
         <div class="modal-content">
             <div class="modal-header" style="text-align: center">
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                <h4 class="modal-title" id="DeleteAssayedTraitDialog"><b>Assayed Trait Deletion</b></h4>
+                <button type="button" class="close" data-dismiss="modal" aria-label="<% $c->i18n->p("global.dataset_publish.close", "Close") |h %>"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="DeleteAssayedTraitDialog"><b><% $c->i18n->p("trial.heatmap.assayed_trait_deletion", "Assayed Trait Deletion") |h %></b></h4>
             </div>
             <div class="modal-body">
                 <div class="container-fluid">
 
                     <form class="form-horizontal" role="form" method="post" enctype="multipart/form-data" encoding="multipart/form-data" id="trait_deletion_form" name="trait_deletion_form">
 
-                    <p3><b>Please, confirm the deletion of selected trait...</b></p3></br>
-                    <center><p2> ...trait is deleted permanently from the database...</p2></center>
+                    <p3><b><% $c->i18n->p("trial.heatmap.confirm_trait_deletion", "Please, confirm the deletion of selected trait...") |h %></b></p3></br>
+                    <center><p2> <% $c->i18n->p("trial.heatmap.trait_permanent_deletion", "...trait is deleted permanently from the database...") |h %></p2></center>
 
                     </form>
                 </div>
             </div>
             <div class="modal-footer">
-                <button id="close_delete_trait_dialog" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-                <button type="button" class="btn btn-primary" name="delete_selected_trait_dialog_submit" id="delete_selected_trait_dialog_submit">Delete Trait</button>
+                <button id="close_delete_trait_dialog" type="button" class="btn btn-default" data-dismiss="modal"><% $c->i18n->p("global.dataset_publish.close", "Close") |h %></button>
+                <button type="button" class="btn btn-primary" name="delete_selected_trait_dialog_submit" id="delete_selected_trait_dialog_submit"><% $c->i18n->p("trial.heatmap.delete_trait", "Delete Trait") |h %></button>
             </div>
         </div>
     </div>
@@ -460,18 +494,18 @@ $trial_stock_type => undef
     <div class="modal-dialog " role="document">
         <div class="modal-content">
             <div class="modal-header" style="text-align: center">
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                <h4 class="modal-title" id="TraitDeletionDialog"><b>Assayed Trait Deletion</b></h4>
+                <button type="button" class="close" data-dismiss="modal" aria-label="<% $c->i18n->p("global.dataset_publish.close", "Close") |h %>"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="TraitDeletionDialog"><b><% $c->i18n->p("trial.heatmap.assayed_trait_deletion", "Assayed Trait Deletion") |h %></b></h4>
             </div>
             <div class="modal-body">
                 <div class="container-fluid">
 
-                    <p3> Trait deletion was successfully...</p3>
+                    <p3> <% $c->i18n->p("trial.heatmap.trait_deletion_success", "Trait deletion was successfully...") |h %></p3>
 
                 </div>
             </div>
             <div class="modal-footer">
-                <button id="close_trait_delete_dialog" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                <button id="close_trait_delete_dialog" type="button" class="btn btn-default" data-dismiss="modal"><% $c->i18n->p("global.dataset_publish.close", "Close") |h %></button>
 
             </div>
         </div>
@@ -482,34 +516,34 @@ $trial_stock_type => undef
     <div class="modal-dialog " role="document">
         <div class="modal-content">
             <div class="modal-header" style="text-align: center">
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                <h4 class="modal-title" id="DownloadTrialLayoutDialog"><b>Download Spatial Layout Options</b></h4>
+                <button type="button" class="close" data-dismiss="modal" aria-label="<% $c->i18n->p('trial.spatial_export.close', 'Close') |h %>"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="DownloadTrialLayoutDialog"><b><% $c->i18n->p('trial.spatial_export.title', 'Download Spatial Layout Options') |h %></b></h4>
             </div>
             <div class="modal-body">
                 <div class="container-fluid">
                     <form class="form-horizontal" role="form" method="post" >
                         <div class="well">
                             <div class="form-group">
-                                <div class="col-sm-3 control-label"><strong>Information to include: </strong></div>
+                                <div class="col-sm-3 control-label"><strong><% $c->i18n->p('trial.spatial_export.include', 'Information to include:') |h %> </strong></div>
                                 <div class="col-sm-9" >
 % if ($trial_stock_type eq "cross") {
                                     <div class="checkbox">
-                                        <label><input type="checkbox" id="accession_name" value="accession_name" checked> Cross/Accession Name </label>
+                                        <label><input type="checkbox" id="accession_name" value="accession_name" checked> <% $c->i18n->p('trial.spatial_export.cross_accession', 'Cross/Accession Name') |h %> </label>
                                     </div>
 % }
 % else {
                                     <div class="checkbox">
-                                        <label><input type="checkbox" id ="accession_name" value="accession_name" checked> Accession Name </label>
+                                        <label><input type="checkbox" id ="accession_name" value="accession_name" checked> <% $c->i18n->p('trial.spatial_export.accession', 'Accession Name') |h %> </label>
                                     </div>
 % }
                                     <div class="checkbox">
-                                        <label> <input type="checkbox" id="obs_unit_name" value="obsunit_name"> Observation Unit Name </label>
+                                        <label> <input type="checkbox" id="obs_unit_name" value="obsunit_name"> <% $c->i18n->p('trial.spatial_export.observation_unit', 'Observation Unit Name') |h %> </label>
                                     </div>
                                     <div class="checkbox">
-                                        <label> <input type="checkbox" id="plot_id" value="plot_id"> Plot ID </label>
+                                        <label> <input type="checkbox" id="plot_id" value="plot_id"> <% $c->i18n->p('trial.spatial_export.plot_id', 'Plot ID') |h %> </label>
                                     </div>
                                     <div class="checkbox">
-                                        <label><input type="checkbox" id="plot_num" value="plot_num"> Plot Number </label>
+                                        <label><input type="checkbox" id="plot_num" value="plot_num"> <% $c->i18n->p('trial.spatial_export.plot_number', 'Plot Number') |h %> </label>
                                     </div>
                                 </div>
                             </div>
@@ -518,8 +552,8 @@ $trial_stock_type => undef
                 </div>
             </div>
             <div class="modal-footer">
-                <button id="close_download_layout_dialog" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-                <button type="button" class="btn btn-primary" id="download_field_layout_button" title="Download">Download</button>
+                <button id="close_download_layout_dialog" type="button" class="btn btn-default" data-dismiss="modal"><% $c->i18n->p('trial.spatial_export.close', 'Close') |h %></button>
+                <button type="button" class="btn btn-primary" id="download_field_layout_button" title="<% $c->i18n->p('trial.spatial_export.download', 'Download') |h %>"><% $c->i18n->p('trial.spatial_export.download', 'Download') |h %></button>
             </div>
         </div>
     </div>
@@ -529,8 +563,8 @@ $trial_stock_type => undef
     <div class="modal-dialog " role="document">
         <div class="modal-content">
             <div class="modal-header" style="text-align: center">
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                <h4 class="modal-title" id="HmPlotDetailsModal">Plot Details</h4>
+                <button type="button" class="close" data-dismiss="modal" aria-label="<% $c->i18n->p("global.dataset_publish.close", "Close") |h %>"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="HmPlotDetailsModal"><% $c->i18n->p("barcode.js.plot_details", "Plot Details") |h %></h4>
             </div>
             <div class="modal-body">
                 <div class="container-fluid">
@@ -540,32 +574,32 @@ $trial_stock_type => undef
                       </div>
 
                       <div class="form-group">
-                        <label class="col-sm-3 control-label">Plot Name: </label>
+                        <label class="col-sm-3 control-label"><% $c->i18n->p("trial.card.coords.plot_name", "Plot Name: ") |h %></label>
                         <div class="col-sm-9" id="hm_plot_name">
 
                         </div>
                       </div>
 
                       <div class="form-group">
-                        <label class="col-sm-3 control-label">Plot Number: </label>
+                        <label class="col-sm-3 control-label"><% $c->i18n->p("trial.card.coords.plot_number", "Plot Number: ") |h %></label>
                         <div class="col-sm-9" id="hm_plot_number">
                         </div>
                       </div>
 
                       <div class="form-group">
-                        <label class="col-sm-3 control-label">Plot Database ID: </label>
+                        <label class="col-sm-3 control-label"><% $c->i18n->p("trial.card.coords.plot_id", "Plot Database ID: ") |h %></label>
                         <div class="col-sm-9" id="hm_plot_id">
                         </div>
                       </div>
 
                       <div class="form-group">
-                        <label class="col-sm-3 control-label">Accession: </label>
+                        <label class="col-sm-3 control-label"><% $c->i18n->p("trial.card.coords.accession", "Accession: ") |h %></label>
                         <div class="col-sm-9" id="hm_plot_accession">
                         </div>
                       </div>
 
                       <div class="form-group" id="hm_plot_structure_container" hidden>
-                        <label class="col-sm-3 control-label">Plot Structure: </label>
+                        <label class="col-sm-3 control-label"><% $c->i18n->p("trial.heatmap.plot_structure", "Plot Structure:") |h %> </label>
                         <div class="col-sm-9" id="hm_plot_structure_data_container">
                         </div>
                       </div>
@@ -574,9 +608,9 @@ $trial_stock_type => undef
                 </div>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-primary " name="hm_view_plot_image_submit" id="hm_view_plot_image_submit">View Plot Images</button>
-                <button id="hm_close_replace_plot_accession_dialog" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-                <button type="button" class="btn btn-primary" name="hm_edit_plot_info" id="hm_edit_plot_info" onclick="jQuery('#hm_replace_plot_accessions_dialog').modal('show')">Edit Plot Info</button>
+                <button type="button" class="btn btn-primary " name="hm_view_plot_image_submit" id="hm_view_plot_image_submit"><% $c->i18n->p("trial.heatmap.view_plot_images", "View Plot Images") |h %></button>
+                <button id="hm_close_replace_plot_accession_dialog" type="button" class="btn btn-default" data-dismiss="modal"><% $c->i18n->p("global.dataset_publish.close", "Close") |h %></button>
+                <button type="button" class="btn btn-primary" name="hm_edit_plot_info" id="hm_edit_plot_info" onclick="jQuery('#hm_replace_plot_accessions_dialog').modal('show')"><% $c->i18n->p("trial.heatmap.edit_plot_info", "Edit Plot Info") |h %></button>
             </div>
         </div>
     </div>
@@ -586,8 +620,8 @@ $trial_stock_type => undef
     <div class="modal-dialog " role="document">
         <div class="modal-content">
             <div class="modal-header" style="text-align: center">
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                <h4 class="modal-title" id="HmReplacePlotAccessionsDialog">Replace Plot Accession</h4>
+                <button type="button" class="close" data-dismiss="modal" aria-label="<% $c->i18n->p("global.dataset_publish.close", "Close") |h %>"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="HmReplacePlotAccessionsDialog"><% $c->i18n->p("trial.fieldmap_edit.replace_plot_accession", "Replace Plot Accession") |h %></h4>
             </div>
             <div class="modal-body">
                 <div class="container-fluid">
@@ -597,7 +631,7 @@ $trial_stock_type => undef
                       </div>
                      
                       <div class="form-group">
-                        <label class="col-sm-3 control-label">Enter New Accession: </label>
+                        <label class="col-sm-3 control-label"><% $c->i18n->p("trial.heatmap.enter_new_accession", "Enter New Accession:") |h %> </label>
                         <div class="col-sm-9" >
                           <input class="form-control" id="hm_accession" name="hm_accession"></input>
                         </div>
@@ -606,7 +640,7 @@ $trial_stock_type => undef
                       
 
                       <div class="form-group">
-                        <label class="col-sm-3 control-label">New Plot Name:<br> (Optional) </label>
+                        <label class="col-sm-3 control-label"><% $c->i18n->p("trial.heatmap.new_plot_name_label", "New Plot Name:") |h %><br> <% $c->i18n->p("trial.heatmap.optional", "(Optional)") |h %> </label>
                         <div class="col-sm-9">
                           <input class="form-control" id="hm_new_plot_name" name="hm_new_plot_name"></input>
                         </div>
@@ -614,7 +648,7 @@ $trial_stock_type => undef
 
                       <div class="form-group">
                         <div class="col-sm-12 list-group-item-warning" >
-                          <p><i>Warning: the new plot name will replace the old plot name in subplots, plants, and tissue samples if possible. If a plot name template is saved in assocation with this trial, it will be used to rename the plot unless a new plot name is manually specified. Changing plot accessions may change plot replicate numbers. You may need to reprint labels after the changes are applied.</i></p>
+                          <p><i><% $c->i18n->p("trial.heatmap.warning_new_plot_name", "Warning: the new plot name will replace the old plot name in subplots, plants, and tissue samples if possible. If a plot name template is saved in association with this trial, it will be used to rename the plot unless a new plot name is manually specified. Changing plot accessions may change plot replicate numbers. You may need to reprint labels after the changes are applied.") |h %></i></p>
                         </div>
                       </div>
 
@@ -623,8 +657,8 @@ $trial_stock_type => undef
                 </div>
             </div>
             <div class="modal-footer">
-                <button id="hm_close_replace_plot_accession_dialog" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-                <button type="button" class="btn btn-primary" name="hm_replace_plot_accession_submit" id="hm_replace_plot_accession_submit">Replace Plot Accession</button>
+                <button id="hm_close_replace_plot_accession_dialog" type="button" class="btn btn-default" data-dismiss="modal"><% $c->i18n->p("global.dataset_publish.close", "Close") |h %></button>
+                <button type="button" class="btn btn-primary" name="hm_replace_plot_accession_submit" id="hm_replace_plot_accession_submit"><% $c->i18n->p("trial.fieldmap_edit.replace_plot_accession", "Replace Plot Accession") |h %></button>
             </div>
         </div>
     </div>
@@ -634,18 +668,18 @@ $trial_stock_type => undef
     <div class="modal-dialog " role="document">
         <div class="modal-content">
             <div class="modal-header" style="text-align: center">
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                <h4 class="modal-title" id="HmDialog"><b>Replace Plot Accessions</b></h4>
+                <button type="button" class="close" data-dismiss="modal" aria-label="<% $c->i18n->p("global.dataset_publish.close", "Close") |h %>"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="HmDialog"><b><% $c->i18n->p("trial.heatmap.plot_accessions_replaced_title", "Replace Plot Accessions") |h %></b></h4>
             </div>
             <div class="modal-body">
                 <div class="container-fluid">
 
-                    <p3> Plot accession was replaced successfully...</p3>
+                    <p3> <% $c->i18n->p("trial.heatmap.plot_accession_replaced", "Plot accession was replaced successfully...") |h %></p3>
 
                 </div>
             </div>
             <div class="modal-footer">
-                <button onclick="location.reload()" id="close_hmfieldma_dialog" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                <button onclick="location.reload()" id="close_hmfieldma_dialog" type="button" class="btn btn-default" data-dismiss="modal"><% $c->i18n->p("global.dataset_publish.close", "Close") |h %></button>
 
             </div>
         </div>
@@ -656,19 +690,19 @@ $trial_stock_type => undef
     <div class="modal-dialog " role="document">
         <div class="modal-content">
             <div class="modal-header" style="text-align: center">
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                <h4 class="modal-title" id="HmDialog"><b>Submit Field Plot Layout</b></h4>
+                <button type="button" class="close" data-dismiss="modal" aria-label="<% $c->i18n->p("global.dataset_publish.close", "Close") |h %>"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="HmDialog"><b><% $c->i18n->p("trial.heatmap.submit_field_plot_layout", "Submit Field Plot Layout") |h %></b></h4>
             </div>
             <div class="modal-body">
                 <div style="text-align: center;" class="container-fluid">
-                    <p> Field Plot layout submitted successfully!</p>
+                    <p> <% $c->i18n->p("trial.heatmap.field_plot_layout_submitted", "Field Plot layout submitted successfully!") |h %></p>
                 </div>
                 <div>
-                    <p><strong>NOTE:</strong> It may take a few minutes for the database to update and the changes to be reflected on the website.</p>
+                    <p><strong><% $c->i18n->p("trial.heatmap.update_note_label", "NOTE:") |h %></strong> <% $c->i18n->p("trial.heatmap.update_note_text", "It may take a few minutes for the database to update and the changes to be reflected on the website.") |h %></p>
                 </div>
             </div>
             <div class="modal-footer">
-                <button id="close_fp_success_dialog" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                <button id="close_fp_success_dialog" type="button" class="btn btn-default" data-dismiss="modal"><% $c->i18n->p("global.dataset_publish.close", "Close") |h %></button>
             </div>
         </div>
     </div>
@@ -678,8 +712,8 @@ $trial_stock_type => undef
     <div class="modal-dialog" role="document">
         <div class="modal-content">
             <div class="modal-header" style="text-align: center">
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                <h4 class="modal-title" id="tDDialog"><b>Warning!</b></h4>
+                <button type="button" class="close" data-dismiss="modal" aria-label="<% $c->i18n->p("global.dataset_publish.close", "Close") |h %>"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="tDDialog"><b><% $c->i18n->p("accession.forms.warning", "Warning!") |h %></b></h4>
             </div>
             <div class="modal-body">
                 <div class="container-fluid">
@@ -687,8 +721,8 @@ $trial_stock_type => undef
                     <big>
                         <span>&#9888;</span>
                         <p3>
-                            One or more traits have been assayed for this trial; <br>
-                            It is not recommended to change accessions at this point. Are you sure?
+                            <% $c->i18n->p("trial.heatmap.traits_assayed_warning", "One or more traits have been assayed for this trial;") |h %> <br>
+                            <% $c->i18n->p("trial.heatmap.accession_change_warning", "It is not recommended to change accessions at this point. Are you sure?") |h %>
                         </p3>
                     </big>
 
@@ -696,8 +730,8 @@ $trial_stock_type => undef
                 </div>
             </div>
             <div class="modal-footer">
-                <button id="fm_override_accession_warning" type="button" class="btn btn-primary">Yes</button>
-                <button id="close_tdfieldmap_dialog" type="button" class="btn btn-default" data-dismiss="modal">No</button>
+                <button id="fm_override_accession_warning" type="button" class="btn btn-primary"><% $c->i18n->p("trial.details.yes", "Yes") |h %></button>
+                <button id="close_tdfieldmap_dialog" type="button" class="btn btn-default" data-dismiss="modal"><% $c->i18n->p("trial.details.no", "No") |h %></button>
 
             </div>
         </div>
@@ -708,19 +742,19 @@ $trial_stock_type => undef
     <div class="modal-dialog " role="document">
         <div class="modal-content">
             <div class="modal-header" style="text-align: center">
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                <h4 class="modal-title" id="DeleteFillerPlotsDialog">Remove Filler Plots</h4>
+                <button type="button" class="close" data-dismiss="modal" aria-label="<% $c->i18n->p("global.dataset_publish.close", "Close") |h %>"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="DeleteFillerPlotsDialog"><% $c->i18n->p("trial.heatmap.remove_filler_plots", "Remove Filler Plots") |h %></h4>
             </div>
             <div class="modal-body">
                 <div class="container-fluid">
 
-                    <p3>This will remove all filler plots in this trial. Do you want to continue?</p3> </br></br>
+                    <p3><% $c->i18n->p("trial.heatmap.remove_filler_plots_question", "This will remove all filler plots in this trial. Do you want to continue?") |h %></p3> </br></br>
 
                 </div>
             </div>
             <div class="modal-footer">
-                <button id="close_delete_filler_dialog" type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
-                <button type="button" class="btn btn-primary" name="delete_filler_plots_dialog_submit" id="remove_filler_plots_dialog_submit">Remove Fillers</button>
+                <button id="close_delete_filler_dialog" type="button" class="btn btn-default" data-dismiss="modal"><% $c->i18n->p("trial.details.cancel", "Cancel") |h %></button>
+                <button type="button" class="btn btn-primary" name="delete_filler_plots_dialog_submit" id="remove_filler_plots_dialog_submit"><% $c->i18n->p("trial.heatmap.remove_fillers_button", "Remove Fillers") |h %></button>
             </div>
         </div>
     </div>
@@ -735,8 +769,8 @@ my $image_ids =  $stockref->{image_ids} || [] ;
     <div class="modal-dialog " role="document">
         <div class="modal-content">
             <div class="modal-header" style="text-align: center">
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                <h4 class="modal-title" id="ViewPlotImage">View Plot Images</h4>
+                <button type="button" class="close" data-dismiss="modal" aria-label="<% $c->i18n->p("global.dataset_publish.close", "Close") |h %>"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="ViewPlotImage"><% $c->i18n->p("trial.heatmap.view_plot_images", "View Plot Images") |h %></h4>
             </div>
             <div class="modal-body">
                 <div class="container-fluid">
@@ -751,7 +785,7 @@ my $image_ids =  $stockref->{image_ids} || [] ;
                 </div>
             </div>
             <div class="modal-footer">
-                <button id="view_plot_image_dialog" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                <button id="view_plot_image_dialog" type="button" class="btn btn-default" data-dismiss="modal"><% $c->i18n->p("global.dataset_publish.close", "Close") |h %></button>
 
             </div>
         </div>
@@ -762,30 +796,30 @@ my $image_ids =  $stockref->{image_ids} || [] ;
     <div class="modal-dialog " role="document">
         <div class="modal-content">
             <div class="modal-header" style="text-align: center">
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                <h4 class="modal-title" id="ChangeDimensions">Change Dimensions</h4>
+                <button type="button" class="close" data-dismiss="modal" aria-label="<% $c->i18n->p("global.dataset_publish.close", "Close") |h %>"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="ChangeDimensions"><% $c->i18n->p("trial.heatmap.change_dimensions", "Change Dimensions") |h %></h4>
             </div>
             <div class="modal-body">
                 <div class="container-fluid">
-                    <label style="margin-left: 15%;">Dimensions: </label>
+                    <label style="margin-left: 15%;"><% $c->i18n->p("trial.heatmap.dimensions", "Dimensions:") |h %> </label>
                     <div style="display: inline;">
                         <div style="margin-left: 4%; margin-right: 2%; display: inline-block; width: 10%;">
-                            <label for="row-dims" style="display:block;">Rows</label>
+                            <label for="row-dims" style="display:block;"><% $c->i18n->p("decision.js.rows", "Rows") |h %></label>
                             <input style="width: 100%;" type="text" id="row-dims" name="row-dims">
                         </div>
                         x
                         <div style="margin: 2%; display: inline-block; width: 10%;">
-                            <label for="col-dims" style="display:block">Columns</label>
+                            <label for="col-dims" style="display:block"><% $c->i18n->p("trial.heatmap.columns", "Columns") |h %></label>
                             <input style="width: 100%;" type="text" id="col-dims" name="col-dims">
                         </div>
                     </div><br><br>
-                    <label style="margin-left: 15%; margin-right: 2%;">Filler Accession (Optional): </label>
+                    <label style="margin-left: 15%; margin-right: 2%;"><% $c->i18n->p("trial.heatmap.filler_accession_optional", "Filler Accession (Optional):") |h %> </label>
                     <input style="width: 20%;" type="text" id="filler_accession">
                 </div>
             </div>
             <div class="modal-footer">
-                <button id="submit_dimensions_change" type="button" class="btn btn-primary">Submit</button>
-                <button id="close_dimension_dialog" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                <button id="submit_dimensions_change" type="button" class="btn btn-primary"><% $c->i18n->p("trial.correlation.submit", "Submit") |h %></button>
+                <button id="close_dimension_dialog" type="button" class="btn btn-default" data-dismiss="modal"><% $c->i18n->p("global.dataset_publish.close", "Close") |h %></button>
             </div>
         </div>
     </div>
@@ -827,7 +861,7 @@ jQuery(document).ready( function() {
     if (require_login === '1'){
         auth_token = "<%  CXGN::Login->new($c->dbc->dbh)->get_login_cookie() %>";
         if (!auth_token){
-            alert("Login required to display");
+            alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("trial.heatmap.login_required_display", "Login required to display") : "Login required to display"));
         }
     }
 
@@ -880,7 +914,7 @@ jQuery(document).ready( function() {
             },
             error: function(response) {
                 jQuery("#working_modal").modal("hide");
-                alert('Error displaying traits assayed heatmap');
+                alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("trial.heatmap.display_traits_error", "Error displaying traits assayed heatmap") : 'Error displaying traits assayed heatmap'));
             }
         })
 
@@ -999,7 +1033,7 @@ jQuery(document).ready( function() {
         if (require_login === '1'){
             auth_token = "<%  CXGN::Login->new($c->dbc->dbh)->get_login_cookie() %>";
             if (!auth_token){
-                alert("Login required to display field map");
+                alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("trial.heatmap.login_required_fieldmap", "Login required to display field map") : "Login required to display field map"));
             }
         }
       
@@ -1008,7 +1042,7 @@ jQuery(document).ready( function() {
         fieldMap.brapi_endpoint = brapi_endpoint;
         fieldMap.opts.brapi_pageSize = 1000;
         fieldMap.opts.brapi_auth = auth_token;
-        fieldMap.load('<% $trial_id %>').then((value)=>{if (!value) alert("No geo reference data in this trial!"); } );
+        fieldMap.load('<% $trial_id %>').then((value)=>{if (!value) alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("trial.heatmap.no_geo_reference", "No geo reference data in this trial!") : "No geo reference data in this trial!")); } );
 
     }
 
@@ -1044,7 +1078,7 @@ jQuery(document).ready( function() {
         var filler_accession_name = jQuery("#filler_accession").val();
         if (changed_dim_rows * changed_dim_cols < num_real_plots) {
             jQuery('#working_modal').modal("hide");
-            alert('Those are not valid dimensions.\nPlease pick dimensions for a plot size equal to or larger than your current plot.');
+            alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("trial.heatmap.invalid_dimensions", "Those are not valid dimensions.\nPlease pick dimensions for a plot size equal to or larger than your current plot.") : 'Those are not valid dimensions.\nPlease pick dimensions for a plot size equal to or larger than your current plot.'));
         } else if (filler_accession_name) {
             jQuery("#change_dimensions_dialog").modal("hide");
             new jQuery.ajax({
@@ -1069,7 +1103,7 @@ jQuery(document).ready( function() {
                 },
                 error: function(response) {
                     jQuery('#working_modal').modal("hide");
-                    alert('An error occured while trying to find accession name of filler plots');
+                    alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("trial.heatmap.find_filler_accession_error", "An error occurred while trying to find accession name of filler plots") : 'An error occurred while trying to find accession name of filler plots'));
                 }
             });
         } else {
@@ -1126,12 +1160,12 @@ jQuery(document).ready( function() {
                     alert(`Removed ${response.deleted} filler plot(s)`);
                     location.reload();
                 } else {
-                    alert("Failed to remove filler plots");
+                    alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("trial.heatmap.remove_fillers_failed", "Failed to remove filler plots") : "Failed to remove filler plots"));
                 }
             },
             error: function(err) {
                 console.error(err);
-                alert("Error removing filler plots");
+                alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("trial.heatmap.remove_fillers_error", "Error removing filler plots") : "Error removing filler plots"));
             }
         });
     }
@@ -1200,15 +1234,15 @@ jQuery(document).ready( function() {
         let include_subplots = jQuery("#plot_download_subplots").is(":checked");
         let include_plants = jQuery("#plot_download_plants").is(":checked");
         if ( !type || type === '' ) {
-            alert("Please select a type");
+            alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("trial.heatmap.select_plot_type", "Please select a type") : "Please select a type"));
             return;
         }
         if ( !order || order === '' ) {
-            alert("Please select a plot order");
+            alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("trial.heatmap.select_plot_order", "Please select a plot order") : "Please select a plot order"));
             return;
         }
         if ( !start || start === '' ) {
-            alert("Please select a starting plot");
+            alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("trial.heatmap.select_starting_plot", "Please select a starting plot") : "Please select a starting plot"));
             return;
         }
         let additional_properties = {
@@ -1293,7 +1327,7 @@ jQuery(document).ready( function() {
             },
             error: function(response) {
                 jQuery('#working_modal').modal("hide");
-                alert('Error refreshing cache');
+                alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("trial.heatmap.cache_refresh_error", "Error refreshing cache") : 'Error refreshing cache'));
             },
         })
         .then(
@@ -1320,7 +1354,7 @@ jQuery(document).ready( function() {
                 },
                 error: function(response) {
                     jQuery('#working_modal').modal("hide");
-                    alert('Error saving fieldmap layout.');
+                    alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("trial.heatmap.save_fieldmap_error", "Error saving fieldmap layout.") : 'Error saving fieldmap layout.'));
                 },
             });
         } else {
@@ -1342,7 +1376,7 @@ jQuery(document).ready( function() {
             },
             error: function(response) {
                 jQuery('#working_modal').modal("hide");
-                alert('Error saving fieldmap layout.');
+                alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("trial.heatmap.save_fieldmap_error", "Error saving fieldmap layout.") : 'Error saving fieldmap layout.'));
             },
         });
     }
@@ -1375,7 +1409,7 @@ jQuery(document).ready( function() {
             jQuery('#working_modal').modal("hide");
             jQuery('#hm_replace_accession_curator_warning_message').modal("show");
           } else if (response.error) {
-            alert("Error Replacing Plot Accession: "+response.error);
+            alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("trial.card.coords.replace_error", "Error Replacing Plot Accession: ") : "Error Replacing Plot Accession: ")+response.error);
           }
           else {
             jQuery('#hm_replace_accession_curator_warning_message').modal("hide");
@@ -1384,7 +1418,7 @@ jQuery(document).ready( function() {
         },
         error: function () {
           jQuery('#working_modal').modal("hide");
-          alert('A server error occurred replacing plot accession - see console.');
+          alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("trial.heatmap.server_replace_accession_error", "A server error occurred replacing plot accession - see console.") : 'A server error occurred replacing plot accession - see console.'));
         }
       });
     }
@@ -1415,10 +1449,10 @@ jQuery(document).ready( function() {
                 });
 
                 var traits_assayed_html = "<select class='form-control' id='trait_list_dropdown'>";
-                traits_assayed_html = traits_assayed_html + "<optgroup label='Field Map'>";
-                traits_assayed_html = traits_assayed_html + "<option value='fieldmap'>view field layout</option>";
-                traits_assayed_html = traits_assayed_html + "<option value='geofieldmap'>view geo field layout</option></optgroup>";
-                traits_assayed_html = traits_assayed_html + "<optgroup label='Treatments & Assayed Traits'>";
+                traits_assayed_html = traits_assayed_html + "<optgroup label='" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("trial.heatmap.field_map", "Field Map") : "Field Map")).html().replace(/'/g, "&#39;").replace(/"/g, "&quot;") + "'>";
+                traits_assayed_html = traits_assayed_html + "<option value='fieldmap'>" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("trial.heatmap.view_field_layout", "view field layout") : "view field layout")).html() + "</option>";
+                traits_assayed_html = traits_assayed_html + "<option value='geofieldmap'>" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("trial.heatmap.view_geo_field_layout", "view geo field layout") : "view geo field layout")).html() + "</option></optgroup>";
+                traits_assayed_html = traits_assayed_html + "<optgroup label='" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("trial.heatmap.treatments_assayed_traits", "Treatments & Assayed Traits") : "Treatments & Assayed Traits")).html().replace(/'/g, "&#39;").replace(/"/g, "&quot;") + "'>";
                 Object.keys(variables).sort().forEach((name) => {
                     traits_assayed_html = traits_assayed_html + `<option value='${variables[name]}'>${name}</option>`;
                 });
@@ -1466,7 +1500,7 @@ jQuery(document).ready( function() {
             },
             error: function(response){
                 jQuery('#working_modal').modal('hide');
-                alert('Error retrieving traits assayed in this trial');
+                alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("phenotype.error_retrieving_traits_assayed_in_this_trial", "Error retrieving traits assayed in this trial") : 'Error retrieving traits assayed in this trial'));
             }
         });
     });
@@ -1549,13 +1583,13 @@ jQuery(document).ready( function() {
                         html += `ERROR: ${response.error}`;
                     }
                     else {
-                        html += "ERROR: Could not load linked trials";
+                        html += jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("trial.heatmap.load_linked_trials_error", "ERROR: Could not load linked trials") : "ERROR: Could not load linked trials")).html();
                     }
                     jQuery("#include_linked_trials_list").html(html);
                     _finish();
                 },
                 error: () => {
-                    jQuery("#include_linked_trials_list").html("ERROR: Could not load linked trials");
+                    jQuery("#include_linked_trials_list").html(jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("trial.heatmap.load_linked_trials_error", "ERROR: Could not load linked trials") : "ERROR: Could not load linked trials")).html());
                     _finish();
                 }
             });
@@ -1707,14 +1741,14 @@ function _finish() {
         success: function(response){
             jQuery('#working_modal').modal("hide");
             if (response.error) {
-              alert("Error Suppressing Phenotype: "+response.error);
+              alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("trial.heatmap.suppress_phenotype_error_prefix", "Error Suppressing Phenotype: ") : "Error Suppressing Phenotype: ")+response.error);
             }else {
                 jQuery('#suppress_phenotype_dialog_success_message').modal("show");
             }
           },
           error: function() {
             jQuery('#working_modal').modal("hide");
-            alert('An error occurred suppressing phenotype');
+            alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("trial.heatmap.suppress_phenotype_error", "An error occurred suppressing phenotype") : 'An error occurred suppressing phenotype'));
           }
     });
   }
@@ -1742,14 +1776,14 @@ function _finish() {
         success: function(response){
             jQuery("#working_modal").modal("hide");
             if (response.error){
-                alert("Error deleting trait:" +response.error);
+                alert((window.SGN && SGN.i18n ? SGN.i18n.p("trial.heatmap.error_delete_trait", "Error deleting trait:") : "Error deleting trait:") + response.error);
             }else{
                 jQuery("#delete_trait_dialog_success_message").modal("show");
             }
         },
         error: function(){
             jQuery('#working_modal').modal("hide");
-            alert('An error occurred deleting trait');
+            alert((window.SGN && SGN.i18n ? SGN.i18n.p("trial.heatmap.error_deleting_trait", "An error occurred deleting trait") : 'An error occurred deleting trait'));
         }
     });
 
@@ -1760,7 +1794,7 @@ function _finish() {
       var ret = value.split(",");
       var valStock = ret[0];
       var valPlot = ret[1];
-      jQuery('#check_plot_link').html(valPlot + " came from Plot:"+ valStock);
+      jQuery('#check_plot_link').html(valPlot + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("trial.heatmap.plot_came_from", " came from Plot:") : " came from Plot:")).html() + valStock);
   }
 
    jQuery("#view_ctrl_id_button").click(function(){
@@ -1769,9 +1803,9 @@ function _finish() {
 
        var list_of_checks = checks;
        var trial_checks_html = "<select class='form-control' id='check_list_dropdown'>";
-       trial_checks_html = trial_checks_html + "<option value=''>checks and plot numbers</option>";
+       trial_checks_html = trial_checks_html + "<option value=''>" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("trial.heatmap.checks_and_plot_numbers", "checks and plot numbers") : "checks and plot numbers")).html() + "</option>";
        jQuery.each(list_of_checks, function( key, value) {
-           trial_checks_html = trial_checks_html + "<option value="+ key + "," + value + " >" + "Plot:"+ key + "  [" + value +"]"+ "</option>";
+           trial_checks_html = trial_checks_html + "<option value="+ key + "," + value + " >" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("trial.fieldmap_edit.plot_label.plot_prefix", "Plot:") : "Plot:")).html()+ key + "  [" + value +"]"+ "</option>";
        });
        trial_checks_html = trial_checks_html +"</select>";
        jQuery("#heatmap_trial_checks_dropdown").html(trial_checks_html);
@@ -1782,10 +1816,10 @@ function _finish() {
 
    jQuery('#print_fieldmap').click(function(){
 
-    alert("You may need to change print settings - such as page size, margins, and scaling - to get the fieldmap to display properly in the print preview. Select \"Background graphics\" to ensure the legend includes colors.");
+    alert((window.SGN && SGN.i18n ? SGN.i18n.p("trial.heatmap.print_help", "You may need to change print settings - such as page size, margins, and scaling - to get the fieldmap to display properly in the print preview. Select \"Background graphics\" to ensure the legend includes colors.") : "You may need to change print settings - such as page size, margins, and scaling - to get the fieldmap to display properly in the print preview. Select \"Background graphics\" to ensure the legend includes colors."));
 
     let printWindow = window.open('', '', 'width=800,height=600');
-    printWindow.document.write('<html><head><title>Print</title></head><body style="display: flex;justify-content: center;align-items: center;flex-direction: column;margin: 0;">')
+    printWindow.document.write('<html><head><title>' + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("trial.heatmap.print_title", "Print") : "Print")).html() + '</title></head><body style="display: flex;justify-content: center;align-items: center;flex-direction: column;margin: 0;">')
 
     var title = document.querySelector("#trait_list_dropdown option:checked").textContent;
 

@@ -19,12 +19,12 @@ $composable_meta_root_cvterm => undef
 
 <& /util/import_javascript.mas, classes => ['CXGN.BreederSearch', 'CXGN.ComposeTrait'] &>
 
-<& /page/page_title.mas, title=>"Compose a new trait" &>
+<& /page/page_title.mas, title=>HTML::Entities::encode_entities($c->i18n->p("phenotype.root.compose_a_new_trait", "Compose a new trait")) &>
 </br>
 
 <div class="panel panel-default">
     <div class="panel-heading" data-toggle="collapse" data-parent="#accordion" data-target="#collapse0">
-        <div class="panel-title"><a href="#form" class="accordion-toggle">Trait Combinations</a><span class="pull-right clickable" onmouseover="" style="cursor: pointer;"><i class="glyphicon glyphicon-chevron-up"></i></span></div>
+        <div class="panel-title"><a href="#form" class="accordion-toggle"><% $c->i18n->p("phenotype.root.trait_combinations", "Trait Combinations") |h %></a><span class="pull-right clickable" onmouseover="" style="cursor: pointer;"><i class="glyphicon glyphicon-chevron-up"></i></span></div>
     </div>
     <div id="collapse0" class="panel-collapse collapse in">
         <div class="panel-body form-horizontal container-fluid" style="overflow:hidden">
@@ -38,56 +38,56 @@ $composable_meta_root_cvterm => undef
 
 <div class="panel panel-default">
   <div class="panel-heading" data-toggle="collapse" data-parent="#accordion" data-target="#collapse1">
-    <div class="panel-title"><a href="#form" class="accordion-toggle">Base Trait</a><span class="pull-right clickable" onmouseover="" style="cursor: pointer;"><i class="glyphicon glyphicon-chevron-up"></i></span></div>
+    <div class="panel-title"><a href="#form" class="accordion-toggle"><% $c->i18n->p("phenotype.root.base_trait", "Base Trait") |h %></a><span class="pull-right clickable" onmouseover="" style="cursor: pointer;"><i class="glyphicon glyphicon-chevron-up"></i></span></div>
   </div>
   <div id="collapse1" class="panel-collapse collapse in">
     <div class="panel-body form-horizontal container-fluid" style="overflow:hidden">
         <div class="col-sm-12 col-md-12 col-lg-12">
         <div id="object_div" class="col-md-6" style="display: none;">
-            <label for="object_select_div" class="control-label">Object</label>
-            <p class="help-block"><small>Pick the object on which the new trait is measured</small></p>
+            <label for="object_select_div" class="control-label"><% $c->i18n->p("shared.form.object", "Object") |h %></label>
+            <p class="help-block"><small><% $c->i18n->p("phenotype.root.pick_the_object_on_which_the_new_trait_is_measured", "Pick the object on which the new trait is measured") |h %></small></p>
             <div id="object_select_div"></div><br>
-            <button class="btn btn-default btn-sm" id="object_select_all" name="object_select_all"/>Select All</button>
-            <button class="btn btn-default btn-sm" id="object_select_clear" name="object_select_clear"/>Clear</button>
+            <button class="btn btn-default btn-sm" id="object_select_all" name="object_select_all"/><% $c->i18n->p("global.search_wizard.select_all", "Select All") |h %></button>
+            <button class="btn btn-default btn-sm" id="object_select_clear" name="object_select_clear"/><% $c->i18n->p("global.search_wizard.clear", "Clear") |h %></button>
         </div>
         <div id="attribute_div" class="col-md-6" style="display: none;">
-            <label for="attribute_select_div" class="control-label">Attribute</label>
-            <p class="help-block"><small>Pick the attribute the new trait measures</small></p>
+            <label for="attribute_select_div" class="control-label"><% $c->i18n->p("trial.card.design.header.attribute", "Attribute") |h %></label>
+            <p class="help-block"><small><% $c->i18n->p("phenotype.root.pick_the_attribute_the_new_trait_measures", "Pick the attribute the new trait measures") |h %></small></p>
             <div id="attribute_select_div"></div><br>
-            <button class="btn btn-default btn-sm" id="attribute_select_all" name="attribute_select_all"/>Select All</button>
-            <button class="btn btn-default btn-sm" id="attribute_select_clear" name="attribute_select_clear"/>Clear</button>
+            <button class="btn btn-default btn-sm" id="attribute_select_all" name="attribute_select_all"/><% $c->i18n->p("global.search_wizard.select_all", "Select All") |h %></button>
+            <button class="btn btn-default btn-sm" id="attribute_select_clear" name="attribute_select_clear"/><% $c->i18n->p("global.search_wizard.clear", "Clear") |h %></button>
         </div>
 
         <div id="method_div" class="col-md-6" style="display: none;">
-            <label for="method_select_div" class="control-label">Method</label>
-            <p class="help-block"><small>Pick the method by which the new trait is measured</small></p>
+            <label for="method_select_div" class="control-label"><% $c->i18n->p("phenotype.root.method", "Method") |h %></label>
+            <p class="help-block"><small><% $c->i18n->p("phenotype.root.pick_the_method_by_which_the_new_trait_is_measured", "Pick the method by which the new trait is measured") |h %></small></p>
             <div id="method_select_div"></div><br>
-            <button class="btn btn-default btn-sm" id="method_select_all" name="method_select_all"/>Select All</button>
-            <button class="btn btn-default btn-sm" id="method_select_clear" name="method_select_clear"/>Clear</button>
+            <button class="btn btn-default btn-sm" id="method_select_all" name="method_select_all"/><% $c->i18n->p("global.search_wizard.select_all", "Select All") |h %></button>
+            <button class="btn btn-default btn-sm" id="method_select_clear" name="method_select_clear"/><% $c->i18n->p("global.search_wizard.clear", "Clear") |h %></button>
         </div>
         <div id="unit_div" class="col-md-6" style="display: none;">
-            <label for="unit_select_div" class="control-label">Unit</label>
-            <p class="help-block"><small>Pick the units in which the new trait is measured</small></p>
+            <label for="unit_select_div" class="control-label"><% $c->i18n->p("phenotype.root.unit", "Unit") |h %></label>
+            <p class="help-block"><small><% $c->i18n->p("phenotype.root.pick_the_units_in_which_the_new_trait_is_measured", "Pick the units in which the new trait is measured") |h %></small></p>
             <div id="unit_select_div"></div><br>
-            <button class="btn btn-default btn-sm" id="unit_select_all" name="unit_select_all"/>Select All</button>
-            <button class="btn btn-default btn-sm" id="unit_select_clear" name="unit_select_clear"/>Clear</button>
+            <button class="btn btn-default btn-sm" id="unit_select_all" name="unit_select_all"/><% $c->i18n->p("global.search_wizard.select_all", "Select All") |h %></button>
+            <button class="btn btn-default btn-sm" id="unit_select_clear" name="unit_select_clear"/><% $c->i18n->p("global.search_wizard.clear", "Clear") |h %></button>
         </div>
 
         <div id="trait_div" class="col-md-6" style="display: none;">
-            <label for="trait_select_div" class="control-label">Trait</label>
-            <p class="help-block"><small>Pick an existing trait</small></p>
-            <input type="text" id="trait_search" class="form-control input-sm" placeholder="Search traits...">
+            <label for="trait_select_div" class="control-label"><% $c->i18n->p("accession.stock.phenotype.header.trait", "Trait") |h %></label>
+            <p class="help-block"><small><% $c->i18n->p("phenotype.root.pick_an_existing_trait", "Pick an existing trait") |h %></small></p>
+            <input type="text" id="trait_search" class="form-control input-sm" placeholder="<% $c->i18n->p("phenotype.root.search_traits", "Search traits...") |h %>">
             <div id="trait_select_div"></div><br>
-            <button class="btn btn-default btn-sm" id="trait_select_all" name="trait_select_all"/>Select All</button>
-            <button class="btn btn-default btn-sm" id="trait_select_clear" name="trait_select_clear"/>Clear</button>
+            <button class="btn btn-default btn-sm" id="trait_select_all" name="trait_select_all"/><% $c->i18n->p("global.search_wizard.select_all", "Select All") |h %></button>
+            <button class="btn btn-default btn-sm" id="trait_select_clear" name="trait_select_clear"/><% $c->i18n->p("global.search_wizard.clear", "Clear") |h %></button>
         </div>
 
         <div id="meta_div" class="col-md-6" style="display: none;">
-            <label for="meta_select_div" class="control-label">Metadata</label>
-            <p class="help-block"><small>Pick a metadata property</small></p>
+            <label for="meta_select_div" class="control-label"><% $c->i18n->p("global.search_wizard.metadata", "Metadata") |h %></label>
+            <p class="help-block"><small><% $c->i18n->p("phenotype.root.pick_a_metadata_property", "Pick a metadata property") |h %></small></p>
             <div id="meta_select_div"></div><br>
-            <button class="btn btn-default btn-sm" id="meta_select_all" name="meta_select_all"/>Select All</button>
-            <button class="btn btn-default btn-sm" id="meta_select_clear" name="meta_select_clear"/>Clear</button>
+            <button class="btn btn-default btn-sm" id="meta_select_all" name="meta_select_all"/><% $c->i18n->p("global.search_wizard.select_all", "Select All") |h %></button>
+            <button class="btn btn-default btn-sm" id="meta_select_clear" name="meta_select_clear"/><% $c->i18n->p("global.search_wizard.clear", "Clear") |h %></button>
         </div>
         </div>
 </div>
@@ -96,47 +96,47 @@ $composable_meta_root_cvterm => undef
 
 <div class="panel panel-default">
   <div class="panel-heading" data-toggle="collapse" data-parent="#accordion" data-target="#collapse2">
-    <div class="panel-title"><a href="#form" class="accordion-toggle">Time Terms</a><span class="pull-right clickable" onmouseover="" style="cursor: pointer;"><i class="glyphicon glyphicon-chevron-up"></i></span></div>
+    <div class="panel-title"><a href="#form" class="accordion-toggle"><% $c->i18n->p("phenotype.root.time_terms", "Time Terms") |h %></a><span class="pull-right clickable" onmouseover="" style="cursor: pointer;"><i class="glyphicon glyphicon-chevron-up"></i></span></div>
   </div>
   <div id="collapse2" class="panel-collapse collapse in">
     <div class="panel-body form-horizontal container-fluid" style="overflow:hidden">
     <div class="col-sm-12 col-md-12 col-lg-12">
     <div id="tod_div" class="col-md-6" style="display: none;">
-      <label for="tod_select_div" class="control-label">Time of Day</label>
-      <p class="help-block"><small><i>Optional</i> Pick the time of day at which the new trait is measured</small></p>
+      <label for="tod_select_div" class="control-label"><% $c->i18n->p("phenotype.root.time_of_day", "Time of Day") |h %></label>
+      <p class="help-block"><small><i><% $c->i18n->p("accession.stock.optional", "Optional") |h %></i> <% $c->i18n->p("phenotype.root.pick_the_time_of_day_at_which_the_new_trait", "Pick the time of day at which the new trait is measured") |h %></small></p>
       <div id="tod_select_div"></div><br>
-      <button class="btn btn-default btn-sm" id="tod_select_all" name="tod_select_all"/>Select All</button>
-      <button class="btn btn-default btn-sm" id="tod_select_clear" name="tod_select_clear"/>Clear</button>
+      <button class="btn btn-default btn-sm" id="tod_select_all" name="tod_select_all"/><% $c->i18n->p("global.search_wizard.select_all", "Select All") |h %></button>
+      <button class="btn btn-default btn-sm" id="tod_select_clear" name="tod_select_clear"/><% $c->i18n->p("global.search_wizard.clear", "Clear") |h %></button>
     </div>
     <div id="toy_div" class="col-md-6" style="display: none;">
-      <label for="toy_select_div" class="control-label">Time of Year</label>
-      <p class="help-block"><small><i>Optional</i> Pick the day, week, or month in which the new trait is measured</small></p>
-      <input type="text" id="toy_search" class="form-control input-sm" placeholder="Search minute, hour, day, week, month...">
+      <label for="toy_select_div" class="control-label"><% $c->i18n->p("phenotype.root.time_of_year", "Time of Year") |h %></label>
+      <p class="help-block"><small><i><% $c->i18n->p("accession.stock.optional", "Optional") |h %></i> <% $c->i18n->p("phenotype.root.pick_the_day_week_or_month_in_which_the_new", "Pick the day, week, or month in which the new trait is measured") |h %></small></p>
+      <input type="text" id="toy_search" class="form-control input-sm" placeholder="<% $c->i18n->p("phenotype.root.search_minute_hour_day_week_month", "Search minute, hour, day, week, month...") |h %>">
       <div id="toy_select_div"></div><br>
-      <button class="btn btn-default btn-sm" id="toy_select_all" name="toy_select_all"/>Select All</button>
-      <button class="btn btn-default btn-sm" id="toy_select_clear" name="toy_select_clear"/>Clear</button>
+      <button class="btn btn-default btn-sm" id="toy_select_all" name="toy_select_all"/><% $c->i18n->p("global.search_wizard.select_all", "Select All") |h %></button>
+      <button class="btn btn-default btn-sm" id="toy_select_clear" name="toy_select_clear"/><% $c->i18n->p("global.search_wizard.clear", "Clear") |h %></button>
     </div>
     <div id="tiy_div" class="col-md-6" style="display: none;">
-      <label for="tiy_select_div" class="control-label">Time in Years</label>
-      <p class="help-block"><small><i>Optional</i> Pick the year in which the new trait is measured</small></p>
-      <input type="text" id="tiy_search" class="form-control input-sm" placeholder="Search year...">
+      <label for="tiy_select_div" class="control-label"><% $c->i18n->p("phenotype.root.time_in_years", "Time in Years") |h %></label>
+      <p class="help-block"><small><i><% $c->i18n->p("accession.stock.optional", "Optional") |h %></i> <% $c->i18n->p("phenotype.root.pick_the_year_in_which_the_new_trait_is_measured", "Pick the year in which the new trait is measured") |h %></small></p>
+      <input type="text" id="tiy_search" class="form-control input-sm" placeholder="<% $c->i18n->p("phenotype.root.search_year", "Search year...") |h %>">
       <div id="tiy_select_div"></div><br>
-      <button class="btn btn-default btn-sm" id="tiy_select_all" name="tiy_select_all"/>Select All</button>
-      <button class="btn btn-default btn-sm" id="tiy_select_clear" name="tiy_select_clear"/>Clear</button>
+      <button class="btn btn-default btn-sm" id="tiy_select_all" name="tiy_select_all"/><% $c->i18n->p("global.search_wizard.select_all", "Select All") |h %></button>
+      <button class="btn btn-default btn-sm" id="tiy_select_clear" name="tiy_select_clear"/><% $c->i18n->p("global.search_wizard.clear", "Clear") |h %></button>
     </div>
     <div id="gen_div" class="col-md-6" style="display: none;">
-      <label for="gen_select_div" class="control-label">Generation</label>
-      <p class="help-block"><small><i>Optional</i> Pick the generation on which the new trait is measured</small></p>
+      <label for="gen_select_div" class="control-label"><% $c->i18n->p("phenotype.root.generation", "Generation") |h %></label>
+      <p class="help-block"><small><i><% $c->i18n->p("accession.stock.optional", "Optional") |h %></i> <% $c->i18n->p("phenotype.root.pick_the_generation_on_which_the_new_trait_is_measured", "Pick the generation on which the new trait is measured") |h %></small></p>
       <div id="gen_select_div"></div><br>
-      <button class="btn btn-default btn-sm" id="gen_select_all" name="gen_select_all"/>Select All</button>
-      <button class="btn btn-default btn-sm" id="gen_select_clear" name="gen_select_clear"/>Clear</button>
+      <button class="btn btn-default btn-sm" id="gen_select_all" name="gen_select_all"/><% $c->i18n->p("global.search_wizard.select_all", "Select All") |h %></button>
+      <button class="btn btn-default btn-sm" id="gen_select_clear" name="gen_select_clear"/><% $c->i18n->p("global.search_wizard.clear", "Clear") |h %></button>
     </div>
     <div id="evt_div" class="col-md-6" style="display: none;">
-      <label for="evt_select_div" class="control-label">Event</label>
-      <p class="help-block"><small><i>Optional</i> Pick the breeding event to which you selected time term relates.</small></p>
+      <label for="evt_select_div" class="control-label"><% $c->i18n->p("seedlot_overdue.ui.event", "Event") |h %></label>
+      <p class="help-block"><small><i><% $c->i18n->p("accession.stock.optional", "Optional") |h %></i> <% $c->i18n->p("phenotype.root.pick_the_breeding_event_to_which_you_selected_time_term", "Pick the breeding event to which you selected time term relates.") |h %></small></p>
       <div id="evt_select_div"></div><br>
-      <button class="btn btn-default btn-sm" id="evt_select_all" name="evt_select_all"/>Select All</button>
-      <button class="btn btn-default btn-sm" id="evt_select_clear" name="evt_select_clear"/>Clear</button>
+      <button class="btn btn-default btn-sm" id="evt_select_all" name="evt_select_all"/><% $c->i18n->p("global.search_wizard.select_all", "Select All") |h %></button>
+      <button class="btn btn-default btn-sm" id="evt_select_clear" name="evt_select_clear"/><% $c->i18n->p("global.search_wizard.clear", "Clear") |h %></button>
     </div>
     </div>
   </div>
@@ -146,23 +146,23 @@ $composable_meta_root_cvterm => undef
 
   <div class="panel panel-default">
     <div class="panel-heading" data-toggle="collapse" data-parent="#accordion" data-target="#collapse3">
-      <div class="panel-title"><a href="#form" class="accordion-toggle">Combinations</a><span class="pull-right clickable" onmouseover="" style="cursor: pointer;"><i class="glyphicon glyphicon-chevron-up"></i></span></div>
+      <div class="panel-title"><a href="#form" class="accordion-toggle"><% $c->i18n->p("phenotype.root.combinations", "Combinations") |h %></a><span class="pull-right clickable" onmouseover="" style="cursor: pointer;"><i class="glyphicon glyphicon-chevron-up"></i></span></div>
     </div>
     <div id="collapse3" class="panel-collapse collapse in">
       <div class="panel-body form-horizontal container-fluid" style="overflow:hidden">
 <div class="col-sm-12 col-md-12 col-lg-12">
 <div class="col-md-6">
-  <center><label class="control-label">Existing Traits</label></center>
-  <center><p class="help-block"><small>Existing traits that match the current selections</small></p></center>
+  <center><label class="control-label"><% $c->i18n->p("phenotype.root.existing_traits", "Existing Traits") |h %></label></center>
+  <center><p class="help-block"><small><% $c->i18n->p("phenotype.root.existing_traits_that_match_the_current_selections", "Existing traits that match the current selections") |h %></small></p></center>
   <select multiple class="form-control" id="existing_traits"></select>
   </br>
   <div id="existing_traits_to_list"></div>
 </div>
 <div class="col-md-6">
-  <center><label class="control-label">New Traits</label></center>
-  <center><p class="help-block"><small>New traits that can be made from the current selections</small></p></center>
+  <center><label class="control-label"><% $c->i18n->p("phenotype.root.new_traits", "New Traits") |h %></label></center>
+  <center><p class="help-block"><small><% $c->i18n->p("phenotype.root.new_traits_that_can_be_made_from_the_current_selections", "New traits that can be made from the current selections") |h %></small></p></center>
   <select multiple class="form-control" id="new_traits"></select></br>
-  <center><button id="compose_trait" title="Select at least one new trait to create before submitting" class="btn btn-primary">Submit</button></center>
+  <center><button id="compose_trait" title="<% $c->i18n->p("phenotype.root.select_at_least_one_new_trait_to_create_before_submitting", "Select at least one new trait to create before submitting") |h %>" class="btn btn-primary"><% $c->i18n->p("global.manage_file_share_dump.submit", "Submit") |h %></button></center>
 </div>
 </div>
 
@@ -176,13 +176,13 @@ $composable_meta_root_cvterm => undef
     <div class="modal-dialog" role="document">
         <div class="modal-content ui-front">
             <div class="modal-header text-center">
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                <h4 class="modal-title" id="traitsSavedDialog">Results</h4>
+                <button type="button" class="close" data-dismiss="modal" aria-label="<% $c->i18n->p("global.dataset_publish.close", "Close") |h %>"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="traitsSavedDialog"><% $c->i18n->p("global.gem_experiment_search.results", "Results") |h %></h4>
             </div>
             <div id="traits_saved_body" class="container-fluid">
             </div>
             <div class="modal-footer">
-                <button id="traits_saved_close_button" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                <button id="traits_saved_close_button" type="button" class="btn btn-default" data-dismiss="modal"><% $c->i18n->p("global.dataset_publish.close", "Close") |h %></button>
             </div>
         </div>
     </div>
@@ -301,7 +301,7 @@ jQuery('#compose_trait').on('click', function () {
     //console.log("just disabled ui");
     const selectedOptions = jQuery("#new_traits option:selected");
     if (selectedOptions.length === 0) {
-        alert("Please select at least one trait to compose.");
+        alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("phenotype.root.please_select_at_least_one_trait_to_compose", "Please select at least one trait to compose.") : "Please select at least one trait to compose."));
         return;
     }
     const new_trait_names = {};
@@ -324,13 +324,13 @@ jQuery('#compose_trait').on('click', function () {
             var names = [];
             enable_ui();
             if (response.success) {
-                results_html += '<div class="modal-body col-sm-12" id="traits_saved"><label id="success_label" class="control-label">Traits saved</label><ul class="list-group" id="traits_saved_message"><li class="list-group-item list-group-item-success">'+response.success+'</li></ul></div><label id="list_label" class="control-label">Copy new traits to a list</label><div class="modal-body col-sm-12" id="results_to_list_menu"></div><div id="new_trait_names" style="display: none;"></div>';
+                results_html += ("<div class=\"modal-body col-sm-12\" id=\"traits_saved\"><label id=\"success_label\" class=\"control-label\">" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("phenotype.root.traits_saved", "Traits saved") : "Traits saved")).html() + "</label><ul class=\"list-group\" id=\"traits_saved_message\"><li class=\"list-group-item list-group-item-success\">")+response.success+("</li></ul></div><label id=\"list_label\" class=\"control-label\">" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("phenotype.root.copy_new_traits_to_a_list", "Copy new traits to a list") : "Copy new traits to a list")).html() + "</label><div class=\"modal-body col-sm-12\" id=\"results_to_list_menu\"></div><div id=\"new_trait_names\" style=\"display: none;\"></div>");
                 for(var i=0; i<response.names.length; i++){
                     names.push(response.names[i]+"\n");
                 }
             }
             if (response.error){
-                results_html += '<div class="modal-body col-sm-12" id="traits_error"><label id="error_label" class="control-label">Traits Not Saved</label><ul class="list-group" id="traits_error_message"><li class="list-group-item list-group-item-danger">'+response.error+'</li></ul></div>';
+                results_html += ("<div class=\"modal-body col-sm-12\" id=\"traits_error\"><label id=\"error_label\" class=\"control-label\">" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("phenotype.root.traits_not_saved", "Traits Not Saved") : "Traits Not Saved")).html() + "</label><ul class=\"list-group\" id=\"traits_error_message\"><li class=\"list-group-item list-group-item-danger\">")+response.error+'</li></ul></div>';
             }
 
             document.getElementById('traits_saved_body').innerHTML = results_html;
@@ -346,7 +346,7 @@ jQuery('#compose_trait').on('click', function () {
         },
         error: function(request, status, err) {
             enable_ui();
-            var results_html = '<div class="modal-body col-sm-12" id="traits_error"><label id="error_label" class="control-label">Traits Not Saved</label><ul class="list-group" id="traits_error_message"><li class="list-group-item list-group-item-danger">There was an error storing the composed terms. None were saved.</li></ul></div>';
+            var results_html = ("<div class=\"modal-body col-sm-12\" id=\"traits_error\"><label id=\"error_label\" class=\"control-label\">" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("phenotype.root.traits_not_saved", "Traits Not Saved") : "Traits Not Saved")).html() + "</label><ul class=\"list-group\" id=\"traits_error_message\"><li class=\"list-group-item list-group-item-danger\">" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("phenotype.root.there_was_an_error_storing_the_composed_terms_none_were", "There was an error storing the composed terms. None were saved.") : "There was an error storing the composed terms. None were saved.")).html() + "</li></ul></div>");
             document.getElementById('traits_saved_body').innerHTML = results_html;
       }
     });
@@ -513,3 +513,7 @@ jQuery(document).ready(function () {
 
 
 </script>
+
+<%once>
+use HTML::Entities ();
+</%once>

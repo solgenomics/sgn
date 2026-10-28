@@ -1,3 +1,7 @@
+<%once>
+use HTML::Entities ();
+</%once>
+
 
 <%args>
 $stock_id
@@ -12,7 +16,7 @@ $stock_type => undef
 
 <div class="panel panel-default">
     <div class="panel-body">
-        <&| /page/info_section.mas, title => 'Copy Accessions to a List', collapsible=>1, collapsed=>0, subtitle=>'<i>Copy the accession names to a new or exisiting list</i>'&>
+        <&| /page/info_section.mas, anchor_title => 'Copy Accessions to a List', title => HTML::Entities::encode_entities($c->i18n->p("transformation.root.copy_accessions_to_a_list", 'Copy Accessions to a List')), collapsible=>1, collapsed=>0, subtitle=>("<i>" . HTML::Entities::encode_entities($c->i18n->p("accessions.section.copy_list_help", "Copy the accession names to a new or existing list")) . "</i>")&>
         <br>
         <div id="transformant_names" style="display:none"></div>
         <div id="transformants_to_list_menu"></div>
@@ -35,22 +39,22 @@ jQuery(document).ready(function(){
         'autoWidth': false,
         'ordering': false,
         'columns': [
-            { title: "Accession", "data": null, "render": function ( data, type, row ) { return "<a href='/stock/"+row.transformant_id+"/view'>"+row.transformant_name+"</a>"; } },
-            { title: "Plant Material", "data": null, "render": function ( data, type, row ) { return "<a href='/stock/"+row.plant_id+"/view'>"+row.plant_name+"</a>"; } },
-            { title: "Transformation ID", "data": null, "render": function ( data, type, row ) {
+            { title: jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("global.index_logged_in_user.accession", "Accession") : "Accession")).html(), "data": null, "render": function ( data, type, row ) { return "<a href='/stock/"+row.transformant_id+"/view'>"+row.transformant_name+"</a>"; } },
+            { title: jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("transformation.plant_material", "Plant Material") : "Plant Material")).html(), "data": null, "render": function ( data, type, row ) { return "<a href='/stock/"+row.plant_id+"/view'>"+row.plant_name+"</a>"; } },
+            { title: jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("transformation.transformation_id.6f39808", "Transformation ID") : "Transformation ID")).html(), "data": null, "render": function ( data, type, row ) {
                 if (row.transformation_id === null){
                     return 'NA'
                 } else {
                     return "<a href='/transformation/"+row.transformation_id+"'>"+row.transformation_name+"</a>";
                 }
             }},
-            { title: "Obsolete Accession", "data": "null", "render": function ( data, type, row ) { return "<a onclick='obsoleteStock("+row.transformant_id+",\""+row.transformant_name+"\")'>X</a>"; } },
+            { title: jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("transformation.obsolete_accession", "Obsolete Accession") : "Obsolete Accession")).html(), "data": "null", "render": function ( data, type, row ) { return "<a onclick='obsoleteStock("+row.transformant_id+",\""+row.transformant_name+"\")'>X</a>"; } },
         ],
 
         "fnInitComplete": function(oSettings, json) {
             //console.log(json);
             if (!isLoggedIn()) {
-                jQuery('#transformants_to_list_menu').html("<div class='well well-sm'><h3>Please login to use lists!</h3></div>");
+                jQuery('#transformants_to_list_menu').html(("<div class='well well-sm'><h3>" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("accession.related_stock.login_lists", "Please login to use lists!") : "Please login to use lists!")).html() + "</h3></div>"));
             } else {
                 let html = "";
                 for(let i=0; i<json.data.length; i++){

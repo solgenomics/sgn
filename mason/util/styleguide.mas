@@ -1,15 +1,26 @@
-<h3>Importing CSS</h3>
+<%once>
+use HTML::Entities ();
+use JSON::PP ();
+sub styleguide_fixed_markup {
+    my ($text, $slots) = @_;
+    $text = HTML::Entities::encode_entities($text);
+    my %encoded_slots = map { HTML::Entities::encode_entities($_) => $slots->{$_} } keys %{$slots || {}};
+    if (%encoded_slots) {
+        my $pattern = join '|', map { quotemeta($_) } sort { length($b) <=> length($a) } keys %encoded_slots;
+        $text =~ s/($pattern)/$encoded_slots{$1}/ge;
+    }
+    return $text;
+}
+</%once>
+
+<h3><% $c->i18n->p('styleguide.section.importing_css', 'Importing CSS') |h %></h3>
 
 <p>
-  To import CSS one should use the <code>/util/import_css.mas</code> 
-  mason component instead of a <code>&lt;link&gt;</code> element. This will 
-  ensure that a link is added to the <code>&lt;head&gt;</code> 
-  instead of being part of the <code>&lt;body&gt;</code>. One provides this 
-  mason componant with a list of strings which are one of the following:
+  <% styleguide_fixed_markup($c->i18n->p('styleguide.css.intro', 'To import CSS one should use the %{component} mason component instead of a %{link} element. This will ensure that a link is added to the %{head} instead of being part of the %{body}. One provides this mason component with a list of strings which are one of the following:', { component => '__SGN_CSS_COMPONENT__', link => '__SGN_LINK_ELEMENT__', head => '__SGN_HEAD_ELEMENT__', body => '__SGN_BODY_ELEMENT__' }), { '__SGN_CSS_COMPONENT__' => '<code>/util/import_css.mas</code>', '__SGN_LINK_ELEMENT__' => '<code>&lt;link&gt;</code>', '__SGN_HEAD_ELEMENT__' => '<code>&lt;head&gt;</code>', '__SGN_BODY_ELEMENT__' => '<code>&lt;body&gt;</code>' }) |n %>
   <ul>
-    <li>The relative path to the CSS file from the /static/css folder.</li>
-    <li>The absolute site path to the CSS file.</li>
-    <li>A URL starting with the scheme name (i.e. 'http://...').</li>
+    <li><% $c->i18n->p('styleguide.css.path.relative', 'The relative path to the CSS file from the /static/css folder.') |h %></li>
+    <li><% $c->i18n->p('styleguide.css.path.absolute', 'The absolute site path to the CSS file.') |h %></li>
+    <li><% $c->i18n->p('styleguide.css.path.url', "A URL starting with the scheme name (i.e. '%{url}').", { url => 'http://...' }) |h %></li>
   </ul>
     <pre><%text><& /util/import_css.mas, paths => [
     'bootstrap/v1.css',
@@ -20,22 +31,17 @@
 
 <hr>
 
-<h3>Importing JavaScript</h3>
+<h3><% $c->i18n->p('styleguide.section.importing_javascript', 'Importing JavaScript') |h %></h3>
 
 <p>
-  To import JavaScript one should use the <code>/util/import_javascript.mas</code> 
-  mason component. This will ensure that the script is loaded in the 
-  <code>&lt;head&gt;</code> instead of being part of the 
-  <code>&lt;body&gt;</code>. One provides this mason componant with a list of 
-  strings which are the path to the JavaScript file with slashes replaced by 
-  periods (e.g. <code>s/\/\./g</code>) and the file extension removed.
+  <% styleguide_fixed_markup($c->i18n->p('styleguide.javascript.intro', 'To import JavaScript one should use the %{component} mason component. This will ensure that the script is loaded in the %{head} instead of being part of the %{body}. One provides this mason component with a list of strings which are the path to the JavaScript file with slashes replaced by periods (e.g. %{expression}) and the file extension removed.', { component => '__SGN_JS_COMPONENT__', head => '__SGN_HEAD_ELEMENT__', body => '__SGN_BODY_ELEMENT__', expression => '__SGN_PATH_EXPRESSION__' }), { '__SGN_JS_COMPONENT__' => '<code>/util/import_javascript.mas</code>', '__SGN_HEAD_ELEMENT__' => '<code>&lt;head&gt;</code>', '__SGN_BODY_ELEMENT__' => '<code>&lt;body&gt;</code>', '__SGN_PATH_EXPRESSION__' => '<code>s/\/\./g</code>' }) |n %>
   <pre><%text><& /util/import_javascript.mas, classes => [qw[ CXGN.Effects CXGN.Phenome.Locus MochiKit.DOM ]] &></%text></pre>
 </p>
 
 <hr>
 
-<h3>Info Sections</h3>
-<p>Source:</p>
+<h3><% $c->i18n->p('styleguide.section.info_sections', 'Info Sections') |h %></h3>
+<p><% $c->i18n->p('styleguide.caption.source', 'Source:') |h %></p>
 <pre><%text>
 &lt;&| /page/info_section.mas, id=&gt;'Example_Info_Section', 
     title =&gt; 'Example Info Section', subtitle =&gt; 'This is a subtitle', 
@@ -46,9 +52,9 @@
 &lt;/&&gt;
 </%text></pre>
 
-<p>Creates:</p>
+<p><% $c->i18n->p('styleguide.caption.creates', 'Creates:') |h %></p>
 <&| /page/info_section.mas, id=>'Example_Info_Section', 
-    title => 'Example Info Section', subtitle => 'This is a subtitle', 
+    title => HTML::Entities::encode_entities($c->i18n->p('styleguide.demo.info_section.title', 'Example Info Section')), subtitle => HTML::Entities::encode_entities($c->i18n->p('styleguide.demo.info_section.subtitle', 'This is a subtitle')),
     collapsible=>1, collapsed=>0 &>
     
   Lorem ipsum dolor sit amet, consectetur adipiscing elit. 
@@ -57,8 +63,8 @@
 
 <hr>
 
-<h3>List Select Menus</h3>
-<p>Source:</p>
+<h3><% $c->i18n->p('styleguide.section.list_select_menus', 'List Select Menus') |h %></h3>
+<p><% $c->i18n->p('styleguide.caption.source', 'Source:') |h %></p>
 <pre>
   &lt;& /util/import_javascript.mas, classes => ['CXGN.List'] &&gt;
   &lt;div id="select_div_id"&gt;&lt;/div&gt;
@@ -69,17 +75,17 @@
   &lt;/script&gt;
 </pre>
 
-<p>Creates:</p>
+<p><% $c->i18n->p('styleguide.caption.creates', 'Creates:') |h %></p>
 <div id="select_div_id"></div>
 <script type="text/javascript">
   var lo = new CXGN.List();
-  var listhtml = lo.listSelect('select_div_id', ['accessions'], "Select an Accession List", undefined, undefined);
+  var listhtml = lo.listSelect('select_div_id', ['accessions'], <% JSON::PP::encode_json($c->i18n->p('styleguide.demo.select_accession_list', 'Select an Accession List')) %>, undefined, undefined);
   jQuery('#select_div_id').html(listhtml);
 </script>
 <hr>
 
-<h3>HTML Selects (get_select_box)</h3>
-<p>Source:</p>
+<h3><% $c->i18n->p('styleguide.section.html_selects', 'HTML Selects (get_select_box)') |h %></h3>
+<p><% $c->i18n->p('styleguide.caption.source', 'Source:') |h %></p>
 <pre>
 &lt;& /util/import_javascript.mas, classes => ['CXGN.BreedersToolbox.HTMLSelect'] &&gt;
 &lt;div id="htmlselectexample"&gt;&lt;/div&gt;
@@ -88,7 +94,7 @@
 &lt;/script&gt;
 </pre>
 
-<p>Creates:</p>
+<p><% $c->i18n->p('styleguide.caption.creates', 'Creates:') |h %></p>
 <div id="htmlselectexample"></div>
 <script type="text/javascript">
     get_select_box("trials", "htmlselectexample")
@@ -96,8 +102,8 @@
 
 <hr>
 
-<h3>HTML Muliple Selects (get_select_box has many options e.g. search for trials in breeding_program_name)</h3>
-<p>Source:</p>
+<h3><% $c->i18n->p('styleguide.section.html_multiple_selects', 'HTML Multiple Selects (%{function} has many options e.g. search for trials in %{program_key})', { function => 'get_select_box', program_key => 'breeding_program_name' }) |h %></h3>
+<p><% $c->i18n->p('styleguide.caption.source', 'Source:') |h %></p>
 <pre>
 &lt;& /util/import_javascript.mas, classes => ['CXGN.BreedersToolbox.HTMLSelect'] &&gt;
 &lt;div id="htmlselectmultipleexample"&gt;&lt;/div&gt;
@@ -106,7 +112,7 @@
 &lt;/script&gt;
 </pre>
 
-<p>Creates:</p>
+<p><% $c->i18n->p('styleguide.caption.creates', 'Creates:') |h %></p>
 <div id="htmlselectmultipleexample"></div>
 <script type="text/javascript">
     get_select_box("trials", "htmlselectmultipleexample", {'multiple':1, 'size':10, 'breeding_program_name':'test'})
@@ -114,8 +120,8 @@
 
 <hr>
 
-<h3>Add to List Menu</h3>
-<p>Source:</p>
+<h3><% $c->i18n->p('styleguide.section.add_to_list_menu', 'Add to List Menu') |h %></h3>
+<p><% $c->i18n->p('styleguide.caption.source', 'Source:') |h %></p>
 <pre>
 &lt;div id="styleguide_add_to_list_menu"&gt;&lt;/div&gt;
 &lt;div id="styleguide_add_to_list_items" style="display:none"&gt;item1
@@ -129,7 +135,7 @@
 &lt;/script&gt;
 </pre>
 
-<p>Creates:</p>
+<p><% $c->i18n->p('styleguide.caption.creates', 'Creates:') |h %></p>
 <div id="styleguide_add_to_list_menu"></div>
 <div id="styleguide_add_to_list_items" style="display:none">item1
     item2
@@ -143,8 +149,8 @@
 
 <hr>
 
-<h3>jQueryUI autocomplete</h3>
-<p>Source:</p>
+<h3><% $c->i18n->p('styleguide.section.jqueryui_autocomplete', 'jQueryUI autocomplete') |h %></h3>
+<p><% $c->i18n->p('styleguide.caption.source', 'Source:') |h %></p>
 <pre>
 &lt;input type="text" class="form-control" id="popname" value="" placeholder="Populations autocomplete..."&gt;
 &lt;script type="text/javascript"&gt;
@@ -154,8 +160,8 @@
 &lt;/script&gt;
 </pre>
 
-<p>Creates:</p>
-<input type="text" class="form-control" id="popname" value="" placeholder="Populations autocomplete...">
+<p><% $c->i18n->p('styleguide.caption.creates', 'Creates:') |h %></p>
+<input type="text" class="form-control" id="popname" value="" placeholder="<% $c->i18n->p('styleguide.demo.populations_placeholder', 'Populations autocomplete...') |h %>">
 <script type="text/javascript">
   jQuery('#popname').autocomplete({
     source: '/ajax/stock/population_autocomplete',
@@ -164,9 +170,9 @@
 
 <hr>
 
-<h3>2 Column Detail Page Section</h3>
-<p>This section is used from trial detail page and stock detail page, but ideally it would be used on all detail pages. The info_section_id specifies what to show in the main section. Buttons can be passed into the buttons_html.</p>
-<p>Source:</p>
+<h3><% $c->i18n->p('styleguide.section.detail_2_column', '2 Column Detail Page Section') |h %></h3>
+<p><% styleguide_fixed_markup($c->i18n->p('styleguide.detail_2_column.explanation', 'This section is used from trial detail page and stock detail page, but ideally it would be used on all detail pages. The %{info_section_id} specifies what to show in the main section. Buttons can be passed into the %{buttons_html}.', { info_section_id => '__SGN_INFO_SECTION_ID__', buttons_html => '__SGN_BUTTONS_HTML__' }), { '__SGN_INFO_SECTION_ID__' => '<code>info_section_id</code>', '__SGN_BUTTONS_HTML__' => '<code>buttons_html</code>' }) |n %></p>
+<p><% $c->i18n->p('styleguide.caption.source', 'Source:') |h %></p>
 <pre>
 &lt;& /page/detail_page_2_col_section.mas,
 info_section_title =&gt; "&lt;h4 style='display:inline'&gt;My Info Section&lt;/h4&gt;",
@@ -177,13 +183,13 @@ buttons_html =&gt; "&lt;button class='btn btn-sm btn-primary' style='margin:3px'
 &&gt;
 </pre>
 
-<p>Creates:</p>
-<& /page/detail_page_2_col_section.mas, info_section_title => "<h4 style='display:inline'>My Info Section</h4>", info_section_subtitle => 'View my info.', icon_class => "glyphicon glyphicon-equalizer", info_section_id => "", buttons_html => "<button class='btn btn-sm btn-primary' style='margin:3px' id='my_example_button'>Example Button</button>" &>
+<p><% $c->i18n->p('styleguide.caption.creates', 'Creates:') |h %></p>
+<& /page/detail_page_2_col_section.mas, info_section_title => "<h4 style='display:inline'>" . HTML::Entities::encode_entities($c->i18n->p('styleguide.demo.detail_2_column.title', 'My Info Section')) . "</h4>", info_section_subtitle => HTML::Entities::encode_entities($c->i18n->p('styleguide.demo.detail_2_column.subtitle', 'View my info.')), icon_class => "glyphicon glyphicon-equalizer", info_section_id => "", buttons_html => "<button class='btn btn-sm btn-primary' style='margin:3px' id='my_example_button'>" . HTML::Entities::encode_entities($c->i18n->p('styleguide.demo.example_button', 'Example Button')) . "</button>" &>
 
 <hr>
 
-<h3>3 Column Detail Page Section</h3>
-<p>Source:</p>
+<h3><% $c->i18n->p('styleguide.section.detail_3_column', '3 Column Detail Page Section') |h %></h3>
+<p><% $c->i18n->p('styleguide.caption.source', 'Source:') |h %></p>
 <pre>
 &lt;& /page/detail_page_3_col_section.mas,
 icon_class =&gt; "glyphicon glyphicon-qrcode",
@@ -192,23 +198,23 @@ button_id =&gt; "example_button_link"
 &&gt;
 </pre>
 
-<p>Creates:</p>
-<& /page/detail_page_3_col_section.mas, icon_class => "glyphicon glyphicon-qrcode", title => "Example title.", button_id => "example_button_link" &>
+<p><% $c->i18n->p('styleguide.caption.creates', 'Creates:') |h %></p>
+<& /page/detail_page_3_col_section.mas, icon_class => "glyphicon glyphicon-qrcode", title => HTML::Entities::encode_entities($c->i18n->p('styleguide.demo.detail_3_column.title', 'Example title.')), button_id => "example_button_link" &>
 
 <hr>
 
-<h3>An Example Workflow Explaining Workflows</h3>
+<h3><% $c->i18n->p('styleguide.section.example_workflow', 'An Example Workflow Explaining Workflows') |h %></h3>
 
 <&| /util/workflow.mas , id=> "my_workflow"&>
 
   <&| /util/workflow.mas:step, title=>"workflow.mas" &>
-    <p>Add a workflow using the <code>/util/workflow.mas</code> mason component</p>
+    <p><% styleguide_fixed_markup($c->i18n->p('styleguide.workflow.add_workflow', 'Add a workflow using the %{component} mason component', { component => '__SGN_WORKFLOW_COMPONENT__' }), { '__SGN_WORKFLOW_COMPONENT__' => '<code>/util/workflow.mas</code>' }) |n %></p>
     <p><pre><%text>&lt;&amp;| /util/workflow.mas, id=> "my_workflow" &amp;&gt;...&lt;/&amp;&gt;</%text></pre></p>
-    <button type="button" class="btn btn-default" onclick="Workflow.complete(this);">Next</button>
+    <button type="button" class="btn btn-default" onclick="Workflow.complete(this);"><% $c->i18n->p('styleguide.workflow.next', 'Next') |h %></button>
   </&>
   
-  <&| /util/workflow.mas:step, title=>"Adding Steps" &>
-    <p>Add steps to the workflow using the <code>/util/workflow.mas:step</code> mason method.</p>
+  <&| /util/workflow.mas:step, title=>HTML::Entities::encode_entities($c->i18n->p('styleguide.workflow.step.adding', 'Adding Steps')) &>
+    <p><% styleguide_fixed_markup($c->i18n->p('styleguide.workflow.add_steps', 'Add steps to the workflow using the %{step_method} mason method.', { step_method => '__SGN_STEP_METHOD__' }), { '__SGN_STEP_METHOD__' => '<code>/util/workflow.mas:step</code>' }) |n %></p>
     <p>
 <pre><%text>&lt;&amp;| /util/workflow.mas, id=&gt; "my_workflow" &amp;&gt;
     &lt;&amp;| /util/workflow.mas:step, title=&gt; "Step A" &amp;&gt;...&lt;/&amp;&gt;
@@ -216,14 +222,12 @@ button_id =&gt; "example_button_link"
     ...
 &lt;/&amp;&gt;</%text></pre>
     </p>
-    <button type="button" class="btn btn-default" onclick="Workflow.complete(this);">Next</button>
+    <button type="button" class="btn btn-default" onclick="Workflow.complete(this);"><% $c->i18n->p('styleguide.workflow.next', 'Next') |h %></button>
   </&>
   
-  <&| /util/workflow.mas:step, title=>"Completing Steps" &>
+  <&| /util/workflow.mas:step, title=>HTML::Entities::encode_entities($c->i18n->p('styleguide.workflow.step.completing', 'Completing Steps')) &>
   <p>
-    Use the <code>Workflow.complete(Element)</code> JavaScript function to 
-    complete a step. <code>Element</code> should be any DOM element within the 
-    step you would like to complete.
+    <% styleguide_fixed_markup($c->i18n->p('styleguide.workflow.complete_help', 'Use the %{complete_method} JavaScript function to complete a step. %{element} should be any DOM element within the step you would like to complete.', { complete_method => '__SGN_COMPLETE_METHOD__', element => '__SGN_ELEMENT__' }), { '__SGN_COMPLETE_METHOD__' => '<code>Workflow.complete(Element)</code>', '__SGN_ELEMENT__' => '<code>Element</code>' }) |n %>
   </p>
   <p>
 <pre><%text>&lt;&amp;| /util/workflow.mas, id=&gt; "my_workflow"&amp;&gt;
@@ -234,14 +238,12 @@ button_id =&gt; "example_button_link"
   ...
 &lt;/&amp;&gt;</%text></pre>
   </p>
-  <button type="button" class="btn btn-default" onclick="Workflow.complete(this);">Next</button>
+  <button type="button" class="btn btn-default" onclick="Workflow.complete(this);"><% $c->i18n->p('styleguide.workflow.next', 'Next') |h %></button>
   </&>
   
-  <&| /util/workflow.mas:step, title=>"Skipping Steps" &>
+  <&| /util/workflow.mas:step, title=>HTML::Entities::encode_entities($c->i18n->p('styleguide.workflow.step.skipping', 'Skipping Steps')) &>
   <p>
-    Skipping works like completing but marks the step as incomplete. Use
-    <code>Workflow.skip(Element)</code> just like you would 
-    <code>Workflow.complete(Element)</code>.
+    <% styleguide_fixed_markup($c->i18n->p('styleguide.workflow.skip_help', 'Skipping works like completing but marks the step as incomplete. Use %{skip_method} just like you would %{complete_method}.', { skip_method => '__SGN_SKIP_METHOD__', complete_method => '__SGN_COMPLETE_METHOD__' }), { '__SGN_SKIP_METHOD__' => '<code>Workflow.skip(Element)</code>', '__SGN_COMPLETE_METHOD__' => '<code>Workflow.complete(Element)</code>' }) |n %>
   </p>
   <p>
 <pre><%text>&lt;&amp;| /util/workflow.mas, id=&gt; "my_workflow"&amp;&gt;
@@ -252,14 +254,12 @@ button_id =&gt; "example_button_link"
   ...
 &lt;/&amp;&gt;</%text></pre>
   </p>
-  <button type="button" class="btn btn-default" onclick="Workflow.skip(this);">Skip this Step</button>
+  <button type="button" class="btn btn-default" onclick="Workflow.skip(this);"><% $c->i18n->p('styleguide.workflow.skip_button', 'Skip this Step') |h %></button>
   </&>
   
-  <&| /util/workflow.mas:step, title=>"Pending Steps" &>
+  <&| /util/workflow.mas:step, title=>HTML::Entities::encode_entities($c->i18n->p('styleguide.workflow.step.pending', 'Pending Steps')) &>
   <p>
-    Sometimes a step needs time to complete, such as uploads. You can mark a
-    step as pending using <code>Workflow.pending(Element)</code>. You can later
-    fully complete the step using <code>Workflow.complete(Element)</code>.
+    <% styleguide_fixed_markup($c->i18n->p('styleguide.workflow.pending_help', 'Sometimes a step needs time to complete, such as uploads. You can mark a step as pending using %{pending_method}. You can later fully complete the step using %{complete_method}.', { pending_method => '__SGN_PENDING_METHOD__', complete_method => '__SGN_COMPLETE_METHOD__' }), { '__SGN_PENDING_METHOD__' => '<code>Workflow.pending(Element)</code>', '__SGN_COMPLETE_METHOD__' => '<code>Workflow.complete(Element)</code>' }) |n %>
   </p>
   <p>
 <pre><%text>&lt;&amp;| /util/workflow.mas, id=&gt; "my_workflow"&amp;&gt;
@@ -271,16 +271,12 @@ button_id =&gt; "example_button_link"
   ...
 &lt;/&amp;&gt;</%text></pre>
   </p>
-  <button id="to_complete" type="button" class="btn btn-primary" onclick="Workflow.pending(this);">Wait and Continue</button>
+  <button id="to_complete" type="button" class="btn btn-primary" onclick="Workflow.pending(this);"><% $c->i18n->p('styleguide.workflow.wait_continue', 'Wait and Continue') |h %></button>
   </&>
   
-  <&| /util/workflow.mas:step, title=>"Endscreens" &>
+  <&| /util/workflow.mas:step, title=>HTML::Entities::encode_entities($c->i18n->p('styleguide.workflow.step.endscreens', 'Endscreens')) &>
   <p>
-    After the final step is completed, an endscreen will be shown. To set the 
-    content of the endscreen, use the <code>/util/workflow.mas:complete</code> 
-    mason method. You can also optionally set a special endscreen which is shown
-    instead while there are pending steps using 
-    <code>/util/workflow.mas:pending</code>.
+    <% styleguide_fixed_markup($c->i18n->p('styleguide.workflow.endscreens_help', 'After the final step is completed, an endscreen will be shown. To set the content of the endscreen, use the %{complete_method} mason method. You can also optionally set a special endscreen which is shown instead while there are pending steps using %{pending_method}.', { complete_method => '__SGN_COMPLETE_METHOD__', pending_method => '__SGN_PENDING_METHOD__' }), { '__SGN_COMPLETE_METHOD__' => '<code>/util/workflow.mas:complete</code>', '__SGN_PENDING_METHOD__' => '<code>/util/workflow.mas:pending</code>' }) |n %>
   </p>
   <p>
 <pre><%text>&lt;&amp;| /util/workflow.mas, id=&gt; "my_workflow"&amp;&gt;
@@ -289,25 +285,21 @@ button_id =&gt; "example_button_link"
   &lt;&amp;| /util/workflow.mas:pending &amp;&gt; ... &lt;/&amp;&gt;
 &lt;/&amp;&gt;</%text></pre>
   </p>
-  <button type="button" class="btn btn-default" onclick="Workflow.complete(this);">Go to endscreen</button>
+  <button type="button" class="btn btn-default" onclick="Workflow.complete(this);"><% $c->i18n->p('styleguide.workflow.go_to_endscreen', 'Go to endscreen') |h %></button>
   </&>
   
   <&| /util/workflow.mas:pending &>
-    <h2>There is still a pending step. Complete it to see the final endscreen.</h2>
-    <button type="button" class="btn btn-default" onclick="Workflow.complete(document.querySelector('#to_complete'),false);">Complete Pending Step</button>
+    <h2><% $c->i18n->p('styleguide.workflow.pending_message', 'There is still a pending step. Complete it to see the final endscreen.') |h %></h2>
+    <button type="button" class="btn btn-default" onclick="Workflow.complete(document.querySelector('#to_complete'),false);"><% $c->i18n->p('styleguide.workflow.complete_pending', 'Complete Pending Step') |h %></button>
   </&>
   <&| /util/workflow.mas:complete &>
-    <h1>Congratulations, you've made it through the workflow!</h1>
-    <h4>Here are some other tips and tricks:</h4>
-    <p>To set the currently visible step of the workflow use</p>
+    <h1><% $c->i18n->p('styleguide.workflow.congratulations', "Congratulations, you've made it through the workflow!") |h %></h1>
+    <h4><% $c->i18n->p('styleguide.workflow.tips_heading', 'Here are some other tips and tricks:') |h %></h4>
+    <p><% styleguide_fixed_markup($c->i18n->p('styleguide.workflow.focus_help', 'To set the currently visible step of the workflow use %{focus_code}', { focus_code => '__SGN_FOCUS_CODE__' }), { '__SGN_FOCUS_CODE__' => '<code>Workflow.focus(wf,step_index);</code>' }) |n %></p>
     <pre>var wf = document.querySelector("#my_workflow");
 Workflow.focus(wf,step_index);</pre>
     <p>
-      By default, <code>Workflow.complete(...)</code>, 
-      <code>Workflow.skip(...)</code>, and <code>Workflow.pending(...)</code> 
-      also change the focus to the next step. Sometimes, you need to set a step 
-      to complete without changing the focus. To do this, pass 
-      <code>false</code> as the second argument.
+      <% styleguide_fixed_markup($c->i18n->p('styleguide.workflow.focus_behavior', 'By default, %{complete_method}, %{skip_method}, and %{pending_method} also change the focus to the next step. Sometimes, you need to set a step to complete without changing the focus. To do this, pass %{false_value} as the second argument.', { complete_method => '__SGN_COMPLETE_METHOD__', skip_method => '__SGN_SKIP_METHOD__', pending_method => '__SGN_PENDING_METHOD__', false_value => '__SGN_FALSE__' }), { '__SGN_COMPLETE_METHOD__' => '<code>Workflow.complete(...)</code>', '__SGN_SKIP_METHOD__' => '<code>Workflow.skip(...)</code>', '__SGN_PENDING_METHOD__' => '<code>Workflow.pending(...)</code>', '__SGN_FALSE__' => '<code>false</code>' }) |n %>
     </p>
     <pre>Workflow.complete(Element,false);
 Workflow.skip(Element,false);
@@ -317,14 +309,14 @@ Workflow.pending(Element,false);</pre>
 
 <hr>
 
-<h3>Vega(-lite) Graphs</h3>
+<h3><% $c->i18n->p('styleguide.section.vega_graphs', 'Vega(-lite) Graphs') |h %></h3>
 
 <p>
-    Using <a href="https://vega.github.io/vega-lite/">vega-lite</a> is an easy and quick way to make graphs in the db. Simply include vega-lite:
+    <% styleguide_fixed_markup($c->i18n->p('styleguide.vega.intro', 'Using %{vega_lite_link} is an easy and quick way to make graphs in the db. Simply include vega-lite:', { vega_lite_link => '__SGN_VEGA_LITE_LINK__' }), { '__SGN_VEGA_LITE_LINK__' => '<a href="https://vega.github.io/vega-lite/">vega-lite</a>' }) |n %>
     <pre><%text><& /util/import_javascript.mas, classes => [qw[ vega.vega3 vega.vega-lite2 vega.vega-embed3 vega.vega-defaults ]] &></%text></pre>
     set up a div:
 <pre><%text>&lt;div id="vis"&gt;&lt;/div&gt;</%text></pre>
-    and then run vega-lite (you can also use a <a href="https://vega.github.io/vega/">vega</a> graph spec): 
+    <% styleguide_fixed_markup($c->i18n->p('styleguide.vega.run', 'and then run vega-lite (you can also use a %{vega_link} graph spec):', { vega_link => '__SGN_VEGA_LINK__' }), { '__SGN_VEGA_LINK__' => '<a href="https://vega.github.io/vega/">vega</a>' }) |n %>
 <pre><%text>&lt;script type="text/javascript"&gt;
     var yourVlSpec = {
       "$schema": "https://vega.github.io/schema/vega-lite/v2.0.json",
@@ -345,7 +337,7 @@ Workflow.pending(Element,false);</pre>
     vegaEmbed("#vis", yourVlSpec, window.VEGA_DEFAULTS);
   &lt;/script&gt;</%text></pre>
 </p>
-to create:
+<% $c->i18n->p('styleguide.vega.to_create', 'to create:') |h %>
 <& /util/import_javascript.mas, classes => [qw[ vega.vega3 vega.vega-lite2 vega.vega-embed3 vega.vega-defaults ]] &>
 <div>
   <div id="vis"></div>
@@ -372,8 +364,8 @@ to create:
 
 <hr>
 
-<h3>Field Trials Search Datatable</h3>
-<p>Source:</p>
+<h3><% $c->i18n->p('styleguide.section.trial_search_datatable', 'Field Trials Search Datatable') |h %></h3>
+<p><% $c->i18n->p('styleguide.caption.source', 'Source:') |h %></p>
 <pre>
     &lt;div class="well"&gt;
     &lt;table id="trial_search_results" width="100%" class="table table-hover table-striped"&gt;
@@ -406,23 +398,23 @@ to create:
     &lt;/script&gt;
 </pre>
 
-<p>Creates:</p>
+<p><% $c->i18n->p('styleguide.caption.creates', 'Creates:') |h %></p>
 <div class="well">
 <table id="styleguide_trial_search_results" width="100%" class="table table-hover table-striped">
 <thead>
   <tr>
-    <th>Select</th>
-    <th>Trial name</th>
-    <th>Description</th>
-    <th>Breeding program</th>
-    <th>Folder</th>
-    <th>Year</th>
-    <th>Location</th>
-    <th>Trial type</th>
-    <th>Design</th>
-    <th>Planting Date</th>
-    <th>Harvest Date</th>
-    <th>Download</th>
+    <th><% $c->i18n->p('styleguide.demo.trial_table.select', 'Select') |h %></th>
+    <th><% $c->i18n->p('styleguide.demo.trial_table.name', 'Trial name') |h %></th>
+    <th><% $c->i18n->p('styleguide.demo.trial_table.description', 'Description') |h %></th>
+    <th><% $c->i18n->p('styleguide.demo.trial_table.breeding_program', 'Breeding program') |h %></th>
+    <th><% $c->i18n->p('styleguide.demo.trial_table.folder', 'Folder') |h %></th>
+    <th><% $c->i18n->p('styleguide.demo.trial_table.year', 'Year') |h %></th>
+    <th><% $c->i18n->p('styleguide.demo.trial_table.location', 'Location') |h %></th>
+    <th><% $c->i18n->p('styleguide.demo.trial_table.trial_type', 'Trial type') |h %></th>
+    <th><% $c->i18n->p('styleguide.demo.trial_table.design', 'Design') |h %></th>
+    <th><% $c->i18n->p('styleguide.demo.trial_table.planting_date', 'Planting Date') |h %></th>
+    <th><% $c->i18n->p('styleguide.demo.trial_table.harvest_date', 'Harvest Date') |h %></th>
+    <th><% $c->i18n->p('styleguide.demo.trial_table.download', 'Download') |h %></th>
 </tr>
 </thead>
 </table>
@@ -440,11 +432,10 @@ var styleguide_trial_table = jQuery('#styleguide_trial_search_results').DataTabl
 
 <hr>
 
-<h3>Use of Symbols</h3>
+<h3><% $c->i18n->p('styleguide.section.use_symbols', 'Use of Symbols') |h %></h3>
 
 <p>
-  Below is a table with current usages of symbols in the database. 
-  Please add to this tale when you choose to use a new symbol.
+  <% $c->i18n->p('styleguide.symbols.explanation', 'Below is a table with current usages of symbols in the database. Please add to this tale when you choose to use a new symbol.') |h %>
 </p>
 <style media="screen">
   .symbol-table>tbody>tr>td{
@@ -456,8 +447,8 @@ var styleguide_trial_table = jQuery('#styleguide_trial_search_results').DataTabl
 </style>
 <table class="table symbol-table">
   <tr>
-    <th>Symbol</th>
-    <th>Usages and contexts</th>
+    <th><% $c->i18n->p('styleguide.symbols.header.symbol', 'Symbol') |h %></th>
+    <th><% $c->i18n->p('styleguide.symbols.header.usages', 'Usages and contexts') |h %></th>
   </tr>
   <tr>
     <td><span class="glyphicon glyphicon-dashboard"></span></td>

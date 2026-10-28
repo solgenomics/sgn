@@ -19,14 +19,14 @@ $item_prop_id
     <div class="modal-dialog modal-xl" role="document">
         <div class="modal-content ui-front">
             <div class="modal-header text-center">
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                <h4 class="modal-title" id="editCatalogDetailsDialog">Edit Catalog Item Details</h4>
+                <button type="button" class="close" data-dismiss="modal" aria-label="<% $c->i18n->p("global.dataset_publish.close", "Close") |h %>"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="editCatalogDetailsDialog"><% $c->i18n->p("barcode.helper.edit_catalog_item_details", "Edit Catalog Item Details") |h %></h4>
             </div>
             <div class="modal-body" id="catalog_details_edit_body">
                 <div class="container-fluid">
                     <form class="form-horizontal" role="form" method="post" enctype="multipart/form-data" encoding="multipart/form-data">
                         <div class="form-group">
-                            <label class="col-sm-3 control-label" for="edit_item_name">Item Name: </label>
+                            <label class="col-sm-3 control-label" for="edit_item_name"><% $c->i18n->p("barcode.helper.item_name.b8d89d2", "Item Name:") |h %> </label>
                             <div class="col-sm-8">
                                 <div class="input-group">
                                     <input class="form-control col-sm-8" id="edit_item_name" type="text" value="<%$item_name%>" disabled/>
@@ -34,7 +34,7 @@ $item_prop_id
                             </div>
                         </div>
                         <div class="form-group">
-                            <label class="col-sm-3 control-label" for="edit_item_type">Item Type: </label>
+                            <label class="col-sm-3 control-label" for="edit_item_type"><% $c->i18n->p("barcode.helper.item_type.3f5084e", "Item Type:") |h %> </label>
                             <div class="col-sm-8">
                                 <div class="input-group">
                                     <input class="form-control col-sm-8" id="edit_item_type" type="text" value="<%$item_type%>" disabled/>
@@ -42,7 +42,7 @@ $item_prop_id
                             </div>
                         </div>
                         <div class="form-group">
-                            <label class="col-sm-3 control-label" for="edit_item_species">Species: </label>
+                            <label class="col-sm-3 control-label" for="edit_item_species"><% $c->i18n->p("barcode.helper.species", "Species:") |h %> </label>
                             <div class="col-sm-8">
                                 <div class="input-group">
                                     <input class="form-control col-sm-8" id="edit_item_species" type="text" value="<%$species%>" disabled/>
@@ -50,7 +50,7 @@ $item_prop_id
                             </div>
                         </div>
                         <div class="form-group">
-                            <label class="col-sm-3 control-label" for="edit_item_variety">Variety: </label>
+                            <label class="col-sm-3 control-label" for="edit_item_variety"><% $c->i18n->p("barcode.helper.variety", "Variety:") |h %> </label>
                             <div class="col-sm-8">
                                 <div class="input-group">
                                     <input class="form-control col-sm-8" id="edit_item_variety" type="text" value="<%$variety%>" disabled/>
@@ -58,7 +58,7 @@ $item_prop_id
                             </div>
                         </div>
                         <div class="form-group">
-                            <label class="col-sm-3 control-label" for="edit_material_type">Material Type: </label>
+                            <label class="col-sm-3 control-label" for="edit_material_type"><% $c->i18n->p("seedlots.ui.material_type.21ab872", "Material Type:") |h %> </label>
                             <div class="col-sm-8">
                                 <div class="input-group">
                                     <input class="form-control col-sm-8" id="edit_material_type" type="text" value="<%$material_type%>" disabled/>
@@ -66,20 +66,20 @@ $item_prop_id
                             </div>
                         </div>
                         <div class="form-group">
-                            <label class="col-sm-3 control-label" for="edit_item_category">Item Category: </label>
+                            <label class="col-sm-3 control-label" for="edit_item_category"><% $c->i18n->p("barcode.helper.item_category", "Item Category:") |h %> </label>
                             <div class="col-sm-8">
                                 <div class="input-group">
                                     <select class="form-control" id="edit_item_category" value="<%$category%>">
-                                        <option value="released variety">released variety</option>
-                                        <option value="pathogen assay ">pathogen assay</option>
-                                        <option value="control">control</option>
-                                        <option value="transgenic line">transgenic line</option>
+                                        <option value="released variety"><% $c->i18n->p("barcode.helper.released_variety", "released variety") |h %></option>
+                                        <option value="pathogen assay "><% $c->i18n->p("barcode.helper.pathogen_assay", "pathogen assay") |h %></option>
+                                        <option value="control"><% $c->i18n->p("barcode.helper.control", "control") |h %></option>
+                                        <option value="transgenic line"><% $c->i18n->p("barcode.helper.transgenic_line", "transgenic line") |h %></option>
                                     </select>
                                 </div>
                             </div>
                         </div>
                         <div class="form-group">
-                            <label class="col-sm-3 control-label" for="edit_item_material_source">Material Source: </label>
+                            <label class="col-sm-3 control-label" for="edit_item_material_source"><% $c->i18n->p("barcode.helper.material_source.765771b", "Material Source:") |h %> </label>
                             <div class="col-sm-8">
                                 <div class="input-group">
                                     <input class="form-control col-sm-8" id="edit_item_material_source" type="text" value="<%$material_source%>" />
@@ -87,7 +87,7 @@ $item_prop_id
                             </div>
                         </div>
                         <div class="form-group">
-                            <label class="col-sm-3 control-label" for="edit_item_additional_info">Additional Info: </label>
+                            <label class="col-sm-3 control-label" for="edit_item_additional_info"><% $c->i18n->p("barcode.helper.additional_info.fc45f9a", "Additional Info:") |h %> </label>
                             <div class="col-sm-8">
                                 <div class="input-group">
                                     <input class="form-control col-sm-8" id="edit_item_additional_info" type="text" value="<%$additional_info%>" />
@@ -95,7 +95,7 @@ $item_prop_id
                             </div>
                         </div>
                         <div class="form-group">
-                            <label class="col-sm-3 control-label" for="edit_item_breeding_program">Breeding Program: </label>
+                            <label class="col-sm-3 control-label" for="edit_item_breeding_program"><% $c->i18n->p("cross.ui.breeding_program.2c9b17e", "Breeding Program:") |h %> </label>
                             <div class="col-sm-8">
                                 <div class="input-group">
                                     <select class="form-control" id="edit_item_breeding_program" value="<%$program_id%>"></select>
@@ -103,12 +103,12 @@ $item_prop_id
                             </div>
                         </div>
                         <div class="form-group">
-                            <label class="col-sm-3 control-label" for="edit_availability">Availability: </label>
+                            <label class="col-sm-3 control-label" for="edit_availability"><% $c->i18n->p("barcode.helper.availability.00afffb", "Availability:") |h %> </label>
                             <div class="col-sm-8">
                                 <div class="input-group">
                                     <select class="form-control" id="edit_availability" value="<%$availability%>">
-                                        <option value="available">available</option>
-                                        <option value="unavailable">unavailable</option>
+                                        <option value="available"><% $c->i18n->p("barcode.helper.available", "available") |h %></option>
+                                        <option value="unavailable"><% $c->i18n->p("barcode.helper.unavailable", "unavailable") |h %></option>
                                     </select>
                                 </div>
                             </div>
@@ -127,8 +127,8 @@ $item_prop_id
                 </div>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-default" data-dismiss="modal" id="edit_item_details_cancel_button">Cancel</button>
-                <button type="button" class="btn btn-primary" id="save_item_details">Save Changes</button>
+                <button type="button" class="btn btn-default" data-dismiss="modal" id="edit_item_details_cancel_button"><% $c->i18n->p("auth.legacy.cancel", "Cancel") |h %></button>
+                <button type="button" class="btn btn-primary" id="save_item_details"><% $c->i18n->p("trial.details.save", "Save Changes") |h %></button>
             </div>
         </div>
     </div>
@@ -139,19 +139,19 @@ $item_prop_id
     <div class="modal-dialog" role="document">
         <div class="modal-content">
             <div class="modal-header">
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                <h4 class="modal-title" id="editCatalogSavedDialog">Success</h4>
+                <button type="button" class="close" data-dismiss="modal" aria-label="<% $c->i18n->p("global.dataset_publish.close", "Close") |h %>"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="editCatalogSavedDialog"><% $c->i18n->p("cross.ui.success", "Success") |h %></h4>
             </div>
             <div class="modal-body">
                 <div class="container-fluid">
                     <p>
                         <span class="ui-icon ui-icon-circle-check" style="float: left; margin: 0 7px 50px 0;"></span>
-                        The catalog info was saved successfully.
+                        <% $c->i18n->p("barcode.helper.the_catalog_info_was_saved_successfully", "The catalog info was saved successfully.") |h %>
                     </p>
                 </div>
             </div>
             <div class="modal-footer">
-                <button id="dismiss_edit_item_saved_dialog" type="button" class="btn btn-default" data-dismiss="modal">Close & Reload</button>
+                <button id="dismiss_edit_item_saved_dialog" type="button" class="btn btn-default" data-dismiss="modal"><% $c->i18n->p("seedlots.ui.close_reload", "Close & Reload") |h %></button>
             </div>
         </div>
     </div>
@@ -230,7 +230,7 @@ jQuery(document).ready( function() {
             },
             error: function(response){
                 jQuery('#working_modal').modal('hide');
-                alert('An error occurred adding item');
+                alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("barcode.helper.an_error_occurred_adding_item", "An error occurred adding item") : 'An error occurred adding item'));
             }
         });
     });

@@ -106,7 +106,7 @@ solGS.listTypeSelectionPopulation = {
 
     var runSolgsCol = this.getRunSolgsBtnElement(selectionPop);
     var rowData = [popName,
-    dataStr, selectionPop.owner, runSolgsCol, `${dataStr}_${popId}`];
+    (typeof solGS.dataCaption === "function" ? solGS.dataCaption(dataStr) : dataStr), (typeof solGS.dataCaption === "function" ? solGS.dataCaption(selectionPop.owner) : selectionPop.owner), runSolgsCol, `${dataStr}_${popId}`];
     
     return rowData;
   },
@@ -124,7 +124,7 @@ solGS.listTypeSelectionPopulation = {
 
     var runSolgsBtn =
       `<button type="button" id=${runSolgsBtnId}` +
-      ` class="btn btn-success" data-selected-pop='${selectionArgs}'>Predict</button>`;
+      ` class="btn btn-success" data-selected-pop='${selectionArgs}'>${window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.predict_selection_population", "Predict") : "Predict"}</button>`;
 
       return runSolgsBtn;
 
@@ -144,10 +144,10 @@ solGS.listTypeSelectionPopulation = {
 
     var selectionTable =
       `<table id="${tableId}" class="table table-striped"><thead><tr>` +
-      "<th>Population</th>" +
-      "<th>Data structure</th>" +
-      "<th>Ownership</th>" +
-      "<th>Run solGS</th>" +
+      "<th>" + (window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.table_population", "Population") : "Population") + "</th>" +
+      "<th>" + (window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.table_data_structure", "Data structure") : "Data structure") + "</th>" +
+      "<th>" + (window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.table_ownership", "Ownership") : "Ownership") + "</th>" +
+      "<th>" + (window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.table_run_solgs", "Run solGS") : "Run solGS") + "</th>" +
       "</tr></thead></table>";
 
     return selectionTable;
@@ -167,7 +167,7 @@ solGS.listTypeSelectionPopulation = {
         return a[4]
       },
       "oLanguage": {
-        "sSearch": "Filter"
+        "sSearch": (window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.filter", "Filter") : "Filter")
       },
       columnDefs: [
         {
@@ -389,7 +389,7 @@ jQuery(document).ready(function () {
                 }
               })
               .fail(function () {
-                alert("Error occured checking if the selection population has predicted output.");
+                alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.predicted_output_check_error", ("Error occurred checking if the selection population has predicted output.")) : "Error occurred checking if the selection population has predicted output."));
               });
           } else {
             //TO-DO
@@ -423,7 +423,7 @@ jQuery(document).ready(function () {
             }
           })
           .fail(function () {
-            alert("Error occured checking if the selection population has predicted output.");
+            alert("Error occurred checking if the selection population has predicted output.");
           });
         }
       }

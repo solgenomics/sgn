@@ -1,5 +1,8 @@
 package CXGN::Page::FormattingHelpers;
+use SGN::I18N ();
+use HTML::Entities ();
 use strict;
+use CatalystX::GlobalContext '$c';
 use CXGN::Tools::List;
 use warnings;
 use Carp;
@@ -625,7 +628,7 @@ sub simple_checkbox_html {
 
 =item __tableattrs
 
-  A string of HTML attributes (like qq{width="100%" height="200"}) that will be directly imbedded
+  A string of HTML attributes (like qq{width="100%" height="200"}) that will be directly embedded
   in the beginning <table> tag.
 
 =item __multicol
@@ -1196,6 +1199,7 @@ my $numerical_range_input_unique_id = 0;
 
 sub numerical_range_input_html {
     my %params = @_;
+    my SGN::I18N $numeric_range_i18n = $params{i18n} || ($c && $c->can('i18n') ? $c->i18n : undef);
 
     3 == grep { $params{$_}[0] } qw/compare value1 value2/
       or croak
@@ -1212,10 +1216,10 @@ sub numerical_range_input_html {
     my $compare_select = simple_selectbox_html(
         name    => $params{compare}[0],
         choices => [
-            [ 'gt',  'greater than' ],
-            [ 'lt',  'less than' ],
-            [ 'bet', 'between' ],
-            [ 'eq',  'exactly' ],
+            [ 'gt',  HTML::Entities::encode_entities($numeric_range_i18n ? $numeric_range_i18n->p("shared.range.gt", "greater than") : "greater than") ],
+            [ 'lt',  HTML::Entities::encode_entities($numeric_range_i18n ? $numeric_range_i18n->p("shared.range.lt", "less than") : "less than") ],
+            [ 'bet', HTML::Entities::encode_entities($numeric_range_i18n ? $numeric_range_i18n->p("shared.range.bet", "between") : "between") ],
+            [ 'eq',  HTML::Entities::encode_entities($numeric_range_i18n ? $numeric_range_i18n->p("shared.range.eq", "exactly") : "exactly") ],
         ],
         selected => $params{compare}[1],
         id       => $id . '_r',
@@ -1226,8 +1230,9 @@ qq|onchange="CXGN.Page.FormattingHelpers.update_numerical_range_input('$id','$pa
     $params{value1}[1] = '' unless defined( $params{value1}[1] );
     $params{value2}[1] = '' unless defined( $params{value2}[1] );
 
+    my $and_caption = HTML::Entities::encode_entities($numeric_range_i18n ? $numeric_range_i18n->p("global.formatting.range.and", "and") : "and");
     return <<EOH;
-<div class="form-group"><div class="input-group col-sm-6"><span class="input-group-btn ">$compare_select</span><span class="input-group-btn"><input class="form-control" type="text" size="8" name="$params{value1}[0]" value="$params{value1}[1]" /></span></div>&nbsp;<span id="${id}_m">and</span>&nbsp;<span id="${id}_2" ><input size="8" type="text" name="$params{value2}[0]" value="$params{value2}[1]" />&nbsp;</span><span id="${id}_e">$params{units}</span></div>
+<div class="form-group"><div class="input-group col-sm-6"><span class="input-group-btn ">$compare_select</span><span class="input-group-btn"><input class="form-control" type="text" size="8" name="$params{value1}[0]" value="$params{value1}[1]" /></span></div>&nbsp;<span id="${id}_m">$and_caption</span>&nbsp;<span id="${id}_2" ><input size="8" type="text" name="$params{value2}[0]" value="$params{value2}[1]" />&nbsp;</span><span id="${id}_e">$params{units}</span></div>
 
 <!--$compare_select&nbsp;<input type="text" size="8" name="$params{value1}[0]" value="$params{value1}[1]" />&nbsp;<span id="${id}_m">and</span>&nbsp;<span id="${id}_2" ><input size="8" type="text" name="$params{value2}[0]" value="$params{value2}[1]" />&nbsp;</span><span id="${id}_e">$params{units}</span>-->
 <script language="JavaScript" type="text/javascript">
@@ -1259,6 +1264,7 @@ EOH
 
 sub conditional_like_input_html {
     my ( $name, $type_init, $string_init, $size ) = @_;
+    my SGN::I18N $conditional_match_i18n = $c && $c->can('i18n') ? $c->i18n : undef;
 
     #check arguments
     $name or croak 'must provide a name to conditional_like_input_html()';
@@ -1277,14 +1283,17 @@ EOC
 	id       => $name . '_matchtype',
 	selected => $type_init,
         choices  => [
-            'contains', [ 'starts_with', 'starts with' ],
-            [ 'ends_with', 'ends with' ], 'exactly',
+            [ "contains", HTML::Entities::encode_entities($conditional_match_i18n ? $conditional_match_i18n->p("shared.match.contains", "contains") : "contains") ],
+            [ "starts_with", HTML::Entities::encode_entities($conditional_match_i18n ? $conditional_match_i18n->p("shared.match.starts_with", "starts with") : "starts with") ],
+            [ "ends_with", HTML::Entities::encode_entities($conditional_match_i18n ? $conditional_match_i18n->p("shared.match.ends_with", "ends with") : "ends with") ],
+            [ "exactly", HTML::Entities::encode_entities($conditional_match_i18n ? $conditional_match_i18n->p("shared.match.exactly", "exactly") : "exactly") ]
         ],
     );
     chomp $matchtype_select;   #remove newline, cause some browsers are idiotic.
                                #return the html
+    my $search_placeholder = HTML::Entities::encode_entities($conditional_match_i18n ? $conditional_match_i18n->p("shared.match.search_placeholder", "Type search here...") : "Type search here...");
     return <<EOHTML;
-<div class="form-group"><div class="input-group"><span class="input-group-btn" width="20%">$matchtype_select</span><span class="input-group-btn"><input class="form-control" name="$name" id="$name" value="$string_init" size="$size" type="text" placeholder="Type search here..."/></span></div></div>
+<div class="form-group"><div class="input-group"><span class="input-group-btn" width="20%">$matchtype_select</span><span class="input-group-btn"><input class="form-control" name="$name" id="$name" value="$string_init" size="$size" type="text" placeholder="$search_placeholder"/></span></div></div>
 EOHTML
 }
 
@@ -1435,7 +1444,7 @@ sub multilevel_mode_selector_html {
 
 #TODO: transform the conf into a more standard tree structure, which is easier to work with
 #      and rewrite render code for it
-    sub _xform_tree {
+    sub _xform_tree { ## no critic (Subroutines::ProhibitNestedSubs) # Retain the existing recursive helper name and renderer call structure.
         my ( $def, $stem_name ) = @_;
         my @child_keys = _ml_child_keys($def);
         my @children;
@@ -1541,7 +1550,7 @@ sub _ml_render {
     my $thisml = $ml_id_ctr++;
 
     #sorts a single set of children by sort_index, if present
-    sub _sort_nodes {
+    sub _sort_nodes { ## no critic (Subroutines::ProhibitNestedSubs) # Retain the existing named sort helper used by the renderer.
         no warnings 'uninitialized';
         my ($nodelist) = @_;
         sort { $a->{sort_index} <=> $b->{sort_index} } @$nodelist;
@@ -1553,7 +1562,7 @@ sub _ml_render {
     #  print Dumper($tree);
     my %id_based_index;
 
-    sub _assign_ids_and_build_idx {
+    sub _assign_ids_and_build_idx { ## no critic (Subroutines::ProhibitNestedSubs) # Retain the existing named index helper used by the renderer.
         my ( $self, $parent_id, $idx ) = @_;
         my $id = "ml_" . $ml_id_ctr++;
         $self->{ml_id}        = $id;

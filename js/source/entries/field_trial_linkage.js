@@ -24,6 +24,8 @@ function brapiAjax(url) {
 }
 // BrAPI defaults to pageSize=10; request one page large enough to hold every
 // accession in a trial so germplasm matching is not silently truncated.
+function _sgnB12LinkageEscape(value) { return jQuery('<div>').text(value).html(); }
+
 var GERMPLASM_PAGE_SIZE = 100000;
 function studyGermplasmXhr(studyId) {
     return brapiAjax('/brapi/v2/germplasm?pageSize=' + GERMPLASM_PAGE_SIZE + '&studyDbId=' + studyId);
@@ -50,8 +52,8 @@ export function init(trial_id, trial_name) {
         success: function(r){
           jQuery('#working_modal').modal("hide");
 
-          var html1 = '<table class="table table-hover table-bordered"><thead><tr><th>Source Field Trial(s) For This Field Trial</th></tr></thead><tbody>';
-          var html2 = '<table class="table table-hover table-bordered"><thead><tr><th>Field Trial(s) Sourced From This Field Trial</th></tr></thead><tbody>';
+          var html1 = '<table class="table table-hover table-bordered"><thead><tr><th>' + _sgnB12LinkageEscape((window.SGN && SGN.i18n ? SGN.i18n.p("trial.linkage.source_header", "Source Field Trial(s) For This Field Trial") : "Source Field Trial(s) For This Field Trial")) + '</th></tr></thead><tbody>';
+          var html2 = '<table class="table table-hover table-bordered"><thead><tr><th>' + _sgnB12LinkageEscape((window.SGN && SGN.i18n ? SGN.i18n.p("trial.linkage.sourced_header", "Field Trial(s) Sourced From This Field Trial") : "Field Trial(s) Sourced From This Field Trial")) + '</th></tr></thead><tbody>';
           for (var i=0; i<r.source_field_trials.length; i++){
               html1 = html1 + '<tr><td><a href="/breeders/trial/'+r.source_field_trials[i][0]+'">'+r.source_field_trials[i][1]+'</a></td></tr>';
           }
@@ -259,16 +261,16 @@ export function init(trial_id, trial_name) {
                 var LINK_TOOLTIP_MAX_NAMES = 15;
                 function show_link_tooltip(d){
                   var shown = d.names.slice(0, LINK_TOOLTIP_MAX_NAMES);
-                  var header = d.value + " shared accession" + (d.value === 1 ? "" : "s");
+                  var header = d.value === 1 ? (window.SGN && SGN.i18n ? SGN.i18n.p("trial.linkage.shared_accession_one", "%{count} shared accession", {count: String(d.value)}) : d.value + " shared accession") : (window.SGN && SGN.i18n ? SGN.i18n.p("trial.linkage.shared_accession_many", "%{count} shared accessions", {count: String(d.value)}) : d.value + " shared accessions");
                   var lines = [header].concat(shown);
                   if (d.names.length > shown.length){
-                    lines.push("...and " + (d.names.length - shown.length) + " more");
+                    lines.push((window.SGN && SGN.i18n ? SGN.i18n.p("trial.linkage.more_count", "...and %{count} more", {count: String(d.names.length - shown.length)}) : "...and " + (d.names.length - shown.length) + " more"));
                   }
                   draw_tooltip((d.source.x1 + d.target.x0) / 2 + 10, (d.y0 + d.y1) / 2, lines);
                 }
 
                 function show_node_tooltip(d){
-                  var lines = ["Trial: " + d.id, "Trial Type: " + (d.trialType || "")];
+                  var lines = [(window.SGN && SGN.i18n ? SGN.i18n.p("trial.linkage.tooltip_trial", "Trial: %{trial}", {trial: String(d.id)}) : "Trial: " + d.id), (window.SGN && SGN.i18n ? SGN.i18n.p("trial.linkage.tooltip_type", "Trial Type: %{type}", {type: String(d.trialType || "")}) : "Trial Type: " + (d.trialType || ""))];
                   var leftX = d.x1 + 12;
                   if (leftX + TOOLTIP_WIDTH > sankeyWidth) leftX = d.x0 - 12 - TOOLTIP_WIDTH;
                   draw_tooltip(leftX, (d.y0 + d.y1) / 2, lines);
@@ -390,7 +392,7 @@ export function init(trial_id, trial_name) {
         },
         error: function(r){
           jQuery("#working_modal").modal("hide");
-          alert("Error retrieving field trial to field trial linkage.");
+          alert(window.SGN && SGN.i18n ? SGN.i18n.p("trial.linkage.error", "Error retrieving field trial to field trial linkage.") : "Error retrieving field trial to field trial linkage.");
         }
       });
 }

@@ -4,7 +4,7 @@
 
 <& /util/import_javascript.mas, classes => [ 'jquery', 'jquery.dataTables' ] &>
 
-<h4>Sampling Trials</h4>
+<h4><% $c->i18n->p('genotype.tissue.list.sampling_trials', 'Sampling Trials') |h %></h4>
 
 <div class="well well-sm">
     <div class="panel panel-default">
@@ -12,15 +12,15 @@
             <table id="tissue_sample_sampling_trial_search_results" class="table table-hover table-striped">
                 <thead>
                     <tr>
-                        <th>Trial name</th>
-                        <th>Description</th>
-                        <th>Breeding program</th>
-                        <th>Folder</th>
-                        <th>Year</th>
-                        <th>Location</th>
-                        <th>Sampling Facility</th>
-                        <th>Sample Type</th>
-                        <th>Download</th>
+                        <th><% $c->i18n->p('global.trial_table.name', 'Trial name') |h %></th>
+                        <th><% $c->i18n->p('global.trial_table.description', 'Description') |h %></th>
+                        <th><% $c->i18n->p('global.trial_table.breeding_program', 'Breeding program') |h %></th>
+                        <th><% $c->i18n->p('global.trial_table.folder', 'Folder') |h %></th>
+                        <th><% $c->i18n->p('global.trial_table.year', 'Year') |h %></th>
+                        <th><% $c->i18n->p('global.trial_table.location', 'Location') |h %></th>
+                        <th><% $c->i18n->p('genotype.sampling.list.sampling_facility', 'Sampling Facility') |h %></th>
+                        <th><% $c->i18n->p('genotype.sampling.list.sample_type', 'Sample Type') |h %></th>
+                        <th><% $c->i18n->p('global.download', 'Download') |h %></th>
                     </tr>
                 </thead>
             </table>

@@ -2,7 +2,7 @@ package CXGN::AnalysisModel::SaveModel;
 
 =head1 NAME
 
-CXGN::AnalysisModel::SaveModel - A Moose object to handle saving and retriving models and their training data files
+CXGN::AnalysisModel::SaveModel - A Moose object to handle saving and retrieving models and their training data files
 
 =head1 USAGE
 
@@ -32,6 +32,8 @@ Nicolas Morales <nm529@cornell.edu>
 =cut
 
 use Moose;
+use SGN::I18N ();
+has 'i18n' => (is => 'rw', isa => 'Maybe[Object]');
 use Data::Dumper;
 use DateTime;
 use CXGN::UploadFile;
@@ -131,6 +133,7 @@ has 'user_role' => (
 
 sub save_model {
     my $self = shift;
+    my $i18n = SGN::I18N::translate($self);
     my $schema = $self->bcs_schema();
     my $phenome_schema = $self->phenome_schema();
     my $metadata_schema = $self->metadata_schema();
@@ -162,7 +165,7 @@ sub save_model {
         type_id => $model_type_cvterm_id
     });
     if ($protocol_row) {
-        return { error => "The model name: $model_name has already been used! Please use a new name." };
+        return { error => SGN::I18N::translate($i18n, "analysis.interface.the_model_name_model_name_has_already_been_used_please", "The model name: %{model_name} has already been used! Please use a new name.", {model_name => ("" . "$model_name")}) };
     }
     else {
         $protocol_row = $schema->resultset("NaturalDiversity::NdProtocol")->create({

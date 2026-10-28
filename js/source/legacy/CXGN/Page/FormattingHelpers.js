@@ -46,14 +46,21 @@ CXGN.Page.FormattingHelpers.update_hierarchical_selectbox = function(parentindex
 
 
 CXGN.Page.FormattingHelpers.update_numerical_range_input = function(id,unitstr) {
+  var rangeI18n = (window.SGN && window.SGN.i18n) || { p: function (context, source) { return source; } };
+  var rangeAnd = rangeI18n.p('global.formatting.range.and', 'and');
   var range = id+'_r';
   var value2 = id+'_2';
   var middle = id+'_m';
   var end    = id+'_e';
   document.getElementById(value2).style.visibility= ( (document.getElementById(range).value=='bet') ? 'visible' : 'hidden' );
   document.getElementById(end).style.visibility= ( (document.getElementById(range).value=='bet') ? 'visible' : 'hidden' );
-  document.getElementById(middle).innerHTML = ( (document.getElementById(range).value=='bet') ? 'and' : unitstr );
-  document.getElementById(end).innerHTML = ( (document.getElementById(range).value=='bet') ? unitstr : 'and' );
+  if (document.getElementById(range).value=='bet') {
+    document.getElementById(middle).textContent = rangeAnd;
+    document.getElementById(end).innerHTML = unitstr;
+  } else {
+    document.getElementById(middle).innerHTML = unitstr;
+    document.getElementById(end).textContent = rangeAnd;
+  }
 };
 
 

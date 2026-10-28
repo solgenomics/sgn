@@ -8,15 +8,15 @@ $trial_name => undef
   <div class="modal-dialog modal-lg" role="document">
     <div class="modal-content">
       <div class="modal-header">
-        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-        <h4 class="modal-title" id="uploadTrialEntryNumbersDialog">Upload Trial Entry Numbers</h4>
+        <button type="button" class="close" data-dismiss="modal" aria-label="<% $c->i18n->p('trial.create.close', 'Close') |h %>"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title" id="uploadTrialEntryNumbersDialog"><% $c->i18n->p('trial.card.entry_numbers.upload_title', 'Upload Trial Entry Numbers') |h %></h4>
       </div>
       <div class="modal-body">
         <div class="container-fluid">
-          <b>Trial Entry Numbers may be uploaded in an Excel file (.xls or .xlsx)</b><br>
+          <b><% $c->i18n->p('trial.card.entry_numbers.upload_format', 'Trial Entry Numbers may be uploaded in an Excel file (%{xls} or %{xlsx})', { xls => '.xls', xlsx => '.xlsx' }) |h %></b><br>
           <br><br>
-          <b>Header:</b><br>
-          The first row (header) must contain the following:
+          <b><% $c->i18n->p('trial.card.entry_numbers.header', 'Header:') |h %></b><br>
+          <% $c->i18n->p('trial.card.entry_numbers.header_help', 'The first row (header) must contain the following:') |h %>
           <br>
           <table class="table table-bordered table-hover">
             <tbody>
@@ -27,16 +27,16 @@ $trial_name => undef
               </tr>
             </tbody>
           </table>
-          <b>Column Definitions:</b><br>
-          <b>accession_name:</b> (required) the unique name of the Accession record, must exist in the database<br>
-          <b>trial_names:</b> (required) the name(s) of the Trials to assign entry numbers in (can include more than one comma-separated Trial name)<br>
-          <b>entry_number:</b> The entry number to assign to the Accession in all of the specified Trial(s).  The entry number should be unique in this set of Trial(s).<br>
+          <b><% $c->i18n->p('trial.card.entry_numbers.column_definitions', 'Column Definitions:') |h %></b><br>
+          <b>accession_name:</b> <% $c->i18n->p('trial.card.entry_numbers.accession_definition', ' (required) the unique name of the Accession record, must exist in the database') |h %><br>
+          <b>trial_names:</b> <% $c->i18n->p('trial.card.entry_numbers.trials_definition', ' (required) the name(s) of the Trials to assign entry numbers in (can include more than one comma-separated Trial name)') |h %><br>
+          <b>entry_number:</b> <% $c->i18n->p('trial.card.entry_numbers.number_definition', ' The entry number to assign to the Accession in all of the specified Trial(s).  The entry number should be unique in this set of Trial(s).') |h %><br>
           <br>
           <form method="post" enctype="multipart/form-data" encoding="multipart/form-data" id="upload_entry_numbers_form" name="upload_entry_numbers_form">
-            <label for="upload_entry_numbers_file" style="display: inline-block;">Entry Numbers File:</label>
+            <label for="upload_entry_numbers_file" style="display: inline-block;"><% $c->i18n->p('trial.card.entry_numbers.file_label', 'Entry Numbers File:') |h %></label>
             <input class="form-control" type="file" name="upload_entry_numbers_file" id="upload_entry_numbers_file" encoding="multipart/form-data" />
             <input id="upload_entry_numbers_ignore_warnings_cb" name="upload_entry_numbers_ignore_warnings_cb" type="checkbox" value="">
-            <label for="upload_entry_numbers_ignore_warnings_cb"> Ignore Warnings - check to upload even if there are warnings with the file</label><br>
+            <label for="upload_entry_numbers_ignore_warnings_cb"> <% $c->i18n->p('trial.card.entry_numbers.ignore_warnings', 'Ignore Warnings - check to upload even if there are warnings with the file') |h %></label><br>
           </form>
 
           <br /><br />
@@ -47,8 +47,8 @@ $trial_name => undef
         </div>
       </div>
       <div class="modal-footer">
-        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-	      <button type="button" class="btn btn-primary" name="upload_entry_numbers_submit" id="upload_entry_numbers_submit">Upload</button>
+        <button type="button" class="btn btn-default" data-dismiss="modal"><% $c->i18n->p('trial.create.close', 'Close') |h %></button>
+	      <button type="button" class="btn btn-primary" name="upload_entry_numbers_submit" id="upload_entry_numbers_submit"><% $c->i18n->p('trial.card.entry_numbers.upload', 'Upload') |h %></button>
       </div>
     </div>
   </div>
@@ -64,7 +64,7 @@ jQuery(document).ready(function() {
   jQuery('#upload_entry_numbers_submit').click( function() {
     var uploadFile = jQuery("#upload_entry_numbers_file").val();
     if (uploadFile === '') {
-      alert("Please select a file");
+      alert(window.SGN && SGN.i18n ? SGN.i18n.p('trial.card.entry_numbers.select_file', 'Please select a file') : 'Please select a file');
       return;
     }
 
@@ -92,7 +92,7 @@ jQuery(document).ready(function() {
             addWarnings(response.warning);
           }
           if ( response.success === 1) {
-            addSuccess("Trial entry numbers stored!");
+            addSuccess(window.SGN && SGN.i18n ? SGN.i18n.p('trial.card.entry_numbers.stored', 'Trial entry numbers stored!') : 'Trial entry numbers stored!');
 	    loadEntryNumbers();
           }
         }
@@ -100,7 +100,7 @@ jQuery(document).ready(function() {
       error: function() {
         jQuery('#working_modal').modal("hide");
         jQuery("#upload_entry_numbers_file").val("");
-        alert("ERROR: Could not upload and process file due to server error!");
+        alert(window.SGN && SGN.i18n ? SGN.i18n.p('trial.card.entry_numbers.upload_error', 'ERROR: Could not upload and process file due to server error!') : 'ERROR: Could not upload and process file due to server error!');
       }
     });
   });

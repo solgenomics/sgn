@@ -2,6 +2,9 @@
 package CXGN::Trait;
 
 use Moose;
+use SGN::I18N ();
+use HTML::Entities ();
+use CatalystX::GlobalContext '$c';
 use Data::Dumper;
 use Try::Tiny;
 use List::Util qw(max);
@@ -795,16 +798,17 @@ sub delete_existing_synonyms {
 
 sub interactive_store {
 	my $self = shift;
+    my SGN::I18N $ui_interactive_store_i18n = SGN::I18N::translate($c);
     my $parent_terms_json = shift;
-	my $db_name = shift || die "No trait ontology supplied to store the new term in.\n"; # db name of the ontology the new term belongs to, e.g. CO_334
+	my $db_name = shift || die ("" . SGN::I18N::translate($ui_interactive_store_i18n, "phenotype.root.no_trait_ontology_supplied_to_store_the_new_term_in", "No trait ontology supplied to store the new term in.\n", undef, { entities => '<>&', decode => 1 }) . ""); # db name of the ontology the new term belongs to, e.g. CO_334
 
     my $schema = $self->bcs_schema();
 
 	my @parent_ids;
 
-    my $name = $self->name() || die "No name found.\n";
-    my $definition = $self->definition() || die "No definition found.\n";
-    my $format = $self->format() || die "No format found.\n";
+    my $name = $self->name() || die ("" . SGN::I18N::translate($ui_interactive_store_i18n, "phenotype.root.no_name_found", "No name found.\n", undef, { entities => '<>&', decode => 1 }) . "");
+    my $definition = $self->definition() || die ("" . SGN::I18N::translate($ui_interactive_store_i18n, "phenotype.root.no_definition_found", "No definition found.\n", undef, { entities => '<>&', decode => 1 }) . "");
+    my $format = $self->format() || die ("" . SGN::I18N::translate($ui_interactive_store_i18n, "phenotype.root.no_format_found", "No format found.\n", undef, { entities => '<>&', decode => 1 }) . "");
     my $default_value = $self->default_value() ne "" ? $self->default_value() : undef;
     my $minimum = $self->minimum() ne "" ? $self->minimum() : undef;
     my $maximum = $self->maximum() ne "" ? $self->maximum() : undef;
@@ -868,7 +872,7 @@ sub interactive_store {
 	my ($root_node) = grep { $_->[1] =~ m/^\Q$db_name\E:/ } @root_nodes;
 
 	if (!$root_node) {
-		die "No trait ontology named $db_name could be found in the database.\n";
+		die ("" . SGN::I18N::translate($ui_interactive_store_i18n, "phenotype.root.no_trait_ontology_named", "No trait ontology named ", undef, { entities => '<>&', decode => 1 }) . "$db_name" . SGN::I18N::translate($ui_interactive_store_i18n, "phenotype.root.could_be_found_in_the_database", " could be found in the database.\n", undef, { entities => '<>&', decode => 1 }) . "");
 	}
 
 	my $trait_cv_id = $root_node->[0];
@@ -886,7 +890,7 @@ sub interactive_store {
 		my $transform = $lt->transform($schema, "traits_2_trait_ids", $parent_terms);
 
 		if (@{$transform->{missing}} > 0) {
-			die "Parent term(s) " . join(", ", @{$transform->{missing}}) . " could not be found in the database.\n";
+			die(("" . SGN::I18N::translate($ui_interactive_store_i18n, "phenotype.root.parent_term_s", "Parent term(s) ", undef, { entities => '<>&', decode => 1 }) . "") . join(", ", @{$transform->{missing}}) . ("" . SGN::I18N::translate($ui_interactive_store_i18n, "phenotype.root.could_not_be_found_in_the_database", " could not be found in the database.\n", undef, { entities => '<>&', decode => 1 }) . ""));
 		}
 
 		@parent_ids = @{$transform->{transform}};
@@ -1019,6 +1023,7 @@ sub interactive_update {
 
 sub delete {
 	my $self = shift;
+    my SGN::I18N $ui_delete_i18n = SGN::I18N::translate($c);
 
 	my $schema = $self->bcs_schema;
 	my $cvterm_id = $self->cvterm_id;
@@ -1032,11 +1037,11 @@ sub delete {
 	my $phenotype_count = $h->fetchrow_array();
 
 	if ($phenotype_count > 0) {
-		die "Cannot delete cvterm $name because it has associated phenotypes. Delete these phenotypes before attempting to delete the cvterm.\n";
+		die ("" . SGN::I18N::translate($ui_delete_i18n, "phenotype.root.cannot_delete_cvterm", "Cannot delete cvterm ", undef, { entities => '<>&', decode => 1 }) . "$name" . SGN::I18N::translate($ui_delete_i18n, "phenotype.root.because_it_has_associated_phenotypes_delete_these_phenotypes_before_attempting", " because it has associated phenotypes. Delete these phenotypes before attempting to delete the cvterm.\n", undef, { entities => '<>&', decode => 1 }) . "");
 	}
 
 	if (!$self->db) {
-		die "It appears this cvterm is not part of an ontology. Deleting it is likely unsafe.\n";
+		die ("" . SGN::I18N::translate($ui_delete_i18n, "phenotype.root.it_appears_this_cvterm_is_not_part_of_an_ontology", "It appears this cvterm is not part of an ontology. Deleting it is likely unsafe.\n", undef, { entities => '<>&', decode => 1 }) . "");
 	}
 
 	my $coderef = sub {

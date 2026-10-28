@@ -1,10 +1,13 @@
 <!-- INSERT_HEAD_PRE_HTML -->
+<!-- Synchronous bootstrap is required before legacy and on-page consumers. -->
+<script src="/i18n/runtime.js"></script>
+<script src="/i18n/bootstrap.js?lang=<% $c->i18n->requested_locale |u %>&amp;workflow=<% SGN::I18N::workflow_for_source($c->path_to('locale', 'workflows.json')->stringify, $c->req->path, $c->stash->{template}, $m->request_comp->path, $m->base_comp->path) // '' |u %>"></script>
 
 <meta http-equiv="content-type" content="text/html; charset=utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1">
 
   <!-- <link rel="stylesheet" href="/css/sgn.css" type="text/css" /> -->
-  <link rel="search" type="application/opensearchdescription+xml" title="Search Database" href="/documents/sgn_sol_search.xml" />
+  <link rel="search" type="application/opensearchdescription+xml" title="<% $c->i18n->p('global.header.search_database', 'Search Database') |h %>" href="/documents/sgn_sol_search.xml" />
   <& /util/import_css.mas, paths => [
     '/css/new_sgn.css',
     '/css/jquery-sgn-theme/jquery-ui-1.10.3.custom.css',
@@ -47,3 +50,35 @@
 
 
 <!-- INSERT_HEAD_POST_HTML -->
+
+% if ($c->config->{i18n_enabled}) {
+<script type="text/javascript">
+(function ($) {
+    if (!$.fn.dataTable || !window.SGN || !SGN.i18n) return;
+    // DataTables inserts these captions as HTML. Keep its tokens and all
+    // decimal/thousands settings unchanged; escape translated text only.
+    function captionHTML(text) { return $('<div>').text(text).html(); }
+    $.extend(true, $.fn.dataTable.defaults.oLanguage, {
+        sEmptyTable: captionHTML(SGN.i18n.p("shared.datatables.empty", "No data available in table")),
+        sInfo: captionHTML(SGN.i18n.p("shared.datatables.info", "Showing _START_ to _END_ of _TOTAL_ entries")),
+        sInfoEmpty: captionHTML(SGN.i18n.p("shared.datatables.info_empty", "Showing 0 to 0 of 0 entries")),
+        sInfoFiltered: captionHTML(SGN.i18n.p("shared.datatables.filtered", "(filtered from _MAX_ total entries)")),
+        sLengthMenu: captionHTML(SGN.i18n.p("shared.datatables.length", "Show _MENU_ entries")),
+        sLoadingRecords: captionHTML(SGN.i18n.p("shared.datatables.loading", "Loading...")),
+        sProcessing: captionHTML(SGN.i18n.p("shared.datatables.processing", "Processing...")),
+        sSearch: captionHTML(SGN.i18n.p("shared.datatables.search", "Search:")),
+        sZeroRecords: captionHTML(SGN.i18n.p("shared.datatables.zero", "No matching records found")),
+        oPaginate: {
+            sFirst: captionHTML(SGN.i18n.p("shared.datatables.first", "First")),
+            sLast: captionHTML(SGN.i18n.p("shared.datatables.last", "Last")),
+            sNext: captionHTML(SGN.i18n.p("shared.datatables.next", "Next")),
+            sPrevious: captionHTML(SGN.i18n.p("shared.datatables.previous", "Previous"))
+        },
+        oAria: {
+            sSortAscending: SGN.i18n.p("shared.datatables.ascending", ": activate to sort column ascending"),
+            sSortDescending: SGN.i18n.p("shared.datatables.descending", ": activate to sort column descending")
+        }
+    });
+}(jQuery));
+</script>
+% }

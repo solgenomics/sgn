@@ -1,3 +1,7 @@
+<%once>
+use HTML::Entities ();
+</%once>
+
 <%args>
 $trial_id
 $trial_name
@@ -23,107 +27,107 @@ $default_plant_material_name
     <div class="col-sm-12">
         <table class="table table-hover table-bordered" >
             <tr>
-                <td><b>Transformation Project Name</b></td>
+                <td><b><% $c->i18n->p("transformation.transformation_project_name", "Transformation Project Name") |h %></b></td>
                 <td>
                     <div id="trial_name">
 % if ($trial_name) {
 %     print "$trial_name";
 % } else {
-%     print "<span class='text-danger'>[No Transformation Project Name]</span>";
+%     print ("<span class='text-danger'>" . HTML::Entities::encode_entities($c->i18n->p("transformation.no_transformation_project_name", "[No Transformation Project Name]")) . "</span>");
 % }
                     </div>
                 </td>
             </tr>
 
             <tr>
-                <td><b>Breeding Program </b></td>
+                <td><b><% $c->i18n->p("global.index_logged_in_user.breeding_program", "Breeding Program") |h %> </b></td>
                 <td>
                     <span id="breeding_program">
 % if ($breeding_program_name) {
 %     print "$breeding_program_name";
 % }
 % else {
-%     print "<span class='text-danger'>[No Breeding Program]</span>";
+%     print ("<span class='text-danger'>" . HTML::Entities::encode_entities($c->i18n->p("cross.ui.no_breeding_program", "[No Breeding Program]")) . "</span>");
 % }
                     </span>
                 </td>
             </tr>
 
             <tr>
-                <td><b>Location</b></td>
+                <td><b><% $c->i18n->p("global.search.features.location", "Location") |h %></b></td>
                 <td>
                     <div id="trial_location">
 % if ($location_name) {
 %     print "$location_name ( $country_name )";
 % } else {
-%     print "<span class='text-danger'>[No Location]</span>";
+%     print ("<span class='text-danger'>" . HTML::Entities::encode_entities($c->i18n->p("cross.ui.no_location", "[No Location]")) . "</span>");
 % }
                     </div>
                 </td>
             </tr>
 
             <tr>
-                <td><b>Year</b></td>
+                <td><b><% $c->i18n->p("accession.sequencing.table.year", "Year") |h %></b></td>
                 <td>
                     <div id="trial_year">
 % if ($year) {
 %    print "$year";
 % } else {
-%     print "<span class='text-danger'>[No Year]</span>";
+%     print ("<span class='text-danger'>" . HTML::Entities::encode_entities($c->i18n->p("cross.ui.no_year", "[No Year]")) . "</span>");
 % }
                     </div>
                 </td>
             </tr>
 
-            <tr><td><b>Description</b></td>
+            <tr><td><b><% $c->i18n->p("global.dataset_cxgn_dataset.table.description", "Description") |h %></b></td>
                 <td>
 % if ($trial_description) {
 %     print "<div id='trial_description' style='white-space: pre-wrap;'>$trial_description</div>";
 % } else {
-%     print "<div id='trial_description'><span class='text-danger'>[No Description]</span></div>";
+%     print ("<div id='trial_description'><span class='text-danger'>" . HTML::Entities::encode_entities($c->i18n->p("cross.ui.no_description", "[No Description]")) . "</span></div>");
 % }
                 </td>
             </tr>
 
-            <tr><td><b>Name Format for Transformants</b></td>
+            <tr><td><b><% $c->i18n->p("transformation.name_format_for_transformants", "Name Format for Transformants") |h %></b></td>
                 <td>
                     <div id="name_format">
 % if ($name_format) {
 %     print "$name_format";
 % } else {
-%     print "<span class='text-danger'>[Not Set]</span>";
+%     print ("<span class='text-danger'>" . HTML::Entities::encode_entities($c->i18n->p("transformation.not_set", "[Not Set]")) . "</span>");
 % }
                     </div>
                 </td>
             </tr>
 
-            <tr><td><b>Default Plant Material</b></td>
+            <tr><td><b><% $c->i18n->p("transformation.default_plant_material.2b9a162", "Default Plant Material") |h %></b></td>
                 <td>
 % if ($default_plant_material_id) {
       <span id="default_plant_material"><a href="/stock/<%$default_plant_material_id%>/view"><%$default_plant_material_name%></a></span>
 % } else {
-%     print "<span class='text-danger'>[Not Set]</span>";
+%     print ("<span class='text-danger'>" . HTML::Entities::encode_entities($c->i18n->p("transformation.not_set", "[Not Set]")) . "</span>");
 % }
                 </td>
             </tr>
 
             <tr>
-                <td><b>Folder</b></td>
+                <td><b><% $c->i18n->p("cross.ui.folder", "Folder") |h %></b></td>
                 <td>
                     <span id="trial_folder_div"><a href="/folder/<% $folder_id %>"><% $folder_name %></a></span>
                     <br/><br/>
-                    <button class="btn btn-sm btn-default" style="margin:3px" id="new_folder_dialog_link">New Folder</button> <button class="btn btn-sm btn-default" style="margin:3px" id="open_folder_dialog_link">Change Folder</button>
+                    <button class="btn btn-sm btn-default" style="margin:3px" id="new_folder_dialog_link"><% $c->i18n->p("cross.ui.new_folder", "New Folder") |h %></button> <button class="btn btn-sm btn-default" style="margin:3px" id="open_folder_dialog_link"><% $c->i18n->p("cross.ui.change_folder", "Change Folder") |h %></button>
                 </td>
             </tr>
 
             <tr>
-                <td><b>Created by</b></td>
+                <td><b><% $c->i18n->p("cross.ui.created_by", "Created by") |h %></b></td>
                 <td>
                     <div id="trial_owner">
 % if ($trial_owner) {
 %     print "$trial_owner";
 % } else {
-%     print "<span class='text-danger'>[N/A]</span>";
+%     print ("<span class='text-danger'>" . HTML::Entities::encode_entities($c->i18n->p("cross.ui.n_a", "[N/A]")) . "</span>");
 % }
                     </div>
                 </td>
@@ -132,16 +136,17 @@ $default_plant_material_name
 
     </div>
 </div>
-<button class="btn btn-sm btn-default" style="margin:3px" id="set_plant_material_link">Set Default Plant Material</button><button class="btn btn-sm btn-default" style="margin:3px" id="set_autogenerated_names_link">Set Autogenerated Names for Transformants</button>
+<button class="btn btn-sm btn-default" style="margin:3px" id="set_plant_material_link"><% $c->i18n->p("transformation.set_default_plant_material", "Set Default Plant Material") |h %></button><button class="btn btn-sm btn-default" style="margin:3px" id="set_autogenerated_names_link"><% $c->i18n->p("transformation.set_autogenerated_names_for_transformants", "Set Autogenerated Names for Transformants") |h %></button>
 <br/>
-<button class="btn btn-sm btn-primary" style="margin:3px" id="new_transformation_identifier_link">Add New Transformation ID</button><button class="btn btn-sm btn-primary" style="margin:3px" id="upload_transformation_ids_link">Upload New Transformation IDs</button><button class="btn btn-sm btn-primary" style="margin:3px" id="upload_transgenic_lines_link">Upload Transgenic Lines</button>
+<button class="btn btn-sm btn-primary" style="margin:3px" id="new_transformation_identifier_link"><% $c->i18n->p("transformation.add_new_transformation_id", "Add New Transformation ID") |h %></button><button class="btn btn-sm btn-primary" style="margin:3px" id="upload_transformation_ids_link"><% $c->i18n->p("transformation.upload_new_transformation_ids", "Upload New Transformation IDs") |h %></button>
+<button class="btn btn-sm btn-primary" style="margin:3px" id="upload_transgenic_lines_link"><% $c->i18n->p("transformation.upload_transgenic_lines", "Upload Transgenic Lines") |h %></button>
 <br/>
-<button class="btn btn-sm btn-primary" style="margin:3px" id="upload_transgenic_historical_data_link">Upload Transgenic Historical Data</button>
+<button class="btn btn-sm btn-primary" style="margin:3px" id="upload_transgenic_historical_data_link"><% $c->i18n->p("transformation.upload_transgenic_historical_data", "Upload Transgenic Historical Data") |h %></button>
 </br>
 </br>
 % if ($tracking_project_id) {
     <td>
-        <a href='/breeders/trial/<%$tracking_project_id%>'><p>Go to Transformation Progress</p></a>
+        <a href='/breeders/trial/<%$tracking_project_id%>'><p><% $c->i18n->p("transformation.go_to_transformation_progress", "Go to Transformation Progress") |h %></p></a>
     </td>
 % }
 

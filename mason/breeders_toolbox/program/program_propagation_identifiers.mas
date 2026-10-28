@@ -9,10 +9,10 @@ $program_id
 <table id="program_propagation_identifier_table" class="display">
     <thead>
         <tr>
-            <th>Propagation Identifier</th>
-            <th>Material</th>
-            <th>Rootstock</th>
-            <th>Propagation Group</th>
+            <th><% $c->i18n->p("seedlot.propagation_identifier.e403673", "Propagation Identifier") |h %></th>
+            <th><% $c->i18n->p("seedlot.material", "Material") |h %></th>
+            <th><% $c->i18n->p("seedlot.rootstock", "Rootstock") |h %></th>
+            <th><% $c->i18n->p("seedlot.propagation_group", "Propagation Group") |h %></th>
         </tr>
     </thead>
 </table>

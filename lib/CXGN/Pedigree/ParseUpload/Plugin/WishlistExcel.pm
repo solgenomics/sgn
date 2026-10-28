@@ -1,6 +1,7 @@
 package CXGN::Pedigree::ParseUpload::Plugin::WishlistExcel;
 
 use Moose::Role;
+use SGN::I18N ();
 use Spreadsheet::ParseExcel;
 use Spreadsheet::ParseXLSX;
 use CXGN::Stock::StockLookup;
@@ -10,6 +11,7 @@ use CXGN::List::Validate;
 
 sub _validate_with_plugin {
     my $self = shift;
+    my SGN::I18N $ui_wishlistexcel_i18n = SGN::I18N::translate($self);
     my $filename = $self->get_filename();
     my $schema = $self->get_chado_schema();
     my @error_messages;
@@ -39,7 +41,7 @@ sub _validate_with_plugin {
 
     $worksheet = ($excel_obj->worksheets())[0]; #support only one worksheet
     if (!$worksheet){
-        push @error_messages, "Spreadsheet must be on 1st tab in Excel (.xls) file";
+        push @error_messages, (SGN::I18N::translate($ui_wishlistexcel_i18n, "accession.catalog.error_1", "Spreadsheet must be on 1st tab in Excel (.xls) file"));
         $errors{'error_messages'} = \@error_messages;
         $self->_set_parse_errors(\%errors);
         return;
@@ -48,7 +50,7 @@ sub _validate_with_plugin {
     my ($row_min, $row_max) = $worksheet->row_range();
     my ($col_min, $col_max) = $worksheet->col_range();
     if (($col_max - $col_min)  < 2 || ($row_max - $row_min) < 1 ) { #must have header and at least one row of cross combination
-        push @error_messages, "Spreadsheet is missing header or no cross combination data";
+        push @error_messages, (SGN::I18N::translate($ui_wishlistexcel_i18n, "cross.spreadsheet_is_missing_header_or_no_cross_combination_data", "Spreadsheet is missing header or no cross combination data"));
         $errors{'error_messages'} = \@error_messages;
         $self->_set_parse_errors(\%errors);
         return;
@@ -73,13 +75,13 @@ sub _validate_with_plugin {
     }
 
     if (!$female_accession_head || $female_accession_head ne 'female_accession' ) {
-        push @error_messages, "Cell A1: female_accession is missing from the header";
+        push @error_messages, (SGN::I18N::translate($ui_wishlistexcel_i18n, "cross.cell_a1_female_accession_is_missing_from_the_header", "Cell A1: female_accession is missing from the header"));
     }
     if (!$male_accession_head || $male_accession_head ne 'male_accession') {
-        push @error_messages, "Cell B1: male_accession is missing from the header";
+        push @error_messages, (SGN::I18N::translate($ui_wishlistexcel_i18n, "cross.cell_b1_male_accession_is_missing_from_the_header", "Cell B1: male_accession is missing from the header"));
     }
     if (!$priority_head || $priority_head ne 'priority') {
-        push @error_messages, "Cell C1: priority is missing from the header";
+        push @error_messages, (SGN::I18N::translate($ui_wishlistexcel_i18n, "cross.cell_c1_priority_is_missing_from_the_header", "Cell C1: priority is missing from the header"));
     }
 
     my %seen_accessions;
@@ -100,14 +102,14 @@ sub _validate_with_plugin {
         }
 
         if (!$female_accession || $female_accession eq '') {
-            push @error_messages, "Cell A$row_name: female accession missing";
+            push @error_messages, (SGN::I18N::translate($ui_wishlistexcel_i18n, "cross.cell_a_row_name_female_accession_missing", "Cell A%{row_name}: female accession missing", {row_name => "" . ($row_name)}));
         } else {
             $female_accession =~ s/^\s+|\s+$//g;
             $seen_accessions{$female_accession}++;
         }
 
         if (!$male_accession || $male_accession eq '') {
-            push @error_messages, "Cell B$row_name: male accession missing";
+            push @error_messages, (SGN::I18N::translate($ui_wishlistexcel_i18n, "cross.cell_b_row_name_male_accession_missing", "Cell B%{row_name}: male accession missing", {row_name => "" . ($row_name)}));
         } else {
             $male_accession =~ s/^\s+|\s+$//g;
             $seen_accessions{$male_accession}++;
@@ -119,7 +121,7 @@ sub _validate_with_plugin {
     my @accessions_missing = @{$accession_validator->validate($schema,'uniquenames',\@accessions)->{'missing'}};
 
     if (scalar(@accessions_missing) > 0){
-        push @error_messages, "The following accessions are not in the database or are not in the database as uniquenames: ".join(',',@accessions_missing);
+        push @error_messages, (SGN::I18N::translate($ui_wishlistexcel_i18n, "cross.the_following_accessions_are_not_in_the_database_or_are_not_in_the_database_as_uniquenames_valu", "The following accessions are not in the database or are not in the database as uniquenames: %{value0}", {value0 => "" . (join(',',@accessions_missing))}));
     }
 
     #store any errors found in the parsed file to parse_errors accessor

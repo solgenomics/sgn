@@ -1,11 +1,15 @@
 
 package CXGN::Trial::TrialDesign::Plugin::MADIV;
 
+use CXGN::Trial::TrialDesign::ROutput qw(read_rbase_utf8);
+
 use Moose::Role;
+use SGN::I18N ();
 
 sub create_design {
 #sub _get_madiv_design {
     my $self = shift;
+    my SGN::I18N $design_i18n = $self->i18n;
     my %madiv_design;
     
     my $rbase = R::YapRI::Base->new();
@@ -41,7 +45,7 @@ sub create_design {
     if ($self->has_stock_list()) {
 	@stock_list = @{$self->get_stock_list()};
     } else {
-	die "No stock list specified\n";
+	die (($design_i18n ? $design_i18n->p("genotype.generation.no_stock_list", "No stock list specified") : "No stock list specified") . "\n");
     }
     
     if ($self->has_control_list()) {
@@ -49,20 +53,20 @@ sub create_design {
 	%control_names_lookup = map { $_ => 1 } @control_list;
 	$self->_check_controls_and_accessions_lists;
     } else {
-	die "No list of control stocks specified.  Required for augmented design.\n";
+	die (($design_i18n ? $design_i18n->p("trial.design.augmented_controls", "No list of control stocks specified.  Required for augmented design.") : "No list of control stocks specified.  Required for augmented design.") . "\n");
     }
     
     
     if ($self->has_number_of_rows()) {
 	$number_of_rows = $self->get_number_of_rows();
     } else {
-	die "Number of rows not specified\n";
+	die (($design_i18n ? $design_i18n->p("trial.design.rows_missing", "Number of rows not specified") : "Number of rows not specified") . "\n");
     }
     
     if ($self->has_block_row_numbers()) {
 	$number_of_rows_per_block = $self->get_block_row_numbers();
     } else {
-	die "Number of block row not specified\n";
+	die (($design_i18n ? $design_i18n->p("trial.design.block_row_missing", "Number of block row not specified") : "Number of block row not specified") . "\n");
     }
     
     #  if ($self->has_block_col_numbers()) {
@@ -193,7 +197,7 @@ sub create_design {
     
     $r_block->run_block();
     
-    $result_matrix = R::YapRI::Data::Matrix->read_rbase( $rbase,'r_block','augmented');
+    $result_matrix = read_rbase_utf8( $rbase,'r_block','augmented');
     
     @plot_numbers = $result_matrix->get_column("Plot");
     @row_numbers = $result_matrix->get_column("Row");

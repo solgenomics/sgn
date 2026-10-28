@@ -4,12 +4,19 @@
  $project_name => ''
  $contact_email => ''
 </%args>
+<%init>
+use HTML::Entities ();
+</%init>
 
 % $exception = [ $exception ] unless ref $exception eq 'ARRAY';
 % for my $e (@$exception) {
 
 <h1 style="text-align: center">
-   <% $e->title || ( $e->is_server_error ? 'Server Error' : $e->is_client_error ? 'Error' : 'Message' ) %>
+% if ($e->title) {
+   <% $e->title %>
+% } else {
+   <% $e->is_server_error ? $c->i18n->p('common.error.title.server', 'Server Error') : $e->is_client_error ? $c->i18n->p('common.error.title.client', 'Error') : $c->i18n->p('common.error.title.message', 'Message') | h %>
+% }
 </h1>
 
 <div style="margin: auto; width: 60%">
@@ -17,24 +24,26 @@
 % if( $e->public_message ) {
     <% $e->public_message . ( $e->public_message =~ /\.\s*$/ ? '' : '.' ) %>
 % } else {
-    Our apologies, there was an error processing your request.  
+    <% $c->i18n->p('common.error.processing', 'Our apologies, there was an error processing your request.') | h %>
 % }
     </p>
 
     <p>
 % if( $e->notify ) {
-    An error report has been sent to the <% $project_name %> development team.
+    <% $c->i18n->p('common.error.report_sent', 'An error report has been sent to the %{project_name} development team.', { project_name => $project_name }) | h %>
 % }
 
 % if( $e->is_client_error || $e->is_server_error ) {
 
-    Feel free to contact the <a href="/contact/form">development team</a>,
-        if the problem persists, and
+%   my $contact;
 %   if( $e->is_server_error ) {
-      we will keep you informed of our progress in resolving it.
+%     $contact = HTML::Entities::encode_entities($c->i18n->p('common.error.contact.server', 'Feel free to contact the %{development_team}, if the problem persists, and we will keep you informed of our progress in resolving it.', { development_team => '__SGN_ERROR_TEAM_LINK__' }));
 %   } else {
-      we will work with you to resolve it.
+%     $contact = HTML::Entities::encode_entities($c->i18n->p('common.error.contact.client', 'Feel free to contact the %{development_team}, if the problem persists, and we will work with you to resolve it.', { development_team => '__SGN_ERROR_TEAM_LINK__' }));
 %   }
+%   my $team_link = '<a href="/contact/form">' . HTML::Entities::encode_entities($c->i18n->p('common.error.development_team', 'development team')) . '</a>';
+%   $contact =~ s/__SGN_ERROR_TEAM_LINK__/$team_link/g;
+    <% $contact %>
    </p>
 
 % }
@@ -53,8 +62,8 @@
      </style>
 
     <div style="margin: 1em 0; border: 2px solid orange; padding: 0 1em 1em 1em">
-      <h3>Developer message:</h3>
-        <pre><% defined $e->developer_message ? $e->developer_message : 'none provided' | h %></pre>
+      <h3><% $c->i18n->p('common.error.developer_message', 'Developer message:') | h %></h3>
+        <pre><% defined $e->developer_message ? $e->developer_message : $c->i18n->p('common.error.no_developer_message', 'none provided') | h %></pre>
     </div>
 %   }
 % }

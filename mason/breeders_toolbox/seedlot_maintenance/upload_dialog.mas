@@ -1,47 +1,54 @@
 <%args>
 </%args>
 
+<%perl>
+    use HTML::Entities ();
+    # Catalog prose is escaped; only this original authored link supplies markup.
+    my $maintenance_upload_link = '<a href="/breeders/seedlots/">' . HTML::Entities::encode_entities($c->i18n->p('seedlot_maintenance_upload.ui.manage_seedlots_link', 'Manage Seedlots')) . '</a>';
+    my $maintenance_upload_help_html = HTML::Entities::encode_entities($c->i18n->p('seedlot_maintenance_upload.ui.existing_seedlot_help', 'The Maintenance Events are associated with Seedlots, so the name of the Seedlot in the file must match an existing Seedlot in the database. If a Seedlot is not yet in the database, go to the %{manage_seedlots_link} page to create it first.', {manage_seedlots_link => '%{manage_seedlots_link}'}));
+    $maintenance_upload_help_html =~ s/%\{manage_seedlots_link\}/$maintenance_upload_link/g;
+</%perl>
+
 <& /util/import_javascript.mas, classes => [ 'jquery', 'jqueryui' ] &>
 
 <div class="modal fade" id="upload_maintenance_event_upload_modal" name="upload_maintenance_event_upload_modal" tabindex="-1" role="dialog">
     <div class="modal-dialog modal-lg" role="document">
         <div class="modal-content">
             <div class="modal-header">
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                <h4 class="modal-title">Upload Seedlot Maintenance Events</h4>
+                <button type="button" class="close" data-dismiss="modal" aria-label="<% $c->i18n->p('seedlot_maintenance_upload.ui.close', 'Close') |h %>"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title"><% $c->i18n->p('seedlot_maintenance_upload.ui.title', 'Upload Seedlot Maintenance Events') |h %></h4>
             </div>
             <div class="modal-body">
                 <div class="container-fluid">
-                    <p><strong>Requirements:</strong></p>
+                    <p><strong><% $c->i18n->p('seedlot_maintenance_upload.ui.requirements', 'Requirements:') |h %></strong></p>
                     <ul>
                         <li>
-                            The Maintenance Events are associated with Seedlots, so the name of the Seedlot in the file must match an existing Seedlot in the database.
-                            If a Seedlot is not yet in the database, go to the <a href='/breeders/seedlots/'>Manage Seedlots</a> page to create it first.
+                            <% $maintenance_upload_help_html %>
                         </li>
                         <li>
-                            The name of the Maintenance Event must be a valid event type.  Valid event types include:
+                            <% $c->i18n->p('seedlot_maintenance_upload.ui.valid_types_intro', 'The name of the Maintenance Event must be a valid event type.  Valid event types include:') |h %>
                             <table class="table table-striped">
                                 <thead>
                                     <tr>
-                                        <th>Event Type Name</th>
-                                        <th>Event Type Values</th>
+                                        <th><% $c->i18n->p('seedlot_maintenance_upload.ui.event_type_header', 'Event Type Name') |h %></th>
+                                        <th><% $c->i18n->p('seedlot_maintenance_upload.ui.event_values_header', 'Event Type Values') |h %></th>
                                     </tr>
                                 </thead>
                                 <tbody id="maintenece_event_terms"></tbody>
                             </table>
                         </li>
                     </ul>
-                    <&| /page/explanation.mas, title=>'Template Information' &>
+                    <&| /page/explanation.mas, title=>HTML::Entities::encode_entities($c->i18n->p('seedlot_maintenance_upload.ui.template_info', 'Template Information')) &>
                         <p>
-                        <b>File format information</b>
+                        <b><% $c->i18n->p('seedlot_maintenance_upload.ui.file_format', 'File format information') |h %></b>
                         <br>
-                        <a id="maintenance_event_upload_spreadsheet_format_info">Spreadsheet Format</a>
+                        <a id="maintenance_event_upload_spreadsheet_format_info"><% $c->i18n->p('seedlot_maintenance_upload.ui.spreadsheet_format', 'Spreadsheet Format') |h %></a>
                         </p>
                     </&>
                     <br />
                     <form class="form-horizontal" role="form" method="post" enctype="multipart/form-data" encoding="multipart/form-data" id="upload_maintenance_events_form" name="upload_maintenance_events_form">
                         <div class="form-group">
-                            <label class="col-sm-4 control-label">Upload File: </label>
+                            <label class="col-sm-4 control-label"><% $c->i18n->p('seedlot_maintenance_upload.ui.upload_file', 'Upload File:') |h %> </label>
                             <div class="col-sm-8" >
                                 <input class="form-control" type="file" name="maintenance_events_upload_file" id="maintenance_events_upload_file" encoding="multipart/form-data" />
                             </div>
@@ -54,8 +61,8 @@
                 </div>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-                <button type="button" class="btn btn-primary" name="maintenance_events_submit" id="maintenance_events_submit">Upload</button>
+                <button type="button" class="btn btn-default" data-dismiss="modal"><% $c->i18n->p('seedlot_maintenance_upload.ui.close', 'Close') |h %></button>
+                <button type="button" class="btn btn-primary" name="maintenance_events_submit" id="maintenance_events_submit"><% $c->i18n->p('seedlot_maintenance_upload.ui.upload', 'Upload') |h %></button>
             </div>
         </div>
     </div>
@@ -66,14 +73,14 @@
     <div class="modal-dialog modal-xl" role="document">
         <div class="modal-content">
             <div class="modal-header" style="text-align: center">
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                <h4 class="modal-title" id="uploadMaintenanceInfoDialog">Upload Seedlot Maintenance Event Template Information</h4>
+                <button type="button" class="close" data-dismiss="modal" aria-label="<% $c->i18n->p('seedlot_maintenance_upload.ui.close', 'Close') |h %>"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="uploadMaintenanceInfoDialog"><% $c->i18n->p('seedlot_maintenance_upload.ui.template_title', 'Upload Seedlot Maintenance Event Template Information') |h %></h4>
             </div>
             <div class="modal-body">
                 <div class="container-fluid">
-                    <strong>Header:</strong>
+                    <strong><% $c->i18n->p('seedlot_maintenance_upload.ui.header', 'Header:') |h %></strong>
                     <br />
-                    The first row (header) should contain the following:
+                    <% $c->i18n->p('seedlot_maintenance_upload.ui.header_intro', 'The first row (header) should contain the following:') |h %>
                     <br />
 
                     <table class="table table-hover table-bordered table-condensed" >
@@ -90,32 +97,61 @@
                         </tbody>
                     </table>
 
-                    <b>Fields:</b>
+                    <b><% $c->i18n->p('seedlot_maintenance_upload.ui.fields', 'Fields:') |h %></b>
                     <ul>
-                        <li>seedlot (name of the seedlot, must match an existing seedlot))</li>
-                        <li>type (name of the maintenance event type, must match an existing term)</li>
-                        <li>value (value of the event)</li>
-                        <li>notes (optional, additional comments about the event)</li>
-                        <li>operator (username of the person recording the event)</li>
-                        <li>timestamp (date/time of when the event is recorded in 'YYYY-MM-DD HH:MM:SS' format)</li>
+                        <li><% $c->i18n->p('seedlot_maintenance_upload.ui.field_seedlot', '%{field} (name of the seedlot, must match an existing seedlot))', {field => 'seedlot'}) |h %></li>
+                        <li><% $c->i18n->p('seedlot_maintenance_upload.ui.field_type', '%{field} (name of the maintenance event type, must match an existing term)', {field => 'type'}) |h %></li>
+                        <li><% $c->i18n->p('seedlot_maintenance_upload.ui.field_value', '%{field} (value of the event)', {field => 'value'}) |h %></li>
+                        <li><% $c->i18n->p('seedlot_maintenance_upload.ui.field_notes', '%{field} (optional, additional comments about the event)', {field => 'notes'}) |h %></li>
+                        <li><% $c->i18n->p('seedlot_maintenance_upload.ui.field_operator', '%{field} (username of the person recording the event)', {field => 'operator'}) |h %></li>
+                        <li><% $c->i18n->p('seedlot_maintenance_upload.ui.field_timestamp', '%{field} (date/time of when the event is recorded in \'%{format}\' format)', {field => 'timestamp', format => 'YYYY-MM-DD HH:MM:SS'}) |h %></li>
                     </ul>
                 </div>
                 <& /help/file_upload_type.mas, type => "Upload Seedlot Maintenance Events", optional_column => 0 &>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-default" data-dismiss="modal"><% $c->i18n->p('seedlot_maintenance_upload.ui.close', 'Close') |h %></button>
             </div>
         </div>
     </div>
 </div>
 
 <style>
+    #upload_maintenance_event_upload_modal .modal-footer .btn,
+    #maintenance_event_upload_spreadsheet_format_modal .modal-footer .btn {
+        max-width: calc(100% - 5px);
+        white-space: normal;
+        overflow-wrap: anywhere;
+    }
     div.center {
         text-align: center
     }
 </style>
 
 <script type="text/javascript">
+
+    const maintenanceUploadI18n = window.SGN && window.SGN.i18n || {
+        p: function(context, text, vars) {
+            return String(text).replace(/%\{([A-Za-z_][A-Za-z0-9_]*)\}/g, function(token, name) {
+                return vars && Object.prototype.hasOwnProperty.call(vars, name) ? String(vars[name]) : token;
+            });
+        }
+    };
+    function maintenanceUploadHTML(value) {
+        return String(value == null ? "" : value).replace(/[&<>"']/g, function(c) {
+            return {"&": "&amp;", "<": "&lt;", ">": "&gt;", "\"": "&quot;", "'": "&#39;"}[c];
+        });
+    }
+    function maintenanceUploadLocaleHeaders(url) {
+        try {
+            const destination = new URL(url, window.location.href);
+            if (destination.origin !== window.location.origin) return {};
+            const locale = maintenanceUploadI18n.requestedLocale || document.documentElement.getAttribute("data-sgn-locale") || "en";
+            return {"X-SGN-Locale": /^[A-Za-z]{2,8}(?:-[A-Za-z0-9]{1,8})*$/.test(locale) ? locale : "en"};
+        }
+        catch (error) { return {}; }
+    }
+
 
     jQuery(document).ready(function() {
 
@@ -135,11 +171,12 @@
      * Get the maintenance event ontology and populate the table of valid names and values
      */
     function getValidEventTypes() {
-        let html = "";
+        let rows = [];
         jQuery.ajax({
             type: 'GET',
             dataType: 'json',
             url: '/ajax/breeders/seedlot/maintenance/ontology',
+            headers: maintenanceUploadLocaleHeaders('/ajax/breeders/seedlot/maintenance/ontology'),
             success: function(data) {
                 if ( data && data.ontology ) {
                     for ( let i = 0; i < data.ontology.length; i++ ) {
@@ -151,14 +188,16 @@
                                     values.push(data.ontology[i].children[j].children[k].name);
                                 }
                             }
-                            if ( values.length === 0 ) values.push('<em>Any Value</em>');
-                            html += "<tr><td>" + name + "</td><td>" + values.join(', ') + "</td></tr>";
+                            let valueCell = jQuery('<td>');
+                            if ( values.length === 0 ) valueCell.append(jQuery('<em>').text(maintenanceUploadI18n.p("seedlot_maintenance_upload.ui.any_value", "Any Value")));
+                            else valueCell.text(values.join(', '));
+                            rows.push(jQuery('<tr>').append(jQuery('<td>').text(String(name)), valueCell)[0]);
                         }
                     }
                 }
             },
             complete: function() {
-                jQuery("#maintenece_event_terms").html(html);
+                jQuery("#maintenece_event_terms").empty().append(rows);
             }
         });
     }
@@ -169,12 +208,12 @@
     function uploadMaintenanceEvents() {
         let file = jQuery('#maintenance_events_upload_file').val();
         if ( !file || file === '' ) {
-            alert("Please select your upload file");
+            alert(maintenanceUploadI18n.p("seedlot_maintenance_upload.ui.file_required", "Please select your upload file"));
             return false;
         }
 
         // Setup working modal
-        jQuery('#working_msg').html("Uploading Seedlot Maintenance Events File");
+        jQuery('#working_msg').text(maintenanceUploadI18n.p("seedlot_maintenance_upload.ui.uploading", "Uploading Seedlot Maintenance Events File"));
         jQuery('#working_modal_progress').css('width', 0).attr('aria-valuenow', 0);
         jQuery('#working_modal_progress_div').css('display', 'block');
         jQuery('#working_modal').modal("show");
@@ -187,6 +226,7 @@
         // Make the POST request
         jQuery.ajax({
             url: '/ajax/breeders/seedlot/maitenance/upload',
+            headers: maintenanceUploadLocaleHeaders('/ajax/breeders/seedlot/maitenance/upload'),
             type: 'POST',
             data: formData,
             cache: false,
@@ -200,7 +240,7 @@
                             let prog = (e.loaded / e.total)*100;
                             jQuery('#working_modal_progress').css('width', prog + "%").attr('aria-valuenow', prog);
                             if ( prog >= 100 ) {
-                               jQuery('#working_msg').html("Uploading Seedlot Maintenance Events File");
+                               jQuery('#working_msg').text(maintenanceUploadI18n.p("seedlot_maintenance_upload.ui.uploading", "Uploading Seedlot Maintenance Events File"));
                             }
                         }
                     }, false);
@@ -212,10 +252,10 @@
             },
             error: function(e) {
                 console.log(e);
-                alert("ERROR: Could not upload file!");
+                alert(maintenanceUploadI18n.p("seedlot_maintenance_upload.ui.upload_failed", "ERROR: Could not upload file!"));
             },
             complete: function() {
-                jQuery('#working_msg').html("");
+                jQuery('#working_msg').text("");
                 jQuery('#working_modal_progress').css('width', 0).attr('aria-valuenow', 0);
                 jQuery('#working_modal_progress_div').css('display', 'none');
                 jQuery('#working_modal').modal("hide");
@@ -231,15 +271,16 @@
      */
     function handleUploadResponse(response) {
         if ( response && response.success && response.success === 1 ) {
-            add_message("success", "Seedlot Maintenace Events successfully stored!");
+            add_message("success", maintenanceUploadHTML(maintenanceUploadI18n.p("seedlot_maintenance_upload.ui.stored_success", "Seedlot Maintenance Events successfully stored!")));
             if ( getEvents ) getEvents();
         }
         else if ( response && response.error ) {
-            let html = "<strong>The Seedlot Maintenance Events could not be stored due to the following error(s):</strong><br />" + response.error;
+            // Keep the original server error carrier as legacy HTML, separately from escaped catalog prose.
+            let html = "<strong>" + maintenanceUploadHTML(maintenanceUploadI18n.p("seedlot_maintenance_upload.ui.error_intro", "The Seedlot Maintenance Events could not be stored due to the following error(s):")) + "</strong><br />" + response.error;
             add_message("error", html);
         }
         else {
-            add_message("error", "The Seedlot Maintenance Events were not stored due to an unknown error!");
+            add_message("error", maintenanceUploadHTML(maintenanceUploadI18n.p("seedlot_maintenance_upload.ui.unknown_error", "The Seedlot Maintenance Events were not stored due to an unknown error!")));
         }
     }
 

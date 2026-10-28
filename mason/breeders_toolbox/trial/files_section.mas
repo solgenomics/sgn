@@ -1,3 +1,6 @@
+<%once>
+use HTML::Entities ();
+</%once>
 <%args>
 $trial_id
 $trial_stock_type => undef
@@ -8,13 +11,13 @@ $for_analysis_page => undef
 
     <div class="panel panel-default">
         <div class="panel-body">
-            <&| /page/info_section.mas, title=>"Data Collection Files", is_subsection => 1, collapsible=>1, collapsed=>0, &>
-                <&| /page/info_section.mas, title=>"Phenotyping Spreadsheets", empty_message=>'', is_subsection => 1, collapsible=>0, collapsed=>0, subtitle=>'<button class="btn btn-sm btn-default" style="margin:3px" name="create_spreadsheet_link">Create Spreadsheet</button>' &>
+            <&| /page/info_section.mas, title=>HTML::Entities::encode_entities($c->i18n->p('trial.files.data_collection', "Data Collection Files")), is_subsection => 1, collapsible=>1, collapsed=>0, &>
+                <&| /page/info_section.mas, title=>HTML::Entities::encode_entities($c->i18n->p('trial.files.phenotyping_spreadsheets', "Phenotyping Spreadsheets")), empty_message=>'', is_subsection => 1, collapsible=>0, collapsed=>0, subtitle=>'<button class="btn btn-sm btn-default" style="margin:3px" name="create_spreadsheet_link">' . HTML::Entities::encode_entities($c->i18n->p('trial.files.create_spreadsheet', "Create Spreadsheet")) . '</button>' &>
                 </&>
 %  if (!$for_analysis_page) {
-                <&| /page/info_section.mas, title=>"Android Field Book Layout", empty_message=>'', is_subsection => 1, collapsible=>0, collapsed=>0, subtitle=>'<button class="btn btn-sm btn-default" style="margin:3px" name="create_fieldbook_link">Create Field Book</button>' &>
+                <&| /page/info_section.mas, title=>HTML::Entities::encode_entities($c->i18n->p('trial.files.fieldbook_layout', "Android Field Book Layout")), empty_message=>'', is_subsection => 1, collapsible=>0, collapsed=>0, subtitle=>'<button class="btn btn-sm btn-default" style="margin:3px" name="create_fieldbook_link">' . HTML::Entities::encode_entities($c->i18n->p('trial.files.create_fieldbook', "Create Field Book")) . '</button>' &>
                 </&>
-                <&| /page/info_section.mas, title=>"Data Collector Spreadsheet", empty_message=>'', is_subsection => 1, collapsible=>0, collapsed=>0, subtitle=> '<button class="btn btn-sm btn-default" style="margin:3px" id="create_DataCollector_link">Create DataCollector Spreadsheet</button>' &>
+                <&| /page/info_section.mas, title=>HTML::Entities::encode_entities($c->i18n->p('trial.files.data_collector', "Data Collector Spreadsheet")), empty_message=>'', is_subsection => 1, collapsible=>0, collapsed=>0, subtitle=>'<button class="btn btn-sm btn-default" style="margin:3px" id="create_DataCollector_link">' . HTML::Entities::encode_entities($c->i18n->p('trial.files.create_data_collector', "Create DataCollector Spreadsheet")) . '</button>' &>
                 </&>
 %  }
             </&><!-- closes create new phenotyping file section -->
@@ -22,13 +25,13 @@ $for_analysis_page => undef
     </div>
     <div class="panel panel-default">
         <div class="panel-body">
-            <&| /page/info_section.mas, title=>"Upload Phenotyping Files", is_subsection => 1, collapsible=>1, collapsed=>0, &>
-                <&| /page/info_section.mas, title=>"Phenotyping Spreadsheets", empty_message=>'', is_subsection => 1, collapsible=>0, collapsed=>0, subtitle=>'<button class="btn btn-sm btn-primary" style="margin:3px" id="upload_spreadsheet_phenotypes_link">Upload</button>'&>
+            <&| /page/info_section.mas, title=>HTML::Entities::encode_entities($c->i18n->p('trial.files.upload_phenotypes', "Upload Phenotyping Files")), is_subsection => 1, collapsible=>1, collapsed=>0, &>
+                <&| /page/info_section.mas, title=>HTML::Entities::encode_entities($c->i18n->p('trial.files.phenotyping_spreadsheets', "Phenotyping Spreadsheets")), empty_message=>'', is_subsection => 1, collapsible=>0, collapsed=>0, subtitle=>'<button class="btn btn-sm btn-primary" style="margin:3px" id="upload_spreadsheet_phenotypes_link">' . HTML::Entities::encode_entities($c->i18n->p('trial.upload.dialog.upload', "Upload")) . '</button>'&>
                 </&>
 %  if (!$for_analysis_page) {
-                <&| /page/info_section.mas, title=>"Android Field Book Exported", empty_message=>'', is_subsection => 1, collapsible=>0, collapsed=>0, subtitle=>'<button class="btn btn-sm btn-primary" style="margin:3px" id="upload_fieldbook_phenotypes_link">Upload</button>'&>
+                <&| /page/info_section.mas, title=>HTML::Entities::encode_entities($c->i18n->p('trial.files.fieldbook_exported', "Android Field Book Exported")), empty_message=>'', is_subsection => 1, collapsible=>0, collapsed=>0, subtitle=>'<button class="btn btn-sm btn-primary" style="margin:3px" id="upload_fieldbook_phenotypes_link">' . HTML::Entities::encode_entities($c->i18n->p('trial.upload.dialog.upload', "Upload")) . '</button>'&>
                 </&>
-                <&| /page/info_section.mas, title=>"Data Collector Spreadsheet", empty_message=>'', is_subsection => 1, collapsible=>0, collapsed=>0, subtitle=>'<button class="btn btn-sm btn-primary" style="margin:3px" id="upload_datacollector_phenotypes_link">Upload</button>'&>
+                <&| /page/info_section.mas, title=>HTML::Entities::encode_entities($c->i18n->p('trial.files.data_collector', "Data Collector Spreadsheet")), empty_message=>'', is_subsection => 1, collapsible=>0, collapsed=>0, subtitle=>'<button class="btn btn-sm btn-primary" style="margin:3px" id="upload_datacollector_phenotypes_link">' . HTML::Entities::encode_entities($c->i18n->p('trial.upload.dialog.upload', "Upload")) . '</button>'&>
                 </&>
 %  }
             </&><!-- closes upload new phenotype file section -->
@@ -36,7 +39,7 @@ $for_analysis_page => undef
     </div>
     <div class="panel panel-default">
         <div class="panel-body">
-            <&| /page/info_section.mas, title=>"Uploaded Phenotyping Files", is_subsection => 1, collapsible=>1, collapsed=>0 &>
+            <&| /page/info_section.mas, title=>HTML::Entities::encode_entities($c->i18n->p('trial.files.uploaded_phenotype_files', "Uploaded Phenotyping Files")), is_subsection => 1, collapsible=>1, collapsed=>0 &>
 
                 <table class="table table-bordered" id="trial_phenotype_files_datatables" alt="">
                 </table>
@@ -46,7 +49,7 @@ $for_analysis_page => undef
     </div>
     <div class="panel panel-default">
         <div class="panel-body">
-            <&| /page/info_section.mas, title=>"Uploaded Additional Files", is_subsection => 1, collapsible=>1, collapsed=>0, subtitle=>'<button class="btn btn-sm btn-primary" style="margin:3px" id="trial_upload_additional_files_link">Upload Additional Files</button>' &>
+            <&| /page/info_section.mas, title=>HTML::Entities::encode_entities($c->i18n->p('trial.files.uploaded_additional_files', "Uploaded Additional Files")), is_subsection => 1, collapsible=>1, collapsed=>0, subtitle=>'<button class="btn btn-sm btn-primary" style="margin:3px" id="trial_upload_additional_files_link">' . HTML::Entities::encode_entities($c->i18n->p('trial.files.upload_additional_files', "Upload Additional Files")) . '</button>' &>
 
             <& /breeders_toolbox/trial/upload_additional_file.mas, trial_id => $trial_id &>
 
@@ -57,17 +60,19 @@ $for_analysis_page => undef
 </div><!-- closes well -->
 
 <script>
+function _sgnB11FilesEscapeHTML(value) { return jQuery('<div>').text(value).html(); }
+
 jQuery(document).ready(function() {
     jQuery('#trial_upload_files_onswitch').one("click", function(){
 
         jQuery('#trial_phenotype_files_datatables').DataTable({
             'ajax': { 'url': '/ajax/breeders/trial/<% $trial_id %>/phenotype_metadata' },
             columns: [
-                { title: "Filename", "data": null, "render": function ( data, type, row ) { return row[4]; } },
-                { title: "Date Uploaded", "data": null, "render": function ( data, type, row ) { return row[1]; } },
-                { title: "Uploaded By", "data": null, "render": function ( data, type, row ) { return '<a href="/solpeople/profile/'+row[2]+'">'+row[3]+'</a>'; } },
-                { title: "File Type", "data": null, "render": function ( data, type, row ) { return row[6]; } },
-                { title: "Options", "data": null, "render": function ( data, type, row ) { return '<a href="/breeders/phenotyping/view/'+row[0]+'">View</a> | <a href="/breeders/phenotyping/download/'+row[0]+'">Download</a>'; } },
+                { title: _sgnB11FilesEscapeHTML(window.SGN && SGN.i18n ? SGN.i18n.p('trial.files.filename', "Filename") : "Filename"), "data": null, "render": function ( data, type, row ) { return row[4]; } },
+                { title: _sgnB11FilesEscapeHTML(window.SGN && SGN.i18n ? SGN.i18n.p('trial.files.date_uploaded', "Date Uploaded") : "Date Uploaded"), "data": null, "render": function ( data, type, row ) { return row[1]; } },
+                { title: _sgnB11FilesEscapeHTML(window.SGN && SGN.i18n ? SGN.i18n.p('trial.files.uploaded_by', "Uploaded By") : "Uploaded By"), "data": null, "render": function ( data, type, row ) { return '<a href="/solpeople/profile/'+row[2]+'">'+row[3]+'</a>'; } },
+                { title: _sgnB11FilesEscapeHTML(window.SGN && SGN.i18n ? SGN.i18n.p('trial.files.file_type', "File Type") : "File Type"), "data": null, "render": function ( data, type, row ) { return row[6]; } },
+                { title: _sgnB11FilesEscapeHTML(window.SGN && SGN.i18n ? SGN.i18n.p('trial.files.options', "Options") : "Options"), "data": null, "render": function ( data, type, row ) { return '<a href="/breeders/phenotyping/view/'+row[0]+'">' + _sgnB11FilesEscapeHTML(window.SGN && SGN.i18n ? SGN.i18n.p('trial.files.view', "View") : "View") + '</a> | <a href="/breeders/phenotyping/download/'+row[0]+'">' + _sgnB11FilesEscapeHTML(window.SGN && SGN.i18n ? SGN.i18n.p('trial.files.download', "Download") : "Download") + '</a>'; } },
             ]
         });
 

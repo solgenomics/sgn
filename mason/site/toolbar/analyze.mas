@@ -1,43 +1,43 @@
-<li class="dropdown"><a class="menu_click_dropdown dropdown-toggle" data-toggle="dropdown">Analyze</a>
+<li class="dropdown"><a class="menu_click_dropdown dropdown-toggle" data-toggle="dropdown"><% $c->i18n->p('navigation.analyze.menu', 'Analyze') |h %></a>
 <!-- <li class="dropdown"><a class="dropdown-toggle" data-toggle="dropdown" href="#">Genomes<span class="caret"></span></a> -->
   <ul class="dropdown-menu">
     <li role="separator" class="divider"></li>
-    <li><a href="/tools/qualitycontrol">Phenotype Quality Control</a></li>
-    <li><a href="/tools/validatedtrials">Validated Trials</a></li>
+    <li><a href="/tools/qualitycontrol"><% $c->i18n->p('navigation.analyze.phenotype_quality', 'Phenotype Quality Control') |h %></a></li>
+    <li><a href="/tools/validatedtrials"><% $c->i18n->p('navigation.analyze.validated_trials', 'Validated Trials') |h %></a></li>
     <li role="separator" class="divider"></li>
-    <li><a href="/analyses">Stored Analyses</a></li>
-    <li class="dropdown-header">Breeder Tools</li>
-    <li><a href="/selection/index">Selection Index</a></li>
+    <li><a href="/analyses"><% $c->i18n->p('navigation.analyze.stored', 'Stored Analyses') |h %></a></li>
+    <li class="dropdown-header"><% $c->i18n->p('navigation.analyze.breeder_tools', 'Breeder Tools') |h %></li>
+    <li><a href="/selection/index"><% $c->i18n->p('navigation.analyze.selection_index', 'Selection Index') |h %></a></li>
     <!-- li><a href="/analyze/phenotypes">Analyze Phenotypes</a><li -->
     <!-- li><a href="/barcode">Barcode Tools</a></li -->
     <!--li><a href="/solgs/search">Genomic Selection</a></li -->
-    <li><a href="/pca/analysis">Population Structure</a></li>
-    <li><a href="/cluster/analysis">Clustering</a></li>
-    <li><a href="/correlation/analysis">Correlation</a></li>
-    <li><a href="/kinship/analysis">Kinship & Inbreeding</a></li>
-    <li><a href="/tools/stability">Stability AMMI/GGE</a></li>
-    <li><a href="/tools/environment_stratification">Environment Stratification</a></li>
-    <li><a href="/tools/heritability">Heritability</a></li>
+    <li><a href="/pca/analysis"><% $c->i18n->p('navigation.analyze.population_structure', 'Population Structure') |h %></a></li>
+    <li><a href="/cluster/analysis"><% $c->i18n->p('navigation.analyze.clustering', 'Clustering') |h %></a></li>
+    <li><a href="/correlation/analysis"><% $c->i18n->p('navigation.analyze.correlation', 'Correlation') |h %></a></li>
+    <li><a href="/kinship/analysis"><% $c->i18n->p('navigation.analyze.kinship', 'Kinship & Inbreeding') |h %></a></li>
+    <li><a href="/tools/stability"><% $c->i18n->p('navigation.analyze.stability', 'Stability AMMI/GGE') |h %></a></li>
+    <li><a href="/tools/environment_stratification"><% $c->i18n->p('navigation.analyze.environment', 'Environment Stratification') |h %></a></li>
+    <li><a href="/tools/heritability"><% $c->i18n->p('navigation.analyze.heritability', 'Heritability') |h %></a></li>
     <li role="separator" class="divider"></li>
-    <li><a href="/accession_usage">Accession Usage</a></li>
-    <li><a href="/tools/mixedmodels">Mixed Models</a></li>
-    <li><a href="/tools/trial/comparison/list">Compare Trials</a></li>
-    <li><a href="/tools/graphicalfiltering">Graphical Filtering</a></li>
-    <li><a href="/tools/boxplotter">BoxPlotter Tool</a></li>
-    <li><a href="/tools/solgwas">GWAS</a></li>
-    <li><a href="/tools/image_analysis">Image Analysis</a></li>
+    <li><a href="/accession_usage"><% $c->i18n->p('navigation.analyze.accession_usage', 'Accession Usage') |h %></a></li>
+    <li><a href="/tools/mixedmodels"><% $c->i18n->p('navigation.analyze.mixed_models', 'Mixed Models') |h %></a></li>
+    <li><a href="/tools/trial/comparison/list"><% $c->i18n->p('navigation.analyze.compare_trials', 'Compare Trials') |h %></a></li>
+    <li><a href="/tools/graphicalfiltering"><% $c->i18n->p('navigation.analyze.graphical_filtering', 'Graphical Filtering') |h %></a></li>
+    <li><a href="/tools/boxplotter"><% $c->i18n->p('navigation.analyze.boxplot', 'BoxPlotter Tool') |h %></a></li>
+    <li><a href="/tools/solgwas"><% $c->i18n->p('navigation.analyze.gwas', 'GWAS') |h %></a></li>
+    <li><a href="/tools/image_analysis"><% $c->i18n->p('navigation.analyze.images', 'Image Analysis') |h %></a></li>
 
     <li role="separator" class="divider"></li>
-    <li class="dropdown-header">Sequence Analysis</li>
-    <li><a class="footer" href="/tools/blast">BLAST</a></li>
+    <li class="dropdown-header"><% $c->i18n->p('navigation.analyze.sequences', 'Sequence Analysis') |h %></li>
+    <li><a class="footer" href="/tools/blast"><% $c->i18n->p('navigation.analyze.blast', 'BLAST') |h %></a></li>
     <!-- li><a class="footer" href="http://vigs.solgenomics.net/">VIGS Tool</a></li>
     <li><a class="footer" href="https://cassavabase.org/jbrowse_cassavabase/?data=data/json/hapmap_variants">HapMap Jbrowse</a></li --> 
 
     <li role="separator" class="divider"></li>
-    <li class="dropdown-header">Other</li>
-    <li><a href="/tools/onto/">Ontology Browser</a></li>
-    <li><a href="/tools/compose_trait/">Compose a New Trait</a></li>
-    <li><a href="/tools/compose_treatment/">Compose a New Treatment</a></li>
+    <li class="dropdown-header"><% $c->i18n->p('navigation.analyze.other', 'Other') |h %></li>
+    <li><a href="/tools/onto/"><% $c->i18n->p('navigation.analyze.ontology', 'Ontology Browser') |h %></a></li>
+    <li><a href="/tools/compose_trait/"><% $c->i18n->p('navigation.analyze.compose_trait', 'Compose a New Trait') |h %></a></li>
+    <li><a href="/tools/compose_treatment/"><% $c->i18n->p('navigation.analyze.compose_treatment', 'Compose a New Treatment') |h %></a></li>
 
   </ul>
 </li>

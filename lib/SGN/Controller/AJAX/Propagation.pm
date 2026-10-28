@@ -54,7 +54,7 @@ sub add_propagation_project_POST :Args(0){
     }
 
     if (!any { $_ eq "curator" || $_ eq "submitter" } ($c->user()->roles)){
-        $c->stash->{rest} = {error =>  "you have insufficient privileges to add a propagation project." };
+        $c->stash->{rest} = {error =>  do { local $_; local $@; local $!; $c->i18n->p("seedlot.server.you_have_insufficient_privileges_to_add_a_propagation.f57dd79", "you have insufficient privileges to add a propagation project.") } };
         return;
     }
 
@@ -64,7 +64,7 @@ sub add_propagation_project_POST :Args(0){
     map { $has_roles{$_} = 1; } @user_roles;
 
     if (! ( (exists($has_roles{$program_name}) && exists($has_roles{submitter})) || exists($has_roles{curator}))) {
-        $c->stash->{rest} = { error => "You need to be either a curator, or a submitter associated with breeding program $program_name to add new propagation project." };
+        $c->stash->{rest} = { error => do { local $_; local $@; local $!; $c->i18n->p("seedlot.server.you_need_to_be_either_a_curator_or.bb0daf7", "You need to be either a curator, or a submitter associated with breeding program %{program_name} to add new propagation project.", {program_name => "" . ($program_name)}) } };
         return;
     }
 
@@ -73,7 +73,7 @@ sub add_propagation_project_POST :Args(0){
     my $geolocation_lookup = CXGN::Location::LocationLookup->new(schema =>$schema);
        $geolocation_lookup->set_location_name($location);
        if(!$geolocation_lookup->get_geolocation()){
-           $c->stash->{rest}={error => "Location not found"};
+           $c->stash->{rest}={error => do { local $_; local $@; local $!; $c->i18n->p("cross.server.location_not_found", "Location not found") }};
            return;
        }
 
@@ -97,7 +97,7 @@ sub add_propagation_project_POST :Args(0){
     };
 
     if (!$return){
-        $c->stash->{rest} = {error => "Error saving project",};
+        $c->stash->{rest} = {error => do { local $_; local $@; local $!; $c->i18n->p("seedlot.server.error_saving_project", "Error saving project") },};
         return;
     }
 
@@ -146,7 +146,7 @@ sub add_propagation_group_identifier_POST :Args(0){
     }
 
     if (!any { $_ eq "curator" || $_ eq "submitter" } ($c->user()->roles)){
-        $c->stash->{rest} = {error =>  "you have insufficient privileges to add a propagation group ID." };
+        $c->stash->{rest} = {error =>  do { local $_; local $@; local $!; $c->i18n->p("seedlot.server.you_have_insufficient_privileges_to_add_a_propagation.e5615cb", "you have insufficient privileges to add a propagation group ID.") } };
         return;
     }
 
@@ -155,7 +155,7 @@ sub add_propagation_group_identifier_POST :Args(0){
     map { $has_roles{$_} = 1; } @user_roles;
 
     if (! ( (exists($has_roles{$program_name}) && exists($has_roles{submitter})) || exists($has_roles{curator}))) {
-        $c->stash->{rest} = { error => "You need to be either a curator, or a submitter associated with breeding program $program_name to add propagation group identifiers." };
+        $c->stash->{rest} = { error => do { local $_; local $@; local $!; $c->i18n->p("seedlot.server.you_need_to_be_either_a_curator_or.825e468", "You need to be either a curator, or a submitter associated with breeding program %{program_name} to add propagation group identifiers.", {program_name => "" . ($program_name)}) } };
         return;
     }
 
@@ -164,18 +164,18 @@ sub add_propagation_group_identifier_POST :Args(0){
     my $accession_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema,'accession', 'stock_type')->cvterm_id();
 
     if ($schema->resultset("Stock::Stock")->find({uniquename => $propagation_group_identifier})){
-        $c->stash->{rest} = {error =>  "Propagation Group Identifier already exists. Please use another name" };
+        $c->stash->{rest} = {error =>  do { local $_; local $@; local $!; $c->i18n->p("seedlot.server.propagation_group_identifier_already_exists_please_use_another", "Propagation Group Identifier already exists. Please use another name") } };
         return;
     }
 
     if (! $schema->resultset("Stock::Stock")->find({uniquename => $accession_name, type_id => $accession_cvterm_id })){
-        $c->stash->{rest} = {error =>  "Accession name does not exist or does not exist as accession uniquename." };
+        $c->stash->{rest} = {error =>  do { local $_; local $@; local $!; $c->i18n->p("seedlot.server.accession_name_does_not_exist_or_does_not", "Accession name does not exist or does not exist as accession uniquename.") } };
         return;
     }
 
     if ($source_name) {
         if (! $schema->resultset("Stock::Stock")->find({uniquename => $source_name})){
-            $c->stash->{rest} = {error =>  "Source name does not exist in the database." };
+            $c->stash->{rest} = {error =>  do { local $_; local $@; local $!; $c->i18n->p("seedlot.server.source_name_does_not_exist_in_the_database", "Source name does not exist in the database.") } };
             return;
         }
     }
@@ -255,7 +255,7 @@ sub upload_propagation_group_identifiers_POST : Args(0) {
         my $dbh = $c->dbc->dbh;
         my @user_info = CXGN::Login->new($dbh)->query_from_cookie($session_id);
         if (!$user_info[0]){
-            $c->stash->{rest} = {error=>'You must be logged in to upload propagation group identifers!'};
+            $c->stash->{rest} = {error=>do { local $_; local $@; local $!; $c->i18n->p("seedlot.server.you_must_be_logged_in_to_upload_propagation.04192e7", "You must be logged in to upload propagation group identifiers!") }};
             $c->detach();
         }
         $user_id = $user_info[0];
@@ -264,12 +264,12 @@ sub upload_propagation_group_identifiers_POST : Args(0) {
         $user_name = $p->get_username;
 
         if (($user_role ne 'curator') && ($user_role ne 'submitter')) {
-            $c->stash->{rest} = {error=>'Only a submitter or a curator can upload propagation group identifiers'};
+            $c->stash->{rest} = {error=>do { local $_; local $@; local $!; $c->i18n->p("seedlot.server.only_a_submitter_or_a_curator_can_upload.2259418", "Only a submitter or a curator can upload propagation group identifiers") }};
             $c->detach();
         }
     } else {
         if (!$c->user){
-            $c->stash->{rest} = {error=>'You must be logged in to upload propagation group identifiers!'};
+            $c->stash->{rest} = {error=>do { local $_; local $@; local $!; $c->i18n->p("seedlot.server.you_must_be_logged_in_to_upload_propagation.71d862f", "You must be logged in to upload propagation group identifiers!") }};
             $c->detach();
         }
         $user_id = $c->user()->get_object()->get_sp_person_id();
@@ -281,7 +281,7 @@ sub upload_propagation_group_identifiers_POST : Args(0) {
         map { $has_roles{$_} = 1; } @user_roles;
 
         if (! ( (exists($has_roles{$breeding_program_name}) && exists($has_roles{submitter})) || exists($has_roles{curator}))) {
-          $c->stash->{rest} = { error => "You need to be either a curator, or a submitter associated with breeding program $breeding_program_name to upload propagation group identifiers." };
+          $c->stash->{rest} = { error => do { local $_; local $@; local $!; $c->i18n->p("seedlot.server.you_need_to_be_either_a_curator_or.132a834", "You need to be either a curator, or a submitter associated with breeding program %{breeding_program_name} to upload propagation group identifiers.", {breeding_program_name => "" . ($breeding_program_name)}) } };
           return;
         }
     }
@@ -296,18 +296,18 @@ sub upload_propagation_group_identifiers_POST : Args(0) {
         user_role => $user_role
     });
 
-        ## Store uploaded temporary file in arhive
+        ## Store uploaded temporary file in archive
     $archived_filename_with_path = $uploader->archive();
     $md5 = $uploader->get_md5($archived_filename_with_path);
     if (!$archived_filename_with_path) {
-        $c->stash->{rest} = {error => "Could not save file $upload_original_name in archive",};
+        $c->stash->{rest} = {error => do { local $_; local $@; local $!; $c->i18n->p("seedlots.server.could_not_save_file_upload_original_name_in_arch", "Could not save file %{upload_original_name} in archive", {upload_original_name => "" . ($upload_original_name)}) },};
         return;
     }
     unlink $upload_tempfile;
 
     #parse uploaded file with appropriate plugin
     my @stock_props = ();
-    $parser = CXGN::Stock::ParseUpload->new(chado_schema => $schema, filename => $archived_filename_with_path, editable_stock_props=>\@stock_props);
+    $parser = CXGN::Stock::ParseUpload->new(i18n => $c->i18n, chado_schema => $schema, filename => $archived_filename_with_path, editable_stock_props=>\@stock_props);
 
     $parser->load_plugin('PropagationGroupIdentifiersGeneric');
     $parsed_data = $parser->parse();
@@ -316,7 +316,7 @@ sub upload_propagation_group_identifiers_POST : Args(0) {
         my $return_error = '';
         my $parse_errors;
         if (!$parser->has_parse_errors() ){
-            $c->stash->{rest} = {error_string => "Could not get parsing errors"};
+            $c->stash->{rest} = {error_string => do { local $_; local $@; local $!; $c->i18n->p("seedlots.server.could_not_get_parsing_errors", "Could not get parsing errors") }};
         } else {
             $parse_errors = $parser->get_parse_errors();
             #print STDERR Dumper $parse_errors;
@@ -396,7 +396,7 @@ sub add_propagation_identifier_POST :Args(0){
     }
 
     if (!any { $_ eq "curator" || $_ eq "submitter" } ($c->user()->roles)){
-        $c->stash->{rest} = {error =>  "you have insufficient privileges to add a propagation ID." };
+        $c->stash->{rest} = {error =>  do { local $_; local $@; local $!; $c->i18n->p("seedlot.server.you_have_insufficient_privileges_to_add_a_propagation.98fdf62", "you have insufficient privileges to add a propagation ID.") } };
         return;
     }
 
@@ -407,13 +407,13 @@ sub add_propagation_identifier_POST :Args(0){
     my $accession_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema,'accession', 'stock_type')->cvterm_id();
 
     if ($schema->resultset("Stock::Stock")->find({uniquename => $propagation_identifier})){
-        $c->stash->{rest} = {error =>  "Propagation Identifier already exists. Please use another name" };
+        $c->stash->{rest} = {error =>  do { local $_; local $@; local $!; $c->i18n->p("seedlot.server.propagation_identifier_already_exists_please_use_another_name", "Propagation Identifier already exists. Please use another name") } };
         return;
     }
 
     if ($rootstock_name) {
         if (! $schema->resultset("Stock::Stock")->find({uniquename => $rootstock_name, type_id => $accession_cvterm_id })){
-            $c->stash->{rest} = {error =>  "Rootstock name does not exist or does not exist as accession uniquename." };
+            $c->stash->{rest} = {error =>  do { local $_; local $@; local $!; $c->i18n->p("seedlot.server.rootstock_name_does_not_exist_or_does_not", "Rootstock name does not exist or does not exist as accession uniquename.") } };
             return;
         }
     }
@@ -450,7 +450,7 @@ sub add_propagation_identifier_POST :Args(0){
         my $added_status = $status->add_status_info();
 
         if (!$added_status) {
-            $c->stash->{rest} = {error => "Error saving status for propagation identifier",};
+            $c->stash->{rest} = {error => do { local $_; local $@; local $!; $c->i18n->p("seedlot.server.error_saving_status_for_propagation_identifier", "Error saving status for propagation identifier") },};
             return;
         }
     }
@@ -495,7 +495,7 @@ sub upload_propagation_identifiers_POST : Args(0) {
         my $dbh = $c->dbc->dbh;
         my @user_info = CXGN::Login->new($dbh)->query_from_cookie($session_id);
         if (!$user_info[0]){
-            $c->stash->{rest} = {error=>'You must be logged in to upload propagation identifers!'};
+            $c->stash->{rest} = {error=>do { local $_; local $@; local $!; $c->i18n->p("seedlot.server.you_must_be_logged_in_to_upload_propagation.ca675c9", "You must be logged in to upload propagation identifiers!") }};
             $c->detach();
         }
         $user_id = $user_info[0];
@@ -504,7 +504,7 @@ sub upload_propagation_identifiers_POST : Args(0) {
         $user_name = $p->get_username;
     } else {
         if (!$c->user){
-            $c->stash->{rest} = {error=>'You must be logged in to upload propagation identifiers!'};
+            $c->stash->{rest} = {error=>do { local $_; local $@; local $!; $c->i18n->p("seedlot.server.you_must_be_logged_in_to_upload_propagation.50cb9d9", "You must be logged in to upload propagation identifiers!") }};
             $c->detach();
         }
         $user_id = $c->user()->get_object()->get_sp_person_id();
@@ -513,7 +513,7 @@ sub upload_propagation_identifiers_POST : Args(0) {
     }
 
     if (($user_role ne 'curator') && ($user_role ne 'submitter')) {
-        $c->stash->{rest} = {error=>'Only a submitter or a curator can upload propagation identifiers'};
+        $c->stash->{rest} = {error=>do { local $_; local $@; local $!; $c->i18n->p("seedlot.server.only_a_submitter_or_a_curator_can_upload.055953c", "Only a submitter or a curator can upload propagation identifiers") }};
         $c->detach();
     }
 
@@ -530,18 +530,18 @@ sub upload_propagation_identifiers_POST : Args(0) {
         user_role => $user_role
     });
 
-        ## Store uploaded temporary file in arhive
+        ## Store uploaded temporary file in archive
     $archived_filename_with_path = $uploader->archive();
     $md5 = $uploader->get_md5($archived_filename_with_path);
     if (!$archived_filename_with_path) {
-        $c->stash->{rest} = {error => "Could not save file $upload_original_name in archive",};
+        $c->stash->{rest} = {error => do { local $_; local $@; local $!; $c->i18n->p("seedlots.server.could_not_save_file_upload_original_name_in_arch", "Could not save file %{upload_original_name} in archive", {upload_original_name => "" . ($upload_original_name)}) },};
         return;
     }
     unlink $upload_tempfile;
 
     #parse uploaded file with appropriate plugin
     my @stock_props = ();
-    $parser = CXGN::Stock::ParseUpload->new(chado_schema => $schema, filename => $archived_filename_with_path, editable_stock_props=>\@stock_props);
+    $parser = CXGN::Stock::ParseUpload->new(i18n => $c->i18n, chado_schema => $schema, filename => $archived_filename_with_path, editable_stock_props=>\@stock_props);
 
     $parser->load_plugin('PropagationIdentifiersGeneric');
     $parsed_data = $parser->parse();
@@ -550,7 +550,7 @@ sub upload_propagation_identifiers_POST : Args(0) {
         my $return_error = '';
         my $parse_errors;
         if (!$parser->has_parse_errors() ){
-            $c->stash->{rest} = {error_string => "Could not get parsing errors"};
+            $c->stash->{rest} = {error_string => do { local $_; local $@; local $!; $c->i18n->p("seedlots.server.could_not_get_parsing_errors", "Could not get parsing errors") }};
         } else {
             $parse_errors = $parser->get_parse_errors();
             #print STDERR Dumper $parse_errors;
@@ -590,7 +590,7 @@ sub upload_propagation_identifiers_POST : Args(0) {
                 my $propagation_stock_id = $add->{propagation_stock_id};
 
                 if (!$propagation_stock_id) {
-                    $c->stash->{rest} = {error => "Error saving new propagation identifier",};
+                    $c->stash->{rest} = {error => do { local $_; local $@; local $!; $c->i18n->p("seedlot.server.error_saving_new_propagation_identifier", "Error saving new propagation identifier") },};
                     return;
                 }
 
@@ -617,7 +617,7 @@ sub upload_propagation_identifiers_POST : Args(0) {
                     my $added_status = $status->add_status_info();
 
                     if (!$added_status) {
-                        $c->stash->{rest} = {error => "Error saving status for new propagation identifier",};
+                        $c->stash->{rest} = {error => do { local $_; local $@; local $!; $c->i18n->p("seedlot.server.error_saving_status_for_new_propagation_identifier", "Error saving status for new propagation identifier") },};
                         return;
                     }
 
@@ -635,7 +635,7 @@ sub upload_propagation_identifiers_POST : Args(0) {
                         my $inventory_stock_id = $add->{inventory_stock_id};
                         print STDERR "INVENTORY STOCK ID =".Dumper($inventory_stock_id)."\n";
                         if (!$inventory_stock_id) {
-                            $c->stash->{rest} = {error => "Error saving Inventory Identifier!",};
+                            $c->stash->{rest} = {error => do { local $_; local $@; local $!; $c->i18n->p("seedlot.server.error_saving_inventory_identifier", "Error saving Inventory Identifier!") },};
                             return;
                         }
                     }
@@ -800,7 +800,7 @@ sub update_propagation_status_POST : Args(0) {
     my $user_id;
 
     if (!$c->user){
-        $c->stash->{rest} = {error=>'You must be logged in to update the status!'};
+        $c->stash->{rest} = {error=>do { local $_; local $@; local $!; $c->i18n->p("seedlot.server.you_must_be_logged_in_to_update_the", "You must be logged in to update the status!") }};
         $c->detach();
     }
 
@@ -817,7 +817,7 @@ sub update_propagation_status_POST : Args(0) {
     if ($inventory_identifier) {
         my $inventory_identifier_stock = $schema->resultset('Stock::Stock')->find({ uniquename => $inventory_identifier});
         if ($inventory_identifier_stock) {
-            $c->stash->{rest} = {error => "Error: inventory identifier already exists, please use another inventory identifier!"};
+            $c->stash->{rest} = {error => do { local $_; local $@; local $!; $c->i18n->p("seedlot.server.error_inventory_identifier_already_exists_please_use_another", "Error: inventory identifier already exists, please use another inventory identifier!") }};
             return;
         }
     }
@@ -845,7 +845,7 @@ sub update_propagation_status_POST : Args(0) {
     my $added_status = $status->add_status_info();
 
     if (!$added_status) {
-        $c->stash->{rest} = {error => "Error updating status",};
+        $c->stash->{rest} = {error => do { local $_; local $@; local $!; $c->i18n->p("seedlot.server.error_updating_status", "Error updating status") },};
         return;
     }
 
@@ -864,7 +864,7 @@ sub update_propagation_status_POST : Args(0) {
         $inventory_stock_id = $add->{inventory_stock_id};
 
         if (!$inventory_stock_id) {
-            $c->stash->{rest} = {error => "Error saving Inventory Identifier!",};
+            $c->stash->{rest} = {error => do { local $_; local $@; local $!; $c->i18n->p("seedlot.server.error_saving_inventory_identifier", "Error saving Inventory Identifier!") },};
             return;
         }
     }
@@ -909,7 +909,7 @@ sub upload_propagation_identifier_status_POST : Args(0) {
         my $dbh = $c->dbc->dbh;
         my @user_info = CXGN::Login->new($dbh)->query_from_cookie($session_id);
         if (!$user_info[0]){
-            $c->stash->{rest} = {error=>'You must be logged in to upload propagation identifer statuses!'};
+            $c->stash->{rest} = {error=>do { local $_; local $@; local $!; $c->i18n->p("seedlot.server.you_must_be_logged_in_to_upload_propagation.ad49c13", "You must be logged in to upload propagation identifier statuses!") }};
             $c->detach();
         }
         $user_id = $user_info[0];
@@ -918,7 +918,7 @@ sub upload_propagation_identifier_status_POST : Args(0) {
         $user_name = $p->get_username;
     } else {
         if (!$c->user){
-            $c->stash->{rest} = {error=>'You must be logged in to upload propagation identifier statuses!'};
+            $c->stash->{rest} = {error=>do { local $_; local $@; local $!; $c->i18n->p("seedlot.server.you_must_be_logged_in_to_upload_propagation.c5d699c", "You must be logged in to upload propagation identifier statuses!") }};
             $c->detach();
         }
         $user_id = $c->user()->get_object()->get_sp_person_id();
@@ -927,7 +927,7 @@ sub upload_propagation_identifier_status_POST : Args(0) {
     }
 
     if (($user_role ne 'curator') && ($user_role ne 'submitter')) {
-        $c->stash->{rest} = {error=>'Only a submitter or a curator can upload propagation identifier status'};
+        $c->stash->{rest} = {error=>do { local $_; local $@; local $!; $c->i18n->p("seedlot.server.only_a_submitter_or_a_curator_can_upload.8cbf959", "Only a submitter or a curator can upload propagation identifier status") }};
         $c->detach();
     }
 
@@ -944,18 +944,18 @@ sub upload_propagation_identifier_status_POST : Args(0) {
         user_role => $user_role
     });
 
-        ## Store uploaded temporary file in arhive
+        ## Store uploaded temporary file in archive
     $archived_filename_with_path = $uploader->archive();
     $md5 = $uploader->get_md5($archived_filename_with_path);
     if (!$archived_filename_with_path) {
-        $c->stash->{rest} = {error => "Could not save file $upload_original_name in archive",};
+        $c->stash->{rest} = {error => do { local $_; local $@; local $!; $c->i18n->p("seedlots.server.could_not_save_file_upload_original_name_in_arch", "Could not save file %{upload_original_name} in archive", {upload_original_name => "" . ($upload_original_name)}) },};
         return;
     }
     unlink $upload_tempfile;
 
     #parse uploaded file with appropriate plugin
     my @stock_props = ();
-    $parser = CXGN::Stock::ParseUpload->new(chado_schema => $schema, filename => $archived_filename_with_path, editable_stock_props=>\@stock_props);
+    $parser = CXGN::Stock::ParseUpload->new(i18n => $c->i18n, chado_schema => $schema, filename => $archived_filename_with_path, editable_stock_props=>\@stock_props);
 
     $parser->load_plugin('PropagationIdentifierStatusUpdate');
     $parsed_data = $parser->parse();
@@ -964,7 +964,7 @@ sub upload_propagation_identifier_status_POST : Args(0) {
         my $return_error = '';
         my $parse_errors;
         if (!$parser->has_parse_errors() ){
-            $c->stash->{rest} = {error_string => "Could not get parsing errors"};
+            $c->stash->{rest} = {error_string => do { local $_; local $@; local $!; $c->i18n->p("seedlots.server.could_not_get_parsing_errors", "Could not get parsing errors") }};
         } else {
             $parse_errors = $parser->get_parse_errors();
             #print STDERR Dumper $parse_errors;
@@ -998,7 +998,7 @@ sub upload_propagation_identifier_status_POST : Args(0) {
             my $added_status = $status->add_status_info();
 
             if (!$added_status) {
-                $c->stash->{rest} = {error => "Error updating status",};
+                $c->stash->{rest} = {error => do { local $_; local $@; local $!; $c->i18n->p("seedlot.server.error_updating_status", "Error updating status") },};
                 return;
             }
 
@@ -1017,7 +1017,7 @@ sub upload_propagation_identifier_status_POST : Args(0) {
                 $inventory_stock_id = $add->{inventory_stock_id};
 
                 if (!$inventory_stock_id) {
-                    $c->stash->{rest} = {error => "Error saving Inventory Identifier!",};
+                    $c->stash->{rest} = {error => do { local $_; local $@; local $!; $c->i18n->p("seedlot.server.error_saving_inventory_identifier", "Error saving Inventory Identifier!") },};
                     return;
                 }
             }

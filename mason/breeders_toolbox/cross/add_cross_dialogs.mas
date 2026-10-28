@@ -22,269 +22,269 @@ $locations
     <div class="modal-dialog modal-xl" role="document">
         <div class="modal-content ui-front">
             <div class="modal-header">
-                <button type="reset" class="close" id="new_cross_close_modal_1" name="new_cross_close_modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                <h4 class="modal-title" id="createNewCrosses">Add New Cross</h4>
+                <button type="reset" class="close" id="new_cross_close_modal_1" name="new_cross_close_modal" aria-label="<% $c->i18n->p('cross.ui.close', 'Close') |h %>"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="createNewCrosses"><% $c->i18n->p('cross.ui.add_new_cross', 'Add New Cross') |h %></h4>
             </div>
             <div class="modal-body">
                 <div class="container-fluid">
 
                     <&| /util/workflow.mas, id=> "add_cross_workflow" &>
-                        <&| /util/workflow.mas:step, title=> "Intro" &>
-                            <& /page/page_title.mas, title=>"What is a cross?" &>
+                        <&| /util/workflow.mas:step, title=> HTML::Entities::encode_entities($c->i18n->p('cross.ui.intro', 'Intro')) &>
+                            <& /page/page_title.mas, title=>HTML::Entities::encode_entities($c->i18n->p('cross.ui.what_is_a_cross', 'What is a cross?')) &>
 
                             <ul>
-                                <li>The Cross Tool can track any pollinations in a breeding program.</li>
-                                <li>Each cross has a globally unique cross id.</li>
-                                <li>Supported cross types are: biparental, self, open, backcross, sib, polycross, bulk, bulk_self, bulk_open, doubled_haploid, or dihaploid_induction</li>
-                                <li>For an open pollinated cross, the cross can be defined as between female accession A and male population P1 (populations in the database are defined strictly as groups of accessions). If the male parent is not known, it can be left blank.</li>
-                                <li>For backcross cross type, cross unique id can be used as one of the parents.</li>
-                                <li>An individual cross can be linked to the specific female plot or plant, as well as to the specific male plot or plant.</li>
-                                <li>A cross can have other data associated to it, such as number of flowers, pollination date, etc.</li>
-                                <li>Seed produced by a cross can be managed using a seedlot.</li>
-                                <li>Progenies from a cross can become named accessions in the database.</li>
+                                <li><% $c->i18n->p('cross.ui.the_cross_tool_can_track_any_pollinations_in_a_breeding_progra', 'The Cross Tool can track any pollinations in a breeding program.') |h %></li>
+                                <li><% $c->i18n->p('cross.ui.each_cross_has_a_globally_unique_cross_id', 'Each cross has a globally unique cross id.') |h %></li>
+                                <li><% $c->i18n->p('cross.ui.supported_cross_types_are_biparental_self_open_backcross_sib_p', 'Supported cross types are: biparental, self, open, backcross, sib, polycross, bulk, bulk_self, bulk_open, doubled_haploid, or dihaploid_induction') |h %></li>
+                                <li><% $c->i18n->p('cross.ui.for_an_open_pollinated_cross_the_cross_can_be_defined_as_betwe', 'For an open pollinated cross, the cross can be defined as between female accession A and male population P1 (populations in the database are defined strictly as groups of accessions). If the male parent is not known, it can be left blank.') |h %></li>
+                                <li><% $c->i18n->p('cross.ui.for_backcross_cross_type_cross_unique_id_can_be_used_as_one_of', 'For backcross cross type, cross unique id can be used as one of the parents.') |h %></li>
+                                <li><% $c->i18n->p('cross.ui.an_individual_cross_can_be_linked_to_the_specific_female_plot_', 'An individual cross can be linked to the specific female plot or plant, as well as to the specific male plot or plant.') |h %></li>
+                                <li><% $c->i18n->p('cross.ui.a_cross_can_have_other_data_associated_to_it_such_as_number_of', 'A cross can have other data associated to it, such as number of flowers, pollination date, etc.') |h %></li>
+                                <li><% $c->i18n->p('cross.ui.seed_produced_by_a_cross_can_be_managed_using_a_seedlot', 'Seed produced by a cross can be managed using a seedlot.') |h %></li>
+                                <li><% $c->i18n->p('cross.ui.progenies_from_a_cross_can_become_named_accessions_in_the_data', 'Progenies from a cross can become named accessions in the database.') |h %></li>
                             </ul>
 
                             <br/>
                             <center>
-                                <button id="next_step_cross_intro" class="btn btn-primary" onclick="Workflow.complete(this);">Go to Next Step</button>
+                                <button id="next_step_cross_intro" class="btn btn-primary" onclick="Workflow.complete(this);"><% $c->i18n->p('cross.ui.go_to_next_step', 'Go to Next Step') |h %></button>
                             </center>
                         </&>
-                        <&| /util/workflow.mas:step, title=> "Crossing Experiment" &>
-                            <& /page/page_title.mas, title=>"Select a crossing experiment" &>
+                        <&| /util/workflow.mas:step, title=> HTML::Entities::encode_entities($c->i18n->p('cross.ui.crossing_experiment.1594653', 'Crossing Experiment')) &>
+                            <& /page/page_title.mas, title=>HTML::Entities::encode_entities($c->i18n->p('cross.ui.select_a_crossing_experiment', 'Select a crossing experiment')) &>
 
-                            <p>Crossing experiments are for grouping crosses together. The grouping is most often done for crosses derived from the same field trial, the same year, or for crosses that have the same breeding objective.</p>
+                            <p><% $c->i18n->p('cross.ui.crossing_experiments_are_for_grouping_crosses_together_the_gro', 'Crossing experiments are for grouping crosses together. The grouping is most often done for crosses derived from the same field trial, the same year, or for crosses that have the same breeding objective.') |h %></p>
                             <center>
-                                <button class="btn btn-info" name="create_crossingtrial_link">If you need to create a crossing experiment, click here</button><br/><br/>
-                                <button id="next_step_cross_experiment" class="btn btn-primary" onclick="Workflow.complete(this);">Once you have a crossing experiment, go to Next Step</button>
+                                <button class="btn btn-info" name="create_crossingtrial_link"><% $c->i18n->p('cross.ui.if_you_need_to_create_a_crossing_experiment_click_here', 'If you need to create a crossing experiment, click here') |h %></button><br/><br/>
+                                <button id="next_step_cross_experiment" class="btn btn-primary" onclick="Workflow.complete(this);"><% $c->i18n->p('cross.ui.once_you_have_a_crossing_experiment_go_to_next_step', 'Once you have a crossing experiment, go to Next Step') |h %></button>
                             </center>
 
                         </&>
 
                         <form class="form-horizontal" role="form" name="create_cross_form" id="create_cross_form">
 
-                            <&| /util/workflow.mas:step, title=> "Enter cross information" &>
-                                <& /page/page_title.mas, title=>"Enter basic information about the cross" &>
+                            <&| /util/workflow.mas:step, title=> HTML::Entities::encode_entities($c->i18n->p('cross.ui.enter_cross_information', 'Enter cross information')) &>
+                                <& /page/page_title.mas, title=>HTML::Entities::encode_entities($c->i18n->p('cross.ui.enter_basic_information_about_the_cross', 'Enter basic information about the cross')) &>
 
-                                <&| /page/explanation.mas, title=>'Cross Type information' &>
+                                <&| /page/explanation.mas, title=>HTML::Entities::encode_entities($c->i18n->p('cross.ui.cross_type_information.e1a759f', 'Cross Type information')) &>
                                     <p>
-                                        <b>Cross type information</b>
+                                        <b><% $c->i18n->p('cross.ui.cross_type_information.1a536cc', 'Cross type information') |h %></b>
                                         <br>
-                                        <a id="cross_type_info">Descriptions of cross types</a>
+                                        <a id="cross_type_info"><% $c->i18n->p('cross.ui.descriptions_of_cross_types', 'Descriptions of cross types') |h %></a>
                                     </p>
                                 </&>
                                 <div class="form-group">
-                                    <label class="col-sm-3 control-label">Breeding Program: </label>
+                                    <label class="col-sm-3 control-label"><% $c->i18n->p('cross.ui.breeding_program.2c9b17e', 'Breeding Program:') |h %> </label>
                                     <div class="col-sm-9">
                                         <div id="add_cross_breeding_program_select_div" name="add_cross_breeding_program_select_div">
                                         </div>
                                     </div>
                                 </div><br/><br/>
                                 <div class="form-group">
-                                    <label class="col-sm-3 control-label">Crossing Experiment: </label>
+                                    <label class="col-sm-3 control-label"><% $c->i18n->p('cross.ui.crossing_experiment.9272d74', 'Crossing Experiment:') |h %> </label>
                                     <div class="col-sm-9">
                                         <div id="add_cross_crossing_experiment_select_div" name="add_cross_crossing_experiment_select_div" >
                                         </div>
                                     </div>
                                 </div><br/><br/>
                                 <div class="form-group">
-                                    <label class="col-sm-3 control-label">Cross Unique ID: </label>
+                                    <label class="col-sm-3 control-label"><% $c->i18n->p('cross.ui.cross_unique_id.1909bf7', 'Cross Unique ID:') |h %> </label>
                                     <div class="col-sm-9">
                                         <input class="form-control" type="text" id="cross_name" name="cross_name" />
                                     </div>
                                 </div><br/><br/>
                                 <div class="form-group">
-                                    <label class="col-sm-3 control-label">Cross Combination (optional): </label>
+                                    <label class="col-sm-3 control-label"><% $c->i18n->p('cross.ui.cross_combination_optional', 'Cross Combination (optional):') |h %> </label>
                                     <div class="col-sm-9">
                                         <input class="form-control" type="text" id="dialog_cross_combination" name="dialog_cross_combination" placeholder="e.g. female_name/male_name"/>
                                     </div>
                                 </div><br/><br/>
                                 <div class="form-group">
-                                    <label class="col-sm-3 control-label">Cross Type: </label>
+                                    <label class="col-sm-3 control-label"><% $c->i18n->p('cross.ui.cross_type.3715ccd', 'Cross Type:') |h %> </label>
                                     <div class="col-sm-9">
                                         <select class="form-control" id="cross_type">
-                                            <option value="">Select a cross type</option>
-                                            <option value="biparental">biparental</option>
-                                            <option value="self">self</option>
-                                            <option value="open">open pollinated</option>
-                                            <option value="backcross">backcross</option>
-                                            <option value="sib">sib</option>
-                                            <option value="bulk">bulk</option>
-                                            <option value="bulk_self">bulk selfed</option>
-                                            <option value="bulk_open">bulk and open pollinated</option>
-                                            <option value="doubled_haploid">doubled haploid</option>
-                                            <option value="dihaploid_induction">dihaploid induction</option>
-                                            <option value="polycross">polycross</option>
-                                            <option value="reciprocal">reciprocal</option>
-                                            <option value="multicross">multicross</option>
+                                            <option value=""><% $c->i18n->p('cross.ui.select_a_cross_type', 'Select a cross type') |h %></option>
+                                            <option value="biparental"><% $c->i18n->p('cross.type.caption.biparental', 'biparental') |h %></option>
+                                            <option value="self"><% $c->i18n->p('cross.type.caption.self', 'self') |h %></option>
+                                            <option value="open"><% $c->i18n->p('cross.ui.open_pollinated.75fcdb9', 'open pollinated') |h %></option>
+                                            <option value="backcross"><% $c->i18n->p('cross.type.caption.backcross', 'backcross') |h %></option>
+                                            <option value="sib"><% $c->i18n->p('cross.type.caption.sib', 'sib') |h %></option>
+                                            <option value="bulk"><% $c->i18n->p('cross.type.caption.bulk', 'bulk') |h %></option>
+                                            <option value="bulk_self"><% $c->i18n->p('cross.ui.bulk_selfed.8cbb08d', 'bulk selfed') |h %></option>
+                                            <option value="bulk_open"><% $c->i18n->p('cross.ui.bulk_and_open_pollinated.95641f7', 'bulk and open pollinated') |h %></option>
+                                            <option value="doubled_haploid"><% $c->i18n->p('cross.ui.doubled_haploid.ce3bc4b', 'doubled haploid') |h %></option>
+                                            <option value="dihaploid_induction"><% $c->i18n->p('cross.ui.dihaploid_induction.f33acb6', 'dihaploid induction') |h %></option>
+                                            <option value="polycross"><% $c->i18n->p('cross.type.caption.polycross', 'polycross') |h %></option>
+                                            <option value="reciprocal"><% $c->i18n->p('cross.type.caption.reciprocal', 'reciprocal') |h %></option>
+                                            <option value="multicross"><% $c->i18n->p('cross.type.caption.multicross', 'multicross') |h %></option>
                                         </select>
                                     </div>
                                 </div>
                                 <br/><br/>
                                 <center>
-                                    <button id="next_step_cross_information" class="btn btn-primary" onclick="Workflow.complete(this);">Go to Next Step</button>
+                                    <button id="next_step_cross_information" class="btn btn-primary" onclick="Workflow.complete(this);"><% $c->i18n->p('cross.ui.go_to_next_step', 'Go to Next Step') |h %></button>
                                 </center>
                             </&>
-                            <&| /util/workflow.mas:step, title=> "Enter parentage information" &>
-                                <& /page/page_title.mas, title=>"Enter basic information about the cross" &>
+                            <&| /util/workflow.mas:step, title=> HTML::Entities::encode_entities($c->i18n->p('cross.ui.enter_parentage_information', 'Enter parentage information')) &>
+                                <& /page/page_title.mas, title=>HTML::Entities::encode_entities($c->i18n->p('cross.ui.enter_basic_information_about_the_cross', 'Enter basic information about the cross')) &>
 
                                 <div class="form-group" id="get_maternal_parent" style="display: none">
-                                    <label class="col-sm-2 control-label">Female Parent: </label>
+                                    <label class="col-sm-2 control-label"><% $c->i18n->p('cross.ui.female_parent.d4f10f0', 'Female Parent:') |h %> </label>
                                     <div class="col-sm-10">
-                                        <input class="form-control" id="maternal_parent" type="text" name="maternal" placeholder="Enter female parent name" />
+                                        <input class="form-control" id="maternal_parent" type="text" name="maternal" placeholder="<% $c->i18n->p('cross.ui.enter_female_parent_name', 'Enter female parent name') |h %>" />
                                     </div><br/><br/>
                                 </div>
                                 <div class="form-group" id="get_paternal_parent" style="display: none">
-                                    <label class="col-sm-2 control-label">Male Parent: </label>
+                                    <label class="col-sm-2 control-label"><% $c->i18n->p('cross.ui.male_parent.4c306a2', 'Male Parent:') |h %> </label>
                                     <div class="col-sm-10">
-                                        <input class="form-control" id="paternal_parent" type="text" name="paternal" placeholder="Enter male parent name"  />
+                                        <input class="form-control" id="paternal_parent" type="text" name="paternal" placeholder="<% $c->i18n->p('cross.ui.enter_male_parent_name', 'Enter male parent name') |h %>"  />
                                     </div><br/><br/>
                                 </div>
                                 <div class="form-group" id="get_selfed_parent" style="display: none">
-                                    <label class="col-sm-2 control-label">Selfed Parent: </label>
+                                    <label class="col-sm-2 control-label"><% $c->i18n->p('cross.ui.selfed_parent', 'Selfed Parent:') |h %> </label>
                                     <div class="col-sm-10">
-                                        <input class="form-control" id="selfed_parent" type="text" name="selfed" placeholder="Enter parent name" />
+                                        <input class="form-control" id="selfed_parent" type="text" name="selfed" placeholder="<% $c->i18n->p('cross.ui.enter_parent_name', 'Enter parent name') |h %>" />
                                     </div><br/><br/>
                                 </div>
                                 <div class="form-group" id="get_open_maternal_parent" style="display: none">
-                                    <label class="col-sm-2 control-label">Female Parent: </label>
+                                    <label class="col-sm-2 control-label"><% $c->i18n->p('cross.ui.female_parent.d4f10f0', 'Female Parent:') |h %> </label>
                                     <div class="col-sm-10">
-                                        <input class="form-control" id="open_maternal_parent" type="text" name="open maternal" placeholder="Enter female parent name" />
+                                        <input class="form-control" id="open_maternal_parent" type="text" name="open maternal" placeholder="<% $c->i18n->p('cross.ui.enter_female_parent_name', 'Enter female parent name') |h %>" />
                                     </div><br/><br/>
                                 </div>
                                 <div class="form-group" id="get_open_paternal_population" style="display: none">
-                                    <div class="col-sm-2"><center><label class="control-label">Male Population: </label><i>(optional)</i></center></div>
+                                    <div class="col-sm-2"><center><label class="control-label"><% $c->i18n->p('cross.ui.male_population', 'Male Population:') |h %> </label><i><% $c->i18n->p('cross.ui.optional.87e6ca1', '(optional)') |h %></i></center></div>
                                     <div class="col-sm-10">
-                                        <input class="form-control" id="open_paternal_population" type="text" name="open paternal" placeholder="Enter male population name" />
+                                        <input class="form-control" id="open_paternal_population" type="text" name="open paternal" placeholder="<% $c->i18n->p('cross.ui.enter_male_population_name', 'Enter male population name') |h %>" />
                                     </div><br/><br/>
                                 </div>
                                 <div class="form-group" id="get_bulk_maternal_population" style="display: none">
-                                    <label class="col-sm-2 control-label">Female Population: </label>
+                                    <label class="col-sm-2 control-label"><% $c->i18n->p('cross.ui.female_population', 'Female Population:') |h %> </label>
                                     <div class="col-sm-10">
-                                        <input class="form-control" id="bulk_maternal_population" type="text" name="bulk maternal" placeholder="Enter female population name" />
+                                        <input class="form-control" id="bulk_maternal_population" type="text" name="bulk maternal" placeholder="<% $c->i18n->p('cross.ui.enter_female_population_name', 'Enter female population name') |h %>" />
                                     </div><br/><br/>
                                 </div>
                                 <div class="form-group" id="get_bulk_paternal_parent" style="display: none">
-                                    <label class="col-sm-2 control-label">Male Parent: </label>
+                                    <label class="col-sm-2 control-label"><% $c->i18n->p('cross.ui.male_parent.4c306a2', 'Male Parent:') |h %> </label>
                                     <div class="col-sm-10">
-                                        <input class="form-control" id="bulk_paternal_parent" type="text" name="bulk paternal" placeholder="Enter male parent name" />
+                                        <input class="form-control" id="bulk_paternal_parent" type="text" name="bulk paternal" placeholder="<% $c->i18n->p('cross.ui.enter_male_parent_name', 'Enter male parent name') |h %>" />
                                     </div><br/><br/>
                                 </div>
                                 <div class="form-group" id="get_bulk_selfed_population" style="display: none">
-                                    <label class="col-sm-2 control-label">Selfed Population: </label>
+                                    <label class="col-sm-2 control-label"><% $c->i18n->p('cross.ui.selfed_population', 'Selfed Population:') |h %> </label>
                                     <div class="col-sm-10">
-                                        <input class="form-control" id="bulk_selfed_population" type="text" name="bulk selfed" placeholder="Enter parent population name" />
+                                        <input class="form-control" id="bulk_selfed_population" type="text" name="bulk selfed" placeholder="<% $c->i18n->p('cross.ui.enter_parent_population_name', 'Enter parent population name') |h %>" />
                                     </div><br/><br/>
                                 </div>
                                 <div class="form-group" id="get_bulk_open_maternal_population" style="display: none">
-                                    <label class="col-sm-2 control-label">Female Population: </label>
+                                    <label class="col-sm-2 control-label"><% $c->i18n->p('cross.ui.female_population', 'Female Population:') |h %> </label>
                                     <div class="col-sm-10">
-                                        <input class="form-control" id="bulk_open_maternal_population" type="text" name="bulk open maternal" placeholder="Enter female population name" />
+                                        <input class="form-control" id="bulk_open_maternal_population" type="text" name="bulk open maternal" placeholder="<% $c->i18n->p('cross.ui.enter_female_population_name', 'Enter female population name') |h %>" />
                                     </div><br/><br/>
                                 </div>
                                 <div class="form-group" id="get_bulk_open_paternal_population" style="display: none">
-                                    <div class="col-sm-2"><center><label class="control-label">Male Population: </label><i>(optional)</i></center></div>
+                                    <div class="col-sm-2"><center><label class="control-label"><% $c->i18n->p('cross.ui.male_population', 'Male Population:') |h %> </label><i><% $c->i18n->p('cross.ui.optional.87e6ca1', '(optional)') |h %></i></center></div>
                                     <div class="col-sm-10">
-                                        <input class="form-control" id="bulk_open_paternal_population" type="text" name="bulk open paternal" placeholder="Enter male population name" />
+                                        <input class="form-control" id="bulk_open_paternal_population" type="text" name="bulk open paternal" placeholder="<% $c->i18n->p('cross.ui.enter_male_population_name', 'Enter male population name') |h %>" />
                                     </div><br/><br/>
                                 </div>
                                 <div class="form-group" id="get_doubled_haploid_parent" style="display: none">
-                                    <label class="col-sm-2 control-label">Doubled Haploid Parent: </label>
+                                    <label class="col-sm-2 control-label"><% $c->i18n->p('cross.ui.doubled_haploid_parent', 'Doubled Haploid Parent:') |h %> </label>
                                     <div class="col-sm-10">
-                                        <input class="form-control" id="doubled_haploid_parent" type="text" name="doubled haploid" placeholder="Enter parent name" />
+                                        <input class="form-control" id="doubled_haploid_parent" type="text" name="doubled haploid" placeholder="<% $c->i18n->p('cross.ui.enter_parent_name', 'Enter parent name') |h %>" />
                                     </div><br/><br/>
                                 </div>
                                 <div class="form-group" id="get_dihaploid_induction_parent" style="display: none">
-                                    <label class="col-sm-2 control-label">Dihaploid induction Parent: </label>
+                                    <label class="col-sm-2 control-label"><% $c->i18n->p('cross.ui.dihaploid_induction_parent', 'Dihaploid induction Parent:') |h %> </label>
                                     <div class="col-sm-10">
-                                        <input class="form-control" id="dihaploid_induction_parent" type="text" name="dihaploid_induction" placeholder="Enter parent name" />
+                                        <input class="form-control" id="dihaploid_induction_parent" type="text" name="dihaploid_induction" placeholder="<% $c->i18n->p('cross.ui.enter_parent_name', 'Enter parent name') |h %>" />
                                      </div><br/><br/>
                                 </div>
                                 <div class="form-group" id="polycross_accessions" style="display: none">
-                                    <label class="col-sm-2 control-label">Accessions to use in Polycross: </label>
+                                    <label class="col-sm-2 control-label"><% $c->i18n->p('cross.ui.accessions_to_use_in_polycross', 'Accessions to use in Polycross:') |h %> </label>
                                     <div class="col-sm-10">
                                         <div id="polycross_accession_list"></div>
                                     </div><br/><br/>
                                 </div>
                                 <div class="form-group" id="reciprocal_accessions" style="display: none">
-                                    <label class="col-sm-2 control-label">Accessions to use in Reciprocal cross: </label>
+                                    <label class="col-sm-2 control-label"><% $c->i18n->p('cross.ui.accessions_to_use_in_reciprocal_cross', 'Accessions to use in Reciprocal cross:') |h %> </label>
                                     <div class="col-sm-10">
                                         <div id="reciprocal_accession_list"></div>
                                     </div><br/><br/>
                                 </div>
                                 <div class="form-group" id="maternal_accessions" style="display: none">
-                                    <label class="col-sm-2 control-label">Multicross Female Parents: </label>
+                                    <label class="col-sm-2 control-label"><% $c->i18n->p('cross.ui.multicross_female_parents', 'Multicross Female Parents:') |h %> </label>
                                     <div class="col-sm-10">
                                         <div id="maternal_accession_list"></div>
                                     </div><br/><br/>
                                 </div>
                                 <div class="form-group" id="paternal_accessions" style="display: none">
-                                    <label class="col-sm-2 control-label">Multicross Male Parents: </label>
+                                    <label class="col-sm-2 control-label"><% $c->i18n->p('cross.ui.multicross_male_parents', 'Multicross Male Parents:') |h %> </label>
                                     <div class="col-sm-10">
                                         <div id="paternal_accession_list"></div>
                                     </div><br/><br/>
                                 </div>
                                 <div class="form-group" id="exact_parents" style="display: none">
-                                    <& /page/page_title.mas, title=>"Optional: If you choose to record exact cross parents, you can do so." &>
+                                    <& /page/page_title.mas, title=>HTML::Entities::encode_entities($c->i18n->p('cross.ui.optional_if_you_choose_to_record_exact_cross_parents_you_can_d', 'Optional: If you choose to record exact cross parents, you can do so.')) &>
 
                                     <div class="form-group">
-                                        <label class="col-sm-2 control-label">Field Trial: </label>
+                                        <label class="col-sm-2 control-label"><% $c->i18n->p('cross.ui.field_trial', 'Field Trial:') |h %> </label>
                                         <div class="col-sm-10">
                                             <div class="input-group">
-                                                <input type ="text" class ="form-control" id="parents_field_trial" name="parents_field_trial" placeholder="Enter trial name">
+                                                <input type ="text" class ="form-control" id="parents_field_trial" name="parents_field_trial" placeholder="<% $c->i18n->p('cross.ui.enter_trial_name', 'Enter trial name') |h %>">
                                                 <div class ="input-group-btn">
-                                                    <button class = "btn btn-info" id="search_parents_plots_plants" name="search_plots_plants"></i>Search Plots/Plants</button>
+                                                    <button class = "btn btn-info" id="search_parents_plots_plants" name="search_plots_plants"></i><% $c->i18n->p('cross.ui.search_plots_plants', 'Search Plots/Plants') |h %></button>
                                                 </div>
                                             </div>
                                         </div>
                                     </div><br/><br/>
                                     <div class="form-group">
-                                        <label class="col-sm-2 control-label">Female Plot/Plant: </label>
+                                        <label class="col-sm-2 control-label"><% $c->i18n->p('cross.ui.female_plot_plant', 'Female Plot/Plant:') |h %> </label>
                                         <div class="col-sm-10">
                                             <select class="form-control" id="female_plot_plant" name="female_plot_plant">
-                                                <option value="">Enter trial name first</option>
+                                                <option value=""><% $c->i18n->p('cross.ui.enter_trial_name_first', 'Enter trial name first') |h %></option>
                                             </select>
                                         </div>
                                     </div><br/><br/>
                                     <div class="form-group">
-                                        <label class="col-sm-2 control-label">Male Plot/Plant: </label>
+                                        <label class="col-sm-2 control-label"><% $c->i18n->p('cross.ui.male_plot_plant', 'Male Plot/Plant:') |h %> </label>
                                         <div class="col-sm-10">
                                             <select class="form-control" id="male_plot_plant" name="male_plot_plant">
-                                                <option value="">Enter trial name first</option>
+                                                <option value=""><% $c->i18n->p('cross.ui.enter_trial_name_first', 'Enter trial name first') |h %></option>
                                             </select>
                                         </div>
                                     </div><br/><br/>
                                 </div>
                                 <div class="form-group" id="exact_female" style="display: none">
-                                    <& /page/page_title.mas, title=>"Optional: If you choose to record exact cross female parent, you can do so." &>
+                                    <& /page/page_title.mas, title=>HTML::Entities::encode_entities($c->i18n->p('cross.ui.optional_if_you_choose_to_record_exact_cross_female_parent_you', 'Optional: If you choose to record exact cross female parent, you can do so.')) &>
 
                                     <div class="form-group">
-                                        <label class="col-sm-2 control-label">Field Trial: </label>
+                                        <label class="col-sm-2 control-label"><% $c->i18n->p('cross.ui.field_trial', 'Field Trial:') |h %> </label>
                                         <div class="col-sm-10">
                                             <div class="input-group">
-                                                <input type ="text" class ="form-control" id="female_field_trial" name ="female_field_trial" placeholder="Enter trial name">
+                                                <input type ="text" class ="form-control" id="female_field_trial" name ="female_field_trial" placeholder="<% $c->i18n->p('cross.ui.enter_trial_name', 'Enter trial name') |h %>">
                                                 <div class ="input-group-btn">
-                                                    <button class = "btn btn-info" id="search_female_plots_plants" name="search_plots_plants"></i>Search Plots/Plants</button>
+                                                    <button class = "btn btn-info" id="search_female_plots_plants" name="search_plots_plants"></i><% $c->i18n->p('cross.ui.search_plots_plants', 'Search Plots/Plants') |h %></button>
                                                 </div>
                                             </div>
                                         </div>
                                     </div><br/><br/>
                                     <div class="form-group">
-                                        <label class="col-sm-2 control-label">Female Plot/Plant: </label>
+                                        <label class="col-sm-2 control-label"><% $c->i18n->p('cross.ui.female_plot_plant', 'Female Plot/Plant:') |h %> </label>
                                         <div class="col-sm-10">
                                             <select class="form-control" id="open_female_plot_plant" name="open_female_plot_plant">
-                                                <option value="">Enter trial name first</option>
+                                                <option value=""><% $c->i18n->p('cross.ui.enter_trial_name_first', 'Enter trial name first') |h %></option>
                                             </select>
                                         </div>
                                     </div><br/><br/>
                                 </div>
                                 <br>
                                 <center>
-                                    <button id="next_step_basic_information" class="btn btn-primary" onclick="Workflow.complete(this);">Go to Next Step</button>
+                                    <button id="next_step_basic_information" class="btn btn-primary" onclick="Workflow.complete(this);"><% $c->i18n->p('cross.ui.go_to_next_step', 'Go to Next Step') |h %></button>
                                 </center>
                             </&>
-                            <&| /util/workflow.mas:step, title=> "Additional cross info" &>
-                                <& /page/page_title.mas, title=>"If you would like to add auto-generated progeny names for this cross, you can add it here" &>
-                                <h3>Optional:</h3>
+                            <&| /util/workflow.mas:step, title=> HTML::Entities::encode_entities($c->i18n->p('cross.ui.additional_cross_info', 'Additional cross info')) &>
+                                <& /page/page_title.mas, title=>HTML::Entities::encode_entities($c->i18n->p('cross.ui.if_you_would_like_to_add_auto_generated_progeny_names_for_this', 'If you would like to add auto-generated progeny names for this cross, you can add it here')) &>
+                                <h3><% $c->i18n->p('cross.ui.optional.545cb87', 'Optional:') |h %></h3>
                                 <table>
                                 <!--
                                     <tr>
@@ -357,7 +357,7 @@ $locations
                                     <tr>
                                         <td>
                                             <div class="form-group">
-                                                <label title="You may choose to create accessions for the progeny of the cross at this time." class="col-sm-9 control-label">Add New Accessions for Progeny: </label>
+                                                <label title="<% $c->i18n->p('cross.ui.you_may_choose_to_create_accessions_for_the_progeny_of_the_cro', 'You may choose to create accessions for the progeny of the cross at this time.') |h %>" class="col-sm-9 control-label"><% $c->i18n->p('cross.ui.add_new_accessions_for_progeny', 'Add New Accessions for Progeny:') |h %> </label>
                                                 <div class="col-sm-3">
                                                     <input id="create_progeny_checkbox" type="checkbox"/>
                                                 </div>
@@ -365,7 +365,7 @@ $locations
                                         </td>
                                         <td>
                                             <div class="form-group" id="create_progeny_number" style="display: none">
-                                                <label class="col-sm-6 control-label">Number of progeny: </label>
+                                                <label class="col-sm-6 control-label"><% $c->i18n->p('cross.ui.number_of_progeny', 'Number of progeny:') |h %> </label>
                                                 <div class="col-sm-6">
                                                     <input class="form-control" type="text" id="progeny_number" />
                                                 </div>
@@ -375,7 +375,7 @@ $locations
                                     <tr id="use_prefix_suffix" style = "display: none">
                                         <td>
                                             <div class="form-group">
-                                                <label class="col-sm-9 control-label">Use Prefix and/or Suffix: </label>
+                                                <label class="col-sm-9 control-label"><% $c->i18n->p('cross.ui.use_prefix_and_or_suffix', 'Use Prefix and/or Suffix:') |h %> </label>
                                                 <div class="col-sm-3">
                                                     <input id="use_prefix_suffix_checkbox" type="checkbox" checked/>
                                                 </div>
@@ -383,13 +383,13 @@ $locations
                                         </td>
                                         <td id="get_prefix_suffix" style="display: none">
                                             <div class="form-group" >
-                                                <label class="col-sm-6 control-label">Prefix: </label>
+                                                <label class="col-sm-6 control-label"><% $c->i18n->p('cross.ui.prefix', 'Prefix:') |h %> </label>
                                                 <div class="col-sm-6">
                                                     <input class="form-control" id="prefix" name="prefix" value="P" size="5" />
                                                 </div>
                                             </div>
                                             <div class="form-group" >
-                                                <label class="col-sm-6 control-label">Suffix: </label>
+                                                <label class="col-sm-6 control-label"><% $c->i18n->p('cross.ui.suffix', 'Suffix:') |h %> </label>
                                                 <div class="col-sm-6">
                                                     <input class="form-control" id="suffix" name="suffix" size="5" />
                                                 </div>
@@ -399,22 +399,22 @@ $locations
                                 </table>
                                 <br/>
                                 <center>
-                                    <button class="btn btn-primary" name="create_cross_submit" id="create_cross_submit" onclick="Workflow.complete(this, false);">Submit Cross</button>
+                                    <button class="btn btn-primary" name="create_cross_submit" id="create_cross_submit" onclick="Workflow.complete(this, false);"><% $c->i18n->p('cross.ui.submit_cross', 'Submit Cross') |h %></button>
                                 </center>
                             </&>
                         </form>
 
-                        <&| /util/workflow.mas:complete, title=> "Complete" &>
-                            <& /page/page_title.mas, title=>"Finished! Your cross is now in the database" &>
+                        <&| /util/workflow.mas:complete, title=> HTML::Entities::encode_entities($c->i18n->p('cross.ui.complete', 'Complete')) &>
+                            <& /page/page_title.mas, title=>HTML::Entities::encode_entities($c->i18n->p('cross.ui.finished_your_cross_is_now_in_the_database', 'Finished! Your cross is now in the database')) &>
                             <p>
                                 <span class="ui-icon ui-icon-circle-check" style="float: left; margin: 0 7px 50px 0;"></span>
-                                The cross was added successfully
+                                <% $c->i18n->p('cross.ui.the_cross_was_added_successfully', 'The cross was added successfully') |h %>
                             </p>
 
                             <ul>
-                                <li>You may want to proceed to the cross detail page for the cross you just created.</li>
-                                <li>You can print barcodes for the cross.</li>
-                                <li>You can add crossing information as it becomes available (e.g. number of seeds, progeny, etc).</li>
+                                <li><% $c->i18n->p('cross.ui.you_may_want_to_proceed_to_the_cross_detail_page_for_the_cross', 'You may want to proceed to the cross detail page for the cross you just created.') |h %></li>
+                                <li><% $c->i18n->p('cross.ui.you_can_print_barcodes_for_the_cross', 'You can print barcodes for the cross.') |h %></li>
+                                <li><% $c->i18n->p('cross.ui.you_can_add_crossing_information_as_it_becomes_available_e_g_n', 'You can add crossing information as it becomes available (e.g. number of seeds, progeny, etc).') |h %></li>
                             </ul>
                             <br/>
                         </&>
@@ -422,7 +422,7 @@ $locations
                 </div>
             </div>
             <div class="modal-footer">
-                <button id="new_cross_close_modal" name="new_cross_close_modal" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                <button id="new_cross_close_modal" name="new_cross_close_modal" type="button" class="btn btn-default" data-dismiss="modal"><% $c->i18n->p('cross.ui.close', 'Close') |h %></button>
             </div>
         </div>
     </div>
@@ -432,38 +432,38 @@ $locations
     <div class="modal-dialog modal-lg" role="document">
         <div class="modal-content">
             <div class="modal-header">
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                <h4 class="modal-title" id="crossTypeDialog">Template Information</h4>
+                <button type="button" class="close" data-dismiss="modal" aria-label="<% $c->i18n->p('cross.ui.close', 'Close') |h %>"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="crossTypeDialog"><% $c->i18n->p('cross.ui.template_information.bf8c643', 'Template Information') |h %></h4>
             </div>
             <div class="modal-body">
                 <div class="container-fluid">
                     <h2>
-                        Individual Crosses:
+                        <% $c->i18n->p('cross.ui.individual_crosses', 'Individual Crosses:') |h %>
                     </h2>
 
-                    <p><b>biparental:</b> An individual plant pollinated by another individual plant.</p>
-                    <p><b>self:</b> A self pollinated individual plant.</p>
-                    <p><b>open pollinated:</b> An individual plant pollinated by a group of plants or open pollinated (pollen may be from a group with known or unknown members).</p>
-                    <p><b>backcross:</b> An individual plant pollinated by one of its parents.</p>
-                    <p><b>sib:</b> Mating between individuals that have at least one parent in common. Generally between two individuals within the same plot.</p>
-                    <p><b>bulk:</b> A group of plants (usually a related family) pollinated by an individual plant.</p>
-                    <p><b>bulk selfed:</b> A group of plants (usually a related family) that are self pollinated (each individual selfed, not combined pollen).</p>
-                    <p><b>bulk and open pollinated:</b> A group of plants (usually a related family) that are pollinated by another group of plants or open pollinated (pollen may be from a group with known or unknown members).</p>
-                    <p><b>doubled haploid:</b> Plants derived from doubling the chromosome number of haploid tissue.</p>
-                    <p><b>dihaploid induction:</b> Plants derived from a chromosome reduction from tetraploid to diploid</p>
+                    <p><b>biparental:</b> <% $c->i18n->p('cross.ui.an_individual_plant_pollinated_by_another_individual_plant', 'An individual plant pollinated by another individual plant.') |h %></p>
+                    <p><b>self:</b> <% $c->i18n->p('cross.ui.a_self_pollinated_individual_plant', 'A self pollinated individual plant.') |h %></p>
+                    <p><b><% $c->i18n->p('cross.ui.open_pollinated.d2e54d1', 'open pollinated:') |h %></b> <% $c->i18n->p('cross.ui.an_individual_plant_pollinated_by_a_group_of_plants_or_open_po', 'An individual plant pollinated by a group of plants or open pollinated (pollen may be from a group with known or unknown members).') |h %></p>
+                    <p><b>backcross:</b> <% $c->i18n->p('cross.ui.an_individual_plant_pollinated_by_one_of_its_parents', 'An individual plant pollinated by one of its parents.') |h %></p>
+                    <p><b>sib:</b> <% $c->i18n->p('cross.ui.mating_between_individuals_that_have_at_least_one_parent_in_co', 'Mating between individuals that have at least one parent in common. Generally between two individuals within the same plot.') |h %></p>
+                    <p><b>bulk:</b> <% $c->i18n->p('cross.ui.a_group_of_plants_usually_a_related_family_pollinated_by_an_in.9d5bea3', 'A group of plants (usually a related family) pollinated by an individual plant.') |h %></p>
+                    <p><b><% $c->i18n->p('cross.ui.bulk_selfed.903818e', 'bulk selfed:') |h %></b> <% $c->i18n->p('cross.ui.a_group_of_plants_usually_a_related_family_that_are_self_polli', 'A group of plants (usually a related family) that are self pollinated (each individual selfed, not combined pollen).') |h %></p>
+                    <p><b><% $c->i18n->p('cross.ui.bulk_and_open_pollinated.f286f01', 'bulk and open pollinated:') |h %></b> <% $c->i18n->p('cross.ui.a_group_of_plants_usually_a_related_family_that_are_pollinated.d8719e7', 'A group of plants (usually a related family) that are pollinated by another group of plants or open pollinated (pollen may be from a group with known or unknown members).') |h %></p>
+                    <p><b><% $c->i18n->p('cross.ui.doubled_haploid.2480c06', 'doubled haploid:') |h %></b> <% $c->i18n->p('cross.ui.plants_derived_from_doubling_the_chromosome_number_of_haploid_', 'Plants derived from doubling the chromosome number of haploid tissue.') |h %></p>
+                    <p><b><% $c->i18n->p('cross.ui.dihaploid_induction.381901d', 'dihaploid induction:') |h %></b> <% $c->i18n->p('cross.ui.plants_derived_from_a_chromosome_reduction_from_tetraploid_to_', 'Plants derived from a chromosome reduction from tetraploid to diploid') |h %></p>
                     <br>
 
                     <h2>
-                      Group of Crosses:
+                      <% $c->i18n->p('cross.ui.group_of_crosses', 'Group of Crosses:') |h %>
                     </h2>
 
-                    <p><b>polycross:</b> Creates a group of open pollinated crosses. Each accession in the selected list becomes the female parent in an open cross, and all the members of the list grouped together form the male parent.<p>
-                    <p><b>reciprocal:</b> Creates a group of biparental crosses. Starting with a list of accessions, all possible biparental cross combinations are made between them.<p>
-                    <p><b>multicross:</b> Creates a group of biparental crosses. Starting with a list of maternal accessions and a list of paternal accessions, direct crosses are made in order.<p>
+                    <p><b>polycross:</b> <% $c->i18n->p('cross.ui.creates_a_group_of_open_pollinated_crosses_each_accession_in_t', 'Creates a group of open pollinated crosses. Each accession in the selected list becomes the female parent in an open cross, and all the members of the list grouped together form the male parent.') |h %><p>
+                    <p><b>reciprocal:</b> <% $c->i18n->p('cross.ui.creates_a_group_of_biparental_crosses_starting_with_a_list_of_.ea076eb', 'Creates a group of biparental crosses. Starting with a list of accessions, all possible biparental cross combinations are made between them.') |h %><p>
+                    <p><b>multicross:</b> <% $c->i18n->p('cross.ui.creates_a_group_of_biparental_crosses_starting_with_a_list_of_.5177381', 'Creates a group of biparental crosses. Starting with a list of maternal accessions and a list of paternal accessions, direct crosses are made in order.') |h %><p>
                 </div>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-default" data-dismiss="modal"><% $c->i18n->p('cross.ui.close', 'Close') |h %></button>
             </div>
         </div>
     </div>
@@ -473,25 +473,43 @@ $locations
   <div class="modal-dialog" role="document">
     <div class="modal-content">
       <div class="modal-header">
-        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-        <h4 class="modal-title" id="crossSavedDialog">Success</h4>
+        <button type="button" class="close" data-dismiss="modal" aria-label="<% $c->i18n->p('cross.ui.close', 'Close') |h %>"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title" id="crossSavedDialog"><% $c->i18n->p('cross.ui.success', 'Success') |h %></h4>
       </div>
       <div class="modal-body">
         <div class="container-fluid">
 	    <p>
     	  <span class="ui-icon ui-icon-circle-check" style="float: left; margin: 0 7px 50px 0;"></span>
-    	  The cross or crosses were saved successfully.
+          <% $c->i18n->p('cross.ui.the_cross_or_crosses_were_saved_successfully', 'The cross or crosses were saved successfully.') |h %>
   	  </p>
         </div>
       </div>
       <div class="modal-footer">
-        <button id="dismiss_cross_saved_dialog" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+        <button id="dismiss_cross_saved_dialog" type="button" class="btn btn-default" data-dismiss="modal"><% $c->i18n->p('cross.ui.close', 'Close') |h %></button>
       </div>
     </div>
   </div>
 </div>
 
 <script>
+// Optional locale assets never block the native crossing workflow.
+var crossI18n = (window.SGN && window.SGN.i18n) || {
+    p: function (context, source, variables) {
+        return source.replace(/%\{([A-Za-z0-9_]+)\}/g, function (match, name) {
+            return variables && Object.prototype.hasOwnProperty.call(variables, name) ? String(variables[name]) : match;
+        });
+    },
+    np: function (context, one, many, count, variables) {
+        return this.p(context, count === 1 ? one : many, variables);
+    }
+};
+function crossHTML(value) {
+    return String(value == null ? '' : value).replace(/[&<>"']/g, function (character) {
+        return {'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'}[character];
+    });
+}
+
+
 
 jQuery.noConflict();
 
@@ -518,19 +536,19 @@ jQuery(document).ready(function($) {
         }
 
         if (!field_trial) {
-            alert("Please provide trial name");
+            alert(crossI18n.p("cross.ui.please_provide_trial_name", "Please provide trial name"));
             return;
         }
 
         if (!maternal_parent) {
-            alert("Please provide female parent name");
+            alert(crossI18n.p("cross.ui.please_provide_female_parent_name", "Please provide female parent name"));
             return;
         }
 
         if ((crossType == 'biparental') || (crossType == 'backcross') || (crossType == 'sib')) {
             paternal_parent = jQuery('#paternal_parent').val();
             if (!paternal_parent) {
-                alert("Please provide male parent name");
+                alert(crossI18n.p("cross.ui.please_provide_male_parent_name", "Please provide male parent name"));
                 return;
              }
         }
@@ -556,7 +574,7 @@ jQuery(document).ready(function($) {
                 console.log(html);
 
                 if(i ==''){
-                    alert("No female plot");
+                    alert(crossI18n.p("cross.ui.no_female_plot", "No female plot"));
                     return;
                 }
 
@@ -568,7 +586,7 @@ jQuery(document).ready(function($) {
             },
 
             error:function(response){
-                alert("An error occurred getting female plots or plants.");
+                alert(crossI18n.p("cross.ui.an_error_occurred_getting_female_plots_or_plants", "An error occurred getting female plots or plants."));
             }
         });
 
@@ -588,7 +606,7 @@ jQuery(document).ready(function($) {
                     console.log(html);
 
                     if(i ==''){
-                        alert("No male plot");
+                        alert(crossI18n.p("cross.ui.no_male_plot", "No male plot"));
                         return;
                     }
 

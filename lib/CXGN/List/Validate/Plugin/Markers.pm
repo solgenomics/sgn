@@ -4,6 +4,7 @@ use strict;
 use warnings;
 use CXGN::Marker::Search;
 use JSON;
+use SGN::I18N ();
 
 sub name { 
     return "markers";
@@ -13,6 +14,8 @@ sub validate {
     my $self = shift;
     my $schema = shift;
     my $list = shift;
+    my $validator = shift;
+    my $i18n = SGN::I18N::translate($validator);
 
     my $str;
     my $data;
@@ -49,7 +52,7 @@ sub validate {
                     $data = decode_json($val);
                 } else {
 		    print STDERR "error protocol $protocol_id not found\n";
-		    push @missing, "protocol $protocol_id not found";
+		    push @missing, SGN::I18N::translate($i18n, "genotype.validation.protocol_protocol_id_not_found", "protocol %{protocol_id} not found", {protocol_id => ("" . "$protocol_id")});
 		}
 		$q = "SELECT name from nd_protocol where nd_protocol_id = ?";
 		$h = $schema->storage->dbh()->prepare($q);
@@ -98,7 +101,7 @@ sub validate {
 	}
     }
 	if (%other_protocols) {
-	    my $formatted = "selected protocol $protocol_name, markers also found in\n";
+	    my $formatted = SGN::I18N::translate($i18n, "genotype.validation.selected_protocol_protocol_name_markers_also_found_in", "selected protocol %{protocol_name}, markers also found in\n", {protocol_name => ("" . "$protocol_name")});
 	    foreach my $marker (keys %other_protocols) {
                 $formatted .= "$marker\n\t" . join("\n\t", @{$other_protocols{$marker}}) . "\n";
             }

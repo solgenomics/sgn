@@ -66,7 +66,7 @@ ROW
          <input class   = "button"
                 type    = "submit"
 		        id      = "runGS"
-                value   = "Build model"
+                value   = "<% $c->i18n->p("solgs.interface.build_model", "Build model") |h %>"
                 name    = "runGS"
                 >
        </td>
@@ -77,7 +77,7 @@ ROW
 %} else {
 
 <div id="traits_list_message"  class="message">
-<p>There are no phenotyped traits for this population.</p>
+<p><% $c->i18n->p("solgs.interface.there_are_no_phenotyped_traits_for_this_population", "There are no phenotyped traits for this population.") |h %></p>
 </div>
 
 %}

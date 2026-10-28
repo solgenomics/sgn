@@ -6,7 +6,7 @@ function plot_histogram(values, div_id) {
   var identical = identical_check(values);
 
   if (identical == true) {
-      jQuery("#"+div_id).html("<center><h3>All "+values.length+" values were the same value of "+values[0]+".</h3></center>");
+      jQuery("#"+div_id).html(("<center><h3>" + (window.SGN && window.SGN.i18n ? window.SGN.i18n.p("analysis.interface.all_count_values_were_the_same_value_of_value", "All %{count} values were the same value of %{value}.", {count: values.length, value: values[0]}) : ("All "+values.length+" values were the same value of "+values[0]+".")) + "</h3></center>"));
   }  else {
 
       // A formatter for counts.

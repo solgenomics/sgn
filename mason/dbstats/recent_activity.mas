@@ -8,55 +8,55 @@
 <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.min.js"></script>
 <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.css" />
 
-<& /page/page_title.mas, title => 'Recent activity' &>
+<& /page/page_title.mas, title => HTML::Entities::encode_entities($c->i18n->p("administration.interface.recent_activity", "Recent activity")) &>
 
-Start Date: <input type="text" id="dbstats_start_date" title="dbstats_start_date"  />
+<% $c->i18n->p("trial.card.raw_data.start_date", "Start Date:") |h %> <input type="text" id="dbstats_start_date" title="dbstats_start_date"  />
 <td>&nbsp;</td></td><td>
 
-End Date: <input type="text" id="dbstats_end_date" title="dbstats_end_date"  />
+<% $c->i18n->p("trial.card.raw_data.end_date", "End Date:") |h %> <input type="text" id="dbstats_end_date" title="dbstats_end_date"  />
 </td><td>
 &nbsp;
 </td><td>
-<input type="checkbox" id="include_dateless_items" checked="1" > include items without a date</input>
+<input type="checkbox" id="include_dateless_items" checked="1" > <% $c->i18n->p("administration.interface.include_items_without_date", "include items without a date") |h %></input>
 </td><td>
 &nbsp;
 </td><td>
-<button id="update_dbstats_by_date">Update</button>
+<button id="update_dbstats_by_date"><% $c->i18n->p("lists.render.update", "Update") |h %></button>
 <br /><br />
 <div id="dbstats_message"></div>
 
-<h3>Trials</h3>
+<h3><% $c->i18n->p("accession.stock.trials.title", "Trials") |h %></h3>
 <div id="recent_activity_trials_div">
   <table id="recent_activity_trials" width="600">
   <thead>
-    <tr><th width="200">Breeding Program</th><th width="200">Trials</th></tr>
+    <tr><th width="200"><% $c->i18n->p("global.index_logged_in_user.breeding_program", "Breeding Program") |h %></th><th width="200"><% $c->i18n->p("accession.stock.trials.title", "Trials") |h %></th></tr>
     </thead>
   </table>
 </div>
 
-<h3>Phenotypes</h3>
+<h3><% $c->i18n->p("global.search.advanced_search.phenotypes", "Phenotypes") |h %></h3>
 <div id="recent_activity_phenotypes_div">
   <table id="recent_activity_phenotypes" width="600">
   <thead>
-    <tr><th width="200">Breeding Program</th><th width="200">Phenotypes</th></tr>
+    <tr><th width="200"><% $c->i18n->p("global.index_logged_in_user.breeding_program", "Breeding Program") |h %></th><th width="200"><% $c->i18n->p("global.search.advanced_search.phenotypes", "Phenotypes") |h %></th></tr>
     </thead>
   </table>
 </div>
 
-<h3>Accessions</h3>
+<h3><% $c->i18n->p("navigation.manage.accessions", "Accessions") |h %></h3>
 <div id="recent_activity_accessions_div">
   <table id="recent_activity_accessions" width="600">
   <thead>
-    <tr><th width="200">Breeding Program</th><th width="200">Accessions</th></tr>
+    <tr><th width="200"><% $c->i18n->p("global.index_logged_in_user.breeding_program", "Breeding Program") |h %></th><th width="200"><% $c->i18n->p("navigation.manage.accessions", "Accessions") |h %></th></tr>
     </thead>
   </table>
 </div>
 
-<h3>Plots</h3>
+<h3><% $c->i18n->p("global.graphical_filtering.plots", "Plots") |h %></h3>
 <div id="recent_activity_plots_div">
   <table id="recent_activity_plots" width="600">
   <thead>
-    <tr><th width="200">Breeding Program</th><th width="200">Plots</th></tr>
+    <tr><th width="200"><% $c->i18n->p("global.index_logged_in_user.breeding_program", "Breeding Program") |h %></th><th width="200"><% $c->i18n->p("global.graphical_filtering.plots", "Plots") |h %></th></tr>
     </thead>
   </table>
 </div>
@@ -77,8 +77,8 @@ function update_dbstats_tables(start_date, end_date, include_dateless_items) {
     var end_date = jQuery('#dbstats_end_date').val();
     var include_dateless_items = jQuery('#include_dateless_items').prop('checked');
     
-    var html = "Showing database items generated from date: "+start_date+" to date: "+end_date;
-    if (include_dateless_items === true) { html += '. Including data items that do not have an associated date.'; }
+    var html = (window.SGN && window.SGN.i18n ? SGN.i18n.p("administration.interface.showing_items_from_date", "Showing database items generated from date:") : "Showing database items generated from date:") + " " + start_date + " " + (window.SGN && window.SGN.i18n ? SGN.i18n.p("administration.interface.to_date", "to date:") : "to date:") + " " + end_date;
+    if (include_dateless_items === true) { html += '. ' + (window.SGN && window.SGN.i18n ? SGN.i18n.p("administration.interface.including_dateless_items", "Including data items that do not have an associated date.") : "Including data items that do not have an associated date."); }
     jQuery('#dbstats_message').html(html);
 
     jQuery('#recent_activity_trials').dataTable( {
@@ -159,3 +159,6 @@ jQuery('input[title="dbstats_end_date"]').daterangepicker(
 
 </script>
 
+<%once>
+use HTML::Entities ();
+</%once>

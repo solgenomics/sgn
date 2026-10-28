@@ -1,4 +1,6 @@
-
+<%once>
+use HTML::Entities ();
+</%once>
 <%doc>
 
 =head1 NAME
@@ -24,24 +26,26 @@ $marker
 </%args>
 
 <%init>
+use SGN::I18N ();
+
 use CXGN::Page::FormattingHelpers qw/ info_table_html columnar_table_html /;
 use CXGN::Tools::Identifiers qw/ link_identifier /;
 use SGN::Controller::Marker;
 
 sub fmt_sequence {
   my $seq = shift
-    or return '<span class="ghosted">not available</span>';
+    or return ('<span class="ghosted">' . SGN::I18N::translate($c->i18n, "marker.detail.not_available", "not available", undef, {entities => '<>&'}) . '</span>');
   '<span class="sequence">'.CXGN::Page::FormattingHelpers::html_break_string($seq,90).'</span>'
 }
 sub fmt_rflp_image_link {
     my $marker = shift;
     my $l = SGN::Controller::Marker->rflp_image_link( $c, $marker )
-        or return '<span class="ghosted">'.$marker->get_name.' image not available</span>';
-    return '<a href="/marker/SGN-M'.$marker->marker_id.'/rflp_image/view">'.$marker->get_name.' RFLP image</a>';
+        or return '<span class="ghosted">'.$marker->get_name.(SGN::I18N::translate($c->i18n, "marker.detail.image_not_available_suffix", " image not available", undef, {entities => '<>&'}) . '</span>');
+    return '<a href="/marker/SGN-M'.$marker->marker_id.'/rflp_image/view">'.$marker->get_name.(SGN::I18N::translate($c->i18n, "marker.detail.rflp_image_link_suffix", " RFLP image", undef, {entities => '<>&'}) . '</a>');
 }
 sub len_pct {
     my ($len,$seq) = @_;
-    return sprintf('%d (%0.1f%% of RFLP seq)',$len,$len/length($seq)*100);
+    return sprintf(('%d ' . SGN::I18N::translate($c->i18n, "marker.detail.percent_of_rflp_sequence", "(%0.1f%% of RFLP seq)", undef, {entities => '<>&'})),$len,$len/length($seq)*100);
 }
 
 my $e_val_blast_cutoff = '1.0e-4';
@@ -50,25 +54,25 @@ my $e_val_blast_cutoff = '1.0e-4';
 % if( my $r = $marker->rflp_data() ) {
 %     my ($forward_unigene_matches, $reverse_unigene_matches) = $marker->rflp_unigene_matches( $r->{forward_seq_id}, $r->{reverse_seq_id} );
 
-      <&| /page/info_section.mas, title=>'RFLP details' &>
+      <&| /page/info_section.mas, anchor_title => 'RFLP details', title=>HTML::Entities::encode_entities($c->i18n->p("marker.detail.rflp_details", 'RFLP details')) &>
 
          <% info_table_html( __border => 0, __multicol => 5,
-              'Insert size'     => $r->{insert_size},
-              'Vector'          => $r->{vector},
-              'Cutting Site'    => $r->{cutting_site},
-              'Drug Resistance' => $r->{drug_resistance},
-              'Image'           => fmt_rflp_image_link( $marker ),              
+              SGN::I18N::translate($c->i18n, "marker.detail.insert_size", "Insert size", undef, {entities => '<>&'})     => $r->{insert_size},
+              SGN::I18N::translate($c->i18n, "marker.detail.vector", "Vector", undef, {entities => '<>&'})          => $r->{vector},
+              SGN::I18N::translate($c->i18n, "marker.detail.cutting_site", "Cutting Site", undef, {entities => '<>&'})    => $r->{cutting_site},
+              SGN::I18N::translate($c->i18n, "marker.detail.drug_resistance", "Drug Resistance", undef, {entities => '<>&'}) => $r->{drug_resistance},
+              SGN::I18N::translate($c->i18n, "marker.detail.image", "Image", undef, {entities => '<>&'})           => fmt_rflp_image_link( $marker ),
          )%>
          <% info_table_html( __border => 0,
-              'Forward sequence' => fmt_sequence( $r->{forward_seq} ),
-              'Reverse sequence' => fmt_sequence( $r->{reverse_seq} ),
+              SGN::I18N::translate($c->i18n, "marker.detail.forward_sequence", "Forward sequence", undef, {entities => '<>&'}) => fmt_sequence( $r->{forward_seq} ),
+              SGN::I18N::translate($c->i18n, "marker.detail.reverse_sequence", "Reverse sequence", undef, {entities => '<>&'}) => fmt_sequence( $r->{reverse_seq} ),
          )%>
 
       </&>
-       <&| /page/info_section.mas, title => 'RFLP sequence matches to unigenes' &>
+       <&| /page/info_section.mas, anchor_title => 'RFLP sequence matches to unigenes', title => HTML::Entities::encode_entities($c->i18n->p("marker.detail.rflp_sequence_matches_to_unigenes", 'RFLP sequence matches to unigenes')) &>
 %          if( @$forward_unigene_matches || @$reverse_unigene_matches ) {
                <% columnar_table_html(
-                      headings => ['Unigene','e value','Match length (bp)','Strand'],
+                      headings => [SGN::I18N::translate($c->i18n, "marker.detail.unigene_heading", "Unigene", undef, {entities => '<>&'}),SGN::I18N::translate($c->i18n, "marker.detail.e_value_heading", "e value", undef, {entities => '<>&'}),SGN::I18N::translate($c->i18n, "marker.detail.match_length_heading", "Match length (bp)", undef, {entities => '<>&'}),SGN::I18N::translate($c->i18n, "marker.detail.strand_heading", "Strand", undef, {entities => '<>&'})],
                       data     => [
                                     ( map [ link_identifier($_->[0]), $_->[1], len_pct($_->[2], $r->{forward_seq}), '+' ], @$forward_unigene_matches ),
                                     ( map [ link_identifier($_->[0]), $_->[1], len_pct($_->[2], $r->{reverse_seq}), '-' ], @$reverse_unigene_matches ),

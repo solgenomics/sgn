@@ -1,3 +1,7 @@
+<%once>
+use HTML::Entities ();
+</%once>
+
 <%args>
 
 </%args>
@@ -17,12 +21,12 @@
 
 
 
-<& /page/page_title.mas, title=>"Validated Trials" &>
+<& /page/page_title.mas, title=>HTML::Entities::encode_entities($c->i18n->p("navigation.analyze.validated_trials", "Validated Trials")) &>
 
-<p>This table presents all trials that have been thoroughly filtered and validated through the Quality Control Tool.</p>
+<p><% $c->i18n->p("analysis.interface.this_table_presents_all_trials_that_have_been_thoroughly_filtered", "This table presents all trials that have been thoroughly filtered and validated through the Quality Control Tool.") |h %></p>
 <br>
 <div>
-    <input type="text" id="searchBox" placeholder="Search tool..." onkeyup="filterTable()">
+    <input type="text" id="searchBox" placeholder="<% $c->i18n->p("analysis.interface.search_tool", "Search tool...") |h %>" onkeyup="filterTable()">
     <br>
 </div>
 <div id="validated_trials_tool">
@@ -31,11 +35,11 @@
     <table id="projectDataTable" class="table table-bordered table-striped">
         <thead>
             <tr>
-                <th>Select</th> 
-                <th>Project Name</th>
-                <th>Project Location</th>
-                <th>Trait Name</th>
-                <th>Validated By</th>
+                <th><% $c->i18n->p("global.select", "Select") |h %></th><% ' ' %>
+                <th><% $c->i18n->p("analysis.interface.project_name", "Project Name") |h %></th>
+                <th><% $c->i18n->p("analysis.interface.project_location", "Project Location") |h %></th>
+                <th><% $c->i18n->p("phenotype.root.trait_name.4f1c8cb", "Trait Name") |h %></th>
+                <th><% $c->i18n->p("analysis.interface.validated_by", "Validated By") |h %></th>
             </tr>
         </thead>
         <tbody>
@@ -44,14 +48,14 @@
     </table>
 </div>
 <div id="paginationControls">
-    <button id="prevPageBtn" onclick="changePage(-1)">Previous</button>
-    <span id="currentPageLabel">Page 1</span>
-    <button id="nextPageBtn" onclick="changePage(1)">Next</button>
+    <button id="prevPageBtn" onclick="changePage(-1)"><% $c->i18n->p("global.annotation_search_result.previous", "Previous") |h %></button>
+    <span id="currentPageLabel"><% $c->i18n->p("analysis.interface.page_1", "Page 1") |h %></span>
+    <button id="nextPageBtn" onclick="changePage(1)"><% $c->i18n->p("global.annotation_search_result.next", "Next") |h %></button>
 </div>
 
 <!-- Items per page control -->
 <div>
-    <label for="itemsPerPage">Items per page:</label>
+    <label for="itemsPerPage"><% $c->i18n->p("analysis.interface.items_per_page", "Items per page:") |h %></label>
     <select id="itemsPerPage" onchange="setItemsPerPage()">
         <option value="5">5</option>
         <option value="10" selected>10</option>
@@ -68,23 +72,23 @@
 <br>
 <br>
 
-<&| /page/info_section.mas, title=>"Statistcs", collapsible=>1, collapsed=>1 &>
+<&| /page/info_section.mas, anchor_title => "Statistics", title=>HTML::Entities::encode_entities($c->i18n->p("analysis.interface.statistcs", "Statistics")), collapsible=>1, collapsed=>1 &>
 
-    <button id="calculate_statistics">Calculate Statistics</button>
+    <button id="calculate_statistics"><% $c->i18n->p("analysis.interface.calculate_statistics_20fbc2", "Calculate Statistics") |h %></button>
     <br>
     <div>
         <br>
         <table id="statTable" class="table table-bordered table-striped">
             <thead>
                 <tr>
-                    <th>Accession</th>
-                    <th>Trials</th>
-                    <th>Observations</th> 
-                    <th>Trait</th>
-                    <th>Average</th>
-                    <th>SD</th>
-                    <th>Min</th>
-                    <th>Max</th>
+                    <th><% $c->i18n->p("global.index_logged_in_user.accession", "Accession") |h %></th>
+                    <th><% $c->i18n->p("accession.stock.trials.title", "Trials") |h %></th>
+                    <th><% $c->i18n->p("analysis.interface.observations", "Observations") |h %></th><% ' ' %>
+                    <th><% $c->i18n->p("accession.population_cgi.trait", "Trait") |h %></th>
+                    <th><% $c->i18n->p("accession.population_cgi.average", "Average") |h %></th>
+                    <th><% $c->i18n->p("analysis.interface.sd", "SD") |h %></th>
+                    <th><% $c->i18n->p("accession.usage.header.min", "Min") |h %></th>
+                    <th><% $c->i18n->p("accession.usage.header.max", "Max") |h %></th>
                 </tr>
             </thead>
             <tbody>
@@ -92,31 +96,31 @@
             </tbody>
         </table>
     </div>
-    <button id="downloadCsvButton">Download CSV</button>
+    <button id="downloadCsvButton"><% $c->i18n->p("analysis.interface.download_csv", "Download CSV") |h %></button>
 
 
 </&>
 
-<&| /page/info_section.mas, title=>"Graphics", collapsible=>1, collapsed=>1 &>
+<&| /page/info_section.mas, anchor_title => "Graphics", title=>HTML::Entities::encode_entities($c->i18n->p("analysis.interface.graphics", "Graphics")), collapsible=>1, collapsed=>1 &>
 
-    <label for="traitSelection">Select Trait:</label>
+    <label for="traitSelection"><% $c->i18n->p("trial.repetitive.trait", "Select Trait:") |h %></label>
     <select id="traitSelection" class="form-control">
-        <option value="" disabled selected>Select a trait</option>
+        <option value="" disabled selected><% $c->i18n->p("phenotype.root.select_a_trait", "Select a trait") |h %></option>
         <!-- Options will be dynamically populated -->
     </select>
 
     <div id="filterOptions" style="margin-bottom: 20px;">
-      <label><input type="radio" name="filter" value="5"> Show top 5%</label>
-      <label><input type="radio" name="filter" value="10" checked > Show top 10%</label>
-      <label><input type="radio" name="filter" value="25"> Show top 25%</label>
-      <label><input type="radio" name="filter" value="50"> Show top 50%</label>
-      <label><input type="radio" name="filter" value="100"> Show 100%</label>
+      <label><input type="radio" name="filter" value="5"> <% $c->i18n->p("analysis.interface.show_top_5", "Show top 5%") |h %></label>
+      <label><input type="radio" name="filter" value="10" checked > <% $c->i18n->p("analysis.interface.show_top_10", "Show top 10%") |h %></label>
+      <label><input type="radio" name="filter" value="25"> <% $c->i18n->p("analysis.interface.show_top_25", "Show top 25%") |h %></label>
+      <label><input type="radio" name="filter" value="50"> <% $c->i18n->p("analysis.interface.show_top_50", "Show top 50%") |h %></label>
+      <label><input type="radio" name="filter" value="100"> <% $c->i18n->p("analysis.interface.show_100", "Show 100%") |h %></label>
       <br>
       <!-- Bottom filters -->
-      <label><input type="radio" name="filter" value="bottom-5"> Show bottom 5%</label>
-      <label><input type="radio" name="filter" value="bottom-25"> Show bottom 25%</label>
-      <label><input type="radio" name="filter" value="bottom-50"> Show bottom 50%</label>
-      <label><input type="radio" name="filter" value="bottom-75"> Show bottom 75%</label>
+      <label><input type="radio" name="filter" value="bottom-5"> <% $c->i18n->p("analysis.interface.show_bottom_5", "Show bottom 5%") |h %></label>
+      <label><input type="radio" name="filter" value="bottom-25"> <% $c->i18n->p("analysis.interface.show_bottom_25", "Show bottom 25%") |h %></label>
+      <label><input type="radio" name="filter" value="bottom-50"> <% $c->i18n->p("analysis.interface.show_bottom_50", "Show bottom 50%") |h %></label>
+      <label><input type="radio" name="filter" value="bottom-75"> <% $c->i18n->p("analysis.interface.show_bottom_75", "Show bottom 75%") |h %></label>
     </div>
 
     <br>
@@ -177,7 +181,7 @@ function drawD3Barplot(statsByTrait, selectedTrait) {
   const traitStats = statsByTrait[selectedTrait];
 
   if (!traitStats) {
-    alert('No data available for the selected trait!');
+    alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("analysis.interface.no_data_available_for_the_selected_trait", "No data available for the selected trait!") : 'No data available for the selected trait!'));
     return;
   }
 
@@ -466,7 +470,7 @@ function populateTraitSelection(stats) {
   traitSelection.empty();
 
   // Add a default option
-  traitSelection.append('<option value="" disabled selected>Select a trait</option>');
+  traitSelection.append(("<option value=\"\" disabled selected>" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("phenotype.root.select_a_trait", "Select a trait") : "Select a trait")).html() + "</option>"));
 
   // Get the traits from the stats object and populate the dropdown
   const traits = Object.keys(stats); // Traits are the top-level keys in the stats object
@@ -598,7 +602,7 @@ $(document).ready(function () {
       },
       error: function (xhr, status, error) {
         console.error('Error:', error);
-        alert('An error occurred while calculating statistics.');
+        alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("analysis.interface.an_error_occurred_while_calculating_statistics", "An error occurred while calculating statistics.") : 'An error occurred while calculating statistics.'));
       },
       complete: function () {
         $('#loading_spinner').hide();
@@ -842,7 +846,7 @@ function updatePaginationControls(data) {
     document.getElementById("prevPageBtn").disabled = currentPage === 1;
     document.getElementById("nextPageBtn").disabled = currentPage === totalPages;
     
-    document.getElementById("currentPageLabel").textContent = `Page ${currentPage} of ${totalPages}`;
+    document.getElementById("currentPageLabel").textContent = (window.SGN && window.SGN.i18n ? window.SGN.i18n.p("lists_datasets.bulk.page_of", "Page %{page} of %{pages}", {page: currentPage, pages: totalPages}) : `Page ${currentPage} of ${totalPages}`);
 }
 
 
@@ -865,11 +869,11 @@ function fetchProjectData() {
                 displayData(allData); 
                 updatePaginationControls(allData);
             } else {
-                alert("No valid data found or data format issue");
+                alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("analysis.interface.no_valid_data_found_or_data_format_issue", "No valid data found or data format issue") : "No valid data found or data format issue"));
             }
         },
         error: function() {
-            alert("An error occurred while fetching project data.");
+            alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("analysis.interface.an_error_occurred_while_fetching_project_data", "An error occurred while fetching project data.") : "An error occurred while fetching project data."));
         }
     });
 }

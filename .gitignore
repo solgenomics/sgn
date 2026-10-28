@@ -52,4 +52,6 @@ sgn.iml
 docs/*
 !docs/r_markdown_docs/
 !docs/r_markdown_docs/**
+!docs/i18n/
+!docs/i18n/**
 .idea/

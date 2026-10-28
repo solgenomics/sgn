@@ -1,5 +1,8 @@
 package CXGN::Stock::ParseUpload::Plugin::CatalogXLS;
 
+use SGN::I18N ();
+use CatalystX::GlobalContext '$c';
+
 use Moose::Role;
 use Spreadsheet::ParseExcel;
 use Spreadsheet::ParseXLSX;
@@ -10,6 +13,7 @@ use CXGN::List::Validate;
 use CXGN::People::Person;
 
 sub _validate_with_plugin {
+    my SGN::I18N $ui_validate_with_plugin_i18n = $c && $c->can('i18n') ? $c->i18n : undef;
     my $self = shift;
     my $filename = $self->get_filename();
     my $schema = $self->get_chado_schema();
@@ -60,7 +64,7 @@ sub _validate_with_plugin {
 
     $worksheet = ($excel_obj->worksheets())[0]; #support only one worksheet
     if (!$worksheet){
-        push @error_messages, "Spreadsheet must be on 1st tab in Excel (.xls) file";
+        push @error_messages, (SGN::I18N::translate($ui_validate_with_plugin_i18n, "accession.catalog.error_1", "Spreadsheet must be on 1st tab in Excel (.xls) file"));
         $errors{'error_messages'} = \@error_messages;
         $self->_set_parse_errors(\%errors);
         return;
@@ -69,7 +73,7 @@ sub _validate_with_plugin {
     my ($row_min, $row_max) = $worksheet->row_range();
     my ($col_min, $col_max) = $worksheet->col_range();
     if (($col_max - $col_min)  < 5 || ($row_max - $row_min) < 1 ) { #must have header and at least one row of info
-        push @error_messages, "Spreadsheet is missing header or no catalog info";
+        push @error_messages, (SGN::I18N::translate($ui_validate_with_plugin_i18n, "accession.catalog.error_2", "Spreadsheet is missing header or no catalog info"));
         $errors{'error_messages'} = \@error_messages;
         $self->_set_parse_errors(\%errors);
         return;
@@ -109,22 +113,22 @@ sub _validate_with_plugin {
     }
 
     if (!$item_name_header || $item_name_header ne 'item_name' ) {
-        push @error_messages, "Cell A1: item_name is missing from the header";
+        push @error_messages, (SGN::I18N::translate($ui_validate_with_plugin_i18n, "accession.catalog.error_3", "Cell A1: item_name is missing from the header"));
     }
     if (!$category_header || $category_header ne 'category') {
-        push @error_messages, "Cell B1: category is missing from the header";
+        push @error_messages, (SGN::I18N::translate($ui_validate_with_plugin_i18n, "accession.catalog.error_4", "Cell B1: category is missing from the header"));
     }
     if (!$additional_info_header || $additional_info_header ne 'additional_info') {
-        push @error_messages, "Cell C1: additional_info is missing from the header";
+        push @error_messages, (SGN::I18N::translate($ui_validate_with_plugin_i18n, "accession.catalog.error_5", "Cell C1: additional_info is missing from the header"));
     }
     if (!$material_source_header || $material_source_header ne 'material_source') {
-        push @error_messages, "Cell D1: material_source is missing from the header";
+        push @error_messages, (SGN::I18N::translate($ui_validate_with_plugin_i18n, "accession.catalog.error_6", "Cell D1: material_source is missing from the header"));
     }
     if (!$breeding_program_header || $breeding_program_header ne 'breeding_program') {
-        push @error_messages, "Cell E1: breeding_program is missing from the header";
+        push @error_messages, (SGN::I18N::translate($ui_validate_with_plugin_i18n, "accession.catalog.error_7", "Cell E1: breeding_program is missing from the header"));
     }
     if (!$contact_person_header || $contact_person_header ne 'contact_person_username') {
-        push @error_messages, "Cell F1: contact_person_username is missing from the header";
+        push @error_messages, (SGN::I18N::translate($ui_validate_with_plugin_i18n, "accession.catalog.error_8", "Cell F1: contact_person_username is missing from the header"));
     }
 
     my %seen_stock_names;
@@ -164,26 +168,26 @@ sub _validate_with_plugin {
 
 
         if (!$item_name || $item_name eq '') {
-            push @error_messages, "Cell A$row_name: item_name missing";
+            push @error_messages, (SGN::I18N::translate($ui_validate_with_plugin_i18n, "accession.catalog.error_9", "Cell A%{row_name}: item_name missing", {row_name => "" . ($row_name)}));
         }
 
         if (!$category || $category eq '') {
-            push @error_messages, "Cell B$row_name: category missing";
+            push @error_messages, (SGN::I18N::translate($ui_validate_with_plugin_i18n, "accession.catalog.error_10", "Cell B%{row_name}: category missing", {row_name => "" . ($row_name)}));
         } elsif (!$supported_categories{$category}) {
-            push @error_messages, "Cell B$row_name: category is not supported: $category";
+            push @error_messages, (SGN::I18N::translate($ui_validate_with_plugin_i18n, "accession.catalog.error_11", "Cell B%{row_name}: category is not supported: %{category}", {row_name => "" . ($row_name), category => "" . ($category)}));
         }
 
         if (!$breeding_program || $breeding_program eq '') {
-            push @error_messages, "Cell E$row_name: breeding_program missing";
+            push @error_messages, (SGN::I18N::translate($ui_validate_with_plugin_i18n, "accession.catalog.error_12", "Cell E%{row_name}: breeding_program missing", {row_name => "" . ($row_name)}));
         }
 
         if (!$contact_person_username || $contact_person_username eq '') {
-            push @error_messages, "Cell F$row_name: contact person username missing";
+            push @error_messages, (SGN::I18N::translate($ui_validate_with_plugin_i18n, "accession.catalog.error_13", "Cell F%{row_name}: contact person username missing", {row_name => "" . ($row_name)}));
         }
 
         my $sp_person_id = CXGN::People::Person->get_person_by_username($dbh, $contact_person_username);
         if (!$sp_person_id) {
-            push @error_messages, "Cell H$row_name: contact person username is not in database";
+            push @error_messages, (SGN::I18N::translate($ui_validate_with_plugin_i18n, "accession.catalog.error_14", "Cell H%{row_name}: contact person username is not in database", {row_name => "" . ($row_name)}));
         }
 
         if ($item_name){
@@ -202,7 +206,7 @@ sub _validate_with_plugin {
     my @stocks_missing = @{$catalog_item_validator->validate($schema,'stocks',\@catalog_items)->{'missing'}};
 
     if (scalar(@stocks_missing) > 0){
-        push @error_messages, "The following catalog items are not in the database: ".join(',',@stocks_missing);
+        push @error_messages, (SGN::I18N::translate($ui_validate_with_plugin_i18n, "accession.catalog.error_15", "The following catalog items are not in the database: ")).join(',',@stocks_missing);
     }
 
     my @breeding_programs = keys %seen_program_names;
@@ -210,7 +214,7 @@ sub _validate_with_plugin {
     my @programs_missing = @{$breeding_program_validator->validate($schema,'breeding_programs',\@breeding_programs)->{'missing'}};
 
     if (scalar(@programs_missing) > 0){
-        push @error_messages, "The following breeding programs are not in the database: ".join(',',@programs_missing);
+        push @error_messages, (SGN::I18N::translate($ui_validate_with_plugin_i18n, "accession.catalog.error_16", "The following breeding programs are not in the database: ")).join(',',@programs_missing);
     }
 
     if (scalar(@error_messages) >= 1) {

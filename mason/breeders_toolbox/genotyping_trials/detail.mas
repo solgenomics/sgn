@@ -1,3 +1,7 @@
+<%once>
+use HTML::Entities ();
+</%once>
+
 
 <%args>
 $trial_id
@@ -33,7 +37,7 @@ $assay_type => undef
 
 <& /util/import_javascript.mas, classes => [ 'jquery', 'jqueryui' , 'jquery.iframe-post-form', 'CXGN.Trial', 'CXGN.BreedersToolbox.GenotypingTrial', 'CXGN.BreedersToolbox.GenotypingSubmission', 'CXGN.BreedersToolbox.HTMLSelect', 'jstree/dist/jstree' ] &>
 
-<& /page/page_title.mas, title=>"Genotyping plate $trial_name" &>
+<& /page/page_title.mas, title=>HTML::Entities::encode_entities($c->i18n->p("genotype.plate.genotyping_plate_20c6c4", "Genotyping plate ")).HTML::Entities::encode_entities($trial_name) &>
 
 <%perl>
     my $order_id;
@@ -57,16 +61,16 @@ $assay_type => undef
                 <div class="panel-body">
                     <table class="table table-bordered table-hover">
                     <tbody>
-                    <tr><td><b>Genotyping Project</b></td><td><% $genotyping_project_link %></td></tr>
-                    <tr><td><b>Breeding Program</b></td><td><a href="/breeders/program/<% $breeding_program_id %>"><% $breeding_program_name %></a></td></tr>
-                    <tr><td><b>Trial Type</b></td><td>Genotyping Plate</td></tr>
-                    <tr><td><b>Plate Format</b></td><td><% $genotyping_plate_format %></td></tr>
-                    <tr><td><b>Plate Sample Type</b></td><td><% $genotyping_plate_sample_type %></td></tr>
-                    <tr><td><b>Number of Samples</b></td><td><% $number_of_samples %></td></tr>
-                    <tr><td><b>Number of Samples with Data</b></td><td><% $number_of_samples_with_data %></td></tr>
-                    <tr><td><b>Genotyping Facility</b></td><td><% $genotyping_facility %></td></tr>
-                    <tr><td><b>Description</b></td><td><% $trial_description %></td></tr>
-                    <tr><td><b>Created By</b></td><td><% $trial_owner %></td></tr>
+                    <tr><td><b><% $c->i18n->p("genotype.plate.dialog.title_genotyping_project", "Genotyping Project") |h %></b></td><td><% $genotyping_project_link %></td></tr>
+                    <tr><td><b><% $c->i18n->p("global.index_logged_in_user.breeding_program", "Breeding Program") |h %></b></td><td><a href="/breeders/program/<% $breeding_program_id %>"><% $breeding_program_name %></a></td></tr>
+                    <tr><td><b><% $c->i18n->p("global.index_logged_in_user.trial_type", "Trial Type") |h %></b></td><td><% $c->i18n->p("trial.folder.type.genotyping_plate", "Genotyping Plate") |h %></td></tr>
+                    <tr><td><b><% $c->i18n->p("genotype.plate.plate_format", "Plate Format") |h %></b></td><td><% $genotyping_plate_format %></td></tr>
+                    <tr><td><b><% $c->i18n->p("genotype.plate.plate_sample_type", "Plate Sample Type") |h %></b></td><td><% $genotyping_plate_sample_type %></td></tr>
+                    <tr><td><b><% $c->i18n->p("genotype.plate.number_of_samples", "Number of Samples") |h %></b></td><td><% $number_of_samples %></td></tr>
+                    <tr><td><b><% $c->i18n->p("genotype.plate.number_of_samples_with_data", "Number of Samples with Data") |h %></b></td><td><% $number_of_samples_with_data %></td></tr>
+                    <tr><td><b><% $c->i18n->p("genotype.plate.genotyping_facility", "Genotyping Facility") |h %></b></td><td><% $genotyping_facility %></td></tr>
+                    <tr><td><b><% $c->i18n->p("global.dataset_cxgn_dataset.table.description", "Description") |h %></b></td><td><% $trial_description %></td></tr>
+                    <tr><td><b><% $c->i18n->p("cross.forms.created_by", "Created By") |h %></b></td><td><% $trial_owner %></td></tr>
                     <!-- <tr><td><b>Submitted to Genotyping Facility</b></td><td><% $genotyping_facility_submitted %></td></tr>
                     <tr><td><b>Genotyping Facility Status</b></td><td><% $genotyping_facility_status %></td></tr>
                     <tr><td><b>Raw Data Link</b></td><td><a href='<% $raw_data_link %>'><% $raw_data_link %></td></tr> -->
@@ -77,7 +81,7 @@ $assay_type => undef
 
             <div class="panel panel-default">
                 <div class="panel-body">
-                    <button class="btn btn-primary btn-sm" id="edit_genotyping_trial_details" style="margin:3px">Edit Plate Details</button>
+                    <button class="btn btn-primary btn-sm" id="edit_genotyping_trial_details" style="margin:3px"><% $c->i18n->p("genotype.plate.edit_plate_details", "Edit Plate Details") |h %></button>
                 </div>
             </div>
 
@@ -92,9 +96,9 @@ $assay_type => undef
                 </div>
             </div> -->
 
-            <a href="/breeders/trial/<% $trial_id %>/download/layout?format=csv&dataLevel=plate" class="btn btn-default">Download Breedbase Formatted File</a>
-            <a href="/breeders/trial/<% $trial_id %>/download/layout?format=intertekxls&dataLevel=plate" class="btn btn-default">Download Intertek Formatted File</a>
-            <a href="/breeders/trial/<% $trial_id %>/download/layout?format=dartseqcsv&dataLevel=plate" class="btn btn-default">Download DartSeq Formatted File</a>
+            <a href="/breeders/trial/<% $trial_id %>/download/layout?format=csv&dataLevel=plate" class="btn btn-default"><% $c->i18n->p("genotype.plate.download_breedbase_formatted_file", "Download Breedbase Formatted File") |h %></a>
+            <a href="/breeders/trial/<% $trial_id %>/download/layout?format=intertekxls&dataLevel=plate" class="btn btn-default"><% $c->i18n->p("genotype.plate.download_intertek_formatted_file", "Download Intertek Formatted File") |h %></a>
+            <a href="/breeders/trial/<% $trial_id %>/download/layout?format=dartseqcsv&dataLevel=plate" class="btn btn-default"><% $c->i18n->p("genotype.plate.download_dartseq_formatted_file", "Download DartSeq Formatted File") |h %></a>
 
         </div>
         <div class="col-sm-3">
@@ -114,22 +118,22 @@ $assay_type => undef
                     <span style="font-size:3.5em;" class="glyphicon glyphicon-export"></span>
                 </div>
                 <div class="col-sm-11">
-                <&| /page/info_section.mas, title => "<h4 style='display:inline'>Genotyping plate submission status</h4>", subtitle=> "Submit genotyping plates to facilities.", id => 'genotyping_facilities_section', collapsible => 1, collapsed => 1 &>
+                <&| /page/info_section.mas, anchor_title => "<h4 style='display:inline'>Genotyping plate submission status</h4>", title => ("<h4 style='display:inline'>" . HTML::Entities::encode_entities($c->i18n->p("genotype.plate.genotyping_plate_submission_status", "Genotyping plate submission status")) . "</h4>"), subtitle=> HTML::Entities::encode_entities($c->i18n->p("genotype.plate.submit_genotyping_plates_to_facilities", "Submit genotyping plates to facilities.")), id => 'genotyping_facilities_section', collapsible => 1, collapsed => 1 &>
                     <div class="col-sm-9"></div>
                     <div class="col-sm-3">
-                        <button class="btn btn-primary btn-sm" id="submit_plate_link" style="margin:3px">Submit plates</button>
+                        <button class="btn btn-primary btn-sm" id="submit_plate_link" style="margin:3px"><% $c->i18n->p("genotype.plate.submit_plates", "Submit plates") |h %></button>
                     </div>
                     <div class="panel panel-default">
                         <div class="panel-body">
                             <table class="table table-bordered table-hover">
                             <tbody>
-                                <tr><td><b>Genotyping Facility</b></td><td><div id="genotyping_facility_tab"><% $genotyping_facility %></div></td></tr>
-                                <tr><td><b>Submitted to Genotyping Facility</b></td><td><div id="genotyping_facility_submitted_tab"></div></td></tr>
-                                <tr><td><b>Genotyping Facility Order ID </b></td><td><div id="genotyping_vendor_order_id_tab"><% $order_id %></div></td></tr>
-                                <tr><td><b>Genotyping Facility Submission ID </b></td><td><div id="genotyping_vendor_submission_id_tab"><% $submission_id %></div></td></tr>
-                                <tr><td><b>Live Status From Genotyping Facility</b></td><td><div id="genotyping_trial_status_info"></div></td></tr>
-                                <tr><td><b>Download PDF</b></td><td><div id="download_trial_pdf"></div></td></tr>
-                                <tr><td><b>Raw Data Link</b></td><td><div id="raw_data_tab"></div></td></tr>
+                                <tr><td><b><% $c->i18n->p("genotype.plate.genotyping_facility", "Genotyping Facility") |h %></b></td><td><div id="genotyping_facility_tab"><% $genotyping_facility %></div></td></tr>
+                                <tr><td><b><% $c->i18n->p("genotype.plate.submitted_to_genotyping_facility", "Submitted to Genotyping Facility") |h %></b></td><td><div id="genotyping_facility_submitted_tab"></div></td></tr>
+                                <tr><td><b><% $c->i18n->p("genotype.plate.genotyping_facility_order_id", "Genotyping Facility Order ID") |h %> </b></td><td><div id="genotyping_vendor_order_id_tab"><% $order_id %></div></td></tr>
+                                <tr><td><b><% $c->i18n->p("genotype.plate.genotyping_facility_submission_id", "Genotyping Facility Submission ID") |h %> </b></td><td><div id="genotyping_vendor_submission_id_tab"><% $submission_id %></div></td></tr>
+                                <tr><td><b><% $c->i18n->p("genotype.plate.live_status_from_genotyping_facility", "Live Status From Genotyping Facility") |h %></b></td><td><div id="genotyping_trial_status_info"></div></td></tr>
+                                <tr><td><b><% $c->i18n->p("genotype.plate.download_pdf", "Download PDF") |h %></b></td><td><div id="download_trial_pdf"></div></td></tr>
+                                <tr><td><b><% $c->i18n->p("genotype.plate.raw_data_link", "Raw Data Link") |h %></b></td><td><div id="raw_data_tab"></div></td></tr>
                             </tbody>
                             </table>
                         </div>
@@ -156,12 +160,12 @@ DEPRECATED. THIS SHOULD BE DONE VIA BRAPI
                     <span style="font-size:3.5em;" class="glyphicon glyphicon-qrcode"></span>
                 </div>
                 <div class="col-sm-7">
-                    <h4>Generate barcode labels for samples, accessions or plate ID.</h4>
+                    <h4><% $c->i18n->p("genotype.plate.generate_barcode_labels_for_samples_accessions_or_plate_id", "Generate barcode labels for samples, accessions or plate ID.") |h %></h4>
                 </div>
                 <div class="col-sm-2">
                     <& /breeders_toolbox/trial/generate_genotrial_barcode.mas, trial_name => $trial_name, trial_id => $trial_id, identifier => $identifier_prefix, plate_id=> $plate_id &>
 
-                    <button id="generate_genotyping_trial_barcode_link" class="btn btn-primary btn-sm">Go</button>
+                    <button id="generate_genotyping_trial_barcode_link" class="btn btn-primary btn-sm"><% $c->i18n->p("global.page.detail_3_col.go", "Go") |h %></button>
                 </div>
             </div>
         </div>
@@ -209,7 +213,7 @@ DEPRECATED. THIS SHOULD BE DONE VIA BRAPI
                 <div class="col-sm-11">
 
 % my $plate_view_link = '/breeders_toolbox/trial/'.$trial_id.'?format=as_table';
-                    <&| /page/info_section.mas, title=>"<h4 style='display:inline'>Plate Layout</h4>", id=>"trial_plate_layout", collapsible=>1, collapsed=>0, is_subsection=>1,subtitle=> qq{ Download layout <a class='btn btn-sm btn-default' style='margin:3px' id=\"download_layout_xls_link\" href=\"/breeders/trial/$trial_id/download/layout?format=xls&dataLevel=plate\">XLS</a> <a class='btn btn-sm btn-default' style='margin:3px' id=\"download_layout_csv_link\" href=\"/breeders/trial/$trial_id/download/layout?format=csv&dataLevel=plate\">CSV</a><a class='btn btn-sm btn-default' style='margin:3px' href=$plate_view_link>Plate View</a> } &>
+                    <&| /page/info_section.mas, anchor_title => "<h4 style='display:inline'>Plate Layout</h4>", title=>("<h4 style='display:inline'>" . HTML::Entities::encode_entities($c->i18n->p("genotype.plate.plate_layout", "Plate Layout")) . "</h4>"), id=>"trial_plate_layout", collapsible=>1, collapsed=>0, is_subsection=>1,subtitle=> qq{ Download layout <a class='btn btn-sm btn-default' style='margin:3px' id=\"download_layout_xls_link\" href=\"/breeders/trial/$trial_id/download/layout?format=xls&dataLevel=plate\">XLS</a> <a class='btn btn-sm btn-default' style='margin:3px' id=\"download_layout_csv_link\" href=\"/breeders/trial/$trial_id/download/layout?format=csv&dataLevel=plate\">CSV</a><a class='btn btn-sm btn-default' style='margin:3px' href=$plate_view_link>Plate View</a> } &>
 
                         <div class="well well-sm">
                             <& /breeders_toolbox/genotyping_trials/format/as_table.mas, trial_id => $trial_id, trial_name => $trial_name, breeding_program_name => $breeding_program_name, breeding_program_id => $breeding_program_id, genotyping_plate_format => $genotyping_plate_format, table_only=>1 &>
@@ -230,9 +234,9 @@ DEPRECATED. THIS SHOULD BE DONE VIA BRAPI
 </div>
 
 % if ($assay_type eq 'KASP') {
-    <& /page/detail_page_2_col_section.mas, trial_id => $trial_id, info_section_title => "<h4 style='display:inline'>Genotyping Data</h4>", info_section_subtitle => 'View and download genotyping data derived from this genotyping plate.', icon_class => "glyphicon glyphicon-map-marker", buttons_html => '<button class="btn btn-primary" style="margin:3px" id="plate_genotyping_data_download_all_vcf">Download All Genotype Data VCF</button><button class="btn btn-primary" style="margin:3px" id="plate_genotyping_data_download_all_dosagematrix">Download All Genotype Data Dosage Matrix</button><button class="btn btn-default" style="margin:3px" id="plate_kasp_genotype_data_download_csv">Download All Genotype Data (CSV)</button>', info_section_id => "plate_genotyping_data" &>
+    <& /page/detail_page_2_col_section.mas, info_section_anchor_title => "<h4 style='display:inline'>Genotyping Data</h4>", trial_id => $trial_id, info_section_title => ("<h4 style='display:inline'>" . HTML::Entities::encode_entities($c->i18n->p("genotype.plate.genotyping_data", "Genotyping Data")) . "</h4>"), info_section_subtitle => HTML::Entities::encode_entities($c->i18n->p("genotype.plate.view_and_download_genotyping_data_derived_from_this_genotyping_plate", 'View and download genotyping data derived from this genotyping plate.')), icon_class => "glyphicon glyphicon-map-marker", buttons_html => ("<button class=\"btn btn-primary\" style=\"margin:3px\" id=\"plate_genotyping_data_download_all_vcf\">" . HTML::Entities::encode_entities($c->i18n->p("genotype.plate.download_all_genotype_data_vcf", "Download All Genotype Data VCF")) . "</button><button class=\"btn btn-primary\" style=\"margin:3px\" id=\"plate_genotyping_data_download_all_dosagematrix\">" . HTML::Entities::encode_entities($c->i18n->p("genotype.plate.download_all_genotype_data_dosage_matrix", "Download All Genotype Data Dosage Matrix")) . "</button><button class=\"btn btn-default\" style=\"margin:3px\" id=\"plate_kasp_genotype_data_download_csv\">" . HTML::Entities::encode_entities($c->i18n->p("genotype.plate.download_all_genotype_data_csv", "Download All Genotype Data (CSV)")) . "</button>"), info_section_id => "plate_genotyping_data" &>
 % } else {
-    <& /page/detail_page_2_col_section.mas, trial_id => $trial_id, info_section_title => "<h4 style='display:inline'>Genotyping Data</h4>", info_section_subtitle => 'View and download genotyping data derived from this genotyping plate.', icon_class => "glyphicon glyphicon-map-marker", buttons_html => '<button class="btn btn-primary" style="margin:3px" id="plate_genotyping_data_download_all_vcf">Download All Genotype Data VCF</button><button class="btn btn-primary" style="margin:3px" id="plate_genotyping_data_download_all_dosagematrix">Download All Genotype Data Dosage Matrix</button>', info_section_id => "plate_genotyping_data" &>
+    <& /page/detail_page_2_col_section.mas, info_section_anchor_title => "<h4 style='display:inline'>Genotyping Data</h4>", trial_id => $trial_id, info_section_title => ("<h4 style='display:inline'>" . HTML::Entities::encode_entities($c->i18n->p("genotype.plate.genotyping_data", "Genotyping Data")) . "</h4>"), info_section_subtitle => HTML::Entities::encode_entities($c->i18n->p("genotype.plate.view_and_download_genotyping_data_derived_from_this_genotyping_plate", 'View and download genotyping data derived from this genotyping plate.')), icon_class => "glyphicon glyphicon-map-marker", buttons_html => ("<button class=\"btn btn-primary\" style=\"margin:3px\" id=\"plate_genotyping_data_download_all_vcf\">" . HTML::Entities::encode_entities($c->i18n->p("genotype.plate.download_all_genotype_data_vcf", "Download All Genotype Data VCF")) . "</button><button class=\"btn btn-primary\" style=\"margin:3px\" id=\"plate_genotyping_data_download_all_dosagematrix\">" . HTML::Entities::encode_entities($c->i18n->p("genotype.plate.download_all_genotype_data_dosage_matrix", "Download All Genotype Data Dosage Matrix")) . "</button>"), info_section_id => "plate_genotyping_data" &>
 
 % }
 <div class="row">
@@ -244,7 +248,7 @@ DEPRECATED. THIS SHOULD BE DONE VIA BRAPI
                 </div>
                 <div class="col-sm-11">
 
-                    <&| /page/info_section.mas, title => "<h4 style='display:inline'>Additional Files</h4>", subtitle=> "Upload and view any additional files for   this plate", id => 'genotyping_trial_additional_files_section', collapsible => 1, collapsed => 1 &>
+                    <&| /page/info_section.mas, anchor_title => "<h4 style='display:inline'>Additional Files</h4>", title => ("<h4 style='display:inline'>" . HTML::Entities::encode_entities($c->i18n->p("genotype.plate.additional_files", "Additional Files")) . "</h4>"), subtitle=> HTML::Entities::encode_entities($c->i18n->p("genotype.plate.upload_and_view_any_additional_files_for_this_plate", "Upload and view any additional files for   this plate")), id => 'genotyping_trial_additional_files_section', collapsible => 1, collapsed => 1 &>
 
                         <div class="panel panel-default">
                             <div class="panel-body">
@@ -267,7 +271,7 @@ DEPRECATED. THIS SHOULD BE DONE VIA BRAPI
                 </div>
                 <div class="col-sm-11">
 
-                    <&| /page/info_section.mas, title => "<h4 style='display:inline'>Plate Linkage</h4>", subtitle => 'View any field trial to genotyping plate linkage', id => 'genotyping_trial_from_field_trial_section', collapsible => 1, collapsed => 1 &>
+                    <&| /page/info_section.mas, anchor_title => "<h4 style='display:inline'>Plate Linkage</h4>", title => ("<h4 style='display:inline'>" . HTML::Entities::encode_entities($c->i18n->p("genotype.plate.plate_linkage", "Plate Linkage")) . "</h4>"), subtitle => HTML::Entities::encode_entities($c->i18n->p("genotype.plate.view_any_field_trial_to_genotyping_plate_linkage", 'View any field trial to genotyping plate linkage')), id => 'genotyping_trial_from_field_trial_section', collapsible => 1, collapsed => 1 &>
                         <& /breeders_toolbox/trial/genotyping_trial_from_field_trial_linkage.mas, trial_id => $trial_id, trial_type => 'genotyping_trial' &>
                     </&>
                 </div>
@@ -276,7 +280,7 @@ DEPRECATED. THIS SHOULD BE DONE VIA BRAPI
     </div>
 </div>
 
-<& /page/detail_page_2_col_section.mas, trial_id => $trial_id, number_of_samples_with_data => $number_of_samples_with_data, info_section_title => "<h4 style='display:inline'>Deletion</h4>", info_section_subtitle => 'Deleting genotyping data derived from this genotyping plate or genotyping plate layout.', icon_class => "glyphicon glyphicon-trash", info_section_id => "delete_genotyping_plate_section" &>
+<& /page/detail_page_2_col_section.mas, info_section_anchor_title => "<h4 style='display:inline'>Deletion</h4>", trial_id => $trial_id, number_of_samples_with_data => $number_of_samples_with_data, info_section_title => ("<h4 style='display:inline'>" . HTML::Entities::encode_entities($c->i18n->p("genotype.plate.deletion", "Deletion")) . "</h4>"), info_section_subtitle => HTML::Entities::encode_entities($c->i18n->p("genotype.plate.deleting_genotyping_data_derived_from_this_genotyping_plate_or_genotyping", 'Deleting genotyping data derived from this genotyping plate or genotyping plate layout.')), icon_class => "glyphicon glyphicon-trash", info_section_id => "delete_genotyping_plate_section" &>
 
 <!--
 <div class="row">
@@ -300,9 +304,9 @@ DEPRECATED. THIS SHOULD BE DONE VIA BRAPI
 </div>
 -->
 
-<&| /page/info_section.mas, id=>"genotyping_trial_check_layout_section", title=>"Check Plate Design", collapsible=>1, collapsed=>1 &>
+<&| /page/info_section.mas, anchor_title => "Check Plate Design", id=>"genotyping_trial_check_layout_section", title=>HTML::Entities::encode_entities($c->i18n->p("genotype.plate.check_plate_design", "Check Plate Design")), collapsible=>1, collapsed=>1 &>
     <div id="genotyping_trial_check_layout_section_div">
-        <div class="well well-sm">LOADING...</div>
+        <div class="well well-sm"><% $c->i18n->p("odk.ui.loading_forms", "LOADING...") |h %></div>
     </div>
 </&>
 
@@ -350,9 +354,9 @@ genotyping_facility => $genotyping_facility
             success: function(response){
                 var html = '';
                 if (response.has_layout == 1){
-                    html += '<p class="text-success" title="This trial has plots and their layout information saved in the database. All relationships between accessions, plots, seedlots, plants, and subplots are consistent. You can view and download this information in the Design section on this page."><small>Has Field Layout&nbsp;&nbsp;</small><span class="glyphicon glyphicon-ok-sign"></span></p>';
+                    html += ("<p class=\"text-success\" title=\"This trial has plots and their layout information saved in the database. All relationships between accessions, plots, seedlots, plants, and subplots are consistent. You can view and download this information in the Design section on this page.\"><small>" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("trial.card.status.has_layout_label", "Has Field Layout") : "Has Field Layout")).html() + "&nbsp;&nbsp;</small><span class=\"glyphicon glyphicon-ok-sign\"></span></p>");
                 } else {
-                    html += '<p class="text-danger" title="There is something wrong with the layout! If this occurs please contact us because this should not occur! (click here for more info)"><span id="layout_error_button"><small>Bad Field Layout&nbsp;&nbsp;</small><span class="glyphicon glyphicon-remove-sign"></span></span></p>';
+                    html += ("<p class=\"text-danger\" title=\"There is something wrong with the layout! If this occurs please contact us because this should not occur! (click here for more info)\"><span id=\"layout_error_button\"><small>" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("trial.card.status.bad_layout_label", "Bad Field Layout") : "Bad Field Layout")).html() + "&nbsp;&nbsp;</small><span class=\"glyphicon glyphicon-remove-sign\"></span></span></p>");
                 }
                 jQuery(document).on('click', 'span[id="layout_error_button"]', function(){
                     alert(response.layout_errors);
@@ -360,7 +364,7 @@ genotyping_facility => $genotyping_facility
                 jQuery('#genotyping_trial_check_layout_section_div').html(html);
             },
             error: function(response){
-                alert('Error retrieving trial check layout section');
+                alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("genotype.plate.error_retrieving_trial_check_layout_section", "Error retrieving trial check layout section") : 'Error retrieving trial check layout section'));
             }
 
         });

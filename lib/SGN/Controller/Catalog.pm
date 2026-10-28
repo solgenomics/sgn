@@ -1,6 +1,7 @@
 package SGN::Controller::Catalog;
 
 use Moose;
+use SGN::I18N ();
 use URI::FromHash 'uri';
 use SGN::Model::Cvterm;
 use CXGN::People::Person;
@@ -52,6 +53,7 @@ sub stock_catalog :Path('/catalog/view') :Args(0) {
 sub catalog_item_details : Path('/catalog/item_details') Args(1) {
     my $self = shift;
     my $c = shift;
+    my SGN::I18N $i18n = $c && $c->can('i18n') ? $c->i18n : undef;
     my $dbh = $c->dbc->dbh;
 
     if (! $c->user()) {
@@ -75,7 +77,7 @@ sub catalog_item_details : Path('/catalog/item_details') Args(1) {
     my $item_prop_id;
     if (!$stock_catalog_info){
         $c->stash->{template} = '/generic_message.mas';
-        $c->stash->{message} = 'The requested catalog item does not exist.';
+        $c->stash->{message} = SGN::I18N::translate($i18n, "administration.catalog.item_not_found", "The requested catalog item does not exist.");
         return;
     } else {
         $item_prop_id = $stock_catalog_info->stockprop_id();

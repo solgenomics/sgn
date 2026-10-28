@@ -19,9 +19,9 @@ Isaak Y Tecle (iyt2@cornell.edu)
 <%perl>
 	my $combine_button;
 	if ($c->req->path =~ /solgs\/search\/trials\/trait/) {
-		$combine_button = 'Combine trials & build model';
+		$combine_button = $c->i18n->p("solgs.interface.combine_trials_build_model", "Combine trials & build model");
 	} else {
-		$combine_button = 'Combine trials';
+		$combine_button = $c->i18n->p("solgs.interface.combine_trials", "Combine trials");
 	}
 
 
@@ -29,16 +29,16 @@ Isaak Y Tecle (iyt2@cornell.edu)
 
 <div id="selected_trials" style="display:none;width:100%">
 
- <p class="message"> Selected trials </p>
+ <p class="message"> <% $c->i18n->p("solgs.interface.selected_trials", "Selected trials") |h %> </p>
 
 <table class ="table" id="selected_trials_table" style="text-align:left;width:100%">
 <tr>
   <th></th>
-  <th>Trial</th>
-  <th>Description</th>
-  <th>Location</th>
-  <th>Year</th>
-  <th>More details</th>
+  <th><% $c->i18n->p("global.index_logged_in_user.trial", "Trial") |h %></th>
+  <th><% $c->i18n->p("global.dataset_cxgn_dataset.table.description", "Description") |h %></th>
+  <th><% $c->i18n->p("solgs.interface.location", "Location") |h %></th>
+  <th><% $c->i18n->p("global.trial_table.year", "Year") |h %></th>
+  <th><% $c->i18n->p("solgs.interface.more_details", "More details") |h %></th>
 </tr>
 <tr>
 </tr>
@@ -55,7 +55,7 @@ Isaak Y Tecle (iyt2@cornell.edu)
   </td>
   <td>
     <div id="search_again_div" style="display:none;text-align:right">
-    <input style class="button" type="button" id="search_again" value="Search again"/>
+    <input style class="button" type="button" id="search_again" value="<% $c->i18n->p("global.gem_experiment_search.search_again", "Search again") |h %>"/>
   </div>
  </td>
 </tr>

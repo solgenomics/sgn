@@ -5,7 +5,7 @@ $family_id
 <& /util/import_javascript.mas, classes => [ 'jquery', 'jquery.dataTables' ] &>
 <& /util/import_css.mas, paths => ['/documents/inc/datatables/jquery.dataTables.css'] &>
 
-<&| /page/info_section.mas, id=>'remove_crosses_from_family_section', title => 'Remove crosses from this family', subtitle => ' ', collapsible=>1, collapsed=>1 &>
+<&| /page/info_section.mas, id=>'remove_crosses_from_family_section', title => HTML::Entities::encode_entities($c->i18n->p("cross.forms.remove_crosses_from_this_family", "Remove crosses from this family")), anchor_title => 'Remove crosses from this family', subtitle => ' ', collapsible=>1, collapsed=>1 &>
     <div class="well well-sm">
         <div class="panel panel-default">
             <div class="panel-body">
@@ -16,11 +16,11 @@ $family_id
     </div>
 </&>
 
-<&| /page/info_section.mas, id=>'delete_family_section', title => 'Delete family', subtitle => '<font color="red">Deletion cannot be undone.</font>', collapsible=>1, collapsed=>1 &>
+<&| /page/info_section.mas, id=>'delete_family_section', title => HTML::Entities::encode_entities($c->i18n->p("cross.forms.delete_family", "Delete family")), anchor_title => 'Delete family', subtitle => "<font color=\"red\">" . HTML::Entities::encode_entities($c->i18n->p("cross.forms.deletion_cannot_be_undone", "Deletion cannot be undone.")) . "</font>", collapsible=>1, collapsed=>1 &>
     <div class="well well-sm">
         <div class="panel panel-default">
             <div class="panel-body">
-                <button class="btn btn-default" id="delete_family" role="button">Delete this family</button><br/><br/>
+                <button class="btn btn-default" id="delete_family" role="button"><% $c->i18n->p("cross.forms.delete_this_family", "Delete this family") |h %></button><br/><br/>
             </div>
         </div>
     </div>
@@ -38,8 +38,8 @@ jQuery(document).ready(function(){
             'destroy': true,
             'autoWidth': false,
             columns: [
-                { title: "Cross Unique ID", "data": null, "render": function ( data, type, row ) { return "<a href='/cross/"+row.cross_id+"'>"+row.cross_name+"</a>"; } },
-                { title: "Remove", "data": "null", "render": function ( data, type, row ) { return "<a onclick='removeFamilyMember("+row.cross_id+")'>Remove</a>"; } },
+                { title: (window.SGN && window.SGN.i18n ? window.SGN.i18n.p("cross.ui.cross_unique_id.923bfbc", "Cross Unique ID") : "Cross Unique ID"), "data": null, "render": function ( data, type, row ) { return "<a href='/cross/"+row.cross_id+"'>"+row.cross_name+"</a>"; } },
+                { title: (window.SGN && window.SGN.i18n ? window.SGN.i18n.p("global.dataset_publish.action.remove", "Remove") : "Remove"), "data": "null", "render": function ( data, type, row ) { return "<a onclick='removeFamilyMember("+row.cross_id+(")'>" + jQuery("<div>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("global.dataset_publish.action.remove", "Remove") : "Remove")).html() + "</a>"); } },
             ]
         });
     });
@@ -47,7 +47,7 @@ jQuery(document).ready(function(){
     jQuery('#delete_family').click(function() {
 
         const family_id = "<% $family_id %>";
-        const confirmation = confirm("Are you sure you want to delete this family? The deletion cannot be undone.");
+        const confirmation = confirm((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("cross.forms.are_you_sure_you_want_to_delete_this_family", "Are you sure you want to delete this family? The deletion cannot be undone.") : "Are you sure you want to delete this family? The deletion cannot be undone."));
         if (confirmation) {
             jQuery.ajax({
                 url: '/ajax/family/delete_family',
@@ -62,7 +62,7 @@ jQuery(document).ready(function(){
                 success: function(response) {
                     jQuery('#working_modal').modal('hide');
                     if (response.success == 1) {
-                        alert('The family was deleted');
+                        alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("cross.forms.the_family_was_deleted", "The family was deleted") : "The family was deleted"));
                         location.reload();
                     }
                     if (response.error) {
@@ -71,7 +71,7 @@ jQuery(document).ready(function(){
                 },
                 error: function(response) {
                     jQuery('#working_modal').modal('hide');
-                    alert('An error occurred during delete this family');
+                    alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("cross.forms.an_error_occurred_during_delete_this_family", "An error occurred during delete this family") : "An error occurred during delete this family"));
                 }
             });
         }
@@ -81,7 +81,7 @@ jQuery(document).ready(function(){
 
 function removeFamilyMember(cross_id){
 
-    var confirmation = confirm('Are you sure you want to remove this cross?');
+    var confirmation = confirm((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("cross.forms.are_you_sure_you_want_to_remove_this_cross", "Are you sure you want to remove this cross?") : "Are you sure you want to remove this cross?"));
 
     if (confirmation) {
         const family_id = "<%$family_id%>";
@@ -99,7 +99,7 @@ function removeFamilyMember(cross_id){
             success: function(response) {
                 jQuery('#working_modal').modal('hide');
                 if (response.success == 1) {
-                    alert('The cross was removed');
+                    alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("cross.forms.the_cross_was_removed", "The cross was removed") : "The cross was removed"));
                     location.reload();
                 }
                 if (response.error) {
@@ -108,7 +108,7 @@ function removeFamilyMember(cross_id){
             },
             error: function(response) {
                 jQuery('#working_modal').modal('hide');
-                alert('An error occurred during removing cross member');
+                alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("cross.forms.an_error_occurred_during_removing_cross_member", "An error occurred during removing cross member") : "An error occurred during removing cross member"));
             }
         });
     }

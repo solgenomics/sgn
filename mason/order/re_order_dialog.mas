@@ -16,8 +16,8 @@ $order_values => undef
     <div class="modal-dialog modal-lg" role="document">
         <div class="modal-content">
             <div class="modal-header">
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                <h4 class="modal-title" id="reOrderDialog">Ordering Information</h4>
+                <button type="button" class="close" data-dismiss="modal" aria-label="<% $c->i18n->p("global.dataset_publish.close", "Close") |h %>"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="reOrderDialog"><% $c->i18n->p("barcode.helper.ordering_information", "Ordering Information") |h %></h4>
             </div>
             <div class="modal-body">
                 <div class="container-fluid">
@@ -26,8 +26,8 @@ $order_values => undef
                 </div>
             </div>
             <div class="modal-footer">
-                <button id="close_re_order_dialog" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-                <button id="re_order_submit" type="button" class="btn btn-primary" >Submit</button>
+                <button id="close_re_order_dialog" type="button" class="btn btn-default" data-dismiss="modal"><% $c->i18n->p("global.dataset_publish.close", "Close") |h %></button>
+                <button id="re_order_submit" type="button" class="btn btn-primary" ><% $c->i18n->p("global.manage_file_share_dump.submit", "Submit") |h %></button>
             </div>
         </div>
     </div>
@@ -37,8 +37,8 @@ $order_values => undef
     <div class="modal-dialog" role="document">
         <div class="modal-content">
             <div class="modal-header">
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                <h4 class="modal-title" id="reOrderResponseDialog">Your Order</h4>
+                <button type="button" class="close" data-dismiss="modal" aria-label="<% $c->i18n->p("global.dataset_publish.close", "Close") |h %>"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="reOrderResponseDialog"><% $c->i18n->p("barcode.helper.your_order", "Your Order") |h %></h4>
             </div>
             <div class="modal-body">
                 <div class="container-fluid">
@@ -46,7 +46,7 @@ $order_values => undef
                 </div>
             </div>
             <div class="modal-footer">
-                <button id="dismiss_re_order_response_dialog" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                <button id="dismiss_re_order_response_dialog" type="button" class="btn btn-default" data-dismiss="modal"><% $c->i18n->p("global.dataset_publish.close", "Close") |h %></button>
             </div>
         </div>
     </div>
@@ -100,7 +100,7 @@ jQuery(document).ready( function() {
             },
             error: function(response){
                 jQuery('#working_modal').modal('hide');
-                alert('An error occurred saving your request');
+                alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("barcode.helper.an_error_occurred_saving_your_request", "An error occurred saving your request") : 'An error occurred saving your request'));
             }
         });
     });

@@ -6,8 +6,8 @@ $trial_id
     <div class="modal-dialog modal-lg" role="document">
         <div class="modal-content">
             <div class="modal-header">
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                <h4 class="modal-title" id="addDataAgreementDialog">Modify Data Agreement</h4>
+                <button type="button" class="close" data-dismiss="modal" aria-label="<% $c->i18n->p("auth.common.close", "Close") |h %>"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="addDataAgreementDialog"><% $c->i18n->p("administration.interface.modify_data_agreement", "Modify Data Agreement") |h %></h4>
             </div>
             <div class="modal-body">
                 <div class="container-fluid">
@@ -18,8 +18,8 @@ $trial_id
                 </div>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-default" data-dismiss="modal" id="data_agreement_cancel_button">Close</button>
-                <button type="button" class="btn btn-primary" name="data_agreement_ok_button" id="data_agreement_ok_button">Submit</button>
+                <button type="button" class="btn btn-default" data-dismiss="modal" id="data_agreement_cancel_button"><% $c->i18n->p("auth.common.close", "Close") |h %></button>
+                <button type="button" class="btn btn-primary" name="data_agreement_ok_button" id="data_agreement_ok_button"><% $c->i18n->p("global.submit", "Submit") |h %></button>
             </div>
         </div>
     </div>
@@ -48,12 +48,12 @@ jQuery(document).ready(function () {
           else 
           if (response.message) { alert(response.message); }
           else { 
-            alert("Successfully added a data agreement to this trial.");
+            alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("administration.interface.agreement_added_success", "Successfully added a data agreement to this trial.") : "Successfully added a data agreement to this trial."));
           }
           get_data_agreement(<% $trial_id %>, 'data_agreement_div');
         },
         error: function(response) { 
-          alert("An error occurred storing the data agreement.");
+          alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("administration.interface.agreement_store_error", "An error occurred storing the data agreement.") : "An error occurred storing the data agreement."));
         }
       });
     }
@@ -68,12 +68,12 @@ jQuery(document).ready(function () {
              jQuery('#'+div).html(response.text);
            }
            else { 
-             jQuery('#'+div).html('By default, trial data is provided under the Toronto agreement, as explained in the <a href="/usage_policy">data usage policy</a>.');
+             jQuery('#'+div).html(jQuery("<span>").text((window.SGN && window.SGN.i18n ? SGN.i18n.p("administration.interface.agreement_default_intro", "By default, trial data is provided under the") : "By default, trial data is provided under the")).html() + ' Toronto agreement, ' + jQuery("<span>").text((window.SGN && window.SGN.i18n ? SGN.i18n.p("administration.interface.agreement_default_explained", "as explained in the") : "as explained in the")).html() + ' <a href="/usage_policy">' + jQuery("<span>").text((window.SGN && window.SGN.i18n ? SGN.i18n.p("administration.interface.data_usage_policy_link", "data usage policy") : "data usage policy")).html() + '</a>.');
            }
            if (response.message) { alert(response.message); }
         },
         error: function(response) { 
-           alert('An error occurred fetching the data agreement data.');
+           alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("administration.interface.agreement_fetch_error", "An error occurred fetching the data agreement data.") : "An error occurred fetching the data agreement data."));
         }
       });
     }

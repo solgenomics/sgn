@@ -1,6 +1,9 @@
 
 package SGN::Controller::AJAX::ValidatedTrials;
 
+use SGN::I18N ();
+use CatalystX::GlobalContext '$c';
+
 use Moose;
 
 use Data::Dumper;
@@ -32,6 +35,7 @@ __PACKAGE__->config(
 sub grab_data :Path('/ajax/validatedtrials/grabdata') Args(0) {
     my $self = shift;
     my $c = shift;
+    my SGN::I18N $ui_grab_data_i18n = SGN::I18N::translate($c);
     my $dbh = $c->dbc->dbh();
     my $schema = $c->dbic_schema("Bio::Chado::Schema");
 
@@ -85,7 +89,7 @@ sub grab_data :Path('/ajax/validatedtrials/grabdata') Args(0) {
     $c->response->body($encoded_response);
 
     if ($@) {
-        $c->response->body("Failed to search data: $@");
+        $c->response->body((SGN::I18N::translate($ui_grab_data_i18n, 'decision.server.failed_to_search_data_error_details', 'Failed to search data: %{error_details}', {error_details => ("" . ("$@"))})));
             return;
     }
 }
@@ -93,6 +97,7 @@ sub grab_data :Path('/ajax/validatedtrials/grabdata') Args(0) {
 sub get_coordinate :Path('/ajax/validatedtrials/getcoordinates') Args(0) {
 
     my ($self, $c) = @_;
+    my SGN::I18N $ui_get_coordinate_i18n = SGN::I18N::translate($c);
 
     my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
     my $schema = $c->dbic_schema("Bio::Chado::Schema", undef, $sp_person_id);
@@ -132,7 +137,7 @@ sub get_coordinate :Path('/ajax/validatedtrials/getcoordinates') Args(0) {
 
     if ($@) {
         $c->res->status(500);
-        $c->res->body(encode_json({ error => "Database error: $_" }));
+        $c->res->body(encode_json({ error => (SGN::I18N::translate($ui_get_coordinate_i18n, 'decision.server.database_error_value', 'Database error: %{value}', {value => ("" . ("$_"))}))}));
     };
 
 }

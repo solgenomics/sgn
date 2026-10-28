@@ -57,7 +57,7 @@ $uri => "/ajax/cvterm/autocomplete"
 
    function associate_phenotype() {
       var trait = jQuery("#trait_ontology_name").val();
-      if (!trait) { alert("Must choose a trait name!"); return; }
+      if (!trait) { alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("phenotype.root.must_choose_a_trait_name", "Must choose a trait name!") : "Must choose a trait name!")); return; }
       var stock_id = '<% $stock_id %>';
       var phenotype_value = jQuery("#phenotye_value").val();
       jQuery.ajax({
@@ -71,7 +71,7 @@ $uri => "/ajax/cvterm/autocomplete"
         success: function(response) {
           if (response.error) { alert(response.error); }
           else {
-            alert("The phenotype has been added. ["+response.error+"]");
+            alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("phenotype.root.the_phenotype_has_been_added", "The phenotype has been added. [") : "The phenotype has been added. [")+response.error+"]");
            //jQuery("#add_phenotype_form").dialog("close");
             document.location.reload(); // reload the entire page, might be faster then rendering phenotype section with AJAX
           }
@@ -84,8 +84,8 @@ $uri => "/ajax/cvterm/autocomplete"
 <div id="add_phenotype_form">
      <div id="phenotype_add">
      	  <form name = "add_phenotype" >
-      	  	<b>Trait name</b><input type="text" id="trait_ontology_name" name="trait_ontology_name" />
-      		<b>Value</b> <input type="text" id="phenotype_value" />
+                <b><% $c->i18n->p("phenotype.root.trait_name.4f3e5b7", "Trait name") |h %></b><input type="text" id="trait_ontology_name" name="trait_ontology_name" />
+                <b><% $c->i18n->p("seedlot_maintenance_table.ui.value_header", "Value") |h %></b> <input type="text" id="phenotype_value" />
       		<input type="hidden" id="stock_id" name="stock_id" value="<% $stock_id %>" />
     	        <input type="button" name="associate_phenotype_button" id="associate_phenotype_button" value="Submit" onclick="javascript:associate_phenotype()" />
      	</form>

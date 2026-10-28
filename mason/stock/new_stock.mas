@@ -1,3 +1,6 @@
+<%once>
+use HTML::Entities ();
+</%once>
 
 <%args>
 $stockref => undef
@@ -5,10 +8,10 @@ $stockref => undef
 
 % my $stock_id = $stockref->{stock_id};
 
-<& /page/page_title.mas, title=> 'Create a New Stock' &>
+<& /page/page_title.mas, title=>HTML::Entities::encode_entities($c->i18n->p("accession.stock.create.title", "Create a New Stock")) &>
 
 
-<&| /page/info_section.mas, title=>"Stock details"  &>
+<&| /page/info_section.mas, title=>HTML::Entities::encode_entities($c->i18n->p("accession.stock.create.details", "Stock details"))  &>
 
 <div class="row">
   <div class="col-sm-12">
@@ -21,7 +24,7 @@ $stockref => undef
   form_div_name=>'stock_details',
   js_object_name=> 'stockForm',
   page_url => "/stock/$stock_id/view/" ,
-  alternate_new_button => '<a class="btn btn-sm btn-default" href ="/stock/0/new">New</a>'
+  alternate_new_button => '<a class="btn btn-sm btn-default" href ="/stock/0/new">' . HTML::Entities::encode_entities($c->i18n->p("accession.stock.create.new", "New")) . '</a>'
   &>
 
   </div>

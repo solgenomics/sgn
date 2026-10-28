@@ -1,3 +1,7 @@
+<%once>
+use HTML::Entities ();
+</%once>
+
 
 <%args>
 $vector_id
@@ -9,12 +13,12 @@ $program_name => undef
     <table class="table table-hover table-bordered" id="vector_obsoleted_transformants_table">
         <thead>
             <tr>
-                <th>Accession</th>
-                <th>Note</th>
-                <th>Date</th>
-                <th>Obsoleted by</th>
+                <th><% $c->i18n->p("global.index_logged_in_user.accession", "Accession") |h %></th>
+                <th><% $c->i18n->p("phenotype.root.note", "Note") |h %></th>
+                <th><% $c->i18n->p("global.file_dump_share_files.date", "Date") |h %></th>
+                <th><% $c->i18n->p("transformation.root.obsoleted_by", "Obsoleted by") |h %></th>
 % if (!$transformation_id) {
-                <th>Transformation ID</th>
+                <th><% $c->i18n->p("transformation.transformation_id.6f39808", "Transformation ID") |h %></th>
 %}
             </tr>
         </thead>
@@ -24,7 +28,7 @@ $program_name => undef
 
 <div class="panel panel-default">
     <div class="panel-body">
-        <&| /page/info_section.mas, title => 'Copy obsoleted accessions to a List', collapsible=>1, collapsed=>0, subtitle=>'<i>Copy the obsoleted accession names to a new or exisiting list</i>'&>
+        <&| /page/info_section.mas, anchor_title => 'Copy obsoleted accessions to a List', title => HTML::Entities::encode_entities($c->i18n->p("transformation.root.copy_obsoleted_accessions_to_a_list", 'Copy obsoleted accessions to a List')), collapsible=>1, collapsed=>0, subtitle=>("<i>" . HTML::Entities::encode_entities($c->i18n->p("transformation.root.copy_the_obsoleted_accession_names_to_a_new_or_exisiting", "Copy the obsoleted accession names to a new or existing list")) . "</i>")&>
         <br>
         <div id="obsoleted_transformant_names" style="display:none"></div>
         <div id="obsoleted_transformants_to_list_menu"></div>
@@ -57,7 +61,7 @@ jQuery(document).ready(function(){
             },
             "fnInitComplete": function(oSettings, json) {
                 if (!isLoggedIn()) {
-                    jQuery('#obsoleted_transformants_to_list_menu').html("<div class='well well-sm'><h3>Please login to use lists!</h3></div>");
+                    jQuery('#obsoleted_transformants_to_list_menu').html(("<div class='well well-sm'><h3>" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("accession.related_stock.login_lists", "Please login to use lists!") : "Please login to use lists!")).html() + "</h3></div>"));
                 } else {
                     var html = "";
                     for(var i=0; i<json.data.length; i++){

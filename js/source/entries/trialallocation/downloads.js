@@ -44,7 +44,7 @@ export function createDownloadTools({ qs, key, sanitizeTrialName, collectLayoutJ
 
   function downloadExcelWorkbook(filename, sheets) {
     if (!window.JSZip) {
-      alert('The XLSX export library is not available on this page.');
+      alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("decision.js.the_xlsx_export_library_is_not_available_on_this_page", "The XLSX export library is not available on this page.") : 'The XLSX export library is not available on this page.'));
       return;
     }
 
@@ -235,7 +235,7 @@ ${worksheetEntries.map(sheet => `  <Relationship Id="rId${sheet.id}" Type="http:
     const rows = collectPlantingMapRows(layout, settings);
 
     if (!rows.length) {
-      alert('Place trials, borders, or fillers before downloading the planting map.');
+      alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("decision.js.place_trials_borders_or_fillers_before_downloading_the_planting_map", "Place trials, borders, or fillers before downloading the planting map.") : 'Place trials, borders, or fillers before downloading the planting map.'));
       return;
     }
 
@@ -297,7 +297,7 @@ ${worksheetEntries.map(sheet => `  <Relationship Id="rId${sheet.id}" Type="http:
     qs("#export-full-jpg-btn")?.addEventListener("click", function () {
       const exportGrid = createFullGridExportElement();
       if (!exportGrid) {
-        alert("Set the field rows and columns before exporting the full grid.");
+        alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("decision.js.set_the_field_rows_and_columns_before_exporting_the_full_grid", "Set the field rows and columns before exporting the full grid.") : "Set the field rows and columns before exporting the full grid."));
         return;
       }
 
@@ -316,7 +316,7 @@ ${worksheetEntries.map(sheet => `  <Relationship Id="rId${sheet.id}" Type="http:
         link.click();
       }).catch(error => {
         console.error("Full grid export failed:", error);
-        alert("Could not export the full field grid.");
+        alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("decision.js.could_not_export_the_full_field_grid", "Could not export the full field grid.") : "Could not export the full field grid."));
       }).finally(() => {
         exportGrid.remove();
       });

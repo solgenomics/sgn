@@ -109,7 +109,7 @@ sub create_cross_wishlist_POST : Args(0) {
     }
 #    print STDERR "BLOCK PLOT HASH =".Dumper(\%block_plot_hash)."\n";
 
-    my $cross_wishlist_plot_select_html = '<h1>Select Female <!--and Male -->Plots For Each Desired Cross Below:</h1>';
+    my $cross_wishlist_plot_select_html = "<h1>" . HTML::Entities::encode_entities($c->i18n->p("cross.controller.select_female", "Select Female ")) . "<!--and Male -->" . HTML::Entities::encode_entities($c->i18n->p("cross.controller.plots_for_each_desired_cross_below", "Plots For Each Desired Cross Below:")) . "</h1>";
 
     foreach my $female_accession_name (sort keys %ordered_data){
         my $decoded_female_accession_name = uri_decode($female_accession_name);
@@ -117,12 +117,12 @@ sub create_cross_wishlist_POST : Args(0) {
         my $current_males = $ordered_data{$female_accession_name};
         my $current_males_string = join ',', @$current_males;
         my $encoded_males_string = uri_encode($current_males_string);
-        $cross_wishlist_plot_select_html .= '<div class="well" id="cross_wishlist_plot_'.$female_accession_name.'_tab" ><h2>Female: '.$decoded_female_accession_name.' Males: '.$current_males_string.'</h2><h3><!--Select All Male Plots <input type="checkbox" name="cross_wishlist_plot_select_all_male" id="cross_wishlist_plot_select_all_male_'.$female_accession_name.'" data-female_accession_name="'.$female_accession_name.'" />   -->Select All Female Plots <input type="checkbox" id="cross_wishlist_plot_select_all_female_'.$female_accession_name.'" name="cross_wishlist_plot_select_all_female" data-female_accession_name="'.$female_accession_name.'" /></h3><table class="table table-bordered table-hover"><thead>';
+        $cross_wishlist_plot_select_html .= '<div class="well" id="cross_wishlist_plot_'.$female_accession_name."_tab\" ><h2>" . HTML::Entities::encode_entities($c->i18n->p("cross.controller.female", "Female: ")) . "".$decoded_female_accession_name."" . HTML::Entities::encode_entities($c->i18n->p("cross.controller.males", " Males: ")) . "".$current_males_string.'</h2><h3><!--Select All Male Plots <input type="checkbox" name="cross_wishlist_plot_select_all_male" id="cross_wishlist_plot_select_all_male_'.$female_accession_name.'" data-female_accession_name="'.$female_accession_name."\" />   -->" . HTML::Entities::encode_entities($c->i18n->p("cross.controller.select_all_female_plots", "Select All Female Plots ")) . "<input type=\"checkbox\" id=\"cross_wishlist_plot_select_all_female_".$female_accession_name.'" name="cross_wishlist_plot_select_all_female" data-female_accession_name="'.$female_accession_name.'" /></h3><table class="table table-bordered table-hover"><thead>';
 
         $cross_wishlist_plot_select_html .= "</thead><tbody>";
         my %current_males = map{$_=>1} @$current_males;
         foreach my $block_number (sort { $a <=> $b } keys %block_plot_hash){
-            $cross_wishlist_plot_select_html .= "<tr><td><b>Block $block_number</b></td>";
+            $cross_wishlist_plot_select_html .= "<tr><td><b>" . $c->i18n->p("cross.controller.block_block_number", "Block %{block_number}", {block_number => "" . ($block_number)}) . "</b></td>";
             my $plot_number_obj = $block_plot_hash{$block_number};
             my @plot_numbers = sort { $a <=> $b } keys %$plot_number_obj;
             for (0 .. scalar(@plot_numbers)-1){
@@ -140,7 +140,7 @@ sub create_cross_wishlist_POST : Args(0) {
                 #    $num_seen++;
                 #}
                 if ($decoded_female_accession_name eq $accession_name){
-                    $cross_wishlist_plot_select_html .= '<td class="bg-primary" title="Female. Plot Name: '.$value->{plot_name}.' Plot Number: '.$value->{plot_number}.' Males to Cross: '.$current_males_string;
+                    $cross_wishlist_plot_select_html .= "<td class=\"bg-primary\" title=\"" . HTML::Entities::encode_entities($c->i18n->p("cross.controller.female_plot_name", "Female. Plot Name: ")) . "".$value->{plot_name}."" . HTML::Entities::encode_entities($c->i18n->p("cross.controller.plot_number", " Plot Number: ")) . "".$value->{plot_number}."" . HTML::Entities::encode_entities($c->i18n->p("cross.controller.males_to_cross", " Males to Cross: ")) . "".$current_males_string;
                     #my $count = 1;
                     #foreach (@{$ordered_data{$value->{accession_name}}}){
                     #    $cross_wishlist_plot_select_html .= ' Male'.$count.': '.$_;
@@ -154,7 +154,7 @@ sub create_cross_wishlist_POST : Args(0) {
                 #    $num_seen++;
                 #}
                 else {
-                    $cross_wishlist_plot_select_html .= '<td title="Not Chosen. Plot Name: '.$value->{plot_name}.' Plot Number: '.$value->{plot_number}.'">'.$accession_name.'</td>';
+                    $cross_wishlist_plot_select_html .= "<td title=\"" . HTML::Entities::encode_entities($c->i18n->p("cross.controller.not_chosen_plot_name", "Not Chosen. Plot Name: ")) . "".$value->{plot_name}."" . HTML::Entities::encode_entities($c->i18n->p("cross.controller.plot_number", " Plot Number: ")) . "".$value->{plot_number}.'">'.$accession_name.'</td>';
                     $num_seen++;
                 }
             }
@@ -177,7 +177,7 @@ sub create_cross_wishlist_submit_POST : Args(0) {
     my ($self, $c) = @_;
 
     if (!$c->user){
-        $c->stash->{rest}->{error} = "You must be logged in to actually create a cross wishlist.";
+        $c->stash->{rest}->{error} = $c->i18n->p("cross.controller.you_must_be_logged_in_to_actually_create", "You must be logged in to actually create a cross wishlist.");
         $c->detach();
     }
     my $user_id = $c->user()->get_object()->get_sp_person_id();
@@ -845,7 +845,7 @@ sub create_cross_wishlist_submit_POST : Args(0) {
     my $odk_crossing_data_service_name = $c->config->{odk_crossing_data_service_name};
     my $odk_crossing_data_service_url = $c->config->{odk_crossing_data_service_url};
 
-    $c->stash->{rest}->{success} = 'The cross wishlist file can be downloaded <a href="'.$uri2.'">here</a>. The germplasm info file can be downloaded <a href="'.$uri3.'">here</a>.';
+    $c->stash->{rest}->{success} = "" . HTML::Entities::encode_entities($c->i18n->p("cross.controller.the_cross_wishlist_file_can_be_downloaded", "The cross wishlist file can be downloaded ")) . "<a href=\"".$uri2."\">" . HTML::Entities::encode_entities($c->i18n->p("global.page.comments.link_here", "here")) . "</a>" . HTML::Entities::encode_entities($c->i18n->p("cross.controller.the_germplasm_info_file_can_be_downloaded", ". The germplasm info file can be downloaded ")) . "<a href=\"".$uri3."\">" . HTML::Entities::encode_entities($c->i18n->p("global.page.comments.link_here", "here")) . "</a>.";
 
     if ($odk_crossing_data_service_name eq 'NULL') {
         $c->detach();
@@ -903,14 +903,14 @@ sub create_cross_wishlist_submit_POST : Args(0) {
             my $message = $resp->decoded_content;
             my $message_hash = decode_json $message;
             if ($message_hash->{id}){
-                $c->stash->{rest}->{success} .= 'The cross wishlist is now ready to be used on the ODK tablet application. Files uploaded to ONA here: <a href="'.$message_hash->{media_url}.'">'.$message_hash->{data_value}.'</a> with <a href="'.$message_hash->{url}.'">metadata entry</a>.';
+                $c->stash->{rest}->{success} .= "" . HTML::Entities::encode_entities($c->i18n->p("cross.controller.the_cross_wishlist_is_now_ready_to_be", "The cross wishlist is now ready to be used on the ODK tablet application. Files uploaded to ONA here: ")) . "<a href=\"".$message_hash->{media_url}.'">'.$message_hash->{data_value}."</a>" . HTML::Entities::encode_entities($c->i18n->p("cross.controller.with", " with ")) . "<a href=\"".$message_hash->{url}."\">" . HTML::Entities::encode_entities($c->i18n->p("cross.controller.metadata_entry", "metadata entry")) . "</a>.";
             } else {
-                $c->stash->{rest}->{error} = 'The cross wishlist was not posted to ONA. Please try again.';
+                $c->stash->{rest}->{error} = $c->i18n->p("cross.controller.the_cross_wishlist_was_not_posted_to_ona", "The cross wishlist was not posted to ONA. Please try again.");
             }
         } else {
 #            print STDERR "ONA RESPONSE MESSAGE HASH 2=".Dumper($resp);
 #            print STDERR Dumper $resp;
-            $c->stash->{rest}->{error} = "There was an error submitting cross wishlist to ONA. Please try again.";
+            $c->stash->{rest}->{error} = $c->i18n->p("cross.controller.there_was_an_error_submitting_cross_wishlist_to", "There was an error submitting cross wishlist to ONA. Please try again.");
         }
 
         my $germplasm_info_resp = $ua->post(
@@ -930,13 +930,13 @@ sub create_cross_wishlist_submit_POST : Args(0) {
             my $message_hash = decode_json $message;
             #print STDERR Dumper $message_hash;
             if ($message_hash->{id}){
-                $c->stash->{rest}->{success} .= 'The germplasm info file is now ready to be used on the ODK tablet application. Files uploaded to ONA here: <a href="'.$message_hash->{media_url}.'">'.$message_hash->{data_value}.'</a> with <a href="'.$message_hash->{url}.'">metadata entry</a>.';
+                $c->stash->{rest}->{success} .= "" . HTML::Entities::encode_entities($c->i18n->p("cross.controller.the_germplasm_info_file_is_now_ready_to", "The germplasm info file is now ready to be used on the ODK tablet application. Files uploaded to ONA here: ")) . "<a href=\"".$message_hash->{media_url}.'">'.$message_hash->{data_value}."</a>" . HTML::Entities::encode_entities($c->i18n->p("cross.controller.with", " with ")) . "<a href=\"".$message_hash->{url}."\">" . HTML::Entities::encode_entities($c->i18n->p("cross.controller.metadata_entry", "metadata entry")) . "</a>.";
             } else {
-                $c->stash->{rest}->{error} .= 'The germplasm info file was not posted to ONA. Please try again.';
+                $c->stash->{rest}->{error} .= $c->i18n->p("cross.controller.the_germplasm_info_file_was_not_posted_to", "The germplasm info file was not posted to ONA. Please try again.");
             }
         } else {
             #print STDERR Dumper $germplasm_info_resp;
-            $c->stash->{rest}->{error} .= "There was an error submitting germplasm info file to ONA. Please try again.";
+            $c->stash->{rest}->{error} .= $c->i18n->p("cross.controller.there_was_an_error_submitting_germplasm_info_file", "There was an error submitting germplasm info file to ONA. Please try again.");
         }
     }
 
@@ -975,7 +975,7 @@ sub create_wishlist_by_uploading_POST : Args(0) {
     my ($self, $c) = @_;
 
     if (!$c->user){
-        $c->stash->{rest}->{error} = "You must be logged in to actually create a cross wishlist.";
+        $c->stash->{rest}->{error} = $c->i18n->p("cross.controller.you_must_be_logged_in_to_actually_create", "You must be logged in to actually create a cross wishlist.");
         $c->detach();
     }
 
@@ -1012,7 +1012,7 @@ sub create_wishlist_by_uploading_POST : Args(0) {
         my $dbh = $c->dbc->dbh;
         my @user_info = CXGN::Login->new($dbh)->query_from_cookie($session_id);
         if (!$user_info[0]){
-            $c->stash->{rest} = {error=>'You must be logged in to upload wishlist!'};
+            $c->stash->{rest} = {error=>$c->i18n->p("cross.controller.you_must_be_logged_in_to_upload_wishlist", "You must be logged in to upload wishlist!")};
             $c->detach();
         }
         $user_id = $user_info[0];
@@ -1021,7 +1021,7 @@ sub create_wishlist_by_uploading_POST : Args(0) {
         $user_name = $p->get_username;
     } else{
         if (!$c->user){
-            $c->stash->{rest} = {error=>'You must be logged in to upload wishlist!'};
+            $c->stash->{rest} = {error=>$c->i18n->p("cross.controller.you_must_be_logged_in_to_upload_wishlist", "You must be logged in to upload wishlist!")};
             $c->detach();
         }
         $user_id = $c->user()->get_object()->get_sp_person_id();
@@ -1043,11 +1043,11 @@ sub create_wishlist_by_uploading_POST : Args(0) {
         user_role => $user_role
     });
 
-    ## Store uploaded temporary file in arhive
+    ## Store uploaded temporary file in archive
     $archived_filename_with_path = $uploader->archive();
     $md5 = $uploader->get_md5($archived_filename_with_path);
     if (!$archived_filename_with_path) {
-        $c->stash->{rest} = {error => "Could not save file $upload_original_name in archive",};
+        $c->stash->{rest} = {error => $c->i18n->p("cross.server.could_not_save_file_upload_original_name_in_archive", "Could not save file %{upload_original_name} in archive", {upload_original_name => "" . ($upload_original_name)}),};
         return;
     }
     unlink $upload_tempfile;
@@ -1057,7 +1057,7 @@ sub create_wishlist_by_uploading_POST : Args(0) {
     $upload_metadata{'user_id'}=$user_id;
     $upload_metadata{'date'}="$timestamp";
     #parse uploaded file with appropriate plugin
-    $parser = CXGN::Pedigree::ParseUpload->new(chado_schema => $chado_schema, filename => $archived_filename_with_path);
+    $parser = CXGN::Pedigree::ParseUpload->new(i18n => $c->i18n, chado_schema => $chado_schema, filename => $archived_filename_with_path);
     $parser->load_plugin($upload_type);
     $parsed_data = $parser->parse();
     #print STDERR "Dumper of parsed data:\t" . Dumper($parsed_data) . "\n";
@@ -1066,7 +1066,7 @@ sub create_wishlist_by_uploading_POST : Args(0) {
         my $return_error = '';
         my $parse_errors;
         if (!$parser->has_parse_errors() ){
-            $c->stash->{rest} = {error_string => "Could not get parsing errors"};
+            $c->stash->{rest} = {error_string => $c->i18n->p("cross.server.could_not_get_parsing_errors", "Could not get parsing errors")};
         } else {
             $parse_errors = $parser->get_parse_errors();
             #print STDERR Dumper $parse_errors;
@@ -1136,7 +1136,7 @@ sub create_wishlist_by_uploading_POST : Args(0) {
 #    print STDERR "ACCESSIONS NOT IN TRIAL =".Dumper(\@accessions_not_in_trial)."\n";
 
     if (scalar(@accessions_not_in_trial) > 0){
-        my $trial_error = "The following accessions are not in the provided female trial: ".join(',',@accessions_not_in_trial);
+        my $trial_error = $c->i18n->p("cross.controller.the_following_accessions_are_not_in_the_provided", "The following accessions are not in the provided female trial: ").join(',',@accessions_not_in_trial);
         $c->stash->{rest} = {error_string => $trial_error };
         $c->detach();
     } else {
@@ -1172,7 +1172,7 @@ sub check_wishlist_accessions_POST : Args(0) {
     print STDERR "ACCESSIONS NOT IN TRIAL =".Dumper(\@accessions_not_in_trial)."\n";
 
     if (scalar(@accessions_not_in_trial) > 0){
-        my $error = "The following female accessions are not in the provided female trial: ".join(',',@accessions_not_in_trial);
+        my $error = $c->i18n->p("cross.controller.the_following_female_accessions_are_not_in_the", "The following female accessions are not in the provided female trial: ").join(',',@accessions_not_in_trial);
         $c->stash->{rest} = {error_string => $error };
     } else {
         $c->stash->{rest}->{success => 1}

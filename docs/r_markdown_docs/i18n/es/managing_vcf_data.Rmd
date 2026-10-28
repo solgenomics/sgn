@@ -1,0 +1,95 @@
+# Gestión de datos VCF {#managing-vcf-data}
+
+## Cargar datos VCF {#uploading-vcf-data}
+
+Los datos de genotipado en formato VCF pueden cargarse desde la interfaz web. Breedbase puede almacenar variantes genotípicas de un VCF, incluidos poliploides y variantes estructurales.
+
+Para empezar, vaya a Gestionar -> Placas de genotipado y pulse el botón que se muestra abajo:
+No es necesario cargar placas de genotipado para cargar datos VCF. Puede cargarlos para accesiones o para muestras de tejido incluidas en placas de genotipado.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/manage_genotyping_data_upload_button.png')
+```
+
+El flujo de trabajo comienza con una introducción:
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/manage_genotyping_data_upload_dialog_intro.png')
+```
+
+En el siguiente paso, seleccione o defina un proyecto de genotipado. Esta entidad de nivel superior agrupa varios eventos de genotipado. Se especifican su nombre, descripción, programa de mejoramiento e instalación de genotipado (IGD, Intertek, etc.).
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/manage_genotyping_data_upload_dialog_project.png')
+```
+
+A continuación, defina o seleccione un protocolo de genotipado. Este representa el conjunto de marcadores llamados frente a un genoma de referencia específico. Se especifican su nombre, descripción, nombre del genoma de referencia, especie y ubicación donde se generaron los datos. Como muestra la imagen, puede indicar si las muestras del archivo son accesiones o muestras de tejido de la base de datos; estas últimas se usan cuando hay una placa de genotipado guardada. También puede analizar nombres con números de secuenciación IGD añadidos, como "accession:igdnumber".
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/manage_genotyping_data_upload_dialog_protocol.png')
+```
+
+En el último paso, seleccione el archivo VCF de su equipo y cárguelo. El tamaño máximo de carga desde la interfaz web se define en la configuración de NGINX.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/manage_genotyping_data_upload_dialog_vcf.png')
+```
+
+## Buscar y descargar datos VCF {#searching-and-downloading-vcf-data}
+
+El asistente de búsqueda es la herramienta principal para consultar la base de datos. Para comenzar, vaya a Buscar -> Asistente.
+
+Una vez guardados los protocolos de genotipado, seleccione “Protocolos de genotipado” en el primer menú desplegable. Elija uno o varios protocolos y “Accesiones” en el segundo menú para ver las accesiones con genotipos guardados. Como se muestra abajo, puede filtrar por cromosoma y posiciones inicial y final. Los genotipos pueden descargarse en formatos VCF o DosageMatrix.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/manage_genotyping_data_wizard_download_prot.png')
+```
+
+Con el “Protocolo de genotipado predeterminado” configurado en el sistema, puede consultar las evaluaciones fenotípicas de campo antes de descargar genotipos y fenotipos.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/manage_genotyping_data_wizard_trial.png')
+```
+
+## Buscar protocolos {#searching-protocols}
+
+Puede buscar protocolos de genotipado en Buscar -> Protocolos de genotipado. Para descargar genotipos debe seleccionar accesiones, que puede filtrar con cualquier combinación de criterios. Si no selecciona un protocolo, se usará el predeterminado de la configuración. También puede seleccionar protocolos en el asistente.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/search_wizard_genotyping_protocols_download_main.png')
+```
+
+El menú de descarga de genotipos del asistente permite filtrar por cromosoma y posiciones inicial y final. Los genotipos pueden descargarse en formato VCF o Dosage Matrix. La matriz de relaciones genómicas (GRM) para las accesiones seleccionadas puede descargarse como matriz delimitada por tabuladores o en formato de tres columnas útil para Asreml. Si los progenitores están genotipados, puede calcular los genotipos a partir del pedigrí marcando "compute from parents". Esa opción también permite calcular la GRM con los genotipos de los progenitores.
+
+```{r echo=FALSE, out.width='75%', fig.align='center'}
+knitr::include_graphics('assets/images/search_wizard_genotyping_protocols_download_genotypes.png')
+```
+
+Como se explica en otra sección, el asistente permite filtrar valores fenotípicos por valores mínimo y máximo y descargarlos en formatos CSV y Excel.
+
+```{r echo=FALSE, out.width='75%', fig.align='center'}
+knitr::include_graphics('assets/images/search_wizard_genotyping_protocols_download_phenotypes.png')
+```
+
+
+## Páginas de detalles y eliminación {#detail-pages-and-deletion}
+
+La página de detalles del protocolo muestra información como el genoma de referencia, las líneas de encabezado del VCF cargado, los marcadores incluidos y las muestras genotipadas.
+
+La sección de marcadores muestra todos los marcadores usados y sus anotaciones, como posición, cromosoma, alelo alternativo, alelo de referencia y formato.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/genotyping_protocol_detail_page_markers.png')
+```
+
+La sección de muestras muestra todas las muestras genotipadas. Los enlaces “Descargar” de la tabla permiten obtener fácilmente el VCF con los resultados de cada muestra y todos los marcadores del protocolo. Para descargar varias a la vez, use el asistente de búsqueda.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/genotyping_protocol_detail_page_samples.png')
+```
+
+El protocolo y todos los datos de genotipado asociados pueden eliminarse desde la página del protocolo.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/genotyping_protocol_detail_page_delete.png')
+```

@@ -16,12 +16,12 @@ jQuery(document).ready(function(){
               //alert(response.accessions[0].length);
               //console.log(response.accessions[0]);
               var html = '';
-              html += 'Number of controls: ';
+              html += (window.SGN && SGN.i18n ? SGN.i18n.p('trial.counts.controls', "Number of controls: ") : "Number of controls: ");
                html += response.accessions[0].length;
               jQuery("#controls_counts").html(html);
           },
           error: function(response){
-              alert('Error displaying controls count');
+              alert((window.SGN && SGN.i18n ? SGN.i18n.p('trial.counts.controls_error', "Error displaying controls count") : "Error displaying controls count"));
           }
 
       });

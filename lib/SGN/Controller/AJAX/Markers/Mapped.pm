@@ -20,6 +20,7 @@ use strict;
 package SGN::Controller::AJAX::Markers::Mapped;
 
 use Moose;
+use SGN::I18N ();
 use JSON;
 use CXGN::Marker::Search;
 use CXGN::Marker::SearchMatView;
@@ -198,13 +199,14 @@ sub get_related_variants_of_mapped_marker : Path('/ajax/markers/mapped/related_v
 sub get_related_variants_of_mapped_marker_GET : Args(0) {
     my $self = shift;
     my $c = shift;
+    my $i18n = SGN::I18N::translate($c);
     my $marker_id = $c->req->param('marker_id');
     my $schema = $c->dbic_schema("Bio::Chado::Schema");
     my $dbh = $schema->storage->dbh();
 
     # Check for required parameters
     if ( !defined $marker_id || $marker_id eq '' ) {
-        $c->stash->{rest} = {error => 'marker_id must be provided!'};
+        $c->stash->{rest} = {error => SGN::I18N::translate($i18n, "genotype.protocol.server.marker_id_must_be_provided", "marker_id must be provided!")};
         $c->detach();
     }
 
@@ -285,6 +287,7 @@ sub query_mapped_markers : Path('/ajax/markers/mapped/query') : ActionClass('RES
 sub query_mapped_markers_GET : Args(0) {
     my $self = shift;
     my $c = shift;
+    my $i18n = SGN::I18N::translate($c);
     my $schema = $c->dbic_schema("Bio::Chado::Schema");
     my $dbh = $schema->storage->dbh();
 
@@ -300,11 +303,11 @@ sub query_mapped_markers_GET : Args(0) {
 
     # Check required parameters
     if ( defined $page && !defined $limit ) {
-        $c->stash->{rest} = {error => 'limit must be provided with page!'};
+        $c->stash->{rest} = {error => SGN::I18N::translate($i18n, "genotype.protocol.server.limit_must_be_provided_with_page", "limit must be provided with page!")};
         $c->detach();
     }
     if ( (defined $start && !defined $end) || (defined $end && !defined $start) ) {
-        $c->stash->{rest} = {error => 'start and end positions are required when filtering by position!'};
+        $c->stash->{rest} = {error => SGN::I18N::translate($i18n, "genotype.protocol.server.start_and_end_positions_are_required_when_filtering_by_position", "start and end positions are required when filtering by position!")};
         $c->detach();
     }
 

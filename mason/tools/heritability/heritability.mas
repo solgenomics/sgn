@@ -1,3 +1,7 @@
+<%once>
+use HTML::Entities ();
+</%once>
+
 <%doc>
 
 =head1 NAME
@@ -42,15 +46,15 @@ $pop_id = $trial_id if $trial_id;
 
 
 <& /util/import_javascript.mas, classes => ["d3.d3Min", "heritability.heritability"] &>
-<&| /page/info_section.mas, 
+<&| /page/info_section.mas, anchor_title => "Phenotypic heritability analysis",
       collapsible => 1, 
       collapsed   => 0, 
-      title       => "Phenotypic heritability analysis"
+      title       => HTML::Entities::encode_entities($c->i18n->p("analysis.interface.phenotypic_heritability_analysis", "Phenotypic heritability analysis"))
 &>
 
 
 <div id="heritability_canvas">
-  <input id="run_pheno_heritability" class="button" type="button" value="Run heritability" /> 
+  <input id="run_pheno_heritability" class="button" type="button" value="<% $c->i18n->p("analysis.interface.run_heritability_23333a", "Run heritability") |h %>" /><% ' ' %>
   <input type="hidden" id="population_id" value="<% $pop_id %>" />
   <div id="heritability_message"  style="font-weight:bold;text-align:center;color:#A7C942"></div>
 </div>

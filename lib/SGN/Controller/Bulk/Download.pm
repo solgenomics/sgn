@@ -9,6 +9,9 @@ use Data::Dumper;
 use File::Slurp qw | read_file |;
 use Cache::File; 
 use File::Spec;
+use SGN::I18N ();
+use Scalar::Util ();
+use HTML::Entities ();
 
 use CXGN::Bulk::BAC;
 use CXGN::Bulk::UnigeneConverter;
@@ -107,7 +110,7 @@ sub download : Path('/tools/bulk/download') Args(0) {
 	$c->forward("Bulk::Display", "display_summary_page", [ $dumpfile ]);
     }
     else {
-	$c->stash->{message}  = $bulk->error_message();
+	$c->stash->{message}  = $bulk->error_message($c->i18n);
 	$c->stash->{template} = '/generic_message.mas';
     }
 }
@@ -118,7 +121,7 @@ sub download : Path('/tools/bulk/download') Args(0) {
   Args: array; example: get_parameters($ARGV[0]);
   Ret : modified parameter array
 
-  Retrives parameters from CXGN::Page object (passed from the user).
+  Retrieves parameters from CXGN::Page object (passed from the user).
 
 =cut
 
@@ -217,8 +220,12 @@ sub get_parameters {
 
 
 sub post_only {
-  my ($page) = @_;
-  $page->error_page('This page can only accept HTTP POST requests. Please go to <a href="input.pl">Bulk Download</a> to make your selections.');
+  my ($page, $presentation) = @_;
+  my SGN::I18N $bulk_post_only_i18n = Scalar::Util::blessed($presentation) && $presentation->isa('SGN::I18N') ? $presentation : undef;
+  my $caption = HTML::Entities::encode_entities($bulk_post_only_i18n ? $bulk_post_only_i18n->p("lists_datasets.bulk.post_only", "This page can only accept HTTP POST requests. Please go to %{link} to make your selections.", {link => "__BULK_LINK__"}) : "This page can only accept HTTP POST requests. Please go to __BULK_LINK__ to make your selections.");
+  my $link = '<a href="input.pl">' . HTML::Entities::encode_entities($bulk_post_only_i18n ? $bulk_post_only_i18n->p("lists_datasets.bulk.bulk_download", "Bulk Download") : "Bulk Download") . '</a>';
+  $caption =~ s/__BULK_LINK__/$link/g;
+  $page->error_page($caption);
 }
 
 sub _invalid_params {
@@ -226,8 +233,8 @@ sub _invalid_params {
     my $c = shift;
 
     $c->throw(
-        title    => "An Error has occured",
-        message  => "ID Type must be provided",
+        title    => ($c ? $c->i18n->p("lists_datasets.bulk.error_occurred_title", "An Error has occurred") : "An Error has occurred"),
+        message  => ($c ? $c->i18n->p("lists_datasets.bulk.id_type_required", "ID Type must be provided") : "ID Type must be provided"),
         notify   => 0,
         is_error => 0,
     );

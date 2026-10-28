@@ -8,11 +8,11 @@ $stock_id
 <table class="table table-hover table-bordered" id="traitlist_summary_data" >
 <thead>
   <tr>
-    <th>Trait ID</th>
-    <th>Trait name</th>
-    <th>Average Value</th>
-    <th>Standard deviation</th>
-    <th>Count</th>
+    <th><% $c->i18n->p("phenotype.root.trait_id", "Trait ID") |h %></th>
+    <th><% $c->i18n->p("phenotype.root.trait_name.4f3e5b7", "Trait name") |h %></th>
+    <th><% $c->i18n->p("phenotype.root.average_value", "Average Value") |h %></th>
+    <th><% $c->i18n->p("phenotype.root.standard_deviation", "Standard deviation") |h %></th>
+    <th><% $c->i18n->p("accession.stock.phenotype.header.count", "Count") |h %></th>
   </tr>
 </thead>
 

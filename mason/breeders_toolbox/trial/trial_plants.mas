@@ -1,4 +1,8 @@
 
+<%once>
+use HTML::Entities ();
+</%once>
+
 <%args>
 $trial_id
 $curator => undef
@@ -13,30 +17,30 @@ $curator => undef
 
 <br>
 
-<button id="select_all_plants_btn" class="btn btn-primary">Select/Deselect All</button>
+<button id="select_all_plants_btn" class="btn btn-primary"><% $c->i18n->p('trial.card.list_selection.toggle_all', 'Select/Deselect All') |h %></button>
 
 <br>
 
 <div class="panel panel-default">
     <div class="panel-body">
-        <&| /page/info_section.mas, title => 'Add plants to a list', collapsible=>1, collapsed=>0, subtitle=>'<i>Add plants in this trial to a new or exisiting list</i>'&>
+        <&| /page/info_section.mas, title => HTML::Entities::encode_entities($c->i18n->p('trial.card.list_selection.plants_title', 'Add plants to a list')), collapsible=>1, collapsed=>0, subtitle=>'<i>'.HTML::Entities::encode_entities($c->i18n->p('trial.card.list_selection.plants_subtitle', 'Adding plants in this trial to a new or existing list')).'</i>'&>
         <br>
             <table style="width:100%">
                 <tr>
                     <td>
-                        <input style="width:85%" class="form-control input-sm" type="text" id="plant_select_new_list_name" placeholder="New list name..."/>
-                        <input style="width:85%" class="form-control input-sm" type="text" id="plant_select_new_list_description" placeholder="New list description..."/>
-                        <button class="btn btn-primary btn-sm" id="plant_select_add_to_new_list_btn" type="button">Add selection to new list</button>
+                        <input style="width:85%" class="form-control input-sm" type="text" id="plant_select_new_list_name" placeholder="<% $c->i18n->p('trial.card.list_selection.new_list_name', 'New list name...') |h %>"/>
+                        <input style="width:85%" class="form-control input-sm" type="text" id="plant_select_new_list_description" placeholder="<% $c->i18n->p('trial.card.list_selection.new_list_description', 'New list description...') |h %>"/>
+                        <button class="btn btn-primary btn-sm" id="plant_select_add_to_new_list_btn" type="button"><% $c->i18n->p('trial.card.list_selection.add_new', 'Add selection to new list') |h %></button>
                     </td>
                     <td>
                         <div id="plant_select_existing_list_name" style="width:85%"></div>
-                        <button class="btn btn-primary btn-sm" id="plant_select_add_to_existing_list_btn" type="button">Add selection to existing list</button>
+                        <button class="btn btn-primary btn-sm" id="plant_select_add_to_existing_list_btn" type="button"><% $c->i18n->p('trial.card.list_selection.add_existing', 'Add selection to existing list') |h %></button>
                     </td>
                 </tr>
             </table>
 % if ($curator) {
             <br>
-            <button id="plant_select_delete_plants" class="btn btn-danger">Delete selected plants</button>
+            <button id="plant_select_delete_plants" class="btn btn-danger"><% $c->i18n->p('trial.card.plants.delete_selected', 'Delete selected plants') |h %></button>
 % } 
         </&>
     </div>
@@ -74,8 +78,8 @@ jQuery(document).ready(function () {
                 jQuery('#plant_select_existing_list_name').html(lo.listSelect('plant_select_existing_list_name', ['plants'], undefined, undefined, undefined));
             },
             error: function(response) {
-                jQuery('#trial_plants_html').html("error");
-                alert("An error occurred");
+                jQuery('#trial_plants_html').html("<% $c->i18n->p('trial.card.plants.error', 'error') |h %>");
+                alert(window.SGN && SGN.i18n ? SGN.i18n.p('trial.card.ajax.error', 'An error occurred') : 'An error occurred');
             }
         });
     });
@@ -103,7 +107,7 @@ jQuery(document).ready(function () {
             success : function(response) {
                 if (response.error) {
                     jQuery('#working_modal').modal("hide");
-                    alert("An error occurred: " + response.error);
+                    alert((window.SGN && SGN.i18n ? SGN.i18n.p('trial.card.list.error_prefix', 'An error occurred: ') : 'An error occurred: ') + response.error);
                 } else {
                     let new_list_id = response.list_id;
                     jQuery.ajax({
@@ -111,7 +115,7 @@ jQuery(document).ready(function () {
                         success: function(response) {
                             if (response.error) {
                                 jQuery('#working_modal').modal("hide");
-                                alert("The new list was created, but an error occurred adding items to it: " + response.error);
+                                alert((window.SGN && SGN.i18n ? SGN.i18n.p('trial.card.list.created_add_error_prefix', 'The new list was created, but an error occurred adding items to it: ') : 'The new list was created, but an error occurred adding items to it: ') + response.error);
                             } else {
                                 jQuery.ajax({
                                     url : '/list/add/bulk',
@@ -127,30 +131,30 @@ jQuery(document).ready(function () {
                                     success : function(response) {
                                         jQuery('#working_modal').modal("hide");
                                         if (response.error) {
-                                            alert("The new list was created, but an error occurred adding items to it: " + response.error);
+                                            alert((window.SGN && SGN.i18n ? SGN.i18n.p('trial.card.list.created_add_error_prefix', 'The new list was created, but an error occurred adding items to it: ') : 'The new list was created, but an error occurred adding items to it: ') + response.error);
                                         } else {
-                                            alert("List created.");
+                                            alert(window.SGN && SGN.i18n ? SGN.i18n.p('trial.card.list.created', 'List created.') : 'List created.');
                                             var lo = new CXGN.List();
                                             jQuery('#plant_select_existing_list_name').html(lo.listSelect('plant_select_existing_list_name', ['plants'], undefined, undefined, undefined));
                                         }
                                     },
                                     error : function(error) {
                                         jQuery('#working_modal').modal("hide");
-                                        alert("The new list was created, but a server error occurred adding items to it.");
+                                        alert(window.SGN && SGN.i18n ? SGN.i18n.p('trial.card.list.created_add_server_error', 'The new list was created, but a server error occurred adding items to it.') : 'The new list was created, but a server error occurred adding items to it.');
                                     }
                                 });
                             }
                         },
                         error : function() {
                             jQuery('#working_modal').modal("hide");
-                            alert("The new list was created, but a server error occurred adding items to it.");
+                            alert(window.SGN && SGN.i18n ? SGN.i18n.p('trial.card.list.created_add_server_error', 'The new list was created, but a server error occurred adding items to it.') : 'The new list was created, but a server error occurred adding items to it.');
                         }
                     });
                 }
             },
             error : function() {
                 jQuery('#working_modal').modal("hide");
-                alert("A server error occurred making new list.");
+                alert(window.SGN && SGN.i18n ? SGN.i18n.p('trial.card.list.create_server_error', 'A server error occurred making new list.') : 'A server error occurred making new list.');
             }
         })
     });
@@ -173,20 +177,20 @@ jQuery(document).ready(function () {
             success : function(response) {
                 jQuery('#working_modal').modal("hide");
                 if (response.error) {
-                    alert("Error adding items to list: " + response.error);
+                    alert((window.SGN && SGN.i18n ? SGN.i18n.p('trial.card.list.add_error_prefix', 'Error adding items to list: ') : 'Error adding items to list: ') + response.error);
                 } else {
-                    alert("Plants added to list.");
+                    alert(window.SGN && SGN.i18n ? SGN.i18n.p('trial.card.plants.added_to_list', 'Plants added to list.') : 'Plants added to list.');
                 }
             },
             error : function() {
                 jQuery('#working_modal').modal("hide");
-                alert("Server error adding plants to list.");
+                alert(window.SGN && SGN.i18n ? SGN.i18n.p('trial.card.plants.add_server_error', 'Server error adding plants to list.') : 'Server error adding plants to list.');
             }
         });
     });
 
     jQuery('#plant_select_delete_plants').click(function() {
-        if (confirm("Are you sure you want to delete the selected plants? Any associated tissue samples will also be deleted. This action cannot be undone.")) {
+        if (confirm(window.SGN && SGN.i18n ? SGN.i18n.p('trial.card.plants.confirm_delete', 'Are you sure you want to delete the selected plants? Any associated tissue samples will also be deleted. This action cannot be undone.') : 'Are you sure you want to delete the selected plants? Any associated tissue samples will also be deleted. This action cannot be undone.')) {
             let plant_ids = jQuery('.exp_design_plant_select:checkbox:checked')
                 .map(function() {
                     return this.id.replace('select_plant_', '');
@@ -206,15 +210,15 @@ jQuery(document).ready(function () {
                 success : function(response) {
                     jQuery('#working_modal').modal("hide");
                     if (response.error) {
-                        alert("Error: " + response.error);
+                        alert((window.SGN && SGN.i18n ? SGN.i18n.p('trial.card.error_prefix', 'Error: ') : 'Error: ') + response.error);
                     } else {
-                        alert("Plants deleted.");
+                        alert(window.SGN && SGN.i18n ? SGN.i18n.p('trial.card.plants.deleted', 'Plants deleted.') : 'Plants deleted.');
                         window.location.reload();
                     }
                 },
                 error : function(response) {
                     jQuery('#working_modal').modal("hide");
-                    alert("A server error occurred, check console.");
+                    alert(window.SGN && SGN.i18n ? SGN.i18n.p('trial.card.server_console_error', 'A server error occurred, check console.') : 'A server error occurred, check console.');
                 }
             });
         } 

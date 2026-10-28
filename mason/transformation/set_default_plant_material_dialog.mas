@@ -10,14 +10,14 @@ $breeding_program_name
     <div class="modal-dialog modal-lg" role="document">
         <div class="modal-content ui-front">
             <div class="modal-header text-center">
-                <button type="reset" class="close" id="set_default_plant_material_dismiss_button_1" name="set_default_plant_material_dismiss_button" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                <h4 class="modal-title" id="setDefaultPlantMaterialDialog">Set Default Plant Material for Transformation</h4>
+                <button type="reset" class="close" id="set_default_plant_material_dismiss_button_1" name="set_default_plant_material_dismiss_button" aria-label="<% $c->i18n->p("global.dataset_publish.close", "Close") |h %>"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="setDefaultPlantMaterialDialog"><% $c->i18n->p("transformation.root.set_default_plant_material_for_transformation", "Set Default Plant Material for Transformation") |h %></h4>
             </div>
             <div class="modal-body" id="set_default_plant_material_body">
                 <div class="container-fluid">
                     <form class="form-horizontal" role="form" method="post" enctype="multipart/form-data" encoding="multipart/form-data">
                         <div class="form-group">
-                            <label class="col-sm-5 control-label" >Plant Material (accession name): </label>
+                            <label class="col-sm-5 control-label" ><% $c->i18n->p("transformation.plant_material_accession_name", "Plant Material (accession name):") |h %> </label>
                             <div class="col-sm-7">
                                 <input class="form-control" type="text" id="default_plant_material_input" name="default_plant_material_input"  />
                             </div>
@@ -26,8 +26,8 @@ $breeding_program_name
                 </div>
             </div>
             <div class="modal-footer">
-                <button id="set_default_plant_material_dismiss_button_2" name="set_default_plant_material_dismiss_button" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-                <button type="button" class="btn btn-primary" id="set_default_plant_material_submit">Submit</button>
+                <button id="set_default_plant_material_dismiss_button_2" name="set_default_plant_material_dismiss_button" type="button" class="btn btn-default" data-dismiss="modal"><% $c->i18n->p("global.dataset_publish.close", "Close") |h %></button>
+                <button type="button" class="btn btn-primary" id="set_default_plant_material_submit"><% $c->i18n->p("global.manage_file_share_dump.submit", "Submit") |h %></button>
             </div>
         </div>
     </div>
@@ -37,19 +37,19 @@ $breeding_program_name
     <div class="modal-dialog" role="document">
         <div class="modal-content">
             <div class="modal-header">
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                <h4 class="modal-title" id="defaultPlantMaterialSavedDialog">Success</h4>
+                <button type="button" class="close" data-dismiss="modal" aria-label="<% $c->i18n->p("global.dataset_publish.close", "Close") |h %>"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="defaultPlantMaterialSavedDialog"><% $c->i18n->p("cross.ui.success", "Success") |h %></h4>
             </div>
             <div class="modal-body">
                 <div class="container-fluid">
                     <p>
                         <span class="ui-icon ui-icon-circle-check" style="float: left; margin: 0 7px 50px 0;"></span>
-                        The default plant material was set successfully.
+                        <% $c->i18n->p("transformation.root.the_default_plant_material_was_set_successfully", "The default plant material was set successfully.") |h %>
                     </p>
                 </div>
             </div>
             <div class="modal-footer">
-                <button id="dismiss_default_plant_material_saved_dialog" type="button" class="btn btn-default" data-dismiss="modal">Close & Reload</button>
+                <button id="dismiss_default_plant_material_saved_dialog" type="button" class="btn btn-default" data-dismiss="modal"><% $c->i18n->p("seedlots.ui.close_reload", "Close & Reload") |h %></button>
             </div>
         </div>
     </div>
@@ -76,7 +76,7 @@ jQuery(document).ready(function(){
 
         var default_plant_material = jQuery("#default_plant_material_input").val();
         if (!default_plant_material) {
-            alert("Plant material is required");
+            alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("transformation.plant_material_is_required", "Plant material is required") : "Plant material is required"));
             return;
         }
 
@@ -104,7 +104,7 @@ jQuery(document).ready(function(){
             },
             error: function(response){
                 jQuery('#working_modal').modal('hide');
-                alert('An error occurred saving default plant material');
+                alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("transformation.root.an_error_occurred_saving_default_plant_material", "An error occurred saving default plant material") : 'An error occurred saving default plant material'));
             }
         });
 

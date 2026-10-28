@@ -5,7 +5,7 @@ $website_name => ''
 $email_address_to_display => ''
 </%args>
 
-<& "/page/page_title.mas", title => "Contact $website_name" &>
+<& "/page/page_title.mas", title => $c->i18n->p("help.contact.page_title", "Contact %{site}", { site => $website_name // '' }) &>
 
 <div class="container-fluid">
     <div class="well">
@@ -19,11 +19,17 @@ $email_address_to_display => ''
 % #Uses Perl to print out the fields with similar HTML tags
 <%perl>
 my $infoNeeded = ["name", "email", "subject", ];
+my %contact_fields = (
+    "name" => $c->i18n->p("help.contact.field.name", "Name"),
+    "email" => $c->i18n->p("help.contact.field.email", "Email"),
+    "subject" => $c->i18n->p("help.contact.field.subject", "Subject"),
+);
+
 </%perl>
 
 % foreach my $info_category (@$infoNeeded) {
     <div class="form-group">
-      <label class="col-sm-2 control-label"><% ucfirst $info_category %>* :
+      <label class="col-sm-2 control-label"><% $contact_fields{$info_category} |h %>* :
       </label>
       <div class="col-sm-10">
         <input type="text" class="form-control" value="" name="<% $info_category %>"></input>
@@ -32,14 +38,14 @@ my $infoNeeded = ["name", "email", "subject", ];
 % }
 
     <div class="form-group">
-      <label class="col-sm-2 control-label">Body* :
+      <label class="col-sm-2 control-label"><% $c->i18n->p("help.contact.field.body", "Body") |h %>* :
       </label>
       <div class="col-sm-10">
         <textarea rows="12" class="form-control" name="body"></textarea>
       </div>
     </div>
     <div class="form-group">
-      <label class="col-sm-2 control-label">What is <br/><% $contact_form_human_question %>?* :
+      <label class="col-sm-2 control-label"><% $c->i18n->p("help.contact.challenge", "What is ") |h %><br/><% $contact_form_human_question %>?* :
       </label>
       <div class="col-sm-10">
         <input type="text" class="form-control" value="" name="contact_form_human_answer"></input>
@@ -48,27 +54,27 @@ my $infoNeeded = ["name", "email", "subject", ];
     <div class="form-group">
       <label class="col-sm-2 control-label"></label>
       <div class="col-sm-10">
-        <h5 valign="middle" style="color:red; font-size:90%; font-style:italic;">Fields Marked With <% '"*"' |h %> Are Required.</h5>
+        <h5 valign="middle" style="color:red; font-size:90%; font-style:italic;"><% $c->i18n->p("help.contact.required_prefix", "Fields Marked With ") |h %><% '"*"' |h %><% $c->i18n->p("help.contact.required_suffix", " Are Required.") |h %></h5>
       </div>
     </div>
     <hr>
-    <button style="float:right" type="submit" class="btn btn-primary btn-lg" id="contact_form_submit">Submit</button>
+    <button style="float:right" type="submit" class="btn btn-primary btn-lg" id="contact_form_submit"><% $c->i18n->p("help.contact.submit", "Submit") |h %></button>
     <br/><br/>
 
   </form>
   </div>
 
   <br/>
-  <h2>Contact Us</h2>
+  <h2><% $c->i18n->p("help.contact.title", "Contact Us") |h %></h2>
   <br/>
   <table class="table table-hover table-bordered">
      <tbody>
       <tr>
-        <td><b>Email</b></td>
-	<td>Note that the contact email address <% $email_address_to_display %> has been deactivated due to extreme levels of spam. <br/>Use this contact form instead.</td>
+        <td><b><% $c->i18n->p("help.contact.field.email", "Email") |h %></b></td>
+	<td><% $c->i18n->p("help.contact.deactivated_email", "Note that the contact email address %{email} has been deactivated due to extreme levels of spam. ", { email => $email_address_to_display // '' }) |h %><br/><% $c->i18n->p("help.contact.use_form", "Use this contact form instead.") |h %></td>
       </tr>
       <tr>
-        <td><b>Mailing Address</b></td>
+        <td><b><% $c->i18n->p("help.contact.mailing_address", "Mailing Address") |h %></b></td>
 	<td>Sol Genomics Network<br />
 	c/o Lukas Mueller<br />
 	Boyce Thompson Institute<br />
@@ -90,8 +96,8 @@ my $infoNeeded = ["name", "email", "subject", ];
     <div class="modal-dialog" role="document">
         <div class="modal-content">
             <div class="modal-header" style="text-align: center">
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                <h4 class="modal-title" id="submitContactResponseDialog">Contact Form</h4>
+                <button type="button" class="close" data-dismiss="modal" aria-label="<% $c->i18n->p("help.contact.aria_close", "Close") |h %>"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="submitContactResponseDialog"><% $c->i18n->p("help.contact.form_title", "Contact Form") |h %></h4>
             </div>
             <div class="modal-body">
                 <div class="container-fluid">
@@ -100,7 +106,7 @@ my $infoNeeded = ["name", "email", "subject", ];
                 </div>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-default" data-dismiss="modal"><% $c->i18n->p("help.contact.close", "Close") |h %></button>
             </div>
         </div>
     </div>
@@ -117,19 +123,19 @@ jQuery(document).ready(function () {
         var body = jQuery('textarea[name="body"]').val();
         var challenge_answer = jQuery('input[name="contact_form_human_answer"]').val();
         if (challenge_answer != <% $contact_form_human_answer %>){
-            jQuery('#submit_contact_form_response_message').html("Please prove you are a human by answering the simple math question.");
+            jQuery('#submit_contact_form_response_message').html((window.SGN && window.SGN.i18n ? SGN.i18n.p("help.contact.human_check", "Please prove you are a human by answering the simple math question.") : "Please prove you are a human by answering the simple math question."));
             jQuery('#submit_contact_form_response').modal('show');
         } else if (subject == '' || !subject){
-            jQuery('#submit_contact_form_response_message').html("Subject is required. Please fill in this field.");
+            jQuery('#submit_contact_form_response_message').html((window.SGN && window.SGN.i18n ? SGN.i18n.p("help.contact.validation.subject", "Subject is required. Please fill in this field.") : "Subject is required. Please fill in this field."));
             jQuery('#submit_contact_form_response').modal('show');
         } else if (name == '' || !name){
-            jQuery('#submit_contact_form_response_message').html("Name is required. Please fill in this field.");
+            jQuery('#submit_contact_form_response_message').html((window.SGN && window.SGN.i18n ? SGN.i18n.p("help.contact.validation.name", "Name is required. Please fill in this field.") : "Name is required. Please fill in this field."));
             jQuery('#submit_contact_form_response').modal('show');
         } else if (email == '' || !email){
-            jQuery('#submit_contact_form_response_message').html("Email is required. Please fill in this field.");
+            jQuery('#submit_contact_form_response_message').html((window.SGN && window.SGN.i18n ? SGN.i18n.p("help.contact.validation.email", "Email is required. Please fill in this field.") : "Email is required. Please fill in this field."));
             jQuery('#submit_contact_form_response').modal('show');
         } else if (body == '' || !body){
-            jQuery('#submit_contact_form_response_message').html("Body is required. Please fill in this field.");
+            jQuery('#submit_contact_form_response_message').html((window.SGN && window.SGN.i18n ? SGN.i18n.p("help.contact.validation.body", "Body is required. Please fill in this field.") : "Body is required. Please fill in this field."));
             jQuery('#submit_contact_form_response').modal('show');
         } else {
             jQuery.ajax ( {
@@ -151,10 +157,10 @@ jQuery(document).ready(function () {
                     var html_return;
                     if (response.error){
                         html = response.error;
-                        html_return = '<div class="panel panel-danger"><div class="panel-heading">Error</div><div class="panel-body">'+html+'</div></div>';
+                        html_return = ("<div class=\"panel panel-danger\"><div class=\"panel-heading\">" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? SGN.i18n.p("help.contact.error_heading", "Error") : "Error")).html().replace(/"/g, "&quot;").replace(/'/g, "&#39;") + "</div><div class=\"panel-body\">")+html+'</div></div>';
                     } else {
-                        html = "Thank you for your message. We will reply as soon as possible.";
-                        html_return = '<div class="panel panel-success"><div class="panel-heading">Success</div><div class="panel-body">'+html+'</div></div>';
+                        html = (window.SGN && window.SGN.i18n ? SGN.i18n.p("help.contact.thanks", "Thank you for your message. We will reply as soon as possible.") : "Thank you for your message. We will reply as soon as possible.");
+                        html_return = ("<div class=\"panel panel-success\"><div class=\"panel-heading\">" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? SGN.i18n.p("help.contact.success_heading", "Success") : "Success")).html().replace(/"/g, "&quot;").replace(/'/g, "&#39;") + "</div><div class=\"panel-body\">")+html+'</div></div>';
                     }
                     jQuery('#contact_form_return_message').html(html_return);
                     jQuery('#submit_contact_form_response_message').html(html);
@@ -163,8 +169,8 @@ jQuery(document).ready(function () {
                 error: function(response){
                     console.log(response);
                     jQuery('#working_modal').modal('hide');
-                    var html = "Error posting message! Please contact us. : "+response;
-                    var html_return = '<div class="panel panel-danger"><div class="panel-heading">Error</div><div class="panel-body">'+html+'</div></div>';
+                    var html = (window.SGN && window.SGN.i18n ? SGN.i18n.p("help.contact.posting_error_prefix", "Error posting message! Please contact us. : ") : "Error posting message! Please contact us. : ")+response;
+                    var html_return = ("<div class=\"panel panel-danger\"><div class=\"panel-heading\">" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? SGN.i18n.p("help.contact.error_heading", "Error") : "Error")).html().replace(/"/g, "&quot;").replace(/'/g, "&#39;") + "</div><div class=\"panel-body\">")+html+'</div></div>';
                     jQuery('#contact_form_return_message').html(html_return);
                     jQuery('#submit_contact_form_response_message').html(html);
                     jQuery('#submit_contact_form_response').modal('show');
