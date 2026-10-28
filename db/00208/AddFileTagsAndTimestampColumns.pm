@@ -38,6 +38,7 @@ package AddFileTagsAndTimestampColumns;
 
 use Moose;
 use Config::Any;
+use Data::Dumper;
 extends 'CXGN::Metadata::Dbpatch';
 
 
@@ -59,9 +60,9 @@ sub patch {
 
     print STDOUT "\nExecuting the SQL commands.\n";
 
-    my $test_conf  = "../sgn_test.conf";
-    my $conf_file  = "../sgn.conf";
-    my $local_conf = "../sgn_local.conf";
+    my $test_conf  = "../../sgn_test.conf";
+    my $conf_file  = "../../sgn.conf";
+    my $local_conf = "../../sgn_local.conf";
 
     my $cfg = Config::Any->load_files({files=> [$test_conf, $conf_file, $local_conf], use_ext=>1 });
 
