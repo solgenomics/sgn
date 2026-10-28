@@ -29,9 +29,9 @@ sub create_trait :Path('/ajax/trait/create') {
     my $name = $c->req->param('name') ? $c->req->param('name') : undef;
     my $definition = $c->req->param('definition') ? $c->req->param('definition') : undef;
     my $format = $c->req->param('format') ? $c->req->param('format') : undef;
-    my $default_value = $c->req->param('default_value') ? $c->req->param('default_value') : undef;
-    my $minimum = $c->req->param('minimum') ? $c->req->param('minimum') : undef;
-    my $maximum = $c->req->param('maximum') ? $c->req->param('maximum') : undef;
+    my $default_value = defined($c->req->param('default_value')) ? $c->req->param('default_value') : undef;
+    my $minimum = defined($c->req->param('minimum')) ? $c->req->param('minimum') : undef;
+    my $maximum = defined($c->req->param('maximum')) ? $c->req->param('maximum') : undef;
     my $categories = $c->req->param('categories') ? $c->req->param('categories') : undef;
     my $category_details = $c->req->param('category_details') ? $c->req->param('category_details') : undef;
     my $repeat_type = $c->req->param('repeat_type') ? $c->req->param('repeat_type') : undef;
@@ -196,7 +196,7 @@ sub edit_trait :Path('/ajax/trait/edit') {
         });
     };
     if ($@) {
-        $c->stash->{rest} = {error => "An error occurred retreiving cvterm information: $@\n"};
+        $c->stash->{rest} = {error => "An error occurred retrieving cvterm information: $@\n"};
         return;
     }
 

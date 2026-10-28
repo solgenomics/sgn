@@ -174,8 +174,6 @@
             </div>
             <div class="modal-body">
                 <div class="container-fluid">
-                    <b>Transactions may be uploaded in an Excel file (.xls or .xlsx)</b>
-                    <br />
                     <b>Header:</b>
                     <br>
                     The first row (header) must contain the following:
@@ -187,7 +185,7 @@
                                 <td>from_seedlot_name</td>
                                 <td>to_seedlot_name</td>
                                 <td>amount</td>
-                                <td>weight(g)</td>
+                                <td>weight_gram</td>
                                 <td>operator_name</td>
                                 <td>transaction_description</td>
                             </tr>
@@ -198,9 +196,9 @@
                         <li><b>from_seedlot_name:</b> Must exist in the database. Seeds were taken from this seedlot.</li>
                         <li><b>to_seedlot_name:</b> Must exist in the database. Seeds were added to this seedlot.</li>
                         <li>
-                            <b>amount:</b> Number of seeds being transaferred. Can be provided in conjunction with weight(g). Must provide a value for amount or weight(g) or both.
+                            <b>amount:</b> Number of seeds being transaferred. Can be provided in conjunction with weight_gram. Must provide a value for amount or weight_gram or both.
                             <br/><b>AND/OR</b><br/>
-                            <b>weight(g):</b> Weight in grams of seedlot being transferred. Can be provided in conjunction with amount. Must provide a value for amount or weight(g) or both.
+                            <b>weight_gram:</b> Weight in grams of seedlot being transferred. Can be provided in conjunction with amount. Must provide a value for amount or weight_gram or both.
                         </li>
                         <li><b>operator_name:</b> Name of the person who oversaw the transaction process. Can be any name.</li>
                     </ul>
@@ -209,6 +207,7 @@
                         <li><b>transaction_description:</b> Information about why this transaction is processed.</li>
                     </ul>
                 </div>
+                <& /help/file_upload_type.mas, type => "Seedlot Transactions", optional_column => 1 &>
             </div>
             <div class="modal-footer">
                 <button id="close_seedlots_to_seedlots_info_dialog" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
@@ -226,8 +225,6 @@
             </div>
             <div class="modal-body">
                 <div class="container-fluid">
-                    <b>Transactions may be uploaded in an Excel file (.xls or .xlsx)</b>
-                    <br />
                     <b>Header:</b>
                     <br>
                     The first row (header) must contain the following:
@@ -238,7 +235,7 @@
                             <tr>
                                 <td>from_seedlot_name</td>
                                 <td>amount</td>
-                                <td>weight(g)</td>
+                                <td>weight_gram</td>
                                 <td>operator_name</td>
                                 <td>transaction_description</td>
                                 <td>to_new_seedlot_name</td>
@@ -252,9 +249,9 @@
                     <ul>
                         <li><b>from_seedlot_name:</b> Must exist in the database. Seeds were taken from this seedlot.</li>
                         <li>
-                            <b>amount:</b> Number of seeds being transaferred. Can be provided in conjunction with weight(g). Must provide a value for amount or weight(g) or both.
+                            <b>amount:</b> Number of seeds being transferred. Can be provided in conjunction with weight_gram. Must provide a value for amount or weight_gram or both.
                             <br/><b>AND/OR</b><br/>
-                            <b>weight(g):</b> Weight in grams of seedlot being transferred. Can be provided in conjunction with amount. Must provide a value for amount or weight(g) or both.
+                            <b>weight_gram:</b> Weight in grams of seedlot being transferred. Can be provided in conjunction with amount. Must provide a value for amount or weight_gram or both.
                         </li>
                         <li><b>operator_name:</b> Name of the person who oversaw the transaction process. Can be any name.</li>
                         <li><b>to_new_seedlot_name:</b> Must NOT exist in the database. New seedlot will be created using amount/weight of seeeds from existing seedlot.</li>
@@ -267,6 +264,7 @@
                         <li><b>new_seedlot_quality:</b> Status or condition of the seedlot, for example "ok", "moldy", "insect damage" etc.</li>
                     </ul>
                 </div>
+                <& /help/file_upload_type.mas, type => "Seedlot Transactions", optional_column => 1 &>
             </div>
             <div class="modal-footer">
                 <button id="close_seedlots_to_new_seedlots_info_dialog" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
@@ -285,7 +283,6 @@
             <div class="modal-body">
                 <div class="container-fluid">
                     <b>Transactions may be uploaded in an Excel file (.xls or .xlsx)</b>
-                    <br />
                     <b>Header:</b>
                     <br>
                     The first row (header) must contain the following:
@@ -298,7 +295,7 @@
                                 <td>from_seedlot_name</td>
                                 <td>to_plot_name</td>
                                 <td>amount</td>
-                                <td>weight(g)</td>
+                                <td>weight_gram</td>
                                 <td>operator_name</td>
                                 <td>transaction_description</td>
                             </tr>
@@ -309,9 +306,9 @@
                         <li><b>from_seedlot_name:</b> Must exist in the database. Seeds were taken from this seedlot.</li>
                         <li><b>to_plot_name:</b> Must exist in the database. Seeds were used for this plot. You can also record seedlot used for each plot during uploading existing trial on the Manage Trials page</li>
                         <li>
-                            <b>amount:</b> Number of seeds being transaferred. Can be provided in conjunction with weight(g). Must provide a value for amount or weight(g) or both.
+                            <b>amount:</b> Number of seeds being transaferred. Can be provided in conjunction with weight_gram. Must provide a value for amount or weight_gram or both.
                             <br/><b>AND/OR</b><br/>
-                            <b>weight(g):</b> Weight in grams of seedlot being transferred. Can be provided in conjunction with amount. Must provide a value for amount or weight(g) or both.
+                            <b>weight_gram:</b> Weight in grams of seedlot being transferred. Can be provided in conjunction with amount. Must provide a value for amount or weight_gram or both.
                         </li>
                         <li><b>operator_name:</b> Name of the person who oversaw the transaction process. Can be any name.</li>
                     </ul>
@@ -337,8 +334,6 @@
             </div>
             <div class="modal-body">
                 <div class="container-fluid">
-                    <b>Transactions may be uploaded in an Excel file (.xls or .xlsx)</b>
-                    <br />
                     <b>Header:</b>
                     <br>
                     The first row (header) must contain the following:
@@ -349,7 +344,7 @@
                             <tr>
                                 <td>from_seedlot_name</td>
                                 <td>amount</td>
-                                <td>weight(g)</td>
+                                <td>weight_gram</td>
                                 <td>operator_name</td>
                                 <td>transaction_description</td>
                             </tr>
@@ -359,17 +354,69 @@
                     <ul>
                         <li><b>from_seedlot_name:</b> Must exist in the database. Seeds were taken from this seedlot.</li>
                         <li>
-                            <b>amount:</b> Number of seeds being transferred. Can be provided in conjunction with weight(g). Must provide a value for amount or weight(g) or both.
+                            <b>amount:</b> Number of seeds being transaferred. Can be provided in conjunction with weight_gram. Must provide a value for amount or weight_gram or both.
                             <br/><b>AND/OR</b><br/>
-                            <b>weight(g):</b> Weight in grams of seedlot being transferred. Can be provided in conjunction with amount. Must provide a value for amount or weight(g) or both.
+                            <b>weight_gram:</b> Weight in grams of seedlot being transferred. Can be provided in conjunction with amount. Must provide a value for amount or weight_gram or both.
                         </li>
                         <li><b>operator_name:</b> Name of the person who oversaw the transaction process. Can be any name.</li>
                         <li><b>transaction_description:</b> Information about why this transaction is processed.</li>
                     </ul>
                 </div>
+                <& /help/file_upload_type.mas, type => "Seedlot Transactions", optional_column => 0 &>
             </div>
             <div class="modal-footer">
                 <button id="close_seedlots_to_unspecified_names_info_dialog" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="sources_to_existing_seedlots_info_dialog" name="sources_to_existing_seedlots_info_dialog" tabindex="-1" role="dialog" aria-labelledby="sourcesToExistingSeedlotsInfoDialog">
+    <div class="modal-dialog modal-xl" role="document">
+        <div class="modal-content">
+            <div class="modal-header" style="text-align: center">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="sourcesToExistingSeedlotsInfoDialog">Upload Template Information For Accession/Cross to Existing Seedlot Transactions  </h4>
+            </div>
+            <div class="modal-body">
+                <div class="container-fluid">
+                    <b>Header:</b>
+                    <br>
+                    The first row (header) must contain the following:
+                    <br />
+                    <table class="table table-hover table-bordered table-condensed" >
+                        <thead></thead>
+                        <tbody>
+                            <tr>
+                                <td>from_source_name</td>
+                                <td>to_seedlot_name</td>
+                                <td>amount</td>
+                                <td>weight_gram</td>
+                                <td>operator_name</td>
+                                <td>transaction_description</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <b>Required fields:</b>
+                    <ul>
+                        <li><b>from_source_name:</b> Must be the same as the corresponding seedlot content.</li>
+                        <li><b>to_seedlot_name:</b> Must exist in the database.</li>
+                        <li>
+                            <b>amount:</b> Number of seeds being added. Can be provided in conjunction with weight_gram. Must provide a value for amount or weight_gram or both.
+                            <br/><b>AND/OR</b><br/>
+                            <b>weight_gram:</b> Weight in grams of seedlot being added. Can be provided in conjunction with amount. Must provide a value for amount or weight_gram or both.
+                        </li>
+                        <li><b>operator_name:</b> Name of the person who oversaw the transaction process. Can be any name.</li>
+                    </ul>
+                    <b>Optional fields:</b>
+                    <ul>
+                        <li><b>transaction_description:</b> Information about why this transaction is processed.</li>
+                    </ul>
+                </div>
+                <& /help/file_upload_type.mas, type => "Seedlot Transactions", optional_column => 1 &>
+            </div>
+            <div class="modal-footer">
+                <button id="close_accessions_crossses_to_seedlots_info_dialog" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
             </div>
         </div>
     </div>

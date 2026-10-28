@@ -15,12 +15,13 @@
                     <&| /util/workflow.mas, id=> "transactions_upload_workflow" &>
                         <&| /util/workflow.mas:step, title=> "Intro" &>
                             <& /page/page_title.mas, title=>"Upload Seedlot Transactions" &>
-                            <center>You can upload 3 different types of seedlot transactions. All of the transactions in each file have to be the same type.</center>
+                            <center>You can upload 4 different types of seedlot transactions. All of the transactions in each file have to be the same type.</center>
                             <ul>
                                 <li>Transferring seeds from existing seedlot to another existing seedlot.</li>
                                 <li>Transferring seeds from existing seedlot to a new seedlot. A new seedlot is created beforing adding new transaction.</li>
                                 <li>Removing seeds from existing seedlot to unspecified seedlot name or plot name</li>
                                 <li><b>Note:</b>To transfer seeds from existing seedlot to a previously stored plot, Please use <b>Upload Seedlots Planted in Trial</b> link in the Experimental Design section on the Trial Detail page.</li>
+                                <li>Add additional seeds from accession or cross to existing seedlot</li>
                             </ul>
                             <br/><br/>
                             <center>
@@ -39,6 +40,7 @@
                                             <option value="seedlots_to_seedlots">From existing seedlots to other existing seedlots</option>
                                             <option value="seedlots_to_new_seedlots">From existing seedlots to new seedlots</option>
                                             <option value="seedlots_to_unspecified_names">From existing seedlots to unpecified seedlots/plots</option>
+                                            <option value="sources_to_existing_seedlots">From accessions or crosses to existing seedlots</option>
                                         </select>
                                     </div>
                                 </div>
@@ -64,7 +66,7 @@
                                                 <div class="panel panel-default">
                                                     <div class="panel-body">
                                                         <div class="form-group">
-                                                            <label class="col-sm-6 control-label">Select an .xls or .xlsx File: </label>
+                                                            <label class="col-sm-6 control-label">Select a File: </label>
                                                             <div class="col-sm-6">
                                                                 <input type="file" name="seedlots_to_seedlots_file" id="seedlots_to_seedlots_file" encoding="multipart/form-data" />
                                                             </div>
@@ -115,7 +117,7 @@
                                                 <div class="panel panel-default">
                                                     <div class="panel-body">
                                                         <div class="form-group">
-                                                            <label class="col-sm-6 control-label">Select an .xls or .xlsx File: </label>
+                                                            <label class="col-sm-6 control-label">Select a File: </label>
                                                             <div class="col-sm-6">
                                                                 <input type="file" name="seedlots_to_new_seedlots_file" id="seedlots_to_new_seedlots_file" encoding="multipart/form-data" />
                                                             </div>
@@ -148,7 +150,7 @@
                                                 <div class="panel panel-default">
                                                     <div class="panel-body">
                                                         <div class="form-group">
-                                                            <label class="col-sm-6 control-label">Select an .xls or .xlsx File: </label>
+                                                            <label class="col-sm-6 control-label">Select a File: </label>
                                                             <div class="col-sm-6">
                                                                 <input type="file" name="seedlots_to_plots_file" id="seedlots_to_plots_file" encoding="multipart/form-data" />
                                                             </div>
@@ -181,9 +183,42 @@
                                                 <div class="panel panel-default">
                                                     <div class="panel-body">
                                                         <div class="form-group">
-                                                            <label class="col-sm-6 control-label">Select an .xls or .xlsx File: </label>
+                                                            <label class="col-sm-6 control-label">Select a File: </label>
                                                             <div class="col-sm-6">
                                                                 <input type="file" name="seedlots_to_unspecified_names_file" id="seedlots_to_unspecified_names_file" encoding="multipart/form-data" />
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div id="sources_to_existing_seedlots_section" style="display:none">
+                                    <br/>
+                                    <hr class ="solid">
+                                    <center>
+                                        <h4>You want to add more seeds from accessions/crosses to existing seedlots</h4>
+                                    </center>
+                                    <div class="well well-sm">
+                                        <div class="row">
+                                            <div class="col-sm-4">
+                                                <&| /page/explanation.mas, title=>'Template information' &>
+                                                    <p>
+                                                        <b>File format information</b>
+                                                        <br>
+                                                        <a id="sources_to_existing_seedlots_format">Spreadsheet format</a>
+                                                    </p>
+                                                </&>
+                                            </div>
+                                            <div class="col-sm-8">
+                                                <br/>
+                                                <div class="panel panel-default">
+                                                    <div class="panel-body">
+                                                        <div class="form-group">
+                                                            <label class="col-sm-6 control-label">Select a File: </label>
+                                                            <div class="col-sm-6">
+                                                                <input type="file" name="sources_to_existing_seedlots_file" id="sources_to_existing_seedlots_file" encoding="multipart/form-data" />
                                                             </div>
                                                         </div>
                                                     </div>
@@ -266,12 +301,14 @@ jQuery(document).ready(function(){
             jQuery("#seedlots_to_plots_section").hide();
             jQuery("#seedlots_to_unspecified_names_section").hide();
             jQuery("#submit_transactions_button_section").hide();
+            jQuery("#sources_to_existing_seedlots_section").hide();
         }
         if (jQuery(this).val() == "seedlots_to_seedlots"){
             jQuery("#seedlots_to_seedlots_section").show();
             jQuery("#seedlots_to_new_seedlots_section").hide();
             jQuery("#seedlots_to_plots_section").hide();
             jQuery("#seedlots_to_unspecified_names_section").hide();
+            jQuery("#sources_to_existing_seedlots_section").hide();
             jQuery("#submit_transactions_button_section").show();
         }
         if(jQuery(this).val() == "seedlots_to_new_seedlots"){
@@ -279,6 +316,7 @@ jQuery(document).ready(function(){
             jQuery("#seedlots_to_new_seedlots_section").show();
             jQuery("#seedlots_to_plots_section").hide();
             jQuery("#seedlots_to_unspecified_names_section").hide();
+            jQuery("#sources_to_existing_seedlots_section").hide();
             jQuery("#submit_transactions_button_section").show();
         }
         if (jQuery(this).val() == "seedlots_to_plots" ){
@@ -286,44 +324,29 @@ jQuery(document).ready(function(){
             jQuery("#seedlots_to_new_seedlots_section").hide();
             jQuery("#seedlots_to_plots_section").show();
             jQuery("#seedlots_to_unspecified_names_section").hide();
+            jQuery("#sources_to_existing_seedlots_section").hide();
             jQuery("#submit_transactions_button_section").show();
         }
         if (jQuery(this).val() == "seedlots_to_unspecified_names" ){
             jQuery("#seedlots_to_seedlots_section").hide();
             jQuery("#seedlots_to_new_seedlots_section").hide();
             jQuery("#seedlots_to_plots_section").hide();
+            jQuery("#sources_to_existing_seedlots_section").hide();
             jQuery("#seedlots_to_unspecified_names_section").show();
+            jQuery("#submit_transactions_button_section").show();
+        }
+        if (jQuery(this).val() == "sources_to_existing_seedlots" ){
+            jQuery("#seedlots_to_seedlots_section").hide();
+            jQuery("#seedlots_to_new_seedlots_section").hide();
+            jQuery("#seedlots_to_plots_section").hide();
+            jQuery("#seedlots_to_unspecified_names_section").hide();
+            jQuery("#sources_to_existing_seedlots_section").show();
             jQuery("#submit_transactions_button_section").show();
         }
     });
 
     jQuery("#upload_transactions_submit").click(function() {
         upload_transactions_file();
-    });
-
-    jQuery('#upload_transactions_form').iframePostForm({
-        json: true,
-        post: function() {
-            jQuery("#working_modal").modal("show");
-        },
-        complete: function(response) {
-            jQuery("#working_modal").modal("hide");
-            if (response.error_string) {
-                jQuery("#upload_transactions_error_display tbody").html('');
-                jQuery("#upload_transactions_error_display tbody").append(response.error_string);
-                jQuery("#upload_transactions_error_display").modal("show");
-
-                return;
-            }
-            if (response.error) {
-                alert(response.error);
-                return;
-            }
-            if (response.success) {
-                Workflow.focus("#transactions_upload_workflow", -1); //Go to success page
-                Workflow.check_complete("#transactions_upload_workflow");
-            }
-        }
     });
 
     jQuery("#seedlots_to_seedlots_format").click(function() {
@@ -342,6 +365,9 @@ jQuery(document).ready(function(){
         jQuery("#seedlots_to_unspecified_names_info_dialog").modal("show");
     });
 
+    jQuery("#sources_to_existing_seedlots_format").click(function() {
+        jQuery("#sources_to_existing_seedlots_info_dialog").modal("show");
+    });
 
     jQuery("[name='upload_transactions_dismiss_button']").click(function() {
         jQuery('#upload_transactions_dialog').modal('hide');
@@ -350,6 +376,7 @@ jQuery(document).ready(function(){
         jQuery('#seedlots_to_plots_file').val('');
         jQuery('#seedlots_to_new_seedlots_file').val('');
         jQuery('#seedlots_to_unspecified_names_file').val('');
+        jQuery('#sources_to_existing_seedlots_file').val('');
         jQuery('#new_seedlot_location').val('');
         jQuery('#new_seedlot_organization_name').val('');
         location.reload();
@@ -367,8 +394,11 @@ function upload_transactions_file() {
             if (uploadSeedlotsToPlots === ''){
                 var uploadSeedlotsToUnspecified = jQuery("#seedlots_to_unspecified_names_file").val();
                 if (uploadSeedlotsToUnspecified === '') {
-                    alert("Please select a file");
-                    return;
+                    var uploadSourcesToExistingSeedlots = jQuery("#sources_to_existing_seedlots_file").val();
+                    if (uploadSourcesToExistingSeedlots === '') {
+                        alert("Please select a file");
+                        return;
+                    }
                 }
             }
         }
@@ -387,9 +417,32 @@ function upload_transactions_file() {
         }
     }
 
-    jQuery('#upload_transactions_form').attr("action", "/ajax/breeders/upload_transactions");
+    jQuery("#working_modal").modal("show");
+    jQuery.ajax({
+        url: "/ajax/breeders/upload_transactions",
+        type: 'POST',
+        data: new FormData(jQuery("#upload_transactions_form")[0]),
+        processData: false,
+        contentType: false,
+        success: function(response) {
+            jQuery("#working_modal").modal("hide");
+            if (response.error_string) {
+                jQuery("#upload_transactions_error_display tbody").html('');
+                jQuery("#upload_transactions_error_display tbody").append(response.error_string);
+                jQuery("#upload_transactions_error_display").modal("show");
 
-    jQuery("#upload_transactions_form").submit();
+                return;
+            }
+            if (response.error) {
+                alert(response.error);
+                return;
+            }
+            if (response.success) {
+                Workflow.focus("#transactions_upload_workflow", -1); //Go to success page
+                Workflow.check_complete("#transactions_upload_workflow");
+            }
+        }
+    });
 }
 
 

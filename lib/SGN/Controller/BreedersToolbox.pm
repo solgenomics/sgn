@@ -978,6 +978,10 @@ sub manage_genotype_qc : Path("/breeders/genotype_qc") :Args(0) {
 
     my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
 
+    my $genotyping_facilities = $c->config->{genotyping_facilities};
+    my @facilities = split ',',$genotyping_facilities;
+    $c->stash->{facilities} = \@facilities;
+
     $c->stash->{template} = '/breeders_toolbox/manage_genotype_qc.mas';
 }
 

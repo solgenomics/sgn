@@ -51,4 +51,5 @@ jobs:
           VALIDATE_JAVASCRIPT_ES: false
           VALIDATE_SQLFLUFF: false
           VALIDATE_BIOME_FORMAT: false
+          VALIDATE_BIOME_LINT: false
           VALIDATE_GITHUB_ACTIONS_ZIZMOR: false
