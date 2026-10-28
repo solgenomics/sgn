@@ -388,7 +388,7 @@ $t->while_logged_in_as("submitter", sub {
         'xpath',
         'find a button "add to list" and click')->click();
     sleep(1);
-    ok($t->driver->get_alert_text() =~ m/The following items are already in the list and were not added: UG120001/i, 'UG120001 already exists in list');
+    is($t->driver->get_alert_text(), 'The following item is already in the list and was not added: UG120001.', 'one existing accession is reported with the singular duplicate message');
     $t->driver()->accept_alert();
     sleep(1);
     ok($t->driver->get_alert_text() =~ m/2 items added to list/i, '2 items added to list');

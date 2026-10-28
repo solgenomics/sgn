@@ -10,7 +10,7 @@ $breeding_program_name => undef
 </%args>
 
 <& /util/import_javascript.mas, classes => [ 'CXGN.TrialTreeFolders' ] &>
-% my $dialog_type;
+% my $dialog_type = ''; # Generic folders retain the legacy blank type caption.
 % my $folder_for_trials;
 % my $folder_for_crosses;
 % my $folder_for_genotyping_trials;

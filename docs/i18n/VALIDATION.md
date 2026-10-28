@@ -9,7 +9,7 @@ request record the full upstream fixture and browser CI status for each commit.
 
 ## Results
 
-- 52 native unit files: 2,263 top-level checks passed locally, including the native wrapper
+- 53 native unit files: 2,271 top-level checks passed locally, including the native wrapper
   for 12 JavaScript suites. Four optional browser-dependent cases are explicitly
   unarmed; their source/DOM checks ran where available. The local image skips
   the source-path calendar dependency probe and optional Perl POD-coverage check;
@@ -92,7 +92,10 @@ real English translator; its existing recipient and token security assertions
 are retained. The reset form preserves the upstream controller's already-escaped
 username contract: decode that field before interpolation, then escape the whole
 translated title once. Real Mason cases cover markup and literal entities in all
-four locales. Python formatters share the same 120-column style;
+four locales. Generic folder dialogs retain the legacy blank type caption as a
+defined string; real parent-page/dialog regressions cover generic and typed
+folders in four locales. The search-browser assertion now requires the exact
+singular duplicate notice for its one existing accession. Python formatters share the same 120-column style;
 strict JSON scalar checks intentionally reject bool and custom subclasses.
 
 Spelling corrections retain semantic contexts, API/data identifiers and all
