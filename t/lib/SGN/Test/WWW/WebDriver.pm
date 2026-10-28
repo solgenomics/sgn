@@ -3,7 +3,7 @@
 
 SGN::Test::WWW::WebDriver - a wrapper around the Selenium::Remote::Driver tailored to the SGN codebase
 
-=head1 SYNOPSYS
+=head1 SYNOPSIS
 
 Your test script should look somewhat like this:
 
