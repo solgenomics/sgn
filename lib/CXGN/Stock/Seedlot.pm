@@ -159,7 +159,7 @@ has 'seedlot_id' => (
 
 =head2 Accessor location_code()
 
-A string specifiying where the seedlot is stored. On the backend,
+A string specifying where the seedlot is stored. On the backend,
 this is stored the nd_geolocation description field.
 
 =cut
@@ -180,7 +180,7 @@ has 'nd_geolocation_id' => (
 
 =head2 Accessor box_name()
 
-A string specifiying box where the seedlot is stored. On the backend,
+A string specifying box where the seedlot is stored. On the backend,
 this is stored as a stockprop.
 
 =cut
@@ -1417,8 +1417,8 @@ sub _update_seedlot_location {
     if($nd_exp->count != 1){
         die "There should be exactly one nd_experiment for any single seedlot!";
     }
-    my $nd = $nd_exp->first();
-    $nd->update({nd_geolocation_id=>$self->nd_geolocation_id});
+    my $experiment = $nd_exp->first();
+    $experiment->update({nd_geolocation_id=>$self->nd_geolocation_id});
 }
 
 sub _store_seedlot_accession {
@@ -1953,7 +1953,7 @@ sub delete_using_list {
                     - maxPage: the number of the last page
                     - pageSize: (max) number of results per page
                     - total: total number of results
-                    - results: an arrayref of hases of the seedlot's stored events, with the following keys:
+                    - results: an arrayref of hashes of the seedlot's stored events, with the following keys:
                         - stock_id: the unique id of the seedlot
                         - uniquename: the unique name of the seedlot
                         - stockprop_id: the unique id of the maintenance event

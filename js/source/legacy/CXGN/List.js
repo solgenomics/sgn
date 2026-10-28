@@ -1180,7 +1180,7 @@ CXGN.List.prototype = {
                         html += "<tr><td>"+response.found[i].unique_name+"</td></tr>";
                     }
                     html += "</tbody></table>";
-                    html += "<h2>"+list_type_name+" that are not found in the database, but fuzzy match (names are visibily similar)</h2>";
+                    html += "<h2>"+list_type_name+" that are not found in the database, but fuzzy match (names are visibly similar)</h2>";
                     html += "<table class='table table-hover table-bordered' ><thead><tr><th>Name In Your List</th><th>Found In Database</th><th>Distance Score <span style='position: relative; top: 0: right: 0; cursor: help;' title='The closer the score is to 1.0, the more similar the match'>(?)</span></th></tr></thead><tbody>";
                     for(var i=0; i<response.fuzzy.length; i++){
                         for(j=0; j <response.fuzzy[i].matches.length; j++){
