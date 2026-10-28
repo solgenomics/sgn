@@ -186,10 +186,10 @@ sub _lookup_trial_id {
     $self->_set_replicate_numbers($self->_get_plot_info_fields_from_trial("rep_number") || []);
     $self->_set_row_numbers($self->_get_plot_info_fields_from_trial("row_number") || [] );
     $self->_set_col_numbers($self->_get_plot_info_fields_from_trial("col_number") || [] );
-    $self->_set_accession_names($self->_get_unique_accession_names_from_trial() || []);        
+    $self->_set_accession_names($self->_get_unique_accession_names_from_trial() || []);
     $self->_set_control_names($self->_get_unique_control_accession_names_from_trial() || []);
     $self->set_analysis_result_stock_names();
-    
+
     print STDERR "CXGN::Trial::TrialLayout End Build".localtime."\n";
 }
 
@@ -201,9 +201,9 @@ sub set_analysis_result_stock_names {
     if ($sample_entry->{'analysis_result_stock_id'}) {
         print STDERR "SETTING ANALYSIS RESULT STOCK NAMES\n";
         $self->_set_analysis_result_stock_names($self->_get_unique_analysis_result_stock_names_from_trial() || []);
-        $self->_set_accession_names([]);        
+        $self->_set_accession_names([]);
         $self->_set_control_names([]);
-    } 
+    }
 
 }
 
@@ -272,7 +272,7 @@ sub _get_unique_analysis_result_stock_names_from_trial {
     no warnings 'numeric'; #for genotyping plate so that wells don't give warning
 
     foreach my $key (sort { $a <=> $b} keys %design) {
-        my %design_info = %{$design{$key}};    
+        my %design_info = %{$design{$key}};
         $unique_analysis_result_stock_names{$design_info{"analysis_result_stock_name"}} = $design_info{"analysis_result_stock_id"}
     }
 
@@ -498,8 +498,8 @@ sub retrieve_plot_info {
     my $well_facility_identifier_prop = $stockprop_hash{$self->cvterm_id('facility_identifier')} ? join ',', @{$stockprop_hash{$self->cvterm_id('facility_identifier')}} : undef;
     my $plot_geo_json_prop = $stockprop_hash{$self->cvterm_id('plot_geo_json')} ? $stockprop_hash{$self->cvterm_id('plot_geo_json')}->[0] : undef;
 
-    #print  STDERR "SORUCE STOCK TYPES: ".Dumper($self->get_source_stock_type_ids())."\n".Dumper($self->get_source_stock_types());
-    #print STDERR "REL TYEPS = ".Dumper($self->get_relationship_types());
+    #print  STDERR "SOURCE STOCK TYPES: ".Dumper($self->get_source_stock_type_ids())."\n".Dumper($self->get_source_stock_types());
+    #print STDERR "REL TYPES = ".Dumper($self->get_relationship_types());
     my $source_primary_stock_type_ids = $self->get_source_primary_stock_type_ids();
 
     my $accession_rs = $plot->search_related('stock_relationship_subjects')->search(
@@ -551,13 +551,13 @@ sub retrieve_plot_info {
     # 	$design_info{"genus"} = $genus;
     # }
     my $accession = $accession_rs->first->object;
-    
+
     my $plants = $plot->search_related('stock_relationship_subjects', { 'me.type_id' => $self->cvterm_id('plant_of')})->search_related('object', {'object.type_id' => $self->cvterm_id('plant') }, {order_by=>"object.stock_id"});
 
     my $subplots = $plot->search_related('stock_relationship_subjects', { 'me.type_id' => $self->cvterm_id('subplot_of')})->search_related('object', {'object.type_id' => $self->cvterm_id('subplot')}, {order_by=>"object.stock_id"});
     my $tissues = $plot->search_related('stock_relationship_objects', { 'me.type_id' => $self->cvterm_id('tissue_sample_of') })->search_related('subject', {'subject.type_id' => $self->cvterm_id('tissue_sample')}, {order_by=>"subject.stock_id"});
     my $seedlot_transaction = $plot->search_related('stock_relationship_subjects', { 'me.type_id' => $self->cvterm_id('seed transaction'), 'object.type_id' => $self->cvterm_id('seedlot') }, {'join'=>'object', order_by=>"object.stock_id"});
-    
+
     if ($seedlot_transaction->count > 0 && $seedlot_transaction->count != 1){
 	    die "There is more than one seedlot linked here!\n";
 	}
