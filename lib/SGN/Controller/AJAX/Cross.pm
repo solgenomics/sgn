@@ -165,7 +165,7 @@ sub upload_cross_file_POST : Args(0) {
             file_type => 'crosses'
         });
 
-        ## Store uploaded temporary file in arhive
+        ## Store uploaded temporary file in archive
         ($archived_file_id, $archived_filename_with_path) = $uploader->archive();
         my $md5 = $uploader->get_md5($archived_filename_with_path);
         if (!$archived_filename_with_path) {
@@ -1123,7 +1123,7 @@ sub upload_progenies_POST : Args(0) {
         metadata_schema => $metadata_schema
     });
 
-    ## Store uploaded temporary file in arhive
+    ## Store uploaded temporary file in archive
     (my $archived_file_id, $archived_filename_with_path) = $uploader->archive();
     $md5 = $uploader->get_md5($archived_filename_with_path);
     if (!$archived_filename_with_path) {
@@ -1179,7 +1179,7 @@ sub upload_progenies_POST : Args(0) {
     foreach my $cross_name (@all_crosses) {
         my $cross_experiment_type = CXGN::Cross->new({schema => $chado_schema, cross_name => $cross_name});
         my $experiment_id = $cross_experiment_type->get_nd_experiment_id_with_type_cross_experiment();
-#        print STDERR "ND EXPERIMENT ID =".Dumper($experiment_id)."\n";
+#        print STDERR "ND_EXPERIMENT_ID =".Dumper($experiment_id)."\n";
         my $nd_experiment_file = $phenome_schema->resultset("NdExperimentMdFiles")->create({
             nd_experiment_id => $experiment_id,
             file_id => $archived_file_id,
@@ -1258,7 +1258,7 @@ sub validate_upload_existing_progenies_POST : Args(0) {
         metadata_schema => $metadata_schema
     });
 
-    ## Store uploaded temporary file in arhive
+    ## Store uploaded temporary file in archive
     (my $archived_file_id, $archived_filename_with_path) = $uploader->archive();
     $md5 = $uploader->get_md5($archived_filename_with_path);
     if (!$archived_filename_with_path) {
@@ -1352,7 +1352,7 @@ sub store_upload_existing_progenies : Path('/ajax/cross/store_upload_existing_pr
     foreach my $cross_name (@all_crosses) {
         my $cross_experiment_type = CXGN::Cross->new({schema => $chado_schema, cross_name => $cross_name});
         my $experiment_id = $cross_experiment_type->get_nd_experiment_id_with_type_cross_experiment();
-#        print STDERR "ND EXPERIMENT ID =".Dumper($experiment_id)."\n";
+#        print STDERR "ND_EXPERIMENT_ID =".Dumper($experiment_id)."\n";
         my $nd_experiment_file = $phenome_schema->resultset("NdExperimentMdFiles")->create({
             nd_experiment_id => $experiment_id,
             file_id => $file_id,
@@ -1447,7 +1447,7 @@ sub upload_info_POST : Args(0) {
         metadata_schema => $metadata_schema
     });
 
-    ## Store uploaded temporary file in arhive
+    ## Store uploaded temporary file in archive
     (my $archived_file_id, $archived_filename_with_path) = $uploader->archive();
     $md5 = $uploader->get_md5($archived_filename_with_path);
     if (!$archived_filename_with_path) {
@@ -1518,7 +1518,7 @@ sub upload_info_POST : Args(0) {
     foreach my $cross_name (@all_crosses) {
         my $cross_experiment_type = CXGN::Cross->new({schema => $chado_schema, cross_name => $cross_name});
         my $experiment_id = $cross_experiment_type->get_nd_experiment_id_with_type_cross_experiment();
-#        print STDERR "ND EXPERIMENT ID =".Dumper($experiment_id)."\n";
+#        print STDERR "ND_EXPERIMENT_ID =".Dumper($experiment_id)."\n";
         my $nd_experiment_file = $phenome_schema->resultset("NdExperimentMdFiles")->create({
             nd_experiment_id => $experiment_id,
             file_id => $archived_file_id,
@@ -1613,7 +1613,7 @@ sub upload_family_names_POST : Args(0) {
         metadata_schema => $metadata_schema
     });
 
-    ## Store uploaded temporary file in arhive
+    ## Store uploaded temporary file in archive
     (my $archived_file_id, $archived_filename_with_path) = $uploader->archive();
     $md5 = $uploader->get_md5($archived_filename_with_path);
     if (!$archived_filename_with_path) {
@@ -1683,7 +1683,7 @@ sub upload_family_names_POST : Args(0) {
     foreach my $cross_name (@all_crosses) {
         my $cross_experiment_type = CXGN::Cross->new({schema => $chado_schema, cross_name => $cross_name});
         my $experiment_id = $cross_experiment_type->get_nd_experiment_id_with_type_cross_experiment();
-#        print STDERR "ND EXPERIMENT ID =".Dumper($experiment_id)."\n";
+#        print STDERR "ND_EXPERIMENT_ID =".Dumper($experiment_id)."\n";
         my $nd_experiment_file = $phenome_schema->resultset("NdExperimentMdFiles")->create({
             nd_experiment_id => $experiment_id,
             file_id => $archived_file_id,

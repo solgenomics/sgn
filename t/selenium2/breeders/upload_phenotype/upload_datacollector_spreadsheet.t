@@ -114,7 +114,7 @@ $t->while_logged_in_as("submitter", sub {
         "upload_phenotype_datacollector_verify_status",
         "id", "verify the verification")->get_attribute('innerHTML');
 
-    print STDERR "VERFIY STATUS NOW: $verify_status\n";
+    print STDERR "VERIFY STATUS NOW: $verify_status\n";
     
     ok($verify_status =~ /60 previously stored values skipped/, "Verify warnings after store validation - skipped values");
     ok($verify_status =~ /0 previously stored values overwritten/, "Verify warnings after store validation - overwritten values");

@@ -135,7 +135,7 @@
                 <li>start_position (required): The start position in base pairs of where the transcript begins.</li>
                 <li>end_position (required): The end position in base pairs of where the transcript ends.</li>
                 <li>gene_description (optional): Descriptors for gene annotations.</li>
-                <li>notes (optional): Any additional descrptions.</li>
+                <li>notes (optional): Any additional descriptions.</li>
             </ul>
             <table class="table table-hover table-bordered table-condensed" >
                 <thead></thead>

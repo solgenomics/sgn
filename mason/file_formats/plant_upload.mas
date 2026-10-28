@@ -57,7 +57,7 @@
             </div>
             <div class="modal-body">
                 <div class="container-fluid">
-                    <b>This is for recording individual plants in a plot. The plant name will be saved as a concatenation of plot_name + _ + plant_index_number for as many plants as specfied by num_plants_per_plot</b>
+                    <b>This is for recording individual plants in a plot. The plant name will be saved as a concatenation of plot_name + _ + plant_index_number for as many plants as specified by num_plants_per_plot</b>
                     <br/>
                     <b>May be uploaded in an Excel file (.xls or .xlsx)</b>
                     <br />

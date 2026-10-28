@@ -517,9 +517,9 @@ sub generate_experimental_design_POST : Args(0) {
         my $total_area = $plot_width * $plot_length * $num_plots; #sq meters. 1 ha = 10000m2
         my $field_size_m = $field_size * 10000;
         if ($field_size_m < $total_area){
-            $warning_message = "The generated design would require atleast $total_area square meters, which is larger than the $field_size hectare ($field_size_m square meters) field size you indicated.";
+            $warning_message = "The generated design would require at least $total_area square meters, which is larger than the $field_size hectare ($field_size_m square meters) field size you indicated.";
         } else {
-            $warning_message = "The generated design would require atleast $total_area square meters and your field size is $field_size hectare ($field_size_m square meters).";
+            $warning_message = "The generated design would require at least $total_area square meters and your field size is $field_size hectare ($field_size_m square meters).";
         }
     }
 
@@ -879,7 +879,7 @@ sub verify_trial_name_GET : Args(0) {
     my $project_rs = $schema->resultset('Project::Project')->find({name=>$trial_name});
 
     if ($project_rs){
-        my $error = 'The following trial name has aready been used. Please use a unique name';
+        my $error = 'The following trial name has already been used. Please use a unique name';
         $c->stash->{rest} = {error => $error};
     } else {
         $c->stash->{rest} = {

@@ -379,7 +379,7 @@ sub check_status {
 
     my $finish_timestamp = $self->finish_timestamp();
     if ($finish_timestamp) {
-        if ($self->status() ne "canceled" && $self->status() ne "failed" && $self->status() ne "timed_out") { #if theres a timestamp and the job doesn't already have and end state, then mark it as done
+        if ($self->status() ne "canceled" && $self->status() ne "failed" && $self->status() ne "timed_out") { #if there's a timestamp and the job doesn't already have and end state, then mark it as done
             $self->status("finished");
             $self->store();
         } 
@@ -399,7 +399,7 @@ sub check_status {
                 if ($age > 1) {
                     $self->status("timed_out");
                     $self->store();
-                } else { # no backend, no create timestamp, no finish timestamp, but hasnt been running long
+                } else { # no backend, no create timestamp, no finish timestamp, but hasn't been running long
                     $self->status("submitted");
                     $self->store();
                 }
@@ -525,7 +525,7 @@ sub submit {
         $status = 'submitted';
     } catch {
         $self->update_status('failed');
-        die "An error occured trying to submit a background job.\n$_\n";
+        die "An error occurred trying to submit a background job.\n$_\n";
     } ;
 
     $self->backend_id($backend_id);

@@ -209,7 +209,7 @@ sub upload_drone_imagery_POST : Args(0) {
         }
         my $drone_run_date_obj = Time::Piece->strptime($new_drone_run_date, "%Y/%m/%d %H:%M:%S");
         if (exists($seen_field_trial_drone_run_dates{$drone_run_date_obj->epoch})) {
-            $c->stash->{rest} = { error => "An imaging event has already occured on this field trial at the same date and time! Please give a unique date/time for each imaging event!" };
+            $c->stash->{rest} = { error => "An imaging event has already occurred on this field trial at the same date and time! Please give a unique date/time for each imaging event!" };
             $c->detach();
         }
 
@@ -1196,7 +1196,7 @@ sub upload_drone_imagery_POST : Args(0) {
         }
 
         if ($current_odm_image_count < 25) {
-            $c->stash->{rest} = { error => "Upload more than $current_odm_image_count images! Atleast 25 are required for OpenDroneMap to stitch. Upload now and try again!", drone_run_project_id => $selected_drone_run_id, current_image_count => $current_odm_image_count };
+            $c->stash->{rest} = { error => "Upload more than $current_odm_image_count images! At least 25 are required for OpenDroneMap to stitch. Upload now and try again!", drone_run_project_id => $selected_drone_run_id, current_image_count => $current_odm_image_count };
             $c->detach();
         }
 

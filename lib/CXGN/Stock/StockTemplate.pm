@@ -180,7 +180,7 @@ sub parse {
         # got the row number, now look at the column headers
         my $plot_stock_id =  $worksheet->get_cell ($row , $headers{'PLOT'} )->value();
         my $replicate = $worksheet->get_cell ($row , $headers{'REP'})->value();
-        my $clone_name = $worksheet->get_cell ($row , $headers{'DESIG'})->value();
+        my $clone_name = $worksheet->get_cell ($row , $headers{'DESIGN'})->value();
         my $block = $worksheet->get_cell ($row , $headers{'BLOCK'})->value();
         my $planted_plants = $worksheet->get_cell ($row , $headers{'NOPLT'})->value();
         my $surv_plants = $worksheet->get_cell ($row , $headers{'NOSV'})->value;
@@ -470,7 +470,7 @@ sub store {
       $schema->txn_do($coderef);
     } catch {
       # Transaction failed
-      $error =  "An error occured! Cannot store data! <br />" . $_ . "\n";
+      $error =  "An error occurred! Cannot store data! <br />" . $_ . "\n";
     };
 
     if ($error) {

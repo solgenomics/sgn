@@ -460,7 +460,7 @@ my @sequencing_center_options = split ",", $c->config->{genotyping_facilities};
                             <div class="form-group">
                                 <label class="col-sm-3 control-label">Data Process Description: </label>
                                 <div class="col-sm-9" >
-                                    <textarea rows="10" class="form-control" id="high_dim_data_upload_metabolomics_data_process_description" placeholder="e.g. This describes mode, instrument settings, calibration procedure. Also, describes how the files from the LCMS machine were transformed into peak area. Finally, describes how metabolite annotations were assinged to peaks"></textarea>
+                                    <textarea rows="10" class="form-control" id="high_dim_data_upload_metabolomics_data_process_description" placeholder="e.g. This describes mode, instrument settings, calibration procedure. Also, describes how the files from the LCMS machine were transformed into peak area. Finally, describes how metabolite annotations were assigned to peaks"></textarea>
                                 </div>
                             </div>
                             <div class="form-group">
@@ -1022,10 +1022,10 @@ jQuery(document).ready(function() {
                             message_text += "</li>";
                         }
                         if (errorarrayLength == 0) {
-                            message_text += "<li class='list-group-item list-group-item-success'><hr><h3>Upload Successfull!</h3></li>";
+                            message_text += "<li class='list-group-item list-group-item-success'><hr><h3>Upload Successful!</h3></li>";
                         }
                     } else {
-                        message_text += "<li class='list-group-item list-group-item-success'><hr><h3>Upload Successfull!</h3></li>";
+                        message_text += "<li class='list-group-item list-group-item-success'><hr><h3>Upload Successful!</h3></li>";
                     }
                     message_text += "</ul>";
                     jQuery(upload_phenotype_status).html(message_text);
@@ -1147,10 +1147,10 @@ jQuery(document).ready(function() {
                         message_text += "</li>";
                     }
                     if (errorarrayLength == 0) {
-                        message_text += "<li class='list-group-item list-group-item-success'><hr><h3>Upload Successfull!</h3></li>";
+                        message_text += "<li class='list-group-item list-group-item-success'><hr><h3>Upload Successful!</h3></li>";
                     }
                 } else {
-                    message_text += "<li class='list-group-item list-group-item-success'><hr><h3>Upload Successfull!</h3></li>";
+                    message_text += "<li class='list-group-item list-group-item-success'><hr><h3>Upload Successful!</h3></li>";
                 }
             }
             message_text += "</ul>";
@@ -1276,10 +1276,10 @@ jQuery(document).ready(function() {
                             message_text += "</li>";
                         }
                         if (errorarrayLength == 0) {
-                            message_text += "<li class='list-group-item list-group-item-success'><hr><h3>Upload Successfull!</h3></li>";
+                            message_text += "<li class='list-group-item list-group-item-success'><hr><h3>Upload Successful!</h3></li>";
                         }
                     } else {
-                        message_text += "<li class='list-group-item list-group-item-success'><hr><h3>Upload Successfull!</h3></li>";
+                        message_text += "<li class='list-group-item list-group-item-success'><hr><h3>Upload Successful!</h3></li>";
                     }
                     message_text += "</ul>";
                     jQuery(upload_phenotype_status).html(message_text);

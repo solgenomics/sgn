@@ -345,7 +345,7 @@ jQuery(document).ready(function(){
             success: function(response) {
                 jQuery('#working_modal').modal('hide');
                 if (response.error) {
-                    alert('An Error Occured: No progenies were saved!. '+response.error);
+                    alert('An Error Occurred: No progenies were saved!. '+response.error);
                     return;
                 } else {
                     jQuery('#progenies_saved_dialog_message').modal("show");

@@ -204,7 +204,7 @@ sub upload_catalog_items_POST : Args(0) {
         metadata_schema => $c->dbic_schema("CXGN::Metadata::Schema")
     });
 
-    ## Store uploaded temporary file in arhive
+    ## Store uploaded temporary file in archive
     (my $archived_file_id, $archived_filename_with_path) = $uploader->archive();
     $md5 = $uploader->get_md5($archived_filename_with_path);
     if (!$archived_filename_with_path) {

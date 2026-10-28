@@ -174,7 +174,7 @@ ORDER BY name;";
 #   - results = verification results
 #       - processed_filepath = server filepath to processed file
 #       - processed = 1 if file successfully uploaded and processed / 0 if not
-#       - verified = 1 if file sucessfully verified / 0 if not
+#       - verified = 1 if file successfully verified / 0 if not
 #       - missing_features = list of seqid's not in the database as features
 #       - missing_attributes = list of attributes in the protocol that are not in the uploaded file
 #       - undefined_attributes = list attributes in the uploaded file not defined by the protocol
@@ -240,7 +240,7 @@ sub sequence_metadata_upload_verify_POST : Args(0) {
     # Using an existing protocol...
     if ( $use_existing_protocol eq 'true' ) {
 
-        # Get exisiting protocol id
+        # Get existing protocol id
         my $protocol_id = $c->req->param('existing_protocol_id');
         if ( !defined $protocol_id || $protocol_id eq '' ) {
             $c->stash->{rest} = {error => 'protocol_id not provided!'};
@@ -503,7 +503,7 @@ sub sequence_metadata_store_POST : Args(0) {
 #   OPTIONAL:
 #   - start = start position of the query range (default: 0)
 #   - end = end position of the query range (default: feature max)
-#   - reference_genome = (required if start or end are provided) = name of referene genome used by start and/or end positions
+#   - reference_genome = (required if start or end are provided) = name of reference genome used by start and/or end positions
 #   - type_id = cvterm_id(s) of sequence metadata type(s) (comma separated list of multiple type ids)
 #   - nd_protocol_id = nd_protocol_id(s) of sequence metadata protocol(s) (comma separated list of multiple protocol ids)
 #   - attribute = attribute(s) and their properties (protocol id, comparison, and value - | separated) (comma separated list of multiple attributes)

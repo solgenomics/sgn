@@ -138,7 +138,7 @@ has 'marker_name_list' => (
 has 'genotypeprop_hash_select' => (
     isa => 'ArrayRef[Str]',
     is => 'ro',
-    default => sub {['GT', 'AD', 'DP', 'GQ', 'DS', 'PL', 'NT']} #THESE ARE THE GENERIC AND EXPECTED VCF ATRRIBUTES
+    default => sub {['GT', 'AD', 'DP', 'GQ', 'DS', 'PL', 'NT']} #THESE ARE THE GENERIC AND EXPECTED VCF ATTRIBUTES
 );
 
 has 'protocolprop_top_key_select' => (
@@ -1337,7 +1337,7 @@ sub get_cached_file_search_json {
         my $counter = 0;
         while (my $geno = $self->get_next_genotype_info) {
 
-            # OLD GENOTYPING PROTCOLS DID NOT HAVE ND_PROTOCOLPROP INFO...
+            # OLD GENOTYPING PROTOCOLS DID NOT HAVE ND_PROTOCOLPROP INFO...
             if (scalar(@all_marker_objects) == 0) {
                 foreach my $o (sort genosort keys %{$geno->{selected_genotype_hash}}) {
                     push @all_marker_objects, {name => $o};
@@ -1436,7 +1436,7 @@ sub get_cached_file_dosage_matrix {
         my $counter = 0;
         while (my $geno = $self->get_next_genotype_info) {
 
-            # OLD GENOTYPING PROTCOLS DID NOT HAVE ND_PROTOCOLPROP INFO...
+            # OLD GENOTYPING PROTOCOLS DID NOT HAVE ND_PROTOCOLPROP INFO...
             if (scalar(@all_marker_objects) == 0) {
                 foreach my $o (sort genosort keys %{$geno->{selected_genotype_hash}}) {
                     push @all_marker_objects, {name => $o};
@@ -1762,7 +1762,7 @@ sub get_cached_file_VCF {
         my $counter = 0;
         my $usingGT;
         while (my $geno = $self->get_next_genotype_info) {
-            # OLD GENOTYPING PROTCOLS DID NOT HAVE ND_PROTOCOLPROP INFO...
+            # OLD GENOTYPING PROTOCOLS DID NOT HAVE ND_PROTOCOLPROP INFO...
             if (scalar(@all_marker_objects) == 0) {
                 foreach my $o (sort genosort keys %{$geno->{selected_genotype_hash}}) {
                     push @all_marker_objects, {name => $o};
@@ -2168,7 +2168,7 @@ sub get_cached_file_VCF_compute_from_parents {
                     $genotype_string .= "\n";
                     $genotype_string .= "FORMAT\t";
                     foreach my $m (@all_marker_objects) {
-                        my $format = 'DS'; #When calculating genotypes from parents, only will return dosages atleast for now
+                        my $format = 'DS'; #When calculating genotypes from parents, only will return dosages at least for now
                         $genotype_string .= $format . "\t";
                         $geno->{selected_protocol_hash}->{markers}->{$m->{name}}->{format} = $format;
                         $m->{format} = $format;

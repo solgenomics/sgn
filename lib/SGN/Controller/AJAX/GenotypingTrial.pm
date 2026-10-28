@@ -625,7 +625,7 @@ sub create_plate_order_POST : Args(0) {
     my $service_id_list = $plate_info->{service_ids};
     my $facility_id = $plate_info->{facility_id};
     my $organism_name = $plate_info->{organism_name};
-    my $add_requirements = $plate_info->{requeriments};
+    my $add_requirements = $plate_info->{requirements};
 
     print STDERR Dumper $plate_info;
 
@@ -635,7 +635,7 @@ sub create_plate_order_POST : Args(0) {
         service_id_list=>$service_id_list,
         plate_id => $plate_id,
         facility_id => $facility_id,
-        requeriments => $add_requirements,
+        requirements => $add_requirements,
         organism_name => $organism_name
     });
     # my $errors = $submit_samples->validate();

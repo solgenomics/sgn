@@ -510,7 +510,7 @@ $dataset_id => undef
                 <div class="checkbox">
                   <label>
                     <input class="wizard-download-phenotypes-outliers" type="checkbox" />
-                    Supress user defined phenotype outliers
+                    Suppress user defined phenotype outliers
                   </label>
                 </div>
               </td>
@@ -577,7 +577,7 @@ $dataset_id => undef
                 <div class="checkbox">
                   <label>
                     <input class="wizard-download-high-dim-phenotypes-outliers" type="checkbox" />
-                    Supress user defined phenotype outliers
+                    Suppress user defined phenotype outliers
                   </label>
                 </div>
               </td>
@@ -828,7 +828,7 @@ $dataset_id => undef
           success: function(response) {
             if (response.error) {
               console.log("ERROR: Server returned an error trying to get the chromosome names for genotyping protocol #" + SELECTED_GENOTYPING_PROTOCOL);
-              console.log(repsonse.error);
+              console.log(response.error);
               updateChromosomeNames();
             } else {
               updateChromosomeNames(response.chromosome_names);
@@ -846,7 +846,7 @@ $dataset_id => undef
           success: function(response) {
             if (response.error) {
               console.log("ERROR: Server returned an error trying to get markers for genotyping protocol #" + SELECTED_GENOTYPING_PROTOCOL);
-              console.log(repsonse.error);
+              console.log(response.error);
             } else {
               num_markers = response.data;
             }
@@ -898,7 +898,7 @@ $dataset_id => undef
               success: function(response) {
                 if (response.error) {
                   console.log("ERROR: Server returned an error trying to get the chromosome names for genotyping protocol #" + SELECTED_GENOTYPING_PROTOCOL);
-                  console.log(repsonse.error);
+                  console.log(response.error);
                   updateChromosomeNames();
                 } else {
                   updateChromosomeNames(response.chromosome_names);
@@ -917,7 +917,7 @@ $dataset_id => undef
               success: function(response) {
                 if (response.error) {
                   console.log("ERROR: Server returned an error trying to get markers for genotyping protocol #" + SELECTED_GENOTYPING_PROTOCOL);
-                  console.log(repsonse.error);
+                  console.log(response.error);
                 } else {
                   num_markers = response.data;
                 }
@@ -941,7 +941,7 @@ $dataset_id => undef
           success: function(response) {
            if (response.error) {
               console.log("ERROR: Server returned an error trying to get genotyping protocol #" + SELECTED_GENOTYPING_PROTOCOL);
-              console.log(repsonse.error);
+              console.log(response.error);
             } else {
               SELECTED_GENOTYPING_PROTOCOL = response.default_protocol.protocol_id;
               jQuery.ajax({
@@ -955,7 +955,7 @@ $dataset_id => undef
                 success: function(response) {
                   if (response.error) {
                     console.log("ERROR: Server returned an error trying to get markers for genotyping protocol #" + SELECTED_GENOTYPING_PROTOCOL);
-                    console.log(repsonse.error);
+                    console.log(response.error);
                   } else {
                     num_markers = response.data;
                   }

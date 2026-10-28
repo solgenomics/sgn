@@ -91,7 +91,7 @@
             </div>
             <div class="modal-body">
                 <div class="container-fluid">
-                    <b>This is for recording individual subplots in a plot. The subplot name will be saved as a concatenation of plot_name + _ + subplot_index_number for as many subplots as specfied by num_subplots_per_plot</b>
+                    <b>This is for recording individual subplots in a plot. The subplot name will be saved as a concatenation of plot_name + _ + subplot_index_number for as many subplots as specified by num_subplots_per_plot</b>
                     <br/>
                     <b>May be uploaded in an Excel file (.xls or .xlsx)</b>
                     <br />
