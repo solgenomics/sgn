@@ -37,6 +37,7 @@ it under the same terms as Perl itself.
 package AddFileTagsAndTimestampColumns;
 
 use Moose;
+use Config::Any;
 extends 'CXGN::Metadata::Dbpatch';
 
 
@@ -58,6 +59,24 @@ sub patch {
 
     print STDOUT "\nExecuting the SQL commands.\n";
 
+    my $test_conf  = "../sgn_test.conf";
+    my $conf_file  = "../sgn.conf";
+    my $local_conf = "../sgn_local.conf";
+
+    my $cfg = Config::Any->load_files({files=> [$test_conf, $conf_file, $local_conf], use_ext=>1 });
+
+    my $sgn_test_conf   = $cfg->[0]->{$test_conf};
+    my $sgn_conf        = $cfg->[1]->{$conf_file};
+    my $sgn_local_conf  = $cfg->[2]->{$local_conf};
+
+    my $archive_path = $sgn_local_conf->{archive_path} ? $sgn_local_conf->{archive_path} : $sgn_conf->{archive_path};
+
+    # this is an assumption. sgn_test.conf is git-tracked, and dbname=db in that file. Since I assume no actual 
+    # site or dev environmment uses dbname=db, I will guess that if our dbname is just db, we are inside of a test.
+    if ($self->dbname() eq "db") {
+      $archive_path = $sgn_test_conf->{archive_path};
+    }
+
 
     $self->dbh()->do( <<'EOSQL');
 --do your SQL here
@@ -77,6 +96,28 @@ UPDATE metadata.md_files AS f
    AND t.file_timestamp IS NOT NULL;
 
 EOSQL
+
+    # md_files.dirname used to hold the full path of the folder, archive_path included. It should only hold
+    # what comes after archive_path, which is added back from the config wherever a file is read. Only a leading
+    # archive_path (ending at a folder boundary) is removed, and the rest of the dirname is left as it is.
+    if ($archive_path) {
+        (my $archive_path_prefix = $archive_path) =~ s/\/+$//;
+
+        if (length $archive_path_prefix) {
+            print STDOUT "\nRemoving $archive_path_prefix from md_files.dirname.\n";
+
+            $self->dbh()->do( <<'EOSQL', undef, ($archive_path_prefix) x 4);
+UPDATE metadata.md_files
+   SET dirname = substr(dirname, length(?::text) + 1)
+ WHERE dirname = ?::text
+    OR left(dirname, length(?::text) + 1) = ?::text || '/';
+
+EOSQL
+        }
+    }
+    else {
+        print STDERR "\nNo archive_path found in the configuration, so md_files.dirname was not changed.\n";
+    }
 
 print "You're done!\n";
 }
