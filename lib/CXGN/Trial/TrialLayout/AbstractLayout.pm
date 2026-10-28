@@ -422,8 +422,17 @@ sub generate_and_cache_layout {
     my %design;
 
     #print STDERR "PLOTS: ".Dumper(\@plots);
-    foreach my $plot (@plots) {
-	$self->retrieve_plot_info($plot, \%design);
+    # Layouts that use the generic retrieve_plot_info() get all plots in a few
+    # queries; subclasses with their own retrieve_plot_info(), and layout
+    # verification, still go plot by plot.
+    my $uses_generic_plot_info = $self->can('retrieve_plot_info') == \&CXGN::Trial::TrialLayout::AbstractLayout::retrieve_plot_info;
+    if ($uses_generic_plot_info && !$self->get_verify_layout && !$self->get_verify_physical_map) {
+	$self->_retrieve_plots_info_bulk(\@plots, \%design);
+    }
+    else {
+	foreach my $plot (@plots) {
+	    $self->retrieve_plot_info($plot, \%design);
+	}
     }
 
     #print STDERR "DESIGN IN generate_and_cache_layout: ".Dumper(\%design);
@@ -811,6 +820,232 @@ sub retrieve_plot_info {
     }
     $design->{$plot_number_prop}=\%design_info;
 
+}
+
+
+# Same result as calling retrieve_plot_info() for each plot, but with a fixed
+# number of queries for all plots together, instead of a dozen or more queries
+# per plot. Used by generate_and_cache_layout() for layouts that use the
+# generic retrieve_plot_info() and do not verify the layout. Rows are read in
+# the order the per-plot queries would return them (by stock_id where those
+# are ordered, otherwise by primary key, which matches their insertion order).
+sub _retrieve_plots_info_bulk {
+    my $self = shift;
+    my $plots = shift;
+    my $design = shift;
+
+    my $dbh = $self->get_schema->storage->dbh();
+    my $json = JSON->new();
+
+    my @plot_ids = map { $_->stock_id } @$plots;
+    return if !@plot_ids;
+
+    my $select_rows = sub {
+	my ($sql, @bind) = @_;
+	return $dbh->selectall_arrayref($sql, undef, @bind);
+    };
+
+    # stockprops of a set of stocks: { stock_id => { type_id => [ values ] } }
+    my $stockprops_of = sub {
+	my ($stock_ids, @type_ids) = @_;
+	my %props;
+	return \%props if !@$stock_ids;
+	my $type_filter = @type_ids ? 'AND type_id = ANY(?)' : '';
+	my $rows = $select_rows->("SELECT stock_id, type_id, value FROM stockprop WHERE stock_id = ANY(?) $type_filter ORDER BY stock_id, stockprop_id", $stock_ids, (@type_ids ? \@type_ids : ()));
+	push @{$props{$_->[0]}->{$_->[1]}}, $_->[2] for @$rows;
+	return \%props;
+    };
+
+    # stocks linked to a set of stocks: subject => objects ('subject') or object => subjects ('object')
+    my $related = sub {
+	my ($side, $stock_ids, $rel_type_ids, $stock_type_ids, $order) = @_;
+	my %related;
+	return \%related if !@$stock_ids;
+	my ($from, $to) = $side eq 'subject' ? ('subject_id', 'object_id') : ('object_id', 'subject_id');
+	my $order_by = $order eq 'stock_id' ? 's.stock_id' : 'r.stock_relationship_id';
+	my $rows = $select_rows->("SELECT r.$from, s.stock_id, s.uniquename, r.value, c.name FROM stock_relationship r JOIN stock s ON s.stock_id = r.$to JOIN cvterm c ON c.cvterm_id = s.type_id WHERE r.$from = ANY(?) AND r.type_id = ANY(?) AND s.type_id = ANY(?) ORDER BY $order_by", $stock_ids, $rel_type_ids, $stock_type_ids);
+	foreach my $row (@$rows) {
+	    my %r = (stock_id => $row->[1], uniquename => $row->[2], value => $row->[3], type_name => $row->[4]);
+	    $r{key} = $row->[1];  # separate copy for hash lookups, so stock_id keeps its type in the JSON
+	    push @{$related{$row->[0]}}, \%r;
+	}
+	return \%related;
+    };
+
+    my %prop_terms = (
+	plot_number => 'plot number', block_number => 'block', rep_number => 'replicate', range_number => 'range',
+	is_a_control => 'is a control', row_number => 'row_number', col_number => 'col_number', is_blank => 'is_blank',
+	concentration => 'concentration', volume => 'volume', dna_person => 'dna_person', extraction => 'extraction',
+	tissue_type => 'tissue_type', acquisition_date => 'acquisition date', notes => 'notes',
+	ncbi_taxonomy_id => 'ncbi_taxonomy_id', facility_identifier => 'facility_identifier', plot_geo_json => 'plot_geo_json',
+    );
+    my %prop_type_id = map { $_ => $self->cvterm_id($prop_terms{$_}) } keys %prop_terms;
+
+    my $plot_props = $stockprops_of->(\@plot_ids);
+    my $accessions = $related->('subject', \@plot_ids, $self->get_relationship_type_ids(), $self->get_source_primary_stock_type_ids(), 'id');
+    my $plants = $related->('subject', \@plot_ids, [ $self->cvterm_id('plant_of') ], [ $self->cvterm_id('plant') ], 'stock_id');
+    my $subplots = $related->('subject', \@plot_ids, [ $self->cvterm_id('subplot_of') ], [ $self->cvterm_id('subplot') ], 'stock_id');
+    my $tissues = $related->('object', \@plot_ids, [ $self->cvterm_id('tissue_sample_of') ], [ $self->cvterm_id('tissue_sample') ], 'stock_id');
+    my $seedlots = $related->('subject', \@plot_ids, [ $self->cvterm_id('seed transaction') ], [ $self->cvterm_id('seedlot') ], 'stock_id');
+    my $intercrops = $related->('subject', \@plot_ids, [ $self->cvterm_id('intercrop_plot_of') ], $self->get_source_primary_stock_type_ids(), 'id');
+
+    my @plant_ids = map { $_->{key} } map { @$_ } values %$plants;
+    my @subplot_ids = map { $_->{key} } map { @$_ } values %$subplots;
+    my @tissue_ids = map { $_->{key} } map { @$_ } values %$tissues;
+
+    my ($plant_index_numbers, $tissues_of_plants, $subplot_index_numbers, $plants_of_subplots, $tissues_of_subplots, $tissue_index_numbers) = ({}, {}, {}, {}, {}, {});
+    if (@plant_ids) {
+	$plant_index_numbers = $stockprops_of->(\@plant_ids, $self->cvterm_id('plant_index_number'));
+	$tissues_of_plants = $related->('object', \@plant_ids, [ $self->cvterm_id('tissue_sample_of') ], [ $self->cvterm_id('tissue_sample') ], 'id');
+    }
+    if (@subplot_ids) {
+	$subplot_index_numbers = $stockprops_of->(\@subplot_ids, $self->cvterm_id('subplot_index_number'));
+	$plants_of_subplots = $related->('object', \@subplot_ids, [ $self->cvterm_id('plant_of_subplot') ], [ $self->cvterm_id('plant') ], 'id');
+	$tissues_of_subplots = $related->('object', \@subplot_ids, [ $self->cvterm_id('tissue_sample_of') ], [ $self->cvterm_id('tissue_sample') ], 'id');
+    }
+    if (@tissue_ids) {
+	$tissue_index_numbers = $stockprops_of->(\@tissue_ids, $self->cvterm_id('tissue_sample_index_number'));
+    }
+
+    foreach my $plot (@$plots) {
+	my $plot_name = $plot->uniquename;
+	my $plot_id = $plot->stock_id;
+	my $plot_key = $plot->stock_id;  # copy for hash lookups, so $plot_id keeps its type in the JSON
+	my %design_info;
+
+	my $props = $plot_props->{$plot_key} || {};
+	my %prop;
+	foreach my $key (keys %prop_type_id) {
+	    my $values = $props->{$prop_type_id{$key}};
+	    next if !$values;
+	    $prop{$key} = $key eq 'plot_geo_json' ? $values->[0] : join ',', @$values;
+	}
+
+	my @plot_accessions = @{$accessions->{$plot_key} || []};
+	if (scalar(@plot_accessions) != 1) {
+	    die "There is more than one or no (".scalar(@plot_accessions).") accession/cross/family_name linked  here!\n";
+	}
+	my $accession = $plot_accessions[0];
+
+	my @plot_seedlots = @{$seedlots->{$plot_key} || []};
+	if (scalar(@plot_seedlots) > 0 && scalar(@plot_seedlots) != 1) {
+	    die "There is more than one seedlot linked here!\n";
+	}
+
+	my $accession_name = $accession->{uniquename};
+	my $accession_id = $accession->{stock_id};
+
+	$design_info{"plot_name"} = $plot_name;
+	$design_info{"plot_id"} = $plot_id;
+
+	if ($prop{plot_number}) {
+	    $design_info{"plot_number"} = $prop{plot_number};
+	}
+	else {
+	    die "no plot number stockprop found for plot $plot_name";
+	}
+	foreach my $key (qw(block_number row_number col_number)) {
+	    $design_info{$key} = $prop{$key} if $prop{$key};
+	}
+	if ($self->get_experiment_type eq 'genotyping_layout') {
+	    $design_info{"is_blank"} = $prop{is_blank} ? 1 : 0;
+	}
+	foreach my $key (qw(concentration volume dna_person extraction tissue_type acquisition_date notes ncbi_taxonomy_id facility_identifier rep_number range_number)) {
+	    $design_info{$key} = $prop{$key} if $prop{$key};
+	}
+	if ($prop{plot_geo_json}) {
+	    $design_info{"plot_geo_json"} = decode_stored_json($prop{plot_geo_json});
+	}
+	if ($prop{is_a_control}) {
+	    $design_info{"is_a_control"} = $prop{is_a_control};
+	}
+
+	if ($accession->{type_name} eq 'analysis_result') {
+	    $design_info{"analysis_result_stock_name"} = $accession_name if $accession_name;
+	    $design_info{"analysis_result_stock_id"} = $accession_id if $accession_id;
+	} else {
+	    $design_info{"accession_name"} = $accession_name if $accession_name;
+	    $design_info{"accession_id"} = $accession_id if $accession_id;
+	}
+
+	my @intercrop_accessions = map { { accession_name => $_->{uniquename}, accession_id => $_->{stock_id} } } @{$intercrops->{$plot_key} || []};
+	if (scalar(@intercrop_accessions) > 0) {
+	    $design_info{"intercrop_accessions"} = \@intercrop_accessions;
+	}
+
+	if (@plot_seedlots) {
+	    my $val = $json->decode($plot_seedlots[0]->{value});
+	    $design_info{"seedlot_name"} = $plot_seedlots[0]->{uniquename};
+	    $design_info{"seedlot_stock_id"} = $plot_seedlots[0]->{stock_id};
+	    $design_info{"num_seed_per_plot"} = $val->{amount};
+	    $design_info{"weight_gram_seed_per_plot"} = $val->{weight_gram};
+	    $design_info{"seed_transaction_operator"} = $val->{operator};
+	}
+
+	my (@plant_names, @plant_ids_of_plot, @plant_index_number_values, %plants_tissue_hash);
+	foreach my $p (@{$plants->{$plot_key} || []}) {
+	    push @plant_names, $p->{uniquename};
+	    push @plant_ids_of_plot, $p->{stock_id};
+	    my $plant_key = $p->{key};
+	    my $numbers = $plant_index_numbers->{$plant_key}->{$self->cvterm_id('plant_index_number')} || [];
+	    if (scalar(@$numbers) != 1) {
+		print STDERR "Problem with plant_index_number stockprop for plant: $p->{uniquename}\n";
+	    }
+	    die "Can't call method \"value\" on an undefined value (no plant_index_number for plant $p->{uniquename})\n" if !@$numbers;
+	    push @plant_index_number_values, $numbers->[0];
+	    foreach my $t (@{$tissues_of_plants->{$plant_key} || []}) {
+		push @{$plants_tissue_hash{$p->{uniquename}}}, $t->{uniquename};
+	    }
+	}
+	$design_info{"plant_names"} = \@plant_names;
+	$design_info{"plant_ids"} = \@plant_ids_of_plot;
+	$design_info{"plant_index_numbers"} = \@plant_index_number_values;
+	$design_info{"plants_tissue_sample_names"} = \%plants_tissue_hash;
+
+	my (@tissue_sample_names, @tissue_sample_ids, @tissue_sample_index_number_values);
+	foreach my $t (@{$tissues->{$plot_key} || []}) {
+	    push @tissue_sample_names, $t->{uniquename};
+	    push @tissue_sample_ids, $t->{stock_id};
+	    my $numbers = $tissue_index_numbers->{$t->{key}}->{$self->cvterm_id('tissue_sample_index_number')} || [];
+	    if (scalar(@$numbers) > 0) {
+		if (scalar(@$numbers) != 1) {
+		    print STDERR "Problem with tissue_sample_index_number stockprop for tissue_sample: $t->{uniquename}\n";
+		}
+		push @tissue_sample_index_number_values, $numbers->[0];
+	    }
+	}
+	$design_info{"tissue_sample_names"} = \@tissue_sample_names;
+	$design_info{"tissue_sample_ids"} = \@tissue_sample_ids;
+	$design_info{"tissue_sample_index_numbers"} = \@tissue_sample_index_number_values;
+
+	my (@subplot_names, @subplot_ids_of_plot, @subplot_index_number_values, %subplots_plants_hash, %subplots_tissues_hash);
+	foreach my $s (@{$subplots->{$plot_key} || []}) {
+	    push @subplot_names, $s->{uniquename};
+	    push @subplot_ids_of_plot, $s->{stock_id};
+	    my $subplot_key = $s->{key};
+	    my $numbers = $subplot_index_numbers->{$subplot_key}->{$self->cvterm_id('subplot_index_number')} || [];
+	    if (scalar(@$numbers) != 1) {
+		print STDERR "Problem with subplot_index_number stockprop for subplot: $s->{uniquename}\n";
+	    }
+	    die "Can't call method \"value\" on an undefined value (no subplot_index_number for subplot $s->{uniquename})\n" if !@$numbers;
+	    push @subplot_index_number_values, $numbers->[0];
+	    foreach my $pp (@{$plants_of_subplots->{$subplot_key} || []}) {
+		push @{$subplots_plants_hash{$s->{uniquename}}}, $pp->{uniquename};
+	    }
+	    foreach my $t (@{$tissues_of_subplots->{$subplot_key} || []}) {
+		push @{$subplots_tissues_hash{$s->{uniquename}}}, $t->{uniquename};
+	    }
+	}
+	if (scalar(@subplot_names) > 0) {
+	    $design_info{"subplot_names"} = \@subplot_names;
+	    $design_info{"subplot_ids"} = \@subplot_ids_of_plot;
+	    $design_info{"subplot_index_numbers"} = \@subplot_index_number_values;
+	    $design_info{"subplots_plant_names"} = \%subplots_plants_hash;
+	    $design_info{"subplots_tissue_sample_names"} = \%subplots_tissues_hash;
+	}
+
+	$design->{$prop{plot_number}} = \%design_info;
+    }
 }
 
 
