@@ -35,7 +35,7 @@ jQuery(document).ready(function () {
           html += `<td>${data[i].create_date}</td>`;
           html += `<td><a href='/solpeople/profile/${data[i].uploader_id}'>${data[i].uploader_username}</a></td>`;
           if ( data[i].exists === "true" ) {
-            html += `<td><a href='/ajax/genotyping_project/download_archived_vcf?genotyping_project_id=<% $trial_id %>&basename=${data[i].basename}' target='_blank'>Download</a></td>`;
+            html += `<td><a href='/ajax/genotyping_project/download_archived_vcf?genotyping_project_id=<% $trial_id %>&file_id=${data[i].file_id}' target='_blank'>Download</a></td>`;
           }
           else {
             html += "<td>File not found</td>";

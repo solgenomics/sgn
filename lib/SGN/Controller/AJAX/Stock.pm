@@ -2487,19 +2487,18 @@ sub stock_additional_file_upload :Chained('/stock/get_stock') PathPart('upload_a
         timestamp => $timestamp,
         user_id => $user_id,
         user_role => $user_role,
-        metadata_schema => $c->dbic_schema("CXGN::Metadata::Schema")
+        metadata_schema => $c->dbic_schema("CXGN::Metadata::Schema"),
+        file_type => 'accession_additional_file_upload'
     });
     my ($archived_file_id, $archived_filename_with_path) = $uploader->archive();
-    my $md5 = $uploader->get_md5($archived_filename_with_path);
     if (!$archived_filename_with_path) {
         $c->stash->{rest} = {error => "Could not save file $upload_original_name in archive",};
         $c->detach();
     }
     unlink $upload_tempfile;
-    my $md5checksum = $md5->hexdigest();
 
     my $stock = CXGN::Stock->new({schema=>$schema,stock_id=>$stock_id});
-    my $result = $stock->associate_uploaded_file($user_id, $archived_filename_with_path, $md5checksum, $stock_id );
+    my $result = $stock->associate_uploaded_file($archived_file_id, $stock_id);
     if ($result->{error}){
         $c->stash->{rest} = {error=>$result->{error}};
         $c->detach();

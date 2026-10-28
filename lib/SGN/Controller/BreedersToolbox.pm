@@ -619,7 +619,8 @@ sub manage_phenotyping_view : Path("/breeders/phenotyping/view") Args(1) {
 
     my $metadata_schema = $c->dbic_schema('CXGN::Metadata::Schema');
     my $file_row = $metadata_schema->resultset("MdFiles")->find({file_id => $file_id});
-    my $file_destination =  File::Spec->catfile($file_row->dirname, $file_row->basename);
+    my $archive_path = $c->config->{archive_path};
+    my $file_destination =  File::Spec->catfile($archive_path, $file_row->dirname, $file_row->basename);
     #print STDERR "\n\n\nfile name:".$file_row->basename."\n";
     my @contents = ReadData ($file_destination);
     #print STDERR Dumper \@contents;

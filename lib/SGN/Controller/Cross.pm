@@ -619,7 +619,8 @@ sub cross_wishlist_download : Path('/cross_wishlist/file_download/') Args(1) {
     my $file_id = shift;
     my $metadata_schema = $c->dbic_schema('CXGN::Metadata::Schema');
     my $file_row = $metadata_schema->resultset("MdFiles")->find({file_id => $file_id});
-    my $file_destination =  File::Spec->catfile($file_row->dirname, $file_row->basename);
+    my $archive_path = $c->config->{archive_path};
+    my $file_destination =  File::Spec->catfile($archive_path, $file_row->dirname, $file_row->basename);
     my $contents = read_file($file_destination);
     my $file_name = $file_row->basename;
     $c->res->content_type('Application/xls');

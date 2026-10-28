@@ -54,6 +54,7 @@ use Try::Tiny;
 use Bio::Chado::Schema;
 use CXGN::BreederSearch;
 use CXGN::DB::InsertDBH;
+use CXGN::File;
 use CXGN::Genotype::ParseUpload;
 use CXGN::Genotype::Protocol;
 use CXGN::Genotype::Search;
@@ -168,7 +169,7 @@ Reads the uploaded file with the parser it belongs to and saves the genotypes in
 =cut
 
 sub upload_genotype_data {
-    my $file_path = $params->{archived_filename};
+    my $file_path = archived_file_path($params->{archived_file_id});
 
     # A Tassel HDF5 file is not something the genotype parsers can read, so it is exported to VCF
     # first and what comes out of that is what gets parsed.
@@ -177,7 +178,7 @@ sub upload_genotype_data {
     }
 
     my $parser = build_parser($file_path);
-    my $store_args = build_store_args($file_path);
+    my $store_args = build_store_args();
 
     my $plugin = $params->{parser_plugin};
     my $return;
@@ -204,6 +205,32 @@ sub upload_genotype_data {
 
     push @success_messages, "Genotype data stored successfully.";
     $result = $return;
+}
+
+=head2 archived_file_path($file_id)
+
+Returns the full path of an archived file, which is the archive path followed by what is stored for
+the file in the database. CXGN::File sets the search path of the connection it is given, so it gets
+a connection of its own rather than the one the rest of this script shares.
+
+=cut
+
+sub archived_file_path {
+    my $file_id = shift;
+
+    if (!$file_id) {
+        die "The upload does not name an archived file.\n";
+    }
+
+    my $file_dbh = $dbh->clone();
+    my $file_metadata_schema = CXGN::Metadata::Schema->connect( sub { $file_dbh }, { on_connect_do => ['SET search_path TO public, metadata;'] } );
+    my $archived_file = CXGN::File->new({
+        file_id => $file_id,
+        metadata_schema => $file_metadata_schema,
+        archive_path => $archive_path
+    });
+
+    return $archived_file->get_path();
 }
 
 =head2 export_tassel_hdf5_to_vcf($hdf5_file)
@@ -293,7 +320,7 @@ sub build_parser {
     return $parser;
 }
 
-=head2 build_store_args($file_path)
+=head2 build_store_args()
 
 Builds the arguments the genotype store takes. The project and protocol details are whatever the
 uploader filled in; the store creates a project or a protocol from them if the upload did not name
@@ -302,8 +329,6 @@ ones that already exist.
 =cut
 
 sub build_store_args {
-    my $file_path = shift;
-
     return {
         bcs_schema=>$chado_schema,
         metadata_schema=>$metadata_schema,
@@ -323,7 +348,7 @@ sub build_store_args {
         igd_numbers_included=>$params->{include_igd_numbers},
         lab_numbers_included=>$params->{include_lab_numbers},
         user_id=>$params->{user_id},
-        archived_filename=>$file_path,
+        archived_file_id=>$params->{archived_file_id},
         archived_file_type=>'genotype_vcf', #can be 'genotype_vcf' or 'genotype_dosage' to disntiguish genotyprop between old dosage only format and more info vcf format
         temp_file_sql_copy=>sql_copy_tempfile(),
         vcf_genotyping_type => $vcf_genotyping_type,

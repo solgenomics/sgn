@@ -1290,22 +1290,28 @@ sub validate_upload_existing_progenies_POST : Args(0) {
             }
 
         }
-        $c->stash->{rest} = {error_string => $return_error, existing_pedigrees => $existing_pedigree, archived_file_name => $archived_filename_with_path, user_id => $user_id};
+        $c->stash->{rest} = {error_string => $return_error, existing_pedigrees => $existing_pedigree, archived_file_id => $archived_file_id, user_id => $user_id};
 }
 
 
 sub store_upload_existing_progenies : Path('/ajax/cross/store_upload_existing_progenies') Args(0) {
     my $self = shift;
     my $c = shift;
-    my $archived_filename_with_path = $c->req->param('archived_file_name');
+    my $archived_file_id = $c->req->param('archived_file_id');
     my $user_id = $c->req->param('user_id');
-#    print STDERR "ARCHIVED FILE NAME =".Dumper($archived_filename_with_path)."\n";
 #    print STDERR "USER ID =".Dumper($user_id)."\n";
     my $overwrite_pedigrees = $c->req->param('overwrite_pedigrees') ne 'false' ? $c->req->param('overwrite_pedigrees') : 0;
     my $chado_schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
     my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema");
     my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema");
     my $dbh = $c->dbc->dbh;
+
+    my $archived_file = CXGN::File->new({
+        file_id => $archived_file_id,
+        metadata_schema => $metadata_schema,
+        archive_path => $c->config->{archive_path}
+    });
+    my $archived_filename_with_path = $archived_file->get_path();
 
     my $upload_type = 'StoreExistingProgeniesExcel';
     my @all_crosses;
@@ -1342,21 +1348,7 @@ sub store_upload_existing_progenies : Path('/ajax/cross/store_upload_existing_pr
         }
     }
 
-    my $md_row = $metadata_schema->resultset("MdMetadata")->create({create_person_id => $user_id});
-    $md_row->insert();
-    my $upload_file = CXGN::UploadFile->new({ metadata_schema => $metadata_schema });
-    my $md5 = $upload_file->get_md5($archived_filename_with_path);
-    my $md5checksum = $md5->hexdigest();
-    my $file_row = $metadata_schema->resultset("MdFiles")->create({
-        basename => basename($archived_filename_with_path),
-        dirname => dirname($archived_filename_with_path),
-        filetype => 'existing_progenies',
-        md5checksum => $md5checksum,
-        metadata_id => $md_row->metadata_id(),
-    });
-
-    my $file_id = $file_row->file_id();
-#    print STDERR "FILE ID =".Dumper($file_id)."\n";
+    my $file_id = $archived_file_id;
     foreach my $cross_name (@all_crosses) {
         my $cross_experiment_type = CXGN::Cross->new({schema => $chado_schema, cross_name => $cross_name});
         my $experiment_id = $cross_experiment_type->get_nd_experiment_id_with_type_cross_experiment();

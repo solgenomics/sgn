@@ -170,7 +170,7 @@ sub retrieve :Chained('vector') PathPart('retrieve') Args(0) {
 	    my $record = "";
 	    if ($basename =~ /\.gb$/) {
 		print STDERR "FOUND GENBANK RECORD FILE!\n";
-		my $filename = File::Spec->catdir($dirname, $basename);
+		my $filename = File::Spec->catfile($c->config->{archive_path}, $dirname, $basename);
 		open(my $F, "<", $filename) || die "Can't open file $filename for genbank data";
 
 		

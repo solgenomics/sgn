@@ -610,7 +610,7 @@ sub create_profile_template_POST : Args(0) {
 
     my $file_row = $metadata_schema->resultset("MdFiles")->create({
         basename => basename($file_destination),
-        dirname => dirname($file_destination),
+        dirname => dirname($archived_file_name),
         filetype => 'profile template xls',
         md5checksum => $md5->hexdigest(),
         metadata_id => $md_row->metadata_id(),

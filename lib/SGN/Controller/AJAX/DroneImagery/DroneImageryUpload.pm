@@ -1040,24 +1040,14 @@ sub upload_drone_imagery_POST : Args(0) {
             metadata_schema => $metadata_schema
         });
         my ($alignment_archived_file_id, $alignment_archived_filename_with_path) = $uploader_alignment->archive();
-        my $alignment_md5 = $uploader_alignment->get_md5($archived_filename_with_path);
         if (!$alignment_archived_filename_with_path) {
             return { error => "Could not save file $alignment_output_path_name in archive." };
         }
         print STDERR "Archived Alignment Matrices File: $alignment_archived_filename_with_path\n";
 
-        my $alignment_md_row = $metadata_schema->resultset("MdMetadata")->create({create_person_id => $user_id});
-        my $alignment_file_row = $metadata_schema->resultset("MdFiles")->create({
-            basename => basename($alignment_archived_filename_with_path),
-            dirname => dirname($alignment_archived_filename_with_path),
-            filetype => $alignment_matrices_type,
-            md5checksum => $alignment_md5->hexdigest(),
-            metadata_id => $alignment_md_row->metadata_id()
-        });
-
         my $experiment_files = $phenome_schema->resultset("NdExperimentMdFiles")->create({
             nd_experiment_id => $drone_run_nd_experiment_id,
-            file_id => $alignment_file_row->file_id()
+            file_id => $alignment_archived_file_id
         });
 
         my @aligned_images;

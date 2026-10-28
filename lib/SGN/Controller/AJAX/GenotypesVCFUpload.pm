@@ -618,7 +618,7 @@ sub upload_genotype_verify_POST : Args(0) {
 
     # Nothing recognizable was uploaded. Submitting a job for it would only produce a background
     # failure that is harder to read than saying so here.
-    if (!$genotype_file_type || !$archived_filename_with_path || !$parser_plugin) {
+    if (!$genotype_file_type || !$archived_filename_with_path || !$archived_main_file_id || !$parser_plugin) {
         $c->stash->{rest} = { error => 'You must upload a genotype data file!' };
         $c->detach();
     }
@@ -637,7 +637,7 @@ sub upload_genotype_verify_POST : Args(0) {
     my $upload_params = {
         parser_plugin => $parser_plugin,
         genotype_file_type => $genotype_file_type,
-        archived_filename => $archived_filename_with_path,
+        archived_file_id => $archived_main_file_id,
         archived_marker_info_file => $archived_marker_info_file,
         tassel_hdf5_file => $tassel_hdf5_file,
         rootpath => $c->config->{rootpath},

@@ -785,7 +785,7 @@ $dataset_id => undef
           html += `<td><a href="/breeders_toolbox/protocol/${file.genotyping_protocol_id}" target="_blank">${file.genotyping_protocol_name}</td>`;
           html += `<td><a href="/breeders/trial/${file.genotyping_project_id}" target="_blank">${file.genotyping_project_name}</td>`;
           if ( file.exists === 'true' ) {
-            html += `<td><a href="/ajax/genotyping_project/download_archived_vcf?genotyping_project_id=${file.genotyping_project_id}&basename=${file.basename}" target="_blank">Download</a></td>`;
+            html += `<td><a href="/ajax/genotyping_project/download_archived_vcf?genotyping_project_id=${file.genotyping_project_id}&file_id=${file.file_id}" target="_blank">Download</a></td>`;
           }
           else {
             html += "<td>File not found</td>";

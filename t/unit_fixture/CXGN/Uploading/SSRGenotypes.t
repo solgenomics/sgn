@@ -134,7 +134,7 @@ for my $extension ("xls", "xlsx") {
 		project_name=>'ssr_project',
 		project_description=>'test_ssr_upload',
 		user_id=>'41',
-		archived_filename=>$archived_filename_with_path,
+		archived_file_id=>$archived_file_id,
 		archived_file_type=>'ssr',
 		genotyping_data_type=>'ssr',
 		organism_id => $organism_id,

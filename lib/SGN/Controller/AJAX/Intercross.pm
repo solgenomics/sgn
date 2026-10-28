@@ -165,7 +165,7 @@ sub create_parents_file_POST : Args(0) {
     $md_row->insert();
     my $file_row = $metadata_schema->resultset("MdFiles")->create({
         basename => basename($file_destination),
-        dirname => dirname($file_destination),
+        dirname => dirname($archived_file_name),
         filetype => 'intercross_parents',
         md5checksum => $md5->hexdigest(),
         metadata_id => $md_row->metadata_id(),
@@ -323,7 +323,7 @@ sub create_intercross_wishlist_POST : Args(0) {
     $md_row->insert();
     my $file_row = $metadata_schema->resultset("MdFiles")->create({
         basename => basename($file_destination),
-        dirname => dirname($file_destination),
+        dirname => dirname($archived_file_name),
         filetype => 'intercross_wishlist',
         md5checksum => $md5->hexdigest(),
         metadata_id => $md_row->metadata_id(),

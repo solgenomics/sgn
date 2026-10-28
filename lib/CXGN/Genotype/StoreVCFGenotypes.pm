@@ -139,7 +139,7 @@ my $store_genotypes = CXGN::Genotype::StoreVCFGenotypes->new(
     user_id => 41,
     igd_numbers_included=>0,
     lab_numbers_included=>0,
-    archived_filename => $archived_file,
+    archived_file_id => $archived_file_id,  #file_id of the already archived file, from CXGN::UploadFile->archive()
     archived_file_type => 'genotype_vcf'  #can be 'genotype_vcf' or 'genotype_dosage'
 );
 my $verified_errors = $store_genotypes->validate();
@@ -176,7 +176,7 @@ my $store_genotypes = CXGN::Genotype::StoreVCFGenotypes->new(
     user_id => 41,
     igd_numbers_included=>0,
     lab_numbers_included=>0,
-    archived_filename => $archived_file,
+    archived_file_id => $archived_file_id,  #file_id of the already archived file, from CXGN::UploadFile->archive()
     archived_file_type => 'genotype_vcf'  #can be 'genotype_vcf' or 'genotype_dosage'
 );
 my $verified_errors = $store_genotypes->validate();
@@ -206,7 +206,7 @@ my $store_genotypes = CXGN::Genotype::StoreVCFGenotypes->new(
     user_id => 41,
     igd_numbers_included=>0,
     lab_numbers_included=>0,
-    archived_filename => $archived_file,
+    archived_file_id => $archived_file_id,  #file_id of the already archived file, from CXGN::UploadFile->archive()
     archived_file_type => 'genotype_vcf'  #can be 'genotype_vcf' or 'genotype_dosage'
 );
 my $verified_errors = $store_genotypes->validate();
@@ -232,7 +232,7 @@ $return = $store_genotypes->store_genotypeprop_table();
     user_id => 41,
     igd_numbers_included=>0,
     lab_numbers_included=>0,
-    archived_filename => $archived_file,
+    archived_file_id => $archived_file_id,  #file_id of the already archived file, from CXGN::UploadFile->archive()
     archived_file_type => 'genotype_vcf'  #can be 'genotype_vcf' or 'genotype_dosage'
 );
  my $verified_errors = $store_genotypes->validate();
@@ -256,7 +256,6 @@ use File::Basename qw | basename dirname|;
 use Digest::MD5;
 use CXGN::List::Validate;
 use Data::Dumper;
-use CXGN::UploadFile;
 use SGN::Model::Cvterm;
 use JSON;
 use CXGN::Trial;
@@ -375,8 +374,8 @@ has 'user_id' => (
     required => 1,
 );
 
-has 'archived_filename' => (
-    isa => 'Str',
+has 'archived_file_id' => ( #md_files file_id of the originating file, which must already be archived with CXGN::UploadFile
+    isa => 'Int',
     is => 'rw',
     required => 0,
 );
@@ -976,21 +975,11 @@ sub store_metadata {
 #    print STDERR "Generated lookup table with ".scalar(keys(%stock_lookup))." entries.\n";
 
     print STDERR "Generating md_file entry...\n";
-    #create relationship between nd_experiment and originating archived file
-    my $file = $self->archived_filename;
-    my $md_row = $self->metadata_schema->resultset("MdMetadata")->create({create_person_id => $self->user_id});
-    $md_row->insert();
-    my $upload_file = CXGN::UploadFile->new({ metadata_schema => $self->metadata_schema });
-    my $md5 = $upload_file->get_md5($file);
-    my $md5checksum = $md5->hexdigest();
-    my $file_row = $self->metadata_schema->resultset("MdFiles")->create({
-        basename => basename($file),
-        dirname => dirname($file),
-        filetype => $self->archived_file_type,
-        md5checksum => $md5checksum,
-        metadata_id => $md_row->metadata_id(),
-    });
-    $self->md_file_id($file_row->file_id());
+    #the originating file was already given an md_files row when it was archived, so link to that one
+    if (!$self->archived_file_id) {
+        die "An archived_file_id is required to store genotype metadata. Archive the file with CXGN::UploadFile first.\n";
+    }
+    $self->md_file_id($self->archived_file_id);
     print STDERR "md_file_id is ".$self->md_file_id()."\n";
 }
 
