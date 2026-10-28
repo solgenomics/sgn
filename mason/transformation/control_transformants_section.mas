@@ -17,9 +17,9 @@ jQuery(document).ready(function(){
         'autoWidth': false,
         'order': false,
         'columns': [
-            { title: "Accession", "data": null, "render": function ( data, type, row ) { return "<a href='/stock/"+row.transformant_id+"/view'>"+row.transformant_name+"</a>"; } },
+            { title: "Accession", "data": null, "render": function ( data, type, row ) { return "<a href='/stock/"+row.control_transformant_id+"/view'>"+row.control_transformant_name+"</a>"; } },
             { title: "Number of Insertions", "data": "number_of_insertions" },
-            { title: "Transformation ID", "data": null, "render": function ( data, type, row ) { return "<a href='/transformation/"+row.transformation_id+"/view'>"+row.transformation_name+"</a>"; } },
+            { title: "Transformation ID", "data": null, "render": function ( data, type, row ) { return "<a href='/transformation/"+row.control_transformation_id+"/view'>"+row.control_transformation_name+"</a>"; } },
         ],
     });
 

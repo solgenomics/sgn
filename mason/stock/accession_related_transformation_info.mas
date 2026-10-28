@@ -154,6 +154,7 @@ jQuery(document).ready(function(){
             'order': false,
             'columns': [
                 { title: "Accession", "data": null, "render": function ( data, type, row ) { return "<a href='/stock/"+row.control_transformant_id+"/view'>"+row.control_transformant_name+"</a>"; } },
+                { title: "Transformation ID", "data": null, "render": function ( data, type, row ) { return "<a href='/transformation/"+row.control_transformation_id+"/view'>"+row.control_transformation_name+"</a>"; } },
             ],
 
             "fnInitComplete": function(oSettings, json) {

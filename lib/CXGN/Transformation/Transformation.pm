@@ -666,7 +666,7 @@ sub get_control_transformant_details {
         JOIN stock_relationship AS transformant_relationship ON (transformant_relationship.object_id = transformation.stock_id) AND transformant_relationship.type_id = ?
         JOIN stock AS transformant ON (transformant_relationship.subject_id = transformant.stock_id) AND transformant.type_id = ?
         LEFT JOIN stockprop ON (stockprop.stock_id = transformant.stock_id) AND stockprop.type_id = ?
-        Where control_relationship.object_id = ? ";
+        Where control_relationship.object_id = ? ORDER BY transformation.uniquename";
 
     my $h = $schema->storage->dbh()->prepare($q);
 

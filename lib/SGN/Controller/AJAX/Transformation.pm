@@ -1169,20 +1169,17 @@ sub get_control_transformants :Path('/ajax/transformation/control_transformants'
 
     my @control_transformants;
     if ($transformation_id) {
-        my $control_of_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'control_of', 'stock_relationship')->cvterm_id();
-        my $transformation_control_rs = $schema->resultset("Stock::StockRelationship")->find({ object_id => $transformation_id, type_id => $control_of_type_id});
-        my $control_id;
-        if ($transformation_control_rs) {
-            $control_id = $transformation_control_rs->subject_id();
-            my $control_transformation_obj = CXGN::Transformation::Transformation->new({schema=>$schema, dbh=>$dbh, transformation_stock_id=>$control_id});
-            my $result = $control_transformation_obj->transformants();
-            my @sorted_names = natkeysort {($_->[1])} @$result;
+        my $transformation_obj = CXGN::Transformation::Transformation->new({schema=>$schema, dbh=>$dbh, transformation_stock_id=>$transformation_id});
+        my $results = $transformation_obj->get_control_transformant_details();
+        if (scalar @$results > 0) {
+            foreach my $r (@$results){
+                my ($stock_id, $stock_name, $number_of_insertions, $control_transformation_id, $control_transformation_name) =@$r;
 
-            foreach my $r (@sorted_names) {
-                my ($stock_id, $stock_name) =@$r;
                 push @control_transformants, {
                     control_transformant_id => $stock_id,
                     control_transformant_name => $stock_name,
+                    control_transformation_id => $control_transformation_id,
+                    control_transformation_name => $control_transformation_name
                 };
             }
         }
@@ -1924,20 +1921,20 @@ sub get_control_transgenic_line_details :Path('/ajax/transformation/control_tran
     my $dbh = $c->dbc->dbh;
 
     my $transformation_obj = CXGN::Transformation::Transformation->new({schema=>$schema, dbh=>$dbh, transformation_stock_id=>$transformation_stock_id});
-    my $result = $transformation_obj->get_control_transformant_details();
-    my @sorted_names = natkeysort {($_->[1])} @$result;
+    my $results = $transformation_obj->get_control_transformant_details();
 
     my @transformant_details;
-    foreach my $r (@sorted_names){
-        my ($stock_id, $stock_name, $number_of_insertions, $control_transformation_id, $control_transformation_name) =@$r;
-
-        push @transformant_details, {
-            transformant_id => $stock_id,
-            transformant_name => $stock_name,
-            number_of_insertions => $number_of_insertions,
-            transformation_id => $control_transformation_id,
-            transformation_name => $control_transformation_name
-        };
+    if (scalar @$results > 0) {
+        foreach my $r (@$results){
+            my ($stock_id, $stock_name, $number_of_insertions, $control_transformation_id, $control_transformation_name) =@$r;
+            push @transformant_details, {
+                control_transformant_id => $stock_id,
+                control_transformant_name => $stock_name,
+                number_of_insertions => $number_of_insertions,
+                control_transformation_id => $control_transformation_id,
+                control_transformation_name => $control_transformation_name
+            };
+        }
     }
 
     $c->stash->{rest} = { data => \@transformant_details };
