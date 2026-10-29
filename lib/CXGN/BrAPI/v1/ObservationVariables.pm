@@ -147,7 +147,7 @@ sub search {
 	my @bind_values;
 	if (scalar(@trait_ids)>0){
 		my $trait_ids_sql = join ',', ('?') x scalar(@trait_ids);
-		push @and_wheres, "cvterm.id IN ($trait_ids_sql)";
+		push @and_wheres, "cvterm.cvterm_id IN ($trait_ids_sql)";
 		push @bind_values, @trait_ids;
 	}
 	if (scalar(@db_names)>0){
