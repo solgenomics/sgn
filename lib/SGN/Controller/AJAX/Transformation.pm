@@ -1322,7 +1322,7 @@ sub upload_transgenic_historical_data_POST : Args(0) {
     my @all_batch_info = ();
     if ($parsed_data){
         foreach my $batch_number (sort keys %$parsed_data) {
-            my $control_transformation_id;
+            my @control_transformation_ids = ();
             my @transformation_ids = ();
             my $batch_info = $parsed_data->{$batch_number};
             foreach my $vector_construct (sort keys %$batch_info) {
@@ -1416,20 +1416,22 @@ sub upload_transgenic_historical_data_POST : Args(0) {
 
                 if ($transformation_stock_id) {
                     if ($is_a_control) {
-                        $control_transformation_id = $transformation_stock_id;
+                        push @control_transformation_ids, $transformation_stock_id;
                     } else {
                         push @transformation_ids, $transformation_stock_id;
                     }
                 }
             }
 
-            if ($control_transformation_id && (scalar @transformation_ids > 0)) {
+            if ((scalar @control_transformation_ids > 0) && (scalar @transformation_ids > 0)) {
                 foreach my $id (@transformation_ids) {
-                    my $transformation_obj = CXGN::Transformation::Transformation->new({schema=>$schema, dbh=>$dbh, transformation_stock_id=>$id, transformation_control_stock_id=>$control_transformation_id});
-                    my $error = $transformation_obj->set_transformation_control();
-                    if ($error) {
-                        $c->stash->{rest} = { error => "An error occurred attempting to set transformation control for batch: $batch_number. ($@)" };
-                        return;
+                    foreach my $control_id (@control_transformation_ids) {
+                        my $transformation_obj = CXGN::Transformation::Transformation->new({schema=>$schema, dbh=>$dbh, transformation_stock_id=>$id, transformation_control_stock_id=>$control_id});
+                        my $error = $transformation_obj->set_transformation_control();
+                        if ($error) {
+                            $c->stash->{rest} = { error => "An error occurred attempting to set transformation control for batch: $batch_number. ($@)" };
+                            return;
+                        }
                     }
                 }
             }
