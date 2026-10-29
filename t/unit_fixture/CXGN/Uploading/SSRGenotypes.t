@@ -86,11 +86,13 @@ for my $extension ("xls", "xlsx") {
 		archive_filename => "ssr_data.$extension",
 		timestamp => $timestamp,
 		user_id => 41, #janedoe in fixture
-		user_role => 'curator'
+		user_role => 'curator',
+		metadata_schema => $metadata_schema,
+		file_type => 'genotyping_data'
 	});
 
 	## Store uploaded temporary file in archive
-	my $archived_filename_with_path = $uploader->archive();
+	my ($archived_file_id, $archived_filename_with_path) = $uploader->archive();
 	my $md5 = $uploader->get_md5($archived_filename_with_path);
 	ok($archived_filename_with_path);
 	ok($md5);
@@ -132,7 +134,7 @@ for my $extension ("xls", "xlsx") {
 		project_name=>'ssr_project',
 		project_description=>'test_ssr_upload',
 		user_id=>'41',
-		archived_filename=>$archived_filename_with_path,
+		archived_file_id=>$archived_file_id,
 		archived_file_type=>'ssr',
 		genotyping_data_type=>'ssr',
 		organism_id => $organism_id,

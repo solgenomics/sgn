@@ -9,7 +9,7 @@ CXGN::Project is the root object for information stored in the project table, su
 
 It should rarely be necessary to be instantiated on its own. Use the CXGN::Trial factory object to generate the appropriate object from a project_id.
 
-=head1 SYNOPSYS
+=head1 SYNOPSIS
 
  my $project = CXGN::Project->new( { bcs_schema => $schema, trial_id => $trial_id });
  $trial->set_description("yield trial with promising varieties");
@@ -2317,7 +2317,17 @@ sub get_phenotype_metadata {
 	my $trial_id = $self->get_trial_id();
 	my @file_array;
 	my %file_info;
-	my $q = "SELECT file_id, m.create_date, p.sp_person_id, p.username, basename, dirname, filetype FROM nd_experiment_project JOIN nd_experiment_phenotype USING(nd_experiment_id) JOIN phenome.nd_experiment_md_files ON (nd_experiment_phenotype.nd_experiment_id=nd_experiment_md_files.nd_experiment_id) LEFT JOIN metadata.md_files using(file_id) LEFT JOIN metadata.md_metadata as m using(metadata_id) LEFT JOIN sgn_people.sp_person as p ON (p.sp_person_id=m.create_person_id) WHERE project_id=? and m.obsolete = 0 and NOT (metadata.md_files.filetype='generated from plot from plant phenotypes') and NOT (metadata.md_files.filetype='direct phenotyping') ORDER BY file_id ASC";
+	my $q = "SELECT file_id, m.create_date, p.sp_person_id, p.username, basename, dirname, filetype FROM nd_experiment_project 
+    JOIN nd_experiment_phenotype USING(nd_experiment_id) 
+    JOIN phenome.nd_experiment_md_files ON (nd_experiment_phenotype.nd_experiment_id=nd_experiment_md_files.nd_experiment_id) 
+    LEFT JOIN metadata.md_files using(file_id) 
+    LEFT JOIN metadata.md_metadata as m using(metadata_id) 
+    LEFT JOIN sgn_people.sp_person as p ON (p.sp_person_id=m.create_person_id) 
+    WHERE project_id=? 
+    and m.obsolete = 0 
+    and NOT (metadata.md_files.filetype='generated from plot from plant phenotypes') 
+    and NOT (metadata.md_files.filetype='direct phenotyping') 
+    ORDER BY file_id ASC";
 	my $h = $self->bcs_schema->storage()->dbh()->prepare($q);
 	$h->execute($trial_id);
 
@@ -2758,33 +2768,20 @@ sub total_phenotypes {
 
 sub add_additional_uploaded_file {
     my $self = shift;
-    my $user_id = shift;
-    my $archived_filename_with_path = shift;
-    my $md5checksum = shift;
+    my $file_id = shift;
     my $result = $self->get_nd_experiment_id();
     if ($result->{error}){
         return {error => $result->{error} };
     }
+
     my $nd_experiment_id = $result->{nd_experiment_id};
 
-    my $md_row = $self->metadata_schema->resultset("MdMetadata")->create({create_person_id => $user_id});
-    $md_row->insert();
-    my $file_row = $self->metadata_schema->resultset("MdFiles")
-        ->create({
-            basename => basename($archived_filename_with_path),
-            dirname => dirname($archived_filename_with_path),
-            filetype => 'trial_additional_file_upload',
-            md5checksum => $md5checksum,
-            metadata_id => $md_row->metadata_id(),
-        });
-    my $file_id = $file_row->file_id();
-    my $experiment_file = $self->phenome_schema->resultset("NdExperimentMdFiles")
-        ->create({
-            nd_experiment_id => $nd_experiment_id,
-            file_id => $file_id,
-        });
+    my $experiment_file = $self->phenome_schema->resultset("NdExperimentMdFiles")->create({
+        nd_experiment_id => $nd_experiment_id,
+        file_id => $file_id,
+    });
 
-    return {success => 1, file_id=>$file_id};
+    return {success => 1};
 }
 
 =head2 function get_additional_uploaded_files()
@@ -2803,7 +2800,13 @@ sub get_additional_uploaded_files {
     my $trial_id = $self->get_trial_id();
     my @file_array;
     my %file_info;
-    my $q = "SELECT file_id, m.create_date, p.sp_person_id, p.username, basename, dirname, filetype FROM project JOIN nd_experiment_project USING(project_id) JOIN phenome.nd_experiment_md_files ON (nd_experiment_project.nd_experiment_id=nd_experiment_md_files.nd_experiment_id) LEFT JOIN metadata.md_files using(file_id) LEFT JOIN metadata.md_metadata as m using(metadata_id) LEFT JOIN sgn_people.sp_person as p ON (p.sp_person_id=m.create_person_id) WHERE project_id=? and m.obsolete = 0 and metadata.md_files.filetype='trial_additional_file_upload' ORDER BY file_id ASC";
+    my $q = "SELECT file_id, m.create_date, p.sp_person_id, p.username, basename, dirname, filetype FROM project 
+        JOIN nd_experiment_project USING(project_id) 
+        JOIN phenome.nd_experiment_md_files ON (nd_experiment_project.nd_experiment_id=nd_experiment_md_files.nd_experiment_id) 
+        LEFT JOIN metadata.md_files using(file_id) 
+        LEFT JOIN metadata.md_metadata as m using(metadata_id) 
+        LEFT JOIN sgn_people.sp_person as p ON (p.sp_person_id=m.create_person_id) 
+        WHERE project_id=? and m.obsolete = 0 and metadata.md_files.filetype='trial_additional_file' ORDER BY file_id ASC";
     my $h = $self->bcs_schema->storage()->dbh()->prepare($q);
     $h->execute($trial_id);
 
@@ -5672,7 +5675,7 @@ sub get_treatments {
 
 =cut
 
-sub get_treatment_projects { #WARNING: THIS FUNCTION IS DEPRECATD AND SHOULD NOT BE USED
+sub get_treatment_projects { #WARNING: THIS FUNCTION IS DEPRECATED AND SHOULD NOT BE USED
     my $self = shift;
 
     my @plants;
@@ -5691,7 +5694,7 @@ sub get_treatment_projects { #WARNING: THIS FUNCTION IS DEPRECATD AND SHOULD NOT
 =head2 get_trial_contacts
 
  Usage:        my $contacts = $t->get_trial_contacts();
- Desc:         Returns an arrayref of hashrefs that contain all sp_person info fpr sp_person_ids saved as projectprops to this trial
+ Desc:         Returns an arrayref of hashrefs that contain all sp_person info for sp_person_ids saved as projectprops to this trial
  Ret:          an arrayref containing
                { sp_person_id => 1, salutation => 'Mr.', first_name => 'joe', last_name => 'doe', email => 'j@d.com' }
  Args:         none

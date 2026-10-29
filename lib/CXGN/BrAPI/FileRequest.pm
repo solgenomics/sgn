@@ -18,9 +18,16 @@ use File::Spec::Functions;
 use List::MoreUtils qw(uniq);
 use DateTime;
 use CXGN::UploadFile;
+use CXGN::Metadata::Schema;
 
 has 'schema' => (
     isa => 'Bio::Chado::Schema',
+    is => 'rw',
+    required => 1,
+);
+
+has 'metadata_schema' => (
+    isa => 'CXGN::Metadata::Schema',
     is => 'rw',
     required => 1,
 );
@@ -80,6 +87,7 @@ sub get_path {
 sub observations {
     my $self = shift;
     my $schema = $self->schema;
+    my $metadata_schema = $self->metadata_schema;
     my $data = $self->data;
     my $user_id = $self->user_id;
     my $user_type = $self->user_type;
@@ -115,9 +123,10 @@ sub observations {
         archive_filename => $archive_filename,
         timestamp => $timestamp,
         user_id => $user_id,
-        user_role => $user_type
+        user_role => $user_type,
+        metadata_schema => $metadata_schema
     });
-    my $archived_filename_with_path = $uploader->archive();
+    my ($archived_file_id, $archived_filename_with_path) = $uploader->archive();
     my $md5 = $uploader->get_md5($archived_filename_with_path);
     if (!$archived_filename_with_path) {
         $error_message = "Could not save incoming brapi observations into file for archive.";

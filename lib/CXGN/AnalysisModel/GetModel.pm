@@ -141,30 +141,22 @@ sub store_analysis_model_files {
             archive_filename => $model_original_name,
             timestamp => $timestamp,
             user_id => $user_id,
-            user_role => $user_role
+            user_role => $user_role,
+            metadata_schema => $metadata_schema,
+            file_type => $archived_model_file_type
         });
-        my $archived_filename_with_path = $uploader->archive();
-        my $md5 = $uploader->get_md5($archived_filename_with_path);
+        my ($archived_file_id, $archived_filename_with_path) = $uploader->archive();
         if (!$archived_filename_with_path) {
             return { error => "Could not save file $model_original_name in archive." };
         }
         print STDERR "Archived Model File: $archived_filename_with_path\n";
 
-        my $md_row = $metadata_schema->resultset("MdMetadata")->create({create_person_id => $user_id});
-        my $file_row = $metadata_schema->resultset("MdFiles")->create({
-            basename => basename($archived_filename_with_path),
-            dirname => dirname($archived_filename_with_path),
-            filetype => $archived_model_file_type,
-            md5checksum => $md5->hexdigest(),
-            metadata_id => $md_row->metadata_id()
-        });
-
         my $experiment_files = $phenome_schema->resultset("NdExperimentMdFiles")->create({
             nd_experiment_id => $nd_experiment_id,
-            file_id => $file_row->file_id()
+            file_id => $archived_file_id
         });
 
-        $model_file_md_file_id = $file_row->file_id();
+        $model_file_md_file_id = $archived_file_id;
         # unlink($model_file);
     }
 
@@ -179,27 +171,19 @@ sub store_analysis_model_files {
         archive_filename => $model_aux_original_name,
         timestamp => $timestamp,
         user_id => $user_id,
-        user_role => $user_role
+        user_role => $user_role,
+        metadata_schema => $metadata_schema,
+        file_type => $archived_training_data_file_type
     });
-    my $archived_aux_filename_with_path = $uploader_autoencoder->archive();
-    my $md5_aux = $uploader_autoencoder->get_md5($archived_aux_filename_with_path);
+    my ($archived_aux_file_id, $archived_aux_filename_with_path) = $uploader_autoencoder->archive();
     if (!$archived_aux_filename_with_path) {
         return { error => "Could not save file $model_aux_original_name in archive." };
     }
     print STDERR "Archived Auxiliary Model File: $archived_aux_filename_with_path\n";
 
-    my $md_row_aux = $metadata_schema->resultset("MdMetadata")->create({create_person_id => $user_id});
-    my $file_row_aux = $metadata_schema->resultset("MdFiles")->create({
-        basename => basename($archived_aux_filename_with_path),
-        dirname => dirname($archived_aux_filename_with_path),
-        filetype => $archived_training_data_file_type,
-        md5checksum => $md5_aux->hexdigest(),
-        metadata_id => $md_row_aux->metadata_id()
-    });
-
     my $experiment_files_pheno = $phenome_schema->resultset("NdExperimentMdFiles")->create({
         nd_experiment_id => $nd_experiment_id,
-        file_id => $file_row_aux->file_id()
+        file_id => $archived_aux_file_id
     });
 
     # SAVING AUXILIARY FILES, LIKE AUXILIARY TRAINING DATA AND PREPROCESSING MODELS
@@ -218,27 +202,19 @@ sub store_analysis_model_files {
                 archive_filename => $model_aux_original_name,
                 timestamp => $timestamp,
                 user_id => $user_id,
-                user_role => $user_role
+                user_role => $user_role,
+                metadata_schema => $metadata_schema,
+                file_type => $auxiliary_model_file_archive_type
             });
-            my $archived_aux_filename_with_path = $uploader_autoencoder->archive();
-            my $md5_aux = $uploader_autoencoder->get_md5($archived_aux_filename_with_path);
+            my ($archived_aux_file_id, $archived_aux_filename_with_path) = $uploader_autoencoder->archive();
             if (!$archived_aux_filename_with_path) {
                 return { error => "Could not save file $model_aux_original_name in archive." };
             }
             print STDERR "Archived Auxiliary Model File: $archived_aux_filename_with_path\n";
 
-            my $md_row_aux = $metadata_schema->resultset("MdMetadata")->create({create_person_id => $user_id});
-            my $file_row_aux = $metadata_schema->resultset("MdFiles")->create({
-                basename => basename($archived_aux_filename_with_path),
-                dirname => dirname($archived_aux_filename_with_path),
-                filetype => $auxiliary_model_file_archive_type,
-                md5checksum => $md5_aux->hexdigest(),
-                metadata_id => $md_row_aux->metadata_id()
-            });
-
             my $experiment_files_aux = $phenome_schema->resultset("NdExperimentMdFiles")->create({
                 nd_experiment_id => $nd_experiment_id,
-                file_id => $file_row_aux->file_id()
+                file_id => $archived_aux_file_id
             });
 
             # unlink($auxiliary_model_file);

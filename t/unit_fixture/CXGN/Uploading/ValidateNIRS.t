@@ -10,6 +10,9 @@ use LWP::UserAgent;
 use CXGN::Dataset;
 use CXGN::Phenotypes::ParseUpload;
 use CXGN::Phenotypes::StorePhenotypes;
+use CXGN::UploadFile;
+use File::Basename qw |basename|;
+use DateTime;
 
 #Needed to update IO::Socket::SSL
 use Data::Dumper;
@@ -44,11 +47,27 @@ for my $extension ("xls", "xlsx") {
 
     my $parser = CXGN::Phenotypes::ParseUpload->new();
     my $filename = "t/data/trial/upload_phenotypin_spreadsheet_large.$extension";
+    my $subdirectory = "nirs_validation_tests";
+    my $time = DateTime->now();
+    my $timestamp = $time->ymd()."_".$time->hms();
+    my $uploader = CXGN::UploadFile->new({
+        tempfile => $filename, #UploadFile will try to copy the test file to the archive, so this should work
+        subdirectory => $subdirectory,
+        archive_path => $f->config->{archive_path},
+        archive_filename => basename($filename),
+        timestamp => $timestamp,
+        user_id => 41, #41 for janedoe
+        user_role => 'curator',
+        file_type => 'phenotyping_spreadsheet',
+        metadata_schema => $f->metadata_schema
+    });
+    my ($archived_file_id, $archived_filename_with_path) = $uploader->archive(); #we need the archived file ID to properly associate the file with the phenotype metadata
     my $parsed_file = $parser->parse('phenotype spreadsheet', $filename, 0, 'plots', $f->bcs_schema);
     ok($parsed_file, "Check if parse parse phenotype spreadsheet works");
 
     my %phenotype_metadata;
     $phenotype_metadata{'archived_file'} = $filename;
+    $phenotype_metadata{'archived_file_id'} = $archived_file_id;
     $phenotype_metadata{'archived_file_type'} = "spreadsheet phenotype file";
     $phenotype_metadata{'operator'} = "janedoe";
     $phenotype_metadata{'date'} = "2016-02-17_05:15:21";

@@ -12,6 +12,7 @@ use DateTime;
 use Spreadsheet::WriteExcel;
 use Spreadsheet::Read;
 use CXGN::Dataset;
+use CXGN::UploadFile;
 use CXGN::Phenotypes::ParseUpload;
 use CXGN::Phenotypes::StorePhenotypes;
 
@@ -134,7 +135,7 @@ is_deeply($response,  {'metadata' => {'datafiles' => [],'status' => [{'messageTy
 
 $mech->get_ok('http://localhost:3010/brapi/v2/observations/table?pageSize=2');
 $response = decode_json $mech->content;
- print STDERR "\n reponse is here:" . Dumper $response;
+ print STDERR "\n response is here:" . Dumper $response;
 #17
 
 is_deeply($response,
@@ -429,7 +430,7 @@ $data = '{ "740336":  { "observationUnitDbId": "41284",  "collector": "Jane Doe"
 $resp = $ua->put("http://localhost:3010/brapi/v2/observations/", Content => $data);
 $response = decode_json $resp->{_content};
 
-# 19 Test will be fixed when repeted and modified obsverations are allowed
+# 19 Test will be fixed when repeated and modified obsverations are allowed
 is_deeply($response, {'metadata' => {'pagination' => {'currentPage' => 0,'totalCount' => 1,'pageSize' => 10,'totalPages' => 1},'datafiles' => [],'status' => [{'message' => 'BrAPI base call found with page=0, pageSize=10','messageType' => 'INFO'},{'message' => 'Loading CXGN::BrAPI::v2::Observations','messageType' => 'INFO'},{'messageType' => 'info','message' => 'Request structure is valid'},{'messageType' => 'info','message' => 'Request data is valid'},{'messageType' => 'info','message' => 'File for incoming brapi obserations saved in archive.'},{'messageType' => 'INFO','message' => 'All values in your file have been successfully processed!<br><br>0 new values stored<br>0 previously stored values skipped<br>1 previously stored values overwritten<br>0 previously stored values removed<br><br>'}]},'result' => {'data' => [{'germplasmName' => 'IITA-TMS-IBA980581','observationVariableName' => 'cass sink leaf|3-phosphoglyceric acid|ug/g|week 16','observationUnitName' => 'CASS_6Genotypes_103','observationTimeStamp' => '2020-01-01T14:47:23-07:00','germplasmDbId' => 41283,'collector' => 'Jane Doe','observationDbId' => 740336,'studyDbId' => 165,'observationLevel' => 'plot','observationUnitDbId' => 41284,'observationVariableDbId' => '77559','value' => 'value 5','uploadedBy' => 'Jane Doe', 'externalReferences' => [{ "referenceId" => "doi:10.155454/5555", "referenceSource" => "DOI" } ], "additionalInfo" => { "year" => "2011" }  }]}}, "PUT observations test");
 
 $data = '{ "observationUnitDbId": 39548,  "collector": "John Doe", "observationTimeStamp": "2023-01-01T14:47:23-06:10", "observationVariableDbId":"70741", "season": "2011",  "value": "500", "externalReferences" : [{ "referenceId": "doi:10.155454/200" , "referenceSource" : "DOI" } ] }';
@@ -645,12 +646,30 @@ for my $extension ("xls", "xlsx") {
 
     my $parser = CXGN::Phenotypes::ParseUpload->new();
     my $filename = "t/data/trial/upload_phenotypin_spreadsheet_large.$extension";
+
+    my $time = DateTime->now();
+    my $timestamp = $time->ymd()."_".$time->hms();
+
+    my $uploader = CXGN::UploadFile->new({
+        tempfile => $filename,
+        subdirectory => 'brapi_v2_phenotyping_test',
+        archive_path => '/tmp',
+        archive_filename => "upload_phenotypin_spreadsheet_large.$extension",
+        timestamp => $timestamp,
+        user_id => 41, #janedoe in fixture
+        user_role => 'curator',
+        metadata_schema => $f->metadata_schema(),
+        file_type => 'phenotyping_spreadsheet'
+    });
+    my ($archived_file_id, $archived_filename_with_path) = $uploader->archive();
+
     my $parsed_file = $parser->parse('phenotype spreadsheet', $filename, 0, 'plots', $f->bcs_schema);
     ok($parsed_file, "Check if parse parse phenotype spreadsheet works");
 
     my %phenotype_metadata;
     $phenotype_metadata{'archived_file'} = $filename;
-    $phenotype_metadata{'archived_file_type'} = "spreadsheet phenotype file";
+    $phenotype_metadata{'archived_file_id'} = $archived_file_id;
+    $phenotype_metadata{'archived_file_type'} = "phenotyping_spreadsheet";
     $phenotype_metadata{'operator'} = "janedoe";
     $phenotype_metadata{'date'} = "2016-02-17_05:15:21";
     my %parsed_data = %{$parsed_file->{'data'}};

@@ -121,8 +121,8 @@ $message_hash = decode_json $message;
 is($message_hash->{$project_id}->[0]->{exists}, 'true');
 is($message_hash->{$project_id}->[0]->{genotyping_project_id}, $project_id);
 
-my $vcf_basename = $message_hash->{$project_id}->[0]->{basename};
-$response = $ua->get("http://localhost:3010/ajax/genotyping_project/download_archived_vcf?genotyping_project_id=$project_id&basename=$vcf_basename");
+my $vcf_file_id = $message_hash->{$project_id}->[0]->{file_id};
+$response = $ua->get("http://localhost:3010/ajax/genotyping_project/download_archived_vcf?genotyping_project_id=$project_id&file_id=$vcf_file_id");
 ok($response->is_success);
 $message = $response->decoded_content;
 my @lines = split "\n", $message;

@@ -1154,11 +1154,11 @@ sub remove_owner {
 
 =head2 associate_uploaded_file()
 
- Usage: $self->associate_uploaded_file($owner_sp_person_id, $archived_filename_with_path, $md5checksum, $stock_id )
- Desc:  Associate files with metadata and stock
- Ret:   a database id
- Args:  owner_id, archived_filename_with_path, md5checksum, stock_id
- Side Effects:  store a metadata row
+ Usage: $self->associate_uploaded_file($archived_file_id, $stock_id)
+ Desc:  Associate an already archived file (see CXGN::UploadFile) with a stock
+ Ret:   a hashref with the file_id
+ Args:  archived_file_id, stock_id
+ Side Effects:  store a stock_file row
  Example:
 
 =cut
@@ -1166,27 +1166,8 @@ sub remove_owner {
 sub associate_uploaded_file {
 
     my $self = shift;
-    my $user_id = shift;
-    my $archived_filename_with_path = shift;
-    my $md5checksum = shift;
+    my $file_id = shift;
     my $stock_id = shift;
-
-    my $metadata_id = $self->_new_metadata_id($user_id);
-
-    my $metadata_schema = CXGN::Metadata::Schema->connect(
-        sub { $self->schema()->storage()->dbh() },
-        { on_connect_do => [ 'SET search_path TO metadata'], limit_dialect => 'LimitOffset' }
-        );
-
-    my $file_row = $metadata_schema->resultset("MdFiles")
-        ->create({
-            basename => basename($archived_filename_with_path),
-            dirname  => dirname($archived_filename_with_path),
-            filetype => 'accession_additional_file_upload',
-            md5checksum => $md5checksum,
-            metadata_id => $metadata_id,
-        });
-    my $file_id = $file_row->file_id();
 
     my $phenome_schema = CXGN::Phenome::Schema->connect(
 	sub { $self->schema()->storage()->dbh() }, { on_connect_do => [ 'SET search_path TO phenome, public, sgn'], limit_dialect => 'LimitOffset' }

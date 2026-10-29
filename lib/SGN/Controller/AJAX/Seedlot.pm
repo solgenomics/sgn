@@ -646,9 +646,11 @@ sub upload_seedlots_POST : Args(0) {
         archive_filename => $upload_original_name,
         timestamp => $timestamp,
         user_id => $user_id,
-        user_role => $user_role
+        user_role => $user_role,
+        file_type => 'seedlots',
+        metadata_schema => $c->dbic_schema("CXGN::Metadata::Schema")
     });
-    my $archived_filename_with_path = $uploader->archive();
+    my ($archived_file_id, $archived_filename_with_path) = $uploader->archive();
     my $md5 = $uploader->get_md5($archived_filename_with_path);
     if (!$archived_filename_with_path) {
         $c->stash->{rest} = {error => "Could not save file $upload_original_name in archive",};
@@ -877,9 +879,11 @@ sub upload_seedlots_inventory_POST : Args(0) {
         archive_filename => $upload_original_name,
         timestamp => $timestamp,
         user_id => $user_id,
-        user_role => $user_role
+        user_role => $user_role,
+        file_type => 'seedlot_inventory',
+        metadata_schema => $c->dbic_schema("CXGN::Metadata::Schema")
     });
-    my $archived_filename_with_path = $uploader->archive();
+    my ($archived_file_id, $archived_filename_with_path) = $uploader->archive();
     my $md5 = $uploader->get_md5($archived_filename_with_path);
     if (!$archived_filename_with_path) {
         $c->stash->{rest} = {error => "Could not save file $upload_original_name in archive",};
@@ -1371,7 +1375,7 @@ sub delete_seedlot_transaction :Chained('seedlot_transaction_base') PathPart('de
         $c->stash->{rest} = { success => 1 };
     }
     else {
-        $c->stash->{rest} = { error => "An error occured deleting the seedlot transaction" };
+        $c->stash->{rest} = { error => "An error occurred deleting the seedlot transaction" };
     }
 }
 
@@ -1429,7 +1433,7 @@ sub seedlot_maintenance_ontology : Path('/ajax/breeders/seedlot/maintenance/onto
 # PARAMS:
 #   filters: an array of filter properties, with the following keys:
 #       - names: an array of seedlot names
-#       - dates: an array of date filter properies:
+#       - dates: an array of date filter properties:
 #           - date: date in YYYY-MM-DD format
 #           - comp: date comparison type ('=', '<=', '<', '>=', '>')
 #       - types: an array of event type/value filter properties
@@ -1549,7 +1553,7 @@ sub seedlot_maintenance_events_GET {
 # Add one or more Maintenance Events to the specified Seedlot
 # PATH: POST /ajax/breeders/seedlot/{seedlot id}/maintenance
 # PARAMS:
-#   events: the events to store in the databsae, an array of objects with the following keys:
+#   events: the events to store in the database, an array of objects with the following keys:
 #       - cvterm_id: id of seedlot maintenance event ontology term
 #       - value: value of the seedlot maintenance event
 #       - notes: (optional) additional notes/comments about the event
@@ -1697,7 +1701,7 @@ sub seedlot_maintenance_event_DELETE {
 #   - missing_seedlots: a list of Seedlot names not found in the database (need to be added first)
 #   - missing_events: a list of event type names not found in the maintenance event ontology
 #
-sub seedlot_maintenance_event_upload : Path('/ajax/breeders/seedlot/maitenance/upload') : ActionClass('REST') { }
+sub seedlot_maintenance_event_upload : Path('/ajax/breeders/seedlot/maintenance/upload') : ActionClass('REST') { }
 sub seedlot_maintenance_event_upload_POST : Args(0) {
     my $self = shift;
     my $c = shift;
@@ -1738,9 +1742,10 @@ sub seedlot_maintenance_event_upload_POST : Args(0) {
             archive_filename => $upload_original_name,
             timestamp => $timestamp,
             user_id => $user_id,
-            user_role => $user_role
+            user_role => $user_role,
+            metadata_schema => $c->dbic_schema("CXGN::Metadata::Schema")
         });
-        my $archived_filepath = $uploader->archive();
+        my ($archived_file_id, $archived_filepath) = $uploader->archive();
         if (!$archived_filepath) {
             $c->stash->{rest} = {error => "Could not save file $upload_original_name in archive",};
             $c->detach();
@@ -2006,9 +2011,11 @@ sub upload_transactions_POST : Args(0) {
         archive_filename => $upload_original_name,
         timestamp => $timestamp,
         user_id => $user_id,
-        user_role => $user_role
+        user_role => $user_role,
+        file_type => 'seedlot_transaction',
+        metadata_schema => $c->dbic_schema("CXGN::Metadata::Schema")
     });
-    my $archived_filename_with_path = $uploader->archive();
+    my ($archived_file_id, $archived_filename_with_path) = $uploader->archive();
     my $md5 = $uploader->get_md5($archived_filename_with_path);
     if (!$archived_filename_with_path) {
         $c->stash->{rest} = {error => "Could not save file $upload_original_name in archive",};

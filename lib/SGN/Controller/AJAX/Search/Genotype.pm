@@ -378,7 +378,7 @@ sub pcr_genotyping_data_download_POST : Args(0) {
 
     my $file_row = $metadata_schema->resultset("MdFiles")->create({
         basename => basename($file_destination),
-        dirname => dirname($file_destination),
+        dirname => dirname($archived_file_name),
         filetype => 'ssr_genotype_data_csv',
         md5checksum => $md5->hexdigest(),
         metadata_id => $md_row->metadata_id(),

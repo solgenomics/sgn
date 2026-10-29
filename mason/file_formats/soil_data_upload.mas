@@ -1,0 +1,63 @@
+<div class="modal fade" id="upload_soil_data_spreadsheet_format_dialog" name="upload_soil_data_spreadsheet_format_dialog" tabindex="-1" role="dialog" aria-labelledby="uploadSoilDataFormatDialog">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="uploadSoilDataFormatDialog">Template Information</h4>
+            </div>
+            <div class="modal-body">
+                <div class="container-fluid">
+                    <b>
+                        Soil data may be uploaded in an Excel file (.xls or .xlsx)
+                    </b>
+                    <br>
+                    <b>
+                        Header:
+                    </b>
+                    <br>
+                        The first row (header) must contain the following:
+                    <br>
+
+                    <table class="table table-bordered table-hover">
+                        <tbody>
+                            <tr>
+                                <td>soil_data_type</td>
+                                <td>soil_data_value</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <b>
+                        Example:
+                    </b>
+                    <table class="table table-bordered table-hover">
+                        <tbody>
+                            <tr>
+                                <td>soil_data_type</td>
+                                <td>soil_data_value</td>
+                            </tr>
+                            <tr>
+                                <td>pH (CaCl2)</td>
+                                <td>5.500</td>
+                            </tr>
+                            <tr>
+                                <td>Ca (cmolc/dm³)</td>
+                                <td>3.500</td>
+                            </tr>
+                            <tr>
+                                <td>Zn (mg/dm³)</td>
+                                <td>3.200</td>
+                            </tr>
+                            <tr>
+                                <td>Organic matter (%)</td>
+                                <td>3.500</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>

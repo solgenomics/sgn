@@ -83,7 +83,7 @@ sub upload_rename_accessions_verify : Path('/ajax/rename_accessions/upload_verif
     # check file type by file name extension
     #
     if ($upload_original_name =~ /\.xls$|\.xlsx/) {
-	$c->stash->{rest} = { error => "The rename accessions funtion requires a tab delimited file. Excel files (.xls and .xlsx) are currently not supported. Please convert the file and try again." };
+	$c->stash->{rest} = { error => "The rename accessions function requires a tab delimited file. Excel files (.xls and .xlsx) are currently not supported. Please convert the file and try again." };
 	return;
     }
     
@@ -100,12 +100,13 @@ sub upload_rename_accessions_verify : Path('/ajax/rename_accessions/upload_verif
 	timestamp => $timestamp,
 	user_id => $user_id,
 	user_role => $user_role,
+	metadata_schema => $c->dbic_schema("CXGN::Metadata::Schema"),
     };
-    
+
     my $uploader = CXGN::UploadFile->new( $params );
-    
+
     my %upload_metadata;
-    my $archived_filename_with_path = $uploader->archive();
+    my ($archived_file_id, $archived_filename_with_path) = $uploader->archive();
     
     if (!$archived_filename_with_path) {
 	$c->stash->{rest} = {error => "Could not save file $upload_original_name in archive",};

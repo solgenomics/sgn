@@ -23,7 +23,7 @@ perl bin/load_genotypes_vcf_cxgn_postgres.pl -H localhost -D imagebreedv4 -U pos
  -U database username (required)
  -c VCF file type. transposedVCF or VCF (when uploading Tassel HDF5, this should be VCF)
  -o temporary file for transposing a VCF. whenever a VCF is used, it is transposed for speed (unless option w is flagged).
- -v temporary file for converting Tassel HDF5 to VCF. whenever a Tassel HDF5 (-s) file is uploaded it is coverted to a VCF.
+ -v temporary file for converting Tassel HDF5 to VCF. whenever a Tassel HDF5 (-s) file is uploaded it is converted to a VCF.
  -i path to infile VCF (either i or s is required)
  -s path to infile Tassel HDF5 (either i or s is required)
  -r archive path (required)
@@ -98,20 +98,20 @@ our ($opt_H, $opt_D, $opt_U, $opt_c, $opt_o, $opt_v, $opt_r, $opt_R, $opt_i, $op
 getopts('H:U:i:s:r:R:u:c:o:v:tD:p:y:g:axsm:k:l:q:zf:d:b:n:e:h:j:wAB:T:M:');
 
 if ($opt_j && !$opt_h && (!$opt_H || !$opt_U || !$opt_D || !$opt_c || (!$opt_i && !$opt_s) || !$opt_p || !$opt_y || !$opt_l || !$opt_q || !$opt_r || !$opt_R || !$opt_u || !$opt_f || !$opt_d || !$opt_b || !$opt_n || !$opt_e || !$opt_B) ) {
-    pod2usage(-verbose => 2, -message => "When a protocol id is given (-j) you must provide options -H (hostname), -D (database name), -U (database username), -c VCF file type (transposedVCF or VCF), -i (input file VCF) or -s (input file Tassel HDF5), -r (archive path), -R (root path), -p (project name), -y (project year), -l (location name of project), -q (organism species), -u (database username), -f (reference genome name), -d (project description), -b (observation unit type name), -n (genotype facility name), -e (breeding program name), -B (temp file where SQL COPY is written. make sure thi file is a fresh file between loadings.)\n");
+    pod2usage(-verbose => 2, -message => "When a protocol id is given (-j) you must provide options -H (hostname), -D (database name), -U (database username), -c VCF file type (transposedVCF or VCF), -i (input file VCF) or -s (input file Tassel HDF5), -r (archive path), -R (root path), -p (project name), -y (project year), -l (location name of project), -q (organism species), -u (database username), -f (reference genome name), -d (project description), -b (observation unit type name), -n (genotype facility name), -e (breeding program name), -B (temp file where SQL COPY is written. make sure this file is a fresh file between loadings.)\n");
 }
 elsif ($opt_h && !$opt_j && (!$opt_H || !$opt_U || !$opt_D || !$opt_c || (!$opt_i && !$opt_s) || !$opt_m || !$opt_k || !$opt_l || !$opt_q || !$opt_r || !$opt_R || !$opt_u || !$opt_f || !$opt_b || !$opt_n || !$opt_e || !$opt_B) ) {
     pod2usage(-verbose => 2, -message => "When a project id is given (-h) you must provide options -H (hostname), -D (database name), -U (database username), -c VCF file type (transposedVCF or VCF), -i (input file VCF) or -s (input file Tassel HDF5), -r (archive path), -R (root path), -l (location name of project), -m (protocol name), -k (protocol description), -q (organism species), -u (database username), -f (reference genome name), -b (observation unit type name), -n (genotype facility name), -e (breeding program name), -B (temp file where SQL COPY is written. make sure this is a fresh file between loadings.)\n");
 }
 elsif ($opt_j && $opt_h && (!$opt_H || !$opt_U || !$opt_D || !$opt_c || (!$opt_i && !$opt_s) || !$opt_l || !$opt_q || !$opt_r || !$opt_R || !$opt_u || !$opt_f || !$opt_b || !$opt_n || !$opt_e || !$opt_B) ) {
-    pod2usage(-verbose => 2, -message => "When a protocol id is given (-j) And a project id is given (-h) you must provide options -H (hostname), -D (database name), -U (database username), -c VCF file type (transposedVCF or VCF), -i (input file VCF) or -s (input file Tassel HDF5), -r (archive path), -R (root path), -l (location name of project), -q (organism species), -u (database username), -f (reference genome name), -b (observation unit type name), -n (genotype facility name), -e (breeding program name), -B (temp file where SQL COPY is written. make sure thi file is a fresh file between loadings.)\n");
+    pod2usage(-verbose => 2, -message => "When a protocol id is given (-j) And a project id is given (-h) you must provide options -H (hostname), -D (database name), -U (database username), -c VCF file type (transposedVCF or VCF), -i (input file VCF) or -s (input file Tassel HDF5), -r (archive path), -R (root path), -l (location name of project), -q (organism species), -u (database username), -f (reference genome name), -b (observation unit type name), -n (genotype facility name), -e (breeding program name), -B (temp file where SQL COPY is written. make sure this file is a fresh file between loadings.)\n");
 }
 elsif (!$opt_j && !$opt_h && (!$opt_H || !$opt_U || !$opt_D || !$opt_c || (!$opt_i && !$opt_s) || !$opt_p || !$opt_y || !$opt_m || !$opt_k || !$opt_l || !$opt_q || !$opt_r || !$opt_R || !$opt_u || !$opt_f || !$opt_d || !$opt_b || !$opt_n || !$opt_e || !$opt_B) ){
     pod2usage(-verbose => 2, -message => "Must provide options -H (hostname), -D (database name), -U (database username), -c VCF file type (transposedVCF or VCF), -i (input file VCF) or -s (input file Tassel HDF5), -r (archive path), -R (root path), -p (project name), -y (project year), -l (location name of project), -m (protocol name), -k (protocol description), -q (organism species), -u (database username), -f (reference genome name), -d (project description), -b (observation unit type name), -n (genotype facility name), -e (breeding program name), -B (temp file where SQL COPY is written. make sure this is a fresh file between loadings.)\n");
 }
 
 if ($opt_s && !$opt_v) {
-    pod2usage(-verbose => 2, -message => "If a Tassel HDF5 file is uploaded (-s), then a temporary file for coverting to VCF is required (-v)\n");
+    pod2usage(-verbose => 2, -message => "If a Tassel HDF5 file is uploaded (-s), then a temporary file for converting to VCF is required (-v)\n");
 }
 
 if ($opt_c ne 'transposedVCF' && $opt_c ne 'VCF') {
@@ -181,9 +181,11 @@ if ($opt_c eq 'VCF' && !$opt_w) {
         archive_filename => basename($file),
         timestamp => $timestamp,
         user_id => $sp_person_id,
-        user_role => 'curator'
+        user_role => 'curator',
+        metadata_schema => $metadata_schema,
+        file_type => 'genotyping_data'
     });
-    my $archived_original = $original_uploader->archive();
+    my ($vcf_archive_id, $archived_original) = $original_uploader->archive();
     if (!$archived_original) {
         die "Could not archive original VCF file!\n";
     }
@@ -226,9 +228,11 @@ my $uploader = CXGN::UploadFile->new({
    archive_filename => basename($file),
    timestamp => $timestamp,
    user_id => $sp_person_id,
-   user_role => 'curator'
+   user_role => 'curator',
+   metadata_schema => $metadata_schema,
+    file_type => 'genotyping_data'
 });
-my $archived_filename_with_path = $uploader->archive();
+my ($archived_file_id, $archived_filename_with_path) = $uploader->archive();
 my $md5 = $uploader->get_md5($archived_filename_with_path);
 if (!$archived_filename_with_path) {
     die "Could not archive file!\n";
@@ -334,7 +338,7 @@ my $store_args = {
     organism_id=>$organism_id,
     igd_numbers_included=>$include_igd_numbers,
     user_id=>$sp_person_id,
-    archived_filename=>$archived_filename_with_path,
+    archived_file_id=>$archived_file_id,
     archived_file_type=>'genotype_vcf', #can be 'genotype_vcf' or 'genotype_dosage' to disntiguish genotyprop between old dosage only format and more info vcf format
     temp_file_sql_copy=>$opt_B,
     genotyping_data_type=> $genotype_data_type,

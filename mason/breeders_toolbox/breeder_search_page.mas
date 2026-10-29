@@ -510,7 +510,7 @@ $dataset_id => undef
                 <div class="checkbox">
                   <label>
                     <input class="wizard-download-phenotypes-outliers" type="checkbox" />
-                    Supress user defined phenotype outliers
+                    Suppress user defined phenotype outliers
                   </label>
                 </div>
               </td>
@@ -577,7 +577,7 @@ $dataset_id => undef
                 <div class="checkbox">
                   <label>
                     <input class="wizard-download-high-dim-phenotypes-outliers" type="checkbox" />
-                    Supress user defined phenotype outliers
+                    Suppress user defined phenotype outliers
                   </label>
                 </div>
               </td>
@@ -785,7 +785,7 @@ $dataset_id => undef
           html += `<td><a href="/breeders_toolbox/protocol/${file.genotyping_protocol_id}" target="_blank">${file.genotyping_protocol_name}</td>`;
           html += `<td><a href="/breeders/trial/${file.genotyping_project_id}" target="_blank">${file.genotyping_project_name}</td>`;
           if ( file.exists === 'true' ) {
-            html += `<td><a href="/ajax/genotyping_project/download_archived_vcf?genotyping_project_id=${file.genotyping_project_id}&basename=${file.basename}" target="_blank">Download</a></td>`;
+            html += `<td><a href="/ajax/genotyping_project/download_archived_vcf?genotyping_project_id=${file.genotyping_project_id}&file_id=${file.file_id}" target="_blank">Download</a></td>`;
           }
           else {
             html += "<td>File not found</td>";
@@ -828,7 +828,7 @@ $dataset_id => undef
           success: function(response) {
             if (response.error) {
               console.log("ERROR: Server returned an error trying to get the chromosome names for genotyping protocol #" + SELECTED_GENOTYPING_PROTOCOL);
-              console.log(repsonse.error);
+              console.log(response.error);
               updateChromosomeNames();
             } else {
               updateChromosomeNames(response.chromosome_names);
@@ -846,7 +846,7 @@ $dataset_id => undef
           success: function(response) {
             if (response.error) {
               console.log("ERROR: Server returned an error trying to get markers for genotyping protocol #" + SELECTED_GENOTYPING_PROTOCOL);
-              console.log(repsonse.error);
+              console.log(response.error);
             } else {
               num_markers = response.data;
             }
@@ -898,7 +898,7 @@ $dataset_id => undef
               success: function(response) {
                 if (response.error) {
                   console.log("ERROR: Server returned an error trying to get the chromosome names for genotyping protocol #" + SELECTED_GENOTYPING_PROTOCOL);
-                  console.log(repsonse.error);
+                  console.log(response.error);
                   updateChromosomeNames();
                 } else {
                   updateChromosomeNames(response.chromosome_names);
@@ -917,7 +917,7 @@ $dataset_id => undef
               success: function(response) {
                 if (response.error) {
                   console.log("ERROR: Server returned an error trying to get markers for genotyping protocol #" + SELECTED_GENOTYPING_PROTOCOL);
-                  console.log(repsonse.error);
+                  console.log(response.error);
                 } else {
                   num_markers = response.data;
                 }
@@ -941,7 +941,7 @@ $dataset_id => undef
           success: function(response) {
            if (response.error) {
               console.log("ERROR: Server returned an error trying to get genotyping protocol #" + SELECTED_GENOTYPING_PROTOCOL);
-              console.log(repsonse.error);
+              console.log(response.error);
             } else {
               SELECTED_GENOTYPING_PROTOCOL = response.default_protocol.protocol_id;
               jQuery.ajax({
@@ -955,7 +955,7 @@ $dataset_id => undef
                 success: function(response) {
                   if (response.error) {
                     console.log("ERROR: Server returned an error trying to get markers for genotyping protocol #" + SELECTED_GENOTYPING_PROTOCOL);
-                    console.log(repsonse.error);
+                    console.log(response.error);
                   } else {
                     num_markers = response.data;
                   }

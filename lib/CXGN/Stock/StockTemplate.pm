@@ -8,7 +8,10 @@ CXGN::Stock::StockTemplate - an object to handle SGN stock data uploaded from a 
 
 =head1 USAGE
 
- my $sbt = CXGN::Stock::Stocktemplate->new({ schema => $schema} );
+ my $sbt = CXGN::Stock::Stocktemplate->new({ schema => $schema, archive_path => $c->config->{archive_path} } );
+
+ filename is the full path of the archived template. archive_path is removed from it before it is
+ stored, so that md_files.dirname holds only the folders that come after the archive path.
 
 
 =head1 DESCRIPTION
@@ -75,6 +78,11 @@ has 'store_message' => (
     );
 
 has 'filename' => (
+    is => 'rw',
+    isa => 'Str',
+    );
+
+has 'archive_path' => (
     is => 'rw',
     isa => 'Str',
     );
@@ -172,7 +180,7 @@ sub parse {
         # got the row number, now look at the column headers
         my $plot_stock_id =  $worksheet->get_cell ($row , $headers{'PLOT'} )->value();
         my $replicate = $worksheet->get_cell ($row , $headers{'REP'})->value();
-        my $clone_name = $worksheet->get_cell ($row , $headers{'DESIG'})->value();
+        my $clone_name = $worksheet->get_cell ($row , $headers{'DESIGN'})->value();
         my $block = $worksheet->get_cell ($row , $headers{'BLOCK'})->value();
         my $planted_plants = $worksheet->get_cell ($row , $headers{'NOPLT'})->value();
         my $surv_plants = $worksheet->get_cell ($row , $headers{'NOSV'})->value;
@@ -209,7 +217,7 @@ sub parse {
             }
         }
     }
-    ##unique#  PLOT REP  DESIG  BLOCK NOPLT NOSV CO_334:0000010	CO_334:0000099|scale:cassavabase  CO_334:0000018|unit:cm   CO_334:0000039|date:1MAP
+    ##unique#  PLOT REP  DESIGN  BLOCK NOPLT NOSV CO_334:0000010	CO_334:0000099|scale:cassavabase  CO_334:0000018|unit:cm   CO_334:0000039|date:1MAP
 ###########
 #################################
     #my ($op_name, $project_id, $location_id, $stock_id, $cvterm_accession, $value, $date, $count);
@@ -298,9 +306,16 @@ sub store {
 								     });
       $md_row->insert();
       
+      # md_files.dirname must not contain the archive path
+      my $archived_filename = $self->filename();
+      if ($self->archive_path()) {
+	  my $archive_path = $self->archive_path();
+	  $archived_filename =~ s/^\Q$archive_path\E\/?//;
+      }
+
       my $file_row = $metadata_schema->resultset("MdFiles")->create({
-	  basename => basename($self->filename()),
-	  dirname => dirname($self->filename()),
+	  basename => basename($archived_filename),
+	  dirname => dirname($archived_filename),
 	  filetype => 'phenotype spreadsheet upload xls',
 	  md5checksum => $md5->hexdigest(),
 	  metadata_id => $md_row->metadata_id(),
@@ -455,7 +470,7 @@ sub store {
       $schema->txn_do($coderef);
     } catch {
       # Transaction failed
-      $error =  "An error occured! Cannot store data! <br />" . $_ . "\n";
+      $error =  "An error occurred! Cannot store data! <br />" . $_ . "\n";
     };
 
     if ($error) {
