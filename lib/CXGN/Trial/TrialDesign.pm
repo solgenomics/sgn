@@ -235,16 +235,8 @@ sub _convert_plot_numbers {
       my $idx = 0;
       for (my $i = 0; $i < $number_of_reps; $i++) {
 	  for (my $j = 0; $j < $rep_plot_count; $j++) {
-	      if ($i == 0) {
-		  $plot_numbers[$idx] = $first_plot_number + $j;
-		  $idx++;
-	      } else {
-		  $plot_numbers[$idx] = $plot_increment + $first_plot_number + $j;
-		  $idx++;
-	      }
-	  }
-	  if ($i > 0) {
-	      $plot_increment += $plot_increment;
+	      $plot_numbers[$idx] = $first_plot_number + ($i * $plot_increment) + $j;
+	      $idx++;
 	  }
       }
   }
