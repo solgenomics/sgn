@@ -277,7 +277,7 @@ sub search {
             }
 
 
-            #For performace reasons it is faster to include specific stock_ids in the query.
+            #For performance reasons it is faster to include specific stock_ids in the query.
             if ($self->data_level eq 'analysis_instance'){
                 if (!$self->plot_list){
                     $self->plot_list(\@plots_list);
@@ -586,8 +586,8 @@ sub search {
     #print STDERR "the start date here: $start_date. And the end date here: $end_date\n";
 
     if ($start_date && $end_date) {
-        #print STDERR "including the date query\n";
-	    push @where_clause, " ( $datelessq ( phenotype.collect_date >= '$start_date'::date and phenotype.collect_date <= '$end_date'::date ) ) ";
+        # Include the entire end date, including fractional seconds before midnight.
+        push @where_clause, " ( $datelessq ( phenotype.collect_date >= '$start_date'::date and phenotype.collect_date < ('$end_date'::date + 1) ) ) ";
         #push @where_clause, " ( $datelessq ( phenotype.collect_date >= $start_date and phenotype.collect_date <= $end_date ) ) ";
     }
 
