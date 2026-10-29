@@ -49,6 +49,7 @@ sub list_seedlots :Path('/ajax/breeders/seedlots') :Args(0) {
     my $trial_name = $params->{trial_name};
     my $trial_usage = $params->{trial_usage};
     my $material_type = $params->{material_type};
+    my $exclude_discarded = $params->{exclude_discarded};
 
     my $rows = $params->{length} || 10;
     my $offset = $params->{start} || 0;
@@ -91,6 +92,7 @@ sub list_seedlots :Path('/ajax/breeders/seedlots') :Args(0) {
         $trial_name,
         $trial_usage,
         $material_type,
+        $exclude_discarded
     );
     my @seedlots;
     foreach my $sl (@$list) {
@@ -1371,7 +1373,7 @@ sub delete_seedlot_transaction :Chained('seedlot_transaction_base') PathPart('de
         $c->stash->{rest} = { success => 1 };
     }
     else {
-        $c->stash->{rest} = { error => "An error occured deleting the seedlot transaction" };
+        $c->stash->{rest} = { error => "An error occurred deleting the seedlot transaction" };
     }
 }
 
@@ -1429,7 +1431,7 @@ sub seedlot_maintenance_ontology : Path('/ajax/breeders/seedlot/maintenance/onto
 # PARAMS:
 #   filters: an array of filter properties, with the following keys:
 #       - names: an array of seedlot names
-#       - dates: an array of date filter properies:
+#       - dates: an array of date filter properties:
 #           - date: date in YYYY-MM-DD format
 #           - comp: date comparison type ('=', '<=', '<', '>=', '>')
 #       - types: an array of event type/value filter properties
@@ -1549,7 +1551,7 @@ sub seedlot_maintenance_events_GET {
 # Add one or more Maintenance Events to the specified Seedlot
 # PATH: POST /ajax/breeders/seedlot/{seedlot id}/maintenance
 # PARAMS:
-#   events: the events to store in the databsae, an array of objects with the following keys:
+#   events: the events to store in the database, an array of objects with the following keys:
 #       - cvterm_id: id of seedlot maintenance event ontology term
 #       - value: value of the seedlot maintenance event
 #       - notes: (optional) additional notes/comments about the event
@@ -1697,7 +1699,7 @@ sub seedlot_maintenance_event_DELETE {
 #   - missing_seedlots: a list of Seedlot names not found in the database (need to be added first)
 #   - missing_events: a list of event type names not found in the maintenance event ontology
 #
-sub seedlot_maintenance_event_upload : Path('/ajax/breeders/seedlot/maitenance/upload') : ActionClass('REST') { }
+sub seedlot_maintenance_event_upload : Path('/ajax/breeders/seedlot/maintenance/upload') : ActionClass('REST') { }
 sub seedlot_maintenance_event_upload_POST : Args(0) {
     my $self = shift;
     my $c = shift;

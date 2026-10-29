@@ -186,7 +186,7 @@
 
         // Make the POST request
         jQuery.ajax({
-            url: '/ajax/breeders/seedlot/maitenance/upload',
+            url: '/ajax/breeders/seedlot/maintenance/upload',
             type: 'POST',
             data: formData,
             cache: false,
@@ -231,7 +231,7 @@
      */
     function handleUploadResponse(response) {
         if ( response && response.success && response.success === 1 ) {
-            add_message("success", "Seedlot Maintenace Events successfully stored!");
+            add_message("success", "Seedlot Maintenance Events successfully stored!");
             if ( getEvents ) getEvents();
         }
         else if ( response && response.error ) {
