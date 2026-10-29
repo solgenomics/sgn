@@ -183,7 +183,7 @@ sub high_dimensional_phenotypes_nirs_upload_verify_POST : Args(0) {
         print $F $filter_data_input_json;
     close($F);
 
-    my $cmd_s = "Rscript ".$c->config->{basepath} . "/R/Nirs/nirs_upload_filter_aggregate.R '$filter_json_filepath' '$output_csv_filepath' '$output_raw_csv_filepath' '$output_plot_filepath' '$output_outliers_filepath' ";
+    my $cmd_s = "Rscript ".$c->config->{basepath} . "/R/Nirs/nirs_upload_filter_aggregate.R '$filter_json_filepath' '$output_csv_filepath' '$output_raw_csv_filepath' '$output_plot_filepath' '$output_outliers_filepath' > /dev/null ";
     print STDERR $cmd_s;
     my $cmd_status = system($cmd_s);
     if ($cmd_status != 0) {
@@ -402,7 +402,7 @@ sub high_dimensional_phenotypes_nirs_upload_store_POST : Args(0) {
         print $F $filter_data_input_json;
     close($F);
 
-    my $cmd_s = "Rscript ".$c->config->{basepath} . "/R/Nirs/nirs_upload_filter_aggregate.R '$filter_json_filepath' '$output_csv_filepath' '$output_raw_csv_filepath' '$output_plot_filepath' '$output_outliers_filepath' ";
+    my $cmd_s = "Rscript ".$c->config->{basepath} . "/R/Nirs/nirs_upload_filter_aggregate.R '$filter_json_filepath' '$output_csv_filepath' '$output_raw_csv_filepath' '$output_plot_filepath' '$output_outliers_filepath' > /dev/null";
     print STDERR $cmd_s;
     my $cmd_status = system($cmd_s);
     if ($cmd_status != 0) {
