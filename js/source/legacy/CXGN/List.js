@@ -52,6 +52,45 @@ CXGN.List = function () {
     this.list = [];
 };
 
+// The user's lists and the public lists, by list type, cached for the page.
+// availableLists() and publicLists() fetch them synchronously, and pages build
+// several list menus (the trial page builds one per table, the phenotype
+// summary rebuilt its menu on every row selection), each of which froze the
+// page while the lists were fetched again. Any request that may change a list
+// clears the cache (see below); the refresh button of a list select does too.
+CXGN.List._lists_cache = { available: {}, public: {} };
+
+CXGN.List.clearListsCache = function () {
+    CXGN.List._lists_cache = { available: {}, public: {} };
+};
+
+CXGN.List._cachedLists = function (which, list_type, fetch) {
+    var key = (list_type === undefined || list_type === null) ? '' : String(list_type);
+    var cache = CXGN.List._lists_cache[which];
+    if (!Object.prototype.hasOwnProperty.call(cache, key)) {
+        var result = fetch();
+        if (!result.ok) {
+            return result.lists;  // don't cache failed requests
+        }
+        cache[key] = result.lists;
+    }
+    // copy, so that callers can't change the cached array
+    return Array.isArray(cache[key]) ? cache[key].slice() : cache[key];
+};
+
+// List URLs that only read: requests to any other /list/ or /ajax/list/ URL may
+// change a list, so they clear the cache when they complete, whichever code made them.
+CXGN.List._readOnlyListUrl = /\/list\/(available(_public)?|contents\/|data|exists(_item)?|alltypes|validate|compare|fuzzysearch\/|transform\/|desynonymize|download_multiple|type\/\d+(\?|$))|\/ajax\/list\/validate_lists/;
+
+if (typeof jQuery !== 'undefined') {
+    jQuery(document).on('ajaxComplete', function (event, xhr, settings) {
+        var url = (settings && settings.url) || '';
+        if (/\/list\//.test(url) && !CXGN.List._readOnlyListUrl.test(url)) {
+            CXGN.List.clearListsCache();
+        }
+    });
+}
+
 
 
 // Keep track of the rendered lists page number and sort column between refreshes
@@ -229,41 +268,45 @@ CXGN.List.prototype = {
     },
 
     availableLists: function(list_type) {
-        var lists = [];
-        jQuery.ajax( {
-            url: '/list/available',
-            data: { 'type': list_type },
-            async: false,
-            success: function(response) {
-                if (response.error) {
-                    //alert(response.error);  //do not alert here
+        return CXGN.List._cachedLists('available', list_type, function () {
+            var result = { ok: false, lists: [] };
+            jQuery.ajax( {
+                url: '/list/available',
+                data: { 'type': list_type },
+                async: false,
+                success: function(response) {
+                    if (response.error) {
+                        //alert(response.error);  //do not alert here
+                    }
+                    result = { ok: !response.error, lists: response };
+                },
+                error: function(response) {
+                    alert("An error occurred");
                 }
-                lists = response;
-            },
-            error: function(response) {
-                alert("An error occurred");
-            }
+            });
+            return result;
         });
-        return lists;
     },
 
     publicLists: function(list_type) {
-        var lists = [];
-        jQuery.ajax( {
-            url: '/list/available_public',
-            data: { 'type': list_type },
-            async: false,
-            success: function(response) {
-                if (response.error) {
-                    //alert(response.error); //do not alert here
+        return CXGN.List._cachedLists('public', list_type, function () {
+            var result = { ok: false, lists: [] };
+            jQuery.ajax( {
+                url: '/list/available_public',
+                data: { 'type': list_type },
+                async: false,
+                success: function(response) {
+                    if (response.error) {
+                        //alert(response.error); //do not alert here
+                    }
+                    result = { ok: !response.error, lists: response };
+                },
+                error: function(response) {
+                    alert("An error occurred");
                 }
-                lists = response;
-            },
-            error: function(response) {
-                alert("An error occurred");
-            }
+            });
+            return result;
         });
-        return lists;
     },
 
     compareLists: function(list_ids) {
@@ -1361,6 +1404,7 @@ function pasteList(div_name) {
 */
 
 function refreshListSelect(div_name, types) {
+    CXGN.List.clearListsCache();  // the refresh button must fetch the lists again
     var lo = new CXGN.List();
     var types = types.split(",");
     document.getElementById(div_name).innerHTML = (lo.listSelect(div_name, types, 'Options refreshed.', 'refresh', undefined));

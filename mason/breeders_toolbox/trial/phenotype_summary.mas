@@ -421,6 +421,10 @@ input[type="text"] {
 
         summary_table.clear().draw();
 
+        // the list menu reads #selected_names when a button is clicked, so it only
+        // needs to be rebuilt when the list type changes, not on every selection
+        // (rebuilding also cleared a new list name being typed)
+        var names_to_list_menu_type;
         var selection_changed = function () {
             var selected_rows = summary_table.rows({'selected':true});
             var list_type = jQuery('#group_by_accession_check').prop('checked') ? 'accessions' : 'traits';
@@ -433,9 +437,12 @@ input[type="text"] {
             });
 
             jQuery('#selected_names').html(selected_names);
-            addToListMenu('names_to_list_menu', 'selected_names', {
-                listType: list_type
-            });
+            if (list_type !== names_to_list_menu_type) {
+                addToListMenu('names_to_list_menu', 'selected_names', {
+                    listType: list_type
+                });
+                names_to_list_menu_type = list_type;
+            }
         };
 
         summary_table.on( 'draw', selection_changed);
