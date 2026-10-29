@@ -204,7 +204,7 @@ sub parse {
     for my $row ( 1 .. $row_max ) {
         my $observationunit_name = $worksheet->get_cell($row,0)->value();
         my $observationvariable_name = $worksheet->get_cell($row,1)->value();
-        my $phenotype_value = $worksheet->get_cell($row,2)->value();
+        my $phenotype_value = $worksheet->get_cell($row,2) ? $worksheet->get_cell($row,2)->value() : '';
         my $phenotype_timestamp = $worksheet->get_cell($row,3) ? $worksheet->get_cell($row,3)->value() : '';
         my $image_name = $worksheet->get_cell($row,4)->value();
         my $username = $worksheet->get_cell($row,5) ? $worksheet->get_cell($row,5)->value() : '';
@@ -242,16 +242,14 @@ sub parse {
     for my $row ( 1 .. $row_max ) {
         my $observationunit_name = $worksheet->get_cell($row,0)->value();
         my $observationvariable_name = $worksheet->get_cell($row,1)->value();
-        my $phenotype_value = $worksheet->get_cell($row,2)->value();
+        my $phenotype_value = $worksheet->get_cell($row,2) ? $worksheet->get_cell($row,2)->value() : '';
         my $phenotype_timestamp = $worksheet->get_cell($row,3) ? $worksheet->get_cell($row,3)->value() : '';
         my $image_name = $worksheet->get_cell($row,4)->value();
         my $username = $worksheet->get_cell($row,5) ? $worksheet->get_cell($row,5)->value() : '';
         $observationvariables_seen{$observationvariable_name} = 1;
-        my $timestamp = '';
+        my $timestamp = $phenotype_timestamp;
         if ( defined($phenotype_value) && defined($timestamp) ) {
-            if ($phenotype_value ne '.'){
-                $data{$observationunit_name}->{$observationvariable_name} = [$phenotype_value, $timestamp, $username, '', $stock_id_image_id_lookup->{$observationunit_lookup{$observationunit_name}->{stock_id}}];
-            }
+            $data{$observationunit_name}->{$observationvariable_name} = [$phenotype_value, $timestamp, $username, '', $stock_id_image_id_lookup->{$observationunit_lookup{$observationunit_name}->{stock_id}}];
         }
     }
 
