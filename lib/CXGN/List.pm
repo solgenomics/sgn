@@ -130,9 +130,11 @@ sub available_lists {
     my $owner = shift;
     my $requested_type = shift;
 
-    my $q = "SELECT list_id, list.name, description, count(distinct(list_item_id)), type_id, cvterm.name, is_public, list.create_date, list.modified_date FROM sgn_people.list left join sgn_people.list_item using(list_id) LEFT JOIN cvterm ON (type_id=cvterm_id) WHERE owner=? GROUP BY list_id, list.name, description, type_id, cvterm.name, is_public, list.create_date, list.modified_date ORDER BY list.name";
+    # filter by type in SQL, so that items are only counted for the lists that are returned
+    my $type_filter = $requested_type ? "AND cvterm.name = ?" : "";
+    my $q = "SELECT list_id, list.name, description, count(distinct(list_item_id)), type_id, cvterm.name, is_public, list.create_date, list.modified_date FROM sgn_people.list left join sgn_people.list_item using(list_id) LEFT JOIN cvterm ON (type_id=cvterm_id) WHERE owner=? $type_filter GROUP BY list_id, list.name, description, type_id, cvterm.name, is_public, list.create_date, list.modified_date ORDER BY list.name";
     my $h = $dbh->prepare($q);
-    $h->execute($owner);
+    $h->execute($owner, ($requested_type ? $requested_type : ()));
 
     my @lists = ();
     while (my ($id, $name, $desc, $item_count, $type_id, $type, $public, $timestamp, $modify_timestamp) = $h->fetchrow_array()) {
@@ -152,9 +154,11 @@ sub available_public_lists {
     my $dbh = shift;
     my $requested_type = shift;
 
-    my $q = "SELECT list_id, list.name, description, count(distinct(list_item_id)), type_id, cvterm.name, sp_person.username, list.create_date, list.modified_date FROM sgn_people.list LEFT JOIN sgn_people.sp_person AS sp_person ON (sgn_people.list.owner=sp_person.sp_person_id) LEFT JOIN sgn_people.list_item using(list_id) LEFT JOIN cvterm ON (type_id=cvterm_id) WHERE is_public='t' GROUP BY list_id, list.name, description, type_id, cvterm.name, sp_person.username, list.create_date, list.modified_date ORDER BY list.name";
+    # filter by type in SQL, so that items are only counted for the lists that are returned
+    my $type_filter = $requested_type ? "AND cvterm.name = ?" : "";
+    my $q = "SELECT list_id, list.name, description, count(distinct(list_item_id)), type_id, cvterm.name, sp_person.username, list.create_date, list.modified_date FROM sgn_people.list LEFT JOIN sgn_people.sp_person AS sp_person ON (sgn_people.list.owner=sp_person.sp_person_id) LEFT JOIN sgn_people.list_item using(list_id) LEFT JOIN cvterm ON (type_id=cvterm_id) WHERE is_public='t' $type_filter GROUP BY list_id, list.name, description, type_id, cvterm.name, sp_person.username, list.create_date, list.modified_date ORDER BY list.name";
     my $h = $dbh->prepare($q);
-    $h->execute();
+    $h->execute(($requested_type ? $requested_type : ()));
 
     my @lists = ();
     while (my ($id, $name, $desc, $item_count, $type_id, $type, $username, $timestamp, $modify_timestamp) = $h->fetchrow_array()) {
