@@ -305,9 +305,15 @@ sub genotyping_project_download_archived_vcf_GET : Args(0) {
         # The original (non-transposed) VCF file is archived alongside the transposed
         # file, in a sibling genotype_vcf_archive directory, under the same basename.
         # If it is found there, use it directly. Otherwise, fall back to un-transposing
-        # the (transposed) file in genotype_vcf_upload.
+        # the (transposed) file in genotype_vcf_upload. Newer uploads store the original
+        # gzipped (<basename>.gz); it is served as-is.
+        my $content_type = 'text/plain';
         (my $archive_dirname = $dirname) =~ s/genotype_vcf_upload$/genotype_vcf_archive/;
-        if ( $archive_dirname ne $dirname && -s "$archive_dirname/$basename" ) {
+        if ( $archive_dirname ne $dirname && -s "$archive_dirname/$basename.gz" ) {
+            $filepath = "$archive_dirname/$basename.gz";
+            $basename = "$basename.gz";
+            $content_type = 'application/gzip';
+        } elsif ( $archive_dirname ne $dirname && -s "$archive_dirname/$basename" ) {
             $filepath = "$archive_dirname/$basename";
         } else {
 
@@ -358,8 +364,8 @@ sub genotyping_project_download_archived_vcf_GET : Args(0) {
             }
         }
 
-        my $contents = read_file($filepath);
-        $c->res->content_type('text/plain');
+        my $contents = read_file($filepath, binmode => ':raw');
+        $c->res->content_type($content_type);
         $c->res->header('Content-Disposition', qq[attachment; filename="$basename"]);
         $c->res->body($contents);
     }

@@ -90,6 +90,7 @@ use CXGN::Genotype::StoreVCFGenotypes;
 use DateTime;
 use CXGN::UploadFile;
 use File::Basename qw | basename dirname|;
+use IO::Compress::Gzip qw(gzip $GzipError);
 use CXGN::Genotype::Protocol;
 use CXGN::Genotype::ParseUpload;
 
@@ -187,6 +188,8 @@ if ($opt_c eq 'VCF' && !$opt_w) {
     if (!$archived_original) {
         die "Could not archive original VCF file!\n";
     }
+    gzip($archived_original => "$archived_original.gz") or die "Could not gzip archived original VCF file: $GzipError\n";
+    unlink $archived_original;
     print STDERR "Original VCF saved in archive.\n";
 
     open (my $Fout, ">", $opt_o) || die "Can't open file $opt_o\n";
