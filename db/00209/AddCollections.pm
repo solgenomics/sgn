@@ -116,6 +116,19 @@ CREATE TABLE phenome.project_md_collection (
 CREATE INDEX project_md_collection_collection_idx
     ON phenome.project_md_collection (collection_id);
 
+-- grant permissions to web_usr
+GRANT SELECT, INSERT, UPDATE, DELETE ON metadata.md_collection TO web_usr;
+GRANT USAGE ON metadata.md_collection_collection_id_seq TO web_usr;
+
+GRANT SELECT, INSERT, UPDATE, DELETE ON metadata.md_collection_image TO web_usr;
+GRANT USAGE ON metadata.md_collection_image_collection_image_id_seq TO web_usr;
+
+GRANT SELECT, INSERT, UPDATE, DELETE ON metadata.md_collection_file TO web_usr;
+GRANT USAGE ON metadata.md_collection_file_collection_file_id_seq TO web_usr;
+
+GRANT SELECT, INSERT, UPDATE, DELETE ON phenome.project_md_collection TO web_usr;
+GRANT USAGE ON phenome.project_md_collection_project_md_collection_id_seq TO web_usr;
+
 EOSQL
 
     print "You're done!\n";
