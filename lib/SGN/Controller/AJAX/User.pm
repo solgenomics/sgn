@@ -23,6 +23,8 @@ sub login : Path('/ajax/user/login') Args(0) {
     my $self = shift;
     my $c = shift;
 
+    return if !$self->_require_post($c);
+
     my $username = $c->req->param("username");
     my $password = $c->req->param("password");
     my $goto_url = $c->req->param("goto_url");
@@ -79,6 +81,9 @@ sub new_account :Path('/ajax/user/new') Args(0) {
     my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
     my $schema = $c->dbic_schema("Bio::Chado::Schema", undef, $sp_person_id);
     my $people_schema = $c->dbic_schema('CXGN::People::Schema');
+
+    return if !$self->_require_post($c);
+
     print STDERR "Adding new account...\n";
     if ($c->config->{is_mirror}) {
 	$c->stash->{template} = '/system_message.mas';
@@ -252,6 +257,8 @@ END_HEREDOC
 sub change_account_info_action :Path('/ajax/user/update') Args(0) {
     my $self = shift;
     my $c = shift;
+
+    return if !$self->_require_post($c);
 
     if (! $c->user() ) {
         $c->stash->{rest} = { error => "You must be logged in to use this page." };
@@ -671,7 +678,9 @@ sub quick_create_user :Path('/ajax/user/quick_create_account') Args(0) {
     my $self = shift;
     my $c = shift;
 
-     if (!$c->user()) {
+    return if !$self->_require_post($c);
+
+    if (!$c->user()) {
 	$c->stash->{rest} = { error => "Need to be logged in to use feature." };
 	return;
     }

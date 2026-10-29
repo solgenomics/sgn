@@ -27,7 +27,7 @@ my $f = SGN::Test::Fixture->new();
 my $mech = Test::WWW::Mechanize->new;
 my $response;
 
-$mech->get_ok('http://localhost:3010/ajax/user/login?username=janedoe&password=secretpw');
+$mech->post_ok('http://localhost:3010/ajax/user/login', [ username => 'janedoe', password => 'secretpw' ]);
 
 
 $response = decode_json $mech->content;
