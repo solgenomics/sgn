@@ -20,6 +20,7 @@ jobs:
       volumes:
         - ${{ github.workspace }}:/home/production/cxgn/sgn
         - ${{ github.workspace }}:/home/vagrant/cxgn/sgn
+        - /tmp/downloads:/downloads
       options: --network-alias test_breedbase --cap-add=SYS_ADMIN --cap-add=NET_ADMIN --privileged
 
     services:
@@ -39,6 +40,8 @@ jobs:
         volumes:
           - ${{ github.workspace }}:/home/production/cxgn/sgn
           - ${{ github.workspace }}:/home/vagrant/cxgn/sgn
+          - /tmp/downloads:/downloads
+
         options: --health-cmd="curl --silent --head http://localhost:4444 || exit 1"
 
       keycloak_db:
