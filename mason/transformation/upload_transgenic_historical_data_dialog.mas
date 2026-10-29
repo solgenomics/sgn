@@ -164,29 +164,27 @@ jQuery(document).ready(function(){
             return;
         }
 
-        jQuery('#upload_transgenic_historical_data_form').attr("action", "/ajax/transformation/upload_transgenic_historical_data");
-
-        jQuery("#upload_transgenic_historical_data_form").submit();
-        jQuery("#upload_transgenic_historical_data_dialog").modal("hide");
-    });
-
-    jQuery('#upload_transgenic_historical_data_form').iframePostForm({
-        json: true,
-        post: function(){
-            jQuery("#working_modal").modal("show");
-        },
-        complete: function(response) {
-            jQuery("#working_modal").modal("hide");
-            if (response.error) {
-                jQuery("#upload_transgenic_data_error_display tbody").html('');
-                jQuery("#upload_transgenic_data_error_display tbody").append(response.error);
-                jQuery("#upload_transgenic_data_error_display").modal("show");
-                return;
+        jQuery("#working_modal").modal("show");
+        jQuery.ajax({
+            url: "/ajax/transformation/upload_transgenic_historical_data",
+            type: 'POST',
+            data: new FormData(jQuery("#upload_transgenic_historical_data_form")[0]),
+            processData: false,
+            contentType: false,
+            success: function(response) {
+                jQuery("#working_modal").modal("hide");
+                if (response.error) {
+                    jQuery("#upload_transgenic_data_error_display tbody").html('');
+                    jQuery("#upload_transgenic_data_error_display tbody").append(response.error);
+                    jQuery("#upload_transgenic_data_error_display").modal("show");
+                    return;
+                }
+                if (response.success) {
+                    jQuery('#upload_transgenic_historical_data_dialog').modal('hide');
+                    jQuery('#transgenic_data_saved_dialog_message').modal("show");
+                }
             }
-            if (response.success) {
-                jQuery('#transgenic_data_saved_dialog_message').modal("show");
-            }
-        }
+        });
     });
 
     jQuery("#dismiss_transgenic_data_saved_dialog").click(function(){
@@ -201,8 +199,6 @@ jQuery(document).ready(function(){
         jQuery('#upload_transgenic_historical_data_dialog').modal('hide');
         jQuery('#transgenic_historical_data_file').val('');
     });
-
-
 
 });
 
