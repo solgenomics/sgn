@@ -30,6 +30,8 @@ use CXGN::Stock;
 use CXGN::Transformation::ParseUpload;
 use CXGN::Transformation::StoreTransgeneExpressionData;
 use Time::Piece;
+use CXGN::UploadFile;
+use CXGN::Job;
 
 BEGIN { extends 'Catalyst::Controller::REST' }
 
@@ -348,6 +350,7 @@ sub upload_transformation_identifiers_POST : Args(0) {
         timestamp => $timestamp,
         user_id => $user_id,
         user_role => $user_role,
+        file_type => 'transformation_identifiers',
         metadata_schema => $metadata_schema
     });
 
@@ -360,6 +363,22 @@ sub upload_transformation_identifiers_POST : Args(0) {
     }
     unlink $upload_tempfile;
 
+    my $upload_job = CXGN::Job->new({
+        schema => $schema,
+        people_schema => $c->dbic_schema("CXGN::People::Schema"),
+        sp_person_id => $user_id,
+        name => $upload_original_name." transformation identifiers upload",
+        job_type => 'upload',
+        submit_page => ($c->req->referer ? $c->req->referer->as_string : undef),
+        additional_args => {
+            file_type => 'transformation_identifiers',
+            user_name => $user_name,
+            file_id => $archived_file_id
+        }
+    });
+
+    $upload_job->update_status("submitted");
+
     #parse uploaded file with appropriate plugin
     my @stock_props = ('transformation_notes');
     $parser = CXGN::Stock::ParseUpload->new(chado_schema => $schema, filename => $archived_filename_with_path, editable_stock_props=>\@stock_props);
@@ -371,7 +390,7 @@ sub upload_transformation_identifiers_POST : Args(0) {
         my $return_error = '';
         my $parse_errors;
         if (!$parser->has_parse_errors() ){
-            $c->stash->{rest} = {error_string => "Could not get parsing errors"};
+            $return_error = "Could not get parsing errors";
         } else {
             $parse_errors = $parser->get_parse_errors();
             #print STDERR Dumper $parse_errors;
@@ -379,6 +398,8 @@ sub upload_transformation_identifiers_POST : Args(0) {
                 $return_error .= $error_string."<br>";
             }
         }
+        $upload_job->additional_args->{error_messages} = $parse_errors ? $parse_errors->{'error_messages'} : $return_error;
+        $upload_job->update_status("failed");
         $c->stash->{rest} = {error_string => $return_error};
         $c->detach();
     }
@@ -409,13 +430,16 @@ sub upload_transformation_identifiers_POST : Args(0) {
         };
 
         if ($@) {
+            $upload_job->additional_args->{error_messages} = "An error occurred creating transformation IDs: $@";
+            $upload_job->update_status("failed");
             $c->stash->{rest} = { success => 0, error => $@ };
             print STDERR "An error condition occurred, was not able to create transformation ID. ($@).\n";
             return;
         }
     }
 
-
+    $upload_job->additional_args->{success_messages} = "Transformation identifiers uploaded successfully.";
+    $upload_job->update_status("finished");
     $c->stash->{rest} = {success => "1",};
 }
 
@@ -1269,6 +1293,7 @@ sub upload_transgenic_historical_data_POST : Args(0) {
         timestamp => $timestamp,
         user_id => $user_id,
         user_role => $user_role,
+        file_type => 'transgenic_historical_data',
         metadata_schema => $metadata_schema
     });
 
@@ -1281,6 +1306,22 @@ sub upload_transgenic_historical_data_POST : Args(0) {
     }
     unlink $upload_tempfile;
 
+    my $upload_job = CXGN::Job->new({
+        schema => $schema,
+        people_schema => $c->dbic_schema("CXGN::People::Schema"),
+        sp_person_id => $user_id,
+        name => $upload_original_name." transgenic historical data upload",
+        job_type => 'upload',
+        submit_page => ($c->req->referer ? $c->req->referer->as_string : undef),
+        additional_args => {
+            file_type => 'transgenic_historical_data',
+            user_name => $user_name,
+            file_id => $archived_file_id
+        }
+    });
+
+    $upload_job->update_status("submitted");
+
     #parse uploaded file with appropriate plugin
     my @stock_props = ('transformation_notes');
     $parser = CXGN::Stock::ParseUpload->new(chado_schema => $schema, filename => $archived_filename_with_path, editable_stock_props=>\@stock_props);
@@ -1292,7 +1333,7 @@ sub upload_transgenic_historical_data_POST : Args(0) {
         my $return_error = '';
         my $parse_errors;
         if (!$parser->has_parse_errors() ){
-            $c->stash->{rest} = {error => "Could not get parsing errors"};
+            $return_error = "Could not get parsing errors";
         } else {
             $parse_errors = $parser->get_parse_errors();
             #print STDERR Dumper $parse_errors;
@@ -1300,6 +1341,8 @@ sub upload_transgenic_historical_data_POST : Args(0) {
                 $return_error .= $error_string."<br>";
             }
         }
+        $upload_job->additional_args->{error_messages} = $parse_errors ? $parse_errors->{'error_messages'} : $return_error;
+        $upload_job->update_status("failed");
         $c->stash->{rest} = {error => $return_error};
         $c->detach();
     }
@@ -1314,7 +1357,10 @@ sub upload_transgenic_historical_data_POST : Args(0) {
                 my $vector_construct_info = $batch_info->{$vector_construct};
                 my @check_type = keys %$vector_construct_info;
                 if (scalar(@check_type) > 1) {
-                    $c->stash->{rest} = { error => "Error! Vector construct: $vector_construct in batch: $batch_number is assigned as both a control and a construct. Please check is_a_control column."};
+                    my $error_message = "Error! Vector construct: $vector_construct in batch: $batch_number is assigned as both a control and a construct. Please check is_a_control column.";
+                    $upload_job->additional_args->{error_messages} = $error_message;
+                    $upload_job->update_status("failed");
+                    $c->stash->{rest} = { error => $error_message};
                     return;
                 }
 
@@ -1328,7 +1374,10 @@ sub upload_transgenic_historical_data_POST : Args(0) {
                 my $transformant_info = $vector_construct_info->{$type};
                 my @check_accession_type = keys %$transformant_info;
                 if (scalar(@check_accession_type) > 1) {
-                    $c->stash->{rest} = { error => "Error! All accessions in the same file should have the same accession type (either an existing accession in the database or new accession)."};
+                    my $error_message = "Error! All accessions in the same file should have the same accession type (either an existing accession in the database or new accession).";
+                    $upload_job->additional_args->{error_messages} = $error_message;
+                    $upload_job->update_status("failed");
+                    $c->stash->{rest} = { error => $error_message};
                     return;
                 }
 
@@ -1354,13 +1403,19 @@ sub upload_transgenic_historical_data_POST : Args(0) {
                 my $add = $add_transformation->add_transformation_identifier();
                 my $add_transformation_id_error = $add->{error};
                 if ($add_transformation_id_error) {
-                    $c->stash->{rest} = { error => "Error! Cannot generate transformation identifier for vector construct: $vector_construct in batch: $batch_number. $add_transformation_id_error."};
+                    my $error_message = "Error! Cannot generate transformation identifier for vector construct: $vector_construct in batch: $batch_number. $add_transformation_id_error.";
+                    $upload_job->additional_args->{error_messages} = $error_message;
+                    $upload_job->update_status("failed");
+                    $c->stash->{rest} = { error => $error_message};
                     return;
                 }
 
                 my $transformation_stock_id = $add->{transformation_id};
                 if (!$transformation_stock_id) {
-                    $c->stash->{rest} = { error => "Error! Cannot generate transformation identifier for vector construct: $vector_construct in batch: $batch_number."};
+                    my $error_message = "Error! Cannot generate transformation identifier for vector construct: $vector_construct in batch: $batch_number.";
+                    $upload_job->additional_args->{error_messages} = $error_message;
+                    $upload_job->update_status("failed");
+                    $c->stash->{rest} = { error => $error_message};
                     return;
                 }
 
@@ -1379,7 +1434,10 @@ sub upload_transgenic_historical_data_POST : Args(0) {
                         my $response = $add_transformants->add_transformant();
                         my $add_transformant_error = $response->{error};
                         if ($add_transformant_error){
-                            $c->stash->{rest} = {error => "Error adding new accessions for vector construct: $vector_construct in batch $batch_number."};
+                            my $error_message = "Error adding new accessions for vector construct: $vector_construct in batch $batch_number.";
+                            $upload_job->additional_args->{error_messages} = $error_message;
+                            $upload_job->update_status("failed");
+                            $c->stash->{rest} = {error => $error_message};
                             return;
                         }
                     } elsif ($accession_type eq 'existing_accession') {
@@ -1393,7 +1451,10 @@ sub upload_transgenic_historical_data_POST : Args(0) {
                         my $response = $add_transformants->link_info();
                         my $add_transformant_error = $response->{error};
                         if ($add_transformant_error){
-                            $c->stash->{rest} = {error => "Error linking accession names with transformation info for vector construct: $vector_construct in batch $batch_number."};
+                            my $error_message = "Error linking accession names with transformation info for vector construct: $vector_construct in batch $batch_number.";
+                            $upload_job->additional_args->{error_messages} = $error_message;
+                            $upload_job->update_status("failed");
+                            $c->stash->{rest} = {error => $error_message};
                             return;
                         }
                     }
@@ -1413,7 +1474,10 @@ sub upload_transgenic_historical_data_POST : Args(0) {
                     my $transformation_obj = CXGN::Transformation::Transformation->new({schema=>$schema, dbh=>$dbh, transformation_stock_id=>$id, transformation_control_stock_id=>$control_transformation_id});
                     my $error = $transformation_obj->set_transformation_control();
                     if ($error) {
-                        $c->stash->{rest} = { error => "An error occurred attempting to set transformation control for batch: $batch_number. ($@)" };
+                        my $error_message = "An error occurred attempting to set transformation control for batch: $batch_number. ($error)";
+                        $upload_job->additional_args->{error_messages} = $error_message;
+                        $upload_job->update_status("failed");
+                        $c->stash->{rest} = { error => $error_message };
                         return;
                     }
                 }
@@ -1421,6 +1485,8 @@ sub upload_transgenic_historical_data_POST : Args(0) {
         }
     }
 
+    $upload_job->additional_args->{success_messages} = "Transgenic historical data uploaded successfully.";
+    $upload_job->update_status("finished");
     $c->stash->{rest} = {success => "1",};
 
 }
@@ -1585,6 +1651,7 @@ sub upload_qPCR_data_POST : Args(0) {
         timestamp => $timestamp,
         user_id => $user_id,
         user_role => $user_role,
+        file_type => 'qPCR_data',
         metadata_schema => $metadata_schema
     });
 
@@ -1597,7 +1664,23 @@ sub upload_qPCR_data_POST : Args(0) {
     }
     unlink $upload_tempfile;
 
-    my $gene_type_id  =  SGN::Model::Cvterm->get_cvterm_row($schema, 'Gene', 'stock_property')->cvterm_id;
+    my $upload_job = CXGN::Job->new({
+        schema => $schema,
+        people_schema => $c->dbic_schema("CXGN::People::Schema"),
+        sp_person_id => $user_id,
+        name => $upload_original_name." qPCR data upload",
+        job_type => 'upload',
+        submit_page => ($c->req->referer ? $c->req->referer->as_string : undef),
+        additional_args => {
+            file_type => 'qPCR_data',
+            user_name => $user_name,
+            file_id => $archived_file_id
+        }
+    });
+
+    $upload_job->update_status("submitted");
+
+    my $gene_type_id =  SGN::Model::Cvterm->get_cvterm_row($schema, 'Gene', 'stock_property')->cvterm_id;
     my $gene_stockprop_rs = $schema->resultset("Stock::Stockprop")->find({stock_id => $vector_id, type_id => $gene_type_id});
     my $gene_info;
     if ($gene_stockprop_rs) {
@@ -1623,7 +1706,7 @@ sub upload_qPCR_data_POST : Args(0) {
         my $return_error = '';
         my $parse_errors;
         if (!$parser->has_parse_errors() ){
-            $c->stash->{rest} = {error_string => "Could not get parsing errors"};
+            $return_error = "Could not get parsing errors";
         } else {
             $parse_errors = $parser->get_parse_errors();
             #print STDERR Dumper $parse_errors;
@@ -1631,6 +1714,8 @@ sub upload_qPCR_data_POST : Args(0) {
                 $return_error .= $error_string."<br>";
             }
         }
+        $upload_job->additional_args->{error_messages} = $parse_errors ? $parse_errors->{'error_messages'} : $return_error;
+        $upload_job->update_status("failed");
         $c->stash->{rest} = {error_string => $return_error};
         $c->detach();
     }
@@ -1679,12 +1764,16 @@ sub upload_qPCR_data_POST : Args(0) {
                 $error = $return->{error};
             }
             if ($error) {
+                $upload_job->additional_args->{error_messages} = $error;
+                $upload_job->update_status("failed");
                 $c->stash->{rest} = { error => $error};
                 return;
             }
         }
     };
 
+    $upload_job->additional_args->{success_messages} = "qPCR data uploaded successfully.";
+    $upload_job->update_status("finished");
     $c->stash->{rest} = {success => "1"};
 }
 
@@ -1904,6 +1993,7 @@ sub upload_transgenic_lines : Path('/ajax/transformation/upload_transgenic_lines
 sub upload_transgenic_lines_POST : Args(0) {
     my $self = shift;
     my $c = shift;
+    my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema");
     my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema");
     my $dbh = $c->dbc->dbh;
     my $breeding_program_name = $c->req->param('project_breeding_program_name');
@@ -1974,17 +2064,35 @@ sub upload_transgenic_lines_POST : Args(0) {
         archive_filename => $upload_original_name,
         timestamp => $timestamp,
         user_id => $user_id,
-        user_role => $user_role
+        user_role => $user_role,
+        file_type => 'transgenic_lines',
+        metadata_schema => $metadata_schema
     });
 
         ## Store uploaded temporary file in archive
-    $archived_filename_with_path = $uploader->archive();
+    (my $archived_file_id, $archived_filename_with_path) = $uploader->archive();
     $md5 = $uploader->get_md5($archived_filename_with_path);
     if (!$archived_filename_with_path) {
         $c->stash->{rest} = {error => "Could not save file $upload_original_name in archive",};
         return;
     }
     unlink $upload_tempfile;
+
+    my $upload_job = CXGN::Job->new({
+        schema => $schema,
+        people_schema => $c->dbic_schema("CXGN::People::Schema"),
+        sp_person_id => $user_id,
+        name => $upload_original_name." transgenic lines upload",
+        job_type => 'upload',
+        submit_page => ($c->req->referer ? $c->req->referer->as_string : undef),
+        additional_args => {
+            file_type => 'transgenic_lines',
+            user_name => $user_name,
+            file_id => $archived_file_id
+        }
+    });
+
+    $upload_job->update_status("submitted");
 
     $parser = CXGN::Transformation::ParseUpload->new(chado_schema => $schema, filename => $archived_filename_with_path);
 
@@ -1994,7 +2102,7 @@ sub upload_transgenic_lines_POST : Args(0) {
         my $return_error = '';
         my $parse_errors;
         if (!$parser->has_parse_errors() ){
-            $c->stash->{rest} = {error_string => "Could not get parsing errors"};
+            $return_error = "Could not get parsing errors";
         } else {
             $parse_errors = $parser->get_parse_errors();
             #print STDERR Dumper $parse_errors;
@@ -2002,6 +2110,8 @@ sub upload_transgenic_lines_POST : Args(0) {
                 $return_error .= $error_string."<br>";
             }
         }
+        $upload_job->additional_args->{error_messages} = $parse_errors ? $parse_errors->{'error_messages'} : $return_error;
+        $upload_job->update_status("failed");
         $c->stash->{rest} = {error_string => $return_error};
         $c->detach();
     }
@@ -2009,8 +2119,14 @@ sub upload_transgenic_lines_POST : Args(0) {
     if ($parsed_data){
         foreach my $transformation_identifier (keys %$parsed_data) {
             my $transformation_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'transformation', 'stock_type')->cvterm_id();
-            my $transformation_stock_id;
             my $transformation_identifier_rs = $schema->resultset("Stock::Stock")->find( { uniquename => $transformation_identifier, type_id => $transformation_type_id });
+            if (!$transformation_identifier_rs) {
+                my $error_message = "Transformation identifier $transformation_identifier was not found in the database.";
+                $upload_job->additional_args->{error_messages} = $error_message;
+                $upload_job->update_status("failed");
+                $c->stash->{rest} = { error => $error_message };
+                return;
+            }
             my $transformation_stock_id = $transformation_identifier_rs->stock_id();
             my $new_transformant_names = $parsed_data->{$transformation_identifier};
             my @new_names = keys %$new_transformant_names;
@@ -2029,6 +2145,8 @@ sub upload_transgenic_lines_POST : Args(0) {
             };
 
             if ($@) {
+                $upload_job->additional_args->{error_messages} = "An error occurred creating new transformants: $@";
+                $upload_job->update_status("failed");
                 $c->stash->{rest} = { success => 0, error => $@ };
                 print STDERR "An error condition occurred, was not able to create new transformants. ($@).\n";
                 return;
@@ -2036,6 +2154,8 @@ sub upload_transgenic_lines_POST : Args(0) {
         }
     };
 
+    $upload_job->additional_args->{success_messages} = "Transgenic lines uploaded successfully.";
+    $upload_job->update_status("finished");
     $c->stash->{rest} = {success => "1",};
 
 }
