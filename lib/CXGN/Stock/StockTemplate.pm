@@ -217,7 +217,7 @@ sub parse {
             }
         }
     }
-    ##unique#  PLOT REP  DESIG  BLOCK NOPLT NOSV CO_334:0000010	CO_334:0000099|scale:cassavabase  CO_334:0000018|unit:cm   CO_334:0000039|date:1MAP
+    ##unique#  PLOT REP  DESIGN  BLOCK NOPLT NOSV CO_334:0000010	CO_334:0000099|scale:cassavabase  CO_334:0000018|unit:cm   CO_334:0000039|date:1MAP
 ###########
 #################################
     #my ($op_name, $project_id, $location_id, $stock_id, $cvterm_accession, $value, $date, $count);

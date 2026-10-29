@@ -329,7 +329,7 @@ sub store {
             dirname => $self->dirname(),
             filetype => $self->filetype(),
             alt_filename => $self->alt_filename(),
-            comment => $self->comments(),
+            comment => $self->comment(),
             tags => join(',', keys(%{$self->tags()})),
             md5checksum => $self->md5checksum(),
             metadata_id => $self->metadata_id(),
@@ -368,7 +368,7 @@ sub add_comment {
 
     my $comment = $self->comment();
     $comment .= "; $new_comment";
-    $self->_set_comments($comment);
+    $self->_set_comment($comment);
     $self->store();
 }
 
@@ -405,7 +405,7 @@ you have a specific reason to delete it.
 sub clear_comments {
     my $self = shift;
 
-    $self->_set_comments('');
+    $self->_set_comment('');
     $self->store();
 }
 
