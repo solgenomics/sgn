@@ -231,7 +231,7 @@ sub genotyping_project_has_archived_vcf_GET : Args(0) {
                 WHERE nd_experiment_project.project_id IN ($ph)
                 GROUP BY genotyping_projects.genotyping_project_id, genotyping_project_name, 
                     genotyping_protocols.genotyping_protocol_id, genotyping_protocol_name, 
-                    dirname, basename, create_date, sp_person_id, first_name, last_name, username
+                    dirname, basename, md_files.file_id, create_date, sp_person_id, first_name, last_name, username
             ) AS t
             WHERE t.create_date IS NOT NULL
             ORDER BY t.genotyping_protocol_name, t.genotyping_project_name, t.create_date DESC";

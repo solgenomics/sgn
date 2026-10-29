@@ -549,7 +549,8 @@ for my $extension ("xls", "xlsx") {
         archive_filename => "cross_trial_layout.xlsx",
         timestamp        => $timestamp_1,
         user_id          => 41,
-        user_role        => 'curator'
+        user_role        => 'curator',
+        metadata_schema  => $metadata_schema
     });
 
     ## Store uploaded temporary file in archive
