@@ -1642,12 +1642,17 @@ sub add_parent {
 	return $error;
     }
 
+    # The cross type belongs to the female parent relationship, as in pedigree
+    # uploads. An empty or "null" value from the page means no cross type.
+    my $relationship_value = ($parent_type eq 'female' && defined($cross_type) && $cross_type ne '' && $cross_type ne 'null')
+        ? $cross_type : undef;
+
     my $new_row = $self->schema()->resultset("Stock::StockRelationship")->new(
 	{
 	    subject_id => $parent->stock_id,
 	    object_id  => $self->stock_id,
 	    type_id    => $type_id_row,
-	    value => $cross_type
+	    value => $relationship_value
 	});
 
     eval {
