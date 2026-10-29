@@ -36,7 +36,7 @@ sub _validate_with_plugin {
     my @header_info;
     my @fields;
     my @observation_unit_names;
-    open($F, "<", $filename) || die "Can't open file $filename\n";
+    open($F, "< :encoding(UTF-8)", $filename) || die "Can't open file $filename\n";
         while (<$F>) {
 	    $_ =~ s/\r//g;
 	    chomp;
@@ -57,7 +57,7 @@ sub _validate_with_plugin {
         }
     close($F);
 
-    open($F, "<", $filename) || die "Can't open file $filename\n";
+    open($F, "< :encoding(UTF-8)", $filename) || die "Can't open file $filename\n";
 
         my @chroms;
         my @positions;
@@ -289,7 +289,7 @@ sub _parse_with_plugin {
     print STDERR "Reading VCF to parse\n";
 
     my $F;
-    open($F, "<", $filename) || die "Can't open file $filename\n";
+    open($F, "< :encoding(UTF-8)", $filename) || die "Can't open file $filename\n";
     while (<$F> =~ m/^##/) {
         #Trash header lines
     }
