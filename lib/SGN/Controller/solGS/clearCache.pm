@@ -94,6 +94,7 @@ sub delete_cache_dirs {
 
     my @data_id_dirs = @{$cache_dirs->{data_dir_ids}};
     my @analysis_types = @{$cache_dirs->{analysis_type_dirs}};
+    my $clearing_solgs = grep { $_ eq 'solgs' } @analysis_types;
     
     for my $analysis_type (@analysis_types) {
 
@@ -116,11 +117,32 @@ sub delete_cache_dirs {
                 $c->log->error("Error removing a directory: " . $err->[0]->{message} . " at " . $err->[0]->{path});
                 return 0;
             }
+
+            if ($analysis_type eq 'anova' && !$clearing_solgs) {
+                return 0 unless $self->_clear_anova_input($c, $data_id);
+            }
         }
     }
     
     return 1;
 
+}
+
+
+# Phenotype input and its per-trial trait maps lie outside the ANOVA
+# result directory. Refresh them together without deleting other models.
+sub _clear_anova_input {
+    my ($self, $c, $trial_id) = @_;
+    return 1 unless defined($trial_id) && $trial_id =~ /\A[1-9][0-9]*\z/;
+    my $files = $c->controller('solGS::Files');
+    for my $method (qw(phenotype_file_name traits_list_file traits_acronym_file all_traits_file)) {
+        my $file = $files->$method($c, $trial_id);
+        if (defined($file) && -e $file && !unlink($file)) {
+            $c->log->error('Could not clear the ANOVA phenotype input.');
+            return 0;
+        }
+    }
+    return 1;
 }
 
 
