@@ -1,0 +1,199 @@
+<%doc>
+
+=head1 NAME
+
+/collection/add_files_to_collection_modal.mas - picker modal for adding
+selected files to collections
+
+=head1 DESCRIPTION
+
+Include once per page. The page's own "Add Selected Files to Collection"
+button opens #files_add_to_collection_dialog directly (there is no public
+API function like folder_picker_open, because the search table with the
+selection checkboxes lives on the page, not here).
+
+The list mirrors loadFolders() in add_to_collection_modal.mas: all
+collections this user can modify are offered as checkboxes; Save adds the
+selected files to every checked collection in one bulk request each and
+fires 'files_add_to_collection:items_added' when done.
+
+=head1 AUTHORS
+
+=cut
+
+</%doc>
+
+<& /collection/message_modal.mas &>
+
+<%args>
+</%args>
+
+<div class="modal fade" id="files_add_to_collection_dialog" tabindex="-1" role="dialog">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal">&times;</button>
+        <h4 class="modal-title" id="files_pick_title">Add Files to Collection</h4>
+      </div>
+      <div class="modal-body">
+
+        <div class="form-group">
+          <input type="text" class="form-control" id="files_pick_collection_search"
+                 placeholder="Search collections by name...">
+        </div>
+
+        <div id="files_pick_loading" class="text-muted" style="padding:10px;">
+          <span class="glyphicon glyphicon-refresh"></span> Loading collections&hellip;
+        </div>
+
+        <div id="files_pick_list" style="max-height:260px; overflow-y:auto;"></div>
+
+        <div id="files_pick_empty" class="text-muted" style="display:none; padding:10px;">
+          No collections found.
+        </div>
+
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+        <button type="button" class="btn btn-primary" id="files_pick_save">Add</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+jQuery(document).ready(function () {
+
+    var files_pick_all_collections = {};
+
+    function files_pick_esc(s) {
+        return jQuery('<div>').text(s == null ? '' : s).html();
+    }
+
+    function files_pick_render(filter_text) {
+        var $list = jQuery('#files_pick_list').empty();
+        var needle = (filter_text || '').toLowerCase();
+        var shown = 0;
+
+        Object.keys(files_pick_all_collections).forEach(function (cid) {
+            var collection = files_pick_all_collections[cid];
+            if (needle && collection.name.toLowerCase().indexOf(needle) === -1) { return; }
+            shown++;
+            $list.append(
+                '<div class="checkbox">' +
+                  '<label>' +
+                    '<input type="checkbox" class="files_pick_checkbox" value="' + cid + '"> ' +
+                    files_pick_esc(collection.name) +
+                    ' <span class="text-muted" style="font-size:11px;">(' +
+                      (collection.file_count || 0) + ' files)</span>' +
+                  '</label>' +
+                '</div>'
+            );
+        });
+
+        jQuery('#files_pick_empty').toggle(shown === 0 && Object.keys(files_pick_all_collections).length === 0);
+    }
+
+    function files_pick_load() {
+        jQuery('#files_pick_loading').show();
+        jQuery('#files_pick_list').empty();
+
+        jQuery.ajax({
+            url: '/ajax/search/collections',
+            type: 'POST',
+            data: { collection_type: 'file', length: 100, start: 0 }
+        }).done(function (response) {
+            jQuery('#files_pick_loading').hide();
+
+            if (response.error) {
+                jQuery('#files_pick_empty').text(response.error).show();
+                return;
+            }
+
+            // Only offer collections this user can actually modify —
+            // matches _require_edit_privileges server-side exactly.
+            files_pick_all_collections = {};
+            (response.data || []).forEach(function (c) {
+                if (c.user_can_modify) { files_pick_all_collections[c.collection_id] = c; }
+            });
+
+            files_pick_render(jQuery('#files_pick_collection_search').val());
+        }).fail(function () {
+            jQuery('#files_pick_loading').hide();
+            jQuery('#files_pick_empty').text('Could not load collections.').show();
+        });
+    }
+
+    jQuery('#files_pick_collection_search').on('input', function () {
+        files_pick_render(jQuery(this).val());
+    });
+
+    jQuery('#files_pick_save').click(function () {
+        var checked_ids = [];
+        jQuery('.files_pick_checkbox:checked').each(function () {
+            checked_ids.push(parseInt(jQuery(this).val(), 10));
+        });
+
+        if (!checked_ids.length) {
+            jQuery('#files_add_to_collection_dialog').modal('hide');
+            return;
+        }
+
+        // The selection lives on the page: read the checked file checkboxes
+        // when Save is clicked rather than keeping a shadow copy here.
+        var file_ids = [];
+        jQuery('input[name="file_select"]:checked').each(function () {
+            file_ids.push(parseInt(jQuery(this).val(), 10));
+        });
+        if (!file_ids.length) {
+            jQuery('#files_add_to_collection_dialog').modal('hide');
+            return;
+        }
+
+        var add_requests = checked_ids.map(function (collection_id) {
+            return jQuery.ajax({
+                url: '/ajax/collection/add_items',
+                type: 'POST',
+                data: {
+                    collection_id: collection_id,
+                    item_type:     'file',
+                    item_ids_json: JSON.stringify(file_ids)
+                }
+            });
+        });
+
+        jQuery.when.apply(jQuery, add_requests).done(function () {
+            var results = add_requests.length === 1 ? [arguments[0]] : arguments;
+            var errors = [];
+            var dup_count = 0;
+            jQuery.each(results, function (i, r) {
+                var resp = Array.isArray(r) ? r[0] : r;
+                if (resp && resp.error) { errors.push(resp.error); }
+                if (resp && resp.duplicate_ids && resp.duplicate_ids.length) {
+                    dup_count += resp.duplicate_ids.length;
+                }
+            });
+
+            jQuery('#files_add_to_collection_dialog').modal('hide');
+
+            var msg = file_ids.length + ' file(s) added to ' + checked_ids.length + ' collection(s).';
+            if (dup_count) { msg += '\n' + dup_count + ' file(s) were already in a collection and were not re-added.'; }
+            if (errors.length) { msg += '\nErrors:\n' + errors.join('\n'); }
+            if (errors.length) {
+                window.collection_notify_error(msg);
+            } else {
+                window.collection_notify_success(msg);
+            }
+
+            jQuery(document).trigger('files_add_to_collection:items_added', [file_ids]);
+        }).fail(function () {
+            window.collection_notify_error('An error occurred adding files to collections.');
+        });
+    });
+
+    // Reload the option list each time the dialog opens.
+    jQuery('#files_add_to_collection_dialog').on('show.bs.modal', function () {
+        files_pick_load();
+    });
+});
+</script>
