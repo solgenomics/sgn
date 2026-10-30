@@ -16,7 +16,7 @@ my $f = SGN::Test::Fixture->new();
 my $solgs_data = SGN::Test::solGSData->new({
     'fixture' => $f, 
     'accessions_list_subset' => 60, 
-    'plots_list_subset' => 60,
+    'plots_list_subset' => 160,
     'user_id' => 40,
 });
 
