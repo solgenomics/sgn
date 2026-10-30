@@ -166,7 +166,7 @@ my $control_transformation_stock_id = $control_transformation_rs->stock_id();
 push @all_new_stocks, $control_transformation_stock_id;
 
 #setting control for UG1TT1
-$mech->post_ok('http://localhost:3010/ajax/transformation/set_transformation_control', [ 'transformation_stock_id' => $transformation_stock_id, 'control_stock_id' => $control_transformation_stock_id, 'program_name' => 'test']);
+$mech->post_ok('http://localhost:3010/ajax/transformation/set_transformation_control', [ 'transformation_stock_id' => $transformation_stock_id, 'selected_control_name' => 'UG1TTC', 'program_name' => 'test']);
 
 $response = decode_json $mech->content;
 is($response->{'success'}, '1');
@@ -179,9 +179,8 @@ is ($is_a_control, '1');
 
 #retrieve control experiment info for UG1TT1
 my $transformation_obj = CXGN::Transformation::Transformation->new({schema=>$schema, dbh=>$dbh, transformation_stock_id=>$transformation_stock_id});
-my $info = $transformation_obj->get_transformation_info();
-
-my $control_name = $info->[0]->[7];
+my $transformation_controls = $transformation_obj->get_transformation_controls();
+my $control_name = $transformation_controls->[0]->[1];
 is ($control_name, 'UG1TTC');
 
 #test adding transformants (accessions)
