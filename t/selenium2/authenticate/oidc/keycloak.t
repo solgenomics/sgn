@@ -84,7 +84,7 @@ sub logout_breedbase {
     ok( wait_for sub {$d->accept_alert }, 'confirm logout');
 }
 
-# Pre-emptive cleanup
+# Preemptive cleanup
 $q = "update sgn_people.sp_person set private_email = null where username = 'johndoe' or username = 'janedoe'";
 $dbh->prepare($q)->execute();
 $q = "delete from sgn_people.sp_token where sp_person_id = (select sp_person_id from sgn_people.sp_person where username = 'newuser')";
