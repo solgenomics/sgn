@@ -53,7 +53,7 @@ $d->while_logged_in_as("submitter", sub {
     sleep(10);
  
 
-   # #  #trial type training population: single trait modeling
+   ###trial type training population: single trait modeling
 
     $d->find_element_ok('dry matter', 'partial_link_text',  'build model')->click();
     sleep(3);
@@ -126,8 +126,8 @@ $d->while_logged_in_as("submitter", sub {
     sleep(5);
 
 #####################
-	# $d->get('/solgs/population/139/gp/1');
-	# sleep(5);
+	### $d->get('/solgs/population/139/gp/1');
+	### sleep(5);
 #####################
 
     $d->find_element_ok('//table[@id="population_traits_list"]/tbody/tr[1]/td/input', 'xpath', 'select 1st trait')->click();
@@ -166,6 +166,175 @@ $d->while_logged_in_as("submitter", sub {
     sleep(40);
     $d->find_element_ok('boxplot', 'partial_link_text',  'check multi traits  boxplot download link');
     sleep(3);
+
+    ########## combined trials training population ##########
+
+    $d->get_ok('/solgs', 'solgs home page');
+    sleep(4);
+    $d->find_element_ok('trial_search_box', 'id', 'population search form')->send_keys('Kasese solgs trial');
+    sleep(2);
+    $d->find_element_ok('search_trial', 'id', 'search for training pop')->click();
+    sleep(3);
+    $d->find_element_ok('trial_search_box', 'id', 'population search form')->clear();
+    sleep(2);
+    $d->find_element_ok('trial_search_box', 'id', 'population search form')->send_keys('trial2 nacrri');
+    sleep(5);
+    $d->find_element_ok('search_trial', 'id', 'search for training pop')->click();
+    sleep(5);
+    $d->find_element_ok('//table[@id="searched_trials_table"]//input[@value="139"]', 'xpath', 'select trial kasese')->click();
+    sleep(2);
+    $d->find_element_ok('//table[@id="searched_trials_table"]//input[@value="141"]', 'xpath', 'select trial nacrri')->click();
+    sleep(2);
+    $d->find_element_ok('select_trials_btn', 'id', 'done selecting')->click();
+    sleep(2);
+    $d->find_element_ok('combine_trait_trials', 'id', 'combine trials')->click();
+    sleep(3);
+    $d->find_element_ok('queue_job', 'id', 'submit combine trials job')->click();
+    sleep(2);
+    $d->find_element_ok('analysis_name', 'id', 'combine trials job name')->send_keys('combined trials');
+    sleep(2);
+    $d->find_element_ok('user_email', 'id', 'user email')->send_keys('email@email.com');
+    sleep(2);
+    $d->find_element_ok('submit_job', 'id', 'submit')->click();
+    sleep(200);
+    $d->find_element_ok('Go back', 'partial_link_text', 'go back')->click();
+    sleep(5);
+
+    $d->find_element_ok('trial_search_box', 'id', 'population search form')->send_keys('Kasese solgs trial');
+    sleep(2);
+    $d->find_element_ok('search_trial', 'id', 'search for training pop')->click();
+    sleep(3);
+    $d->find_element_ok('trial_search_box', 'id', 'population search form')->clear();
+    sleep(2);
+    $d->find_element_ok('trial_search_box', 'id', 'population search form')->send_keys('trial2 nacrri');
+    sleep(5);
+    $d->find_element_ok('search_trial', 'id', 'search for training pop')->click();
+    sleep(5);
+    $d->find_element_ok('//table[@id="searched_trials_table"]//input[@value="139"]', 'xpath', 'select trial kasese')->click();
+    sleep(3);
+    $d->find_element_ok('//table[@id="searched_trials_table"]//input[@value="141"]', 'xpath', 'select trial nacrri')->click();
+    sleep(3);
+    $d->find_element_ok('select_trials_btn', 'id', 'done selecting')->click();
+    sleep(3);
+    $d->find_element_ok('combine_trait_trials', 'id', 'combine trials -- go to combined trials training pop page')->click();
+    sleep(15);
+
+    my $combo_pops_id = $d->find_element('training_pop_id', 'id')->get_value();
+    my $combo_tr_pop_page = "/solgs/populations/combined/$combo_pops_id/gp/1";
+    print STDERR "\ncombined trials training pop page: $combo_tr_pop_page\n";
+
+    # combined trials training population: single trait modeling and genetic gain
+
+    $d->find_element_ok('dry matter', 'partial_link_text',  'build combined trials model')->click();
+    sleep(3);
+    $d->find_element_ok('queue_job', 'id', 'job queueing')->click();
+    sleep(2);
+    $d->find_element_ok('analysis_name', 'id', 'fill in modeling job name')->send_keys('Test DMCP model combo trials');
+    sleep(2);
+    $d->find_element_ok('user_email', 'id', 'fill user email')->send_keys('email@email.com');
+    sleep(2);
+    $d->find_element_ok('submit_job', 'id', 'submit')->click();
+    sleep(250);
+    $d->find_element_ok('Go back', 'partial_link_text', 'go back')->click();
+    sleep(15);
+
+    $d->find_element_ok('dry matter', 'partial_link_text',  'go to combined trials model page')->click();
+    sleep(15);
+
+    my $sel_pred = $d->find_element('Predict', 'partial_link_text', 'scroll to selection pred');
+    my $elem = $d->driver->execute_script( "arguments[0].scrollIntoView(true);window.scrollBy(0,-70);", $sel_pred);
+    sleep(2);
+    $d->find_element_ok('trial_search_box', 'id', 'population search form')->send_keys('trial2 NaCRRI');
+    sleep(2);
+    $d->find_element_ok('search_selection_pop', 'id', 'search for selection pop')->click();
+    sleep(10);
+    $d->find_element_ok('//table[@id="selection_pops_table"]//*[contains(text(), "Predict")]', 'xpath', 'click selection pop predict')->click();
+    sleep(5);
+    $d->find_element_ok('queue_job', 'id', 'job queueing')->click();
+    sleep(2);
+    $d->find_element_ok('analysis_name', 'id', 'fill in selection prediction job name')->send_keys('Test DMCP selection pred nacrri combo trials model');
+    sleep(2);
+    $d->find_element_ok('user_email', 'id', 'fill user email')->send_keys('email@email.com');
+    sleep(2);
+    $d->find_element_ok('submit_job', 'id', 'submit')->click();
+    sleep(250);
+    $d->find_element_ok('Go back', 'partial_link_text', 'go back')->click();
+    sleep(15);
+
+    my $sel_pred = $d->find_element('Predict', 'partial_link_text', 'scroll to selection pred');
+    my $elem = $d->driver->execute_script( "arguments[0].scrollIntoView(true);window.scrollBy(0,-70);", $sel_pred);
+    sleep(8);
+    $d->find_element_ok('DMCP', 'partial_link_text', 'go to combined trials model selection pop page')->click();
+    sleep(5);
+
+    my $sel_pred = $d->find_element('Expected genetic gain', 'partial_link_text', 'scroll to genetic gain');
+    my $elem = $d->driver->execute_script( "arguments[0].scrollIntoView(true);window.scrollBy(0,-100);", $sel_pred);
+    sleep(2);
+    $d->find_element_ok('check_genetic_gain', 'id',  'run plot combined trials genetic gain')->click();
+    sleep(20);
+    $d->find_element_ok('boxplot', 'partial_link_text',  'checkout combined trials boxplot download link');
+    sleep(2);
+
+    # combined trials training population: multi traits modeling and genetic gain
+
+    $d->get_ok($combo_tr_pop_page, 'combined trials training pop page');
+    sleep(15);
+
+    $d->find_element_ok('//table[@id="population_traits_list"]/tbody/tr[1]/td/input', 'xpath', 'select 1st trait')->click();
+    sleep(1);
+    $d->find_element_ok('//table[@id="population_traits_list"]/tbody/tr[2]/td/input', 'xpath', 'select 2nd trait')->click();
+    sleep(1);
+    $d->find_element_ok('runGS', 'id',  'build combined trials multi models')->click();
+    sleep(3);
+    $d->find_element_ok('queue_job', 'id', 'job queueing')->click();
+    sleep(2);
+    $d->find_element_ok('analysis_name', 'id', 'fill in job name')->send_keys('Test DMCP-FRW modeling combo trials');
+    sleep(2);
+    $d->find_element_ok('user_email', 'id', 'user email')->send_keys('email@email.com');
+    sleep(2);
+    $d->find_element_ok('submit_job', 'id', 'submit')->click();
+    sleep(350);
+    $d->find_element_ok('Go back', 'partial_link_text', 'go back')->click();
+    sleep(15);
+
+    $d->find_element_ok('//table[@id="population_traits_list"]/tbody/tr[1]/td/input', 'xpath', 'select 1st trait')->click();
+    sleep(1);
+    $d->find_element_ok('//table[@id="population_traits_list"]/tbody/tr[2]/td/input', 'xpath', 'select 2nd trait')->click();
+    sleep(1);
+    $d->find_element_ok('runGS', 'id',  'go to combined trials multi models page')->click();
+    sleep(20);
+    $d->find_element_ok('//*[contains(text(), "Prediction models from")]', 'xpath', 'combined trials multi models page loaded');
+
+    $d->find_element_ok('trial_search_box', 'id', 'population search form')->send_keys('trial2 NaCRRI');
+    sleep(2);
+    $d->find_element_ok('search_selection_pop', 'id', 'search for selection pop')->click();
+    sleep(5);
+    $d->find_element_ok('//table[@id="selection_pops_table"]//*[contains(text(), "Predict")]', 'xpath', 'click selection pop predict')->click();
+    sleep(5);
+    $d->find_element_ok('queue_job', 'id', 'job queueing')->click();
+    sleep(2);
+    $d->find_element_ok('analysis_name', 'id', 'fill in job name')->send_keys('Test DMCP-FRW selection pred nacrri combo trials');
+    sleep(2);
+    $d->find_element_ok('user_email', 'id', 'fill in user email')->send_keys('email@email.com');
+    sleep(2);
+    $d->find_element_ok('submit_job', 'id', 'submit')->click();
+    sleep(300);
+    $d->find_element_ok('Go back', 'partial_link_text', 'go back')->click();
+    sleep(15);
+
+    my $sel_pred = $d->find_element('Expected genetic gain', 'partial_link_text', 'scroll to genetic gain');
+    my $elem = $d->driver->execute_script( "arguments[0].scrollIntoView(true);window.scrollBy(0,-100);", $sel_pred);
+    sleep(2);
+    $d->find_element_ok('gg_pops_select', 'id', 'select combined trials sel pop')->click();
+    sleep(3);
+    $d->find_element_ok('//select[@id="gg_pops_select"]/option[text()="trial2 NaCRRI"]', 'xpath', 'select selection pop')->click();
+    sleep(3);
+    $d->find_element_ok('check_genetic_gain', 'id',  'run plot combined trials multi traits genetic gain')->click();
+    sleep(40);
+    $d->find_element_ok('boxplot', 'partial_link_text',  'check combined trials multi traits boxplot download link');
+    sleep(3);
+
+    remove_tree($cache_dir, {safe => 1});
 
 });
 
