@@ -15,6 +15,7 @@ use Bio::GeneticRelationships::Pedigree;
 use CXGN::Pedigree::AddPedigrees;
 use Bio::GeneticRelationships::Individual;
 use CXGN::List;
+use IO::Uncompress::Gunzip qw(gunzip $GunzipError);
 
 #Needed to update IO::Socket::SSL
 use Data::Dumper;
@@ -124,7 +125,11 @@ is($message_hash->{$project_id}->[0]->{genotyping_project_id}, $project_id);
 my $vcf_basename = $message_hash->{$project_id}->[0]->{basename};
 $response = $ua->get("http://localhost:3010/ajax/genotyping_project/download_archived_vcf?genotyping_project_id=$project_id&basename=$vcf_basename");
 ok($response->is_success);
-$message = $response->decoded_content;
+# The archived original VCF is stored and served gzipped
+is($response->header('Content-Type'), 'application/gzip');
+like($response->header('Content-Disposition'), qr/filename="\Q$vcf_basename\E\.gz"/);
+my $gzipped = $response->content;
+gunzip(\$gzipped => \$message) or die "gunzip failed: $GunzipError";
 my @lines = split "\n", $message;
 my $first_lines = join "\n", @lines[0 .. 12];
 is($first_lines, '##fileformat=VCFv4.0
