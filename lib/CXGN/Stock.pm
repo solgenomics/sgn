@@ -1370,6 +1370,8 @@ sub get_trials {
         push @where_clause, "stock_relationship_1.object_id = $stock_id";
     } elsif ($type eq 'tissue_sample') {
         push @where_clause, "stock_relationship_2.subject_id = $stock_id OR nd_experiment_stock.stock_id = $stock_id";
+    } elsif ($type eq 'transformation') {
+	push @where_clause, "stock.stock_id = $stock_id";
     }
 
     my $where_clause = scalar(@where_clause)>0 ? " WHERE " . (join (" AND " , @where_clause)) : '';
@@ -1597,7 +1599,7 @@ sub add_parent {
     my $parent_name = shift;
     my $parent_type = shift;
     my $cross_type = shift;
-    
+
     print STDERR "Add_stock_parent function...\n";
 
     my $cvterm_name = "";
@@ -1605,7 +1607,7 @@ sub add_parent {
         $cvterm_name = "male_parent";
     }
     elsif ($parent_type eq "female") {
-        $cvterm_name = "female_parent";	
+        $cvterm_name = "female_parent";
     }
 
     my $type_id_row = SGN::Model::Cvterm->get_cvterm_row($self->schema(), $cvterm_name, "stock_relationship" )->cvterm_id();
@@ -1618,7 +1620,7 @@ sub add_parent {
     });
 
     my $error;
-    
+
     if ($previous_parent) {
 	print STDERR "The stock ".$previous_parent->subject_id." is already associated with stock ".$self->stock_id()." - returning.\n";
 	$error = "A $parent_type parent with id ".$previous_parent->subject_id." is already associated with this stock. Please specify another parent.";
@@ -2466,7 +2468,7 @@ sub merge {
     my $delete_other_stock = shift;
 
     print STDERR "IN SUB MERGE with stock id $other_stock_id and delete or not ? $delete_other_stock!\n";
-    
+
     if ($other_stock_id == $self->stock_id()) {
 	print STDERR "Trying to merge stock into itself ($other_stock_id) Skipping...\n";
 	return "Error: cannot merge stock into itself";
@@ -2588,7 +2590,7 @@ sub merge {
     # move subject relationships
     #
     print STDERR "MOVING SUBJECT RELATIONSHIPS...\n";
-    
+
     my $ssrs = $schema->resultset("Stock::StockRelationship")->search( { subject_id => $other_stock_id });
 
     while (my $row = $ssrs->next()) {
@@ -2619,7 +2621,7 @@ sub merge {
     }
 
     print STDERR "MOVING OBJECT RELATIONSHIPS...\n";
-    
+
     my $osrs = $schema->resultset("Stock::StockRelationship")->search( { object_id => $other_stock_id });
     while (my $row = $osrs->next()) {
 	my $this_object_rel_rs = $schema->resultset("Stock::StockRelationship")->search( { object_id => $self->stock_id, subject_id => $row->subject_id(), type_id => $row->type_id() });
