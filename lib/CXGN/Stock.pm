@@ -1372,6 +1372,8 @@ sub get_trials {
         push @where_clause, "stock_relationship_2.subject_id = $stock_id OR nd_experiment_stock.stock_id = $stock_id";
     } elsif ($type eq 'transformation') {
 	push @where_clause, "stock.stock_id = $stock_id";
+    } elsif ($type eq 'vector_construct') {
+	push @where_clause, "stock.stock_id = $stock_id";
     }
 
     my $where_clause = scalar(@where_clause)>0 ? " WHERE " . (join (" AND " , @where_clause)) : '';
