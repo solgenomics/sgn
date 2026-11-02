@@ -94,7 +94,7 @@ jQuery(document).ready(function(){
         });
 
         if(selected.length > 1 || selected.length == 0) {
-            alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("nirs.ui.dataset_required", "Please select one dataset!") : "Please select one dataset!"));
+            alert((SGN.t("nirs.ui.dataset_required", "Please select one dataset!")));
             return false;
         }
         else {
@@ -113,7 +113,7 @@ jQuery(document).ready(function(){
         });
 
         if(selected.length > 1 || selected.length == 0) {
-            alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("nirs.ui.dataset_required", "Please select one dataset!") : "Please select one dataset!"));
+            alert((SGN.t("nirs.ui.dataset_required", "Please select one dataset!")));
             return false;
         }
         else {
@@ -154,7 +154,7 @@ jQuery(document).ready(function(){
                 window.scrollTo(0,0);
             },
             error: function(response){
-                alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("nirs.plot.failure", "Error plotting spectra from NIRS!") : "Error plotting spectra from NIRS!"));
+                alert((SGN.t("nirs.plot.failure", "Error plotting spectra from NIRS!")));
                 jQuery('#working_modal').modal('hide');
             }
         });

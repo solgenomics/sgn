@@ -25,19 +25,19 @@ jQuery(document).ready(function(){
         'ajax': '/ajax/propagation/inactive_propagation_ids_in_group/'+propagation_group_stock_id,
         'autoWidth': false,
         'columns': [
-            { title: jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("seedlot.propagation_id.c146e1b", "Propagation ID") : "Propagation ID")).html(), "data": null, "render": function ( data, type, row ) { return "<a href='/stock/"+row.propagation_stock_id+"/view'>"+row.propagation_name+"</a>"; } },
-            { title: jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("global.index_logged_in_user.accession", "Accession") : "Accession")).html(), "data": null, "render": function ( data, type, row ) { return "<a href='/stock/"+row.accession_stock_id+"/view'>"+row.accession_name+"</a>"; } },
-            { title: jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("seedlot.rootstock", "Rootstock") : "Rootstock")).html(), "data": null, "render": function ( data, type, row ) {
+            { title: jQuery("<span>").text((SGN.t("seedlot.propagation_id.c146e1b", "Propagation ID"))).html(), "data": null, "render": function ( data, type, row ) { return "<a href='/stock/"+row.propagation_stock_id+"/view'>"+row.propagation_name+"</a>"; } },
+            { title: jQuery("<span>").text((SGN.t("global.index_logged_in_user.accession", "Accession"))).html(), "data": null, "render": function ( data, type, row ) { return "<a href='/stock/"+row.accession_stock_id+"/view'>"+row.accession_name+"</a>"; } },
+            { title: jQuery("<span>").text((SGN.t("seedlot.rootstock", "Rootstock"))).html(), "data": null, "render": function ( data, type, row ) {
                 if (row.rootstock_stock_id === null){
                     return ' '
                 } else {
                     return "<a href='/stock/"+row.rootstock_stock_id+"'>"+row.rootstock_name+"</a>"
                 }
             }},
-            { title: jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("global.dataset_publish.status.heading", "Status") : "Status")).html(), "data": "propagation_status" },
-            { title: jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("seedlot.updated_date", "Updated Date") : "Updated Date")).html(), "data": "updated_date" },
-            { title: jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("trial.card.status.updated_by", "Updated by") : "Updated by")).html(), "data": "updated_by" },
-            { title: jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("cross.ui.notes", "Notes") : "Notes")).html(), "data": "notes" },
+            { title: jQuery("<span>").text((SGN.t("global.dataset_publish.status.heading", "Status"))).html(), "data": "propagation_status" },
+            { title: jQuery("<span>").text((SGN.t("seedlot.updated_date", "Updated Date"))).html(), "data": "updated_date" },
+            { title: jQuery("<span>").text((SGN.t("trial.card.status.updated_by", "Updated by"))).html(), "data": "updated_by" },
+            { title: jQuery("<span>").text((SGN.t("cross.ui.notes", "Notes"))).html(), "data": "notes" },
 
         ],
 

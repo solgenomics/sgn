@@ -1142,11 +1142,11 @@ jQuery(document).ready(function() {
     jQuery('#upload_nirs_spreadsheet_submit_verify').click(function(){
         var file_input = jQuery("#upload_nirs_spreadsheet_file_input").val();
         if (file_input === '') {
-            alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("global.manage_file_share_dump.select_file", "Please select a file") : "Please select a file"));
+            alert((SGN.t("global.manage_file_share_dump.select_file", "Please select a file")));
             return false;
         }
         else {
-            jQuery('#working_msg').html((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("phenotype.verifying_nirs_file_and_data", "Verifying NIRS File and Data") : "Verifying NIRS File and Data"));
+            jQuery('#working_msg').html((SGN.t("phenotype.verifying_nirs_file_and_data", "Verifying NIRS File and Data")));
             jQuery('#working_modal').modal("show");
             jQuery('#upload_nirs_spreadsheet_file_form').attr("action", '/ajax/highdimensionalphenotypes/nirs_upload_verify');
             jQuery('#upload_nirs_spreadsheet_file_form').submit();
@@ -1166,7 +1166,7 @@ jQuery(document).ready(function() {
             var submit_store_button = "#upload_nirs_spreadsheet_submit_store";
             var upload_phenotype_status = "#upload_nirs_spreadsheet_verify_status";
 
-            jQuery('#upload_nirs_spreadsheet_verify_figure').html(("<div class=\"well well-sm\"><h3>" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("phenotype.plot_of_spectra", "Plot of Spectra:") : "Plot of Spectra:")).html() + " </h3><img width=\"80%\" height=\"80%\" src=\"")+response.figure+'"></div>');
+            jQuery('#upload_nirs_spreadsheet_verify_figure').html(("<div class=\"well well-sm\"><h3>" + jQuery("<span>").text((SGN.t("phenotype.plot_of_spectra", "Plot of Spectra:"))).html() + " </h3><img width=\"80%\" height=\"80%\" src=\"")+response.figure+'"></div>');
 
             jQuery(submit_verify_button).attr('disabled', true);
             var message_text = "<hr><ul class='list-group'>";
@@ -1197,7 +1197,7 @@ jQuery(document).ready(function() {
                 if (warningarrayLength > 0) {
                     message_text += "<li class='list-group-item list-group-item-warning'>";
                     message_text += "<span class='badge'><span class='glyphicon glyphicon-asterisk'></span></span>";
-                    message_text += ("" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("phenotype_upload.client.warnings_help", "Warnings are shown in yellow. Either fix the file and try again or continue with storing the data.") : "Warnings are shown in yellow. Either fix the file and try again or continue with storing the data.")).html() + "<hr>" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("phenotype.if_you_continue_by_default_any_new_values_will_be", "If you continue, by default any new values will be uploaded and any previously stored values will be skipped.") : "If you continue, by default any new values will be uploaded and any previously stored values will be skipped.")).html() + "<hr>" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("phenotype.to_overwrite_previously_stored_values_instead", "To overwrite previously stored values instead:") : "To overwrite previously stored values instead:")).html() + " <input type='checkbox' id='phenotype_upload_overwrite_values' name='phenotype_upload_overwrite_values' /><br><br>");
+                    message_text += ("" + jQuery("<span>").text((SGN.t("phenotype_upload.client.warnings_help", "Warnings are shown in yellow. Either fix the file and try again or continue with storing the data."))).html() + "<hr>" + jQuery("<span>").text((SGN.t("phenotype.if_you_continue_by_default_any_new_values_will_be", "If you continue, by default any new values will be uploaded and any previously stored values will be skipped."))).html() + "<hr>" + jQuery("<span>").text((SGN.t("phenotype.to_overwrite_previously_stored_values_instead", "To overwrite previously stored values instead:"))).html() + " <input type='checkbox' id='phenotype_upload_overwrite_values' name='phenotype_upload_overwrite_values' /><br><br>");
                     message_text += "</li>";
                     for (var i = 0; i < warningarrayLength; i++) {
                         message_text += "<li class='list-group-item list-group-item-warning'>";
@@ -1213,11 +1213,11 @@ jQuery(document).ready(function() {
             jQuery("#upload_nirs_spreadsheet_submit_store").click( function() {
                 var file_input = jQuery("#upload_nirs_spreadsheet_file_input").val();
                 if (file_input === '') {
-                    alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("global.manage_file_share_dump.select_file", "Please select a file") : "Please select a file"));
+                    alert((SGN.t("global.manage_file_share_dump.select_file", "Please select a file")));
                     return false;
                 }
                 else {
-                    jQuery('#working_msg').html((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("phenotype.storing_nirs_file_and_data", "Storing NIRS File and Data") : "Storing NIRS File and Data"));
+                    jQuery('#working_msg').html((SGN.t("phenotype.storing_nirs_file_and_data", "Storing NIRS File and Data")));
                     jQuery('#working_modal').modal("show");
                     jQuery('#upload_nirs_spreadsheet_file_form').attr("action", '/ajax/highdimensionalphenotypes/nirs_upload_store');
                     jQuery('#upload_nirs_spreadsheet_file_form').submit();
@@ -1253,10 +1253,10 @@ jQuery(document).ready(function() {
                             message_text += "</li>";
                         }
                         if (errorarrayLength == 0) {
-                            message_text += ("<li class='list-group-item list-group-item-success'><hr><h3>" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("phenotype.upload_successfull", "Upload Successful!") : "Upload Successful!")).html() + "</h3></li>");
+                            message_text += ("<li class='list-group-item list-group-item-success'><hr><h3>" + jQuery("<span>").text((SGN.t("phenotype.upload_successfull", "Upload Successful!"))).html() + "</h3></li>");
                         }
                     } else {
-                        message_text += ("<li class='list-group-item list-group-item-success'><hr><h3>" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("phenotype.upload_successfull", "Upload Successful!") : "Upload Successful!")).html() + "</h3></li>");
+                        message_text += ("<li class='list-group-item list-group-item-success'><hr><h3>" + jQuery("<span>").text((SGN.t("phenotype.upload_successfull", "Upload Successful!"))).html() + "</h3></li>");
                     }
                     message_text += "</ul>";
                     jQuery(upload_phenotype_status).html(message_text);
@@ -1275,11 +1275,11 @@ jQuery(document).ready(function() {
     jQuery('#upload_transcriptomics_spreadsheet_submit_verify').click(function(){
         var file_input = jQuery("#upload_transcriptomics_spreadsheet_file_input").val();
         if (file_input === '') {
-            alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("global.manage_file_share_dump.select_file", "Please select a file") : "Please select a file"));
+            alert((SGN.t("global.manage_file_share_dump.select_file", "Please select a file")));
             return false;
         }
         else {
-            jQuery('#working_msg').html((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("phenotype.verifying_transcriptomics_file_and_data", "Verifying Transcriptomics File and Data") : "Verifying Transcriptomics File and Data"));
+            jQuery('#working_msg').html((SGN.t("phenotype.verifying_transcriptomics_file_and_data", "Verifying Transcriptomics File and Data")));
             jQuery('#working_modal').modal("show");
             jQuery('#upload_transcriptomics_spreadsheet_file_form').data("flag", "verify");
             jQuery('#upload_transcriptomics_spreadsheet_file_form').attr("action", '/ajax/highdimensionalphenotypes/transcriptomics_upload_verify');
@@ -1290,11 +1290,11 @@ jQuery(document).ready(function() {
     jQuery("#upload_transcriptomics_spreadsheet_submit_store").click( function() {
         var file_input = jQuery("#upload_transcriptomics_spreadsheet_file_input").val();
         if (file_input === '') {
-            alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("global.manage_file_share_dump.select_file", "Please select a file") : "Please select a file"));
+            alert((SGN.t("global.manage_file_share_dump.select_file", "Please select a file")));
             return false;
         }
         else {
-            jQuery('#working_msg').html((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("phenotype.storing_transcriptomics_file_and_data", "Storing Transcriptomics File and Data") : "Storing Transcriptomics File and Data"));
+            jQuery('#working_msg').html((SGN.t("phenotype.storing_transcriptomics_file_and_data", "Storing Transcriptomics File and Data")));
             jQuery('#working_modal').modal("show");
             jQuery('#upload_transcriptomics_spreadsheet_file_form').data("flag", "store");
             jQuery('#upload_transcriptomics_spreadsheet_file_form').attr("action", '/ajax/highdimensionalphenotypes/transcriptomics_upload_store');
@@ -1345,7 +1345,7 @@ jQuery(document).ready(function() {
                     if (warningarrayLength > 0) {
                         message_text += "<li class='list-group-item list-group-item-warning'>";
                         message_text += "<span class='badge'><span class='glyphicon glyphicon-asterisk'></span></span>";
-                        message_text += ("" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("phenotype_upload.client.warnings_help", "Warnings are shown in yellow. Either fix the file and try again or continue with storing the data.") : "Warnings are shown in yellow. Either fix the file and try again or continue with storing the data.")).html() + "<hr>" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("phenotype.if_you_continue_by_default_any_new_values_will_be", "If you continue, by default any new values will be uploaded and any previously stored values will be skipped.") : "If you continue, by default any new values will be uploaded and any previously stored values will be skipped.")).html() + "<hr>" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("phenotype.to_overwrite_previously_stored_values_instead", "To overwrite previously stored values instead:") : "To overwrite previously stored values instead:")).html() + " <input type='checkbox' id='phenotype_upload_overwrite_values' name='phenotype_upload_overwrite_values' /><br><br>");
+                        message_text += ("" + jQuery("<span>").text((SGN.t("phenotype_upload.client.warnings_help", "Warnings are shown in yellow. Either fix the file and try again or continue with storing the data."))).html() + "<hr>" + jQuery("<span>").text((SGN.t("phenotype.if_you_continue_by_default_any_new_values_will_be", "If you continue, by default any new values will be uploaded and any previously stored values will be skipped."))).html() + "<hr>" + jQuery("<span>").text((SGN.t("phenotype.to_overwrite_previously_stored_values_instead", "To overwrite previously stored values instead:"))).html() + " <input type='checkbox' id='phenotype_upload_overwrite_values' name='phenotype_upload_overwrite_values' /><br><br>");
                         message_text += "</li>";
                         for (var i = 0; i < warningarrayLength; i++) {
                             message_text += "<li class='list-group-item list-group-item-warning'>";
@@ -1378,10 +1378,10 @@ jQuery(document).ready(function() {
                         message_text += "</li>";
                     }
                     if (errorarrayLength == 0) {
-                        message_text += ("<li class='list-group-item list-group-item-success'><hr><h3>" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("phenotype.upload_successfull", "Upload Successful!") : "Upload Successful!")).html() + "</h3></li>");
+                        message_text += ("<li class='list-group-item list-group-item-success'><hr><h3>" + jQuery("<span>").text((SGN.t("phenotype.upload_successfull", "Upload Successful!"))).html() + "</h3></li>");
                     }
                 } else {
-                    message_text += ("<li class='list-group-item list-group-item-success'><hr><h3>" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("phenotype.upload_successfull", "Upload Successful!") : "Upload Successful!")).html() + "</h3></li>");
+                    message_text += ("<li class='list-group-item list-group-item-success'><hr><h3>" + jQuery("<span>").text((SGN.t("phenotype.upload_successfull", "Upload Successful!"))).html() + "</h3></li>");
                 }
             }
             message_text += "</ul>";
@@ -1398,11 +1398,11 @@ jQuery(document).ready(function() {
     jQuery('#upload_metabolomics_spreadsheet_submit_verify').click(function(){
         var file_input = jQuery("#upload_metabolomics_spreadsheet_file_input").val();
         if (file_input === '') {
-            alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("global.manage_file_share_dump.select_file", "Please select a file") : "Please select a file"));
+            alert((SGN.t("global.manage_file_share_dump.select_file", "Please select a file")));
             return false;
         }
         else {
-            jQuery('#working_msg').html((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("phenotype.verifying_metabolomics_file_and_data", "Verifying Metabolomics File and Data") : "Verifying Metabolomics File and Data"));
+            jQuery('#working_msg').html((SGN.t("phenotype.verifying_metabolomics_file_and_data", "Verifying Metabolomics File and Data")));
             jQuery('#working_modal').modal("show");
             jQuery('#upload_metabolomics_spreadsheet_file_form').attr("action", '/ajax/highdimensionalphenotypes/metabolomics_upload_verify');
             jQuery('#upload_metabolomics_spreadsheet_file_form').submit();
@@ -1451,7 +1451,7 @@ jQuery(document).ready(function() {
                 if (warningarrayLength > 0) {
                     message_text += "<li class='list-group-item list-group-item-warning'>";
                     message_text += "<span class='badge'><span class='glyphicon glyphicon-asterisk'></span></span>";
-                    message_text += ("" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("phenotype_upload.client.warnings_help", "Warnings are shown in yellow. Either fix the file and try again or continue with storing the data.") : "Warnings are shown in yellow. Either fix the file and try again or continue with storing the data.")).html() + "<hr>" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("phenotype.if_you_continue_by_default_any_new_values_will_be", "If you continue, by default any new values will be uploaded and any previously stored values will be skipped.") : "If you continue, by default any new values will be uploaded and any previously stored values will be skipped.")).html() + "<hr>" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("phenotype.to_overwrite_previously_stored_values_instead", "To overwrite previously stored values instead:") : "To overwrite previously stored values instead:")).html() + " <input type='checkbox' id='phenotype_upload_overwrite_values' name='phenotype_upload_overwrite_values' /><br><br>");
+                    message_text += ("" + jQuery("<span>").text((SGN.t("phenotype_upload.client.warnings_help", "Warnings are shown in yellow. Either fix the file and try again or continue with storing the data."))).html() + "<hr>" + jQuery("<span>").text((SGN.t("phenotype.if_you_continue_by_default_any_new_values_will_be", "If you continue, by default any new values will be uploaded and any previously stored values will be skipped."))).html() + "<hr>" + jQuery("<span>").text((SGN.t("phenotype.to_overwrite_previously_stored_values_instead", "To overwrite previously stored values instead:"))).html() + " <input type='checkbox' id='phenotype_upload_overwrite_values' name='phenotype_upload_overwrite_values' /><br><br>");
                     message_text += "</li>";
                     for (var i = 0; i < warningarrayLength; i++) {
                         message_text += "<li class='list-group-item list-group-item-warning'>";
@@ -1467,11 +1467,11 @@ jQuery(document).ready(function() {
             jQuery("#upload_metabolomics_spreadsheet_submit_store").click( function() {
                 var file_input = jQuery("#upload_metabolomics_spreadsheet_file_input").val();
                 if (file_input === '') {
-                    alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("global.manage_file_share_dump.select_file", "Please select a file") : "Please select a file"));
+                    alert((SGN.t("global.manage_file_share_dump.select_file", "Please select a file")));
                     return false;
                 }
                 else {
-                    jQuery('#working_msg').html((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("phenotype.storing_metabolomics_file_and_data", "Storing Metabolomics File and Data") : "Storing Metabolomics File and Data"));
+                    jQuery('#working_msg').html((SGN.t("phenotype.storing_metabolomics_file_and_data", "Storing Metabolomics File and Data")));
                     jQuery('#working_modal').modal("show");
                     jQuery('#upload_metabolomics_spreadsheet_file_form').attr("action", '/ajax/highdimensionalphenotypes/metabolomics_upload_store');
                     jQuery('#upload_metabolomics_spreadsheet_file_form').submit();
@@ -1507,10 +1507,10 @@ jQuery(document).ready(function() {
                             message_text += "</li>";
                         }
                         if (errorarrayLength == 0) {
-                            message_text += ("<li class='list-group-item list-group-item-success'><hr><h3>" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("phenotype.upload_successfull", "Upload Successful!") : "Upload Successful!")).html() + "</h3></li>");
+                            message_text += ("<li class='list-group-item list-group-item-success'><hr><h3>" + jQuery("<span>").text((SGN.t("phenotype.upload_successfull", "Upload Successful!"))).html() + "</h3></li>");
                         }
                     } else {
-                        message_text += ("<li class='list-group-item list-group-item-success'><hr><h3>" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("phenotype.upload_successfull", "Upload Successful!") : "Upload Successful!")).html() + "</h3></li>");
+                        message_text += ("<li class='list-group-item list-group-item-success'><hr><h3>" + jQuery("<span>").text((SGN.t("phenotype.upload_successfull", "Upload Successful!"))).html() + "</h3></li>");
                     }
                     message_text += "</ul>";
                     jQuery(upload_phenotype_status).html(message_text);

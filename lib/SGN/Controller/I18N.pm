@@ -2,6 +2,8 @@ package SGN::Controller::I18N;
 use Moose;
 use JSON;
 use File::Slurp qw(read_file);
+use URI;
+use URI::Escape qw(uri_unescape);
 BEGIN { extends 'Catalyst::Controller' }
 
 =head1 NAME
@@ -47,7 +49,7 @@ sub language :Path('/i18n/language') Args(0) {
         return;
     }
     my $locale = $c->req->param('locale') || '';
-    my %allowed = map { $_ => 1 } $c->i18n_locales;
+    my %allowed = map { $_->{locale} => 1 } $c->i18n_locale_choices;
     if (!$allowed{$locale}) {
         $c->res->status(400);
         $c->res->body('Unsupported language.');
@@ -58,9 +60,29 @@ sub language :Path('/i18n/language') Args(0) {
         secure => ($c->req->uri->scheme eq 'https' ? 1 : 0),
         expires => '+1y',
     };
-    my $path = $c->req->param('return_to') || '/';
-    $path = '/' unless $path =~ m{^/(?!/)[A-Za-z0-9_./-]*$};
+    my $path = _return_path($c->req->param('return_to'));
     $c->res->redirect($path, 303);
+}
+
+# Preserve local navigation while rejecting browser-normalized external URLs.
+sub _return_path {
+    my ($value) = @_;
+    return '/' if !defined($value) || ref($value) || length($value) > 8192;
+    return '/' unless $value =~ m{\A/(?!/)};
+    return '/' if $value =~ /[\x00-\x20\x7f\\]/ || $value =~ /%(?:0[ad]|5c)/i;
+    my $uri = URI->new($value);
+    return '/' if defined($uri->scheme) || defined($uri->authority);
+    my $path = $uri->path;
+    for (1..2) {
+        $path = uri_unescape($path);
+        return '/' if $path =~ m{\A//} || $path =~ /[\x00-\x20\x7f\\]/;
+    }
+    # An old explicit ?lang= would otherwise override the freshly saved cookie.
+    if (defined(my $query = $uri->query)) {
+        my @parts = grep { uri_unescape((split /=/, $_, 2)[0]) ne 'lang' } split /[&;]/, $query;
+        $uri->query(@parts ? join('&', @parts) : undef);
+    }
+    return $uri->as_string;
 }
 
 1;

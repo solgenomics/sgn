@@ -96,7 +96,7 @@ jQuery(document).ready(function() {
         dom: 'Bfrtip',
         autoWidth: false,
         data: [],
-        columns: [{ title: (window.SGN && SGN.i18n ? SGN.i18n.p("global.search.bulk.name.7e68cb0", "Name") : "Name") }],
+        columns: [{ title: (SGN.t("global.search.bulk.name.7e68cb0", "Name")) }],
         buttons: [
             {
                 extend: 'excelHtml5',
@@ -114,7 +114,7 @@ jQuery(document).ready(function() {
         dom: 'Bfrtip',
         autoWidth: false,
         data: [],
-        columns: [{ title: (window.SGN && SGN.i18n ? SGN.i18n.p("global.search.bulk.name.7e68cb0", "Name") : "Name") }],
+        columns: [{ title: (SGN.t("global.search.bulk.name.7e68cb0", "Name")) }],
         buttons: [
             {
                 extend: 'excelHtml5',
@@ -157,7 +157,7 @@ function updateDataTypes() {
             }
         },
         error: function() {
-            alert((window.SGN && SGN.i18n ? SGN.i18n.p("global.search.bulk.could_not_get_supported_data_types", "Could not get supported data types!") : "Could not get supported data types!"));
+            alert((SGN.t("global.search.bulk.could_not_get_supported_data_types", "Could not get supported data types!")));
         }
     })
 }
@@ -175,7 +175,7 @@ function bulkSearch() {
         return /\S/.test(str);
     });
 
-    jQuery('#bulk_search_start').text((window.SGN && SGN.i18n ? SGN.i18n.p("global.search.bulk.searching", "Searching...") : "Searching...")).attr('disabled', true);
+    jQuery('#bulk_search_start').text((SGN.t("global.search.bulk.searching", "Searching..."))).attr('disabled', true);
 
     jQuery.ajax({
         url: "/list/validate/temp",
@@ -185,12 +185,12 @@ function bulkSearch() {
             "items": JSON.stringify(names),
         },
         success: function(data) {
-            jQuery('#bulk_search_start').text((window.SGN && SGN.i18n ? SGN.i18n.p("global.search.bulk.search.7883f4b", "Search") : "Search")).attr('disabled', false);
+            jQuery('#bulk_search_start').text((SGN.t("global.search.bulk.search.7883f4b", "Search"))).attr('disabled', false);
             displayResults(data, type_name);
         },
         error: function() {
-            alert((window.SGN && SGN.i18n ? SGN.i18n.p("global.search.bulk.could_not_run_bulk_search", "Could not run bulk search!") : "Could not run bulk search!"));
-            jQuery('#bulk_search_start').text((window.SGN && SGN.i18n ? SGN.i18n.p("global.search.bulk.search.7883f4b", "Search") : "Search")).attr('disabled', false);
+            alert((SGN.t("global.search.bulk.could_not_run_bulk_search", "Could not run bulk search!")));
+            jQuery('#bulk_search_start').text((SGN.t("global.search.bulk.search.7883f4b", "Search"))).attr('disabled', false);
         }
     });
 }
@@ -233,7 +233,7 @@ function displayResults(data, type) {
         }
     }
     else {
-        alert((window.SGN && SGN.i18n ? SGN.i18n.p("global.search.bulk.invalid_response_from_the_server", "Invalid response from the server!") : "Invalid response from the server!"));
+        alert((SGN.t("global.search.bulk.invalid_response_from_the_server", "Invalid response from the server!")));
     }
 
     dte.draw();

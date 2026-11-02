@@ -13,7 +13,7 @@
     jQuery.ajax( { 
       url: '/ajax/user/login_button_html',
       headers: {'X-SGN-Locale': document.documentElement.getAttribute('data-sgn-locale') || document.documentElement.lang || 'en'},
-      error: function(r) { alert(window.SGN && SGN.i18n ? SGN.i18n.p('navigation.login.network_error', 'An error occurred') : 'An error occurred'); },
+      error: function(r) { alert(SGN.t('navigation.login.network_error', 'An error occurred')); },
       success: function(r) { 
         if (r.error) { alert(r.error); }
         else { 
@@ -30,13 +30,13 @@
   }
         
   function logout() { 
-    var answer = confirm(window.SGN && SGN.i18n ? SGN.i18n.p('navigation.login.confirm_logout', 'Are you sure you want to log out?') : 'Are you sure you want to log out?');
+    var answer = confirm(SGN.t('navigation.login.confirm_logout', 'Are you sure you want to log out?'));
 
     if (answer === true) { 
       jQuery.ajax( { 
         url: '/ajax/user/logout',
         headers: {'X-SGN-Locale': document.documentElement.getAttribute('data-sgn-locale') || document.documentElement.lang || 'en'},
-        error: function(r) { alert(window.SGN && SGN.i18n ? SGN.i18n.p('navigation.login.network_error', 'An error occurred') : 'An error occurred'); },
+        error: function(r) { alert(SGN.t('navigation.login.network_error', 'An error occurred')); },
         success: function(r) { 
           if (r.error) { alert(r.error); }
           else { 

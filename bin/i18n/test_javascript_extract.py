@@ -30,6 +30,23 @@ class JavaScriptExtractionTests(unittest.TestCase):
 
     # pylint: enable=duplicate-code
 
+    def test_short_helpers_keep_context_plurals_and_shadowing(self):
+        rows = self.records("SGN.t('save', 'Save'); window.SGN.tn('count', 'One', 'Many', n);")
+        self.assertEqual(
+            [(r["context"], r["source"], r["plural"]) for r in rows], [("save", "Save", None), ("count", "One", "Many")]
+        )
+        self.assertEqual(self.records("function f(SGN) { SGN.t('ignored', 'Local'); }"), [])
+        with self.assertRaisesRegex(ExtractionError, "literal constants"):
+            self.records("SGN.t('save', label)")
+        with self.assertRaisesRegex(ExtractionError, "unsupported"):
+            self.records("const t=SGN.t; t('save', 'Save')")
+
+    def test_short_helper_destructuring_cannot_silently_hide_messages(self):
+        for source in ("const {t}=SGN; t('save','Save')", "const {tn:count}=window.SGN; count('n','One','Many',2)"):
+            with self.subTest(source=source), self.assertRaisesRegex(ExtractionError, "destructuring"):
+                self.records(source)
+        self.assertEqual(self.records("const {other}=SGN; other('Ignored')"), [])
+
     def test_optional_mason_chain_suffix_keeps_static_captions(self):
         rows = self.records(
             """<script>
@@ -110,7 +127,8 @@ translator.p('handler.client', 'Client label');
                     extract_file(path, root)
 
     def test_globals_reviewed_fallback_aliases_and_constructor(self):
-        rows = self.records("""SGN.i18n.p('direct', 'Text');
+        rows = self.records(
+            """SGN.i18n.p('direct', 'Text');
 if (!window.SGN.i18n) {window.SGN.i18n={p:function(c,s){return s;}};} window.SGN.i18n.p('window', 'Text');
 const i18n = window.SGN && SGN.i18n;
 i18n.np('count', '%{count} item', '%{count} items', count, {count});
@@ -120,7 +138,8 @@ const translator = new SGN.I18N(payload);
 const second = translator;
 second.p('', 'Вітаємо 🌱');
 new window.SGN.I18N(payload).p('constructor', 'Text');
-""")
+"""
+        )
         self.assertEqual(
             [row["context"] for row in rows],
             ["direct", "window", "count", "fallback", "", "constructor"],
@@ -130,7 +149,8 @@ new window.SGN.I18N(payload).p('constructor', 'Text');
         self.assertEqual(rows[4]["reference"], "fixture.js:9")
 
     def test_lexical_shadowing_parameters_loops_catch_and_hoisted_var(self):
-        rows = self.records("""const i18n = SGN.i18n;
+        rows = self.records(
+            """const i18n = SGN.i18n;
 { let i18n = widget; i18n.p('property', dynamic); }
 function shadow(i18n) { i18n.p('parameter', dynamic); }
 function hoisted() { SGN.i18n.p('localnamespace', dynamic); var SGN = widget; }
@@ -139,28 +159,33 @@ for (let i18n of widgets) { i18n.p('loop', dynamic); }
 try {} catch (i18n) { i18n.p('catch', dynamic); }
 function nested() { i18n.p('closure', 'Text'); }
 i18n.p('outer', 'Text');
-""")
+"""
+        )
         self.assertEqual([row["context"] for row in rows], ["closure", "outer"])
 
     def test_comments_regex_literal_and_template_data_are_opaque(self):
-        rows = self.records(r"""// SGN.i18n.p('comment', 'Ignored');
+        rows = self.records(
+            r"""// SGN.i18n.p('comment', 'Ignored');
 /* SGN.i18n.p('block', 'Ignored'); */
 const regex = /SGN.i18n.p\('regex', 'Ignored'\)/g;
 const quoted = "SGN.i18n.p('quote', 'Ignored')";
 const template = `SGN.i18n.p('template', 'Ignored') ${widget.p('widget', dynamic)}`;
 widget.p('widget', dynamic);
 SGN.i18n.p('real', 'English');
-""")
+"""
+        )
         self.assertEqual([row["context"] for row in rows], ["real"])
         self.assertEqual(rows[0]["reference"], "fixture.js:7")
 
     def test_literal_unicode_escapes_constant_template_and_real_template_expression(
         self,
     ):
-        rows = self.records(r"""SGN.i18n.p('', '\u0412\u0456\u0442\u0430\u0454\u043c\u043e \u{1F331}');
+        rows = self.records(
+            r"""SGN.i18n.p('', '\u0412\u0456\u0442\u0430\u0454\u043c\u043e \u{1F331}');
 SGN.i18n.p('template.constant', `Quote: " and ' \nLine`);
 const label = `Prefix ${SGN.i18n.p('nested.real', 'Nested text')}`;
-""")
+"""
+        )
         self.assertEqual(rows[0]["source"], "Вітаємо 🌱")
         self.assertEqual(rows[1]["source"], "Quote: \" and ' \nLine")
         self.assertEqual([row["context"] for row in rows], ["", "template.constant", "nested.real"])

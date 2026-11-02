@@ -103,23 +103,23 @@ jQuery(document).ready(function() {
         data: [],
         columns: [
             { 
-                title: jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("genotype.marker.marker", "Marker") : "Marker")).html(),
+                title: jQuery("<span>").text((SGN.t("genotype.marker.marker", "Marker"))).html(),
                 data: "marker_name",
                 render: function(data, type, row) {
                     return data && data !== "" ? "<strong><a href='/variant/" + row.variant_name + "/details'>" + data + "</a></strong>" : "";
                 }
             },
             { 
-                title: jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("global.search_wizard.protocol", "Protocol") : "Protocol")).html(),
+                title: jQuery("<span>").text((SGN.t("global.search_wizard.protocol", "Protocol"))).html(),
                 data: "nd_protocol_name",
                 render: function(data, type, row) {
                     return data && data !== "" ? "<a href='/breeders_toolbox/protocol/" + row.nd_protocol_id + "'>" + data + "</a>" : "";
                 } 
             },
-            { title: jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("cross.species", "Species") : "Species")).html(), data: "species_name" },
-            { title: jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("genotype.plate.reference_genome", "Reference Genome") : "Reference Genome")).html(), data: "reference_genome_name" },
-            { title: jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("global.search_wizard.chromosome", "Chromosome") : "Chromosome")).html(), data: "chrom" },
-            { title: jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("genotype.marker.position", "Position") : "Position")).html(), data: "pos" },
+            { title: jQuery("<span>").text((SGN.t("cross.species", "Species"))).html(), data: "species_name" },
+            { title: jQuery("<span>").text((SGN.t("genotype.plate.reference_genome", "Reference Genome"))).html(), data: "reference_genome_name" },
+            { title: jQuery("<span>").text((SGN.t("global.search_wizard.chromosome", "Chromosome"))).html(), data: "chrom" },
+            { title: jQuery("<span>").text((SGN.t("genotype.marker.position", "Position"))).html(), data: "pos" },
             { title: "Ref", data: "ref" },
             { title: "Alt", data: "alt" }
         ],
@@ -137,18 +137,18 @@ jQuery(document).ready(function() {
         data: [],
         columns: [
             { 
-                title: jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("genotype.marker.marker", "Marker") : "Marker")).html(),
+                title: jQuery("<span>").text((SGN.t("genotype.marker.marker", "Marker"))).html(),
                 data: "marker_name", 
                 render: function(data, type, row) {
                     return data && data !== "" ? "<strong><a href='/search/markers/markerinfo.pl?marker_id=" + row.marker_id + "'>" + data + "</a></strong>" : "";
                 }
             },
-            { title: jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("global.search_wizard.protocol", "Protocol") : "Protocol")).html(), data: "protocol" },
-            { title: jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("cross.species", "Species") : "Species")).html(), data: "species_name" },
-            { title: jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("genotype.marker.map", "Map") : "Map")).html(), data: "map_name" },
-            { title: jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("global.search_wizard.chromosome", "Chromosome") : "Chromosome")).html(), data: "lg_name" },
-            { title: jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("genotype.marker.position", "Position") : "Position")).html(), data: "position" },
-            { title: jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("genotype.marker.map_units", "Map Units") : "Map Units")).html(), data: "map_units" },
+            { title: jQuery("<span>").text((SGN.t("global.search_wizard.protocol", "Protocol"))).html(), data: "protocol" },
+            { title: jQuery("<span>").text((SGN.t("cross.species", "Species"))).html(), data: "species_name" },
+            { title: jQuery("<span>").text((SGN.t("genotype.marker.map", "Map"))).html(), data: "map_name" },
+            { title: jQuery("<span>").text((SGN.t("global.search_wizard.chromosome", "Chromosome"))).html(), data: "lg_name" },
+            { title: jQuery("<span>").text((SGN.t("genotype.marker.position", "Position"))).html(), data: "position" },
+            { title: jQuery("<span>").text((SGN.t("genotype.marker.map_units", "Map Units"))).html(), data: "map_units" },
         ],
         order: [[ 0, "asc" ]]
     });
@@ -233,7 +233,7 @@ function searchGenotypedMarkers() {
     let dt = jQuery('#genotyped-marker-results-table').DataTable();
     dt.clear();
     dt.draw();
-    jQuery("#genotyped-marker-results-table .dataTables_empty").html((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("global.search.bulk.searching", "Searching...") : "Searching..."));
+    jQuery("#genotyped-marker-results-table .dataTables_empty").html((SGN.t("global.search.bulk.searching", "Searching...")));
     jQuery("#genotyped-marker-page-prev").attr('disabled', true);
     jQuery("#genotyped-marker-page-next").attr('disabled', true);
 
@@ -258,7 +258,7 @@ function searchGenotypedMarkers() {
             displayGenotypedMarkers(dt, data);
         },
         error: function() {
-            alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("genotype.marker.error_could_not_perform_genotyped_marker_search", "ERROR: Could not perform genotyped marker search") : "ERROR: Could not perform genotyped marker search"));
+            alert((SGN.t("genotype.marker.error_could_not_perform_genotyped_marker_search", "ERROR: Could not perform genotyped marker search")));
         }
     });
 
@@ -321,8 +321,8 @@ function displayGenotypedMarkers(dt, data) {
     let displayed = start + " - " + end + " / " + total;
     let max_page = Math.ceil(total/GENOTYPED_MARKERS_LIMIT);
     let page = GENOTYPED_MARKERS_PAGE + " / " + max_page;
-    jQuery("#genotyped-marker-results-displayed").html(("<strong>" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("genotype.marker.markers", "MARKERS:") : "MARKERS:")).html() + "</strong> ") + displayed);
-    jQuery("#genotyped-marker-results-pages").html(("<strong>" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("genotype.marker.page", "PAGE:") : "PAGE:")).html() + "</strong> ") + page);
+    jQuery("#genotyped-marker-results-displayed").html(("<strong>" + jQuery("<span>").text((SGN.t("genotype.marker.markers", "MARKERS:"))).html() + "</strong> ") + displayed);
+    jQuery("#genotyped-marker-results-pages").html(("<strong>" + jQuery("<span>").text((SGN.t("genotype.marker.page", "PAGE:"))).html() + "</strong> ") + page);
     jQuery("#genotyped-marker-page-prev").attr('disabled', GENOTYPED_MARKERS_PAGE === 1);
     jQuery("#genotyped-marker-page-next").attr('disabled', GENOTYPED_MARKERS_PAGE === max_page || max_page === 0);
     
@@ -348,7 +348,7 @@ function searchMappedMarkers() {
     let dt = jQuery('#mapped-marker-results-table').DataTable();
     dt.clear();
     dt.draw();
-    jQuery("#mapped-marker-results-table .dataTables_empty").html((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("global.search.bulk.searching", "Searching...") : "Searching..."));
+    jQuery("#mapped-marker-results-table .dataTables_empty").html((SGN.t("global.search.bulk.searching", "Searching...")));
     jQuery("#mapped-marker-page-prev").attr('disabled', true);
     jQuery("#mapped-marker-page-next").attr('disabled', true);
 
@@ -372,7 +372,7 @@ function searchMappedMarkers() {
             displayMappedMarkers(dt, data);
         },
         error: function() {
-            alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("genotype.marker.error_could_not_perform_mapped_marker_search", "ERROR: Could not perform mapped marker search") : "ERROR: Could not perform mapped marker search"));
+            alert((SGN.t("genotype.marker.error_could_not_perform_mapped_marker_search", "ERROR: Could not perform mapped marker search")));
         }
     });
 
@@ -427,8 +427,8 @@ function displayMappedMarkers(dt, data) {
     let displayed = start + " - " + end + " / " + total;
     let max_page = Math.ceil(total/MAPPED_MARKERS_LIMIT);
     let page = MAPPED_MARKERS_PAGE + " / " + max_page;
-    jQuery("#mapped-marker-results-displayed").html(("<strong>" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("genotype.marker.markers", "MARKERS:") : "MARKERS:")).html() + "</strong> ") + displayed);
-    jQuery("#mapped-marker-results-pages").html(("<strong>" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("genotype.marker.page", "PAGE:") : "PAGE:")).html() + "</strong> ") + page);
+    jQuery("#mapped-marker-results-displayed").html(("<strong>" + jQuery("<span>").text((SGN.t("genotype.marker.markers", "MARKERS:"))).html() + "</strong> ") + displayed);
+    jQuery("#mapped-marker-results-pages").html(("<strong>" + jQuery("<span>").text((SGN.t("genotype.marker.page", "PAGE:"))).html() + "</strong> ") + page);
     jQuery("#mapped-marker-page-prev").attr('disabled', MAPPED_MARKERS_PAGE === 1);
     jQuery("#mapped-marker-page-next").attr('disabled', MAPPED_MARKERS_PAGE === max_page || max_page === 0);
 

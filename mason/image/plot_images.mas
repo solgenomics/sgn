@@ -94,7 +94,7 @@ function getStocksWithImages() {
             _load_stock_image_results();
         },
         error: function(response) {
-            alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("community.image.error_fetching_stock_names", "Error fetching stock names") : "Error fetching stock names"));
+            alert((SGN.t("community.image.error_fetching_stock_names", "Error fetching stock names")));
         }
     });
 }

@@ -43,12 +43,12 @@ jQuery(document).ready(function(){
     jQuery('#download_obsoleted_stock_list_submit').click(function() {
         var obsoleted_stock_list_id = jQuery('#obsoleted_stock_list_list_select').val();
         if (!obsoleted_stock_list_id) {
-            alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("lists_datasets.download_js.please_select_an_obsoleted_stock_list", "Please select an obsoleted stock list!") : "Please select an obsoleted stock list!"));
+            alert((SGN.t("lists_datasets.download_js.please_select_an_obsoleted_stock_list", "Please select an obsoleted stock list!")));
             return;
         } else {
             lo.validate(obsoleted_stock_list_id, 'obsoleted_stocks', true).then((r) => {
                 if (r.missing.length > 0) {
-                   alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("lists_datasets.download_js.the_obsoleted_stock_list_did_not_pass_validation_please_correct_t", "The obsoleted stock list did not pass validation. Please correct the list and try again") : "The obsoleted stock list did not pass validation. Please correct the list and try again"));
+                   alert((SGN.t("lists_datasets.download_js.the_obsoleted_stock_list_did_not_pass_validation_please_correct_t", "The obsoleted stock list did not pass validation. Please correct the list and try again")));
                 } else {
                     var token = new Date().getTime(); //use the current timestamp as the token name and value
                     jQuery('#download_obsolete_metadata_token').val(token);

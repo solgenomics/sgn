@@ -112,19 +112,19 @@ jQuery(document).ready(function(){
     jQuery('#new_transformation_identifier_submit').click(function() {
         var transformation_identifier = jQuery("#new_transformation_identifier_name").val();
         if (!transformation_identifier) {
-            alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("transformation.transformation_id_is_required", "Transformation ID is required") : "Transformation ID is required"));
+            alert((SGN.t("transformation.transformation_id_is_required", "Transformation ID is required")));
             return;
         }
 
         var plant_material = jQuery("#plant_material").val();
         if (!plant_material) {
-            alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("transformation.plant_material_is_required", "Plant material is required") : "Plant material is required"));
+            alert((SGN.t("transformation.plant_material_is_required", "Plant material is required")));
             return;
         }
 
         var vector_construct = jQuery("#vector_construct").val();
         if (!vector_construct) {
-            alert ((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("transformation.vector_construct_is_required", "Vector construct is required") : "Vector construct is required"));
+            alert ((SGN.t("transformation.vector_construct_is_required", "Vector construct is required")));
             return;
         }
 

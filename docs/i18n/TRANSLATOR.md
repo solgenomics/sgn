@@ -1,227 +1,191 @@
 # Translator and language-pack operator workflow
 
-This guide covers the SGN interface localization layer. A translator owns an
-external PO workspace; a site operator owns the language-pack store and site
-configuration. Adding a language for already instrumented messages requires no
-application source edit. The source allowlist defines the available messages;
-it does not assert that every SGN page, calculation or report is translated.
+Developers mark complete interface messages in application source. The release
+builder freezes the message set and workflow assignments once per application
+release. Translators edit standard gettext PO files in their own workspace;
+operators install ready, data-only packages. Routine source PRs do not require
+finished translations or a rewrite of every language's PO file.
 
-Use the tools supplied with a frozen source release. The compiler needs Python
-3, GNU gettext (`msgfmt`, `msgmerge`), Node and the qualified JavaScript parser,
-and Perl/PPI/JSON::PP for registered Perl/Mason sources. Registered marked R
-sources additionally need the qualified R helper. The [main guide](README.md)
-describes the offline parser environment. Parser helpers must match the source
-release; application code is parsed as data rather than executed during
-extraction. No online translation service or global installation is required.
+Stored names, identifiers, ontology terms, measurements, units, scientific
+formulas and machine import/export/API keys remain data. Keep complete English
+fallbacks. A missing, fuzzy or incomplete translation retains its whole English
+message; a filled obsolete source or changed plural identity is rejected.
 
-## Create and edit an external PO
+## Release builder: freeze source once
 
-Choose separate absolute paths outside the application checkout. Preserve the
-original PO and use new build/pack output directories for each reviewed version.
-The examples use French; its plural rule has two forms and treats zero as the
-first form.
+Only the source-release builder needs the qualified Perl/PPI, JavaScript/Acorn
+and R extractors described in [README.md](README.md). Run from the frozen
+application source, using its exact application version or commit:
 
 ```sh
 SGN_ROOT=/path/to/frozen-sgn-source
+RELEASE_DIR=/path/to/release-output
+
+python3 "$SGN_ROOT/bin/i18n/catalog.py" --root "$SGN_ROOT" freeze \
+  --application-version APPLICATION_VERSION_OR_COMMIT \
+  --output "$RELEASE_DIR/release.json"
+```
+
+This creates `release.json` and its adjacent `release.pot`. The validated JSON
+contains the application version, semantic message-set revision, source
+references and complete partition assignments. Preserve the printed SHA-256 and
+ship both files with the matching `bin/i18n` tool directory. Refusing to overwrite
+an existing snapshot protects previously released translator inputs. Generated
+snapshots, packs and reports belong outside application source control.
+
+The snapshot hash establishes byte identity, not a publisher signature. Obtain
+the release inputs and tools through the project's normal trusted release path.
+The compiler rejects malformed snapshots, duplicate identities, a wrong semantic
+revision or invalid/incomplete partition references before writing outputs.
+
+## Translator: initialize or merge an external PO
+
+A translator building from the frozen snapshot needs Python 3 and GNU gettext
+(`msgfmt`, `msgcat`, `msgmerge`), without Node, Acorn, PPI, R or an application
+checkout. The copied Python tool modules parse source only for the explicit
+source-extraction commands; `init/build --release` never invokes those parsers.
+
+```sh
+I18N_TOOLS=/path/to/release-tools/bin/i18n
+RELEASE_JSON=/path/to/release-output/release.json
 PO_WORKSPACE=/path/to/translator-workspace
-PACK_STORE=/path/to/operator-owned-language-store
 PO_FILE="$PO_WORKSPACE/fr/LC_MESSAGES/sgn.po"
 
-python3 "$SGN_ROOT/script/i18n/catalog.py" --root "$SGN_ROOT" init \
+python3 "$I18N_TOOLS/catalog.py" init --release "$RELEASE_JSON" \
   --locale fr --direction ltr --plural-forms 'nplurals=2; plural=(n > 1);' \
   --name 'Français' --output "$PO_FILE"
 ```
 
-`init` refuses to overwrite existing translator work. `Language`, direction,
-plural metadata and optional `X-SGN-Language-Name` describe the language. The
-native name is display text, independent of identifiers, filenames and access
-permissions. Locale identifiers remain safe ASCII tags such as `fr` or `fr-CA`;
-native display names may contain Unicode.
-
-Edit `msgstr` and every required `msgstr[n]` in a gettext editor. Preserve
-`msgctxt`, exact English `msgid`/`msgid_plural` and named variables such as
-`%{count}` or `%{name}`. Translate a complete sentence; variable order can change,
-but variable names must remain identical in every form. Keep text plain: callers
-escape it for their actual HTML/report sinks. Do not insert HTML entities to
-pre-escape ordinary text.
-
-Ordinary named values may repeat when the sentence needs them. The file-table
-message `file_list.datatable.length_menu` / `Show %{menu} entries` is different:
-`%{menu}` produces one interactive selector and must occur exactly once.
-PO compilation and ready-JSON pack validation enforce this same requirement.
-Create, install, activate and rollback reject a duplicated control even when
-the catalog checksum is valid. An activation or rollback refusal preserves the
-current language and history. Repair the translation and build/install/activate
-a valid pack; previously installed files are retained for inspection.
-
-Stock/accession names, identifiers, scientific codes, stored list types, machine
-import headers, query/API field names, numerical values and measurements remain
-application data. A translated sentence may include them through named variables;
-their values are not translated. Leave a record empty or fuzzy when it still
-needs review. The compiler omits the whole missing/fuzzy/incomplete record, so
-the site retains its complete English fallback.
-
-## Check and compile
-
-There is no separate `catalog.py check` command. GNU gettext checks PO syntax and
-headers; `build` additionally validates the source template, named-variable
-parity, required plural forms and the bounded plural rule/AST contract.
+`init` refuses to overwrite existing work. For an existing language, preserve
+the original PO and use GNU gettext to merge the next release's template:
 
 ```sh
-msgfmt --check --output-file="$PO_WORKSPACE/fr-check.mo" "$PO_FILE"
-
-python3 "$SGN_ROOT/script/i18n/catalog.py" --root "$SGN_ROOT" build \
-  --po "$PO_FILE" --output "$PO_WORKSPACE/build-v1" --legacy-single-file
+cp "$PO_FILE" "$PO_WORKSPACE/fr-before-release-update.po"
+msgmerge --update --no-wrap --backup=none \
+  "$PO_FILE" /path/to/new-release/release.pot
 ```
 
-The MO above is a check artifact, not the deployed pack. The legacy runtime
-output is `build-v1/fr/sgn.json`; `--legacy-single-file` selects this
-data-only offline format. The default build uses the indexed common/workflow
-layout when `locale/workflows.json` is present. `--po` is repeatable and compiles only the selected PO
-files, including external files. Their `Language` header determines the locale;
-directory names do not. Duplicate selected locale identifiers fail. The default
-build without `--po` still discovers repository-local PO files.
+The PO's `Language`, `X-SGN-Direction`, `Plural-Forms` and optional
+`X-SGN-Language-Name` describe its locale. `Language` determines the output tag,
+independently of the input filename. Locale tags are safe ASCII identifiers;
+the native name is Unicode display text. Translate `msgstr` and every required
+`msgstr[n]` in a gettext editor, preserving exact `msgctxt`, `msgid`,
+`msgid_plural` and named values such as `%{count}` or `%{name}`.
 
-The source release must provide a current `locale/sgn.pot`. A stale template
-fails explicitly. A translator does not fix this by editing application code or
-running `update` against other people's shipped PO files; obtain the current
-source/POT from the release owner. The compiler validates all selected inputs
-before writing runtime output and derives compiled provenance from its current
-source-message set. `sourceRevision` is a semantic message-set SHA-256, not a Git
-commit identifier.
+Translate a whole sentence, allowing word and variable order to change. Keep
+text plain, without HTML markup or pre-escaped entities; application callers
+escape it for their actual destination. Ordinary variables may repeat. The
+interactive `%{menu}` placeholder in `file_list.datatable.length_menu` and
+`odk.table.length` must occur exactly once and must not introduce `_MENU_`.
+Compiler and ready-package validation enforce the same rule.
 
-## Create, install and activate a reviewed pack
+Review terminology in small breeding workflows, using a shared glossary for
+accessions, trials, plots, seedlots, crosses and observation variables. Review
+uncertain and machine-generated text with a native speaker and a breeder.
+Leave a record empty or fuzzy until it is ready for use. Filled translation
+counts measure coverage; they do not certify linguistic or scientific quality.
+
+## Translator or release builder: compile and package
 
 ```sh
-python3 "$SGN_ROOT/script/i18n/pack.py" create \
-  --catalog "$PO_WORKSPACE/build-v1/fr/sgn.json" \
+python3 "$I18N_TOOLS/catalog.py" build --release "$RELEASE_JSON" \
+  --po "$PO_FILE" --output "$PO_WORKSPACE/build-v1"
+
+python3 "$I18N_TOOLS/pack.py" create \
+  --catalog "$PO_WORKSPACE/build-v1/fr/sgn/index.json" \
   --output "$PO_WORKSPACE/pack-v1"
 
-python3 "$SGN_ROOT/script/i18n/pack.py" install \
-  --pack "$PO_WORKSPACE/pack-v1" --root "$PACK_STORE"
+python3 "$I18N_TOOLS/pack.py" validate --pack "$PO_WORKSPACE/pack-v1"
 ```
 
-A pack contains only `manifest.json` and `catalog.json`. `create` prints the
-catalog SHA-256; the manifest records that hash, locale, direction, domain,
-schema/API and source revision. Preserve the exact output and use its hash for
-activation. The hash establishes byte identity/integrity, not a publisher
-signature; the operator still chooses the source of translations.
+`--po` is repeatable; all selected locales are validated before build output is
+written. The build report counts translated and English-fallback identities per
+locale without double-counting messages used by several workflows. Standard PO
+and gettext remain the translator format. The bounded, non-executable plural
+parser emits the same AST as the application's pinned browser runtime, proves
+all-count form bounds and rejects unsafe or unsupported formulas.
 
-Installation copies a validated immutable version to
-`installed/fr/<catalog-sha256>/`. It does not activate it. A new store is
-initialized only in an empty directory and receives `.sgn-i18n-store`.
+The normal output is an indexed common/workflow bundle. The index and every
+partition have independent 2 MiB limits. The pack binds all file checksums and
+its source revision in one manifest; one missing, extra, symlinked, mismatched or
+conflicting member rejects the package. Preserve `catalogSha256` printed by
+`create`: for an indexed package it identifies the complete file-hash set.
+
+A small existing single-file catalog remains supported through
+`build --legacy-single-file`, followed by `pack.py create --catalog .../fr/sgn.json`.
+The full multilingual corpus must use indexed packages rather than increasing
+the single-file limit.
+
+## Operator: install, activate and roll back
+
+Operators need the supplied Python tools and Python's standard library. Ready
+package validation, installation, activation and rollback require no Node,
+gettext, Perl, R or application source. Use a separate writable store, preserve
+both the current and previous immutable package, and keep its absolute path
+stable when mounting it into a container.
 
 ```sh
+PACK_STORE=/path/to/operator-language-store
+python3 "$I18N_TOOLS/pack.py" install \
+  --pack "$PO_WORKSPACE/pack-v1" --root "$PACK_STORE"
+
 CATALOG_SHA=64_HEX_DIGITS_PRINTED_BY_CREATE
-python3 "$SGN_ROOT/script/i18n/pack.py" activate \
+python3 "$I18N_TOOLS/pack.py" activate \
   --locale fr --hash "$CATALOG_SHA" --root "$PACK_STORE"
+
+python3 "$I18N_TOOLS/pack.py" rollback --locale fr --root "$PACK_STORE"
 ```
 
-Activation switches `active/fr/sgn.json` atomically under an advisory store lock
-and records the previous target in `history/fr.json`. Re-activating the already
-active hash is idempotent. An operator can add `--expected-revision` with an
-approved semantic source revision for a strict rollout gate. That option is
-deliberately stricter than ordinary runtime compatibility: unrelated source
-changes do not invalidate otherwise matching messages, while changed English
-source/plural identities retain English fallback.
+Installation validates and copies the complete immutable package to
+`installed/fr/<catalogSha256>/`; it does not change the selected language.
+Activation validates its exact locale and hash again. An optional
+`--expected-revision` requires the approved semantic message-set revision.
+An unrelated source change does not ordinarily invalidate exact matching
+messages; a strict revision rollout gate is an operator choice.
 
-## Enable the language and preserve the data namespace
+Each activation prepares a generation containing runtime pointers and its
+history, then atomically replaces the one `active/fr` selector under a store
+lock. A failed generation write or selector replacement preserves the previous
+selected generation and its history. Re-activating the selected hash is
+idempotent. Rollback selects the previous complete package; rolling back the
+first activation selects an empty generation and returns to English fallback.
+Installed packages are retained.
 
-The operator's site configuration must enable localization, point at the active
-data root, and include the requested language tags. For a controlled parent-pack
-example:
+`history/fr.json` is a compatibility view into the selected generation. A legacy
+single-file store is imported on its first state change; its installed packages,
+old active directory and original history are preserved under `installed/`,
+`legacy-active/` and `legacy-history/`. Failed first-migration selector changes
+restore the old active directory. After migration, use the new tools; old tools
+do not understand generation selectors. Do not edit selector links or history
+by hand. The tool rejects inconsistent state and malformed rollback targets.
+
+## Site configuration and verification
+
+Use the site's normal startup configuration to enable the requested tags and
+point it at the store's active root:
 
 ```text
 i18n_enabled 1
-i18n_catalog_dir /absolute/operator-store/active
+i18n_catalog_dir /absolute/operator-language-store/active
 i18n_default_locale en
 i18n_enabled_locales en,fr-CA
 ```
 
-Here the enabled request/selector tag is `fr-CA`, while the installed parent pack
-is `fr`. The runtime loads that parent and retains requested `fr-CA` separately
-from effective `fr`. The selector reads `Français` from pack metadata. When no
-compatible active catalog exists, whole English fallback remains available and
-the enabled selector entry displays its tag. A site may instead enable `fr`
-directly. A tag that is not enabled does not become a valid preference merely
-because its pack is installed.
+A parent `fr` package can serve enabled `fr-CA`, preserving the requested tag
+separately from its effective language. Installing a language does not grant
+access rights or automatically enable it. Mount the **whole store** read-only
+at the same absolute host/container path: generation and installed-package
+symlinks must resolve inside that mount. A single-file bind can retain an old
+inode. Do not overlay application source with translation data.
 
-The operator applies initial configuration through the site's normal startup
-process. Pack activation then changes JSON data only; it does not require an
-application source rebuild. A new HTTP request/bootstrap or ordinary page reload
-reads the active version. An already loaded page's translator is not rewritten
-in place.
+A new page request/bootstrap reads the selected package; an existing page's
+translator is not rewritten in place. For a correction, retain the previous PO,
+build and create into new `build-v2`/`pack-v2` paths, install, activate its new
+hash, and verify a normal new request. Keep the exact release snapshot, package
+hash, coverage report and human terminology-review result with release evidence.
 
-Active targets are absolute symlinks into the store's `installed` directory.
-A container must resolve that same absolute namespace. Mount the **whole store**
-read-only at the same absolute host/container path and configure its `active`
-child. An alias-only mount can leave absolute targets unresolved; a single-file
-bind can retain an old inode instead of following an atomic activation. Do not
-overlay application source with a language store or perform container source
-hot patches.
-
-
-## Update and roll back
-
-For a translation-only correction, preserve the PO, edit the reviewed forms,
-check it again, and build/create into new `build-v2`/`pack-v2` directories. Install
-the new pack, confirm that installation alone left the old active target intact,
-and activate its new hash. Keep both immutable versions available.
-
-```sh
-python3 "$SGN_ROOT/script/i18n/catalog.py" --root "$SGN_ROOT" build \
-  --po "$PO_FILE" --output "$PO_WORKSPACE/build-v2" --legacy-single-file
-python3 "$SGN_ROOT/script/i18n/pack.py" create \
-  --catalog "$PO_WORKSPACE/build-v2/fr/sgn.json" \
-  --output "$PO_WORKSPACE/pack-v2"
-python3 "$SGN_ROOT/script/i18n/pack.py" install \
-  --pack "$PO_WORKSPACE/pack-v2" --root "$PACK_STORE"
-
-NEW_CATALOG_SHA=64_HEX_DIGITS_PRINTED_BY_CREATE
-python3 "$SGN_ROOT/script/i18n/pack.py" activate \
-  --locale fr --hash "$NEW_CATALOG_SHA" --root "$PACK_STORE"
-
-python3 "$SGN_ROOT/script/i18n/pack.py" rollback \
-  --locale fr --root "$PACK_STORE"
-```
-
-Rollback restores the previous target and exact bytes. Rolling back the first
-activation removes its active link and returns to English fallback; installed
-versions remain intact. The tool refuses rollback if the active target no longer
-matches its recorded last activation. Inspect that state rather than deleting
-catalogs or altering history by hand.
-
-For an application source-release update, obtain its frozen source/POT and merge
-into the external translator workspace after retaining the previous PO:
-
-```sh
-cp "$PO_FILE" "$PO_WORKSPACE/fr-before-source-update.po"
-msgmerge --update --no-wrap --backup=none \
-  "$PO_FILE" "$SGN_ROOT/locale/sgn.pot"
-```
-
-Review new/fuzzy forms, then repeat check/build/pack/install/activation using the
-new source release's tools. A production source-release merge is distinct from
-a translation-only pack change and requires its own site acceptance.
-
-## Acceptance boundary
-
-The controlled French fixture intentionally translates seven records. The
-actual external-PO CLI lifecycle and real independent Perl, JavaScript and R
-objects have passed all five states: installed/unactivated, active v1, active v2,
-rollback to v1 and first-activation rollback to English. They verify parent
-`fr-CA` fallback, counts 0/1/2/5, missing/stale whole-source fallback, Unicode
-named values and independent English objects. R environment/process locale
-invariance is part of that object-level gate.
-
-A clean native HTTP/browser gate has also passed all five states using one
-frozen committed image and container with the whole store mounted readonly at
-its unchanged absolute path. Anonymous and authenticated users exercised actual
-selector POST/cookies, preserved authentication sessions, requested/effective
-locale tags, `fr-CA` parent fallback, native stock-search/AJAX scientific values,
-and server/browser plurals at 0/1/2/5. Activation updates normal new requests;
-rollback restores the exact old pack or whole English fallback. Nine application
-source hashes and both installed pack byte sets remained unchanged. No unknown
-browser, HTTP or first-party request failure was admitted.
-
-Run the native SGN unit/fixture tests and affected browser workflows against the exact installed pack before release.
+Before release, exercise actual anonymous and authenticated pages, selector
+POST/cookie behavior, parent-locale fallback, asynchronous errors, counts
+0/1/2/5, narrow and RTL layouts, and unchanged breeding identifiers and values.
+Check active v1, active v2, rollback to v1 and rollback to English. Source/parser
+unit tests alone do not establish HTTP, browser or translation-quality acceptance.

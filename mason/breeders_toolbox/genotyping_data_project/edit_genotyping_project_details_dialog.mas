@@ -156,7 +156,7 @@ function edit_genotyping_project_details(){
             if(jQuery('#'+id).is("select")){
                 new_value = changed_elements[i].options[changed_elements[i].selectedIndex].text
             }
-            success_message += ("<li class='list-group-item list-group-item-success'> " + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("transformation.changed", "Changed") : "Changed")).html() + " ")+type+(" " + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("transformation.to", "to:") : "to:")).html() + " <b>")+new_value+"</b></li>";
+            success_message += ("<li class='list-group-item list-group-item-success'> " + jQuery("<span>").text((SGN.t("transformation.changed", "Changed"))).html() + " ")+type+(" " + jQuery("<span>").text((SGN.t("transformation.to", "to:"))).html() + " <b>")+new_value+"</b></li>";
         }
 
         save_genotyping_project_details(categories, new_details, success_message);
@@ -192,7 +192,7 @@ function save_genotyping_project_details (categories, new_details, success_messa
             }
         },
         error: function(response) {
-            document.getElementById('genotyping_project_details_error_message').innerHTML = ("<li class='list-group-item list-group-item-danger'> " + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("genotype.plate.genotyping_project_detail_update_ajax_request_failed_update_not_completed", "Genotyping project detail update AJAX request failed. Update not completed.") : "Genotyping project detail update AJAX request failed. Update not completed.")).html() + "</li>");
+            document.getElementById('genotyping_project_details_error_message').innerHTML = ("<li class='list-group-item list-group-item-danger'> " + jQuery("<span>").text((SGN.t("genotype.plate.genotyping_project_detail_update_ajax_request_failed_update_not_completed", "Genotyping project detail update AJAX request failed. Update not completed."))).html() + "</li>");
             jQuery('#genotyping_project_details_error_dialog').modal("show");
         },
     });

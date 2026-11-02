@@ -76,12 +76,12 @@ use HTML::Entities ();
       var select_html = list.listSelect('trials', ['trials'], ' ', undefined, undefined);
       $('#trials_list_select_container').html(select_html);
       if (d3.select('#trials_list_select').selectAll("option").size()<2){
-        d3.select('#trials_list_select').html('<option>' + jQuery('<div>').text(window.SGN && SGN.i18n ? SGN.i18n.p('trial.comparison.no_lists', 'No trial lists! (Create one using the wizard.)') : 'No trial lists! (Create one using the wizard.)').html() + '</option>');
+        d3.select('#trials_list_select').html('<option>' + jQuery('<div>').text(SGN.t('trial.comparison.no_lists', 'No trial lists! (Create one using the wizard.)')).html() + '</option>');
       }
       $('#trials_list_select').change(call_change);
     }
     else {
-      $('#trials_list_select').html('<option selected="selected">' + jQuery('<div>').text(window.SGN && SGN.i18n ? SGN.i18n.p('trial.comparison.login_required', 'You must be logged in to use lists.') : 'You must be logged in to use lists.').html() + '</option>');
+      $('#trials_list_select').html('<option selected="selected">' + jQuery('<div>').text(SGN.t('trial.comparison.login_required', 'You must be logged in to use lists.')).html() + '</option>');
     }
   })
 
@@ -106,7 +106,7 @@ use HTML::Entities ();
       var require_login = "<%  $c->get_conf('brapi_require_login') %>";
       if (require_login === '1'){
           auth_token = "<%  CXGN::Login->new($c->dbc->dbh)->get_login_cookie() %>";
-          if (!auth_token){ alert(window.SGN && SGN.i18n ? SGN.i18n.p("trial.comparison.login_error", "Login required to display graphical filtering") : "Login required to display graphical filtering"); }
+          if (!auth_token){ alert(SGN.t("trial.comparison.login_error", "Login required to display graphical filtering")); }
       } 
       BrAPI("/brapi/v2",'v2.0',auth_token)
         .search_observationunits({

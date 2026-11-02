@@ -14,7 +14,6 @@ $cart_caption =~ s/__SGN_CART_ORDER__/<a class="toplink" style="text-decoration:
 
   <& /site/header/browser_alert.mas &>
   <& /site/toolbar.mas &>
-  <& /i18n/language_selector.mas &>
   <& /system_message.mas &>
 % if ( $c->req->uri->path_query =~ "logout=yes") {  
   <!-- & /logout_message.mas & -->

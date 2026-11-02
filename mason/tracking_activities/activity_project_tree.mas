@@ -100,7 +100,7 @@ jQuery(document).ready(function($) {
 
       },
       error: function(response) {
-        alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("cross.ui.an_error_occurred_while_loading_the_trial_data", "An error occurred while loading the trial data.") : "An error occurred while loading the trial data."));
+        alert((SGN.t("cross.ui.an_error_occurred_while_loading_the_trial_data", "An error occurred while loading the trial data.")));
       }
   });
 

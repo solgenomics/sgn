@@ -146,13 +146,13 @@ jQuery(document).ready(function() {
         var export_name = jQuery('#expression_atlas_export_name').val();
         var export_type = jQuery('#expression_atlas_export_type').val();
         if (export_name == '' || !export_name){
-            jQuery('#submit_export_to_expression_atlas_message').text(window.SGN && SGN.i18n ? SGN.i18n.p("trial.expression_atlas.validation.project_name", "Project Name is required. This is the project name that will appear in the expression atlas.") : "Project Name is required. This is the project name that will appear in the expression atlas.");
+            jQuery('#submit_export_to_expression_atlas_message').text(SGN.t("trial.expression_atlas.validation.project_name", "Project Name is required. This is the project name that will appear in the expression atlas."));
             jQuery('#submit_export_to_expression_atlas_modal').modal('show');
         } else if (export_type == '' || !export_type){
-            jQuery('#submit_export_to_expression_atlas_message').text(window.SGN && SGN.i18n ? SGN.i18n.p("trial.expression_atlas.validation.export_type", "Export type is required.") : "Export type is required." );
+            jQuery('#submit_export_to_expression_atlas_message').text(SGN.t("trial.expression_atlas.validation.export_type", "Export type is required.") );
             jQuery('#submit_export_to_expression_atlas_modal').modal('show');
         } else if (combined_trial_ids.length < 1 || !combined_trial_ids){
-            jQuery('#submit_export_to_expression_atlas_message').text(window.SGN && SGN.i18n ? SGN.i18n.p("trial.expression_atlas.validation.trials", "Please select at least one trial.") : "Please select at least one trial.");
+            jQuery('#submit_export_to_expression_atlas_message').text(SGN.t("trial.expression_atlas.validation.trials", "Please select at least one trial."));
             jQuery('#submit_export_to_expression_atlas_modal').modal('show');
         } else {
 
@@ -164,12 +164,12 @@ jQuery(document).ready(function() {
                 },
                 success: function (response) {
                     jQuery('#working_modal').modal("hide");
-                    jQuery('#submit_export_to_expression_atlas_message').text(window.SGN && SGN.i18n ? SGN.i18n.p("trial.expression_atlas.export_success", "Successfully exported trial to Expression Atlas!") : "Successfully exported trial to Expression Atlas!");
+                    jQuery('#submit_export_to_expression_atlas_message').text(SGN.t("trial.expression_atlas.export_success", "Successfully exported trial to Expression Atlas!"));
                     jQuery('#submit_export_to_expression_atlas_modal').modal('show');
                 },
                 error: function () {
                     jQuery('#working_modal').modal("hide");
-                    jQuery('#submit_export_to_expression_atlas_message').text(window.SGN && SGN.i18n ? SGN.i18n.p('trial.expression_atlas.export_error', 'An error occurred exporting trial to Expression Atlas.') : 'An error occurred exporting trial to Expression Atlas.');
+                    jQuery('#submit_export_to_expression_atlas_message').text(SGN.t('trial.expression_atlas.export_error', 'An error occurred exporting trial to Expression Atlas.'));
                     jQuery('#submit_export_to_expression_atlas_modal').modal('show');
                 }
             });

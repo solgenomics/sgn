@@ -124,24 +124,24 @@ jQuery(document).ready(function(){
         var breeding_program = jQuery('#list_breeding_program_id').val();
         var contact_person = jQuery('#list_contact_person_name').val();
         if (catalog_list_type == '') {
-            alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("barcode.helper.please_select_a_list_type", "Please select a list type") : "Please select a list type"));
+            alert((SGN.t("barcode.helper.please_select_a_list_type", "Please select a list type")));
             return;
         }
 
         if (catalog_list == '') {
-            alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("seedlots.ui.please_select_a_list", "Please select a list") : "Please select a list"));
+            alert((SGN.t("seedlots.ui.please_select_a_list", "Please select a list")));
             return;
         }
         if (category == '') {
-            alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("barcode.helper.please_select_a_category", "Please select a category") : "Please select a category"));
+            alert((SGN.t("barcode.helper.please_select_a_category", "Please select a category")));
             return;
         }
         if (breeding_program == '') {
-            alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("locations.select.program", "Please select a program") : "Please select a program"));
+            alert((SGN.t("locations.select.program", "Please select a program")));
             return;
         }
         if (contact_person == '') {
-            alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("barcode.helper.please_provide_contact_username", "Please provide contact username") : "Please provide contact username"));
+            alert((SGN.t("barcode.helper.please_provide_contact_username", "Please provide contact username")));
             return;
         }
 

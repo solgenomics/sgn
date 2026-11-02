@@ -170,7 +170,7 @@ function save_single_observation(observation_id) {
 		},
 		error : function() {
 			jQuery('#working_modal').modal("hide");
-			alert(window.SGN && SGN.i18n ? SGN.i18n.p('trial.card.raw_data.server_console_error', 'Server error, check console.') : 'Server error, check console.');
+			alert(SGN.t('trial.card.raw_data.server_console_error', 'Server error, check console.'));
 		}
 	});
 }
@@ -240,7 +240,7 @@ jQuery(window).ready( function() {
 	   	})
         .fail(() => {
             jQuery('#working_modal').modal('hide');
-            alert(window.SGN && SGN.i18n ? SGN.i18n.p('trial.card.raw_data.request_error', 'An error occurred while processing the request.') : 'An error occurred while processing the request.');
+            alert(SGN.t('trial.card.raw_data.request_error', 'An error occurred while processing the request.'));
         });;
     });
 	/*

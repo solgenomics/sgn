@@ -167,7 +167,7 @@ CXGN.Page.Form.JSFormPage.prototype = {
 	if (!action) action = 'view';
         if ( this.getObjectId() == 0 ) action = 'new';
 	if (!action || !this.getObjectName() || !this.getAjaxScript() )  {
-	    alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("shared.form.print_configuration_required", "Cannot print from without a objectName, action, and ajaxScript name ! ") : "Cannot print from without a objectName, action, and ajaxScript name ! "));
+	    alert((SGN.t("shared.form.print_configuration_required", "Cannot print from without a objectName, action, and ajaxScript name ! ")));
 	} else if  (action == 'delete') { 
 	    this.printDeleteDialog();
 	}
@@ -191,7 +191,7 @@ CXGN.Page.Form.JSFormPage.prototype = {
 			window.location =  '/user/login' ;
 			x.error = undef;
 		    }
-		    if (x.error) { alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("shared.form.error_prefix_lower", "error: ") : "error: ") + x.error); }
+		    if (x.error) { alert((SGN.t("shared.form.error_prefix_lower", "error: ")) + x.error); }
 		    else if (response.reload) {  
 			window.location.reload(); } 
 		    else {

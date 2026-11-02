@@ -55,7 +55,7 @@ jQuery(document).ready(function() {
         var uploadFile = jQuery("#manage_file_dump_upload_file_dialog_file").val();
         jQuery('#manage_file_dump_upload_file_dialog_form').attr("action", "/ajax/filesharedump/upload");
         if (uploadFile === '') {
-            alert(window.SGN && SGN.i18n ? SGN.i18n.p("global.manage_file_share_dump.select_file", "Please select a file") : "Please select a file");
+            alert(SGN.t("global.manage_file_share_dump.select_file", "Please select a file"));
             return;
         }
         jQuery("#manage_file_dump_upload_file_dialog_form").submit();
@@ -68,7 +68,7 @@ jQuery(document).ready(function() {
             jQuery('#working_modal').modal("show");
             if (uploadedAdditionalFile === '') {
                 jQuery('#working_modal').modal("hide");
-                alert(window.SGN && SGN.i18n ? SGN.i18n.p("global.manage_file_share_dump.no_file", "No file selected") : "No file selected");
+                alert(SGN.t("global.manage_file_share_dump.no_file", "No file selected"));
                 return;
             }
         },
@@ -81,7 +81,7 @@ jQuery(document).ready(function() {
                 return;
             }
             if (response.success) {
-                alert(window.SGN && SGN.i18n ? SGN.i18n.p("global.manage_file_share_dump.upload_success", "File uploaded successfully") : "File uploaded successfully");
+                alert(SGN.t("global.manage_file_share_dump.upload_success", "File uploaded successfully"));
                 location.reload();
             }
         }

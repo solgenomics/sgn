@@ -145,7 +145,7 @@ jQuery(document).ready(function () {
                 jQuery("#working_modal").modal("hide");
                 if (response.traits_assayed[0][0]) {
                     var traits_assayed_html = "<select class='form-control' id='generate_plot_pheno_trait_select' onchange='generate_plot_pheno_trait_change(this.value)'>";
-                    traits_assayed_html = traits_assayed_html + ("<option value=\"all\">" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("global.search_wizard.all_levels", "All") : "All")).html() + "</option>");
+                    traits_assayed_html = traits_assayed_html + ("<option value=\"all\">" + jQuery("<span>").text((SGN.t("global.search_wizard.all_levels", "All"))).html() + "</option>");
                     for (i=0; i<response.traits_assayed[0].length; i++) {
                         traits_assayed_html = traits_assayed_html + "<option value="+ encodeURI(response.traits_assayed[0][i][1]) + " >" + response.traits_assayed[0][i][1] + "</option>";
                     }
@@ -153,7 +153,7 @@ jQuery(document).ready(function () {
 
                     jQuery("#generate_plot_pheno_trait_select_dropdown").html(traits_assayed_html);
 
-                    jQuery('#generate_plot_pheno_trait_select_definition').html("<a href='/cvterm/"+response.traits_assayed[0][0][0]+("/view'>" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("phenotype.definition", "Definition") : "Definition")).html() + "</a>"));
+                    jQuery('#generate_plot_pheno_trait_select_definition').html("<a href='/cvterm/"+response.traits_assayed[0][0][0]+("/view'>" + jQuery("<span>").text((SGN.t("phenotype.definition", "Definition"))).html() + "</a>"));
                 }
             }
         });
@@ -177,7 +177,7 @@ jQuery(document).ready(function () {
             },
             success: function(response){
                 //console.log(response);
-                var html = ("<hr><h5>" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("trial.comparison.no_list.trait", "Trait:") : "Trait:")).html() + " ")+response.trait_name+("</h5><h5>" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("phenotype.method.61d47b9", "Method:") : "Method:")).html() + " ")+response.method+("</h5><h5>" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("phenotype.rounding", "Rounding:") : "Rounding:")).html() + " ")+response.rounding+("</h5><table class=\"table table-hover\"><thead><tr><th>" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("lists_datasets.download.plot", "Plot") : "Plot")).html() + "</th><th>" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("phenotype.plant_values", "Plant Values") : "Plant Values")).html() + "</th><th>" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("phenotype.calculation_output", "Calculation Output") : "Calculation Output")).html() + "</th><th>" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("phenotype.value_to_store", "Value to Store") : "Value to Store")).html() + "</th><th>" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("cross.ui.notes", "Notes") : "Notes")).html() + "</th></tr></thead><tbody>");
+                var html = ("<hr><h5>" + jQuery("<span>").text((SGN.t("trial.comparison.no_list.trait", "Trait:"))).html() + " ")+response.trait_name+("</h5><h5>" + jQuery("<span>").text((SGN.t("phenotype.method.61d47b9", "Method:"))).html() + " ")+response.method+("</h5><h5>" + jQuery("<span>").text((SGN.t("phenotype.rounding", "Rounding:"))).html() + " ")+response.rounding+("</h5><table class=\"table table-hover\"><thead><tr><th>" + jQuery("<span>").text((SGN.t("lists_datasets.download.plot", "Plot"))).html() + "</th><th>" + jQuery("<span>").text((SGN.t("phenotype.plant_values", "Plant Values"))).html() + "</th><th>" + jQuery("<span>").text((SGN.t("phenotype.calculation_output", "Calculation Output"))).html() + "</th><th>" + jQuery("<span>").text((SGN.t("phenotype.value_to_store", "Value to Store"))).html() + "</th><th>" + jQuery("<span>").text((SGN.t("cross.ui.notes", "Notes"))).html() + "</th></tr></thead><tbody>");
                 for (var k=0; k<response.info.length; k++) {
                     for (var i=0; i<response.info[k].length; i++) {
                         html = html + '<tr><td>'+response.info[k][i].plot_name+'</td><td>'+response.info[k][i].plant_values+'</td><td>'+response.info[k][i].output+'</td><td>'+response.info[k][i].value_to_store+'</td>';
@@ -229,7 +229,7 @@ jQuery(document).ready(function () {
 });
 
 function generate_plot_pheno_trait_change(trait_id) {
-    jQuery('#generate_plot_pheno_trait_select_definition').html("<a href='/cvterm/"+trait_id+("/view'>" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("phenotype.definition", "Definition") : "Definition")).html() + "</a>"));
+    jQuery('#generate_plot_pheno_trait_select_definition').html("<a href='/cvterm/"+trait_id+("/view'>" + jQuery("<span>").text((SGN.t("phenotype.definition", "Definition"))).html() + "</a>"));
 }
 
 </script>

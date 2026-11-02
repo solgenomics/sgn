@@ -1213,10 +1213,24 @@ return parser;
 
     I18N.parsePlural = parsePlural;
     I18N.evaluatePlural = function (ast, count) { return evaluatePlural(validateAst(ast), count); };
+    /** Install the short API without capturing a catalog that bootstrap can replace. */
+    I18N.install = function (target) {
+        target.SGN = target.SGN || {};
+        var english = new I18N();
+        /** Translate plain text using the current page catalog, or English. */
+        target.SGN.t = function (context, text, variables) {
+            return (target.SGN.i18n || english).p(context, text, variables);
+        };
+        /** Translate a counted message without changing its numeric value. */
+        target.SGN.tn = function (context, one, many, count, variables) {
+            return (target.SGN.i18n || english).np(context, one, many, count, variables);
+        };
+    };
     if (typeof module !== 'undefined' && module.exports) module.exports = I18N;
     else {
         root.SGN = root.SGN || {};
         root.SGN.I18N = I18N;
         root.SGN.i18n = new I18N();
+        I18N.install(root);
     }
 })(typeof globalThis !== 'undefined' ? globalThis : this);

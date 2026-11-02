@@ -32,7 +32,7 @@ jQuery(document).ready(function() {
       'method': 'GET',
       'success': function(response) {
         //console.log(response);
-        var html = '<table class="table table-bordered table-hover" id="homepage_github_pullrequests" alt=""><thead><tr><th>' + escapeHtml(window.SGN && SGN.i18n ? SGN.i18n.p('global.github_pullrequests.title', 'Title') : 'Title') + '</th><th>' + escapeHtml(window.SGN && SGN.i18n ? SGN.i18n.p('global.github_pullrequests.description', 'Description') : 'Description') + '</th><th>' + escapeHtml(window.SGN && SGN.i18n ? SGN.i18n.p('global.github_pullrequests.date', 'Date') : 'Date') + '</th></tr></thead><tbody>';
+        var html = '<table class="table table-bordered table-hover" id="homepage_github_pullrequests" alt=""><thead><tr><th>' + escapeHtml(SGN.t('global.github_pullrequests.title', 'Title')) + '</th><th>' + escapeHtml(SGN.t('global.github_pullrequests.description', 'Description')) + '</th><th>' + escapeHtml(SGN.t('global.github_pullrequests.date', 'Date')) + '</th></tr></thead><tbody>';
         for (var i=0; i<response.length; i++){
             pr_body = response[i].body;
             trim1 = pr_body.split(pr_body_end)[0];

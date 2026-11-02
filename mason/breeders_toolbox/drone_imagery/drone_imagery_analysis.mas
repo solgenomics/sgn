@@ -601,14 +601,14 @@ jQuery(document).ready(function() {
         manage_drone_imagery_calculate_statistics_field_trial_id_array = jQuery('#drone_imagery_calculate_statistics_field_trial_id').val();
 
         if (manage_drone_imagery_calculate_statistics_field_trial_id_array.length > 1) {
-            alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("drone.interface.please_only_select_a_single_field_trial_for_now", "Please only select a single field trial for now!") : "Please only select a single field trial for now!"));
+            alert((SGN.t("drone.interface.please_only_select_a_single_field_trial_for_now", "Please only select a single field trial for now!")));
             return false;
         }
 
         manage_drone_imagery_calculate_statistics_field_trial_id_string = manage_drone_imagery_calculate_statistics_field_trial_id_array.join(",");
         manage_drone_imagery_calculate_statistics_observation_variable_type = jQuery('#drone_imagery_calculate_statistics_select_observation_variable_type').val();
         if (manage_drone_imagery_calculate_statistics_field_trial_id_string == '') {
-            alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("analysis.interface.please_select_a_field_trial_first", "Please select a field trial first!") : "Please select a field trial first!"));
+            alert((SGN.t("analysis.interface.please_select_a_field_trial_first", "Please select a field trial first!")));
         } else {
             if (manage_drone_imagery_calculate_statistics_observation_variable_type == 'time_ontology') {
                 get_select_box('traits', 'drone_imagery_calculate_statistics_trait_select_div', { 'name' : 'drone_imagery_calculate_statistics_trait_id_select', 'id' : 'drone_imagery_calculate_statistics_trait_id_select', 'empty':1, 'multiple':1, 'size': 20, 'trial_ids':manage_drone_imagery_calculate_statistics_field_trial_id_string, 'stock_type':'plot', 'contains_composable_cv_type':manage_drone_imagery_calculate_statistics_observation_variable_type, 'select_format':'component_table_select' });
@@ -631,7 +631,7 @@ jQuery(document).ready(function() {
         manage_drone_imagery_calculate_statistics_multiseason_field_trial_id_array = jQuery('#drone_imagery_calculate_statistics_multiseason_field_trial_id').val();
 
         if (manage_drone_imagery_calculate_statistics_multiseason_field_trial_id_array.length > 1) {
-            alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("drone.interface.please_only_select_a_single_field_trial_for_now", "Please only select a single field trial for now!") : "Please only select a single field trial for now!"));
+            alert((SGN.t("drone.interface.please_only_select_a_single_field_trial_for_now", "Please only select a single field trial for now!")));
             return false;
         }
 
@@ -660,13 +660,13 @@ jQuery(document).ready(function() {
         else {
             manage_drone_imagery_calculate_statistics_trait_ids = jQuery('#drone_imagery_calculate_statistics_trait_id_select').val();
             if (manage_drone_imagery_calculate_statistics_trait_ids == null || manage_drone_imagery_calculate_statistics_trait_ids == undefined) {
-                alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("drone.interface.please_select_at_least_one_observation_variable", "Please select at least one observation variable!") : "Please select at least one observation variable!"));
+                alert((SGN.t("drone.interface.please_select_at_least_one_observation_variable", "Please select at least one observation variable!")));
                 return false;
             }
         }
 
         if (manage_drone_imagery_calculate_statistics_trait_ids.length < 1){
-            alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("drone.interface.please_select_at_least_one_observation_variable", "Please select at least one observation variable!") : "Please select at least one observation variable!"));
+            alert((SGN.t("drone.interface.please_select_at_least_one_observation_variable", "Please select at least one observation variable!")));
         } else {
             Workflow.complete("#drone_imagery_calculate_statistics_trait_select_step");
             Workflow.focus('#drone_imagery_calculate_statistics_workflow', 3);
@@ -866,15 +866,15 @@ jQuery(document).ready(function() {
         manage_drone_imagery_calculate_statistics_select = jQuery('#drone_imagery_calculate_statistics_select_input').val();
 
         if (manage_drone_imagery_calculate_statistics_select == 'marss_germplasmname_block' && manage_drone_imagery_calculate_statistics_observation_variable_type != 'time_ontology') {
-            alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("drone.interface.the_marss_model_fit_and_prediction_only_works_for_time_series_traits_please_go_to_trait_selection_and_select_time", "The MARSS model fit and prediction only works for Time Series traits! Please go to Trait Selection and select time series traits.") : "The MARSS model fit and prediction only works for Time Series traits! Please go to Trait Selection and select time series traits."));
+            alert((SGN.t("drone.interface.the_marss_model_fit_and_prediction_only_works_for_time_series_traits_please_go_to_trait_selection_and_select_time", "The MARSS model fit and prediction only works for Time Series traits! Please go to Trait Selection and select time series traits.")));
             return false;
         }
         if (jQuery('#drone_image_calculate_statistics_genotyping_protocol_include_pedigree_select').val() == 'yes' && jQuery('#drone_image_calculate_statistics_genotyping_protocol_compute_from_parents_select').val() != 'yes') {
-            alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("drone.interface.you_can_only_use_pedigree_info_in_the_relationship_matrix_if_you_will_compute_the_genotypes_from_the_parents", "You can only use pedigree info in the relationship matrix if you will compute the genotypes from the parents!") : "You can only use pedigree info in the relationship matrix if you will compute the genotypes from the parents!"));
+            alert((SGN.t("drone.interface.you_can_only_use_pedigree_info_in_the_relationship_matrix_if_you_will_compute_the_genotypes_from_the_parents", "You can only use pedigree info in the relationship matrix if you will compute the genotypes from the parents!")));
             return false;
         }
         if (jQuery('#drone_image_calculate_statistics_genotyping_protocol_use_parental_grms_select').val() == 'yes' && jQuery('#drone_image_calculate_statistics_genotyping_protocol_compute_from_parents_select').val() != 'yes') {
-            alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("drone.interface.you_can_only_use_parental_relationship_matrices_if_you_will_compute_the_genotypes_from_the_parents", "You can only use parental relationship matrices if you will compute the genotypes from the parents!") : "You can only use parental relationship matrices if you will compute the genotypes from the parents!"));
+            alert((SGN.t("drone.interface.you_can_only_use_parental_relationship_matrices_if_you_will_compute_the_genotypes_from_the_parents", "You can only use parental relationship matrices if you will compute the genotypes from the parents!")));
             return false;
         }
 
@@ -882,7 +882,7 @@ jQuery(document).ready(function() {
         if (jQuery('#drone_image_calculate_statistics_permanent_env_structure_select').val() == 'phenotype_correlation') {
             manage_drone_imagery_calculate_statistics_rr_structure_phenotype_correlation = jQuery('#drone_imagery_calculate_statistics_permanent_env_structure_phenotype_correlation_select').val();
             if (!manage_drone_imagery_calculate_statistics_rr_structure_phenotype_correlation || manage_drone_imagery_calculate_statistics_rr_structure_phenotype_correlation.length < 3) {
-                alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("drone.interface.please_select_at_least_three_phenotypes_to_use_in_random_regression_phenotype_correlation_structure", "Please select at least three phenotypes to use in random regression phenotype correlation structure!") : "Please select at least three phenotypes to use in random regression phenotype correlation structure!"));
+                alert((SGN.t("drone.interface.please_select_at_least_three_phenotypes_to_use_in_random_regression_phenotype_correlation_structure", "Please select at least three phenotypes to use in random regression phenotype correlation structure!")));
                 return false;
             }
         }
@@ -924,7 +924,7 @@ jQuery(document).ready(function() {
 
                     var html = '';
                     if (response.sum_square_residual) {
-                        html = html + ("<h4>" + (window.SGN && window.SGN.i18n ? SGN.i18n.p("analysis.interface.sum_square_residual", "Sum square residual:") : "Sum square residual:") + " ")+response.sum_square_residual+'</h4><hr>';
+                        html = html + ("<h4>" + (SGN.t("analysis.interface.sum_square_residual", "Sum square residual:")) + " ")+response.sum_square_residual+'</h4><hr>';
                     }
                     if (response.genetic_effects_line_plot) {
                         html = html + '<img src="'+response.genetic_effects_line_plot+'"><hr>';
@@ -938,7 +938,7 @@ jQuery(document).ready(function() {
                         manage_drone_imagery_calculate_statistics_phenotype_training_file = response.stats_tempfile;
                         manage_drone_imagery_calculate_statistics_grm_training_file = response.grm_file;
 
-                        html = html + ("<table class=\"table table-bordered table-hover\"><thead><tr><th>" + (window.SGN && window.SGN.i18n ? SGN.i18n.p("seedlots.ui.accessions", "Accessions") : "Accessions") + "</th>");
+                        html = html + ("<table class=\"table table-bordered table-hover\"><thead><tr><th>" + (SGN.t("seedlots.ui.accessions", "Accessions")) + "</th>");
                         for (var i=0; i<manage_drone_imagery_calculate_statistics_trait_names.length; i++) {
                             html = html + '<th>'+manage_drone_imagery_calculate_statistics_trait_names[i]+'</th>';
                         }
@@ -951,7 +951,7 @@ jQuery(document).ready(function() {
                                     html = html + '<td>'+response.result_blup_genetic_data[acc][manage_drone_imagery_calculate_statistics_trait_names[i]][0]+'</td>';
                                 }
                                 else {
-                                    html = html + ("<td>" + (window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.job_result_na_alt", "NA") : "NA") + "</td>");
+                                    html = html + ("<td>" + (SGN.t("solgs.browser.job_result_na_alt", "NA")) + "</td>");
                                 }
                             }
                             html = html + '</tr>';
@@ -963,7 +963,7 @@ jQuery(document).ready(function() {
                         manage_drone_imagery_calculate_statistics_plot_names = response.unique_plots;
                         manage_drone_imagery_calculate_statistics_trait_names = response.unique_traits;
 
-                        html = html + ("<table class=\"table table-bordered table-hover\"><thead><tr><th>" + (window.SGN && window.SGN.i18n ? SGN.i18n.p("global.search_wizard.plots", "Plots") : "Plots") + "</th>");
+                        html = html + ("<table class=\"table table-bordered table-hover\"><thead><tr><th>" + (SGN.t("global.search_wizard.plots", "Plots")) + "</th>");
                         for (var i=0; i<response.unique_traits.length; i++) {
                             html = html + '<th>'+response.unique_traits[i]+'</th>';
                         }
@@ -983,7 +983,7 @@ jQuery(document).ready(function() {
                         manage_drone_imagery_calculate_statistics_plot_names = response.unique_plots;
                         manage_drone_imagery_calculate_statistics_trait_names = response.unique_traits;
 
-                        html = html + ("<table class=\"table table-bordered table-hover\"><thead><tr><th>" + (window.SGN && window.SGN.i18n ? SGN.i18n.p("global.search_wizard.plots", "Plots") : "Plots") + "</th>");
+                        html = html + ("<table class=\"table table-bordered table-hover\"><thead><tr><th>" + (SGN.t("global.search_wizard.plots", "Plots")) + "</th>");
                         for (var i=0; i<response.unique_traits.length; i++) {
                             html = html + '<th>'+response.unique_traits[i]+'</th>';
                         }
@@ -996,7 +996,7 @@ jQuery(document).ready(function() {
                                     html = html + '<td>'+response.result_blup_pe_data[plot][response.unique_traits[i]][0]+'</td>';
                                 }
                                 else {
-                                    html = html + ("<td>" + (window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.job_result_na_alt", "NA") : "NA") + "</td>");
+                                    html = html + ("<td>" + (SGN.t("solgs.browser.job_result_na_alt", "NA")) + "</td>");
                                 }
                             }
                             html = html + '</tr>';
@@ -1005,17 +1005,17 @@ jQuery(document).ready(function() {
                     }
 
                     if (response.results.length > 0) {
-                        html = ("<table class=\"table table-bordered table-hover\"><thead><tr><th>" + (window.SGN && window.SGN.i18n ? SGN.i18n.p("accession.usage.header.variable", "Observation Variable") : "Observation Variable") + "</th><th>" + (window.SGN && window.SGN.i18n ? SGN.i18n.p("analysis.interface.statistics", "Statistics") : "Statistics") + "</th><th>" + (window.SGN && window.SGN.i18n ? SGN.i18n.p("nirs.trial.plot", "Plot") : "Plot") + "</th></tr></thead><tbody>");
+                        html = ("<table class=\"table table-bordered table-hover\"><thead><tr><th>" + (SGN.t("accession.usage.header.variable", "Observation Variable")) + "</th><th>" + (SGN.t("analysis.interface.statistics", "Statistics")) + "</th><th>" + (SGN.t("nirs.trial.plot", "Plot")) + "</th></tr></thead><tbody>");
                         for (var i=0; i<response.results.length; i++) {
                             html = html + '<tr><td>'+response.results[i][0]+'</td><td>'+response.results[i][1]+'</td><td><img src="'+response.results[i][2]+'"></td></tr>';
                         }
                         html = html + '</tbody></table>';
                     }
 
-                    html = html + '<hr><a href="'+response.stats_out_tempfile_string+(".log\" target=_blank>" + (window.SGN && window.SGN.i18n ? SGN.i18n.p("analysis.interface.stats_file_or_log", "Stats file or log") : "Stats file or log") + "</a>");
+                    html = html + '<hr><a href="'+response.stats_out_tempfile_string+(".log\" target=_blank>" + (SGN.t("analysis.interface.stats_file_or_log", "Stats file or log")) + "</a>");
 
                     if (jQuery('#drone_imagery_calculate_statistics_relationship_matrix_type_select_div').val() == 'htp_phenotypes') {
-                        html = html + '<hr><a href="'+response.stats_out_htp_rel_tempfile_out_string+("\" target=_blank>" + (window.SGN && window.SGN.i18n ? SGN.i18n.p("analysis.interface.htp_relationship_matrix", "HTP Relationship Matrix") : "HTP Relationship Matrix") + "</a>");
+                        html = html + '<hr><a href="'+response.stats_out_htp_rel_tempfile_out_string+("\" target=_blank>" + (SGN.t("analysis.interface.htp_relationship_matrix", "HTP Relationship Matrix")) + "</a>");
                     }
 
                     jQuery('#drone_imagery_calculate_statistics_result_div').html(html);
@@ -1026,7 +1026,7 @@ jQuery(document).ready(function() {
             },
             error: function(response){
                 jQuery("#working_modal").modal("hide");
-                alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("analysis.interface.error_calculating_statistics", "Error calculating statistics!") : "Error calculating statistics!"))
+                alert((SGN.t("analysis.interface.error_calculating_statistics", "Error calculating statistics!")))
             }
         });
     });
@@ -1042,15 +1042,15 @@ jQuery(document).ready(function() {
         var generic_save_analysis_template_breeding_program_id = jQuery('#generic_save_analysis_template_breeding_program_id').val();
 
         if (generic_save_analysis_template_analysis_name == '') {
-            alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("analysis.interface.please_give_an_analysis_template_name", "Please give an analysis template name") : "Please give an analysis template name"));
+            alert((SGN.t("analysis.interface.please_give_an_analysis_template_name", "Please give an analysis template name")));
             return false;
         }
         if (generic_save_analysis_template_analysis_description == '') {
-            alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("analysis.interface.please_give_an_analysis_template_description", "Please give an analysis template description") : "Please give an analysis template description"));
+            alert((SGN.t("analysis.interface.please_give_an_analysis_template_description", "Please give an analysis template description")));
             return false;
         }
         if (generic_save_analysis_template_analysis_year == '') {
-            alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("analysis.interface.please_give_an_analysis_template_year", "Please give an analysis template year") : "Please give an analysis template year"));
+            alert((SGN.t("analysis.interface.please_give_an_analysis_template_year", "Please give an analysis template year")));
             return false;
         }
 
@@ -1327,10 +1327,10 @@ jQuery(document).ready(function() {
                 if (response.success) {
                     var html = '<center>';
                     if (response.model_id) {
-                        html = html + ("<p>" + (window.SGN && window.SGN.i18n ? SGN.i18n.p("analysis.interface.go_to_saved", "Go to saved") : "Go to saved") + " <a href=\"/analyses_model/")+response.model_id+("\" target=_blank >" + (window.SGN && window.SGN.i18n ? SGN.i18n.p("analysis.interface.model_9372c4", "model") : "model") + "</a></p>");
+                        html = html + ("<p>" + (SGN.t("analysis.interface.go_to_saved", "Go to saved")) + " <a href=\"/analyses_model/")+response.model_id+("\" target=_blank >" + (SGN.t("analysis.interface.model_9372c4", "model")) + "</a></p>");
                     }
                     if (response.analysis_id) {
-                        html = html + ("<p>" + (window.SGN && window.SGN.i18n ? SGN.i18n.p("analysis.interface.go_to_saved", "Go to saved") : "Go to saved") + " <a href=\"/analyses/")+response.analysis_id+("\" target=_blank >" + (window.SGN && window.SGN.i18n ? SGN.i18n.p("analysis.interface.gblup_analysis", "GBLUP analysis") : "GBLUP analysis") + "</a></p>");
+                        html = html + ("<p>" + (SGN.t("analysis.interface.go_to_saved", "Go to saved")) + " <a href=\"/analyses/")+response.analysis_id+("\" target=_blank >" + (SGN.t("analysis.interface.gblup_analysis", "GBLUP analysis")) + "</a></p>");
                     }
                     html = html + '</center>';
                     jQuery('#generic_save_analysis_template_response_div').html(html);
@@ -1486,10 +1486,10 @@ jQuery(document).ready(function() {
                                 html = html + '<center>';
                                 if (response.analysis_id) {
                                     if (manage_drone_imagery_calculate_statistics_select == 'sommer_grm_spatial_genetic_blups') {
-                                        html = html + ("<p>" + (window.SGN && window.SGN.i18n ? SGN.i18n.p("analysis.interface.go_to_saved", "Go to saved") : "Go to saved") + " <a href=\"/analyses/")+response.analysis_id+("\" target=_blank >" + (window.SGN && window.SGN.i18n ? SGN.i18n.p("analysis.interface.spatial_blup_analysis", "spatial BLUP analysis") : "spatial BLUP analysis") + "</a></p>");
+                                        html = html + ("<p>" + (SGN.t("analysis.interface.go_to_saved", "Go to saved")) + " <a href=\"/analyses/")+response.analysis_id+("\" target=_blank >" + (SGN.t("analysis.interface.spatial_blup_analysis", "spatial BLUP analysis")) + "</a></p>");
                                     }
                                     else {
-                                        html = html + ("<p>" + (window.SGN && window.SGN.i18n ? SGN.i18n.p("analysis.interface.go_to_saved", "Go to saved") : "Go to saved") + " <a href=\"/analyses/")+response.analysis_id+("\" target=_blank >" + (window.SGN && window.SGN.i18n ? SGN.i18n.p("drone.interface.permanent_environment_blup_analysis", "permanent environment BLUP analysis") : "permanent environment BLUP analysis") + "</a></p>");
+                                        html = html + ("<p>" + (SGN.t("analysis.interface.go_to_saved", "Go to saved")) + " <a href=\"/analyses/")+response.analysis_id+("\" target=_blank >" + (SGN.t("drone.interface.permanent_environment_blup_analysis", "permanent environment BLUP analysis")) + "</a></p>");
                                     }
                                 }
                                 html = html + '</center>';
@@ -1598,7 +1598,7 @@ jQuery(document).ready(function() {
 
                                 if (manage_drone_imagery_calculate_statistics_select == 'sommer_grm_spatial_genetic_blups') {
                                     jQuery('#working_modal').modal('hide');
-                                    alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("analysis.interface.analysis_and_or_model_saved", "Analysis and/or model saved!") : "Analysis and/or model saved!"));
+                                    alert((SGN.t("analysis.interface.analysis_and_or_model_saved", "Analysis and/or model saved!")));
                                     return false;
                                 }
 
@@ -1643,30 +1643,30 @@ jQuery(document).ready(function() {
                                             alert(response.error);
                                         }
                                         if (response.success) {
-                                            alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("analysis.interface.analysis_and_or_model_saved", "Analysis and/or model saved!") : "Analysis and/or model saved!"));
+                                            alert((SGN.t("analysis.interface.analysis_and_or_model_saved", "Analysis and/or model saved!")));
                                             html = html + '<center>';
                                             if (response.analysis_id) {
-                                                html = html + ("<p>" + (window.SGN && window.SGN.i18n ? SGN.i18n.p("analysis.interface.go_to_saved", "Go to saved") : "Go to saved") + " <a href=\"/analyses/")+response.analysis_id+("\" target=_blank >" + (window.SGN && window.SGN.i18n ? SGN.i18n.p("analysis.interface.residuals_analysis", "residuals analysis") : "residuals analysis") + "</a></p>");
+                                                html = html + ("<p>" + (SGN.t("analysis.interface.go_to_saved", "Go to saved")) + " <a href=\"/analyses/")+response.analysis_id+("\" target=_blank >" + (SGN.t("analysis.interface.residuals_analysis", "residuals analysis")) + "</a></p>");
                                             }
                                             html = html + '</center>';
                                             jQuery('#generic_save_analysis_template_response_div').html(html);
                                         }
                                     },
                                     error: function(response){
-                                        alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("analysis.interface.error_saving_analysis_multiple", "Error saving analysis multiple!") : "Error saving analysis multiple!"));
+                                        alert((SGN.t("analysis.interface.error_saving_analysis_multiple", "Error saving analysis multiple!")));
                                     }
                                 });
                             }
                         },
                         error: function(response){
-                            alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("analysis.interface.error_saving_analysis_multiple", "Error saving analysis multiple!") : "Error saving analysis multiple!"));
+                            alert((SGN.t("analysis.interface.error_saving_analysis_multiple", "Error saving analysis multiple!")));
                         }
                     });
                 }
             },
             error: function(response){
                 jQuery('#working_modal').modal('hide');
-                alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("analysis.interface.error_saving_analysis_multiple", "Error saving analysis multiple!") : "Error saving analysis multiple!"));
+                alert((SGN.t("analysis.interface.error_saving_analysis_multiple", "Error saving analysis multiple!")));
             }
         });
     });
@@ -1926,7 +1926,7 @@ jQuery(document).ready(function() {
 
     jQuery('#drone_imagery_calculate_statistics_analysis_save_blups_spatial').click(function(){
         if (manage_drone_imagery_calculate_statistics_field_trial_id_array.length>1) {
-            alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("analysis.interface.saving_spatial_blups_currently_only_implemented_for_a_single_trial", "Saving spatial BLUPs currently only implemented for a single trial, so only select one field trial in your analysis") : "Saving spatial BLUPs currently only implemented for a single trial, so only select one field trial in your analysis"));
+            alert((SGN.t("analysis.interface.saving_spatial_blups_currently_only_implemented_for_a_single_trial", "Saving spatial BLUPs currently only implemented for a single trial, so only select one field trial in your analysis")));
             return false;
         }
 
@@ -1983,7 +1983,7 @@ jQuery(document).ready(function() {
 
     jQuery('#drone_imagery_calculate_statistics_analysis_save_blups_pe').click(function(){
         if (manage_drone_imagery_calculate_statistics_field_trial_id_array.length>1) {
-            alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("analysis.interface.saving_spatial_blups_currently_only_implemented_for_a_single_trial", "Saving spatial BLUPs currently only implemented for a single trial, so only select one field trial in your analysis") : "Saving spatial BLUPs currently only implemented for a single trial, so only select one field trial in your analysis"));
+            alert((SGN.t("analysis.interface.saving_spatial_blups_currently_only_implemented_for_a_single_trial", "Saving spatial BLUPs currently only implemented for a single trial, so only select one field trial in your analysis")));
             return false;
         }
 

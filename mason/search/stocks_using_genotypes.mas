@@ -144,14 +144,14 @@ jQuery(document).ready(function (){
         var stock_list_id = jQuery('#stock_list_select').val();
 
         if (!stock_list_id) {
-            alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("genotype.marker.please_choose_a_list_of_accessions", "Please choose a list of accessions") : "Please choose a list of accessions"));
+            alert((SGN.t("genotype.marker.please_choose_a_list_of_accessions", "Please choose a list of accessions")));
             return;
         }
 
         var markerset_id = jQuery('#markerset_select').val();
 
         if (!markerset_id) {
-            alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("genotype.marker.please_choose_a_list_of_marker_alleles", "Please choose a list of marker alleles") : "Please choose a list of marker alleles"));
+            alert((SGN.t("genotype.marker.please_choose_a_list_of_marker_alleles", "Please choose a list of marker alleles")));
             return;
         }
 
@@ -165,21 +165,21 @@ jQuery(document).ready(function (){
             },
             columns: [
                 {
-                    title: jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("accession.related_stock.header.accession_name", "Accession Name") : "Accession Name")).html(),
+                    title: jQuery("<span>").text((SGN.t("accession.related_stock.header.accession_name", "Accession Name"))).html(),
                     data: null,
                     render: function(data, type, row){return "<a href='/stock/"+row.stock_id+"/view'>"+row.stock_name+"</a>";}
                 },
                 {
-                    title: jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("genotype.plate.sample_name", "Sample Name") : "Sample Name")).html(),
+                    title: jQuery("<span>").text((SGN.t("genotype.plate.sample_name", "Sample Name"))).html(),
                     data: null,
                     render: function(data, type, row){return "<a href='/stock/"+row.sample_id+"/view'>"+row.sample_name+"</a>";}
                 },
                 {
-                    title: jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("genotype.plate.sample_type", "Sample Type") : "Sample Type")).html(),
+                    title: jQuery("<span>").text((SGN.t("genotype.plate.sample_type", "Sample Type"))).html(),
                     data: "sample_type",
                 },
                 {
-                    title: jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("genotype.marker.genotypes", "Genotypes") : "Genotypes")).html(),
+                    title: jQuery("<span>").text((SGN.t("genotype.marker.genotypes", "Genotypes"))).html(),
                     data: "genotypes",
                     render: function(data, type,row){
                         var parsed = JSON.parse(data);

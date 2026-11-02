@@ -2912,7 +2912,7 @@ jQuery(document).ready(function() {
 
     jQuery('#upload_drone_image_field_trial_select_continue').click(function(){
         if (jQuery('#drone_run_field_trial_id').val() == ''){
-            alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("drone.interface.please_select_a_field_trial_first", "Please select a field trial first") : "Please select a field trial first"));
+            alert((SGN.t("drone.interface.please_select_a_field_trial_first", "Please select a field trial first")));
         } else {
             jQuery.ajax({
                 url : '/ajax/breeders/trial/'+jQuery('#drone_run_field_trial_id').val()+'/details',
@@ -2925,16 +2925,16 @@ jQuery(document).ready(function() {
                             Workflow.focus('#drone_imagery_upload_workflow', 2);
                         }
                         else {
-                            jQuery('#upload_drone_image_field_trial_info').html("<div class='well well-sm'>" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? SGN.i18n.p("drone.interface.please_set_the_noaa_location_id_for_this_field_trial_before_proceeding_you_can", "Please set the NOAA location id for this field trial before proceeding. You can do so from the manage locations page.") : "Please set the NOAA location id for this field trial before proceeding. You can do so from the manage locations page.")).html() + "</div>");
+                            jQuery('#upload_drone_image_field_trial_info').html("<div class='well well-sm'>" + jQuery("<span>").text((SGN.t("drone.interface.please_set_the_noaa_location_id_for_this_field_trial_before_proceeding_you_can", "Please set the NOAA location id for this field trial before proceeding. You can do so from the manage locations page."))).html() + "</div>");
                         }
                     }
                     else {
-                        jQuery('#upload_drone_image_field_trial_info').html("<div class='well well-sm'>" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? SGN.i18n.p("drone.interface.planting_date_notice_prefix", "Please set the planting date for this field trial before proceeding. You can do so from the trial's ") : "Please set the planting date for this field trial before proceeding. You can do so from the trial's ")).html() + "<a href='/breeders/trial/" + jQuery('#drone_run_field_trial_id').val() + "' target=_blank>" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? SGN.i18n.p("drone.interface.detail_page", "Detail Page") : "Detail Page")).html() + "</a></div>");
+                        jQuery('#upload_drone_image_field_trial_info').html("<div class='well well-sm'>" + jQuery("<span>").text((SGN.t("drone.interface.planting_date_notice_prefix", "Please set the planting date for this field trial before proceeding. You can do so from the trial's "))).html() + "<a href='/breeders/trial/" + jQuery('#drone_run_field_trial_id').val() + "' target=_blank>" + jQuery("<span>").text((SGN.t("drone.interface.detail_page", "Detail Page"))).html() + "</a></div>");
                     }
                     return false;
                 },
                 error: function(response){
-                    alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("drone.interface.error_checking_field_trial_details", "Error checking field trial details!") : "Error checking field trial details!"));
+                    alert((SGN.t("drone.interface.error_checking_field_trial_details", "Error checking field trial details!")));
                 }
             });
         }
@@ -2995,7 +2995,7 @@ jQuery(document).ready(function() {
                 return false;
             },
             error: function(response){
-                alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("drone.interface.error_getting_vehicle", "Error getting vehicle!") : "Error getting vehicle!"));
+                alert((SGN.t("drone.interface.error_getting_vehicle", "Error getting vehicle!")));
             }
         });
     }
@@ -3012,11 +3012,11 @@ jQuery(document).ready(function() {
         var vehicle_batteries = jQuery('#drone_run_new_imaging_vehicle_battery_names').val();
 
         if (vehicle_name == '' || vehicle_desc == '') {
-            alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("drone.interface.please_give_a_vehicle_name_and_description", "Please give a vehicle name and description!") : "Please give a vehicle name and description!"));
+            alert((SGN.t("drone.interface.please_give_a_vehicle_name_and_description", "Please give a vehicle name and description!")));
             return false;
         }
         if (vehicle_batteries == '') {
-            alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("drone.interface.please_give_at_least_default_battery_name", "Please give at least default battery name!") : "Please give at least default battery name!"));
+            alert((SGN.t("drone.interface.please_give_at_least_default_battery_name", "Please give at least default battery name!")));
             return false;
         }
 
@@ -3028,7 +3028,7 @@ jQuery(document).ready(function() {
                     alert(response.error);
                 }
                 else if (response.success) {
-                    alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("drone.interface.vehicle_added", "Vehicle added!") : "Vehicle added!"));
+                    alert((SGN.t("drone.interface.vehicle_added", "Vehicle added!")));
                     get_select_box('imaging_event_vehicles', 'drone_run_imaging_vehicle_div', {'id':'drone_run_imaging_vehicle_id', 'name':'drone_run_imaging_vehicle_id'});
                     upload_drone_imagery_vehicle_id = response.new_vehicle_id;
                     _show_vehicle_battery_select();
@@ -3037,7 +3037,7 @@ jQuery(document).ready(function() {
                 return false;
             },
             error: function(response){
-                alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("drone.interface.error_adding_new_imaging_vehicle", "Error adding new imaging vehicle!") : "Error adding new imaging vehicle!"));
+                alert((SGN.t("drone.interface.error_adding_new_imaging_vehicle", "Error adding new imaging vehicle!")));
             }
         });
     });
@@ -3055,23 +3055,23 @@ jQuery(document).ready(function() {
             selected.push(jQuery(this).val());
         });
         if (selected.length > 1){
-            alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("drone.interface.only_select_one_drone_run", "Only select one drone run!") : "Only select one drone run!"));
+            alert((SGN.t("drone.interface.only_select_one_drone_run", "Only select one drone run!")));
         } else {
             if (selected.length == 0 && jQuery('#drone_run_name').val() == ''){
-                alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("drone.interface.select_a_drone_run_or_create_a_new_one", "Select a drone run or create a new one!") : "Select a drone run or create a new one!"));
+                alert((SGN.t("drone.interface.select_a_drone_run_or_create_a_new_one", "Select a drone run or create a new one!")));
             } else if (selected.length == 1 && jQuery('#drone_run_name').val() != ''){
-                alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("drone.interface.if_you_selected_a_drone_run_do_not_try_to_make_a_new_one_at_the_same_time", "If you selected a drone run, do not try to make a new one at the same time!") : "If you selected a drone run, do not try to make a new one at the same time!"));
+                alert((SGN.t("drone.interface.if_you_selected_a_drone_run_do_not_try_to_make_a_new_one_at_the_same_time", "If you selected a drone run, do not try to make a new one at the same time!")));
             } else if (selected.length == 1 && jQuery('#drone_run_name').val() == ''){
                 jQuery('#drone_run_id').val(selected[0]);
                 Workflow.complete('#drone_image_upload_drone_run_continue');
                 Workflow.focus('#drone_imagery_upload_workflow', 3);
             } else if (selected.length == 0 && jQuery('#drone_run_name').val() != '') {
                 if (jQuery('#drone_run_description').val() == ''){
-                    alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("drone.interface.please_give_a_drone_run_description", "Please give a drone run description.") : "Please give a drone run description."));
+                    alert((SGN.t("drone.interface.please_give_a_drone_run_description", "Please give a drone run description.")));
                 } else if (jQuery('#drone_run_date').val() == ''){
-                    alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("drone.interface.please_give_a_drone_run_date", "Please give a drone run date.") : "Please give a drone run date."));
+                    alert((SGN.t("drone.interface.please_give_a_drone_run_date", "Please give a drone run date.")));
                 } else if (jQuery('#drone_run_type') == ''){
-                    alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("drone.interface.please_select_a_drone_run_type", "Please select a drone run type") : "Please select a drone run type"));
+                    alert((SGN.t("drone.interface.please_select_a_drone_run_type", "Please select a drone run type")));
                 } else {
                     jQuery('#drone_run_id').val('');
                     jQuery.ajax({
@@ -3085,12 +3085,12 @@ jQuery(document).ready(function() {
                                 return false;
                             }
                             else if (response.error) {
-                                alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("drone.interface.error_prefix", "Error: ") : "Error: ") + response.error);
+                                alert((SGN.t("drone.interface.error_prefix", "Error: ")) + response.error);
                             }
                             return false;
                         },
                         error: function(response){
-                            alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("drone.interface.error_checking_drone_run_name", "Error checking drone run name!") : "Error checking drone run name!"));
+                            alert((SGN.t("drone.interface.error_checking_drone_run_name", "Error checking drone run name!")));
                         }
                     });
                 }
@@ -3127,20 +3127,20 @@ jQuery(document).ready(function() {
         var drone_run_base_date = jQuery('#drone_run_base_date').val();
 
         if (drone_run_band_unstitched == '') {
-            alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("drone.interface.please_select_whether_you_are_uploading_orthomosaic_images", "Please select whether you are uploading orthomosaic images.") : "Please select whether you are uploading orthomosaic images."));
+            alert((SGN.t("drone.interface.please_select_whether_you_are_uploading_orthomosaic_images", "Please select whether you are uploading orthomosaic images.")));
             return false;
         }
         if (drone_run_id == '' && drone_run_camera_info == '') {
-            alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("drone.interface.please_select_the_camera_type_used", "Please select the camera type used.") : "Please select the camera type used."));
+            alert((SGN.t("drone.interface.please_select_the_camera_type_used", "Please select the camera type used.")));
             return false;
         }
 
         if (drone_run_vehicle_id == '' || drone_run_vehicle_battery_name == '') {
-            alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("drone.interface.please_select_an_imaging_event_vehicle_and_the_associated_battery_you_can_crea", "Please select an imaging event vehicle and the associated battery! You can create a new vehicle if needed e.g. default_battery") : "Please select an imaging event vehicle and the associated battery! You can create a new vehicle if needed e.g. default_battery"));
+            alert((SGN.t("drone.interface.please_select_an_imaging_event_vehicle_and_the_associated_battery_you_can_crea", "Please select an imaging event vehicle and the associated battery! You can create a new vehicle if needed e.g. default_battery")));
             return false;
         }
         if (drone_run_camera_info == '') {
-            alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("drone.interface.please_select_the_camera_type_used", "Please select the camera type used.") : "Please select the camera type used."));
+            alert((SGN.t("drone.interface.please_select_the_camera_type_used", "Please select the camera type used.")));
             return false;
         }
 
@@ -3163,7 +3163,7 @@ jQuery(document).ready(function() {
 
         if (drone_run_band_unstitched == 'no') {
             if (drone_run_band_number == '') {
-                alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("drone.interface.please_select_the_number_of_drone_run_bands_you_will_upload", "Please select the number of drone run bands you will upload") : "Please select the number of drone run bands you will upload"));
+                alert((SGN.t("drone.interface.please_select_the_number_of_drone_run_bands_you_will_upload", "Please select the number of drone run bands you will upload")));
             } else {
                 if (drone_run_band_number == 5 && drone_run_camera_info == 'micasense_5'){
                     jQuery('input[name="drone_run_band_name_1"]').val(drone_run_name+'_'+drone_run_date+'_Blue');
@@ -3219,17 +3219,17 @@ jQuery(document).ready(function() {
     jQuery('#upload_drone_imagery_select_images_one').click(function(e){
         e.preventDefault();
         if (jQuery('#drone_run_band_name_one_1').val() == ''){
-            alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("drone.interface.give_a_new_drone_run_band_name", "Give a new drone run band name!") : "Give a new drone run band name!"));
+            alert((SGN.t("drone.interface.give_a_new_drone_run_band_name", "Give a new drone run band name!")));
             return;
         } else if (jQuery('#drone_run_band_description_one_1').val() == ''){
-            alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("drone.interface.please_give_a_drone_run_band_description", "Please give a drone run band description.") : "Please give a drone run band description."));
+            alert((SGN.t("drone.interface.please_give_a_drone_run_band_description", "Please give a drone run band description.")));
             return;
         } else if (jQuery('#drone_run_band_type_one_1').val() == ''){
-            alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("drone.interface.please_select_a_drone_run_band_type", "Please select a drone run band type.") : "Please select a drone run band type."));
+            alert((SGN.t("drone.interface.please_select_a_drone_run_band_type", "Please select a drone run band type.")));
             return;
         }
         if (jQuery('#drone_run_band_stitched_ortho_image_one_1').val() == '') {
-            alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("drone.interface.please_select_an_image", "Please select an image") : "Please select an image"));
+            alert((SGN.t("drone.interface.please_select_an_image", "Please select an image")));
             return;
         }
 
@@ -3241,31 +3241,31 @@ jQuery(document).ready(function() {
     jQuery('#upload_drone_imagery_select_images_two').click(function(e){
         e.preventDefault();
         if (jQuery('#drone_run_band_name_two_1').val() == ''){
-            alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("drone.interface.give_a_new_drone_run_band_name", "Give a new drone run band name!") : "Give a new drone run band name!"));
+            alert((SGN.t("drone.interface.give_a_new_drone_run_band_name", "Give a new drone run band name!")));
             return;
         } else if (jQuery('#drone_run_band_description_two_1').val() == ''){
-            alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("drone.interface.please_give_a_drone_run_band_description", "Please give a drone run band description.") : "Please give a drone run band description."));
+            alert((SGN.t("drone.interface.please_give_a_drone_run_band_description", "Please give a drone run band description.")));
             return;
         } else if (jQuery('#drone_run_band_type_two_1').val() == ''){
-            alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("drone.interface.please_select_a_drone_run_band_type", "Please select a drone run band type.") : "Please select a drone run band type."));
+            alert((SGN.t("drone.interface.please_select_a_drone_run_band_type", "Please select a drone run band type.")));
             return;
         }
         if (jQuery('#drone_run_band_stitched_ortho_image_two_1').val() == '') {
-            alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("drone.interface.please_select_an_image", "Please select an image") : "Please select an image"));
+            alert((SGN.t("drone.interface.please_select_an_image", "Please select an image")));
             return;
         }
         if (jQuery('#drone_run_band_name_two_2').val() == ''){
-            alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("drone.interface.give_a_new_drone_run_band_name", "Give a new drone run band name!") : "Give a new drone run band name!"));
+            alert((SGN.t("drone.interface.give_a_new_drone_run_band_name", "Give a new drone run band name!")));
             return;
         } else if (jQuery('#drone_run_band_description_two_2').val() == ''){
-            alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("drone.interface.please_give_a_drone_run_band_description", "Please give a drone run band description.") : "Please give a drone run band description."));
+            alert((SGN.t("drone.interface.please_give_a_drone_run_band_description", "Please give a drone run band description.")));
             return;
         } else if (jQuery('#drone_run_band_type_two_2').val() == ''){
-            alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("drone.interface.please_select_a_drone_run_band_type", "Please select a drone run band type.") : "Please select a drone run band type."));
+            alert((SGN.t("drone.interface.please_select_a_drone_run_band_type", "Please select a drone run band type.")));
             return;
         }
         if (jQuery('#drone_run_band_stitched_ortho_image_two_2').val() == '') {
-            alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("drone.interface.please_select_an_image", "Please select an image") : "Please select an image"));
+            alert((SGN.t("drone.interface.please_select_an_image", "Please select an image")));
             return;
         }
 
@@ -3277,45 +3277,45 @@ jQuery(document).ready(function() {
     jQuery('#upload_drone_imagery_select_images_three').click(function(e){
         e.preventDefault();
         if (jQuery('#drone_run_band_name_three_1').val() == ''){
-            alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("drone.interface.give_a_new_drone_run_band_name", "Give a new drone run band name!") : "Give a new drone run band name!"));
+            alert((SGN.t("drone.interface.give_a_new_drone_run_band_name", "Give a new drone run band name!")));
             return;
         } else if (jQuery('#drone_run_band_description_three_1').val() == ''){
-            alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("drone.interface.please_give_a_drone_run_band_description", "Please give a drone run band description.") : "Please give a drone run band description."));
+            alert((SGN.t("drone.interface.please_give_a_drone_run_band_description", "Please give a drone run band description.")));
             return;
         } else if (jQuery('#drone_run_band_type_three_1').val() == ''){
-            alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("drone.interface.please_select_a_drone_run_band_type", "Please select a drone run band type.") : "Please select a drone run band type."));
+            alert((SGN.t("drone.interface.please_select_a_drone_run_band_type", "Please select a drone run band type.")));
             return;
         }
         if (jQuery('#drone_run_band_stitched_ortho_image_three_1').val() == '') {
-            alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("drone.interface.please_select_an_image", "Please select an image") : "Please select an image"));
+            alert((SGN.t("drone.interface.please_select_an_image", "Please select an image")));
             return;
         }
         if (jQuery('#drone_run_band_name_three_2').val() == ''){
-            alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("drone.interface.give_a_new_drone_run_band_name", "Give a new drone run band name!") : "Give a new drone run band name!"));
+            alert((SGN.t("drone.interface.give_a_new_drone_run_band_name", "Give a new drone run band name!")));
             return;
         } else if (jQuery('#drone_run_band_description_three_2').val() == ''){
-            alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("drone.interface.please_give_a_drone_run_band_description", "Please give a drone run band description.") : "Please give a drone run band description."));
+            alert((SGN.t("drone.interface.please_give_a_drone_run_band_description", "Please give a drone run band description.")));
             return;
         } else if (jQuery('#drone_run_band_type_three_2').val() == ''){
-            alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("drone.interface.please_select_a_drone_run_band_type", "Please select a drone run band type.") : "Please select a drone run band type."));
+            alert((SGN.t("drone.interface.please_select_a_drone_run_band_type", "Please select a drone run band type.")));
             return;
         }
         if (jQuery('#drone_run_band_stitched_ortho_image_three_2').val() == '') {
-            alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("drone.interface.please_select_an_image", "Please select an image") : "Please select an image"));
+            alert((SGN.t("drone.interface.please_select_an_image", "Please select an image")));
             return;
         }
         if (jQuery('#drone_run_band_name_three_3').val() == ''){
-            alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("drone.interface.give_a_new_drone_run_band_name", "Give a new drone run band name!") : "Give a new drone run band name!"));
+            alert((SGN.t("drone.interface.give_a_new_drone_run_band_name", "Give a new drone run band name!")));
             return;
         } else if (jQuery('#drone_run_band_description_three_3').val() == ''){
-            alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("drone.interface.please_give_a_drone_run_band_description", "Please give a drone run band description.") : "Please give a drone run band description."));
+            alert((SGN.t("drone.interface.please_give_a_drone_run_band_description", "Please give a drone run band description.")));
             return;
         } else if (jQuery('#drone_run_band_type_three_3').val() == ''){
-            alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("drone.interface.please_select_a_drone_run_band_type", "Please select a drone run band type.") : "Please select a drone run band type."));
+            alert((SGN.t("drone.interface.please_select_a_drone_run_band_type", "Please select a drone run band type.")));
             return;
         }
         if (jQuery('#drone_run_band_stitched_ortho_image_three_3').val() == '') {
-            alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("drone.interface.please_select_an_image", "Please select an image") : "Please select an image"));
+            alert((SGN.t("drone.interface.please_select_an_image", "Please select an image")));
             return;
         }
 
@@ -3327,59 +3327,59 @@ jQuery(document).ready(function() {
     jQuery('#upload_drone_imagery_select_images_four').click(function(e){
         e.preventDefault();
         if (jQuery('#drone_run_band_name_four_1').val() == ''){
-            alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("drone.interface.give_a_new_drone_run_band_name", "Give a new drone run band name!") : "Give a new drone run band name!"));
+            alert((SGN.t("drone.interface.give_a_new_drone_run_band_name", "Give a new drone run band name!")));
             return;
         } else if (jQuery('#drone_run_band_description_four_1').val() == ''){
-            alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("drone.interface.please_give_a_drone_run_band_description", "Please give a drone run band description.") : "Please give a drone run band description."));
+            alert((SGN.t("drone.interface.please_give_a_drone_run_band_description", "Please give a drone run band description.")));
             return;
         } else if (jQuery('#drone_run_band_type_four_1').val() == ''){
-            alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("drone.interface.please_select_a_drone_run_band_type", "Please select a drone run band type.") : "Please select a drone run band type."));
+            alert((SGN.t("drone.interface.please_select_a_drone_run_band_type", "Please select a drone run band type.")));
             return;
         }
         if (jQuery('#drone_run_band_stitched_ortho_image_four_1').val() == '') {
-            alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("drone.interface.please_select_an_image", "Please select an image") : "Please select an image"));
+            alert((SGN.t("drone.interface.please_select_an_image", "Please select an image")));
             return;
         }
         if (jQuery('#drone_run_band_name_four_2').val() == ''){
-            alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("drone.interface.give_a_new_drone_run_band_name", "Give a new drone run band name!") : "Give a new drone run band name!"));
+            alert((SGN.t("drone.interface.give_a_new_drone_run_band_name", "Give a new drone run band name!")));
             return;
         } else if (jQuery('#drone_run_band_description_four_2').val() == ''){
-            alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("drone.interface.please_give_a_drone_run_band_description", "Please give a drone run band description.") : "Please give a drone run band description."));
+            alert((SGN.t("drone.interface.please_give_a_drone_run_band_description", "Please give a drone run band description.")));
             return;
         } else if (jQuery('#drone_run_band_type_four_2').val() == ''){
-            alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("drone.interface.please_select_a_drone_run_band_type", "Please select a drone run band type.") : "Please select a drone run band type."));
+            alert((SGN.t("drone.interface.please_select_a_drone_run_band_type", "Please select a drone run band type.")));
             return;
         }
         if (jQuery('#drone_run_band_stitched_ortho_image_four_2').val() == '') {
-            alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("drone.interface.please_select_an_image", "Please select an image") : "Please select an image"));
+            alert((SGN.t("drone.interface.please_select_an_image", "Please select an image")));
             return;
         }
         if (jQuery('#drone_run_band_name_four_3').val() == ''){
-            alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("drone.interface.give_a_new_drone_run_band_name", "Give a new drone run band name!") : "Give a new drone run band name!"));
+            alert((SGN.t("drone.interface.give_a_new_drone_run_band_name", "Give a new drone run band name!")));
             return;
         } else if (jQuery('#drone_run_band_description_four_3').val() == ''){
-            alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("drone.interface.please_give_a_drone_run_band_description", "Please give a drone run band description.") : "Please give a drone run band description."));
+            alert((SGN.t("drone.interface.please_give_a_drone_run_band_description", "Please give a drone run band description.")));
             return;
         } else if (jQuery('#drone_run_band_type_four_3').val() == ''){
-            alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("drone.interface.please_select_a_drone_run_band_type", "Please select a drone run band type.") : "Please select a drone run band type."));
+            alert((SGN.t("drone.interface.please_select_a_drone_run_band_type", "Please select a drone run band type.")));
             return;
         }
         if (jQuery('#drone_run_band_stitched_ortho_image_four_3').val() == '') {
-            alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("drone.interface.please_select_an_image", "Please select an image") : "Please select an image"));
+            alert((SGN.t("drone.interface.please_select_an_image", "Please select an image")));
             return;
         }
         if (jQuery('#drone_run_band_name_four_4').val() == ''){
-            alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("drone.interface.give_a_new_drone_run_band_name", "Give a new drone run band name!") : "Give a new drone run band name!"));
+            alert((SGN.t("drone.interface.give_a_new_drone_run_band_name", "Give a new drone run band name!")));
             return;
         } else if (jQuery('#drone_run_band_description_four_4').val() == ''){
-            alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("drone.interface.please_give_a_drone_run_band_description", "Please give a drone run band description.") : "Please give a drone run band description."));
+            alert((SGN.t("drone.interface.please_give_a_drone_run_band_description", "Please give a drone run band description.")));
             return;
         } else if (jQuery('#drone_run_band_type_four_4').val() == ''){
-            alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("drone.interface.please_select_a_drone_run_band_type", "Please select a drone run band type.") : "Please select a drone run band type."));
+            alert((SGN.t("drone.interface.please_select_a_drone_run_band_type", "Please select a drone run band type.")));
             return;
         }
         if (jQuery('#drone_run_band_stitched_ortho_image_four_4').val() == '') {
-            alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("drone.interface.please_select_an_image", "Please select an image") : "Please select an image"));
+            alert((SGN.t("drone.interface.please_select_an_image", "Please select an image")));
             return;
         }
 
@@ -3391,73 +3391,73 @@ jQuery(document).ready(function() {
     jQuery('#upload_drone_imagery_select_images_five').click(function(e){
         e.preventDefault();
         if (jQuery('#drone_run_band_name_five_1').val() == ''){
-            alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("drone.interface.give_a_new_drone_run_band_name", "Give a new drone run band name!") : "Give a new drone run band name!"));
+            alert((SGN.t("drone.interface.give_a_new_drone_run_band_name", "Give a new drone run band name!")));
             return;
         } else if (jQuery('#drone_run_band_description_five_1').val() == ''){
-            alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("drone.interface.please_give_a_drone_run_band_description", "Please give a drone run band description.") : "Please give a drone run band description."));
+            alert((SGN.t("drone.interface.please_give_a_drone_run_band_description", "Please give a drone run band description.")));
             return;
         } else if (jQuery('#drone_run_band_type_five_1').val() == ''){
-            alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("drone.interface.please_select_a_drone_run_band_type", "Please select a drone run band type.") : "Please select a drone run band type."));
+            alert((SGN.t("drone.interface.please_select_a_drone_run_band_type", "Please select a drone run band type.")));
             return;
         }
         if (jQuery('#drone_run_band_stitched_ortho_image_five_1').val() == '') {
-            alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("drone.interface.please_select_an_image", "Please select an image") : "Please select an image"));
+            alert((SGN.t("drone.interface.please_select_an_image", "Please select an image")));
             return;
         }
         if (jQuery('#drone_run_band_name_five_2').val() == ''){
-            alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("drone.interface.give_a_new_drone_run_band_name", "Give a new drone run band name!") : "Give a new drone run band name!"));
+            alert((SGN.t("drone.interface.give_a_new_drone_run_band_name", "Give a new drone run band name!")));
             return;
         } else if (jQuery('#drone_run_band_description_five_2').val() == ''){
-            alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("drone.interface.please_give_a_drone_run_band_description", "Please give a drone run band description.") : "Please give a drone run band description."));
+            alert((SGN.t("drone.interface.please_give_a_drone_run_band_description", "Please give a drone run band description.")));
             return;
         } else if (jQuery('#drone_run_band_type_five_2').val() == ''){
-            alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("drone.interface.please_select_a_drone_run_band_type", "Please select a drone run band type.") : "Please select a drone run band type."));
+            alert((SGN.t("drone.interface.please_select_a_drone_run_band_type", "Please select a drone run band type.")));
             return;
         }
         if (jQuery('#drone_run_band_stitched_ortho_image_five_2').val() == '') {
-            alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("drone.interface.please_select_an_image", "Please select an image") : "Please select an image"));
+            alert((SGN.t("drone.interface.please_select_an_image", "Please select an image")));
             return;
         }
         if (jQuery('#drone_run_band_name_five_3').val() == ''){
-            alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("drone.interface.give_a_new_drone_run_band_name", "Give a new drone run band name!") : "Give a new drone run band name!"));
+            alert((SGN.t("drone.interface.give_a_new_drone_run_band_name", "Give a new drone run band name!")));
             return;
         } else if (jQuery('#drone_run_band_description_five_3').val() == ''){
-            alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("drone.interface.please_give_a_drone_run_band_description", "Please give a drone run band description.") : "Please give a drone run band description."));
+            alert((SGN.t("drone.interface.please_give_a_drone_run_band_description", "Please give a drone run band description.")));
             return;
         } else if (jQuery('#drone_run_band_type_five_3').val() == ''){
-            alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("drone.interface.please_select_a_drone_run_band_type", "Please select a drone run band type.") : "Please select a drone run band type."));
+            alert((SGN.t("drone.interface.please_select_a_drone_run_band_type", "Please select a drone run band type.")));
             return;
         }
         if (jQuery('#drone_run_band_stitched_ortho_image_five_3').val() == '') {
-            alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("drone.interface.please_select_an_image", "Please select an image") : "Please select an image"));
+            alert((SGN.t("drone.interface.please_select_an_image", "Please select an image")));
             return;
         }
         if (jQuery('#drone_run_band_name_five_4').val() == ''){
-            alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("drone.interface.give_a_new_drone_run_band_name", "Give a new drone run band name!") : "Give a new drone run band name!"));
+            alert((SGN.t("drone.interface.give_a_new_drone_run_band_name", "Give a new drone run band name!")));
             return;
         } else if (jQuery('#drone_run_band_description_five_4').val() == ''){
-            alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("drone.interface.please_give_a_drone_run_band_description", "Please give a drone run band description.") : "Please give a drone run band description."));
+            alert((SGN.t("drone.interface.please_give_a_drone_run_band_description", "Please give a drone run band description.")));
             return;
         } else if (jQuery('#drone_run_band_type_five_4').val() == ''){
-            alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("drone.interface.please_select_a_drone_run_band_type", "Please select a drone run band type.") : "Please select a drone run band type."));
+            alert((SGN.t("drone.interface.please_select_a_drone_run_band_type", "Please select a drone run band type.")));
             return;
         }
         if (jQuery('#drone_run_band_stitched_ortho_image_five_4').val() == '') {
-            alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("drone.interface.please_select_an_image", "Please select an image") : "Please select an image"));
+            alert((SGN.t("drone.interface.please_select_an_image", "Please select an image")));
             return;
         }
         if (jQuery('#drone_run_band_name_five_5').val() == ''){
-            alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("drone.interface.give_a_new_drone_run_band_name", "Give a new drone run band name!") : "Give a new drone run band name!"));
+            alert((SGN.t("drone.interface.give_a_new_drone_run_band_name", "Give a new drone run band name!")));
             return;
         } else if (jQuery('#drone_run_band_description_five_5').val() == ''){
-            alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("drone.interface.please_give_a_drone_run_band_description", "Please give a drone run band description.") : "Please give a drone run band description."));
+            alert((SGN.t("drone.interface.please_give_a_drone_run_band_description", "Please give a drone run band description.")));
             return;
         } else if (jQuery('#drone_run_band_type_five_5').val() == ''){
-            alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("drone.interface.please_select_a_drone_run_band_type", "Please select a drone run band type.") : "Please select a drone run band type."));
+            alert((SGN.t("drone.interface.please_select_a_drone_run_band_type", "Please select a drone run band type.")));
             return;
         }
         if (jQuery('#drone_run_band_stitched_ortho_image_five_5').val() == '') {
-            alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("drone.interface.please_select_an_image", "Please select an image") : "Please select an image"));
+            alert((SGN.t("drone.interface.please_select_an_image", "Please select an image")));
             return;
         }
 
@@ -3469,87 +3469,87 @@ jQuery(document).ready(function() {
     jQuery('#upload_drone_imagery_select_images_six').click(function(e){
         e.preventDefault();
         if (jQuery('#drone_run_band_name_six_1').val() == ''){
-            alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("drone.interface.give_a_new_drone_run_band_name", "Give a new drone run band name!") : "Give a new drone run band name!"));
+            alert((SGN.t("drone.interface.give_a_new_drone_run_band_name", "Give a new drone run band name!")));
             return;
         } else if (jQuery('#drone_run_band_description_six_1').val() == ''){
-            alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("drone.interface.please_give_a_drone_run_band_description", "Please give a drone run band description.") : "Please give a drone run band description."));
+            alert((SGN.t("drone.interface.please_give_a_drone_run_band_description", "Please give a drone run band description.")));
             return;
         } else if (jQuery('#drone_run_band_type_six_1').val() == ''){
-            alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("drone.interface.please_select_a_drone_run_band_type", "Please select a drone run band type.") : "Please select a drone run band type."));
+            alert((SGN.t("drone.interface.please_select_a_drone_run_band_type", "Please select a drone run band type.")));
             return;
         }
         if (jQuery('#drone_run_band_stitched_ortho_image_six_1').val() == '') {
-            alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("drone.interface.please_select_an_image", "Please select an image") : "Please select an image"));
+            alert((SGN.t("drone.interface.please_select_an_image", "Please select an image")));
             return;
         }
         if (jQuery('#drone_run_band_name_six_2').val() == ''){
-            alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("drone.interface.give_a_new_drone_run_band_name", "Give a new drone run band name!") : "Give a new drone run band name!"));
+            alert((SGN.t("drone.interface.give_a_new_drone_run_band_name", "Give a new drone run band name!")));
             return;
         } else if (jQuery('#drone_run_band_description_six_2').val() == ''){
-            alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("drone.interface.please_give_a_drone_run_band_description", "Please give a drone run band description.") : "Please give a drone run band description."));
+            alert((SGN.t("drone.interface.please_give_a_drone_run_band_description", "Please give a drone run band description.")));
             return;
         } else if (jQuery('#drone_run_band_type_six_2').val() == ''){
-            alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("drone.interface.please_select_a_drone_run_band_type", "Please select a drone run band type.") : "Please select a drone run band type."));
+            alert((SGN.t("drone.interface.please_select_a_drone_run_band_type", "Please select a drone run band type.")));
             return;
         }
         if (jQuery('#drone_run_band_stitched_ortho_image_six_2').val() == '') {
-            alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("drone.interface.please_select_an_image", "Please select an image") : "Please select an image"));
+            alert((SGN.t("drone.interface.please_select_an_image", "Please select an image")));
             return;
         }
         if (jQuery('#drone_run_band_name_six_3').val() == ''){
-            alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("drone.interface.give_a_new_drone_run_band_name", "Give a new drone run band name!") : "Give a new drone run band name!"));
+            alert((SGN.t("drone.interface.give_a_new_drone_run_band_name", "Give a new drone run band name!")));
             return;
         } else if (jQuery('#drone_run_band_description_six_3').val() == ''){
-            alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("drone.interface.please_give_a_drone_run_band_description", "Please give a drone run band description.") : "Please give a drone run band description."));
+            alert((SGN.t("drone.interface.please_give_a_drone_run_band_description", "Please give a drone run band description.")));
             return;
         } else if (jQuery('#drone_run_band_type_six_3').val() == ''){
-            alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("drone.interface.please_select_a_drone_run_band_type", "Please select a drone run band type.") : "Please select a drone run band type."));
+            alert((SGN.t("drone.interface.please_select_a_drone_run_band_type", "Please select a drone run band type.")));
             return;
         }
         if (jQuery('#drone_run_band_stitched_ortho_image_six_3').val() == '') {
-            alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("drone.interface.please_select_an_image", "Please select an image") : "Please select an image"));
+            alert((SGN.t("drone.interface.please_select_an_image", "Please select an image")));
             return;
         }
         if (jQuery('#drone_run_band_name_six_4').val() == ''){
-            alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("drone.interface.give_a_new_drone_run_band_name", "Give a new drone run band name!") : "Give a new drone run band name!"));
+            alert((SGN.t("drone.interface.give_a_new_drone_run_band_name", "Give a new drone run band name!")));
             return;
         } else if (jQuery('#drone_run_band_description_six_4').val() == ''){
-            alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("drone.interface.please_give_a_drone_run_band_description", "Please give a drone run band description.") : "Please give a drone run band description."));
+            alert((SGN.t("drone.interface.please_give_a_drone_run_band_description", "Please give a drone run band description.")));
             return;
         } else if (jQuery('#drone_run_band_type_six_4').val() == ''){
-            alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("drone.interface.please_select_a_drone_run_band_type", "Please select a drone run band type.") : "Please select a drone run band type."));
+            alert((SGN.t("drone.interface.please_select_a_drone_run_band_type", "Please select a drone run band type.")));
             return;
         }
         if (jQuery('#drone_run_band_stitched_ortho_image_six_4').val() == '') {
-            alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("drone.interface.please_select_an_image", "Please select an image") : "Please select an image"));
+            alert((SGN.t("drone.interface.please_select_an_image", "Please select an image")));
             return;
         }
         if (jQuery('#drone_run_band_name_six_5').val() == ''){
-            alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("drone.interface.give_a_new_drone_run_band_name", "Give a new drone run band name!") : "Give a new drone run band name!"));
+            alert((SGN.t("drone.interface.give_a_new_drone_run_band_name", "Give a new drone run band name!")));
             return;
         } else if (jQuery('#drone_run_band_description_six_5').val() == ''){
-            alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("drone.interface.please_give_a_drone_run_band_description", "Please give a drone run band description.") : "Please give a drone run band description."));
+            alert((SGN.t("drone.interface.please_give_a_drone_run_band_description", "Please give a drone run band description.")));
             return;
         } else if (jQuery('#drone_run_band_type_six_5').val() == ''){
-            alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("drone.interface.please_select_a_drone_run_band_type", "Please select a drone run band type.") : "Please select a drone run band type."));
+            alert((SGN.t("drone.interface.please_select_a_drone_run_band_type", "Please select a drone run band type.")));
             return;
         }
         if (jQuery('#drone_run_band_stitched_ortho_image_six_5').val() == '') {
-            alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("drone.interface.please_select_an_image", "Please select an image") : "Please select an image"));
+            alert((SGN.t("drone.interface.please_select_an_image", "Please select an image")));
             return;
         }
         if (jQuery('#drone_run_band_name_six_6').val() == ''){
-            alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("drone.interface.give_a_new_drone_run_band_name", "Give a new drone run band name!") : "Give a new drone run band name!"));
+            alert((SGN.t("drone.interface.give_a_new_drone_run_band_name", "Give a new drone run band name!")));
             return;
         } else if (jQuery('#drone_run_band_description_six_6').val() == ''){
-            alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("drone.interface.please_give_a_drone_run_band_description", "Please give a drone run band description.") : "Please give a drone run band description."));
+            alert((SGN.t("drone.interface.please_give_a_drone_run_band_description", "Please give a drone run band description.")));
             return;
         } else if (jQuery('#drone_run_band_type_six_6').val() == ''){
-            alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("drone.interface.please_select_a_drone_run_band_type", "Please select a drone run band type.") : "Please select a drone run band type."));
+            alert((SGN.t("drone.interface.please_select_a_drone_run_band_type", "Please select a drone run band type.")));
             return;
         }
         if (jQuery('#drone_run_band_stitched_ortho_image_six_6').val() == '') {
-            alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("drone.interface.please_select_an_image", "Please select an image") : "Please select an image"));
+            alert((SGN.t("drone.interface.please_select_an_image", "Please select an image")));
             return;
         }
 
@@ -3561,101 +3561,101 @@ jQuery(document).ready(function() {
     jQuery('#upload_drone_imagery_select_images_seven').click(function(e){
         e.preventDefault();
         if (jQuery('#drone_run_band_name_seven_1').val() == ''){
-            alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("drone.interface.give_a_new_drone_run_band_name", "Give a new drone run band name!") : "Give a new drone run band name!"));
+            alert((SGN.t("drone.interface.give_a_new_drone_run_band_name", "Give a new drone run band name!")));
             return;
         } else if (jQuery('#drone_run_band_description_seven_1').val() == ''){
-            alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("drone.interface.please_give_a_drone_run_band_description", "Please give a drone run band description.") : "Please give a drone run band description."));
+            alert((SGN.t("drone.interface.please_give_a_drone_run_band_description", "Please give a drone run band description.")));
             return;
         } else if (jQuery('#drone_run_band_type_seven_1').val() == ''){
-            alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("drone.interface.please_select_a_drone_run_band_type", "Please select a drone run band type.") : "Please select a drone run band type."));
+            alert((SGN.t("drone.interface.please_select_a_drone_run_band_type", "Please select a drone run band type.")));
             return;
         }
         if (jQuery('#drone_run_band_stitched_ortho_image_seven_1').val() == '') {
-            alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("drone.interface.please_select_an_image", "Please select an image") : "Please select an image"));
+            alert((SGN.t("drone.interface.please_select_an_image", "Please select an image")));
             return;
         }
         if (jQuery('#drone_run_band_name_seven_2').val() == ''){
-            alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("drone.interface.give_a_new_drone_run_band_name", "Give a new drone run band name!") : "Give a new drone run band name!"));
+            alert((SGN.t("drone.interface.give_a_new_drone_run_band_name", "Give a new drone run band name!")));
             return;
         } else if (jQuery('#drone_run_band_description_seven_2').val() == ''){
-            alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("drone.interface.please_give_a_drone_run_band_description", "Please give a drone run band description.") : "Please give a drone run band description."));
+            alert((SGN.t("drone.interface.please_give_a_drone_run_band_description", "Please give a drone run band description.")));
             return;
         } else if (jQuery('#drone_run_band_type_seven_2').val() == ''){
-            alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("drone.interface.please_select_a_drone_run_band_type", "Please select a drone run band type.") : "Please select a drone run band type."));
+            alert((SGN.t("drone.interface.please_select_a_drone_run_band_type", "Please select a drone run band type.")));
             return;
         }
         if (jQuery('#drone_run_band_stitched_ortho_image_seven_2').val() == '') {
-            alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("drone.interface.please_select_an_image", "Please select an image") : "Please select an image"));
+            alert((SGN.t("drone.interface.please_select_an_image", "Please select an image")));
             return;
         }
         if (jQuery('#drone_run_band_name_seven_3').val() == ''){
-            alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("drone.interface.give_a_new_drone_run_band_name", "Give a new drone run band name!") : "Give a new drone run band name!"));
+            alert((SGN.t("drone.interface.give_a_new_drone_run_band_name", "Give a new drone run band name!")));
             return;
         } else if (jQuery('#drone_run_band_description_seven_3').val() == ''){
-            alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("drone.interface.please_give_a_drone_run_band_description", "Please give a drone run band description.") : "Please give a drone run band description."));
+            alert((SGN.t("drone.interface.please_give_a_drone_run_band_description", "Please give a drone run band description.")));
             return;
         } else if (jQuery('#drone_run_band_type_seven_3').val() == ''){
-            alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("drone.interface.please_select_a_drone_run_band_type", "Please select a drone run band type.") : "Please select a drone run band type."));
+            alert((SGN.t("drone.interface.please_select_a_drone_run_band_type", "Please select a drone run band type.")));
             return;
         }
         if (jQuery('#drone_run_band_stitched_ortho_image_seven_3').val() == '') {
-            alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("drone.interface.please_select_an_image", "Please select an image") : "Please select an image"));
+            alert((SGN.t("drone.interface.please_select_an_image", "Please select an image")));
             return;
         }
         if (jQuery('#drone_run_band_name_seven_4').val() == ''){
-            alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("drone.interface.give_a_new_drone_run_band_name", "Give a new drone run band name!") : "Give a new drone run band name!"));
+            alert((SGN.t("drone.interface.give_a_new_drone_run_band_name", "Give a new drone run band name!")));
             return;
         } else if (jQuery('#drone_run_band_description_seven_4').val() == ''){
-            alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("drone.interface.please_give_a_drone_run_band_description", "Please give a drone run band description.") : "Please give a drone run band description."));
+            alert((SGN.t("drone.interface.please_give_a_drone_run_band_description", "Please give a drone run band description.")));
             return;
         } else if (jQuery('#drone_run_band_type_seven_4').val() == ''){
-            alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("drone.interface.please_select_a_drone_run_band_type", "Please select a drone run band type.") : "Please select a drone run band type."));
+            alert((SGN.t("drone.interface.please_select_a_drone_run_band_type", "Please select a drone run band type.")));
             return;
         }
         if (jQuery('#drone_run_band_stitched_ortho_image_seven_4').val() == '') {
-            alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("drone.interface.please_select_an_image", "Please select an image") : "Please select an image"));
+            alert((SGN.t("drone.interface.please_select_an_image", "Please select an image")));
             return;
         }
         if (jQuery('#drone_run_band_name_seven_5').val() == ''){
-            alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("drone.interface.give_a_new_drone_run_band_name", "Give a new drone run band name!") : "Give a new drone run band name!"));
+            alert((SGN.t("drone.interface.give_a_new_drone_run_band_name", "Give a new drone run band name!")));
             return;
         } else if (jQuery('#drone_run_band_description_seven_5').val() == ''){
-            alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("drone.interface.please_give_a_drone_run_band_description", "Please give a drone run band description.") : "Please give a drone run band description."));
+            alert((SGN.t("drone.interface.please_give_a_drone_run_band_description", "Please give a drone run band description.")));
             return;
         } else if (jQuery('#drone_run_band_type_seven_5').val() == ''){
-            alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("drone.interface.please_select_a_drone_run_band_type", "Please select a drone run band type.") : "Please select a drone run band type."));
+            alert((SGN.t("drone.interface.please_select_a_drone_run_band_type", "Please select a drone run band type.")));
             return;
         }
         if (jQuery('#drone_run_band_stitched_ortho_image_seven_5').val() == '') {
-            alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("drone.interface.please_select_an_image", "Please select an image") : "Please select an image"));
+            alert((SGN.t("drone.interface.please_select_an_image", "Please select an image")));
             return;
         }
         if (jQuery('#drone_run_band_name_seven_6').val() == ''){
-            alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("drone.interface.give_a_new_drone_run_band_name", "Give a new drone run band name!") : "Give a new drone run band name!"));
+            alert((SGN.t("drone.interface.give_a_new_drone_run_band_name", "Give a new drone run band name!")));
             return;
         } else if (jQuery('#drone_run_band_description_seven_6').val() == ''){
-            alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("drone.interface.please_give_a_drone_run_band_description", "Please give a drone run band description.") : "Please give a drone run band description."));
+            alert((SGN.t("drone.interface.please_give_a_drone_run_band_description", "Please give a drone run band description.")));
             return;
         } else if (jQuery('#drone_run_band_type_seven_6').val() == ''){
-            alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("drone.interface.please_select_a_drone_run_band_type", "Please select a drone run band type.") : "Please select a drone run band type."));
+            alert((SGN.t("drone.interface.please_select_a_drone_run_band_type", "Please select a drone run band type.")));
             return;
         }
         if (jQuery('#drone_run_band_stitched_ortho_image_seven_6').val() == '') {
-            alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("drone.interface.please_select_an_image", "Please select an image") : "Please select an image"));
+            alert((SGN.t("drone.interface.please_select_an_image", "Please select an image")));
             return;
         }
         if (jQuery('#drone_run_band_name_seven_7').val() == ''){
-            alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("drone.interface.give_a_new_drone_run_band_name", "Give a new drone run band name!") : "Give a new drone run band name!"));
+            alert((SGN.t("drone.interface.give_a_new_drone_run_band_name", "Give a new drone run band name!")));
             return;
         } else if (jQuery('#drone_run_band_description_seven_7').val() == ''){
-            alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("drone.interface.please_give_a_drone_run_band_description", "Please give a drone run band description.") : "Please give a drone run band description."));
+            alert((SGN.t("drone.interface.please_give_a_drone_run_band_description", "Please give a drone run band description.")));
             return;
         } else if (jQuery('#drone_run_band_type_seven_7').val() == ''){
-            alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("drone.interface.please_select_a_drone_run_band_type", "Please select a drone run band type.") : "Please select a drone run band type."));
+            alert((SGN.t("drone.interface.please_select_a_drone_run_band_type", "Please select a drone run band type.")));
             return;
         }
         if (jQuery('#drone_run_band_stitched_ortho_image_seven_7').val() == '') {
-            alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("drone.interface.please_select_an_image", "Please select an image") : "Please select an image"));
+            alert((SGN.t("drone.interface.please_select_an_image", "Please select an image")));
             return;
         }
 
@@ -3667,115 +3667,115 @@ jQuery(document).ready(function() {
     jQuery('#upload_drone_imagery_select_images_eight').click(function(e){
         e.preventDefault();
         if (jQuery('#drone_run_band_name_eight_1').val() == ''){
-            alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("drone.interface.give_a_new_drone_run_band_name", "Give a new drone run band name!") : "Give a new drone run band name!"));
+            alert((SGN.t("drone.interface.give_a_new_drone_run_band_name", "Give a new drone run band name!")));
             return;
         } else if (jQuery('#drone_run_band_description_eight_1').val() == ''){
-            alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("drone.interface.please_give_a_drone_run_band_description", "Please give a drone run band description.") : "Please give a drone run band description."));
+            alert((SGN.t("drone.interface.please_give_a_drone_run_band_description", "Please give a drone run band description.")));
             return;
         } else if (jQuery('#drone_run_band_type_eight_1').val() == ''){
-            alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("drone.interface.please_select_a_drone_run_band_type", "Please select a drone run band type.") : "Please select a drone run band type."));
+            alert((SGN.t("drone.interface.please_select_a_drone_run_band_type", "Please select a drone run band type.")));
             return;
         }
         if (jQuery('#drone_run_band_stitched_ortho_image_eight_1').val() == '') {
-            alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("drone.interface.please_select_an_image", "Please select an image") : "Please select an image"));
+            alert((SGN.t("drone.interface.please_select_an_image", "Please select an image")));
             return;
         }
         if (jQuery('#drone_run_band_name_eight_2').val() == ''){
-            alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("drone.interface.give_a_new_drone_run_band_name", "Give a new drone run band name!") : "Give a new drone run band name!"));
+            alert((SGN.t("drone.interface.give_a_new_drone_run_band_name", "Give a new drone run band name!")));
             return;
         } else if (jQuery('#drone_run_band_description_eight_2').val() == ''){
-            alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("drone.interface.please_give_a_drone_run_band_description", "Please give a drone run band description.") : "Please give a drone run band description."));
+            alert((SGN.t("drone.interface.please_give_a_drone_run_band_description", "Please give a drone run band description.")));
             return;
         } else if (jQuery('#drone_run_band_type_eight_2').val() == ''){
-            alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("drone.interface.please_select_a_drone_run_band_type", "Please select a drone run band type.") : "Please select a drone run band type."));
+            alert((SGN.t("drone.interface.please_select_a_drone_run_band_type", "Please select a drone run band type.")));
             return;
         }
         if (jQuery('#drone_run_band_stitched_ortho_image_eight_2').val() == '') {
-            alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("drone.interface.please_select_an_image", "Please select an image") : "Please select an image"));
+            alert((SGN.t("drone.interface.please_select_an_image", "Please select an image")));
             return;
         }
         if (jQuery('#drone_run_band_name_eight_3').val() == ''){
-            alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("drone.interface.give_a_new_drone_run_band_name", "Give a new drone run band name!") : "Give a new drone run band name!"));
+            alert((SGN.t("drone.interface.give_a_new_drone_run_band_name", "Give a new drone run band name!")));
             return;
         } else if (jQuery('#drone_run_band_description_eight_3').val() == ''){
-            alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("drone.interface.please_give_a_drone_run_band_description", "Please give a drone run band description.") : "Please give a drone run band description."));
+            alert((SGN.t("drone.interface.please_give_a_drone_run_band_description", "Please give a drone run band description.")));
             return;
         } else if (jQuery('#drone_run_band_type_eight_3').val() == ''){
-            alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("drone.interface.please_select_a_drone_run_band_type", "Please select a drone run band type.") : "Please select a drone run band type."));
+            alert((SGN.t("drone.interface.please_select_a_drone_run_band_type", "Please select a drone run band type.")));
             return;
         }
         if (jQuery('#drone_run_band_stitched_ortho_image_eight_3').val() == '') {
-            alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("drone.interface.please_select_an_image", "Please select an image") : "Please select an image"));
+            alert((SGN.t("drone.interface.please_select_an_image", "Please select an image")));
             return;
         }
         if (jQuery('#drone_run_band_name_eight_4').val() == ''){
-            alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("drone.interface.give_a_new_drone_run_band_name", "Give a new drone run band name!") : "Give a new drone run band name!"));
+            alert((SGN.t("drone.interface.give_a_new_drone_run_band_name", "Give a new drone run band name!")));
             return;
         } else if (jQuery('#drone_run_band_description_eight_4').val() == ''){
-            alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("drone.interface.please_give_a_drone_run_band_description", "Please give a drone run band description.") : "Please give a drone run band description."));
+            alert((SGN.t("drone.interface.please_give_a_drone_run_band_description", "Please give a drone run band description.")));
             return;
         } else if (jQuery('#drone_run_band_type_eight_4').val() == ''){
-            alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("drone.interface.please_select_a_drone_run_band_type", "Please select a drone run band type.") : "Please select a drone run band type."));
+            alert((SGN.t("drone.interface.please_select_a_drone_run_band_type", "Please select a drone run band type.")));
             return;
         }
         if (jQuery('#drone_run_band_stitched_ortho_image_eight_4').val() == '') {
-            alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("drone.interface.please_select_an_image", "Please select an image") : "Please select an image"));
+            alert((SGN.t("drone.interface.please_select_an_image", "Please select an image")));
             return;
         }
         if (jQuery('#drone_run_band_name_eight_5').val() == ''){
-            alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("drone.interface.give_a_new_drone_run_band_name", "Give a new drone run band name!") : "Give a new drone run band name!"));
+            alert((SGN.t("drone.interface.give_a_new_drone_run_band_name", "Give a new drone run band name!")));
             return;
         } else if (jQuery('#drone_run_band_description_eight_5').val() == ''){
-            alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("drone.interface.please_give_a_drone_run_band_description", "Please give a drone run band description.") : "Please give a drone run band description."));
+            alert((SGN.t("drone.interface.please_give_a_drone_run_band_description", "Please give a drone run band description.")));
             return;
         } else if (jQuery('#drone_run_band_type_eight_5').val() == ''){
-            alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("drone.interface.please_select_a_drone_run_band_type", "Please select a drone run band type.") : "Please select a drone run band type."));
+            alert((SGN.t("drone.interface.please_select_a_drone_run_band_type", "Please select a drone run band type.")));
             return;
         }
         if (jQuery('#drone_run_band_stitched_ortho_image_eight_5').val() == '') {
-            alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("drone.interface.please_select_an_image", "Please select an image") : "Please select an image"));
+            alert((SGN.t("drone.interface.please_select_an_image", "Please select an image")));
             return;
         }
         if (jQuery('#drone_run_band_name_eight_6').val() == ''){
-            alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("drone.interface.give_a_new_drone_run_band_name", "Give a new drone run band name!") : "Give a new drone run band name!"));
+            alert((SGN.t("drone.interface.give_a_new_drone_run_band_name", "Give a new drone run band name!")));
             return;
         } else if (jQuery('#drone_run_band_description_eight_6').val() == ''){
-            alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("drone.interface.please_give_a_drone_run_band_description", "Please give a drone run band description.") : "Please give a drone run band description."));
+            alert((SGN.t("drone.interface.please_give_a_drone_run_band_description", "Please give a drone run band description.")));
             return;
         } else if (jQuery('#drone_run_band_type_eight_6').val() == ''){
-            alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("drone.interface.please_select_a_drone_run_band_type", "Please select a drone run band type.") : "Please select a drone run band type."));
+            alert((SGN.t("drone.interface.please_select_a_drone_run_band_type", "Please select a drone run band type.")));
             return;
         }
         if (jQuery('#drone_run_band_stitched_ortho_image_eight_6').val() == '') {
-            alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("drone.interface.please_select_an_image", "Please select an image") : "Please select an image"));
+            alert((SGN.t("drone.interface.please_select_an_image", "Please select an image")));
             return;
         }
         if (jQuery('#drone_run_band_name_eight_7').val() == ''){
-            alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("drone.interface.give_a_new_drone_run_band_name", "Give a new drone run band name!") : "Give a new drone run band name!"));
+            alert((SGN.t("drone.interface.give_a_new_drone_run_band_name", "Give a new drone run band name!")));
             return;
         } else if (jQuery('#drone_run_band_description_eight_7').val() == ''){
-            alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("drone.interface.please_give_a_drone_run_band_description", "Please give a drone run band description.") : "Please give a drone run band description."));
+            alert((SGN.t("drone.interface.please_give_a_drone_run_band_description", "Please give a drone run band description.")));
             return;
         } else if (jQuery('#drone_run_band_type_eight_7').val() == ''){
-            alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("drone.interface.please_select_a_drone_run_band_type", "Please select a drone run band type.") : "Please select a drone run band type."));
+            alert((SGN.t("drone.interface.please_select_a_drone_run_band_type", "Please select a drone run band type.")));
             return;
         }
         if (jQuery('#drone_run_band_stitched_ortho_image_eight_7').val() == '') {
-            alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("drone.interface.please_select_an_image", "Please select an image") : "Please select an image"));
+            alert((SGN.t("drone.interface.please_select_an_image", "Please select an image")));
             return;
         }
         if (jQuery('#drone_run_band_name_eight_8').val() == ''){
-            alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("drone.interface.give_a_new_drone_run_band_name", "Give a new drone run band name!") : "Give a new drone run band name!"));
+            alert((SGN.t("drone.interface.give_a_new_drone_run_band_name", "Give a new drone run band name!")));
             return;
         } else if (jQuery('#drone_run_band_description_eight_8').val() == ''){
-            alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("drone.interface.please_give_a_drone_run_band_description", "Please give a drone run band description.") : "Please give a drone run band description."));
+            alert((SGN.t("drone.interface.please_give_a_drone_run_band_description", "Please give a drone run band description.")));
             return;
         } else if (jQuery('#drone_run_band_type_eight_8').val() == ''){
-            alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("drone.interface.please_select_a_drone_run_band_type", "Please select a drone run band type.") : "Please select a drone run band type."));
+            alert((SGN.t("drone.interface.please_select_a_drone_run_band_type", "Please select a drone run band type.")));
             return;
         }
         if (jQuery('#drone_run_band_stitched_ortho_image_eight_8').val() == '') {
-            alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("drone.interface.please_select_an_image", "Please select an image") : "Please select an image"));
+            alert((SGN.t("drone.interface.please_select_an_image", "Please select an image")));
             return;
         }
 
@@ -3787,13 +3787,13 @@ jQuery(document).ready(function() {
     jQuery('#upload_drone_imagery_select_images_odm').click(function(e){
         e.preventDefault();
         if (jQuery('#upload_drone_images_zipfile_odm').val() == ''){
-            alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("drone.interface.please_select_a_zipfile_of_images", "Please select a zipfile of images") : "Please select a zipfile of images"));
+            alert((SGN.t("drone.interface.please_select_a_zipfile_of_images", "Please select a zipfile of images")));
             return;
         }
 
         var file_input = document.getElementById('upload_drone_images_zipfile_odm');
         if (!file_input.files[0] || file_input.files.length > 1) {
-            alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("drone.interface.please_select_only_a_single_zipfile", "Please select only a single zipfile.") : "Please select only a single zipfile."));
+            alert((SGN.t("drone.interface.please_select_only_a_single_zipfile", "Please select only a single zipfile.")));
             return;
         }
 
@@ -3805,18 +3805,18 @@ jQuery(document).ready(function() {
     jQuery('#upload_drone_imagery_select_images_odm_micasense').click(function(e){
         e.preventDefault();
         if (jQuery('#upload_drone_images_zipfile_odm_micasense').val() == ''){
-            alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("drone.interface.please_select_a_zipfile_of_images", "Please select a zipfile of images") : "Please select a zipfile of images"));
+            alert((SGN.t("drone.interface.please_select_a_zipfile_of_images", "Please select a zipfile of images")));
             return;
         }
 
         var file_input = document.getElementById('upload_drone_images_zipfile_odm_micasense');
         if (!file_input.files[0] || file_input.files.length > 1) {
-            alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("drone.interface.please_select_only_a_single_zipfile", "Please select only a single zipfile.") : "Please select only a single zipfile."));
+            alert((SGN.t("drone.interface.please_select_only_a_single_zipfile", "Please select only a single zipfile.")));
             return;
         }
 
         if (jQuery('#upload_drone_images_panel_zipfile_odm_micasense').val() == ''){
-            alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("drone.interface.please_select_a_zipfile_of_micasense_radiocalibration_panel_images", "Please select a zipfile of Micasense radiocalibration panel images") : "Please select a zipfile of Micasense radiocalibration panel images"));
+            alert((SGN.t("drone.interface.please_select_a_zipfile_of_micasense_radiocalibration_panel_images", "Please select a zipfile of Micasense radiocalibration panel images")));
             return;
         }
 
@@ -3826,73 +3826,73 @@ jQuery(document).ready(function() {
     });
 
     jQuery('#upload_drone_imagery_odm_form').submit(function() {
-        jQuery('#working_msg').html((window.SGN && window.SGN.i18n ? SGN.i18n.p("drone.interface.this_can_potentially_take_time_to_complete_ensure_the_file_s_have_completely_t", "This can potentially take time to complete. Ensure the file(s) have completely transferred to the server before closing this tab.") : "This can potentially take time to complete. Ensure the file(s) have completely transferred to the server before closing this tab."));
+        jQuery('#working_msg').html((SGN.t("drone.interface.this_can_potentially_take_time_to_complete_ensure_the_file_s_have_completely_t", "This can potentially take time to complete. Ensure the file(s) have completely transferred to the server before closing this tab.")));
         jQuery('#working_modal').modal('show');
         return true;
     });
 
     jQuery('#upload_drone_imagery_odm_micasense_form').submit(function() {
-        jQuery('#working_msg').html((window.SGN && window.SGN.i18n ? SGN.i18n.p("drone.interface.this_can_potentially_take_time_to_complete_ensure_the_file_s_have_completely_t", "This can potentially take time to complete. Ensure the file(s) have completely transferred to the server before closing this tab.") : "This can potentially take time to complete. Ensure the file(s) have completely transferred to the server before closing this tab."));
+        jQuery('#working_msg').html((SGN.t("drone.interface.this_can_potentially_take_time_to_complete_ensure_the_file_s_have_completely_t", "This can potentially take time to complete. Ensure the file(s) have completely transferred to the server before closing this tab.")));
         jQuery('#working_modal').modal('show');
         return true;
     });
 
     jQuery('#upload_drone_imagery_bulk_previous_form').submit(function() {
-        jQuery('#working_msg').html((window.SGN && window.SGN.i18n ? SGN.i18n.p("drone.interface.this_can_potentially_take_time_to_complete_ensure_the_file_s_have_completely_t", "This can potentially take time to complete. Ensure the file(s) have completely transferred to the server before closing this tab.") : "This can potentially take time to complete. Ensure the file(s) have completely transferred to the server before closing this tab."));
+        jQuery('#working_msg').html((SGN.t("drone.interface.this_can_potentially_take_time_to_complete_ensure_the_file_s_have_completely_t", "This can potentially take time to complete. Ensure the file(s) have completely transferred to the server before closing this tab.")));
         jQuery('#working_modal').modal('show');
         return true;
     });
 
     jQuery('#upload_drone_imagery_bulk_form').submit(function() {
-        jQuery('#working_msg').html((window.SGN && window.SGN.i18n ? SGN.i18n.p("drone.interface.this_can_potentially_take_time_to_complete_ensure_the_file_s_have_completely_t", "This can potentially take time to complete. Ensure the file(s) have completely transferred to the server before closing this tab.") : "This can potentially take time to complete. Ensure the file(s) have completely transferred to the server before closing this tab."));
+        jQuery('#working_msg').html((SGN.t("drone.interface.this_can_potentially_take_time_to_complete_ensure_the_file_s_have_completely_t", "This can potentially take time to complete. Ensure the file(s) have completely transferred to the server before closing this tab.")));
         jQuery('#working_modal').modal('show');
         return true;
     });
 
     jQuery('#upload_drone_imagery_one_band_form').submit(function() {
-        jQuery('#working_msg').html((window.SGN && window.SGN.i18n ? SGN.i18n.p("drone.interface.this_can_potentially_take_time_to_complete_ensure_the_file_s_have_completely_t", "This can potentially take time to complete. Ensure the file(s) have completely transferred to the server before closing this tab.") : "This can potentially take time to complete. Ensure the file(s) have completely transferred to the server before closing this tab."));
+        jQuery('#working_msg').html((SGN.t("drone.interface.this_can_potentially_take_time_to_complete_ensure_the_file_s_have_completely_t", "This can potentially take time to complete. Ensure the file(s) have completely transferred to the server before closing this tab.")));
         jQuery('#working_modal').modal('show');
         return true;
     });
 
     jQuery('#upload_drone_imagery_two_band_form').submit(function() {
-        jQuery('#working_msg').html((window.SGN && window.SGN.i18n ? SGN.i18n.p("drone.interface.this_can_potentially_take_time_to_complete_ensure_the_file_s_have_completely_t", "This can potentially take time to complete. Ensure the file(s) have completely transferred to the server before closing this tab.") : "This can potentially take time to complete. Ensure the file(s) have completely transferred to the server before closing this tab."));
+        jQuery('#working_msg').html((SGN.t("drone.interface.this_can_potentially_take_time_to_complete_ensure_the_file_s_have_completely_t", "This can potentially take time to complete. Ensure the file(s) have completely transferred to the server before closing this tab.")));
         jQuery('#working_modal').modal('show');
         return true;
     });
 
     jQuery('#upload_drone_imagery_three_band_form').submit(function() {
-        jQuery('#working_msg').html((window.SGN && window.SGN.i18n ? SGN.i18n.p("drone.interface.this_can_potentially_take_time_to_complete_ensure_the_file_s_have_completely_t", "This can potentially take time to complete. Ensure the file(s) have completely transferred to the server before closing this tab.") : "This can potentially take time to complete. Ensure the file(s) have completely transferred to the server before closing this tab."));
+        jQuery('#working_msg').html((SGN.t("drone.interface.this_can_potentially_take_time_to_complete_ensure_the_file_s_have_completely_t", "This can potentially take time to complete. Ensure the file(s) have completely transferred to the server before closing this tab.")));
         jQuery('#working_modal').modal('show');
         return true;
     });
 
     jQuery('#upload_drone_imagery_four_band_form').submit(function() {
-        jQuery('#working_msg').html((window.SGN && window.SGN.i18n ? SGN.i18n.p("drone.interface.this_can_potentially_take_time_to_complete_ensure_the_file_s_have_completely_t", "This can potentially take time to complete. Ensure the file(s) have completely transferred to the server before closing this tab.") : "This can potentially take time to complete. Ensure the file(s) have completely transferred to the server before closing this tab."));
+        jQuery('#working_msg').html((SGN.t("drone.interface.this_can_potentially_take_time_to_complete_ensure_the_file_s_have_completely_t", "This can potentially take time to complete. Ensure the file(s) have completely transferred to the server before closing this tab.")));
         jQuery('#working_modal').modal('show');
         return true;
     });
 
     jQuery('#upload_drone_imagery_five_band_form').submit(function() {
-        jQuery('#working_msg').html((window.SGN && window.SGN.i18n ? SGN.i18n.p("drone.interface.this_can_potentially_take_time_to_complete_ensure_the_file_s_have_completely_t", "This can potentially take time to complete. Ensure the file(s) have completely transferred to the server before closing this tab.") : "This can potentially take time to complete. Ensure the file(s) have completely transferred to the server before closing this tab."));
+        jQuery('#working_msg').html((SGN.t("drone.interface.this_can_potentially_take_time_to_complete_ensure_the_file_s_have_completely_t", "This can potentially take time to complete. Ensure the file(s) have completely transferred to the server before closing this tab.")));
         jQuery('#working_modal').modal('show');
         return true;
     });
 
     jQuery('#upload_drone_imagery_six_band_form').submit(function() {
-        jQuery('#working_msg').html((window.SGN && window.SGN.i18n ? SGN.i18n.p("drone.interface.this_can_potentially_take_time_to_complete_ensure_the_file_s_have_completely_t", "This can potentially take time to complete. Ensure the file(s) have completely transferred to the server before closing this tab.") : "This can potentially take time to complete. Ensure the file(s) have completely transferred to the server before closing this tab."));
+        jQuery('#working_msg').html((SGN.t("drone.interface.this_can_potentially_take_time_to_complete_ensure_the_file_s_have_completely_t", "This can potentially take time to complete. Ensure the file(s) have completely transferred to the server before closing this tab.")));
         jQuery('#working_modal').modal('show');
         return true;
     });
 
     jQuery('#upload_drone_imagery_seven_band_form').submit(function() {
-        jQuery('#working_msg').html((window.SGN && window.SGN.i18n ? SGN.i18n.p("drone.interface.this_can_potentially_take_time_to_complete_ensure_the_file_s_have_completely_t", "This can potentially take time to complete. Ensure the file(s) have completely transferred to the server before closing this tab.") : "This can potentially take time to complete. Ensure the file(s) have completely transferred to the server before closing this tab."));
+        jQuery('#working_msg').html((SGN.t("drone.interface.this_can_potentially_take_time_to_complete_ensure_the_file_s_have_completely_t", "This can potentially take time to complete. Ensure the file(s) have completely transferred to the server before closing this tab.")));
         jQuery('#working_modal').modal('show');
         return true;
     });
 
     jQuery('#upload_drone_imagery_eight_band_form').submit(function() {
-        jQuery('#working_msg').html((window.SGN && window.SGN.i18n ? SGN.i18n.p("drone.interface.this_can_potentially_take_time_to_complete_ensure_the_file_s_have_completely_t", "This can potentially take time to complete. Ensure the file(s) have completely transferred to the server before closing this tab.") : "This can potentially take time to complete. Ensure the file(s) have completely transferred to the server before closing this tab."));
+        jQuery('#working_msg').html((SGN.t("drone.interface.this_can_potentially_take_time_to_complete_ensure_the_file_s_have_completely_t", "This can potentially take time to complete. Ensure the file(s) have completely transferred to the server before closing this tab.")));
         jQuery('#working_modal').modal('show');
         return true;
     });

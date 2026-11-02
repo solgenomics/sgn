@@ -97,7 +97,7 @@ jQuery(document).ready(function(){
     jQuery(document).on('change', '#derived_from_type', function () {
         list_type = jQuery('#derived_from_type').val();
         jQuery("#derived_accession_section").show();
-        document.getElementById("derived_from_list_select").innerHTML = list.listSelect("derived_from_list_select", [ list_type ], (window.SGN && window.SGN.i18n ? window.SGN.i18n.p("seedlots.ui.please_select_a_list", "Please select a list") : "Please select a list"),'', undefined);
+        document.getElementById("derived_from_list_select").innerHTML = list.listSelect("derived_from_list_select", [ list_type ], (SGN.t("seedlots.ui.please_select_a_list", "Please select a list")),'', undefined);
     });
 
     jQuery("#derived_from_list_select").change(function() {
@@ -106,7 +106,7 @@ jQuery(document).ready(function(){
             let derived_from_list_validation = 1;
             derived_from_list_validation = list.legacy_validate(derived_from_list_id, list_type, true);
             if (derived_from_list_validation != 1) {
-                alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("accession.forms.the_list_did_not_pass_validation_names_in_the_list.a7434e3", "The list did not pass validation. Names in the list must be uniquenames in the database") : "The list did not pass validation. Names in the list must be uniquenames in the database"));
+                alert((SGN.t("accession.forms.the_list_did_not_pass_validation_names_in_the_list.a7434e3", "The list did not pass validation. Names in the list must be uniquenames in the database")));
                 return;
             } else {
                 add_derived_accessions_form(derived_from_list_id);
@@ -117,9 +117,9 @@ jQuery(document).ready(function(){
     function add_derived_accessions_form (derived_from_list_id) {
         const derived_from_list = list.getList(derived_from_list_id);
 
-        var html = ("<table class=\"table table-bordered\" id=\"accession_info_table\"><thead><tr><th>" + jQuery("<div>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("accession.forms.source_name", "Source Name") : "Source Name")).html() + "</th><th>" + jQuery("<div>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("accession.forms.new_accession_name", "New Accession Name") : "New Accession Name")).html() + "</th><th>" + jQuery("<div>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("global.dataset_cxgn_dataset.table.description", "Description") : "Description")).html() + "</th></tr></thead><tbody>");
+        var html = ("<table class=\"table table-bordered\" id=\"accession_info_table\"><thead><tr><th>" + jQuery("<div>").text((SGN.t("accession.forms.source_name", "Source Name"))).html() + "</th><th>" + jQuery("<div>").text((SGN.t("accession.forms.new_accession_name", "New Accession Name"))).html() + "</th><th>" + jQuery("<div>").text((SGN.t("global.dataset_cxgn_dataset.table.description", "Description"))).html() + "</th></tr></thead><tbody>");
         for (var i=0; i<derived_from_list.length; i++){
-            html = html + '<tr><td>' + derived_from_list[i] + '</td><td><input class="form-control"  name ="new_derived_accession_name" id="new_derived_accession_name_'+ i +("\" value=\"\" placeholder=\"" + jQuery("<div>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("seedlot_split.ui.required", "Required") : "Required")).html() + "\"/></td><td><input class=\"form-control\"  name =\"accession_description\" id=\"accession_description_")+ i +("\" value=\"\" placeholder=\"" + jQuery("<div>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("seedlot_split.ui.required", "Required") : "Required")).html() + "\"/></td></tr>");
+            html = html + '<tr><td>' + derived_from_list[i] + '</td><td><input class="form-control"  name ="new_derived_accession_name" id="new_derived_accession_name_'+ i +("\" value=\"\" placeholder=\"" + jQuery("<div>").text((SGN.t("seedlot_split.ui.required", "Required"))).html() + "\"/></td><td><input class=\"form-control\"  name =\"accession_description\" id=\"accession_description_")+ i +("\" value=\"\" placeholder=\"" + jQuery("<div>").text((SGN.t("seedlot_split.ui.required", "Required"))).html() + "\"/></td></tr>");
         };
 
         html = html + '</tbody></table>';
@@ -178,7 +178,7 @@ jQuery(document).ready(function(){
 
             error: function() {
                 jQuery("#working_modal").modal("hide");
-                alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("accession.forms.an_error_occurred_storing_new_accessions", "An error occurred storing new accessions.") : "An error occurred storing new accessions."));
+                alert((SGN.t("accession.forms.an_error_occurred_storing_new_accessions", "An error occurred storing new accessions.")));
             },
         });
     });

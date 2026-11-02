@@ -1447,19 +1447,19 @@ jQuery(document).ready(function(){
 
         jQuery('#upload_ssr_protocol_form').attr("action", "/ajax/genotype/upload_ssr_protocol");
         if (ssr_protocol_name === ''){
-            alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("genotype.plate.please_give_a_protocol_name", "Please give a protocol name") : "Please give a protocol name"));
+            alert((SGN.t("genotype.plate.please_give_a_protocol_name", "Please give a protocol name")));
             return;
         }
         if (ssr_protocol_species_name === ''){
-            alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("genotype.plate.please_give_a_species_name_43ff50", "Please give a species name") : "Please give a species name"));
+            alert((SGN.t("genotype.plate.please_give_a_species_name_43ff50", "Please give a species name")));
             return;
         }
         if (ssr_protocol_description === ''){
-            alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("trial.upload.ui.description", "Please give a description") : "Please give a description"));
+            alert((SGN.t("trial.upload.ui.description", "Please give a description")));
             return;
         }
         if (uploadFile === ''){
-            alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("global.manage_file_share_dump.select_file", "Please select a file") : "Please select a file"));
+            alert((SGN.t("global.manage_file_share_dump.select_file", "Please select a file")));
             return;
         }
         jQuery('#upload_ssr_protocol_form').submit();
@@ -1524,11 +1524,11 @@ jQuery(document).ready(function(){
         var uploadFile = jQuery("#upload_mla_file").val();
 
         if ( !genoProtocolId || genoProtocolId === '' ) {
-            alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("genotype.plate.please_go_back_and_select_a_genotyping_protocol", "Please go back and select a Genotyping Protocol") : "Please go back and select a Genotyping Protocol"));
+            alert((SGN.t("genotype.plate.please_go_back_and_select_a_genotyping_protocol", "Please go back and select a Genotyping Protocol")));
             return;
         }
         if (uploadFile === '') {
-            alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("global.manage_file_share_dump.select_file", "Please select a file") : "Please select a file"));
+            alert((SGN.t("global.manage_file_share_dump.select_file", "Please select a file")));
             return;
         }
 
@@ -1545,18 +1545,18 @@ jQuery(document).ready(function(){
             success: function(response) {
                 jQuery("#working_modal").modal("hide");
                 if ( response.success ) {
-                    jQuery('#upload_mla_success').html(`<strong>${jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("genotype.plate.marker_metadata_successfully_stored_in_the_database", "Marker Metadata successfully stored in the database!") : "Marker Metadata successfully stored in the database!")).html()}`);
+                    jQuery('#upload_mla_success').html(`<strong>${jQuery("<span>").text((SGN.t("genotype.plate.marker_metadata_successfully_stored_in_the_database", "Marker Metadata successfully stored in the database!"))).html()}`);
                     jQuery('#upload_mla_success').show();
                 }
                 else {
                     const errors = (response.error_string || response.warning_string || "An unknown error occurred.  Please try again later or contact us for more help.").replaceAll('\n', '<br />');
-                    jQuery('#upload_mla_errors').html(`<strong>${jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("genotype.plate.marker_metadata_not_stored", "Marker Metadata NOT stored:") : "Marker Metadata NOT stored:")).html()}</strong><br /><br />${errors}`);
+                    jQuery('#upload_mla_errors').html(`<strong>${jQuery("<span>").text((SGN.t("genotype.plate.marker_metadata_not_stored", "Marker Metadata NOT stored:"))).html()}</strong><br /><br />${errors}`);
                     jQuery('#upload_mla_errors').show();
                 }
             },
             error: function() {
                 jQuery("#working_modal").modal("hide");
-                jQuery('#upload_mla_errors').html(`<strong>${jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("genotype.plate.marker_metadata_not_stored_due_to_a_server_error", "Marker Metadata NOT stored due to a server error.") : "Marker Metadata NOT stored due to a server error.")).html()}</strong>`);
+                jQuery('#upload_mla_errors').html(`<strong>${jQuery("<span>").text((SGN.t("genotype.plate.marker_metadata_not_stored_due_to_a_server_error", "Marker Metadata NOT stored due to a server error."))).html()}</strong>`);
                 jQuery('#upload_mla_errors').show();
             }
         });

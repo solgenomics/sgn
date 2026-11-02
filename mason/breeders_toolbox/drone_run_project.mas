@@ -123,12 +123,12 @@ jQuery(document).ready(function () {
           },
           success: function(response){
             if (response.success) {
-                alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("drone.interface.details_saved", "Details saved!") : "Details saved!"));
+                alert((SGN.t("drone.interface.details_saved", "Details saved!")));
             }
             location.reload();
           },
           error: function(response){
-              alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("drone.interface.error_saving_details", "Error saving details") : "Error saving details"));
+              alert((SGN.t("drone.interface.error_saving_details", "Error saving details")));
           }
 
       });

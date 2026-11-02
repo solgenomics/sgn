@@ -743,12 +743,12 @@ $archived_genotype_help =~ s/\Q$archived_choice_token\E/<strong>one or more geno
       .then(function(isLoading){
         if(isLoading) {
           d3.select("#update_wizard")
-          .attr("title",window.SGN && SGN.i18n ? SGN.i18n.p('global.search_wizard.update_in_progress', 'A search wizard update is already in progress...') : 'A search wizard update is already in progress...')
+          .attr("title",SGN.t('global.search_wizard.update_in_progress', 'A search wizard update is already in progress...'))
           .attr("disabled",true);
         }
         else {
           d3.select("#update_wizard")
-          .attr("title",window.SGN && SGN.i18n ? SGN.i18n.p('global.search_wizard.refresh_includes_new_data', 'Refresh the search wizard to include newly uploaded data') : 'Refresh the search wizard to include newly uploaded data')
+          .attr("title",SGN.t('global.search_wizard.refresh_includes_new_data', 'Refresh the search wizard to include newly uploaded data'))
           .attr("disabled",null)
         }
       });
@@ -805,14 +805,14 @@ $archived_genotype_help =~ s/\Q$archived_choice_token\E/<strong>one or more geno
       html += "<p style='text-align: center; margin: 15px; font-size: 90%'>" + wizardSafeText(selectionNotice, { [protocolsToken]: '<em>genotyping protocols</em>', [projectsToken]: '<em>genotyping projects</em>' }) + "</p>";
     }
     else if ( loading ) {
-      html += "<p style='text-align: center; margin: 15px'>" + wizardEscapeHtml(window.SGN && SGN.i18n ? SGN.i18n.p('global.search_wizard.loading', 'Loading...') : 'Loading...') + "</p>";
+      html += "<p style='text-align: center; margin: 15px'>" + wizardEscapeHtml(SGN.t('global.search_wizard.loading', 'Loading...')) + "</p>";
     }
     else if ( error ) {
-      html += "<p style='text-align: center; margin: 15px'>" + wizardEscapeHtml(window.SGN && SGN.i18n ? SGN.i18n.p('global.search_wizard.archived_files_error', 'Error: Could not check for archived files') : 'Error: Could not check for archived files') + "</p>";
+      html += "<p style='text-align: center; margin: 15px'>" + wizardEscapeHtml(SGN.t('global.search_wizard.archived_files_error', 'Error: Could not check for archived files')) + "</p>";
     }
     else if ( data ) {
       html += "<table class='table table-hover table-striped'>";
-      html += "<thead><tr><th>" + wizardEscapeHtml(window.SGN && SGN.i18n ? SGN.i18n.p('global.search_wizard.protocol', 'Protocol') : 'Protocol') + "</th><th>" + wizardEscapeHtml(window.SGN && SGN.i18n ? SGN.i18n.p('global.search_wizard.project', 'Project') : 'Project') + "</th><th>" + wizardEscapeHtml(window.SGN && SGN.i18n ? SGN.i18n.p('global.search_wizard.vcf_file', 'VCF File') : 'VCF File') + "</th></tr></thead>";
+      html += "<thead><tr><th>" + wizardEscapeHtml(SGN.t('global.search_wizard.protocol', 'Protocol')) + "</th><th>" + wizardEscapeHtml(SGN.t('global.search_wizard.project', 'Project')) + "</th><th>" + wizardEscapeHtml(SGN.t('global.search_wizard.vcf_file', 'VCF File')) + "</th></tr></thead>";
       html += "<tbody>";
       Object.keys(data).forEach((proj_id) => {
         const files = data[proj_id];
@@ -821,10 +821,10 @@ $archived_genotype_help =~ s/\Q$archived_choice_token\E/<strong>one or more geno
           html += `<td><a href="/breeders_toolbox/protocol/${file.genotyping_protocol_id}" target="_blank">${file.genotyping_protocol_name}</td>`;
           html += `<td><a href="/breeders/trial/${file.genotyping_project_id}" target="_blank">${file.genotyping_project_name}</td>`;
           if ( file.exists === 'true' ) {
-            html += '<td><a href="/ajax/genotyping_project/download_archived_vcf?genotyping_project_id=' + file.genotyping_project_id + '&basename=' + file.basename + '" target="_blank">' + wizardEscapeHtml(window.SGN && SGN.i18n ? SGN.i18n.p('global.search_wizard.download', 'Download') : 'Download') + '</a></td>';
+            html += '<td><a href="/ajax/genotyping_project/download_archived_vcf?genotyping_project_id=' + file.genotyping_project_id + '&basename=' + file.basename + '" target="_blank">' + wizardEscapeHtml(SGN.t('global.search_wizard.download', 'Download')) + '</a></td>';
           }
           else {
-            html += "<td>" + wizardEscapeHtml(window.SGN && SGN.i18n ? SGN.i18n.p('global.search_wizard.file_not_found', 'File not found') : 'File not found') + "</td>";
+            html += "<td>" + wizardEscapeHtml(SGN.t('global.search_wizard.file_not_found', 'File not found')) + "</td>";
           }
           html += "</tr>";
         });
@@ -891,7 +891,7 @@ $archived_genotype_help =~ s/\Q$archived_choice_token\E/<strong>one or more geno
       }
       if ( selected_genotyping_protocols.length > 1 ) {
         $(".wizard-download-genotypes-info2").show();
-        $(".wizard-download-genotypes-info2").val(window.SGN && SGN.i18n ? SGN.i18n.p('global.search_wizard.too_many_protocols', 'too many genotype protocols') : 'too many genotype protocols');
+        $(".wizard-download-genotypes-info2").val(SGN.t('global.search_wizard.too_many_protocols', 'too many genotype protocols'));
       } else {
         $(".wizard-download-genotypes-info2").hide();
       }

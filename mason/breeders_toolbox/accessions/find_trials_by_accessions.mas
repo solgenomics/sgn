@@ -144,7 +144,7 @@ jQuery('#shared_trials_2_lists').hide();
 	}
 	return html;
     }
-    return (window.SGN && window.SGN.i18n ? window.SGN.i18n.p("seedlots.ui.no_data", "no data") : "no data");
+    return (SGN.t("seedlots.ui.no_data", "no data"));
   }
 
 });

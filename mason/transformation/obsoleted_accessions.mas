@@ -61,7 +61,7 @@ jQuery(document).ready(function(){
             },
             "fnInitComplete": function(oSettings, json) {
                 if (!isLoggedIn()) {
-                    jQuery('#obsoleted_transformants_to_list_menu').html(("<div class='well well-sm'><h3>" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("accession.related_stock.login_lists", "Please login to use lists!") : "Please login to use lists!")).html() + "</h3></div>"));
+                    jQuery('#obsoleted_transformants_to_list_menu').html(("<div class='well well-sm'><h3>" + jQuery("<span>").text((SGN.t("accession.related_stock.login_lists", "Please login to use lists!"))).html() + "</h3></div>"));
                 } else {
                     var html = "";
                     for(var i=0; i<json.data.length; i++){

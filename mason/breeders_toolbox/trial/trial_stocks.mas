@@ -49,17 +49,17 @@ jQuery(document).ready(function(){
                 },
             },
             columns: [
-                { title: window.SGN && SGN.i18n ? SGN.i18n.p('trial.card.stocks.header.name', 'Stock Name') : 'Stock Name', "data": null, "render": function ( data, type, row ) {
+                { title: SGN.t('trial.card.stocks.header.name', 'Stock Name'), "data": null, "render": function ( data, type, row ) {
                     if (row.stock_type == 'cross') { return "<a href='/cross/"+row.stock_id+"'>"+row.accession_name+"</a>";
                     } else { return "<a href='/stock/"+row.stock_id+"/view'>"+row.accession_name+"</a>";}
                 }},
-                { title: window.SGN && SGN.i18n ? SGN.i18n.p('trial.card.stocks.header.species', 'Stock Species') : 'Stock Species', "data": "organism" },
-                { title: window.SGN && SGN.i18n ? SGN.i18n.p('trial.card.stocks.header.type', 'Stock Type') : 'Stock Type', "data": "stock_type" },
+                { title: SGN.t('trial.card.stocks.header.species', 'Stock Species'), "data": "organism" },
+                { title: SGN.t('trial.card.stocks.header.type', 'Stock Type'), "data": "stock_type" },
             ],
             "fnInitComplete": function(oSettings, json) {
                 //console.log(json);
                 if (!isLoggedIn()) {
-                    var loginMessage = window.SGN && SGN.i18n ? SGN.i18n.p('trial.card.stocks.login_required', 'Please login to use lists!') : 'Please login to use lists!';
+                    var loginMessage = SGN.t('trial.card.stocks.login_required', 'Please login to use lists!');
                     var escapedLoginMessage = jQuery('<div>').text(loginMessage).html();
                     jQuery('#stocks_add_to_list').html("<div class='well well-sm'><h3>"+escapedLoginMessage+"</h3></div>");
                 } else {

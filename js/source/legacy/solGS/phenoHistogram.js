@@ -60,7 +60,7 @@ solGS.phenoHistogram =  {
 
         var phenoTypeHistoDivId = phenoTypeHistoDivId.replace(/#/, '');
         var histoDownloadBtn = "download_" + phenoTypeHistoDivId;
-        var histoPlotLink = "<a href='#'  onclick='event.preventDefault();' id='" + histoDownloadBtn + "'>" + (window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.phenotype_histogram_link", " Histogram") : " Histogram") + "</a>";
+        var histoPlotLink = "<a href='#'  onclick='event.preventDefault();' id='" + histoDownloadBtn + "'>" + (SGN.t("solgs.browser.phenotype_histogram_link", " Histogram")) + "</a>";
         var downloadLinks = `Download:  ${histoPlotLink}`;
 
         return downloadLinks;
@@ -112,14 +112,14 @@ jQuery(document).ready(function () {
 
             }
        } else {
-            var msg = "<p>" + (window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.pheno_data_missing", "This trait has no phenotype data to plot.") : "This trait has no phenotype data to plot.") + "</p>";
+            var msg = "<p>" + (SGN.t("solgs.browser.pheno_data_missing", "This trait has no phenotype data to plot.")) + "</p>";
             solGS.showMessage(histMsgId, msg);
        }
 
     });
 
     solGS.phenoHistogram.getTraitPhenoMeansData().fail(function(res) {
-        var msg = "<p>" + (window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.pheno_histogram_error", "Error occurred plotting histogram for this trait dataset.") : "Error occurred plotting histogram for this trait dataset.") + "</p>";
+        var msg = "<p>" + (SGN.t("solgs.browser.pheno_histogram_error", "Error occurred plotting histogram for this trait dataset.")) + "</p>";
         solGS.showMessage(histMsgId, msg);
     });
 
@@ -151,14 +151,14 @@ jQuery(document).ready(function () {
 
              }
         } else {
-             var msg = "<p>" + (window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.pheno_data_missing", "This trait has no phenotype data to plot.") : "This trait has no phenotype data to plot.") + "</p>";
+             var msg = "<p>" + (SGN.t("solgs.browser.pheno_data_missing", "This trait has no phenotype data to plot.")) + "</p>";
              solGS.showMessage(histMsgIdRaw, msg);
         }
 
      });
 
      solGS.phenoHistogram.getTraitPhenoRawData().fail(function(res) {
-         var msg = "<p>" + (window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.pheno_histogram_error", "Error occurred plotting histogram for this trait dataset.") : "Error occurred plotting histogram for this trait dataset.") + "</p>";
+         var msg = "<p>" + (SGN.t("solgs.browser.pheno_histogram_error", "Error occurred plotting histogram for this trait dataset.")) + "</p>";
          solGS.showMessage(histMsgIdRaw, msg);
      });
 

@@ -251,7 +251,7 @@ jQuery(document).ready(function ($) {
                 }
             },
             error: function(response) {
-                alert(window.SGN && SGN.i18n ? SGN.i18n.p('genotype.plate.local.layout_failed', 'An error occurred trying the create the layout.') : 'An error occurred trying the create the layout.');
+                alert(SGN.t('genotype.plate.local.layout_failed', 'An error occurred trying the create the layout.'));
                 jQuery("working_modal").modal('hide');
             }
         });
@@ -316,7 +316,7 @@ jQuery(document).ready(function ($) {
                 }
             },
             error: function(response) {
-                alert(window.SGN && SGN.i18n ? SGN.i18n.p('genotype.plate.local.layout_failed', 'An error occurred trying the create the layout.') : 'An error occurred trying the create the layout.');
+                alert(SGN.t('genotype.plate.local.layout_failed', 'An error occurred trying the create the layout.'));
                 jQuery("#working_modal").modal('hide');
             }
         });

@@ -87,7 +87,7 @@ jQuery(document).ready(function() {
         var uploadFile = jQuery("#locations_upload_file").val();
         jQuery('#upload_locations_form').attr("action", "/ajax/locations/upload");
         if (uploadFile === '') {
-            alert((window.SGN && SGN.i18n ? SGN.i18n.p("trial.upload.ui.file", "Please select a file") : "Please select a file"));
+            alert((SGN.t("trial.upload.ui.file", "Please select a file")));
             return;
         }
         jQuery("#upload_locations_form").submit();
@@ -110,7 +110,7 @@ jQuery(document).ready(function() {
                 for (i = 0; i < response.error.length; i++) {
                     errors.push( '<p>'+response.error[i]+'</p>');
                 }
-                var html = '<br><center><b>' + jQuery("<div>").text(window.SGN && SGN.i18n ? SGN.i18n.p("program.location.upload.failed", "Upload failed.") : "Upload failed.").html() + '</b><br><b>' + jQuery("<div>").text(window.SGN && SGN.i18n ? SGN.i18n.p("program.location.upload.fix_errors", "Please fix the following errors in ") : "Please fix the following errors in ").html() + '</b>'+response.filename+'<b>' + jQuery("<div>").text(window.SGN && SGN.i18n ? SGN.i18n.p("program.location.upload.try_again", " and try again:") : " and try again:").html() + '</b></center><br>';
+                var html = '<br><center><b>' + jQuery("<div>").text(SGN.t("program.location.upload.failed", "Upload failed.")).html() + '</b><br><b>' + jQuery("<div>").text(SGN.t("program.location.upload.fix_errors", "Please fix the following errors in ")).html() + '</b>'+response.filename+'<b>' + jQuery("<div>").text(SGN.t("program.location.upload.try_again", " and try again:")).html() + '</b></center><br>';
                 html += errors.join('') + '<br>';
                 document.getElementById('locations_result_body').innerHTML = html;
                 jQuery('#locations_result_dialog').modal("show");
@@ -131,7 +131,7 @@ jQuery(document).ready(function() {
         },
         error: function(response) {
             jQuery('#working_modal').modal("hide");
-            alert((window.SGN && SGN.i18n ? SGN.i18n.p("trial.card.ajax.error", "An error occurred") : "An error occurred"));
+            alert((SGN.t("trial.card.ajax.error", "An error occurred")));
         }
     });
 

@@ -77,22 +77,22 @@ export function init(vector_id) {
     });
     
     var columnDefs = [{
-	title: jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("transformation.helper.feature_name", "Feature Name") : "Feature Name")).html(),
+	title: jQuery("<span>").text((SGN.t("transformation.helper.feature_name", "Feature Name"))).html(),
 	type: "string-utf8",
     }, {
-	title: jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("transformation.helper.start_coord", "Start Coord") : "Start Coord")).html(),
+	title: jQuery("<span>").text((SGN.t("transformation.helper.start_coord", "Start Coord"))).html(),
 	type: "num",
     }, {
-	title: jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("transformation.helper.end_coord", "End Coord") : "End Coord")).html(),
+	title: jQuery("<span>").text((SGN.t("transformation.helper.end_coord", "End Coord"))).html(),
 	type: "num", 
     }, {
-	title: jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("transformation.helper.color", "Color") : "Color")).html(),
+	title: jQuery("<span>").text((SGN.t("transformation.helper.color", "Color"))).html(),
 	type: "string-utf8",
     }, {
-	title: jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("transformation.helper.orientation", "Orientation") : "Orientation")).html(),
+	title: jQuery("<span>").text((SGN.t("transformation.helper.orientation", "Orientation"))).html(),
 	type: "string-utf8"
     }, {
-        title: jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("global.dataset_cxgn_dataset.table.actions", "Actions") : "Actions")).html(),
+        title: jQuery("<span>").text((SGN.t("global.dataset_cxgn_dataset.table.actions", "Actions"))).html(),
         type: "string-utf8"
     }
 		     ];
@@ -456,11 +456,11 @@ export function updateFeatureDataTable(table_data) {
 	    { title: jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("transformation.helper.orientation", "Orientation") : 'Orientation')).html(), data: 'orientation' },
 	    { data: null,
 	      render: function(data, type, row) {
-		  var formatted = '<button class="edit_row_button" data-id="'+row.no+("\">" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("accession.sequencing.action.edit", "Edit") : "Edit")).html() + "</button>&nbsp;<button class=\"delete_row_button\" data-id=\"")+row.no+("\">" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("accession.sequencing.action.delete", "Delete") : "Delete")).html() + "</button>");
+		  var formatted = '<button class="edit_row_button" data-id="'+row.no+("\">" + jQuery("<span>").text((SGN.t("accession.sequencing.action.edit", "Edit"))).html() + "</button>&nbsp;<button class=\"delete_row_button\" data-id=\"")+row.no+("\">" + jQuery("<span>").text((SGN.t("accession.sequencing.action.delete", "Delete"))).html() + "</button>");
 		  //alert('Formatted: '+formatted);
 		  return formatted;
 	      },
-	      title: jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("global.dataset_cxgn_dataset.table.actions", "Actions") : "Actions")).html(),
+	      title: jQuery("<span>").text((SGN.t("global.dataset_cxgn_dataset.table.actions", "Actions"))).html(),
 	    }
 	]
     });
@@ -584,7 +584,7 @@ export function getSequenceDataFromDataTable() {
 export function updateREsitesDataTable(re_sites) {
 //    alert('RESITES FOR TABLE: '+JSON.stringify(re_sites));
     for (var i=0; i < re_sites.length; i++) {
-	re_sites[i][2] = '<button class="edit_re_row_button" data-id="'+i+("\">" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("accession.sequencing.action.edit", "Edit") : "Edit")).html() + "</button>&nbsp;<button class=\"delete_re_row_button\" data-id=\"")+i+("\">" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("accession.sequencing.action.delete", "Delete") : "Delete")).html() + "</button>");
+	re_sites[i][2] = '<button class="edit_re_row_button" data-id="'+i+("\">" + jQuery("<span>").text((SGN.t("accession.sequencing.action.edit", "Edit"))).html() + "</button>&nbsp;<button class=\"delete_re_row_button\" data-id=\"")+i+("\">" + jQuery("<span>").text((SGN.t("accession.sequencing.action.delete", "Delete"))).html() + "</button>");
 	//alert(JSON.stringify(re_sites[i]));
 	re_sites[i].unshift(i);
     }

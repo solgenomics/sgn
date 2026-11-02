@@ -288,19 +288,19 @@ jQuery(document).ready(function() {
     jQuery("[name=folder_datatables_table]").DataTable();
 
     jQuery('#delete_folder_button').click( function() {
-        if (confirm(window.SGN && SGN.i18n ? SGN.i18n.p('folder.detail.confirm_delete', 'Are you sure you want to delete this folder?') : 'Are you sure you want to delete this folder?')) {
+        if (confirm(SGN.t('folder.detail.confirm_delete', 'Are you sure you want to delete this folder?'))) {
             jQuery.ajax( {
                 url: '/ajax/folder/'+<% $folder_id %>+'/delete',
                 success: function(response) {
                     if (response.error) {
                         alert(response.error);
                     } else {
-                        alert(window.SGN && SGN.i18n ? SGN.i18n.p('folder.detail.deleted', 'Folder successfully deleted.') : 'Folder successfully deleted.');
+                        alert(SGN.t('folder.detail.deleted', 'Folder successfully deleted.'));
                         window.location.replace("/breeders/trials");
                     }
                 },
                 error: function(response) {
-                    alert(window.SGN && SGN.i18n ? SGN.i18n.p('folder.detail.delete_error', 'An error occurred trying to delete folder.') : 'An error occurred trying to delete folder.');
+                    alert(SGN.t('folder.detail.delete_error', 'An error occurred trying to delete folder.'));
                 }
             });
         }

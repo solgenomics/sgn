@@ -1,0 +1,26 @@
+#!/usr/bin/env python3
+"""One entry point for release builders, translators and site operators."""
+# Standard command names use hyphens.
+# pylint: disable=invalid-name
+import subprocess
+import sys
+from pathlib import Path
+
+COMMANDS = {
+    "review": "review.py",
+    **{name: "catalog.py" for name in ("extract", "update", "freeze", "init", "build")},
+    **{name: "pack.py" for name in ("create", "validate", "install", "activate", "rollback")},
+}
+
+
+def main():
+    """Dispatch to the documented tool without invoking a shell."""
+    if len(sys.argv) < 2 or sys.argv[1] not in COMMANDS:
+        print("Usage: bin/i18n/sgn-i18n {" + ",".join(COMMANDS) + "} [options]")
+        return 0 if len(sys.argv) == 2 and sys.argv[1] in ("-h", "--help") else 2
+    script = Path(__file__).resolve().parent / COMMANDS[sys.argv[1]]
+    return subprocess.call([sys.executable, str(script), *sys.argv[1:]])
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

@@ -98,7 +98,7 @@ jQuery(document).ready(function(){
         var uploadFile = jQuery("#trial_upload_additional_file").val();
         jQuery('#trial_upload_additional_file_form').attr("action", "/ajax/breeders/trial/<% $trial_id %>/upload_additional_file");
         if (uploadFile === '') {
-            alert((window.SGN && SGN.i18n ? SGN.i18n.p('trial.card.entry_numbers.select_file', "Please select a file") : "Please select a file"));
+            alert((SGN.t('trial.card.entry_numbers.select_file', "Please select a file")));
             return;
         }
         jQuery("#trial_upload_additional_file_form").submit();
@@ -111,7 +111,7 @@ jQuery(document).ready(function(){
             jQuery('#working_modal').modal("show");
             if (uploadedAdditionalFile === '') {
                 jQuery('#working_modal').modal("hide");
-                alert((window.SGN && SGN.i18n ? SGN.i18n.p('trial.additional_file.no_file', "No file selected") : "No file selected"));
+                alert((SGN.t('trial.additional_file.no_file', "No file selected")));
             }
         },
         complete: function (response) {
@@ -127,7 +127,7 @@ jQuery(document).ready(function(){
                 return;
             }
             if (response.success) {
-                alert((window.SGN && SGN.i18n ? SGN.i18n.p('trial.additional_file.upload_success', "File uploaded successfully") : "File uploaded successfully"));
+                alert((SGN.t('trial.additional_file.upload_success', "File uploaded successfully")));
                 display_trial_additional_upload_files();
             }
         }
@@ -142,22 +142,22 @@ function display_trial_additional_upload_files(){
         },
         success: function(response){
             //console.log(response);
-            var html = "<table class='table table-hover table-condensed table-bordered' id='trial_additional_uploaded_files_table'><thead><tr><th>" + _sgnB11AdditionalFileEscape(window.SGN && SGN.i18n ? SGN.i18n.p('trial.additional_file.filename', "Filename") : "Filename") + "</th><th>" + _sgnB11AdditionalFileEscape(window.SGN && SGN.i18n ? SGN.i18n.p('trial.additional_file.date_uploaded', "Date Uploaded") : "Date Uploaded") + "</th><th>" + _sgnB11AdditionalFileEscape(window.SGN && SGN.i18n ? SGN.i18n.p('trial.additional_file.uploaded_by', "Uploaded By") : "Uploaded By") + "</th><th>" + _sgnB11AdditionalFileEscape(window.SGN && SGN.i18n ? SGN.i18n.p('trial.additional_file.options', "Options") : "Options") + "</th></tr></thead><tbody>";
+            var html = "<table class='table table-hover table-condensed table-bordered' id='trial_additional_uploaded_files_table'><thead><tr><th>" + _sgnB11AdditionalFileEscape(SGN.t('trial.additional_file.filename', "Filename")) + "</th><th>" + _sgnB11AdditionalFileEscape(SGN.t('trial.additional_file.date_uploaded', "Date Uploaded")) + "</th><th>" + _sgnB11AdditionalFileEscape(SGN.t('trial.additional_file.uploaded_by', "Uploaded By")) + "</th><th>" + _sgnB11AdditionalFileEscape(SGN.t('trial.additional_file.options', "Options")) + "</th></tr></thead><tbody>";
             for (i=0; i<response.files.length; i++) {
-                html = html + '<tr><td>'+response.files[i][4]+'</td><td>'+response.files[i][1]+'</td><td><a href="/solpeople/profile/'+response.files[i][2]+'">'+response.files[i][3]+'</a></td><td><a href="/breeders/phenotyping/download/'+response.files[i][0]+'">' + _sgnB11AdditionalFileEscape(window.SGN && SGN.i18n ? SGN.i18n.p('trial.additional_file.download', "Download") : "Download") + '</a> | <a href="javascript:obsolete_additional_file('+<% $trial_id %>+', '+response.files[i][0]+')">' + _sgnB11AdditionalFileEscape(window.SGN && SGN.i18n ? SGN.i18n.p('trial.additional_file.remove', "Remove") : "Remove") + '</a></td></tr>';
+                html = html + '<tr><td>'+response.files[i][4]+'</td><td>'+response.files[i][1]+'</td><td><a href="/solpeople/profile/'+response.files[i][2]+'">'+response.files[i][3]+'</a></td><td><a href="/breeders/phenotyping/download/'+response.files[i][0]+'">' + _sgnB11AdditionalFileEscape(SGN.t('trial.additional_file.download', "Download")) + '</a> | <a href="javascript:obsolete_additional_file('+<% $trial_id %>+', '+response.files[i][0]+')">' + _sgnB11AdditionalFileEscape(SGN.t('trial.additional_file.remove', "Remove")) + '</a></td></tr>';
             }
             html = html + "</tbody></table>";
             jQuery('#trial_additional_uploaded_files_div').html(html);
             jQuery('#trial_additional_uploaded_files_table').DataTable();
         },
         error: function(response){
-            alert((window.SGN && SGN.i18n ? SGN.i18n.p('trial.additional_file.retrieve_error', "Error retrieving additional uploaded files.") : "Error retrieving additional uploaded files."));
+            alert((SGN.t('trial.additional_file.retrieve_error', "Error retrieving additional uploaded files.")));
         }
     });
 }	
 						   
 function obsolete_additional_file(trial_id, file_id) {
-    var yes = confirm((window.SGN && SGN.i18n ? SGN.i18n.p('trial.additional_file.obsolete_confirm', "Are you sure you want to obsolete this file? This operation cannot be undone.") : "Are you sure you want to obsolete this file? This operation cannot be undone."));
+    var yes = confirm((SGN.t('trial.additional_file.obsolete_confirm', "Are you sure you want to obsolete this file? This operation cannot be undone.")));
     if (yes) {
         jQuery.ajax({
             url: '/ajax/breeders/trial/'+trial_id+'/obsolete_uploaded_additional_file/'+file_id,
@@ -166,11 +166,11 @@ function obsolete_additional_file(trial_id, file_id) {
                     alert(r.error); 
                 }
                 else {
-                    alert((window.SGN && SGN.i18n ? SGN.i18n.p('trial.additional_file.obsolete_success', "The file has been obsoleted.") : "The file has been obsoleted."));
+                    alert((SGN.t('trial.additional_file.obsolete_success', "The file has been obsoleted.")));
                     display_trial_additional_upload_files();
                 }
             },
-            error: function(r) {  alert((window.SGN && SGN.i18n ? SGN.i18n.p('trial.additional_file.operation_error', "An error occurred!") : "An error occurred!")) }
+            error: function(r) {  alert((SGN.t('trial.additional_file.operation_error', "An error occurred!"))) }
         });
     }
 }

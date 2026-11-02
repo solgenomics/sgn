@@ -165,14 +165,14 @@ jQuery(document).ready( function() {
             'searching': false,
             'ajax': '/ajax/catalog/image_list/' + <% $item_id %>,
             'columns': [
-                { title: jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("global.library_search.name", "Name") : "Name")).html(), "data": "image_name" },
-                { title: jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("barcode.helper.image", "Image") : "Image")).html(), "data": "small_image" },
-                { title: jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("global.dataset_cxgn_dataset.table.description", "Description") : "Description")).html(), "data": "image_description"},
-                { title: jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("barcode.helper.add_or_remove_image", "Add or Remove Image") : "Add or Remove Image")).html(), "data": "null", "render": function ( data, type, row ) {
+                { title: jQuery("<span>").text((SGN.t("global.library_search.name", "Name"))).html(), "data": "image_name" },
+                { title: jQuery("<span>").text((SGN.t("barcode.helper.image", "Image"))).html(), "data": "small_image" },
+                { title: jQuery("<span>").text((SGN.t("global.dataset_cxgn_dataset.table.description", "Description"))).html(), "data": "image_description"},
+                { title: jQuery("<span>").text((SGN.t("barcode.helper.add_or_remove_image", "Add or Remove Image"))).html(), "data": "null", "render": function ( data, type, row ) {
                     if (row.image_id == selected_image_id) {
-                        return ("<a onclick='removeImage()' >" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("global.dataset_publish.action.remove", "Remove") : "Remove")).html() + "</a>")
+                        return ("<a onclick='removeImage()' >" + jQuery("<span>").text((SGN.t("global.dataset_publish.action.remove", "Remove"))).html() + "</a>")
                     } else {
-                        return "<a onclick='addImage(\""+row.image_id+("\")' >" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("global.search_wizard.add", "Add") : "Add")).html() + "</a>")
+                        return "<a onclick='addImage(\""+row.image_id+("\")' >" + jQuery("<span>").text((SGN.t("global.search_wizard.add", "Add"))).html() + "</a>")
                     }
                 }},
             ],

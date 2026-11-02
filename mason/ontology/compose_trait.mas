@@ -301,7 +301,7 @@ jQuery('#compose_trait').on('click', function () {
     //console.log("just disabled ui");
     const selectedOptions = jQuery("#new_traits option:selected");
     if (selectedOptions.length === 0) {
-        alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("phenotype.root.please_select_at_least_one_trait_to_compose", "Please select at least one trait to compose.") : "Please select at least one trait to compose."));
+        alert((SGN.t("phenotype.root.please_select_at_least_one_trait_to_compose", "Please select at least one trait to compose.")));
         return;
     }
     const new_trait_names = {};
@@ -324,13 +324,13 @@ jQuery('#compose_trait').on('click', function () {
             var names = [];
             enable_ui();
             if (response.success) {
-                results_html += ("<div class=\"modal-body col-sm-12\" id=\"traits_saved\"><label id=\"success_label\" class=\"control-label\">" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("phenotype.root.traits_saved", "Traits saved") : "Traits saved")).html() + "</label><ul class=\"list-group\" id=\"traits_saved_message\"><li class=\"list-group-item list-group-item-success\">")+response.success+("</li></ul></div><label id=\"list_label\" class=\"control-label\">" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("phenotype.root.copy_new_traits_to_a_list", "Copy new traits to a list") : "Copy new traits to a list")).html() + "</label><div class=\"modal-body col-sm-12\" id=\"results_to_list_menu\"></div><div id=\"new_trait_names\" style=\"display: none;\"></div>");
+                results_html += ("<div class=\"modal-body col-sm-12\" id=\"traits_saved\"><label id=\"success_label\" class=\"control-label\">" + jQuery("<span>").text((SGN.t("phenotype.root.traits_saved", "Traits saved"))).html() + "</label><ul class=\"list-group\" id=\"traits_saved_message\"><li class=\"list-group-item list-group-item-success\">")+response.success+("</li></ul></div><label id=\"list_label\" class=\"control-label\">" + jQuery("<span>").text((SGN.t("phenotype.root.copy_new_traits_to_a_list", "Copy new traits to a list"))).html() + "</label><div class=\"modal-body col-sm-12\" id=\"results_to_list_menu\"></div><div id=\"new_trait_names\" style=\"display: none;\"></div>");
                 for(var i=0; i<response.names.length; i++){
                     names.push(response.names[i]+"\n");
                 }
             }
             if (response.error){
-                results_html += ("<div class=\"modal-body col-sm-12\" id=\"traits_error\"><label id=\"error_label\" class=\"control-label\">" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("phenotype.root.traits_not_saved", "Traits Not Saved") : "Traits Not Saved")).html() + "</label><ul class=\"list-group\" id=\"traits_error_message\"><li class=\"list-group-item list-group-item-danger\">")+response.error+'</li></ul></div>';
+                results_html += ("<div class=\"modal-body col-sm-12\" id=\"traits_error\"><label id=\"error_label\" class=\"control-label\">" + jQuery("<span>").text((SGN.t("phenotype.root.traits_not_saved", "Traits Not Saved"))).html() + "</label><ul class=\"list-group\" id=\"traits_error_message\"><li class=\"list-group-item list-group-item-danger\">")+response.error+'</li></ul></div>';
             }
 
             document.getElementById('traits_saved_body').innerHTML = results_html;
@@ -346,7 +346,7 @@ jQuery('#compose_trait').on('click', function () {
         },
         error: function(request, status, err) {
             enable_ui();
-            var results_html = ("<div class=\"modal-body col-sm-12\" id=\"traits_error\"><label id=\"error_label\" class=\"control-label\">" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("phenotype.root.traits_not_saved", "Traits Not Saved") : "Traits Not Saved")).html() + "</label><ul class=\"list-group\" id=\"traits_error_message\"><li class=\"list-group-item list-group-item-danger\">" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("phenotype.root.there_was_an_error_storing_the_composed_terms_none_were", "There was an error storing the composed terms. None were saved.") : "There was an error storing the composed terms. None were saved.")).html() + "</li></ul></div>");
+            var results_html = ("<div class=\"modal-body col-sm-12\" id=\"traits_error\"><label id=\"error_label\" class=\"control-label\">" + jQuery("<span>").text((SGN.t("phenotype.root.traits_not_saved", "Traits Not Saved"))).html() + "</label><ul class=\"list-group\" id=\"traits_error_message\"><li class=\"list-group-item list-group-item-danger\">" + jQuery("<span>").text((SGN.t("phenotype.root.there_was_an_error_storing_the_composed_terms_none_were", "There was an error storing the composed terms. None were saved."))).html() + "</li></ul></div>");
             document.getElementById('traits_saved_body').innerHTML = results_html;
       }
     });

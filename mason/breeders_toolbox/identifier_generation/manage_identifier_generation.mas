@@ -105,7 +105,7 @@ jQuery(document).ready(function(){
                 }
             },
             error: function(response){
-                alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("program.identifiers.submit_error", "Error submitting new identifier!") : "Error submitting new identifier!"));
+                alert((SGN.t("program.identifiers.submit_error", "Error submitting new identifier!")));
             }
         });
     });

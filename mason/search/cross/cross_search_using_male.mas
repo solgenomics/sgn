@@ -100,14 +100,14 @@ jQuery(document).ready(function (){
                 console.log(html);
 
                 if(i ==''){
-                    alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("cross.pages.no_female_parent", "No female parent") : "No female parent"));
+                    alert((SGN.t("cross.pages.no_female_parent", "No female parent")));
                     return;
                 }
 
                 jQuery('#cross_female').html(html);
             },
             error:function(response){
-                alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("folder.new.request_error", "An error occurred") : "An error occurred"));
+                alert((SGN.t("folder.new.request_error", "An error occurred")));
             }
         });
     });

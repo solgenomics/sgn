@@ -115,6 +115,7 @@ function setup({translator, requested = '', lang = '', overrides = {}} = {}) {
     };
     if (translator) sandbox.window.SGN = {i18n: translator};
     vm.createContext(sandbox);
+    I18N.install(sandbox.window); sandbox.SGN = sandbox.window.SGN;
     vm.runInContext(sources.select, sandbox, {filename: sourcePaths.select});
     vm.runInContext(sources.locations, sandbox, {filename: sourcePaths.locations});
     vm.runInContext(editorSource, sandbox, {filename: sourcePaths.editor + ':script'});

@@ -53,7 +53,7 @@ $breeding_programs
 
       },
       error: function(response) { 
-        alert(window.SGN && SGN.i18n ? SGN.i18n.p("trial.tree.error", "An error occurred") : "An error occurred");
+        alert(SGN.t("trial.tree.error", "An error occurred"));
       }
   });
 
@@ -99,7 +99,7 @@ $breeding_programs
         if (selected.length !== 0) { 
 	  window.open('/breeders/trials/phenotype/download/'+selected.join(","));
         }
-        else { alert(window.SGN && SGN.i18n ? SGN.i18n.p("trial.tree.no_leaf_nodes", "No leaf nodes selected for download.") : "No leaf nodes selected for download."); }
+        else { alert(SGN.t("trial.tree.no_leaf_nodes", "No leaf nodes selected for download.")); }
        
     });
 
@@ -108,7 +108,7 @@ $breeding_programs
         if (selected.length !== 0) { 
 	  window.open('/breeders/trials/phenotype/download/'+selected.join(",")+'?format=csv');
         }
-        else { alert(window.SGN && SGN.i18n ? SGN.i18n.p("trial.tree.no_leaf_nodes", "No leaf nodes selected for download.") : "No leaf nodes selected for download."); }
+        else { alert(SGN.t("trial.tree.no_leaf_nodes", "No leaf nodes selected for download.")); }
        
     });
 

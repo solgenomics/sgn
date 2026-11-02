@@ -75,6 +75,7 @@ function setup(runtime, overrides = {}, pageMetadata = {}) {
         CXGN: function() {}, jQuery: jq, alert: value => alerts.push(String(value)), console};
     if (runtime) sandbox.window.SGN = {i18n: runtime};
     vm.createContext(sandbox);
+    I18N.install(sandbox.window); sandbox.SGN = sandbox.window.SGN;
     vm.runInContext(source, sandbox, {filename: 'native-List.js'});
     sandbox.addToListMenu('owned_menu', 'owned_data', {listType: 'accessions', listName});
     element('#owned_data_new_list_name').value = listName;

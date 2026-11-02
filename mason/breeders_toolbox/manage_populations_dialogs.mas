@@ -150,17 +150,17 @@ jQuery(document).ready(function(){
             jQuery('#population_plot_list').hide();
             jQuery('#population_plant_list').hide();
         } else if(jQuery(this).val() == 'accessions'){
-            document.getElementById("create_population_accession_list_div").innerHTML = list.listSelect("create_population_accession_list_div", [ 'accessions' ], (window.SGN && window.SGN.i18n ? window.SGN.i18n.p("trial.create.list.choose", "select a list") : "select a list"), undefined, undefined);
+            document.getElementById("create_population_accession_list_div").innerHTML = list.listSelect("create_population_accession_list_div", [ 'accessions' ], (SGN.t("trial.create.list.choose", "select a list")), undefined, undefined);
             jQuery('#population_accession_list').show();
             jQuery('#population_plot_list').hide();
             jQuery('#population_plant_list').hide();
         } else if (jQuery(this).val() == 'plots'){
-            document.getElementById("create_population_plot_list_div").innerHTML = list.listSelect("create_population_plot_list_div", [ 'plots' ], (window.SGN && window.SGN.i18n ? window.SGN.i18n.p("trial.create.list.choose", "select a list") : "select a list"), undefined, undefined);
+            document.getElementById("create_population_plot_list_div").innerHTML = list.listSelect("create_population_plot_list_div", [ 'plots' ], (SGN.t("trial.create.list.choose", "select a list")), undefined, undefined);
             jQuery('#population_accession_list').hide();
             jQuery('#population_plot_list').show();
             jQuery('#population_plant_list').hide();
         } else if (jQuery(this).val() == 'plants'){
-            document.getElementById("create_population_plant_list_div").innerHTML = list.listSelect("create_population_plant_list_div", [ 'plants' ], (window.SGN && window.SGN.i18n ? window.SGN.i18n.p("trial.create.list.choose", "select a list") : "select a list"), undefined, undefined);
+            document.getElementById("create_population_plant_list_div").innerHTML = list.listSelect("create_population_plant_list_div", [ 'plants' ], (SGN.t("trial.create.list.choose", "select a list")), undefined, undefined);
             jQuery('#population_accession_list').hide();
             jQuery('#population_plot_list').hide();
             jQuery('#population_plant_list').show();

@@ -161,7 +161,7 @@
             .attr("y", height + margin.bottom - 10)
             .attr("text-anchor", "middle")
             .style("font-size", "12px")
-            .text((typeof window !== 'undefined' && window.SGN && window.SGN.i18n ? SGN.i18n.p("widgets.graph.collect_date", "Collect Date") : "Collect Date"));
+            .text((typeof window !== 'undefined' && SGN.t("widgets.graph.collect_date", "Collect Date")));
         }
  
         if (options.showYAxis) {

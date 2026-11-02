@@ -173,7 +173,7 @@ $design_types => ()
         },
         error: function(xhr) {
           console.log('Trial tree load failed:', xhr.status, xhr.responseText);
-          alert(window.SGN && SGN.i18n ? SGN.i18n.p('trial.tree.load_error', 'An error occurred while loading the trial data.') : 'An error occurred while loading the trial data.');
+          alert(SGN.t('trial.tree.load_error', 'An error occurred while loading the trial data.'));
         }
       });
     }

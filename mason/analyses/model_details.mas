@@ -87,7 +87,7 @@ jQuery(document).ready(function(){
                 for (var key in response.model_info.model_file_ids) {
                     if (response.model_info.model_file_ids.hasOwnProperty(key)) {
                         if (key) {
-                            model_files_string = model_files_string + response.model_info.model_file_ids[key] + " : <a href='/breeders/phenotyping/download/" + key + ("'>" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("global.download", "Download") : "Download")).html() + "</a><br/>");
+                            model_files_string = model_files_string + response.model_info.model_file_ids[key] + " : <a href='/breeders/phenotyping/download/" + key + ("'>" + jQuery("<span>").text((SGN.t("global.download", "Download"))).html() + "</a><br/>");
                         }
                     }
                 }

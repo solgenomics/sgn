@@ -47,9 +47,9 @@ jQuery(document).ready(function(){
         'autoWidth': false,
         'order': false,
         'columns': [
-            { title: jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("global.index_logged_in_user.accession", "Accession") : "Accession")).html(), "data": null, "render": function ( data, type, row ) { return "<a href='/stock/"+row.transformant_id+"/view'>"+row.transformant_name+"</a>"; } },
-            { title: jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("transformation.number_of_insertions", "Number of Insertions") : "Number of Insertions")).html(), "data": "number_of_insertions" },
-            { title: jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("transformation.obsolete_accession", "Obsolete Accession") : "Obsolete Accession")).html(), "data": null, "render": function ( data, type, row ) {
+            { title: jQuery("<span>").text((SGN.t("global.index_logged_in_user.accession", "Accession"))).html(), "data": null, "render": function ( data, type, row ) { return "<a href='/stock/"+row.transformant_id+"/view'>"+row.transformant_name+"</a>"; } },
+            { title: jQuery("<span>").text((SGN.t("transformation.number_of_insertions", "Number of Insertions"))).html(), "data": "number_of_insertions" },
+            { title: jQuery("<span>").text((SGN.t("transformation.obsolete_accession", "Obsolete Accession"))).html(), "data": null, "render": function ( data, type, row ) {
                 if (can_obsolete) {
                     if (row.is_a_parent) {
                         return (window.SGN && window.SGN.i18n ? window.SGN.i18n.p("transformation.used_as_a_parent_cannot_obsolete", "Used as a parent, cannot obsolete") : 'Used as a parent, cannot obsolete');
@@ -65,7 +65,7 @@ jQuery(document).ready(function(){
         "fnInitComplete": function(oSettings, json) {
             //console.log(json);
             if (!isLoggedIn()) {
-                jQuery('#transgenic_lines_add_to_list').html(("<div class='well well-sm'><h3>" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("accession.related_stock.login_lists", "Please login to use lists!") : "Please login to use lists!")).html() + "</h3></div>"));
+                jQuery('#transgenic_lines_add_to_list').html(("<div class='well well-sm'><h3>" + jQuery("<span>").text((SGN.t("accession.related_stock.login_lists", "Please login to use lists!"))).html() + "</h3></div>"));
             } else {
                 let html = "";
                 for(let i=0; i<json.data.length; i++){

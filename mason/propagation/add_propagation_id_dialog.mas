@@ -75,7 +75,7 @@ jQuery(document).ready(function(){
         const propagation_group_stock_id = "<%$propagation_group_id%>";
 
         if (propagation_identifier == '') {
-            alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("seedlot.please_provide_a_propagation_identifier", "Please provide a propagation identifier") : "Please provide a propagation identifier"));
+            alert((SGN.t("seedlot.please_provide_a_propagation_identifier", "Please provide a propagation identifier")));
             return;
         }
 

@@ -256,19 +256,19 @@ $(document).ready(function () {
 
 
    var columnDefs = [{
-      title: jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("transformation.root.feature_name", "Feature Name") : "Feature Name")).html(),
+      title: jQuery("<span>").text((SGN.t("transformation.root.feature_name", "Feature Name"))).html(),
       type: "text"
     }, {
-      title: jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("transformation.root.start_coord.c39b242", "Start Coord") : "Start Coord")).html(),
+      title: jQuery("<span>").text((SGN.t("transformation.root.start_coord.c39b242", "Start Coord"))).html(),
       type: "text"
     }, {
-      title: jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("transformation.root.end_coord.22a497a", "End Coord") : "End Coord")).html()
+      title: jQuery("<span>").text((SGN.t("transformation.root.end_coord.22a497a", "End Coord"))).html()
       //no type = text
     }, {
-      title: jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("transformation.root.color", "Color") : "Color")).html(),
+      title: jQuery("<span>").text((SGN.t("transformation.root.color", "Color"))).html(),
       type: "text"
     }, {
-      title: jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("transformation.root.orientation", "Orientation") : "Orientation")).html(),
+      title: jQuery("<span>").text((SGN.t("transformation.root.orientation", "Orientation"))).html(),
       type: "text"
     }];
 
@@ -305,10 +305,10 @@ $(document).ready(function () {
 
     //RE sites table
     var columnDefs2 = [{
-      title: jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("transformation.root.restriction_enzyme_site", "Restriction Enzyme Site") : "Restriction Enzyme Site")).html(),
+      title: jQuery("<span>").text((SGN.t("transformation.root.restriction_enzyme_site", "Restriction Enzyme Site"))).html(),
       type: "text"
     }, {
-      title: jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("transformation.root.cut_coord.bd2974e", "Cut Coord") : "Cut Coord")).html(),
+      title: jQuery("<span>").text((SGN.t("transformation.root.cut_coord.bd2974e", "Cut Coord"))).html(),
       type: "text"
     }];
  

@@ -103,7 +103,7 @@ jQuery(document).ready(function($) {
             });
         },
         error: function(response) {
-            alert(window.SGN && SGN.i18n ? SGN.i18n.p('genotype.tree.load_error', 'An error occurred while loading the genotyping projects.') : 'An error occurred while loading the genotyping projects.');
+            alert(SGN.t('genotype.tree.load_error', 'An error occurred while loading the genotyping projects.'));
         }
     });
 

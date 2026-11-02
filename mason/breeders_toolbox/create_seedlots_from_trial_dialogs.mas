@@ -505,7 +505,7 @@ $default_seedlot_material_type => undef
         // Make sure trial name was entered
         let trial_name = jQuery("#create_seedlots_trial_name").val();
         if ( !trial_name || trial_name === '' ) {
-            alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("seedlot.enter_a_trial_name_to_continue", "Enter a trial name to continue") : "Enter a trial name to continue"));
+            alert((SGN.t("seedlot.enter_a_trial_name_to_continue", "Enter a trial name to continue")));
             return;
         }
 
@@ -607,7 +607,7 @@ $default_seedlot_material_type => undef
             }
         }
         else {
-            alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("seedlot.error_unknown_seedlot_stock_type", "ERROR: unknown seedlot stock type!") : "ERROR: unknown seedlot stock type!"));
+            alert((SGN.t("seedlot.error_unknown_seedlot_stock_type", "ERROR: unknown seedlot stock type!")));
         }
 
         Workflow.complete('#create_seedlots_trial_complete_select_stock_type');
@@ -627,14 +627,14 @@ $default_seedlot_material_type => undef
         let names = [];
         for ( let i = 0; i < SEEDLOTS.length; i++ ) {
             if ( names.includes(SEEDLOTS[i].name) ) {
-                alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("seedlot.seedlot_names_must_be_unique", "Seedlot names must be unique - '") : "Seedlot names must be unique - '") + SEEDLOTS[i].name + (window.SGN && window.SGN.i18n ? window.SGN.i18n.p("seedlot.is_used_more_than_once", "' is used more than once") : "' is used more than once"));
+                alert((SGN.t("seedlot.seedlot_names_must_be_unique", "Seedlot names must be unique - '")) + SEEDLOTS[i].name + (SGN.t("seedlot.is_used_more_than_once", "' is used more than once")));
                 return;
             }
             names.push(SEEDLOTS[i].name);
         }
 
         // Set trait values
-        let html = ("<option value=''>" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("seedlot.choose_trait", "Choose trait...") : "Choose trait...")).html() + "</option>");
+        let html = ("<option value=''>" + jQuery("<span>").text((SGN.t("seedlot.choose_trait", "Choose trait..."))).html() + "</option>");
         for ( let i = 0; i < TRAITS.length; i++ ) {
             html += "<option value='" + TRAITS[i].id + "'>" + TRAITS[i].name + "</option>";
         }
@@ -692,20 +692,20 @@ $default_seedlot_material_type => undef
         let stock_type = jQuery("#create_seedlots_trial_stock_type").val();
         let name_template = jQuery("#create_seedlots_trial_name_template").val();
         if ( name_template === '{plot_name}' ) {
-            return alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("seedlot.the_seedlot_name_cannot_be_the_same_as_the_plot", "The seedlot name cannot be the same as the plot name, please add a prefix or suffix to make the name unique") : "The seedlot name cannot be the same as the plot name, please add a prefix or suffix to make the name unique"));
+            return alert((SGN.t("seedlot.the_seedlot_name_cannot_be_the_same_as_the_plot", "The seedlot name cannot be the same as the plot name, please add a prefix or suffix to make the name unique")));
         }
 
         let html = "<thead></tr>";
-        if ( stock_type === 'accessions' ) html += ("<th>" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("folder.detail.trial_name", "Trial Name") : "Trial Name")).html() + "</th>");
-        html += ("<th>" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("accession.related_stock.header.accession_name", "Accession Name") : "Accession Name")).html() + "</th>");
-        if ( ["plots", "subplots", "plants"].includes(stock_type) ) html += ("<th>" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("trial.design.header.plot_number", "Plot Number") : "Plot Number")).html() + "</th>");
-        if ( ["plots", "subplots", "plants"].includes(stock_type)  ) html += ("<th>" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("seedlot.rep", "Rep") : "Rep")).html() + "</th>");
-        if ( ["plots", "subplots", "plants"].includes(stock_type)  ) html += ("<th>" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("seedlot.block", "Block") : "Block")).html() + "</th>");
-        if ( stock_type === 'subplots' ) html += ("<th>" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("trial.design.header.subplot_name", "Subplot Name") : "Subplot Name")).html() + "</th>");
-        if ( stock_type === 'subplots' ) html += ("<th>" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("seedlot.subplot_index", "Subplot Index") : "Subplot Index")).html() + "</th>");
-        if ( stock_type === 'plants' ) html += ("<th>" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("trial.design.header.plant_name", "Plant Name") : "Plant Name")).html() + "</th>");
-        if ( stock_type === 'plants' ) html += ("<th>" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("seedlot.plant_index", "Plant Index") : "Plant Index")).html() + "</th>");
-        html += ("<th>" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("seedlot_split.ui.name", "Seedlot Name") : "Seedlot Name")).html() + "</th>");
+        if ( stock_type === 'accessions' ) html += ("<th>" + jQuery("<span>").text((SGN.t("folder.detail.trial_name", "Trial Name"))).html() + "</th>");
+        html += ("<th>" + jQuery("<span>").text((SGN.t("accession.related_stock.header.accession_name", "Accession Name"))).html() + "</th>");
+        if ( ["plots", "subplots", "plants"].includes(stock_type) ) html += ("<th>" + jQuery("<span>").text((SGN.t("trial.design.header.plot_number", "Plot Number"))).html() + "</th>");
+        if ( ["plots", "subplots", "plants"].includes(stock_type)  ) html += ("<th>" + jQuery("<span>").text((SGN.t("seedlot.rep", "Rep"))).html() + "</th>");
+        if ( ["plots", "subplots", "plants"].includes(stock_type)  ) html += ("<th>" + jQuery("<span>").text((SGN.t("seedlot.block", "Block"))).html() + "</th>");
+        if ( stock_type === 'subplots' ) html += ("<th>" + jQuery("<span>").text((SGN.t("trial.design.header.subplot_name", "Subplot Name"))).html() + "</th>");
+        if ( stock_type === 'subplots' ) html += ("<th>" + jQuery("<span>").text((SGN.t("seedlot.subplot_index", "Subplot Index"))).html() + "</th>");
+        if ( stock_type === 'plants' ) html += ("<th>" + jQuery("<span>").text((SGN.t("trial.design.header.plant_name", "Plant Name"))).html() + "</th>");
+        if ( stock_type === 'plants' ) html += ("<th>" + jQuery("<span>").text((SGN.t("seedlot.plant_index", "Plant Index"))).html() + "</th>");
+        html += ("<th>" + jQuery("<span>").text((SGN.t("seedlot_split.ui.name", "Seedlot Name"))).html() + "</th>");
         html += "</tr></thead>";
 
         for ( let i = 0; i < SEEDLOTS.length; i++ ) {
@@ -764,8 +764,8 @@ $default_seedlot_material_type => undef
         let formula = jQuery("#create_seedlots_trial_contents_computed_formula").val();
 
         let html = "<thead></tr>";
-        html += ("<th>" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("seedlot_split.ui.name", "Seedlot Name") : "Seedlot Name")).html() + "</th>");
-        html += ("<th>" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("lists_datasets.pages.contents", "Contents") : "Contents")).html() + "</th>");
+        html += ("<th>" + jQuery("<span>").text((SGN.t("seedlot_split.ui.name", "Seedlot Name"))).html() + "</th>");
+        html += ("<th>" + jQuery("<span>").text((SGN.t("lists_datasets.pages.contents", "Contents"))).html() + "</th>");
         html += "</tr></thead>";
 
         for ( let i = 0; i < SEEDLOTS.length; i++ ) {
@@ -862,26 +862,26 @@ $default_seedlot_material_type => undef
 
         // Check for required fields
         if ( !p_id || p_id === '' ) {
-            if (!quiet) alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("seedlot.breeding_program_is_required", "Breeding Program is required") : "Breeding Program is required"));
+            if (!quiet) alert((SGN.t("seedlot.breeding_program_is_required", "Breeding Program is required")));
             return;
         }
         if ( !l || l === '' ) {
-            if (!quiet) alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("seedlots.ui.location_is_required", "Location is required") : "Location is required"));
+            if (!quiet) alert((SGN.t("seedlots.ui.location_is_required", "Location is required")));
             return;
         }
         if ( !b || b === '' ) {
-            if (!quiet) alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("seedlot.box_name_is_required", "Box Name is required") : "Box Name is required"));
+            if (!quiet) alert((SGN.t("seedlot.box_name_is_required", "Box Name is required")));
             return;
         }
         if ( !mt || mt === '' ) {
-            if (!quiet) alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("seedlots.ui.material_type_is_required", "Material type is required") : "Material type is required"));
+            if (!quiet) alert((SGN.t("seedlots.ui.material_type_is_required", "Material type is required")));
             return;
         }
 
         // Build Table
         let html = "<thead><tr>";
-        html += ("<th>" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("seedlot_split.ui.name", "Seedlot Name") : "Seedlot Name")).html() + "</th>");
-        html += ("<th>" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("global.search_wizard.metadata", "Metadata") : "Metadata")).html() + "</th>");
+        html += ("<th>" + jQuery("<span>").text((SGN.t("seedlot_split.ui.name", "Seedlot Name"))).html() + "</th>");
+        html += ("<th>" + jQuery("<span>").text((SGN.t("global.search_wizard.metadata", "Metadata"))).html() + "</th>");
         html += "</tr></thead>";
 
         for ( let i = 0; i < SEEDLOTS.length; i++ ) {
@@ -890,13 +890,13 @@ $default_seedlot_material_type => undef
             html += "<tr>";
             html += "<td>" + SEEDLOTS[i].name + "</td>";
             html += "<td>";
-            html += ("<strong>" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("cross.ui.breeding_program.2c9b17e", "Breeding Program:") : "Breeding Program:")).html() + "</strong><select class='form-control  create_seedlots_trial_metadata_input_seedlot_breeding_program' data-index='") + i + "'>" + p_select + "</select><br />";
-            html += ("<strong>" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("seedlot_record.ui.location", "Location:") : "Location:")).html() + "</strong><input class='form-control create_seedlots_trial_metadata_input_seedlot' data-prop='location' data-index='") + i + "' value='" + l + "'><br />";
-            html += ("<strong>" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("seedlots.ui.box_name.3781c9f", "Box Name:") : "Box Name:")).html() + "</strong><input class='form-control create_seedlots_trial_metadata_input_seedlot' data-prop='box_name' data-index='") + i + "' value='" + b + "'><br />";
-            html += ("<strong>" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("seedlot.quality_issues", "Quality Issues:") : "Quality Issues:")).html() + "</strong><input class='form-control create_seedlots_trial_metadata_input_seedlot' data-prop='quality_issues' data-index='") + i + "' value='" + q + "'><br />";
-            html += ("<strong>" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("seedlots.ui.organization.3dd93c8", "Organization:") : "Organization:")).html() + "</strong><input class='form-control create_seedlots_trial_metadata_input_seedlot' data-prop='organization' data-index='") + i + "' value='" + o + "'><br />";
-            html += ("<strong>" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("lists_datasets.download.timestamp", "Timestamp:") : "Timestamp:")).html() + "</strong><input class='form-control create_seedlots_trial_metadata_input_seedlot' data-prop='timestamp' data-index='") + i + "' value='" + t + "'><br />";
-            html += ("<strong>" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("global.dataset_publish.description", "Description:") : "Description:")).html() + "</strong><input class='form-control create_seedlots_trial_metadata_input_seedlot' data-prop='description' data-index='") + i + "' value='" + d + "'><br />";
+            html += ("<strong>" + jQuery("<span>").text((SGN.t("cross.ui.breeding_program.2c9b17e", "Breeding Program:"))).html() + "</strong><select class='form-control  create_seedlots_trial_metadata_input_seedlot_breeding_program' data-index='") + i + "'>" + p_select + "</select><br />";
+            html += ("<strong>" + jQuery("<span>").text((SGN.t("seedlot_record.ui.location", "Location:"))).html() + "</strong><input class='form-control create_seedlots_trial_metadata_input_seedlot' data-prop='location' data-index='") + i + "' value='" + l + "'><br />";
+            html += ("<strong>" + jQuery("<span>").text((SGN.t("seedlots.ui.box_name.3781c9f", "Box Name:"))).html() + "</strong><input class='form-control create_seedlots_trial_metadata_input_seedlot' data-prop='box_name' data-index='") + i + "' value='" + b + "'><br />";
+            html += ("<strong>" + jQuery("<span>").text((SGN.t("seedlot.quality_issues", "Quality Issues:"))).html() + "</strong><input class='form-control create_seedlots_trial_metadata_input_seedlot' data-prop='quality_issues' data-index='") + i + "' value='" + q + "'><br />";
+            html += ("<strong>" + jQuery("<span>").text((SGN.t("seedlots.ui.organization.3dd93c8", "Organization:"))).html() + "</strong><input class='form-control create_seedlots_trial_metadata_input_seedlot' data-prop='organization' data-index='") + i + "' value='" + o + "'><br />";
+            html += ("<strong>" + jQuery("<span>").text((SGN.t("lists_datasets.download.timestamp", "Timestamp:"))).html() + "</strong><input class='form-control create_seedlots_trial_metadata_input_seedlot' data-prop='timestamp' data-index='") + i + "' value='" + t + "'><br />";
+            html += ("<strong>" + jQuery("<span>").text((SGN.t("global.dataset_publish.description", "Description:"))).html() + "</strong><input class='form-control create_seedlots_trial_metadata_input_seedlot' data-prop='description' data-index='") + i + "' value='" + d + "'><br />";
             html += "</td>";
             html += "</tr>";
 
@@ -930,21 +930,21 @@ $default_seedlot_material_type => undef
         let contents_type = jQuery("#create_seedlots_trial_contents_type").val();
 
         let html = "<thead><tr>";
-        html += ("<th>" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("seedlot_split.ui.name", "Seedlot Name") : "Seedlot Name")).html() + "</th>");
-        html += ("<th>" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("global.index_logged_in_user.breeding_program", "Breeding Program") : "Breeding Program")).html() + "</th>");
-        html += ("<th>" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("seedlot.source_accession", "Source Accession") : "Source Accession")).html() + "</th>");
-        if ( stock_type === 'plots' ) html += ("<th>" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("seedlot.source_plot", "Source Plot") : "Source Plot")).html() + "</th>");
-        if ( stock_type === 'subplots' ) html += ("<th>" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("seedlot.source_subplot", "Source Subplot") : "Source Subplot")).html() + "</th>");
-        if ( stock_type === 'plants' ) html += ("<th>" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("seedlot.source_plant", "Source Plant") : "Source Plant")).html() + "</th>");
-        if ( contents_type === 'amount' ) html += ("<th>" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("seedlot.contents_amount", "Contents (Amount)") : "Contents (Amount)")).html() + "</th>");
-        if ( contents_type === 'weight' ) html += ("<th>" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("seedlot.contents_weight", "Contents (Weight)") : "Contents (Weight)")).html() + "</th>");
-        html += ("<th>" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("global.search.features.location", "Location") : "Location")).html() + "</th>");
-        html += ("<th>" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("seedlots.ui.box_name.95fff30", "Box Name") : "Box Name")).html() + "</th>");
-        html += ("<th>" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("seedlot_split.ui.material_type", "Material Type") : "Material Type")).html() + "</th>");
-        html += ("<th>" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("seedlot_split.ui.quality", "Quality Issues") : "Quality Issues")).html() + "</th>");
-        html += ("<th>" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("accession.sequencing.organization_alt", "Organization") : "Organization")).html() + "</th>");
-        html += ("<th>" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("accession.audit.header.timestamp", "Timestamp") : "Timestamp")).html() + "</th>");
-        html += ("<th>" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("global.dataset_cxgn_dataset.table.description", "Description") : "Description")).html() + "</th>");
+        html += ("<th>" + jQuery("<span>").text((SGN.t("seedlot_split.ui.name", "Seedlot Name"))).html() + "</th>");
+        html += ("<th>" + jQuery("<span>").text((SGN.t("global.index_logged_in_user.breeding_program", "Breeding Program"))).html() + "</th>");
+        html += ("<th>" + jQuery("<span>").text((SGN.t("seedlot.source_accession", "Source Accession"))).html() + "</th>");
+        if ( stock_type === 'plots' ) html += ("<th>" + jQuery("<span>").text((SGN.t("seedlot.source_plot", "Source Plot"))).html() + "</th>");
+        if ( stock_type === 'subplots' ) html += ("<th>" + jQuery("<span>").text((SGN.t("seedlot.source_subplot", "Source Subplot"))).html() + "</th>");
+        if ( stock_type === 'plants' ) html += ("<th>" + jQuery("<span>").text((SGN.t("seedlot.source_plant", "Source Plant"))).html() + "</th>");
+        if ( contents_type === 'amount' ) html += ("<th>" + jQuery("<span>").text((SGN.t("seedlot.contents_amount", "Contents (Amount)"))).html() + "</th>");
+        if ( contents_type === 'weight' ) html += ("<th>" + jQuery("<span>").text((SGN.t("seedlot.contents_weight", "Contents (Weight)"))).html() + "</th>");
+        html += ("<th>" + jQuery("<span>").text((SGN.t("global.search.features.location", "Location"))).html() + "</th>");
+        html += ("<th>" + jQuery("<span>").text((SGN.t("seedlots.ui.box_name.95fff30", "Box Name"))).html() + "</th>");
+        html += ("<th>" + jQuery("<span>").text((SGN.t("seedlot_split.ui.material_type", "Material Type"))).html() + "</th>");
+        html += ("<th>" + jQuery("<span>").text((SGN.t("seedlot_split.ui.quality", "Quality Issues"))).html() + "</th>");
+        html += ("<th>" + jQuery("<span>").text((SGN.t("accession.sequencing.organization_alt", "Organization"))).html() + "</th>");
+        html += ("<th>" + jQuery("<span>").text((SGN.t("accession.audit.header.timestamp", "Timestamp"))).html() + "</th>");
+        html += ("<th>" + jQuery("<span>").text((SGN.t("global.dataset_cxgn_dataset.table.description", "Description"))).html() + "</th>");
         html += "</tr></thead>";
 
         for ( let i = 0; i < SEEDLOTS.length; i++ ) {
@@ -984,19 +984,19 @@ $default_seedlot_material_type => undef
         let errors = [];                            // Array of errors encountered during upload
 
         return new Promise(async (resolve) => {
-            jQuery("#create_seedlots_trial_status").html(("<strong>" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("seedlot.creating_seedlots", "Creating Seedlots...") : "Creating Seedlots...")).html() + "</strong>"));
+            jQuery("#create_seedlots_trial_status").html(("<strong>" + jQuery("<span>").text((SGN.t("seedlot.creating_seedlots", "Creating Seedlots..."))).html() + "</strong>"));
             jQuery("#create_seedlots_trial_progress").css('width', '0%').attr('aria-valuenow', 0);
             jQuery("#create_seedlots_trial_results").empty();
 
             // Create Results table
             let html = "<thead><tr>";
-            html += ("<th>" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("seedlot_maintenance_table.ui.seedlot_header", "Seedlot") : "Seedlot")).html() + "</th>");
-            html += ("<th>" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("interface.progress", "Progress") : "Progress")).html() + "</th>");
+            html += ("<th>" + jQuery("<span>").text((SGN.t("seedlot_maintenance_table.ui.seedlot_header", "Seedlot"))).html() + "</th>");
+            html += ("<th>" + jQuery("<span>").text((SGN.t("interface.progress", "Progress"))).html() + "</th>");
             html += "</tr></thead>";
             html += "<tbody id='create_seedlots_trial_results_table_body'></tbody>";
             for ( let i = 0; i < SEEDLOTS.length; i++ ) {
                 let status_id = "create_seedlots_trial_results_row_" + i;
-                html += "<tr><td>" + SEEDLOTS[i].name + "</td><td id='" + status_id + ("'>" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("global.dataset_publish.pending", "Pending...") : "Pending...")).html() + "</td>");
+                html += "<tr><td>" + SEEDLOTS[i].name + "</td><td id='" + status_id + ("'>" + jQuery("<span>").text((SGN.t("global.dataset_publish.pending", "Pending..."))).html() + "</td>");
                 SEEDLOTS[i].status_id = status_id;
             }
             jQuery("#create_seedlots_trial_results_table").html(html);
@@ -1034,7 +1034,7 @@ $default_seedlot_material_type => undef
          * Process the specified seedlot
          */
         async function _processSeedlot(seedlot) {
-            _setStatusInfo(seedlot, (window.SGN && window.SGN.i18n ? window.SGN.i18n.p("seedlot.creating", "Creating...") : "Creating..."));
+            _setStatusInfo(seedlot, (SGN.t("seedlot.creating", "Creating...")));
 
             // Set seedlot request data
             let data = {
@@ -1083,7 +1083,7 @@ $default_seedlot_material_type => undef
                         resolve();
                     },
                     error: () => {
-                        _setStatusError(seedlot, (window.SGN && window.SGN.i18n ? window.SGN.i18n.p("seedlot.ajax_error", "AJAX error") : "AJAX error"));
+                        _setStatusError(seedlot, (SGN.t("seedlot.ajax_error", "AJAX error")));
                         resolve();
                     }
                 });
@@ -1102,7 +1102,7 @@ $default_seedlot_material_type => undef
          */
         function _setStatusComplete(seedlot) {
             upload_count++;
-            _setStatusInfo(seedlot, ("<strong><span class='glyphicon glyphicon-ok-sign text-success'></span></strong>&nbsp;" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("seedlot.seedlot_created", "Seedlot Created!") : "Seedlot Created!")).html() + ""));
+            _setStatusInfo(seedlot, ("<strong><span class='glyphicon glyphicon-ok-sign text-success'></span></strong>&nbsp;" + jQuery("<span>").text((SGN.t("seedlot.seedlot_created", "Seedlot Created!"))).html() + ""));
         }
 
         /**
@@ -1114,7 +1114,7 @@ $default_seedlot_material_type => undef
                 seedlot: seedlot,
                 error: error
             });
-            _setStatusInfo(seedlot, ("<strong><span class='glyphicon glyphicon-exclamation-sign text-danger'></span>&nbsp;" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("seedlot_record.ui.ontology_error_label", "ERROR:") : "ERROR:")).html() + "</strong> ") + error);
+            _setStatusInfo(seedlot, ("<strong><span class='glyphicon glyphicon-exclamation-sign text-danger'></span>&nbsp;" + jQuery("<span>").text((SGN.t("seedlot_record.ui.ontology_error_label", "ERROR:"))).html() + "</strong> ") + error);
         }
     }
 
@@ -1124,21 +1124,21 @@ $default_seedlot_material_type => undef
      * @param {int} upload_count Count of successfully uploaded seedlots
      */
     function displayUploadResults(errors, upload_count) {
-        jQuery("#create_seedlots_trial_status").html(("<strong>" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("seedlot.upload_complete", "Upload Complete") : "Upload Complete")).html() + "</strong>"));
+        jQuery("#create_seedlots_trial_status").html(("<strong>" + jQuery("<span>").text((SGN.t("seedlot.upload_complete", "Upload Complete"))).html() + "</strong>"));
         jQuery("#create_seedlots_trial_progress").css('width', '100%').attr('aria-valuenow', 100);
 
         let html = "<br /><br />";
         if ( !errors || errors.length === 0 ) {
             html += "<div class='alert-success' role='alert'>";
             html += "<strong><span class='glyphicon glyphicon-ok-sign'></span></strong>&nbsp;";
-            html += upload_count + (window.SGN && window.SGN.i18n ? window.SGN.i18n.p("seedlot.seedlots_successfully_created.c32b624", " seedlots successfully created!") : " seedlots successfully created!");
+            html += upload_count + (SGN.t("seedlot.seedlots_successfully_created.c32b624", " seedlots successfully created!"));
             html += "</div>";
         }
         if ( errors && errors.length > 0 ) {
             html += "<div class='alert-danger' role='alert'>"
-            html += "<strong><span class='glyphicon glyphicon-exclamation-sign'></span>&nbsp; " + errors.length + (" " + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("seedlot.errors_encountered", "errors encountered!") : "errors encountered!")).html() + "<br />");
-            html += ("" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("seedlot.see_below_for_which_seedlots_failed_and_more_details", "See below for which seedlots failed and more details") : "See below for which seedlots failed and more details")).html() + "<br />");
-            if ( upload_count > 0 ) html += "<br /><strong><span class='glyphicon glyphicon-ok-sign'></span>&nbsp; " + upload_count + (window.SGN && window.SGN.i18n ? window.SGN.i18n.p("seedlot.seedlots_successfully_created.54d3fc6", " seedlots successfully created") : " seedlots successfully created");
+            html += "<strong><span class='glyphicon glyphicon-exclamation-sign'></span>&nbsp; " + errors.length + (" " + jQuery("<span>").text((SGN.t("seedlot.errors_encountered", "errors encountered!"))).html() + "<br />");
+            html += ("" + jQuery("<span>").text((SGN.t("seedlot.see_below_for_which_seedlots_failed_and_more_details", "See below for which seedlots failed and more details"))).html() + "<br />");
+            if ( upload_count > 0 ) html += "<br /><strong><span class='glyphicon glyphicon-ok-sign'></span>&nbsp; " + upload_count + (SGN.t("seedlot.seedlots_successfully_created.54d3fc6", " seedlots successfully created"));
             html += "</div>";
         }
 

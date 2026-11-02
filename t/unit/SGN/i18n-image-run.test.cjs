@@ -45,6 +45,7 @@ function setup(locale) {
     $.fn.DataTable.isDataTable = () => false;
     w.console.error = () => {};
     w.SGN = {i18n:translator(locale)};
+    I18N.install(w);
     $('#analysis_info_json_data').text(JSON.stringify({analysis_metadata:{
         pipeline_name:hostile, pipeline_version:'1.2', job_id:'00073', timestamp:'2026-10-27T00:00:00Z',
         input_filename:'Жито_%{name}.tif', qc_json:{mean:'0.00', CV:'NA'}

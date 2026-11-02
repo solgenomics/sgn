@@ -164,14 +164,14 @@
                     if (response.error) {
                         alert(response.error);
                     } else {
-                        alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("transformation.root.new_treatment_saved", "New treatment saved.") : "New treatment saved."));
+                        alert((SGN.t("transformation.root.new_treatment_saved", "New treatment saved.")));
                         window.location.reload();
                     }
                 },
                 error: function(response) { 
                     jQuery('#working_modal').modal("hide");
                     console.log(response);
-                    alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("phenotype.root.an_error_occurred_check_console", "An error occurred, check console.") : "An error occurred, check console."));
+                    alert((SGN.t("phenotype.root.an_error_occurred_check_console", "An error occurred, check console.")));
                 }
             });
         });
@@ -205,7 +205,7 @@
                 jQuery('#new_treatment_default_value_container').show();
                 jQuery('#new_treatment_maximum_value_container').show();
                 jQuery('#new_treatment_add_categories_container').hide();
-                jQuery('#new_treatment_default_value_label').html((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("phenotype.root.default_value", "Default value:") : "Default value:"));
+                jQuery('#new_treatment_default_value_label').html((SGN.t("phenotype.root.default_value", "Default value:")));
                 jQuery('#new_treatment_default_value').val('');
                 jQuery('#new_treatment_min_value').val('');
                 jQuery('#new_treatment_max_value').val('');
@@ -215,7 +215,7 @@
                 jQuery('#new_treatment_default_value_container').show();
                 jQuery('#new_treatment_maximum_value_container').hide();
                 jQuery('#new_treatment_add_categories_container').show();
-                jQuery('#new_treatment_default_value_label').html((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("phenotype.root.default_category", "Default category:") : "Default category:"));
+                jQuery('#new_treatment_default_value_label').html((SGN.t("phenotype.root.default_category", "Default category:")));
                 jQuery('#new_treatment_default_value').val('');
                 jQuery('#new_treatment_min_value').val('');
                 jQuery('#new_treatment_max_value').val('');
@@ -234,7 +234,7 @@
                 jQuery('#new_treatment_default_value_container').show();
                 jQuery('#new_treatment_maximum_value_container').show();
                 jQuery('#new_treatment_add_categories_container').hide();
-                jQuery('#new_treatment_default_value_label').html((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("phenotype.root.default_value", "Default value:") : "Default value:"));
+                jQuery('#new_treatment_default_value_label').html((SGN.t("phenotype.root.default_value", "Default value:")));
                 jQuery('#new_treatment_default_value').val('');
                 jQuery('#new_treatment_min_value').val('0');
                 jQuery('#new_treatment_max_value').val('100');
@@ -244,7 +244,7 @@
                 jQuery('#new_treatment_default_value_container').show();
                 jQuery('#new_treatment_maximum_value_container').show();
                 jQuery('#new_treatment_add_categories_container').hide();
-                jQuery('#new_treatment_default_value_label').html((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("phenotype.root.default_value", "Default value:") : "Default value:"));
+                jQuery('#new_treatment_default_value_label').html((SGN.t("phenotype.root.default_value", "Default value:")));
                 jQuery('#new_treatment_default_value').val('');
                 jQuery('#new_treatment_min_value').val('0');
                 jQuery('#new_treatment_max_value').val('');
@@ -254,7 +254,7 @@
                 jQuery('#new_treatment_default_value_container').show();
                 jQuery('#new_treatment_maximum_value_container').show();
                 jQuery('#new_treatment_add_categories_container').hide();
-                jQuery('#new_treatment_default_value_label').html((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("phenotype.root.default_value", "Default value:") : "Default value:"));
+                jQuery('#new_treatment_default_value_label').html((SGN.t("phenotype.root.default_value", "Default value:")));
                 jQuery('#new_treatment_default_value').val('');
                 jQuery('#new_treatment_min_value').val('0');
                 jQuery('#new_treatment_max_value').val('1');
@@ -286,12 +286,12 @@
             let new_ordinal = jQuery('#new_treatment_category_ordinal').val();
 
             if (! new_ordinal) {
-                alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("phenotype.root.assign_an_ordinal_value_to_the_new_category", "Assign an ordinal value to the new category.") : "Assign an ordinal value to the new category."));
+                alert((SGN.t("phenotype.root.assign_an_ordinal_value_to_the_new_category", "Assign an ordinal value to the new category.")));
                 return;
             }
 
             if (new_category.includes('/') || new_category.includes('=')){
-                alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("phenotype.root.no_special_characters", "No special characters.") : "No special characters."));
+                alert((SGN.t("phenotype.root.no_special_characters", "No special characters.")));
                 return;
             }
 
@@ -383,7 +383,7 @@
                 })
                 .catch(error => {
                     jQuery('#working_modal').modal("hide");
-                    alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("trial.subplots.error_prefix", "An error occurred: ") : "An error occurred: ") + error);
+                    alert((SGN.t("trial.subplots.error_prefix", "An error occurred: ")) + error);
                     console.error('Download failed:', error)
                 });
         });

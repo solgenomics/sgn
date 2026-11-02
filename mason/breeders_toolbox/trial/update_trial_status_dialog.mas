@@ -101,13 +101,13 @@ jQuery(document).ready(function(){
     jQuery("#update_trial_status_submit").click(function() {
         var trial_status = jQuery("#trial_status_select").val();
         if (trial_status == 'Please select a status') {
-            alert(window.SGN && SGN.i18n ? SGN.i18n.p('trial.status_dialog.sentinel', 'Please select a status') : 'Please select a status');
+            alert(SGN.t('trial.status_dialog.sentinel', 'Please select a status'));
             return;
         }
 
         var activity_date = jQuery("#trial_activity_date").val();
         if (activity_date == '') {
-            alert(window.SGN && SGN.i18n ? SGN.i18n.p('trial.status_dialog.select_date', 'Please select a date') : 'Please select a date');
+            alert(SGN.t('trial.status_dialog.select_date', 'Please select a date'));
             return;
         }
 
@@ -136,7 +136,7 @@ jQuery(document).ready(function(){
             },
             error: function(response){
                 jQuery('#working_modal').modal('hide');
-                alert(window.SGN && SGN.i18n ? SGN.i18n.p('trial.status_dialog.update_error', 'An error occurred updating trial status') : 'An error occurred updating trial status');
+                alert(SGN.t('trial.status_dialog.update_error', 'An error occurred updating trial status'));
             }
         });
     });

@@ -223,13 +223,13 @@ $(window).ready( function() {
         'autoWidth': false,
         'ajax': '/ajax/order/vendor_current_orders',
         columns: [
-            { title: jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("barcode.helper.order_number.f1d1cc6", "Order Number") : "Order Number")).html(), "data": null, "render": function ( data, type, row ) { return "<a href='/order/details/view/"+row.order_id+"'>"+row.order_id+"</a>"; } },
-            { title: jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("barcode.helper.ordered_by.826ddab", "Ordered by") : "Ordered by")).html(), "data": "order_from_name" },
-            { title: jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("barcode.helper.submitted_date", "Submitted Date") : "Submitted Date")).html(), "data": "create_date" },
-            { title: jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("barcode.helper.order_details", "Order Details") : "Order Details")).html(), "data": "order_details" },
-            { title: jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("global.dataset_publish.status.heading", "Status") : "Status")).html(), "data": "order_status" },
-            { title: jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("accession.stock.section.comments", "Comments") : "Comments")).html(), "data": "contact_person_comments" },
-            { title: jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("lists.render.update", "Update") : "Update")).html(), "data": "null", "render": function ( data, type, row ) { return "<a onclick='updateOrder(\""+row.order_id+"\", \""+row.order_from_name+("\")' >" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("lists.render.update", "Update") : "Update")).html() + "</a>"); } },
+            { title: jQuery("<span>").text((SGN.t("barcode.helper.order_number.f1d1cc6", "Order Number"))).html(), "data": null, "render": function ( data, type, row ) { return "<a href='/order/details/view/"+row.order_id+"'>"+row.order_id+"</a>"; } },
+            { title: jQuery("<span>").text((SGN.t("barcode.helper.ordered_by.826ddab", "Ordered by"))).html(), "data": "order_from_name" },
+            { title: jQuery("<span>").text((SGN.t("barcode.helper.submitted_date", "Submitted Date"))).html(), "data": "create_date" },
+            { title: jQuery("<span>").text((SGN.t("barcode.helper.order_details", "Order Details"))).html(), "data": "order_details" },
+            { title: jQuery("<span>").text((SGN.t("global.dataset_publish.status.heading", "Status"))).html(), "data": "order_status" },
+            { title: jQuery("<span>").text((SGN.t("accession.stock.section.comments", "Comments"))).html(), "data": "contact_person_comments" },
+            { title: jQuery("<span>").text((SGN.t("lists.render.update", "Update"))).html(), "data": "null", "render": function ( data, type, row ) { return "<a onclick='updateOrder(\""+row.order_id+"\", \""+row.order_from_name+("\")' >" + jQuery("<span>").text((SGN.t("lists.render.update", "Update"))).html() + "</a>"); } },
         ]
     });
 
@@ -237,14 +237,14 @@ $(window).ready( function() {
         'autoWidth': false,
         'ajax': '/ajax/order/vendor_completed_orders',
         columns: [
-            { title: jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("barcode.helper.order_number.f1d1cc6", "Order Number") : "Order Number")).html(), "data": null, "render": function ( data, type, row ) { return "<a href='/order/details/view/"+row.order_id+"'>"+row.order_id+"</a>"; } },
-            { title: jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("barcode.helper.ordered_by.826ddab", "Ordered by") : "Ordered by")).html(), "data": "order_from_name" },
-            { title: jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("barcode.helper.submitted_date", "Submitted Date") : "Submitted Date")).html(), "data": "create_date" },
-            { title: jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("barcode.helper.order_details", "Order Details") : "Order Details")).html(), "data": "order_details" },
-            { title: jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("global.dataset_publish.status.heading", "Status") : "Status")).html(), "data": "order_status" },
-            { title: jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("barcode.helper.completion_date", "Completion Date") : "Completion Date")).html(), "data": "completion_date" },
-            { title: jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("accession.stock.section.comments", "Comments") : "Comments")).html(), "data": "contact_person_comments" },
-            { title: jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("lists.render.update", "Update") : "Update")).html(), "data": "null", "render": function ( data, type, row ) { return "<a onclick='reOpenOrder(\""+row.order_id+"\", \""+row.order_from_name+("\")' >" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("barcode.helper.re_open", "Re-Open") : "Re-Open")).html() + "</a>"); } },
+            { title: jQuery("<span>").text((SGN.t("barcode.helper.order_number.f1d1cc6", "Order Number"))).html(), "data": null, "render": function ( data, type, row ) { return "<a href='/order/details/view/"+row.order_id+"'>"+row.order_id+"</a>"; } },
+            { title: jQuery("<span>").text((SGN.t("barcode.helper.ordered_by.826ddab", "Ordered by"))).html(), "data": "order_from_name" },
+            { title: jQuery("<span>").text((SGN.t("barcode.helper.submitted_date", "Submitted Date"))).html(), "data": "create_date" },
+            { title: jQuery("<span>").text((SGN.t("barcode.helper.order_details", "Order Details"))).html(), "data": "order_details" },
+            { title: jQuery("<span>").text((SGN.t("global.dataset_publish.status.heading", "Status"))).html(), "data": "order_status" },
+            { title: jQuery("<span>").text((SGN.t("barcode.helper.completion_date", "Completion Date"))).html(), "data": "completion_date" },
+            { title: jQuery("<span>").text((SGN.t("accession.stock.section.comments", "Comments"))).html(), "data": "contact_person_comments" },
+            { title: jQuery("<span>").text((SGN.t("lists.render.update", "Update"))).html(), "data": "null", "render": function ( data, type, row ) { return "<a onclick='reOpenOrder(\""+row.order_id+"\", \""+row.order_from_name+("\")' >" + jQuery("<span>").text((SGN.t("barcode.helper.re_open", "Re-Open"))).html() + "</a>"); } },
         ]
     });
 
@@ -252,7 +252,7 @@ $(window).ready( function() {
         var order_id = jQuery('#update_order_id').val();
         var new_order_status = jQuery('#update_order_status').val();
         if (!new_order_status) {
-            alert ((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("trial.status_dialog.sentinel", "Please select a status") : "Please select a status"));
+            alert ((SGN.t("trial.status_dialog.sentinel", "Please select a status")));
             return;
         }
         var contact_person_comments = jQuery('#contact_person_comments').val();
@@ -295,7 +295,7 @@ $(window).ready( function() {
         var re_open_status = jQuery('#re_open_status').val();
         var re_open_comments = jQuery('#re_open_comments').val();
         if (!re_open_comments) {
-            alert ((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("barcode.helper.please_add_comments_for_re_opening_the_order", "Please add comments for re-opening the order") : "Please add comments for re-opening the order"));
+            alert ((SGN.t("barcode.helper.please_add_comments_for_re_opening_the_order", "Please add comments for re-opening the order")));
             return;
         }
 
@@ -337,15 +337,15 @@ $(window).ready( function() {
 
 function updateOrder(order_id, order_from_name){
     var html = '';
-    html += ("<form class=\"form-horizontal\"><div class=\"form-group\"><label class=\"col-sm-3 control-label\">" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("barcode.helper.order_number.a252e43", "Order Number:") : "Order Number:")).html() + " </label><div class=\"col-sm-9\" ><input class=\"form-control\" id=\"update_order_id\" name=\"update_order_id\" value=\"")+order_id+'" disabled></div></div>';
-    html += ("<div class=\"form-group\"><label class=\"col-sm-3 control-label\">" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("barcode.helper.ordered_by.5a36b09", "Ordered by:") : "Ordered by:")).html() + " </label><div class=\"col-sm-9\" ><input class=\"form-control\" id=\"ordered_by_name\" name=\"ordered_by_name\" value=\"")+order_from_name+'" disabled></div></div>';
-    html += ("<div class=\"form-group\"><label class=\"col-sm-3 control-label\">" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("global.est.status", "Status:") : "Status:")).html() + " </label><div class=\"col-sm-9\" ><select class=\"form-control\" id=\"update_order_status\" name=\"update_order_status\"><option disabled value=\"\" selected hidden>" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("seedlot.select_a_status", "Select a status") : "Select a status")).html() + "</option>");
+    html += ("<form class=\"form-horizontal\"><div class=\"form-group\"><label class=\"col-sm-3 control-label\">" + jQuery("<span>").text((SGN.t("barcode.helper.order_number.a252e43", "Order Number:"))).html() + " </label><div class=\"col-sm-9\" ><input class=\"form-control\" id=\"update_order_id\" name=\"update_order_id\" value=\"")+order_id+'" disabled></div></div>';
+    html += ("<div class=\"form-group\"><label class=\"col-sm-3 control-label\">" + jQuery("<span>").text((SGN.t("barcode.helper.ordered_by.5a36b09", "Ordered by:"))).html() + " </label><div class=\"col-sm-9\" ><input class=\"form-control\" id=\"ordered_by_name\" name=\"ordered_by_name\" value=\"")+order_from_name+'" disabled></div></div>';
+    html += ("<div class=\"form-group\"><label class=\"col-sm-3 control-label\">" + jQuery("<span>").text((SGN.t("global.est.status", "Status:"))).html() + " </label><div class=\"col-sm-9\" ><select class=\"form-control\" id=\"update_order_status\" name=\"update_order_status\"><option disabled value=\"\" selected hidden>" + jQuery("<span>").text((SGN.t("seedlot.select_a_status", "Select a status"))).html() + "</option>");
     html += '<option value='+"being_processed"+'>'+"being_processed"+'</option>';
     html += '<option value='+"shipped"+'>'+"shipped"+'</option>';
     html += '<option value='+"completed"+'>'+"completed"+'</option>';
     html += '<option value='+"cancelled"+'>'+"cancelled"+'</option>';
     html += '</select></div></div>';
-    html += ("<div class=\"form-group\"><label class=\"col-sm-3 control-label\">" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("transformation.root.comments", "Comments:") : "Comments:")).html() + " </label><div class=\"col-sm-9\" ><input class=\"form-control\" id=\"contact_person_comments\" placeholder=\"" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("accession.stock.optional", "Optional") : "Optional")).html() + "\"></div></div></form>")
+    html += ("<div class=\"form-group\"><label class=\"col-sm-3 control-label\">" + jQuery("<span>").text((SGN.t("transformation.root.comments", "Comments:"))).html() + " </label><div class=\"col-sm-9\" ><input class=\"form-control\" id=\"contact_person_comments\" placeholder=\"" + jQuery("<span>").text((SGN.t("accession.stock.optional", "Optional"))).html() + "\"></div></div></form>")
 
     jQuery('#update_order_div').html(html);
     jQuery('#update_order_dialog').modal('show');
@@ -355,10 +355,10 @@ function updateOrder(order_id, order_from_name){
 function reOpenOrder(order_id, order_from_name){
     var re_open = "re-opened"
     var html = '';
-    html += ("<form class=\"form-horizontal\"><div class=\"form-group\"><label class=\"col-sm-3 control-label\">" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("barcode.helper.order_number.a252e43", "Order Number:") : "Order Number:")).html() + " </label><div class=\"col-sm-9\" ><input class=\"form-control\" id=\"re_open_order_id\" name=\"re_open_order_id\" value=\"")+order_id+'" disabled></div></div>';
-    html += ("<div class=\"form-group\"><label class=\"col-sm-3 control-label\">" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("barcode.helper.ordered_by.5a36b09", "Ordered by:") : "Ordered by:")).html() + " </label><div class=\"col-sm-9\" ><input class=\"form-control\" id=\"re_open_ordered_by\" name=\"re_open_ordered_by\" value=\"")+order_from_name+'" disabled></div></div>';
-    html += ("<div class=\"form-group\"><label class=\"col-sm-3 control-label\">" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("global.est.status", "Status:") : "Status:")).html() + " </label><div class=\"col-sm-9\" ><input class=\"form-control\" id=\"re_open_status\" name=\"re_open_status\" value=\"")+re_open+'" disabled></div></div>';
-    html += ("<div class=\"form-group\"><label class=\"col-sm-3 control-label\">" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("transformation.root.comments", "Comments:") : "Comments:")).html() + " </label><div class=\"col-sm-9\" ><input class=\"form-control\" id=\"re_open_comments\" placeholder=\"" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("seedlot_split.ui.required", "Required") : "Required")).html() + "\"></div></div></form>")
+    html += ("<form class=\"form-horizontal\"><div class=\"form-group\"><label class=\"col-sm-3 control-label\">" + jQuery("<span>").text((SGN.t("barcode.helper.order_number.a252e43", "Order Number:"))).html() + " </label><div class=\"col-sm-9\" ><input class=\"form-control\" id=\"re_open_order_id\" name=\"re_open_order_id\" value=\"")+order_id+'" disabled></div></div>';
+    html += ("<div class=\"form-group\"><label class=\"col-sm-3 control-label\">" + jQuery("<span>").text((SGN.t("barcode.helper.ordered_by.5a36b09", "Ordered by:"))).html() + " </label><div class=\"col-sm-9\" ><input class=\"form-control\" id=\"re_open_ordered_by\" name=\"re_open_ordered_by\" value=\"")+order_from_name+'" disabled></div></div>';
+    html += ("<div class=\"form-group\"><label class=\"col-sm-3 control-label\">" + jQuery("<span>").text((SGN.t("global.est.status", "Status:"))).html() + " </label><div class=\"col-sm-9\" ><input class=\"form-control\" id=\"re_open_status\" name=\"re_open_status\" value=\"")+re_open+'" disabled></div></div>';
+    html += ("<div class=\"form-group\"><label class=\"col-sm-3 control-label\">" + jQuery("<span>").text((SGN.t("transformation.root.comments", "Comments:"))).html() + " </label><div class=\"col-sm-9\" ><input class=\"form-control\" id=\"re_open_comments\" placeholder=\"" + jQuery("<span>").text((SGN.t("seedlot_split.ui.required", "Required"))).html() + "\"></div></div></form>")
 
     jQuery('#re_open_order_div').html(html);
     jQuery('#re_open_order_dialog').modal('show');

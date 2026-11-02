@@ -698,10 +698,10 @@ jQuery(document).ready(function() {
                     alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("analysis.interface.analysis_and_or_model_saved", "Analysis and/or model saved!") : 'Analysis and/or model saved!'));
                     var html = '<center>';
                     if (response.analysis_id) {
-                        html = html + ("<p>" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("analysis.interface.go_to_saved", "Go to saved") : "Go to saved")).html() + " <a href=\"/analyses/")+response.analysis_id+("\" target=_blank >" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("analysis.interface.analysis_f44e85", "analysis") : "analysis")).html() + "</a></p>");
+                        html = html + ("<p>" + jQuery("<span>").text((SGN.t("analysis.interface.go_to_saved", "Go to saved"))).html() + " <a href=\"/analyses/")+response.analysis_id+("\" target=_blank >" + jQuery("<span>").text((SGN.t("analysis.interface.analysis_f44e85", "analysis"))).html() + "</a></p>");
                     }
                     if (response.model_id) {
-                        html = html + ("<p>" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("analysis.interface.go_to_saved", "Go to saved") : "Go to saved")).html() + " <a href=\"/analyses_model/")+response.model_id+("\" target=_blank >" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("analysis.interface.model_9372c4", "model") : "model")).html() + "</a></p>");
+                        html = html + ("<p>" + jQuery("<span>").text((SGN.t("analysis.interface.go_to_saved", "Go to saved"))).html() + " <a href=\"/analyses_model/")+response.model_id+("\" target=_blank >" + jQuery("<span>").text((SGN.t("analysis.interface.model_9372c4", "model"))).html() + "</a></p>");
                     }
                     html = html + '</center>';
                     jQuery('#generic_save_analysis_response_div').html(html);

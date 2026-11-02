@@ -69,16 +69,16 @@ function logout() {
 function setUpLogin() {
 
  var loginButtons = [
-    { text: (window.SGN && SGN.i18n ? SGN.i18n.p("auth.login.title", "Login") : "Login"), click: function() { login(); } },
-    { text: (window.SGN && SGN.i18n ? SGN.i18n.p("auth.legacy.cancel", "Cancel") : "Cancel"), click: function() { jQuery('#login_window').dialog('close'); } }
+    { text: (SGN.t("auth.login.title", "Login")), click: function() { login(); } },
+    { text: (SGN.t("auth.legacy.cancel", "Cancel")), click: function() { jQuery('#login_window').dialog('close'); } }
  ];
 
  jQuery('#working').dialog( {
     height: 80,
     width: 100,
     modal: true,
-    closeText: (window.SGN && SGN.i18n ? SGN.i18n.p("auth.common.close", "Close") : "Close"),
-    title: (window.SGN && SGN.i18n ? SGN.i18n.p("auth.legacy.working", "Working...") : "Working..."),
+    closeText: (SGN.t("auth.common.close", "Close")),
+    title: (SGN.t("auth.legacy.working", "Working...")),
     closeOnEscape: false,
     autoOpen: false
   });
@@ -87,8 +87,8 @@ jQuery('#login_window').dialog( {
     height: 180,
     width: 300,
     modal: true,
-    closeText: (window.SGN && SGN.i18n ? SGN.i18n.p("auth.common.close", "Close") : "Close"),
-    title: (window.SGN && SGN.i18n ? SGN.i18n.p("auth.login.title", "Login") : "Login"),
+    closeText: (SGN.t("auth.common.close", "Close")),
+    title: (SGN.t("auth.login.title", "Login")),
     autoOpen: false,
     buttons: loginButtons
 

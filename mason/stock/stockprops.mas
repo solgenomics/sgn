@@ -119,7 +119,7 @@ function <% $div_name %>_getProps() {
     url: '/stock/prop/get',
     data: { stock_id: <% $stock_id %> },
     success: function(response) { <% $div_name %>_renderProps(response);  },
-    error: function(response) { alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("accession.stockprops.network_short", "an error occurred") : "an error occurred")); }
+    error: function(response) { alert((SGN.t("accession.stockprops.network_short", "an error occurred"))); }
   });
  
 }
@@ -168,7 +168,7 @@ function <% $div_name %>_addProp() {
   var prop_type = jQuery('#<% $div_name %>_select').val();
   var prop = jQuery('#<% $div_name %>_prop').val();
   prop = prop.trim();
-  if (prop === '') { alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("accession.stockprops.required", "Please fill in the field.") : "Please fill in the field.")); return; }
+  if (prop === '') { alert((SGN.t("accession.stockprops.required", "Please fill in the field."))); return; }
 
   jQuery.ajax( {
     type: 'POST',

@@ -16,7 +16,7 @@ solGS.searchTrials = {
 
   searchAllTrials: function (url, result) {
     jQuery(this.searchResultMsg)
-      .html((window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.searching_trials", "Searching for GS trials..") : "Searching for GS trials.."))
+      .html((SGN.t("solgs.browser.searching_trials", "Searching for GS trials..")))
       .show();
 
     var traitTrials = jQuery.ajax({
@@ -47,7 +47,7 @@ solGS.searchTrials = {
 
       this.displayTrainingPopulations(tableDetails);
     } else {
-      jQuery(this.searchResultMsg).html((window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.no_trials_found", "No trials were found.") : "No trials were found.")).show();
+      jQuery(this.searchResultMsg).html((SGN.t("solgs.browser.no_trials_found", "No trials were found."))).show();
     }
   },
 
@@ -96,7 +96,7 @@ solGS.searchTrials = {
       '" class="table" style="width:100%;text-align:left">';
     table += "<thead><tr>";
     table +=
-      "<th></th>" + "<th>" + (window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.trial_table_trial", "Trial") : "Trial") + "</th>" + "<th>" + (window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.trial_table_description", "Description") : "Description") + "</th>" + "<th>" + (window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.trial_table_location", "Location") : "Location") + "</th>" + "<th>" + (window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.trial_table_year", "Year") : "Year") + "</th>" + "<th>" + (window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.trial_table_more_details", "More details") : "More details") + "</th>";
+      "<th></th>" + "<th>" + (SGN.t("solgs.browser.trial_table_trial", "Trial")) + "</th>" + "<th>" + (SGN.t("solgs.browser.trial_table_description", "Description")) + "</th>" + "<th>" + (SGN.t("solgs.browser.trial_table_location", "Location")) + "</th>" + "<th>" + (SGN.t("solgs.browser.trial_table_year", "Year")) + "</th>" + "<th>" + (SGN.t("solgs.browser.trial_table_more_details", "More details")) + "</th>";
     // table    += '<th id="color_tip" title="You can combine Trials with matching color."><span class="glyphicon glyphicon-question-sign"></span></th>';
     table += "</tr></thead>";
     table += "</table>";
@@ -131,7 +131,7 @@ solGS.searchTrials = {
           bInfo: false,
           paging: false,
           oLanguage: {
-            sSearch: (window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.filter_result_by", "Filter result by: ") : "Filter result by: "),
+            sSearch: (SGN.t("solgs.browser.filter_result_by", "Filter result by: ")),
           },
           data: data,
         });
@@ -163,7 +163,7 @@ jQuery(document).ready(function () {
   jQuery(searchResultDiv).on("click", "div.paginate_nav a", function (e) {
     jQuery(searchResultDiv).empty();
     jQuery(searchResultMsg)
-      .html((window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.searching_more_trials", "Searching for more GS trials..") : "Searching for more GS trials.."))
+      .html((SGN.t("solgs.browser.searching_more_trials", "Searching for more GS trials..")))
       .show();
 
     var page = jQuery(this).attr("href");
@@ -180,7 +180,7 @@ jQuery(document).ready(function () {
         },
         error: function () {
           jQuery(searchResultMsg)
-            .html((window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.next_trials_error", "Error occurred fetching the next set of GS trials.") : "Error occurred fetching the next set of GS trials."))
+            .html((SGN.t("solgs.browser.next_trials_error", "Error occurred fetching the next set of GS trials.")))
             .show();
         },
       });
@@ -214,13 +214,13 @@ jQuery(document).ready(function () {
           jQuery(searchResultDiv).append(pagination);
         } else {
           jQuery(searchResultMsg)
-            .html((window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.no_trait_trials", "No trials phenotyped for the trait were found.") : "No trials phenotyped for the trait were found."))
+            .html((SGN.t("solgs.browser.no_trait_trials", "No trials phenotyped for the trait were found.")))
             .show();
         }
       })
       .fail(function () {
         jQuery(searchResultMsg)
-          .html((window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.first_trials_error", "Error occurred fetching the first set of GS trials.") : "Error occurred fetching the first set of GS trials."))
+          .html((SGN.t("solgs.browser.first_trials_error", "Error occurred fetching the first set of GS trials.")))
           .show();
       });
   }
@@ -268,7 +268,7 @@ jQuery(document).ready(function () {
         .done(function (res) {
           if (res.trial_id) {
             msg =
-              "<p>" + (window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.check_training_population_intro", "Checking if the trial or population can be used ") : "Checking if the trial or population can be used ") + "<br />" + (window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.check_training_population_wait", "as a training population...please wait...") : "as a training population...please wait...") + "</p>";
+              "<p>" + (SGN.t("solgs.browser.check_training_population_intro", "Checking if the trial or population can be used ")) + "<br />" + (SGN.t("solgs.browser.check_training_population_wait", "as a training population...please wait...")) + "</p>";
             solGS.showMessage(msgDiv, msg);
 
             solGS.searchTrials
@@ -299,29 +299,29 @@ jQuery(document).ready(function () {
                   solGS.searchTrials.displayTrainingPopulations(tableDetails);
                 } else {
                   var msg =
-                    "<p>" + (window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.population_not_trainable_prefix", " Population ") : " Population ") + popIds + (window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.population_not_trainable_suffix", " can not be used as a training population. It has no phenotype or/and genotype data.") : " can not be used as a training population. It has no phenotype or/and genotype data.");
+                    "<p>" + (SGN.t("solgs.browser.population_not_trainable_prefix", " Population ")) + popIds + (SGN.t("solgs.browser.population_not_trainable_suffix", " can not be used as a training population. It has no phenotype or/and genotype data."));
                   solGS.showMessage(msgDiv, msg);
                   jQuery("#search_all_training_pops").show();
                 }
               })
               .fail(function () {
                 var msg =
-                  (window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.training_population_check_error", "Error occurred checking for if trial can be used as training population.") : "Error occurred checking for if trial can be used as training population.");
+                  (SGN.t("solgs.browser.training_population_check_error", "Error occurred checking for if trial can be used as training population."));
                 solGS.showMessage(msgDiv, msg);
               });
           } else {
-            msg = "<p>" + entry + (window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.trial_not_in_database", " is not in the database.") : " is not in the database.") + "</p>";
+            msg = "<p>" + entry + (SGN.t("solgs.browser.trial_not_in_database", " is not in the database.")) + "</p>";
             solGS.showMessage(msgDiv, msg);
           }
         })
         .fail(function (res) {
-          msg = (window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.training_population_exists_error", "Error occurred checking if the training population exists.") : "Error occurred checking if the training population exists.");
+          msg = (SGN.t("solgs.browser.training_population_exists_error", "Error occurred checking if the training population exists."));
           solGS.showMessage(msgDiv, msg);
         });
     } else {
       jQuery("#trial_search_box").css("border", "solid #FF0000");
 
-      jQuery("#form-feedback-search-trials").text((window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.enter_trial_name_1743b1", "Please enter a trial name.") : "Please enter a trial name."));
+      jQuery("#form-feedback-search-trials").text((SGN.t("solgs.browser.enter_trial_name_1743b1", "Please enter a trial name.")));
     }
   });
 });

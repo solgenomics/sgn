@@ -44,7 +44,7 @@ jQuery(document).ready(function ($) {
             $('#working_modal').modal("show");
             if (uploadedRenameAccessionsFile === '') {
                 $('#working_modal').modal("hide");
-                alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("cross.ui.no_file_selected", "No file selected") : "No file selected"));
+                alert((SGN.t("cross.ui.no_file_selected", "No file selected")));
             }
         },
         complete: function (r) {
@@ -57,7 +57,7 @@ jQuery(document).ready(function ($) {
             var html;
 
             if (response.error) {
-                html = '<h3>' + _sgnB16RenameEscape((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("accession.rename.issues", "The Following Issues Were Identified") : "The Following Issues Were Identified")) + '</h3><p class="bg-warning">'+response.error+'</p>';
+                html = '<h3>' + _sgnB16RenameEscape((SGN.t("accession.rename.issues", "The Following Issues Were Identified"))) + '</h3><p class="bg-warning">'+response.error+'</p>';
 		$('#upload_rename_accessions_store').prop("disabled", true);
             }
             else {
@@ -65,7 +65,7 @@ jQuery(document).ready(function ($) {
                 archived_filename = response.archived_filename_with_path;
 
 		$('#upload_rename_accessions_store').prop("disabled", false);
-                html = '<h3>' + _sgnB16RenameEscape((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("accession.rename.no_issues", "There Were No Issues Identified") : "There Were No Issues Identified")) + '</h3>' + _sgnB16RenameEscape((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("accession.rename.ready", "Please click the \"Rename\" button to renamee the accessions in the database.") : "Please click the \"Rename\" button to renamee the accessions in the database.")) + '';
+                html = '<h3>' + _sgnB16RenameEscape((SGN.t("accession.rename.no_issues", "There Were No Issues Identified"))) + '</h3>' + _sgnB16RenameEscape((SGN.t("accession.rename.ready", "Please click the \"Rename\" button to renamee the accessions in the database."))) + '';
             }
             $("#upload_rename_accessions_validate_display tbody").html(html);
             $("#upload_rename_accessions_validate_display").modal('show');
@@ -76,7 +76,7 @@ jQuery(document).ready(function ($) {
         var uploadFile = $("#rename_accessions_uploaded_file").val();
         $('#upload_rename_accessions_form').attr("action", "/ajax/rename_accessions/upload_verify");
         if (uploadFile === '') {
-            alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("accessions.upload.file_required", "Please select a file") : "Please select a file"));
+            alert((SGN.t("accessions.upload.file_required", "Please select a file")));
             return;
         }
         $("#upload_rename_accessions_form").submit();

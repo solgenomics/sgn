@@ -313,9 +313,9 @@ $(document).ready(function($) {
             var title = $(this).children().text();
             //console.log("workflow element with title "+title+" was just clicked\n");
 
-            if (title == (window.SGN && window.SGN.i18n ? window.SGN.i18n.p("barcode.mason.design_your_label", "Design Your Label") : "Design Your Label")) {
+            if (title == (SGN.t("barcode.mason.design_your_label", "Design Your Label"))) {
                 $("#d3-draw-area").prependTo("#d3-draw-div");
-            } else if (title == (window.SGN && window.SGN.i18n ? window.SGN.i18n.p("barcode.mason.more_options_save_and_download", "More Options, Save, And Download") : "More Options, Save, And Download")) {
+            } else if (title == (SGN.t("barcode.mason.more_options_save_and_download", "More Options, Save, And Download"))) {
                 $("#d3-draw-area").prependTo("#save-labels-display");
             }
 
@@ -323,7 +323,7 @@ $(document).ready(function($) {
         $("ol.workflow-prog li").click(function() {
             var title = $(this).children().text();
             //console.log("workflow element with title "+title+" was just clicked\n");
-            if (title == (window.SGN && window.SGN.i18n ? window.SGN.i18n.p("barcode.mason.more_options_save_and_download", "More Options, Save, And Download") : "More Options, Save, And Download")) {
+            if (title == (SGN.t("barcode.mason.more_options_save_and_download", "More Options, Save, And Download"))) {
                 $("#d3-draw-area").prependTo("#save-labels-display");
             }
 
@@ -357,15 +357,15 @@ $(document).ready(function($) {
                     jQuery('#page_format').focus();
                 },
                 success: function(response) {
-                    var html = ("<select class=\"form-control\" id=\"label_designer_data_level\" ><option value=\"\" selected>" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("barcode.js.select_a_level", "Select a Level") : "Select a Level")).html() + "</option><option value=\"plots\">" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("lists_datasets.download.plot", "Plot") : "Plot")).html() + "</option>");
+                    var html = ("<select class=\"form-control\" id=\"label_designer_data_level\" ><option value=\"\" selected>" + jQuery("<span>").text((SGN.t("barcode.js.select_a_level", "Select a Level"))).html() + "</option><option value=\"plots\">" + jQuery("<span>").text((SGN.t("lists_datasets.download.plot", "Plot"))).html() + "</option>");
                     if(response.has_plants){
-                        html = html + ("<option value=\"plants\">" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("lists_datasets.download.plant", "Plant") : "Plant")).html() + "</option>");
+                        html = html + ("<option value=\"plants\">" + jQuery("<span>").text((SGN.t("lists_datasets.download.plant", "Plant"))).html() + "</option>");
                     }
                     if(response.has_subplots){
-                        html = html + ("<option value=\"subplots\">" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("trial.card.treatments.level.subplot", "Subplot") : "Subplot")).html() + "</option>");
+                        html = html + ("<option value=\"subplots\">" + jQuery("<span>").text((SGN.t("trial.card.treatments.level.subplot", "Subplot"))).html() + "</option>");
                     }
                     if(response.has_tissue_samples){
-                        html = html + ("<option value=\"tissue_samples\">" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("trial.summary_stock.tissue_sample", "Tissue Sample") : "Tissue Sample")).html() + "</option>");
+                        html = html + ("<option value=\"tissue_samples\">" + jQuery("<span>").text((SGN.t("trial.summary_stock.tissue_sample", "Tissue Sample"))).html() + "</option>");
                     }
                     html = html + '</select>';
                     jQuery('#label_designer_data_level_select_div').html(html);
@@ -377,17 +377,17 @@ $(document).ready(function($) {
             });
         } else if (data_type == 'Genotyping Plates') {
 
-            jQuery('#label_designer_data_level_select_div').html(("<select class=\"form-control\" id=\"label_designer_data_level\" ><option value=\"\" selected>" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("barcode.js.select_a_level", "Select a Level") : "Select a Level")).html() + "</option><option value=\"plate\">" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("barcode.js.plate", "Plate") : "Plate")).html() + "</option></select>"));
+            jQuery('#label_designer_data_level_select_div').html(("<select class=\"form-control\" id=\"label_designer_data_level\" ><option value=\"\" selected>" + jQuery("<span>").text((SGN.t("barcode.js.select_a_level", "Select a Level"))).html() + "</option><option value=\"plate\">" + jQuery("<span>").text((SGN.t("barcode.js.plate", "Plate"))).html() + "</option></select>"));
             jQuery("#label_designer_data_level").focus();
 
         } else if (data_type == 'Crossing Experiments') {
 
-            jQuery('#label_designer_data_level_select_div').html(("<select class=\"form-control\" id=\"label_designer_data_level\" ><option value=\"\" selected>" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("barcode.js.select_a_level", "Select a Level") : "Select a Level")).html() + "</option><option value=\"crosses\">" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("seedlots.ui.cross", "Cross") : "Cross")).html() + "</option></select>"));
+            jQuery('#label_designer_data_level_select_div').html(("<select class=\"form-control\" id=\"label_designer_data_level\" ><option value=\"\" selected>" + jQuery("<span>").text((SGN.t("barcode.js.select_a_level", "Select a Level"))).html() + "</option><option value=\"crosses\">" + jQuery("<span>").text((SGN.t("seedlots.ui.cross", "Cross"))).html() + "</option></select>"));
             jQuery("#label_designer_data_level").focus();
 
         } else if ((data_type == 'Lists') || (data_type == 'Public Lists')) {
 
-            var html = ("<select class=\"form-control\" id=\"label_designer_data_level\" ><option value=\"\" selected>" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("barcode.js.select_a_level", "Select a Level") : "Select a Level")).html() + "</option><option value=\"list\">" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("lists.details.items", "List Items") : "List Items")).html() + "</option>");
+            var html = ("<select class=\"form-control\" id=\"label_designer_data_level\" ><option value=\"\" selected>" + jQuery("<span>").text((SGN.t("barcode.js.select_a_level", "Select a Level"))).html() + "</option><option value=\"list\">" + jQuery("<span>").text((SGN.t("lists.details.items", "List Items"))).html() + "</option>");
             // Check list type, if Plot, Plant, or Tissue Sample add details option
             var name = $('#source_select :selected').text();
 
@@ -403,20 +403,20 @@ $(document).ready(function($) {
                 },
                 success: function(response) {
                     if ( response.list_type === 'trials' ) {
-                        html += ("<option value=\"plots\">" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("barcode.js.plot_details", "Plot Details") : "Plot Details")).html() + "</option>");
+                        html += ("<option value=\"plots\">" + jQuery("<span>").text((SGN.t("barcode.js.plot_details", "Plot Details"))).html() + "</option>");
                     } else if (response.list_type == 'plots') {
-                        html = html + ("<option value=\"plots\">" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("barcode.js.plot_details", "Plot Details") : "Plot Details")).html() + "</option>");
+                        html = html + ("<option value=\"plots\">" + jQuery("<span>").text((SGN.t("barcode.js.plot_details", "Plot Details"))).html() + "</option>");
                     } else if (response.list_type == 'subplots') {
-                        html = html + ("<option value=\"subplots\">" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("barcode.js.subplot_details", "Subplot Details") : "Subplot Details")).html() + "</option>");
+                        html = html + ("<option value=\"subplots\">" + jQuery("<span>").text((SGN.t("barcode.js.subplot_details", "Subplot Details"))).html() + "</option>");
                     } else if (response.list_type == 'plants') {
-                        html = html + ("<option value=\"plants\">" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("barcode.js.plant_details", "Plant Details") : "Plant Details")).html() + "</option>");
+                        html = html + ("<option value=\"plants\">" + jQuery("<span>").text((SGN.t("barcode.js.plant_details", "Plant Details"))).html() + "</option>");
                     } else if (response.list_type == 'tissue_samples') {
-                        html = html + ("<option value=\"tissue_samples\">" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("barcode.js.tissue_sample_details", "Tissue Sample Details") : "Tissue Sample Details")).html() + "</option>");
+                        html = html + ("<option value=\"tissue_samples\">" + jQuery("<span>").text((SGN.t("barcode.js.tissue_sample_details", "Tissue Sample Details"))).html() + "</option>");
                     } else if (response.list_type == 'crosses') {
-                        html = html + ("<option value=\"crosses\">" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("barcode.js.cross_details", "Cross Details") : "Cross Details")).html() + "</option>");
+                        html = html + ("<option value=\"crosses\">" + jQuery("<span>").text((SGN.t("barcode.js.cross_details", "Cross Details"))).html() + "</option>");
                     } else if (response.list_type == 'identifier_generation') {
                         // remove list item select options and add options for each id batch
-                        html = ("<select class=\"form-control\" id=\"label_designer_data_level\" ><option value=\"\" selected>" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("barcode.js.select_a_level", "Select a Level") : "Select a Level")).html() + "</option>");
+                        html = ("<select class=\"form-control\" id=\"label_designer_data_level\" ><option value=\"\" selected>" + jQuery("<span>").text((SGN.t("barcode.js.select_a_level", "Select a Level"))).html() + "</option>");
                         var lo = new CXGN.List();
                         var list_data = lo.getListData(response.list_id);
                         var elements = list_data.elements;
@@ -429,7 +429,7 @@ $(document).ready(function($) {
                                 var min = generated_identifiers.shift();
                                 var max = generated_identifiers.pop();
                                 var id = records[x].next_number;
-                                html = html + '<option value="batch-'+id+'">' + jQuery('<span>').text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("barcode.final_selector.271e65a", "ID Batch ") : "ID Batch ")).html() + min+' - '+max+'</option>';
+                                html = html + '<option value="batch-'+id+'">' + jQuery('<span>').text((SGN.t("barcode.final_selector.271e65a", "ID Batch "))).html() + min+' - '+max+'</option>';
                             }
                         }
                     }
@@ -587,12 +587,12 @@ $(document).ready(function($) {
     $("#d3-add").on("click", function() {
         var type = document.getElementById("d3-add-type-input").value;
         if (!type || type == 'Select an element type') {
-            alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("barcode.js.a_valid_type_must_be_selected", "A valid type must be selected.") : "A valid type must be selected."));
+            alert((SGN.t("barcode.js.a_valid_type_must_be_selected", "A valid type must be selected.")));
             return;
         }
         var field = $('#d3-add-field-input').find('option:selected').text();
-        if (!field || field == (window.SGN && window.SGN.i18n ? window.SGN.i18n.p("barcode.final_selector.c20a5eb", "Select a field") : "Select a field")) {
-            alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("barcode.js.a_valid_field_must_be_selected", "A valid field must be selected.") : "A valid field must be selected."));
+        if (!field || field == (SGN.t("barcode.final_selector.c20a5eb", "Select a field"))) {
+            alert((SGN.t("barcode.js.a_valid_field_must_be_selected", "A valid field must be selected.")));
             return;
         }
         // check if add_fields[field] is defined. If so, add {}s
@@ -715,7 +715,7 @@ function downloadLabels (design, download_type) {
     var label_elements = document.getElementsByClassName('label-element');
     label_elements = Array.prototype.slice.call(label_elements); // convert to array
     if (label_elements.length < 1) {
-        alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("barcode.js.no_elements_in_the_design_please_add_design_elements_before_downloading", "No elements in the design. Please add design elements before downloading") : "No elements in the design. Please add design elements before downloading"));
+        alert((SGN.t("barcode.js.no_elements_in_the_design_please_add_design_elements_before_downloading", "No elements in the design. Please add design elements before downloading")));
         return;
     }
     var data_type = ($('#source_select :selected').parent().attr('data-sgn-source-type') || $('#source_select :selected').parent().attr('label'));
@@ -723,12 +723,12 @@ function downloadLabels (design, download_type) {
     var source_name = $("#source_select :selected").text();
     //console.log("Id is "+source_id+" and name is "+source_name);
     if (!source_id || source_id == 'Please select a trial' || source_id == 'Select a plot list') {
-        alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("barcode.js.no_data_source_selected_please_select_a_data_source_before_downloading", "No data source selected. Please select a data source before downloading") : "No data source selected. Please select a data source before downloading"));
+        alert((SGN.t("barcode.js.no_data_source_selected_please_select_a_data_source_before_downloading", "No data source selected. Please select a data source before downloading")));
         return;
     }
 
     if (!design) {
-        alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("barcode.js.no_design_please_define_a_design_before_downloading", "No design. Please define a design before downloading") : "No design. Please define a design before downloading"));
+        alert((SGN.t("barcode.js.no_design_please_define_a_design_before_downloading", "No design. Please define a design before downloading")));
         return;
     }
     design.label_elements = label_elements.filter(checkIfVisible).map(getLabelDetails);
@@ -769,7 +769,7 @@ function downloadLabels (design, download_type) {
         },
         error: function(request, status, err) {
             enable_ui();
-            alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("barcode.js.error_unable_to_download_labels", "Error. Unable to download labels.") : "Error. Unable to download labels."));
+            alert((SGN.t("barcode.js.error_unable_to_download_labels", "Error. Unable to download labels.")));
         }
     });
 }
@@ -799,7 +799,7 @@ function updateFields(data_type, source_id, data_level){
         },
         success: function(response) {
             if (response.error) {
-                alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("barcode.js.an_error_occured_while_retrieving_the_design_elements_of_this_trial", "An error occurred while retrieving the design elements of this trial: ") : "An error occurred while retrieving the design elements of this trial: ") + JSON.stringify(response.error));
+                alert((SGN.t("barcode.js.an_error_occured_while_retrieving_the_design_elements_of_this_trial", "An error occurred while retrieving the design elements of this trial: ")) + JSON.stringify(response.error));
                 getDataSourceSelect();
             } else {
                 add_fields = response.fields;
@@ -827,7 +827,7 @@ function updateFields(data_type, source_id, data_level){
             }
         },
         error: function(request, status, err) {
-            alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("barcode.js.unable_to_retrieve_design_elements_of_this_trial_please_confirm_this_tri", "Unable to retrieve design elements of this trial. Please confirm this trial has a design, or try again with a different trial. Please contact us!") : "Unable to retrieve design elements of this trial. Please confirm this trial has a design, or try again with a different trial. Please contact us!"));
+            alert((SGN.t("barcode.js.unable_to_retrieve_design_elements_of_this_trial_please_confirm_this_tri", "Unable to retrieve design elements of this trial. Please confirm this trial has a design, or try again with a different trial. Please contact us!")));
         }
     });
 }
@@ -1100,7 +1100,7 @@ function getDataSourceSelect() {
     get_select_box('label_data_source_types', 'data_source_type', {
         name: 'source_type_select',
         id: 'source_type_select',
-        default: (window.SGN && window.SGN.i18n ? window.SGN.i18n.p("barcode.final_selector.d47ea10", "Select a type of data source for the labels") : "Select a type of data source for the labels"),
+        default: (SGN.t("barcode.final_selector.d47ea10", "Select a type of data source for the labels")),
         live_search: 0,
         after_load: function () {
             if (sourceTypeFromUrl) {
@@ -1121,7 +1121,7 @@ function updateDataSourceSelect() {
         {
             name: 'source_select',
             id: 'source_select',
-            default: (window.SGN && window.SGN.i18n ? window.SGN.i18n.p("barcode.final_selector.b14b127", "Select a data source for the labels") : "Select a data source for the labels"),
+            default: (SGN.t("barcode.final_selector.b14b127", "Select a data source for the labels")),
             live_search: 1,
             type: jQuery("#source_type_select option:selected").val(),
             after_load: function () {
@@ -1456,7 +1456,7 @@ function createAdders(add_fields) {
         .data(["Select a field", ...Object.keys(add_fields).sort()])
         .enter().append("option")
         .text(function(d) {
-            return d === "Select a field" ? (window.SGN && window.SGN.i18n ? window.SGN.i18n.p("barcode.final_selector.c20a5eb", "Select a field") : "Select a field") : d
+            return d === "Select a field" ? (SGN.t("barcode.final_selector.c20a5eb", "Select a field")) : d
         })
         .attr("value", function(d) {
             return add_fields[d]
@@ -1478,7 +1478,7 @@ function addPlotFilter(reps) {
         .data(Object.keys(reps).sort())
         .enter().append("option")
         .text(function(d) {
-            return d === "All" ? (window.SGN && window.SGN.i18n ? window.SGN.i18n.p("global.search_wizard.all_levels", "All") : "All") : (window.SGN && window.SGN.i18n ? window.SGN.i18n.p("barcode.final_selector.ecc90b4", "Rep %{rep} only", {rep: d.slice(4, -5)}) : d)
+            return d === "All" ? (SGN.t("global.search_wizard.all_levels", "All")) : (window.SGN && window.SGN.i18n ? window.SGN.i18n.p("barcode.final_selector.ecc90b4", "Rep %{rep} only", {rep: d.slice(4, -5)}) : d)
         })
         .attr("value", function(d) {
             return reps[d]
@@ -1501,7 +1501,7 @@ function addSortOrders(add_fields, data_type, data_level) {
         .data(["Select a field", ...data_type_fields, ...Object.keys(add_fields).sort()])
         .enter().append("option")
         .text(function(d) {
-            return d === "Select a field" ? (window.SGN && window.SGN.i18n ? window.SGN.i18n.p("barcode.final_selector.c20a5eb", "Select a field") : "Select a field") : d === "Trial Layout: Plot Order" ? (window.SGN && window.SGN.i18n ? window.SGN.i18n.p("barcode.final_selector.2cec4d0", "Trial Layout: Plot Order") : "Trial Layout: Plot Order") : d
+            return d === "Select a field" ? (SGN.t("barcode.final_selector.c20a5eb", "Select a field")) : d === "Trial Layout: Plot Order" ? (SGN.t("barcode.final_selector.2cec4d0", "Trial Layout: Plot Order")) : d
         })
         .attr("value", function(d) {
             return d
@@ -1510,7 +1510,7 @@ function addSortOrders(add_fields, data_type, data_level) {
         .data(["Select a field", ...Object.keys(add_fields).sort()])
         .enter().append("option")
         .text(function(d) {
-            return d === "Select a field" ? (window.SGN && window.SGN.i18n ? window.SGN.i18n.p("barcode.final_selector.c20a5eb", "Select a field") : "Select a field") : d === "Trial Layout: Plot Order" ? (window.SGN && window.SGN.i18n ? window.SGN.i18n.p("barcode.final_selector.2cec4d0", "Trial Layout: Plot Order") : "Trial Layout: Plot Order") : d
+            return d === "Select a field" ? (SGN.t("barcode.final_selector.c20a5eb", "Select a field")) : d === "Trial Layout: Plot Order" ? (SGN.t("barcode.final_selector.2cec4d0", "Trial Layout: Plot Order")) : d
         })
         .attr("value", function(d) {
             return d
@@ -1615,12 +1615,12 @@ function retrievePageParams() {
 
     var page = d3.select("#page_format").node().value;
     if (!page || page == 'Select a page format') {
-        alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("barcode.js.no_page_format_select_please_select_a_page_format", "No page format select. Please select a page format") : "No page format select. Please select a page format"));
+        alert((SGN.t("barcode.js.no_page_format_select_please_select_a_page_format", "No page format select. Please select a page format")));
         return;
     }
     var label = d3.select("#label_format").node().value;
     if (!label || label == 'Select a label format') {
-        alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("barcode.js.no_label_format_select_please_select_a_label_format", "No label format select. Please select a label format") : "No label format select. Please select a label format"));
+        alert((SGN.t("barcode.js.no_label_format_select_please_select_a_label_format", "No label format select. Please select a label format")));
         return;
     }
     var label_sizes = page_formats[page].label_sizes;
@@ -1708,7 +1708,7 @@ function initializeCustomModal(add_fields) {
         .data(["Select a field", ...Object.keys(add_fields).sort()])
         .enter().append("option")
         .text(function(d) {
-            return d === "Select a field" ? (window.SGN && window.SGN.i18n ? window.SGN.i18n.p("barcode.final_selector.c20a5eb", "Select a field") : "Select a field") : d
+            return d === "Select a field" ? (SGN.t("barcode.final_selector.c20a5eb", "Select a field")) : d
         })
         .attr("value", function(d) {
             return add_fields[d]
@@ -1717,7 +1717,7 @@ function initializeCustomModal(add_fields) {
     $('#d3-custom-add-field-input').on("change", function() {
 
         var value = $(this).find('option:selected').text();
-        if (!value || value == (window.SGN && window.SGN.i18n ? window.SGN.i18n.p("barcode.final_selector.c20a5eb", "Select a field") : "Select a field")) {
+        if (!value || value == (SGN.t("barcode.final_selector.c20a5eb", "Select a field"))) {
             return;
         } else {
             var custom_field = $("#d3-custom-input").val() + "{" + value + "}";
@@ -1765,7 +1765,7 @@ function saveLabelDesign() {
     var label_elements = document.getElementsByClassName('label-element');
     label_elements = Array.prototype.slice.call(label_elements); // convert to array
     if (label_elements.length < 1) {
-        alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("barcode.js.no_elements_in_the_design_please_add_design_elements_before_saving", "No elements in the design. Please add design elements before saving") : "No elements in the design. Please add design elements before saving"));
+        alert((SGN.t("barcode.js.no_elements_in_the_design_please_add_design_elements_before_saving", "No elements in the design. Please add design elements before saving")));
         return;
     }
 
@@ -1787,7 +1787,7 @@ function saveLabelDesign() {
         lo.setListType(list_id, 'label_design');
     }
     if (elementsAdded) {
-        alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("barcode.js.saved_label_design_with_name", "Saved label design with name ") : "Saved label design with name ") + new_name);
+        alert((SGN.t("barcode.js.saved_label_design_with_name", "Saved label design with name ")) + new_name);
     }
 }
 
@@ -1796,7 +1796,7 @@ function fillInPlaceholders(match, placeholder) { // replace placeholders with a
         // console.log("Filling "+placeholder+" with "+filled);
         if (typeof filled === 'undefined' && !placeholder.match(/Number:/)) {
             // console.log(placeholder+" is undefined. Alerting with warning");
-            alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("barcode.js.missing_field_your_selected_design_includes_the_field", "Missing field. Your selected design includes the field ") : "Missing field. Your selected design includes the field ")+placeholder+(window.SGN && window.SGN.i18n ? window.SGN.i18n.p("barcode.js.which_is_not_available_from_the_selected_data_source_please_pick_a_diffe", " which is not available from the selected data source. Please pick a different saved design or data source, or remove the undefined field from the design area.") : " which is not available from the selected data source. Please pick a different saved design or data source, or remove the undefined field from the design area."))
+            alert((SGN.t("barcode.js.missing_field_your_selected_design_includes_the_field", "Missing field. Your selected design includes the field "))+placeholder+(SGN.t("barcode.js.which_is_not_available_from_the_selected_data_source_please_pick_a_diffe", " which is not available from the selected data source. Please pick a different saved design or data source, or remove the undefined field from the design area.")))
         }
         return filled;
 }
@@ -1805,7 +1805,7 @@ function showLoadOption() {
     // document.getElementById('design_label').style.display = "inline";
     // document.getElementById('design_list').style.display = "inline";
     var lo = new CXGN.List();
-    $('#design_list').html(lo.listSelect('design_list', ['label_design'], (window.SGN && window.SGN.i18n ? window.SGN.i18n.p("lists.selector.saved_label_design_prompt", "Select a saved design") : "Select a saved design"), 'refresh', undefined));
+    $('#design_list').html(lo.listSelect('design_list', ['label_design'], (SGN.t("lists.selector.saved_label_design_prompt", "Select a saved design")), 'refresh', undefined));
     $('#design_list_list_select').change(
       function() {
         Workflow.complete(this);
@@ -1906,32 +1906,32 @@ function loadDesign (list_id) {
 
 function labelDesignerOptionCaption(value) {
     switch (value) {
-        case "Select a field": return (window.SGN && window.SGN.i18n ? window.SGN.i18n.p("barcode.final_selector.c20a5eb", "Select a field") : "Select a field");
-        case "Trial Layout: Plot Order": return (window.SGN && window.SGN.i18n ? window.SGN.i18n.p("barcode.final_selector.2cec4d0", "Trial Layout: Plot Order") : "Trial Layout: Plot Order");
-        case "Select a page format": return (window.SGN && window.SGN.i18n ? window.SGN.i18n.p("barcode.final_selector.b33d072", "Select a page format") : "Select a page format");
-        case "Select a label format": return (window.SGN && window.SGN.i18n ? window.SGN.i18n.p("barcode.final_selector.d2ab36d", "Select a label format") : "Select a label format");
-        case "Custom": return (window.SGN && window.SGN.i18n ? window.SGN.i18n.p("barcode.final_selector.c917329", "Custom") : "Custom");
-        case "Zebra printer file": return (window.SGN && window.SGN.i18n ? window.SGN.i18n.p("barcode.final_selector.1855455", "Zebra printer file") : "Zebra printer file");
-        case "US Letter PDF": return (window.SGN && window.SGN.i18n ? window.SGN.i18n.p("barcode.final_selector.8c99fd5", "US Letter PDF") : "US Letter PDF");
-        case "A4 PDF": return (window.SGN && window.SGN.i18n ? window.SGN.i18n.p("barcode.final_selector.e82255f", "A4 PDF") : "A4 PDF");
-        case "Select an element type": return (window.SGN && window.SGN.i18n ? window.SGN.i18n.p("barcode.final_selector.59e1cdd", "Select an element type") : "Select an element type");
-        case "Text (PDF)": return (window.SGN && window.SGN.i18n ? window.SGN.i18n.p("barcode.final_selector.2a0ce76", "Text (PDF)") : "Text (PDF)");
-        case "Text (Zebra)": return (window.SGN && window.SGN.i18n ? window.SGN.i18n.p("barcode.final_selector.fa95e2b", "Text (Zebra)") : "Text (Zebra)");
-        case "1D Barcode (Code128)": return (window.SGN && window.SGN.i18n ? window.SGN.i18n.p("barcode.final_selector.9a64362", "1D Barcode (Code128)") : "1D Barcode (Code128)");
-        case "2D Barcode (QRCode)": return (window.SGN && window.SGN.i18n ? window.SGN.i18n.p("barcode.final_selector.bf1a4c8", "2D Barcode (QRCode)") : "2D Barcode (QRCode)");
-        case "All": return (window.SGN && window.SGN.i18n ? window.SGN.i18n.p("global.search_wizard.all_levels", "All") : "All");
-        case "One": return (window.SGN && window.SGN.i18n ? window.SGN.i18n.p("barcode.final_selector.eef0545", "One") : "One");
-        case "Two": return (window.SGN && window.SGN.i18n ? window.SGN.i18n.p("barcode.final_selector.dd5aa61", "Two") : "Two");
-        case "Three": return (window.SGN && window.SGN.i18n ? window.SGN.i18n.p("barcode.final_selector.18d4616", "Three") : "Three");
-        case "Four": return (window.SGN && window.SGN.i18n ? window.SGN.i18n.p("barcode.final_selector.36d3998", "Four") : "Four");
-        case "Five": return (window.SGN && window.SGN.i18n ? window.SGN.i18n.p("barcode.final_selector.ca24d5f", "Five") : "Five");
-        case "Six": return (window.SGN && window.SGN.i18n ? window.SGN.i18n.p("barcode.final_selector.3ab5b56", "Six") : "Six");
-        case "Seven": return (window.SGN && window.SGN.i18n ? window.SGN.i18n.p("barcode.final_selector.996b439", "Seven") : "Seven");
-        case "Eight": return (window.SGN && window.SGN.i18n ? window.SGN.i18n.p("barcode.final_selector.31c1f65", "Eight") : "Eight");
-        case "Nine": return (window.SGN && window.SGN.i18n ? window.SGN.i18n.p("barcode.final_selector.2749db9", "Nine") : "Nine");
-        case "Ten": return (window.SGN && window.SGN.i18n ? window.SGN.i18n.p("barcode.final_selector.a7bd116", "Ten") : "Ten");
-        case "32 Label Size Sticker [1\" x 1 1/3\"]": return (window.SGN && window.SGN.i18n ? window.SGN.i18n.p("barcode.final_selector.5311bc4", "32 Label Size Sticker [1\" x 1 1/3\"]") : "32 Label Size Sticker [1\" x 1 1/3\"]");
-        case "20 Label Size Sticker [5/6\" x 3 3/5\"]": return (window.SGN && window.SGN.i18n ? window.SGN.i18n.p("barcode.final_selector.5fdd249", "20 Label Size Sticker [5/6\" x 3 3/5\"]") : "20 Label Size Sticker [5/6\" x 3 3/5\"]");
+        case "Select a field": return (SGN.t("barcode.final_selector.c20a5eb", "Select a field"));
+        case "Trial Layout: Plot Order": return (SGN.t("barcode.final_selector.2cec4d0", "Trial Layout: Plot Order"));
+        case "Select a page format": return (SGN.t("barcode.final_selector.b33d072", "Select a page format"));
+        case "Select a label format": return (SGN.t("barcode.final_selector.d2ab36d", "Select a label format"));
+        case "Custom": return (SGN.t("barcode.final_selector.c917329", "Custom"));
+        case "Zebra printer file": return (SGN.t("barcode.final_selector.1855455", "Zebra printer file"));
+        case "US Letter PDF": return (SGN.t("barcode.final_selector.8c99fd5", "US Letter PDF"));
+        case "A4 PDF": return (SGN.t("barcode.final_selector.e82255f", "A4 PDF"));
+        case "Select an element type": return (SGN.t("barcode.final_selector.59e1cdd", "Select an element type"));
+        case "Text (PDF)": return (SGN.t("barcode.final_selector.2a0ce76", "Text (PDF)"));
+        case "Text (Zebra)": return (SGN.t("barcode.final_selector.fa95e2b", "Text (Zebra)"));
+        case "1D Barcode (Code128)": return (SGN.t("barcode.final_selector.9a64362", "1D Barcode (Code128)"));
+        case "2D Barcode (QRCode)": return (SGN.t("barcode.final_selector.bf1a4c8", "2D Barcode (QRCode)"));
+        case "All": return (SGN.t("global.search_wizard.all_levels", "All"));
+        case "One": return (SGN.t("barcode.final_selector.eef0545", "One"));
+        case "Two": return (SGN.t("barcode.final_selector.dd5aa61", "Two"));
+        case "Three": return (SGN.t("barcode.final_selector.18d4616", "Three"));
+        case "Four": return (SGN.t("barcode.final_selector.36d3998", "Four"));
+        case "Five": return (SGN.t("barcode.final_selector.ca24d5f", "Five"));
+        case "Six": return (SGN.t("barcode.final_selector.3ab5b56", "Six"));
+        case "Seven": return (SGN.t("barcode.final_selector.996b439", "Seven"));
+        case "Eight": return (SGN.t("barcode.final_selector.31c1f65", "Eight"));
+        case "Nine": return (SGN.t("barcode.final_selector.2749db9", "Nine"));
+        case "Ten": return (SGN.t("barcode.final_selector.a7bd116", "Ten"));
+        case "32 Label Size Sticker [1\" x 1 1/3\"]": return (SGN.t("barcode.final_selector.5311bc4", "32 Label Size Sticker [1\" x 1 1/3\"]"));
+        case "20 Label Size Sticker [5/6\" x 3 3/5\"]": return (SGN.t("barcode.final_selector.5fdd249", "20 Label Size Sticker [5/6\" x 3 3/5\"]"));
         default: return value;
     }
 }

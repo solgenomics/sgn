@@ -423,7 +423,7 @@ jQuery(document).ready(function() {
 
                     var html = '';
                     if (response.sum_square_residual) {
-                        html = html + ("<h4>" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("analysis.interface.sum_square_residual", "Sum square residual:") : "Sum square residual:")).html() + " ")+response.sum_square_residual+'</h4><hr>';
+                        html = html + ("<h4>" + jQuery("<span>").text((SGN.t("analysis.interface.sum_square_residual", "Sum square residual:"))).html() + " ")+response.sum_square_residual+'</h4><hr>';
                     }
                     if (response.genetic_effects_line_plot) {
                         html = html + '<img src="'+response.genetic_effects_line_plot+'"><hr>';
@@ -437,7 +437,7 @@ jQuery(document).ready(function() {
                         analysis_calculate_statistics_phenotype_training_file = response.stats_tempfile;
                         analysis_calculate_statistics_grm_training_file = response.grm_file;
 
-                        html = html + ("<table class=\"table table-bordered table-hover\"><thead><tr><th>" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("accessions.section.accessions", "Accessions") : "Accessions")).html() + "</th>");
+                        html = html + ("<table class=\"table table-bordered table-hover\"><thead><tr><th>" + jQuery("<span>").text((SGN.t("accessions.section.accessions", "Accessions"))).html() + "</th>");
                         for (var i=0; i<analysis_calculate_statistics_trait_names.length; i++) {
                             html = html + '<th>'+analysis_calculate_statistics_trait_names[i]+'</th>';
                         }
@@ -462,7 +462,7 @@ jQuery(document).ready(function() {
                         analysis_calculate_statistics_plot_names = response.unique_plots;
                         analysis_calculate_statistics_trait_names = response.unique_traits;
 
-                        html = html + ("<table class=\"table table-bordered table-hover\"><thead><tr><th>" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("global.graphical_filtering.plots", "Plots") : "Plots")).html() + "</th>");
+                        html = html + ("<table class=\"table table-bordered table-hover\"><thead><tr><th>" + jQuery("<span>").text((SGN.t("global.graphical_filtering.plots", "Plots"))).html() + "</th>");
                         for (var i=0; i<response.unique_traits.length; i++) {
                             html = html + '<th>'+response.unique_traits[i]+'</th>';
                         }
@@ -479,17 +479,17 @@ jQuery(document).ready(function() {
                     }
 
                     if (response.results.length > 0) {
-                        html = ("<table class=\"table table-bordered table-hover\"><thead><tr><th>" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("accession.usage.header.variable", "Observation Variable") : "Observation Variable")).html() + "</th><th>" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("analysis.interface.statistics", "Statistics") : "Statistics")).html() + "</th><th>" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("lists_datasets.download.plot", "Plot") : "Plot")).html() + "</th></tr></thead><tbody>");
+                        html = ("<table class=\"table table-bordered table-hover\"><thead><tr><th>" + jQuery("<span>").text((SGN.t("accession.usage.header.variable", "Observation Variable"))).html() + "</th><th>" + jQuery("<span>").text((SGN.t("analysis.interface.statistics", "Statistics"))).html() + "</th><th>" + jQuery("<span>").text((SGN.t("lists_datasets.download.plot", "Plot"))).html() + "</th></tr></thead><tbody>");
                         for (var i=0; i<response.results.length; i++) {
                             html = html + '<tr><td>'+response.results[i][0]+'</td><td>'+response.results[i][1]+'</td><td><img src="'+response.results[i][2]+'"></td></tr>';
                         }
                         html = html + '</tbody></table>';
                     }
 
-                    html = html + '<hr><a href="'+response.stats_out_tempfile_string+(".log\" target=_blank>" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("analysis.interface.stats_file_or_log", "Stats file or log") : "Stats file or log")).html() + "</a>");
+                    html = html + '<hr><a href="'+response.stats_out_tempfile_string+(".log\" target=_blank>" + jQuery("<span>").text((SGN.t("analysis.interface.stats_file_or_log", "Stats file or log"))).html() + "</a>");
 
                     if (jQuery('#analysis_calculate_statistics_relationship_matrix_type_select_div').val() == 'htp_phenotypes') {
-                        html = html + '<hr><a href="'+response.stats_out_htp_rel_tempfile_out_string+("\" target=_blank>" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("analysis.interface.htp_relationship_matrix", "HTP Relationship Matrix") : "HTP Relationship Matrix")).html() + "</a>");
+                        html = html + '<hr><a href="'+response.stats_out_htp_rel_tempfile_out_string+("\" target=_blank>" + jQuery("<span>").text((SGN.t("analysis.interface.htp_relationship_matrix", "HTP Relationship Matrix"))).html() + "</a>");
                     }
 
                     jQuery('#analysis_calculate_statistics_result_div').html(html);
@@ -637,10 +637,10 @@ jQuery(document).ready(function() {
                 if (response.success) {
                     var html = '<center>';
                     if (response.model_id) {
-                        html = html + ("<p>" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("analysis.interface.go_to_saved", "Go to saved") : "Go to saved")).html() + " <a href=\"/analyses_model/")+response.model_id+("\" target=_blank >" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("analysis.interface.model_9372c4", "model") : "model")).html() + "</a></p>");
+                        html = html + ("<p>" + jQuery("<span>").text((SGN.t("analysis.interface.go_to_saved", "Go to saved"))).html() + " <a href=\"/analyses_model/")+response.model_id+("\" target=_blank >" + jQuery("<span>").text((SGN.t("analysis.interface.model_9372c4", "model"))).html() + "</a></p>");
                     }
                     if (response.analysis_id) {
-                        html = html + ("<p>" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("analysis.interface.go_to_saved", "Go to saved") : "Go to saved")).html() + " <a href=\"/analyses/")+response.analysis_id+("\" target=_blank >" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("analysis.interface.gblup_analysis", "GBLUP analysis") : "GBLUP analysis")).html() + "</a></p>");
+                        html = html + ("<p>" + jQuery("<span>").text((SGN.t("analysis.interface.go_to_saved", "Go to saved"))).html() + " <a href=\"/analyses/")+response.analysis_id+("\" target=_blank >" + jQuery("<span>").text((SGN.t("analysis.interface.gblup_analysis", "GBLUP analysis"))).html() + "</a></p>");
                     }
                     html = html + '</center>';
                     jQuery('#generic_save_analysis_template_response_div').html(html);
@@ -702,7 +702,7 @@ jQuery(document).ready(function() {
                                 html = html + '<center>';
                                 if (response.analysis_id) {
                                     if (analysis_calculate_statistics_select == 'sommer_grm_spatial_genetic_blups') {
-                                        html = html + ("<p>" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("analysis.interface.go_to_saved", "Go to saved") : "Go to saved")).html() + " <a href=\"/analyses/")+response.analysis_id+("\" target=_blank >" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("analysis.interface.spatial_blup_analysis", "spatial BLUP analysis") : "spatial BLUP analysis")).html() + "</a></p>");
+                                        html = html + ("<p>" + jQuery("<span>").text((SGN.t("analysis.interface.go_to_saved", "Go to saved"))).html() + " <a href=\"/analyses/")+response.analysis_id+("\" target=_blank >" + jQuery("<span>").text((SGN.t("analysis.interface.spatial_blup_analysis", "spatial BLUP analysis"))).html() + "</a></p>");
                                     }
                                 }
                                 html = html + '</center>';
@@ -761,7 +761,7 @@ jQuery(document).ready(function() {
                                             alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("analysis.interface.analysis_and_or_model_saved", "Analysis and/or model saved!") : 'Analysis and/or model saved!'));
                                             html = html + '<center>';
                                             if (response.analysis_id) {
-                                                html = html + ("<p>" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("analysis.interface.go_to_saved", "Go to saved") : "Go to saved")).html() + " <a href=\"/analyses/")+response.analysis_id+("\" target=_blank >" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("analysis.interface.residuals_analysis", "residuals analysis") : "residuals analysis")).html() + "</a></p>");
+                                                html = html + ("<p>" + jQuery("<span>").text((SGN.t("analysis.interface.go_to_saved", "Go to saved"))).html() + " <a href=\"/analyses/")+response.analysis_id+("\" target=_blank >" + jQuery("<span>").text((SGN.t("analysis.interface.residuals_analysis", "residuals analysis"))).html() + "</a></p>");
                                             }
                                             html = html + '</center>';
                                             jQuery('#generic_save_analysis_template_response_div').html(html);

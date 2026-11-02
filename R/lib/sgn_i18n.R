@@ -208,6 +208,9 @@
     list(bytes = bytes, value = value)
 }
 .sgn_i18n_bundle <- function(directory, locale, domain) {
+    if (!dir.exists(directory)) return(NULL)
+    # Pin all partition reads to one immutable activation generation.
+    directory <- normalizePath(directory, mustWork = TRUE)
     path <- file.path(directory, "index.json")
     if (!file.exists(path)) return(NULL)
     index <- .sgn_i18n_read(path, 2L * 1024L * 1024L)$value

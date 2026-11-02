@@ -36,14 +36,14 @@ solGS.anova = {
 
     jQuery("#anova_msg").dialog({
       modal: true,
-      title: (window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.anova_alert_title", "Alert") : "Alert"),
+      title: (SGN.t("solgs.browser.anova_alert_title", "Alert")),
       buttons: {
         OK: {
           click: function () {
             jQuery(this).dialog("close");
           },
           class: "btn btn-success",
-          text: (window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.ok", "OK") : "OK"),
+          text: (SGN.t("solgs.browser.ok", "OK")),
         },
       },
     });
@@ -110,7 +110,7 @@ solGS.anova = {
     var selectId = this.anovaTraitsSelectMenuId;
     var menuDivId = this.anovaTraitsDiv;
 
-    var optionsLabel = (window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.anova_select_trait", "Select a trait") : "Select a trait");
+    var optionsLabel = (SGN.t("solgs.browser.anova_select_trait", "Select a trait"));
     var menuClass = "form-control";
     var menu = new SelectMenu(menuDivId, selectId, menuClass, optionsLabel);
     menu.populateMenu(traits)
@@ -153,18 +153,18 @@ jQuery(document).ready(function () {
                 solGS.anova.populateAnovaMenu(traits);
                 jQuery(runDiv).show();
               } else {
-                solGS.anova.showMessage((window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.anova_no_phenotyped_traits", "This trial has no phenotyped traits.") : "This trial has no phenotyped traits."));
+                solGS.anova.showMessage((SGN.t("solgs.browser.anova_no_phenotyped_traits", "This trial has no phenotyped traits.")));
                 jQuery(runDiv).hide();
               }
             })
             .fail(function () {
-              solGS.anova.showMessage((window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.anova_trait_list_error", "Error occurred listing anova traits.") : "Error occurred listing anova traits."));
+              solGS.anova.showMessage((SGN.t("solgs.browser.anova_trait_list_error", "Error occurred listing anova traits.")));
               jQuery(runDiv).hide();
             });
         }
       })
       .fail(function () {
-        solGS.anova.showMessage((window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.anova_design_error", "Error occurred running the ANOVA.") : "Error occurred running the ANOVA."));
+        solGS.anova.showMessage((SGN.t("solgs.browser.anova_design_error", "Error occurred running the ANOVA.")));
         jQuery(runDiv).show();
       });
   }
@@ -178,7 +178,7 @@ jQuery(document).ready(function () {
     var traitId = jQuery("#anova_selected_trait_id").val();
     if (traitId) {
       jQuery(runDiv).hide();
-      solGS.anova.showMessage((window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.anova_query_wait", "Please wait...querying the database for the trait data...") : "Please wait...querying the database for the trait data..."));
+      solGS.anova.showMessage((SGN.t("solgs.browser.anova_query_wait", "Please wait...querying the database for the trait data...")));
       jQuery(`${canvas} .multi-spinner-container`).show();
 
       solGS.anova.queryPhenoData(traitId).done(function (queryRes) {
@@ -189,7 +189,7 @@ jQuery(document).ready(function () {
         } else {
           var traitsAbbrs = queryRes.traits_abbrs;
           traitsAbbrs = JSON.parse(traitsAbbrs);
-          solGS.anova.showMessage((window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.anova_running_wait", "Validated trait data...now running ANOVA...please wait...") : "Validated trait data...now running ANOVA...please wait..."));
+          solGS.anova.showMessage((SGN.t("solgs.browser.anova_running_wait", "Validated trait data...now running ANOVA...please wait...")));
 
           solGS.anova
             .runAnovaAnalysis(traitsAbbrs)
@@ -218,25 +218,25 @@ jQuery(document).ready(function () {
                   var AdjMeansFileName = AdjMeansFile.split("/").pop();
                   var fileNameDiagnostics = diagnosticsFile.split("/").pop();
                   anovaTxtFile =
-                    '<a href="' + anovaTxtFile + '" download=' + AnovaTxtFileName + ">" + (window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.anova_table_download_link", "Anova table") : "Anova table") + "</a>";
+                    '<a href="' + anovaTxtFile + '" download=' + AnovaTxtFileName + ">" + (SGN.t("solgs.browser.anova_table_download_link", "Anova table")) + "</a>";
                   modelSummaryFile =
-                    '<a href="' + modelSummaryFile + '" download=' + modelSummaryFileName + ">" + (window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.anova_model_summary_download_link", "Model summary") : "Model summary") + "</a>";
+                    '<a href="' + modelSummaryFile + '" download=' + modelSummaryFileName + ">" + (SGN.t("solgs.browser.anova_model_summary_download_link", "Model summary")) + "</a>";
                   AdjMeansFile =
-                    '<a href="' + AdjMeansFile + '" download=' + AdjMeansFileName + ">" + (window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.anova_adjusted_means_download_link", "Adjusted means") : "Adjusted means") + "</a>";
+                    '<a href="' + AdjMeansFile + '" download=' + AdjMeansFileName + ">" + (SGN.t("solgs.browser.anova_adjusted_means_download_link", "Adjusted means")) + "</a>";
 
                   diagnosticsFile =
                     '<a href="' +
                     diagnosticsFile +
                     '" download=' +
                     fileNameDiagnostics +
-                    ">" + (window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.anova_model_diagnostics_download_link", "Model diagnostics") : "Model diagnostics") + "</a>";
+                    ">" + (SGN.t("solgs.browser.anova_model_diagnostics_download_link", "Model diagnostics")) + "</a>";
 
                   jQuery(solGS.anova.anovaTableDiv)
                     .prepend(
                       '<div style="margin-top: 20px">' +
                         anovaHtmlTable +
                         "</div>" +
-                        "<br /> <strong>" + (window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.download_caption", "Download:") : "Download:") + "</strong> " +
+                        "<br /> <strong>" + (SGN.t("solgs.browser.download_caption", "Download:")) + "</strong> " +
                         anovaTxtFile +
                         " | " +
                         modelSummaryFile +
@@ -249,14 +249,14 @@ jQuery(document).ready(function () {
                     jQuery(solGS.anova.clearCacheAnova).removeClass('hidden').show();
                 } else {
                   jQuery(`${canvas} .multi-spinner-container`).hide();
-                  solGS.anova.showMessage((window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.anova_no_output", "There is no anova output for this dataset.") : "There is no anova output for this dataset."));
+                  solGS.anova.showMessage((SGN.t("solgs.browser.anova_no_output", "There is no anova output for this dataset.")));
                   jQuery(runDiv).show();
                 }
               }
             })
             .fail(function () {
               jQuery(`${canvas} .multi-spinner-container`).hide();
-              solGS.anova.showMessage((window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.anova_run_error", "Error occurred running the anova analysis.") : "Error occurred running the anova analysis."));
+              solGS.anova.showMessage((SGN.t("solgs.browser.anova_run_error", "Error occurred running the anova analysis.")));
               jQuery(runDiv).show();
             });
         }
@@ -264,7 +264,7 @@ jQuery(document).ready(function () {
         solGS.anova.clearTraitSelection();
       });
     } else {
-      var msg = (window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.anova_select_trait_required", "Please select a trait.") : "Please select a trait.");
+      var msg = (SGN.t("solgs.browser.anova_select_trait_required", "Please select a trait."));
       solGS.anova.anovaAlert(msg);
     }
   });

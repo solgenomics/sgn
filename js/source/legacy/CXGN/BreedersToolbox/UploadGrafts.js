@@ -43,7 +43,7 @@ jQuery(document).ready(function ($) {
             $('#working_modal').modal("show");
             if (uploadedGraftsFile === '') {
                 $('#working_modal').modal("hide");
-                alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("cross.ui.no_file_selected", "No file selected") : "No file selected"));
+                alert((SGN.t("cross.ui.no_file_selected", "No file selected")));
             }
         },
         complete: function (r) {
@@ -56,7 +56,7 @@ jQuery(document).ready(function ($) {
             var html;
 
             if (response.error) {
-                html = ("<h3>" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("accession.rename.issues", "The Following Issues Were Identified") : "The Following Issues Were Identified")).html() + "</h3><p class=\"bg-warning\">")+response.error+'</p>';
+                html = ("<h3>" + jQuery("<span>").text((SGN.t("accession.rename.issues", "The Following Issues Were Identified"))).html() + "</h3><p class=\"bg-warning\">")+response.error+'</p>';
 		$('#upload_graft_store').prop("disabled", true);
             }
             else {
@@ -64,7 +64,7 @@ jQuery(document).ready(function ($) {
                 archived_filename = response.archived_filename_with_path;
 
 		$('#upload_graft_store').prop("disabled", false);
-                html = ("<h3>" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("accession.rename.no_issues", "There Were No Issues Identified") : "There Were No Issues Identified")).html() + "</h3>" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("transformation.helper.please_click_the_store_button_to_save_the_grafts_to_the_database", "Please click the \"Store\" button to save the grafts to the database.") : "Please click the \"Store\" button to save the grafts to the database.")).html() + "");
+                html = ("<h3>" + jQuery("<span>").text((SGN.t("accession.rename.no_issues", "There Were No Issues Identified"))).html() + "</h3>" + jQuery("<span>").text((SGN.t("transformation.helper.please_click_the_store_button_to_save_the_grafts_to_the_database", "Please click the \"Store\" button to save the grafts to the database."))).html() + "");
             }
             $("#upload_graft_validate_display tbody").html(html);
             $("#upload_graft_validate_display").modal('show');
@@ -75,7 +75,7 @@ jQuery(document).ready(function ($) {
         var uploadFile = $("#graft_uploaded_file").val();
         $('#upload_graft_form').attr("action", "/ajax/grafts/upload_verify");
         if (uploadFile === '') {
-            alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("accession.files.required_file", "Please select a file") : "Please select a file"));
+            alert((SGN.t("accession.files.required_file", "Please select a file")));
             return;
         }
         $("#upload_graft_form").submit();

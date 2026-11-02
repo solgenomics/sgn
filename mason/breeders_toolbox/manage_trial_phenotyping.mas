@@ -169,7 +169,7 @@ var trial_info_object = [];
            success: function(response) {
                 trial_info_object = response.trial_info;
                if (response.error){
-                 alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("phenotype.error_retrieving_trial_information", "Error Retrieving Trial Information: ") : "Error Retrieving Trial Information: ")+response.error);
+                 alert((SGN.t("phenotype.error_retrieving_trial_information", "Error Retrieving Trial Information: "))+response.error);
                }
 
                var trial_plot_name_html = "<select class='form-control' id='plot_name' >";
@@ -291,7 +291,7 @@ var trial_info_object = [];
         success: function (response) {
           jQuery("#loading-trial-phenotype").hide();
           if (response.error){
-            alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("phenotype.error_saving_trait_value", "Error Saving Trait Value: ") : "Error Saving Trait Value: ")+response.error);
+            alert((SGN.t("phenotype.error_saving_trait_value", "Error Saving Trait Value: "))+response.error);
             jQuery("#error-trial-phenotype").show();
           }
           else {
@@ -334,7 +334,7 @@ var trial_info_object = [];
                 var value = response.trait_value;
                 var red = {'color': 'red'};
                 if (response.error){
-                    alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("phenotype.error_retrieving_trait_value", "Error Retrieving Trait Value: ") : "Error Retrieving Trait Value: ")+response.error);
+                    alert((SGN.t("phenotype.error_retrieving_trait_value", "Error Retrieving Trait Value: "))+response.error);
                 } else if (value) {
                     jQuery('#new_pheno_input').hide();
                     jQuery("#stored_pheno_value").css(red);

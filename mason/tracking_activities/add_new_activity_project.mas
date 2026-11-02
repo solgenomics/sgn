@@ -149,37 +149,37 @@ jQuery(document).ready(function(){
     jQuery('#create_activity_project_submit').click(function() {
         var project_name = jQuery("#activity_project_name").val();
         if (!project_name) {
-            alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("seedlot.project_name_is_required", "Project name is required") : "Project name is required"));
+            alert((SGN.t("seedlot.project_name_is_required", "Project name is required")));
             return;
         }
 
         var activity_type = jQuery("#activity_type").val();
         if (!activity_type) {
-            alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("transformation.root.activity_type_is_required", "Activity type is required") : "Activity type is required"));
+            alert((SGN.t("transformation.root.activity_type_is_required", "Activity type is required")));
             return;
         }
 
         var breeding_program = jQuery("#activity_project_program").val();
         if (!breeding_program) {
-            alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("cross.ui.breeding_program_is_required", "Breeding program is required") : "Breeding program is required"));
+            alert((SGN.t("cross.ui.breeding_program_is_required", "Breeding program is required")));
             return;
         }
 
         var project_location = jQuery("#activity_project_location").val();
         if (!project_location) {
-            alert ((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("seedlots.ui.location_is_required", "Location is required") : "Location is required"));
+            alert ((SGN.t("seedlots.ui.location_is_required", "Location is required")));
             return;
         }
 
         var year = jQuery("#activity_project_year_select").val();
         if (!year) {
-            alert ((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("genotype.project.validation.year_required", "Year is required") : "Year is required"));
+            alert ((SGN.t("genotype.project.validation.year_required", "Year is required")));
             return;
         }
 
         var project_description = jQuery("#activity_project_description").val();
         if (!project_description) {
-            alert ((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("genotype.project.validation.description_required", "Description is required") : "Description is required"));
+            alert ((SGN.t("genotype.project.validation.description_required", "Description is required")));
             return;
         }
 

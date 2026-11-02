@@ -216,7 +216,7 @@ jQuery(document).ready(function(){
     jQuery('#tissue_sample_help_select_level_submit').click(function(){
         selected_level = jQuery('input[name="tissue_sample_help_select_level"]:checked').val();
         if (selected_level == '' || !selected_level){
-            alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("help.tissue.js.select_one", "Please select one") : "Please select one"));
+            alert((SGN.t("help.tissue.js.select_one", "Please select one")));
         } else {
             Workflow.complete('#tissue_sample_help_select_level_submit');
             if (selected_level == 'accession'){
@@ -252,7 +252,7 @@ jQuery(document).ready(function(){
         });
         selected_level = jQuery('input[name="tissue_sample_help_select_level"]:checked').val();
         if (selected.length !== 1){
-            alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("help.tissue.js.only_one_trial", "Only select one trial!") : "Only select one trial!"));
+            alert((SGN.t("help.tissue.js.only_one_trial", "Only select one trial!")));
         } else {
             Workflow.complete('#tissue_sample_help_select_trial_submit');
             if (selected_level == 'plot'){
@@ -309,7 +309,7 @@ jQuery(document).ready(function(){
                                     },
                                     error: function () {
                                         jQuery("#working_modal").modal("hide");
-                                        alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("help.tissue.js.error_check_samples", "An error occurred checking trial for tissue samples.") : "An error occurred checking trial for tissue samples."));
+                                        alert((SGN.t("help.tissue.js.error_check_samples", "An error occurred checking trial for tissue samples.")));
                                     }
                                 });
                             }
@@ -322,7 +322,7 @@ jQuery(document).ready(function(){
                     },
                     error: function () {
                         jQuery("#working_modal").modal("hide");
-                        alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("help.tissue.js.error_check_plants", "An error occurred checking trial for plants.") : "An error occurred checking trial for plants."));
+                        alert((SGN.t("help.tissue.js.error_check_plants", "An error occurred checking trial for plants.")));
                     }
                 });
             }
@@ -352,7 +352,7 @@ jQuery(document).ready(function(){
                     alert(response.error);
                 }
                 else {
-                    alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("help.tissue.js.success_plants", "Successfully created plant entries.") : "Successfully created plant entries."));
+                    alert((SGN.t("help.tissue.js.success_plants", "Successfully created plant entries.")));
                     Workflow.complete('#tissue_sample_help_plants_per_plot_submit');
                     if (selected_level == 'plant'){
                         jQuery('#tissue_sample_help_tissue_samples_not_relevant').show();
@@ -384,7 +384,7 @@ jQuery(document).ready(function(){
                             },
                             error: function () {
                                 jQuery("#working_modal").modal("hide");
-                                alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("help.tissue.js.error_check_samples", "An error occurred checking trial for tissue samples.") : "An error occurred checking trial for tissue samples."));
+                                alert((SGN.t("help.tissue.js.error_check_samples", "An error occurred checking trial for tissue samples.")));
                             }
                         });
                     }
@@ -392,7 +392,7 @@ jQuery(document).ready(function(){
             },
             error: function(response) {
                 jQuery("#working_modal").modal("hide");
-                alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("help.tissue.js.error_save_plants", "An error occurred saving plant entries") : "An error occurred saving plant entries"));
+                alert((SGN.t("help.tissue.js.error_save_plants", "An error occurred saving plant entries")));
             },
         });
     });
@@ -401,7 +401,7 @@ jQuery(document).ready(function(){
         var num_tissues = jQuery(this).val();
         var html = '';
         for (var i=1; i<=num_tissues; i++){
-            html = html + ("<div class=\"form-group\"><label class=\"col-sm-3 control-label\"><span title=\"" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? SGN.i18n.p("help.tissue.js.sample_name_tooltip", "The sample names will be a combination of the plant name, the tissue name you give here, and the tissue number.") : "The sample names will be a combination of the plant name, the tissue name you give here, and the tissue number.")).html().replace(/"/g, "&quot;").replace(/'/g, "&#39;") + "\"><span class=\"glyphicon glyphicon-info-sign\"></span>&nbsp;&nbsp;") + jQuery("<span>").text((window.SGN && window.SGN.i18n ? SGN.i18n.p("help.tissue.js.sample_name_label", "Tissue Name %{number}: ", { number: i }) : "Tissue Name " + i + ": ")).html().replace(/"/g, "&quot;").replace(/'/g, "&#39;") + '</span></label><div class="col-sm-9" ><input name="tissue_sample_help_tissue_name" id="tissue_samples_help_tissue_name_'+i+("\" class=\"form-control\" type=\"text\" placeholder=\"" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? SGN.i18n.p("help.tissue.js.examples_prefix", "examples: ") : "examples: ")).html().replace(/"/g, "&quot;").replace(/'/g, "&#39;") + "leaf, root, stem, seed, fruit or tuber\" /></div></div>");
+            html = html + ("<div class=\"form-group\"><label class=\"col-sm-3 control-label\"><span title=\"" + jQuery("<span>").text((SGN.t("help.tissue.js.sample_name_tooltip", "The sample names will be a combination of the plant name, the tissue name you give here, and the tissue number."))).html().replace(/"/g, "&quot;").replace(/'/g, "&#39;") + "\"><span class=\"glyphicon glyphicon-info-sign\"></span>&nbsp;&nbsp;") + jQuery("<span>").text((window.SGN && window.SGN.i18n ? SGN.i18n.p("help.tissue.js.sample_name_label", "Tissue Name %{number}: ", { number: i }) : "Tissue Name " + i + ": ")).html().replace(/"/g, "&quot;").replace(/'/g, "&#39;") + '</span></label><div class="col-sm-9" ><input name="tissue_sample_help_tissue_name" id="tissue_samples_help_tissue_name_'+i+("\" class=\"form-control\" type=\"text\" placeholder=\"" + jQuery("<span>").text((SGN.t("help.tissue.js.examples_prefix", "examples: "))).html().replace(/"/g, "&quot;").replace(/'/g, "&#39;") + "leaf, root, stem, seed, fruit or tuber\" /></div></div>");
         }
         jQuery('#tissue_sample_help_tissue_samples_names_div').html(html);
     });
@@ -434,14 +434,14 @@ jQuery(document).ready(function(){
                     alert(response.error);
                 }
                 else {
-                    alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("help.tissue.js.success_samples", "Successfully created tissue sample entries.") : "Successfully created tissue sample entries."));
+                    alert((SGN.t("help.tissue.js.success_samples", "Successfully created tissue sample entries.")));
                     Workflow.complete('#tissue_sample_help_per_plant_submit');
                     Workflow.focus("#tissue_sample_help_workflow", -1); //go to success
                 }
             },
             error: function(response) {
                 jQuery("#working_modal").modal("hide");
-                alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("help.tissue.js.error_create_samples", "An error occurred creating tissue sample entries") : "An error occurred creating tissue sample entries"));
+                alert((SGN.t("help.tissue.js.error_create_samples", "An error occurred creating tissue sample entries")));
             },
         });
     });
@@ -450,7 +450,7 @@ jQuery(document).ready(function(){
 
 function final_download_layout_button_click(){
     if (selected_level == 'accession'){
-        alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("help.tissue.js.no_layout", "You selected to sample on the accession level, meaning that you will not sample from a field trial. In this case there is no field layout to download!") : "You selected to sample on the accession level, meaning that you will not sample from a field trial. In this case there is no field layout to download!"));
+        alert((SGN.t("help.tissue.js.no_layout", "You selected to sample on the accession level, meaning that you will not sample from a field trial. In this case there is no field layout to download!")));
     }
     if (selected_level == 'plot'){
         var selected_columns = {'plot_name':1,'plot_id':1,'block_number':1,'plot_number':1,'rep_number':1,'row_number':1,'col_number':1,'accession_name':1,'is_a_control':1};

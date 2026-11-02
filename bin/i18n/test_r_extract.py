@@ -75,13 +75,15 @@ tr$p("", "Вітаємо 🌱")
         self.assertEqual(rows[0]["reference"], "fixture.R:2")
 
     def test_quoted_and_backtick_literal_method_names_are_marked(self):
-        rows = self.records("""tr <- sgn_i18n()
+        rows = self.records(
+            """tr <- sgn_i18n()
 tr$"p"("quoted", "Quoted source")
 tr$`p`("backtick", "Backtick source")
 tr$'np'("count", "one", "many", n)
 `translator with spaces` <- `sgn_i18n`()
 `translator with spaces`$`p`(`context`="named", `source`="Named source")
-""")
+"""
+        )
         self.assertEqual(
             [(row["context"], row["source"], row["plural"]) for row in rows],
             [
@@ -108,12 +110,14 @@ tr$'np'("count", "one", "many", n)
                 self.records(source)
 
     def test_exact_named_arguments_match_before_positional_arguments(self):
-        rows = self.records("""tr <- sgn_i18n()
+        rows = self.records(
+            """tr <- sgn_i18n()
 tr$p("Text", context="ctx")
 tr$p(source="Other text", "other")
 tr$np("one", "many", n, context="count")
 tr$np(plural="plural", "plural.ctx", n, singular="singular")
-""")
+"""
+        )
         self.assertEqual(
             [(row["context"], row["source"], row["plural"]) for row in rows],
             [

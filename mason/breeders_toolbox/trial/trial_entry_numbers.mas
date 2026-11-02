@@ -32,7 +32,7 @@ $trial_name
         });
 
 	jQuery('#delete_entry_numbers_btn').click(function() {
-	    var yes = confirm(window.SGN && SGN.i18n ? SGN.i18n.p('trial.card.entry_numbers.confirm_delete', "Are you sure you would like to remove the entry numbers from this trial? This action cannot be undone.") : "Are you sure you would like to remove the entry numbers from this trial? This action cannot be undone.");
+	    var yes = confirm(SGN.t('trial.card.entry_numbers.confirm_delete', "Are you sure you would like to remove the entry numbers from this trial? This action cannot be undone."));
 
 	    if (yes) {
 	       var p = jQuery.ajax( {
@@ -41,7 +41,7 @@ $trial_name
 	     	   data: { trial_id : <% $trial_id %> },
 	       } );
 
-	       p.then( function(value) { loadEntryNumbers(); alert(window.SGN && SGN.i18n ? SGN.i18n.p('trial.card.entry_numbers.delete_success', "Success!") : "Success!"); }, function(error) { alert(window.SGN && SGN.i18n ? SGN.i18n.p('trial.card.entry_numbers.delete_error', "An error occurred deleting the entry numbers.") : "An error occurred deleting the entry numbers." ) } )
+	       p.then( function(value) { loadEntryNumbers(); alert(SGN.t('trial.card.entry_numbers.delete_success', "Success!")); }, function(error) { alert(SGN.t('trial.card.entry_numbers.delete_error', "An error occurred deleting the entry numbers.") ) } )
  	    }
 	});
 	
@@ -99,11 +99,11 @@ $trial_name
                     displayEntryNumbers(response.entry_numbers);
                 }
                 else {
-                    alert(window.SGN && SGN.i18n ? SGN.i18n.p('trial.card.entry_numbers.load_error', "ERROR: Could not load entry numbers due to a server error!") : "ERROR: Could not load entry numbers due to a server error!");
+                    alert(SGN.t('trial.card.entry_numbers.load_error', "ERROR: Could not load entry numbers due to a server error!"));
                 }
             },
             error: function() {
-                alert(window.SGN && SGN.i18n ? SGN.i18n.p('trial.card.entry_numbers.load_error', "ERROR: Could not load entry numbers due to a server error!") : "ERROR: Could not load entry numbers due to a server error!");
+                alert(SGN.t('trial.card.entry_numbers.load_error', "ERROR: Could not load entry numbers due to a server error!"));
             }
         });
     }

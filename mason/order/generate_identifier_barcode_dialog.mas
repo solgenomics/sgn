@@ -250,7 +250,7 @@ jQuery(document).ready(function () {
 
             },
             error: function(response){
-                alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("barcode.helper.error_retrieving_requested_item_info", "Error retrieving requested item info.") : "Error retrieving requested item info."));
+                alert((SGN.t("barcode.helper.error_retrieving_requested_item_info", "Error retrieving requested item info.")));
             }
         });
     });
@@ -274,7 +274,7 @@ jQuery(document).ready(function () {
 
             },
             error: function(response){
-                alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("barcode.helper.error_retrieving_requested_item_info", "Error retrieving requested item info.") : "Error retrieving requested item info."));
+                alert((SGN.t("barcode.helper.error_retrieving_requested_item_info", "Error retrieving requested item info.")));
             }
         });
     });
@@ -299,7 +299,7 @@ jQuery(document).ready(function () {
 
             },
             error: function(response){
-                alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("barcode.helper.error_retrieving_requested_item_info", "Error retrieving requested item info.") : "Error retrieving requested item info."));
+                alert((SGN.t("barcode.helper.error_retrieving_requested_item_info", "Error retrieving requested item info.")));
             }
         });
     });

@@ -127,7 +127,7 @@ jQuery(document).ready(function(){
                 },
                 error: function(response){
                     jQuery('#working_modal').modal('hide');
-                    alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("transformation.root.error_obsoleting_accessions", "Error obsoleting accessions.") : "Error obsoleting accessions."));
+                    alert((SGN.t("transformation.root.error_obsoleting_accessions", "Error obsoleting accessions.")));
                 }
             });
         }

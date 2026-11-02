@@ -606,9 +606,9 @@ function jqueryStuff() {
 
             qrCodeDisplay.toggle();
             if (qrCodeDisplay.is(':visible')) {
-                jQuery(this).text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p('accession.stock.action.hide_qr', 'Hide QR Code') : 'Hide QR Code'));
+                jQuery(this).text((SGN.t('accession.stock.action.hide_qr', 'Hide QR Code')));
             } else {
-                jQuery(this).text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p('accession.stock.action.show_qr', 'Show QR Code') : 'Show QR Code'));
+                jQuery(this).text((SGN.t('accession.stock.action.show_qr', 'Show QR Code')));
             }
         });
 

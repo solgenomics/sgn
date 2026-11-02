@@ -85,7 +85,7 @@ jQuery(document).ready(function(){
 
         let name_format = jQuery('#name_format_select').val();
         if (!name_format) {
-            alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("transformation.root.please_select_a_name_format", "Please select a name format") : "Please select a name format"));
+            alert((SGN.t("transformation.root.please_select_a_name_format", "Please select a name format")));
             return;
         }
 

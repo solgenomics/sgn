@@ -390,7 +390,7 @@ jQuery(document).ready(function () {
 		jQuery('#trial_accessions').html(trial_accessions_html);
             },
             error: function(response){
-		      alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("accession.forms.error_retrieving_accessions", "Error retrieving accessions.") : "Error retrieving accessions."));
+		      alert((SGN.t("accession.forms.error_retrieving_accessions", "Error retrieving accessions.")));
             }
         });
     });
@@ -412,7 +412,7 @@ jQuery(document).ready(function () {
                 jQuery('#trial_accessions').html(trial_plots_html);
             },
             error: function(response){
-                alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("seedlots.ui.error_retrieving_plots", "Error retrieving plots.") : "Error retrieving plots."));
+                alert((SGN.t("seedlots.ui.error_retrieving_plots", "Error retrieving plots.")));
             }
         });
     });
@@ -426,7 +426,7 @@ jQuery(document).ready(function () {
 
             success: function(response){
                 if (response.plants == '') {
-                    alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("barcode.mason.trial_has_no_plant_entries", "Trial has no plant entries.") : "Trial has no plant entries."));
+                    alert((SGN.t("barcode.mason.trial_has_no_plant_entries", "Trial has no plant entries.")));
                 }
                 var trial_plants_html = '<textarea class="form-control" id="stock_names" name="stock_names" >';
                 for (i=0; i<response.plants[0].length; i++) {
@@ -437,7 +437,7 @@ jQuery(document).ready(function () {
                 jQuery('#trial_accessions').html(trial_plants_html);
             },
             error: function(response){
-                alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("barcode.mason.error_retrieving_plants", "Error retrieving plants.") : "Error retrieving plants."));
+                alert((SGN.t("barcode.mason.error_retrieving_plants", "Error retrieving plants.")));
             }
 
         });
@@ -468,7 +468,7 @@ jQuery(document).ready(function () {
 
             },
             error: function(response){
-                alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("barcode.mason.error_retrieving_crosses", "Error retrieving crosses.") : "Error retrieving crosses."));
+                alert((SGN.t("barcode.mason.error_retrieving_crosses", "Error retrieving crosses.")));
             }
         });
     });
@@ -495,7 +495,7 @@ jQuery(document).ready(function () {
 
             },
             error: function(response){
-                alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("barcode.mason.error_retrieving_female_accessions", "Error retrieving female accessions.") : "Error retrieving female accessions."));
+                alert((SGN.t("barcode.mason.error_retrieving_female_accessions", "Error retrieving female accessions.")));
             }
         });
     });
@@ -522,7 +522,7 @@ jQuery(document).ready(function () {
 
             },
             error: function(response){
-                alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("barcode.mason.error_retrieving_male_accessions", "Error retrieving male accessions.") : "Error retrieving male accessions."));
+                alert((SGN.t("barcode.mason.error_retrieving_male_accessions", "Error retrieving male accessions.")));
             }
         });
     });
@@ -536,7 +536,7 @@ jQuery(document).ready(function () {
 
             success: function(response){
                 if (response.female_plots == '') {
-                    alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("barcode.mason.this_crossing_experiment_has_no_female_plot_entry", "This crossing experiment has no female plot entry.") : "This crossing experiment has no female plot entry."));
+                    alert((SGN.t("barcode.mason.this_crossing_experiment_has_no_female_plot_entry", "This crossing experiment has no female plot entry.")));
                 } else {
                     jQuery('#generate_trial_barcode_dialog').modal("show");
                     jQuery('#barcode_dialog_subtitle2').text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("barcode.mason.generate_barcodes_for_female_plots", "Generate barcodes for female plots") : 'Generate barcodes for female plots'));
@@ -553,7 +553,7 @@ jQuery(document).ready(function () {
 
             },
             error: function(response){
-                alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("barcode.mason.error_retrieving_female_plots", "Error retrieving female plots.") : "Error retrieving female plots."));
+                alert((SGN.t("barcode.mason.error_retrieving_female_plots", "Error retrieving female plots.")));
             }
         });
     });
@@ -567,7 +567,7 @@ jQuery(document).ready(function () {
 
             success: function(response){
                 if (response.male_plots == '') {
-                    alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("barcode.mason.this_crossing_experiment_has_no_male_plot_entry", "This crossing experiment has no male plot entry.") : "This crossing experiment has no male plot entry."));
+                    alert((SGN.t("barcode.mason.this_crossing_experiment_has_no_male_plot_entry", "This crossing experiment has no male plot entry.")));
                 } else {
                     jQuery('#generate_trial_barcode_dialog').modal("show");
                     jQuery('#barcode_dialog_subtitle2').text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("barcode.mason.generate_barcodes_for_male_plots", "Generate barcodes for male plots") : 'Generate barcodes for male plots'));
@@ -584,7 +584,7 @@ jQuery(document).ready(function () {
 
             },
             error: function(response){
-                alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("barcode.mason.error_retrieving_male_plots", "Error retrieving male plots.") : "Error retrieving male plots."));
+                alert((SGN.t("barcode.mason.error_retrieving_male_plots", "Error retrieving male plots.")));
             }
         });
     });
@@ -598,7 +598,7 @@ jQuery(document).ready(function () {
 
             success: function(response){
                 if (response.female_plants == '') {
-                    alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("barcode.mason.this_crossing_experiment_has_no_female_plant_entry", "This crossing experiment has no female plant entry.") : "This crossing experiment has no female plant entry."));
+                    alert((SGN.t("barcode.mason.this_crossing_experiment_has_no_female_plant_entry", "This crossing experiment has no female plant entry.")));
                 } else {
                     jQuery('#generate_trial_barcode_dialog').modal("show");
                     jQuery('#barcode_dialog_subtitle2').text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("barcode.mason.generate_barcodes_for_female_plants", "Generate barcodes for female plants") : 'Generate barcodes for female plants'));
@@ -615,7 +615,7 @@ jQuery(document).ready(function () {
 
             },
             error: function(response){
-                alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("barcode.mason.error_retrieving_female_plants", "Error retrieving female plants.") : "Error retrieving female plants."));
+                alert((SGN.t("barcode.mason.error_retrieving_female_plants", "Error retrieving female plants.")));
             }
         });
     });
@@ -629,7 +629,7 @@ jQuery(document).ready(function () {
 
             success: function(response){
                 if (response.male_plants == '') {
-                    alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("barcode.mason.this_crossing_experiment_has_no_male_plant_entry", "This crossing experiment has no male plant entry.") : "This crossing experiment has no male plant entry."));
+                    alert((SGN.t("barcode.mason.this_crossing_experiment_has_no_male_plant_entry", "This crossing experiment has no male plant entry.")));
                 } else {
                     jQuery('#generate_trial_barcode_dialog').modal("show");
                     jQuery('#barcode_dialog_subtitle2').text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("barcode.mason.generate_barcodes_for_male_plants", "Generate barcodes for male plants") : 'Generate barcodes for male plants'));
@@ -646,7 +646,7 @@ jQuery(document).ready(function () {
 
             },
             error: function(response){
-                alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("barcode.mason.error_retrieving_male_plants", "Error retrieving male plants.") : "Error retrieving male plants."));
+                alert((SGN.t("barcode.mason.error_retrieving_male_plants", "Error retrieving male plants.")));
             }
         });
     });

@@ -1,4 +1,5 @@
 'use strict';
+const I18N = require('../../../static/js/sgn-i18n.js');
 // Whole actual inline source with controlled transport and a recording DOM API.
 // This is a source unit, not native browser, HTTP, database or layout evidence.
 const assert=require('node:assert/strict'),test=require('node:test');
@@ -41,6 +42,7 @@ function harness({text=source,locale='uk',translate=false}={}){
     const window={location:{href:'http://127.0.0.1:18335/breeders/seedlot/maintenance?lang='+locale,origin:'http://127.0.0.1:18335'}};
     if(translate)window.SGN={i18n:{requestedLocale:'ar',p(context,source,variables){translationCalls.push({context,source});return translated(source).replace(/%\{([A-Za-z0-9_]+)\}/g,(match,key)=>variables && Object.hasOwn(variables,key)?String(variables[key]):match);}}};
     const context=vm.createContext({window,document,jQuery:jq,CXGN:{List},URL,URLSearchParams,Date,alert:message=>alerts.push(message)});
+    I18N.install(context.window); context.SGN=context.window.SGN;
     vm.runInContext(inline(text),context,{filename:file});
     function trigger(){const callback=element('#overdue_events_find_seedlots').handlers.click;assert.equal(typeof callback,'function');return callback();}
     function fill({list='42',event='7801',date='2026-10-11'}={}){element('#overdue_events_filter_seedlot_list_select').value=list;element('#overdue_events_event_select').value=event;element('#overdue_events_date').value=date;}

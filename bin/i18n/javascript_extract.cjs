@@ -147,6 +147,7 @@ function extractBlock(block, file) {
             if (node.operator === '||' && left === 'known' && fallback(node.right, scope)) return 'known';
             return combineKnown([left, right]) ? 'ambiguous' : 'unknown';
         }
+        if (node.type === 'MemberExpression' && namespace(node.object, scope) && ['t', 'tn'].includes(propertyName(node))) return 'unsupported';
         if (node.type === 'MemberExpression') return state(node.object, scope) === 'unknown' ? 'unknown' : 'unsupported';
         if (node.type === 'CallExpression') return state(node.callee, scope) === 'unknown' ? 'unknown' : 'unsupported';
         if (node.type === 'ConditionalExpression' || node.type === 'SequenceExpression') return childNodes(node).some(child => state(child, scope) !== 'unknown') ? 'ambiguous' : 'unknown';
@@ -158,6 +159,7 @@ function extractBlock(block, file) {
         if (value === 'unsupported') throw new Error(location(node) + ': unsupported known i18n receiver chain');
     }
     for (const declaration of destructured) {
+        if (namespace(declaration.node.init, declaration.scope) && declaration.node.id.type === 'ObjectPattern' && declaration.node.id.properties.some(property => property.type === 'RestElement' || property.computed || ['t', 'tn'].includes(property.key.name || property.key.value))) throw new Error(location(declaration.node) + ': unsupported short-helper destructuring');
         if (state(declaration.node.init, declaration.scope) !== 'unknown') throw new Error(location(declaration.node) + ': unsupported translator destructuring');
     }
     function guardedGlobalFallback(write) {
@@ -193,14 +195,15 @@ function extractBlock(block, file) {
         if (callee.type === 'Identifier') { rejectState(state(callee, scope), node); continue; }
         if (callee.type !== 'MemberExpression') continue;
         const name = propertyName(callee);
-        const receiver = state(callee.object, scope);
-        if (!['p', 'np'].includes(name)) {
+        const helper = namespace(callee.object, scope) && ['t', 'tn'].includes(name);
+        const receiver = helper ? 'known' : state(callee.object, scope);
+        if (!helper && !['p', 'np'].includes(name)) {
             if (name === null && receiver !== 'unknown') throw new Error(location(node) + ': dynamic known i18n method is unsupported');
             continue;
         }
         rejectState(receiver, node);
         if (receiver !== 'known') continue;
-        const needed = name === 'p' ? 2 : 3;
+        const needed = name === 'p' || name === 't' ? 2 : 3;
         const args = node.arguments.slice(0, needed).map(argument => literal(argument, node));
         if (args.length !== needed || !args[1] || (needed === 3 && !args[2])) throw new Error(location(node) + ': invalid context or English text');
         records.push({context: args[0], source: args[1], plural: needed === 3 ? args[2] : null, reference: location(node)});

@@ -128,12 +128,12 @@ jQuery(document).ready(function(){
         const control_stock_id = jQuery('#transformation_control_id').val();
 
         if (!control_stock_id) {
-            alert ((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("transformation.please_select_a_control", "Please select a control") : "Please select a control"));
+            alert ((SGN.t("transformation.please_select_a_control", "Please select a control")));
             return;
         }
 
         if (control_name) {
-            var confirmation = confirm((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("transformation.this_transformation_id_already_has", "This transformation ID already has ") : "This transformation ID already has ") +control_name+ (window.SGN && window.SGN.i18n ? window.SGN.i18n.p("transformation.as_a_control_do_you_want_to_replace_with_a", " as a control. Do you want to replace with a new one?") : " as a control. Do you want to replace with a new one?"));
+            var confirmation = confirm((SGN.t("transformation.this_transformation_id_already_has", "This transformation ID already has ")) +control_name+ (SGN.t("transformation.as_a_control_do_you_want_to_replace_with_a", " as a control. Do you want to replace with a new one?")));
             if (confirmation) {
                 setTransformationControl(transformation_id, control_stock_id, program_name);
             }
@@ -145,12 +145,12 @@ jQuery(document).ready(function(){
     jQuery('#set_as_a_control_submit').click(function(){
         const transformation_id = jQuery('#transformation_id_as_control').val();
         if (!transformation_id) {
-            alert ((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("transformation.error_retrieving_transformation_id_info", "Error retrieving transformation ID info") : "Error retrieving transformation ID info"));
+            alert ((SGN.t("transformation.error_retrieving_transformation_id_info", "Error retrieving transformation ID info")));
             return;
         }
 
         if (is_a_control) {
-            alert ((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("transformation.this_transformation_id_has_already_been_set_as_a_control.99bc68b", "This transformation ID has already been set as a control") : "This transformation ID has already been set as a control"));
+            alert ((SGN.t("transformation.this_transformation_id_has_already_been_set_as_a_control.99bc68b", "This transformation ID has already been set as a control")));
             return;
         } else {
             setAsAControl(transformation_id, program_name)

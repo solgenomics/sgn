@@ -12,6 +12,7 @@ import tempfile
 from pathlib import Path
 
 from extract import extract, po_quote, pot
+from plural import parse_plural as parse_plural_header
 
 SCHEMA = API = 1
 LOCALE = re.compile(r"^[a-z]{2,8}(?:-[A-Za-z0-9]{2,8})*$")
@@ -90,27 +91,9 @@ def read_mo(data):
 
 
 def parse_plural(root, expression):
-    """Compile a trusted plural grammar to validated data-only AST nodes."""
-    if len(expression) > 512:
-        raise ValueError("plural expression too large")
-    program = (
-        "const fs=require('fs'); const api=require(process.argv[1]); const "
-        "x=JSON.parse(fs.readFileSync(0,'utf8')); "
-        "process.stdout.write(JSON.stringify(api.parsePlural(x)));"
-    )
-    run = subprocess.run(
-        ["node", "-e", program, str(root / "static/js/sgn-i18n.js")],
-        input=json.dumps(expression),
-        capture_output=True,
-        text=True,
-        timeout=5,
-        check=False,
-    )
-    if run.returncode:
-        raise ValueError("unsupported or unsafe plural expression: " + run.stderr.strip()[:200])
-    result = json.loads(run.stdout)
-    validate_plural_safety(result["ast"], result["nplurals"])
-    return result
+    """Compile the bounded grammar without source files or external runtimes."""
+    del root  # Preserve the compiler's public API for existing callers.
+    return parse_plural_header(expression)
 
 
 # Audited grammar traversal or explicit source-fixture boundary.
@@ -219,8 +202,6 @@ def compile_po(root, path, current_messages):
     locale = info.get("Language", "")
     if not LOCALE.fullmatch(locale) or locale == "en":
         raise ValueError("invalid or reserved Language in PO")
-    if path.parent.parent.name != locale:
-        raise ValueError("PO directory and Language must agree")
     native_name = info.get("X-SGN-Language-Name")
     if native_name is not None:
         validate_language_name(native_name)
@@ -378,8 +359,8 @@ def compile_partition(root, path, messages, *, invert=False, entries=None):
     entries = partition_po_entries(path) if entries is None else entries
     selected_blocks = [block for context, header, block in entries if header or ((context in contexts) != invert)]
     with tempfile.TemporaryDirectory(prefix="sgn-i18n-partition-") as temporary:
-        selected = Path(temporary) / path.parent.parent.name / "LC_MESSAGES" / "sgn.po"
-        selected.parent.mkdir(parents=True)
+        selected = Path(temporary) / "sgn.po"
+        selected.parent.mkdir(parents=True, exist_ok=True)
         selected.write_text("\n\n".join(selected_blocks) + "\n")
         return compile_po(root, selected, [] if invert else messages)
 
@@ -413,6 +394,124 @@ def init_po(messages, locale, direction, formula, native_name=None):
     return text.replace('msgstr[0] ""\nmsgstr[1] ""', slots)
 
 
+MAX_RELEASE_BYTES = 32 * 1024 * 1024
+
+
+def read_unique_json(path, limit=MAX_RELEASE_BYTES):
+    """Decode bounded release data without duplicate JSON object fields."""
+    if path.is_symlink() or not path.is_file() or path.stat().st_size > limit:
+        raise ValueError("unsafe or oversized release input")
+
+    def unique(pairs):
+        result = {}
+        for key, value in pairs:
+            if key in result:
+                raise ValueError("duplicate release JSON key")
+            result[key] = value
+        return result
+
+    return json.loads(path.read_text(encoding="utf-8"), object_pairs_hook=unique)
+
+
+# Explicit data-contract checks reject bool and preserve all schema branches.
+# pylint: disable=too-many-locals,too-many-branches,unidiomatic-typecheck
+def validate_release(release):
+    """Validate a frozen message contract before using external translations."""
+    fields = {"schema", "api", "domain", "applicationVersion", "sourceRevision", "messages", "partitions"}
+    if not isinstance(release, dict) or set(release) != fields:
+        raise ValueError("invalid release snapshot fields")
+    if (
+        type(release["schema"]) is not int
+        or release["schema"] != 1
+        or type(release["api"]) is not int
+        or release["api"] != API
+        or release["domain"] != "sgn"
+    ):
+        raise ValueError("unsupported release snapshot schema/API")
+    version = release["applicationVersion"]
+    if not isinstance(version, str) or not version.strip() or len(version) > 200 or any(ord(c) < 32 for c in version):
+        raise ValueError("invalid application version")
+    messages = release["messages"]
+    if not isinstance(messages, list) or len(messages) > 20000:
+        raise ValueError("invalid release messages")
+    seen = set()
+    for message in messages:
+        if not isinstance(message, dict) or set(message) != {"context", "source", "plural", "references"}:
+            raise ValueError("invalid release message fields")
+        context, source, plural = (message[key] for key in ("context", "source", "plural"))
+        if (
+            not isinstance(context, str)
+            or not isinstance(source, str)
+            or not source
+            or any(c in context + source for c in ("\x00", "\x04"))
+        ):
+            raise ValueError("invalid release message identity")
+        if plural is not None and (
+            not isinstance(plural, str) or not plural or any(c in plural for c in ("\x00", "\x04"))
+        ):
+            raise ValueError("invalid release plural source")
+        identity = (context, source)
+        if identity in seen:
+            raise ValueError("duplicate release message identity")
+        seen.add(identity)
+        if plural is not None and placeholders(plural) != placeholders(source):
+            raise ValueError("release source placeholder mismatch")
+        placeholders(source)
+        references = message["references"]
+        if (
+            not isinstance(references, list)
+            or len(references) > 10000
+            or any(
+                not isinstance(ref, str)
+                or not re.fullmatch(r"[A-Za-z0-9_./-]+:[1-9][0-9]*", ref)
+                or Path(ref.rsplit(":", 1)[0]).is_absolute()
+                or ".." in Path(ref.rsplit(":", 1)[0]).parts
+                for ref in references
+            )
+        ):
+            raise ValueError("invalid release source references")
+    if release["sourceRevision"] != source_revision(messages):
+        raise ValueError("release source revision mismatch")
+    groups = release["partitions"]
+    if not isinstance(groups, dict) or "common" not in groups or not 1 <= len(groups) <= 64:
+        raise ValueError("invalid release partitions")
+    actual = set()
+    for name, indices in groups.items():
+        if not re.fullmatch(r"[a-z][a-z0-9_]*", name) or not isinstance(indices, list):
+            raise ValueError("invalid release partition")
+        if any(type(i) is not int or not 0 <= i < len(messages) for i in indices) or len(set(indices)) != len(indices):
+            raise ValueError("invalid release partition message reference")
+        actual.update(indices)
+    if actual != set(range(len(messages))):
+        raise ValueError("release partitions lost message identities")
+    common = set(groups["common"])
+    if any(common.intersection(indices) for name, indices in groups.items() if name != "common"):
+        raise ValueError("release common messages duplicated into workflows")
+    return release
+
+
+# pylint: enable=too-many-locals,too-many-branches,unidiomatic-typecheck
+
+
+def freeze_release(root, messages, version):
+    """Freeze extraction and source dependency assignments once per release."""
+    groups = partition_sources(root, messages) if (root / "locale/workflows.json").is_file() else {"common": messages}
+    indices = {(m["context"], m["source"]): i for i, m in enumerate(messages)}
+    return validate_release(
+        {
+            "schema": 1,
+            "api": API,
+            "domain": "sgn",
+            "applicationVersion": version,
+            "sourceRevision": source_revision(messages),
+            "messages": messages,
+            "partitions": {
+                name: [indices[(m["context"], m["source"])] for m in group] for name, group in groups.items()
+            },
+        }
+    )
+
+
 # Audited grammar traversal or explicit source-fixture boundary.
 # pylint: disable=too-many-branches,too-many-locals,too-many-statements
 def main():
@@ -422,8 +521,12 @@ def main():
     commands = parser.add_subparsers(dest="command", required=True)
     commands.add_parser("extract")
     commands.add_parser("update")
+    freeze = commands.add_parser("freeze")
+    freeze.add_argument("--output", type=Path, required=True)
+    freeze.add_argument("--application-version", required=True)
     build = commands.add_parser("build")
     build.add_argument("--output", type=Path, default=Path("locale/build"))
+    build.add_argument("--release", type=Path, help="compile from a validated frozen release without source parsers")
     build.add_argument(
         "--legacy-single-file",
         action="store_true",
@@ -436,6 +539,7 @@ def main():
         help="compile only selected PO files, including external translator work",
     )
     init = commands.add_parser("init")
+    init.add_argument("--release", type=Path, help="initialize from a frozen release without source parsers")
     init.add_argument("--locale", required=True)
     init.add_argument("--direction", choices=("ltr", "rtl"), required=True)
     init.add_argument("--plural-forms", required=True)
@@ -443,8 +547,32 @@ def main():
     init.add_argument("--name", help="native language name, such as Français; optional for old packs")
     args = parser.parse_args()
     root = args.root.resolve()
-    messages = source_messages(root)
-    if args.command == "extract":
+    release_path = getattr(args, "release", None)
+    release = validate_release(read_unique_json(release_path)) if release_path else None
+    messages = release["messages"] if release else source_messages(root)
+    if args.command == "freeze":
+        release = freeze_release(root, messages, args.application_version)
+        output = args.output if args.output.is_absolute() else root / args.output
+        template = output.with_suffix(".pot")
+        if output.exists() or template.exists():
+            raise ValueError("refusing to overwrite an existing release snapshot")
+        output.parent.mkdir(parents=True, exist_ok=True)
+        data = json_bytes(release)
+        if len(data) > MAX_RELEASE_BYTES:
+            raise ValueError("release snapshot exceeds size limit")
+        output.write_bytes(data)
+        template.write_text(pot(messages), encoding="utf-8")
+        print(
+            json.dumps(
+                {
+                    "release": str(output),
+                    "template": str(template),
+                    "sha256": digest(data),
+                    "sourceRevision": source_revision(messages),
+                }
+            )
+        )
+    elif args.command == "extract":
         output = root / "locale/sgn.pot"
         output.parent.mkdir(parents=True, exist_ok=True)
         output.write_text(pot(messages), encoding="utf-8")
@@ -499,16 +627,22 @@ def main():
         )
     else:
         expected = pot(messages)
-        if (root / "locale/sgn.pot").read_text(encoding="utf-8") != expected:
+        if not release and (root / "locale/sgn.pot").read_text(encoding="utf-8") != expected:
             raise ValueError("POT is stale; run extract and merge/review translations")
         paths = (
             [path if path.is_absolute() else root / path for path in args.po]
             if args.po
             else sorted((root / "locale").glob("*/LC_MESSAGES/sgn.po"))
         )
+        if not paths:
+            raise ValueError("no PO files selected; provide --po for a release workspace")
         output = args.output if args.output.is_absolute() else root / args.output
-        if (root / "locale/workflows.json").is_file() and not args.legacy_single_file:
-            partitions = partition_sources(root, messages)
+        if (release or (root / "locale/workflows.json").is_file()) and not args.legacy_single_file:
+            partitions = (
+                {name: [messages[i] for i in indices] for name, indices in release["partitions"].items()}
+                if release
+                else partition_sources(root, messages)
+            )
             builds = []
             locales = set()
             for path in paths:
@@ -540,9 +674,21 @@ def main():
                 }
                 (directory / "index.json").write_bytes(json_bytes(index))
                 (output / locale / "sgn.json").unlink(missing_ok=True)
+            coverage = []
+            for locale, catalogs in builds:
+                translated = {key for catalog in catalogs.values() for key in catalog["messages"]}
+                coverage.append(
+                    {
+                        "locale": locale,
+                        "translated": len(translated),
+                        "englishFallback": len(messages) - len(translated),
+                        "total": len(messages),
+                    }
+                )
             print(
                 json.dumps(
                     {
+                        "coverage": coverage,
                         "locales": len(builds),
                         "partitions": len(partitions),
                         "messages": len(messages),
@@ -561,6 +707,15 @@ def main():
             print(
                 json.dumps(
                     {
+                        "coverage": [
+                            {
+                                "locale": catalog["locale"],
+                                "translated": len(catalog["messages"]),
+                                "englishFallback": len(messages) - len(catalog["messages"]),
+                                "total": len(messages),
+                            }
+                            for catalog in catalogs
+                        ],
                         "catalogs": len(catalogs),
                         "messages": len(messages),
                         "sourceRevision": source_revision(messages),

@@ -470,7 +470,7 @@ function populateTraitSelection(stats) {
   traitSelection.empty();
 
   // Add a default option
-  traitSelection.append(("<option value=\"\" disabled selected>" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("phenotype.root.select_a_trait", "Select a trait") : "Select a trait")).html() + "</option>"));
+  traitSelection.append(("<option value=\"\" disabled selected>" + jQuery("<span>").text((SGN.t("phenotype.root.select_a_trait", "Select a trait"))).html() + "</option>"));
 
   // Get the traits from the stats object and populate the dropdown
   const traits = Object.keys(stats); // Traits are the top-level keys in the stats object
@@ -869,11 +869,11 @@ function fetchProjectData() {
                 displayData(allData); 
                 updatePaginationControls(allData);
             } else {
-                alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("analysis.interface.no_valid_data_found_or_data_format_issue", "No valid data found or data format issue") : "No valid data found or data format issue"));
+                alert((SGN.t("analysis.interface.no_valid_data_found_or_data_format_issue", "No valid data found or data format issue")));
             }
         },
         error: function() {
-            alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("analysis.interface.an_error_occurred_while_fetching_project_data", "An error occurred while fetching project data.") : "An error occurred while fetching project data."));
+            alert((SGN.t("analysis.interface.an_error_occurred_while_fetching_project_data", "An error occurred while fetching project data.")));
         }
     });
 }

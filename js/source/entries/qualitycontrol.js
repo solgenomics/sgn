@@ -171,7 +171,7 @@ export function init(main_div) {
                     alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("analysis.interface.outliers_successfully_stored", "Outliers successfully stored!") : 'Outliers successfully stored!'));
                 } else {
                     $('#store_outliers_button').prop("disabled", true);
-                    alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("analysis.interface.only_curators_or_breeders_are_allowed_to_validated_trials_please", "Only curators or breeders are allowed to validated trials. Please contact a curator.") : "Only curators or breeders are allowed to validated trials. Please contact a curator."), response.is_curator);
+                    alert((SGN.t("analysis.interface.only_curators_or_breeders_are_allowed_to_validated_trials_please", "Only curators or breeders are allowed to validated trials. Please contact a curator.")), response.is_curator);
                 }
                 
 
@@ -202,10 +202,10 @@ export function init(main_div) {
                         success: function (r) {
                             if (r.is_curator === 1) {
                                 $('#restore_outliers_button').prop("disabled", false);
-                                alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("analysis.interface.data_successfully_restored", "Data successfully restored!") : "Data successfully restored!"));
+                                alert((SGN.t("analysis.interface.data_successfully_restored", "Data successfully restored!")));
                             } else {
                                 $('#restore_outliers_button').prop("disabled", true);
-                                alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("analysis.interface.only_curators_are_allowed_undo_validated_trial_please_contact_a", "Only curators are allowed undo validated trial. Please contact a curator.") : "Only curators are allowed undo validated trial. Please contact a curator."));
+                                alert((SGN.t("analysis.interface.only_curators_are_allowed_undo_validated_trial_please_contact_a", "Only curators are allowed undo validated trial. Please contact a curator.")));
                             }
                         },
                         error: function () {
@@ -565,7 +565,7 @@ function drawBoxplot(data, selected_trait, outlierMultiplier, isFixedMinMax, min
         .attr("x", -height / 2) // Position in the center of the Y-axis
         .attr("y", -margin.left + 10) // Ensure it's within margins
         .attr("transform", "rotate(-90)") // Rotate to match Y-axis orientation
-        .text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("analysis.interface.location_id", "Location ID") : "Location ID"));
+        .text((SGN.t("analysis.interface.location_id", "Location ID")));
 
 
     // Draw individual points with jitter
@@ -604,7 +604,7 @@ function drawBoxplot(data, selected_trait, outlierMultiplier, isFixedMinMax, min
                 .style("opacity", .9); // Fade in the tooltip
 
             // Add plotName and value to the tooltip content
-            tooltip.html(`<strong>${jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("trial.fieldmap_edit.plot_label.plot_prefix", "Plot:") : "Plot:")).html()}</strong> ${d.plotName}<br><strong>${jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("analysis.interface.value", "Value:") : "Value:")).html()}</strong> ${d.value}`)
+            tooltip.html(`<strong>${jQuery("<span>").text((SGN.t("trial.fieldmap_edit.plot_label.plot_prefix", "Plot:"))).html()}</strong> ${d.plotName}<br><strong>${jQuery("<span>").text((SGN.t("analysis.interface.value", "Value:"))).html()}</strong> ${d.value}`)
                 .style("left", (event.pageX + 10) + "px") // Position tooltip near the cursor
                 .style("top", (event.pageY - 28) + "px");
         })
@@ -656,7 +656,7 @@ function populateTraitDropdown(selectedVariableHTML) {
     traitSelect.empty();  // Clear previous options
 
     // Add default "Select a trait" option
-    traitSelect.append(("<option disabled selected value=\"\">" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("phenotype.root.select_a_trait", "Select a trait") : "Select a trait")).html() + "</option>"));
+    traitSelect.append(("<option disabled selected value=\"\">" + jQuery("<span>").text((SGN.t("phenotype.root.select_a_trait", "Select a trait"))).html() + "</option>"));
 
     // Create a temporary div to hold the HTML string
     var tempDiv = $('<div>').html(selectedVariableHTML);

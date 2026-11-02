@@ -325,7 +325,7 @@ jQuery(document).ready(function () {
                 jQuery('#geno_trial_accessions').html(trial_accessions_html);
                 },
                 error: function(response){
-                      alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("accession.forms.error_retrieving_accessions", "Error retrieving accessions.") : "Error retrieving accessions."));
+                      alert((SGN.t("accession.forms.error_retrieving_accessions", "Error retrieving accessions.")));
                 }
         });
     });
@@ -346,7 +346,7 @@ jQuery(document).ready(function () {
                     jQuery('#geno_trial_accessions').html(trial_accessions_html);
                 },
                 error: function(response){
-                    alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("accession.forms.error_retrieving_accessions", "Error retrieving accessions.") : "Error retrieving accessions."));
+                    alert((SGN.t("accession.forms.error_retrieving_accessions", "Error retrieving accessions.")));
                 }
         });
     });

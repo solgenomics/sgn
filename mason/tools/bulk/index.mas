@@ -26,7 +26,7 @@ if (!exists($modes{$mode})) { $mode = "clone_search"; }
       beforeLoad: function( event, ui ) {
         ui.jqXHR.fail(function() {
           ui.panel.text(
-            (window.SGN && SGN.i18n ? SGN.i18n.p("lists_datasets.bulk.tab_load_failed", "Couldn't load this tab. We'll try to fix this as soon as possible. If this wouldn't be a demo.") : "Couldn't load this tab. We'll try to fix this as soon as possible. If this wouldn't be a demo.") );
+            (SGN.t("lists_datasets.bulk.tab_load_failed", "Couldn't load this tab. We'll try to fix this as soon as possible. If this wouldn't be a demo.")) );
         });
       }
 

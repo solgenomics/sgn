@@ -95,7 +95,7 @@ jQuery(document).ready(function() {
             compare_images_selected_image_ids.push(jQuery(this).val());
         });
         if (compare_images_selected_image_ids.length != 2){
-            alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("community.image.please_select_two_image_types", "Please select two image types!") : "Please select two image types!"));
+            alert((SGN.t("community.image.please_select_two_image_types", "Please select two image types!")));
             return false;
         } else {
     
@@ -116,7 +116,7 @@ jQuery(document).ready(function() {
                 },
                 error: function(response){
                     jQuery("#working_modal").modal("hide");
-                    alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("community.image.error_comparing_images", "Error comparing images!") : "Error comparing images!"))
+                    alert((SGN.t("community.image.error_comparing_images", "Error comparing images!")))
                 }
             });
         }

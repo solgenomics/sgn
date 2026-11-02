@@ -85,15 +85,15 @@ jQuery(document).ready(function(){
             jQuery('#stock_audit_results').DataTable({
                 data: json_object,
                 columns: [
-                    { title: _sgnB15AuditEscape(window.SGN && window.SGN.i18n ? window.SGN.i18n.p('accession.audit.header.timestamp', 'Timestamp') : 'Timestamp') },
-                    { title: _sgnB15AuditEscape(window.SGN && window.SGN.i18n ? window.SGN.i18n.p('accession.audit.header.operation', 'Operation') : 'Operation') },
-                    { title: _sgnB15AuditEscape(window.SGN && window.SGN.i18n ? window.SGN.i18n.p('accession.audit.header.username', 'Username') : 'Username') },
-                    { title: _sgnB15AuditEscape(window.SGN && window.SGN.i18n ? window.SGN.i18n.p('accession.audit.header.logged_user', 'Logged in User') : 'Logged in User') },
-                    { title: _sgnB15AuditEscape(window.SGN && window.SGN.i18n ? window.SGN.i18n.p('accession.audit.header.before', 'Before') : 'Before') },
-                    { title: _sgnB15AuditEscape(window.SGN && window.SGN.i18n ? window.SGN.i18n.p('accession.audit.header.after', 'After') : 'After') },
-                    { title: _sgnB15AuditEscape(window.SGN && window.SGN.i18n ? window.SGN.i18n.p('accession.audit.header.transaction_code', 'Transaction Code') : 'Transaction Code')},
-                    { title: _sgnB15AuditEscape(window.SGN && window.SGN.i18n ? window.SGN.i18n.p('accession.audit.header.primary_key', 'Primary Key') : 'Primary Key')},
-                    { title: _sgnB15AuditEscape(window.SGN && window.SGN.i18n ? window.SGN.i18n.p('accession.audit.header.is_undo', 'Is Undo') : 'Is Undo')},
+                    { title: _sgnB15AuditEscape(SGN.t('accession.audit.header.timestamp', 'Timestamp')) },
+                    { title: _sgnB15AuditEscape(SGN.t('accession.audit.header.operation', 'Operation')) },
+                    { title: _sgnB15AuditEscape(SGN.t('accession.audit.header.username', 'Username')) },
+                    { title: _sgnB15AuditEscape(SGN.t('accession.audit.header.logged_user', 'Logged in User')) },
+                    { title: _sgnB15AuditEscape(SGN.t('accession.audit.header.before', 'Before')) },
+                    { title: _sgnB15AuditEscape(SGN.t('accession.audit.header.after', 'After')) },
+                    { title: _sgnB15AuditEscape(SGN.t('accession.audit.header.transaction_code', 'Transaction Code'))},
+                    { title: _sgnB15AuditEscape(SGN.t('accession.audit.header.primary_key', 'Primary Key'))},
+                    { title: _sgnB15AuditEscape(SGN.t('accession.audit.header.is_undo', 'Is Undo'))},
                 ],
                 "rowCallback" : function (row, data, index){
                     if(data[1] == "INSERT"){

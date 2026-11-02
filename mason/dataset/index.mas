@@ -126,7 +126,7 @@ jQuery(document).ready(function() {
             }
         },
         error: function(response) {
-            alert((window.SGN && SGN.i18n ? SGN.i18n.p("lists_datasets.pages.analysis_retrieval_error", "Error retrieving analyses using this dataset.") : "Error retrieving analyses using this dataset."));
+            alert((SGN.t("lists_datasets.pages.analysis_retrieval_error", "Error retrieving analyses using this dataset.")));
         }
     });
 });

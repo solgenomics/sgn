@@ -1,4 +1,5 @@
 'use strict';
+const I18N = require('../../../static/js/sgn-i18n.js');
 // Source unit only: execute every actual inline statement and callback, with
 // controlled native DataTables transport. No browser, HTTP or database claim.
 const assert = require('node:assert/strict');
@@ -39,6 +40,7 @@ function harness(text=source, {populationName=literal, serializedName=fixtureJSO
     const body=scripts[0][1].replace(/<%\s*\$stock_id\s*%>/g,String(stockId))
         .replace(/<%\s*\$population_name_json\s*%>/g,serializedName);
     assert(!body.includes('<%'),'Only declared numeric ID/scientific JSON Mason bindings occur');
+    I18N.install(context.window); context.SGN=context.window.SGN;
     vm.runInContext(body,context,{filename:sourcePath});
     assert.equal(tables.length,1);
     return {context,table:tables[0],listCalls,values,htmlWrites,
@@ -186,7 +188,7 @@ test('actual vendored DataTables offline render keeps final search cache literal
         const body=source.match(/<script\b[^>]*>([\s\S]*?)<\/script>/)[1]
             .replace(/<%\s*\$stock_id\s*%>/g,String(stockId))
             .replace(/<%\s*\$population_name_json\s*%>/g,fixtureJSON(literal));
-        await page.addScriptTag({content:body});
+await page.addScriptTag({path:path.join(root,'static/js/sgn-i18n.js')});        await page.addScriptTag({content:body});
         await page.waitForFunction(()=>window.populationMembersRenderListCalls.length===1);
         const observed=await page.evaluate(()=>{
             const table=jQuery('#population_members_table').DataTable(),settings=table.settings()[0];

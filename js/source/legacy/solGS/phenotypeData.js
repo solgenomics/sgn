@@ -57,7 +57,7 @@ jQuery(window).load( function() {
             jQuery('#phenoHistogram').append(message).show();
         } else {        
             var graph = jQuery.jqplot('phenoHistogram', {
-                    title: (window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.legacy_phenotype_plot_title", "Phenotype data") : "Phenotype data"),
+                    title: (SGN.t("solgs.browser.legacy_phenotype_plot_title", "Phenotype data")),
                     dataRenderer: phenoDataRenderer,
                     seriesDefaults: {
                         showLine: false,

@@ -86,7 +86,7 @@ jQuery(document).ready(function() {
                     alert(response.error);
                 }
                 if ( response?.results?.counts?.ranked_genotyping_protocols?.length === 0 ) {
-                    alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("genotype.marker.no_genotyping_protocols_found_for_accessions", "No genotyping protocols found for accessions") : "No genotyping protocols found for accessions"));
+                    alert((SGN.t("genotype.marker.no_genotyping_protocols_found_for_accessions", "No genotyping protocols found for accessions")));
                 }
                 else {
                     GENO_SEARCH_ACC_RESULTS = response?.results || {};
@@ -111,7 +111,7 @@ function displayResults(results) {
     // Display the top genotyping protocols
     if ( results?.counts?.ranked_genotyping_protocols ) {
         let ranked_gen_table = "<table class='table'>";
-        ranked_gen_table += `<thead><tr><th>${jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("lists_datasets.download.genotyping_protocol", "Genotyping Protocol") : "Genotyping Protocol")).html()}</th><th>${jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("genotype.marker.accession_count_total_count", "Accession Count (total: %{count})", {count: results.counts.accessions_total}) : `Accession Count (total: ${results.counts.accessions_total})`)).html()}</th><th></th></tr></thead>`;
+        ranked_gen_table += `<thead><tr><th>${jQuery("<span>").text((SGN.t("lists_datasets.download.genotyping_protocol", "Genotyping Protocol"))).html()}</th><th>${jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("genotype.marker.accession_count_total_count", "Accession Count (total: %{count})", {count: results.counts.accessions_total}) : `Accession Count (total: ${results.counts.accessions_total})`)).html()}</th><th></th></tr></thead>`;
         ranked_gen_table += "<tbody>";
         const display = results.counts.ranked_genotyping_protocols.length < 3 ? results.counts.ranked_genotyping_protocols.length : 3;
         for ( let i = 0; i < display; i++ ) {
@@ -134,7 +134,7 @@ function displayResults(results) {
 
     // Display the accession usage in the top protocols
     let table = "<thead><tr>";
-    table += ("<th>" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("global.index_logged_in_user.accession", "Accession") : "Accession")).html() + "</th>");
+    table += ("<th>" + jQuery("<span>").text((SGN.t("global.index_logged_in_user.accession", "Accession"))).html() + "</th>");
     for ( let gen_id in (results?.lookups?.genotyping_protocols || {}) ) {
         table += `<th>${(results?.lookups?.genotyping_protocols || {})[gen_id]}</th>`;
     }
@@ -203,7 +203,7 @@ function showAccessionsList() {
     acc_names.sort();
 
     // Show Dialog of Accessions List
-    jQuery("#genotypingProtocolAccessionsListDialog").html(list_type === "matching" ? `${jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("genotype.marker.accessions_found_in_protocol", "Accessions Found in Protocol ") : "Accessions Found in Protocol ")).html()}${gen_name}` : `${jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("genotype.marker.accessions_missing_from_protocol", "Accessions Missing From Protocol ") : "Accessions Missing From Protocol ")).html()}${gen_name}`);
+    jQuery("#genotypingProtocolAccessionsListDialog").html(list_type === "matching" ? `${jQuery("<span>").text((SGN.t("genotype.marker.accessions_found_in_protocol", "Accessions Found in Protocol "))).html()}${gen_name}` : `${jQuery("<span>").text((SGN.t("genotype.marker.accessions_missing_from_protocol", "Accessions Missing From Protocol "))).html()}${gen_name}`);
     jQuery("#genotyping_protocol_accessions_list_results").html(acc_names.join("\n"));
     jQuery("#genotyping_protocol_accessions_list").modal("show");
 

@@ -145,7 +145,7 @@ use HTML::Entities ();
 var require_login = "<%  $c->get_conf('brapi_require_login') %>";
 if (require_login === '1'){
     auth_token = "<%  CXGN::Login->new($c->dbc->dbh)->get_login_cookie() %>";
-    if (!auth_token){ alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("analysis.interface.login_required_to_display_heritability", "Login required to display heritability") : "Login required to display heritability")); }
+    if (!auth_token){ alert((SGN.t("analysis.interface.login_required_to_display_heritability", "Login required to display heritability"))); }
 }
 
 var check_outliers = "<% $c->get_conf('exclude_phenotype_outliers') || 0 %>";
@@ -186,7 +186,7 @@ jQuery(document).ready(function() {
     }
         },
         error: function(response) {
-          alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("analysis.interface.an_error_occurred_please_check_the_datase", "An error occurred, please check the datase.") : "An error occurred, please check the datase."));
+          alert((SGN.t("analysis.interface.an_error_occurred_please_check_the_datase", "An error occurred, please check the datase.")));
       }
     });
   });
@@ -221,7 +221,7 @@ $(document).ready(function(){
 
                         // Generate and append the table HTML
                         var tableHtml = '<table id="summaryTable">';
-                        tableHtml += ("<thead class=\"bg-light-blue\"><tr><th>" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("accession.population_cgi.trait", "Trait") : "Trait")).html() + "</th><th>" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("accession.usage.header.mean", "Mean") : "Mean")).html() + "</th><th>" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("accession.population_cgi.min", "Minimum") : "Minimum")).html() + "</th><th>" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("accession.population_cgi.max", "Maximum") : "Maximum")).html() + "</th><th>" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("accession.usage.header.stddev", "Std Dev") : "Std Dev")).html() + "</th><th>" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("phenotype.percent_missing", "Percent Missing") : "Percent Missing")).html() + "</th></tr></thead>");
+                        tableHtml += ("<thead class=\"bg-light-blue\"><tr><th>" + jQuery("<span>").text((SGN.t("accession.population_cgi.trait", "Trait"))).html() + "</th><th>" + jQuery("<span>").text((SGN.t("accession.usage.header.mean", "Mean"))).html() + "</th><th>" + jQuery("<span>").text((SGN.t("accession.population_cgi.min", "Minimum"))).html() + "</th><th>" + jQuery("<span>").text((SGN.t("accession.population_cgi.max", "Maximum"))).html() + "</th><th>" + jQuery("<span>").text((SGN.t("accession.usage.header.stddev", "Std Dev"))).html() + "</th><th>" + jQuery("<span>").text((SGN.t("phenotype.percent_missing", "Percent Missing"))).html() + "</th></tr></thead>");
                         tableHtml += '<tbody>';
                         tableHtml += '<tr><td>' + pheno_select + '</td><td>' + mean + '</td><td>' + min + '</td><td>' + max + '</td><td>' + standardDeviation + '</td><td>' + missingPercentage + '</td></tr>';
                         tableHtml += '</tbody>';
@@ -319,12 +319,12 @@ function calculateMissingPercentage(data) {
 
 jQuery('#runAMMI').click( function () {
     if (!jQuery('#pheno_select').val()) {
-        alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("analysis.interface.please_select_a_dataset_and_trait", "Please select a dataset and trait.") : "Please select a dataset and trait."))
+        alert((SGN.t("analysis.interface.please_select_a_dataset_and_trait", "Please select a dataset and trait.")))
         $('#stability_files').empty();
     } else if (jQuery('#select_imput').val() == "imput_empty") {
-        alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("analysis.interface.please_select_if_phenotype_imputation_is_required", "Please select if phenotype imputation is required.") : "Please select if phenotype imputation is required."))
+        alert((SGN.t("analysis.interface.please_select_if_phenotype_imputation_is_required", "Please select if phenotype imputation is required.")))
     } else if (jQuery('#select_method').val() == "method_empty"){
-        alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("analysis.interface.please_select_the_stability_method", "Please select the stability method.") : "Please select the stability method."))
+        alert((SGN.t("analysis.interface.please_select_the_stability_method", "Please select the stability method.")))
     } else {
         $('#stability_files').empty();
         if ($('#pheno_select').val() != ""){
@@ -367,19 +367,19 @@ jQuery('#runAMMI').click( function () {
                                     var firstLine = parsedData[0];
                                     var imputAcc = firstLine.imputAcc;
                                     imputAcc = imputAcc.toFixed(3);
-                                    var message = ("<p>" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("analysis.interface.the_imputation_accuracy_correlation_is", "The imputation accuracy (correlation) is") : "The imputation accuracy (correlation) is")).html() + " ") + imputAcc + ".</p>";
+                                    var message = ("<p>" + jQuery("<span>").text((SGN.t("analysis.interface.the_imputation_accuracy_correlation_is", "The imputation accuracy (correlation) is"))).html() + " ") + imputAcc + ".</p>";
                                     $('#stability_message').html(message);
                                 }else{
-                                    var message = ("<p>" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("analysis.interface.analysis_processed_with_no_phenotypic_imputation", "Analysis processed with no phenotypic imputation.") : "Analysis processed with no phenotypic imputation.")).html() + "</p>");
+                                    var message = ("<p>" + jQuery("<span>").text((SGN.t("analysis.interface.analysis_processed_with_no_phenotypic_imputation", "Analysis processed with no phenotypic imputation."))).html() + "</p>");
                                     $('#stability_message').html(message);
                                 }
 
                                 var table = '<table id="myTable">';
                                 if (method_id == "ammi") {
-                                  table += ("<thead class=\"bg-light-blue\"><tr><th>" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("global.index_logged_in_user.accession", "Accession") : "Accession")).html() + "</th><th>" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("analysis.interface.location", "Location") : "Location")).html() + "</th><th>" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("analysis.interface.effect", "Effect") : "Effect")).html() + "</th><th>" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("analysis.interface.stability_rank", "Stability Rank") : "Stability Rank")).html() + "</th><th>" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("analysis.interface.means", "Means") : "Means")).html() + "</th></tr></thead>");
+                                  table += ("<thead class=\"bg-light-blue\"><tr><th>" + jQuery("<span>").text((SGN.t("global.index_logged_in_user.accession", "Accession"))).html() + "</th><th>" + jQuery("<span>").text((SGN.t("analysis.interface.location", "Location"))).html() + "</th><th>" + jQuery("<span>").text((SGN.t("analysis.interface.effect", "Effect"))).html() + "</th><th>" + jQuery("<span>").text((SGN.t("analysis.interface.stability_rank", "Stability Rank"))).html() + "</th><th>" + jQuery("<span>").text((SGN.t("analysis.interface.means", "Means"))).html() + "</th></tr></thead>");
 
                                 } else {
-                                  table += ("<thead class=\"bg-light-blue\"><tr><th>" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("global.index_logged_in_user.accession", "Accession") : "Accession")).html() + "</th><th>" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("analysis.interface.location", "Location") : "Location")).html() + "</th><th>" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("analysis.interface.means", "Means") : "Means")).html() + "</th><th>" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("analysis.interface.location_rank", "Location Rank") : "Location Rank")).html() + "</th><th>" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("analysis.interface.genotype_rank", "Genotype Rank") : "Genotype Rank")).html() + "</th></tr></thead>");
+                                  table += ("<thead class=\"bg-light-blue\"><tr><th>" + jQuery("<span>").text((SGN.t("global.index_logged_in_user.accession", "Accession"))).html() + "</th><th>" + jQuery("<span>").text((SGN.t("analysis.interface.location", "Location"))).html() + "</th><th>" + jQuery("<span>").text((SGN.t("analysis.interface.means", "Means"))).html() + "</th><th>" + jQuery("<span>").text((SGN.t("analysis.interface.location_rank", "Location Rank"))).html() + "</th><th>" + jQuery("<span>").text((SGN.t("analysis.interface.genotype_rank", "Genotype Rank"))).html() + "</th></tr></thead>");
                                 }
 
                                 if ( method_id == "ammi"){
@@ -466,7 +466,7 @@ jQuery('#runAMMI').click( function () {
                                     var link = document.createElement("a");
                                     link.setAttribute("href", encodedUri);
                                     link.setAttribute("download", "stability_data.csv");
-                                    link.innerHTML = (window.SGN && window.SGN.i18n ? window.SGN.i18n.p("analysis.interface.download_csv", "Download CSV") : "Download CSV");
+                                    link.innerHTML = (SGN.t("analysis.interface.download_csv", "Download CSV"));
 
                                     // Trigger the click event to download the file
                                     link.click();
@@ -536,7 +536,7 @@ jQuery('#runAMMI').click( function () {
             }
           },
           error: function(response) {
-            alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("analysis.interface.an_error_occurred_the_service_may_temporarily_be_unavailable", "An error occurred, the service may temporarily be unavailable") : "An error occurred, the service may temporarily be unavailable"));
+            alert((SGN.t("analysis.interface.an_error_occurred_the_service_may_temporarily_be_unavailable", "An error occurred, the service may temporarily be unavailable")));
           }
         });
       }
@@ -602,7 +602,7 @@ function createChart(data) {
             tooltip.transition()
                 .duration(200)
                 .style("opacity", .9);
-            tooltip.html((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("trial.card.coords.accession", "Accession: ") : "Accession: ") + d.key) // Display accession name in the tooltip
+            tooltip.html((SGN.t("trial.card.coords.accession", "Accession: ")) + d.key) // Display accession name in the tooltip
                 .style("left", (event.pageX + 10) + "px")
                 .style("top", (event.pageY - 20) + "px");
         })
@@ -661,7 +661,7 @@ function createChart(data) {
         .attr("x", width / 2)
         .attr("y", height + margin.bottom)
         .style("text-anchor", "middle")
-        .text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("analysis.interface.number_of_locations", "Number of Locations") : "Number of Locations"));
+        .text((SGN.t("analysis.interface.number_of_locations", "Number of Locations")));
 
     svg.append("text")
         .attr("class", "y-label")
@@ -670,7 +670,7 @@ function createChart(data) {
         .attr("y", -margin.left)
         .attr("dy", "1em")
         .style("text-anchor", "middle")
-        .text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("analysis.interface.scaled_stability", "Scaled Stability") : "Scaled Stability"));
+        .text((SGN.t("analysis.interface.scaled_stability", "Scaled Stability")));
 
     return svg; // Return the SVG node
 }
@@ -782,7 +782,7 @@ function deviationLinePlot(data) {
         .attr("x", width / 2)
         .attr("y", height + margin.bottom)
         .style("text-anchor", "middle")
-        .text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("analysis.interface.location", "Location") : "Location"));
+        .text((SGN.t("analysis.interface.location", "Location")));
 
     svg.append("text")
         .attr("class", "y-label")
@@ -791,7 +791,7 @@ function deviationLinePlot(data) {
         .attr("y", -margin.left)
         .attr("dy", "1em")
         .style("text-anchor", "middle")
-        .text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("accession.usage.header.mean", "Mean") : "Mean"));
+        .text((SGN.t("accession.usage.header.mean", "Mean")));
 
     return svg; // Return the SVG node
 }

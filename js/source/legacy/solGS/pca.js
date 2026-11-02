@@ -298,7 +298,7 @@ solGS.pca = {
 
     var runPcaBtn =
         `<button type="button" id=${runPcaBtnId}` +
-        ` class="btn btn-success" data-selected-pop='${pcaArgs}'>${(window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.run_pca", "Run PCA") : "Run PCA")}</button>`;
+        ` class="btn btn-success" data-selected-pop='${pcaArgs}'>${(SGN.t("solgs.browser.run_pca", "Run PCA"))}</button>`;
 
     var compatibilityMessage = '';
     if (dataStr.match(/dataset/)) {
@@ -328,7 +328,7 @@ solGS.pca = {
 
         if (dataStr.match(/dataset/)) {
             if (toolCompatibility == null || toolCompatibility == "(not calculated)"){
-            compatibilityMessage = (window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.compatibility_not_calculated", "(not calculated)") : "(not calculated)");
+            compatibilityMessage = (SGN.t("solgs.browser.compatibility_not_calculated", "(not calculated)"));
             } else {
                 if (toolCompatibility["Population Structure"]['compatible'] == 0) {
                 compatibilityMessage = '<b><span class="glyphicon glyphicon-remove" style="color:red"></span></b>'
@@ -493,12 +493,12 @@ solGS.pca = {
 
             if (listType.match(/accessions/) && dataType.match(/phenotype/i)) {
                 msg =
-                    (window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.pca_clones_genotype_only", "With list of clones, you can only do PCA based on ") : "With list of clones, you can only do PCA based on ") + "<em>" + (window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.data_type_genotype", "genotype") : "genotype") + "</em>.";
+                    (SGN.t("solgs.browser.pca_clones_genotype_only", "With list of clones, you can only do PCA based on ")) + "<em>" + (SGN.t("solgs.browser.data_type_genotype", "genotype")) + "</em>.";
             }
 
             if (listType.match(/plots/) && dataType.match(/genotype/i)) {
                 msg =
-                    (window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.pca_plots_phenotype_only", "With list of plots, you can only do PCA based on ") : "With list of plots, you can only do PCA based on ") + "<em>" + (window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.data_type_phenotype", "phenotype") : "phenotype") + "</em>.";
+                    (SGN.t("solgs.browser.pca_plots_phenotype_only", "With list of plots, you can only do PCA based on ")) + "<em>" + (SGN.t("solgs.browser.data_type_phenotype", "phenotype")) + "</em>.";
             }
         }
 
@@ -508,12 +508,12 @@ solGS.pca = {
     createTable: function (tableId) {
         var pcaTable =
             `<table id="${tableId}" class="table table-striped"><thead><tr>` +
-            "<th>" + (window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.pca_table_population", "Population") : "Population") + "</th>" +
-            "<th>" + (window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.pca_table_data_structure", "Data structure") : "Data structure") + "</th>" +
-            "<th>" + (window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.pca_table_compatibility", "Compatibility") : "Compatibility") + "</th>" +
-      "<th>" + (window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.pca_table_ownership", "Ownership") : "Ownership") + "</th>" +
-            "<th>" + (window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.pca_table_data_type", "Data type") : "Data type") + "</th>" +
-            "<th>" + (window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.run_pca", "Run PCA") : "Run PCA") + "</th>" +
+            "<th>" + (SGN.t("solgs.browser.pca_table_population", "Population")) + "</th>" +
+            "<th>" + (SGN.t("solgs.browser.pca_table_data_structure", "Data structure")) + "</th>" +
+            "<th>" + (SGN.t("solgs.browser.pca_table_compatibility", "Compatibility")) + "</th>" +
+      "<th>" + (SGN.t("solgs.browser.pca_table_ownership", "Ownership")) + "</th>" +
+            "<th>" + (SGN.t("solgs.browser.pca_table_data_type", "Data type")) + "</th>" +
+            "<th>" + (SGN.t("solgs.browser.run_pca", "Run PCA")) + "</th>" +
             "</tr></thead></table>";
 
         return pcaTable;
@@ -547,11 +547,11 @@ solGS.pca = {
             screePlotFile +
             '" download=' +
             screePlot +
-            ">" + (window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.pca_scree_plot_link", "Scree plot") : "Scree plot") + "</a>";
+            ">" + (SGN.t("solgs.browser.pca_scree_plot_link", "Scree plot")) + "</a>";
 
         var scores = scoresFile.split("/").pop();
         var scoresLink =
-            '<a href="' + scoresFile + '" download=' + scores + ">" + (window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.pca_scores_link", " Scores ") : " Scores ") + "</a>";
+            '<a href="' + scoresFile + '" download=' + scores + ">" + (SGN.t("solgs.browser.pca_scores_link", " Scores ")) + "</a>";
 
         var loadings = loadingsFile.split("/").pop();
         var loadingsLink =
@@ -559,7 +559,7 @@ solGS.pca = {
             loadingsFile +
             '" download=' +
             loadings +
-            ">" + (window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.pca_loadings_link", "Loadings") : "Loadings") + "</a>";
+            ">" + (SGN.t("solgs.browser.pca_loadings_link", "Loadings")) + "</a>";
 
         var variances = variancesFile.split("/").pop();
         var variancesLink =
@@ -567,7 +567,7 @@ solGS.pca = {
             variancesFile +
             '" download=' +
             variances +
-            ">" + (window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.pca_variances_link", "Variances") : "Variances") + "</a>";
+            ">" + (SGN.t("solgs.browser.pca_variances_link", "Variances")) + "</a>";
         
         var report = reportFile.split("/").pop();
         var reportLink = 
@@ -575,10 +575,10 @@ solGS.pca = {
             reportFile +
             '" download=' +
             report +
-            ">" + (window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.pca_analysis_log_link", "Analysis log") : "Analysis log") + "</a>";
+            ">" + (SGN.t("solgs.browser.pca_analysis_log_link", "Analysis log")) + "</a>";
 
         var pcaPlotDivId = this.pcaPlotDivId(res.file_id).replace(/#/, "");
-        var pcaPlotLink = `<a href='#'  onclick='event.preventDefault();' id='download_${pcaPlotDivId}'>${(window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.pca_plot_link", "PCA plot") : "PCA plot")}</a>`;
+        var pcaPlotLink = `<a href='#'  onclick='event.preventDefault();' id='download_${pcaPlotDivId}'>${(SGN.t("solgs.browser.pca_plot_link", "PCA plot"))}</a>`;
 
         var runPcaBtnId;// = this.getRunPcaId(res.pca_pop_id);
 
@@ -596,7 +596,7 @@ solGS.pca = {
 
         var savePcs;
         if (res.analysis_name) {
-            savePcs = `<button id="save_pcs_btn_${res.file_id}" class="btn btn-success" data-selected-pop='${pcaArgs}'>${(window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.save_pcs", "Save PCs") : "Save PCs")}</button>`;
+            savePcs = `<button id="save_pcs_btn_${res.file_id}" class="btn btn-success" data-selected-pop='${pcaArgs}'>${(SGN.t("solgs.browser.save_pcs", "Save PCs"))}</button>`;
         }
 
         var downloadLinks =
@@ -953,7 +953,7 @@ solGS.pca = {
         popName = popName
             ? popName + " (" + plotData.data_type + ")"
             : " (" + plotData.data_type + ")";
-        var dld = (window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.pca_download_prefix", "Download PCA ") : "Download PCA ") + popName + ": ";
+        var dld = (SGN.t("solgs.browser.pca_download_prefix", "Download PCA ")) + popName + ": ";
 
         if (downloadLinks) {
             jQuery(pcaPlotDivId).append(
@@ -988,7 +988,7 @@ solGS.pca = {
                         groupName.push(trialsNames[id]);
                     });
 
-                    groupName = (window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.pca_shared_trial_legend_prefix", "common to: ") : "common to: ") + groupName.join(", ");
+                    groupName = (SGN.t("solgs.browser.pca_shared_trial_legend_prefix", "common to: ")) + groupName.join(", ");
                 } else {
                     groupName = trialsNames[id] || id;
                 }
@@ -1126,7 +1126,7 @@ jQuery(document).ready(function () {
         if (pcaHtmlElem.match(/pca_data_type_select/)) {
             var pcaPopId = pcaHtmlElem.replace(/pca_data_type_select_/, "");
             var runPcaBtnId = solGS.pca.getRunPcaId(pcaPopId);
-            jQuery(`#${runPcaBtnId}`).html((window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.run_pca", "Run PCA") : "Run PCA")).show();
+            jQuery(`#${runPcaBtnId}`).html((SGN.t("solgs.browser.run_pca", "Run PCA"))).show();
         }
     });
 });
@@ -1165,7 +1165,7 @@ jQuery(document).ready(function () {
                             solGS.pca.plotPca(plotData, downloadLinks);
                         }
 
-                        jQuery(`#${runPcaBtnId}`).html((window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.pca_done_button_label", "Done") : "Done")).show();
+                        jQuery(`#${runPcaBtnId}`).html((SGN.t("solgs.browser.pca_done_button_label", "Done"))).show();
 
                         solGS.pca.cleanUpOnSuccess(pcaPopId);
                     } else {
@@ -1175,7 +1175,7 @@ jQuery(document).ready(function () {
 
                         runPcaBtnId = `#${runPcaBtnId}`;
 
-                        var title = "<p>" + (window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.pca_analysis_may_take_time", "This analysis may take a long time. ") : "This analysis may take a long time. ") + (window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.pca_email_prompt", "Do you want to submit the analysis and get an email when it completes?") : "Do you want to submit the analysis and get an email when it completes?") + "</p>";
+                        var title = "<p>" + (SGN.t("solgs.browser.pca_analysis_may_take_time", "This analysis may take a long time. ")) + (SGN.t("solgs.browser.pca_email_prompt", "Do you want to submit the analysis and get an email when it completes?")) + "</p>";
 
                         var jobSubmit =
                             '<div id= "pca_submit">' + title + "</div>";
@@ -1186,10 +1186,10 @@ jQuery(document).ready(function () {
                             height: "auto",
                             width: "auto",
                             modal: true,
-                            title: (window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.pca_job_title", "pca job submission") : "pca job submission"),
+                            title: (SGN.t("solgs.browser.pca_job_title", "pca job submission")),
                             buttons: {
                                 OK: {
-                                    text: (window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.yes", "Yes") : "Yes"),
+                                    text: (SGN.t("solgs.browser.yes", "Yes")),
                                     class: "btn btn-success",
                                     id: "queue_job",
                                     click: function () {
@@ -1202,14 +1202,14 @@ jQuery(document).ready(function () {
                                 },
 
                                 No: {
-                                    text: (window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.job_no_wait", "No, I will wait till it completes.") : "No, I will wait till it completes."),
+                                    text: (SGN.t("solgs.browser.job_no_wait", "No, I will wait till it completes.")),
                                     class: "btn btn-warning",
                                     id: "no_queue",
                                     click: function () {
                                         jQuery(this).dialog("close");
 
                                         jQuery(runPcaBtnId)
-                                            .html((window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.pca_running_button_label", "Running...") : "Running..."))
+                                            .html((SGN.t("solgs.browser.pca_running_button_label", "Running...")))
                                             .show();
 
                                         jQuery(
@@ -1217,7 +1217,7 @@ jQuery(document).ready(function () {
                                         ).show();
                                         jQuery(pcaMsgDiv)
                                             .html(
-                                                (window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.pca_running_message", "Running pca... please wait...") : "Running pca... please wait...")
+                                                (SGN.t("solgs.browser.pca_running_message", "Running pca... please wait..."))
                                             )
                                             .show();
 
@@ -1238,14 +1238,14 @@ jQuery(document).ready(function () {
                                                         downloadLinks
                                                     );
                                                     jQuery(runPcaBtnId)
-                                                        .html((window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.pca_done_button_label", "Done") : "Done"))
+                                                        .html((SGN.t("solgs.browser.pca_done_button_label", "Done")))
                                                         .show();
                                                     solGS.pca.cleanUpOnSuccess(
                                                         pcaPopId
                                                     );
                                                 } else {
                                                     var msg =
-                                                        (window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.pca_no_output", "There is no PCA output for this dataset.") : "There is no PCA output for this dataset.");
+                                                        (SGN.t("solgs.browser.pca_no_output", "There is no PCA output for this dataset."));
                                                     solGS.pca.feedBackOnFailure(
                                                         pcaPopId,
                                                         msg
@@ -1255,7 +1255,7 @@ jQuery(document).ready(function () {
                                             })
                                             .fail(function (res) {
                                                 var msg =
-                                                    (window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.pca_run_error", "Error occurred running the PCA.") : "Error occurred running the PCA.");
+                                                    (SGN.t("solgs.browser.pca_run_error", "Error occurred running the PCA."));
                                                 solGS.pca.feedBackOnFailure(
                                                     pcaPopId,
                                                     msg
@@ -1266,7 +1266,7 @@ jQuery(document).ready(function () {
                                 },
 
                                 Cancel: {
-                                    text: (window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.cancel", "Cancel") : "Cancel"),
+                                    text: (SGN.t("solgs.browser.cancel", "Cancel")),
                                     class: "btn btn-info",
                                     id: "cancel_queue_info",
                                     click: function () {
@@ -1294,11 +1294,11 @@ jQuery(document).ready(function () {
                                             plotData,
                                             downloadLinks
                                         );
-                                        jQuery(runPcaBtnId).html((window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.pca_done_button_label", "Done") : "Done")).show();
+                                        jQuery(runPcaBtnId).html((SGN.t("solgs.browser.pca_done_button_label", "Done"))).show();
                                         solGS.pca.cleanUpOnSuccess(pcaPopId);
                                     } else {
                                         var msg =
-                                            (window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.pca_no_output", "There is no PCA output for this dataset.") : "There is no PCA output for this dataset.");
+                                            (SGN.t("solgs.browser.pca_no_output", "There is no PCA output for this dataset."));
                                         solGS.pca.feedBackOnFailure(
                                             pcaPopId,
                                             msg
@@ -1306,7 +1306,7 @@ jQuery(document).ready(function () {
                                     }
                                 })
                                 .fail(function (res) {
-                                    var msg = (window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.pca_run_error", "Error occurred running the PCA.") : "Error occurred running the PCA.");
+                                    var msg = (SGN.t("solgs.browser.pca_run_error", "Error occurred running the PCA."));
                                     solGS.pca.feedBackOnFailure(pcaPopId, msg);
                                     jQuery(runPcaBtnId).show();
                                 });
@@ -1314,7 +1314,7 @@ jQuery(document).ready(function () {
                     }
                 })
                 .fail(function () {
-                    var msg = (window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.pca_cached_output_check_error", "Error occurred checking for cached output.") : "Error occurred checking for cached output.");
+                    var msg = (SGN.t("solgs.browser.pca_cached_output_check_error", "Error occurred checking for cached output."));
                     solGS.pca.feedBackOnFailure(pcaPopId, msg);
                     jQuery(runPcaBtnId).show();
                 });

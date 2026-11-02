@@ -342,7 +342,7 @@ function updateServices() {
                 }
             },
             error: () => {
-                alert((window.SGN && SGN.i18n ? SGN.i18n.p("global.dataset_publish.error.services", "Could not get external services") : "Could not get external services"));
+                alert((SGN.t("global.dataset_publish.error.services", "Could not get external services")));
             }
         });
     })
@@ -405,7 +405,7 @@ function updateConnection() {
                 }
             },
             error: () => {
-                alert((window.SGN && SGN.i18n ? SGN.i18n.p("global.dataset_publish.error.connection", "Could not update connection info") : "Could not update connection info"));
+                alert((SGN.t("global.dataset_publish.error.connection", "Could not update connection info")));
                 displayConnection();
             }
         });
@@ -475,7 +475,7 @@ function connectService() {
 
         if ( !popup ) {
             jQuery(".dataset-archive-publish-connect-btn").attr("disabled", false);
-            alert((window.SGN && SGN.i18n ? SGN.i18n.p("global.dataset_publish.error.popup_required", "You must allow popup windows in your browser to continue") : "You must allow popup windows in your browser to continue"));
+            alert((SGN.t("global.dataset_publish.error.popup_required", "You must allow popup windows in your browser to continue")));
         }
 
         const interval = setInterval(() => {
@@ -520,7 +520,7 @@ function updateArticles() {
             }
         },
         error: () => {
-            alert((window.SGN && SGN.i18n ? SGN.i18n.p("global.dataset_publish.error.articles", "Could not get account articles") : "Could not get account articles"));
+            alert((SGN.t("global.dataset_publish.error.articles", "Could not get account articles")));
         }
     });
 }
@@ -554,7 +554,7 @@ async function onArticleChanged() {
             jQuery("#dataset-archive-publish-article-title-addon").html(details.status.toUpperCase());
             jQuery("#dataset-archive-publish-article-description").val(details.description);
             jQuery("#dataset-archive-publish-article-authors").val(details.authors.map((e) => e.full_name).join('\n'));
-            jQuery("#dataset-archive-publish-send-label").html(datasetPublishEscapeHtml((window.SGN && SGN.i18n ? SGN.i18n.p("global.dataset_publish.add_files_to_dataset", "Add files to selected dataset") : "Add files to selected dataset")));
+            jQuery("#dataset-archive-publish-send-label").html(datasetPublishEscapeHtml((SGN.t("global.dataset_publish.add_files_to_dataset", "Add files to selected dataset"))));
             jQuery(".dataset-archive-publish-connected-btn").attr("disabled", false);
         }
         catch (err) {
@@ -565,10 +565,10 @@ async function onArticleChanged() {
         jQuery(".dataset-archive-publish-connected-btn").attr("disabled", false);
         jQuery(".dataset-archive-publish-article-details").attr("disabled", false);
         jQuery("#dataset-archive-publish-article-title").val("");
-        jQuery("#dataset-archive-publish-article-title-addon").html(datasetPublishEscapeHtml((window.SGN && SGN.i18n ? SGN.i18n.p("global.dataset_publish.new", "NEW") : "NEW")));
+        jQuery("#dataset-archive-publish-article-title-addon").html(datasetPublishEscapeHtml((SGN.t("global.dataset_publish.new", "NEW"))));
         jQuery("#dataset-archive-publish-article-description").val("");
         jQuery("#dataset-archive-publish-article-authors").val("");
-        jQuery("#dataset-archive-publish-send-label").html(datasetPublishEscapeHtml((window.SGN && SGN.i18n ? SGN.i18n.p("global.dataset_publish.create_dataset_and_add_files", "Create new dataset and add files") : "Create new dataset and add files")));
+        jQuery("#dataset-archive-publish-send-label").html(datasetPublishEscapeHtml((SGN.t("global.dataset_publish.create_dataset_and_add_files", "Create new dataset and add files"))));
     }
 }
 
@@ -590,7 +590,7 @@ function getArticleDetails(service, article_id) {
                 }
             },
             error: () => {
-                reject((window.SGN && SGN.i18n ? SGN.i18n.p("global.dataset_publish.error.article_details", "Could not get article details") : "Could not get article details"));
+                reject((SGN.t("global.dataset_publish.error.article_details", "Could not get article details")));
             }
         });
     })
@@ -612,7 +612,7 @@ function updateIssues() {
             }
         },
         error: () => {
-            alert((window.SGN && SGN.i18n ? SGN.i18n.p("global.dataset_publish.error.issues", "Could not get dataset published issues") : "Could not get dataset published issues"));
+            alert((SGN.t("global.dataset_publish.error.issues", "Could not get dataset published issues")));
         }
     });
 }
@@ -672,14 +672,14 @@ async function displayIssues(issues = {}) {
 
                 // Display Public Link
                 if ( s.article.is_public ) {
-                    html += `<div><span class="label label-primary">${datasetPublishEscapeHtml(window.SGN && SGN.i18n ? SGN.i18n.p("global.dataset_publish.status.public", "Public") : "Public")}</span>&nbsp;<a href='${s.article.url_public_html}' target='_blank'>${s.article.title}</a></div>`;
+                    html += `<div><span class="label label-primary">${datasetPublishEscapeHtml(SGN.t("global.dataset_publish.status.public", "Public"))}</span>&nbsp;<a href='${s.article.url_public_html}' target='_blank'>${s.article.title}</a></div>`;
                 }
 
                 // Display Private Link, only to the dataset owner
 % if ( $is_dataset_owner ) {
-                    html += `<div><span class="label label-info">${datasetPublishEscapeHtml(window.SGN && SGN.i18n ? SGN.i18n.p("global.dataset_publish.status.preview", "Preview") : "Preview")}</span>&nbsp;<a href='${s.article.url_private_html}' target='_blank'>${s.article.title}</a></div>`;
+                    html += `<div><span class="label label-info">${datasetPublishEscapeHtml(SGN.t("global.dataset_publish.status.preview", "Preview"))}</span>&nbsp;<a href='${s.article.url_private_html}' target='_blank'>${s.article.title}</a></div>`;
 % } else {
-                    if ( !s.article.is_public ) html += `<em>${datasetPublishEscapeHtml((window.SGN && SGN.i18n ? SGN.i18n.p("global.dataset_publish.status.private", "Published to a private dataset") : "Published to a private dataset"))}</em>`;
+                    if ( !s.article.is_public ) html += `<em>${datasetPublishEscapeHtml((SGN.t("global.dataset_publish.status.private", "Published to a private dataset")))}</em>`;
 % }
 
                 // Display DOI, if available
@@ -687,19 +687,19 @@ async function displayIssues(issues = {}) {
                 html += `</div></td>`;
             }
             else {
-                html += `<td><em>${datasetPublishEscapeHtml((window.SGN && SGN.i18n ? SGN.i18n.p("global.dataset_publish.status.not_uploaded", "Not uploaded") : "Not uploaded"))}</em></td>`;
+                html += `<td><em>${datasetPublishEscapeHtml((SGN.t("global.dataset_publish.status.not_uploaded", "Not uploaded")))}</em></td>`;
             }
 
             // Display actions only to owner
 % if ( $is_dataset_owner ) {
             html += `<td><div style='display: flex; flex-wrap: wrap; gap: 5px;'>`
             if ( Object.keys(SERVICES).length > 0 ) {
-                if ( !overallSubmitted || !overallComplete ) html += `<button class='btn btn-primary btn-xs' onclick='uploadIssue(${s.key})'><span class='glyphicon glyphicon-export'></span>&nbsp;&nbsp;${datasetPublishEscapeHtml(window.SGN && SGN.i18n ? SGN.i18n.p("global.dataset_publish.action.upload", "Upload") : "Upload")}</button>`;
+                if ( !overallSubmitted || !overallComplete ) html += `<button class='btn btn-primary btn-xs' onclick='uploadIssue(${s.key})'><span class='glyphicon glyphicon-export'></span>&nbsp;&nbsp;${datasetPublishEscapeHtml(SGN.t("global.dataset_publish.action.upload", "Upload"))}</button>`;
                 if ( overallSubmitted && overallComplete ) html += `<button class='btn btn-primary btn-xs' onclick='editIssue(${s.key}, "${s.service}")'><span class='glyphicon glyphicon-pencil'></span>&nbsp;&nbsp;${datasetPublishEscapeHtml((window.SGN && SGN.i18n ? SGN.i18n.p("global.dataset_publish.action.edit_on", "Edit on %{service}", {service: SERVICES[s.service]?.display_name}) : datasetPublishFallback("Edit on %{service}", {service: SERVICES[s.service]?.display_name})))}</button>`;
-                if ( overallSubmitted && overallComplete && s.published !== 1 ) html += `<button class='btn btn-warning btn-xs' onclick='publishIssue(${s.key}, "${s.service}")'><span class='glyphicon glyphicon-share'></span>&nbsp;&nbsp;${datasetPublishEscapeHtml(window.SGN && SGN.i18n ? SGN.i18n.p("global.dataset_publish.action.publish", "Publish") : "Publish")}</button>`;
-                if ( s.article?.id && (!s.article?.doi || s.article?.doi === '') ) html += `<button class='btn btn-primary btn-xs' onclick='reserveDOI(${s.key}, "${s.service}")'><span class='glyphicon glyphicon-barcode'></span>&nbsp;&nbsp;${datasetPublishEscapeHtml(window.SGN && SGN.i18n ? SGN.i18n.p("global.dataset_publish.action.reserve_doi", "Reserve DOI") : "Reserve DOI")}</button>`;
+                if ( overallSubmitted && overallComplete && s.published !== 1 ) html += `<button class='btn btn-warning btn-xs' onclick='publishIssue(${s.key}, "${s.service}")'><span class='glyphicon glyphicon-share'></span>&nbsp;&nbsp;${datasetPublishEscapeHtml(SGN.t("global.dataset_publish.action.publish", "Publish"))}</button>`;
+                if ( s.article?.id && (!s.article?.doi || s.article?.doi === '') ) html += `<button class='btn btn-primary btn-xs' onclick='reserveDOI(${s.key}, "${s.service}")'><span class='glyphicon glyphicon-barcode'></span>&nbsp;&nbsp;${datasetPublishEscapeHtml(SGN.t("global.dataset_publish.action.reserve_doi", "Reserve DOI"))}</button>`;
             }
-            html += `<button class='btn btn-danger btn-xs' onclick='removeIssue(${s.key})'><span class='glyphicon glyphicon-trash'></span>&nbsp;&nbsp;${datasetPublishEscapeHtml(window.SGN && SGN.i18n ? SGN.i18n.p("global.dataset_publish.action.remove", "Remove") : "Remove")}</button>`;
+            html += `<button class='btn btn-danger btn-xs' onclick='removeIssue(${s.key})'><span class='glyphicon glyphicon-trash'></span>&nbsp;&nbsp;${datasetPublishEscapeHtml(SGN.t("global.dataset_publish.action.remove", "Remove"))}</button>`;
             html += `</div></td>`;
 % } else {
             html += `<td></td>`;
@@ -710,7 +710,7 @@ async function displayIssues(issues = {}) {
         jQuery("#dataset-publish-status").html(`<tr>${rows.join('</tr><tr>')}</tr>`);
     }
     else {
-        const html = `<tr><td colspan=5><p style='text-align: center'><em>${datasetPublishEscapeHtml((window.SGN && SGN.i18n ? SGN.i18n.p("global.dataset_publish.not_published", "This dataset has not been published") : "This dataset has not been published"))}</em></p><br /><p style='text-align: center'>${datasetPublishEscapeHtml((window.SGN && SGN.i18n ? SGN.i18n.p("global.dataset_publish.generate_first", "To publish this dataset, first generate a set of archived files.") : "To publish this dataset, first generate a set of archived files."))}</p></td></tr>`;
+        const html = `<tr><td colspan=5><p style='text-align: center'><em>${datasetPublishEscapeHtml((SGN.t("global.dataset_publish.not_published", "This dataset has not been published")))}</em></p><br /><p style='text-align: center'>${datasetPublishEscapeHtml((SGN.t("global.dataset_publish.generate_first", "To publish this dataset, first generate a set of archived files.")))}</p></td></tr>`;
         jQuery("#dataset-publish-status").html(html);
     }
 }
@@ -721,7 +721,7 @@ async function displayIssues(issues = {}) {
  * - After initialization, display the generate dialog and start to generate each file
  */
 function initArchive() {
-    jQuery("#dataset-archive-generate-dialog-content").html(`<p>${datasetPublishEscapeHtml((window.SGN && SGN.i18n ? SGN.i18n.p("global.dataset_publish.analyzing", "Analyzing Dataset...") : "Analyzing Dataset..."))}</p>`);
+    jQuery("#dataset-archive-generate-dialog-content").html(`<p>${datasetPublishEscapeHtml((SGN.t("global.dataset_publish.analyzing", "Analyzing Dataset...")))}</p>`);
     jQuery("#dataset-archive-generate-dialog").modal("show");
     jQuery("#dataset-archive-generate-dialog-close").attr("disabled", true);
     jQuery.ajax({
@@ -736,7 +736,7 @@ function initArchive() {
             }
         },
         error: () => {
-            alert((window.SGN && SGN.i18n ? SGN.i18n.p("global.dataset_publish.error.init", "Could not initialize dataset archive files") : "Could not initialize dataset archive files"));
+            alert((SGN.t("global.dataset_publish.error.init", "Could not initialize dataset archive files")));
         }
     });
 }
@@ -752,13 +752,13 @@ async function displayArchiveFiles(key, data = {}) {
     const types = Object.keys(data).sort();
 
     // Display the file type table
-    let html = `<p>${datasetPublishEscapeHtml((window.SGN && SGN.i18n ? SGN.i18n.p("global.dataset_publish.files_to_generate", "Files to generate:") : "Files to generate:"))}</p>`;
+    let html = `<p>${datasetPublishEscapeHtml((SGN.t("global.dataset_publish.files_to_generate", "Files to generate:")))}</p>`;
     html += `<table class='table table-striped'>`;
-    html += `<thead><tr><th>${datasetPublishEscapeHtml((window.SGN && SGN.i18n ? SGN.i18n.p("global.dataset_publish.data_type", "Data Type") : "Data Type"))}</th><th>${datasetPublishEscapeHtml((window.SGN && SGN.i18n ? SGN.i18n.p("global.dataset_publish.item_count", "Item Count") : "Item Count"))}</th><th>${datasetPublishEscapeHtml((window.SGN && SGN.i18n ? SGN.i18n.p("global.dataset_publish.status.heading", "Status") : "Status"))}</th></tr></thead>`;
+    html += `<thead><tr><th>${datasetPublishEscapeHtml((SGN.t("global.dataset_publish.data_type", "Data Type")))}</th><th>${datasetPublishEscapeHtml((SGN.t("global.dataset_publish.item_count", "Item Count")))}</th><th>${datasetPublishEscapeHtml((SGN.t("global.dataset_publish.status.heading", "Status")))}</th></tr></thead>`;
     for (const t of types ) {
         const ids = data[t];
         if ( ids && ids.length > 0 ) {
-            html += `<tr><td>${t}</td><td>${ids.length}</td><td id='dataset-archive-generate-dialog-status-${t}'><span class='glyphicon glyphicon-option-horizontal'></span>&nbsp;&nbsp;<em>${datasetPublishEscapeHtml((window.SGN && SGN.i18n ? SGN.i18n.p("global.dataset_publish.pending", "Pending...") : "Pending..."))}</em></td></tr>`;
+            html += `<tr><td>${t}</td><td>${ids.length}</td><td id='dataset-archive-generate-dialog-status-${t}'><span class='glyphicon glyphicon-option-horizontal'></span>&nbsp;&nbsp;<em>${datasetPublishEscapeHtml((SGN.t("global.dataset_publish.pending", "Pending...")))}</em></td></tr>`;
         }
     }
     html += `</table>`
@@ -774,7 +774,7 @@ async function displayArchiveFiles(key, data = {}) {
                     jQuery(`#dataset-archive-generate-dialog-status-${t}`).html(`<strong><span class='glyphicon glyphicon-ok text-success'></span></strong>&nbsp;&nbsp;${datasetPublishEscapeHtml((window.SGN && SGN.i18n ? SGN.i18n.p("global.dataset_publish.created_file", "Created archived file: %{file}", {file}) : datasetPublishFallback("Created archived file: %{file}", {file})))}`);
                 }
                 else {
-                    jQuery(`#dataset-archive-generate-dialog-status-${t}`).html(`<strong><span class='glyphicon glyphicon-exclamation-sign text-danger'></span></strong>&nbsp;&nbsp;${datasetPublishEscapeHtml((window.SGN && SGN.i18n ? SGN.i18n.p("global.dataset_publish.could_not_generate", "Could not generate file") : "Could not generate file"))}`);
+                    jQuery(`#dataset-archive-generate-dialog-status-${t}`).html(`<strong><span class='glyphicon glyphicon-exclamation-sign text-danger'></span></strong>&nbsp;&nbsp;${datasetPublishEscapeHtml((SGN.t("global.dataset_publish.could_not_generate", "Could not generate file")))}`);
                 }
             }
         }
@@ -845,7 +845,7 @@ function publishIssue(key, service) {
     SELECTED_ISSUE = ISSUES[key];
     onServiceChanged(service);
     if ( !SELECTED_ISSUE.article || !SELECTED_ISSUE.article.id ) {
-        alert((window.SGN && SGN.i18n ? SGN.i18n.p("global.dataset_publish.error.no_article", "The selected dataset archive is not associated with an external article!") : "The selected dataset archive is not associated with an external article!"));
+        alert((SGN.t("global.dataset_publish.error.no_article", "The selected dataset archive is not associated with an external article!")));
         return;
     }
 
@@ -866,7 +866,7 @@ function reserveDOI(key, service) {
     SELECTED_ISSUE = ISSUES[key];
     onServiceChanged(service);
     if ( !SELECTED_ISSUE.article || !SELECTED_ISSUE.article.id ) {
-        alert((window.SGN && SGN.i18n ? SGN.i18n.p("global.dataset_publish.error.no_article", "The selected dataset archive is not associated with an external article!") : "The selected dataset archive is not associated with an external article!"));
+        alert((SGN.t("global.dataset_publish.error.no_article", "The selected dataset archive is not associated with an external article!")));
         return;
     }
 
@@ -887,7 +887,7 @@ function reserveDOI(key, service) {
  * - Call updateIssues() when complete to reflect changes
  */
 function removeIssue(key) {
-    if (confirm((window.SGN && SGN.i18n ? SGN.i18n.p("global.dataset_publish.confirm.remove", "Are you sure you want to unlink this published metadata from the dataset?  This will remove the archived data on this server and the connection between the dataset and the external service.  This will NOT remove anything from the external service.") : "Are you sure you want to unlink this published metadata from the dataset?  This will remove the archived data on this server and the connection between the dataset and the external service.  This will NOT remove anything from the external service.")) ) {
+    if (confirm((SGN.t("global.dataset_publish.confirm.remove", "Are you sure you want to unlink this published metadata from the dataset?  This will remove the archived data on this server and the connection between the dataset and the external service.  This will NOT remove anything from the external service."))) ) {
         jQuery.ajax({
             url: `/ajax/dataset/publish/issues/remove/<% $dataset_id %>/${key}`,
             success: (resp) => {
@@ -899,7 +899,7 @@ function removeIssue(key) {
                 }
             },
             error: () => {
-                alert((window.SGN && SGN.i18n ? SGN.i18n.p("global.dataset_publish.error.remove_issues", "Could not remove dataset published issues") : "Could not remove dataset published issues"));
+                alert((SGN.t("global.dataset_publish.error.remove_issues", "Could not remove dataset published issues")));
             }
         });
     }
@@ -958,7 +958,7 @@ async function sendArchive() {
                 };
 
                 // Finalize the File
-                subProgress({ msg: (window.SGN && SGN.i18n ? SGN.i18n.p("global.dataset_publish.progress.finalizing_file", "Finalizing File") : "Finalizing File"), count: subCount, total: subTotal });
+                subProgress({ msg: (SGN.t("global.dataset_publish.progress.finalizing_file", "Finalizing File")), count: subCount, total: subTotal });
                 await finalizeFile(t, file_id, article_id);
 
                 // Show success for file
@@ -970,7 +970,7 @@ async function sendArchive() {
 
             // Show completed status
             count++;
-            progress({ msg: (window.SGN && SGN.i18n ? SGN.i18n.p("global.dataset_publish.progress.all_files_uploaded", "All Files Uploaded!") : "All Files Uploaded!"), bold: true, count, total });
+            progress({ msg: (SGN.t("global.dataset_publish.progress.all_files_uploaded", "All Files Uploaded!")), bold: true, count, total });
             subProgress({ clear: true });
             jQuery(".dataset-archive-publish-connected-btn").attr("disabled", false);
             updateIssues();
@@ -993,8 +993,8 @@ function createArticle() {
         const description = jQuery("#dataset-archive-publish-article-description").val();
         const authors = jQuery("#dataset-archive-publish-article-authors").val();
 
-        if ( !title || title === '' ) return reject((window.SGN && SGN.i18n ? SGN.i18n.p("global.dataset_publish.error.article_required", "Please provide a name for the new dataset") : "Please provide a name for the new dataset"));
-        if ( !description || description === '' ) return reject((window.SGN && SGN.i18n ? SGN.i18n.p("global.dataset_publish.error.description_required", "Please provide a description for the new dataset") : "Please provide a description for the new dataset"));
+        if ( !title || title === '' ) return reject((SGN.t("global.dataset_publish.error.article_required", "Please provide a name for the new dataset")));
+        if ( !description || description === '' ) return reject((SGN.t("global.dataset_publish.error.description_required", "Please provide a description for the new dataset")));
 
         jQuery.ajax({
             url: `/ajax/dataset/publish/articles/new`,
@@ -1015,7 +1015,7 @@ function createArticle() {
                 }
             },
             error: () => {
-                reject((window.SGN && SGN.i18n ? SGN.i18n.p("global.dataset_publish.error.create_article", "Could not create new article") : "Could not create new article"))
+                reject((SGN.t("global.dataset_publish.error.create_article", "Could not create new article")))
             }
         });
     });
@@ -1125,11 +1125,11 @@ function finalizeFile(data_type, file_id, article_id) {
  */
 function makePublic() {
     if ( !SELECTED_ISSUE.article || !SELECTED_ISSUE.article.id ) {
-        alert((window.SGN && SGN.i18n ? SGN.i18n.p("global.dataset_publish.error.no_article", "The selected dataset archive is not associated with an external article!") : "The selected dataset archive is not associated with an external article!"));
+        alert((SGN.t("global.dataset_publish.error.no_article", "The selected dataset archive is not associated with an external article!")));
         return;
     }
 
-    if ( confirm((window.SGN && SGN.i18n ? SGN.i18n.p("global.dataset_publish.confirm.publish", "Are you sure you want to publish this dataset now? This cannot be undone.") : "Are you sure you want to publish this dataset now? This cannot be undone.")) ) {
+    if ( confirm((SGN.t("global.dataset_publish.confirm.publish", "Are you sure you want to publish this dataset now? This cannot be undone."))) ) {
         jQuery("#working_modal").modal("show");
         jQuery.ajax({
             url: `/ajax/dataset/publish/issues/publish/<% $dataset_id %>/${SELECTED_ISSUE.key}`,
@@ -1147,7 +1147,7 @@ function makePublic() {
             },
             error: () => {
                 jQuery("#working_modal").modal("hide");
-                alert((window.SGN && SGN.i18n ? SGN.i18n.p("global.dataset_publish.error.publish", "Could not publish dataset") : "Could not publish dataset"));
+                alert((SGN.t("global.dataset_publish.error.publish", "Could not publish dataset")));
             }
         });
     }
@@ -1158,11 +1158,11 @@ function makePublic() {
  */
 function getDOI(key, service) {
     if ( !SELECTED_ISSUE.article || !SELECTED_ISSUE.article.id ) {
-        alert((window.SGN && SGN.i18n ? SGN.i18n.p("global.dataset_publish.error.no_article", "The selected dataset archive is not associated with an external article!") : "The selected dataset archive is not associated with an external article!"));
+        alert((SGN.t("global.dataset_publish.error.no_article", "The selected dataset archive is not associated with an external article!")));
         return;
     }
 
-    if ( confirm((window.SGN && SGN.i18n ? SGN.i18n.p("global.dataset_publish.confirm.reserve_doi", "Are you sure you want to reserve a DOI now?  If the external dataset is still private, the DOI will become active once it is published.  Once a DOI is active, it cannot be disabled.") : "Are you sure you want to reserve a DOI now?  If the external dataset is still private, the DOI will become active once it is published.  Once a DOI is active, it cannot be disabled.")) ) {
+    if ( confirm((SGN.t("global.dataset_publish.confirm.reserve_doi", "Are you sure you want to reserve a DOI now?  If the external dataset is still private, the DOI will become active once it is published.  Once a DOI is active, it cannot be disabled."))) ) {
         jQuery("#working_modal").modal("show");
         jQuery.ajax({
             url: `/ajax/dataset/publish/issues/reserveDOI/<% $dataset_id %>/${SELECTED_ISSUE.key}`,
@@ -1180,7 +1180,7 @@ function getDOI(key, service) {
             },
             error: () => {
                 jQuery("#working_modal").modal("hide");
-                alert((window.SGN && SGN.i18n ? SGN.i18n.p("global.dataset_publish.error.reserve_doi", "Could not reserve a DOI for this dataset") : "Could not reserve a DOI for this dataset"));
+                alert((SGN.t("global.dataset_publish.error.reserve_doi", "Could not reserve a DOI for this dataset")));
             }
         });
     }
@@ -1223,7 +1223,7 @@ function fail(msg) {
     jQuery("#dataset-archive-publish-send-pb").removeClass('progress-bar-info');
     jQuery("#dataset-archive-publish-send-pb").addClass('progress-bar-danger');
     jQuery("#dataset-archive-publish-send-pb").css("width", `100%`);
-    jQuery("#dataset-archive-publish-send-status").html(`<strong>(${datasetPublishEscapeHtml((window.SGN && SGN.i18n ? SGN.i18n.p("global.dataset_publish.upload_failed", "Upload Failed") : "Upload Failed"))}) ${datasetPublishEscapeHtml(msg)}</strong>`);
+    jQuery("#dataset-archive-publish-send-status").html(`<strong>(${datasetPublishEscapeHtml((SGN.t("global.dataset_publish.upload_failed", "Upload Failed")))}) ${datasetPublishEscapeHtml(msg)}</strong>`);
 }
 
 /**

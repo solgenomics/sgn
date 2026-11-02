@@ -22,15 +22,15 @@ solGS.geneticGain = {
 
     var missing;
     if (!gebvParams.training_pop_id) {
-      missing = (window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.missing_training_population_id", "training population id") : "training population id");
+      missing = (SGN.t("solgs.browser.missing_training_population_id", "training population id"));
     }
 
     if (!gebvParams.selection_pop_id) {
-      missing += (window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.missing_selection_population_id", ", selection population id") : ", selection population id");
+      missing += (SGN.t("solgs.browser.missing_selection_population_id", ", selection population id"));
     }
 
     if (!gebvParams.trait_id) {
-      missing += (window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.missing_trait_id", ", trait id") : ", trait id");
+      missing += (SGN.t("solgs.browser.missing_trait_id", ", trait id"));
     }
 
     var ggMsgDiv = this.ggMsgDiv;
@@ -79,7 +79,7 @@ solGS.geneticGain = {
 	ggArgs = JSON.stringify(ggArgs)
     jQuery(` ${canvas} .multi-spinner-container`).show();
     jQuery("#check_genetic_gain").hide();
-    jQuery(ggMsgDiv).html((window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.plotting_genetic_gain_wait", "Please wait... plotting genetic gain") : "Please wait... plotting genetic gain")).show();
+    jQuery(ggMsgDiv).html((SGN.t("solgs.browser.plotting_genetic_gain_wait", "Please wait... plotting genetic gain"))).show();
 
     jQuery.ajax({
       type: "POST",
@@ -107,16 +107,16 @@ solGS.geneticGain = {
 
           if (boxplot) {
             var fileNameBoxplot = boxplot.split("/").pop();
-            boxplotFile = '<a href="' + boxplot + '" download=' + fileNameBoxplot + ">" + (window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.genetic_gain_boxplot_link", "boxplot") : "boxplot") + "</a>";
+            boxplotFile = '<a href="' + boxplot + '" download=' + fileNameBoxplot + ">" + (SGN.t("solgs.browser.genetic_gain_boxplot_link", "boxplot")) + "</a>";
 
             var fileNameData = boxplotData.split("/").pop();
-            var dataFile = '<a href="' + boxplotData + '" download=' + fileNameData + ">" + (window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.genetic_gain_data_link", "Data") : "Data") + "</a>";
+            var dataFile = '<a href="' + boxplotData + '" download=' + fileNameData + ">" + (SGN.t("solgs.browser.genetic_gain_data_link", "Data")) + "</a>";
             jQuery("#gg_plot")
               .prepend(
                 '<div style="margin-top: 20px">' +
                   plot +
                   "</div>" +
-                  "<br /> <strong>" + (window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.download_caption", "Download:") : "Download:") + "</strong> " +
+                  "<br /> <strong>" + (SGN.t("solgs.browser.download_caption", "Download:")) + "</strong> " +
                   boxplotFile +
                   " | " +
                   dataFile
@@ -135,14 +135,14 @@ solGS.geneticGain = {
             }
           } else {
             jQuery(`${canvas} .multi-spinner-container`).hide();
-            showMessage((window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.no_genetic_gain_plot", "There is no genetic gain plot for this dataset.") : "There is no genetic gain plot for this dataset."));
+            showMessage((SGN.t("solgs.browser.no_genetic_gain_plot", "There is no genetic gain plot for this dataset.")));
             jQuery("#check_genetic_gain").show();
           }
         }
       },
       error: function (res) {
         jQuery(`${canvas} .multi-spinner-container`).hide();
-        solGS.showMessage(ggMsgDiv, (window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.genetic_gain_plot_error", "Error occurred plotting the genetic gain.") : "Error occurred plotting the genetic gain."));
+        solGS.showMessage(ggMsgDiv, (SGN.t("solgs.browser.genetic_gain_plot_error", "Error occurred plotting the genetic gain.")));
         jQuery("#check_genetic_gain").show();
       },
     });
@@ -166,12 +166,12 @@ solGS.geneticGain = {
             solGS.geneticGain.getSelectionPopulationGEBVs(gebvParams);
           }
         } else {
-          jQuery(ggMsgDiv).html((window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.no_training_gebv", "There is no GEBV data for the training population.") : "There is no GEBV data for the training population.")).show();
+          jQuery(ggMsgDiv).html((SGN.t("solgs.browser.no_training_gebv", "There is no GEBV data for the training population."))).show();
         }
       },
       error: function () {
         jQuery(ggMsgDiv)
-          .html((window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.training_gebv_check_error", "Error occurred checking for GEBV data for the training population.") : "Error occurred checking for GEBV data for the training population."))
+          .html((SGN.t("solgs.browser.training_gebv_check_error", "Error occurred checking for GEBV data for the training population.")))
           .show();
       },
     });
@@ -193,7 +193,7 @@ solGS.geneticGain = {
           selectionGEBVs = res.gebv_arrayref;
 
           if (selectionGEBVs && trainingGEBVs) {
-            jQuery(ggMsgDiv).html((window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.plotting_gebv_wait", "Please wait... plotting gebvs") : "Please wait... plotting gebvs")).show();
+            jQuery(ggMsgDiv).html((SGN.t("solgs.browser.plotting_gebv_wait", "Please wait... plotting gebvs"))).show();
 
             solGS.geneticGain.plotGEBVs(trainingGEBVs, selectionGEBVs);
 
@@ -201,12 +201,12 @@ solGS.geneticGain = {
             jQuery("#check_genetic_gain").hide();
           }
         } else {
-          jQuery(ggMsgDiv).html((window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.no_selection_gebv", "There is no GEBV data for the selection population.") : "There is no GEBV data for the selection population.")).show();
+          jQuery(ggMsgDiv).html((SGN.t("solgs.browser.no_selection_gebv", "There is no GEBV data for the selection population."))).show();
         }
       },
       error: function () {
         jQuery(ggMsgDiv)
-          .html((window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.selection_gebv_check_error", "Error occurred checking for GEBV data for the selection population.") : "Error occurred checking for GEBV data for the selection population."))
+          .html((SGN.t("solgs.browser.selection_gebv_check_error", "Error occurred checking for GEBV data for the selection population.")))
           .show();
       },
     });
@@ -255,7 +255,7 @@ solGS.geneticGain = {
           jQuery(`${canvas} #selection_traits_ids`).val(res.selection_traits);
           solGS.geneticGain.plotGeneticGainBoxplot(ggArgs);
         } else {
-          jQuery(ggMsgDiv).html((window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.selection_no_predicted_traits", "This selection population has no predicted traits.") : "This selection population has no predicted traits.")).show();
+          jQuery(ggMsgDiv).html((SGN.t("solgs.browser.selection_no_predicted_traits", "This selection population has no predicted traits."))).show();
         }
       },
       error: function () {
@@ -316,7 +316,7 @@ solGS.geneticGain = {
     var trColor = "#02bcff";
     var slColor = "#ff1302";
     var axLabelColor = "#ff8d02";
-    var yLabel = (window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.genetic_gain_probability_axis", "Probability") : "Probability");
+    var yLabel = (SGN.t("solgs.browser.genetic_gain_probability_axis", "Probability"));
     var xLabel = "GEBVs";
 
     var title = (window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.genetic_gain_normal_distribution_title", "Normal distribution curves of GEBVs for the training and selection populations.") :       "Normal distribution curves of GEBVs " + "for the training and selection populations.");
@@ -330,12 +330,12 @@ solGS.geneticGain = {
       lines: [
         {
           data: xYT,
-          legend: (window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.genetic_gain_training_legend", "Training population") : "Training population"),
+          legend: (SGN.t("solgs.browser.genetic_gain_training_legend", "Training population")),
           color: trColor,
         },
         {
           data: xYS,
-          legend: (window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.genetic_gain_selection_legend", "Selection population") : "Selection population"),
+          legend: (SGN.t("solgs.browser.genetic_gain_selection_legend", "Selection population")),
           color: slColor,
         },
       ],

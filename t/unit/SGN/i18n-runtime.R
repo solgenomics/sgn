@@ -155,6 +155,33 @@ check(sectioned$np("trials.count", "%{count} trial found", "%{count} trials foun
 writeLines("{}", file.path(directory, "common.json"))
 reject(function() sgn_i18n("uk", bundle_root), "R partition hash mismatch")
 unlink(bundle_root, recursive = TRUE)
+# Change the active directory after reading its index, during the real loader.
+snapshot_root <- tempfile("sgn-i18n-generation-")
+for (version in c("old", "new")) {
+    directory <- file.path(snapshot_root, version, "sgn"); dir.create(directory, recursive = TRUE)
+    catalog <- clone(fixtures$catalogs$uk)
+    catalog$messages <- list(); catalog$messages[["controls.save\u0004Save"]] <- list(plural = NULL, forms = list(version))
+    file <- file.path(directory, "common.json")
+    writeLines(toJSON(catalog, auto_unbox = TRUE, null = "null"), file, useBytes = TRUE)
+    bytes <- readBin(file, "raw", n = file.info(file)$size)
+    part <- list(name = "common", sha256 = digest::digest(bytes, algo = "sha256", serialize = FALSE))
+    writeLines(toJSON(list(schema = 1, domain = "sgn", partitions = list(part)), auto_unbox = TRUE), file.path(directory, "index.json"), useBytes = TRUE)
+}
+dir.create(file.path(snapshot_root, "active")); selector <- file.path(snapshot_root, "active", "uk")
+invisible(file.symlink(file.path(snapshot_root, "old"), selector))
+original_read <- .sgn_i18n_read; switched <- FALSE
+.sgn_i18n_read <- function(path, limit) {
+    result <- original_read(path, limit)
+    if (!switched && basename(path) == "index.json") {
+        unlink(selector); invisible(file.symlink(file.path(snapshot_root, "new"), selector)); switched <<- TRUE
+    }
+    result
+}
+old_generation <- tryCatch(sgn_i18n("uk", file.path(snapshot_root, "active")), finally = {.sgn_i18n_read <- original_read})
+check(switched, TRUE, "R fixture activates during index read")
+check(old_generation$p("controls.save", "Save"), "old", "R request pins the complete old generation")
+check(sgn_i18n("uk", file.path(snapshot_root, "active"))$p("controls.save", "Save"), "new", "R next request sees the complete new generation")
+unlink(snapshot_root, recursive = TRUE)
 # Tiny owned numerical fixture. Translation is presentation after calculation.
 stocks <- data.frame(stock=c("𝛂_Seed_1","𝛃 Seed 2","Stock/A"),value=c(1.25,3.5,8.75),stringsAsFactors=FALSE)
 before <- serialize(stocks,NULL); numerical <- mean(stocks$value); total <- sum(stocks$value)

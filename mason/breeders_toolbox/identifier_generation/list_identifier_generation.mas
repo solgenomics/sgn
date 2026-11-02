@@ -65,7 +65,7 @@ jQuery(document).ready(function(){
                 }
             },
             error: function(response){
-                alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("program.identifiers.error.download", "Error downloading new identifiers!") : "Error downloading new identifiers!"));
+                alert((SGN.t("program.identifiers.error.download", "Error downloading new identifiers!")));
             }
         });
     });
@@ -83,7 +83,7 @@ jQuery(document).ready(function(){
                     alert(response.error);
                 }
                 if(response.success){
-                    var html = '<table class="table table-bordered table-hover"><thead><tr><th>' + _sgnB14IdentifierEscapeHTML(window.SGN && window.SGN.i18n ? window.SGN.i18n.p('program.identifiers.history.timestamp', 'Timestamp') : 'Timestamp') + '</th><th>' + _sgnB14IdentifierEscapeHTML(window.SGN && window.SGN.i18n ? window.SGN.i18n.p('program.identifiers.history.username', 'Username') : 'Username') + '</th><th>' + _sgnB14IdentifierEscapeHTML(window.SGN && window.SGN.i18n ? window.SGN.i18n.p('program.identifiers.history.next_count', 'Next Count') : 'Next Count') + '</th><th>' + _sgnB14IdentifierEscapeHTML(window.SGN && window.SGN.i18n ? window.SGN.i18n.p('program.identifiers.history.action_type', 'Action Type') : 'Action Type') + '</th></tr></thead><tbody>';
+                    var html = '<table class="table table-bordered table-hover"><thead><tr><th>' + _sgnB14IdentifierEscapeHTML(SGN.t('program.identifiers.history.timestamp', 'Timestamp')) + '</th><th>' + _sgnB14IdentifierEscapeHTML(SGN.t('program.identifiers.history.username', 'Username')) + '</th><th>' + _sgnB14IdentifierEscapeHTML(SGN.t('program.identifiers.history.next_count', 'Next Count')) + '</th><th>' + _sgnB14IdentifierEscapeHTML(SGN.t('program.identifiers.history.action_type', 'Action Type')) + '</th></tr></thead><tbody>';
                     for(var i=0; i<response.records.length; i++){
                         html = html + '<tr><td>' + response.records[i].timestamp + '</td><td>' + response.records[i].username + '</td><td>' + response.records[i].next_number + '</td><td>' + response.records[i].type + '</td></tr>';
                     }
@@ -93,7 +93,7 @@ jQuery(document).ready(function(){
                 }
             },
             error: function(response){
-                alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("program.identifiers.error.history", "Error getting identifier list history!") : "Error getting identifier list history!"));
+                alert((SGN.t("program.identifiers.error.history", "Error getting identifier list history!")));
             }
         });
     });

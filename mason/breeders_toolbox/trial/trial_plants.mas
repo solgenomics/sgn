@@ -79,7 +79,7 @@ jQuery(document).ready(function () {
             },
             error: function(response) {
                 jQuery('#trial_plants_html').html("<% $c->i18n->p('trial.card.plants.error', 'error') |h %>");
-                alert(window.SGN && SGN.i18n ? SGN.i18n.p('trial.card.ajax.error', 'An error occurred') : 'An error occurred');
+                alert(SGN.t('trial.card.ajax.error', 'An error occurred'));
             }
         });
     });
@@ -107,7 +107,7 @@ jQuery(document).ready(function () {
             success : function(response) {
                 if (response.error) {
                     jQuery('#working_modal').modal("hide");
-                    alert((window.SGN && SGN.i18n ? SGN.i18n.p('trial.card.list.error_prefix', 'An error occurred: ') : 'An error occurred: ') + response.error);
+                    alert((SGN.t('trial.card.list.error_prefix', 'An error occurred: ')) + response.error);
                 } else {
                     let new_list_id = response.list_id;
                     jQuery.ajax({
@@ -115,7 +115,7 @@ jQuery(document).ready(function () {
                         success: function(response) {
                             if (response.error) {
                                 jQuery('#working_modal').modal("hide");
-                                alert((window.SGN && SGN.i18n ? SGN.i18n.p('trial.card.list.created_add_error_prefix', 'The new list was created, but an error occurred adding items to it: ') : 'The new list was created, but an error occurred adding items to it: ') + response.error);
+                                alert((SGN.t('trial.card.list.created_add_error_prefix', 'The new list was created, but an error occurred adding items to it: ')) + response.error);
                             } else {
                                 jQuery.ajax({
                                     url : '/list/add/bulk',
@@ -131,30 +131,30 @@ jQuery(document).ready(function () {
                                     success : function(response) {
                                         jQuery('#working_modal').modal("hide");
                                         if (response.error) {
-                                            alert((window.SGN && SGN.i18n ? SGN.i18n.p('trial.card.list.created_add_error_prefix', 'The new list was created, but an error occurred adding items to it: ') : 'The new list was created, but an error occurred adding items to it: ') + response.error);
+                                            alert((SGN.t('trial.card.list.created_add_error_prefix', 'The new list was created, but an error occurred adding items to it: ')) + response.error);
                                         } else {
-                                            alert(window.SGN && SGN.i18n ? SGN.i18n.p('trial.card.list.created', 'List created.') : 'List created.');
+                                            alert(SGN.t('trial.card.list.created', 'List created.'));
                                             var lo = new CXGN.List();
                                             jQuery('#plant_select_existing_list_name').html(lo.listSelect('plant_select_existing_list_name', ['plants'], undefined, undefined, undefined));
                                         }
                                     },
                                     error : function(error) {
                                         jQuery('#working_modal').modal("hide");
-                                        alert(window.SGN && SGN.i18n ? SGN.i18n.p('trial.card.list.created_add_server_error', 'The new list was created, but a server error occurred adding items to it.') : 'The new list was created, but a server error occurred adding items to it.');
+                                        alert(SGN.t('trial.card.list.created_add_server_error', 'The new list was created, but a server error occurred adding items to it.'));
                                     }
                                 });
                             }
                         },
                         error : function() {
                             jQuery('#working_modal').modal("hide");
-                            alert(window.SGN && SGN.i18n ? SGN.i18n.p('trial.card.list.created_add_server_error', 'The new list was created, but a server error occurred adding items to it.') : 'The new list was created, but a server error occurred adding items to it.');
+                            alert(SGN.t('trial.card.list.created_add_server_error', 'The new list was created, but a server error occurred adding items to it.'));
                         }
                     });
                 }
             },
             error : function() {
                 jQuery('#working_modal').modal("hide");
-                alert(window.SGN && SGN.i18n ? SGN.i18n.p('trial.card.list.create_server_error', 'A server error occurred making new list.') : 'A server error occurred making new list.');
+                alert(SGN.t('trial.card.list.create_server_error', 'A server error occurred making new list.'));
             }
         })
     });
@@ -177,20 +177,20 @@ jQuery(document).ready(function () {
             success : function(response) {
                 jQuery('#working_modal').modal("hide");
                 if (response.error) {
-                    alert((window.SGN && SGN.i18n ? SGN.i18n.p('trial.card.list.add_error_prefix', 'Error adding items to list: ') : 'Error adding items to list: ') + response.error);
+                    alert((SGN.t('trial.card.list.add_error_prefix', 'Error adding items to list: ')) + response.error);
                 } else {
-                    alert(window.SGN && SGN.i18n ? SGN.i18n.p('trial.card.plants.added_to_list', 'Plants added to list.') : 'Plants added to list.');
+                    alert(SGN.t('trial.card.plants.added_to_list', 'Plants added to list.'));
                 }
             },
             error : function() {
                 jQuery('#working_modal').modal("hide");
-                alert(window.SGN && SGN.i18n ? SGN.i18n.p('trial.card.plants.add_server_error', 'Server error adding plants to list.') : 'Server error adding plants to list.');
+                alert(SGN.t('trial.card.plants.add_server_error', 'Server error adding plants to list.'));
             }
         });
     });
 
     jQuery('#plant_select_delete_plants').click(function() {
-        if (confirm(window.SGN && SGN.i18n ? SGN.i18n.p('trial.card.plants.confirm_delete', 'Are you sure you want to delete the selected plants? Any associated tissue samples will also be deleted. This action cannot be undone.') : 'Are you sure you want to delete the selected plants? Any associated tissue samples will also be deleted. This action cannot be undone.')) {
+        if (confirm(SGN.t('trial.card.plants.confirm_delete', 'Are you sure you want to delete the selected plants? Any associated tissue samples will also be deleted. This action cannot be undone.'))) {
             let plant_ids = jQuery('.exp_design_plant_select:checkbox:checked')
                 .map(function() {
                     return this.id.replace('select_plant_', '');
@@ -210,15 +210,15 @@ jQuery(document).ready(function () {
                 success : function(response) {
                     jQuery('#working_modal').modal("hide");
                     if (response.error) {
-                        alert((window.SGN && SGN.i18n ? SGN.i18n.p('trial.card.error_prefix', 'Error: ') : 'Error: ') + response.error);
+                        alert((SGN.t('trial.card.error_prefix', 'Error: ')) + response.error);
                     } else {
-                        alert(window.SGN && SGN.i18n ? SGN.i18n.p('trial.card.plants.deleted', 'Plants deleted.') : 'Plants deleted.');
+                        alert(SGN.t('trial.card.plants.deleted', 'Plants deleted.'));
                         window.location.reload();
                     }
                 },
                 error : function(response) {
                     jQuery('#working_modal').modal("hide");
-                    alert(window.SGN && SGN.i18n ? SGN.i18n.p('trial.card.server_console_error', 'A server error occurred, check console.') : 'A server error occurred, check console.');
+                    alert(SGN.t('trial.card.server_console_error', 'A server error occurred, check console.'));
                 }
             });
         } 

@@ -79,7 +79,7 @@ solGS.submitJob = {
         }
       },
       error: function () {
-        alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.cached_output_check_error", "Error occurred checking for cached output.") : "Error occurred checking for cached output."));
+        alert((SGN.t("solgs.browser.cached_output_check_error", "Error occurred checking for cached output.")));
       },
     });
   },
@@ -108,7 +108,7 @@ solGS.submitJob = {
   },
 
   askUser: function (page, args) {
-    var title = "<p>" + (window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.job_submission_prompt", "Since the job takes long time, you can only submit and wait for an email with a link to the results. Do you want to submit it and get an email when it completes?") : "Since the job takes long time, you can only submit and wait for an email with a link to the results. Do you want to submit it and get an email when it completes?") + "</p>";
+    var title = "<p>" + (SGN.t("solgs.browser.job_submission_prompt", "Since the job takes long time, you can only submit and wait for an email with a link to the results. Do you want to submit it and get an email when it completes?")) + "</p>";
 
     var jobSubmit = '<div id= "job_submission">' + title + "</div>";
 
@@ -118,10 +118,10 @@ solGS.submitJob = {
       height: 200,
       width: 600,
       modal: true,
-      title: (window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.job_submission_title", "Job submission") : "Job submission"),
+      title: (SGN.t("solgs.browser.job_submission_title", "Job submission")),
       buttons: {
         OK: {
-          text: (window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.yes", "Yes") : "Yes"),
+          text: (SGN.t("solgs.browser.yes", "Yes")),
           class: "btn btn-success",
           id: "queue_job",
           click: function () {
@@ -141,7 +141,7 @@ solGS.submitJob = {
         //     },
         // },
         Cancel: {
-          text: (window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.no", "No") : "No"),
+          text: (SGN.t("solgs.browser.no", "No")),
           class: "btn btn-info",
           id: "cancel_queue_info",
           click: function () {
@@ -178,12 +178,12 @@ solGS.submitJob = {
 
   loginAlert: function () {
     jQuery("<div />")
-      .html((window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.login_restart", "To use this feature, you need to log in and start over the process.") : "To use this feature, you need to log in and start over the process."))
+      .html((SGN.t("solgs.browser.login_restart", "To use this feature, you need to log in and start over the process.")))
       .dialog({
         height: 200,
         width: 250,
         modal: true,
-        title: (window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.login", "Login") : "Login"),
+        title: (SGN.t("solgs.browser.login", "Login")),
         buttons: {
           OK: {
             click: function () {
@@ -191,7 +191,7 @@ solGS.submitJob = {
               solGS.submitJob.loginUser();
             },
             class: "btn btn-success",
-            text: (window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.ok", "OK") : "OK"),
+            text: (SGN.t("solgs.browser.ok", "OK")),
           },
 
           Cancel: {
@@ -199,7 +199,7 @@ solGS.submitJob = {
               jQuery(this).dialog("close");
             },
             class: "btn btn-primary",
-            text: (window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.cancel", "Cancel") : "Cancel"),
+            text: (SGN.t("solgs.browser.cancel", "Cancel")),
           },
         },
       });
@@ -230,14 +230,14 @@ solGS.submitJob = {
         //}
       },
       error: function (res, st, error) {
-        alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.error_prefix", "error: ") : "error: ") + error);
+        alert((SGN.t("solgs.browser.error_prefix", "error: ")) + error);
       },
     });
   },
 
   goToPage: function (page, args) {
     jQuery.blockUI.defaults.applyPlatformOpacityRules = false;
-    jQuery.blockUI({ message: (window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.please_wait", "Please wait..") : "Please wait..") });
+    jQuery.blockUI({ message: (SGN.t("solgs.browser.please_wait", "Please wait..")) });
 
     var matchItems =
       "solgs/submission/feedback" +
@@ -329,7 +329,7 @@ solGS.submitJob = {
         height: 400,
         width: 400,
         modal: true,
-        title: (window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.analysis_info_title", "Info about the analysis") : "Info about the analysis"),
+        title: (SGN.t("solgs.browser.analysis_info_title", "Info about the analysis")),
         buttons: {
           Submit: {
             click: function (e) {
@@ -338,7 +338,7 @@ solGS.submitJob = {
             },
             id: "submit_job",
             class: "btn btn-success",
-            text: (window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.submit", "Submit") : "Submit"),
+            text: (SGN.t("solgs.browser.submit", "Submit")),
           },
 
           Cancel: {
@@ -384,7 +384,7 @@ solGS.submitJob = {
     var analysisName = jQuery("#analysis_name").val();
 
     if (!analysisName) {
-      jQuery("#form-feedback-analysis-name").text((window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.analysis_name_required", "Analysis name is blank. Please give a name.") : "Analysis name is blank. Please give a name."));
+      jQuery("#form-feedback-analysis-name").text((SGN.t("solgs.browser.analysis_name_required", "Analysis name is blank. Please give a name.")));
     } else {
       var checkName = solGS.submitJob.checkAnalysisName(analysisName);
 
@@ -393,7 +393,7 @@ solGS.submitJob = {
           jQuery("#analysis_name").css("border", "solid #FF0000");
 
           jQuery("#form-feedback-analysis-name").text(
-            (window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.duplicate_analysis_name", "The same name exists for another analysis. Please give a new name.") : "The same name exists for another analysis. Please give a new name.")
+            (SGN.t("solgs.browser.duplicate_analysis_name", "The same name exists for another analysis. Please give a new name."))
           );
         } else {
           var email = jQuery("#user_email").val();
@@ -410,7 +410,7 @@ solGS.submitJob = {
     checkName.fail(function (res) {
       var message =
         (window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.job_submission_failed", ("Error occurred submitting the job. Please contact the developers.")) : "Error occurred submitting the job. Please contact the developers.") +
-        (window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.job_error_hint", "\n\nHint: ") : "\n\nHint: ") +
+        (SGN.t("solgs.browser.job_error_hint", "\n\nHint: ")) +
         response.result;
       solGS.alertMessage(message);
     });
@@ -422,7 +422,7 @@ solGS.submitJob = {
     if (!email.match(emailRegex)) {
       jQuery("#user_email").css("border", "solid #FF0000");
 
-      jQuery("#form-feedback-user-email").text((window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.valid_email_required", "Please provide a proper email address.") : "Please provide a proper email address."));
+      jQuery("#form-feedback-user-email").text((SGN.t("solgs.browser.valid_email_required", "Please provide a proper email address.")));
 
       emailPass = 0;
     } else {
@@ -562,18 +562,18 @@ solGS.submitJob = {
 
     var emailForm =
       '<form><div class="form-group">' +
-      '<label for="first_name">' + (window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.name_label", "Name:") : "Name:") + '</label>' +
+      '<label for="first_name">' + (SGN.t("solgs.browser.name_label", "Name:")) + '</label>' +
       '<input type="text" class="form-control" id="first_name"  value="' +
       firstName +
       '"/>' +
       "</div>" +
       '<div class="form-group">' +
-      '<label for="analysis_name">' + (window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.analysis_name_label", "Analysis name:") : "Analysis name:") + '</label>' +
+      '<label for="analysis_name">' + (SGN.t("solgs.browser.analysis_name_label", "Analysis name:")) + '</label>' +
       '<input type="text" class="form-control" id="analysis_name">' +
       '<div style="color:red" id="form-feedback-analysis-name"> </div>' +
       "</div>" +
       '<div class="form-group">' +
-      '<label for="user_email">' + (window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.email_label", "Email:") : "Email:") + '</label>' +
+      '<label for="user_email">' + (SGN.t("solgs.browser.email_label", "Email:")) + '</label>' +
       '<input type="email" class="form-control" id="user_email" value="' +
       email +
       '"/>' +
@@ -594,12 +594,12 @@ solGS.submitJob = {
         if (response.result) {
           solGS.submitJob.runAnalysis(profile);
         } else {
-          var message = (window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.profile_save_failed", "Failed saving your analysis profile.") : "Failed saving your analysis profile.");
+          var message = (SGN.t("solgs.browser.profile_save_failed", "Failed saving your analysis profile."));
           solGS.alertMessage(message);
         }
       },
       error: function () {
-        var message = (window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.profile_save_call_failed", "Error occurred calling the function to save your analysis profile.") : "Error occurred calling the function to save your analysis profile.");
+        var message = (SGN.t("solgs.browser.profile_save_call_failed", "Error occurred calling the function to save your analysis profile."));
         solGS.alertMessage(message);
       },
     });
@@ -643,7 +643,7 @@ solGS.submitJob = {
   selectTraitMessage: function () {
     var message =
       '<p style="text-align:justify;">' +
-      (window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.select_traits_for_models", "Please select one or more traits to build prediction models.") : "Please select one or more traits to build prediction models.") + "</p>";
+      (SGN.t("solgs.browser.select_traits_for_models", "Please select one or more traits to build prediction models.")) + "</p>";
 
     jQuery("<div />")
       .html(message)
@@ -651,7 +651,7 @@ solGS.submitJob = {
         height: 200,
         width: 400,
         modal: true,
-        title: (window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.prediction_modeling_message", "Prediction Modeling Message") : "Prediction Modeling Message"),
+        title: (SGN.t("solgs.browser.prediction_modeling_message", "Prediction Modeling Message")),
         buttons: {
           Yes: {
             text: "OK",

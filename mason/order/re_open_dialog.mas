@@ -63,7 +63,7 @@ jQuery(document).ready( function() {
         var re_open_status = jQuery('#requester_re_open_status').val();
         var requester_re_open_comments = jQuery('#requester_re_open_comments').val();
         if (!requester_re_open_comments) {
-            alert ((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("barcode.helper.please_add_comments_for_re_opening_the_order", "Please add comments for re-opening the order") : "Please add comments for re-opening the order"));
+            alert ((SGN.t("barcode.helper.please_add_comments_for_re_opening_the_order", "Please add comments for re-opening the order")));
             return;
         }
 
@@ -106,10 +106,10 @@ jQuery(document).ready( function() {
 function requesterReOpen(order_id, order_to){
     var re_open = "re-opened"
     var html = '';
-    html += ("<form class=\"form-horizontal\"><div class=\"form-group\"><label class=\"col-sm-3 control-label\">" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("barcode.helper.order_number.a252e43", "Order Number:") : "Order Number:")).html() + " </label><div class=\"col-sm-9\" ><input class=\"form-control\" id=\"requester_re_open_order_id\" name=\"requester_re_open_order_id\" value=\"")+order_id+'" disabled></div></div>';
-    html += ("<div class=\"form-group\"><label class=\"col-sm-3 control-label\">" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("barcode.helper.vendor", "Vendor:") : "Vendor:")).html() + " </label><div class=\"col-sm-9\" ><input class=\"form-control\" id=\"re_open_order_to\" name=\"re_open_order_to\" value=\"")+order_to+'" disabled></div></div>';
-    html += ("<div class=\"form-group\"><label class=\"col-sm-3 control-label\">" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("global.est.status", "Status:") : "Status:")).html() + " </label><div class=\"col-sm-9\" ><input class=\"form-control\" id=\"requester_re_open_status\" name=\"requester_re_open_status\" value=\"")+re_open+'" disabled></div></div>';
-    html += ("<div class=\"form-group\"><label class=\"col-sm-3 control-label\">" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("transformation.root.comments", "Comments:") : "Comments:")).html() + " </label><div class=\"col-sm-9\" ><input class=\"form-control\" id=\"requester_re_open_comments\" placeholder=\"" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("seedlot_split.ui.required", "Required") : "Required")).html() + "\"></div></div></form>")
+    html += ("<form class=\"form-horizontal\"><div class=\"form-group\"><label class=\"col-sm-3 control-label\">" + jQuery("<span>").text((SGN.t("barcode.helper.order_number.a252e43", "Order Number:"))).html() + " </label><div class=\"col-sm-9\" ><input class=\"form-control\" id=\"requester_re_open_order_id\" name=\"requester_re_open_order_id\" value=\"")+order_id+'" disabled></div></div>';
+    html += ("<div class=\"form-group\"><label class=\"col-sm-3 control-label\">" + jQuery("<span>").text((SGN.t("barcode.helper.vendor", "Vendor:"))).html() + " </label><div class=\"col-sm-9\" ><input class=\"form-control\" id=\"re_open_order_to\" name=\"re_open_order_to\" value=\"")+order_to+'" disabled></div></div>';
+    html += ("<div class=\"form-group\"><label class=\"col-sm-3 control-label\">" + jQuery("<span>").text((SGN.t("global.est.status", "Status:"))).html() + " </label><div class=\"col-sm-9\" ><input class=\"form-control\" id=\"requester_re_open_status\" name=\"requester_re_open_status\" value=\"")+re_open+'" disabled></div></div>';
+    html += ("<div class=\"form-group\"><label class=\"col-sm-3 control-label\">" + jQuery("<span>").text((SGN.t("transformation.root.comments", "Comments:"))).html() + " </label><div class=\"col-sm-9\" ><input class=\"form-control\" id=\"requester_re_open_comments\" placeholder=\"" + jQuery("<span>").text((SGN.t("seedlot_split.ui.required", "Required"))).html() + "\"></div></div></form>")
 
     jQuery('#requester_re_open_order_div').html(html);
     jQuery('#requester_re_open_order_dialog').modal('show');

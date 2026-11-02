@@ -220,16 +220,16 @@ $(window).ready( function() {
         var program_name = "<%$program_name%>";
 
         if (identifier_name == '') {
-            alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("transformation.root.please_scan_an_identifier_name_barcode", "Please scan an identifier name barcode") : "Please scan an identifier name barcode"));
+            alert((SGN.t("transformation.root.please_scan_an_identifier_name_barcode", "Please scan an identifier name barcode")));
             return;
         }
 
         if (selected_type == '') {
-            alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("seedlot.please_select_a_type", "Please select a type") : "Please select a type"));
+            alert((SGN.t("seedlot.please_select_a_type", "Please select a type")));
             return;
         }
         if (input == '') {
-            alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("transformation.root.please_provide_an_input", "Please provide an input") : "Please provide an input"));
+            alert((SGN.t("transformation.root.please_provide_an_input", "Please provide an input")));
             return;
         }
 

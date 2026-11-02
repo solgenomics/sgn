@@ -347,7 +347,7 @@ def scan_code(path, sha, text):
         for i, (kind, name, pos) in enumerate(ts):
             if (
                 kind != "name"
-                or name not in ("p", "np")
+                or name not in ("p", "np", "t", "tn")
                 or i < 2
                 or i + 1 >= len(ts)
                 or ts[i - 1][1] not in (".", "->")
@@ -357,9 +357,10 @@ def scan_code(path, sha, text):
             receiver = ts[i - 2][1]
             prefix = source[max(0, pos - 90) : pos]
             known = receiver in aliases or receiver == "i18n" or bool(re.search(r"->i18n(?:\(\))?\s*->\s*$", prefix))
+            known = (known and name in ("p", "np")) or (language == "js" and receiver == "SGN" and name in ("t", "tn"))
             if not known:
                 continue
-            required = 2 if name == "p" else 3
+            required = 2 if name in ("p", "t") else 3
             j = i + 2
             args = []
             valid = True
@@ -393,7 +394,7 @@ def scan_code(path, sha, text):
                     "line": text[: offset + pos].count("\n") + 1,
                     "context": args[0],
                     "source": args[1],
-                    "plural": args[2] if name == "np" else None,
+                    "plural": args[2] if name in ("np", "tn") else None,
                     "evidence": "literal marked " + language + " call; recognized i18n receiver",
                     "classification": "instrumented_source_occurrence",
                 }

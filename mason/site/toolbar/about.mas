@@ -9,7 +9,7 @@
     <li><a href="/wiki"><% $c->i18n->p('navigation.about.wiki', 'Wiki') |h %></a></li>
     <li role="separator" class="divider"></li>
 
-    <li><a href="https://solgenomics.github.io/sgn"><% $c->i18n->p('navigation.about.manual', 'Manual') |h %></a></li>
+    <li><a href="<% $c->i18n_manual_url |h %>"><% $c->i18n->p('navigation.about.manual', 'Manual') |h %></a></li>
     <li><a href="https://www.youtube.com/channel/UC3jrvvzGKKEHzOriDBgnj0A"><% $c->i18n->p('navigation.about.videos', 'Video Tutorials') |h %></a></li>
     <li><a href="/help/faq.pl"><% $c->i18n->p('navigation.about.faq', 'FAQ') |h %></a></li>
     <li><a href="/forum/topics.pl"><% $c->i18n->p('navigation.about.forum', 'Forum') |h %></a></li>

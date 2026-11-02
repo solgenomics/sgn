@@ -24,10 +24,17 @@ render_language <- function(locale, output_dir, single_page = FALSE) {
     if (!all(file.copy(file.path(source_dir, c("conditional-content.lua", "hypothesis.html")), stage))) stop("Cannot stage manual includes")
     # Real copies keep knitr image URLs relative and never modify the shared originals.
     if (!file.copy(file.path(source_dir, "assets"), stage, recursive = TRUE)) stop("Cannot stage manual figures")
-    if (locale != "en") {
+    {
         support <- c("manual-locale.css", "manual-locale.js")
         if (!all(file.copy(file.path(source_dir, "i18n", support), stage))) stop("Cannot stage locale presentation")
-        if (!file.copy(file.path(locale_dir, "locale-header.html"), stage)) stop("Cannot stage locale metadata")
+        header_dir <- file.path(source_dir, "i18n", locale)
+        if (!file.copy(file.path(header_dir, "locale-header.html"), stage)) stop("Cannot stage locale metadata")
+        if (locale == "en") {
+            output <- yaml::read_yaml(file.path(stage, "_output.yml"))
+            output[["bookdown::gitbook"]]$css <- c("assets/style.css", "manual-locale.css")
+            output[["bookdown::gitbook"]]$includes$in_header <- c("hypothesis.html", "locale-header.html")
+            yaml::write_yaml(output, file.path(stage, "_output.yml"))
+        }
     }
     setwd(stage)
     bookdown::render_book("index.Rmd", "bookdown::gitbook", output_dir = output_dir,

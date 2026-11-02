@@ -236,7 +236,7 @@ jQuery(document).ready(function(){
         var uploadFile = jQuery("#crossinfo_upload_file").val();
         jQuery('#upload_crossinfo_form').attr("action", "/ajax/cross/upload_info");
         if (uploadFile === ''){
-            alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("cross.ui.please_select_a_file", "Please select a file") : "Please select a file"));
+            alert((SGN.t("cross.ui.please_select_a_file", "Please select a file")));
             return;
         }
         jQuery("#upload_crossinfo_form").submit();
@@ -283,7 +283,7 @@ jQuery(document).ready(function(){
         var uploadFile = jQuery("#additional_info_upload_file").val();
         jQuery('#upload_additional_info_form').attr("action", "/ajax/cross/upload_info");
         if (uploadFile === ''){
-            alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("cross.ui.please_select_a_file", "Please select a file") : "Please select a file"));
+            alert((SGN.t("cross.ui.please_select_a_file", "Please select a file")));
             return;
         }
         jQuery("#upload_additional_info_form").submit();

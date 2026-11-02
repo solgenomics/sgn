@@ -29,7 +29,7 @@ CXGN.Dataset.prototype = {
 
 	    },
             'error': function(response) {
-		alert((window.SGN && SGN.i18n ? SGN.i18n.p("global.dataset_cxgn_dataset.network_error", "An error occurred. Please try again.") : "An error occurred. Please try again."));
+		alert((SGN.t("global.dataset_cxgn_dataset.network_error", "An error occurred. Please try again.")));
 	    }
 	});
 	return datasets;
@@ -49,7 +49,7 @@ CXGN.Dataset.prototype = {
 
             },
             'error': function(response) {
-                alert((window.SGN && SGN.i18n ? SGN.i18n.p("global.dataset_cxgn_dataset.network_error", "An error occurred. Please try again.") : "An error occurred. Please try again."));
+                alert((SGN.t("global.dataset_cxgn_dataset.network_error", "An error occurred. Please try again.")));
             }
         });
         return datasets;
@@ -90,7 +90,7 @@ CXGN.Dataset.prototype = {
                         return callback();
                     }
                     else {
-                        alert((window.SGN && SGN.i18n ? SGN.i18n.p("global.dataset_cxgn_dataset.delete_success", "The dataset has been deleted.") : "The dataset has been deleted."));
+                        alert((SGN.t("global.dataset_cxgn_dataset.delete_success", "The dataset has been deleted.")));
                     }
                 }
             },
@@ -113,7 +113,7 @@ CXGN.Dataset.prototype = {
                         return callback();
                     }
                     else {
-                        alert((window.SGN && SGN.i18n ? SGN.i18n.p("global.dataset_cxgn_dataset.public_success", "The dataset is now public.") : "The dataset is now public."));
+                        alert((SGN.t("global.dataset_cxgn_dataset.public_success", "The dataset is now public.")));
                     }
                 }
             },
@@ -137,7 +137,7 @@ CXGN.Dataset.prototype = {
                         return callback();
                     }
                     else {
-                        alert((window.SGN && SGN.i18n ? SGN.i18n.p("global.dataset_cxgn_dataset.private_success", "The dataset is now private.") : "The dataset is now private."));
+                        alert((SGN.t("global.dataset_cxgn_dataset.private_success", "The dataset is now private.")));
                     }
                 }
             },
@@ -167,7 +167,7 @@ CXGN.Dataset.prototype = {
                         callback(description)
                     }
                     else {
-                        alert((window.SGN && SGN.i18n ? SGN.i18n.p("global.dataset_cxgn_dataset.description_updated", "The dataset description has been updated.") : "The dataset description has been updated."));
+                        alert((SGN.t("global.dataset_cxgn_dataset.description_updated", "The dataset description has been updated.")));
                     }
                 }
             },
@@ -190,8 +190,8 @@ CXGN.Dataset.prototype = {
       html += '<option value='+datasets[n][0]+'>'+datasets[n][1]+'</option>';
   }
   if (refresh) {
-    var refreshTitle = escapeDatasetHtml(window.SGN && SGN.i18n ? SGN.i18n.p("global.dataset_cxgn_dataset.refresh_title", "Refresh datasets") : "Refresh datasets");
-    var refreshedMessage = escapeDatasetHtml(JSON.stringify(window.SGN && SGN.i18n ? SGN.i18n.p("global.dataset_cxgn_dataset.refresh_done", "Options refreshed.") : "Options refreshed."));
+    var refreshTitle = escapeDatasetHtml(SGN.t("global.dataset_cxgn_dataset.refresh_title", "Refresh datasets"));
+    var refreshedMessage = escapeDatasetHtml(JSON.stringify(SGN.t("global.dataset_cxgn_dataset.refresh_done", "Options refreshed.")));
     html = '<div class="input-group">'+html+'</select><span class="input-group-btn"><button class="btn btn-default" type="button" id="'+div_name+'_dataset_refresh" title="'+refreshTitle+'" onclick="refreshDatasetSelect(\''+div_name+'_dataset_select\','+refreshedMessage+')"><span class="glyphicon glyphicon-refresh" aria-hidden="true"></span></button></span></div>';
     return html;
   }
@@ -206,18 +206,18 @@ CXGN.Dataset.prototype = {
 	var html = '';
 
 	if (!datasets || datasets.length===0) {
-	    html = html + escapeDatasetHtml((window.SGN && SGN.i18n ? SGN.i18n.p("global.dataset_cxgn_dataset.none", "None") : "None"));
+	    html = html + escapeDatasetHtml((SGN.t("global.dataset_cxgn_dataset.none", "None")));
 	    jQuery('#'+div+'_div').html(html);
 	    return;
 	}
 
 	html += '<table class="table table-hover table-condensed">';
-	html += '<thead><tr><th>' + escapeDatasetHtml((window.SGN && SGN.i18n ? SGN.i18n.p("global.dataset_cxgn_dataset.table.dataset_name", "Dataset Name") : "Dataset Name")) + '</th><th>' + escapeDatasetHtml((window.SGN && SGN.i18n ? SGN.i18n.p("global.dataset_cxgn_dataset.table.description", "Description") : "Description")) + '</th><th colspan="4">' + escapeDatasetHtml((window.SGN && SGN.i18n ? SGN.i18n.p("global.dataset_cxgn_dataset.table.actions", "Actions") : "Actions")) + '</th></tr></thead><tbody><tr>';
+	html += '<thead><tr><th>' + escapeDatasetHtml((SGN.t("global.dataset_cxgn_dataset.table.dataset_name", "Dataset Name"))) + '</th><th>' + escapeDatasetHtml((SGN.t("global.dataset_cxgn_dataset.table.description", "Description"))) + '</th><th colspan="4">' + escapeDatasetHtml((SGN.t("global.dataset_cxgn_dataset.table.actions", "Actions"))) + '</th></tr></thead><tbody><tr>';
 	for (var i = 0; i < datasets.length; i++) {
 	    html += '<td><b>'+datasets[i][1]+'</b></td>';
 	    html += '<td>'+datasets[i][2]+'</td>';
-	    html += '<td><a title="' + escapeDatasetHtml((window.SGN && SGN.i18n ? SGN.i18n.p("global.dataset_cxgn_dataset.view", "View") : "View")) + '" id="view_dataset_'+datasets[i][1]+'" href="javascript:showDatasetItems(\'dataset_item_dialog\','+datasets[i][0]+')"><span class="glyphicon glyphicon-th-list"></span></a></td>';
-	    html += '<td><a title="' + escapeDatasetHtml((window.SGN && SGN.i18n ? SGN.i18n.p("global.dataset_cxgn_dataset.delete", "Delete") : "Delete")) + '" id="delete_dataset_'+datasets[i][1]+'" href="javascript:deleteDataset('+datasets[i][0]+')"><span class="glyphicon glyphicon-remove"></span></a></td></tr>';
+	    html += '<td><a title="' + escapeDatasetHtml((SGN.t("global.dataset_cxgn_dataset.view", "View"))) + '" id="view_dataset_'+datasets[i][1]+'" href="javascript:showDatasetItems(\'dataset_item_dialog\','+datasets[i][0]+')"><span class="glyphicon glyphicon-th-list"></span></a></td>';
+	    html += '<td><a title="' + escapeDatasetHtml((SGN.t("global.dataset_cxgn_dataset.delete", "Delete"))) + '" id="delete_dataset_'+datasets[i][1]+'" href="javascript:deleteDataset('+datasets[i][0]+')"><span class="glyphicon glyphicon-remove"></span></a></td></tr>';
 	}
 	html = html + '</tbody></table>';
 	html += '<div id="list_group_select_action"></div>';
@@ -228,7 +228,7 @@ CXGN.Dataset.prototype = {
     renderItems: function(div, dataset_id) {
 	var dataset = this.getDataset(dataset_id);
 
-	var html = escapeDatasetHtml(window.SGN && SGN.i18n ? SGN.i18n.p("global.dataset_cxgn_dataset.items_intro", "This dataset contains the following:") : "This dataset contains the following:") + "<br />";
+	var html = escapeDatasetHtml(SGN.t("global.dataset_cxgn_dataset.items_intro", "This dataset contains the following:")) + "<br />";
 
 	var zero_count = 0;
 	for(var key in dataset.categories) {
@@ -245,7 +245,7 @@ CXGN.Dataset.prototype = {
 	}
 
 	if (zero_count === Object.keys(dataset.categories).length) { 
-	    jQuery('#'+div).html(escapeDatasetHtml((window.SGN && SGN.i18n ? SGN.i18n.p("global.dataset_cxgn_dataset.items_empty", "This dataset does not contain any selections.") : "This dataset does not contain any selections.")));
+	    jQuery('#'+div).html(escapeDatasetHtml((SGN.t("global.dataset_cxgn_dataset.items_empty", "This dataset does not contain any selections."))));
 	}
 	else { 
 	    jQuery('#'+div).html(html);
@@ -293,7 +293,7 @@ function deleteDataset(dataset_id) {
 		}
 	    },
 	    'error': function(response) {
-		alert(window.SGN && SGN.i18n ? SGN.i18n.p("global.dataset_cxgn_dataset.processing_error", "A processing error occurred.") : "A processing error occurred.");
+		alert(SGN.t("global.dataset_cxgn_dataset.processing_error", "A processing error occurred."));
 	    }
 	})
     }
@@ -306,7 +306,7 @@ function showDatasetItems(div, dataset_id) {
 
     var d = new CXGN.Dataset();
 
-    jQuery('#'+div).text((window.SGN && SGN.i18n ? SGN.i18n.p("lists_datasets.dataset.transient_hello", "hello!") : "hello!"));
+    jQuery('#'+div).text((SGN.t("lists_datasets.dataset.transient_hello", "hello!")));
     
     d.renderItems(div, dataset_id);
 

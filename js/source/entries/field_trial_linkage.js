@@ -52,8 +52,8 @@ export function init(trial_id, trial_name) {
         success: function(r){
           jQuery('#working_modal').modal("hide");
 
-          var html1 = '<table class="table table-hover table-bordered"><thead><tr><th>' + _sgnB12LinkageEscape((window.SGN && SGN.i18n ? SGN.i18n.p("trial.linkage.source_header", "Source Field Trial(s) For This Field Trial") : "Source Field Trial(s) For This Field Trial")) + '</th></tr></thead><tbody>';
-          var html2 = '<table class="table table-hover table-bordered"><thead><tr><th>' + _sgnB12LinkageEscape((window.SGN && SGN.i18n ? SGN.i18n.p("trial.linkage.sourced_header", "Field Trial(s) Sourced From This Field Trial") : "Field Trial(s) Sourced From This Field Trial")) + '</th></tr></thead><tbody>';
+          var html1 = '<table class="table table-hover table-bordered"><thead><tr><th>' + _sgnB12LinkageEscape((SGN.t("trial.linkage.source_header", "Source Field Trial(s) For This Field Trial"))) + '</th></tr></thead><tbody>';
+          var html2 = '<table class="table table-hover table-bordered"><thead><tr><th>' + _sgnB12LinkageEscape((SGN.t("trial.linkage.sourced_header", "Field Trial(s) Sourced From This Field Trial"))) + '</th></tr></thead><tbody>';
           for (var i=0; i<r.source_field_trials.length; i++){
               html1 = html1 + '<tr><td><a href="/breeders/trial/'+r.source_field_trials[i][0]+'">'+r.source_field_trials[i][1]+'</a></td></tr>';
           }
@@ -392,7 +392,7 @@ export function init(trial_id, trial_name) {
         },
         error: function(r){
           jQuery("#working_modal").modal("hide");
-          alert(window.SGN && SGN.i18n ? SGN.i18n.p("trial.linkage.error", "Error retrieving field trial to field trial linkage.") : "Error retrieving field trial to field trial linkage.");
+          alert(SGN.t("trial.linkage.error", "Error retrieving field trial to field trial linkage."));
         }
       });
 }

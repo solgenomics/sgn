@@ -28,12 +28,12 @@ function storeConnection(code) {
                     alert((window.SGN && SGN.i18n ? SGN.i18n.p("lists_datasets.authorize.store_error_detail", "Could not store connection info [%{error}]", {error:resp.error}) : "Could not store connection info [" + resp.error + "]"));
                 }
                 else {
-                    jQuery("#authorize-status").text((window.SGN && SGN.i18n ? SGN.i18n.p("lists_datasets.authorize.connected", "Accounts connected - you may close this window") : "Accounts connected - you may close this window"));
+                    jQuery("#authorize-status").text((SGN.t("lists_datasets.authorize.connected", "Accounts connected - you may close this window")));
                     window.close();
                 }
             },
             error: () => {
-                alert((window.SGN && SGN.i18n ? SGN.i18n.p("lists_datasets.authorize.store_error", "Could not store connection info") : "Could not store connection info"));
+                alert((SGN.t("lists_datasets.authorize.store_error", "Could not store connection info")));
             }
         });
     }

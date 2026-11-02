@@ -101,7 +101,7 @@ jQuery(document).ready(function(){
     jQuery("#update_trial_design_type_submit").click(function() {
         var trial_design_type = jQuery("#select_design_method").val();
         if (trial_design_type == 'Please select a design method') {
-            alert((window.SGN && SGN.i18n ? SGN.i18n.p('trial.design_type.select_method', "Please select a design method") : "Please select a design method"));
+            alert((SGN.t('trial.design_type.select_method', "Please select a design method")));
             return;
         }
 
@@ -127,7 +127,7 @@ jQuery(document).ready(function(){
             },
             error: function(response){
                 jQuery('#working_modal').modal('hide');
-                alert((window.SGN && SGN.i18n ? SGN.i18n.p('trial.design_type.update_error', "An error occurred updating trial status") : "An error occurred updating trial status"));
+                alert((SGN.t('trial.design_type.update_error', "An error occurred updating trial status")));
             }
         });
     });

@@ -99,7 +99,7 @@
        jQuery.ajax( { 
          url: '/ajax/user/update',
          data: form_data,
-         error: function(r) { alert(window.SGN && SGN.i18n ? SGN.i18n.p('auth.network_error', 'An error occurred! Sorry!') : 'An error occurred! Sorry!');  },
+         error: function(r) { alert(SGN.t('auth.network_error', 'An error occurred! Sorry!'));  },
          success: function(r) {
            if (r.error) { alert(r.error); }
            else { 

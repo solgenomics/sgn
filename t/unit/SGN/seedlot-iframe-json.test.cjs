@@ -58,7 +58,7 @@ test('actual serializer wire crosses actual iframe plugin and upload callback wi
                     window.get_select_box=()=>{throw new Error('Unrelated source selector request');};
                     window.addToListMenu=()=>{throw new Error('Unexpected missing-stock List branch');};
                 });
-                await page.addScriptTag({content:body});
+        await page.addScriptTag({path:path.join(root,'static/js/sgn-i18n.js')});        await page.addScriptTag({content:body});
                 await page.waitForFunction(()=>document.getElementById('iframe-post-form')?.contentDocument?.readyState==='complete');
                 // Complete the real initial blank-document load before arming
                 // the plugin's real submit listener for the controlled response.

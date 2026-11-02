@@ -127,12 +127,12 @@ function save_folder_categories() {
             if (response.error){
                 alert(response.error);
             }
-            else if(confirm((window.SGN && SGN.i18n ? SGN.i18n.p("trial.folder.category.confirm", "Categories set for folder!") : "Categories set for folder!"))){
+            else if(confirm((SGN.t("trial.folder.category.confirm", "Categories set for folder!")))){
                 location.reload();
             }
         },
         error: function(response) {
-            alert(window.SGN && SGN.i18n ? SGN.i18n.p("trial.folder.category.error", "An error occurred") : "An error occurred");
+            alert(SGN.t("trial.folder.category.error", "An error occurred"));
         }
     });
 }

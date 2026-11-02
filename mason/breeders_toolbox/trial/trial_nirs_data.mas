@@ -74,7 +74,7 @@ jQuery(document).ready(function() {
         });
 
         if (selected.length !== 1) {
-            alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("nirs.trial.protocol_required", "Please select one protocol.") : "Please select one protocol."));
+            alert((SGN.t("nirs.trial.protocol_required", "Please select one protocol.")));
         } else {
             const selectedProtocolId = selected[0];
             get_nirs_protocols(selectedProtocolId);
@@ -96,7 +96,7 @@ jQuery(document).ready(function() {
             })
             .catch((error) => {
                 console.error('Error fetching NIRS data:', error);
-                alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("nirs.trial.fetch_error", "An error occurred while fetching data") : "An error occurred while fetching data"));
+                alert((SGN.t("nirs.trial.fetch_error", "An error occurred while fetching data")));
             })
             .finally(() => {
                 jQuery('#working_modal').modal('hide');
@@ -162,7 +162,7 @@ jQuery(document).ready(function() {
             var group = samples_map[unique_id]
 
             var line_graph = `<div class="small-graph" data-observation="${unique_id}"></div>`;
-            var plot_button = `<button class="btn btn-sm plot-btn" data-sample="${unique_id}">${(window.SGN && window.SGN.i18n ? SGN.i18n.p("nirs.trial.plot", "Plot") : "Plot")}</button>`;
+            var plot_button = `<button class="btn btn-sm plot-btn" data-sample="${unique_id}">${(SGN.t("nirs.trial.plot", "Plot"))}</button>`;
             var accession_link = `<a href='/stock/${group.germplasmDbId}/view'>${group.germplasmName}</a>`;
             data.push([group.observationUnitName, group.observationUnitDbId, accession_link, line_graph, plot_button]);
         }
@@ -170,11 +170,11 @@ jQuery(document).ready(function() {
         jQuery('#nirs_data_table').html(`
             <thead>
                 <tr>
-                    <th>${(window.SGN && window.SGN.i18n ? SGN.i18n.p("nirs.trial.sample_name", "Sample Name") : "Sample Name")}</th>
-                    <th>${(window.SGN && window.SGN.i18n ? SGN.i18n.p("nirs.trial.sample_id", "Sample ID") : "Sample ID")}</th>
-                    <th>${(window.SGN && window.SGN.i18n ? SGN.i18n.p("nirs.trial.accession", "Accession") : "Accession")}</th>
-                    <th>${(window.SGN && window.SGN.i18n ? SGN.i18n.p("nirs.trial.spectra_graph", "Spectra Graph") : "Spectra Graph")}</th>
-                    <th>${(window.SGN && window.SGN.i18n ? SGN.i18n.p("nirs.trial.plot_large", "Plot on Large Graph") : "Plot on Large Graph")}</th>
+                    <th>${(SGN.t("nirs.trial.sample_name", "Sample Name"))}</th>
+                    <th>${(SGN.t("nirs.trial.sample_id", "Sample ID"))}</th>
+                    <th>${(SGN.t("nirs.trial.accession", "Accession"))}</th>
+                    <th>${(SGN.t("nirs.trial.spectra_graph", "Spectra Graph"))}</th>
+                    <th>${(SGN.t("nirs.trial.plot_large", "Plot on Large Graph"))}</th>
                 </tr>
             </thead>
             <tbody></tbody>
@@ -244,7 +244,7 @@ jQuery(document).ready(function() {
             if (isPlotted) {
                 multiGraphData = multiGraphData.filter(d => d.label !== samples_map[sampleKey].observationUnitName);
                 plottedSamples.delete(sampleKey);
-                button.text(plottedSamples.has(sampleKey) ? (window.SGN && window.SGN.i18n ? SGN.i18n.p("nirs.trial.remove_plot", "Remove Plot") : "Remove Plot") : (window.SGN && window.SGN.i18n ? SGN.i18n.p("nirs.trial.plot", "Plot") : "Plot"));
+                button.text(plottedSamples.has(sampleKey) ? (SGN.t("nirs.trial.remove_plot", "Remove Plot")) : (SGN.t("nirs.trial.plot", "Plot")));
             } else {
                 var group = samples_map[sampleKey];
                 var graph_data = group.values.flatMap(d => d.pairedValues);
@@ -255,7 +255,7 @@ jQuery(document).ready(function() {
                     label: label_sample_name
                 });
                 plottedSamples.add(sampleKey);
-                button.text(plottedSamples.has(sampleKey) ? (window.SGN && window.SGN.i18n ? SGN.i18n.p("nirs.trial.remove_plot", "Remove Plot") : "Remove Plot") : (window.SGN && window.SGN.i18n ? SGN.i18n.p("nirs.trial.plot", "Plot") : "Plot"));
+                button.text(plottedSamples.has(sampleKey) ? (SGN.t("nirs.trial.remove_plot", "Remove Plot")) : (SGN.t("nirs.trial.plot", "Plot")));
             }
             update_multi_graph(multiGraphData);
         }); 

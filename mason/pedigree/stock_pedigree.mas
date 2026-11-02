@@ -128,7 +128,7 @@ $stock_id
       var parentName = jQuery("#stock_autocomplete").val();
       //alert("Parent name = "+parentName);
 
-      if (!parentName) { alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("cross.forms.we_need_a_name_here_sorry", "We need a name here, sorry!") : "We need a name here, sorry!")); return; }
+      if (!parentName) { alert((SGN.t("cross.forms.we_need_a_name_here_sorry", "We need a name here, sorry!"))); return; }
 
       var cross_type = jQuery('#add_parent_cross_type').val();
       //alert(cross_type);
@@ -141,15 +141,15 @@ $stock_id
         async: false,
         data: 'stock_id='+stock_id+'&parent_name='+parentName+'&parent_type='+parentType+'&cross_type='+cross_type,
         error: function(response) {
-            alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("cross.forms.an_error_occurred_please_try_again_later", "An error occurred. Please try again later!") : "An error occurred. Please try again later!")+response);
+            alert((SGN.t("cross.forms.an_error_occurred_please_try_again_later", "An error occurred. Please try again later!"))+response);
         },
         parseerror: function(response) {
-            alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("cross.forms.a_parse_error_occurred_please_try_again", "A parse error occurred. Please try again.") : "A parse error occurred. Please try again.")+response);
+            alert((SGN.t("cross.forms.a_parse_error_occurred_please_try_again", "A parse error occurred. Please try again."))+response);
         },
         success: function(response) {
           if (response.error) { alert(response.error); }
           else {
-            alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("cross.forms.parent_added", "The parent has been added.") : "The parent has been added."));
+            alert((SGN.t("cross.forms.parent_added", "The parent has been added.")));
             jQuery("#add_parent_dialog").modal("hide");
             document.location.reload(); // reload the entire page, because pedigree info is in several places.
           }
@@ -227,7 +227,7 @@ $stock_id
             if (require_login === '1'){
                 auth_token = "<%  CXGN::Login->new($c->dbc->dbh)->get_login_cookie() %>";
                 if (!auth_token){
-                    alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("cross.forms.login_required_to_display_pedigree", "Login required to display pedigree") : "Login required to display pedigree"));
+                    alert((SGN.t("cross.forms.login_required_to_display_pedigree", "Login required to display pedigree")));
                 }
             }
 

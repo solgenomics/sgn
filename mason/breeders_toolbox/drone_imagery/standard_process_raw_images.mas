@@ -567,7 +567,7 @@ jQuery(document).ready(function(){
                     console.log(response);
                 },
                 error: function(response){
-                    alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("drone.interface.error_saving_gps_images_positions", "Error saving GPS images positions!") : "Error saving GPS images positions!"));
+                    alert((SGN.t("drone.interface.error_saving_gps_images_positions", "Error saving GPS images positions!")));
                 }
             });
 
@@ -747,10 +747,10 @@ jQuery(document).ready(function(){
 
             initializeInteractiveSvg('#drone_imagery_standard_process_raw_images_interactive_bulk_rotate_div', 'drone_imagery_standard_process_raw_images_interactive_bulk_rotate_div_area', 1, 0);
 
-            jQuery('#drone_imagery_standard_process_interactive_rotate_flight_pass').html(("<h1><b>" + (window.SGN && window.SGN.i18n ? SGN.i18n.p("drone.interface.current_imaging_event_pass", "Current Imaging Event Pass:") : "Current Imaging Event Pass:") + " ")+manage_drone_imagery_standard_process_raw_images_interactive_current_pass+"/"+manage_drone_imagery_standard_process_raw_images_interactive_maximum_pass+"</b></h1>");
+            jQuery('#drone_imagery_standard_process_interactive_rotate_flight_pass').html(("<h1><b>" + (SGN.t("drone.interface.current_imaging_event_pass", "Current Imaging Event Pass:")) + " ")+manage_drone_imagery_standard_process_raw_images_interactive_current_pass+"/"+manage_drone_imagery_standard_process_raw_images_interactive_maximum_pass+"</b></h1>");
         }
         else {
-            alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("drone.interface.no_previous_imaging_pass_to_go_to", "No previous imaging pass to go to!") : "No previous imaging pass to go to!"));
+            alert((SGN.t("drone.interface.no_previous_imaging_pass_to_go_to", "No previous imaging pass to go to!")));
             return false;
         }
     });
@@ -761,10 +761,10 @@ jQuery(document).ready(function(){
 
             initializeInteractiveSvg('#drone_imagery_standard_process_raw_images_interactive_bulk_rotate_div', 'drone_imagery_standard_process_raw_images_interactive_bulk_rotate_div_area', 1, 0);
 
-            jQuery('#drone_imagery_standard_process_interactive_rotate_flight_pass').html(("<h1><b>" + (window.SGN && window.SGN.i18n ? SGN.i18n.p("drone.interface.current_imaging_event_pass", "Current Imaging Event Pass:") : "Current Imaging Event Pass:") + " ")+manage_drone_imagery_standard_process_raw_images_interactive_current_pass+"/"+manage_drone_imagery_standard_process_raw_images_interactive_maximum_pass+"</b></h1>");
+            jQuery('#drone_imagery_standard_process_interactive_rotate_flight_pass').html(("<h1><b>" + (SGN.t("drone.interface.current_imaging_event_pass", "Current Imaging Event Pass:")) + " ")+manage_drone_imagery_standard_process_raw_images_interactive_current_pass+"/"+manage_drone_imagery_standard_process_raw_images_interactive_maximum_pass+"</b></h1>");
         }
         else {
-            alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("drone.interface.no_next_imaging_pass_to_go_to", "No next imaging pass to go to!") : "No next imaging pass to go to!"));
+            alert((SGN.t("drone.interface.no_next_imaging_pass_to_go_to", "No next imaging pass to go to!")));
             return false;
         }
     });
@@ -789,7 +789,7 @@ jQuery(document).ready(function(){
             },
             error: function(response){
                 //jQuery('#working_modal').hide();
-                alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("drone.interface.error_rotating_gps_images", "Error rotating GPS images!") : "Error rotating GPS images!"));
+                alert((SGN.t("drone.interface.error_rotating_gps_images", "Error rotating GPS images!")));
             }
         });
 
@@ -800,13 +800,13 @@ jQuery(document).ready(function(){
 
             initializeInteractiveSvg('#drone_imagery_standard_process_raw_images_interactive_bulk_rotate_div', 'drone_imagery_standard_process_raw_images_interactive_bulk_rotate_div_area', 1, 0);
 
-            jQuery('#drone_imagery_standard_process_interactive_rotate_flight_pass').html(("<h1><b>" + (window.SGN && window.SGN.i18n ? SGN.i18n.p("drone.interface.current_imaging_event_pass", "Current Imaging Event Pass:") : "Current Imaging Event Pass:") + " ")+manage_drone_imagery_standard_process_raw_images_interactive_current_pass+"/"+manage_drone_imagery_standard_process_raw_images_interactive_maximum_pass+"</b></h1>");
+            jQuery('#drone_imagery_standard_process_interactive_rotate_flight_pass').html(("<h1><b>" + (SGN.t("drone.interface.current_imaging_event_pass", "Current Imaging Event Pass:")) + " ")+manage_drone_imagery_standard_process_raw_images_interactive_current_pass+"/"+manage_drone_imagery_standard_process_raw_images_interactive_maximum_pass+"</b></h1>");
 
             window.scrollTo(0,0);
         }
         else {
 
-            jQuery('#drone_imagery_standard_process_interactive_rotate_flight_pass').html(("<h1><b>" + (window.SGN && window.SGN.i18n ? SGN.i18n.p("drone.interface.current_imaging_event_pass", "Current Imaging Event Pass:") : "Current Imaging Event Pass:") + " ")+manage_drone_imagery_standard_process_raw_images_interactive_current_pass+"/"+manage_drone_imagery_standard_process_raw_images_interactive_maximum_pass+("</b></h1><br/><center><h3>" + (window.SGN && window.SGN.i18n ? SGN.i18n.p("interface.working", "Working") : "Working") + " <img src='/img/wheel.gif' /></h3></center>"));
+            jQuery('#drone_imagery_standard_process_interactive_rotate_flight_pass').html(("<h1><b>" + (SGN.t("drone.interface.current_imaging_event_pass", "Current Imaging Event Pass:")) + " ")+manage_drone_imagery_standard_process_raw_images_interactive_current_pass+"/"+manage_drone_imagery_standard_process_raw_images_interactive_maximum_pass+("</b></h1><br/><center><h3>" + (SGN.t("interface.working", "Working")) + " <img src='/img/wheel.gif' /></h3></center>"));
 
             (function checkRawImageRotateProcess (manage_drone_imagery_standard_process_raw_images_interactive_is_rotating) {
                 setTimeout(function () {
@@ -823,13 +823,13 @@ jQuery(document).ready(function(){
                                 checkRawImageRotateProcess(manage_drone_imagery_standard_process_raw_images_interactive_is_rotating);
                             }
                             else {
-                                jQuery('#drone_imagery_standard_process_interactive_rotate_flight_pass').html(("<h1><b>" + (window.SGN && window.SGN.i18n ? SGN.i18n.p("drone.interface.current_imaging_event_pass", "Current Imaging Event Pass:") : "Current Imaging Event Pass:") + " ")+manage_drone_imagery_standard_process_raw_images_interactive_current_pass+"/"+manage_drone_imagery_standard_process_raw_images_interactive_maximum_pass+"</b></h1>");
+                                jQuery('#drone_imagery_standard_process_interactive_rotate_flight_pass').html(("<h1><b>" + (SGN.t("drone.interface.current_imaging_event_pass", "Current Imaging Event Pass:")) + " ")+manage_drone_imagery_standard_process_raw_images_interactive_current_pass+"/"+manage_drone_imagery_standard_process_raw_images_interactive_maximum_pass+"</b></h1>");
 
                                 console.log("ROTATION AND MATCHING COMPLETE");
 
                                 manage_drone_imagery_standard_process_raw_images_interactive_current_pass = 1;
 
-                                jQuery('#drone_imagery_standard_process_interactive_plot_polygons_flight_pass').html(("<h1><b>" + (window.SGN && window.SGN.i18n ? SGN.i18n.p("drone.interface.current_imaging_event_pass", "Current Imaging Event Pass:") : "Current Imaging Event Pass:") + " ")+manage_drone_imagery_standard_process_raw_images_interactive_current_pass+"/"+manage_drone_imagery_standard_process_raw_images_interactive_maximum_pass+"</b></h1>");
+                                jQuery('#drone_imagery_standard_process_interactive_plot_polygons_flight_pass').html(("<h1><b>" + (SGN.t("drone.interface.current_imaging_event_pass", "Current Imaging Event Pass:")) + " ")+manage_drone_imagery_standard_process_raw_images_interactive_current_pass+"/"+manage_drone_imagery_standard_process_raw_images_interactive_maximum_pass+"</b></h1>");
 
                                 initializeInteractiveSvg('#drone_imagery_standard_process_raw_images_image_id_interactive_select_div', 'drone_imagery_standard_process_raw_images_image_id_interactive_select_div_area', 1, 1);
 
@@ -840,7 +840,7 @@ jQuery(document).ready(function(){
                             }
                         },
                         error: function(response){
-                            alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("drone.interface.error_checking_gps_image_rotation_and_matching", "Error checking GPS image rotation and matching!") : "Error checking GPS image rotation and matching!"));
+                            alert((SGN.t("drone.interface.error_checking_gps_image_rotation_and_matching", "Error checking GPS image rotation and matching!")));
                         }
                     });
                 }, 10000);
@@ -851,7 +851,7 @@ jQuery(document).ready(function(){
     jQuery('#drone_imagery_standard_process_raw_images_interactive_rotate_skip_forward').click(function(){
         manage_drone_imagery_standard_process_raw_images_interactive_current_pass = 1;
 
-        jQuery('#drone_imagery_standard_process_interactive_plot_polygons_flight_pass').html(("<h1><b>" + (window.SGN && window.SGN.i18n ? SGN.i18n.p("drone.interface.current_imaging_event_pass", "Current Imaging Event Pass:") : "Current Imaging Event Pass:") + " ")+manage_drone_imagery_standard_process_raw_images_interactive_current_pass+"/"+manage_drone_imagery_standard_process_raw_images_interactive_maximum_pass+"</b></h1>");
+        jQuery('#drone_imagery_standard_process_interactive_plot_polygons_flight_pass').html(("<h1><b>" + (SGN.t("drone.interface.current_imaging_event_pass", "Current Imaging Event Pass:")) + " ")+manage_drone_imagery_standard_process_raw_images_interactive_current_pass+"/"+manage_drone_imagery_standard_process_raw_images_interactive_maximum_pass+"</b></h1>");
 
         initializeInteractiveSvg('#drone_imagery_standard_process_raw_images_image_id_interactive_select_div', 'drone_imagery_standard_process_raw_images_image_id_interactive_select_div_area', 1, 1);
 
@@ -921,7 +921,7 @@ jQuery(document).ready(function(){
                 location.reload();
             },
             error: function(response){
-                alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("drone.interface.error_deleting_gps_images_template_from_match_step", "Error deleting GPS images template from match step!") : "Error deleting GPS images template from match step!"))
+                alert((SGN.t("drone.interface.error_deleting_gps_images_template_from_match_step", "Error deleting GPS images template from match step!")))
             }
         });
     });
@@ -938,7 +938,7 @@ jQuery(document).ready(function(){
                 location.reload();
             },
             error: function(response){
-                alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("drone.interface.error_deleting_gps_images_template_from_rotate_step", "Error deleting GPS images template from rotate step!") : "Error deleting GPS images template from rotate step!"))
+                alert((SGN.t("drone.interface.error_deleting_gps_images_template_from_rotate_step", "Error deleting GPS images template from rotate step!")))
             }
         });
     });
@@ -1179,12 +1179,12 @@ jQuery(document).ready(function(){
                     manage_drone_imagery_interactive_match_two_images(image_id1, image_id2);
                 }
                 else {
-                    alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("drone.interface.no_more_images_to_match", "No more images to match!") : "No more images to match!"));
+                    alert((SGN.t("drone.interface.no_more_images_to_match", "No more images to match!")));
                     return false;
                 }
             },
             error: function(response){
-                alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("drone.interface.error_matching_and_aligning_two_images", "Error matching and aligning two images!") : "Error matching and aligning two images!"))
+                alert((SGN.t("drone.interface.error_matching_and_aligning_two_images", "Error matching and aligning two images!")))
             }
         });
     }
@@ -1195,7 +1195,7 @@ jQuery(document).ready(function(){
 
             initializeInteractiveSvg('#drone_imagery_standard_process_raw_images_image_id_interactive_select_div', 'drone_imagery_standard_process_raw_images_image_id_interactive_select_div_area', 1, 1);
 
-            jQuery('#drone_imagery_standard_process_interactive_plot_polygons_flight_pass').html(("<h1><b>" + (window.SGN && window.SGN.i18n ? SGN.i18n.p("drone.interface.current_imaging_event_pass", "Current Imaging Event Pass:") : "Current Imaging Event Pass:") + " ")+manage_drone_imagery_standard_process_raw_images_interactive_current_pass+"/"+manage_drone_imagery_standard_process_raw_images_interactive_maximum_pass+"</b></h1>");
+            jQuery('#drone_imagery_standard_process_interactive_plot_polygons_flight_pass').html(("<h1><b>" + (SGN.t("drone.interface.current_imaging_event_pass", "Current Imaging Event Pass:")) + " ")+manage_drone_imagery_standard_process_raw_images_interactive_current_pass+"/"+manage_drone_imagery_standard_process_raw_images_interactive_maximum_pass+"</b></h1>");
 
             plot_polygons_interactive_display_points = [];
             plot_polygons_interactive_ind_4_points = [];
@@ -1214,7 +1214,7 @@ jQuery(document).ready(function(){
             window.scrollTo(0,0);
         }
         else {
-            alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("drone.interface.no_previous_imaging_pass_to_go_to", "No previous imaging pass to go to!") : "No previous imaging pass to go to!"));
+            alert((SGN.t("drone.interface.no_previous_imaging_pass_to_go_to", "No previous imaging pass to go to!")));
             return false;
         }
     });
@@ -1225,7 +1225,7 @@ jQuery(document).ready(function(){
 
             initializeInteractiveSvg('#drone_imagery_standard_process_raw_images_image_id_interactive_select_div', 'drone_imagery_standard_process_raw_images_image_id_interactive_select_div_area', 1, 1);
 
-            jQuery('#drone_imagery_standard_process_interactive_plot_polygons_flight_pass').html(("<h1><b>" + (window.SGN && window.SGN.i18n ? SGN.i18n.p("drone.interface.current_imaging_event_pass", "Current Imaging Event Pass:") : "Current Imaging Event Pass:") + " ")+manage_drone_imagery_standard_process_raw_images_interactive_current_pass+"/"+manage_drone_imagery_standard_process_raw_images_interactive_maximum_pass+"</b></h1>");
+            jQuery('#drone_imagery_standard_process_interactive_plot_polygons_flight_pass').html(("<h1><b>" + (SGN.t("drone.interface.current_imaging_event_pass", "Current Imaging Event Pass:")) + " ")+manage_drone_imagery_standard_process_raw_images_interactive_current_pass+"/"+manage_drone_imagery_standard_process_raw_images_interactive_maximum_pass+"</b></h1>");
 
             plot_polygons_interactive_display_points = [];
             plot_polygons_interactive_ind_4_points = [];
@@ -1244,7 +1244,7 @@ jQuery(document).ready(function(){
             window.scrollTo(0,0);
         }
         else {
-            alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("drone.interface.no_next_imaging_pass_to_go_to", "No next imaging pass to go to!") : "No next imaging pass to go to!"));
+            alert((SGN.t("drone.interface.no_next_imaging_pass_to_go_to", "No next imaging pass to go to!")));
             return false;
         }
     });
@@ -1271,7 +1271,7 @@ jQuery(document).ready(function(){
             },
             error: function(response){
             //    jQuery('#working_modal').modal('hide');
-                alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("drone.interface.error_matching_and_aligning_images_sequential", "Error matching and aligning images sequential!") : "Error matching and aligning images sequential!"))
+                alert((SGN.t("drone.interface.error_matching_and_aligning_images_sequential", "Error matching and aligning images sequential!")))
             }
         });
     }
@@ -1281,7 +1281,7 @@ jQuery(document).ready(function(){
     });
 
     jQuery('#drone_imagery_standard_process_raw_images_interactive_drop_pin').click(function(){
-        alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("drone.interface.click_on_a_place_in_the_current_imaging_event_pass_to_drop_a_pin", "Click on a place in the current imaging event pass to drop a pin") : "Click on a place in the current imaging event pass to drop a pin"));
+        alert((SGN.t("drone.interface.click_on_a_place_in_the_current_imaging_event_pass_to_drop_a_pin", "Click on a place in the current imaging event pass to drop a pin")));
 
         d3.selectAll("g").on('mousedown.drag', null);
 
@@ -1321,7 +1321,7 @@ jQuery(document).ready(function(){
                   length: manage_drone_imagery_standard_process_interactive_image_length
                 }
 
-                d3.select(svg_div).html(("<h1>" + (window.SGN && window.SGN.i18n ? SGN.i18n.p("drone.interface.imaging_pass_number", "Imaging Pass Number:") : "Imaging Pass Number:") + " ")+manage_drone_imagery_standard_process_raw_images_interactive_current_pass+"</h1>");
+                d3.select(svg_div).html(("<h1>" + (SGN.t("drone.interface.imaging_pass_number", "Imaging Pass Number:")) + " ")+manage_drone_imagery_standard_process_raw_images_interactive_current_pass+"</h1>");
 
                 manage_drone_imagery_standard_process_raw_images_interactive_svg = d3.select(svg_div).append("svg")
                     .attr("width", drone_imagery_interactive_total_width)
@@ -1336,7 +1336,7 @@ jQuery(document).ready(function(){
                 }
             },
             error: function(response){
-                alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("drone.interface.error_init_svg", "Error init svg!") : "Error init svg!"))
+                alert((SGN.t("drone.interface.error_init_svg", "Error init svg!")))
             }
         });
     }
@@ -1382,7 +1382,7 @@ jQuery(document).ready(function(){
             },
             error: function(response){
                 jQuery("#working_modal").modal("hide");
-                alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("drone.interface.error_retrieving_images_and_gps_info", "Error retrieving images and gps info!") : "Error retrieving images and gps info!"))
+                alert((SGN.t("drone.interface.error_retrieving_images_and_gps_info", "Error retrieving images and gps info!")))
             }
         });
     }
@@ -1408,7 +1408,7 @@ jQuery(document).ready(function(){
             selected.push(jQuery(this).val());
         });
         if (selected.length > 1 || selected.length == 0) {
-            alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("drone.interface.please_select_one_band", "Please select one band!") : "Please select one band!"));
+            alert((SGN.t("drone.interface.please_select_one_band", "Please select one band!")));
             return false;
         }
         manage_drone_imagery_standard_process_interactive_drone_run_band_project_id = selected[0];
@@ -1418,7 +1418,7 @@ jQuery(document).ready(function(){
             success: function(response){
                 console.log(response);
 
-                var html = ("<table class=\"table table-hover table-bordered\"><thead><tr><th>" + (window.SGN && window.SGN.i18n ? SGN.i18n.p("drone.interface.imaging_pass_number_b45535", "Imaging Pass Number") : "Imaging Pass Number") + "</th><th>" + (window.SGN && window.SGN.i18n ? SGN.i18n.p("drone.interface.number_of_captures", "Number of Captures") : "Number of Captures") + "</th></tr></thead><tbody>");
+                var html = ("<table class=\"table table-hover table-bordered\"><thead><tr><th>" + (SGN.t("drone.interface.imaging_pass_number_b45535", "Imaging Pass Number")) + "</th><th>" + (SGN.t("drone.interface.number_of_captures", "Number of Captures")) + "</th></tr></thead><tbody>");
                 for (var i=0; i<response.results.length; i++) {
                     html = html + '<tr><td>'+response.results[i][0]+'</td><td>'+response.results[i][1]+'</td></tr>';
                 }
@@ -1431,7 +1431,7 @@ jQuery(document).ready(function(){
                 window.scrollTo(0,0);
             },
             error: function(response){
-                alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("drone.interface.error_separate_micasense_stacks", "Error separate micasense stacks!") : "Error separate micasense stacks!"));
+                alert((SGN.t("drone.interface.error_separate_micasense_stacks", "Error separate micasense stacks!")));
             }
         });
     });
@@ -1456,7 +1456,7 @@ jQuery(document).ready(function(){
                         _redraw_ground_control_points_table_interactive();
                     },
                     error: function(response){
-                        alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("drone.interface.error_getting_standard_process_interactive_gcps", "Error getting standard process interactive gcps!") : "Error getting standard process interactive gcps!"));
+                        alert((SGN.t("drone.interface.error_getting_standard_process_interactive_gcps", "Error getting standard process interactive gcps!")));
                     }
                 });
 
@@ -1467,7 +1467,7 @@ jQuery(document).ready(function(){
 
                     manage_drone_imagery_standard_process_raw_images_interactive_current_pass = 1;
 
-                    jQuery('#drone_imagery_standard_process_interactive_plot_polygons_flight_pass').html(("<h1><b>" + (window.SGN && window.SGN.i18n ? SGN.i18n.p("drone.interface.current_imaging_event_pass", "Current Imaging Event Pass:") : "Current Imaging Event Pass:") + " ")+manage_drone_imagery_standard_process_raw_images_interactive_current_pass+"/"+manage_drone_imagery_standard_process_raw_images_interactive_maximum_pass+"</b></h1>");
+                    jQuery('#drone_imagery_standard_process_interactive_plot_polygons_flight_pass').html(("<h1><b>" + (SGN.t("drone.interface.current_imaging_event_pass", "Current Imaging Event Pass:")) + " ")+manage_drone_imagery_standard_process_raw_images_interactive_current_pass+"/"+manage_drone_imagery_standard_process_raw_images_interactive_maximum_pass+"</b></h1>");
 
                     initializeInteractiveSvg('#drone_imagery_standard_process_raw_images_image_id_interactive_select_div', 'drone_imagery_standard_process_raw_images_image_id_interactive_select_div_area', 1, 1);
 
@@ -1481,7 +1481,7 @@ jQuery(document).ready(function(){
 
                     manage_drone_imagery_standard_process_raw_images_interactive_current_pass = 1;
 
-                    jQuery('#drone_imagery_standard_process_interactive_rotate_flight_pass').html(("<h1><b>" + (window.SGN && window.SGN.i18n ? SGN.i18n.p("drone.interface.current_imaging_event_pass", "Current Imaging Event Pass:") : "Current Imaging Event Pass:") + " ")+manage_drone_imagery_standard_process_raw_images_interactive_current_pass+"/"+manage_drone_imagery_standard_process_raw_images_interactive_maximum_pass+"</b></h1>");
+                    jQuery('#drone_imagery_standard_process_interactive_rotate_flight_pass').html(("<h1><b>" + (SGN.t("drone.interface.current_imaging_event_pass", "Current Imaging Event Pass:")) + " ")+manage_drone_imagery_standard_process_raw_images_interactive_current_pass+"/"+manage_drone_imagery_standard_process_raw_images_interactive_maximum_pass+"</b></h1>");
 
                     Workflow.complete("#manage_drone_imagery_standard_process_interactive_separated_passes_step");
                     Workflow.focus('#manage_drone_imagery_standard_process_raw_images_interactive_workflow', 3);
@@ -1489,7 +1489,7 @@ jQuery(document).ready(function(){
                 window.scrollTo(0,0);
             },
             error: function(response){
-                alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("drone.interface.error_check_rotation", "Error check rotation!") : "Error check rotation!"));
+                alert((SGN.t("drone.interface.error_check_rotation", "Error check rotation!")));
             }
         });
     });
@@ -1506,12 +1506,12 @@ jQuery(document).ready(function(){
     });
 
     function _redraw_ground_control_points_table_interactive() {
-        var html = ("<table class='table table-bordered table-hover'><thead><tr><th>" + (window.SGN && window.SGN.i18n ? SGN.i18n.p("drone.interface.saved_gcp_name", "Saved GCP Name") : "Saved GCP Name") + "</th><th>" + (window.SGN && window.SGN.i18n ? SGN.i18n.p("drone.interface.x_pos_c3bbe9", "X Pos") : "X Pos") + "</th><th>" + (window.SGN && window.SGN.i18n ? SGN.i18n.p("drone.interface.y_pos_00dbfd", "Y Pos") : "Y Pos") + "</th><th>" + (window.SGN && window.SGN.i18n ? SGN.i18n.p("drone.interface.latitude", "Latitude") : "Latitude") + "</th><th>" + (window.SGN && window.SGN.i18n ? SGN.i18n.p("drone.interface.longitude", "Longitude") : "Longitude") + "</th><th>" + (window.SGN && window.SGN.i18n ? SGN.i18n.p("global.dataset_publish.action.remove", "Remove") : "Remove") + "</th></thead><tbody>");
+        var html = ("<table class='table table-bordered table-hover'><thead><tr><th>" + (SGN.t("drone.interface.saved_gcp_name", "Saved GCP Name")) + "</th><th>" + (SGN.t("drone.interface.x_pos_c3bbe9", "X Pos")) + "</th><th>" + (SGN.t("drone.interface.y_pos_00dbfd", "Y Pos")) + "</th><th>" + (SGN.t("drone.interface.latitude", "Latitude")) + "</th><th>" + (SGN.t("drone.interface.longitude", "Longitude")) + "</th><th>" + (SGN.t("global.dataset_publish.action.remove", "Remove")) + "</th></thead><tbody>");
         for (var i=0; i<project_drone_imagery_interactive_ground_control_points_saved_array.length; i++) {
             html = html + "<tr><td>"+project_drone_imagery_interactive_ground_control_points_saved_array[i]['name']+"</td><td>"+project_drone_imagery_interactive_ground_control_points_saved_array[i]['x_pos']+"</td><td>"+project_drone_imagery_interactive_ground_control_points_saved_array[i]['y_pos']+"</td><td>"+project_drone_imagery_interactive_ground_control_points_saved_array[i]['latitude']+"</td><td>"+project_drone_imagery_interactive_ground_control_points_saved_array[i]['longitude']+"</td><td><p style='color:red' name='project_drone_imagery_interactive_ground_control_points_delete_one' data-name='"+project_drone_imagery_interactive_ground_control_points_saved_array[i]['name']+"' data-drone_run_project_id="+manage_drone_imagery_standard_process_raw_images_interactive_drone_run_id+" >X</p></td></tr>";
         }
         html = html + "</tbody></table>";
-        html = html + ("<button class='btn btn-default' name='project_drone_imagery_interactive_ground_control_points_draw_points'>" + (window.SGN && window.SGN.i18n ? SGN.i18n.p("drone.interface.draw_saved_gcps", "Draw Saved GCPs") : "Draw Saved GCPs") + "</button>");
+        html = html + ("<button class='btn btn-default' name='project_drone_imagery_interactive_ground_control_points_draw_points'>" + (SGN.t("drone.interface.draw_saved_gcps", "Draw Saved GCPs")) + "</button>");
         jQuery('#'+project_drone_imagery_interactive_ground_control_points_saved_div_table).html(html);
     }
 
@@ -1519,7 +1519,7 @@ jQuery(document).ready(function(){
         var drone_run_project_id = jQuery(this).data('drone_run_project_id');
         var name = jQuery(this).data('name');
 
-        if (confirm((window.SGN && window.SGN.i18n ? SGN.i18n.p("drone.interface.remove_this_gcp", "Remove this GCP?") : "Remove this GCP?"))) {
+        if (confirm((SGN.t("drone.interface.remove_this_gcp", "Remove this GCP?")))) {
             jQuery.ajax({
                 type: 'POST',
                 url: '/api/drone_imagery/remove_one_gcp',
@@ -1537,7 +1537,7 @@ jQuery(document).ready(function(){
                     _redraw_ground_control_points_table_interactive();
                 },
                 error: function(response){
-                    alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("drone.interface.error_deleting_gcp_name", "Error deleting GCP name!") : "Error deleting GCP name!"));
+                    alert((SGN.t("drone.interface.error_deleting_gcp_name", "Error deleting GCP name!")));
                 }
             });
         }
@@ -1562,7 +1562,7 @@ jQuery(document).ready(function(){
                 initializeImagesInteractive(1, '#drone_imagery_standard_process_raw_images_image_id_interactive_select_div_area_'+manage_drone_imagery_standard_process_raw_images_interactive_current_pass);
             },
             error: function(response){
-                alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("drone.interface.error_deleting_gps_images_template_from_ns_step", "Error deleting GPS images template from NS step!") : "Error deleting GPS images template from NS step!"))
+                alert((SGN.t("drone.interface.error_deleting_gps_images_template_from_ns_step", "Error deleting GPS images template from NS step!")))
             }
         });
     });
@@ -1581,7 +1581,7 @@ jQuery(document).ready(function(){
                 initializeImagesInteractive(1, '#drone_imagery_standard_process_raw_images_image_id_interactive_select_div_area_'+manage_drone_imagery_standard_process_raw_images_interactive_current_pass);
             },
             error: function(response){
-                alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("drone.interface.error_deleting_gps_images_template_from_ew_step", "Error deleting GPS images template from EW step!") : "Error deleting GPS images template from EW step!"))
+                alert((SGN.t("drone.interface.error_deleting_gps_images_template_from_ew_step", "Error deleting GPS images template from EW step!")))
             }
         });
     });
@@ -1596,7 +1596,7 @@ jQuery(document).ready(function(){
     });
 
     jQuery('#drone_imagery_plot_polygons_top_left_click_raw_images_interactive').click(function(){
-        alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("drone.interface.now_click_the_top_left_corner_of_your_field_on_the_image_below", "Now click the top left corner of your field on the image below.") : "Now click the top left corner of your field on the image below."));
+        alert((SGN.t("drone.interface.now_click_the_top_left_corner_of_your_field_on_the_image_below", "Now click the top left corner of your field on the image below.")));
 
         d3.selectAll("g").on('mousedown.drag', null);
 
@@ -1613,7 +1613,7 @@ jQuery(document).ready(function(){
         });
     });
     jQuery('#drone_imagery_plot_polygons_top_right_click_raw_images_interactive').click(function(){
-        alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("drone.interface.now_click_the_top_right_corner_of_your_field_on_the_image_below", "Now click the top right corner of your field on the image below.") : "Now click the top right corner of your field on the image below."));
+        alert((SGN.t("drone.interface.now_click_the_top_right_corner_of_your_field_on_the_image_below", "Now click the top right corner of your field on the image below.")));
 
         d3.selectAll("g").on('mousedown.drag', null);
 
@@ -1629,7 +1629,7 @@ jQuery(document).ready(function(){
         });
     });
     jQuery('#drone_imagery_plot_polygons_bottom_left_click_raw_images_interactive').click(function(){
-        alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("drone.interface.now_click_the_bottom_left_corner_of_your_field_on_the_image_below", "Now click the bottom left corner of your field on the image below.") : "Now click the bottom left corner of your field on the image below."));
+        alert((SGN.t("drone.interface.now_click_the_bottom_left_corner_of_your_field_on_the_image_below", "Now click the bottom left corner of your field on the image below.")));
 
         d3.selectAll("g").on('mousedown.drag', null);
 
@@ -1646,7 +1646,7 @@ jQuery(document).ready(function(){
         });
     });
     jQuery('#drone_imagery_plot_polygons_bottom_right_click_raw_images_interactive').click(function(){
-        alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("drone.interface.now_click_the_bottom_right_corner_of_your_field_on_the_image_below", "Now click the bottom right corner of your field on the image below.") : "Now click the bottom right corner of your field on the image below."));
+        alert((SGN.t("drone.interface.now_click_the_bottom_right_corner_of_your_field_on_the_image_below", "Now click the bottom right corner of your field on the image below.")));
 
         d3.selectAll("g").on('mousedown.drag', null);
 
@@ -1691,7 +1691,7 @@ jQuery(document).ready(function(){
     var drone_imagery_plot_polygons_rectangles_apply_square_raw_images_interactive_section_right_column_bottom_offset_val = 0;
 
     jQuery('#drone_imagery_plot_polygons_rectangles_apply_square_average_raw_images_interactive').click(function() {
-        alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("drone.interface.click_the_four_corners_of_10_single_plots_at_random_in_the_current_imaging_pass_for_each_single_plot_click_the", "Click the four corners of 10 single plots at random in the current imaging pass. For each single plot click the top left, then the top right, then the bottom right, then the bottom left.") : "Click the four corners of 10 single plots at random in the current imaging pass. For each single plot click the top left, then the top right, then the bottom right, then the bottom left."));
+        alert((SGN.t("drone.interface.click_the_four_corners_of_10_single_plots_at_random_in_the_current_imaging_pass_for_each_single_plot_click_the", "Click the four corners of 10 single plots at random in the current imaging pass. For each single plot click the top left, then the top right, then the bottom right, then the bottom left.")));
 
     });
 
@@ -1709,35 +1709,35 @@ jQuery(document).ready(function(){
         var section_right_column_bottom_offset_val = jQuery('#drone_imagery_plot_polygons_right_col_bottom_offset_raw_images_interactive').val();
 
         if (num_rows_val == ''){
-            alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("drone.interface.please_give_the_number_of_rows", "Please give the number of rows!") : "Please give the number of rows!"));
+            alert((SGN.t("drone.interface.please_give_the_number_of_rows", "Please give the number of rows!")));
             return;
         }
         if (num_cols_val == ''){
-            alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("drone.interface.please_give_the_number_of_columns", "Please give the number of columns!") : "Please give the number of columns!"));
+            alert((SGN.t("drone.interface.please_give_the_number_of_columns", "Please give the number of columns!")));
             return;
         }
         if (section_top_row_left_offset_val == ''){
-            alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("drone.interface.please_give_the_top_most_rows_left_margin_this_can_be_0_if_there_is_no_offset", "Please give the top-most rows left margin! This can be 0 if there is no offset.") : "Please give the top-most rows left margin! This can be 0 if there is no offset."));
+            alert((SGN.t("drone.interface.please_give_the_top_most_rows_left_margin_this_can_be_0_if_there_is_no_offset", "Please give the top-most rows left margin! This can be 0 if there is no offset.")));
             return;
         }
         if (section_bottom_row_left_offset_val == ''){
-            alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("drone.interface.please_give_the_bottom_most_rows_left_margin_this_can_be_0_if_there_is_no_offset", "Please give the bottom-most rows left margin! This can be 0 if there is no offset.") : "Please give the bottom-most rows left margin! This can be 0 if there is no offset."));
+            alert((SGN.t("drone.interface.please_give_the_bottom_most_rows_left_margin_this_can_be_0_if_there_is_no_offset", "Please give the bottom-most rows left margin! This can be 0 if there is no offset.")));
             return;
         }
         if (section_left_column_top_offset_val == ''){
-            alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("drone.interface.please_give_the_left_most_columns_top_margin_this_can_be_0_if_there_is_no_offset", "Please give the left-most columns top margin! This can be 0 if there is no offset.") : "Please give the left-most columns top margin! This can be 0 if there is no offset."));
+            alert((SGN.t("drone.interface.please_give_the_left_most_columns_top_margin_this_can_be_0_if_there_is_no_offset", "Please give the left-most columns top margin! This can be 0 if there is no offset.")));
             return;
         }
         if (section_left_column_bottom_offset_val == ''){
-            alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("drone.interface.please_give_the_left_most_columns_bottom_margin_this_can_be_0_if_there_is_no_offset", "Please give the left-most columns bottom margin! This can be 0 if there is no offset.") : "Please give the left-most columns bottom margin! This can be 0 if there is no offset."));
+            alert((SGN.t("drone.interface.please_give_the_left_most_columns_bottom_margin_this_can_be_0_if_there_is_no_offset", "Please give the left-most columns bottom margin! This can be 0 if there is no offset.")));
             return;
         }
         if (section_top_row_right_offset_val == ''){
-            alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("drone.interface.please_give_the_top_most_rows_right_margin_this_can_be_0_if_there_is_no_offset", "Please give the top-most rows right margin! This can be 0 if there is no offset.") : "Please give the top-most rows right margin! This can be 0 if there is no offset."));
+            alert((SGN.t("drone.interface.please_give_the_top_most_rows_right_margin_this_can_be_0_if_there_is_no_offset", "Please give the top-most rows right margin! This can be 0 if there is no offset.")));
             return;
         }
         if (section_right_column_bottom_offset_val == ''){
-            alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("drone.interface.please_give_the_right_most_columns_bottom_margin_this_can_be_0_if_there_is_no_offset", "Please give the right-most columns bottom margin! This can be 0 if there is no offset.") : "Please give the right-most columns bottom margin! This can be 0 if there is no offset."));
+            alert((SGN.t("drone.interface.please_give_the_right_most_columns_bottom_margin_this_can_be_0_if_there_is_no_offset", "Please give the right-most columns bottom margin! This can be 0 if there is no offset.")));
             return;
         }
 
@@ -1752,7 +1752,7 @@ jQuery(document).ready(function(){
         drone_imagery_plot_polygons_rectangles_apply_square_raw_images_interactive_counter = drone_imagery_plot_polygons_rectangles_apply_square_raw_images_interactive_counter + 1;
 
         if (drone_imagery_plot_polygons_rectangles_apply_square_raw_images_interactive_counter < 10) {
-            alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("drone.interface.click_the_boundaries_of_another_plot_you_need_to_click_atleast_10_to_get_a_good_average_completed", "Click the boundaries of another plot. You need to click at least 10 to get a good average. Completed: ") : "Click the boundaries of another plot. You need to click at least 10 to get a good average. Completed: ")+drone_imagery_plot_polygons_rectangles_apply_square_raw_images_interactive_counter);
+            alert((SGN.t("drone.interface.click_the_boundaries_of_another_plot_you_need_to_click_atleast_10_to_get_a_good_average_completed", "Click the boundaries of another plot. You need to click at least 10 to get a good average. Completed: "))+drone_imagery_plot_polygons_rectangles_apply_square_raw_images_interactive_counter);
             return false;
         }
 
@@ -1761,12 +1761,12 @@ jQuery(document).ready(function(){
 
     function plotPolygonManualAssignPlotNumberTable(div_id, table_id, input_name, generate_assign_button, save_button) {
         var html = '<div class="panel panel-default"><div class="panel-body">';
-        html = html + '<table class="table table-bordered table-hover" id="'+table_id+("\"><thead><tr><th>" + (window.SGN && window.SGN.i18n ? SGN.i18n.p("drone.interface.polygon_number", "Polygon Number") : "Polygon Number") + "</th><th>" + (window.SGN && window.SGN.i18n ? SGN.i18n.p("trial.design.header.plot_number", "Plot Number") : "Plot Number") + "</th></tr></thead><tbody>");
+        html = html + '<table class="table table-bordered table-hover" id="'+table_id+("\"><thead><tr><th>" + (SGN.t("drone.interface.polygon_number", "Polygon Number")) + "</th><th>" + (SGN.t("trial.design.header.plot_number", "Plot Number")) + "</th></tr></thead><tbody>");
         for(var i=0; i<drone_imagery_interactive_plot_generated_polygons.length; i++) {
             html = html + '<tr><td>'+i+'</td><td><input type="number" class="form-control" data-polygon_number="'+i+'" name="'+input_name+'" /></td></tr>';
         }
         html = html + '</tbody></table><hr>';
-        html = html + '<button class="btn btn-primary" id="'+generate_assign_button+("\">" + (window.SGN && window.SGN.i18n ? SGN.i18n.p("drone.interface.generate_assignments_from_manual_input_does_not_save", "Generate Assignments From Manual Input (Does Not Save)") : "Generate Assignments From Manual Input (Does Not Save)") + "</button>&nbsp;&nbsp;&nbsp;<button class=\"btn btn-primary\" name=\"")+save_button+("\">" + (window.SGN && window.SGN.i18n ? SGN.i18n.p("drone.interface.finish_and_save_polygons_to_plots_go_to_next_imaging_pass", "Finish and Save Polygons To Plots. Go to Next Imaging Pass.") : "Finish and Save Polygons To Plots. Go to Next Imaging Pass.") + "</button></div></div>");
+        html = html + '<button class="btn btn-primary" id="'+generate_assign_button+("\">" + (SGN.t("drone.interface.generate_assignments_from_manual_input_does_not_save", "Generate Assignments From Manual Input (Does Not Save)")) + "</button>&nbsp;&nbsp;&nbsp;<button class=\"btn btn-primary\" name=\"")+save_button+("\">" + (SGN.t("drone.interface.finish_and_save_polygons_to_plots_go_to_next_imaging_pass", "Finish and Save Polygons To Plots. Go to Next Imaging Pass.")) + "</button></div></div>");
 
         jQuery('#'+div_id).html(html);
         jQuery('#'+table_id).DataTable({'paging':false});
@@ -1818,9 +1818,9 @@ jQuery(document).ready(function(){
     }
 
     function droneImageryDrawPlotPolygonActiveTemplatesTableInteractive(div_id, plot_polygons_template_dimensions){
-        var html = ("<table class=\"table table-bordered table-hover\"><thead><tr><th>" + (window.SGN && window.SGN.i18n ? SGN.i18n.p("drone.interface.template_number", "Template Number") : "Template Number") + "</th><th>" + (window.SGN && window.SGN.i18n ? SGN.i18n.p("decision.js.rows", "Rows") : "Rows") + "</th><th>" + (window.SGN && window.SGN.i18n ? SGN.i18n.p("trial.heatmap.columns", "Columns") : "Columns") + "</th><th>" + (window.SGN && window.SGN.i18n ? SGN.i18n.p("drone.interface.total_polygons", "Total Polygons") : "Total Polygons") + "</th><th>" + (window.SGN && window.SGN.i18n ? SGN.i18n.p("global.file_dump_share_files.options", "Options") : "Options") + "</th></tr></thead><tbody>");
+        var html = ("<table class=\"table table-bordered table-hover\"><thead><tr><th>" + (SGN.t("drone.interface.template_number", "Template Number")) + "</th><th>" + (SGN.t("decision.js.rows", "Rows")) + "</th><th>" + (SGN.t("trial.heatmap.columns", "Columns")) + "</th><th>" + (SGN.t("drone.interface.total_polygons", "Total Polygons")) + "</th><th>" + (SGN.t("global.file_dump_share_files.options", "Options")) + "</th></tr></thead><tbody>");
         for (var i=0; i<plot_polygons_template_dimensions.length; i++) {
-            html = html + '<tr><td>'+i+'</td><td>'+plot_polygons_template_dimensions[i]['num_rows']+'</td><td>'+plot_polygons_template_dimensions[i]['num_cols']+'</td><td>'+plot_polygons_template_dimensions[i]['total_plot_polygons']+'</td><td><button class="btn btn-sm btn-primary" name="drone_imagery_plot_polygon_template_options_interactive" data-plot_polygon_template_id="'+i+("\" >" + (window.SGN && window.SGN.i18n ? SGN.i18n.p("global.file_dump_share_files.options", "Options") : "Options") + "</button></td></tr>");
+            html = html + '<tr><td>'+i+'</td><td>'+plot_polygons_template_dimensions[i]['num_rows']+'</td><td>'+plot_polygons_template_dimensions[i]['num_cols']+'</td><td>'+plot_polygons_template_dimensions[i]['total_plot_polygons']+'</td><td><button class="btn btn-sm btn-primary" name="drone_imagery_plot_polygon_template_options_interactive" data-plot_polygon_template_id="'+i+("\" >" + (SGN.t("global.file_dump_share_files.options", "Options")) + "</button></td></tr>");
         }
         html = html + '</tbody></table>';
         jQuery('#'+div_id).html(html);
@@ -1828,35 +1828,35 @@ jQuery(document).ready(function(){
 
     function plotPolygonsRectanglesApplyInteractive(num_rows_val, num_cols_val, section_top_row_left_offset_val, section_bottom_row_left_offset_val, section_left_column_top_offset_val, section_left_column_bottom_offset_val, section_top_row_right_offset_val, section_right_column_bottom_offset_val, section_width, section_height, plot_polygons_assignment_info) {
         if (num_rows_val == ''){
-            alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("drone.interface.please_give_the_number_of_rows", "Please give the number of rows!") : "Please give the number of rows!"));
+            alert((SGN.t("drone.interface.please_give_the_number_of_rows", "Please give the number of rows!")));
             return;
         }
         if (num_cols_val == ''){
-            alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("drone.interface.please_give_the_number_of_columns", "Please give the number of columns!") : "Please give the number of columns!"));
+            alert((SGN.t("drone.interface.please_give_the_number_of_columns", "Please give the number of columns!")));
             return;
         }
         if (section_top_row_left_offset_val == ''){
-            alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("drone.interface.please_give_the_top_most_rows_left_margin_this_can_be_0_if_there_is_no_offset", "Please give the top-most rows left margin! This can be 0 if there is no offset.") : "Please give the top-most rows left margin! This can be 0 if there is no offset."));
+            alert((SGN.t("drone.interface.please_give_the_top_most_rows_left_margin_this_can_be_0_if_there_is_no_offset", "Please give the top-most rows left margin! This can be 0 if there is no offset.")));
             return;
         }
         if (section_bottom_row_left_offset_val == ''){
-            alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("drone.interface.please_give_the_bottom_most_rows_left_margin_this_can_be_0_if_there_is_no_offset", "Please give the bottom-most rows left margin! This can be 0 if there is no offset.") : "Please give the bottom-most rows left margin! This can be 0 if there is no offset."));
+            alert((SGN.t("drone.interface.please_give_the_bottom_most_rows_left_margin_this_can_be_0_if_there_is_no_offset", "Please give the bottom-most rows left margin! This can be 0 if there is no offset.")));
             return;
         }
         if (section_left_column_top_offset_val == ''){
-            alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("drone.interface.please_give_the_left_most_columns_top_margin_this_can_be_0_if_there_is_no_offset", "Please give the left-most columns top margin! This can be 0 if there is no offset.") : "Please give the left-most columns top margin! This can be 0 if there is no offset."));
+            alert((SGN.t("drone.interface.please_give_the_left_most_columns_top_margin_this_can_be_0_if_there_is_no_offset", "Please give the left-most columns top margin! This can be 0 if there is no offset.")));
             return;
         }
         if (section_left_column_bottom_offset_val == ''){
-            alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("drone.interface.please_give_the_left_most_columns_bottom_margin_this_can_be_0_if_there_is_no_offset", "Please give the left-most columns bottom margin! This can be 0 if there is no offset.") : "Please give the left-most columns bottom margin! This can be 0 if there is no offset."));
+            alert((SGN.t("drone.interface.please_give_the_left_most_columns_bottom_margin_this_can_be_0_if_there_is_no_offset", "Please give the left-most columns bottom margin! This can be 0 if there is no offset.")));
             return;
         }
         if (section_top_row_right_offset_val == ''){
-            alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("drone.interface.please_give_the_top_most_rows_right_margin_this_can_be_0_if_there_is_no_offset", "Please give the top-most rows right margin! This can be 0 if there is no offset.") : "Please give the top-most rows right margin! This can be 0 if there is no offset."));
+            alert((SGN.t("drone.interface.please_give_the_top_most_rows_right_margin_this_can_be_0_if_there_is_no_offset", "Please give the top-most rows right margin! This can be 0 if there is no offset.")));
             return;
         }
         if (section_right_column_bottom_offset_val == ''){
-            alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("drone.interface.please_give_the_right_most_columns_bottom_margin_this_can_be_0_if_there_is_no_offset", "Please give the right-most columns bottom margin! This can be 0 if there is no offset.") : "Please give the right-most columns bottom margin! This can be 0 if there is no offset."));
+            alert((SGN.t("drone.interface.please_give_the_right_most_columns_bottom_margin_this_can_be_0_if_there_is_no_offset", "Please give the right-most columns bottom margin! This can be 0 if there is no offset.")));
             return;
         }
 
@@ -1983,7 +1983,7 @@ jQuery(document).ready(function(){
         }
         console.log(plot_polygons_interactive_generated_polygons_intermediate);
 
-        alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("drone.interface.click_on_where_the_top_left_corner_of_the_template_will_be_pasted_in_the_current_imaging_event_pass", "Click on where the top left corner of the template will be pasted in the current imaging event pass.") : "Click on where the top left corner of the template will be pasted in the current imaging event pass."));
+        alert((SGN.t("drone.interface.click_on_where_the_top_left_corner_of_the_template_will_be_pasted_in_the_current_imaging_event_pass", "Click on where the top left corner of the template will be pasted in the current imaging event pass.")));
 
         d3.selectAll("g").on('mousedown.drag', null);
 
@@ -2061,7 +2061,7 @@ jQuery(document).ready(function(){
                 droneImageryDrawLayoutTableInteractive(response, {}, 'drone_imagery_interactive_trial_layout_div', 'drone_imagery_interactive_trial_layout_table');
             },
             error: function(response){
-                alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("drone.interface.error_retrieving_trial_layout_and_design", "Error retrieving trial layout and design!") : "Error retrieving trial layout and design!"))
+                alert((SGN.t("drone.interface.error_retrieving_trial_layout_and_design", "Error retrieving trial layout and design!")))
             }
         });
     }
@@ -2073,7 +2073,7 @@ jQuery(document).ready(function(){
         for (var i=0; i<header.length; i++){
             html = html + '<td>'+header[i]+'</td>';
         }
-        html = html + ("<td>" + (window.SGN && window.SGN.i18n ? SGN.i18n.p("drone.interface.polygon_assigned", "Polygon Assigned") : "Polygon Assigned") + "</td>");
+        html = html + ("<td>" + (SGN.t("drone.interface.polygon_assigned", "Polygon Assigned")) + "</td>");
         html = html + '</tr></thead><tbody>';
         for (var i=1; i<output.length; i++){
             html = html + '<tr>';
@@ -2081,7 +2081,7 @@ jQuery(document).ready(function(){
                 html = html + '<td>'+output[i][j]+'</td>';
             }
             if (output[i][0] in plot_polygons && plot_polygons[output[i][0]] != undefined){
-                html = html + ("<td>" + (window.SGN && window.SGN.i18n ? SGN.i18n.p("global.search_wizard.yes", "Yes") : "Yes") + "</td>");
+                html = html + ("<td>" + (SGN.t("global.search_wizard.yes", "Yes")) + "</td>");
             } else {
                 html = html + '<td></td>';
             }
@@ -2093,11 +2093,11 @@ jQuery(document).ready(function(){
     }
 
     function droneImageryDrawRectangleTableInteractive(plot_polygons_layout_assignment_info, plot_polygons_generate_assignment_button, plot_polygon_assignment_submit_button) {
-        var html = ("<hr><div class=\"well well-sm\"><h2>" + (window.SGN && window.SGN.i18n ? SGN.i18n.p("drone.interface.or_auto_assign_plot_polygons_to_plot_numbers", "Or Auto Assign Plot Polygons to Plot Numbers") : "Or Auto Assign Plot Polygons to Plot Numbers") + "</h2>");
+        var html = ("<hr><div class=\"well well-sm\"><h2>" + (SGN.t("drone.interface.or_auto_assign_plot_polygons_to_plot_numbers", "Or Auto Assign Plot Polygons to Plot Numbers")) + "</h2>");
         html = html + '<div class="panel panel-default"><div class="panel-body"><div class="form form-horizontal">';
-        html = html + ("<div class=\"row\"><div class=\"col-sm-6\"><div class=\"form-group form-group-sm\"><label class=\"col-sm-6 control-label\">" + (window.SGN && window.SGN.i18n ? SGN.i18n.p("drone.interface.location_of_first_plot_e_g_plot_number_1", "Location of First Plot (e.g. plot number 1):") : "Location of First Plot (e.g. plot number 1):") + " </label><div class=\"col-sm-6\"><select class=\"form-control\" id=\"drone_imagery_interactive_plot_polygons_first_plot_start\" name=\"drone_imagery_interactive_plot_polygons_first_plot_start\"><option value=\"top_left\">" + (window.SGN && window.SGN.i18n ? SGN.i18n.p("fieldbook.export.top_left", "Top Left") : "Top Left") + "</option><option value=\"top_right\">" + (window.SGN && window.SGN.i18n ? SGN.i18n.p("fieldbook.export.top_right", "Top Right") : "Top Right") + "</option><option value=\"bottom_left\" disabled>" + (window.SGN && window.SGN.i18n ? SGN.i18n.p("fieldbook.export.bottom_left", "Bottom Left") : "Bottom Left") + "</option><option value=\"bottom_right\" disabled>" + (window.SGN && window.SGN.i18n ? SGN.i18n.p("fieldbook.export.bottom_right", "Bottom Right") : "Bottom Right") + "</option></select></div></div></div><div class=\"col-sm-6\"><div class=\"form-group form-group-sm\"><label class=\"col-sm-6 control-label\">" + (window.SGN && window.SGN.i18n ? SGN.i18n.p("drone.interface.second_plot_follows_first_plot_going", "Second Plot Follows First Plot Going:") : "Second Plot Follows First Plot Going:") + " </label><div class=\"col-sm-6\"><select class=\"form-control\" id=\"drone_imagery_interactive_plot_polygons_second_plot_follows\" name=\"drone_imagery_interactive_plot_polygons_second_plot_follows\"><option value=\"right\">" + (window.SGN && window.SGN.i18n ? SGN.i18n.p("drone.interface.right", "Right") : "Right") + "</option><option value=\"up\">" + (window.SGN && window.SGN.i18n ? SGN.i18n.p("drone.interface.up", "Up") : "Up") + "</option><option value=\"down\">" + (window.SGN && window.SGN.i18n ? SGN.i18n.p("drone.interface.down", "Down") : "Down") + "</option><option value=\"left\">" + (window.SGN && window.SGN.i18n ? SGN.i18n.p("drone.interface.left", "Left") : "Left") + "</option></select></div></div></div></div>");
-        html = html + ("<div class=\"row\"><div class=\"col-sm-6\"><div class=\"form-group form-group-sm\"><label class=\"col-sm-6 control-label\">" + (window.SGN && window.SGN.i18n ? SGN.i18n.p("drone.interface.plot_number_orientation", "Plot Number Orientation:") : "Plot Number Orientation:") + " </label><div class=\"col-sm-6\"><select class=\"form-control\" id=\"drone_imagery_interactive_plot_polygons_plot_orientation\" name=\"drone_imagery_interactive_plot_polygons_plot_orientation\"><option value=\"serpentine\">" + (window.SGN && window.SGN.i18n ? SGN.i18n.p("trial.create.field_map.serpentine", "Serpentine") : "Serpentine") + "</option><option value=\"zigzag\">" + (window.SGN && window.SGN.i18n ? SGN.i18n.p("drone.interface.zigzag_not_serpentine", "Zigzag (Not Serpentine)") : "Zigzag (Not Serpentine)") + "</option></select></div></div></div><div class=\"col-sm-6\"><div class=\"form-group form-group-sm\"><label class=\"col-sm-6 control-label\">" + (window.SGN && window.SGN.i18n ? SGN.i18n.p("drone.interface.plot_number_start_optional", "Plot Number Start (optional):") : "Plot Number Start (optional):") + " </label><div class=\"col-sm-6\"><input type=\"number\" class=\"form-control\" id=\"drone_imagery_interactive_plot_polygons_plot_number_start\" name=\"drone_imagery_interactive_plot_polygons_plot_number_start\" placeholder=\"OPTIONAL\" /></div></div></div></div>");
-        html = html + '<button class="btn btn-primary" id="'+plot_polygons_generate_assignment_button+("\">" + (window.SGN && window.SGN.i18n ? SGN.i18n.p("drone.interface.generate_assignments_does_not_save", "Generate Assignments (Does Not Save)") : "Generate Assignments (Does Not Save)") + "</button>&nbsp;&nbsp;&nbsp;<button class=\"btn btn-primary\" name=\"")+plot_polygon_assignment_submit_button+("\">" + (window.SGN && window.SGN.i18n ? SGN.i18n.p("drone.interface.finish_and_save_polygons_to_plots_go_to_next_imaging_pass", "Finish and Save Polygons To Plots. Go to Next Imaging Pass.") : "Finish and Save Polygons To Plots. Go to Next Imaging Pass.") + "</button></div>");
+        html = html + ("<div class=\"row\"><div class=\"col-sm-6\"><div class=\"form-group form-group-sm\"><label class=\"col-sm-6 control-label\">" + (SGN.t("drone.interface.location_of_first_plot_e_g_plot_number_1", "Location of First Plot (e.g. plot number 1):")) + " </label><div class=\"col-sm-6\"><select class=\"form-control\" id=\"drone_imagery_interactive_plot_polygons_first_plot_start\" name=\"drone_imagery_interactive_plot_polygons_first_plot_start\"><option value=\"top_left\">" + (SGN.t("fieldbook.export.top_left", "Top Left")) + "</option><option value=\"top_right\">" + (SGN.t("fieldbook.export.top_right", "Top Right")) + "</option><option value=\"bottom_left\" disabled>" + (SGN.t("fieldbook.export.bottom_left", "Bottom Left")) + "</option><option value=\"bottom_right\" disabled>" + (SGN.t("fieldbook.export.bottom_right", "Bottom Right")) + "</option></select></div></div></div><div class=\"col-sm-6\"><div class=\"form-group form-group-sm\"><label class=\"col-sm-6 control-label\">" + (SGN.t("drone.interface.second_plot_follows_first_plot_going", "Second Plot Follows First Plot Going:")) + " </label><div class=\"col-sm-6\"><select class=\"form-control\" id=\"drone_imagery_interactive_plot_polygons_second_plot_follows\" name=\"drone_imagery_interactive_plot_polygons_second_plot_follows\"><option value=\"right\">" + (SGN.t("drone.interface.right", "Right")) + "</option><option value=\"up\">" + (SGN.t("drone.interface.up", "Up")) + "</option><option value=\"down\">" + (SGN.t("drone.interface.down", "Down")) + "</option><option value=\"left\">" + (SGN.t("drone.interface.left", "Left")) + "</option></select></div></div></div></div>");
+        html = html + ("<div class=\"row\"><div class=\"col-sm-6\"><div class=\"form-group form-group-sm\"><label class=\"col-sm-6 control-label\">" + (SGN.t("drone.interface.plot_number_orientation", "Plot Number Orientation:")) + " </label><div class=\"col-sm-6\"><select class=\"form-control\" id=\"drone_imagery_interactive_plot_polygons_plot_orientation\" name=\"drone_imagery_interactive_plot_polygons_plot_orientation\"><option value=\"serpentine\">" + (SGN.t("trial.create.field_map.serpentine", "Serpentine")) + "</option><option value=\"zigzag\">" + (SGN.t("drone.interface.zigzag_not_serpentine", "Zigzag (Not Serpentine)")) + "</option></select></div></div></div><div class=\"col-sm-6\"><div class=\"form-group form-group-sm\"><label class=\"col-sm-6 control-label\">" + (SGN.t("drone.interface.plot_number_start_optional", "Plot Number Start (optional):")) + " </label><div class=\"col-sm-6\"><input type=\"number\" class=\"form-control\" id=\"drone_imagery_interactive_plot_polygons_plot_number_start\" name=\"drone_imagery_interactive_plot_polygons_plot_number_start\" placeholder=\"OPTIONAL\" /></div></div></div></div>");
+        html = html + '<button class="btn btn-primary" id="'+plot_polygons_generate_assignment_button+("\">" + (SGN.t("drone.interface.generate_assignments_does_not_save", "Generate Assignments (Does Not Save)")) + "</button>&nbsp;&nbsp;&nbsp;<button class=\"btn btn-primary\" name=\"")+plot_polygon_assignment_submit_button+("\">" + (SGN.t("drone.interface.finish_and_save_polygons_to_plots_go_to_next_imaging_pass", "Finish and Save Polygons To Plots. Go to Next Imaging Pass.")) + "</button></div>");
         html = html + '</div></div></div></div>';
 
         jQuery('#'+plot_polygons_layout_assignment_info).html(html);
@@ -2111,7 +2111,7 @@ jQuery(document).ready(function(){
 
     jQuery('#drone_imagery_interactive_plot_polygon_template_options_paste_click').click(function(){
         jQuery('#drone_imagery_interactive_plot_polygon_template_options_dialog').modal('hide');
-        alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("drone.interface.click_on_where_the_top_left_corner_of_the_template_will_be_pasted", "Click on where the top left corner of the template will be pasted.") : "Click on where the top left corner of the template will be pasted."));
+        alert((SGN.t("drone.interface.click_on_where_the_top_left_corner_of_the_template_will_be_pasted", "Click on where the top left corner of the template will be pasted.")));
 
         d3.selectAll("g").on('mousedown.drag', null);
 
@@ -2254,7 +2254,7 @@ jQuery(document).ready(function(){
         if (plot_polygons_first_plot_start == 'top_left') {
             var generated_polygon_key_first_plot_number = 0;
             if (plot_polygons_second_plot_follows == 'left' || plot_polygons_second_plot_follows == 'up') {
-                alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("drone.interface.second_plot_cannot_follow_left_or_up_from_first_plot_if_the_first_plot_starts_at_the_top_left_because_that_is", "Second plot cannot follow left or up from first plot if the first plot starts at the top left, because that is physically impossible.") : "Second plot cannot follow left or up from first plot if the first plot starts at the top left, because that is physically impossible."));
+                alert((SGN.t("drone.interface.second_plot_cannot_follow_left_or_up_from_first_plot_if_the_first_plot_starts_at_the_top_left_because_that_is", "Second plot cannot follow left or up from first plot if the first plot starts at the top left, because that is physically impossible.")));
                 return;
             }
             if (plot_polygons_second_plot_follows == 'right') {
@@ -2336,14 +2336,14 @@ jQuery(document).ready(function(){
                 }
             }
             if (plot_polygons_second_plot_follows == 'down') {
-                alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("drone.interface.down_not_implemented_if_first_plot_starts_in_top_left_please_contact_us_or_try_rotating_your_image_differently", "Down not implemented if first plot starts in top left. Please contact us or try rotating your image differently before assigning plot polygons (e.g. rotate image 90 degrees clock-wise, then first plot starts in top right and you can go left for plot assignment).") : "Down not implemented if first plot starts in top left. Please contact us or try rotating your image differently before assigning plot polygons (e.g. rotate image 90 degrees clock-wise, then first plot starts in top right and you can go left for plot assignment)."));
+                alert((SGN.t("drone.interface.down_not_implemented_if_first_plot_starts_in_top_left_please_contact_us_or_try_rotating_your_image_differently", "Down not implemented if first plot starts in top left. Please contact us or try rotating your image differently before assigning plot polygons (e.g. rotate image 90 degrees clock-wise, then first plot starts in top right and you can go left for plot assignment).")));
                 return;
             }
         }
         if (plot_polygons_first_plot_start == 'top_right') {
             var generated_polygon_key_first_plot_number = plot_polygons_template_current_num_cols - 1;
             if (plot_polygons_second_plot_follows == 'right' || plot_polygons_second_plot_follows == 'up') {
-                alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("drone.interface.second_plot_cannot_follow_right_or_up_from_first_plot_if_the_first_plot_starts_at_the_top_right_because_that_is", "Second plot cannot follow right or up from first plot if the first plot starts at the top right, because that is physically impossible.") : "Second plot cannot follow right or up from first plot if the first plot starts at the top right, because that is physically impossible."));
+                alert((SGN.t("drone.interface.second_plot_cannot_follow_right_or_up_from_first_plot_if_the_first_plot_starts_at_the_top_right_because_that_is", "Second plot cannot follow right or up from first plot if the first plot starts at the top right, because that is physically impossible.")));
                 return;
             }
             if (plot_polygons_second_plot_follows == 'left') {
@@ -2437,16 +2437,16 @@ jQuery(document).ready(function(){
                 }
             }
             if (plot_polygons_second_plot_follows == 'down') {
-                alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("drone.interface.down_not_implemented_if_your_first_plot_starts_in_top_right_please_contact_us_or_try_rotating_your_image", "Down not implemented if your first plot starts in top right. Please contact us or try rotating your image differently before assigning plot polygons (e.g. rotate image 90 degrees clockwise, then first plot starts in bottom right corner and plot assignment can follow going left).") : "Down not implemented if your first plot starts in top right. Please contact us or try rotating your image differently before assigning plot polygons (e.g. rotate image 90 degrees clockwise, then first plot starts in bottom right corner and plot assignment can follow going left)."));
+                alert((SGN.t("drone.interface.down_not_implemented_if_your_first_plot_starts_in_top_right_please_contact_us_or_try_rotating_your_image", "Down not implemented if your first plot starts in top right. Please contact us or try rotating your image differently before assigning plot polygons (e.g. rotate image 90 degrees clockwise, then first plot starts in bottom right corner and plot assignment can follow going left).")));
                 return;
             }
         }
         if (plot_polygons_first_plot_start == 'bottom_left') {
-            alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("drone.interface.not_implemented", "Not implemented") : "Not implemented"));
+            alert((SGN.t("drone.interface.not_implemented", "Not implemented")));
             return;
         }
         if (plot_polygons_first_plot_start == 'bottom_right') {
-            alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("drone.interface.not_implemented", "Not implemented") : "Not implemented"));
+            alert((SGN.t("drone.interface.not_implemented", "Not implemented")));
             return;
         }
 
@@ -2531,7 +2531,7 @@ jQuery(document).ready(function(){
 
                     initializeInteractiveSvg('#drone_imagery_standard_process_raw_images_image_id_interactive_select_div', 'drone_imagery_standard_process_raw_images_image_id_interactive_select_div_area', 1, 1);
 
-                    jQuery('#drone_imagery_standard_process_interactive_plot_polygons_flight_pass').html(("<h1><b>" + (window.SGN && window.SGN.i18n ? SGN.i18n.p("drone.interface.current_imaging_event_pass", "Current Imaging Event Pass:") : "Current Imaging Event Pass:") + " ")+manage_drone_imagery_standard_process_raw_images_interactive_current_pass+"/"+manage_drone_imagery_standard_process_raw_images_interactive_maximum_pass+"</b></h1>");
+                    jQuery('#drone_imagery_standard_process_interactive_plot_polygons_flight_pass').html(("<h1><b>" + (SGN.t("drone.interface.current_imaging_event_pass", "Current Imaging Event Pass:")) + " ")+manage_drone_imagery_standard_process_raw_images_interactive_current_pass+"/"+manage_drone_imagery_standard_process_raw_images_interactive_maximum_pass+"</b></h1>");
 
                     plot_polygons_interactive_display_points = [];
                     plot_polygons_interactive_ind_4_points = [];
@@ -2575,7 +2575,7 @@ jQuery(document).ready(function(){
             manage_drone_imagery_standard_process_interactive_apply_drone_run_band_project_ids.push(jQuery(this).val());
         });
         if (manage_drone_imagery_standard_process_interactive_apply_drone_run_band_project_ids.length < 1){
-            alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("drone.interface.please_select_at_least_one_other_drone_run_band", "Please select at least one other drone run band!") : "Please select at least one other drone run band!"));
+            alert((SGN.t("drone.interface.please_select_at_least_one_other_drone_run_band", "Please select at least one other drone run band!")));
             return false;
         } else {
             Workflow.complete("#manage_drone_imagery_standard_process_interactive_drone_run_band_apply_step");
@@ -2589,7 +2589,7 @@ jQuery(document).ready(function(){
             manage_drone_imagery_standard_process_interactive_apply_drone_run_band_vegetative_indices.push(jQuery(this).val());
         });
         if (manage_drone_imagery_standard_process_interactive_apply_drone_run_band_vegetative_indices.length < 1){
-            alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("drone.interface.please_select_at_least_one_vegetative_index", "Please select at least one vegetative index!") : "Please select at least one vegetative index!"));
+            alert((SGN.t("drone.interface.please_select_at_least_one_vegetative_index", "Please select at least one vegetative index!")));
             return false;
         } else {
             jQuery.ajax({
@@ -2606,13 +2606,13 @@ jQuery(document).ready(function(){
                         alert(response.error);
                     }
 
-                    var html = ("<center><b>" + (window.SGN && window.SGN.i18n ? SGN.i18n.p("drone.interface.field_trial_planting_date", "Field Trial Planting Date") : "Field Trial Planting Date") + "</b>: ")+response.planting_date+("<br/><b>" + (window.SGN && window.SGN.i18n ? SGN.i18n.p("drone.interface.drone_run_date", "Drone Run Date") : "Drone Run Date") + "</b>: ")+response.drone_run_date+("<br/><b>" + (window.SGN && window.SGN.i18n ? SGN.i18n.p("drone.interface.number_of_weeks", "Number of Weeks") : "Number of Weeks") + "</b>: ")+response.rounded_time_difference_weeks+("<br/><b>" + (window.SGN && window.SGN.i18n ? SGN.i18n.p("drone.interface.number_of_weeks_ontology_term", "Number of Weeks Ontology Term") : "Number of Weeks Ontology Term") + "</b>: ")+response.time_ontology_week_term+("<br/><b>" + (window.SGN && window.SGN.i18n ? SGN.i18n.p("drone.interface.number_of_days", "Number of Days") : "Number of Days") + "</b>:")+response.time_difference_days+("<br/><b>" + (window.SGN && window.SGN.i18n ? SGN.i18n.p("drone.interface.number_of_days_ontology_term", "Number of Days Ontology Term") : "Number of Days Ontology Term") + "</b>: ")+response.time_ontology_day_term+"<br/><br/></center>";
+                    var html = ("<center><b>" + (SGN.t("drone.interface.field_trial_planting_date", "Field Trial Planting Date")) + "</b>: ")+response.planting_date+("<br/><b>" + (SGN.t("drone.interface.drone_run_date", "Drone Run Date")) + "</b>: ")+response.drone_run_date+("<br/><b>" + (SGN.t("drone.interface.number_of_weeks", "Number of Weeks")) + "</b>: ")+response.rounded_time_difference_weeks+("<br/><b>" + (SGN.t("drone.interface.number_of_weeks_ontology_term", "Number of Weeks Ontology Term")) + "</b>: ")+response.time_ontology_week_term+("<br/><b>" + (SGN.t("drone.interface.number_of_days", "Number of Days")) + "</b>:")+response.time_difference_days+("<br/><b>" + (SGN.t("drone.interface.number_of_days_ontology_term", "Number of Days Ontology Term")) + "</b>: ")+response.time_ontology_day_term+"<br/><br/></center>";
                     jQuery('#drone_imagery_standard_process_interactive_week_term_div').html(html);
 
                     manage_drone_imagery_standard_process_interactive_phenotype_time = response.time_ontology_day_cvterm_id;
                 },
                 error: function(response){
-                    alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("drone.interface.error_getting_time_terms", "Error getting time terms!") : "Error getting time terms!"));
+                    alert((SGN.t("drone.interface.error_getting_time_terms", "Error getting time terms!")));
                     jQuery('#working_modal').modal('hide');
                 }
             });
@@ -2626,7 +2626,7 @@ jQuery(document).ready(function(){
         var selected = [];
 
         if (manage_drone_imagery_standard_process_interactive_phenotype_time == '') {
-            alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("drone.interface.time_of_phenotype_not_set_this_should_not_happen_please_contact_us", "Time of phenotype not set! This should not happen! Please contact us.") : "Time of phenotype not set! This should not happen! Please contact us."));
+            alert((SGN.t("drone.interface.time_of_phenotype_not_set_this_should_not_happen_please_contact_us", "Time of phenotype not set! This should not happen! Please contact us.")));
             return false;
         }
 
@@ -2634,7 +2634,7 @@ jQuery(document).ready(function(){
             selected.push(jQuery(this).val());
         });
         if (selected.length < 1){
-            alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("drone.interface.please_select_at_least_one_phenotype", "Please select at least one phenotype!") : "Please select at least one phenotype!"));
+            alert((SGN.t("drone.interface.please_select_at_least_one_phenotype", "Please select at least one phenotype!")));
             return false;
         } else {
             jQuery.ajax({
@@ -2673,7 +2673,7 @@ jQuery(document).ready(function(){
     jQuery('#plot_polygons_use_previously_saved_template_raw_images_interactive').click(function(){
         var plot_polygons_use_previously_saved_template = jQuery('#manage_drone_imagery_standard_process_interactive_previous_templates').val();
         if (plot_polygons_use_previously_saved_template == '') {
-            alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("drone.interface.please_select_a_previously_saved_template_before_trying_to_apply_it_if_there_is_not_a_template_listed_then_you", "Please select a previously saved template before trying to apply it. If there is not a template listed, then you can create one using the templating tool above.") : "Please select a previously saved template before trying to apply it. If there is not a template listed, then you can create one using the templating tool above."));
+            alert((SGN.t("drone.interface.please_select_a_previously_saved_template_before_trying_to_apply_it_if_there_is_not_a_template_listed_then_you", "Please select a previously saved template before trying to apply it. If there is not a template listed, then you can create one using the templating tool above.")));
             return;
         }
 
@@ -2691,7 +2691,7 @@ jQuery(document).ready(function(){
                 draw_canvas_image_interactive(0);
             },
             error: function(response){
-                alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("drone.interface.error_retrieving_plot_polygons_template", "Error retrieving plot polygons template!") : "Error retrieving plot polygons template!"));
+                alert((SGN.t("drone.interface.error_retrieving_plot_polygons_template", "Error retrieving plot polygons template!")));
             }
         });
         return;

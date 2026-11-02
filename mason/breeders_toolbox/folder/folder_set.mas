@@ -146,7 +146,7 @@ jQuery(document).ready(function() {
   });
 
   jQuery('#set_trial_folder').click( function() {
-    jQuery('#trial_folder_div').text((window.SGN && SGN.i18n ? SGN.i18n.p("trial.folder.updating", "[Updating...]") : "[Updating...]"));
+    jQuery('#trial_folder_div').text((SGN.t("trial.folder.updating", "[Updating...]")));
     set_trial_folder();
     display_trial_folder();
     jQuery('#set_folder_dialog').modal("hide");
@@ -213,7 +213,7 @@ function set_trial_folder() {
     jQuery.each(trial_ids, function(index, value) {
         //console.log(value);
         if (value == folder_id) {
-          alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("folder.move.self_parent", "Cannot make a folder its own parent.") : "Cannot make a folder its own parent."));
+          alert((SGN.t("folder.move.self_parent", "Cannot make a folder its own parent.")));
           return;
         }
         jQuery.ajax( {
@@ -250,7 +250,7 @@ function set_trial_folder() {
     }
   } else {
       if (trial_ids == folder_id) {
-        alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("folder.move.self_parent", "Cannot make a folder its own parent.") : "Cannot make a folder its own parent."));
+        alert((SGN.t("folder.move.self_parent", "Cannot make a folder its own parent.")));
         return;
       }
       jQuery.ajax( {

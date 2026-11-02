@@ -92,13 +92,13 @@ $datasets
   var require_login = "<%  $c->get_conf('brapi_require_login') %>";
   if (require_login === '1'){
       auth_token = "<%  CXGN::Login->new($c->dbc->dbh)->get_login_cookie() %>";
-      if (!auth_token){ alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("analysis.interface.login_required_to_display_boxplots", "Login required to display boxplots") : "Login required to display boxplots")); }
+      if (!auth_token){ alert((SGN.t("analysis.interface.login_required_to_display_boxplots", "Login required to display boxplots"))); }
   } 
   $("#downloadBxpltBtn").hide();
   $("#createBtn").click(function(){
     var ds = $("#datasetSelect option:selected").val();
     var ou = $("#obsunitSelect option:selected").val();
-    if(ds=="") { alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("analysis.interface.choose_a_dataset", "Choose a dataset!") : "Choose a dataset!")); return; }
+    if(ds=="") { alert((SGN.t("analysis.interface.choose_a_dataset", "Choose a dataset!"))); return; }
     boxplotter.loadDatasetObsUnits(ds,ou,auth_token);
     $("#downloadBxpltBtn").show();
   });

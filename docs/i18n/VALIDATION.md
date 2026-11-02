@@ -51,10 +51,10 @@ listed in [README.md](README.md). The application JavaScript dependencies belong
 under `js/node_modules`, as in SGN's existing CI.
 
 ```sh
-npm ci --prefix script/i18n --ignore-scripts
-for test in script/i18n/test_*.py; do python3 "$test" || exit; done
-python3 script/i18n/catalog.py update
-python3 script/i18n/catalog.py build --output locale/build
+npm ci --prefix bin/i18n --ignore-scripts
+for test in bin/i18n/test_*.py; do python3 "$test" || exit; done
+python3 bin/i18n/catalog.py update
+python3 bin/i18n/catalog.py build --output locale/build
 Rscript --vanilla t/unit/SGN/i18n-runtime.R .
 prove -Ilib -lv t/unit/SGN/I18N.t t/unit/SGN/AccountMessages.t \
   t/unit/SGN/CommonErrors.t t/unit/SGN/JavaScriptDependencies.t \

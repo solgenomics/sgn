@@ -138,7 +138,7 @@ export function init(main_div) {
                             $(this)
                                 //.addClass( "ui-state-highlight" )
                                 .find("p")
-                                .html((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("analysis.interface.dropped", "Dropped!") : "Dropped!"));
+                                .html((SGN.t("analysis.interface.dropped", "Dropped!")));
                             var droppable = $(this);
                             var draggable = ui.draggable;
                             // Move draggable into droppable
@@ -159,7 +159,7 @@ export function init(main_div) {
                             $(this)
                                 //.addClass( "ui-state-highlight" )
                                 .find("p")
-                                .html((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("analysis.interface.dropped", "Dropped!") : "Dropped!"));
+                                .html((SGN.t("analysis.interface.dropped", "Dropped!")));
                             var droppable = $(this);
                             var draggable = ui.draggable;
                             // Move draggable into droppable
@@ -177,7 +177,7 @@ export function init(main_div) {
 
                 },
                 error: function (r) {
-                    alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("analysis.interface.error_1e7938", "ERROR!!!!!") : "ERROR!!!!!"));
+                    alert((SGN.t("analysis.interface.error_1e7938", "ERROR!!!!!")));
                 }
             });
         }
@@ -546,7 +546,7 @@ function get_model_string() {
 	method: 'POST',
 	data : params,
 	error: function(e) {
-	    alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("folder.new.request_error", "An error occurred") : "An error occurred")+e);
+	    alert((SGN.t("folder.new.request_error", "An error occurred"))+e);
 	},
 	success: function(r) {
 	    if (r.error) {

@@ -23,10 +23,10 @@ $display_order
         var display_order = jQuery('#display_order').val();
         jQuery.ajax( { 
            url: '/ajax/image/<% $image_id %>/<% $type %>/<% $id %>/display_order/'+display_order,
-           error: function(e) { alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("community.image.an_error_occurred", "an error occurred") : "an error occurred")); },
+           error: function(e) { alert((SGN.t("community.image.an_error_occurred", "an error occurred"))); },
            success: function(r) {
              if (r.error) { alert(r.error); return; }
-             alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("community.image.successfully_changed_display_order", "Successfully changed display_order") : "Successfully changed display_order"));
+             alert((SGN.t("community.image.successfully_changed_display_order", "Successfully changed display_order")));
            }
         });
      });

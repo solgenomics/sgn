@@ -2,7 +2,7 @@
 $location
 </%args>
 
-<p id="trial_weather_check">(window.SGN && SGN.i18n ? SGN.i18n.p("trial.b12.weather.loading", "[loading...]") : "[loading...]")</p>
+<p id="trial_weather_check">(SGN.t("trial.b12.weather.loading", "[loading...]"))</p>
 
 <script type="text/javascript" defer="defer">
 function _sgnB12WeatherEscape(value) { return jQuery('<div>').text(value).html(); }

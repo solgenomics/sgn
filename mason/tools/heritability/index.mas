@@ -135,7 +135,7 @@ use HTML::Entities ();
 var require_login = "<%  $c->get_conf('brapi_require_login') %>";
 if (require_login === '1'){
     auth_token = "<%  CXGN::Login->new($c->dbc->dbh)->get_login_cookie() %>";
-    if (!auth_token){ alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("analysis.interface.login_required_to_display_heritability", "Login required to display heritability") : "Login required to display heritability")); }
+    if (!auth_token){ alert((SGN.t("analysis.interface.login_required_to_display_heritability", "Login required to display heritability"))); }
 }
 
 var check_outliers = "<% $c->get_conf('exclude_phenotype_outliers') || 0 %>";
@@ -191,7 +191,7 @@ jQuery(document).ready(function() {
 
       },
       error: function(response) {
-        alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("analysis.interface.an_error_occurred_the_service_may_temporarily_be_unavailable_ponto", "An error occurred, the service may temporarily be unavailable, ponto 1 selectDataset ") : "An error occurred, the service may temporarily be unavailable, ponto 1 selectDataset "));
+        alert((SGN.t("analysis.interface.an_error_occurred_the_service_may_temporarily_be_unavailable_ponto", "An error occurred, the service may temporarily be unavailable, ponto 1 selectDataset ")));
         document.getElementById("preview_trait_histogram_btn").disabled = false;
         document.getElementById("loading-spinner").style.visibility = 'hidden';
       }
@@ -200,7 +200,7 @@ jQuery(document).ready(function() {
 
   jQuery('#preview_trait_histogram_btn').on('click', function() {
     if (!jQuery('#pheno_select').val()) {
-      alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("analysis.interface.please_select_a_dataset_and_trait", "Please select a dataset and trait.") : "Please select a dataset and trait."))
+      alert((SGN.t("analysis.interface.please_select_a_dataset_and_trait", "Please select a dataset and trait.")))
     } else {
       //alert("Inside trait preview");
       var tempfile = jQuery('#tempfile').html();
@@ -254,7 +254,7 @@ jQuery(document).ready(function() {
       success: function(response) {
         if (response.error) {
           $('#dataset_select').val('ERROR');          
-          alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("analysis.interface.an_error_occurred_the_is_some_problem_with_data", "An error occurred, the is some problem with data") : "An error occurred, the is some problem with data"));
+          alert((SGN.t("analysis.interface.an_error_occurred_the_is_some_problem_with_data", "An error occurred, the is some problem with data")));
           document.getElementById("loading-spinner").style.visibility = 'hidden';
         }
         else {	        
@@ -264,7 +264,7 @@ jQuery(document).ready(function() {
 	      }
       },
       error: function(response) {
-        alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("analysis.interface.an_error_occurred_the_service_may_temporarily_be_unavailable", "An error occurred, the service may temporarily be unavailable") : "An error occurred, the service may temporarily be unavailable"));
+        alert((SGN.t("analysis.interface.an_error_occurred_the_service_may_temporarily_be_unavailable", "An error occurred, the service may temporarily be unavailable")));
         document.getElementById("preview_trait_histogram_btn").disabled = false; 
         document.getElementById("loading-spinner").style.visibility = 'hidden';
       }
@@ -275,7 +275,7 @@ jQuery(document).ready(function() {
 
   jQuery('#runH2').click( function () {
     if (!jQuery('#pheno_select').val()) {
-      alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("analysis.interface.please_select_a_dataset_and_trait", "Please select a dataset and trait.") : "Please select a dataset and trait."));
+      alert((SGN.t("analysis.interface.please_select_a_dataset_and_trait", "Please select a dataset and trait.")));
       $('#heritability_output').empty();      
     } else {
       $('#heritability_output').empty();
@@ -316,7 +316,7 @@ jQuery(document).ready(function() {
 				var herit = ''; 
 
 				var table = '<table>';
-				table += ("<thead><tr><th>" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("accession.population_cgi.trait", "Trait") : "Trait")).html() + "</th><th>Vg</th><th>Ve</th><th>Vres</th><th>" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("navigation.analyze.heritability", "Heritability") : "Heritability")).html() + "</th></tr></thead>");
+				table += ("<thead><tr><th>" + jQuery("<span>").text((SGN.t("accession.population_cgi.trait", "Trait"))).html() + "</th><th>Vg</th><th>Ve</th><th>Vres</th><th>" + jQuery("<span>").text((SGN.t("navigation.analyze.heritability", "Heritability"))).html() + "</th></tr></thead>");
 				table += '<tbody>';
 
 				for (var i = 0; i < parsedData.length; i++) {
@@ -356,7 +356,7 @@ jQuery(document).ready(function() {
 					var link = document.createElement("a");
 					link.setAttribute("href", encodedUri);
 					link.setAttribute("download", "heritability_data.csv");
-					link.innerHTML = (window.SGN && window.SGN.i18n ? window.SGN.i18n.p("analysis.interface.download_csv", "Download CSV") : "Download CSV");
+					link.innerHTML = (SGN.t("analysis.interface.download_csv", "Download CSV"));
 
 					// Trigger the click event to download the file
 					link.click();

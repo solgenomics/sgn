@@ -232,7 +232,7 @@ my $stock_type_select = simple_selectbox_html(
                 stockprop_extra_columns_view[selected_property] = 1;
                 stockprop_extra_columns_view_array.push(selected_property);
 
-                var table_header_html = ("<table id=\"stock_search_results\" class=\"table table-hover table-striped\"><thead><tr><th>" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("transformation.root.vector_name", "Vector Name") : "Vector Name")).html() + "</th><th>" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("accession.related_stock.header.stock_type", "Stock Type") : "Stock Type")).html() + "</th><th>" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("global.family.organism", "Organism") : "Organism")).html() + "</th><th>" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("accession.stock.additional_info.synonyms", "Synonyms") : "Synonyms")).html() + "</th><th>" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("seedlots.ui.submitters", "Submitters") : "Submitters")).html() + "</th>");
+                var table_header_html = ("<table id=\"stock_search_results\" class=\"table table-hover table-striped\"><thead><tr><th>" + jQuery("<span>").text((SGN.t("transformation.root.vector_name", "Vector Name"))).html() + "</th><th>" + jQuery("<span>").text((SGN.t("accession.related_stock.header.stock_type", "Stock Type"))).html() + "</th><th>" + jQuery("<span>").text((SGN.t("global.family.organism", "Organism"))).html() + "</th><th>" + jQuery("<span>").text((SGN.t("accession.stock.additional_info.synonyms", "Synonyms"))).html() + "</th><th>" + jQuery("<span>").text((SGN.t("seedlots.ui.submitters", "Submitters"))).html() + "</th>");
                 for (var i=0; i<stockprop_extra_columns_view_array.length; i++){
                     table_header_html = table_header_html + '<th>' + stockprop_extra_columns_view_array[i] + '</th>';
                 }
@@ -254,7 +254,7 @@ my $stock_type_select = simple_selectbox_html(
                 var index = stockprop_extra_columns_view_array.indexOf(selected_property);
                 stockprop_extra_columns_view_array.splice(index, 1);
 
-                var table_header_html = ("<table id=\"stock_search_results\" class=\"table table-hover table-striped\"><thead><tr><th>" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("transformation.root.vector_name", "Vector Name") : "Vector Name")).html() + "</th><th>" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("accession.related_stock.header.stock_type", "Stock Type") : "Stock Type")).html() + "</th><th>" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("global.family.organism", "Organism") : "Organism")).html() + "</th><th>" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("accession.stock.additional_info.synonyms", "Synonyms") : "Synonyms")).html() + "</th><th>" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("seedlots.ui.submitters", "Submitters") : "Submitters")).html() + "</th>");
+                var table_header_html = ("<table id=\"stock_search_results\" class=\"table table-hover table-striped\"><thead><tr><th>" + jQuery("<span>").text((SGN.t("transformation.root.vector_name", "Vector Name"))).html() + "</th><th>" + jQuery("<span>").text((SGN.t("accession.related_stock.header.stock_type", "Stock Type"))).html() + "</th><th>" + jQuery("<span>").text((SGN.t("global.family.organism", "Organism"))).html() + "</th><th>" + jQuery("<span>").text((SGN.t("accession.stock.additional_info.synonyms", "Synonyms"))).html() + "</th><th>" + jQuery("<span>").text((SGN.t("seedlots.ui.submitters", "Submitters"))).html() + "</th>");
                 for (var i=0; i<stockprop_extra_columns_view_array.length; i++){
                     table_header_html = table_header_html + '<th>' + stockprop_extra_columns_view_array[i] + '</th>';
                 }
@@ -301,7 +301,7 @@ my $stock_type_select = simple_selectbox_html(
                 search_vectorprop = 1;
             }
             if(!any_name && !gene_name){
-                alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("transformation.root.type_a_valid_value", "Type a valid value!") : "Type a valid value!"),any_name);
+                alert((SGN.t("transformation.root.type_a_valid_value", "Type a valid value!")),any_name);
             }
             _load_stock_search_results(stock_type, editable_stockprops_search, stockprop_extra_columns_view, stockprop_extra_columns_view_array,any_name,'and',search_vectorprop);
         });

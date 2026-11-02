@@ -200,7 +200,7 @@ $trial_name => undef
     })
     .fail(function() {
       jQuery("#set_entry_numbers_template_loading").hide();
-      alert((window.SGN && SGN.i18n ? SGN.i18n.p('trial.entry_template.generate_error', "ERROR: Could not generate upload template!") : "ERROR: Could not generate upload template!"));
+      alert((SGN.t('trial.entry_template.generate_error', "ERROR: Could not generate upload template!")));
     });
   }
 </script>

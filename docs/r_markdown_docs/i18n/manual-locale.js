@@ -32,10 +32,11 @@
                 nav.setAttribute("aria-label", ui.language);
                 var label = document.createElement("span"); label.textContent = ui.language + ":"; nav.appendChild(label);
                 var file = location.pathname.split("/").pop() || "index.html";
-                [["en","English"],["uk","Українська"],["es","Español"],["ar","العربية"]].forEach(function (item) {
+                var root = ui.locale === "en" ? "./" : "../";
+                (ui.languages || [["en","English"],["uk","Українська"],["es","Español"],["ar","العربية"]]).forEach(function (item) {
                     var link = document.createElement("a");
                     link.textContent = item[1]; link.lang = item[0];
-                    link.href = (item[0] === "en" ? "../" : "../" + item[0] + "/") + file + location.hash;
+                    link.href = root + (item[0] === "en" ? "" : item[0] + "/") + file + location.hash;
                     if (item[0] === ui.locale) link.setAttribute("aria-current", "page");
                     nav.appendChild(link);
                 });

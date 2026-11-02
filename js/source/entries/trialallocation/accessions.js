@@ -45,14 +45,14 @@ export function createAccessionTools({ qs }) {
       overlay.style.zIndex = 10050;
       overlay.innerHTML = `
         <div class="bg-white rounded shadow-lg p-4 w-full max-w-md">
-          <h3 class="text-lg font-semibold mb-3">${jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("decision.js.select_filler_accession", "Select filler accession") : "Select filler accession")).html()}</h3>
+          <h3 class="text-lg font-semibold mb-3">${jQuery("<span>").text((SGN.t("decision.js.select_filler_accession", "Select filler accession"))).html()}</h3>
           <select id="plot-filler-accession-dialog" class="w-full border rounded px-2 py-1">
             <option value=""></option>
           </select>
           <div class="mt-4 flex justify-end gap-2">
-            <button type="button" id="plot-filler-clear" class="px-3 py-1 border rounded">${jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("global.search_wizard.clear", "Clear") : "Clear")).html()}</button>
-            <button type="button" id="plot-filler-cancel" class="px-3 py-1 border rounded">${jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("auth.legacy.cancel", "Cancel") : "Cancel")).html()}</button>
-            <button type="button" id="plot-filler-apply" class="px-3 py-1 bg-blue-600 text-white rounded">${jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("language.apply", "Apply") : "Apply")).html()}</button>
+            <button type="button" id="plot-filler-clear" class="px-3 py-1 border rounded">${jQuery("<span>").text((SGN.t("global.search_wizard.clear", "Clear"))).html()}</button>
+            <button type="button" id="plot-filler-cancel" class="px-3 py-1 border rounded">${jQuery("<span>").text((SGN.t("auth.legacy.cancel", "Cancel"))).html()}</button>
+            <button type="button" id="plot-filler-apply" class="px-3 py-1 bg-blue-600 text-white rounded">${jQuery("<span>").text((SGN.t("language.apply", "Apply"))).html()}</button>
           </div>
         </div>
       `;

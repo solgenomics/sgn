@@ -235,19 +235,19 @@ solGS.cluster = {
     var kNumId = solGS.cluster.clusterKnumSelectId(clusterPopId) || this.defaultKNum;
     var runClusterBtnId = solGS.cluster.getRunClusterBtnId(clusterPopId);
 
-    var kNum = '<input class="form-control" type="text" placeholder="' + (window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.cluster_k_default", "default") : "default") + '" id="' + kNumId + '"/>';
+    var kNum = '<input class="form-control" type="text" placeholder="' + (SGN.t("solgs.browser.cluster_k_default", "default")) + '" id="' + kNumId + '"/>';
 
     var clusterArgs = JSON.stringify(clusterPop);
 
     var runClusterBtn =
       `<button type="button" id=${runClusterBtnId}` +
-      ` class="btn btn-success" data-selected-pop='${clusterArgs}'>${(window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.run_cluster", "Run cluster") : "Run cluster")}</button>`;
+      ` class="btn btn-success" data-selected-pop='${clusterArgs}'>${(SGN.t("solgs.browser.run_cluster", "Run cluster"))}</button>`;
 
     var compatibility_message = '';
     if (dataStr.match(/dataset/)) {
       popName = `<a href="/dataset/${popId}">${popName}</a>`;
       if (tool_compatibility == null || tool_compatibility == "(not calculated)"){
-        compatibility_message = (window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.compatibility_not_calculated", "(not calculated)") : "(not calculated)");
+        compatibility_message = (SGN.t("solgs.browser.compatibility_not_calculated", "(not calculated)"));
       } else {
           if (tool_compatibility["Clustering"]['compatible'] == 0) {
           compatibility_message = '<b><span class="glyphicon glyphicon-remove" style="color:red"></span></b>'
@@ -274,14 +274,14 @@ solGS.cluster = {
       '">' +
       "<thead>" +
       "<tr>" +
-      "<th>" + (window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.cluster_header_name", "Name") : "Name") + "</th>" +
-      "<th>" + (window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.cluster_header_data_structure", "Data structure") : "Data structure") + "</th>" +
-      "<th>" + (window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.cluster_header_compatibility", "Compatibility") : "Compatibility") + "</th>" +
-      "<th>" + (window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.cluster_header_ownership", "Ownership") : "Ownership") + "</th>" +
-      "<th>" + (window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.cluster_header_method", "Clustering method") : "Clustering method") + "</th>" +
-      "<th>" + (window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.cluster_header_data_type", "Data type") : "Data type") + "</th>" +
-      "<th>" + (window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.cluster_header_k", "No. of  clusters (K)") : "No. of  clusters (K)") + "</th>" +
-      "<th>" + (window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.run_cluster", "Run cluster") : "Run cluster") + "</th>" +
+      "<th>" + (SGN.t("solgs.browser.cluster_header_name", "Name")) + "</th>" +
+      "<th>" + (SGN.t("solgs.browser.cluster_header_data_structure", "Data structure")) + "</th>" +
+      "<th>" + (SGN.t("solgs.browser.cluster_header_compatibility", "Compatibility")) + "</th>" +
+      "<th>" + (SGN.t("solgs.browser.cluster_header_ownership", "Ownership")) + "</th>" +
+      "<th>" + (SGN.t("solgs.browser.cluster_header_method", "Clustering method")) + "</th>" +
+      "<th>" + (SGN.t("solgs.browser.cluster_header_data_type", "Data type")) + "</th>" +
+      "<th>" + (SGN.t("solgs.browser.cluster_header_k", "No. of  clusters (K)")) + "</th>" +
+      "<th>" + (SGN.t("solgs.browser.run_cluster", "Run cluster")) + "</th>" +
       "</tr>" +
       "</thead></table>";
 
@@ -603,11 +603,11 @@ solGS.cluster = {
       var listType = list.getListType(dataId);
 
       if (listType == "accessions" && dataType.match(/phenotype/i)) {
-        msg = (window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.clone_list_genotype_only", "With list of clones, you can only cluster based on ") : "With list of clones, you can only cluster based on ") + "<em>" + (window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.data_type_genotype", "genotype") : "genotype") + "</em>.";
+        msg = (SGN.t("solgs.browser.clone_list_genotype_only", "With list of clones, you can only cluster based on ")) + "<em>" + (SGN.t("solgs.browser.data_type_genotype", "genotype")) + "</em>.";
       }
 
       if (listType == "plots" && dataType.match(/genotype/i)) {
-        msg = (window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.plot_list_phenotype_only", "With list of plots, you can only cluster based on ") : "With list of plots, you can only cluster based on ") + "<em>" + (window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.data_type_phenotype", "phenotype") : "phenotype") + "</em>.";
+        msg = (SGN.t("solgs.browser.plot_list_phenotype_only", "With list of plots, you can only cluster based on ")) + "<em>" + (SGN.t("solgs.browser.data_type_phenotype", "phenotype")) + "</em>.";
       }
     }
 
@@ -625,15 +625,15 @@ solGS.cluster = {
     var kclusterVariancesFile;
 
     if (clusterPlotFileName.match(/k-means/i)) {
-      plotType = (window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.cluster_kmeans_plot", "K-means plot") : "K-means plot");
-      outFileType = (window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.clusters_plot_label", "Clusters") : "Clusters");
+      plotType = (SGN.t("solgs.browser.cluster_kmeans_plot", "K-means plot"));
+      outFileType = (SGN.t("solgs.browser.clusters_plot_label", "Clusters"));
       clustersFile = res.kmeans_clusters;
       elbowPlotFile = res.elbow_plot;
       kclusterVariancesFile = res.kcluster_variances;
       kclusterMeansFile = res.kcluster_means;
     } else {
-      plotType = (window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.cluster_dendrogram_plot", "Dendrogram") : "Dendrogram");
-      outFileType = (window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.cluster_newick_format", "Newick tree format") : "Newick tree format");
+      plotType = (SGN.t("solgs.browser.cluster_dendrogram_plot", "Dendrogram"));
+      outFileType = (SGN.t("solgs.browser.cluster_newick_format", "Newick tree format"));
       clustersFile = res.newick_file;
     }
 
@@ -647,7 +647,7 @@ solGS.cluster = {
 
     if (elbowPlotFile) {
       var elbowFileName = elbowPlotFile.split("/").pop();
-      elbowLink = '<a href="' + elbowPlotFile + '" download=' + elbowFileName + '">' + (window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.cluster_elbow_plot_link", "Elbow plot") : "Elbow plot") + '</a>';
+      elbowLink = '<a href="' + elbowPlotFile + '" download=' + elbowFileName + '">' + (SGN.t("solgs.browser.cluster_elbow_plot_link", "Elbow plot")) + '</a>';
 
       if (kclusterMeansFile) {
         var kclusterMeansFileName = kclusterMeansFile.split("/").pop();
@@ -656,7 +656,7 @@ solGS.cluster = {
           kclusterMeansFile +
           '" download=' +
           kclusterMeansFileName +
-          '">' + (window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.cluster_means_link", "Cluster means") : "Cluster means") + '</a>';
+          '">' + (SGN.t("solgs.browser.cluster_means_link", "Cluster means")) + '</a>';
       }
 
       var kclusterVariancesFileName = kclusterVariancesFile.split("/").pop();
@@ -665,16 +665,16 @@ solGS.cluster = {
         kclusterVariancesFile +
         '" download=' +
         kclusterVariancesFileName +
-        '">' + (window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.cluster_variances_link", "Cluster variances ") : "Cluster variances ") + '</a>';
+        '">' + (SGN.t("solgs.browser.cluster_variances_link", "Cluster variances ")) + '</a>';
     }
 
     var reportFile = res.cluster_report;
     var reportFileName = reportFile.split("/").pop();
     var dataType = res.data_type;
     var reportLink =
-      '<a href="' + reportFile + '" download=' + reportFileName + '">' + (window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.cluster_analysis_report_link", "Analysis Report ") : "Analysis Report ") + '</a>';
+      '<a href="' + reportFile + '" download=' + reportFileName + '">' + (SGN.t("solgs.browser.cluster_analysis_report_link", "Analysis Report ")) + '</a>';
 
-    var downloadLinks = `<strong>${(window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.cluster_download_prefix", "Download ") : "Download ")}
+    var downloadLinks = `<strong>${(SGN.t("solgs.browser.cluster_download_prefix", "Download "))}
       ${popName} (${dataType})</strong>: 
       ${clustersLink} | 
       ${reportLink}`;
@@ -694,10 +694,10 @@ solGS.cluster = {
       var plotId = res.file_id;
       var clusterDownloadLinkId = `download_${clusterPlotDiv}_${plotId}`;
       clusterPlotDownload =
-        `<a href="#" onclick="event.preventDefault();" id="${clusterDownloadLinkId}">${(window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.cluster_plot_link", "Cluster plot") : "Cluster plot")}</a>`;
+        `<a href="#" onclick="event.preventDefault();" id="${clusterDownloadLinkId}">${(SGN.t("solgs.browser.cluster_plot_link", "Cluster plot"))}</a>`;
     } else {
       clusterPlotDownload =
-        `<a href="${res.cluster_plot}" download="${clusterPlotFileName}">${(window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.cluster_plot_link", "Cluster plot") : "Cluster plot")}</a>`;
+        `<a href="${res.cluster_plot}" download="${clusterPlotFileName}">${(SGN.t("solgs.browser.cluster_plot_link", "Cluster plot"))}</a>`;
     }
 
     downloadLinks += " | " + clusterPlotDownload;
@@ -1116,7 +1116,7 @@ solGS.cluster = {
       .attr("class", "cell")
       .attr("transform", "translate(" + legendXOrig + "," + legendYOrig + ")")
       .append("text")
-      .text((window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.clusters_plot_label", "Clusters") : "Clusters"))
+      .text((SGN.t("solgs.browser.clusters_plot_label", "Clusters")))
       .attr("x", 0)
       .attr("y", 15)
       .style("font-size",'12px')
@@ -1187,7 +1187,7 @@ jQuery(document).ready(function () {
     var clusterPopId = clusterArgs.cluster_pop_id;
 
     if (clusterPopId) {
-      jQuery(clusterMsgDiv).text((window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.running_cluster_wait", "Running cluster... please wait...it may take minutes.") : "Running cluster... please wait...it may take minutes.")).show();
+      jQuery(clusterMsgDiv).text((SGN.t("solgs.browser.running_cluster_wait", "Running cluster... please wait...it may take minutes."))).show();
       jQuery(`${canvas} .multi-spinner-container`).show();
 
       solGS.cluster.checkCachedCluster(url, clusterArgs).done(function (res) {
@@ -1259,7 +1259,7 @@ jQuery(document).ready(function () {
   jQuery("#cluster_div").on("click", function (e) {
     var runClusterBtnId = e.target.id;
     if (runClusterBtnId.match(/run_cluster/)) {
-      jQuery(clusterMsgDiv).text((window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.running_cluster_wait", "Running cluster... please wait...it may take minutes.") : "Running cluster... please wait...it may take minutes.")).show();
+      jQuery(clusterMsgDiv).text((SGN.t("solgs.browser.running_cluster_wait", "Running cluster... please wait...it may take minutes."))).show();
 
       jQuery(`${canvas} .multi-spinner-container`).show();
 
@@ -1322,7 +1322,7 @@ jQuery(document).ready(function () {
           } else {
             jQuery(`${canvas} .multi-spinner-container`).hide();
             jQuery(clusterMsgDiv).empty();
-            var title = "<p>" + (window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.analysis_may_take_time", "This analysis may take a long time. ") : "This analysis may take a long time. ") + (window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.submit_analysis_email_prompt", "Do you want to submit the analysis and get an email when it completes?") : "Do you want to submit the analysis and get an email when it completes?") + "</p>";
+            var title = "<p>" + (SGN.t("solgs.browser.analysis_may_take_time", "This analysis may take a long time. ")) + (SGN.t("solgs.browser.submit_analysis_email_prompt", "Do you want to submit the analysis and get an email when it completes?")) + "</p>";
 
             var jobSubmit = '<div id= "cluster_submit">' + title + "</div>";
 
@@ -1332,10 +1332,10 @@ jQuery(document).ready(function () {
               height: "auto",
               width: "auto",
               modal: true,
-              title: (window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.cluster_job_submission_title", "cluster job submission") : "cluster job submission"),
+              title: (SGN.t("solgs.browser.cluster_job_submission_title", "cluster job submission")),
               buttons: {
                 OK: {
-                  text: (window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.yes", "Yes") : "Yes"),
+                  text: (SGN.t("solgs.browser.yes", "Yes")),
                   class: "btn btn-success",
                   id: "queue_job",
                   click: function () {
@@ -1345,7 +1345,7 @@ jQuery(document).ready(function () {
                 },
 
                 No: {
-                  text: (window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.job_no_wait", "No, I will wait till it completes.") : "No, I will wait till it completes."),
+                  text: (SGN.t("solgs.browser.job_no_wait", "No, I will wait till it completes.")),
                   class: "btn btn-warning",
                   id: "no_queue",
                   click: function () {
@@ -1353,7 +1353,7 @@ jQuery(document).ready(function () {
 
                     jQuery(runClusterBtnId).hide();
                     jQuery(clusterMsgDiv)
-                      .text((window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.running_cluster_wait", "Running cluster... please wait...it may take minutes.") : "Running cluster... please wait...it may take minutes."))
+                      .text((SGN.t("solgs.browser.running_cluster_wait", "Running cluster... please wait...it may take minutes.")))
                       .show();
                     jQuery(`${canvas} .multi-spinner-container`).show();
 
@@ -1372,19 +1372,19 @@ jQuery(document).ready(function () {
                             solGS.cluster.displayClusterOutput(res);    
                           }
                         } else {
-                          var msg = (window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.clustering_r_error", "Error occurred running the clustering. Possibly the R script failed.") : "Error occurred running the clustering. Possibly the R script failed.");
+                          var msg = (SGN.t("solgs.browser.clustering_r_error", "Error occurred running the clustering. Possibly the R script failed."));
                           solGS.cluster.cleanupFeedback(canvas, runClusterBtnId, clusterMsgDiv, msg);
                         }
                       })
                       .fail(function () {
-                        var msg = (window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.clustering_error", "Error occurred running the clustering.") : "Error occurred running the clustering.");
+                        var msg = (SGN.t("solgs.browser.clustering_error", "Error occurred running the clustering."));
                         solGS.cluster.cleanupFeedback(canvas, runClusterBtnId, clusterMsgDiv, msg);
                       });
                   },
                 },
 
                 Cancel: {
-                  text: (window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.cancel", "Cancel") : "Cancel"),
+                  text: (SGN.t("solgs.browser.cancel", "Cancel")),
                   class: "btn btn-info",
                   id: "cancel_queue_info",
                   click: function () {

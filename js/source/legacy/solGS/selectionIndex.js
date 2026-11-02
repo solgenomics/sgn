@@ -162,7 +162,7 @@ solGS.sIndex = {
       //         );
       //    return;
     } else if (nm == "all" && val == 0) {
-      alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.two_traits_weight_required", "At least two traits must be assigned relative weight.") : "At least two traits must be assigned relative weight."));
+      alert((SGN.t("solgs.browser.two_traits_weight_required", "At least two traits must be assigned relative weight.")));
       return;
     } else {
       return true;
@@ -206,7 +206,7 @@ solGS.sIndex = {
     var validate;
     var allValues = [];
 
-    var trRelWts = "<b>" + (window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.relative_weights_label", "Relative weights") : "Relative weights") + "</b>:";
+    var trRelWts = "<b>" + (SGN.t("solgs.browser.relative_weights_label", "Relative weights")) + "</b>:";
 
     for (var i = 0; i < all.length; i++) {
       var nm = all[i].name;
@@ -248,7 +248,7 @@ solGS.sIndex = {
     }
     var legend;
     if (siPopName) {
-      var popName = "<strong>" + (window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.population_name_label", "Population name:") : "Population name:") + "</strong> " + siPopName;
+      var popName = "<strong>" + (SGN.t("solgs.browser.population_name_label", "Population name:")) + "</strong> " + siPopName;
 
       var divId = siPopName.replace(/\s/g, "");
       var relWtsId = trRelWts.replace(/[:\s+relative<>b/weigths]/gi, "");
@@ -294,7 +294,7 @@ jQuery(document).ready(function () {
           if (traits.length > 1) {
             table = solGS.sIndex.selectionIndexForm(traits);
           } else {
-            var msg = (window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.single_valid_trait", "There is only one trait with valid GEBV predictions.") : "There is only one trait with valid GEBV predictions.");
+            var msg = (SGN.t("solgs.browser.single_valid_trait", "There is only one trait with valid GEBV predictions."));
             jQuery(siPopsDiv).empty();
             jQuery(siMsgDiv).empty().append(msg);
           }
@@ -303,7 +303,7 @@ jQuery(document).ready(function () {
         }
       })
       .fail(function () {
-        var msg = (window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.selection_index_form_error", "Error occurred creating the selection index form.") : "Error occurred creating the selection index form.");
+        var msg = (SGN.t("solgs.browser.selection_index_form_error", "Error occurred creating the selection index form."));
         jQuery(siMsgDiv).empty().append(msg);
       });
   }, 5000);
@@ -328,7 +328,7 @@ jQuery(document).on("click", "#calculate_si", function () {
   var siMsgDiv = solGS.sIndex.siMsgDiv;
 
   jQuery(`${canvas} .multi-spinner-container`).show();
-  var msg = (window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.selection_index_calculating", "Calculating selection index...please wait...") : "Calculating selection index...please wait...");
+  var msg = (SGN.t("solgs.browser.selection_index_calculating", "Calculating selection index...please wait..."));
   jQuery(siMsgDiv).html(msg).show();
 
   var modelId = jQuery("#training_pop_id").val();
@@ -351,12 +351,12 @@ jQuery(document).on("click", "#calculate_si", function () {
 
           var fileNameSindex = sindexFile.split("/").pop();
           var fileNameGebvsSindex = gebvsSindexFile.split("/").pop();
-          var sindexLink = `<a href="${sindexFile}" download="${fileNameSindex}">${(window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.selection_indices_link", "Indices") : "Indices")}</a>`;
-          var gebvsSindexLink = `<a href="${gebvsSindexFile}" download="${fileNameGebvsSindex}">${(window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.weighted_gebvs_indices_link", "Weighted GEBVs+indices") : "Weighted GEBVs+indices")}</a>`;
+          var sindexLink = `<a href="${sindexFile}" download="${fileNameSindex}">${(SGN.t("solgs.browser.selection_indices_link", "Indices"))}</a>`;
+          var gebvsSindexLink = `<a href="${gebvsSindexFile}" download="${fileNameGebvsSindex}">${(SGN.t("solgs.browser.weighted_gebvs_indices_link", "Weighted GEBVs+indices"))}</a>`;
 
           var sIndexName = res.sindex_name;
 
-          let caption = `<br/><strong>${(window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.index_name_label", "Index Name:") : "Index Name:")}</strong> ${sIndexName} <strong>${(window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.index_download_label", "Download:") : "Download:")}</strong> ${sindexLink} |  ${gebvsSindexLink} ${legend}`;
+          let caption = `<br/><strong>${(SGN.t("solgs.browser.index_name_label", "Index Name:"))}</strong> ${sIndexName} <strong>${(SGN.t("solgs.browser.index_download_label", "Download:"))}</strong> ${sindexLink} |  ${gebvsSindexLink} ${legend}`;
           let histo = {
             canvas: canvas,
             plot_id: `#${sIndexName}`,
@@ -379,7 +379,7 @@ jQuery(document).on("click", "#calculate_si", function () {
           var corrPlotDivId = genArgs.corr_plot_div;
          
           jQuery(`${canvas} .multi-spinner-container`).show();
-          jQuery(siMsgDiv).html((window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.selection_index_correlation_running", "Running correlation... please wait...") : "Running correlation... please wait...")).show();
+          jQuery(siMsgDiv).html((SGN.t("solgs.browser.selection_index_correlation_running", "Running correlation... please wait..."))).show();
 
           solGS.correlation
             .runGeneticCorrelation(genArgs)
@@ -414,7 +414,7 @@ jQuery(document).on("click", "#calculate_si", function () {
               }
             })
             .fail(function (res) {
-              jQuery(siMsgDiv).html((window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.selection_index_correlation_error", "Error occurred running correlation analysis.") : "Error occurred running correlation analysis.")).fadeOut(8400);
+              jQuery(siMsgDiv).html((SGN.t("solgs.browser.selection_index_correlation_error", "Error occurred running correlation analysis."))).fadeOut(8400);
             });
 
           jQuery("#si_canvas #selected_pop").val("");
@@ -432,7 +432,7 @@ jQuery(document).on("click", "#calculate_si", function () {
         }
       })
       .fail(function () {
-        var msg = (window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.selection_index_calculation_error", "error occurred calculating selection index.") : "error occurred calculating selection index.");
+        var msg = (SGN.t("solgs.browser.selection_index_calculation_error", "error occurred calculating selection index."));
         jQuery(siMsgDiv).html(msg).show();
       });
   }

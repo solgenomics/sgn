@@ -248,7 +248,7 @@ function getReferences(callback) {
             return callback(data && data.reference_genomes ? data.reference_genomes : []);
         },
         error: function() {
-            alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("genotype.marker.error_could_not_get_reference_genomes", "ERROR: Could not get reference genomes") : "ERROR: Could not get reference genomes"));
+            alert((SGN.t("genotype.marker.error_could_not_get_reference_genomes", "ERROR: Could not get reference genomes")));
         }
     });
 }
@@ -266,7 +266,7 @@ function getMaps(callback) {
             return callback(data && data.maps ? data.maps : []);
         },
         error: function() {
-            alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("genotype.marker.error_could_not_get_maps", "ERROR: Could not get maps") : "ERROR: Could not get maps"));
+            alert((SGN.t("genotype.marker.error_could_not_get_maps", "ERROR: Could not get maps")));
         }
     });
 }
@@ -317,7 +317,7 @@ function getGenotypedChromosomes(callback) {
             return callback(data && data.chromosomes ? data.chromosomes : []);
         },
         error: function() {
-            alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("genotype.marker.error_could_not_get_genotyped_chromosomes", "ERROR: Could not get genotyped chromosomes") : "ERROR: Could not get genotyped chromosomes"));
+            alert((SGN.t("genotype.marker.error_could_not_get_genotyped_chromosomes", "ERROR: Could not get genotyped chromosomes")));
         }
     });
 }
@@ -336,7 +336,7 @@ function getMappedChromosomes(callback) {
             return callback(data && data.chromosomes ? data.chromosomes : []);
         },
         error: function() {
-            alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("genotype.marker.error_could_not_get_mapped_chromosomes", "ERROR: Could not get mapped chromosomes") : "ERROR: Could not get mapped chromosomes"));
+            alert((SGN.t("genotype.marker.error_could_not_get_mapped_chromosomes", "ERROR: Could not get mapped chromosomes")));
         }
     });
 }
@@ -387,7 +387,7 @@ function getGenotypedProtocols(callback) {
             return callback(data && data.protocols ? data.protocols : []);
         },
         error: function() {
-            alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("genotype.marker.error_could_not_get_genotyped_protocols", "ERROR: Could not get genotyped protocols") : "ERROR: Could not get genotyped protocols"));
+            alert((SGN.t("genotype.marker.error_could_not_get_genotyped_protocols", "ERROR: Could not get genotyped protocols")));
         }
     });
 }
@@ -406,7 +406,7 @@ function getMappedProtocols(callback) {
             return callback(data && data.protocols ? data.protocols : []);
         },
         error: function() {
-            alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("genotype.marker.error_could_not_get_mapped_protocols", "ERROR: Could not get mapped protocols") : "ERROR: Could not get mapped protocols"));
+            alert((SGN.t("genotype.marker.error_could_not_get_mapped_protocols", "ERROR: Could not get mapped protocols")));
         }
     });
 }
@@ -434,12 +434,12 @@ function updateRefMaps() {
     SPECIES = [];
 
     let ad = protocol_refmap && !Array.isArray(protocol_refmap) || (Array.isArray(protocol_refmap) && protocol_refmap.length === 1) ? 'disabled' : '';
-    let html = "<option value='' " + ad + (">" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("genotype.marker.any_reference_genome_map", "Any Reference Genome / Map") : "Any Reference Genome / Map")).html() + "</option>");
+    let html = "<option value='' " + ad + (">" + jQuery("<span>").text((SGN.t("genotype.marker.any_reference_genome_map", "Any Reference Genome / Map"))).html() + "</option>");
 
     // Add Genotype Reference Genomes
     html += "<optgroup label='Reference Genomes of Genotyped Markers'>";
     let gd = (protocol_type && protocol_type !== 'genotyped') || protocol_refmap ? 'disabled' : '';
-    html += "<option value='' data-type='genotyped' " + gd + (">" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("genotype.marker.any_reference_genome", "Any Reference Genome") : "Any Reference Genome")).html() + "</option>");
+    html += "<option value='' data-type='genotyped' " + gd + (">" + jQuery("<span>").text((SGN.t("genotype.marker.any_reference_genome", "Any Reference Genome"))).html() + "</option>");
     for ( let i = 0; i < references.length; i++ ) {
         let d = (protocol_refmap && protocol_refmap !== references[i].reference_genome_name) 
             || (protocol_type && protocol_type !== 'genotyped') 
@@ -460,7 +460,7 @@ function updateRefMaps() {
     // Add Maps
     html += "<optgroup label='Maps of Mapped Markers'>";
     let md = (protocol_type && protocol_type !== 'mapped') || protocol_refmap ? 'disabled' : '';
-    html += "<option value='' data-type='mapped' " + md + (">" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("genotype.marker.any_map", "Any Map") : "Any Map")).html() + "</option>");
+    html += "<option value='' data-type='mapped' " + md + (">" + jQuery("<span>").text((SGN.t("genotype.marker.any_map", "Any Map"))).html() + "</option>");
     for ( let i = 0; i < maps.length; i++ ) {
         let d = (protocol_type === 'mapped' && protocol_refmap && !protocol_refmap.includes(maps[i].map_id+'')) 
             || (protocol_type && protocol_type !== 'mapped') 
@@ -512,7 +512,7 @@ function updateChromosomes() {
                 chroms = CHROMOSOMES.mapped[map];
             }
         }
-        html += ("<option value=''>" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("genotype.marker.any_chromosome", "Any Chromosome") : "Any Chromosome")).html() + "</option>");
+        html += ("<option value=''>" + jQuery("<span>").text((SGN.t("genotype.marker.any_chromosome", "Any Chromosome"))).html() + "</option>");
         for ( let i = 0; i < chroms.length; i++ ) {
             let s = chrom && chroms[i] === chrom ? 'selected' : '';
             html += "<option value='" + chroms[i] + "' " + s + ">" + chroms[i] + "</option>";
@@ -565,7 +565,7 @@ function updateSpecies() {
             || (protocol_species && !Array.isArray(protocol_species)) 
             || (protocol_species && Array.isArray(protocol_species) && protocol_species.length === 1) 
             ? 'disabled' : '';
-        let html = "<option value='' " + ad + (">" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("genotype.marker.any_species", "Any Species") : "Any Species")).html() + "</option>");
+        let html = "<option value='' " + ad + (">" + jQuery("<span>").text((SGN.t("genotype.marker.any_species", "Any Species"))).html() + "</option>");
         for ( let i = 0; i < SPECIES.length; i++ ) {
             let d = (refmap_species && refmap_species !== SPECIES[i]) 
                 || (protocol_species && !Array.isArray(protocol_species) && protocol_species !== SPECIES[i])
@@ -600,7 +600,7 @@ function updateProtocols() {
 
     if ( PROTOCOLS ) {
         let html = "";
-        html += ("<option value=''>" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("genotype.marker.any_protocol", "Any Protocol") : "Any Protocol")).html() + "</option>");
+        html += ("<option value=''>" + jQuery("<span>").text((SGN.t("genotype.marker.any_protocol", "Any Protocol"))).html() + "</option>");
         
         html += "<optgroup label='Protocols of Genotyped Markers'>";
         for ( let i = 0; i < PROTOCOLS.genotyped.length; i++ ) {
@@ -677,7 +677,7 @@ function search() {
 
     // Check for required params
     if ( (start && !end) || (end && !start) ) {
-        alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("genotype.marker.both_the_start_and_end_position_are_required_when_filtering", "Both the start and end position are required when filtering by position") : "Both the start and end position are required when filtering by position"));
+        alert((SGN.t("genotype.marker.both_the_start_and_end_position_are_required_when_filtering", "Both the start and end position are required when filtering by position")));
         return;
     }
 

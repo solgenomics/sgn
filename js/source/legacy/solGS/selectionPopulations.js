@@ -128,21 +128,21 @@ jQuery(document).ready(function () {
 
         solGS.selectionPopulation.displaySelectionPopulations(res.data);
       } else {
-        var msg = (window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.no_cached_selection_trials", "No cached trial for selection prediction found.") : "No cached trial for selection prediction found.");
+        var msg = (SGN.t("solgs.browser.no_cached_selection_trials", "No cached trial for selection prediction found."));
         solGS.selectionPopulation.feedbackOnFail(msg);
       }
 
       // jQuery(searchBtn).show();
     })
     .fail(function () {
-      var msg = (window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.selection_population_query_error", "Error occurred querying for selection populations") : "Error occurred querying for selection populations");
+      var msg = (SGN.t("solgs.browser.selection_population_query_error", "Error occurred querying for selection populations"));
       solGS.selectionPopulation.feedbackOnFail(msg);
       // jQuery(searchBtn).show();
     });
 
   jQuery(searchAllSelPops).click(function () {
     var msg =
-      "<br/><br/>" + (window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.searching_selection_populations", "Searching for all selection populations relevant to this model...please wait...") : "Searching for all selection populations relevant to this model...please wait...");
+      "<br/><br/>" + (SGN.t("solgs.browser.searching_selection_populations", "Searching for all selection populations relevant to this model...please wait..."));
     jQuery(msgDiv).html(msg).show();
 
     solGS.selectionPopulation
@@ -154,13 +154,13 @@ jQuery(document).ready(function () {
           jQuery(searchAllSelPops).hide();
           jQuery(this.msgDiv).hide();
         } else {
-          var msg = "<p>" + (window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.no_relevant_selection_populations", "There are no relevant selection populations in the database.If you have or want to make your own set of selection candidatesuse the form below.") : "There are no relevant selection populations in the database.If you have or want to make your own set of selection candidatesuse the form below.") + "</p>";
+          var msg = "<p>" + (SGN.t("solgs.browser.no_relevant_selection_populations", "There are no relevant selection populations in the database.If you have or want to make your own set of selection candidatesuse the form below.")) + "</p>";
 
           jQuery(this.msgDiv).html(msg).show().fadeOut(8000);
         }
       })
       .fail(function () {
-        var msg = (window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.selection_population_search_error", "Error occurred searching for the selection populations.") : "Error occurred searching for the selection populations.");
+        var msg = (SGN.t("solgs.browser.selection_population_search_error", "Error occurred searching for the selection populations."));
         jQuery(this.msgDiv).html(msg).show().fadeOut(8000);
       });
   });
@@ -225,7 +225,7 @@ jQuery(document).ready(function () {
             jQuery(`${selPopsDiv} .multi-spinner-container`).hide();
           })
           .fail(function () {
-            var msg = (window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.selection_population_process_error", "Error occurred processing the query.") : "Error occurred processing the query.");
+            var msg = (SGN.t("solgs.browser.selection_population_process_error", "Error occurred processing the query."));
             solGS.selectionPopulation.feedbackOnFail(msg);
             jQuery(searchBtn).show();
             jQuery(`${selPopsDiv} .multi-spinner-container`).hide();
@@ -234,7 +234,7 @@ jQuery(document).ready(function () {
     } else {
       jQuery(searchBox).css("border", "solid #FF0000");
 
-      jQuery(searchFormFeedBack).text((window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.enter_trial_name", "Please enter trial name.") : "Please enter trial name."));
+      jQuery(searchFormFeedBack).text((SGN.t("solgs.browser.enter_trial_name", "Please enter trial name.")));
       jQuery(searchBtn).show();
     }
   });

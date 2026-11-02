@@ -101,7 +101,7 @@ export function WizardDatasets(main_id,wizard){
         return !c.type || c.items.filter(d=>d.selected).length<1
       });
       if(first_irrelevant_col==0) {
-          alert((window.SGN && SGN.i18n ? SGN.i18n.p("global.wizard_datasets.create_failed_empty", "Dataset creation failed. No data is selected.") : "Dataset creation failed. No data is selected."));
+          alert((SGN.t("global.wizard_datasets.create_failed_empty", "Dataset creation failed. No data is selected.")));
           d3.select(this).attr("disabled",null);
           return;
       }
@@ -122,7 +122,7 @@ export function WizardDatasets(main_id,wizard){
         body: params
       }).then(response => {
         if (!response.ok){
-          alert((window.SGN && SGN.i18n ? SGN.i18n.p("global.wizard_datasets.network_error", "Network error!") : "Network error!"));
+          alert((SGN.t("global.wizard_datasets.network_error", "Network error!")));
         }
         return response.json();
       }).then(data => {
@@ -145,7 +145,7 @@ export function WizardDatasets(main_id,wizard){
             } 
           },
           error: function(res) {
-            alert((window.SGN && SGN.i18n ? SGN.i18n.p("global.wizard_datasets.compatibility_console_error", "Error storing tool compatibility, check console.") : "Error storing tool compatibility, check console."));
+            alert((SGN.t("global.wizard_datasets.compatibility_console_error", "Error storing tool compatibility, check console.")));
           }
         });
         load_datasets();

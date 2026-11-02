@@ -1,4 +1,5 @@
 'use strict';
+const I18N = require('../../../static/js/sgn-i18n.js');
 // Execute the entire actual legacy page. Controlled jQuery/DataTables transport
 // stores native handlers and completes actual asynchronous callbacks on demand.
 // No product function is extracted, rewritten, or substituted.
@@ -29,7 +30,7 @@ function harness(confirmAnswer=true){
  }
  jquery.ajax=config=>{const req={config,done:[],fail:[],complete(response){events.push({kind:'ajax-completed',url:config.url});if(config.success)config.success(response);for(const fn of req.done)fn(response);},reject(...args){for(const fn of req.fail)fn(...args);}};requests.push(req);events.push({kind:'ajax-request',url:config.url,method:config.type||'GET',headers:plain(config.headers||{}),data:plain(config.data||{})});const deferred={done(fn){req.done.push(fn);return deferred;},fail(fn){req.fail.push(fn);return deferred;}};return deferred;};
  const context=vm.createContext({window:{location:{href:'http://127.0.0.1:18335/cross/1745',origin:'http://127.0.0.1:18335'},open(){}},document,jQuery:jquery,$:jquery,URL,console:{log(){}},alert:value=>alerts.push(value),confirm:()=>confirmAnswer,format_options_list:()=>'',show_list_counts(){},addToListMenu(){},selectAllOptions(){}});
- vm.runInContext(source,context,{filename:sourcePath});
+ I18N.install(context.window); context.SGN=context.window.SGN;vm.runInContext(source,context,{filename:sourcePath});
  function response(value){return vm.runInContext('('+JSON.stringify(value)+')',context);}
  function trigger(selector,event){const e=element(selector);assert.equal(typeof e.handlers[event],'function','Native '+event+' handler is registered: '+selector);if(event==='click'&&e.disabled)return false;return e.handlers[event].call(e);}
  const propertyTables=()=>tables.filter(t=>t.selector==='#cross_properties');

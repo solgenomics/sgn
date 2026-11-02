@@ -68,11 +68,11 @@ jQuery(document).ready(function() {
         jQuery('#trial_phenotype_files_datatables').DataTable({
             'ajax': { 'url': '/ajax/breeders/trial/<% $trial_id %>/phenotype_metadata' },
             columns: [
-                { title: _sgnB11FilesEscapeHTML(window.SGN && SGN.i18n ? SGN.i18n.p('trial.files.filename', "Filename") : "Filename"), "data": null, "render": function ( data, type, row ) { return row[4]; } },
-                { title: _sgnB11FilesEscapeHTML(window.SGN && SGN.i18n ? SGN.i18n.p('trial.files.date_uploaded', "Date Uploaded") : "Date Uploaded"), "data": null, "render": function ( data, type, row ) { return row[1]; } },
-                { title: _sgnB11FilesEscapeHTML(window.SGN && SGN.i18n ? SGN.i18n.p('trial.files.uploaded_by', "Uploaded By") : "Uploaded By"), "data": null, "render": function ( data, type, row ) { return '<a href="/solpeople/profile/'+row[2]+'">'+row[3]+'</a>'; } },
-                { title: _sgnB11FilesEscapeHTML(window.SGN && SGN.i18n ? SGN.i18n.p('trial.files.file_type', "File Type") : "File Type"), "data": null, "render": function ( data, type, row ) { return row[6]; } },
-                { title: _sgnB11FilesEscapeHTML(window.SGN && SGN.i18n ? SGN.i18n.p('trial.files.options', "Options") : "Options"), "data": null, "render": function ( data, type, row ) { return '<a href="/breeders/phenotyping/view/'+row[0]+'">' + _sgnB11FilesEscapeHTML(window.SGN && SGN.i18n ? SGN.i18n.p('trial.files.view', "View") : "View") + '</a> | <a href="/breeders/phenotyping/download/'+row[0]+'">' + _sgnB11FilesEscapeHTML(window.SGN && SGN.i18n ? SGN.i18n.p('trial.files.download', "Download") : "Download") + '</a>'; } },
+                { title: _sgnB11FilesEscapeHTML(SGN.t('trial.files.filename', "Filename")), "data": null, "render": function ( data, type, row ) { return row[4]; } },
+                { title: _sgnB11FilesEscapeHTML(SGN.t('trial.files.date_uploaded', "Date Uploaded")), "data": null, "render": function ( data, type, row ) { return row[1]; } },
+                { title: _sgnB11FilesEscapeHTML(SGN.t('trial.files.uploaded_by', "Uploaded By")), "data": null, "render": function ( data, type, row ) { return '<a href="/solpeople/profile/'+row[2]+'">'+row[3]+'</a>'; } },
+                { title: _sgnB11FilesEscapeHTML(SGN.t('trial.files.file_type', "File Type")), "data": null, "render": function ( data, type, row ) { return row[6]; } },
+                { title: _sgnB11FilesEscapeHTML(SGN.t('trial.files.options', "Options")), "data": null, "render": function ( data, type, row ) { return '<a href="/breeders/phenotyping/view/'+row[0]+'">' + _sgnB11FilesEscapeHTML(SGN.t('trial.files.view', "View")) + '</a> | <a href="/breeders/phenotyping/download/'+row[0]+'">' + _sgnB11FilesEscapeHTML(SGN.t('trial.files.download', "Download")) + '</a>'; } },
             ]
         });
 

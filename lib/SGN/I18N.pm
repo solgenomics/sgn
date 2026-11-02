@@ -4,6 +4,7 @@ use strict;
 use warnings;
 use utf8;
 use Carp qw(croak);
+use Cwd ();
 use Digest::SHA qw(sha256_hex);
 use File::Spec;
 use Hash::Util qw(lock_hash_recurse);
@@ -164,7 +165,9 @@ sub _bounded_bytes {
 
 sub _load_bundle {
     my ($root, $locale, $domain) = @_;
-    my $directory = File::Spec->catdir($root, $locale, $domain);
+    # Resolve the active generation once; activation may switch it between reads.
+    my $directory = Cwd::abs_path(File::Spec->catdir($root, $locale, $domain));
+    return unless defined $directory;
     my $bytes = _bounded_bytes(File::Spec->catfile($directory, 'index.json'));
     return unless defined $bytes;
     my $index = $JSON->decode($bytes);

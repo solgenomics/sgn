@@ -154,7 +154,7 @@ jQuery(document).ready(function(){
     function upload_propagation_ids() {
         var uploadFile = jQuery("#propagation_ids_file").val();
         if (uploadFile === '') {
-            alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("global.manage_file_share_dump.select_file", "Please select a file") : "Please select a file"));
+            alert((SGN.t("global.manage_file_share_dump.select_file", "Please select a file")));
             return;
         }
 

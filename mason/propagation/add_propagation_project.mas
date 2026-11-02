@@ -150,37 +150,37 @@ jQuery(document).ready(function(){
     jQuery('#add_propagation_project_submit').click(function() {
         var propagation_project_name = jQuery("#propagation_project_name").val();
         if (!propagation_project_name) {
-            alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("seedlot.project_name_is_required", "Project name is required") : "Project name is required"));
+            alert((SGN.t("seedlot.project_name_is_required", "Project name is required")));
             return;
         }
 
         var propagation_type = jQuery("#propagation_type").val();
         if (!propagation_type) {
-            alert ((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("seedlot.propagation_type_is_required", "Propagation Type is required") : "Propagation Type is required"));
+            alert ((SGN.t("seedlot.propagation_type_is_required", "Propagation Type is required")));
             return;
         }
 
         var selectedProgram = jQuery("#propagation_project_program").val();
         if (!selectedProgram) {
-            alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("cross.ui.breeding_program_is_required", "Breeding program is required") : "Breeding program is required"));
+            alert((SGN.t("cross.ui.breeding_program_is_required", "Breeding program is required")));
             return;
         }
 
         var propagation_project_location = jQuery("#propagation_project_location").val();
         if (!propagation_project_location) {
-            alert ((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("seedlots.ui.location_is_required", "Location is required") : "Location is required"));
+            alert ((SGN.t("seedlots.ui.location_is_required", "Location is required")));
             return;
         }
 
         var year = jQuery("#propagation_project_year_select").val();
         if (!year) {
-            alert ((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("genotype.project.validation.year_required", "Year is required") : "Year is required"));
+            alert ((SGN.t("genotype.project.validation.year_required", "Year is required")));
             return;
         }
 
         var project_description = jQuery('textarea#propagation_project_description').val();
         if (!project_description) {
-            alert ((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("genotype.project.validation.description_required", "Description is required") : "Description is required"));
+            alert ((SGN.t("genotype.project.validation.description_required", "Description is required")));
             return;
         }
 
@@ -200,11 +200,11 @@ jQuery(document).ready(function(){
                 jQuery("#working_modal").modal("show");
             },
             error: function(response) {
-                alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("accession.files.files.error", "An error occurred!") : "An error occurred!") + JSON.stringify(response));
+                alert((SGN.t("accession.files.files.error", "An error occurred!")) + JSON.stringify(response));
                 return;
             },
             parseerror: function(response) {
-                alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("seedlot.a_parse_error_occurred", "A parse error occurred!") : "A parse error occurred!") + response);
+                alert((SGN.t("seedlot.a_parse_error_occurred", "A parse error occurred!")) + response);
                 return;
             },
             success: function(response) {

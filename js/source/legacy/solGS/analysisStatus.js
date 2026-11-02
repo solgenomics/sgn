@@ -40,10 +40,10 @@ solGS.log = {
         var displayCopy = Array.isArray(data) ? data.map(function(row) {
             if (!Array.isArray(row)) { return row; }
             var copy = row.slice();
-            var knownStatusText = {"Done": (window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.job_status_done", "Done") : "Done"), "Submitted": (window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.job_status_submitted", "Submitted") : "Submitted"), "Failed": (window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.job_status_failed", "Failed") : "Failed"), "Timed Out": (window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.job_status_timed_out", "Timed Out") : "Timed Out"), "In progress...": (window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.job_status_in_progress", "In progress...") : "In progress..."), "N/A": (window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.job_result_na", "N/A") : "N/A"), "NA": (window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.job_result_na_alt", "NA") : "NA")};
+            var knownStatusText = {"Done": (SGN.t("solgs.browser.job_status_done", "Done")), "Submitted": (SGN.t("solgs.browser.job_status_submitted", "Submitted")), "Failed": (SGN.t("solgs.browser.job_status_failed", "Failed")), "Timed Out": (SGN.t("solgs.browser.job_status_timed_out", "Timed Out")), "In progress...": (SGN.t("solgs.browser.job_status_in_progress", "In progress...")), "N/A": (SGN.t("solgs.browser.job_result_na", "N/A")), "NA": (SGN.t("solgs.browser.job_result_na_alt", "NA"))};
             if (["Submitted", "Failed", "Timed Out", "Done"].includes(copy[3])) { copy[3] = knownStatusText[copy[3]]; }
             if (["In progress...", "N/A", "NA"].includes(copy[4])) { copy[4] = knownStatusText[copy[4]]; }
-            if (typeof copy[4] === "string") { copy[4] = copy[4].replace(/>\[ View \]<\/a>/, ">[ " + (window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.job_result_view_link", "View") : "View") + " ]</a>"); }
+            if (typeof copy[4] === "string") { copy[4] = copy[4].replace(/>\[ View \]<\/a>/, ">[ " + (SGN.t("solgs.browser.job_result_view_link", "View")) + " ]</a>"); }
             return copy;
         }) : data;
         table.rows.add(displayCopy).draw();
@@ -58,16 +58,16 @@ solGS.log = {
             url: '/solgs/delete/old/analyses/'+interval,
             success: function(response) {
                 if (response.error) {
-                    alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.job_log_server_error_prefix", "Encountered an error on the server: ") : "Encountered an error on the server: ")+response.error);
+                    alert((SGN.t("solgs.browser.job_log_server_error_prefix", "Encountered an error on the server: "))+response.error);
                     console.log(response);
                 } else {
-                    alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.job_log_cleared", "Jobs cleared from recent activity.") : "Jobs cleared from recent activity."));
+                    alert((SGN.t("solgs.browser.job_log_cleared", "Jobs cleared from recent activity.")));
                     window.location.reload();
                 }     
     	    },
             error: function(response) {
                 console.log(response);
-                alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.job_log_clear_old_error", "Error clearing old jobs, check console. ") : "Error clearing old jobs, check console. ") + response);
+                alert((SGN.t("solgs.browser.job_log_clear_old_error", "Error clearing old jobs, check console. ")) + response);
                 window.location.reload();
             }
         });
@@ -80,16 +80,16 @@ solGS.log = {
             url: '/solgs/delete/dead/analyses',
             success: function(response) {
                 if (response.error) {
-                    alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.job_log_server_error_prefix", "Encountered an error on the server: ") : "Encountered an error on the server: ")+response.error);
+                    alert((SGN.t("solgs.browser.job_log_server_error_prefix", "Encountered an error on the server: "))+response.error);
                     console.log(response);
                 } else {
-                    alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.job_log_cleared", "Jobs cleared from recent activity.") : "Jobs cleared from recent activity."));
+                    alert((SGN.t("solgs.browser.job_log_cleared", "Jobs cleared from recent activity.")));
                     window.location.reload(); 
                 } 
     	    },
             error: function(response) {
                 console.log(response);
-                alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.job_log_clear_dead_error", "Error clearing dead jobs, check console. ") : "Error clearing dead jobs, check console. ") + response);
+                alert((SGN.t("solgs.browser.job_log_clear_dead_error", "Error clearing dead jobs, check console. ")) + response);
                 window.location.reload();
             }
         });

@@ -275,7 +275,7 @@ jQuery(document).ready(function(){
         let normalization_method = ''
         normalization_method = jQuery("#qPCR_normalization_method").val();
         if (normalization_method == "CASS_Delta_Cq"){
-            jQuery('#normalization_method_description_div').html(("<br/><div class=\"well\" style=\"text-align: center\"><p>" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("transformation.normalized_values_are_calculated_using_the_formula", "Normalized values are calculated using the formula:") : "Normalized values are calculated using the formula:")).html() + "<br><b>2^Cq(Endogenous Control) / 2^Cq(Target)</b>.</p></div>"));
+            jQuery('#normalization_method_description_div').html(("<br/><div class=\"well\" style=\"text-align: center\"><p>" + jQuery("<span>").text((SGN.t("transformation.normalized_values_are_calculated_using_the_formula", "Normalized values are calculated using the formula:"))).html() + "<br><b>2^Cq(Endogenous Control) / 2^Cq(Target)</b>.</p></div>"));
         } else {
             jQuery('#normalization_method_description_div').html('');
         }
@@ -297,27 +297,27 @@ jQuery(document).ready(function(){
         const normalization_method = jQuery("#qPCR_normalization_method").val();
 
         if (tissue_type === ''){
-            alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("transformation.please_select_a_tissue_type", "Please select a tissue type") : "Please select a tissue type"));
+            alert((SGN.t("transformation.please_select_a_tissue_type", "Please select a tissue type")));
             return;
         }
 
         if (endogenous_control === ''){
-            alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("transformation.please_select_an_endogenous_control", "Please select an endogenous control") : "Please select an endogenous control"));
+            alert((SGN.t("transformation.please_select_an_endogenous_control", "Please select an endogenous control")));
             return;
         }
 
         if (assay_date === ''){
-            alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("transformation.please_provide_assay_date", "Please provide assay date") : "Please provide assay date"));
+            alert((SGN.t("transformation.please_provide_assay_date", "Please provide assay date")));
             return;
         }
 
         if (normalization_method === '') {
-            alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("transformation.please_select_a_normalization_method", "Please select a normalization method") : "Please select a normalization method"));
+            alert((SGN.t("transformation.please_select_a_normalization_method", "Please select a normalization method")));
             return;
         }
 
         if (Cq_upload_file === ''){
-            alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("global.manage_file_share_dump.select_file", "Please select a file") : "Please select a file"));
+            alert((SGN.t("global.manage_file_share_dump.select_file", "Please select a file")));
             return;
         }
 

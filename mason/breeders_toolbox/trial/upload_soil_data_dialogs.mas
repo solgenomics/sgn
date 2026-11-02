@@ -224,25 +224,25 @@ jQuery(document).ready(function(){
 
         var soil_data_description = jQuery("#soil_data_description").val();
         if ( soil_data_description === ''){
-            alert((window.SGN && SGN.i18n ? SGN.i18n.p('trial.soil_upload.description_required', "Please provide description") : "Please provide description"));
+            alert((SGN.t('trial.soil_upload.description_required', "Please provide description")));
             return;
         }
 
         var soil_data_date = jQuery("#soil_data_date").val();
         if ( soil_data_date === ''){
-            alert((window.SGN && SGN.i18n ? SGN.i18n.p('trial.soil_upload.date_required', "Please select a date") : "Please select a date"));
+            alert((SGN.t('trial.soil_upload.date_required', "Please select a date")));
             return;
         }
 
         var type_of_sampling = jQuery("#type_of_sampling").val();
         if ( type_of_sampling === ''){
-            alert((window.SGN && SGN.i18n ? SGN.i18n.p('trial.soil_upload.type_required', "Please indicate type of sampling") : "Please indicate type of sampling"));
+            alert((SGN.t('trial.soil_upload.type_required', "Please indicate type of sampling")));
             return;
         }
 
         var uploadFile = jQuery("#soil_data_upload_file").val();
         if (uploadFile === ''){
-            alert((window.SGN && SGN.i18n ? SGN.i18n.p('trial.card.entry_numbers.select_file', "Please select a file") : "Please select a file"));
+            alert((SGN.t('trial.card.entry_numbers.select_file', "Please select a file")));
             return;
         }
 

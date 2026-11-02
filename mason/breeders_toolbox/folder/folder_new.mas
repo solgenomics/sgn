@@ -217,7 +217,7 @@ function new_trial_folder() {
         },
         error: function(response) {
             jQuery('#working_modal').modal('hide');
-            alert(window.SGN && SGN.i18n ? SGN.i18n.p('folder.new.request_error', 'An error occurred') : 'An error occurred');
+            alert(SGN.t('folder.new.request_error', 'An error occurred'));
             jQuery('#new_folder_dialog').modal("hide");
         }
     });

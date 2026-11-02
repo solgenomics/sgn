@@ -16,7 +16,7 @@
       
       //open the search box
       if (jQuery('#quick_search_input').attr("placeholder") == "") {
-        jQuery('#quick_search_input').attr("placeholder", window.SGN && SGN.i18n ? SGN.i18n.p('navigation.quick_search.label', 'Search') : 'Search');
+        jQuery('#quick_search_input').attr("placeholder", SGN.t('navigation.quick_search.label', 'Search'));
         
         jQuery('#quick_search_icon').addClass("input-group-addon");
         

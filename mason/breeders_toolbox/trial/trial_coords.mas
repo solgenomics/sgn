@@ -88,7 +88,7 @@ var trial_id = <% $trial_id %>;
             jQuery("#trial_coords").css("display", "none");
             jQuery("#delete_button").css("display", "inline-block");
             if (false_coord){
-                alert(window.SGN && SGN.i18n ? SGN.i18n.p('trial.card.coords.pseudo_coords', "Pseudo row and column numbers have been used in displaying the field map. Plots row and column numbers were generated from block_number and displayed in zigzag format. You can upload row and column numbers for this trial to reflect the field layout.") : "Pseudo row and column numbers have been used in displaying the field map. Plots row and column numbers were generated from block_number and displayed in zigzag format. You can upload row and column numbers for this trial to reflect the field layout.");
+                alert(SGN.t('trial.card.coords.pseudo_coords', "Pseudo row and column numbers have been used in displaying the field map. Plots row and column numbers were generated from block_number and displayed in zigzag format. You can upload row and column numbers for this trial to reflect the field layout."));
             }
 		}
 
@@ -434,7 +434,7 @@ jQuery(document).ready( function() {
         jQuery('#working_modal').modal("hide");
 
         if (response.error) {
-          alert((window.SGN && SGN.i18n ? SGN.i18n.p('trial.card.coords.replace_error', "Error Replacing Plot Accession: ") : "Error Replacing Plot Accession: ")+response.error);
+          alert((SGN.t('trial.card.coords.replace_error', "Error Replacing Plot Accession: "))+response.error);
         }
         else {
           jQuery('#replace_accessions_dialog_message').dialog("open");
@@ -442,7 +442,7 @@ jQuery(document).ready( function() {
       },
       error: function () {
         jQuery('#working_modal').modal("hide");
-        alert(window.SGN && SGN.i18n ? SGN.i18n.p('trial.card.coords.replace_network_error', "An error occurred replacing plot accession") : "An error occurred replacing plot accession");
+        alert(SGN.t('trial.card.coords.replace_network_error', "An error occurred replacing plot accession"));
       }
     });
   }

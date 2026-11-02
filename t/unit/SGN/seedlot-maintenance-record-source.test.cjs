@@ -1,4 +1,5 @@
 'use strict';
+const I18N = require('../../../static/js/sgn-i18n.js');
 // Render the complete actual Mason component with its real serializer/translator,
 // then execute the complete emitted recorder script and registered handlers.
 // The recording DOM and controlled transport are explicit source-unit boundaries;
@@ -115,7 +116,7 @@ function harness({text=source,query='',locale='uk',translator=false,eventOntolog
     jq.ajax=options=>{const request={options,deliver(data){options.success?.(data);options.complete?.();},fail(error='Transport_'+canonical){options.error?.(error);options.complete?.();}};requests.push(request);options.beforeSend?.();return request;};
     class FrozenDate extends Date{constructor(...args){super(...(args.length?args:[2026,9,11,4,5,6]));}}
 
-    const context=vm.createContext({window,document,jQuery:jq,URL,URLSearchParams,Date:FrozenDate,console});vm.runInContext(inline(rendered.html),context,{filename:file});
+    const context=vm.createContext({window,document,jQuery:jq,URL,URLSearchParams,Date:FrozenDate,console});I18N.install(context.window); context.SGN=context.window.SGN;vm.runInContext(inline(rendered.html),context,{filename:file});
     const one=selector=>{const value=jq(selector);assert.equal(value.length,1,'Exactly one control '+selector);return value;};
     function trigger(target,event='click'){const n=typeof target==='string'?one(target).e:target;assert(n);if(n.tag==='button')assert.equal(!!n.props.disabled||Object.hasOwn(n.attrs,'disabled'),false,'Source-unit trigger uses an enabled control');const handler=n.handlers[event];if(handler)return handler.call(n,{preventDefault(){}});const d=delegated.find(item=>item.event===event&&matches(n,item.selector));assert(d,'Actual registered delegated handler exists');return d.callback.call(n,{preventDefault(){}});}
     function pick(index=1){const buttons=jq('.seedlot_event_values').first().find('.seedlot_event_value_btn');trigger(buttons[index]);}
@@ -208,7 +209,7 @@ test('armed actual vendored jQuery/template carrier creates no active scientific
         const page=await context.newPage(),errors=[],network=[];page.on('pageerror',error=>errors.push(error.message));await context.route('**/*',async route=>{network.push(route.request().url());await route.abort();});
         const rendered=render(),script=inline(rendered.html);await page.setContent(rendered.html.replace(/<script\b[^>]*>[\s\S]*?<\/script>/gi,''));
         for(const name of ['jquery.js','jquerymigrate.js','jqueryui.js','bootstrap_min.js'])await page.addScriptTag({path:path.join(root,'js/source/legacy',name)});
-        await page.evaluate(()=>{window.recordUnitRequests=[];jQuery.ajax=options=>{recordUnitRequests.push(options);options.beforeSend?.();return {};};});await page.addScriptTag({content:script});await page.waitForFunction(()=>document.querySelectorAll('.seedlot_event_title').length===2);network.length=0;
+        await page.evaluate(()=>{window.recordUnitRequests=[];jQuery.ajax=options=>{recordUnitRequests.push(options);options.beforeSend?.();return {};};});await page.addScriptTag({path:path.join(root,'static/js/sgn-i18n.js')});await page.addScriptTag({content:script});await page.waitForFunction(()=>document.querySelectorAll('.seedlot_event_title').length===2);network.length=0;
         const injection='<img src="https://record-unit.invalid/image" onerror="window.recordUnitInjected=1"><iframe src="https://record-unit.invalid/frame"></iframe><script>window.recordUnitInjected=1</script>';
         await page.evaluate(({canonical,injection})=>{
             ONTOLOGY[0].children[0].definition='Definition '+injection;setEvents();

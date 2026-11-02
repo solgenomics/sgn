@@ -70,12 +70,12 @@ jQuery(document).ready(function () {
         trait_list_json = JSON.stringify(trait_list);
 
         if (template_file_name === '') {
-            alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("program.profile_template.required_name", "Please supply a template file name") : "Please supply a template file name"));
+            alert((SGN.t("program.profile_template.required_name", "Please supply a template file name")));
             return;
         }
 
         if (trait_list_id === '') {
-            alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("program.product_profile.required_trait_list", "Please select a trait list") : "Please select a trait list"));
+            alert((SGN.t("program.product_profile.required_trait_list", "Please select a trait list")));
             return;
         }
 
@@ -102,7 +102,7 @@ jQuery(document).ready(function () {
             },
             error: function() {
                 jQuery("#working_modal").modal("hide");
-                alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("program.profile_template.create_error", "An error occurred creating the profile template.") : "An error occurred creating the profile template."));
+                alert((SGN.t("program.profile_template.create_error", "An error occurred creating the profile template.")));
                 jQuery('#create_profile_template_dialog').modal("hide");
             },
 

@@ -94,7 +94,7 @@ jQuery(document).ready(function() {
     var noaa_ncdc_token = '<% $c->config->{noaa_ncdc_access_token} %>';
 
     if (noaa_ncdc_token == 'NULL') {
-        alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("climate.noaa.configuration_variable_noaa_ncdc_access_token_is_undefined_data_from_station", "Configuration variable 'noaa_ncdc_access_token' is undefined. Data from station ") : "Configuration variable 'noaa_ncdc_access_token' is undefined. Data from station ")+noaa_station_id+(window.SGN && window.SGN.i18n ? SGN.i18n.p("climate.noaa.can_t_be_accessed_without_a_token_please_visit_https_www_ncdc_noaa_gov_cdo_web_token_to_generate_a_valid_ac", " can't be accessed without a token.\r\nPlease visit https://www.ncdc.noaa.gov/cdo-web/token to generate a valid access token, then include the token in sgn_local.conf") : " can't be accessed without a token.\r\nPlease visit https://www.ncdc.noaa.gov/cdo-web/token to generate a valid access token, then include the token in sgn_local.conf"));
+        alert((SGN.t("climate.noaa.configuration_variable_noaa_ncdc_access_token_is_undefined_data_from_station", "Configuration variable 'noaa_ncdc_access_token' is undefined. Data from station "))+noaa_station_id+(SGN.t("climate.noaa.can_t_be_accessed_without_a_token_please_visit_https_www_ncdc_noaa_gov_cdo_web_token_to_generate_a_valid_ac", " can't be accessed without a token.\r\nPlease visit https://www.ncdc.noaa.gov/cdo-web/token to generate a valid access token, then include the token in sgn_local.conf")));
     }
 
     jQuery(document).on('change', '#noaa_ncdc_analysis_location_id', function(){
@@ -112,27 +112,27 @@ jQuery(document).ready(function() {
                         success: function(response) {
                             console.log(response);
                             if (response.name) {
-                                alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("climate.noaa.found_a_valid_noaa_station_for_this_location", "Found a valid NOAA Station for this location: ") : "Found a valid NOAA Station for this location: ")+response.name);
+                                alert((SGN.t("climate.noaa.found_a_valid_noaa_station_for_this_location", "Found a valid NOAA Station for this location: "))+response.name);
                                 jQuery('#noaa_ncdc_analysis_input_div').show();
                             }
                             else {
-                                alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("climate.noaa.could_not_verify_the_noaa_stationid_you_provided_go_to_manage_locations_and_make_sure_your_location_has_a_v", "Could not verify the NOAA StationID you provided. Go to Manage->Locations and make sure your location has a valid NOAA station id!") : "Could not verify the NOAA StationID you provided. Go to Manage->Locations and make sure your location has a valid NOAA station id!"));
+                                alert((SGN.t("climate.noaa.could_not_verify_the_noaa_stationid_you_provided_go_to_manage_locations_and_make_sure_your_location_has_a_v", "Could not verify the NOAA StationID you provided. Go to Manage->Locations and make sure your location has a valid NOAA station id!")));
                                 jQuery('#noaa_ncdc_analysis_input_div').hide();
                             }
                         },
                         error: function() {
-                            alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("locations.edit.noaa_failed", "The NOAA NCDC authorization token may not be valid! We could not verify your NOAA StationID. Please contact us!") : "The NOAA NCDC authorization token may not be valid! We could not verify your NOAA StationID. Please contact us!"));
+                            alert((SGN.t("locations.edit.noaa_failed", "The NOAA NCDC authorization token may not be valid! We could not verify your NOAA StationID. Please contact us!")));
                             jQuery('#noaa_ncdc_analysis_input_div').hide();
                         }
                     });
                 }
                 else {
-                    alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("climate.noaa.no_noaa_ncdc_station_id_for_this_location_go_to_manage_locations_and_edit_your_location_to_add_a_valid_noaa", "No NOAA NCDC station id for this location. Go to Manage->Locations and edit your location to add a valid NOAA station id!") : "No NOAA NCDC station id for this location. Go to Manage->Locations and edit your location to add a valid NOAA station id!"));
+                    alert((SGN.t("climate.noaa.no_noaa_ncdc_station_id_for_this_location_go_to_manage_locations_and_edit_your_location_to_add_a_valid_noaa", "No NOAA NCDC station id for this location. Go to Manage->Locations and edit your location to add a valid NOAA station id!")));
                     jQuery('#noaa_ncdc_analysis_input_div').hide();
                 }
             },
             error: function(response){
-                alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("climate.noaa.error_getting_noaa_ncdc_id_for_location", "Error getting NOAA NCDC ID for location!") : "Error getting NOAA NCDC ID for location!"));
+                alert((SGN.t("climate.noaa.error_getting_noaa_ncdc_id_for_location", "Error getting NOAA NCDC ID for location!")));
                 jQuery('#noaa_ncdc_analysis_input_div').hide();
             }
         });
@@ -146,11 +146,11 @@ jQuery(document).ready(function() {
         noaa_ncdc_analysis_window_end_date = jQuery('#noaa_ncdc_analysis_window_end_date').val();
         noaa_ncdc_analysis_cumulative_year = jQuery('#noaa_ncdc_analysis_cumulative_year').val();
         if (noaa_ncdc_analysis_start_date == '') {
-            alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("climate.noaa.please_give_a_start_date", "Please give a start date!") : "Please give a start date!"));
+            alert((SGN.t("climate.noaa.please_give_a_start_date", "Please give a start date!")));
             return false;
         }
         if (noaa_ncdc_analysis_end_date == '') {
-            alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("climate.noaa.please_give_a_end_date", "Please give a end date!") : "Please give a end date!"));
+            alert((SGN.t("climate.noaa.please_give_a_end_date", "Please give a end date!")));
             return false;
         }
 
@@ -166,11 +166,11 @@ jQuery(document).ready(function() {
                     jQuery('#noaa_ndcd_analysis_result').html(html);
                 }
                 else {
-                    alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("climate.noaa.there_was_an_error_getting_noaa_analysis", "There was an error getting NOAA analysis!") : "There was an error getting NOAA analysis!"));
+                    alert((SGN.t("climate.noaa.there_was_an_error_getting_noaa_analysis", "There was an error getting NOAA analysis!")));
                 }
             },
             error: function(response){
-                alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("climate.noaa.error_getting_noaa_ncdc_analysis", "Error getting NOAA NCDC analysis!") : "Error getting NOAA NCDC analysis!"));
+                alert((SGN.t("climate.noaa.error_getting_noaa_ncdc_analysis", "Error getting NOAA NCDC analysis!")));
             }
         });
     });

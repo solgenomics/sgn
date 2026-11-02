@@ -94,17 +94,17 @@ $family_type_string
 jQuery(document).ready(function(){
 
     var lo = new CXGN.List();
-    jQuery('#family_crosses_list_select').html(lo.listSelect('family_crosses_list_select', ['crosses'], (window.SGN && window.SGN.i18n ? window.SGN.i18n.p("fieldbook.trait.client.select_list", "Select a list") : "Select a list"), undefined, undefined));
+    jQuery('#family_crosses_list_select').html(lo.listSelect('family_crosses_list_select', ['crosses'], (SGN.t("fieldbook.trait.client.select_list", "Select a list")), undefined, undefined));
 
     jQuery("#add_family_members_submit").click(function(){
         var crosses_list_id = jQuery('#family_crosses_list_select').val();
         if (!crosses_list_id) {
-            alert ((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("cross.forms.please_select_a_list_of_crosses", "Please select a list of crosses.") : "Please select a list of crosses."));
+            alert ((SGN.t("cross.forms.please_select_a_list_of_crosses", "Please select a list of crosses.")));
             return;
         } else {
             list_validation = lo.legacy_validate(crosses_list_id, 'crosses', true);
             if (list_validation != 1) {
-                alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("cross.forms.the_list_did_not_pass_validation_cross_unique_ids", "The list did not pass validation. Cross Unique IDs in the list must be uniquenames with cross stock type in the database") : "The list did not pass validation. Cross Unique IDs in the list must be uniquenames with cross stock type in the database"));
+                alert((SGN.t("cross.forms.the_list_did_not_pass_validation_cross_unique_ids", "The list did not pass validation. Cross Unique IDs in the list must be uniquenames with cross stock type in the database")));
                 return;
             }
         }
@@ -136,7 +136,7 @@ jQuery(document).ready(function(){
             },
             error: function(response){
                 jQuery('#working_modal').modal('hide');
-                alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("cross.forms.an_error_occurred_adding_new_family_members", "An error occurred adding new family members") : "An error occurred adding new family members"));
+                alert((SGN.t("cross.forms.an_error_occurred_adding_new_family_members", "An error occurred adding new family members")));
             }
         });
     });

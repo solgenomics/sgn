@@ -64,7 +64,7 @@ jQuery(document).ready(function() {
   jQuery('#upload_entry_numbers_submit').click( function() {
     var uploadFile = jQuery("#upload_entry_numbers_file").val();
     if (uploadFile === '') {
-      alert(window.SGN && SGN.i18n ? SGN.i18n.p('trial.card.entry_numbers.select_file', 'Please select a file') : 'Please select a file');
+      alert(SGN.t('trial.card.entry_numbers.select_file', 'Please select a file'));
       return;
     }
 
@@ -92,7 +92,7 @@ jQuery(document).ready(function() {
             addWarnings(response.warning);
           }
           if ( response.success === 1) {
-            addSuccess(window.SGN && SGN.i18n ? SGN.i18n.p('trial.card.entry_numbers.stored', 'Trial entry numbers stored!') : 'Trial entry numbers stored!');
+            addSuccess(SGN.t('trial.card.entry_numbers.stored', 'Trial entry numbers stored!'));
 	    loadEntryNumbers();
           }
         }
@@ -100,7 +100,7 @@ jQuery(document).ready(function() {
       error: function() {
         jQuery('#working_modal').modal("hide");
         jQuery("#upload_entry_numbers_file").val("");
-        alert(window.SGN && SGN.i18n ? SGN.i18n.p('trial.card.entry_numbers.upload_error', 'ERROR: Could not upload and process file due to server error!') : 'ERROR: Could not upload and process file due to server error!');
+        alert(SGN.t('trial.card.entry_numbers.upload_error', 'ERROR: Could not upload and process file due to server error!'));
       }
     });
   });

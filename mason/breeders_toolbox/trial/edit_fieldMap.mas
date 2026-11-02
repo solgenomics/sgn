@@ -283,7 +283,7 @@ jQuery(document).ready(function () {
             jQuery('#stocks_in_trial').html(trial_stocks_html);
         },
 	    error: function(response){
-            alert(window.SGN && SGN.i18n ? SGN.i18n.p("trial.fieldmap_edit.retrieve_stocks_error", "Error retrieving stocks.") : "Error retrieving stocks.");
+            alert(SGN.t("trial.fieldmap_edit.retrieve_stocks_error", "Error retrieving stocks."));
 	    }
 	});
 
@@ -306,12 +306,12 @@ var phenotype_file;
 var dataTableToPass;
 jQuery("#confirm_calculating_spatial_correction").click(async function() {
   try { //try is a block of code that will run and if it encounters an error it will run the catch block
-    jQuery("#calculate_spatial_correction_status_message").text((window.SGN && SGN.i18n ? SGN.i18n.p("trial.fieldmap_edit.analysis_starting", "starting analysis") : "starting analysis"));
+    jQuery("#calculate_spatial_correction_status_message").text((SGN.t("trial.fieldmap_edit.analysis_starting", "starting analysis")));
 
     const response = await new Promise((resolve, reject) => {
       jQuery.ajax({
         beforeSend: function(xhr, settings) {
-          jQuery("#calculate_spatial_correction_status_message").text((window.SGN && SGN.i18n ? SGN.i18n.p("trial.fieldmap_edit.analysis_starting", "starting analysis") : "starting analysis"));
+          jQuery("#calculate_spatial_correction_status_message").text((SGN.t("trial.fieldmap_edit.analysis_starting", "starting analysis")));
           jQuery('#working_modal').modal("show");
         },
         url: '/ajax/spatial_model/generate_results/' + trial_id,
@@ -325,11 +325,11 @@ jQuery("#confirm_calculating_spatial_correction").click(async function() {
     });
 
     jQuery('#working_modal').modal("hide");
-    jQuery("#calculate_spatial_correction_status_message").text((window.SGN && SGN.i18n ? SGN.i18n.p("trial.fieldmap_edit.analysis_complete", "Analysis complete. Click below to correct spatial correlation on necessary traits.") : "Analysis complete. Click below to correct spatial correlation on necessary traits."));
+    jQuery("#calculate_spatial_correction_status_message").text((SGN.t("trial.fieldmap_edit.analysis_complete", "Analysis complete. Click below to correct spatial correlation on necessary traits.")));
 
     if (response.error) {
       alert(response.error);
-      alert(window.SGN && SGN.i18n ? SGN.i18n.p("trial.fieldmap_edit.spatial_correction_error", "Error calculating spatial correction") : "Error calculating spatial correction");
+      alert(SGN.t("trial.fieldmap_edit.spatial_correction_error", "Error calculating spatial correction"));
     } else {
       //jQuery("#confirm_store_spatial_correction").prop("disabled", false);
       jQuery("#spatial_correction_results_buttons button").show();
@@ -349,10 +349,10 @@ jQuery("#confirm_calculating_spatial_correction").click(async function() {
         'paging':false,
         'data': response.data,
         'columns': [
-          { 'title': _sgnB12FieldmapEditEscape(window.SGN && SGN.i18n ? SGN.i18n.p('trial.fieldmap_edit.table.trait', 'Trait') : 'Trait') },
-          { 'title': _sgnB12FieldmapEditEscape(window.SGN && SGN.i18n ? SGN.i18n.p('trial.fieldmap_edit.table.data_quality', 'Data Quality') : 'Data Quality') },
-          { 'title': _sgnB12FieldmapEditEscape(window.SGN && SGN.i18n ? SGN.i18n.p('trial.fieldmap_edit.table.moran_p', 'Moran P Value') : 'Moran P Value') },
-          { 'title': _sgnB12FieldmapEditEscape(window.SGN && SGN.i18n ? SGN.i18n.p('trial.fieldmap_edit.table.correction_needed', 'Spatial Correction Needed') : 'Spatial Correction Needed') },
+          { 'title': _sgnB12FieldmapEditEscape(SGN.t('trial.fieldmap_edit.table.trait', 'Trait')) },
+          { 'title': _sgnB12FieldmapEditEscape(SGN.t('trial.fieldmap_edit.table.data_quality', 'Data Quality')) },
+          { 'title': _sgnB12FieldmapEditEscape(SGN.t('trial.fieldmap_edit.table.moran_p', 'Moran P Value')) },
+          { 'title': _sgnB12FieldmapEditEscape(SGN.t('trial.fieldmap_edit.table.correction_needed', 'Spatial Correction Needed')) },
         ],
         'dom': 'Bfrtip',
         'buttons': [
@@ -380,7 +380,7 @@ jQuery("#confirm_calculating_spatial_correction").click(async function() {
     }
   } catch (error) {
     console.error('Error:', error);
-    jQuery("#calculate_spatial_correction_status_message").text((window.SGN && SGN.i18n ? SGN.i18n.p("trial.fieldmap_edit.spatial_correction_status_error", "Error calculating spatial correction.") : "Error calculating spatial correction."));
+    jQuery("#calculate_spatial_correction_status_message").text((SGN.t("trial.fieldmap_edit.spatial_correction_status_error", "Error calculating spatial correction.")));
   }
 });
 
@@ -424,7 +424,7 @@ jQuery("#correct_spatial").click(function() {
       jQuery('#working_modal').modal('hide');
       if (response.error) {
         alert(response.error);
-        alert(window.SGN && SGN.i18n ? SGN.i18n.p("trial.fieldmap_edit.spatial_correction_error", "Error calculating spatial correction") : "Error calculating spatial correction");
+        alert(SGN.t("trial.fieldmap_edit.spatial_correction_error", "Error calculating spatial correction"));
       } else {
         jQuery('#confirm_store_spatial_correction').prop('disabled', false);
         jQuery("#spatial_correction_blue_results_table").DataTable({
@@ -433,12 +433,12 @@ jQuery("#correct_spatial").click(function() {
           'data': response.result,
           'scrollX': true,
           'columns': [
-            { 'title': _sgnB12FieldmapEditEscape(window.SGN && SGN.i18n ? SGN.i18n.p('trial.fieldmap_edit.table.plot', 'Plot') : 'Plot') },
-            { 'title': _sgnB12FieldmapEditEscape(window.SGN && SGN.i18n ? SGN.i18n.p('trial.fieldmap_edit.table.accession', 'Accession') : 'Accession') },
-            { 'title': _sgnB12FieldmapEditEscape(window.SGN && SGN.i18n ? SGN.i18n.p('trial.fieldmap_edit.table.trait', 'Trait') : 'Trait') },
-            { 'title': _sgnB12FieldmapEditEscape(window.SGN && SGN.i18n ? SGN.i18n.p('trial.fieldmap_edit.table.original', 'Original') : 'Original') },
-            { 'title': _sgnB12FieldmapEditEscape(window.SGN && SGN.i18n ? SGN.i18n.p('trial.fieldmap_edit.table.corrected', 'Corrected') : 'Corrected') },
-            { 'title': _sgnB12FieldmapEditEscape(window.SGN && SGN.i18n ? SGN.i18n.p('trial.fieldmap_edit.table.adjustment', 'Adjustment') : 'Adjustment')}
+            { 'title': _sgnB12FieldmapEditEscape(SGN.t('trial.fieldmap_edit.table.plot', 'Plot')) },
+            { 'title': _sgnB12FieldmapEditEscape(SGN.t('trial.fieldmap_edit.table.accession', 'Accession')) },
+            { 'title': _sgnB12FieldmapEditEscape(SGN.t('trial.fieldmap_edit.table.trait', 'Trait')) },
+            { 'title': _sgnB12FieldmapEditEscape(SGN.t('trial.fieldmap_edit.table.original', 'Original')) },
+            { 'title': _sgnB12FieldmapEditEscape(SGN.t('trial.fieldmap_edit.table.corrected', 'Corrected')) },
+            { 'title': _sgnB12FieldmapEditEscape(SGN.t('trial.fieldmap_edit.table.adjustment', 'Adjustment'))}
           ],
           'dom': 'Bfrtip',
           'buttons': [
@@ -455,8 +455,8 @@ jQuery("#correct_spatial").click(function() {
           'data': response.moran_p_values,
           'scrollX': true,
           'columns': [
-            { 'title': _sgnB12FieldmapEditEscape(window.SGN && SGN.i18n ? SGN.i18n.p('trial.fieldmap_edit.table.trait', 'Trait') : 'Trait') },
-            { 'title': _sgnB12FieldmapEditEscape(window.SGN && SGN.i18n ? SGN.i18n.p('trial.fieldmap_edit.table.moran_after', 'Moran P-value after spatial corrections') : 'Moran P-value after spatial corrections') },
+            { 'title': _sgnB12FieldmapEditEscape(SGN.t('trial.fieldmap_edit.table.trait', 'Trait')) },
+            { 'title': _sgnB12FieldmapEditEscape(SGN.t('trial.fieldmap_edit.table.moran_after', 'Moran P-value after spatial corrections')) },
           ]
         });
       }
@@ -475,7 +475,7 @@ jQuery("#correct_spatial").click(function() {
     }, 
     error: function(error) {
       jQuery('#working_modal').modal('hide');
-      alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("trial.fieldmap.spatial_corrections_error_prefix", "Error calculating spatial corrections: ") : "Error calculating spatial corrections: ")+error);
+      alert((SGN.t("trial.fieldmap.spatial_corrections_error_prefix", "Error calculating spatial corrections: "))+error);
     }
   });
 });
@@ -493,11 +493,11 @@ jQuery(document).on('click', '#confirm_store_spatial_correction', async function
         if (response.error) {
             alert(response.error);
         } else {
-            alert(window.SGN && SGN.i18n ? SGN.i18n.p('trial.fieldmap_edit.spatial_saved', "Spatial corrections have been stored in association with this trial. You may also wish to save them as a standalone analysis for use in downstream analyses.\\n") : "Spatial corrections have been stored in association with this trial. You may also wish to save them as a standalone analysis for use in downstream analyses.\\n");
+            alert(SGN.t('trial.fieldmap_edit.spatial_saved', "Spatial corrections have been stored in association with this trial. You may also wish to save them as a standalone analysis for use in downstream analyses.\\n"));
         }
         },
         'error' : function(error) {
-        alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("trial.subplots.error_prefix", "An error occurred: ") : "An error occurred: ") + error);
+        alert((SGN.t("trial.subplots.error_prefix", "An error occurred: ")) + error);
         }
     });
 
@@ -535,8 +535,8 @@ jQuery(document).on('click', '#confirm_store_spatial_correction', async function
 
   				  for (n=0; n<response.plot_name.length; n++){
   			 			for (i=0; i<response.plot_name[n].length; i++) {
-                        trial_plot_name_html = trial_plot_name_html + "<option value=" + response.plot_id[n][i] + "," + response.acc[n][i] + ">" + _sgnB12FieldmapEditEscape((window.SGN && SGN.i18n ? SGN.i18n.p('trial.fieldmap_edit.plot_label.plot_prefix', 'Plot:') : 'Plot:')) + response.plot_name[n][i] + "," + _sgnB12FieldmapEditEscape((window.SGN && SGN.i18n ? SGN.i18n.p('trial.fieldmap_edit.plot_label.number_prefix', ' Number:') : ' Number:')) + response.plot_number[n][i] + "," +_sgnB12FieldmapEditEscape((window.SGN && SGN.i18n ? SGN.i18n.p('trial.fieldmap_edit.plot_label.accession_prefix', ' Accession:') : ' Accession:'))+ response.acc[n][i] +"</option>";
-                            trial_plot_number_html = trial_plot_number_html + "<option value=" + response.plot_id[n][i] + "," + response.acc[n][i] + ">" + _sgnB12FieldmapEditEscape((window.SGN && SGN.i18n ? SGN.i18n.p('trial.fieldmap_edit.plot_label.plot_prefix', 'Plot:') : 'Plot:')) + response.plot_name[n][i] + "," + _sgnB12FieldmapEditEscape((window.SGN && SGN.i18n ? SGN.i18n.p('trial.fieldmap_edit.plot_label.number_prefix', ' Number:') : ' Number:')) + response.plot_number[n][i] + "," +_sgnB12FieldmapEditEscape((window.SGN && SGN.i18n ? SGN.i18n.p('trial.fieldmap_edit.plot_label.accession_prefix', ' Accession:') : ' Accession:'))+ response.acc[n][i] + "</option>";
+                        trial_plot_name_html = trial_plot_name_html + "<option value=" + response.plot_id[n][i] + "," + response.acc[n][i] + ">" + _sgnB12FieldmapEditEscape((SGN.t('trial.fieldmap_edit.plot_label.plot_prefix', 'Plot:'))) + response.plot_name[n][i] + "," + _sgnB12FieldmapEditEscape((SGN.t('trial.fieldmap_edit.plot_label.number_prefix', ' Number:'))) + response.plot_number[n][i] + "," +_sgnB12FieldmapEditEscape((SGN.t('trial.fieldmap_edit.plot_label.accession_prefix', ' Accession:')))+ response.acc[n][i] +"</option>";
+                            trial_plot_number_html = trial_plot_number_html + "<option value=" + response.plot_id[n][i] + "," + response.acc[n][i] + ">" + _sgnB12FieldmapEditEscape((SGN.t('trial.fieldmap_edit.plot_label.plot_prefix', 'Plot:'))) + response.plot_name[n][i] + "," + _sgnB12FieldmapEditEscape((SGN.t('trial.fieldmap_edit.plot_label.number_prefix', ' Number:'))) + response.plot_number[n][i] + "," +_sgnB12FieldmapEditEscape((SGN.t('trial.fieldmap_edit.plot_label.accession_prefix', ' Accession:')))+ response.acc[n][i] + "</option>";
   				 		}
   					}
   					trial_plot_name_html = trial_plot_name_html + "</select>";
@@ -582,14 +582,14 @@ jQuery(document).on('click', '#confirm_store_spatial_correction', async function
                 jQuery('#working_modal').modal("hide");
 
                 if (response.error) {
-                    alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("trial.fieldmap.replace_stock_error_prefix", "Error Replacing Stock: ") : "Error Replacing Stock: ")+response.error);
+                    alert((SGN.t("trial.fieldmap.replace_stock_error_prefix", "Error Replacing Stock: "))+response.error);
                 } else {
                     jQuery('#replace_stock_dialog_success_message').modal("show");
                 }
             },
             error: function() {
                 jQuery('#working_modal').modal("hide");
-                alert(window.SGN && SGN.i18n ? SGN.i18n.p("trial.fieldmap_edit.replace_stock_network_error", "An error occurred replacing stock") : "An error occurred replacing stock");
+                alert(SGN.t("trial.fieldmap_edit.replace_stock_network_error", "An error occurred replacing stock"));
             }
         });
     }
@@ -654,45 +654,45 @@ jQuery(document).on('click', '#confirm_store_spatial_correction', async function
     var subs_success_message = '';
 
     if (trial_stock_type == 'family_name') {
-        edit_dialog_title = (window.SGN && SGN.i18n ? SGN.i18n.p("trial.fieldmap_edit.stock.family_name.edit_dialog_title", "Replace Trial Family Names Or Substitute Family Names Within A Trial Plots") : "Replace Trial Family Names Or Substitute Family Names Within A Trial Plots");
-        replace_button_label = (window.SGN && SGN.i18n ? SGN.i18n.p("trial.fieldmap_edit.stock.family_name.replace_button_label", "Replace Family Name") : "Replace Family Name");
+        edit_dialog_title = (SGN.t("trial.fieldmap_edit.stock.family_name.edit_dialog_title", "Replace Trial Family Names Or Substitute Family Names Within A Trial Plots"));
+        replace_button_label = (SGN.t("trial.fieldmap_edit.stock.family_name.replace_button_label", "Replace Family Name"));
         substitute_button_label = 'Substitute Family Name';
         replace_dialog_title = (window.SGN && SGN.i18n ? SGN.i18n.p("trial.fieldmap_edit.stock.family_name.replace_dialog_title", "Replace Trial Family Name in %{trial_name}", {trial_name: String(trial_name)}) : "Replace Trial Family Name in ".concat(trial_name));
-        replace_stock_text1 = (window.SGN && SGN.i18n ? SGN.i18n.p("trial.fieldmap_edit.stock.family_name.replace_stock_text1", "Select Family Name: ") : "Select Family Name: ");
-        replace_stock_text2 = (window.SGN && SGN.i18n ? SGN.i18n.p("trial.fieldmap_edit.stock.family_name.replace_stock_text2", "Enter New Family Name: ") : "Enter New Family Name: ");
-        replace_button_submit = (window.SGN && SGN.i18n ? SGN.i18n.p("trial.fieldmap_edit.stock.family_name.replace_button_submit", "Replace Trial Family Name") : "Replace Trial Family Name");
+        replace_stock_text1 = (SGN.t("trial.fieldmap_edit.stock.family_name.replace_stock_text1", "Select Family Name: "));
+        replace_stock_text2 = (SGN.t("trial.fieldmap_edit.stock.family_name.replace_stock_text2", "Enter New Family Name: "));
+        replace_button_submit = (SGN.t("trial.fieldmap_edit.stock.family_name.replace_button_submit", "Replace Trial Family Name"));
         substitute_dialog_title = 'Substitute Plot Family Name in '.concat(trial_name);
         substitute_button_submit = 'Substitute Plot Family Name';
-        replace_message_title = (window.SGN && SGN.i18n ? SGN.i18n.p("trial.fieldmap_edit.stock.family_name.replace_message_title", "Replace Trial Family Name") : "Replace Trial Family Name");
-        replace_success_message = (window.SGN && SGN.i18n ? SGN.i18n.p("trial.fieldmap_edit.stock.family_name.replace_success_message", "Family Name was replaced successfully.") : "Family Name was replaced successfully.");
+        replace_message_title = (SGN.t("trial.fieldmap_edit.stock.family_name.replace_message_title", "Replace Trial Family Name"));
+        replace_success_message = (SGN.t("trial.fieldmap_edit.stock.family_name.replace_success_message", "Family Name was replaced successfully."));
         subs_message_title = 'Substitute Plot Family Name';
         subs_success_message = 'Family Name was substituted successfully.';
     } else if (trial_stock_type == 'cross') {
-        edit_dialog_title = (window.SGN && SGN.i18n ? SGN.i18n.p("trial.fieldmap_edit.stock.cross.edit_dialog_title", "Replace Trial Cross Unique IDs Or Substitute Cross Unique IDs Within A Trial Plots") : "Replace Trial Cross Unique IDs Or Substitute Cross Unique IDs Within A Trial Plots");
-        replace_button_label = (window.SGN && SGN.i18n ? SGN.i18n.p("trial.fieldmap_edit.stock.cross.replace_button_label", "Replace Cross Unique ID") : "Replace Cross Unique ID");
+        edit_dialog_title = (SGN.t("trial.fieldmap_edit.stock.cross.edit_dialog_title", "Replace Trial Cross Unique IDs Or Substitute Cross Unique IDs Within A Trial Plots"));
+        replace_button_label = (SGN.t("trial.fieldmap_edit.stock.cross.replace_button_label", "Replace Cross Unique ID"));
         substitute_button_label = 'Substitute Cross Unique ID';
         replace_dialog_title = (window.SGN && SGN.i18n ? SGN.i18n.p("trial.fieldmap_edit.stock.cross.replace_dialog_title", "Replace Trial Cross Unique ID in %{trial_name}", {trial_name: String(trial_name)}) : "Replace Trial Cross Unique ID in ".concat(trial_name));
-        replace_stock_text1 = (window.SGN && SGN.i18n ? SGN.i18n.p("trial.fieldmap_edit.stock.cross.replace_stock_text1", "Select Cross Unique ID: ") : "Select Cross Unique ID: ");
-        replace_stock_text2 = (window.SGN && SGN.i18n ? SGN.i18n.p("trial.fieldmap_edit.stock.cross.replace_stock_text2", "Enter New Cross Unique ID: ") : "Enter New Cross Unique ID: ");
-        replace_button_submit = (window.SGN && SGN.i18n ? SGN.i18n.p("trial.fieldmap_edit.stock.cross.replace_button_submit", "Replace Trial Cross Unique ID") : "Replace Trial Cross Unique ID");
+        replace_stock_text1 = (SGN.t("trial.fieldmap_edit.stock.cross.replace_stock_text1", "Select Cross Unique ID: "));
+        replace_stock_text2 = (SGN.t("trial.fieldmap_edit.stock.cross.replace_stock_text2", "Enter New Cross Unique ID: "));
+        replace_button_submit = (SGN.t("trial.fieldmap_edit.stock.cross.replace_button_submit", "Replace Trial Cross Unique ID"));
         substitute_dialog_title = 'Substitute Plot Cross Unique ID in '.concat(trial_name);
         substitute_button_submit = 'Substitute Plot Cross Unique ID';
-        replace_message_title = (window.SGN && SGN.i18n ? SGN.i18n.p("trial.fieldmap_edit.stock.cross.replace_message_title", "Replace Cross Unique ID") : "Replace Cross Unique ID");
-        replace_success_message = (window.SGN && SGN.i18n ? SGN.i18n.p("trial.fieldmap_edit.stock.cross.replace_success_message", "Cross Unique ID was replaced successfully.") : "Cross Unique ID was replaced successfully.");
+        replace_message_title = (SGN.t("trial.fieldmap_edit.stock.cross.replace_message_title", "Replace Cross Unique ID"));
+        replace_success_message = (SGN.t("trial.fieldmap_edit.stock.cross.replace_success_message", "Cross Unique ID was replaced successfully."));
         subs_message_title = 'Substitute Cross Unique ID';
         subs_success_message = 'Crosss Unique ID was substituted successfully.';
     } else {
-        edit_dialog_title = (window.SGN && SGN.i18n ? SGN.i18n.p("trial.fieldmap_edit.stock.accession.edit_dialog_title", "Replace Trial Accessions Within A Trial Plots") : "Replace Trial Accessions Within A Trial Plots");
-        replace_button_label = (window.SGN && SGN.i18n ? SGN.i18n.p("trial.fieldmap_edit.stock.accession.replace_button_label", "Replace Accession") : "Replace Accession");
+        edit_dialog_title = (SGN.t("trial.fieldmap_edit.stock.accession.edit_dialog_title", "Replace Trial Accessions Within A Trial Plots"));
+        replace_button_label = (SGN.t("trial.fieldmap_edit.stock.accession.replace_button_label", "Replace Accession"));
         // substitute_button_label = 'Substitute Accession';
         replace_dialog_title = (window.SGN && SGN.i18n ? SGN.i18n.p("trial.fieldmap_edit.stock.accession.replace_dialog_title", "Replace Trial Accession in %{trial_name}", {trial_name: String(trial_name)}) : "Replace Trial Accession in ".concat(trial_name));
-        replace_stock_text1 = (window.SGN && SGN.i18n ? SGN.i18n.p("trial.fieldmap_edit.stock.accession.replace_stock_text1", "Select Accession: ") : "Select Accession: ");
-        replace_stock_text2 = (window.SGN && SGN.i18n ? SGN.i18n.p("trial.fieldmap_edit.stock.accession.replace_stock_text2", "Enter New Accession: ") : "Enter New Accession: ");
-        replace_button_submit = (window.SGN && SGN.i18n ? SGN.i18n.p("trial.fieldmap_edit.stock.accession.replace_button_submit", "Replace Trial Accession") : "Replace Trial Accession");
+        replace_stock_text1 = (SGN.t("trial.fieldmap_edit.stock.accession.replace_stock_text1", "Select Accession: "));
+        replace_stock_text2 = (SGN.t("trial.fieldmap_edit.stock.accession.replace_stock_text2", "Enter New Accession: "));
+        replace_button_submit = (SGN.t("trial.fieldmap_edit.stock.accession.replace_button_submit", "Replace Trial Accession"));
         // substitute_dialog_title = 'Substitute Plot Accession in '.concat(trial_name);
         // substitute_button_submit = 'Substitute Plot Accession';
-        replace_message_title = (window.SGN && SGN.i18n ? SGN.i18n.p("trial.fieldmap_edit.stock.accession.replace_message_title", "Replace Trial Accession") : "Replace Trial Accession");
-        replace_success_message = (window.SGN && SGN.i18n ? SGN.i18n.p("trial.fieldmap_edit.stock.accession.replace_success_message", "Accession was replaced successfully.") : "Accession was replaced successfully.");
+        replace_message_title = (SGN.t("trial.fieldmap_edit.stock.accession.replace_message_title", "Replace Trial Accession"));
+        replace_success_message = (SGN.t("trial.fieldmap_edit.stock.accession.replace_success_message", "Accession was replaced successfully."));
         // subs_message_title = 'Substitute Plot Accession';
         // subs_success_message = 'Accession was substituted successfully.';
     }

@@ -97,3 +97,18 @@ test('requested regional tag remains separate from effective language', () => {
     assert.equal(translator.p('controls.save','Save'),'Зберегти');
     assert.throws(()=>new I18N({...payload,requestedLocale:'../uk'}),/requested locale/);
 });
+
+
+test('short helpers follow bootstrap replacement and retain English without catalogs', () => {
+ const target={}; I18N.install(target);
+ assert.equal(target.SGN.t('name', 'Name: %{name}', {name:'A&B'}), 'Name: A&B');
+ assert.equal(target.SGN.tn('count', '%{count} trial', '%{count} trials', 0, {count:0}), '0 trials');
+ target.SGN.i18n=create('uk');
+ assert.equal(target.SGN.t('controls.save','Save'),'Зберегти');
+ assert.equal(target.SGN.tn('trials.count','%{count} trial found','%{count} trials found',22,{count:22}),'Знайдено 22 досліди');
+ target.SGN.i18n=create('ar');
+ assert.equal(target.SGN.tn('trials.count','%{count} trial found','%{count} trials found',3,{count:3}),'ar[3] 3');
+ delete target.SGN.i18n;
+ assert.equal(target.SGN.t('controls.save','Save'),'Save');
+ assert.throws(()=>target.SGN.t('name','%{name}',{}),/named variable/);
+});

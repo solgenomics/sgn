@@ -77,8 +77,8 @@ jQuery(document).ready(function () {
                 jQuery('#subplot_select_existing_list_name').html(lo.listSelect('subplot_select_existing_list_name', ['subplots'], undefined, undefined, undefined));
             },
             error: function(response) {
-                jQuery('#trial_subplots_html').text(window.SGN && SGN.i18n ? SGN.i18n.p('trial.subplots.select_error', "error") : "error");
-                alert((window.SGN && SGN.i18n ? SGN.i18n.p('trial.subplots.ajax_error', "An error occurred") : "An error occurred"));
+                jQuery('#trial_subplots_html').text(SGN.t('trial.subplots.select_error', "error"));
+                alert((SGN.t('trial.subplots.ajax_error', "An error occurred")));
             }
         });
     });
@@ -106,7 +106,7 @@ jQuery(document).ready(function () {
             success : function(response) {
                 if (response.error) {
                     jQuery('#working_modal').modal("hide");
-                    alert((window.SGN && SGN.i18n ? SGN.i18n.p('trial.subplots.error_prefix', "An error occurred: ") : "An error occurred: ") + response.error);
+                    alert((SGN.t('trial.subplots.error_prefix', "An error occurred: ")) + response.error);
                 } else {
                     let new_list_id = response.list_id;
                     jQuery.ajax({
@@ -114,7 +114,7 @@ jQuery(document).ready(function () {
                         success: function(response) {
                             if (response.error) {
                                 jQuery('#working_modal').modal("hide");
-                                alert((window.SGN && SGN.i18n ? SGN.i18n.p('trial.subplots.list_add_error_prefix', "The new list was created, but an error occurred adding items to it: ") : "The new list was created, but an error occurred adding items to it: ") + response.error);
+                                alert((SGN.t('trial.subplots.list_add_error_prefix', "The new list was created, but an error occurred adding items to it: ")) + response.error);
                             } else {
                                 jQuery.ajax({
                                     url : '/list/add/bulk',
@@ -130,30 +130,30 @@ jQuery(document).ready(function () {
                                     success : function(response) { 
                                         jQuery('#working_modal').modal("hide");
                                         if (response.error) {
-                                            alert((window.SGN && SGN.i18n ? SGN.i18n.p('trial.subplots.list_add_error_prefix', "The new list was created, but an error occurred adding items to it: ") : "The new list was created, but an error occurred adding items to it: ") + response.error);
+                                            alert((SGN.t('trial.subplots.list_add_error_prefix', "The new list was created, but an error occurred adding items to it: ")) + response.error);
                                         } else {
-                                            alert((window.SGN && SGN.i18n ? SGN.i18n.p('trial.subplots.list_created', "List created.") : "List created."));
+                                            alert((SGN.t('trial.subplots.list_created', "List created.")));
                                             var lo = new CXGN.List();
                                             jQuery('#subplot_select_existing_list_name').html(lo.listSelect('subplot_select_existing_list_name', ['subplots'], undefined, undefined, undefined));
                                         }
                                     },
                                     error : function(error) {
                                         jQuery('#working_modal').modal("hide");
-                                        alert((window.SGN && SGN.i18n ? SGN.i18n.p('trial.subplots.created_add_server_error', "The new list was created, but a server error occurred adding items to it.") : "The new list was created, but a server error occurred adding items to it."));
+                                        alert((SGN.t('trial.subplots.created_add_server_error', "The new list was created, but a server error occurred adding items to it.")));
                                     }
                                 });
                             }
                         },
                         error : function() {
                             jQuery('#working_modal').modal("hide");
-                            alert((window.SGN && SGN.i18n ? SGN.i18n.p('trial.subplots.created_add_server_error', "The new list was created, but a server error occurred adding items to it.") : "The new list was created, but a server error occurred adding items to it."));
+                            alert((SGN.t('trial.subplots.created_add_server_error', "The new list was created, but a server error occurred adding items to it.")));
                         }
                     });
                 }
             },
             error : function() {
                 jQuery('#working_modal').modal("hide");
-                alert((window.SGN && SGN.i18n ? SGN.i18n.p('trial.subplots.create_server_error', "A server error occurred making new list.") : "A server error occurred making new list."));
+                alert((SGN.t('trial.subplots.create_server_error', "A server error occurred making new list.")));
             }
         })
     });
@@ -176,20 +176,20 @@ jQuery(document).ready(function () {
             success : function(response) {
                 jQuery('#working_modal').modal("hide");
                 if (response.error) {
-                    alert((window.SGN && SGN.i18n ? SGN.i18n.p('trial.subplots.list_add_prefix', "Error adding items to list: ") : "Error adding items to list: ") + response.error);
+                    alert((SGN.t('trial.subplots.list_add_prefix', "Error adding items to list: ")) + response.error);
                 } else {
-                    alert((window.SGN && SGN.i18n ? SGN.i18n.p('trial.subplots.added_to_list', "Subplots added to list.") : "Subplots added to list."));
+                    alert((SGN.t('trial.subplots.added_to_list', "Subplots added to list.")));
                 }
             },
             error : function() {
                 jQuery('#working_modal').modal("hide");
-                alert((window.SGN && SGN.i18n ? SGN.i18n.p('trial.subplots.add_server_error', "Server error adding subplots to list.") : "Server error adding subplots to list."));
+                alert((SGN.t('trial.subplots.add_server_error', "Server error adding subplots to list.")));
             }
         });
     }); 
 
     jQuery('#subplot_select_delete_subplots').click(function() {
-        if (confirm((window.SGN && SGN.i18n ? SGN.i18n.p('trial.subplots.confirm_delete', "Are you sure you want to delete the selected subplots? Any child stocks, such as plants or tissue samples, will also be deleted. This action cannot be undone.") : "Are you sure you want to delete the selected subplots? Any child stocks, such as plants or tissue samples, will also be deleted. This action cannot be undone."))) {
+        if (confirm((SGN.t('trial.subplots.confirm_delete', "Are you sure you want to delete the selected subplots? Any child stocks, such as plants or tissue samples, will also be deleted. This action cannot be undone.")))) {
             let subplot_ids = jQuery('.exp_design_subplot_select:checkbox:checked')
                 .map(function() {
                     return this.id.replace('select_subplot_', '');
@@ -209,15 +209,15 @@ jQuery(document).ready(function () {
                 success : function(response) {
                     jQuery('#working_modal').modal("hide");
                     if (response.error) {
-                        alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("trial.card.error_prefix", "Error: ") : "Error: ") + response.error);
+                        alert((SGN.t("trial.card.error_prefix", "Error: ")) + response.error);
                     } else {
-                        alert((window.SGN && SGN.i18n ? SGN.i18n.p('trial.subplots.deleted', "Subplots deleted.") : "Subplots deleted."));
+                        alert((SGN.t('trial.subplots.deleted', "Subplots deleted.")));
                         window.location.reload();
                     }
                 },
                 error : function(response) {
                     jQuery('#working_modal').modal("hide");
-                    alert((window.SGN && SGN.i18n ? SGN.i18n.p('trial.subplots.server_console', "A server error occurred, check console.") : "A server error occurred, check console."));
+                    alert((SGN.t('trial.subplots.server_console', "A server error occurred, check console.")));
                 }
             });
         } 

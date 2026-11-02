@@ -140,7 +140,7 @@ solGS.combinedTrials = {
 		} else {
 
                     if (res.not_matching_pops){
-			alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.marker_sets_population_prefix", "populations ") : "populations ") + res.not_matching_pops + (window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.marker_sets_mismatch", " were genotyped using different marker sets. Please make new selections to combine.") : " were genotyped using different marker sets. Please make new selections to combine."));
+			alert((SGN.t("solgs.browser.marker_sets_population_prefix", "populations ")) + res.not_matching_pops + (SGN.t("solgs.browser.marker_sets_mismatch", " were genotyped using different marker sets. Please make new selections to combine.")));
 			window.location.href =  '/solgs/search/result/populations/' + trId;
                     }
 

@@ -53,7 +53,7 @@ $trial_has_plants => undef
 jQuery(document).ready(function() {
 
     jQuery('#create_tissue_sample_entries_button').click( function () {
-        alert(window.SGN && SGN.i18n ? SGN.i18n.p("genotype.tissue.add.linkage_notice", "Please check the Experimental Linkage section to see if this trial is linked to a Genotyping Plate already! You may not need to create new tissue samples for your use case!") : "Please check the Experimental Linkage section to see if this trial is linked to a Genotyping Plate already! You may not need to create new tissue samples for your use case!");
+        alert(SGN.t("genotype.tissue.add.linkage_notice", "Please check the Experimental Linkage section to see if this trial is linked to a Genotyping Plate already! You may not need to create new tissue samples for your use case!"));
         jQuery('#add_tissue_samples_dialog').modal("show");
     });
 
@@ -65,9 +65,9 @@ jQuery(document).ready(function() {
         var num_tissues = jQuery(this).val();
         var html = '';
         for (var i=1; i<=num_tissues; i++){
-            var helpText = window.SGN && SGN.i18n ? SGN.i18n.p('genotype.tissue.create.sample_name_help', 'The sample names will be a combination of the plant name, the tissue name you give here, and the tissue number.') : 'The sample names will be a combination of the plant name, the tissue name you give here, and the tissue number.';
+            var helpText = SGN.t('genotype.tissue.create.sample_name_help', 'The sample names will be a combination of the plant name, the tissue name you give here, and the tissue number.');
             var nameText = window.SGN && SGN.i18n ? SGN.i18n.p('genotype.tissue.create.tissue_name', 'Tissue Name %{index}:', {index: i}) : 'Tissue Name ' + i + ':';
-            var exampleText = window.SGN && SGN.i18n ? SGN.i18n.p('genotype.tissue.create.examples_extended', 'examples: leaf, root, stem, seed, fruit or tuber') : 'examples: leaf, root, stem, seed, fruit or tuber';
+            var exampleText = SGN.t('genotype.tissue.create.examples_extended', 'examples: leaf, root, stem, seed, fruit or tuber');
             html = html + '<div class="form-group"><label class="col-sm-3 control-label"><span title="' + jQuery('<span>').text(helpText).html() + '"><span class="glyphicon glyphicon-info-sign"></span>&nbsp;&nbsp;' + jQuery('<span>').text(nameText).html() + '</span></label><div class="col-sm-9" ><input name="add_tissue_samples_tissue_name" id="add_tissue_samples_tissue_name_'+i+'" class="form-control" type="text" placeholder="' + jQuery('<span>').text(exampleText).html() + '" /></div></div>';
         }
         jQuery('#add_tissue_samples_names_div').html(html);
@@ -104,14 +104,14 @@ function add_tissue_samples_to_trial() {
           alert(response.error);
         }
         else {
-          alert(window.SGN && SGN.i18n ? SGN.i18n.p("genotype.tissue.create.samples_saved", "Successfully created tissue sample entries.") : "Successfully created tissue sample entries.");
+          alert(SGN.t("genotype.tissue.create.samples_saved", "Successfully created tissue sample entries."));
           jQuery('#add_plants_dialog').modal("hide");
           window.location.replace('/breeders/trial/'+<% $trial_id %>);
         }
       },
       error: function(response) {
         disable_working_modal();
-        alert(window.SGN && SGN.i18n ? SGN.i18n.p("genotype.tissue.create.samples_create_error", "An error occurred creating tissue sample entries") : "An error occurred creating tissue sample entries");
+        alert(SGN.t("genotype.tissue.create.samples_create_error", "An error occurred creating tissue sample entries"));
       },
     });
 

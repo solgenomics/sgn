@@ -297,7 +297,7 @@ ${worksheetEntries.map(sheet => `  <Relationship Id="rId${sheet.id}" Type="http:
     qs("#export-full-jpg-btn")?.addEventListener("click", function () {
       const exportGrid = createFullGridExportElement();
       if (!exportGrid) {
-        alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("decision.js.set_the_field_rows_and_columns_before_exporting_the_full_grid", "Set the field rows and columns before exporting the full grid.") : "Set the field rows and columns before exporting the full grid."));
+        alert((SGN.t("decision.js.set_the_field_rows_and_columns_before_exporting_the_full_grid", "Set the field rows and columns before exporting the full grid.")));
         return;
       }
 
@@ -316,7 +316,7 @@ ${worksheetEntries.map(sheet => `  <Relationship Id="rId${sheet.id}" Type="http:
         link.click();
       }).catch(error => {
         console.error("Full grid export failed:", error);
-        alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("decision.js.could_not_export_the_full_field_grid", "Could not export the full field grid.") : "Could not export the full field grid."));
+        alert((SGN.t("decision.js.could_not_export_the_full_field_grid", "Could not export the full field grid.")));
       }).finally(() => {
         exportGrid.remove();
       });

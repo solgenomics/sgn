@@ -148,7 +148,7 @@ jQuery(document).ready(function(){
 
     jQuery("#upload_transgenic_lines_submit").click(function(){
         if (transgenic_lines_upload_file === ''){
-            alert((window.SGN && window.SGN.i18n ? SGN.i18n.p('global.manage_file_share_dump.select_file', 'Please select a file') : 'Please select a file'));
+            alert((SGN.t('global.manage_file_share_dump.select_file', 'Please select a file')));
             return;
         }
 

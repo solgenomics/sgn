@@ -32,17 +32,31 @@ filenames, permissions or locale negotiation. Legacy packs fall back to tags.
 
 =cut
 
+sub _i18n_translator {
+    my ($c, $locale) = @_;
+    my $available = $c->stash->{i18n_available} ||= {};
+    return $available->{$locale} if exists $available->{$locale};
+    my $translator = eval { SGN::I18N->new(
+        locale => $locale, domain => 'sgn',
+        catalog_root => $c->config->{i18n_catalog_dir} || $c->path_to('locale', 'build')->stringify,
+    ) };
+    if (!$translator) {
+        $c->log->warn('Unavailable i18n catalog for ' . $locale) if $c->can('log');
+    } elsif ($locale ne 'en' && $translator->locale eq 'en') {
+        $translator = undef;
+    }
+    $available->{$locale} = $translator;
+    return $translator;
+}
+
 sub i18n_locale_choices {
     my ($c) = @_;
-    return map {
-        my $locale = $_;
-        my $translator = SGN::I18N->new(
-            locale => $locale, domain => 'sgn',
-            catalog_root => $c->config->{i18n_catalog_dir} || $c->path_to('locale', 'build')->stringify,
-        );
-        +{ locale => $locale, name => $translator->locale eq 'en' && lc($locale) ne 'en'
-            ? $locale : $translator->language_name };
-    } $c->i18n_locales;
+    my @choices;
+    for my $locale ($c->i18n_locales) {
+        my $translator = $c->_i18n_translator($locale);
+        push @choices, {locale => $locale, name => $translator->language_name} if $translator;
+    }
+    return @choices;
 }
 
 sub _i18n_match_locale {
@@ -91,10 +105,10 @@ sub initialize_i18n {
         push @preferences, [$c->config->{i18n_default_locale} || 'en', 'default'], ['en', 'default'];
         for my $preference (@preferences) {
             my $matched = _i18n_match_locale($preference->[0], \@locales);
-            if ($matched) { ($locale, $source) = ($matched, $preference->[1]); last; }
+            if ($matched && $c->_i18n_translator($matched)) { ($locale, $source) = ($matched, $preference->[1]); last; }
         }
     }
-    my $translator = SGN::I18N->new(
+    my $translator = ($c->config->{i18n_enabled} ? $c->_i18n_translator($locale) : undef) || SGN::I18N->new(
         locale => $locale,
         domain => 'sgn',
         catalog_root => $c->config->{i18n_catalog_dir} || $c->path_to('locale', 'build')->stringify,
@@ -114,6 +128,23 @@ mutates another request's language.
 sub i18n {
     my ($c) = @_;
     return $c->stash->{i18n} || $c->initialize_i18n;
+}
+
+=head2 i18n_manual_url
+
+Return a published manual matching the effective UI locale, with English fallback.
+Publishing a manual is independent of installing an interface language pack.
+
+=cut
+
+sub i18n_manual_url {
+    my ($c) = @_;
+    my $base = $c->config->{i18n_manual_base_url} || 'https://solgenomics.github.io/sgn';
+    $base =~ s{/+$}{};
+    my $value = $c->config->{i18n_manual_locales} || 'en';
+    my @locales = ref($value) eq 'ARRAY' ? @$value : split /\s*,\s*/, $value;
+    my $locale = _i18n_match_locale($c->i18n->locale, \@locales) || 'en';
+    return $base . ($locale eq 'en' ? '/' : '/' . $locale . '/');
 }
 
 1;

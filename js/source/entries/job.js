@@ -7,20 +7,20 @@
 */
 
 export function dismiss_job(job_id) {
-    if(confirm((window.SGN && window.SGN.i18n ? SGN.i18n.p("jobs.interface.dismiss_job_warning", "Job dismissal removes record of this submission, but does not delete any resulting analyses or other data. Are you sure you want to proceed?") : "Job dismissal removes record of this submission, but does not delete any resulting analyses or other data. Are you sure you want to proceed?"))) {
+    if(confirm((SGN.t("jobs.interface.dismiss_job_warning", "Job dismissal removes record of this submission, but does not delete any resulting analyses or other data. Are you sure you want to proceed?")))) {
         $.ajax({
             url: '/ajax/job/delete/'+job_id,
             success: function(response) {
                 if (response.error) {
-                    alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("jobs.interface.error_dismissing_job", "Error dismissing job.") : "Error dismissing job."));
+                    alert((SGN.t("jobs.interface.error_dismissing_job", "Error dismissing job.")));
                     window.location.reload();
                 } else {
-                    alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("jobs.interface.job_record_deleted", "Job record deleted.") : "Job record deleted."));
+                    alert((SGN.t("jobs.interface.job_record_deleted", "Job record deleted.")));
                     window.location.reload();
                 }
             },
             error: function(response) {
-                alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("jobs.interface.error_dismissing_job", "Error dismissing job.") : "Error dismissing job."));
+                alert((SGN.t("jobs.interface.error_dismissing_job", "Error dismissing job.")));
                 window.location.reload();
             }
         });
@@ -28,21 +28,21 @@ export function dismiss_job(job_id) {
 }
 
 export function dismiss_finished_jobs(user_id) {
-    if (confirm((window.SGN && window.SGN.i18n ? SGN.i18n.p("jobs.interface.dismiss_all_finished_and_canceled_jobs_confirm", "Dismiss all finished and canceled jobs?") : "Dismiss all finished and canceled jobs?"))){
+    if (confirm((SGN.t("jobs.interface.dismiss_all_finished_and_canceled_jobs_confirm", "Dismiss all finished and canceled jobs?")))){
 
         $.ajax({
             url: '/ajax/job/delete_finished/'+user_id,
             success: function(response) {
                 if (response.error) {
-                    alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("jobs.interface.error_dismissing_jobs", "Error dismissing jobs.") : "Error dismissing jobs."));
+                    alert((SGN.t("jobs.interface.error_dismissing_jobs", "Error dismissing jobs.")));
                     window.location.reload();
                 } else {
-                    alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("jobs.interface.jobs_cleared", "Jobs cleared.") : "Jobs cleared."));
+                    alert((SGN.t("jobs.interface.jobs_cleared", "Jobs cleared.")));
                     window.location.reload();
                 }
             },
             error: function(response) {
-                alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("jobs.interface.error_dismissing_jobs", "Error dismissing jobs.") : "Error dismissing jobs."));
+                alert((SGN.t("jobs.interface.error_dismissing_jobs", "Error dismissing jobs.")));
                 window.location.reload();
             }
         });
@@ -50,41 +50,41 @@ export function dismiss_finished_jobs(user_id) {
 }
 
 export function cancel_job(job_id) {
-    if(confirm((window.SGN && window.SGN.i18n ? SGN.i18n.p("jobs.interface.cancel_job_confirm", "Are you sure you want to cancel?") : "Are you sure you want to cancel?"))) {
+    if(confirm((SGN.t("jobs.interface.cancel_job_confirm", "Are you sure you want to cancel?")))) {
         $.ajax({
             url: '/ajax/job/cancel/'+job_id,
             success: function(response) {
                 if (response.error) {
-                    alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("jobs.interface.error_canceling_job", "Error canceling job.") : "Error canceling job."));
+                    alert((SGN.t("jobs.interface.error_canceling_job", "Error canceling job.")));
                 } else {
-                    alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("jobs.interface.job_canceled", "Job canceled.") : "Job canceled."));
+                    alert((SGN.t("jobs.interface.job_canceled", "Job canceled.")));
                     window.location.reload();
                 }
             },
             error: function(response) {
-                alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("jobs.interface.error_canceling_job", "Error canceling job.") : "Error canceling job."));
+                alert((SGN.t("jobs.interface.error_canceling_job", "Error canceling job.")));
             }
         });
     } 
 }
 
 export function keep_recent_jobs(user_id) {
-    if (confirm((window.SGN && window.SGN.i18n ? SGN.i18n.p("jobs.interface.dismiss_old_jobs_confirm", "Dismiss old jobs?") : "Dismiss old jobs?"))){
+    if (confirm((SGN.t("jobs.interface.dismiss_old_jobs_confirm", "Dismiss old jobs?")))){
         var interval = jQuery('#keep_recent_jobs_select').val();
 
         $.ajax({
             url: '/ajax/job/delete_older_than/'+interval+'/'+user_id,
             success: function(response) {
                 if (response.error) {
-                    alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("jobs.interface.error_dismissing_jobs", "Error dismissing jobs.") : "Error dismissing jobs."));
+                    alert((SGN.t("jobs.interface.error_dismissing_jobs", "Error dismissing jobs.")));
                     window.location.reload();
                 } else {
-                    alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("jobs.interface.jobs_cleared", "Jobs cleared.") : "Jobs cleared."));
+                    alert((SGN.t("jobs.interface.jobs_cleared", "Jobs cleared.")));
                     window.location.reload();
                 }
             },
             error: function(response) {
-                alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("jobs.interface.error_dismissing_jobs", "Error dismissing jobs.") : "Error dismissing jobs."));
+                alert((SGN.t("jobs.interface.error_dismissing_jobs", "Error dismissing jobs.")));
                 window.location.reload();
             }
         });
@@ -92,20 +92,20 @@ export function keep_recent_jobs(user_id) {
 }
 
 export function dismiss_dead_jobs(user_id) {
-    if (confirm((window.SGN && window.SGN.i18n ? SGN.i18n.p("jobs.interface.failed_timed_out_jobs_confirm", "Dismiss failed and timed out jobs?") : "Dismiss failed and timed out jobs?"))) {
+    if (confirm((SGN.t("jobs.interface.failed_timed_out_jobs_confirm", "Dismiss failed and timed out jobs?")))) {
         $.ajax({
             url: '/ajax/job/delete_dead_jobs/'+user_id,
             success: function(response) {
                 if (response.error) {
-                    alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("jobs.interface.error_dismissing_jobs", "Error dismissing jobs.") : "Error dismissing jobs."));
+                    alert((SGN.t("jobs.interface.error_dismissing_jobs", "Error dismissing jobs.")));
                     window.location.reload();
                 } else {
-                    alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("jobs.interface.jobs_cleared", "Jobs cleared.") : "Jobs cleared."));
+                    alert((SGN.t("jobs.interface.jobs_cleared", "Jobs cleared.")));
                     window.location.reload();
                 }
             },
             error: function(response) {
-                alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("jobs.interface.error_dismissing_jobs", "Error dismissing jobs.") : "Error dismissing jobs."));
+                alert((SGN.t("jobs.interface.error_dismissing_jobs", "Error dismissing jobs.")));
                 window.location.reload();
             }
         });

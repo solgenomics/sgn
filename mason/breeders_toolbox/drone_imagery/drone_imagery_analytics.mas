@@ -466,14 +466,14 @@ jQuery(document).ready(function() {
         manage_drone_imagery_analytics_field_trial_id_array = jQuery('#drone_imagery_analytics_field_trial_id').val();
 
         if (!manage_drone_imagery_analytics_field_trial_id_array || manage_drone_imagery_analytics_field_trial_id_array.length > 1) {
-            alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("drone.interface.please_only_select_a_single_field_trial_for_now", "Please only select a single field trial for now!") : "Please only select a single field trial for now!"));
+            alert((SGN.t("drone.interface.please_only_select_a_single_field_trial_for_now", "Please only select a single field trial for now!")));
             return false;
         }
 
         manage_drone_imagery_analytics_field_trial_id_string = manage_drone_imagery_analytics_field_trial_id_array.join(",");
         manage_drone_imagery_analytics_observation_variable_type = jQuery('#drone_imagery_analytics_select_observation_variable_type').val();
         if (manage_drone_imagery_analytics_field_trial_id_string == '') {
-            alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("analysis.interface.please_select_a_field_trial_first", "Please select a field trial first!") : "Please select a field trial first!"));
+            alert((SGN.t("analysis.interface.please_select_a_field_trial_first", "Please select a field trial first!")));
         } else {
             if (manage_drone_imagery_analytics_observation_variable_type == 'time_ontology') {
                 get_select_box('traits', 'drone_imagery_analytics_trait_select_div', { 'name' : 'drone_imagery_analytics_trait_id_select', 'id' : 'drone_imagery_analytics_trait_id_select', 'empty':1, 'multiple':1, 'size': 20, 'trial_ids':manage_drone_imagery_analytics_field_trial_id_string, 'stock_type':'plot', 'contains_composable_cv_type':manage_drone_imagery_analytics_observation_variable_type, 'select_format':'component_table_select' });
@@ -682,7 +682,7 @@ jQuery(document).ready(function() {
         });
 
         if (manage_drone_imagery_analytics_protocol_ids.length > 1) {
-            alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("phenotype.please_select_only_one_protocol", "Please select only one protocol!") : "Please select only one protocol!"));
+            alert((SGN.t("phenotype.please_select_only_one_protocol", "Please select only one protocol!")));
             return false;
         }
         if (manage_drone_imagery_analytics_protocol_ids.length == 1) {
@@ -694,15 +694,15 @@ jQuery(document).ready(function() {
         manage_drone_imagery_analytics_type = jQuery('#drone_imagery_analytics_select_analytics_type').val();
 
         if (!manage_drone_imagery_analytics_protocol_id && manage_drone_imagery_analytics_name == '') {
-            alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("drone.interface.please_give_an_analytics_name_or_select_a_previously_saved_analytics_report", "Please give an analytics name or select a previously saved analytics report.") : "Please give an analytics name or select a previously saved analytics report."));
+            alert((SGN.t("drone.interface.please_give_an_analytics_name_or_select_a_previously_saved_analytics_report", "Please give an analytics name or select a previously saved analytics report.")));
             return false;
         }
         if (!manage_drone_imagery_analytics_protocol_id && manage_drone_imagery_analytics_desc == '') {
-            alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("drone.interface.please_give_an_analytics_description", "Please give an analytics description.") : "Please give an analytics description."));
+            alert((SGN.t("drone.interface.please_give_an_analytics_description", "Please give an analytics description.")));
             return false;
         }
         if (manage_drone_imagery_analytics_protocol_id && manage_drone_imagery_analytics_name != '') {
-            alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("drone.interface.please_give_an_analytics_name_or_select_a_previously_saved_analytics_report_not_both", "Please give an analytics name OR select a previously saved analytics report, not both!") : "Please give an analytics name OR select a previously saved analytics report, not both!"));
+            alert((SGN.t("drone.interface.please_give_an_analytics_name_or_select_a_previously_saved_analytics_report_not_both", "Please give an analytics name OR select a previously saved analytics report, not both!")));
             return false;
         }
 
@@ -718,22 +718,22 @@ jQuery(document).ready(function() {
         else {
             manage_drone_imagery_analytics_trait_ids = jQuery('#drone_imagery_analytics_trait_id_select').val();
             if (manage_drone_imagery_analytics_trait_ids == null || manage_drone_imagery_analytics_trait_ids == undefined) {
-                alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("drone.interface.please_select_at_least_one_observation_variable", "Please select at least one observation variable!") : "Please select at least one observation variable!"));
+                alert((SGN.t("drone.interface.please_select_at_least_one_observation_variable", "Please select at least one observation variable!")));
                 return false;
             }
         }
 
         if (!manage_drone_imagery_analytics_protocol_id && manage_drone_imagery_analytics_trait_ids.length < 1){
-            alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("drone.interface.please_select_at_least_one_observation_variable", "Please select at least one observation variable!") : "Please select at least one observation variable!"));
+            alert((SGN.t("drone.interface.please_select_at_least_one_observation_variable", "Please select at least one observation variable!")));
             return false;
         }
 
         if (jQuery('#drone_image_analytics_genotyping_protocol_include_pedigree_select').val() == 'yes' && jQuery('#drone_image_analytics_genotyping_protocol_compute_from_parents_select').val() != 'yes') {
-            alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("drone.interface.you_can_only_use_pedigree_info_in_the_relationship_matrix_if_you_will_compute_the_genotypes_from_the_parents", "You can only use pedigree info in the relationship matrix if you will compute the genotypes from the parents!") : "You can only use pedigree info in the relationship matrix if you will compute the genotypes from the parents!"));
+            alert((SGN.t("drone.interface.you_can_only_use_pedigree_info_in_the_relationship_matrix_if_you_will_compute_the_genotypes_from_the_parents", "You can only use pedigree info in the relationship matrix if you will compute the genotypes from the parents!")));
             return false;
         }
         if (jQuery('#drone_image_analytics_genotyping_protocol_use_parental_grms_select').val() == 'yes' && jQuery('#drone_image_analytics_genotyping_protocol_compute_from_parents_select').val() != 'yes') {
-            alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("drone.interface.you_can_only_use_parental_relationship_matrices_if_you_will_compute_the_genotypes_from_the_parents", "You can only use parental relationship matrices if you will compute the genotypes from the parents!") : "You can only use parental relationship matrices if you will compute the genotypes from the parents!"));
+            alert((SGN.t("drone.interface.you_can_only_use_parental_relationship_matrices_if_you_will_compute_the_genotypes_from_the_parents", "You can only use parental relationship matrices if you will compute the genotypes from the parents!")));
             return false;
         }
 
@@ -741,7 +741,7 @@ jQuery(document).ready(function() {
         if (jQuery('#drone_image_analytics_permanent_env_structure_select').val() == 'phenotype_correlation') {
             manage_drone_imagery_analytics_rr_structure_phenotype_correlation = jQuery('#drone_imagery_analytics_permanent_env_structure_phenotype_correlation_select').val();
             if (!manage_drone_imagery_analytics_rr_structure_phenotype_correlation || manage_drone_imagery_analytics_rr_structure_phenotype_correlation.length < 3) {
-                alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("drone.interface.please_select_at_least_three_phenotypes_to_use_in_random_regression_permanent_environment_phenotype_correlation", "Please select at least three phenotypes to use in random regression permanent environment phenotype correlation structure!") : "Please select at least three phenotypes to use in random regression permanent environment phenotype correlation structure!"));
+                alert((SGN.t("drone.interface.please_select_at_least_three_phenotypes_to_use_in_random_regression_permanent_environment_phenotype_correlation", "Please select at least three phenotypes to use in random regression permanent environment phenotype correlation structure!")));
                 return false;
             }
         }
@@ -801,29 +801,29 @@ jQuery(document).ready(function() {
                     manage_drone_imagery_analytics_response = response;
                     manage_drone_imagery_analytics_protocol_id = response.analytics_protocol_id;
 
-                    var html = ("<h4>" + (window.SGN && window.SGN.i18n ? SGN.i18n.p("drone.interface.summary", "Summary :") : "Summary :") + "</h4><ul>");
+                    var html = ("<h4>" + (SGN.t("drone.interface.summary", "Summary :")) + "</h4><ul>");
                     if (response.sum_square_residual_original) {
-                        html = html + ("<li>" + (window.SGN && window.SGN.i18n ? SGN.i18n.p("drone.interface.sum_square_residual_original", "Sum square residual original:") : "Sum square residual original:") + " ")+response.sum_square_residual_original+'</li>';
+                        html = html + ("<li>" + (SGN.t("drone.interface.sum_square_residual_original", "Sum square residual original:")) + " ")+response.sum_square_residual_original+'</li>';
                     }
                     if (response.sum_square_residual_altered) {
-                        html = html + ("<li>" + (window.SGN && window.SGN.i18n ? SGN.i18n.p("drone.interface.sum_square_residual_altered", "Sum square residual altered:") : "Sum square residual altered:") + " ")+response.sum_square_residual_altered+'</li>';
+                        html = html + ("<li>" + (SGN.t("drone.interface.sum_square_residual_altered", "Sum square residual altered:")) + " ")+response.sum_square_residual_altered+'</li>';
                     }
                     if (response.genetic_effect_sum_original) {
-                        html = html + ("<li>" + (window.SGN && window.SGN.i18n ? SGN.i18n.p("drone.interface.genetic_effect_sum_original", "Genetic effect sum original:") : "Genetic effect sum original:") + " ")+response.genetic_effect_sum_original+'</li>';
+                        html = html + ("<li>" + (SGN.t("drone.interface.genetic_effect_sum_original", "Genetic effect sum original:")) + " ")+response.genetic_effect_sum_original+'</li>';
                     }
                     if (response.genetic_effect_sum_altered) {
-                        html = html + ("<li>" + (window.SGN && window.SGN.i18n ? SGN.i18n.p("drone.interface.genetic_effect_sum_altered", "Genetic effect sum altered:") : "Genetic effect sum altered:") + " ")+response.genetic_effect_sum_altered+'</li>';
+                        html = html + ("<li>" + (SGN.t("drone.interface.genetic_effect_sum_altered", "Genetic effect sum altered:")) + " ")+response.genetic_effect_sum_altered+'</li>';
                     }
                     if (response.env_effect_sum_original) {
-                        html = html + ("<li>" + (window.SGN && window.SGN.i18n ? SGN.i18n.p("drone.interface.env_effect_sum_original", "Env effect sum original:") : "Env effect sum original:") + " ")+response.env_effect_sum_original+'</li>';
+                        html = html + ("<li>" + (SGN.t("drone.interface.env_effect_sum_original", "Env effect sum original:")) + " ")+response.env_effect_sum_original+'</li>';
                     }
                     if (response.env_effect_sum_altered) {
-                        html = html + ("<li>" + (window.SGN && window.SGN.i18n ? SGN.i18n.p("drone.interface.env_effect_sum_altered", "Env effect sum altered:") : "Env effect sum altered:") + " ")+response.env_effect_sum_altered+'</li>';
+                        html = html + ("<li>" + (SGN.t("drone.interface.env_effect_sum_altered", "Env effect sum altered:")) + " ")+response.env_effect_sum_altered+'</li>';
                     }
                     html = html + '</ul>';
 
                     if (response.simulated_environment_to_effect_correlations) {
-                        html = html + ("<h4>" + (window.SGN && window.SGN.i18n ? SGN.i18n.p("drone.interface.simulated_env_to_effects_correlations", "Simulated Env to Effects Correlations:") : "Simulated Env to Effects Correlations:") + "</h4><ul>");
+                        html = html + ("<h4>" + (SGN.t("drone.interface.simulated_env_to_effects_correlations", "Simulated Env to Effects Correlations:")) + "</h4><ul>");
                         for(var i=0; i<response.simulated_environment_to_effect_correlations.length; i++) {
                             html = html + '<li>' + response.simulated_environment_to_effect_correlations[i] + '</li>';
                         }
@@ -842,7 +842,7 @@ jQuery(document).ready(function() {
                         manage_drone_imagery_analytics_phenotype_training_file = response.stats_tempfile;
                         manage_drone_imagery_analytics_grm_training_file = response.grm_file;
 
-                        html = html + ("<table class=\"table table-bordered table-hover\"><thead><tr><th>" + (window.SGN && window.SGN.i18n ? SGN.i18n.p("seedlots.ui.accessions", "Accessions") : "Accessions") + "</th>");
+                        html = html + ("<table class=\"table table-bordered table-hover\"><thead><tr><th>" + (SGN.t("seedlots.ui.accessions", "Accessions")) + "</th>");
                         for (var i=0; i<manage_drone_imagery_analytics_trait_names.length; i++) {
                             html = html + '<th>'+manage_drone_imagery_analytics_trait_names[i]+'</th>';
                         }
@@ -855,7 +855,7 @@ jQuery(document).ready(function() {
                                     html = html + '<td>'+response.result_blup_genetic_data_altered[acc][manage_drone_imagery_analytics_trait_names[i]][0]+'</td>';
                                 }
                                 else {
-                                    html = html + ("<td>" + (window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.job_result_na_alt", "NA") : "NA") + "</td>");
+                                    html = html + ("<td>" + (SGN.t("solgs.browser.job_result_na_alt", "NA")) + "</td>");
                                 }
                             }
                             html = html + '</tr>';
@@ -867,7 +867,7 @@ jQuery(document).ready(function() {
                         manage_drone_imagery_analytics_plot_names = response.unique_plots;
                         manage_drone_imagery_analytics_trait_names = response.unique_traits;
 
-                        html = html + ("<table class=\"table table-bordered table-hover\"><thead><tr><th>" + (window.SGN && window.SGN.i18n ? SGN.i18n.p("global.search_wizard.plots", "Plots") : "Plots") + "</th>");
+                        html = html + ("<table class=\"table table-bordered table-hover\"><thead><tr><th>" + (SGN.t("global.search_wizard.plots", "Plots")) + "</th>");
                         for (var i=0; i<response.unique_traits.length; i++) {
                             html = html + '<th>'+response.unique_traits[i]+'</th>';
                         }
@@ -887,7 +887,7 @@ jQuery(document).ready(function() {
                         manage_drone_imagery_analytics_plot_names = response.unique_plots;
                         manage_drone_imagery_analytics_trait_names = response.unique_traits;
 
-                        html = html + ("<table class=\"table table-bordered table-hover\"><thead><tr><th>" + (window.SGN && window.SGN.i18n ? SGN.i18n.p("global.search_wizard.plots", "Plots") : "Plots") + "</th>");
+                        html = html + ("<table class=\"table table-bordered table-hover\"><thead><tr><th>" + (SGN.t("global.search_wizard.plots", "Plots")) + "</th>");
                         for (var i=0; i<response.unique_traits.length; i++) {
                             html = html + '<th>'+response.unique_traits[i]+'</th>';
                         }
@@ -900,7 +900,7 @@ jQuery(document).ready(function() {
                                     html = html + '<td>'+response.result_blup_pe_data_altered[plot][response.unique_traits[i]][0]+'</td>';
                                 }
                                 else {
-                                    html = html + ("<td>" + (window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.job_result_na_alt", "NA") : "NA") + "</td>");
+                                    html = html + ("<td>" + (SGN.t("solgs.browser.job_result_na_alt", "NA")) + "</td>");
                                 }
                             }
                             html = html + '</tr>';
@@ -908,10 +908,10 @@ jQuery(document).ready(function() {
                         html = html + '</tbody></table>';
                     }
 
-                    html = html + '<hr><a href="'+response.stats_out_tempfile_string+(".log\" target=_blank>" + (window.SGN && window.SGN.i18n ? SGN.i18n.p("analysis.interface.stats_file_or_log", "Stats file or log") : "Stats file or log") + "</a>");
+                    html = html + '<hr><a href="'+response.stats_out_tempfile_string+(".log\" target=_blank>" + (SGN.t("analysis.interface.stats_file_or_log", "Stats file or log")) + "</a>");
 
                     if (jQuery('#drone_imagery_analytics_relationship_matrix_type_select_div').val() == 'htp_phenotypes') {
-                        html = html + '<hr><a href="'+response.stats_out_htp_rel_tempfile_out_string+("\" target=_blank>" + (window.SGN && window.SGN.i18n ? SGN.i18n.p("analysis.interface.htp_relationship_matrix", "HTP Relationship Matrix") : "HTP Relationship Matrix") + "</a>");
+                        html = html + '<hr><a href="'+response.stats_out_htp_rel_tempfile_out_string+("\" target=_blank>" + (SGN.t("analysis.interface.htp_relationship_matrix", "HTP Relationship Matrix")) + "</a>");
                     }
 
                     jQuery('#drone_imagery_analytics_result_div').html(html);
@@ -922,7 +922,7 @@ jQuery(document).ready(function() {
             },
             error: function(response){
                 jQuery("#working_modal").modal("hide");
-                alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("drone.interface.error_calculating_statistics_analytics", "Error calculating statistics analytics!") : "Error calculating statistics analytics!"))
+                alert((SGN.t("drone.interface.error_calculating_statistics_analytics", "Error calculating statistics analytics!")))
             }
         });
     });

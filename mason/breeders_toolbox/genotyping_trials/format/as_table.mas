@@ -77,23 +77,23 @@ jQuery(document).ready(function () {
                             } else {
                                 bgcolor="#FFFFFF";
                             }
-                            cell = ("<br/>" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("genotype.plate.sample", "Sample:") : "Sample:")).html() + " <a href='/stock/") + response.design[well].plot_id +"/view'>" + response.design[well].plot_name + ("</a> <br/>" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("decision.js.accession", "Accession:") : "Accession:")).html() + " <a href='/stock/") + response.design[well].accession_id +"/view'>" + response.design[well].accession_name + "</a>";
+                            cell = ("<br/>" + jQuery("<span>").text((SGN.t("genotype.plate.sample", "Sample:"))).html() + " <a href='/stock/") + response.design[well].plot_id +"/view'>" + response.design[well].plot_name + ("</a> <br/>" + jQuery("<span>").text((SGN.t("decision.js.accession", "Accession:"))).html() + " <a href='/stock/") + response.design[well].accession_id +"/view'>" + response.design[well].accession_name + "</a>";
                             if(response.design[well].source_plot_id){
-                                cell = cell + ("<br/>" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("genotype.plate.source_plot", "Source Plot:") : "Source Plot:")).html() + " <a href='/stock/") + response.design[well].source_plot_id +"/view'>" + response.design[well].source_plot_name + "</a>";
+                                cell = cell + ("<br/>" + jQuery("<span>").text((SGN.t("genotype.plate.source_plot", "Source Plot:"))).html() + " <a href='/stock/") + response.design[well].source_plot_id +"/view'>" + response.design[well].source_plot_name + "</a>";
                             }
                             if(response.design[well].source_subplot_id){
-                                cell = cell + ("<br/>" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("genotype.plate.source_subplot", "Source Subplot:") : "Source Subplot:")).html() + " <a href='/stock/") + response.design[well].source_subplot_id +"/view'>" + response.design[well].source_subplot_name + "</a>";
+                                cell = cell + ("<br/>" + jQuery("<span>").text((SGN.t("genotype.plate.source_subplot", "Source Subplot:"))).html() + " <a href='/stock/") + response.design[well].source_subplot_id +"/view'>" + response.design[well].source_subplot_name + "</a>";
                             }
                             if(response.design[well].source_plant_id){
-                                cell = cell + ("<br/>" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("genotype.plate.source_plant", "Source Plant:") : "Source Plant:")).html() + " <a href='/stock/") + response.design[well].source_plant_id +"/view'>" + response.design[well].source_plant_name + "</a>";
+                                cell = cell + ("<br/>" + jQuery("<span>").text((SGN.t("genotype.plate.source_plant", "Source Plant:"))).html() + " <a href='/stock/") + response.design[well].source_plant_id +"/view'>" + response.design[well].source_plant_name + "</a>";
                             }
                             if(response.design[well].source_tissue_id){
-                                cell = cell + ("<br/>" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("genotype.plate.source_tissue", "Source Tissue:") : "Source Tissue:")).html() + " <a href='/stock/") + response.design[well].source_tissue_id +"/view'>" + response.design[well].source_tissue_name + "</a>";
+                                cell = cell + ("<br/>" + jQuery("<span>").text((SGN.t("genotype.plate.source_tissue", "Source Tissue:"))).html() + " <a href='/stock/") + response.design[well].source_tissue_id +"/view'>" + response.design[well].source_tissue_name + "</a>";
                             }
                             if(response.design[well].facility_identifier){
-                                cell = cell + ("<br/>" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("genotype.plate.facility_identifier", "Facility Identifier:") : "Facility Identifier:")).html() + "") + response.design[well].facility_identifier;
+                                cell = cell + ("<br/>" + jQuery("<span>").text((SGN.t("genotype.plate.facility_identifier", "Facility Identifier:"))).html() + "") + response.design[well].facility_identifier;
                             }
-                            cell = cell + "<br/><a onclick='replace_plate_accessions(\""+ response.design[well].plot_name +"\",\""+ response.design[well].plot_id +"\",\""+ response.design[well].accession_name +("\");'>" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("accession.stock.trial_details", "Details") : "Details")).html() + "</a>");
+                            cell = cell + "<br/><a onclick='replace_plate_accessions(\""+ response.design[well].plot_name +"\",\""+ response.design[well].plot_id +"\",\""+ response.design[well].accession_name +("\");'>" + jQuery("<span>").text((SGN.t("accession.stock.trial_details", "Details"))).html() + "</a>");
                             cell = cell + "<br/><br/>";
                         }
                     }
@@ -108,7 +108,7 @@ jQuery(document).ready(function () {
         },
         error: function(response){
             jQuery("#working_modal").modal("hide");
-            alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("genotype.plate.error_retrieving_plate_layout", "Error retrieving plate layout.") : "Error retrieving plate layout."));
+            alert((SGN.t("genotype.plate.error_retrieving_plate_layout", "Error retrieving plate layout.")));
         }
     });
 

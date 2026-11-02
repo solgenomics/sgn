@@ -202,15 +202,15 @@ jQuery(document).ready(function(){
         jQuery('#upload_profile_form').attr("action", '/ajax/breeders/program/upload_profile');
 
         if (program_id === '') {
-            alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("program.profile_upload.required_program", "Please choose a breeding program") : "Please choose a breeding program"));
+            alert((SGN.t("program.profile_upload.required_program", "Please choose a breeding program")));
             return;
         }
         if (new_profile_name === '') {
-            alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("program.profile_upload.required_profile_name", "Please enter a profile name") : "Please enter a profile name"));
+            alert((SGN.t("program.profile_upload.required_profile_name", "Please enter a profile name")));
             return;
         }
         if (new_profile_scope == '') {
-            alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("program.profile_upload.required_scope", "Please enter a scope") : "Please enter a scope"));
+            alert((SGN.t("program.profile_upload.required_scope", "Please enter a scope")));
             return;
         }
         jQuery('#upload_profile_form').submit();
@@ -224,7 +224,7 @@ jQuery(document).ready(function(){
             jQuery('#working_modal').modal("show");
             if (profile_uploaded_file == '') {
                 jQuery('#working_modal').modal("hide");
-                alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("program.profile_upload.no_file", "No file selected") : "No file selected"));
+                alert((SGN.t("program.profile_upload.no_file", "No file selected")));
             }
         },
         complete: function(response) {

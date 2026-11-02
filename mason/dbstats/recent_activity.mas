@@ -77,8 +77,8 @@ function update_dbstats_tables(start_date, end_date, include_dateless_items) {
     var end_date = jQuery('#dbstats_end_date').val();
     var include_dateless_items = jQuery('#include_dateless_items').prop('checked');
     
-    var html = (window.SGN && window.SGN.i18n ? SGN.i18n.p("administration.interface.showing_items_from_date", "Showing database items generated from date:") : "Showing database items generated from date:") + " " + start_date + " " + (window.SGN && window.SGN.i18n ? SGN.i18n.p("administration.interface.to_date", "to date:") : "to date:") + " " + end_date;
-    if (include_dateless_items === true) { html += '. ' + (window.SGN && window.SGN.i18n ? SGN.i18n.p("administration.interface.including_dateless_items", "Including data items that do not have an associated date.") : "Including data items that do not have an associated date."); }
+    var html = (SGN.t("administration.interface.showing_items_from_date", "Showing database items generated from date:")) + " " + start_date + " " + (SGN.t("administration.interface.to_date", "to date:")) + " " + end_date;
+    if (include_dateless_items === true) { html += '. ' + (SGN.t("administration.interface.including_dateless_items", "Including data items that do not have an associated date.")); }
     jQuery('#dbstats_message').html(html);
 
     jQuery('#recent_activity_trials').dataTable( {

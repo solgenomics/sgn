@@ -26,10 +26,10 @@ jQuery(document).ready(function(){
         'autoWidth': false,
         'order': false,
         'columns': [
-            { title: jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("global.index_logged_in_user.accession", "Accession") : "Accession")).html(), "data": null, "render": function ( data, type, row ) { return "<a href='/stock/"+row.transformant_id+"/view'>"+row.transformant_name+"</a>"; } },
-            { title: jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("phenotype.root.note", "Note") : "Note")).html(), "data": "obsolete_note" },
-            { title: jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("global.file_dump_share_files.date", "Date") : "Date")).html(), "data": "obsolete_date" },
-            { title: jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("transformation.root.obsoleted_by", "Obsoleted by") : "Obsoleted by")).html(), "data": "obsolete_person" },
+            { title: jQuery("<span>").text((SGN.t("global.index_logged_in_user.accession", "Accession"))).html(), "data": null, "render": function ( data, type, row ) { return "<a href='/stock/"+row.transformant_id+"/view'>"+row.transformant_name+"</a>"; } },
+            { title: jQuery("<span>").text((SGN.t("phenotype.root.note", "Note"))).html(), "data": "obsolete_note" },
+            { title: jQuery("<span>").text((SGN.t("global.file_dump_share_files.date", "Date"))).html(), "data": "obsolete_date" },
+            { title: jQuery("<span>").text((SGN.t("transformation.root.obsoleted_by", "Obsoleted by"))).html(), "data": "obsolete_person" },
         ],
     });
 

@@ -58,7 +58,7 @@
           $("#nav_dialog").modal("show");
         });
       } else {
-        alert(window.SGN && SGN.i18n ? SGN.i18n.p('browser.fallback', 'Old browser version detected. Please upgrade your browser.') : 'Old browser version detected. Please upgrade your browser.');
+        alert(SGN.t('browser.fallback', 'Old browser version detected. Please upgrade your browser.'));
       }
     }
 

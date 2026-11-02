@@ -255,12 +255,12 @@
 function calendarDisplayOptions() {
     if (!window.SGN || !SGN.i18n || SGN.i18n.locale === "en") return {};
     return {
-monthNames: [(window.SGN && window.SGN.i18n ? SGN.i18n.p("community.calendar.january", "January") : "January"), (window.SGN && window.SGN.i18n ? SGN.i18n.p("community.calendar.february", "February") : "February"), (window.SGN && window.SGN.i18n ? SGN.i18n.p("community.calendar.march", "March") : "March"), (window.SGN && window.SGN.i18n ? SGN.i18n.p("community.calendar.april", "April") : "April"), (window.SGN && window.SGN.i18n ? SGN.i18n.p("community.calendar.may", "May") : "May"), (window.SGN && window.SGN.i18n ? SGN.i18n.p("community.calendar.june", "June") : "June"), (window.SGN && window.SGN.i18n ? SGN.i18n.p("community.calendar.july", "July") : "July"), (window.SGN && window.SGN.i18n ? SGN.i18n.p("community.calendar.august", "August") : "August"), (window.SGN && window.SGN.i18n ? SGN.i18n.p("community.calendar.september", "September") : "September"), (window.SGN && window.SGN.i18n ? SGN.i18n.p("community.calendar.october", "October") : "October"), (window.SGN && window.SGN.i18n ? SGN.i18n.p("community.calendar.november", "November") : "November"), (window.SGN && window.SGN.i18n ? SGN.i18n.p("community.calendar.december", "December") : "December")],
-        monthNamesShort: [(window.SGN && window.SGN.i18n ? SGN.i18n.p("community.calendar.jan", "Jan") : "Jan"), (window.SGN && window.SGN.i18n ? SGN.i18n.p("community.calendar.feb", "Feb") : "Feb"), (window.SGN && window.SGN.i18n ? SGN.i18n.p("community.calendar.mar", "Mar") : "Mar"), (window.SGN && window.SGN.i18n ? SGN.i18n.p("community.calendar.apr", "Apr") : "Apr"), (window.SGN && window.SGN.i18n ? SGN.i18n.p("community.calendar.may", "May") : "May"), (window.SGN && window.SGN.i18n ? SGN.i18n.p("community.calendar.jun", "Jun") : "Jun"), (window.SGN && window.SGN.i18n ? SGN.i18n.p("community.calendar.jul", "Jul") : "Jul"), (window.SGN && window.SGN.i18n ? SGN.i18n.p("community.calendar.aug", "Aug") : "Aug"), (window.SGN && window.SGN.i18n ? SGN.i18n.p("community.calendar.sep", "Sep") : "Sep"), (window.SGN && window.SGN.i18n ? SGN.i18n.p("community.calendar.oct", "Oct") : "Oct"), (window.SGN && window.SGN.i18n ? SGN.i18n.p("community.calendar.nov", "Nov") : "Nov"), (window.SGN && window.SGN.i18n ? SGN.i18n.p("community.calendar.dec", "Dec") : "Dec")],
-        dayNames: [(window.SGN && window.SGN.i18n ? SGN.i18n.p("community.calendar.sunday", "Sunday") : "Sunday"), (window.SGN && window.SGN.i18n ? SGN.i18n.p("community.calendar.monday", "Monday") : "Monday"), (window.SGN && window.SGN.i18n ? SGN.i18n.p("community.calendar.tuesday", "Tuesday") : "Tuesday"), (window.SGN && window.SGN.i18n ? SGN.i18n.p("community.calendar.wednesday", "Wednesday") : "Wednesday"), (window.SGN && window.SGN.i18n ? SGN.i18n.p("community.calendar.thursday", "Thursday") : "Thursday"), (window.SGN && window.SGN.i18n ? SGN.i18n.p("community.calendar.friday", "Friday") : "Friday"), (window.SGN && window.SGN.i18n ? SGN.i18n.p("community.calendar.saturday", "Saturday") : "Saturday")],
-        dayNamesShort: [(window.SGN && window.SGN.i18n ? SGN.i18n.p("community.calendar.sun", "Sun") : "Sun"), (window.SGN && window.SGN.i18n ? SGN.i18n.p("community.calendar.mon", "Mon") : "Mon"), (window.SGN && window.SGN.i18n ? SGN.i18n.p("community.calendar.tue", "Tue") : "Tue"), (window.SGN && window.SGN.i18n ? SGN.i18n.p("community.calendar.wed", "Wed") : "Wed"), (window.SGN && window.SGN.i18n ? SGN.i18n.p("community.calendar.thu", "Thu") : "Thu"), (window.SGN && window.SGN.i18n ? SGN.i18n.p("community.calendar.fri", "Fri") : "Fri"), (window.SGN && window.SGN.i18n ? SGN.i18n.p("community.calendar.sat", "Sat") : "Sat")],
-        buttonText: {today: (window.SGN && window.SGN.i18n ? SGN.i18n.p("community.calendar.today", "today") : "today"), month: (window.SGN && window.SGN.i18n ? SGN.i18n.p("community.calendar.month", "month") : "month"), week: (window.SGN && window.SGN.i18n ? SGN.i18n.p("community.calendar.week", "week") : "week"), day: (window.SGN && window.SGN.i18n ? SGN.i18n.p("community.calendar.day", "day") : "day"), prev: (window.SGN && window.SGN.i18n ? SGN.i18n.p("community.calendar.prev", "prev") : "prev"), next: (window.SGN && window.SGN.i18n ? SGN.i18n.p("community.calendar.next", "next") : "next"), prevYear: (window.SGN && window.SGN.i18n ? SGN.i18n.p("community.calendar.prev_year", "prev year") : "prev year"), nextYear: (window.SGN && window.SGN.i18n ? SGN.i18n.p("community.calendar.next_year", "next year") : "next year"), year: (window.SGN && window.SGN.i18n ? SGN.i18n.p("community.calendar.year", "year") : "year")},
-        allDayText: (window.SGN && window.SGN.i18n ? SGN.i18n.p("community.calendar.all_day", "all-day") : "all-day"),
+monthNames: [(SGN.t("community.calendar.january", "January")), (SGN.t("community.calendar.february", "February")), (SGN.t("community.calendar.march", "March")), (SGN.t("community.calendar.april", "April")), (SGN.t("community.calendar.may", "May")), (SGN.t("community.calendar.june", "June")), (SGN.t("community.calendar.july", "July")), (SGN.t("community.calendar.august", "August")), (SGN.t("community.calendar.september", "September")), (SGN.t("community.calendar.october", "October")), (SGN.t("community.calendar.november", "November")), (SGN.t("community.calendar.december", "December"))],
+        monthNamesShort: [(SGN.t("community.calendar.jan", "Jan")), (SGN.t("community.calendar.feb", "Feb")), (SGN.t("community.calendar.mar", "Mar")), (SGN.t("community.calendar.apr", "Apr")), (SGN.t("community.calendar.may", "May")), (SGN.t("community.calendar.jun", "Jun")), (SGN.t("community.calendar.jul", "Jul")), (SGN.t("community.calendar.aug", "Aug")), (SGN.t("community.calendar.sep", "Sep")), (SGN.t("community.calendar.oct", "Oct")), (SGN.t("community.calendar.nov", "Nov")), (SGN.t("community.calendar.dec", "Dec"))],
+        dayNames: [(SGN.t("community.calendar.sunday", "Sunday")), (SGN.t("community.calendar.monday", "Monday")), (SGN.t("community.calendar.tuesday", "Tuesday")), (SGN.t("community.calendar.wednesday", "Wednesday")), (SGN.t("community.calendar.thursday", "Thursday")), (SGN.t("community.calendar.friday", "Friday")), (SGN.t("community.calendar.saturday", "Saturday"))],
+        dayNamesShort: [(SGN.t("community.calendar.sun", "Sun")), (SGN.t("community.calendar.mon", "Mon")), (SGN.t("community.calendar.tue", "Tue")), (SGN.t("community.calendar.wed", "Wed")), (SGN.t("community.calendar.thu", "Thu")), (SGN.t("community.calendar.fri", "Fri")), (SGN.t("community.calendar.sat", "Sat"))],
+        buttonText: {today: (SGN.t("community.calendar.today", "today")), month: (SGN.t("community.calendar.month", "month")), week: (SGN.t("community.calendar.week", "week")), day: (SGN.t("community.calendar.day", "day")), prev: (SGN.t("community.calendar.prev", "prev")), next: (SGN.t("community.calendar.next", "next")), prevYear: (SGN.t("community.calendar.prev_year", "prev year")), nextYear: (SGN.t("community.calendar.next_year", "next year")), year: (SGN.t("community.calendar.year", "year"))},
+        allDayText: (SGN.t("community.calendar.all_day", "all-day")),
         isRTL: SGN.i18n.dir === "rtl"
     };
 }
@@ -364,7 +364,7 @@ jQuery(document).ready(function() {
                     return;
                 },
                 error: function() {
-                    alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("community.calendar.error_preparing_day_dialog", "Error preparing Day dialog!") : "Error preparing Day dialog!"));
+                    alert((SGN.t("community.calendar.error_preparing_day_dialog", "Error preparing Day dialog!")));
                 }
             });
             jQuery('#day_dialog').modal('show');
@@ -394,10 +394,10 @@ jQuery(document).ready(function() {
         },
         eventMouseover: function(event, jsEvent) {
             if (event.url) {
-                jQuery(this).popover({html:true, title:event.title, placement:'right', container:'body', content: jQuery("<span>").text((window.SGN && window.SGN.i18n ? SGN.i18n.p("community.calendar.location", "Location: ") : "Location: ")).html() + event.location + '<br/>' + jQuery("<span>").text((window.SGN && window.SGN.i18n ? SGN.i18n.p("community.calendar.description_ebc5574", "Description: ") : "Description: ")).html() + event.description,}).popover('show');
+                jQuery(this).popover({html:true, title:event.title, placement:'right', container:'body', content: jQuery("<span>").text((SGN.t("community.calendar.location", "Location: "))).html() + event.location + '<br/>' + jQuery("<span>").text((SGN.t("community.calendar.description_ebc5574", "Description: "))).html() + event.description,}).popover('show');
                 return false;
             } else {
-                jQuery(this).popover({html:true, title:event.title, placement:'right', container:'body', content: jQuery("<span>").text((window.SGN && window.SGN.i18n ? SGN.i18n.p("community.calendar.start_00308aa", "Start: ") : "Start: ")).html() + event.start_display + '<br/>' + jQuery("<span>").text((window.SGN && window.SGN.i18n ? SGN.i18n.p("community.calendar.end_fb3ce79", "End: ") : "End: ")).html() + event.end_display + '<br/>' + jQuery("<span>").text((window.SGN && window.SGN.i18n ? SGN.i18n.p("community.calendar.type", "Type: ") : "Type: ")).html() + event.property + '<br/>' + jQuery("<span>").text((window.SGN && window.SGN.i18n ? SGN.i18n.p("community.calendar.description_ebc5574", "Description: ") : "Description: ")).html() + event.event_description + '<br/>' + jQuery("<span>").text((window.SGN && window.SGN.i18n ? SGN.i18n.p("community.calendar.url", "URL: ") : "URL: ")).html() + event.event_url,}).popover('show');
+                jQuery(this).popover({html:true, title:event.title, placement:'right', container:'body', content: jQuery("<span>").text((SGN.t("community.calendar.start_00308aa", "Start: "))).html() + event.start_display + '<br/>' + jQuery("<span>").text((SGN.t("community.calendar.end_fb3ce79", "End: "))).html() + event.end_display + '<br/>' + jQuery("<span>").text((SGN.t("community.calendar.type", "Type: "))).html() + event.property + '<br/>' + jQuery("<span>").text((SGN.t("community.calendar.description_ebc5574", "Description: "))).html() + event.event_description + '<br/>' + jQuery("<span>").text((SGN.t("community.calendar.url", "URL: "))).html() + event.event_url,}).popover('show');
                 return false;
               }
         },
@@ -406,7 +406,7 @@ jQuery(document).ready(function() {
             return false;
         },
         eventDrop: function(event, delta, revertFunc, jsEvent, ui, view) {
-            if (!confirm((window.SGN && window.SGN.i18n ? SGN.i18n.p("community.calendar.are_you_sure_about_this_change", "Are you sure about this change?") : "Are you sure about this change?"))) {
+            if (!confirm((SGN.t("community.calendar.are_you_sure_about_this_change", "Are you sure about this change?")))) {
                 revertFunc();
                 return;
             }
@@ -428,9 +428,9 @@ jQuery(document).ready(function() {
                 }),
                 success: function(data) {
                     if (data.status ==3) {
-                        alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("community.calendar.you_do_not_have_the_permissions_to_edit_this_event", "You do not have the permissions to edit this event.") : "You do not have the permissions to edit this event."));
+                        alert((SGN.t("community.calendar.you_do_not_have_the_permissions_to_edit_this_event", "You do not have the permissions to edit this event.")));
                     } else if (data.error ==1) {
-                        alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("community.calendar.the_was_a_problem_editing_this_event", "The was a problem editing this event.") : "The was a problem editing this event."));
+                        alert((SGN.t("community.calendar.the_was_a_problem_editing_this_event", "The was a problem editing this event.")));
                     } else if (data.success == 1) {
                         event.start = data.start;
                         event.start_drag = data.start_drag;
@@ -444,12 +444,12 @@ jQuery(document).ready(function() {
                 },
                 error: function() {
                     revertFunc();
-                    alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("community.calendar.error_did_not_update_event_e_001", "Error! Did Not Update Event! E.001") : "Error! Did Not Update Event! E.001"));
+                    alert((SGN.t("community.calendar.error_did_not_update_event_e_001", "Error! Did Not Update Event! E.001")));
                 }
             });
         },
         eventResize: function(event, delta, revertFunc, jsEvent, ui, view) {
-            if (!confirm((window.SGN && window.SGN.i18n ? SGN.i18n.p("community.calendar.are_you_sure_about_this_change", "Are you sure about this change?") : "Are you sure about this change?"))) {
+            if (!confirm((SGN.t("community.calendar.are_you_sure_about_this_change", "Are you sure about this change?")))) {
                 revertFunc();
                 return;
             }
@@ -471,9 +471,9 @@ jQuery(document).ready(function() {
                 }),
                 success: function(data) {
                     if (data.status ==3) {
-                        alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("community.calendar.you_do_not_have_the_permissions_to_edit_this_event", "You do not have the permissions to edit this event.") : "You do not have the permissions to edit this event."));
+                        alert((SGN.t("community.calendar.you_do_not_have_the_permissions_to_edit_this_event", "You do not have the permissions to edit this event.")));
                     } else if (data.error ==1) {
-                        alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("community.calendar.the_was_a_problem_editing_this_event", "The was a problem editing this event.") : "The was a problem editing this event."));
+                        alert((SGN.t("community.calendar.the_was_a_problem_editing_this_event", "The was a problem editing this event.")));
                     } else if (data.success == 1) {
                         event.start = data.start;
                         event.start_drag = data.start_drag;
@@ -487,7 +487,7 @@ jQuery(document).ready(function() {
                 },
                 error: function() {
                     revertFunc();
-                    alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("community.calendar.error_did_not_update_event_e_001", "Error! Did Not Update Event! E.001") : "Error! Did Not Update Event! E.001"));
+                    alert((SGN.t("community.calendar.error_did_not_update_event_e_001", "Error! Did Not Update Event! E.001")));
                 }
             });
         },
@@ -502,17 +502,17 @@ jQuery(document).ready(function() {
             data: jQuery('form#day_dialog_add_event_form').serialize(),
             success: function(data) {
                 if(data.status == 1){
-                    alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("community.calendar.event_successfully_added", "Event Successfully Added!") : "Event Successfully Added!"));
+                    alert((SGN.t("community.calendar.event_successfully_added", "Event Successfully Added!")));
                     jQuery('#day_dialog').modal('hide');
                     jQuery('#calendar').fullCalendar('refetchEvents');
                 }else if(data.status == 2){
-                    alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("community.calendar.error_event_not_added_e_002", "Error! Event Not Added! E.002") : "Error! Event Not Added! E.002"));
+                    alert((SGN.t("community.calendar.error_event_not_added_e_002", "Error! Event Not Added! E.002")));
                 }else if(data.status == 3){
-                    alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("community.calendar.you_do_not_have_the_permissions_to_add_an_event", "You do not have the permissions to add an event.") : "You do not have the permissions to add an event."));
+                    alert((SGN.t("community.calendar.you_do_not_have_the_permissions_to_add_an_event", "You do not have the permissions to add an event.")));
                 }
             },
             error: function() {
-                alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("community.calendar.error_event_not_added_e_001", "Error! Event Not Added! E.001") : "Error! Event Not Added! E.001"));
+                alert((SGN.t("community.calendar.error_event_not_added_e_001", "Error! Event Not Added! E.001")));
             }
         });
     });
@@ -520,7 +520,7 @@ jQuery(document).ready(function() {
     jQuery('button#delete_event_submit').click( function(event) {
         event.preventDefault();
         jQuery('button#export_event_display').popover('hide');
-        if (!confirm((window.SGN && window.SGN.i18n ? SGN.i18n.p("community.calendar.are_you_sure_you_want_to_delete_this_event", "Are you sure you want to delete this event?") : "Are you sure you want to delete this event?"))) {
+        if (!confirm((SGN.t("community.calendar.are_you_sure_you_want_to_delete_this_event", "Are you sure you want to delete this event?")))) {
             return;
         }
         jQuery.ajax({
@@ -532,13 +532,13 @@ jQuery(document).ready(function() {
                 jQuery('#event_dialog').modal('hide');
                 jQuery('#calendar').fullCalendar( 'refetchEvents' );
                 if (data.status==3){
-                    alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("community.calendar.you_do_not_have_the_permissions_to_delete_an_event", "You do not have the permissions to delete an event.") : "You do not have the permissions to delete an event."));
+                    alert((SGN.t("community.calendar.you_do_not_have_the_permissions_to_delete_an_event", "You do not have the permissions to delete an event.")));
                 } else if (data.status==0){
-                    alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("community.calendar.the_event_was_not_deleted", "The event was not deleted!") : "The event was not deleted!"));
+                    alert((SGN.t("community.calendar.the_event_was_not_deleted", "The event was not deleted!")));
                 }
             },
             error: function() {
-                alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("community.calendar.did_not_delete_event_e_001", "Did Not Delete Event! E.001") : "Did Not Delete Event! E.001"));
+                alert((SGN.t("community.calendar.did_not_delete_event_e_001", "Did Not Delete Event! E.001")));
             }
         });
     });
@@ -565,7 +565,7 @@ jQuery(document).ready(function() {
                 return;
             },
             error: function() {
-                alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("community.calendar.error_preparing_edit_event_dialog", "Error Preparing Edit Event Dialog!") : "Error Preparing Edit Event Dialog!"));
+                alert((SGN.t("community.calendar.error_preparing_edit_event_dialog", "Error Preparing Edit Event Dialog!")));
             }
         });
 
@@ -579,7 +579,7 @@ jQuery(document).ready(function() {
 
     jQuery('button#edit_event_submit').click( function(event) {
         event.preventDefault();
-        if (!confirm((window.SGN && window.SGN.i18n ? SGN.i18n.p("community.calendar.are_you_sure_you_want_to_save_this_edit", "Are you sure you want to save this edit?") : "Are you sure you want to save this edit?"))) {
+        if (!confirm((SGN.t("community.calendar.are_you_sure_you_want_to_save_this_edit", "Are you sure you want to save this edit?")))) {
             return;
         }
         jQuery.ajax({
@@ -593,19 +593,19 @@ jQuery(document).ready(function() {
                     jQuery('#edit_event_dialog').modal('hide');
                     jQuery('#calendar').fullCalendar( 'refetchEvents' );
                 } else if (data.status == 0) {
-                    alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("community.calendar.event_already_existed_your_edit_was_not_saved", "Event Already Existed! Your Edit Was Not Saved!") : "Event Already Existed! Your Edit Was Not Saved!"));
+                    alert((SGN.t("community.calendar.event_already_existed_your_edit_was_not_saved", "Event Already Existed! Your Edit Was Not Saved!")));
                 } else if (data.status == 3) {
-                    alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("community.calendar.you_do_not_have_the_permissions_to_edit_thie_event", "You do not have the permissions to edit the event.") : "You do not have the permissions to edit the event."));
+                    alert((SGN.t("community.calendar.you_do_not_have_the_permissions_to_edit_thie_event", "You do not have the permissions to edit the event.")));
                 }
             },
             error: function() {
-                alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("community.calendar.did_not_save_edit_e_001", "Did Not Save Edit! E.001") : "Did Not Save Edit! E.001"));
+                alert((SGN.t("community.calendar.did_not_save_edit_e_001", "Did Not Save Edit! E.001")));
             }
         });
     });
 
     jQuery('button#export_event_display').click( function() {
-        jQuery(this).popover({html:true, title:(window.SGN && window.SGN.i18n ? SGN.i18n.p("community.calendar.export_event", "Export Event") : "Export Event"), placement:'right', container:'body', content: "Google Calendar: <a href='http://www.google.com/calendar' target='_blank' >" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? SGN.i18n.p("community.calendar.export", "Export") : "Export")).html() + "</a>"}).popover('toggle');
+        jQuery(this).popover({html:true, title:(SGN.t("community.calendar.export_event", "Export Event")), placement:'right', container:'body', content: "Google Calendar: <a href='http://www.google.com/calendar' target='_blank' >" + jQuery("<span>").text((SGN.t("community.calendar.export", "Export"))).html() + "</a>"}).popover('toggle');
     });
 
     jQuery('#event_dialog').on('hide.bs.modal', function (e) {

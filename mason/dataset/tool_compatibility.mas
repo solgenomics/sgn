@@ -74,7 +74,7 @@ jQuery(document).ready(function() {
                     jQuery('#working_modal').modal("hide");
                     alert((window.SGN && SGN.i18n ? SGN.i18n.p("lists_datasets.compatibility.calculate_error_detail", "An error occurred calculating tool compatibility: \n%{error}", {error:response.error}) : "An error occurred calculating tool compatibility: \n" + response.error));
                     jQuery('#predicted-tool-compatibility').css('height', '100px');
-                    jQuery('#predicted-tool-compatibility').text((window.SGN && SGN.i18n ? SGN.i18n.p("lists_datasets.compatibility.calculate_failed", "Error calculating tool compatibility.") : "Error calculating tool compatibility."));
+                    jQuery('#predicted-tool-compatibility').text((SGN.t("lists_datasets.compatibility.calculate_failed", "Error calculating tool compatibility.")));
                 } else {
                     //jQuery('#predicted-tool-compatibility').css('height', '400px');
                     //jQuery('#predicted-tool-compatibility').html(populate_tool_compatibility(JSON.parse(response.tool_compatibility)));
@@ -85,8 +85,8 @@ jQuery(document).ready(function() {
             error: function(response) {
                 jQuery('#working_modal').modal("hide");
                 jQuery('#predicted-tool-compatibility').css('height', '100px');
-                alert((window.SGN && SGN.i18n ? SGN.i18n.p("lists_datasets.compatibility.calculate_error", "An error occurred calculating tool compatibility") : "An error occurred calculating tool compatibility"));
-                jQuery('#predicted-tool-compatibility').text((window.SGN && SGN.i18n ? SGN.i18n.p("lists_datasets.compatibility.calculate_failed", "Error calculating tool compatibility.") : "Error calculating tool compatibility."));
+                alert((SGN.t("lists_datasets.compatibility.calculate_error", "An error occurred calculating tool compatibility")));
+                jQuery('#predicted-tool-compatibility').text((SGN.t("lists_datasets.compatibility.calculate_failed", "Error calculating tool compatibility.")));
             }
         });
     });
@@ -96,7 +96,7 @@ jQuery(document).ready(function() {
         success: function(response) {
             if (response.error) {
                 alert((window.SGN && SGN.i18n ? SGN.i18n.p("lists_datasets.compatibility.retrieve_error_detail", "An error occurred. \n%{error}", {error:response.error}) : "An error occurred. \n" + response.error));
-                jQuery('#predicted-tool-compatibility').text((window.SGN && SGN.i18n ? SGN.i18n.p("lists_datasets.compatibility.retrieve_failed", "Error retrieving tool compatibility.") : "Error retrieving tool compatibility."));
+                jQuery('#predicted-tool-compatibility').text((SGN.t("lists_datasets.compatibility.retrieve_failed", "Error retrieving tool compatibility.")));
             } else {
                 if (response.tool_compatibility == "(not calculated)") {
                         jQuery('#predicted-tool-compatibility').text(response.tool_compatibility);
@@ -108,9 +108,9 @@ jQuery(document).ready(function() {
             }
         },
         error: function(response) {
-            alert((window.SGN && SGN.i18n ? SGN.i18n.p("lists_datasets.compatibility.retrieve_error", "An error occurred retrieving tool compatibility") : "An error occurred retrieving tool compatibility"));
+            alert((SGN.t("lists_datasets.compatibility.retrieve_error", "An error occurred retrieving tool compatibility")));
             jQuery('#predicted-tool-compatibility').css('height', '100px');
-            jQuery('#predicted-tool-compatibility').text((window.SGN && SGN.i18n ? SGN.i18n.p("lists_datasets.compatibility.retrieve_failed", "Error retrieving tool compatibility.") : "Error retrieving tool compatibility."));
+            jQuery('#predicted-tool-compatibility').text((SGN.t("lists_datasets.compatibility.retrieve_failed", "Error retrieving tool compatibility.")));
         }
     });
 });

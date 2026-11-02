@@ -380,27 +380,27 @@ jQuery(document).ready(function(){
         sampling_data.sample_notes = jQuery('#sampling_trial_notes').val();
 
         if (sampling_data.breeding_program == '') {
-            alert(window.SGN && SGN.i18n ? SGN.i18n.p("genotype.sampling.validation.breeding_program", 'A breeding program is required. Please try again.') : 'A breeding program is required. Please try again.');
+            alert(SGN.t("genotype.sampling.validation.breeding_program", 'A breeding program is required. Please try again.'));
             return;
         }
         if (sampling_data.year == '') {
-            alert(window.SGN && SGN.i18n ? SGN.i18n.p("genotype.sampling.validation.year", 'A year is required. Please try again.') : 'A year is required. Please try again.');
+            alert(SGN.t("genotype.sampling.validation.year", 'A year is required. Please try again.'));
             return;
         }
         if (sampling_data.location == '') {
-            alert(window.SGN && SGN.i18n ? SGN.i18n.p("genotype.sampling.validation.location", 'A location is required. Please try again.') : 'A location is required. Please try again.');
+            alert(SGN.t("genotype.sampling.validation.location", 'A location is required. Please try again.'));
             return;
         }
         if (sampling_data.name == '') {
-            alert(window.SGN && SGN.i18n ? SGN.i18n.p("genotype.sampling.validation.name_unique", 'A sampling trial name is required and it should be unique in the database. Please try again.') : 'A sampling trial name is required and it should be unique in the database. Please try again.');
+            alert(SGN.t("genotype.sampling.validation.name_unique", 'A sampling trial name is required and it should be unique in the database. Please try again.'));
             return;
         }
         if (sampling_data.description == '') {
-            alert(window.SGN && SGN.i18n ? SGN.i18n.p("genotype.sampling.validation.description", 'A sampling trial description is required. Please try again.') : 'A sampling trial description is required. Please try again.');
+            alert(SGN.t("genotype.sampling.validation.description", 'A sampling trial description is required. Please try again.'));
             return;
         }
         if (sampling_data.sample_type == '') {
-            alert(window.SGN && SGN.i18n ? SGN.i18n.p("genotype.sampling.validation.sample_type", 'A sampling trial type is required. Please try again.') : 'A sampling trial type is required. Please try again.');
+            alert(SGN.t("genotype.sampling.validation.sample_type", 'A sampling trial type is required. Please try again.'));
             return;
         }
         if (sampling_data.replicates == '') {
@@ -412,12 +412,12 @@ jQuery(document).ready(function(){
             sampling_data.list_id = jQuery('#sampling_trial_accession_select_box_list_select').val();
             var l = new CXGN.List();
             if (! l.validate(sampling_data.list_id, 'accessions', true) && ! l.validate(sampling_data.list_id, 'plots', true) && ! l.validate(sampling_data.list_id, 'plants', true) && ! l.validate(sampling_data.list_id, 'tissue_samples', true)) {
-                alert(window.SGN && SGN.i18n ? SGN.i18n.p("genotype.sampling.validation.source_types", 'The list contains elements that are not accessions or plots or plants or tissue_samples.') : 'The list contains elements that are not accessions or plots or plants or tissue_samples.');
+                alert(SGN.t("genotype.sampling.validation.source_types", 'The list contains elements that are not accessions or plots or plants or tissue_samples.'));
                 return;
             }
             var elements = l.getList(sampling_data.list_id);
             if (typeof elements == 'undefined' ) {
-                alert(window.SGN && SGN.i18n ? SGN.i18n.p("genotype.sampling.validation.empty_source_list", 'There are no elements in the list provided.') : 'There are no elements in the list provided.');
+                alert(SGN.t("genotype.sampling.validation.empty_source_list", 'There are no elements in the list provided.'));
                 return;
             }
             sampling_data.elements = elements;
@@ -443,7 +443,7 @@ jQuery(document).ready(function(){
                     }
                 },
                 error: function(response) {
-                    alert(window.SGN && SGN.i18n ? SGN.i18n.p("genotype.sampling.create.layout_error", 'An error occurred trying the create the sampling trial layout.') : 'An error occurred trying the create the sampling trial layout.');
+                    alert(SGN.t("genotype.sampling.create.layout_error", 'An error occurred trying the create the sampling trial layout.'));
                     jQuery("working_modal").modal('hide');
                 }
             });
@@ -498,7 +498,7 @@ jQuery(document).ready(function(){
                 }
             },
             error: function(response) {
-                alert(window.SGN && SGN.i18n ? SGN.i18n.p("genotype.sampling.create.layout_store_error", 'An error occurred trying the create the layout.') : 'An error occurred trying the create the layout.');
+                alert(SGN.t("genotype.sampling.create.layout_store_error", 'An error occurred trying the create the layout.'));
                 jQuery("#working_modal").modal('hide');
             }
         });

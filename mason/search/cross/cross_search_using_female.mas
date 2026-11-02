@@ -98,14 +98,14 @@ jQuery(document).ready(function (){
                 console.log(html);
 
                 if(i ==''){
-                    alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("cross.pages.no_male_parent", "No male parent") : "No male parent"));
+                    alert((SGN.t("cross.pages.no_male_parent", "No male parent")));
                     return;
                 }
 
                 jQuery('#cross_male_parent').html(html);
             },
             error:function(response){
-                alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("folder.new.request_error", "An error occurred") : "An error occurred"));
+                alert((SGN.t("folder.new.request_error", "An error occurred")));
             }
         });
     });

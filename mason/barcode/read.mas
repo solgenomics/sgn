@@ -53,7 +53,7 @@ function parseArgs() {
     const urlSearchParams = new URLSearchParams(window.location.search);
     if ( urlSearchParams.has('return') ) {
         RETURN_URL = decodeURIComponent(urlSearchParams.get('return'));
-        jQuery("#panel-heading-return").html((" " + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("barcode.mason.to_return_to", "to return to") : "to return to")).html() + " <a href='") + RETURN_URL + "'>" + RETURN_URL + "</a>");
+        jQuery("#panel-heading-return").html((" " + jQuery("<span>").text((SGN.t("barcode.mason.to_return_to", "to return to"))).html() + " <a href='") + RETURN_URL + "'>" + RETURN_URL + "</a>");
     }
     RETURN_PARAM = urlSearchParams.get('param');
 }
@@ -70,7 +70,7 @@ function startReader() {
     var canvasElement = document.getElementById("canvas");
     var canvas = canvasElement.getContext("2d");
     var loadingMessage = document.getElementById("loadingMessage");
-    loadingMessage.innerHTML = ("<strong>" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("barcode.mason.unable_to_access_video_stream", "Unable to access video stream") : "Unable to access video stream")).html() + "</strong><br />" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("barcode.mason.please_make_sure_you_have_a_webcam_enabled_and_permissions", "Please make sure you have a webcam enabled and permissions have been granted for this site") : "Please make sure you have a webcam enabled and permissions have been granted for this site")).html() + "</p>");
+    loadingMessage.innerHTML = ("<strong>" + jQuery("<span>").text((SGN.t("barcode.mason.unable_to_access_video_stream", "Unable to access video stream"))).html() + "</strong><br />" + jQuery("<span>").text((SGN.t("barcode.mason.please_make_sure_you_have_a_webcam_enabled_and_permissions", "Please make sure you have a webcam enabled and permissions have been granted for this site"))).html() + "</p>");
 
     // Use facingMode: environment to attempt to get the front camera on phones
     navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } }).then(function(stream) {
@@ -81,7 +81,7 @@ function startReader() {
     });
 
     function tick() {
-        loadingMessage.innerText = (window.SGN && window.SGN.i18n ? window.SGN.i18n.p("barcode.mason.loading_video", "Loading video...") : "Loading video...");
+        loadingMessage.innerText = (SGN.t("barcode.mason.loading_video", "Loading video..."));
         if (video.readyState === video.HAVE_ENOUGH_DATA) {
             loadingMessage.hidden = true;
             canvasElement.hidden = false;
@@ -137,7 +137,7 @@ function stopReader() {
  * @param {string} data QR Code data
  */
 function processCode(data) {
-    jQuery(".panel-footer").html(("<strong>" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("barcode.mason.barcode_found", "Barcode Found:") : "Barcode Found:")).html() + "</strong> ") + data);
+    jQuery(".panel-footer").html(("<strong>" + jQuery("<span>").text((SGN.t("barcode.mason.barcode_found", "Barcode Found:"))).html() + "</strong> ") + data);
     if ( data && data !== "" && RETURN_URL && RETURN_URL !== "" && RETURN_PARAM && RETURN_PARAM !== "" ) {
         let q = RETURN_URL.includes('?') ? '&' : '?';
         window.location = RETURN_URL + q + RETURN_PARAM + '=' + encodeURIComponent(data);

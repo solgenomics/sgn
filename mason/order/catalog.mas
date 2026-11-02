@@ -176,19 +176,19 @@ jQuery(document).ready( function() {
             'search':'applied',
             'ajax': '/ajax/catalog/items',
             columns: [
-                { title: jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("global.library_search.name", "Name") : "Name")).html(), "data": null, "render": function ( data, type, row ) { return "<a href='/catalog/item_details/"+row.item_id+"'>"+row.item_name+"</a>"; } },
-                { title: jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("global.search.features.type.f65b938", "Type") : "Type")).html(), "data": "item_type" },
-                { title: jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("seedlot_split.ui.material_type", "Material Type") : "Material Type")).html(), "data": "material_type" },
-                { title: jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("cross.species", "Species") : "Species")).html(), "data": "species" },
-                { title: jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("seedlot.variety", "Variety") : "Variety")).html(), "data": "variety" },
-                { title: jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("barcode.helper.category.df1f580", "Category") : "Category")).html(), "data": "category" },
-                { title: jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("accession.stock.section.additional_info", "Additional Info") : "Additional Info")).html(), "data": "additional_info" },
-                { title: jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("barcode.helper.material_source.43ceb28", "Material Source") : "Material Source")).html(), "data": "material_source" },
-                { title: jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("locations.table.program", "Program") : "Program")).html(), "data": "breeding_program" },
-                { title: jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("barcode.helper.availability.797abcb", "Availability") : "Availability")).html(), "data": "availability"},
+                { title: jQuery("<span>").text((SGN.t("global.library_search.name", "Name"))).html(), "data": null, "render": function ( data, type, row ) { return "<a href='/catalog/item_details/"+row.item_id+"'>"+row.item_name+"</a>"; } },
+                { title: jQuery("<span>").text((SGN.t("global.search.features.type.f65b938", "Type"))).html(), "data": "item_type" },
+                { title: jQuery("<span>").text((SGN.t("seedlot_split.ui.material_type", "Material Type"))).html(), "data": "material_type" },
+                { title: jQuery("<span>").text((SGN.t("cross.species", "Species"))).html(), "data": "species" },
+                { title: jQuery("<span>").text((SGN.t("seedlot.variety", "Variety"))).html(), "data": "variety" },
+                { title: jQuery("<span>").text((SGN.t("barcode.helper.category.df1f580", "Category"))).html(), "data": "category" },
+                { title: jQuery("<span>").text((SGN.t("accession.stock.section.additional_info", "Additional Info"))).html(), "data": "additional_info" },
+                { title: jQuery("<span>").text((SGN.t("barcode.helper.material_source.43ceb28", "Material Source"))).html(), "data": "material_source" },
+                { title: jQuery("<span>").text((SGN.t("locations.table.program", "Program"))).html(), "data": "breeding_program" },
+                { title: jQuery("<span>").text((SGN.t("barcode.helper.availability.797abcb", "Availability"))).html(), "data": "availability"},
                 { title: " ", "data": "null", "render": function ( data, type, row ) {
                     if (row.availability == 'available') {
-                        return "<a onclick='addToCart(\""+row.item_name+"\", \""+additional_order_info+"\", \""+ordering_service_name+"\", \""+ordering_type+"\", \""+order_properties_dialog+("\")'>" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("barcode.helper.request", "Request") : "Request")).html() + "</a>");
+                        return "<a onclick='addToCart(\""+row.item_name+"\", \""+additional_order_info+"\", \""+ordering_service_name+"\", \""+ordering_type+"\", \""+order_properties_dialog+("\")'>" + jQuery("<span>").text((SGN.t("barcode.helper.request", "Request"))).html() + "</a>");
                     } else {
                         return ' '
                     }
@@ -202,17 +202,17 @@ jQuery(document).ready( function() {
             'search':'applied',
             'ajax': '/ajax/catalog/items',
             columns: [
-                { title: jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("global.library_search.name", "Name") : "Name")).html(), "data": null, "render": function ( data, type, row ) { return "<a href='/catalog/item_details/"+row.item_id+"'>"+row.item_name+"</a>"; } },
-                { title: jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("global.search.features.type.f65b938", "Type") : "Type")).html(), "data": "item_type" },
-                { title: jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("seedlot_split.ui.material_type", "Material Type") : "Material Type")).html(), "data": "material_type" },
-                { title: jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("cross.species", "Species") : "Species")).html(), "data": "species" },
-                { title: jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("seedlot.variety", "Variety") : "Variety")).html(), "data": "variety" },
-                { title: jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("barcode.helper.category.df1f580", "Category") : "Category")).html(), "data": "category" },
-                { title: jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("accession.stock.section.additional_info", "Additional Info") : "Additional Info")).html(), "data": "additional_info" },
-                { title: jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("barcode.helper.material_source.43ceb28", "Material Source") : "Material Source")).html(), "data": "material_source" },
-                { title: jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("locations.table.program", "Program") : "Program")).html(), "data": "breeding_program" },
-                { title: jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("barcode.helper.availability.797abcb", "Availability") : "Availability")).html(), "data": "availability"},
-                { title: jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("barcode.helper.add_to_cart", "Add to Cart") : "Add to Cart")).html(), "data": "null", "render": function ( data, type, row ) {
+                { title: jQuery("<span>").text((SGN.t("global.library_search.name", "Name"))).html(), "data": null, "render": function ( data, type, row ) { return "<a href='/catalog/item_details/"+row.item_id+"'>"+row.item_name+"</a>"; } },
+                { title: jQuery("<span>").text((SGN.t("global.search.features.type.f65b938", "Type"))).html(), "data": "item_type" },
+                { title: jQuery("<span>").text((SGN.t("seedlot_split.ui.material_type", "Material Type"))).html(), "data": "material_type" },
+                { title: jQuery("<span>").text((SGN.t("cross.species", "Species"))).html(), "data": "species" },
+                { title: jQuery("<span>").text((SGN.t("seedlot.variety", "Variety"))).html(), "data": "variety" },
+                { title: jQuery("<span>").text((SGN.t("barcode.helper.category.df1f580", "Category"))).html(), "data": "category" },
+                { title: jQuery("<span>").text((SGN.t("accession.stock.section.additional_info", "Additional Info"))).html(), "data": "additional_info" },
+                { title: jQuery("<span>").text((SGN.t("barcode.helper.material_source.43ceb28", "Material Source"))).html(), "data": "material_source" },
+                { title: jQuery("<span>").text((SGN.t("locations.table.program", "Program"))).html(), "data": "breeding_program" },
+                { title: jQuery("<span>").text((SGN.t("barcode.helper.availability.797abcb", "Availability"))).html(), "data": "availability"},
+                { title: jQuery("<span>").text((SGN.t("barcode.helper.add_to_cart", "Add to Cart"))).html(), "data": "null", "render": function ( data, type, row ) {
                     if (row.availability == 'available') {
                         return "<a onclick='addToCart(\""+row.item_name+"\", \""+additional_order_info+"\", \""+ordering_service_name+"\", \""+ordering_type+"\", \""+order_properties_dialog+"\" )'><span class='glyphicon glyphicon-shopping-cart'></span></a>";
                     } else {
@@ -265,7 +265,7 @@ jQuery(document).ready( function() {
         }
         if (itemAdded) {
             jQuery('#add_item_detail_dialog').modal('hide');
-            alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("barcode.helper.saved", "Saved ") : "Saved ") + item_name + " in your cart");
+            alert((SGN.t("barcode.helper.saved", "Saved ")) + item_name + " in your cart");
             location.reload();
         }
 
@@ -360,11 +360,11 @@ function addToCart(item_name, additional_order_info, ordering_service_name, orde
     var properties = order_properties_dialog.split(",");
     var html = '';
 
-    html = html + ("<form class=\"form-horizontal\"><div class=\"form-group\"><label class=\"col-sm-3 control-label\">" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("barcode.helper.item_name.b8d89d2", "Item Name:") : "Item Name:")).html() + " </label><div class=\"col-sm-9\" ><input class=\"form-control\" id=\"item_name\" name=\"item_name\" value=\"")+item_name+'" disabled></div><br><br>';
+    html = html + ("<form class=\"form-horizontal\"><div class=\"form-group\"><label class=\"col-sm-3 control-label\">" + jQuery("<span>").text((SGN.t("barcode.helper.item_name.b8d89d2", "Item Name:"))).html() + " </label><div class=\"col-sm-9\" ><input class=\"form-control\" id=\"item_name\" name=\"item_name\" value=\"")+item_name+'" disabled></div><br><br>';
     for(var i=0; i<properties.length; i++){
         var each_property_info = properties[i].split(":");
         if (each_property_info.length == 1 && (properties[i].includes("Date"))) {
-            html = html + '<label class="col-sm-3 control-label">'+ properties[i] +'</label><div class="col-sm-9" ><input class="form-control" id= '+ i +' name= '+ i +(" placeholder=\"" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("decision.root.yyyy_mm_dd", "YYYY-MM-DD") : "YYYY-MM-DD")).html() + "\"></div><br><br>");
+            html = html + '<label class="col-sm-3 control-label">'+ properties[i] +'</label><div class="col-sm-9" ><input class="form-control" id= '+ i +' name= '+ i +(" placeholder=\"" + jQuery("<span>").text((SGN.t("decision.root.yyyy_mm_dd", "YYYY-MM-DD"))).html() + "\"></div><br><br>");
         } else if (each_property_info.length == 1) {
             html = html + '<label class="col-sm-3 control-label">'+ properties[i] +'</label><div class="col-sm-9" ><input class="form-control" id= '+ i +' name= '+ i +' placeholder=""></div><br><br>';
         } else {

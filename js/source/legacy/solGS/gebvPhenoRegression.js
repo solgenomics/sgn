@@ -47,8 +47,8 @@ createGebvPhenoDownloadLinks: function () {
 
     var gebvPhenoRegPlotDivId = this.gebvPhenoRegPlotDivId.replace(/#/, '');
     var regDownloadBtn = "download_" + gebvPhenoRegPlotDivId;
-    var regPlotLink = "<a href='#'  onclick='event.preventDefault();' id='" + regDownloadBtn + "'>" + (window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.regression_plot_link", " Regression plot") : " Regression plot") + "</a>";
-    var downloadLinks = `${(window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.download_prefix", "Download:  ") : "Download:  ")}${regPlotLink}`;
+    var regPlotLink = "<a href='#'  onclick='event.preventDefault();' id='" + regDownloadBtn + "'>" + (SGN.t("solgs.browser.regression_plot_link", " Regression plot")) + "</a>";
+    var downloadLinks = `${(SGN.t("solgs.browser.download_prefix", "Download:  "))}${regPlotLink}`;
 
     return downloadLinks;
 

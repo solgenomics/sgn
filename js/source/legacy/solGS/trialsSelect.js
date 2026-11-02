@@ -102,7 +102,7 @@ jQuery(document).ready(function () {
                 trialSelect.empty();
                 var datasetOption = jQuery("<option></option>")
                     .attr("value", datasetId)
-                    .text((window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.dataset_option_prefix", "Dataset: ") : "Dataset: ") + datasetName);
+                    .text((SGN.t("solgs.browser.dataset_option_prefix", "Dataset: ")) + datasetName);
                 trialSelect.append(datasetOption);
 
                 Object.keys(trials).forEach(function (key) {

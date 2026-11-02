@@ -33,7 +33,7 @@
             var expDate = new Date();
             expDate.setTime(expDate.getTime() + (50000 * 60 * 1000)); //about 30 days
             jQuery.cookie("cookies_approved", "1", { expires: expDate, path: '/' } );
-            jQuery('#cookie_popup_content_div').html('<div class="panel panel-success"><div class="panel-body bg-success"><center><h3></h3></center></div></div>').find('h3').text((window.SGN && SGN.i18n ? SGN.i18n.p("cookie.thank_you", "Thank you :-)") : "Thank you :-)"));
+            jQuery('#cookie_popup_content_div').html('<div class="panel panel-success"><div class="panel-body bg-success"><center><h3></h3></center></div></div>').find('h3').text((SGN.t("cookie.thank_you", "Thank you :-)")));
             setTimeout(function() {
                 jQuery('#cookie_popup').hide('slow');
             }, 1500);

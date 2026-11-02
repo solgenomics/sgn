@@ -67,7 +67,7 @@ jQuery(document).ready(function () {
             { title: "Sample Type", "data": "stock_type" },
             { title: "Number of Markers", "data": "number_of_markers" },
             { title: "Description", "data": "genotype_description" },
-            { title: jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("global.download", "Download") : "Download")).html(), "data": "null", "render": function ( data, type, row ) { return "<a onclick='downloadSSRData(\""+row.stock_id+"\", \""+row.genotype_id+"\")' >" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("global.download", "Download") : "Download")).html() + "</a>"; } },
+            { title: jQuery("<span>").text((SGN.t("global.download", "Download"))).html(), "data": "null", "render": function ( data, type, row ) { return "<a onclick='downloadSSRData(\""+row.stock_id+"\", \""+row.genotype_id+"\")' >" + jQuery("<span>").text((SGN.t("global.download", "Download"))).html() + "</a>"; } },
 
         ]
     });

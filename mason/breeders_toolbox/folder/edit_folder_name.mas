@@ -65,7 +65,7 @@ function save_trial_name() {
         alert(response.error);
       }
       else {
-        alert(window.SGN && SGN.i18n ? SGN.i18n.p("folder.edit_name.update_success", "Successfully updated folder name") : "Successfully updated folder name");
+        alert(SGN.t("folder.edit_name.update_success", "Successfully updated folder name"));
         jQuery('#edit_trial_name_dialog').modal("hide");
         var detailTitle = window.SGN && SGN.i18n
           ? SGN.i18n.p('folder.edit_name.detail_title', '%{type} detail for %{name}', {type: <% JSON::encode_json($trial_type) %>, name: new_name})
@@ -74,7 +74,7 @@ function save_trial_name() {
       }
     },
     error: function(response) {
-      alert(window.SGN && SGN.i18n ? SGN.i18n.p("folder.edit_name.update_error", "An error occurred updating the folder name") : "An error occurred updating the folder name");
+      alert(SGN.t("folder.edit_name.update_error", "An error occurred updating the folder name"));
     },
   });
 }

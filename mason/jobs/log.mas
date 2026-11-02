@@ -44,7 +44,7 @@ jQuery(document).ready(function (){
         url: '/ajax/job/jobs_by_user/<% $sp_person_id %>',
         success: function(response) {
             if (response.error) {
-                alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("jobs.interface.error_fetching_submitted_jobs_console", "Error fetching submitted jobs, check console.") : "Error fetching submitted jobs, check console."));
+                alert((SGN.t("jobs.interface.error_fetching_submitted_jobs_console", "Error fetching submitted jobs, check console.")));
                 console.error(response.error);
             } else {
                 jQuery('#job_log_div').removeAttr('style');
@@ -62,7 +62,7 @@ jQuery(document).ready(function (){
             }
         }, 
         error: function(response) {
-            alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("jobs.interface.error_fetching_submitted_jobs", "Error fetching submitted jobs") : "Error fetching submitted jobs"));
+            alert((SGN.t("jobs.interface.error_fetching_submitted_jobs", "Error fetching submitted jobs")));
         }
     });
 });

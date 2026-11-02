@@ -19,7 +19,7 @@ jQuery( document ).ready( function() {
             var imageFiles = document.getElementById('upload_images_file_input').files;
             if (imageFiles.length < 1) {
                 jQuery('#working_modal').modal("hide");
-                alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("drone_imaging.upload_select_images", "Please select image files") : "Please select image files"));
+                alert((SGN.t("drone_imaging.upload_select_images", "Please select image files")));
                 return false;
             }
 
@@ -57,14 +57,14 @@ jQuery( document ).ready( function() {
                 }
                 jQuery('#working_modal').modal("hide");
             }).fail(function() {
-                reportVerifyResult({ "error": [(window.SGN && window.SGN.i18n ? SGN.i18n.p("drone_imaging.upload.exif_verification_failure", "Error occurred during EXIF verification.") : "Error occurred during EXIF verification.")]});
+                reportVerifyResult({ "error": [(SGN.t("drone_imaging.upload.exif_verification_failure", "Error occurred during EXIF verification."))]});
                 jQuery('#working_modal').modal("hide");
             });
         } else if (type == 'images_with_barcodes') {
             var imageFiles = document.getElementById('upload_images_file_input').files;
             if (imageFiles.length < 1) {
                 jQuery('#working_modal').modal("hide");
-                alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("drone_imaging.upload_select_images", "Please select image files") : "Please select image files"));
+                alert((SGN.t("drone_imaging.upload_select_images", "Please select image files")));
                 return false;
             }
             var formData = new FormData();
@@ -83,7 +83,7 @@ jQuery( document ).ready( function() {
                 jQuery('#working_modal').modal("hide");
 
             }).fail(function() {
-                reportVerifyResult({ "error": [(window.SGN && window.SGN.i18n ? SGN.i18n.p("drone_imaging.upload.barcode_scan_failure", "Error occurred during barcode scan") : "Error occurred during barcode scan")]});
+                reportVerifyResult({ "error": [(SGN.t("drone_imaging.upload.barcode_scan_failure", "Error occurred during barcode scan"))]});
                 jQuery('#working_modal').modal("hide");
             });
         } else { // verify associated phenotypes format
@@ -91,7 +91,7 @@ jQuery( document ).ready( function() {
             var zipFile =  document.getElementById('upload_images_zip_file_input').files[0];
             if (!(phenoFile instanceof File)) {
                 jQuery('#working_modal').modal("hide");
-                alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("drone_imaging.upload_select_spreadsheet", "Please select a phenotype spreadsheet") : "Please select a phenotype spreadsheet"));
+                alert((SGN.t("drone_imaging.upload_select_spreadsheet", "Please select a phenotype spreadsheet")));
                 return false;
             } else if (!(zipFile instanceof File)) {
                 jQuery('#working_modal').modal("hide");
@@ -220,7 +220,7 @@ jQuery( document ).ready( function() {
             var zipFile =  document.getElementById('upload_images_zip_file_input').files[0];
             if (!(phenoFile instanceof File)) {
                 jQuery('#working_modal').modal("hide");
-                alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("drone_imaging.upload_select_spreadsheet", "Please select a phenotype spreadsheet") : "Please select a phenotype spreadsheet"));
+                alert((SGN.t("drone_imaging.upload_select_spreadsheet", "Please select a phenotype spreadsheet")));
                 return false;
             } else if (!(zipFile instanceof File)) {
                 jQuery('#working_modal').modal("hide");
@@ -364,7 +364,7 @@ function verifyExifData(result) {
     }
 
     if (exifFiles > 0 && nonExifFiles > 0) {
-        errorMessages.push((window.SGN && window.SGN.i18n ? SGN.i18n.p("drone_imaging.upload.exif_or_pattern_required", "Please load files all containing EXIF data or with the same file naming pattern") : "Please load files all containing EXIF data or with the same file naming pattern"));
+        errorMessages.push((SGN.t("drone_imaging.upload.exif_or_pattern_required", "Please load files all containing EXIF data or with the same file naming pattern")));
     }
 
     jQuery('#upload_images_submit_store').attr('disabled', true);
@@ -452,12 +452,12 @@ function parseImageFilenames(imageFiles) {
                 "observationUnit" : justUnit
             };
         } else {
-            parseErrors.push((window.SGN && window.SGN.i18n ? SGN.i18n.p("drone_imaging.upload.filename_prefix", "Filename ") : "Filename ") + "<b>" + String(name) + "</b>" + (window.SGN && window.SGN.i18n ? SGN.i18n.p("drone_imaging.upload.filename_suffix", " must start with a valid observationUnitName or observationUnitDbId.") : " must start with a valid observationUnitName or observationUnitDbId."))
+            parseErrors.push((SGN.t("drone_imaging.upload.filename_prefix", "Filename ")) + "<b>" + String(name) + "</b>" + (SGN.t("drone_imaging.upload.filename_suffix", " must start with a valid observationUnitName or observationUnitDbId.")))
         }
     }
 
     if (id_count > 0 && name_count > 0) {
-        parseErrors.push((window.SGN && window.SGN.i18n ? SGN.i18n.p("drone_imaging.upload.mixed_unit_filename_patterns", "Image filenames include a mix of observationUnitDbIds and observationUnitNames. Please load files with only one naming pattern at a time.") : "Image filenames include a mix of observationUnitDbIds and observationUnitNames. Please load files with only one naming pattern at a time."));
+        parseErrors.push((SGN.t("drone_imaging.upload.mixed_unit_filename_patterns", "Image filenames include a mix of observationUnitDbIds and observationUnitNames. Please load files with only one naming pattern at a time.")));
     }
 
     if (id_count > 0) {
@@ -580,7 +580,7 @@ function verifyImageFiles(fileData, unitType, transformType) {
           //console.log("Errors are "+errors);
           return { "error" : errors };
       } else {
-          var successText = (window.SGN && window.SGN.i18n ? SGN.i18n.p("drone_imaging.upload.verification_complete", "Verification complete. All image files match an existing observationUnit. Ready to store images.") : "Verification complete. All image files match an existing observationUnit. Ready to store images.");
+          var successText = (SGN.t("drone_imaging.upload.verification_complete", "Verification complete. All image files match an existing observationUnit. Ready to store images."));
           return { "success" : successText };
       }
     }).fail(function(error){
@@ -628,7 +628,7 @@ function loadImagesSequentially(imageFiles, imageData, uploadStatus){
         // console.log("load single image response is: " +JSON.stringify(response));
 
         if (response.result) {
-            var msg = (window.SGN && window.SGN.i18n ? SGN.i18n.p("drone_imaging.upload.image_upload_success", "Successfly uploaded image ") : "Successfly uploaded image ") + String(response.result.data[0].imageFileName);
+            var msg = (SGN.t("drone_imaging.upload.image_upload_success", "Successfly uploaded image ")) + String(response.result.data[0].imageFileName);
             uploadStatus.success.push(msg);
         } else {
             // console.log("handling response errors: "+JSON.stringify(response.metadata.status));

@@ -87,17 +87,17 @@ jQuery(document).ready(function () {
         trait_list_json = JSON.stringify(trait_list);
 
         if (product_profile_name === '') {
-            alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("program.product_profile.required_name", "Please supply a product profile name") : "Please supply a product profile name"));
+            alert((SGN.t("program.product_profile.required_name", "Please supply a product profile name")));
             return;
         }
 
         if (product_profile_scope === '') {
-            alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("program.product_profile.required_scope", "Please supply a product profile scope") : "Please supply a product profile scope"));
+            alert((SGN.t("program.product_profile.required_scope", "Please supply a product profile scope")));
             return;
         }
 
         if (trait_list_id === '') {
-            alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("program.product_profile.required_trait_list", "Please select a trait list") : "Please select a trait list"));
+            alert((SGN.t("program.product_profile.required_trait_list", "Please select a trait list")));
             return;
         }
 
@@ -135,7 +135,7 @@ jQuery(document).ready(function () {
                 if (response.error) {
                     alert(response.error);
                 } else {
-                    alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("program.product_profile.saved", "The product profile was saved successfully.") : "The product profile was saved successfully."));
+                    alert((SGN.t("program.product_profile.saved", "The product profile was saved successfully.")));
                 }
             },
 

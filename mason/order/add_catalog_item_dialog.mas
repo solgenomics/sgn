@@ -112,19 +112,19 @@ jQuery(document).ready(function(){
         var contact_person = jQuery('#contact_person_name').val();
 
         if (name == '') {
-            alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("seedlots.ui.please_provide_a_name", "Please provide a name") : "Please provide a name"));
+            alert((SGN.t("seedlots.ui.please_provide_a_name", "Please provide a name")));
             return;
         }
         if (category == '') {
-            alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("barcode.helper.please_select_a_category", "Please select a category") : "Please select a category"));
+            alert((SGN.t("barcode.helper.please_select_a_category", "Please select a category")));
             return;
         }
         if (breeding_program == '') {
-            alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("locations.select.program", "Please select a program") : "Please select a program"));
+            alert((SGN.t("locations.select.program", "Please select a program")));
             return;
         }
         if (contact_person == '') {
-            alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("barcode.helper.please_provide_contact_username", "Please provide contact username") : "Please provide contact username"));
+            alert((SGN.t("barcode.helper.please_provide_contact_username", "Please provide contact username")));
             return;
         }
 

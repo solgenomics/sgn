@@ -156,27 +156,27 @@ jQuery(document).ready(function(){
         const propagation_project_id = "<%$trial_id%>";
 
         if (propagation_group_identifier == '') {
-            alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("seedlot.please_provide_a_propagation_group_identifier", "Please provide a propagation group identifier") : "Please provide a propagation group identifier"));
+            alert((SGN.t("seedlot.please_provide_a_propagation_group_identifier", "Please provide a propagation group identifier")));
             return;
         }
         if (accession_name == '') {
-            alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("seedlot.please_provide_accession_name", "Please provide accession name") : "Please provide accession name"));
+            alert((SGN.t("seedlot.please_provide_accession_name", "Please provide accession name")));
             return;
         }
         if (material_type == '') {
-            alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("seedlot.please_provide_material_type", "Please provide material type") : "Please provide material type"));
+            alert((SGN.t("seedlot.please_provide_material_type", "Please provide material type")));
             return;
         }
         if (date == '') {
-            alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("seedlot.please_provide_date", "Please provide date") : "Please provide date"));
+            alert((SGN.t("seedlot.please_provide_date", "Please provide date")));
             return;
         }
         if (description == '') {
-            alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("trial.soil_upload.description_required", "Please provide description") : "Please provide description"));
+            alert((SGN.t("trial.soil_upload.description_required", "Please provide description")));
             return;
         }
         if (operator_name == '') {
-            alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("seedlot.please_provide_operator_name", "Please provide operator name") : "Please provide operator name"));
+            alert((SGN.t("seedlot.please_provide_operator_name", "Please provide operator name")));
             return;
         }
 

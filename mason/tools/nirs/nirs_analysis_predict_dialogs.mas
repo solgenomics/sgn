@@ -117,7 +117,7 @@ jQuery(document).ready(function(){
         });
 
         if(selected.length > 1 || selected.length == 0) {
-            alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("nirs.predict.dataset_required", "Please select one dataset!") : "Please select one dataset!"));
+            alert((SGN.t("nirs.predict.dataset_required", "Please select one dataset!")));
             return false;
         }
         else {
@@ -139,7 +139,7 @@ jQuery(document).ready(function(){
         });
 
         if(selected.length > 1 || selected.length == 0) {
-            alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("nirs.predict.model_required", "Please select one model!") : "Please select one model!"));
+            alert((SGN.t("nirs.predict.model_required", "Please select one model!")));
             return false;
         }
         else {
@@ -164,7 +164,7 @@ jQuery(document).ready(function(){
                         return false;
                     }
 
-                    var html = "<table class='table table-bordered table-hover'><thead><tr><th>" + (window.SGN && window.SGN.i18n ? SGN.i18n.p("nirs.ui.stock", "Stock") : "Stock") + "</th><th>" + (window.SGN && window.SGN.i18n ? SGN.i18n.p("nirs.ui.prediction", "Prediction") : "Prediction") + "</th></tr></thead><tbody>";
+                    var html = "<table class='table table-bordered table-hover'><thead><tr><th>" + (SGN.t("nirs.ui.stock", "Stock")) + "</th><th>" + (SGN.t("nirs.ui.prediction", "Prediction")) + "</th></tr></thead><tbody>";
                     for (var i=0; i<response.unique_plots.length; i++) {
                         html = html + '<tr><td>'+response.unique_plots[i]+'</td><td>'+response.result_predictions[response.unique_plots[i]][response.unique_traits[0]][0]+'</td></tr>';
                     }
@@ -196,7 +196,7 @@ jQuery(document).ready(function(){
                     window.scrollTo(0,0);
                 },
                 error: function(response){
-                    alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("nirs.predict.failure", "Error predicting phenotypes from NIRS!") : "Error predicting phenotypes from NIRS!"));
+                    alert((SGN.t("nirs.predict.failure", "Error predicting phenotypes from NIRS!")));
                     jQuery('#working_modal').modal('hide');
                 }
             });

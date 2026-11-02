@@ -112,11 +112,11 @@ jQuery(document).ready(function(){
             if (id == 'edit_transformation_name') {
                 new_transformation_name = changed_elements[i].value;
                 type = (window.SGN && window.SGN.i18n ? window.SGN.i18n.p("transformation.transformation_id.6f39808", "Transformation ID") : 'Transformation ID');
-                success_message += ("<li class='list-group-item list-group-item-success'> " + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("transformation.changed", "Changed") : "Changed")).html() + " ")+type+(" " + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("transformation.to", "to:") : "to:")).html() + " <b>")+new_transformation_name+"</b></li>";
+                success_message += ("<li class='list-group-item list-group-item-success'> " + jQuery("<span>").text((SGN.t("transformation.changed", "Changed"))).html() + " ")+type+(" " + jQuery("<span>").text((SGN.t("transformation.to", "to:"))).html() + " <b>")+new_transformation_name+"</b></li>";
             } else if (id == 'edit_transformation_notes') {
                 new_transformation_notes = changed_elements[i].value;
                 type = (window.SGN && window.SGN.i18n ? window.SGN.i18n.p("cross.ui.notes", "Notes") : 'Notes');
-                success_message += ("<li class='list-group-item list-group-item-success'> " + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("transformation.changed", "Changed") : "Changed")).html() + " ")+type+(" " + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("transformation.to", "to:") : "to:")).html() + " <b>")+new_transformation_notes+"</b></li>";
+                success_message += ("<li class='list-group-item list-group-item-success'> " + jQuery("<span>").text((SGN.t("transformation.changed", "Changed"))).html() + " ")+type+(" " + jQuery("<span>").text((SGN.t("transformation.to", "to:"))).html() + " <b>")+new_transformation_notes+"</b></li>";
             }
         }
 

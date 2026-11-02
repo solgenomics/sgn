@@ -50,10 +50,10 @@ jQuery('#display_stats_button').click(function () {
         ajax: '/ajax/progress?trait_id=' + trait_id,
         destroy: true,
         columns: [
-            { "title": jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("global.index_logged_in_user.year", "year") : "year")).html() },
-            { "title": jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("analysis.interface.average", "average") : "average")).html() },
-            { "title": jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("analysis.interface.std_dev", "std dev") : "std dev")).html() },
-            { "title": jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("analysis.interface.observations_count", "observations [count]") : "observations [count]")).html() }
+            { "title": jQuery("<span>").text((SGN.t("global.index_logged_in_user.year", "year"))).html() },
+            { "title": jQuery("<span>").text((SGN.t("analysis.interface.average", "average"))).html() },
+            { "title": jQuery("<span>").text((SGN.t("analysis.interface.std_dev", "std dev"))).html() },
+            { "title": jQuery("<span>").text((SGN.t("analysis.interface.observations_count", "observations [count]"))).html() }
         ]
     });
 });
@@ -90,7 +90,7 @@ jQuery('#display_graph_button').click(function () {
                     "x": {
                         //"bin": true,
                         "field": "Year",
-                        "title": (window.SGN && window.SGN.i18n ? window.SGN.i18n.p("global.trial_table.year", "Year") : "Year"),
+                        "title": (SGN.t("global.trial_table.year", "Year")),
                         "type": "ordinal",
                         "axis": { "labelAngle": 0 },
                     },
@@ -105,7 +105,7 @@ jQuery('#display_graph_button').click(function () {
                         "encoding": {
                             "y": {
                                 "field": "Average",
-                        "title": (window.SGN && window.SGN.i18n ? window.SGN.i18n.p("accession.population_cgi.average", "Average") : "Average"),
+                        "title": (SGN.t("accession.population_cgi.average", "Average")),
                                 "type": "quantitative",
                             },
                         },
@@ -117,7 +117,7 @@ jQuery('#display_graph_button').click(function () {
                                 "field": "mean + stddev",
                                 "type": "quantitative",
                                 "scale": { "zero": false },
-                                "title": jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("accession.population_cgi.average", "Average") : "Average")).html()
+                                "title": jQuery("<span>").text((SGN.t("accession.population_cgi.average", "Average"))).html()
                             },
                             "y2": { "field": "mean - stddev" },
                             "color": {"value": "navy"}

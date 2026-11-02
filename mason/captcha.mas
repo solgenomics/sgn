@@ -55,7 +55,7 @@ use HTML::Entities ();
     // verify the token that has been returned
     // if the token is valid, redirect to the original URL
     cap.addEventListener("solve", (e) => {
-        status.innerHTML = `<strong>${escapeHtml(window.SGN && SGN.i18n ? SGN.i18n.p('global.captcha.saving', 'Saving verification token...') : 'Saving verification token...')}</strong>`;
+        status.innerHTML = `<strong>${escapeHtml(SGN.t('global.captcha.saving', 'Saving verification token...'))}</strong>`;
         loader.removeAttribute("value");
 
         // Use fetch() rather than jQuery.ajax() here: this page is the gate shown
@@ -68,11 +68,11 @@ use HTML::Entities ();
             .then((r) => r.json())
             .then((response) => {
                 if ( response?.error || response?.success !== 1 ) {
-                    status.innerHTML = `<strong>${escapeHtml(window.SGN && SGN.i18n ? SGN.i18n.p('global.captcha.could_not_save', 'Could not save verification token') : 'Could not save verification token')}</strong><br />${escapeHtml(response.error)}`;
+                    status.innerHTML = `<strong>${escapeHtml(SGN.t('global.captcha.could_not_save', 'Could not save verification token'))}</strong><br />${escapeHtml(response.error)}`;
                     loader.style.display = "none";
                 }
                 else {
-                    const savedMessage = window.SGN && SGN.i18n ? SGN.i18n.p('global.captcha.saved', 'Saved verification token!') : 'Saved verification token!';
+                    const savedMessage = SGN.t('global.captcha.saved', 'Saved verification token!');
                     const redirectMarker = '__SGN_CAPTCHA_REDIRECT__';
                     const redirectNotice = window.SGN && SGN.i18n ? SGN.i18n.p('global.captcha.redirect_notice', 'You should now be redirected to %{link}', {link: redirectMarker}) : `You should now be redirected to ${redirectMarker}`;
                     const redirectParts = redirectNotice.split(redirectMarker);
@@ -92,20 +92,20 @@ use HTML::Entities ();
                 }
             })
             .catch(() => {
-                status.innerHTML = `<strong>${escapeHtml(window.SGN && SGN.i18n ? SGN.i18n.p('global.captcha.could_not_save', 'Could not save verification token') : 'Could not save verification token')}</strong>`;
+                status.innerHTML = `<strong>${escapeHtml(SGN.t('global.captcha.could_not_save', 'Could not save verification token'))}</strong>`;
                 loader.style.display = "none";
             });
     });
 
     // Update the progress of the captcha solve routine...
     cap.addEventListener("progress", (e) => {
-        status.innerHTML = `<strong>${escapeHtml(window.SGN && SGN.i18n ? SGN.i18n.p('global.captcha.verifying', 'Verifying your request...') : 'Verifying your request...')}</strong>`;
+        status.innerHTML = `<strong>${escapeHtml(SGN.t('global.captcha.verifying', 'Verifying your request...'))}</strong>`;
         loader.value = e.detail.progress;
     });
 
     // The captcha solve has failed...
     cap.addEventListener("error", (e) => {
-        status.innerHTML = `<strong>${escapeHtml(window.SGN && SGN.i18n ? SGN.i18n.p('global.captcha.could_not_verify', 'Could not verify the token') : 'Could not verify the token')}</strong><br />${escapeHtml(e.detail.message)}`;
+        status.innerHTML = `<strong>${escapeHtml(SGN.t('global.captcha.could_not_verify', 'Could not verify the token'))}</strong><br />${escapeHtml(e.detail.message)}`;
         loader.style.display = "none";
     });
 </script>

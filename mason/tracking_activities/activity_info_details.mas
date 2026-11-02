@@ -229,11 +229,11 @@ jQuery(document).ready( function() {
         var notes = jQuery('#selected_type_notes').val();
 
         if (selected_type == '') {
-            alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("seedlot.please_select_a_type", "Please select a type") : "Please select a type"));
+            alert((SGN.t("seedlot.please_select_a_type", "Please select a type")));
             return;
         }
         if (input == '') {
-            alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("transformation.root.please_provide_an_input", "Please provide an input") : "Please provide an input"));
+            alert((SGN.t("transformation.root.please_provide_an_input", "Please provide an input")));
             return;
         }
 

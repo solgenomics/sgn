@@ -34,11 +34,11 @@ jQuery('#intercross_section_onswitch').click(function(){
         'destroy': true,
         'ajax': { 'url': '/ajax/breeders/trial/<% $trial_id %>/downloaded_intercross_file_metadata' },
         columns: [
-            { title: (window.SGN && window.SGN.i18n ? window.SGN.i18n.p("global.search.images.filename", "Filename") : "Filename"), "data": null, "render": function ( data, type, row ) { return row[4]; } },
-            { title: (window.SGN && window.SGN.i18n ? window.SGN.i18n.p("cross.forms.create_date", "Create Date") : "Create Date"), "data": null, "render": function ( data, type, row ) { return row[1]; } },
-            { title: (window.SGN && window.SGN.i18n ? window.SGN.i18n.p("cross.forms.created_by", "Created By") : "Created By"), "data": null, "render": function ( data, type, row ) { return '<a href="/solpeople/profile/'+row[2]+'">'+row[3]+'</a>'; } },
-            { title: (window.SGN && window.SGN.i18n ? window.SGN.i18n.p("file_viewer.ui.type", "File Type") : "File Type"), "data": null, "render": function ( data, type, row ) { return row[6]; } },
-            { title: (window.SGN && window.SGN.i18n ? window.SGN.i18n.p("global.file_dump_share_files.options", "Options") : "Options"), "data": null, "render": function ( data, type, row ) { return '<a href="/breeders/phenotyping/view/'+row[0]+("\">" + jQuery("<div>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("global.dataset_cxgn_dataset.view", "View") : "View")).html() + "</a> | <a href=\"/breeders/phenotyping/download/")+row[0]+("\">" + jQuery("<div>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("global.est.download", "Download") : "Download")).html() + "</a>"); } },
+            { title: (SGN.t("global.search.images.filename", "Filename")), "data": null, "render": function ( data, type, row ) { return row[4]; } },
+            { title: (SGN.t("cross.forms.create_date", "Create Date")), "data": null, "render": function ( data, type, row ) { return row[1]; } },
+            { title: (SGN.t("cross.forms.created_by", "Created By")), "data": null, "render": function ( data, type, row ) { return '<a href="/solpeople/profile/'+row[2]+'">'+row[3]+'</a>'; } },
+            { title: (SGN.t("file_viewer.ui.type", "File Type")), "data": null, "render": function ( data, type, row ) { return row[6]; } },
+            { title: (SGN.t("global.file_dump_share_files.options", "Options")), "data": null, "render": function ( data, type, row ) { return '<a href="/breeders/phenotyping/view/'+row[0]+("\">" + jQuery("<div>").text((SGN.t("global.dataset_cxgn_dataset.view", "View"))).html() + "</a> | <a href=\"/breeders/phenotyping/download/")+row[0]+("\">" + jQuery("<div>").text((SGN.t("global.est.download", "Download"))).html() + "</a>"); } },
         ]
     });
 
@@ -47,11 +47,11 @@ jQuery('#intercross_section_onswitch').click(function(){
         'destroy': true,
         'ajax': { 'url': '/ajax/breeders/trial/<% $trial_id %>/uploaded_intercross_file_metadata' },
         columns: [
-            { title: (window.SGN && window.SGN.i18n ? window.SGN.i18n.p("global.search.images.filename", "Filename") : "Filename"), "data": null, "render": function ( data, type, row ) { return row[4]; } },
-            { title: (window.SGN && window.SGN.i18n ? window.SGN.i18n.p("cross.forms.create_date", "Create Date") : "Create Date"), "data": null, "render": function ( data, type, row ) { return row[1]; } },
-            { title: (window.SGN && window.SGN.i18n ? window.SGN.i18n.p("cross.forms.created_by", "Created By") : "Created By"), "data": null, "render": function ( data, type, row ) { return '<a href="/solpeople/profile/'+row[2]+'">'+row[3]+'</a>'; } },
-            { title: (window.SGN && window.SGN.i18n ? window.SGN.i18n.p("file_viewer.ui.type", "File Type") : "File Type"), "data": null, "render": function ( data, type, row ) { return row[6]; } },
-            { title: (window.SGN && window.SGN.i18n ? window.SGN.i18n.p("global.file_dump_share_files.options", "Options") : "Options"), "data": null, "render": function ( data, type, row ) { return '<a href="/breeders/phenotyping/view/'+row[0]+("\">" + jQuery("<div>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("global.dataset_cxgn_dataset.view", "View") : "View")).html() + "</a> | <a href=\"/breeders/phenotyping/download/")+row[0]+("\">" + jQuery("<div>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("global.est.download", "Download") : "Download")).html() + "</a>"); } },
+            { title: (SGN.t("global.search.images.filename", "Filename")), "data": null, "render": function ( data, type, row ) { return row[4]; } },
+            { title: (SGN.t("cross.forms.create_date", "Create Date")), "data": null, "render": function ( data, type, row ) { return row[1]; } },
+            { title: (SGN.t("cross.forms.created_by", "Created By")), "data": null, "render": function ( data, type, row ) { return '<a href="/solpeople/profile/'+row[2]+'">'+row[3]+'</a>'; } },
+            { title: (SGN.t("file_viewer.ui.type", "File Type")), "data": null, "render": function ( data, type, row ) { return row[6]; } },
+            { title: (SGN.t("global.file_dump_share_files.options", "Options")), "data": null, "render": function ( data, type, row ) { return '<a href="/breeders/phenotyping/view/'+row[0]+("\">" + jQuery("<div>").text((SGN.t("global.dataset_cxgn_dataset.view", "View"))).html() + "</a> | <a href=\"/breeders/phenotyping/download/")+row[0]+("\">" + jQuery("<div>").text((SGN.t("global.est.download", "Download"))).html() + "</a>"); } },
         ]
     });
 

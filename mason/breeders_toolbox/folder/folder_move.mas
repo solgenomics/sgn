@@ -217,7 +217,7 @@ function move_folder() {
   //console.log(parent_folder_id);
   //console.log(folder_id);
   if (parent_folder_id == folder_id) {
-    alert(window.SGN && SGN.i18n ? SGN.i18n.p('folder.move.self_parent', 'Cannot make a folder its own parent.') : 'Cannot make a folder its own parent.');
+    alert(SGN.t('folder.move.self_parent', 'Cannot make a folder its own parent.'));
     return;
   }
   jQuery.ajax( {
@@ -234,7 +234,7 @@ function move_folder() {
       }
     },
     error: function(response) {
-      alert(window.SGN && SGN.i18n ? SGN.i18n.p('folder.move.move_error', 'An error occurred trying to move folder.') : 'An error occurred trying to move folder.');
+      alert(SGN.t('folder.move.move_error', 'An error occurred trying to move folder.'));
       jQuery('#move_folder_dialog').modal("hide");
     }
   });

@@ -71,9 +71,9 @@ jQuery(document).ready( function() {
             success: function(response) {
                 jQuery("#working_modal").modal("hide");
                 if (response.error) {
-                    alert((window.SGN && SGN.i18n ? SGN.i18n.p('trial.management.add_error', "Error adding management factor: ") : "Error adding management factor: ") +response.error);
+                    alert((SGN.t('trial.management.add_error', "Error adding management factor: ")) +response.error);
                 } else {
-                    alert((window.SGN && SGN.i18n ? SGN.i18n.p('trial.management.submitted', "Management factor submitted.") : "Management factor submitted."));
+                    alert((SGN.t('trial.management.submitted', "Management factor submitted.")));
                     if (mode !== null && row_json !== null && mode == 'edit' && row_json !== local_json) {
                         delete_management_factor(row_json);
                     }
@@ -89,7 +89,7 @@ jQuery(document).ready( function() {
             },
             error: function(response) {
                 jQuery("#working_modal").modal("hide");
-                alert((window.SGN && SGN.i18n ? SGN.i18n.p('trial.management.submit_error', "An error occurred submitting new management factor.") : "An error occurred submitting new management factor.") + response.error)
+                alert((SGN.t('trial.management.submit_error', "An error occurred submitting new management factor.")) + response.error)
             }
         });
     }
@@ -121,7 +121,7 @@ jQuery(document).ready( function() {
             },
             error: function(response) {
                 jQuery("#working_modal").modal("hide");
-                alert((window.SGN && SGN.i18n ? SGN.i18n.p('trial.management.delete_error', "An error occurred deleting management factor: ") : "An error occurred deleting management factor: ") + response.error);
+                alert((SGN.t('trial.management.delete_error', "An error occurred deleting management factor: ")) + response.error);
                 console.log(response.error);
             }
         });
@@ -138,21 +138,21 @@ jQuery(document).ready( function() {
             let result = await response.json();
 
             if (result.error) {
-                alert((window.SGN && SGN.i18n ? SGN.i18n.p('trial.management.retrieve_error', "Error retrieving management regime.") : "Error retrieving management regime."));
+                alert((SGN.t('trial.management.retrieve_error', "Error retrieving management regime.")));
                 console.log(result.error);
                 return;
             } 
             jQuery('#management_regime_table').DataTable({
                 data: JSON.parse(result.data),
                 columns: [
-                    { data: 'type', title: _sgnB11ManagementEscape(window.SGN && SGN.i18n ? SGN.i18n.p('trial.management.type', "Type") : "Type") },
-                    { data: 'description', title: _sgnB11ManagementEscape(window.SGN && SGN.i18n ? SGN.i18n.p('trial.management.description', "Description") : "Description") },
-                    { data: 'schedule', title: _sgnB11ManagementEscape(window.SGN && SGN.i18n ? SGN.i18n.p('trial.management.schedule', "Schedule") : "Schedule") },
-                    { data: 'start_date', title: _sgnB11ManagementEscape(window.SGN && SGN.i18n ? SGN.i18n.p('trial.management.start_date', "Start Date") : "Start Date")},
-                    { data: 'end_date', title: _sgnB11ManagementEscape(window.SGN && SGN.i18n ? SGN.i18n.p('trial.management.end_date', "End Date") : "End Date")},
+                    { data: 'type', title: _sgnB11ManagementEscape(SGN.t('trial.management.type', "Type")) },
+                    { data: 'description', title: _sgnB11ManagementEscape(SGN.t('trial.management.description', "Description")) },
+                    { data: 'schedule', title: _sgnB11ManagementEscape(SGN.t('trial.management.schedule', "Schedule")) },
+                    { data: 'start_date', title: _sgnB11ManagementEscape(SGN.t('trial.management.start_date', "Start Date"))},
+                    { data: 'end_date', title: _sgnB11ManagementEscape(SGN.t('trial.management.end_date', "End Date"))},
                     { 
                         data: 'completions', 
-                        title: _sgnB11ManagementEscape(window.SGN && SGN.i18n ? SGN.i18n.p('trial.management.completions', "Completion records") : "Completion records"),
+                        title: _sgnB11ManagementEscape(SGN.t('trial.management.completions', "Completion records")),
                         orderable: false,
                         render: function(data, type, row, meta) {
                             if (Array.isArray(data)) {
@@ -168,7 +168,7 @@ jQuery(document).ready( function() {
                         }
                     },
                     {
-                        title: _sgnB11ManagementEscape(window.SGN && SGN.i18n ? SGN.i18n.p('trial.management.actions', "Actions") : "Actions"),
+                        title: _sgnB11ManagementEscape(SGN.t('trial.management.actions', "Actions")),
                         data: null,
                         orderable: false,
                         render: function (data, type, row, meta) {
@@ -181,7 +181,7 @@ jQuery(document).ready( function() {
             });
 
         } catch (error) {
-            alert((window.SGN && SGN.i18n ? SGN.i18n.p('trial.management.retrieve_error', "Error retrieving management regime.") : "Error retrieving management regime."));
+            alert((SGN.t('trial.management.retrieve_error', "Error retrieving management regime.")));
             console.log(error);
         }
     }
@@ -197,7 +197,7 @@ jQuery(document).ready( function() {
             let result = await response.json();
 
             if (result.error) {
-                alert((window.SGN && SGN.i18n ? SGN.i18n.p('trial.management.retrieve_error', "Error retrieving management regime.") : "Error retrieving management regime."));
+                alert((SGN.t('trial.management.retrieve_error', "Error retrieving management regime.")));
                 console.log(result.error);
                 return;
             } else {
@@ -207,7 +207,7 @@ jQuery(document).ready( function() {
                 table.draw();
             }
         } catch (error) {
-            alert((window.SGN && SGN.i18n ? SGN.i18n.p('trial.management.retrieve_error', "Error retrieving management regime.") : "Error retrieving management regime."));
+            alert((SGN.t('trial.management.retrieve_error', "Error retrieving management regime.")));
             console.log(error);
         }
     }

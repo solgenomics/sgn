@@ -861,7 +861,7 @@ jQuery(document).ready( function() {
     if (require_login === '1'){
         auth_token = "<%  CXGN::Login->new($c->dbc->dbh)->get_login_cookie() %>";
         if (!auth_token){
-            alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("trial.heatmap.login_required_display", "Login required to display") : "Login required to display"));
+            alert((SGN.t("trial.heatmap.login_required_display", "Login required to display")));
         }
     }
 
@@ -1033,7 +1033,7 @@ jQuery(document).ready( function() {
         if (require_login === '1'){
             auth_token = "<%  CXGN::Login->new($c->dbc->dbh)->get_login_cookie() %>";
             if (!auth_token){
-                alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("trial.heatmap.login_required_fieldmap", "Login required to display field map") : "Login required to display field map"));
+                alert((SGN.t("trial.heatmap.login_required_fieldmap", "Login required to display field map")));
             }
         }
       
@@ -1042,7 +1042,7 @@ jQuery(document).ready( function() {
         fieldMap.brapi_endpoint = brapi_endpoint;
         fieldMap.opts.brapi_pageSize = 1000;
         fieldMap.opts.brapi_auth = auth_token;
-        fieldMap.load('<% $trial_id %>').then((value)=>{if (!value) alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("trial.heatmap.no_geo_reference", "No geo reference data in this trial!") : "No geo reference data in this trial!")); } );
+        fieldMap.load('<% $trial_id %>').then((value)=>{if (!value) alert((SGN.t("trial.heatmap.no_geo_reference", "No geo reference data in this trial!"))); } );
 
     }
 
@@ -1160,12 +1160,12 @@ jQuery(document).ready( function() {
                     alert(`Removed ${response.deleted} filler plot(s)`);
                     location.reload();
                 } else {
-                    alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("trial.heatmap.remove_fillers_failed", "Failed to remove filler plots") : "Failed to remove filler plots"));
+                    alert((SGN.t("trial.heatmap.remove_fillers_failed", "Failed to remove filler plots")));
                 }
             },
             error: function(err) {
                 console.error(err);
-                alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("trial.heatmap.remove_fillers_error", "Error removing filler plots") : "Error removing filler plots"));
+                alert((SGN.t("trial.heatmap.remove_fillers_error", "Error removing filler plots")));
             }
         });
     }
@@ -1234,15 +1234,15 @@ jQuery(document).ready( function() {
         let include_subplots = jQuery("#plot_download_subplots").is(":checked");
         let include_plants = jQuery("#plot_download_plants").is(":checked");
         if ( !type || type === '' ) {
-            alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("trial.heatmap.select_plot_type", "Please select a type") : "Please select a type"));
+            alert((SGN.t("trial.heatmap.select_plot_type", "Please select a type")));
             return;
         }
         if ( !order || order === '' ) {
-            alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("trial.heatmap.select_plot_order", "Please select a plot order") : "Please select a plot order"));
+            alert((SGN.t("trial.heatmap.select_plot_order", "Please select a plot order")));
             return;
         }
         if ( !start || start === '' ) {
-            alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("trial.heatmap.select_starting_plot", "Please select a starting plot") : "Please select a starting plot"));
+            alert((SGN.t("trial.heatmap.select_starting_plot", "Please select a starting plot")));
             return;
         }
         let additional_properties = {
@@ -1409,7 +1409,7 @@ jQuery(document).ready( function() {
             jQuery('#working_modal').modal("hide");
             jQuery('#hm_replace_accession_curator_warning_message').modal("show");
           } else if (response.error) {
-            alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("trial.card.coords.replace_error", "Error Replacing Plot Accession: ") : "Error Replacing Plot Accession: ")+response.error);
+            alert((SGN.t("trial.card.coords.replace_error", "Error Replacing Plot Accession: "))+response.error);
           }
           else {
             jQuery('#hm_replace_accession_curator_warning_message').modal("hide");
@@ -1449,10 +1449,10 @@ jQuery(document).ready( function() {
                 });
 
                 var traits_assayed_html = "<select class='form-control' id='trait_list_dropdown'>";
-                traits_assayed_html = traits_assayed_html + "<optgroup label='" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("trial.heatmap.field_map", "Field Map") : "Field Map")).html().replace(/'/g, "&#39;").replace(/"/g, "&quot;") + "'>";
-                traits_assayed_html = traits_assayed_html + "<option value='fieldmap'>" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("trial.heatmap.view_field_layout", "view field layout") : "view field layout")).html() + "</option>";
-                traits_assayed_html = traits_assayed_html + "<option value='geofieldmap'>" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("trial.heatmap.view_geo_field_layout", "view geo field layout") : "view geo field layout")).html() + "</option></optgroup>";
-                traits_assayed_html = traits_assayed_html + "<optgroup label='" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("trial.heatmap.treatments_assayed_traits", "Treatments & Assayed Traits") : "Treatments & Assayed Traits")).html().replace(/'/g, "&#39;").replace(/"/g, "&quot;") + "'>";
+                traits_assayed_html = traits_assayed_html + "<optgroup label='" + jQuery("<span>").text((SGN.t("trial.heatmap.field_map", "Field Map"))).html().replace(/'/g, "&#39;").replace(/"/g, "&quot;") + "'>";
+                traits_assayed_html = traits_assayed_html + "<option value='fieldmap'>" + jQuery("<span>").text((SGN.t("trial.heatmap.view_field_layout", "view field layout"))).html() + "</option>";
+                traits_assayed_html = traits_assayed_html + "<option value='geofieldmap'>" + jQuery("<span>").text((SGN.t("trial.heatmap.view_geo_field_layout", "view geo field layout"))).html() + "</option></optgroup>";
+                traits_assayed_html = traits_assayed_html + "<optgroup label='" + jQuery("<span>").text((SGN.t("trial.heatmap.treatments_assayed_traits", "Treatments & Assayed Traits"))).html().replace(/'/g, "&#39;").replace(/"/g, "&quot;") + "'>";
                 Object.keys(variables).sort().forEach((name) => {
                     traits_assayed_html = traits_assayed_html + `<option value='${variables[name]}'>${name}</option>`;
                 });
@@ -1583,13 +1583,13 @@ jQuery(document).ready( function() {
                         html += `ERROR: ${response.error}`;
                     }
                     else {
-                        html += jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("trial.heatmap.load_linked_trials_error", "ERROR: Could not load linked trials") : "ERROR: Could not load linked trials")).html();
+                        html += jQuery("<span>").text((SGN.t("trial.heatmap.load_linked_trials_error", "ERROR: Could not load linked trials"))).html();
                     }
                     jQuery("#include_linked_trials_list").html(html);
                     _finish();
                 },
                 error: () => {
-                    jQuery("#include_linked_trials_list").html(jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("trial.heatmap.load_linked_trials_error", "ERROR: Could not load linked trials") : "ERROR: Could not load linked trials")).html());
+                    jQuery("#include_linked_trials_list").html(jQuery("<span>").text((SGN.t("trial.heatmap.load_linked_trials_error", "ERROR: Could not load linked trials"))).html());
                     _finish();
                 }
             });
@@ -1741,7 +1741,7 @@ function _finish() {
         success: function(response){
             jQuery('#working_modal').modal("hide");
             if (response.error) {
-              alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("trial.heatmap.suppress_phenotype_error_prefix", "Error Suppressing Phenotype: ") : "Error Suppressing Phenotype: ")+response.error);
+              alert((SGN.t("trial.heatmap.suppress_phenotype_error_prefix", "Error Suppressing Phenotype: "))+response.error);
             }else {
                 jQuery('#suppress_phenotype_dialog_success_message').modal("show");
             }
@@ -1776,7 +1776,7 @@ function _finish() {
         success: function(response){
             jQuery("#working_modal").modal("hide");
             if (response.error){
-                alert((window.SGN && SGN.i18n ? SGN.i18n.p("trial.heatmap.error_delete_trait", "Error deleting trait:") : "Error deleting trait:") + response.error);
+                alert((SGN.t("trial.heatmap.error_delete_trait", "Error deleting trait:")) + response.error);
             }else{
                 jQuery("#delete_trait_dialog_success_message").modal("show");
             }
@@ -1794,7 +1794,7 @@ function _finish() {
       var ret = value.split(",");
       var valStock = ret[0];
       var valPlot = ret[1];
-      jQuery('#check_plot_link').html(valPlot + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("trial.heatmap.plot_came_from", " came from Plot:") : " came from Plot:")).html() + valStock);
+      jQuery('#check_plot_link').html(valPlot + jQuery("<span>").text((SGN.t("trial.heatmap.plot_came_from", " came from Plot:"))).html() + valStock);
   }
 
    jQuery("#view_ctrl_id_button").click(function(){
@@ -1803,9 +1803,9 @@ function _finish() {
 
        var list_of_checks = checks;
        var trial_checks_html = "<select class='form-control' id='check_list_dropdown'>";
-       trial_checks_html = trial_checks_html + "<option value=''>" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("trial.heatmap.checks_and_plot_numbers", "checks and plot numbers") : "checks and plot numbers")).html() + "</option>";
+       trial_checks_html = trial_checks_html + "<option value=''>" + jQuery("<span>").text((SGN.t("trial.heatmap.checks_and_plot_numbers", "checks and plot numbers"))).html() + "</option>";
        jQuery.each(list_of_checks, function( key, value) {
-           trial_checks_html = trial_checks_html + "<option value="+ key + "," + value + " >" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("trial.fieldmap_edit.plot_label.plot_prefix", "Plot:") : "Plot:")).html()+ key + "  [" + value +"]"+ "</option>";
+           trial_checks_html = trial_checks_html + "<option value="+ key + "," + value + " >" + jQuery("<span>").text((SGN.t("trial.fieldmap_edit.plot_label.plot_prefix", "Plot:"))).html()+ key + "  [" + value +"]"+ "</option>";
        });
        trial_checks_html = trial_checks_html +"</select>";
        jQuery("#heatmap_trial_checks_dropdown").html(trial_checks_html);
@@ -1816,10 +1816,10 @@ function _finish() {
 
    jQuery('#print_fieldmap').click(function(){
 
-    alert((window.SGN && SGN.i18n ? SGN.i18n.p("trial.heatmap.print_help", "You may need to change print settings - such as page size, margins, and scaling - to get the fieldmap to display properly in the print preview. Select \"Background graphics\" to ensure the legend includes colors.") : "You may need to change print settings - such as page size, margins, and scaling - to get the fieldmap to display properly in the print preview. Select \"Background graphics\" to ensure the legend includes colors."));
+    alert((SGN.t("trial.heatmap.print_help", "You may need to change print settings - such as page size, margins, and scaling - to get the fieldmap to display properly in the print preview. Select \"Background graphics\" to ensure the legend includes colors.")));
 
     let printWindow = window.open('', '', 'width=800,height=600');
-    printWindow.document.write('<html><head><title>' + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("trial.heatmap.print_title", "Print") : "Print")).html() + '</title></head><body style="display: flex;justify-content: center;align-items: center;flex-direction: column;margin: 0;">')
+    printWindow.document.write('<html><head><title>' + jQuery("<span>").text((SGN.t("trial.heatmap.print_title", "Print"))).html() + '</title></head><body style="display: flex;justify-content: center;align-items: center;flex-direction: column;margin: 0;">')
 
     var title = document.querySelector("#trait_list_dropdown option:checked").textContent;
 

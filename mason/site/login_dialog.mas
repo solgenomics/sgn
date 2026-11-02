@@ -303,7 +303,7 @@ jQuery(document).ready( function() {
             url: '/ajax/user/forgot_username',
             headers: {'X-SGN-Locale': document.documentElement.getAttribute('data-sgn-locale') || document.documentElement.lang || 'en'},
             data: form_data,
-            error: function(r) { alert((window.SGN && SGN.i18n ? SGN.i18n.p("auth.network_error", "An error occurred! Sorry!") : "An error occurred! Sorry!"));  },
+            error: function(r) { alert((SGN.t("auth.network_error", "An error occurred! Sorry!")));  },
             success: function(r) {
                 if (r.error) { alert(r.error); }
                 else { 
@@ -326,7 +326,7 @@ jQuery(document).ready( function() {
             url: '/ajax/user/reset_password',
             headers: {'X-SGN-Locale': document.documentElement.getAttribute('data-sgn-locale') || document.documentElement.lang || 'en'},
             data: form_data,
-            error: function(r) { alert((window.SGN && SGN.i18n ? SGN.i18n.p("auth.network_error", "An error occurred! Sorry!") : "An error occurred! Sorry!"));  },
+            error: function(r) { alert((SGN.t("auth.network_error", "An error occurred! Sorry!")));  },
             success: function(r) {
                 if (r.error) { alert(r.error); }
                 else { 
@@ -363,7 +363,7 @@ jQuery(document).ready( function() {
         // Check bot challenge response and answer
         var response = jQuery("input[name='challenge_response']").val();
         if ( response !== "<% $challenge_answer %>" ) {
-            alert((window.SGN && SGN.i18n ? SGN.i18n.p("auth.registration.challenge_error", "Are you a bot?  The response to the 'Are you Human?' question did not match the answer.  Try again!") : "Are you a bot?  The response to the 'Are you Human?' question did not match the answer.  Try again!"));
+            alert((SGN.t("auth.registration.challenge_error", "Are you a bot?  The response to the 'Are you Human?' question did not match the answer.  Try again!")));
             return;
         }
 
@@ -379,7 +379,7 @@ jQuery(document).ready( function() {
                 console.log(r);
                 if (r.error) { alert(r.error); }
                 else {
-                    let message = r.message || (window.SGN && SGN.i18n ? SGN.i18n.p("auth.registration.account_added", "New account added. Check your email for the confirmation link - you must confirm your account before you can login.") : "New account added. Check your email for the confirmation link - you must confirm your account before you can login.");
+                    let message = r.message || (SGN.t("auth.registration.account_added", "New account added. Check your email for the confirmation link - you must confirm your account before you can login."));
                     alert(message);
                     jQuery('#site_login_new_user_dialog').modal('hide');
                     jQuery('#site_login_dialog').modal('hide');
@@ -399,14 +399,14 @@ jQuery(document).ready( function() {
         event.preventDefault();
         var form_data = jQuery('#login_form').serialize();
         if (!jQuery('#username').val() || !jQuery('#password').val()) { 
-            alert((window.SGN && SGN.i18n ? SGN.i18n.p("auth.login.credentials_missing", "Please enter a username and password") : "Please enter a username and password"));
+            alert((SGN.t("auth.login.credentials_missing", "Please enter a username and password")));
             return;
         }
         jQuery.ajax( { 
             url: '/ajax/user/login',
             headers: {'X-SGN-Locale': document.documentElement.getAttribute('data-sgn-locale') || document.documentElement.lang || 'en'},
             data: form_data,
-            error: function(r) { alert((window.SGN && SGN.i18n ? SGN.i18n.p("auth.network_error", "An error occurred! Sorry!") : "An error occurred! Sorry!"));  },
+            error: function(r) { alert((SGN.t("auth.network_error", "An error occurred! Sorry!")));  },
             success: function(r) {
                 if (r.error) { 
                     alert(r.error);

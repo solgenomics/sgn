@@ -132,7 +132,7 @@ CXGN.List.prototype = {
                 }
             },
             error: function(response) {
-                alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("lists.get.failed", "An error occurred.") : "An error occurred."));
+                alert((SGN.t("lists.get.failed", "An error occurred.")));
             }
         });
         return list;
@@ -179,7 +179,7 @@ CXGN.List.prototype = {
                 }
             },
             error: function () {
-                alert((window.SGN && SGN.i18n ? SGN.i18n.p('lists.error.cannot_determine_type', 'An error occurred. Cannot determine type. ') : 'An error occurred. Cannot determine type. '));
+                alert((SGN.t('lists.error.cannot_determine_type', 'An error occurred. Cannot determine type. ')));
             }
         });
 
@@ -224,7 +224,7 @@ CXGN.List.prototype = {
     typesHtmlSelect: function(list_id, html_select_id, selected) {
         var types = this.allListTypes();
         var html = '<select class="form-control" id="'+html_select_id+'" onchange="javascript:changeListType(\''+html_select_id+'\', '+list_id+');" >';
-        html += '<option name="null" value="(none)">' + _sgnListEscapeHTML((window.SGN && SGN.i18n ? SGN.i18n.p('lists.render.none_type', '(none)') : '(none)')) + '</option>';
+        html += '<option name="null" value="(none)">' + _sgnListEscapeHTML((SGN.t('lists.render.none_type', '(none)'))) + '</option>';
         for (var i=0; i<types.length; i++) {
             var selected_html = '';
             if (types[i][1] == selected) {
@@ -1464,7 +1464,7 @@ function pasteList(div_name) {
 function refreshListSelect(div_name, types) {
     var lo = new CXGN.List();
     var types = types.split(",");
-    document.getElementById(div_name).innerHTML = (lo.listSelect(div_name, types, window.SGN && SGN.i18n ? SGN.i18n.p('lists.selector.refreshed', 'Options refreshed.') : 'Options refreshed.', 'refresh', undefined));
+    document.getElementById(div_name).innerHTML = (lo.listSelect(div_name, types, SGN.t('lists.selector.refreshed', 'Options refreshed.'), 'refresh', undefined));
     //console.log("List options refreshed!");
 }
 
@@ -1624,7 +1624,7 @@ function getData(id, selectText) {
 function addTextToListMenu(div) {
     var lo = new CXGN.List();
     var html = lo.listSelect(div, undefined, undefined, undefined, undefined);
-    html = html + '<input id="'+div+'_button" type="button" value="' + _sgnListEscapeHTML((window.SGN && SGN.i18n ? SGN.i18n.p('lists.copy.add_existing', 'add to list') : 'add to list')) + '" />';
+    html = html + '<input id="'+div+'_button" type="button" value="' + _sgnListEscapeHTML((SGN.t('lists.copy.add_existing', 'add to list'))) + '" />';
 
     document.write(html);
 
@@ -1640,7 +1640,7 @@ function addTextToListMenu(div) {
 function addSelectToListMenu(div) {
     var lo = new CXGN.List();
     var html = lo.listSelect(div, undefined, undefined, undefined, undefined);
-    html = html + '<input id="'+div+'_button" type="button" value="' + _sgnListEscapeHTML((window.SGN && SGN.i18n ? SGN.i18n.p('lists.copy.add_existing', 'add to list') : 'add to list')) + '" />';
+    html = html + '<input id="'+div+'_button" type="button" value="' + _sgnListEscapeHTML((SGN.t('lists.copy.add_existing', 'add to list'))) + '" />';
 
     document.write(html);
 
@@ -1883,7 +1883,7 @@ function validateList(list_id, list_type, html_select_id) {
         list_type = jQuery('#'+html_select_id).val();
     }
     if ( !list_type || list_type === '' || list_type === '(none)' ) {
-        alert((window.SGN && SGN.i18n ? SGN.i18n.p('lists.validation.type_required', 'You must select the list type before validating') : 'You must select the list type before validating'));
+        alert((SGN.t('lists.validation.type_required', 'You must select the list type before validating')));
         return;
     }
 

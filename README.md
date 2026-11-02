@@ -11,7 +11,7 @@ Contact SGN using the contact form on the page https://solgenomics.net/contact/f
 
 Users should refer to the <a href="https://solgenomics.github.io/sgn/">user's manual</a>.
 
-Developers should refer to the <a href="https://github.com/solgenomics/sgn/wiki">developer's guide</a>.
+Developers should refer to the <a href="https://github.com/solgenomics/sgn/wiki">developer's guide</a>. See the [internationalization chapter](docs/i18n/DEVELOPER.md) for adding and debugging translated messages.
 
 
 :-)

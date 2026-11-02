@@ -18,6 +18,9 @@
       </ul>
       <ul class="nav navbar-nav navbar-right">
         <& toolbar/search.mas &>
+% if ($c->config->{i18n_enabled}) {
+        <li class="sgn-language-control"><& /i18n/language_selector.mas &></li>
+% }
         <& toolbar/login.mas &>
       </ul>
     </div>

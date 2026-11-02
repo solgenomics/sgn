@@ -33,11 +33,11 @@ jQuery(document).ready(function() {
           'success': function(response) {
             console.log(response);
             //jQuery("#brapi_auth_home_div").empty().html("Successfully logged in!"+response);
-            alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("integrations.auth.login_success", "Successfully logged in!") : "Successfully logged in!")+response.userDisplayName + response.expires_in);
+            alert((SGN.t("integrations.auth.login_success", "Successfully logged in!"))+response.userDisplayName + response.expires_in);
             //location.reload();
           },
           error: function(response) {
-            alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("integrations.auth.error", "An error occurred") : "An error occurred"));
+            alert((SGN.t("integrations.auth.error", "An error occurred")));
           }
         });
     });
@@ -48,11 +48,11 @@ jQuery(document).ready(function() {
           'method': 'DELETE',
           'success': function(response) {
             console.log(response);
-            alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("integrations.auth.logout_success", "Successfully logged out!") : "Successfully logged out!"));
+            alert((SGN.t("integrations.auth.logout_success", "Successfully logged out!")));
             //location.reload();
           },
           error: function(response) {
-            alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("integrations.auth.error", "An error occurred") : "An error occurred"));
+            alert((SGN.t("integrations.auth.error", "An error occurred")));
           }
         });
     });

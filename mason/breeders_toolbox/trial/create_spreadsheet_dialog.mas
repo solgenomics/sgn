@@ -182,7 +182,7 @@ function create_phenotype_spreadsheet() {
         trait_list = JSON.stringify(list.getList(trait_list_id));
     }
     else {
-        alert(window.SGN && SGN.i18n ? SGN.i18n.p('trial.spreadsheet.trait_list_required', "You must select a Trait List first") : "You must select a Trait List first");
+        alert(SGN.t('trial.spreadsheet.trait_list_required', "You must select a Trait List first"));
         return;
     }
 %  if ($trial_id){
@@ -219,7 +219,7 @@ function create_phenotype_spreadsheet() {
         },
         error: function () {
             jQuery('#working_modal').modal("hide");
-            alert(window.SGN && SGN.i18n ? SGN.i18n.p('trial.spreadsheet.create_error', "An error occurred creating a phenotype file.") : "An error occurred creating a phenotype file.");
+            alert(SGN.t('trial.spreadsheet.create_error', "An error occurred creating a phenotype file."));
             jQuery('#create_spreadsheet_dialog').modal("hide");
         }
     });

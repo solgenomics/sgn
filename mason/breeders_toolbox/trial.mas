@@ -323,7 +323,7 @@ jQuery(document).ready(function () {
      function() {
         var trial_id = get_trial_id();
 
-	var yes = confirm((window.SGN && SGN.i18n ? SGN.i18n.p("trial.card.page.remove_program", "Do you really want to remove this trial from the breeding program?") : "Do you really want to remove this trial from the breeding program?"));
+	var yes = confirm((SGN.t("trial.card.page.remove_program", "Do you really want to remove this trial from the breeding program?")));
 	if (yes) {
             jQuery.ajax( {
 		url: '/breeders/program/remove/<% $breeding_program_id %>/'+trial_id,
@@ -353,14 +353,14 @@ jQuery(document).ready(function () {
     let button_label_2 = '';
     const trial_stock_type = "<%$trial_stock_type%>";
     if (trial_stock_type == 'cross') {
-        button_label = (window.SGN && SGN.i18n ? SGN.i18n.p("trial.card.page.additional_crosses", "Add Additional Crosses or Plants") : "Add Additional Crosses or Plants");
-        button_label_2 = (window.SGN && SGN.i18n ? SGN.i18n.p("trial.card.page.change_crosses", "Change Crosses or Accessions") : "Change Crosses or Accessions");
+        button_label = (SGN.t("trial.card.page.additional_crosses", "Add Additional Crosses or Plants"));
+        button_label_2 = (SGN.t("trial.card.page.change_crosses", "Change Crosses or Accessions"));
     } else if (trial_stock_type == 'family_name') {
-        button_label = (window.SGN && SGN.i18n ? SGN.i18n.p("trial.card.page.additional_families", "Add Additional Families or Plants") : "Add Additional Families or Plants");
-        button_label_2 = (window.SGN && SGN.i18n ? SGN.i18n.p("trial.card.page.change_families", "Change Family Names or Accessions") : "Change Family Names or Accessions");
+        button_label = (SGN.t("trial.card.page.additional_families", "Add Additional Families or Plants"));
+        button_label_2 = (SGN.t("trial.card.page.change_families", "Change Family Names or Accessions"));
     } else {
-        button_label = (window.SGN && SGN.i18n ? SGN.i18n.p("trial.card.page.additional_accessions", "Add Additional Accessions or Plants") : "Add Additional Accessions or Plants");
-        button_label_2 = (window.SGN && SGN.i18n ? SGN.i18n.p("trial.card.page.change_accessions", "Change Accessions") : "Change Accessions");
+        button_label = (SGN.t("trial.card.page.additional_accessions", "Add Additional Accessions or Plants"));
+        button_label_2 = (SGN.t("trial.card.page.change_accessions", "Change Accessions"));
     }
 
     jQuery('#trial_detail_page_add_additional_stocks').text(button_label);

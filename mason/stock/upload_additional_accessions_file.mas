@@ -92,7 +92,7 @@ jQuery(document).ready(function(){
             var uploadFile = jQuery("#accession_upload_additional_file").val();
 
             if (uploadFile === '') {
-                alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("accession.files.required_file", "Please select a file") : "Please select a file"));
+                alert((SGN.t("accession.files.required_file", "Please select a file")));
                 return;
             }
             jQuery('#accession_upload_additional_file_form').attr("action", "/stock/"+<% $stock_id %>+"/upload_additional_file");
@@ -121,7 +121,7 @@ jQuery(document).ready(function(){
                     return;
                 }
                 if (response.success) {
-                    alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("accession.files.upload_success", "File uploaded successfully") : "File uploaded successfully"));
+                    alert((SGN.t("accession.files.upload_success", "File uploaded successfully")));
                     location.reload();
                 }
             }
@@ -132,38 +132,38 @@ jQuery(document).ready(function(){
             jQuery.ajax ({
                 url : '/stock/'+<% $stock_id %>+'/get_uploaded_additional_file',
                 beforeSend : function(){
-                    jQuery('#stock_additional_uploaded_files_div').html(_sgnB15FilesEscape(window.SGN && window.SGN.i18n ? window.SGN.i18n.p("accession.files.loading_upper", "[LOADING...]") : "[LOADING...]"));
+                    jQuery('#stock_additional_uploaded_files_div').html(_sgnB15FilesEscape(SGN.t("accession.files.loading_upper", "[LOADING...]")));
                 },
                 success: function(response){
                     console.log("response" ,response);
-                    var html = "<table class='table table-hover table-condensed table-bordered' id='stock_additional_uploaded_files_table'><thead><tr><th>" + _sgnB15FilesEscape(window.SGN && window.SGN.i18n ? window.SGN.i18n.p("accession.files.files.header.filename", "Filename") : "Filename") + "</th><th>" + _sgnB15FilesEscape(window.SGN && window.SGN.i18n ? window.SGN.i18n.p("accession.files.files.header.date", "Date Uploaded") : "Date Uploaded") + "</th><th>" + _sgnB15FilesEscape(window.SGN && window.SGN.i18n ? window.SGN.i18n.p("accession.files.files.header.uploader", "Uploaded By") : "Uploaded By") + "</th><th>" + _sgnB15FilesEscape(window.SGN && window.SGN.i18n ? window.SGN.i18n.p("accession.files.files.header.options", "Options") : "Options") + "</th></tr></thead><tbody>";
+                    var html = "<table class='table table-hover table-condensed table-bordered' id='stock_additional_uploaded_files_table'><thead><tr><th>" + _sgnB15FilesEscape(SGN.t("accession.files.files.header.filename", "Filename")) + "</th><th>" + _sgnB15FilesEscape(SGN.t("accession.files.files.header.date", "Date Uploaded")) + "</th><th>" + _sgnB15FilesEscape(SGN.t("accession.files.files.header.uploader", "Uploaded By")) + "</th><th>" + _sgnB15FilesEscape(SGN.t("accession.files.files.header.options", "Options")) + "</th></tr></thead><tbody>";
                     for (i=0; i<response.files.length; i++) {
-                        html = html + '<tr><td>'+response.files[i][4]+'</td><td>'+response.files[i][1]+'</td><td><a href="/solpeople/profile/'+response.files[i][2]+'">'+response.files[i][3]+'</a></td><td><a href="/breeders/phenotyping/download/'+response.files[i][0]+'">' + _sgnB15FilesEscape(window.SGN && window.SGN.i18n ? window.SGN.i18n.p("accession.files.files.download", "Download") : "Download") + '</a> </td></tr>';
+                        html = html + '<tr><td>'+response.files[i][4]+'</td><td>'+response.files[i][1]+'</td><td><a href="/solpeople/profile/'+response.files[i][2]+'">'+response.files[i][3]+'</a></td><td><a href="/breeders/phenotyping/download/'+response.files[i][0]+'">' + _sgnB15FilesEscape(SGN.t("accession.files.files.download", "Download")) + '</a> </td></tr>';
                     }
                     html = html + "</tbody></table>";
                     jQuery('#stock_additional_uploaded_files_div').html(html);
                     jQuery('#stock_additional_uploaded_files_table').DataTable();
                 },
                 error: function(response){
-                    alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("accession.files.files.retrieve_error", "Error retrieving additional uploaded files.") : "Error retrieving additional uploaded files."));
+                    alert((SGN.t("accession.files.files.retrieve_error", "Error retrieving additional uploaded files.")));
                 }
             });
         }                          
 
 
         function obsolete_additional_file(stock_id, file_id) {
-            var yes = confirm((window.SGN && window.SGN.i18n ? window.SGN.i18n.p('accession.files.files.obsolete_confirm', 'Are you sure you want to obsolete this file? This operation cannot be undone.') : 'Are you sure you want to obsolete this file? This operation cannot be undone.'));
+            var yes = confirm((SGN.t('accession.files.files.obsolete_confirm', 'Are you sure you want to obsolete this file? This operation cannot be undone.')));
             if (yes) {
                 jQuery.ajax({
                     url: '/stock/'+stock_id+'/obsolete_uploaded_additional_file/'+file_id,
                     success: function(r) {
                         if (r.error) { alert(r.error); }
                         else {
-                            alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("accession.files.files.obsoleted", "The file has been obsoleted.") : "The file has been obsoleted."));
+                            alert((SGN.t("accession.files.files.obsoleted", "The file has been obsoleted.")));
                             display_stock_additional_upload_files();
                         }
                     },
-                    error: function(r) {  alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("accession.files.files.error", "An error occurred!") : "An error occurred!")) }
+                    error: function(r) {  alert((SGN.t("accession.files.files.error", "An error occurred!"))) }
                 });
             }
         }

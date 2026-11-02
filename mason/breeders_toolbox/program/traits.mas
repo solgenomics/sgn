@@ -117,7 +117,7 @@ function trait_summary_hist_display_change(program_id) {
                  trait_summary_hist_change(program_id, this.value);
                 });
 
-                jQuery('#traits_assayed_histogram_cvterm_link').html("<a href='/cvterm/"+response.traits_assayed[0][0][0]+("/view'>" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("phenotype.definition", "Definition") : "Definition")).html() + "</a>"));
+                jQuery('#traits_assayed_histogram_cvterm_link').html("<a href='/cvterm/"+response.traits_assayed[0][0][0]+("/view'>" + jQuery("<span>").text((SGN.t("phenotype.definition", "Definition"))).html() + "</a>"));
 
                 jQuery.ajax( {
                     url : '/ajax/breeders/program/'+ program_id +'/trait_phenotypes/?trait='+jQuery("#program_summary_hist_dropdown").val(),
@@ -128,7 +128,7 @@ function trait_summary_hist_display_change(program_id) {
                             alert(response.error);
                         }
                         else if (response.status!="success"){
-                            alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("phenotype.problem_loading_plant_plot_data", "Problem loading plant/plot data: ") : "Problem loading plant/plot data: ")+response.status);
+                            alert((SGN.t("phenotype.problem_loading_plant_plot_data", "Problem loading plant/plot data: "))+response.status);
                         }
                         else {
                             draw_histogram(response.data, d3.select("#program_summary_hist").node());
@@ -141,7 +141,7 @@ function trait_summary_hist_display_change(program_id) {
                 });
             } else {
                 jQuery("#working_modal").modal("hide");
-                jQuery("#program_summary_hist").html(("<center><h4>" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("phenotype.there_is_no_data_to_plot", "There is no data to plot.") : "There is no data to plot.")).html() + "</h4></center>"));
+                jQuery("#program_summary_hist").html(("<center><h4>" + jQuery("<span>").text((SGN.t("phenotype.there_is_no_data_to_plot", "There is no data to plot."))).html() + "</h4></center>"));
             }
 
         },
@@ -153,7 +153,7 @@ function trait_summary_hist_display_change(program_id) {
 }
 
 function trait_summary_hist_change(program_id, value) {
-    jQuery('#traits_assayed_histogram_cvterm_link').html("<a href='/cvterm/"+value+("/view'>" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("phenotype.definition", "Definition") : "Definition")).html() + "</a>"));
+    jQuery('#traits_assayed_histogram_cvterm_link').html("<a href='/cvterm/"+value+("/view'>" + jQuery("<span>").text((SGN.t("phenotype.definition", "Definition"))).html() + "</a>"));
     jQuery("#program_summary_hist_dropdown").val(value);
     jQuery.ajax( {
         url : '/ajax/breeders/program/'+ program_id +'/trait_phenotypes/?trait='+value+'',
@@ -167,7 +167,7 @@ function trait_summary_hist_change(program_id, value) {
                 alert(response.error);
             }
             else if (response.status!="success"){
-                alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("phenotype.problem_loading_plant_plot_data", "Problem loading plant/plot data: ") : "Problem loading plant/plot data: ")+response.status);
+                alert((SGN.t("phenotype.problem_loading_plant_plot_data", "Problem loading plant/plot data: "))+response.status);
             }
             else {
                 draw_histogram(response.data, d3.select("#program_summary_hist").node());

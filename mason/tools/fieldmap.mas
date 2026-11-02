@@ -61,7 +61,7 @@ $trial_id => undef
     document.getElementById("trialList").style.display="none";
 
     jQuery(document).ready(function() {
-        jQuery('#ranking_formula').html('<center><i>' + jQuery('<div>').text(window.SGN && SGN.i18n ? SGN.i18n.p('trial.fieldmap.select_trial', 'Select a trial.') : 'Select a trial.').html() + '</i></center>');
+        jQuery('#ranking_formula').html('<center><i>' + jQuery('<div>').text(SGN.t('trial.fieldmap.select_trial', 'Select a trial.')).html() + '</i></center>');
         get_select_box('trials', 'select_trial_for_selection_index', { 'name' : 'html_select_trial_for_selection_index', 'id' : 'html_select_trial_for_selection_index' , 'empty' : 1 });
         jQuery('#select_trial_for_selection_index').change(load);
         load();
@@ -76,7 +76,7 @@ $trial_id => undef
         if (require_login === '1' || update){
             auth_token = "<%  CXGN::Login->new($c->dbc->dbh)->get_login_cookie() %>";
             if (!auth_token){
-                alert(window.SGN && SGN.i18n ? SGN.i18n.p("trial.fieldmap.login_error", "Login required to display and/or update field map") : "Login required to display and/or update field map");
+                alert(SGN.t("trial.fieldmap.login_error", "Login required to display and/or update field map"));
             }
         }
         fieldMap.brapi_endpoint = brapi_endpoint;
@@ -91,7 +91,7 @@ $trial_id => undef
 
         if (studyDbId){
             jQuery("#btn-load-plots, #btn-save-geo-coordinates").prop("disabled", true);
-            jQuery("#btn-load-plots").text((window.SGN && SGN.i18n ? SGN.i18n.p("trial.fieldmap.loading", "Loading...") : "Loading..."));
+            jQuery("#btn-load-plots").text((SGN.t("trial.fieldmap.loading", "Loading...")));
             fieldMap.load(studyDbId)
                 .then((value)=>{
                   if (!value) return setLocation(studyDbId); 
@@ -101,26 +101,26 @@ $trial_id => undef
                 })  
                 .finally(() => {
                     jQuery("#btn-load-plots").prop("disabled", false);
-                    jQuery("#btn-load-plots").text((window.SGN && SGN.i18n ? SGN.i18n.p("trial.fieldmap.load_plots", "Load plots") : "Load plots"));
+                    jQuery("#btn-load-plots").text((SGN.t("trial.fieldmap.load_plots", "Load plots")));
                 }); 
             document.getElementById("formOptions").style.display="block";
-        } else alert(window.SGN && SGN.i18n ? SGN.i18n.p("trial.fieldmap.invalid_trial", "Invalid trial!") : "Invalid trial!");
+        } else alert(SGN.t("trial.fieldmap.invalid_trial", "Invalid trial!"));
     }
 
     function setLocation(studyDbId) {
         jQuery("#select_trial_for_selection_index option[value="+studyDbId+"]").attr('selected', 'selected'); 
-        fieldMap.setLocation(studyDbId).then(()=>alert(window.SGN && SGN.i18n ? SGN.i18n.p('trial.fieldmap.select_area_named', "Please select an area over the field and click %{button}.", {button: "'" + (window.SGN && SGN.i18n ? SGN.i18n.p('trial.fieldmap.load_plots', 'Load plots') : 'Load plots') + "'"}) : "Please select an area over the field and click 'Load plots'."), ()=>alert(window.SGN && SGN.i18n ? SGN.i18n.p("trial.fieldmap.no_geo_reference", "No geo reference for location in this trial!") : "No geo reference for location in this trial!"));
+        fieldMap.setLocation(studyDbId).then(()=>alert(window.SGN && SGN.i18n ? SGN.i18n.p('trial.fieldmap.select_area_named', "Please select an area over the field and click %{button}.", {button: "'" + (SGN.t('trial.fieldmap.load_plots', 'Load plots')) + "'"}) : "Please select an area over the field and click 'Load plots'."), ()=>alert(SGN.t("trial.fieldmap.no_geo_reference", "No geo reference for location in this trial!")));
     }
     
     function update() {
         setupBrAPI(true);
         jQuery("#btn-load-plots, #btn-save-geo-coordinates").prop("disabled", true);
-        jQuery("#btn-save-geo-coordinates").text((window.SGN && SGN.i18n ? SGN.i18n.p("trial.fieldmap.saving", "Saving...") : "Saving..."));
+        jQuery("#btn-save-geo-coordinates").text((SGN.t("trial.fieldmap.saving", "Saving...")));
         fieldMap.update()
             .then((resp)=>alert(resp), (resp)=>alert(resp))
             .finally(() => {
                 jQuery("#btn-load-plots, #btn-save-geo-coordinates").prop("disabled", false);
-                jQuery("#btn-save-geo-coordinates").text((window.SGN && SGN.i18n ? SGN.i18n.p("trial.fieldmap.save_button", "Save Geo coordinates") : "Save Geo coordinates"));
+                jQuery("#btn-save-geo-coordinates").text((SGN.t("trial.fieldmap.save_button", "Save Geo coordinates")));
             });
     }
 

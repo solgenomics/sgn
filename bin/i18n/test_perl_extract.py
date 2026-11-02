@@ -31,14 +31,16 @@ class PPIExtractionTests(unittest.TestCase):
             return extract_file(path, root)
 
     def test_shared_helper_acquisition_singular_and_plural(self):
-        rows = self.records("""
+        rows = self.records(
+            """
 my SGN::I18N $tr = SGN::I18N::translate($c);
 SGN::I18N::translate($tr, 'helper.name', 'Name: %{name}', {name => $name});
 SGN::I18N::translate($tr, 'helper.html', 'A & B', undef, {entities => '<>&', decode => 1});
 SGN::I18N::translate($tr, 'helper.fallback', 'Name: %{name}', {name => $token}, {fallback => $original});
 SGN::I18N::translate($tr, 'helper.count', '%{count} trial', {count => $n},
     {plural => ['%{count} trials', $n], entities => '<>&', decode => 1});
-""")
+"""
+        )
         self.assertEqual(
             [(r["context"], r["source"], r["plural"]) for r in rows],
             [
@@ -250,11 +252,13 @@ $c->i18n()->p('real.after', "Number of trials");
         self.assertEqual([row["reference"] for row in records], ["fixture.pm:12", "fixture.pm:16"])
 
     def test_literal_alias_plural_unicode_empty_context_and_escapes(self):
-        records = self.records("""my $translator = $c->i18n;
+        records = self.records(
+            """my $translator = $c->i18n;
 $translator->np('demo.count', '%{count} trial', '%{count} trials', $n, {count=>$n});
 $c->i18n->p('', 'Вітаємо, %{name}.', {name=>$name});
 $c->i18n->p('demo.escape', "Price \\$ and \\"quote\\"\\n");
-""")
+"""
+        )
         self.assertEqual(len(records), 3)
         self.assertEqual(records[0]["plural"], "%{count} trials")
         self.assertEqual(records[1]["context"], "")
@@ -333,11 +337,13 @@ SGN.i18n.p('page.js','Save Changes');
                 self.records("$c->i18n->p('ctx','English');")
 
     def test_typed_constructor_alias_and_unsupported_known_chain(self):
-        records = self.records("""my $i18n = SGN::I18N->new(locale=>'en');
+        records = self.records(
+            """my $i18n = SGN::I18N->new(locale=>'en');
 $i18n->p('', 'Text');
 SGN::I18N->new(locale=>'en')->np('count', '%{count} item', '%{count} items', $n, {count=>$n});
 $widget->p('unrelated', 'Widget property');
-""")
+"""
+        )
         self.assertEqual(
             [(row["context"], row["source"]) for row in records],
             [("", "Text"), ("count", "%{count} item")],
@@ -451,7 +457,9 @@ my $quoted=q{my $translator=SGN::I18N->new();};
 <%text>my $translator=$c->i18n;</%text>
 <p><% $translator->p("widget", "Property") |h %></p>
 <p><% $c->i18n->p("safe", "Safe text") |h %></p>
-""".replace("MARKER", str(marker))
+""".replace(
+                "MARKER", str(marker)
+            )
             path.write_text(source, encoding="utf-8")
             rows = extract_file(path, root)
             self.assertEqual(

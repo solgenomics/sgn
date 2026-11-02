@@ -94,7 +94,7 @@ jQuery(document).ready(function(){
 
     jQuery('#delete_plate_genotyping_data').click(function() {
         const trial_id = get_trial_id();
-        const confirmation = confirm((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("genotype.plate.are_you_sure_you_want_to_delete_all_genotyping_data", "Are you sure you want to delete all genotyping data derived from this genotyping plate? This action cannot be undone.") : "Are you sure you want to delete all genotyping data derived from this genotyping plate? This action cannot be undone."));
+        const confirmation = confirm((SGN.t("genotype.plate.are_you_sure_you_want_to_delete_all_genotyping_data", "Are you sure you want to delete all genotyping data derived from this genotyping plate? This action cannot be undone.")));
         if (confirmation) {
             jQuery.ajax({
                 url: '/ajax/breeders/plate_genotyping_data_delete',
@@ -105,7 +105,7 @@ jQuery(document).ready(function(){
                 },
                 beforeSend: function(){
                     jQuery('#working_modal').modal("show");
-                    jQuery('#working_msg').html(("" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("genotype.plate.deleting_genotyping_data", "Deleting genotyping data...") : "Deleting genotyping data...")).html() + "<br />"));
+                    jQuery('#working_msg').html(("" + jQuery("<span>").text((SGN.t("genotype.plate.deleting_genotyping_data", "Deleting genotyping data..."))).html() + "<br />"));
                 },
                 success: function(response) {
                     jQuery('#working_modal').modal('hide');
@@ -143,7 +143,7 @@ jQuery(document).ready(function(){
     });
 
     jQuery('#delete_empty_protocol_submit').click(function() {
-        const confirmation = confirm((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("genotype.plate.are_you_sure_you_want_to_delete_this_genotyping_protocol", "Are you sure you want to delete this genotyping protocol? This action cannot be undone.") : "Are you sure you want to delete this genotyping protocol? This action cannot be undone."));
+        const confirmation = confirm((SGN.t("genotype.plate.are_you_sure_you_want_to_delete_this_genotyping_protocol", "Are you sure you want to delete this genotyping protocol? This action cannot be undone.")));
         if (confirmation) {
             jQuery.ajax({
                 url: '/ajax/breeders/empty_protocol_delete',
@@ -154,12 +154,12 @@ jQuery(document).ready(function(){
                 },
                 beforeSend: function(){
                     jQuery('#working_modal').modal("show");
-                    jQuery('#working_msg').html(("" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("genotype.plate.deleting_genotyping_protocol", "Deleting genotyping protocol...") : "Deleting genotyping protocol...")).html() + "<br />"));
+                    jQuery('#working_msg').html(("" + jQuery("<span>").text((SGN.t("genotype.plate.deleting_genotyping_protocol", "Deleting genotyping protocol..."))).html() + "<br />"));
                 },
                 success: function(response) {
                     jQuery('#working_modal').modal('hide');
                     if (response.success == 1) {
-                        alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("genotype.plate.the_genotyping_protocol_was_deleted_successfully", "The genotyping protocol was deleted successfully.") : "The genotyping protocol was deleted successfully."));
+                        alert((SGN.t("genotype.plate.the_genotyping_protocol_was_deleted_successfully", "The genotyping protocol was deleted successfully.")));
                         location.reload();
                     }
                     if (response.error) {

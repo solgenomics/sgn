@@ -18,7 +18,7 @@ jQuery(document).ready(function(){
     function upload_derived_accessions_file() {
         var uploadFile = jQuery("#derived_accessions_file").val();
         if (uploadFile === '') {
-            alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("accessions.upload.file_required", "Please select a file") : "Please select a file"));
+            alert((SGN.t("accessions.upload.file_required", "Please select a file")));
             return;
         }
 
@@ -33,7 +33,7 @@ jQuery(document).ready(function(){
                 jQuery("#working_modal").modal("hide");
             var html;
             if (response.error_string) {
-                html = '<h4>' + _sgnB16DerivedEscape((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("accession.derived.issues", "The following issues were identified") : "The following issues were identified")) + '</h4><p class="bg-warning">'+response.error_string+'</p>';
+                html = '<h4>' + _sgnB16DerivedEscape((SGN.t("accession.derived.issues", "The following issues were identified"))) + '</h4><p class="bg-warning">'+response.error_string+'</p>';
                 jQuery("#upload_derived_accessions_error_display tbody").html(html);
                 jQuery("#upload_derived_accessions_error_display").modal('show');
             }

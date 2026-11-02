@@ -188,7 +188,7 @@ $type_name => "plot"
 
         success: function (response) {
           if (response.error){
-            alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("phenotype.error_saving_trait_value", "Error Saving Trait Value: ") : "Error Saving Trait Value: ")+response.error);
+            alert((SGN.t("phenotype.error_saving_trait_value", "Error Saving Trait Value: "))+response.error);
           }
         },
           error: function() {
@@ -227,7 +227,7 @@ $type_name => "plot"
             var black = {'color': 'red'};
 
             if (response.error){
-              alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("phenotype.error_retrieving_trait_value", "Error Retrieving Trait Value: ") : "Error Retrieving Trait Value: ")+response.error);
+              alert((SGN.t("phenotype.error_retrieving_trait_value", "Error Retrieving Trait Value: "))+response.error);
             }else{
               if (value){
                 jQuery("#select_pheno_value").css(black);

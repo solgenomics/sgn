@@ -146,7 +146,7 @@ jQuery(document).ready(function(){
     jQuery('#upload_transgenic_historical_data_link').click(function() {
         const defaultPlantMaterial = "<% $default_plant_material_name %>";
         if (defaultPlantMaterial === ''){
-            alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("transformation.please_set_a_default_plant_material_for_this_project_before", "Please set a default plant material for this project before uploading your data.") : "Please set a default plant material for this project before uploading your data."));
+            alert((SGN.t("transformation.please_set_a_default_plant_material_for_this_project_before", "Please set a default plant material for this project before uploading your data.")));
             return;
         }
 
@@ -160,7 +160,7 @@ jQuery(document).ready(function(){
     jQuery("#upload_transgenic_historical_data_submit").click(function(){
         var uploadFile = jQuery("#transgenic_historical_data_file").val();
         if (uploadFile === ''){
-            alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("global.manage_file_share_dump.select_file", "Please select a file") : "Please select a file"));
+            alert((SGN.t("global.manage_file_share_dump.select_file", "Please select a file")));
             return;
         }
 

@@ -98,7 +98,7 @@ function save_folders_categories() {
         });
     }
     if (error == 1){
-        alert(window.SGN && SGN.i18n ? SGN.i18n.p('folder.edit_categories.error', 'Error setting folder categories!') : 'Error setting folder categories!');
+        alert(SGN.t('folder.edit_categories.error', 'Error setting folder categories!'));
     } else {
         if(confirm(window.SGN && SGN.i18n ? SGN.i18n.p('folder.edit_categories.success', 'Categories set for folder(s)! Refresh %{tree_type} Tree?', {tree_type: <% JSON::encode_json($folder_tree_type) %>}) : 'Categories set for folder(s)! Refresh <% $folder_tree_type %> Tree?')){
             jQuery("[name='<% $folder_tree_refresh_name %>']").trigger("click");

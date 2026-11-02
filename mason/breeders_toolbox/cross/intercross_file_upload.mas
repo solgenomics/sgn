@@ -170,12 +170,12 @@ jQuery(document).ready(function(){
         jQuery('#upload_intercross_form').attr("action", "/ajax/cross/upload_intercross_file");
 
         if (crossIDformat === ''){
-            alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("cross.forms.please_select_your_cross_id_format", "Please select your cross ID format") : "Please select your cross ID format"));
+            alert((SGN.t("cross.forms.please_select_your_cross_id_format", "Please select your cross ID format")));
             return;
         }
 
         if (uploadFile === ''){
-            alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("cross.ui.please_select_a_file", "Please select a file") : "Please select a file"));
+            alert((SGN.t("cross.ui.please_select_a_file", "Please select a file")));
             return;
         }
         jQuery("#upload_intercross_form").submit();

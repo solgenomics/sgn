@@ -117,7 +117,7 @@ jQuery(document).ready(function() {
             export_imaging_events_drone_run_ids.push(jQuery(this).val());
         });
         if (export_imaging_events_drone_run_ids.length < 1) {
-            alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("drone.interface.please_select_at_least_one_imaging_event_ea7e46", "Please select at least one imaging event.") : "Please select at least one imaging event."));
+            alert((SGN.t("drone.interface.please_select_at_least_one_imaging_event_ea7e46", "Please select at least one imaging event.")));
             return false;
         }
         else {
@@ -139,13 +139,13 @@ jQuery(document).ready(function() {
                     return false;
                 }
                 else {
-                    var html = '<a href="' + response.imaging_events_spreadsheet + '">' + jQuery("<span>").text((window.SGN && window.SGN.i18n ? SGN.i18n.p("drone.interface.download_imaging_event_spreadsheet", "Download Imaging Event Spreadsheet") : "Download Imaging Event Spreadsheet")).html() + '</a><hr><a href="' + response.orthoimage_zipfile + '">' + jQuery("<span>").text((window.SGN && window.SGN.i18n ? SGN.i18n.p("drone.interface.download_orthoimage_zipfile", "Download Orthoimage Zipfile") : "Download Orthoimage Zipfile")).html() + '</a><hr><a href="' + response.geojson_zipfile + '">' + jQuery("<span>").text((window.SGN && window.SGN.i18n ? SGN.i18n.p("drone.interface.download_geojson_zipfile", "Download GeoJSON Zipfile") : "Download GeoJSON Zipfile")).html() + '</a>';
+                    var html = '<a href="' + response.imaging_events_spreadsheet + '">' + jQuery("<span>").text((SGN.t("drone.interface.download_imaging_event_spreadsheet", "Download Imaging Event Spreadsheet"))).html() + '</a><hr><a href="' + response.orthoimage_zipfile + '">' + jQuery("<span>").text((SGN.t("drone.interface.download_orthoimage_zipfile", "Download Orthoimage Zipfile"))).html() + '</a><hr><a href="' + response.geojson_zipfile + '">' + jQuery("<span>").text((SGN.t("drone.interface.download_geojson_zipfile", "Download GeoJSON Zipfile"))).html() + '</a>';
                     jQuery('#export_drone_imagery_submit_div').html(html);
                     return false;
                 }
             },
             error: function(response){
-                alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("drone.interface.error_exporting_imaging_events", "Error exporting imaging events!") : "Error exporting imaging events!"));
+                alert((SGN.t("drone.interface.error_exporting_imaging_events", "Error exporting imaging events!")));
             }
         });
     });

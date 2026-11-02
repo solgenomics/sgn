@@ -104,7 +104,7 @@ jQuery(document).ready(function () {
             },
             error: function(response){
                 jQuery("#working_modal").modal("hide");
-                alert(window.SGN && SGN.i18n ? SGN.i18n.p('trial.card.treatments.retrieve_error', 'Error retrieving treatments.') : 'Error retrieving treatments.');
+                alert(SGN.t('trial.card.treatments.retrieve_error', 'Error retrieving treatments.'));
             }
         });
     }
@@ -189,7 +189,7 @@ jQuery(document).ready(function () {
         let splits = this_id.split('_');
         let treatment_id = splits[2];
 
-        if (confirm(window.SGN && SGN.i18n ? SGN.i18n.p('trial.card.treatments.confirm_delete', 'Delete treatment data from all stocks?') : 'Delete treatment data from all stocks?')) {
+        if (confirm(SGN.t('trial.card.treatments.confirm_delete', 'Delete treatment data from all stocks?'))) {
             jQuery.ajax({
                 url : '/ajax/breeders/trial/'+<% $trial_id %>+'/remove_treatment',
                 data : {
@@ -203,14 +203,14 @@ jQuery(document).ready(function () {
                     if (response.error) {
                         alert(response.error);
                     } else {
-                        alert(window.SGN && SGN.i18n ? SGN.i18n.p('trial.card.treatments.removed', 'Treatment data removed.') : 'Treatment data removed.');
+                        alert(SGN.t('trial.card.treatments.removed', 'Treatment data removed.'));
                         window.location.reload();
                     }
                 },
                 error : function(response) {
                     jQuery('#working_modal').modal("hide");
                     console.log(response);
-                    alert(window.SGN && SGN.i18n ? SGN.i18n.p('trial.card.treatments.delete_error', 'An error occurred deleting treatment data.') : 'An error occurred deleting treatment data.');
+                    alert(SGN.t('trial.card.treatments.delete_error', 'An error occurred deleting treatment data.'));
                 }
             });
         }

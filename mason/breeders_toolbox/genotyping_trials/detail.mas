@@ -354,9 +354,9 @@ genotyping_facility => $genotyping_facility
             success: function(response){
                 var html = '';
                 if (response.has_layout == 1){
-                    html += ("<p class=\"text-success\" title=\"This trial has plots and their layout information saved in the database. All relationships between accessions, plots, seedlots, plants, and subplots are consistent. You can view and download this information in the Design section on this page.\"><small>" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("trial.card.status.has_layout_label", "Has Field Layout") : "Has Field Layout")).html() + "&nbsp;&nbsp;</small><span class=\"glyphicon glyphicon-ok-sign\"></span></p>");
+                    html += ("<p class=\"text-success\" title=\"This trial has plots and their layout information saved in the database. All relationships between accessions, plots, seedlots, plants, and subplots are consistent. You can view and download this information in the Design section on this page.\"><small>" + jQuery("<span>").text((SGN.t("trial.card.status.has_layout_label", "Has Field Layout"))).html() + "&nbsp;&nbsp;</small><span class=\"glyphicon glyphicon-ok-sign\"></span></p>");
                 } else {
-                    html += ("<p class=\"text-danger\" title=\"There is something wrong with the layout! If this occurs please contact us because this should not occur! (click here for more info)\"><span id=\"layout_error_button\"><small>" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("trial.card.status.bad_layout_label", "Bad Field Layout") : "Bad Field Layout")).html() + "&nbsp;&nbsp;</small><span class=\"glyphicon glyphicon-remove-sign\"></span></span></p>");
+                    html += ("<p class=\"text-danger\" title=\"There is something wrong with the layout! If this occurs please contact us because this should not occur! (click here for more info)\"><span id=\"layout_error_button\"><small>" + jQuery("<span>").text((SGN.t("trial.card.status.bad_layout_label", "Bad Field Layout"))).html() + "&nbsp;&nbsp;</small><span class=\"glyphicon glyphicon-remove-sign\"></span></span></p>");
                 }
                 jQuery(document).on('click', 'span[id="layout_error_button"]', function(){
                     alert(response.layout_errors);

@@ -153,7 +153,7 @@ $trial_name => undef
 
 <script>
     jQuery(document).ready(function() {
-        jQuery('#ranking_formula').html(("<center><i>" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("phenotype.select_a_trial_then_pick_traits_and_weights_or_load", "Select a trial, then pick traits and weights (or load a saved formula).") : "Select a trial, then pick traits and weights (or load a saved formula).")).html() + "</i></center>"));
+        jQuery('#ranking_formula').html(("<center><i>" + jQuery("<span>").text((SGN.t("phenotype.select_a_trial_then_pick_traits_and_weights_or_load", "Select a trial, then pick traits and weights (or load a saved formula)."))).html() + "</i></center>"));
         get_select_box('projects', 'select_trial_for_selection_index', { 'get_field_trials' : 1, 'include_analyses' : 1, 'name' : 'html_select_trial_for_selection_index', 'id' : 'html_select_trial_for_selection_index' , 'default': (window.SGN && window.SGN.i18n ? window.SGN.i18n.p("phenotype.select_a_trial_or_analysis", "Select a trial or analysis") : 'Select a trial or analysis'), 'live_search': 1 });
         var lo = new CXGN.List();
         jQuery('#sin_list').html(lo.listSelect('sin_list', ['dataset'], (window.SGN && window.SGN.i18n ? window.SGN.i18n.p("phenotype.select_a_formula", "Select a formula") : 'Select a formula'), 'refresh', undefined));

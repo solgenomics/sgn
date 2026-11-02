@@ -117,7 +117,7 @@ jQuery(document).ready(function(){
         console.log(selected_accession_ids);
 
         if (!selected_trait_ids || selected_trait_ids.length < 1) {
-            alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("trial.correlation.traits_required", "Please select at least one trait!") : "Please select at least one trait!"));
+            alert((SGN.t("trial.correlation.traits_required", "Please select at least one trait!")));
             return false;
         }
         else {
@@ -142,7 +142,7 @@ jQuery(document).ready(function(){
                 },
                 error: function(response){
                     jQuery("#working_modal").modal("hide");
-                    alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("accession.forms.error_doing_time_series_accessions", "Error doing time series accessions!") : "Error doing time series accessions!"));
+                    alert((SGN.t("accession.forms.error_doing_time_series_accessions", "Error doing time series accessions!")));
                 }
             });
         }

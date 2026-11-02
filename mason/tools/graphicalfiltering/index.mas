@@ -84,7 +84,7 @@ use HTML::Entities ();
   var require_login = "<%  $c->get_conf('brapi_require_login') %>";
   if (require_login === '1'){
       auth_token = "<%  CXGN::Login->new($c->dbc->dbh)->get_login_cookie() %>";
-      if (!auth_token){ alert(window.SGN && SGN.i18n ? SGN.i18n.p('global.graphical_filtering.login_required', 'Login required to display graphical filtering') : 'Login required to display graphical filtering'); }
+      if (!auth_token){ alert(SGN.t('global.graphical_filtering.login_required', 'Login required to display graphical filtering')); }
   }
 
   $('#confirm_list_select').on("click", function() {
@@ -98,7 +98,7 @@ use HTML::Entities ();
     switch (list_type) {
       case 'plots':
       case 'plants':
-        alert(window.SGN && SGN.i18n ? SGN.i18n.p('global.graphical_filtering.not_implemented', 'not yet implimented') : 'not yet implimented');
+        alert(SGN.t('global.graphical_filtering.not_implemented', 'not yet implimented'));
         break;
       case 'trials':
         updateGFilter(group,
@@ -147,7 +147,7 @@ use HTML::Entities ();
             },
              {
                  extend: 'copyHtml5',
-                 text: escapeGraphicalLabel(window.SGN && SGN.i18n ? SGN.i18n.p('global.graphical_filtering.copy_to_clipboard', 'Copy to Clipboard') : 'Copy to Clipboard'),
+                 text: escapeGraphicalLabel(SGN.t('global.graphical_filtering.copy_to_clipboard', 'Copy to Clipboard')),
             },
         ]
         );
@@ -159,7 +159,7 @@ use HTML::Entities ();
     $('#select_div').show();
 
     // set up list
-    var filter_list_select_html = list.listSelect('filter', ['trials'/*,'plots','plants'*/], escapeGraphicalLabel(window.SGN && SGN.i18n ? SGN.i18n.p('global.graphical_filtering.choose_a_list', 'Choose a List:') : 'Choose a List:'), undefined, undefined);
+    var filter_list_select_html = list.listSelect('filter', ['trials'/*,'plots','plants'*/], escapeGraphicalLabel(SGN.t('global.graphical_filtering.choose_a_list', 'Choose a List:')), undefined, undefined);
     $('#filter_list_select_container').html(filter_list_select_html);
     $('#filter_list_select>option:first-of-type').prop('disabled', true);
     
@@ -211,7 +211,7 @@ use HTML::Entities ();
   // set up the form for saving results as a list
   $('#new-list-form').submit(function () {
     if (!window.gfiltering.data){
-      alert(window.SGN && SGN.i18n ? SGN.i18n.p('global.graphical_filtering.cannot_create_empty_list', "Can't create a list from nothing.") : "Can't create a list from nothing.")
+      alert(SGN.t('global.graphical_filtering.cannot_create_empty_list', "Can't create a list from nothing."))
       return false;
     }
     try {

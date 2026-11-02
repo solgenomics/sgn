@@ -1,4 +1,5 @@
 'use strict';
+const I18N = require('../../../static/js/sgn-i18n.js');
 // Execute the entire actual inline component and its registered handlers.
 // Controlled transport/getters below are source-unit boundaries; the separately
 // armed vendored-jQuery DOM test qualifies the HTML/text carrier itself.
@@ -23,6 +24,7 @@ function harness({text=source,query='',locale='uk',translator}={}) {
     const window={location:{href:'http://127.0.0.1:18335/breeders/seedlot/maintenance'+query,origin:'http://127.0.0.1:18335',search:query}};
     if(translator)window.SGN={i18n:translator};
     const context=vm.createContext({window,document,jQuery:jq,URL,URLSearchParams,get_select_box:(type,id,options)=>selectors.push({type,id,options:plain(options)})});
+    I18N.install(context.window); context.SGN=context.window.SGN;
     vm.runInContext(inline(text),context,{filename:file});
     function trigger(id,event='click'){const e=element(id);assert.equal(typeof e.handlers[event],'function');return e.handlers[event].call(e);}
     function fill(){for(const [id,value] of Object.entries({seedlot_split_name:literal,seedlot_split_new_name:literal+'-LOTA',seedlot_split_new_location:'test_location',seedlot_split_new_box:'Box_é_<br>',seedlot_split_new_contents:accession,seedlot_split_new_organization:'Org_دفعة',seedlot_split_new_timestamp:'2026-10-11_13:00:00',seedlot_split_new_description:'Desc_<br>_&amp;',seedlot_split_new_breeding_program_id:'42',seedlot_split_new_quality_issues:'ok',seedlot_split_new_material_type:'seed'}))element('#'+id).value=value;}
@@ -90,7 +92,7 @@ test('vendored jQuery whole-source DOM reads exact escaped content text and show
             .replace(/<%\s*\$timestamp\s*%>/g,'2026-10-11_13:00:00');assert(!markup.includes('<%'));
         await page.setContent(markup+'<div id="working_modal" class="modal"></div>');for(const file of ['jquery.js','jquerymigrate.js','jqueryui.js','bootstrap_min.js'])await page.addScriptTag({path:path.join(root,'js/source/legacy',file)});
         await page.evaluate(()=>{window.splitRequests=[];window.get_select_box=(type,id,options)=>{const select=jQuery('<select>').attr('id',options.id);select.append(jQuery('<option>').val(type==='material_types'?'seed':'42').text(type));jQuery('#'+id).append(select);};jQuery.ajax=options=>{splitRequests.push(options);return {};};});
-        await page.addScriptTag({content:inline(source)});await page.waitForFunction(()=>document.getElementById('seedlot_split_new_material_type'));
+        await page.addScriptTag({path:path.join(root,'static/js/sgn-i18n.js')});await page.addScriptTag({content:inline(source)});await page.waitForFunction(()=>document.getElementById('seedlot_split_new_material_type'));
         await page.locator('#seedlot_split_name').fill(literal);await page.locator('#seedlot_split_name_update').click();
         await page.evaluate(({literal,accession})=>{splitRequests[0].success({data:[{seedlot_stock_uniquename:literal,contents_html:'<a href="/stock/17/view">'+accession.replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))+'</a> (accession)',breeding_program_id:42,material_type:'seed',location:'test_location',box:'Box_é',organization:'Org',count:0,weight_gram:'NA'}]});splitRequests[0].complete();splitRequests[1].success({data:[]});splitRequests[1].complete();}, {literal,accession});
         assert.equal(await page.locator('#seedlot_split_new_contents').inputValue(),accession);assert.equal(await page.locator('#seedlot_split_original_contents_count').textContent(),'0');

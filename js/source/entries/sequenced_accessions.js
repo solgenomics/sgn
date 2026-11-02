@@ -37,7 +37,7 @@ export function init(main_div, stock_id, stockprop_id) {
             success: function (r) {
                 if (r.error) { alert(r.error + r); }
                 else {
-                    alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("accession.sequencing_ui.saved", "The entry has been saved. Thank you!") : "The entry has been saved. Thank you!"));
+                    alert((SGN.t("accession.sequencing_ui.saved", "The entry has been saved. Thank you!")));
                     jQuery('#edit_sequencing_info_dialog').modal('toggle');
                     clear_dialog_entries();
                     jQuery('#sequenced_stocks_table').DataTable().ajax.reload();
@@ -82,12 +82,12 @@ export function delete_sequencing_info(stockprop_id) {
             success: function (r) {
                 if (r.error) { alert(r.error); }
                 else {
-                    alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("accession.sequencing_ui.deleted", "The entry has been deleted.") : "The entry has been deleted."));
+                    alert((SGN.t("accession.sequencing_ui.deleted", "The entry has been deleted.")));
                     jQuery('#sequenced_stocks_table').DataTable().ajax.reload();
                 }
             },
             error: function (r) {
-                alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("accession.sequencing_ui.delete_error", "An error occurred. The entry was not deleted.") : "An error occurred. The entry was not deleted."));
+                alert((SGN.t("accession.sequencing_ui.delete_error", "An error occurred. The entry was not deleted.")));
             }
         });
     }
@@ -119,7 +119,7 @@ export function edit_sequencing_info(stockprop_id) {
                 jQuery('#edit_sequencing_info_dialog').modal("show");
             }
         },
-        error: function (r) { alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("accession.sequencing_ui.read_error", "an error occurred") : "an error occurred")); }
+        error: function (r) { alert((SGN.t("accession.sequencing_ui.read_error", "an error occurred"))); }
     });
 
 

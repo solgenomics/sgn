@@ -38,8 +38,8 @@ jQuery(document).ready(function(){
             'destroy': true,
             'autoWidth': false,
             columns: [
-                { title: (window.SGN && window.SGN.i18n ? window.SGN.i18n.p("cross.ui.cross_unique_id.923bfbc", "Cross Unique ID") : "Cross Unique ID"), "data": null, "render": function ( data, type, row ) { return "<a href='/cross/"+row.cross_id+"'>"+row.cross_name+"</a>"; } },
-                { title: (window.SGN && window.SGN.i18n ? window.SGN.i18n.p("global.dataset_publish.action.remove", "Remove") : "Remove"), "data": "null", "render": function ( data, type, row ) { return "<a onclick='removeFamilyMember("+row.cross_id+(")'>" + jQuery("<div>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("global.dataset_publish.action.remove", "Remove") : "Remove")).html() + "</a>"); } },
+                { title: (SGN.t("cross.ui.cross_unique_id.923bfbc", "Cross Unique ID")), "data": null, "render": function ( data, type, row ) { return "<a href='/cross/"+row.cross_id+"'>"+row.cross_name+"</a>"; } },
+                { title: (SGN.t("global.dataset_publish.action.remove", "Remove")), "data": "null", "render": function ( data, type, row ) { return "<a onclick='removeFamilyMember("+row.cross_id+(")'>" + jQuery("<div>").text((SGN.t("global.dataset_publish.action.remove", "Remove"))).html() + "</a>"); } },
             ]
         });
     });
@@ -47,7 +47,7 @@ jQuery(document).ready(function(){
     jQuery('#delete_family').click(function() {
 
         const family_id = "<% $family_id %>";
-        const confirmation = confirm((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("cross.forms.are_you_sure_you_want_to_delete_this_family", "Are you sure you want to delete this family? The deletion cannot be undone.") : "Are you sure you want to delete this family? The deletion cannot be undone."));
+        const confirmation = confirm((SGN.t("cross.forms.are_you_sure_you_want_to_delete_this_family", "Are you sure you want to delete this family? The deletion cannot be undone.")));
         if (confirmation) {
             jQuery.ajax({
                 url: '/ajax/family/delete_family',
@@ -62,7 +62,7 @@ jQuery(document).ready(function(){
                 success: function(response) {
                     jQuery('#working_modal').modal('hide');
                     if (response.success == 1) {
-                        alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("cross.forms.the_family_was_deleted", "The family was deleted") : "The family was deleted"));
+                        alert((SGN.t("cross.forms.the_family_was_deleted", "The family was deleted")));
                         location.reload();
                     }
                     if (response.error) {
@@ -71,7 +71,7 @@ jQuery(document).ready(function(){
                 },
                 error: function(response) {
                     jQuery('#working_modal').modal('hide');
-                    alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("cross.forms.an_error_occurred_during_delete_this_family", "An error occurred during delete this family") : "An error occurred during delete this family"));
+                    alert((SGN.t("cross.forms.an_error_occurred_during_delete_this_family", "An error occurred during delete this family")));
                 }
             });
         }
@@ -81,7 +81,7 @@ jQuery(document).ready(function(){
 
 function removeFamilyMember(cross_id){
 
-    var confirmation = confirm((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("cross.forms.are_you_sure_you_want_to_remove_this_cross", "Are you sure you want to remove this cross?") : "Are you sure you want to remove this cross?"));
+    var confirmation = confirm((SGN.t("cross.forms.are_you_sure_you_want_to_remove_this_cross", "Are you sure you want to remove this cross?")));
 
     if (confirmation) {
         const family_id = "<%$family_id%>";
@@ -99,7 +99,7 @@ function removeFamilyMember(cross_id){
             success: function(response) {
                 jQuery('#working_modal').modal('hide');
                 if (response.success == 1) {
-                    alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("cross.forms.the_cross_was_removed", "The cross was removed") : "The cross was removed"));
+                    alert((SGN.t("cross.forms.the_cross_was_removed", "The cross was removed")));
                     location.reload();
                 }
                 if (response.error) {
@@ -108,7 +108,7 @@ function removeFamilyMember(cross_id){
             },
             error: function(response) {
                 jQuery('#working_modal').modal('hide');
-                alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("cross.forms.an_error_occurred_during_removing_cross_member", "An error occurred during removing cross member") : "An error occurred during removing cross member"));
+                alert((SGN.t("cross.forms.an_error_occurred_during_removing_cross_member", "An error occurred during removing cross member")));
             }
         });
     }

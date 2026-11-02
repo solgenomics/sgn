@@ -175,7 +175,7 @@ jQuery(document).ready(function(){
             selected.push(jQuery(this).val());
         });
         if (selected.length !== 1){
-            alert(window.SGN && SGN.i18n ? SGN.i18n.p('genotype.tissue.create.select_one_trial', 'Only select one trial!') : 'Only select one trial!');
+            alert(SGN.t('genotype.tissue.create.select_one_trial', 'Only select one trial!'));
         } else {
             new jQuery.ajax({
                 type: 'POST',
@@ -201,7 +201,7 @@ jQuery(document).ready(function(){
                 },
                 error: function () {
                     jQuery("#working_modal").modal("hide");
-                    alert(window.SGN && SGN.i18n ? SGN.i18n.p('genotype.tissue.create.check_plants_error', 'An error occurred checking trial for plants.') : 'An error occurred checking trial for plants.');
+                    alert(SGN.t('genotype.tissue.create.check_plants_error', 'An error occurred checking trial for plants.'));
                 }
             });
         }
@@ -229,14 +229,14 @@ jQuery(document).ready(function(){
                     alert(response.error);
                 }
                 else {
-                    alert(window.SGN && SGN.i18n ? SGN.i18n.p("genotype.tissue.create.plants_saved", "Successfully created plant entries.") : "Successfully created plant entries.");
+                    alert(SGN.t("genotype.tissue.create.plants_saved", "Successfully created plant entries."));
                     Workflow.complete('#create_tissue_samples_plants_per_plot_submit');
                     Workflow.focus("#field_tissue_samples_create_workflow", 3);
                 }
             },
             error: function(response) {
                 jQuery("#working_modal").modal("hide");
-                alert(window.SGN && SGN.i18n ? SGN.i18n.p("genotype.tissue.create.plants_save_error", "An error occurred saving plant entries") : "An error occurred saving plant entries");
+                alert(SGN.t("genotype.tissue.create.plants_save_error", "An error occurred saving plant entries"));
             },
         });
     });
@@ -245,9 +245,9 @@ jQuery(document).ready(function(){
         var num_tissues = jQuery(this).val();
         var html = '';
         for (var i=1; i<=num_tissues; i++){
-            var helpText = window.SGN && SGN.i18n ? SGN.i18n.p('genotype.tissue.create.sample_name_help', 'The sample names will be a combination of the plant name, the tissue name you give here, and the tissue number.') : 'The sample names will be a combination of the plant name, the tissue name you give here, and the tissue number.';
+            var helpText = SGN.t('genotype.tissue.create.sample_name_help', 'The sample names will be a combination of the plant name, the tissue name you give here, and the tissue number.');
             var nameText = window.SGN && SGN.i18n ? SGN.i18n.p('genotype.tissue.create.tissue_name', 'Tissue Name %{index}:', {index: i}) : 'Tissue Name ' + i + ':';
-            var exampleText = window.SGN && SGN.i18n ? SGN.i18n.p('genotype.tissue.create.examples', 'examples: leaf or root or stem or seed or fruit') : 'examples: leaf or root or stem or seed or fruit';
+            var exampleText = SGN.t('genotype.tissue.create.examples', 'examples: leaf or root or stem or seed or fruit');
             html = html + '<div class="form-group"><label class="col-sm-3 control-label"><span title="' + jQuery('<span>').text(helpText).html() + '"><span class="glyphicon glyphicon-info-sign"></span>&nbsp;&nbsp;' + jQuery('<span>').text(nameText).html() + '</span></label><div class="col-sm-9" ><input name="create_tissue_samples_tissue_name" id="create_tissue_samples_tissue_name_'+i+'" class="form-control" type="text" placeholder="' + jQuery('<span>').text(exampleText).html() + '" /></div></div>';
         }
         jQuery('#create_tissue_samples_names_div').html(html);
@@ -288,14 +288,14 @@ jQuery(document).ready(function(){
                     alert(response.error);
                 }
                 else {
-                    alert(window.SGN && SGN.i18n ? SGN.i18n.p("genotype.tissue.create.samples_saved", "Successfully created tissue sample entries.") : "Successfully created tissue sample entries.");
+                    alert(SGN.t("genotype.tissue.create.samples_saved", "Successfully created tissue sample entries."));
                     Workflow.complete('#create_tissue_samples_plants_per_plant_submit');
                     Workflow.focus("#field_tissue_samples_create_workflow", -1); //go to success
                 }
             },
             error: function(response) {
                 jQuery("#working_modal").modal("hide");
-                alert(window.SGN && SGN.i18n ? SGN.i18n.p("genotype.tissue.create.samples_create_error", "An error occurred creating tissue sample entries") : "An error occurred creating tissue sample entries");
+                alert(SGN.t("genotype.tissue.create.samples_create_error", "An error occurred creating tissue sample entries"));
             },
         });
     });

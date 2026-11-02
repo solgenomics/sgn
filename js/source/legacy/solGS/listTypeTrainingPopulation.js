@@ -85,7 +85,7 @@ solGS.listTypeTrainingPopulation = {
 
     var runSolgsBtn =
       `<button type="button" id=${runSolgsBtnId}` +
-      ` class="btn btn-success" data-selected-pop='${trainingArgs}'>${window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.create_training_population", "Create Training Population") : "Create Training Population"}</button>`;
+      ` class="btn btn-success" data-selected-pop='${trainingArgs}'>${SGN.t("solgs.browser.create_training_population", "Create Training Population")}</button>`;
 
       return runSolgsBtn;
 
@@ -131,10 +131,10 @@ solGS.listTypeTrainingPopulation = {
     tableId = tableId.replace('#', "");
     var trainingTable =
       `<table id="${tableId}" class="table table-striped"><thead><tr>` +
-      "<th>" + (window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.table_population", "Population") : "Population") + "</th>" +
-      "<th>" + (window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.table_data_structure", "Data structure") : "Data structure") + "</th>" +
-      "<th>" + (window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.table_ownership", "Ownership") : "Ownership") + "</th>" +
-      "<th>" + (window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.table_run_solgs", "Run solGS") : "Run solGS") + "</th>" +
+      "<th>" + (SGN.t("solgs.browser.table_population", "Population")) + "</th>" +
+      "<th>" + (SGN.t("solgs.browser.table_data_structure", "Data structure")) + "</th>" +
+      "<th>" + (SGN.t("solgs.browser.table_ownership", "Ownership")) + "</th>" +
+      "<th>" + (SGN.t("solgs.browser.table_run_solgs", "Run solGS")) + "</th>" +
       "</tr></thead></table>";
 
     return trainingTable;
@@ -154,7 +154,7 @@ solGS.listTypeTrainingPopulation = {
         return a[4]
       },
       "oLanguage": {
-        "sSearch": (window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.filter", "Filter") : "Filter")
+        "sSearch": (SGN.t("solgs.browser.filter", "Filter"))
       },
       columnDefs: [
         {
@@ -263,7 +263,7 @@ jQuery(document).ready(function () {
               solGS.combinedTrials.getCombinedPopsId(res.trials_ids);
             })
             .fail(function (res) {
-              alert((window.SGN && window.SGN.i18n ? SGN.i18n.p("solgs.browser.trial_ids_error", "Error occurred querying for trials ids") : "Error occurred querying for trials ids"));
+              alert((SGN.t("solgs.browser.trial_ids_error", "Error occurred querying for trials ids")));
             });
         }
       } else {

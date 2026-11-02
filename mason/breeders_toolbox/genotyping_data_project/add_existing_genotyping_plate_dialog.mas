@@ -117,7 +117,7 @@ jQuery(document).ready(function() {
         var plate_ids = jQuery('#html_select_plate_for_project').val();
 
         if (!plate_ids) {
-            alert ((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("genotype.plate.please_select_at_least_one_genotyping_plate", "Please select at least one genotyping plate") : "Please select at least one genotyping plate"));
+            alert ((SGN.t("genotype.plate.please_select_at_least_one_genotyping_plate", "Please select at least one genotyping plate")));
             return;
         }
 

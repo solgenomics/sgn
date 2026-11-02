@@ -61,6 +61,13 @@ class InventoryTests(unittest.TestCase):
         )
         return command(root, "rev-parse", "HEAD"), sources
 
+    def test_short_helpers_are_discovered_as_instrumented_occurrences(self):
+        _, marked, gaps, _ = scan_code(
+            "example.js", "a" * 64, "SGN.t('save','Save'); window.SGN.tn('count','One','Many',n);"
+        )
+        self.assertEqual([(m["context"], m["plural"]) for m in marked], [("save", None), ("count", "Many")])
+        self.assertEqual(gaps, [])
+
     def test_exact_special_mason_root_classification_and_markup_discovery(self):
         for path in ("mason/autohandler", "mason/site/error/dhandler"):
             self.assertEqual(category(path, "100644")[0], "mason_template")

@@ -1,5 +1,5 @@
 % if ($c->config->{i18n_enabled}) {
-<form action="/i18n/language" method="post" class="form-inline" style="padding: .5em 1em; text-align: end">
+<form action="/i18n/language" method="post" class="form-inline" style="padding: 7px; margin: 0; white-space: nowrap">
   <label for="sgn-language"><% $c->i18n->p('language.select', 'Language') |h %></label>
   <select id="sgn-language" name="locale" class="form-control input-sm">
 % for my $choice ($c->i18n_locale_choices) {
@@ -7,7 +7,18 @@
     <option value="<% $locale |h %>"<% lc($locale) eq lc($c->i18n->requested_locale) ? ' selected="selected"' : '' %> lang="<% $locale |h %>" dir="auto"><% $choice->{name} |h %></option>
 % }
   </select>
-  <input type="hidden" name="return_to" value="<% $c->req->uri->path |h %>" />
+  <input type="hidden" name="return_to" value="<% $c->req->uri->path_query |h %>" />
   <button class="btn btn-default btn-sm" type="submit"><% $c->i18n->p('language.apply', 'Apply') |h %></button>
 </form>
+% }
+% if ($c->config->{i18n_enabled}) {
+<script>
+(function () {
+    var select = document.getElementById('sgn-language');
+    if (!select) return;
+    select.form.addEventListener('submit', function () {
+        this.elements.return_to.value = window.location.pathname + window.location.search + window.location.hash;
+    });
+}());
+</script>
 % }

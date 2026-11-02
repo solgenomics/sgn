@@ -7,7 +7,7 @@ function stock_detail_page_init_dialogs() {
 	'height' : 600,
 	'width' : 700,
 	'buttons' : {
-	    [(window.SGN && window.SGN.i18n ? window.SGN.i18n.p("cross.ui.ok", "OK") : "OK")] : function() {
+	    [(SGN.t("cross.ui.ok", "OK"))] : function() {
 		jQuery('#stock_trials_info_popup').dialog("close");
 	    }
 	}
@@ -17,11 +17,11 @@ function stock_detail_page_init_dialogs() {
     jQuery('#remove_parent_dialog').dialog({
 	'autoOpen' : false,
 	'modal' : true,
-	'title' : (window.SGN && window.SGN.i18n ? window.SGN.i18n.p("accession.stock.remove_title", "Remove a parent") : "Remove a parent"),
+	'title' : (SGN.t("accession.stock.remove_title", "Remove a parent")),
 	'height' : 300,
 	'width' : 400,
 	'buttons' : {
-	    [(window.SGN && window.SGN.i18n ? window.SGN.i18n.p("cross.ui.done", "Done") : "Done")] : function() {
+	    [(SGN.t("cross.ui.done", "Done"))] : function() {
 		jQuery('#remove_parent_dialog').dialog("close");
 	    },
 
@@ -55,14 +55,14 @@ function get_remove_parents_list(stock_id) {
 	    jQuery('#remove_parent_list').html(html);
 	},
 	error: function(response) {
-	    alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("accession.stock.parent_read_error", "an error occurred.") : "an error occurred."));
+	    alert((SGN.t("accession.stock.parent_read_error", "an error occurred.")));
 	}
     });
 
 }
 
 function remove_parents(stock_id, parent_id) {
-    var yes = confirm((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("accession.stock.remove_confirm", "Are you sure you want to remove this parent?") : "Are you sure you want to remove this parent?"));
+    var yes = confirm((SGN.t("accession.stock.remove_confirm", "Are you sure you want to remove this parent?")));
     if (yes) {
 	jQuery.ajax( {
 	    url: '/ajax/stock/parent/remove',
@@ -72,7 +72,7 @@ function remove_parents(stock_id, parent_id) {
 		    alert(response.error);
 		}
 		else {
-		    alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("accession.stock.parent_removed", "The parent has been removed.") : "The parent has been removed."));
+		    alert((SGN.t("accession.stock.parent_removed", "The parent has been removed.")));
 		    jQuery('#remove_parent_dialog').dialog("close");
 		    window.location.href = '/stock/'+stock_id+'/view';
 
@@ -94,12 +94,12 @@ function unObsoleteStock(stock_id, stock_name){
 
 function showObsoleteDialog(stock_id, stock_name, obsolete) {
     let html = '';
-    html = html + '<form class="form-horizontal"><div class="form-group"><label class="col-sm-4 control-label">' + _sgnB16StockEscape((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("accession.stock.name", "Stock Name: ") : "Stock Name: ")) + '</label><div class="col-sm-8" ><input class="form-control" id="obsolete_stock_name" name="obsolete_stock_name" value="'+stock_name+'" disabled></div></div>';
-    html = html + '<div class="form-group"><label class="col-sm-4 control-label">' + _sgnB16StockEscape((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("accession.stock.note", "Note: ") : "Note: ")) + '</label><div class="col-sm-8" ><input class="form-control" id="obsolete_note" name="obsolete_note" placeholder="' + _sgnB16StockEscape((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("accession.stock.optional", "Optional") : "Optional")) + '"></div></div></form>';
+    html = html + '<form class="form-horizontal"><div class="form-group"><label class="col-sm-4 control-label">' + _sgnB16StockEscape((SGN.t("accession.stock.name", "Stock Name: "))) + '</label><div class="col-sm-8" ><input class="form-control" id="obsolete_stock_name" name="obsolete_stock_name" value="'+stock_name+'" disabled></div></div>';
+    html = html + '<div class="form-group"><label class="col-sm-4 control-label">' + _sgnB16StockEscape((SGN.t("accession.stock.note", "Note: "))) + '</label><div class="col-sm-8" ><input class="form-control" id="obsolete_note" name="obsolete_note" placeholder="' + _sgnB16StockEscape((SGN.t("accession.stock.optional", "Optional"))) + '"></div></div></form>';
     html = html + '<div class="form-group"><input id="obsolete_stock_id" type="hidden" value="'+stock_id+'"/>';
 
-    jQuery("#obsoleteStockDialog").html(obsolete ? _sgnB16StockEscape((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("accession.stock.action.obsolete", "Obsolete This Stock") : "Obsolete This Stock")) : _sgnB16StockEscape((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("accession.stock.action.unobsolete", "Un-Obsolete This Stock") : "Un-Obsolete This Stock")));
-    jQuery("#obsolete_stock_submit").html(obsolete ? _sgnB16StockEscape((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("accession.stock.obsolete_button", "Obsolete") : "Obsolete")) : _sgnB16StockEscape((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("accession.stock.unobsolete_button", "Un-Obsolete") : "Un-Obsolete")));
+    jQuery("#obsoleteStockDialog").html(obsolete ? _sgnB16StockEscape((SGN.t("accession.stock.action.obsolete", "Obsolete This Stock"))) : _sgnB16StockEscape((SGN.t("accession.stock.action.unobsolete", "Un-Obsolete This Stock"))));
+    jQuery("#obsolete_stock_submit").html(obsolete ? _sgnB16StockEscape((SGN.t("accession.stock.obsolete_button", "Obsolete"))) : _sgnB16StockEscape((SGN.t("accession.stock.unobsolete_button", "Un-Obsolete"))));
     jQuery("#obsolete_stock_submit").data("obsolete", obsolete ? 'true' : 'false');
     jQuery('#obsolete_stock_div').html(html);
     jQuery('#obsolete_stock_dialog').modal('show');
@@ -112,13 +112,13 @@ jQuery(document).ready(function($) {
         const note = jQuery('#obsolete_note').val();
         const stock_id = jQuery('#obsolete_stock_id').val();
         if (!stock_id) {
-            alert ((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("accession.stock.missing_id", "Error retrieving stock id") : "Error retrieving stock id"));
+            alert ((SGN.t("accession.stock.missing_id", "Error retrieving stock id")));
             return;
         }
 
         const stock_name = jQuery('#obsolete_stock_name').val();
         if (!stock_name) {
-            alert ((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("accession.stock.missing_name", "Error retrieving stock name") : "Error retrieving stock name"));
+            alert ((SGN.t("accession.stock.missing_name", "Error retrieving stock name")));
             return;
         }
 
@@ -148,7 +148,7 @@ jQuery(document).ready(function($) {
                 },                
                 error: function(response){
                     jQuery('#working_modal').modal('hide');
-                    alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("accession.stock.obsolete_failed", "Error obsoleting stock.") : "Error obsoleting stock."));
+                    alert((SGN.t("accession.stock.obsolete_failed", "Error obsoleting stock.")));
                 }
             });
         }

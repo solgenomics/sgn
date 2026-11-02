@@ -39,7 +39,7 @@ function getRelatedVariants() {
             let html = "";
             if ( response && response.related_variants && !jQuery.isEmptyObject(response.related_variants) ) {
                 html += "<table class='table table-striped'>";
-                html += ("<thead><tr><th>" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("genotype.marker.marker", "Marker") : "Marker")).html() + "</th><th>" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("global.search_wizard.protocol", "Protocol") : "Protocol")).html() + "</th><th>" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("cross.species", "Species") : "Species")).html() + "</th><th>" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("marker.detail.reference", "Reference") : "Reference")).html() + "</th><th>" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("global.search_wizard.chromosome", "Chromosome") : "Chromosome")).html() + "</th><th>" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("marker.detail.position", "Position") : "Position")).html() + "</th><th>Ref</th><th>Alt</th></tr></thead>");
+                html += ("<thead><tr><th>" + jQuery("<span>").text((SGN.t("genotype.marker.marker", "Marker"))).html() + "</th><th>" + jQuery("<span>").text((SGN.t("global.search_wizard.protocol", "Protocol"))).html() + "</th><th>" + jQuery("<span>").text((SGN.t("cross.species", "Species"))).html() + "</th><th>" + jQuery("<span>").text((SGN.t("marker.detail.reference", "Reference"))).html() + "</th><th>" + jQuery("<span>").text((SGN.t("global.search_wizard.chromosome", "Chromosome"))).html() + "</th><th>" + jQuery("<span>").text((SGN.t("marker.detail.position", "Position"))).html() + "</th><th>Ref</th><th>Alt</th></tr></thead>");
                 html += "<tbody>";
                 for ( let variant_name in response.related_variants ) {
                     if ( response.related_variants.hasOwnProperty(variant_name) ) {
@@ -58,7 +58,7 @@ function getRelatedVariants() {
                 html += "</table>";
             }
             else {
-                html += ("<em>" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("marker.detail.no_related_genotyed_markers_found", "No related genotyed markers found") : "No related genotyed markers found")).html() + "</em><br /><br />");
+                html += ("<em>" + jQuery("<span>").text((SGN.t("marker.detail.no_related_genotyed_markers_found", "No related genotyed markers found"))).html() + "</em><br /><br />");
             }
             jQuery("#related-variants").html(html);
         },
@@ -80,7 +80,7 @@ function getRelatedMappedMarkers() {
             let html = "";
             if ( response && response.related_mapped_markers && response.related_mapped_markers.length > 0 ) {
                 html += "<table class='table table-striped'>";
-                html += ("<thead><tr><th>" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("genotype.marker.marker", "Marker") : "Marker")).html() + "</th><th>" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("global.search_wizard.protocol", "Protocol") : "Protocol")).html() + "</th><th>" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("cross.species", "Species") : "Species")).html() + "</th><th>" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("marker.detail.map", "Map") : "Map")).html() + "</th><th>" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("global.search_wizard.chromosome", "Chromosome") : "Chromosome")).html() + "</th><th>" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("marker.detail.position", "Position") : "Position")).html() + "</th></tr></thead>");
+                html += ("<thead><tr><th>" + jQuery("<span>").text((SGN.t("genotype.marker.marker", "Marker"))).html() + "</th><th>" + jQuery("<span>").text((SGN.t("global.search_wizard.protocol", "Protocol"))).html() + "</th><th>" + jQuery("<span>").text((SGN.t("cross.species", "Species"))).html() + "</th><th>" + jQuery("<span>").text((SGN.t("marker.detail.map", "Map"))).html() + "</th><th>" + jQuery("<span>").text((SGN.t("global.search_wizard.chromosome", "Chromosome"))).html() + "</th><th>" + jQuery("<span>").text((SGN.t("marker.detail.position", "Position"))).html() + "</th></tr></thead>");
                 html += "<tbody>";
                 let ms = response.related_mapped_markers;
                 for ( let i = 0; i < ms.length; i++ ) {
@@ -92,7 +92,7 @@ function getRelatedMappedMarkers() {
                 }
             }
             else {
-                html += ("<em>" + jQuery("<span>").text((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("marker.detail.no_related_mapped_markers_found", "No related mapped markers found") : "No related mapped markers found")).html() + "</em><br />");
+                html += ("<em>" + jQuery("<span>").text((SGN.t("marker.detail.no_related_mapped_markers_found", "No related mapped markers found"))).html() + "</em><br />");
             }
             jQuery("#related-mapped-markers").html(html);
         },

@@ -426,7 +426,7 @@ jQuery(document).ready(function() {
         var uploadFile = jQuery("#trial_upload_plants_file").val();
         jQuery('#upload_plants_dialog_form').attr("action", "/ajax/breeders/trial/<% $trial_id %>/upload_plants");
         if (uploadFile === '') {
-            alert((window.SGN && SGN.i18n ? SGN.i18n.p('trial.card.entry_numbers.select_file', "Please select a file") : "Please select a file"));
+            alert((SGN.t('trial.card.entry_numbers.select_file', "Please select a file")));
             return;
         }
         jQuery("#upload_plants_dialog_form").submit();
@@ -439,7 +439,7 @@ jQuery(document).ready(function() {
             jQuery('#working_modal').modal("show");
             if (uploadedPlantsFile === '') {
                 jQuery('#working_modal').modal("hide");
-                alert((window.SGN && SGN.i18n ? SGN.i18n.p('trial.upload.no_file', "No file selected") : "No file selected"));
+                alert((SGN.t('trial.upload.no_file', "No file selected")));
             }
         },
         complete: function (response) {
@@ -451,7 +451,7 @@ jQuery(document).ready(function() {
                 return;
             }
             if (response.success) {
-                alert((window.SGN && SGN.i18n ? SGN.i18n.p('trial.upload.file_success', "File uploaded successfully") : "File uploaded successfully"));
+                alert((SGN.t('trial.upload.file_success', "File uploaded successfully")));
                 window.location.replace('/breeders/trial/'+<% $trial_id %>);
             }
         }
@@ -461,7 +461,7 @@ jQuery(document).ready(function() {
         var uploadFile = jQuery("#trial_upload_plants_with_index_number_file").val();
         jQuery('#upload_plants_with_index_number_dialog_form').attr("action", "/ajax/breeders/trial/<% $trial_id %>/upload_plants_with_plant_index_number");
         if (uploadFile === '') {
-            alert((window.SGN && SGN.i18n ? SGN.i18n.p('trial.card.entry_numbers.select_file', "Please select a file") : "Please select a file"));
+            alert((SGN.t('trial.card.entry_numbers.select_file', "Please select a file")));
             return;
         }
         jQuery("#upload_plants_with_index_number_dialog_form").submit();
@@ -474,7 +474,7 @@ jQuery(document).ready(function() {
             jQuery('#working_modal').modal("show");
             if (uploadedPlantsFile === '') {
                 jQuery('#working_modal').modal("hide");
-                alert((window.SGN && SGN.i18n ? SGN.i18n.p('trial.upload.no_file', "No file selected") : "No file selected"));
+                alert((SGN.t('trial.upload.no_file', "No file selected")));
             }
         },
         complete: function (response) {
@@ -486,7 +486,7 @@ jQuery(document).ready(function() {
                 return;
             }
             if (response.success) {
-                alert((window.SGN && SGN.i18n ? SGN.i18n.p('trial.upload.file_success', "File uploaded successfully") : "File uploaded successfully"));
+                alert((SGN.t('trial.upload.file_success', "File uploaded successfully")));
                 window.location.replace('/breeders/trial/'+<% $trial_id %>);
             }
         }
@@ -496,7 +496,7 @@ jQuery(document).ready(function() {
         var uploadFile = jQuery("#trial_upload_plants_with_number_of_plants_file").val();
         jQuery('#upload_plants_with_num_plants_dialog_form').attr("action", "/ajax/breeders/trial/<% $trial_id %>/upload_plants_with_number_of_plants");
         if (uploadFile === '') {
-            alert((window.SGN && SGN.i18n ? SGN.i18n.p('trial.card.entry_numbers.select_file', "Please select a file") : "Please select a file"));
+            alert((SGN.t('trial.card.entry_numbers.select_file', "Please select a file")));
             return;
         }
         jQuery("#upload_plants_with_num_plants_dialog_form").submit();
@@ -509,7 +509,7 @@ jQuery(document).ready(function() {
             jQuery('#working_modal').modal("show");
             if (uploadedPlantsFile === '') {
                 jQuery('#working_modal').modal("hide");
-                alert((window.SGN && SGN.i18n ? SGN.i18n.p('trial.upload.no_file', "No file selected") : "No file selected"));
+                alert((SGN.t('trial.upload.no_file', "No file selected")));
             }
         },
         complete: function (response) {
@@ -521,7 +521,7 @@ jQuery(document).ready(function() {
                 return;
             }
             if (response.success) {
-                alert((window.SGN && SGN.i18n ? SGN.i18n.p('trial.upload.file_success', "File uploaded successfully") : "File uploaded successfully"));
+                alert((SGN.t('trial.upload.file_success', "File uploaded successfully")));
                 window.location.replace('/breeders/trial/'+<% $trial_id %>);
             }
         }
@@ -546,11 +546,11 @@ function add_plants_to_trial() {
         include_plant_coordinates = 1;
 
         if (num_rows == "" || num_cols == "" || num_rows * num_cols == 0) {
-            alert((window.SGN && SGN.i18n ? SGN.i18n.p('trial.plants.coordinates.required', "You need to specify the number of rows and columns to give plant coordinates within plots.") : "You need to specify the number of rows and columns to give plant coordinates within plots."));
+            alert((SGN.t('trial.plants.coordinates.required', "You need to specify the number of rows and columns to give plant coordinates within plots.")));
             return;
         }
         if (num_rows * num_cols < plants_per_plot) {
-            alert((window.SGN && SGN.i18n ? SGN.i18n.p('trial.plants.coordinates.unique', "Only one plant per (row, column) coordinate is allowed. You must specify fewer plants per plot, or add rows and columns.") : "Only one plant per (row, column) coordinate is allowed. You must specify fewer plants per plot, or add rows and columns."));
+            alert((SGN.t('trial.plants.coordinates.unique', "Only one plant per (row, column) coordinate is allowed. You must specify fewer plants per plot, or add rows and columns.")));
             return;
         }
     }
@@ -574,14 +574,14 @@ function add_plants_to_trial() {
           alert(response.error);
         }
         else {
-          alert((window.SGN && SGN.i18n ? SGN.i18n.p('trial.plants.create_success', "Successfully created plant entries.") : "Successfully created plant entries."));
+          alert((SGN.t('trial.plants.create_success', "Successfully created plant entries.")));
           jQuery('#add_plants_dialog').modal("hide");
           window.location.replace('/breeders/trial/'+<% $trial_id %>);
         }
       },
       error: function(response) {
         disable_working_modal();
-        alert((window.SGN && SGN.i18n ? SGN.i18n.p('trial.plants.create_error', "An error occurred saving plant entries") : "An error occurred saving plant entries"));
+        alert((SGN.t('trial.plants.create_error', "An error occurred saving plant entries")));
       },
     });
 

@@ -24,7 +24,7 @@ Methods and private object state are locked; caller input and exported catalogs
 are detached copies. Independent objects can present the same calculated
 results in different languages within one R process.
 
-`script/i18n/r_extract.R` parses application source as data using the qualified
+`bin/i18n/r_extract.R` parses application source as data using the qualified
 R 4.5.1/jsonlite 1.8.7 parser. It does not source scripts, load their packages,
 run their calculations or resolve application functions. Literal `$p`/`$np`
 markers, including R's equivalent quoted and backtick member spelling, work on
@@ -37,7 +37,7 @@ unsupported injected/imported bindings fail explicitly.
 The minimal offline images are built with `Dockerfile.i18n-r-extractor` and
 `Dockerfile.i18n-r-runtime-test`. The latter includes only the new library, the
 owned runtime test and the shared message fixture. The extraction tests are in
-`script/i18n/test_r_extract.py`. Configure `SGN_I18N_R_EXTRACT_COMMAND` with a
+`bin/i18n/test_r_extract.py`. Configure `SGN_I18N_R_EXTRACT_COMMAND` with a
 shell-free JSON argv pointing to the qualified helper when R is unavailable on
 the developer host. Image source hashes must match the tested working files.
 

@@ -656,7 +656,7 @@ jQuery(document).ready(function() {
             },
             error: function(response){
                 jQuery("#working_modal").modal("hide");
-                alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("phenotype.error_saving_observation_variable", "Error saving observation variable.") : "Error saving observation variable."));
+                alert((SGN.t("phenotype.error_saving_observation_variable", "Error saving observation variable.")));
             }
         });
     });
@@ -691,7 +691,7 @@ jQuery(document).ready(function() {
             },
             error: function(response){
                 jQuery("#working_modal").modal("hide");
-                alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("phenotype.error_saving_ontology", "Error saving ontology.") : "Error saving ontology."));
+                alert((SGN.t("phenotype.error_saving_ontology", "Error saving ontology.")));
             }
         });
     });

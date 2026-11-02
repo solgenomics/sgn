@@ -1,4 +1,5 @@
 "use strict";
+const I18N = require('../../../static/js/sgn-i18n.js');
 const assert=require('node:assert/strict');
 const test=require('node:test');
 const fs=require('node:fs');
@@ -10,6 +11,7 @@ function run(response,type='seedlots') {
  const jq=()=>({ready(){return this;},on(){return this;},draggable(){return this;}});
  jq.ajax=options=>{calls.push({url:options.url,async:options.async});options.success(response);};
  const sandbox={CXGN:function(){},jQuery:jq,document:{},window:{},alert:value=>alerts.push(String(value)),console};
+ I18N.install(sandbox.window); sandbox.SGN=sandbox.window.SGN;
  vm.runInNewContext(source,sandbox,{filename:'CXGN/List.js'});
  const valid=new sandbox.CXGN.List().legacy_validate(317,type,true);
  assert.deepEqual(calls,[{url:'/list/validate/317/'+type,async:false}]);

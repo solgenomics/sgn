@@ -13,23 +13,36 @@ objects do not change process locale, authentication, permissions or schema.
 Background solGS notification emails remain English. Translated user manuals are included in the same contribution; see
 [manual sources and build commands](../r_markdown_docs/i18n/README.md).
 
+Start with the [developer chapter](DEVELOPER.md) for short call examples and debugging.
+Review machine-translated text in [small breeding workflows](REVIEW.md).
+
 ## Enable a language pack
 
-Build the catalogs before enabling the feature. From the SGN root:
+Install a ready package matching the application release. Site operators need
+Python and the supplied `bin/i18n` directory; they do not need extraction parsers,
+Node, Perl, R or gettext for the ready-package lifecycle.
 
 ```sh
-python3 script/i18n/catalog.py update
-python3 script/i18n/catalog.py build --output locale/build
+bin/i18n/sgn-i18n validate --pack /release/uk-pack
+bin/i18n/sgn-i18n install --pack /release/uk-pack --root /srv/sgn-language-store
+bin/i18n/sgn-i18n activate --locale uk --hash CATALOG_SHA256 \
+  --root /srv/sgn-language-store
 ```
 
-Set the following in the site's local configuration, using an absolute path:
+Use the exact hash printed by package creation. Set the site's local
+configuration using an absolute path:
 
 ```text
 i18n_enabled 1
 i18n_default_locale en
 i18n_enabled_locales en,uk,es,ar
-i18n_catalog_dir /path/to/sgn/locale/build
+i18n_catalog_dir /srv/sgn-language-store/active
 ```
+
+Install each requested language before enabling it. Available languages appear
+beside the login control; missing or corrupt packs do not block other languages.
+Release builders freeze source messages once and translators build from that
+snapshot; see [the complete release and operator procedure](TRANSLATOR.md).
 
 `i18n_enabled 0` preserves the English interface. Locale choice is resolved for
 one request from an explicit preference, the saved browser cookie, browser
@@ -47,8 +60,7 @@ not part of this contribution.
 ## Catalog and rendering contract
 
 Source catalogs use GNU gettext PO/POT: semantic `msgctxt`, exact English
-`msgid`, optional English plural source, and named `%{name}` values. Application
-calls are `p(context, English, variables)` and
+`msgid`, optional English plural source, and named `%{name}` values. Server calls are `p(context, English, variables)` and
 `np(context, singular, plural, count, variables)`. Keep complete messages and
 preserve every named variable. Callers escape returned plain text for their
 HTML, JavaScript, JSON or report sink; catalog text must never become code.
@@ -76,7 +88,7 @@ with PPI 1.272/JSON::PP and Node with the qualified Acorn 8.18.0 parser. Install
 the isolated JavaScript tool dependency with:
 
 ```sh
-npm ci --prefix script/i18n --ignore-scripts
+npm ci --prefix bin/i18n --ignore-scripts
 ```
 
 Marked R extraction additionally uses the qualified R 4.5.1/jsonlite 1.8.7 parser.
@@ -93,10 +105,10 @@ Supported registered formats are Perl, standard JavaScript, marked R, Mason
 TypeScript and additional translator-binding patterns need explicit adapters.
 
 ```sh
-python3 script/i18n/test_catalog.py
-python3 script/i18n/test_perl_extract.py
-python3 script/i18n/test_javascript_extract.py
-python3 script/i18n/test_r_extract.py
+python3 bin/i18n/test_catalog.py
+python3 bin/i18n/test_perl_extract.py
+python3 bin/i18n/test_javascript_extract.py
+python3 bin/i18n/test_r_extract.py
 prove -Ilib -v t/unit/SGN/I18N.t t/unit/SGN/i18n-javascript.t
 ```
 
@@ -112,7 +124,7 @@ A new language needs a PO file, native name, text direction and supported plural
 rule. Already instrumented pages do not need to be rewritten. For example:
 
 ```sh
-python3 script/i18n/catalog.py init --locale fr --direction ltr \
+python3 bin/i18n/catalog.py init --locale fr --direction ltr \
   --plural-forms 'nplurals=2; plural=(n > 1);' --name 'Français' \
   --output locale/fr/LC_MESSAGES/sgn.po
 ```

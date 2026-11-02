@@ -84,13 +84,13 @@ jQuery(document).ready(function() {
 
 function delete_user_role(sp_person_role_id) {
     
-    var yes = confirm((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("program.roles.confirm_delete", "Really delete this role association?") : "Really delete this role association?"));
+    var yes = confirm((SGN.t("program.roles.confirm_delete", "Really delete this role association?")));
     if (yes) { 
       $.ajax( {
         url: '/ajax/roles/delete/association/'+sp_person_role_id
       });
       jQuery('#manage_user_roles_table').DataTable().ajax.reload();					  
-      alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("program.roles.deleted", "Association deleted.") : "Association deleted."));
+      alert((SGN.t("program.roles.deleted", "Association deleted.")));
     }
   }
 
@@ -137,7 +137,7 @@ function add_user_role(sp_person_id, person_name) {
                 alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("program.roles.error.response", "Error: %{error}", {error: String(response.error)}) : 'Error: ' + response.error));
             } else {
             jQuery('#manage_user_roles_table').DataTable().ajax.reload();
-                alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("program.roles.added", "Role Added for User!") : "Role Added for User!"));
+                alert((SGN.t("program.roles.added", "Role Added for User!")));
             }
         },
         error: function(response) {

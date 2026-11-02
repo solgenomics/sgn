@@ -96,27 +96,27 @@ function makeURL(target, id) {
 
 function wizardTypeCaptions() {
   return {
-    "accessions": (typeof window !== "undefined" && window.SGN && window.SGN.i18n ? SGN.i18n.p("unassigned.wizard.types.accessions", "Accessions") : "Accessions"),
-    "accessions_ids": (typeof window !== "undefined" && window.SGN && window.SGN.i18n ? SGN.i18n.p("unassigned.wizard.types.accessions_ids", "Accessions Ids") : "Accessions Ids"),
-    "organisms": (typeof window !== "undefined" && window.SGN && window.SGN.i18n ? SGN.i18n.p("unassigned.wizard.types.organisms", "Organisms") : "Organisms"),
-    "breeding_programs": (typeof window !== "undefined" && window.SGN && window.SGN.i18n ? SGN.i18n.p("unassigned.wizard.types.breeding_programs", "Breeding Programs") : "Breeding Programs"),
-    "genotyping_protocols": (typeof window !== "undefined" && window.SGN && window.SGN.i18n ? SGN.i18n.p("unassigned.wizard.types.genotyping_protocols", "Genotyping Protocols") : "Genotyping Protocols"),
-    "genotyping_projects": (typeof window !== "undefined" && window.SGN && window.SGN.i18n ? SGN.i18n.p("unassigned.wizard.types.genotyping_projects", "Genotyping Projects") : "Genotyping Projects"),
-    "locations": (typeof window !== "undefined" && window.SGN && window.SGN.i18n ? SGN.i18n.p("unassigned.wizard.types.locations", "Locations") : "Locations"),
-    "protocols": (typeof window !== "undefined" && window.SGN && window.SGN.i18n ? SGN.i18n.p("unassigned.wizard.types.protocols", "HDP Protocols") : "HDP Protocols"),
-    "instances": (typeof window !== "undefined" && window.SGN && window.SGN.i18n ? SGN.i18n.p("unassigned.wizard.types.instances", "HDP Upload Ids") : "HDP Upload Ids"),
-    "plots": (typeof window !== "undefined" && window.SGN && window.SGN.i18n ? SGN.i18n.p("unassigned.wizard.types.plots", "Plots") : "Plots"),
-    "subplots": (typeof window !== "undefined" && window.SGN && window.SGN.i18n ? SGN.i18n.p("unassigned.wizard.types.subplots", "Subplots") : "Subplots"),
-    "plants": (typeof window !== "undefined" && window.SGN && window.SGN.i18n ? SGN.i18n.p("unassigned.wizard.types.plants", "Plants") : "Plants"),
-    "tissue_sample": (typeof window !== "undefined" && window.SGN && window.SGN.i18n ? SGN.i18n.p("unassigned.wizard.types.tissue_sample", "Tissue Samples") : "Tissue Samples"),
-    "populations": (typeof window !== "undefined" && window.SGN && window.SGN.i18n ? SGN.i18n.p("unassigned.wizard.types.populations", "Populations") : "Populations"),
-    "seedlots": (typeof window !== "undefined" && window.SGN && window.SGN.i18n ? SGN.i18n.p("unassigned.wizard.types.seedlots", "Seedlots") : "Seedlots"),
-    "trait_components": (typeof window !== "undefined" && window.SGN && window.SGN.i18n ? SGN.i18n.p("unassigned.wizard.types.trait_components", "Trait Components") : "Trait Components"),
-    "traits": (typeof window !== "undefined" && window.SGN && window.SGN.i18n ? SGN.i18n.p("unassigned.wizard.types.traits", "Traits") : "Traits"),
-    "trials": (typeof window !== "undefined" && window.SGN && window.SGN.i18n ? SGN.i18n.p("unassigned.wizard.types.trials", "Trials") : "Trials"),
-    "trial_designs": (typeof window !== "undefined" && window.SGN && window.SGN.i18n ? SGN.i18n.p("unassigned.wizard.types.trial_designs", "Trial Designs") : "Trial Designs"),
-    "trial_types": (typeof window !== "undefined" && window.SGN && window.SGN.i18n ? SGN.i18n.p("unassigned.wizard.types.trial_types", "Trial Types") : "Trial Types"),
-    "years": (typeof window !== "undefined" && window.SGN && window.SGN.i18n ? SGN.i18n.p("unassigned.wizard.types.years", "Years") : "Years"),
+    "accessions": (typeof window !== "undefined" && SGN.t("unassigned.wizard.types.accessions", "Accessions")),
+    "accessions_ids": (typeof window !== "undefined" && SGN.t("unassigned.wizard.types.accessions_ids", "Accessions Ids")),
+    "organisms": (typeof window !== "undefined" && SGN.t("unassigned.wizard.types.organisms", "Organisms")),
+    "breeding_programs": (typeof window !== "undefined" && SGN.t("unassigned.wizard.types.breeding_programs", "Breeding Programs")),
+    "genotyping_protocols": (typeof window !== "undefined" && SGN.t("unassigned.wizard.types.genotyping_protocols", "Genotyping Protocols")),
+    "genotyping_projects": (typeof window !== "undefined" && SGN.t("unassigned.wizard.types.genotyping_projects", "Genotyping Projects")),
+    "locations": (typeof window !== "undefined" && SGN.t("unassigned.wizard.types.locations", "Locations")),
+    "protocols": (typeof window !== "undefined" && SGN.t("unassigned.wizard.types.protocols", "HDP Protocols")),
+    "instances": (typeof window !== "undefined" && SGN.t("unassigned.wizard.types.instances", "HDP Upload Ids")),
+    "plots": (typeof window !== "undefined" && SGN.t("unassigned.wizard.types.plots", "Plots")),
+    "subplots": (typeof window !== "undefined" && SGN.t("unassigned.wizard.types.subplots", "Subplots")),
+    "plants": (typeof window !== "undefined" && SGN.t("unassigned.wizard.types.plants", "Plants")),
+    "tissue_sample": (typeof window !== "undefined" && SGN.t("unassigned.wizard.types.tissue_sample", "Tissue Samples")),
+    "populations": (typeof window !== "undefined" && SGN.t("unassigned.wizard.types.populations", "Populations")),
+    "seedlots": (typeof window !== "undefined" && SGN.t("unassigned.wizard.types.seedlots", "Seedlots")),
+    "trait_components": (typeof window !== "undefined" && SGN.t("unassigned.wizard.types.trait_components", "Trait Components")),
+    "traits": (typeof window !== "undefined" && SGN.t("unassigned.wizard.types.traits", "Traits")),
+    "trials": (typeof window !== "undefined" && SGN.t("unassigned.wizard.types.trials", "Trials")),
+    "trial_designs": (typeof window !== "undefined" && SGN.t("unassigned.wizard.types.trial_designs", "Trial Designs")),
+    "trial_types": (typeof window !== "undefined" && SGN.t("unassigned.wizard.types.trial_types", "Trial Types")),
+    "years": (typeof window !== "undefined" && SGN.t("unassigned.wizard.types.years", "Years")),
   };
 }
 
@@ -182,7 +182,7 @@ export function WizardSetup(main_id) {
         const loadType     = toLoadType(validateType);
 
         if (!fetchTypes.includes(validateType)) {
-          setTimeout(() => alert((typeof window !== "undefined" && window.SGN && window.SGN.i18n ? SGN.i18n.p("unassigned.wizard.invalid_list_type", "List is not of an appropriate type.") : "List is not of an appropriate type.")), 1);
+          setTimeout(() => alert((typeof window !== "undefined" && SGN.t("unassigned.wizard.invalid_list_type", "List is not of an appropriate type."))), 1);
         }
 
 

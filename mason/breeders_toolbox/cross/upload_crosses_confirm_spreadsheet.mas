@@ -74,7 +74,7 @@ foreach my $key (sort { $a <=> $b} keys %upload_data) {
 
    jQuery("#verify_uploaded_data_dialog").dialog( {
       autoOpen: true,
-      buttons: [{ text: (window.SGN && window.SGN.i18n ? window.SGN.i18n.p("cross.ui.close", "Close") : "Close"), click: function() { jQuery("#verify_uploaded_data_dialog").dialog("close"); } }],
+      buttons: [{ text: (SGN.t("cross.ui.close", "Close")), click: function() { jQuery("#verify_uploaded_data_dialog").dialog("close"); } }],
       modal: true,
       width: 600,
       height: 250
@@ -87,7 +87,7 @@ foreach my $key (sort { $a <=> $b} keys %upload_data) {
 
    jQuery("#display_uploaded_data_dialog").dialog( {
       autoOpen: false,
-      buttons: [{ text: (window.SGN && window.SGN.i18n ? window.SGN.i18n.p("cross.ui.ok", "OK") : "OK"), click: function() { jQuery("#display_uploaded_data_dialog").dialog("close"); } }],
+      buttons: [{ text: (SGN.t("cross.ui.ok", "OK")), click: function() { jQuery("#display_uploaded_data_dialog").dialog("close"); } }],
       modal: true,
       width: 1000,
       height: 300

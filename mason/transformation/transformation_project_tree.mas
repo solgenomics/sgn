@@ -95,7 +95,7 @@ jQuery(document).ready(function($) {
             });
         },
         error: function(response) {
-            alert((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("transformation.an_error_occurred_while_loading_the_transformation_project_data", "An error occurred while loading the transformation project data.") : "An error occurred while loading the transformation project data."));
+            alert((SGN.t("transformation.an_error_occurred_while_loading_the_transformation_project_data", "An error occurred while loading the transformation project data.")));
           }
     });
 

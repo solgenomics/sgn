@@ -67,6 +67,7 @@ const I18N = require(path.resolve(process.cwd(), runtime_file));
 const translator = new I18N({locale: 'en', dir: 'ltr', domain: 'sgn', catalogs: []});
 const sgn = {i18n: translator};
 const window = {SGN: sgn};
+I18N.install(window);
 
 const source = fs.readFileSync(mason_file, 'utf8');
 const script = source.slice(source.indexOf('<script>') + '<script>'.length, source.lastIndexOf('</script>'))
