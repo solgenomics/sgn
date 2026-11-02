@@ -15,7 +15,8 @@ use warnings;
 use utf8;
 
 use Test::More;
-use File::Temp qw | tempfile |;
+use File::Temp qw | tempfile tempdir |;
+use HTML::Mason::Interp;
 use JSON;
 use Config::General;
 use URI::Escape qw | uri_escape_utf8 |;
@@ -32,11 +33,28 @@ close($source);
 my ($setup) = $page =~ /(my \$jbrowse_path = .*?)(?=\n\n)/s;
 die 'Cannot find the stock page JBrowse URL setup' unless defined $setup;
 
+my $component_root = tempdir(CLEANUP => 1);
+open(my $component, '>', "$component_root/jbrowse_url.mas") or die "Cannot write component: $!";
+print $component '<%args>' . "\n" . '$config' . "\n" . '$stock_id' . "\n" . '$uniquename' . "\n";
+print $component '</%args><%perl>' . "\n";
+print $component 'my $c = bless { config => $config }, "JBrowseTestContext";' . "\n";
+print $component $setup;
+print $component '</%perl><% $jbrowse_url %>';
+close($component);
+my $interp = HTML::Mason::Interp->new(
+    comp_root => $component_root,
+    data_dir => tempdir(CLEANUP => 1),
+    autohandler_name => '',
+);
+
 sub stock_url {
     my ($config, $stock_id, $uniquename) = @_;
-    my $c = bless { config => $config }, 'JBrowseTestContext';
-    my $url = eval "$setup\n\$jbrowse_url"; ## no critic (BuiltinFunctions::ProhibitStringyEval)
-    die $@ if $@;
+    my $url = '';
+    $interp->make_request(
+        comp => '/jbrowse_url.mas',
+        args => [config => $config, stock_id => $stock_id, uniquename => $uniquename],
+        out_method => \$url,
+    )->exec();
     return $url;
 }
 
