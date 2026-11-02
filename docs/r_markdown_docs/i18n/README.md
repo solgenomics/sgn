@@ -8,12 +8,15 @@ English chapter sources and shared reference figures remain in the parent direct
 Use the existing builder from any directory:
 
 ```sh
+Rscript --vanilla docs/r_markdown_docs/build.R en /absolute/output split
 Rscript --vanilla docs/r_markdown_docs/build.R uk /absolute/output/uk split
 Rscript --vanilla docs/r_markdown_docs/build.R es /absolute/output/es split
 Rscript --vanilla docs/r_markdown_docs/build.R ar /absolute/output/ar split
 ```
 
-`en` builds an isolated English reference. `single` instead of `split` creates the full-book HTML used for PDF export. Without arguments the original English Bookdown command and its default output remain unchanged. The language builder stages independent copies of the shared figures so knitr writes portable relative URLs, cleans the temporary project, and writes only to the selected output directory. Do not bind-mount this source over a running SGN application.
+`en` builds the English root with the shared language navigator. Publish all four
+reader outputs as one multilingual release, keeping English at the root and the
+three translated readers in their locale directories. `single` instead of `split` creates the full-book HTML used for PDF export. Without arguments the original English Bookdown command and its default output remain unchanged. The language builder stages independent copies of the shared figures so knitr writes portable relative URLs, cleans the temporary project, and writes only to the selected output directory. Do not bind-mount this source over a running SGN application.
 
 `manual-locale.css`, `manual-locale.js`, and each `locale-header.html` provide RTL/code/table presentation, language navigation and captions for standard reader controls without editing vendor libraries. Mathematical notation uses native MathML. The standard optional Hypothesis integration and pinned external Fuse library remain inherited reader dependencies; a local preview can block services and supply the exact cached library.
 
