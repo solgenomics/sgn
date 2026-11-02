@@ -1,4 +1,5 @@
 
+// biome-ignore lint/correctness/noUnusedVariables: Called through the legacy Mason global API.
 function stock_detail_page_init_dialogs() {
         jQuery('#stock_trials_info_popup').dialog({
 	'autoOpen' : false,
@@ -6,7 +7,7 @@ function stock_detail_page_init_dialogs() {
 	'height' : 600,
 	'width' : 700,
 	'buttons' : {
-	    'OK' : function() {
+	    'OK' : () => {
 		jQuery('#stock_trials_info_popup').dialog("close");
 	    }
 	}
@@ -20,7 +21,7 @@ function stock_detail_page_init_dialogs() {
 	'height' : 300,
 	'width' : 400,
 	'buttons' : {
-	    'Done' : function() {
+	    'Done' : () => {
 		jQuery('#remove_parent_dialog').dialog("close");
 	    },
 
@@ -31,6 +32,7 @@ function stock_detail_page_init_dialogs() {
 
 }
 
+// biome-ignore lint/correctness/noUnusedVariables: Called through the legacy Mason global API.
 function show_stock_trial_detail(stock_id, stock_name, trial_id, trial_name) {
     jQuery('#stock_trials_info_popup').dialog("option", "title", "Phenotypic data for "+stock_name+" from trial "+trial_name);
     jQuery('#stock_trials_info_popup').dialog("open");
@@ -51,22 +53,22 @@ function get_remove_parents_list(stock_id) {
         dataType: 'json',
         cache: false,
         data: { stock_id: stock_id },
-        success: function(response) {
+        success: (response) => {
             if (!pedigree_response_object(response) || !Array.isArray(response.relationships)) {
                 alert('Could not load the saved parent relationships. Please try again.');
                 return;
             }
             var list = jQuery('#remove_parent_list').empty();
-            jQuery.each(response.relationships, function(_, parent) {
+            jQuery.each(response.relationships, (_, parent) => {
                 var row = jQuery('<div>').append(jQuery('<span>').text(parent.parent_name + ' (' + parent.parent_type + ') '));
-                jQuery('<a href="#">').text('Remove').on('click', function(event) {
+                jQuery('<a href="#">').text('Remove').on('click', (event) => {
                     event.preventDefault();
                     remove_parents(stock_id, parent.parent_id, parent.parent_type);
                 }).appendTo(row);
                 row.appendTo(list);
             });
         },
-        error: function() { alert('An error occurred while loading parents.'); }
+        error: () => { alert('An error occurred while loading parents.'); }
     });
 }
 
@@ -77,7 +79,7 @@ function remove_parents(stock_id, parent_id, parent_type) {
         type: 'POST',
         dataType: 'json',
         data: { stock_id: stock_id, parent_id: parent_id, parent_type: parent_type },
-        success: function(response) {
+        success: (response) => {
             if (pedigree_response_object(response) && response.error) { alert(response.error); }
             else if (pedigree_response_object(response) && response.success === 1) {
                 alert('The parent has been removed.');
@@ -88,7 +90,7 @@ function remove_parents(stock_id, parent_id, parent_type) {
                 get_remove_parents_list(stock_id);
             }
         },
-        error: function() {
+        error: () => {
             alert('The removal result could not be confirmed. Reload the saved parents before trying again.');
             get_remove_parents_list(stock_id);
         }
@@ -96,6 +98,7 @@ function remove_parents(stock_id, parent_id, parent_type) {
 }
 
 /** Add missing parents using explicit names or selected stock identities. */
+// biome-ignore lint/correctness/noUnusedVariables: Called through the legacy Mason global API.
 function stock_pedigree_dialog_init(stock_id) {
     var $ = jQuery;
     var modal = $('#add_parent_dialog');
@@ -151,7 +154,7 @@ function stock_pedigree_dialog_init(stock_id) {
         loadRequest = $.ajax({
             url: '/ajax/stock/parents', type: 'GET', dataType: 'json', cache: false,
             data: { stock_id: stock_id },
-            success: function(response) {
+            success: (response) => {
                 if (!opened || token !== generation) { return; }
                 loadRequest = null;
                 if (!pedigree_response_object(response) || !Array.isArray(response.relationships)) {
@@ -162,7 +165,8 @@ function stock_pedigree_dialog_init(stock_id) {
                 if (response.error) { showStatus(''); showError(response.error); return; }
                 var rows = { female: null, male: null };
                 var invalid = false;
-                $.each(response.relationships, function(_, parent) {
+                $.each(response.relationships, (_, parent) => {
+                    // biome-ignore lint/suspicious/noPrototypeBuiltins: Preserve browsers without Object.hasOwn.
                     if (!pedigree_response_object(parent) || !Object.prototype.hasOwnProperty.call(rows, parent.parent_type)
                         || typeof parent.parent_name !== 'string' || rows[parent.parent_type]) {
                         invalid = true;
@@ -175,8 +179,9 @@ function stock_pedigree_dialog_init(stock_id) {
                     showError('The saved parent relationships are ambiguous. Review the saved pedigree first.');
                     return;
                 }
+                // biome-ignore lint/complexity/useOptionalChain: Legacy scripts are served without Babel transforms.
                 saved = { female: rows.female, male: rows.male, type: normalType(rows.female && rows.female.cross_type) };
-                $.each(['female', 'male'], function(_, role) {
+                $.each(['female', 'male'], (_, role) => {
                     var parent = rows[role];
                     fields[role].val(parent ? parent.parent_name : '').prop('readOnly', !!parent);
                     selected[role] = parent && parent.parent_id !== undefined
@@ -195,7 +200,7 @@ function stock_pedigree_dialog_init(stock_id) {
                 if (failureNotice) { showError(failureNotice); }
                 updateRequirements();
             },
-            error: function(xhr, textStatus) {
+            error: (_xhr, textStatus) => {
                 if (!opened || token !== generation || textStatus === 'abort') { return; }
                 loadRequest = null;
                 showStatus('');
@@ -203,15 +208,15 @@ function stock_pedigree_dialog_init(stock_id) {
             }
         });
     }
-    $.each(['female', 'male'], function(_, role) {
+    $.each(['female', 'male'], (_, role) => {
         var field = fields[role];
         field.autocomplete({
-            source: function(request, response) {
+            source: (request, response) => {
                 $.getJSON('/ajax/stock/pedigree_parent_autocomplete', { parent_type: role, term: request.term })
-                    .done(function(matches) { response(!field.prop('disabled') && !field.prop('readOnly') && Array.isArray(matches) ? matches : []); })
-                    .fail(function() { response([]); });
+                    .done((matches) => { response(!field.prop('disabled') && !field.prop('readOnly') && Array.isArray(matches) ? matches : []); })
+                    .fail(() => { response([]); });
             },
-            select: function(event, ui) {
+            select: (_event, ui) => {
                 if (field.prop('disabled') || field.prop('readOnly')) { return false; }
                 field.val(ui.item.value);
                 selected[role] = { id: ui.item.id, name: ui.item.value };
@@ -219,19 +224,19 @@ function stock_pedigree_dialog_init(stock_id) {
                 return false;
             }
         });
-        field.off('.pedigree').on('input.pedigree change.pedigree', function() {
+        field.off('.pedigree').on('input.pedigree change.pedigree', () => {
             if (!field.prop('readOnly') && selected[role] && field.val() !== selected[role].name) { selected[role] = null; }
             updateRequirements();
         });
     });
     crossType.off('.pedigree').on('change.pedigree', updateRequirements);
-    modal.off('.pedigree').on('hide.bs.modal.pedigree', function() {
+    modal.off('.pedigree').on('hide.bs.modal.pedigree', () => {
         opened = false;
         loaded = false;
         ++generation;
         abortLoad();
     });
-    $('#add_parent_link').off('click.pedigree').on('click.pedigree', function() {
+    $('#add_parent_link').off('click.pedigree').on('click.pedigree', () => {
         opened = true;
         modal.modal('show');
         if (saveInFlight) {
@@ -243,7 +248,7 @@ function stock_pedigree_dialog_init(stock_id) {
         nextNotice = '';
         loadSavedParents(notice);
     });
-    $('#add_parent_dialog_form').off('submit.pedigree').on('submit.pedigree', function(event) {
+    $('#add_parent_dialog_form').off('submit.pedigree').on('submit.pedigree', (event) => {
         event.preventDefault();
         if (!loaded || saveInFlight || save.prop('disabled') || !changed()) { return; }
         error.hide().empty();
@@ -262,7 +267,7 @@ function stock_pedigree_dialog_init(stock_id) {
             return;
         }
         var data = { stock_id: stock_id, female_parent: femaleName, male_parent: maleName, cross_type: type };
-        $.each(['female', 'male'], function(_, role) {
+        $.each(['female', 'male'], (_, role) => {
             if (selected[role] && selected[role].id !== undefined) { data[role + '_parent_id'] = selected[role].id; }
         });
         var token = generation;
@@ -298,16 +303,18 @@ function stock_pedigree_dialog_init(stock_id) {
         }
         $.ajax({
             url: '/ajax/stock/add_stock_parents', type: 'POST', dataType: 'json', data: data,
-            success: function(response) { finish(response, false); },
-            error: function() { finish(null, true); }
+            success: (response) => { finish(response, false); },
+            error: () => { finish(null, true); }
         });
     });
 }
 
+// biome-ignore lint/correctness/noUnusedVariables: Called through the legacy Mason global API.
 function obsoleteStock(stock_id, stock_name){
     showObsoleteDialog(stock_id, stock_name, true);
 }
 
+// biome-ignore lint/correctness/noUnusedVariables: Called through the legacy Mason global API.
 function unObsoleteStock(stock_id, stock_name){
     showObsoleteDialog(stock_id, stock_name, false);
 }
@@ -325,7 +332,7 @@ function showObsoleteDialog(stock_id, stock_name, obsolete) {
     jQuery('#obsolete_stock_dialog').modal('show');
 }
 
-jQuery(document).ready(function($) {
+jQuery(document).ready((_$) => {
 
     jQuery('#obsolete_stock_submit').click( function() {
         const obsolete = jQuery(this).data("obsolete") === 'true';
@@ -352,21 +359,21 @@ jQuery(document).ready(function($) {
                     'is_obsolete': obsolete ? 1 : 0,
                     'obsolete_note': note,
                 },
-                beforeSend: function(response){
+                beforeSend: (_response)=> {
                     jQuery('#working_modal').modal('show');
                 },
-                success: function(response){
+                success: (response)=> {
                     console.log(response);
                     jQuery('#working_modal').modal('hide');
                     if (response.error) {
                         alert(response.error);
                     }
-                    if (response.success == 1) {
+                    if (Number(response.success) === 1) {
                         jQuery('#obsolete_stock_dialog').modal('hide');
                         jQuery('#obsolete_stock_message_dialog').modal('show');
                     }
                 },                
-                error: function(response){
+                error: (_response)=> {
                     jQuery('#working_modal').modal('hide');
                     alert("Error obsoleting stock.");
                 }
@@ -374,7 +381,7 @@ jQuery(document).ready(function($) {
         }
     });
 
-    jQuery("#dismiss_obsolete_stock_message_dialog").click(function(){
+    jQuery("#dismiss_obsolete_stock_message_dialog").click(()=> {
         location.reload();
     });
 
