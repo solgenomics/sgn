@@ -126,7 +126,7 @@ class CompilerTests(unittest.TestCase):
                 'msgstr[0] "%{count} ensayo"\nmsgstr[1] "%{count} ensayos"',
             )
             path.write_text(alter(text) if alter else text, encoding="utf-8")
-            return compile_po(PROJECT_ROOT, path, self.messages)
+            return compile_po(path, self.messages)
 
     def test_compile_named_vars_and_safe_plural_ast(self):
         catalog = self.compile()
@@ -250,7 +250,7 @@ class CompilerTests(unittest.TestCase):
             self.assertLess(mo.stat().st_size, MAX_BYTES)
             self.assertEqual(len(read_mo(mo.read_bytes())), 18001)
             with self.assertRaisesRegex(ValueError, "independent pack size limit"):
-                compile_po(PROJECT_ROOT, path, messages)
+                compile_po(path, messages)
 
     # Audited grammar traversal or explicit source-fixture boundary.
     # pylint: disable=too-many-locals
@@ -806,16 +806,16 @@ class WorkflowPartitionTests(unittest.TestCase):
             text = text.replace('msgid "Save"\nmsgstr ""', 'msgid "Save"\nmsgstr "Зберегти"')
             text = text.replace('msgid "Trial"\nmsgstr ""', 'msgid "Trial"\nmsgstr "Дослід"')
             po.write_text(text)
-            selected = compile_partition(PROJECT_ROOT, po, messages[:1])
+            selected = compile_partition(po, messages[:1])
             self.assertEqual(set(selected["messages"]), {"common.save\x04Save"})
             self.assertEqual(selected["messages"]["common.save\x04Save"]["forms"], ["Зберегти"])
             self.assertEqual(
-                compile_partition(PROJECT_ROOT, po, messages, invert=True)["messages"],
+                compile_partition(po, messages, invert=True)["messages"],
                 {},
             )
             po.write_text(text + '\nmsgctxt "orphan"\nmsgid "Other"\nmsgstr "Інше"\n')
             with self.assertRaisesRegex(ValueError, "unregistered"):
-                compile_partition(PROJECT_ROOT, po, messages, invert=True)
+                compile_partition(po, messages, invert=True)
 
 
 if __name__ == "__main__":

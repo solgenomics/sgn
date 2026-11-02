@@ -2,6 +2,7 @@
 """One entry point for release builders, translators and site operators."""
 # Standard command names use hyphens.
 # pylint: disable=invalid-name
+import argparse
 import subprocess
 import sys
 from pathlib import Path
@@ -15,10 +16,14 @@ COMMANDS = {
 
 def main():
     """Dispatch to the documented tool without invoking a shell."""
-    if len(sys.argv) < 2 or sys.argv[1] not in COMMANDS:
-        print("Usage: bin/i18n/sgn-i18n {" + ",".join(COMMANDS) + "} [options]")
-        return 0 if len(sys.argv) == 2 and sys.argv[1] in ("-h", "--help") else 2
-    script = Path(__file__).resolve().parent / COMMANDS[sys.argv[1]]
+    parser = argparse.ArgumentParser(
+        description=__doc__,
+        usage="%(prog)s COMMAND [OPTIONS]",
+        epilog="Use COMMAND --help for its options. Install ready packs with install, activate and rollback.",
+    )
+    parser.add_argument("command", choices=COMMANDS)
+    command = parser.parse_args(sys.argv[1:2]).command
+    script = Path(__file__).resolve().parent / COMMANDS[command]
     return subprocess.call([sys.executable, str(script), *sys.argv[1:]])
 
 

@@ -3,7 +3,6 @@
 
 import argparse
 import fcntl
-import hashlib
 import json
 import os
 import re
@@ -11,13 +10,15 @@ import shutil
 import tempfile
 from pathlib import Path
 
-from catalog import (
+from catalog_format import (
     API,
     LOCALE,
     MAX_BYTES,
     SCHEMA,
     json_bytes,
     placeholders,
+    read_json,
+    sha256_hex,
     validate_control_placeholders,
     validate_language_name,
 )
@@ -25,27 +26,6 @@ from plural import parse_plural, validate_ast
 
 HASH = re.compile(r"[a-f0-9]{64}")
 PART = re.compile(r"[a-z][a-z0-9_]*")
-
-
-def sha(data):
-    """Return a byte-identity SHA-256 fingerprint."""
-    return hashlib.sha256(data).hexdigest()
-
-
-def read_json(path):
-    """Decode bounded regular JSON and reject duplicate object fields."""
-    if path.is_symlink() or not path.is_file() or path.stat().st_size > MAX_BYTES:
-        raise ValueError("unsafe input file")
-
-    def unique(pairs):
-        result = {}
-        for key, value in pairs:
-            if key in result:
-                raise ValueError("duplicate JSON key")
-            result[key] = value
-        return result
-
-    return json.loads(path.read_text(encoding="utf-8"), object_pairs_hook=unique)
 
 
 def validate_catalog(catalog):
@@ -122,7 +102,7 @@ def indexed_data(directory):
     parts = index["partitions"]
     if not isinstance(parts, list) or not 1 <= len(parts) <= 64:
         raise ValueError("invalid partition count")
-    files = {"index.json": sha((directory / "index.json").read_bytes())}
+    files = {"index.json": sha256_hex((directory / "index.json").read_bytes())}
     catalogs = []
     messages = {}
     for part in parts:
@@ -139,7 +119,7 @@ def indexed_data(directory):
         if name in files:
             raise ValueError("duplicate partition")
         catalog = validate_catalog(read_json(directory / name))
-        checksum = sha((directory / name).read_bytes())
+        checksum = sha256_hex((directory / name).read_bytes())
         if checksum != part["sha256"]:
             raise ValueError("partition checksum mismatch")
         files[name] = checksum
@@ -170,7 +150,7 @@ def manifest_for(directory, indexed=False):
             "sourceRevision": index["sourceRevision"],
             "format": "indexed",
             "files": files,
-            "catalogSha256": sha(json_bytes(files)),
+            "catalogSha256": sha256_hex(json_bytes(files)),
         }
     catalog = validate_catalog(read_json(directory / "catalog.json"))
     return {
@@ -180,7 +160,7 @@ def manifest_for(directory, indexed=False):
         "direction": catalog["direction"],
         "domain": "sgn",
         "sourceRevision": catalog["sourceRevision"],
-        "catalogSha256": sha((directory / "catalog.json").read_bytes()),
+        "catalogSha256": sha256_hex((directory / "catalog.json").read_bytes()),
     }
 
 
@@ -627,5 +607,5 @@ def main():
 if __name__ == "__main__":
     try:
         main()
-    except (ValueError, OSError, json.JSONDecodeError) as error:
+    except (ValueError, OSError) as error:
         raise SystemExit(str(error)) from error

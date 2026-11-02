@@ -15,6 +15,7 @@ from unittest.mock import patch
 
 import catalog
 import pack
+from catalog_format import read_json, sha256_hex
 from plural import parse_plural, validate_ast
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -81,6 +82,56 @@ class ReleaseTests(unittest.TestCase):  # pylint: disable=too-many-public-method
         )
         return output, manifest
 
+    def test_ready_pack_operator_needs_only_data_format_and_plural_modules(self):
+        """Install tools run without importing the builder or source extractors."""
+        operator = self.root / "operator"
+        operator.mkdir()
+        for name in ("pack.py", "catalog_format.py", "plural.py"):
+            shutil.copyfile(TOOLS / name, operator / name)
+        source = self.root / "catalog.json"
+        source.write_bytes(catalog.json_bytes(self.native_catalog()))
+        env = {**os.environ, "PATH": str(self.root / "no-commands"), "PYTHONDONTWRITEBYTECODE": "1"}
+        result = subprocess.run(
+            [
+                sys.executable,
+                str(operator / "pack.py"),
+                "create",
+                "--catalog",
+                str(source),
+                "--output",
+                str(self.root / "pack"),
+            ],
+            env=env,
+            capture_output=True,
+            text=True,
+            check=False,
+        )
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertEqual(json.loads(result.stdout)["locale"], "es")
+
+    def test_json_inputs_are_bounded_and_reject_non_json_numbers(self):
+        """Malformed JSON cannot enter a ready pack or exceed the read limit."""
+        source = self.root / "catalog.json"
+        for token in ("NaN", "Infinity", "-Infinity"):
+            source.write_text('{"unused":' + token + "}")
+            with self.subTest(token=token), self.assertRaisesRegex(ValueError, "JSON number"):
+                read_json(source)
+        source.write_text('{"duplicate":1,"duplicate":2}')
+        with self.assertRaisesRegex(ValueError, "duplicate JSON key"):
+            read_json(source)
+        source.write_text('"' + "x" * 100 + '"')
+        with self.assertRaisesRegex(ValueError, "size limit"):
+            read_json(source, limit=32)
+        self.assertEqual(read_json(source, limit=102), "x" * 100)
+        value = self.native_catalog()
+        value["unexpected"] = float("nan")
+        source.write_text(json.dumps(value))
+        self.assertIn(
+            "JSON number",
+            self.command("pack.py", "create", "--catalog", source, "--output", self.root / "invalid", ok=False),
+        )
+        self.assertFalse((self.root / "invalid").exists())
+
     def test_plural_trees_match_all_existing_runtime_fixtures(self):
         """Plural trees match all existing runtime fixtures."""
         fixtures = json.loads((ROOT / "t/unit/SGN/i18n-fixtures.json").read_text())
@@ -128,7 +179,7 @@ class ReleaseTests(unittest.TestCase):  # pylint: disable=too-many-public-method
         release.write_bytes(catalog.json_bytes(catalog.freeze_release(source, messages, "fixture-v1")))
         release.with_suffix(".pot").write_text(catalog.pot(messages))
         self.assertTrue(release.with_suffix(".pot").is_file())
-        data = catalog.validate_release(catalog.read_unique_json(release))
+        data = catalog.validate_release(catalog.read_json(release, limit=catalog.MAX_RELEASE_BYTES))
         self.assertEqual(data["applicationVersion"], "fixture-v1")
         shutil.rmtree(source)
         # The deliberately unrelated filename proves PO Language metadata owns
@@ -223,7 +274,7 @@ class ReleaseTests(unittest.TestCase):  # pylint: disable=too-many-public-method
             raw = catalog.json_bytes(data)
             self.assertLess(len(raw), catalog.MAX_BYTES)
             (directory / (group + ".json")).write_bytes(raw)
-            entries.append({"name": group, "sha256": catalog.digest(raw)})
+            entries.append({"name": group, "sha256": sha256_hex(raw)})
         self.assertGreater(sum(p.stat().st_size for p in directory.iterdir()), catalog.MAX_BYTES)
         (directory / "index.json").write_bytes(
             catalog.json_bytes({"schema": 1, "domain": "sgn", "sourceRevision": "b" * 64, "partitions": entries})
@@ -361,7 +412,7 @@ class ReleaseTests(unittest.TestCase):  # pylint: disable=too-many-public-method
             "schema": 1,
             "domain": "sgn",
             "sourceRevision": "b" * 64,
-            "partitions": [{"name": name, "sha256": catalog.digest(raw)} for name in ("common", "trials")],
+            "partitions": [{"name": name, "sha256": sha256_hex(raw)} for name in ("common", "trials")],
         }
         (directory / "index.json").write_bytes(catalog.json_bytes(index))
         for mode in ("missing", "symlink", "conflicting"):
@@ -373,7 +424,7 @@ class ReleaseTests(unittest.TestCase):  # pylint: disable=too-many-public-method
                 changed = self.native_catalog(2)
                 changed_bytes = catalog.json_bytes(changed)
                 member.write_bytes(changed_bytes)
-                index["partitions"][1]["sha256"] = catalog.digest(changed_bytes)
+                index["partitions"][1]["sha256"] = sha256_hex(changed_bytes)
                 (directory / "index.json").write_bytes(catalog.json_bytes(index))
             with self.subTest(mode=mode), self.assertRaises((ValueError, OSError)):
                 pack.create_pack(directory, self.root / ("unwritten-" + mode))

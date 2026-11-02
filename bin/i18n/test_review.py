@@ -59,6 +59,55 @@ class ReviewTests(unittest.TestCase):
             self.assertNotEqual(run.returncode, 0)
             self.assertEqual(po.read_text(), original)
 
+    def test_batch_selects_one_exact_message_when_context_is_shared(self):
+        """One source identity cannot silently expand into two review entries."""
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            messages = [
+                {"context": "caption", "source": source, "plural": None, "references": ["page.mas:1"]}
+                for source in ("Seedlot name", "Source seedlot name")
+            ]
+            release = {
+                "schema": 1,
+                "api": 1,
+                "domain": "sgn",
+                "applicationVersion": "test-v1",
+                "sourceRevision": source_revision(messages),
+                "messages": messages,
+                "partitions": {"common": [], "seedlots": [0, 1]},
+            }
+            (root / "release.json").write_text(json.dumps(release))
+            po = root / "original.po"
+            po.write_text(init_po(messages, "uk", "ltr", "nplurals=1; plural=0;"))
+            command = [
+                sys.executable,
+                str(Path(__file__).with_name("review.py")),
+                "review",
+                "--release",
+                str(root / "release.json"),
+                "--po",
+                str(po),
+                "--workflow",
+                "seedlots",
+                "--limit",
+                "1",
+                "--output",
+                str(root / "review"),
+            ]
+            result = subprocess.run(command, capture_output=True, text=True, check=False)
+            self.assertEqual(result.returncode, 0, result.stderr)
+            exported = (root / "review/review.po").read_text()
+            self.assertEqual(exported.count("msgctxt "), 1)
+            self.assertIn('msgid "Seedlot name"', exported)
+            self.assertNotIn('msgid "Source seedlot name"', exported)
+            # A PO not yet merged with the release must fail before creating a misleading batch.
+            po.write_text(init_po(messages[1:], "uk", "ltr", "nplurals=1; plural=0;"))
+            command[-1] = str(root / "missing")
+            result = subprocess.run(command, capture_output=True, text=True, check=False)
+            self.assertNotEqual(result.returncode, 0)
+            self.assertIn("merge the release POT", result.stderr)
+            self.assertFalse((root / "missing").exists())
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -3,7 +3,6 @@
 
 import argparse
 import ast
-import hashlib
 import json
 import re
 import struct
@@ -11,42 +10,27 @@ import subprocess
 import tempfile
 from pathlib import Path
 
+from catalog_format import (
+    API,
+    LOCALE,
+    MAX_BYTES,
+    MAX_PO_BYTES,
+    MAX_RELEASE_BYTES,
+    SCHEMA,
+    json_bytes,
+    placeholders,
+    read_json,
+    sha256_hex,
+    validate_control_placeholders,
+    validate_language_name,
+)
 from extract import extract, po_quote, pot
-from plural import parse_plural as parse_plural_header
-
-SCHEMA = API = 1
-LOCALE = re.compile(r"^[a-z]{2,8}(?:-[A-Za-z0-9]{2,8})*$")
-PLACEHOLDER = re.compile(r"%\{([A-Za-z][A-Za-z0-9_]*)\}")
-MAX_BYTES = 2 * 1024 * 1024
-# Translator notes and source references are excluded from MO/JSON outputs.
-MAX_PO_BYTES = 4 * 1024 * 1024
-
-
-def validate_language_name(value):
-    """Native language names are display data, never markup or identifiers."""
-    if (
-        not isinstance(value, str)
-        or not value.strip()
-        or len(value) > 200
-        or any(ord(c) < 32 or 0x7F <= ord(c) <= 0x9F or c in "\u2028\u2029" for c in value)
-    ):
-        raise ValueError("invalid native language name")
-    return value
-
-
-def json_bytes(value):
-    """Serialize canonical UTF-8 data for fingerprints and pack files."""
-    return (json.dumps(value, ensure_ascii=False, sort_keys=True, separators=(",", ":")) + "\n").encode("utf-8")
-
-
-def digest(value):
-    """Return the SHA-256 fingerprint of supplied bytes."""
-    return hashlib.sha256(value).hexdigest()
+from plural import parse_plural
 
 
 def source_revision(messages):
     """Fingerprint message identities independently of source references."""
-    return digest(json_bytes([{k: m[k] for k in ("context", "source", "plural")} for m in messages]))
+    return sha256_hex(json_bytes([{k: m[k] for k in ("context", "source", "plural")} for m in messages]))
 
 
 def source_messages(root):
@@ -90,57 +74,6 @@ def read_mo(data):
     return result
 
 
-def parse_plural(root, expression):
-    """Compile the bounded grammar without source files or external runtimes."""
-    del root  # Preserve the compiler's public API for existing callers.
-    return parse_plural_header(expression)
-
-
-# Audited grammar traversal or explicit source-fixture boundary.
-# pylint: disable=redefined-outer-name
-def validate_plural_safety(ast, nplurals):
-    """Prove the supported integer grammar cannot divide by zero or overflow forms.
-
-    Standard language formulas use modulo by positive constants, comparisons,
-    and ternaries selecting fixed form indices. Reject unprovable extensions.
-    This complements runtime samples with an all-count conservative bound.
-    """
-
-    def constant(node):
-        """Return a literal AST integer, or no value for a nonconstant node."""
-        while node.get("type") == "GROUP":
-            node = node["expr"]
-        return node.get("val") if node.get("type") == "NUM" else None
-
-    def bounds(node):
-        """Prove conservative plural-index bounds for every supported count."""
-        kind = node["type"]
-        if kind == "NUM":
-            return node["val"], node["val"]
-        if kind == "VAR":
-            return 0, 9007199254740991
-        if kind == "GROUP":
-            return bounds(node["expr"])
-        if kind == "TERNARY":
-            bounds(node["expr"])
-            left, right = bounds(node["truthy"]), bounds(node["falsey"])
-            return min(left[0], right[0]), max(left[1], right[1])
-        left, right = bounds(node["left"]), bounds(node["right"])
-        if kind == "MOD":
-            divisor = constant(node["right"])
-            if divisor is None or divisor <= 0:
-                raise ValueError("plural modulo divisor must be a positive integer constant")
-            return 0, min(left[1], divisor - 1)
-        return 0, 1
-
-    low, high = bounds(ast)
-    if low < 0 or high >= nplurals:
-        raise ValueError("plural index cannot be proven inside the catalog form count")
-
-
-# pylint: enable=redefined-outer-name
-
-
 def metadata(header):
     """Read unique gettext metadata fields without evaluating values."""
     result = {}
@@ -153,28 +86,9 @@ def metadata(header):
     return result
 
 
-def placeholders(text):
-    """Collect complete named interpolation fields and reject malformed ones."""
-    result = set(PLACEHOLDER.findall(text))
-    remaining = PLACEHOLDER.sub("", text)
-    if "%{" in remaining:
-        raise ValueError("invalid named placeholder")
-    return result
-
-
-def validate_control_placeholders(context, source, forms):
-    """One native menu control cannot be duplicated like ordinary text values."""
-    if (context, source) in {
-        ("file_list.datatable.length_menu", "Show %{menu} entries"),
-        ("odk.table.length", "Show %{menu} entries"),
-    }:
-        if any(PLACEHOLDER.findall(text).count("menu") != 1 or "_MENU_" in text for text in forms):
-            raise ValueError(context + " must contain exactly one %{menu} control placeholder")
-
-
 # Audited grammar traversal or explicit source-fixture boundary.
 # pylint: disable=too-many-branches,too-many-locals
-def compile_po(root, path, current_messages):
+def compile_po(path, current_messages):
     """Validate gettext input and compile exact compatible message forms."""
     if path.stat().st_size > MAX_PO_BYTES:
         raise ValueError("PO exceeds size limit")
@@ -209,7 +123,7 @@ def compile_po(root, path, current_messages):
     if direction not in ("ltr", "rtl"):
         raise ValueError("X-SGN-Direction must be ltr or rtl")
     formula = info.get("Plural-Forms", "")
-    plural = parse_plural(root, formula)
+    plural = parse_plural(formula)
     revision = source_revision(current_messages)
     # The fingerprint records catalog provenance. Exact context + English text
     # (and exact plural source) determine compatibility, not the whole digest.
@@ -338,31 +252,41 @@ def partition_po_entries(path):
         raise ValueError("msgcat rejected " + str(path) + ": " + run.stderr.strip())
     entries = []
     for block in run.stdout.split("\n\n"):
-        context = None
-        active = False
+        fields = {}
+        active = None
         for line in block.splitlines():
-            if line.startswith("msgctxt "):
-                context = ast.literal_eval(line[len("msgctxt ") :])
-                active = True
+            field = re.match(r'^(msgctxt|msgid|msgid_plural) (".*")$', line)
+            if field:
+                active = field[1]
+                fields[active] = ast.literal_eval(field[2])
             elif active and line.startswith('"'):
-                context += ast.literal_eval(line)
+                fields[active] += ast.literal_eval(line)
             else:
-                active = False
-        header = context is None and bool(re.search(r'^msgid ""$', block, re.M))
-        entries.append((context, header, block))
+                active = None
+        entries.append(
+            {
+                "context": fields.get("msgctxt"),
+                "source": fields.get("msgid"),
+                "plural": fields.get("msgid_plural"),
+                "header": fields.get("msgctxt") is None and fields.get("msgid") == "",
+                "text": block,
+            }
+        )
     return entries
 
 
-def compile_partition(root, path, messages, *, invert=False, entries=None):
+def compile_partition(path, messages, *, invert=False, entries=None):
     """Filter authoritative PO before the unchanged bounded MO/JSON compiler."""
     contexts = {m["context"] for m in messages}
     entries = partition_po_entries(path) if entries is None else entries
-    selected_blocks = [block for context, header, block in entries if header or ((context in contexts) != invert)]
+    selected_blocks = [
+        entry["text"] for entry in entries if entry["header"] or ((entry["context"] in contexts) != invert)
+    ]
     with tempfile.TemporaryDirectory(prefix="sgn-i18n-partition-") as temporary:
         selected = Path(temporary) / "sgn.po"
         selected.parent.mkdir(parents=True, exist_ok=True)
         selected.write_text("\n\n".join(selected_blocks) + "\n")
-        return compile_po(root, selected, [] if invert else messages)
+        return compile_po(selected, [] if invert else messages)
 
 
 def init_po(messages, locale, direction, formula, native_name=None):
@@ -392,25 +316,6 @@ def init_po(messages, locale, direction, formula, native_name=None):
         raise ValueError("unsupported nplurals")
     slots = "\n".join("msgstr[" + str(i) + '] ""' for i in range(int(match.group(1))))
     return text.replace('msgstr[0] ""\nmsgstr[1] ""', slots)
-
-
-MAX_RELEASE_BYTES = 32 * 1024 * 1024
-
-
-def read_unique_json(path, limit=MAX_RELEASE_BYTES):
-    """Decode bounded release data without duplicate JSON object fields."""
-    if path.is_symlink() or not path.is_file() or path.stat().st_size > limit:
-        raise ValueError("unsafe or oversized release input")
-
-    def unique(pairs):
-        result = {}
-        for key, value in pairs:
-            if key in result:
-                raise ValueError("duplicate release JSON key")
-            result[key] = value
-        return result
-
-    return json.loads(path.read_text(encoding="utf-8"), object_pairs_hook=unique)
 
 
 # Explicit data-contract checks reject bool and preserve all schema branches.
@@ -548,7 +453,7 @@ def main():
     args = parser.parse_args()
     root = args.root.resolve()
     release_path = getattr(args, "release", None)
-    release = validate_release(read_unique_json(release_path)) if release_path else None
+    release = validate_release(read_json(release_path, limit=MAX_RELEASE_BYTES)) if release_path else None
     messages = release["messages"] if release else source_messages(root)
     if args.command == "freeze":
         release = freeze_release(root, messages, args.application_version)
@@ -567,7 +472,7 @@ def main():
                 {
                     "release": str(output),
                     "template": str(template),
-                    "sha256": digest(data),
+                    "sha256": sha256_hex(data),
                     "sourceRevision": source_revision(messages),
                 }
             )
@@ -619,7 +524,7 @@ def main():
     elif args.command == "init":
         if args.output.exists():
             raise ValueError("refusing to overwrite an existing translation")
-        parse_plural(root, args.plural_forms)
+        parse_plural(args.plural_forms)
         args.output.parent.mkdir(parents=True, exist_ok=True)
         args.output.write_text(
             init_po(messages, args.locale, args.direction, args.plural_forms, args.name),
@@ -648,9 +553,9 @@ def main():
             for path in paths:
                 # Filled obsolete sources must not disappear behind the filter.
                 entries = partition_po_entries(path)
-                compile_partition(root, path, messages, invert=True, entries=entries)
+                compile_partition(path, messages, invert=True, entries=entries)
                 catalogs = {
-                    name: compile_partition(root, path, source, entries=entries) for name, source in partitions.items()
+                    name: compile_partition(path, source, entries=entries) for name, source in partitions.items()
                 }
                 locale = catalogs["common"]["locale"]
                 if locale in locales:
@@ -665,7 +570,7 @@ def main():
                 for name, catalog in catalogs.items():
                     data = json_bytes(catalog)
                     (directory / (name + ".json")).write_bytes(data)
-                    entries.append({"name": name, "sha256": digest(data)})
+                    entries.append({"name": name, "sha256": sha256_hex(data)})
                 index = {
                     "schema": 1,
                     "domain": "sgn",
@@ -697,7 +602,7 @@ def main():
                 )
             )
         else:
-            catalogs = [compile_po(root, path, messages) for path in paths]
+            catalogs = [compile_po(path, messages) for path in paths]
             if len({catalog["locale"] for catalog in catalogs}) != len(catalogs):
                 raise ValueError("duplicate locale in selected PO files")
             for catalog in catalogs:
