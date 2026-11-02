@@ -10,7 +10,7 @@ from the isolated candidate checkout. No production service, data or account was
 modified. Hosted checks from the earlier Draft do not certify this new candidate.
 
 - The complete native unit suite passed: 59 files / 2,306 top-level checks.
-  The opt-in POD-coverage check remains skipped. Four optional Chromium source
+  The source-path calendar dependency probe and opt-in POD-coverage check remain skipped locally. Four optional Chromium source
   tests were run separately with all four enabled and passed.
 - All extraction/catalog/inventory/release/review/manual Python suites passed:
   122 checks. Release regressions cover builds after removal of application

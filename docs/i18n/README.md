@@ -91,7 +91,7 @@ the isolated JavaScript tool dependency with:
 npm ci --prefix bin/i18n --ignore-scripts
 ```
 
-Marked R extraction additionally uses the qualified R 4.5.1/jsonlite 1.8.7 parser.
+Marked R extraction additionally uses a qualified R/jsonlite pair: 4.5.0/2.0.0 or 4.5.1/1.8.7.
 Use a separate developer environment if the application uses another R version;
 this feature does not require changing the scientific runtime. Trusted helper
 argv overrides are `SGN_I18N_PERL_COMMAND`,

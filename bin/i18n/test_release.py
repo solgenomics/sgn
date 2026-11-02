@@ -101,8 +101,8 @@ class ReleaseTests(unittest.TestCase):  # pylint: disable=too-many-public-method
         with self.assertRaises(ValueError):
             validate_ast({"type": "NUM", "val": True})
 
-    def test_freeze_then_external_po_build_needs_only_snapshot_and_gettext(self):
-        """Freeze then external po build needs only snapshot and gettext."""
+    def test_frozen_external_po_build_needs_only_snapshot_and_gettext(self):
+        """Compile a frozen contract after deleting its entire application source."""
         source = self.root / "source"
         (source / "locale").mkdir(parents=True)
         (source / "trial.js").write_text('SGN.i18n.p("trial.name", "Trial name");\n')
@@ -119,9 +119,14 @@ class ReleaseTests(unittest.TestCase):  # pylint: disable=too-many-public-method
             )
         )
         release = self.root / "release.json"
-        self.command(
-            "catalog.py", "--root", source, "freeze", "--output", release, "--application-version", "fixture-v1"
-        )
+        # Source parsing has its own qualified extractor suites. The native CI
+        # gate exercises the release/operator boundary without those parsers.
+        messages = [
+            {"context": "controls.save", "source": "Save", "plural": None, "references": ["shared.js:1"]},
+            {"context": "trial.name", "source": "Trial name", "plural": None, "references": ["trial.js:1"]},
+        ]
+        release.write_bytes(catalog.json_bytes(catalog.freeze_release(source, messages, "fixture-v1")))
+        release.with_suffix(".pot").write_text(catalog.pot(messages))
         self.assertTrue(release.with_suffix(".pot").is_file())
         data = catalog.validate_release(catalog.read_unique_json(release))
         self.assertEqual(data["applicationVersion"], "fixture-v1")
