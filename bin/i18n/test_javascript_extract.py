@@ -16,6 +16,8 @@ from extract import ExtractionError, extract_file, javascript_extract
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
 
 
+# Independent syntax boundaries use separate unittest methods.
+# pylint: disable=too-many-public-methods
 class JavaScriptExtractionTests(unittest.TestCase):
     """Exercise the java script extraction tests contracts."""
 

@@ -205,9 +205,7 @@ sub parse {
                 #print STDERR $trait_value." : ".$timestamp."\n";
 
                 if ( defined($value) && defined($timestamp) ) {
-                    if ($value ne '.'){
-                        $data{$observation_unit_name}->{$trait_name} = [$value, $timestamp];
-                    }
+                    $data{$observation_unit_name}->{$trait_name} = [$value, $timestamp];
                 } else {
                     $parse_result{'error'} = (SGN::I18N::translate($ui_phenotypespreadsheetcsv_parse_i18n, 'phenotype.upload.value_or_timestamp_missing', 'Value or timestamp missing.'));
                     return \%parse_result;

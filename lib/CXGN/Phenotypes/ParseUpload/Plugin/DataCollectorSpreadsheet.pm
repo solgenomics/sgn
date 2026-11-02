@@ -270,9 +270,7 @@ sub parse {
             }
 
             if ( defined($trait_value) && defined($timestamp) ) {
-                if ($trait_value ne '.'){
-                    $data{$plot_name}->{$trait_key} = [$trait_value, $timestamp];
-                }
+                $data{$plot_name}->{$trait_key} = [$trait_value, $timestamp];
             } else {
                 $parse_result{'error_detail'} = { code => 'value_timestamp_missing', variables => {  } };
                 $parse_result{'error'} = SGN::I18N::translate($ui_parse_i18n, "phenotype_upload.datacollector_error.value_timestamp_missing", "Value or timestamp missing.");

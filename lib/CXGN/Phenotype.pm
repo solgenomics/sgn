@@ -277,7 +277,7 @@ has 'overwrite' => (
 
 =head2 remove_empty_value
 
-Remove a value if the value in the file is undef or '' and another value is already
+Remove a value if the value in the file is undef, '', '.' or 'NA' and another value is already
 stored in the database. Requires overwrite(1).
 
 =cut
@@ -359,7 +359,7 @@ sub store {
 
         # check if a value needs to be removed.
         #
-        if ($self->remove_empty_value() && (!defined($self->value()) || $self->value() eq '')) {
+        if ($self->overwrite() && $self->remove_empty_value() && (!defined($self->value()) || $self->value() eq '' || $self->value() eq '.' || $self->value() eq 'NA')) {
             #print STDERR "REMOVE VALUES SET. REMOVING THE VALUE ".$self->value()." BECAUSE IT IS NOT DEFINED.\n";
             $self->delete_phenotype();
             return { success => 1, remove_count => 1, reason => "DELETED ENTRY - DELETE VALUES SET ON EMPTY VALUE.\n" };
@@ -370,9 +370,9 @@ sub store {
         if ($self->overwrite()) {
             #print STDERR "OVERWRITE SET (".$self->overwrite()."). OVERWRITING OLD VALUE ".$self->old_value()." WITH NEW VALUE ".$self->value()."\n";
 
-            if (! $self->image_id() && ($self->value() eq "" || ! defined($self->value()) || $self->value() eq ".") || $self->value() eq "NA") {
+            if ((!$self->image_id() && (!defined($self->value()) || $self->value() eq "")) || (defined($self->value()) && ($self->value() eq "." || $self->value() eq "NA"))) {
                 #print STDERR "DELETE VALUES NOT SET FOR EMPTY VALUE. IGNORING EMPTY VALUES!\n";
-                return { succes => 1, skip_count => 1, reason => "SKIPPING EMPTY VALUE WITHOUT DELETE_VALUES\n" }; # codespell:ignore succes (legacy result hash key)
+                return { success => 1, skip_count => 1, reason => "SKIPPING EMPTY VALUE WITHOUT DELETE_VALUES\n" };
             }
 
             if ($self->old_value() && ($self->old_value() eq $self->value())) {
@@ -429,7 +429,7 @@ sub store {
         }
 
         #print STDERR "INSERTING... ".$self->value()."\n";
-        if (! $self->image_id() && ($self->value() eq "" || ! defined($self->value()) || $self->value() eq ".") || $self->value() eq "NA") {
+        if ((!$self->image_id() && (!defined($self->value()) || $self->value() eq "")) || (defined($self->value()) && ($self->value() eq "." || $self->value() eq "NA"))) {
             #print STDERR "NOT STORING EMPTY VALUE\n";
             return { success => 1, skip_count => 1, message => "Not storing empty values" };
         }

@@ -14,14 +14,14 @@ LANGUAGES = ("uk", "es", "ar")
 
 
 def fenced_blocks(text):
-    result, active, block = [], None, []
+    result, active, block = [], "", []
     for line in text.splitlines(keepends=True):
         marker = re.match(r"^\s*(`{3,}|~{3,})", line)
         if active:
             block.append(line)
             if marker and marker[1][0] == active[0] and len(marker[1]) >= len(active):
                 result.append(block[0].rstrip() + "\n" + "".join(block[1:-1]) + block[-1].rstrip() + "\n")
-                active, block = None, []
+                active, block = "", []
         elif marker:
             active, block = marker[1], [line]
     if active:
