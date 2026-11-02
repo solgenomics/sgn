@@ -241,9 +241,7 @@ write.tree(phy = newickFormat,
 file = newickFile
 )
 
-# 
-
-message("Done hierachical clustering.")
+message("Done hierarchical clustering.")
 ####
 q(save = "no", runLast = FALSE)
 ####
