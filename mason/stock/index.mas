@@ -566,9 +566,10 @@ function jqueryStuff() {
             url: "<% $test_url %>",
             dataType: "text",
             success: function(response) {
-                // only the dataset named exactly Accession_<id>, not one whose id starts with it
-                if ( jsMod['jbrowse_datasets'].hasDataset(response, "Accession_<% $stock_id %>") ) {  // if dataset is found, create and display link
-                    jQuery('#jbrowse_check').replaceWith(jQuery('<a id="jbrowse_link"></a>').attr('href', "<% $jbrowse_url %>")
+                var href = jsMod['jbrowse_datasets'].linkFor(response, "Accession_<% $stock_id %>",
+                    "/<% $basepath %>/", "<% $jbrowse_url %>");
+                if ( href ) { // if the exact dataset is found, create and display its link
+                    jQuery('#jbrowse_check').replaceWith(jQuery('<a id="jbrowse_link"></a>').attr('href', href)
                         .text('View the tracks for this accession in JBrowse'));
                 }
                 else { // if not found, display message that dataset doesn't exist

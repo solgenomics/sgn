@@ -87,7 +87,7 @@ SKIP: {
     my $status = $?;
     is($status, 0, 'dataset module and real page callbacks execute successfully');
     my $results = eval { decode_json($output) } || [];
-    is(scalar @$results, 29, 'all JavaScript checks returned results');
+    is(scalar @$results, 54, 'all JavaScript checks returned results');
     foreach my $result (@$results) {
         is_deeply($result->{actual}, $result->{expected}, $result->{name});
     }
@@ -113,31 +113,67 @@ const { JSDOM } = require(path.resolve('js/node_modules/jsdom'));
     for (const value of ['', null, '# [datasets.Accession_7]\nurl = Accession_7']) {
         check('no dataset in ' + JSON.stringify(value), module.hasDataset(value, 'Accession_7'), false);
     }
+    const fallback = '/jbrowse/?data=data/json%2Faccessions%2F7&tracks=DNA%2CLine_2026&highlight=';
+    const link = conf => module.linkFor(conf, 'Accession_7', '/jbrowse/', fallback);
+    const dataset = url => '[ datasets.Accession_7 ] # exact block\r\nurl = ' + url + '\r\n';
+    check('dataset data, location, tracks and highlight override defaults',
+        link(dataset('?data=data/json/Genome&loc=chr3:10..20&tracks=DNA,Line&highlight=chr3:12..13')),
+        '/jbrowse/?data=data/json/Genome&loc=chr3:10..20&tracks=DNA,Line&highlight=chr3:12..13');
+    check('dataset without tracks inherits the configured fallback tracks', link(dataset('?data=data/json/Genome')),
+        '/jbrowse/?data=data/json/Genome&tracks=DNA%2CLine_2026&highlight=');
+    check('explicit empty dataset tracks are retained', link(dataset('?data=data/json/Genome&tracks=')),
+        '/jbrowse/?data=data/json/Genome&tracks=&highlight=');
+    check('missing dataset has no link', link('[datasets.Accession_78]\nurl = ?data=other'), null);
+    check('another section cannot supply the dataset URL', link('[datasets.Accession_7]\n[GENERAL]\nurl = ?data=other'), fallback);
+    check('blank dataset URL keeps the native fallback', link(dataset('')), fallback);
+    check('generator-style dataset URLs retain native track selection', link(dataset('?data=data/json/accessions/7')),
+        '/jbrowse/?data=data/json/accessions/7&tracks=DNA%2CLine_2026&highlight=');
+    check('a malformed section boundary cannot lend another dataset URL',
+        link('[datasets.Accession_7]\n[datasets.Accession_78] ; comment\nurl = ?data=other'), fallback);
+    const trialFallback = '/browser/?data=data/json%2Ftrials%2F22&tracks=DNA%2CGene%20exons%2C&cat=Diversity/NEXTGEN/Imputed&highlight=';
+    check('a generated trial dataset retains native tracks and category',
+        module.linkFor('[datasets.Trial_22]\nurl = ?data=data/json/trials/22', 'Trial_22', '/browser/', trialFallback),
+        '/browser/?data=data/json/trials/22&tracks=DNA%2CGene%20exons%2C&cat=Diversity/NEXTGEN/Imputed&highlight=');
+    check('an explicitly empty category overrides the native trial category',
+        module.linkFor('[datasets.Trial_22]\nurl = ?data=data/json/Genome&cat=', 'Trial_22', '/browser/', trialFallback),
+        '/browser/?data=data/json/Genome&cat=&tracks=DNA%2CGene%20exons%2C&highlight=');
+    check('encoded parameter names override defaults without duplication', link(dataset('?data=Genome&tr%61cks=custom')),
+        '/jbrowse/?data=Genome&tr%61cks=custom&highlight=');
+    check('a bare tracks key is an explicit empty selection', link(dataset('?data=Genome&tracks')),
+        '/jbrowse/?data=Genome&tracks&highlight=');
+    for (const unsafe of ['https://example.invalid/', '//example.invalid/', 'javascript:alert(1)',
+        '?data=bad"value', '?data=bad\\value', '?data=bad value', '?data=bad#fragment']) {
+        check('unsafe or non-query URL retains fallback: ' + unsafe, link(dataset(unsafe)), fallback);
+    }
     for (const [file, kind, id, placeholder] of [
         ['mason/stock/index.mas', 'Accession', 4204, 'stock_id'],
         ['mason/breeders_toolbox/trial/jbrowse_instance.mas', 'Trial', 22, 'trial_id'],
     ]) {
         const page = fs.readFileSync(file, 'utf8');
         const ajax = page.match(/jQuery\.ajax\(\{\s*url: "<% \$test_url %>",[\s\S]*?\n\s*\}\);/)[0];
-        for (const outcome of ['exact', 'prefix', 'error']) {
+        for (const outcome of ['exact', 'configured', 'prefix', 'error']) {
             const target = kind === 'Accession' ? 'jbrowse_check' : 'trial_jbrowse_check';
             const dom = new JSDOM('<p id="' + target + '">[loading...]</p>', { runScripts: 'outside-only' });
             const window = dom.window;
             window.eval(fs.readFileSync('js/source/legacy/jquery.js', 'utf8'));
             window.jsMod = { jbrowse_datasets: module };
-            const href = kind === 'Accession' ? process.argv[2] : '/browser/?data=' + kind + '_' + id + '&tracks=DNA%2CA%26B';
+            const href = kind === 'Accession' ? process.argv[2] : trialFallback;
             let requested;
             window.jQuery.ajax = options => { requested = options; };
             const script = ajax.replace(/<% \$test_url %>/g, '/browser/jbrowse.conf')
                 .replace(new RegExp('<% \\$' + placeholder + ' %>', 'g'), String(id))
-                .replace(/<% \$jbrowse_url %>/g, href);
+                .replace(/<% \$jbrowse_url %>/g, href)
+                .replace(/<% \$basepath %>/g, 'browser');
             window.eval(script);
             check(kind + ' requests the configured dataset list (' + outcome + ')', requested.url, '/browser/jbrowse.conf');
             if (outcome === 'error') requested.error();
-            else requested.success('[datasets.' + kind + '_' + id + (outcome === 'prefix' ? '8' : '') + ']');
+            else requested.success('[datasets.' + kind + '_' + id + (outcome === 'prefix' ? '8' : '') + ']' +
+                (outcome === 'configured' ? '\nurl = ?data=data/json/Genome&tracks=custom&highlight=' : ''));
             const link = window.document.querySelector('a#jbrowse_link');
-            check(kind + ' ' + outcome + ' link visibility', Boolean(link), outcome === 'exact');
-            if (link) check(kind + ' preserves the URL', link.getAttribute('href'), href);
+            check(kind + ' ' + outcome + ' link visibility', Boolean(link), outcome === 'exact' || outcome === 'configured');
+            if (link) check(kind + ' preserves the URL (' + outcome + ')', link.getAttribute('href'),
+                outcome === 'configured' ? '/browser/?data=data/json/Genome&tracks=custom&highlight=' +
+                    (kind === 'Trial' ? '&cat=Diversity/NEXTGEN/Imputed' : '') : href);
             else check(kind + ' ' + outcome + ' explains missing data', window.document.getElementById(target).textContent,
                 outcome === 'error' ? ' Jbrowse has not been set up for this database.' :
                     kind === 'Accession' ? ' This accession does not have any data in Jbrowse.' : ' This trial does not have a dataset in Jbrowse.');
