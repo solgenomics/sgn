@@ -5,6 +5,16 @@ The site uses GNU gettext PO/POT files and the existing Perl/Mason, JavaScript a
 R presentation paths. Translate complete messages; keep scientific data, stored
 names, ontology terms, IDs, units, import headers and API keys unchanged.
 
+## Keep changes simple
+
+Follow [PEP 20](https://peps.python.org/pep-0020/): make behavior explicit and
+readable, use existing platform features and give each function one clear job.
+Keep data-format rules in `catalog_format.py`, build work in `catalog.py`, and
+installation in `pack.py`. Do not add flags, backends or compatibility paths
+without a real caller. State errors clearly and preserve input data. Simplify
+only when runtime checks confirm the intended behavior; retain necessary
+validation, package integrity and rollback boundaries.
+
 ## Change a message
 
 Keep a descriptive context and the exact English fallback beside the call.

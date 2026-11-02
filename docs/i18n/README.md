@@ -23,13 +23,13 @@ Python and the supplied `bin/i18n` directory; they do not need extraction parser
 Node, Perl, R or gettext for the ready-package lifecycle.
 
 ```sh
-bin/i18n/sgn-i18n validate --pack /release/uk-pack
 bin/i18n/sgn-i18n install --pack /release/uk-pack --root /srv/sgn-language-store
 bin/i18n/sgn-i18n activate --locale uk --hash CATALOG_SHA256 \
   --root /srv/sgn-language-store
 ```
 
-Use the exact hash printed by package creation. Set the site's local
+`install` validates the package before storing it. Use the exact hash printed
+by package creation for activation; a separate `validate` is optional diagnostics. Set the site's local
 configuration using an absolute path:
 
 ```text

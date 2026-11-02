@@ -16,7 +16,9 @@ contexts and required plural forms. `review.po` contains only that workflow;
 Exports default to 100 complete source messages; use `--offset 100 --limit 100`
 for the next batch. The worksheet records the selected range and workflow total.
 Keep each reviewed batch alongside its release and merge it into a copy of the master PO.
-Unknown workflows and existing output directories are rejected. Repeat for
+Unknown workflows, existing outputs and PO files missing selected messages are
+rejected before creating a review folder. Merge the release POT before retrying.
+Each batch selects exact context/source/plural identities, including shared contexts. Repeat for
 accessions, trials or another name listed by the release snapshot.
 
 Read messages beside their actual screen, including errors and successful

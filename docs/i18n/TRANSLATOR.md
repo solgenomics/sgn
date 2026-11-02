@@ -95,7 +95,6 @@ python3 "$I18N_TOOLS/pack.py" create \
   --catalog "$PO_WORKSPACE/build-v1/fr/sgn/index.json" \
   --output "$PO_WORKSPACE/pack-v1"
 
-python3 "$I18N_TOOLS/pack.py" validate --pack "$PO_WORKSPACE/pack-v1"
 ```
 
 `--po` is repeatable; all selected locales are validated before build output is
@@ -118,7 +117,9 @@ the single-file limit.
 
 ## Operator: install, activate and roll back
 
-Operators need the supplied Python tools and Python's standard library. Ready
+Operators need Python's standard library and three files: `pack.py`,
+`catalog_format.py` and `plural.py`. The installer does not import the builder
+or source extractors. Ready
 package validation, installation, activation and rollback require no Node,
 gettext, Perl, R or application source. Use a separate writable store, preserve
 both the current and previous immutable package, and keep its absolute path
@@ -135,6 +136,9 @@ python3 "$I18N_TOOLS/pack.py" activate \
 
 python3 "$I18N_TOOLS/pack.py" rollback --locale fr --root "$PACK_STORE"
 ```
+
+`create` and `install` already validate their inputs; use `pack.py validate`
+only to inspect a package without installing it.
 
 Installation validates and copies the complete immutable package to
 `installed/fr/<catalogSha256>/`; it does not change the selected language.
