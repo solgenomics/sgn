@@ -136,9 +136,14 @@ sub _parse_with_plugin {
     my $pedigrees = CXGN::Pedigree::AddPedigrees->new({ schema => $schema });
     my $generated_pedigrees = $pedigrees->generate_pedigrees($parsed_data);
 
-    my $validate = CXGN::Pedigree::AddPedigrees->new({ schema => $schema, pedigrees => $generated_pedigrees });
+    my $validate = CXGN::Pedigree::AddPedigrees->new({ schema => $schema, pedigrees => $generated_pedigrees,
+        source_rows => [map {$_->{_row}} @$parsed_data] });
     my $error;
     my $pedigree_check = $validate->validate_pedigrees();
+    if ($pedigree_check->{fatal}) {
+        $self->_set_parse_errors({error_messages => $pedigree_check->{error}});
+        return;
+    }
 
     my %return;
     if (!$pedigree_check){

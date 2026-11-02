@@ -99,7 +99,7 @@ sub add_parents {
     my ($female, $male, $cross_type, $expected_error) = @_;
     my $dialog_open = eval { is_visible($t->find_element('add_parent_female', 'id')) };
     wait_for_element_ok('add_parent_link', 'id', 'find add parent link')->click() if !$dialog_open;
-    ok(wait_for(sub { $t->driver->execute_script('return !document.getElementById("add_parent_submit").disabled;') }), 'saved parents loaded');
+    ok(wait_for(sub { $t->driver->execute_script('return !document.getElementById("add_parent_female").disabled;') }), 'saved parents loaded');
     clear_and_type(wait_for_element_ok('add_parent_female', 'id', 'find female parent input'), $female);
     clear_and_type(wait_for_element_ok('add_parent_male', 'id', 'find male parent input'), $male);
     wait_for_element_ok("//select[\@id='add_parent_cross_type']/option[\@value='$cross_type']", 'xpath', "select $cross_type cross type")->click();

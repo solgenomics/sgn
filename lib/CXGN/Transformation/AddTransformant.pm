@@ -22,6 +22,7 @@ use Moose::Util::TypeConstraints;
 use Try::Tiny;
 use CXGN::Stock::StockLookup;
 use SGN::Model::Cvterm;
+use CXGN::Pedigree::Parentage;
 use Data::Dumper;
 
 has 'schema' => (
@@ -92,6 +93,7 @@ sub add_transformant {
     my $owner_id = $self->get_owner_id();;
 
     my $coderef = sub {
+        CXGN::Pedigree::Parentage->lock($schema);
 
         my $transformation_cvterm = SGN::Model::Cvterm->get_cvterm_row($schema, 'transformation', 'stock_type');
         my $plant_material_of_cvterm = SGN::Model::Cvterm->get_cvterm_row($schema,  'plant_material_of', 'stock_relationship');
@@ -155,6 +157,7 @@ sub add_transformant {
                 $accession_stock->create_stockprops({$number_of_insertions_cvterm->name() => $number_of_insertions});
             }
         }
+        CXGN::Pedigree::Parentage->assert_acyclic($schema, \@added_stock_ids);
     };
 
     try {

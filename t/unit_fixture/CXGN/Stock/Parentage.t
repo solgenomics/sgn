@@ -97,7 +97,7 @@ subtest 'new pedigree requirements and cycle prevention' => sub {
     my $poly = stock('population_child');
     is($poly->add_parents($mother->uniquename, $population->uniquename, 'polycross'), undef, 'existing population may be the male parent');
     my $plot = stock('plot', 'plot');
-    like($new->add_parents($plot->uniquename, '', 'open'), qr/unsupported stock type/, 'plot is not offered as a pedigree parent');
+    like($new->add_parents($plot->uniquename, '', 'open'), qr/unsupported stock type|not found for this parentage role/, 'plot is not offered as a pedigree parent');
 };
 
 subtest 'database failure on the second insert rolls back the first' => sub {

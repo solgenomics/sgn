@@ -9,6 +9,8 @@ use CXGN::List::Transform;
 use CXGN::BreedersToolbox::Projects;
 use CXGN::BreedersToolbox::Accessions;
 use SGN::Model::Cvterm;
+use CXGN::Pedigree::Parentage;
+use CXGN::Pedigree::Upload;
 use URI::FromHash 'uri';
 use Spreadsheet::WriteExcel;
 use Spreadsheet::Read;
@@ -612,133 +614,11 @@ sub make_cross_form :Path("/stock/cross/new") :Args(0) {
 }
 
 
+# Compatibility alias: both historical controller registrations now execute
+# one implementation, so dispatcher order cannot change parentage semantics.
 sub make_cross :Path("/stock/cross/generate") :Args(0) {
     my ($self, $c) = @_;
-    $c->stash->{template} = '/breeders_toolbox/progeny_from_crosses.mas';
-    my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
-    my $cross_name = $c->req->param('cross_name');
-    $c->stash->{cross_name} = $cross_name;
-    my $trial_id = $c->req->param('trial_id');
-    $c->stash->{trial_id} = $trial_id;
-    #my $location = $c->req->param('location_id');
-    my $maternal = $c->req->param('maternal');
-    my $paternal = $c->req->param('paternal');
-    my $prefix = $c->req->param('prefix');
-    my $suffix = $c->req->param('suffix');
-    my $progeny_number = $c->req->param('progeny_number');
-    my $visible_to_role = $c->req->param('visible_to_role');
-
-    if (! $c->user()) { # redirect
-	$c->res->redirect( uri( path => '/user/login', query => { goto_url => $c->req->uri->path_query } ) );
-	return;
-    }
-
-
-    #check that progeny number is an integer less than maximum allowed
-    my $maximum_progeny_number = 1000;
-    if ((! $progeny_number =~ m/^\d+$/) or ($progeny_number > $maximum_progeny_number)){
-      #redirect to error page?
-      return;
-    }
-
-    #check that parent names are not blank
-    if ($maternal eq "" or $paternal eq "") {
-      return;
-    }
-
-    #check that parents exist in the database
-    if (! $schema->resultset("Stock::Stock")->find({name=>$maternal,})){
-      return;
-    }
-    if (! $schema->resultset("Stock::Stock")->find({name=>$paternal,})){
-      return;
-    }
-
-    #check that cross name does not already exist
-    if ($schema->resultset("Stock::Stock")->find({name=>$cross_name})){
-      return;
-    }
-
-    #check that progeny do not already exist
-    if ($schema->resultset("Stock::Stock")->find({name=>$prefix.$cross_name.$suffix."-1",})){
-      return;
-    }
-
-    my $organism = $schema->resultset("Organism::Organism")->find_or_create(
-    {
-	genus   => 'Manihot',
-	species => 'Manihot esculenta',
-    } );
-    my $organism_id = $organism->organism_id();
-
-    my $accession_cvterm = SGN::Model::Cvterm->get_cvterm_row($schema, 'accession', 'stock_type');
-
-    my $population_cvterm = $schema->resultset("Cv::Cvterm")->find(
-      { name   => 'population',
-    });
-
-
-    my $female_parent_stock = $schema->resultset("Stock::Stock")->find(
-	{ name       => $maternal,
-	} );
-
-    my $male_parent_stock = $schema->resultset("Stock::Stock")->find(
-            { name       => $paternal,
-            } );
-
-    my $population_stock = $schema->resultset("Stock::Stock")->find_or_create(
-            { organism_id => $organism_id,
-	      name       => $cross_name,
-	      uniquename => $cross_name,
-	      type_id => $population_cvterm->cvterm_id,
-            } );
-      my $female_parent =  SGN::Model::Cvterm->get_cvterm_row($schema, 'female_parent',  'stock_relationship');
-
-      my $male_parent =  SGN::Model::Cvterm->get_cvterm_row($schema, 'male_parent', 'stock_relationship');
-
-
-      my $population_members =  SGN::Model::Cvterm->get_cvterm_row($schema,  'cross_relationship','stock_relationship');
-
-
-    my $visible_to_role_cvterm =  SGN::Model::Cvterm->get_cvterm_row($schema,  'visible_to_role', 'local');
-
-    my $increment = 1;
-    while ($increment < $progeny_number + 1) {
-	$increment = sprintf "%03d", $increment;
-	my $stock_name = $prefix.$cross_name."_".$increment.$suffix;
-      my $accession_stock = $schema->resultset("Stock::Stock")->create(
-            { organism_id => $organism_id,
-              name       => $stock_name,
-              uniquename => $stock_name,
-              type_id     => $accession_cvterm->cvterm_id,
-            } );
-      $accession_stock->find_or_create_related('stock_relationship_objects', {
-		type_id => $female_parent->cvterm_id(),
-		object_id => $accession_stock->stock_id(),
-		subject_id => $female_parent_stock->stock_id(),
-	 					  } );
-      $accession_stock->find_or_create_related('stock_relationship_objects', {
-		type_id => $male_parent->cvterm_id(),
-		object_id => $accession_stock->stock_id(),
-		subject_id => $male_parent_stock->stock_id(),
-	 					  } );
-      $accession_stock->find_or_create_related('stock_relationship_objects', {
-		type_id => $population_members->cvterm_id(),
-		object_id => $accession_stock->stock_id(),
-		subject_id => $population_stock->stock_id(),
-	 					  } );
-      if ($visible_to_role ne "") {
-	my $accession_stock_prop = $schema->resultset("Stock::Stockprop")->find_or_create(
-	       { type_id =>$visible_to_role_cvterm->cvterm_id(),
-		 value => $visible_to_role,
-		 stock_id => $accession_stock->stock_id()
-		 });
-      }
-      $increment++;
-
-    }
-    if ($@) {
-    }
+    return $c->controller('Cross')->make_cross($c);
 }
 
 sub selection_index : Path("/selection/index") :Args(0) {

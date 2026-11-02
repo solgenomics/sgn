@@ -32,6 +32,7 @@ use Bio::GeneticRelationships::Individual;
 use Bio::GeneticRelationships::Population;
 use CXGN::Stock::StockLookup;
 use SGN::Model::Cvterm;
+use CXGN::Pedigree::Parentage;
 
 #class_type 'Pedigree', { class => 'Bio::GeneticRelationships::Pedigree' };
 has 'schema' => (
@@ -54,6 +55,9 @@ has 'schema' => (
 
 has 'pedigrees' => (isa =>'ArrayRef[Bio::GeneticRelationships::Pedigree]', is => 'rw', predicate => 'has_pedigrees');
 
+# Optional physical input rows; legacy object callers use entry positions.
+has 'source_rows' => (isa => 'ArrayRef', is => 'rw', default => sub { [] });
+
 
 =head2 supported_cross_types()
 
@@ -63,249 +67,86 @@ multi-combination crossing operations have separate workflows.
 =cut
 
 sub supported_cross_types {
-    return qw(biparental open self sib polycross backcross reselected doubled_haploid dihaploid_induction);
+    return CXGN::Pedigree::Parentage->supported_cross_types;
 }
+
+=head2 add_pedigrees($overwrite)
+
+Resolve and validate the complete batch, then store it under the common graph
+lock. Without overwrite, only identical records or missing information may be
+completed; conflicting roles never produce additional parents.
+
+=cut
 
 sub add_pedigrees {
-    my $self = shift;
-    my $overwrite_pedigrees = shift;
-    my $schema = $self->get_schema();
-    my @pedigrees;
-    my %return;
-
-    @pedigrees = @{$self->get_pedigrees()};
-    #print STDERR Dumper \@pedigrees;
-
-    my @added_stock_ids;
-    my $transaction_error = "";
-
-    my $coderef = sub {
-        #print STDERR "Getting cvterms...\n";
-        # get cvterms for parents and offspring
-        my $female_parent_cvterm = SGN::Model::Cvterm->get_cvterm_row($self->get_schema(), 'female_parent', 'stock_relationship');
-        my $male_parent_cvterm = SGN::Model::Cvterm->get_cvterm_row($self->get_schema(), 'male_parent', 'stock_relationship');
-
-        my ($accessions_crosses_hash_ref, $accessions_crosses_populations_hash_ref) = $self->_get_available_stocks;
-        my %accessions_crosses_hash = %{$accessions_crosses_hash_ref};
-        my %accessions_crosses_populations_hash = %{$accessions_crosses_populations_hash_ref};
-
-        foreach my $pedigree (@pedigrees) {
-
-            #print STDERR Dumper($pedigree);
-            my $organism_id;
-            my $female_parent_name;
-            my $male_parent_name;
-            my $female_parent;
-            my $male_parent;
-            my $cross_type = $pedigree->get_cross_type();
-
-            if ($pedigree->has_female_parent()) {
-                $female_parent_name = $pedigree->get_female_parent()->get_name();
-                $female_parent = $accessions_crosses_hash{$female_parent_name};
-                die "Female parent $female_parent_name was not found.\n" unless $female_parent;
-            }
-
-            if ($pedigree->has_male_parent()) {
-                $male_parent_name = $pedigree->get_male_parent()->get_name();
-                $male_parent = $accessions_crosses_populations_hash{$male_parent_name};
-                die "Male parent $male_parent_name was not found.\n" unless $male_parent;
-            }
-
-            print STDERR "Creating pedigree $cross_type\n";
-
-            my $progeny_accession = $accessions_crosses_hash{$pedigree->get_name()};
-            die "Progeny accession was not found.\n" unless $progeny_accession;
-            die "A female parent is required.\n" unless $female_parent;
-            my %supported = map { $_ => 1 } $self->supported_cross_types;
-            die "Unsupported cross type: $cross_type.\n" unless $supported{$cross_type};
-            die "A male parent is required for cross type $cross_type.\n" if !$male_parent && $cross_type ne 'open';
-
-            # organism of cross experiment will be the same as the female parent
-            if ($female_parent) {
-                $organism_id = $female_parent->[1];
-            } else {
-                $organism_id = $male_parent->[1];
-            }
-
-            # Serialize all pedigree edits for this accession, including the
-            # stock-page add/remove actions, before changing either role.
-            my $locked = $schema->resultset('Stock::Stock')->find($progeny_accession->[0], { for => 'update' });
-            die "Progeny accession was not found.\n" unless $locked;
-            if ($overwrite_pedigrees) {
-                $schema->resultset('Stock::StockRelationship')->search({
-                    object_id => $progeny_accession->[0],
-                    type_id => { -in => [$female_parent_cvterm->cvterm_id, $male_parent_cvterm->cvterm_id] },
-                })->delete;
-            }
-            if ($female_parent) {
-                $schema->resultset('Stock::StockRelationship')->create({
-                    type_id => $female_parent_cvterm->cvterm_id,
-                    object_id => $progeny_accession->[0], subject_id => $female_parent->[0], value => $cross_type,
-                });
-            }
-            if ($male_parent) {
-                $schema->resultset('Stock::StockRelationship')->create({
-                    type_id => $male_parent_cvterm->cvterm_id,
-                    object_id => $progeny_accession->[0], subject_id => $male_parent->[0],
-                });
-            }
-
-            print STDERR "Successfully added pedigree ".$pedigree->get_name()."\n";
-        }
+    my ($self, $overwrite) = @_;
+    return {error => 'No pedigrees to add'} unless $self->has_pedigrees && @{$self->get_pedigrees};
+    my $schema = $self->get_schema;
+    my ($result, $error);
+    eval {
+        $result = $schema->txn_do(sub {
+            CXGN::Pedigree::Parentage->lock($schema);
+            my $v = CXGN::Pedigree::Parentage->vocabulary($schema);
+            my $plans = CXGN::Pedigree::Parentage->prepare($schema, $self->get_pedigrees, $self->get_source_rows, $v);
+            return CXGN::Pedigree::Parentage->apply($schema, $plans, $overwrite, $v);
+        });
     };
-
-    # try to add all crosses in a transaction
-    try {
-        print STDERR "Performing database operations... \n";
-        $self->get_schema()->txn_do($coderef);
-        print STDERR "Done.\n";
-    } catch {
-        $transaction_error =  $_;
-    };
-
-    if ($transaction_error) {
-        $return{error} = "Transaction error creating pedigrees: $transaction_error";
-        print STDERR "Transaction error creating pedigrees: $transaction_error\n";
-        return \%return;
-    }
-
-    return \%return;
+    $error = $@;
+    return $error ? {error => "Transaction error creating pedigrees: $error"} : $result;
 }
+
+=head2 validate_pedigrees()
+
+Validate names, resolved identities, row uniqueness and explicit parent rules.
+Existing parents are returned as warnings requiring review/overwrite in the
+upload flow. The writer independently repeats validation under its lock.
+
+=cut
 
 sub validate_pedigrees {
     my $self = shift;
-    my $schema = $self->get_schema();
+    return {error => ['No pedigrees to add']} unless $self->has_pedigrees && @{$self->get_pedigrees};
+    my $schema = $self->get_schema;
+    my ($plans, $v);
+    eval {
+        $v = CXGN::Pedigree::Parentage->vocabulary($schema);
+        $plans = CXGN::Pedigree::Parentage->prepare($schema, $self->get_pedigrees, $self->get_source_rows, $v);
+    };
+    return {error => ["$@"], fatal => 1} if $@;
     my %return;
-
-    if (!$self->has_pedigrees()){
-        $return{error} = "No pedigrees to add";
-        return \%return;
-    }
-
-    my ($accessions_crosses_hash_ref, $accessions_crosses_populations_hash_ref) = $self->_get_available_stocks();
-    my %accessions_crosses_hash = %{$accessions_crosses_hash_ref};
-    my %accessions_crosses_populations_hash = %{$accessions_crosses_populations_hash_ref};
-
-    my $female_parent_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->get_schema(), 'female_parent', 'stock_relationship')->cvterm_id;
-    my $male_parent_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->get_schema(), 'male_parent', 'stock_relationship')->cvterm_id;
-
-    my @pedigrees = @{$self->get_pedigrees()};
-
-    my @progeny_stock_ids;
-    my %progeny_stock_ids_hash;
-    foreach my $pedigree (@pedigrees) {
-        my $progeny_name = $pedigree->get_name();
-        my $cross_type = $pedigree->get_cross_type();
-        my $progeny = $accessions_crosses_hash{$progeny_name};
-        if (!$progeny){
-            push @{$return{error}}, "Progeny name $progeny_name missing or not found as an accession in database.";
-        } else {
-            push @progeny_stock_ids, $progeny->[0];
-            $progeny_stock_ids_hash{$progeny->[0]} = $progeny_name;
-        }
-
-        if (!$pedigree->get_female_parent()){
-            push @{$return{error}}, "Pedigree not structured correctly";
-        }
-
-        my $female_parent_name = $pedigree->get_female_parent()->get_name();
-        if (!$female_parent_name) {
-            push @{$return{error}}, "Female parent not provided for $progeny_name.";
-        }
-        my $female_parent = $accessions_crosses_hash{$female_parent_name};
-        if (!$female_parent) {
-            push @{$return{error}}, "Female parent not found for $progeny_name.";
-        }
-
-        my %supported = map { $_ => 1 } $self->supported_cross_types;
-        if (!$supported{$cross_type}) {
-            push @{$return{error}}, "cross_type must be either biparental, self, open, backcross, sib, reselected, dihaploid_induction, doubled_haploid or polycross for progeny $progeny_name.";
-        }
-        if ($cross_type eq 'biparental' || $cross_type eq 'self' || $cross_type eq 'sib' || $cross_type eq 'polycross' || $cross_type eq 'backcross' || $cross_type eq 'reselected' || $cross_type eq 'dihaploid_induction' || $cross_type eq 'doubled_haploid' ) {
-            if (!$pedigree->get_male_parent){
-                push @{$return{error}}, "Male parent not provided for $progeny_name and cross type is $cross_type.";
-            }
-            else {
-                my $male_parent_name = $pedigree->get_male_parent()->get_name();
-                if (!$male_parent_name) {
-                    push @{$return{error}}, "Male parent not provided for $progeny_name and cross type is $cross_type.";
-                }
-                else {
-                    my $male_parent = $accessions_crosses_populations_hash{$male_parent_name};
-                    if (!$male_parent) {
-                        push @{$return{error}}, "Male parent not found for $progeny_name.";
-                    }
-                }
-            }
-        }
-        if ($cross_type eq 'open'){
-            if ($pedigree->get_male_parent){
-                if ($pedigree->get_male_parent()->get_name()){
-                    my $male_parent_name = $pedigree->get_male_parent()->get_name();
-                    my $male_parent = $accessions_crosses_populations_hash{$male_parent_name};
-                    if (!$male_parent) {
-                        push @{$return{error}}, "Male parent not found for $progeny_name.";
-                    }
-                }
-            }
-        }
-    }
-
-    my $progeny_female_parent_search = $schema->resultset('Stock::StockRelationship')->search({
-        type_id => $female_parent_cvterm_id,
-        object_id => { '-in'=>\@progeny_stock_ids },
+    my @ids = map {$_->{child_id}} @$plans;
+    my $rs = $schema->resultset('Stock::StockRelationship')->search({
+        object_id => {-in => \@ids}, type_id => {-in => [values %{$v->{roles}}]},
     });
-    my %progeny_with_female_parent_already;
-    while (my $r=$progeny_female_parent_search->next){
-        $progeny_with_female_parent_already{$r->object_id} = [$r->subject_id, $r->value];
+    while (my $row = $rs->next) {
+        my $role = $row->type_id == $v->{roles}{female} ? 'female' : 'male';
+        push @{$return{error}}, 'Stock '.$row->object_id.' already has '.$role.' parent stockID '.$row->subject_id;
     }
-    my $progeny_male_parent_search = $schema->resultset('Stock::StockRelationship')->search({
-        type_id => $male_parent_cvterm_id,
-        object_id => { '-in'=>\@progeny_stock_ids },
-    });
-    my %progeny_with_male_parent_already;
-    while (my $r=$progeny_male_parent_search->next){
-        $progeny_with_male_parent_already{$r->object_id} = $r->subject_id;
-    }
-    foreach (@progeny_stock_ids){
-        if (exists($progeny_with_female_parent_already{$_})){
-            push @{$return{error}}, $progeny_stock_ids_hash{$_}." already has female parent stockID ".$progeny_with_female_parent_already{$_}->[0]." saved with cross type ".$progeny_with_female_parent_already{$_}->[1];
-        }
-        if (exists($progeny_with_male_parent_already{$_})){
-            push @{$return{error}}, $progeny_stock_ids_hash{$_}." already has male parent stockID ".$progeny_with_male_parent_already{$_};
-        }
-    }
-
     return \%return;
 }
 
+# Private compatibility helper: resolve only the names needed by this operation.
 sub _get_available_stocks {
-    my $self = shift;
-    my $schema = $self->get_schema();
-    my $accession_cvterm = SGN::Model::Cvterm->get_cvterm_row($schema, 'accession', 'stock_type')->cvterm_id();
-    my $population_cvterm = SGN::Model::Cvterm->get_cvterm_row($schema, 'population', 'stock_type')->cvterm_id();
-    my $synonym_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'stock_synonym', 'stock_property')->cvterm_id();
-    my $cross_cvterm = SGN::Model::Cvterm->get_cvterm_row($schema, 'cross', 'stock_type')->cvterm_id();
-    my $vector_construct_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'vector_construct', 'stock_type')->cvterm_id();
-
-    my %accessions_crosses_hash;
-    my %accessions_crosses_populations_hash;
-    my $q = "SELECT stock.uniquename, stock.type_id, stock.stock_id, stock.organism_id, stockprop.value, stockprop.type_id FROM stock LEFT JOIN stockprop USING(stock_id) WHERE stock.type_id=$accession_cvterm OR stock.type_id=$population_cvterm OR stock.type_id=$cross_cvterm OR stock.type_id=$vector_construct_cvterm_id";
-    my $h = $schema->storage->dbh()->prepare($q);
-    $h->execute();
-    while (my ($uniquename, $stock_type_id, $stock_id, $organism_id, $synonym, $type_id) = $h->fetchrow_array()) {
-        if (($stock_type_id == $accession_cvterm) || ($stock_type_id == $cross_cvterm)){
-            $accessions_crosses_hash{$uniquename} = [$stock_id, $organism_id];
+    my ($self, $names) = @_;
+    if (!$names) {
+        my @requested;
+        for my $p (@{$self->get_pedigrees || []}) {
+            push @requested, $p->get_name;
+            push @requested, $p->get_female_parent->get_name if $p->has_female_parent;
+            push @requested, $p->get_male_parent->get_name if $p->has_male_parent;
         }
-        $accessions_crosses_populations_hash{$uniquename} = [$stock_id, $organism_id];
-        if ($type_id){
-            if ($type_id == $synonym_type_id){
-                $accessions_crosses_hash{$synonym} = [$stock_id, $organism_id];
-                $accessions_crosses_populations_hash{$synonym} = [$stock_id, $organism_id];
-            }
-        }
+        $names = \@requested;
     }
-    return (\%accessions_crosses_hash, \%accessions_crosses_populations_hash);
+    my $v = CXGN::Pedigree::Parentage->vocabulary($self->get_schema);
+    my $matches = CXGN::Pedigree::Parentage->resolve_names($self->get_schema, $names, $v);
+    my (%accessions, %all);
+    for my $name (keys %$matches) {
+        my @female = grep {($v->{stock_names}{$_->{type_id}} || '') =~ /^(accession|cross)$/} @{$matches->{$name}};
+        die "Stock name $name is ambiguous.\n" if @female > 1 || @{$matches->{$name}} > 1;
+        $accessions{$name} = [$female[0]{stock_id}, $female[0]{organism_id}] if @female;
+        $all{$name} = [$matches->{$name}[0]{stock_id}, $matches->{$name}[0]{organism_id}];
+    }
+    return (\%accessions, \%all);
 }
 
 sub generate_pedigrees {
@@ -328,7 +169,7 @@ sub generate_pedigrees {
         } elsif($cross_type eq "open") {
             $female_parent = Bio::GeneticRelationships::Individual->new( { name => $female });
             $male_parent = undef;
-            if ($male){
+            if (defined($male) && length($male)){
                 $male_parent = Bio::GeneticRelationships::Individual->new( { name => $male });
             }
         }

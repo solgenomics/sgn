@@ -34,6 +34,7 @@ use CXGN::Stock::RelatedStocks;
 use CXGN::BreederSearch;
 use CXGN::Genotype::Search;
 use JSON;
+use HTML::Entities qw(encode_entities);
 use CXGN::Cross;
 use Bio::Chado::Schema;
 
@@ -965,6 +966,43 @@ sub stock_autocomplete_GET :Args(0) {
     $c->stash->{rest} = \@response_list;
 }
 
+=head2 pedigree_parent_autocomplete
+
+Return role-filtered stock IDs, canonical values and descriptive labels for the
+single-accession parent dialog. Existing autocomplete responses stay unchanged.
+
+=cut
+
+sub pedigree_parent_autocomplete : Local : ActionClass('REST') { }
+
+sub pedigree_parent_autocomplete_GET : Args(0) {
+    my ($self, $c) = @_;
+    my $role = $c->req->param('parent_type') || '';
+    my $term = $c->req->param('term') || '';
+    if (($role ne 'female' && $role ne 'male') || !length($term)) {
+        $c->stash->{rest} = [];
+        return;
+    }
+    my @types = $role eq 'female' ? qw(accession cross) : qw(accession cross population vector_construct);
+    $term =~ s/([%_\\])/\\$1/g;
+    my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
+    # Use the owning Chado result sources: SGN also has an organism table with
+    # a different layout on the generic connection's search path.
+    my $rs = $schema->resultset('Stock::Stock')->search({
+        'cv.name' => 'stock_type', 'type.name' => {-in => \@types},
+        'me.uniquename' => {-ilike => '%'.$term.'%'},
+    }, {join => [{type => 'cv'}, 'organism'], columns => ['me.stock_id', 'me.uniquename'],
+        '+select' => ['type.name', 'organism.species'], '+as' => ['stock_type', 'organism_species'],
+        order_by => ['me.uniquename', 'type.name', 'me.stock_id'], rows => 20});
+    my @matches;
+    while (my $row = $rs->next) {
+        my $species = $row->get_column('organism_species');
+        push @matches, {id => $row->stock_id, value => $row->uniquename,
+            label => $row->uniquename.' ('.$row->get_column('stock_type').(defined($species) ? ', '.$species : '').')'};
+    }
+    $c->stash->{rest} = \@matches;
+}
+
 =head2 accession_autocomplete
 
  Usage:
@@ -1453,7 +1491,8 @@ sub remove_parent_GET : Path('/ajax/stock/parent/remove') Args(0) {
     my @type_ids = map { SGN::Model::Cvterm->get_cvterm_row($schema, $_.'_parent', 'stock_relationship')->cvterm_id } @roles;
     my $error;
     eval {
-        $schema->txn_do(sub {
+         $schema->txn_do(sub {
+            CXGN::Pedigree::Parentage->lock($schema);
             my $child = $schema->resultset('Stock::Stock')->find($stock_id, { for => 'update' });
             if (!$child) { $error = 'The stock was not found.'; die "$error\n"; }
             my @relationships = $schema->resultset('Stock::StockRelationship')->search({
@@ -1557,7 +1596,8 @@ sub add_stock_parents_POST : Args(0) {
     my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
     my $stock = CXGN::Stock->new(schema => $schema, stock_id => $stock_id);
     my $error = $stock->add_parents(
-        $c->req->param('female_parent'), $c->req->param('male_parent'), $c->req->param('cross_type'),
+        scalar($c->req->param('female_parent')), scalar($c->req->param('male_parent')), scalar($c->req->param('cross_type')),
+        {female => scalar($c->req->param('female_parent_id')), male => scalar($c->req->param('male_parent_id'))},
     );
     $c->stash->{rest} = $error ? { error => $error } : { success => 1 };
 }
@@ -2190,8 +2230,10 @@ sub get_progenies:Chained('/stock/get_stock') PathPart('datatables/progenies') A
 	my ($cvterm_name, $stock_id, $stock_name, $cross_type) = @$r;
 
 	if (! $cross_type) { $cross_type = 'unspecified'; }
+        my $label = encode_entities($stock_name);
+        $cross_type = encode_entities($cross_type);
 
-	push @stocks, [$cvterm_name, $cross_type, qq{<a href = "/stock/$stock_id/view">$stock_name</a>}, $stock_name ];
+	push @stocks, [$cvterm_name, $cross_type, qq{<a href = "/stock/$stock_id/view">$label</a>}, $stock_name ];
     }
 
     $c->stash->{rest}={data=>\@stocks};
@@ -2239,11 +2281,13 @@ sub get_parents :Chained('/stock/get_stock') PathPart('datatables/parents') Args
     my $male_parent = $parents->{'father'};
     my $male_parent_id = $parents->{'father_id'};
 
-    my $female_parent_link = qq { <a href="/stock/$female_parent_id/view">$female_parent</a> };
+    my $female_label = encode_entities($female_parent // '');
+    my $male_label = encode_entities($male_parent // '');
+    my $female_parent_link = qq { <a href="/stock/$female_parent_id/view">$female_label</a> };
 
-    my $male_parent_link = qq { <a href="/stock/$male_parent_id/view">$male_parent</a> };
+    my $male_parent_link = qq { <a href="/stock/$male_parent_id/view">$male_label</a> };
 
-    my $cross_type = $parents->{'cross_type'};
+    my $cross_type = defined($parents->{'cross_type'}) ? encode_entities($parents->{'cross_type'}) : undef;
 
     print STDERR "PARENTS: ".Dumper($parents);
     $c->stash->{rest}= { data => [ [ $female_parent_link, $male_parent_link, $cross_type ] ] };

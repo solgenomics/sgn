@@ -50,6 +50,7 @@ $stock_id
                     <h4 class="modal-title" id="addParentDialog">Add Parents</h4>
                 </div>
                 <div class="modal-body">
+                    <div id="add_parent_status" class="alert alert-info" role="status" aria-live="polite" style="display:none;"></div>
                     <div id="add_parent_error" class="alert alert-danger" role="alert" style="display:none;"></div>
                     <p>Enter the parents and cross type for this accession. Existing parents are read-only.</p>
                     <div class="form-group">

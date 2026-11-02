@@ -28,6 +28,7 @@ use Try::Tiny;
 use Data::Dumper;
 use CXGN::Stock::StockLookup;
 use SGN::Model::Cvterm;
+use CXGN::Pedigree::Parentage;
 
 #class_type 'Pedigree', { class => 'Bio::GeneticRelationships::Pedigree' };
 has 'schema' => (
@@ -62,6 +63,7 @@ sub add_grafts {
     my %return_errors;
     
     my $coderef = sub {
+        CXGN::Pedigree::Parentage->lock($schema);
         #print STDERR "Getting cvterms...\n";
         # get cvterms for scion and rootstock
         my $scion_of_cvterm = SGN::Model::Cvterm->get_cvterm_row($self->schema(), 'scion_of', 'stock_relationship');
@@ -78,7 +80,7 @@ sub add_grafts {
 	    my $graft_row = $schema->resultset('Stock::Stock')->find( { uniquename => $graft });
 
 	    if ($graft_row) {
-		push @errors, "The name for the graft $graft already exists in the database, not storing.\n";
+                die "The name for the graft $graft already exists in the database, not storing.\n";
 	    }
 	    else {
 	        $graft_row = $self->schema->resultset('Stock::Stock')->create(
@@ -102,6 +104,7 @@ sub add_grafts {
 		    object_id => $graft_row->stock_id(),
 		    subject_id => $rootstock_row->stock_id(),
 		});
+            CXGN::Pedigree::Parentage->assert_acyclic($schema, [$graft_row->stock_id]);
 	}
 	else {
 	    if (!$scion_row) {
