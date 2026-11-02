@@ -1,5 +1,21 @@
 # Localization validation
 
+## Upstream synchronization, 2026-11-03
+
+After publication of the approved head, upstream master advanced to
+`cd749b7790192d9b861ee8d9500925e1c69d8e30`, producing five merge conflicts and
+preventing pull-request CI from starting. The integration preserves upstream
+POST-only account actions, discarded-seedlot handling, date-range behavior,
+bulk layout retrieval and the canonical maintenance upload endpoint. Existing
+localized presentation and locale headers remain in place; no new translation
+keys, authentication policy or database schema changes were introduced.
+
+Qualification passed: 60 native unit files / 2,309 top-level checks, all 125
+Python tool checks and 133 R checks. The account transport regression covers
+102 nested assertions; seedlot/list/upload checks cover literal data, multipart
+fields and locale headers. Source references were refreshed with GNU gettext;
+all 15,398 message identities and all 90 compiled JSON/index bytes are unchanged.
+
 ## Review follow-up, 2026-11-02
 
 The minimalism pass starts at `8d15183cd0399bc2d239d179be65638112b5dd69`.

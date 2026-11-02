@@ -369,6 +369,7 @@ jQuery(document).ready( function() {
 
         jQuery.ajax({
             url: '/ajax/user/new',
+            method: 'POST',
             headers: {'X-SGN-Locale': document.documentElement.getAttribute('data-sgn-locale') || document.documentElement.lang || 'en'},
             beforeSend: function(){
                 jQuery('#working_modal').modal('show');
@@ -384,6 +385,10 @@ jQuery(document).ready( function() {
                     jQuery('#site_login_new_user_dialog').modal('hide');
                     jQuery('#site_login_dialog').modal('hide');
                 }
+            },
+            error: function(r) {
+                jQuery('#working_modal').modal('hide');
+                alert(`Could not create new account. Please try again later. [${r?.responseJSON?.error || r?.statusText || 'Unknown error'}]`);
             }
         });
     });
@@ -404,6 +409,7 @@ jQuery(document).ready( function() {
         }
         jQuery.ajax( { 
             url: '/ajax/user/login',
+            method: 'POST',
             headers: {'X-SGN-Locale': document.documentElement.getAttribute('data-sgn-locale') || document.documentElement.lang || 'en'},
             data: form_data,
             error: function(r) { alert((SGN.t("auth.network_error", "An error occurred! Sorry!")));  },

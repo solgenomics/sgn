@@ -58,6 +58,7 @@ sub list_seedlots :Path('/ajax/breeders/seedlots') :Args(0) {
     my $trial_name = $params->{trial_name};
     my $trial_usage = $params->{trial_usage};
     my $material_type = $params->{material_type};
+    my $exclude_discarded = $params->{exclude_discarded};
 
     my $rows = $params->{length} || 10;
     my $offset = $params->{start} || 0;
@@ -100,6 +101,7 @@ sub list_seedlots :Path('/ajax/breeders/seedlots') :Args(0) {
         $trial_name,
         $trial_usage,
         $material_type,
+        $exclude_discarded
     );
     my @seedlots;
     foreach my $sl (@$list) {
@@ -1707,7 +1709,7 @@ sub seedlot_maintenance_event_DELETE {
 #   - missing_seedlots: a list of Seedlot names not found in the database (need to be added first)
 #   - missing_events: a list of event type names not found in the maintenance event ontology
 #
-sub seedlot_maintenance_event_upload : Path('/ajax/breeders/seedlot/maitenance/upload') : ActionClass('REST') { }
+sub seedlot_maintenance_event_upload : Path('/ajax/breeders/seedlot/maintenance/upload') : ActionClass('REST') { }
 sub seedlot_maintenance_event_upload_POST : Args(0) {
     my $self = shift;
     my $c = shift;

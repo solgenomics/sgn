@@ -98,6 +98,7 @@
        // alert(JSON.stringify(form_data));
        jQuery.ajax( { 
          url: '/ajax/user/update',
+         method: 'POST',
          data: form_data,
          error: function(r) { alert(SGN.t('auth.network_error', 'An error occurred! Sorry!'));  },
          success: function(r) {

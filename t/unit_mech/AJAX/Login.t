@@ -18,12 +18,12 @@ my $schema = $f->bcs_schema;
 my $mech = Test::WWW::Mechanize->new;
 my $response;
 
-$mech->get_ok('http://localhost:3010/ajax/user/login?username=janedoe&password=secretpw');
+$mech->post_ok('http://localhost:3010/ajax/user/login', [ username => 'janedoe', password => 'secretpw' ]);
 $response = decode_json $mech->content;
 print STDERR Dumper $response;
 is($response->{message}, 'Login successful');
 
-$mech->get_ok('http://localhost:3010/ajax/user/new?first_name=testfirst&last_name=testlast&username=testusername&password=testpass&confirm_password=testpass&email_address=test@testcassavabase.com');
+$mech->post_ok('http://localhost:3010/ajax/user/new', [ "first_name" => "testfirst", "last_name" => "testlast", "username" => "testusername", "password" => "testpass", "confirm_password" => "testpass", "email_address" => 'test@testcassavabase.com' ]);
 $response = decode_json $mech->content;
 print STDERR Dumper $response;
 is_deeply($response, {'message' => 'Account was created with username "testusername".
@@ -32,7 +32,7 @@ To continue, you must confirm that we can reach you via email address "test@test
 
 You will be able to login once your account has been confirmed.'});
 
-$mech->get_ok('http://localhost:3010/ajax/user/new?first_name=testfirst&last_name=testlast&username=testusername&password=testpass&confirm_password=testpass&email_address=test@testcassavabase.com&organization=testorg');
+$mech->post_ok('http://localhost:3010/ajax/user/new', [ "first_name" => "testfirst", "last_name" => "testlast", "username" => "testusername", "password" => "testpass", "confirm_password" => "testpass", "email_address" => 'test@testcassavabase.com', "organization" => "testorg" ]);
 $response = decode_json $mech->content;
 print STDERR Dumper $response;
 is_deeply($response, {'error' => 'Account creation failed for the following reason(s): Username "testusername" is already in use. Please pick a different username.'});
@@ -56,7 +56,7 @@ $response = decode_json $mech->content;
 print STDERR Dumper $response;
 is($response->{message}, 'Password reset email requested. If you have an account on this database with this email, you will receive a message with a password reset link.  If you do not have an account with this email address, you will not receive a message.');
 
-$mech->get_ok('http://localhost:3010/ajax/user/login?username=testusername&password=testpass');
+$mech->post_ok('http://localhost:3010/ajax/user/login', [ username => 'testusername', password => 'testpass' ]);
 $response = decode_json $mech->content;
 print STDERR Dumper $response;
 is($response->{message}, 'Login successful');
@@ -65,18 +65,18 @@ is($response->{message}, 'Login successful');
 
 # test update password functionality 
 #
-$mech->get_ok('http://localhost:3010/ajax/user/update?change_password=1&current_password=secretpw&new_password=blablabla&confirm_password=blablabla');
+$mech->post_ok('http://localhost:3010/ajax/user/update', [ change_password => 1, current_password => 'secretpw', new_password => 'blablabla', confirm_password => 'blablabla' ]);
 $response = decode_json($mech->content());
 print STDERR Dumper($response);
 is($response->{error}, "Your current password does not match SGN records.", "password update check");
 
 # reset it to what it was
 #
-$mech->get_ok('http://localhost:3010/ajax/user/update?change_password=1&current_password=blablabla&new_password=secretpw&confirm_password=secretpw');
+$mech->post_ok('http://localhost:3010/ajax/user/update', [ change_password => 1, current_password => 'blablabla', new_password => 'secretpw', confirm_password => 'secretpw' ]);
 
 # check email update
 #
-$mech->get_ok('http://localhost:3010/ajax/user/update?change_email=1&current_password=secretpw&private_email=test@testbase.org&confirm_email=test@testbase.org');
+$mech->post_ok('http://localhost:3010/ajax/user/update', [ change_email => 1, current_password => 'secretpw', private_email => 'test@testbase.org', confirm_email => 'test@testbase.org' ]);
 $response = decode_json($mech->content());
 is($response->{error}, "Your current password does not match SGN records.", 'email update check');
 
@@ -85,42 +85,42 @@ is($response->{error}, "Your current password does not match SGN records.", 'ema
 
 # change username
 #
-$mech->get_ok('http://localhost:3010/ajax/user/update?current_password=secretpw&change_username=1&new_username=janemoe');
+$mech->post_ok('http://localhost:3010/ajax/user/update', [ current_password => 'secretpw', change_username => 1, new_username => 'janemoe' ]);
 my $un_response = decode_json($mech->content());
 is($un_response->{error}, "Your current password does not match SGN records.", "username update check");
 
 # change username back
 #
-$mech->get_ok('http://localhost:3010/ajax/user/update?current_password=secretpw&change_username=1&new_username=janedoe');
+$mech->post_ok('http://localhost:3010/ajax/user/update', [ current_password => 'secretpw', change_username => 1, new_username => 'janedoe' ]);
 
 # LOG OUT WRONG USER
 #
-$mech->get_ok('http://localhost:3010/ajax/user/login?logout=1');
+$mech->post_ok('http://localhost:3010/ajax/user/login', [ logout => 1 ]);
 $response = decode_json $mech->content();
 print STDERR "LOGOUT: ".Dumper($response);
 
 # CHECK UPDATES WITH CORRECT USER
 # login again as janedoe for update tests
 #
-$mech->get_ok('http://localhost:3010/ajax/user/login?username=janedoe&password=secretpw');
+$mech->post_ok('http://localhost:3010/ajax/user/login', [ username => 'janedoe', password => 'secretpw' ]);
 $response = decode_json $mech->content;
 print STDERR Dumper $response;
 is($response->{message}, 'Login successful');
 
 # test update password functionality
 #
-$mech->get_ok('http://localhost:3010/ajax/user/update?change_password=1&current_password=secretpw&new_password=blablabla&confirm_password=blablabla');
+$mech->post_ok('http://localhost:3010/ajax/user/update', [ change_password => 1, current_password => 'secretpw', new_password => 'blablabla', confirm_password => 'blablabla' ]);
 $response = decode_json($mech->content());
 print STDERR Dumper($response);
 is($response->{message}, "Update successful", "password update check");
 
 # reset it to what it was
 #
-$mech->get_ok('http://localhost:3010/ajax/user/update?change_password=1&current_password=blablabla&new_password=secretpw&confirm_password=secretpw');
+$mech->post_ok('http://localhost:3010/ajax/user/update', [ change_password => 1, current_password => 'blablabla', new_password => 'secretpw', confirm_password => 'secretpw' ]);
 
 # check email update
 #
-$mech->get_ok('http://localhost:3010/ajax/user/update?change_email=1&current_password=secretpw&private_email=test@testbase.org&confirm_email=test@testbase.org');
+$mech->post_ok('http://localhost:3010/ajax/user/update', [ change_email => 1, current_password => 'secretpw', private_email => 'test@testbase.org', confirm_email => 'test@testbase.org' ]);
 $response = decode_json($mech->content());
 is($response->{message}, 'Update successful', 'email update check');
 
@@ -129,13 +129,13 @@ is($response->{message}, 'Update successful', 'email update check');
 
 # change username
 #
-$mech->get_ok('http://localhost:3010/ajax/user/update?current_password=secretpw&change_username=1&new_username=janemoe');
+$mech->post_ok('http://localhost:3010/ajax/user/update', [ current_password => 'secretpw', change_username => 1, new_username => 'janemoe' ]);
 my $un_response = decode_json($mech->content());
 is($un_response->{message}, "Update successful", "username update check");
 
 # change username back
 #
-$mech->get_ok('http://localhost:3010/ajax/user/update?current_password=secretpw&change_username=1&new_username=janedoe');
+$mech->post_ok('http://localhost:3010/ajax/user/update', [ current_password => 'secretpw', change_username => 1, new_username => 'janedoe' ]);
 
 
 

@@ -225,8 +225,8 @@
 
         // Make the POST request
         jQuery.ajax({
-            url: '/ajax/breeders/seedlot/maitenance/upload',
-            headers: maintenanceUploadLocaleHeaders('/ajax/breeders/seedlot/maitenance/upload'),
+            url: '/ajax/breeders/seedlot/maintenance/upload',
+            headers: maintenanceUploadLocaleHeaders('/ajax/breeders/seedlot/maintenance/upload'),
             type: 'POST',
             data: formData,
             cache: false,

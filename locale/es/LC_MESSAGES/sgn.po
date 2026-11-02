@@ -4549,7 +4549,7 @@ msgid "Current password"
 msgstr "Contraseña actual"
 
 # Draft translation; human review required.
-#: mason/user/change_account.mas:106
+#: mason/user/change_account.mas:107
 msgctxt "account.change.done"
 msgid "Done! %{message}"
 msgstr "¡Listo! %{message}"
@@ -4691,7 +4691,7 @@ msgctxt "account.quick_create.username"
 msgid "Username (at least 7 characters)"
 msgstr "Nombre de usuario (al menos 7 caracteres)"
 
-#: lib/SGN/Controller/AJAX/User.pm:247
+#: lib/SGN/Controller/AJAX/User.pm:252
 msgctxt "account.server.account_created"
 msgid ""
 "Account was created with username \"%{username}\".\n"
@@ -4706,47 +4706,47 @@ msgstr ""
 "\n"
 "Podrá iniciar sesión cuando se confirme su cuenta."
 
-#: lib/SGN/Controller/AJAX/User.pm:237
+#: lib/SGN/Controller/AJAX/User.pm:242
 msgctxt "account.server.admin_confirmation"
 msgid "Your account has been created but first must be confirmed by the site administrators.  You will receive an email once your account has been confirmed."
 msgstr "Su cuenta se ha creado y debe ser confirmada por los administradores del sitio. Recibirá un correo cuando se confirme."
 
-#: lib/SGN/Controller/AJAX/User.pm:152
+#: lib/SGN/Controller/AJAX/User.pm:157
 msgctxt "account.server.creation_failed"
 msgid "Account creation failed for the following reason(s): %{reasons}"
 msgstr "No se pudo crear la cuenta por los siguientes motivos: %{reasons}"
 
-#: lib/SGN/Controller/AJAX/User.pm:41
+#: lib/SGN/Controller/AJAX/User.pm:43
 msgctxt "account.server.disabled_account"
 msgid "This account has been deactivated due to %{reason}. Please contact the database administrator to re-instate the account."
 msgstr "Esta cuenta se ha desactivado por el siguiente motivo: %{reason}. Contacte con el administrador de la base de datos para reactivarla."
 
-#: lib/SGN/Controller/AJAX/User.pm:243
+#: lib/SGN/Controller/AJAX/User.pm:248
 msgctxt "account.server.email_confirmation"
 msgid "To continue, you must confirm that we can reach you via email address \"%{email}\". An email has been sent with a URL to confirm this address. Please check your email for this message and use the link to confirm your email address."
 msgstr "Para continuar, confirme la dirección \"%{email}\". Se ha enviado un correo con un enlace de confirmación. Revise su correo y use ese enlace para confirmar la dirección."
 
-#: lib/SGN/Controller/AJAX/User.pm:141
+#: lib/SGN/Controller/AJAX/User.pm:146
 msgctxt "account.server.email_exists"
 msgid "Email address is already associated with an account."
 msgstr "Esta dirección de correo electrónico ya está asociada a una cuenta."
 
-#: lib/SGN/Controller/AJAX/User.pm:136
+#: lib/SGN/Controller/AJAX/User.pm:141
 msgctxt "account.server.email_invalid"
 msgid "Email address is invalid."
 msgstr "La dirección de correo electrónico no es válida."
 
-#: lib/SGN/Controller/AJAX/User.pm:145
+#: lib/SGN/Controller/AJAX/User.pm:150
 msgctxt "account.server.first_name_required"
 msgid "You must enter a first name or initial."
 msgstr "Introduzca un nombre o una inicial."
 
-#: lib/SGN/Controller/AJAX/User.pm:405
+#: lib/SGN/Controller/AJAX/User.pm:412
 msgctxt "account.server.forgot_requested"
 msgid "Username email requested. If you have an account on this database with this email, you will receive a message that includes the username associated with this email address.  If you do not have an account with this email address, you will not receive a message."
 msgstr "Se ha solicitado un recordatorio del nombre de usuario. Si existe una cuenta con ese correo en esta base de datos, recibirá un mensaje con el nombre asociado. Si no existe, no recibirá ningún mensaje."
 
-#: lib/SGN/Controller/AJAX/User.pm:37
+#: lib/SGN/Controller/AJAX/User.pm:39
 msgctxt "account.server.incorrect_credentials"
 msgid "Login credentials are incorrect. Please try again."
 msgstr "Los datos de acceso son incorrectos. Inténtelo de nuevo."
@@ -4756,22 +4756,22 @@ msgctxt "account.server.invalid_reset_link"
 msgid "The provided password reset link is invalid. Please try again with another link."
 msgstr "El enlace de restablecimiento de contraseña no es válido. Inténtelo con otro enlace."
 
-#: lib/SGN/Controller/AJAX/User.pm:148
+#: lib/SGN/Controller/AJAX/User.pm:153
 msgctxt "account.server.last_name_required"
 msgid "You must enter a last name."
 msgstr "Introduzca un apellido."
 
-#: lib/SGN/Controller/AJAX/User.pm:46
+#: lib/SGN/Controller/AJAX/User.pm:48
 msgctxt "account.server.login_success"
 msgid "Login successful"
 msgstr "Inicio de sesión correcto"
 
-#: lib/SGN/Controller/AJAX/User.pm:59 lib/SGN/Controller/AJAX/User.pm:73
+#: lib/SGN/Controller/AJAX/User.pm:61 lib/SGN/Controller/AJAX/User.pm:75
 msgctxt "account.server.logout_success"
 msgid "User successfully logged out."
 msgstr "La sesión se ha cerrado correctamente."
 
-#: lib/SGN/Controller/AJAX/User.pm:85
+#: lib/SGN/Controller/AJAX/User.pm:90
 msgctxt "account.server.mirror_registration"
 msgid "This site is a mirror site and does not support adding users. Please go to the main site to create an account."
 msgstr "Este sitio es un espejo y no permite añadir usuarios. Cree una cuenta en el sitio principal."
@@ -4781,47 +4781,47 @@ msgctxt "account.server.missing_reset_token"
 msgid "No token provided. Please try again."
 msgstr "No se ha proporcionado un token. Inténtelo de nuevo."
 
-#: lib/SGN/Controller/AJAX/User.pm:129
+#: lib/SGN/Controller/AJAX/User.pm:134
 msgctxt "account.server.password_mismatch"
 msgid "Password and confirm password do not match."
 msgstr "La contraseña y su confirmación no coinciden."
 
-#: lib/SGN/Controller/AJAX/User.pm:126 lib/SGN/Controller/AJAX/User.pm:445
+#: lib/SGN/Controller/AJAX/User.pm:131 lib/SGN/Controller/AJAX/User.pm:452
 msgctxt "account.server.password_short"
 msgid "Password is too short. Password must be %{minimum} or more characters"
 msgstr "La contraseña es demasiado corta. Debe tener al menos %{minimum} caracteres"
 
-#: lib/SGN/Controller/AJAX/User.pm:478
+#: lib/SGN/Controller/AJAX/User.pm:485
 msgctxt "account.server.password_updated"
 msgid "The password was successfully updated."
 msgstr "La contraseña se ha actualizado correctamente."
 
-#: lib/SGN/Controller/AJAX/User.pm:133
+#: lib/SGN/Controller/AJAX/User.pm:138
 msgctxt "account.server.password_username"
 msgid "Password must not be the same as your username."
 msgstr "La contraseña debe ser distinta del nombre de usuario."
 
-#: lib/SGN/Controller/AJAX/User.pm:450
+#: lib/SGN/Controller/AJAX/User.pm:457
 msgctxt "account.server.reset_confirm_mismatch"
 msgid "Please enter the same password in the confirm password field!"
 msgstr "Introduzca la misma contraseña en el campo de confirmación."
 
-#: lib/SGN/Controller/AJAX/User.pm:430
+#: lib/SGN/Controller/AJAX/User.pm:437
 msgctxt "account.server.reset_requested"
 msgid "Password reset email requested. If you have an account on this database with this email, you will receive a message with a password reset link.  If you do not have an account with this email address, you will not receive a message."
 msgstr "Se ha solicitado un restablecimiento de contraseña. Si existe una cuenta con ese correo en esta base de datos, recibirá un mensaje con un enlace de restablecimiento. Si no existe, no recibirá ningún mensaje."
 
-#: lib/SGN/Controller/AJAX/User.pm:121
+#: lib/SGN/Controller/AJAX/User.pm:126
 msgctxt "account.server.username_exists"
 msgid "Username \"%{username}\" is already in use. Please pick a different username."
 msgstr "El nombre de usuario \"%{username}\" ya está en uso. Elija otro."
 
-#: lib/SGN/Controller/AJAX/User.pm:112
+#: lib/SGN/Controller/AJAX/User.pm:117
 msgctxt "account.server.username_short"
 msgid "Username is too short. Username must be %{minimum} or more characters"
 msgstr "El nombre de usuario es demasiado corto. Debe tener al menos %{minimum} caracteres"
 
-#: lib/SGN/Controller/AJAX/User.pm:114
+#: lib/SGN/Controller/AJAX/User.pm:119
 msgctxt "account.server.username_spaces"
 msgid "Username must not contain spaces"
 msgstr "El nombre de usuario no puede contener espacios"
@@ -8264,7 +8264,7 @@ msgctxt "auth.legacy.working"
 msgid "Working..."
 msgstr "Procesando..."
 
-#: mason/site/login_dialog.mas:402
+#: mason/site/login_dialog.mas:407
 msgctxt "auth.login.credentials_missing"
 msgid "Please enter a username and password"
 msgstr "Introduzca un nombre de usuario y una contraseña"
@@ -8313,7 +8313,7 @@ msgid "Username"
 msgstr "Nombre de usuario"
 
 #: mason/site/login_dialog.mas:306 mason/site/login_dialog.mas:329
-#: mason/site/login_dialog.mas:409 mason/user/change_account.mas:102
+#: mason/site/login_dialog.mas:415 mason/user/change_account.mas:103
 #: mason/user/reset_password_form.mas:80
 msgctxt "auth.network_error"
 msgid "An error occurred! Sorry!"
@@ -8339,7 +8339,7 @@ msgctxt "auth.recovery.username_help"
 msgid "If you've forgotten your username, enter your email address below. An email will be sent with any account username(s) associated with your email address."
 msgstr "Si olvidó su nombre de usuario, introduzca su correo electrónico abajo. Recibirá un mensaje con los nombres de usuario de las cuentas asociadas a esa dirección."
 
-#: mason/site/login_dialog.mas:382
+#: mason/site/login_dialog.mas:383
 msgctxt "auth.registration.account_added"
 msgid "New account added. Check your email for the confirmation link - you must confirm your account before you can login."
 msgstr "Se añadió una cuenta nueva. Revise su correo electrónico para obtener el enlace de confirmación; debe confirmar su cuenta antes de iniciar sesión."
@@ -47785,80 +47785,80 @@ msgctxt "lists.synonyms.unique_name"
 msgid "Unique Name"
 msgstr "Nombre único"
 
-#: js/source/legacy/CXGN/List.js:2308
+#: js/source/legacy/CXGN/List.js:2312
 msgctxt "lists.validation.case_adjusted"
 msgid "The case has been successfully adjusted."
 msgstr "Se ajustaron correctamente las mayúsculas y minúsculas."
 
-#: js/source/legacy/CXGN/List.js:2304
+#: js/source/legacy/CXGN/List.js:2308
 msgctxt "lists.validation.converted_ids"
 msgid "Converted the following ids: %{ids}"
 msgstr "Se convirtieron los siguientes ID: %{ids}"
 
-#: js/source/legacy/CXGN/List.js:2237 js/source/legacy/CXGN/List.js:2264
-#: js/source/legacy/CXGN/List.js:2286
+#: js/source/legacy/CXGN/List.js:2241 js/source/legacy/CXGN/List.js:2268
+#: js/source/legacy/CXGN/List.js:2290
 msgctxt "lists.validation.database_column"
 msgid "DB"
 msgstr "BD"
 
-#: js/source/legacy/CXGN/List.js:2409
+#: js/source/legacy/CXGN/List.js:2413
 msgctxt "lists.validation.failed_heading"
 msgid "List did not pass validation."
 msgstr "La lista no superó la validación."
 
 #: js/source/legacy/CXGN/BreedersToolbox/MarkerSet.js:329
-#: js/source/legacy/CXGN/List.js:2381
+#: js/source/legacy/CXGN/List.js:2385
 msgctxt "lists.validation.item_column"
 msgid "Item"
 msgstr "Elemento"
 
-#: js/source/legacy/CXGN/List.js:2236 js/source/legacy/CXGN/List.js:2263
-#: js/source/legacy/CXGN/List.js:2285
+#: js/source/legacy/CXGN/List.js:2240 js/source/legacy/CXGN/List.js:2267
+#: js/source/legacy/CXGN/List.js:2289
 msgctxt "lists.validation.list_column"
 msgid "List"
 msgstr "Lista"
 
-#: js/source/legacy/CXGN/List.js:2214
+#: js/source/legacy/CXGN/List.js:2218
 msgctxt "lists.validation.manage_accessions_note"
 msgid "Go to Manage Accessions to add these new accessions to database now."
 msgstr "Vaya a gestionar los accesos para añadir estos nuevos accesos a la base de datos."
 
-#: js/source/legacy/CXGN/List.js:2308
+#: js/source/legacy/CXGN/List.js:2312
 msgctxt "lists.validation.mismatched_case"
 msgid "Mismatched case"
 msgstr "Diferencia de mayúsculas y minúsculas"
 
-#: js/source/legacy/CXGN/List.js:2412
+#: js/source/legacy/CXGN/List.js:2416
 msgctxt "lists.validation.missing_heading"
 msgid "Not found in the database:"
 msgstr "No se encontraron en la base de datos:"
 
-#: js/source/legacy/CXGN/List.js:2422
+#: js/source/legacy/CXGN/List.js:2426
 msgctxt "lists.validation.multiple_case_heading"
 msgid "Matches more than one entry by case - fix the spelling manually:"
 msgstr "Coincide con varias entradas sin distinguir mayúsculas y minúsculas; corrija la escritura manualmente:"
 
-#: js/source/legacy/CXGN/List.js:2424
+#: js/source/legacy/CXGN/List.js:2428
 msgctxt "lists.validation.multiple_case_pair"
 msgid "    %{input}  to  %{matches}"
 msgstr "    %{input}  por  %{matches}"
 
-#: js/source/legacy/CXGN/List.js:2273
+#: js/source/legacy/CXGN/List.js:2277
 msgctxt "lists.validation.no_mismatched_cases"
 msgid "No mismatched cases found."
 msgstr "No se encontraron diferencias de mayúsculas y minúsculas."
 
-#: js/source/legacy/CXGN/List.js:2363
+#: js/source/legacy/CXGN/List.js:2367
 msgctxt "lists.validation.no_synonym_matches"
 msgid "No synonym matches found."
 msgstr "No se encontraron coincidencias de sinónimos."
 
-#: js/source/legacy/CXGN/List.js:2204 js/source/legacy/CXGN/List.js:2208
+#: js/source/legacy/CXGN/List.js:2208 js/source/legacy/CXGN/List.js:2212
 msgctxt "lists.validation.passed"
 msgid "This list passed validation."
 msgstr "La lista pasó la validación."
 
-#: js/source/legacy/CXGN/List.js:2298 js/source/legacy/CXGN/List.js:2327
+#: js/source/legacy/CXGN/List.js:2302 js/source/legacy/CXGN/List.js:2331
 #: mason/breeders_toolbox/db_stats.mas:189
 #: mason/breeders_toolbox/db_stats.mas:199
 #: mason/breeders_toolbox/db_stats.mas:209
@@ -47872,27 +47872,27 @@ msgctxt "lists.validation.request_failed"
 msgid "An error occurred validating the list %{id} (type=%{type})"
 msgstr "Se produjo un error al validar la lista %{id} (tipo=%{type})"
 
-#: js/source/legacy/CXGN/List.js:2382 mason/search/traits.mas:74
+#: js/source/legacy/CXGN/List.js:2386 mason/search/traits.mas:74
 msgctxt "lists.validation.synonym_column"
 msgid "Synonym"
 msgstr "Sinónimo"
 
-#: js/source/legacy/CXGN/List.js:2357
+#: js/source/legacy/CXGN/List.js:2361
 msgctxt "lists.validation.synonym_db_column"
 msgid "Corresponding db names"
 msgstr "Nombres correspondientes en la BD"
 
-#: js/source/legacy/CXGN/List.js:2356
+#: js/source/legacy/CXGN/List.js:2360
 msgctxt "lists.validation.synonym_list_column"
 msgid "List elements matching synonym"
 msgstr "Elementos de la lista que coinciden con el sinónimo"
 
-#: js/source/legacy/CXGN/List.js:2337
+#: js/source/legacy/CXGN/List.js:2341
 msgctxt "lists.validation.synonyms_heading"
 msgid "Synonyms"
 msgstr "Sinónimos"
 
-#: js/source/legacy/CXGN/List.js:2337
+#: js/source/legacy/CXGN/List.js:2341
 msgctxt "lists.validation.synonyms_replaced"
 msgid "Synonyms have been successfully replaced with uniquenames."
 msgstr "Los sinónimos se sustituyeron correctamente por nombres únicos."
@@ -47907,12 +47907,12 @@ msgctxt "lists.validation.unexpected_error"
 msgid "There was an error validating your list. "
 msgstr "Se produjo un error al validar la lista. "
 
-#: js/source/legacy/CXGN/List.js:2415
+#: js/source/legacy/CXGN/List.js:2419
 msgctxt "lists.validation.wrong_case_heading"
 msgid "Wrong case - change these in your list to match the database exactly:"
 msgstr "Mayúsculas y minúsculas incorrectas; cambie estos nombres de la lista para que coincidan exactamente con la base de datos:"
 
-#: js/source/legacy/CXGN/List.js:2417
+#: js/source/legacy/CXGN/List.js:2421
 msgctxt "lists.validation.wrong_case_pair"
 msgid "    %{input}  to  %{database}"
 msgstr "    %{input}  por  %{database}"
@@ -52735,12 +52735,12 @@ msgctxt "navigation.analyze.validated_trials"
 msgid "Validated Trials"
 msgstr "Ensayos validados"
 
-#: lib/SGN/Controller/AJAX/User.pm:617
+#: lib/SGN/Controller/AJAX/User.pm:624
 msgctxt "navigation.login.calendar"
 msgid "Calendar"
 msgstr "Calendario"
 
-#: lib/SGN/Controller/AJAX/User.pm:616
+#: lib/SGN/Controller/AJAX/User.pm:623
 msgctxt "navigation.login.calendar_title"
 msgid "Your Calendar"
 msgstr "Su calendario"
@@ -52750,24 +52750,24 @@ msgctxt "navigation.login.confirm_logout"
 msgid "Are you sure you want to log out?"
 msgstr "¿Seguro que desea cerrar la sesión?"
 
-#: lib/SGN/Controller/AJAX/User.pm:615
+#: lib/SGN/Controller/AJAX/User.pm:622
 msgctxt "navigation.login.datasets"
 msgid "Datasets"
 msgstr "Conjuntos de datos"
 
 #: lib/SGN/Controller/AJAX/HTMLSelect.pm:552
 #: lib/SGN/Controller/AJAX/HTMLSelect.pm:654
-#: lib/SGN/Controller/AJAX/User.pm:614
+#: lib/SGN/Controller/AJAX/User.pm:621
 msgctxt "navigation.login.lists"
 msgid "Lists"
 msgstr "Listas"
 
-#: lib/SGN/Controller/AJAX/User.pm:611
+#: lib/SGN/Controller/AJAX/User.pm:618
 msgctxt "navigation.login.main_site"
 msgid "main site"
 msgstr "sitio principal"
 
-#: lib/SGN/Controller/AJAX/User.pm:612
+#: lib/SGN/Controller/AJAX/User.pm:619
 msgctxt "navigation.login.main_site_title"
 msgid "log in on main site"
 msgstr "Iniciar sesión en el sitio principal"
@@ -52777,18 +52777,18 @@ msgctxt "navigation.login.network_error"
 msgid "An error occurred"
 msgstr "Se produjo un error"
 
-#: lib/SGN/Controller/AJAX/User.pm:613
+#: lib/SGN/Controller/AJAX/User.pm:620
 msgctxt "navigation.login.profile"
 msgid "My Profile"
 msgstr "Mi perfil"
 
-#: cgi-bin/forum/topics.pl:19 lib/SGN/Controller/AJAX/User.pm:610
+#: cgi-bin/forum/topics.pl:19 lib/SGN/Controller/AJAX/User.pm:617
 #: mason/site/toolbar/login.mas:2
 msgctxt "navigation.login.sign_in"
 msgid "Login"
 msgstr "Iniciar sesión"
 
-#: lib/SGN/Controller/AJAX/User.pm:618
+#: lib/SGN/Controller/AJAX/User.pm:625
 msgctxt "navigation.login.sign_out"
 msgid "Logout"
 msgstr "Cerrar sesión"
@@ -63120,7 +63120,7 @@ msgctxt "seedlot.within_each_propagation_group_the_progress_of_each_plant_produc
 msgid "Within each Propagation Group, the progress of each plant produced is tracked by a globally unique"
 msgstr "Dentro de cada grupo de propagación, el progreso de cada planta producida se sigue mediante el identificador globalmente único"
 
-#: lib/SGN/Controller/AJAX/Seedlot.pm:1413 lib/SGN/Controller/Seedlot.pm:166
+#: lib/SGN/Controller/AJAX/Seedlot.pm:1415 lib/SGN/Controller/Seedlot.pm:166
 #: lib/SGN/Controller/Seedlot.pm:199
 msgctxt "seedlot_maintenance.server.disabled"
 msgid "Seedlot Maintenance Events are not enabled on this server!"
@@ -63643,29 +63643,29 @@ msgctxt "seedlot_maintenance_upload.parse.header_or_rows"
 msgid "Spreadsheet is missing header or contains no rows"
 msgstr "La hoja de cálculo no tiene encabezado o no contiene filas"
 
-#: lib/SGN/Controller/AJAX/Seedlot.pm:1755
+#: lib/SGN/Controller/AJAX/Seedlot.pm:1757
 msgctxt "seedlot_maintenance_upload.server.archive_failed"
 msgid "Could not save file %{filename} in archive"
 msgstr "No se pudo archivar el archivo %{filename}"
 
 # Model draft; human/native editorial review pending.
-#: lib/SGN/Controller/AJAX/Seedlot.pm:1733
+#: lib/SGN/Controller/AJAX/Seedlot.pm:1735
 msgctxt "seedlot_maintenance_upload.server.file_required"
 msgid "You must provide the upload file!"
 msgstr "¡Debe proporcionar el archivo que desea cargar!"
 
-#: lib/SGN/Controller/AJAX/Seedlot.pm:1720
+#: lib/SGN/Controller/AJAX/Seedlot.pm:1722
 msgctxt "seedlot_maintenance_upload.server.login_required"
 msgid "You must be logged in to do this!"
 msgstr "¡Debe iniciar sesión para realizar esta operación!"
 
 # Model draft; human/native editorial review pending.
-#: lib/SGN/Controller/AJAX/Seedlot.pm:1726
+#: lib/SGN/Controller/AJAX/Seedlot.pm:1728
 msgctxt "seedlot_maintenance_upload.server.permission"
 msgid "You do not have permission in the database to do this! Please contact us."
 msgstr "No tiene permiso para realizar esta operación en la base de datos. Póngase en contacto con nosotros."
 
-#: lib/SGN/Controller/AJAX/Seedlot.pm:1773
+#: lib/SGN/Controller/AJAX/Seedlot.pm:1775
 msgctxt "seedlot_maintenance_upload.server.unknown"
 msgid "An unknown error occurred"
 msgstr "Se ha producido un error desconocido"
@@ -64032,12 +64032,12 @@ msgctxt "seedlot_overdue.ui.weekday_wed"
 msgid "Wed"
 msgstr "mié"
 
-#: lib/SGN/Controller/AJAX/Seedlot.pm:1592
+#: lib/SGN/Controller/AJAX/Seedlot.pm:1594
 msgctxt "seedlot_record.server.event_privileges"
 msgid "You do not have the required privileges to seedlot maintenance events."
 msgstr "No tiene los permisos necesarios para los eventos de mantenimiento de lotes de semillas."
 
-#: lib/SGN/Controller/AJAX/Seedlot.pm:1600
+#: lib/SGN/Controller/AJAX/Seedlot.pm:1602
 msgctxt "seedlot_record.server.events_required"
 msgid "Event parameters not provided!"
 msgstr "¡No se han proporcionado los parámetros de los eventos!"
@@ -64048,7 +64048,7 @@ msgctxt "seedlot_record.server.page_privileges"
 msgid "Your account must have either submitter or curator privileges to add seedlot maintenance events."
 msgstr "Su cuenta debe tener permisos de registro de datos o de curador para añadir eventos de mantenimiento de lotes de semillas."
 
-#: lib/SGN/Controller/AJAX/Seedlot.pm:1642
+#: lib/SGN/Controller/AJAX/Seedlot.pm:1644
 msgctxt "seedlot_record.server.store_failed"
 msgid "Could not store seedlot maintenance events [%{diagnostic}]!"
 msgstr "¡No se pudieron guardar los eventos de mantenimiento del lote de semillas [%{diagnostic}]!"
@@ -64512,179 +64512,179 @@ msgid "Row: %{row}: timestamp not valid format [%{format}]"
 msgstr "Fila %{row}: la marca de tiempo tiene un formato no válido [%{format}]"
 
 # Model draft; human/native editorial review pending.
-#: lib/CXGN/Stock/Seedlot.pm:1427
+#: lib/CXGN/Stock/Seedlot.pm:1455
 msgctxt "seedlots.model.accession_with_id_accession_stock_id_is_already_"
 msgid "Accession with id %{accession_stock_id} is already associated with seedlot id %{seedlot_id}"
 msgstr "La accesión con ID %{accession_stock_id} ya está asociada al lote de semillas con ID %{seedlot_id}"
 
 # Model draft; human/native editorial review pending.
-#: lib/CXGN/Stock/Seedlot.pm:1416
+#: lib/CXGN/Stock/Seedlot.pm:1444
 msgctxt "seedlots.model.accessions_must_all_be_the_same_organism_so_that"
 msgid "Accessions must all be the same organism, so that a population can group the seed lots.\n"
 msgstr "Todas las accesiones deben pertenecer al mismo taxón para que una población pueda agrupar los lotes de semillas.\n"
 
 # Model draft; human/native editorial review pending.
-#: lib/CXGN/Stock/Seedlot.pm:1499
+#: lib/CXGN/Stock/Seedlot.pm:1527
 msgctxt "seedlots.model.cross_with_id_cross_stock_id_is_already_associat"
 msgid "Cross with id %{cross_stock_id} is already associated with seedlot id %{seedlot_id}"
 msgstr "El cruzamiento con ID %{cross_stock_id} ya está asociado al lote de semillas con ID %{seedlot_id}"
 
 # Model draft; human/native editorial review pending.
-#: lib/CXGN/Stock/Seedlot.pm:1488
+#: lib/CXGN/Stock/Seedlot.pm:1516
 msgctxt "seedlots.model.crosses_must_all_be_the_same_organism_to_be_in_a"
 msgid "Crosses must all be the same organism to be in a seed lot.\n"
 msgstr "Todos los cruzamientos deben pertenecer al mismo taxón para formar parte de un lote de semillas.\n"
 
 # Model draft; human/native editorial review pending.
-#: lib/CXGN/Stock/Seedlot.pm:601
+#: lib/CXGN/Stock/Seedlot.pm:629
 msgctxt "seedlots.model.no_accession_list_selected"
 msgid "No accession list selected!"
 msgstr "¡No se ha seleccionado una lista de accesiones!"
 
 # Model draft; human/native editorial review pending.
-#: lib/CXGN/Stock/Seedlot.pm:1114
+#: lib/CXGN/Stock/Seedlot.pm:1142
 msgctxt "seedlots.model.no_associated_seedlot"
 msgid "No associated seedlot!"
 msgstr "¡No hay un lote de semillas asociado!"
 
 # Model draft; human/native editorial review pending.
-#: lib/CXGN/Stock/Seedlot.pm:1036 lib/CXGN/Stock/Seedlot.pm:1165
-#: lib/CXGN/Stock/Seedlot.pm:687 lib/CXGN/Stock/Seedlot.pm:746
-#: lib/CXGN/Stock/Seedlot.pm:828 lib/CXGN/Stock/Seedlot.pm:913
+#: lib/CXGN/Stock/Seedlot.pm:1064 lib/CXGN/Stock/Seedlot.pm:1193
+#: lib/CXGN/Stock/Seedlot.pm:715 lib/CXGN/Stock/Seedlot.pm:774
+#: lib/CXGN/Stock/Seedlot.pm:856 lib/CXGN/Stock/Seedlot.pm:941
 msgctxt "seedlots.model.no_pair_array_passed"
 msgid "No pair array passed!"
 msgstr "¡No se ha proporcionado un arreglo de pares!"
 
 # Model draft; human/native editorial review pending.
-#: lib/CXGN/Stock/Seedlot.pm:604
+#: lib/CXGN/Stock/Seedlot.pm:632
 msgctxt "seedlots.model.no_seedlot_list_supplied"
 msgid "No seedlot list supplied!"
 msgstr "¡No se ha proporcionado una lista de lotes de semillas!"
 
 # Model draft; human/native editorial review pending.
-#: lib/CXGN/Stock/Seedlot.pm:1864 lib/CXGN/Stock/Seedlot.pm:1912
+#: lib/CXGN/Stock/Seedlot.pm:1892 lib/CXGN/Stock/Seedlot.pm:1940
 msgctxt "seedlots.model.no_seedlot_named_ele_could_be_found_in_the_datab"
 msgid "No seedlot named '%{ele}' could be found in the database"
 msgstr "No se encontró en la base de datos un lote de semillas llamado «%{ele}»"
 
 # Model draft; human/native editorial review pending.
-#: lib/CXGN/Stock/Seedlot.pm:1102
+#: lib/CXGN/Stock/Seedlot.pm:1130
 msgctxt "seedlots.model.no_seedlot_names_passed"
 msgid "No seedlot names passed!"
 msgstr "¡No se han proporcionado nombres de lotes de semillas!"
 
 # Model draft; human/native editorial review pending.
-#: lib/CXGN/Stock/Seedlot.pm:1872
+#: lib/CXGN/Stock/Seedlot.pm:1900
 msgctxt "seedlots.model.seedlot_ele_should_have_only_one_associated_reco"
 msgid "Seedlot '%{ele}' should have only one associated %{record_type}!"
 msgstr "¡El lote de semillas «%{ele}» debe tener un único registro %{record_type} asociado!"
 
 # Model draft; human/native editorial review pending.
-#: lib/CXGN/Stock/Seedlot.pm:1811
+#: lib/CXGN/Stock/Seedlot.pm:1839
 msgctxt "seedlots.model.seedlot_name_has_been_used_in_transactions_and_s"
 msgid "Seedlot '%{name}' has been used in transactions and so cannot be deleted!"
 msgstr "¡El lote de semillas «%{name}» se ha utilizado en operaciones y no se puede eliminar!"
 
 # Model draft; human/native editorial review pending.
-#: lib/CXGN/Stock/Seedlot.pm:1817
+#: lib/CXGN/Stock/Seedlot.pm:1845
 msgctxt "seedlots.model.seedlot_name_should_have_only_one_associated_rec"
 msgid "Seedlot '%{name}' should have only one associated %{record_type}!"
 msgstr "¡El lote de semillas «%{name}» debe tener un único registro %{record_type} asociado!"
 
 # Model draft; human/native editorial review pending.
-#: lib/CXGN/Stock/Seedlot.pm:630
+#: lib/CXGN/Stock/Seedlot.pm:658
 msgctxt "seedlots.model.the_following_accessions_are_not_valid_in_the_da"
 msgid "The following accessions are not valid in the database, so you must add them first: %{names}"
 msgstr "Las siguientes accesiones no son registros válidos de la base de datos; debe agregarlas primero: %{names}"
 
 # Model draft; human/native editorial review pending.
-#: lib/CXGN/Stock/Seedlot.pm:633
+#: lib/CXGN/Stock/Seedlot.pm:661
 msgctxt "seedlots.model.the_following_seedlots_are_not_valid_in_the_data"
 msgid "The following seedlots are not valid in the database, so you must add them first: %{names}"
 msgstr "Los siguientes lotes de semillas no son registros válidos de la base de datos; debe agregarlos primero: %{names}"
 
 # Model draft; human/native editorial review pending.
-#: lib/CXGN/Stock/Seedlot.pm:1004
+#: lib/CXGN/Stock/Seedlot.pm:1032
 msgctxt "seedlots.model.the_seedlot_seedlot_name_is_not_linked_to_any_cr"
 msgid "The seedlot: %{seedlot_name} is not linked to any cross member of the family: %{stock_name}. "
 msgstr "El lote de semillas %{seedlot_name} no está vinculado a ningún cruzamiento de la familia %{stock_name}. "
 
 # Model draft; human/native editorial review pending.
-#: lib/CXGN/Stock/Seedlot.pm:989
+#: lib/CXGN/Stock/Seedlot.pm:1017
 msgctxt "seedlots.model.the_seedlot_seedlot_name_is_not_linked_to_the_ac.90e77db"
 msgid "The seedlot: %{seedlot_name} is not linked to the accession : %{stock_name}."
 msgstr "El lote de semillas %{seedlot_name} no está vinculado a la accesión %{stock_name}."
 
 # Model draft; human/native editorial review pending.
-#: lib/CXGN/Stock/Seedlot.pm:880
+#: lib/CXGN/Stock/Seedlot.pm:908
 msgctxt "seedlots.model.the_seedlot_seedlot_name_is_not_linked_to_the_ac.9fa7cbc"
 msgid "The seedlot: %{seedlot_name} is not linked to the accession/%{column}: %{accession_name}."
 msgstr "El lote de semillas %{seedlot_name} no está vinculado a la accesión/%{column}: %{accession_name}."
 
 # Model draft; human/native editorial review pending.
-#: lib/CXGN/Stock/Seedlot.pm:714 lib/CXGN/Stock/Seedlot.pm:794
+#: lib/CXGN/Stock/Seedlot.pm:742 lib/CXGN/Stock/Seedlot.pm:822
 msgctxt "seedlots.model.the_seedlot_seedlot_name_is_not_linked_to_the_sa.bf12604"
 msgid "The seedlot: %{seedlot_name} is not linked to the same accession as the plot: %{plot_name} . "
 msgstr "El lote de semillas %{seedlot_name} no está vinculado a la misma accesión que la parcela %{plot_name}. "
 
 # Model draft; human/native editorial review pending.
-#: lib/CXGN/Stock/Seedlot.pm:789
+#: lib/CXGN/Stock/Seedlot.pm:817
 msgctxt "seedlots.model.the_seedlot_seedlot_name_is_not_linked_to_the_sa.c04c648"
 msgid "The seedlot: %{seedlot_name} is not linked to the same family as the plot: %{plot_name} . "
 msgstr "El lote de semillas %{seedlot_name} no está vinculado a la misma familia que la parcela %{plot_name}. "
 
 # Model draft; human/native editorial review pending.
-#: lib/CXGN/Stock/Seedlot.pm:1069
+#: lib/CXGN/Stock/Seedlot.pm:1097
 msgctxt "seedlots.model.the_seedlots_seedlot_name_1_and_seedlot_name_2_h"
 msgid "The seedlots: %{seedlot_name_1} and %{seedlot_name_2} have different contents."
 msgstr "Los lotes de semillas %{seedlot_name_1} y %{seedlot_name_2} contienen materiales diferentes."
 
 # Model draft; human/native editorial review pending.
-#: lib/CXGN/Stock/Seedlot.pm:1216
+#: lib/CXGN/Stock/Seedlot.pm:1244
 msgctxt "seedlots.model.the_source_name_source_name_is_not_a_plot_subplo"
 msgid "The source name: %{source_name} is not a plot, subplot or plant stock type."
 msgstr "El origen %{source_name} no corresponde a una parcela, subparcela o planta."
 
 # Model draft; human/native editorial review pending.
-#: lib/CXGN/Stock/Seedlot.pm:1225
+#: lib/CXGN/Stock/Seedlot.pm:1253
 msgctxt "seedlots.model.the_source_name_source_name_is_not_linked_to_the"
 msgid "The source name: %{source_name} is not linked to the same accession as the access content: %{accession_name}"
 msgstr "El origen %{source_name} no está vinculado a la misma accesión que el material contenido %{accession_name}"
 
 # Model draft; human/native editorial review pending.
-#: lib/CXGN/Stock/Seedlot.pm:1729
+#: lib/CXGN/Stock/Seedlot.pm:1757
 msgctxt "seedlots.model.this_seedlot_name_has_been_used_in_transactions_.32105b6"
 msgid "This seedlot %{name} has been used in transactions, so the contents (accessions) cannot be changed now!"
 msgstr "¡Este lote de semillas %{name} se ha utilizado en operaciones, por lo que ahora no se puede cambiar su contenido (accesiones)!"
 
 # Model draft; human/native editorial review pending.
-#: lib/CXGN/Stock/Seedlot.pm:1747
+#: lib/CXGN/Stock/Seedlot.pm:1775
 msgctxt "seedlots.model.this_seedlot_name_has_been_used_in_transactions_.863bd1b"
 msgid "This seedlot %{name} has been used in transactions, so the contents (crosses) cannot be changed now!"
 msgstr "¡Este lote de semillas %{name} se ha utilizado en operaciones, por lo que ahora no se puede cambiar su contenido (cruzamientos)!"
 
 # Model draft; human/native editorial review pending.
-#: lib/CXGN/Stock/Seedlot.pm:1134
+#: lib/CXGN/Stock/Seedlot.pm:1162
 msgctxt "seedlots.model.you_assigned_more_than_one_content_to_this_new_s"
 msgid "You assigned more than one content to this new seedlot name: %{new_seedlot_name} "
 msgstr "Ha asignado más de un material a este nuevo lote de semillas: %{new_seedlot_name} "
 
 # Model draft; human/native editorial review pending.
-#: lib/CXGN/Stock/Seedlot.pm:614
+#: lib/CXGN/Stock/Seedlot.pm:642
 msgctxt "seedlots.model.your_accession_list_is_empty"
 msgid "Your accession list is empty!"
 msgstr "¡Su lista de accesiones está vacía!"
 
 # Model draft; human/native editorial review pending.
-#: lib/CXGN/Stock/Seedlot.pm:1045 lib/CXGN/Stock/Seedlot.pm:1174
-#: lib/CXGN/Stock/Seedlot.pm:696 lib/CXGN/Stock/Seedlot.pm:755
-#: lib/CXGN/Stock/Seedlot.pm:837 lib/CXGN/Stock/Seedlot.pm:922
+#: lib/CXGN/Stock/Seedlot.pm:1073 lib/CXGN/Stock/Seedlot.pm:1202
+#: lib/CXGN/Stock/Seedlot.pm:724 lib/CXGN/Stock/Seedlot.pm:783
+#: lib/CXGN/Stock/Seedlot.pm:865 lib/CXGN/Stock/Seedlot.pm:950
 msgctxt "seedlots.model.your_pairs_list_is_empty"
 msgid "Your pairs list is empty!"
 msgstr "¡Su lista de pares está vacía!"
 
 # Model draft; human/native editorial review pending.
-#: lib/CXGN/Stock/Seedlot.pm:617
+#: lib/CXGN/Stock/Seedlot.pm:645
 msgctxt "seedlots.model.your_seedlot_list_is_empty"
 msgid "Your seedlot list is empty!"
 msgstr "¡Su lista de lotes de semillas está vacía!"
@@ -64984,35 +64984,35 @@ msgid "unspecified"
 msgstr "no especificado"
 
 # Model draft; human/native editorial review pending.
-#: lib/SGN/Controller/AJAX/Seedlot.pm:498
+#: lib/SGN/Controller/AJAX/Seedlot.pm:500
 msgctxt "seedlots.server.a_seedlot_must_have_a_breeding_program"
 msgid "A seedlot must have a breeding program."
 msgstr "El lote de semillas debe tener un programa de mejoramiento."
 
 # Model draft; human/native editorial review pending.
-#: lib/SGN/Controller/AJAX/Seedlot.pm:493
+#: lib/SGN/Controller/AJAX/Seedlot.pm:495
 msgctxt "seedlots.server.a_seedlot_must_have_a_timestamp_for_the_transact"
 msgid "A seedlot must have a timestamp for the transaction."
 msgstr "El lote de semillas debe tener una fecha y hora para la operación."
 
 # Model draft; human/native editorial review pending.
-#: lib/SGN/Controller/AJAX/Seedlot.pm:1218
-#: lib/SGN/Controller/AJAX/Seedlot.pm:241
-#: lib/SGN/Controller/AJAX/Seedlot.pm:478
+#: lib/SGN/Controller/AJAX/Seedlot.pm:1220
+#: lib/SGN/Controller/AJAX/Seedlot.pm:243
+#: lib/SGN/Controller/AJAX/Seedlot.pm:480
 msgctxt "seedlots.server.a_seedlot_must_have_either_an_accession_or_a_cro.45a7dc8"
 msgid "A seedlot must have either an accession or a cross as contents."
 msgstr "El contenido de un lote de semillas debe ser una accesión o un cruzamiento."
 
 # Model draft; human/native editorial review pending.
-#: lib/SGN/Controller/AJAX/Seedlot.pm:1214
-#: lib/SGN/Controller/AJAX/Seedlot.pm:237
-#: lib/SGN/Controller/AJAX/Seedlot.pm:474
+#: lib/SGN/Controller/AJAX/Seedlot.pm:1216
+#: lib/SGN/Controller/AJAX/Seedlot.pm:239
+#: lib/SGN/Controller/AJAX/Seedlot.pm:476
 msgctxt "seedlots.server.a_seedlot_must_have_either_an_accession_or_a_cro.ebc1b5b"
 msgid "A seedlot must have either an accession OR a cross as contents. Not both."
 msgstr "El contenido de un lote de semillas debe ser una accesión O un cruzamiento, no ambos."
 
 # Model draft; human/native editorial review pending.
-#: lib/SGN/Controller/AJAX/Seedlot.pm:109 lib/SGN/Controller/Seedlot.pm:79
+#: lib/SGN/Controller/AJAX/Seedlot.pm:111 lib/SGN/Controller/Seedlot.pm:79
 #: mason/breeders_toolbox/create_seedlots_from_trial_dialogs.mas:60
 #: mason/breeders_toolbox/genotyping_trials/plate_genotyping_data.mas:41
 #: mason/tracking_activities/generate_tracking_identifiers_dialog.mas:40
@@ -65021,13 +65021,13 @@ msgid "accession"
 msgstr "accesión"
 
 # Model draft; human/native editorial review pending.
-#: lib/SGN/Controller/AJAX/Seedlot.pm:1383
+#: lib/SGN/Controller/AJAX/Seedlot.pm:1385
 msgctxt "seedlots.server.an_error_occured_deleting_the_seedlot_transactio"
 msgid "An error occurred deleting the seedlot transaction"
 msgstr "Se produjo un error al eliminar la operación del lote de semillas"
 
 # Model draft; human/native editorial review pending.
-#: lib/SGN/Controller/AJAX/Seedlot.pm:455
+#: lib/SGN/Controller/AJAX/Seedlot.pm:457
 msgctxt "seedlots.server.could_not_check_seedlot_source_due_to_undefined_"
 msgid "Could not check seedlot source due to undefined source stock type"
 msgstr "No se pudo comprobar el origen del lote de semillas porque no se ha definido el tipo de material de origen"
@@ -65036,9 +65036,9 @@ msgstr "No se pudo comprobar el origen del lote de semillas porque no se ha defi
 #: lib/SGN/Controller/AJAX/Propagation.pm:319
 #: lib/SGN/Controller/AJAX/Propagation.pm:553
 #: lib/SGN/Controller/AJAX/Propagation.pm:967
-#: lib/SGN/Controller/AJAX/Seedlot.pm:2037
-#: lib/SGN/Controller/AJAX/Seedlot.pm:675
-#: lib/SGN/Controller/AJAX/Seedlot.pm:907
+#: lib/SGN/Controller/AJAX/Seedlot.pm:2039
+#: lib/SGN/Controller/AJAX/Seedlot.pm:677
+#: lib/SGN/Controller/AJAX/Seedlot.pm:909
 msgctxt "seedlots.server.could_not_get_parsing_errors"
 msgid "Could not get parsing errors"
 msgstr "No se pudieron obtener los errores de análisis del archivo"
@@ -65047,15 +65047,15 @@ msgstr "No se pudieron obtener los errores de análisis del archivo"
 #: lib/SGN/Controller/AJAX/Propagation.pm:303
 #: lib/SGN/Controller/AJAX/Propagation.pm:537
 #: lib/SGN/Controller/AJAX/Propagation.pm:951
-#: lib/SGN/Controller/AJAX/Seedlot.pm:2025
-#: lib/SGN/Controller/AJAX/Seedlot.pm:663
-#: lib/SGN/Controller/AJAX/Seedlot.pm:894
+#: lib/SGN/Controller/AJAX/Seedlot.pm:2027
+#: lib/SGN/Controller/AJAX/Seedlot.pm:665
+#: lib/SGN/Controller/AJAX/Seedlot.pm:896
 msgctxt "seedlots.server.could_not_save_file_upload_original_name_in_arch"
 msgid "Could not save file %{upload_original_name} in archive"
 msgstr "No se pudo guardar el archivo %{upload_original_name} en el archivo histórico"
 
 # Model draft; human/native editorial review pending.
-#: lib/SGN/Controller/AJAX/Seedlot.pm:112 lib/SGN/Controller/Seedlot.pm:85
+#: lib/SGN/Controller/AJAX/Seedlot.pm:114 lib/SGN/Controller/Seedlot.pm:85
 msgctxt "seedlots.server.cross"
 msgid "cross"
 msgstr "cruzamiento"
@@ -65073,37 +65073,37 @@ msgid "Discarded Date:%{value}"
 msgstr "Fecha de descarte: %{value}"
 
 # Model draft; human/native editorial review pending.
-#: lib/SGN/Controller/AJAX/Seedlot.pm:1880
+#: lib/SGN/Controller/AJAX/Seedlot.pm:1882
 msgctxt "seedlots.server.error_discarding_seedlot"
 msgid "Error discarding seedlot"
 msgstr "Error al descartar el lote de semillas"
 
 # Model draft; human/native editorial review pending.
-#: lib/SGN/Controller/AJAX/Seedlot.pm:2233
+#: lib/SGN/Controller/AJAX/Seedlot.pm:2235
 msgctxt "seedlots.server.only_a_submitter_or_a_curator_can_add_seedlot_tr.378acfa"
 msgid "Only a submitter or a curator can add seedlot transactions"
 msgstr "Solo un usuario con permisos de carga o un curador puede agregar operaciones de lotes de semillas"
 
 # Model draft; human/native editorial review pending.
-#: lib/SGN/Controller/AJAX/Seedlot.pm:1161
+#: lib/SGN/Controller/AJAX/Seedlot.pm:1163
 msgctxt "seedlots.server.only_a_submitter_or_a_curator_can_add_seedlot_tr.ec2ed2c"
 msgid "Only a submitter or a curator can add seedlot transaction"
 msgstr "Solo un usuario con permisos de carga o un curador puede agregar una operación de lote de semillas"
 
 # Model draft; human/native editorial review pending.
-#: lib/SGN/Controller/AJAX/Seedlot.pm:868
+#: lib/SGN/Controller/AJAX/Seedlot.pm:870
 msgctxt "seedlots.server.only_a_submitter_or_a_curator_can_upload_seedlot.8fa843b"
 msgid "Only a submitter or a curator can upload seedlot inventory"
 msgstr "Solo un usuario con permisos de carga o un curador puede cargar el inventario de semillas"
 
 # Model draft; human/native editorial review pending.
-#: lib/SGN/Controller/AJAX/Seedlot.pm:609
+#: lib/SGN/Controller/AJAX/Seedlot.pm:611
 msgctxt "seedlots.server.only_a_submitter_or_a_curator_can_upload_seedlot.9aa377b"
 msgid "Only a submitter or a curator can upload seedlots"
 msgstr "Solo un usuario con permisos de carga o un curador puede cargar lotes de semillas"
 
 # Model draft; human/native editorial review pending.
-#: lib/SGN/Controller/AJAX/Seedlot.pm:1963
+#: lib/SGN/Controller/AJAX/Seedlot.pm:1965
 msgctxt "seedlots.server.only_a_submitter_or_a_curator_can_upload_seedlot.e675113"
 msgid "Only a submitter or a curator can upload seedlot transactions"
 msgstr "Solo un usuario con permisos de carga o un curador puede cargar operaciones de lotes de semillas"
@@ -65115,215 +65115,215 @@ msgid "Reason:%{value}"
 msgstr "Motivo: %{value}"
 
 # Model draft; human/native editorial review pending.
-#: lib/SGN/Controller/AJAX/Seedlot.pm:1081
+#: lib/SGN/Controller/AJAX/Seedlot.pm:1083
 msgctxt "seedlots.server.something_went_wrong_with_the_transaction_update"
 msgid "Something went wrong with the transaction update"
 msgstr "Se produjo un problema al actualizar la operación"
 
 # Model draft; human/native editorial review pending.
-#: lib/SGN/Controller/AJAX/Seedlot.pm:382
+#: lib/SGN/Controller/AJAX/Seedlot.pm:384
 msgctxt "seedlots.server.the_accession_name_you_provided_does_not_match_t"
 msgid "The accession name you provided does not match to a unique accession. Please make sure you are using the correct name or contact us."
 msgstr "El nombre de accesión proporcionado no identifica una accesión única. Compruebe que utiliza el nombre correcto o póngase en contacto con nosotros."
 
 # Model draft; human/native editorial review pending.
-#: lib/SGN/Controller/AJAX/Seedlot.pm:203
+#: lib/SGN/Controller/AJAX/Seedlot.pm:205
 msgctxt "seedlots.server.the_breeding_program_breeding_program_name_does_"
 msgid "The breeding program %{breeding_program_name} does not exist in the database. Please add it first or choose another."
 msgstr "El programa de mejoramiento %{breeding_program_name} no existe en la base de datos. Agréguelo primero o elija otro."
 
 # Model draft; human/native editorial review pending.
-#: lib/SGN/Controller/AJAX/Seedlot.pm:392
+#: lib/SGN/Controller/AJAX/Seedlot.pm:394
 msgctxt "seedlots.server.the_cross_name_you_provided_does_not_match_an_ex"
 msgid "The cross name you provided does not match an existing cross name in the database.  Please make sure you are using the correct name or contact us."
 msgstr "El nombre de cruzamiento proporcionado no coincide con uno existente en la base de datos. Compruebe que utiliza el nombre correcto o póngase en contacto con nosotros."
 
 # Model draft; human/native editorial review pending.
-#: lib/SGN/Controller/AJAX/Seedlot.pm:1843
+#: lib/SGN/Controller/AJAX/Seedlot.pm:1845
 msgctxt "seedlots.server.the_following_seedlots_are_not_in_the_database_o"
 msgid "The following seedlots are not in the database or are marked as discarded : %{names}"
 msgstr "Los siguientes lotes de semillas no figuran en la base de datos o están marcados como descartados: %{names}"
 
 # Model draft; human/native editorial review pending.
-#: lib/SGN/Controller/AJAX/Seedlot.pm:1206
-#: lib/SGN/Controller/AJAX/Seedlot.pm:229
-#: lib/SGN/Controller/AJAX/Seedlot.pm:466
+#: lib/SGN/Controller/AJAX/Seedlot.pm:1208
+#: lib/SGN/Controller/AJAX/Seedlot.pm:231
+#: lib/SGN/Controller/AJAX/Seedlot.pm:468
 msgctxt "seedlots.server.the_given_accession_name_is_not_in_the_database_"
 msgid "The given accession name is not in the database! Seedlots can only be added onto existing accessions."
 msgstr "¡La accesión indicada no figura en la base de datos! Solo se pueden agregar lotes de semillas a accesiones existentes."
 
 # Model draft; human/native editorial review pending.
-#: lib/SGN/Controller/AJAX/Seedlot.pm:1210
-#: lib/SGN/Controller/AJAX/Seedlot.pm:233
-#: lib/SGN/Controller/AJAX/Seedlot.pm:470
+#: lib/SGN/Controller/AJAX/Seedlot.pm:1212
+#: lib/SGN/Controller/AJAX/Seedlot.pm:235
+#: lib/SGN/Controller/AJAX/Seedlot.pm:472
 msgctxt "seedlots.server.the_given_cross_name_is_not_in_the_database_seed"
 msgid "The given cross name is not in the database! Seedlots can only be added onto existing crosses."
 msgstr "¡El cruzamiento indicado no figura en la base de datos! Solo se pueden agregar lotes de semillas a cruzamientos existentes."
 
 # Model draft; human/native editorial review pending.
-#: lib/SGN/Controller/AJAX/Seedlot.pm:402
+#: lib/SGN/Controller/AJAX/Seedlot.pm:404
 msgctxt "seedlots.server.the_given_seedlot_source_name_does_not_match_an_"
 msgid "The given seedlot source name does not match an existing entry in the database. Seedlot sources must be an existing seedlot, plot, subplot, or plant name."
 msgstr "El nombre de origen del lote de semillas no coincide con un registro existente de la base de datos. El origen debe ser el nombre de un lote de semillas, parcela, subparcela o planta existente."
 
 # Model draft; human/native editorial review pending.
-#: lib/SGN/Controller/AJAX/Seedlot.pm:1194
-#: lib/SGN/Controller/AJAX/Seedlot.pm:216
-#: lib/SGN/Controller/AJAX/Seedlot.pm:373
+#: lib/SGN/Controller/AJAX/Seedlot.pm:1196
+#: lib/SGN/Controller/AJAX/Seedlot.pm:218
+#: lib/SGN/Controller/AJAX/Seedlot.pm:375
 msgctxt "seedlots.server.the_given_seedlot_uniquename_has_been_taken_plea"
 msgid "The given seedlot uniquename has been taken. Please use another name or use the existing seedlot."
 msgstr "El nombre único del lote de semillas ya está en uso. Utilice otro nombre o el lote existente."
 
 # Model draft; human/native editorial review pending.
-#: lib/SGN/Controller/AJAX/Seedlot.pm:415
+#: lib/SGN/Controller/AJAX/Seedlot.pm:417
 msgctxt "seedlots.server.the_source_seedlot_contents_accession_source_acc"
 msgid "The source seedlot contents accession (%{source_accession_name}) does not match the new seedlot contents accession (%{accession_uniquename})."
 msgstr "La accesión del lote de semillas de origen (%{source_accession_name}) no coincide con la del nuevo lote (%{accession_uniquename})."
 
 # Model draft; human/native editorial review pending.
-#: lib/SGN/Controller/AJAX/Seedlot.pm:419
+#: lib/SGN/Controller/AJAX/Seedlot.pm:421
 msgctxt "seedlots.server.the_source_seedlot_contents_cross_source_cross_n"
 msgid "The source seedlot contents cross (%{source_cross_name}) does not match the new seedlot contents cross (%{cross_uniquename})."
 msgstr "El cruzamiento del lote de semillas de origen (%{source_cross_name}) no coincide con el del nuevo lote (%{cross_uniquename})."
 
 # Model draft; human/native editorial review pending.
-#: lib/SGN/Controller/AJAX/Seedlot.pm:444
+#: lib/SGN/Controller/AJAX/Seedlot.pm:446
 msgctxt "seedlots.server.the_source_stock_accession_source_stock_name_doe"
 msgid "The source stock accession (%{source_stock_name}) does not match the seedlot contents accession (%{accession_uniquename})."
 msgstr "La accesión del material de origen (%{source_stock_name}) no coincide con la del lote de semillas (%{accession_uniquename})."
 
 # Model draft; human/native editorial review pending.
-#: lib/SGN/Controller/AJAX/Seedlot.pm:450
+#: lib/SGN/Controller/AJAX/Seedlot.pm:452
 msgctxt "seedlots.server.the_source_stock_cross_source_stock_name_does_no"
 msgid "The source stock cross (%{source_stock_name}) does not match the seedlot contents cross (%{cross_uniquename})."
 msgstr "El cruzamiento del material de origen (%{source_stock_name}) no coincide con el del lote de semillas (%{cross_uniquename})."
 
 # Model draft; human/native editorial review pending.
-#: lib/SGN/Controller/AJAX/Seedlot.pm:461
+#: lib/SGN/Controller/AJAX/Seedlot.pm:463
 msgctxt "seedlots.server.unsupported_seedlot_source_type"
 msgid "Unsupported seedlot source type"
 msgstr "Tipo de origen de lote de semillas no compatible"
 
 # Model draft; human/native editorial review pending.
-#: lib/SGN/Controller/AJAX/Seedlot.pm:1349
+#: lib/SGN/Controller/AJAX/Seedlot.pm:1351
 msgctxt "seedlots.server.you_do_not_have_the_correct_role_to_delete_seedl.7ecb101"
 msgid "You do not have the correct role to delete seedlot transactions. Please contact us."
 msgstr "No tiene el rol necesario para eliminar operaciones de lotes de semillas. Póngase en contacto con nosotros."
 
 # Model draft; human/native editorial review pending.
-#: lib/SGN/Controller/AJAX/Seedlot.pm:274
-#: lib/SGN/Controller/AJAX/Seedlot.pm:298
-#: lib/SGN/Controller/AJAX/Seedlot.pm:323
+#: lib/SGN/Controller/AJAX/Seedlot.pm:276
+#: lib/SGN/Controller/AJAX/Seedlot.pm:300
+#: lib/SGN/Controller/AJAX/Seedlot.pm:325
 msgctxt "seedlots.server.you_do_not_have_the_correct_role_to_delete_seedl.a757c42"
 msgid "You do not have the correct role to delete seedlots. Please contact us."
 msgstr "No tiene el rol necesario para eliminar lotes de semillas. Póngase en contacto con nosotros."
 
 # Model draft; human/native editorial review pending.
-#: lib/SGN/Controller/AJAX/Seedlot.pm:1828
+#: lib/SGN/Controller/AJAX/Seedlot.pm:1830
 msgctxt "seedlots.server.you_do_not_have_the_correct_role_to_discard_seed"
 msgid "You do not have the correct role to discard seedlot. Please contact us."
 msgstr "No tiene el rol necesario para descartar el lote de semillas. Póngase en contacto con nosotros."
 
 # Model draft; human/native editorial review pending.
-#: lib/SGN/Controller/AJAX/Seedlot.pm:183
+#: lib/SGN/Controller/AJAX/Seedlot.pm:185
 msgctxt "seedlots.server.you_do_not_have_the_correct_role_to_edit_seedlot.5b5ff4b"
 msgid "You do not have the correct role to edit seedlot detail. Please contact us."
 msgstr "No tiene el rol necesario para editar los datos del lote de semillas. Póngase en contacto con nosotros."
 
 # Model draft; human/native editorial review pending.
-#: lib/SGN/Controller/AJAX/Seedlot.pm:1036
+#: lib/SGN/Controller/AJAX/Seedlot.pm:1038
 msgctxt "seedlots.server.you_do_not_have_the_correct_role_to_edit_seedlot.9462c37"
 msgid "You do not have the correct role to edit seedlot transactions. Please contact us."
 msgstr "No tiene el rol necesario para editar operaciones de lotes de semillas. Póngase en contacto con nosotros."
 
 # Model draft; human/native editorial review pending.
-#: lib/SGN/Controller/AJAX/Seedlot.pm:1905
+#: lib/SGN/Controller/AJAX/Seedlot.pm:1907
 msgctxt "seedlots.server.you_do_not_have_the_correct_role_to_undo_discard"
 msgid "You do not have the correct role to undo discarding this seedlot. Please contact us."
 msgstr "No tiene el rol necesario para deshacer el descarte de este lote de semillas. Póngase en contacto con nosotros."
 
 # Model draft; human/native editorial review pending.
-#: lib/SGN/Controller/AJAX/Seedlot.pm:349
+#: lib/SGN/Controller/AJAX/Seedlot.pm:351
 msgctxt "seedlots.server.you_do_not_have_the_correct_submitter_or_curator"
 msgid "You do not have the correct submitter or curator role to add seedlots. Please contact us."
 msgstr "No tiene el rol necesario de usuario con permisos de carga o curador para agregar lotes de semillas. Póngase en contacto con nosotros."
 
 # Model draft; human/native editorial review pending.
-#: lib/SGN/Controller/AJAX/Seedlot.pm:270
-#: lib/SGN/Controller/AJAX/Seedlot.pm:294
-#: lib/SGN/Controller/AJAX/Seedlot.pm:319
+#: lib/SGN/Controller/AJAX/Seedlot.pm:272
+#: lib/SGN/Controller/AJAX/Seedlot.pm:296
+#: lib/SGN/Controller/AJAX/Seedlot.pm:321
 msgctxt "seedlots.server.you_must_be_logged_in_the_delete_seedlots"
 msgid "You must be logged in the delete seedlots"
 msgstr "Debe iniciar sesión para eliminar lotes de semillas"
 
 # Model draft; human/native editorial review pending.
-#: lib/SGN/Controller/AJAX/Seedlot.pm:1156
-#: lib/SGN/Controller/AJAX/Seedlot.pm:1586
-#: lib/SGN/Controller/AJAX/Seedlot.pm:345
+#: lib/SGN/Controller/AJAX/Seedlot.pm:1158
+#: lib/SGN/Controller/AJAX/Seedlot.pm:1588
+#: lib/SGN/Controller/AJAX/Seedlot.pm:347
 msgctxt "seedlots.server.you_must_be_logged_in_to_add_a_seedlot_transacti"
 msgid "You must be logged in to add a seedlot transaction!"
 msgstr "¡Debe iniciar sesión para agregar una operación de lote de semillas!"
 
 # Model draft; human/native editorial review pending.
-#: lib/SGN/Controller/AJAX/Seedlot.pm:2228
+#: lib/SGN/Controller/AJAX/Seedlot.pm:2230
 msgctxt "seedlots.server.you_must_be_logged_in_to_add_seedlot_transaction"
 msgid "You must be logged in to add seedlot transactions!"
 msgstr "¡Debe iniciar sesión para agregar operaciones de lotes de semillas!"
 
 # Model draft; human/native editorial review pending.
-#: lib/SGN/Controller/AJAX/Seedlot.pm:1345
+#: lib/SGN/Controller/AJAX/Seedlot.pm:1347
 msgctxt "seedlots.server.you_must_be_logged_in_to_delete_seedlot_transact"
 msgid "You must be logged in to delete seedlot transactions"
 msgstr "Debe iniciar sesión para eliminar operaciones de lotes de semillas"
 
 # Model draft; human/native editorial review pending.
-#: lib/SGN/Controller/AJAX/Seedlot.pm:1824
+#: lib/SGN/Controller/AJAX/Seedlot.pm:1826
 msgctxt "seedlots.server.you_must_be_logged_in_to_discard_seedlot"
 msgid "You must be logged in to discard seedlot"
 msgstr "Debe iniciar sesión para descartar el lote de semillas"
 
 # Model draft; human/native editorial review pending.
-#: lib/SGN/Controller/AJAX/Seedlot.pm:179
+#: lib/SGN/Controller/AJAX/Seedlot.pm:181
 msgctxt "seedlots.server.you_must_be_logged_in_to_edit_seedlot_details"
 msgid "You must be logged in to edit seedlot details"
 msgstr "Debe iniciar sesión para editar los datos del lote de semillas"
 
 # Model draft; human/native editorial review pending.
-#: lib/SGN/Controller/AJAX/Seedlot.pm:1032
+#: lib/SGN/Controller/AJAX/Seedlot.pm:1034
 msgctxt "seedlots.server.you_must_be_logged_in_to_edit_seedlot_transactio"
 msgid "You must be logged in to edit seedlot transactions"
 msgstr "Debe iniciar sesión para editar operaciones de lotes de semillas"
 
 # Model draft; human/native editorial review pending.
-#: lib/SGN/Controller/AJAX/Seedlot.pm:1901
+#: lib/SGN/Controller/AJAX/Seedlot.pm:1903
 msgctxt "seedlots.server.you_must_be_logged_in_to_undo_discading_this_see"
 msgid "You must be logged in to undo discading this seedlot"
 msgstr "Debe iniciar sesión para deshacer el descarte de este lote de semillas"
 
 # Model draft; human/native editorial review pending.
-#: lib/SGN/Controller/AJAX/Seedlot.pm:850
-#: lib/SGN/Controller/AJAX/Seedlot.pm:859
+#: lib/SGN/Controller/AJAX/Seedlot.pm:852
+#: lib/SGN/Controller/AJAX/Seedlot.pm:861
 msgctxt "seedlots.server.you_must_be_logged_in_to_upload_seedlot_inventor"
 msgid "You must be logged in to upload seedlot inventory!"
 msgstr "¡Debe iniciar sesión para cargar el inventario de semillas!"
 
 # Model draft; human/native editorial review pending.
-#: lib/SGN/Controller/AJAX/Seedlot.pm:1945
-#: lib/SGN/Controller/AJAX/Seedlot.pm:1954
-#: lib/SGN/Controller/AJAX/Seedlot.pm:591
-#: lib/SGN/Controller/AJAX/Seedlot.pm:600
+#: lib/SGN/Controller/AJAX/Seedlot.pm:1947
+#: lib/SGN/Controller/AJAX/Seedlot.pm:1956
+#: lib/SGN/Controller/AJAX/Seedlot.pm:593
+#: lib/SGN/Controller/AJAX/Seedlot.pm:602
 msgctxt "seedlots.server.you_must_be_logged_in_to_upload_seedlots"
 msgid "You must be logged in to upload seedlots!"
 msgstr "¡Debe iniciar sesión para cargar lotes de semillas!"
 
 # Model draft; human/native editorial review pending.
-#: lib/SGN/Controller/AJAX/Seedlot.pm:630
+#: lib/SGN/Controller/AJAX/Seedlot.pm:632
 msgctxt "seedlots.server.you_must_upload_a_seedlot_file"
 msgid "You must upload a seedlot file!"
 msgstr "¡Debe cargar un archivo de lotes de semillas!"
 
 # Model draft; human/native editorial review pending.
-#: lib/SGN/Controller/AJAX/Seedlot.pm:1980
+#: lib/SGN/Controller/AJAX/Seedlot.pm:1982
 msgctxt "seedlots.server.you_must_upload_a_transaction_file"
 msgid "You must upload a transaction file!"
 msgstr "¡Debe cargar un archivo de operaciones!"
@@ -65559,7 +65559,7 @@ msgid "An error occurred creating seedlot transaction"
 msgstr "Se produjo un error al crear la operación del lote de semillas"
 
 # Model draft; human/native editorial review pending.
-#: mason/breeders_toolbox/seedlots.mas:404
+#: mason/breeders_toolbox/seedlots.mas:420
 msgctxt "seedlots.ui.an_error_occurred_deleting_seed_lot"
 msgid "An error occurred deleting seed lot"
 msgstr "Se produjo un error al eliminar el lote de semillas"
@@ -65633,7 +65633,7 @@ msgid "AND/OR"
 msgstr "Y/O"
 
 # Model draft; human/native editorial review pending.
-#: mason/breeders_toolbox/seedlots.mas:385
+#: mason/breeders_toolbox/seedlots.mas:401
 msgctxt "seedlots.ui.are_you_sure_you_want_to_delete_this_seedlot"
 msgid "Are you sure you want to delete this seedlot?"
 msgstr "¿Está seguro de que desea eliminar este lote de semillas?"
@@ -65657,7 +65657,7 @@ msgid "Available Seedlots"
 msgstr "Lotes de semillas disponibles"
 
 # Model draft; human/native editorial review pending.
-#: mason/breeders_toolbox/seedlots.mas:329
+#: mason/breeders_toolbox/seedlots.mas:344
 msgctxt "seedlots.ui.box"
 msgid "Box"
 msgstr "Caja"
@@ -65710,7 +65710,7 @@ msgstr "Programa de mejoramiento:"
 
 # Model draft; human/native editorial review pending.
 #: mason/breeders_toolbox/seedlot_details.mas:63
-#: mason/breeders_toolbox/seedlots.mas:321
+#: mason/breeders_toolbox/seedlots.mas:336
 #: mason/breeders_toolbox/seedlots_section.mas:96
 #: mason/tools/available_seedlots.mas:10
 msgctxt "seedlots.ui.breeding_program.a79d70a"
@@ -66027,7 +66027,7 @@ msgstr "Tipo de contenido"
 
 # Model draft; human/native editorial review pending.
 #: mason/breeders_toolbox/seedlot_details.mas:71
-#: mason/breeders_toolbox/seedlots.mas:322
+#: mason/breeders_toolbox/seedlots.mas:337
 #: mason/breeders_toolbox/seedlots_section.mas:97
 #: mason/tools/available_seedlots.mas:12
 msgctxt "seedlots.ui.contents.d1ce6ee"
@@ -66073,7 +66073,7 @@ msgid "Copy the seedlot names showing in table to a new or existing list"
 msgstr "Copiar los nombres de lotes de semillas que aparecen en la tabla a una lista nueva o existente"
 
 # Model draft; human/native editorial review pending.
-#: mason/breeders_toolbox/seedlots.mas:325
+#: mason/breeders_toolbox/seedlots.mas:340
 #: mason/breeders_toolbox/seedlots_section.mas:99
 #: mason/tools/available_seedlots.mas:14
 msgctxt "seedlots.ui.count"
@@ -66161,7 +66161,7 @@ msgid "Current Weight (g)"
 msgstr "Masa actual (g)"
 
 # Model draft; human/native editorial review pending.
-#: mason/breeders_toolbox/seedlots.mas:331
+#: mason/breeders_toolbox/seedlots.mas:346
 msgctxt "seedlots.ui.delete"
 msgid "Delete"
 msgstr "Eliminar"
@@ -66180,8 +66180,8 @@ msgid "Delete Seedlots"
 msgstr "Eliminar lotes de semillas"
 
 # Model draft; human/native editorial review pending.
-#: mason/breeders_toolbox/seedlots.mas:215
-#: mason/breeders_toolbox/seedlots.mas:220
+#: mason/breeders_toolbox/seedlots.mas:222
+#: mason/breeders_toolbox/seedlots.mas:227
 msgctxt "seedlots.ui.delete_seedlots_using_a_list"
 msgid "Delete seedlots using a list"
 msgstr "Eliminar lotes de semillas mediante una lista"
@@ -66308,7 +66308,7 @@ msgid "Enter information about the transactions"
 msgstr "Introduzca información sobre las operaciones"
 
 # Model draft; human/native editorial review pending.
-#: mason/breeders_toolbox/seedlots.mas:178
+#: mason/breeders_toolbox/seedlots.mas:185
 msgctxt "seedlots.ui.enter_search_terms_and_click_the_search_button_to_view_results"
 msgid "Enter search terms and click the \"Search\" button to view results."
 msgstr "Introduzca los criterios de búsqueda y pulse «Buscar» para ver los resultados."
@@ -66632,7 +66632,7 @@ msgid "[LOADING...]"
 msgstr "[CARGANDO...]"
 
 # Model draft; human/native editorial review pending.
-#: mason/breeders_toolbox/seedlots.mas:324
+#: mason/breeders_toolbox/seedlots.mas:339
 #: mason/stock/population_seedlots.mas:95
 msgctxt "seedlots.ui.location.5cf58de"
 msgid "Location"
@@ -66716,13 +66716,13 @@ msgstr "Asegúrese de que sus lotes de semillas estén en la base de datos. Use 
 
 # Model draft; human/native editorial review pending.
 #: mason/breeders_toolbox/discard_seedlots.mas:11
-#: mason/breeders_toolbox/seedlots.mas:206
+#: mason/breeders_toolbox/seedlots.mas:213
 msgctxt "seedlots.ui.mark_seedlots_as_discarded"
 msgid "Mark Seedlots as Discarded"
 msgstr "Marcar lotes de semillas como descartados"
 
 # Model draft; human/native editorial review pending.
-#: mason/breeders_toolbox/seedlots.mas:201
+#: mason/breeders_toolbox/seedlots.mas:208
 msgctxt "seedlots.ui.mark_seedlots_as_status_using_a_list"
 msgid "Mark seedlots as %{status} using a list"
 msgstr "Marcar lotes de semillas como %{status} mediante una lista"
@@ -66765,7 +66765,7 @@ msgstr "Tipo de material:"
 
 # Model draft; human/native editorial review pending.
 #: mason/breeders_toolbox/seedlot_details.mas:65
-#: mason/breeders_toolbox/seedlots.mas:323
+#: mason/breeders_toolbox/seedlots.mas:338
 #: mason/breeders_toolbox/seedlots_section.mas:103
 #: mason/list/list_details.mas:69
 msgctxt "seedlots.ui.material_type.b9881bc"
@@ -67108,7 +67108,7 @@ msgstr "Organización:"
 
 # Model draft; human/native editorial review pending.
 #: mason/breeders_toolbox/seedlot_details.mas:67
-#: mason/breeders_toolbox/seedlots.mas:328
+#: mason/breeders_toolbox/seedlots.mas:343
 msgctxt "seedlots.ui.organization.989e84c"
 msgid "Organization"
 msgstr "Organización"
@@ -67373,7 +67373,7 @@ msgstr "Calidad:"
 # Model draft; human/native editorial review pending.
 #: mason/breeders_toolbox/genotyping_trials/upload_genotyping_data_dialogs.mas:653
 #: mason/breeders_toolbox/genotyping_trials/upload_genotyping_data_dialogs.mas:993
-#: mason/breeders_toolbox/seedlots.mas:330
+#: mason/breeders_toolbox/seedlots.mas:345
 #: mason/breeders_toolbox/seedlots_section.mas:102
 #: mason/list/list_details.mas:74
 msgctxt "seedlots.ui.quality.e77b76f"
@@ -67461,7 +67461,7 @@ msgid "Save"
 msgstr "Guardar"
 
 # Model draft; human/native editorial review pending.
-#: mason/breeders_toolbox/seedlots.mas:172
+#: mason/breeders_toolbox/seedlots.mas:179
 msgctxt "seedlots.ui.search"
 msgid "Search"
 msgstr "Buscar"
@@ -67538,7 +67538,7 @@ msgstr "Nombre del lote de semillas:"
 #: mason/breeders_toolbox/cross/seedlots_from_crossingtrial.mas:116
 #: mason/breeders_toolbox/program/program_seedlots.mas:12
 #: mason/breeders_toolbox/seedlot_details.mas:64
-#: mason/breeders_toolbox/seedlots.mas:320
+#: mason/breeders_toolbox/seedlots.mas:335
 #: mason/breeders_toolbox/seedlots_section.mas:95
 #: mason/list/list_details.mas:60 mason/stock/population_seedlots.mas:85
 #: mason/tools/available_seedlots.mas:11
@@ -67814,7 +67814,7 @@ msgstr "Envíe nuevamente sus lotes de semillas. Ya debería haber corregido tod
 
 # Model draft; human/native editorial review pending.
 #: mason/breeders_toolbox/seedlot_details.mas:75
-#: mason/breeders_toolbox/seedlots.mas:327 mason/search/vectors.mas:175
+#: mason/breeders_toolbox/seedlots.mas:342 mason/search/vectors.mas:175
 #: mason/search/vectors.mas:235 mason/search/vectors.mas:257
 msgctxt "seedlots.ui.submitters"
 msgid "Submitters"
@@ -67912,7 +67912,7 @@ msgid "The seedlot has been created."
 msgstr "Se ha creado el lote de semillas."
 
 # Model draft; human/native editorial review pending.
-#: mason/breeders_toolbox/seedlots.mas:395
+#: mason/breeders_toolbox/seedlots.mas:411
 msgctxt "seedlots.ui.the_seedlot_has_been_deleted"
 msgid "The seedlot has been deleted."
 msgstr "Se ha eliminado el lote de semillas."
@@ -68394,7 +68394,7 @@ msgstr "Cargar lotes de semillas utilizados en el ensayo"
 # Model draft; human/native editorial review pending.
 #: mason/breeders_toolbox/seedlot_details.mas:101
 #: mason/breeders_toolbox/seedlot_details.mas:99
-#: mason/breeders_toolbox/seedlots.mas:206
+#: mason/breeders_toolbox/seedlots.mas:213
 msgctxt "seedlots.ui.usage_help"
 msgid "Usage Help"
 msgstr "Ayuda de uso"
@@ -68424,7 +68424,7 @@ msgid "using weight (g)"
 msgstr "por masa (g)"
 
 # Model draft; human/native editorial review pending.
-#: mason/breeders_toolbox/seedlots.mas:326
+#: mason/breeders_toolbox/seedlots.mas:341
 msgctxt "seedlots.ui.weight_g.3319361"
 msgid "Weight (g)"
 msgstr "Masa (g)"
@@ -68543,13 +68543,13 @@ msgid "You need to be logged in or you do not have sufficient privileges to mark
 msgstr "Debe iniciar sesión o no tiene permisos suficientes para marcar este lote de semillas como %{status}."
 
 # Model draft; human/native editorial review pending.
-#: mason/breeders_toolbox/seedlots.mas:211
+#: mason/breeders_toolbox/seedlots.mas:218
 msgctxt "seedlots.ui.you_need_to_be_logged_in_or_you_do_not_have_sufficient_privilege.5e7cc40"
 msgid "You need to be logged in or you do not have sufficient privileges to mark seedlots as %{status} using lists."
 msgstr "Debe iniciar sesión o no tiene permisos suficientes para marcar lotes de semillas como %{status} mediante listas."
 
 # Model draft; human/native editorial review pending.
-#: mason/breeders_toolbox/seedlots.mas:225
+#: mason/breeders_toolbox/seedlots.mas:232
 msgctxt "seedlots.ui.you_need_to_be_logged_in_or_you_do_not_have_sufficient_privilege.6e34ec8"
 msgid "You need to be logged in or you do not have sufficient privileges to delete seedlots."
 msgstr "Debe iniciar sesión o no tiene permisos suficientes para eliminar lotes de semillas."
