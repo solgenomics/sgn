@@ -31,7 +31,8 @@ node docs/r_markdown_docs/i18n/print_manual.cjs \
   /absolute/output/print/uk /absolute/output/uk/BreedbaseManual.pdf uk
 ```
 
-Repeat for `es` and `ar`. The browser needs the fonts used by `manual-locale.css`,
+Repeat for `es` and `ar`. Language builds include the four original static print figures, allowing export
+from a read-only HTML bundle. The browser needs the fonts used by `manual-locale.css`,
 including Arabic and mathematical glyph coverage. The exporter serves only local
 book resources, supplies the pinned Fuse dependency locally, blocks other external
 requests, uses the four original static PNG alternatives to animated examples,

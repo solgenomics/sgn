@@ -40,7 +40,12 @@ modified. Hosted checks from the earlier Draft do not certify this new candidate
 - Four current Bookdown HTML builds passed. English now also has language
   navigation; two existing English cross references were repaired. Scientific
   examples, code, formulas and numerical tokens passed the manual source tests.
-  PDF export was not rerun for this follow-up.
+  Three full-book print inputs and translated PDFs also passed: Ukrainian 249,
+  Spanish 247 and Arabic 228 pages. Export from read-only HTML bundles used all
+  four original static print figures with zero missing resources or browser
+  errors. All-page character-bound checks and visual samples of 18 rendered
+  pages found no clipping or replacement glyphs. The builder now stages the
+  print alternatives so export does not need to modify its HTML inputs.
 - PostgreSQL 12.7 fixture regressions `RemoveEmptyValues.t` and
   `RemoveParsedEmptyValues.t` passed 277 assertions after the upstream merge.
   The standard fixture bootstrap emitted an `AddCascadeDeletes` foreign-key

@@ -37,9 +37,16 @@ render_language <- function(locale, output_dir, single_page = FALSE) {
         }
     }
     setwd(stage)
-    bookdown::render_book("index.Rmd", "bookdown::gitbook", output_dir = output_dir,
+    rendered <- bookdown::render_book("index.Rmd", "bookdown::gitbook", output_dir = output_dir,
         output_options = list(split_by = if (single_page) "none" else "chapter", mathjax = NULL,
             pandoc_args = c("--lua-filter=conditional-content.lua", "--mathml")), clean = FALSE)
+    # Bookdown copies referenced GIFs only. Ship their static print alternatives
+    # too, so PDF export can read an immutable HTML bundle without modifying it.
+    print_figures <- file.path(source_dir, "assets", "gifs", paste0("gif", 1:4, ".png"))
+    print_dir <- file.path(output_dir, "assets", "gifs")
+    dir.create(print_dir, recursive = TRUE, showWarnings = FALSE)
+    if (!all(file.copy(print_figures, print_dir, overwrite = TRUE))) stop("Cannot stage static print figures")
+    rendered
 }
 
 if (!length(args)) {
