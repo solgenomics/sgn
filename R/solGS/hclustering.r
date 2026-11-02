@@ -21,7 +21,9 @@ library(ggplot2)
 library(ape)
 library(ggtree)
 library(treeio)
-library(R2D3) #install_github("jamesthomson/R2D3")
+
+#library(R2D3) #install_github("jamesthomson/R2D3")
+#When needed, replace with jsonlite::toJSON() to convert hclust object to json format for visualization in D3.js
 
 allArgs <- commandArgs()
 
@@ -239,8 +241,7 @@ write.tree(phy = newickFormat,
 file = newickFile
 )
 
-jsonHclust <- R2D3::jsonHC(hClust)
-write(jsonHclust$json, file = jsonFile)
+# 
 
 message("Done hierachical clustering.")
 ####
