@@ -1956,12 +1956,12 @@ msgctxt "accession.stock.additional_info.synonyms"
 msgid "Synonyms"
 msgstr ""
 
-#: lib/SGN/Controller/AJAX/Stock.pm:326
+#: lib/SGN/Controller/AJAX/Stock.pm:330
 msgctxt "accession.stock.allele_header"
 msgid "Allele symbol"
 msgstr ""
 
-#: lib/SGN/Controller/AJAX/Stock.pm:1787 lib/SGN/Controller/AJAX/Stock.pm:1801
+#: lib/SGN/Controller/AJAX/Stock.pm:1791 lib/SGN/Controller/AJAX/Stock.pm:1805
 msgctxt "accession.stock.analysis_suffix"
 msgid " (Analysis)"
 msgstr ""
@@ -2041,7 +2041,7 @@ msgctxt "accession.stock.files.upload"
 msgid "Upload Additional Files"
 msgstr ""
 
-#: lib/SGN/Controller/AJAX/Stock.pm:2316
+#: lib/SGN/Controller/AJAX/Stock.pm:2320
 msgctxt "accession.stock.genotype_download"
 msgid "Download"
 msgstr ""
@@ -2066,7 +2066,7 @@ msgctxt "accession.stock.jbrowse.tracks"
 msgid "View the tracks for this accession in JBrowse"
 msgstr ""
 
-#: lib/SGN/Controller/AJAX/Stock.pm:326
+#: lib/SGN/Controller/AJAX/Stock.pm:330
 msgctxt "accession.stock.locus_header"
 msgid "Locus name"
 msgstr ""
@@ -2076,232 +2076,232 @@ msgctxt "accession.stock.message_1"
 msgid "Log in required for adding stock properties."
 msgstr ""
 
-#: lib/SGN/Controller/AJAX/Stock.pm:218
+#: lib/SGN/Controller/AJAX/Stock.pm:222
 msgctxt "accession.stock.message_10"
 msgid "An error occurred during deletion: %{details}"
 msgstr ""
 
-#: lib/SGN/Controller/AJAX/Stock.pm:221
+#: lib/SGN/Controller/AJAX/Stock.pm:225
 msgctxt "accession.stock.message_11"
 msgid "The element was removed from the database."
 msgstr ""
 
-#: lib/SGN/Controller/AJAX/Stock.pm:231
+#: lib/SGN/Controller/AJAX/Stock.pm:235
 msgctxt "accession.stock.message_12"
 msgid "Nothing here, it's a POST.."
 msgstr ""
 
-#: lib/SGN/Controller/AJAX/Stock.pm:242
+#: lib/SGN/Controller/AJAX/Stock.pm:246
 msgctxt "accession.stock.message_13"
 msgid "need loci param"
 msgstr ""
 
-#: lib/SGN/Controller/AJAX/Stock.pm:263
+#: lib/SGN/Controller/AJAX/Stock.pm:267
 msgctxt "accession.stock.message_14"
 msgid "no allele found for locus '%{locus_data}' (allele: '%{allele_symbol}')"
 msgstr ""
 
-#: lib/SGN/Controller/AJAX/Stock.pm:269
+#: lib/SGN/Controller/AJAX/Stock.pm:273
 msgctxt "accession.stock.message_15"
 msgid "Must be logged in for associating loci! "
 msgstr ""
 
-#: lib/SGN/Controller/AJAX/Stock.pm:289
+#: lib/SGN/Controller/AJAX/Stock.pm:293
 msgctxt "accession.stock.message_16"
 msgid "need both valid stock_id and allele_id for adding the stockprop! "
 msgstr ""
 
-#: lib/SGN/Controller/AJAX/Stock.pm:292
+#: lib/SGN/Controller/AJAX/Stock.pm:296
 msgctxt "accession.stock.message_17"
 msgid "No privileges for adding new loci. You must have an sgn submitter account. Please contact sgn-feedback@solgenomics.net for upgrading your user account. "
 msgstr ""
 
-#: lib/SGN/Controller/AJAX/Stock.pm:1543 lib/SGN/Controller/AJAX/Stock.pm:501
+#: lib/SGN/Controller/AJAX/Stock.pm:1547 lib/SGN/Controller/AJAX/Stock.pm:505
 msgctxt "accession.stock.message_18"
 msgid "Nothing here, it's a GET.."
 msgstr ""
 
-#: lib/SGN/Controller/AJAX/Stock.pm:539
+#: lib/SGN/Controller/AJAX/Stock.pm:543
 msgctxt "accession.stock.message_19"
 msgid "no ontology term found for term %{db_name} : %{accession}"
 msgstr ""
 
-#: lib/SGN/Controller/AJAX/Stock.pm:97
+#: lib/SGN/Controller/AJAX/Stock.pm:98
 msgctxt "accession.stock.message_2"
 msgid "ERROR: "
 msgstr ""
 
-#: lib/SGN/Controller/AJAX/Stock.pm:546
+#: lib/SGN/Controller/AJAX/Stock.pm:550
 msgctxt "accession.stock.message_20"
 msgid "Must be logged in for associating ontology terms! "
 msgstr ""
 
-#: lib/SGN/Controller/AJAX/Stock.pm:583
+#: lib/SGN/Controller/AJAX/Stock.pm:587
 msgctxt "accession.stock.message_21"
 msgid "Annotation exists with these evidence codes! "
 msgstr ""
 
-#: lib/SGN/Controller/AJAX/Stock.pm:635
+#: lib/SGN/Controller/AJAX/Stock.pm:639
 msgctxt "accession.stock.message_22"
 msgid "need both valid stock_id and cvterm_id for adding an ontology term to this stock! "
 msgstr ""
 
-#: lib/SGN/Controller/AJAX/Stock.pm:638
+#: lib/SGN/Controller/AJAX/Stock.pm:642
 msgctxt "accession.stock.message_23"
 msgid "No privileges for adding new ontology terms. You must have an sgn submitter account. Please contact sgn-feedback@solgenomics.net for upgrading your user account. "
 msgstr ""
 
-#: lib/SGN/Controller/AJAX/Stock.pm:705
+#: lib/SGN/Controller/AJAX/Stock.pm:709
 msgctxt "accession.stock.message_24"
 msgid "No stock_cvtermp found for id %{stock_cvterm_id} ! "
 msgstr ""
 
-#: lib/SGN/Controller/AJAX/Stock.pm:706
+#: lib/SGN/Controller/AJAX/Stock.pm:710
 msgctxt "accession.stock.message_25"
 msgid "stock_cvterm $stock_cvterm_id does not exists! "
 msgstr ""
 
-#: lib/SGN/Controller/AJAX/Stock.pm:1439
+#: lib/SGN/Controller/AJAX/Stock.pm:1443
 msgctxt "accession.stock.message_26"
 msgid "No stock and parent specified"
 msgstr ""
 
-#: lib/SGN/Controller/AJAX/Stock.pm:1444
+#: lib/SGN/Controller/AJAX/Stock.pm:1448
 msgctxt "accession.stock.message_27"
 msgid "Log in is required, or insufficient privileges, for removing parents"
 msgstr ""
 
-#: lib/SGN/Controller/AJAX/Stock.pm:1480
+#: lib/SGN/Controller/AJAX/Stock.pm:1484
 msgctxt "accession.stock.message_28"
 msgid "You need to be logged in to add pedigree information."
 msgstr ""
 
-#: lib/SGN/Controller/AJAX/Stock.pm:1486
+#: lib/SGN/Controller/AJAX/Stock.pm:1490
 msgctxt "accession.stock.message_29"
 msgid "you have insufficient privileges to add pedigree information."
 msgstr ""
 
-#: lib/SGN/Controller/AJAX/Stock.pm:101
+#: lib/SGN/Controller/AJAX/Stock.pm:102
 msgctxt "accession.stock.message_3"
 msgid "Synonym not added: The synonym you are adding is already stored as its own unique stock or as a synonym."
 msgstr ""
 
-#: lib/SGN/Controller/AJAX/Stock.pm:1593
+#: lib/SGN/Controller/AJAX/Stock.pm:1597
 msgctxt "accession.stock.message_30"
 msgid "stock_id %{stock_id} and project_id %{project_id} associated with cvterm %{observable_id} , phenotype value %{value} (phenotype_id = "
 msgstr ""
 
-#: lib/SGN/Controller/AJAX/Stock.pm:2048 lib/SGN/Controller/Cross.pm:419
+#: lib/SGN/Controller/AJAX/Stock.pm:2052 lib/SGN/Controller/Cross.pm:419
 msgctxt "accession.stock.message_31"
 msgid "An error occurred: %{details}"
 msgstr ""
 
-#: lib/SGN/Controller/AJAX/Stock.pm:2345
+#: lib/SGN/Controller/AJAX/Stock.pm:2349
 msgctxt "accession.stock.message_32"
 msgid "Log in required for making stock obsolete."
 msgstr ""
 
-#: lib/SGN/Controller/AJAX/Stock.pm:2349
+#: lib/SGN/Controller/AJAX/Stock.pm:2353
 msgctxt "accession.stock.message_33"
 msgid "Cannot obsolete stock! You do not have a curator, sequencer or submitter account"
 msgstr ""
 
-#: lib/SGN/Controller/AJAX/Stock.pm:2377
+#: lib/SGN/Controller/AJAX/Stock.pm:2381
 msgctxt "accession.stock.message_34"
 msgid "Not a valid stock %{stock_id} "
 msgstr ""
 
-#: lib/SGN/Controller/AJAX/Stock.pm:2466
+#: lib/SGN/Controller/AJAX/Stock.pm:2470
 msgctxt "accession.stock.message_35"
 msgid "You must be logged in to upload additional trials to a file!"
 msgstr ""
 
-#: lib/SGN/Controller/AJAX/Stock.pm:2475
+#: lib/SGN/Controller/AJAX/Stock.pm:2479
 msgctxt "accession.stock.message_36"
 msgid "You must be logged in to upload additional files to a trial!"
 msgstr ""
 
-#: lib/SGN/Controller/AJAX/Stock.pm:2503 lib/SGN/Controller/AJAX/Stock.pm:2935
+#: lib/SGN/Controller/AJAX/Stock.pm:2507 lib/SGN/Controller/AJAX/Stock.pm:2939
 msgctxt "accession.stock.message_37"
 msgid "Could not save file %{upload_original_name} in archive"
 msgstr ""
 
-#: lib/SGN/Controller/AJAX/Stock.pm:2524
+#: lib/SGN/Controller/AJAX/Stock.pm:2528
 msgctxt "accession.stock.message_38"
 msgid "You must be logged in to see uploaded additional files!"
 msgstr ""
 
-#: lib/SGN/Controller/AJAX/Stock.pm:2545
+#: lib/SGN/Controller/AJAX/Stock.pm:2549
 msgctxt "accession.stock.message_39"
 msgid "You must be logged in to obsolete additional files!"
 msgstr ""
 
-#: lib/SGN/Controller/AJAX/Stock.pm:135
+#: lib/SGN/Controller/AJAX/Stock.pm:136
 msgctxt "accession.stock.message_4"
 msgid "%{message} Stock_id %{stock_id} and type_id %{prop_type} have been associated with value %{prop}. "
 msgstr ""
 
-#: lib/SGN/Controller/AJAX/Stock.pm:2800
+#: lib/SGN/Controller/AJAX/Stock.pm:2804
 msgctxt "accession.stock.message_40"
 msgid "Log in required for adding derived accessions."
 msgstr ""
 
-#: lib/SGN/Controller/AJAX/Stock.pm:2804
+#: lib/SGN/Controller/AJAX/Stock.pm:2808
 msgctxt "accession.stock.message_41"
 msgid "Cannot add new accessions! You do not have a curator account"
 msgstr ""
 
-#: lib/SGN/Controller/AJAX/Stock.pm:2852 lib/SGN/Controller/AJAX/Stock.pm:2986
+#: lib/SGN/Controller/AJAX/Stock.pm:2856 lib/SGN/Controller/AJAX/Stock.pm:2990
 msgctxt "accession.stock.message_42"
 msgid "An error occurred while adding new accessions: %{details}"
 msgstr ""
 
-#: lib/SGN/Controller/AJAX/Stock.pm:2899 lib/SGN/Controller/AJAX/Stock.pm:2908
+#: lib/SGN/Controller/AJAX/Stock.pm:2903 lib/SGN/Controller/AJAX/Stock.pm:2912
 msgctxt "accession.stock.message_43"
 msgid "You must be logged in to upload derived accessions!"
 msgstr ""
 
-#: lib/SGN/Controller/AJAX/Stock.pm:2917
+#: lib/SGN/Controller/AJAX/Stock.pm:2921
 msgctxt "accession.stock.message_44"
 msgid "Only a submitter or a curator can upload derived accessions"
 msgstr ""
 
-#: lib/SGN/Controller/AJAX/Stock.pm:3027
+#: lib/SGN/Controller/AJAX/Stock.pm:3031
 msgctxt "accession.stock.message_45"
 msgid "You must be logged in to obsolete stocks"
 msgstr ""
 
-#: lib/SGN/Controller/AJAX/Stock.pm:3078
+#: lib/SGN/Controller/AJAX/Stock.pm:3082
 msgctxt "accession.stock.message_47"
 msgid "Not a valid stock: %{stock_name}"
 msgstr ""
 
-#: lib/SGN/Controller/AJAX/Stock.pm:111
+#: lib/SGN/Controller/AJAX/Stock.pm:112
 msgctxt "accession.stock.message_48"
 msgid "CAUTION: The synonym you are adding is similar to these accessions and synonyms in the database: "
 msgstr ""
 
-#: lib/SGN/Controller/AJAX/Stock.pm:139 lib/SGN/Controller/AJAX/Stock.pm:1595 lib/SGN/Controller/AJAX/Stock.pm:2374 lib/SGN/Controller/AJAX/Stock.pm:285 lib/SGN/Controller/AJAX/Stock.pm:3075 lib/SGN/Controller/AJAX/Stock.pm:613
+#: lib/SGN/Controller/AJAX/Stock.pm:141 lib/SGN/Controller/AJAX/Stock.pm:1599 lib/SGN/Controller/AJAX/Stock.pm:2378 lib/SGN/Controller/AJAX/Stock.pm:289 lib/SGN/Controller/AJAX/Stock.pm:3079 lib/SGN/Controller/AJAX/Stock.pm:617
 msgctxt "accession.stock.message_5"
 msgid "Failed: %{details}"
 msgstr ""
 
-#: lib/SGN/Controller/AJAX/Stock.pm:143
+#: lib/SGN/Controller/AJAX/Stock.pm:146
 msgctxt "accession.stock.message_6"
 msgid "Cannot associate prop %{prop_type}: %{prop} with stock %{stock_id} "
 msgstr ""
 
-#: lib/SGN/Controller/AJAX/Stock.pm:146 lib/SGN/Controller/AJAX/Stock.pm:1597
+#: lib/SGN/Controller/AJAX/Stock.pm:150 lib/SGN/Controller/AJAX/Stock.pm:1601
 msgctxt "accession.stock.message_7"
 msgid "user does not have a curator/sequencer/submitter account"
 msgstr ""
 
-#: lib/SGN/Controller/AJAX/Stock.pm:205
+#: lib/SGN/Controller/AJAX/Stock.pm:209
 msgctxt "accession.stock.message_8"
 msgid "Log in required for deletion of stock properties."
 msgstr ""
 
-#: lib/SGN/Controller/AJAX/Stock.pm:211
+#: lib/SGN/Controller/AJAX/Stock.pm:215
 msgctxt "accession.stock.message_9"
 msgid "The specified prop does not exist"
 msgstr ""
@@ -2321,7 +2321,7 @@ msgctxt "accession.stock.name"
 msgid "Stock Name: "
 msgstr ""
 
-#: lib/SGN/Controller/AJAX/Stock.pm:1809
+#: lib/SGN/Controller/AJAX/Stock.pm:1813
 msgctxt "accession.stock.no_shared_trials"
 msgid "No shared trials found."
 msgstr ""
@@ -2346,12 +2346,12 @@ msgctxt "accession.stock.obsolete_failed"
 msgid "Error obsoleting stock."
 msgstr ""
 
-#: lib/SGN/Controller/AJAX/Stock.pm:339
+#: lib/SGN/Controller/AJAX/Stock.pm:343
 msgctxt "accession.stock.ontology_delete"
 msgid "delete"
 msgstr ""
 
-#: lib/SGN/Controller/AJAX/Stock.pm:341
+#: lib/SGN/Controller/AJAX/Stock.pm:345
 msgctxt "accession.stock.ontology_unobsolete"
 msgid "unobsolete"
 msgstr ""
@@ -2401,7 +2401,7 @@ msgctxt "accession.stock.phenotype.header.trait"
 msgid "Trait"
 msgstr ""
 
-#: lib/SGN/Controller/AJAX/Stock.pm:326
+#: lib/SGN/Controller/AJAX/Stock.pm:330
 msgctxt "accession.stock.phenotype_header"
 msgid "Phenotype"
 msgstr ""
@@ -2671,7 +2671,7 @@ msgctxt "accession.stock.section.upload_files_help"
 msgid "Upload any additional files for this Accession."
 msgstr ""
 
-#: lib/SGN/Controller/AJAX/Stock.pm:488
+#: lib/SGN/Controller/AJAX/Stock.pm:492
 msgctxt "accession.stock.show_obsolete"
 msgid "Show obsolete"
 msgstr ""
@@ -2691,7 +2691,7 @@ msgctxt "accession.stock.tooltip.login_add"
 msgid "Login to add info"
 msgstr ""
 
-#: lib/SGN/Controller/AJAX/Stock.pm:1680 mason/breeders_toolbox/genotyping_trials/format/as_table.mas:96
+#: lib/SGN/Controller/AJAX/Stock.pm:1684 mason/breeders_toolbox/genotyping_trials/format/as_table.mas:96
 msgctxt "accession.stock.trial_details"
 msgid "Details"
 msgstr ""
@@ -2731,7 +2731,7 @@ msgctxt "accession.stock.trials.title"
 msgid "Trials"
 msgstr ""
 
-#: lib/SGN/Controller/AJAX/Stock.pm:1807 lib/SGN/Controller/AJAX/Stock.pm:1809
+#: lib/SGN/Controller/AJAX/Stock.pm:1811 lib/SGN/Controller/AJAX/Stock.pm:1813
 msgctxt "accession.stock.trials_common"
 msgid "Trials in Common"
 msgstr ""
@@ -34270,7 +34270,7 @@ msgctxt "global.dataset_cxgn_dataset.network_error"
 msgid "An error occurred. Please try again."
 msgstr ""
 
-#: js/source/legacy/CXGN/Dataset.js:209 lib/SGN/Controller/AJAX/Search/Treatment.pm:121 mason/transcript/unigene/gene_family_info.mas:96
+#: js/source/legacy/CXGN/Dataset.js:209 lib/SGN/Controller/AJAX/Search/Treatment.pm:148 mason/transcript/unigene/gene_family_info.mas:96
 msgctxt "global.dataset_cxgn_dataset.none"
 msgid "None"
 msgstr ""
@@ -51519,7 +51519,7 @@ msgctxt "phenotype.unweighted_means"
 msgid "Unweighted Means"
 msgstr ""
 
-#: lib/CXGN/Phenotypes/ParseUpload/Plugin/PhenotypeSpreadsheetSimpleGeneric.pm:211
+#: lib/CXGN/Phenotypes/ParseUpload/Plugin/PhenotypeSpreadsheetSimpleGeneric.pm:210
 msgctxt "phenotype.upload.a_database_schema_is_required_to_parse_observationunitdbid_values"
 msgid "A database schema is required to parse observationUnitDbId values."
 msgstr ""
@@ -51584,12 +51584,12 @@ msgctxt "phenotype.upload.file_contents_incorrect_header_row_must_contain_studyy
 msgid "File contents incorrect. Header row must contain:  \"studyYear\",\"studyDbId\",\"studyName\",\"studyDesign\",\"locationDbId\",\"locationName\",\"germplasmDbId\",\"germplasmName\",\"germplasmSynonyms\",\"observationLevel\",\"observationUnitDbId\",\"observationUnitName\",\"replicate\",\"blockNumber\",\"plotNumber\" followed by all measured traits."
 msgstr ""
 
-#: lib/CXGN/Phenotypes/ParseUpload/Plugin/PhenotypeSpreadsheetSimpleGeneric.pm:201
+#: lib/CXGN/Phenotypes/ParseUpload/Plugin/PhenotypeSpreadsheetSimpleGeneric.pm:200
 msgctxt "phenotype.upload.file_must_have_a_plot_name_or_observationunitdbid_column"
 msgid "File must have a plot name or observationUnitDbId column."
 msgstr ""
 
-#: lib/CXGN/Phenotypes/ParseUpload/Plugin/PhenotypeSpreadsheetSimpleGeneric.pm:191
+#: lib/CXGN/Phenotypes/ParseUpload/Plugin/PhenotypeSpreadsheetSimpleGeneric.pm:190
 msgctxt "phenotype.upload.file_must_have_a_plot_name_or_observationunitdbid_column_errors_values"
 msgid "File must have a plot name or observationUnitDbId column. Errors: %{values}"
 msgstr ""
@@ -51709,7 +51709,7 @@ msgctxt "phenotype.upload.no_plot_name_or_plant_name_or_subplot_name_or_tissue_s
 msgid "No plot_name or plant_name or subplot_name or tissue_sample_name in header. Make sure you are using the correct spreadsheet format. It may help to recreate your spreadsheet from the website."
 msgstr ""
 
-#: lib/CXGN/Phenotypes/ParseUpload/Plugin/PhenotypeSpreadsheetSimpleGeneric.pm:225
+#: lib/CXGN/Phenotypes/ParseUpload/Plugin/PhenotypeSpreadsheetSimpleGeneric.pm:224
 msgctxt "phenotype.upload.no_valid_observationunitdbid_values_found_in_the_file"
 msgid "No valid observationUnitDbId values found in the file."
 msgstr ""
@@ -51774,7 +51774,7 @@ msgctxt "phenotype.upload.spreadsheet_is_missing_plot_name_and_atleast_one_trait
 msgid "Spreadsheet is missing plot_name and at least one trait in header."
 msgstr ""
 
-#: lib/CXGN/Phenotypes/ParseUpload/Plugin/PhenotypeSpreadsheetSimpleGeneric.pm:126 lib/CXGN/Phenotypes/ParseUpload/Plugin/PhenotypeSpreadsheetSimpleGeneric.pm:205
+#: lib/CXGN/Phenotypes/ParseUpload/Plugin/PhenotypeSpreadsheetSimpleGeneric.pm:125 lib/CXGN/Phenotypes/ParseUpload/Plugin/PhenotypeSpreadsheetSimpleGeneric.pm:204
 msgctxt "phenotype.upload.spreadsheet_must_have_at_least_one_trait_in_the_header"
 msgid "Spreadsheet must have at least one trait in the header."
 msgstr ""
@@ -51804,7 +51804,7 @@ msgctxt "phenotype.upload.the_following_observations_do_not_exist_in_the_databas
 msgid "The following observations do not exist in the database: %{values}"
 msgstr ""
 
-#: lib/CXGN/Phenotypes/ParseUpload/Plugin/PhenotypeSpreadsheetSimpleGeneric.pm:233
+#: lib/CXGN/Phenotypes/ParseUpload/Plugin/PhenotypeSpreadsheetSimpleGeneric.pm:232
 msgctxt "phenotype.upload.the_following_observationunitdbid_values_could_not_be_found_in_the_database"
 msgid "The following observationUnitDbId values could not be found in the database: %{values}"
 msgstr ""
@@ -51854,7 +51854,7 @@ msgctxt "phenotype.upload.timestamp_needs_to_be_of_form_yyyy_mm_dd_hh_mm_ss_0000
 msgid "Timestamp needs to be of form YYYY-MM-DD HH:MM:SS-0000 or YYYY-MM-DD HH:MM:SS+0000"
 msgstr ""
 
-#: lib/CXGN/Phenotypes/ParseUpload/Plugin/PhenotypeSpreadsheetSimpleGeneric.pm:140
+#: lib/CXGN/Phenotypes/ParseUpload/Plugin/PhenotypeSpreadsheetSimpleGeneric.pm:139
 msgctxt "phenotype.upload.timestamp_needs_to_be_of_form_yyyy_mm_dd_hh_mm_ss_0000_or_yyyy_mm_dd_hh_mm_.c94f12a"
 msgid "Timestamp needs to be of form YYYY-MM-DD HH:MM:SS-0000 or YYYY-MM-DD HH:MM:SS+0000 or YYYY-MM-DD HH:MM format"
 msgstr ""
@@ -51869,7 +51869,7 @@ msgctxt "phenotype.upload.transcript_name_is_required"
 msgid "Transcript name is required!"
 msgstr ""
 
-#: lib/CXGN/Phenotypes/ParseUpload/Plugin/AnalysisPhenotypeSpreadsheetCSV.pm:234 lib/CXGN/Phenotypes/ParseUpload/Plugin/PhenotypeSpreadsheetCSV.pm:212
+#: lib/CXGN/Phenotypes/ParseUpload/Plugin/AnalysisPhenotypeSpreadsheetCSV.pm:232 lib/CXGN/Phenotypes/ParseUpload/Plugin/PhenotypeSpreadsheetCSV.pm:210
 msgctxt "phenotype.upload.value_or_timestamp_missing"
 msgid "Value or timestamp missing."
 msgstr ""
@@ -52011,7 +52011,7 @@ msgstr ""
 
 #: js/source/legacy/CXGN/BreedersToolbox/UploadPhenotype.js:264
 msgctxt "phenotype_upload.client.remove_help"
-msgid "New values will be uploaded. Any previously stored values will be replaced by non-blank values.  Blank values in the upload file will remove any previously stored values."
+msgid "New values will be uploaded. Any previously stored values will be replaced by non-blank values.  Blank values, NA and '.' in the upload file will remove any previously stored values."
 msgstr ""
 
 #: js/source/legacy/CXGN/BreedersToolbox/UploadPhenotype.js:82
@@ -52089,7 +52089,7 @@ msgctxt "phenotype_upload.datacollector_error.timestamp_format"
 msgid "Timestamp needs to be of form %{negative} or %{positive}"
 msgstr ""
 
-#: lib/CXGN/Phenotypes/ParseUpload/Plugin/DataCollectorSpreadsheet.pm:278 lib/SGN/Controller/AJAX/PhenotypesUpload.pm:559
+#: lib/CXGN/Phenotypes/ParseUpload/Plugin/DataCollectorSpreadsheet.pm:276 lib/SGN/Controller/AJAX/PhenotypesUpload.pm:559
 msgctxt "phenotype_upload.datacollector_error.value_timestamp_missing"
 msgid "Value or timestamp missing."
 msgstr ""
@@ -64431,7 +64431,7 @@ msgctxt "transformation.helper.please_set_up_prefix_for_autogenerated_names_for_
 msgid "Please set up prefix for autogenerated names for this transformation project before using tracking tool"
 msgstr ""
 
-#: lib/SGN/Controller/AJAX/Search/Treatment.pm:156
+#: lib/SGN/Controller/AJAX/Search/Treatment.pm:183
 msgctxt "transformation.helper.plots"
 msgid "Plots:"
 msgstr ""
@@ -64606,7 +64606,7 @@ msgctxt "transformation.helper.treatment_format_must_be_numeric_categorical_date
 msgid "Treatment format must be numeric, categorical, date, percent, counter, boolean, text, or ontology.\n"
 msgstr ""
 
-#: lib/SGN/Controller/AJAX/Search/Treatment.pm:156
+#: lib/SGN/Controller/AJAX/Search/Treatment.pm:183
 msgctxt "transformation.helper.trials"
 msgid "Trials:"
 msgstr ""
@@ -73124,17 +73124,17 @@ msgctxt "trial.model.folder_name_used"
 msgid "The name %{name} cannot be used for a new folder because it already exists."
 msgstr ""
 
-#: lib/CXGN/Project.pm:5980
+#: lib/CXGN/Project.pm:5987
 msgctxt "trial.model.genotyping_linkage.curator_only"
 msgid "Only a curator can delete this linkage."
 msgstr ""
 
-#: lib/CXGN/Project.pm:6000
+#: lib/CXGN/Project.pm:6007
 msgctxt "trial.model.genotyping_linkage.deletion_error"
 msgid "An error occurred during deletion."
 msgstr ""
 
-#: lib/CXGN/Project.pm:6003
+#: lib/CXGN/Project.pm:6010
 msgctxt "trial.model.genotyping_linkage.relationship_count"
 msgid "Project relationship does not exists or has more than 1 occurrence."
 msgstr ""

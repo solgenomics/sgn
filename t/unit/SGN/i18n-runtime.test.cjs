@@ -112,3 +112,16 @@ test('short helpers follow bootstrap replacement and retain English without cata
  assert.equal(target.SGN.t('controls.save','Save'),'Save');
  assert.throws(()=>target.SGN.t('name','%{name}',{}),/named variable/);
 });
+
+
+test('standard shared script preserves native English when optional locale endpoints fail', () => {
+ const sandbox={jQuery(){},JSAN:{use(){}}}; vm.createContext(sandbox);
+ vm.runInContext(fs.readFileSync(path.resolve(__dirname,'../../../js/source/legacy/sgn.js'),'utf8'),sandbox);
+ assert.equal(sandbox.SGN.t('caption','Name: %{name}',{name:'<img> & %{other}'}),'Name: <img> & %{other}');
+ for(const count of [0,1,2,21]) assert.equal(sandbox.SGN.tn('count','%{count} trial','%{count} trials',count,{count}),`${count} ${count===1?'trial':'trials'}`);
+ assert.throws(()=>sandbox.SGN.t('caption','%{name}',{}),/named variable/);
+ assert.throws(()=>sandbox.SGN.tn('count','One','Many',-1),/count/);
+ sandbox.SGN.i18n=create('uk');
+ assert.equal(sandbox.SGN.t('controls.save','Save'),'Зберегти');
+ assert.equal(sandbox.SGN.tn('trials.count','%{count} trial found','%{count} trials found',22,{count:22}),'Знайдено 22 досліди');
+});

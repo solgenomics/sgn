@@ -13,6 +13,9 @@ bin/i18n/sgn-i18n review --release /release/release.json \
 The command preserves the original PO, its attribution, complete message
 contexts and required plural forms. `review.po` contains only that workflow;
 `REVIEW.md` records the application/source versions and a terminology worksheet.
+Exports default to 100 complete source messages; use `--offset 100 --limit 100`
+for the next batch. The worksheet records the selected range and workflow total.
+Keep each reviewed batch alongside its release and merge it into a copy of the master PO.
 Unknown workflows and existing output directories are rejected. Repeat for
 accessions, trials or another name listed by the release snapshot.
 

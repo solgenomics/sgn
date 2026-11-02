@@ -41,7 +41,7 @@ msgstr ""
 "X-SGN-Language-Name: Español\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 "X-SGN-Direction: ltr\n"
-"X-SGN-Source-Revision: 84c7b2cd81e0765c1344b7a6e01584bc52231cfd6ec62e2f16d9b17c0a12600d\n"
+"X-SGN-Source-Revision: 284ba4ad5e457a3aecff6c33173351e9ed04dd9afe3815d304f101123e7866db\n"
 
 #: mason/stock/audit.mas:93
 msgctxt "accession.audit.header.after"
@@ -1106,7 +1106,6 @@ msgid "Population has associated cross or pedigree: Cannot delete population mem
 msgstr "La población tiene un cruzamiento o pedigrí asociado: no se puede eliminar al miembro de la población.\n"
 
 #: lib/CXGN/Population.pm:153
-
 msgctxt "accession.population.not_member"
 msgid "This accession is not a population member. Cannot delete.\n"
 msgstr "Esta accesión no pertenece a la población. No se puede eliminar.\n"
@@ -1280,7 +1279,10 @@ msgid ""
 "The QTL data for this population is not public yet.\n"
 "                       If you would like to know more about this data,\n"
 "                       please contact the owner of the data: "
-msgstr "Los datos QTL de esta población aún no son públicos.\n                       Si desea saber más sobre estos datos,\n                       póngase en contacto con el propietario de los datos: "
+msgstr ""
+"Los datos QTL de esta población aún no son públicos.\n"
+"                       Si desea saber más sobre estos datos,\n"
+"                       póngase en contacto con el propietario de los datos: "
 
 #: cgi-bin/phenome/population.pl:343
 msgctxt "accession.population_cgi.qtl"
@@ -1400,7 +1402,9 @@ msgctxt "accession.receipt.greeting"
 msgid ""
 "Dear %{user_name},\n"
 "\n"
-msgstr "Estimado/a %{user_name},\n\n"
+msgstr ""
+"Estimado/a %{user_name},\n"
+"\n"
 
 #: lib/SGN/Controller/AJAX/Accessions.pm:532
 msgctxt "accession.receipt.more"
@@ -1417,21 +1421,27 @@ msgctxt "accession.receipt.retry"
 msgid ""
 "Please correct these errors and try uploading again.\n"
 "\n"
-msgstr "Corrija estos errores e intente cargarlos de nuevo.\n\n"
+msgstr ""
+"Corrija estos errores e intente cargarlos de nuevo.\n"
+"\n"
 
 #: lib/SGN/Controller/AJAX/Accessions.pm:513
 msgctxt "accession.receipt.success"
 msgid ""
 "Congratulations, all your accessions have been successfully uploaded to the database.\n"
 "\n"
-msgstr "Enhorabuena, todas sus accesiones se cargaron correctamente en la base de datos.\n\n"
+msgstr ""
+"Enhorabuena, todas sus accesiones se cargaron correctamente en la base de datos.\n"
+"\n"
 
 #: lib/SGN/Controller/AJAX/Accessions.pm:555
 msgctxt "accession.receipt.thanks_error"
 msgid ""
 "Thank you\n"
 "Have a nice day\n"
-msgstr "Gracias\nQue tenga un buen día\n"
+msgstr ""
+"Gracias\n"
+"Que tenga un buen día\n"
 
 #: lib/SGN/Controller/AJAX/Accessions.pm:535
 msgctxt "accession.receipt.thanks_success"
@@ -1439,7 +1449,10 @@ msgid ""
 "\n"
 "Thank you.\n"
 "Have a nice day\n"
-msgstr "\nGracias.\nQue tenga un buen día\n"
+msgstr ""
+"\n"
+"Gracias.\n"
+"Que tenga un buen día\n"
 
 #: mason/stock/related_stock.mas:55
 msgctxt "accession.related_stock.copy_seedlot_help"
@@ -2236,12 +2249,12 @@ msgctxt "accession.stock.additional_info.synonyms"
 msgid "Synonyms"
 msgstr "Sinónimos"
 
-#: lib/SGN/Controller/AJAX/Stock.pm:326
+#: lib/SGN/Controller/AJAX/Stock.pm:330
 msgctxt "accession.stock.allele_header"
 msgid "Allele symbol"
 msgstr "Símbolo del alelo"
 
-#: lib/SGN/Controller/AJAX/Stock.pm:1787 lib/SGN/Controller/AJAX/Stock.pm:1801
+#: lib/SGN/Controller/AJAX/Stock.pm:1791 lib/SGN/Controller/AJAX/Stock.pm:1805
 msgctxt "accession.stock.analysis_suffix"
 msgid " (Analysis)"
 msgstr " (Análisis)"
@@ -2323,7 +2336,7 @@ msgctxt "accession.stock.files.upload"
 msgid "Upload Additional Files"
 msgstr "Cargar archivos adicionales"
 
-#: lib/SGN/Controller/AJAX/Stock.pm:2316
+#: lib/SGN/Controller/AJAX/Stock.pm:2320
 msgctxt "accession.stock.genotype_download"
 msgid "Download"
 msgstr "Descargar"
@@ -2348,7 +2361,7 @@ msgctxt "accession.stock.jbrowse.tracks"
 msgid "View the tracks for this accession in JBrowse"
 msgstr "Ver las pistas de esta accesión en JBrowse"
 
-#: lib/SGN/Controller/AJAX/Stock.pm:326
+#: lib/SGN/Controller/AJAX/Stock.pm:330
 msgctxt "accession.stock.locus_header"
 msgid "Locus name"
 msgstr "Nombre del locus"
@@ -2358,234 +2371,234 @@ msgctxt "accession.stock.message_1"
 msgid "Log in required for adding stock properties."
 msgstr "Debe iniciar sesión para añadir propiedades del material."
 
-#: lib/SGN/Controller/AJAX/Stock.pm:218
+#: lib/SGN/Controller/AJAX/Stock.pm:222
 msgctxt "accession.stock.message_10"
 msgid "An error occurred during deletion: %{details}"
 msgstr "Se produjo un error durante la eliminación: %{details}"
 
-#: lib/SGN/Controller/AJAX/Stock.pm:221
+#: lib/SGN/Controller/AJAX/Stock.pm:225
 msgctxt "accession.stock.message_11"
 msgid "The element was removed from the database."
 msgstr "El elemento se eliminó de la base de datos."
 
-#: lib/SGN/Controller/AJAX/Stock.pm:231
+#: lib/SGN/Controller/AJAX/Stock.pm:235
 msgctxt "accession.stock.message_12"
 msgid "Nothing here, it's a POST.."
 msgstr "No hay nada aquí, es un POST.."
 
-#: lib/SGN/Controller/AJAX/Stock.pm:242
+#: lib/SGN/Controller/AJAX/Stock.pm:246
 msgctxt "accession.stock.message_13"
 msgid "need loci param"
 msgstr "se necesita el parámetro loci"
 
-#: lib/SGN/Controller/AJAX/Stock.pm:263
+#: lib/SGN/Controller/AJAX/Stock.pm:267
 msgctxt "accession.stock.message_14"
 msgid "no allele found for locus '%{locus_data}' (allele: '%{allele_symbol}')"
 msgstr "no se encontró ningún alelo para el locus '%{locus_data}' (alelo: '%{allele_symbol}')"
 
-#: lib/SGN/Controller/AJAX/Stock.pm:269
+#: lib/SGN/Controller/AJAX/Stock.pm:273
 msgctxt "accession.stock.message_15"
 msgid "Must be logged in for associating loci! "
 msgstr "¡Debe iniciar sesión para asociar loci! "
 
-#: lib/SGN/Controller/AJAX/Stock.pm:289
+#: lib/SGN/Controller/AJAX/Stock.pm:293
 msgctxt "accession.stock.message_16"
 msgid "need both valid stock_id and allele_id for adding the stockprop! "
 msgstr "¡Se necesitan stock_id y allele_id válidos para añadir stockprop! "
 
-#: lib/SGN/Controller/AJAX/Stock.pm:292
+#: lib/SGN/Controller/AJAX/Stock.pm:296
 msgctxt "accession.stock.message_17"
 msgid "No privileges for adding new loci. You must have an sgn submitter account. Please contact sgn-feedback@solgenomics.net for upgrading your user account. "
 msgstr "No tiene permisos para añadir nuevos loci. Debe tener una cuenta de remitente de datos de sgn. Contacte con sgn-feedback@solgenomics.net para ampliar los permisos de su cuenta. "
 
-#: lib/SGN/Controller/AJAX/Stock.pm:1543 lib/SGN/Controller/AJAX/Stock.pm:501
+#: lib/SGN/Controller/AJAX/Stock.pm:1547 lib/SGN/Controller/AJAX/Stock.pm:505
 msgctxt "accession.stock.message_18"
 msgid "Nothing here, it's a GET.."
 msgstr "No hay nada aquí, es un GET.."
 
-#: lib/SGN/Controller/AJAX/Stock.pm:539
+#: lib/SGN/Controller/AJAX/Stock.pm:543
 msgctxt "accession.stock.message_19"
 msgid "no ontology term found for term %{db_name} : %{accession}"
 msgstr "no se encontró ningún término de ontología para %{db_name} : %{accession}"
 
-#: lib/SGN/Controller/AJAX/Stock.pm:97
+#: lib/SGN/Controller/AJAX/Stock.pm:98
 msgctxt "accession.stock.message_2"
 msgid "ERROR: "
 msgstr "ERROR: "
 
-#: lib/SGN/Controller/AJAX/Stock.pm:546
+#: lib/SGN/Controller/AJAX/Stock.pm:550
 msgctxt "accession.stock.message_20"
 msgid "Must be logged in for associating ontology terms! "
 msgstr "¡Debe iniciar sesión para asociar términos de ontología! "
 
-#: lib/SGN/Controller/AJAX/Stock.pm:583
+#: lib/SGN/Controller/AJAX/Stock.pm:587
 msgctxt "accession.stock.message_21"
 msgid "Annotation exists with these evidence codes! "
 msgstr "¡Ya existe una anotación con estos códigos de evidencia! "
 
-#: lib/SGN/Controller/AJAX/Stock.pm:635
+#: lib/SGN/Controller/AJAX/Stock.pm:639
 msgctxt "accession.stock.message_22"
 msgid "need both valid stock_id and cvterm_id for adding an ontology term to this stock! "
 msgstr "¡Se necesitan stock_id y cvterm_id válidos para añadir un término de ontología a este material! "
 
-#: lib/SGN/Controller/AJAX/Stock.pm:638
+#: lib/SGN/Controller/AJAX/Stock.pm:642
 msgctxt "accession.stock.message_23"
 msgid "No privileges for adding new ontology terms. You must have an sgn submitter account. Please contact sgn-feedback@solgenomics.net for upgrading your user account. "
 msgstr "No tiene permisos para añadir nuevos términos de ontología. Debe tener una cuenta de remitente de datos de sgn. Contacte con sgn-feedback@solgenomics.net para ampliar los permisos de su cuenta. "
 
-#: lib/SGN/Controller/AJAX/Stock.pm:705
+#: lib/SGN/Controller/AJAX/Stock.pm:709
 msgctxt "accession.stock.message_24"
 msgid "No stock_cvtermp found for id %{stock_cvterm_id} ! "
 msgstr "¡No se encontró stock_cvtermp para id %{stock_cvterm_id} ! "
 
-#: lib/SGN/Controller/AJAX/Stock.pm:706
+#: lib/SGN/Controller/AJAX/Stock.pm:710
 msgctxt "accession.stock.message_25"
 msgid "stock_cvterm $stock_cvterm_id does not exists! "
 msgstr "¡stock_cvterm $stock_cvterm_id no existe! "
 
-#: lib/SGN/Controller/AJAX/Stock.pm:1439
+#: lib/SGN/Controller/AJAX/Stock.pm:1443
 msgctxt "accession.stock.message_26"
 msgid "No stock and parent specified"
 msgstr "No se han especificado el material ni el progenitor"
 
-#: lib/SGN/Controller/AJAX/Stock.pm:1444
+#: lib/SGN/Controller/AJAX/Stock.pm:1448
 msgctxt "accession.stock.message_27"
 msgid "Log in is required, or insufficient privileges, for removing parents"
 msgstr "Para eliminar progenitores debe iniciar sesión y tener permisos suficientes"
 
-#: lib/SGN/Controller/AJAX/Stock.pm:1480
+#: lib/SGN/Controller/AJAX/Stock.pm:1484
 msgctxt "accession.stock.message_28"
 msgid "You need to be logged in to add pedigree information."
 msgstr "Debe iniciar sesión para añadir información del pedigrí."
 
-#: lib/SGN/Controller/AJAX/Stock.pm:1486
+#: lib/SGN/Controller/AJAX/Stock.pm:1490
 msgctxt "accession.stock.message_29"
 msgid "you have insufficient privileges to add pedigree information."
 msgstr "no tiene permisos suficientes para añadir información del pedigrí."
 
-#: lib/SGN/Controller/AJAX/Stock.pm:101
+#: lib/SGN/Controller/AJAX/Stock.pm:102
 msgctxt "accession.stock.message_3"
 msgid "Synonym not added: The synonym you are adding is already stored as its own unique stock or as a synonym."
 msgstr "No se añadió el sinónimo: el sinónimo que intenta añadir ya está guardado como un material único independiente o como sinónimo."
 
-#: lib/SGN/Controller/AJAX/Stock.pm:1593
+#: lib/SGN/Controller/AJAX/Stock.pm:1597
 msgctxt "accession.stock.message_30"
 msgid "stock_id %{stock_id} and project_id %{project_id} associated with cvterm %{observable_id} , phenotype value %{value} (phenotype_id = "
 msgstr "stock_id %{stock_id} y project_id %{project_id} asociados con cvterm %{observable_id} , valor fenotípico %{value} (phenotype_id = "
 
-#: lib/SGN/Controller/AJAX/Stock.pm:2048 lib/SGN/Controller/Cross.pm:419
+#: lib/SGN/Controller/AJAX/Stock.pm:2052 lib/SGN/Controller/Cross.pm:419
 msgctxt "accession.stock.message_31"
 msgid "An error occurred: %{details}"
 msgstr "Se produjo un error: %{details}"
 
-#: lib/SGN/Controller/AJAX/Stock.pm:2345
+#: lib/SGN/Controller/AJAX/Stock.pm:2349
 msgctxt "accession.stock.message_32"
 msgid "Log in required for making stock obsolete."
 msgstr "Debe iniciar sesión para marcar el material como obsoleto."
 
-#: lib/SGN/Controller/AJAX/Stock.pm:2349
+#: lib/SGN/Controller/AJAX/Stock.pm:2353
 msgctxt "accession.stock.message_33"
 msgid "Cannot obsolete stock! You do not have a curator, sequencer or submitter account"
 msgstr "¡No se puede marcar el material como obsoleto! No tiene una cuenta de curador, usuario de secuenciación o remitente de datos"
 
-#: lib/SGN/Controller/AJAX/Stock.pm:2377
+#: lib/SGN/Controller/AJAX/Stock.pm:2381
 msgctxt "accession.stock.message_34"
 msgid "Not a valid stock %{stock_id} "
 msgstr "El material %{stock_id} no es válido "
 
-#: lib/SGN/Controller/AJAX/Stock.pm:2466
+#: lib/SGN/Controller/AJAX/Stock.pm:2470
 msgctxt "accession.stock.message_35"
 msgid "You must be logged in to upload additional trials to a file!"
 msgstr "¡Debe iniciar sesión para cargar ensayos adicionales en un archivo!"
 
-#: lib/SGN/Controller/AJAX/Stock.pm:2475
+#: lib/SGN/Controller/AJAX/Stock.pm:2479
 msgctxt "accession.stock.message_36"
 msgid "You must be logged in to upload additional files to a trial!"
 msgstr "¡Debe iniciar sesión para cargar archivos adicionales a un ensayo!"
 
-#: lib/SGN/Controller/AJAX/Stock.pm:2503 lib/SGN/Controller/AJAX/Stock.pm:2935
+#: lib/SGN/Controller/AJAX/Stock.pm:2507 lib/SGN/Controller/AJAX/Stock.pm:2939
 msgctxt "accession.stock.message_37"
 msgid "Could not save file %{upload_original_name} in archive"
 msgstr "No se pudo guardar el archivo %{upload_original_name} en el archivo de cargas"
 
-#: lib/SGN/Controller/AJAX/Stock.pm:2524
+#: lib/SGN/Controller/AJAX/Stock.pm:2528
 msgctxt "accession.stock.message_38"
 msgid "You must be logged in to see uploaded additional files!"
 msgstr "¡Debe iniciar sesión para ver los archivos adicionales cargados!"
 
-#: lib/SGN/Controller/AJAX/Stock.pm:2545
+#: lib/SGN/Controller/AJAX/Stock.pm:2549
 msgctxt "accession.stock.message_39"
 msgid "You must be logged in to obsolete additional files!"
 msgstr "¡Debe iniciar sesión para marcar los archivos adicionales como obsoletos!"
 
-#: lib/SGN/Controller/AJAX/Stock.pm:135
+#: lib/SGN/Controller/AJAX/Stock.pm:136
 msgctxt "accession.stock.message_4"
 msgid "%{message} Stock_id %{stock_id} and type_id %{prop_type} have been associated with value %{prop}. "
 msgstr "%{message} Stock_id %{stock_id} y type_id %{prop_type} se han asociado con el valor %{prop}. "
 
-#: lib/SGN/Controller/AJAX/Stock.pm:2800
+#: lib/SGN/Controller/AJAX/Stock.pm:2804
 msgctxt "accession.stock.message_40"
 msgid "Log in required for adding derived accessions."
 msgstr "Debe iniciar sesión para añadir accesiones derivadas."
 
-#: lib/SGN/Controller/AJAX/Stock.pm:2804
+#: lib/SGN/Controller/AJAX/Stock.pm:2808
 msgctxt "accession.stock.message_41"
 msgid "Cannot add new accessions! You do not have a curator account"
 msgstr "¡No se pueden añadir nuevas accesiones! No tiene una cuenta de curador"
 
-#: lib/SGN/Controller/AJAX/Stock.pm:2852 lib/SGN/Controller/AJAX/Stock.pm:2986
+#: lib/SGN/Controller/AJAX/Stock.pm:2856 lib/SGN/Controller/AJAX/Stock.pm:2990
 msgctxt "accession.stock.message_42"
 msgid "An error occurred while adding new accessions: %{details}"
 msgstr "Se produjo un error al añadir nuevas accesiones: %{details}"
 
-#: lib/SGN/Controller/AJAX/Stock.pm:2899 lib/SGN/Controller/AJAX/Stock.pm:2908
+#: lib/SGN/Controller/AJAX/Stock.pm:2903 lib/SGN/Controller/AJAX/Stock.pm:2912
 msgctxt "accession.stock.message_43"
 msgid "You must be logged in to upload derived accessions!"
 msgstr "¡Debe iniciar sesión para cargar accesiones derivadas!"
 
-#: lib/SGN/Controller/AJAX/Stock.pm:2917
+#: lib/SGN/Controller/AJAX/Stock.pm:2921
 msgctxt "accession.stock.message_44"
 msgid "Only a submitter or a curator can upload derived accessions"
 msgstr "Solo un remitente de datos o un curador puede cargar accesiones derivadas"
 
-#: lib/SGN/Controller/AJAX/Stock.pm:3027
+#: lib/SGN/Controller/AJAX/Stock.pm:3031
 msgctxt "accession.stock.message_45"
 msgid "You must be logged in to obsolete stocks"
 msgstr "Debe iniciar sesión para marcar materiales como obsoletos"
 
-#: lib/SGN/Controller/AJAX/Stock.pm:3078
+#: lib/SGN/Controller/AJAX/Stock.pm:3082
 msgctxt "accession.stock.message_47"
 msgid "Not a valid stock: %{stock_name}"
 msgstr "El material no es válido: %{stock_name}"
 
-#: lib/SGN/Controller/AJAX/Stock.pm:111
+#: lib/SGN/Controller/AJAX/Stock.pm:112
 msgctxt "accession.stock.message_48"
 msgid "CAUTION: The synonym you are adding is similar to these accessions and synonyms in the database: "
 msgstr "ATENCIÓN: el sinónimo que intenta añadir es similar a estas accesiones y sinónimos de la base de datos: "
 
-#: lib/SGN/Controller/AJAX/Stock.pm:139 lib/SGN/Controller/AJAX/Stock.pm:1595
-#: lib/SGN/Controller/AJAX/Stock.pm:2374 lib/SGN/Controller/AJAX/Stock.pm:285
-#: lib/SGN/Controller/AJAX/Stock.pm:3075 lib/SGN/Controller/AJAX/Stock.pm:613
+#: lib/SGN/Controller/AJAX/Stock.pm:141 lib/SGN/Controller/AJAX/Stock.pm:1599
+#: lib/SGN/Controller/AJAX/Stock.pm:2378 lib/SGN/Controller/AJAX/Stock.pm:289
+#: lib/SGN/Controller/AJAX/Stock.pm:3079 lib/SGN/Controller/AJAX/Stock.pm:617
 msgctxt "accession.stock.message_5"
 msgid "Failed: %{details}"
 msgstr "Falló: %{details}"
 
-#: lib/SGN/Controller/AJAX/Stock.pm:143
+#: lib/SGN/Controller/AJAX/Stock.pm:146
 msgctxt "accession.stock.message_6"
 msgid "Cannot associate prop %{prop_type}: %{prop} with stock %{stock_id} "
 msgstr "No se puede asociar prop %{prop_type}: %{prop} con el material %{stock_id} "
 
-#: lib/SGN/Controller/AJAX/Stock.pm:146 lib/SGN/Controller/AJAX/Stock.pm:1597
+#: lib/SGN/Controller/AJAX/Stock.pm:150 lib/SGN/Controller/AJAX/Stock.pm:1601
 msgctxt "accession.stock.message_7"
 msgid "user does not have a curator/sequencer/submitter account"
 msgstr "el usuario no tiene una cuenta de curador/usuario de secuenciación/remitente de datos"
 
-#: lib/SGN/Controller/AJAX/Stock.pm:205
+#: lib/SGN/Controller/AJAX/Stock.pm:209
 msgctxt "accession.stock.message_8"
 msgid "Log in required for deletion of stock properties."
 msgstr "Debe iniciar sesión para eliminar propiedades del material."
 
-#: lib/SGN/Controller/AJAX/Stock.pm:211
+#: lib/SGN/Controller/AJAX/Stock.pm:215
 msgctxt "accession.stock.message_9"
 msgid "The specified prop does not exist"
 msgstr "La prop especificada no existe"
@@ -2605,7 +2618,7 @@ msgctxt "accession.stock.name"
 msgid "Stock Name: "
 msgstr "Nombre del material: "
 
-#: lib/SGN/Controller/AJAX/Stock.pm:1809
+#: lib/SGN/Controller/AJAX/Stock.pm:1813
 msgctxt "accession.stock.no_shared_trials"
 msgid "No shared trials found."
 msgstr "No se encontraron ensayos en común."
@@ -2631,12 +2644,12 @@ msgctxt "accession.stock.obsolete_failed"
 msgid "Error obsoleting stock."
 msgstr "Error al marcar el material como obsoleto."
 
-#: lib/SGN/Controller/AJAX/Stock.pm:339
+#: lib/SGN/Controller/AJAX/Stock.pm:343
 msgctxt "accession.stock.ontology_delete"
 msgid "delete"
 msgstr "eliminar"
 
-#: lib/SGN/Controller/AJAX/Stock.pm:341
+#: lib/SGN/Controller/AJAX/Stock.pm:345
 msgctxt "accession.stock.ontology_unobsolete"
 msgid "unobsolete"
 msgstr "restablecer"
@@ -2708,7 +2721,7 @@ msgctxt "accession.stock.phenotype.header.trait"
 msgid "Trait"
 msgstr "Rasgo"
 
-#: lib/SGN/Controller/AJAX/Stock.pm:326
+#: lib/SGN/Controller/AJAX/Stock.pm:330
 msgctxt "accession.stock.phenotype_header"
 msgid "Phenotype"
 msgstr "Fenotipo"
@@ -2986,7 +2999,7 @@ msgctxt "accession.stock.section.upload_files_help"
 msgid "Upload any additional files for this Accession."
 msgstr "Cargar cualquier archivo adicional de esta accesión."
 
-#: lib/SGN/Controller/AJAX/Stock.pm:488
+#: lib/SGN/Controller/AJAX/Stock.pm:492
 msgctxt "accession.stock.show_obsolete"
 msgid "Show obsolete"
 msgstr "Mostrar obsoletos"
@@ -3006,7 +3019,7 @@ msgctxt "accession.stock.tooltip.login_add"
 msgid "Login to add info"
 msgstr "Inicie sesión para añadir información"
 
-#: lib/SGN/Controller/AJAX/Stock.pm:1680
+#: lib/SGN/Controller/AJAX/Stock.pm:1684
 #: mason/breeders_toolbox/genotyping_trials/format/as_table.mas:96
 msgctxt "accession.stock.trial_details"
 msgid "Details"
@@ -3054,7 +3067,7 @@ msgctxt "accession.stock.trials.title"
 msgid "Trials"
 msgstr "Ensayos"
 
-#: lib/SGN/Controller/AJAX/Stock.pm:1807 lib/SGN/Controller/AJAX/Stock.pm:1809
+#: lib/SGN/Controller/AJAX/Stock.pm:1811 lib/SGN/Controller/AJAX/Stock.pm:1813
 msgctxt "accession.stock.trials_common"
 msgid "Trials in Common"
 msgstr "Ensayos en común"
@@ -3074,7 +3087,9 @@ msgctxt "accession.stock_form.delete_failed"
 msgid ""
 " An error occurred. Cannot delete stock\n"
 " An  email message has been sent to the SGN development team"
-msgstr " Se produjo un error. No se pudo eliminar el material\n Se ha enviado un mensaje de correo electrónico al equipo de desarrollo de SGN"
+msgstr ""
+" Se produjo un error. No se pudo eliminar el material\n"
+" Se ha enviado un mensaje de correo electrónico al equipo de desarrollo de SGN"
 
 #: cgi-bin/phenome/stock/stock_ajax_form.pl:94
 msgctxt "accession.stock_form.duplicate"
@@ -3101,7 +3116,9 @@ msgctxt "accession.stock_form.store_failed"
 msgid ""
 " An error occurred. Cannot store to the database\n"
 " An  email message has been sent to the SGN development team"
-msgstr " Se produjo un error. No se pudo guardar en la base de datos\n Se ha enviado un mensaje de correo electrónico al equipo de desarrollo de SGN"
+msgstr ""
+" Se produjo un error. No se pudo guardar en la base de datos\n"
+" Se ha enviado un mensaje de correo electrónico al equipo de desarrollo de SGN"
 
 #: mason/stock/stockprops.mas:72
 msgctxt "accession.stockprops.add_title"
@@ -3208,7 +3225,9 @@ msgctxt "accession.template.error_9"
 msgid ""
 "NO cvterm found in the database for accession %{cvterm_accession}!\n"
 " db_name = '"
-msgstr "¡NO se encontró cvterm en la base de datos para el identificador %{cvterm_accession}!\n db_name = '"
+msgstr ""
+"¡NO se encontró cvterm en la base de datos para el identificador %{cvterm_accession}!\n"
+" db_name = '"
 
 #: lib/CXGN/Stock/StockTemplate.pm:464
 msgctxt "accession.template.store_failed"
@@ -4680,7 +4699,12 @@ msgid ""
 "%{confirmation}\n"
 "\n"
 "You will be able to login once your account has been confirmed."
-msgstr "Se ha creado la cuenta \"%{username}\".\n\n%{confirmation}\n\nPodrá iniciar sesión cuando se confirme su cuenta."
+msgstr ""
+"Se ha creado la cuenta \"%{username}\".\n"
+"\n"
+"%{confirmation}\n"
+"\n"
+"Podrá iniciar sesión cuando se confirme su cuenta."
 
 #: lib/SGN/Controller/AJAX/User.pm:237
 msgctxt "account.server.admin_confirmation"
@@ -5060,7 +5084,9 @@ msgctxt "analysis.interface.an_error_occurred_saving_spatial_corrections_to_this
 msgid ""
 "An error occurred saving spatial corrections to this trial. It may still be saved as a standalone analysis. \n"
 " %{error} \n"
-msgstr "Se produjo un error al guardar las correcciones espaciales de este ensayo. Es posible que aún se guarden como análisis independiente. \n %{error} \n"
+msgstr ""
+"Se produjo un error al guardar las correcciones espaciales de este ensayo. Es posible que aún se guarden como análisis independiente. \n"
+" %{error} \n"
 
 #: lib/CXGN/Analysis/AnalysisCreate.pm:677
 msgctxt "analysis.interface.an_error_occurred_storing_nalysis_result_stocks_error"
@@ -7768,7 +7794,6 @@ msgid "guidelines"
 msgstr "directrices"
 
 #: mason/qtl/qtl_load/population_exists.mas:29
-
 msgctxt "analysis.qtl.ui.if_you_are_trying_to_load_more_or_change_data"
 msgid ""
 "If you are trying to load more or change data to an \n"
@@ -7997,7 +8022,6 @@ msgid "QTL search results"
 msgstr "Resultados de búsqueda de QTL"
 
 #: mason/qtl/qtl_load/check_organism.mas:32
-
 msgctxt "analysis.qtl.ui.read_also_the_guidline_for_the_nomenclature_format_you_have"
 msgid ""
 "Read also the guideline for the nomenclature format \n"
@@ -8063,7 +8087,12 @@ msgid ""
 "                       This may take \n"
 "                            a few minutes.\n"
 "    "
-msgstr "solQTL se está ejecutando .....\n                Espere .....\n                       Esto puede tardar\n                            unos minutos.\n    "
+msgstr ""
+"solQTL se está ejecutando .....\n"
+"                Espere .....\n"
+"                       Esto puede tardar\n"
+"                            unos minutos.\n"
+"    "
 
 #: mason/qtl/qtl_form/general_intro.mas:28
 msgctxt "analysis.qtl.ui.some_basic_information_about_the_population"
@@ -9653,7 +9682,6 @@ msgid_plural "You are trying to download %{count} labels (%{count_2} %{level} x 
 msgstr[0] "Está intentando descargar %{count} etiqueta (%{count_2} %{level} x %{copies}, número de copias de cada una). Descargar esta cantidad puede ser lento. Use los campos de entrada siguientes para controlar cuántas se descargan cada vez."
 msgstr[1] "Está intentando descargar %{count} etiquetas (%{count_2} %{level} x %{copies}, número de copias de cada una). Descargar esta cantidad puede ser lento. Use los campos de entrada siguientes para controlar cuántas se descargan cada vez."
 
-
 #: js/source/legacy/tools/LabelDesigner.js:1799
 msgctxt "barcode.js.missing_field_your_selected_design_includes_the_field"
 msgid "Missing field. Your selected design includes the field "
@@ -10702,14 +10730,18 @@ msgctxt "barcode.server.could_not_upload_upload_success"
 msgid ""
 "Could not upload!\n"
 " %{upload_success}"
-msgstr "No se pudo cargar.\n %{upload_success}"
+msgstr ""
+"No se pudo cargar.\n"
+" %{upload_success}"
 
 #: lib/CXGN/Stock/StockBarcode.pm:120
 msgctxt "barcode.server.data_code_cannot_be_stored_in_the_database_please_check_your_barcode"
 msgid ""
 " Data ' %{code} ' cannot be stored in the database! \n"
 " Please check your barcode input\n"
-msgstr " Los datos ' %{code} ' no se pueden guardar en la base de datos. \n Revise los códigos de barras introducidos\n"
+msgstr ""
+" Los datos ' %{code} ' no se pueden guardar en la base de datos. \n"
+" Revise los códigos de barras introducidos\n"
 
 #: lib/CXGN/Stock/StockBarcode.pm:188
 msgctxt "barcode.server.db_name_db_name_does_not_exist_in_the_database"
@@ -10768,7 +10800,9 @@ msgctxt "barcode.server.no_cvterm_found_in_the_database_for_accession_cvterm_acc
 msgid ""
 "NO cvterm found in the database for accession %{cvterm_accession}!\n"
 " db_name = '%{value2}' , accession = '%{value3}' \n"
-msgstr "NO se encontró un cvterm en la base de datos para el número de acceso %{cvterm_accession}.\n db_name = '%{value2}' , accession = '%{value3}' \n"
+msgstr ""
+"NO se encontró un cvterm en la base de datos para el número de acceso %{cvterm_accession}.\n"
+" db_name = '%{value2}' , accession = '%{value3}' \n"
 
 #: lib/CXGN/Stock/StockBarcode.pm:184
 msgctxt "barcode.server.no_dbxref_found_for_cvterm_accession_accession"
@@ -10812,7 +10846,9 @@ msgctxt "barcode.server.the_file_does_not_exist"
 msgid ""
 "The file does not exist!\n"
 "\n"
-msgstr "El archivo no existe.\n\n"
+msgstr ""
+"El archivo no existe.\n"
+"\n"
 
 #: lib/SGN/Controller/AJAX/LabelDesigner.pm:425
 msgctxt "barcode.server.the_selected_list_contains_plots_from_more_than_one_trial_this_is_no"
@@ -10839,7 +10875,14 @@ msgid ""
 "Thank you,\n"
 "%{project_name_2} Team\n"
 "\n"
-msgstr "\nSe ha recibido un pedido reabierto para %{project_name} (%{host}/order/stocks/view).\nPor favor, *NO* responda a este mensaje.\n\nGracias,\nEquipo de %{project_name_2}\n\n"
+msgstr ""
+"\n"
+"Se ha recibido un pedido reabierto para %{project_name} (%{host}/order/stocks/view).\n"
+"Por favor, *NO* responda a este mensaje.\n"
+"\n"
+"Gracias,\n"
+"Equipo de %{project_name_2}\n"
+"\n"
 
 #: lib/SGN/Controller/AJAX/Order.pm:237 lib/SGN/Controller/AJAX/Order.pm:628
 #: lib/SGN/Controller/AJAX/Order.pm:732
@@ -10852,7 +10895,14 @@ msgid ""
 "Thank you,\n"
 "%{project_name_2} Team\n"
 "\n"
-msgstr "\nSe ha recibido un pedido para %{project_name} (%{host}/order/stocks/view).\nPor favor, *NO* responda a este mensaje.\n\nGracias,\nEquipo de %{project_name_2}\n\n"
+msgstr ""
+"\n"
+"Se ha recibido un pedido para %{project_name} (%{host}/order/stocks/view).\n"
+"Por favor, *NO* responda a este mensaje.\n"
+"\n"
+"Gracias,\n"
+"Equipo de %{project_name_2}\n"
+"\n"
 
 #: lib/SGN/Controller/AJAX/Order.pm:537
 msgctxt "barcode.server.you_have_an_order_update_submitted_to_project_name_host_order_stocks"
@@ -10864,7 +10914,14 @@ msgid ""
 "Thank you,\n"
 "%{project_name_2} Team\n"
 "\n"
-msgstr "\nSe ha recibido una actualización de pedido para %{project_name} (%{host}/order/stocks/view).\nPor favor, *NO* responda a este mensaje.\n\nGracias,\nEquipo de %{project_name_2}\n\n"
+msgstr ""
+"\n"
+"Se ha recibido una actualización de pedido para %{project_name} (%{host}/order/stocks/view).\n"
+"Por favor, *NO* responda a este mensaje.\n"
+"\n"
+"Gracias,\n"
+"Equipo de %{project_name_2}\n"
+"\n"
 
 #: lib/SGN/Controller/AJAX/Order.pm:64
 msgctxt "barcode.server.you_must_be_logged_in_to_add_a_catalog_item"
@@ -10918,7 +10975,14 @@ msgid ""
 "Thank you,\n"
 "%{project_name_2} Team\n"
 "\n"
-msgstr "\nSu pedido se ha enviado a %{project_name} (%{host}/order/stocks/view).\nPor favor, *NO* responda a este mensaje.\n\nGracias,\nEquipo de %{project_name_2}\n\n"
+msgstr ""
+"\n"
+"Su pedido se ha enviado a %{project_name} (%{host}/order/stocks/view).\n"
+"Por favor, *NO* responda a este mensaje.\n"
+"\n"
+"Gracias,\n"
+"Equipo de %{project_name_2}\n"
+"\n"
 
 #: lib/SGN/Controller/AJAX/Order.pm:250
 msgctxt "barcode.server.your_order_has_been_submitted_successfully_and_the_vendor_has_been_n"
@@ -11135,7 +11199,9 @@ msgctxt "climate.noaa.can_t_be_accessed_without_a_token_please_visit_https_www_n
 msgid ""
 " can't be accessed without a token.\r\n"
 "Please visit https://www.ncdc.noaa.gov/cdo-web/token to generate a valid access token, then include the token in sgn_local.conf"
-msgstr " no están disponibles sin un token.\r\nVisite https://www.ncdc.noaa.gov/cdo-web/token para generar un token válido e inclúyalo en sgn_local.conf"
+msgstr ""
+" no están disponibles sin un token.\r\n"
+"Visite https://www.ncdc.noaa.gov/cdo-web/token para generar un token válido e inclúyalo en sgn_local.conf"
 
 #: mason/breeders_toolbox/noaa_ncdc_analysis.mas:97
 msgctxt "climate.noaa.configuration_variable_noaa_ncdc_access_token_is_undefined_data_from_station"
@@ -12464,7 +12530,9 @@ msgctxt "community.forum.post_review_explanation"
 msgid ""
 "This is how the text of your post will appear. Please use the 'store post' button for permanently adding the post\n"
 "    or the 'modify post' button to go back and revise the post. To cancel, click on 'back to posts'."
-msgstr "Así aparecerá el texto de su publicación. Use el botón «guardar publicación» para añadirla definitivamente\n    o el botón «modificar publicación» para volver y editarla. Para cancelar, haga clic en «volver a las publicaciones»."
+msgstr ""
+"Así aparecerá el texto de su publicación. Use el botón «guardar publicación» para añadirla definitivamente\n"
+"    o el botón «modificar publicación» para volver y editarla. Para cancelar, haga clic en «volver a las publicaciones»."
 
 #: cgi-bin/forum/add_post.pl:264
 msgctxt "community.forum.post_size_limit"
@@ -12628,7 +12696,11 @@ msgid ""
 "You don't have the privileges to edit this topic, because you did not create it.\n"
 "\n"
 "\n"
-msgstr "Error:\nNo tiene permiso para editar este tema porque no lo creó.\n\n\n"
+msgstr ""
+"Error:\n"
+"No tiene permiso para editar este tema porque no lo creó.\n"
+"\n"
+"\n"
 
 #: cgi-bin/forum/add_topic.pl:74
 msgctxt "community.forum.topic_review_intro"
@@ -12912,7 +12984,9 @@ msgctxt "community.image.invalid_filename_characters"
 msgid ""
 "Invalid characters found in filename, must not contain\n"
 "        characters %{characters}"
-msgstr "El nombre del archivo contiene caracteres no válidos; no debe incluir\n        los caracteres %{characters}"
+msgstr ""
+"El nombre del archivo contiene caracteres no válidos; no debe incluir\n"
+"        los caracteres %{characters}"
 
 #: mason/image/display_image.mas:91
 msgctxt "community.image.large"
@@ -13054,7 +13128,9 @@ msgctxt "community.image.supported_file_formats_include_jpg_jpeg_gif_png_pdf_ps_
 msgid ""
 "Supported file formats include .jpg. .jpeg, .gif, .png, .pdf, .ps,\n"
 "\t.eps"
-msgstr "Los formatos admitidos incluyen .jpg. .jpeg, .gif, .png, .pdf, .ps,\n\t.eps"
+msgstr ""
+"Los formatos admitidos incluyen .jpg. .jpeg, .gif, .png, .pdf, .ps,\n"
+"\t.eps"
 
 #: mason/image/display_image.mas:115
 msgctxt "community.image.the_above_image_may_be_subject_to_copyright_please_contact_the_submitter_about"
@@ -14225,7 +14301,9 @@ msgctxt "cross.controller.contains_an_illegal_character_br"
 msgid ""
 " contains an illegal character: -\n"
 " <br>"
-msgstr " contiene un carácter no permitido: -\n <br>"
+msgstr ""
+" contiene un carácter no permitido: -\n"
+" <br>"
 
 #: lib/SGN/Controller/AJAX/Intercross.pm:524
 msgctxt "cross.controller.cross_between_intercross_female_parent_and_intercross_male"
@@ -14267,21 +14345,27 @@ msgctxt "cross.controller.exceeds_the_maximum_of_max_flowers_or_is"
 msgid ""
 " exceeds the maximum of %{max_flowers} or is invalid\n"
 " <br>"
-msgstr " supera el máximo de %{max_flowers} o no es válido\n <br>"
+msgstr ""
+" supera el máximo de %{max_flowers} o no es válido\n"
+" <br>"
 
 #: lib/SGN/Controller/Cross.pm:249
 msgctxt "cross.controller.exceeds_the_maximum_of_max_progeny_or_is"
 msgid ""
 " exceeds the maximum of %{max_progeny} or is invalid\n"
 " <br>"
-msgstr " supera el máximo de %{max_progeny} o no es válido\n <br>"
+msgstr ""
+" supera el máximo de %{max_progeny} o no es válido\n"
+" <br>"
 
 #: lib/SGN/Controller/Cross.pm:267
 msgctxt "cross.controller.exceeds_the_maximum_of_max_seeds_or_is"
 msgid ""
 " exceeds the maximum of %{max_seeds} or is invalid\n"
 " <br>"
-msgstr " supera el máximo de %{max_seeds} o no es válido\n <br>"
+msgstr ""
+" supera el máximo de %{max_seeds} o no es válido\n"
+" <br>"
 
 #: lib/SGN/Controller/AJAX/CrossWishlist.pm:120
 msgctxt "cross.controller.female"
@@ -14309,42 +14393,54 @@ msgctxt "cross.controller.is_not_an_integer_br"
 msgid ""
 " is not an integer\n"
 " <br>"
-msgstr " no es un número entero\n <br>"
+msgstr ""
+" no es un número entero\n"
+" <br>"
 
 #: lib/SGN/Controller/Cross.pm:244
 msgctxt "cross.controller.line_number_line_number_cross_cross_name_already"
 msgid ""
 "Line number %{line_number}, Cross %{cross_name} already exists in database\n"
 " <br>"
-msgstr "Línea %{line_number}, el cruzamiento %{cross_name} ya existe en la base de datos\n <br>"
+msgstr ""
+"Línea %{line_number}, el cruzamiento %{cross_name} ya existe en la base de datos\n"
+" <br>"
 
 #: lib/SGN/Controller/Cross.pm:226
 msgctxt "cross.controller.line_number_line_number_cross_type_cross_type"
 msgid ""
 "Line number %{line_number}, Cross type %{cross_type} is not valid\n"
 " <br>"
-msgstr "Línea %{line_number}, el tipo de cruzamiento %{cross_type} no es válido\n <br>"
+msgstr ""
+"Línea %{line_number}, el tipo de cruzamiento %{cross_type} no es válido\n"
+" <br>"
 
 #: lib/SGN/Controller/Cross.pm:240
 msgctxt "cross.controller.line_number_line_number_location_cross_location_does"
 msgid ""
 "Line number %{line_number}, Location %{cross_location} does not exist in database\n"
 " <br>"
-msgstr "Línea %{line_number}, la ubicación %{cross_location} no existe en la base de datos\n <br>"
+msgstr ""
+"Línea %{line_number}, la ubicación %{cross_location} no existe en la base de datos\n"
+" <br>"
 
 #: lib/SGN/Controller/Cross.pm:230
 msgctxt "cross.controller.line_number_line_number_maternal_and_paternal_parents"
 msgid ""
 "Line number %{line_number}, maternal and paternal parents must match for cross type %{cross_type}\n"
 " <br>"
-msgstr "Línea %{line_number}, los progenitores femenino y masculino deben coincidir para el tipo de cruzamiento %{cross_type}\n <br>"
+msgstr ""
+"Línea %{line_number}, los progenitores femenino y masculino deben coincidir para el tipo de cruzamiento %{cross_type}\n"
+" <br>"
 
 #: lib/SGN/Controller/Cross.pm:223
 msgctxt "cross.controller.line_number_line_number_maternal_parent_maternal_parent"
 msgid ""
 "Line number %{line_number}, Maternal parent %{maternal_parent} does not exist in database\n"
 " <br>"
-msgstr "Línea %{line_number}, el progenitor femenino %{maternal_parent} no existe en la base de datos\n <br>"
+msgstr ""
+"Línea %{line_number}, el progenitor femenino %{maternal_parent} no existe en la base de datos\n"
+" <br>"
 
 #: lib/SGN/Controller/Cross.pm:258 lib/SGN/Controller/Cross.pm:261
 msgctxt "cross.controller.line_number_line_number_number_of_flowers"
@@ -14366,7 +14462,9 @@ msgctxt "cross.controller.line_number_line_number_paternal_parent_paternal_paren
 msgid ""
 "Line number %{line_number}, Paternal parent %{paternal_parent} does not exist in database\n"
 " <br>"
-msgstr "Línea %{line_number}, el progenitor masculino %{paternal_parent} no existe en la base de datos\n <br>"
+msgstr ""
+"Línea %{line_number}, el progenitor masculino %{paternal_parent} no existe en la base de datos\n"
+" <br>"
 
 #: lib/SGN/Controller/Cross.pm:274
 msgctxt "cross.controller.line_number_line_number_prefix"
@@ -14383,7 +14481,9 @@ msgctxt "cross.controller.line_number_line_number_trial_cross_trial_does"
 msgid ""
 "Line number %{line_number}, Trial %{cross_trial} does not exist in database\n"
 " <br>"
-msgstr "Línea %{line_number}, el ensayo %{cross_trial} no existe en la base de datos\n <br>"
+msgstr ""
+"Línea %{line_number}, el ensayo %{cross_trial} no existe en la base de datos\n"
+" <br>"
 
 #: lib/SGN/Controller/AJAX/CrossWishlist.pm:120
 msgctxt "cross.controller.males"
@@ -20160,7 +20260,10 @@ msgid ""
 "\n"
 "\n"
 "Could not save layout view."
-msgstr "\n\nNo se pudo guardar la vista de la disposición."
+msgstr ""
+"\n"
+"\n"
+"No se pudo guardar la vista de la disposición."
 
 #: js/source/entries/trialallocation/app.js:3543
 msgctxt "decision.js.could_not_save_layout_view.9752f5d"
@@ -20168,7 +20271,10 @@ msgid ""
 "\n"
 "\n"
 "Could not save layout view:"
-msgstr "\n\nNo se pudo guardar la vista de la disposición:"
+msgstr ""
+"\n"
+"\n"
+"No se pudo guardar la vista de la disposición:"
 
 #: js/source/entries/trialallocation/app.js:3603
 #: js/source/entries/trialallocation/app.js:3609
@@ -20337,7 +20443,10 @@ msgid ""
 "\n"
 "\n"
 "Layout view saved."
-msgstr "\n\nSe guardó la vista de la disposición."
+msgstr ""
+"\n"
+"\n"
+"Se guardó la vista de la disposición."
 
 #: js/source/entries/trialallocation/app.js:1537
 msgctxt "decision.js.left_to_right"
@@ -20794,7 +20903,6 @@ msgid "%{count} trial added."
 msgid_plural "%{count} trials added."
 msgstr[0] "Se añadió %{count} ensayo."
 msgstr[1] "Se añadieron %{count} ensayos."
-
 
 #: js/source/entries/decision_meeting.js:2037
 msgctxt "decision.js.unexpected_error"
@@ -30708,7 +30816,10 @@ msgid ""
 "20 bp. The search\n"
 "    algorithms allowed for imperfect repeats as well as complex\n"
 "    repeats."
-msgstr "20 bp. Los algoritmos\n    de búsqueda también permitían\n    repeticiones imperfectas y complejas."
+msgstr ""
+"20 bp. Los algoritmos\n"
+"    de búsqueda también permitían\n"
+"    repeticiones imperfectas y complejas."
 
 #: cgi-bin/solpeople/submit_marker.pl:57
 msgctxt "genotype.marker.3_primer_seq"
@@ -30853,7 +30964,12 @@ msgid ""
 "          the UTRs and correcting sequencing errors. Peptide\n"
 "          sequence is translated from from edited sequence in frame\n"
 "          1 (for unigenes) or downloaded from"
-msgstr "El CDS de Arabidopsis no se editó. Los unigenes se\n          editaron según su alineamiento con el CDS, recortando las\n          UTR y corrigiendo errores de secuenciación. La secuencia peptídica\n          se tradujo a partir de la secuencia editada en\n          el marco 1 (para unigenes) o se descargó de"
+msgstr ""
+"El CDS de Arabidopsis no se editó. Los unigenes se\n"
+"          editaron según su alineamiento con el CDS, recortando las\n"
+"          UTR y corrigiendo errores de secuenciación. La secuencia peptídica\n"
+"          se tradujo a partir de la secuencia editada en\n"
+"          el marco 1 (para unigenes) o se descargó de"
 
 #: cgi-bin/solpeople/submit_marker.pl:63
 msgctxt "genotype.marker.band_sizes"
@@ -30867,7 +30983,11 @@ msgid ""
 "          they may also be useful for comparative mapping in other\n"
 "          dicot species. The computational screen by how COS\n"
 "          markers were identified is described below:"
-msgstr "Debido al alto grado de conservación de estos marcadores\n          COS, también pueden ser útiles para el mapeo comparativo\n          en otras especies dicotiledóneas. A continuación se describe el\n          análisis computacional utilizado para identificar los marcadores COS:"
+msgstr ""
+"Debido al alto grado de conservación de estos marcadores\n"
+"          COS, también pueden ser útiles para el mapeo comparativo\n"
+"          en otras especies dicotiledóneas. A continuación se describe el\n"
+"          análisis computacional utilizado para identificar los marcadores COS:"
 
 #: mason/search/genotyping_projects_accession_filter.mas:20
 msgctxt "genotype.marker.best_genotyping_projects"
@@ -30886,7 +31006,11 @@ msgid ""
 "            single tomato EST (or associated contig) and a single\n"
 "            BAC in Arabidopsis. Each tomato EST must pass the\n"
 "            following criteria:"
-msgstr ") entre un EST de tomate\n            (o un contig asociado) y un\n            BAC en Arabidopsis. Cada EST de\n            tomate debe cumplir los siguientes criterios:"
+msgstr ""
+") entre un EST de tomate\n"
+"            (o un contig asociado) y un\n"
+"            BAC en Arabidopsis. Cada EST de\n"
+"            tomate debe cumplir los siguientes criterios:"
 
 #: mason/search/markers/search.mas:680
 msgctxt "genotype.marker.both_the_start_and_end_position_are_required_when_filtering"
@@ -30908,7 +31032,9 @@ msgctxt "genotype.marker.complete_listings_of_cosii_genes_and_markers_can_be_fou
 msgid ""
 "Complete listings of COSII genes and markers can be\n"
 "          found in our"
-msgstr "Los listados completos de genes y\n          marcadores COSII están en nuestros"
+msgstr ""
+"Los listados completos de genes y\n"
+"          marcadores COSII están en nuestros"
 
 #: cgi-bin/markers/cos_markers.pl:17 cgi-bin/markers/cos_markers.pl:7
 msgctxt "genotype.marker.conserved_ortholog_set_cos_markers"
@@ -30946,14 +31072,19 @@ msgid ""
 "Copy No is how many copies the COS marker shows on\n"
 "            a southern blot survey- S(single) is 1-2 copy, L(low)\n"
 "            is 3-4 copy, M(multiple) means more than 4 copy."
-msgstr "Copy No indica cuántas copias muestra el marcador COS en un\n            análisis Southern blot: S (single) corresponde a 1-2 copias, L (low)\n            a 3-4 y M (multiple) a más de 4 copias."
+msgstr ""
+"Copy No indica cuántas copias muestra el marcador COS en un\n"
+"            análisis Southern blot: S (single) corresponde a 1-2 copias, L (low)\n"
+"            a 3-4 y M (multiple) a más de 4 copias."
 
 #: cgi-bin/markers/cos_markers.pl:51
 msgctxt "genotype.marker.cos_list_online"
 msgid ""
 "COS list\n"
 "          online"
-msgstr "Lista COS\n          en línea"
+msgstr ""
+"Lista COS\n"
+"          en línea"
 
 #: cgi-bin/markers/cos_markers.pl:45
 msgctxt "genotype.marker.cos_markers_were_functionally_annotated_using_the_mips_role_categories_as_they"
@@ -30964,7 +31095,13 @@ msgid ""
 "          to continued changes, a copy of the role categories and\n"
 "          the COS-marker annotations as used in the analysis can be\n"
 "          found below:"
-msgstr "Los marcadores COS se anotaron funcionalmente según las\n          categorías de funciones MIPS vigentes en el\n          momento del análisis. Como las descripciones funcionales\n          se actualizan continuamente, a continuación se ofrece\n          una copia de las categorías y anotaciones\n          de marcadores COS utilizadas en el análisis:"
+msgstr ""
+"Los marcadores COS se anotaron funcionalmente según las\n"
+"          categorías de funciones MIPS vigentes en el\n"
+"          momento del análisis. Como las descripciones funcionales\n"
+"          se actualizan continuamente, a continuación se ofrece\n"
+"          una copia de las categorías y anotaciones\n"
+"          de marcadores COS utilizadas en el análisis:"
 
 #: mason/transcript/unigene/markers_info.mas:115
 msgctxt "genotype.marker.cosii_marker"
@@ -30986,7 +31123,14 @@ msgid ""
 "          Arabidopsis gene. In comparison with COS markers reported\n"
 "          by Fulton et al. (2002), COSII markers/genes have the\n"
 "          following new properties:"
-msgstr "Los marcadores COSII son marcadores basados en PCR, desarrollados a\n          partir de un conjunto de genes ortólogos conservados de\n          copia única (genes COSII) de especies Asterid. Cada gen\n          COSII (que representa un grupo de unigenes Asterid) corresponde\n          a un único gen Arabidopsis de copia única. En\n          comparación con los marcadores COS descritos por Fulton et\n          al. (2002), los marcadores/genes COSII presentan estas nuevas propiedades:"
+msgstr ""
+"Los marcadores COSII son marcadores basados en PCR, desarrollados a\n"
+"          partir de un conjunto de genes ortólogos conservados de\n"
+"          copia única (genes COSII) de especies Asterid. Cada gen\n"
+"          COSII (que representa un grupo de unigenes Asterid) corresponde\n"
+"          a un único gen Arabidopsis de copia única. En\n"
+"          comparación con los marcadores COS descritos por Fulton et\n"
+"          al. (2002), los marcadores/genes COSII presentan estas nuevas propiedades:"
 
 #: cgi-bin/search/markers/cos_list.pl:57
 msgctxt "genotype.marker.cu_id"
@@ -31005,7 +31149,11 @@ msgid ""
 "            orthologous counterparts (exons and/or introns) from\n"
 "            other related solanaceous species including those lack\n"
 "            of sequence data."
-msgstr "Los «cebadores universales» diseñados pudieron amplificar\n            las regiones ortólogas (exones y/o intrones)\n            de otras especies solanáceas relacionadas, incluidas\n            aquellas sin datos de secuencia."
+msgstr ""
+"Los «cebadores universales» diseñados pudieron amplificar\n"
+"            las regiones ortólogas (exones y/o intrones)\n"
+"            de otras especies solanáceas relacionadas, incluidas\n"
+"            aquellas sin datos de secuencia."
 
 #: cgi-bin/markers/microsats.pl:20
 msgctxt "genotype.marker.dinucleotides"
@@ -31027,7 +31175,9 @@ msgctxt "genotype.marker.each_of_the_cosii_genes_was_assigned_a_functional_annot
 msgid ""
 "Each of the COSII genes was assigned a functional\n"
 "          annotation based on the"
-msgstr "A cada gen COSII se le\n          asignó una anotación funcional basada en"
+msgstr ""
+"A cada gen COSII se le\n"
+"          asignó una anotación funcional basada en"
 
 #: mason/search/markers/search.mas:93
 msgctxt "genotype.marker.end"
@@ -31105,7 +31255,10 @@ msgid ""
 "ESTs that pass all these criteria are classified as\n"
 "            conserved orthologs, all others are considered\n"
 "            potentially paralogous and eliminated."
-msgstr "Los EST que cumplen todos estos criterios\n            se clasifican como ortólogos conservados; los demás\n            se consideran potencialmente parálogos y se descartan."
+msgstr ""
+"Los EST que cumplen todos estos criterios\n"
+"            se clasifican como ortólogos conservados; los demás\n"
+"            se consideran potencialmente parálogos y se descartan."
 
 #: mason/search/markers/search.mas:38
 msgctxt "genotype.marker.exactly"
@@ -31139,7 +31292,11 @@ msgid ""
 "          Intron locations of unigenes were predicted from\n"
 "          alignment with the Arabidopsis CDS, whose intron\n"
 "          locations were downloaded from"
-msgstr "(para Arabidopsis). Las posiciones de intrones de los\n          unigenes se predijeron a partir del alineamiento\n          con el CDS de Arabidopsis; las posiciones\n          de intrones de Arabidopsis se descargaron de"
+msgstr ""
+"(para Arabidopsis). Las posiciones de intrones de los\n"
+"          unigenes se predijeron a partir del alineamiento\n"
+"          con el CDS de Arabidopsis; las posiciones\n"
+"          de intrones de Arabidopsis se descargaron de"
 
 #: cgi-bin/markers/cosii_markers.pl:51
 msgctxt "genotype.marker.for_arabidopsis_or_predicted_intron_location_in_the_sequence_for_unigenes"
@@ -31147,14 +31304,19 @@ msgid ""
 "(for Arabidopsis)\n"
 "          or predicted intron location in the sequence (for\n"
 "          unigenes)."
-msgstr "(para Arabidopsis) o la\n          posición intrónica predicha en\n          la secuencia (para unigenes)."
+msgstr ""
+"(para Arabidopsis) o la\n"
+"          posición intrónica predicha en\n"
+"          la secuencia (para unigenes)."
 
 #: cgi-bin/markers/cos_markers.pl:56
 msgctxt "genotype.marker.for_the_tomato_map_position_in_the_table_linked_above"
 msgid ""
 "for the tomato map position in\n"
 "          the table linked above:"
-msgstr "para la posición en el mapa de\n          tomate de la tabla enlazada arriba:"
+msgstr ""
+"para la posición en el mapa de\n"
+"          tomate de la tabla enlazada arriba:"
 
 #: cgi-bin/markers/microsats.pl:17
 msgctxt "genotype.marker.for_those_wishing_to_test_ssrs_for_mapping_polymorphism_studies_it_is"
@@ -31162,7 +31324,10 @@ msgid ""
 "For those wishing to test SSRs for mapping/polymorphism\n"
 "    studies, it is recommended (based on empirical testing) to start\n"
 "    with:"
-msgstr "Para quienes deseen probar SSR en\n    estudios de mapeo/polimorfismo, se recomienda comenzar\n    con lo siguiente, según pruebas empíricas:"
+msgstr ""
+"Para quienes deseen probar SSR en\n"
+"    estudios de mapeo/polimorfismo, se recomienda comenzar\n"
+"    con lo siguiente, según pruebas empíricas:"
 
 #: cgi-bin/markers/cosii_markers.pl:68
 msgctxt "genotype.marker.ftp_site"
@@ -31177,7 +31342,12 @@ msgid ""
 "            and Utilization of a Conserved Ortholog Set (COS)\n"
 "            Markers for Comparative Genomics in Higher Plants. The\n"
 "            Plant Cell 14: 1457-1467"
-msgstr "Fulton T, van der Hoeven R, Eannetta\n            N, Tanksley S (2002). Identification, Analysis and\n            Utilization of a Conserved Ortholog Set (COS)\n            Markers for Comparative Genomics in Higher\n            Plants. The Plant Cell 14: 1457-1467"
+msgstr ""
+"Fulton T, van der Hoeven R, Eannetta\n"
+"            N, Tanksley S (2002). Identification, Analysis and\n"
+"            Utilization of a Conserved Ortholog Set (COS)\n"
+"            Markers for Comparative Genomics in Higher\n"
+"            Plants. The Plant Cell 14: 1457-1467"
 
 #: cgi-bin/markers/cos_markers.pl:43
 msgctxt "genotype.marker.functional_annotation_of_cos_markers"
@@ -31204,7 +31374,9 @@ msgctxt "genotype.marker.gene_ontology_go_annotation"
 msgid ""
 "Gene\n"
 "          Ontology (GO) annotation"
-msgstr "anotación de Gene\n          Ontology (GO)"
+msgstr ""
+"anotación de Gene\n"
+"          Ontology (GO)"
 
 #: cgi-bin/markers/cosii_markers.pl:73
 msgctxt "genotype.marker.genetics"
@@ -31271,7 +31443,14 @@ msgid ""
 "          these COS markers on the tomato genome to provide a\n"
 "          tomato: arabidopsis comparative map. This mapping\n"
 "          information is available on SGN now."
-msgstr "En esta sección de SGN encontrará información de secuencias\n          y clones de cada uno de estos marcadores\n          COS, así como de su contraparte correspondiente en\n          el genoma de arabidopsis. Hemos estudiado estos marcadores\n          COS y mapeado algunos en el genoma del\n          tomate para elaborar un mapa comparativo tomate-arabidopsis. Esta\n          información de mapeo ya está disponible en SGN."
+msgstr ""
+"En esta sección de SGN encontrará información de secuencias\n"
+"          y clones de cada uno de estos marcadores\n"
+"          COS, así como de su contraparte correspondiente en\n"
+"          el genoma de arabidopsis. Hemos estudiado estos marcadores\n"
+"          COS y mapeado algunos en el genoma del\n"
+"          tomate para elaborar un mapa comparativo tomate-arabidopsis. Esta\n"
+"          información de mapeo ya está disponible en SGN."
 
 #: cgi-bin/markers/index.pl:25
 msgctxt "genotype.marker.in_this_section_of_sgn_you_will_find_sequence_and_clone_information_d959d3"
@@ -31291,7 +31470,17 @@ msgid ""
 "          pepper, Nicotiana, etc.). All the information in this\n"
 "          section will be updated as new data are generated, so\n"
 "          please come back and check from time to time."
-msgstr "En esta sección de SGN encontrará información de\n          secuencias de cada gen COSII y datos de\n          mapeo de los genes COSII mapeados (los llamados\n          marcadores COSII). Hemos mapeado más de 300 marcadores\n          COSII en tomate y ampliaremos el conjunto hasta\n          al menos 500; mientras tanto, también se mapearán\n          en las principales especies solanáceas (por ejemplo, berenjena,\n          pimiento, Nicotiana, etc.). La información de esta\n          sección se actualizará a medida que se\n          generen datos nuevos; vuelva a consultarla periódicamente."
+msgstr ""
+"En esta sección de SGN encontrará información de\n"
+"          secuencias de cada gen COSII y datos de\n"
+"          mapeo de los genes COSII mapeados (los llamados\n"
+"          marcadores COSII). Hemos mapeado más de 300 marcadores\n"
+"          COSII en tomate y ampliaremos el conjunto hasta\n"
+"          al menos 500; mientras tanto, también se mapearán\n"
+"          en las principales especies solanáceas (por ejemplo, berenjena,\n"
+"          pimiento, Nicotiana, etc.). La información de esta\n"
+"          sección se actualizará a medida que se\n"
+"          generen datos nuevos; vuelva a consultarla periódicamente."
 
 #: cgi-bin/markers/index.pl:28
 msgctxt "genotype.marker.in_this_section_of_sgn_you_will_find_sequence_information_of_each_5903d0"
@@ -31303,7 +31492,9 @@ msgctxt "genotype.marker.indicates_introns_from"
 msgid ""
 "indicates\n"
 "          introns from"
-msgstr ". «=====» indica\n          intrones de"
+msgstr ""
+". «=====» indica\n"
+"          intrones de"
 
 #: cgi-bin/search/markers/rflp_list.pl:88
 msgctxt "genotype.marker.insert"
@@ -31315,7 +31506,9 @@ msgctxt "genotype.marker.it_hits_an_arabidopsis_sequence_at_a_significance_level
 msgid ""
 "it hits an arabidopsis sequence at a\n"
 "                significance level of"
-msgstr "coincide con una secuencia de arabidopsis\n                con un nivel de significación de"
+msgstr ""
+"coincide con una secuencia de arabidopsis\n"
+"                con un nivel de significación de"
 
 #: cgi-bin/markers/cos_markers.pl:34
 msgctxt "genotype.marker.it_is_determined_to_be_not_part_of_a_domain_where_several"
@@ -31323,7 +31516,10 @@ msgid ""
 "it is determined to be NOT part of a domain\n"
 "                (where several solanaceous sequences hit the same\n"
 "                arabidopsis region)"
-msgstr "se determina que NO forma parte de un\n                dominio (en el que varias secuencias de solanáceas\n                coinciden con la misma región de arabidopsis)"
+msgstr ""
+"se determina que NO forma parte de un\n"
+"                dominio (en el que varias secuencias de solanáceas\n"
+"                coinciden con la misma región de arabidopsis)"
 
 #: cgi-bin/markers/cosii_markers.pl:42
 msgctxt "genotype.marker.iupa_amplify_an_intron_with_a_short_stretch_of_the_flanking_exons"
@@ -31335,7 +31531,14 @@ msgid ""
 "          various solanaceous species as well as coffee, and primer\n"
 "          sequences, PCR conditions and product sizes are\n"
 "          available."
-msgstr "(iUPA) amplifican un intrón junto con un tramo\n          corto de los exones flanqueantes, por lo que\n          son útiles para el mapeo genómico y comparativo\n          y para la filogenética de especies estrechamente relacionadas.\n          Se han probado muchos iUPA en varias especies\n          solanáceas y en café; se ofrecen secuencias de\n          cebadores, condiciones de PCR y tamaños de producto."
+msgstr ""
+"(iUPA) amplifican un intrón junto con un tramo\n"
+"          corto de los exones flanqueantes, por lo que\n"
+"          son útiles para el mapeo genómico y comparativo\n"
+"          y para la filogenética de especies estrechamente relacionadas.\n"
+"          Se han probado muchos iUPA en varias especies\n"
+"          solanáceas y en café; se ofrecen secuencias de\n"
+"          cebadores, condiciones de PCR y tamaños de producto."
 
 #: cgi-bin/search/markers/rflp_list.pl:92
 #: cgi-bin/search/markers/rflp_list.pl:93
@@ -31369,7 +31572,14 @@ msgid ""
 "            position, if the COS marker has a second or third map\n"
 "            position, then there were two or three alleles that\n"
 "            could be mapped."
-msgstr "Map position indica dónde se mapeó el marcador COS\n            en el mapa de sintenia tomate-arabidopsis. Por ejemplo, la\n            posición del marcador T1675 es 01.005, es decir, cromosoma\n            1, a 5 cM del extremo inicial. La mayoría\n            de los marcadores COS tiene una sola posición; si\n            un marcador COS tiene una segunda o tercera posición,\n            significa que se pudieron mapear dos o tres alelos."
+msgstr ""
+"Map position indica dónde se mapeó el marcador COS\n"
+"            en el mapa de sintenia tomate-arabidopsis. Por ejemplo, la\n"
+"            posición del marcador T1675 es 01.005, es decir, cromosoma\n"
+"            1, a 5 cM del extremo inicial. La mayoría\n"
+"            de los marcadores COS tiene una sola posición; si\n"
+"            un marcador COS tiene una segunda o tercera posición,\n"
+"            significa que se pudieron mapear dos o tres alelos."
 
 #: mason/search/markers/results.mas:151
 msgctxt "genotype.marker.map_units"
@@ -31393,7 +31603,9 @@ msgctxt "genotype.marker.mapping_pcr_based_cosii_markers_in_major_solanaceous_sp
 msgid ""
 "Mapping PCR-based COSII markers in major solanaceous\n"
 "          species"
-msgstr "Mapeo de marcadores COSII basados en\n          PCR en las principales especies solanáceas"
+msgstr ""
+"Mapeo de marcadores COSII basados en\n"
+"          PCR en las principales especies solanáceas"
 
 #: cgi-bin/search/markers/markersearch.pl:248
 #: cgi-bin/search/markers/rflp_list.pl:85
@@ -31437,7 +31649,9 @@ msgctxt "genotype.marker.marker_search_results_00f96d"
 msgid ""
 "marker\n"
 "          search results"
-msgstr "resultados de búsqueda\n          de marcadores"
+msgstr ""
+"resultados de búsqueda\n"
+"          de marcadores"
 
 #: cgi-bin/search/markers/markersearch.pl:246
 msgctxt "genotype.marker.marker_search_results_3e9192"
@@ -31490,7 +31704,9 @@ msgctxt "genotype.marker.mips_role_categories_at_time_of_cos_marker_annotation"
 msgid ""
 "MIPS role categories at\n"
 "          time of COS marker annotation"
-msgstr "Categorías de funciones MIPS en el momento\n          de la anotación de marcadores COS"
+msgstr ""
+"Categorías de funciones MIPS en el momento\n"
+"          de la anotación de marcadores COS"
 
 #: mason/search/markers/results.mas:30
 msgctxt "genotype.marker.modify_marker_search"
@@ -31504,7 +31720,11 @@ msgid ""
 "            potato, pepper and coffee, as well as the Arabidopsis\n"
 "            CDS database, were screened computationally and the\n"
 "            method for establishing orthology was more robust."
-msgstr "Se analizaron computacionalmente varias bases de datos de unigenes ensamblados\n            a partir de EST de tomate, papa, pimiento y café,\n            así como la base de datos CDS de Arabidopsis;\n            el método para establecer la ortología fue más robusto."
+msgstr ""
+"Se analizaron computacionalmente varias bases de datos de unigenes ensamblados\n"
+"            a partir de EST de tomate, papa, pimiento y café,\n"
+"            así como la base de datos CDS de Arabidopsis;\n"
+"            el método para establecer la ortología fue más robusto."
 
 #: mason/search/stocks_using_genotypes.mas:73
 msgctxt "genotype.marker.need_to_create_a_list_of_marker_alleles"
@@ -31556,7 +31776,9 @@ msgctxt "genotype.marker.of_the_matching_arabidopsis_gene_member"
 msgid ""
 "of the matching Arabidopsis\n"
 "          gene member."
-msgstr "del gen correspondiente\n          de Arabidopsis."
+msgstr ""
+"del gen correspondiente\n"
+"          de Arabidopsis."
 
 #: cgi-bin/markers/cos_markers.pl:52
 msgctxt "genotype.marker.old_plain_text_download"
@@ -31578,7 +31800,9 @@ msgctxt "genotype.marker.online_format_with_links_to_sequences_and_tiling_path"
 msgid ""
 "- online format with links to sequences and\n"
 "          tiling path."
-msgstr "- formato en línea con enlaces\n          a secuencias y al tiling path."
+msgstr ""
+"- formato en línea con enlaces\n"
+"          a secuencias y al tiling path."
 
 #: cgi-bin/search/markers/markersearch.pl:221
 msgctxt "genotype.marker.or"
@@ -31610,14 +31834,18 @@ msgctxt "genotype.marker.phylogenetic_analyses_support_their_classification_as_o
 msgid ""
 "Phylogenetic analyses support their classification\n"
 "            as orthologs."
-msgstr "Los análisis filogenéticos respaldan\n            su clasificación como ortólogos."
+msgstr ""
+"Los análisis filogenéticos respaldan\n"
+"            su clasificación como ortólogos."
 
 #: cgi-bin/markers/cos_markers.pl:52 cgi-bin/markers/cos_markers.pl:53
 msgctxt "genotype.marker.plain_text_format_for_download"
 msgid ""
 "- plain\n"
 "          text format for download."
-msgstr "- formato de\n          texto para descargar."
+msgstr ""
+"- formato de\n"
+"          texto para descargar."
 
 #: cgi-bin/phenotype/display_plants_from_genotype.pl:23
 #: cgi-bin/phenotype/display_plants_from_genotype.pl:29
@@ -31728,7 +31956,14 @@ msgid ""
 "          solanaceous species as well as coffee, and primer\n"
 "          sequences, PCR conditions and product sizes are\n"
 "          available."
-msgstr "S (eUPA) amplifican al menos 400bp de secuencias\n          exónicas, con o sin un intrón intermedio,\n          por lo que son útiles para la\n          filogenética de especies distantes. Algunos eUPA se\n          han probado en varias especies solanáceas y\n          en café; se ofrecen secuencias de cebadores,\n          condiciones de PCR y tamaños de producto."
+msgstr ""
+"S (eUPA) amplifican al menos 400bp de secuencias\n"
+"          exónicas, con o sin un intrón intermedio,\n"
+"          por lo que son útiles para la\n"
+"          filogenética de especies distantes. Algunos eUPA se\n"
+"          han probado en varias especies solanáceas y\n"
+"          en café; se ofrecen secuencias de cebadores,\n"
+"          condiciones de PCR y tamaños de producto."
 
 #: mason/search/stocks_using_genotypes.mas:12
 msgctxt "genotype.marker.search_accessions_containing_specific_genotypes"
@@ -31825,7 +32060,9 @@ msgctxt "genotype.marker.tblastx_tomato_ests_against_the_arabidopsis_genome_spec
 msgid ""
 "TBLASTX tomato ESTs against the arabidopsis genome\n"
 "            (specifically, the BAC tiling path from TAIR)"
-msgstr "TBLASTX de EST de tomate frente al genoma de\n            arabidopsis (en concreto, la ruta BAC tiling de TAIR)"
+msgstr ""
+"TBLASTX de EST de tomate frente al genoma de\n"
+"            arabidopsis (en concreto, la ruta BAC tiling de TAIR)"
 
 #: cgi-bin/markers/microsats.pl:24
 msgctxt "genotype.marker.tetra_to_hexonuclotides"
@@ -31837,28 +32074,36 @@ msgctxt "genotype.marker.the_computational_screen_for_identifying_cosii_genes_is
 msgid ""
 "The computational screen for identifying COSII genes\n"
 "          is described in"
-msgstr "El análisis computacional para identificar\n          genes COSII se describe en"
+msgstr ""
+"El análisis computacional para identificar\n"
+"          genes COSII se describe en"
 
 #: cgi-bin/markers/cos_markers.pl:49
 msgctxt "genotype.marker.the_list_of_cos_markers_is_available_in_both_online_and_plain"
 msgid ""
 "The list of COS markers is available in both online\n"
 "          and plain text format"
-msgstr "La lista de marcadores COS está disponible en\n          línea y en formato de texto sin formato"
+msgstr ""
+"La lista de marcadores COS está disponible en\n"
+"          línea y en formato de texto sin formato"
 
 #: cgi-bin/markers/cos_markers.pl:36
 msgctxt "genotype.marker.the_next_best_arabidopsis_hit_must_be_of_lower_significance_delta_e"
 msgid ""
 "the next best Arabidopsis hit must be of lower\n"
 "                significance (delta e"
-msgstr "la siguiente mejor coincidencia en Arabidopsis\n                debe tener menor significación (delta e"
+msgstr ""
+"la siguiente mejor coincidencia en Arabidopsis\n"
+"                debe tener menor significación (delta e"
 
 #: cgi-bin/markers/cosii_markers.pl:67
 msgctxt "genotype.marker.the_spreadsheet_is_sometimes_more_up_to_date_than_the_search_results"
 msgid ""
 ". The spreadsheet is sometimes more up-to-date than the search results.\n"
 "          Sequence text files and other associated COSII data can be downloaded from our"
-msgstr ". La hoja de cálculo a veces está más actualizada que los resultados de búsqueda. Los\n          archivos de texto de secuencias y otros datos COSII asociados se pueden descargar de nuestro"
+msgstr ""
+". La hoja de cálculo a veces está más actualizada que los resultados de búsqueda. Los\n"
+"          archivos de texto de secuencias y otros datos COSII asociados se pueden descargar de nuestro"
 
 #: cgi-bin/search/markers/ssr_list.pl:116
 msgctxt "genotype.marker.there_has_been_an_error_generating_data"
@@ -31876,14 +32121,24 @@ msgid ""
 "          similar orthologs sets and Universal Primers for other\n"
 "          plant families (especially dicots), and connect them with\n"
 "          COSII genes by the common Arabidopsis orthologs."
-msgstr "Por tanto, este conjunto de genes COSII y\n          los cebadores universales constituyen una herramienta eficaz para\n          establecer una red de sintenia entre Solanaceae y\n          Arabidopsis, y para estudiar filogenias, evolución y organización\n          genómica de Solanaceae. También pueden establecerse conjuntos de\n          ortólogos y cebadores universales similares para otras familias\n          vegetales (especialmente dicotiledóneas) y conectarlos con genes\n          COSII mediante los ortólogos comunes de Arabidopsis."
+msgstr ""
+"Por tanto, este conjunto de genes COSII y\n"
+"          los cebadores universales constituyen una herramienta eficaz para\n"
+"          establecer una red de sintenia entre Solanaceae y\n"
+"          Arabidopsis, y para estudiar filogenias, evolución y organización\n"
+"          genómica de Solanaceae. También pueden establecerse conjuntos de\n"
+"          ortólogos y cebadores universales similares para otras familias\n"
+"          vegetales (especialmente dicotiledóneas) y conectarlos con genes\n"
+"          COSII mediante los ortólogos comunes de Arabidopsis."
 
 #: cgi-bin/markers/cosii_markers.pl:27
 msgctxt "genotype.marker.they_occur_as_single_copy_genes_in_these_species"
 msgid ""
 "They occur as single-copy genes in these\n"
 "            species."
-msgstr "Se presentan como genes de\n            copia única en estas especies."
+msgstr ""
+"Se presentan como genes de\n"
+"            copia única en estas especies."
 
 #: cgi-bin/markers/cosii_markers.pl:34
 msgctxt "genotype.marker.this_diagram"
@@ -31930,7 +32185,9 @@ msgctxt "genotype.marker.universal_primers_developed_from_cosii_genes_iupa_and_e
 msgid ""
 "Universal Primers developed from COSII genes (iUPA\n"
 "          and eUPA)"
-msgstr "Cebadores universales desarrollados a partir de\n          genes COSII (iUPA y eUPA)"
+msgstr ""
+"Cebadores universales desarrollados a partir de\n"
+"          genes COSII (iUPA y eUPA)"
 
 #: cgi-bin/markers/cosii_markers.pl:40
 msgctxt "genotype.marker.universal_primers_for_asterid_species"
@@ -31952,7 +32209,14 @@ msgid ""
 "          related taxa in the Asterid I clade of dicot plant\n"
 "          species, and which are therefore useful for comparative\n"
 "          mapping and phylogenetics."
-msgstr "(UPA) se diseñaron sobre la secuencia consenso\n          de un grupo/gen COSII; amplifican regiones exónicas\n          e intrónicas en la mayoría, si no\n          en todas, las especies solanáceas y taxones\n          relacionados del clado Asterid I de plantas\n          dicotiledóneas, por lo que son útiles para\n          el mapeo comparativo y la filogenética."
+msgstr ""
+"(UPA) se diseñaron sobre la secuencia consenso\n"
+"          de un grupo/gen COSII; amplifican regiones exónicas\n"
+"          e intrónicas en la mayoría, si no\n"
+"          en todas, las especies solanáceas y taxones\n"
+"          relacionados del clado Asterid I de plantas\n"
+"          dicotiledóneas, por lo que son útiles para\n"
+"          el mapeo comparativo y la filogenética."
 
 #: cgi-bin/phenotype/display_plants_from_genotype.pl:78
 msgctxt "genotype.marker.view_all_images_for_this_plant"
@@ -31986,7 +32250,14 @@ msgid ""
 "          comparative mapping between the tomato and arabidopsis\n"
 "          genomes. Currently we have identified approximately 1000\n"
 "          of these Conserved Ortholog Set (COS) markers."
-msgstr "Usamos un método computacional para buscar en la base de\n          datos EST de tomate frente a la secuencia del genoma\n          de arabidopsis, con el fin de encontrar un conjunto de\n          genes altamente conservados y de copia única que puedan usarse\n          como marcadores para el mapeo comparativo de los genomas\n          de tomate y arabidopsis. Actualmente hemos identificado aproximadamente 1000\n          de estos marcadores del conjunto de ortólogos conservados (COS)."
+msgstr ""
+"Usamos un método computacional para buscar en la base de\n"
+"          datos EST de tomate frente a la secuencia del genoma\n"
+"          de arabidopsis, con el fin de encontrar un conjunto de\n"
+"          genes altamente conservados y de copia única que puedan usarse\n"
+"          como marcadores para el mapeo comparativo de los genomas\n"
+"          de tomate y arabidopsis. Actualmente hemos identificado aproximadamente 1000\n"
+"          de estos marcadores del conjunto de ortólogos conservados (COS)."
 
 #: cgi-bin/markers/index.pl:31
 msgctxt "genotype.marker.while_microsatellites_or_simple_sequence_repeats_ssrs_normally_occur_in_non_coding"
@@ -32007,7 +32278,18 @@ msgid ""
 "    a polymorphic molecular markers genetic and breeding studies in\n"
 "    tomato. The search parameters were for all possible repeat\n"
 "    motifs 2 bp to 6 bp with repeat blocks"
-msgstr "Aunque los microsatélites o repeticiones de secuencia simple (SSR) suelen aparecer\n    en regiones no codificantes del genoma, también pueden encontrarse en las\n    UTR 3' o 5' de EST e incluso en regiones codificantes\n    (normalmente como repeticiones de tripletes). Por ello, en mayo de\n    2001 se analizaron las secuencias EST de tomate y papa\n    almacenadas en SGN para detectar motivos de microsatélites, usando herramientas\n    analíticas desarrolladas por Genomics Edge Technologies, Inc; St. Louis, Missouri.\n    El objetivo era identificar SSR que pudieran servir como marcadores\n    moleculares polimórficos para estudios genéticos y de mejoramiento de tomate.\n    Los parámetros de búsqueda incluyeron todos los motivos repetidos posibles\n    de 2 bp a 6 bp, con bloques de repetición"
+msgstr ""
+"Aunque los microsatélites o repeticiones de secuencia simple (SSR) suelen aparecer\n"
+"    en regiones no codificantes del genoma, también pueden encontrarse en las\n"
+"    UTR 3' o 5' de EST e incluso en regiones codificantes\n"
+"    (normalmente como repeticiones de tripletes). Por ello, en mayo de\n"
+"    2001 se analizaron las secuencias EST de tomate y papa\n"
+"    almacenadas en SGN para detectar motivos de microsatélites, usando herramientas\n"
+"    analíticas desarrolladas por Genomics Edge Technologies, Inc; St. Louis, Missouri.\n"
+"    El objetivo era identificar SSR que pudieran servir como marcadores\n"
+"    moleculares polimórficos para estudios genéticos y de mejoramiento de tomate.\n"
+"    Los parámetros de búsqueda incluyeron todos los motivos repetidos posibles\n"
+"    de 2 bp a 6 bp, con bloques de repetición"
 
 #: cgi-bin/markers/cosii_markers.pl:73
 msgctxt "genotype.marker.wu_f_mueller_la_crouzillat_d_petiard_v_tanksley_sd_2006_combining"
@@ -32017,14 +32299,21 @@ msgid ""
 "Single Copy, Orthologous Genes (COSII) for Comparative, Evolutinonary\n"
 "and Systematics Studies: A Test Case in the Euasterid Plant Clade (2006).\n"
 "Genetics, 2006 Nov;174(3):1407-20."
-msgstr "Wu F, Mueller LA, Crouzillat D, Petiard V, Tanksley\nSD (2006). Combining Bioinformatics and Phylogenetics to Identify Large\nSets of Single Copy, Orthologous Genes (COSII) for Comparative,\nEvolutinonary and Systematics Studies: A Test Case in\nthe Euasterid Plant Clade (2006). Genetics, 2006 Nov;174(3):1407-20."
+msgstr ""
+"Wu F, Mueller LA, Crouzillat D, Petiard V, Tanksley\n"
+"SD (2006). Combining Bioinformatics and Phylogenetics to Identify Large\n"
+"Sets of Single Copy, Orthologous Genes (COSII) for Comparative,\n"
+"Evolutinonary and Systematics Studies: A Test Case in\n"
+"the Euasterid Plant Clade (2006). Genetics, 2006 Nov;174(3):1407-20."
 
 #: cgi-bin/markers/cosii_markers.pl:67
 msgctxt "genotype.marker.xls_spreadsheet"
 msgid ""
 ".xls\n"
 "          spreadsheet"
-msgstr "hoja de\n          cálculo .xls"
+msgstr ""
+"hoja de\n"
+"          cálculo .xls"
 
 #: mason/breeders_toolbox/markers/manage_markers.mas:162
 msgctxt "genotype.marker_sets.add_multiple_markers"
@@ -35222,7 +35511,9 @@ msgctxt "genotype.plate.the_first_step_will_be_to_select_the_genotyping_protocol
 msgid ""
 "The first step will be to select the Genotyping Protocol that contains the markers.\n"
 "                                This Genotyping Protocol"
-msgstr "El primer paso es seleccionar el protocolo de genotipado que contiene los marcadores.\n                                Este protocolo de genotipado"
+msgstr ""
+"El primer paso es seleccionar el protocolo de genotipado que contiene los marcadores.\n"
+"                                Este protocolo de genotipado"
 
 #: mason/breeders_toolbox/genotyping_trials/upload_genotyping_data_dialogs.mas:217
 msgctxt "genotype.plate.the_generated_number_is_separated_from_the_tissue_sample_name"
@@ -35292,7 +35583,9 @@ msgctxt "genotype.plate.the_second_step_will_be_to_upload_the_a_file"
 msgid ""
 "The second step will be to upload the a file containing the metadata that are associated with each marker.\n"
 "                                The names of the markers in the file"
-msgstr "El segundo paso es cargar un archivo con los metadatos asociados a cada marcador.\n                                Los nombres de los marcadores del archivo"
+msgstr ""
+"El segundo paso es cargar un archivo con los metadatos asociados a cada marcador.\n"
+"                                Los nombres de los marcadores del archivo"
 
 #: mason/breeders_toolbox/genotyping_trials/download_genotyping_trial_layouts_dialogs.mas:36
 msgctxt "genotype.plate.there_are_no_genotyping_layouts_in_this_folder"
@@ -35530,7 +35823,6 @@ msgid "Well accession was replaced successfully..."
 msgstr "La muestra del pocillo se reemplazó correctamente..."
 
 #: mason/breeders_toolbox/genotyping_trials/upload_genotyping_data_dialogs.mas:651
-
 msgctxt "genotype.plate.you_can_include_additional_marker_infomation_by_selecting_one_or"
 msgid "You can include additional marker information by selecting one or more column headers listed below. Please add the selected column(s) after \"Position\" column."
 msgstr "Puede incluir información adicional de los marcadores seleccionando uno o más encabezados de columna de la lista. Añada las columnas seleccionadas después de la columna «Position»."
@@ -38597,7 +38889,7 @@ msgid "An error occurred. Please try again."
 msgstr "Se produjo un error. Inténtelo de nuevo."
 
 #: js/source/legacy/CXGN/Dataset.js:209
-#: lib/SGN/Controller/AJAX/Search/Treatment.pm:121
+#: lib/SGN/Controller/AJAX/Search/Treatment.pm:148
 #: mason/transcript/unigene/gene_family_info.mas:96
 msgctxt "global.dataset_cxgn_dataset.none"
 msgid "None"
@@ -44850,14 +45142,18 @@ msgctxt "global.wizard_datasets.create_success"
 msgid ""
 "Dataset %{name} created with: %{details}. \n"
 "Compatibility check will run in background."
-msgstr "Se creó el conjunto de datos %{name} con: %{details}. \nLa comprobación de compatibilidad se ejecutará en segundo plano."
+msgstr ""
+"Se creó el conjunto de datos %{name} con: %{details}. \n"
+"La comprobación de compatibilidad se ejecutará en segundo plano."
 
 #: js/source/modules/wizard-datasets.js:57
 msgctxt "global.wizard_datasets.delete_confirm"
 msgid ""
 "Dataset %{name} contains: %{details}\n"
 "Are you sure you would like to delete it? Deletion cannot be undone."
-msgstr "El conjunto de datos %{name} contiene: %{details}\n¿Seguro que desea eliminarlo? Esta acción no se puede deshacer."
+msgstr ""
+"El conjunto de datos %{name} contiene: %{details}\n"
+"¿Seguro que desea eliminarlo? Esta acción no se puede deshacer."
 
 #: js/source/modules/wizard-datasets.js:125
 msgctxt "global.wizard_datasets.network_error"
@@ -46154,7 +46450,6 @@ msgid_plural "%{count} tissue samples"
 msgstr[0] "%{count} muestra de tejido"
 msgstr[1] "%{count} muestras de tejido"
 
-
 #: mason/breeders_toolbox/image_analysis_run_details.mas:116
 msgctxt "image_analysis.run.samples"
 msgid "Samples"
@@ -46721,7 +47016,6 @@ msgid_plural "The following items are already in the list and were not added: %{
 msgstr[0] "El siguiente elemento ya está en la lista y no se añadió: %{items}."
 msgstr[1] "Los siguientes elementos ya están en la lista y no se añadieron: %{items}."
 
-
 #: js/source/legacy/CXGN/List.js:392
 msgctxt "lists.bulk.failed"
 msgid "An error occurred. Cannot add items to the list."
@@ -46750,14 +47044,12 @@ msgid_plural "Added %{count} list elements."
 msgstr[0] "Se añadió %{count} elemento."
 msgstr[1] "Se añadieron %{count} elementos."
 
-
 #: js/source/legacy/CXGN/List.js:1555
 msgctxt "lists.copy.added_new"
 msgid "Added %{count} list element to the new list \"%{name}\"."
 msgid_plural "Added %{count} list elements to the new list \"%{name}\"."
 msgstr[0] "Se añadió %{count} elemento a la nueva lista \"%{name}\"."
 msgstr[1] "Se añadieron %{count} elementos a la nueva lista \"%{name}\"."
-
 
 #: js/source/legacy/CXGN/List.js:1521
 msgctxt "lists.copy.new_name"
@@ -47685,7 +47977,9 @@ msgctxt "lists_datasets.api_dataset.error_calculating_tool_compatibility_detail"
 msgid ""
 "Error calculating tool compatibility:\n"
 "%{detail}"
-msgstr "Error al calcular la compatibilidad con herramientas:\n%{detail}"
+msgstr ""
+"Error al calcular la compatibilidad con herramientas:\n"
+"%{detail}"
 
 #: lib/SGN/Controller/AJAX/Dataset.pm:432
 msgctxt "lists_datasets.api_dataset.error_retrieving_analyses_using_this_dataset_detail"
@@ -48539,12 +48833,13 @@ msgid "An error occurred calculating tool compatibility"
 msgstr "Se produjo un error al calcular la compatibilidad de herramientas"
 
 #: mason/dataset/tool_compatibility.mas:75
-
 msgctxt "lists_datasets.compatibility.calculate_error_detail"
 msgid ""
 "An error occurred calculating tool compatibility: \n"
 "%{error}"
-msgstr "Se produjo un error al calcular la compatibilidad de herramientas: \n%{error}"
+msgstr ""
+"Se produjo un error al calcular la compatibilidad de herramientas: \n"
+"%{error}"
 
 #: mason/dataset/tool_compatibility.mas:77
 #: mason/dataset/tool_compatibility.mas:89
@@ -48567,7 +48862,9 @@ msgctxt "lists_datasets.compatibility.retrieve_error_detail"
 msgid ""
 "An error occurred. \n"
 "%{error}"
-msgstr "Se produjo un error. \n%{error}"
+msgstr ""
+"Se produjo un error. \n"
+"%{error}"
 
 #: mason/dataset/tool_compatibility.mas:113
 #: mason/dataset/tool_compatibility.mas:99
@@ -50965,7 +51262,6 @@ msgid_plural "Location %{name} cannot be deleted because there are %{count} meas
 msgstr[0] "No se puede eliminar la ubicación %{name} porque tiene %{count} medición asociada de al menos un ensayo.\n"
 msgstr[1] "No se puede eliminar la ubicación %{name} porque tiene %{count} mediciones asociadas de al menos un ensayo.\n"
 
-
 #: lib/CXGN/Location.pm:328
 msgctxt "locations.model.deleted"
 msgid "Location %{name} was successfully deleted.\n"
@@ -51114,7 +51410,6 @@ msgid "Copied %{count} row to clipboard"
 msgid_plural "Copied %{count} rows to clipboard"
 msgstr[0] "Se copió %{count} fila al portapapeles"
 msgstr[1] "Se copiaron %{count} filas al portapapeles"
-
 
 #: js/source/legacy/CXGN/Locations.js:83
 msgctxt "locations.table.copy_title"
@@ -51301,7 +51596,9 @@ msgctxt "marker.detail.as_one_or_more_markers_at_this_variant_or_are"
 msgid ""
 "as one or more markers at this variant or \n"
 "are located at the same"
-msgstr "nombre que uno o más marcadores de esta variante o\nse encuentran en la misma "
+msgstr ""
+"nombre que uno o más marcadores de esta variante o\n"
+"se encuentran en la misma "
 
 #: mason/markers/locations.mas:243
 msgctxt "marker.detail.aspe_primers_direction"
@@ -56113,7 +56410,9 @@ msgctxt "phenotype.root.all_populations.2ddb165"
 msgid ""
 "\n"
 "All Populations:\n"
-msgstr "\nTodas las poblaciones:\n"
+msgstr ""
+"\n"
+"Todas las poblaciones:\n"
 
 #: cgi-bin/phenotype/population.pl:61
 msgctxt "phenotype.root.all_populations.af2f753"
@@ -56223,7 +56522,9 @@ msgctxt "phenotype.root.below_is_a_list_of_all.83ce014"
 msgid ""
 "\n"
 "Below is a list of all "
-msgstr "\nA continuación se muestra una lista de todos los "
+msgstr ""
+"\n"
+"A continuación se muestra una lista de todos los "
 
 #: cgi-bin/phenotype/index.pl:60 cgi-bin/phenotype/index.pl:75
 #: cgi-bin/phenotype/population.pl:97
@@ -56596,7 +56897,9 @@ msgctxt "phenotype.root.genotypes_in.0ad1fb7"
 msgid ""
 "\n"
 "Genotypes in "
-msgstr "\nGenotipos en "
+msgstr ""
+"\n"
+"Genotipos en "
 
 #: cgi-bin/phenotype/index.pl:63
 msgctxt "phenotype.root.genotypes_in.7138ec5"
@@ -56654,7 +56957,9 @@ msgctxt "phenotype.root.in_the_selected_population_above_selecting_a_genotype_wi
 msgid ""
 " in the selected population above -  \n"
 "selecting a genotype will take you to a page of plants with the selected genotype.  This new page will have links to all images and data of these plants:"
-msgstr " de la población seleccionada arriba;  \nal seleccionar un genotipo se abrirá una página de plantas con ese genotipo.  Esta nueva página tendrá enlaces a todas las imágenes y datos de estas plantas:"
+msgstr ""
+" de la población seleccionada arriba;  \n"
+"al seleccionar un genotipo se abrirá una página de plantas con ese genotipo.  Esta nueva página tendrá enlaces a todas las imágenes y datos de estas plantas:"
 
 #: cgi-bin/phenotype/population.pl:81
 msgctxt "phenotype.root.in_the_selected_population_above_selecting_a_genotype_will_take.a241ffb"
@@ -56751,7 +57056,9 @@ msgctxt "phenotype.root.measured_in_the_selected_population_above_selecting_a_pr
 msgid ""
 " measured in the selected population above - \n"
 "selecting a property will take you to a page of plants with the selected property measured.  This new page will have links to each plant's sample data and images:"
-msgstr " medidas en la población seleccionada arriba - \nal seleccionar una propiedad se abrirá una página de plantas con esa propiedad medida. Esta nueva página tendrá enlaces a los datos e imágenes de las muestras de cada planta:"
+msgstr ""
+" medidas en la población seleccionada arriba - \n"
+"al seleccionar una propiedad se abrirá una página de plantas con esa propiedad medida. Esta nueva página tendrá enlaces a los datos e imágenes de las muestras de cada planta:"
 
 #: mason/tools/trait_designer.mas:52
 msgctxt "phenotype.root.measurement_type"
@@ -57080,7 +57387,6 @@ msgid_plural "populations"
 msgstr[0] "población"
 msgstr[1] "poblaciones"
 
-
 #: lib/CXGN/Phenotypes/StorePhenotypes.pm:1376
 msgctxt "phenotype.root.previously_stored_values_overwritten"
 msgid " previously stored values overwritten"
@@ -57350,7 +57656,9 @@ msgctxt "phenotype.root.should_not_be_a_variable_term_will_be_the_trait"
 msgid ""
 "Should not be a variable term.\n"
 "Will be the trait root term by default if none are added."
-msgstr "No debe ser un término de variable.\nSi no se añade ninguno, se usará el término raíz del carácter."
+msgstr ""
+"No debe ser un término de variable.\n"
+"Si no se añade ninguno, se usará el término raíz del carácter."
 
 #: lib/CXGN/Phenotypes/StorePhenotypes.pm:760
 msgctxt "phenotype.root.should_not_be_larger_than_the_defined_trait_maximum"
@@ -57684,7 +57992,9 @@ msgctxt "phenotype.root.upload_or_compute_trait_s_required_for_computing"
 msgid ""
 "Upload or compute trait(s) required for computing \n"
 "\n"
-msgstr "Cargue o calcule los caracteres necesarios para calcular \n\n"
+msgstr ""
+"Cargue o calcule los caracteres necesarios para calcular \n"
+"\n"
 
 #: mason/search/traits.mas:113
 msgctxt "phenotype.root.using_the_trait_submission_form"
@@ -58287,7 +58597,7 @@ msgctxt "phenotype.unweighted_means"
 msgid "Unweighted Means"
 msgstr "Medias sin ponderar"
 
-#: lib/CXGN/Phenotypes/ParseUpload/Plugin/PhenotypeSpreadsheetSimpleGeneric.pm:211
+#: lib/CXGN/Phenotypes/ParseUpload/Plugin/PhenotypeSpreadsheetSimpleGeneric.pm:210
 msgctxt "phenotype.upload.a_database_schema_is_required_to_parse_observationunitdbid_values"
 msgid "A database schema is required to parse observationUnitDbId values."
 msgstr "Se requiere un esquema de base de datos para analizar los valores de observationUnitDbId."
@@ -58353,12 +58663,12 @@ msgctxt "phenotype.upload.file_contents_incorrect_header_row_must_contain_studyy
 msgid "File contents incorrect. Header row must contain:  \"studyYear\",\"studyDbId\",\"studyName\",\"studyDesign\",\"locationDbId\",\"locationName\",\"germplasmDbId\",\"germplasmName\",\"germplasmSynonyms\",\"observationLevel\",\"observationUnitDbId\",\"observationUnitName\",\"replicate\",\"blockNumber\",\"plotNumber\" followed by all measured traits."
 msgstr "El contenido del archivo es incorrecto. La fila de encabezados debe contener:  \"studyYear\",\"studyDbId\",\"studyName\",\"studyDesign\",\"locationDbId\",\"locationName\",\"germplasmDbId\",\"germplasmName\",\"germplasmSynonyms\",\"observationLevel\",\"observationUnitDbId\",\"observationUnitName\",\"replicate\",\"blockNumber\",\"plotNumber\" seguido de todos los caracteres medidos."
 
-#: lib/CXGN/Phenotypes/ParseUpload/Plugin/PhenotypeSpreadsheetSimpleGeneric.pm:201
+#: lib/CXGN/Phenotypes/ParseUpload/Plugin/PhenotypeSpreadsheetSimpleGeneric.pm:200
 msgctxt "phenotype.upload.file_must_have_a_plot_name_or_observationunitdbid_column"
 msgid "File must have a plot name or observationUnitDbId column."
 msgstr "El archivo debe tener una columna de nombre de parcela u observationUnitDbId."
 
-#: lib/CXGN/Phenotypes/ParseUpload/Plugin/PhenotypeSpreadsheetSimpleGeneric.pm:191
+#: lib/CXGN/Phenotypes/ParseUpload/Plugin/PhenotypeSpreadsheetSimpleGeneric.pm:190
 msgctxt "phenotype.upload.file_must_have_a_plot_name_or_observationunitdbid_column_errors_values"
 msgid "File must have a plot name or observationUnitDbId column. Errors: %{values}"
 msgstr "El archivo debe tener una columna de nombre de parcela u observationUnitDbId. Errores: %{values}"
@@ -58479,7 +58789,7 @@ msgctxt "phenotype.upload.no_plot_name_or_plant_name_or_subplot_name_or_tissue_s
 msgid "No plot_name or plant_name or subplot_name or tissue_sample_name in header. Make sure you are using the correct spreadsheet format. It may help to recreate your spreadsheet from the website."
 msgstr "Falta plot_name o plant_name o subplot_name o tissue_sample_name en el encabezado. Asegúrese de utilizar el formato correcto de hoja de cálculo. Puede ayudar volver a crear la hoja desde el sitio web."
 
-#: lib/CXGN/Phenotypes/ParseUpload/Plugin/PhenotypeSpreadsheetSimpleGeneric.pm:225
+#: lib/CXGN/Phenotypes/ParseUpload/Plugin/PhenotypeSpreadsheetSimpleGeneric.pm:224
 msgctxt "phenotype.upload.no_valid_observationunitdbid_values_found_in_the_file"
 msgid "No valid observationUnitDbId values found in the file."
 msgstr "No se encontraron valores válidos de observationUnitDbId en el archivo."
@@ -58545,8 +58855,8 @@ msgctxt "phenotype.upload.spreadsheet_is_missing_plot_name_and_atleast_one_trait
 msgid "Spreadsheet is missing plot_name and at least one trait in header."
 msgstr "Faltan plot_name y al menos un carácter en el encabezado de la hoja."
 
-#: lib/CXGN/Phenotypes/ParseUpload/Plugin/PhenotypeSpreadsheetSimpleGeneric.pm:126
-#: lib/CXGN/Phenotypes/ParseUpload/Plugin/PhenotypeSpreadsheetSimpleGeneric.pm:205
+#: lib/CXGN/Phenotypes/ParseUpload/Plugin/PhenotypeSpreadsheetSimpleGeneric.pm:125
+#: lib/CXGN/Phenotypes/ParseUpload/Plugin/PhenotypeSpreadsheetSimpleGeneric.pm:204
 msgctxt "phenotype.upload.spreadsheet_must_have_at_least_one_trait_in_the_header"
 msgid "Spreadsheet must have at least one trait in the header."
 msgstr "La hoja debe tener al menos un carácter en el encabezado."
@@ -58576,7 +58886,7 @@ msgctxt "phenotype.upload.the_following_observations_do_not_exist_in_the_databas
 msgid "The following observations do not exist in the database: %{values}"
 msgstr "Las siguientes observaciones no existen en la base de datos: %{values}"
 
-#: lib/CXGN/Phenotypes/ParseUpload/Plugin/PhenotypeSpreadsheetSimpleGeneric.pm:233
+#: lib/CXGN/Phenotypes/ParseUpload/Plugin/PhenotypeSpreadsheetSimpleGeneric.pm:232
 msgctxt "phenotype.upload.the_following_observationunitdbid_values_could_not_be_found_in_the_database"
 msgid "The following observationUnitDbId values could not be found in the database: %{values}"
 msgstr "No se encontraron los siguientes valores de observationUnitDbId en la base de datos: %{values}"
@@ -58632,7 +58942,7 @@ msgctxt "phenotype.upload.timestamp_needs_to_be_of_form_yyyy_mm_dd_hh_mm_ss_0000
 msgid "Timestamp needs to be of form YYYY-MM-DD HH:MM:SS-0000 or YYYY-MM-DD HH:MM:SS+0000"
 msgstr "La marca de tiempo debe tener el formato YYYY-MM-DD HH:MM:SS-0000 o YYYY-MM-DD HH:MM:SS+0000"
 
-#: lib/CXGN/Phenotypes/ParseUpload/Plugin/PhenotypeSpreadsheetSimpleGeneric.pm:140
+#: lib/CXGN/Phenotypes/ParseUpload/Plugin/PhenotypeSpreadsheetSimpleGeneric.pm:139
 msgctxt "phenotype.upload.timestamp_needs_to_be_of_form_yyyy_mm_dd_hh_mm_ss_0000_or_yyyy_mm_dd_hh_mm_.c94f12a"
 msgid "Timestamp needs to be of form YYYY-MM-DD HH:MM:SS-0000 or YYYY-MM-DD HH:MM:SS+0000 or YYYY-MM-DD HH:MM format"
 msgstr "La marca de tiempo debe tener el formato YYYY-MM-DD HH:MM:SS-0000 o YYYY-MM-DD HH:MM:SS+0000 o YYYY-MM-DD HH:MM"
@@ -58647,8 +58957,8 @@ msgctxt "phenotype.upload.transcript_name_is_required"
 msgid "Transcript name is required!"
 msgstr "El nombre del transcrito es obligatorio!"
 
-#: lib/CXGN/Phenotypes/ParseUpload/Plugin/AnalysisPhenotypeSpreadsheetCSV.pm:234
-#: lib/CXGN/Phenotypes/ParseUpload/Plugin/PhenotypeSpreadsheetCSV.pm:212
+#: lib/CXGN/Phenotypes/ParseUpload/Plugin/AnalysisPhenotypeSpreadsheetCSV.pm:232
+#: lib/CXGN/Phenotypes/ParseUpload/Plugin/PhenotypeSpreadsheetCSV.pm:210
 msgctxt "phenotype.upload.value_or_timestamp_missing"
 msgid "Value or timestamp missing."
 msgstr "Falta el valor o la marca de tiempo."
@@ -58796,8 +59106,9 @@ msgid "To remove previously stored values if left blank in your file: "
 msgstr "Para eliminar los valores guardados anteriormente cuando los campos correspondientes estén vacíos en el archivo: "
 
 #: js/source/legacy/CXGN/BreedersToolbox/UploadPhenotype.js:264
+#, fuzzy
 msgctxt "phenotype_upload.client.remove_help"
-msgid "New values will be uploaded. Any previously stored values will be replaced by non-blank values.  Blank values in the upload file will remove any previously stored values."
+msgid "New values will be uploaded. Any previously stored values will be replaced by non-blank values.  Blank values, NA and '.' in the upload file will remove any previously stored values."
 msgstr "Se cargarán los valores nuevos. Los valores guardados anteriormente se reemplazarán por valores no vacíos.  Los valores vacíos del archivo cargado eliminarán los valores guardados anteriormente."
 
 #: js/source/legacy/CXGN/BreedersToolbox/UploadPhenotype.js:82
@@ -58890,7 +59201,7 @@ msgctxt "phenotype_upload.datacollector_error.timestamp_format"
 msgid "Timestamp needs to be of form %{negative} or %{positive}"
 msgstr "La marca de tiempo debe tener el formato %{negative} o %{positive}"
 
-#: lib/CXGN/Phenotypes/ParseUpload/Plugin/DataCollectorSpreadsheet.pm:278
+#: lib/CXGN/Phenotypes/ParseUpload/Plugin/DataCollectorSpreadsheet.pm:276
 #: lib/SGN/Controller/AJAX/PhenotypesUpload.pm:559
 msgctxt "phenotype_upload.datacollector_error.value_timestamp_missing"
 msgid "Value or timestamp missing."
@@ -59099,7 +59410,6 @@ msgid_plural "%{count} previously stored values overwritten"
 msgstr[0] "Se ha sobrescrito %{count} valor guardado previamente"
 msgstr[1] "Se han sobrescrito %{count} valores guardados previamente"
 
-
 #: lib/SGN/Controller/AJAX/PhenotypesUpload.pm:737
 msgctxt "phenotype_upload.server.parse_failed"
 msgid "Error parsing file %{filename}."
@@ -59128,7 +59438,6 @@ msgid_plural "%{count} previously stored values removed"
 msgstr[0] "Se ha eliminado %{count} valor guardado previamente"
 msgstr[1] "Se han eliminado %{count} valores guardados previamente"
 
-
 #: lib/SGN/Controller/AJAX/PhenotypesUpload.pm:420
 msgctxt "phenotype_upload.server.skipped_count"
 msgid "%{count} previously stored value skipped"
@@ -59136,14 +59445,12 @@ msgid_plural "%{count} previously stored values skipped"
 msgstr[0] "Se ha omitido %{count} valor guardado previamente"
 msgstr[1] "Se han omitido %{count} valores guardados previamente"
 
-
 #: lib/SGN/Controller/AJAX/PhenotypesUpload.pm:419
 msgctxt "phenotype_upload.server.stored_count"
 msgid "%{count} new value stored"
 msgid_plural "%{count} new values stored"
 msgstr[0] "Se ha guardado %{count} valor nuevo"
 msgstr[1] "Se han guardado %{count} valores nuevos"
-
 
 #: lib/SGN/Controller/AJAX/PhenotypesUpload.pm:638
 msgctxt "phenotype_upload.server.submitter_required"
@@ -59403,7 +59710,6 @@ msgid "There is %{count} value in your file that is the same as a value already 
 msgid_plural "There are %{count} values in your file that are the same as values already stored in the database."
 msgstr[0] "Hay %{count} valor en su archivo que coincide con un valor ya almacenado en la base de datos."
 msgstr[1] "Hay %{count} valores en su archivo que coinciden con valores ya almacenados en la base de datos."
-
 
 #: mason/breeders_toolbox/manage_phenotyping.mas:29
 msgctxt "phenotyping.manage.action.create_spreadsheet"
@@ -60332,7 +60638,10 @@ msgid ""
 "The allowed management factor types are defined\n"
 "in the server configuration file. Contact the \n"
 "server administrator with questions."
-msgstr "Los tipos de factores de manejo permitidos se definen\nen el archivo de configuración del servidor. Si tiene preguntas, contacte al \nadministrador del servidor."
+msgstr ""
+"Los tipos de factores de manejo permitidos se definen\n"
+"en el archivo de configuración del servidor. Si tiene preguntas, contacte al \n"
+"administrador del servidor."
 
 #: mason/breeders_toolbox/trial/add_management_factor_dialog.mas:17
 msgctxt "program.management_factor_add.type_label"
@@ -65779,7 +66088,6 @@ msgid_plural "%{count} elements have been deleted"
 msgstr[0] "Se ha eliminado %{count} elemento"
 msgstr[1] "Se han eliminado %{count} elementos"
 
-
 # Model draft; human/native editorial review pending.
 #: mason/breeders_toolbox/add_seedlot_dialogs.mas:27
 #: mason/breeders_toolbox/seedlots_section.mas:15
@@ -69441,7 +69749,10 @@ msgid ""
 "\n"
 "\n"
 "Hint: "
-msgstr "\n\nPista: "
+msgstr ""
+"\n"
+"\n"
+"Pista: "
 
 #: js/source/legacy/solGS/analysisStatus.js:92
 msgctxt "solgs.browser.job_log_clear_dead_error"
@@ -69516,7 +69827,6 @@ msgid "Timed Out"
 msgstr "Tiempo agotado"
 
 #: js/source/legacy/solGS/solGS.js:412
-
 msgctxt "solgs.browser.job_submission_failed"
 msgid "Error occurred submitting the job. Please contact the developers."
 msgstr "Error al enviar el trabajo. Contacta con los desarrolladores."
@@ -69986,7 +70296,6 @@ msgid "Predict"
 msgstr "Predecir"
 
 #: js/source/legacy/solGS/listTypeSelectionPopulation.js:392
-
 msgctxt "solgs.browser.predicted_output_check_error"
 msgid "Error occurred checking if the selection population has predicted output."
 msgstr "Error al comprobar si la población de selección tiene resultados de predicción."
@@ -70026,7 +70335,9 @@ msgctxt "solgs.browser.relative_weight_must_be_number"
 msgid ""
 "the relative weight of trait  %{trait} must be a number.\n"
 "                    Only numbers and multiplication symbols ('*' or 'x') are allowed."
-msgstr "el peso relativo del rasgo  %{trait} debe ser un número.\n                    Solo se permiten números y los símbolos de multiplicación ('*' o 'x')."
+msgstr ""
+"el peso relativo del rasgo  %{trait} debe ser un número.\n"
+"                    Solo se permiten números y los símbolos de multiplicación ('*' o 'x')."
 
 #: js/source/legacy/solGS/selectionIndex.js:153
 msgctxt "solgs.browser.relative_weight_required"
@@ -72821,7 +73132,7 @@ msgctxt "transformation.helper.please_set_up_prefix_for_autogenerated_names_for_
 msgid "Please set up prefix for autogenerated names for this transformation project before using tracking tool"
 msgstr "Configure el prefijo de nombres autogenerados de este proyecto de transformación antes de utilizar la herramienta de seguimiento"
 
-#: lib/SGN/Controller/AJAX/Search/Treatment.pm:156
+#: lib/SGN/Controller/AJAX/Search/Treatment.pm:183
 msgctxt "transformation.helper.plots"
 msgid "Plots:"
 msgstr "Parcelas:"
@@ -73005,7 +73316,7 @@ msgctxt "transformation.helper.treatment_format_must_be_numeric_categorical_date
 msgid "Treatment format must be numeric, categorical, date, percent, counter, boolean, text, or ontology.\n"
 msgstr "El formato del tratamiento debe ser numeric, categorical, date, percent, counter, boolean, text u ontology.\n"
 
-#: lib/SGN/Controller/AJAX/Search/Treatment.pm:156
+#: lib/SGN/Controller/AJAX/Search/Treatment.pm:183
 msgctxt "transformation.helper.trials"
 msgid "Trials:"
 msgstr "Ensayos:"
@@ -74399,7 +74710,9 @@ msgctxt "transformation.root.should_not_be_a_variable_term_will_be_the_treatment
 msgid ""
 "Should not be a variable term.\n"
 "Will be the treatment root term by default if none are added."
-msgstr "No debe ser un término de variable.\nPor defecto será el término raíz del tratamiento si no se añade ninguno."
+msgstr ""
+"No debe ser un término de variable.\n"
+"Por defecto será el término raíz del tratamiento si no se añade ninguno."
 
 #: mason/tools/treatment_designer.mas:46
 msgctxt "transformation.root.single_application"
@@ -78503,7 +78816,6 @@ msgid_plural "Locations Selected: %{count}"
 msgstr[0] "Ubicación seleccionada: %{count}"
 msgstr[1] "Ubicaciones seleccionadas: %{count}"
 
-
 #: mason/breeders_toolbox/trial/trial_create_dialogs.mas:92
 msgctxt "trial.create.metadata.title"
 msgid "Enter basic information about the trial"
@@ -79248,7 +79560,11 @@ msgid ""
 "This design is resulting in:\n"
 "Cols: %{cols}\n"
 "Rows: %{rows}\n"
-msgstr "El número de entradas debe ser divisible por el número de columnas.\nEste diseño da como resultado:\nColumnas: %{cols}\nFilas: %{rows}\n"
+msgstr ""
+"El número de entradas debe ser divisible por el número de columnas.\n"
+"Este diseño da como resultado:\n"
+"Columnas: %{cols}\n"
+"Filas: %{rows}\n"
 
 #: lib/CXGN/Trial/TrialDesign/Plugin/DRRC.pm:78
 msgctxt "trial.design.drrc_treatments"
@@ -79257,7 +79573,11 @@ msgid ""
 "This design is resulting in:\n"
 "Cols: %{cols}\n"
 "Rows: %{rows}\n"
-msgstr "El número total de tratamientos debe ser divisible por el número de filas.\nEste diseño da como resultado:\nColumnas: %{cols}\nFilas: %{rows}\n"
+msgstr ""
+"El número total de tratamientos debe ser divisible por el número de filas.\n"
+"Este diseño da como resultado:\n"
+"Columnas: %{cols}\n"
+"Filas: %{rows}\n"
 
 #: lib/CXGN/Trial/TrialDesign.pm:212
 msgctxt "trial.design.field_rows_integer"
@@ -79373,7 +79693,12 @@ msgid ""
 "block_No:%{block_number}\n"
 "rep_No:%{rep_number}\n"
 "stock:%{stock_name}"
-msgstr "%{plot_name}\nNúmero de parcela:%{plot_number}\nNúmero de bloque:%{block_number}\nNúmero de repetición:%{rep_number}\nAccesión:%{stock_name}"
+msgstr ""
+"%{plot_name}\n"
+"Número de parcela:%{plot_number}\n"
+"Número de bloque:%{block_number}\n"
+"Número de repetición:%{rep_number}\n"
+"Accesión:%{stock_name}"
 
 #: lib/CXGN/Trial/TrialDesign/Plugin/Alpha.pm:51
 #: lib/CXGN/Trial/TrialDesign/Plugin/CRD.pm:51
@@ -79408,7 +79733,6 @@ msgid_plural "Block %{block}: %{count} accessions"
 msgstr[0] "Bloque %{block}: %{count} accesión"
 msgstr[1] "Bloque %{block}: %{count} accesiones"
 
-
 #: lib/SGN/View/Trial.pm:421
 msgctxt "trial.design.summary.block_crosses"
 msgid "Block %{block}: %{count} cross unique id"
@@ -79416,14 +79740,12 @@ msgid_plural "Block %{block}: %{count} cross unique ids"
 msgstr[0] "Bloque %{block}: %{count} identificador único de cruzamiento"
 msgstr[1] "Bloque %{block}: %{count} identificadores únicos de cruzamiento"
 
-
 #: lib/SGN/View/Trial.pm:416
 msgctxt "trial.design.summary.block_families"
 msgid "Block %{block}: %{count} family name"
 msgid_plural "Block %{block}: %{count} family names"
 msgstr[0] "Bloque %{block}: %{count} nombre de familia"
 msgstr[1] "Bloque %{block}: %{count} nombres de familia"
-
 
 #: lib/SGN/View/Trial.pm:412
 msgctxt "trial.design.summary.blocks"
@@ -81361,7 +81683,9 @@ msgctxt "trial.heatmap.invalid_dimensions"
 msgid ""
 "Those are not valid dimensions.\n"
 "Please pick dimensions for a plot size equal to or larger than your current plot."
-msgstr "Esas dimensiones no son válidas.\nElija dimensiones de parcela iguales o mayores que las actuales."
+msgstr ""
+"Esas dimensiones no son válidas.\n"
+"Elija dimensiones de parcela iguales o mayores que las actuales."
 
 #: mason/breeders_toolbox/trial/phenotype_heatmap.mas:233
 msgctxt "trial.heatmap.invert_rows"
@@ -81998,17 +82322,17 @@ msgctxt "trial.model.folder_name_used"
 msgid "The name %{name} cannot be used for a new folder because it already exists."
 msgstr "El nombre %{name} no se puede utilizar para una carpeta nueva porque ya existe."
 
-#: lib/CXGN/Project.pm:5980
+#: lib/CXGN/Project.pm:5987
 msgctxt "trial.model.genotyping_linkage.curator_only"
 msgid "Only a curator can delete this linkage."
 msgstr "Solo un curador puede eliminar este vínculo."
 
-#: lib/CXGN/Project.pm:6000
+#: lib/CXGN/Project.pm:6007
 msgctxt "trial.model.genotyping_linkage.deletion_error"
 msgid "An error occurred during deletion."
 msgstr "Se produjo un error durante la eliminación."
 
-#: lib/CXGN/Project.pm:6003
+#: lib/CXGN/Project.pm:6010
 msgctxt "trial.model.genotyping_linkage.relationship_count"
 msgid "Project relationship does not exists or has more than 1 occurrence."
 msgstr "La relación del proyecto no existe o aparece más de 1 vez."

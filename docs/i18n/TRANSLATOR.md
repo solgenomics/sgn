@@ -138,7 +138,9 @@ python3 "$I18N_TOOLS/pack.py" rollback --locale fr --root "$PACK_STORE"
 
 Installation validates and copies the complete immutable package to
 `installed/fr/<catalogSha256>/`; it does not change the selected language.
-Activation validates its exact locale and hash again. An optional
+Activation validates its exact locale and hash again. A validated recovery journal
+restores or reconciles an interrupted first activation or legacy-store migration
+on the next operator command; unrelated missing paths never authorize recovery. An optional
 `--expected-revision` requires the approved semantic message-set revision.
 An unrelated source change does not ordinarily invalidate exact matching
 messages; a strict revision rollout gate is an operator choice.

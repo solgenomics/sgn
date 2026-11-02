@@ -1,3 +1,28 @@
+// Keep native English pages usable when optional locale resources are unavailable.
+(function (root) {
+    var api = root.SGN = root.SGN || {};
+    function format(text, variables) {
+        variables = variables || {};
+        if (typeof variables !== 'object' || Array.isArray(variables)) throw new Error('Named variables must be an object');
+        return text.replace(/%\{([A-Za-z_][A-Za-z0-9_]*)\}/g, function (_, name) {
+            if (!Object.prototype.hasOwnProperty.call(variables, name) || variables[name] == null ||
+                typeof variables[name] === 'object' || typeof variables[name] === 'function') throw new Error('Missing or invalid named variable: ' + name);
+            return String(variables[name]);
+        });
+    }
+    if (!api.t) api.t = function (context, text, variables) {
+        if (api.i18n) return api.i18n.p(context, text, variables);
+        if (typeof context !== 'string' || typeof text !== 'string') throw new Error('Translation context and text must be strings');
+        return format(text, variables);
+    };
+    if (!api.tn) api.tn = function (context, one, many, count, variables) {
+        if (api.i18n) return api.i18n.np(context, one, many, count, variables);
+        if (!Number.isSafeInteger(count) || count < 0) throw new Error('Plural count must be a nonnegative safe integer');
+        if (typeof context !== 'string' || typeof one !== 'string' || typeof many !== 'string') throw new Error('Translation context and texts must be strings');
+        return format(count === 1 ? one : many, variables);
+    };
+})(typeof globalThis !== 'undefined' ? globalThis : this);
+
 // stub out some problematic things
 var docroot = '/';
 

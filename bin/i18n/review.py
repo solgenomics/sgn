@@ -14,18 +14,29 @@ def main():
     parser.add_argument("--po", type=Path, required=True)
     parser.add_argument("--workflow", required=True)
     parser.add_argument("--output", type=Path, required=True)
+    parser.add_argument("--offset", type=int, default=0)
+    parser.add_argument("--limit", type=int, default=100)
     args = parser.parse_args()
     release = validate_release(read_unique_json(args.release))
     if args.workflow not in release["partitions"]:
         raise ValueError("unknown workflow; choose: " + ", ".join(release["partitions"]))
     if args.output.exists():
         raise ValueError("refusing to overwrite an existing review workspace")
-    messages = [release["messages"][index] for index in release["partitions"][args.workflow]]
+    all_messages = [release["messages"][index] for index in release["partitions"][args.workflow]]
+    if not 1 <= args.limit <= 500 or not 0 <= args.offset < len(all_messages):
+        raise ValueError("review requires an existing offset and a batch limit from 1 to 500")
+    messages = all_messages[args.offset : args.offset + args.limit]
     contexts = {message["context"] for message in messages}
     entries = partition_po_entries(args.po)
     selected = [block for context, header, block in entries if header or context in contexts]
     args.output.mkdir(parents=True)
     (args.output / "review.po").write_text("\n\n".join(selected) + "\n", encoding="utf-8")
+    next_offset = args.offset + len(messages)
+    next_batch = (
+        "Next batch: --offset " + str(next_offset) + " --limit " + str(args.limit)
+        if next_offset < len(all_messages)
+        else "Last batch in this workflow"
+    )
     (args.output / "REVIEW.md").write_text(
         "# Translation review: "
         + args.workflow
@@ -37,7 +48,13 @@ def main():
         + release["sourceRevision"]
         + "\n\n"
         + str(len(messages))
-        + " complete source messages. Filled text may be machine-generated; "
+        + " of "
+        + str(len(all_messages))
+        + " source messages, starting at offset "
+        + str(args.offset)
+        + ". "
+        + next_batch
+        + ". Filled text may be machine-generated; "
         + "export does not certify human review. Keep the original PO intact.\n\n"
         + "| English term | Meaning in this workflow | Approved wording | Reviewer |\n"
         + "|---|---|---|---|\n"

@@ -1,107 +1,81 @@
 # Localization validation
 
-Baseline: `solgenomics/sgn` master at
-`4031ffe7503f0cbb2914f00b0f01d032c51a0dad` (2026-10-27).
-The upstream head was checked again after the port. Tests used the candidate
-SGN source first in the Perl include path and an offline dependency environment
-derived from the pinned BreedBase v2.23 recipe. These are local source-validation results. The checks attached to the pull
-request record the full upstream fixture and browser CI status for each commit.
+## Review follow-up, 2026-11-02
 
-## Results
+The candidate includes upstream `master` at
+`004e91f45dc8a36e826ddf705a62629a6e92dc69` and the original localization Draft
+head `b98b862c8e83b8d712f2e829603cc7e3174f918d`. Validation used the existing
+`codex-sgn-pr-refresh:20261025` dependency image; application source was supplied
+from the isolated candidate checkout. No production service, data or account was
+modified. Hosted checks from the earlier Draft do not certify this new candidate.
 
-- 53 native unit files: 2,271 top-level checks passed locally, including the native wrapper
-  for 12 JavaScript suites. Four optional browser-dependent cases are explicitly
-  unarmed; their source/DOM checks ran where available. The local image skips
-  the source-path calendar dependency probe and optional Perl POD-coverage check;
-  hosted CI installs its normal application dependencies. No native HTTP, database
-  write, outbound mail, image-processing job or scientific application run is
-  implied by these unit results.
-- Catalog/compiler/inventory/manual tests: 104 passed (27 catalog, 8 inventory,
-  19 JavaScript extraction, 23 Perl extraction, 12 R extraction, 10 R discovery,
-  5 manual source-contract tests).
-- R presentation runtime: 130 checks passed; the numeric fixture, process locale
-  and environment were unchanged.
-- All 751 changed Mason components and 101 JavaScript/tool source files passed
-  syntax checks. Mason was compiled to Perl and checked without executing
-  request-only initialization blocks.
-- 312 of 316 changed Perl modules compiled. Four failures reproduce in the
-  unchanged baseline: three XLS validators refer to undeclared variables, and
-  `solGS/combinedTrials.pm` requires `String::CRC32`, absent in this dependency
-  environment. They are not counted as passing checks.
-- All 15,398 active message identities from 1,759 registered sources compiled
-  with filled Ukrainian, Spanish and Arabic translations, correct named
-  placeholders and validated plural rules. Each language has 29 partitions;
-  all 90 JSON/index files passed hash checks and remain within the per-pack
-  2 MiB limit. Generated JSON is excluded from Git.
-- A focused HTML-sink review escaped 501 translation returns and nine dynamic
-  title suffixes while preserving caller markup. Ten section anchors now retain
-  their canonical English names. Real Mason regression cases cover consent
-  destinations, literal catalog/data text, section controls and legacy arrow
-  entities in English, Ukrainian, Spanish and Arabic.
+- The complete native unit suite passed: 59 files / 2,306 top-level checks.
+  The opt-in POD-coverage check remains skipped. Four optional Chromium source
+  tests were run separately with all four enabled and passed.
+- All extraction/catalog/inventory/release/review/manual Python suites passed:
+  122 checks. Release regressions cover builds after removal of application
+  sources, Node-free operator commands, partitioned packs larger than 2 MiB in
+  aggregate, malformed members, stale revisions, legacy migration, failed
+  writes, interrupted first activation and recovery journals.
+- The R presentation runtime passed 133 checks. Numerical stock values, process
+  locale and environment remained unchanged. Perl and R loaders retain one
+  physical package generation when activation happens between partition reads;
+  the Perl regression reproduced a hash-mismatch failure before that correction.
+- All 15,398 current message identities were extracted and frozen. Three current
+  languages compiled into 29 independently bounded partitions plus an index per
+  language. All three complete packages passed create/validate/install/activate,
+  idempotent activation and rollback with `PATH` containing no Node. The actual
+  Perl runtime loaded all three installed packages with the expected locale,
+  direction and language label.
+- A current upstream import explanation changed to mention blank values, `NA`
+  and `.`. GNU gettext marked the old translation fuzzy: each language now has
+  15,397 compiled translations and one complete English fallback pending review.
+  Filled machine translations remain drafts, not human linguistic approval.
+- Real Mason toolbar rendering and Chromium passed 20 layout/navigation cases:
+  English, Ukrainian, Spanish and Arabic at 1440/768/360/320 pixels; selection
+  without automatic navigation; form query/fragment transport; and manual
+  chapter/anchor round trips through English and translated versions. Unrelated
+  menu content and login transport were controlled. This is not a full logged-in
+  application browser acceptance test.
+- Four current Bookdown HTML builds passed. English now also has language
+  navigation; two existing English cross references were repaired. Scientific
+  examples, code, formulas and numerical tokens passed the manual source tests.
+  PDF export was not rerun for this follow-up.
+- PostgreSQL 12.7 fixture regressions `RemoveEmptyValues.t` and
+  `RemoveParsedEmptyValues.t` passed 277 assertions after the upstream merge.
+  The standard fixture bootstrap emitted an `AddCascadeDeletes` foreign-key
+  diagnostic for absent `md_files.file_id=2` and continued; a clean full fixture
+  bootstrap is not claimed. A separate real stock-property controller check
+  passed 25 controlled-context assertions without database writes.
+- JavaScript syntax passed for 114 changed files. Python Black/isort checks and
+  pylint passed for all 19 tool files; local versions were Black 24.10.0,
+  isort 5.13.2 and pylint 3.3.2. Official hosted lint remains a publication gate.
 
-These checks do not establish complete UI coverage or native-language quality.
-The source registry defines instrumented coverage. Dedicated retired sections,
-vendor text, scientific data and background solGS emails
-are outside this contribution. New or unsupported messages fall back to English.
+The release snapshot's semantic source revision is
+`284ba4ad5e457a3aecff6c33173351e9ed04dd9afe3815d304f101123e7866db`.
+Generated snapshots, package stores, browser captures and logs stay outside Git.
+The source registry defines coverage; these results do not establish translation
+of every route, scientific analysis or background email.
 
 ## Reproduce
 
-Install the isolated extraction dependency and the qualified parser dependencies
-listed in [README.md](README.md). The application JavaScript dependencies belong
-under `js/node_modules`, as in SGN's existing CI.
+Use the qualified extraction dependencies in [README.md](README.md), the normal
+application dependencies under `js/node_modules`, and an isolated source/fixture.
 
 ```sh
 npm ci --prefix bin/i18n --ignore-scripts
 for test in bin/i18n/test_*.py; do python3 "$test" || exit; done
-python3 bin/i18n/catalog.py update
-python3 bin/i18n/catalog.py build --output locale/build
+prove -Ilib --recurse t/unit
 Rscript --vanilla t/unit/SGN/i18n-runtime.R .
-prove -Ilib -lv t/unit/SGN/I18N.t t/unit/SGN/AccountMessages.t \
-  t/unit/SGN/CommonErrors.t t/unit/SGN/JavaScriptDependencies.t \
-  t/unit/SGN/TrialSummary*.t t/unit/SGN/*iframe-json.t t/unit/SGN/i18n-*.t \
-  t/unit/CXGN/Trial/TrialDesign/ROutput.t t/unit/CXGN/File/Parse/I18N.t
+
+bin/i18n/sgn-i18n freeze --application-version APPLICATION_COMMIT \
+  --output /release/release.json
+bin/i18n/sgn-i18n build --release /release/release.json \
+  --po /translations/uk/LC_MESSAGES/sgn.po --output /release/build
 ```
 
-The normal upstream fixture and browser suites should also run before this
-Draft is considered ready for integration. Review translations with breeders
-and native speakers, especially terminology, long labels and RTL layouts.
-
-## Included translated manual
-
-The same PR includes 29 chapters in each of Ukrainian, Spanish and Arabic.
-Machine-translation notices appear on their title pages. The English chapters,
-figures, examples, formulas and numeric tokens remain unchanged. Seven Bookdown
-builds (English split reference, three split readers and three full-book HTMLs)
-passed. The readers retain the 260 canonical chapter heading IDs, plus the
-generated 404 heading. Local assets and anchors were checked across all pages;
-reader controls, language links, search, RTL/code direction and 404 pages were
-exercised in nine browser cases. PDFs are generated and reviewed outside Git.
-
-The existing documentation workflow still renders English only. The included
-commands build translated readers and their PDF downloads; maintainers must
-invoke them when publishing the multilingual documentation site. The workflow
-checkout and publication restrictions are described below.
-
-## CI portability repairs
-
-The JavaScript dependency unit test uses a controlled temporary mapping and the
-real candidate legacy resolver, so it does not require webpack output before
-CI builds it. Mason/browser harnesses supply the actual English translator and
-request/browser contexts. The password-reset fixture context also supplies the
-real English translator; its existing recipient and token security assertions
-are retained. The reset form preserves the upstream controller's already-escaped
-username contract: decode that field before interpolation, then escape the whole
-translated title once. Real Mason cases cover markup and literal entities in all
-four locales. Generic folder dialogs retain the legacy blank type caption as a
-defined string; real parent-page/dialog regressions cover generic and typed
-folders in four locales. The search-browser assertion now requires the exact
-singular duplicate notice for its one existing accession. Python formatters share the same 120-column style;
-strict JSON scalar checks intentionally reject bool and custom subclasses.
-
-Spelling corrections retain semantic contexts, API/data identifiers and all
-translated forms. One duplicate message identity is merged. Existing public
-Calendar browser-key use is unchanged and annotated narrowly for Gitleaks.
-
-Documentation CI uses the normal pull-request checkout. HTML/PDF builds still
-run for fork PRs; the existing commit/push step runs only for an explicit manual
-workflow on master. Existing permissions are not expanded.
+Follow [the operator workflow](TRANSLATOR.md) for the complete package cycle,
+[the developer chapter](DEVELOPER.md) for request/browser diagnostics and
+[workflow review](REVIEW.md) for terminology review batches. Preserve English
+with localization disabled, scientific identifiers and measurements, ordinary
+permission boundaries, request field names and import/export contracts.

@@ -71,7 +71,7 @@ sub add_stockprop_POST {
     my $response;
     my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
     if (!$c->user()) {
-	    $c->stash->{rest} = { error => $c->i18n->p("accession.stock.message_1", "Log in required for adding stock properties.") }; 
+	    $c->stash->{rest} = { error => $c->i18n->p("accession.stock.message_1", "Log in required for adding stock properties.") };
         return;
     }
 
