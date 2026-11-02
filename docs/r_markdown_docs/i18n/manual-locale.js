@@ -26,24 +26,29 @@
                 document.title = document.title.replace("Page not found", translate("Page not found"));
             }
             var parent = document.querySelector(".page-inner");
-            if (parent && !parent.querySelector(".manual-language-nav")) {
-                var nav = document.createElement("nav");
+            if (!parent) return;
+            var nav = parent.querySelector(".manual-language-nav");
+            if (!nav) {
+                nav = document.createElement("nav");
                 nav.className = "manual-language-nav";
                 nav.setAttribute("aria-label", ui.language);
                 var label = document.createElement("span"); label.textContent = ui.language + ":"; nav.appendChild(label);
-                var file = location.pathname.split("/").pop() || "index.html";
-                var root = ui.locale === "en" ? "./" : "../";
                 (ui.languages || [["en","English"],["uk","Українська"],["es","Español"],["ar","العربية"]]).forEach(function (item) {
                     var link = document.createElement("a");
                     link.textContent = item[1]; link.lang = item[0];
-                    link.href = root + (item[0] === "en" ? "" : item[0] + "/") + file + location.hash;
                     if (item[0] === ui.locale) link.setAttribute("aria-current", "page");
                     nav.appendChild(link);
                 });
                 parent.insertBefore(nav, parent.firstChild);
             }
+            var file = location.pathname.split("/").pop() || "index.html";
+            var root = ui.locale === "en" ? "./" : "../";
+            nav.querySelectorAll("a").forEach(function (link) {
+                link.href = root + (link.lang === "en" ? "" : link.lang + "/") + file + location.hash;
+            });
         }
         apply();
+        window.addEventListener("hashchange", apply);
         if (window.gitbook && gitbook.events) {
             gitbook.events.bind("start", function () { window.setTimeout(apply, 0); });
             gitbook.events.bind("page.change", function () { window.setTimeout(apply, 0); });

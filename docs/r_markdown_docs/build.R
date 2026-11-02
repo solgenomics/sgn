@@ -1,7 +1,3 @@
-library(bookdown)
-library(xfun)
-is_abs_path <- FALSE
-
 # The default English build remains the original Bookdown command.
 args <- commandArgs(trailingOnly = TRUE)
 file_arg <- grep("^--file=", commandArgs(FALSE), value = TRUE)
@@ -24,22 +20,20 @@ render_language <- function(locale, output_dir, single_page = FALSE) {
     if (!all(file.copy(file.path(source_dir, c("conditional-content.lua", "hypothesis.html")), stage))) stop("Cannot stage manual includes")
     # Real copies keep knitr image URLs relative and never modify the shared originals.
     if (!file.copy(file.path(source_dir, "assets"), stage, recursive = TRUE)) stop("Cannot stage manual figures")
-    {
-        support <- c("manual-locale.css", "manual-locale.js")
-        if (!all(file.copy(file.path(source_dir, "i18n", support), stage))) stop("Cannot stage locale presentation")
-        header_dir <- file.path(source_dir, "i18n", locale)
-        if (!file.copy(file.path(header_dir, "locale-header.html"), stage)) stop("Cannot stage locale metadata")
-        if (locale == "en") {
-            output <- yaml::read_yaml(file.path(stage, "_output.yml"))
-            output[["bookdown::gitbook"]]$css <- c("assets/style.css", "manual-locale.css")
-            output[["bookdown::gitbook"]]$includes$in_header <- c("hypothesis.html", "locale-header.html")
-            yaml::write_yaml(output, file.path(stage, "_output.yml"))
-        }
+    support <- c("manual-locale.css", "manual-locale.js")
+    if (!all(file.copy(file.path(source_dir, "i18n", support), stage))) stop("Cannot stage locale presentation")
+    header_dir <- file.path(source_dir, "i18n", locale)
+    if (!file.copy(file.path(header_dir, "locale-header.html"), stage)) stop("Cannot stage locale metadata")
+    if (locale == "en") {
+        output <- yaml::read_yaml(file.path(stage, "_output.yml"))
+        output[["bookdown::gitbook"]]$css <- c("assets/style.css", "manual-locale.css")
+        output[["bookdown::gitbook"]]$includes$in_header <- c("hypothesis.html", "locale-header.html")
+        yaml::write_yaml(output, file.path(stage, "_output.yml"))
     }
     setwd(stage)
     rendered <- bookdown::render_book("index.Rmd", "bookdown::gitbook", output_dir = output_dir,
         output_options = list(split_by = if (single_page) "none" else "chapter", mathjax = NULL,
-            pandoc_args = c("--lua-filter=conditional-content.lua", "--mathml")), clean = FALSE)
+            pandoc_args = c("--lua-filter=conditional-content.lua", "--mathml", paste0("--metadata=lang:", locale))), clean = FALSE)
     # Bookdown copies referenced GIFs only. Ship their static print alternatives
     # too, so PDF export can read an immutable HTML bundle without modifying it.
     print_figures <- file.path(source_dir, "assets", "gifs", paste0("gif", 1:4, ".png"))
@@ -50,7 +44,7 @@ render_language <- function(locale, output_dir, single_page = FALSE) {
 }
 
 if (!length(args)) {
-    render_book("index.Rmd", "bookdown::gitbook")
+    bookdown::render_book("index.Rmd", "bookdown::gitbook")
 } else {
     locale <- args[1]
     output_dir <- if (length(args) >= 2) args[2] else file.path(dirname(source_dir), if (locale == "en") "" else locale)
