@@ -628,6 +628,54 @@ $response = decode_json $mech->content;
 
 ok(!$response->{error}, 'owner can rename') or diag Dumper $response;
 
+# set_breeding_program: replace or remove the program link, keeping trial links
+#
+is($cobj->get_breeding_program($attachable_id), undef, 'standalone collection has no breeding program');
+
+$cobj->set_breeding_program($attachable_id, $program_id);
+is($cobj->get_breeding_program($attachable_id)->{project_id}, $program_id, 'set_breeding_program links the program');
+is($cobj->get_collection($attachable_id)->{breeding_program}{project_id}, $program_id, 'get_collection returns the breeding program');
+
+$cobj->attach_to_project($attachable_id, $trial_id);
+$cobj->set_breeding_program($attachable_id, undef);
+is($cobj->get_breeding_program($attachable_id), undef, 'set_breeding_program with no program removes the link');
+is_deeply([ map { $_->{project_id} } @{ $cobj->get_projects($attachable_id) } ], [ $trial_id ], 'the trial link is kept');
+$cobj->detach_from_project($attachable_id, $trial_id);
+
+eval { $cobj->set_breeding_program($attachable_id, $trial_id) };
+like($@, qr/not a breeding program/i, 'set_breeding_program rejects a project that is not a program');
+
+eval { $cobj->set_breeding_program($standalone_same_name_id, $program_id) };
+like($@, qr/already exists/i, 'set_breeding_program dies when the name is taken in the program');
+is($cobj->get_breeding_program($standalone_same_name_id), undef, 'the rejected change did not link the program');
+
+# AJAX set_breeding_program and the detail page row
+#
+$john->post('http://localhost:3010/ajax/collection/set_breeding_program', [ collection_id => $owner_lock_id, breeding_program_id => $program_id ]);
+
+$response = decode_json $john->content;
+
+like($response->{error}, qr/creator or a curator/i, 'non owner set_breeding_program rejected');
+
+$mech->post_ok('http://localhost:3010/ajax/collection/set_breeding_program', [ collection_id => $owner_lock_id, breeding_program_id => $program_id ], 'owner sets the breeding program');
+
+$response = decode_json $mech->content;
+
+ok(!$response->{error}, 'set_breeding_program has no error') or diag Dumper $response;
+is($response->{breeding_program}{project_id}, $program_id, 'set_breeding_program returns the new program');
+
+$mech->get_ok("http://localhost:3010/collection/$owner_lock_id", 'collection detail page loads');
+$mech->content_contains('Breeding program', 'detail page has the breeding program row');
+$mech->content_contains("/breeders/program/$program_id", 'detail page links the breeding program');
+$mech->content_contains('id="change_breeding_program_button"', 'owner sees the change button');
+
+$mech->post_ok('http://localhost:3010/ajax/collection/set_breeding_program', [ collection_id => $owner_lock_id, breeding_program_id => '' ], 'owner removes the breeding program');
+
+$response = decode_json $mech->content;
+
+ok(!$response->{error}, 'removing the breeding program has no error') or diag Dumper $response;
+is($response->{breeding_program}, undef, 'no breeding program after removing it');
+
 # the image and file collection pages, and the old combined page that redirects to them
 #
 $mech->get_ok('http://localhost:3010/collections/images', 'image collections page loads');

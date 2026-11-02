@@ -61,6 +61,7 @@ sub collection_detail : Path('/collection') : Args(1) {
     $c->stash->{owner_username}   = $collection->{username};
     $c->stash->{collection_type}  = $collection->{collection_type};
     $c->stash->{projects}         = $collection->{projects};
+    $c->stash->{breeding_program} = $collection->{breeding_program};
     $c->stash->{user_can_modify}  = $can_modify;
     $c->stash->{template}         = '/collection/collection_details.mas';
 }

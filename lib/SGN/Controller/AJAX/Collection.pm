@@ -253,6 +253,25 @@ sub rename_POST : Args(0) {
     $c->stash->{rest} = { success => 1 };
 }
 
+# breeding program; an empty breeding_program_id removes the link
+
+sub set_breeding_program : Path('/ajax/collection/set_breeding_program') : ActionClass('REST') { }
+
+sub set_breeding_program_POST : Args(0) {
+    my ($self, $c) = @_;
+    my $collection_id = $c->req->param('collection_id');
+    $self->_require_edit_privileges($c, $collection_id);
+
+    my $cobj = $self->_collection_object($c);
+    eval { $cobj->set_breeding_program($collection_id, $c->req->param('breeding_program_id')) };
+    if ($@) { my $e = $@; chomp $e; $c->stash->{rest} = { error => $e }; $c->detach(); }
+
+    $c->stash->{rest} = {
+        success          => 1,
+        breeding_program => $cobj->get_breeding_program($collection_id),
+    };
+}
+
 # add / remove
 
 sub add_items : Path('/ajax/collection/add_items') : ActionClass('REST') { }

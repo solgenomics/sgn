@@ -4,6 +4,7 @@ $collection_name
 $description      => undef
 $collection_type  => undef
 $owner_username   => undef
+$breeding_program => undef
 $user_can_modify  => 0
 </%args>
 <%init>
@@ -24,11 +25,26 @@ my $items_title  = $is_file_type ? 'Files in this collection' : 'Images in this 
     </tr>
     <tr>
       <td><b>Description</b></td>
-      <td><span id="collection_description_display"><% ($description || '—') | h %></span></td>
+      <td><span id="collection_description_display"><% ($description || '') | h %></span></td>
     </tr>
     <tr>
       <td><b>Created by</b></td>
       <td><% ($owner_username || '—') | h %></td>
+    </tr>
+    <tr>
+      <td><b>Breeding program</b></td>
+      <td>
+        <span id="collection_breeding_program_display">
+% if ($breeding_program) {
+          <a href="/breeders/program/<% $breeding_program->{project_id} %>"><% $breeding_program->{name} | h %></a>
+% } else {
+          —
+% }
+        </span>
+% if ($user_can_modify) {
+        <button class="btn btn-link btn-xs" id="change_breeding_program_button">Change</button>
+% }
+      </td>
     </tr>
 % if ($collection_type) {
     <tr>
@@ -217,6 +233,32 @@ my $items_title  = $is_file_type ? 'Files in this collection' : 'Images in this 
     </div>
   </div>
 </div>
+
+<div class="modal fade" id="change_breeding_program_dialog" tabindex="-1" role="dialog">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal">&times;</button>
+        <h4 class="modal-title">Change Breeding Program</h4>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label for="change_breeding_program_select">Breeding program</label>
+          <select class="form-control" id="change_breeding_program_select">
+            <option value="">Loading programs&hellip;</option>
+          </select>
+          <p class="help-block">Links to trials are not changed.</p>
+          <div id="change_breeding_program_error" class="text-danger"
+               style="display:none; margin-top:6px;"></div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+        <button type="button" class="btn btn-primary" id="change_breeding_program_submit">Save</button>
+      </div>
+    </div>
+  </div>
+</div>
 % }
 
 <div id="collection_id_div" style="display:none;"><% $collection_id %></div>
@@ -388,6 +430,63 @@ jQuery(document).ready(function () {
             error: function () {
                 jQuery('#rename_collection_submit').prop('disabled', false);
                 window.collection_notify_error('An error occurred renaming the collection.');
+            }
+        });
+    });
+
+    var breeding_program_id = '<% $breeding_program ? $breeding_program->{project_id} : "" %>';
+
+    jQuery('#change_breeding_program_button').click(function () {
+        var $select = jQuery('#change_breeding_program_select');
+        jQuery('#change_breeding_program_error').hide();
+        $select.html('<option value="">Loading programs&hellip;</option>');
+        jQuery('#change_breeding_program_dialog').modal('show');
+
+        jQuery.ajax({
+            url: '/ajax/html/select/breeding_programs',
+            data: { id: 'change_breeding_program_select_tmp', name: 'breeding_program' },
+            success: function (response) {
+                // take just the <option>s from the helper's <select>
+                var options = jQuery('<div>').html(response.select).find('option');
+                $select.empty().append(jQuery('<option>').val('').text('No program'));
+                $select.append(options);
+                $select.val(breeding_program_id);
+            },
+            error: function () {
+                $select.html('<option value="">Could not load programs</option>');
+            }
+        });
+    });
+
+    jQuery('#change_breeding_program_submit').click(function () {
+        var $err = jQuery('#change_breeding_program_error');
+        jQuery('#change_breeding_program_submit').prop('disabled', true);
+        jQuery.ajax({
+            url:  '/ajax/collection/set_breeding_program',
+            type: 'POST',
+            data: {
+                collection_id: collection_id,
+                breeding_program_id: jQuery('#change_breeding_program_select').val()
+            },
+            success: function (response) {
+                jQuery('#change_breeding_program_submit').prop('disabled', false);
+                if (response.error) {
+                    $err.text(response.error).show();
+                    return;
+                }
+                var program = response.breeding_program;
+                breeding_program_id = program ? String(program.project_id) : '';
+                var $display = jQuery('#collection_breeding_program_display').empty();
+                if (program) {
+                    $display.append(jQuery('<a>').attr('href', '/breeders/program/' + program.project_id).text(program.name));
+                } else {
+                    $display.text('—');
+                }
+                jQuery('#change_breeding_program_dialog').modal('hide');
+            },
+            error: function () {
+                jQuery('#change_breeding_program_submit').prop('disabled', false);
+                $err.text('An error occurred changing the breeding program.').show();
             }
         });
     });

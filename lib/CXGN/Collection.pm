@@ -87,6 +87,13 @@ sub _clean_collection_type {
     return $type;
 }
 
+sub _breeding_program_cvterm_id {
+    my ($self) = @_;
+    return SGN::Model::Cvterm->get_cvterm_row(
+        $self->bcs_schema, 'breeding_program', 'project_property'
+    )->cvterm_id();
+}
+
 # Confirms the project is a breeding program (carries the breeding_program
 # projectprop) and returns its id, or dies.
 sub _assert_breeding_program_id {
@@ -94,14 +101,10 @@ sub _assert_breeding_program_id {
     die "breeding_program_id must be numeric.\n"
         unless defined $project_id && $project_id =~ /^\d+$/;
 
-    my $cvterm_id = SGN::Model::Cvterm->get_cvterm_row(
-        $self->bcs_schema, 'breeding_program', 'project_property'
-    )->cvterm_id();
-
     my $h = $self->_dbh->prepare(
         "SELECT 1 FROM projectprop WHERE project_id = ? AND type_id = ?"
     );
-    $h->execute($project_id, $cvterm_id);
+    $h->execute($project_id, $self->_breeding_program_cvterm_id);
     my ($found) = $h->fetchrow_array();
     die "Project $project_id is not a breeding program.\n" unless $found;
     return 1;
@@ -242,6 +245,7 @@ sub get_collection {
     return unless $row;
 
     $row->{projects}    = $self->get_projects($collection_id);
+    $row->{breeding_program} = $self->get_breeding_program($collection_id);
     $row->{image_count} = scalar @{ $self->get_image_ids($collection_id) };
     $row->{file_count}  = scalar @{ $self->get_file_ids($collection_id) };
     return $row;
@@ -571,6 +575,85 @@ sub detach_from_project {
         "DELETE FROM phenome.project_md_collection
           WHERE collection_id = ? AND project_id = ?"
     )->execute($collection_id, $project_id);
+    return 1;
+}
+
+# ---------------------------------------------------------- breeding program
+
+# The breeding program a collection is linked to directly, as
+# { project_id, name }, or undef. A program link is a project_md_collection
+# row whose project carries the breeding_program projectprop; links to
+# trials are not counted.
+sub get_breeding_program {
+    my ($self, $collection_id) = @_;
+    my $h = $self->_dbh->prepare(
+        "SELECT p.project_id, p.name
+           FROM phenome.project_md_collection AS pc
+           JOIN project AS p ON (p.project_id = pc.project_id)
+           JOIN projectprop AS pp
+             ON (pp.project_id = p.project_id AND pp.type_id = ?)
+          WHERE pc.collection_id = ?
+          ORDER BY p.name
+          LIMIT 1"
+    );
+    $h->execute($self->_breeding_program_cvterm_id, $collection_id);
+    my $row = $h->fetchrow_hashref();
+    return $row ? { %$row } : undef;
+}
+
+# Replaces the collection's breeding program link with $program_id, or
+# removes it when $program_id is undef or empty. Trial links are kept.
+sub set_breeding_program {
+    my ($self, $collection_id, $program_id) = @_;
+    $self->_assert_exists($collection_id);
+    $program_id = undef unless defined $program_id && length $program_id;
+    $self->_assert_breeding_program_id($program_id) if defined $program_id;
+
+    my $collection = $self->get_collection($collection_id);
+    my $bp_cvterm_id = $self->_breeding_program_cvterm_id;
+
+    # The name must stay unique in the new program, or among standalone
+    # collections if no project links would remain.
+    if (defined $program_id) {
+        $self->_assert_name_available($collection->{name}, $program_id, $collection_id);
+    }
+    else {
+        my $h = $self->_dbh->prepare(
+            "SELECT count(*)
+               FROM phenome.project_md_collection AS pc
+              WHERE pc.collection_id = ?
+                AND NOT EXISTS (
+                    SELECT 1 FROM projectprop AS pp
+                     WHERE pp.project_id = pc.project_id AND pp.type_id = ?
+                )"
+        );
+        $h->execute($collection_id, $bp_cvterm_id);
+        my ($n_trial_links) = $h->fetchrow_array();
+        $self->_assert_name_available($collection->{name}, undef, $collection_id)
+            unless $n_trial_links;
+    }
+
+    $self->bcs_schema->txn_do(sub {
+        $self->_dbh->prepare(
+            "DELETE FROM phenome.project_md_collection AS pc
+              USING projectprop AS pp
+              WHERE pc.collection_id = ?
+                AND pp.project_id = pc.project_id
+                AND pp.type_id = ?"
+        )->execute($collection_id, $bp_cvterm_id);
+
+        if (defined $program_id) {
+            $self->_dbh->prepare(
+                "INSERT INTO phenome.project_md_collection (project_id, collection_id)
+                 VALUES (?, ?)"
+            )->execute($program_id, $collection_id);
+        }
+
+        $self->_dbh->prepare(
+            "UPDATE metadata.md_collection SET modified_date = now()
+              WHERE collection_id = ?"
+        )->execute($collection_id);
+    });
     return 1;
 }
 
