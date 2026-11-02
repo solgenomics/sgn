@@ -36,6 +36,10 @@ sub _i18n_translator {
     my ($c, $locale) = @_;
     my $available = $c->stash->{i18n_available} ||= {};
     return $available->{$locale} if exists $available->{$locale};
+    if ($locale eq 'en') {
+        $available->{$locale} = SGN::I18N->new(locale => 'en');
+        return $available->{$locale};
+    }
     my $translator = eval { SGN::I18N->new(
         locale => $locale, domain => 'sgn',
         catalog_root => $c->config->{i18n_catalog_dir} || $c->path_to('locale', 'build')->stringify,
@@ -108,11 +112,8 @@ sub initialize_i18n {
             if ($matched && $c->_i18n_translator($matched)) { ($locale, $source) = ($matched, $preference->[1]); last; }
         }
     }
-    my $translator = ($c->config->{i18n_enabled} ? $c->_i18n_translator($locale) : undef) || SGN::I18N->new(
-        locale => $locale,
-        domain => 'sgn',
-        catalog_root => $c->config->{i18n_catalog_dir} || $c->path_to('locale', 'build')->stringify,
-    );
+    my $translator = $c->config->{i18n_enabled} ? $c->_i18n_translator($locale) : undef;
+    $translator ||= SGN::I18N->new(locale => 'en');
     $c->stash->{i18n} = $translator;
     $c->stash->{i18n_locale_source} = $source;
     return $translator;

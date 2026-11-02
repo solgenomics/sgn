@@ -20,13 +20,10 @@ only; language packs cannot replace it. Preferences preserve existing login.
 
 sub runtime :Path('/i18n/runtime.js') Args(0) {
     my ($self, $c) = @_;
-    my @paths = (
-        $c->path_to('static', 'js', 'sgn-i18n.js'),
-    );
     $c->res->content_type('application/javascript; charset=UTF-8');
     $c->res->headers->header('X-Content-Type-Options' => 'nosniff');
     $c->res->headers->header('Cache-Control' => 'no-cache');
-    $c->res->body(join("\n", map { scalar read_file($_, binmode => ':raw') } @paths));
+    $c->res->body(scalar read_file($c->path_to('static', 'js', 'sgn-i18n.js'), binmode => ':raw'));
 }
 
 sub bootstrap :Path('/i18n/bootstrap.js') Args(0) {

@@ -1152,19 +1152,14 @@ return parser;
             var rule = parsePlural(catalog.pluralForms);
             validateAst(catalog.pluralAst);
             if (catalog.nplurals !== rule.nplurals || canonical(catalog.pluralAst) !== canonical(rule.ast)) throw new Error('Plural metadata mismatch');
-            var dictionary = Object.create(null);
-            dictionary[''] = {domain: payload.domain, lang: catalog.locale, plural_forms: rule.normalized};
             Object.keys(catalog.messages).forEach(function (key) {
                 var message = catalog.messages[key];
                 if (!message || !Array.isArray(message.forms) || (message.plural !== null && typeof message.plural !== 'string') ||
                     message.forms.length !== (message.plural === null ? 1 : rule.nplurals) || message.forms.some(function (s) { return typeof s !== 'string' || !s.length; })) {
                     throw new Error('Invalid catalog message');
                 }
-                dictionary[key.charAt(0) === '\u0004' ? key.slice(1) : key] = message.forms.slice();
             });
-            var localeData = Object.create(null);
-            localeData[payload.domain] = dictionary;
-            return {data: catalog, jed: new JedRuntime({domain: payload.domain, locale_data: localeData})};
+            return {data: catalog};
         });
     }
 
@@ -1182,7 +1177,7 @@ return parser;
         for (var i = 0; i < this.catalogs.length; i++) {
             var entry = this.catalogs[i];
             if (own(entry.data.messages, key) && entry.data.messages[key].plural === null) {
-                translated = entry.jed.pgettext(context, text); break;
+                translated = entry.data.messages[key].forms[0]; break;
             }
         }
         return format(translated, variables);
@@ -1205,7 +1200,13 @@ return parser;
         for (var i = 0; i < this.catalogs.length; i++) {
             var entry = this.catalogs[i];
             if (own(entry.data.messages, key) && entry.data.messages[key].plural === many) {
-                translated = entry.jed.npgettext(context, one, many, count); break;
+                var message = entry.data.messages[key];
+                var result = JedRuntime.PF.interpreter(entry.data.pluralAst)(count);
+                // Match pinned Jed: booleans are numeric and falsy/NaN selects form zero.
+                var index = result === true ? 1 : result ? result : 0;
+                // Preserve Jed's whole-English fallback for an absent form.
+                if (Number.isSafeInteger(index) && index >= 0 && index < message.forms.length) translated = message.forms[index];
+                break;
             }
         }
         return format(translated, variables);

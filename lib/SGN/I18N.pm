@@ -182,9 +182,10 @@ sub _load_bundle {
             && $part->{name} =~ /\A[a-z][a-z0-9_]*\z/ && !$seen{$part->{name}}++
             && ($part->{sha256} // '') =~ /\A[a-f0-9]{64}\z/;
         my $data = _bounded_bytes(File::Spec->catfile($directory, "$part->{name}.json"));
-        $fingerprint .= "\0$part->{name}\0" . (defined($data) ? sha256_hex($data) : 'missing');
+        my $digest = defined($data) ? sha256_hex($data) : 'missing';
+        $fingerprint .= "\0$part->{name}\0" . $digest;
         next unless defined $data; # A missing section keeps its English fallback.
-        croak 'Catalog partition hash mismatch' unless sha256_hex($data) eq $part->{sha256};
+        croak 'Catalog partition hash mismatch' unless $digest eq $part->{sha256};
         push @parts, [$part->{name}, $data];
     }
     my $key = $locale . "\0bundle\0" . sha256_hex($fingerprint);

@@ -125,3 +125,22 @@ test('standard shared script preserves native English when optional locale endpo
  assert.equal(sandbox.SGN.t('controls.save','Save'),'Зберегти');
  assert.equal(sandbox.SGN.tn('trials.count','%{count} trial found','%{count} trials found',22,{count:22}),'Знайдено 22 досліди');
 });
+
+
+test('a plural index without a represented form retains whole English fallback', () => {
+ const catalog=clone(fixture.catalogs['pt-PT']);
+ const parsed=I18N.parsePlural('nplurals=2; plural=(n==5000 ? 7 : 0);');
+ catalog.pluralForms=parsed.normalized;catalog.pluralAst=parsed.ast;
+ const runtime=new I18N({locale:'pt-PT',dir:'ltr',domain:'sgn',catalogs:[catalog]});
+ assert.equal(runtime.np('trials.count','%{count} trial found','%{count} trials found',5000,{count:5000}),'5000 trials found');
+});
+
+
+test('late nonnumeric plural results retain the pinned Jed form-zero behavior', () => {
+ const catalog=clone(fixture.catalogs['pt-PT']);
+ const parsed=I18N.parsePlural('nplurals=2; plural=(n % (n != 5000));');
+ catalog.pluralForms=parsed.normalized;catalog.pluralAst=parsed.ast;
+ const runtime=new I18N({locale:'pt-PT',dir:'ltr',domain:'sgn',catalogs:[catalog]});
+ assert.equal(runtime.np('trials.count','%{count} trial found','%{count} trials found',5000,{count:5000}),'pt-PT[0] 5000');
+ assert.throws(()=>runtime.np('trials.count','%{count} trial found','%{count} trials found',NaN,{count:5000}),/count/);
+});

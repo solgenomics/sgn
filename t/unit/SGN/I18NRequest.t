@@ -63,6 +63,12 @@ subtest 'explicit preference, cookie, regional fallback and disabled feature' =>
     $c = context(i18n_enabled => 0);
     $c->req->{params}{lang} = 'ar';
     is($c->i18n->locale, 'en', 'Disabled feature retains English');
+    write_catalog('en', '{}');
+    $c = context(i18n_enabled => 0);
+    is($c->i18n->locale, 'en', 'Disabled feature never reads an external English catalog');
+    $c = context(); $c->req->{params}{lang} = 'en';
+    is($c->i18n->locale, 'en', 'Explicit source language never reads an external English catalog');
+    unlink "$root/en/sgn.json" or die $!;
 };
 subtest 'language POST retains local navigation and removes stale lang override' => sub {
     my $c = context();
