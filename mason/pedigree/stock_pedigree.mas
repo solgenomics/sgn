@@ -41,130 +41,61 @@ $stock_id
 }
 </style>
 
-<div class="modal fade" id="add_parent_dialog" name="add_parent_dialog" tabindex="-1" role="dialog" aria-labelledby="addParentDialog">
+<div class="modal fade" id="add_parent_dialog" tabindex="-1" role="dialog" aria-labelledby="addParentDialog">
     <div class="modal-dialog" role="document">
         <div class="modal-content">
-            <div class="modal-header" style="text-align: center">
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                <h4 class="modal-title" id="addParentDialog">Add Parent</h4>
-            </div>
-            <div class="modal-body">
-                <div class="container-fluid">
-
-                    <form class="form-horizontal" role="form" method="post" id="add_parent_dialog_form" name="add_parent_dialog_form">
-                        <div class="form-group">
-                            <label class="col-sm-3 control-label">Stock Name: </label>
-                            <div class="col-sm-9" >
-                                <input name="stock_autocomplete" id="stock_autocomplete" class="form-control" type="text" />
-                            </div>
-                        </div>
-                        <div class="form-group">
-                            <label class="col-sm-3 control-label">Parent is: </label>
-                            <div class="col-sm-9" >
-                                <input type="radio" id="female" name="parent_type" value="female" checked="1"  /> female<br />
-                                <input type="radio" id="male" name="parent_type" value="male" /> male<br />
-                            </div>
-                        </div>
-                        <div class="form-group" id="add_parent_cross_type_div">
-                            <label class="col-sm-3 control-label">Cross Type: </label>
-                            <div class="col-sm-9" >
-                                <select class="form-control" id="add_parent_cross_type">
-                                    <option value="biparental">biparental</option>
-                                    <option value="self">self</option>
-                                    <option value="open">open pollinated</option>
-                                    <option value="sib">sib</option>
-                                    <option value="reselected">reselected</option>
-                                    <option value="bulk">bulk</option>
-                                    <option value="bulk_self">bulk selfed</option>
-                                    <option value="bulk_open">bulk and open pollinated</option>
-                                    <option value="doubled_haploid">doubled haploid</option>
-				    <option value="dihaploid_induction">dihaploid induction</option>
-                                    <option value="polycross">polycross</option>
-                                    <option value="reciprocal">reciprocal</option>
-                                    <option value="multicross">multicross</option>
-                                </select>
-                            </div>
-                        </div>
-                    </form>
-
+            <form class="form-horizontal" id="add_parent_dialog_form">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                    <h4 class="modal-title" id="addParentDialog">Add Parents</h4>
                 </div>
-            </div>
-            <div class="modal-footer">
-                <button id="close_add_parent_dialog" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-                <button type="button" class="btn btn-primary" name="add_parent_submit" id="add_parent_submit" title="Save Parent">Save</button>
-            </div>
+                <div class="modal-body">
+                    <div id="add_parent_error" class="alert alert-danger" role="alert" style="display:none;"></div>
+                    <p>Enter the parents and cross type for this accession. Existing parents are read-only.</p>
+                    <div class="form-group">
+                        <label class="col-sm-4 control-label" for="add_parent_female">Female Parent</label>
+                        <div class="col-sm-8"><input id="add_parent_female" class="form-control" type="text" autocomplete="off" required /></div>
+                    </div>
+                    <div class="form-group">
+                        <label class="col-sm-4 control-label" for="add_parent_male">Male Parent</label>
+                        <div class="col-sm-8">
+                            <input id="add_parent_male" class="form-control" type="text" autocomplete="off" aria-describedby="add_parent_male_help" />
+                            <span id="add_parent_male_help" class="help-block">Required except for open pollination.</span>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="col-sm-4 control-label" for="add_parent_cross_type">Cross Type</label>
+                        <div class="col-sm-8">
+                            <select class="form-control" id="add_parent_cross_type">
+                                <option value="">Select cross type</option>
+                                <option value="biparental">biparental</option>
+                                <option value="self">self</option>
+                                <option value="open">open pollinated</option>
+                                <option value="sib">sib</option>
+                                <option value="backcross">backcross</option>
+                                <option value="reselected">reselected</option>
+                                <option value="doubled_haploid">doubled haploid</option>
+                                <option value="dihaploid_induction">dihaploid induction</option>
+                                <option value="polycross">polycross</option>
+                            </select>
+                            <span class="help-block">For self, enter the same parent in both fields. Enter both recorded parents for doubled haploid and dihaploid induction.</span>
+                        </div>
+                    </div>
+                    <p class="help-block">To replace an existing parent, close this dialog and remove the specific parent relationship first. An unspecified existing cross type may be left unchanged.</p>
+                </div>
+                <div class="modal-footer">
+                    <button id="close_add_parent_dialog" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                    <button type="submit" class="btn btn-primary" id="add_parent_submit" disabled>Save Parents</button>
+                </div>
+            </form>
         </div>
     </div>
 </div>
 
+<& /util/import_javascript.mas, classes => [ 'jqueryui', 'CXGN.Stock' ] &>
 <script>
-
-    jQuery('#add_parent_submit').click(function(){
-        associate_parent();
-    });
-
-    jQuery("#add_parent_link").click( function () {
-        jQuery("#add_parent_dialog" ).modal("show");
-    });
-
-    jQuery("#stock_autocomplete").autocomplete({
-        source: '/ajax/stock/accession_autocomplete'
-    });
-
-    jQuery('input:radio[name="parent_type"]').change(function(){
-        var type = jQuery("input:radio[name='parent_type']:checked").val();
-        if(type == 'female'){
-            jQuery('#add_parent_cross_type_div').show();
-        } else {
-            jQuery('#add_parent_cross_type_div').hide();
-            jQuery('#add_parent_cross_type').val('biparental');
-        }
-    });
-
-    function associate_parent() {
-      var parentType = "";
-      parentType = jQuery("#add_parent_dialog").find("input:checked").val();
-      //alert("PARENTTYPE="+parentType);
-      var parentName = jQuery("#stock_autocomplete").val();
-      //alert("Parent name = "+parentName);
-
-      if (!parentName) { alert("We need a name here, sorry!"); return; }
-
-      // only the female parent carries a cross type
-      var cross_type = parentType == 'female' ? jQuery('#add_parent_cross_type').val() : '';
-      //alert(cross_type);
-
-      var stock_id = "<% $stock_id %>";
-      jQuery.ajax({
-        url: '/ajax/stock/add_stock_parent',
-        dataType: "json",
-        type: 'GET',
-        async: false,
-        data: { stock_id: stock_id, parent_name: parentName, parent_type: parentType, cross_type: cross_type },
-        error: function(response) {
-            alert("An error occurred. Please try again later!"+response);
-        },
-        parseerror: function(response) {
-            alert("A parse error occurred. Please try again."+response);
-        },
-        success: function(response) {
-          if (response.error) { alert(response.error); }
-          else {
-            alert("The parent has been added.");
-            jQuery("#add_parent_dialog").modal("hide");
-            document.location.reload(); // reload the entire page, because pedigree info is in several places.
-          }
-        },
-      });
-
-
-   }
-
+    stock_pedigree_dialog_init("<% $stock_id %>");
 </script>
-
-
-<& /util/import_javascript.mas, classes => [ 'jqueryui' ] &>
-
 
 <div>
     <span style="white-space:nowrap;">

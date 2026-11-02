@@ -55,6 +55,17 @@ has 'schema' => (
 has 'pedigrees' => (isa =>'ArrayRef[Bio::GeneticRelationships::Pedigree]', is => 'rw', predicate => 'has_pedigrees');
 
 
+=head2 supported_cross_types()
+
+Return the cross types supported by a single accession pedigree. Bulk and
+multi-combination crossing operations have separate workflows.
+
+=cut
+
+sub supported_cross_types {
+    return qw(biparental open self sib polycross backcross reselected doubled_haploid dihaploid_induction);
+}
+
 sub add_pedigrees {
     my $self = shift;
     my $overwrite_pedigrees = shift;
@@ -91,19 +102,23 @@ sub add_pedigrees {
             if ($pedigree->has_female_parent()) {
                 $female_parent_name = $pedigree->get_female_parent()->get_name();
                 $female_parent = $accessions_crosses_hash{$female_parent_name};
-                if (!$female_parent){
-                    push @{$return{error}}, ""
-                }
+                die "Female parent $female_parent_name was not found.\n" unless $female_parent;
             }
 
             if ($pedigree->has_male_parent()) {
                 $male_parent_name = $pedigree->get_male_parent()->get_name();
                 $male_parent = $accessions_crosses_populations_hash{$male_parent_name};
+                die "Male parent $male_parent_name was not found.\n" unless $male_parent;
             }
 
             print STDERR "Creating pedigree $cross_type\n";
 
             my $progeny_accession = $accessions_crosses_hash{$pedigree->get_name()};
+            die "Progeny accession was not found.\n" unless $progeny_accession;
+            die "A female parent is required.\n" unless $female_parent;
+            my %supported = map { $_ => 1 } $self->supported_cross_types;
+            die "Unsupported cross type: $cross_type.\n" unless $supported{$cross_type};
+            die "A male parent is required for cross type $cross_type.\n" if !$male_parent && $cross_type ne 'open';
 
             # organism of cross experiment will be the same as the female parent
             if ($female_parent) {
@@ -112,41 +127,26 @@ sub add_pedigrees {
                 $organism_id = $male_parent->[1];
             }
 
-            if ($female_parent) {
-                if ($overwrite_pedigrees){
-                    my $previous_female_parent = $self->get_schema->resultset('Stock::StockRelationship')->search({
-                        type_id => $female_parent_cvterm->cvterm_id(),
-                        object_id => $progeny_accession->[0],
-                    });
-                    while(my $r = $previous_female_parent->next()){
-                        print STDERR "Deleted female parent stock_relationship_id: ".$r->stock_relationship_id."\n";
-                        $r->delete();
-                    }
-                }
-                $self->get_schema->resultset('Stock::StockRelationship')->create({
-                    type_id => $female_parent_cvterm->cvterm_id(),
+            # Serialize all pedigree edits for this accession, including the
+            # stock-page add/remove actions, before changing either role.
+            my $locked = $schema->resultset('Stock::Stock')->find($progeny_accession->[0], { for => 'update' });
+            die "Progeny accession was not found.\n" unless $locked;
+            if ($overwrite_pedigrees) {
+                $schema->resultset('Stock::StockRelationship')->search({
                     object_id => $progeny_accession->[0],
-                    subject_id => $female_parent->[0],
-                    value => $cross_type,
+                    type_id => { -in => [$female_parent_cvterm->cvterm_id, $male_parent_cvterm->cvterm_id] },
+                })->delete;
+            }
+            if ($female_parent) {
+                $schema->resultset('Stock::StockRelationship')->create({
+                    type_id => $female_parent_cvterm->cvterm_id,
+                    object_id => $progeny_accession->[0], subject_id => $female_parent->[0], value => $cross_type,
                 });
             }
-
-            #create relationship to male parent
             if ($male_parent) {
-                if ($overwrite_pedigrees){
-                    my $previous_male_parent = $self->get_schema->resultset('Stock::StockRelationship')->search({
-                        type_id => $male_parent_cvterm->cvterm_id(),
-                        object_id => $progeny_accession->[0],
-                    });
-                    while(my $r = $previous_male_parent->next()){
-                        print STDERR "Deleted male parent stock_relationship_id: ".$r->stock_relationship_id."\n";
-                        $r->delete();
-                    }
-                }
-                $self->get_schema->resultset('Stock::StockRelationship')->create({
-                    type_id => $male_parent_cvterm->cvterm_id(),
-                    object_id => $progeny_accession->[0],
-                    subject_id => $male_parent->[0],
+                $schema->resultset('Stock::StockRelationship')->create({
+                    type_id => $male_parent_cvterm->cvterm_id,
+                    object_id => $progeny_accession->[0], subject_id => $male_parent->[0],
                 });
             }
 
@@ -217,7 +217,8 @@ sub validate_pedigrees {
             push @{$return{error}}, "Female parent not found for $progeny_name.";
         }
 
-        if ( ($cross_type ne 'biparental') && ($cross_type ne 'self') && ($cross_type ne 'open') && ($cross_type ne 'sib') && ($cross_type ne 'polycross') && ($cross_type ne 'backcross') && ($cross_type ne 'reselected') && ($cross_type ne 'doubled_haploid') && ($cross_type ne 'dihaploid_induction') ){
+        my %supported = map { $_ => 1 } $self->supported_cross_types;
+        if (!$supported{$cross_type}) {
             push @{$return{error}}, "cross_type must be either biparental, self, open, backcross, sib, reselected, dihaploid_induction, doubled_haploid or polycross for progeny $progeny_name.";
         }
         if ($cross_type eq 'biparental' || $cross_type eq 'self' || $cross_type eq 'sib' || $cross_type eq 'polycross' || $cross_type eq 'backcross' || $cross_type eq 'reselected' || $cross_type eq 'dihaploid_induction' || $cross_type eq 'doubled_haploid' ) {

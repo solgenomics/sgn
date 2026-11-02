@@ -1588,84 +1588,175 @@ sub get_pedigree_rows {
     return $pedigree_rows;
 }
 
-=head1 add_parent()
+=head2 add_parent($name, $role, $cross_type)
+
+Add one parent for legacy callers. Returns an error string, or undef on success.
+The cross type is stored only on the female relationship. New stock-page forms
+should use add_parents() to validate and save the complete pedigree atomically.
 
 =cut
 
 sub add_parent {
-    my $self = shift;
-    my $parent_name = shift;
-    my $parent_type = shift;
-    my $cross_type = shift;
-    
-    print STDERR "Add_stock_parent function...\n";
-
-    my $cvterm_name = "";
-    if ($parent_type eq "male") {
-        $cvterm_name = "male_parent";
+    my ($self, $parent_name, $parent_type, $cross_type) = @_;
+    return "Parent type must be female or male."
+        unless defined($parent_type) && ($parent_type eq 'female' || $parent_type eq 'male');
+    my $schema = $self->schema;
+    my $child = $schema->resultset('Stock::Stock')->find($self->stock_id);
+    return "Stock was not found in the database." unless $child;
+    my $parent = $schema->resultset('Stock::Stock')->find({ uniquename => $parent_name });
+    return "Stock with uniquename $parent_name was not found in the database!" unless $parent;
+    my $value = $self->_parent_cross_type_value($parent_type, $cross_type);
+    if (defined($value) && $value ne 'derived'
+        && !Moose::Util::TypeConstraints::find_type_constraint('CrossType')->check($value)) {
+        return "Unsupported cross type: $value.";
     }
-    elsif ($parent_type eq "female") {
-        $cvterm_name = "female_parent";	
-    }
-
-    my $type_id_row = SGN::Model::Cvterm->get_cvterm_row($self->schema(), $cvterm_name, "stock_relationship" )->cvterm_id();
-
-    # check if a parent of this parent_type is already associated with this stock
-    #
-    my $previous_parent = $self->schema()->resultset("Stock::StockRelationship")->find({
-        type_id => $type_id_row,
-        object_id => $self->stock_id(),
-    });
-
+    my $types = $self->_parent_relationship_types;
     my $error;
-    
-    if ($previous_parent) {
-	print STDERR "The stock ".$previous_parent->subject_id." is already associated with stock ".$self->stock_id()." - returning.\n";
-	$error = "A $parent_type parent with id ".$previous_parent->subject_id." is already associated with this stock. Please specify another parent.";
-	return $error;
-    }
-
-    print STDERR "PARENT_NAME = $parent_name STOCK_ID ".$self->stock_id()."  $cvterm_name\n";
-
-#    my $stock = $self->schema()->resultset("Stock::Stock")->find( { stock_id => $self->stock_id() });
-
-   my $parent = $self->schema()->resultset("Stock::Stock")->find( { uniquename => $parent_name } );
-
-
-
-    if (!$self->stock_id()) {
-	$error = "Stock with ".$self->stock_id()." is not found in the database!";
-	return $error;
-    }
-    if (!$parent) {
-	$error = "Stock with uniquename $parent_name was not found, Either this is not unique name or it is not in the database!";
-	return $error;
-    }
-
-    # The cross type belongs to the female parent relationship, as in pedigree
-    # uploads. An empty or "null" value from the page means no cross type.
-    my $relationship_value = ($parent_type eq 'female' && defined($cross_type) && $cross_type ne '' && $cross_type ne 'null')
-        ? $cross_type : undef;
-
-    my $new_row = $self->schema()->resultset("Stock::StockRelationship")->new(
-	{
-	    subject_id => $parent->stock_id,
-	    object_id  => $self->stock_id,
-	    type_id    => $type_id_row,
-	    value => $relationship_value
-	});
-
     eval {
-	$new_row->insert();
+        $schema->txn_do(sub {
+            $schema->resultset('Stock::Stock')->find($self->stock_id, { for => 'update' });
+            my $previous = $schema->resultset('Stock::StockRelationship')->find({
+                object_id => $self->stock_id, type_id => $types->{$parent_type},
+            });
+            if ($previous) {
+                $error = "A $parent_type parent with id ".$previous->subject_id." is already associated with this stock. Please specify another parent.";
+                die "$error\n";
+            }
+            if ($self->_parent_would_create_cycle($parent->stock_id, $types)) {
+                $error = "A parent relationship cannot make a stock its own ancestor.";
+                die "$error\n";
+            }
+            $schema->resultset('Stock::StockRelationship')->create({
+                subject_id => $parent->stock_id, object_id => $self->stock_id,
+                type_id => $types->{$parent_type}, value => $value,
+            });
+        });
     };
-
-    if ($@) {
-	$error = "An error occurred: $@";
-    }
-    else {
-	$error = undef;
-    }
+    $error ||= "An error occurred while adding the parent." if $@;
     return $error;
+}
+
+=head2 add_parents($female_name, $male_name, $cross_type)
+
+Add or complete the parents of an accession in one transaction. Existing
+parents and known cross types cannot be replaced here. Missing cross types may
+be supplied explicitly. Repeating the same request is safe. Returns an error
+string, or undef on success. Parent names are uniquenames, not inferred values.
+
+=cut
+
+sub add_parents {
+    my ($self, $female_name, $male_name, $cross_type) = @_;
+    return "A female parent is required." unless defined($female_name) && length($female_name);
+    $male_name //= '';
+    $cross_type = $self->_parent_cross_type_value('female', $cross_type);
+    require CXGN::Pedigree::AddPedigrees;
+    my %supported = map { $_ => 1 } CXGN::Pedigree::AddPedigrees->supported_cross_types;
+    my $schema = $self->schema;
+    my $types = $self->_parent_relationship_types;
+    my $error;
+    my $fail = sub { $error = shift; die "$error\n"; };
+    eval {
+        $schema->txn_do(sub {
+            my $child = $schema->resultset('Stock::Stock')->find($self->stock_id, { for => 'update' });
+            $fail->("Stock was not found in the database.") unless $child;
+            $fail->("Parents can only be added here to an accession.") unless $child->type->name eq 'accession';
+            my %existing;
+            for my $role (qw(female male)) {
+                my @rows = $schema->resultset('Stock::StockRelationship')->search({
+                    object_id => $self->stock_id, type_id => $types->{$role},
+                })->all;
+                $fail->("More than one $role parent is stored. Review the existing pedigree first.") if @rows > 1;
+                $existing{$role} = $rows[0];
+            }
+            my %names = (female => $female_name, male => $male_name);
+            my %parents;
+            for my $role (qw(female male)) {
+                if (length($names{$role})) {
+                    my @matches = $schema->resultset('Stock::Stock')->search({ uniquename => $names{$role} })->all;
+                    $fail->("Stock with uniquename $names{$role} was not found in the database!") unless @matches;
+                    $fail->("Parent name $names{$role} is ambiguous. Use a unique stock name.") if @matches > 1;
+                    $parents{$role} = $matches[0];
+                }
+                if ($existing{$role} && (!$parents{$role} || $existing{$role}->subject_id != $parents{$role}->stock_id)) {
+                    $fail->("The existing $role parent cannot be replaced here. Reload the page and review the saved pedigree.");
+                }
+            }
+            my $stored_type = $existing{female} ? $self->_parent_cross_type_value('female', $existing{female}->value) : undef;
+            if (defined($stored_type) && (!defined($cross_type) || $stored_type ne $cross_type)) {
+                $fail->("The existing cross type cannot be replaced here. Reload the page and review the saved pedigree.");
+            }
+            my $same_type = (!defined($stored_type) && !defined($cross_type))
+                || (defined($stored_type) && defined($cross_type) && $stored_type eq $cross_type);
+            my $unchanged = $existing{female} && $same_type
+                && ((!$parents{male} && !$existing{male}) || ($parents{male} && $existing{male}));
+            return if $unchanged;
+            # Historical cross types may be preserved when completing a pedigree;
+            # new female relationships use the standard pedigree upload types.
+            $fail->("A cross type is required for a new pedigree.") if !$existing{female} && !defined($cross_type);
+            $fail->("Unsupported cross type: $cross_type.")
+                if defined($cross_type) && !$supported{$cross_type} && !defined($stored_type);
+            $fail->("A male parent is required for cross type $cross_type.")
+                if !$parents{male} && defined($cross_type) && $cross_type ne 'open';
+            if ($parents{male}) {
+                my $same = $parents{female}->stock_id == $parents{male}->stock_id;
+                $fail->("For self, use the same parent in both fields.") if defined($cross_type) && $cross_type eq 'self' && !$same;
+                my %same_allowed = map { $_ => 1 } qw(self sib reselected doubled_haploid dihaploid_induction);
+                $fail->("The parents cannot be the same for cross type $cross_type.")
+                    if $same && defined($cross_type) && !$same_allowed{$cross_type} && $supported{$cross_type};
+            }
+            for my $role (qw(female male)) {
+                next unless $parents{$role} && !$existing{$role};
+                my %allowed = map { $_ => 1 } ($role eq 'female'
+                    ? qw(accession cross) : qw(accession cross population vector_construct));
+                $fail->("The selected $role parent has an unsupported stock type.") unless $allowed{$parents{$role}->type->name};
+                $fail->("A parent relationship cannot make a stock its own ancestor.")
+                    if $self->_parent_would_create_cycle($parents{$role}->stock_id, $types);
+            }
+            for my $role (qw(female male)) {
+                next unless $parents{$role};
+                if (!$existing{$role}) {
+                    $schema->resultset('Stock::StockRelationship')->create({
+                        subject_id => $parents{$role}->stock_id, object_id => $self->stock_id,
+                        type_id => $types->{$role}, value => $self->_parent_cross_type_value($role, $cross_type),
+                    });
+                } elsif ($role eq 'female' && !defined($stored_type) && defined($cross_type)) {
+                    $existing{$role}->update({ value => $cross_type });
+                }
+            }
+        });
+    };
+    $error ||= "An error occurred while saving the parents. No parents were changed." if $@;
+    return $error;
+}
+
+# Both roles describe one pedigree; only the female relationship carries its type.
+sub _parent_cross_type_value {
+    my ($self, $role, $value) = @_;
+    return ($role eq 'female' || $role eq 'female_parent') && defined($value) && $value ne '' && $value ne 'null'
+        ? $value : undef;
+}
+
+sub _parent_relationship_types {
+    my $self = shift;
+    return { map { $_ => SGN::Model::Cvterm->get_cvterm_row($self->schema, $_.'_parent', 'stock_relationship')->cvterm_id }
+        qw(female male) };
+}
+
+# UNION terminates even if an unrelated historical pedigree already has a cycle.
+sub _parent_would_create_cycle {
+    my ($self, $parent_id, $types) = @_;
+    my ($cycle) = $self->schema->storage->dbh->selectrow_array(q{
+        WITH RECURSIVE ancestors(stock_id) AS (
+            SELECT ?::integer
+            UNION
+            SELECT r.subject_id FROM stock_relationship r
+            JOIN ancestors a ON r.object_id = a.stock_id
+            WHERE r.type_id IN (?, ?)
+        )
+        SELECT EXISTS(SELECT 1 FROM ancestors WHERE stock_id = ?)
+    }, undef, $parent_id, $types->{female}, $types->{male}, $self->stock_id);
+    return $cycle;
 }
 
 
@@ -1768,7 +1859,7 @@ sub get_parents {
     $parents{'mother_id'} = $pedigree_hashref->{'female_parent'}->{'id'};
     $parents{'father'} = $pedigree_hashref->{'male_parent'}->{'name'};
     $parents{'father_id'} = $pedigree_hashref->{'male_parent'}->{'id'};
-    $parents{'cross_type'} = $pedigree_hashref->{'female_parent'}->{'cross_type'};
+    $parents{'cross_type'} = $pedigree_hashref->{'cross_type'};
     return \%parents;
 }
 
@@ -2044,7 +2135,7 @@ sub _store_parent_relationship {
             type_id    => $parent_cvterm_id,
             object_id  => $self->stock_id(),
             subject_id => $parent->stock_id(),
-            value      => $cross_type
+            value      => $self->_parent_cross_type_value($relationship_type, $cross_type)
         });
     } else {
         return $return{error} = "Parent accession not found: ".$parent_accession;
@@ -2054,6 +2145,7 @@ sub _store_parent_relationship {
 sub _remove_parent_relationship {
     my $self = shift;
     my $relationship_type = shift;
+    $self->schema->resultset('Stock::Stock')->find($self->stock_id, { for => 'update' });
     my $parent_cvterm_id =  SGN::Model::Cvterm->get_cvterm_row($self->schema, $relationship_type,'stock_relationship')->cvterm_id();
     my $rs = $self->schema()->resultset("Stock::StockRelationship")->search( { type_id=>$parent_cvterm_id, object_id => $self->stock_id() } );
 

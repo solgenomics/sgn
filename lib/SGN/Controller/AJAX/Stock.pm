@@ -1406,20 +1406,23 @@ sub parents_GET : Path('/ajax/stock/parents') Args(0) {
     $parent_types{$female_parent_type_id} = "female";
     $parent_types{$male_parent_type_id} = "male";
 
-    my $parent_rs = $schema->resultset("Stock::StockRelationship")->search( { 'me.type_id' => { -in => [ $female_parent_type_id, $male_parent_type_id] }, object_id => $stock_id })->search_related("subject");
-
-    my @parents;
-    while (my $p = $parent_rs->next()) {
-	push @parents, [
-	    $p->get_column("stock_id"),
-	    $p->get_column("uniquename"),
-	];
-
+    my $parent_rs = $schema->resultset('Stock::StockRelationship')->search({
+        'me.type_id' => { -in => [$female_parent_type_id, $male_parent_type_id] },
+        'me.object_id' => $stock_id,
+    }, { prefetch => 'subject', order_by => 'me.type_id' });
+    my (@parents, @relationships);
+    while (my $relationship = $parent_rs->next) {
+        my $parent = $relationship->subject;
+        push @parents, [$parent->stock_id, $parent->uniquename];
+        push @relationships, {
+            parent_id => $parent->stock_id,
+            parent_name => $parent->uniquename,
+            parent_type => $parent_types{$relationship->type_id},
+            cross_type => $relationship->value,
+        };
     }
-    $c->stash->{rest} = {
-	stock_id => $stock_id,
-	parents => \@parents,
-    };
+    # Keep the original two-column array for existing callers.
+    $c->stash->{rest} = { stock_id => $stock_id, parents => \@parents, relationships => \@relationships };
 }
 
 sub remove_stock_parent : Local : ActionClass('REST') { }
@@ -1430,7 +1433,7 @@ sub remove_parent_GET : Path('/ajax/stock/parent/remove') Args(0) {
     my $stock_id = $c->req->param("stock_id");
     my $parent_id = $c->req->param("parent_id");
 
-    if (!$stock_id || ! $parent_id) {
+    if (!$stock_id || !$parent_id || $stock_id !~ /^\d+$/ || $parent_id !~ /^\d+$/) {
 	$c->stash->{rest} = { error => "No stock and parent specified" };
 	return;
     }
@@ -1440,17 +1443,33 @@ sub remove_parent_GET : Path('/ajax/stock/parent/remove') Args(0) {
 	return;
     }
 
-    my $q = $c->dbic_schema("Bio::Chado::Schema")->resultset("Stock::StockRelationship")->find( { object_id => $stock_id, subject_id=> $parent_id });
-
-    eval {
-	$q->delete();
-    };
-    if ($@) {
-	$c->stash->{rest} = { error => $@ };
-	return;
+    my $schema = $c->dbic_schema('Bio::Chado::Schema');
+    my $parent_type = $c->req->param('parent_type');
+    if (defined($parent_type) && $parent_type ne 'female' && $parent_type ne 'male') {
+        $c->stash->{rest} = { error => 'Parent type must be female or male.' };
+        return;
     }
-
-    $c->stash->{rest} = { success => 1 };
+    my @roles = $parent_type ? ($parent_type) : qw(female male);
+    my @type_ids = map { SGN::Model::Cvterm->get_cvterm_row($schema, $_.'_parent', 'stock_relationship')->cvterm_id } @roles;
+    my $error;
+    eval {
+        $schema->txn_do(sub {
+            my $child = $schema->resultset('Stock::Stock')->find($stock_id, { for => 'update' });
+            if (!$child) { $error = 'The stock was not found.'; die "$error\n"; }
+            my @relationships = $schema->resultset('Stock::StockRelationship')->search({
+                object_id => $stock_id, subject_id => $parent_id, type_id => { -in => \@type_ids },
+            })->all;
+            if (@relationships != 1) {
+                $error = @relationships
+                    ? 'This parent has more than one role. Select the female or male relationship to remove.'
+                    : 'The parent relationship was not found.';
+                die "$error\n";
+            }
+            $relationships[0]->delete;
+        });
+    };
+    $error ||= 'An error occurred while removing the parent.' if $@;
+    $c->stash->{rest} = $error ? { error => $error } : { success => 1 };
 }
 
 
@@ -1483,6 +1502,10 @@ sub add_stock_parent_GET :Args(0) {
     }
 
     my $stock_id = $c->req->param('stock_id');
+    if (!defined($stock_id) || $stock_id !~ /^\d+$/) {
+        $c->stash->{rest} = { error => 'A valid stock ID is required.' };
+        return;
+    }
     my $parent_name = $c->req->param('parent_name');
     my $parent_type = $c->req->param('parent_type');
     my $cross_type = $c->req->param('cross_type');
@@ -1502,6 +1525,41 @@ sub add_stock_parent_GET :Args(0) {
     }
 
     $c->stash->{rest} = { success => 1 };
+}
+
+
+=head2 add_stock_parents
+
+POST stock_id, female_parent, male_parent and cross_type to add missing parents
+atomically. Existing parent identities and known cross types are read-only.
+Uses the same submitter/curator permission as the legacy single-parent action.
+
+=cut
+
+sub add_stock_parents : Local : ActionClass('REST') { }
+
+sub add_stock_parents_GET : Args(0) {
+    my ($self, $c) = @_;
+    $c->stash->{rest} = { error => 'Use POST to save parents.' };
+}
+
+sub add_stock_parents_POST : Args(0) {
+    my ($self, $c) = @_;
+    if (!$c->user || !any { $_ eq 'curator' || $_ eq 'submitter' } ($c->user->roles)) {
+        $c->stash->{rest} = { error => 'Log in as a submitter or curator to add pedigree information.' };
+        return;
+    }
+    my $stock_id = $c->req->param('stock_id');
+    if (!defined($stock_id) || $stock_id !~ /^\d+$/) {
+        $c->stash->{rest} = { error => 'A valid stock ID is required.' };
+        return;
+    }
+    my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
+    my $stock = CXGN::Stock->new(schema => $schema, stock_id => $stock_id);
+    my $error = $stock->add_parents(
+        $c->req->param('female_parent'), $c->req->param('male_parent'), $c->req->param('cross_type'),
+    );
+    $c->stash->{rest} = $error ? { error => $error } : { success => 1 };
 }
 
 

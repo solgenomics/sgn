@@ -60,8 +60,7 @@ sub add_progenies_existing_accessions {
        #Get stock of type cross matching cross name
         $cross_stock = $self->_get_cross($self->get_cross_name());
         if (!$cross_stock) {
-            print STDERR "Cross could not be found\n";
-            return;
+            die "Cross ".$self->get_cross_name." could not be found.\n";
         }
 
         $female_parent = $chado_schema->resultset("Stock::StockRelationship")
@@ -76,48 +75,34 @@ sub add_progenies_existing_accessions {
                 type_id => $male_parent_cvterm->cvterm_id(),
             });
 
+        die "Cross ".$self->get_cross_name." has no female parent.\n" unless $female_parent;
+
         foreach my $progeny_name (@progeny_names) {
             my $progeny_rs = $self->_get_progeny_name($progeny_name);
             if (!$progeny_rs) {
-                print STDERR "Progeny name could not be found\n";
-                return;
+                die "Progeny name $progeny_name could not be found.\n";
             }
 
+            my $locked = $chado_schema->resultset('Stock::Stock')->find($progeny_rs->stock_id, { for => 'update' });
+            die "Progeny $progeny_name was not found.\n" unless $locked;
+            if ($overwrite_pedigrees) {
+                $chado_schema->resultset('Stock::StockRelationship')->search({
+                    object_id => $progeny_rs->stock_id,
+                    type_id => { -in => [$female_parent_cvterm->cvterm_id, $male_parent_cvterm->cvterm_id] },
+                })->delete;
+            }
             if ($female_parent) {
-                if ($overwrite_pedigrees) {
-				    my $previous_female_parent = $chado_schema->resultset('Stock::StockRelationship')->search({
-				        type_id => $female_parent_cvterm->cvterm_id(),
-				        object_id => $progeny_rs->stock_id(),
-			        });
-				    while(my $r = $previous_female_parent->next()){
-					    print STDERR "Deleted female parent stock_relationship_id: ".$r->stock_relationship_id."\n";
-					    $r->delete();
-				    }
-                }
-		        $progeny_rs->find_or_create_related('stock_relationship_objects', {
-                    type_id => $female_parent_cvterm->cvterm_id(),
-                    object_id => $progeny_rs->stock_id(),
-                    subject_id => $female_parent->subject_id(),
-                    value => $female_parent->value(),
+                $progeny_rs->find_or_create_related('stock_relationship_objects', {
+                    type_id => $female_parent_cvterm->cvterm_id,
+                    object_id => $progeny_rs->stock_id, subject_id => $female_parent->subject_id,
+                    value => $female_parent->value,
                 });
             }
-
-			if ($male_parent) {
-                if ($overwrite_pedigrees) {
-				    my $previous_male_parent = $chado_schema->resultset('Stock::StockRelationship')->search({
-				        type_id => $male_parent_cvterm->cvterm_id(),
-				        object_id => $progeny_rs->stock_id(),
-			        });
-				    while(my $r = $previous_male_parent->next()){
-					    print STDERR "Deleted male parent stock_relationship_id: ".$r->stock_relationship_id."\n";
-					    $r->delete();
-				    }
-                }
-	       	    $progeny_rs->find_or_create_related('stock_relationship_objects', {
-	                type_id => $male_parent_cvterm->cvterm_id(),
-	                object_id => $progeny_rs->stock_id(),
-	                subject_id => $male_parent->subject_id(),
-	            });
+            if ($male_parent) {
+                $progeny_rs->find_or_create_related('stock_relationship_objects', {
+                    type_id => $male_parent_cvterm->cvterm_id,
+                    object_id => $progeny_rs->stock_id, subject_id => $male_parent->subject_id,
+                });
             }
 
 			#create relationship to cross

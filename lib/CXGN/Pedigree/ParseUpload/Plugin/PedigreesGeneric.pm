@@ -51,7 +51,7 @@ sub _validate_with_plugin {
         return;
     }
 
-    my %supported_cross_types = ( biparental => 1, open => 1, self => 1, sib => 1, polycross => 1, backcross => 1, reselected => 1, doubled_haploid => 1, dihaploid_induction => 1 );
+    my %supported_cross_types = map { $_ => 1 } CXGN::Pedigree::AddPedigrees->supported_cross_types;
     my $seen_cross_types = $parsed_values->{'type'};
     my $seen_progenies = $parsed_values->{'progeny name'};
     my $seen_female_parents = $parsed_values->{'female parent accession'};

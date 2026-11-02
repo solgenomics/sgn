@@ -94,24 +94,27 @@ sub open_pedigree_section {
     wait_for_element_ok('add_parent_link', 'id', 'pedigree section is open');
 }
 
-# Fill in and submit the add parent dialog, opening it first if needed
-sub add_parent {
-    my ($parent_name, $parent_type, $cross_type, $expected_alert, $test_name) = @_;
-    my $dialog_open = eval { is_visible($t->find_element('stock_autocomplete', 'id')) };
+# Fill both roles and save once; a rejected pair stays in the dialog for correction.
+sub add_parents {
+    my ($female, $male, $cross_type, $expected_error) = @_;
+    my $dialog_open = eval { is_visible($t->find_element('add_parent_female', 'id')) };
     wait_for_element_ok('add_parent_link', 'id', 'find add parent link')->click() if !$dialog_open;
-    my $stock_name = wait_for_element_ok('stock_autocomplete', 'id', 'find add parent input');
-    wait_for_element_ok($parent_type, 'id', "select $parent_type parent type")->click();
-    if ($cross_type) {
-        wait_for_element_ok("//select[\@id='add_parent_cross_type']/option[\@value='$cross_type']", 'xpath', "select $cross_type cross type")->click();
+    ok(wait_for(sub { $t->driver->execute_script('return !document.getElementById("add_parent_submit").disabled;') }), 'saved parents loaded');
+    clear_and_type(wait_for_element_ok('add_parent_female', 'id', 'find female parent input'), $female);
+    clear_and_type(wait_for_element_ok('add_parent_male', 'id', 'find male parent input'), $male);
+    wait_for_element_ok("//select[\@id='add_parent_cross_type']/option[\@value='$cross_type']", 'xpath', "select $cross_type cross type")->click();
+    $t->find_element_ok('add_parent_submit', 'id', 'submit both parents')->click();
+    if ($expected_error) {
+        my $error = wait_for(sub { $t->find_element('add_parent_error', 'id')->get_text() });
+        like($error, $expected_error, 'invalid pair displays an error without saving');
+    } else {
+        accept_alert_like(qr/The parents have been added/, 'both parents saved');
     }
-    clear_and_type($stock_name, $parent_name);
-    $t->find_element_ok('add_parent_submit', 'id', 'submit add parent')->click();
-    accept_alert_like($expected_alert, $test_name);
 }
 
 sub remove_first_parent {
     wait_for_element_ok('remove_parent_link', 'id', 'find remove parent button')->click();
-    wait_for_element_ok('//div[@id="remove_parent_list"]/a[1]', 'xpath', 'find delete parent link')->click();
+    wait_for_element_ok('//div[@id="remove_parent_list"]//a[1]', 'xpath', 'find delete parent link')->click();
     accept_alert_like(qr/Are you sure you want to remove this parent/, 'confirm remove parent');
     accept_alert_like(qr/The parent has been removed/, 'parent removed');
     # remove_parents() reloads the stock page on success
@@ -195,13 +198,8 @@ my $ok = eval { $t->while_logged_in_as("submitter", sub {
     open_stock_page();
     open_pedigree_section();
 
-    add_parent('test_wrong_stock_name', 'female', 'biparental', qr/Stock with uniquename test_wrong_stock_name was not found/, 'unknown parent name is rejected');
-    # the dialog stays open after an error, so correct the name and resubmit
-    add_parent('test_accession1', 'female', 'biparental', qr/The parent has been added/, 'female parent test_accession1 added');
-
-    open_stock_page();
-    open_pedigree_section();
-    add_parent('test_accession2', 'male', undef, qr/The parent has been added/, 'male parent test_accession2 added');
+    add_parents('test_wrong_stock_name', 'test_accession2', 'biparental', qr/Stock with uniquename test_wrong_stock_name was not found/);
+    add_parents('test_accession1', 'test_accession2', 'biparental');
 
     # Test if parents were added to database and now in a view
     open_stock_page();

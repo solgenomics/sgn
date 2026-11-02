@@ -135,7 +135,7 @@ The currently supported format has four columns:
 
 progeny name female parent accession male parent accession type
 
-Type can be biparental, self, backcross, sib, polycross, reselected, or open.
+Type can be biparental, self, backcross, sib, polycross, reselected, doubled_haploid, dihaploid_induction, or open.
 In the case of the open type, the male parent accession field can remain blank.
 For all other types, both columns should be filled, even if they contain the same information as another column (such as self).
 
@@ -146,6 +146,21 @@ knitr::include_graphics('assets/images/image333.png')
 ```{r echo=FALSE, out.width='75%', fig.align='center'}
 knitr::include_graphics('assets/images/pedigree_upload_format.png')
 ```
+
+On an accession detail page, open the **Pedigree** section and click **Add parent**
+to add or complete a single accession's pedigree. The dialog shows **Female
+Parent**, **Male Parent**, and **Cross Type** together. Use the parents' unique
+names. Select the cross type explicitly; for open pollination, the male parent
+may remain blank. For self, enter the same parent in both fields. For doubled
+haploid and dihaploid induction, enter both recorded parents, as in pedigree
+uploads. The dialog does not infer a missing parent or cross type.
+
+Existing parents and known cross types are read-only in this dialog. An
+unspecified existing type may be kept unspecified or supplied explicitly.
+Saving validates both parents and saves the pair together; an error leaves the
+saved pedigree unchanged. To replace a parent, close the dialog and use **Remove
+parent** to select the female or male relationship first. The role is shown even
+when the same accession is used for both parents.
 
 ## Working with grafts
 

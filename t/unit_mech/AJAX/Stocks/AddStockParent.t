@@ -50,8 +50,8 @@ like($response->{'error'}, qr/was not found/, 'an unknown parent returns a JSON 
 $response = $add_parent->('test_accession1', 'female');
 is_deeply($response, { success => 1 }, 'adding a female parent returns a JSON success object');
 
-# the stock page used to send cross_type=null for a male parent
-$response = $add_parent->('test_accession2', 'male', 'null');
+# Even a real cross type must never be duplicated on the male relationship.
+$response = $add_parent->('test_accession2', 'male', 'biparental');
 is_deeply($response, { success => 1 }, 'adding a male parent returns a JSON success object');
 
 $response = $add_parent->('test_accession2', 'female');
