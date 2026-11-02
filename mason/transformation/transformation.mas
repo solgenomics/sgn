@@ -34,6 +34,7 @@ $vector_related_genes
 $vector_analyzed_tissue_types => undef
 $vector_id
 $vector_name
+$FEC_batch
 
 </%args>
 
@@ -53,6 +54,9 @@ $vector_name
                         <tr><td><b>Project</b></td><td><%$project_link%></td></tr>
                         <tr><td><b>Plant Material</b></td><td><%$plant_material%></td></tr>
                         <tr><td><b>Vector Construct</b></td><td><%$vector_construct%></td></tr>
+%if ($FEC_batch) {
+                        <tr><td><b>FEC Batch</b></td><td><%$FEC_batch%></td></tr>
+%}
                         <tr><td><b>Notes</b></td><td><%$transformation_notes%></td></tr>
 %if ($is_a_control) {
                         <tr><td><b>Control</b></td><td><%$is_a_control%></td></tr>

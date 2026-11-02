@@ -167,6 +167,7 @@ sub add_transformation_identifier_POST :Args(0){
     my $program_name = $c->req->param('program_name');
     my $transformation_project_id = $c->req->param('transformation_project_id');
     my $is_a_control = $c->req->param('is_a_control');
+    my $FEC_batch = $c->req->param('FEC_batch');
     $transformation_identifier =~ s/^\s+|\s+$//g;
 
     if (!$c->user()) {
@@ -221,7 +222,8 @@ sub add_transformation_identifier_POST :Args(0){
             vector_construct => $vector_construct,
             notes => $notes,
             owner_id => $user_id,
-            is_a_control => $is_a_control
+            is_a_control => $is_a_control,
+            FEC_batch => $FEC_batch
         });
 
         my $add = $add_transformation->add_transformation_identifier();
