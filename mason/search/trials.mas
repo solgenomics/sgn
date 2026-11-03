@@ -33,7 +33,7 @@ $location_id => 'not_provided'
     <div class="panel panel-default">
         <div class="panel-body">
             <br><br>
-            <&| /page/info_section.mas, title => 'Copy Results to a List', collapsible=>1, collapsed=>0, subtitle=>'<i>Copy the trial names currently showing in the search results table to a new or exisiting list</i>'&>
+            <&| /page/info_section.mas, title => 'Copy Results to a List', collapsible=>1, collapsed=>0, subtitle=>'<i>Copy the trial names currently showing in the search results table to a new or existing list</i>'&>
                 <br>
                 <div style="text-align:right" id="trials_to_list_menu"></div>
                 <div id="trial_result_names" style="display: none;"></div>

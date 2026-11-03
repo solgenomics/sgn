@@ -30,6 +30,7 @@ use Moose;
 use SGN::Model::Cvterm;
 use CXGN::Chado::Cvterm;
 use CXGN::Onto;
+use File::Spec;
 use Data::Dumper;
 use JSON;
 use CXGN::Job;
@@ -116,6 +117,148 @@ sub download_obo: Path('/ajax/onto/download_obo') Args(1) {
         local $/; #this slurps a file I think
         <$f>;
     });
+}
+
+=head2 make_cvtermpath
+
+Recomputes the transitive closure (the cvtermpath table) for a single
+ontology, by running chado_tools/chado/bin/gmod_make_cvtermpath.pl as a
+background job.
+
+Accepts an ontology namespace (db.name), e.g. "CO_334". The cv to operate
+on is derived from the namespace by joining db to dbxref on db_id, and
+the first dbxref that has a cvterm to cvterm on dbxref_id, and taking
+that cvterm's cv_id. There is only one cv per db.name, so any
+cvterm-bearing dbxref of the db maps to the correct cv.
+
+Returns the sp_job_id of the submitted job. The closure can take a long
+time to compute on a large ontology, so the job is not waited on.
+
+=cut
+
+sub make_cvtermpath : Path('/ajax/onto/make_cvtermpath') Args(1) {
+    my $self = shift;
+    my $c = shift;
+    my $namespace = shift;
+
+    if (!$c->user()) {
+        $c->stash->{rest} = { error => "You must be logged in to recompute an ontology's cvtermpath." };
+        return;
+    }
+
+    if ($c->user->get_object->get_user_type() ne 'curator') {
+        $c->stash->{rest} = { error => "You have insufficient privileges to recompute an ontology's cvtermpath." };
+        return;
+    }
+
+    if (!defined($namespace)) {
+        $c->stash->{rest} = { error => "An ontology namespace is required." };
+        return;
+    }
+
+    # accept either the bare namespace ("CO_334") or the full root accession
+    # ("CO_334:0000000") and normalize to the bare namespace.
+    $namespace =~ s/^\s+|\s+$//g;
+    $namespace =~ s/:.*$//;
+
+    if (!$namespace) {
+        $c->stash->{rest} = { error => "An ontology namespace is required." };
+        return;
+    }
+
+    my $dbhost = $c->config->{dbhost};
+    my $dbname = $c->config->{dbname};
+    my $dbuser = $c->config->{dbuser};
+    my $dbpass = $c->config->{dbpass};
+    my $basepath = $c->config->{basepath};
+
+    my $sp_person_id = $c->user->get_object()->get_sp_person_id();
+    my $schema = $c->dbic_schema("Bio::Chado::Schema", undef, $sp_person_id);
+    my $people_schema = $c->dbic_schema("CXGN::People::Schema", undef, $sp_person_id);
+
+    # There is one db row per namespace, and one cv per namespace, so the cv
+    # can be derived from any of the db's dbxrefs (assuming it has a cvterm).
+    my $db = $schema->resultset('General::Db')->search(
+        { 'upper(me.name)' => uc($namespace) }
+        )->first();
+
+    if (!$db) {
+        $c->stash->{rest} = { error => "No db row found for ontology namespace $namespace. Cannot determine the cv name." };
+        return;
+    }
+
+    my $dbxref = $db->search_related('dbxrefs',
+        { 'cvterm.cvterm_id' => { '!=', undef } },
+        { join => 'cvterm', rows => 1 }
+        )->first();
+
+    if (!$dbxref) {
+        $c->stash->{rest} = { error => "No cvterms found for ontology namespace $namespace. Cannot determine the cv name." };
+        return;
+    }
+
+    my $cv_name = $dbxref->cvterm->cv->name();
+    my $cv_id = $dbxref->cvterm->cv_id();
+
+    # Don't queue a second build for a cv that is already being built. The
+    # script performs this check again when it starts, which is the check that
+    # actually guards the table; this one is here so the user finds out now
+    # instead of from a job that quietly exits.
+    my $build_status;
+
+    eval {
+        $build_status = $schema->storage->dbh()->selectrow_hashref(
+            "SELECT currently_building::int AS currently_building, build_start FROM public.cvtermpath_build WHERE cv_id = ?",
+            undef,
+            $cv_id
+        );
+    };
+
+    if ($@) {
+        $c->stash->{rest} = { error => "Could not check the cvtermpath build status for $cv_name: $@" };
+        return;
+    }
+
+    if ($build_status && $build_status->{currently_building}) {
+        $c->stash->{rest} = { error => "A transitive closure is already being built for $cv_name ($namespace), started at ".($build_status->{build_start} || 'an unknown time').". Please wait for it to finish before starting another one." };
+        return;
+    }
+
+    my $script = File::Spec->catfile($basepath, 'bin', 'sgn_gmod_make_cvtermpath.pl');
+
+    my $cmd = "perl $script -H $dbhost -D $dbname -d Pg -u $dbuser -p '$dbpass' -c '$cv_name'";
+
+    my $sp_job_id;
+
+    eval {
+        my $job = CXGN::Job->new({
+            people_schema => $people_schema,
+            schema => $schema,
+            dbhost => $dbhost,
+            dbname => $dbname,
+            dbuser => $dbuser,
+            dbpass => $dbpass,
+            basepath => $basepath,
+            sp_person_id => $sp_person_id,
+            cmd => $cmd,
+            name => "$cv_name cvtermpath calculation",
+            job_type => 'ontology_indexing',
+            submit_page => $c->req->path
+        });
+
+        $sp_job_id = $job->submit();
+    };
+
+    if ($@) {
+        $c->stash->{rest} = { error => "An error occurred submitting the cvtermpath job: $@" };
+        return;
+    }
+
+    $c->stash->{rest} = {
+        success => "Submitted a transitive closure calculation for $cv_name ($namespace).",
+        sp_job_id => $sp_job_id,
+        cv_name => $cv_name
+    };
 }
 
 =head2 compose_trait

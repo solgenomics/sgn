@@ -101,9 +101,11 @@ sub observation_variable_ontologies {
 	foreach (@$name_spaces){
 		$sth->execute($_);
 		while (my ($cvterm_id, $cvterm_name, $cvterm_definition, $db_name, $db_id, $dbxref_accession, $dbxref_version, $dbxref_description, $cv_id, $cv_name, $cv_definition) = $sth->fetchrow_array()) {
-			my $info;
+			my $info = {};
 			if($dbxref_description){
-				$info = decode_json($dbxref_description);
+				# dbxref.description is free text; only use it when it holds a JSON object
+				my $decoded = eval { decode_json($dbxref_description) };
+				$info = $decoded if ref($decoded) eq 'HASH';
 			}
 			push @available, {
                 ontologyDbId=>qq|$db_id|,
@@ -145,7 +147,7 @@ sub search {
 	my @bind_values;
 	if (scalar(@trait_ids)>0){
 		my $trait_ids_sql = join ',', ('?') x scalar(@trait_ids);
-		push @and_wheres, "cvterm.id IN ($trait_ids_sql)";
+		push @and_wheres, "cvterm.cvterm_id IN ($trait_ids_sql)";
 		push @bind_values, @trait_ids;
 	}
 	if (scalar(@db_names)>0){

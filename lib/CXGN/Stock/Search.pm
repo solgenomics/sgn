@@ -492,7 +492,7 @@ sub search {
                     s{^\s+|\s+$}{}g foreach @values;
                     #my $search_vals_sql = "'".join ("','" , @values)."'";
                     #push @stockprop_wheres, "sp$index.value IN ($search_vals_sql)";
-		    push @stockprop_wheres, " (type_id = $type_id and value in (" . join(" ", '?' x scalar(@values) ).") ) ";
+		    push @stockprop_wheres, " (type_id = $type_id and value in (" . join(",", ('?') x scalar(@values)) . ") ) ";
 		    @placeholder_values = (@placeholder_values, @values);
 
                 } else {
@@ -508,8 +508,8 @@ sub search {
             }
         }
         #my $stockprop_join = join ' ', @stockprop_joins;
-        my $stockprop_where = 'WHERE ' . join ' AND ', @stockprop_wheres;
-        my $stockprop_query = "SELECT stockprop.stock_id FROM public.stockprop $stockprop_where;";
+        # each filter is matched on its own stockprop row, a stock has to match all of them
+        my $stockprop_query = join ' INTERSECT ', map { "SELECT stockprop.stock_id FROM public.stockprop WHERE $_" } @stockprop_wheres;
 
 	print STDERR "STOCKPROP QUERY: $stockprop_query with placeholders ".join(", ", @placeholder_values)."\n";
         my $h = $schema->storage->dbh()->prepare($stockprop_query);

@@ -2728,7 +2728,7 @@ sub merge {
 	my $this_subject_rel_rs = $schema->resultset("Stock::StockRelationship")->search( { subject_id => $self->stock_id(), object_id => $row->object_id(), type_id => $row->type_id() });
 
 	if ($this_subject_rel_rs->count() > 0) { # this stock does not have the relationship
-	    print STDERR "Target object ".$row->uniquename()." already has this relationship of type ".$row->type_id()."(".$this_subject_rel_rs->count()." counts)\n";
+	    print STDERR "Target object ".$row->subject_id()." already has this relationship of type ".$row->type_id()."(".$this_subject_rel_rs->count()." counts)\n";
 	}
 	else {
 	    # get the max rank
@@ -2753,8 +2753,7 @@ sub merge {
 	my $this_object_rel_rs = $schema->resultset("Stock::StockRelationship")->search( { object_id => $self->stock_id, subject_id => $row->subject_id(), type_id => $row->type_id() });
 
 	if ($this_object_rel_rs->count() > 0) {
-	    print STDERR "Target object ".$row->uniquename()." already has this relationship of ".$row->type_id()." with ".$this_object_rel_rs->count()." counts\n";;
-	    
+	    print STDERR "Target object ".$row->object_id()." already has this relationship of ".$row->type_id()." with ".$this_object_rel_rs->count()." counts\n";
 	}
 	else {
 	    my $rank_rs = $schema->resultset("Stock::StockRelationship")->search( { object_id => $self->stock_id(), type_id => $row->type_id() });

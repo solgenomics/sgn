@@ -459,7 +459,7 @@ sub search {
         $total_count = $full_count;
     }
 
-    #pagination in sql query not possible unitl we have project_class explicitly
+    #pagination in sql query not possible until we have project_class explicitly
     my @data_window;
     if (($limit && defined($limit) || ($offset && defined($offset)))){
         my $start = $offset;
