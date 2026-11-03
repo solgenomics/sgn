@@ -2,12 +2,8 @@ use strict;
 
 use lib 't/lib';
 
-<<<<<<< HEAD
-use File::Spec::Functions qw / catfile catdir/;
-use File::Path qw /remove_tree/;
-=======
 use File::Spec;
->>>>>>> master
+use File::Path qw /remove_tree/;
 use Test::More;
 use SGN::Test::WWW::WebDriver;
 use SGN::Test::Fixture;
@@ -23,16 +19,10 @@ my $solgs_data = SGN::Test::solGSData->new({
     'user_id' => 40,
 });
 
-<<<<<<< HEAD
-my $cache_dir = $solgs_data->base_analyses_cache_dir();
-my $cluster_dir  = catdir($cache_dir, 'cluster');
-my $log_dir      = catdir($cache_dir, 'log');
-=======
 my $cache_dir    = $solgs_data->site_cluster_shared_dir();
 my $protocol_dir = $solgs_data->default_protocol_dir();
 my $cluster_dir  = File::Spec->catdir( $protocol_dir, 'cluster' );
 my $log_dir      = File::Spec->catdir( $protocol_dir, 'log' );
->>>>>>> master
 
 my $accessions_list = $solgs_data->load_accessions_list();
 my $accessions_list_name = $accessions_list->{list_name};
@@ -60,512 +50,535 @@ my $plots_dt_name = $plots_dt->{dataset_name};
 my $plots_dt_id   = 'dataset_' . $plots_dt->{dataset_id};
 
 
-print STDERR "\ntrials dt: $trials_dt_name -- $trials_dt_id\n";
-print STDERR "\naccessions dt: $accessions_dt_name -- $accessions_dt_id\n";
-print STDERR "\nplots dt: $plots_dt_name -- $plots_dt_id\n";
+remove_tree($cache_dir, {safe => 1});
 
-print STDERR "\ntrials list: $trials_list_name -- $trials_list_id\n";
-print STDERR
-  "\naccessions list: $accessions_list_name -- $accessions_list_id\n";
-print STDERR "\nplots list: $plots_list_name -- $plots_list_id\n";
+#### Run both clustering methods for each population and data type
 
-# Run both clustering methods for each population and data type before moving on.
-# Model training and prediction setup is shared by each pair of clustering tests.
 $d->while_logged_in_as(
     "submitter",
     sub {
-        remove_tree($cache_dir, {safe => 1});
-
         $d->get_ok('/cluster/analysis', 'cluster home page'); 
         sleep(5);
 
-        # # K-means clustering.
-        # $d->find_element_ok('//tr[@id="' . $accessions_list_id . '"]//*[starts-with(@id, "cluster_type_select")]', 'xpath', "select K-means")->send_keys('K-means');
-        # sleep(1);
-        # $d->find_element_ok('//tr[@id="' . $accessions_list_id . '"]//*[starts-with(@id, "cluster_data_type_select")]/option[text()="Genotype"]', 'xpath', 'select genotype')->click();
-        # sleep(1);
-        # $d->find_element_ok('//tr[@id="' . $accessions_list_id . '"]//*[starts-with(@id, "k_number_input")]', 'xpath', 'clear k number')->clear();
-        # $d->find_element_ok('//tr[@id="' . $accessions_list_id . '"]//*[starts-with(@id, "k_number_input")]', 'xpath', 'select k number')->send_keys(4);
-        # sleep(2);
-        # $d->find_element_ok('//tr[@id="' . $accessions_list_id . '"]//*[starts-with(@id, "run_cluster")]', 'xpath', 'run clones list (genotype) clustering')->click();
-        # sleep(5);
-        # $d->find_element_ok('no_queue', 'id', 'no job queueing')->click();
-        # sleep(350);
-
-        # my $sel_pops = $d->find_element('//*[contains(text(), "Clustering")]', 'xpath', 'scroll up');
-        # my $elem = $d->driver->execute_script("arguments[0].scrollIntoView(true);window.scrollBy(0, -10);", $sel_pops);
-        # sleep(3);
-        # $d->find_element_ok('//a[contains(text(), "Cluster variances")]', 'xpath', "check accessions list geno  K-means cluster plot");
-        # sleep(3);
-
-        # $d->driver->refresh();
-        # sleep(3);
-
-        # # Hierarchical clustering of the same population and data type.
-        # $d->driver->execute_script(
-        #     "arguments[0].scrollIntoView(true);window.scrollBy(0, -100);",
-        #     $d->find_element('//tr[@id="' . $accessions_list_id . '"]//*[starts-with(@id, "cluster_type_select")]', 'xpath')
-        # );
-        # sleep(1);
-
-        # $d->find_element_ok('//tr[@id="' . $accessions_list_id . '"]//*[starts-with(@id, "cluster_type_select")]', 'xpath', "select Hierarchical")->send_keys('Hierarchical');
-        # sleep(1);
-        # $d->find_element_ok('//tr[@id="' . $accessions_list_id . '"]//*[starts-with(@id, "cluster_data_type_select")]/option[text()="Genotype"]', 'xpath', 'select genotype')->click();
-        # sleep(1);
-        # $d->find_element_ok('//tr[@id="' . $accessions_list_id . '"]//*[starts-with(@id, "run_cluster")]', 'xpath', 'run clones list (genotype) clustering')->click();
-        # sleep(5);
-        # $d->find_element_ok('no_queue', 'id', 'no job queueing')->click();
-        # sleep(350);
-
-        # $sel_pops = $d->find_element('//*[contains(text(), "Clustering")]', 'xpath', 'scroll up');
-        # $elem = $d->driver->execute_script("arguments[0].scrollIntoView(true);window.scrollBy(0, -10);", $sel_pops);
-        # sleep(3);
-        # $d->find_element_ok('//img[starts-with(@id, "hierarchical-plot-")]', 'xpath', "check accessions list geno  Hierarchical cluster plot");
-        # sleep(3);
-
-        # $d->driver->refresh();
-        # sleep(3);
-
-        # # K-means clustering.
-        # $d->find_element_ok('//tr[@id="' . $plots_list_id . '"]//*[starts-with(@id, "cluster_type_select")]', 'xpath', "select K-means")->send_keys('K-means');
-        # sleep(1);
-        # $d->find_element_ok('//tr[@id="' . $plots_list_id . '"]//*[starts-with(@id, "cluster_data_type_select")]/option[text()="Phenotype"]', 'xpath', 'select phenotype')->click();
-        # sleep(1);
-        # $d->find_element_ok('//tr[@id="' . $plots_list_id . '"]//*[starts-with(@id, "k_number_input")]', 'xpath', 'clear k number')->clear();
-        # $d->find_element_ok('//tr[@id="' . $plots_list_id . '"]//*[starts-with(@id, "k_number_input")]', 'xpath', 'select k number')->send_keys(4);
-        # sleep(2);
-        # $d->find_element_ok('//tr[@id="' . $plots_list_id . '"]//*[starts-with(@id, "run_cluster")]', 'xpath', 'run plots list (phenotype) clustering')->click();
-        # sleep(3);
-        # $d->find_element_ok('no_queue', 'id', 'no job queueing')->click();
-        # sleep(350);
-
-        # $sel_pops = $d->find_element('//*[contains(text(), "Clustering")]', 'xpath', 'scroll up');
-        # $elem = $d->driver->execute_script("arguments[0].scrollIntoView(true);window.scrollBy(0, -10);", $sel_pops);
-        # sleep(5);
-        # $d->find_element_ok('//a[contains(text(), "Cluster variances")]', 'xpath', "check plots phenotype K-means cluster plot");
-        # sleep(5);
-
-        # $d->driver->refresh();
-        # sleep(3);
-
-        # # Hierarchical clustering of the same population and data type.
-        # $d->driver->execute_script(
-        #     "arguments[0].scrollIntoView(true);window.scrollBy(0, -100);",
-        #     $d->find_element('//tr[@id="' . $plots_list_id . '"]//*[starts-with(@id, "cluster_type_select")]', 'xpath')
-        # );
-        # sleep(1);
-
-        # $d->find_element_ok('//tr[@id="' . $plots_list_id . '"]//*[starts-with(@id, "cluster_type_select")]', 'xpath', "select Hierarchical")->send_keys('Hierarchical');
-        # sleep(1);
-        # $d->find_element_ok('//tr[@id="' . $plots_list_id . '"]//*[starts-with(@id, "cluster_data_type_select")]/option[text()="Phenotype"]', 'xpath', 'select phenotype')->click();
-        # sleep(1);
-        # $d->find_element_ok('//tr[@id="' . $plots_list_id . '"]//*[starts-with(@id, "run_cluster")]', 'xpath', 'run plots list (phenotype) clustering')->click();
-        # sleep(3);
-        # $d->find_element_ok('no_queue', 'id', 'no job queueing')->click();
-        # sleep(350);
-
-        # $sel_pops = $d->find_element('//*[contains(text(), "Clustering")]', 'xpath', 'scroll up');
-        # $elem = $d->driver->execute_script("arguments[0].scrollIntoView(true);window.scrollBy(0, -10);", $sel_pops);
-        # sleep(5);
-        # $d->find_element_ok('//img[starts-with(@id, "hierarchical-plot-")]', 'xpath', "check plots phenotype Hierarchical cluster plot");
-        # sleep(5);
-
-        # $d->driver->refresh();
-        # sleep(3);
-
-        # # K-means clustering.
-        # $d->find_element_ok('//tr[@id="' . $trials_list_id . '"]//*[starts-with(@id, "cluster_type_select")]', 'xpath', "select K-means")->send_keys('K-means');
-        # sleep(1);
-        # $d->find_element_ok('//tr[@id="' . $trials_list_id . '"]//*[starts-with(@id, "cluster_data_type_select")]/option[text()="Genotype"]', 'xpath', 'select genotype')->click();
-        # sleep(1);
-        # $d->find_element_ok('//tr[@id="' . $trials_list_id . '"]//*[starts-with(@id, "k_number_input")]', 'xpath', 'clear k number')->clear();
-        # $d->find_element_ok('//tr[@id="' . $trials_list_id . '"]//*[starts-with(@id, "k_number_input")]', 'xpath', 'select k number')->send_keys(4);
-        # sleep(2);
-        # $d->find_element_ok('//tr[@id="' . $trials_list_id . '"]//*[starts-with(@id, "run_cluster")]', 'xpath', 'run trials list (genotype) clustering')->click();
-        # sleep(3);
-        # $d->find_element_ok('no_queue', 'id', 'no job queueing')->click();
-        # sleep(350);
-
-        # $sel_pops = $d->find_element('//*[contains(text(), "Clustering")]', 'xpath', 'scroll up');
-        # $elem = $d->driver->execute_script("arguments[0].scrollIntoView(true);window.scrollBy(0, -10);", $sel_pops);
-        # sleep(5);
-        # $d->find_element_ok('//a[contains(text(), "Cluster variances")]', 'xpath', "check trials list  geno K-means cluster plot");
-        # sleep(5);
-
-        # $d->driver->refresh();
-        # sleep(3);
-
-        # # Hierarchical clustering of the same population and data type.
-        # $d->driver->execute_script(
-        #     "arguments[0].scrollIntoView(true);window.scrollBy(0, -100);",
-        #     $d->find_element('//tr[@id="' . $trials_list_id . '"]//*[starts-with(@id, "cluster_type_select")]', 'xpath')
-        # );
-        # sleep(1);
-
-        # $d->find_element_ok('//tr[@id="' . $trials_list_id . '"]//*[starts-with(@id, "cluster_type_select")]', 'xpath', "select Hierarchical")->send_keys('Hierarchical');
-        # sleep(1);
-        # $d->find_element_ok('//tr[@id="' . $trials_list_id . '"]//*[starts-with(@id, "cluster_data_type_select")]/option[text()="Genotype"]', 'xpath', 'select genotype')->click();
-        # sleep(1);
-        # $d->find_element_ok('//tr[@id="' . $trials_list_id . '"]//*[starts-with(@id, "run_cluster")]', 'xpath', 'run trials list (genotype) clustering')->click();
-        # sleep(3);
-        # $d->find_element_ok('no_queue', 'id', 'no job queueing')->click();
-        # sleep(350);
-
-        # $sel_pops = $d->find_element('//*[contains(text(), "Clustering")]', 'xpath', 'scroll up');
-        # $elem = $d->driver->execute_script("arguments[0].scrollIntoView(true);window.scrollBy(0, -10);", $sel_pops);
-        # sleep(5);
-        # $d->find_element_ok('//img[starts-with(@id, "hierarchical-plot-")]', 'xpath', "check trials list  geno Hierarchical cluster plot");
-        # sleep(5);
-
-        # $d->driver->refresh();
-        # sleep(3);
-
-        # # K-means clustering.
-        # $d->find_element_ok('//tr[@id="' . $trials_list_id . '"]//*[starts-with(@id, "cluster_type_select")]', 'xpath', "select K-means")->send_keys('K-means');
-        # sleep(1);
-        # $d->find_element_ok('//tr[@id="' . $trials_list_id . '"]//*[starts-with(@id, "cluster_data_type_select")]/option[text()="Phenotype"]', 'xpath', 'select phenotype')->click();
-        # sleep(1);
-        # $d->find_element_ok('//tr[@id="' . $trials_list_id . '"]//*[starts-with(@id, "k_number_input")]', 'xpath', 'clear k number')->clear();
-        # $d->find_element_ok('//tr[@id="' . $trials_list_id . '"]//*[starts-with(@id, "k_number_input")]', 'xpath', 'select k number')->send_keys(4);
-        # sleep(2);
-        # $d->find_element_ok('//tr[@id="' . $trials_list_id . '"]//*[starts-with(@id, "run_cluster")]', 'xpath', 'run trials list (phenotype) clustering')->click();
-        # sleep(5);
-        # $d->find_element_ok('no_queue', 'id', 'no job queueing')->click();
-        # sleep(350);
-
-        # $sel_pops = $d->find_element('//*[contains(text(), "Clustering")]', 'xpath', 'scroll up');
-        # $elem = $d->driver->execute_script("arguments[0].scrollIntoView(true);window.scrollBy(0, -10);", $sel_pops);
-        # sleep(5);
-        # $d->find_element_ok('//a[contains(text(), "Cluster variances")]', 'xpath', "check trials list geno K-means cluster plot");
-        # sleep(5);
-
-        # $d->driver->refresh();
-        # sleep(3);
-
-        # # Hierarchical clustering of the same population and data type.
-        # $d->driver->execute_script(
-        #     "arguments[0].scrollIntoView(true);window.scrollBy(0, -100);",
-        #     $d->find_element('//tr[@id="' . $trials_list_id . '"]//*[starts-with(@id, "cluster_type_select")]', 'xpath')
-        # );
-        # sleep(1);
-
-        # $d->find_element_ok('//tr[@id="' . $trials_list_id . '"]//*[starts-with(@id, "cluster_type_select")]', 'xpath', "select Hierarchical")->send_keys('Hierarchical');
-        # sleep(1);
-        # $d->find_element_ok('//tr[@id="' . $trials_list_id . '"]//*[starts-with(@id, "cluster_data_type_select")]/option[text()="Phenotype"]', 'xpath', 'select phenotype')->click();
-        # sleep(1);
-        # $d->find_element_ok('//tr[@id="' . $trials_list_id . '"]//*[starts-with(@id, "run_cluster")]', 'xpath', 'run trials list (phenotype) clustering')->click();
-        # sleep(5);
-        # $d->find_element_ok('no_queue', 'id', 'no job queueing')->click();
-        # sleep(350);
-
-        # $sel_pops = $d->find_element('//*[contains(text(), "Clustering")]', 'xpath', 'scroll up');
-        # $elem = $d->driver->execute_script("arguments[0].scrollIntoView(true);window.scrollBy(0, -10);", $sel_pops);
-        # sleep(5);
-        # $d->find_element_ok('//img[starts-with(@id, "hierarchical-plot-")]', 'xpath', "check trials list geno Hierarchical cluster plot");
-        # sleep(5);
-
-        # $d->driver->refresh();
-        # sleep(3);
-
-        # remove_tree($cache_dir, {safe => 1});
-        # sleep(5);
-
-        # # K-means clustering.
-        # $d->find_element_ok('//tr[@id="' . $trials_list_id . '"]//*[starts-with(@id, "cluster_type_select")]', 'xpath', "select K-means")->send_keys('K-means');
-        # sleep(1);
-        # $d->find_element_ok('//tr[@id="' . $trials_list_id . '"]//*[starts-with(@id, "cluster_data_type_select")]/option[text()="Phenotype"]', 'xpath', 'select genotype')->click();
-        # sleep(1);
-        # $d->find_element_ok('//tr[@id="' . $trials_list_id . '"]//*[starts-with(@id, "k_number_input")]', 'xpath', 'clear k number')->clear();
-        # $d->find_element_ok('//tr[@id="' . $trials_list_id . '"]//*[starts-with(@id, "k_number_input")]', 'xpath', 'select k number')->send_keys(4);
-        # sleep(2);
-        # $d->find_element_ok('//tr[@id="' . $trials_list_id . '"]//*[starts-with(@id, "run_cluster")]', 'xpath', 'run cluster')->click();
-        # sleep(3);
-        # $d->find_element_ok('queue_job', 'id', 'job queueing')->click();
-        # sleep(2);
-        # $d->find_element_ok('analysis_name', 'id', 'trials list pheno analysis name')->send_keys('trials list clustering');
-        # sleep(2);
-        # $d->find_element_ok('user_email', 'id', 'user email')->send_keys('email@email.com');
-        # sleep(2);
-        # $d->find_element_ok('submit_job', 'id', 'submit')->click();
-        # sleep(350);
-
-        # $d->driver->go_back();
-        # sleep(5);
-
-        # $d->driver->refresh();
-        # sleep(3);
-
-        # $d->find_element_ok('//tr[@id="' . $trials_list_id . '"]//*[starts-with(@id, "cluster_type_select")]', 'xpath', "select K-means")->send_keys('K-means');
-        # sleep(1);
-        # $d->find_element_ok('//tr[@id="' . $trials_list_id . '"]//*[starts-with(@id, "cluster_data_type_select")]/option[text()="Phenotype"]', 'xpath', 'select phenotype')->click();
-        # sleep(1);
-        # $d->find_element_ok('//tr[@id="' . $trials_list_id . '"]//*[starts-with(@id, "k_number_input")]', 'xpath', 'clear k number')->clear();
-        # $d->find_element_ok('//tr[@id="' . $trials_list_id . '"]//*[starts-with(@id, "k_number_input")]', 'xpath', 'select k number')->send_keys(4);
-        # sleep(2);
-        # $d->find_element_ok('//tr[@id="' . $trials_list_id . '"]//*[starts-with(@id, "run_cluster")]', 'xpath', 'run trials list (pheno) cluster')->click();
-        # sleep(5);
-
-        # $sel_pops = $d->find_element('//*[contains(text(), "Clustering")]', 'xpath', 'scroll up');
-        # $elem = $d->driver->execute_script("arguments[0].scrollIntoView(true);window.scrollBy(0, -10);", $sel_pops);
-        # sleep(5);
-        # $d->find_element_ok('//a[contains(text(), "Cluster variances")]', 'xpath', "check trials list pheno K-means cluster plot");
-        # sleep(5);
-
-        # $d->driver->refresh();
-        # sleep(3);
-
-        # Hierarchical clustering of the same population and data type.
-        # $d->driver->execute_script(
-        #     "arguments[0].scrollIntoView(true);window.scrollBy(0, -100);",
-        #$d->find_element('//tr[@id="' . $trials_list_id . '"]//*[starts-with(@id, "cluster_type_select")]', 'xpath')
-        # );
-        # sleep(1);
-
-        # $d->find_element_ok('//tr[@id="' . $trials_list_id . '"]//*[starts-with(@id, "cluster_type_select")]', 'xpath', "select Hierarchical")->send_keys('Hierarchical');
-        # sleep(1);
-        # $d->find_element_ok('//tr[@id="' . $trials_list_id . '"]//*[starts-with(@id, "cluster_data_type_select")]/option[text()="Phenotype"]', 'xpath', 'select genotype')->click();
-        # sleep(1);
-        # $d->find_element_ok('//tr[@id="' . $trials_list_id . '"]//*[starts-with(@id, "run_cluster")]', 'xpath', 'run cluster')->click();
-        # sleep(3);
-        # $d->find_element_ok('queue_job', 'id', 'job queueing')->click();
-        # sleep(2);
-        # $d->find_element_ok('analysis_name', 'id', 'trials list pheno analysis name')->send_keys('trials list clustering');
-        # sleep(2);
-        # $d->find_element_ok('user_email', 'id', 'user email')->send_keys('email@email.com');
-        # sleep(2);
-        # $d->find_element_ok('submit_job', 'id', 'submit')->click();
-        # sleep(350);
-
-        # $d->driver->go_back();
-        # sleep(5);
-
-        # $d->driver->refresh();
-        # sleep(3);
-
-        # $d->find_element_ok('//tr[@id="' . $trials_list_id . '"]//*[starts-with(@id, "cluster_type_select")]', 'xpath', "select Hierarchical")->send_keys('Hierarchical');
-        # sleep(1);
-        # $d->find_element_ok('//tr[@id="' . $trials_list_id . '"]//*[starts-with(@id, "cluster_data_type_select")]/option[text()="Phenotype"]', 'xpath', 'select phenotype')->click();
-        # sleep(1);
-        # $d->find_element_ok('//tr[@id="' . $trials_list_id . '"]//*[starts-with(@id, "run_cluster")]', 'xpath', 'run trials list (pheno) cluster')->click();
-        # sleep(5);
-
-        # my $sel_pops = $d->find_element('//*[contains(text(), "Clustering")]', 'xpath', 'scroll up');
-        # my $elem = $d->driver->execute_script("arguments[0].scrollIntoView(true);window.scrollBy(0, -10);", $sel_pops);
-        # sleep(5);
-        # $d->find_element_ok('//img[starts-with(@id, "hierarchical-plot-")]', 'xpath', "check trials list pheno Hierarchical cluster plot");
-        # sleep(5);
-
-        # $d->driver->refresh();
-        # sleep(3);
-
-        # # K-means clustering.
-        # $d->find_element_ok('//tr[@id="' . $trials_dt_id . '"]//*[starts-with(@id, "cluster_type_select")]', 'xpath', "select K-means")->send_keys('K-means');
-        # sleep(1);
-        # $d->find_element_ok('//tr[@id="' . $trials_dt_id . '"]//*[starts-with(@id, "cluster_data_type_select")]/option[text()="Genotype"]', 'xpath', 'select genotype')->click();
-        # sleep(1);
-        # $d->find_element_ok('//tr[@id="' . $trials_dt_id . '"]//*[starts-with(@id, "k_number_input")]', 'xpath', 'clear k number')->clear();
-        # $d->find_element_ok('//tr[@id="' . $trials_dt_id . '"]//*[starts-with(@id, "k_number_input")]', 'xpath', 'select k number')->send_keys(4);
-        # sleep(2);
-        # $d->find_element_ok('//tr[@id="' . $trials_dt_id . '"]//*[starts-with(@id, "run_cluster")]', 'xpath', 'run trials dataset (genotype) cluster')->click();
-        # sleep(3);
-        # $d->find_element_ok('no_queue', 'id', 'no job queueing')->click();
-        # sleep(350);
-
-        # $sel_pops = $d->find_element('//*[contains(text(), "Clustering")]', 'xpath', 'scroll up');
-        # $elem = $d->driver->execute_script("arguments[0].scrollIntoView(true);window.scrollBy(0, 500);", $sel_pops);
-        # sleep(2);
-        # $d->find_element_ok('//a[contains(text(), "Cluster variances")]', 'xpath', "check trials dataset geno K-means cluster plot");
-        # sleep(5);
-
-        # $d->driver->refresh();
-        # sleep(3);
-
-        # # Hierarchical clustering of the same population and data type.
-        # $d->driver->execute_script(
-        #     "arguments[0].scrollIntoView(true);window.scrollBy(0, -100);",
-        #     $d->find_element('//tr[@id="' . $trials_dt_id . '"]//*[starts-with(@id, "cluster_type_select")]', 'xpath')
-        # );
-        # sleep(1);
-
-        # $d->find_element_ok('//tr[@id="' . $trials_dt_id . '"]//*[starts-with(@id, "cluster_type_select")]', 'xpath', "select Hierarchical")->send_keys('Hierarchical');
-        # sleep(1);
-        # $d->find_element_ok('//tr[@id="' . $trials_dt_id . '"]//*[starts-with(@id, "cluster_data_type_select")]/option[text()="Genotype"]', 'xpath', 'select genotype')->click();
-        # sleep(1);
-        # $d->find_element_ok('//tr[@id="' . $trials_dt_id . '"]//*[starts-with(@id, "run_cluster")]', 'xpath', 'run trials dataset (genotype) cluster')->click();
-        # sleep(3);
-        # $d->find_element_ok('no_queue', 'id', 'no job queueing')->click();
-        # sleep(350);
-
-        # $sel_pops = $d->find_element('//*[contains(text(), "Clustering")]', 'xpath', 'scroll up');
-        # $elem = $d->driver->execute_script("arguments[0].scrollIntoView(true);window.scrollBy(0, 500);", $sel_pops);
-        # sleep(2);
-        # $d->find_element_ok('//img[starts-with(@id, "hierarchical-plot-")]', 'xpath', "check trials dataset geno Hierarchical cluster plot");
-        # sleep(5);
-
-        # $d->driver->refresh();
-        # sleep(3);
-
-        # # K-means clustering.
-        # $d->find_element_ok('//tr[@id="' . $trials_dt_id . '"]//*[starts-with(@id, "cluster_type_select")]', 'xpath', "select K-means")->send_keys('K-means');
-        # sleep(1);
-        # $d->find_element_ok('//tr[@id="' . $trials_dt_id . '"]//*[starts-with(@id, "cluster_data_type_select")]/option[text()="Phenotype"]', 'xpath', 'select phenotype')->click();
-        # sleep(1);
-        # $d->find_element_ok('//tr[@id="' . $trials_dt_id . '"]//*[starts-with(@id, "k_number_input")]', 'xpath', 'clear k number')->clear();
-        # $d->find_element_ok('//tr[@id="' . $trials_dt_id . '"]//*[starts-with(@id, "k_number_input")]', 'xpath', 'select k number')->send_keys(4);
-        # sleep(2);
-        # $d->find_element_ok('//tr[@id="' . $trials_dt_id . '"]//*[starts-with(@id, "run_cluster")]', 'xpath', 'run trials dataset (phenotype) cluster')->click();
-        # sleep(3);
-        # $d->find_element_ok('no_queue', 'id', 'no job queueing')->click();
-        # sleep(350);
-
-        # $sel_pops = $d->find_element('//*[contains(text(), "Clustering")]', 'xpath', 'scroll up');
-        # $elem = $d->driver->execute_script("arguments[0].scrollIntoView(true);window.scrollBy(0, 500);", $sel_pops);
-        # sleep(5);
-        # $d->find_element_ok('//a[contains(text(), "Cluster variances")]', 'xpath', "check trials dataset pheno K-means cluster plot");
-        # sleep(5);
-
-        # $d->driver->refresh();
-        # sleep(3);
-
-        # # Hierarchical clustering of the same population and data type.
-        # $d->driver->execute_script(
-        #     "arguments[0].scrollIntoView(true);window.scrollBy(0, -100);",
-        #     $d->find_element('//tr[@id="' . $trials_dt_id . '"]//*[starts-with(@id, "cluster_type_select")]', 'xpath')
-        # );
-        # sleep(1);
-
-        # $d->find_element_ok('//tr[@id="' . $trials_dt_id . '"]//*[starts-with(@id, "cluster_type_select")]', 'xpath', "select Hierarchical")->send_keys('Hierarchical');
-        # sleep(1);
-        # $d->find_element_ok('//tr[@id="' . $trials_dt_id . '"]//*[starts-with(@id, "cluster_data_type_select")]/option[text()="Phenotype"]', 'xpath', 'select phenotype')->click();
-        # sleep(1);
-        # $d->find_element_ok('//tr[@id="' . $trials_dt_id . '"]//*[starts-with(@id, "run_cluster")]', 'xpath', 'run trials dataset (phenotype) cluster')->click();
-        # sleep(3);
-        # $d->find_element_ok('no_queue', 'id', 'no job queueing')->click();
-        # sleep(350);
-
-        # $sel_pops = $d->find_element('//*[contains(text(), "Clustering")]', 'xpath', 'scroll up');
-        # $elem = $d->driver->execute_script("arguments[0].scrollIntoView(true);window.scrollBy(0, 500);", $sel_pops);
-        # sleep(5);
-        # $d->find_element_ok('//img[starts-with(@id, "hierarchical-plot-")]', 'xpath', "check trials dataset pheno Hierarchical cluster plot");
-        # sleep(5);
-
-        # $d->driver->refresh();
-        # sleep(3);
-
-        # remove_tree($cache_dir, {safe => 1});
-        # sleep(5);
-
-        # $d->get_ok('/breeders/trial/139', 'trial detail home page');
-        # sleep(5);
-
-        # my $analysis_tools = $d->find_element('Analysis Tools', 'partial_link_text', 'toogle analysis tools');
-        # $elem = $d->driver->execute_script("arguments[0].scrollIntoView(true);window.scrollBy(0,-100);", $analysis_tools);
-        # sleep(5);
-        # $d->find_element_ok('Analysis Tools', 'partial_link_text', 'toogle analysis tools')->click();
-        # sleep(5);
-        # $d->find_element_ok('Clustering', 'partial_link_text', 'expand cluster sec')->click();
-        # sleep(5);
-        # # K-means clustering.
-        # $d->find_element_ok('//*[starts-with(@id, "cluster_type_select")]', 'xpath', "select K-means")->send_keys('K-means');
-        # sleep(2);
-        # $d->find_element_ok('//*[starts-with(@id, "cluster_data_type_select")]/option[text()="Phenotype"]', 'xpath', 'select phenotype')->click();
-        # sleep(2);
-        # $d->find_element_ok('//*[starts-with(@id, "k_number_input")]', 'xpath', 'clear k number')->clear();
-        # $d->find_element_ok('//*[starts-with(@id, "k_number_input")]', 'xpath', 'select k number')->send_keys(4);
-        # sleep(2);
-        # $d->find_element_ok('//*[starts-with(@id, "run_cluster")]', 'xpath', 'run phenotype cluster')->click();
-        # sleep(3);
-        # $d->find_element_ok('no_queue', 'id', 'no job queueing')->click();
-        # sleep(350);
-        # $d->find_element_ok('//a[contains(text(), "Cluster variances")]', 'xpath', "check trial detail page pheno K-means cluster plot");
-        # sleep(5);
-
-        # $d->driver->refresh();
-        # sleep(3);
-
-        # # Hierarchical clustering of the same population and data type.
-        # $analysis_tools = $d->find_element('Analysis Tools', 'partial_link_text', 'toogle analysis tools');
-        # $elem = $d->driver->execute_script("arguments[0].scrollIntoView(true);window.scrollBy(0,-100);", $analysis_tools);
-        # sleep(5);
-        # $d->find_element_ok('Analysis Tools', 'partial_link_text', 'toogle analysis tools')->click();
-        # sleep(5);
-        # $d->find_element_ok('Clustering', 'partial_link_text', 'expand cluster sec')->click();
-        # sleep(5);
-        # $d->driver->execute_script(
-        #     "arguments[0].scrollIntoView(true);window.scrollBy(0, -100);",
-        #     $d->find_element('//*[starts-with(@id, "cluster_type_select")]', 'xpath')
-        # );
-        # sleep(1);
-
-        # $d->find_element_ok('//*[starts-with(@id, "cluster_type_select")]', 'xpath', "select Hierarchical")->send_keys('Hierarchical');
-        # sleep(2);
-        # $d->find_element_ok('//*[starts-with(@id, "cluster_data_type_select")]/option[text()="Phenotype"]', 'xpath', 'select phenotype')->click();
-        # sleep(2);
-        # $d->find_element_ok('//*[starts-with(@id, "run_cluster")]', 'xpath', 'run phenotype cluster')->click();
-        # sleep(3);
-        # $d->find_element_ok('no_queue', 'id', 'no job queueing')->click();
-        # sleep(350);
-        # $d->find_element_ok('//img[starts-with(@id, "hierarchical-plot-")]', 'xpath', "check trial detail page pheno Hierarchical cluster plot");
-        # sleep(5);
-
-        # $d->driver->refresh();
-        # sleep(5);
-
-        # $analysis_tools = $d->find_element('cluster_canvas', 'id', 'toogle analysis tools');
-        # $elem = $d->driver->execute_script("arguments[0].scrollIntoView(true);window.scrollBy(0,-100);", $analysis_tools);
-        # sleep(5);
-        # $d->find_element_ok('Analysis Tools', 'partial_link_text', 'toogle analysis tools')->click();
-        # sleep(5);
-        # $d->find_element_ok('Clustering', 'partial_link_text', 'expand cluster sec')->click();
-        # sleep(5);
-        # # K-means clustering.
-        # $d->find_element_ok('//*[starts-with(@id, "cluster_type_select")]', 'xpath', "select K-means")->send_keys('K-means');
-        # sleep(1);
-        # $d->find_element_ok('//*[starts-with(@id, "cluster_data_type_select")]/option[text()="Genotype"]', 'xpath', 'select genotype')->click();
-        # sleep(1);
-        # $d->find_element_ok('//*[starts-with(@id, "k_number_input")]', 'xpath', 'clear k number')->clear();
-        # $d->find_element_ok('//*[starts-with(@id, "k_number_input")]', 'xpath', 'select k number')->send_keys(4);
-        # sleep(2);
-        # $d->find_element_ok('//*[starts-with(@id, "run_cluster")]', 'xpath', 'run genotype cluster')->click();
-        # sleep(3);
-        # $d->find_element_ok('no_queue', 'id', 'no job queueing')->click();
-        # sleep(350);
-        # $d->find_element_ok('//a[contains(text(), "Cluster variances")]', 'xpath', "check trials detail page geno K-means cluster plot");
-        # sleep(5);
-
-        # $d->driver->refresh();
-        # sleep(3);
-
-        # # Hierarchical clustering of the same population and data type.
-        # $analysis_tools = $d->find_element('cluster_canvas', 'id', 'toogle analysis tools');
-        # $elem = $d->driver->execute_script("arguments[0].scrollIntoView(true);window.scrollBy(0,-100);", $analysis_tools);
-        # sleep(5);
-        # $d->find_element_ok('Analysis Tools', 'partial_link_text', 'toogle analysis tools')->click();
-        # sleep(5);
-        # $d->find_element_ok('Clustering', 'partial_link_text', 'expand cluster sec')->click();
-        # sleep(5);
-        # $d->driver->execute_script(
-        #     "arguments[0].scrollIntoView(true);window.scrollBy(0, -100);",
-        #     $d->find_element('//*[starts-with(@id, "cluster_type_select")]', 'xpath')
-        # );
-        # sleep(1);
-
-        # $d->find_element_ok('//*[starts-with(@id, "cluster_type_select")]', 'xpath', "select Hierarchical")->send_keys('Hierarchical');
-        # sleep(1);
-        # $d->find_element_ok('//*[starts-with(@id, "cluster_data_type_select")]/option[text()="Genotype"]', 'xpath', 'select genotype')->click();
-        # sleep(1);
-        # $d->find_element_ok('//*[starts-with(@id, "run_cluster")]', 'xpath', 'run genotype cluster')->click();
-        # sleep(3);
-        # $d->find_element_ok('no_queue', 'id', 'no job queueing')->click();
-        # sleep(350);
-        # $d->find_element_ok('//img[starts-with(@id, "hierarchical-plot-")]', 'xpath', "check trials detail page geno Hierarchical cluster plot");
-        # sleep(5);
-
-        # $d->driver->refresh();
-        # sleep(3);
-
-        # ############## solGS #####################
-        # remove_tree($cache_dir, {safe => 1});
+        #### K-means clustering ####
+        $d->select_datatable_tab('cluster_private_lists');
+        $d->filter_datatable('cluster_private_list_table', $accessions_list_name);
+        $d->find_element_ok('//tr[@id="' . $accessions_list_id . '"]//*[starts-with(@id, "cluster_type_select")]', 'xpath', "select K-means")->send_keys('K-means');
+        sleep(1);
+        $d->find_element_ok('//tr[@id="' . $accessions_list_id . '"]//*[starts-with(@id, "cluster_data_type_select")]/option[text()="Genotype"]', 'xpath', 'select genotype')->click();
+        sleep(1);
+        $d->find_element_ok('//tr[@id="' . $accessions_list_id . '"]//*[starts-with(@id, "k_number_input")]', 'xpath', 'clear k number')->clear();
+        $d->find_element_ok('//tr[@id="' . $accessions_list_id . '"]//*[starts-with(@id, "k_number_input")]', 'xpath', 'select k number')->send_keys(4);
+        sleep(2);
+        $d->find_element_ok('//tr[@id="' . $accessions_list_id . '"]//*[starts-with(@id, "run_cluster")]', 'xpath', 'run clones list (genotype) clustering')->click();
+        sleep(5);
+        $d->find_element_ok('no_queue', 'id', 'no job queueing')->click();
+        sleep(350);
+
+        my $sel_pops = $d->find_element('//*[contains(text(), "Clustering")]', 'xpath', 'scroll up');
+        my $elem = $d->driver->execute_script("arguments[0].scrollIntoView(true);window.scrollBy(0, -10);", $sel_pops);
+        sleep(3);
+        $d->find_element_ok('//a[contains(text(), "Cluster variances")]', 'xpath', "check accessions list geno  K-means cluster plot");
+        sleep(3);
+
+        $d->driver->refresh();
+        sleep(3);
+
+        #### Hierarchical clustering ####.
+        $d->select_datatable_tab('cluster_private_lists');
+        $d->filter_datatable('cluster_private_list_table', $accessions_list_name);
+        $d->driver->execute_script(
+            "arguments[0].scrollIntoView(true);window.scrollBy(0, -100);",
+            $d->find_element('//tr[@id="' . $accessions_list_id . '"]//*[starts-with(@id, "cluster_type_select")]', 'xpath')
+        );
+        sleep(1);
+
+        $d->find_element_ok('//tr[@id="' . $accessions_list_id . '"]//*[starts-with(@id, "cluster_type_select")]', 'xpath', "select Hierarchical")->send_keys('Hierarchical');
+        sleep(1);
+        $d->find_element_ok('//tr[@id="' . $accessions_list_id . '"]//*[starts-with(@id, "cluster_data_type_select")]/option[text()="Genotype"]', 'xpath', 'select genotype')->click();
+        sleep(1);
+        $d->find_element_ok('//tr[@id="' . $accessions_list_id . '"]//*[starts-with(@id, "run_cluster")]', 'xpath', 'run clones list (genotype) clustering')->click();
+        sleep(5);
+        $d->find_element_ok('no_queue', 'id', 'no job queueing')->click();
+        sleep(350);
+
+        $sel_pops = $d->find_element('//*[contains(text(), "Clustering")]', 'xpath', 'scroll up');
+        $elem = $d->driver->execute_script("arguments[0].scrollIntoView(true);window.scrollBy(0, -10);", $sel_pops);
+        sleep(3);
+        $d->find_element_ok('//img[starts-with(@id, "hierarchical-plot-")]', 'xpath', "check accessions list geno  Hierarchical cluster plot");
+        sleep(3);
+
+        $d->driver->refresh();
+        sleep(3);
+
+        #### K-means clustering ####
+        $d->select_datatable_tab('cluster_private_lists');
+        $d->filter_datatable('cluster_private_list_table', $plots_list_name);
+        $d->find_element_ok('//tr[@id="' . $plots_list_id . '"]//*[starts-with(@id, "cluster_type_select")]', 'xpath', "select K-means")->send_keys('K-means');
+        sleep(1);
+        $d->find_element_ok('//tr[@id="' . $plots_list_id . '"]//*[starts-with(@id, "cluster_data_type_select")]/option[text()="Phenotype"]', 'xpath', 'select phenotype')->click();
+        sleep(1);
+        $d->find_element_ok('//tr[@id="' . $plots_list_id . '"]//*[starts-with(@id, "k_number_input")]', 'xpath', 'clear k number')->clear();
+        $d->find_element_ok('//tr[@id="' . $plots_list_id . '"]//*[starts-with(@id, "k_number_input")]', 'xpath', 'select k number')->send_keys(4);
+        sleep(2);
+        $d->find_element_ok('//tr[@id="' . $plots_list_id . '"]//*[starts-with(@id, "run_cluster")]', 'xpath', 'run plots list (phenotype) clustering')->click();
+        sleep(3);
+        $d->find_element_ok('no_queue', 'id', 'no job queueing')->click();
+        sleep(350);
+
+        $sel_pops = $d->find_element('//*[contains(text(), "Clustering")]', 'xpath', 'scroll up');
+        $elem = $d->driver->execute_script("arguments[0].scrollIntoView(true);window.scrollBy(0, -10);", $sel_pops);
+        sleep(5);
+        $d->find_element_ok('//a[contains(text(), "Cluster variances")]', 'xpath', "check plots phenotype K-means cluster plot");
+        sleep(5);
+
+        $d->driver->refresh();
+        sleep(3);
+
+        #### Hierarchical clustering ####.
+        $d->select_datatable_tab('cluster_private_lists');
+        $d->filter_datatable('cluster_private_list_table', $plots_list_name);
+        $d->driver->execute_script(
+            "arguments[0].scrollIntoView(true);window.scrollBy(0, -100);",
+            $d->find_element('//tr[@id="' . $plots_list_id . '"]//*[starts-with(@id, "cluster_type_select")]', 'xpath')
+        );
+        sleep(1);
+
+        $d->find_element_ok('//tr[@id="' . $plots_list_id . '"]//*[starts-with(@id, "cluster_type_select")]', 'xpath', "select Hierarchical")->send_keys('Hierarchical');
+        sleep(1);
+        $d->find_element_ok('//tr[@id="' . $plots_list_id . '"]//*[starts-with(@id, "cluster_data_type_select")]/option[text()="Phenotype"]', 'xpath', 'select phenotype')->click();
+        sleep(1);
+        $d->find_element_ok('//tr[@id="' . $plots_list_id . '"]//*[starts-with(@id, "run_cluster")]', 'xpath', 'run plots list (phenotype) clustering')->click();
+        sleep(3);
+        $d->find_element_ok('no_queue', 'id', 'no job queueing')->click();
+        sleep(350);
+
+        $sel_pops = $d->find_element('//*[contains(text(), "Clustering")]', 'xpath', 'scroll up');
+        $elem = $d->driver->execute_script("arguments[0].scrollIntoView(true);window.scrollBy(0, -10);", $sel_pops);
+        sleep(5);
+        $d->find_element_ok('//img[starts-with(@id, "hierarchical-plot-")]', 'xpath', "check plots phenotype Hierarchical cluster plot");
+        sleep(5);
+
+        $d->driver->refresh();
+        sleep(3);
+
+        #### K-means clustering ####
+        $d->select_datatable_tab('cluster_private_lists');
+        $d->filter_datatable('cluster_private_list_table', $trials_list_name);
+        $d->find_element_ok('//tr[@id="' . $trials_list_id . '"]//*[starts-with(@id, "cluster_type_select")]', 'xpath', "select K-means")->send_keys('K-means');
+        sleep(1);
+        $d->find_element_ok('//tr[@id="' . $trials_list_id . '"]//*[starts-with(@id, "cluster_data_type_select")]/option[text()="Genotype"]', 'xpath', 'select genotype')->click();
+        sleep(1);
+        $d->find_element_ok('//tr[@id="' . $trials_list_id . '"]//*[starts-with(@id, "k_number_input")]', 'xpath', 'clear k number')->clear();
+        $d->find_element_ok('//tr[@id="' . $trials_list_id . '"]//*[starts-with(@id, "k_number_input")]', 'xpath', 'select k number')->send_keys(4);
+        sleep(2);
+        $d->find_element_ok('//tr[@id="' . $trials_list_id . '"]//*[starts-with(@id, "run_cluster")]', 'xpath', 'run trials list (genotype) clustering')->click();
+        sleep(3);
+        $d->find_element_ok('no_queue', 'id', 'no job queueing')->click();
+        sleep(350);
+
+        $sel_pops = $d->find_element('//*[contains(text(), "Clustering")]', 'xpath', 'scroll up');
+        $elem = $d->driver->execute_script("arguments[0].scrollIntoView(true);window.scrollBy(0, -10);", $sel_pops);
+        sleep(5);
+        $d->find_element_ok('//a[contains(text(), "Cluster variances")]', 'xpath', "check trials list  geno K-means cluster plot");
+        sleep(5);
+
+        $d->driver->refresh();
+        sleep(3);
+
+        #### Hierarchical clustering ####.
+        $d->select_datatable_tab('cluster_private_lists');
+        $d->filter_datatable('cluster_private_list_table', $trials_list_name);
+        $d->driver->execute_script(
+            "arguments[0].scrollIntoView(true);window.scrollBy(0, -100);",
+            $d->find_element('//tr[@id="' . $trials_list_id . '"]//*[starts-with(@id, "cluster_type_select")]', 'xpath')
+        );
+        sleep(1);
+
+        $d->find_element_ok('//tr[@id="' . $trials_list_id . '"]//*[starts-with(@id, "cluster_type_select")]', 'xpath', "select Hierarchical")->send_keys('Hierarchical');
+        sleep(1);
+        $d->find_element_ok('//tr[@id="' . $trials_list_id . '"]//*[starts-with(@id, "cluster_data_type_select")]/option[text()="Genotype"]', 'xpath', 'select genotype')->click();
+        sleep(1);
+        $d->find_element_ok('//tr[@id="' . $trials_list_id . '"]//*[starts-with(@id, "run_cluster")]', 'xpath', 'run trials list (genotype) clustering')->click();
+        sleep(3);
+        $d->find_element_ok('no_queue', 'id', 'no job queueing')->click();
+        sleep(350);
+
+        $sel_pops = $d->find_element('//*[contains(text(), "Clustering")]', 'xpath', 'scroll up');
+        $elem = $d->driver->execute_script("arguments[0].scrollIntoView(true);window.scrollBy(0, -10);", $sel_pops);
+        sleep(5);
+        $d->find_element_ok('//img[starts-with(@id, "hierarchical-plot-")]', 'xpath', "check trials list  geno Hierarchical cluster plot");
+        sleep(5);
+
+        $d->driver->refresh();
+        sleep(3);
+
+        #### K-means clustering ####
+        $d->select_datatable_tab('cluster_private_lists');
+        $d->filter_datatable('cluster_private_list_table', $trials_list_name);
+        $d->find_element_ok('//tr[@id="' . $trials_list_id . '"]//*[starts-with(@id, "cluster_type_select")]', 'xpath', "select K-means")->send_keys('K-means');
+        sleep(1);
+        $d->find_element_ok('//tr[@id="' . $trials_list_id . '"]//*[starts-with(@id, "cluster_data_type_select")]/option[text()="Phenotype"]', 'xpath', 'select phenotype')->click();
+        sleep(1);
+        $d->find_element_ok('//tr[@id="' . $trials_list_id . '"]//*[starts-with(@id, "k_number_input")]', 'xpath', 'clear k number')->clear();
+        $d->find_element_ok('//tr[@id="' . $trials_list_id . '"]//*[starts-with(@id, "k_number_input")]', 'xpath', 'select k number')->send_keys(4);
+        sleep(2);
+        $d->find_element_ok('//tr[@id="' . $trials_list_id . '"]//*[starts-with(@id, "run_cluster")]', 'xpath', 'run trials list (phenotype) clustering')->click();
+        sleep(5);
+        $d->find_element_ok('no_queue', 'id', 'no job queueing')->click();
+        sleep(350);
+
+        $sel_pops = $d->find_element('//*[contains(text(), "Clustering")]', 'xpath', 'scroll up');
+        $elem = $d->driver->execute_script("arguments[0].scrollIntoView(true);window.scrollBy(0, -10);", $sel_pops);
+        sleep(5);
+        $d->find_element_ok('//a[contains(text(), "Cluster variances")]', 'xpath', "check trials list geno K-means cluster plot");
+        sleep(5);
+
+        $d->driver->refresh();
+        sleep(3);
+
+        ######### Hierarchical clustering ####.
+        $d->select_datatable_tab('cluster_private_lists');
+        $d->filter_datatable('cluster_private_list_table', $trials_list_name);
+        $d->driver->execute_script(
+            "arguments[0].scrollIntoView(true);window.scrollBy(0, -100);",
+            $d->find_element('//tr[@id="' . $trials_list_id . '"]//*[starts-with(@id, "cluster_type_select")]', 'xpath')
+        );
+        sleep(1);
+
+        $d->find_element_ok('//tr[@id="' . $trials_list_id . '"]//*[starts-with(@id, "cluster_type_select")]', 'xpath', "select Hierarchical")->send_keys('Hierarchical');
+        sleep(1);
+        $d->find_element_ok('//tr[@id="' . $trials_list_id . '"]//*[starts-with(@id, "cluster_data_type_select")]/option[text()="Phenotype"]', 'xpath', 'select phenotype')->click();
+        sleep(1);
+        $d->find_element_ok('//tr[@id="' . $trials_list_id . '"]//*[starts-with(@id, "run_cluster")]', 'xpath', 'run trials list (phenotype) clustering')->click();
+        sleep(5);
+        $d->find_element_ok('no_queue', 'id', 'no job queueing')->click();
+        sleep(350);
+
+        $sel_pops = $d->find_element('//*[contains(text(), "Clustering")]', 'xpath', 'scroll up');
+        $elem = $d->driver->execute_script("arguments[0].scrollIntoView(true);window.scrollBy(0, -10);", $sel_pops);
+        sleep(5);
+        $d->find_element_ok('//img[starts-with(@id, "hierarchical-plot-")]', 'xpath', "check trials list geno Hierarchical cluster plot");
+        sleep(5);
+
+        $d->driver->refresh();
+        sleep(3);
+
+        remove_tree($cache_dir, {safe => 1});
+        sleep(5);
+
+        ####### K-means clustering ####
+        $d->select_datatable_tab('cluster_private_lists');
+        $d->filter_datatable('cluster_private_list_table', $trials_list_name);
+        $d->find_element_ok('//tr[@id="' . $trials_list_id . '"]//*[starts-with(@id, "cluster_type_select")]', 'xpath', "select K-means")->send_keys('K-means');
+        sleep(1);
+        $d->find_element_ok('//tr[@id="' . $trials_list_id . '"]//*[starts-with(@id, "cluster_data_type_select")]/option[text()="Phenotype"]', 'xpath', 'select genotype')->click();
+        sleep(1);
+        $d->find_element_ok('//tr[@id="' . $trials_list_id . '"]//*[starts-with(@id, "k_number_input")]', 'xpath', 'clear k number')->clear();
+        $d->find_element_ok('//tr[@id="' . $trials_list_id . '"]//*[starts-with(@id, "k_number_input")]', 'xpath', 'select k number')->send_keys(4);
+        sleep(2);
+        $d->find_element_ok('//tr[@id="' . $trials_list_id . '"]//*[starts-with(@id, "run_cluster")]', 'xpath', 'run cluster')->click();
+        sleep(3);
+        $d->find_element_ok('queue_job', 'id', 'job queueing')->click();
+        sleep(2);
+        $d->find_element_ok('analysis_name', 'id', 'trials list pheno analysis name')->send_keys('trials list pheno k-means clustering');
+        sleep(2);
+        $d->find_element_ok('user_email', 'id', 'user email')->send_keys('email@email.com');
+        sleep(2);
+        $d->find_element_ok('submit_job', 'id', 'submit')->click();
+        sleep(350);
+
+        $d->driver->go_back();
+        sleep(5);
+
+        $d->driver->refresh();
+        sleep(3);
+
+        $d->select_datatable_tab('cluster_private_lists');
+        $d->filter_datatable('cluster_private_list_table', $trials_list_name);
+        $d->find_element_ok('//tr[@id="' . $trials_list_id . '"]//*[starts-with(@id, "cluster_type_select")]', 'xpath', "select K-means")->send_keys('K-means');
+        sleep(1);
+        $d->find_element_ok('//tr[@id="' . $trials_list_id . '"]//*[starts-with(@id, "cluster_data_type_select")]/option[text()="Phenotype"]', 'xpath', 'select phenotype')->click();
+        sleep(1);
+        $d->find_element_ok('//tr[@id="' . $trials_list_id . '"]//*[starts-with(@id, "k_number_input")]', 'xpath', 'clear k number')->clear();
+        $d->find_element_ok('//tr[@id="' . $trials_list_id . '"]//*[starts-with(@id, "k_number_input")]', 'xpath', 'select k number')->send_keys(4);
+        sleep(2);
+        $d->find_element_ok('//tr[@id="' . $trials_list_id . '"]//*[starts-with(@id, "run_cluster")]', 'xpath', 'run trials list (pheno) cluster')->click();
+        sleep(5);
+
+        $sel_pops = $d->find_element('//*[contains(text(), "Clustering")]', 'xpath', 'scroll up');
+        $elem = $d->driver->execute_script("arguments[0].scrollIntoView(true);window.scrollBy(0, -10);", $sel_pops);
+        sleep(5);
+        $d->find_element_ok('//a[contains(text(), "Cluster variances")]', 'xpath', "check trials list pheno K-means cluster plot");
+        sleep(5);
+
+        $d->driver->refresh();
+        sleep(3);
+
+        ######Hierarchical clustering of the same population and data type.
+        $d->select_datatable_tab('cluster_private_lists');
+        $d->filter_datatable('cluster_private_list_table', $trials_list_name);
+        $d->driver->execute_script(
+            "arguments[0].scrollIntoView(true);window.scrollBy(0, -100);",
+        $d->find_element('//tr[@id="' . $trials_list_id . '"]//*[starts-with(@id, "cluster_type_select")]', 'xpath')
+        );
+        sleep(1);
+
+        $d->find_element_ok('//tr[@id="' . $trials_list_id . '"]//*[starts-with(@id, "cluster_type_select")]', 'xpath', "select Hierarchical")->send_keys('Hierarchical');
+        sleep(1);
+        $d->find_element_ok('//tr[@id="' . $trials_list_id . '"]//*[starts-with(@id, "cluster_data_type_select")]/option[text()="Phenotype"]', 'xpath', 'select genotype')->click();
+        sleep(1);
+        $d->find_element_ok('//tr[@id="' . $trials_list_id . '"]//*[starts-with(@id, "run_cluster")]', 'xpath', 'run cluster')->click();
+        sleep(3);
+        $d->find_element_ok('queue_job', 'id', 'job queueing')->click();
+        sleep(2);
+        $d->find_element_ok('analysis_name', 'id', 'trials list pheno analysis name')->send_keys('trials list pheno hierarchical clustering');
+        sleep(2);
+        $d->find_element_ok('user_email', 'id', 'user email')->send_keys('email@email.com');
+        sleep(2);
+        $d->find_element_ok('submit_job', 'id', 'submit')->click();
+        sleep(350);
+
+        $d->driver->go_back();
+        sleep(5);
+
+        $d->driver->refresh();
+        sleep(3);
+
+        $d->select_datatable_tab('cluster_private_lists');
+        $d->filter_datatable('cluster_private_list_table', $trials_list_name);
+        $d->find_element_ok('//tr[@id="' . $trials_list_id . '"]//*[starts-with(@id, "cluster_type_select")]', 'xpath', "select Hierarchical")->send_keys('Hierarchical');
+        sleep(1);
+        $d->find_element_ok('//tr[@id="' . $trials_list_id . '"]//*[starts-with(@id, "cluster_data_type_select")]/option[text()="Phenotype"]', 'xpath', 'select phenotype')->click();
+        sleep(1);
+        $d->find_element_ok('//tr[@id="' . $trials_list_id . '"]//*[starts-with(@id, "run_cluster")]', 'xpath', 'run trials list (pheno) cluster')->click();
+        sleep(5);
+
+        my $sel_pops = $d->find_element('//*[contains(text(), "Clustering")]', 'xpath', 'scroll up');
+        my $elem = $d->driver->execute_script("arguments[0].scrollIntoView(true);window.scrollBy(0, -10);", $sel_pops);
+        sleep(5);
+        $d->find_element_ok('//img[starts-with(@id, "hierarchical-plot-")]', 'xpath', "check trials list pheno Hierarchical cluster plot");
+        sleep(5);
+
+        $d->driver->refresh();
+        sleep(3);
+
+        #### K-means clustering ####
+        $d->select_datatable_tab('cluster_private_datasets');
+        $d->filter_datatable('cluster_private_dataset_table', $trials_dt_name);
+        $d->find_element_ok('//tr[@id="' . $trials_dt_id . '"]//*[starts-with(@id, "cluster_type_select")]', 'xpath', "select K-means")->send_keys('K-means');
+        sleep(1);
+        $d->find_element_ok('//tr[@id="' . $trials_dt_id . '"]//*[starts-with(@id, "cluster_data_type_select")]/option[text()="Genotype"]', 'xpath', 'select genotype')->click();
+        sleep(1);
+        $d->find_element_ok('//tr[@id="' . $trials_dt_id . '"]//*[starts-with(@id, "k_number_input")]', 'xpath', 'clear k number')->clear();
+        $d->find_element_ok('//tr[@id="' . $trials_dt_id . '"]//*[starts-with(@id, "k_number_input")]', 'xpath', 'select k number')->send_keys(4);
+        sleep(2);
+        $d->find_element_ok('//tr[@id="' . $trials_dt_id . '"]//*[starts-with(@id, "run_cluster")]', 'xpath', 'run trials dataset (genotype) cluster')->click();
+        sleep(3);
+        $d->find_element_ok('no_queue', 'id', 'no job queueing')->click();
+        sleep(350);
+
+        $sel_pops = $d->find_element('//*[contains(text(), "Clustering")]', 'xpath', 'scroll up');
+        $elem = $d->driver->execute_script("arguments[0].scrollIntoView(true);window.scrollBy(0, 500);", $sel_pops);
+        sleep(2);
+        $d->find_element_ok('//a[contains(text(), "Cluster variances")]', 'xpath', "check trials dataset geno K-means cluster plot");
+        sleep(5);
+
+        $d->driver->refresh();
+        sleep(3);
+
+        #### Hierarchical clustering ####.
+        $d->select_datatable_tab('cluster_private_datasets');
+        $d->filter_datatable('cluster_private_dataset_table', $trials_dt_name);
+        $d->driver->execute_script(
+            "arguments[0].scrollIntoView(true);window.scrollBy(0, -100);",
+            $d->find_element('//tr[@id="' . $trials_dt_id . '"]//*[starts-with(@id, "cluster_type_select")]', 'xpath')
+        );
+        sleep(1);
+
+        $d->find_element_ok('//tr[@id="' . $trials_dt_id . '"]//*[starts-with(@id, "cluster_type_select")]', 'xpath', "select Hierarchical")->send_keys('Hierarchical');
+        sleep(1);
+        $d->find_element_ok('//tr[@id="' . $trials_dt_id . '"]//*[starts-with(@id, "cluster_data_type_select")]/option[text()="Genotype"]', 'xpath', 'select genotype')->click();
+        sleep(1);
+        $d->find_element_ok('//tr[@id="' . $trials_dt_id . '"]//*[starts-with(@id, "run_cluster")]', 'xpath', 'run trials dataset (genotype) cluster')->click();
+        sleep(3);
+        $d->find_element_ok('no_queue', 'id', 'no job queueing')->click();
+        sleep(350);
+
+        $sel_pops = $d->find_element('//*[contains(text(), "Clustering")]', 'xpath', 'scroll up');
+        $elem = $d->driver->execute_script("arguments[0].scrollIntoView(true);window.scrollBy(0, 500);", $sel_pops);
+        sleep(2);
+        $d->find_element_ok('//img[starts-with(@id, "hierarchical-plot-")]', 'xpath', "check trials dataset geno Hierarchical cluster plot");
+        sleep(5);
+
+        $d->driver->refresh();
+        sleep(3);
+
+        #### K-means clustering ####
+        $d->select_datatable_tab('cluster_private_datasets');
+        $d->filter_datatable('cluster_private_dataset_table', $trials_dt_name);
+        $d->find_element_ok('//tr[@id="' . $trials_dt_id . '"]//*[starts-with(@id, "cluster_type_select")]', 'xpath', "select K-means")->send_keys('K-means');
+        sleep(1);
+        $d->find_element_ok('//tr[@id="' . $trials_dt_id . '"]//*[starts-with(@id, "cluster_data_type_select")]/option[text()="Phenotype"]', 'xpath', 'select phenotype')->click();
+        sleep(1);
+        $d->find_element_ok('//tr[@id="' . $trials_dt_id . '"]//*[starts-with(@id, "k_number_input")]', 'xpath', 'clear k number')->clear();
+        $d->find_element_ok('//tr[@id="' . $trials_dt_id . '"]//*[starts-with(@id, "k_number_input")]', 'xpath', 'select k number')->send_keys(4);
+        sleep(2);
+        $d->find_element_ok('//tr[@id="' . $trials_dt_id . '"]//*[starts-with(@id, "run_cluster")]', 'xpath', 'run trials dataset (phenotype) cluster')->click();
+        sleep(3);
+        $d->find_element_ok('no_queue', 'id', 'no job queueing')->click();
+        sleep(350);
+
+        $sel_pops = $d->find_element('//*[contains(text(), "Clustering")]', 'xpath', 'scroll up');
+        $elem = $d->driver->execute_script("arguments[0].scrollIntoView(true);window.scrollBy(0, 500);", $sel_pops);
+        sleep(5);
+        $d->find_element_ok('//a[contains(text(), "Cluster variances")]', 'xpath', "check trials dataset pheno K-means cluster plot");
+        sleep(5);
+
+        $d->driver->refresh();
+        sleep(3);
+
+        #### Hierarchical clustering ####.
+        $d->select_datatable_tab('cluster_private_datasets');
+        $d->filter_datatable('cluster_private_dataset_table', $trials_dt_name);
+        $d->driver->execute_script(
+            "arguments[0].scrollIntoView(true);window.scrollBy(0, -100);",
+            $d->find_element('//tr[@id="' . $trials_dt_id . '"]//*[starts-with(@id, "cluster_type_select")]', 'xpath')
+        );
+        sleep(1);
+
+        $d->find_element_ok('//tr[@id="' . $trials_dt_id . '"]//*[starts-with(@id, "cluster_type_select")]', 'xpath', "select Hierarchical")->send_keys('Hierarchical');
+        sleep(1);
+        $d->find_element_ok('//tr[@id="' . $trials_dt_id . '"]//*[starts-with(@id, "cluster_data_type_select")]/option[text()="Phenotype"]', 'xpath', 'select phenotype')->click();
+        sleep(1);
+        $d->find_element_ok('//tr[@id="' . $trials_dt_id . '"]//*[starts-with(@id, "run_cluster")]', 'xpath', 'run trials dataset (phenotype) cluster')->click();
+        sleep(3);
+        $d->find_element_ok('no_queue', 'id', 'no job queueing')->click();
+        sleep(350);
+
+        $sel_pops = $d->find_element('//*[contains(text(), "Clustering")]', 'xpath', 'scroll up');
+        $elem = $d->driver->execute_script("arguments[0].scrollIntoView(true);window.scrollBy(0, 500);", $sel_pops);
+        sleep(5);
+        $d->find_element_ok('//img[starts-with(@id, "hierarchical-plot-")]', 'xpath', "check trials dataset pheno Hierarchical cluster plot");
+        sleep(5);
+
+        $d->driver->refresh();
+        sleep(3);
+
+        remove_tree($cache_dir, {safe => 1});
+        sleep(5);
+
+        $d->get_ok('/breeders/trial/139', 'trial detail home page');
+        sleep(5);
+
+        my $analysis_tools = $d->find_element('Analysis Tools', 'partial_link_text', 'toogle analysis tools');
+        $elem = $d->driver->execute_script("arguments[0].scrollIntoView(true);window.scrollBy(0,-100);", $analysis_tools);
+        sleep(5);
+        $d->find_element_ok('Analysis Tools', 'partial_link_text', 'toogle analysis tools')->click();
+        sleep(5);
+        $d->find_element_ok('Clustering', 'partial_link_text', 'expand cluster sec')->click();
+        sleep(5);
+        #### K-means clustering ####
+        $d->find_element_ok('//*[starts-with(@id, "cluster_type_select")]', 'xpath', "select K-means")->send_keys('K-means');
+        sleep(2);
+        $d->find_element_ok('//*[starts-with(@id, "cluster_data_type_select")]/option[text()="Phenotype"]', 'xpath', 'select phenotype')->click();
+        sleep(2);
+        $d->find_element_ok('//*[starts-with(@id, "k_number_input")]', 'xpath', 'clear k number')->clear();
+        $d->find_element_ok('//*[starts-with(@id, "k_number_input")]', 'xpath', 'select k number')->send_keys(4);
+        sleep(2);
+        $d->find_element_ok('//*[starts-with(@id, "run_cluster")]', 'xpath', 'run phenotype cluster')->click();
+        sleep(3);
+        $d->find_element_ok('no_queue', 'id', 'no job queueing')->click();
+        sleep(350);
+        $d->find_element_ok('//a[contains(text(), "Cluster variances")]', 'xpath', "check trial detail page pheno K-means cluster plot");
+        sleep(5);
+
+        $d->driver->refresh();
+        sleep(3);
+
+        #### Hierarchical clustering ####.
+        $analysis_tools = $d->find_element('Analysis Tools', 'partial_link_text', 'toogle analysis tools');
+        $elem = $d->driver->execute_script("arguments[0].scrollIntoView(true);window.scrollBy(0,-100);", $analysis_tools);
+        sleep(5);
+        $d->find_element_ok('Analysis Tools', 'partial_link_text', 'toogle analysis tools')->click();
+        sleep(5);
+        $d->find_element_ok('Clustering', 'partial_link_text', 'expand cluster sec')->click();
+        sleep(5);
+        $d->driver->execute_script(
+            "arguments[0].scrollIntoView(true);window.scrollBy(0, -100);",
+            $d->find_element('//*[starts-with(@id, "cluster_type_select")]', 'xpath')
+        );
+        sleep(1);
+
+        $d->find_element_ok('//*[starts-with(@id, "cluster_type_select")]', 'xpath', "select Hierarchical")->send_keys('Hierarchical');
+        sleep(2);
+        $d->find_element_ok('//*[starts-with(@id, "cluster_data_type_select")]/option[text()="Phenotype"]', 'xpath', 'select phenotype')->click();
+        sleep(2);
+        $d->find_element_ok('//*[starts-with(@id, "run_cluster")]', 'xpath', 'run phenotype cluster')->click();
+        sleep(3);
+        $d->find_element_ok('no_queue', 'id', 'no job queueing')->click();
+        sleep(350);
+        $d->find_element_ok('//img[starts-with(@id, "hierarchical-plot-")]', 'xpath', "check trial detail page pheno Hierarchical cluster plot");
+        sleep(5);
+
+        $d->driver->refresh();
+        sleep(5);
+
+        $analysis_tools = $d->find_element('cluster_canvas', 'id', 'toogle analysis tools');
+        $elem = $d->driver->execute_script("arguments[0].scrollIntoView(true);window.scrollBy(0,-100);", $analysis_tools);
+        sleep(5);
+        $d->find_element_ok('Analysis Tools', 'partial_link_text', 'toogle analysis tools')->click();
+        sleep(5);
+        $d->find_element_ok('Clustering', 'partial_link_text', 'expand cluster sec')->click();
+        sleep(5);
+        #### K-means clustering ####
+        $d->find_element_ok('//*[starts-with(@id, "cluster_type_select")]', 'xpath', "select K-means")->send_keys('K-means');
+        sleep(1);
+        $d->find_element_ok('//*[starts-with(@id, "cluster_data_type_select")]/option[text()="Genotype"]', 'xpath', 'select genotype')->click();
+        sleep(1);
+        $d->find_element_ok('//*[starts-with(@id, "k_number_input")]', 'xpath', 'clear k number')->clear();
+        $d->find_element_ok('//*[starts-with(@id, "k_number_input")]', 'xpath', 'select k number')->send_keys(4);
+        sleep(2);
+        $d->find_element_ok('//*[starts-with(@id, "run_cluster")]', 'xpath', 'run genotype cluster')->click();
+        sleep(3);
+        $d->find_element_ok('no_queue', 'id', 'no job queueing')->click();
+        sleep(350);
+        $d->find_element_ok('//a[contains(text(), "Cluster variances")]', 'xpath', "check trials detail page geno K-means cluster plot");
+        sleep(5);
+
+        $d->driver->refresh();
+        sleep(3);
+
+        #### Hierarchical clustering ####.
+        $analysis_tools = $d->find_element('cluster_canvas', 'id', 'toogle analysis tools');
+        $elem = $d->driver->execute_script("arguments[0].scrollIntoView(true);window.scrollBy(0,-100);", $analysis_tools);
+        sleep(5);
+        $d->find_element_ok('Analysis Tools', 'partial_link_text', 'toogle analysis tools')->click();
+        sleep(5);
+        $d->find_element_ok('Clustering', 'partial_link_text', 'expand cluster sec')->click();
+        sleep(5);
+        $d->driver->execute_script(
+            "arguments[0].scrollIntoView(true);window.scrollBy(0, -100);",
+            $d->find_element('//*[starts-with(@id, "cluster_type_select")]', 'xpath')
+        );
+        sleep(1);
+
+        $d->find_element_ok('//*[starts-with(@id, "cluster_type_select")]', 'xpath', "select Hierarchical")->send_keys('Hierarchical');
+        sleep(1);
+        $d->find_element_ok('//*[starts-with(@id, "cluster_data_type_select")]/option[text()="Genotype"]', 'xpath', 'select genotype')->click();
+        sleep(1);
+        $d->find_element_ok('//*[starts-with(@id, "run_cluster")]', 'xpath', 'run genotype cluster')->click();
+        sleep(3);
+        $d->find_element_ok('no_queue', 'id', 'no job queueing')->click();
+        sleep(350);
+        $d->find_element_ok('//img[starts-with(@id, "hierarchical-plot-")]', 'xpath', "check trials detail page geno Hierarchical cluster plot");
+        sleep(5);
+
+        $d->driver->refresh();
+        sleep(3);
+
+        ############## solGS #####################
+        remove_tree($cache_dir, {safe => 1});
 
         $d->get_ok('/solgs', 'solgs homepage');
         sleep(4);
@@ -635,6 +648,8 @@ $d->while_logged_in_as(
         $d->find_element_ok('Go back', 'partial_link_text', 'go back')->click();
         sleep(15);
 
+        $d->select_datatable_tab('list_type_selection_private_lists');
+        $d->filter_datatable('list_type_selection_private_list_table', $accessions_list_name);
         $d->find_element_ok('//tr[@id="' . $accessions_list_id . '"]//*[contains(text(), "Predict")]', 'xpath', 'click list sel pred')->click();
         sleep(5);
         $d->find_element_ok('queue_job', 'id', 'no job queueing')->click();
@@ -648,6 +663,8 @@ $d->while_logged_in_as(
         $d->find_element_ok('Go back', 'partial_link_text', 'go back')->click();
         sleep(15);
 
+        $d->select_datatable_tab('list_type_selection_private_datasets');
+        $d->filter_datatable('list_type_selection_private_dataset_table', $accessions_dt_name);
         $d->find_element_ok('//tr[@id="' . $accessions_dt_id . '"]//*[contains(text(), "Predict")]', 'xpath', 'list sel pred')->click();
         sleep(5);
         $d->find_element_ok('queue_job', 'id', 'no job queueing')->click();
@@ -663,6 +680,8 @@ $d->while_logged_in_as(
 
         $d->driver->refresh();
         sleep(3);
+        $d->select_datatable_tab('list_type_selection_private_lists');
+        sleep(30);
 
         my $sel_pops = $d->find_element('Predict', 'partial_link_text', 'scroll up');
         sleep(1);
@@ -679,7 +698,7 @@ $d->while_logged_in_as(
         sleep(3);
         $d->find_element_ok('//select[@id="cluster_pops_select"]/option[text()="' . $accessions_list_name . '"]', 'xpath', 'select accessions list sel pop')->click();
         sleep(3);
-        # K-means clustering.
+        #### K-means clustering ####
         $d->find_element_ok('//*[starts-with(@id, "cluster_type_select")]', 'xpath', "select K-means")->send_keys('K-means');
         sleep(2);
         $d->find_element_ok('//select[@id="cluster_data_type_select"]/option[text()="GEBV"]', 'xpath', 'select gebv')->click();
@@ -696,8 +715,10 @@ $d->while_logged_in_as(
 
         $d->driver->refresh();
         sleep(3);
+        $d->select_datatable_tab('list_type_selection_private_lists');
+        sleep(30);
 
-        # Hierarchical clustering of the same population and data type.
+        #### Hierarchical clustering ####.
         $clustering = $d->find_element('Clustering', 'partial_link_text', 'scroll up');
         sleep(1);
         $d->driver->execute_script("arguments[0].scrollIntoView(true);window.scrollBy(0,-200);", $clustering);
@@ -741,7 +762,7 @@ $d->while_logged_in_as(
         sleep(2);
         $d->find_element_ok('//select[@id="cluster_pops_select"]/option[text()="' . $accessions_dt_name . '"]', 'xpath', 'select accessions dataset sel pop')->click();
         sleep(2);
-        # K-means clustering.
+        #### K-means clustering ####
         $d->find_element_ok('//*[starts-with(@id, "cluster_type_select")]', 'xpath', "select K-means")->send_keys('K-means');
         sleep(2);
         $d->find_element_ok('//*[starts-with(@id, "cluster_data_type_select")]/option[text()="Genotype"]', 'xpath', 'select genotype')->click();
@@ -763,7 +784,7 @@ $d->while_logged_in_as(
         $d->driver->refresh();
         sleep(3);
 
-        # Hierarchical clustering of the same population and data type.
+        #### Hierarchical clustering ####.
         $clustering = $d->find_element('Clustering', 'partial_link_text', 'scroll up');
         sleep(1);
         $d->driver->execute_script("arguments[0].scrollIntoView(true);window.scrollBy(0,-200);", $clustering);
@@ -812,7 +833,7 @@ $d->while_logged_in_as(
         sleep(3);
         $d->find_element_ok('//select[@id="cluster_pops_select"]/option[text()="' . $accessions_dt_name . '"]', 'xpath', 'select accessions dataset sel pop')->click();
         sleep(3);
-        # K-means clustering.
+        #### K-means clustering ####
         $d->find_element_ok('//*[starts-with(@id, "cluster_type_select")]', 'xpath', "select K-means")->send_keys('K-means');
         sleep(2);
         $d->find_element_ok('//select[@id="cluster_data_type_select"]/option[text()="GEBV"]', 'xpath', 'select gebv')->click();
@@ -830,7 +851,7 @@ $d->while_logged_in_as(
         $d->driver->refresh();
         sleep(3);
 
-        # Hierarchical clustering of the same population and data type.
+        #### Hierarchical clustering ####.
         $clustering = $d->find_element('Clustering', 'partial_link_text', 'scroll up');
         sleep(1);
         $d->driver->execute_script("arguments[0].scrollIntoView(true);window.scrollBy(0,-200);", $clustering);
@@ -867,7 +888,7 @@ $d->while_logged_in_as(
         sleep(3);
         $d->find_element_ok('//select[@id="cluster_pops_select"]/option[text()="Kasese solgs trial"]', 'xpath', 'select trial tr pop')->click();
         sleep(3);
-        # K-means clustering.
+        #### K-means clustering ####
         $d->find_element_ok('//*[starts-with(@id, "cluster_type_select")]', 'xpath', "select K-means")->send_keys('K-means');
         sleep(2);
         $d->find_element_ok('//select[@id="cluster_data_type_select"]/option[text()="Phenotype"]', 'xpath', 'select phenotype')->click();
@@ -885,7 +906,7 @@ $d->while_logged_in_as(
         $d->driver->refresh();
         sleep(3);
 
-        # Hierarchical clustering of the same population and data type.
+        #### Hierarchical clustering ####.
         $clustering = $d->find_element('Clustering', 'partial_link_text', 'scroll up');
         sleep(1);
         $d->driver->execute_script("arguments[0].scrollIntoView(true);window.scrollBy(0,-200);", $clustering);
@@ -922,7 +943,7 @@ $d->while_logged_in_as(
         sleep(3);
         $d->find_element_ok('//select[@id="cluster_pops_select"]/option[text()="Kasese solgs trial"]', 'xpath', 'select trial tr pop')->click();
         sleep(3);
-        # K-means clustering.
+        #### K-means clustering ####
         $d->find_element_ok('//*[starts-with(@id, "cluster_type_select")]', 'xpath', "select K-means")->send_keys('K-means');
         sleep(2);
         $d->find_element_ok('//*[starts-with(@id, "cluster_data_type_select")]/option[text()="Genotype"]', 'xpath', 'select genotype')->click();
@@ -940,7 +961,7 @@ $d->while_logged_in_as(
         $d->driver->refresh();
         sleep(3);
 
-        # Hierarchical clustering of the same population and data type.
+        #### Hierarchical clustering ####.
         $clustering = $d->find_element('Clustering', 'partial_link_text', 'scroll up');
         sleep(1);
         $d->driver->execute_script("arguments[0].scrollIntoView(true);window.scrollBy(0,-200);", $clustering);
@@ -977,7 +998,7 @@ $d->while_logged_in_as(
         sleep(3);
         $d->find_element_ok('//select[@id="cluster_pops_select"]/option[text()="Kasese solgs trial"]', 'xpath', 'select trial tr pop')->click();
         sleep(3);
-        # K-means clustering.
+        #### K-means clustering ####
         $d->find_element_ok('//*[starts-with(@id, "cluster_type_select")]', 'xpath', "select K-means")->send_keys('K-means');
         sleep(2);
         $d->find_element_ok('//select[@id="cluster_data_type_select"]/option[text()="GEBV"]', 'xpath', 'select gebv')->click();
@@ -995,7 +1016,7 @@ $d->while_logged_in_as(
         $d->driver->refresh();
         sleep(3);
 
-        # Hierarchical clustering of the same population and data type.
+        #### Hierarchical clustering ####.
         $clustering = $d->find_element('Clustering', 'partial_link_text', 'scroll up');
         sleep(1);
         $d->driver->execute_script("arguments[0].scrollIntoView(true);window.scrollBy(0,-200);", $clustering);
@@ -1047,7 +1068,7 @@ $d->while_logged_in_as(
         sleep(3);
         $d->find_element_ok('//select[@id="cluster_pops_select"]/option[text()="139-DMCP-3-FRW-5"]', 'xpath', 'select sel index pop')->click();
         sleep(3);
-        # K-means clustering.
+        #### K-means clustering ####
         $d->find_element_ok('//*[starts-with(@id, "cluster_type_select")]', 'xpath', "select K-means")->send_keys('K-means');
         sleep(2);
         $d->find_element_ok('//*[starts-with(@id, "cluster_data_type_select")]/option[text()="Genotype"]', 'xpath', 'select genotype')->click();
@@ -1067,7 +1088,7 @@ $d->while_logged_in_as(
         $d->driver->refresh();
         sleep(3);
 
-        # Hierarchical clustering of the same population and data type.
+        #### Hierarchical clustering ####.
         $cor = $d->find_element('Genetic correlation', 'partial_link_text', 'scroll up');
         sleep(1);
         $d->driver->execute_script("arguments[0].scrollIntoView(true);window.scrollBy(0,-100);", $cor);
@@ -1124,7 +1145,7 @@ $d->while_logged_in_as(
         sleep(3);
         $d->find_element_ok('//select[@id="cluster_pops_select"]/option[text()="trial2 NaCRRI"]', 'xpath', 'select trial sel pop')->click();
         sleep(3);
-        # K-means clustering.
+        #### K-means clustering ####
         $d->find_element_ok('//*[starts-with(@id, "cluster_type_select")]', 'xpath', "select K-means")->send_keys('K-means');
         sleep(2);
         $d->find_element_ok('//*[starts-with(@id, "cluster_data_type_select")]/option[text()="Genotype"]', 'xpath', 'select genotype')->click();
@@ -1142,7 +1163,7 @@ $d->while_logged_in_as(
         $d->driver->refresh();
         sleep(3);
 
-        # Hierarchical clustering of the same population and data type.
+        #### Hierarchical clustering ####.
         $clustering = $d->find_element('Clustering', 'partial_link_text', 'scroll up');
         sleep(1);
         $d->driver->execute_script("arguments[0].scrollIntoView(true);window.scrollBy(0,-200);", $clustering);
@@ -1179,7 +1200,7 @@ $d->while_logged_in_as(
         sleep(3);
         $d->find_element_ok('//select[@id="cluster_pops_select"]/option[text()="trial2 NaCRRI"]', 'xpath', 'select trial sel pop')->click();
         sleep(3);
-        # K-means clustering.
+        #### K-means clustering ####
         $d->find_element_ok('//*[starts-with(@id, "cluster_type_select")]', 'xpath', "select K-means")->send_keys('K-means');
         sleep(2);
         $d->find_element_ok('//*[starts-with(@id, "cluster_data_type_select")]/option[text()="GEBV"]', 'xpath', 'select gebv')->click();
@@ -1197,7 +1218,7 @@ $d->while_logged_in_as(
         $d->driver->refresh();
         sleep(3);
 
-        # Hierarchical clustering of the same population and data type.
+        #### Hierarchical clustering ####.
         $clustering = $d->find_element('Clustering', 'partial_link_text', 'scroll up');
         sleep(1);
         $d->driver->execute_script("arguments[0].scrollIntoView(true);window.scrollBy(0,-100);", $clustering);
@@ -1239,7 +1260,7 @@ $d->while_logged_in_as(
         sleep(3);
         $d->find_element_ok('//select[@id="cluster_pops_select"]/option[text()="trial2 NaCRRI"]', 'xpath', 'select trial sel pop')->click();
         sleep(3);
-        # K-means clustering.
+        #### K-means clustering ####
         $d->find_element_ok('//*[starts-with(@id, "cluster_type_select")]', 'xpath', "select K-means")->send_keys('K-means');
         sleep(2);
         $d->find_element_ok('//*[starts-with(@id, "cluster_data_type_select")]/option[text()="Genotype"]', 'xpath', 'select genotype')->click();
@@ -1251,7 +1272,7 @@ $d->while_logged_in_as(
         sleep(3);
         $d->find_element_ok('queue_job', 'id', 'queueing trial2 NaCRri  geno clustering')->click();
         sleep(3);
-        $d->find_element_ok('analysis_name', 'id', 'analysis name -Nacrri sel pop geno clustering')->send_keys('Nacrri sel pop geno clustering');
+        $d->find_element_ok('analysis_name', 'id', 'analysis name -Nacrri sel pop geno clustering')->send_keys('Nacrri sel pop geno k-means clustering');
         sleep(2);
         $d->find_element_ok('user_email', 'id', 'user email')->send_keys('email@email.com');
         sleep(2);
@@ -1286,7 +1307,7 @@ $d->while_logged_in_as(
         $d->driver->refresh();
         sleep(3);
 
-        # Hierarchical clustering of the same population and data type.
+        #### Hierarchical clustering ####.
         $clustering = $d->find_element('Clustering', 'partial_link_text', 'scroll up');
         sleep(1);
         $d->driver->execute_script("arguments[0].scrollIntoView(true);window.scrollBy(0,-200);", $clustering);
@@ -1309,7 +1330,7 @@ $d->while_logged_in_as(
         sleep(3);
         $d->find_element_ok('queue_job', 'id', 'queueing trial2 NaCRri  geno clustering')->click();
         sleep(3);
-        $d->find_element_ok('analysis_name', 'id', 'analysis name -Nacrri sel pop geno clustering')->send_keys('Nacrri sel pop geno clustering');
+        $d->find_element_ok('analysis_name', 'id', 'analysis name -Nacrri sel pop geno clustering')->send_keys('Nacrri sel pop geno hierarchical clustering');
         sleep(2);
         $d->find_element_ok('user_email', 'id', 'user email')->send_keys('email@email.com');
         sleep(2);
@@ -1349,7 +1370,7 @@ $d->while_logged_in_as(
         sleep(3);
         $d->find_element_ok('//select[@id="cluster_pops_select"]/option[text()="trial2 NaCRRI"]', 'xpath', 'select trial sel pop')->click();
         sleep(3);
-        # K-means clustering.
+        #### K-means clustering ####
         $d->find_element_ok('//*[starts-with(@id, "cluster_type_select")]', 'xpath', "select K-means")->send_keys('K-means');
         sleep(2);
         $d->find_element_ok('//select[@id="cluster_data_type_select"]/option[text()="GEBV"]', 'xpath', 'select gebv')->click();
@@ -1361,7 +1382,7 @@ $d->while_logged_in_as(
         sleep(3);
         $d->find_element_ok('queue_job', 'id', 'queueing trial2 NaCRri  gebv cluster')->click();
         sleep(3);
-        $d->find_element_ok('analysis_name', 'id', 'analysis name -Nacrri sel pop gebv clustering')->send_keys('Nacrri sel pop gebv clustering');
+        $d->find_element_ok('analysis_name', 'id', 'analysis name -Nacrri sel pop gebv clustering')->send_keys('Nacrri sel pop gebv k-means clustering');
         sleep(2);
         $d->find_element_ok('user_email', 'id', 'user email')->send_keys('email@email.com');
         sleep(2);
@@ -1396,7 +1417,7 @@ $d->while_logged_in_as(
         $d->driver->refresh();
         sleep(3);
 
-        # Hierarchical clustering of the same population and data type.
+        #### Hierarchical clustering ####.
         $clustering = $d->find_element('Clustering', 'partial_link_text', 'scroll up');
         sleep(1);
         $d->driver->execute_script("arguments[0].scrollIntoView(true);window.scrollBy(0,-200);", $clustering);
@@ -1419,7 +1440,7 @@ $d->while_logged_in_as(
         sleep(3);
         $d->find_element_ok('queue_job', 'id', 'queueing trial2 NaCRri  gebv cluster')->click();
         sleep(3);
-        $d->find_element_ok('analysis_name', 'id', 'analysis name -Nacrri sel pop gebv clustering')->send_keys('Nacrri sel pop gebv clustering');
+        $d->find_element_ok('analysis_name', 'id', 'analysis name -Nacrri sel pop gebv clustering')->send_keys('Nacrri sel pop gebv hierarchical clustering');
         sleep(2);
         $d->find_element_ok('user_email', 'id', 'user email')->send_keys('email@email.com');
         sleep(2);
@@ -1474,7 +1495,7 @@ $d->while_logged_in_as(
         sleep(3);
         $d->find_element_ok('//select[@id="cluster_pops_select"]/option[text()="139-DMCP-3-FRW-5"]', 'xpath', 'select sel index pop')->click();
         sleep(3);
-        # K-means clustering.
+        #### K-means clustering ####
         $d->find_element_ok('//*[starts-with(@id, "cluster_type_select")]', 'xpath', "select K-means")->send_keys('K-means');
         sleep(2);
         $d->find_element_ok('//*[starts-with(@id, "cluster_data_type_select")]/option[text()="Genotype"]', 'xpath', 'select genotype')->click();
@@ -1488,7 +1509,7 @@ $d->while_logged_in_as(
         sleep(3);
         $d->find_element_ok('queue_job', 'id', 'no job queueing')->click();
         sleep(3);
-        $d->find_element_ok('analysis_name', 'id', 'analysis name -Nacrri sel pop sindex clustering')->send_keys('Nacrri sel pop sindex clustering');
+        $d->find_element_ok('analysis_name', 'id', 'analysis name -Nacrri sel pop sindex clustering')->send_keys('Nacrri sel pop sindex k-means clustering');
         sleep(2);
         $d->find_element_ok('user_email', 'id', 'user email')->send_keys('email@email.com');
         sleep(2);
@@ -1540,7 +1561,7 @@ $d->while_logged_in_as(
         $d->driver->refresh();
         sleep(3);
 
-        # Hierarchical clustering of the same population and data type.
+        #### Hierarchical clustering ####.
         $cor = $d->find_element('Genetic correlation', 'partial_link_text', 'scroll up');
         sleep(1);
         $d->driver->execute_script("arguments[0].scrollIntoView(true);window.scrollBy(0,-100);", $cor);
@@ -1581,7 +1602,7 @@ $d->while_logged_in_as(
         sleep(3);
         $d->find_element_ok('queue_job', 'id', 'no job queueing')->click();
         sleep(3);
-        $d->find_element_ok('analysis_name', 'id', 'analysis name -Nacrri sel pop sindex clustering')->send_keys('Nacrri sel pop sindex clustering');
+        $d->find_element_ok('analysis_name', 'id', 'analysis name -Nacrri sel pop sindex clustering')->send_keys('Nacrri sel pop sindex hierarchical clustering');
         sleep(2);
         $d->find_element_ok('user_email', 'id', 'user email')->send_keys('email@email.com');
         sleep(2);
@@ -1644,7 +1665,7 @@ $d->while_logged_in_as(
         sleep(3);
         $d->find_element_ok('//select[@id="cluster_pops_select"]/option[text()="trial2 NaCRRI"]', 'xpath', 'select trial sel pop')->click();
         sleep(3);
-        # K-means clustering.
+        #### K-means clustering ####
         $d->find_element_ok('//*[starts-with(@id, "cluster_type_select")]', 'xpath', "select K-means")->send_keys('K-means');
         sleep(2);
         $d->find_element_ok('//*[starts-with(@id, "cluster_data_type_select")]/option[text()="Genotype"]', 'xpath', 'select genotype')->click();
@@ -1662,7 +1683,7 @@ $d->while_logged_in_as(
         $d->driver->refresh();
         sleep(3);
 
-        # Hierarchical clustering of the same population and data type.
+        #### Hierarchical clustering ####.
         $clustering = $d->find_element('Clustering', 'partial_link_text', 'scroll up');
         sleep(1);
         $d->driver->execute_script("arguments[0].scrollIntoView(true);window.scrollBy(0,-200);", $clustering);
@@ -1702,7 +1723,7 @@ $d->while_logged_in_as(
         sleep(1);
         $d->driver->execute_script("arguments[0].scrollIntoView(true);window.scrollBy(0,-200);", $clustering);
         sleep(5);
-        # K-means clustering.
+        #### K-means clustering ####
         $d->find_element_ok('//*[starts-with(@id, "cluster_type_select")]', 'xpath', "select K-means")->send_keys('K-means');
         sleep(2);
         $d->find_element_ok('//*[starts-with(@id, "cluster_data_type_select")]/option[text()="Genotype"]', 'xpath', 'select genotype')->click();
@@ -1720,7 +1741,7 @@ $d->while_logged_in_as(
         $d->driver->refresh();
         sleep(3);
 
-        # Hierarchical clustering of the same population and data type.
+        #### Hierarchical clustering ####.
         $clustering = $d->find_element('Clustering', 'partial_link_text', 'scroll up');
         sleep(1);
         $d->driver->execute_script("arguments[0].scrollIntoView(true);window.scrollBy(0,-200);", $clustering);
@@ -1844,6 +1865,8 @@ $d->while_logged_in_as(
         $d->find_element_ok('Go back', 'partial_link_text', 'go back to combo trials multi models pg')->click();
         sleep(15);
 
+        $d->select_datatable_tab('list_type_selection_private_lists');
+        $d->filter_datatable('list_type_selection_private_list_table', $accessions_list_name);
         $d->find_element_ok('//tr[@id="' . $accessions_list_id . '"]//*[contains(text(), "Predict")]', 'xpath', 'accessions list sel pred')->click();
         sleep(5);
         $d->find_element_ok('queue_job', 'id', 'list type sel pop prediction job queueing')->click();
@@ -1857,6 +1880,8 @@ $d->while_logged_in_as(
         $d->find_element_ok('Go back', 'partial_link_text', 'go back')->click();
         sleep(5);
 
+        $d->select_datatable_tab('list_type_selection_private_datasets');
+        $d->filter_datatable('list_type_selection_private_dataset_table', $accessions_dt_name);
         $d->find_element_ok('//tr[@id="' . $accessions_dt_id . '"]//*[contains(text(), "Predict")]', 'xpath', 'accessions dataset sel pred')->click();
         sleep(5);
         $d->find_element_ok('queue_job', 'id', 'dataset sel pop prediction job queueing')->click();
@@ -1876,9 +1901,9 @@ $d->while_logged_in_as(
         sleep(5);
         $d->find_element_ok('cluster_pops_select', 'id', 'select list sl pop')->click();
         sleep(3);
-        $d->find_element_ok('//select[@id="cluster_pops_select"]/option[text()="Training population 2804608595"]', 'xpath', 'select list sel pop')->click();
+        $d->find_element_ok('//select[@id="cluster_pops_select"]/option[contains(text(), "Training population ")]', 'xpath', 'select list sel pop')->click();
         sleep(5);
-        # K-means clustering.
+        #### K-means clustering ####
         $d->find_element_ok('//*[starts-with(@id, "cluster_type_select")]', 'xpath', "select K-means")->send_keys('K-means');
         sleep(2);
         $d->find_element_ok('//*[starts-with(@id, "cluster_data_type_select")]/option[text()="Phenotype"]', 'xpath', 'select phenotype')->click();
@@ -1896,14 +1921,14 @@ $d->while_logged_in_as(
         $d->driver->refresh();
         sleep(3);
 
-        # Hierarchical clustering of the same population and data type.
+        #### Hierarchical clustering ####.
         $clustering = $d->find_element('Clustering', 'partial_link_text', 'scroll up');
         sleep(1);
         $d->driver->execute_script("arguments[0].scrollIntoView(true);window.scrollBy(0,-100);", $clustering);
         sleep(5);
         $d->find_element_ok('cluster_pops_select', 'id', 'select list sl pop')->click();
         sleep(3);
-        $d->find_element_ok('//select[@id="cluster_pops_select"]/option[text()="Training population 2804608595"]', 'xpath', 'select list sel pop')->click();
+        $d->find_element_ok('//select[@id="cluster_pops_select"]/option[contains(text(), "Training population ")]', 'xpath', 'select list sel pop')->click();
         sleep(5);
         $d->driver->execute_script(
             "arguments[0].scrollIntoView(true);window.scrollBy(0, -100);",
@@ -1931,9 +1956,9 @@ $d->while_logged_in_as(
         sleep(5);
         $d->find_element_ok('cluster_pops_select', 'id', 'select list sl pop')->click();
         sleep(3);
-        $d->find_element_ok('//select[@id="cluster_pops_select"]/option[text()="Training population 2804608595"]', 'xpath', 'select list sel pop')->click();
+        $d->find_element_ok('//select[@id="cluster_pops_select"]/option[contains(text(), "Training population ")]', 'xpath', 'select list sel pop')->click();
         sleep(5);
-        # K-means clustering.
+        #### K-means clustering ####
         $d->find_element_ok('//*[starts-with(@id, "cluster_type_select")]', 'xpath', "select K-means")->send_keys('K-means');
         sleep(2);
         $d->find_element_ok('//select[@id="cluster_data_type_select"]/option[text()="GEBV"]', 'xpath', 'select phenotype')->click();
@@ -1951,14 +1976,14 @@ $d->while_logged_in_as(
         $d->driver->refresh();
         sleep(3);
 
-        # Hierarchical clustering of the same population and data type.
+        #### Hierarchical clustering ####.
         $clustering = $d->find_element('Clustering', 'partial_link_text', 'scroll up');
         sleep(1);
         $d->driver->execute_script("arguments[0].scrollIntoView(true);window.scrollBy(0,-100);", $clustering);
         sleep(5);
         $d->find_element_ok('cluster_pops_select', 'id', 'select list sl pop')->click();
         sleep(3);
-        $d->find_element_ok('//select[@id="cluster_pops_select"]/option[text()="Training population 2804608595"]', 'xpath', 'select list sel pop')->click();
+        $d->find_element_ok('//select[@id="cluster_pops_select"]/option[contains(text(), "Training population ")]', 'xpath', 'select list sel pop')->click();
         sleep(5);
         $d->driver->execute_script(
             "arguments[0].scrollIntoView(true);window.scrollBy(0, -100);",
@@ -1986,9 +2011,9 @@ $d->while_logged_in_as(
         sleep(5);
         $d->find_element_ok('cluster_pops_select', 'id', 'click cluster pops')->click();
         sleep(3);
-        $d->find_element_ok('//select[@id="cluster_pops_select"]/option[text()="Training population 2804608595"]', 'xpath', 'select tr pop')->click();
+        $d->find_element_ok('//select[@id="cluster_pops_select"]/option[contains(text(), "Training population ")]', 'xpath', 'select tr pop')->click();
         sleep(5);
-        # K-means clustering.
+        #### K-means clustering ####
         $d->find_element_ok('//*[starts-with(@id, "cluster_type_select")]', 'xpath', "select K-means")->send_keys('K-means');
         sleep(2);
         $d->find_element_ok('//*[starts-with(@id, "cluster_data_type_select")]/option[text()="Genotype"]', 'xpath', 'select genotype')->click();
@@ -2006,14 +2031,14 @@ $d->while_logged_in_as(
         $d->driver->refresh();
         sleep(3);
 
-        # Hierarchical clustering of the same population and data type.
+        #### Hierarchical clustering ####.
         $clustering = $d->find_element('Clustering', 'partial_link_text', 'scroll up');
         sleep(1);
         $d->driver->execute_script("arguments[0].scrollIntoView(true);window.scrollBy(0,-100);", $clustering);
         sleep(5);
         $d->find_element_ok('cluster_pops_select', 'id', 'click cluster pops')->click();
         sleep(3);
-        $d->find_element_ok('//select[@id="cluster_pops_select"]/option[text()="Training population 2804608595"]', 'xpath', 'select tr pop')->click();
+        $d->find_element_ok('//select[@id="cluster_pops_select"]/option[contains(text(), "Training population ")]', 'xpath', 'select tr pop')->click();
         sleep(5);
         $d->driver->execute_script(
             "arguments[0].scrollIntoView(true);window.scrollBy(0, -100);",
@@ -2041,7 +2066,7 @@ $d->while_logged_in_as(
         sleep(5);
         $d->find_element_ok('si_pops_select', 'id', 'select list sl pop')->click();
         sleep(3);
-        $d->find_element_ok('//select[@id="si_pops_select"]/option[text()="Training population 2804608595"]', 'xpath', 'select combo pop')->click();
+        $d->find_element_ok('//select[@id="si_pops_select"]/option[contains(text(), "Training population ")]', 'xpath', 'select combo pop')->click();
         sleep(3);
         $d->find_element_ok('DMCP', 'id', 'rel wt 1st')->send_keys(3);
         sleep(5);
@@ -2056,9 +2081,10 @@ $d->while_logged_in_as(
         sleep(5);
         $d->find_element_ok('cluster_pops_select', 'id', 'click cluster pops')->click();
         sleep(3);
-        $d->find_element_ok('//select[@id="cluster_pops_select"]/option[text()="2804608595-DMCP-3-FRW-5"]', 'xpath', 'si')->click();
+        my $combo_pops_id = $d->find_element('training_pop_id', 'id')->get_value();
+        $d->find_element_ok("//select[\@id='cluster_pops_select']/option[text()='$combo_pops_id-DMCP-3-FRW-5']", 'xpath', 'si')->click();
         sleep(5);
-        # K-means clustering.
+        #### K-means clustering ####
         $d->find_element_ok('//*[starts-with(@id, "cluster_type_select")]', 'xpath', "select K-means")->send_keys('K-means');
         sleep(2);
         $d->find_element_ok('//select[@id="cluster_data_type_select"]/option[text()="Genotype"]', 'xpath', 'genotype')->click();
@@ -2078,14 +2104,14 @@ $d->while_logged_in_as(
         $d->driver->refresh();
         sleep(3);
 
-        # Hierarchical clustering of the same population and data type.
+        #### Hierarchical clustering ####.
         $cor = $d->find_element('Genetic correlation', 'partial_link_text', 'scroll up');
         sleep(1);
         $d->driver->execute_script("arguments[0].scrollIntoView(true);window.scrollBy(0,-100);", $cor);
         sleep(5);
         $d->find_element_ok('si_pops_select', 'id', 'select list sl pop')->click();
         sleep(3);
-        $d->find_element_ok('//select[@id="si_pops_select"]/option[text()="Training population 2804608595"]', 'xpath', 'select combo pop')->click();
+        $d->find_element_ok('//select[@id="si_pops_select"]/option[contains(text(), "Training population ")]', 'xpath', 'select combo pop')->click();
         sleep(3);
         $d->find_element_ok('DMCP', 'id', 'rel wt 1st')->send_keys(3);
         sleep(5);
@@ -2100,7 +2126,7 @@ $d->while_logged_in_as(
         sleep(5);
         $d->find_element_ok('cluster_pops_select', 'id', 'click cluster pops')->click();
         sleep(3);
-        $d->find_element_ok('//select[@id="cluster_pops_select"]/option[text()="2804608595-DMCP-3-FRW-5"]', 'xpath', 'si')->click();
+        $d->find_element_ok("//select[\@id='cluster_pops_select']/option[text()='$combo_pops_id-DMCP-3-FRW-5']", 'xpath', 'si')->click();
         sleep(5);
         $d->driver->execute_script(
             "arguments[0].scrollIntoView(true);window.scrollBy(0, -100);",
@@ -2141,7 +2167,7 @@ $d->while_logged_in_as(
         sleep(3);
         $d->find_element_ok('//select[@id="cluster_pops_select"]/option[text()="' . $accessions_dt_name . '"]', 'xpath', 'select dataset sel pop')->click();
         sleep(3);
-        # K-means clustering.
+        #### K-means clustering ####
         $d->find_element_ok('//*[starts-with(@id, "cluster_type_select")]', 'xpath', "select K-means")->send_keys('K-means');
         sleep(2);
         $d->find_element_ok('//select[@id="cluster_data_type_select"]/option[text()="GEBV"]', 'xpath', 'select gebv')->click();
@@ -2159,7 +2185,7 @@ $d->while_logged_in_as(
         $d->driver->refresh();
         sleep(3);
 
-        # Hierarchical clustering of the same population and data type.
+        #### Hierarchical clustering ####.
         $clustering = $d->find_element('Clustering', 'partial_link_text', 'scroll up');
         sleep(1);
         $d->driver->execute_script("arguments[0].scrollIntoView(true);window.scrollBy(0,-200);", $clustering);
@@ -2187,6 +2213,8 @@ $d->while_logged_in_as(
 
         $d->driver->refresh();
         sleep(5);
+        $d->select_datatable_tab('list_type_selection_private_lists');
+        sleep(30);
 
         $sel_pops = $d->find_element('Predict', 'partial_link_text', 'scroll up');
         sleep(1);
@@ -2204,7 +2232,7 @@ $d->while_logged_in_as(
         sleep(3);
         $d->find_element_ok('//select[@id="cluster_pops_select"]/option[text()="' . $accessions_list_name . '"]', 'xpath', 'select list sel pop')->click();
         sleep(3);
-        # K-means clustering.
+        #### K-means clustering ####
         $d->find_element_ok('//*[starts-with(@id, "cluster_type_select")]', 'xpath', "select K-means")->send_keys('K-means');
         sleep(2);
         $d->find_element_ok('//select[@id="cluster_data_type_select"]/option[text()="GEBV"]', 'xpath', 'select gebv')->click();
@@ -2221,8 +2249,10 @@ $d->while_logged_in_as(
 
         $d->driver->refresh();
         sleep(3);
+        $d->select_datatable_tab('list_type_selection_private_lists');
+        sleep(30);
 
-        # Hierarchical clustering of the same population and data type.
+        #### Hierarchical clustering ####.
         $clustering = $d->find_element('Clustering', 'partial_link_text', 'scroll up');
         sleep(1);
         $d->driver->execute_script("arguments[0].scrollIntoView(true);window.scrollBy(0,-200);", $clustering);
@@ -2259,7 +2289,7 @@ $d->while_logged_in_as(
         sleep(3);
         $d->find_element_ok('//select[@id="cluster_pops_select"]/option[text()="trial2 NaCRRI"]', 'xpath', 'select trial sel pop')->click();
         sleep(3);
-        # K-means clustering.
+        #### K-means clustering ####
         $d->find_element_ok('//*[starts-with(@id, "cluster_type_select")]', 'xpath', "select K-means")->send_keys('K-means');
         sleep(2);
         $d->find_element_ok('//*[starts-with(@id, "cluster_data_type_select")]/option[text()="Genotype"]', 'xpath', 'select genotype')->click();
@@ -2277,7 +2307,7 @@ $d->while_logged_in_as(
         $d->driver->refresh();
         sleep(3);
 
-        # Hierarchical clustering of the same population and data type.
+        #### Hierarchical clustering ####.
         $clustering = $d->find_element('Clustering', 'partial_link_text', 'scroll up');
         sleep(1);
         $d->driver->execute_script("arguments[0].scrollIntoView(true);window.scrollBy(0,-200);", $clustering);
@@ -2314,7 +2344,7 @@ $d->while_logged_in_as(
         sleep(3);
         $d->find_element_ok('//select[@id="cluster_pops_select"]/option[text()="trial2 NaCRRI"]', 'xpath', 'select trial sel pop')->click();
         sleep(3);
-        # K-means clustering.
+        #### K-means clustering ####
         $d->find_element_ok('//*[starts-with(@id, "cluster_type_select")]', 'xpath', "select K-means")->send_keys('K-means');
         sleep(2);
         $d->find_element_ok('//select[@id="cluster_data_type_select"]/option[text()="GEBV"]', 'xpath', 'select gebv')->click();
@@ -2332,7 +2362,7 @@ $d->while_logged_in_as(
         $d->driver->refresh();
         sleep(3);
 
-        # Hierarchical clustering of the same population and data type.
+        #### Hierarchical clustering ####.
         $clustering = $d->find_element('Clustering', 'partial_link_text', 'scroll up');
         sleep(1);
         $d->driver->execute_script("arguments[0].scrollIntoView(true);window.scrollBy(0,-100);", $clustering);
@@ -2373,7 +2403,7 @@ $d->while_logged_in_as(
         $d->driver->execute_script("arguments[0].scrollIntoView(true);window.scrollBy(0,-200);", $clustering);
         sleep(5);
 
-        # K-means clustering.
+        #### K-means clustering ####
         $d->find_element_ok('//*[starts-with(@id, "cluster_type_select")]', 'xpath', "select K-means")->send_keys('K-means');
         sleep(2);
         $d->find_element_ok('//*[starts-with(@id, "cluster_data_type_select")]/option[text()="Genotype"]', 'xpath', 'select genotype')->click();
@@ -2391,7 +2421,7 @@ $d->while_logged_in_as(
         $d->driver->refresh();
         sleep(3);
 
-        # Hierarchical clustering of the same population and data type.
+        #### Hierarchical clustering ####.
         $clustering = $d->find_element('Clustering', 'partial_link_text', 'scroll up');
         sleep(1);
         $d->driver->execute_script("arguments[0].scrollIntoView(true);window.scrollBy(0,-200);", $clustering);
