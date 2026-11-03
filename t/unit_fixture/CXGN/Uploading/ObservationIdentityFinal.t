@@ -10,7 +10,7 @@ use CXGN::Phenotypes::ParseUpload;
 use CXGN::TimeUtils;
 use CXGN::BrAPI::v1::Observations;
 use CXGN::BrAPI::v2::Observations;
-{package ObservationRefreshDbc;sub dbh {$_[0]{dbh}}}
+{package ObservationRefreshDbc;sub dbh {$_[0]{dbh}}} ## no critic (Modules::RequireFilenameMatchesPackage) -- This test embeds its named test double beside the assertions.
 {package ObservationRefreshCache;sub clear_cached_analyses_result {push @{$_[0]{calls}},$_[2];return 1}}
 {package ObservationRefreshContext;sub dbc {$_[0]{dbc}}sub config {$_[0]{config}}sub controller {$_[0]{cache}}}
 my $f=SGN::Test::Fixture->new;my $s=$f->bcs_schema;$s->storage->auto_savepoint(1);

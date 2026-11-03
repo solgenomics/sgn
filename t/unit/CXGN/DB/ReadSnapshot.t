@@ -1,5 +1,5 @@
 use strict;use warnings;use Test::More;use CXGN::DB::ReadSnapshot;
-{package SnapshotFakeHandle;sub state {$_[0]{state}} sub do {$_[0]{sql}=$_[1];$_[0]{isolation}='repeatable read';1}}
+{package SnapshotFakeHandle;sub state {$_[0]{state}} sub do {$_[0]{sql}=$_[1];$_[0]{isolation}='repeatable read';1}} ## no critic (Modules::RequireFilenameMatchesPackage) -- This test embeds its named test double beside the assertions.
 {package SnapshotFakeSchema;
  sub storage {$_[0]}sub dbh {$_[0]{handle}}
  sub txn_begin {$_[0]{begin}++;$_[0]{handle}{AutoCommit}=0}

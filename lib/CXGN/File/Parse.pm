@@ -210,7 +210,7 @@ and the optional columns (such as planting_date, harvest_date, etc).  Any of the
 
 =head1 AUTHORS
 
-  David Waring <djw64@cornell.edu>
+  David Waring <djw64@cornell.edu> Z<# codespell:ignore waring>
 
 =cut
 
@@ -251,7 +251,7 @@ has column_aliases => (
 );
 
 # Array or Map of column arrays
-# If an array, the default demiliter will be used for each specified colum name
+# If an array, the default demiliter will be used for each specified column name
 # If a hash, they key is the column name and the value is the delimiter used to split the value
 has column_arrays => (
   isa => "ArrayRef[Str]|HashRef",
