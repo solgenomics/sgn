@@ -2,7 +2,7 @@
 name: Build documentation with R bookmark
 
 on:
-  # Runs on pushes/marge targeting the default branch
+  # Runs for pull requests that change the manual.
   pull_request:    
     paths:
       - 'docs/r_markdown_docs/**'
