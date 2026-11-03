@@ -98,9 +98,10 @@ sub get_active_transformations_in_project {
     my $completed_metadata_type_id  =  SGN::Model::Cvterm->get_cvterm_row($schema, 'completed_metadata', 'stock_property')->cvterm_id;
     my $terminated_metadata_type_id  =  SGN::Model::Cvterm->get_cvterm_row($schema, 'terminated_metadata', 'stock_property')->cvterm_id;
     my $is_a_transformation_control_type_id  =  SGN::Model::Cvterm->get_cvterm_row($schema, 'is_a_transformation_control', 'stock_property')->cvterm_id;
+    my $FEC_batch_type_id  =  SGN::Model::Cvterm->get_cvterm_row($schema, 'FEC_batch', 'stock_property')->cvterm_id;
     my $control_of_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'control_of', 'stock_relationship')->cvterm_id();
 
-    my $q = "SELECT transformation.stock_id, transformation.uniquename, plant.stock_id, plant.uniquename, vector.stock_id, vector.uniquename, stockprop.value, stockprop2.value, control.stock_id, control.uniquename
+    my $q = "SELECT transformation.stock_id, transformation.uniquename, plant.stock_id, plant.uniquename, vector.stock_id, vector.uniquename, stockprop.value, stockprop2.value, control.stock_id, control.uniquename, stockprop4.value
         FROM nd_experiment_project
         JOIN nd_experiment_stock ON (nd_experiment_project.nd_experiment_id = nd_experiment_stock.nd_experiment_id)
         JOIN stock AS transformation ON (nd_experiment_stock.stock_id = transformation.stock_id) AND transformation.type_id = ?
@@ -113,15 +114,16 @@ sub get_active_transformations_in_project {
         LEFT JOIN stock_relationship AS has_control ON (has_control.object_id =transformation.stock_id) AND has_control.type_id = ?
         LEFT JOIN stock AS control on (has_control.subject_id = control.stock_id)
         LEFT JOIN stockprop AS stockprop3 ON (stockprop3.stock_id = transformation.stock_id) AND stockprop3.type_id in (?, ?)
+        LEFT JOIN stockprop AS stockprop4 ON (stockprop4.stock_id = transformation.stock_id) AND stockprop4.type_id = ?
         WHERE nd_experiment_project.project_id = ? AND stockprop3.value IS NULL ORDER BY transformation.stock_id ASC";
 
     my $h = $schema->storage->dbh()->prepare($q);
 
-    $h->execute($transformation_type_id, $plant_material_of_type_id, $accession_type_id, $vector_construct_of_type_id, $vector_construct_type_id, $transformation_notes_type_id, $is_a_transformation_control_type_id, $control_of_type_id, $completed_metadata_type_id, $terminated_metadata_type_id, $project_id);
+    $h->execute($transformation_type_id, $plant_material_of_type_id, $accession_type_id, $vector_construct_of_type_id, $vector_construct_type_id, $transformation_notes_type_id, $is_a_transformation_control_type_id, $control_of_type_id, $completed_metadata_type_id, $terminated_metadata_type_id, $FEC_batch_type_id, $project_id);
 
     my @transformations = ();
-    while (my ($transformation_id,  $transformation_name, $plant_id, $plant_name, $vector_id, $vector_name, $notes, $is_a_control, $control_id, $control_name) = $h->fetchrow_array()){
-        push @transformations, [$transformation_id,  $transformation_name, $plant_id, $plant_name, $vector_id, $vector_name, $notes, $is_a_control, $control_id, $control_name]
+    while (my ($transformation_id,  $transformation_name, $plant_id, $plant_name, $vector_id, $vector_name, $notes, $is_a_control, $control_id, $control_name, $FEC_batch) = $h->fetchrow_array()){
+        push @transformations, [$transformation_id,  $transformation_name, $plant_id, $plant_name, $vector_id, $vector_name, $notes, $is_a_control, $control_id, $control_name, $FEC_batch]
     }
 
     return \@transformations;
@@ -142,9 +144,10 @@ sub get_inactive_transformations_in_project {
     my $completed_metadata_type_id  =  SGN::Model::Cvterm->get_cvterm_row($schema, 'completed_metadata', 'stock_property')->cvterm_id;
     my $terminated_metadata_type_id  =  SGN::Model::Cvterm->get_cvterm_row($schema, 'terminated_metadata', 'stock_property')->cvterm_id;
     my $is_a_transformation_control_type_id  =  SGN::Model::Cvterm->get_cvterm_row($schema, 'is_a_transformation_control', 'stock_property')->cvterm_id;
+    my $FEC_batch_type_id  =  SGN::Model::Cvterm->get_cvterm_row($schema, 'FEC_batch', 'stock_property')->cvterm_id;
     my $control_of_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'control_of', 'stock_relationship')->cvterm_id();
 
-    my $q = "SELECT transformation.stock_id, transformation.uniquename, plant.stock_id, plant.uniquename, vector.stock_id, vector.uniquename, stockprop.value, stockprop2.value, control.stock_id, control.uniquename, cvterm.name
+    my $q = "SELECT transformation.stock_id, transformation.uniquename, plant.stock_id, plant.uniquename, vector.stock_id, vector.uniquename, stockprop.value, stockprop2.value, stockprop3.value, control.stock_id, control.uniquename, cvterm.name
         FROM nd_experiment_project
         JOIN nd_experiment_stock ON (nd_experiment_project.nd_experiment_id = nd_experiment_stock.nd_experiment_id)
         JOIN stock AS transformation ON (nd_experiment_stock.stock_id = transformation.stock_id) AND transformation.type_id = ?
@@ -153,20 +156,21 @@ sub get_inactive_transformations_in_project {
         JOIN stock_relationship AS vector_relationship ON (vector_relationship.object_id = transformation.stock_id) AND vector_relationship.type_id = ?
         JOIN stock AS vector ON (vector_relationship.subject_id = vector.stock_id) AND vector.type_id = ?
         LEFT JOIN stockprop ON (stockprop.stock_id = transformation.stock_id) AND stockprop.type_id = ?
-        LEFT JOIN stockprop AS stockprop2 ON (stockprop2.stock_id = transformation.stock_id) and stockprop2.type_id = ?
+        LEFT JOIN stockprop AS stockprop2 ON (stockprop2.stock_id = transformation.stock_id) And stockprop2.type_id = ?
+        LEFT JOIN stockprop AS stockprop3 ON (stockprop3.stock_id = transformation.stock_id) AND stockprop3.type_id = ?
         LEFT JOIN stock_relationship AS has_control ON (has_control.object_id =transformation.stock_id) AND has_control.type_id = ?
         LEFT JOIN stock AS control on (has_control.subject_id = control.stock_id)
-        JOIN stockprop AS stockprop3 ON (stockprop3.stock_id = transformation.stock_id) AND stockprop3.type_id in (?, ?)
-        JOIN cvterm ON (stockprop3.type_id = cvterm.cvterm_id)
+        JOIN stockprop AS stockprop4 ON (stockprop4.stock_id = transformation.stock_id) AND stockprop4.type_id in (?, ?)
+        JOIN cvterm ON (stockprop4.type_id = cvterm.cvterm_id)
         WHERE nd_experiment_project.project_id = ?";
 
     my $h = $schema->storage->dbh()->prepare($q);
 
-    $h->execute($transformation_type_id, $plant_material_of_type_id, $accession_type_id, $vector_construct_of_type_id, $vector_construct_type_id, $transformation_notes_type_id, $is_a_transformation_control_type_id, $control_of_type_id, $completed_metadata_type_id, $terminated_metadata_type_id, $project_id);
+    $h->execute($transformation_type_id, $plant_material_of_type_id, $accession_type_id, $vector_construct_of_type_id, $vector_construct_type_id, $transformation_notes_type_id, $is_a_transformation_control_type_id, $FEC_batch_type_id, $control_of_type_id, $completed_metadata_type_id, $terminated_metadata_type_id, $project_id);
 
     my @transformations = ();
-    while (my ($transformation_id,  $transformation_name, $plant_id, $plant_name, $vector_id, $vector_name, $notes, $is_a_control, $control_id, $control_name, $status_type) = $h->fetchrow_array()){
-        push @transformations, [$transformation_id,  $transformation_name, $plant_id, $plant_name, $vector_id, $vector_name, $notes, $is_a_control, $control_id, $control_name, $status_type]
+    while (my ($transformation_id,  $transformation_name, $plant_id, $plant_name, $vector_id, $vector_name, $notes, $is_a_control, $FEC_batch, $control_id, $control_name, $status_type) = $h->fetchrow_array()){
+        push @transformations, [$transformation_id,  $transformation_name, $plant_id, $plant_name, $vector_id, $vector_name, $notes, $is_a_control, $FEC_batch, $control_id, $control_name, $status_type]
     }
 
     return \@transformations;
