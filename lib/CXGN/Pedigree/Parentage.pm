@@ -105,17 +105,19 @@ sub overwrite_flag {
     die "Overwrite must be true or false.\n";
 }
 
-=head2 error_message($exception)
+=head2 error_message($exception, $database_failure_message)
 
 Keep validation messages useful while avoiding SQL/bind details in user errors.
 DBIx::Class wraps application validation errors with an UNKNOWN/source wrapper.
+An optional database-failure message gives callers context without exposing SQL.
 
 =cut
 
 sub error_message {
-    my ($class, $error) = @_;
+    my ($class, $error, $database_failure_message) = @_;
     my $text = "$error";
-    return 'An error occurred while saving the parents. No parents were changed.'
+    $database_failure_message //= 'An error occurred while saving the parents. No parents were changed.';
+    return $database_failure_message
         if $text =~ /DBI Exception|DBD::|SQLSTATE/;
     $text =~ s/\A.*?\{UNKNOWN\}:\s*//s;
     $text =~ s/\s+at\s+\/[^\n]+?\s+line\s+\d+.*\z//s;
