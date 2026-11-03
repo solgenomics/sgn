@@ -78,6 +78,13 @@ class ManualTranslationTests(unittest.TestCase):
                     self.assertIn(error, result.stderr)
             self.assertEqual(list(scratch.iterdir()), [alias])
             self.assertFalse((ROOT / "generated").exists())
+            existing = scratch / "existing-reader"
+            existing.mkdir()
+            (existing / "index.html").write_text("Keep existing reader")
+            result = subprocess.run(command + ["all", str(existing)], capture_output=True, text=True, check=False)
+            self.assertNotEqual(result.returncode, 0)
+            self.assertIn("choose a new output folder", result.stderr)
+            self.assertEqual((existing / "index.html").read_text(), "Keep existing reader")
 
     def test_all_current_chapters_have_one_copy_per_language(self):
         self.assertTrue(self.chapters)

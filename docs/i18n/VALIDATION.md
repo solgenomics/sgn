@@ -1,6 +1,63 @@
 # Localization validation
 
-This is the test record. For site setup, use [Turn on translations](README.md).
+This is the test record. For site setup, use [Install a language](README.md).
+
+## Release and editor automation audit, 2026-11-03
+
+This local candidate starts at `3a9221bf99e50cb6cd500a4e381ac34ca3817c67`.
+The published base passed application, lint and documentation CI. Those hosted
+results do not certify the new commands until this candidate is published.
+
+The review covered the complete translation chain in four passes: current PR
+comments/linked issue; administrator and release workflow; independent adversarial
+checks; and an actual local-editor/publisher run. The four PR comments, reviews,
+inline threads and issue #5915 were read again. Repository/hosting ownership
+remains a maintainer decision; no repository, server or production deployment
+was created.
+
+| Role | Result | Evidence |
+| --- | --- | --- |
+| Release builder | `prepare` extracts once, updates separate PO copies and includes matching tools/notices. | Actual registered-source extraction for all three languages; source PO/POT unchanged. |
+| Translator | Standard Poedit opens the prepared PO; source and translation are separate. Saving does not publish. | Offline Poedit 3.6.3-2 GUI: view/edit/save, then actual packaging; original PO hash unchanged. |
+| Publisher | `package` snapshots the saved PO/release inputs, validates and produces whole ready bundles. | GNU-gettext-only copied-tool run; editor-save race regression; exact used PO copies in bundle. |
+| Administrator | `install --activate` reads locale/hash from a validated pack under the existing store lock. | All three full packs installed/selected/repeated/rolled back without external commands in PATH. |
+| Diagnostics | `doctor` does not initialize a folder, recover a journal, repair files or change permissions. | Missing-folder, interrupted-operation, corruption, busy-lock, regional-parent and HTTP regressions. |
+| Manual publisher | `build.R all` stages all four readers and renames only after all succeed. | Four real Bookdown builds and four Chromium language/section round trips; injected second-reader failure leaves no output/staging folder. |
+
+Qualification passed: **145 Python tool checks**, **61 native files / 2,312
+top-level checks**, and **133 R checks** in the qualified dependency image.
+The six manual-source/argument checks were repeated after adding the all-language
+mode. Numerical R fixture, environment and process locale remained unchanged.
+A broad host-only parser run failed because that host lacks the Perl/R extraction
+dependencies; the complete qualified-image run passed. Frozen-workspace building
+and the ready-package lifecycle also passed on that same host without source
+parsers.
+
+All **90 compiled JSON/index files**, **15,398 message identities** and **three
+complete package hashes** match the previously qualified data. Each language
+still has 15,397 translated entries and one whole English fallback. The new PO
+header text identifies an editable copy and the actual release instead of saying
+"Generated; do not edit" or advertising a prototype; original source files and
+notices are preserved.
+
+Independent adversarial review found and closed: an explicitly blank revision
+could bypass a gate; direct activation could recover a journal before rejecting
+the requested revision; diagnostics could reject a working regional parent;
+and a later editor save could mismatch ready-package provenance. Regression
+checks cover these cases and refusal before state changes.
+
+The local-editor test used synthetic messages in one offline Linux GUI session.
+It is not human terminology review or Windows/macOS GUI acceptance. A proposed
+custom editor-launch wrapper did not prove a reliable already-running handoff
+(exit 255), so it is excluded from the final design; standard Poedit file opening
+is used instead. The test editor lacked the optional Ukrainian spellcheck
+dictionary. No editor or OS package was installed on the host.
+
+Diagnostics verify selected/previous local package bytes and, when explicitly
+requested, two HEAD resource responses and the effective language. They do not
+prove that the local folder is the remote site's exact active version, the SGN
+process's filesystem identity, all authenticated workflows or scientific
+calculations. The site itself was not deployed or modified in this audit.
 
 ## Setup and simplicity review, 2026-11-03
 

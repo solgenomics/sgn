@@ -5,12 +5,11 @@ and a breeder to check the text before treating it as approved.
 
 ## 1. Make a small review file
 
-Run this from the SGN source folder. Replace the release and PO paths with your
-files. This example exports the first 100 seedlot messages:
+Run this from the prepared translation folder. This example exports the first 100 seedlot messages:
 
 ```sh
-python3 bin/i18n/sgn-i18n review --release /path/to/release.json \
-  --po /path/to/uk.po --workflow seedlots --output "$HOME/uk-seedlots-review-1"
+python3 tools/sgn-i18n review --release release.json \
+  --po translations/uk.po --workflow seedlots --output "$HOME/uk-seedlots-review-1"
 ```
 
 The result has two files: `review.po` for editing and `REVIEW.md` for notes.
@@ -32,7 +31,7 @@ small screens, Arabic layout and counts 0/1/2/5/21.
 Have the release builder merge reviewed entries into a **copy of the full PO**
 using a gettext editor. A 100-message review file cannot replace a whole language.
 Keep uncertain entries empty or fuzzy. Keep the review notes with the release.
-Then [build and check the new pack](TRANSLATOR.md#3-build-the-files).
+Then [build and check the new pack](TRANSLATOR.md#3-builder-make-ready-packages).
 
 For the next batch, use a new output folder and add `--offset 100 --limit 100`.
 The output tells you the next offset. Other group names are in `release.json`.

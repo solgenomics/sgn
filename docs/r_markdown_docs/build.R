@@ -2,7 +2,7 @@
 args <- commandArgs(trailingOnly = TRUE)
 usage <- "Usage: Rscript build.R LOCALE /absolute/output [split|single]"
 if (identical(args, "--help") || identical(args, "-h")) {
-    cat(usage, "\nLocales: en, uk, es, ar. Default mode: split.\n",
+    cat(usage, "\nLocales: en, uk, es, ar, all. Default mode: split.\n",
         "No arguments: original English Bookdown build.\n", sep = "")
     quit(status = 0)
 }
@@ -22,8 +22,7 @@ resolve_output <- function(path) {
     if (dir.exists(resolved)) normalizePath(resolved, mustWork = TRUE) else resolved
 }
 
-render_language <- function(locale, output_dir, single_page = FALSE) {
-    if (!locale %in% c("en", "uk", "es", "ar")) stop("Unsupported manual locale")
+manual_output <- function(output_dir) {
     if (!startsWith(output_dir, "/")) stop("Manual output must be an absolute path outside the source directory")
     output_dir <- resolve_output(output_dir)
     output_prefix <- paste0(sub("/+$", "", output_dir), "/")
@@ -31,6 +30,12 @@ render_language <- function(locale, output_dir, single_page = FALSE) {
     if (startsWith(output_prefix, source_prefix) || startsWith(source_prefix, output_prefix)) {
         stop("Manual output must not overlap the source directory")
     }
+    output_dir
+}
+
+render_language <- function(locale, output_dir, single_page = FALSE) {
+    if (!locale %in% c("en", "uk", "es", "ar")) stop("Unsupported manual locale")
+    output_dir <- manual_output(output_dir)
     chapter_files <- yaml::read_yaml("_bookdown.yml")$rmd_files
     locale_dir <- if (locale == "en") source_dir else file.path(source_dir, "i18n", locale)
     required <- c(chapter_files, "_bookdown.yml", "_output.yml")
@@ -67,6 +72,25 @@ render_language <- function(locale, output_dir, single_page = FALSE) {
     rendered
 }
 
+render_all <- function(output_dir, single_page = FALSE) {
+    output_dir <- manual_output(output_dir)
+    occupied <- function(path) {
+        link <- Sys.readlink(path)
+        file.exists(path) || (!is.na(link) && nzchar(link))
+    }
+    if (occupied(output_dir)) stop("For all languages, choose a new output folder")
+    dir.create(dirname(output_dir), recursive = TRUE, showWarnings = FALSE)
+    stage <- tempfile(".sgn-manual-", tmpdir = dirname(output_dir))
+    dir.create(stage)
+    on.exit(unlink(stage, recursive = TRUE), add = TRUE)
+    for (locale in c("en", "uk", "es", "ar")) {
+        target <- if (locale == "en") stage else file.path(stage, locale)
+        render_language(locale, target, single_page)
+    }
+    if (occupied(output_dir) || !file.rename(stage, output_dir)) stop("Cannot publish the complete manual output folder")
+    output_dir
+}
+
 if (!length(args)) {
     bookdown::render_book("index.Rmd", "bookdown::gitbook")
 } else {
@@ -74,5 +98,5 @@ if (!length(args)) {
     output_dir <- args[2]
     mode <- if (length(args) >= 3) args[3] else "split"
     if (!mode %in% c("split", "single")) stop("Manual mode must be split or single")
-    render_language(locale, output_dir, mode == "single")
+    if (locale == "all") render_all(output_dir, mode == "single") else render_language(locale, output_dir, mode == "single")
 }

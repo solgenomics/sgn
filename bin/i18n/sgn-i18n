@@ -10,27 +10,33 @@ from pathlib import Path
 
 COMMANDS = {
     "review": "review.py",
+    **{name: "workflow.py" for name in ("prepare", "package")},
     **{name: "catalog.py" for name in ("extract", "update", "freeze", "init", "build")},
-    **{name: "pack.py" for name in ("create", "validate", "install", "activate", "rollback")},
+    **{name: "pack.py" for name in ("create", "validate", "install", "activate", "rollback", "doctor")},
 }
 
 
 def main():
-    """Dispatch to the documented tool without invoking a shell."""
+    """Offer only commands included in this toolkit and execute without a shell."""
+    directory = Path(__file__).resolve().parent
+    available = {name: script for name, script in COMMANDS.items() if (directory / script).is_file()}
+    guidance = []
+    if (directory / "pack.py").is_file():
+        guidance.append("Ready packs: install --activate, doctor, rollback")
+    if (directory / "workflow.py").is_file():
+        guidance.append("Translator workflow: prepare, package")
+    if (directory / "catalog.py").is_file():
+        guidance.append("Source tools: extract, update, freeze, init, build")
+    guidance.append("Use COMMAND --help for its options. Put options after the command.")
     parser = argparse.ArgumentParser(
         description=__doc__,
         usage="%(prog)s COMMAND [OPTIONS]",
         formatter_class=argparse.RawDescriptionHelpFormatter,
-        epilog="""Ready packs:  install, activate, rollback (Python standard library only)
-Translations: init, review, build, create, validate
-Source release: extract, update, freeze
-
-Use COMMAND --help for its options. Put options after the command.
-Source commands accept --root; install/activate/rollback use --root for the pack store.""",
+        epilog="\n".join(guidance),
     )
-    parser.add_argument("command", choices=COMMANDS)
+    parser.add_argument("command", choices=available)
     command = parser.parse_args(sys.argv[1:2]).command
-    script = Path(__file__).resolve().parent / COMMANDS[command]
+    script = directory / available[command]
     os.execv(sys.executable, [sys.executable, str(script), *sys.argv[1:]])
 
 

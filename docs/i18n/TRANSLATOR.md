@@ -1,118 +1,112 @@
-# Build a language pack
+# Translate a release
 
-A pack is a folder of translated messages ready for installation.
-To install an existing pack, use [Turn on translations](README.md).
-This example builds Ukrainian. Use a new output folder for each release.
+There are three jobs: the builder prepares files, the translator edits them,
+and the administrator installs the result. Installing a ready bundle is covered
+in [Install a language](README.md).
 
-## 1. Prepare the release
+## 1. Builder: make the translation folder
 
-The person building the SGN release does this step.
-Open a terminal in the SGN source folder for that release.
-Install the [source tools](DEVELOPER.md#source-tools) first.
-
-```sh
-RELEASE_DIR="$HOME/sgn-release-v1"
-python3 bin/i18n/sgn-i18n freeze \
-  --application-version "$(git rev-parse HEAD)" \
-  --output "$RELEASE_DIR/release.json"
-mkdir -p "$RELEASE_DIR/tools"
-cp bin/i18n/*.py bin/i18n/sgn-i18n "$RELEASE_DIR/tools/"
-cp locale/uk/LC_MESSAGES/sgn.po "$RELEASE_DIR/uk.po"
-```
-
-You now have:
-
-- `release.json`: the exact message list for this SGN release.
-- `release.pot`: the same list for gettext editors.
-- `uk.po`: a copy of the Ukrainian translations.
-- `tools`: the Python files for the remaining steps.
-
-Keep the printed release checksum with the release record. Get these files
-through the project's trusted release channel; a checksum is not a signature.
-The freeze command refuses to overwrite an existing release.
-Give the whole `sgn-release-v1` folder to the translator. They should put it
-in their Linux home folder before step 2.
-
-## 2. Update the translation
-
-The translator needs Python 3.9 or newer and GNU gettext: `msgmerge`, `msgcat`
-and `msgfmt`. No application checkout, Node, Perl or R is needed from here on.
+Open the SGN source folder for the release. Install the [source tools](DEVELOPER.md#source-tools).
+Replace `RELEASE_VERSION` with the actual SGN version or commit, then run:
 
 ```sh
-cd "$HOME/sgn-release-v1"
-msgmerge --update --no-wrap --backup=numbered uk.po release.pot
+python3 bin/i18n/sgn-i18n prepare --application-version RELEASE_VERSION --output "$HOME/sgn-translation-v1"
 ```
 
-This keeps a numbered backup of the PO file. Open `uk.po` in a gettext editor:
+This one command reads source messages once, copies the PO files, updates those
+copies from the release template, and includes the matching tools and notices.
+It keeps the original source PO/POT files unchanged. Existing output folders
+are never overwritten.
 
-- Translate `msgstr` and every required `msgstr[n]`.
-- Keep `msgctxt`, `msgid` and `msgid_plural` unchanged.
-- Keep names such as `%{count}` and `%{name}` exactly as written.
-- Write plain text, without HTML tags or pre-escaped entities.
-- Leave uncertain text empty or marked fuzzy. The site will use whole English
-  messages for those entries.
+Give the whole `sgn-translation-v1` folder to the translator. It contains:
 
-Have a native speaker and a breeder check the wording. A filled entry is not
-proof that someone reviewed it. [Review small batches](REVIEW.md) if needed.
-The `%{menu}` value in `file_list.datatable.length_menu` and `odk.table.length`
-must appear exactly once; do not replace it with `_MENU_`.
+```text
+translations/uk.po
+translations/es.po
+translations/ar.po
+release.json
+release.pot
+tools/
+notices/
+README.md
+```
 
-## 3. Build the files
-
-Run from the release folder used in step 2:
+If a release was already frozen, prepare from it instead. No source parsers,
+Node, Perl or R are needed for this mode:
 
 ```sh
-python3 tools/sgn-i18n build --release release.json --po uk.po --output build-v1
+python3 bin/i18n/sgn-i18n prepare --release /path/to/release.json \
+  --po /path/to/uk.po --output "$HOME/sgn-translation-v1"
 ```
 
-The result is `build-v1/uk/sgn/index.json` and its message files.
-The output reports translated and English-fallback counts. A missing message,
-changed source or invalid placeholder cannot silently reuse the wrong wording.
+Repeat `--po` for more languages. Use the trusted release files and accompanying
+notices. A checksum identifies bytes; it is not a publisher signature.
 
-## 4. Make the installable pack
+## 2. Translator: open, edit and save
+
+Install [Poedit](https://poedit.com/download/) on your computer once.
+Open Poedit, choose **File → Open**, and open `translations/uk.po` from the
+received folder. Spanish is `es.po`; Arabic is `ar.po`.
+Editing in Poedit does not require SGN, Python, Node or a translation server.
+
+1. Select a message. **Source text** shows the English; **Translation** is editable.
+2. Change the translation. Keep values such as `%{name}` and `%{count}` unchanged.
+3. Fill every plural form shown for the language.
+4. Mark uncertain text **Needs Work**. It will use whole English fallback on the site.
+5. Save, then return the whole folder to the release builder.
+
+Keep context keys, English source, IDs, scientific names, units and file headers
+unchanged. Write plain text without HTML tags or pre-escaped entities.
+Have a native speaker and a breeder review the wording. Filled text is not proof
+of review. Poedit's normal checks are useful; the SGN build also checks its own
+placeholder rules. `%{menu}` in `file_list.datatable.length_menu` and
+`odk.table.length` must appear exactly once and must not become `_MENU_`.
+
+Saving a PO changes the working copy only. It never updates the running site.
+See [small review batches](REVIEW.md) if a full catalog is too much to review.
+
+## 3. Builder: make ready packages
+
+On the Linux/POSIX release builder, use Python 3.9 or newer and GNU gettext
+(`msgcat`, `msgfmt`, `msgmerge`). No application checkout or source parsers are
+needed after preparation. Run from the received folder:
 
 ```sh
-python3 tools/sgn-i18n create --catalog build-v1/uk/sgn/index.json --output uk-pack
+python3 tools/sgn-i18n package --workspace . --output "$HOME/sgn-ready-v1"
 ```
 
-The result is the **whole `uk-pack` folder**, including `manifest.json`.
-Keep all files together. `create` already checks them.
-Give the site operator this folder and these four files from `tools`:
-`sgn-i18n`, `pack.py`, `catalog_format.py`, `plural.py`.
-The operator can now follow [Turn on translations](README.md).
+The result contains `<language>-pack` folders, the four operator tools,
+a short installation guide and copies of the exact release/PO inputs used.
+The build takes its own input copies, so another editor save cannot mix a
+later PO into the package's source record. Invalid placeholders or incomplete
+files stop the build before a ready folder appears.
 
-For a correction, keep the previous PO, choose new names such as `build-v2`
-and `uk-pack-v2`, and repeat steps 3 and 4.
+Give the whole ready folder to the site administrator. They can follow
+[Install a language](README.md) with one install-and-activate command.
+For a correction, keep the workspace and choose a new output name, such as
+`sgn-ready-v2`. Never overwrite an earlier ready bundle.
 
-## Add a language that has no PO file
+## Additional tools
 
-Run from the release folder. This example creates French:
+To start French from a frozen template, use the existing init command:
 
 ```sh
-python3 tools/sgn-i18n init --release release.json \
-  --locale fr --direction ltr --plural-forms 'nplurals=2; plural=(n > 1);' \
-  --name 'Français' --output fr.po
+python3 tools/sgn-i18n init --release release.json --locale fr --direction ltr \
+  --plural-forms 'nplurals=2; plural=(n > 1);' --name 'Français' \
+  --output translations/fr.po
 ```
 
-Use that language's real direction and plural rule. Do not guess them.
-Then translate and build its PO as in steps 2–4. Change the PO filename and
-language folder in the commands. The PO's `Language` field determines the tag.
-The header also holds `X-SGN-Direction`, `Plural-Forms` and the optional
-`X-SGN-Language-Name`. Keep these unless preparing another language.
+Use the language's real direction and plural rule; do not guess them.
+The PO header contains `Language`, `X-SGN-Direction`, `Plural-Forms` and the
+optional native name `X-SGN-Language-Name`.
 
-## Package rules
+Advanced `build`, `create`, `validate`, plain `install` and explicit `activate`
+remain available. `create` and `install` already validate packages; a separate
+`validate` is not a required extra step. `--expected-revision` can require an
+exact message-list version when activating. It is optional and rejects blank
+or malformed values.
 
-- Keep the original PO, release files and license notices.
-- Each JSON file in the installable pack has a 2 MiB limit. Large languages use separate message
-  files; do not raise that limit.
-- Installation checks file contents and checksums. Missing, extra, changed or
-  symlinked pack members are rejected.
-- `validate --pack uk-pack` checks without installing. Use it for diagnosis;
-  it is not a required extra step after `create` or `install`.
-- Small older catalogs can still use `build --legacy-single-file` and
-  `create --catalog .../sgn.json`. Use indexed packs for the full corpus.
-- `activate --expected-revision CODE` can require an exact message-list version.
-  It is optional; the normal setup does not need it.
-
-Ordinary code changes do not require finished human translations in every
-language. Refresh the message list for a release, then review changed wording.
+Each JSON file in a pack has a 2 MiB limit. Large languages use indexed message
+files, not a raised limit. Small older catalogs still support
+`build --legacy-single-file`. Ordinary code PRs do not require finished human
+translations for every language; prepare updated catalogs when making a release.

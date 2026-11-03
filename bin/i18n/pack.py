@@ -3,11 +3,15 @@
 
 import argparse
 import fcntl
+import http.client
 import json
 import os
 import re
 import shutil
 import tempfile
+import urllib.error
+import urllib.parse
+import urllib.request
 from pathlib import Path
 
 from catalog_format import (
@@ -356,11 +360,14 @@ def recover_migration(root, locale):
         shutil.rmtree(generation, ignore_errors=True)
 
 
-def read_state(root, locale):
+def read_state(root, locale, *, recover=True):
     # Audited JSON boundary and explicit transaction state machine.
     # pylint: disable=unidiomatic-typecheck,too-many-branches
     """Read one selected generation, or import a legacy single-file store."""
-    recover_migration(root, locale)
+    if recover:
+        recover_migration(root, locale)
+    elif (root / "migrations" / (locale + ".json")).exists() or (root / "migrations" / (locale + ".json")).is_symlink():
+        raise ValueError("unfinished activation; run activate or rollback to recover it")
     active = root / "active" / locale
     if active.is_symlink():
         generation = active.resolve(strict=True)
@@ -403,6 +410,8 @@ def read_state(root, locale):
         # Recover old-tool interruptions: the last history write preceded or
         # followed a selector update that did not finish. Never guess a target.
         while history and current != history[-1]["after"] and current == history[-1]["before"]:
+            if not recover:
+                raise ValueError("unfinished legacy activation; run activate or rollback to recover it")
             history = history[:-1]
     if (history[-1]["after"] if history else None) != current:
         raise ValueError("no matching activation history; active state changed")
@@ -514,6 +523,174 @@ def create_pack(source, output):
     return manifest
 
 
+def activate_installed(root, locale, catalog_hash, expected_revision=None):
+    """Select an installed pack while the caller holds the store lock."""
+    if not LOCALE.fullmatch(locale) or locale == "en":
+        raise ValueError("invalid locale")
+    if expected_revision is not None and not HASH.fullmatch(expected_revision):
+        raise ValueError("expected revision must be a 64-character lowercase SHA-256")
+    if not HASH.fullmatch(catalog_hash):
+        raise ValueError("invalid catalog hash")
+    directory = root / "installed" / locale / catalog_hash
+    manifest, _ = validate_pack(directory)
+    if manifest["locale"] != locale or manifest["catalogSha256"] != catalog_hash:
+        raise ValueError("installed pack identity mismatch")
+    if expected_revision is not None and manifest["sourceRevision"] != expected_revision:
+        raise ValueError("source revision mismatch; activation refused")
+    # Refusing this package must not first repair or remove an unrelated journal.
+    current, history = read_state(root, locale)
+    target = str(
+        (directory / ("index.json" if manifest.get("format") == "indexed" else "catalog.json")).relative_to(root)
+    )
+    if current == target:
+        active = root / "active" / locale
+        runtime = active / ("sgn" if manifest.get("format") == "indexed" else "sgn.json")
+        if not active.is_symlink() or any(Path(os.readlink(link)).is_absolute() for link in (active, runtime)):
+            publish_state(root, locale, target, history)
+        return {"active": catalog_hash, "unchanged": True}
+    publish_state(root, locale, target, history + [{"before": current, "after": target}])
+    return {"active": catalog_hash, "locale": locale, "catalogRoot": str(root / "active")}
+
+
+class NoRedirect(urllib.request.HTTPRedirectHandler):
+    """Require the supplied site URL instead of following a login or other redirect."""
+
+    def redirect_request(self, *_args, **_kwargs):
+        return None
+
+
+def check_site(site, locale, effective_locale=None):
+    """Check the two required resource headers; never read or execute their JS."""
+    url = urllib.parse.urlsplit(site)
+    if url.scheme not in ("http", "https") or not url.netloc:
+        raise ValueError("use the site's full HTTP(S) root URL")
+    if url.username or url.password or url.query or url.fragment:
+        raise ValueError("use the site root URL without credentials, query or fragment")
+    opener = urllib.request.build_opener(NoRedirect)
+    expected = effective_locale or locale
+    resources = (("runtime.js", ""), ("bootstrap.js", urllib.parse.urlencode({"lang": locale})))
+    for resource, query in resources:
+        path = url.path.rstrip("/") + "/i18n/" + resource
+        endpoint = urllib.parse.urlunsplit((url.scheme, url.netloc, path, query, ""))
+        request = urllib.request.Request(endpoint, headers={"Cache-Control": "no-cache"}, method="HEAD")
+        try:
+            with opener.open(request, timeout=10) as response:
+                if response.status != 200:
+                    raise ValueError(resource + " returned HTTP " + str(response.status))
+                if response.headers.get_content_type() not in ("application/javascript", "text/javascript"):
+                    raise ValueError(resource + " did not return JavaScript headers")
+                if resource == "bootstrap.js":
+                    actual = response.headers.get("Content-Language", "").strip()
+                    if actual.lower() != expected.lower():
+                        raise ValueError("site language is " + (actual or "not declared") + "; expected " + expected)
+        except urllib.error.URLError as error:
+            raise ValueError(resource + ": " + str(error)) from error
+    return (
+        "runtime resource available; site language response is "
+        + expected
+        + " (exact package version and workflows not checked)"
+    )
+
+
+def store_locales(root):
+    """List only safe locale identifiers from the known store directories."""
+    locales = set()
+    for directory in ("active", "installed", "migrations"):
+        folder = root / directory
+        if not folder.is_dir():
+            continue
+        for path in folder.iterdir():
+            if directory == "migrations" and path.suffix != ".json":
+                continue
+            tag = path.stem if directory == "migrations" else path.name
+            if LOCALE.fullmatch(tag) and tag != "en":
+                locales.add(tag)
+    return sorted(locales)
+
+
+def effective_store_locale(root, requested):
+    """Follow the runtime's parent order without guessing between case aliases."""
+    available = store_locales(root)
+    candidate = requested
+    while candidate:
+        matches = [tag for tag in available if tag.lower() == candidate.lower()]
+        if len(matches) > 1:
+            raise ValueError("ambiguous language folders: " + ", ".join(matches))
+        selected = matches[0] if matches else candidate
+        current, _ = read_state(root, selected, recover=False)
+        if current is not None:
+            return selected
+        candidate = candidate.rpartition("-")[0]
+    return requested
+
+
+def selected_checks(root, locale, requested):
+    """Check selected and previous package data without recovery or writes."""
+    current, history = read_state(root, locale, recover=False)
+    findings = []
+    for label, target in (("active", current), ("rollback", history[-1]["before"] if history else None)):
+        if target is None:
+            level = "ERROR" if label == "active" and requested else "INFO"
+            findings.append((level, locale + ": " + label + " uses English fallback"))
+            continue
+        try:
+            checked_target(root, locale, target)
+            findings.append(("OK", locale + ": " + label + " pack and all checksums are valid"))
+        except (ValueError, OSError) as error:
+            findings.append(("ERROR", locale + ": " + label + ": " + str(error)))
+    return findings
+
+
+def store_checks(root, locale):
+    """Hold a shared read-only lock while checking package snapshots."""
+    marker = root / ".sgn-i18n-store"
+    if not root.is_dir() or marker.is_symlink() or not marker.is_file():
+        raise ValueError("language folder is missing or was not created by install: " + str(root))
+    with marker.open(encoding="ascii") as handle:
+        if handle.read(64) != "schema=1\n":
+            raise ValueError("invalid language-folder marker")
+    lock_path = root / ".lock"
+    if lock_path.is_symlink() or not lock_path.is_file():
+        raise ValueError("language-folder lock is missing or unsafe")
+    with lock_path.open() as lock:
+        try:
+            fcntl.flock(lock, fcntl.LOCK_SH | fcntl.LOCK_NB)
+        except BlockingIOError as error:
+            raise ValueError("another language operation is running; retry when it finishes") from error
+        effective = effective_store_locale(root, locale) if locale else None
+        locales = [effective] if locale else store_locales(root)
+        findings = [("OK", "language folder exists: " + str(root))]
+        if locale and effective.lower() != locale.lower():
+            findings.append(("INFO", locale + " uses the installed parent language " + effective))
+        if not locales:
+            findings.append(("INFO", "no language packs; English remains available"))
+        for tag in locales:
+            try:
+                findings.extend(selected_checks(root, tag, locale is not None))
+            except (ValueError, OSError) as error:
+                findings.append(("ERROR", tag + ": " + str(error)))
+    return findings, effective
+
+
+def doctor(root, locale=None, site=None):
+    """Inspect files and optional response headers without changing the site."""
+    findings = [("INFO", "current user UID " + str(os.getuid()) + "; SGN's filesystem user has not been tested")]
+    effective = None
+    try:
+        checks, effective = store_checks(root, locale)
+        findings.extend(checks)
+    except (ValueError, OSError) as error:
+        findings.append(("ERROR", str(error)))
+    if site:
+        try:
+            findings.append(("OK", check_site(site, locale, effective)))
+        except (ValueError, OSError, http.client.HTTPException) as error:
+            findings.append(("ERROR", "site check: " + str(error)))
+    else:
+        findings.append(("INFO", "site not checked; add --locale LANGUAGE --site URL to check its language response"))
+    return not any(level == "ERROR" for level, _ in findings), findings
+
+
 def main():
     # Audited JSON boundary and explicit transaction state machine.
     # pylint: disable=too-many-locals,too-many-branches,too-many-statements
@@ -527,11 +704,17 @@ def main():
     create.add_argument("--output", type=Path, required=True)
     validate = commands.add_parser("validate")
     validate.add_argument("--pack", type=Path, required=True)
+    inspect = commands.add_parser("doctor", help="check files and optional site headers without changing anything")
+    inspect.add_argument("--root", type=Path, required=True)
+    inspect.add_argument("--locale")
+    inspect.add_argument("--site", help="site root URL; requires --locale; checks two resource headers")
     for name in ("install", "activate", "rollback"):
         command = commands.add_parser(name)
         command.add_argument("--root", type=Path, required=True)
         if name == "install":
             command.add_argument("--pack", type=Path, required=True)
+            command.add_argument("--activate", action="store_true", help="install and select the validated pack")
+            command.add_argument("--expected-revision", help="require this message-list revision when activating")
         else:
             command.add_argument("--locale", required=True)
             if name == "activate":
@@ -540,11 +723,25 @@ def main():
     args = parser.parse_args()
     if args.command == "create":
         print(json.dumps(create_pack(args.catalog, args.output)))
-        return
+        return 0
     if args.command == "validate":
         print(json.dumps(validate_pack(args.pack)[0]))
-        return
+        return 0
+    if args.command in ("install", "activate") and args.expected_revision is not None:
+        if not HASH.fullmatch(args.expected_revision):
+            parser.error("--expected-revision must be a 64-character lowercase SHA-256")
     root = args.root.resolve()
+    if args.command == "doctor":
+        if args.locale and (not LOCALE.fullmatch(args.locale) or args.locale == "en"):
+            parser.error("doctor requires a non-English language tag")
+        if args.site and not args.locale:
+            parser.error("--site requires --locale")
+        healthy, findings = doctor(root, args.locale, args.site)
+        for level, message in findings:
+            print(level + ": " + message)
+        return 0 if healthy else 1
+    if args.command == "install" and args.expected_revision is not None and not args.activate:
+        parser.error("--expected-revision on install requires --activate")
     if root == Path("/") or len(root.parts) < 3:
         raise ValueError("use a task-local pack store")
     root.mkdir(parents=True, exist_ok=True)
@@ -556,6 +753,8 @@ def main():
         fcntl.flock(lock, fcntl.LOCK_EX)
         if args.command == "install":
             manifest, _ = validate_pack(args.pack)
+            if args.expected_revision is not None and manifest["sourceRevision"] != args.expected_revision:
+                raise ValueError("source revision mismatch; activation refused")
             destination = root / "installed" / manifest["locale"] / manifest["catalogSha256"]
             if destination.exists():
                 existing, _ = validate_pack(destination)
@@ -572,36 +771,20 @@ def main():
                 finally:
                     if stage.exists():
                         shutil.rmtree(stage)
-            print(json.dumps({"installed": manifest["catalogSha256"], "locale": manifest["locale"]}))
-            return
+            receipt = {"installed": manifest["catalogSha256"], "locale": manifest["locale"]}
+            if args.activate:
+                receipt.update(
+                    activate_installed(root, manifest["locale"], manifest["catalogSha256"], args.expected_revision)
+                )
+                receipt["siteChecked"] = False
+            print(json.dumps(receipt))
+            return 0
         if not LOCALE.fullmatch(args.locale) or args.locale == "en":
             raise ValueError("invalid locale")
-        current, history = read_state(root, args.locale)
         if args.command == "activate":
-            if not HASH.fullmatch(args.hash):
-                raise ValueError("invalid catalog hash")
-            directory = root / "installed" / args.locale / args.hash
-            manifest, _ = validate_pack(directory)
-            if manifest["locale"] != args.locale or manifest["catalogSha256"] != args.hash:
-                raise ValueError("installed pack identity mismatch")
-            if args.expected_revision and manifest["sourceRevision"] != args.expected_revision:
-                raise ValueError("source revision mismatch; activation refused")
-            target = str(
-                (directory / ("index.json" if manifest.get("format") == "indexed" else "catalog.json")).relative_to(
-                    root
-                )
-            )
-            if current == target:
-                active = root / "active" / args.locale
-                runtime = active / ("sgn" if manifest.get("format") == "indexed" else "sgn.json")
-                # Upgrade old absolute pointers without adding an activation event.
-                if not active.is_symlink() or any(Path(os.readlink(link)).is_absolute() for link in (active, runtime)):
-                    publish_state(root, args.locale, target, history)
-                print(json.dumps({"active": args.hash, "unchanged": True}))
-                return
-            publish_state(root, args.locale, target, history + [{"before": current, "after": target}])
-            print(json.dumps({"active": args.hash, "locale": args.locale, "catalogRoot": str(root / "active")}))
+            print(json.dumps(activate_installed(root, args.locale, args.hash, args.expected_revision)))
         else:
+            current, history = read_state(root, args.locale)
             if not history or current is None:
                 raise ValueError("no matching activation to roll back; active state changed")
             previous = history[-1]["before"]
@@ -609,9 +792,11 @@ def main():
             publish_state(root, args.locale, previous, history[:-1])
             print(json.dumps({"rolledBack": True, "locale": args.locale, "englishFallback": previous is None}))
 
+    return 0
+
 
 if __name__ == "__main__":
     try:
-        main()
+        raise SystemExit(main())
     except (ValueError, OSError) as error:
         raise SystemExit(str(error)) from error

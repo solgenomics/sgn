@@ -289,6 +289,21 @@ def compile_partition(path, messages, *, invert=False, entries=None):
         return compile_po(selected, [] if invert else messages)
 
 
+def editable_po_header(header, revision, application_version="SGN"):
+    """Make the copied PO visibly editable and identify its actual message release."""
+    header = header.replace(
+        "# SGN internationalization source catalog. Generated; do not edit.",
+        "# SGN translations. Edit msgstr text; keep English sources and named values unchanged.",
+    )
+    for name, value in (("Project-Id-Version", application_version), ("X-SGN-Source-Revision", revision)):
+        quoted = po_quote(name + ": " + value + "\n")
+        pattern = '^"' + re.escape(name) + ':.*"$'
+        header, count = re.subn(pattern, lambda _, line=quoted: line, header, flags=re.M)
+        if not count:
+            header += "\n" + quoted
+    return header
+
+
 def init_po(messages, locale, direction, formula, native_name=None):
     """Create an empty language catalog with explicit locale metadata."""
     if not LOCALE.fullmatch(locale) or direction not in ("ltr", "rtl"):
@@ -315,7 +330,9 @@ def init_po(messages, locale, direction, formula, native_name=None):
     if not match:
         raise ValueError("unsupported nplurals")
     slots = "\n".join("msgstr[" + str(i) + '] ""' for i in range(int(match.group(1))))
-    return text.replace('msgstr[0] ""\nmsgstr[1] ""', slots)
+    text = text.replace('msgstr[0] ""\nmsgstr[1] ""', slots)
+    header, separator, body = text.partition("\n\n")
+    return editable_po_header(header, source_revision(messages)) + separator + body
 
 
 # Explicit data-contract checks reject bool and preserve all schema branches.

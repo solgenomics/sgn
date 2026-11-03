@@ -6,14 +6,11 @@ and a breeder review them before publication.
 
 ## Build the web pages
 
-Choose a new output folder outside the source checkout:
+Choose a new output folder outside the source checkout. One command builds all four readers:
 
 ```sh
 MANUAL_DIR="$HOME/sgn-manual-v1"
-Rscript --vanilla docs/r_markdown_docs/build.R en "$MANUAL_DIR"
-Rscript --vanilla docs/r_markdown_docs/build.R uk "$MANUAL_DIR/uk"
-Rscript --vanilla docs/r_markdown_docs/build.R es "$MANUAL_DIR/es"
-Rscript --vanilla docs/r_markdown_docs/build.R ar "$MANUAL_DIR/ar"
+Rscript --vanilla docs/r_markdown_docs/build.R all "$MANUAL_DIR"
 ```
 
 Open `~/sgn-manual-v1/index.html` to read English. The `uk`, `es` and `ar`
@@ -22,6 +19,8 @@ language links find the same chapter and section.
 
 For help, run `Rscript --vanilla docs/r_markdown_docs/build.R --help`.
 The language build requires an absolute output path and rejects source overlap.
+`all` refuses an existing output folder and publishes it only after all four
+builds succeed. Use `en`, `uk`, `es` or `ar` to build one language.
 With no arguments, `build.R` keeps the original English Bookdown build.
 
 ## Build a PDF
@@ -67,6 +66,19 @@ The existing documentation CI publishes English only. Other languages need a
 separate publication step by the maintainer. UI pack installation does not
 publish a manual. Keep generated HTML, PDFs, caches and tools outside Git.
 The existing workflow force-adds `docs/`, so do not install tool dependencies there.
+
+## Edit chapter text
+
+Use a regular text editor such as VS Code for `.Rmd` chapters. Poedit is for PO
+interface files. Change paragraphs, then have the release builder run the source
+checks and build the preview:
+
+```sh
+python3 bin/i18n/test_manual.py
+```
+
+Keep heading IDs, code blocks, formulas, numbers and file-field examples unchanged.
+The checks compare these with English. Building the reader does not publish it.
 
 ## Source files
 

@@ -55,7 +55,7 @@ need completed translations for every language.
 
 ## If text stays English
 
-1. Check the three [site settings](README.md#4-change-the-site-settings).
+1. Check the three [site settings](README.md#3-apply-the-site-settings-once).
 2. Check that the requested language is installed and activated. Read the server
    log for a missing or corrupt pack and its path.
 3. Open a new page. Existing pages keep their original translator.
@@ -119,6 +119,20 @@ Parser errors stop the build; they do not produce an empty catalog.
 Custom helper commands use JSON argument arrays, without a shell:
 `SGN_I18N_PERL_COMMAND`, `SGN_I18N_JAVASCRIPT_COMMAND`,
 `SGN_I18N_R_EXTRACT_COMMAND`, `SGN_I18N_R_DISCOVERY_COMMAND`.
+
+## Release automation
+
+Use `prepare` once per release to make the editor folder, then `package` after
+saved translations are reviewed. The source PO/POT files remain unchanged.
+The installer can use `install --activate`; locale and hash come from the checked
+manifest. Plain install still stages without selecting anything.
+
+`doctor` is read-only: it checks selected/rollback file checksums without running
+migration recovery. Its optional site check sends HEAD requests to the existing
+runtime/bootstrap endpoints, without executing JavaScript or following redirects.
+It reports requested/effective parent languages separately. Local user checks
+are not proof of the SGN process's access, and language-response headers do not
+prove an exact remote package or all application workflows.
 
 ## How it works
 

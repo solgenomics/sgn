@@ -9,7 +9,9 @@ import shutil
 import subprocess
 import sys
 import tempfile
+import threading
 import unittest
+from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from unittest.mock import patch
 
@@ -106,6 +108,16 @@ class ReleaseTests(unittest.TestCase):  # pylint: disable=too-many-public-method
         )
         self.assertEqual(result.returncode, 0, result.stderr)
         self.assertEqual(json.loads(result.stdout)["locale"], "es")
+        help_result = subprocess.run(
+            [sys.executable, str(operator / "sgn-i18n"), "--help"],
+            capture_output=True,
+            text=True,
+            check=False,
+        )
+        self.assertEqual(help_result.returncode, 0, help_result.stderr)
+        self.assertIn("install --activate", help_result.stdout)
+        self.assertNotIn("prepare", help_result.stdout)
+        self.assertNotIn("extract", help_result.stdout)
 
     def test_shared_command_accepts_source_root_after_command(self):
         """The documented launcher and old direct syntax read the same source."""
@@ -125,6 +137,281 @@ class ReleaseTests(unittest.TestCase):  # pylint: disable=too-many-public-method
         )
         self.assertEqual(result.returncode, 0, result.stderr)
         self.assertIn("--root", result.stdout)
+
+    def test_install_and_activate_needs_no_copied_hash_and_is_idempotent(self):
+        """One command derives identity from the validated pack and preserves history."""
+        package, manifest = self.single_pack()
+        store = self.root / "store"
+        receipt = self.command("sgn-i18n", "install", "--activate", "--pack", package, "--root", store)
+        self.assertEqual(receipt["active"], manifest["catalogSha256"])
+        self.assertEqual(receipt["active"], receipt["installed"])
+        self.assertFalse(receipt["siteChecked"])
+        selected = (store / "active/es").readlink()
+        history = (store / "history/es.json").read_bytes()
+        receipt = self.command("sgn-i18n", "install", "--activate", "--pack", package, "--root", store)
+        self.assertTrue(receipt["unchanged"])
+        self.assertEqual((store / "active/es").readlink(), selected)
+        self.assertEqual((store / "history/es.json").read_bytes(), history)
+        self.assertTrue(self.command("sgn-i18n", "rollback", "--locale", "es", "--root", store)["englishFallback"])
+
+    def test_combined_install_respects_revision_and_failed_activation_preserves_selection(self):
+        """Neither a wrong release gate nor a failed publish selects a new version."""
+        store, _, two = self.prepared_store()
+        package = self.root / "pack-2"
+        before = (store / "active/es").readlink()
+        history = (store / "history/es.json").read_bytes()
+        error = self.command(
+            "sgn-i18n",
+            "install",
+            "--activate",
+            "--pack",
+            package,
+            "--root",
+            store,
+            "--expected-revision",
+            "b" * 64,
+            ok=False,
+        )
+        self.assertIn("source revision mismatch", error)
+        with patch.object(pack, "publish_state", side_effect=PermissionError("injected activation failure")):
+            with self.assertRaises(PermissionError):
+                self.in_process("install", "--activate", "--pack", package, "--root", store)
+        self.assertEqual((store / "active/es").readlink(), before)
+        self.assertEqual((store / "history/es.json").read_bytes(), history)
+        retry = self.command("sgn-i18n", "install", "--activate", "--pack", package, "--root", store)
+        self.assertEqual(retry["active"], two["catalogSha256"])
+
+    def test_revision_gate_cannot_be_silently_ignored_on_staging_only_install(self):
+        """A misplaced gate stops before even creating the requested store."""
+        package, _ = self.single_pack()
+        store = self.root / "not-created"
+        error = self.command(
+            "sgn-i18n",
+            "install",
+            "--pack",
+            package,
+            "--root",
+            store,
+            "--expected-revision",
+            "a" * 64,
+            ok=False,
+        )
+        self.assertIn("requires --activate", error)
+        self.assertFalse(store.exists())
+
+    @staticmethod
+    def footprint(root):
+        """Capture all persistent names, pointers and file bytes, without following links."""
+        result = {}
+        for path in root.rglob("*"):
+            if path.is_symlink():
+                value = ("link", str(path.readlink()))
+            elif path.is_file():
+                value = ("file", path.read_bytes())
+            else:
+                value = ("directory", None)
+            result[str(path.relative_to(root))] = value
+        return result
+
+    def diagnose(self, store, *arguments):
+        """Run the real read-only command, retaining its human-readable output."""
+        return subprocess.run(
+            [sys.executable, str(TOOLS / "sgn-i18n"), "doctor", "--root", str(store), *arguments],
+            capture_output=True,
+            text=True,
+            timeout=20,
+            check=False,
+        )
+
+    def test_doctor_does_not_create_a_typo_path_or_recover_an_interrupted_activation(self):
+        """Inspection is read-only even on missing or interrupted operator state."""
+        missing = self.root / "missing"
+        result = self.diagnose(missing)
+        self.assertNotEqual(result.returncode, 0)
+        self.assertFalse(missing.exists())
+        package, _ = self.single_pack()
+        store = self.root / "store"
+        self.command("pack.py", "install", "--pack", package, "--root", store)
+        pending = store / "state/es/generation-pending"
+        pending.mkdir(parents=True)
+        (store / "history").mkdir()
+        (store / "history/es.json").symlink_to("../active/es/.history.json")
+        (store / "migrations").mkdir()
+        (store / "migrations/es.json").write_text(
+            json.dumps(
+                {
+                    "schema": 1,
+                    "locale": "es",
+                    "mode": "initial",
+                    "generation": "state/es/generation-pending",
+                }
+            )
+        )
+        before = self.footprint(store)
+        with patch.object(pack, "recover_migration", side_effect=AssertionError("doctor must not recover")):
+            healthy, findings = pack.doctor(store, "es")
+        self.assertFalse(healthy)
+        self.assertTrue(any("unfinished activation" in message for _, message in findings))
+        self.assertEqual(self.footprint(store), before)
+        result = self.diagnose(store)
+        self.assertNotEqual(result.returncode, 0)
+        self.assertEqual(self.footprint(store), before)
+
+    def test_doctor_checks_active_and_rollback_bytes_without_blocking_recovery(self):
+        """A selected path alone cannot conceal corruption or a broken rollback pack."""
+        store, one, two = self.prepared_store()
+        self.in_process("activate", "--locale", "es", "--hash", two["catalogSha256"], "--root", store)
+        before = self.footprint(store)
+        result = self.diagnose(store, "--locale", "es")
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        self.assertIn("SGN's filesystem user has not been tested", result.stdout)
+        self.assertIn("site not checked", result.stdout)
+        self.assertEqual(self.footprint(store), before)
+        selected = store / "installed/es" / two["catalogSha256"] / "catalog.json"
+        selected.write_text("{}")
+        before = self.footprint(store)
+        result = self.diagnose(store, "--locale", "es")
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn("es: active:", result.stdout)
+        self.assertIn("es: rollback pack", result.stdout)
+        self.assertEqual(self.footprint(store), before)
+        self.in_process("rollback", "--locale", "es", "--root", store)
+        self.assertIn("Guardar 1", (store / "active/es/sgn.json").read_text())
+        self.assertEqual(
+            (store / "active/es/sgn.json").resolve(), store / "installed/es" / one["catalogSha256"] / "catalog.json"
+        )
+
+    def language_site(self, language="es", redirect=False, runtime_status=200):
+        """Serve only a controlled header contract; catalog JavaScript is never executed."""
+        observed = []
+
+        class Handler(BaseHTTPRequestHandler):
+            """Expose the same header types as the existing bootstrap endpoint."""
+
+            def do_HEAD(self):  # pylint: disable=invalid-name  # HTTP handler protocol name.
+                """Record one HEAD request, optionally returning a forbidden redirect."""
+                observed.append((self.command, self.path))
+                status = runtime_status if self.path.endswith("runtime.js") else 200
+                self.send_response(302 if redirect else status)
+                self.send_header("Content-Type", "application/javascript; charset=UTF-8")
+                self.send_header("Content-Language", language)
+                if redirect:
+                    self.send_header("Location", "/login")
+                self.end_headers()
+
+            def log_message(self, *_args):
+                """Keep synthetic HTTP requests out of test output."""
+
+        server = ThreadingHTTPServer(("127.0.0.1", 0), Handler)
+        thread = threading.Thread(target=server.serve_forever, kwargs={"poll_interval": 0.01}, daemon=True)
+        thread.start()
+        self.addCleanup(server.server_close)
+        self.addCleanup(thread.join)
+        self.addCleanup(server.shutdown)
+        return "http://127.0.0.1:" + str(server.server_port) + "/breedbase", observed
+
+    def test_doctor_site_check_uses_only_head_and_does_not_claim_whole_site_acceptance(self):
+        """A genuine language header is checked separately from local file health."""
+        store, _, _ = self.prepared_store()
+        site, observed = self.language_site()
+        result = self.diagnose(store, "--locale", "es", "--site", site)
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        self.assertEqual(
+            observed, [("HEAD", "/breedbase/i18n/runtime.js"), ("HEAD", "/breedbase/i18n/bootstrap.js?lang=es")]
+        )
+        self.assertIn("exact package version and workflows not checked", result.stdout)
+        other, _ = self.language_site(language="en")
+        result = self.diagnose(store, "--locale", "es", "--site", other)
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn("expected es", result.stdout)
+        redirect, requested = self.language_site(redirect=True)
+        result = self.diagnose(store, "--locale", "es", "--site", redirect)
+        self.assertNotEqual(result.returncode, 0)
+        self.assertEqual(len(requested), 1, "A login redirect must not turn into a successful check")
+        broken, requested = self.language_site(runtime_status=404)
+        result = self.diagnose(store, "--locale", "es", "--site", broken)
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn("runtime.js", result.stdout)
+        self.assertEqual(requested, [("HEAD", "/breedbase/i18n/runtime.js")])
+
+    def test_explicit_blank_revision_never_disables_the_requested_gate(self):
+        """An empty editor/environment field is an error, not an absent gate."""
+        package, manifest = self.single_pack()
+        for activate in ([], ["--activate"]):
+            with self.subTest(activate=activate):
+                store = self.root / ("blank-active" if activate else "blank-staging")
+                error = self.command(
+                    "sgn-i18n",
+                    "install",
+                    *activate,
+                    "--pack",
+                    package,
+                    "--root",
+                    store,
+                    "--expected-revision",
+                    "",
+                    ok=False,
+                )
+                self.assertIn("64-character", error)
+                self.assertFalse(store.exists())
+        store = self.root / "blank-explicit"
+        activation = ("activate", "--locale", "es", "--hash", manifest["catalogSha256"], "--root", store)
+        error = self.command("sgn-i18n", *activation, "--expected-revision", "", ok=False)
+        self.assertIn("64-character", error)
+        self.assertFalse(store.exists())
+
+    def test_rejected_revision_does_not_recover_or_delete_a_pending_operation(self):
+        """Package approval is checked before any journal recovery is authorized."""
+        package, manifest = self.single_pack()
+        store = self.root / "store"
+        self.command("pack.py", "install", "--pack", package, "--root", store)
+        pending = store / "state/es/generation-pending"
+        pending.mkdir(parents=True)
+        (store / "history").mkdir()
+        (store / "history/es.json").symlink_to("../active/es/.history.json")
+        (store / "migrations").mkdir()
+        (store / "migrations/es.json").write_text(
+            json.dumps(
+                {
+                    "schema": 1,
+                    "locale": "es",
+                    "mode": "initial",
+                    "generation": "state/es/generation-pending",
+                }
+            )
+        )
+        before = self.footprint(store)
+        activation = ("activate", "--locale", "es", "--hash", manifest["catalogSha256"], "--root", store)
+        error = self.command("sgn-i18n", *activation, "--expected-revision", "b" * 64, ok=False)
+        self.assertIn("source revision mismatch", error)
+        self.assertEqual(self.footprint(store), before)
+        receipt = self.command("sgn-i18n", *activation, "--expected-revision", "a" * 64)
+        self.assertEqual(receipt["active"], manifest["catalogSha256"])
+        self.assertFalse((store / "migrations/es.json").exists())
+
+    def test_doctor_accepts_the_runtime_regional_parent_without_extra_settings(self):
+        """Requested and effective language can differ in a healthy supported setup."""
+        store, _, _ = self.prepared_store()
+        before = self.footprint(store)
+        site, observed = self.language_site(language="es")
+        result = self.diagnose(store, "--locale", "es-AR", "--site", site)
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        self.assertIn("es-AR uses the installed parent language es", result.stdout)
+        self.assertIn("site language response is es", result.stdout)
+        self.assertEqual(
+            observed, [("HEAD", "/breedbase/i18n/runtime.js"), ("HEAD", "/breedbase/i18n/bootstrap.js?lang=es-AR")]
+        )
+        self.assertEqual(self.footprint(store), before)
+        region = self.native_catalog()
+        region["locale"] = "es-AR"
+        source = self.root / "regional.json"
+        source.write_bytes(catalog.json_bytes(region))
+        package = self.root / "regional-pack"
+        self.command("pack.py", "create", "--catalog", source, "--output", package)
+        self.command("pack.py", "install", "--activate", "--pack", package, "--root", store)
+        result = self.diagnose(store, "--locale", "es-AR", "--site", site)
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn("expected es-AR", result.stdout)
 
     def test_json_inputs_are_bounded_and_reject_non_json_numbers(self):
         """Malformed JSON cannot enter a ready pack or exceed the read limit."""
