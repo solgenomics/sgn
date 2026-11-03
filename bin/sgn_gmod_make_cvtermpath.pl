@@ -6,7 +6,7 @@
 
 sgn_gmod_make_cvtermpath.pl
 
-=head1 USAGE 
+=head1 USAGE
 
  perl sgn_gmod_make_cvtermpath.pl -H [dbhost] -D [dbname]  [-vt] -c cvname
  perl sgn_gmod_make_cvtermpath.pl -g [GMODConf_profile] -c cvname
@@ -28,7 +28,7 @@ Verbose output
 
 Trial mode. Do not perform any store operations at all. (Not implemented)
 
-=item -o 
+=item -o
 
 outfile for writing errors and verbose messages (optional)
 
@@ -77,7 +77,7 @@ a transative closure is, please see:
 
   http://www.geneontology.org/GO.database.shtml#graphs
 
-This is a fork of gmod_make_cvtermpaths.pl, originally written by Naama Menda. 
+This is a fork of gmod_make_cvtermpaths.pl, originally written by Naama Menda.
 
 =head1 AUTHOR
 
@@ -159,8 +159,7 @@ if (!$schema || !$db) { die "No schema or dbh is available! \n"; }
 print STDOUT "Connected to database $dbname on host $dbhost.\n" if $verbose;
 ##########
 
-
-if ($opt_o) { open (my $OUT, ">", $opt_o) ||die "can't open error file $opt_o for writing.\n" ; }
+open (my $OUT, ">", $opt_o || '-') ||die "can't open error file $opt_o for writing.\n" ; } # - is STDOUT
 
 my $cv_id;
 warn "select cv_id from cv where name = '$cvname'" if $verbose;
@@ -277,7 +276,7 @@ while(my $cvterm_relationship = $sth_cvterm_relationship->fetchrow_hashref){
   $sot{$cvterm_relationship->{subject_id}}{$cvterm_relationship->{object_id}}{$cvterm_relationship->{type_id}}++;
 }
 
-#populate hash of roots (terms without parents (objects)) and hash of leaves (terms without child terms (subjects)) 
+#populate hash of roots (terms without parents (objects)) and hash of leaves (terms without child terms (subjects))
 foreach my $cvterm (keys %cvterm){
   $root{$cvterm}++ if(!$subject{$cvterm} and  $object{$cvterm});
   $leaf{$cvterm}++ if( $subject{$cvterm} and !$object{$cvterm});
@@ -356,15 +355,15 @@ sub recurse {
           foreach my $s (@$subjects){
               #next if the path was seen (subject-object-type-distance)
               next if $sot{$s}{$object}{$type}{$tdist};
-              if (exists($sot{$s}{$object}) && exists($sot{$object}{$s})) { 
+              if (exists($sot{$s}{$object}) && exists($sot{$object}{$s})) {
                   die " YOU HAVE A CYCLE IN YOUR ONTOLOGY for $s, $object ($type, $tdist)    C8-( \n" ;
               }
               $sot{$s}{$object}{$type}{$tdist}++;
               print $tdist,"\t"x$dist,"\t",$s,"\t" , $object,"\t" ,$type||'transitive',"\n";
 
-              # if type is defined , create a path using it (see the first looping through %leaf keys) 
+              # if type is defined , create a path using it (see the first looping through %leaf keys)
               if($type){
-                  $path = $schema->resultset("Cv::Cvtermpath")->find_or_create( 
+                  $path = $schema->resultset("Cv::Cvtermpath")->find_or_create(
                       {
                           subject_id => $s,
                           object_id  => $object,
@@ -375,7 +374,7 @@ sub recurse {
                   message( "Inserting ($s,$object,$type,$cv_id , $tdist) into cvtermpath...path_id = " . $path->cvtermpath_id(). "\n" );
                   my $ttdist = -1 * $tdist;
 
-                  $path = $schema->resultset("Cv::Cvtermpath")->find_or_create( 
+                  $path = $schema->resultset("Cv::Cvtermpath")->find_or_create(
                       {
                           subject_id => $object,
                           object_id  => $subject,
@@ -388,7 +387,7 @@ sub recurse {
                   message("No type defined! Using default IS_A relationship\n");
                   my $is_a = $schema->resultset("Cv::Cvterm")->search({ name => 'is_a' })->first();
 
-                  $path = $schema->resultset("Cv::Cvtermpath")->find_or_create( 
+                  $path = $schema->resultset("Cv::Cvtermpath")->find_or_create(
                       {
                           subject_id => $s,
                           object_id  => $object,
@@ -398,7 +397,7 @@ sub recurse {
                       }, { key => 'cvtermpath_c1' } , );
                   message("Inserting ($s,$object, $type, " . $is_a->cv_id() . "  , $tdist) into cvtermpath...path_id = " . $path->cvtermpath_id() . "\n" );
 
-                  $path = $schema->resultset("Cv::Cvtermpath")->find_or_create( 
+                  $path = $schema->resultset("Cv::Cvtermpath")->find_or_create(
                       {
                           subject_id => $object,
                           object_id  => $subject,
