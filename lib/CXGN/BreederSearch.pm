@@ -14,8 +14,10 @@ Aimin Yan <ay247@cornell.edu>
 package CXGN::BreederSearch;
 
 use Moose;
+use CXGN::Phenotypes::Summary;
 use Data::Dumper;
 use Try::Tiny;
+use Time::HiRes ();
 
 has 'dbh' => (
     is  => 'rw',
@@ -189,11 +191,15 @@ sub avg_phenotypes_query {
   my @controls = @$controls;
   my $allow_missing = shift;
 
+  return { error => 'Invalid trial ID.' } unless defined($trial_id) && $trial_id =~ /^\d+$/;
+  my $numeric_regex = CXGN::Phenotypes::Summary::numeric_value_regex();
+  my @bind;
   my $select = "SELECT table0.accession_id, table0.accession_name";
   my $from = " FROM (SELECT accession_id, accession_name FROM materialized_phenoview JOIN accessions USING (accession_id) WHERE trial_id = $trial_id GROUP BY 1,2) AS table0";
   for (my $i = 1; $i <= scalar @trait_ids; $i++) {
+    push @bind, $trait_ids[$i-1], $numeric_regex;
     $select .= ",  ROUND( CAST(table$i.trait$i AS NUMERIC), 2)";
-    $from .= " JOIN (SELECT accession_id, accession_name, AVG(value::REAL) AS trait$i FROM materialized_phenoview JOIN accessions USING (accession_id) JOIN phenotype USING (phenotype_id) WHERE trial_id = $trial_id AND trait_id = ? GROUP BY 1,2) AS table$i USING (accession_id)";
+    $from .= " JOIN (SELECT accession_id, accession_name, AVG(value::REAL) AS trait$i FROM materialized_phenoview JOIN accessions USING (accession_id) JOIN phenotype USING (phenotype_id) WHERE trial_id = $trial_id AND trait_id = ? AND phenotype.value ~ ? GROUP BY 1,2) AS table$i USING (accession_id)";
   }
   my $query = $select . $from . " ORDER BY 2";
   if ($allow_missing eq 'true') { $query =~ s/JOIN/FULL OUTER JOIN/g; }
@@ -201,7 +207,7 @@ sub avg_phenotypes_query {
   print STDERR "QUERY: $query\n";
 
   my $h = $self->dbh->prepare($query);
-  $h->execute(@$trait_ids);
+  $h->execute(@bind);
 
   my (@raw_avg_values, @reference_values, @rows_to_scale, @weighted_values);
 
@@ -225,7 +231,7 @@ sub avg_phenotypes_query {
     }
 
     #print STDERR "reference values = @reference_values\n";
-    $h->execute(@$trait_ids);
+    $h->execute(@bind);
     while (my ($id, $name, @avg_values) = $h->fetchrow_array()) {
 
       my @scaled_values = map {sprintf("%.2f", $avg_values[$_] / $reference_values[$_])} 0..$#avg_values;
@@ -331,6 +337,33 @@ Side Effects: Refreshes materialized views
 
 =cut
 
+# Mutation callers need a view built after their commit. A running older
+# refresh is not a queued request for the new state. Retry only that explicit
+# busy case, then use the existing synchronous runner: no detached new worker.
+sub refresh_matviews_after_change {
+    my ($self, $dbhost, $dbname, $dbuser, $dbpass, $view, $refresh_type, $basepath, $timeout) = @_;
+    $timeout = 10 if !defined($timeout);
+    return {refresh_pending => 1, error => 'Invalid refresh wait timeout.'}
+        if ref($timeout) || $timeout !~ /^\d+(?:\.\d+)?$/;
+    my $deadline = Time::HiRes::time() + $timeout;
+    while (1) {
+        my $result;
+        my $ok = eval {
+            $result = $self->refresh_matviews($dbhost, $dbname, $dbuser, $dbpass, $view, $refresh_type, $basepath, 0);
+            1;
+        };
+        return {refresh_pending => 1, error => 'Could not refresh the committed analytical data.'} if !$ok || ref($result) ne 'HASH';
+        if ($result->{busy}) {
+            return {refresh_pending => 1, error => 'Another analytical refresh is still running; the saved change needs a later refresh.'}
+                if Time::HiRes::time() >= $deadline;
+            Time::HiRes::sleep(0.1);
+            next;
+        }
+        return {refresh_pending => 1, error => $result->{error}} if $result->{error};
+        return {success => 1, %$result};
+    }
+}
+
 sub refresh_matviews {
     my $self = shift;
     my $dbhost = shift;
@@ -356,7 +389,7 @@ sub refresh_matviews {
     my $refreshing = $h->fetchrow_array();
 
     if ($refreshing) {
-        return { error => $materialized_view.' update already in progress . . . ' };
+        return { error => $materialized_view.' update already in progress . . . ', busy => 1 };
     }
     else {
         try {

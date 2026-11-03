@@ -3,6 +3,7 @@ package CXGN::BrAPI::FileResponse;
 use Moose;
 use Data::Dumper;
 use Spreadsheet::WriteExcel;
+use Text::CSV;
 
 has 'absolute_file_path' => (
 	isa => 'File::Temp',
@@ -51,59 +52,27 @@ sub get_datafiles {
 }
 
 sub csv {
-	my $self = shift;
-	my $data_array = $self->data;
-	my $file_path = $self->absolute_file_path;
-
-	my $num_col = scalar(@{$data_array->[0]});
-	open(my $fh, ">", $file_path);
-		print STDERR $file_path."\n";
-		foreach my $cols (@$data_array){
-			my $step = 1;
-			for(my $i=0; $i<$num_col; $i++) {
-				if ($cols->[$i]) {
-					print $fh "\"$cols->[$i]\"";
-				} else {
-					print $fh "\"\"";
-				}
-				if ($step < $num_col) {
-					print $fh ",";
-				}
-				$step++;
-			}
-			print $fh "\n";
-		}
-	close $fh;
-	my @datafiles = ($self->absolute_file_uri);
-	return @datafiles;
+    return shift->_delimited(',');
 }
 
 sub tsv {
-	my $self = shift;
-	my $data_array = $self->data;
-	my $file_path = $self->absolute_file_path;
+    return shift->_delimited("\t");
+}
 
-	my $num_col = scalar(@{$data_array->[0]});
-	open(my $fh, ">", $file_path);
-		print STDERR $file_path."\n";
-		foreach my $cols (@$data_array){
-			my $step = 1;
-			for(my $i=0; $i<$num_col; $i++) {
-				if ($cols->[$i]) {
-					print $fh $cols->[$i];
-				} else {
-					print $fh "";
-				}
-				if ($step < $num_col) {
-					print $fh "\t";
-				}
-				$step++;
-			}
-			print $fh "\n";
-		}
-	close $fh;
-	my @datafiles = ($self->absolute_file_uri);
-	return @datafiles;
+sub _delimited {
+    my ($self, $separator) = @_;
+    my $data = $self->data;
+    my $width = @{$data->[0] || []};
+    my $csv = Text::CSV->new({binary=>1, sep_char=>$separator, eol=>"\n",
+        always_quote=>$separator eq ',' ? 1 : 0}) or die Text::CSV->error_diag;
+    open(my $fh, '>:encoding(UTF-8)', $self->absolute_file_path) or die "Cannot create BrAPI data file: $!";
+    for my $row (@$data) {
+        # Keep each existing caller's header width and preserve literal zero.
+        my @values = map {defined($row->[$_]) ? $row->[$_] : ''} 0..$width-1;
+        $csv->print($fh, \@values) or die $csv->error_diag;
+    }
+    close($fh) or die "Cannot close BrAPI data file: $!";
+    return ($self->absolute_file_uri);
 }
 
 sub xls {
@@ -114,10 +83,24 @@ sub xls {
 	my $ss = Spreadsheet::WriteExcel->new($file_path);
 	my $ws = $ss->add_worksheet();
 
+	my $header = $data_array->[0] || [];
 	for (my $line=0; $line< scalar(@$data_array); $line++) {
-		$ws->write_row($line, 0, $data_array->[$line]);
+        for my $column (0..$#{$data_array->[$line]}) {
+            my $value = $data_array->[$line][$column];
+            my $name = $header->[$column] // '';
+            # Design replication is a tag ("01" differs from "1"). Keep real
+            # numeric measurements and the occurrence counter numeric.
+            my $text = $name =~ /(?:_name|Name)$/ ||
+                $name =~ /^(?:replicate|rep_number|design_rep_number|designReplicate|blockNumber|block_number|reject_reason)$/;
+            if (defined($value) && ($line == 0 || $text || $value =~ /^=/)) {
+                $ws->write_string($line, $column, $value);
+            } else {
+                $ws->write($line, $column, $value);
+            }
+        }
 	}
 	$ss ->close();
+    $file_path->flush;
 	my @datafiles = ($self->absolute_file_uri);
 	return @datafiles;
 }

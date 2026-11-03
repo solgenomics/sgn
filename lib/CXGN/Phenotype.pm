@@ -35,6 +35,7 @@ Phenotypes can have different types:
 package CXGN::Phenotype;
 
 use Moose;
+use CXGN::TimeUtils;
 use Data::Dumper;
 use Bio::Chado::Schema;
 use Scalar::Util qw | looks_like_number |;
@@ -372,7 +373,11 @@ sub store {
                 return { success => 1, skip_count => 1, reason => "SKIPPING EMPTY VALUE WITHOUT DELETE_VALUES\n" };
             }
 
-            if ($self->old_value() && ($self->old_value() eq $self->value())) {
+            my $existing_row = $self->schema->resultset('Phenotype::Phenotype')->find({phenotype_id => $self->phenotype_id});
+            die "Observation no longer exists.\n" if !$existing_row;
+            my $same_time = (CXGN::TimeUtils::normalize_db_timestamp($existing_row->get_column('collect_date')) // '') eq (CXGN::TimeUtils::normalize_db_timestamp($self->collect_date) // '');
+            my $same_operator = ($existing_row->get_column('operator') // '') eq ($self->operator // '');
+            if (defined($existing_row->value) && $existing_row->value eq $self->value && $same_time && $same_operator) {
                 #print STDERR "OLD VALUE AND NEW VALUE ARE THE SAME (".$self->value()."). NOT UPDATING\n";
                 return { success => 1, skip_count => 1, previously_stored_skip_count => 1, reason => "NEW AND OLD VALUES ARE IDENTICAL.\n" };
 
@@ -401,11 +406,10 @@ sub store {
                         JOIN nd_experiment_stock using(nd_experiment_id)
                         LEFT JOIN phenome.nd_experiment_md_files using(nd_experiment_id)
                         JOIN stock using(stock_id)
-                        WHERE stock.stock_id=?
-                        AND phenotype.cvalue_id=?";
+                        WHERE phenotype.phenotype_id=?";
 
             my $h = $self->schema->storage->dbh()->prepare($q);
-            $h->execute($self->stock_id, $self->cvterm_id);
+            $h->execute($self->phenotype_id);
 
             while (my ($phenotype_id, $nd_experiment_id, $file_id) = $h->fetchrow_array()) {
                 push @overwritten_values, [ $file_id, $phenotype_id, $nd_experiment_id ];

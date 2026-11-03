@@ -40,6 +40,7 @@ CXGN::Trial::TrialLayoutSearch - Module to get layout information about one or m
 # use strict;
 # use warnings;
 use Moose;
+use CXGN::DB::ReadSnapshot;
 use Try::Tiny;
 use Data::Dumper;
 use SGN::Model::Cvterm;
@@ -407,7 +408,7 @@ sub _include_observations {
         data_level=>$self->data_level,
         plot_list=>$observation_units,
         order_by=>"plot_number",
-        include_timestamp=>1
+        include_timestamp=>1,
     });
     my ($data, $unique_traits) = $phenotypes_search->search();
 
@@ -457,5 +458,13 @@ sub _sql_from_arrayref {
     my $sql = join ("," , @$arrayref);
     return $sql;
 }
+
+# Identity and later live enrichment belong to the same read snapshot. The
+# shared helper leaves a surrounding caller-owned transaction unchanged.
+around 'search' => sub {
+    my ($next,$self,@args)=@_;
+    return CXGN::DB::ReadSnapshot::run($self->bcs_schema, sub {$next->($self,@args)});
+};
+
 
 1;
