@@ -37,6 +37,7 @@ nm529
 use strict;
 use warnings;
 use Moose;
+use CXGN::Phenotypes::RejectedUnits;   # rejected plots are left out of the trait performance
 use Try::Tiny;
 use Data::Dumper;
 use SGN::Model::Cvterm;
@@ -140,6 +141,7 @@ sub search {
             $additional_trial_where
             $additional_accession_where
             $additional_trait_where
+            AND plot.stock_id NOT IN (SELECT stock_id FROM ".CXGN::Phenotypes::RejectedUnits->sql($schema)." rejected_units)
         GROUP BY (((cvterm.name::text || '|'::text) || db.name::text) || ':'::text) || dbxref.accession::text, cvterm.cvterm_id, accession.stock_id, accession.uniquename
         ORDER BY cvterm.name ASC;");
 

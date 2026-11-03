@@ -8440,7 +8440,8 @@ sub drone_imagery_accession_phenotype_histogram_GET : Args(0) {
             trait_list=>[$trait_id],
             plot_list=>[$plot_id],
             include_timestamp=>0,
-            exclude_phenotype_outlier=>0
+            exclude_phenotype_outlier=>0,
+            exclude_rejected=>0   # the clicked plot's own value, shown even when the plot is rejected
         }
     );
     my ($plot_data, $plot_unique_traits) = $plot_phenotypes_search->search();

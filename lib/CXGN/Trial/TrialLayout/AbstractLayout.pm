@@ -387,6 +387,21 @@ sub _get_design_from_trial {
     }
 }
 
+=head2 get_planted_design()
+
+The design without the plots that were not planted (stock property
+not_planted, see CXGN::Trial::AccessionChange). For files to collect data
+in, where those plots have nothing to measure.
+
+=cut
+
+sub get_planted_design {
+    my $self = shift;
+    my $design = $self->get_design();
+    return $design if ref($design) ne 'HASH';
+    return { map { $_ => $design->{$_} } grep { !(ref($design->{$_}) eq 'HASH' && $design->{$_}->{not_planted}) } keys %$design };
+}
+
 sub generate_and_cache_layout {
     my $self = shift;
     print STDERR "TrialLayout generate layout ".localtime."\n";
@@ -496,6 +511,14 @@ sub retrieve_plot_info {
     my $row_number_prop = $stockprop_hash{$self->cvterm_id('row_number')} ? join ',', @{$stockprop_hash{$self->cvterm_id('row_number')}} : undef;
     my $col_number_prop = $stockprop_hash{$self->cvterm_id('col_number')} ? join ',', @{$stockprop_hash{$self->cvterm_id('col_number')}} : undef;
     my $is_blank_prop = $stockprop_hash{$self->cvterm_id('is_blank')} ? join ',', @{$stockprop_hash{$self->cvterm_id('is_blank')}} : undef;
+    # not_planted is added by a database patch, so it may not exist yet
+    my $not_planted_type_id = $self->get_cvterm_hash->{'not_planted'};
+    my $not_planted_prop = ($not_planted_type_id && $stockprop_hash{$not_planted_type_id}) ? join ',', @{$stockprop_hash{$not_planted_type_id}} : undef;
+    # rejected and reject_reason as well (CXGN::Trial::AccessionChange)
+    my $rejected_type_id = $self->get_cvterm_hash->{'rejected'};
+    my $rejected_prop = ($rejected_type_id && $stockprop_hash{$rejected_type_id}) ? join ',', @{$stockprop_hash{$rejected_type_id}} : undef;
+    my $reject_reason_type_id = $self->get_cvterm_hash->{'reject_reason'};
+    my $reject_reason_prop = ($reject_reason_type_id && $stockprop_hash{$reject_reason_type_id}) ? join ',', @{$stockprop_hash{$reject_reason_type_id}} : undef;
     my $well_concentration_prop = $stockprop_hash{$self->cvterm_id('concentration')} ? join ',', @{$stockprop_hash{$self->cvterm_id('concentration')}} : undef;
     my $well_volume_prop = $stockprop_hash{$self->cvterm_id('volume')} ? join ',', @{$stockprop_hash{$self->cvterm_id('volume')}} : undef;
     my $well_dna_person_prop = $stockprop_hash{$self->cvterm_id('dna_person')} ? join ',', @{$stockprop_hash{$self->cvterm_id('dna_person')}} : undef;
@@ -644,6 +667,13 @@ sub retrieve_plot_info {
 	if ($plot_geo_json_prop) {
 	    $design_info{"plot_geo_json"} = decode_stored_json($plot_geo_json_prop);
 	}
+    if ($not_planted_prop) {
+        $design_info{"not_planted"} = $not_planted_prop;
+    }
+    if ($rejected_prop) {
+        $design_info{"rejected"} = $rejected_prop;
+        $design_info{"reject_reason"} = $reject_reason_prop if defined($reject_reason_prop) && length($reject_reason_prop);
+    }
     if ($is_a_control_prop) {
 	    $design_info{"is_a_control"}=$is_a_control_prop;
 	    $unique_controls{$accession_name}=$accession_id;
@@ -892,6 +922,13 @@ sub _retrieve_plots_info_bulk {
 	ncbi_taxonomy_id => 'ncbi_taxonomy_id', facility_identifier => 'facility_identifier', plot_geo_json => 'plot_geo_json',
     );
     my %prop_type_id = map { $_ => $self->cvterm_id($prop_terms{$_}) } keys %prop_terms;
+    # Status vocabulary may not have been migrated on an existing installation.
+    # Match the scalar reader without making the optional terms prerequisites.
+    for my $name (qw(not_planted rejected reject_reason)) {
+        my $type_id = $self->get_cvterm_hash->{$name};
+        $prop_type_id{$name} = $type_id if defined($type_id);
+    }
+
     my $plot_props = $stockprops_of->(\@plot_ids);
     my $accessions = $related->('subject', \@plot_ids, $self->get_relationship_type_ids(), $self->get_source_primary_stock_type_ids(), 'id');
     my $plants = $related->('subject', \@plot_ids, [ $self->cvterm_id('plant_of') ], [ $self->cvterm_id('plant') ], 'stock_id');
@@ -971,6 +1008,14 @@ sub _retrieve_plots_info_bulk {
         $design_info{design_rep_number} = $design_replication->{value};
         $design_info{design_replicate_recorded} = $design_replication->{recorded} ? 1 : 0;
         $design_info{accession_occurrence_ready} = $design_replication->{occurrence_ready} ? 1 : 0;
+        if ($prop{not_planted}) {
+            $design_info{not_planted} = $prop{not_planted};
+        }
+        if ($prop{rejected}) {
+            $design_info{rejected} = $prop{rejected};
+            $design_info{reject_reason} = $prop{reject_reason}
+                if defined($prop{reject_reason}) && length($prop{reject_reason});
+        }
 	if ($prop{plot_geo_json}) {
 	    $design_info{"plot_geo_json"} = decode_stored_json($prop{plot_geo_json});
 	}

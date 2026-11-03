@@ -26,6 +26,18 @@ my @children;
 our($barrier_dir,$writer_number);
 sub touch {open(my $h,'>',$_[0]) or die "$!";close($h)}
 sub await_file {my($path,$seconds)=@_;my $until=time+$seconds;until(-f $path){die "Barrier timeout $path\n" if time>$until;sleep .025}}
+{
+ package AuditStoreSnapshotBarrier;
+ our @ISA=('CXGN::Phenotypes::StorePhenotypes');
+ sub not_planted_units {
+  my $self=shift;my $value=$self->SUPER::not_planted_units(@_);
+  if ($ENV{AUDIT_FORCE_PRELOCK_BARRIER} && (caller(1))[3] eq 'CXGN::Phenotypes::StorePhenotypes::store') {
+   main::touch("$main::barrier_dir/snapshot_$main::writer_number");
+   main::await_file("$main::barrier_dir/snapshots_released",20);
+  }
+  return $value;
+ }
+}
 sub cleanup {
  return unless defined($trial) || defined($trait);
  # Every stock/experiment below belongs to this newly-created, private project.
@@ -70,7 +82,7 @@ my $ran=eval {
    $f->dbh->{InactiveDestroy}=1;
    my $worked=eval {
     my $child=SGN::Test::Fixture->new;
-    my $class=$ENV{AUDIT_FORCE_PRELOCK_BARRIER} ? 'CXGN::Phenotypes::StorePhenotypes' : 'CXGN::Phenotypes::StorePhenotypes';
+    my $class=$ENV{AUDIT_FORCE_PRELOCK_BARRIER} ? 'AuditStoreSnapshotBarrier' : 'CXGN::Phenotypes::StorePhenotypes';
     my $store=$class->new({basepath=>$child->config->{basepath},dbhost=>$child->config->{dbhost},dbname=>$child->config->{dbname},dbuser=>$child->config->{dbuser},dbpass=>$child->config->{dbpass},temp_file_nd_experiment_id=>"$dir/exp_$number",bcs_schema=>$child->bcs_schema,metadata_schema=>$child->metadata_schema,phenome_schema=>$child->phenome_schema,user_id=>41,stock_list=>[$plot_name],trait_list=>[$trait_name],values_hash=>{$plot_name=>{$trait_name=>[[($ENV{AUDIT_IDENTICAL_VALUES} ? 73 : 72+$number),'2030-11-03 10:00:00','janedoe','']]}},has_timestamps=>1,overwrite_values=>0,metadata_hash=>{operator=>'janedoe',date=>'2030-11-03_12:00:00'},composable_validation_check_name=>$child->config->{composable_validation_check_name}});
     my($warning,$error)=$store->verify;die "Verify: $error" if $error;
     touch("$dir/ready_$number");await_file("$dir/start",20);
@@ -85,6 +97,10 @@ my $ran=eval {
  }
  await_file("$dir/ready_1",20);await_file("$dir/ready_2",20);
  pass('both independent writers verified their objects before start');touch("$dir/start");
+ if ($ENV{AUDIT_FORCE_PRELOCK_BARRIER}) {
+  await_file("$dir/snapshot_1",20);await_file("$dir/snapshot_2",20);
+  pass('both actual old store snapshots completed before either write transaction');touch("$dir/snapshots_released");
+ }
  for my $number (1..2) {
   await_file("$dir/result_$number",30);open(my $in,'<',"$dir/result_$number") or die $!;local $/;my $result=JSON::decode_json(<$in>);close($in);
   ok($result->{ok},"actual writer $number finished without storage error") or diag($result->{error});

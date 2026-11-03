@@ -14,6 +14,7 @@ use CXGN::BrAPI::Pagination;
 use CXGN::BrAPI::JSONResponse;
 use Try::Tiny;
 use CXGN::Phenotypes::PhenotypeMatrix;
+use CXGN::Phenotypes::RejectedUnits;
 use CXGN::List::Transform;
 
 extends 'CXGN::BrAPI::v1::Common';
@@ -81,6 +82,7 @@ sub search {
             folder_list=>$folder_ids_arrayref,
             program_list=>$program_ids_arrayref,
             observation_unit_names_list=>$observation_unit_names_list,
+            exclude_rejected=>0,   # a listing of the units: a rejected plot stays, without its values (below)
             limit=>$limit,
             offset=>$offset,
             # # Order by plot_number, account for non-numeric plot numbers
@@ -91,13 +93,16 @@ sub search {
         }
     );
     my ($data, $unique_traits) = $phenotypes_search->search();
+    my $rejected_units = CXGN::Phenotypes::RejectedUnits->ids($self->bcs_schema, [ map { $_->{observationunit_stock_id} } @$data ]);
+    my $unit_status = CXGN::Phenotypes::RejectedUnits->status_details($self->bcs_schema, [map {$_->{observationunit_stock_id}} @$data]);
     # print STDERR Dumper $data;
 
     my @data_window;
     my $total_count = 0;
     foreach my $obs_unit (@$data){
         my @brapi_observations;
-        my $observations = $obs_unit->{observations};
+        # the values of a rejected plot are left out, as in the downloads
+        my $observations = $rejected_units->{ $obs_unit->{observationunit_stock_id} } ? [] : $obs_unit->{observations};
         foreach (@$observations){
             my $obs_timestamp = $_->{collect_date} ? $_->{collect_date} : $_->{timestamp};
             if (defined($start_time) || defined($end_time)) {
@@ -126,10 +131,14 @@ sub search {
             };
         }
         my $entry_type = $obs_unit->{obsunit_is_a_control} ? 'check' : 'test';
+        my $state = $unit_status->{$obs_unit->{observationunit_stock_id}} || {};
         my %info;
         $info{designReplicate} = $obs_unit->{obsunit_design_rep}
             if $obs_unit->{obsunit_design_rep_recorded} || defined($obs_unit->{obsunit_design_rep});
         $info{accessionOccurrence} = $obs_unit->{obsunit_accession_occurrence} if $obs_unit->{obsunit_occurrence_ready};
+        $info{notPlanted} = JSON::true if $state->{not_planted};
+        $info{rejected} = JSON::true if $state->{rejected};
+        $info{rejectReason} = $state->{reject_reason} if defined($state->{reject_reason});
         push @data_window, {
             (%info ? (additionalInfo => \%info) : ()),
             observationUnitDbId => qq|$obs_unit->{observationunit_stock_id}|,

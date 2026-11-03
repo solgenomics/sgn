@@ -54,8 +54,10 @@ sub retrieve {
     my $trial_stock_type = $self->trial_stock_type();
     my $include_plot_order = $self->include_plot_order() && $self->plot_order() && $self->plot_order() ne '' && $self->plot_start() && $self->plot_start() ne '';
 
-    my @possible_cols = ('plant_name','plant_id','subplot_name','subplot_id','plot_name','plot_id','accession_name','accession_id','plot_order','plot_number','block_number','is_a_control','range_number','rep_number','accession_occurrence','row_number','col_number','seedlot_name','seed_transaction_operator','num_seed_per_plot','subplot_number','plant_number','pedigree','location_name','trial_name','year', 'planting_date', 'synonyms','tier','variety','plot_geo_json');
+    my @possible_cols = ('plant_name','plant_id','subplot_name','subplot_id','plot_name','plot_id','accession_name','accession_id','plot_order','plot_number','block_number','is_a_control','range_number','rep_number','accession_occurrence','row_number','col_number','seedlot_name','seed_transaction_operator','num_seed_per_plot','subplot_number','plant_number','pedigree','location_name','trial_name','year', 'planting_date', 'synonyms','tier','variety','plot_geo_json','not_planted','rejected','reject_reason');
 
+    $selected_cols{not_planted} = 1 if grep { $_->{not_planted} } values %design;
+    $selected_cols{rejected} = $selected_cols{reject_reason} = 1 if grep { $_->{rejected} } values %design;
 
     $selected_cols{plot_order} = 1 if $include_plot_order;
 
@@ -89,7 +91,8 @@ sub retrieve {
         my $results = CXGN::Trial->get_sorted_plots($schema, [$self->trial_id], $self->plot_order, $self->plot_start);
         if ( $results->{plots} ) {
             foreach (@{$results->{plots}}) {
-                $design{$_->{plot_number}}->{plot_order} = $_->{order};
+                # plots left out of %design (not planted) are not added back
+                $design{$_->{plot_number}}->{plot_order} = $_->{order} if $design{$_->{plot_number}};
             }
         }
     }
@@ -184,6 +187,10 @@ sub retrieve {
                     push @$line, $design_info->{design_rep_number};
                 } elsif ($c eq 'accession_occurrence') {
                     push @$line, $design_info->{accession_occurrence_ready} ? $design_info->{rep_number} : undef;
+                } elsif ($c eq 'not_planted' || $c eq 'rejected') {
+                    push @$line, $design_info->{$c} ? 1 : 0;
+                } elsif ($c eq 'reject_reason') {
+                    push @$line, $design_info->{$c} // '';
                 } elsif ($c eq 'tier'){
                     my $row = $design_info->{"row_number"} ? $design_info->{"row_number"} : '';
                     my $col = $design_info->{"col_number"} ? $design_info->{"col_number"} : '';

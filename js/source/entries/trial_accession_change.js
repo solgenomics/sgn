@@ -2,20 +2,23 @@ import "../legacy/jquery.js";
 
 /**
  * Changes of what grows on the plots of a field trial: the Change Accessions
- * upload (a file of what was planted) and Replace Accession (Field Layout
- * Tools -> Edit Field Layout).
+ * upload (a file of what was planted, which can also mark plots as not
+ * planted or as rejected) and Replace Accession (Field Layout Tools -> Edit
+ * Field Layout).
  *
  * The endpoints answer with a summary (see CXGN::Trial::AccessionChange::summary()):
  * with preview=1 what would change ({ preview: summary }), otherwise what changed
  * ({ success: 1, ...summary }). Otherwise they answer { error }, or { warning }
  * when a curator has to confirm a change of a trial that has phenotypes or seedlots.
+ * Errors about phenotypes of plots marked as not planted come with
+ * not_planted_phenotypes, the number of those values.
  */
 
 /**
  * The lines that describe a summary, without HTML.
  * @param {Object} summary - the summary (or the preview) from the server
  * @param {boolean} planned - true for a preview (what will change), false for what changed
- * @param {number} [maxItems=10] - how many plots to list for renames and check marks
+ * @param {number} [maxItems=10] - how many plots to list for renames, check marks and planting
  * @returns {string[]}
  */
 export function summaryLines(summary, planned, maxItems = 10) {
@@ -30,9 +33,38 @@ export function summaryLines(summary, planned, maxItems = 10) {
     if (planned && summary.rows_read !== undefined) {
         lines.push(`${summary.rows_read} plot(s) read from the file.`);
     }
-    const changes = summary.changes || [];
-    lines.push(`${summary.changed} plot(s) ${planned ? "will get" : "got"} another accession${changes.length ? ":" : "."}`);
-    list(changes, (c) => `${c.plot_name}: ${c.old_stock_name} -> ${c.new_stock_name}`);
+    const planting = summary.planting || [];
+    const rejections = summary.rejections || [];
+    if (summary.changed || (!planting.length && !rejections.length)) {
+        const changes = summary.changes || [];
+        lines.push(`${summary.changed} plot(s) ${planned ? "will get" : "got"} another accession${changes.length ? ":" : "."}`);
+        list(changes, (c) => `${c.plot_name}: ${c.old_stock_name} -> ${c.new_stock_name}`);
+    }
+    const notPlanted = planting.filter((p) => p.not_planted);
+    const planted = planting.filter((p) => !p.not_planted);
+    if (notPlanted.length) {
+        lines.push(`${notPlanted.length} plot(s) ${planned ? "will be" : "were"} marked as not planted:`);
+        list(notPlanted, (p) => p.plot_name);
+    }
+    if (planted.length) {
+        lines.push(`${planted.length} plot(s) ${planned ? "will be" : "were"} marked as planted again:`);
+        list(planted, (p) => p.plot_name);
+    }
+    const rejected = rejections.filter((r) => r.rejected && !r.was_rejected);
+    const newReason = rejections.filter((r) => r.rejected && r.was_rejected);
+    const unrejected = rejections.filter((r) => !r.rejected);
+    if (rejected.length) {
+        lines.push(`${rejected.length} plot(s) ${planned ? "will be" : "were"} rejected (the data stay, but are left out of downloads and analyses):`);
+        list(rejected, (r) => r.plot_name + (r.reject_reason ? ` (${r.reject_reason})` : ""));
+    }
+    if (newReason.length) {
+        lines.push(`${newReason.length} rejected plot(s) ${planned ? "will get" : "got"} another reject reason:`);
+        list(newReason, (r) => `${r.plot_name}: ${r.reject_reason || "(none)"}`);
+    }
+    if (unrejected.length) {
+        lines.push(`${unrejected.length} plot(s) ${planned ? "will be" : "are"} no longer rejected:`);
+        list(unrejected, (r) => r.plot_name);
+    }
     if (summary.replicates_changed) {
         lines.push(`${summary.replicates_changed} accession occurrence number(s) ${planned ? "will be" : "were"} numbered again by plot number; recorded design groups stay unchanged.`);
     }
@@ -67,6 +99,9 @@ export function summaryLines(summary, planned, maxItems = 10) {
         list(taken, (t) => `${t.seedlot_name} (was linked to ${t.plot_name})`);
     }
     (summary.entry_numbers || []).forEach((e) => lines.push(`${e.stock_name}${planned ? " will get" : " got"} entry number ${e.entry_number}.`));
+    if (!planned && summary.phenotypes_deleted) {
+        lines.push(`${summary.phenotypes_deleted} phenotype value(s) were deleted.`);
+    }
     (summary.warnings || []).forEach((w) => lines.push("Note: " + w));
     return lines;
 }
@@ -81,6 +116,8 @@ export function changedPlots(summary) {
     const names = [
         ...(summary.changes || []).map((c) => c.plot_name),
         ...(summary.renamed || []).map((r) => r.old_name),
+        ...(summary.planting || []).map((p) => p.plot_name),
+        ...(summary.rejections || []).map((r) => r.plot_name),
         ...(summary.checks || []).map((c) => c.plot_name),
         ...(summary.seedlots || []).flatMap((s) => [s.from_plot_name, s.plot_name]),
     ];
@@ -127,7 +164,7 @@ export function renameByDefault(hasPhenotypes) {
  */
 export function nothingChanges(summary) {
     return !summary.changed && !summary.replicates_changed && !summary.phenotypes_deleted
-        && !(summary.renamed || []).length
+        && !(summary.planting || []).length && !(summary.rejections || []).length && !(summary.renamed || []).length
         && !(summary.checks || []).length && !(summary.entry_numbers || []).length
         && !(summary.seedlots || []).length;
 }

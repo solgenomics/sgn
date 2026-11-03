@@ -3,6 +3,7 @@ package SGN::Controller::AJAX::BreedersToolbox;
 
 use Moose;
 use CXGN::Phenotypes::Summary;
+use CXGN::Phenotypes::RejectedUnits;
 
 use URI::FromHash 'uri';
 use Data::Dumper;
@@ -337,8 +338,9 @@ sub progress : Path('/ajax/progress') Args(0) {
     my $schema = $c->dbic_schema("Bio::Chado::Schema", undef, $sp_person_id);
     my $dbh = $schema->storage->dbh();
 
+    my $not_rejected = CXGN::Phenotypes::RejectedUnits->not_rejected_sql($schema, 'nes.stock_id');
     my $numeric_regex = CXGN::Phenotypes::Summary::numeric_value_regex();
-    my $q = "select projectprop.value, avg(phenotype.value::REAL), stddev(phenotype.value::REAL),count(*) from phenotype join cvterm on(cvalue_id=cvterm_id) join nd_experiment_phenotype using(phenotype_id) join nd_experiment_project using(nd_experiment_id) join nd_experiment_stock nes USING(nd_experiment_id) join projectprop using(project_id)  where cvterm.cvterm_id=? and phenotype.value ~ ? and projectprop.type_id=(SELECT cvterm_id FROM cvterm where name='project year') group by projectprop.type_id, projectprop.value order by projectprop.value";
+    my $q = "select projectprop.value, avg(phenotype.value::REAL), stddev(phenotype.value::REAL),count(*) from phenotype join cvterm on(cvalue_id=cvterm_id) join nd_experiment_phenotype using(phenotype_id) join nd_experiment_project using(nd_experiment_id) join nd_experiment_stock nes USING(nd_experiment_id) join projectprop using(project_id)  where cvterm.cvterm_id=? and phenotype.value ~ ? and projectprop.type_id=(SELECT cvterm_id FROM cvterm where name='project year') AND $not_rejected group by projectprop.type_id, projectprop.value order by projectprop.value";
 
     my $h = $dbh->prepare($q);
 

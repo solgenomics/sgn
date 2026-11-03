@@ -51,6 +51,7 @@ use Data::Dumper;
 use SGN::Model::Cvterm;
 use CXGN::Trial::DesignReplication;
 use CXGN::Stock::StockLookup;
+use CXGN::Phenotypes::RejectedUnits;
 use CXGN::Trial;
 use CXGN::Project;
 use CXGN::Trial::TrialLayout;
@@ -132,6 +133,14 @@ has 'exclude_phenotype_outlier' => (
     isa => 'Bool|Undef',
     is => 'ro',
     default => 0
+);
+
+# plots that are rejected (CXGN::Trial::AccessionChange), with their plants, subplots and
+# tissue samples, are left out unless asked otherwise (see CXGN::Phenotypes::RejectedUnits)
+has 'exclude_rejected' => (
+    isa => 'Bool|Undef',
+    is => 'ro',
+    default => 1
 );
 
 # Native trial-page filters select calendar days. BrAPI callers explicitly
@@ -391,6 +400,7 @@ sub search {
             ) AS not_outliers
             ON not_outliers.phenotype_id = nd_experiment_phenotype.phenotype_id"
     };
+    my $rejected_sql = $self->exclude_rejected ? " LEFT JOIN ".CXGN::Phenotypes::RejectedUnits->sql($schema)." AS rejected_units ON rejected_units.stock_id = observationunit.stock_id " : '';
 
     my $from_clause = " FROM stock as observationunit
       LEFT JOIN stock_relationship ON (observationunit.stock_id=stock_relationship.subject_id) AND stock_relationship.type_id IN ($analysis_instance_of_type_id, $plot_of_type_id, $plant_of_type_id, $subplot_of_type_id, $tissue_sample_of_type_id)
@@ -407,6 +417,7 @@ sub search {
       LEFT JOIN nd_experiment_phenotype ON (nd_experiment_phenotype.nd_experiment_id=nd_experiment_stock.nd_experiment_id)
       LEFT JOIN phenotype USING(phenotype_id)
       $phenotypeprop_sql
+      $rejected_sql
       LEFT JOIN cvterm ON (phenotype.cvalue_id=cvterm.cvterm_id)
       LEFT JOIN cvtermsynonym ON (cvterm.cvterm_id = cvtermsynonym.cvterm_id)
       LEFT JOIN dbxref ON (cvterm.dbxref_id = dbxref.dbxref_id)
@@ -656,6 +667,7 @@ sub search {
         OR observationunit.type_id = $subplot_type_id
         OR observationunit.type_id = $tissue_sample_type_id)"; #plots AND plants AND subplots AND tissue_samples
     }
+    push @where_clause, "rejected_units.stock_id IS NULL" if $self->exclude_rejected;
 
     my $where_clause = " WHERE " . (join (" AND " , @where_clause));
 

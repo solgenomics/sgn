@@ -151,6 +151,13 @@ has 'exclude_phenotype_outlier' => (
     default => 0
 );
 
+# rejected plots (CXGN::Trial::AccessionChange) and their plants and samples are left out unless asked otherwise
+has 'exclude_rejected' => (
+    isa => 'Bool|Undef',
+    is => 'ro',
+    default => 1
+);
+
 has 'dataset_excluded_outliers' => (
     isa => 'ArrayRef[Int]|Undef',
     is => 'rw',
@@ -265,6 +272,7 @@ sub get_phenotype_matrix {
             subplot_list=>$self->subplot_list,
             include_timestamp=>$include_timestamp,
             exclude_phenotype_outlier=>$self->exclude_phenotype_outlier,
+            exclude_rejected=>$self->exclude_rejected,
             dataset_excluded_outliers=>$self->dataset_excluded_outliers,
             trait_contains=>$self->trait_contains,
             phenotype_min_value=>$self->phenotype_min_value,

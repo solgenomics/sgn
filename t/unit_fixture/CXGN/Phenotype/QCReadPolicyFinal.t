@@ -40,7 +40,8 @@ sub search {
 }
 sub values_at {
     my(%args)=@_;
-    my($rows)=search('Native',$plots[1],$trait_a,include_dateless_items=>0,%args);
+    # Exercise exact instants explicitly; native trial-page filters default to calendar days.
+    my($rows)=search('Native',$plots[1],$trait_a,date_range_mode=>'timestamp',include_dateless_items=>0,%args);
     return [sort { $a <=> $b } map {0+$_->{phenotype_value}} grep {defined $_->{phenotype_value}} @$rows];
 }
 {package QCReadPolicyDbc;sub dbh {$_[0]{dbh}}}
@@ -100,6 +101,32 @@ my $ran=eval {
         my $ok=eval{values_at(start_date=>'invalid timestamp',end_date=>undef);1};
         ok(!$ok,'invalid timestamp is rejected before querying');
         is(($dbh->selectrow_array('SELECT 1'))[0],1,'invalid bound does not abort the database transaction');
+    };
+    subtest 'Rejected measurements disappear from exact export and analytical stock routes; source and treatments stay' => sub {
+        my $treatment=SGN::Model::Cvterm->get_cvterm_row_from_trait_name($s,'irrigation|EXPERIMENT_TREATMENT:0000001');
+        ok($treatment,'fixture provides standard design treatment');
+        measurement($plots[0],$treatment->cvterm_id,'yes',undef);
+        CXGN::Trial::AccessionChange->new({schema=>$s,trial_id=>$trial})->apply([{plot_id=>$plots[0],rejected=>1,reject_reason=>'read policy test'}],{curator=>1,rename_plots=>'none'});
+        my $name=$s->resultset('Stock::Stock')->find($plots[0])->name;
+        my $trait=SGN::Model::Cvterm::get_trait_from_cvterm_id($s,$trait_a,'extended');
+        my $treatment_name=SGN::Model::Cvterm::get_trait_from_cvterm_id($s,$treatment->cvterm_id,'extended');
+        my $exact=CXGN::Phenotypes::Exact->new({bcs_schema=>$s,trial_id=>$trial})->search;
+        ok(!exists $exact->{$trait}{$name},'exact measured export omits rejected value');
+        is($exact->{$treatment_name}{$name},'yes','exact design treatment stays available');
+        my $raw=CXGN::Phenotypes::Exact->new({bcs_schema=>$s,trial_id=>$trial,exclude_rejected=>0})->search;
+        is($raw->{$trait}{$name},10,'explicit raw exact read preserves original value');
+        for my $stock_id ($plots[0],$s->resultset('Stock::StockRelationship')->find({subject_id=>$plots[0],type_id=>term('plot_of','stock_relationship')})->object_id) {
+            my $c=bless {schema=>$s,dbc=>bless({dbh=>$dbh},'QCReadPolicyDbc'),stash=>{stock=>CXGN::Chado::Stock->new($s,$stock_id)}},'QCReadPolicyContext';
+            SGN::Controller::AJAX::Stock->get_phenotypes_by_stock_and_trial($c,$trial);
+            is(scalar @{$c->stash->{rest}{data}},0,'trial analytical stock table excludes rejected plot and accession values');
+            SGN::Controller::AJAX::Stock->get_stock_trait_list($c);
+            is(scalar @{$c->stash->{rest}{data}},0,'actual legacy-wrapper trait-list route uses the filtered local analytical model');
+        }
+        my $valid=bless {schema=>$s,dbc=>bless({dbh=>$dbh},'QCReadPolicyDbc'),stash=>{stock=>CXGN::Chado::Stock->new($s,$plots[1])}},'QCReadPolicyContext';
+        SGN::Controller::AJAX::Stock->get_stock_trait_list($valid);
+        my($row)=grep {$_->[0]=~m{/cvterm/$trait_a/view}} @{$valid->stash->{rest}{data}};
+        ok($row,'valid direct stock performance stays visible');
+        is(0+$row->[4],4,'formatted stock observation count is preserved by the shared analytical adapter');
     };
     subtest 'Strict numeric means accept signed zero/exponent values and safely skip comma text' => sub {
         my $base=$s->resultset('Cv::Cvterm')->find($trait_a);

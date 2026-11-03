@@ -52,6 +52,11 @@ my $ran = eval {
     })->save_trial;
     die 'Native trial creation failed: '.encode_json($created) if !$created->{trial_id};
     my @plots = map { $schema->resultset('Stock::Stock')->find({uniquename=>"${prefix}_P$_"}) } 1..3;
+    for my $property ([$plots[1], 'not_planted', 1], [$plots[2], 'rejected', 1], [$plots[2], 'reject_reason', 'reader parity fixture']) {
+        $property->[0]->create_related('stockprops', {
+            type_id=>term($property->[1], 'stock_property'), value=>$property->[2], rank=>0,
+        });
+    }
     # Qualify the actual object written by Transaction, then both documented
     # database encodings. Byte-upgraded JSON is not a nested JSON string.
     my $packet = $schema->resultset('Stock::StockRelationship')->find({
@@ -75,7 +80,7 @@ my $ran = eval {
         my $bulk = $layout->generate_and_cache_layout;
         my %scalar;
         $layout->retrieve_plot_info($_, \%scalar) for @{$layout->_get_plots};
-        my @fields = qw(plot_name plot_id accession_name accession_id plot_number block_number row_number col_number rep_number range_number design_rep_number design_replicate_recorded accession_occurrence_ready seedlot_name num_seed_per_plot weight_gram_seed_per_plot);
+        my @fields = qw(plot_name plot_id accession_name accession_id plot_number block_number row_number col_number rep_number range_number design_rep_number design_replicate_recorded accession_occurrence_ready not_planted rejected reject_reason seedlot_name num_seed_per_plot weight_gram_seed_per_plot);
         for my $number (1..3) {
             is_deeply(
                 [map {exists($bulk->{$number}{$_}) ? [1, $bulk->{$number}{$_}] : [0]} @fields],
@@ -97,6 +102,7 @@ my $ran = eval {
                 [map {exists($bulk->{$number}{$_}) ? [1,$bulk->{$number}{$_}] : [0]} @fields],
                 "$storage cached JSON retains the addressed metadata at position$number");
         }
+        ok($bulk->{2}{not_planted} && $bulk->{3}{rejected}, 'bulk cache retains the independent plot flags');
     }
     1;
 };

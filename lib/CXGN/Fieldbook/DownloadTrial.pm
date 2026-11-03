@@ -216,7 +216,8 @@ sub download {
         all_stats => $self->all_stats,
         use_synonyms => $self->use_synonyms,
         selected_trait_ids => $self->selected_trait_ids,
-        trial_stock_type => $self->trial_stock_type
+        trial_stock_type => $self->trial_stock_type,
+        exclude_not_planted => 1,
     });
     my $output = $trial_layout_download->get_layout_output();
     if ($output->{error_messages}){
@@ -240,7 +241,7 @@ sub download {
     my $plot_name_col = 0;
     my %text_column = map { $_ => 1 } grep {
         my $header = $output_array[0][$_] // '';
-        $header =~ /_name$/ || $header eq 'rep_number' || $header eq 'design_rep_number' || $header eq 'block_number';
+        $header =~ /_name$/ || $header eq 'reject_reason' || $header eq 'rep_number' || $header eq 'design_rep_number' || $header eq 'block_number';
     } 0 .. $#{ $output_array[0] || [] };
     foreach my $l (@output_array){
         my $col_num = 0;

@@ -14,10 +14,11 @@ my $trial=$schema->resultset('Project::Project')->find({name=>'test_trial'})->pr
 my $plot=$schema->resultset('Stock::Stock')->find({uniquename=>'test_trial210'})->stock_id;
 my $plotof=SGN::Model::Cvterm->get_cvterm_row($schema,'plot_of','stock_relationship')->cvterm_id;
 my $original_acc=$schema->resultset('Stock::StockRelationship')->find({subject_id=>$plot,type_id=>$plotof})->object_id;
+my %type=map {$_=>SGN::Model::Cvterm->get_cvterm_row($schema,$_,'stock_property')->cvterm_id} qw(rejected reject_reason not_planted);
 sub prop {
  my($name,$value)=@_;
- my $rs=$schema->resultset('Stock::Stockprop')->search({stock_id=>$plot,type_id=>SGN::Model::Cvterm->get_cvterm_row($schema,$name,'stock_property')->cvterm_id});
- if(@_>1){$rs->delete; $rs->create({stock_id=>$plot,type_id=>SGN::Model::Cvterm->get_cvterm_row($schema,$name,'stock_property')->cvterm_id,value=>$value,rank=>0}) if defined $value;}
+ my $rs=$schema->resultset('Stock::Stockprop')->search({stock_id=>$plot,type_id=>$type{$name}});
+ if(@_>1){$rs->delete; $rs->create({stock_id=>$plot,type_id=>$type{$name},value=>$value,rank=>0}) if defined $value;}
  my $row=$rs->first; return $row?$row->value:undef;
 }
 sub ac { CXGN::Trial::AccessionChange->new({schema=>$schema,trial_id=>$trial}) }
@@ -30,6 +31,20 @@ sub scenario {
   ok($ok,'scenario completed and rolled back') or diag($err);
  };
 }
+scenario 'A preview must notice a rejection reason edited by another operator'=>sub {
+ prop('rejected',1); prop('reject_reason','initial reason');
+ my $changes=[{plot_id=>$plot,rejected=>1,reject_reason=>'my reviewed reason'}];
+ my $svc=ac(); my $options={rename_plots=>'none'};
+ my $before=$svc->plan($changes,$options);
+ is_deeply($before->{errors},[],'initial preview valid');
+ my $digest=$svc->plan_digest($before);
+ prop('reject_reason','another operator correction');
+ my $after=$svc->plan($changes,$options);
+ isnt($svc->plan_digest($after),$digest,'preview digest changes with the old reason');
+ my $ok=eval {$svc->apply($changes,{%$options,plan_digest=>$digest});1};
+ ok(!$ok,'stale preview refused');
+ is(prop('reject_reason'),'another operator correction','other operator reason retained');
+};
 scenario 'A preview must notice a plot label edited by another operator'=>sub {
  my $changes=[{plot_id=>$plot,new_stock_id=>$original_acc,new_plot_name=>'audit_reviewed_plot_label'}];
  my $svc=ac(); my $options={rename_plots=>'none'};
@@ -49,6 +64,22 @@ scenario 'Two active accessions sharing a name must require an explicit identity
  my $plan=ac()->plan([{plot_id=>$plot,new_stock_name=>'audit_duplicate_name'}],{rename_plots=>'none'});
  ok(@{$plan->{errors}}>0,'ambiguous name refused instead of choosing the lowest stock ID');
  diag('Chosen stock ID: '.($plan->{changes}->[0]->{new_stock_id}//'<none>').'; candidate IDs: '.join(',',map {$_->stock_id} @stocks));
+};
+scenario 'Invalid boolean must not silently remove a rejection'=>sub {
+ prop('rejected',1); prop('reject_reason','confirmed flooding');
+ my $plan=ac()->plan([{plot_id=>$plot,rejected=>'perhaps'}],{rename_plots=>'none'});
+ ok(@{$plan->{errors}}>0,'invalid boolean refused at service boundary');
+ diag('Planned rejection changes: '.encode_json($plan->{rejections}));
+};
+scenario 'Omitted, empty and false planting flags have distinct meanings'=>sub {
+ prop('not_planted',1);
+ my $svc=ac();
+ for my $change ({plot_id=>$plot,new_stock_id=>$original_acc},{plot_id=>$plot,new_stock_id=>$original_acc,not_planted=>undef},{plot_id=>$plot,new_stock_id=>$original_acc,not_planted=>''}) {
+  my $p=$svc->plan([$change],{rename_plots=>'none'});
+  is_deeply($p->{errors},[],'valid no-op'); is_deeply($p->{planting},[],'missing or empty leaves status intact');
+ }
+ my $p=$svc->plan([{plot_id=>$plot,not_planted=>0}],{rename_plots=>'none'});
+ is_deeply([map {$_->{not_planted}} @{$p->{planting}}],[0],'explicit false restores planted status');
 };
 scenario 'Writes use actual program membership, not a submitted study name'=>sub {
  my $people=$schema->storage->dbh;

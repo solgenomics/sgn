@@ -16,6 +16,7 @@ use CXGN::Trial::AccessionChange;
 use HTML::Entities qw(encode_entities);
 use JSON;
 use CXGN::Phenotypes::PhenotypeMatrix;
+use CXGN::Phenotypes::RejectedUnits;
 use CXGN::Phenotypes::Summary;
 use CXGN::Cross;
 use CXGN::Phenotypes::TrialPhenotype;
@@ -388,6 +389,13 @@ sub phenotype_summary : Chained('trial') PathPart('phenotypes') Args(0) {
     my $rel_type_id;
     my $total_complete_number;
     # print STDERR "trial phenotypes: START DATE: $start_date. END DATE: $end_date, INCLUDE DATELESS $include_dateless_items, DISPLAY = $display\n";
+    # the units of the trial, without those of rejected plots (CXGN::Trial::AccessionChange),
+    # whose values are left out of the summary too; a unit is [ stock_id, name ]
+    my $count_not_rejected = sub {
+        my $units = shift;
+        my $rejected = CXGN::Phenotypes::RejectedUnits->ids($schema, [ map { $_->[0] } @$units ]);
+        return scalar(grep { !$rejected->{ $_->[0] } } @$units);
+    };
     if ($display eq 'plots') {
         if ($group_by_accession) {
             $stock_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'plot', 'stock_type')->cvterm_id();
@@ -399,7 +407,7 @@ sub phenotype_summary : Chained('trial') PathPart('phenotypes') Args(0) {
             $stock_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'plot', 'stock_type')->cvterm_id();
             $rel_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'plot_of', 'stock_relationship')->cvterm_id();
             my $plots = $c->stash->{trial}->get_plots();
-            $total_complete_number = scalar (@$plots);
+            $total_complete_number = $count_not_rejected->($plots);
         }
     }
     if ($display eq 'plants') {
@@ -413,14 +421,14 @@ sub phenotype_summary : Chained('trial') PathPart('phenotypes') Args(0) {
             $stock_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'plant', 'stock_type')->cvterm_id();
             $rel_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'plant_of', 'stock_relationship')->cvterm_id();
             my $plants = $c->stash->{trial}->get_plants();
-            $total_complete_number = scalar (@$plants);
+            $total_complete_number = $count_not_rejected->($plants);
         }
     }
     if ($display eq 'subplots') {
         $stock_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'subplot', 'stock_type')->cvterm_id();
         $rel_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'subplot_of', 'stock_relationship')->cvterm_id();
         my $subplots = $c->stash->{trial}->get_subplots();
-        $total_complete_number = scalar (@$subplots);
+        $total_complete_number = $count_not_rejected->($subplots);
     }
     if ($display eq 'tissue_samples') {
         if ($group_by_accession) {
@@ -433,7 +441,7 @@ sub phenotype_summary : Chained('trial') PathPart('phenotypes') Args(0) {
             $stock_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'tissue_sample', 'stock_type')->cvterm_id();
             $rel_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'tissue_sample_of', 'stock_relationship')->cvterm_id();
             my $tissue_samples = $c->stash->{trial}->get_tissue_samples();
-            $total_complete_number = scalar (@$tissue_samples);
+            $total_complete_number = $count_not_rejected->($tissue_samples);
         }
     }
     if ($display eq 'analysis_instance') {
@@ -545,6 +553,9 @@ sub phenotype_summary : Chained('trial') PathPart('phenotypes') Args(0) {
 
     my $is_grouped = $select_clause_additional || $group_by_treatments;
 
+    # rejected plots (CXGN::Trial::AccessionChange) are left out, as in the downloads: from the values and from the totals
+    my $rejected_units_sql = CXGN::Phenotypes::RejectedUnits->sql($schema);
+
     # This is where we get group totals for treatments, accessions, and treatments+accessions
     if ($is_grouped) {
         my $group_by_clause = "$group_by_additional $treatment_group_by";
@@ -560,11 +571,13 @@ sub phenotype_summary : Chained('trial') PathPart('phenotypes') Args(0) {
             JOIN nd_experiment_project USING(nd_experiment_id)
             JOIN stock_relationship ON plot.stock_id = stock_relationship.subject_id
             JOIN stock AS accession ON accession.stock_id = stock_relationship.object_id
+            LEFT JOIN $rejected_units_sql AS rejected_units ON rejected_units.stock_id = plot.stock_id
             $treatment_join
             WHERE project_id                = ?
             AND stock_relationship.type_id  = ?
             AND plot.type_id                = ?
             AND accession.type_id           = ?
+            AND rejected_units.stock_id IS NULL
             GROUP BY $group_by_clause";
 
         my $hg = $dbh->prepare($qg);
@@ -602,6 +615,7 @@ sub phenotype_summary : Chained('trial') PathPart('phenotypes') Args(0) {
         JOIN dbxref     ON cvterm.dbxref_id   = dbxref.dbxref_id
         JOIN db         ON dbxref.db_id       = db.db_id
         JOIN stock     AS plot      USING (stock_id)
+        LEFT JOIN $rejected_units_sql AS rejected_units ON rejected_units.stock_id = plot.stock_id
         JOIN stock_relationship  ON plot.stock_id   = stock_relationship.subject_id
         JOIN stock     AS accession ON accession.stock_id = stock_relationship.object_id
         $treatment_join
@@ -610,6 +624,7 @@ sub phenotype_summary : Chained('trial') PathPart('phenotypes') Args(0) {
         AND stock_relationship.type_id  = ?
         AND plot.type_id                = ?
         AND accession.type_id           = ?
+        AND rejected_units.stock_id IS NULL
         AND db.name NOT LIKE '\%TREATMENT\%'
         $date_params
         GROUP BY trait, cvterm.cvterm_id $group_by_additional $treatment_group_by
@@ -706,6 +721,7 @@ sub phenotype_summary : Chained('trial') PathPart('phenotypes') Args(0) {
         JOIN dbxref     ON cvterm.dbxref_id   = dbxref.dbxref_id
         JOIN db         ON dbxref.db_id       = db.db_id
         JOIN stock     AS plot      USING (stock_id)
+        LEFT JOIN $rejected_units_sql AS rejected_units ON rejected_units.stock_id = plot.stock_id
         JOIN stock_relationship  ON plot.stock_id   = stock_relationship.subject_id
         JOIN stock     AS accession ON accession.stock_id = stock_relationship.object_id
         $treatment_join
@@ -713,6 +729,7 @@ sub phenotype_summary : Chained('trial') PathPart('phenotypes') Args(0) {
         AND stock_relationship.type_id  = ?
         AND plot.type_id                = ?
         AND accession.type_id           = ?
+        AND rejected_units.stock_id IS NULL
         AND db.name NOT LIKE '\%TREATMENT\%'
         $date_params
         $exclude_numeric_trait_ids
@@ -2384,14 +2401,15 @@ sub trial_plot_gps_upload : Chained('trial') PathPart('upload_plot_gps') Args(0)
     $c->stash->{rest} = { success => 1 };
 }
 
-# Changes the accessions of plots from a file: plot_name, accession_name, and
-# optionally new_plot_name and seedlot_name (the seed transactions follow the
-# packets anyway). Other
+# Changes the accessions of plots, marks plots as not planted or as rejected,
+# from a file: plot_name, accession_name, and optionally new_plot_name,
+# not_planted, rejected, reject_reason and seedlot_name (the seed
+# transactions follow the packets anyway). Other
 # columns are ignored, so a downloaded layout or planting order file (Download
 # Plot Order, whose border and gap rows are skipped) can be corrected and
 # uploaded; uploading it again changes nothing.
 # Args: 'check' (curators get a warning for trials with phenotypes) or 'override'.
-# params: keep_plot_names, preview (1 to get the plan only),
+# params: keep_plot_names, delete_phenotypes, preview (1 to get the plan only),
 #   override (1, the same as the Arg 'override')
 sub trial_change_plot_accessions_upload : Chained('trial') PathPart('change_plot_accessions_using_file') Args(1) {
     my $self = shift;
@@ -2491,6 +2509,9 @@ sub trial_change_plot_accessions_upload : Chained('trial') PathPart('change_plot
         plot_name => $_,
         new_stock_name => $parsed_data->{$_}->{new_accession_name},
         new_plot_name => $parsed_data->{$_}->{new_plot_name},
+        not_planted => $parsed_data->{$_}->{not_planted},
+        rejected => $parsed_data->{$_}->{rejected},
+        reject_reason => $parsed_data->{$_}->{reject_reason},
         seedlot_name => $parsed_data->{$_}->{seedlot_name},
     } } keys %$parsed_data;
 
@@ -3149,8 +3170,10 @@ sub accession_change_defaults : Chained('trial') PathPart('accession_change_defa
 
 # Changes the stock of plots (or wells) with CXGN::Trial::AccessionChange and
 # puts the outcome in the REST response: with $preview the plan, otherwise
-# success and a summary of what changed, or why nothing was changed. The
-# materialized views are refreshed after a change. With $html_errors the errors are HTML-escaped
+# success and a summary of what changed, or why nothing was changed. A preview
+# that fails because plots marked as not planted have phenotypes also has
+# not_planted_phenotypes, the number of those values. The materialized views
+# are refreshed after a change. With $html_errors the errors are HTML-escaped
 # and joined with <br>. A user who is not a curator cannot change plots with phenotypes or
 # with samples in other trials (see the option curator of CXGN::Trial::AccessionChange).
 sub _change_trial_stocks {
@@ -3172,6 +3195,7 @@ sub _change_trial_stocks {
         my $plan = $accession_change->plan($changes, $options);
         if (@{$plan->{errors}}) {
             $c->stash->{rest} = { error => $format_errors->(@{$plan->{errors}}) };
+            $c->stash->{rest}->{not_planted_phenotypes} = $plan->{not_planted_phenotypes} if $plan->{not_planted_phenotypes};
             return;
         }
         $c->stash->{rest} = { preview => $accession_change->summary($plan) };
@@ -3197,13 +3221,13 @@ sub _change_trial_stocks {
     # the genotypes of the wells of a plate, also of wells taken from these plots, are filed under
     # their accession in materialized_genoview
     my $matviews = ($accession_change->experiment_type eq 'genotyping_layout' || @{ $plan->{external_samples} || [] }) ? 'fullview' : 'phenotypes';
-    my $changed = grep { @{$plan->{$_} || []} } qw(changes replicates renames checks seedlots entry_numbers);
+    my $changed = grep { @{$plan->{$_} || []} } qw(changes replicates renames checks planting rejections seedlots entry_numbers);
     my $refresh_pending;
     if ($changed) {
         my $refresh = $bs->refresh_matviews_after_change($c->config->{dbhost}, $c->config->{dbname}, $c->config->{dbuser}, $c->config->{dbpass}, $matviews, 'concurrent', $c->config->{basepath});
         $refresh_pending = $refresh->{refresh_pending};
         # Invalidate every affected project's input/result caches, including an
-        # external plate reached through a corrected field sample.
+        # external plate reached through a rejected/restored field sample.
         try {
             $c->controller('solGS::clearCache')->clear_cached_analyses_result($c, { trials => $plan->{affected_project_ids} || [ $accession_change->trial_id ] });
         } catch {
@@ -4446,6 +4470,7 @@ sub phenotype_heatmap : Chained('trial') PathPart('heatmap') Args(0) {
             data_level=> 'plot',
             trait_list=> \@trait_ids,
             plot_list=>  \@items,
+            exclude_rejected=> 0,   # the heatmap shows every plot
         }
     );
     my $data = $phenotypes_search->search();
@@ -6383,6 +6408,12 @@ sub get_trial_plot_order : Path('/ajax/breeders/trial_plot_order') : Args(0) {
             "block_number",
             "is_a_control"
         );
+        # plots that were not planted (see CXGN::Trial::AccessionChange), when there are any;
+        # the file can be corrected and uploaded with Change Accessions
+        my $has_not_planted = grep { ($_->{type} // '') eq 'plot' && $_->{not_planted} } @{$results->{plots}};
+        push(@headers, "not_planted") if $has_not_planted;
+        my $has_rejected = grep { ($_->{type} // '') eq 'plot' && $_->{rejected} } @{$results->{plots}};
+        push(@headers, "rejected", "reject_reason") if $has_rejected;
         push(@data, \@headers);
 
         # Add plot rows
@@ -6409,7 +6440,8 @@ sub get_trial_plot_order : Path('/ajax/breeders/trial_plot_order') : Args(0) {
                     $plot->{block_number},
                     $plot->{is_a_control}
                 );
-
+                push(@d, $plot->{not_planted} ? 1 : 0) if $has_not_planted;
+                push(@d, $plot->{rejected} ? 1 : 0, $plot->{reject_reason} // '') if $has_rejected;   # free text: commas and quotes
                 push(@data, \@d);
 
                 # Add additional subplots for the current plot, if found
@@ -6433,7 +6465,8 @@ sub get_trial_plot_order : Path('/ajax/breeders/trial_plot_order') : Args(0) {
                             $plot->{block_number},
                             $plot->{is_a_control}
                         );
-
+                        push(@d, $plot->{not_planted} ? 1 : 0) if $has_not_planted;
+                        push(@d, $plot->{rejected} ? 1 : 0, $plot->{reject_reason} // '') if $has_rejected;   # free text: commas and quotes
                         push(@data, \@d);
                     }
                 }
@@ -6459,7 +6492,8 @@ sub get_trial_plot_order : Path('/ajax/breeders/trial_plot_order') : Args(0) {
                             $plot->{block_number},
                             $plot->{is_a_control}
                         );
-
+                        push(@d, $plot->{not_planted} ? 1 : 0) if $has_not_planted;
+                        push(@d, $plot->{rejected} ? 1 : 0, $plot->{reject_reason} // '') if $has_rejected;   # free text: commas and quotes
                         push(@data, \@d);
                     }
                 }
@@ -6484,6 +6518,8 @@ sub get_trial_plot_order : Path('/ajax/breeders/trial_plot_order') : Args(0) {
                     "", # block
                     "", # control
                 );
+                push(@d, "") if $has_not_planted;
+                push(@d, "", "") if $has_rejected;
                 push(@data, \@d);
             }
 
@@ -6598,7 +6634,7 @@ sub get_trial_plot_order : Path('/ajax/breeders/trial_plot_order') : Args(0) {
     }
 
     # Serialize every raw cell with the standard CSV writer. Stock/trial names,
-    # locations can contain commas, quotes and newlines.
+    # locations and reject reasons can contain commas, quotes and newlines.
     my $csv = Text::CSV->new({ binary => 1 });
     my @all_lines;
     foreach my $each_line (@data) {

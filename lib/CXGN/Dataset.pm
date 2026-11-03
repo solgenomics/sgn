@@ -299,6 +299,19 @@ has 'exclude_phenotype_outlier' => (
     default => 0
 );
 
+=head2 exclude_rejected()
+
+Rejected plots (CXGN::Trial::AccessionChange) and their plants and samples are left out of the
+phenotypes of the dataset unless this is 0.
+
+=cut
+
+has 'exclude_rejected' => (
+    isa => 'Bool|Undef',
+    is => 'ro',
+    default => 1
+);
+
 =head2 outliers()
 
 =cut
@@ -770,6 +783,7 @@ sub retrieve_phenotypes {
         trial_list=>\@trial_ids,
         accession_list=>\@accession_ids,
         exclude_phenotype_outlier=>$self->exclude_phenotype_outlier,
+        exclude_rejected=>$self->exclude_rejected,
         include_phenotype_primary_key=>$self->include_phenotype_primary_key,
         dataset_excluded_outliers=>$dataset_excluded_outliers
     );
@@ -812,7 +826,8 @@ sub retrieve_phenotypes_ref {
             trait_list=>\@trait_ids,
             trial_list=>\@trial_ids,
             accession_list=>\@accession_ids,
-            exclude_phenotype_outlier=>$self->exclude_phenotype_outlier
+            exclude_phenotype_outlier=>$self->exclude_phenotype_outlier,
+            exclude_rejected=>$self->exclude_rejected
         }
     );
     my ($data, $unique_traits) = $phenotypes_search->search();
@@ -868,6 +883,7 @@ sub retrieve_high_dimensional_phenotypes {
         accession_list=>\@accession_ids,
         plot_list=>\@plot_ids,
         plant_list=>\@plant_ids,
+        exclude_rejected=>$self->exclude_rejected,
     });
 
     my ($data_matrix, $identifier_metadata, $identifier_names) = $phenotypes_search->search();

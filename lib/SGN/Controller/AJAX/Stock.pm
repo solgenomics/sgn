@@ -19,6 +19,7 @@ package SGN::Controller::AJAX::Stock;
 
 use Moose;
 use CXGN::Phenotypes::Summary;
+use CXGN::Phenotypes::RejectedUnits;
 
 use List::MoreUtils qw /any /;
 use Data::Dumper;
@@ -67,7 +68,7 @@ Stores a new stockprop in the database
 =head2 _write_field_layout_property
 
 Keep the native property form on the same validated transaction as BrAPI for
-field blocks, recorded replication tags. Operational occurrences are derived
+field blocks, recorded replication tags and plot eligibility. Operational occurrences are derived
 and remain read-only. A group clear retains explicit missing metadata; all
 inherited units, permissions, layout caches and analytical refresh are handled by
 the owning unit workflow.
@@ -76,11 +77,7 @@ the owning unit workflow.
 
 sub _write_field_layout_property {
     my ($self,$c,$schema,$stock_id,$property,$value,$clear)=@_;
-    if (defined($property) && $property =~ /^(?:not_planted|rejected|reject_reason)$/) {
-        $c->stash->{rest}={error=>'Unsupported stock property: '.$property.'.'};
-        return 1;
-    }
-    return 0 if !defined($property) || $property !~ /^(?:block|design_replicate|replicate|is a control)$/;
+    return 0 if !defined($property) || $property !~ /^(?:block|design_replicate|replicate|not_planted|rejected|reject_reason|is a control)$/;
     my ($field)=$schema->storage->dbh->selectrow_array(q{
         SELECT EXISTS(SELECT 1 FROM nd_experiment_stock nes
           JOIN nd_experiment ne USING(nd_experiment_id)
@@ -88,6 +85,10 @@ sub _write_field_layout_property {
           WHERE nes.stock_id=? AND cv.name='experiment_type' AND t.name='field_layout')
     },undef,$stock_id);
     if (!$field) {
+        if ($property =~ /^(?:not_planted|rejected|reject_reason)$/) {
+            $c->stash->{rest}={error=>'Plot status belongs to its field plot. Use the plot status workflow.'};
+            return 1;
+        }
         return 0;
     }
     if ($property eq 'replicate') {
@@ -96,6 +97,10 @@ sub _write_field_layout_property {
     }
     if (!$clear && (!defined($value) || (!ref($value) && $value !~ /\S/))) {
         $c->stash->{rest}={error=>'Provide a plot metadata value.'};
+        return 1;
+    }
+    if ($clear && $property eq 'reject_reason') {
+        $c->stash->{rest}={error=>'Correct rejection metadata through the plot status workflow.'};
         return 1;
     }
     if (defined($value) && ref($value)) {
@@ -112,8 +117,8 @@ sub _write_field_layout_property {
     if ($property eq 'block') {
         $unit->{observationUnitPosition}={observationLevelRelationships=>[{levelName=>'block',levelCode=>$value}]};
     } else {
-        my %key=(design_replicate=>'designReplicate','is a control'=>'control');
-        $value=0 if $clear && $property =~ /^is a control$/;
+        my %key=(design_replicate=>'designReplicate',not_planted=>'notPlanted',rejected=>'rejected',reject_reason=>'rejectReason','is a control'=>'control');
+        $value=0 if $clear && $property =~ /^(?:not_planted|rejected|is a control)$/;
         $unit->{additionalInfo}={$key{$property}=>$value};
     }
     my $response=$api->observationunits_update([$unit],$c,$c->user->get_object->get_sp_person_id);
@@ -1934,13 +1939,14 @@ sub get_phenotypes_by_stock_and_trial :Chained('/stock/get_stock') PathPart('dat
     my $trial_id = shift;
     my $stock_type = $c->stash->{stock}->get_type()->name();
 
-
+    my $related_not_rejected = CXGN::Phenotypes::RejectedUnits->not_rejected_sql($c->dbic_schema('Bio::Chado::Schema'), 'stock_relationship.subject_id');
+    my $direct_not_rejected = CXGN::Phenotypes::RejectedUnits->not_rejected_sql($c->dbic_schema('Bio::Chado::Schema'), 'stock.stock_id');
     my $numeric_regex = CXGN::Phenotypes::Summary::numeric_value_regex();
     my $q;
     if ($stock_type eq 'accession' || $stock_type eq 'family_name' || $stock_type eq 'cross'){
-        $q = "SELECT stock.stock_id, stock.uniquename, cvterm_id, cvterm.name, avg(phenotype.value::REAL), stddev(phenotype.value::REAL), count(phenotype.value::REAL) FROM stock JOIN stock_relationship ON (stock.stock_id=stock_relationship.object_id) JOIN  nd_experiment_stock ON (nd_experiment_stock.stock_id=stock_relationship.subject_id) JOIN nd_experiment_project ON (nd_experiment_stock.nd_experiment_id=nd_experiment_project.nd_experiment_id) JOIN nd_experiment_phenotype ON (nd_experiment_phenotype.nd_experiment_id=nd_experiment_project.nd_experiment_id) JOIN phenotype USING(phenotype_id) JOIN cvterm ON (phenotype.cvalue_id=cvterm.cvterm_id) WHERE project_id=? AND stock.stock_id=? AND phenotype.value ~ ? GROUP BY stock.stock_id, stock.uniquename, cvterm_id, cvterm.name";
+        $q = "SELECT stock.stock_id, stock.uniquename, cvterm_id, cvterm.name, avg(phenotype.value::REAL), stddev(phenotype.value::REAL), count(phenotype.value::REAL) FROM stock JOIN stock_relationship ON (stock.stock_id=stock_relationship.object_id) JOIN  nd_experiment_stock ON (nd_experiment_stock.stock_id=stock_relationship.subject_id) JOIN nd_experiment_project ON (nd_experiment_stock.nd_experiment_id=nd_experiment_project.nd_experiment_id) JOIN nd_experiment_phenotype ON (nd_experiment_phenotype.nd_experiment_id=nd_experiment_project.nd_experiment_id) JOIN phenotype USING(phenotype_id) JOIN cvterm ON (phenotype.cvalue_id=cvterm.cvterm_id) WHERE project_id=? AND stock.stock_id=? AND phenotype.value ~ ? AND $related_not_rejected GROUP BY stock.stock_id, stock.uniquename, cvterm_id, cvterm.name";
     } else {
-        $q = "SELECT stock.stock_id, stock.uniquename, cvterm_id, cvterm.name, avg(phenotype.value::REAL), stddev(phenotype.value::REAL), count(phenotype.value::REAL) FROM stock JOIN nd_experiment_stock USING(stock_id) JOIN nd_experiment_project ON (nd_experiment_stock.nd_experiment_id=nd_experiment_project.nd_experiment_id) JOIN nd_experiment_phenotype ON (nd_experiment_phenotype.nd_experiment_id=nd_experiment_project.nd_experiment_id) JOIN phenotype USING(phenotype_id) JOIN cvterm ON (phenotype.cvalue_id=cvterm.cvterm_id) WHERE project_id=? AND stock.stock_id=? AND phenotype.value ~ ? GROUP BY stock.stock_id, stock.uniquename, cvterm_id, cvterm.name";
+        $q = "SELECT stock.stock_id, stock.uniquename, cvterm_id, cvterm.name, avg(phenotype.value::REAL), stddev(phenotype.value::REAL), count(phenotype.value::REAL) FROM stock JOIN nd_experiment_stock USING(stock_id) JOIN nd_experiment_project ON (nd_experiment_stock.nd_experiment_id=nd_experiment_project.nd_experiment_id) JOIN nd_experiment_phenotype ON (nd_experiment_phenotype.nd_experiment_id=nd_experiment_project.nd_experiment_id) JOIN phenotype USING(phenotype_id) JOIN cvterm ON (phenotype.cvalue_id=cvterm.cvterm_id) WHERE project_id=? AND stock.stock_id=? AND phenotype.value ~ ? AND $direct_not_rejected GROUP BY stock.stock_id, stock.uniquename, cvterm_id, cvterm.name";
     }
 
     my $h = $c->dbc->dbh->prepare($q);

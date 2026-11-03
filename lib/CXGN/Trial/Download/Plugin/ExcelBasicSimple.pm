@@ -81,7 +81,7 @@ sub download {
         my $trial = CXGN::Trial->new({bcs_schema => $schema, trial_id => $_} );
         my $trial_name = $trial->get_name;
         my $trial_layout = CXGN::Trial::TrialLayout->new({schema => $schema, trial_id => $_, experiment_type=>'field_layout'});
-        my $design = $trial_layout->get_design();
+        my $design = $trial_layout->get_planted_design();
 
         if (!$design) {
             return "No design found for trial: ".$trial_name;

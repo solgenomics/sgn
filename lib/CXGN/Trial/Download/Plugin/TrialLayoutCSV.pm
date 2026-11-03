@@ -89,7 +89,7 @@ sub download {
         }
         no warnings 'uninitialized';
         foreach my $l (@output_array){
-            # every value in quotes, quotes in a value doubled (names are free text)
+            # every value in quotes, quotes in a value doubled (names and a reject_reason are free text)
             print $F join(',', map { my $v = $_ // ''; $v =~ s/"/""/g; "\"$v\"" } @$l);
             print $F "\n";
         }

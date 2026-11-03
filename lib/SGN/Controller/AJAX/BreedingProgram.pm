@@ -18,6 +18,7 @@ package SGN::Controller::AJAX::BreedingProgram;
 
 use Moose;
 use CXGN::Phenotypes::Summary;
+use CXGN::Phenotypes::RejectedUnits;
 
 BEGIN { extends 'Catalyst::Controller::REST' };
 
@@ -111,6 +112,7 @@ sub phenotype_summary : Chained('ajax_breeding_program') PathPart('phenotypes') 
     my @phenotype_data;
     my @trait_list;
 
+    my $not_rejected = CXGN::Phenotypes::RejectedUnits->not_rejected_sql($schema, 'plot.stock_id');
     if ( $trial_ids ) {
 	my $h = $dbh->prepare("SELECT (((cvterm.name::text || '|'::text) || db.name::text) || ':'::text) || dbxref.accession::text AS trait,
         cvterm.cvterm_id,
@@ -129,7 +131,7 @@ sub phenotype_summary : Chained('ajax_breeding_program') PathPart('phenotypes') 
             JOIN dbxref ON cvterm.dbxref_id = dbxref.dbxref_id JOIN db ON dbxref.db_id = db.db_id
         WHERE project_id IN ( $trial_ids )
             AND phenotype.value~?
-
+            AND $not_rejected
 
         GROUP BY (((cvterm.name::text || '|'::text) || db.name::text) || ':'::text) || dbxref.accession::text, cvterm.cvterm_id
         ORDER BY cvterm.name ASC

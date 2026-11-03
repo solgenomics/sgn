@@ -110,10 +110,13 @@ my $ran=eval {
   is(property($x->{plots}[0],'design_replicate'),undef,'recorded missing design replica remains missing after another correction');
   is(property($x->{plots}[1],'design_replicate'),'0','recorded zero remains zero after another correction');
  };
- scenario 'No-op requests do not renumber legacy occurrences'=>sub {
+ scenario 'No-op and status-only requests do not renumber legacy occurrences'=>sub {
   my $x=create_layout('RCBD');my $before=values_for($x->{plots},'replicate');
   apply($x,[{plot_id=>$x->{plots}[1],new_stock_id=>$x->{stocks}[1]}]);
   is_deeply(values_for($x->{plots},'replicate'),$before,'same-accession no-op does not force normalization');
+  apply($x,[{plot_id=>$x->{plots}[1],rejected=>1}]);
+  is_deeply(values_for($x->{plots},'replicate'),$before,'status-only update does not force normalization');
+  is(property($x->{plots}[1],'rejected'),'1','status action itself still applies');
  };
  scenario 'A swap counts the final trial state and keeps recorded design groups'=>sub {
   my $x=create_layout('RCBD');
@@ -123,11 +126,13 @@ my $ran=eval {
   is_deeply(values_for($x->{plots},'replicate'),[1,1,1,2,2,2],'swap occurrence numbers derive from final memberships');
   is_deeply(values_for($x->{plots},'design_replicate'),[10,10,10,30,30,30],'swap does not exchange fixed physical design membership');
  };
- scenario 'Check positions remain in the planned occurrence sequence'=>sub {
+ scenario 'Unplanted, rejected and check positions remain in the planned occurrence sequence'=>sub {
   my $x=create_layout('RCBD');
-  property($x->{plots}[5],'is a control','1');
+  property($x->{plots}[0],'not_planted','1');property($x->{plots}[3],'rejected','1');property($x->{plots}[5],'is a control','1');
   apply($x,merge_change($x));
-  is_deeply(values_for($x->{plots},'replicate'),[1,2,1,3,1,2],'checks do not compress or renumber other planned positions');
+  is_deeply(values_for($x->{plots},'replicate'),[1,2,1,3,1,2],'statuses and checks do not compress or renumber other planned positions');
+  is(property($x->{plots}[0],'not_planted'),'1','unplanted status remains');
+  is(property($x->{plots}[3],'rejected'),'1','rejection remains');
   is(property($x->{plots}[5],'is a control'),'1','unrelated check remains');
  };
  scenario 'Occurrence ordering is numeric by plot number and stable by plot ID'=>sub {

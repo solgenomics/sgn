@@ -101,6 +101,17 @@ my $ran = eval {
     die 'Plant setup failed' if !$trial_object->create_plant_entities(1,0,undef,undef,undef,undef,$config);
     die 'Tissue setup failed' if !$trial_object->create_tissue_samples(['leaf'],0,0,undef,undef,$config);
     die 'Subplot setup failed' if !$trial_object->create_subplot_entities(1,0,undef,undef,$config);
+    my $rejected_plot = $schema->resultset('Stock::Stock')->find({uniquename=>'test_trial214'});
+    my $reason = 'trampled, then "rain"';
+    CXGN::Trial::AccessionChange->new({schema=>$schema,trial_id=>$trial})->apply([{plot_id=>$rejected_plot->stock_id,rejected=>1,reject_reason=>$reason}],{rename_plots=>'none',curator=>1});
+    for my $level (qw(plants subplots field_trial_tissue_samples)) {
+        my $r=fieldbook("status-$level.xls", {plot_name=>1,plant_name=>1,subplot_name=>1,tissue_sample_name=>1}, $level);
+        my $marked=row_for_plot($r->{file},$rejected_plot->uniquename);
+        is($marked->{rejected},1,"$level automatically exports inherited rejection");
+        is($marked->{reject_reason},$reason,"$level exports its parent reason");
+        my $valid=row_for_plot($r->{file},$numeric_plot_name);
+        is($valid->{rejected},0,"$level normalizes the valid control flag to zero");
+    }
     1;
 };
 my $error = $@;

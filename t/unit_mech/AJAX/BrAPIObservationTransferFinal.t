@@ -54,6 +54,19 @@ for my $case(['v1',13],['v2',14]) {
  };
 }
 is($operator{v1},$operator{v2},'v1 and v2 persist the same collector identity');
+my $np=SGN::Model::Cvterm->get_cvterm_row($schema,'not_planted','stock_property')->cvterm_id;
+$schema->resultset('Stock::Stockprop')->create({stock_id=>$plot{15},type_id=>$np,value=>'1',rank=>0});
+for my $version(qw(v1 v2)) {
+ subtest "$version leaves unsown-plot values out and reports why"=>sub {
+  my $before=count_values($plot{15});
+  my($r,$j)=send_values($version,[[$plot{15},'15']]);
+  ok($r->is_success,'request handled');
+  is(count_values($plot{15}),$before,'no measurement stored for unsown plot');
+  like(join(' ',map {$_->{message}//''} @{$j->{metadata}->{status}||[]}),qr/not planted|not stored/i,'response reports skipped data');
+ };
+}
+$schema->resultset('Stock::Stockprop')->search({stock_id=>$plot{15},type_id=>$np})->delete;
+
 subtest 'A stored ID crosses versions without losing metadata or changing units'=>sub {
  my ($id)=$schema->storage->dbh->selectrow_array('SELECT p.phenotype_id FROM nd_experiment_stock nes JOIN nd_experiment_phenotype nep USING(nd_experiment_id) JOIN phenotype p USING(phenotype_id) WHERE nes.stock_id=? AND p.cvalue_id=? ORDER BY p.phenotype_id DESC LIMIT 1',undef,$plot{13},$trait);
  ok($id,'positive upload supplied a real persistent ID');return if !$id;

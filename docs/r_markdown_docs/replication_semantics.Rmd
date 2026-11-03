@@ -44,7 +44,7 @@ legacy group labels cannot remain mixed with occurrence counters. Same-trial
 plants, subplots and samples receive the plot's occurrence; external layouts
 keep their own local fields. A repeated correction is idempotent.
 
-Check plots and planned positions retain their places in
+Check plots, rejected plots and unsown planned positions retain their places in
 this numbering. These labels are not counts of eligible measurements. Analysis
 eligibility and observation counts remain separate.
 
@@ -143,4 +143,5 @@ Explicit layout/Field Book `selected_columns` requests retain exactly the
 requested metadata columns. Selecting `rep_number` does not silently insert an
 extra occurrence column. Rich native defaults/UI can select both independently;
 the separate `accession_occurrence` option is visible and removable. Existing
-fixed-width custom layouts remain compatible.
+fixed-width custom layouts remain compatible. Plot eligibility/status policy
+continues to apply independently of column selection.

@@ -29,8 +29,8 @@ $trial_stock_type
                     <div class="well well-sm">
                         <p><b>Correct the trial with a file of what was planted:</b></p>
                         <ol style="padding-left: 20px">
-                            <li><a class="btn btn-default btn-sm" id="trial_design_change_accessions_download" href="/breeders/trial/<% $trial_id %>/download/layout?format=xlsx&amp;dataLevel=plots&amp;selected_columns=%7B%22plot_name%22%3A1%2C%22accession_name%22%3A1%2C%22plot_number%22%3A1%2C%22block_number%22%3A1%2C%22rep_number%22%3A1%2C%22accession_occurrence%22%3A1%2C%22row_number%22%3A1%2C%22col_number%22%3A1%2C%22seedlot_name%22%3A1%7D">Download the current layout</a> (by plot number), or <b>Download Plot Order</b> with the planting order and borders in Field Layout Tools (for a trial with row and column numbers).</li>
-                            <li>Write what was planted: change accession_name where another accession grows. In a file in planting order, a shift is a cut and paste of accession_name one row down; leave border rows as they are.</li>
+                            <li><a class="btn btn-default btn-sm" id="trial_design_change_accessions_download" href="/breeders/trial/<% $trial_id %>/download/layout?format=xlsx&amp;dataLevel=plots&amp;selected_columns=%7B%22plot_name%22%3A1%2C%22accession_name%22%3A1%2C%22plot_number%22%3A1%2C%22block_number%22%3A1%2C%22not_planted%22%3A1%2C%22rep_number%22%3A1%2C%22accession_occurrence%22%3A1%2C%22row_number%22%3A1%2C%22col_number%22%3A1%2C%22seedlot_name%22%3A1%2C%22rejected%22%3A1%2C%22reject_reason%22%3A1%7D">Download the current layout</a> (by plot number), or <b>Download Plot Order</b> with the planting order and borders in Field Layout Tools (for a trial with row and column numbers).</li>
+                            <li>Write what was planted: change accession_name where another accession grows. Put 1 in not_planted where no seed was sown (add a not_planted column if the file has none); the plot keeps its planned accession, so its accession_name may stay as it is or be left empty. A plot that was sown but lost later (no emergence, flood) stays planted: record its stand count. Put 1 in rejected (and why in reject_reason) for a planted plot whose data must not be used, for example trampled, flooded after emergence or contaminated; 0 takes a rejection back. Its data stay and can still be recorded, but are left out of downloads and analyses. In a file in planting order, a shift is a cut and paste of accession_name one row down; leave the border rows as they are.</li>
                             <li>Upload the file here, as .xlsx or as CSV with commas (a CSV that Excel saved with semicolons is not read). You see what changes before anything is changed. Plots that already match the file are left as they are, so the same file can be uploaded again while the plot names are kept, and a later correction starts from a new download. The file is kept with the trial (Uploaded Additional Files). Once the trial has phenotypes or seedlots, a curator uploads the file.</li>
                         </ol>
                         <p>Seed transactions follow the packets: a plot that got the packet of another plot takes over its seedlot. A packet that is in no plot any more (for example planted into a border) stays taken from its seedlot; if the seed of a place left empty went back into the seedlot, add it there. After the change, print new labels for the changed plots, and download new Field Book files and phenotyping spreadsheets.</p>
@@ -44,6 +44,8 @@ $trial_stock_type
                                 An optional additional column, 'new_plot_name' can be added to change the plot names; the current name keeps it.<br>
                                 Without a new name, the old name is replaced where it is a whole part of the plot name, or, if a plot name template has been saved in association with this trial, the template is used to rename the plot. Check "Keep the plot names" to keep all names.<br>
                                 The file can list every plot of the trial, for example the plan as it was planted; plots whose accession does not change are left as they are. Other columns are ignored, and so are rows of a planting order file whose type is not plot (borders and gaps).<br>
+                                An optional column 'not_planted' marks places where no seed was sown (1) or that were planted after all (0); an empty cell leaves the plot as it is. A plot that was not planted keeps the accession in the file as its planned accession.<br>
+                                Optional columns 'rejected' (1 for a planted plot whose data must not be used, 0 to take that back; an empty cell leaves the plot as it is) and 'reject_reason' (free text, with rejected = 1).<br>
                                 An optional column 'seedlot_name' names the seedlot a plot was planted from, where it is not the one the plot has now; seed transactions follow the packets without it.<br>
 
                                 <table style="margin-top: 3%;" class="table table-bordered table-hover">
@@ -52,6 +54,9 @@ $trial_stock_type
                                     <td>plot_name</td>
                                     <td>accession_name</td>
                                     <td>new_plot_name (optional)</td>
+                                    <td>not_planted (optional)</td>
+                                    <td>rejected (optional)</td>
+                                    <td>reject_reason (optional)</td>
                                     <td>seedlot_name (optional)</td>
                                   </tr>
                                   </tbody>
@@ -63,6 +68,9 @@ $trial_stock_type
                         <b>accession_name or cross_unique_id or family_name:</b> name of the accession or cross unique id or family name that the plot should be connected to.<br>
                         <br><b>Optional columns:</b><br>
                         <b>new_plot_name:</b> new name for plot.<br>
+                        <b>not_planted:</b> 1 if no seed was sown in the plot, 0 if it was planted. Plots that were not planted are shown as empty on the field map, are left out of Field Book files and phenotyping spreadsheets, and cannot get phenotypes.<br>
+                        <b>rejected:</b> 1 for a planted plot whose data must not be used (trampled, flooded after emergence, contaminated), 0 to take that back. The plot keeps everything and data can still be recorded for it, but its values and those of its plants and samples (also NIRS) are left out of phenotype downloads, datasets and analyses, and the field map shows it hatched. A plot that was not planted cannot be rejected.<br>
+                        <b>reject_reason:</b> why, free text of at most 500 characters, only with rejected = 1. An empty cell keeps the reason the plot has.<br>
                         <b>seedlot_name:</b> the seedlot the plot was planted from, where it is another one than now (a plot without a seed transaction gets one with Upload Seedlots Planted In Trial).<br>
                         <div class="list-group-item-warning" >
                           <p><i>Warning: the new plot name will replace the old plot name in subplots, plants, and tissue samples if possible. Plot numbers, blocks and recorded design groups are kept. Accession occurrence numbers are reassigned by plot number for every trial design; check plots follow their accessions. Phenotypes stay with their plots. You may need to reprint labels after the changes are applied.</i></p>

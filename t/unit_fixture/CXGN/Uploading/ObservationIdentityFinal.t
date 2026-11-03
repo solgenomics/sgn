@@ -85,5 +85,6 @@ $s->txn_begin;my $ran=eval {
  $a->discard_changes;is($a->value,13,'failed archive registration rolls the value back too');
  for my $bad ('NaN','Inf','-Inf','1e999') {my $v=store_values({$names[0]=>{$tn=>[$bad,'2026-11-02T11:00:00Z','after']}},1);my(undef,$invalid)=$v->verify;like($invalid//'',qr/finite/,'nonfinite numeric input refused before writing');}
  my $trial=$s->resultset('Project::Project')->find({name=>'test_trial'})->project_id;my $ac=CXGN::Trial::AccessionChange->new({schema=>$s,trial_id=>$trial});
+ my $plan=$ac->plan([{plot_id=>$units[0],not_planted=>1}],{curator=>1,delete_phenotypes=>1});ok(@{$plan->{errors}}>0,'status change cannot delete existing raw data even with old deletion option');ok($s->resultset('Phenotype::Phenotype')->find($id{$units[0]}),'raw measurement preserved');
  1;
 };my $error=$@;$s->txn_rollback;ok($ran,'scenario completed and fixture rolled back')or diag($error);done_testing;

@@ -75,6 +75,19 @@ my $ran=eval {
     $client->post("$base/stock/prop/add",[stock_id=>$plot,prop_type=>'replicate',prop=>'99']);
     ok(result($client)->{error},'derived field occurrence cannot be edited as a generic property');
     is(rows('replicate')->first->value,1,'refused direct edit preserves occurrence numbering');
+    $client->post("$base/stock/prop/add",[stock_id=>$plot,prop_type=>'not_planted',prop=>'1']);
+    ok(result($client)->{error},'generic form cannot bypass the stored-observation planting-status rule');
+    is(rows('not_planted')->count,0,'a real zero observation prevents an unsown flag');
+    is($schema->resultset('Phenotype::Phenotype')->find($phenotype_id)->value,0,'rejected status input never deletes the real zero measurement');
+    $client->post("$base/stock/prop/add",[stock_id=>$plot,prop_type=>'rejected',prop=>'1']);
+    ok(!result($client)->{error},'native form uses the validated plot-rejection workflow');
+    is(rows('rejected')->first->value,1,'rejection records eligibility without deleting data');
+    my $rejection_id=rows('rejected')->first->stockprop_id;
+    $client->get("$base/stock/prop/delete?stockprop_id=$rejection_id");
+    ok(!result($client)->{error},'native form can restore eligibility through the owning workflow');
+    is(rows('rejected')->count,0,'cleared rejection is no longer stored');
+    is($schema->resultset('Phenotype::Phenotype')->find($phenotype_id)->value,0,'restoring eligibility retains the same measurement');
+
     my $block_id=rows('block')->first->stockprop_id;
     my $anonymous=Test::WWW::Mechanize->new(autocheck=>0);
     $anonymous->get("$base/stock/prop/delete?stockprop_id=$block_id");

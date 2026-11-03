@@ -2,6 +2,7 @@ package SGN::Controller::AJAX::Accession_usage;
 
 use Moose;
 use CXGN::Phenotypes::Summary;
+use CXGN::Phenotypes::RejectedUnits;
 use Data::Dumper;
 use Scalar::Util qw(looks_like_number);
 use CXGN::Cross;
@@ -119,6 +120,7 @@ sub accession_usage_phenotypes: Path('/ajax/accession_usage_phenotypes') :Args(0
         $offset_clause = ' OFFSET '.$offset;
     }
 
+    my $not_rejected = CXGN::Phenotypes::RejectedUnits->not_rejected_sql($schema, 'plot.stock_id');
     my $h = $dbh->prepare("SELECT (((cvterm.name::text || '|'::text) || db.name::text) || ':'::text) || dbxref.accession::text AS trait,
         cvterm.cvterm_id,
         count(phenotype.value),
@@ -142,7 +144,7 @@ sub accession_usage_phenotypes: Path('/ajax/accession_usage_phenotypes') :Args(0
             AND stock_relationship.type_id=?
             AND plot.type_id=?
             AND accession.type_id=?
-
+            AND $not_rejected
         GROUP BY (((cvterm.name::text || '|'::text) || db.name::text) || ':'::text) || dbxref.accession::text, cvterm.cvterm_id, accession.stock_id, accession.uniquename
         ORDER BY cvterm.name ASC
         ,accession.uniquename DESC

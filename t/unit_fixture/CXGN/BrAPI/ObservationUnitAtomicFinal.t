@@ -64,14 +64,11 @@ my $all=eval {
  my $new=$s->resultset('Stock::Stock')->create({name=>$prefix.'new_accession',uniquename=>$prefix.'new_accession',type_id=>$template->type_id,organism_id=>$template->organism_id});
  no warnings 'redefine';
  local *CXGN::BreederSearch::refresh_matviews=sub {push @refresh,[@_];return {message=>'captured after successful API transaction'}};
- scenario 'Unsupported additional information cannot partially change identity'=>sub {
+ scenario 'One invalid combined identity/status request changes nothing'=>sub {
   my $old=accession($plots[0]);
-  for my $info ({notPlanted=>JSON::true},{notPlanted=>JSON::false},{rejected=>JSON::true},{rejected=>JSON::false},{rejectReason=>'unsupported reason'}) {
-   my $r=api()->observationunits_update([request_unit($plots[0],germplasmDbId=>''.$new->stock_id,additionalInfo=>$info)],$context,41);
-   is($r->{http_code},400,'unsupported additionalInfo field is refused');
-   like(join(' ',map {$_->{message}//''} @{$r->{status}||[]}),qr/Unsupported observation-unit additionalInfo field/,'the unsupported field contract is explicit');
-   is(accession($plots[0]),$old,'identity did not change');
-  }
+  my $r=api()->observationunits_update([request_unit($plots[0],germplasmDbId=>''.$new->stock_id,additionalInfo=>{notPlanted=>JSON::true,rejected=>JSON::true})],$context,41);
+  is($r->{http_code},400,'incompatible statuses rejected');is(accession($plots[0]),$old,'identity did not change');
+  is(scalar @refresh,0,'no external refresh on failure');is(scalar @clear,0,'no filesystem cache clearing on failure');
  };
  scenario 'A late bulk metadata error rolls back germplasm, controls and references'=>sub {
   my $old=accession($plots[0]);my $control=value($plots[0],'is a control');
@@ -98,6 +95,25 @@ my $all=eval {
   my $r=api()->observationunits_update([$body],$context,41);
   ok(defined $r->{result},'full object accepted') or diag(encode_json($r));
   is(accession($plots[0]),$new->stock_id,'requested germplasm persisted');ok(!value($plots[0],'is a control'),'old entryType CHECK did not undo service inference');
+ };
+ scenario 'Inherited child status roundtrips but cannot be changed on the child'=>sub {
+  my $id=child($plots[0],$prefix.'plant');
+  CXGN::Trial::AccessionChange->new({schema=>$s,trial_id=>$trial})->apply([{plot_id=>$plots[0],rejected=>1,reject_reason=>'flooded'}],{curator=>1,rename_plots=>'none'});
+  my $body=decode_json(encode_json(api()->detail($id,$context)->{result}));
+  ok($body->{additionalInfo}{rejected},'child inherits rejection');is($body->{additionalInfo}{rejectReason},'flooded','child inherits reason');
+  my $r=api()->observationunits_update([$body],$context,41);ok(defined $r->{result},'unchanged inherited status accepted') or diag(encode_json($r));
+  is(value($id,'is a control'),undef,'readback did not create a new child check marker');
+  is(scalar @refresh,0,'unchanged readback starts no refresh worker');is(scalar @clear,0,'unchanged readback clears no analysis cache');
+  $body->{additionalInfo}{rejected}=JSON::false;
+  $r=api()->observationunits_update([$body],$context,41);is($r->{http_code},400,'changing inherited status is refused');is(value($plots[0],'rejected'),1,'parent rejection preserved');
+ };
+ scenario 'A POST persists plot status and refuses an unsown parent before creating children'=>sub {
+  my $r=api()->observationunits_store([{studyDbId=>"$trial",observationUnitName=>$prefix.'posted',germplasmDbId=>''.$template->stock_id,additionalInfo=>{notPlanted=>JSON::true},observationUnitPosition=>{observationLevel=>{levelName=>'plot',levelCode=>'99101'},observationLevelRelationships=>[]}}],$context,41);
+  ok(defined $r->{result},'new plot created with its status') or diag(encode_json($r));
+  my $created=$s->resultset('Stock::Stock')->find({uniquename=>$prefix.'posted'});
+  ok($created,'new plot exists');is(value($created->stock_id,'not_planted'),1,'notPlanted persisted');
+  my $bad=api()->observationunits_store([{studyDbId=>"$trial",observationUnitName=>$prefix.'unsown_child',germplasmDbId=>''.$template->stock_id,additionalInfo=>{observationUnitParent=>''.$created->stock_id},observationUnitPosition=>{observationLevel=>{levelName=>'plant',levelCode=>'plant_1'}}}],$context,41);
+  is($bad->{http_code},400,'unsown parent refused');is($s->resultset('Stock::Stock')->search({uniquename=>$prefix.'unsown_child'})->count,0,'no unsown child created');
  };
  scenario 'Generic coordinate/control changes use the same program authorization'=>sub {
   my($john)=$dbh->selectrow_array('SELECT sp_person_id FROM sgn_people.sp_person WHERE username=?',undef,'johndoe');

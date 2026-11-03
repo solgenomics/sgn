@@ -47,9 +47,38 @@ test("summaryLines", (t) => {
         t.end();
     });
 
+    t.test("plots marked as not planted, and planted again", (t) => {
+        const summary = { ...empty, planting: [{ plot_name: "P1", not_planted: 1 }, { plot_name: "P2", not_planted: 0 }], phenotypes_deleted: 3 };
+        t.deepEqual(summaryLines(summary, false), [
+            "1 plot(s) were marked as not planted:",
+            "    P1",
+            "1 plot(s) were marked as planted again:",
+            "    P2",
+            "3 phenotype value(s) were deleted.",
+        ], "no line about accessions when only the planting changes");
+        t.notOk(summaryLines(summary, true).some((l) => /deleted/.test(l)), "the preview tells about deleting in its warnings");
+        t.end();
+    });
+
     t.test("plots are renamed by default until the trial has phenotypes", (t) => {
         t.equal(renameByDefault(false), true, "a planned trial: the names follow the accessions");
         t.equal(renameByDefault(true), false, "data collected with the names: they are kept");
+        t.end();
+    });
+
+    t.test("plots rejected, with the reason, and no longer rejected", (t) => {
+        const summary = { ...empty, rejections: [{ plot_name: "P1", rejected: 1, reject_reason: "trampled", was_rejected: 0 }, { plot_name: "P2", rejected: 1, reject_reason: null, was_rejected: 0 }, { plot_name: "P3", rejected: 0, reject_reason: null, was_rejected: 1 }, { plot_name: "P4", rejected: 1, reject_reason: "flooded", was_rejected: 1 }] };
+        t.deepEqual(summaryLines(summary, true), [
+            "2 plot(s) will be rejected (the data stay, but are left out of downloads and analyses):",
+            "    P1 (trampled)",
+            "    P2",
+            "1 rejected plot(s) will get another reject reason:",
+            "    P4: flooded",
+            "1 plot(s) will be no longer rejected:",
+            "    P3",
+        ], "no line about accessions when only rejections change; a new reason is not a new rejection");
+        t.notOk(nothingChanges(summary), "a rejection is a change");
+        t.deepEqual(changedPlots(summary), ["P1", "P2", "P3", "P4"], "rejected plots are changed plots");
         t.end();
     });
 
@@ -164,6 +193,21 @@ test("changeWithPreview", (t) => {
         t.end();
     });
 
+    t.test("existing phenotypes block a not-planted correction without a deletion retry", async (t) => {
+        const error = "2 phenotype value(s) exist for P1. Keep the plot planted, or reject it to exclude its values.";
+        const requests = fakeServer([
+            { error, not_planted_phenotypes: 2 },
+        ]);
+        const asked = [];
+        const told = [];
+        const result = await changeWithPreview("/url", { plot_ids: "7" }, { confirm: (m) => { asked.push(m); return true; }, alert: (...args) => told.push(args) });
+        t.equal(result, null);
+        t.deepEqual(asked, [], "no observation-deletion confirmation");
+        t.deepEqual(told, [[`Change: ${error}`, error]], "the server's preservation guidance is shown");
+        t.deepEqual(requests, [{ plot_ids: "7", preview: 1 }], "no retry or apply is sent");
+        t.end();
+    });
+
     t.test("the page can ask in its own dialog", async (t) => {
         const requests = fakeServer([{ preview: { ...empty, changed: 1 } }, { success: 1, ...empty, changed: 1 }]);
         const result = await changeWithPreview("/url", {}, { confirm: () => Promise.resolve(true) });
@@ -184,7 +228,7 @@ test("changeWithPreview", (t) => {
         await changeWithPreview("/url", {}, { alert: (m) => notes.push(m) });
         t.deepEqual(notes, ["Nothing to change: the trial already matches.\nNote: Plot P1 has no seed transaction"], "with the notes of the plan");
         t.ok(nothingChanges({ ...empty }), "an empty plan");
-        t.notOk(nothingChanges({ ...empty, changed: 1 }), "a plan that changes a plot");
+        t.notOk(nothingChanges({ ...empty, planting: [{ plot_name: "P1", not_planted: 1 }] }), "a plan that marks a plot");
         t.end();
     });
 
@@ -226,11 +270,21 @@ test("changeWithPreview", (t) => {
         t.end();
     });
 
+    t.test("a blocked not-planted request after curator confirmation still preserves values", async (t) => {
+        const requests = fakeServer([{ warning: "Phenotypes have been stored." }, { error: "Keep the recorded values.", not_planted_phenotypes: 2 }]);
+        const asked = [], told = [];
+        const result = await changeWithPreview("/url", {}, { confirm: (m) => { asked.push(m); return true; }, alert: (m) => told.push(m) });
+        t.equal(result, null);
+        t.equal(asked.length, 1, "only the curator warning is confirmed");
+        t.deepEqual(told, ["Change: Keep the recorded values."]);
+        t.deepEqual(requests, [{ preview: 1 }, { override: 1, preview: 1 }], "no deletion option or apply");
+        t.end();
+    });
 });
 
 test("changedPlots", (t) => {
-    const summary = { ...empty, changes: [{ plot_name: "P1" }, { plot_name: "P2" }], renamed: [{ old_name: "P2", new_name: "Q2" }, { old_name: "P3", new_name: "Q3" }] };
-    t.deepEqual(changedPlots(summary), ["P1", "Q2", "Q3"], "each plot once, by its new name");
+    const summary = { ...empty, changes: [{ plot_name: "P1" }, { plot_name: "P2" }], renamed: [{ old_name: "P2", new_name: "Q2" }, { old_name: "P3", new_name: "Q3" }], planting: [{ plot_name: "P1", not_planted: 1 }, { plot_name: "P4", not_planted: 1 }] };
+    t.deepEqual(changedPlots(summary), ["P1", "Q2", "Q3", "P4"], "each plot once, by its new name");
     t.deepEqual(changedPlots({ ...empty, seedlots: [{ type: "seedlot", plot_name: "P5" }] }), ["P5"], "seedlot-only correction is available for new files and labels");
     t.deepEqual(changedPlots({ ...empty, affected_plots: ["P7", "P8"], checks: [{ plot_name: "P8", check: 1 }] }), ["P7", "P8"], "server list includes replicate-only changes and removes duplicates");
     t.deepEqual(changedPlots({ ...empty, affected_plots: ["B", "C"], renamed: [{ old_name: "A", new_name: "B" }, { old_name: "B", new_name: "C" }] }), ["B", "C"], "already-final server names are not renamed twice");

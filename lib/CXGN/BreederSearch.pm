@@ -15,6 +15,7 @@ package CXGN::BreederSearch;
 
 use Moose;
 use CXGN::Phenotypes::Summary;
+use CXGN::Phenotypes::RejectedUnits;
 use Data::Dumper;
 use Try::Tiny;
 use Time::HiRes ();
@@ -192,15 +193,15 @@ sub avg_phenotypes_query {
   my $allow_missing = shift;
 
   return { error => 'Invalid trial ID.' } unless defined($trial_id) && $trial_id =~ /^\d+$/;
-
+  my $not_rejected = CXGN::Phenotypes::RejectedUnits->not_rejected_sql($self->dbh, 'materialized_phenoview.stock_id');
   my $numeric_regex = CXGN::Phenotypes::Summary::numeric_value_regex();
   my @bind;
   my $select = "SELECT table0.accession_id, table0.accession_name";
-  my $from = " FROM (SELECT accession_id, accession_name FROM materialized_phenoview JOIN accessions USING (accession_id) WHERE trial_id = $trial_id GROUP BY 1,2) AS table0";
+  my $from = " FROM (SELECT accession_id, accession_name FROM materialized_phenoview JOIN accessions USING (accession_id) WHERE trial_id = $trial_id AND $not_rejected GROUP BY 1,2) AS table0";
   for (my $i = 1; $i <= scalar @trait_ids; $i++) {
     push @bind, $trait_ids[$i-1], $numeric_regex;
     $select .= ",  ROUND( CAST(table$i.trait$i AS NUMERIC), 2)";
-    $from .= " JOIN (SELECT accession_id, accession_name, AVG(value::REAL) AS trait$i FROM materialized_phenoview JOIN accessions USING (accession_id) JOIN phenotype USING (phenotype_id) WHERE trial_id = $trial_id AND trait_id = ? AND phenotype.value ~ ? GROUP BY 1,2) AS table$i USING (accession_id)";
+    $from .= " JOIN (SELECT accession_id, accession_name, AVG(value::REAL) AS trait$i FROM materialized_phenoview JOIN accessions USING (accession_id) JOIN phenotype USING (phenotype_id) WHERE trial_id = $trial_id AND trait_id = ? AND phenotype.value ~ ? AND $not_rejected GROUP BY 1,2) AS table$i USING (accession_id)";
   }
   my $query = $select . $from . " ORDER BY 2";
   if ($allow_missing eq 'true') { $query =~ s/JOIN/FULL OUTER JOIN/g; }

@@ -420,7 +420,9 @@ sub _include_observations {
         data_level=>$self->data_level,
         plot_list=>$observation_units,
         order_by=>"plot_number",
-        include_timestamp=>1
+        include_timestamp=>1,
+        # a rejected plot (CXGN::Trial::AccessionChange) is listed, with additionalInfo.rejected, but without its
+        # observations: Trial Comparison, the Boxplotter and graphical filtering analyse them
     });
     my ($data, $unique_traits) = $phenotypes_search->search();
 

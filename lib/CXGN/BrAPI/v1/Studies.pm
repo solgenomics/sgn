@@ -10,6 +10,7 @@ use CXGN::Trait;
 use CXGN::Stock;
 use CXGN::Phenotypes::SearchFactory;
 use CXGN::Phenotypes::PhenotypeMatrix;
+use CXGN::Phenotypes::RejectedUnits;
 use CXGN::BrAPI::Pagination;
 use CXGN::BrAPI::FileResponse;
 use CXGN::BrAPI::JSONResponse;
@@ -564,6 +565,14 @@ sub studies_layout {
 			if ($design->{$plot_number}->{plant_ids}){
 				$additional_info{plantDbIds} = $design->{$plot_number}->{plant_ids};
 			}
+			# plots that were not planted (see CXGN::Trial::AccessionChange), as in v2
+			if ($design->{$plot_number}->{not_planted}){
+				$additional_info{notPlanted} = JSON::true;
+			}
+			if ($design->{$plot_number}->{rejected}){
+				$additional_info{rejected} = JSON::true;
+				$additional_info{rejectReason} = $design->{$plot_number}->{reject_reason} if defined($design->{$plot_number}->{reject_reason}) && length($design->{$plot_number}->{reject_reason});
+			}
 			my @plot_image_ids;
 			eval {
 	            my $image_id = CXGN::Stock->new({
@@ -662,6 +671,7 @@ sub observation_units {
             trial_list=>[$study_id],
             trait_list=>\@trait_ids_array,
             include_timestamp=>1,
+            exclude_rejected=>0,   # a listing of the units: a rejected plot stays, without its values (below)
             limit=>$limit,
             offset=>$offset,
 			# Order by plot_number, account for non-numeric plot numbers
@@ -669,13 +679,16 @@ sub observation_units {
         }
     );
     my ($data, $unique_traits) = $phenotypes_search->search();
+    my $rejected_units = CXGN::Phenotypes::RejectedUnits->ids($self->bcs_schema, [ map { $_->{observationunit_stock_id} } @$data ]);
+    my $unit_status = CXGN::Phenotypes::RejectedUnits->status_details($self->bcs_schema, [map {$_->{observationunit_stock_id}} @$data]);
     #print STDERR Dumper $data;
 
     my @data_window;
     my $total_count = 0;
     foreach my $obs_unit (@$data){
         my @brapi_observations;
-        my $observations = $obs_unit->{observations};
+        # the values of a rejected plot are left out, as in the downloads
+        my $observations = $rejected_units->{ $obs_unit->{observationunit_stock_id} } ? [] : $obs_unit->{observations};
         foreach (@$observations){
             my $obs_timestamp = $_->{collect_date} ? $_->{collect_date} : $_->{timestamp};
             push @brapi_observations, {
@@ -709,10 +722,14 @@ sub observation_units {
 		}
 
         my $entry_type = $obs_unit->{obsunit_is_a_control} ? 'check' : 'test';
+        my $state = $unit_status->{$obs_unit->{observationunit_stock_id}} || {};
         my %info;
         $info{designReplicate} = $obs_unit->{obsunit_design_rep}
             if $obs_unit->{obsunit_design_rep_recorded} || defined($obs_unit->{obsunit_design_rep});
         $info{accessionOccurrence} = $obs_unit->{obsunit_accession_occurrence} if $obs_unit->{obsunit_occurrence_ready};
+        $info{notPlanted} = JSON::true if $state->{not_planted};
+        $info{rejected} = JSON::true if $state->{rejected};
+        $info{rejectReason} = $state->{reject_reason} if defined($state->{reject_reason});
         push @data_window, {
             (%info ? (additionalInfo => \%info) : ()),
 			X => $obs_unit->{obsunit_col_number},
@@ -848,7 +865,7 @@ sub observation_units_granular {
             trial_list=>[$study_id],
             trait_list=>\@trait_ids_array,
             include_timestamp=>1,
-            exclude_phenotype_outlier=>$exclude_phenotype_outlier
+            exclude_phenotype_outlier=>$exclude_phenotype_outlier,
         }
     );
     my ($data, $unique_traits) = $phenotypes_search->search();

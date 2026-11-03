@@ -9,6 +9,7 @@ use CXGN::Trial::TrialLayoutSearch;
 use CXGN::Trial::FieldMap;
 use CXGN::Trial::AccessionChange;
 use CXGN::Trial::DesignReplication;
+use CXGN::Phenotypes::RejectedUnits;
 use CXGN::BreederSearch;
 use CXGN::BreedersToolbox::Projects;
 use CXGN::People::Person;
@@ -157,6 +158,10 @@ sub _search {
         })->search()
         : {};
 
+    my $unit_status = CXGN::Phenotypes::RejectedUnits->status_details($self->bcs_schema, \@page_stock_ids);
+    my %not_planted = map {$_ => 1} grep {$unit_status->{$_}{not_planted}} keys %$unit_status;
+    my %rejected = map {$_ => 1} grep {$unit_status->{$_}{rejected}} keys %$unit_status;
+    my %reject_reason = map {$_ => $unit_status->{$_}{reject_reason}} grep {defined($unit_status->{$_}{reject_reason})} keys %$unit_status;
     my %index_numbers;
     if (@page_stock_ids) {
         my $h = $self->bcs_schema->storage->dbh->prepare("SELECT stock_id, cvterm.name, value FROM stockprop JOIN cvterm ON cvterm_id = type_id WHERE stock_id = ANY(?) AND cvterm.name IN ('plant_index_number','subplot_index_number','tissue_sample_index_number','range')");
@@ -214,7 +219,24 @@ sub _search {
             $additional_info->{accessionOccurrence} = $obs_unit->{accession_occurrence}
                 if $obs_unit->{accession_occurrence_ready};
         }
-        # Range is backed by its actual stock property.
+        # notPlanted comes from the stock property, never from a stored additionalInfo
+        if ($not_planted{ $obs_unit->{obsunit_stock_id} } || (ref($additional_info) eq 'HASH' && exists($additional_info->{notPlanted}))) {
+            $additional_info = { %{ $additional_info || {} } };
+            delete $additional_info->{notPlanted};
+            $additional_info->{notPlanted} = JSON::true if $not_planted{ $obs_unit->{obsunit_stock_id} };
+        }
+        # rejected and rejectReason come from the stock properties too
+        if ($rejected{ $obs_unit->{obsunit_stock_id} } || (ref($additional_info) eq 'HASH' && (exists($additional_info->{rejected}) || exists($additional_info->{rejectReason})))) {
+            $additional_info = { %{ $additional_info || {} } };
+            delete @{$additional_info}{qw(rejected rejectReason)};
+            if ($rejected{ $obs_unit->{obsunit_stock_id} }) {
+                $additional_info->{rejected} = JSON::true;
+                my $reason = $reject_reason{ $obs_unit->{obsunit_stock_id} };
+                $additional_info->{rejectReason} = $reason if defined($reason) && length($reason);
+            }
+        }
+
+        # range, like plot statuses, is backed by its actual stock property.
         my $range = $index_numbers{$obs_unit->{obsunit_stock_id}}{range};
         if (defined($range) || (ref($additional_info) eq 'HASH' && exists($additional_info->{range}))) {
             $additional_info = {%{$additional_info || {}}};
@@ -612,10 +634,13 @@ sub _unit_boolean {
     _unit_fail("$field must be true or false.");
 }
 
-sub _unit_validate_additional_fields {
-    my ($info) = @_;
-    my @unsupported = grep {exists($info->{$_})} qw(notPlanted rejected rejectReason);
-    _unit_fail('Unsupported observation-unit additionalInfo field(s): '.join(', ', @unsupported).'.') if @unsupported;
+sub _unit_reason {
+    my ($value) = @_;
+    return undef if !defined($value);
+    _unit_fail('rejectReason must be text.') if ref($value);
+    $value =~ s/[\r\n\t]+/ /g; $value =~ s/^\s+|\s+$//g;
+    _unit_fail('rejectReason is longer than 500 characters.') if length($value) > 500;
+    return length($value) ? $value : undef;
 }
 
 sub _unit_prop {
@@ -710,7 +735,7 @@ sub _unit_apply_service_groups {
         my $options = {rename_plots => 'none', curator => $roles{curator} ? 1 : 0};
         my $plan = $svc->plan($g->{changes}, $options);
         _unit_fail(join(' ', @{$plan->{errors}})) if @{$plan->{errors}};
-        next if !@{$plan->{changes}};
+        next if !@{$plan->{changes}} && !@{$plan->{planting}} && !@{$plan->{rejections}};
         my $precheck = CXGN::Trial::FieldMap->new({bcs_schema => $schema, trial_id => $trial_id, experiment_type => 'field_layout'})->update_fieldmap_precheck;
         _unit_fail($precheck, 403) if $precheck && !$roles{curator};
         push @{$state->{warnings}},'Curator correction: '.$precheck if $precheck;
@@ -740,6 +765,7 @@ sub _unit_apply_updates {
     # Prepare without writes, compute the complete source/descendant closure,
     # then lock it canonically and prepare again from the protected state.
     $state->{projects}{$_} = 1 for @$projects;
+    my $status = CXGN::Phenotypes::RejectedUnits->status_details($schema, \@ids);
     my $replication = CXGN::Trial::DesignReplication::read($schema, \@ids);
     my (%groups, @prepared);
     for my $p (@$data) {
@@ -750,7 +776,6 @@ sub _unit_apply_updates {
         my $pos = $p->{observationUnitPosition} // {};
         my $info = $p->{additionalInfo} // {};
         _unit_fail('observationUnitPosition and additionalInfo must be objects.') if ref($pos) ne 'HASH' || ref($info) ne 'HASH';
-        _unit_validate_additional_fields($info);
         _unit_fail('observationLevel must be an object.') if exists($pos->{observationLevel}) && ref($pos->{observationLevel}) ne 'HASH';
         my $level = $pos->{observationLevel} || {};
         my $replication_state = $replication->{$id} || {};
@@ -783,6 +808,25 @@ sub _unit_apply_updates {
             if ($target->{id} != $self->_unit_old_germplasm($id)) {
                 _unit_fail('Germplasm can only be changed for plots.') if $type ne 'plot';
                 $change{new_stock_id} = $target->{id}; $identity = 1;
+            }
+        }
+        for my $pair ([notPlanted => 'not_planted'], [rejected => 'rejected']) {
+            next unless exists($info->{$pair->[0]});
+            my $value = _unit_boolean($info->{$pair->[0]}, $pair->[0]);
+            next unless defined($value);
+            if ($type ne 'plot') {
+                _unit_fail('Inherited plot status cannot be changed on a child unit.') if $value != ($status->{$id}{$pair->[1]} || 0);
+            } else { $change{$pair->[1]} = $value; }
+        }
+        if (exists($info->{rejectReason})) {
+            if ($type ne 'plot' && defined($info->{rejectReason}) && !ref($info->{rejectReason}) && $info->{rejectReason} eq ($status->{$id}{reject_reason} // '')) {
+                # A pooled sample can expose several inherited reasons. An
+                # unchanged readback is not a new 500-character plot reason.
+            } else {
+                my $reason = _unit_reason($info->{rejectReason});
+                if ($type ne 'plot') {
+                    _unit_fail('Inherited rejection reason cannot be changed on a child unit.') if defined($reason);
+                } elsif (defined($reason)) { $change{reject_reason} = $reason; }
             }
         }
         if (keys(%change) > 1) {
@@ -864,7 +908,7 @@ sub _unit_apply_updates {
         # Replication/block relationships were validated together and applied
         # once above, including inherited children and deliberate NULL clears.
         $self->_unit_prop($id, 'range', _unit_scalar($info->{range}, 'range')) if exists($info->{range});
-        my %reserved = map {$_ => 1} qw(observationUnitParent control range familyDbId familyName intercropGermplasm designReplicate accessionOccurrence);
+        my %reserved = map {$_ => 1} qw(observationUnitParent control range notPlanted rejected rejectReason familyDbId familyName intercropGermplasm designReplicate accessionOccurrence);
         my %extra = map {$_ => $info->{$_}} grep {!$reserved{$_}} keys %$info;
         if (%extra) {
             my $old = $self->_unit_prop($id, 'stock_additional_info');
@@ -984,8 +1028,10 @@ sub observationunits_store {
                 _unit_validate_references($unit->{externalReferences}) if exists($unit->{externalReferences});
                 _unit_boolean($info->{control},'control') if exists($info->{control});
                 if (defined($pos->{entryType}) && $pos->{entryType} !~ /^(?:CHECK|TEST)$/i) {_unit_fail('entryType must be CHECK or TEST.')}
-                _unit_validate_additional_fields($info);
+                for my $flag(qw(notPlanted rejected)){_unit_boolean($info->{$flag},$flag) if exists($info->{$flag})}
+                _unit_reason($info->{rejectReason}) if exists($info->{rejectReason});
                 if ($level ne 'plot') {
+                    _unit_fail('Plot statuses must be set on the parent plot.') if grep {defined($info->{$_}) && "$info->{$_}" ne ''} qw(notPlanted rejected rejectReason);
                     my $parent=_unit_scalar($info->{observationUnitParent},'observationUnitParent');
                     _unit_fail('A parent plot is required for a child unit.') if !defined($parent) || $parent !~ /^[1-9]\d*$/;
                     push @parents,$parent;
@@ -1012,6 +1058,8 @@ sub observationunits_store {
             $self->bcs_schema->storage->dbh->selectcol_arrayref('SELECT project_id FROM project WHERE project_id = ANY(?) ORDER BY project_id FOR UPDATE',undef,[keys %locks]);
             if(@parents){
                 $self->bcs_schema->storage->dbh->selectcol_arrayref('SELECT stock_id FROM stock WHERE stock_id = ANY(?) ORDER BY stock_id FOR UPDATE',undef,\@parents);
+                my $not_planted=CXGN::Phenotypes::RejectedUnits->marked_ids($self->bcs_schema,\@parents,'not_planted');
+                _unit_fail('New plants or samples cannot be added to a plot that was not planted.') if keys %$not_planted;
                 my $parent_replication = CXGN::Trial::DesignReplication::read($self->bcs_schema, \@parents);
                 for my $unit (@copy) {
                     next if $unit->{observationUnitPosition}{observationLevel}{levelName} eq 'plot';
@@ -1086,7 +1134,7 @@ sub _store_units_legacy {
         my $ou_level = $params->{observationUnitPosition}->{observationLevel}->{levelName} || undef;
         my $observationUnit_x_ref = $params->{externalReferences} ? $params->{externalReferences} : undef;
         my $raw_additional_info = $params->{additionalInfo} || undef;
-        my %specific_keys = map { $_ => 1 } ("observationUnitParent","control","designReplicate","accessionOccurrence");
+        my %specific_keys = map { $_ => 1 } ("observationUnitParent","control","notPlanted","rejected","rejectReason","designReplicate","accessionOccurrence");
         my %additional_info;
         if (defined $raw_additional_info) {
             foreach my $key (keys %$raw_additional_info) {

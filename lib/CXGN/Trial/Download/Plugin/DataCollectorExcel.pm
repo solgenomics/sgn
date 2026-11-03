@@ -55,14 +55,15 @@ sub download {
     my $spreadsheet_metadata = $self->file_metadata();
     my $trial_layout = CXGN::Trial::TrialLayout->new({schema => $schema, trial_id => $trial_id, experiment_type=>'field_layout'} );
     my $trial_stock_type = $self->trial_stock_type();
-    my $design = $trial_layout->get_design();
+    my $design = $trial_layout->get_planted_design();
 
     if (! $design) {
 	     return { error => "No design found for this trial. A trial design must exist in order to create this file"};
     }
 
-    my %design = %{$trial_layout->get_design()};
-    my @plot_names = @{$trial_layout->get_plot_names};
+    my %design = %$design;
+    my %planted = map { $_->{plot_name} => 1 } values %design;
+    my @plot_names = grep { $planted{$_} } @{$trial_layout->get_plot_names};
 
     # Match a dot, extension .xls / .xlsx
     my ($extension) = $self->filename() =~ /(\.[^.]+)$/;
