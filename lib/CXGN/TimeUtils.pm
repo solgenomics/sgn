@@ -17,10 +17,10 @@ trailing zero precision is accepted without changing the instant.
 
 sub normalize_db_timestamp {
     my $value = shift;
-    return undef if !defined($value) || $value eq '';
+    return undef if !defined($value) || $value eq ''; ## no critic (Subroutines::ProhibitExplicitReturnUndef) -- Preserve the explicit absent-value sentinel in every calling context.
     die "Timestamp must be a scalar value.\n" if ref($value);
     $value =~ s/^\s+|\s+$//g;
-    return undef if $value eq '';
+    return undef if $value eq ''; ## no critic (Subroutines::ProhibitExplicitReturnUndef) -- Preserve the explicit absent-value sentinel in every calling context.
     my $iso = $value;
     $iso =~ s/^(\d{4})(\d{2})(\d{2})$/$1-$2-$3/;
     $iso =~ s/^(\d{4}-\d{2}-\d{2})(?:\s+|_)/$1T/;

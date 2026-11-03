@@ -1360,7 +1360,7 @@ sub upload_barcode_output : Path('/breeders/phenotype/upload') :Args(0) {
 
     $tempfile = $archive_path . "/" . $basename ;
     print STDERR "**tempfile = $tempfile \n\n"; ##OK
-    #chack for write permissions in $archive_path !
+    #check for write permissions in $archive_path !
     my $upload_success = $upload->copy_to($archive_path . "/" . $basename); #returns false for failure, true for success
     if (!$upload_success) { die "Could not upload!\n $upload_success" ; }
     my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;

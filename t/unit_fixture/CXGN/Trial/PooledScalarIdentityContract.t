@@ -20,7 +20,7 @@ use CXGN::BrAPI::v2::ObservationUnits;
 my$f=SGN::Test::Fixture->new;my$s=$f->bcs_schema;my$dbh=$s->storage->dbh;
 $s->storage->auto_savepoint(1);my$prefix='audit_pool_identity_contract_'.$$;
 my($trial,$sample,$phenotype,@plots,@stocks);
-{package PoolScalarDbc;sub dbh{$_[0]{dbh}}}
+{package PoolScalarDbc;sub dbh{$_[0]{dbh}}} ## no critic (Modules::RequireFilenameMatchesPackage) -- This test embeds its named test double beside the assertions.
 {package PoolScalarClear;sub clear_cached_analyses_result{1}}
 {package PoolScalarContext;sub dbc{$_[0]{dbc}}sub config{$_[0]{config}}sub controller{$_[0]{clear}}}
 my$c=bless{dbc=>bless({dbh=>$dbh},'PoolScalarDbc'),config=>$f->config,clear=>bless({},'PoolScalarClear')},'PoolScalarContext';

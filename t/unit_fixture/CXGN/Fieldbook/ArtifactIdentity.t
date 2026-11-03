@@ -71,7 +71,7 @@ my $ran = eval {
     my $first = fieldbook('first.xls', {plot_name=>1,accession_name=>1});
     my $before = contents($first->{file});
     my $second = fieldbook('second.xls', {plot_name=>1,plot_number=>1});
-    isnt($first->{file}, $second->{file}, 'each generated file ID has a separate archived path');
+    isnt($first->{file}, $second->{file}, 'each generated file ID has a separate archived path'); # codespell:ignore isnt
     is(contents($first->{file}), $before, 'a later export cannot replace the first artifact');
     my $metadata = $f->metadata_schema->resultset('MdFiles')->find({file_id=>$first->{file_id}});
     is(md5_hex(contents($first->{file})), $metadata->md5checksum, 'saved checksum still names the actual first file');

@@ -602,7 +602,7 @@ sub _unit_set_blocks {
 
 sub _unit_boolean {
     my ($value, $field) = @_;
-    return undef if !defined($value) || (!ref($value) && $value =~ /^\s*$/);
+    return undef if !defined($value) || (!ref($value) && $value =~ /^\s*$/); ## no critic (Subroutines::ProhibitExplicitReturnUndef) -- Preserve the explicit absent-value sentinel in every calling context.
     if (ref($value)) {
         return $value ? 1 : 0 if ref($value) =~ /^(?:JSON::(?:XS|PP)::Boolean|Types::Serialiser::Boolean)$/;
         _unit_fail("$field must be true or false.");
@@ -626,7 +626,7 @@ sub _unit_prop {
     my $rs = $schema->resultset('Stock::Stockprop')->search({stock_id => $stock_id, type_id => $type->cvterm_id});
     if (@value) {
         my @old = $rs->all;
-        return undef if !@old && !defined($value[0]);
+        return undef if !@old && !defined($value[0]); ## no critic (Subroutines::ProhibitExplicitReturnUndef) -- Preserve the explicit absent-value sentinel in every calling context.
         return $old[0]->value if @old == 1 && defined($value[0]) && defined($old[0]->value) && $old[0]->value eq $value[0];
         $rs->delete;
         $schema->resultset('Stock::Stockprop')->create({stock_id => $stock_id, type_id => $type->cvterm_id, value => $value[0], rank => 0}) if defined($value[0]);

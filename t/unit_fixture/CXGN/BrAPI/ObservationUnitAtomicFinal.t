@@ -19,7 +19,7 @@ my $trial=$s->resultset('Project::Project')->find({name=>'test_trial'})->project
 my @plots=map {$s->resultset('Stock::Stock')->find({uniquename=>"test_trial2$_"})->stock_id} (10,11,12);
 my $prefix='unit_atomic_final_';
 my(@refresh,@clear);
-{package UnitAtomicDbc;sub dbh {$_[0]{dbh}}}
+{package UnitAtomicDbc;sub dbh {$_[0]{dbh}}} ## no critic (Modules::RequireFilenameMatchesPackage) -- This test embeds its named test double beside the assertions.
 {package UnitAtomicClear;sub clear_cached_analyses_result {push @{$_[0]{calls}},$_[2];return 1}}
 {package UnitAtomicContext;
  sub dbc {$_[0]{dbc}}

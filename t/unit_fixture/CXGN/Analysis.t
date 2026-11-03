@@ -86,32 +86,53 @@ for my $extension ("xls", "xlsx") {
             $result_blup_genetic_data_no_timestamps{$k}->{$k1} = $v1->[0];
         }
     }
-    is_deeply(\%result_blup_genetic_data_no_timestamps, {
+    # Independent reference: raw trial 165 records declare RCBD, with blocks
+    # 1/2/3 and a constant replicate tag of 1. Fit y ~ block + (1|genotype).
+    # Standard lme4 and independent nlme REML fits agree within 2.5e-7;
+    # 1e-5 allows numerical optimizer variation while detecting omitted blocks.
+    my $expected_rcbd_blups = {
         'IITA-TMS-IBA980002' => {
-            'cass sink leaf|3-phosphoglyceric acid|ug/g|week 16|COMP:0000013' => '-66.8437119136587',
+            'cass sink leaf|3-phosphoglyceric acid|ug/g|week 16|COMP:0000013' => '-93.2214664053642',
             'cass sink leaf|ADP alpha-D-glucoside|ug/g|week 16|COMP:0000011'  => '0'
         },
         'TMEB419'            => {
             'cass sink leaf|ADP alpha-D-glucoside|ug/g|week 16|COMP:0000011'  => '0',
-            'cass sink leaf|3-phosphoglyceric acid|ug/g|week 16|COMP:0000013' => '-63.0930280648434'
+            'cass sink leaf|3-phosphoglyceric acid|ug/g|week 16|COMP:0000013' => '-59.3674526487148'
         },
         'IITA-TMS-IBA30572'  => {
             'cass sink leaf|ADP alpha-D-glucoside|ug/g|week 16|COMP:0000011'  => '0',
-            'cass sink leaf|3-phosphoglyceric acid|ug/g|week 16|COMP:0000013' => '73.0440483006472'
+            'cass sink leaf|3-phosphoglyceric acid|ug/g|week 16|COMP:0000013' => '91.7907330002807'
         },
         'IITA-TMS-IBA980581' => {
-            'cass sink leaf|3-phosphoglyceric acid|ug/g|week 16|COMP:0000013' => '0.533200041783611',
+            'cass sink leaf|3-phosphoglyceric acid|ug/g|week 16|COMP:0000013' => '-4.11037726547205',
             'cass sink leaf|ADP alpha-D-glucoside|ug/g|week 16|COMP:0000011'  => '0'
         },
         'IITA-TMS-IBA011412' => {
-            'cass sink leaf|3-phosphoglyceric acid|ug/g|week 16|COMP:0000013' => '77.8812579916274',
+            'cass sink leaf|3-phosphoglyceric acid|ug/g|week 16|COMP:0000013' => '98.1883106192482',
             'cass sink leaf|ADP alpha-D-glucoside|ug/g|week 16|COMP:0000011'  => '0'
         },
         'TMEB693'            => {
             'cass sink leaf|ADP alpha-D-glucoside|ug/g|week 16|COMP:0000011'  => '0',
-            'cass sink leaf|3-phosphoglyceric acid|ug/g|week 16|COMP:0000013' => '-21.5217663555557'
+            'cass sink leaf|3-phosphoglyceric acid|ug/g|week 16|COMP:0000013' => '-33.2797472999781'
         }
-    });
+    };
+    is_deeply([sort keys %result_blup_genetic_data_no_timestamps],
+        [sort keys %$expected_rcbd_blups], 'RCBD BLUP output preserves every genotype identity');
+    for my $genotype (sort keys %$expected_rcbd_blups) {
+        my $actual = $result_blup_genetic_data_no_timestamps{$genotype} || {};
+        my $expected = $expected_rcbd_blups->{$genotype};
+        is_deeply([sort keys %$actual], [sort keys %$expected],
+            "$genotype BLUP output preserves every trait identity");
+        for my $trait (sort keys %$expected) {
+            my $value = $actual->{$trait};
+            my $numeric = defined($value) && $value =~ /^[-+]?(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][-+]?\d+)?$/;
+            ok($numeric, "$genotype $trait has a finite numeric BLUP");
+            if ($numeric) {
+                cmp_ok(abs($value - $expected->{$trait}), '<=', 1e-5,
+                    "$genotype $trait agrees with independent physical-block REML reference");
+            }
+        }
+    }
 
     my $protocol = 'lme(t1~replicate + 1|germplasmName, data=mat, na.action = na.omit)';
 

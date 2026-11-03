@@ -166,7 +166,7 @@ my $ran=eval {
   my $x=create_layout('RCBD');my $svc=service($x);my $changes=merge_change($x);my $options={curator=>1,rename_plots=>'none'};
   my $preview=$svc->plan($changes,$options);is_deeply($preview->{errors},[],'preview valid');
   my $digest=$svc->plan_digest($preview);property($x->{plots}[2],'design_replicate','99');
-  isnt($svc->plan_digest($svc->plan($changes,$options)),$digest,'digest notices changed recorded design membership');
+  isnt($svc->plan_digest($svc->plan($changes,$options)),$digest,'digest notices changed recorded design membership'); # codespell:ignore isnt
   my $saved=eval {$svc->apply($changes,{%$options,plan_digest=>$digest});1};
   ok(!$saved,'stale preview is refused');
   is(germplasm($x->{plots}[1]),$x->{stocks}[1],'stale apply did not change accession');

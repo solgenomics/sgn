@@ -22,7 +22,7 @@ for my $row (1..8) { for my $col (1..8) {
     push @source,join("\t",$col,$row,"P$plot","G$genotype",$row,$row,$plot,$value)."\n";
 }}
 {
-    package SpatialBoundaryReq;
+    package SpatialBoundaryReq; ## no critic (Modules::RequireFilenameMatchesPackage) -- This test embeds its named test double beside the assertions.
     sub param {return $_[0]->{$_[1]}}
     package SpatialBoundaryPerson;
     sub get_sp_person_id {return 41}

@@ -18,7 +18,7 @@ my $prefix='audit_design_clone_'.$$;
 my ($trial,@plots);
 my %types;
 sub term {my($name,$cv)=@_;return $types{"$cv/$name"} ||= SGN::Model::Cvterm->get_cvterm_row($schema,$name,$cv)->cvterm_id}
-{ package RealMigrationContext; sub dbh {$_[0]{dbh}} }
+{ package RealMigrationContext; sub dbh {$_[0]{dbh}} } ## no critic (Modules::RequireFilenameMatchesPackage) -- This test embeds its named test double beside the assertions.
 sub patch {AddDesignReplicationStockprop::patch(bless({dbh=>$dbh},'RealMigrationContext'))}
 sub property_rows {return $dbh->selectall_arrayref('SELECT stock_id,rank,value FROM stockprop WHERE stock_id=ANY(?) AND type_id=? ORDER BY stock_id,rank',undef,\@plots,term($_[0],'stock_property'))}
 sub cleanup {
@@ -46,7 +46,7 @@ my $ran=eval {
  my $before=property_rows('replicate');
  patch();
  my $reader=SGN::Test::Fixture->new;
- isnt($reader->bcs_schema->storage->dbh->selectrow_array('SELECT pg_backend_pid()'),$dbh->selectrow_array('SELECT pg_backend_pid()'),'verification reader has an independent database connection');
+ isnt($reader->bcs_schema->storage->dbh->selectrow_array('SELECT pg_backend_pid()'),$dbh->selectrow_array('SELECT pg_backend_pid()'),'verification reader has an independent database connection'); # codespell:ignore isnt
  my $state=CXGN::Trial::DesignReplication::read($reader->bcs_schema,\@plots);
  is_deeply([map {$state->{$_}{value}} @plots],['01',undef],'real migration commit is visible to another connection with exact and NULL tags');
  is_deeply([map {$state->{$_}{recorded}} @plots],[1,1],'real migration commits explicit snapshot rows');

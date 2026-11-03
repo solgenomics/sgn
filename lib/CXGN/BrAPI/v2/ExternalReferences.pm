@@ -42,7 +42,7 @@ has 'table_id_key' => (
 # Callers may validate before constructing the storage object or archiving data.
 sub validate_payload {
     my ($refs) = @_;
-    return undef if !defined($refs);
+    return undef if !defined($refs); ## no critic (Subroutines::ProhibitExplicitReturnUndef) -- Preserve the explicit absent-value sentinel in every calling context.
     return {code=>400,error=>'externalReferences must be an array of objects.'} if ref($refs) ne 'ARRAY';
     for my $ref (@$refs) {
         return {code=>400,error=>'Each external reference must be an object.'} if ref($ref) ne 'HASH';
@@ -56,7 +56,7 @@ sub validate_payload {
         return {code=>400,error=>'referenceId and legacy referenceID identify different references.'}
             if defined($ref->{referenceId}) && length($ref->{referenceId}) && defined($ref->{referenceID}) && length($ref->{referenceID}) && $ref->{referenceId} ne $ref->{referenceID};
     }
-    return undef;
+    return undef; ## no critic (Subroutines::ProhibitExplicitReturnUndef) -- Preserve the explicit absent-value sentinel in every calling context.
 }
 
 sub search {

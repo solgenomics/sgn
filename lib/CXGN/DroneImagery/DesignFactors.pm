@@ -38,7 +38,7 @@ sub fixed_terms {
 sub group_key {
     my ($design, $rep, $block, $environment) = @_;
     my $kind = kind($design);
-    return undef if $kind eq 'CRD';
+    return undef if $kind eq 'CRD'; ## no critic (Subroutines::ProhibitExplicitReturnUndef) -- Preserve the explicit absent-value sentinel in every calling context.
     die "Recorded block metadata is missing; an accession occurrence cannot replace it.\n" unless defined($block) && length($block);
     my @key = (defined($environment) ? "$environment" : (), "$block");
     if ($kind eq 'Incomplete') {
@@ -76,7 +76,7 @@ sub numeric_group_code {
 
 sub cnn_design {
     my ($prediction_type,$designs) = @_;
-    return undef unless ($prediction_type // '') eq 'cnn_prediction_mixed_model';
+    return undef unless ($prediction_type // '') eq 'cnn_prediction_mixed_model'; ## no critic (Subroutines::ProhibitExplicitReturnUndef) -- Preserve the explicit absent-value sentinel in every calling context.
     die "CNN mixed-model evaluation requires declared trial designs.\n" unless ref($designs) eq 'ARRAY' && @$designs;
     my %unique;
     for my $design (@$designs) {

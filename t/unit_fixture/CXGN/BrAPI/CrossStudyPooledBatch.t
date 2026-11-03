@@ -9,7 +9,7 @@ use CXGN::Phenotypes::SearchFactory;
 my $f=SGN::Test::Fixture->new;my $s=$f->bcs_schema;my $dbh=$s->storage->dbh;
 $s->storage->auto_savepoint(1);my $prefix='audit_cross_study_pool_'.$$;
 my(@trials,@plots,$pool,$phenotype,$old_stock,$new_stock);my(@refresh,@clear);
-{package CrossPoolDbc;sub dbh {$_[0]{dbh}}}
+{package CrossPoolDbc;sub dbh {$_[0]{dbh}}} ## no critic (Modules::RequireFilenameMatchesPackage) -- This test embeds its named test double beside the assertions.
 {package CrossPoolClear;sub clear_cached_analyses_result {push @{$_[0]{calls}},$_[2];return 1}}
 {package CrossPoolContext;sub dbc {$_[0]{dbc}} sub config {$_[0]{config}} sub controller {$_[0]{clear}}}
 my $context=bless({dbc=>bless({dbh=>$dbh},'CrossPoolDbc'),config=>$f->config,clear=>bless({calls=>\@clear},'CrossPoolClear')},'CrossPoolContext');

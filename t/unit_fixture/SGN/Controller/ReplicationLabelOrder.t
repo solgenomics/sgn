@@ -37,7 +37,7 @@ for my$entry([$metadata,'metadata'],[$phenome,'phenome']){
     $schema->storage->dbh;
 }
 {
-    package RepLabelReq;
+    package RepLabelReq; ## no critic (Modules::RequireFilenameMatchesPackage) -- This test embeds its named test double beside the assertions.
     sub param {$_[0]{params}{$_[1]}}
     sub upload {undef}
     package RepLabelResponse;

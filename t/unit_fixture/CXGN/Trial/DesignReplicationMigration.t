@@ -30,7 +30,7 @@ sub raw_rows {
 sub snapshot {
  my($ids)=@_;return CXGN::Trial::DesignReplication::read($s,$ids);
 }
-{package MigrationOwnerContext;sub dbh {$_[0]{dbh}}}
+{package MigrationOwnerContext;sub dbh {$_[0]{dbh}}} ## no critic (Modules::RequireFilenameMatchesPackage) -- This test embeds its named test double beside the assertions.
 sub run_patch {
  my $connects=0;
  {
