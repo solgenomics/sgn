@@ -19,6 +19,9 @@ For more information, use the [SGN contact form](https://solgenomics.net/contact
 
 Users should refer to the [user manual](https://solgenomics.github.io/sgn/).
 
+Optional interface and user-manual translations are documented in the
+[localization guide](docs/i18n/README.md).
+
 Developers should refer to the [developer guide](https://github.com/solgenomics/sgn/wiki).
 See the [internationalization chapter](docs/i18n/DEVELOPER.md) for adding and
 debugging translated messages.

@@ -169,3 +169,105 @@ add its tag to `i18n_enabled_locales`. When source English changes, merge and
 review new/fuzzy entries before rebuilding. Runtime JSON is generated output,
 not translator-authored code. See [the translator/operator procedure](TRANSLATOR.md)
 for external workspaces, validation, installation and activation/rollback.
+
+## Design and review changes
+
+This contribution includes the interface, Ukrainian/Spanish/Arabic gettext
+catalogs and all 29 user-manual chapters per language. It is related to
+[translation issue #5915](https://github.com/solgenomics/sgn/issues/5915).
+The following changes address the review and simplify setup and maintenance:
+
+- **One browser API:** `SGN.t` and `SGN.tn` provide short calls and complete
+  English fallback through the ordinary shared script. Trial uses those helpers
+  instead of publishing a second, incomplete global translator. Its native save
+  payload and locale header remain intact. Catalogs remain one validated
+  dictionary rather than another executable translation backend.
+- **Release-based catalogs:** the source builder freezes messages and workflow
+  assignments once per application release. Translators work with external PO
+  files and the frozen release, without parsing application source. Operators
+  use the common launcher and three standard-library modules; ready-pack
+  installation needs no Node, Acorn, gettext, Perl or R. Installation is
+  `install`, then `activate`, using the hash from the install receipt.
+- **Explicit settings and commands:** the quickstart requires only the enabled
+  flag, language allow-list and active catalog path. Optional defaults and
+  published-manual settings are separate. Task-specific help and
+  `COMMAND --root PATH` use one entry point; earlier direct tool syntax remains
+  compatible. Configuration changes require the normal application restart;
+  data-only catalog activation affects subsequent requests.
+- **Portable, recoverable packages:** new runtime and selector pointers are
+  relative within the whole store, so its container mount path can differ from
+  the operator's path. Re-activating an older selected hash updates absolute
+  pointers without adding an activation-history event. Validate, activate and
+  roll back through the supplied tools; checksums, immutable request snapshots
+  and atomic generation/history changes protect the working site. Interrupted
+  first activation and legacy-store migration have explicit recovery journals.
+- **Predictable language selection:** the selector sits immediately left of
+  Login. Applying a choice preserves the query and section anchor and removes
+  a stale language override. Disabled pages omit both optional locale-resource
+  requests. Missing or corrupt configured packs log their locale, store and
+  reason once per request; an unavailable regional pack does not hide an
+  installed, configured parent language.
+- **Standard development workflow:** tools live under `bin/i18n`; the
+  [developer chapter](DEVELOPER.md) covers complete messages, escaping and
+  debugging. Shared format rules, standard argparse and bounded terminology
+  review batches avoid extra configuration and repeated manual catalog work.
+  The official developer wiki has not been edited by this contribution.
+- **Independent manuals:** language builds and tests do not start the
+  application. Explicit language builds require an absolute output outside the
+  manual sources; help and path checks prevent accidental overwrites. The
+  original no-argument English build remains supported. Language navigation
+  preserves chapter/section and new-tab actions; explicit English metadata,
+  Arabic RTL layout and static print figures are included.
+
+Interface and manual sources are delivered together. The release contract also
+supports separate catalog/manual repositories, but repository ownership and
+hosting remain maintainer decisions. No separate repository is required or
+created by this contribution. Existing documentation CI retains its English
+publication path; multilingual documentation publication is a separate
+maintainer action. Interface pack activation does not publish a manual.
+
+## Validation and current limits
+
+The 2026-11-03 local qualification passed 60 native files / 2,311 top-level checks,
+128 Python tool checks, 133 R checks and four armed Chromium source checks.
+Mason header/request tests cover enabled and disabled behavior, missing packs
+and regional fallback. A whole-source Trial regression exercises the actual
+edit/save callback, canonical field keys, literal Unicode/markup, zero and
+empty-date behavior, locale headers, plain messages and plural fallback in
+three runtime modes. Store tests cover earlier absolute selectors, relative
+selectors, changed mount paths, unchanged activation history and rollback;
+the actual Perl and R APIs loaded all three packs at a different container path.
+
+All 15,398 message identities, 90 compiled JSON/index files and three package
+hashes matched the previous qualified version after the simplification; PO/POT
+changes contain source references only. Black 26.1.0, Ruff 0.14.14, isort and
+pylint passed all 20 Python tool files; root README Markdown, formatting and
+terminology checks passed. The [validation record](VALIDATION.md) maps each
+requirement to its evidence and gives reproduction commands.
+
+Four HTML readers and three translated PDFs were built and reviewed during the
+earlier qualification. Scientific examples and chapter text are preserved;
+English, Arabic and the original no-argument English HTML builds passed again.
+Generated HTML, PDFs, catalogs, package stores and reports remain outside Git.
+Earlier PostgreSQL phenotype regressions passed 277 assertions and controlled
+stock-property checks passed 25; these are separate from the current local
+request and tool checks.
+
+The catalogs and manuals are machine-generated drafts requiring native-speaker
+and breeder review. Each current language has 15,397 translated identities and
+one whole English fallback for the updated blank/`NA`/`.` import explanation.
+Filled coverage is not linguistic or scientific approval. Country-name sources
+and licensing are retained in [translation sources](TRANSLATION_SOURCES.md).
+
+Two optional local probes remain skipped: the source-path calendar dependency
+probe and opt-in POD coverage. The earlier fixture bootstrap emitted an
+`AddCascadeDeletes` foreign-key diagnostic for absent `md_files.file_id=2` and
+continued. A clean full fixture bootstrap and full authenticated application
+browser acceptance are not claimed. Each newly published revision must receive
+its own hosted CI results. R support is an explicit presentation API; existing
+scientific R calculations are not newly instrumented or qualified by it.
+
+Rollback uses the previous immutable package without restarting the application,
+or `i18n_enabled 0` with the normal restart. Documentation can return to its
+previous published artifact. Stored scientific data, IDs, units, import/export
+fields, permissions and schema remain unchanged.
