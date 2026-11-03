@@ -6,6 +6,7 @@ use Moose;
 use Data::Dumper;
 use File::Slurp;
 use File::Spec;
+use File::Copy qw(copy);
 use JSON::Any;
 use File::Basename qw | basename |;
 use DateTime;
@@ -203,11 +204,56 @@ sub run: Path('/ajax/mixedmodels/run') Args(0) {
 
     print STDERR "ENGINE = $engine\n";
 
-    my $mm = CXGN::MixedModels->new( { tempfile => $c->config->{basepath}."/".$tempfile });
+    my $prepared = $c->config->{basepath}."/".$tempfile;
+    $prepared .= ".before_clean" if -f $prepared.".before_clean";
+    if (!-f $prepared) {
+        $c->stash->{rest} = { error => "The prepared phenotype table is unavailable. Prepare the dataset again." };
+        return;
+    }
+    $c->tempfiles_subdir("mixedmodels");
+    my ($run_fh, $run_tempfile) = $c->tempfile(TEMPLATE => "mixedmodels/run_XXXXX", SUFFIX => "_phenotype.txt");
+    close($run_fh) if defined($run_fh);
+    my $working_input = "".$c->path_to($run_tempfile);
+    if (!copy($prepared, $working_input)) {
+        unlink($working_input);
+        $c->stash->{rest} = { error => "Could not copy the prepared phenotype table for this analysis." };
+        return;
+    }
+    $tempfile = $run_tempfile;
+    my $mm = CXGN::MixedModels->new( { tempfile => $working_input });
 
     $mm->dependent_variables($dependent_variables);
     $mm->random_factors($random_factors);
     $mm->fixed_factors($fixed_factors);
+    # Preserve the structured terms used by the preview. The displayed model
+    # string remains generated from these selected factors.
+    for my $term (qw(fixed_factors_interaction variable_slope_intersects)) {
+        next unless defined $params->{$term};
+        my $terms = $params->{$term};
+        if (!ref($terms)) {
+            eval { $terms = JSON::Any->new->decode($terms); };
+            if ($@) {
+                $c->stash->{rest} = { error => "Invalid model terms for $term." };
+                return;
+            }
+        }
+        my $invalid = ref($terms) ne 'ARRAY';
+        if (!$invalid) {
+            for my $collection (@$terms) {
+                if (ref($collection) ne 'ARRAY' || !@$collection ||
+                    ($term eq 'variable_slope_intersects' && @$collection != 2) ||
+                    grep { !defined($_) || ref($_) || $_ eq '' } @$collection) {
+                    $invalid = 1;
+                    last;
+                }
+            }
+        }
+        if ($invalid) {
+            $c->stash->{rest} = { error => "Invalid factor collection for $term." };
+            return;
+        }
+        $mm->$term($terms);
+    }
     $mm->engine($engine);
     my $dep_vars = join(", ", @{$dependent_variables});
     my $job_record_config = {
@@ -225,7 +271,7 @@ sub run: Path('/ajax/mixedmodels/run') Args(0) {
     };
     my $error = $mm->run_model($c->config->{backend}, $c->config->{cluster_host}, $c->config->{cluster_shared_tempdir} . "/mixed_models", $job_record_config);
 
-    my $temppath = $c->config->{basepath}."/".$tempfile;
+    my $temppath = $working_input;
 
     my $adjusted_blups_file = $temppath.".adjustedBLUPs";
     #print STDERR "ADJUSTED BLUP FILES: ".Dumper($adjusted_blups_file);

@@ -139,9 +139,73 @@ planting transaction changes. Cached seed count and weight are then recalculated
 together from one fresh transaction list under the same lock; cached per-object
 transactions cannot overwrite another study's committed inventory changes.
 
+## Native random-regression variance report by time
+
+The native F90 trajectory report uses the actual fitted covariance model. With
+basis vector `b(t)`, coefficient covariance matrices `QG` and `QPE`, genotype
+kernel `K`, physical-unit kernel `L` and fitted log-residual coefficients `gamma`,
+the marginal variances on genotype `i`, physical unit `j`, at time `t` are
+`K[i,i] * b(t)' QG b(t)`, `L[j,j] * b(t)' QPE b(t)` and
+`exp(b(t)' gamma)`. Keep the full matrices and their covariance cross-terms.
+The printed native `SE for R` is a diagnostic standard error; it is never a
+residual variance, time-specific uncertainty estimate or ratio denominator.
+Fixed-covariance BLUP uses declared matrices and labels them supplied; AIREML
+uses the validated final estimates and labels them estimated.
+
+Report the genetic share of adjusted individual-observation variance. The
+summary curve is the ratio of average marginal components over a fixed set of
+fitted physical units, with equal per-unit weights archived with their IDs.
+Keep the individual values/range, numeric time, DAP/GDD unit, actual basis,
+kernel provenance and scale. Missing dates do not silently change the reference
+population. Rescaling a kernel and inversely rescaling its coefficient covariance
+must leave every projected marginal component and share unchanged.
+
+Interpretation follows the biological model. Additive marker effects produce an
+explicitly labelled additive/model share; independent genotypic effects may
+represent broad-sense variation only when that interpretation is declared.
+Phenotype-derived or unknown kernels do not justify an unqualified heritability
+label. Invalid covariance kernels or unidentifiable/nonconverged fits produce a
+named diagnostic. Do not change their estimator to manufacture a plausible H2.
+
+This report does not estimate genotype-mean selection reliability. That metric
+requires the actual averaging weights and prediction-error covariance of
+contrasts; neither occurrence counters nor a maximum replication label provide
+it. Preserve existing historical summary JSON, clearly identifying old native
+coefficient-ratio results as legacy/unverified. Version the corrected report and
+label across-simulation standard deviations separately from estimation SE.
+
+Scientific basis: [Salimiyekta et al. (2021), equations 9–12](https://pmc.ncbi.nlm.nih.gov/articles/PMC8697866/)
+and [Schmidt et al. (2019), individual versus entry-mean interpretation](https://pmc.ncbi.nlm.nih.gov/articles/PMC6707473/).
+
+Native F90 input explicitly declares its missing-observation code. Actual numeric
+zero is measured data. Only absent observations or held-out CV values use the
+reserved code, and a real measurement colliding with that code is refused with
+a diagnostic. Missing-input rows do not contribute placeholder fitted values,
+residuals or error sums on readback. This coding rule does not change categorical
+zero labels, pedigree identifiers or the statistical model.
+
+Original native F90 output is a finite-precision numerical interface. A successful
+exit alone does not establish a valid supplied kernel: the retained original
+backend can silently use a partial generalized inverse for a numerically singular
+kernel. Require the documented relative numerical-rank contract and report a
+named unsupported-kernel diagnostic; never silently repair the supplied kernel.
+
+AIREML text covariance entries can round a positive fitted matrix into an
+apparently indefinite matrix. Preserve raw covariance/eigensystem text and its
+decimal representation bounds. Use a reported spectral representation only when
+nonnegative eigenvalues, orthogonality and covariance-entry consistency are
+validated against the propagated printed precision. Label that readback source
+and uncertainty explicitly. This is numerical output representation, not a new
+fit, kernel repair, confidence interval or claim of unavailable full precision.
+
 Explicit layout/Field Book `selected_columns` requests retain exactly the
 requested metadata columns. Selecting `rep_number` does not silently insert an
 extra occurrence column. Rich native defaults/UI can select both independently;
 the separate `accession_occurrence` option is visible and removable. Existing
 fixed-width custom layouts remain compatible. Plot eligibility/status policy
 continues to apply independently of column selection.
+
+A native variance JSON archive is successful only after a real readable file and
+its digest exist. If archival fails after summary persistence, return a controlled
+error with the saved protocol ID and saved-summary state. Retain the source JSON
+and stored result; never present a nonexistent archive path as success.

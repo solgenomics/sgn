@@ -10,6 +10,10 @@ export function init(main_div) {
     }
 
     var dataset_id;
+    var executed_analysis;
+    function model_statistical_term(lmer, sommer) {
+        return executed_analysis.engine === 'sommer' || executed_analysis.engine === 'spl2D' ? sommer : lmer;
+    }
 
     // alert("WELCOME TO MIXED MODELS!");
     get_select_box("datasets", "mixed_model_dataset_select", { "checkbox_name": "mixed_model_dataset_select_checkbox", "analysis_type":"Mixed Models", "show_compatibility":"yes" });
@@ -23,14 +27,18 @@ export function init(main_div) {
 
 
     $(document).on('click', '#open_store_adjusted_blups_dialog_button', function (e) {
+        if (!executed_analysis) {
+            alert('Run an analysis successfully before saving its results.');
+            return;
+        }
         $('#generic_save_analysis_dialog').modal("show");
         $('#generic_save_analysis_model_properties').val(model_properties);
-        $('#generic_save_analysis_protocol').val($('#model_string').html());
-        $('#generic_save_analysis_dataset_id').val(dataset_id);
+        $('#generic_save_analysis_protocol').val(executed_analysis.protocol);
+        $('#generic_save_analysis_dataset_id').val(executed_analysis.dataset_id);
         $('#generic_save_analysis_accession_names').val(accession_names);
-        $('#generic_save_analysis_dataset_id').val(get_dataset_id());
+        $('#generic_save_analysis_dataset_id').val(executed_analysis.dataset_id);
         $('#generic_save_analysis_trait_names').val(traits);
-        $('#generic_save_analysis_statistical_ontology_term').val('Adjusted means from BLUPs using LMER R|SGNSTAT:0000034');
+        $('#generic_save_analysis_statistical_ontology_term').val(model_statistical_term('Adjusted means from BLUPs using LMER R|SGNSTAT:0000034', 'Adjusted means from BLUPs using Sommer R|SGNSTAT:0000039'));
         $('#generic_save_analysis_model_language').val('R');
         $('#generic_save_analysis_model_application_name').val('Breedbase Mixed Model Tool');
         $('#generic_save_analysis_model_application_version').val(version);
@@ -43,14 +51,18 @@ export function init(main_div) {
     });
 
     $(document).on('click', '#open_store_blups_dialog_button', function (e) {
+        if (!executed_analysis) {
+            alert('Run an analysis successfully before saving its results.');
+            return;
+        }
         $('#generic_save_analysis_dialog').modal("show");
         $('#generic_save_analysis_model_properties').val(model_properties);
-        $('#generic_save_analysis_protocol').val($('#model_string').html());
-        $('#generic_save_analysis_dataset_id').val(dataset_id);
+        $('#generic_save_analysis_protocol').val(executed_analysis.protocol);
+        $('#generic_save_analysis_dataset_id').val(executed_analysis.dataset_id);
         $('#generic_save_analysis_accession_names').val(accession_names);
-        $('#generic_save_analysis_dataset_id').val(get_dataset_id());
+        $('#generic_save_analysis_dataset_id').val(executed_analysis.dataset_id);
         $('#generic_save_analysis_trait_names').val(traits);
-        $('#generic_save_analysis_statistical_ontology_term').val('Phenotypic BLUPs using LMER R|SGNSTAT:0000035');
+        $('#generic_save_analysis_statistical_ontology_term').val(model_statistical_term('Phenotypic BLUPs using LMER R|SGNSTAT:0000035', 'Phenotypic BLUPs using Sommer R|SGNSTAT:0000040'));
         $('#generic_save_analysis_model_language').val('R');
         $('#generic_save_analysis_model_application_name').val('Breedbase Mixed Model Tool');
         $('#generic_save_analysis_model_application_version').val(version);
@@ -63,14 +75,18 @@ export function init(main_div) {
     });
 
     $(document).on('click', '#open_store_adjusted_blues_dialog_button', function (e) {
+        if (!executed_analysis) {
+            alert('Run an analysis successfully before saving its results.');
+            return;
+        }
         $('#generic_save_analysis_dialog').modal("show");
         $('#generic_save_analysis_model_properties').val(model_properties);
-        $('#generic_save_analysis_protocol').val($('#model_string').html());
-        $('#generic_save_analysis_dataset_id').val(dataset_id);
+        $('#generic_save_analysis_protocol').val(executed_analysis.protocol);
+        $('#generic_save_analysis_dataset_id').val(executed_analysis.dataset_id);
         $('#generic_save_analysis_accession_names').val(accession_names);
-        $('#generic_save_analysis_dataset_id').val(get_dataset_id());
+        $('#generic_save_analysis_dataset_id').val(executed_analysis.dataset_id);
         $('#generic_save_analysis_trait_names').val(traits);
-        $('#generic_save_analysis_statistical_ontology_term').val('Adjusted means from BLUEs using LMER R|SGNSTAT:0000036');
+        $('#generic_save_analysis_statistical_ontology_term').val(model_statistical_term('Adjusted means from BLUEs using LMER R|SGNSTAT:0000036', 'Adjusted means from BLUEs using Sommer R|SGNSTAT:0000041'));
         $('#generic_save_analysis_model_language').val('R');
         $('#generic_save_analysis_model_application_name').val('Breedbase Mixed Model Tool');
         $('#generic_save_analysis_model_application_version').val(version);
@@ -84,14 +100,18 @@ export function init(main_div) {
 
 
     $(document).on('click', '#open_store_blues_dialog_button', function (e) {
+        if (!executed_analysis) {
+            alert('Run an analysis successfully before saving its results.');
+            return;
+        }
         $('#generic_save_analysis_dialog').modal("show");
         $('#generic_save_analysis_model_properties').val(model_properties);
-        $('#generic_save_analysis_protocol').val($('#model_string').html());
-        $('#generic_save_analysis_dataset_id').val(dataset_id);
+        $('#generic_save_analysis_protocol').val(executed_analysis.protocol);
+        $('#generic_save_analysis_dataset_id').val(executed_analysis.dataset_id);
         $('#generic_save_analysis_accession_names').val(accession_names);
-        $('#generic_save_analysis_dataset_id').val(get_dataset_id());
+        $('#generic_save_analysis_dataset_id').val(executed_analysis.dataset_id);
         $('#generic_save_analysis_trait_names').val(traits);
-        $('#generic_save_analysis_statistical_ontology_term').val('Phenotypic BLUEs using LMER R|SGNSTAT:0000037');
+        $('#generic_save_analysis_statistical_ontology_term').val(model_statistical_term('Phenotypic BLUEs using LMER R|SGNSTAT:0000037', 'Phenotypic BLUEs using Sommer R|SGNSTAT:0000042'));
         $('#generic_save_analysis_model_language').val('R');
         $('#generic_save_analysis_model_application_name').val('Breedbase Mixed Model Tool');
         $('#generic_save_analysis_model_application_version').val(version);
@@ -105,18 +125,21 @@ export function init(main_div) {
 
     $('#mixed_model_analysis_prepare_button').click(function () {
 
-        dataset_id = get_dataset_id();
+        var requested_dataset_id = get_dataset_id();
         var dataset_trait_outliers = $('#dataset_trait_outliers').is(':checked') ? 1 : 0;
 
-        if (dataset_id != false) {
+        if (requested_dataset_id != false) {
             $.ajax({
                 url: '/ajax/mixedmodels/prepare',
-                data: { 'dataset_id': get_dataset_id(),'dataset_trait_outliers': dataset_trait_outliers, },
+                data: { 'dataset_id': requested_dataset_id,'dataset_trait_outliers': dataset_trait_outliers, },
                 success: function (r) {
                     if (r.error) {
                         alert(r.error);
                     }
                     else {
+                        // Bind the prepared file to its own response, even if
+                        // the selection changes while the request is pending.
+                        dataset_id = requested_dataset_id;
                         $('#dependent_variable').html(r.dependent_variable);
                         var html = "";
 
@@ -316,7 +339,9 @@ export function init(main_div) {
         var fixed_factors = parse_simple_factors("fixed_factors");
         //alert("FIXED FACTORS: "+fixed_factors);
         var random_factors = parse_simple_factors("random_factors");
+        var model_parameters = extract_model_parameters();
         var engine = $('input[name="select_engine"]:checked').val();
+        var submitted_dataset_id = dataset_id;
         //alert("Engine is "+engine);
         var tempfile = $('#tempfile').text();
 
@@ -336,6 +361,8 @@ export function init(main_div) {
 		"dependent_variables": dependent_variables,
 		"fixed_factors" : fixed_factors,
 		"random_factors" : random_factors,
+                "fixed_factors_interaction": JSON.stringify(model_parameters.fixed_factors_interaction),
+                "variable_slope_intersects": JSON.stringify(model_parameters.variable_slope_intersects),
 		"engine" : engine
 	    },
             "success": function(r) {
@@ -386,7 +413,9 @@ export function init(main_div) {
 		    input_file = r.input_file;
 		    result_summary = '{ "method" : "Breedbase mixed model analysis tool" }';
 
-		    var model_properties_data = { "properties" : { "traits" : traits  } } ;
+            // Save the context of these values, not later UI selections.
+            executed_analysis = { protocol: model, engine: engine, dataset_id: submitted_dataset_id };
+		    var model_properties_data = { "properties" : { "traits" : traits, "engine": executed_analysis.engine } } ;
 			console.log("traits: "+traits);
 		    model_properties = JSON.stringify(model_properties_data);
 			//alert("Model properties: "+model_properties);
@@ -555,7 +584,7 @@ function get_model_string() {
 	    else {
 		//alert("MODEL STRING: "+r.model);
 		console.log("ENGINE AGAIN: "+r.engine+" "+JSON.stringify(r));
-		if (r.engine == 'sommer') {
+		if (r.engine == 'sommer' || r.engine == 'spl2D') {
 		    jQuery('#model_string').text(r.model[0]+" , random = " + r.model[1]);
 		}
                 else {

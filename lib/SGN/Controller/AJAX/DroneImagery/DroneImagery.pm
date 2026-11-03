@@ -38,6 +38,8 @@ use CXGN::Tag;
 use CXGN::DroneImagery::ImageTypes;
 use CXGN::DroneImagery::LegendrePolynomials;
 use CXGN::DroneImagery::DesignFactors;
+use CXGN::DroneImagery::NativeResults;
+use CXGN::Trial::DesignReplication;
 use Time::Piece;
 use POSIX;
 use Math::Round;
@@ -230,6 +232,9 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
     my $people_schema = $c->dbic_schema("CXGN::People::Schema", undef, $sp_person_id);
     my ($user_id, $user_name, $user_role) = _check_user_login($c);
 
+    my @executed_protocols;
+    my ($native_residual_initial_coefficients,$native_residual_initial_variance_range,$native_residual_basis_rows,$native_rr_summary);
+    my %native_unit_metadata;
     my $statistics_select = $c->req->param('statistics_select');
     my $field_trial_id_list = $c->req->param('field_trial_id_list') ? decode_json $c->req->param('field_trial_id_list') : [];
     my $field_trial_id_list_string = join ',', @$field_trial_id_list;
@@ -239,6 +244,8 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
         return;
     }
 
+    my $native_engine_error = CXGN::DroneImagery::DesignFactors::statistics_prerequisite_error($statistics_select);
+    if ($native_engine_error) { $c->stash->{rest} = {error=>$native_engine_error}; return; }
     my $recorded_study_design = CXGN::Trial->new({bcs_schema=>$schema, trial_id=>$field_trial_id_list->[0]})->get_design_type();
     my $design_fixed_terms;
     if ($statistics_select =~ /^(?:lmer_|sommer_|blupf90_|airemlf90_)/) {
@@ -266,6 +273,7 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
     my $shared_cluster_dir_config = $c->config->{cluster_shared_tempdir};
     my $tmp_stats_dir = $shared_cluster_dir_config."/tmp_drone_statistics";
     mkdir $tmp_stats_dir if ! -d $tmp_stats_dir;
+    $tmp_stats_dir = CXGN::DroneImagery::DesignFactors::working_directory($tmp_stats_dir,$statistics_select);
     my ($grm_rename_tempfile_fh, $grm_rename_tempfile) = tempfile("drone_stats_XXXXX", DIR=> $tmp_stats_dir);
     $grm_rename_tempfile .= '.grm';
     my ($permanent_environment_structure_tempfile_fh, $permanent_environment_structure_tempfile) = tempfile("drone_stats_XXXXX", DIR=> $tmp_stats_dir);
@@ -924,6 +932,9 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
                 }
                 $leg_pos_counter++;
             }
+            my $variance_design_error = CXGN::DroneImagery::DesignFactors::native_variance_design_error($statistics_select,scalar(@sorted_trait_names),$legendre_order_number+1);
+            if ($variance_design_error) { $c->stash->{rest}={error=>$variance_design_error}; return; }
+
             my $sorted_trait_names_scaled_string = join ',', @sorted_trait_names_scaled;
 
             my $cmd = 'R -e "library(sommer); library(orthopolynom);
@@ -954,6 +965,7 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
                     $p_counter++;
                 }
             close($fh);
+            $native_residual_basis_rows=[map {$polynomial_map{$_}} @sorted_trait_names];
 
             open(my $F_prep, ">:encoding(UTF-8)", $stats_prep_tempfile) || die "Can't open file ".$stats_prep_tempfile;
                 print $F_prep "accession_id,accession_id_factor,plot_id,plot_id_factor,replicate,time,replicate_time,ind_replicate\n";
@@ -1025,6 +1037,7 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
                     $accession_id_factor_map_reverse{$accession_id_factor} = $stock_info{$accession_id}->{uniquename};
                     # $plot_id_factor_map_reverse{$ind_rep} = $seen_plots{$plot_id};
                     $plot_id_factor_map_reverse{$plot_id_factor} = $seen_plots{$plot_id};
+                    $native_unit_metadata{$plot_id_factor} = {plot_id=>$plot_id,genotype_id=>$accession_id,genotype_factor=>$accession_id_factor};
                     $plot_id_count_map_reverse{$line_factor_count} = $seen_plots{$plot_id};
                     $time_count_map_reverse{$line_factor_count} = $time;
                     $line_factor_count++;
@@ -1099,16 +1112,20 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
                                     $val = $val + (($neg*($p2-$p1)*($t2-$t1))/2)+($t2-$t1)*$min_val;
                                 }
                             }
-                            push @row, $val;
-                            push @data_matrix_phenotypes_row, $val;
+                            my $observation=eval {CXGN::DroneImagery::DesignFactors::native_observation($val)};
+                            if ($@) { $c->stash->{rest}={error=>"$@"}; return; }
+                            push @row, $observation;
+                            push @data_matrix_phenotypes_row, $observation;
                         }
                         else {
-                            push @row, $phenotype_data{$obsunit_stock_uniquename}->{$t} + 0;
-                            push @data_matrix_phenotypes_row, $phenotype_data{$obsunit_stock_uniquename}->{$t} + 0;
+                            my $observation=eval {CXGN::DroneImagery::DesignFactors::native_observation($phenotype_data{$obsunit_stock_uniquename}->{$t})};
+                            if ($@) { $c->stash->{rest}={error=>"$@"}; return; }
+                            push @row, $observation;
+                            push @data_matrix_phenotypes_row, $observation;
                         }
                     } else {
                         print STDERR $obsunit_stock_uniquename." : $t : $germplasm_name : NA \n";
-                        push @row, '';
+                        push @row, CXGN::DroneImagery::DesignFactors::native_missing_value();
                         push @data_matrix_phenotypes_row, 'NA';
                     }
 
@@ -1526,7 +1543,13 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
                     A_threecol\$variable <- substring(A_threecol\$variable, 2);
                     write.table(data.frame(variable = A_threecol\$variable, stock_id = A_threecol\$stock_id, value = A_threecol\$value), file=\''.$grm_out_tempfile.'\', row.names=FALSE, col.names=FALSE, sep=\'\t\');"';
                     print STDERR $cmd."\n";
-                    my $status = system("$cmd > /dev/null");
+                    $cmd =~ s/\s+$//;
+            push @executed_protocols,$cmd;
+            my $status = system("($cmd) > \"$stats_out_tempfile.log\" 2>&1");
+            if ($status != 0) {
+                $c->stash->{rest} = {error=>"The statistics engine failed. Check its log and required packages before saving results.",stats_log=>$stats_out_tempfile_string.'.log'};
+                return;
+            }
 
                     my $csv = Text::CSV->new({ sep_char => "\t" });
 
@@ -1758,7 +1781,13 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
                     A_threecol\$variable <- substring(A_threecol\$variable, 2);
                     write.table(data.frame(variable = A_threecol\$variable, stock_id = A_threecol\$stock_id, value = A_threecol\$value), file=\''.$grm_out_tempfile.'\', row.names=FALSE, col.names=FALSE, sep=\'\t\');"';
                     print STDERR $cmd."\n";
-                    my $status = system("$cmd > /dev/null");
+                    $cmd =~ s/\s+$//;
+            push @executed_protocols,$cmd;
+            my $status = system("($cmd) > \"$stats_out_tempfile.log\" 2>&1");
+            if ($status != 0) {
+                $c->stash->{rest} = {error=>"The statistics engine failed. Check its log and required packages before saving results.",stats_log=>$stats_out_tempfile_string.'.log'};
+                return;
+            }
 
                     my $csv = Text::CSV->new({ sep_char => "\t" });
 
@@ -2166,7 +2195,13 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
                 #mix.summary <- summary(mix);
                 #ve <- mix.summary\$varcor\$id[1,1]/(mix.summary\$varcor\$id[1,1] + (mix.summary\$sigma)^2);
                 write.table(ranef(mix)\$id, file=\''.$stats_out_tempfile.'\', row.names=TRUE, col.names=TRUE, sep=\'\t\');"';
-                my $status = system("$cmd > /dev/null");
+                $cmd =~ s/\s+$//;
+            push @executed_protocols,$cmd;
+            my $status = system("($cmd) > \"$stats_out_tempfile.log\" 2>&1");
+            if ($status != 0) {
+                $c->stash->{rest} = {error=>"The statistics engine failed. Check its log and required packages before saving results.",stats_log=>$stats_out_tempfile_string.'.log'};
+                return;
+            }
 
                 my $csv = Text::CSV->new({ sep_char => "\t" });
 
@@ -2217,7 +2252,13 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
             write.table(mix\$U\$\`u:id\`, file=\''.$stats_out_tempfile.'\', row.names=TRUE, col.names=TRUE, sep=\'\t\');
             "';
             print STDERR Dumper $cmd;
-            my $status = system("$cmd > /dev/null");
+            $cmd =~ s/\s+$//;
+            push @executed_protocols,$cmd;
+            my $status = system("($cmd) > \"$stats_out_tempfile.log\" 2>&1");
+            if ($status != 0) {
+                $c->stash->{rest} = {error=>"The statistics engine failed. Check its log and required packages before saving results.",stats_log=>$stats_out_tempfile_string.'.log'};
+                return;
+            }
 
             my $csv = Text::CSV->new({ sep_char => "\t" });
 
@@ -2295,7 +2336,13 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
             $cmd .= 'write.table(spatial_blup_results, file=\''.$stats_out_tempfile_2dspl.'\', row.names=FALSE, col.names=TRUE, sep=\'\t\');
             "';
             print STDERR Dumper $cmd;
-            my $status = system("$cmd > /dev/null");
+            $cmd =~ s/\s+$//;
+            push @executed_protocols,$cmd;
+            my $status = system("($cmd) > \"$stats_out_tempfile.log\" 2>&1");
+            if ($status != 0) {
+                $c->stash->{rest} = {error=>"The statistics engine failed. Check its log and required packages before saving results.",stats_log=>$stats_out_tempfile_string.'.log'};
+                return;
+            }
 
             my $csv = Text::CSV->new({ sep_char => "\t" });
 
@@ -2475,7 +2522,13 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
                 write.table(pe_coeff, file=\''.$stats_out_tempfile_permanent_environment.'\', row.names=FALSE, col.names=TRUE, sep=\'\t\');"
             ';
             print STDERR Dumper $cmd;
-            my $status = system("$cmd > /dev/null");
+            $cmd =~ s/\s+$//;
+            push @executed_protocols,$cmd;
+            my $status = system("($cmd) > \"$stats_out_tempfile.log\" 2>&1");
+            if ($status != 0) {
+                $c->stash->{rest} = {error=>"The statistics engine failed. Check its log and required packages before saving results.",stats_log=>$stats_out_tempfile_string.'.log'};
+                return;
+            }
 
             my $csv = Text::CSV->new({ sep_char => "\t" });
 
@@ -2602,7 +2655,7 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
                     my $time = $t_i*5/100;
                     my $time_rescaled = sprintf("%.2f", $time*($time_max - $time_min) + $time_min);
 
-                    my $value = CXGN::DroneImagery::LegendrePolynomials::legendre_polynomial_sum($coeffs, $time);
+                    my $value = CXGN::DroneImagery::LegendrePolynomials::normalized_legendre_polynomial_sum($coeffs, $time);
 
                     my $time_term_string = '';
                     if ($statistics_select eq 'sommer_grm_temporal_random_regression_gdd_genetic_blups') {
@@ -2640,7 +2693,7 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
                     my $time = $t_i*5/100;
                     my $time_rescaled = sprintf("%.2f", $time*($time_max - $time_min) + $time_min);
 
-                    my $value = CXGN::DroneImagery::LegendrePolynomials::legendre_polynomial_sum($coeffs, $time);
+                    my $value = CXGN::DroneImagery::LegendrePolynomials::normalized_legendre_polynomial_sum($coeffs, $time);
 
                     my $time_term_string = '';
                     if ($statistics_select eq 'sommer_grm_temporal_random_regression_gdd_genetic_blups') {
@@ -2710,7 +2763,13 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
             $cmd .= 'write.table(genetic_coeff, file=\''.$stats_out_tempfile_genetic.'\', row.names=FALSE, col.names=TRUE, sep=\'\t\');"
             ';
             print STDERR Dumper $cmd;
-            my $status = system("$cmd > /dev/null/");
+            $cmd =~ s/\s+$//;
+            push @executed_protocols,$cmd;
+            my $status = system("($cmd) > \"$stats_out_tempfile.log\" 2>&1");
+            if ($status != 0) {
+                $c->stash->{rest} = {error=>"The statistics engine failed. Check its log and required packages before saving results.",stats_log=>$stats_out_tempfile_string.'.log'};
+                return;
+            }
 
             my $csv = Text::CSV->new({ sep_char => "\t" });
 
@@ -2805,7 +2864,7 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
                     my $time = $t_i*5/100;
                     my $time_rescaled = sprintf("%.2f", $time*($time_max - $time_min) + $time_min);
 
-                    my $value = CXGN::DroneImagery::LegendrePolynomials::legendre_polynomial_sum($coeffs, $time);
+                    my $value = CXGN::DroneImagery::LegendrePolynomials::normalized_legendre_polynomial_sum($coeffs, $time);
 
                     my $time_term_string = '';
                     if ($statistics_select eq 'sommer_grm_genetic_only_random_regression_gdd_genetic_blups') {
@@ -2854,6 +2913,7 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
             }
 
             my $pheno_var_pos = $legendre_order_number+1;
+            my $native_initial_residual_variance=1;
             my $cmd_r = 'R -e "
                 pheno <- read.csv(\''.$stats_prep2_tempfile.'\', header=FALSE, sep=\',\');
                 start_data <- pheno[,seq_len('.$pheno_var_pos.'),drop=FALSE];
@@ -2978,7 +3038,7 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
             my $hetres_group_string = join ' ', @hetres_group;
             push @param_file_rows, (
                 'RANDOM_RESIDUAL VALUES',
-                '1',
+                $native_initial_residual_variance,
                 'RANDOM_GROUP',
                 $random_group_string1,
                 'RANDOM_TYPE'
@@ -3032,11 +3092,16 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
                 my $s = join ' ', @$_;
                 push @param_file_rows, $s;
             }
-            my $hetres_pol_string = join ' ', @sorted_scaled_ln_times;
+            my @native_residual_options;
+            if ($statistics_select =~ /^airemlf90_/) {
+                my $start=CXGN::DroneImagery::DesignFactors::native_residual_start($native_initial_residual_variance,$native_residual_basis_rows);
+                $native_residual_initial_coefficients=$start->{coefficients};
+                $native_residual_initial_variance_range=$start->{initial_variance_range};
+                push @native_residual_options,'OPTION hetres_pos '.$hetres_group_string,'OPTION hetres_pol '.join(' ',@{$start->{coefficients}});
+            }
             push @param_file_rows, (
-                'OPTION hetres_pos '.$hetres_group_string,
-                'OPTION hetres_pol '.$hetres_pol_string,
-                'OPTION conv_crit '.$tolparinv,
+                @native_residual_options,
+                @{CXGN::DroneImagery::DesignFactors::native_solver_settings($statistics_select)->{parameter_options}},
                 'OPTION residual',
             );
 
@@ -3058,7 +3123,34 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
             $stats_out_tempfile .= '.log';
             my $cmd = 'cd '.$tmp_stats_dir.'; echo '.$parameter_tempfile_basename.' | '.$command_name.' > '.$stats_out_tempfile;
             print STDERR Dumper $cmd;
-            my $status = system("$cmd > /dev/null");
+            $cmd =~ s/\s+$//;
+            push @executed_protocols,$cmd;
+            my $status = system("($cmd) > \"$stats_out_tempfile.log\" 2>&1");
+            if ($status != 0) {
+                $c->stash->{rest} = {error=>"The statistics engine failed. Check its log and required packages before saving results.",stats_log=>$stats_out_tempfile_string.'.log'};
+                return;
+            }
+
+            my $native_fit_error = CXGN::DroneImagery::DesignFactors::native_fit_error($statistics_select,$parameter_tempfile,$stats_tempfile_2,$stats_out_tempfile,$tmp_stats_dir);
+            if ($native_fit_error) { $c->stash->{rest}={error=>$native_fit_error}; return; }
+            my $native_kernel_origin = 'unknown';
+            if ($compute_relationship_matrix_from_htp_phenotypes eq 'htp_phenotypes') {
+                $native_kernel_origin = 'phenotypic_similarity';
+            } elsif (!$protocol_id) {
+                $native_kernel_origin = 'genotypic_identity';
+            } elsif ($include_pedgiree_info_if_compute_from_parents) {
+                $native_kernel_origin = 'additive_combined';
+            } else {
+                $native_kernel_origin = 'additive_marker';
+            }
+            $native_rr_summary = eval { CXGN::DroneImagery::NativeResults::summarize(
+                parameter_file=>$parameter_tempfile,data_file=>$stats_tempfile_2,
+                log_file=>$stats_out_tempfile,cwd=>$tmp_stats_dir,
+                backend=>$command_name,time_scale=>$statistics_select =~ /_gdd_/ ? 'GDD' : 'DAP',
+                kernel_origin=>$native_kernel_origin,unit_metadata=>\%native_unit_metadata,
+            ) };
+            if ($@) { $c->stash->{rest}={error=>"$@"}; return; }
+
 
             $csv = Text::CSV->new({ sep_char => "\t" });
 
@@ -3090,6 +3182,10 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
                     my @vals = split ' ', $row;
                     my $pred = $vals[0];
                     my $residual = $vals[1];
+                    if (!$native_rr_summary->{observation_mask}[$pred_res_counter]) {
+                        $pred_res_counter++;
+                        next;
+                    }
                     $sum_square_res = $sum_square_res + $residual*$residual;
 
                     my $plot_name = $plot_id_count_map_reverse{$pred_res_counter};
@@ -3103,6 +3199,10 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
                     $pred_res_counter++;
                 }
             close($fh_yhat_res);
+            if ($pred_res_counter != @{$native_rr_summary->{observation_mask}}) {
+                $c->stash->{rest}={error=>'Native fitted/residual rows do not match original input records; no result was saved.'};
+                return;
+            }
             $model_sum_square_residual = $sum_square_res;
 
             my %fixed_effects;
@@ -3174,7 +3274,7 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
                     my $time = $t_i*5/100;
                     my $time_rescaled = sprintf("%.2f", $time*($time_max - $time_min) + $time_min);
 
-                    my $value = CXGN::DroneImagery::LegendrePolynomials::legendre_polynomial_sum($coeffs, $time);
+                    my $value = CXGN::DroneImagery::LegendrePolynomials::normalized_legendre_polynomial_sum($coeffs, $time);
 
                     my $time_term_string = '';
                     if ($statistics_select eq 'blupf90_grm_random_regression_gdd_blups' || $statistics_select eq 'airemlf90_grm_random_regression_gdd_blups') {
@@ -3204,7 +3304,7 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
             while ( my ($accession_name, $coeffs) = each %rr_genetic_coefficients) {
                 foreach my $time_term (@sorted_trait_names) {
                     $time = ($time_term - $time_min)/($time_max - $time_min);
-                    my $value = CXGN::DroneImagery::LegendrePolynomials::legendre_polynomial_sum($coeffs, $time);
+                    my $value = CXGN::DroneImagery::LegendrePolynomials::normalized_legendre_polynomial_sum($coeffs, $time);
 
                     $result_blup_data_delta->{$accession_name}->{$time_term} = [$value, $timestamp, $user_name, '', ''];
                 }
@@ -3222,7 +3322,7 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
                     my $time = $t_i*5/100;
                     my $time_rescaled = sprintf("%.2f", $time*($time_max - $time_min) + $time_min);
 
-                    my $value = CXGN::DroneImagery::LegendrePolynomials::legendre_polynomial_sum($coeffs, $time);
+                    my $value = CXGN::DroneImagery::LegendrePolynomials::normalized_legendre_polynomial_sum($coeffs, $time);
 
                     my $time_term_string = '';
                     if ($statistics_select eq 'blupf90_grm_random_regression_gdd_blups' || $statistics_select eq 'airemlf90_grm_random_regression_gdd_blups') {
@@ -3252,7 +3352,7 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
             while ( my ($plot_name, $coeffs) = each %rr_temporal_coefficients) {
                 foreach my $time_term (@sorted_trait_names) {
                     my $time = ($time_term - $time_min)/($time_max - $time_min);
-                    my $value = CXGN::DroneImagery::LegendrePolynomials::legendre_polynomial_sum($coeffs, $time);
+                    my $value = CXGN::DroneImagery::LegendrePolynomials::normalized_legendre_polynomial_sum($coeffs, $time);
 
                     $result_blup_pe_data_delta->{$plot_name}->{$time_term} = [$value, $timestamp, $user_name, '', ''];
                 }
@@ -3601,6 +3701,13 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
         unique_accessions => \@unique_accession_names,
         unique_plots => \@unique_plot_names,
         statistics_select => $statistics_select,
+        native_rr_summary => $native_rr_summary,
+        native_residual_initial_coefficients => $native_residual_initial_coefficients,
+        native_residual_initial_variance_range => $native_residual_initial_variance_range,
+        native_solver => $statistics_select =~ /^(?:blupf90|airemlf90)_/ ? CXGN::DroneImagery::DesignFactors::native_solver_settings($statistics_select)->{solver} : undef,
+        native_convergence_criterion => $statistics_select =~ /^(?:blupf90|airemlf90)_/ ? CXGN::DroneImagery::DesignFactors::native_convergence_criterion() : undef,
+        design_fixed_terms => $design_fixed_terms,
+        executed_protocol => join("\n",@executed_protocols),
         grm_file => $grm_file,
         stats_tempfile => $stats_tempfile,
         blupf90_grm_file => $grm_rename_tempfile,

@@ -108,6 +108,13 @@ for(design in designs) {
       check(setequal(paste(residual$plot_id,residual$time),paste(long$plot_id,long$time))&&all(is.finite(residual$fitted)),paste("actual generated",family,design,"retains each physical plot/time identity"))
       coefficients <- read.delim(file.path(dir,"genetic-coefficients.tsv"),check.names=FALSE)
       check(setequal(coefficients$id,names(expected))&&all(is.finite(as.matrix(coefficients[,-1,drop=FALSE]))),paste("actual generated",family,design,"retains finite genotype regression coefficients"))
+      signed_row<-which(coefficients$leg_0<0|coefficients$leg_1<0)[1]
+      if(is.na(signed_row))signed_row<-1L
+      b<-as.numeric(coefficients[signed_row,c("leg_0","leg_1")])
+      expected_curve<-as.numeric(leg(c(10,20,30,40),n=1,intercept=TRUE)%*%b)
+      code<-paste0("print CXGN::DroneImagery::LegendrePolynomials::normalized_legendre_polynomial_sum([",paste(format(b,digits=17),collapse=","),"],$_),qq(\\n) for (0,1/3,2/3,1);")
+      actual_curve<-as.numeric(system2("perl",c("-MCXGN::DroneImagery::LegendrePolynomials","-e",shQuote(code)),stdout=TRUE))
+      check(length(actual_curve)==4L&&max(abs(actual_curve-expected_curve))<1e-7,paste("actual",family,design,"saved curve uses the same normalized signed basis as its fitted R coefficients"))
     }
     actual<-read.delim(file.path(dir,"genotype.tsv"),row.names=1,check.names=FALSE)
     check(setequal(rownames(actual),names(expected))&&all(is.finite(actual[[1]])),paste("actual generated",family,design,"retains genotype IDs and trait-unit output"))

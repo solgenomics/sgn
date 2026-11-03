@@ -63,6 +63,7 @@ use SGN::Controller::AJAX::DroneImagery::DroneImagery;
 use Storable qw(dclone);
 use Statistics::Descriptive;
 use CXGN::DroneImagery::DesignFactors;
+use CXGN::DroneImagery::NativeResults;
 use CXGN::Trial;
 use File::Spec;
 
@@ -115,7 +116,11 @@ sub _write_model_csv_row {
 }
 
 sub perform_drone_imagery_analytics {
-    my ($schema, $a_env, $b_env, $ro_env, $row_ro_env, $env_variance_percent, $protocol_id, $statistics_select, $analytics_select, $tolparinv, $use_area_under_curve, $legendre_order_number, $permanent_environment_structure, $trait_name_encoder_hash, $trait_name_encoder_rev_hash, $stock_info_hash, $plot_id_map_hash, $sorted_trait_names_array, $accession_id_factor_map_hash, $rep_time_factors_array, $ind_rep_factors_array, $unique_accession_names_array, $plot_id_count_map_reverse_hash, $sorted_scaled_ln_times_array, $time_count_map_reverse_hash, $accession_id_factor_map_reverse_hash, $seen_times_hash, $plot_id_factor_map_reverse_hash, $trait_to_time_map_hash, $unique_plot_names_array, $stock_name_row_col_hash, $phenotype_data_original_hash, $plot_rep_time_factor_map_hash, $stock_row_col_hash, $stock_row_col_id_hash, $polynomial_map_hash, $plot_ids_ordered_array, $csv, $timestamp, $user_name, $stats_tempfile, $grm_file, $grm_rename_tempfile, $tmp_stats_dir, $stats_out_tempfile, $stats_out_tempfile_row, $stats_out_tempfile_col, $stats_out_tempfile_residual, $stats_out_tempfile_2dspl, $stats_prep2_tempfile, $stats_out_param_tempfile, $parameter_tempfile, $parameter_asreml_tempfile, $stats_tempfile_2, $permanent_environment_structure_tempfile, $permanent_environment_structure_env_tempfile, $permanent_environment_structure_env_tempfile2, $permanent_environment_structure_env_tempfile_mat, $sim_env_changing_mat_tempfile, $sim_env_changing_mat_full_tempfile, $yhat_residual_tempfile, $blupf90_solutions_tempfile, $coeff_genetic_tempfile, $coeff_pe_tempfile, $stats_out_tempfile_varcomp, $time_min, $time_max, $header_string, $min_row, $max_row, $min_col, $max_col, $mean_row, $sig_row, $mean_col, $sig_col, $sim_env_change_over_time, $correlation_between_times, $field_trial_id_list, $simulated_environment_real_data_trait_id, $fixed_effect_type, $perform_cv) = @_;
+    my ($schema, $a_env, $b_env, $ro_env, $row_ro_env, $env_variance_percent, $protocol_id, $statistics_select, $analytics_select, $tolparinv, $use_area_under_curve, $legendre_order_number, $permanent_environment_structure, $trait_name_encoder_hash, $trait_name_encoder_rev_hash, $stock_info_hash, $plot_id_map_hash, $sorted_trait_names_array, $accession_id_factor_map_hash, $rep_time_factors_array, $ind_rep_factors_array, $unique_accession_names_array, $plot_id_count_map_reverse_hash, $sorted_scaled_ln_times_array, $time_count_map_reverse_hash, $accession_id_factor_map_reverse_hash, $seen_times_hash, $plot_id_factor_map_reverse_hash, $trait_to_time_map_hash, $unique_plot_names_array, $stock_name_row_col_hash, $phenotype_data_original_hash, $plot_rep_time_factor_map_hash, $stock_row_col_hash, $stock_row_col_id_hash, $polynomial_map_hash, $plot_ids_ordered_array, $csv, $timestamp, $user_name, $stats_tempfile, $grm_file, $grm_rename_tempfile, $tmp_stats_dir, $stats_out_tempfile, $stats_out_tempfile_row, $stats_out_tempfile_col, $stats_out_tempfile_residual, $stats_out_tempfile_2dspl, $stats_prep2_tempfile, $stats_out_param_tempfile, $parameter_tempfile, $parameter_asreml_tempfile, $stats_tempfile_2, $permanent_environment_structure_tempfile, $permanent_environment_structure_env_tempfile, $permanent_environment_structure_env_tempfile2, $permanent_environment_structure_env_tempfile_mat, $sim_env_changing_mat_tempfile, $sim_env_changing_mat_full_tempfile, $yhat_residual_tempfile, $blupf90_solutions_tempfile, $coeff_genetic_tempfile, $coeff_pe_tempfile, $stats_out_tempfile_varcomp, $time_min, $time_max, $header_string, $min_row, $max_row, $min_col, $max_col, $mean_row, $sig_row, $mean_col, $sig_col, $sim_env_change_over_time, $correlation_between_times, $field_trial_id_list, $simulated_environment_real_data_trait_id, $fixed_effect_type, $perform_cv, $native_variance_options) = @_;
+    my $engine_error=CXGN::DroneImagery::DesignFactors::statistics_prerequisite_error($statistics_select);
+    die "$engine_error\n" if $engine_error;
+    # Genetic result hashes below use names; retain distinct known identities
+    # by refusing an input they cannot represent, before fitting or allocation.
     CXGN::DroneImagery::DesignFactors::validate_genotype_names(
         [values %{$stock_name_row_col_hash || {}}], 'germplasm_stock_id', 'germplasm_name');
     die "Select one field trial for simulation design effects.\n" if ref($field_trial_id_list) ne 'ARRAY' || @$field_trial_id_list!=1;
@@ -145,10 +150,59 @@ sub perform_drone_imagery_analytics {
     my @unique_plot_names = @$unique_plot_names_array;
     my %stock_name_row_col = %$stock_name_row_col_hash;
     my %phenotype_data_original = %$phenotype_data_original_hash;
+    if (($statistics_select // '') =~ /^(?:blupf90|airemlf90)_/) {
+        foreach my $plot (keys %phenotype_data_original) {
+            my %values=%{$phenotype_data_original{$plot}};
+            foreach my $time (keys %values) {
+                my $value=eval {CXGN::DroneImagery::DesignFactors::native_observation($values{$time})};
+                return {error=>"$@"} if $@;
+                $values{$time}=$value==CXGN::DroneImagery::DesignFactors::native_missing_value() ? undef:$value;
+            }
+            return {error=>'Native area under the curve requires observed values at every included time point.'}
+                if $use_area_under_curve && grep {!defined($values{$_})} @sorted_trait_names;
+            $phenotype_data_original{$plot}=\%values;
+        }
+    }
+
     my %plot_rep_time_factor_map = %$plot_rep_time_factor_map_hash;
     my %stock_row_col = %$stock_row_col_hash;
     my %stock_row_col_id = %$stock_row_col_id_hash;
     my %polynomial_map = %$polynomial_map_hash;
+    # Append-only metadata preserves the established positional interface.
+    $native_variance_options ||= {};
+    my %native_variance_summaries;
+    my %native_unit_metadata;
+    if (($statistics_select // '') =~ /^(?:blupf90|airemlf90)_/) {
+        foreach my $plot_name (keys %stock_name_row_col) {
+            my $unit=$stock_name_row_col{$plot_name};
+            my $plot=$unit->{obsunit_stock_id};
+            my $factor=defined($plot) ? $stock_row_col{$plot}->{plot_id_factor} : undef;
+            return {error=>'Native RR variance summary requires the original physical plot and factor mapping.'}
+                if !defined($plot) || !defined($factor) || !defined($unit->{germplasm_stock_id});
+            $native_unit_metadata{$factor}={
+                plot_id=>$plot, genotype_id=>$unit->{germplasm_stock_id},
+                genotype_factor=>$accession_id_factor_map{$unit->{germplasm_stock_id}},
+            };
+        }
+    }
+
+    my $native_declared_residual_variance=1;
+    my $native_residual_start;
+    my $native_blup_selection=$statistics_select;
+    $native_blup_selection =~ s/^airemlf90_/blupf90_/;
+    my @native_blup_options;
+    if ($statistics_select =~ /^(?:blupf90|airemlf90)_/) {
+        my $design_error=CXGN::DroneImagery::DesignFactors::native_variance_design_error(
+            $statistics_select,scalar(@sorted_trait_names),$legendre_order_number+1);
+        return {error=>$design_error} if $design_error;
+        $native_residual_start=CXGN::DroneImagery::DesignFactors::native_residual_start(
+            $native_declared_residual_variance,[map {$polynomial_map{$_}} @sorted_trait_names])
+            if $statistics_select =~ /^airemlf90_/;
+        @native_blup_options=(
+            @{CXGN::DroneImagery::DesignFactors::native_solver_settings($native_blup_selection)->{parameter_options}},
+            'OPTION residual');
+    }
+
     my @plot_ids_ordered = @$plot_ids_ordered_array;
     my $col_number_span = 1 + $max_col - $min_col;
     my $row_number_span = 1 + $max_row - $min_row;
@@ -1488,13 +1542,17 @@ sub perform_drone_imagery_analytics {
 
         $statistics_cmd = 'R -e "
             pheno <- read.csv(\''.$stats_prep2_tempfile.'\', header=FALSE, sep=\',\');
+            pheno <- pheno[,seq_len('.$pheno_var_pos.'),drop=FALSE];
+            pheno <- pheno[complete.cases(pheno),,drop=FALSE];
+            if(nrow(pheno) <= '.$pheno_var_pos.') stop(\'Native starting covariance requires sufficient complete paired observations\');
             v <- var(pheno);
-            v <- v[1:'.$pheno_var_pos.', 1:'.$pheno_var_pos.'];
+            if(any(!is.finite(v)) || inherits(try(chol(v),silent=TRUE), \'try-error\')) stop(\'Native starting covariance must be positive definite; no replacement was invented\');
             #v <- matrix(rep(0.1, '.$pheno_var_pos.'*'.$pheno_var_pos.'), nrow = '.$pheno_var_pos.');
             #diag(v) <- rep(1, '.$pheno_var_pos.');
             write.table(v, file=\''.$stats_out_param_tempfile.'\', row.names=FALSE, col.names=FALSE, qmethod=\'double\', sep=\'\t\');
         "';
         my $status_r = system($statistics_cmd);
+        return {error=>'Native starting covariance requires sufficient complete paired observations and a positive-definite covariance; no estimates were read.'} if $status_r;
 
         my @pheno_var;
         open(my $fh_r, '<', $stats_out_param_tempfile) or die "Could not open file '$stats_out_param_tempfile' $!";
@@ -1571,9 +1629,17 @@ sub perform_drone_imagery_analytics {
 
         print STDERR Dumper $stats_tempfile_2;
         my $data_cv_cmd = 'R -e "mat <- read.csv(\''.$stats_tempfile_2.'\', header=FALSE, sep=\' \');
-        randomized_positions <- sample(length(mat[,1]));
-        cv_step_size <- length(mat[,1]) %/% 5;
-        cv_step_size_modulo <- length(mat[,1]) %% 5;
+        native_missing <- '.CXGN::DroneImagery::DesignFactors::native_missing_value().';
+        observed_positions <- which(mat[,ncol(mat)] != native_missing);
+        randomized_positions <- sample(observed_positions, length(observed_positions));
+        cv_step_size <- length(randomized_positions) %/% 5;
+        cv_step_size_modulo <- length(randomized_positions) %% 5;
+        fold_positions <- lapply(1:5, function(i) {
+            size <- cv_step_size + if(i == 5) cv_step_size_modulo else 0;
+            if(size == 0) return(integer(0));
+            randomized_positions[(i-1)*cv_step_size + seq_len(size)];
+        });
+        observed_median <- median(mat[observed_positions,ncol(mat)]);
         mat_CV1 <- mat; mat_CV2 <- mat; mat_CV3 <- mat; mat_CV4 <- mat; mat_CV5 <- mat;
         mat_CV1[fold_positions[[1]],ncol(mat)] <- observed_median;
         mat_CV2[fold_positions[[2]],ncol(mat)] <- observed_median;
@@ -1581,22 +1647,22 @@ sub perform_drone_imagery_analytics {
         mat_CV4[fold_positions[[4]],ncol(mat)] <- observed_median;
         mat_CV5[fold_positions[[5]],ncol(mat)] <- observed_median;
         mat_CV1_2 <- mat; mat_CV2_2 <- mat; mat_CV3_2 <- mat; mat_CV4_2 <- mat; mat_CV5_2 <- mat;
-        mat_CV1_2[c(randomized_positions[1:cv_step_size]),ncol(mat)] <- -999;
-        mat_CV2_2[c(randomized_positions[(cv_step_size+1):(2*cv_step_size)]),ncol(mat)] <- -999;
-        mat_CV3_2[c(randomized_positions[((2*cv_step_size)+1):(3*cv_step_size)]),ncol(mat)] <- -999;
-        mat_CV4_2[c(randomized_positions[((3*cv_step_size)+1):(4*cv_step_size)]),ncol(mat)] <- -999;
-        mat_CV5_2[c(randomized_positions[((4*cv_step_size)+1):((5*cv_step_size)+cv_step_size_modulo)]),ncol(mat)] <- -999;
-        write.table(mat, file=\''.$stats_tempfile_2.'\', row.names=FALSE, col.names=FALSE, sep=\' \');
-        write.table(mat_CV1, file=\''.$stats_out_cv1_predict_tempfile.'\', row.names=FALSE, col.names=FALSE, sep=\' \');
-        write.table(mat_CV2, file=\''.$stats_out_cv2_predict_tempfile.'\', row.names=FALSE, col.names=FALSE, sep=\' \');
-        write.table(mat_CV3, file=\''.$stats_out_cv3_predict_tempfile.'\', row.names=FALSE, col.names=FALSE, sep=\' \');
-        write.table(mat_CV4, file=\''.$stats_out_cv4_predict_tempfile.'\', row.names=FALSE, col.names=FALSE, sep=\' \');
-        write.table(mat_CV5, file=\''.$stats_out_cv5_predict_tempfile.'\', row.names=FALSE, col.names=FALSE, sep=\' \');
-        write.table(mat_CV1_2, file=\''.$stats_out_cv1_2_predict_tempfile.'\', row.names=FALSE, col.names=FALSE, sep=\' \');
-        write.table(mat_CV2_2, file=\''.$stats_out_cv2_2_predict_tempfile.'\', row.names=FALSE, col.names=FALSE, sep=\' \');
-        write.table(mat_CV3_2, file=\''.$stats_out_cv3_2_predict_tempfile.'\', row.names=FALSE, col.names=FALSE, sep=\' \');
-        write.table(mat_CV4_2, file=\''.$stats_out_cv4_2_predict_tempfile.'\', row.names=FALSE, col.names=FALSE, sep=\' \');
-        write.table(mat_CV5_2, file=\''.$stats_out_cv5_2_predict_tempfile.'\', row.names=FALSE, col.names=FALSE, sep=\' \');
+        mat_CV1_2[fold_positions[[1]],ncol(mat)] <- native_missing;
+        mat_CV2_2[fold_positions[[2]],ncol(mat)] <- native_missing;
+        mat_CV3_2[fold_positions[[3]],ncol(mat)] <- native_missing;
+        mat_CV4_2[fold_positions[[4]],ncol(mat)] <- native_missing;
+        mat_CV5_2[fold_positions[[5]],ncol(mat)] <- native_missing;
+        write.table(mat, file=\''.$stats_tempfile_2.'\', row.names=FALSE, col.names=FALSE, qmethod=\'double\', sep=\' \');
+        write.table(mat_CV1, file=\''.$stats_out_cv1_predict_tempfile.'\', row.names=FALSE, col.names=FALSE, qmethod=\'double\', sep=\' \');
+        write.table(mat_CV2, file=\''.$stats_out_cv2_predict_tempfile.'\', row.names=FALSE, col.names=FALSE, qmethod=\'double\', sep=\' \');
+        write.table(mat_CV3, file=\''.$stats_out_cv3_predict_tempfile.'\', row.names=FALSE, col.names=FALSE, qmethod=\'double\', sep=\' \');
+        write.table(mat_CV4, file=\''.$stats_out_cv4_predict_tempfile.'\', row.names=FALSE, col.names=FALSE, qmethod=\'double\', sep=\' \');
+        write.table(mat_CV5, file=\''.$stats_out_cv5_predict_tempfile.'\', row.names=FALSE, col.names=FALSE, qmethod=\'double\', sep=\' \');
+        write.table(mat_CV1_2, file=\''.$stats_out_cv1_2_predict_tempfile.'\', row.names=FALSE, col.names=FALSE, qmethod=\'double\', sep=\' \');
+        write.table(mat_CV2_2, file=\''.$stats_out_cv2_2_predict_tempfile.'\', row.names=FALSE, col.names=FALSE, qmethod=\'double\', sep=\' \');
+        write.table(mat_CV3_2, file=\''.$stats_out_cv3_2_predict_tempfile.'\', row.names=FALSE, col.names=FALSE, qmethod=\'double\', sep=\' \');
+        write.table(mat_CV4_2, file=\''.$stats_out_cv4_2_predict_tempfile.'\', row.names=FALSE, col.names=FALSE, qmethod=\'double\', sep=\' \');
+        write.table(mat_CV5_2, file=\''.$stats_out_cv5_2_predict_tempfile.'\', row.names=FALSE, col.names=FALSE, qmethod=\'double\', sep=\' \');
         "';
         my $status_cv_files = system($data_cv_cmd);
 
@@ -1655,7 +1721,7 @@ sub perform_drone_imagery_analytics {
         my $hetres_group_string = join ' ', @hetres_group;
         push @param_file_rows_1, (
             'RANDOM_RESIDUAL VALUES',
-            '1',
+            $native_declared_residual_variance,
             'RANDOM_GROUP',
             $random_group_string1,
             'RANDOM_TYPE'
@@ -1709,12 +1775,10 @@ sub perform_drone_imagery_analytics {
             my $s = join ' ', @$_;
             push @param_file_rows_4, $s;
         }
-        my $hetres_pol_string = join ' ', @sorted_scaled_ln_times;
+        my $hetres_pol_string=$native_residual_start ? join(' ',@{$native_residual_start->{coefficients}}) : undef;
         @param_file_rows_5 = (
-            'OPTION hetres_pos '.$hetres_group_string,
-            'OPTION hetres_pol '.$hetres_pol_string,
-            'OPTION conv_crit '.$tolparinv,
-            'OPTION missing -999',
+            ($statistics_select =~ /^airemlf90_/ ? ('OPTION hetres_pos '.$hetres_group_string,'OPTION hetres_pol '.$hetres_pol_string) : ()),
+            @{CXGN::DroneImagery::DesignFactors::native_solver_settings($statistics_select)->{parameter_options}},
             'OPTION residual',
         );
 
@@ -1778,6 +1842,11 @@ sub perform_drone_imagery_analytics {
         $cmd_f90 = 'cd '.$tmp_stats_dir.'; echo '.$parameter_tempfile_basename.' | '.$command_name.' > '.$stats_out_tempfile;
         print STDERR Dumper $cmd_f90;
         my $status = system($cmd_f90);
+        return {error=>'The native statistics process failed; no estimates were read.'} if $status;
+        my $fit_error=CXGN::DroneImagery::DesignFactors::native_fit_error(
+            $statistics_select,$parameter_tempfile,$stats_tempfile_2,$stats_out_tempfile,$tmp_stats_dir);
+        return {error=>$fit_error} if $fit_error;
+
 
         my @log_output_rows;
         open(my $fh_log, '<', $stats_out_tempfile) or die "Could not open file '$stats_out_tempfile' $!";
@@ -1788,23 +1857,23 @@ sub perform_drone_imagery_analytics {
             }
         close($fh_log);
 
-        my $log_output = join '', @log_output_rows;
-        my ($gen_var_string) = $log_output =~ /Genetic variance\(s\) for effect  2(.*?)correlations/gs;
-        @rr_coeff_genetic_covariance_original = split ' ', $gen_var_string;
-        print STDERR Dumper \@rr_coeff_genetic_covariance_original;
-        my ($env_var_string) = $log_output =~ /Genetic variance\(s\) for effect  $legendre_order_number_env_var_pos(.*?)correlations/gs;
-        @rr_coeff_env_covariance_original = split ' ', $env_var_string;
-        print STDERR Dumper \@rr_coeff_env_covariance_original;
-        my (@gen_cor_string) = $log_output =~ /correlations(.*?)eigenvectors/gs;
-        @rr_coeff_genetic_correlation_original = split ' ', $gen_cor_string[0];
-        print STDERR Dumper \@rr_coeff_genetic_correlation_original;
-        @rr_coeff_env_correlation_original = split ' ', $gen_cor_string[1];
-        print STDERR Dumper \@rr_coeff_env_correlation_original;
-        my ($res_se_string) = $log_output =~ /SE for R(.*?)\* FINISHED \(AIREMLF90\)/gs;
-        print STDERR Dumper $res_se_string;
-        # $rr_residual_variance_original = ($res_se_string**2)*$number_plots;
-        $rr_residual_variance_original = $res_se_string;
-        print STDERR Dumper $rr_residual_variance_original;
+        my $native_summary=eval {CXGN::DroneImagery::NativeResults::summarize(
+            parameter_file=>$parameter_tempfile,data_file=>$stats_tempfile_2,
+            log_file=>$stats_out_tempfile,cwd=>$tmp_stats_dir,
+            backend=>($statistics_select =~ /^blupf90_/ ? 'blupf90':'airemlf90'),
+            time_scale=>($statistics_select =~ /_gdd_/ ? 'GDD':'DAP'),
+            kernel_origin=>($native_variance_options->{kernel_origin} // ($protocol_id ? 'unknown':'genotypic_identity')),
+            unit_metadata=>\%native_unit_metadata,
+        )};
+        return {error=>"$@"} if $@;
+        $native_variance_summaries{original}=$native_summary;
+        @rr_coeff_genetic_covariance_original=@{$native_summary->{genetic_covariance}};
+        @rr_coeff_env_covariance_original=@{$native_summary->{env_covariance}};
+        @rr_coeff_genetic_correlation_original=@{$native_summary->{genetic_correlation}};
+        @rr_coeff_env_correlation_original=@{$native_summary->{env_correlation}};
+        # A heterogeneous residual is a time function. The old scalar slot
+        # remains undefined; printed native SE is retained only in metadata.
+        $rr_residual_variance_original=undef;
 
         @param_file_rows_6 = (
             '(CO)VARIANCES'
@@ -1835,31 +1904,31 @@ sub perform_drone_imagery_analytics {
         }
 
         open(my $Fp_cv1_2, ">", $parameter_tempfile_cv1_2) || die "Can't open file ".$parameter_tempfile_cv1_2;
-            foreach ((@param_file_rows_data_cv1, @param_file_rows_1, @param_file_rows_6, @param_file_rows_3, @param_file_rows_7, @param_file_rows_5)) {
+            foreach ((@param_file_rows_data_cv1, @param_file_rows_1, @param_file_rows_6, @param_file_rows_3, @param_file_rows_7, @native_blup_options)) {
                 print $Fp_cv1_2 "$_\n";
             }
         close($Fp_cv1_2);
 
         open(my $Fp_cv2_2, ">", $parameter_tempfile_cv2_2) || die "Can't open file ".$parameter_tempfile_cv2_2;
-            foreach ((@param_file_rows_data_cv2, @param_file_rows_1, @param_file_rows_6, @param_file_rows_3, @param_file_rows_7, @param_file_rows_5)) {
+            foreach ((@param_file_rows_data_cv2, @param_file_rows_1, @param_file_rows_6, @param_file_rows_3, @param_file_rows_7, @native_blup_options)) {
                 print $Fp_cv2_2 "$_\n";
             }
         close($Fp_cv2_2);
 
         open(my $Fp_cv3_2, ">", $parameter_tempfile_cv3_2) || die "Can't open file ".$parameter_tempfile_cv3_2;
-            foreach ((@param_file_rows_data_cv3, @param_file_rows_1, @param_file_rows_6, @param_file_rows_3, @param_file_rows_7, @param_file_rows_5)) {
+            foreach ((@param_file_rows_data_cv3, @param_file_rows_1, @param_file_rows_6, @param_file_rows_3, @param_file_rows_7, @native_blup_options)) {
                 print $Fp_cv3_2 "$_\n";
             }
         close($Fp_cv3_2);
 
         open(my $Fp_cv4_2, ">", $parameter_tempfile_cv4_2) || die "Can't open file ".$parameter_tempfile_cv4_2;
-            foreach ((@param_file_rows_data_cv4, @param_file_rows_1, @param_file_rows_6, @param_file_rows_3, @param_file_rows_7, @param_file_rows_5)) {
+            foreach ((@param_file_rows_data_cv4, @param_file_rows_1, @param_file_rows_6, @param_file_rows_3, @param_file_rows_7, @native_blup_options)) {
                 print $Fp_cv4_2 "$_\n";
             }
         close($Fp_cv4_2);
 
         open(my $Fp_cv5_2, ">", $parameter_tempfile_cv5_2) || die "Can't open file ".$parameter_tempfile_cv5_2;
-            foreach ((@param_file_rows_data_cv5, @param_file_rows_1, @param_file_rows_6, @param_file_rows_3, @param_file_rows_7, @param_file_rows_5)) {
+            foreach ((@param_file_rows_data_cv5, @param_file_rows_1, @param_file_rows_6, @param_file_rows_3, @param_file_rows_7, @native_blup_options)) {
                 print $Fp_cv5_2 "$_\n";
             }
         close($Fp_cv5_2);
@@ -1871,10 +1940,12 @@ sub perform_drone_imagery_analytics {
         open(my $fh_yhat_res, '<', $yhat_residual_tempfile) or die "Could not open file '$yhat_residual_tempfile' $!";
             print STDERR "Opened $yhat_residual_tempfile\n";
 
+            my $native_observed=CXGN::DroneImagery::NativeResults::observation_mask($stats_tempfile_2,$parameter_tempfile);
             my $pred_res_counter = 0;
             my $trait_counter = 0;
             while (my $row = <$fh_yhat_res>) {
                 # print STDERR $row;
+                if (!$native_observed->[$pred_res_counter]) {$pred_res_counter++;next;}
                 my @vals = split ' ', $row;
                 my $pred = $vals[0];
                 my $residual = $vals[1];
@@ -1896,6 +1967,8 @@ sub perform_drone_imagery_analytics {
 
                 $pred_res_counter++;
             }
+            return {error=>'Native readback row count differs from its input; no partial results were saved.'}
+                if $pred_res_counter!=@$native_observed;
         close($fh_yhat_res);
 
         $blupf90_solutions_tempfile = $tmp_stats_dir."/solutions";
@@ -1962,7 +2035,7 @@ sub perform_drone_imagery_analytics {
                 my $time = $t_i*5/100;
                 my $time_rescaled = sprintf("%.2f", $time*($time_max - $time_min) + $time_min);
 
-                my $value = CXGN::DroneImagery::LegendrePolynomials::legendre_polynomial_sum($coeffs, $time);
+                my $value = CXGN::DroneImagery::LegendrePolynomials::normalized_legendre_polynomial_sum($coeffs, $time);
 
                 my $time_term_string = '';
                 if ($statistics_select eq 'blupf90_grm_random_regression_gdd_blups' || $statistics_select eq 'airemlf90_grm_random_regression_gdd_blups') {
@@ -1994,7 +2067,7 @@ sub perform_drone_imagery_analytics {
         while ( my ($accession_name, $coeffs) = each %rr_genetic_coefficients_original) {
             foreach my $time_term (@sorted_trait_names) {
                 my $time = ($time_term - $time_min)/($time_max - $time_min);
-                my $value = CXGN::DroneImagery::LegendrePolynomials::legendre_polynomial_sum($coeffs, $time);
+                my $value = CXGN::DroneImagery::LegendrePolynomials::normalized_legendre_polynomial_sum($coeffs, $time);
 
                 $result_blup_data_delta_original->{$accession_name}->{$time_term} = [$value, $timestamp, $user_name, '', ''];
 
@@ -2021,7 +2094,7 @@ sub perform_drone_imagery_analytics {
                 my $time = $t_i*5/100;
                 my $time_rescaled = sprintf("%.2f", $time*($time_max - $time_min) + $time_min);
 
-                my $value = CXGN::DroneImagery::LegendrePolynomials::legendre_polynomial_sum($coeffs, $time);
+                my $value = CXGN::DroneImagery::LegendrePolynomials::normalized_legendre_polynomial_sum($coeffs, $time);
 
                 my $time_term_string = '';
                 if ($statistics_select eq 'blupf90_grm_random_regression_gdd_blups' || $statistics_select eq 'airemlf90_grm_random_regression_gdd_blups') {
@@ -2052,7 +2125,7 @@ sub perform_drone_imagery_analytics {
         while ( my ($plot_name, $coeffs) = each %rr_temporal_coefficients_original) {
             foreach my $time_term (@sorted_trait_names) {
                 my $time = ($time_term - $time_min)/($time_max - $time_min);
-                my $value = CXGN::DroneImagery::LegendrePolynomials::legendre_polynomial_sum($coeffs, $time);
+                my $value = CXGN::DroneImagery::LegendrePolynomials::normalized_legendre_polynomial_sum($coeffs, $time);
 
                 $result_blup_pe_data_delta_original->{$plot_name}->{$time_term} = [$value, $timestamp, $user_name, '', ''];
 
@@ -2072,6 +2145,10 @@ sub perform_drone_imagery_analytics {
             my $cmd_f90_cv1 = 'cd '.$tmp_stats_dir.'; echo '.$parameter_tempfile_cv1_basename.' | '.$command_name.' > '.$stats_out_tempfile;
             print STDERR Dumper $cmd_f90_cv1;
             my $status_cv1 = system($cmd_f90_cv1);
+            return {error=>'The native fold process failed; no estimates were read.'} if $status_cv1;
+            my $fold_error_cv1=CXGN::DroneImagery::DesignFactors::native_fit_error(
+                $statistics_select,$parameter_tempfile_cv1,$stats_out_cv1_predict_tempfile,$stats_out_tempfile,$tmp_stats_dir);
+            return {error=>$fold_error_cv1} if $fold_error_cv1;
 
             open(my $fh_log_cv1, '<', $stats_out_tempfile) or die "Could not open file '$stats_out_tempfile' $!";
                 print STDERR "Opened $stats_out_tempfile\n";
@@ -2084,18 +2161,27 @@ sub perform_drone_imagery_analytics {
             open(my $fh_yhat_res_cv1, '<', $yhat_residual_tempfile_cv1) or die "Could not open file '$yhat_residual_tempfile_cv1' $!";
                 print STDERR "Opened $yhat_residual_tempfile_cv1\n";
 
+                my $native_fold_observed_1=CXGN::DroneImagery::NativeResults::observation_mask($stats_out_cv1_predict_tempfile,$parameter_tempfile_cv1);
+                my $native_fold_row_1=0;
                 while (my $row = <$fh_yhat_res_cv1>) {
+                    next if !$native_fold_observed_1->[$native_fold_row_1++];
                     # print STDERR $row;
                     my @vals = split ' ', $row;
                     my $pred = $vals[0];
                     my $residual = $vals[1];
                     $model_sum_square_cv1_original = $model_sum_square_cv1_original + $residual*$residual;
                 }
+                return {error=>'Native fold readback row count differs from its input.'}
+                    if $native_fold_row_1!=@$native_fold_observed_1;
             close($fh_yhat_res_cv1);
 
             my $cmd_f90_cv2 = 'cd '.$tmp_stats_dir.'; echo '.$parameter_tempfile_cv2_basename.' | '.$command_name.' > '.$stats_out_tempfile;
             print STDERR Dumper $cmd_f90_cv2;
             my $status_cv2 = system($cmd_f90_cv2);
+            return {error=>'The native fold process failed; no estimates were read.'} if $status_cv2;
+            my $fold_error_cv2=CXGN::DroneImagery::DesignFactors::native_fit_error(
+                $statistics_select,$parameter_tempfile_cv2,$stats_out_cv2_predict_tempfile,$stats_out_tempfile,$tmp_stats_dir);
+            return {error=>$fold_error_cv2} if $fold_error_cv2;
 
             open(my $fh_log_cv2, '<', $stats_out_tempfile) or die "Could not open file '$stats_out_tempfile' $!";
                 print STDERR "Opened $stats_out_tempfile\n";
@@ -2108,18 +2194,27 @@ sub perform_drone_imagery_analytics {
             open(my $fh_yhat_res_cv2, '<', $yhat_residual_tempfile_cv2) or die "Could not open file '$yhat_residual_tempfile_cv2' $!";
                 print STDERR "Opened $yhat_residual_tempfile_cv2\n";
 
+                my $native_fold_observed_2=CXGN::DroneImagery::NativeResults::observation_mask($stats_out_cv2_predict_tempfile,$parameter_tempfile_cv2);
+                my $native_fold_row_2=0;
                 while (my $row = <$fh_yhat_res_cv2>) {
+                    next if !$native_fold_observed_2->[$native_fold_row_2++];
                     # print STDERR $row;
                     my @vals = split ' ', $row;
                     my $pred = $vals[0];
                     my $residual = $vals[1];
                     $model_sum_square_cv2_original = $model_sum_square_cv2_original + $residual*$residual;
                 }
+                return {error=>'Native fold readback row count differs from its input.'}
+                    if $native_fold_row_2!=@$native_fold_observed_2;
             close($fh_yhat_res_cv2);
 
             my $cmd_f90_cv3 = 'cd '.$tmp_stats_dir.'; echo '.$parameter_tempfile_cv3_basename.' | '.$command_name.' > '.$stats_out_tempfile;
             print STDERR Dumper $cmd_f90_cv3;
             my $status_cv3 = system($cmd_f90_cv3);
+            return {error=>'The native fold process failed; no estimates were read.'} if $status_cv3;
+            my $fold_error_cv3=CXGN::DroneImagery::DesignFactors::native_fit_error(
+                $statistics_select,$parameter_tempfile_cv3,$stats_out_cv3_predict_tempfile,$stats_out_tempfile,$tmp_stats_dir);
+            return {error=>$fold_error_cv3} if $fold_error_cv3;
 
             open(my $fh_log_cv3, '<', $stats_out_tempfile) or die "Could not open file '$stats_out_tempfile' $!";
                 print STDERR "Opened $stats_out_tempfile\n";
@@ -2132,18 +2227,27 @@ sub perform_drone_imagery_analytics {
             open(my $fh_yhat_res_cv3, '<', $yhat_residual_tempfile_cv3) or die "Could not open file '$yhat_residual_tempfile_cv3' $!";
                 print STDERR "Opened $yhat_residual_tempfile_cv3\n";
 
+                my $native_fold_observed_3=CXGN::DroneImagery::NativeResults::observation_mask($stats_out_cv3_predict_tempfile,$parameter_tempfile_cv3);
+                my $native_fold_row_3=0;
                 while (my $row = <$fh_yhat_res_cv3>) {
+                    next if !$native_fold_observed_3->[$native_fold_row_3++];
                     # print STDERR $row;
                     my @vals = split ' ', $row;
                     my $pred = $vals[0];
                     my $residual = $vals[1];
                     $model_sum_square_cv3_original = $model_sum_square_cv3_original + $residual*$residual;
                 }
+                return {error=>'Native fold readback row count differs from its input.'}
+                    if $native_fold_row_3!=@$native_fold_observed_3;
             close($fh_yhat_res_cv3);
 
             my $cmd_f90_cv4 = 'cd '.$tmp_stats_dir.'; echo '.$parameter_tempfile_cv4_basename.' | '.$command_name.' > '.$stats_out_tempfile;
             print STDERR Dumper $cmd_f90_cv4;
             my $status_cv4 = system($cmd_f90_cv4);
+            return {error=>'The native fold process failed; no estimates were read.'} if $status_cv4;
+            my $fold_error_cv4=CXGN::DroneImagery::DesignFactors::native_fit_error(
+                $statistics_select,$parameter_tempfile_cv4,$stats_out_cv4_predict_tempfile,$stats_out_tempfile,$tmp_stats_dir);
+            return {error=>$fold_error_cv4} if $fold_error_cv4;
 
             open(my $fh_log_cv4, '<', $stats_out_tempfile) or die "Could not open file '$stats_out_tempfile' $!";
                 print STDERR "Opened $stats_out_tempfile\n";
@@ -2156,18 +2260,27 @@ sub perform_drone_imagery_analytics {
             open(my $fh_yhat_res_cv4, '<', $yhat_residual_tempfile_cv4) or die "Could not open file '$yhat_residual_tempfile_cv4' $!";
                 print STDERR "Opened $yhat_residual_tempfile_cv4\n";
 
+                my $native_fold_observed_4=CXGN::DroneImagery::NativeResults::observation_mask($stats_out_cv4_predict_tempfile,$parameter_tempfile_cv4);
+                my $native_fold_row_4=0;
                 while (my $row = <$fh_yhat_res_cv4>) {
+                    next if !$native_fold_observed_4->[$native_fold_row_4++];
                     # print STDERR $row;
                     my @vals = split ' ', $row;
                     my $pred = $vals[0];
                     my $residual = $vals[1];
                     $model_sum_square_cv4_original = $model_sum_square_cv4_original + $residual*$residual;
                 }
+                return {error=>'Native fold readback row count differs from its input.'}
+                    if $native_fold_row_4!=@$native_fold_observed_4;
             close($fh_yhat_res_cv4);
 
             my $cmd_f90_cv5 = 'cd '.$tmp_stats_dir.'; echo '.$parameter_tempfile_cv5_basename.' | '.$command_name.' > '.$stats_out_tempfile;
             print STDERR Dumper $cmd_f90_cv5;
             my $status_cv5 = system($cmd_f90_cv5);
+            return {error=>'The native fold process failed; no estimates were read.'} if $status_cv5;
+            my $fold_error_cv5=CXGN::DroneImagery::DesignFactors::native_fit_error(
+                $statistics_select,$parameter_tempfile_cv5,$stats_out_cv5_predict_tempfile,$stats_out_tempfile,$tmp_stats_dir);
+            return {error=>$fold_error_cv5} if $fold_error_cv5;
 
             open(my $fh_log_cv5, '<', $stats_out_tempfile) or die "Could not open file '$stats_out_tempfile' $!";
                 print STDERR "Opened $stats_out_tempfile\n";
@@ -2180,18 +2293,27 @@ sub perform_drone_imagery_analytics {
             open(my $fh_yhat_res_cv5, '<', $yhat_residual_tempfile_cv5) or die "Could not open file '$yhat_residual_tempfile_cv5' $!";
                 print STDERR "Opened $yhat_residual_tempfile_cv5\n";
 
+                my $native_fold_observed_5=CXGN::DroneImagery::NativeResults::observation_mask($stats_out_cv5_predict_tempfile,$parameter_tempfile_cv5);
+                my $native_fold_row_5=0;
                 while (my $row = <$fh_yhat_res_cv5>) {
+                    next if !$native_fold_observed_5->[$native_fold_row_5++];
                     # print STDERR $row;
                     my @vals = split ' ', $row;
                     my $pred = $vals[0];
                     my $residual = $vals[1];
                     $model_sum_square_cv5_original = $model_sum_square_cv5_original + $residual*$residual;
                 }
+                return {error=>'Native fold readback row count differs from its input.'}
+                    if $native_fold_row_5!=@$native_fold_observed_5;
             close($fh_yhat_res_cv5);
 
             my $cmd_f90_cv1_2 = 'cd '.$tmp_stats_dir.'; echo '.$parameter_tempfile_cv1_2_basename.' | blupf90 > '.$stats_out_tempfile;
             print STDERR Dumper $cmd_f90_cv1_2;
             my $status_cv1_2 = system($cmd_f90_cv1_2);
+            return {error=>'The native fold process failed; no estimates were read.'} if $status_cv1_2;
+            my $fold_error_cv1_2=CXGN::DroneImagery::DesignFactors::native_fit_error(
+                $native_blup_selection,$parameter_tempfile_cv1_2,$stats_out_cv1_predict_tempfile,$stats_out_tempfile,$tmp_stats_dir);
+            return {error=>$fold_error_cv1_2} if $fold_error_cv1_2;
 
             open(my $fh_log_cv1_2, '<', $stats_out_tempfile) or die "Could not open file '$stats_out_tempfile' $!";
                 print STDERR "Opened $stats_out_tempfile\n";
@@ -2204,18 +2326,27 @@ sub perform_drone_imagery_analytics {
             open(my $fh_yhat_res_cv1_2, '<', $yhat_residual_tempfile_cv1_2) or die "Could not open file '$yhat_residual_tempfile_cv1_2' $!";
                 print STDERR "Opened $yhat_residual_tempfile_cv1_2\n";
 
+                my $native_fold_observed_1_2=CXGN::DroneImagery::NativeResults::observation_mask($stats_out_cv1_predict_tempfile,$parameter_tempfile_cv1_2);
+                my $native_fold_row_1_2=0;
                 while (my $row = <$fh_yhat_res_cv1_2>) {
+                    next if !$native_fold_observed_1_2->[$native_fold_row_1_2++];
                     # print STDERR $row;
                     my @vals = split ' ', $row;
                     my $pred = $vals[0];
                     my $residual = $vals[1];
                     $model_sum_square_cv1_2_original = $model_sum_square_cv1_2_original + $residual*$residual;
                 }
+                return {error=>'Native fold readback row count differs from its input.'}
+                    if $native_fold_row_1_2!=@$native_fold_observed_1_2;
             close($fh_yhat_res_cv1_2);
 
             my $cmd_f90_cv2_2 = 'cd '.$tmp_stats_dir.'; echo '.$parameter_tempfile_cv2_2_basename.' | blupf90 > '.$stats_out_tempfile;
             print STDERR Dumper $cmd_f90_cv2_2;
             my $status_cv2_2 = system($cmd_f90_cv2_2);
+            return {error=>'The native fold process failed; no estimates were read.'} if $status_cv2_2;
+            my $fold_error_cv2_2=CXGN::DroneImagery::DesignFactors::native_fit_error(
+                $native_blup_selection,$parameter_tempfile_cv2_2,$stats_out_cv2_predict_tempfile,$stats_out_tempfile,$tmp_stats_dir);
+            return {error=>$fold_error_cv2_2} if $fold_error_cv2_2;
 
             open(my $fh_log_cv2_2, '<', $stats_out_tempfile) or die "Could not open file '$stats_out_tempfile' $!";
                 print STDERR "Opened $stats_out_tempfile\n";
@@ -2228,18 +2359,27 @@ sub perform_drone_imagery_analytics {
             open(my $fh_yhat_res_cv2_2, '<', $yhat_residual_tempfile_cv2_2) or die "Could not open file '$yhat_residual_tempfile_cv2_2' $!";
                 print STDERR "Opened $yhat_residual_tempfile_cv2_2\n";
 
+                my $native_fold_observed_2_2=CXGN::DroneImagery::NativeResults::observation_mask($stats_out_cv2_predict_tempfile,$parameter_tempfile_cv2_2);
+                my $native_fold_row_2_2=0;
                 while (my $row = <$fh_yhat_res_cv2_2>) {
+                    next if !$native_fold_observed_2_2->[$native_fold_row_2_2++];
                     # print STDERR $row;
                     my @vals = split ' ', $row;
                     my $pred = $vals[0];
                     my $residual = $vals[1];
                     $model_sum_square_cv2_2_original = $model_sum_square_cv2_2_original + $residual*$residual;
                 }
+                return {error=>'Native fold readback row count differs from its input.'}
+                    if $native_fold_row_2_2!=@$native_fold_observed_2_2;
             close($fh_yhat_res_cv2_2);
 
             my $cmd_f90_cv3_2 = 'cd '.$tmp_stats_dir.'; echo '.$parameter_tempfile_cv3_2_basename.' | blupf90 > '.$stats_out_tempfile;
             print STDERR Dumper $cmd_f90_cv3_2;
             my $status_cv3_2 = system($cmd_f90_cv3_2);
+            return {error=>'The native fold process failed; no estimates were read.'} if $status_cv3_2;
+            my $fold_error_cv3_2=CXGN::DroneImagery::DesignFactors::native_fit_error(
+                $native_blup_selection,$parameter_tempfile_cv3_2,$stats_out_cv3_predict_tempfile,$stats_out_tempfile,$tmp_stats_dir);
+            return {error=>$fold_error_cv3_2} if $fold_error_cv3_2;
 
             open(my $fh_log_cv3_2, '<', $stats_out_tempfile) or die "Could not open file '$stats_out_tempfile' $!";
                 print STDERR "Opened $stats_out_tempfile\n";
@@ -2252,18 +2392,27 @@ sub perform_drone_imagery_analytics {
             open(my $fh_yhat_res_cv3_2, '<', $yhat_residual_tempfile_cv3_2) or die "Could not open file '$yhat_residual_tempfile_cv3_2' $!";
                 print STDERR "Opened $yhat_residual_tempfile_cv3_2\n";
 
+                my $native_fold_observed_3_2=CXGN::DroneImagery::NativeResults::observation_mask($stats_out_cv3_predict_tempfile,$parameter_tempfile_cv3_2);
+                my $native_fold_row_3_2=0;
                 while (my $row = <$fh_yhat_res_cv3_2>) {
+                    next if !$native_fold_observed_3_2->[$native_fold_row_3_2++];
                     # print STDERR $row;
                     my @vals = split ' ', $row;
                     my $pred = $vals[0];
                     my $residual = $vals[1];
                     $model_sum_square_cv3_2_original = $model_sum_square_cv3_2_original + $residual*$residual;
                 }
+                return {error=>'Native fold readback row count differs from its input.'}
+                    if $native_fold_row_3_2!=@$native_fold_observed_3_2;
             close($fh_yhat_res_cv3_2);
 
             my $cmd_f90_cv4_2 = 'cd '.$tmp_stats_dir.'; echo '.$parameter_tempfile_cv4_2_basename.' | blupf90 > '.$stats_out_tempfile;
             print STDERR Dumper $cmd_f90_cv4_2;
             my $status_cv4_2 = system($cmd_f90_cv4_2);
+            return {error=>'The native fold process failed; no estimates were read.'} if $status_cv4_2;
+            my $fold_error_cv4_2=CXGN::DroneImagery::DesignFactors::native_fit_error(
+                $native_blup_selection,$parameter_tempfile_cv4_2,$stats_out_cv4_predict_tempfile,$stats_out_tempfile,$tmp_stats_dir);
+            return {error=>$fold_error_cv4_2} if $fold_error_cv4_2;
 
             open(my $fh_log_cv4_2, '<', $stats_out_tempfile) or die "Could not open file '$stats_out_tempfile' $!";
                 print STDERR "Opened $stats_out_tempfile\n";
@@ -2276,18 +2425,27 @@ sub perform_drone_imagery_analytics {
             open(my $fh_yhat_res_cv4_2, '<', $yhat_residual_tempfile_cv4_2) or die "Could not open file '$yhat_residual_tempfile_cv4_2' $!";
                 print STDERR "Opened $yhat_residual_tempfile_cv4_2\n";
 
+                my $native_fold_observed_4_2=CXGN::DroneImagery::NativeResults::observation_mask($stats_out_cv4_predict_tempfile,$parameter_tempfile_cv4_2);
+                my $native_fold_row_4_2=0;
                 while (my $row = <$fh_yhat_res_cv4_2>) {
+                    next if !$native_fold_observed_4_2->[$native_fold_row_4_2++];
                     # print STDERR $row;
                     my @vals = split ' ', $row;
                     my $pred = $vals[0];
                     my $residual = $vals[1];
                     $model_sum_square_cv4_2_original = $model_sum_square_cv4_2_original + $residual*$residual;
                 }
+                return {error=>'Native fold readback row count differs from its input.'}
+                    if $native_fold_row_4_2!=@$native_fold_observed_4_2;
             close($fh_yhat_res_cv4_2);
 
             my $cmd_f90_cv5_2 = 'cd '.$tmp_stats_dir.'; echo '.$parameter_tempfile_cv5_2_basename.' | blupf90 > '.$stats_out_tempfile;
             print STDERR Dumper $cmd_f90_cv5_2;
             my $status_cv5_2 = system($cmd_f90_cv5_2);
+            return {error=>'The native fold process failed; no estimates were read.'} if $status_cv5_2;
+            my $fold_error_cv5_2=CXGN::DroneImagery::DesignFactors::native_fit_error(
+                $native_blup_selection,$parameter_tempfile_cv5_2,$stats_out_cv5_predict_tempfile,$stats_out_tempfile,$tmp_stats_dir);
+            return {error=>$fold_error_cv5_2} if $fold_error_cv5_2;
 
             open(my $fh_log_cv5_2, '<', $stats_out_tempfile) or die "Could not open file '$stats_out_tempfile' $!";
                 print STDERR "Opened $stats_out_tempfile\n";
@@ -2300,13 +2458,18 @@ sub perform_drone_imagery_analytics {
             open(my $fh_yhat_res_cv5_2, '<', $yhat_residual_tempfile_cv5_2) or die "Could not open file '$yhat_residual_tempfile_cv5_2' $!";
                 print STDERR "Opened $yhat_residual_tempfile_cv5_2\n";
 
+                my $native_fold_observed_5_2=CXGN::DroneImagery::NativeResults::observation_mask($stats_out_cv5_predict_tempfile,$parameter_tempfile_cv5_2);
+                my $native_fold_row_5_2=0;
                 while (my $row = <$fh_yhat_res_cv5_2>) {
+                    next if !$native_fold_observed_5_2->[$native_fold_row_5_2++];
                     # print STDERR $row;
                     my @vals = split ' ', $row;
                     my $pred = $vals[0];
                     my $residual = $vals[1];
                     $model_sum_square_cv5_2_original = $model_sum_square_cv5_2_original + $residual*$residual;
                 }
+                return {error=>'Native fold readback row count differs from its input.'}
+                    if $native_fold_row_5_2!=@$native_fold_observed_5_2;
             close($fh_yhat_res_cv5_2);
         }
     }
@@ -4396,7 +4559,11 @@ sub perform_drone_imagery_analytics {
 
         open(my $F, ">", $stats_tempfile_2) || die "Can't open file ".$stats_tempfile_2;
             foreach (@data_matrix_altered) {
-                my $line = join ' ', @$_;
+                my @native_row=@$_;
+                my $encoded_value=eval {CXGN::DroneImagery::DesignFactors::native_observation($native_row[-1])};
+                return {error=>"$@"} if $@;
+                $native_row[-1]=$encoded_value;
+                my $line = join ' ', @native_row;
                 print $F "$line\n";
             }
         close($F);
@@ -5330,6 +5497,7 @@ sub perform_drone_imagery_analytics {
 
         print STDERR Dumper $statistics_cmd;
         my $status_r = system($statistics_cmd);
+        return {error=>'Native starting covariance requires sufficient complete paired observations and a positive-definite covariance; no estimates were read.'} if $status_r;
 
         my @pheno_var;
         open(my $fh_r, '<', $stats_out_param_tempfile) or die "Could not open file '$stats_out_param_tempfile' $!";
@@ -5356,9 +5524,17 @@ sub perform_drone_imagery_analytics {
 
         print STDERR Dumper $stats_tempfile_2;
         my $data_cv_cmd = 'R -e "mat <- read.csv(\''.$stats_tempfile_2.'\', header=FALSE, sep=\' \');
-        randomized_positions <- sample(length(mat[,1]));
-        cv_step_size <- length(mat[,1]) %/% 5;
-        cv_step_size_modulo <- length(mat[,1]) %% 5;
+        native_missing <- '.CXGN::DroneImagery::DesignFactors::native_missing_value().';
+        observed_positions <- which(mat[,ncol(mat)] != native_missing);
+        randomized_positions <- sample(observed_positions, length(observed_positions));
+        cv_step_size <- length(randomized_positions) %/% 5;
+        cv_step_size_modulo <- length(randomized_positions) %% 5;
+        fold_positions <- lapply(1:5, function(i) {
+            size <- cv_step_size + if(i == 5) cv_step_size_modulo else 0;
+            if(size == 0) return(integer(0));
+            randomized_positions[(i-1)*cv_step_size + seq_len(size)];
+        });
+        observed_median <- median(mat[observed_positions,ncol(mat)]);
         mat_CV1 <- mat; mat_CV2 <- mat; mat_CV3 <- mat; mat_CV4 <- mat; mat_CV5 <- mat;
         mat_CV1[fold_positions[[1]],ncol(mat)] <- observed_median;
         mat_CV2[fold_positions[[2]],ncol(mat)] <- observed_median;
@@ -5366,22 +5542,22 @@ sub perform_drone_imagery_analytics {
         mat_CV4[fold_positions[[4]],ncol(mat)] <- observed_median;
         mat_CV5[fold_positions[[5]],ncol(mat)] <- observed_median;
         mat_CV1_2 <- mat; mat_CV2_2 <- mat; mat_CV3_2 <- mat; mat_CV4_2 <- mat; mat_CV5_2 <- mat;
-        mat_CV1_2[c(randomized_positions[1:cv_step_size]),ncol(mat)] <- -999;
-        mat_CV2_2[c(randomized_positions[(cv_step_size+1):(2*cv_step_size)]),ncol(mat)] <- -999;
-        mat_CV3_2[c(randomized_positions[((2*cv_step_size)+1):(3*cv_step_size)]),ncol(mat)] <- -999;
-        mat_CV4_2[c(randomized_positions[((3*cv_step_size)+1):(4*cv_step_size)]),ncol(mat)] <- -999;
-        mat_CV5_2[c(randomized_positions[((4*cv_step_size)+1):((5*cv_step_size)+cv_step_size_modulo)]),ncol(mat)] <- -999;
-        write.table(mat, file=\''.$stats_tempfile_2.'\', row.names=FALSE, col.names=FALSE, sep=\' \');
-        write.table(mat_CV1, file=\''.$stats_out_cv1_predict_tempfile.'\', row.names=FALSE, col.names=FALSE, sep=\' \');
-        write.table(mat_CV2, file=\''.$stats_out_cv2_predict_tempfile.'\', row.names=FALSE, col.names=FALSE, sep=\' \');
-        write.table(mat_CV3, file=\''.$stats_out_cv3_predict_tempfile.'\', row.names=FALSE, col.names=FALSE, sep=\' \');
-        write.table(mat_CV4, file=\''.$stats_out_cv4_predict_tempfile.'\', row.names=FALSE, col.names=FALSE, sep=\' \');
-        write.table(mat_CV5, file=\''.$stats_out_cv5_predict_tempfile.'\', row.names=FALSE, col.names=FALSE, sep=\' \');
-        write.table(mat_CV1_2, file=\''.$stats_out_cv1_2_predict_tempfile.'\', row.names=FALSE, col.names=FALSE, sep=\' \');
-        write.table(mat_CV2_2, file=\''.$stats_out_cv2_2_predict_tempfile.'\', row.names=FALSE, col.names=FALSE, sep=\' \');
-        write.table(mat_CV3_2, file=\''.$stats_out_cv3_2_predict_tempfile.'\', row.names=FALSE, col.names=FALSE, sep=\' \');
-        write.table(mat_CV4_2, file=\''.$stats_out_cv4_2_predict_tempfile.'\', row.names=FALSE, col.names=FALSE, sep=\' \');
-        write.table(mat_CV5_2, file=\''.$stats_out_cv5_2_predict_tempfile.'\', row.names=FALSE, col.names=FALSE, sep=\' \');
+        mat_CV1_2[fold_positions[[1]],ncol(mat)] <- native_missing;
+        mat_CV2_2[fold_positions[[2]],ncol(mat)] <- native_missing;
+        mat_CV3_2[fold_positions[[3]],ncol(mat)] <- native_missing;
+        mat_CV4_2[fold_positions[[4]],ncol(mat)] <- native_missing;
+        mat_CV5_2[fold_positions[[5]],ncol(mat)] <- native_missing;
+        write.table(mat, file=\''.$stats_tempfile_2.'\', row.names=FALSE, col.names=FALSE, qmethod=\'double\', sep=\' \');
+        write.table(mat_CV1, file=\''.$stats_out_cv1_predict_tempfile.'\', row.names=FALSE, col.names=FALSE, qmethod=\'double\', sep=\' \');
+        write.table(mat_CV2, file=\''.$stats_out_cv2_predict_tempfile.'\', row.names=FALSE, col.names=FALSE, qmethod=\'double\', sep=\' \');
+        write.table(mat_CV3, file=\''.$stats_out_cv3_predict_tempfile.'\', row.names=FALSE, col.names=FALSE, qmethod=\'double\', sep=\' \');
+        write.table(mat_CV4, file=\''.$stats_out_cv4_predict_tempfile.'\', row.names=FALSE, col.names=FALSE, qmethod=\'double\', sep=\' \');
+        write.table(mat_CV5, file=\''.$stats_out_cv5_predict_tempfile.'\', row.names=FALSE, col.names=FALSE, qmethod=\'double\', sep=\' \');
+        write.table(mat_CV1_2, file=\''.$stats_out_cv1_2_predict_tempfile.'\', row.names=FALSE, col.names=FALSE, qmethod=\'double\', sep=\' \');
+        write.table(mat_CV2_2, file=\''.$stats_out_cv2_2_predict_tempfile.'\', row.names=FALSE, col.names=FALSE, qmethod=\'double\', sep=\' \');
+        write.table(mat_CV3_2, file=\''.$stats_out_cv3_2_predict_tempfile.'\', row.names=FALSE, col.names=FALSE, qmethod=\'double\', sep=\' \');
+        write.table(mat_CV4_2, file=\''.$stats_out_cv4_2_predict_tempfile.'\', row.names=FALSE, col.names=FALSE, qmethod=\'double\', sep=\' \');
+        write.table(mat_CV5_2, file=\''.$stats_out_cv5_2_predict_tempfile.'\', row.names=FALSE, col.names=FALSE, qmethod=\'double\', sep=\' \');
         "';
         my $status_cv_files = system($data_cv_cmd);
 
@@ -5470,6 +5646,11 @@ sub perform_drone_imagery_analytics {
 
         print STDERR Dumper $cmd_f90;
         my $status = system($cmd_f90);
+        return {error=>'The native statistics process failed; no estimates were read.'} if $status;
+        my $fit_error=CXGN::DroneImagery::DesignFactors::native_fit_error(
+            $statistics_select,$parameter_tempfile,$stats_tempfile_2,$stats_out_tempfile,$tmp_stats_dir);
+        return {error=>$fit_error} if $fit_error;
+
 
         my @log_output_rows;
         open(my $fh_log, '<', $stats_out_tempfile) or die "Could not open file '$stats_out_tempfile' $!";
@@ -5480,23 +5661,23 @@ sub perform_drone_imagery_analytics {
             }
         close($fh_log);
 
-        my $log_output = join '', @log_output_rows;
-        my ($gen_var_string) = $log_output =~ /Genetic variance\(s\) for effect  2(.*?)correlations/gs;
-        @rr_coeff_genetic_covariance_altered = split ' ', $gen_var_string;
-        print STDERR Dumper \@rr_coeff_genetic_covariance_altered;
-        my ($env_var_string) = $log_output =~ /Genetic variance\(s\) for effect  $legendre_order_number_env_var_pos(.*?)correlations/gs;
-        @rr_coeff_env_covariance_altered = split ' ', $env_var_string;
-        print STDERR Dumper \@rr_coeff_env_covariance_altered;
-        my (@gen_cor_string) = $log_output =~ /correlations(.*?)eigenvectors/gs;
-        @rr_coeff_genetic_correlation_altered = split ' ', $gen_cor_string[0];
-        print STDERR Dumper \@rr_coeff_genetic_correlation_altered;
-        @rr_coeff_env_correlation_altered = split ' ', $gen_cor_string[1];
-        print STDERR Dumper \@rr_coeff_env_correlation_altered;
-        my ($res_se_string) = $log_output =~ /SE for R(.*?)\* FINISHED \(AIREMLF90\)/gs;
-        print STDERR Dumper $res_se_string;
-        # $rr_residual_variance_altered = ($res_se_string**2)*$number_plots;
-        $rr_residual_variance_altered = $res_se_string;
-        print STDERR Dumper $rr_residual_variance_altered;
+        my $native_summary=eval {CXGN::DroneImagery::NativeResults::summarize(
+            parameter_file=>$parameter_tempfile,data_file=>$stats_tempfile_2,
+            log_file=>$stats_out_tempfile,cwd=>$tmp_stats_dir,
+            backend=>($statistics_select =~ /^blupf90_/ ? 'blupf90':'airemlf90'),
+            time_scale=>($statistics_select =~ /_gdd_/ ? 'GDD':'DAP'),
+            kernel_origin=>($native_variance_options->{kernel_origin} // ($protocol_id ? 'unknown':'genotypic_identity')),
+            unit_metadata=>\%native_unit_metadata,
+        )};
+        return {error=>"$@"} if $@;
+        $native_variance_summaries{altered}=$native_summary;
+        @rr_coeff_genetic_covariance_altered=@{$native_summary->{genetic_covariance}};
+        @rr_coeff_env_covariance_altered=@{$native_summary->{env_covariance}};
+        @rr_coeff_genetic_correlation_altered=@{$native_summary->{genetic_correlation}};
+        @rr_coeff_env_correlation_altered=@{$native_summary->{env_correlation}};
+        # A heterogeneous residual is a time function. The old scalar slot
+        # remains undefined; printed native SE is retained only in metadata.
+        $rr_residual_variance_altered=undef;
 
         @param_file_rows_6 = (
             '(CO)VARIANCES'
@@ -5527,31 +5708,31 @@ sub perform_drone_imagery_analytics {
         }
 
         open(my $Fp_cv1_2, ">", $parameter_tempfile_cv1_2) || die "Can't open file ".$parameter_tempfile_cv1_2;
-            foreach ((@param_file_rows_data_cv1, @param_file_rows_1, @param_file_rows_6, @param_file_rows_3, @param_file_rows_7, @param_file_rows_5)) {
+            foreach ((@param_file_rows_data_cv1, @param_file_rows_1, @param_file_rows_6, @param_file_rows_3, @param_file_rows_7, @native_blup_options)) {
                 print $Fp_cv1_2 "$_\n";
             }
         close($Fp_cv1_2);
 
         open(my $Fp_cv2_2, ">", $parameter_tempfile_cv2_2) || die "Can't open file ".$parameter_tempfile_cv2_2;
-            foreach ((@param_file_rows_data_cv2, @param_file_rows_1, @param_file_rows_6, @param_file_rows_3, @param_file_rows_7, @param_file_rows_5)) {
+            foreach ((@param_file_rows_data_cv2, @param_file_rows_1, @param_file_rows_6, @param_file_rows_3, @param_file_rows_7, @native_blup_options)) {
                 print $Fp_cv2_2 "$_\n";
             }
         close($Fp_cv2_2);
 
         open(my $Fp_cv3_2, ">", $parameter_tempfile_cv3_2) || die "Can't open file ".$parameter_tempfile_cv3_2;
-            foreach ((@param_file_rows_data_cv3, @param_file_rows_1, @param_file_rows_6, @param_file_rows_3, @param_file_rows_7, @param_file_rows_5)) {
+            foreach ((@param_file_rows_data_cv3, @param_file_rows_1, @param_file_rows_6, @param_file_rows_3, @param_file_rows_7, @native_blup_options)) {
                 print $Fp_cv3_2 "$_\n";
             }
         close($Fp_cv3_2);
 
         open(my $Fp_cv4_2, ">", $parameter_tempfile_cv4_2) || die "Can't open file ".$parameter_tempfile_cv4_2;
-            foreach ((@param_file_rows_data_cv4, @param_file_rows_1, @param_file_rows_6, @param_file_rows_3, @param_file_rows_7, @param_file_rows_5)) {
+            foreach ((@param_file_rows_data_cv4, @param_file_rows_1, @param_file_rows_6, @param_file_rows_3, @param_file_rows_7, @native_blup_options)) {
                 print $Fp_cv4_2 "$_\n";
             }
         close($Fp_cv4_2);
 
         open(my $Fp_cv5_2, ">", $parameter_tempfile_cv5_2) || die "Can't open file ".$parameter_tempfile_cv5_2;
-            foreach ((@param_file_rows_data_cv5, @param_file_rows_1, @param_file_rows_6, @param_file_rows_3, @param_file_rows_7, @param_file_rows_5)) {
+            foreach ((@param_file_rows_data_cv5, @param_file_rows_1, @param_file_rows_6, @param_file_rows_3, @param_file_rows_7, @native_blup_options)) {
                 print $Fp_cv5_2 "$_\n";
             }
         close($Fp_cv5_2);
@@ -5563,10 +5744,12 @@ sub perform_drone_imagery_analytics {
         open(my $fh_yhat_res, '<', $yhat_residual_tempfile) or die "Could not open file '$yhat_residual_tempfile' $!";
             print STDERR "Opened $yhat_residual_tempfile\n";
 
+            my $native_observed=CXGN::DroneImagery::NativeResults::observation_mask($stats_tempfile_2,$parameter_tempfile);
             my $pred_res_counter = 0;
             my $trait_counter = 0;
             while (my $row = <$fh_yhat_res>) {
                 # print STDERR $row;
+                if (!$native_observed->[$pred_res_counter]) {$pred_res_counter++;next;}
                 my @vals = split ' ', $row;
                 my $pred = $vals[0];
                 my $residual = $vals[1];
@@ -5586,6 +5769,8 @@ sub perform_drone_imagery_analytics {
 
                 $pred_res_counter++;
             }
+            return {error=>'Native readback row count differs from its input; no partial results were saved.'}
+                if $pred_res_counter!=@$native_observed;
         close($fh_yhat_res);
 
         $blupf90_solutions_tempfile = $tmp_stats_dir."/solutions";
@@ -5651,7 +5836,7 @@ sub perform_drone_imagery_analytics {
                 my $time = $t_i*5/100;
                 my $time_rescaled = sprintf("%.2f", $time*($time_max - $time_min) + $time_min);
 
-                my $value = CXGN::DroneImagery::LegendrePolynomials::legendre_polynomial_sum($coeffs, $time);
+                my $value = CXGN::DroneImagery::LegendrePolynomials::normalized_legendre_polynomial_sum($coeffs, $time);
 
                 my $time_term_string = '';
                 if ($statistics_select eq 'blupf90_grm_random_regression_gdd_blups' || $statistics_select eq 'airemlf90_grm_random_regression_gdd_blups') {
@@ -5680,7 +5865,7 @@ sub perform_drone_imagery_analytics {
         while ( my ($accession_name, $coeffs) = each %rr_genetic_coefficients_altered) {
             foreach my $time_term (@sorted_trait_names) {
                 my $time = ($time_term - $time_min)/($time_max - $time_min);
-                my $value = CXGN::DroneImagery::LegendrePolynomials::legendre_polynomial_sum($coeffs, $time);
+                my $value = CXGN::DroneImagery::LegendrePolynomials::normalized_legendre_polynomial_sum($coeffs, $time);
 
                 $result_blup_data_delta_altered->{$accession_name}->{$time_term} = [$value, $timestamp, $user_name, '', ''];
 
@@ -5706,7 +5891,7 @@ sub perform_drone_imagery_analytics {
                 my $time = $t_i*5/100;
                 my $time_rescaled = sprintf("%.2f", $time*($time_max - $time_min) + $time_min);
 
-                my $value = CXGN::DroneImagery::LegendrePolynomials::legendre_polynomial_sum($coeffs, $time);
+                my $value = CXGN::DroneImagery::LegendrePolynomials::normalized_legendre_polynomial_sum($coeffs, $time);
 
                 my $time_term_string = '';
                 if ($statistics_select eq 'blupf90_grm_random_regression_gdd_blups' || $statistics_select eq 'airemlf90_grm_random_regression_gdd_blups') {
@@ -5735,7 +5920,7 @@ sub perform_drone_imagery_analytics {
         while ( my ($plot_name, $coeffs) = each %rr_temporal_coefficients_altered) {
             foreach my $time_term (@sorted_trait_names) {
                 my $time = ($time_term - $time_min)/($time_max - $time_min);
-                my $value = CXGN::DroneImagery::LegendrePolynomials::legendre_polynomial_sum($coeffs, $time);
+                my $value = CXGN::DroneImagery::LegendrePolynomials::normalized_legendre_polynomial_sum($coeffs, $time);
 
                 $result_blup_pe_data_delta_altered->{$plot_name}->{$time_term} = [$value, $timestamp, $user_name, '', ''];
 
@@ -5755,6 +5940,10 @@ sub perform_drone_imagery_analytics {
             my $cmd_f90_cv1 = 'cd '.$tmp_stats_dir.'; echo '.$parameter_tempfile_cv1_basename.' | '.$command_name.' > '.$stats_out_tempfile;
             print STDERR Dumper $cmd_f90_cv1;
             my $status_cv1 = system($cmd_f90_cv1);
+            return {error=>'The native fold process failed; no estimates were read.'} if $status_cv1;
+            my $fold_error_cv1=CXGN::DroneImagery::DesignFactors::native_fit_error(
+                $statistics_select,$parameter_tempfile_cv1,$stats_out_cv1_predict_tempfile,$stats_out_tempfile,$tmp_stats_dir);
+            return {error=>$fold_error_cv1} if $fold_error_cv1;
 
             open(my $fh_log_cv1, '<', $stats_out_tempfile) or die "Could not open file '$stats_out_tempfile' $!";
                 print STDERR "Opened $stats_out_tempfile\n";
@@ -5767,18 +5956,27 @@ sub perform_drone_imagery_analytics {
             open(my $fh_yhat_res_cv1, '<', $yhat_residual_tempfile_cv1) or die "Could not open file '$yhat_residual_tempfile_cv1' $!";
                 print STDERR "Opened $yhat_residual_tempfile_cv1\n";
 
+                my $native_fold_observed_1=CXGN::DroneImagery::NativeResults::observation_mask($stats_out_cv1_predict_tempfile,$parameter_tempfile_cv1);
+                my $native_fold_row_1=0;
                 while (my $row = <$fh_yhat_res_cv1>) {
+                    next if !$native_fold_observed_1->[$native_fold_row_1++];
                     # print STDERR $row;
                     my @vals = split ' ', $row;
                     my $pred = $vals[0];
                     my $residual = $vals[1];
                     $model_sum_square_cv1_altered = $model_sum_square_cv1_altered + $residual*$residual;
                 }
+                return {error=>'Native fold readback row count differs from its input.'}
+                    if $native_fold_row_1!=@$native_fold_observed_1;
             close($fh_yhat_res_cv1);
 
             my $cmd_f90_cv2 = 'cd '.$tmp_stats_dir.'; echo '.$parameter_tempfile_cv2_basename.' | '.$command_name.' > '.$stats_out_tempfile;
             print STDERR Dumper $cmd_f90_cv2;
             my $status_cv2 = system($cmd_f90_cv2);
+            return {error=>'The native fold process failed; no estimates were read.'} if $status_cv2;
+            my $fold_error_cv2=CXGN::DroneImagery::DesignFactors::native_fit_error(
+                $statistics_select,$parameter_tempfile_cv2,$stats_out_cv2_predict_tempfile,$stats_out_tempfile,$tmp_stats_dir);
+            return {error=>$fold_error_cv2} if $fold_error_cv2;
 
             open(my $fh_log_cv2, '<', $stats_out_tempfile) or die "Could not open file '$stats_out_tempfile' $!";
                 print STDERR "Opened $stats_out_tempfile\n";
@@ -5791,18 +5989,27 @@ sub perform_drone_imagery_analytics {
             open(my $fh_yhat_res_cv2, '<', $yhat_residual_tempfile_cv2) or die "Could not open file '$yhat_residual_tempfile_cv2' $!";
                 print STDERR "Opened $yhat_residual_tempfile_cv2\n";
 
+                my $native_fold_observed_2=CXGN::DroneImagery::NativeResults::observation_mask($stats_out_cv2_predict_tempfile,$parameter_tempfile_cv2);
+                my $native_fold_row_2=0;
                 while (my $row = <$fh_yhat_res_cv2>) {
+                    next if !$native_fold_observed_2->[$native_fold_row_2++];
                     # print STDERR $row;
                     my @vals = split ' ', $row;
                     my $pred = $vals[0];
                     my $residual = $vals[1];
                     $model_sum_square_cv2_altered = $model_sum_square_cv2_altered + $residual*$residual;
                 }
+                return {error=>'Native fold readback row count differs from its input.'}
+                    if $native_fold_row_2!=@$native_fold_observed_2;
             close($fh_yhat_res_cv2);
 
             my $cmd_f90_cv3 = 'cd '.$tmp_stats_dir.'; echo '.$parameter_tempfile_cv3_basename.' | '.$command_name.' > '.$stats_out_tempfile;
             print STDERR Dumper $cmd_f90_cv3;
             my $status_cv3 = system($cmd_f90_cv3);
+            return {error=>'The native fold process failed; no estimates were read.'} if $status_cv3;
+            my $fold_error_cv3=CXGN::DroneImagery::DesignFactors::native_fit_error(
+                $statistics_select,$parameter_tempfile_cv3,$stats_out_cv3_predict_tempfile,$stats_out_tempfile,$tmp_stats_dir);
+            return {error=>$fold_error_cv3} if $fold_error_cv3;
 
             open(my $fh_log_cv3, '<', $stats_out_tempfile) or die "Could not open file '$stats_out_tempfile' $!";
                 print STDERR "Opened $stats_out_tempfile\n";
@@ -5815,18 +6022,27 @@ sub perform_drone_imagery_analytics {
             open(my $fh_yhat_res_cv3, '<', $yhat_residual_tempfile_cv3) or die "Could not open file '$yhat_residual_tempfile_cv3' $!";
                 print STDERR "Opened $yhat_residual_tempfile_cv3\n";
 
+                my $native_fold_observed_3=CXGN::DroneImagery::NativeResults::observation_mask($stats_out_cv3_predict_tempfile,$parameter_tempfile_cv3);
+                my $native_fold_row_3=0;
                 while (my $row = <$fh_yhat_res_cv3>) {
+                    next if !$native_fold_observed_3->[$native_fold_row_3++];
                     # print STDERR $row;
                     my @vals = split ' ', $row;
                     my $pred = $vals[0];
                     my $residual = $vals[1];
                     $model_sum_square_cv3_altered = $model_sum_square_cv3_altered + $residual*$residual;
                 }
+                return {error=>'Native fold readback row count differs from its input.'}
+                    if $native_fold_row_3!=@$native_fold_observed_3;
             close($fh_yhat_res_cv3);
 
             my $cmd_f90_cv4 = 'cd '.$tmp_stats_dir.'; echo '.$parameter_tempfile_cv4_basename.' | '.$command_name.' > '.$stats_out_tempfile;
             print STDERR Dumper $cmd_f90_cv4;
             my $status_cv4 = system($cmd_f90_cv4);
+            return {error=>'The native fold process failed; no estimates were read.'} if $status_cv4;
+            my $fold_error_cv4=CXGN::DroneImagery::DesignFactors::native_fit_error(
+                $statistics_select,$parameter_tempfile_cv4,$stats_out_cv4_predict_tempfile,$stats_out_tempfile,$tmp_stats_dir);
+            return {error=>$fold_error_cv4} if $fold_error_cv4;
 
             open(my $fh_log_cv4, '<', $stats_out_tempfile) or die "Could not open file '$stats_out_tempfile' $!";
                 print STDERR "Opened $stats_out_tempfile\n";
@@ -5839,18 +6055,27 @@ sub perform_drone_imagery_analytics {
             open(my $fh_yhat_res_cv4, '<', $yhat_residual_tempfile_cv4) or die "Could not open file '$yhat_residual_tempfile_cv4' $!";
                 print STDERR "Opened $yhat_residual_tempfile_cv4\n";
 
+                my $native_fold_observed_4=CXGN::DroneImagery::NativeResults::observation_mask($stats_out_cv4_predict_tempfile,$parameter_tempfile_cv4);
+                my $native_fold_row_4=0;
                 while (my $row = <$fh_yhat_res_cv4>) {
+                    next if !$native_fold_observed_4->[$native_fold_row_4++];
                     # print STDERR $row;
                     my @vals = split ' ', $row;
                     my $pred = $vals[0];
                     my $residual = $vals[1];
                     $model_sum_square_cv4_altered = $model_sum_square_cv4_altered + $residual*$residual;
                 }
+                return {error=>'Native fold readback row count differs from its input.'}
+                    if $native_fold_row_4!=@$native_fold_observed_4;
             close($fh_yhat_res_cv4);
 
             my $cmd_f90_cv5 = 'cd '.$tmp_stats_dir.'; echo '.$parameter_tempfile_cv5_basename.' | '.$command_name.' > '.$stats_out_tempfile;
             print STDERR Dumper $cmd_f90_cv5;
             my $status_cv5 = system($cmd_f90_cv5);
+            return {error=>'The native fold process failed; no estimates were read.'} if $status_cv5;
+            my $fold_error_cv5=CXGN::DroneImagery::DesignFactors::native_fit_error(
+                $statistics_select,$parameter_tempfile_cv5,$stats_out_cv5_predict_tempfile,$stats_out_tempfile,$tmp_stats_dir);
+            return {error=>$fold_error_cv5} if $fold_error_cv5;
 
             open(my $fh_log_cv5, '<', $stats_out_tempfile) or die "Could not open file '$stats_out_tempfile' $!";
                 print STDERR "Opened $stats_out_tempfile\n";
@@ -5863,18 +6088,27 @@ sub perform_drone_imagery_analytics {
             open(my $fh_yhat_res_cv5, '<', $yhat_residual_tempfile_cv5) or die "Could not open file '$yhat_residual_tempfile_cv5' $!";
                 print STDERR "Opened $yhat_residual_tempfile_cv5\n";
 
+                my $native_fold_observed_5=CXGN::DroneImagery::NativeResults::observation_mask($stats_out_cv5_predict_tempfile,$parameter_tempfile_cv5);
+                my $native_fold_row_5=0;
                 while (my $row = <$fh_yhat_res_cv5>) {
+                    next if !$native_fold_observed_5->[$native_fold_row_5++];
                     # print STDERR $row;
                     my @vals = split ' ', $row;
                     my $pred = $vals[0];
                     my $residual = $vals[1];
                     $model_sum_square_cv5_altered = $model_sum_square_cv5_altered + $residual*$residual;
                 }
+                return {error=>'Native fold readback row count differs from its input.'}
+                    if $native_fold_row_5!=@$native_fold_observed_5;
             close($fh_yhat_res_cv5);
 
             my $cmd_f90_cv1_2 = 'cd '.$tmp_stats_dir.'; echo '.$parameter_tempfile_cv1_2_basename.' | blupf90 > '.$stats_out_tempfile;
             print STDERR Dumper $cmd_f90_cv1_2;
             my $status_cv1_2 = system($cmd_f90_cv1_2);
+            return {error=>'The native fold process failed; no estimates were read.'} if $status_cv1_2;
+            my $fold_error_cv1_2=CXGN::DroneImagery::DesignFactors::native_fit_error(
+                $native_blup_selection,$parameter_tempfile_cv1_2,$stats_out_cv1_predict_tempfile,$stats_out_tempfile,$tmp_stats_dir);
+            return {error=>$fold_error_cv1_2} if $fold_error_cv1_2;
 
             open(my $fh_log_cv1_2, '<', $stats_out_tempfile) or die "Could not open file '$stats_out_tempfile' $!";
                 print STDERR "Opened $stats_out_tempfile\n";
@@ -5887,18 +6121,27 @@ sub perform_drone_imagery_analytics {
             open(my $fh_yhat_res_cv1_2, '<', $yhat_residual_tempfile_cv1_2) or die "Could not open file '$yhat_residual_tempfile_cv1_2' $!";
                 print STDERR "Opened $yhat_residual_tempfile_cv1_2\n";
 
+                my $native_fold_observed_1_2=CXGN::DroneImagery::NativeResults::observation_mask($stats_out_cv1_predict_tempfile,$parameter_tempfile_cv1_2);
+                my $native_fold_row_1_2=0;
                 while (my $row = <$fh_yhat_res_cv1_2>) {
+                    next if !$native_fold_observed_1_2->[$native_fold_row_1_2++];
                     # print STDERR $row;
                     my @vals = split ' ', $row;
                     my $pred = $vals[0];
                     my $residual = $vals[1];
                     $model_sum_square_cv1_2_altered = $model_sum_square_cv1_2_altered + $residual*$residual;
                 }
+                return {error=>'Native fold readback row count differs from its input.'}
+                    if $native_fold_row_1_2!=@$native_fold_observed_1_2;
             close($fh_yhat_res_cv1_2);
 
             my $cmd_f90_cv2_2 = 'cd '.$tmp_stats_dir.'; echo '.$parameter_tempfile_cv2_2_basename.' | blupf90 > '.$stats_out_tempfile;
             print STDERR Dumper $cmd_f90_cv2_2;
             my $status_cv2_2 = system($cmd_f90_cv2_2);
+            return {error=>'The native fold process failed; no estimates were read.'} if $status_cv2_2;
+            my $fold_error_cv2_2=CXGN::DroneImagery::DesignFactors::native_fit_error(
+                $native_blup_selection,$parameter_tempfile_cv2_2,$stats_out_cv2_predict_tempfile,$stats_out_tempfile,$tmp_stats_dir);
+            return {error=>$fold_error_cv2_2} if $fold_error_cv2_2;
 
             open(my $fh_log_cv2_2, '<', $stats_out_tempfile) or die "Could not open file '$stats_out_tempfile' $!";
                 print STDERR "Opened $stats_out_tempfile\n";
@@ -5911,18 +6154,27 @@ sub perform_drone_imagery_analytics {
             open(my $fh_yhat_res_cv2_2, '<', $yhat_residual_tempfile_cv2_2) or die "Could not open file '$yhat_residual_tempfile_cv2_2' $!";
                 print STDERR "Opened $yhat_residual_tempfile_cv2_2\n";
 
+                my $native_fold_observed_2_2=CXGN::DroneImagery::NativeResults::observation_mask($stats_out_cv2_predict_tempfile,$parameter_tempfile_cv2_2);
+                my $native_fold_row_2_2=0;
                 while (my $row = <$fh_yhat_res_cv2_2>) {
+                    next if !$native_fold_observed_2_2->[$native_fold_row_2_2++];
                     # print STDERR $row;
                     my @vals = split ' ', $row;
                     my $pred = $vals[0];
                     my $residual = $vals[1];
                     $model_sum_square_cv2_2_altered = $model_sum_square_cv2_2_altered + $residual*$residual;
                 }
+                return {error=>'Native fold readback row count differs from its input.'}
+                    if $native_fold_row_2_2!=@$native_fold_observed_2_2;
             close($fh_yhat_res_cv2_2);
 
             my $cmd_f90_cv3_2 = 'cd '.$tmp_stats_dir.'; echo '.$parameter_tempfile_cv3_2_basename.' | blupf90 > '.$stats_out_tempfile;
             print STDERR Dumper $cmd_f90_cv3_2;
             my $status_cv3_2 = system($cmd_f90_cv3_2);
+            return {error=>'The native fold process failed; no estimates were read.'} if $status_cv3_2;
+            my $fold_error_cv3_2=CXGN::DroneImagery::DesignFactors::native_fit_error(
+                $native_blup_selection,$parameter_tempfile_cv3_2,$stats_out_cv3_predict_tempfile,$stats_out_tempfile,$tmp_stats_dir);
+            return {error=>$fold_error_cv3_2} if $fold_error_cv3_2;
 
             open(my $fh_log_cv3_2, '<', $stats_out_tempfile) or die "Could not open file '$stats_out_tempfile' $!";
                 print STDERR "Opened $stats_out_tempfile\n";
@@ -5935,18 +6187,27 @@ sub perform_drone_imagery_analytics {
             open(my $fh_yhat_res_cv3_2, '<', $yhat_residual_tempfile_cv3_2) or die "Could not open file '$yhat_residual_tempfile_cv3_2' $!";
                 print STDERR "Opened $yhat_residual_tempfile_cv3_2\n";
 
+                my $native_fold_observed_3_2=CXGN::DroneImagery::NativeResults::observation_mask($stats_out_cv3_predict_tempfile,$parameter_tempfile_cv3_2);
+                my $native_fold_row_3_2=0;
                 while (my $row = <$fh_yhat_res_cv3_2>) {
+                    next if !$native_fold_observed_3_2->[$native_fold_row_3_2++];
                     # print STDERR $row;
                     my @vals = split ' ', $row;
                     my $pred = $vals[0];
                     my $residual = $vals[1];
                     $model_sum_square_cv3_2_altered = $model_sum_square_cv3_2_altered + $residual*$residual;
                 }
+                return {error=>'Native fold readback row count differs from its input.'}
+                    if $native_fold_row_3_2!=@$native_fold_observed_3_2;
             close($fh_yhat_res_cv3_2);
 
             my $cmd_f90_cv4_2 = 'cd '.$tmp_stats_dir.'; echo '.$parameter_tempfile_cv4_2_basename.' | blupf90 > '.$stats_out_tempfile;
             print STDERR Dumper $cmd_f90_cv4_2;
             my $status_cv4_2 = system($cmd_f90_cv4_2);
+            return {error=>'The native fold process failed; no estimates were read.'} if $status_cv4_2;
+            my $fold_error_cv4_2=CXGN::DroneImagery::DesignFactors::native_fit_error(
+                $native_blup_selection,$parameter_tempfile_cv4_2,$stats_out_cv4_predict_tempfile,$stats_out_tempfile,$tmp_stats_dir);
+            return {error=>$fold_error_cv4_2} if $fold_error_cv4_2;
 
             open(my $fh_log_cv4_2, '<', $stats_out_tempfile) or die "Could not open file '$stats_out_tempfile' $!";
                 print STDERR "Opened $stats_out_tempfile\n";
@@ -5959,18 +6220,27 @@ sub perform_drone_imagery_analytics {
             open(my $fh_yhat_res_cv4_2, '<', $yhat_residual_tempfile_cv4_2) or die "Could not open file '$yhat_residual_tempfile_cv4_2' $!";
                 print STDERR "Opened $yhat_residual_tempfile_cv4_2\n";
 
+                my $native_fold_observed_4_2=CXGN::DroneImagery::NativeResults::observation_mask($stats_out_cv4_predict_tempfile,$parameter_tempfile_cv4_2);
+                my $native_fold_row_4_2=0;
                 while (my $row = <$fh_yhat_res_cv4_2>) {
+                    next if !$native_fold_observed_4_2->[$native_fold_row_4_2++];
                     # print STDERR $row;
                     my @vals = split ' ', $row;
                     my $pred = $vals[0];
                     my $residual = $vals[1];
                     $model_sum_square_cv4_2_altered = $model_sum_square_cv4_2_altered + $residual*$residual;
                 }
+                return {error=>'Native fold readback row count differs from its input.'}
+                    if $native_fold_row_4_2!=@$native_fold_observed_4_2;
             close($fh_yhat_res_cv4_2);
 
             my $cmd_f90_cv5_2 = 'cd '.$tmp_stats_dir.'; echo '.$parameter_tempfile_cv5_2_basename.' | blupf90 > '.$stats_out_tempfile;
             print STDERR Dumper $cmd_f90_cv5_2;
             my $status_cv5_2 = system($cmd_f90_cv5_2);
+            return {error=>'The native fold process failed; no estimates were read.'} if $status_cv5_2;
+            my $fold_error_cv5_2=CXGN::DroneImagery::DesignFactors::native_fit_error(
+                $native_blup_selection,$parameter_tempfile_cv5_2,$stats_out_cv5_predict_tempfile,$stats_out_tempfile,$tmp_stats_dir);
+            return {error=>$fold_error_cv5_2} if $fold_error_cv5_2;
 
             open(my $fh_log_cv5_2, '<', $stats_out_tempfile) or die "Could not open file '$stats_out_tempfile' $!";
                 print STDERR "Opened $stats_out_tempfile\n";
@@ -5983,13 +6253,18 @@ sub perform_drone_imagery_analytics {
             open(my $fh_yhat_res_cv5_2, '<', $yhat_residual_tempfile_cv5_2) or die "Could not open file '$yhat_residual_tempfile_cv5_2' $!";
                 print STDERR "Opened $yhat_residual_tempfile_cv5_2\n";
 
+                my $native_fold_observed_5_2=CXGN::DroneImagery::NativeResults::observation_mask($stats_out_cv5_predict_tempfile,$parameter_tempfile_cv5_2);
+                my $native_fold_row_5_2=0;
                 while (my $row = <$fh_yhat_res_cv5_2>) {
+                    next if !$native_fold_observed_5_2->[$native_fold_row_5_2++];
                     # print STDERR $row;
                     my @vals = split ' ', $row;
                     my $pred = $vals[0];
                     my $residual = $vals[1];
                     $model_sum_square_cv5_2_altered = $model_sum_square_cv5_2_altered + $residual*$residual;
                 }
+                return {error=>'Native fold readback row count differs from its input.'}
+                    if $native_fold_row_5_2!=@$native_fold_observed_5_2;
             close($fh_yhat_res_cv5_2);
         }
     }
@@ -7576,7 +7851,11 @@ sub perform_drone_imagery_analytics {
 
         open(my $F, ">", $stats_tempfile_2) || die "Can't open file ".$stats_tempfile_2;
             foreach (@data_matrix_altered_env) {
-                my $line = join ' ', @$_;
+                my @native_row=@$_;
+                my $encoded_value=eval {CXGN::DroneImagery::DesignFactors::native_observation($native_row[-1])};
+                return {error=>"$@"} if $@;
+                $native_row[-1]=$encoded_value;
+                my $line = join ' ', @native_row;
                 print $F "$line\n";
             }
         close($F);
@@ -8499,6 +8778,7 @@ sub perform_drone_imagery_analytics {
 
         print STDERR Dumper $statistics_cmd;
         my $status_r = system($statistics_cmd);
+        return {error=>'Native starting covariance requires sufficient complete paired observations and a positive-definite covariance; no estimates were read.'} if $status_r;
 
         my @pheno_var;
         open(my $fh_r, '<', $stats_out_param_tempfile) or die "Could not open file '$stats_out_param_tempfile' $!";
@@ -8526,9 +8806,17 @@ sub perform_drone_imagery_analytics {
 
         print STDERR Dumper $stats_tempfile_2;
         my $data_cv_cmd = 'R -e "mat <- read.csv(\''.$stats_tempfile_2.'\', header=FALSE, sep=\' \');
-        randomized_positions <- sample(length(mat[,1]));
-        cv_step_size <- length(mat[,1]) %/% 5;
-        cv_step_size_modulo <- length(mat[,1]) %% 5;
+        native_missing <- '.CXGN::DroneImagery::DesignFactors::native_missing_value().';
+        observed_positions <- which(mat[,ncol(mat)] != native_missing);
+        randomized_positions <- sample(observed_positions, length(observed_positions));
+        cv_step_size <- length(randomized_positions) %/% 5;
+        cv_step_size_modulo <- length(randomized_positions) %% 5;
+        fold_positions <- lapply(1:5, function(i) {
+            size <- cv_step_size + if(i == 5) cv_step_size_modulo else 0;
+            if(size == 0) return(integer(0));
+            randomized_positions[(i-1)*cv_step_size + seq_len(size)];
+        });
+        observed_median <- median(mat[observed_positions,ncol(mat)]);
         mat_CV1 <- mat; mat_CV2 <- mat; mat_CV3 <- mat; mat_CV4 <- mat; mat_CV5 <- mat;
         mat_CV1[fold_positions[[1]],ncol(mat)] <- observed_median;
         mat_CV2[fold_positions[[2]],ncol(mat)] <- observed_median;
@@ -8536,22 +8824,22 @@ sub perform_drone_imagery_analytics {
         mat_CV4[fold_positions[[4]],ncol(mat)] <- observed_median;
         mat_CV5[fold_positions[[5]],ncol(mat)] <- observed_median;
         mat_CV1_2 <- mat; mat_CV2_2 <- mat; mat_CV3_2 <- mat; mat_CV4_2 <- mat; mat_CV5_2 <- mat;
-        mat_CV1_2[c(randomized_positions[1:cv_step_size]),ncol(mat)] <- -999;
-        mat_CV2_2[c(randomized_positions[(cv_step_size+1):(2*cv_step_size)]),ncol(mat)] <- -999;
-        mat_CV3_2[c(randomized_positions[((2*cv_step_size)+1):(3*cv_step_size)]),ncol(mat)] <- -999;
-        mat_CV4_2[c(randomized_positions[((3*cv_step_size)+1):(4*cv_step_size)]),ncol(mat)] <- -999;
-        mat_CV5_2[c(randomized_positions[((4*cv_step_size)+1):((5*cv_step_size)+cv_step_size_modulo)]),ncol(mat)] <- -999;
-        write.table(mat, file=\''.$stats_tempfile_2.'\', row.names=FALSE, col.names=FALSE, sep=\' \');
-        write.table(mat_CV1, file=\''.$stats_out_cv1_predict_tempfile.'\', row.names=FALSE, col.names=FALSE, sep=\' \');
-        write.table(mat_CV2, file=\''.$stats_out_cv2_predict_tempfile.'\', row.names=FALSE, col.names=FALSE, sep=\' \');
-        write.table(mat_CV3, file=\''.$stats_out_cv3_predict_tempfile.'\', row.names=FALSE, col.names=FALSE, sep=\' \');
-        write.table(mat_CV4, file=\''.$stats_out_cv4_predict_tempfile.'\', row.names=FALSE, col.names=FALSE, sep=\' \');
-        write.table(mat_CV5, file=\''.$stats_out_cv5_predict_tempfile.'\', row.names=FALSE, col.names=FALSE, sep=\' \');
-        write.table(mat_CV1_2, file=\''.$stats_out_cv1_2_predict_tempfile.'\', row.names=FALSE, col.names=FALSE, sep=\' \');
-        write.table(mat_CV2_2, file=\''.$stats_out_cv2_2_predict_tempfile.'\', row.names=FALSE, col.names=FALSE, sep=\' \');
-        write.table(mat_CV3_2, file=\''.$stats_out_cv3_2_predict_tempfile.'\', row.names=FALSE, col.names=FALSE, sep=\' \');
-        write.table(mat_CV4_2, file=\''.$stats_out_cv4_2_predict_tempfile.'\', row.names=FALSE, col.names=FALSE, sep=\' \');
-        write.table(mat_CV5_2, file=\''.$stats_out_cv5_2_predict_tempfile.'\', row.names=FALSE, col.names=FALSE, sep=\' \');
+        mat_CV1_2[fold_positions[[1]],ncol(mat)] <- native_missing;
+        mat_CV2_2[fold_positions[[2]],ncol(mat)] <- native_missing;
+        mat_CV3_2[fold_positions[[3]],ncol(mat)] <- native_missing;
+        mat_CV4_2[fold_positions[[4]],ncol(mat)] <- native_missing;
+        mat_CV5_2[fold_positions[[5]],ncol(mat)] <- native_missing;
+        write.table(mat, file=\''.$stats_tempfile_2.'\', row.names=FALSE, col.names=FALSE, qmethod=\'double\', sep=\' \');
+        write.table(mat_CV1, file=\''.$stats_out_cv1_predict_tempfile.'\', row.names=FALSE, col.names=FALSE, qmethod=\'double\', sep=\' \');
+        write.table(mat_CV2, file=\''.$stats_out_cv2_predict_tempfile.'\', row.names=FALSE, col.names=FALSE, qmethod=\'double\', sep=\' \');
+        write.table(mat_CV3, file=\''.$stats_out_cv3_predict_tempfile.'\', row.names=FALSE, col.names=FALSE, qmethod=\'double\', sep=\' \');
+        write.table(mat_CV4, file=\''.$stats_out_cv4_predict_tempfile.'\', row.names=FALSE, col.names=FALSE, qmethod=\'double\', sep=\' \');
+        write.table(mat_CV5, file=\''.$stats_out_cv5_predict_tempfile.'\', row.names=FALSE, col.names=FALSE, qmethod=\'double\', sep=\' \');
+        write.table(mat_CV1_2, file=\''.$stats_out_cv1_2_predict_tempfile.'\', row.names=FALSE, col.names=FALSE, qmethod=\'double\', sep=\' \');
+        write.table(mat_CV2_2, file=\''.$stats_out_cv2_2_predict_tempfile.'\', row.names=FALSE, col.names=FALSE, qmethod=\'double\', sep=\' \');
+        write.table(mat_CV3_2, file=\''.$stats_out_cv3_2_predict_tempfile.'\', row.names=FALSE, col.names=FALSE, qmethod=\'double\', sep=\' \');
+        write.table(mat_CV4_2, file=\''.$stats_out_cv4_2_predict_tempfile.'\', row.names=FALSE, col.names=FALSE, qmethod=\'double\', sep=\' \');
+        write.table(mat_CV5_2, file=\''.$stats_out_cv5_2_predict_tempfile.'\', row.names=FALSE, col.names=FALSE, qmethod=\'double\', sep=\' \');
         "';
         my $status_cv_files = system($data_cv_cmd);
 
@@ -8640,6 +8928,11 @@ sub perform_drone_imagery_analytics {
 
         print STDERR Dumper $cmd_f90;
         my $status = system($cmd_f90);
+        return {error=>'The native statistics process failed; no estimates were read.'} if $status;
+        my $fit_error=CXGN::DroneImagery::DesignFactors::native_fit_error(
+            $statistics_select,$parameter_tempfile,$stats_tempfile_2,$stats_out_tempfile,$tmp_stats_dir);
+        return {error=>$fit_error} if $fit_error;
+
 
         my @log_output_rows;
         open(my $fh_log, '<', $stats_out_tempfile) or die "Could not open file '$stats_out_tempfile' $!";
@@ -8650,23 +8943,23 @@ sub perform_drone_imagery_analytics {
             }
         close($fh_log);
 
-        my $log_output = join '', @log_output_rows;
-        my ($gen_var_string) = $log_output =~ /Genetic variance\(s\) for effect  2(.*?)correlations/gs;
-        @rr_coeff_genetic_covariance_altered_env = split ' ', $gen_var_string;
-        print STDERR Dumper \@rr_coeff_genetic_covariance_altered_env;
-        my ($env_var_string) = $log_output =~ /Genetic variance\(s\) for effect  $legendre_order_number_env_var_pos(.*?)correlations/gs;
-        @rr_coeff_env_covariance_altered_env = split ' ', $env_var_string;
-        print STDERR Dumper \@rr_coeff_env_covariance_altered_env;
-        my (@gen_cor_string) = $log_output =~ /correlations(.*?)eigenvectors/gs;
-        @rr_coeff_genetic_correlation_altered_env = split ' ', $gen_cor_string[0];
-        print STDERR Dumper \@rr_coeff_genetic_correlation_altered_env;
-        @rr_coeff_env_correlation_altered_env = split ' ', $gen_cor_string[1];
-        print STDERR Dumper \@rr_coeff_env_correlation_altered_env;
-        my ($res_se_string) = $log_output =~ /SE for R(.*?)\* FINISHED \(AIREMLF90\)/gs;
-        print STDERR Dumper $res_se_string;
-        # $rr_residual_variance_altered_env = ($res_se_string**2)*$number_plots;
-        $rr_residual_variance_altered_env = $res_se_string;
-        print STDERR Dumper $rr_residual_variance_altered_env;
+        my $native_summary=eval {CXGN::DroneImagery::NativeResults::summarize(
+            parameter_file=>$parameter_tempfile,data_file=>$stats_tempfile_2,
+            log_file=>$stats_out_tempfile,cwd=>$tmp_stats_dir,
+            backend=>($statistics_select =~ /^blupf90_/ ? 'blupf90':'airemlf90'),
+            time_scale=>($statistics_select =~ /_gdd_/ ? 'GDD':'DAP'),
+            kernel_origin=>($native_variance_options->{kernel_origin} // ($protocol_id ? 'unknown':'genotypic_identity')),
+            unit_metadata=>\%native_unit_metadata,
+        )};
+        return {error=>"$@"} if $@;
+        $native_variance_summaries{env_linear}=$native_summary;
+        @rr_coeff_genetic_covariance_altered_env=@{$native_summary->{genetic_covariance}};
+        @rr_coeff_env_covariance_altered_env=@{$native_summary->{env_covariance}};
+        @rr_coeff_genetic_correlation_altered_env=@{$native_summary->{genetic_correlation}};
+        @rr_coeff_env_correlation_altered_env=@{$native_summary->{env_correlation}};
+        # A heterogeneous residual is a time function. The old scalar slot
+        # remains undefined; printed native SE is retained only in metadata.
+        $rr_residual_variance_altered_env=undef;
 
         @param_file_rows_6 = (
             '(CO)VARIANCES'
@@ -8697,31 +8990,31 @@ sub perform_drone_imagery_analytics {
         }
 
         open(my $Fp_cv1_2, ">", $parameter_tempfile_cv1_2) || die "Can't open file ".$parameter_tempfile_cv1_2;
-            foreach ((@param_file_rows_data_cv1, @param_file_rows_1, @param_file_rows_6, @param_file_rows_3, @param_file_rows_7, @param_file_rows_5)) {
+            foreach ((@param_file_rows_data_cv1, @param_file_rows_1, @param_file_rows_6, @param_file_rows_3, @param_file_rows_7, @native_blup_options)) {
                 print $Fp_cv1_2 "$_\n";
             }
         close($Fp_cv1_2);
 
         open(my $Fp_cv2_2, ">", $parameter_tempfile_cv2_2) || die "Can't open file ".$parameter_tempfile_cv2_2;
-            foreach ((@param_file_rows_data_cv2, @param_file_rows_1, @param_file_rows_6, @param_file_rows_3, @param_file_rows_7, @param_file_rows_5)) {
+            foreach ((@param_file_rows_data_cv2, @param_file_rows_1, @param_file_rows_6, @param_file_rows_3, @param_file_rows_7, @native_blup_options)) {
                 print $Fp_cv2_2 "$_\n";
             }
         close($Fp_cv2_2);
 
         open(my $Fp_cv3_2, ">", $parameter_tempfile_cv3_2) || die "Can't open file ".$parameter_tempfile_cv3_2;
-            foreach ((@param_file_rows_data_cv3, @param_file_rows_1, @param_file_rows_6, @param_file_rows_3, @param_file_rows_7, @param_file_rows_5)) {
+            foreach ((@param_file_rows_data_cv3, @param_file_rows_1, @param_file_rows_6, @param_file_rows_3, @param_file_rows_7, @native_blup_options)) {
                 print $Fp_cv3_2 "$_\n";
             }
         close($Fp_cv3_2);
 
         open(my $Fp_cv4_2, ">", $parameter_tempfile_cv4_2) || die "Can't open file ".$parameter_tempfile_cv4_2;
-            foreach ((@param_file_rows_data_cv4, @param_file_rows_1, @param_file_rows_6, @param_file_rows_3, @param_file_rows_7, @param_file_rows_5)) {
+            foreach ((@param_file_rows_data_cv4, @param_file_rows_1, @param_file_rows_6, @param_file_rows_3, @param_file_rows_7, @native_blup_options)) {
                 print $Fp_cv4_2 "$_\n";
             }
         close($Fp_cv4_2);
 
         open(my $Fp_cv5_2, ">", $parameter_tempfile_cv5_2) || die "Can't open file ".$parameter_tempfile_cv5_2;
-            foreach ((@param_file_rows_data_cv5, @param_file_rows_1, @param_file_rows_6, @param_file_rows_3, @param_file_rows_7, @param_file_rows_5)) {
+            foreach ((@param_file_rows_data_cv5, @param_file_rows_1, @param_file_rows_6, @param_file_rows_3, @param_file_rows_7, @native_blup_options)) {
                 print $Fp_cv5_2 "$_\n";
             }
         close($Fp_cv5_2);
@@ -8733,10 +9026,12 @@ sub perform_drone_imagery_analytics {
         open(my $fh_yhat_res, '<', $yhat_residual_tempfile) or die "Could not open file '$yhat_residual_tempfile' $!";
             print STDERR "Opened $yhat_residual_tempfile\n";
 
+            my $native_observed=CXGN::DroneImagery::NativeResults::observation_mask($stats_tempfile_2,$parameter_tempfile);
             my $pred_res_counter = 0;
             my $trait_counter = 0;
             while (my $row = <$fh_yhat_res>) {
                 # print STDERR $row;
+                if (!$native_observed->[$pred_res_counter]) {$pred_res_counter++;next;}
                 my @vals = split ' ', $row;
                 my $pred = $vals[0];
                 my $residual = $vals[1];
@@ -8756,6 +9051,8 @@ sub perform_drone_imagery_analytics {
 
                 $pred_res_counter++;
             }
+            return {error=>'Native readback row count differs from its input; no partial results were saved.'}
+                if $pred_res_counter!=@$native_observed;
         close($fh_yhat_res);
 
         $blupf90_solutions_tempfile = $tmp_stats_dir."/solutions";
@@ -8821,7 +9118,7 @@ sub perform_drone_imagery_analytics {
                 my $time = $t_i*5/100;
                 my $time_rescaled = sprintf("%.2f", $time*($time_max - $time_min) + $time_min);
 
-                my $value = CXGN::DroneImagery::LegendrePolynomials::legendre_polynomial_sum($coeffs, $time);
+                my $value = CXGN::DroneImagery::LegendrePolynomials::normalized_legendre_polynomial_sum($coeffs, $time);
 
                 my $time_term_string = '';
                 if ($statistics_select eq 'blupf90_grm_random_regression_gdd_blups' || $statistics_select eq 'airemlf90_grm_random_regression_gdd_blups') {
@@ -8850,7 +9147,7 @@ sub perform_drone_imagery_analytics {
         while ( my ($accession_name, $coeffs) = each %rr_genetic_coefficients_altered_env) {
             foreach my $time_term (@sorted_trait_names) {
                 my $time = ($time_term - $time_min)/($time_max - $time_min);
-                my $value = CXGN::DroneImagery::LegendrePolynomials::legendre_polynomial_sum($coeffs, $time);
+                my $value = CXGN::DroneImagery::LegendrePolynomials::normalized_legendre_polynomial_sum($coeffs, $time);
 
                 $result_blup_data_delta_altered_env->{$accession_name}->{$time_term} = [$value, $timestamp, $user_name, '', ''];
 
@@ -8876,7 +9173,7 @@ sub perform_drone_imagery_analytics {
                 my $time = $t_i*5/100;
                 my $time_rescaled = sprintf("%.2f", $time*($time_max - $time_min) + $time_min);
 
-                my $value = CXGN::DroneImagery::LegendrePolynomials::legendre_polynomial_sum($coeffs, $time);
+                my $value = CXGN::DroneImagery::LegendrePolynomials::normalized_legendre_polynomial_sum($coeffs, $time);
 
                 my $time_term_string = '';
                 if ($statistics_select eq 'blupf90_grm_random_regression_gdd_blups' || $statistics_select eq 'airemlf90_grm_random_regression_gdd_blups') {
@@ -8905,7 +9202,7 @@ sub perform_drone_imagery_analytics {
         while ( my ($plot_name, $coeffs) = each %rr_temporal_coefficients_altered_env) {
             foreach my $time_term (@sorted_trait_names) {
                 my $time = ($time_term - $time_min)/($time_max - $time_min);
-                my $value = CXGN::DroneImagery::LegendrePolynomials::legendre_polynomial_sum($coeffs, $time);
+                my $value = CXGN::DroneImagery::LegendrePolynomials::normalized_legendre_polynomial_sum($coeffs, $time);
 
                 $result_blup_pe_data_delta_altered_env->{$plot_name}->{$time_term} = [$value, $timestamp, $user_name, '', ''];
 
@@ -8925,6 +9222,10 @@ sub perform_drone_imagery_analytics {
             my $cmd_f90_cv1 = 'cd '.$tmp_stats_dir.'; echo '.$parameter_tempfile_cv1_basename.' | '.$command_name.' > '.$stats_out_tempfile;
             print STDERR Dumper $cmd_f90_cv1;
             my $status_cv1 = system($cmd_f90_cv1);
+            return {error=>'The native fold process failed; no estimates were read.'} if $status_cv1;
+            my $fold_error_cv1=CXGN::DroneImagery::DesignFactors::native_fit_error(
+                $statistics_select,$parameter_tempfile_cv1,$stats_out_cv1_predict_tempfile,$stats_out_tempfile,$tmp_stats_dir);
+            return {error=>$fold_error_cv1} if $fold_error_cv1;
 
             open(my $fh_log_cv1, '<', $stats_out_tempfile) or die "Could not open file '$stats_out_tempfile' $!";
                 print STDERR "Opened $stats_out_tempfile\n";
@@ -8937,18 +9238,27 @@ sub perform_drone_imagery_analytics {
             open(my $fh_yhat_res_cv1, '<', $yhat_residual_tempfile_cv1) or die "Could not open file '$yhat_residual_tempfile_cv1' $!";
                 print STDERR "Opened $yhat_residual_tempfile_cv1\n";
 
+                my $native_fold_observed_1=CXGN::DroneImagery::NativeResults::observation_mask($stats_out_cv1_predict_tempfile,$parameter_tempfile_cv1);
+                my $native_fold_row_1=0;
                 while (my $row = <$fh_yhat_res_cv1>) {
+                    next if !$native_fold_observed_1->[$native_fold_row_1++];
                     # print STDERR $row;
                     my @vals = split ' ', $row;
                     my $pred = $vals[0];
                     my $residual = $vals[1];
                     $model_sum_square_cv1_altered_env = $model_sum_square_cv1_altered_env + $residual*$residual;
                 }
+                return {error=>'Native fold readback row count differs from its input.'}
+                    if $native_fold_row_1!=@$native_fold_observed_1;
             close($fh_yhat_res_cv1);
 
             my $cmd_f90_cv2 = 'cd '.$tmp_stats_dir.'; echo '.$parameter_tempfile_cv2_basename.' | '.$command_name.' > '.$stats_out_tempfile;
             print STDERR Dumper $cmd_f90_cv2;
             my $status_cv2 = system($cmd_f90_cv2);
+            return {error=>'The native fold process failed; no estimates were read.'} if $status_cv2;
+            my $fold_error_cv2=CXGN::DroneImagery::DesignFactors::native_fit_error(
+                $statistics_select,$parameter_tempfile_cv2,$stats_out_cv2_predict_tempfile,$stats_out_tempfile,$tmp_stats_dir);
+            return {error=>$fold_error_cv2} if $fold_error_cv2;
 
             open(my $fh_log_cv2, '<', $stats_out_tempfile) or die "Could not open file '$stats_out_tempfile' $!";
                 print STDERR "Opened $stats_out_tempfile\n";
@@ -8961,18 +9271,27 @@ sub perform_drone_imagery_analytics {
             open(my $fh_yhat_res_cv2, '<', $yhat_residual_tempfile_cv2) or die "Could not open file '$yhat_residual_tempfile_cv2' $!";
                 print STDERR "Opened $yhat_residual_tempfile_cv2\n";
 
+                my $native_fold_observed_2=CXGN::DroneImagery::NativeResults::observation_mask($stats_out_cv2_predict_tempfile,$parameter_tempfile_cv2);
+                my $native_fold_row_2=0;
                 while (my $row = <$fh_yhat_res_cv2>) {
+                    next if !$native_fold_observed_2->[$native_fold_row_2++];
                     # print STDERR $row;
                     my @vals = split ' ', $row;
                     my $pred = $vals[0];
                     my $residual = $vals[1];
                     $model_sum_square_cv2_altered_env = $model_sum_square_cv2_altered_env + $residual*$residual;
                 }
+                return {error=>'Native fold readback row count differs from its input.'}
+                    if $native_fold_row_2!=@$native_fold_observed_2;
             close($fh_yhat_res_cv2);
 
             my $cmd_f90_cv3 = 'cd '.$tmp_stats_dir.'; echo '.$parameter_tempfile_cv3_basename.' | '.$command_name.' > '.$stats_out_tempfile;
             print STDERR Dumper $cmd_f90_cv3;
             my $status_cv3 = system($cmd_f90_cv3);
+            return {error=>'The native fold process failed; no estimates were read.'} if $status_cv3;
+            my $fold_error_cv3=CXGN::DroneImagery::DesignFactors::native_fit_error(
+                $statistics_select,$parameter_tempfile_cv3,$stats_out_cv3_predict_tempfile,$stats_out_tempfile,$tmp_stats_dir);
+            return {error=>$fold_error_cv3} if $fold_error_cv3;
 
             open(my $fh_log_cv3, '<', $stats_out_tempfile) or die "Could not open file '$stats_out_tempfile' $!";
                 print STDERR "Opened $stats_out_tempfile\n";
@@ -8985,18 +9304,27 @@ sub perform_drone_imagery_analytics {
             open(my $fh_yhat_res_cv3, '<', $yhat_residual_tempfile_cv3) or die "Could not open file '$yhat_residual_tempfile_cv3' $!";
                 print STDERR "Opened $yhat_residual_tempfile_cv3\n";
 
+                my $native_fold_observed_3=CXGN::DroneImagery::NativeResults::observation_mask($stats_out_cv3_predict_tempfile,$parameter_tempfile_cv3);
+                my $native_fold_row_3=0;
                 while (my $row = <$fh_yhat_res_cv3>) {
+                    next if !$native_fold_observed_3->[$native_fold_row_3++];
                     # print STDERR $row;
                     my @vals = split ' ', $row;
                     my $pred = $vals[0];
                     my $residual = $vals[1];
                     $model_sum_square_cv3_altered_env = $model_sum_square_cv3_altered_env + $residual*$residual;
                 }
+                return {error=>'Native fold readback row count differs from its input.'}
+                    if $native_fold_row_3!=@$native_fold_observed_3;
             close($fh_yhat_res_cv3);
 
             my $cmd_f90_cv4 = 'cd '.$tmp_stats_dir.'; echo '.$parameter_tempfile_cv4_basename.' | '.$command_name.' > '.$stats_out_tempfile;
             print STDERR Dumper $cmd_f90_cv4;
             my $status_cv4 = system($cmd_f90_cv4);
+            return {error=>'The native fold process failed; no estimates were read.'} if $status_cv4;
+            my $fold_error_cv4=CXGN::DroneImagery::DesignFactors::native_fit_error(
+                $statistics_select,$parameter_tempfile_cv4,$stats_out_cv4_predict_tempfile,$stats_out_tempfile,$tmp_stats_dir);
+            return {error=>$fold_error_cv4} if $fold_error_cv4;
 
             open(my $fh_log_cv4, '<', $stats_out_tempfile) or die "Could not open file '$stats_out_tempfile' $!";
                 print STDERR "Opened $stats_out_tempfile\n";
@@ -9009,18 +9337,27 @@ sub perform_drone_imagery_analytics {
             open(my $fh_yhat_res_cv4, '<', $yhat_residual_tempfile_cv4) or die "Could not open file '$yhat_residual_tempfile_cv4' $!";
                 print STDERR "Opened $yhat_residual_tempfile_cv4\n";
 
+                my $native_fold_observed_4=CXGN::DroneImagery::NativeResults::observation_mask($stats_out_cv4_predict_tempfile,$parameter_tempfile_cv4);
+                my $native_fold_row_4=0;
                 while (my $row = <$fh_yhat_res_cv4>) {
+                    next if !$native_fold_observed_4->[$native_fold_row_4++];
                     # print STDERR $row;
                     my @vals = split ' ', $row;
                     my $pred = $vals[0];
                     my $residual = $vals[1];
                     $model_sum_square_cv4_altered_env = $model_sum_square_cv4_altered_env + $residual*$residual;
                 }
+                return {error=>'Native fold readback row count differs from its input.'}
+                    if $native_fold_row_4!=@$native_fold_observed_4;
             close($fh_yhat_res_cv4);
 
             my $cmd_f90_cv5 = 'cd '.$tmp_stats_dir.'; echo '.$parameter_tempfile_cv5_basename.' | '.$command_name.' > '.$stats_out_tempfile;
             print STDERR Dumper $cmd_f90_cv5;
             my $status_cv5 = system($cmd_f90_cv5);
+            return {error=>'The native fold process failed; no estimates were read.'} if $status_cv5;
+            my $fold_error_cv5=CXGN::DroneImagery::DesignFactors::native_fit_error(
+                $statistics_select,$parameter_tempfile_cv5,$stats_out_cv5_predict_tempfile,$stats_out_tempfile,$tmp_stats_dir);
+            return {error=>$fold_error_cv5} if $fold_error_cv5;
 
             open(my $fh_log_cv5, '<', $stats_out_tempfile) or die "Could not open file '$stats_out_tempfile' $!";
                 print STDERR "Opened $stats_out_tempfile\n";
@@ -9033,18 +9370,27 @@ sub perform_drone_imagery_analytics {
             open(my $fh_yhat_res_cv5, '<', $yhat_residual_tempfile_cv5) or die "Could not open file '$yhat_residual_tempfile_cv5' $!";
                 print STDERR "Opened $yhat_residual_tempfile_cv5\n";
 
+                my $native_fold_observed_5=CXGN::DroneImagery::NativeResults::observation_mask($stats_out_cv5_predict_tempfile,$parameter_tempfile_cv5);
+                my $native_fold_row_5=0;
                 while (my $row = <$fh_yhat_res_cv5>) {
+                    next if !$native_fold_observed_5->[$native_fold_row_5++];
                     # print STDERR $row;
                     my @vals = split ' ', $row;
                     my $pred = $vals[0];
                     my $residual = $vals[1];
                     $model_sum_square_cv5_altered_env = $model_sum_square_cv5_altered_env + $residual*$residual;
                 }
+                return {error=>'Native fold readback row count differs from its input.'}
+                    if $native_fold_row_5!=@$native_fold_observed_5;
             close($fh_yhat_res_cv5);
 
             my $cmd_f90_cv1_2 = 'cd '.$tmp_stats_dir.'; echo '.$parameter_tempfile_cv1_2_basename.' | blupf90 > '.$stats_out_tempfile;
             print STDERR Dumper $cmd_f90_cv1_2;
             my $status_cv1_2 = system($cmd_f90_cv1_2);
+            return {error=>'The native fold process failed; no estimates were read.'} if $status_cv1_2;
+            my $fold_error_cv1_2=CXGN::DroneImagery::DesignFactors::native_fit_error(
+                $native_blup_selection,$parameter_tempfile_cv1_2,$stats_out_cv1_predict_tempfile,$stats_out_tempfile,$tmp_stats_dir);
+            return {error=>$fold_error_cv1_2} if $fold_error_cv1_2;
 
             open(my $fh_log_cv1_2, '<', $stats_out_tempfile) or die "Could not open file '$stats_out_tempfile' $!";
                 print STDERR "Opened $stats_out_tempfile\n";
@@ -9057,18 +9403,27 @@ sub perform_drone_imagery_analytics {
             open(my $fh_yhat_res_cv1_2, '<', $yhat_residual_tempfile_cv1_2) or die "Could not open file '$yhat_residual_tempfile_cv1_2' $!";
                 print STDERR "Opened $yhat_residual_tempfile_cv1_2\n";
 
+                my $native_fold_observed_1_2=CXGN::DroneImagery::NativeResults::observation_mask($stats_out_cv1_predict_tempfile,$parameter_tempfile_cv1_2);
+                my $native_fold_row_1_2=0;
                 while (my $row = <$fh_yhat_res_cv1_2>) {
+                    next if !$native_fold_observed_1_2->[$native_fold_row_1_2++];
                     # print STDERR $row;
                     my @vals = split ' ', $row;
                     my $pred = $vals[0];
                     my $residual = $vals[1];
                     $model_sum_square_cv1_2_altered_env = $model_sum_square_cv1_2_altered_env + $residual*$residual;
                 }
+                return {error=>'Native fold readback row count differs from its input.'}
+                    if $native_fold_row_1_2!=@$native_fold_observed_1_2;
             close($fh_yhat_res_cv1_2);
 
             my $cmd_f90_cv2_2 = 'cd '.$tmp_stats_dir.'; echo '.$parameter_tempfile_cv2_2_basename.' | blupf90 > '.$stats_out_tempfile;
             print STDERR Dumper $cmd_f90_cv2_2;
             my $status_cv2_2 = system($cmd_f90_cv2_2);
+            return {error=>'The native fold process failed; no estimates were read.'} if $status_cv2_2;
+            my $fold_error_cv2_2=CXGN::DroneImagery::DesignFactors::native_fit_error(
+                $native_blup_selection,$parameter_tempfile_cv2_2,$stats_out_cv2_predict_tempfile,$stats_out_tempfile,$tmp_stats_dir);
+            return {error=>$fold_error_cv2_2} if $fold_error_cv2_2;
 
             open(my $fh_log_cv2_2, '<', $stats_out_tempfile) or die "Could not open file '$stats_out_tempfile' $!";
                 print STDERR "Opened $stats_out_tempfile\n";
@@ -9081,18 +9436,27 @@ sub perform_drone_imagery_analytics {
             open(my $fh_yhat_res_cv2_2, '<', $yhat_residual_tempfile_cv2_2) or die "Could not open file '$yhat_residual_tempfile_cv2_2' $!";
                 print STDERR "Opened $yhat_residual_tempfile_cv2_2\n";
 
+                my $native_fold_observed_2_2=CXGN::DroneImagery::NativeResults::observation_mask($stats_out_cv2_predict_tempfile,$parameter_tempfile_cv2_2);
+                my $native_fold_row_2_2=0;
                 while (my $row = <$fh_yhat_res_cv2_2>) {
+                    next if !$native_fold_observed_2_2->[$native_fold_row_2_2++];
                     # print STDERR $row;
                     my @vals = split ' ', $row;
                     my $pred = $vals[0];
                     my $residual = $vals[1];
                     $model_sum_square_cv2_2_altered_env = $model_sum_square_cv2_2_altered_env + $residual*$residual;
                 }
+                return {error=>'Native fold readback row count differs from its input.'}
+                    if $native_fold_row_2_2!=@$native_fold_observed_2_2;
             close($fh_yhat_res_cv2_2);
 
             my $cmd_f90_cv3_2 = 'cd '.$tmp_stats_dir.'; echo '.$parameter_tempfile_cv3_2_basename.' | blupf90 > '.$stats_out_tempfile;
             print STDERR Dumper $cmd_f90_cv3_2;
             my $status_cv3_2 = system($cmd_f90_cv3_2);
+            return {error=>'The native fold process failed; no estimates were read.'} if $status_cv3_2;
+            my $fold_error_cv3_2=CXGN::DroneImagery::DesignFactors::native_fit_error(
+                $native_blup_selection,$parameter_tempfile_cv3_2,$stats_out_cv3_predict_tempfile,$stats_out_tempfile,$tmp_stats_dir);
+            return {error=>$fold_error_cv3_2} if $fold_error_cv3_2;
 
             open(my $fh_log_cv3_2, '<', $stats_out_tempfile) or die "Could not open file '$stats_out_tempfile' $!";
                 print STDERR "Opened $stats_out_tempfile\n";
@@ -9105,18 +9469,27 @@ sub perform_drone_imagery_analytics {
             open(my $fh_yhat_res_cv3_2, '<', $yhat_residual_tempfile_cv3_2) or die "Could not open file '$yhat_residual_tempfile_cv3_2' $!";
                 print STDERR "Opened $yhat_residual_tempfile_cv3_2\n";
 
+                my $native_fold_observed_3_2=CXGN::DroneImagery::NativeResults::observation_mask($stats_out_cv3_predict_tempfile,$parameter_tempfile_cv3_2);
+                my $native_fold_row_3_2=0;
                 while (my $row = <$fh_yhat_res_cv3_2>) {
+                    next if !$native_fold_observed_3_2->[$native_fold_row_3_2++];
                     # print STDERR $row;
                     my @vals = split ' ', $row;
                     my $pred = $vals[0];
                     my $residual = $vals[1];
                     $model_sum_square_cv3_2_altered_env = $model_sum_square_cv3_2_altered_env + $residual*$residual;
                 }
+                return {error=>'Native fold readback row count differs from its input.'}
+                    if $native_fold_row_3_2!=@$native_fold_observed_3_2;
             close($fh_yhat_res_cv3_2);
 
             my $cmd_f90_cv4_2 = 'cd '.$tmp_stats_dir.'; echo '.$parameter_tempfile_cv4_2_basename.' | blupf90 > '.$stats_out_tempfile;
             print STDERR Dumper $cmd_f90_cv4_2;
             my $status_cv4_2 = system($cmd_f90_cv4_2);
+            return {error=>'The native fold process failed; no estimates were read.'} if $status_cv4_2;
+            my $fold_error_cv4_2=CXGN::DroneImagery::DesignFactors::native_fit_error(
+                $native_blup_selection,$parameter_tempfile_cv4_2,$stats_out_cv4_predict_tempfile,$stats_out_tempfile,$tmp_stats_dir);
+            return {error=>$fold_error_cv4_2} if $fold_error_cv4_2;
 
             open(my $fh_log_cv4_2, '<', $stats_out_tempfile) or die "Could not open file '$stats_out_tempfile' $!";
                 print STDERR "Opened $stats_out_tempfile\n";
@@ -9129,18 +9502,27 @@ sub perform_drone_imagery_analytics {
             open(my $fh_yhat_res_cv4_2, '<', $yhat_residual_tempfile_cv4_2) or die "Could not open file '$yhat_residual_tempfile_cv4_2' $!";
                 print STDERR "Opened $yhat_residual_tempfile_cv4_2\n";
 
+                my $native_fold_observed_4_2=CXGN::DroneImagery::NativeResults::observation_mask($stats_out_cv4_predict_tempfile,$parameter_tempfile_cv4_2);
+                my $native_fold_row_4_2=0;
                 while (my $row = <$fh_yhat_res_cv4_2>) {
+                    next if !$native_fold_observed_4_2->[$native_fold_row_4_2++];
                     # print STDERR $row;
                     my @vals = split ' ', $row;
                     my $pred = $vals[0];
                     my $residual = $vals[1];
                     $model_sum_square_cv4_2_altered_env = $model_sum_square_cv4_2_altered_env + $residual*$residual;
                 }
+                return {error=>'Native fold readback row count differs from its input.'}
+                    if $native_fold_row_4_2!=@$native_fold_observed_4_2;
             close($fh_yhat_res_cv4_2);
 
             my $cmd_f90_cv5_2 = 'cd '.$tmp_stats_dir.'; echo '.$parameter_tempfile_cv5_2_basename.' | blupf90 > '.$stats_out_tempfile;
             print STDERR Dumper $cmd_f90_cv5_2;
             my $status_cv5_2 = system($cmd_f90_cv5_2);
+            return {error=>'The native fold process failed; no estimates were read.'} if $status_cv5_2;
+            my $fold_error_cv5_2=CXGN::DroneImagery::DesignFactors::native_fit_error(
+                $native_blup_selection,$parameter_tempfile_cv5_2,$stats_out_cv5_predict_tempfile,$stats_out_tempfile,$tmp_stats_dir);
+            return {error=>$fold_error_cv5_2} if $fold_error_cv5_2;
 
             open(my $fh_log_cv5_2, '<', $stats_out_tempfile) or die "Could not open file '$stats_out_tempfile' $!";
                 print STDERR "Opened $stats_out_tempfile\n";
@@ -9153,13 +9535,18 @@ sub perform_drone_imagery_analytics {
             open(my $fh_yhat_res_cv5_2, '<', $yhat_residual_tempfile_cv5_2) or die "Could not open file '$yhat_residual_tempfile_cv5_2' $!";
                 print STDERR "Opened $yhat_residual_tempfile_cv5_2\n";
 
+                my $native_fold_observed_5_2=CXGN::DroneImagery::NativeResults::observation_mask($stats_out_cv5_predict_tempfile,$parameter_tempfile_cv5_2);
+                my $native_fold_row_5_2=0;
                 while (my $row = <$fh_yhat_res_cv5_2>) {
+                    next if !$native_fold_observed_5_2->[$native_fold_row_5_2++];
                     # print STDERR $row;
                     my @vals = split ' ', $row;
                     my $pred = $vals[0];
                     my $residual = $vals[1];
                     $model_sum_square_cv5_2_altered_env = $model_sum_square_cv5_2_altered_env + $residual*$residual;
                 }
+                return {error=>'Native fold readback row count differs from its input.'}
+                    if $native_fold_row_5_2!=@$native_fold_observed_5_2;
             close($fh_yhat_res_cv5_2);
         }
     }
@@ -10735,7 +11122,11 @@ sub perform_drone_imagery_analytics {
 
         open(my $F, ">", $stats_tempfile_2) || die "Can't open file ".$stats_tempfile_2;
             foreach (@data_matrix_altered_env_2) {
-                my $line = join ' ', @$_;
+                my @native_row=@$_;
+                my $encoded_value=eval {CXGN::DroneImagery::DesignFactors::native_observation($native_row[-1])};
+                return {error=>"$@"} if $@;
+                $native_row[-1]=$encoded_value;
+                my $line = join ' ', @native_row;
                 print $F "$line\n";
             }
         close($F);
@@ -11658,6 +12049,7 @@ sub perform_drone_imagery_analytics {
 
         print STDERR Dumper $statistics_cmd;
         my $status_r = system($statistics_cmd);
+        return {error=>'Native starting covariance requires sufficient complete paired observations and a positive-definite covariance; no estimates were read.'} if $status_r;
 
         my @pheno_var;
         open(my $fh_r, '<', $stats_out_param_tempfile) or die "Could not open file '$stats_out_param_tempfile' $!";
@@ -11685,9 +12077,17 @@ sub perform_drone_imagery_analytics {
 
         print STDERR Dumper $stats_tempfile_2;
         my $data_cv_cmd = 'R -e "mat <- read.csv(\''.$stats_tempfile_2.'\', header=FALSE, sep=\' \');
-        randomized_positions <- sample(length(mat[,1]));
-        cv_step_size <- length(mat[,1]) %/% 5;
-        cv_step_size_modulo <- length(mat[,1]) %% 5;
+        native_missing <- '.CXGN::DroneImagery::DesignFactors::native_missing_value().';
+        observed_positions <- which(mat[,ncol(mat)] != native_missing);
+        randomized_positions <- sample(observed_positions, length(observed_positions));
+        cv_step_size <- length(randomized_positions) %/% 5;
+        cv_step_size_modulo <- length(randomized_positions) %% 5;
+        fold_positions <- lapply(1:5, function(i) {
+            size <- cv_step_size + if(i == 5) cv_step_size_modulo else 0;
+            if(size == 0) return(integer(0));
+            randomized_positions[(i-1)*cv_step_size + seq_len(size)];
+        });
+        observed_median <- median(mat[observed_positions,ncol(mat)]);
         mat_CV1 <- mat; mat_CV2 <- mat; mat_CV3 <- mat; mat_CV4 <- mat; mat_CV5 <- mat;
         mat_CV1[fold_positions[[1]],ncol(mat)] <- observed_median;
         mat_CV2[fold_positions[[2]],ncol(mat)] <- observed_median;
@@ -11695,22 +12095,22 @@ sub perform_drone_imagery_analytics {
         mat_CV4[fold_positions[[4]],ncol(mat)] <- observed_median;
         mat_CV5[fold_positions[[5]],ncol(mat)] <- observed_median;
         mat_CV1_2 <- mat; mat_CV2_2 <- mat; mat_CV3_2 <- mat; mat_CV4_2 <- mat; mat_CV5_2 <- mat;
-        mat_CV1_2[c(randomized_positions[1:cv_step_size]),ncol(mat)] <- -999;
-        mat_CV2_2[c(randomized_positions[(cv_step_size+1):(2*cv_step_size)]),ncol(mat)] <- -999;
-        mat_CV3_2[c(randomized_positions[((2*cv_step_size)+1):(3*cv_step_size)]),ncol(mat)] <- -999;
-        mat_CV4_2[c(randomized_positions[((3*cv_step_size)+1):(4*cv_step_size)]),ncol(mat)] <- -999;
-        mat_CV5_2[c(randomized_positions[((4*cv_step_size)+1):((5*cv_step_size)+cv_step_size_modulo)]),ncol(mat)] <- -999;
-        write.table(mat, file=\''.$stats_tempfile_2.'\', row.names=FALSE, col.names=FALSE, sep=\' \');
-        write.table(mat_CV1, file=\''.$stats_out_cv1_predict_tempfile.'\', row.names=FALSE, col.names=FALSE, sep=\' \');
-        write.table(mat_CV2, file=\''.$stats_out_cv2_predict_tempfile.'\', row.names=FALSE, col.names=FALSE, sep=\' \');
-        write.table(mat_CV3, file=\''.$stats_out_cv3_predict_tempfile.'\', row.names=FALSE, col.names=FALSE, sep=\' \');
-        write.table(mat_CV4, file=\''.$stats_out_cv4_predict_tempfile.'\', row.names=FALSE, col.names=FALSE, sep=\' \');
-        write.table(mat_CV5, file=\''.$stats_out_cv5_predict_tempfile.'\', row.names=FALSE, col.names=FALSE, sep=\' \');
-        write.table(mat_CV1_2, file=\''.$stats_out_cv1_2_predict_tempfile.'\', row.names=FALSE, col.names=FALSE, sep=\' \');
-        write.table(mat_CV2_2, file=\''.$stats_out_cv2_2_predict_tempfile.'\', row.names=FALSE, col.names=FALSE, sep=\' \');
-        write.table(mat_CV3_2, file=\''.$stats_out_cv3_2_predict_tempfile.'\', row.names=FALSE, col.names=FALSE, sep=\' \');
-        write.table(mat_CV4_2, file=\''.$stats_out_cv4_2_predict_tempfile.'\', row.names=FALSE, col.names=FALSE, sep=\' \');
-        write.table(mat_CV5_2, file=\''.$stats_out_cv5_2_predict_tempfile.'\', row.names=FALSE, col.names=FALSE, sep=\' \');
+        mat_CV1_2[fold_positions[[1]],ncol(mat)] <- native_missing;
+        mat_CV2_2[fold_positions[[2]],ncol(mat)] <- native_missing;
+        mat_CV3_2[fold_positions[[3]],ncol(mat)] <- native_missing;
+        mat_CV4_2[fold_positions[[4]],ncol(mat)] <- native_missing;
+        mat_CV5_2[fold_positions[[5]],ncol(mat)] <- native_missing;
+        write.table(mat, file=\''.$stats_tempfile_2.'\', row.names=FALSE, col.names=FALSE, qmethod=\'double\', sep=\' \');
+        write.table(mat_CV1, file=\''.$stats_out_cv1_predict_tempfile.'\', row.names=FALSE, col.names=FALSE, qmethod=\'double\', sep=\' \');
+        write.table(mat_CV2, file=\''.$stats_out_cv2_predict_tempfile.'\', row.names=FALSE, col.names=FALSE, qmethod=\'double\', sep=\' \');
+        write.table(mat_CV3, file=\''.$stats_out_cv3_predict_tempfile.'\', row.names=FALSE, col.names=FALSE, qmethod=\'double\', sep=\' \');
+        write.table(mat_CV4, file=\''.$stats_out_cv4_predict_tempfile.'\', row.names=FALSE, col.names=FALSE, qmethod=\'double\', sep=\' \');
+        write.table(mat_CV5, file=\''.$stats_out_cv5_predict_tempfile.'\', row.names=FALSE, col.names=FALSE, qmethod=\'double\', sep=\' \');
+        write.table(mat_CV1_2, file=\''.$stats_out_cv1_2_predict_tempfile.'\', row.names=FALSE, col.names=FALSE, qmethod=\'double\', sep=\' \');
+        write.table(mat_CV2_2, file=\''.$stats_out_cv2_2_predict_tempfile.'\', row.names=FALSE, col.names=FALSE, qmethod=\'double\', sep=\' \');
+        write.table(mat_CV3_2, file=\''.$stats_out_cv3_2_predict_tempfile.'\', row.names=FALSE, col.names=FALSE, qmethod=\'double\', sep=\' \');
+        write.table(mat_CV4_2, file=\''.$stats_out_cv4_2_predict_tempfile.'\', row.names=FALSE, col.names=FALSE, qmethod=\'double\', sep=\' \');
+        write.table(mat_CV5_2, file=\''.$stats_out_cv5_2_predict_tempfile.'\', row.names=FALSE, col.names=FALSE, qmethod=\'double\', sep=\' \');
         "';
         my $status_cv_files = system($data_cv_cmd);
 
@@ -11799,6 +12199,11 @@ sub perform_drone_imagery_analytics {
 
         print STDERR Dumper $cmd_f90;
         my $status = system($cmd_f90);
+        return {error=>'The native statistics process failed; no estimates were read.'} if $status;
+        my $fit_error=CXGN::DroneImagery::DesignFactors::native_fit_error(
+            $statistics_select,$parameter_tempfile,$stats_tempfile_2,$stats_out_tempfile,$tmp_stats_dir);
+        return {error=>$fit_error} if $fit_error;
+
 
         my @log_output_rows;
         open(my $fh_log, '<', $stats_out_tempfile) or die "Could not open file '$stats_out_tempfile' $!";
@@ -11809,23 +12214,23 @@ sub perform_drone_imagery_analytics {
             }
         close($fh_log);
 
-        my $log_output = join '', @log_output_rows;
-        my ($gen_var_string) = $log_output =~ /Genetic variance\(s\) for effect  2(.*?)correlations/gs;
-        @rr_coeff_genetic_covariance_altered_env_2 = split ' ', $gen_var_string;
-        print STDERR Dumper \@rr_coeff_genetic_covariance_altered_env_2;
-        my ($env_var_string) = $log_output =~ /Genetic variance\(s\) for effect  $legendre_order_number_env_var_pos(.*?)correlations/gs;
-        @rr_coeff_env_covariance_altered_env_2 = split ' ', $env_var_string;
-        print STDERR Dumper \@rr_coeff_env_covariance_altered_env_2;
-        my (@gen_cor_string) = $log_output =~ /correlations(.*?)eigenvectors/gs;
-        @rr_coeff_genetic_correlation_altered_env_2 = split ' ', $gen_cor_string[0];
-        print STDERR Dumper \@rr_coeff_genetic_correlation_altered_env_2;
-        @rr_coeff_env_correlation_altered_env_2 = split ' ', $gen_cor_string[1];
-        print STDERR Dumper \@rr_coeff_env_correlation_altered_env_2;
-        my ($res_se_string) = $log_output =~ /SE for R(.*?)\* FINISHED \(AIREMLF90\)/gs;
-        print STDERR Dumper $res_se_string;
-        # $rr_residual_variance_altered_env_2 = ($res_se_string**2)*$number_plots;
-        $rr_residual_variance_altered_env_2 = $res_se_string;
-        print STDERR Dumper $rr_residual_variance_altered_env_2;
+        my $native_summary=eval {CXGN::DroneImagery::NativeResults::summarize(
+            parameter_file=>$parameter_tempfile,data_file=>$stats_tempfile_2,
+            log_file=>$stats_out_tempfile,cwd=>$tmp_stats_dir,
+            backend=>($statistics_select =~ /^blupf90_/ ? 'blupf90':'airemlf90'),
+            time_scale=>($statistics_select =~ /_gdd_/ ? 'GDD':'DAP'),
+            kernel_origin=>($native_variance_options->{kernel_origin} // ($protocol_id ? 'unknown':'genotypic_identity')),
+            unit_metadata=>\%native_unit_metadata,
+        )};
+        return {error=>"$@"} if $@;
+        $native_variance_summaries{env_1DN}=$native_summary;
+        @rr_coeff_genetic_covariance_altered_env_2=@{$native_summary->{genetic_covariance}};
+        @rr_coeff_env_covariance_altered_env_2=@{$native_summary->{env_covariance}};
+        @rr_coeff_genetic_correlation_altered_env_2=@{$native_summary->{genetic_correlation}};
+        @rr_coeff_env_correlation_altered_env_2=@{$native_summary->{env_correlation}};
+        # A heterogeneous residual is a time function. The old scalar slot
+        # remains undefined; printed native SE is retained only in metadata.
+        $rr_residual_variance_altered_env_2=undef;
 
         @param_file_rows_6 = (
             '(CO)VARIANCES'
@@ -11856,31 +12261,31 @@ sub perform_drone_imagery_analytics {
         }
 
         open(my $Fp_cv1_2, ">", $parameter_tempfile_cv1_2) || die "Can't open file ".$parameter_tempfile_cv1_2;
-            foreach ((@param_file_rows_data_cv1, @param_file_rows_1, @param_file_rows_6, @param_file_rows_3, @param_file_rows_7, @param_file_rows_5)) {
+            foreach ((@param_file_rows_data_cv1, @param_file_rows_1, @param_file_rows_6, @param_file_rows_3, @param_file_rows_7, @native_blup_options)) {
                 print $Fp_cv1_2 "$_\n";
             }
         close($Fp_cv1_2);
 
         open(my $Fp_cv2_2, ">", $parameter_tempfile_cv2_2) || die "Can't open file ".$parameter_tempfile_cv2_2;
-            foreach ((@param_file_rows_data_cv2, @param_file_rows_1, @param_file_rows_6, @param_file_rows_3, @param_file_rows_7, @param_file_rows_5)) {
+            foreach ((@param_file_rows_data_cv2, @param_file_rows_1, @param_file_rows_6, @param_file_rows_3, @param_file_rows_7, @native_blup_options)) {
                 print $Fp_cv2_2 "$_\n";
             }
         close($Fp_cv2_2);
 
         open(my $Fp_cv3_2, ">", $parameter_tempfile_cv3_2) || die "Can't open file ".$parameter_tempfile_cv3_2;
-            foreach ((@param_file_rows_data_cv3, @param_file_rows_1, @param_file_rows_6, @param_file_rows_3, @param_file_rows_7, @param_file_rows_5)) {
+            foreach ((@param_file_rows_data_cv3, @param_file_rows_1, @param_file_rows_6, @param_file_rows_3, @param_file_rows_7, @native_blup_options)) {
                 print $Fp_cv3_2 "$_\n";
             }
         close($Fp_cv3_2);
 
         open(my $Fp_cv4_2, ">", $parameter_tempfile_cv4_2) || die "Can't open file ".$parameter_tempfile_cv4_2;
-            foreach ((@param_file_rows_data_cv4, @param_file_rows_1, @param_file_rows_6, @param_file_rows_3, @param_file_rows_7, @param_file_rows_5)) {
+            foreach ((@param_file_rows_data_cv4, @param_file_rows_1, @param_file_rows_6, @param_file_rows_3, @param_file_rows_7, @native_blup_options)) {
                 print $Fp_cv4_2 "$_\n";
             }
         close($Fp_cv4_2);
 
         open(my $Fp_cv5_2, ">", $parameter_tempfile_cv5_2) || die "Can't open file ".$parameter_tempfile_cv5_2;
-            foreach ((@param_file_rows_data_cv5, @param_file_rows_1, @param_file_rows_6, @param_file_rows_3, @param_file_rows_7, @param_file_rows_5)) {
+            foreach ((@param_file_rows_data_cv5, @param_file_rows_1, @param_file_rows_6, @param_file_rows_3, @param_file_rows_7, @native_blup_options)) {
                 print $Fp_cv5_2 "$_\n";
             }
         close($Fp_cv5_2);
@@ -11892,10 +12297,12 @@ sub perform_drone_imagery_analytics {
         open(my $fh_yhat_res, '<', $yhat_residual_tempfile) or die "Could not open file '$yhat_residual_tempfile' $!";
             print STDERR "Opened $yhat_residual_tempfile\n";
 
+            my $native_observed=CXGN::DroneImagery::NativeResults::observation_mask($stats_tempfile_2,$parameter_tempfile);
             my $pred_res_counter = 0;
             my $trait_counter = 0;
             while (my $row = <$fh_yhat_res>) {
                 # print STDERR $row;
+                if (!$native_observed->[$pred_res_counter]) {$pred_res_counter++;next;}
                 my @vals = split ' ', $row;
                 my $pred = $vals[0];
                 my $residual = $vals[1];
@@ -11915,6 +12322,8 @@ sub perform_drone_imagery_analytics {
 
                 $pred_res_counter++;
             }
+            return {error=>'Native readback row count differs from its input; no partial results were saved.'}
+                if $pred_res_counter!=@$native_observed;
         close($fh_yhat_res);
 
         $blupf90_solutions_tempfile = $tmp_stats_dir."/solutions";
@@ -11980,7 +12389,7 @@ sub perform_drone_imagery_analytics {
                 my $time = $t_i*5/100;
                 my $time_rescaled = sprintf("%.2f", $time*($time_max - $time_min) + $time_min);
 
-                my $value = CXGN::DroneImagery::LegendrePolynomials::legendre_polynomial_sum($coeffs, $time);
+                my $value = CXGN::DroneImagery::LegendrePolynomials::normalized_legendre_polynomial_sum($coeffs, $time);
 
                 my $time_term_string = '';
                 if ($statistics_select eq 'blupf90_grm_random_regression_gdd_blups' || $statistics_select eq 'airemlf90_grm_random_regression_gdd_blups') {
@@ -12009,7 +12418,7 @@ sub perform_drone_imagery_analytics {
         while ( my ($accession_name, $coeffs) = each %rr_genetic_coefficients_altered_env_2) {
             foreach my $time_term (@sorted_trait_names) {
                 my $time = ($time_term - $time_min)/($time_max - $time_min);
-                my $value = CXGN::DroneImagery::LegendrePolynomials::legendre_polynomial_sum($coeffs, $time);
+                my $value = CXGN::DroneImagery::LegendrePolynomials::normalized_legendre_polynomial_sum($coeffs, $time);
 
                 $result_blup_data_delta_altered_env_2->{$accession_name}->{$time_term} = [$value, $timestamp, $user_name, '', ''];
 
@@ -12035,7 +12444,7 @@ sub perform_drone_imagery_analytics {
                 my $time = $t_i*5/100;
                 my $time_rescaled = sprintf("%.2f", $time*($time_max - $time_min) + $time_min);
 
-                my $value = CXGN::DroneImagery::LegendrePolynomials::legendre_polynomial_sum($coeffs, $time);
+                my $value = CXGN::DroneImagery::LegendrePolynomials::normalized_legendre_polynomial_sum($coeffs, $time);
 
                 my $time_term_string = '';
                 if ($statistics_select eq 'blupf90_grm_random_regression_gdd_blups' || $statistics_select eq 'airemlf90_grm_random_regression_gdd_blups') {
@@ -12064,7 +12473,7 @@ sub perform_drone_imagery_analytics {
         while ( my ($plot_name, $coeffs) = each %rr_temporal_coefficients_altered_env_2) {
             foreach my $time_term (@sorted_trait_names) {
                 my $time = ($time_term - $time_min)/($time_max - $time_min);
-                my $value = CXGN::DroneImagery::LegendrePolynomials::legendre_polynomial_sum($coeffs, $time);
+                my $value = CXGN::DroneImagery::LegendrePolynomials::normalized_legendre_polynomial_sum($coeffs, $time);
 
                 $result_blup_pe_data_delta_altered_env_2->{$plot_name}->{$time_term} = [$value, $timestamp, $user_name, '', ''];
 
@@ -12084,6 +12493,10 @@ sub perform_drone_imagery_analytics {
             my $cmd_f90_cv1 = 'cd '.$tmp_stats_dir.'; echo '.$parameter_tempfile_cv1_basename.' | '.$command_name.' > '.$stats_out_tempfile;
             print STDERR Dumper $cmd_f90_cv1;
             my $status_cv1 = system($cmd_f90_cv1);
+            return {error=>'The native fold process failed; no estimates were read.'} if $status_cv1;
+            my $fold_error_cv1=CXGN::DroneImagery::DesignFactors::native_fit_error(
+                $statistics_select,$parameter_tempfile_cv1,$stats_out_cv1_predict_tempfile,$stats_out_tempfile,$tmp_stats_dir);
+            return {error=>$fold_error_cv1} if $fold_error_cv1;
 
             open(my $fh_log_cv1, '<', $stats_out_tempfile) or die "Could not open file '$stats_out_tempfile' $!";
                 print STDERR "Opened $stats_out_tempfile\n";
@@ -12096,18 +12509,27 @@ sub perform_drone_imagery_analytics {
             open(my $fh_yhat_res_cv1, '<', $yhat_residual_tempfile_cv1) or die "Could not open file '$yhat_residual_tempfile_cv1' $!";
                 print STDERR "Opened $yhat_residual_tempfile_cv1\n";
 
+                my $native_fold_observed_1=CXGN::DroneImagery::NativeResults::observation_mask($stats_out_cv1_predict_tempfile,$parameter_tempfile_cv1);
+                my $native_fold_row_1=0;
                 while (my $row = <$fh_yhat_res_cv1>) {
+                    next if !$native_fold_observed_1->[$native_fold_row_1++];
                     # print STDERR $row;
                     my @vals = split ' ', $row;
                     my $pred = $vals[0];
                     my $residual = $vals[1];
                     $model_sum_square_cv1_altered_env_2 = $model_sum_square_cv1_altered_env_2 + $residual*$residual;
                 }
+                return {error=>'Native fold readback row count differs from its input.'}
+                    if $native_fold_row_1!=@$native_fold_observed_1;
             close($fh_yhat_res_cv1);
 
             my $cmd_f90_cv2 = 'cd '.$tmp_stats_dir.'; echo '.$parameter_tempfile_cv2_basename.' | '.$command_name.' > '.$stats_out_tempfile;
             print STDERR Dumper $cmd_f90_cv2;
             my $status_cv2 = system($cmd_f90_cv2);
+            return {error=>'The native fold process failed; no estimates were read.'} if $status_cv2;
+            my $fold_error_cv2=CXGN::DroneImagery::DesignFactors::native_fit_error(
+                $statistics_select,$parameter_tempfile_cv2,$stats_out_cv2_predict_tempfile,$stats_out_tempfile,$tmp_stats_dir);
+            return {error=>$fold_error_cv2} if $fold_error_cv2;
 
             open(my $fh_log_cv2, '<', $stats_out_tempfile) or die "Could not open file '$stats_out_tempfile' $!";
                 print STDERR "Opened $stats_out_tempfile\n";
@@ -12120,18 +12542,27 @@ sub perform_drone_imagery_analytics {
             open(my $fh_yhat_res_cv2, '<', $yhat_residual_tempfile_cv2) or die "Could not open file '$yhat_residual_tempfile_cv2' $!";
                 print STDERR "Opened $yhat_residual_tempfile_cv2\n";
 
+                my $native_fold_observed_2=CXGN::DroneImagery::NativeResults::observation_mask($stats_out_cv2_predict_tempfile,$parameter_tempfile_cv2);
+                my $native_fold_row_2=0;
                 while (my $row = <$fh_yhat_res_cv2>) {
+                    next if !$native_fold_observed_2->[$native_fold_row_2++];
                     # print STDERR $row;
                     my @vals = split ' ', $row;
                     my $pred = $vals[0];
                     my $residual = $vals[1];
                     $model_sum_square_cv2_altered_env_2 = $model_sum_square_cv2_altered_env_2 + $residual*$residual;
                 }
+                return {error=>'Native fold readback row count differs from its input.'}
+                    if $native_fold_row_2!=@$native_fold_observed_2;
             close($fh_yhat_res_cv2);
 
             my $cmd_f90_cv3 = 'cd '.$tmp_stats_dir.'; echo '.$parameter_tempfile_cv3_basename.' | '.$command_name.' > '.$stats_out_tempfile;
             print STDERR Dumper $cmd_f90_cv3;
             my $status_cv3 = system($cmd_f90_cv3);
+            return {error=>'The native fold process failed; no estimates were read.'} if $status_cv3;
+            my $fold_error_cv3=CXGN::DroneImagery::DesignFactors::native_fit_error(
+                $statistics_select,$parameter_tempfile_cv3,$stats_out_cv3_predict_tempfile,$stats_out_tempfile,$tmp_stats_dir);
+            return {error=>$fold_error_cv3} if $fold_error_cv3;
 
             open(my $fh_log_cv3, '<', $stats_out_tempfile) or die "Could not open file '$stats_out_tempfile' $!";
                 print STDERR "Opened $stats_out_tempfile\n";
@@ -12144,18 +12575,27 @@ sub perform_drone_imagery_analytics {
             open(my $fh_yhat_res_cv3, '<', $yhat_residual_tempfile_cv3) or die "Could not open file '$yhat_residual_tempfile_cv3' $!";
                 print STDERR "Opened $yhat_residual_tempfile_cv3\n";
 
+                my $native_fold_observed_3=CXGN::DroneImagery::NativeResults::observation_mask($stats_out_cv3_predict_tempfile,$parameter_tempfile_cv3);
+                my $native_fold_row_3=0;
                 while (my $row = <$fh_yhat_res_cv3>) {
+                    next if !$native_fold_observed_3->[$native_fold_row_3++];
                     # print STDERR $row;
                     my @vals = split ' ', $row;
                     my $pred = $vals[0];
                     my $residual = $vals[1];
                     $model_sum_square_cv3_altered_env_2 = $model_sum_square_cv3_altered_env_2 + $residual*$residual;
                 }
+                return {error=>'Native fold readback row count differs from its input.'}
+                    if $native_fold_row_3!=@$native_fold_observed_3;
             close($fh_yhat_res_cv3);
 
             my $cmd_f90_cv4 = 'cd '.$tmp_stats_dir.'; echo '.$parameter_tempfile_cv4_basename.' | '.$command_name.' > '.$stats_out_tempfile;
             print STDERR Dumper $cmd_f90_cv4;
             my $status_cv4 = system($cmd_f90_cv4);
+            return {error=>'The native fold process failed; no estimates were read.'} if $status_cv4;
+            my $fold_error_cv4=CXGN::DroneImagery::DesignFactors::native_fit_error(
+                $statistics_select,$parameter_tempfile_cv4,$stats_out_cv4_predict_tempfile,$stats_out_tempfile,$tmp_stats_dir);
+            return {error=>$fold_error_cv4} if $fold_error_cv4;
 
             open(my $fh_log_cv4, '<', $stats_out_tempfile) or die "Could not open file '$stats_out_tempfile' $!";
                 print STDERR "Opened $stats_out_tempfile\n";
@@ -12168,18 +12608,27 @@ sub perform_drone_imagery_analytics {
             open(my $fh_yhat_res_cv4, '<', $yhat_residual_tempfile_cv4) or die "Could not open file '$yhat_residual_tempfile_cv4' $!";
                 print STDERR "Opened $yhat_residual_tempfile_cv4\n";
 
+                my $native_fold_observed_4=CXGN::DroneImagery::NativeResults::observation_mask($stats_out_cv4_predict_tempfile,$parameter_tempfile_cv4);
+                my $native_fold_row_4=0;
                 while (my $row = <$fh_yhat_res_cv4>) {
+                    next if !$native_fold_observed_4->[$native_fold_row_4++];
                     # print STDERR $row;
                     my @vals = split ' ', $row;
                     my $pred = $vals[0];
                     my $residual = $vals[1];
                     $model_sum_square_cv4_altered_env_2 = $model_sum_square_cv4_altered_env_2 + $residual*$residual;
                 }
+                return {error=>'Native fold readback row count differs from its input.'}
+                    if $native_fold_row_4!=@$native_fold_observed_4;
             close($fh_yhat_res_cv4);
 
             my $cmd_f90_cv5 = 'cd '.$tmp_stats_dir.'; echo '.$parameter_tempfile_cv5_basename.' | '.$command_name.' > '.$stats_out_tempfile;
             print STDERR Dumper $cmd_f90_cv5;
             my $status_cv5 = system($cmd_f90_cv5);
+            return {error=>'The native fold process failed; no estimates were read.'} if $status_cv5;
+            my $fold_error_cv5=CXGN::DroneImagery::DesignFactors::native_fit_error(
+                $statistics_select,$parameter_tempfile_cv5,$stats_out_cv5_predict_tempfile,$stats_out_tempfile,$tmp_stats_dir);
+            return {error=>$fold_error_cv5} if $fold_error_cv5;
 
             open(my $fh_log_cv5, '<', $stats_out_tempfile) or die "Could not open file '$stats_out_tempfile' $!";
                 print STDERR "Opened $stats_out_tempfile\n";
@@ -12192,18 +12641,27 @@ sub perform_drone_imagery_analytics {
             open(my $fh_yhat_res_cv5, '<', $yhat_residual_tempfile_cv5) or die "Could not open file '$yhat_residual_tempfile_cv5' $!";
                 print STDERR "Opened $yhat_residual_tempfile_cv5\n";
 
+                my $native_fold_observed_5=CXGN::DroneImagery::NativeResults::observation_mask($stats_out_cv5_predict_tempfile,$parameter_tempfile_cv5);
+                my $native_fold_row_5=0;
                 while (my $row = <$fh_yhat_res_cv5>) {
+                    next if !$native_fold_observed_5->[$native_fold_row_5++];
                     # print STDERR $row;
                     my @vals = split ' ', $row;
                     my $pred = $vals[0];
                     my $residual = $vals[1];
                     $model_sum_square_cv5_altered_env_2 = $model_sum_square_cv5_altered_env_2 + $residual*$residual;
                 }
+                return {error=>'Native fold readback row count differs from its input.'}
+                    if $native_fold_row_5!=@$native_fold_observed_5;
             close($fh_yhat_res_cv5);
 
             my $cmd_f90_cv1_2 = 'cd '.$tmp_stats_dir.'; echo '.$parameter_tempfile_cv1_2_basename.' | blupf90 > '.$stats_out_tempfile;
             print STDERR Dumper $cmd_f90_cv1_2;
             my $status_cv1_2 = system($cmd_f90_cv1_2);
+            return {error=>'The native fold process failed; no estimates were read.'} if $status_cv1_2;
+            my $fold_error_cv1_2=CXGN::DroneImagery::DesignFactors::native_fit_error(
+                $native_blup_selection,$parameter_tempfile_cv1_2,$stats_out_cv1_predict_tempfile,$stats_out_tempfile,$tmp_stats_dir);
+            return {error=>$fold_error_cv1_2} if $fold_error_cv1_2;
 
             open(my $fh_log_cv1_2, '<', $stats_out_tempfile) or die "Could not open file '$stats_out_tempfile' $!";
                 print STDERR "Opened $stats_out_tempfile\n";
@@ -12216,18 +12674,27 @@ sub perform_drone_imagery_analytics {
             open(my $fh_yhat_res_cv1_2, '<', $yhat_residual_tempfile_cv1_2) or die "Could not open file '$yhat_residual_tempfile_cv1_2' $!";
                 print STDERR "Opened $yhat_residual_tempfile_cv1_2\n";
 
+                my $native_fold_observed_1_2=CXGN::DroneImagery::NativeResults::observation_mask($stats_out_cv1_predict_tempfile,$parameter_tempfile_cv1_2);
+                my $native_fold_row_1_2=0;
                 while (my $row = <$fh_yhat_res_cv1_2>) {
+                    next if !$native_fold_observed_1_2->[$native_fold_row_1_2++];
                     # print STDERR $row;
                     my @vals = split ' ', $row;
                     my $pred = $vals[0];
                     my $residual = $vals[1];
                     $model_sum_square_cv1_2_altered_env_2 = $model_sum_square_cv1_2_altered_env_2 + $residual*$residual;
                 }
+                return {error=>'Native fold readback row count differs from its input.'}
+                    if $native_fold_row_1_2!=@$native_fold_observed_1_2;
             close($fh_yhat_res_cv1_2);
 
             my $cmd_f90_cv2_2 = 'cd '.$tmp_stats_dir.'; echo '.$parameter_tempfile_cv2_2_basename.' | blupf90 > '.$stats_out_tempfile;
             print STDERR Dumper $cmd_f90_cv2_2;
             my $status_cv2_2 = system($cmd_f90_cv2_2);
+            return {error=>'The native fold process failed; no estimates were read.'} if $status_cv2_2;
+            my $fold_error_cv2_2=CXGN::DroneImagery::DesignFactors::native_fit_error(
+                $native_blup_selection,$parameter_tempfile_cv2_2,$stats_out_cv2_predict_tempfile,$stats_out_tempfile,$tmp_stats_dir);
+            return {error=>$fold_error_cv2_2} if $fold_error_cv2_2;
 
             open(my $fh_log_cv2_2, '<', $stats_out_tempfile) or die "Could not open file '$stats_out_tempfile' $!";
                 print STDERR "Opened $stats_out_tempfile\n";
@@ -12240,18 +12707,27 @@ sub perform_drone_imagery_analytics {
             open(my $fh_yhat_res_cv2_2, '<', $yhat_residual_tempfile_cv2_2) or die "Could not open file '$yhat_residual_tempfile_cv2_2' $!";
                 print STDERR "Opened $yhat_residual_tempfile_cv2_2\n";
 
+                my $native_fold_observed_2_2=CXGN::DroneImagery::NativeResults::observation_mask($stats_out_cv2_predict_tempfile,$parameter_tempfile_cv2_2);
+                my $native_fold_row_2_2=0;
                 while (my $row = <$fh_yhat_res_cv2_2>) {
+                    next if !$native_fold_observed_2_2->[$native_fold_row_2_2++];
                     # print STDERR $row;
                     my @vals = split ' ', $row;
                     my $pred = $vals[0];
                     my $residual = $vals[1];
                     $model_sum_square_cv2_2_altered_env_2 = $model_sum_square_cv2_2_altered_env_2 + $residual*$residual;
                 }
+                return {error=>'Native fold readback row count differs from its input.'}
+                    if $native_fold_row_2_2!=@$native_fold_observed_2_2;
             close($fh_yhat_res_cv2_2);
 
             my $cmd_f90_cv3_2 = 'cd '.$tmp_stats_dir.'; echo '.$parameter_tempfile_cv3_2_basename.' | blupf90 > '.$stats_out_tempfile;
             print STDERR Dumper $cmd_f90_cv3_2;
             my $status_cv3_2 = system($cmd_f90_cv3_2);
+            return {error=>'The native fold process failed; no estimates were read.'} if $status_cv3_2;
+            my $fold_error_cv3_2=CXGN::DroneImagery::DesignFactors::native_fit_error(
+                $native_blup_selection,$parameter_tempfile_cv3_2,$stats_out_cv3_predict_tempfile,$stats_out_tempfile,$tmp_stats_dir);
+            return {error=>$fold_error_cv3_2} if $fold_error_cv3_2;
 
             open(my $fh_log_cv3_2, '<', $stats_out_tempfile) or die "Could not open file '$stats_out_tempfile' $!";
                 print STDERR "Opened $stats_out_tempfile\n";
@@ -12264,18 +12740,27 @@ sub perform_drone_imagery_analytics {
             open(my $fh_yhat_res_cv3_2, '<', $yhat_residual_tempfile_cv3_2) or die "Could not open file '$yhat_residual_tempfile_cv3_2' $!";
                 print STDERR "Opened $yhat_residual_tempfile_cv3_2\n";
 
+                my $native_fold_observed_3_2=CXGN::DroneImagery::NativeResults::observation_mask($stats_out_cv3_predict_tempfile,$parameter_tempfile_cv3_2);
+                my $native_fold_row_3_2=0;
                 while (my $row = <$fh_yhat_res_cv3_2>) {
+                    next if !$native_fold_observed_3_2->[$native_fold_row_3_2++];
                     # print STDERR $row;
                     my @vals = split ' ', $row;
                     my $pred = $vals[0];
                     my $residual = $vals[1];
                     $model_sum_square_cv3_2_altered_env_2 = $model_sum_square_cv3_2_altered_env_2 + $residual*$residual;
                 }
+                return {error=>'Native fold readback row count differs from its input.'}
+                    if $native_fold_row_3_2!=@$native_fold_observed_3_2;
             close($fh_yhat_res_cv3_2);
 
             my $cmd_f90_cv4_2 = 'cd '.$tmp_stats_dir.'; echo '.$parameter_tempfile_cv4_2_basename.' | blupf90 > '.$stats_out_tempfile;
             print STDERR Dumper $cmd_f90_cv4_2;
             my $status_cv4_2 = system($cmd_f90_cv4_2);
+            return {error=>'The native fold process failed; no estimates were read.'} if $status_cv4_2;
+            my $fold_error_cv4_2=CXGN::DroneImagery::DesignFactors::native_fit_error(
+                $native_blup_selection,$parameter_tempfile_cv4_2,$stats_out_cv4_predict_tempfile,$stats_out_tempfile,$tmp_stats_dir);
+            return {error=>$fold_error_cv4_2} if $fold_error_cv4_2;
 
             open(my $fh_log_cv4_2, '<', $stats_out_tempfile) or die "Could not open file '$stats_out_tempfile' $!";
                 print STDERR "Opened $stats_out_tempfile\n";
@@ -12288,18 +12773,27 @@ sub perform_drone_imagery_analytics {
             open(my $fh_yhat_res_cv4_2, '<', $yhat_residual_tempfile_cv4_2) or die "Could not open file '$yhat_residual_tempfile_cv4_2' $!";
                 print STDERR "Opened $yhat_residual_tempfile_cv4_2\n";
 
+                my $native_fold_observed_4_2=CXGN::DroneImagery::NativeResults::observation_mask($stats_out_cv4_predict_tempfile,$parameter_tempfile_cv4_2);
+                my $native_fold_row_4_2=0;
                 while (my $row = <$fh_yhat_res_cv4_2>) {
+                    next if !$native_fold_observed_4_2->[$native_fold_row_4_2++];
                     # print STDERR $row;
                     my @vals = split ' ', $row;
                     my $pred = $vals[0];
                     my $residual = $vals[1];
                     $model_sum_square_cv4_2_altered_env_2 = $model_sum_square_cv4_2_altered_env_2 + $residual*$residual;
                 }
+                return {error=>'Native fold readback row count differs from its input.'}
+                    if $native_fold_row_4_2!=@$native_fold_observed_4_2;
             close($fh_yhat_res_cv4_2);
 
             my $cmd_f90_cv5_2 = 'cd '.$tmp_stats_dir.'; echo '.$parameter_tempfile_cv5_2_basename.' | blupf90 > '.$stats_out_tempfile;
             print STDERR Dumper $cmd_f90_cv5_2;
             my $status_cv5_2 = system($cmd_f90_cv5_2);
+            return {error=>'The native fold process failed; no estimates were read.'} if $status_cv5_2;
+            my $fold_error_cv5_2=CXGN::DroneImagery::DesignFactors::native_fit_error(
+                $native_blup_selection,$parameter_tempfile_cv5_2,$stats_out_cv5_predict_tempfile,$stats_out_tempfile,$tmp_stats_dir);
+            return {error=>$fold_error_cv5_2} if $fold_error_cv5_2;
 
             open(my $fh_log_cv5_2, '<', $stats_out_tempfile) or die "Could not open file '$stats_out_tempfile' $!";
                 print STDERR "Opened $stats_out_tempfile\n";
@@ -12312,13 +12806,18 @@ sub perform_drone_imagery_analytics {
             open(my $fh_yhat_res_cv5_2, '<', $yhat_residual_tempfile_cv5_2) or die "Could not open file '$yhat_residual_tempfile_cv5_2' $!";
                 print STDERR "Opened $yhat_residual_tempfile_cv5_2\n";
 
+                my $native_fold_observed_5_2=CXGN::DroneImagery::NativeResults::observation_mask($stats_out_cv5_predict_tempfile,$parameter_tempfile_cv5_2);
+                my $native_fold_row_5_2=0;
                 while (my $row = <$fh_yhat_res_cv5_2>) {
+                    next if !$native_fold_observed_5_2->[$native_fold_row_5_2++];
                     # print STDERR $row;
                     my @vals = split ' ', $row;
                     my $pred = $vals[0];
                     my $residual = $vals[1];
                     $model_sum_square_cv5_2_altered_env_2 = $model_sum_square_cv5_2_altered_env_2 + $residual*$residual;
                 }
+                return {error=>'Native fold readback row count differs from its input.'}
+                    if $native_fold_row_5_2!=@$native_fold_observed_5_2;
             close($fh_yhat_res_cv5_2);
         }
     }
@@ -13895,7 +14394,11 @@ sub perform_drone_imagery_analytics {
 
         open(my $F, ">", $stats_tempfile_2) || die "Can't open file ".$stats_tempfile_2;
             foreach (@data_matrix_altered_env_3) {
-                my $line = join ' ', @$_;
+                my @native_row=@$_;
+                my $encoded_value=eval {CXGN::DroneImagery::DesignFactors::native_observation($native_row[-1])};
+                return {error=>"$@"} if $@;
+                $native_row[-1]=$encoded_value;
+                my $line = join ' ', @native_row;
                 print $F "$line\n";
             }
         close($F);
@@ -14819,6 +15322,7 @@ sub perform_drone_imagery_analytics {
 
         print STDERR Dumper $statistics_cmd;
         my $status_r = system($statistics_cmd);
+        return {error=>'Native starting covariance requires sufficient complete paired observations and a positive-definite covariance; no estimates were read.'} if $status_r;
 
         my @pheno_var;
         open(my $fh_r, '<', $stats_out_param_tempfile) or die "Could not open file '$stats_out_param_tempfile' $!";
@@ -14846,9 +15350,17 @@ sub perform_drone_imagery_analytics {
 
         print STDERR Dumper $stats_tempfile_2;
         my $data_cv_cmd = 'R -e "mat <- read.csv(\''.$stats_tempfile_2.'\', header=FALSE, sep=\' \');
-        randomized_positions <- sample(length(mat[,1]));
-        cv_step_size <- length(mat[,1]) %/% 5;
-        cv_step_size_modulo <- length(mat[,1]) %% 5;
+        native_missing <- '.CXGN::DroneImagery::DesignFactors::native_missing_value().';
+        observed_positions <- which(mat[,ncol(mat)] != native_missing);
+        randomized_positions <- sample(observed_positions, length(observed_positions));
+        cv_step_size <- length(randomized_positions) %/% 5;
+        cv_step_size_modulo <- length(randomized_positions) %% 5;
+        fold_positions <- lapply(1:5, function(i) {
+            size <- cv_step_size + if(i == 5) cv_step_size_modulo else 0;
+            if(size == 0) return(integer(0));
+            randomized_positions[(i-1)*cv_step_size + seq_len(size)];
+        });
+        observed_median <- median(mat[observed_positions,ncol(mat)]);
         mat_CV1 <- mat; mat_CV2 <- mat; mat_CV3 <- mat; mat_CV4 <- mat; mat_CV5 <- mat;
         mat_CV1[fold_positions[[1]],ncol(mat)] <- observed_median;
         mat_CV2[fold_positions[[2]],ncol(mat)] <- observed_median;
@@ -14856,22 +15368,22 @@ sub perform_drone_imagery_analytics {
         mat_CV4[fold_positions[[4]],ncol(mat)] <- observed_median;
         mat_CV5[fold_positions[[5]],ncol(mat)] <- observed_median;
         mat_CV1_2 <- mat; mat_CV2_2 <- mat; mat_CV3_2 <- mat; mat_CV4_2 <- mat; mat_CV5_2 <- mat;
-        mat_CV1_2[c(randomized_positions[1:cv_step_size]),ncol(mat)] <- -999;
-        mat_CV2_2[c(randomized_positions[(cv_step_size+1):(2*cv_step_size)]),ncol(mat)] <- -999;
-        mat_CV3_2[c(randomized_positions[((2*cv_step_size)+1):(3*cv_step_size)]),ncol(mat)] <- -999;
-        mat_CV4_2[c(randomized_positions[((3*cv_step_size)+1):(4*cv_step_size)]),ncol(mat)] <- -999;
-        mat_CV5_2[c(randomized_positions[((4*cv_step_size)+1):((5*cv_step_size)+cv_step_size_modulo)]),ncol(mat)] <- -999;
-        write.table(mat, file=\''.$stats_tempfile_2.'\', row.names=FALSE, col.names=FALSE, sep=\' \');
-        write.table(mat_CV1, file=\''.$stats_out_cv1_predict_tempfile.'\', row.names=FALSE, col.names=FALSE, sep=\' \');
-        write.table(mat_CV2, file=\''.$stats_out_cv2_predict_tempfile.'\', row.names=FALSE, col.names=FALSE, sep=\' \');
-        write.table(mat_CV3, file=\''.$stats_out_cv3_predict_tempfile.'\', row.names=FALSE, col.names=FALSE, sep=\' \');
-        write.table(mat_CV4, file=\''.$stats_out_cv4_predict_tempfile.'\', row.names=FALSE, col.names=FALSE, sep=\' \');
-        write.table(mat_CV5, file=\''.$stats_out_cv5_predict_tempfile.'\', row.names=FALSE, col.names=FALSE, sep=\' \');
-        write.table(mat_CV1_2, file=\''.$stats_out_cv1_2_predict_tempfile.'\', row.names=FALSE, col.names=FALSE, sep=\' \');
-        write.table(mat_CV2_2, file=\''.$stats_out_cv2_2_predict_tempfile.'\', row.names=FALSE, col.names=FALSE, sep=\' \');
-        write.table(mat_CV3_2, file=\''.$stats_out_cv3_2_predict_tempfile.'\', row.names=FALSE, col.names=FALSE, sep=\' \');
-        write.table(mat_CV4_2, file=\''.$stats_out_cv4_2_predict_tempfile.'\', row.names=FALSE, col.names=FALSE, sep=\' \');
-        write.table(mat_CV5_2, file=\''.$stats_out_cv5_2_predict_tempfile.'\', row.names=FALSE, col.names=FALSE, sep=\' \');
+        mat_CV1_2[fold_positions[[1]],ncol(mat)] <- native_missing;
+        mat_CV2_2[fold_positions[[2]],ncol(mat)] <- native_missing;
+        mat_CV3_2[fold_positions[[3]],ncol(mat)] <- native_missing;
+        mat_CV4_2[fold_positions[[4]],ncol(mat)] <- native_missing;
+        mat_CV5_2[fold_positions[[5]],ncol(mat)] <- native_missing;
+        write.table(mat, file=\''.$stats_tempfile_2.'\', row.names=FALSE, col.names=FALSE, qmethod=\'double\', sep=\' \');
+        write.table(mat_CV1, file=\''.$stats_out_cv1_predict_tempfile.'\', row.names=FALSE, col.names=FALSE, qmethod=\'double\', sep=\' \');
+        write.table(mat_CV2, file=\''.$stats_out_cv2_predict_tempfile.'\', row.names=FALSE, col.names=FALSE, qmethod=\'double\', sep=\' \');
+        write.table(mat_CV3, file=\''.$stats_out_cv3_predict_tempfile.'\', row.names=FALSE, col.names=FALSE, qmethod=\'double\', sep=\' \');
+        write.table(mat_CV4, file=\''.$stats_out_cv4_predict_tempfile.'\', row.names=FALSE, col.names=FALSE, qmethod=\'double\', sep=\' \');
+        write.table(mat_CV5, file=\''.$stats_out_cv5_predict_tempfile.'\', row.names=FALSE, col.names=FALSE, qmethod=\'double\', sep=\' \');
+        write.table(mat_CV1_2, file=\''.$stats_out_cv1_2_predict_tempfile.'\', row.names=FALSE, col.names=FALSE, qmethod=\'double\', sep=\' \');
+        write.table(mat_CV2_2, file=\''.$stats_out_cv2_2_predict_tempfile.'\', row.names=FALSE, col.names=FALSE, qmethod=\'double\', sep=\' \');
+        write.table(mat_CV3_2, file=\''.$stats_out_cv3_2_predict_tempfile.'\', row.names=FALSE, col.names=FALSE, qmethod=\'double\', sep=\' \');
+        write.table(mat_CV4_2, file=\''.$stats_out_cv4_2_predict_tempfile.'\', row.names=FALSE, col.names=FALSE, qmethod=\'double\', sep=\' \');
+        write.table(mat_CV5_2, file=\''.$stats_out_cv5_2_predict_tempfile.'\', row.names=FALSE, col.names=FALSE, qmethod=\'double\', sep=\' \');
         "';
         my $status_cv_files = system($data_cv_cmd);
 
@@ -14960,6 +15472,11 @@ sub perform_drone_imagery_analytics {
 
         print STDERR Dumper $cmd_f90;
         my $status = system($cmd_f90);
+        return {error=>'The native statistics process failed; no estimates were read.'} if $status;
+        my $fit_error=CXGN::DroneImagery::DesignFactors::native_fit_error(
+            $statistics_select,$parameter_tempfile,$stats_tempfile_2,$stats_out_tempfile,$tmp_stats_dir);
+        return {error=>$fit_error} if $fit_error;
+
 
         my @log_output_rows;
         open(my $fh_log, '<', $stats_out_tempfile) or die "Could not open file '$stats_out_tempfile' $!";
@@ -14970,23 +15487,23 @@ sub perform_drone_imagery_analytics {
             }
         close($fh_log);
 
-        my $log_output = join '', @log_output_rows;
-        my ($gen_var_string) = $log_output =~ /Genetic variance\(s\) for effect  2(.*?)correlations/gs;
-        @rr_coeff_genetic_covariance_altered_env_3 = split ' ', $gen_var_string;
-        print STDERR Dumper \@rr_coeff_genetic_covariance_altered_env_3;
-        my ($env_var_string) = $log_output =~ /Genetic variance\(s\) for effect  $legendre_order_number_env_var_pos(.*?)correlations/gs;
-        @rr_coeff_env_covariance_altered_env_3 = split ' ', $env_var_string;
-        print STDERR Dumper \@rr_coeff_env_covariance_altered_env_3;
-        my (@gen_cor_string) = $log_output =~ /correlations(.*?)eigenvectors/gs;
-        @rr_coeff_genetic_correlation_altered_env_3 = split ' ', $gen_cor_string[0];
-        print STDERR Dumper \@rr_coeff_genetic_correlation_altered_env_3;
-        @rr_coeff_env_correlation_altered_env_3 = split ' ', $gen_cor_string[1];
-        print STDERR Dumper \@rr_coeff_env_correlation_altered_env_3;
-        my ($res_se_string) = $log_output =~ /SE for R(.*?)\* FINISHED \(AIREMLF90\)/gs;
-        print STDERR Dumper $res_se_string;
-        # $rr_residual_variance_altered_env_3 = ($res_se_string**2)*$number_plots;
-        $rr_residual_variance_altered_env_3 = $res_se_string;
-        print STDERR Dumper $rr_residual_variance_altered_env_3;
+        my $native_summary=eval {CXGN::DroneImagery::NativeResults::summarize(
+            parameter_file=>$parameter_tempfile,data_file=>$stats_tempfile_2,
+            log_file=>$stats_out_tempfile,cwd=>$tmp_stats_dir,
+            backend=>($statistics_select =~ /^blupf90_/ ? 'blupf90':'airemlf90'),
+            time_scale=>($statistics_select =~ /_gdd_/ ? 'GDD':'DAP'),
+            kernel_origin=>($native_variance_options->{kernel_origin} // ($protocol_id ? 'unknown':'genotypic_identity')),
+            unit_metadata=>\%native_unit_metadata,
+        )};
+        return {error=>"$@"} if $@;
+        $native_variance_summaries{env_2DN}=$native_summary;
+        @rr_coeff_genetic_covariance_altered_env_3=@{$native_summary->{genetic_covariance}};
+        @rr_coeff_env_covariance_altered_env_3=@{$native_summary->{env_covariance}};
+        @rr_coeff_genetic_correlation_altered_env_3=@{$native_summary->{genetic_correlation}};
+        @rr_coeff_env_correlation_altered_env_3=@{$native_summary->{env_correlation}};
+        # A heterogeneous residual is a time function. The old scalar slot
+        # remains undefined; printed native SE is retained only in metadata.
+        $rr_residual_variance_altered_env_3=undef;
 
         @param_file_rows_6 = (
             '(CO)VARIANCES'
@@ -15017,31 +15534,31 @@ sub perform_drone_imagery_analytics {
         }
 
         open(my $Fp_cv1_2, ">", $parameter_tempfile_cv1_2) || die "Can't open file ".$parameter_tempfile_cv1_2;
-            foreach ((@param_file_rows_data_cv1, @param_file_rows_1, @param_file_rows_6, @param_file_rows_3, @param_file_rows_7, @param_file_rows_5)) {
+            foreach ((@param_file_rows_data_cv1, @param_file_rows_1, @param_file_rows_6, @param_file_rows_3, @param_file_rows_7, @native_blup_options)) {
                 print $Fp_cv1_2 "$_\n";
             }
         close($Fp_cv1_2);
 
         open(my $Fp_cv2_2, ">", $parameter_tempfile_cv2_2) || die "Can't open file ".$parameter_tempfile_cv2_2;
-            foreach ((@param_file_rows_data_cv2, @param_file_rows_1, @param_file_rows_6, @param_file_rows_3, @param_file_rows_7, @param_file_rows_5)) {
+            foreach ((@param_file_rows_data_cv2, @param_file_rows_1, @param_file_rows_6, @param_file_rows_3, @param_file_rows_7, @native_blup_options)) {
                 print $Fp_cv2_2 "$_\n";
             }
         close($Fp_cv2_2);
 
         open(my $Fp_cv3_2, ">", $parameter_tempfile_cv3_2) || die "Can't open file ".$parameter_tempfile_cv3_2;
-            foreach ((@param_file_rows_data_cv3, @param_file_rows_1, @param_file_rows_6, @param_file_rows_3, @param_file_rows_7, @param_file_rows_5)) {
+            foreach ((@param_file_rows_data_cv3, @param_file_rows_1, @param_file_rows_6, @param_file_rows_3, @param_file_rows_7, @native_blup_options)) {
                 print $Fp_cv3_2 "$_\n";
             }
         close($Fp_cv3_2);
 
         open(my $Fp_cv4_2, ">", $parameter_tempfile_cv4_2) || die "Can't open file ".$parameter_tempfile_cv4_2;
-            foreach ((@param_file_rows_data_cv4, @param_file_rows_1, @param_file_rows_6, @param_file_rows_3, @param_file_rows_7, @param_file_rows_5)) {
+            foreach ((@param_file_rows_data_cv4, @param_file_rows_1, @param_file_rows_6, @param_file_rows_3, @param_file_rows_7, @native_blup_options)) {
                 print $Fp_cv4_2 "$_\n";
             }
         close($Fp_cv4_2);
 
         open(my $Fp_cv5_2, ">", $parameter_tempfile_cv5_2) || die "Can't open file ".$parameter_tempfile_cv5_2;
-            foreach ((@param_file_rows_data_cv5, @param_file_rows_1, @param_file_rows_6, @param_file_rows_3, @param_file_rows_7, @param_file_rows_5)) {
+            foreach ((@param_file_rows_data_cv5, @param_file_rows_1, @param_file_rows_6, @param_file_rows_3, @param_file_rows_7, @native_blup_options)) {
                 print $Fp_cv5_2 "$_\n";
             }
         close($Fp_cv5_2);
@@ -15053,10 +15570,12 @@ sub perform_drone_imagery_analytics {
         open(my $fh_yhat_res, '<', $yhat_residual_tempfile) or die "Could not open file '$yhat_residual_tempfile' $!";
             print STDERR "Opened $yhat_residual_tempfile\n";
 
+            my $native_observed=CXGN::DroneImagery::NativeResults::observation_mask($stats_tempfile_2,$parameter_tempfile);
             my $pred_res_counter = 0;
             my $trait_counter = 0;
             while (my $row = <$fh_yhat_res>) {
                 # print STDERR $row;
+                if (!$native_observed->[$pred_res_counter]) {$pred_res_counter++;next;}
                 my @vals = split ' ', $row;
                 my $pred = $vals[0];
                 my $residual = $vals[1];
@@ -15076,6 +15595,8 @@ sub perform_drone_imagery_analytics {
 
                 $pred_res_counter++;
             }
+            return {error=>'Native readback row count differs from its input; no partial results were saved.'}
+                if $pred_res_counter!=@$native_observed;
         close($fh_yhat_res);
 
         $blupf90_solutions_tempfile = $tmp_stats_dir."/solutions";
@@ -15141,7 +15662,7 @@ sub perform_drone_imagery_analytics {
                 my $time = $t_i*5/100;
                 my $time_rescaled = sprintf("%.2f", $time*($time_max - $time_min) + $time_min);
 
-                my $value = CXGN::DroneImagery::LegendrePolynomials::legendre_polynomial_sum($coeffs, $time);
+                my $value = CXGN::DroneImagery::LegendrePolynomials::normalized_legendre_polynomial_sum($coeffs, $time);
 
                 my $time_term_string = '';
                 if ($statistics_select eq 'blupf90_grm_random_regression_gdd_blups' || $statistics_select eq 'airemlf90_grm_random_regression_gdd_blups') {
@@ -15170,7 +15691,7 @@ sub perform_drone_imagery_analytics {
         while ( my ($accession_name, $coeffs) = each %rr_genetic_coefficients_altered_env_3) {
             foreach my $time_term (@sorted_trait_names) {
                 my $time = ($time_term - $time_min)/($time_max - $time_min);
-                my $value = CXGN::DroneImagery::LegendrePolynomials::legendre_polynomial_sum($coeffs, $time);
+                my $value = CXGN::DroneImagery::LegendrePolynomials::normalized_legendre_polynomial_sum($coeffs, $time);
 
                 $result_blup_data_delta_altered_env_3->{$accession_name}->{$time_term} = [$value, $timestamp, $user_name, '', ''];
 
@@ -15196,7 +15717,7 @@ sub perform_drone_imagery_analytics {
                 my $time = $t_i*5/100;
                 my $time_rescaled = sprintf("%.2f", $time*($time_max - $time_min) + $time_min);
 
-                my $value = CXGN::DroneImagery::LegendrePolynomials::legendre_polynomial_sum($coeffs, $time);
+                my $value = CXGN::DroneImagery::LegendrePolynomials::normalized_legendre_polynomial_sum($coeffs, $time);
 
                 my $time_term_string = '';
                 if ($statistics_select eq 'blupf90_grm_random_regression_gdd_blups' || $statistics_select eq 'airemlf90_grm_random_regression_gdd_blups') {
@@ -15225,7 +15746,7 @@ sub perform_drone_imagery_analytics {
         while ( my ($plot_name, $coeffs) = each %rr_temporal_coefficients_altered_env_3) {
             foreach my $time_term (@sorted_trait_names) {
                 my $time = ($time_term - $time_min)/($time_max - $time_min);
-                my $value = CXGN::DroneImagery::LegendrePolynomials::legendre_polynomial_sum($coeffs, $time);
+                my $value = CXGN::DroneImagery::LegendrePolynomials::normalized_legendre_polynomial_sum($coeffs, $time);
 
                 $result_blup_pe_data_delta_altered_env_3->{$plot_name}->{$time_term} = [$value, $timestamp, $user_name, '', ''];
 
@@ -15245,6 +15766,10 @@ sub perform_drone_imagery_analytics {
             my $cmd_f90_cv1 = 'cd '.$tmp_stats_dir.'; echo '.$parameter_tempfile_cv1_basename.' | '.$command_name.' > '.$stats_out_tempfile;
             print STDERR Dumper $cmd_f90_cv1;
             my $status_cv1 = system($cmd_f90_cv1);
+            return {error=>'The native fold process failed; no estimates were read.'} if $status_cv1;
+            my $fold_error_cv1=CXGN::DroneImagery::DesignFactors::native_fit_error(
+                $statistics_select,$parameter_tempfile_cv1,$stats_out_cv1_predict_tempfile,$stats_out_tempfile,$tmp_stats_dir);
+            return {error=>$fold_error_cv1} if $fold_error_cv1;
 
             open(my $fh_log_cv1, '<', $stats_out_tempfile) or die "Could not open file '$stats_out_tempfile' $!";
                 print STDERR "Opened $stats_out_tempfile\n";
@@ -15257,18 +15782,27 @@ sub perform_drone_imagery_analytics {
             open(my $fh_yhat_res_cv1, '<', $yhat_residual_tempfile_cv1) or die "Could not open file '$yhat_residual_tempfile_cv1' $!";
                 print STDERR "Opened $yhat_residual_tempfile_cv1\n";
 
+                my $native_fold_observed_1=CXGN::DroneImagery::NativeResults::observation_mask($stats_out_cv1_predict_tempfile,$parameter_tempfile_cv1);
+                my $native_fold_row_1=0;
                 while (my $row = <$fh_yhat_res_cv1>) {
+                    next if !$native_fold_observed_1->[$native_fold_row_1++];
                     # print STDERR $row;
                     my @vals = split ' ', $row;
                     my $pred = $vals[0];
                     my $residual = $vals[1];
                     $model_sum_square_cv1_altered_env_3 = $model_sum_square_cv1_altered_env_3 + $residual*$residual;
                 }
+                return {error=>'Native fold readback row count differs from its input.'}
+                    if $native_fold_row_1!=@$native_fold_observed_1;
             close($fh_yhat_res_cv1);
 
             my $cmd_f90_cv2 = 'cd '.$tmp_stats_dir.'; echo '.$parameter_tempfile_cv2_basename.' | '.$command_name.' > '.$stats_out_tempfile;
             print STDERR Dumper $cmd_f90_cv2;
             my $status_cv2 = system($cmd_f90_cv2);
+            return {error=>'The native fold process failed; no estimates were read.'} if $status_cv2;
+            my $fold_error_cv2=CXGN::DroneImagery::DesignFactors::native_fit_error(
+                $statistics_select,$parameter_tempfile_cv2,$stats_out_cv2_predict_tempfile,$stats_out_tempfile,$tmp_stats_dir);
+            return {error=>$fold_error_cv2} if $fold_error_cv2;
 
             open(my $fh_log_cv2, '<', $stats_out_tempfile) or die "Could not open file '$stats_out_tempfile' $!";
                 print STDERR "Opened $stats_out_tempfile\n";
@@ -15281,18 +15815,27 @@ sub perform_drone_imagery_analytics {
             open(my $fh_yhat_res_cv2, '<', $yhat_residual_tempfile_cv2) or die "Could not open file '$yhat_residual_tempfile_cv2' $!";
                 print STDERR "Opened $yhat_residual_tempfile_cv2\n";
 
+                my $native_fold_observed_2=CXGN::DroneImagery::NativeResults::observation_mask($stats_out_cv2_predict_tempfile,$parameter_tempfile_cv2);
+                my $native_fold_row_2=0;
                 while (my $row = <$fh_yhat_res_cv2>) {
+                    next if !$native_fold_observed_2->[$native_fold_row_2++];
                     # print STDERR $row;
                     my @vals = split ' ', $row;
                     my $pred = $vals[0];
                     my $residual = $vals[1];
                     $model_sum_square_cv2_altered_env_3 = $model_sum_square_cv2_altered_env_3 + $residual*$residual;
                 }
+                return {error=>'Native fold readback row count differs from its input.'}
+                    if $native_fold_row_2!=@$native_fold_observed_2;
             close($fh_yhat_res_cv2);
 
             my $cmd_f90_cv3 = 'cd '.$tmp_stats_dir.'; echo '.$parameter_tempfile_cv3_basename.' | '.$command_name.' > '.$stats_out_tempfile;
             print STDERR Dumper $cmd_f90_cv3;
             my $status_cv3 = system($cmd_f90_cv3);
+            return {error=>'The native fold process failed; no estimates were read.'} if $status_cv3;
+            my $fold_error_cv3=CXGN::DroneImagery::DesignFactors::native_fit_error(
+                $statistics_select,$parameter_tempfile_cv3,$stats_out_cv3_predict_tempfile,$stats_out_tempfile,$tmp_stats_dir);
+            return {error=>$fold_error_cv3} if $fold_error_cv3;
 
             open(my $fh_log_cv3, '<', $stats_out_tempfile) or die "Could not open file '$stats_out_tempfile' $!";
                 print STDERR "Opened $stats_out_tempfile\n";
@@ -15305,18 +15848,27 @@ sub perform_drone_imagery_analytics {
             open(my $fh_yhat_res_cv3, '<', $yhat_residual_tempfile_cv3) or die "Could not open file '$yhat_residual_tempfile_cv3' $!";
                 print STDERR "Opened $yhat_residual_tempfile_cv3\n";
 
+                my $native_fold_observed_3=CXGN::DroneImagery::NativeResults::observation_mask($stats_out_cv3_predict_tempfile,$parameter_tempfile_cv3);
+                my $native_fold_row_3=0;
                 while (my $row = <$fh_yhat_res_cv3>) {
+                    next if !$native_fold_observed_3->[$native_fold_row_3++];
                     # print STDERR $row;
                     my @vals = split ' ', $row;
                     my $pred = $vals[0];
                     my $residual = $vals[1];
                     $model_sum_square_cv3_altered_env_3 = $model_sum_square_cv3_altered_env_3 + $residual*$residual;
                 }
+                return {error=>'Native fold readback row count differs from its input.'}
+                    if $native_fold_row_3!=@$native_fold_observed_3;
             close($fh_yhat_res_cv3);
 
             my $cmd_f90_cv4 = 'cd '.$tmp_stats_dir.'; echo '.$parameter_tempfile_cv4_basename.' | '.$command_name.' > '.$stats_out_tempfile;
             print STDERR Dumper $cmd_f90_cv4;
             my $status_cv4 = system($cmd_f90_cv4);
+            return {error=>'The native fold process failed; no estimates were read.'} if $status_cv4;
+            my $fold_error_cv4=CXGN::DroneImagery::DesignFactors::native_fit_error(
+                $statistics_select,$parameter_tempfile_cv4,$stats_out_cv4_predict_tempfile,$stats_out_tempfile,$tmp_stats_dir);
+            return {error=>$fold_error_cv4} if $fold_error_cv4;
 
             open(my $fh_log_cv4, '<', $stats_out_tempfile) or die "Could not open file '$stats_out_tempfile' $!";
                 print STDERR "Opened $stats_out_tempfile\n";
@@ -15329,18 +15881,27 @@ sub perform_drone_imagery_analytics {
             open(my $fh_yhat_res_cv4, '<', $yhat_residual_tempfile_cv4) or die "Could not open file '$yhat_residual_tempfile_cv4' $!";
                 print STDERR "Opened $yhat_residual_tempfile_cv4\n";
 
+                my $native_fold_observed_4=CXGN::DroneImagery::NativeResults::observation_mask($stats_out_cv4_predict_tempfile,$parameter_tempfile_cv4);
+                my $native_fold_row_4=0;
                 while (my $row = <$fh_yhat_res_cv4>) {
+                    next if !$native_fold_observed_4->[$native_fold_row_4++];
                     # print STDERR $row;
                     my @vals = split ' ', $row;
                     my $pred = $vals[0];
                     my $residual = $vals[1];
                     $model_sum_square_cv4_altered_env_3 = $model_sum_square_cv4_altered_env_3 + $residual*$residual;
                 }
+                return {error=>'Native fold readback row count differs from its input.'}
+                    if $native_fold_row_4!=@$native_fold_observed_4;
             close($fh_yhat_res_cv4);
 
             my $cmd_f90_cv5 = 'cd '.$tmp_stats_dir.'; echo '.$parameter_tempfile_cv5_basename.' | '.$command_name.' > '.$stats_out_tempfile;
             print STDERR Dumper $cmd_f90_cv5;
             my $status_cv5 = system($cmd_f90_cv5);
+            return {error=>'The native fold process failed; no estimates were read.'} if $status_cv5;
+            my $fold_error_cv5=CXGN::DroneImagery::DesignFactors::native_fit_error(
+                $statistics_select,$parameter_tempfile_cv5,$stats_out_cv5_predict_tempfile,$stats_out_tempfile,$tmp_stats_dir);
+            return {error=>$fold_error_cv5} if $fold_error_cv5;
 
             open(my $fh_log_cv5, '<', $stats_out_tempfile) or die "Could not open file '$stats_out_tempfile' $!";
                 print STDERR "Opened $stats_out_tempfile\n";
@@ -15353,18 +15914,27 @@ sub perform_drone_imagery_analytics {
             open(my $fh_yhat_res_cv5, '<', $yhat_residual_tempfile_cv5) or die "Could not open file '$yhat_residual_tempfile_cv5' $!";
                 print STDERR "Opened $yhat_residual_tempfile_cv5\n";
 
+                my $native_fold_observed_5=CXGN::DroneImagery::NativeResults::observation_mask($stats_out_cv5_predict_tempfile,$parameter_tempfile_cv5);
+                my $native_fold_row_5=0;
                 while (my $row = <$fh_yhat_res_cv5>) {
+                    next if !$native_fold_observed_5->[$native_fold_row_5++];
                     # print STDERR $row;
                     my @vals = split ' ', $row;
                     my $pred = $vals[0];
                     my $residual = $vals[1];
                     $model_sum_square_cv5_altered_env_3 = $model_sum_square_cv5_altered_env_3 + $residual*$residual;
                 }
+                return {error=>'Native fold readback row count differs from its input.'}
+                    if $native_fold_row_5!=@$native_fold_observed_5;
             close($fh_yhat_res_cv5);
 
             my $cmd_f90_cv1_2 = 'cd '.$tmp_stats_dir.'; echo '.$parameter_tempfile_cv1_2_basename.' | blupf90 > '.$stats_out_tempfile;
             print STDERR Dumper $cmd_f90_cv1_2;
             my $status_cv1_2 = system($cmd_f90_cv1_2);
+            return {error=>'The native fold process failed; no estimates were read.'} if $status_cv1_2;
+            my $fold_error_cv1_2=CXGN::DroneImagery::DesignFactors::native_fit_error(
+                $native_blup_selection,$parameter_tempfile_cv1_2,$stats_out_cv1_predict_tempfile,$stats_out_tempfile,$tmp_stats_dir);
+            return {error=>$fold_error_cv1_2} if $fold_error_cv1_2;
 
             open(my $fh_log_cv1_2, '<', $stats_out_tempfile) or die "Could not open file '$stats_out_tempfile' $!";
                 print STDERR "Opened $stats_out_tempfile\n";
@@ -15377,18 +15947,27 @@ sub perform_drone_imagery_analytics {
             open(my $fh_yhat_res_cv1_2, '<', $yhat_residual_tempfile_cv1_2) or die "Could not open file '$yhat_residual_tempfile_cv1_2' $!";
                 print STDERR "Opened $yhat_residual_tempfile_cv1_2\n";
 
+                my $native_fold_observed_1_2=CXGN::DroneImagery::NativeResults::observation_mask($stats_out_cv1_predict_tempfile,$parameter_tempfile_cv1_2);
+                my $native_fold_row_1_2=0;
                 while (my $row = <$fh_yhat_res_cv1_2>) {
+                    next if !$native_fold_observed_1_2->[$native_fold_row_1_2++];
                     # print STDERR $row;
                     my @vals = split ' ', $row;
                     my $pred = $vals[0];
                     my $residual = $vals[1];
                     $model_sum_square_cv1_2_altered_env_3 = $model_sum_square_cv1_2_altered_env_3 + $residual*$residual;
                 }
+                return {error=>'Native fold readback row count differs from its input.'}
+                    if $native_fold_row_1_2!=@$native_fold_observed_1_2;
             close($fh_yhat_res_cv1_2);
 
             my $cmd_f90_cv2_2 = 'cd '.$tmp_stats_dir.'; echo '.$parameter_tempfile_cv2_2_basename.' | blupf90 > '.$stats_out_tempfile;
             print STDERR Dumper $cmd_f90_cv2_2;
             my $status_cv2_2 = system($cmd_f90_cv2_2);
+            return {error=>'The native fold process failed; no estimates were read.'} if $status_cv2_2;
+            my $fold_error_cv2_2=CXGN::DroneImagery::DesignFactors::native_fit_error(
+                $native_blup_selection,$parameter_tempfile_cv2_2,$stats_out_cv2_predict_tempfile,$stats_out_tempfile,$tmp_stats_dir);
+            return {error=>$fold_error_cv2_2} if $fold_error_cv2_2;
 
             open(my $fh_log_cv2_2, '<', $stats_out_tempfile) or die "Could not open file '$stats_out_tempfile' $!";
                 print STDERR "Opened $stats_out_tempfile\n";
@@ -15401,18 +15980,27 @@ sub perform_drone_imagery_analytics {
             open(my $fh_yhat_res_cv2_2, '<', $yhat_residual_tempfile_cv2_2) or die "Could not open file '$yhat_residual_tempfile_cv2_2' $!";
                 print STDERR "Opened $yhat_residual_tempfile_cv2_2\n";
 
+                my $native_fold_observed_2_2=CXGN::DroneImagery::NativeResults::observation_mask($stats_out_cv2_predict_tempfile,$parameter_tempfile_cv2_2);
+                my $native_fold_row_2_2=0;
                 while (my $row = <$fh_yhat_res_cv2_2>) {
+                    next if !$native_fold_observed_2_2->[$native_fold_row_2_2++];
                     # print STDERR $row;
                     my @vals = split ' ', $row;
                     my $pred = $vals[0];
                     my $residual = $vals[1];
                     $model_sum_square_cv2_2_altered_env_3 = $model_sum_square_cv2_2_altered_env_3 + $residual*$residual;
                 }
+                return {error=>'Native fold readback row count differs from its input.'}
+                    if $native_fold_row_2_2!=@$native_fold_observed_2_2;
             close($fh_yhat_res_cv2_2);
 
             my $cmd_f90_cv3_2 = 'cd '.$tmp_stats_dir.'; echo '.$parameter_tempfile_cv3_2_basename.' | blupf90 > '.$stats_out_tempfile;
             print STDERR Dumper $cmd_f90_cv3_2;
             my $status_cv3_2 = system($cmd_f90_cv3_2);
+            return {error=>'The native fold process failed; no estimates were read.'} if $status_cv3_2;
+            my $fold_error_cv3_2=CXGN::DroneImagery::DesignFactors::native_fit_error(
+                $native_blup_selection,$parameter_tempfile_cv3_2,$stats_out_cv3_predict_tempfile,$stats_out_tempfile,$tmp_stats_dir);
+            return {error=>$fold_error_cv3_2} if $fold_error_cv3_2;
 
             open(my $fh_log_cv3_2, '<', $stats_out_tempfile) or die "Could not open file '$stats_out_tempfile' $!";
                 print STDERR "Opened $stats_out_tempfile\n";
@@ -15425,18 +16013,27 @@ sub perform_drone_imagery_analytics {
             open(my $fh_yhat_res_cv3_2, '<', $yhat_residual_tempfile_cv3_2) or die "Could not open file '$yhat_residual_tempfile_cv3_2' $!";
                 print STDERR "Opened $yhat_residual_tempfile_cv3_2\n";
 
+                my $native_fold_observed_3_2=CXGN::DroneImagery::NativeResults::observation_mask($stats_out_cv3_predict_tempfile,$parameter_tempfile_cv3_2);
+                my $native_fold_row_3_2=0;
                 while (my $row = <$fh_yhat_res_cv3_2>) {
+                    next if !$native_fold_observed_3_2->[$native_fold_row_3_2++];
                     # print STDERR $row;
                     my @vals = split ' ', $row;
                     my $pred = $vals[0];
                     my $residual = $vals[1];
                     $model_sum_square_cv3_2_altered_env_3 = $model_sum_square_cv3_2_altered_env_3 + $residual*$residual;
                 }
+                return {error=>'Native fold readback row count differs from its input.'}
+                    if $native_fold_row_3_2!=@$native_fold_observed_3_2;
             close($fh_yhat_res_cv3_2);
 
             my $cmd_f90_cv4_2 = 'cd '.$tmp_stats_dir.'; echo '.$parameter_tempfile_cv4_2_basename.' | blupf90 > '.$stats_out_tempfile;
             print STDERR Dumper $cmd_f90_cv4_2;
             my $status_cv4_2 = system($cmd_f90_cv4_2);
+            return {error=>'The native fold process failed; no estimates were read.'} if $status_cv4_2;
+            my $fold_error_cv4_2=CXGN::DroneImagery::DesignFactors::native_fit_error(
+                $native_blup_selection,$parameter_tempfile_cv4_2,$stats_out_cv4_predict_tempfile,$stats_out_tempfile,$tmp_stats_dir);
+            return {error=>$fold_error_cv4_2} if $fold_error_cv4_2;
 
             open(my $fh_log_cv4_2, '<', $stats_out_tempfile) or die "Could not open file '$stats_out_tempfile' $!";
                 print STDERR "Opened $stats_out_tempfile\n";
@@ -15449,18 +16046,27 @@ sub perform_drone_imagery_analytics {
             open(my $fh_yhat_res_cv4_2, '<', $yhat_residual_tempfile_cv4_2) or die "Could not open file '$yhat_residual_tempfile_cv4_2' $!";
                 print STDERR "Opened $yhat_residual_tempfile_cv4_2\n";
 
+                my $native_fold_observed_4_2=CXGN::DroneImagery::NativeResults::observation_mask($stats_out_cv4_predict_tempfile,$parameter_tempfile_cv4_2);
+                my $native_fold_row_4_2=0;
                 while (my $row = <$fh_yhat_res_cv4_2>) {
+                    next if !$native_fold_observed_4_2->[$native_fold_row_4_2++];
                     # print STDERR $row;
                     my @vals = split ' ', $row;
                     my $pred = $vals[0];
                     my $residual = $vals[1];
                     $model_sum_square_cv4_2_altered_env_3 = $model_sum_square_cv4_2_altered_env_3 + $residual*$residual;
                 }
+                return {error=>'Native fold readback row count differs from its input.'}
+                    if $native_fold_row_4_2!=@$native_fold_observed_4_2;
             close($fh_yhat_res_cv4_2);
 
             my $cmd_f90_cv5_2 = 'cd '.$tmp_stats_dir.'; echo '.$parameter_tempfile_cv5_2_basename.' | blupf90 > '.$stats_out_tempfile;
             print STDERR Dumper $cmd_f90_cv5_2;
             my $status_cv5_2 = system($cmd_f90_cv5_2);
+            return {error=>'The native fold process failed; no estimates were read.'} if $status_cv5_2;
+            my $fold_error_cv5_2=CXGN::DroneImagery::DesignFactors::native_fit_error(
+                $native_blup_selection,$parameter_tempfile_cv5_2,$stats_out_cv5_predict_tempfile,$stats_out_tempfile,$tmp_stats_dir);
+            return {error=>$fold_error_cv5_2} if $fold_error_cv5_2;
 
             open(my $fh_log_cv5_2, '<', $stats_out_tempfile) or die "Could not open file '$stats_out_tempfile' $!";
                 print STDERR "Opened $stats_out_tempfile\n";
@@ -15473,13 +16079,18 @@ sub perform_drone_imagery_analytics {
             open(my $fh_yhat_res_cv5_2, '<', $yhat_residual_tempfile_cv5_2) or die "Could not open file '$yhat_residual_tempfile_cv5_2' $!";
                 print STDERR "Opened $yhat_residual_tempfile_cv5_2\n";
 
+                my $native_fold_observed_5_2=CXGN::DroneImagery::NativeResults::observation_mask($stats_out_cv5_predict_tempfile,$parameter_tempfile_cv5_2);
+                my $native_fold_row_5_2=0;
                 while (my $row = <$fh_yhat_res_cv5_2>) {
+                    next if !$native_fold_observed_5_2->[$native_fold_row_5_2++];
                     # print STDERR $row;
                     my @vals = split ' ', $row;
                     my $pred = $vals[0];
                     my $residual = $vals[1];
                     $model_sum_square_cv5_2_altered_env_3 = $model_sum_square_cv5_2_altered_env_3 + $residual*$residual;
                 }
+                return {error=>'Native fold readback row count differs from its input.'}
+                    if $native_fold_row_5_2!=@$native_fold_observed_5_2;
             close($fh_yhat_res_cv5_2);
         }
     }
@@ -17053,7 +17664,11 @@ sub perform_drone_imagery_analytics {
 
         open(my $F, ">", $stats_tempfile_2) || die "Can't open file ".$stats_tempfile_2;
             foreach (@data_matrix_altered_env_4) {
-                my $line = join ' ', @$_;
+                my @native_row=@$_;
+                my $encoded_value=eval {CXGN::DroneImagery::DesignFactors::native_observation($native_row[-1])};
+                return {error=>"$@"} if $@;
+                $native_row[-1]=$encoded_value;
+                my $line = join ' ', @native_row;
                 print $F "$line\n";
             }
         close($F);
@@ -17977,6 +18592,7 @@ sub perform_drone_imagery_analytics {
 
         print STDERR Dumper $statistics_cmd;
         my $status_r = system($statistics_cmd);
+        return {error=>'Native starting covariance requires sufficient complete paired observations and a positive-definite covariance; no estimates were read.'} if $status_r;
 
         my @pheno_var;
         open(my $fh_r, '<', $stats_out_param_tempfile) or die "Could not open file '$stats_out_param_tempfile' $!";
@@ -18004,9 +18620,17 @@ sub perform_drone_imagery_analytics {
 
         print STDERR Dumper $stats_tempfile_2;
         my $data_cv_cmd = 'R -e "mat <- read.csv(\''.$stats_tempfile_2.'\', header=FALSE, sep=\' \');
-        randomized_positions <- sample(length(mat[,1]));
-        cv_step_size <- length(mat[,1]) %/% 5;
-        cv_step_size_modulo <- length(mat[,1]) %% 5;
+        native_missing <- '.CXGN::DroneImagery::DesignFactors::native_missing_value().';
+        observed_positions <- which(mat[,ncol(mat)] != native_missing);
+        randomized_positions <- sample(observed_positions, length(observed_positions));
+        cv_step_size <- length(randomized_positions) %/% 5;
+        cv_step_size_modulo <- length(randomized_positions) %% 5;
+        fold_positions <- lapply(1:5, function(i) {
+            size <- cv_step_size + if(i == 5) cv_step_size_modulo else 0;
+            if(size == 0) return(integer(0));
+            randomized_positions[(i-1)*cv_step_size + seq_len(size)];
+        });
+        observed_median <- median(mat[observed_positions,ncol(mat)]);
         mat_CV1 <- mat; mat_CV2 <- mat; mat_CV3 <- mat; mat_CV4 <- mat; mat_CV5 <- mat;
         mat_CV1[fold_positions[[1]],ncol(mat)] <- observed_median;
         mat_CV2[fold_positions[[2]],ncol(mat)] <- observed_median;
@@ -18014,22 +18638,22 @@ sub perform_drone_imagery_analytics {
         mat_CV4[fold_positions[[4]],ncol(mat)] <- observed_median;
         mat_CV5[fold_positions[[5]],ncol(mat)] <- observed_median;
         mat_CV1_2 <- mat; mat_CV2_2 <- mat; mat_CV3_2 <- mat; mat_CV4_2 <- mat; mat_CV5_2 <- mat;
-        mat_CV1_2[c(randomized_positions[1:cv_step_size]),ncol(mat)] <- -999;
-        mat_CV2_2[c(randomized_positions[(cv_step_size+1):(2*cv_step_size)]),ncol(mat)] <- -999;
-        mat_CV3_2[c(randomized_positions[((2*cv_step_size)+1):(3*cv_step_size)]),ncol(mat)] <- -999;
-        mat_CV4_2[c(randomized_positions[((3*cv_step_size)+1):(4*cv_step_size)]),ncol(mat)] <- -999;
-        mat_CV5_2[c(randomized_positions[((4*cv_step_size)+1):((5*cv_step_size)+cv_step_size_modulo)]),ncol(mat)] <- -999;
-        write.table(mat, file=\''.$stats_tempfile_2.'\', row.names=FALSE, col.names=FALSE, sep=\' \');
-        write.table(mat_CV1, file=\''.$stats_out_cv1_predict_tempfile.'\', row.names=FALSE, col.names=FALSE, sep=\' \');
-        write.table(mat_CV2, file=\''.$stats_out_cv2_predict_tempfile.'\', row.names=FALSE, col.names=FALSE, sep=\' \');
-        write.table(mat_CV3, file=\''.$stats_out_cv3_predict_tempfile.'\', row.names=FALSE, col.names=FALSE, sep=\' \');
-        write.table(mat_CV4, file=\''.$stats_out_cv4_predict_tempfile.'\', row.names=FALSE, col.names=FALSE, sep=\' \');
-        write.table(mat_CV5, file=\''.$stats_out_cv5_predict_tempfile.'\', row.names=FALSE, col.names=FALSE, sep=\' \');
-        write.table(mat_CV1_2, file=\''.$stats_out_cv1_2_predict_tempfile.'\', row.names=FALSE, col.names=FALSE, sep=\' \');
-        write.table(mat_CV2_2, file=\''.$stats_out_cv2_2_predict_tempfile.'\', row.names=FALSE, col.names=FALSE, sep=\' \');
-        write.table(mat_CV3_2, file=\''.$stats_out_cv3_2_predict_tempfile.'\', row.names=FALSE, col.names=FALSE, sep=\' \');
-        write.table(mat_CV4_2, file=\''.$stats_out_cv4_2_predict_tempfile.'\', row.names=FALSE, col.names=FALSE, sep=\' \');
-        write.table(mat_CV5_2, file=\''.$stats_out_cv5_2_predict_tempfile.'\', row.names=FALSE, col.names=FALSE, sep=\' \');
+        mat_CV1_2[fold_positions[[1]],ncol(mat)] <- native_missing;
+        mat_CV2_2[fold_positions[[2]],ncol(mat)] <- native_missing;
+        mat_CV3_2[fold_positions[[3]],ncol(mat)] <- native_missing;
+        mat_CV4_2[fold_positions[[4]],ncol(mat)] <- native_missing;
+        mat_CV5_2[fold_positions[[5]],ncol(mat)] <- native_missing;
+        write.table(mat, file=\''.$stats_tempfile_2.'\', row.names=FALSE, col.names=FALSE, qmethod=\'double\', sep=\' \');
+        write.table(mat_CV1, file=\''.$stats_out_cv1_predict_tempfile.'\', row.names=FALSE, col.names=FALSE, qmethod=\'double\', sep=\' \');
+        write.table(mat_CV2, file=\''.$stats_out_cv2_predict_tempfile.'\', row.names=FALSE, col.names=FALSE, qmethod=\'double\', sep=\' \');
+        write.table(mat_CV3, file=\''.$stats_out_cv3_predict_tempfile.'\', row.names=FALSE, col.names=FALSE, qmethod=\'double\', sep=\' \');
+        write.table(mat_CV4, file=\''.$stats_out_cv4_predict_tempfile.'\', row.names=FALSE, col.names=FALSE, qmethod=\'double\', sep=\' \');
+        write.table(mat_CV5, file=\''.$stats_out_cv5_predict_tempfile.'\', row.names=FALSE, col.names=FALSE, qmethod=\'double\', sep=\' \');
+        write.table(mat_CV1_2, file=\''.$stats_out_cv1_2_predict_tempfile.'\', row.names=FALSE, col.names=FALSE, qmethod=\'double\', sep=\' \');
+        write.table(mat_CV2_2, file=\''.$stats_out_cv2_2_predict_tempfile.'\', row.names=FALSE, col.names=FALSE, qmethod=\'double\', sep=\' \');
+        write.table(mat_CV3_2, file=\''.$stats_out_cv3_2_predict_tempfile.'\', row.names=FALSE, col.names=FALSE, qmethod=\'double\', sep=\' \');
+        write.table(mat_CV4_2, file=\''.$stats_out_cv4_2_predict_tempfile.'\', row.names=FALSE, col.names=FALSE, qmethod=\'double\', sep=\' \');
+        write.table(mat_CV5_2, file=\''.$stats_out_cv5_2_predict_tempfile.'\', row.names=FALSE, col.names=FALSE, qmethod=\'double\', sep=\' \');
         "';
         my $status_cv_files = system($data_cv_cmd);
 
@@ -18118,6 +18742,11 @@ sub perform_drone_imagery_analytics {
 
         print STDERR Dumper $cmd_f90;
         my $status = system($cmd_f90);
+        return {error=>'The native statistics process failed; no estimates were read.'} if $status;
+        my $fit_error=CXGN::DroneImagery::DesignFactors::native_fit_error(
+            $statistics_select,$parameter_tempfile,$stats_tempfile_2,$stats_out_tempfile,$tmp_stats_dir);
+        return {error=>$fit_error} if $fit_error;
+
 
         my @log_output_rows;
         open(my $fh_log, '<', $stats_out_tempfile) or die "Could not open file '$stats_out_tempfile' $!";
@@ -18128,23 +18757,23 @@ sub perform_drone_imagery_analytics {
             }
         close($fh_log);
 
-        my $log_output = join '', @log_output_rows;
-        my ($gen_var_string) = $log_output =~ /Genetic variance\(s\) for effect  2(.*?)correlations/gs;
-        @rr_coeff_genetic_covariance_altered_env_4 = split ' ', $gen_var_string;
-        print STDERR Dumper \@rr_coeff_genetic_covariance_altered_env_4;
-        my ($env_var_string) = $log_output =~ /Genetic variance\(s\) for effect  $legendre_order_number_env_var_pos(.*?)correlations/gs;
-        @rr_coeff_env_covariance_altered_env_4 = split ' ', $env_var_string;
-        print STDERR Dumper \@rr_coeff_env_covariance_altered_env_4;
-        my (@gen_cor_string) = $log_output =~ /correlations(.*?)eigenvectors/gs;
-        @rr_coeff_genetic_correlation_altered_env_4 = split ' ', $gen_cor_string[0];
-        print STDERR Dumper \@rr_coeff_genetic_correlation_altered_env_4;
-        @rr_coeff_env_correlation_altered_env_4 = split ' ', $gen_cor_string[1];
-        print STDERR Dumper \@rr_coeff_env_correlation_altered_env_4;
-        my ($res_se_string) = $log_output =~ /SE for R(.*?)\* FINISHED \(AIREMLF90\)/gs;
-        print STDERR Dumper $res_se_string;
-        # $rr_residual_variance_altered_env_4 = ($res_se_string**2)*$number_plots;
-        $rr_residual_variance_altered_env_4 = $res_se_string;
-        print STDERR Dumper $rr_residual_variance_altered_env_4;
+        my $native_summary=eval {CXGN::DroneImagery::NativeResults::summarize(
+            parameter_file=>$parameter_tempfile,data_file=>$stats_tempfile_2,
+            log_file=>$stats_out_tempfile,cwd=>$tmp_stats_dir,
+            backend=>($statistics_select =~ /^blupf90_/ ? 'blupf90':'airemlf90'),
+            time_scale=>($statistics_select =~ /_gdd_/ ? 'GDD':'DAP'),
+            kernel_origin=>($native_variance_options->{kernel_origin} // ($protocol_id ? 'unknown':'genotypic_identity')),
+            unit_metadata=>\%native_unit_metadata,
+        )};
+        return {error=>"$@"} if $@;
+        $native_variance_summaries{env_random}=$native_summary;
+        @rr_coeff_genetic_covariance_altered_env_4=@{$native_summary->{genetic_covariance}};
+        @rr_coeff_env_covariance_altered_env_4=@{$native_summary->{env_covariance}};
+        @rr_coeff_genetic_correlation_altered_env_4=@{$native_summary->{genetic_correlation}};
+        @rr_coeff_env_correlation_altered_env_4=@{$native_summary->{env_correlation}};
+        # A heterogeneous residual is a time function. The old scalar slot
+        # remains undefined; printed native SE is retained only in metadata.
+        $rr_residual_variance_altered_env_4=undef;
 
         @param_file_rows_6 = (
             '(CO)VARIANCES'
@@ -18175,31 +18804,31 @@ sub perform_drone_imagery_analytics {
         }
 
         open(my $Fp_cv1_2, ">", $parameter_tempfile_cv1_2) || die "Can't open file ".$parameter_tempfile_cv1_2;
-            foreach ((@param_file_rows_data_cv1, @param_file_rows_1, @param_file_rows_6, @param_file_rows_3, @param_file_rows_7, @param_file_rows_5)) {
+            foreach ((@param_file_rows_data_cv1, @param_file_rows_1, @param_file_rows_6, @param_file_rows_3, @param_file_rows_7, @native_blup_options)) {
                 print $Fp_cv1_2 "$_\n";
             }
         close($Fp_cv1_2);
 
         open(my $Fp_cv2_2, ">", $parameter_tempfile_cv2_2) || die "Can't open file ".$parameter_tempfile_cv2_2;
-            foreach ((@param_file_rows_data_cv2, @param_file_rows_1, @param_file_rows_6, @param_file_rows_3, @param_file_rows_7, @param_file_rows_5)) {
+            foreach ((@param_file_rows_data_cv2, @param_file_rows_1, @param_file_rows_6, @param_file_rows_3, @param_file_rows_7, @native_blup_options)) {
                 print $Fp_cv2_2 "$_\n";
             }
         close($Fp_cv2_2);
 
         open(my $Fp_cv3_2, ">", $parameter_tempfile_cv3_2) || die "Can't open file ".$parameter_tempfile_cv3_2;
-            foreach ((@param_file_rows_data_cv3, @param_file_rows_1, @param_file_rows_6, @param_file_rows_3, @param_file_rows_7, @param_file_rows_5)) {
+            foreach ((@param_file_rows_data_cv3, @param_file_rows_1, @param_file_rows_6, @param_file_rows_3, @param_file_rows_7, @native_blup_options)) {
                 print $Fp_cv3_2 "$_\n";
             }
         close($Fp_cv3_2);
 
         open(my $Fp_cv4_2, ">", $parameter_tempfile_cv4_2) || die "Can't open file ".$parameter_tempfile_cv4_2;
-            foreach ((@param_file_rows_data_cv4, @param_file_rows_1, @param_file_rows_6, @param_file_rows_3, @param_file_rows_7, @param_file_rows_5)) {
+            foreach ((@param_file_rows_data_cv4, @param_file_rows_1, @param_file_rows_6, @param_file_rows_3, @param_file_rows_7, @native_blup_options)) {
                 print $Fp_cv4_2 "$_\n";
             }
         close($Fp_cv4_2);
 
         open(my $Fp_cv5_2, ">", $parameter_tempfile_cv5_2) || die "Can't open file ".$parameter_tempfile_cv5_2;
-            foreach ((@param_file_rows_data_cv5, @param_file_rows_1, @param_file_rows_6, @param_file_rows_3, @param_file_rows_7, @param_file_rows_5)) {
+            foreach ((@param_file_rows_data_cv5, @param_file_rows_1, @param_file_rows_6, @param_file_rows_3, @param_file_rows_7, @native_blup_options)) {
                 print $Fp_cv5_2 "$_\n";
             }
         close($Fp_cv5_2);
@@ -18211,10 +18840,12 @@ sub perform_drone_imagery_analytics {
         open(my $fh_yhat_res, '<', $yhat_residual_tempfile) or die "Could not open file '$yhat_residual_tempfile' $!";
             print STDERR "Opened $yhat_residual_tempfile\n";
 
+            my $native_observed=CXGN::DroneImagery::NativeResults::observation_mask($stats_tempfile_2,$parameter_tempfile);
             my $pred_res_counter = 0;
             my $trait_counter = 0;
             while (my $row = <$fh_yhat_res>) {
                 # print STDERR $row;
+                if (!$native_observed->[$pred_res_counter]) {$pred_res_counter++;next;}
                 my @vals = split ' ', $row;
                 my $pred = $vals[0];
                 my $residual = $vals[1];
@@ -18234,6 +18865,8 @@ sub perform_drone_imagery_analytics {
 
                 $pred_res_counter++;
             }
+            return {error=>'Native readback row count differs from its input; no partial results were saved.'}
+                if $pred_res_counter!=@$native_observed;
         close($fh_yhat_res);
 
         $blupf90_solutions_tempfile = $tmp_stats_dir."/solutions";
@@ -18299,7 +18932,7 @@ sub perform_drone_imagery_analytics {
                 my $time = $t_i*5/100;
                 my $time_rescaled = sprintf("%.2f", $time*($time_max - $time_min) + $time_min);
 
-                my $value = CXGN::DroneImagery::LegendrePolynomials::legendre_polynomial_sum($coeffs, $time);
+                my $value = CXGN::DroneImagery::LegendrePolynomials::normalized_legendre_polynomial_sum($coeffs, $time);
 
                 my $time_term_string = '';
                 if ($statistics_select eq 'blupf90_grm_random_regression_gdd_blups' || $statistics_select eq 'airemlf90_grm_random_regression_gdd_blups') {
@@ -18328,7 +18961,7 @@ sub perform_drone_imagery_analytics {
         while ( my ($accession_name, $coeffs) = each %rr_genetic_coefficients_altered_env_4) {
             foreach my $time_term (@sorted_trait_names) {
                 my $time = ($time_term - $time_min)/($time_max - $time_min);
-                my $value = CXGN::DroneImagery::LegendrePolynomials::legendre_polynomial_sum($coeffs, $time);
+                my $value = CXGN::DroneImagery::LegendrePolynomials::normalized_legendre_polynomial_sum($coeffs, $time);
 
                 $result_blup_data_delta_altered_env_4->{$accession_name}->{$time_term} = [$value, $timestamp, $user_name, '', ''];
 
@@ -18354,7 +18987,7 @@ sub perform_drone_imagery_analytics {
                 my $time = $t_i*5/100;
                 my $time_rescaled = sprintf("%.2f", $time*($time_max - $time_min) + $time_min);
 
-                my $value = CXGN::DroneImagery::LegendrePolynomials::legendre_polynomial_sum($coeffs, $time);
+                my $value = CXGN::DroneImagery::LegendrePolynomials::normalized_legendre_polynomial_sum($coeffs, $time);
 
                 my $time_term_string = '';
                 if ($statistics_select eq 'blupf90_grm_random_regression_gdd_blups' || $statistics_select eq 'airemlf90_grm_random_regression_gdd_blups') {
@@ -18383,7 +19016,7 @@ sub perform_drone_imagery_analytics {
         while ( my ($plot_name, $coeffs) = each %rr_temporal_coefficients_altered_env_4) {
             foreach my $time_term (@sorted_trait_names) {
                 my $time = ($time_term - $time_min)/($time_max - $time_min);
-                my $value = CXGN::DroneImagery::LegendrePolynomials::legendre_polynomial_sum($coeffs, $time);
+                my $value = CXGN::DroneImagery::LegendrePolynomials::normalized_legendre_polynomial_sum($coeffs, $time);
 
                 $result_blup_pe_data_delta_altered_env_4->{$plot_name}->{$time_term} = [$value, $timestamp, $user_name, '', ''];
 
@@ -18403,6 +19036,10 @@ sub perform_drone_imagery_analytics {
             my $cmd_f90_cv1 = 'cd '.$tmp_stats_dir.'; echo '.$parameter_tempfile_cv1_basename.' | '.$command_name.' > '.$stats_out_tempfile;
             print STDERR Dumper $cmd_f90_cv1;
             my $status_cv1 = system($cmd_f90_cv1);
+            return {error=>'The native fold process failed; no estimates were read.'} if $status_cv1;
+            my $fold_error_cv1=CXGN::DroneImagery::DesignFactors::native_fit_error(
+                $statistics_select,$parameter_tempfile_cv1,$stats_out_cv1_predict_tempfile,$stats_out_tempfile,$tmp_stats_dir);
+            return {error=>$fold_error_cv1} if $fold_error_cv1;
 
             open(my $fh_log_cv1, '<', $stats_out_tempfile) or die "Could not open file '$stats_out_tempfile' $!";
                 print STDERR "Opened $stats_out_tempfile\n";
@@ -18415,18 +19052,27 @@ sub perform_drone_imagery_analytics {
             open(my $fh_yhat_res_cv1, '<', $yhat_residual_tempfile_cv1) or die "Could not open file '$yhat_residual_tempfile_cv1' $!";
                 print STDERR "Opened $yhat_residual_tempfile_cv1\n";
 
+                my $native_fold_observed_1=CXGN::DroneImagery::NativeResults::observation_mask($stats_out_cv1_predict_tempfile,$parameter_tempfile_cv1);
+                my $native_fold_row_1=0;
                 while (my $row = <$fh_yhat_res_cv1>) {
+                    next if !$native_fold_observed_1->[$native_fold_row_1++];
                     # print STDERR $row;
                     my @vals = split ' ', $row;
                     my $pred = $vals[0];
                     my $residual = $vals[1];
                     $model_sum_square_cv1_altered_env_4 = $model_sum_square_cv1_altered_env_4 + $residual*$residual;
                 }
+                return {error=>'Native fold readback row count differs from its input.'}
+                    if $native_fold_row_1!=@$native_fold_observed_1;
             close($fh_yhat_res_cv1);
 
             my $cmd_f90_cv2 = 'cd '.$tmp_stats_dir.'; echo '.$parameter_tempfile_cv2_basename.' | '.$command_name.' > '.$stats_out_tempfile;
             print STDERR Dumper $cmd_f90_cv2;
             my $status_cv2 = system($cmd_f90_cv2);
+            return {error=>'The native fold process failed; no estimates were read.'} if $status_cv2;
+            my $fold_error_cv2=CXGN::DroneImagery::DesignFactors::native_fit_error(
+                $statistics_select,$parameter_tempfile_cv2,$stats_out_cv2_predict_tempfile,$stats_out_tempfile,$tmp_stats_dir);
+            return {error=>$fold_error_cv2} if $fold_error_cv2;
 
             open(my $fh_log_cv2, '<', $stats_out_tempfile) or die "Could not open file '$stats_out_tempfile' $!";
                 print STDERR "Opened $stats_out_tempfile\n";
@@ -18439,18 +19085,27 @@ sub perform_drone_imagery_analytics {
             open(my $fh_yhat_res_cv2, '<', $yhat_residual_tempfile_cv2) or die "Could not open file '$yhat_residual_tempfile_cv2' $!";
                 print STDERR "Opened $yhat_residual_tempfile_cv2\n";
 
+                my $native_fold_observed_2=CXGN::DroneImagery::NativeResults::observation_mask($stats_out_cv2_predict_tempfile,$parameter_tempfile_cv2);
+                my $native_fold_row_2=0;
                 while (my $row = <$fh_yhat_res_cv2>) {
+                    next if !$native_fold_observed_2->[$native_fold_row_2++];
                     # print STDERR $row;
                     my @vals = split ' ', $row;
                     my $pred = $vals[0];
                     my $residual = $vals[1];
                     $model_sum_square_cv2_altered_env_4 = $model_sum_square_cv2_altered_env_4 + $residual*$residual;
                 }
+                return {error=>'Native fold readback row count differs from its input.'}
+                    if $native_fold_row_2!=@$native_fold_observed_2;
             close($fh_yhat_res_cv2);
 
             my $cmd_f90_cv3 = 'cd '.$tmp_stats_dir.'; echo '.$parameter_tempfile_cv3_basename.' | '.$command_name.' > '.$stats_out_tempfile;
             print STDERR Dumper $cmd_f90_cv3;
             my $status_cv3 = system($cmd_f90_cv3);
+            return {error=>'The native fold process failed; no estimates were read.'} if $status_cv3;
+            my $fold_error_cv3=CXGN::DroneImagery::DesignFactors::native_fit_error(
+                $statistics_select,$parameter_tempfile_cv3,$stats_out_cv3_predict_tempfile,$stats_out_tempfile,$tmp_stats_dir);
+            return {error=>$fold_error_cv3} if $fold_error_cv3;
 
             open(my $fh_log_cv3, '<', $stats_out_tempfile) or die "Could not open file '$stats_out_tempfile' $!";
                 print STDERR "Opened $stats_out_tempfile\n";
@@ -18463,18 +19118,27 @@ sub perform_drone_imagery_analytics {
             open(my $fh_yhat_res_cv3, '<', $yhat_residual_tempfile_cv3) or die "Could not open file '$yhat_residual_tempfile_cv3' $!";
                 print STDERR "Opened $yhat_residual_tempfile_cv3\n";
 
+                my $native_fold_observed_3=CXGN::DroneImagery::NativeResults::observation_mask($stats_out_cv3_predict_tempfile,$parameter_tempfile_cv3);
+                my $native_fold_row_3=0;
                 while (my $row = <$fh_yhat_res_cv3>) {
+                    next if !$native_fold_observed_3->[$native_fold_row_3++];
                     # print STDERR $row;
                     my @vals = split ' ', $row;
                     my $pred = $vals[0];
                     my $residual = $vals[1];
                     $model_sum_square_cv3_altered_env_4 = $model_sum_square_cv3_altered_env_4 + $residual*$residual;
                 }
+                return {error=>'Native fold readback row count differs from its input.'}
+                    if $native_fold_row_3!=@$native_fold_observed_3;
             close($fh_yhat_res_cv3);
 
             my $cmd_f90_cv4 = 'cd '.$tmp_stats_dir.'; echo '.$parameter_tempfile_cv4_basename.' | '.$command_name.' > '.$stats_out_tempfile;
             print STDERR Dumper $cmd_f90_cv4;
             my $status_cv4 = system($cmd_f90_cv4);
+            return {error=>'The native fold process failed; no estimates were read.'} if $status_cv4;
+            my $fold_error_cv4=CXGN::DroneImagery::DesignFactors::native_fit_error(
+                $statistics_select,$parameter_tempfile_cv4,$stats_out_cv4_predict_tempfile,$stats_out_tempfile,$tmp_stats_dir);
+            return {error=>$fold_error_cv4} if $fold_error_cv4;
 
             open(my $fh_log_cv4, '<', $stats_out_tempfile) or die "Could not open file '$stats_out_tempfile' $!";
                 print STDERR "Opened $stats_out_tempfile\n";
@@ -18487,18 +19151,27 @@ sub perform_drone_imagery_analytics {
             open(my $fh_yhat_res_cv4, '<', $yhat_residual_tempfile_cv4) or die "Could not open file '$yhat_residual_tempfile_cv4' $!";
                 print STDERR "Opened $yhat_residual_tempfile_cv4\n";
 
+                my $native_fold_observed_4=CXGN::DroneImagery::NativeResults::observation_mask($stats_out_cv4_predict_tempfile,$parameter_tempfile_cv4);
+                my $native_fold_row_4=0;
                 while (my $row = <$fh_yhat_res_cv4>) {
+                    next if !$native_fold_observed_4->[$native_fold_row_4++];
                     # print STDERR $row;
                     my @vals = split ' ', $row;
                     my $pred = $vals[0];
                     my $residual = $vals[1];
                     $model_sum_square_cv4_altered_env_4 = $model_sum_square_cv4_altered_env_4 + $residual*$residual;
                 }
+                return {error=>'Native fold readback row count differs from its input.'}
+                    if $native_fold_row_4!=@$native_fold_observed_4;
             close($fh_yhat_res_cv4);
 
             my $cmd_f90_cv5 = 'cd '.$tmp_stats_dir.'; echo '.$parameter_tempfile_cv5_basename.' | '.$command_name.' > '.$stats_out_tempfile;
             print STDERR Dumper $cmd_f90_cv5;
             my $status_cv5 = system($cmd_f90_cv5);
+            return {error=>'The native fold process failed; no estimates were read.'} if $status_cv5;
+            my $fold_error_cv5=CXGN::DroneImagery::DesignFactors::native_fit_error(
+                $statistics_select,$parameter_tempfile_cv5,$stats_out_cv5_predict_tempfile,$stats_out_tempfile,$tmp_stats_dir);
+            return {error=>$fold_error_cv5} if $fold_error_cv5;
 
             open(my $fh_log_cv5, '<', $stats_out_tempfile) or die "Could not open file '$stats_out_tempfile' $!";
                 print STDERR "Opened $stats_out_tempfile\n";
@@ -18511,18 +19184,27 @@ sub perform_drone_imagery_analytics {
             open(my $fh_yhat_res_cv5, '<', $yhat_residual_tempfile_cv5) or die "Could not open file '$yhat_residual_tempfile_cv5' $!";
                 print STDERR "Opened $yhat_residual_tempfile_cv5\n";
 
+                my $native_fold_observed_5=CXGN::DroneImagery::NativeResults::observation_mask($stats_out_cv5_predict_tempfile,$parameter_tempfile_cv5);
+                my $native_fold_row_5=0;
                 while (my $row = <$fh_yhat_res_cv5>) {
+                    next if !$native_fold_observed_5->[$native_fold_row_5++];
                     # print STDERR $row;
                     my @vals = split ' ', $row;
                     my $pred = $vals[0];
                     my $residual = $vals[1];
                     $model_sum_square_cv5_altered_env_4 = $model_sum_square_cv5_altered_env_4 + $residual*$residual;
                 }
+                return {error=>'Native fold readback row count differs from its input.'}
+                    if $native_fold_row_5!=@$native_fold_observed_5;
             close($fh_yhat_res_cv5);
 
             my $cmd_f90_cv1_2 = 'cd '.$tmp_stats_dir.'; echo '.$parameter_tempfile_cv1_2_basename.' | blupf90 > '.$stats_out_tempfile;
             print STDERR Dumper $cmd_f90_cv1_2;
             my $status_cv1_2 = system($cmd_f90_cv1_2);
+            return {error=>'The native fold process failed; no estimates were read.'} if $status_cv1_2;
+            my $fold_error_cv1_2=CXGN::DroneImagery::DesignFactors::native_fit_error(
+                $native_blup_selection,$parameter_tempfile_cv1_2,$stats_out_cv1_predict_tempfile,$stats_out_tempfile,$tmp_stats_dir);
+            return {error=>$fold_error_cv1_2} if $fold_error_cv1_2;
 
             open(my $fh_log_cv1_2, '<', $stats_out_tempfile) or die "Could not open file '$stats_out_tempfile' $!";
                 print STDERR "Opened $stats_out_tempfile\n";
@@ -18535,18 +19217,27 @@ sub perform_drone_imagery_analytics {
             open(my $fh_yhat_res_cv1_2, '<', $yhat_residual_tempfile_cv1_2) or die "Could not open file '$yhat_residual_tempfile_cv1_2' $!";
                 print STDERR "Opened $yhat_residual_tempfile_cv1_2\n";
 
+                my $native_fold_observed_1_2=CXGN::DroneImagery::NativeResults::observation_mask($stats_out_cv1_predict_tempfile,$parameter_tempfile_cv1_2);
+                my $native_fold_row_1_2=0;
                 while (my $row = <$fh_yhat_res_cv1_2>) {
+                    next if !$native_fold_observed_1_2->[$native_fold_row_1_2++];
                     # print STDERR $row;
                     my @vals = split ' ', $row;
                     my $pred = $vals[0];
                     my $residual = $vals[1];
                     $model_sum_square_cv1_2_altered_env_4 = $model_sum_square_cv1_2_altered_env_4 + $residual*$residual;
                 }
+                return {error=>'Native fold readback row count differs from its input.'}
+                    if $native_fold_row_1_2!=@$native_fold_observed_1_2;
             close($fh_yhat_res_cv1_2);
 
             my $cmd_f90_cv2_2 = 'cd '.$tmp_stats_dir.'; echo '.$parameter_tempfile_cv2_2_basename.' | blupf90 > '.$stats_out_tempfile;
             print STDERR Dumper $cmd_f90_cv2_2;
             my $status_cv2_2 = system($cmd_f90_cv2_2);
+            return {error=>'The native fold process failed; no estimates were read.'} if $status_cv2_2;
+            my $fold_error_cv2_2=CXGN::DroneImagery::DesignFactors::native_fit_error(
+                $native_blup_selection,$parameter_tempfile_cv2_2,$stats_out_cv2_predict_tempfile,$stats_out_tempfile,$tmp_stats_dir);
+            return {error=>$fold_error_cv2_2} if $fold_error_cv2_2;
 
             open(my $fh_log_cv2_2, '<', $stats_out_tempfile) or die "Could not open file '$stats_out_tempfile' $!";
                 print STDERR "Opened $stats_out_tempfile\n";
@@ -18559,18 +19250,27 @@ sub perform_drone_imagery_analytics {
             open(my $fh_yhat_res_cv2_2, '<', $yhat_residual_tempfile_cv2_2) or die "Could not open file '$yhat_residual_tempfile_cv2_2' $!";
                 print STDERR "Opened $yhat_residual_tempfile_cv2_2\n";
 
+                my $native_fold_observed_2_2=CXGN::DroneImagery::NativeResults::observation_mask($stats_out_cv2_predict_tempfile,$parameter_tempfile_cv2_2);
+                my $native_fold_row_2_2=0;
                 while (my $row = <$fh_yhat_res_cv2_2>) {
+                    next if !$native_fold_observed_2_2->[$native_fold_row_2_2++];
                     # print STDERR $row;
                     my @vals = split ' ', $row;
                     my $pred = $vals[0];
                     my $residual = $vals[1];
                     $model_sum_square_cv2_2_altered_env_4 = $model_sum_square_cv2_2_altered_env_4 + $residual*$residual;
                 }
+                return {error=>'Native fold readback row count differs from its input.'}
+                    if $native_fold_row_2_2!=@$native_fold_observed_2_2;
             close($fh_yhat_res_cv2_2);
 
             my $cmd_f90_cv3_2 = 'cd '.$tmp_stats_dir.'; echo '.$parameter_tempfile_cv3_2_basename.' | blupf90 > '.$stats_out_tempfile;
             print STDERR Dumper $cmd_f90_cv3_2;
             my $status_cv3_2 = system($cmd_f90_cv3_2);
+            return {error=>'The native fold process failed; no estimates were read.'} if $status_cv3_2;
+            my $fold_error_cv3_2=CXGN::DroneImagery::DesignFactors::native_fit_error(
+                $native_blup_selection,$parameter_tempfile_cv3_2,$stats_out_cv3_predict_tempfile,$stats_out_tempfile,$tmp_stats_dir);
+            return {error=>$fold_error_cv3_2} if $fold_error_cv3_2;
 
             open(my $fh_log_cv3_2, '<', $stats_out_tempfile) or die "Could not open file '$stats_out_tempfile' $!";
                 print STDERR "Opened $stats_out_tempfile\n";
@@ -18583,18 +19283,27 @@ sub perform_drone_imagery_analytics {
             open(my $fh_yhat_res_cv3_2, '<', $yhat_residual_tempfile_cv3_2) or die "Could not open file '$yhat_residual_tempfile_cv3_2' $!";
                 print STDERR "Opened $yhat_residual_tempfile_cv3_2\n";
 
+                my $native_fold_observed_3_2=CXGN::DroneImagery::NativeResults::observation_mask($stats_out_cv3_predict_tempfile,$parameter_tempfile_cv3_2);
+                my $native_fold_row_3_2=0;
                 while (my $row = <$fh_yhat_res_cv3_2>) {
+                    next if !$native_fold_observed_3_2->[$native_fold_row_3_2++];
                     # print STDERR $row;
                     my @vals = split ' ', $row;
                     my $pred = $vals[0];
                     my $residual = $vals[1];
                     $model_sum_square_cv3_2_altered_env_4 = $model_sum_square_cv3_2_altered_env_4 + $residual*$residual;
                 }
+                return {error=>'Native fold readback row count differs from its input.'}
+                    if $native_fold_row_3_2!=@$native_fold_observed_3_2;
             close($fh_yhat_res_cv3_2);
 
             my $cmd_f90_cv4_2 = 'cd '.$tmp_stats_dir.'; echo '.$parameter_tempfile_cv4_2_basename.' | blupf90 > '.$stats_out_tempfile;
             print STDERR Dumper $cmd_f90_cv4_2;
             my $status_cv4_2 = system($cmd_f90_cv4_2);
+            return {error=>'The native fold process failed; no estimates were read.'} if $status_cv4_2;
+            my $fold_error_cv4_2=CXGN::DroneImagery::DesignFactors::native_fit_error(
+                $native_blup_selection,$parameter_tempfile_cv4_2,$stats_out_cv4_predict_tempfile,$stats_out_tempfile,$tmp_stats_dir);
+            return {error=>$fold_error_cv4_2} if $fold_error_cv4_2;
 
             open(my $fh_log_cv4_2, '<', $stats_out_tempfile) or die "Could not open file '$stats_out_tempfile' $!";
                 print STDERR "Opened $stats_out_tempfile\n";
@@ -18607,18 +19316,27 @@ sub perform_drone_imagery_analytics {
             open(my $fh_yhat_res_cv4_2, '<', $yhat_residual_tempfile_cv4_2) or die "Could not open file '$yhat_residual_tempfile_cv4_2' $!";
                 print STDERR "Opened $yhat_residual_tempfile_cv4_2\n";
 
+                my $native_fold_observed_4_2=CXGN::DroneImagery::NativeResults::observation_mask($stats_out_cv4_predict_tempfile,$parameter_tempfile_cv4_2);
+                my $native_fold_row_4_2=0;
                 while (my $row = <$fh_yhat_res_cv4_2>) {
+                    next if !$native_fold_observed_4_2->[$native_fold_row_4_2++];
                     # print STDERR $row;
                     my @vals = split ' ', $row;
                     my $pred = $vals[0];
                     my $residual = $vals[1];
                     $model_sum_square_cv4_2_altered_env_4 = $model_sum_square_cv4_2_altered_env_4 + $residual*$residual;
                 }
+                return {error=>'Native fold readback row count differs from its input.'}
+                    if $native_fold_row_4_2!=@$native_fold_observed_4_2;
             close($fh_yhat_res_cv4_2);
 
             my $cmd_f90_cv5_2 = 'cd '.$tmp_stats_dir.'; echo '.$parameter_tempfile_cv5_2_basename.' | blupf90 > '.$stats_out_tempfile;
             print STDERR Dumper $cmd_f90_cv5_2;
             my $status_cv5_2 = system($cmd_f90_cv5_2);
+            return {error=>'The native fold process failed; no estimates were read.'} if $status_cv5_2;
+            my $fold_error_cv5_2=CXGN::DroneImagery::DesignFactors::native_fit_error(
+                $native_blup_selection,$parameter_tempfile_cv5_2,$stats_out_cv5_predict_tempfile,$stats_out_tempfile,$tmp_stats_dir);
+            return {error=>$fold_error_cv5_2} if $fold_error_cv5_2;
 
             open(my $fh_log_cv5_2, '<', $stats_out_tempfile) or die "Could not open file '$stats_out_tempfile' $!";
                 print STDERR "Opened $stats_out_tempfile\n";
@@ -18631,13 +19349,18 @@ sub perform_drone_imagery_analytics {
             open(my $fh_yhat_res_cv5_2, '<', $yhat_residual_tempfile_cv5_2) or die "Could not open file '$yhat_residual_tempfile_cv5_2' $!";
                 print STDERR "Opened $yhat_residual_tempfile_cv5_2\n";
 
+                my $native_fold_observed_5_2=CXGN::DroneImagery::NativeResults::observation_mask($stats_out_cv5_predict_tempfile,$parameter_tempfile_cv5_2);
+                my $native_fold_row_5_2=0;
                 while (my $row = <$fh_yhat_res_cv5_2>) {
+                    next if !$native_fold_observed_5_2->[$native_fold_row_5_2++];
                     # print STDERR $row;
                     my @vals = split ' ', $row;
                     my $pred = $vals[0];
                     my $residual = $vals[1];
                     $model_sum_square_cv5_2_altered_env_4 = $model_sum_square_cv5_2_altered_env_4 + $residual*$residual;
                 }
+                return {error=>'Native fold readback row count differs from its input.'}
+                    if $native_fold_row_5_2!=@$native_fold_observed_5_2;
             close($fh_yhat_res_cv5_2);
         }
     }
@@ -20179,7 +20902,11 @@ sub perform_drone_imagery_analytics {
 
         open(my $F, ">", $stats_tempfile_2) || die "Can't open file ".$stats_tempfile_2;
             foreach (@data_matrix_altered_env_5) {
-                my $line = join ' ', @$_;
+                my @native_row=@$_;
+                my $encoded_value=eval {CXGN::DroneImagery::DesignFactors::native_observation($native_row[-1])};
+                return {error=>"$@"} if $@;
+                $native_row[-1]=$encoded_value;
+                my $line = join ' ', @native_row;
                 print $F "$line\n";
             }
         close($F);
@@ -21106,6 +21833,7 @@ sub perform_drone_imagery_analytics {
 
         print STDERR Dumper $statistics_cmd;
         my $status_r = system($statistics_cmd);
+        return {error=>'Native starting covariance requires sufficient complete paired observations and a positive-definite covariance; no estimates were read.'} if $status_r;
 
         my @pheno_var;
         open(my $fh_r, '<', $stats_out_param_tempfile) or die "Could not open file '$stats_out_param_tempfile' $!";
@@ -21133,9 +21861,17 @@ sub perform_drone_imagery_analytics {
 
         print STDERR Dumper $stats_tempfile_2;
         my $data_cv_cmd = 'R -e "mat <- read.csv(\''.$stats_tempfile_2.'\', header=FALSE, sep=\' \');
-        randomized_positions <- sample(length(mat[,1]));
-        cv_step_size <- length(mat[,1]) %/% 5;
-        cv_step_size_modulo <- length(mat[,1]) %% 5;
+        native_missing <- '.CXGN::DroneImagery::DesignFactors::native_missing_value().';
+        observed_positions <- which(mat[,ncol(mat)] != native_missing);
+        randomized_positions <- sample(observed_positions, length(observed_positions));
+        cv_step_size <- length(randomized_positions) %/% 5;
+        cv_step_size_modulo <- length(randomized_positions) %% 5;
+        fold_positions <- lapply(1:5, function(i) {
+            size <- cv_step_size + if(i == 5) cv_step_size_modulo else 0;
+            if(size == 0) return(integer(0));
+            randomized_positions[(i-1)*cv_step_size + seq_len(size)];
+        });
+        observed_median <- median(mat[observed_positions,ncol(mat)]);
         mat_CV1 <- mat; mat_CV2 <- mat; mat_CV3 <- mat; mat_CV4 <- mat; mat_CV5 <- mat;
         mat_CV1[fold_positions[[1]],ncol(mat)] <- observed_median;
         mat_CV2[fold_positions[[2]],ncol(mat)] <- observed_median;
@@ -21143,22 +21879,22 @@ sub perform_drone_imagery_analytics {
         mat_CV4[fold_positions[[4]],ncol(mat)] <- observed_median;
         mat_CV5[fold_positions[[5]],ncol(mat)] <- observed_median;
         mat_CV1_2 <- mat; mat_CV2_2 <- mat; mat_CV3_2 <- mat; mat_CV4_2 <- mat; mat_CV5_2 <- mat;
-        mat_CV1_2[c(randomized_positions[1:cv_step_size]),ncol(mat)] <- -999;
-        mat_CV2_2[c(randomized_positions[(cv_step_size+1):(2*cv_step_size)]),ncol(mat)] <- -999;
-        mat_CV3_2[c(randomized_positions[((2*cv_step_size)+1):(3*cv_step_size)]),ncol(mat)] <- -999;
-        mat_CV4_2[c(randomized_positions[((3*cv_step_size)+1):(4*cv_step_size)]),ncol(mat)] <- -999;
-        mat_CV5_2[c(randomized_positions[((4*cv_step_size)+1):((5*cv_step_size)+cv_step_size_modulo)]),ncol(mat)] <- -999;
-        write.table(mat, file=\''.$stats_tempfile_2.'\', row.names=FALSE, col.names=FALSE, sep=\' \');
-        write.table(mat_CV1, file=\''.$stats_out_cv1_predict_tempfile.'\', row.names=FALSE, col.names=FALSE, sep=\' \');
-        write.table(mat_CV2, file=\''.$stats_out_cv2_predict_tempfile.'\', row.names=FALSE, col.names=FALSE, sep=\' \');
-        write.table(mat_CV3, file=\''.$stats_out_cv3_predict_tempfile.'\', row.names=FALSE, col.names=FALSE, sep=\' \');
-        write.table(mat_CV4, file=\''.$stats_out_cv4_predict_tempfile.'\', row.names=FALSE, col.names=FALSE, sep=\' \');
-        write.table(mat_CV5, file=\''.$stats_out_cv5_predict_tempfile.'\', row.names=FALSE, col.names=FALSE, sep=\' \');
-        write.table(mat_CV1_2, file=\''.$stats_out_cv1_2_predict_tempfile.'\', row.names=FALSE, col.names=FALSE, sep=\' \');
-        write.table(mat_CV2_2, file=\''.$stats_out_cv2_2_predict_tempfile.'\', row.names=FALSE, col.names=FALSE, sep=\' \');
-        write.table(mat_CV3_2, file=\''.$stats_out_cv3_2_predict_tempfile.'\', row.names=FALSE, col.names=FALSE, sep=\' \');
-        write.table(mat_CV4_2, file=\''.$stats_out_cv4_2_predict_tempfile.'\', row.names=FALSE, col.names=FALSE, sep=\' \');
-        write.table(mat_CV5_2, file=\''.$stats_out_cv5_2_predict_tempfile.'\', row.names=FALSE, col.names=FALSE, sep=\' \');
+        mat_CV1_2[fold_positions[[1]],ncol(mat)] <- native_missing;
+        mat_CV2_2[fold_positions[[2]],ncol(mat)] <- native_missing;
+        mat_CV3_2[fold_positions[[3]],ncol(mat)] <- native_missing;
+        mat_CV4_2[fold_positions[[4]],ncol(mat)] <- native_missing;
+        mat_CV5_2[fold_positions[[5]],ncol(mat)] <- native_missing;
+        write.table(mat, file=\''.$stats_tempfile_2.'\', row.names=FALSE, col.names=FALSE, qmethod=\'double\', sep=\' \');
+        write.table(mat_CV1, file=\''.$stats_out_cv1_predict_tempfile.'\', row.names=FALSE, col.names=FALSE, qmethod=\'double\', sep=\' \');
+        write.table(mat_CV2, file=\''.$stats_out_cv2_predict_tempfile.'\', row.names=FALSE, col.names=FALSE, qmethod=\'double\', sep=\' \');
+        write.table(mat_CV3, file=\''.$stats_out_cv3_predict_tempfile.'\', row.names=FALSE, col.names=FALSE, qmethod=\'double\', sep=\' \');
+        write.table(mat_CV4, file=\''.$stats_out_cv4_predict_tempfile.'\', row.names=FALSE, col.names=FALSE, qmethod=\'double\', sep=\' \');
+        write.table(mat_CV5, file=\''.$stats_out_cv5_predict_tempfile.'\', row.names=FALSE, col.names=FALSE, qmethod=\'double\', sep=\' \');
+        write.table(mat_CV1_2, file=\''.$stats_out_cv1_2_predict_tempfile.'\', row.names=FALSE, col.names=FALSE, qmethod=\'double\', sep=\' \');
+        write.table(mat_CV2_2, file=\''.$stats_out_cv2_2_predict_tempfile.'\', row.names=FALSE, col.names=FALSE, qmethod=\'double\', sep=\' \');
+        write.table(mat_CV3_2, file=\''.$stats_out_cv3_2_predict_tempfile.'\', row.names=FALSE, col.names=FALSE, qmethod=\'double\', sep=\' \');
+        write.table(mat_CV4_2, file=\''.$stats_out_cv4_2_predict_tempfile.'\', row.names=FALSE, col.names=FALSE, qmethod=\'double\', sep=\' \');
+        write.table(mat_CV5_2, file=\''.$stats_out_cv5_2_predict_tempfile.'\', row.names=FALSE, col.names=FALSE, qmethod=\'double\', sep=\' \');
         "';
         my $status_cv_files = system($data_cv_cmd);
 
@@ -21247,6 +21983,11 @@ sub perform_drone_imagery_analytics {
 
         print STDERR Dumper $cmd_f90;
         my $status = system($cmd_f90);
+        return {error=>'The native statistics process failed; no estimates were read.'} if $status;
+        my $fit_error=CXGN::DroneImagery::DesignFactors::native_fit_error(
+            $statistics_select,$parameter_tempfile,$stats_tempfile_2,$stats_out_tempfile,$tmp_stats_dir);
+        return {error=>$fit_error} if $fit_error;
+
 
         my @log_output_rows;
         open(my $fh_log, '<', $stats_out_tempfile) or die "Could not open file '$stats_out_tempfile' $!";
@@ -21257,23 +21998,23 @@ sub perform_drone_imagery_analytics {
             }
         close($fh_log);
 
-        my $log_output = join '', @log_output_rows;
-        my ($gen_var_string) = $log_output =~ /Genetic variance\(s\) for effect  2(.*?)correlations/gs;
-        @rr_coeff_genetic_covariance_altered_env_5 = split ' ', $gen_var_string;
-        print STDERR Dumper \@rr_coeff_genetic_covariance_altered_env_5;
-        my ($env_var_string) = $log_output =~ /Genetic variance\(s\) for effect  $legendre_order_number_env_var_pos(.*?)correlations/gs;
-        @rr_coeff_env_covariance_altered_env_5 = split ' ', $env_var_string;
-        print STDERR Dumper \@rr_coeff_env_covariance_altered_env_5;
-        my (@gen_cor_string) = $log_output =~ /correlations(.*?)eigenvectors/gs;
-        @rr_coeff_genetic_correlation_altered_env_5 = split ' ', $gen_cor_string[0];
-        print STDERR Dumper \@rr_coeff_genetic_correlation_altered_env_5;
-        @rr_coeff_env_correlation_altered_env_5 = split ' ', $gen_cor_string[1];
-        print STDERR Dumper \@rr_coeff_env_correlation_altered_env_5;
-        my ($res_se_string) = $log_output =~ /SE for R(.*?)\* FINISHED \(AIREMLF90\)/gs;
-        print STDERR Dumper $res_se_string;
-        # $rr_residual_variance_altered_env_5 = ($res_se_string**2)*$number_plots;
-        $rr_residual_variance_altered_env_5 = $res_se_string;
-        print STDERR Dumper $rr_residual_variance_altered_env_5;
+        my $native_summary=eval {CXGN::DroneImagery::NativeResults::summarize(
+            parameter_file=>$parameter_tempfile,data_file=>$stats_tempfile_2,
+            log_file=>$stats_out_tempfile,cwd=>$tmp_stats_dir,
+            backend=>($statistics_select =~ /^blupf90_/ ? 'blupf90':'airemlf90'),
+            time_scale=>($statistics_select =~ /_gdd_/ ? 'GDD':'DAP'),
+            kernel_origin=>($native_variance_options->{kernel_origin} // ($protocol_id ? 'unknown':'genotypic_identity')),
+            unit_metadata=>\%native_unit_metadata,
+        )};
+        return {error=>"$@"} if $@;
+        $native_variance_summaries{env_ar1xar1}=$native_summary;
+        @rr_coeff_genetic_covariance_altered_env_5=@{$native_summary->{genetic_covariance}};
+        @rr_coeff_env_covariance_altered_env_5=@{$native_summary->{env_covariance}};
+        @rr_coeff_genetic_correlation_altered_env_5=@{$native_summary->{genetic_correlation}};
+        @rr_coeff_env_correlation_altered_env_5=@{$native_summary->{env_correlation}};
+        # A heterogeneous residual is a time function. The old scalar slot
+        # remains undefined; printed native SE is retained only in metadata.
+        $rr_residual_variance_altered_env_5=undef;
 
         @param_file_rows_6 = (
             '(CO)VARIANCES'
@@ -21304,31 +22045,31 @@ sub perform_drone_imagery_analytics {
         }
 
         open(my $Fp_cv1_2, ">", $parameter_tempfile_cv1_2) || die "Can't open file ".$parameter_tempfile_cv1_2;
-            foreach ((@param_file_rows_data_cv1, @param_file_rows_1, @param_file_rows_6, @param_file_rows_3, @param_file_rows_7, @param_file_rows_5)) {
+            foreach ((@param_file_rows_data_cv1, @param_file_rows_1, @param_file_rows_6, @param_file_rows_3, @param_file_rows_7, @native_blup_options)) {
                 print $Fp_cv1_2 "$_\n";
             }
         close($Fp_cv1_2);
 
         open(my $Fp_cv2_2, ">", $parameter_tempfile_cv2_2) || die "Can't open file ".$parameter_tempfile_cv2_2;
-            foreach ((@param_file_rows_data_cv2, @param_file_rows_1, @param_file_rows_6, @param_file_rows_3, @param_file_rows_7, @param_file_rows_5)) {
+            foreach ((@param_file_rows_data_cv2, @param_file_rows_1, @param_file_rows_6, @param_file_rows_3, @param_file_rows_7, @native_blup_options)) {
                 print $Fp_cv2_2 "$_\n";
             }
         close($Fp_cv2_2);
 
         open(my $Fp_cv3_2, ">", $parameter_tempfile_cv3_2) || die "Can't open file ".$parameter_tempfile_cv3_2;
-            foreach ((@param_file_rows_data_cv3, @param_file_rows_1, @param_file_rows_6, @param_file_rows_3, @param_file_rows_7, @param_file_rows_5)) {
+            foreach ((@param_file_rows_data_cv3, @param_file_rows_1, @param_file_rows_6, @param_file_rows_3, @param_file_rows_7, @native_blup_options)) {
                 print $Fp_cv3_2 "$_\n";
             }
         close($Fp_cv3_2);
 
         open(my $Fp_cv4_2, ">", $parameter_tempfile_cv4_2) || die "Can't open file ".$parameter_tempfile_cv4_2;
-            foreach ((@param_file_rows_data_cv4, @param_file_rows_1, @param_file_rows_6, @param_file_rows_3, @param_file_rows_7, @param_file_rows_5)) {
+            foreach ((@param_file_rows_data_cv4, @param_file_rows_1, @param_file_rows_6, @param_file_rows_3, @param_file_rows_7, @native_blup_options)) {
                 print $Fp_cv4_2 "$_\n";
             }
         close($Fp_cv4_2);
 
         open(my $Fp_cv5_2, ">", $parameter_tempfile_cv5_2) || die "Can't open file ".$parameter_tempfile_cv5_2;
-            foreach ((@param_file_rows_data_cv5, @param_file_rows_1, @param_file_rows_6, @param_file_rows_3, @param_file_rows_7, @param_file_rows_5)) {
+            foreach ((@param_file_rows_data_cv5, @param_file_rows_1, @param_file_rows_6, @param_file_rows_3, @param_file_rows_7, @native_blup_options)) {
                 print $Fp_cv5_2 "$_\n";
             }
         close($Fp_cv5_2);
@@ -21340,10 +22081,12 @@ sub perform_drone_imagery_analytics {
         open(my $fh_yhat_res, '<', $yhat_residual_tempfile) or die "Could not open file '$yhat_residual_tempfile' $!";
             print STDERR "Opened $yhat_residual_tempfile\n";
 
+            my $native_observed=CXGN::DroneImagery::NativeResults::observation_mask($stats_tempfile_2,$parameter_tempfile);
             my $pred_res_counter = 0;
             my $trait_counter = 0;
             while (my $row = <$fh_yhat_res>) {
                 # print STDERR $row;
+                if (!$native_observed->[$pred_res_counter]) {$pred_res_counter++;next;}
                 my @vals = split ' ', $row;
                 my $pred = $vals[0];
                 my $residual = $vals[1];
@@ -21363,6 +22106,8 @@ sub perform_drone_imagery_analytics {
 
                 $pred_res_counter++;
             }
+            return {error=>'Native readback row count differs from its input; no partial results were saved.'}
+                if $pred_res_counter!=@$native_observed;
         close($fh_yhat_res);
 
         $blupf90_solutions_tempfile = $tmp_stats_dir."/solutions";
@@ -21428,7 +22173,7 @@ sub perform_drone_imagery_analytics {
                 my $time = $t_i*5/100;
                 my $time_rescaled = sprintf("%.2f", $time*($time_max - $time_min) + $time_min);
 
-                my $value = CXGN::DroneImagery::LegendrePolynomials::legendre_polynomial_sum($coeffs, $time);
+                my $value = CXGN::DroneImagery::LegendrePolynomials::normalized_legendre_polynomial_sum($coeffs, $time);
 
                 my $time_term_string = '';
                 if ($statistics_select eq 'blupf90_grm_random_regression_gdd_blups' || $statistics_select eq 'airemlf90_grm_random_regression_gdd_blups') {
@@ -21457,7 +22202,7 @@ sub perform_drone_imagery_analytics {
         while ( my ($accession_name, $coeffs) = each %rr_genetic_coefficients_altered_env_5) {
             foreach my $time_term (@sorted_trait_names) {
                 my $time = ($time_term - $time_min)/($time_max - $time_min);
-                my $value = CXGN::DroneImagery::LegendrePolynomials::legendre_polynomial_sum($coeffs, $time);
+                my $value = CXGN::DroneImagery::LegendrePolynomials::normalized_legendre_polynomial_sum($coeffs, $time);
 
                 $result_blup_data_delta_altered_env_5->{$accession_name}->{$time_term} = [$value, $timestamp, $user_name, '', ''];
 
@@ -21483,7 +22228,7 @@ sub perform_drone_imagery_analytics {
                 my $time = $t_i*5/100;
                 my $time_rescaled = sprintf("%.2f", $time*($time_max - $time_min) + $time_min);
 
-                my $value = CXGN::DroneImagery::LegendrePolynomials::legendre_polynomial_sum($coeffs, $time);
+                my $value = CXGN::DroneImagery::LegendrePolynomials::normalized_legendre_polynomial_sum($coeffs, $time);
 
                 my $time_term_string = '';
                 if ($statistics_select eq 'blupf90_grm_random_regression_gdd_blups' || $statistics_select eq 'airemlf90_grm_random_regression_gdd_blups') {
@@ -21512,7 +22257,7 @@ sub perform_drone_imagery_analytics {
         while ( my ($plot_name, $coeffs) = each %rr_temporal_coefficients_altered_env_5) {
             foreach my $time_term (@sorted_trait_names) {
                 my $time = ($time_term - $time_min)/($time_max - $time_min);
-                my $value = CXGN::DroneImagery::LegendrePolynomials::legendre_polynomial_sum($coeffs, $time);
+                my $value = CXGN::DroneImagery::LegendrePolynomials::normalized_legendre_polynomial_sum($coeffs, $time);
 
                 $result_blup_pe_data_delta_altered_env_5->{$plot_name}->{$time_term} = [$value, $timestamp, $user_name, '', ''];
 
@@ -21532,6 +22277,10 @@ sub perform_drone_imagery_analytics {
             my $cmd_f90_cv1 = 'cd '.$tmp_stats_dir.'; echo '.$parameter_tempfile_cv1_basename.' | '.$command_name.' > '.$stats_out_tempfile;
             print STDERR Dumper $cmd_f90_cv1;
             my $status_cv1 = system($cmd_f90_cv1);
+            return {error=>'The native fold process failed; no estimates were read.'} if $status_cv1;
+            my $fold_error_cv1=CXGN::DroneImagery::DesignFactors::native_fit_error(
+                $statistics_select,$parameter_tempfile_cv1,$stats_out_cv1_predict_tempfile,$stats_out_tempfile,$tmp_stats_dir);
+            return {error=>$fold_error_cv1} if $fold_error_cv1;
 
             open(my $fh_log_cv1, '<', $stats_out_tempfile) or die "Could not open file '$stats_out_tempfile' $!";
                 print STDERR "Opened $stats_out_tempfile\n";
@@ -21544,18 +22293,27 @@ sub perform_drone_imagery_analytics {
             open(my $fh_yhat_res_cv1, '<', $yhat_residual_tempfile_cv1) or die "Could not open file '$yhat_residual_tempfile_cv1' $!";
                 print STDERR "Opened $yhat_residual_tempfile_cv1\n";
 
+                my $native_fold_observed_1=CXGN::DroneImagery::NativeResults::observation_mask($stats_out_cv1_predict_tempfile,$parameter_tempfile_cv1);
+                my $native_fold_row_1=0;
                 while (my $row = <$fh_yhat_res_cv1>) {
+                    next if !$native_fold_observed_1->[$native_fold_row_1++];
                     # print STDERR $row;
                     my @vals = split ' ', $row;
                     my $pred = $vals[0];
                     my $residual = $vals[1];
                     $model_sum_square_cv1_altered_env_5 = $model_sum_square_cv1_altered_env_5 + $residual*$residual;
                 }
+                return {error=>'Native fold readback row count differs from its input.'}
+                    if $native_fold_row_1!=@$native_fold_observed_1;
             close($fh_yhat_res_cv1);
 
             my $cmd_f90_cv2 = 'cd '.$tmp_stats_dir.'; echo '.$parameter_tempfile_cv2_basename.' | '.$command_name.' > '.$stats_out_tempfile;
             print STDERR Dumper $cmd_f90_cv2;
             my $status_cv2 = system($cmd_f90_cv2);
+            return {error=>'The native fold process failed; no estimates were read.'} if $status_cv2;
+            my $fold_error_cv2=CXGN::DroneImagery::DesignFactors::native_fit_error(
+                $statistics_select,$parameter_tempfile_cv2,$stats_out_cv2_predict_tempfile,$stats_out_tempfile,$tmp_stats_dir);
+            return {error=>$fold_error_cv2} if $fold_error_cv2;
 
             open(my $fh_log_cv2, '<', $stats_out_tempfile) or die "Could not open file '$stats_out_tempfile' $!";
                 print STDERR "Opened $stats_out_tempfile\n";
@@ -21568,18 +22326,27 @@ sub perform_drone_imagery_analytics {
             open(my $fh_yhat_res_cv2, '<', $yhat_residual_tempfile_cv2) or die "Could not open file '$yhat_residual_tempfile_cv2' $!";
                 print STDERR "Opened $yhat_residual_tempfile_cv2\n";
 
+                my $native_fold_observed_2=CXGN::DroneImagery::NativeResults::observation_mask($stats_out_cv2_predict_tempfile,$parameter_tempfile_cv2);
+                my $native_fold_row_2=0;
                 while (my $row = <$fh_yhat_res_cv2>) {
+                    next if !$native_fold_observed_2->[$native_fold_row_2++];
                     # print STDERR $row;
                     my @vals = split ' ', $row;
                     my $pred = $vals[0];
                     my $residual = $vals[1];
                     $model_sum_square_cv2_altered_env_5 = $model_sum_square_cv2_altered_env_5 + $residual*$residual;
                 }
+                return {error=>'Native fold readback row count differs from its input.'}
+                    if $native_fold_row_2!=@$native_fold_observed_2;
             close($fh_yhat_res_cv2);
 
             my $cmd_f90_cv3 = 'cd '.$tmp_stats_dir.'; echo '.$parameter_tempfile_cv3_basename.' | '.$command_name.' > '.$stats_out_tempfile;
             print STDERR Dumper $cmd_f90_cv3;
             my $status_cv3 = system($cmd_f90_cv3);
+            return {error=>'The native fold process failed; no estimates were read.'} if $status_cv3;
+            my $fold_error_cv3=CXGN::DroneImagery::DesignFactors::native_fit_error(
+                $statistics_select,$parameter_tempfile_cv3,$stats_out_cv3_predict_tempfile,$stats_out_tempfile,$tmp_stats_dir);
+            return {error=>$fold_error_cv3} if $fold_error_cv3;
 
             open(my $fh_log_cv3, '<', $stats_out_tempfile) or die "Could not open file '$stats_out_tempfile' $!";
                 print STDERR "Opened $stats_out_tempfile\n";
@@ -21592,18 +22359,27 @@ sub perform_drone_imagery_analytics {
             open(my $fh_yhat_res_cv3, '<', $yhat_residual_tempfile_cv3) or die "Could not open file '$yhat_residual_tempfile_cv3' $!";
                 print STDERR "Opened $yhat_residual_tempfile_cv3\n";
 
+                my $native_fold_observed_3=CXGN::DroneImagery::NativeResults::observation_mask($stats_out_cv3_predict_tempfile,$parameter_tempfile_cv3);
+                my $native_fold_row_3=0;
                 while (my $row = <$fh_yhat_res_cv3>) {
+                    next if !$native_fold_observed_3->[$native_fold_row_3++];
                     # print STDERR $row;
                     my @vals = split ' ', $row;
                     my $pred = $vals[0];
                     my $residual = $vals[1];
                     $model_sum_square_cv3_altered_env_5 = $model_sum_square_cv3_altered_env_5 + $residual*$residual;
                 }
+                return {error=>'Native fold readback row count differs from its input.'}
+                    if $native_fold_row_3!=@$native_fold_observed_3;
             close($fh_yhat_res_cv3);
 
             my $cmd_f90_cv4 = 'cd '.$tmp_stats_dir.'; echo '.$parameter_tempfile_cv4_basename.' | '.$command_name.' > '.$stats_out_tempfile;
             print STDERR Dumper $cmd_f90_cv4;
             my $status_cv4 = system($cmd_f90_cv4);
+            return {error=>'The native fold process failed; no estimates were read.'} if $status_cv4;
+            my $fold_error_cv4=CXGN::DroneImagery::DesignFactors::native_fit_error(
+                $statistics_select,$parameter_tempfile_cv4,$stats_out_cv4_predict_tempfile,$stats_out_tempfile,$tmp_stats_dir);
+            return {error=>$fold_error_cv4} if $fold_error_cv4;
 
             open(my $fh_log_cv4, '<', $stats_out_tempfile) or die "Could not open file '$stats_out_tempfile' $!";
                 print STDERR "Opened $stats_out_tempfile\n";
@@ -21616,18 +22392,27 @@ sub perform_drone_imagery_analytics {
             open(my $fh_yhat_res_cv4, '<', $yhat_residual_tempfile_cv4) or die "Could not open file '$yhat_residual_tempfile_cv4' $!";
                 print STDERR "Opened $yhat_residual_tempfile_cv4\n";
 
+                my $native_fold_observed_4=CXGN::DroneImagery::NativeResults::observation_mask($stats_out_cv4_predict_tempfile,$parameter_tempfile_cv4);
+                my $native_fold_row_4=0;
                 while (my $row = <$fh_yhat_res_cv4>) {
+                    next if !$native_fold_observed_4->[$native_fold_row_4++];
                     # print STDERR $row;
                     my @vals = split ' ', $row;
                     my $pred = $vals[0];
                     my $residual = $vals[1];
                     $model_sum_square_cv4_altered_env_5 = $model_sum_square_cv4_altered_env_5 + $residual*$residual;
                 }
+                return {error=>'Native fold readback row count differs from its input.'}
+                    if $native_fold_row_4!=@$native_fold_observed_4;
             close($fh_yhat_res_cv4);
 
             my $cmd_f90_cv5 = 'cd '.$tmp_stats_dir.'; echo '.$parameter_tempfile_cv5_basename.' | '.$command_name.' > '.$stats_out_tempfile;
             print STDERR Dumper $cmd_f90_cv5;
             my $status_cv5 = system($cmd_f90_cv5);
+            return {error=>'The native fold process failed; no estimates were read.'} if $status_cv5;
+            my $fold_error_cv5=CXGN::DroneImagery::DesignFactors::native_fit_error(
+                $statistics_select,$parameter_tempfile_cv5,$stats_out_cv5_predict_tempfile,$stats_out_tempfile,$tmp_stats_dir);
+            return {error=>$fold_error_cv5} if $fold_error_cv5;
 
             open(my $fh_log_cv5, '<', $stats_out_tempfile) or die "Could not open file '$stats_out_tempfile' $!";
                 print STDERR "Opened $stats_out_tempfile\n";
@@ -21640,18 +22425,27 @@ sub perform_drone_imagery_analytics {
             open(my $fh_yhat_res_cv5, '<', $yhat_residual_tempfile_cv5) or die "Could not open file '$yhat_residual_tempfile_cv5' $!";
                 print STDERR "Opened $yhat_residual_tempfile_cv5\n";
 
+                my $native_fold_observed_5=CXGN::DroneImagery::NativeResults::observation_mask($stats_out_cv5_predict_tempfile,$parameter_tempfile_cv5);
+                my $native_fold_row_5=0;
                 while (my $row = <$fh_yhat_res_cv5>) {
+                    next if !$native_fold_observed_5->[$native_fold_row_5++];
                     # print STDERR $row;
                     my @vals = split ' ', $row;
                     my $pred = $vals[0];
                     my $residual = $vals[1];
                     $model_sum_square_cv5_altered_env_5 = $model_sum_square_cv5_altered_env_5 + $residual*$residual;
                 }
+                return {error=>'Native fold readback row count differs from its input.'}
+                    if $native_fold_row_5!=@$native_fold_observed_5;
             close($fh_yhat_res_cv5);
 
             my $cmd_f90_cv1_2 = 'cd '.$tmp_stats_dir.'; echo '.$parameter_tempfile_cv1_2_basename.' | blupf90 > '.$stats_out_tempfile;
             print STDERR Dumper $cmd_f90_cv1_2;
             my $status_cv1_2 = system($cmd_f90_cv1_2);
+            return {error=>'The native fold process failed; no estimates were read.'} if $status_cv1_2;
+            my $fold_error_cv1_2=CXGN::DroneImagery::DesignFactors::native_fit_error(
+                $native_blup_selection,$parameter_tempfile_cv1_2,$stats_out_cv1_predict_tempfile,$stats_out_tempfile,$tmp_stats_dir);
+            return {error=>$fold_error_cv1_2} if $fold_error_cv1_2;
 
             open(my $fh_log_cv1_2, '<', $stats_out_tempfile) or die "Could not open file '$stats_out_tempfile' $!";
                 print STDERR "Opened $stats_out_tempfile\n";
@@ -21664,18 +22458,27 @@ sub perform_drone_imagery_analytics {
             open(my $fh_yhat_res_cv1_2, '<', $yhat_residual_tempfile_cv1_2) or die "Could not open file '$yhat_residual_tempfile_cv1_2' $!";
                 print STDERR "Opened $yhat_residual_tempfile_cv1_2\n";
 
+                my $native_fold_observed_1_2=CXGN::DroneImagery::NativeResults::observation_mask($stats_out_cv1_predict_tempfile,$parameter_tempfile_cv1_2);
+                my $native_fold_row_1_2=0;
                 while (my $row = <$fh_yhat_res_cv1_2>) {
+                    next if !$native_fold_observed_1_2->[$native_fold_row_1_2++];
                     # print STDERR $row;
                     my @vals = split ' ', $row;
                     my $pred = $vals[0];
                     my $residual = $vals[1];
                     $model_sum_square_cv1_2_altered_env_5 = $model_sum_square_cv1_2_altered_env_5 + $residual*$residual;
                 }
+                return {error=>'Native fold readback row count differs from its input.'}
+                    if $native_fold_row_1_2!=@$native_fold_observed_1_2;
             close($fh_yhat_res_cv1_2);
 
             my $cmd_f90_cv2_2 = 'cd '.$tmp_stats_dir.'; echo '.$parameter_tempfile_cv2_2_basename.' | blupf90 > '.$stats_out_tempfile;
             print STDERR Dumper $cmd_f90_cv2_2;
             my $status_cv2_2 = system($cmd_f90_cv2_2);
+            return {error=>'The native fold process failed; no estimates were read.'} if $status_cv2_2;
+            my $fold_error_cv2_2=CXGN::DroneImagery::DesignFactors::native_fit_error(
+                $native_blup_selection,$parameter_tempfile_cv2_2,$stats_out_cv2_predict_tempfile,$stats_out_tempfile,$tmp_stats_dir);
+            return {error=>$fold_error_cv2_2} if $fold_error_cv2_2;
 
             open(my $fh_log_cv2_2, '<', $stats_out_tempfile) or die "Could not open file '$stats_out_tempfile' $!";
                 print STDERR "Opened $stats_out_tempfile\n";
@@ -21688,18 +22491,27 @@ sub perform_drone_imagery_analytics {
             open(my $fh_yhat_res_cv2_2, '<', $yhat_residual_tempfile_cv2_2) or die "Could not open file '$yhat_residual_tempfile_cv2_2' $!";
                 print STDERR "Opened $yhat_residual_tempfile_cv2_2\n";
 
+                my $native_fold_observed_2_2=CXGN::DroneImagery::NativeResults::observation_mask($stats_out_cv2_predict_tempfile,$parameter_tempfile_cv2_2);
+                my $native_fold_row_2_2=0;
                 while (my $row = <$fh_yhat_res_cv2_2>) {
+                    next if !$native_fold_observed_2_2->[$native_fold_row_2_2++];
                     # print STDERR $row;
                     my @vals = split ' ', $row;
                     my $pred = $vals[0];
                     my $residual = $vals[1];
                     $model_sum_square_cv2_2_altered_env_5 = $model_sum_square_cv2_2_altered_env_5 + $residual*$residual;
                 }
+                return {error=>'Native fold readback row count differs from its input.'}
+                    if $native_fold_row_2_2!=@$native_fold_observed_2_2;
             close($fh_yhat_res_cv2_2);
 
             my $cmd_f90_cv3_2 = 'cd '.$tmp_stats_dir.'; echo '.$parameter_tempfile_cv3_2_basename.' | blupf90 > '.$stats_out_tempfile;
             print STDERR Dumper $cmd_f90_cv3_2;
             my $status_cv3_2 = system($cmd_f90_cv3_2);
+            return {error=>'The native fold process failed; no estimates were read.'} if $status_cv3_2;
+            my $fold_error_cv3_2=CXGN::DroneImagery::DesignFactors::native_fit_error(
+                $native_blup_selection,$parameter_tempfile_cv3_2,$stats_out_cv3_predict_tempfile,$stats_out_tempfile,$tmp_stats_dir);
+            return {error=>$fold_error_cv3_2} if $fold_error_cv3_2;
 
             open(my $fh_log_cv3_2, '<', $stats_out_tempfile) or die "Could not open file '$stats_out_tempfile' $!";
                 print STDERR "Opened $stats_out_tempfile\n";
@@ -21712,18 +22524,27 @@ sub perform_drone_imagery_analytics {
             open(my $fh_yhat_res_cv3_2, '<', $yhat_residual_tempfile_cv3_2) or die "Could not open file '$yhat_residual_tempfile_cv3_2' $!";
                 print STDERR "Opened $yhat_residual_tempfile_cv3_2\n";
 
+                my $native_fold_observed_3_2=CXGN::DroneImagery::NativeResults::observation_mask($stats_out_cv3_predict_tempfile,$parameter_tempfile_cv3_2);
+                my $native_fold_row_3_2=0;
                 while (my $row = <$fh_yhat_res_cv3_2>) {
+                    next if !$native_fold_observed_3_2->[$native_fold_row_3_2++];
                     # print STDERR $row;
                     my @vals = split ' ', $row;
                     my $pred = $vals[0];
                     my $residual = $vals[1];
                     $model_sum_square_cv3_2_altered_env_5 = $model_sum_square_cv3_2_altered_env_5 + $residual*$residual;
                 }
+                return {error=>'Native fold readback row count differs from its input.'}
+                    if $native_fold_row_3_2!=@$native_fold_observed_3_2;
             close($fh_yhat_res_cv3_2);
 
             my $cmd_f90_cv4_2 = 'cd '.$tmp_stats_dir.'; echo '.$parameter_tempfile_cv4_2_basename.' | blupf90 > '.$stats_out_tempfile;
             print STDERR Dumper $cmd_f90_cv4_2;
             my $status_cv4_2 = system($cmd_f90_cv4_2);
+            return {error=>'The native fold process failed; no estimates were read.'} if $status_cv4_2;
+            my $fold_error_cv4_2=CXGN::DroneImagery::DesignFactors::native_fit_error(
+                $native_blup_selection,$parameter_tempfile_cv4_2,$stats_out_cv4_predict_tempfile,$stats_out_tempfile,$tmp_stats_dir);
+            return {error=>$fold_error_cv4_2} if $fold_error_cv4_2;
 
             open(my $fh_log_cv4_2, '<', $stats_out_tempfile) or die "Could not open file '$stats_out_tempfile' $!";
                 print STDERR "Opened $stats_out_tempfile\n";
@@ -21736,18 +22557,27 @@ sub perform_drone_imagery_analytics {
             open(my $fh_yhat_res_cv4_2, '<', $yhat_residual_tempfile_cv4_2) or die "Could not open file '$yhat_residual_tempfile_cv4_2' $!";
                 print STDERR "Opened $yhat_residual_tempfile_cv4_2\n";
 
+                my $native_fold_observed_4_2=CXGN::DroneImagery::NativeResults::observation_mask($stats_out_cv4_predict_tempfile,$parameter_tempfile_cv4_2);
+                my $native_fold_row_4_2=0;
                 while (my $row = <$fh_yhat_res_cv4_2>) {
+                    next if !$native_fold_observed_4_2->[$native_fold_row_4_2++];
                     # print STDERR $row;
                     my @vals = split ' ', $row;
                     my $pred = $vals[0];
                     my $residual = $vals[1];
                     $model_sum_square_cv4_2_altered_env_5 = $model_sum_square_cv4_2_altered_env_5 + $residual*$residual;
                 }
+                return {error=>'Native fold readback row count differs from its input.'}
+                    if $native_fold_row_4_2!=@$native_fold_observed_4_2;
             close($fh_yhat_res_cv4_2);
 
             my $cmd_f90_cv5_2 = 'cd '.$tmp_stats_dir.'; echo '.$parameter_tempfile_cv5_2_basename.' | blupf90 > '.$stats_out_tempfile;
             print STDERR Dumper $cmd_f90_cv5_2;
             my $status_cv5_2 = system($cmd_f90_cv5_2);
+            return {error=>'The native fold process failed; no estimates were read.'} if $status_cv5_2;
+            my $fold_error_cv5_2=CXGN::DroneImagery::DesignFactors::native_fit_error(
+                $native_blup_selection,$parameter_tempfile_cv5_2,$stats_out_cv5_predict_tempfile,$stats_out_tempfile,$tmp_stats_dir);
+            return {error=>$fold_error_cv5_2} if $fold_error_cv5_2;
 
             open(my $fh_log_cv5_2, '<', $stats_out_tempfile) or die "Could not open file '$stats_out_tempfile' $!";
                 print STDERR "Opened $stats_out_tempfile\n";
@@ -21760,13 +22590,18 @@ sub perform_drone_imagery_analytics {
             open(my $fh_yhat_res_cv5_2, '<', $yhat_residual_tempfile_cv5_2) or die "Could not open file '$yhat_residual_tempfile_cv5_2' $!";
                 print STDERR "Opened $yhat_residual_tempfile_cv5_2\n";
 
+                my $native_fold_observed_5_2=CXGN::DroneImagery::NativeResults::observation_mask($stats_out_cv5_predict_tempfile,$parameter_tempfile_cv5_2);
+                my $native_fold_row_5_2=0;
                 while (my $row = <$fh_yhat_res_cv5_2>) {
+                    next if !$native_fold_observed_5_2->[$native_fold_row_5_2++];
                     # print STDERR $row;
                     my @vals = split ' ', $row;
                     my $pred = $vals[0];
                     my $residual = $vals[1];
                     $model_sum_square_cv5_2_altered_env_5 = $model_sum_square_cv5_2_altered_env_5 + $residual*$residual;
                 }
+                return {error=>'Native fold readback row count differs from its input.'}
+                    if $native_fold_row_5_2!=@$native_fold_observed_5_2;
             close($fh_yhat_res_cv5_2);
         }
     }
@@ -23361,7 +24196,11 @@ sub perform_drone_imagery_analytics {
 
         open(my $F, ">", $stats_tempfile_2) || die "Can't open file ".$stats_tempfile_2;
             foreach (@data_matrix_altered_env_6) {
-                my $line = join ' ', @$_;
+                my @native_row=@$_;
+                my $encoded_value=eval {CXGN::DroneImagery::DesignFactors::native_observation($native_row[-1])};
+                return {error=>"$@"} if $@;
+                $native_row[-1]=$encoded_value;
+                my $line = join ' ', @native_row;
                 print $F "$line\n";
             }
         close($F);
@@ -24288,6 +25127,7 @@ sub perform_drone_imagery_analytics {
 
         print STDERR Dumper $statistics_cmd;
         my $status_r = system($statistics_cmd);
+        return {error=>'Native starting covariance requires sufficient complete paired observations and a positive-definite covariance; no estimates were read.'} if $status_r;
 
         my @pheno_var;
         open(my $fh_r, '<', $stats_out_param_tempfile) or die "Could not open file '$stats_out_param_tempfile' $!";
@@ -24315,9 +25155,17 @@ sub perform_drone_imagery_analytics {
 
         print STDERR Dumper $stats_tempfile_2;
         my $data_cv_cmd = 'R -e "mat <- read.csv(\''.$stats_tempfile_2.'\', header=FALSE, sep=\' \');
-        randomized_positions <- sample(length(mat[,1]));
-        cv_step_size <- length(mat[,1]) %/% 5;
-        cv_step_size_modulo <- length(mat[,1]) %% 5;
+        native_missing <- '.CXGN::DroneImagery::DesignFactors::native_missing_value().';
+        observed_positions <- which(mat[,ncol(mat)] != native_missing);
+        randomized_positions <- sample(observed_positions, length(observed_positions));
+        cv_step_size <- length(randomized_positions) %/% 5;
+        cv_step_size_modulo <- length(randomized_positions) %% 5;
+        fold_positions <- lapply(1:5, function(i) {
+            size <- cv_step_size + if(i == 5) cv_step_size_modulo else 0;
+            if(size == 0) return(integer(0));
+            randomized_positions[(i-1)*cv_step_size + seq_len(size)];
+        });
+        observed_median <- median(mat[observed_positions,ncol(mat)]);
         mat_CV1 <- mat; mat_CV2 <- mat; mat_CV3 <- mat; mat_CV4 <- mat; mat_CV5 <- mat;
         mat_CV1[fold_positions[[1]],ncol(mat)] <- observed_median;
         mat_CV2[fold_positions[[2]],ncol(mat)] <- observed_median;
@@ -24325,22 +25173,22 @@ sub perform_drone_imagery_analytics {
         mat_CV4[fold_positions[[4]],ncol(mat)] <- observed_median;
         mat_CV5[fold_positions[[5]],ncol(mat)] <- observed_median;
         mat_CV1_2 <- mat; mat_CV2_2 <- mat; mat_CV3_2 <- mat; mat_CV4_2 <- mat; mat_CV5_2 <- mat;
-        mat_CV1_2[c(randomized_positions[1:cv_step_size]),ncol(mat)] <- -999;
-        mat_CV2_2[c(randomized_positions[(cv_step_size+1):(2*cv_step_size)]),ncol(mat)] <- -999;
-        mat_CV3_2[c(randomized_positions[((2*cv_step_size)+1):(3*cv_step_size)]),ncol(mat)] <- -999;
-        mat_CV4_2[c(randomized_positions[((3*cv_step_size)+1):(4*cv_step_size)]),ncol(mat)] <- -999;
-        mat_CV5_2[c(randomized_positions[((4*cv_step_size)+1):((5*cv_step_size)+cv_step_size_modulo)]),ncol(mat)] <- -999;
-        write.table(mat, file=\''.$stats_tempfile_2.'\', row.names=FALSE, col.names=FALSE, sep=\' \');
-        write.table(mat_CV1, file=\''.$stats_out_cv1_predict_tempfile.'\', row.names=FALSE, col.names=FALSE, sep=\' \');
-        write.table(mat_CV2, file=\''.$stats_out_cv2_predict_tempfile.'\', row.names=FALSE, col.names=FALSE, sep=\' \');
-        write.table(mat_CV3, file=\''.$stats_out_cv3_predict_tempfile.'\', row.names=FALSE, col.names=FALSE, sep=\' \');
-        write.table(mat_CV4, file=\''.$stats_out_cv4_predict_tempfile.'\', row.names=FALSE, col.names=FALSE, sep=\' \');
-        write.table(mat_CV5, file=\''.$stats_out_cv5_predict_tempfile.'\', row.names=FALSE, col.names=FALSE, sep=\' \');
-        write.table(mat_CV1_2, file=\''.$stats_out_cv1_2_predict_tempfile.'\', row.names=FALSE, col.names=FALSE, sep=\' \');
-        write.table(mat_CV2_2, file=\''.$stats_out_cv2_2_predict_tempfile.'\', row.names=FALSE, col.names=FALSE, sep=\' \');
-        write.table(mat_CV3_2, file=\''.$stats_out_cv3_2_predict_tempfile.'\', row.names=FALSE, col.names=FALSE, sep=\' \');
-        write.table(mat_CV4_2, file=\''.$stats_out_cv4_2_predict_tempfile.'\', row.names=FALSE, col.names=FALSE, sep=\' \');
-        write.table(mat_CV5_2, file=\''.$stats_out_cv5_2_predict_tempfile.'\', row.names=FALSE, col.names=FALSE, sep=\' \');
+        mat_CV1_2[fold_positions[[1]],ncol(mat)] <- native_missing;
+        mat_CV2_2[fold_positions[[2]],ncol(mat)] <- native_missing;
+        mat_CV3_2[fold_positions[[3]],ncol(mat)] <- native_missing;
+        mat_CV4_2[fold_positions[[4]],ncol(mat)] <- native_missing;
+        mat_CV5_2[fold_positions[[5]],ncol(mat)] <- native_missing;
+        write.table(mat, file=\''.$stats_tempfile_2.'\', row.names=FALSE, col.names=FALSE, qmethod=\'double\', sep=\' \');
+        write.table(mat_CV1, file=\''.$stats_out_cv1_predict_tempfile.'\', row.names=FALSE, col.names=FALSE, qmethod=\'double\', sep=\' \');
+        write.table(mat_CV2, file=\''.$stats_out_cv2_predict_tempfile.'\', row.names=FALSE, col.names=FALSE, qmethod=\'double\', sep=\' \');
+        write.table(mat_CV3, file=\''.$stats_out_cv3_predict_tempfile.'\', row.names=FALSE, col.names=FALSE, qmethod=\'double\', sep=\' \');
+        write.table(mat_CV4, file=\''.$stats_out_cv4_predict_tempfile.'\', row.names=FALSE, col.names=FALSE, qmethod=\'double\', sep=\' \');
+        write.table(mat_CV5, file=\''.$stats_out_cv5_predict_tempfile.'\', row.names=FALSE, col.names=FALSE, qmethod=\'double\', sep=\' \');
+        write.table(mat_CV1_2, file=\''.$stats_out_cv1_2_predict_tempfile.'\', row.names=FALSE, col.names=FALSE, qmethod=\'double\', sep=\' \');
+        write.table(mat_CV2_2, file=\''.$stats_out_cv2_2_predict_tempfile.'\', row.names=FALSE, col.names=FALSE, qmethod=\'double\', sep=\' \');
+        write.table(mat_CV3_2, file=\''.$stats_out_cv3_2_predict_tempfile.'\', row.names=FALSE, col.names=FALSE, qmethod=\'double\', sep=\' \');
+        write.table(mat_CV4_2, file=\''.$stats_out_cv4_2_predict_tempfile.'\', row.names=FALSE, col.names=FALSE, qmethod=\'double\', sep=\' \');
+        write.table(mat_CV5_2, file=\''.$stats_out_cv5_2_predict_tempfile.'\', row.names=FALSE, col.names=FALSE, qmethod=\'double\', sep=\' \');
         "';
         my $status_cv_files = system($data_cv_cmd);
 
@@ -24429,6 +25277,11 @@ sub perform_drone_imagery_analytics {
 
         print STDERR Dumper $cmd_f90;
         my $status = system($cmd_f90);
+        return {error=>'The native statistics process failed; no estimates were read.'} if $status;
+        my $fit_error=CXGN::DroneImagery::DesignFactors::native_fit_error(
+            $statistics_select,$parameter_tempfile,$stats_tempfile_2,$stats_out_tempfile,$tmp_stats_dir);
+        return {error=>$fit_error} if $fit_error;
+
 
         my @log_output_rows;
         open(my $fh_log, '<', $stats_out_tempfile) or die "Could not open file '$stats_out_tempfile' $!";
@@ -24439,23 +25292,23 @@ sub perform_drone_imagery_analytics {
             }
         close($fh_log);
 
-        my $log_output = join '', @log_output_rows;
-        my ($gen_var_string) = $log_output =~ /Genetic variance\(s\) for effect  2(.*?)correlations/gs;
-        @rr_coeff_genetic_covariance_altered_env_6 = split ' ', $gen_var_string;
-        print STDERR Dumper \@rr_coeff_genetic_covariance_altered_env_6;
-        my ($env_var_string) = $log_output =~ /Genetic variance\(s\) for effect  $legendre_order_number_env_var_pos(.*?)correlations/gs;
-        @rr_coeff_env_covariance_altered_env_6 = split ' ', $env_var_string;
-        print STDERR Dumper \@rr_coeff_env_covariance_altered_env_6;
-        my (@gen_cor_string) = $log_output =~ /correlations(.*?)eigenvectors/gs;
-        @rr_coeff_genetic_correlation_altered_env_6 = split ' ', $gen_cor_string[0];
-        print STDERR Dumper \@rr_coeff_genetic_correlation_altered_env_6;
-        @rr_coeff_env_correlation_altered_env_6 = split ' ', $gen_cor_string[1];
-        print STDERR Dumper \@rr_coeff_env_correlation_altered_env_6;
-        my ($res_se_string) = $log_output =~ /SE for R(.*?)\* FINISHED \(AIREMLF90\)/gs;
-        print STDERR Dumper $res_se_string;
-        # $rr_residual_variance_altered_env_6 = ($res_se_string**2)*$number_plots;
-        $rr_residual_variance_altered_env_6 = $res_se_string;
-        print STDERR Dumper $rr_residual_variance_altered_env_6;
+        my $native_summary=eval {CXGN::DroneImagery::NativeResults::summarize(
+            parameter_file=>$parameter_tempfile,data_file=>$stats_tempfile_2,
+            log_file=>$stats_out_tempfile,cwd=>$tmp_stats_dir,
+            backend=>($statistics_select =~ /^blupf90_/ ? 'blupf90':'airemlf90'),
+            time_scale=>($statistics_select =~ /_gdd_/ ? 'GDD':'DAP'),
+            kernel_origin=>($native_variance_options->{kernel_origin} // ($protocol_id ? 'unknown':'genotypic_identity')),
+            unit_metadata=>\%native_unit_metadata,
+        )};
+        return {error=>"$@"} if $@;
+        $native_variance_summaries{env_realdata}=$native_summary;
+        @rr_coeff_genetic_covariance_altered_env_6=@{$native_summary->{genetic_covariance}};
+        @rr_coeff_env_covariance_altered_env_6=@{$native_summary->{env_covariance}};
+        @rr_coeff_genetic_correlation_altered_env_6=@{$native_summary->{genetic_correlation}};
+        @rr_coeff_env_correlation_altered_env_6=@{$native_summary->{env_correlation}};
+        # A heterogeneous residual is a time function. The old scalar slot
+        # remains undefined; printed native SE is retained only in metadata.
+        $rr_residual_variance_altered_env_6=undef;
 
         @param_file_rows_6 = (
             '(CO)VARIANCES'
@@ -24486,31 +25339,31 @@ sub perform_drone_imagery_analytics {
         }
 
         open(my $Fp_cv1_2, ">", $parameter_tempfile_cv1_2) || die "Can't open file ".$parameter_tempfile_cv1_2;
-            foreach ((@param_file_rows_data_cv1, @param_file_rows_1, @param_file_rows_6, @param_file_rows_3, @param_file_rows_7, @param_file_rows_5)) {
+            foreach ((@param_file_rows_data_cv1, @param_file_rows_1, @param_file_rows_6, @param_file_rows_3, @param_file_rows_7, @native_blup_options)) {
                 print $Fp_cv1_2 "$_\n";
             }
         close($Fp_cv1_2);
 
         open(my $Fp_cv2_2, ">", $parameter_tempfile_cv2_2) || die "Can't open file ".$parameter_tempfile_cv2_2;
-            foreach ((@param_file_rows_data_cv2, @param_file_rows_1, @param_file_rows_6, @param_file_rows_3, @param_file_rows_7, @param_file_rows_5)) {
+            foreach ((@param_file_rows_data_cv2, @param_file_rows_1, @param_file_rows_6, @param_file_rows_3, @param_file_rows_7, @native_blup_options)) {
                 print $Fp_cv2_2 "$_\n";
             }
         close($Fp_cv2_2);
 
         open(my $Fp_cv3_2, ">", $parameter_tempfile_cv3_2) || die "Can't open file ".$parameter_tempfile_cv3_2;
-            foreach ((@param_file_rows_data_cv3, @param_file_rows_1, @param_file_rows_6, @param_file_rows_3, @param_file_rows_7, @param_file_rows_5)) {
+            foreach ((@param_file_rows_data_cv3, @param_file_rows_1, @param_file_rows_6, @param_file_rows_3, @param_file_rows_7, @native_blup_options)) {
                 print $Fp_cv3_2 "$_\n";
             }
         close($Fp_cv3_2);
 
         open(my $Fp_cv4_2, ">", $parameter_tempfile_cv4_2) || die "Can't open file ".$parameter_tempfile_cv4_2;
-            foreach ((@param_file_rows_data_cv4, @param_file_rows_1, @param_file_rows_6, @param_file_rows_3, @param_file_rows_7, @param_file_rows_5)) {
+            foreach ((@param_file_rows_data_cv4, @param_file_rows_1, @param_file_rows_6, @param_file_rows_3, @param_file_rows_7, @native_blup_options)) {
                 print $Fp_cv4_2 "$_\n";
             }
         close($Fp_cv4_2);
 
         open(my $Fp_cv5_2, ">", $parameter_tempfile_cv5_2) || die "Can't open file ".$parameter_tempfile_cv5_2;
-            foreach ((@param_file_rows_data_cv5, @param_file_rows_1, @param_file_rows_6, @param_file_rows_3, @param_file_rows_7, @param_file_rows_5)) {
+            foreach ((@param_file_rows_data_cv5, @param_file_rows_1, @param_file_rows_6, @param_file_rows_3, @param_file_rows_7, @native_blup_options)) {
                 print $Fp_cv5_2 "$_\n";
             }
         close($Fp_cv5_2);
@@ -24522,10 +25375,12 @@ sub perform_drone_imagery_analytics {
         open(my $fh_yhat_res, '<', $yhat_residual_tempfile) or die "Could not open file '$yhat_residual_tempfile' $!";
             print STDERR "Opened $yhat_residual_tempfile\n";
 
+            my $native_observed=CXGN::DroneImagery::NativeResults::observation_mask($stats_tempfile_2,$parameter_tempfile);
             my $pred_res_counter = 0;
             my $trait_counter = 0;
             while (my $row = <$fh_yhat_res>) {
                 # print STDERR $row;
+                if (!$native_observed->[$pred_res_counter]) {$pred_res_counter++;next;}
                 my @vals = split ' ', $row;
                 my $pred = $vals[0];
                 my $residual = $vals[1];
@@ -24545,6 +25400,8 @@ sub perform_drone_imagery_analytics {
 
                 $pred_res_counter++;
             }
+            return {error=>'Native readback row count differs from its input; no partial results were saved.'}
+                if $pred_res_counter!=@$native_observed;
         close($fh_yhat_res);
 
         $blupf90_solutions_tempfile = $tmp_stats_dir."/solutions";
@@ -24610,7 +25467,7 @@ sub perform_drone_imagery_analytics {
                 my $time = $t_i*5/100;
                 my $time_rescaled = sprintf("%.2f", $time*($time_max - $time_min) + $time_min);
 
-                my $value = CXGN::DroneImagery::LegendrePolynomials::legendre_polynomial_sum($coeffs, $time);
+                my $value = CXGN::DroneImagery::LegendrePolynomials::normalized_legendre_polynomial_sum($coeffs, $time);
 
                 my $time_term_string = '';
                 if ($statistics_select eq 'blupf90_grm_random_regression_gdd_blups' || $statistics_select eq 'airemlf90_grm_random_regression_gdd_blups') {
@@ -24639,7 +25496,7 @@ sub perform_drone_imagery_analytics {
         while ( my ($accession_name, $coeffs) = each %rr_genetic_coefficients_altered_env_6) {
             foreach my $time_term (@sorted_trait_names) {
                 my $time = ($time_term - $time_min)/($time_max - $time_min);
-                my $value = CXGN::DroneImagery::LegendrePolynomials::legendre_polynomial_sum($coeffs, $time);
+                my $value = CXGN::DroneImagery::LegendrePolynomials::normalized_legendre_polynomial_sum($coeffs, $time);
 
                 $result_blup_data_delta_altered_env_6->{$accession_name}->{$time_term} = [$value, $timestamp, $user_name, '', ''];
 
@@ -24665,7 +25522,7 @@ sub perform_drone_imagery_analytics {
                 my $time = $t_i*5/100;
                 my $time_rescaled = sprintf("%.2f", $time*($time_max - $time_min) + $time_min);
 
-                my $value = CXGN::DroneImagery::LegendrePolynomials::legendre_polynomial_sum($coeffs, $time);
+                my $value = CXGN::DroneImagery::LegendrePolynomials::normalized_legendre_polynomial_sum($coeffs, $time);
 
                 my $time_term_string = '';
                 if ($statistics_select eq 'blupf90_grm_random_regression_gdd_blups' || $statistics_select eq 'airemlf90_grm_random_regression_gdd_blups') {
@@ -24694,7 +25551,7 @@ sub perform_drone_imagery_analytics {
         while ( my ($plot_name, $coeffs) = each %rr_temporal_coefficients_altered_env_6) {
             foreach my $time_term (@sorted_trait_names) {
                 my $time = ($time_term - $time_min)/($time_max - $time_min);
-                my $value = CXGN::DroneImagery::LegendrePolynomials::legendre_polynomial_sum($coeffs, $time);
+                my $value = CXGN::DroneImagery::LegendrePolynomials::normalized_legendre_polynomial_sum($coeffs, $time);
 
                 $result_blup_pe_data_delta_altered_env_6->{$plot_name}->{$time_term} = [$value, $timestamp, $user_name, '', ''];
 
@@ -24714,6 +25571,10 @@ sub perform_drone_imagery_analytics {
             my $cmd_f90_cv1 = 'cd '.$tmp_stats_dir.'; echo '.$parameter_tempfile_cv1_basename.' | '.$command_name.' > '.$stats_out_tempfile;
             print STDERR Dumper $cmd_f90_cv1;
             my $status_cv1 = system($cmd_f90_cv1);
+            return {error=>'The native fold process failed; no estimates were read.'} if $status_cv1;
+            my $fold_error_cv1=CXGN::DroneImagery::DesignFactors::native_fit_error(
+                $statistics_select,$parameter_tempfile_cv1,$stats_out_cv1_predict_tempfile,$stats_out_tempfile,$tmp_stats_dir);
+            return {error=>$fold_error_cv1} if $fold_error_cv1;
 
             open(my $fh_log_cv1, '<', $stats_out_tempfile) or die "Could not open file '$stats_out_tempfile' $!";
                 print STDERR "Opened $stats_out_tempfile\n";
@@ -24726,18 +25587,27 @@ sub perform_drone_imagery_analytics {
             open(my $fh_yhat_res_cv1, '<', $yhat_residual_tempfile_cv1) or die "Could not open file '$yhat_residual_tempfile_cv1' $!";
                 print STDERR "Opened $yhat_residual_tempfile_cv1\n";
 
+                my $native_fold_observed_1=CXGN::DroneImagery::NativeResults::observation_mask($stats_out_cv1_predict_tempfile,$parameter_tempfile_cv1);
+                my $native_fold_row_1=0;
                 while (my $row = <$fh_yhat_res_cv1>) {
+                    next if !$native_fold_observed_1->[$native_fold_row_1++];
                     # print STDERR $row;
                     my @vals = split ' ', $row;
                     my $pred = $vals[0];
                     my $residual = $vals[1];
                     $model_sum_square_cv1_altered_env_6 = $model_sum_square_cv1_altered_env_6 + $residual*$residual;
                 }
+                return {error=>'Native fold readback row count differs from its input.'}
+                    if $native_fold_row_1!=@$native_fold_observed_1;
             close($fh_yhat_res_cv1);
 
             my $cmd_f90_cv2 = 'cd '.$tmp_stats_dir.'; echo '.$parameter_tempfile_cv2_basename.' | '.$command_name.' > '.$stats_out_tempfile;
             print STDERR Dumper $cmd_f90_cv2;
             my $status_cv2 = system($cmd_f90_cv2);
+            return {error=>'The native fold process failed; no estimates were read.'} if $status_cv2;
+            my $fold_error_cv2=CXGN::DroneImagery::DesignFactors::native_fit_error(
+                $statistics_select,$parameter_tempfile_cv2,$stats_out_cv2_predict_tempfile,$stats_out_tempfile,$tmp_stats_dir);
+            return {error=>$fold_error_cv2} if $fold_error_cv2;
 
             open(my $fh_log_cv2, '<', $stats_out_tempfile) or die "Could not open file '$stats_out_tempfile' $!";
                 print STDERR "Opened $stats_out_tempfile\n";
@@ -24750,18 +25620,27 @@ sub perform_drone_imagery_analytics {
             open(my $fh_yhat_res_cv2, '<', $yhat_residual_tempfile_cv2) or die "Could not open file '$yhat_residual_tempfile_cv2' $!";
                 print STDERR "Opened $yhat_residual_tempfile_cv2\n";
 
+                my $native_fold_observed_2=CXGN::DroneImagery::NativeResults::observation_mask($stats_out_cv2_predict_tempfile,$parameter_tempfile_cv2);
+                my $native_fold_row_2=0;
                 while (my $row = <$fh_yhat_res_cv2>) {
+                    next if !$native_fold_observed_2->[$native_fold_row_2++];
                     # print STDERR $row;
                     my @vals = split ' ', $row;
                     my $pred = $vals[0];
                     my $residual = $vals[1];
                     $model_sum_square_cv2_altered_env_6 = $model_sum_square_cv2_altered_env_6 + $residual*$residual;
                 }
+                return {error=>'Native fold readback row count differs from its input.'}
+                    if $native_fold_row_2!=@$native_fold_observed_2;
             close($fh_yhat_res_cv2);
 
             my $cmd_f90_cv3 = 'cd '.$tmp_stats_dir.'; echo '.$parameter_tempfile_cv3_basename.' | '.$command_name.' > '.$stats_out_tempfile;
             print STDERR Dumper $cmd_f90_cv3;
             my $status_cv3 = system($cmd_f90_cv3);
+            return {error=>'The native fold process failed; no estimates were read.'} if $status_cv3;
+            my $fold_error_cv3=CXGN::DroneImagery::DesignFactors::native_fit_error(
+                $statistics_select,$parameter_tempfile_cv3,$stats_out_cv3_predict_tempfile,$stats_out_tempfile,$tmp_stats_dir);
+            return {error=>$fold_error_cv3} if $fold_error_cv3;
 
             open(my $fh_log_cv3, '<', $stats_out_tempfile) or die "Could not open file '$stats_out_tempfile' $!";
                 print STDERR "Opened $stats_out_tempfile\n";
@@ -24774,18 +25653,27 @@ sub perform_drone_imagery_analytics {
             open(my $fh_yhat_res_cv3, '<', $yhat_residual_tempfile_cv3) or die "Could not open file '$yhat_residual_tempfile_cv3' $!";
                 print STDERR "Opened $yhat_residual_tempfile_cv3\n";
 
+                my $native_fold_observed_3=CXGN::DroneImagery::NativeResults::observation_mask($stats_out_cv3_predict_tempfile,$parameter_tempfile_cv3);
+                my $native_fold_row_3=0;
                 while (my $row = <$fh_yhat_res_cv3>) {
+                    next if !$native_fold_observed_3->[$native_fold_row_3++];
                     # print STDERR $row;
                     my @vals = split ' ', $row;
                     my $pred = $vals[0];
                     my $residual = $vals[1];
                     $model_sum_square_cv3_altered_env_6 = $model_sum_square_cv3_altered_env_6 + $residual*$residual;
                 }
+                return {error=>'Native fold readback row count differs from its input.'}
+                    if $native_fold_row_3!=@$native_fold_observed_3;
             close($fh_yhat_res_cv3);
 
             my $cmd_f90_cv4 = 'cd '.$tmp_stats_dir.'; echo '.$parameter_tempfile_cv4_basename.' | '.$command_name.' > '.$stats_out_tempfile;
             print STDERR Dumper $cmd_f90_cv4;
             my $status_cv4 = system($cmd_f90_cv4);
+            return {error=>'The native fold process failed; no estimates were read.'} if $status_cv4;
+            my $fold_error_cv4=CXGN::DroneImagery::DesignFactors::native_fit_error(
+                $statistics_select,$parameter_tempfile_cv4,$stats_out_cv4_predict_tempfile,$stats_out_tempfile,$tmp_stats_dir);
+            return {error=>$fold_error_cv4} if $fold_error_cv4;
 
             open(my $fh_log_cv4, '<', $stats_out_tempfile) or die "Could not open file '$stats_out_tempfile' $!";
                 print STDERR "Opened $stats_out_tempfile\n";
@@ -24798,18 +25686,27 @@ sub perform_drone_imagery_analytics {
             open(my $fh_yhat_res_cv4, '<', $yhat_residual_tempfile_cv4) or die "Could not open file '$yhat_residual_tempfile_cv4' $!";
                 print STDERR "Opened $yhat_residual_tempfile_cv4\n";
 
+                my $native_fold_observed_4=CXGN::DroneImagery::NativeResults::observation_mask($stats_out_cv4_predict_tempfile,$parameter_tempfile_cv4);
+                my $native_fold_row_4=0;
                 while (my $row = <$fh_yhat_res_cv4>) {
+                    next if !$native_fold_observed_4->[$native_fold_row_4++];
                     # print STDERR $row;
                     my @vals = split ' ', $row;
                     my $pred = $vals[0];
                     my $residual = $vals[1];
                     $model_sum_square_cv4_altered_env_6 = $model_sum_square_cv4_altered_env_6 + $residual*$residual;
                 }
+                return {error=>'Native fold readback row count differs from its input.'}
+                    if $native_fold_row_4!=@$native_fold_observed_4;
             close($fh_yhat_res_cv4);
 
             my $cmd_f90_cv5 = 'cd '.$tmp_stats_dir.'; echo '.$parameter_tempfile_cv5_basename.' | '.$command_name.' > '.$stats_out_tempfile;
             print STDERR Dumper $cmd_f90_cv5;
             my $status_cv5 = system($cmd_f90_cv5);
+            return {error=>'The native fold process failed; no estimates were read.'} if $status_cv5;
+            my $fold_error_cv5=CXGN::DroneImagery::DesignFactors::native_fit_error(
+                $statistics_select,$parameter_tempfile_cv5,$stats_out_cv5_predict_tempfile,$stats_out_tempfile,$tmp_stats_dir);
+            return {error=>$fold_error_cv5} if $fold_error_cv5;
 
             open(my $fh_log_cv5, '<', $stats_out_tempfile) or die "Could not open file '$stats_out_tempfile' $!";
                 print STDERR "Opened $stats_out_tempfile\n";
@@ -24822,18 +25719,27 @@ sub perform_drone_imagery_analytics {
             open(my $fh_yhat_res_cv5, '<', $yhat_residual_tempfile_cv5) or die "Could not open file '$yhat_residual_tempfile_cv5' $!";
                 print STDERR "Opened $yhat_residual_tempfile_cv5\n";
 
+                my $native_fold_observed_5=CXGN::DroneImagery::NativeResults::observation_mask($stats_out_cv5_predict_tempfile,$parameter_tempfile_cv5);
+                my $native_fold_row_5=0;
                 while (my $row = <$fh_yhat_res_cv5>) {
+                    next if !$native_fold_observed_5->[$native_fold_row_5++];
                     # print STDERR $row;
                     my @vals = split ' ', $row;
                     my $pred = $vals[0];
                     my $residual = $vals[1];
                     $model_sum_square_cv5_altered_env_6 = $model_sum_square_cv5_altered_env_6 + $residual*$residual;
                 }
+                return {error=>'Native fold readback row count differs from its input.'}
+                    if $native_fold_row_5!=@$native_fold_observed_5;
             close($fh_yhat_res_cv5);
 
             my $cmd_f90_cv1_2 = 'cd '.$tmp_stats_dir.'; echo '.$parameter_tempfile_cv1_2_basename.' | blupf90 > '.$stats_out_tempfile;
             print STDERR Dumper $cmd_f90_cv1_2;
             my $status_cv1_2 = system($cmd_f90_cv1_2);
+            return {error=>'The native fold process failed; no estimates were read.'} if $status_cv1_2;
+            my $fold_error_cv1_2=CXGN::DroneImagery::DesignFactors::native_fit_error(
+                $native_blup_selection,$parameter_tempfile_cv1_2,$stats_out_cv1_predict_tempfile,$stats_out_tempfile,$tmp_stats_dir);
+            return {error=>$fold_error_cv1_2} if $fold_error_cv1_2;
 
             open(my $fh_log_cv1_2, '<', $stats_out_tempfile) or die "Could not open file '$stats_out_tempfile' $!";
                 print STDERR "Opened $stats_out_tempfile\n";
@@ -24846,18 +25752,27 @@ sub perform_drone_imagery_analytics {
             open(my $fh_yhat_res_cv1_2, '<', $yhat_residual_tempfile_cv1_2) or die "Could not open file '$yhat_residual_tempfile_cv1_2' $!";
                 print STDERR "Opened $yhat_residual_tempfile_cv1_2\n";
 
+                my $native_fold_observed_1_2=CXGN::DroneImagery::NativeResults::observation_mask($stats_out_cv1_predict_tempfile,$parameter_tempfile_cv1_2);
+                my $native_fold_row_1_2=0;
                 while (my $row = <$fh_yhat_res_cv1_2>) {
+                    next if !$native_fold_observed_1_2->[$native_fold_row_1_2++];
                     # print STDERR $row;
                     my @vals = split ' ', $row;
                     my $pred = $vals[0];
                     my $residual = $vals[1];
                     $model_sum_square_cv1_2_altered_env_6 = $model_sum_square_cv1_2_altered_env_6 + $residual*$residual;
                 }
+                return {error=>'Native fold readback row count differs from its input.'}
+                    if $native_fold_row_1_2!=@$native_fold_observed_1_2;
             close($fh_yhat_res_cv1_2);
 
             my $cmd_f90_cv2_2 = 'cd '.$tmp_stats_dir.'; echo '.$parameter_tempfile_cv2_2_basename.' | blupf90 > '.$stats_out_tempfile;
             print STDERR Dumper $cmd_f90_cv2_2;
             my $status_cv2_2 = system($cmd_f90_cv2_2);
+            return {error=>'The native fold process failed; no estimates were read.'} if $status_cv2_2;
+            my $fold_error_cv2_2=CXGN::DroneImagery::DesignFactors::native_fit_error(
+                $native_blup_selection,$parameter_tempfile_cv2_2,$stats_out_cv2_predict_tempfile,$stats_out_tempfile,$tmp_stats_dir);
+            return {error=>$fold_error_cv2_2} if $fold_error_cv2_2;
 
             open(my $fh_log_cv2_2, '<', $stats_out_tempfile) or die "Could not open file '$stats_out_tempfile' $!";
                 print STDERR "Opened $stats_out_tempfile\n";
@@ -24870,18 +25785,27 @@ sub perform_drone_imagery_analytics {
             open(my $fh_yhat_res_cv2_2, '<', $yhat_residual_tempfile_cv2_2) or die "Could not open file '$yhat_residual_tempfile_cv2_2' $!";
                 print STDERR "Opened $yhat_residual_tempfile_cv2_2\n";
 
+                my $native_fold_observed_2_2=CXGN::DroneImagery::NativeResults::observation_mask($stats_out_cv2_predict_tempfile,$parameter_tempfile_cv2_2);
+                my $native_fold_row_2_2=0;
                 while (my $row = <$fh_yhat_res_cv2_2>) {
+                    next if !$native_fold_observed_2_2->[$native_fold_row_2_2++];
                     # print STDERR $row;
                     my @vals = split ' ', $row;
                     my $pred = $vals[0];
                     my $residual = $vals[1];
                     $model_sum_square_cv2_2_altered_env_6 = $model_sum_square_cv2_2_altered_env_6 + $residual*$residual;
                 }
+                return {error=>'Native fold readback row count differs from its input.'}
+                    if $native_fold_row_2_2!=@$native_fold_observed_2_2;
             close($fh_yhat_res_cv2_2);
 
             my $cmd_f90_cv3_2 = 'cd '.$tmp_stats_dir.'; echo '.$parameter_tempfile_cv3_2_basename.' | blupf90 > '.$stats_out_tempfile;
             print STDERR Dumper $cmd_f90_cv3_2;
             my $status_cv3_2 = system($cmd_f90_cv3_2);
+            return {error=>'The native fold process failed; no estimates were read.'} if $status_cv3_2;
+            my $fold_error_cv3_2=CXGN::DroneImagery::DesignFactors::native_fit_error(
+                $native_blup_selection,$parameter_tempfile_cv3_2,$stats_out_cv3_predict_tempfile,$stats_out_tempfile,$tmp_stats_dir);
+            return {error=>$fold_error_cv3_2} if $fold_error_cv3_2;
 
             open(my $fh_log_cv3_2, '<', $stats_out_tempfile) or die "Could not open file '$stats_out_tempfile' $!";
                 print STDERR "Opened $stats_out_tempfile\n";
@@ -24894,18 +25818,27 @@ sub perform_drone_imagery_analytics {
             open(my $fh_yhat_res_cv3_2, '<', $yhat_residual_tempfile_cv3_2) or die "Could not open file '$yhat_residual_tempfile_cv3_2' $!";
                 print STDERR "Opened $yhat_residual_tempfile_cv3_2\n";
 
+                my $native_fold_observed_3_2=CXGN::DroneImagery::NativeResults::observation_mask($stats_out_cv3_predict_tempfile,$parameter_tempfile_cv3_2);
+                my $native_fold_row_3_2=0;
                 while (my $row = <$fh_yhat_res_cv3_2>) {
+                    next if !$native_fold_observed_3_2->[$native_fold_row_3_2++];
                     # print STDERR $row;
                     my @vals = split ' ', $row;
                     my $pred = $vals[0];
                     my $residual = $vals[1];
                     $model_sum_square_cv3_2_altered_env_6 = $model_sum_square_cv3_2_altered_env_6 + $residual*$residual;
                 }
+                return {error=>'Native fold readback row count differs from its input.'}
+                    if $native_fold_row_3_2!=@$native_fold_observed_3_2;
             close($fh_yhat_res_cv3_2);
 
             my $cmd_f90_cv4_2 = 'cd '.$tmp_stats_dir.'; echo '.$parameter_tempfile_cv4_2_basename.' | blupf90 > '.$stats_out_tempfile;
             print STDERR Dumper $cmd_f90_cv4_2;
             my $status_cv4_2 = system($cmd_f90_cv4_2);
+            return {error=>'The native fold process failed; no estimates were read.'} if $status_cv4_2;
+            my $fold_error_cv4_2=CXGN::DroneImagery::DesignFactors::native_fit_error(
+                $native_blup_selection,$parameter_tempfile_cv4_2,$stats_out_cv4_predict_tempfile,$stats_out_tempfile,$tmp_stats_dir);
+            return {error=>$fold_error_cv4_2} if $fold_error_cv4_2;
 
             open(my $fh_log_cv4_2, '<', $stats_out_tempfile) or die "Could not open file '$stats_out_tempfile' $!";
                 print STDERR "Opened $stats_out_tempfile\n";
@@ -24918,18 +25851,27 @@ sub perform_drone_imagery_analytics {
             open(my $fh_yhat_res_cv4_2, '<', $yhat_residual_tempfile_cv4_2) or die "Could not open file '$yhat_residual_tempfile_cv4_2' $!";
                 print STDERR "Opened $yhat_residual_tempfile_cv4_2\n";
 
+                my $native_fold_observed_4_2=CXGN::DroneImagery::NativeResults::observation_mask($stats_out_cv4_predict_tempfile,$parameter_tempfile_cv4_2);
+                my $native_fold_row_4_2=0;
                 while (my $row = <$fh_yhat_res_cv4_2>) {
+                    next if !$native_fold_observed_4_2->[$native_fold_row_4_2++];
                     # print STDERR $row;
                     my @vals = split ' ', $row;
                     my $pred = $vals[0];
                     my $residual = $vals[1];
                     $model_sum_square_cv4_2_altered_env_6 = $model_sum_square_cv4_2_altered_env_6 + $residual*$residual;
                 }
+                return {error=>'Native fold readback row count differs from its input.'}
+                    if $native_fold_row_4_2!=@$native_fold_observed_4_2;
             close($fh_yhat_res_cv4_2);
 
             my $cmd_f90_cv5_2 = 'cd '.$tmp_stats_dir.'; echo '.$parameter_tempfile_cv5_2_basename.' | blupf90 > '.$stats_out_tempfile;
             print STDERR Dumper $cmd_f90_cv5_2;
             my $status_cv5_2 = system($cmd_f90_cv5_2);
+            return {error=>'The native fold process failed; no estimates were read.'} if $status_cv5_2;
+            my $fold_error_cv5_2=CXGN::DroneImagery::DesignFactors::native_fit_error(
+                $native_blup_selection,$parameter_tempfile_cv5_2,$stats_out_cv5_predict_tempfile,$stats_out_tempfile,$tmp_stats_dir);
+            return {error=>$fold_error_cv5_2} if $fold_error_cv5_2;
 
             open(my $fh_log_cv5_2, '<', $stats_out_tempfile) or die "Could not open file '$stats_out_tempfile' $!";
                 print STDERR "Opened $stats_out_tempfile\n";
@@ -24942,13 +25884,18 @@ sub perform_drone_imagery_analytics {
             open(my $fh_yhat_res_cv5_2, '<', $yhat_residual_tempfile_cv5_2) or die "Could not open file '$yhat_residual_tempfile_cv5_2' $!";
                 print STDERR "Opened $yhat_residual_tempfile_cv5_2\n";
 
+                my $native_fold_observed_5_2=CXGN::DroneImagery::NativeResults::observation_mask($stats_out_cv5_predict_tempfile,$parameter_tempfile_cv5_2);
+                my $native_fold_row_5_2=0;
                 while (my $row = <$fh_yhat_res_cv5_2>) {
+                    next if !$native_fold_observed_5_2->[$native_fold_row_5_2++];
                     # print STDERR $row;
                     my @vals = split ' ', $row;
                     my $pred = $vals[0];
                     my $residual = $vals[1];
                     $model_sum_square_cv5_2_altered_env_6 = $model_sum_square_cv5_2_altered_env_6 + $residual*$residual;
                 }
+                return {error=>'Native fold readback row count differs from its input.'}
+                    if $native_fold_row_5_2!=@$native_fold_observed_5_2;
             close($fh_yhat_res_cv5_2);
         }
     }
@@ -26238,7 +27185,8 @@ sub perform_drone_imagery_analytics {
 
     $result_blup_data_altered_env_6, $result_blup_data_delta_altered_env_6, $result_blup_spatial_data_altered_env_6, $result_blup_pe_data_altered_env_6, $result_blup_pe_data_delta_altered_env_6, $result_residual_data_altered_env_6, $result_fitted_data_altered_env_6, \%fixed_effects_altered_env_6, \%rr_genetic_coefficients_altered_env_6, \%rr_temporal_coefficients_altered_env_6, \@rr_coeff_genetic_covariance_altered_env_6, \@rr_coeff_env_covariance_altered_env_6, \@rr_coeff_genetic_correlation_altered_env_6, \@rr_coeff_env_correlation_altered_env_6, $rr_residual_variance_altered_env_6, \@varcomp_altered_env_6,
 
-    $model_sum_square_residual_altered_env_6, $genetic_effect_min_altered_env_6, $genetic_effect_max_altered_env_6, $env_effect_min_altered_env_6, $env_effect_max_altered_env_6, $genetic_effect_sum_square_altered_env_6, $genetic_effect_sum_altered_env_6, $env_effect_sum_square_altered_env_6, $env_effect_sum_altered_env_6, $residual_sum_square_altered_env_6, $residual_sum_altered_env_6, $model_sum_square_altered_env_cv_result_6, $model_sum_square_altered_env_cv_2_result_6
+    $model_sum_square_residual_altered_env_6, $genetic_effect_min_altered_env_6, $genetic_effect_max_altered_env_6, $env_effect_min_altered_env_6, $env_effect_max_altered_env_6, $genetic_effect_sum_square_altered_env_6, $genetic_effect_sum_altered_env_6, $env_effect_sum_square_altered_env_6, $env_effect_sum_altered_env_6, $residual_sum_square_altered_env_6, $residual_sum_altered_env_6, $model_sum_square_altered_env_cv_result_6, $model_sum_square_altered_env_cv_2_result_6,
+    {version=>2,stages=>\%native_variance_summaries}
     ];
 }
 

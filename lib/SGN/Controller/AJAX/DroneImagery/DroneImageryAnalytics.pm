@@ -71,6 +71,117 @@ __PACKAGE__->config(
     map       => { 'application/json' => 'JSON', 'text/html' => 'JSON'  },
 );
 
+# Called only after the calculated protocol summary was saved. UploadFile can
+# return a destination even when its copy failed, so verify the actual file
+# before hashing or advertising a metadata/download link.
+sub _archive_analytics_result {
+    my ($c,$source,$archive_type,$timestamp,$user_id,$user_role,$protocol_id)=@_;
+    my $name=basename($source);
+    my $result=eval {
+        my $uploader=CXGN::UploadFile->new({
+            tempfile=>$source,subdirectory=>$archive_type,
+            archive_path=>$c->config->{archive_path},archive_filename=>$name,
+            timestamp=>$timestamp,user_id=>$user_id,user_role=>$user_role,
+        });
+        my $filename=$uploader->archive;
+        die "The archive destination is not a readable regular file.\n"
+            if !defined($filename) || !-f $filename || !-r $filename;
+        my $md5=$uploader->get_md5($filename);
+        {filename=>$filename,md5=>$md5};
+    };
+    if (!$result) {
+        $c->stash->{rest}={
+            error=>"Could not archive result file $name. The calculated summary remains saved in analytics protocol $protocol_id; the archive download is unavailable.",
+            analytics_protocol_id=>$protocol_id,summary_saved=>1,archive_failed=>1,
+        };
+        return undef;
+    }
+    return $result;
+}
+
+# Aggregate already projected native quantities; never recompute a ratio from
+# averaged components or treat simulation variability as an estimate SE.
+sub _native_variance_averages {
+    my ($runs)=@_;
+    my (%groups,%reference);
+    my @scenarios=qw(original altered env_linear env_1DN env_2DN env_ar1xar1 env_random env_realdata);
+    my @metrics=qw(mean_genetic_variance mean_permanent_variance residual_variance genetic_share);
+    my $json=JSON->new->canonical(1);
+    foreach my $run (@{$runs || []}) {
+        my $type=$run->{statistics_select};
+        foreach my $scenario (@scenarios) {
+            my $scenario_result=$run->{$scenario};
+            my $summary=$scenario_result ? $scenario_result->{native_variance_summary}:undef;
+            if (!defined($summary)) {
+                die "Missing original native variance summary.\n" if $scenario eq 'original';
+                next; # An optional environment was not fitted.
+            }
+            die "Invalid versioned native variance summary for $scenario.\n"
+                if ref($summary) ne 'HASH' || ($summary->{version} // 0)!=2;
+            my @units=sort {"$a->{plot_id}" cmp "$b->{plot_id}"} @{$summary->{reference_units}};
+            my $signature=$json->encode({
+                estimand=>$summary->{estimand_id},time_scale=>$summary->{time_scale},
+                origin=>$summary->{kernel_origin},quantity=>$summary->{quantity_label},
+                covariance_source=>$summary->{covariance_source},
+                units=>[map {{plot_id=>$_->{plot_id},genotype_id=>$_->{genotype_id},weight=>$_->{weight}}} @units],
+            });
+            die "Native variance iterations use different reference plots, weights, units or estimands.\n"
+                if exists($reference{$type}{$scenario}) && $reference{$type}{$scenario} ne $signature;
+            $reference{$type}{$scenario}=$signature;
+            foreach my $field (qw(genetic_covariance env_covariance genetic_correlation env_correlation)) {
+                my $index=0;
+                foreach my $value (@{$summary->{$field}}) {
+                    $index++;
+                    next if !defined($value); # Zero-variance correlations are undefined, not zero.
+                    push @{$groups{$type}{$scenario}{$field.'_'.$index}{vals}},$value;
+                }
+            }
+            foreach my $point (@{$summary->{by_time}}) {
+                foreach my $metric (@metrics) {
+                    my $value=$point->{$metric};
+                    die "Native time summary contains an incomplete quantity.\n"
+                        if !defined($value) || !looks_like_number($value) || !POSIX::isfinite($value);
+                    my $level=$metric.'_time_'.$point->{time};
+                    my $group=($groups{$type}{$scenario}{$level} ||= {
+                        time=>$point->{time},time_scale=>$summary->{time_scale},metric=>$metric,
+                        quantity_label=>$metric eq 'genetic_share' ? $summary->{quantity_label} :
+                            $metric eq 'mean_genetic_variance' ? 'Mean genetic variance' :
+                            $metric eq 'mean_permanent_variance' ? 'Mean permanent-environment variance':'Residual variance',
+                        units=>$metric eq 'genetic_share' ? 'proportion':'response squared',
+                        definition=>$summary->{definition},kernel_origin=>$summary->{kernel_origin},
+                        covariance_source=>$summary->{covariance_source},reference_count=>scalar(@units),
+                    });
+                    push @{$group->{vals}},$value;
+                    if ($metric eq 'genetic_share') {
+                        my ($min,$max)=@{$point->{genetic_share_range}};
+                        $group->{per_unit_range}[0]=$min
+                            if !defined($group->{per_unit_range}[0]) || $min<$group->{per_unit_range}[0];
+                        $group->{per_unit_range}[1]=$max
+                            if !defined($group->{per_unit_range}[1]) || $max>$group->{per_unit_range}[1];
+                    }
+                }
+            }
+        }
+    }
+    my (%values,@display);
+    foreach my $type (sort keys %groups) {
+        foreach my $scenario (sort keys %{$groups{$type}}) {
+            foreach my $level (sort keys %{$groups{$type}{$scenario}}) {
+                my $group=$groups{$type}{$scenario}{$level};
+                my $stat=Statistics::Descriptive::Full->new;
+                $stat->add_data(@{$group->{vals}});
+                my $n=scalar(@{$group->{vals}});
+                my $record={%$group,mean=>$stat->mean,std=>$n>1 ? $stat->standard_deviation:undef,n=>$n};
+                $values{$type}{$scenario}{$level}=$record;
+                push @display,{%$record,type=>$type,type_scenario=>$scenario,level=>$level};
+            }
+        }
+    }
+    @display=sort {$a->{type} cmp $b->{type} || $a->{type_scenario} cmp $b->{type_scenario} ||
+        ($a->{time} // 0)<=>($b->{time} // 0) || $a->{level} cmp $b->{level}} @display;
+    return {values=>\%values,display=>\@display};
+}
+
 sub drone_imagery_calculate_analytics : Path('/api/drone_imagery/calculate_analytics') : ActionClass('REST') { }
 sub drone_imagery_calculate_analytics_POST : Args(0) {
     my $self = shift;
@@ -91,6 +202,14 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
 
     my $field_trial_id_list = $c->req->param('field_trial_id_list') ? decode_json $c->req->param('field_trial_id_list') : [];
     my $field_trial_id_list_string = join ',', @$field_trial_id_list;
+    my $engine_error=CXGN::DroneImagery::DesignFactors::statistics_prerequisite_error($statistics_select_original);
+    if ($engine_error) {$c->stash->{rest}={error=>$engine_error};return;}
+    my $native_settings=($statistics_select_original // '') =~ /^(?:blupf90|airemlf90)_/
+        ? CXGN::DroneImagery::DesignFactors::native_solver_settings($statistics_select_original) : undef;
+    my $native_convergence_criterion=$native_settings ? $native_settings->{convergence_criterion} : undef;
+    my $native_solver=$native_settings ? $native_settings->{solver} : undef;
+    my $native_residual_start_info;
+
 
     if (scalar(@$field_trial_id_list) != 1) {
         $c->stash->{rest} = { error => "Please select one field trial!"};
@@ -145,6 +264,9 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
             use_area_under_curve => $c->req->param('use_area_under_curve') eq 'yes' ? 1 : 0,
             genotyping_protocol_id => $c->req->param('protocol_id'),
             tolparinv => $c->req->param('tolparinv'),
+            (defined($native_settings) ? (native_residual_model=>(($statistics_select_original // '') =~ /^airemlf90_/ ? 'Estimated Legendre log-residual variance' : 'Homogeneous declared variance 1')) : ()) ,
+            (defined($native_convergence_criterion) ? (native_convergence_criterion=>$native_convergence_criterion) : ()),
+            (defined($native_solver) ? (native_solver=>$native_solver) : ()),
             legendre_order_number => $c->req->param('legendre_order_number'),
             permanent_environment_structure => $c->req->param('permanent_environment_structure'),
             permanent_environment_structure_phenotype_correlation_traits => decode_json $c->req->param('permanent_environment_structure_phenotype_correlation_traits'),
@@ -227,6 +349,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
     my $shared_cluster_dir_config = $c->config->{cluster_shared_tempdir};
     my $tmp_stats_dir = $shared_cluster_dir_config."/tmp_drone_statistics";
     mkdir $tmp_stats_dir if ! -d $tmp_stats_dir;
+    $tmp_stats_dir=CXGN::DroneImagery::DesignFactors::working_directory($tmp_stats_dir,$statistics_select_original);
     my ($grm_rename_tempfile_fh, $grm_rename_tempfile) = tempfile("drone_stats_XXXXX", DIR=> $tmp_stats_dir);
     $grm_rename_tempfile .= '.GRM';
     my ($minimization_iterations_tempfile_fh, $minimization_iterations_tempfile) = tempfile("drone_stats_XXXXX", DIR=> $tmp_stats_dir);
@@ -1631,10 +1754,17 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                             my $polys = $polynomial_map{$t};
                             push @row, @$polys;
 
-                            if (defined($phenotype_data_original{$p}->{$t})) {
+                            my $native_value=eval {CXGN::DroneImagery::DesignFactors::native_observation($phenotype_data_original{$p}->{$t})};
+                            if ($@) {$c->stash->{rest}={error=>"$@"};return;}
+                            if ($native_value != CXGN::DroneImagery::DesignFactors::native_missing_value()) {
                                 if ($use_area_under_curve) {
                                     my $val = 0;
                                     foreach my $counter (0..$current_trait_index) {
+                                        my $observed=eval {CXGN::DroneImagery::DesignFactors::native_observation($phenotype_data_original{$p}->{$sorted_trait_names[$counter]})};
+                                        if ($@ || $observed==CXGN::DroneImagery::DesignFactors::native_missing_value()) {
+                                            $c->stash->{rest}={error=>$@ || 'Native area under the curve requires observed values at every included time point.'};
+                                            return;
+                                        }
                                         if ($counter == 0) {
                                             $val = $val + $phenotype_data_original{$p}->{$sorted_trait_names[$counter]} + 0;
                                         }
@@ -1657,12 +1787,12 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                                     push @data_matrix_phenotypes_row, $val;
                                 }
                                 else {
-                                    push @row, $phenotype_data_original{$p}->{$t} + 0;
+                                    push @row, $native_value;
                                     push @data_matrix_phenotypes_row, $phenotype_data_original{$p}->{$t} + 0;
                                 }
                             } else {
                                 print STDERR $p." : $t : $germplasm_name : NA \n";
-                                push @row, '';
+                                push @row, CXGN::DroneImagery::DesignFactors::native_missing_value();
                                 push @data_matrix_phenotypes_row, 'NA';
                             }
 
@@ -1679,7 +1809,9 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                     @phenotype_header = ("id", "plot_id", "replicate", "time", "replicate_time", "ind_replicate", @legs_header, "phenotype");
                     open($F, ">", $stats_tempfile_2) || die "Can't open file ".$stats_tempfile_2;
                         foreach (@data_matrix_original) {
-                            my $line = join ' ', @$_;
+                            my @native_row=@$_;
+                            # Missing observations were encoded explicitly above.
+                            my $line = join ' ', @native_row;
                             print $F "$line\n";
                         }
                     close($F);
@@ -2103,7 +2235,15 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                 $mean_col = $col_stat->mean();
                 $sig_col = $col_stat->variance();
 
-                my $result_1 = CXGN::DroneImagery::DroneImageryAnalyticsRunSimulation::perform_drone_imagery_analytics($schema, $a_env, $b_env, $ro_env, $row_ro_env, $env_variance_percent, $protocol_id, $statistics_select, $analytics_select, $tolparinv, $use_area_under_curve, $legendre_order_number, $permanent_environment_structure, \%trait_name_encoder, \%trait_name_encoder_rev, \%stock_info, \%plot_id_map, \@sorted_trait_names, \%accession_id_factor_map, \@rep_time_factors, \@ind_rep_factors, \@unique_accession_names, \%plot_id_count_map_reverse, \@sorted_scaled_ln_times, \%time_count_map_reverse, \%accession_id_factor_map_reverse, \%seen_times, \%plot_id_factor_map_reverse, \%trait_to_time_map, \@unique_plot_names, \%stock_name_row_col, \%phenotype_data_original, \%plot_rep_time_factor_map, \%stock_row_col, \%stock_row_col_id, \%polynomial_map, \@plot_ids_ordered, $csv, $timestamp, $user_name, $stats_tempfile, $grm_file, $grm_rename_tempfile, $tmp_stats_dir, $stats_out_tempfile, $stats_out_tempfile_row, $stats_out_tempfile_col, $stats_out_tempfile_residual, $stats_out_tempfile_2dspl, $stats_prep2_tempfile, $stats_out_param_tempfile, $parameter_tempfile, $parameter_asreml_tempfile, $stats_tempfile_2, $permanent_environment_structure_tempfile, $permanent_environment_structure_env_tempfile, $permanent_environment_structure_env_tempfile2, $permanent_environment_structure_env_tempfile_mat, $sim_env_changing_mat_tempfile, $sim_env_changing_mat_full_tempfile, $yhat_residual_tempfile, $blupf90_solutions_tempfile, $coeff_genetic_tempfile, $coeff_pe_tempfile, $stats_out_tempfile_varcomp, $time_min, $time_max, $header_string, $min_row, $max_row, $min_col, $max_col, $mean_row, $sig_row, $mean_col, $sig_col, $sim_env_change_over_time, $correlation_between_times, $field_trial_id_list, $simulated_environment_real_data_trait_id, $fixed_effect_type, $perform_cv);
+                my $native_design_error=CXGN::DroneImagery::DesignFactors::native_variance_design_error(
+                    $statistics_select,scalar(@sorted_trait_names),$legendre_order_number+1);
+                if ($native_design_error) {
+                    $c->stash->{rest}={error=>$native_design_error};
+                    return;
+                }
+                $native_residual_start_info=CXGN::DroneImagery::DesignFactors::native_residual_start(
+                    1,[map {$polynomial_map{$_}} @sorted_trait_names]) if $statistics_select =~ /^airemlf90_/;
+                my $result_1 = CXGN::DroneImagery::DroneImageryAnalyticsRunSimulation::perform_drone_imagery_analytics($schema, $a_env, $b_env, $ro_env, $row_ro_env, $env_variance_percent, $protocol_id, $statistics_select, $analytics_select, $tolparinv, $use_area_under_curve, $legendre_order_number, $permanent_environment_structure, \%trait_name_encoder, \%trait_name_encoder_rev, \%stock_info, \%plot_id_map, \@sorted_trait_names, \%accession_id_factor_map, \@rep_time_factors, \@ind_rep_factors, \@unique_accession_names, \%plot_id_count_map_reverse, \@sorted_scaled_ln_times, \%time_count_map_reverse, \%accession_id_factor_map_reverse, \%seen_times, \%plot_id_factor_map_reverse, \%trait_to_time_map, \@unique_plot_names, \%stock_name_row_col, \%phenotype_data_original, \%plot_rep_time_factor_map, \%stock_row_col, \%stock_row_col_id, \%polynomial_map, \@plot_ids_ordered, $csv, $timestamp, $user_name, $stats_tempfile, $grm_file, $grm_rename_tempfile, $tmp_stats_dir, $stats_out_tempfile, $stats_out_tempfile_row, $stats_out_tempfile_col, $stats_out_tempfile_residual, $stats_out_tempfile_2dspl, $stats_prep2_tempfile, $stats_out_param_tempfile, $parameter_tempfile, $parameter_asreml_tempfile, $stats_tempfile_2, $permanent_environment_structure_tempfile, $permanent_environment_structure_env_tempfile, $permanent_environment_structure_env_tempfile2, $permanent_environment_structure_env_tempfile_mat, $sim_env_changing_mat_tempfile, $sim_env_changing_mat_full_tempfile, $yhat_residual_tempfile, $blupf90_solutions_tempfile, $coeff_genetic_tempfile, $coeff_pe_tempfile, $stats_out_tempfile_varcomp, $time_min, $time_max, $header_string, $min_row, $max_row, $min_col, $max_col, $mean_row, $sig_row, $mean_col, $sig_col, $sim_env_change_over_time, $correlation_between_times, $field_trial_id_list, $simulated_environment_real_data_trait_id, $fixed_effect_type, $perform_cv, {kernel_origin=>(!$protocol_id ? 'genotypic_identity' : $compute_relationship_matrix_from_htp_phenotypes eq 'genotypes' ? ($include_pedgiree_info_if_compute_from_parents ? 'additive_combined':'additive_marker') : 'phenotypic_similarity')});
                 if (ref($result_1) eq 'HASH') {
                     $c->stash->{rest} = $result_1;
                     $c->detach();
@@ -2152,6 +2292,31 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                 $rr_coeff_genetic_covariance_altered_env_array_6_1, $rr_coeff_env_covariance_altered_env_array_6_1, $rr_coeff_genetic_correlation_altered_env_array_6_1, $rr_coeff_env_correlation_altered_env_array_6_1, $rr_residual_variance_altered_env_6_1, $varcomp_altered_array_env_6_1,
                 $model_sum_square_residual_altered_env_6_1, $genetic_effect_min_altered_env_6_1, $genetic_effect_max_altered_env_6_1, $env_effect_min_altered_env_6_1, $env_effect_max_altered_env_6_1, $genetic_effect_sum_square_altered_env_6_1, $genetic_effect_sum_altered_env_6_1, $env_effect_sum_square_altered_env_6_1, $env_effect_sum_altered_env_6_1, $residual_sum_square_altered_env_6_1, $residual_sum_altered_env_6_1, $result_cv_altered_env_6_1, $result_cv_2_altered_env_6_1
                 ) = @$result_1;
+                my $native_variance_summaries=$result_1->[-1];
+                $native_variance_summaries->{construction_provenance}={
+                    relationship_matrix_type=>$compute_relationship_matrix_from_htp_phenotypes,
+                    genotyping_protocol_id=>$protocol_id,
+                    include_pedigree_info=>$include_pedgiree_info_if_compute_from_parents,
+                    parental_grms=>$use_parental_grms_if_compute_from_parents,
+                    compute_from_parents=>$compute_from_parents,
+                    permanent_environment_structure=>$permanent_environment_structure,
+                } if ref($native_variance_summaries) eq 'HASH';
+                if (ref($native_variance_summaries) ne 'HASH' || ($native_variance_summaries->{version} // 0)!=2) {
+                    $c->stash->{rest}={error=>'Native RR returned no versioned variance summary.'};
+                    return;
+                }
+                my ($summary_handle,$summary_file)=tempfile('drone_native_variance_summary_XXXXX',SUFFIX=>'.json',DIR=>$tmp_stats_dir);
+                print {$summary_handle} encode_json($native_variance_summaries);
+                close($summary_handle) or die "Cannot close native variance summary: $!";
+                push @$spatial_effects_files_store,[$summary_file,'native_rr_variance_summary_v2'];
+                my $native_variance_archive={basename=>basename($summary_file),filetype=>'native_rr_variance_summary_v2'};
+                my $compact_native_summaries=dclone($native_variance_summaries);
+                foreach my $summary (values %{$compact_native_summaries->{stages}}) {
+                    delete $_->{units} for @{$summary->{by_time}};
+                    delete $summary->{observation_mask};
+                }
+
+
 
                 eval {
                     print STDERR "PLOTTING CORRELATION\n";
@@ -3298,11 +3463,13 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                 };
 
                 push @$env_varcomps, {
+                    native_variance_archive=>$native_variance_archive,
                     type => "$statistics_select: Env Variance $env_variance_percent : PE Structure: $permanent_environment_structure : SimCorrelation: $correlation_between_times : Iteration $iterations",
                     statistics_select => "$statistics_select: Env Variance $env_variance_percent : PE Structure: $permanent_environment_structure : SimCorrelation: $correlation_between_times",
                     correlation_between_times => $correlation_between_times,
                     env_variance => $env_variance_percent,
                     original => {
+                        native_variance_summary=>$compact_native_summaries->{stages}{original},
                         genetic_covariance => $rr_coeff_genetic_covariance_original_array_1,
                         env_covariance => $rr_coeff_env_covariance_original_array_1,
                         residual => $rr_residual_variance_original_1,
@@ -3312,6 +3479,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                         cv_2 => $result_cv_2_original_1
                     },
                     altered => {
+                        native_variance_summary=>$compact_native_summaries->{stages}{altered},
                         genetic_covariance => $rr_coeff_genetic_covariance_altered_array_1,
                         env_covariance => $rr_coeff_env_covariance_altered_array_1,
                         residual => $rr_residual_variance_altered_1,
@@ -3321,6 +3489,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                         cv_2 => $result_cv_2_altered_1
                     },
                     env_linear => {
+                        native_variance_summary=>$compact_native_summaries->{stages}{env_linear},
                         genetic_covariance => $rr_coeff_genetic_covariance_altered_env_array_1_1,
                         env_covariance => $rr_coeff_env_covariance_altered_env_array_1_1,
                         residual => $rr_residual_variance_altered_env_1_1,
@@ -3330,6 +3499,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                         cv_2 => $result_cv_2_altered_env_1_1
                     },
                     env_1DN  => {
+                        native_variance_summary=>$compact_native_summaries->{stages}{env_1DN},
                         genetic_covariance => $rr_coeff_genetic_covariance_altered_env_array_2_1,
                         env_covariance => $rr_coeff_env_covariance_altered_env_array_2_1,
                         residual => $rr_residual_variance_altered_env_2_1,
@@ -3339,6 +3509,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                         cv_2 => $result_cv_2_altered_env_2_1
                     },
                     env_2DN  => {
+                        native_variance_summary=>$compact_native_summaries->{stages}{env_2DN},
                         genetic_covariance => $rr_coeff_genetic_covariance_altered_env_array_3_1,
                         env_covariance => $rr_coeff_env_covariance_altered_env_array_3_1,
                         residual => $rr_residual_variance_altered_env_3_1,
@@ -3348,6 +3519,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                         cv_2 => $result_cv_2_altered_env_3_1
                     },
                     env_random  => {
+                        native_variance_summary=>$compact_native_summaries->{stages}{env_random},
                         genetic_covariance => $rr_coeff_genetic_covariance_altered_env_array_4_1,
                         env_covariance => $rr_coeff_env_covariance_altered_env_array_4_1,
                         residual => $rr_residual_variance_altered_env_4_1,
@@ -3357,6 +3529,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                         cv_2 => $result_cv_2_altered_env_4_1
                     },
                     env_ar1xar1  => {
+                        native_variance_summary=>$compact_native_summaries->{stages}{env_ar1xar1},
                         genetic_covariance => $rr_coeff_genetic_covariance_altered_env_array_5_1,
                         env_covariance => $rr_coeff_env_covariance_altered_env_array_5_1,
                         residual => $rr_residual_variance_altered_env_5_1,
@@ -3366,6 +3539,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                         cv_2 => $result_cv_2_altered_env_5_1
                     },
                     env_realdata  => {
+                        native_variance_summary=>$compact_native_summaries->{stages}{env_realdata},
                         genetic_covariance => $rr_coeff_genetic_covariance_altered_env_array_6_1,
                         env_covariance => $rr_coeff_env_covariance_altered_env_array_6_1,
                         residual => $rr_residual_variance_altered_env_6_1,
@@ -12711,74 +12885,10 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
         }
     }
     else {
-        foreach (@$env_varcomps) {
-            my $type = $_->{statistics_select};
-            foreach my $t (@varcomp_keys) {
-                my $res = $_->{$t}->{residual};
-                my $genetic_line = 1;
-                foreach my $a (@{$_->{$t}->{genetic_covariance}}) {
-                    push @{$avg_varcomps{$type}->{$t}->{genetic_covariance}->{$genetic_line}->{vals}}, $a;
-                    $genetic_line++;
-                }
-                my $env_line = 1;
-                foreach my $a (@{$_->{$t}->{env_covariance}}) {
-                    push @{$avg_varcomps{$type}->{$t}->{env_covariance}->{$env_line}->{vals}}, $a;
-                    $env_line++;
-                }
-                my $hg_line = 1;
-                foreach my $a (@{$_->{$t}->{genetic_covariance}}) {
-                    my $hg = $a + $res == 0 ? 0 : $a/($a + $res);
-                    push @{$avg_varcomps{$type}->{$t}->{h2_coeff}->{$hg_line}->{vals}}, $hg;
-                    $hg_line++;
-                }
-                my $he_line = 1;
-                foreach my $a (@{$_->{$t}->{env_covariance}}) {
-                    my $he = $a + $res == 0 ? 0 : $a/($a + $res);
-                    push @{$avg_varcomps{$type}->{$t}->{env2_coeff}->{$he_line}->{vals}}, $he;
-                    $he_line++;
-                }
-                my $genetic_corr_line = 1;
-                foreach my $a (@{$_->{$t}->{genetic_correlation}}) {
-                    push @{$avg_varcomps{$type}->{$t}->{genetic_correlation}->{$genetic_corr_line}->{vals}}, $a;
-                    $genetic_corr_line++;
-                }
-                my $env_corr_line = 1;
-                foreach my $a (@{$_->{$t}->{env_correlation}}) {
-                    push @{$avg_varcomps{$type}->{$t}->{env_correlation}->{$env_corr_line}->{vals}}, $a;
-                    $env_corr_line++;
-                }
-                push @{$avg_varcomps{$type}->{$t}->{residual}->{1}->{vals}}, $res;
-            }
-        }
-        # print STDERR Dumper \%avg_varcomps;
-
-        my %avg_varcomps_save;
-        while (my($t, $type_obj) = each %avg_varcomps) {
-            while (my($type, $line_obj) = each %$type_obj) {
-                while (my($var_type, $level_obj) = each %$line_obj) {
-                    while (my($line_num, $vals) = each %$level_obj) {
-                        my $values = $vals->{vals};
-                        my $level_rec = $var_type."_".$line_num;
-                        my $stat = Statistics::Descriptive::Full->new();
-                        $stat->add_data(@$values);
-                        my $std = $stat->standard_deviation();
-                        my $mean = $stat->mean();
-                        $avg_varcomps_save{$t}->{$type}->{$level_rec}->{std} = $std;
-                        $avg_varcomps_save{$t}->{$type}->{$level_rec}->{mean} = $mean;
-                        $avg_varcomps_save{$t}->{$type}->{$level_rec}->{vals} = $values;
-                        push @avg_varcomps_display, {
-                            type => $t,
-                            type_scenario => $type,
-                            level => $level_rec,
-                            vals => $values,
-                            std => $std,
-                            mean => $mean
-                        };
-                    }
-                }
-            }
-        }
-        %avg_varcomps = %avg_varcomps_save;
+        my $native_averages=eval {_native_variance_averages($env_varcomps)};
+        if ($@) {$c->stash->{rest}={error=>"$@"};return;}
+        %avg_varcomps=%{$native_averages->{values}};
+        @avg_varcomps_display=@{$native_averages->{display}};
     }
 
     my %avg_cross_validation;
@@ -12825,6 +12935,11 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
     $protocol_result_summary_id = $protocol_result_summary_id_select;
 
     push @$protocol_result_summary, {
+        variance_summary_version=>($statistics_select =~ /^(?:blupf90|airemlf90)_/ ? 2:undef),
+        native_cv_definition=>($statistics_select =~ /^(?:blupf90|airemlf90)_/
+            ? {performed=>$perform_cv ? 1:0,quantity=>'Sum of squared residuals on observed median-replaced fold inputs; not held-out prediction accuracy.',cv1=>'Selected native backend on median-replaced inputs.',cv2=>'BLUPF90 using main-model covariance matrices and homogeneous residual variance 1 on the same median-replaced inputs.'}:undef),
+        variance_summary_definition=>($statistics_select =~ /^(?:blupf90|airemlf90)_/
+            ? {estimand_id=>'rr_observation_marginal_genetic_share',aggregation=>'Arithmetic mean of fitted per-iteration observation-scale shares. SD is between-iteration sample SD, not a native estimate SE.'}:undef),
         statistics_select_original => $statistics_select_original,
         number_iterations => $number_iterations,
         env_iterations => $env_iterations,
@@ -12848,20 +12963,11 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
 
         my $model_aux_original_name = basename($auxiliary_model_file);
 
-        my $uploader_autoencoder = CXGN::UploadFile->new({
-            tempfile => $auxiliary_model_file,
-            subdirectory => $auxiliary_model_file_archive_type,
-            archive_path => $c->config->{archive_path},
-            archive_filename => $model_aux_original_name,
-            timestamp => $timestamp,
-            user_id => $user_id,
-            user_role => $user_role
-        });
-        my $archived_aux_filename_with_path = $uploader_autoencoder->archive();
-        my $md5_aux = $uploader_autoencoder->get_md5($archived_aux_filename_with_path);
-        if (!$archived_aux_filename_with_path) {
-            return { error => "Could not save file $model_aux_original_name in archive." };
-        }
+        my $archived=_archive_analytics_result($c,$auxiliary_model_file,$auxiliary_model_file_archive_type,
+            $timestamp,$user_id,$user_role,$analytics_protocol_id);
+        return if !$archived; # The REST error identifies the retained calculation.
+        my $archived_aux_filename_with_path=$archived->{filename};
+        my $md5_aux=$archived->{md5};
         print STDERR "Archived Analytics Figure File: $archived_aux_filename_with_path\n";
 
         my $md_row_aux = $metadata_schema->resultset("MdMetadata")->create({create_person_id => $user_id});
@@ -12879,6 +12985,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
         });
     }
 
+    my $native_archive_link_updated=0;
     foreach my $f (@$spatial_effects_files_store) {
         my $auxiliary_model_file = $f->[0];
         my $auxiliary_model_file_archive_type = "nicksmixedmodelsanalytics_v1_".$f->[1];
@@ -12886,20 +12993,11 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
 
         my $model_aux_original_name = basename($auxiliary_model_file);
 
-        my $uploader_autoencoder = CXGN::UploadFile->new({
-            tempfile => $auxiliary_model_file,
-            subdirectory => $auxiliary_model_file_archive_type,
-            archive_path => $c->config->{archive_path},
-            archive_filename => $model_aux_original_name,
-            timestamp => $timestamp,
-            user_id => $user_id,
-            user_role => $user_role
-        });
-        my $archived_aux_filename_with_path = $uploader_autoencoder->archive();
-        my $md5_aux = $uploader_autoencoder->get_md5($archived_aux_filename_with_path);
-        if (!$archived_aux_filename_with_path) {
-            return { error => "Could not save file $model_aux_original_name in archive." };
-        }
+        my $archived=_archive_analytics_result($c,$auxiliary_model_file,$auxiliary_model_file_archive_type,
+            $timestamp,$user_id,$user_role,$analytics_protocol_id);
+        return if !$archived; # The REST error identifies the retained calculation.
+        my $archived_aux_filename_with_path=$archived->{filename};
+        my $md5_aux=$archived->{md5};
         print STDERR "Archived Analytics Data File: $archived_aux_filename_with_path\n";
 
         my $md_row_aux = $metadata_schema->resultset("MdMetadata")->create({create_person_id => $user_id});
@@ -12911,13 +13009,25 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
             metadata_id => $md_row_aux->metadata_id()
         });
 
+        if ($f->[1] eq 'native_rr_variance_summary_v2') {
+            foreach my $run (@{$env_varcomps || []}) {
+                my $archive=$run->{native_variance_archive};
+                next if !$archive || $archive->{basename} ne $model_aux_original_name;
+                $archive->{file_id}=$file_row_aux->file_id;
+                $archive->{download_url}='/breeders/phenotyping/download/'.$file_row_aux->file_id;
+                $native_archive_link_updated=1;
+            }
+        }
         my $experiment_files_aux = $phenome_schema->resultset("NdExperimentMdFiles")->create({
             nd_experiment_id => $analytics_nd_experiment_id,
             file_id => $file_row_aux->file_id()
         });
     }
 
+    $h2->execute(encode_json($protocol_result_summary),$protocol_result_summary_id) if $native_archive_link_updated;
+
     $c->stash->{rest} = {
+        native_variance_summary_version=>($statistics_select =~ /^(?:blupf90|airemlf90)_/ ? 2:undef),
         analytics_protocol_id => $analytics_protocol_id,
         unique_traits => \@sorted_trait_names,
         unique_accessions => \@unique_accession_names,
@@ -12939,6 +13049,13 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
         stats_out_tempfile_col => $stats_out_tempfile_col,
         stats_out_tempfile_row => $stats_out_tempfile_row,
         analysis_model_type => $statistics_select,
+        (defined($native_residual_start_info) ? (native_residual_start=>$native_residual_start_info) : ()),
+        (defined($native_settings) ? (native_cv2_solver=>'FSPAK',native_cv2_convergence_criterion=>CXGN::DroneImagery::DesignFactors::native_convergence_criterion(),native_cv2_residual_model=>'Homogeneous declared variance 1') : ()) ,
+        (defined($native_convergence_criterion) ? (native_convergence_criterion=>$native_convergence_criterion) : ()),
+            (defined($native_solver) ? (native_solver=>$native_solver) : ()),
+        replicate_column_definition => ($fixed_effect_type eq 'fixed_effect_trait' ? 'Sommer/ASReml replicate is the selected numeric trait bin; temporal fixed groups use selected bin and time. Field occurrence is not fitted.' : 'Recorded physical design tag; temporal numeric categories are internal. Field occurrence is not fitted.'),
+        fixed_effect_type => $fixed_effect_type,
+        fixed_effect_trait_id => $fixed_effect_trait_id,
         application_name => "NickMorales Mixed Models Analytics",
         application_version => "V1.01",
         field_trial_design => $field_trial_design,

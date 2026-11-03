@@ -74,4 +74,80 @@ for my $generator (qw(generate_model_sommer generate_model_spl2D)) {
     unlike($model->[1], qr/designReplicate:colNumber/, "$generator does not turn a fixed interaction into a random effect");
 }
 
+# Execute modelstring and run owning methods. Only job execution/result reading
+# is intercepted; no database, router, authentication, or actual R claim here.
+my $request={engine=>'lme4',dependent_variables=>['Yield'],fixed_factors=>['replicate'],random_factors=>['germplasmName'],fixed_factors_interaction=>[['replicate','colNumber']],variable_slope_intersects=>[['replicate','germplasmName']]};
+$ctx->{req}{body}=$request;
+$controller->model_string($ctx);
+my $preview=$ctx->stash->{rest}{model};
+like($preview,qr/designReplicate\*colNumber/,'actual preview includes selected interaction of two offered factors');
+$ctx->{req}{params}={%$request,'model'=>$preview,'tempfile'=>'input_phenotype.txt','dependent_variables[]'=>['Yield'],'fixed_factors[]'=>['replicate'],'random_factors[]'=>['germplasmName']};
+$ctx->{req}{params}{fixed_factors_interaction}=JSON::Any->new->encode($request->{fixed_factors_interaction});
+$ctx->{req}{params}{variable_slope_intersects}=JSON::Any->new->encode($request->{variable_slope_intersects});
+my $run_model;
+{
+    no warnings 'redefine';
+    local *CXGN::MixedModels::run_model=sub {my $self=shift;($run_model)=$self->generate_model;return 'Intentional test job interception; no model job submitted'};
+    $controller->run($ctx);
+}
+is($run_model,$preview,'actual run rebuilds the same interaction/slope formula shown in preview');
+open my $pr,'>',"$root/preview_vs_run.txt" or die $!;print $pr "preview: $preview\nrun: $run_model\n";close $pr;
+# Invalid serialized collections must report a controlled validation error,
+# before creating or submitting an R job.
+{
+    no warnings 'redefine';
+    local *CXGN::MixedModels::run_model = sub { die "Invalid terms must not submit a model job" };
+$ctx->{req}{params}{fixed_factors_interaction} = '{';
+$controller->run($ctx);
+like($ctx->stash->{rest}{error}, qr/Invalid model terms/, 'malformed serialized interaction data is refused');
+$ctx->{req}{params}{fixed_factors_interaction} = 'null';
+$controller->run($ctx);
+like($ctx->stash->{rest}{error}, qr/Invalid factor collection/, 'null interaction collection is refused');
+}
+# Re-using a prepared data file must preserve its source headers/values and
+# must not expose results from the previous selected model.
+my $runner = CXGN::MixedModels->new({tempfile => "$root/input_phenotype.txt"});
+$runner->dependent_variables(['Yield|CO_343:0000001']);
+$runner->fixed_factors(['replicate']);
+$runner->random_factors(['germplasmName']);
+$runner->clean_file($runner->tempfile);
+my $first_clean = read_file($runner->tempfile);
+my $pristine = read_file($runner->tempfile.'.before_clean');
+$runner->clean_file($runner->tempfile);
+is(scalar(read_file($runner->tempfile)), $first_clean, 'second clean preserves every phenotype value and cleaned column');
+is(scalar(read_file($runner->tempfile.'.before_clean')), $pristine, 'second clean preserves the original phenotype snapshot');
+my $conversion = $runner->read_conversion_matrix($runner->tempfile.'.traits');
+is($conversion->{Yield_CO_343_0000001}, 'Yield|CO_343:0000001', 'second clean retains original ontology trait names');
+
+{
+    package AuditModelJob;
+    sub submit {
+        my $self = shift;
+        if (defined $self->{message}) {
+            open my $error, '>', $self->{file} or die $!;
+            print $error $self->{message}, "\n";
+            close $error;
+        }
+    }
+    sub alive {return 0}
+    sub retrieve_finish_timestamp {return 1}
+    sub update_status {}
+}
+my @result_suffixes = qw(.model_error .adjustedBLUPs .BLUPs .BLUEs .adjustedBLUEs .anova .varcomp);
+for my $suffix (@result_suffixes) {
+    open my $old, '>', $runner->tempfile.$suffix or die $!;
+    print $old "stale result\n";
+    close $old;
+}
+{
+    no warnings 'redefine';
+    local *SGN::Context::new = sub {return bless {}, 'AuditContext'};
+    local *CXGN::Job::new = sub {return bless {}, 'AuditModelJob'};
+    my $error = $runner->run_model('local','localhost',$root,{});
+    is($error,undef,'owned run_model handoff completes with intercepted job');
+    ok(!grep(-e $runner->tempfile.$_, @result_suffixes), 'a new model submission clears every old result type');
+    local *CXGN::Job::new = sub {return bless {file=>$runner->tempfile.'.model_error',message=>'Unsupported test model output'}, 'AuditModelJob'};
+    $error = $runner->run_model('local','localhost',$root,{});
+    like($error,qr/Unsupported test model output/,'model capability error reaches the existing controller error contract');
+}
 done_testing;

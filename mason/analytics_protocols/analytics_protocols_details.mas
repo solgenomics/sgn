@@ -1,3 +1,9 @@
+<%once>
+use HTML::Entities ();
+</%once>
+<%init>
+my $summary_text=sub {HTML::Entities::encode_entities(defined($_[0]) ? "$_[0]":'')};
+</%init>
 <%args>
 $analytics_protocol_id
 $analytics_protocol_name
@@ -80,6 +86,9 @@ $analytics_protocol_result_summary
 %           my $varcomps = $s->{env_varcomps};
 %           my $avg_varcomps_display = $s->{avg_varcomps_display};
 %           my $avg_cross_validation_display = $s->{avg_cross_validation_display};
+%           my $native_summary=($analytics_result_type // '') =~ /^(?:blupf90|airemlf90)_/;
+%           my $native_summary_v2=$native_summary && ($s->{variance_summary_version} // 0)==2;
+
 %           if ($analytics_result_type) {
 %               print "<h4>Type: ".$analytics_result_type."</h4>";
 %           }
@@ -124,16 +133,74 @@ $analytics_protocol_result_summary
 %           #        }
 %           #    }
 %           #}
+%           if ($native_summary && !$native_summary_v2) {
+%               print "<p class='alert alert-warning'>Legacy native random-regression summary: coefficient ratios and the printed SE-for-R value are not validated date-specific heritability or residual variance. The original saved data are retained. Rerun the analysis for the versioned date summary.</p>";
+%           }
+%           if ($native_summary_v2) {
+%               print "<br/><strong>Observation-scale genetic variance by date</strong>";
+%               print "<p>Each fitted run uses all fitted physical plots with equal weights and the same reference plots at every date. The share is the ratio of mean genetic variance to mean genetic plus permanent-environment plus residual variance. Fixed design effects are adjusted. This is not genotype entry-mean heritability.</p>";
+%               print "<p>Mean and SD below describe simulation runs. SD is not a native estimate standard error. Per-plot range spans the fitted plots and runs. Full per-plot values, reference IDs, weights, kernels and covariance origin are available in the date variance summary JSON when its archive download is listed under Result Files.</p>";
+%               print "<table class='table table-bordered native-variance-by-date'><thead><tr><th>Model / scenario</th><th>Date / time scale</th><th>Quantity / units</th><th>Mean</th><th>Between-run SD</th><th>Runs</th><th>Reference plots</th><th>Per-plot range</th><th>Covariance origin</th></tr></thead><tbody>";
+%               foreach my $i (@{$avg_varcomps_display || []}) {
+%                   next if !defined($i->{time});
+%                   my $sd=defined($i->{std}) ? sprintf('%.6g',$i->{std}):'not available (one run)';
+%                   my $range=$i->{per_unit_range} ? join(' to ',map {sprintf('%.6g',$_)} @{$i->{per_unit_range}}):'';
+%                   my @cells=($i->{type}.': '.$i->{type_scenario},$i->{time}.' '.$i->{time_scale},$i->{quantity_label}.' / '.$i->{units},sprintf('%.6g',$i->{mean}),$sd,$i->{n},$i->{reference_count},$range,$i->{kernel_origin}.'; '.$i->{covariance_source});
+%                   print '<tr>'.join('',map {'<td>'.$summary_text->($_).'</td>'} @cells).'</tr>';
+%               }
+%               print '</tbody></table>';
+%               foreach my $run (@{$varcomps || []}) {
+%                   my $archive=$run->{native_variance_archive};
+%                   if ($archive && $archive->{download_url}) {
+%                       print '<p><a href="'.$summary_text->($archive->{download_url}).'">Download archived per-plot date variance summary (JSON)</a></p>';
+%                   } elsif ($archive) {
+%                       print '<p class="alert alert-warning">The per-plot archive download is not available for this saved calculation.</p>';
+%                   }
+
+%                   foreach my $scenario (@types) {
+%                       my $scenario_result=$run->{$scenario};
+%                       my $summary=$scenario_result ? $scenario_result->{native_variance_summary}:undef;
+%                       next if !$summary;
+%                       print '<p><strong>'.$summary_text->($run->{type}.': '.$scenario).'</strong><br/>';
+%                       my $readback=$summary->{covariance_readback} || {};
+%                       my @approximate=grep {my $group=$readback->{$_}; $group && $group->{approximate}} qw(genetic permanent);
+%                       if (@approximate) {
+%                           print '<p class="alert alert-info">Approximate native printed eigensystem; representation precision, not estimator SE or CI. Components: '.$summary_text->(join(', ',@approximate)).'. Raw printed matrices, eigenvalues and precision bounds are retained in the archived summary.</p>';
+%                       }
+
+%                       foreach my $key (sort keys %{$summary->{definition} || {}}) {
+%                           print $summary_text->($key.': '.$summary->{definition}{$key}).'<br/>';
+%                       }
+%                       my $printed=$summary->{residual}{printed_se_for_R};
+%                       if ($printed && @$printed) {
+%                           print $summary_text->("Native printed 'SE for R' diagnostic: ".join(', ',@$printed)).'<br/>';
+%                           print 'This printed parameter diagnostic is not residual variance or uncertainty for the date-specific share.';
+%                       }
+%                       print '</p>';
+%                   }
+%               }
+%           }
 %           if ($avg_varcomps_display) {
 %               print "<br/><strong>Variance Components</strong><br/>";
 %               foreach my $i (@$avg_varcomps_display) {
+%                   next if $native_summary_v2 && defined($i->{time});
+%                   next if $native_summary && !$native_summary_v2 && ($i->{level} // '') =~ /^(?:h2_coeff_|env2_coeff_|residual_)/;
+
 %                   if (defined($i->{mean})) {
 %                       print "$i->{type}: $i->{type_scenario}: $i->{level}: $i->{mean} +- $i->{std}<br/>";
 %                   }
 %               }
 %           }
+%           if ($native_summary_v2 && !$s->{native_cv_definition}{performed}) {
+%               print '<p>Native median-replacement comparison was not run.</p>';
+%           }
 %           if ($avg_cross_validation_display) {
-%               print "<br/><strong>Cross Validation</strong><br/>";
+%               print $native_summary_v2 ? "<br/><strong>Native median-replacement comparison</strong><br/>" : "<br/><strong>Cross Validation</strong><br/>";
+%               if ($native_summary_v2) {
+%                   foreach my $key (sort keys %{$s->{native_cv_definition} || {}}) {
+%                       print $summary_text->($key.': '.$s->{native_cv_definition}{$key}).'<br/>';
+%                   }
+%               }
 %               foreach my $i (@$avg_cross_validation_display) {
 %                   print "$i->{type}: $i->{type_scenario}: CV1: $i->{cv1_mean} +- $i->{cv1_std} CV2: $i->{cv2_mean} +- $i->{cv2_std}<br/>";
 %               }
