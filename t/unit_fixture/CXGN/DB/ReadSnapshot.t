@@ -9,7 +9,7 @@ use CXGN::Phenotypes::SearchFactory;use CXGN::Trial::TrialLayoutSearch;use CXGN:
 my$f=SGN::Test::Fixture->new;my$s=$f->bcs_schema;my$dbh=$s->storage->dbh;$s->storage->auto_savepoint(1);
 my$c=$f->config;my$writer=Bio::Chado::Schema->connect("dbi:Pg:dbname=$c->{dbname};host=$c->{dbhost}",$c->{dbuser},$c->{dbpass});$writer->storage->auto_savepoint(1);
 my$prefix='audit_read_snapshot_'.$$;my($trial,$target,$phenotype,@plots,@stocks);
-{package SnapshotContext;sub config {$_[0]{config}}}
+{package SnapshotContext;sub config {$_[0]{config}}} ## no critic (Modules::RequireFilenameMatchesPackage) -- This test embeds its named test double beside the assertions.
 my$context=bless({config=>$c},'SnapshotContext');
 sub term{SGN::Model::Cvterm->get_cvterm_row($s,@_)->cvterm_id}
 sub change{my($new)=@_;CXGN::Trial::AccessionChange->new({schema=>$writer,trial_id=>$trial})->apply([{plot_id=>$target,new_stock_id=>$new}],{curator=>1,rename_plots=>'none'})}

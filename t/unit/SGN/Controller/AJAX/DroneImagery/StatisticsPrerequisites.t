@@ -11,7 +11,7 @@ use CXGN::DroneImagery::DroneImageryAnalyticsRunSimulation;
 my $missing=CXGN::DroneImagery::DesignFactors::r_package_error('asreml_grm_multivariate_spatial_genetic_blups');
 plan skip_all=>'This refusal qualification requires an unavailable ASReml namespace.' unless defined $missing;
 
-{ package PrerequisiteActor;
+{ package PrerequisiteActor; ## no critic (Modules::RequireFilenameMatchesPackage) -- This test embeds its named test double beside the assertions.
   sub get_object {$_[0]} sub get_sp_person_id {41}
   sub get_username {'janedoe'} sub get_user_type {'curator'}
   package PrerequisiteRequest;

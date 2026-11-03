@@ -7,7 +7,7 @@ use Text::CSV;
 use File::Basename qw(basename);
 use CXGN::DroneImagery::DesignFactors;
 use CXGN::DroneImagery::NativeResults;
-{package NativeDriverContext;sub stash {$_[0]}}
+{package NativeDriverContext;sub stash {$_[0]}} ## no critic (Modules::RequireFilenameMatchesPackage) -- This test embeds its named test double beside the assertions.
 my $c=bless {},'NativeDriverContext';
 my ($root,$directory,$backend,$recorded_study_design)=@ARGV;
 die "Unsupported native backend\n" unless $backend eq 'blupf90' || $backend eq 'airemlf90';
@@ -51,13 +51,13 @@ my $fragment=sub {
 };
 my $polynomial_start=index($source,'my $sorted_trait_names_scaled_string =');
 my $polynomial_code=$fragment->("my \$cmd = 'R -e",'my $status = system(',$polynomial_start);
-my $command=eval "$polynomial_code\n\$cmd;";die $@ if $@;
+my $command=eval "$polynomial_code\n\$cmd;";die $@ if $@; ## no critic (ProhibitStringyEval) -- Execute the owning source fragment in this regression test; errors are checked below.
 system("($command) > '$directory/polynomial.log' 2>&1")==0 or die "Native polynomial preparation failed\n";
 my $prep_start=index($source,'open(my $F_prep, ">:encoding(UTF-8)", $stats_prep_tempfile)');
 my $prep_end=index($source,'close($F_prep);',$prep_start)+length('close($F_prep);');
-eval substr($source,$prep_start,$prep_end-$prep_start);die $@ if $@;
+eval substr($source,$prep_start,$prep_end-$prep_start);die $@ if $@; ## no critic (ProhibitStringyEval) -- Execute the owning source fragment in this regression test; errors are checked below.
 my $factor_code=$fragment->("my \$cmd_factor = 'R -e",'my $status_factor = system(',$prep_start);
-$command=eval "$factor_code\n\$cmd_factor;";die $@ if $@;
+$command=eval "$factor_code\n\$cmd_factor;";die $@ if $@; ## no critic (ProhibitStringyEval) -- Execute the owning source fragment in this regression test; errors are checked below.
 system("($command) > '$directory/factor.log' 2>&1")==0 or die "Native factor preparation failed\n";
 my (%factor_map,%fixed_time,%accession_id_factor_map,%plots,%genotypes);
 my %recorded_tag=map {$_->{observationunit_stock_id} => (defined($_->{obsunit_rep}) ? $_->{obsunit_rep} : '')} @metadata;
@@ -88,12 +88,12 @@ for my $row (@metadata) {
 }
 my $writer_start=index($source,'open(my $F, ">", $stats_tempfile_2)');
 my $writer_end=index($source,'close($F2);',$writer_start)+length('close($F2);');
-eval substr($source,$writer_start,$writer_end-$writer_start);die $@ if $@;
+eval substr($source,$writer_start,$writer_end-$writer_start);die $@ if $@; ## no critic (ProhibitStringyEval) -- Execute the owning source fragment in this regression test; errors are checked below.
 my @rep_time_factors=sort keys %fixed_time;
 my @unique_accession_names=sort keys %genotypes;
 my @ind_rep_factors=sort keys %plots;
 my $parameter_code=$fragment->('my $pheno_var_pos = $legendre_order_number+1;',"my \$command_name = '';");
-eval $parameter_code;die $@ if $@;die $c->stash->{rest}{error} if $c->stash->{rest}{error};
+eval $parameter_code;die $@ if $@;die $c->stash->{rest}{error} if $c->stash->{rest}{error}; ## no critic (ProhibitStringyEval) -- Execute the owning source fragment in this regression test; errors are checked below.
 if ($ENV{SGN_F90_DIAGNOSTIC_CONVERGENCE}) {
     open(my $parameters,'<',$parameter_tempfile) or die $!;
     my @lines=<$parameters>;close $parameters;
@@ -119,7 +119,7 @@ if (($ENV{SGN_F90_DIAGNOSTIC_SOLVER} // '') eq 'FSPAK' && $backend eq 'blupf90')
     print "DIAGNOSTIC ONLY: copied parameters select the original provided BLUPF90 FSPAK solver.\n";
 }
 my $runner_code=$fragment->("my \$command_name = '';",'print STDERR Dumper $cmd;',index($source,'my $pheno_var_pos = $legendre_order_number+1;'));
-$command=eval "$runner_code\n\$cmd;";die $@ if $@;
+$command=eval "$runner_code\n\$cmd;";die $@ if $@; ## no critic (ProhibitStringyEval) -- Execute the owning source fragment in this regression test; errors are checked below.
 open(my $out,'>',"$directory/command.txt") or die $!;print $out $command,"\n";close $out;
 my $measure='import json,resource,subprocess,sys,time; started=time.monotonic(); result=subprocess.run(["/bin/sh","-c",sys.argv[2]],timeout=60); usage=resource.getrusage(resource.RUSAGE_CHILDREN); open(sys.argv[1],"w").write(json.dumps({"exit_code":result.returncode,"elapsed_seconds":time.monotonic()-started,"maximum_rss_kb":usage.ru_maxrss})); sys.exit(result.returncode)';
 my $status=system('python3','-c',$measure,"$directory/resources.json",$command);

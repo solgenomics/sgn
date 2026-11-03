@@ -63,7 +63,7 @@ my $selected=$producer->retrieve_phenotypes();
 ok(@$selected>8,'actual MixedModels DatasetFile producer emitted repeated field observations');
 note('trial='.$trial.' trait='.$trait.' accessions='.scalar(@accessions).' rows='.(@$selected-1));
 {
-    package NumericReq;
+    package NumericReq; ## no critic (Modules::RequireFilenameMatchesPackage) -- This test embeds its named test double beside the assertions.
     sub params {return $_[0]}
     sub param {return $_[0]->{$_[1]}}
     package NumericActor;
@@ -123,7 +123,7 @@ for my $model ('random','fixed') {
     write_file("$artifacts/$model.json",JSON::Any->encode($response));
     push @responses,$response;
 }
-isnt($responses[0]{input_file},$responses[1]{input_file},'two runs of one prepared table have independent input/output namespaces');
+isnt($responses[0]{input_file},$responses[1]{input_file},'two runs of one prepared table have independent input/output namespaces'); # codespell:ignore isnt
 my $response=$responses[0];
 my $program=$schema->resultset('Project::Project')->find({name=>'test'})->project_id;
 my @allowed=split /,/,$fixture->config->{composable_cvs};

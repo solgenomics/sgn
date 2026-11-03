@@ -44,7 +44,7 @@ sub values_at {
     my($rows)=search('Native',$plots[1],$trait_a,date_range_mode=>'timestamp',include_dateless_items=>0,%args);
     return [sort { $a <=> $b } map {0+$_->{phenotype_value}} grep {defined $_->{phenotype_value}} @$rows];
 }
-{package QCReadPolicyDbc;sub dbh {$_[0]{dbh}}}
+{package QCReadPolicyDbc;sub dbh {$_[0]{dbh}}} ## no critic (Modules::RequireFilenameMatchesPackage) -- This test embeds its named test double beside the assertions.
 {package QCReadPolicyContext;
  sub user {undef}
  sub dbic_schema {$_[0]{schema}}

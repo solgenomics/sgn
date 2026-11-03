@@ -11,7 +11,7 @@ my$fixed_effect_type=$ENV{SGN_SIMULATION_FIXED_TYPE} || 'replicate';
 my$replicate_is_quantitative=$fixed_effect_type eq 'fixed_effect_trait' ? 'TRUE':'FALSE';
 my$recorded_study_design=$design;
 my($design_assignment)=$source=~/^    (my \$design_fixed_terms=[^\n]+;)/m;die'Missing actual design dispatch'if!$design_assignment;
-my$design_fixed_terms=eval "$design_assignment\n\$design_fixed_terms;";die$@if$@;
+my$design_fixed_terms=eval "$design_assignment\n\$design_fixed_terms;";die$@if$@; ## no critic (ProhibitStringyEval) -- Execute the owning source fragment in this regression test; errors are checked below.
 my$stats_tempfile="$dir/input.csv";my$grm_file="$dir/grm.tsv";my$stats_out_tempfile="$dir/genotype.tsv";my$stats_out_tempfile_row="$dir/row.tsv";my$stats_out_tempfile_col="$dir/col.tsv";my$stats_out_tempfile_residual="$dir/residual.tsv";my$stats_out_tempfile_varcomp="$dir/variance.tsv";my$stats_out_tempfile_2dspl="$dir/spatial.tsv";
 my@encoded_traits=$family=~/^multi/?('t1','t2'):('t1');my$cbind_string=$family=~/^multi/?'cbind(t1,t2)':'t1';my$number_traits=@encoded_traits;my$t='t1';my$trait_name_encoder={'t1'=>'t1'};my%trait_name_encoder=('t1'=>'t1');my$tolparinv=1e-6;my$tolparinv_10=1e-5;
 # The owning method always runs these preparation programs before its fit,
@@ -19,8 +19,8 @@ my@encoded_traits=$family=~/^multi/?('t1','t2'):('t1');my$cbind_string=$family=~
 my$prep_start;
 $prep_start=index($source,"\$prepare_file_cv_cmd = 'R -e",$section);
 my$prepare_file_cv_cmd;my$prepare_file_cv2_cmd;
-my$preparers=eval substr($source,$prep_start,$start-$prep_start)."\n[\$prepare_file_cv_cmd,\$prepare_file_cv2_cmd];";die$@if$@;
+my$preparers=eval substr($source,$prep_start,$start-$prep_start)."\n[\$prepare_file_cv_cmd,\$prepare_file_cv2_cmd];";die$@if$@; ## no critic (ProhibitStringyEval) -- Execute the owning source fragment in this regression test; errors are checked below.
 my$i=0;for my$preparer(@$preparers){next if!defined$preparer||!length$preparer;$i++;system("($preparer) > '$dir/preparation-$i.log' 2>&1")==0 or die"Actual CV preparation failed ($i)";}
-my$cmd=eval "$fragment\n\$statistics_cmd_reading.\$statistics_cmd_model;";die$@if$@;
+my$cmd=eval "$fragment\n\$statistics_cmd_reading.\$statistics_cmd_model;";die$@if$@; ## no critic (ProhibitStringyEval) -- Execute the owning source fragment in this regression test; errors are checked below.
 open(my$f,'>',"$dir/command.txt")or die$!;print {$f} $cmd;close$f;
 my$status=system("($cmd) > '$dir/actual-command.log' 2>&1");print"family=$family design=$design status=".($status>>8)."\n";exit($status>>8);

@@ -5520,8 +5520,8 @@ sub _perform_plot_polygon_assign {
         my ($previous_result, $previous_total_count) = $previous_images_search->search();
 
         if (scalar(@$previous_result) == scalar(@found_stock_ids)) {
-            print STDERR "Plot polygon assignment for $assign_plot_polygons_type on project $drone_run_band_project_id has already occured. Skipping \n";
-            return {warning => "Plot polygon assignment already occured for $assign_plot_polygons_type on project $drone_run_band_project_id."};
+            print STDERR "Plot polygon assignment for $assign_plot_polygons_type on project $drone_run_band_project_id has already occurred. Skipping \n";
+            return {warning => "Plot polygon assignment already occurred for $assign_plot_polygons_type on project $drone_run_band_project_id."};
         }
     }
 

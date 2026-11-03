@@ -49,7 +49,7 @@ sub projects_error {
                 if !defined($name) || !$roles->{$name};
         }
     }
-    return undef;
+    return undef; ## no critic (Subroutines::ProhibitExplicitReturnUndef) -- Preserve the explicit absent-value sentinel in every calling context.
 }
 
 sub observation_units_error {

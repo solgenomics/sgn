@@ -22,7 +22,7 @@ for my $n (1..6) {
 close $f;
 
 {
-    package AuditRequest;
+    package AuditRequest; ## no critic (Modules::RequireFilenameMatchesPackage) -- This test embeds its named test double beside the assertions.
     sub param { my ($s,$k)=@_;return $s->{params}{$k} }
     sub params { return $_[0]->{params} }
     sub body_data { return $_[0]->{body} }
@@ -36,7 +36,7 @@ close $f;
     sub tempfiles_subdir {}
     sub tempfile {my($self,%options)=@_;return (undef,($options{TEMPLATE}||'') =~ /run_/ ? 'run_'.++$self->{run_sequence}.($options{SUFFIX}||'') : 'input')}
     sub path_to {return $_[0]->{config}{basepath}.'/'.$_[1]}
-    sub dbic_schema {return undef}
+    sub dbic_schema {return undef} ## no critic (Subroutines::ProhibitExplicitReturnUndef) -- Preserve the explicit absent-value sentinel in every calling context.
     sub config {return $_[0]->{config}}
     sub stash {return $_[0]->{stash}}
     package AuditDataset;
@@ -104,7 +104,7 @@ $ctx->{req}{params}{fixed_factors_interaction} = 'null';
 $controller->run($ctx);
 like($ctx->stash->{rest}{error}, qr/Invalid factor collection/, 'null interaction collection is refused');
 }
-# Re-using a prepared data file must preserve its source headers/values and
+# Reusing a prepared data file must preserve its source headers/values and
 # must not expose results from the previous selected model.
 my $runner = CXGN::MixedModels->new({tempfile => "$root/input_phenotype.txt"});
 $runner->dependent_variables(['Yield|CO_343:0000001']);

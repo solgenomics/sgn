@@ -94,7 +94,7 @@ sub _archive_analytics_result {
             error=>"Could not archive result file $name. The calculated summary remains saved in analytics protocol $protocol_id; the archive download is unavailable.",
             analytics_protocol_id=>$protocol_id,summary_saved=>1,archive_failed=>1,
         };
-        return undef;
+        return undef; ## no critic (Subroutines::ProhibitExplicitReturnUndef) -- Preserve the explicit absent-value sentinel in every calling context.
     }
     return $result;
 }

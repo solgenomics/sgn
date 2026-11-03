@@ -13,12 +13,12 @@ my $temporary=tempdir('sgn-archive-handoff-XXXXXX',TMPDIR=>1,CLEANUP=>1);
 write_file("$temporary/training.tsv","trait\n1.5\n");
 write_file("$temporary/model.txt","model control\n");
 {
-    package BoundarySchema;
+    package BoundarySchema; ## no critic (Modules::RequireFilenameMatchesPackage) -- This test embeds its named test double beside the assertions.
     our @ISA=('Bio::Chado::Schema');
     sub resultset {return bless {},'BoundaryProtocolResultset'}
     sub storage {return bless {},'BoundaryStorage'}
     package BoundaryProtocolResultset;
-    sub find {return undef}
+    sub find {return undef} ## no critic (Subroutines::ProhibitExplicitReturnUndef) -- Preserve the explicit absent-value sentinel in every calling context.
     sub create {my($self,$row)=@_;$protocol_row=$row;return bless {},'BoundaryProtocolRow'}
     package BoundaryProtocolRow;
     sub nd_protocol_id {return 777}
@@ -51,7 +51,7 @@ for my $case ('training_only','model_and_training','returned_error','thrown_erro
     {
         no warnings 'redefine';
         local *SGN::Model::Cvterm::get_cvterm_row=sub{return bless {},'BoundaryCv'};
-        local *CXGN::AnalysisModel::GetModel::store_analysis_model_files=sub{my($self,$args)=@_;push @archives,$args;die "archive failure\n" if $case eq 'thrown_error';return {error=>'archive failure'} if $case eq 'returned_error';return undef};
+        local *CXGN::AnalysisModel::GetModel::store_analysis_model_files=sub{my($self,$args)=@_;push @archives,$args;die "archive failure\n" if $case eq 'thrown_error';return {error=>'archive failure'} if $case eq 'returned_error';return undef}; ## no critic (Subroutines::ProhibitExplicitReturnUndef) -- Preserve the explicit absent-value sentinel in every calling context.
         $result=$creator->store();
     }
     ok($result->{success},"actual AnalysisCreate completes $case protocol path");

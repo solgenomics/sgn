@@ -28,7 +28,7 @@ our($barrier_dir,$writer_number);
 sub touch {open(my $h,'>',$_[0]) or die "$!";close($h)}
 sub await_file {my($path,$seconds)=@_;my $until=time+$seconds;until(-f $path){die "Barrier timeout $path\n" if time>$until;sleep .025}}
 {
- package AuditStoreSnapshotBarrier;
+ package AuditStoreSnapshotBarrier; ## no critic (Modules::RequireFilenameMatchesPackage) -- This test embeds its named test double beside the assertions.
  our @ISA=('CXGN::Phenotypes::StorePhenotypes');
  sub not_planted_units {
   my $self=shift;my $value=$self->SUPER::not_planted_units(@_);

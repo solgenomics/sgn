@@ -22,7 +22,7 @@ my$metadata="$case/../metadata.tsv";my$csv=Text::CSV->new({binary=>1,sep_char=>"
 open(my$meta,'<:encoding(UTF-8)',$metadata)or die"Actual metadata input missing: $!";my$header=$csv->getline($meta);while(my$r=$csv->getline($meta)){my%d;@d{@$header}=@$r;$biological_id{$d{observationunit_stock_id}}=$d{germplasm_stock_id};}close$meta;
 for my$line(split/\n/,read_file($stats_tempfile_2)){my@v=split' ',$line;$native_unit_metadata{$v[5]}={plot_id=>$v[1],genotype_factor=>$v[0],genotype_id=>$biological_id{$v[1]}};}
 my$native_start=index($source,'my $status = system($cmd_f90);');my$start=index($source,'my @log_output_rows;',$native_start);my$end=index($source,'my $q_time =',$start);die'Actual CV2 constructor bounds missing'if$start<0||$end<0;
-eval substr($source,$start,$end-$start);die$@if$@;
+eval substr($source,$start,$end-$start);die$@if$@; ## no critic (ProhibitStringyEval) -- Execute the owning source fragment in this regression test; errors are checked below.
 my@expected_g;my@expected_pe;
 if($statistics_select=~/^airemlf90_/){my$log=read_file($stats_out_tempfile);my$final=rindex($log,'Final Estimates');die'No actual final estimates'if$final<0;my$tail=substr($log,$final);my($g)=$tail=~/Genetic variance\(s\) for effect\s+2\s+(.*?)correlations/s;my($pe)=$tail=~/Genetic variance\(s\) for effect\s+$legendre_order_number_env_var_pos\s+(.*?)correlations/s;@expected_g=split' ',$g;@expected_pe=split' ',$pe;}else{@expected_g=split' ',join(' ',@parameters[$cov[0]+1..$cov[0]+$count]);@expected_pe=split' ',join(' ',@parameters[$cov[1]+1..$cov[1]+$count]);}
 for my$file($parameter_tempfile_cv1_2,$parameter_tempfile_cv2_2,$parameter_tempfile_cv3_2,$parameter_tempfile_cv4_2,$parameter_tempfile_cv5_2){my@p=split/\n/,read_file($file);my@c=grep{$p[$_]=~/^\(CO\)VARIANCES/}0..$#p;my@g=split' ',join(' ',@p[$c[0]+1..$c[0]+$count]);my@pe=split' ',join(' ',@p[$c[1]+1..$c[1]+$count]);die'Final covariance dimensions differ'if@g!=@expected_g||@pe!=@expected_pe;for my$i(0..$#g){die'Final genetic covariance transfer differs'if abs($g[$i]-$expected_g[$i])>1e-12*(1+abs($expected_g[$i]));die'Final permanent covariance transfer differs'if abs($pe[$i]-$expected_pe[$i])>1e-12*(1+abs($expected_pe[$i]));}my($r)=grep{$p[$_]=~/^RANDOM_RESIDUAL VALUES/}0..$#p;die'Residual comparison changed'if$p[$r+1]!=1;die'Data file missing'if$p[1]ne'constructor-data.dat';}
@@ -38,7 +38,7 @@ if($ENV{SGN_SIMULATION_CV2_RUN_ONE_FOLD}) {
     my$fold_start=index($source,'my $cmd_f90_cv1_2 =');
     my$fold_end=index($source,"open(my \$fh_log_cv1_2,",$fold_start);
     die'Actual one-fold execution bounds missing'if$fold_start<0||$fold_end<0;
-    my$failure=eval 'sub {'.substr($source,$fold_start,$fold_end-$fold_start).';return undef;}->()';
+    my$failure=eval 'sub {'.substr($source,$fold_start,$fold_end-$fold_start).';return undef;}->()'; ## no critic (ProhibitStringyEval) -- Execute the owning source fragment in this regression test; errors are checked below.
     die$@if$@;die$failure->{error}if ref($failure)eq'HASH';
     my$p=read_file($parameter_tempfile_cv1_2);
     die'CV2 BLUP solver role changed'if$p!~/^OPTION solv_method FSPAK$/m||$p=~/^OPTION hetres_/m;

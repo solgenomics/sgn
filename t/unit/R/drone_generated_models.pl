@@ -32,7 +32,7 @@ my %trait_name_encoder=(Yield=>'t1');my $t='Yield';
 my @encoded_traits=('t1');my $cbind_string='t1';my $number_traits=1;my $tolparinv=$ENV{SGN_DRONE_TOL_PAR_INV} || 1e-6;my $legendre_order_number=1;
 my $design_fixed_terms=$kind eq 'f90' ? '' : CXGN::DroneImagery::DesignFactors::fixed_terms($design);
 my $expression=$kind eq 'f90' ? '$cmd_factor' : '$cmd';
-my $cmd=eval "$fragment\n$expression;";die $@ if $@;
+my $cmd=eval "$fragment\n$expression;";die $@ if $@; ## no critic (ProhibitStringyEval) -- Execute the owning source fragment in this regression test; errors are checked below.
 
 if ($ENV{SGN_DRONE_DIAGNOSTIC_ORDER}) {
     $cmd =~ s/order\(time\)/order(mat_long\\\$time)/g;

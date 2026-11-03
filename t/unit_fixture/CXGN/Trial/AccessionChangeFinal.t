@@ -40,7 +40,7 @@ scenario 'A preview must notice a rejection reason edited by another operator'=>
  my $digest=$svc->plan_digest($before);
  prop('reject_reason','another operator correction');
  my $after=$svc->plan($changes,$options);
- isnt($svc->plan_digest($after),$digest,'preview digest changes with the old reason');
+ isnt($svc->plan_digest($after),$digest,'preview digest changes with the old reason'); # codespell:ignore isnt
  my $ok=eval {$svc->apply($changes,{%$options,plan_digest=>$digest});1};
  ok(!$ok,'stale preview refused');
  is(prop('reject_reason'),'another operator correction','other operator reason retained');
@@ -52,7 +52,7 @@ scenario 'A preview must notice a plot label edited by another operator'=>sub {
  is_deeply($before->{errors},[],'initial preview valid');
  my $digest=$svc->plan_digest($before);
  $schema->resultset('Stock::Stock')->find({stock_id=>$plot})->update({name=>'audit_other_operator_label',uniquename=>'audit_other_operator_label'});
- isnt($svc->plan_digest($svc->plan($changes,$options)),$digest,'preview digest changes with the old plot label');
+ isnt($svc->plan_digest($svc->plan($changes,$options)),$digest,'preview digest changes with the old plot label'); # codespell:ignore isnt
  my $ok=eval {$svc->apply($changes,{%$options,plan_digest=>$digest});1};
  ok(!$ok,'stale preview refused');
  is($schema->resultset('Stock::Stock')->find({stock_id=>$plot})->uniquename,'audit_other_operator_label','other operator label retained');

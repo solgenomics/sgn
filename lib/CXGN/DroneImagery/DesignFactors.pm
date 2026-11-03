@@ -156,7 +156,7 @@ sub fixed_terms {
 sub group_key {
     my ($design, $rep, $block, $environment) = @_;
     my $kind = kind($design);
-    return undef if $kind eq 'CRD';
+    return undef if $kind eq 'CRD'; ## no critic (Subroutines::ProhibitExplicitReturnUndef) -- Preserve the explicit absent-value sentinel in every calling context.
     die "Recorded block metadata is missing; an accession occurrence cannot replace it.\n" unless defined($block) && length($block);
     my @key = (defined($environment) ? "$environment" : (), "$block");
     if ($kind eq 'Incomplete') {
@@ -194,11 +194,11 @@ sub numeric_group_code {
 sub native_executable_error {
     my ($selection,$paths) = @_;
     my ($binary) = ($selection // '') =~ /^(blupf90|airemlf90)_/;
-    return undef unless $binary;
+    return undef unless $binary; ## no critic (Subroutines::ProhibitExplicitReturnUndef) -- Preserve the explicit absent-value sentinel in every calling context.
     $paths ||= [File::Spec->path];
     for my $directory (@$paths) {
         my $file = File::Spec->catfile($directory,$binary);
-        return undef if -f $file && -x $file;
+        return undef if -f $file && -x $file; ## no critic (Subroutines::ProhibitExplicitReturnUndef) -- Preserve the explicit absent-value sentinel in every calling context.
     }
     return "Required statistics executable $binary was not found in PATH. Configure that project engine before running this analysis.";
 }
@@ -206,7 +206,7 @@ sub native_executable_error {
 my %r_package_available;
 sub r_package_error {
     my ($selection) = @_;
-    return undef unless ($selection // '') =~ /^asreml_/;
+    return undef unless ($selection // '') =~ /^asreml_/; ## no critic (Subroutines::ProhibitExplicitReturnUndef) -- Preserve the explicit absent-value sentinel in every calling context.
     if (!exists($r_package_available{asreml})) {
         my $pid = open(my $check, '-|', 'Rscript', '--vanilla', '-e',
             'quit(status=if(suppressWarnings(suppressMessages(requireNamespace("asreml",quietly=TRUE))))0L else 1L)');
@@ -219,7 +219,7 @@ sub r_package_error {
             $r_package_available{asreml} = 0;
         }
     }
-    return undef if $r_package_available{asreml};
+    return undef if $r_package_available{asreml}; ## no critic (Subroutines::ProhibitExplicitReturnUndef) -- Preserve the explicit absent-value sentinel in every calling context.
     return 'The selected model requires the licensed ASReml R package, which is not loadable in this runtime. Configure the project package and valid license before running this analysis.';
 }
 
@@ -230,7 +230,7 @@ sub statistics_prerequisite_error {
 
 sub cnn_design {
     my ($prediction_type,$designs) = @_;
-    return undef unless ($prediction_type // '') eq 'cnn_prediction_mixed_model';
+    return undef unless ($prediction_type // '') eq 'cnn_prediction_mixed_model'; ## no critic (Subroutines::ProhibitExplicitReturnUndef) -- Preserve the explicit absent-value sentinel in every calling context.
     die "CNN mixed-model evaluation requires declared trial designs.\n" unless ref($designs) eq 'ARRAY' && @$designs;
     my %unique;
     for my $design (@$designs) {
@@ -302,15 +302,15 @@ sub native_solver_settings {
 
 sub native_variance_design_error {
     my ($selection,$time_levels,$coefficients) = @_;
-    return undef unless ($selection // '') =~ /^airemlf90_/;
+    return undef unless ($selection // '') =~ /^airemlf90_/; ## no critic (Subroutines::ProhibitExplicitReturnUndef) -- Preserve the explicit absent-value sentinel in every calling context.
     return 'The AIREML variance model requires more distinct time levels than Legendre coefficients; saturated physical-plot covariance and free residual variances are not separately identifiable.'
         if $time_levels <= $coefficients;
-    return undef;
+    return undef; ## no critic (Subroutines::ProhibitExplicitReturnUndef) -- Preserve the explicit absent-value sentinel in every calling context.
 }
 
 sub _native_number {
     my ($text) = @_;
-    return undef unless defined($text) && $text =~ /^[+-]?(?:\d+(?:\.\d*)?|\.\d+)(?:[eEdD][+-]?\d+)?$/;
+    return undef unless defined($text) && $text =~ /^[+-]?(?:\d+(?:\.\d*)?|\.\d+)(?:[eEdD][+-]?\d+)?$/; ## no critic (Subroutines::ProhibitExplicitReturnUndef) -- Preserve the explicit absent-value sentinel in every calling context.
     $text =~ tr/dD/eE/;
     my $value=0+$text;
     return isfinite($value) ? $value : undef;
@@ -318,7 +318,7 @@ sub _native_number {
 
 sub native_fit_error {
     my ($selection,$parameter_file,$data_file,$log_file,$cwd) = @_;
-    return undef unless ($selection // '') =~ /^(?:blupf90|airemlf90)_/;
+    return undef unless ($selection // '') =~ /^(?:blupf90|airemlf90)_/; ## no critic (Subroutines::ProhibitExplicitReturnUndef) -- Preserve the explicit absent-value sentinel in every calling context.
     return 'The native statistics solver did not produce a complete result; no genotype estimates were saved.'
         unless -s $log_file && -s File::Spec->catfile($cwd,'solutions') && -s File::Spec->catfile($cwd,'yhat_residual');
     open(my $log_handle,'<',$log_file) or return 'The native solver log could not be read.';
@@ -344,7 +344,7 @@ sub native_fit_error {
     if ($selection =~ /^blupf90_/) {
         return 'The native coefficient solver did not report the required original FSPAK mode.'
             unless grep {/solving method.*FSPAK/} @log;
-        return undef;
+        return undef; ## no critic (Subroutines::ProhibitExplicitReturnUndef) -- Preserve the explicit absent-value sentinel in every calling context.
     }
     my @final=grep {$log[$_] =~ /^Final Estimates/} 0..$#log;
     return 'AIREML did not report a complete final variance result; no genotype estimates were saved.'

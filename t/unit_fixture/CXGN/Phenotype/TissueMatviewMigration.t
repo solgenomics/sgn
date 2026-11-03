@@ -16,7 +16,7 @@ sub metadata {
  return $row;
 }
 sub predicate_types {my($definition)=@_;my($types)=$definition=~/\bstock_relationship\.type_id\s*=\s*ANY\s*\(ARRAY\[([\d,\s]+)\]\)/;die 'Unknown actual materialized predicate shape' if !defined($types);return [split /\s*,\s*/,$types]}
-{package TissueMigrationContext;sub dbh {$_[0]{dbh}}}
+{package TissueMigrationContext;sub dbh {$_[0]{dbh}}} ## no critic (Modules::RequireFilenameMatchesPackage) -- This test embeds its named test double beside the assertions.
 sub run_patch {
  my $connects=0;{no warnings 'redefine';local *Bio::Chado::Schema::connect=sub {++$connects;return $s};IncludeTissueSamplesInPhenotypeMatview::patch(bless({dbh=>$dbh},'TissueMigrationContext'))}
  is($connects,1,'actual patch uses the rollback schema seam once');ok(!$dbh->{AutoCommit},'actual DDL method preserves the enclosing fixture transaction');
@@ -41,7 +41,7 @@ my $ok=eval {
  ok((grep {$_==$tissue} @{predicate_types($after->{definition})}),'actual materialized predicate includes tissue_sample_of');
  for my $name (qw(plot_of plant_of subplot_of analysis_of)) {my $id=term($name,'stock_relationship');ok((grep {$_==$id} @{predicate_types($after->{definition})}),"existing $name predicate is retained")}
  if ($was_current) {is($after->{oid},$before->{oid},'already-current migration leaves the relation OID unchanged')}
- else {isnt($after->{oid},$before->{oid},'legacy predicate is rebuilt rather than silently treated as current')}
+ else {isnt($after->{oid},$before->{oid},'legacy predicate is rebuilt rather than silently treated as current')} # codespell:ignore isnt
  is_deeply($after->{indexes},$before->{indexes},'all actual index names and definitions are preserved');
  is($after->{owner},$before->{owner},'materialized owner is preserved');is_deeply($after->{acl},$before->{acl},'effective grants, grant options and grantors are preserved');
  is_deeply($after->{reloptions},$before->{reloptions},'storage options are preserved');is($after->{reltablespace},$before->{reltablespace},'tablespace metadata is preserved');is($after->{comment},$before->{comment},'materialized comment is preserved');

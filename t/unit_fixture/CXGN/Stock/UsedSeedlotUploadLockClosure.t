@@ -18,7 +18,7 @@ use Time::HiRes qw(time sleep);
 
 # Only the Catalyst request/context objects are supplied by the test. The actual
 # controller, file archive/parser, transaction writer and native cache run.
-{package UploadClosureUser; sub get_object {$_[0]} sub get_sp_person_id {41} sub get_username {'janedoe'} sub get_user_type {'curator'}}
+{package UploadClosureUser; sub get_object {$_[0]} sub get_sp_person_id {41} sub get_username {'janedoe'} sub get_user_type {'curator'}} ## no critic (Modules::RequireFilenameMatchesPackage) -- This test embeds its named test double beside the assertions.
 {package UploadClosureFile; sub filename {'private-seedlots.csv'} sub tempname {$_[0]{path}}}
 {package UploadClosureRequest; sub param {$_[1] eq 'trial_stock_type' ? 'accession' : undef} sub upload {$_[0]{upload}}}
 {package UploadClosureContext;

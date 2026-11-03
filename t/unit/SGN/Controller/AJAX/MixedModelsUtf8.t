@@ -12,7 +12,7 @@ my ($rscript)=grep {-x $_} map {"$_/Rscript"} split /:/,$ENV{PATH};
 plan skip_all=>'Rscript unavailable' unless $rscript;
 my $base=tempdir('sgn-model-utf8-XXXXXX',TMPDIR=>1,CLEANUP=>1);
 {
-    package Utf8Person;
+    package Utf8Person; ## no critic (Modules::RequireFilenameMatchesPackage) -- This test embeds its named test double beside the assertions.
     sub get_first_name {return 'Test'}
     sub get_last_name {return 'Operator'}
     package Utf8User;

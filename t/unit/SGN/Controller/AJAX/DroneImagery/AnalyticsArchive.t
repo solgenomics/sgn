@@ -5,7 +5,7 @@ use File::Temp qw(tempdir);
 use File::Slurp qw(read_file);
 use Digest::MD5 qw(md5_hex);
 use SGN::Controller::AJAX::DroneImagery::DroneImageryAnalytics;
-{package AnalyticsArchiveContext;sub config{$_[0]{config}}sub stash{$_[0]{stash}}}
+{package AnalyticsArchiveContext;sub config{$_[0]{config}}sub stash{$_[0]{stash}}} ## no critic (Modules::RequireFilenameMatchesPackage) -- This test embeds its named test double beside the assertions.
 my$directory=tempdir(CLEANUP=>1);
 my$file="$directory/private-summary.json";
 my$bytes='{"version":2,"source":"private fixture","zero":0}';

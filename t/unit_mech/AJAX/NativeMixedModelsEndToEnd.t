@@ -52,7 +52,7 @@ for my$kind(qw(random fixed)){
  my$key=$kind eq'random'?'adjusted_blups_data':'adjusted_blues_data';is(scalar(keys%{$j->{$key}||{}}),8,"$kind HTTP output retains all eight computed genotypes");
  ok($j->{input_file}&&-s$j->{input_file},"$kind HTTP response names the actual nonempty training file");push@responses,$j;
 }
-isnt($responses[0]{input_file},$responses[1]{input_file},'separate real HTTP requests have separate immutable input/output namespaces');
+isnt($responses[0]{input_file},$responses[1]{input_file},'separate real HTTP requests have separate immutable input/output namespaces'); # codespell:ignore isnt
 my$rows=$f->people_schema->resultset('SpJob')->search({sp_job_id=>{'>'=>$before},sp_person_id=>41},{order_by=>'sp_job_id'});@owned_jobs=$rows->all;is(scalar@owned_jobs,2,'real HTTP requests created two native job records');for my$job(@owned_jobs){is($job->status,'finished','native job metadata confirms real completion')}
 my$dir='/tmp/pr6384-http-native-models';make_path($dir);write_file("$dir/response.json",encode_json({scope=>'Actual HTTP/Catalyst/Job/Tsp/R; no scheduling adapter',trial=>$trial,trait=>$trait,responses=>\@responses,jobs=>[map{{id=>$_->sp_job_id,status=>$_->status}}@owned_jobs]}));
 $_->delete for@owned_jobs;@owned_jobs=();done_testing;

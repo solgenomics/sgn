@@ -22,7 +22,7 @@ my $base=$ENV{SGN_TEST_BASE} || 'http://localhost:3010';
 my ($analytics_protocol_id,$analytics_nd_experiment_id,@owned_terms,@owned_xrefs);
 my $archive_dir=tempdir(CLEANUP=>1);
 my @owned_files;
-{package NativeSummaryArchiveContext;sub config {$_[0]{config}}sub stash {$_[0]{stash} ||= {}}}
+{package NativeSummaryArchiveContext;sub config {$_[0]{config}}sub stash {$_[0]{stash} ||= {}}} ## no critic (Modules::RequireFilenameMatchesPackage) -- This test embeds its named test double beside the assertions.
 sub _archive_analytics_result {SGN::Controller::AJAX::DroneImagery::DroneImageryAnalytics::_archive_analytics_result(@_)}
 my $prefix='audit_native_summary_'.$$;
 sub term {
@@ -83,7 +83,7 @@ my $all=eval {
     my $compact_start=index($source,'                my $compact_native_summaries=dclone(');
     my $compact_end=index($source,'                eval {',$compact_start);
     die 'Actual compact-summary producer boundaries missing' if $compact_start<0 || $compact_end<0;
-    my $compact_native_summaries=eval substr($source,$compact_start,$compact_end-$compact_start)."\n\$compact_native_summaries;";
+    my $compact_native_summaries=eval substr($source,$compact_start,$compact_end-$compact_start)."\n\$compact_native_summaries;"; ## no critic (ProhibitStringyEval) -- Execute the owning source fragment in this regression test; errors are checked below.
     die $@ if $@;
     my $env_varcomps=[{statistics_select=>'Native persistence fixture',type=>'One representation',native_variance_archive=>$descriptor,map {$_=>{native_variance_summary=>$compact_native_summaries->{stages}{$_}}} keys %{$compact_native_summaries->{stages}}}];
     my $averages=SGN::Controller::AJAX::DroneImagery::DroneImageryAnalytics::_native_variance_averages($env_varcomps);
@@ -91,7 +91,7 @@ my $all=eval {
     my ($protocol_result_summary,$protocol_result_summary_id);my $statistics_select=($summary->{covariance_source} eq 'supplied' ? 'blupf90':'airemlf90').'_grm_random_regression_'.lc($summary->{time_scale}).'_blups';my $statistics_select_original=$statistics_select;my $number_iterations=1;my $env_iterations={};my $env_corr_res={};my (%trait_name_encoder,%trait_to_time_map,%avg_cross_validation,@avg_cross_validation_display);my $perform_cv=0;
     my $a=index($source,'    my $q_save_res =');my $b=index($source,'    foreach my $f (@$spatial_effects_plots)',$a);
     die 'Owning summary persistence boundaries missing' if $a<0 || $b<0;
-    $schema->txn_do(sub {eval substr($source,$a,$b-$a);die $@ if $@;});
+    $schema->txn_do(sub {eval substr($source,$a,$b-$a);die $@ if $@;}); ## no critic (ProhibitStringyEval) -- Execute the owning source fragment in this regression test; errors are checked below.
     # Execute the actual standard archive/link block on this committed private
     # experiment so independent metadata/phenome connections see its FK owner.
     my ($saved_before_failure)=$dbh->selectrow_array('SELECT value FROM nd_protocolprop WHERE nd_protocol_id=? AND type_id=?',undef,$analytics_protocol_id,$protocolprop_result_type_cvterm_id);
@@ -111,7 +111,7 @@ my $all=eval {
     $a=index($source,'    my $native_archive_link_updated=0;');
     $b=index($source,'    $c->stash->{rest} = {',$a);
     die 'Owning standard archive boundaries missing' if $a<0 || $b<0;
-    my $archived=eval 'sub {'.substr($source,$a,$b-$a).';return undef;}->()';
+    my $archived=eval 'sub {'.substr($source,$a,$b-$a).';return undef;}->()'; ## no critic (ProhibitStringyEval) -- Execute the owning source fragment in this regression test; errors are checked below.
     push @owned_files,$descriptor->{file_id} if $descriptor->{file_id};
     die $@ if $@;die $archived->{error} if ref($archived)eq'HASH';
     ok($descriptor->{file_id},'actual standard uploader assigns the per-unit summary metadata file ID');

@@ -15,7 +15,7 @@ my @keys=map {CXGN::DroneImagery::DesignFactors::group_key('Alpha',$_,'B')} ('01
 my $codes=CXGN::DroneImagery::DesignFactors::category_codes(\@keys);
 is(scalar(keys %$codes),4,'numeric matrix category bijection preserves 01, 1, 0 and literal NA');
 is_deeply([sort values %$codes],[1,2,3,4],'matrix group codes are explicit category indices');
-isnt(CXGN::DroneImagery::DesignFactors::group_key('RCBD','x','B','Trial1'),CXGN::DroneImagery::DesignFactors::group_key('RCBD','x','B','Trial2'),'blocks from different trials are distinct fixed categories');
+isnt(CXGN::DroneImagery::DesignFactors::group_key('RCBD','x','B','Trial1'),CXGN::DroneImagery::DesignFactors::group_key('RCBD','x','B','Trial2'),'blocks from different trials are distinct fixed categories'); # codespell:ignore isnt
 for my $bad (['Alpha',undef,'B'],['Lattice','1',undef],['RCBD','999',undef]) {
     eval {CXGN::DroneImagery::DesignFactors::group_key(@$bad)};
     like($@,qr/Recorded.*metadata is missing/,'missing required recorded metadata is refused instead of using occurrences');
@@ -57,7 +57,7 @@ like($@,qr/one supported studyDesign/,'optional CNN evaluation refuses an ambigu
 my $directory_root=tempdir(CLEANUP=>1);
 my $first=CXGN::DroneImagery::DesignFactors::working_directory($directory_root,'blupf90_grm_random_regression_dap_blups');
 my $second=CXGN::DroneImagery::DesignFactors::working_directory($directory_root,'airemlf90_grm_random_regression_dap_blups');
-isnt($first,$second,'independent F90 requests cannot share fixed solutions/residual files');
+isnt($first,$second,'independent F90 requests cannot share fixed solutions/residual files'); # codespell:ignore isnt
 ok(-d $first&&-d $second&&dirname($first) eq $directory_root&&dirname($second) eq $directory_root,'F90 working directories remain inside the owned project root');
 is(CXGN::DroneImagery::DesignFactors::working_directory($directory_root,'sommer_grm_genetic_blups'),$directory_root,'engines with existing unique output paths retain their normal directory');
 
