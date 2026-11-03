@@ -1,5 +1,7 @@
 # Localization validation
 
+This is the test record. For site setup, use [Turn on translations](README.md).
+
 ## Setup and simplicity review, 2026-11-03
 
 This follow-up starts at `df1df33437fe659fa969050b8aa7a5d854a5448c` and retains

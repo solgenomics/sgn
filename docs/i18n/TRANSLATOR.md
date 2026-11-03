@@ -1,208 +1,118 @@
-# Translator and language-pack operator workflow
+# Build a language pack
 
-Developers mark complete interface messages in application source. The release
-builder freezes the message set and workflow assignments once per application
-release. Translators edit standard gettext PO files in their own workspace;
-operators install ready, data-only packages. Routine source PRs do not require
-finished translations or a rewrite of every language's PO file.
+A pack is a folder of translated messages ready for installation.
+To install an existing pack, use [Turn on translations](README.md).
+This example builds Ukrainian. Use a new output folder for each release.
 
-Stored names, identifiers, ontology terms, measurements, units, scientific
-formulas and machine import/export/API keys remain data. Keep complete English
-fallbacks. A missing, fuzzy or incomplete translation retains its whole English
-message; a filled obsolete source or changed plural identity is rejected.
+## 1. Prepare the release
 
-Use the same command entry point throughout. Run `sgn-i18n COMMAND --help`
-for options. Use absolute paths for tools and release/workspace/store locations
-when working outside the application checkout. Operators can follow the
-[short installation procedure](README.md#enable-a-ready-language-pack) directly.
-
-## Release builder: freeze source once
-
-Only the source-release builder needs the qualified Perl/PPI, JavaScript/Acorn
-and R extractors described in [README.md](README.md). Run from the frozen
-application source, using its exact application version or commit:
+The person building the SGN release does this step.
+Open a terminal in the SGN source folder for that release.
+Install the [source tools](DEVELOPER.md#source-tools) first.
 
 ```sh
-SGN_ROOT=/path/to/frozen-sgn-source
-RELEASE_DIR=/path/to/release-output
-
-python3 "$SGN_ROOT/bin/i18n/sgn-i18n" freeze --root "$SGN_ROOT" \
-  --application-version APPLICATION_VERSION_OR_COMMIT \
+RELEASE_DIR="$HOME/sgn-release-v1"
+python3 bin/i18n/sgn-i18n freeze \
+  --application-version "$(git rev-parse HEAD)" \
   --output "$RELEASE_DIR/release.json"
+mkdir -p "$RELEASE_DIR/tools"
+cp bin/i18n/*.py bin/i18n/sgn-i18n "$RELEASE_DIR/tools/"
+cp locale/uk/LC_MESSAGES/sgn.po "$RELEASE_DIR/uk.po"
 ```
 
-This creates `release.json` and its adjacent `release.pot`. The validated JSON
-contains the application version, semantic message-set revision, source
-references and complete partition assignments. Preserve the printed SHA-256 and
-ship both files with the matching `bin/i18n` tool directory. Refusing to overwrite
-an existing snapshot protects previously released translator inputs. Generated
-snapshots, packs and reports belong outside application source control.
+You now have:
 
-The snapshot hash establishes byte identity, not a publisher signature. Obtain
-the release inputs and tools through the project's normal trusted release path.
-The compiler rejects malformed snapshots, duplicate identities, a wrong semantic
-revision or invalid/incomplete partition references before writing outputs.
+- `release.json`: the exact message list for this SGN release.
+- `release.pot`: the same list for gettext editors.
+- `uk.po`: a copy of the Ukrainian translations.
+- `tools`: the Python files for the remaining steps.
 
-## Translator: initialize or merge an external PO
+Keep the printed release checksum with the release record. Get these files
+through the project's trusted release channel; a checksum is not a signature.
+The freeze command refuses to overwrite an existing release.
+Give the whole `sgn-release-v1` folder to the translator. They should put it
+in their Linux home folder before step 2.
 
-A translator building from the frozen snapshot needs Python 3.9+ and GNU gettext
-(`msgfmt`, `msgcat`, `msgmerge`), without Node, Acorn, PPI, R or an application
-checkout. The copied Python tool modules parse source only for the explicit
-source-extraction commands; `init/build --release` never invokes those parsers.
+## 2. Update the translation
+
+The translator needs Python 3.9 or newer and GNU gettext: `msgmerge`, `msgcat`
+and `msgfmt`. No application checkout, Node, Perl or R is needed from here on.
 
 ```sh
-I18N_TOOLS=/path/to/release-tools/bin/i18n
-RELEASE_JSON=/path/to/release-output/release.json
-PO_WORKSPACE=/path/to/translator-workspace
-PO_FILE="$PO_WORKSPACE/fr/LC_MESSAGES/sgn.po"
+cd "$HOME/sgn-release-v1"
+msgmerge --update --no-wrap --backup=numbered uk.po release.pot
+```
 
-python3 "$I18N_TOOLS/sgn-i18n" init --release "$RELEASE_JSON" \
+This keeps a numbered backup of the PO file. Open `uk.po` in a gettext editor:
+
+- Translate `msgstr` and every required `msgstr[n]`.
+- Keep `msgctxt`, `msgid` and `msgid_plural` unchanged.
+- Keep names such as `%{count}` and `%{name}` exactly as written.
+- Write plain text, without HTML tags or pre-escaped entities.
+- Leave uncertain text empty or marked fuzzy. The site will use whole English
+  messages for those entries.
+
+Have a native speaker and a breeder check the wording. A filled entry is not
+proof that someone reviewed it. [Review small batches](REVIEW.md) if needed.
+The `%{menu}` value in `file_list.datatable.length_menu` and `odk.table.length`
+must appear exactly once; do not replace it with `_MENU_`.
+
+## 3. Build the files
+
+Run from the release folder used in step 2:
+
+```sh
+python3 tools/sgn-i18n build --release release.json --po uk.po --output build-v1
+```
+
+The result is `build-v1/uk/sgn/index.json` and its message files.
+The output reports translated and English-fallback counts. A missing message,
+changed source or invalid placeholder cannot silently reuse the wrong wording.
+
+## 4. Make the installable pack
+
+```sh
+python3 tools/sgn-i18n create --catalog build-v1/uk/sgn/index.json --output uk-pack
+```
+
+The result is the **whole `uk-pack` folder**, including `manifest.json`.
+Keep all files together. `create` already checks them.
+Give the site operator this folder and these four files from `tools`:
+`sgn-i18n`, `pack.py`, `catalog_format.py`, `plural.py`.
+The operator can now follow [Turn on translations](README.md).
+
+For a correction, keep the previous PO, choose new names such as `build-v2`
+and `uk-pack-v2`, and repeat steps 3 and 4.
+
+## Add a language that has no PO file
+
+Run from the release folder. This example creates French:
+
+```sh
+python3 tools/sgn-i18n init --release release.json \
   --locale fr --direction ltr --plural-forms 'nplurals=2; plural=(n > 1);' \
-  --name 'Français' --output "$PO_FILE"
+  --name 'Français' --output fr.po
 ```
 
-`init` refuses to overwrite existing work. For an existing language, preserve
-the original PO and use GNU gettext to merge the next release's template:
+Use that language's real direction and plural rule. Do not guess them.
+Then translate and build its PO as in steps 2–4. Change the PO filename and
+language folder in the commands. The PO's `Language` field determines the tag.
+The header also holds `X-SGN-Direction`, `Plural-Forms` and the optional
+`X-SGN-Language-Name`. Keep these unless preparing another language.
 
-```sh
-cp "$PO_FILE" "$PO_WORKSPACE/fr-before-release-update.po"
-msgmerge --update --no-wrap --backup=none \
-  "$PO_FILE" /path/to/new-release/release.pot
-```
+## Package rules
 
-The PO's `Language`, `X-SGN-Direction`, `Plural-Forms` and optional
-`X-SGN-Language-Name` describe its locale. `Language` determines the output tag,
-independently of the input filename. Locale tags are safe ASCII identifiers;
-the native name is Unicode display text. Translate `msgstr` and every required
-`msgstr[n]` in a gettext editor, preserving exact `msgctxt`, `msgid`,
-`msgid_plural` and named values such as `%{count}` or `%{name}`.
+- Keep the original PO, release files and license notices.
+- Each JSON file in the installable pack has a 2 MiB limit. Large languages use separate message
+  files; do not raise that limit.
+- Installation checks file contents and checksums. Missing, extra, changed or
+  symlinked pack members are rejected.
+- `validate --pack uk-pack` checks without installing. Use it for diagnosis;
+  it is not a required extra step after `create` or `install`.
+- Small older catalogs can still use `build --legacy-single-file` and
+  `create --catalog .../sgn.json`. Use indexed packs for the full corpus.
+- `activate --expected-revision CODE` can require an exact message-list version.
+  It is optional; the normal setup does not need it.
 
-Translate a whole sentence, allowing word and variable order to change. Keep
-text plain, without HTML markup or pre-escaped entities; application callers
-escape it for their actual destination. Ordinary variables may repeat. The
-interactive `%{menu}` placeholder in `file_list.datatable.length_menu` and
-`odk.table.length` must occur exactly once and must not introduce `_MENU_`.
-Compiler and ready-package validation enforce the same rule.
-
-Review terminology in small breeding workflows, using a shared glossary for
-accessions, trials, plots, seedlots, crosses and observation variables. Review
-uncertain and machine-generated text with a native speaker and a breeder.
-Leave a record empty or fuzzy until it is ready for use. Filled translation
-counts measure coverage; they do not certify linguistic or scientific quality.
-
-## Translator or release builder: compile and package
-
-```sh
-python3 "$I18N_TOOLS/sgn-i18n" build --release "$RELEASE_JSON" \
-  --po "$PO_FILE" --output "$PO_WORKSPACE/build-v1"
-
-python3 "$I18N_TOOLS/sgn-i18n" create \
-  --catalog "$PO_WORKSPACE/build-v1/fr/sgn/index.json" \
-  --output "$PO_WORKSPACE/pack-v1"
-
-```
-
-`--po` is repeatable; all selected locales are validated before build output is
-written. The build report counts translated and English-fallback identities per
-locale without double-counting messages used by several workflows. Standard PO
-and gettext remain the translator format. The bounded, non-executable plural
-parser emits the same AST as the application's pinned browser runtime, proves
-all-count form bounds and rejects unsafe or unsupported formulas.
-
-The normal output is an indexed common/workflow bundle. The index and every
-partition have independent 2 MiB limits. The pack binds all file checksums and
-its source revision in one manifest; one missing, extra, symlinked, mismatched or
-conflicting member rejects the package. The `catalogSha256` printed by
-`create` equals the `installed` hash printed by `install`: for an indexed package it identifies the complete file-hash set.
-
-A small existing single-file catalog remains supported through
-`build --legacy-single-file`, followed by `sgn-i18n create --catalog .../fr/sgn.json`.
-The full multilingual corpus must use indexed packages rather than increasing
-the single-file limit.
-
-## Operator: install, activate and roll back
-
-Operators use the same `sgn-i18n` command with Python 3.9+ on Linux/POSIX.
-The tools use only the standard library, including the host's `fcntl` store lock.
-A minimal operator distribution contains that launcher plus `pack.py`,
-`catalog_format.py` and `plural.py`. The three modules also remain independently
-usable; copying the whole supplied tool directory does not install parser dependencies.
-The installer does not import the builder or source extractors. Ready-package
-validation, installation, activation and rollback require no Node,
-gettext, Perl, R or application source. Use a separate writable store, preserve
-both the current and previous immutable package. Mount the whole store in the
-application container; its absolute mount path can differ from the operator's
-path. New activations use store-relative pointers. Existing absolute selectors
-remain readable; activate the desired package with the new tools before moving
-an older store. No catalog rebuild or data migration is required.
-
-```sh
-PACK_STORE=/path/to/operator-language-store
-python3 "$I18N_TOOLS/sgn-i18n" install \
-  --pack "$PO_WORKSPACE/pack-v1" --root "$PACK_STORE"
-
-CATALOG_SHA=64_HEX_DIGITS_FROM_INSTALL_RECEIPT
-python3 "$I18N_TOOLS/sgn-i18n" activate \
-  --locale fr --hash "$CATALOG_SHA" --root "$PACK_STORE"
-
-python3 "$I18N_TOOLS/sgn-i18n" rollback --locale fr --root "$PACK_STORE"
-```
-
-`create` and `install` already validate their inputs; use `sgn-i18n validate`
-only to inspect a package without installing it.
-
-Installation validates and copies the complete immutable package to
-`installed/fr/<catalogSha256>/`; it does not change the selected language.
-Activation validates its exact locale and hash again. A validated recovery journal
-restores or reconciles an interrupted first activation or legacy-store migration
-on the next operator command; unrelated missing paths never authorize recovery. An optional
-`--expected-revision` requires the approved semantic message-set revision.
-An unrelated source change does not ordinarily invalidate exact matching
-messages; a strict revision rollout gate is an operator choice.
-
-Each activation prepares a generation containing runtime pointers and its
-history, then atomically replaces the one `active/fr` selector under a store
-lock. A failed generation write or selector replacement preserves the previous
-selected generation and its history. Re-activating the selected hash is
-idempotent. Rollback selects the previous complete package; rolling back the
-first activation selects an empty generation and returns to English fallback.
-Installed packages are retained.
-
-`history/fr.json` is a compatibility view into the selected generation. A legacy
-single-file store is imported on its first state change; its installed packages,
-old active directory and original history are preserved under `installed/`,
-`legacy-active/` and `legacy-history/`. Failed first-migration selector changes
-restore the old active directory. After migration, use the new tools; old tools
-do not understand generation selectors. Do not edit selector links or history
-by hand. The tool rejects inconsistent state and malformed rollback targets.
-
-## Site configuration and verification
-
-Use the site's normal startup configuration to enable the requested tags and
-point it at the store's active root:
-
-```text
-i18n_enabled 1
-i18n_catalog_dir /absolute/operator-language-store/active
-i18n_default_locale en
-i18n_enabled_locales en,fr-CA
-```
-
-A parent `fr` package can serve enabled `fr-CA`, preserving the requested tag
-separately from its effective language. Installing a language does not grant
-access rights or automatically enable it. Mount the **whole store** read-only
-at the same absolute host/container path: generation and installed-package
-symlinks must resolve inside that mount. A single-file bind can retain an old
-inode. Do not overlay application source with translation data.
-
-A new page request/bootstrap reads the selected package; an existing page's
-translator is not rewritten in place. For a correction, retain the previous PO,
-build and create into new `build-v2`/`pack-v2` paths, install, activate its new
-hash, and verify a normal new request. Keep the exact release snapshot, package
-hash, coverage report and human terminology-review result with release evidence.
-
-Before release, exercise actual anonymous and authenticated pages, selector
-POST/cookie behavior, parent-locale fallback, asynchronous errors, counts
-0/1/2/5, narrow and RTL layouts, and unchanged breeding identifiers and values.
-Check active v1, active v2, rollback to v1 and rollback to English. Source/parser
-unit tests alone do not establish HTTP, browser or translation-quality acceptance.
+Ordinary code changes do not require finished human translations in every
+language. Refresh the message list for a release, then review changed wording.
