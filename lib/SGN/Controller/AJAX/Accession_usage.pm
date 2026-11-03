@@ -1,6 +1,7 @@
 package SGN::Controller::AJAX::Accession_usage;
 
 use Moose;
+use CXGN::Phenotypes::Summary;
 use Data::Dumper;
 use Scalar::Util qw(looks_like_number);
 use CXGN::Cross;
@@ -141,13 +142,14 @@ sub accession_usage_phenotypes: Path('/ajax/accession_usage_phenotypes') :Args(0
             AND stock_relationship.type_id=?
             AND plot.type_id=?
             AND accession.type_id=?
+
         GROUP BY (((cvterm.name::text || '|'::text) || db.name::text) || ':'::text) || dbxref.accession::text, cvterm.cvterm_id, accession.stock_id, accession.uniquename
         ORDER BY cvterm.name ASC
         ,accession.uniquename DESC
         $limit_clause
         $offset_clause;");
 
-    my $numeric_regex = '^-?[0-9]+([,.][0-9]+)?$';
+    my $numeric_regex = CXGN::Phenotypes::Summary::numeric_value_regex();
     $h->execute($numeric_regex, $rel_type_id, $stock_type_id, $accesion_type_id);
 
     my @phenotype_data;

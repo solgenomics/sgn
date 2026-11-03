@@ -7,7 +7,7 @@ use File::Temp;
 use Text::CSV;
 use Spreadsheet::ParseExcel;
 
-my @header=qw(observationUnitName replicate accession_occurrence numericYield reject_reason blockNumber);
+my @header=qw(observationUnitName replicate accession_occurrence numericYield germplasmName blockNumber);
 my @rows=(['unit1','0',1,0,'=1+1','0'],['unit2','01',2,12.5,'ordinary text','01']);
 sub output {
     my ($format,$data)=@_;

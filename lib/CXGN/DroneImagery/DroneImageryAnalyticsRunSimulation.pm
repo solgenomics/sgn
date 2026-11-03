@@ -62,6 +62,9 @@ use Scalar::Util qw(looks_like_number);
 use SGN::Controller::AJAX::DroneImagery::DroneImagery;
 use Storable qw(dclone);
 use Statistics::Descriptive;
+use CXGN::DroneImagery::DesignFactors;
+use CXGN::Trial;
+use File::Spec;
 
 # The environment simulation formulas, keyed by the simulation type. Every entry takes
 # a hashref of the values its formula needs and returns the simulated value.
@@ -102,8 +105,27 @@ sub _simulate_environment_value {
     return $env_sim_sub->($args);
 }
 
+# One standard writer for physical tags/names in model CSVs. F90 whitespace
+# matrices use categorical numeric codes and do not call this serializer.
+my $model_csv_writer=Text::CSV->new({binary=>1,eol=>"\n"});
+sub _write_model_csv_row {
+    my ($handle,$row)=@_;
+    binmode($handle,':encoding(UTF-8)') if !grep {/^encoding/} PerlIO::get_layers($handle);
+    $model_csv_writer->print($handle,$row) or die $model_csv_writer->error_diag;
+}
+
 sub perform_drone_imagery_analytics {
     my ($schema, $a_env, $b_env, $ro_env, $row_ro_env, $env_variance_percent, $protocol_id, $statistics_select, $analytics_select, $tolparinv, $use_area_under_curve, $legendre_order_number, $permanent_environment_structure, $trait_name_encoder_hash, $trait_name_encoder_rev_hash, $stock_info_hash, $plot_id_map_hash, $sorted_trait_names_array, $accession_id_factor_map_hash, $rep_time_factors_array, $ind_rep_factors_array, $unique_accession_names_array, $plot_id_count_map_reverse_hash, $sorted_scaled_ln_times_array, $time_count_map_reverse_hash, $accession_id_factor_map_reverse_hash, $seen_times_hash, $plot_id_factor_map_reverse_hash, $trait_to_time_map_hash, $unique_plot_names_array, $stock_name_row_col_hash, $phenotype_data_original_hash, $plot_rep_time_factor_map_hash, $stock_row_col_hash, $stock_row_col_id_hash, $polynomial_map_hash, $plot_ids_ordered_array, $csv, $timestamp, $user_name, $stats_tempfile, $grm_file, $grm_rename_tempfile, $tmp_stats_dir, $stats_out_tempfile, $stats_out_tempfile_row, $stats_out_tempfile_col, $stats_out_tempfile_residual, $stats_out_tempfile_2dspl, $stats_prep2_tempfile, $stats_out_param_tempfile, $parameter_tempfile, $parameter_asreml_tempfile, $stats_tempfile_2, $permanent_environment_structure_tempfile, $permanent_environment_structure_env_tempfile, $permanent_environment_structure_env_tempfile2, $permanent_environment_structure_env_tempfile_mat, $sim_env_changing_mat_tempfile, $sim_env_changing_mat_full_tempfile, $yhat_residual_tempfile, $blupf90_solutions_tempfile, $coeff_genetic_tempfile, $coeff_pe_tempfile, $stats_out_tempfile_varcomp, $time_min, $time_max, $header_string, $min_row, $max_row, $min_col, $max_col, $mean_row, $sig_row, $mean_col, $sig_col, $sim_env_change_over_time, $correlation_between_times, $field_trial_id_list, $simulated_environment_real_data_trait_id, $fixed_effect_type, $perform_cv) = @_;
+    CXGN::DroneImagery::DesignFactors::validate_genotype_names(
+        [values %{$stock_name_row_col_hash || {}}], 'germplasm_stock_id', 'germplasm_name');
+    die "Select one field trial for simulation design effects.\n" if ref($field_trial_id_list) ne 'ARRAY' || @$field_trial_id_list!=1;
+    my $recorded_study_design=CXGN::Trial->new({bcs_schema=>$schema,trial_id=>$field_trial_id_list->[0]})->get_design_type;
+    my $design_fixed_terms=($fixed_effect_type // '') eq 'fixed_effect_trait' ? 'replicate' : CXGN::DroneImagery::DesignFactors::fixed_terms($recorded_study_design);
+    my $replicate_is_quantitative=($fixed_effect_type // '') eq 'fixed_effect_trait' ? 'TRUE':'FALSE';
+    my $drone_sommer_compat_file=File::Spec->rel2abs(File::Spec->catfile(dirname(dirname(dirname(dirname(__FILE__)))),'R','drone_sommer_compat.R'));
+    my $f90_group_codes=($fixed_effect_type // '') eq 'fixed_effect_trait' ? {} : CXGN::DroneImagery::DesignFactors::category_codes([map {
+        CXGN::DroneImagery::DesignFactors::group_key($recorded_study_design,$_->{rep},$_->{block})
+    } values %$stock_name_row_col_hash]);
     my %trait_name_encoder = %$trait_name_encoder_hash;
     my %trait_name_encoder_rev = %$trait_name_encoder_rev_hash;
     my %stock_info = %$stock_info_hash;
@@ -202,7 +224,8 @@ sub perform_drone_imagery_analytics {
         my $cbind_string = $number_traits > 1 ? "cbind($encoded_trait_string)" : $encoded_trait_string;
 
         $prepare_file_cv_cmd = 'R -e "library(data.table);
-        mat <- data.frame(fread(\''.$stats_tempfile.'\', header=TRUE, sep=\',\'));
+        source(\''.$drone_sommer_compat_file.'\');
+        mat <- drone_read_model_csv(\''.$stats_tempfile.'\', quantitative_replicate='.$replicate_is_quantitative.');
         cv_step_size <- length(mat\$plot_id) %/% 5;
         cv_step_size_modulo <- length(mat\$plot_id) %% 5;
         ';
@@ -269,11 +292,12 @@ sub perform_drone_imagery_analytics {
             push @encoded_traits_cv_save_5, $t_coded_cv5.' = mat\$'.$t_coded_cv5;
         }
         $prepare_file_cv_cmd .= '
-        write.table(mat, file=\''.$stats_tempfile.'\', row.names=FALSE, col.names=TRUE, sep=\',\');
+        write.table(mat, file=\''.$stats_tempfile.'\', row.names=FALSE, col.names=TRUE, qmethod=\'double\', sep=\',\');
         "';
 
         $prepare_file_cv2_cmd = 'R -e "library(data.table);
-        mat <- data.frame(fread(\''.$stats_tempfile.'\', header=TRUE, sep=\',\'));
+        source(\''.$drone_sommer_compat_file.'\');
+        mat <- drone_read_model_csv(\''.$stats_tempfile.'\', quantitative_replicate='.$replicate_is_quantitative.');
         cv_step_size <- length(mat\$plot_id) %/% 5;
         cv_step_size_modulo <- length(mat\$plot_id) %% 5;
         ';
@@ -317,11 +341,12 @@ sub perform_drone_imagery_analytics {
             push @encoded_traits_cv_save_5_2, 'mat\$'.$t_coded_cv5_2;
         }
         $prepare_file_cv2_cmd .= '
-        write.table(mat, file=\''.$stats_tempfile.'\', row.names=FALSE, col.names=TRUE, sep=\',\');
+        write.table(mat, file=\''.$stats_tempfile.'\', row.names=FALSE, col.names=TRUE, qmethod=\'double\', sep=\',\');
         "';
 
         $statistics_cmd_reading = 'R -e "library(sommer); library(data.table); library(reshape2);
-        mat <- data.frame(fread(\''.$stats_tempfile.'\', header=TRUE, sep=\',\'));
+        source(\''.$drone_sommer_compat_file.'\');
+        mat <- drone_read_model_csv(\''.$stats_tempfile.'\', quantitative_replicate='.$replicate_is_quantitative.');
         geno_mat_3col <- data.frame(fread(\''.$grm_file.'\', header=FALSE, sep=\'\t\'));
         geno_mat <- acast(geno_mat_3col, V1~V2, value.var=\'V3\');
         geno_mat[is.na(geno_mat)] <- 0;
@@ -332,32 +357,32 @@ sub perform_drone_imagery_analytics {
         ';
         my $statistics_cmd_model = '';
         if ($statistics_select eq 'sommer_grm_spatial_genetic_blups') {
-            $statistics_cmd_model .= 'mix <- mmer('.$cbind_string.'~1 + replicate, random=~vs(id, Gu=geno_mat, Gtc=unsm('.$number_traits.')) +vs(rowNumberFactor, Gtc=diag('.$number_traits.')) +vs(colNumberFactor, Gtc=diag('.$number_traits.')) +vs(spl2D(rowNumber, colNumber), Gtc=diag('.$number_traits.')), rcov=~vs(units, Gtc=unsm('.$number_traits.')), data=mat, tolparinv='.$tolparinv.');
+            $statistics_cmd_model .= 'mix <- mmer('.$cbind_string.'~'.$design_fixed_terms.', random=~vs(id, Gu=geno_mat, Gtc=unsm('.$number_traits.')) +vs(rowNumberFactor, Gtc=diag('.$number_traits.')) +vs(colNumberFactor, Gtc=diag('.$number_traits.')) +vs(spl2D(rowNumber, colNumber), Gtc=diag('.$number_traits.')), rcov=~vs(units, Gtc=unsm('.$number_traits.')), data=mat, tolParInv='.$tolparinv.');
             ';
         }
         elsif ($statistics_select eq 'sommer_grm_spatial_pure_2dspl_genetic_blups') {
-            $statistics_cmd_model .= 'mix <- mmer('.$cbind_string.'~1 + replicate, random=~vs(id, Gu=geno_mat, Gtc=unsm('.$number_traits.')) +vs(spl2D(rowNumber, colNumber), Gtc=diag('.$number_traits.')), rcov=~vs(units, Gtc=unsm('.$number_traits.')), data=mat, tolparinv='.$tolparinv.');
+            $statistics_cmd_model .= 'mix <- mmer('.$cbind_string.'~'.$design_fixed_terms.', random=~vs(id, Gu=geno_mat, Gtc=unsm('.$number_traits.')) +vs(spl2D(rowNumber, colNumber), Gtc=diag('.$number_traits.')), rcov=~vs(units, Gtc=unsm('.$number_traits.')), data=mat, tolParInv='.$tolparinv.');
             ';
         }
         $statistics_cmd_model .= 'if (!is.null(mix\$U)) {
         #gen_cor <- cov2cor(mix\$sigma\$\`u:id\`);
-        write.table(mix\$U\$\`u:id\`, file=\''.$stats_out_tempfile.'\', row.names=TRUE, col.names=TRUE, sep=\'\t\');
-        write.table(mix\$U\$\`u:rowNumberFactor\`, file=\''.$stats_out_tempfile_row.'\', row.names=TRUE, col.names=TRUE, sep=\'\t\');
-        write.table(mix\$U\$\`u:colNumberFactor\`, file=\''.$stats_out_tempfile_col.'\', row.names=TRUE, col.names=TRUE, sep=\'\t\');
-        write.table(data.frame(plot_id = mix\$data\$plot_id, residuals = mix\$residuals, fitted = mix\$fitted), file=\''.$stats_out_tempfile_residual.'\', row.names=FALSE, col.names=TRUE, sep=\'\t\');
-        write.table(summary(mix)\$varcomp, file=\''.$stats_out_tempfile_varcomp.'\', row.names=TRUE, col.names=TRUE, sep=\'\t\');
+        write.table(mix\$U\$\`u:id\`, file=\''.$stats_out_tempfile.'\', row.names=TRUE, col.names=TRUE, qmethod=\'double\', sep=\'\t\');
+        write.table(mix\$U\$\`u:rowNumberFactor\`, file=\''.$stats_out_tempfile_row.'\', row.names=TRUE, col.names=TRUE, qmethod=\'double\', sep=\'\t\');
+        write.table(mix\$U\$\`u:colNumberFactor\`, file=\''.$stats_out_tempfile_col.'\', row.names=TRUE, col.names=TRUE, qmethod=\'double\', sep=\'\t\');
+        write.table(data.frame(plot_id = mix\$data\$plot_id, residuals = mix\$residuals, fitted = mix\$fitted), file=\''.$stats_out_tempfile_residual.'\', row.names=FALSE, col.names=TRUE, qmethod=\'double\', sep=\'\t\');
+        write.table(summary(mix)\$varcomp, file=\''.$stats_out_tempfile_varcomp.'\', row.names=TRUE, col.names=TRUE, qmethod=\'double\', sep=\'\t\');
         X <- with(mat, spl2D(rowNumber, colNumber));
         spatial_blup_results <- data.frame(plot_id = mat\$plot_id);
         ';
         my $trait_index = 1;
         foreach my $enc_trait_name (@encoded_traits) {
             $statistics_cmd_model .= '
-        blups'.$trait_index.' <- mix\$U\$\`u:rowNumber\`\$'.$enc_trait_name.';
+        blups'.$trait_index.' <- drone_spline_coefficients(mix, \''.$enc_trait_name.'\', X);
         spatial_blup_results\$'.$enc_trait_name.' <- data.matrix(X) %*% data.matrix(blups'.$trait_index.');
             ';
             $trait_index++;
         }
-        $statistics_cmd_model .= 'write.table(spatial_blup_results, file=\''.$stats_out_tempfile_2dspl.'\', row.names=FALSE, col.names=TRUE, sep=\'\t\');
+        $statistics_cmd_model .= 'write.table(spatial_blup_results, file=\''.$stats_out_tempfile_2dspl.'\', row.names=FALSE, col.names=TRUE, qmethod=\'double\', sep=\'\t\');
         }
         "';
 
@@ -388,34 +413,34 @@ sub perform_drone_imagery_analytics {
         my $cv_classify_string = 'c(\'id\')';
         if ($statistics_select eq 'sommer_grm_spatial_genetic_blups') {
             $statistics_cmd_cv_1 .= '
-            mix_cv_1 <- mmer('.$cbind_string_cv_1.'~1 + replicate, random=~vs(id, Gu=geno_mat, Gtc=unsm('.$number_traits.')) +vs(rowNumberFactor, Gtc=diag('.$number_traits.')) +vs(colNumberFactor, Gtc=diag('.$number_traits.')) +vs(spl2D(rowNumber, colNumber), Gtc=diag('.$number_traits.')), rcov=~vs(units, Gtc=unsm('.$number_traits.')), data=mat, tolparinv='.$tolparinv.');
-            mix_cv_2 <- mmer('.$cbind_string_cv_2.'~1 + replicate, random=~vs(id, Gu=geno_mat, Gtc=unsm('.$number_traits.')) +vs(rowNumberFactor, Gtc=diag('.$number_traits.')) +vs(colNumberFactor, Gtc=diag('.$number_traits.')) +vs(spl2D(rowNumber, colNumber), Gtc=diag('.$number_traits.')), rcov=~vs(units, Gtc=unsm('.$number_traits.')), data=mat, tolparinv='.$tolparinv.');
-            mix_cv_3 <- mmer('.$cbind_string_cv_3.'~1 + replicate, random=~vs(id, Gu=geno_mat, Gtc=unsm('.$number_traits.')) +vs(rowNumberFactor, Gtc=diag('.$number_traits.')) +vs(colNumberFactor, Gtc=diag('.$number_traits.')) +vs(spl2D(rowNumber, colNumber), Gtc=diag('.$number_traits.')), rcov=~vs(units, Gtc=unsm('.$number_traits.')), data=mat, tolparinv='.$tolparinv.');
-            mix_cv_4 <- mmer('.$cbind_string_cv_4.'~1 + replicate, random=~vs(id, Gu=geno_mat, Gtc=unsm('.$number_traits.')) +vs(rowNumberFactor, Gtc=diag('.$number_traits.')) +vs(colNumberFactor, Gtc=diag('.$number_traits.')) +vs(spl2D(rowNumber, colNumber), Gtc=diag('.$number_traits.')), rcov=~vs(units, Gtc=unsm('.$number_traits.')), data=mat, tolparinv='.$tolparinv.');
-            mix_cv_5 <- mmer('.$cbind_string_cv_5.'~1 + replicate, random=~vs(id, Gu=geno_mat, Gtc=unsm('.$number_traits.')) +vs(rowNumberFactor, Gtc=diag('.$number_traits.')) +vs(colNumberFactor, Gtc=diag('.$number_traits.')) +vs(spl2D(rowNumber, colNumber), Gtc=diag('.$number_traits.')), rcov=~vs(units, Gtc=unsm('.$number_traits.')), data=mat, tolparinv='.$tolparinv.');
+            mix_cv_1 <- mmer('.$cbind_string_cv_1.'~'.$design_fixed_terms.', random=~vs(id, Gu=geno_mat, Gtc=unsm('.$number_traits.')) +vs(rowNumberFactor, Gtc=diag('.$number_traits.')) +vs(colNumberFactor, Gtc=diag('.$number_traits.')) +vs(spl2D(rowNumber, colNumber), Gtc=diag('.$number_traits.')), rcov=~vs(units, Gtc=unsm('.$number_traits.')), data=mat, tolParInv='.$tolparinv.');
+            mix_cv_2 <- mmer('.$cbind_string_cv_2.'~'.$design_fixed_terms.', random=~vs(id, Gu=geno_mat, Gtc=unsm('.$number_traits.')) +vs(rowNumberFactor, Gtc=diag('.$number_traits.')) +vs(colNumberFactor, Gtc=diag('.$number_traits.')) +vs(spl2D(rowNumber, colNumber), Gtc=diag('.$number_traits.')), rcov=~vs(units, Gtc=unsm('.$number_traits.')), data=mat, tolParInv='.$tolparinv.');
+            mix_cv_3 <- mmer('.$cbind_string_cv_3.'~'.$design_fixed_terms.', random=~vs(id, Gu=geno_mat, Gtc=unsm('.$number_traits.')) +vs(rowNumberFactor, Gtc=diag('.$number_traits.')) +vs(colNumberFactor, Gtc=diag('.$number_traits.')) +vs(spl2D(rowNumber, colNumber), Gtc=diag('.$number_traits.')), rcov=~vs(units, Gtc=unsm('.$number_traits.')), data=mat, tolParInv='.$tolparinv.');
+            mix_cv_4 <- mmer('.$cbind_string_cv_4.'~'.$design_fixed_terms.', random=~vs(id, Gu=geno_mat, Gtc=unsm('.$number_traits.')) +vs(rowNumberFactor, Gtc=diag('.$number_traits.')) +vs(colNumberFactor, Gtc=diag('.$number_traits.')) +vs(spl2D(rowNumber, colNumber), Gtc=diag('.$number_traits.')), rcov=~vs(units, Gtc=unsm('.$number_traits.')), data=mat, tolParInv='.$tolparinv.');
+            mix_cv_5 <- mmer('.$cbind_string_cv_5.'~'.$design_fixed_terms.', random=~vs(id, Gu=geno_mat, Gtc=unsm('.$number_traits.')) +vs(rowNumberFactor, Gtc=diag('.$number_traits.')) +vs(colNumberFactor, Gtc=diag('.$number_traits.')) +vs(spl2D(rowNumber, colNumber), Gtc=diag('.$number_traits.')), rcov=~vs(units, Gtc=unsm('.$number_traits.')), data=mat, tolParInv='.$tolparinv.');
             ';
             $statistics_cmd_cv_2 .= '
-            mix_cv_2_1 <- mmer('.$cbind_string_cv_1_2.'~1 + replicate, random=~vs(id, Gu=geno_mat, Gtc=unsm('.$number_traits.')) +vs(rowNumberFactor, Gtc=diag('.$number_traits.')) +vs(colNumberFactor, Gtc=diag('.$number_traits.')) +vs(spl2D(rowNumber, colNumber), Gtc=diag('.$number_traits.')), rcov=~vs(units, Gtc=unsm('.$number_traits.')), data=mat, tolparinv='.$tolparinv.');
-            mix_cv_2_2 <- mmer('.$cbind_string_cv_2_2.'~1 + replicate, random=~vs(id, Gu=geno_mat, Gtc=unsm('.$number_traits.')) +vs(rowNumberFactor, Gtc=diag('.$number_traits.')) +vs(colNumberFactor, Gtc=diag('.$number_traits.')) +vs(spl2D(rowNumber, colNumber), Gtc=diag('.$number_traits.')), rcov=~vs(units, Gtc=unsm('.$number_traits.')), data=mat, tolparinv='.$tolparinv.');
-            mix_cv_2_3 <- mmer('.$cbind_string_cv_3_2.'~1 + replicate, random=~vs(id, Gu=geno_mat, Gtc=unsm('.$number_traits.')) +vs(rowNumberFactor, Gtc=diag('.$number_traits.')) +vs(colNumberFactor, Gtc=diag('.$number_traits.')) +vs(spl2D(rowNumber, colNumber), Gtc=diag('.$number_traits.')), rcov=~vs(units, Gtc=unsm('.$number_traits.')), data=mat, tolparinv='.$tolparinv.');
-            mix_cv_2_4 <- mmer('.$cbind_string_cv_4_2.'~1 + replicate, random=~vs(id, Gu=geno_mat, Gtc=unsm('.$number_traits.')) +vs(rowNumberFactor, Gtc=diag('.$number_traits.')) +vs(colNumberFactor, Gtc=diag('.$number_traits.')) +vs(spl2D(rowNumber, colNumber), Gtc=diag('.$number_traits.')), rcov=~vs(units, Gtc=unsm('.$number_traits.')), data=mat, tolparinv='.$tolparinv.');
-            mix_cv_2_5 <- mmer('.$cbind_string_cv_5_2.'~1 + replicate, random=~vs(id, Gu=geno_mat, Gtc=unsm('.$number_traits.')) +vs(rowNumberFactor, Gtc=diag('.$number_traits.')) +vs(colNumberFactor, Gtc=diag('.$number_traits.')) +vs(spl2D(rowNumber, colNumber), Gtc=diag('.$number_traits.')), rcov=~vs(units, Gtc=unsm('.$number_traits.')), data=mat, tolparinv='.$tolparinv.');
+            mix_cv_2_1 <- mmer('.$cbind_string_cv_1_2.'~'.$design_fixed_terms.', random=~vs(id, Gu=geno_mat, Gtc=unsm('.$number_traits.')) +vs(rowNumberFactor, Gtc=diag('.$number_traits.')) +vs(colNumberFactor, Gtc=diag('.$number_traits.')) +vs(spl2D(rowNumber, colNumber), Gtc=diag('.$number_traits.')), rcov=~vs(units, Gtc=unsm('.$number_traits.')), data=mat, tolParInv='.$tolparinv.');
+            mix_cv_2_2 <- mmer('.$cbind_string_cv_2_2.'~'.$design_fixed_terms.', random=~vs(id, Gu=geno_mat, Gtc=unsm('.$number_traits.')) +vs(rowNumberFactor, Gtc=diag('.$number_traits.')) +vs(colNumberFactor, Gtc=diag('.$number_traits.')) +vs(spl2D(rowNumber, colNumber), Gtc=diag('.$number_traits.')), rcov=~vs(units, Gtc=unsm('.$number_traits.')), data=mat, tolParInv='.$tolparinv.');
+            mix_cv_2_3 <- mmer('.$cbind_string_cv_3_2.'~'.$design_fixed_terms.', random=~vs(id, Gu=geno_mat, Gtc=unsm('.$number_traits.')) +vs(rowNumberFactor, Gtc=diag('.$number_traits.')) +vs(colNumberFactor, Gtc=diag('.$number_traits.')) +vs(spl2D(rowNumber, colNumber), Gtc=diag('.$number_traits.')), rcov=~vs(units, Gtc=unsm('.$number_traits.')), data=mat, tolParInv='.$tolparinv.');
+            mix_cv_2_4 <- mmer('.$cbind_string_cv_4_2.'~'.$design_fixed_terms.', random=~vs(id, Gu=geno_mat, Gtc=unsm('.$number_traits.')) +vs(rowNumberFactor, Gtc=diag('.$number_traits.')) +vs(colNumberFactor, Gtc=diag('.$number_traits.')) +vs(spl2D(rowNumber, colNumber), Gtc=diag('.$number_traits.')), rcov=~vs(units, Gtc=unsm('.$number_traits.')), data=mat, tolParInv='.$tolparinv.');
+            mix_cv_2_5 <- mmer('.$cbind_string_cv_5_2.'~'.$design_fixed_terms.', random=~vs(id, Gu=geno_mat, Gtc=unsm('.$number_traits.')) +vs(rowNumberFactor, Gtc=diag('.$number_traits.')) +vs(colNumberFactor, Gtc=diag('.$number_traits.')) +vs(spl2D(rowNumber, colNumber), Gtc=diag('.$number_traits.')), rcov=~vs(units, Gtc=unsm('.$number_traits.')), data=mat, tolParInv='.$tolparinv.');
             ';
         }
         elsif ($statistics_select eq 'sommer_grm_spatial_pure_2dspl_genetic_blups') {
             $statistics_cmd_cv_1 .= '
-            mix_cv_1 <- mmer('.$cbind_string_cv_1.'~1 + replicate, random=~vs(id, Gu=geno_mat, Gtc=unsm('.$number_traits.')) +vs(spl2D(rowNumber, colNumber), Gtc=diag('.$number_traits.')), rcov=~vs(units, Gtc=unsm('.$number_traits.')), data=mat, tolparinv='.$tolparinv.' );
-            mix_cv_2 <- mmer('.$cbind_string_cv_2.'~1 + replicate, random=~vs(id, Gu=geno_mat, Gtc=unsm('.$number_traits.')) +vs(spl2D(rowNumber, colNumber), Gtc=diag('.$number_traits.')), rcov=~vs(units, Gtc=unsm('.$number_traits.')), data=mat, tolparinv='.$tolparinv.' );
-            mix_cv_3 <- mmer('.$cbind_string_cv_3.'~1 + replicate, random=~vs(id, Gu=geno_mat, Gtc=unsm('.$number_traits.')) +vs(spl2D(rowNumber, colNumber), Gtc=diag('.$number_traits.')), rcov=~vs(units, Gtc=unsm('.$number_traits.')), data=mat, tolparinv='.$tolparinv.' );
-            mix_cv_4 <- mmer('.$cbind_string_cv_4.'~1 + replicate, random=~vs(id, Gu=geno_mat, Gtc=unsm('.$number_traits.')) +vs(spl2D(rowNumber, colNumber), Gtc=diag('.$number_traits.')), rcov=~vs(units, Gtc=unsm('.$number_traits.')), data=mat, tolparinv='.$tolparinv.' );
-            mix_cv_5 <- mmer('.$cbind_string_cv_5.'~1 + replicate, random=~vs(id, Gu=geno_mat, Gtc=unsm('.$number_traits.')) +vs(spl2D(rowNumber, colNumber), Gtc=diag('.$number_traits.')), rcov=~vs(units, Gtc=unsm('.$number_traits.')), data=mat, tolparinv='.$tolparinv.' );
+            mix_cv_1 <- mmer('.$cbind_string_cv_1.'~'.$design_fixed_terms.', random=~vs(id, Gu=geno_mat, Gtc=unsm('.$number_traits.')) +vs(spl2D(rowNumber, colNumber), Gtc=diag('.$number_traits.')), rcov=~vs(units, Gtc=unsm('.$number_traits.')), data=mat, tolParInv='.$tolparinv.' );
+            mix_cv_2 <- mmer('.$cbind_string_cv_2.'~'.$design_fixed_terms.', random=~vs(id, Gu=geno_mat, Gtc=unsm('.$number_traits.')) +vs(spl2D(rowNumber, colNumber), Gtc=diag('.$number_traits.')), rcov=~vs(units, Gtc=unsm('.$number_traits.')), data=mat, tolParInv='.$tolparinv.' );
+            mix_cv_3 <- mmer('.$cbind_string_cv_3.'~'.$design_fixed_terms.', random=~vs(id, Gu=geno_mat, Gtc=unsm('.$number_traits.')) +vs(spl2D(rowNumber, colNumber), Gtc=diag('.$number_traits.')), rcov=~vs(units, Gtc=unsm('.$number_traits.')), data=mat, tolParInv='.$tolparinv.' );
+            mix_cv_4 <- mmer('.$cbind_string_cv_4.'~'.$design_fixed_terms.', random=~vs(id, Gu=geno_mat, Gtc=unsm('.$number_traits.')) +vs(spl2D(rowNumber, colNumber), Gtc=diag('.$number_traits.')), rcov=~vs(units, Gtc=unsm('.$number_traits.')), data=mat, tolParInv='.$tolparinv.' );
+            mix_cv_5 <- mmer('.$cbind_string_cv_5.'~'.$design_fixed_terms.', random=~vs(id, Gu=geno_mat, Gtc=unsm('.$number_traits.')) +vs(spl2D(rowNumber, colNumber), Gtc=diag('.$number_traits.')), rcov=~vs(units, Gtc=unsm('.$number_traits.')), data=mat, tolParInv='.$tolparinv.' );
             ';
             $statistics_cmd_cv_2 .= '
-            mix_cv_2_1 <- mmer('.$cbind_string_cv_1_2.'~1 + replicate, random=~vs(id, Gu=geno_mat, Gtc=unsm('.$number_traits.')) +vs(spl2D(rowNumber, colNumber), Gtc=diag('.$number_traits.')), rcov=~vs(units, Gtc=unsm('.$number_traits.')), data=mat, tolparinv='.$tolparinv.');
-            mix_cv_2_2 <- mmer('.$cbind_string_cv_2_2.'~1 + replicate, random=~vs(id, Gu=geno_mat, Gtc=unsm('.$number_traits.')) +vs(spl2D(rowNumber, colNumber), Gtc=diag('.$number_traits.')), rcov=~vs(units, Gtc=unsm('.$number_traits.')), data=mat, tolparinv='.$tolparinv.');
-            mix_cv_2_3 <- mmer('.$cbind_string_cv_3_2.'~1 + replicate, random=~vs(id, Gu=geno_mat, Gtc=unsm('.$number_traits.')) +vs(spl2D(rowNumber, colNumber), Gtc=diag('.$number_traits.')), rcov=~vs(units, Gtc=unsm('.$number_traits.')), data=mat, tolparinv='.$tolparinv.');
-            mix_cv_2_4 <- mmer('.$cbind_string_cv_4_2.'~1 + replicate, random=~vs(id, Gu=geno_mat, Gtc=unsm('.$number_traits.')) +vs(spl2D(rowNumber, colNumber), Gtc=diag('.$number_traits.')), rcov=~vs(units, Gtc=unsm('.$number_traits.')), data=mat, tolparinv='.$tolparinv.');
-            mix_cv_2_5 <- mmer('.$cbind_string_cv_5_2.'~1 + replicate, random=~vs(id, Gu=geno_mat, Gtc=unsm('.$number_traits.')) +vs(spl2D(rowNumber, colNumber), Gtc=diag('.$number_traits.')), rcov=~vs(units, Gtc=unsm('.$number_traits.')), data=mat, tolparinv='.$tolparinv.');
+            mix_cv_2_1 <- mmer('.$cbind_string_cv_1_2.'~'.$design_fixed_terms.', random=~vs(id, Gu=geno_mat, Gtc=unsm('.$number_traits.')) +vs(spl2D(rowNumber, colNumber), Gtc=diag('.$number_traits.')), rcov=~vs(units, Gtc=unsm('.$number_traits.')), data=mat, tolParInv='.$tolparinv.');
+            mix_cv_2_2 <- mmer('.$cbind_string_cv_2_2.'~'.$design_fixed_terms.', random=~vs(id, Gu=geno_mat, Gtc=unsm('.$number_traits.')) +vs(spl2D(rowNumber, colNumber), Gtc=diag('.$number_traits.')), rcov=~vs(units, Gtc=unsm('.$number_traits.')), data=mat, tolParInv='.$tolparinv.');
+            mix_cv_2_3 <- mmer('.$cbind_string_cv_3_2.'~'.$design_fixed_terms.', random=~vs(id, Gu=geno_mat, Gtc=unsm('.$number_traits.')) +vs(spl2D(rowNumber, colNumber), Gtc=diag('.$number_traits.')), rcov=~vs(units, Gtc=unsm('.$number_traits.')), data=mat, tolParInv='.$tolparinv.');
+            mix_cv_2_4 <- mmer('.$cbind_string_cv_4_2.'~'.$design_fixed_terms.', random=~vs(id, Gu=geno_mat, Gtc=unsm('.$number_traits.')) +vs(spl2D(rowNumber, colNumber), Gtc=diag('.$number_traits.')), rcov=~vs(units, Gtc=unsm('.$number_traits.')), data=mat, tolParInv='.$tolparinv.');
+            mix_cv_2_5 <- mmer('.$cbind_string_cv_5_2.'~'.$design_fixed_terms.', random=~vs(id, Gu=geno_mat, Gtc=unsm('.$number_traits.')) +vs(spl2D(rowNumber, colNumber), Gtc=diag('.$number_traits.')), rcov=~vs(units, Gtc=unsm('.$number_traits.')), data=mat, tolParInv='.$tolparinv.');
             ';
         }
         my $encoded_traits_cv_save_1 = join ',', @encoded_traits_cv_save_1;
@@ -430,31 +455,31 @@ sub perform_drone_imagery_analytics {
         my $encoded_traits_cv_save_5_2 = join ',', @encoded_traits_cv_save_5_2;
         my $encoded_traits_cv_check = join ',', @encoded_traits_cv_check;
         $statistics_cmd_cv_1 .= '
-        write.table(data.frame(plot_id = mix_cv_1\$data\$plot_id, '.$encoded_traits_cv_check.','.$encoded_traits_cv_save_1.', residuals = mix_cv_1\$residuals, fitted = mix_cv_1\$fitted), file=\''.$stats_out_cv1_predict_tempfile.'\', row.names=FALSE, col.names=TRUE, sep=\'\t\');
-        write.table(data.frame(plot_id = mix_cv_2\$data\$plot_id, '.$encoded_traits_cv_check.','.$encoded_traits_cv_save_2.', residuals = mix_cv_2\$residuals, fitted = mix_cv_2\$fitted), file=\''.$stats_out_cv2_predict_tempfile.'\', row.names=FALSE, col.names=TRUE, sep=\'\t\');
-        write.table(data.frame(plot_id = mix_cv_3\$data\$plot_id, '.$encoded_traits_cv_check.','.$encoded_traits_cv_save_3.', residuals = mix_cv_3\$residuals, fitted = mix_cv_3\$fitted), file=\''.$stats_out_cv3_predict_tempfile.'\', row.names=FALSE, col.names=TRUE, sep=\'\t\');
-        write.table(data.frame(plot_id = mix_cv_4\$data\$plot_id, '.$encoded_traits_cv_check.','.$encoded_traits_cv_save_4.', residuals = mix_cv_4\$residuals, fitted = mix_cv_4\$fitted), file=\''.$stats_out_cv4_predict_tempfile.'\', row.names=FALSE, col.names=TRUE, sep=\'\t\');
-        write.table(data.frame(plot_id = mix_cv_5\$data\$plot_id, '.$encoded_traits_cv_check.','.$encoded_traits_cv_save_5.', residuals = mix_cv_5\$residuals, fitted = mix_cv_5\$fitted), file=\''.$stats_out_cv5_predict_tempfile.'\', row.names=FALSE, col.names=TRUE, sep=\'\t\');
+        write.table(data.frame(plot_id = mix_cv_1\$data\$plot_id, '.$encoded_traits_cv_check.','.$encoded_traits_cv_save_1.', residuals = mix_cv_1\$residuals, fitted = mix_cv_1\$fitted), file=\''.$stats_out_cv1_predict_tempfile.'\', row.names=FALSE, col.names=TRUE, qmethod=\'double\', sep=\'\t\');
+        write.table(data.frame(plot_id = mix_cv_2\$data\$plot_id, '.$encoded_traits_cv_check.','.$encoded_traits_cv_save_2.', residuals = mix_cv_2\$residuals, fitted = mix_cv_2\$fitted), file=\''.$stats_out_cv2_predict_tempfile.'\', row.names=FALSE, col.names=TRUE, qmethod=\'double\', sep=\'\t\');
+        write.table(data.frame(plot_id = mix_cv_3\$data\$plot_id, '.$encoded_traits_cv_check.','.$encoded_traits_cv_save_3.', residuals = mix_cv_3\$residuals, fitted = mix_cv_3\$fitted), file=\''.$stats_out_cv3_predict_tempfile.'\', row.names=FALSE, col.names=TRUE, qmethod=\'double\', sep=\'\t\');
+        write.table(data.frame(plot_id = mix_cv_4\$data\$plot_id, '.$encoded_traits_cv_check.','.$encoded_traits_cv_save_4.', residuals = mix_cv_4\$residuals, fitted = mix_cv_4\$fitted), file=\''.$stats_out_cv4_predict_tempfile.'\', row.names=FALSE, col.names=TRUE, qmethod=\'double\', sep=\'\t\');
+        write.table(data.frame(plot_id = mix_cv_5\$data\$plot_id, '.$encoded_traits_cv_check.','.$encoded_traits_cv_save_5.', residuals = mix_cv_5\$residuals, fitted = mix_cv_5\$fitted), file=\''.$stats_out_cv5_predict_tempfile.'\', row.names=FALSE, col.names=TRUE, qmethod=\'double\', sep=\'\t\');
         "';
         $statistics_cmd_cv_2 .= '
-        write.table(data.frame(plot_id = mix_cv_2_1\$data\$plot_id, '.$encoded_traits_cv_check.','.$encoded_traits_cv_save_1_2.', residuals = mix_cv_2_1\$residuals, fitted = mix_cv_2_1\$fitted), file=\''.$stats_out_cv1_2_predict_tempfile.'\', row.names=FALSE, col.names=TRUE, sep=\'\t\');
-        write.table(data.frame(plot_id = mix_cv_2_2\$data\$plot_id, '.$encoded_traits_cv_check.','.$encoded_traits_cv_save_2_2.', residuals = mix_cv_2_2\$residuals, fitted = mix_cv_2_2\$fitted), file=\''.$stats_out_cv2_2_predict_tempfile.'\', row.names=FALSE, col.names=TRUE, sep=\'\t\');
-        write.table(data.frame(plot_id = mix_cv_2_3\$data\$plot_id, '.$encoded_traits_cv_check.','.$encoded_traits_cv_save_3_2.', residuals = mix_cv_2_3\$residuals, fitted = mix_cv_2_3\$fitted), file=\''.$stats_out_cv3_2_predict_tempfile.'\', row.names=FALSE, col.names=TRUE, sep=\'\t\');
-        write.table(data.frame(plot_id = mix_cv_2_4\$data\$plot_id, '.$encoded_traits_cv_check.','.$encoded_traits_cv_save_4_2.', residuals = mix_cv_2_4\$residuals, fitted = mix_cv_2_4\$fitted), file=\''.$stats_out_cv4_2_predict_tempfile.'\', row.names=FALSE, col.names=TRUE, sep=\'\t\');
-        write.table(data.frame(plot_id = mix_cv_2_5\$data\$plot_id, '.$encoded_traits_cv_check.','.$encoded_traits_cv_save_5_2.', residuals = mix_cv_2_5\$residuals, fitted = mix_cv_2_5\$fitted), file=\''.$stats_out_cv5_2_predict_tempfile.'\', row.names=FALSE, col.names=TRUE, sep=\'\t\');
+        write.table(data.frame(plot_id = mix_cv_2_1\$data\$plot_id, '.$encoded_traits_cv_check.','.$encoded_traits_cv_save_1_2.', residuals = mix_cv_2_1\$residuals, fitted = mix_cv_2_1\$fitted), file=\''.$stats_out_cv1_2_predict_tempfile.'\', row.names=FALSE, col.names=TRUE, qmethod=\'double\', sep=\'\t\');
+        write.table(data.frame(plot_id = mix_cv_2_2\$data\$plot_id, '.$encoded_traits_cv_check.','.$encoded_traits_cv_save_2_2.', residuals = mix_cv_2_2\$residuals, fitted = mix_cv_2_2\$fitted), file=\''.$stats_out_cv2_2_predict_tempfile.'\', row.names=FALSE, col.names=TRUE, qmethod=\'double\', sep=\'\t\');
+        write.table(data.frame(plot_id = mix_cv_2_3\$data\$plot_id, '.$encoded_traits_cv_check.','.$encoded_traits_cv_save_3_2.', residuals = mix_cv_2_3\$residuals, fitted = mix_cv_2_3\$fitted), file=\''.$stats_out_cv3_2_predict_tempfile.'\', row.names=FALSE, col.names=TRUE, qmethod=\'double\', sep=\'\t\');
+        write.table(data.frame(plot_id = mix_cv_2_4\$data\$plot_id, '.$encoded_traits_cv_check.','.$encoded_traits_cv_save_4_2.', residuals = mix_cv_2_4\$residuals, fitted = mix_cv_2_4\$fitted), file=\''.$stats_out_cv4_2_predict_tempfile.'\', row.names=FALSE, col.names=TRUE, qmethod=\'double\', sep=\'\t\');
+        write.table(data.frame(plot_id = mix_cv_2_5\$data\$plot_id, '.$encoded_traits_cv_check.','.$encoded_traits_cv_save_5_2.', residuals = mix_cv_2_5\$residuals, fitted = mix_cv_2_5\$fitted), file=\''.$stats_out_cv5_2_predict_tempfile.'\', row.names=FALSE, col.names=TRUE, qmethod=\'double\', sep=\'\t\');
         "';
 
-        # p_cv1 <- predict.mmer(object=mix_cv_2_1, classify = '.$cv_classify_string.', tolparinv='.$tolparinv_10.' );
-        # p_cv2 <- predict.mmer(object=mix_cv_2_2, classify = '.$cv_classify_string.', tolparinv='.$tolparinv_10.' );
-        # p_cv3 <- predict.mmer(object=mix_cv_2_3, classify = '.$cv_classify_string.', tolparinv='.$tolparinv_10.' );
-        # p_cv4 <- predict.mmer(object=mix_cv_2_4, classify = '.$cv_classify_string.', tolparinv='.$tolparinv_10.' );
-        # p_cv5 <- predict.mmer(object=mix_cv_2_5, classify = '.$cv_classify_string.', tolparinv='.$tolparinv_10.' );
+        # p_cv1 <- predict.mmer(object=mix_cv_2_1, classify = '.$cv_classify_string.', tolParInv='.$tolparinv_10.' );
+        # p_cv2 <- predict.mmer(object=mix_cv_2_2, classify = '.$cv_classify_string.', tolParInv='.$tolparinv_10.' );
+        # p_cv3 <- predict.mmer(object=mix_cv_2_3, classify = '.$cv_classify_string.', tolParInv='.$tolparinv_10.' );
+        # p_cv4 <- predict.mmer(object=mix_cv_2_4, classify = '.$cv_classify_string.', tolParInv='.$tolparinv_10.' );
+        # p_cv5 <- predict.mmer(object=mix_cv_2_5, classify = '.$cv_classify_string.', tolParInv='.$tolparinv_10.' );
         # p_cv1;
-        # write.table(p_cv1\$pvals, file=\''.$stats_out_cv1_2_predict_tempfile.'\', row.names=FALSE, col.names=TRUE, sep=\'\t\');
-        # write.table(p_cv2\$pvals, file=\''.$stats_out_cv2_2_predict_tempfile.'\', row.names=FALSE, col.names=TRUE, sep=\'\t\');
-        # write.table(p_cv3\$pvals, file=\''.$stats_out_cv3_2_predict_tempfile.'\', row.names=FALSE, col.names=TRUE, sep=\'\t\');
-        # write.table(p_cv4\$pvals, file=\''.$stats_out_cv4_2_predict_tempfile.'\', row.names=FALSE, col.names=TRUE, sep=\'\t\');
-        # write.table(p_cv5\$pvals, file=\''.$stats_out_cv5_2_predict_tempfile.'\', row.names=FALSE, col.names=TRUE, sep=\'\t\');
+        # write.table(p_cv1\$pvals, file=\''.$stats_out_cv1_2_predict_tempfile.'\', row.names=FALSE, col.names=TRUE, qmethod=\'double\', sep=\'\t\');
+        # write.table(p_cv2\$pvals, file=\''.$stats_out_cv2_2_predict_tempfile.'\', row.names=FALSE, col.names=TRUE, qmethod=\'double\', sep=\'\t\');
+        # write.table(p_cv3\$pvals, file=\''.$stats_out_cv3_2_predict_tempfile.'\', row.names=FALSE, col.names=TRUE, qmethod=\'double\', sep=\'\t\');
+        # write.table(p_cv4\$pvals, file=\''.$stats_out_cv4_2_predict_tempfile.'\', row.names=FALSE, col.names=TRUE, qmethod=\'double\', sep=\'\t\');
+        # write.table(p_cv5\$pvals, file=\''.$stats_out_cv5_2_predict_tempfile.'\', row.names=FALSE, col.names=TRUE, qmethod=\'double\', sep=\'\t\');
 
         $statistics_cmd = $statistics_cmd_reading.$statistics_cmd_model;
 
@@ -887,7 +912,8 @@ sub perform_drone_imagery_analytics {
         foreach my $t (@encoded_traits) {
 
             $prepare_file_cv_cmd = 'R -e "library(data.table);
-            mat <- data.frame(fread(\''.$stats_tempfile.'\', header=TRUE, sep=\',\'));
+            source(\''.$drone_sommer_compat_file.'\');
+        mat <- drone_read_model_csv(\''.$stats_tempfile.'\', quantitative_replicate='.$replicate_is_quantitative.');
             randomized_positions <- sample(length(mat\$plot_id));
             cv_step_size <- length(mat\$plot_id) %/% 5;
             cv_step_size_modulo <- length(mat\$plot_id) %% 5;
@@ -928,11 +954,12 @@ sub perform_drone_imagery_analytics {
             mat\$'.$t_coded_cv5_2.'[randomized_positions[((4*cv_step_size)+1):((5*cv_step_size)+cv_step_size_modulo)]] <- mean(mat\$'.$t.');
             ';
             $prepare_file_cv_cmd .= '
-            write.table(mat, file=\''.$stats_tempfile.'\', row.names=FALSE, col.names=TRUE, sep=\',\');
+            write.table(mat, file=\''.$stats_tempfile.'\', row.names=FALSE, col.names=TRUE, qmethod=\'double\', sep=\',\');
             "';
 
             $statistics_cmd_reading = 'R -e "library(sommer); library(data.table); library(reshape2);
-            mat <- data.frame(fread(\''.$stats_tempfile.'\', header=TRUE, sep=\',\'));
+            source(\''.$drone_sommer_compat_file.'\');
+        mat <- drone_read_model_csv(\''.$stats_tempfile.'\', quantitative_replicate='.$replicate_is_quantitative.');
             geno_mat_3col <- data.frame(fread(\''.$grm_file.'\', header=FALSE, sep=\'\t\'));
             geno_mat <- acast(geno_mat_3col, V1~V2, value.var=\'V3\');
             geno_mat[is.na(geno_mat)] <- 0;
@@ -943,25 +970,25 @@ sub perform_drone_imagery_analytics {
             ';
             my $statistics_cmd_model = '';
             if ($statistics_select eq 'sommer_grm_univariate_spatial_genetic_blups') {
-                $statistics_cmd_model .= 'mix <- mmer('.$t.'~1 + replicate, random=~vs(id, Gu=geno_mat) +vs(rowNumberFactor) +vs(colNumberFactor) +vs(spl2D(rowNumber, colNumber)), rcov=~vs(units), data=mat, tolparinv='.$tolparinv_10.');
+                $statistics_cmd_model .= 'mix <- mmer('.$t.'~'.$design_fixed_terms.', random=~vs(id, Gu=geno_mat) +vs(rowNumberFactor) +vs(colNumberFactor) +vs(spl2D(rowNumber, colNumber)), rcov=~vs(units), data=mat, tolParInv='.$tolparinv_10.');
                 ';
             }
             elsif ($statistics_select eq 'sommer_grm_univariate_spatial_pure_2dspl_genetic_blups') {
-                $statistics_cmd_model .= 'mix <- mmer('.$t.'~1 + replicate, random=~vs(id, Gu=geno_mat) +vs(spl2D(rowNumber, colNumber)), rcov=~vs(units), data=mat, tolparinv='.$tolparinv_10.');
+                $statistics_cmd_model .= 'mix <- mmer('.$t.'~'.$design_fixed_terms.', random=~vs(id, Gu=geno_mat) +vs(spl2D(rowNumber, colNumber)), rcov=~vs(units), data=mat, tolParInv='.$tolparinv_10.');
                 ';
             }
             $statistics_cmd_model .= 'if (!is.null(mix\$U)) {
             #gen_cor <- cov2cor(mix\$sigma\$\`u:id\`);
-            write.table(mix\$U\$\`u:id\`, file=\''.$stats_out_tempfile.'\', row.names=TRUE, col.names=TRUE, sep=\'\t\');
-            write.table(mix\$U\$\`u:rowNumberFactor\`, file=\''.$stats_out_tempfile_row.'\', row.names=TRUE, col.names=TRUE, sep=\'\t\');
-            write.table(mix\$U\$\`u:colNumberFactor\`, file=\''.$stats_out_tempfile_col.'\', row.names=TRUE, col.names=TRUE, sep=\'\t\');
-            write.table(data.frame(plot_id = mix\$data\$plot_id, residuals = mix\$residuals, fitted = mix\$fitted), file=\''.$stats_out_tempfile_residual.'\', row.names=FALSE, col.names=TRUE, sep=\'\t\');
-            write.table(summary(mix)\$varcomp, file=\''.$stats_out_tempfile_varcomp.'\', row.names=TRUE, col.names=TRUE, sep=\'\t\');
+            write.table(mix\$U\$\`u:id\`, file=\''.$stats_out_tempfile.'\', row.names=TRUE, col.names=TRUE, qmethod=\'double\', sep=\'\t\');
+            write.table(mix\$U\$\`u:rowNumberFactor\`, file=\''.$stats_out_tempfile_row.'\', row.names=TRUE, col.names=TRUE, qmethod=\'double\', sep=\'\t\');
+            write.table(mix\$U\$\`u:colNumberFactor\`, file=\''.$stats_out_tempfile_col.'\', row.names=TRUE, col.names=TRUE, qmethod=\'double\', sep=\'\t\');
+            write.table(data.frame(plot_id = mix\$data\$plot_id, residuals = mix\$residuals, fitted = mix\$fitted), file=\''.$stats_out_tempfile_residual.'\', row.names=FALSE, col.names=TRUE, qmethod=\'double\', sep=\'\t\');
+            write.table(summary(mix)\$varcomp, file=\''.$stats_out_tempfile_varcomp.'\', row.names=TRUE, col.names=TRUE, qmethod=\'double\', sep=\'\t\');
             X <- with(mat, spl2D(rowNumber, colNumber));
             spatial_blup_results <- data.frame(plot_id = mat\$plot_id);
-            blups1 <- mix\$U\$\`u:rowNumber\`\$'.$t.';
+            blups1 <- drone_spline_coefficients(mix, \''.$t.'\', X);
             spatial_blup_results\$'.$t.' <- data.matrix(X) %*% data.matrix(blups1);
-            write.table(spatial_blup_results, file=\''.$stats_out_tempfile_2dspl.'\', row.names=FALSE, col.names=TRUE, sep=\'\t\');
+            write.table(spatial_blup_results, file=\''.$stats_out_tempfile_2dspl.'\', row.names=FALSE, col.names=TRUE, qmethod=\'double\', sep=\'\t\');
             }
             "';
 
@@ -970,64 +997,64 @@ sub perform_drone_imagery_analytics {
             my $cv_classify_string = 'c(\'id\')';
             if ($statistics_select eq 'sommer_grm_univariate_spatial_genetic_blups') {
                 $statistics_cmd_cv_1 .= '
-                mix_cv1 <- mmer('.$t_coded_cv1.'~1 + replicate, random=~vs(id, Gu=geno_mat) +vs(rowNumberFactor) +vs(colNumberFactor) +vs(spl2D(rowNumber, colNumber)), rcov=~vs(units), data=mat, tolparinv='.$tolparinv_10.' );
-                mix_cv2 <- mmer('.$t_coded_cv2.'~1 + replicate, random=~vs(id, Gu=geno_mat) +vs(rowNumberFactor) +vs(colNumberFactor) +vs(spl2D(rowNumber, colNumber)), rcov=~vs(units), data=mat, tolparinv='.$tolparinv_10.' );
-                mix_cv3 <- mmer('.$t_coded_cv3.'~1 + replicate, random=~vs(id, Gu=geno_mat) +vs(rowNumberFactor) +vs(colNumberFactor) +vs(spl2D(rowNumber, colNumber)), rcov=~vs(units), data=mat, tolparinv='.$tolparinv_10.' );
-                mix_cv4 <- mmer('.$t_coded_cv4.'~1 + replicate, random=~vs(id, Gu=geno_mat) +vs(rowNumberFactor) +vs(colNumberFactor) +vs(spl2D(rowNumber, colNumber)), rcov=~vs(units), data=mat, tolparinv='.$tolparinv_10.' );
-                mix_cv5 <- mmer('.$t_coded_cv5.'~1 + replicate, random=~vs(id, Gu=geno_mat) +vs(rowNumberFactor) +vs(colNumberFactor) +vs(spl2D(rowNumber, colNumber)), rcov=~vs(units), data=mat, tolparinv='.$tolparinv_10.' );
+                mix_cv1 <- mmer('.$t_coded_cv1.'~'.$design_fixed_terms.', random=~vs(id, Gu=geno_mat) +vs(rowNumberFactor) +vs(colNumberFactor) +vs(spl2D(rowNumber, colNumber)), rcov=~vs(units), data=mat, tolParInv='.$tolparinv_10.' );
+                mix_cv2 <- mmer('.$t_coded_cv2.'~'.$design_fixed_terms.', random=~vs(id, Gu=geno_mat) +vs(rowNumberFactor) +vs(colNumberFactor) +vs(spl2D(rowNumber, colNumber)), rcov=~vs(units), data=mat, tolParInv='.$tolparinv_10.' );
+                mix_cv3 <- mmer('.$t_coded_cv3.'~'.$design_fixed_terms.', random=~vs(id, Gu=geno_mat) +vs(rowNumberFactor) +vs(colNumberFactor) +vs(spl2D(rowNumber, colNumber)), rcov=~vs(units), data=mat, tolParInv='.$tolparinv_10.' );
+                mix_cv4 <- mmer('.$t_coded_cv4.'~'.$design_fixed_terms.', random=~vs(id, Gu=geno_mat) +vs(rowNumberFactor) +vs(colNumberFactor) +vs(spl2D(rowNumber, colNumber)), rcov=~vs(units), data=mat, tolParInv='.$tolparinv_10.' );
+                mix_cv5 <- mmer('.$t_coded_cv5.'~'.$design_fixed_terms.', random=~vs(id, Gu=geno_mat) +vs(rowNumberFactor) +vs(colNumberFactor) +vs(spl2D(rowNumber, colNumber)), rcov=~vs(units), data=mat, tolParInv='.$tolparinv_10.' );
                 ';
 
                 $statistics_cmd_cv_2 .= '
-                mix_cv_2_1 <- mmer('.$t_coded_cv1_2.'~1 + replicate, random=~vs(id, Gu=geno_mat) +vs(rowNumberFactor) +vs(colNumberFactor) +vs(spl2D(rowNumber, colNumber)), rcov=~vs(units), data=mat, tolparinv='.$tolparinv_10.');
-                mix_cv_2_2 <- mmer('.$t_coded_cv2_2.'~1 + replicate, random=~vs(id, Gu=geno_mat) +vs(rowNumberFactor) +vs(colNumberFactor) +vs(spl2D(rowNumber, colNumber)), rcov=~vs(units), data=mat, tolparinv='.$tolparinv_10.');
-                mix_cv_2_3 <- mmer('.$t_coded_cv3_2.'~1 + replicate, random=~vs(id, Gu=geno_mat) +vs(rowNumberFactor) +vs(colNumberFactor) +vs(spl2D(rowNumber, colNumber)), rcov=~vs(units), data=mat, tolparinv='.$tolparinv_10.');
-                mix_cv_2_4 <- mmer('.$t_coded_cv4_2.'~1 + replicate, random=~vs(id, Gu=geno_mat) +vs(rowNumberFactor) +vs(colNumberFactor) +vs(spl2D(rowNumber, colNumber)), rcov=~vs(units), data=mat, tolparinv='.$tolparinv_10.');
-                mix_cv_2_5 <- mmer('.$t_coded_cv5_2.'~1 + replicate, random=~vs(id, Gu=geno_mat) +vs(rowNumberFactor) +vs(colNumberFactor) +vs(spl2D(rowNumber, colNumber)), rcov=~vs(units), data=mat, tolparinv='.$tolparinv_10.');
+                mix_cv_2_1 <- mmer('.$t_coded_cv1_2.'~'.$design_fixed_terms.', random=~vs(id, Gu=geno_mat) +vs(rowNumberFactor) +vs(colNumberFactor) +vs(spl2D(rowNumber, colNumber)), rcov=~vs(units), data=mat, tolParInv='.$tolparinv_10.');
+                mix_cv_2_2 <- mmer('.$t_coded_cv2_2.'~'.$design_fixed_terms.', random=~vs(id, Gu=geno_mat) +vs(rowNumberFactor) +vs(colNumberFactor) +vs(spl2D(rowNumber, colNumber)), rcov=~vs(units), data=mat, tolParInv='.$tolparinv_10.');
+                mix_cv_2_3 <- mmer('.$t_coded_cv3_2.'~'.$design_fixed_terms.', random=~vs(id, Gu=geno_mat) +vs(rowNumberFactor) +vs(colNumberFactor) +vs(spl2D(rowNumber, colNumber)), rcov=~vs(units), data=mat, tolParInv='.$tolparinv_10.');
+                mix_cv_2_4 <- mmer('.$t_coded_cv4_2.'~'.$design_fixed_terms.', random=~vs(id, Gu=geno_mat) +vs(rowNumberFactor) +vs(colNumberFactor) +vs(spl2D(rowNumber, colNumber)), rcov=~vs(units), data=mat, tolParInv='.$tolparinv_10.');
+                mix_cv_2_5 <- mmer('.$t_coded_cv5_2.'~'.$design_fixed_terms.', random=~vs(id, Gu=geno_mat) +vs(rowNumberFactor) +vs(colNumberFactor) +vs(spl2D(rowNumber, colNumber)), rcov=~vs(units), data=mat, tolParInv='.$tolparinv_10.');
                 ';
             }
             elsif ($statistics_select eq 'sommer_grm_univariate_spatial_pure_2dspl_genetic_blups') {
                 $statistics_cmd_cv_1 .= '
-                mix_cv1 <- mmer('.$t_coded_cv1.'~1 + replicate, random=~vs(id, Gu=geno_mat) +vs(spl2D(rowNumber, colNumber)), rcov=~vs(units), data=mat, tolparinv='.$tolparinv_10.' );
-                mix_cv2 <- mmer('.$t_coded_cv2.'~1 + replicate, random=~vs(id, Gu=geno_mat) +vs(spl2D(rowNumber, colNumber)), rcov=~vs(units), data=mat, tolparinv='.$tolparinv_10.' );
-                mix_cv3 <- mmer('.$t_coded_cv3.'~1 + replicate, random=~vs(id, Gu=geno_mat) +vs(spl2D(rowNumber, colNumber)), rcov=~vs(units), data=mat, tolparinv='.$tolparinv_10.' );
-                mix_cv4 <- mmer('.$t_coded_cv4.'~1 + replicate, random=~vs(id, Gu=geno_mat) +vs(spl2D(rowNumber, colNumber)), rcov=~vs(units), data=mat, tolparinv='.$tolparinv_10.' );
-                mix_cv5 <- mmer('.$t_coded_cv5.'~1 + replicate, random=~vs(id, Gu=geno_mat) +vs(spl2D(rowNumber, colNumber)), rcov=~vs(units), data=mat, tolparinv='.$tolparinv_10.' );
+                mix_cv1 <- mmer('.$t_coded_cv1.'~'.$design_fixed_terms.', random=~vs(id, Gu=geno_mat) +vs(spl2D(rowNumber, colNumber)), rcov=~vs(units), data=mat, tolParInv='.$tolparinv_10.' );
+                mix_cv2 <- mmer('.$t_coded_cv2.'~'.$design_fixed_terms.', random=~vs(id, Gu=geno_mat) +vs(spl2D(rowNumber, colNumber)), rcov=~vs(units), data=mat, tolParInv='.$tolparinv_10.' );
+                mix_cv3 <- mmer('.$t_coded_cv3.'~'.$design_fixed_terms.', random=~vs(id, Gu=geno_mat) +vs(spl2D(rowNumber, colNumber)), rcov=~vs(units), data=mat, tolParInv='.$tolparinv_10.' );
+                mix_cv4 <- mmer('.$t_coded_cv4.'~'.$design_fixed_terms.', random=~vs(id, Gu=geno_mat) +vs(spl2D(rowNumber, colNumber)), rcov=~vs(units), data=mat, tolParInv='.$tolparinv_10.' );
+                mix_cv5 <- mmer('.$t_coded_cv5.'~'.$design_fixed_terms.', random=~vs(id, Gu=geno_mat) +vs(spl2D(rowNumber, colNumber)), rcov=~vs(units), data=mat, tolParInv='.$tolparinv_10.' );
                 ';
 
                 $statistics_cmd_cv_2 .= '
-                mix_cv_2_1 <- mmer('.$t_coded_cv1_2.'~1 + replicate, random=~vs(id, Gu=geno_mat) +vs(spl2D(rowNumber, colNumber)), rcov=~vs(units), data=mat, tolparinv='.$tolparinv_10.');
-                mix_cv_2_2 <- mmer('.$t_coded_cv2_2.'~1 + replicate, random=~vs(id, Gu=geno_mat) +vs(spl2D(rowNumber, colNumber)), rcov=~vs(units), data=mat, tolparinv='.$tolparinv_10.');
-                mix_cv_2_3 <- mmer('.$t_coded_cv3_2.'~1 + replicate, random=~vs(id, Gu=geno_mat) +vs(spl2D(rowNumber, colNumber)), rcov=~vs(units), data=mat, tolparinv='.$tolparinv_10.');
-                mix_cv_2_4 <- mmer('.$t_coded_cv4_2.'~1 + replicate, random=~vs(id, Gu=geno_mat) +vs(spl2D(rowNumber, colNumber)), rcov=~vs(units), data=mat, tolparinv='.$tolparinv_10.');
-                mix_cv_2_5 <- mmer('.$t_coded_cv5_2.'~1 + replicate, random=~vs(id, Gu=geno_mat) +vs(spl2D(rowNumber, colNumber)), rcov=~vs(units), data=mat, tolparinv='.$tolparinv_10.');
+                mix_cv_2_1 <- mmer('.$t_coded_cv1_2.'~'.$design_fixed_terms.', random=~vs(id, Gu=geno_mat) +vs(spl2D(rowNumber, colNumber)), rcov=~vs(units), data=mat, tolParInv='.$tolparinv_10.');
+                mix_cv_2_2 <- mmer('.$t_coded_cv2_2.'~'.$design_fixed_terms.', random=~vs(id, Gu=geno_mat) +vs(spl2D(rowNumber, colNumber)), rcov=~vs(units), data=mat, tolParInv='.$tolparinv_10.');
+                mix_cv_2_3 <- mmer('.$t_coded_cv3_2.'~'.$design_fixed_terms.', random=~vs(id, Gu=geno_mat) +vs(spl2D(rowNumber, colNumber)), rcov=~vs(units), data=mat, tolParInv='.$tolparinv_10.');
+                mix_cv_2_4 <- mmer('.$t_coded_cv4_2.'~'.$design_fixed_terms.', random=~vs(id, Gu=geno_mat) +vs(spl2D(rowNumber, colNumber)), rcov=~vs(units), data=mat, tolParInv='.$tolparinv_10.');
+                mix_cv_2_5 <- mmer('.$t_coded_cv5_2.'~'.$design_fixed_terms.', random=~vs(id, Gu=geno_mat) +vs(spl2D(rowNumber, colNumber)), rcov=~vs(units), data=mat, tolParInv='.$tolparinv_10.');
                 ';
             }
             $statistics_cmd_cv_1 .= '
-                write.table(data.frame(plot_id = mix_cv1\$data\$plot_id, '.$t.' = mat\$'.$t.','.$t_coded_cv1.' = mat\$'.$t_coded_cv1.', residuals = mix_cv1\$residuals, fitted = mix_cv1\$fitted), file=\''.$stats_out_cv1_predict_tempfile.'\', row.names=FALSE, col.names=TRUE, sep=\'\t\');
-                write.table(data.frame(plot_id = mix_cv2\$data\$plot_id, '.$t.' = mat\$'.$t.','.$t_coded_cv2.' = mat\$'.$t_coded_cv2.', residuals = mix_cv2\$residuals, fitted = mix_cv2\$fitted), file=\''.$stats_out_cv2_predict_tempfile.'\', row.names=FALSE, col.names=TRUE, sep=\'\t\');
-                write.table(data.frame(plot_id = mix_cv3\$data\$plot_id, '.$t.' = mat\$'.$t.','.$t_coded_cv3.' = mat\$'.$t_coded_cv3.', residuals = mix_cv3\$residuals, fitted = mix_cv3\$fitted), file=\''.$stats_out_cv3_predict_tempfile.'\', row.names=FALSE, col.names=TRUE, sep=\'\t\');
-                write.table(data.frame(plot_id = mix_cv4\$data\$plot_id, '.$t.' = mat\$'.$t.','.$t_coded_cv4.' = mat\$'.$t_coded_cv4.', residuals = mix_cv4\$residuals, fitted = mix_cv4\$fitted), file=\''.$stats_out_cv4_predict_tempfile.'\', row.names=FALSE, col.names=TRUE, sep=\'\t\');
-                write.table(data.frame(plot_id = mix_cv5\$data\$plot_id, '.$t.' = mat\$'.$t.','.$t_coded_cv5.' = mat\$'.$t_coded_cv5.', residuals = mix_cv5\$residuals, fitted = mix_cv5\$fitted), file=\''.$stats_out_cv5_predict_tempfile.'\', row.names=FALSE, col.names=TRUE, sep=\'\t\');
+                write.table(data.frame(plot_id = mix_cv1\$data\$plot_id, '.$t.' = mat\$'.$t.','.$t_coded_cv1.' = mat\$'.$t_coded_cv1.', residuals = mix_cv1\$residuals, fitted = mix_cv1\$fitted), file=\''.$stats_out_cv1_predict_tempfile.'\', row.names=FALSE, col.names=TRUE, qmethod=\'double\', sep=\'\t\');
+                write.table(data.frame(plot_id = mix_cv2\$data\$plot_id, '.$t.' = mat\$'.$t.','.$t_coded_cv2.' = mat\$'.$t_coded_cv2.', residuals = mix_cv2\$residuals, fitted = mix_cv2\$fitted), file=\''.$stats_out_cv2_predict_tempfile.'\', row.names=FALSE, col.names=TRUE, qmethod=\'double\', sep=\'\t\');
+                write.table(data.frame(plot_id = mix_cv3\$data\$plot_id, '.$t.' = mat\$'.$t.','.$t_coded_cv3.' = mat\$'.$t_coded_cv3.', residuals = mix_cv3\$residuals, fitted = mix_cv3\$fitted), file=\''.$stats_out_cv3_predict_tempfile.'\', row.names=FALSE, col.names=TRUE, qmethod=\'double\', sep=\'\t\');
+                write.table(data.frame(plot_id = mix_cv4\$data\$plot_id, '.$t.' = mat\$'.$t.','.$t_coded_cv4.' = mat\$'.$t_coded_cv4.', residuals = mix_cv4\$residuals, fitted = mix_cv4\$fitted), file=\''.$stats_out_cv4_predict_tempfile.'\', row.names=FALSE, col.names=TRUE, qmethod=\'double\', sep=\'\t\');
+                write.table(data.frame(plot_id = mix_cv5\$data\$plot_id, '.$t.' = mat\$'.$t.','.$t_coded_cv5.' = mat\$'.$t_coded_cv5.', residuals = mix_cv5\$residuals, fitted = mix_cv5\$fitted), file=\''.$stats_out_cv5_predict_tempfile.'\', row.names=FALSE, col.names=TRUE, qmethod=\'double\', sep=\'\t\');
             "';
             $statistics_cmd_cv_2 .= '
-                write.table(data.frame(plot_id = mix_cv_2_1\$data\$plot_id, '.$t.' = mat\$'.$t.','.$t_coded_cv1_2.' = mat\$'.$t_coded_cv1_2.', residuals = mix_cv_2_1\$residuals, fitted = mix_cv_2_1\$fitted), file=\''.$stats_out_cv1_2_predict_tempfile.'\', row.names=FALSE, col.names=TRUE, sep=\'\t\');
-                write.table(data.frame(plot_id = mix_cv_2_2\$data\$plot_id, '.$t.' = mat\$'.$t.','.$t_coded_cv2_2.' = mat\$'.$t_coded_cv2_2.', residuals = mix_cv_2_2\$residuals, fitted = mix_cv_2_2\$fitted), file=\''.$stats_out_cv2_2_predict_tempfile.'\', row.names=FALSE, col.names=TRUE, sep=\'\t\');
-                write.table(data.frame(plot_id = mix_cv_2_3\$data\$plot_id, '.$t.' = mat\$'.$t.','.$t_coded_cv3_2.' = mat\$'.$t_coded_cv3_2.', residuals = mix_cv_2_3\$residuals, fitted = mix_cv_2_3\$fitted), file=\''.$stats_out_cv3_2_predict_tempfile.'\', row.names=FALSE, col.names=TRUE, sep=\'\t\');
-                write.table(data.frame(plot_id = mix_cv_2_4\$data\$plot_id, '.$t.' = mat\$'.$t.','.$t_coded_cv4_2.' = mat\$'.$t_coded_cv4_2.', residuals = mix_cv_2_4\$residuals, fitted = mix_cv_2_4\$fitted), file=\''.$stats_out_cv4_2_predict_tempfile.'\', row.names=FALSE, col.names=TRUE, sep=\'\t\');
-                write.table(data.frame(plot_id = mix_cv_2_5\$data\$plot_id, '.$t.' = mat\$'.$t.','.$t_coded_cv5_2.' = mat\$'.$t_coded_cv5_2.', residuals = mix_cv_2_5\$residuals, fitted = mix_cv_2_5\$fitted), file=\''.$stats_out_cv5_2_predict_tempfile.'\', row.names=FALSE, col.names=TRUE, sep=\'\t\');
+                write.table(data.frame(plot_id = mix_cv_2_1\$data\$plot_id, '.$t.' = mat\$'.$t.','.$t_coded_cv1_2.' = mat\$'.$t_coded_cv1_2.', residuals = mix_cv_2_1\$residuals, fitted = mix_cv_2_1\$fitted), file=\''.$stats_out_cv1_2_predict_tempfile.'\', row.names=FALSE, col.names=TRUE, qmethod=\'double\', sep=\'\t\');
+                write.table(data.frame(plot_id = mix_cv_2_2\$data\$plot_id, '.$t.' = mat\$'.$t.','.$t_coded_cv2_2.' = mat\$'.$t_coded_cv2_2.', residuals = mix_cv_2_2\$residuals, fitted = mix_cv_2_2\$fitted), file=\''.$stats_out_cv2_2_predict_tempfile.'\', row.names=FALSE, col.names=TRUE, qmethod=\'double\', sep=\'\t\');
+                write.table(data.frame(plot_id = mix_cv_2_3\$data\$plot_id, '.$t.' = mat\$'.$t.','.$t_coded_cv3_2.' = mat\$'.$t_coded_cv3_2.', residuals = mix_cv_2_3\$residuals, fitted = mix_cv_2_3\$fitted), file=\''.$stats_out_cv3_2_predict_tempfile.'\', row.names=FALSE, col.names=TRUE, qmethod=\'double\', sep=\'\t\');
+                write.table(data.frame(plot_id = mix_cv_2_4\$data\$plot_id, '.$t.' = mat\$'.$t.','.$t_coded_cv4_2.' = mat\$'.$t_coded_cv4_2.', residuals = mix_cv_2_4\$residuals, fitted = mix_cv_2_4\$fitted), file=\''.$stats_out_cv4_2_predict_tempfile.'\', row.names=FALSE, col.names=TRUE, qmethod=\'double\', sep=\'\t\');
+                write.table(data.frame(plot_id = mix_cv_2_5\$data\$plot_id, '.$t.' = mat\$'.$t.','.$t_coded_cv5_2.' = mat\$'.$t_coded_cv5_2.', residuals = mix_cv_2_5\$residuals, fitted = mix_cv_2_5\$fitted), file=\''.$stats_out_cv5_2_predict_tempfile.'\', row.names=FALSE, col.names=TRUE, qmethod=\'double\', sep=\'\t\');
             "';
 
-            # p_cv1 <- predict.mmer(object=mix_cv_2_1, classify = '.$cv_classify_string.', tolparinv='.$tolparinv_10.' );
-            # p_cv2 <- predict.mmer(object=mix_cv_2_2, classify = '.$cv_classify_string.', tolparinv='.$tolparinv_10.' );
-            # p_cv3 <- predict.mmer(object=mix_cv_2_3, classify = '.$cv_classify_string.', tolparinv='.$tolparinv_10.' );
-            # p_cv4 <- predict.mmer(object=mix_cv_2_4, classify = '.$cv_classify_string.', tolparinv='.$tolparinv_10.' );
-            # p_cv5 <- predict.mmer(object=mix_cv_2_5, classify = '.$cv_classify_string.', tolparinv='.$tolparinv_10.' );
+            # p_cv1 <- predict.mmer(object=mix_cv_2_1, classify = '.$cv_classify_string.', tolParInv='.$tolparinv_10.' );
+            # p_cv2 <- predict.mmer(object=mix_cv_2_2, classify = '.$cv_classify_string.', tolParInv='.$tolparinv_10.' );
+            # p_cv3 <- predict.mmer(object=mix_cv_2_3, classify = '.$cv_classify_string.', tolParInv='.$tolparinv_10.' );
+            # p_cv4 <- predict.mmer(object=mix_cv_2_4, classify = '.$cv_classify_string.', tolParInv='.$tolparinv_10.' );
+            # p_cv5 <- predict.mmer(object=mix_cv_2_5, classify = '.$cv_classify_string.', tolParInv='.$tolparinv_10.' );
             # p_cv1;
-            # write.table(p_cv1\$pvals, file=\''.$stats_out_cv1_2_predict_tempfile.'\', row.names=FALSE, col.names=TRUE, sep=\'\t\');
-            # write.table(p_cv2\$pvals, file=\''.$stats_out_cv2_2_predict_tempfile.'\', row.names=FALSE, col.names=TRUE, sep=\'\t\');
-            # write.table(p_cv3\$pvals, file=\''.$stats_out_cv3_2_predict_tempfile.'\', row.names=FALSE, col.names=TRUE, sep=\'\t\');
-            # write.table(p_cv4\$pvals, file=\''.$stats_out_cv4_2_predict_tempfile.'\', row.names=FALSE, col.names=TRUE, sep=\'\t\');
-            # write.table(p_cv5\$pvals, file=\''.$stats_out_cv5_2_predict_tempfile.'\', row.names=FALSE, col.names=TRUE, sep=\'\t\');
+            # write.table(p_cv1\$pvals, file=\''.$stats_out_cv1_2_predict_tempfile.'\', row.names=FALSE, col.names=TRUE, qmethod=\'double\', sep=\'\t\');
+            # write.table(p_cv2\$pvals, file=\''.$stats_out_cv2_2_predict_tempfile.'\', row.names=FALSE, col.names=TRUE, qmethod=\'double\', sep=\'\t\');
+            # write.table(p_cv3\$pvals, file=\''.$stats_out_cv3_2_predict_tempfile.'\', row.names=FALSE, col.names=TRUE, qmethod=\'double\', sep=\'\t\');
+            # write.table(p_cv4\$pvals, file=\''.$stats_out_cv4_2_predict_tempfile.'\', row.names=FALSE, col.names=TRUE, qmethod=\'double\', sep=\'\t\');
+            # write.table(p_cv5\$pvals, file=\''.$stats_out_cv5_2_predict_tempfile.'\', row.names=FALSE, col.names=TRUE, qmethod=\'double\', sep=\'\t\');
 
             $statistics_cmd = $statistics_cmd_reading.$statistics_cmd_model;
 
@@ -1465,7 +1492,7 @@ sub perform_drone_imagery_analytics {
             v <- v[1:'.$pheno_var_pos.', 1:'.$pheno_var_pos.'];
             #v <- matrix(rep(0.1, '.$pheno_var_pos.'*'.$pheno_var_pos.'), nrow = '.$pheno_var_pos.');
             #diag(v) <- rep(1, '.$pheno_var_pos.');
-            write.table(v, file=\''.$stats_out_param_tempfile.'\', row.names=FALSE, col.names=FALSE, sep=\'\t\');
+            write.table(v, file=\''.$stats_out_param_tempfile.'\', row.names=FALSE, col.names=FALSE, qmethod=\'double\', sep=\'\t\');
         "';
         my $status_r = system($statistics_cmd);
 
@@ -1548,11 +1575,11 @@ sub perform_drone_imagery_analytics {
         cv_step_size <- length(mat[,1]) %/% 5;
         cv_step_size_modulo <- length(mat[,1]) %% 5;
         mat_CV1 <- mat; mat_CV2 <- mat; mat_CV3 <- mat; mat_CV4 <- mat; mat_CV5 <- mat;
-        mat_CV1[c(randomized_positions[1:cv_step_size]),ncol(mat)] <- median(mat[,ncol(mat)]);
-        mat_CV2[c(randomized_positions[(cv_step_size+1):(2*cv_step_size)]),ncol(mat)] <- median(mat[,ncol(mat)]);
-        mat_CV3[c(randomized_positions[((2*cv_step_size)+1):(3*cv_step_size)]),ncol(mat)] <- median(mat[,ncol(mat)]);
-        mat_CV4[c(randomized_positions[((3*cv_step_size)+1):(4*cv_step_size)]),ncol(mat)] <- median(mat[,ncol(mat)]);
-        mat_CV5[c(randomized_positions[((4*cv_step_size)+1):((5*cv_step_size)+cv_step_size_modulo)]),ncol(mat)] <- median(mat[,ncol(mat)]);
+        mat_CV1[fold_positions[[1]],ncol(mat)] <- observed_median;
+        mat_CV2[fold_positions[[2]],ncol(mat)] <- observed_median;
+        mat_CV3[fold_positions[[3]],ncol(mat)] <- observed_median;
+        mat_CV4[fold_positions[[4]],ncol(mat)] <- observed_median;
+        mat_CV5[fold_positions[[5]],ncol(mat)] <- observed_median;
         mat_CV1_2 <- mat; mat_CV2_2 <- mat; mat_CV3_2 <- mat; mat_CV4_2 <- mat; mat_CV5_2 <- mat;
         mat_CV1_2[c(randomized_positions[1:cv_step_size]),ncol(mat)] <- -999;
         mat_CV2_2[c(randomized_positions[(cv_step_size+1):(2*cv_step_size)]),ncol(mat)] <- -999;
@@ -1929,8 +1956,7 @@ sub perform_drone_imagery_analytics {
 
         while ( my ($accession_name, $coeffs) = each %rr_genetic_coefficients_original) {
             my @line = ($accession_name, @$coeffs);
-            my $line_string = join ',', @line;
-            print $Fgc "$line_string\n";
+            CXGN::DroneImagery::DroneImageryAnalyticsRunSimulation::_write_model_csv_row($Fgc,\@line);
 
             foreach my $t_i (0..20) {
                 my $time = $t_i*5/100;
@@ -1989,8 +2015,7 @@ sub perform_drone_imagery_analytics {
 
         while ( my ($plot_name, $coeffs) = each %rr_temporal_coefficients_original) {
             my @line = ($plot_name, @$coeffs);
-            my $line_string = join ',', @line;
-            print $Fpc "$line_string\n";
+            CXGN::DroneImagery::DroneImageryAnalyticsRunSimulation::_write_model_csv_row($Fpc,\@line);
 
             foreach my $t_i (0..20) {
                 my $time = $t_i*5/100;
@@ -2400,7 +2425,8 @@ sub perform_drone_imagery_analytics {
         foreach my $t (@sorted_trait_names) {
 
             $prepare_file_cv_cmd = 'R -e "library(data.table);
-            mat <- data.frame(fread(\''.$stats_tempfile_2.'\', header=TRUE, sep=\',\'));
+            source(\''.$drone_sommer_compat_file.'\');
+        mat <- drone_read_model_csv(\''.$stats_tempfile_2.'\', quantitative_replicate='.$replicate_is_quantitative.');
             randomized_positions <- sample(length(mat\$plot_id));
             cv_step_size <- length(mat\$plot_id) %/% 5;
             cv_step_size_modulo <- length(mat\$plot_id) %% 5;
@@ -2441,11 +2467,12 @@ sub perform_drone_imagery_analytics {
             mat\$'.$t_coded_cv5_2.'[randomized_positions[((4*cv_step_size)+1):((5*cv_step_size)+cv_step_size_modulo)]] <- mean(mat\$t'.$t.');
             ';
             $prepare_file_cv_cmd .= '
-            write.table(mat, file=\''.$stats_tempfile_2.'\', row.names=FALSE, col.names=TRUE, sep=\',\');
+            write.table(mat, file=\''.$stats_tempfile_2.'\', row.names=FALSE, col.names=TRUE, qmethod=\'double\', sep=\',\');
             "';
 
             $statistics_cmd_reading = 'R -e "library(asreml); library(data.table); library(reshape2);
-            mat <- data.frame(fread(\''.$stats_tempfile_2.'\', header=TRUE, sep=\',\'));
+            source(\''.$drone_sommer_compat_file.'\');
+        mat <- drone_read_model_csv(\''.$stats_tempfile_2.'\', quantitative_replicate='.$replicate_is_quantitative.');
             geno_mat_3col <- data.frame(fread(\''.$grm_rename_tempfile.'\', header=FALSE, sep=\' \'));
             mat\$rowNumber <- as.numeric(mat\$rowNumber);
             mat\$colNumber <- as.numeric(mat\$colNumber);
@@ -2460,41 +2487,41 @@ sub perform_drone_imagery_analytics {
             attr(geno_mat_3col,\'INVERSE\') <- TRUE;
             ';
             my $statistics_cmd_model = '
-            mix <- asreml(t'.$t.'~1 + replicate, random=~vm(id_factor, geno_mat_3col) + rowNumberFactorSep + colNumberFactorSep + ar1v(rowNumberFactor):ar1(colNumberFactor), residual=~idv(units), data=mat, tol='.$tol_asr.');
+            mix <- asreml(t'.$t.'~'.$design_fixed_terms.', random=~vm(id_factor, geno_mat_3col) + rowNumberFactorSep + colNumberFactorSep + ar1v(rowNumberFactor):ar1(colNumberFactor), residual=~idv(units), data=mat, tol='.$tol_asr.');
             if (!is.null(summary(mix,coef=TRUE)\$coef.random)) {
-            write.table(summary(mix,coef=TRUE)\$coef.random, file=\''.$stats_out_tempfile.'\', row.names=TRUE, col.names=TRUE, sep=\'\t\');
-            write.table(summary(mix)\$varcomp, file=\''.$stats_out_tempfile_varcomp.'\', row.names=TRUE, col.names=TRUE, sep=\'\t\');
-            write.table(data.frame(plot_id = mat\$plot_id, residuals = mix\$residuals, fitted = mix\$linear.predictors, rowNumber = mat\$rowNumber, colNumber = mat\$colNumber), file=\''.$stats_out_tempfile_residual.'\', row.names=FALSE, col.names=TRUE, sep=\'\t\');
+            write.table(summary(mix,coef=TRUE)\$coef.random, file=\''.$stats_out_tempfile.'\', row.names=TRUE, col.names=TRUE, qmethod=\'double\', sep=\'\t\');
+            write.table(summary(mix)\$varcomp, file=\''.$stats_out_tempfile_varcomp.'\', row.names=TRUE, col.names=TRUE, qmethod=\'double\', sep=\'\t\');
+            write.table(data.frame(plot_id = mat\$plot_id, residuals = mix\$residuals, fitted = mix\$linear.predictors, rowNumber = mat\$rowNumber, colNumber = mat\$colNumber), file=\''.$stats_out_tempfile_residual.'\', row.names=FALSE, col.names=TRUE, qmethod=\'double\', sep=\'\t\');
             }
             "';
 
             my $cv_classify_string = 'id_factor';
             $statistics_cmd_cv_1 = '
-            mix_cv1 <- asreml('.$t_coded_cv1.'~1 + replicate, random=~vm(id_factor, geno_mat_3col) + rowNumberFactorSep + colNumberFactorSep + ar1v(rowNumberFactor):ar1(colNumberFactor), residual=~idv(units), data=mat, tol='.$tol_asr.');
-            mix_cv2 <- asreml('.$t_coded_cv2.'~1 + replicate, random=~vm(id_factor, geno_mat_3col) + rowNumberFactorSep + colNumberFactorSep + ar1v(rowNumberFactor):ar1(colNumberFactor), residual=~idv(units), data=mat, tol='.$tol_asr.');
-            mix_cv3 <- asreml('.$t_coded_cv3.'~1 + replicate, random=~vm(id_factor, geno_mat_3col) + rowNumberFactorSep + colNumberFactorSep + ar1v(rowNumberFactor):ar1(colNumberFactor), residual=~idv(units), data=mat, tol='.$tol_asr.');
-            mix_cv4 <- asreml('.$t_coded_cv4.'~1 + replicate, random=~vm(id_factor, geno_mat_3col) + rowNumberFactorSep + colNumberFactorSep + ar1v(rowNumberFactor):ar1(colNumberFactor), residual=~idv(units), data=mat, tol='.$tol_asr.');
-            mix_cv5 <- asreml('.$t_coded_cv5.'~1 + replicate, random=~vm(id_factor, geno_mat_3col) + rowNumberFactorSep + colNumberFactorSep + ar1v(rowNumberFactor):ar1(colNumberFactor), residual=~idv(units), data=mat, tol='.$tol_asr.');
+            mix_cv1 <- asreml('.$t_coded_cv1.'~'.$design_fixed_terms.', random=~vm(id_factor, geno_mat_3col) + rowNumberFactorSep + colNumberFactorSep + ar1v(rowNumberFactor):ar1(colNumberFactor), residual=~idv(units), data=mat, tol='.$tol_asr.');
+            mix_cv2 <- asreml('.$t_coded_cv2.'~'.$design_fixed_terms.', random=~vm(id_factor, geno_mat_3col) + rowNumberFactorSep + colNumberFactorSep + ar1v(rowNumberFactor):ar1(colNumberFactor), residual=~idv(units), data=mat, tol='.$tol_asr.');
+            mix_cv3 <- asreml('.$t_coded_cv3.'~'.$design_fixed_terms.', random=~vm(id_factor, geno_mat_3col) + rowNumberFactorSep + colNumberFactorSep + ar1v(rowNumberFactor):ar1(colNumberFactor), residual=~idv(units), data=mat, tol='.$tol_asr.');
+            mix_cv4 <- asreml('.$t_coded_cv4.'~'.$design_fixed_terms.', random=~vm(id_factor, geno_mat_3col) + rowNumberFactorSep + colNumberFactorSep + ar1v(rowNumberFactor):ar1(colNumberFactor), residual=~idv(units), data=mat, tol='.$tol_asr.');
+            mix_cv5 <- asreml('.$t_coded_cv5.'~'.$design_fixed_terms.', random=~vm(id_factor, geno_mat_3col) + rowNumberFactorSep + colNumberFactorSep + ar1v(rowNumberFactor):ar1(colNumberFactor), residual=~idv(units), data=mat, tol='.$tol_asr.');
 
-            write.table(data.frame(plot_id = mat\$plot_id, t'.$t.' = mat\$t'.$t.','.$t_coded_cv1.' = mat\$'.$t_coded_cv1.', residuals = mix_cv1\$residuals, fitted = mix_cv1\$linear.predictors), file=\''.$stats_out_cv1_predict_tempfile.'\', row.names=FALSE, col.names=TRUE, sep=\'\t\');
-            write.table(data.frame(plot_id = mat\$plot_id, t'.$t.' = mat\$t'.$t.','.$t_coded_cv2.' = mat\$'.$t_coded_cv2.', residuals = mix_cv2\$residuals, fitted = mix_cv2\$linear.predictors), file=\''.$stats_out_cv2_predict_tempfile.'\', row.names=FALSE, col.names=TRUE, sep=\'\t\');
-            write.table(data.frame(plot_id = mat\$plot_id, t'.$t.' = mat\$t'.$t.','.$t_coded_cv3.' = mat\$'.$t_coded_cv3.', residuals = mix_cv3\$residuals, fitted = mix_cv3\$linear.predictors), file=\''.$stats_out_cv3_predict_tempfile.'\', row.names=FALSE, col.names=TRUE, sep=\'\t\');
-            write.table(data.frame(plot_id = mat\$plot_id, t'.$t.' = mat\$t'.$t.','.$t_coded_cv4.' = mat\$'.$t_coded_cv4.', residuals = mix_cv4\$residuals, fitted = mix_cv4\$linear.predictors), file=\''.$stats_out_cv4_predict_tempfile.'\', row.names=FALSE, col.names=TRUE, sep=\'\t\');
-            write.table(data.frame(plot_id = mat\$plot_id, t'.$t.' = mat\$t'.$t.','.$t_coded_cv5.' = mat\$'.$t_coded_cv5.', residuals = mix_cv5\$residuals, fitted = mix_cv5\$linear.predictors), file=\''.$stats_out_cv5_predict_tempfile.'\', row.names=FALSE, col.names=TRUE, sep=\'\t\');
+            write.table(data.frame(plot_id = mat\$plot_id, t'.$t.' = mat\$t'.$t.','.$t_coded_cv1.' = mat\$'.$t_coded_cv1.', residuals = mix_cv1\$residuals, fitted = mix_cv1\$linear.predictors), file=\''.$stats_out_cv1_predict_tempfile.'\', row.names=FALSE, col.names=TRUE, qmethod=\'double\', sep=\'\t\');
+            write.table(data.frame(plot_id = mat\$plot_id, t'.$t.' = mat\$t'.$t.','.$t_coded_cv2.' = mat\$'.$t_coded_cv2.', residuals = mix_cv2\$residuals, fitted = mix_cv2\$linear.predictors), file=\''.$stats_out_cv2_predict_tempfile.'\', row.names=FALSE, col.names=TRUE, qmethod=\'double\', sep=\'\t\');
+            write.table(data.frame(plot_id = mat\$plot_id, t'.$t.' = mat\$t'.$t.','.$t_coded_cv3.' = mat\$'.$t_coded_cv3.', residuals = mix_cv3\$residuals, fitted = mix_cv3\$linear.predictors), file=\''.$stats_out_cv3_predict_tempfile.'\', row.names=FALSE, col.names=TRUE, qmethod=\'double\', sep=\'\t\');
+            write.table(data.frame(plot_id = mat\$plot_id, t'.$t.' = mat\$t'.$t.','.$t_coded_cv4.' = mat\$'.$t_coded_cv4.', residuals = mix_cv4\$residuals, fitted = mix_cv4\$linear.predictors), file=\''.$stats_out_cv4_predict_tempfile.'\', row.names=FALSE, col.names=TRUE, qmethod=\'double\', sep=\'\t\');
+            write.table(data.frame(plot_id = mat\$plot_id, t'.$t.' = mat\$t'.$t.','.$t_coded_cv5.' = mat\$'.$t_coded_cv5.', residuals = mix_cv5\$residuals, fitted = mix_cv5\$linear.predictors), file=\''.$stats_out_cv5_predict_tempfile.'\', row.names=FALSE, col.names=TRUE, qmethod=\'double\', sep=\'\t\');
             "';
 
             $statistics_cmd_cv_2 = '
-            mix_cv_2_1 <- asreml('.$t_coded_cv1_2.'~1 + replicate, random=~vm(id_factor, geno_mat_3col) + rowNumberFactorSep + colNumberFactorSep + ar1v(rowNumberFactor):ar1(colNumberFactor), residual=~idv(units), data=mat, tol='.$tol_asr.');
-            mix_cv_2_2 <- asreml('.$t_coded_cv2_2.'~1 + replicate, random=~vm(id_factor, geno_mat_3col) + rowNumberFactorSep + colNumberFactorSep + ar1v(rowNumberFactor):ar1(colNumberFactor), residual=~idv(units), data=mat, tol='.$tol_asr.');
-            mix_cv_2_3 <- asreml('.$t_coded_cv3_2.'~1 + replicate, random=~vm(id_factor, geno_mat_3col) + rowNumberFactorSep + colNumberFactorSep + ar1v(rowNumberFactor):ar1(colNumberFactor), residual=~idv(units), data=mat, tol='.$tol_asr.');
-            mix_cv_2_4 <- asreml('.$t_coded_cv4_2.'~1 + replicate, random=~vm(id_factor, geno_mat_3col) + rowNumberFactorSep + colNumberFactorSep + ar1v(rowNumberFactor):ar1(colNumberFactor), residual=~idv(units), data=mat, tol='.$tol_asr.');
-            mix_cv_2_5 <- asreml('.$t_coded_cv5_2.'~1 + replicate, random=~vm(id_factor, geno_mat_3col) + rowNumberFactorSep + colNumberFactorSep + ar1v(rowNumberFactor):ar1(colNumberFactor), residual=~idv(units), data=mat, tol='.$tol_asr.');
+            mix_cv_2_1 <- asreml('.$t_coded_cv1_2.'~'.$design_fixed_terms.', random=~vm(id_factor, geno_mat_3col) + rowNumberFactorSep + colNumberFactorSep + ar1v(rowNumberFactor):ar1(colNumberFactor), residual=~idv(units), data=mat, tol='.$tol_asr.');
+            mix_cv_2_2 <- asreml('.$t_coded_cv2_2.'~'.$design_fixed_terms.', random=~vm(id_factor, geno_mat_3col) + rowNumberFactorSep + colNumberFactorSep + ar1v(rowNumberFactor):ar1(colNumberFactor), residual=~idv(units), data=mat, tol='.$tol_asr.');
+            mix_cv_2_3 <- asreml('.$t_coded_cv3_2.'~'.$design_fixed_terms.', random=~vm(id_factor, geno_mat_3col) + rowNumberFactorSep + colNumberFactorSep + ar1v(rowNumberFactor):ar1(colNumberFactor), residual=~idv(units), data=mat, tol='.$tol_asr.');
+            mix_cv_2_4 <- asreml('.$t_coded_cv4_2.'~'.$design_fixed_terms.', random=~vm(id_factor, geno_mat_3col) + rowNumberFactorSep + colNumberFactorSep + ar1v(rowNumberFactor):ar1(colNumberFactor), residual=~idv(units), data=mat, tol='.$tol_asr.');
+            mix_cv_2_5 <- asreml('.$t_coded_cv5_2.'~'.$design_fixed_terms.', random=~vm(id_factor, geno_mat_3col) + rowNumberFactorSep + colNumberFactorSep + ar1v(rowNumberFactor):ar1(colNumberFactor), residual=~idv(units), data=mat, tol='.$tol_asr.');
 
-            write.table(data.frame(plot_id = mat\$plot_id, t'.$t.' = mat\$t'.$t.','.$t_coded_cv1_2.' = mat\$'.$t_coded_cv1_2.', residuals = mix_cv_2_1\$residuals, fitted = mix_cv_2_1\$linear.predictors), file=\''.$stats_out_cv1_2_predict_tempfile.'\', row.names=FALSE, col.names=TRUE, sep=\'\t\');
-            write.table(data.frame(plot_id = mat\$plot_id, t'.$t.' = mat\$t'.$t.','.$t_coded_cv2_2.' = mat\$'.$t_coded_cv2_2.', residuals = mix_cv_2_2\$residuals, fitted = mix_cv_2_2\$linear.predictors), file=\''.$stats_out_cv2_2_predict_tempfile.'\', row.names=FALSE, col.names=TRUE, sep=\'\t\');
-            write.table(data.frame(plot_id = mat\$plot_id, t'.$t.' = mat\$t'.$t.','.$t_coded_cv3_2.' = mat\$'.$t_coded_cv3_2.', residuals = mix_cv_2_3\$residuals, fitted = mix_cv_2_3\$linear.predictors), file=\''.$stats_out_cv3_2_predict_tempfile.'\', row.names=FALSE, col.names=TRUE, sep=\'\t\');
-            write.table(data.frame(plot_id = mat\$plot_id, t'.$t.' = mat\$t'.$t.','.$t_coded_cv4_2.' = mat\$'.$t_coded_cv4_2.', residuals = mix_cv_2_4\$residuals, fitted = mix_cv_2_4\$linear.predictors), file=\''.$stats_out_cv4_2_predict_tempfile.'\', row.names=FALSE, col.names=TRUE, sep=\'\t\');
-            write.table(data.frame(plot_id = mat\$plot_id, t'.$t.' = mat\$t'.$t.','.$t_coded_cv5_2.' = mat\$'.$t_coded_cv5_2.', residuals = mix_cv_2_5\$residuals, fitted = mix_cv_2_5\$linear.predictors), file=\''.$stats_out_cv5_2_predict_tempfile.'\', row.names=FALSE, col.names=TRUE, sep=\'\t\');
+            write.table(data.frame(plot_id = mat\$plot_id, t'.$t.' = mat\$t'.$t.','.$t_coded_cv1_2.' = mat\$'.$t_coded_cv1_2.', residuals = mix_cv_2_1\$residuals, fitted = mix_cv_2_1\$linear.predictors), file=\''.$stats_out_cv1_2_predict_tempfile.'\', row.names=FALSE, col.names=TRUE, qmethod=\'double\', sep=\'\t\');
+            write.table(data.frame(plot_id = mat\$plot_id, t'.$t.' = mat\$t'.$t.','.$t_coded_cv2_2.' = mat\$'.$t_coded_cv2_2.', residuals = mix_cv_2_2\$residuals, fitted = mix_cv_2_2\$linear.predictors), file=\''.$stats_out_cv2_2_predict_tempfile.'\', row.names=FALSE, col.names=TRUE, qmethod=\'double\', sep=\'\t\');
+            write.table(data.frame(plot_id = mat\$plot_id, t'.$t.' = mat\$t'.$t.','.$t_coded_cv3_2.' = mat\$'.$t_coded_cv3_2.', residuals = mix_cv_2_3\$residuals, fitted = mix_cv_2_3\$linear.predictors), file=\''.$stats_out_cv3_2_predict_tempfile.'\', row.names=FALSE, col.names=TRUE, qmethod=\'double\', sep=\'\t\');
+            write.table(data.frame(plot_id = mat\$plot_id, t'.$t.' = mat\$t'.$t.','.$t_coded_cv4_2.' = mat\$'.$t_coded_cv4_2.', residuals = mix_cv_2_4\$residuals, fitted = mix_cv_2_4\$linear.predictors), file=\''.$stats_out_cv4_2_predict_tempfile.'\', row.names=FALSE, col.names=TRUE, qmethod=\'double\', sep=\'\t\');
+            write.table(data.frame(plot_id = mat\$plot_id, t'.$t.' = mat\$t'.$t.','.$t_coded_cv5_2.' = mat\$'.$t_coded_cv5_2.', residuals = mix_cv_2_5\$residuals, fitted = mix_cv_2_5\$linear.predictors), file=\''.$stats_out_cv5_2_predict_tempfile.'\', row.names=FALSE, col.names=TRUE, qmethod=\'double\', sep=\'\t\');
             "';
 
             # p_cv1 <- predict.asreml(mix_cv_2_1, classify = \''.$cv_classify_string.'\', tol='.$tol_asr.' );
@@ -2503,11 +2530,11 @@ sub perform_drone_imagery_analytics {
             # p_cv4 <- predict.asreml(mix_cv_2_4, classify = \''.$cv_classify_string.'\', tol='.$tol_asr.' );
             # p_cv5 <- predict.asreml(mix_cv_2_5, classify = \''.$cv_classify_string.'\', tol='.$tol_asr.' );
             # p_cv1;
-            # write.table(p_cv1\$pvals, file=\''.$stats_out_cv1_2_predict_tempfile.'\', row.names=FALSE, col.names=TRUE, sep=\'\t\');
-            # write.table(p_cv2\$pvals, file=\''.$stats_out_cv2_2_predict_tempfile.'\', row.names=FALSE, col.names=TRUE, sep=\'\t\');
-            # write.table(p_cv3\$pvals, file=\''.$stats_out_cv3_2_predict_tempfile.'\', row.names=FALSE, col.names=TRUE, sep=\'\t\');
-            # write.table(p_cv4\$pvals, file=\''.$stats_out_cv4_2_predict_tempfile.'\', row.names=FALSE, col.names=TRUE, sep=\'\t\');
-            # write.table(p_cv5\$pvals, file=\''.$stats_out_cv5_2_predict_tempfile.'\', row.names=FALSE, col.names=TRUE, sep=\'\t\');
+            # write.table(p_cv1\$pvals, file=\''.$stats_out_cv1_2_predict_tempfile.'\', row.names=FALSE, col.names=TRUE, qmethod=\'double\', sep=\'\t\');
+            # write.table(p_cv2\$pvals, file=\''.$stats_out_cv2_2_predict_tempfile.'\', row.names=FALSE, col.names=TRUE, qmethod=\'double\', sep=\'\t\');
+            # write.table(p_cv3\$pvals, file=\''.$stats_out_cv3_2_predict_tempfile.'\', row.names=FALSE, col.names=TRUE, qmethod=\'double\', sep=\'\t\');
+            # write.table(p_cv4\$pvals, file=\''.$stats_out_cv4_2_predict_tempfile.'\', row.names=FALSE, col.names=TRUE, qmethod=\'double\', sep=\'\t\');
+            # write.table(p_cv5\$pvals, file=\''.$stats_out_cv5_2_predict_tempfile.'\', row.names=FALSE, col.names=TRUE, qmethod=\'double\', sep=\'\t\');
 
             $statistics_cmd = $statistics_cmd_reading.$statistics_cmd_model;
 
@@ -2975,7 +3002,8 @@ sub perform_drone_imagery_analytics {
         foreach my $t (@sorted_trait_names) {
 
             $prepare_file_cv_cmd = 'R -e "library(data.table);
-            mat <- data.frame(fread(\''.$stats_tempfile_2.'\', header=TRUE, sep=\',\'));
+            source(\''.$drone_sommer_compat_file.'\');
+        mat <- drone_read_model_csv(\''.$stats_tempfile_2.'\', quantitative_replicate='.$replicate_is_quantitative.');
             randomized_positions <- sample(length(mat\$plot_id));
             cv_step_size <- length(mat\$plot_id) %/% 5;
             cv_step_size_modulo <- length(mat\$plot_id) %% 5;
@@ -3016,11 +3044,12 @@ sub perform_drone_imagery_analytics {
             mat\$'.$t_coded_cv5_2.'[randomized_positions[((4*cv_step_size)+1):((5*cv_step_size)+cv_step_size_modulo)]] <- mean(mat\$t'.$t.');
             ';
             $prepare_file_cv_cmd .= '
-            write.table(mat, file=\''.$stats_tempfile_2.'\', row.names=FALSE, col.names=TRUE, sep=\',\');
+            write.table(mat, file=\''.$stats_tempfile_2.'\', row.names=FALSE, col.names=TRUE, qmethod=\'double\', sep=\',\');
             "';
 
             $statistics_cmd_reading = 'R -e "library(asreml); library(data.table); library(reshape2);
-            mat <- data.frame(fread(\''.$stats_tempfile_2.'\', header=TRUE, sep=\',\'));
+            source(\''.$drone_sommer_compat_file.'\');
+        mat <- drone_read_model_csv(\''.$stats_tempfile_2.'\', quantitative_replicate='.$replicate_is_quantitative.');
             geno_mat_3col <- data.frame(fread(\''.$grm_rename_tempfile.'\', header=FALSE, sep=\' \'));
             mat\$rowNumber <- as.numeric(mat\$rowNumber);
             mat\$colNumber <- as.numeric(mat\$colNumber);
@@ -3035,41 +3064,41 @@ sub perform_drone_imagery_analytics {
             attr(geno_mat_3col,\'INVERSE\') <- TRUE;
             ';
             my $statistics_cmd_model = '
-            mix <- asreml(t'.$t.'~1 + replicate, random=~vm(id_factor, geno_mat_3col) + ar1v(rowNumberFactor):ar1(colNumberFactor), residual=~idv(units), data=mat, tol='.$tol_asr.');
+            mix <- asreml(t'.$t.'~'.$design_fixed_terms.', random=~vm(id_factor, geno_mat_3col) + ar1v(rowNumberFactor):ar1(colNumberFactor), residual=~idv(units), data=mat, tol='.$tol_asr.');
             if (!is.null(summary(mix,coef=TRUE)\$coef.random)) {
-            write.table(summary(mix,coef=TRUE)\$coef.random, file=\''.$stats_out_tempfile.'\', row.names=TRUE, col.names=TRUE, sep=\'\t\');
-            write.table(summary(mix)\$varcomp, file=\''.$stats_out_tempfile_varcomp.'\', row.names=TRUE, col.names=TRUE, sep=\'\t\');
-            write.table(data.frame(plot_id = mat\$plot_id, residuals = mix\$residuals, fitted = mix\$linear.predictors, rowNumber = mat\$rowNumber, colNumber = mat\$colNumber), file=\''.$stats_out_tempfile_residual.'\', row.names=FALSE, col.names=TRUE, sep=\'\t\');
+            write.table(summary(mix,coef=TRUE)\$coef.random, file=\''.$stats_out_tempfile.'\', row.names=TRUE, col.names=TRUE, qmethod=\'double\', sep=\'\t\');
+            write.table(summary(mix)\$varcomp, file=\''.$stats_out_tempfile_varcomp.'\', row.names=TRUE, col.names=TRUE, qmethod=\'double\', sep=\'\t\');
+            write.table(data.frame(plot_id = mat\$plot_id, residuals = mix\$residuals, fitted = mix\$linear.predictors, rowNumber = mat\$rowNumber, colNumber = mat\$colNumber), file=\''.$stats_out_tempfile_residual.'\', row.names=FALSE, col.names=TRUE, qmethod=\'double\', sep=\'\t\');
             }
             "';
 
             my $cv_classify_string = 'id_factor';
             $statistics_cmd_cv_1 = '
-            mix_cv1 <- asreml('.$t_coded_cv1.'~1 + replicate, random=~vm(id_factor, geno_mat_3col) + ar1v(rowNumberFactor):ar1(colNumberFactor), residual=~idv(units), data=mat, tol='.$tol_asr.');
-            mix_cv2 <- asreml('.$t_coded_cv2.'~1 + replicate, random=~vm(id_factor, geno_mat_3col) + ar1v(rowNumberFactor):ar1(colNumberFactor), residual=~idv(units), data=mat, tol='.$tol_asr.');
-            mix_cv3 <- asreml('.$t_coded_cv3.'~1 + replicate, random=~vm(id_factor, geno_mat_3col) + ar1v(rowNumberFactor):ar1(colNumberFactor), residual=~idv(units), data=mat, tol='.$tol_asr.');
-            mix_cv4 <- asreml('.$t_coded_cv4.'~1 + replicate, random=~vm(id_factor, geno_mat_3col) + ar1v(rowNumberFactor):ar1(colNumberFactor), residual=~idv(units), data=mat, tol='.$tol_asr.');
-            mix_cv5 <- asreml('.$t_coded_cv5.'~1 + replicate, random=~vm(id_factor, geno_mat_3col) + ar1v(rowNumberFactor):ar1(colNumberFactor), residual=~idv(units), data=mat, tol='.$tol_asr.');
+            mix_cv1 <- asreml('.$t_coded_cv1.'~'.$design_fixed_terms.', random=~vm(id_factor, geno_mat_3col) + ar1v(rowNumberFactor):ar1(colNumberFactor), residual=~idv(units), data=mat, tol='.$tol_asr.');
+            mix_cv2 <- asreml('.$t_coded_cv2.'~'.$design_fixed_terms.', random=~vm(id_factor, geno_mat_3col) + ar1v(rowNumberFactor):ar1(colNumberFactor), residual=~idv(units), data=mat, tol='.$tol_asr.');
+            mix_cv3 <- asreml('.$t_coded_cv3.'~'.$design_fixed_terms.', random=~vm(id_factor, geno_mat_3col) + ar1v(rowNumberFactor):ar1(colNumberFactor), residual=~idv(units), data=mat, tol='.$tol_asr.');
+            mix_cv4 <- asreml('.$t_coded_cv4.'~'.$design_fixed_terms.', random=~vm(id_factor, geno_mat_3col) + ar1v(rowNumberFactor):ar1(colNumberFactor), residual=~idv(units), data=mat, tol='.$tol_asr.');
+            mix_cv5 <- asreml('.$t_coded_cv5.'~'.$design_fixed_terms.', random=~vm(id_factor, geno_mat_3col) + ar1v(rowNumberFactor):ar1(colNumberFactor), residual=~idv(units), data=mat, tol='.$tol_asr.');
 
-            write.table(data.frame(plot_id = mat\$plot_id, t'.$t.' = mat\$t'.$t.','.$t_coded_cv1.' = mat\$'.$t_coded_cv1.', residuals = mix_cv1\$residuals, fitted = mix_cv1\$linear.predictors), file=\''.$stats_out_cv1_predict_tempfile.'\', row.names=FALSE, col.names=TRUE, sep=\'\t\');
-            write.table(data.frame(plot_id = mat\$plot_id, t'.$t.' = mat\$t'.$t.','.$t_coded_cv2.' = mat\$'.$t_coded_cv2.', residuals = mix_cv2\$residuals, fitted = mix_cv2\$linear.predictors), file=\''.$stats_out_cv2_predict_tempfile.'\', row.names=FALSE, col.names=TRUE, sep=\'\t\');
-            write.table(data.frame(plot_id = mat\$plot_id, t'.$t.' = mat\$t'.$t.','.$t_coded_cv3.' = mat\$'.$t_coded_cv3.', residuals = mix_cv3\$residuals, fitted = mix_cv3\$linear.predictors), file=\''.$stats_out_cv3_predict_tempfile.'\', row.names=FALSE, col.names=TRUE, sep=\'\t\');
-            write.table(data.frame(plot_id = mat\$plot_id, t'.$t.' = mat\$t'.$t.','.$t_coded_cv4.' = mat\$'.$t_coded_cv4.', residuals = mix_cv4\$residuals, fitted = mix_cv4\$linear.predictors), file=\''.$stats_out_cv4_predict_tempfile.'\', row.names=FALSE, col.names=TRUE, sep=\'\t\');
-            write.table(data.frame(plot_id = mat\$plot_id, t'.$t.' = mat\$t'.$t.','.$t_coded_cv5.' = mat\$'.$t_coded_cv5.', residuals = mix_cv5\$residuals, fitted = mix_cv5\$linear.predictors), file=\''.$stats_out_cv5_predict_tempfile.'\', row.names=FALSE, col.names=TRUE, sep=\'\t\');
+            write.table(data.frame(plot_id = mat\$plot_id, t'.$t.' = mat\$t'.$t.','.$t_coded_cv1.' = mat\$'.$t_coded_cv1.', residuals = mix_cv1\$residuals, fitted = mix_cv1\$linear.predictors), file=\''.$stats_out_cv1_predict_tempfile.'\', row.names=FALSE, col.names=TRUE, qmethod=\'double\', sep=\'\t\');
+            write.table(data.frame(plot_id = mat\$plot_id, t'.$t.' = mat\$t'.$t.','.$t_coded_cv2.' = mat\$'.$t_coded_cv2.', residuals = mix_cv2\$residuals, fitted = mix_cv2\$linear.predictors), file=\''.$stats_out_cv2_predict_tempfile.'\', row.names=FALSE, col.names=TRUE, qmethod=\'double\', sep=\'\t\');
+            write.table(data.frame(plot_id = mat\$plot_id, t'.$t.' = mat\$t'.$t.','.$t_coded_cv3.' = mat\$'.$t_coded_cv3.', residuals = mix_cv3\$residuals, fitted = mix_cv3\$linear.predictors), file=\''.$stats_out_cv3_predict_tempfile.'\', row.names=FALSE, col.names=TRUE, qmethod=\'double\', sep=\'\t\');
+            write.table(data.frame(plot_id = mat\$plot_id, t'.$t.' = mat\$t'.$t.','.$t_coded_cv4.' = mat\$'.$t_coded_cv4.', residuals = mix_cv4\$residuals, fitted = mix_cv4\$linear.predictors), file=\''.$stats_out_cv4_predict_tempfile.'\', row.names=FALSE, col.names=TRUE, qmethod=\'double\', sep=\'\t\');
+            write.table(data.frame(plot_id = mat\$plot_id, t'.$t.' = mat\$t'.$t.','.$t_coded_cv5.' = mat\$'.$t_coded_cv5.', residuals = mix_cv5\$residuals, fitted = mix_cv5\$linear.predictors), file=\''.$stats_out_cv5_predict_tempfile.'\', row.names=FALSE, col.names=TRUE, qmethod=\'double\', sep=\'\t\');
             "';
 
             $statistics_cmd_cv_2 = '
-            mix_cv_2_1 <- asreml('.$t_coded_cv1_2.'~1 + replicate, random=~vm(id_factor, geno_mat_3col) + ar1v(rowNumberFactor):ar1(colNumberFactor), residual=~idv(units), data=mat, tol='.$tol_asr.');
-            mix_cv_2_2 <- asreml('.$t_coded_cv2_2.'~1 + replicate, random=~vm(id_factor, geno_mat_3col) + ar1v(rowNumberFactor):ar1(colNumberFactor), residual=~idv(units), data=mat, tol='.$tol_asr.');
-            mix_cv_2_3 <- asreml('.$t_coded_cv3_2.'~1 + replicate, random=~vm(id_factor, geno_mat_3col) + ar1v(rowNumberFactor):ar1(colNumberFactor), residual=~idv(units), data=mat, tol='.$tol_asr.');
-            mix_cv_2_4 <- asreml('.$t_coded_cv4_2.'~1 + replicate, random=~vm(id_factor, geno_mat_3col) + ar1v(rowNumberFactor):ar1(colNumberFactor), residual=~idv(units), data=mat, tol='.$tol_asr.');
-            mix_cv_2_5 <- asreml('.$t_coded_cv5_2.'~1 + replicate, random=~vm(id_factor, geno_mat_3col) + ar1v(rowNumberFactor):ar1(colNumberFactor), residual=~idv(units), data=mat, tol='.$tol_asr.');
+            mix_cv_2_1 <- asreml('.$t_coded_cv1_2.'~'.$design_fixed_terms.', random=~vm(id_factor, geno_mat_3col) + ar1v(rowNumberFactor):ar1(colNumberFactor), residual=~idv(units), data=mat, tol='.$tol_asr.');
+            mix_cv_2_2 <- asreml('.$t_coded_cv2_2.'~'.$design_fixed_terms.', random=~vm(id_factor, geno_mat_3col) + ar1v(rowNumberFactor):ar1(colNumberFactor), residual=~idv(units), data=mat, tol='.$tol_asr.');
+            mix_cv_2_3 <- asreml('.$t_coded_cv3_2.'~'.$design_fixed_terms.', random=~vm(id_factor, geno_mat_3col) + ar1v(rowNumberFactor):ar1(colNumberFactor), residual=~idv(units), data=mat, tol='.$tol_asr.');
+            mix_cv_2_4 <- asreml('.$t_coded_cv4_2.'~'.$design_fixed_terms.', random=~vm(id_factor, geno_mat_3col) + ar1v(rowNumberFactor):ar1(colNumberFactor), residual=~idv(units), data=mat, tol='.$tol_asr.');
+            mix_cv_2_5 <- asreml('.$t_coded_cv5_2.'~'.$design_fixed_terms.', random=~vm(id_factor, geno_mat_3col) + ar1v(rowNumberFactor):ar1(colNumberFactor), residual=~idv(units), data=mat, tol='.$tol_asr.');
 
-            write.table(data.frame(plot_id = mat\$plot_id, t'.$t.' = mat\$t'.$t.','.$t_coded_cv1_2.' = mat\$'.$t_coded_cv1_2.', residuals = mix_cv_2_1\$residuals, fitted = mix_cv_2_1\$linear.predictors), file=\''.$stats_out_cv1_2_predict_tempfile.'\', row.names=FALSE, col.names=TRUE, sep=\'\t\');
-            write.table(data.frame(plot_id = mat\$plot_id, t'.$t.' = mat\$t'.$t.','.$t_coded_cv2_2.' = mat\$'.$t_coded_cv2_2.', residuals = mix_cv_2_2\$residuals, fitted = mix_cv_2_2\$linear.predictors), file=\''.$stats_out_cv2_2_predict_tempfile.'\', row.names=FALSE, col.names=TRUE, sep=\'\t\');
-            write.table(data.frame(plot_id = mat\$plot_id, t'.$t.' = mat\$t'.$t.','.$t_coded_cv3_2.' = mat\$'.$t_coded_cv3_2.', residuals = mix_cv_2_3\$residuals, fitted = mix_cv_2_3\$linear.predictors), file=\''.$stats_out_cv3_2_predict_tempfile.'\', row.names=FALSE, col.names=TRUE, sep=\'\t\');
-            write.table(data.frame(plot_id = mat\$plot_id, t'.$t.' = mat\$t'.$t.','.$t_coded_cv4_2.' = mat\$'.$t_coded_cv4_2.', residuals = mix_cv_2_4\$residuals, fitted = mix_cv_2_4\$linear.predictors), file=\''.$stats_out_cv4_2_predict_tempfile.'\', row.names=FALSE, col.names=TRUE, sep=\'\t\');
-            write.table(data.frame(plot_id = mat\$plot_id, t'.$t.' = mat\$t'.$t.','.$t_coded_cv5_2.' = mat\$'.$t_coded_cv5_2.', residuals = mix_cv_2_5\$residuals, fitted = mix_cv_2_5\$linear.predictors), file=\''.$stats_out_cv5_2_predict_tempfile.'\', row.names=FALSE, col.names=TRUE, sep=\'\t\');
+            write.table(data.frame(plot_id = mat\$plot_id, t'.$t.' = mat\$t'.$t.','.$t_coded_cv1_2.' = mat\$'.$t_coded_cv1_2.', residuals = mix_cv_2_1\$residuals, fitted = mix_cv_2_1\$linear.predictors), file=\''.$stats_out_cv1_2_predict_tempfile.'\', row.names=FALSE, col.names=TRUE, qmethod=\'double\', sep=\'\t\');
+            write.table(data.frame(plot_id = mat\$plot_id, t'.$t.' = mat\$t'.$t.','.$t_coded_cv2_2.' = mat\$'.$t_coded_cv2_2.', residuals = mix_cv_2_2\$residuals, fitted = mix_cv_2_2\$linear.predictors), file=\''.$stats_out_cv2_2_predict_tempfile.'\', row.names=FALSE, col.names=TRUE, qmethod=\'double\', sep=\'\t\');
+            write.table(data.frame(plot_id = mat\$plot_id, t'.$t.' = mat\$t'.$t.','.$t_coded_cv3_2.' = mat\$'.$t_coded_cv3_2.', residuals = mix_cv_2_3\$residuals, fitted = mix_cv_2_3\$linear.predictors), file=\''.$stats_out_cv3_2_predict_tempfile.'\', row.names=FALSE, col.names=TRUE, qmethod=\'double\', sep=\'\t\');
+            write.table(data.frame(plot_id = mat\$plot_id, t'.$t.' = mat\$t'.$t.','.$t_coded_cv4_2.' = mat\$'.$t_coded_cv4_2.', residuals = mix_cv_2_4\$residuals, fitted = mix_cv_2_4\$linear.predictors), file=\''.$stats_out_cv4_2_predict_tempfile.'\', row.names=FALSE, col.names=TRUE, qmethod=\'double\', sep=\'\t\');
+            write.table(data.frame(plot_id = mat\$plot_id, t'.$t.' = mat\$t'.$t.','.$t_coded_cv5_2.' = mat\$'.$t_coded_cv5_2.', residuals = mix_cv_2_5\$residuals, fitted = mix_cv_2_5\$linear.predictors), file=\''.$stats_out_cv5_2_predict_tempfile.'\', row.names=FALSE, col.names=TRUE, qmethod=\'double\', sep=\'\t\');
             "';
 
             # p_cv1 <- predict.asreml(mix_cv_2_1, classify = \''.$cv_classify_string.'\', tol='.$tol_asr.' );
@@ -3078,11 +3107,11 @@ sub perform_drone_imagery_analytics {
             # p_cv4 <- predict.asreml(mix_cv_2_4, classify = \''.$cv_classify_string.'\', tol='.$tol_asr.' );
             # p_cv5 <- predict.asreml(mix_cv_2_5, classify = \''.$cv_classify_string.'\', tol='.$tol_asr.' );
             # p_cv1;
-            # write.table(p_cv1\$pvals, file=\''.$stats_out_cv1_2_predict_tempfile.'\', row.names=FALSE, col.names=TRUE, sep=\'\t\');
-            # write.table(p_cv2\$pvals, file=\''.$stats_out_cv2_2_predict_tempfile.'\', row.names=FALSE, col.names=TRUE, sep=\'\t\');
-            # write.table(p_cv3\$pvals, file=\''.$stats_out_cv3_2_predict_tempfile.'\', row.names=FALSE, col.names=TRUE, sep=\'\t\');
-            # write.table(p_cv4\$pvals, file=\''.$stats_out_cv4_2_predict_tempfile.'\', row.names=FALSE, col.names=TRUE, sep=\'\t\');
-            # write.table(p_cv5\$pvals, file=\''.$stats_out_cv5_2_predict_tempfile.'\', row.names=FALSE, col.names=TRUE, sep=\'\t\');
+            # write.table(p_cv1\$pvals, file=\''.$stats_out_cv1_2_predict_tempfile.'\', row.names=FALSE, col.names=TRUE, qmethod=\'double\', sep=\'\t\');
+            # write.table(p_cv2\$pvals, file=\''.$stats_out_cv2_2_predict_tempfile.'\', row.names=FALSE, col.names=TRUE, qmethod=\'double\', sep=\'\t\');
+            # write.table(p_cv3\$pvals, file=\''.$stats_out_cv3_2_predict_tempfile.'\', row.names=FALSE, col.names=TRUE, qmethod=\'double\', sep=\'\t\');
+            # write.table(p_cv4\$pvals, file=\''.$stats_out_cv4_2_predict_tempfile.'\', row.names=FALSE, col.names=TRUE, qmethod=\'double\', sep=\'\t\');
+            # write.table(p_cv5\$pvals, file=\''.$stats_out_cv5_2_predict_tempfile.'\', row.names=FALSE, col.names=TRUE, qmethod=\'double\', sep=\'\t\');
 
             $statistics_cmd = $statistics_cmd_reading.$statistics_cmd_model;
 
@@ -3572,7 +3601,8 @@ sub perform_drone_imagery_analytics {
         my @encoded_traits_cv_save_5_2;
 
         $prepare_file_cv_cmd = 'R -e "library(data.table);
-        mat <- data.frame(fread(\''.$stats_tempfile_2.'\', header=TRUE, sep=\',\'));
+        source(\''.$drone_sommer_compat_file.'\');
+        mat <- drone_read_model_csv(\''.$stats_tempfile_2.'\', quantitative_replicate='.$replicate_is_quantitative.');
         cv_step_size <- length(mat\$plot_id) %/% 5;
         cv_step_size_modulo <- length(mat\$plot_id) %% 5;
         ';
@@ -3619,11 +3649,12 @@ sub perform_drone_imagery_analytics {
             push @encoded_traits_cv_save_5, 'mat\$'.$t_coded_cv5;
         }
         $prepare_file_cv_cmd .= '
-        write.table(mat, file=\''.$stats_tempfile_2.'\', row.names=FALSE, col.names=TRUE, sep=\',\');
+        write.table(mat, file=\''.$stats_tempfile_2.'\', row.names=FALSE, col.names=TRUE, qmethod=\'double\', sep=\',\');
         "';
 
         $prepare_file_cv2_cmd = 'R -e "library(data.table);
-        mat <- data.frame(fread(\''.$stats_tempfile_2.'\', header=TRUE, sep=\',\'));
+        source(\''.$drone_sommer_compat_file.'\');
+        mat <- drone_read_model_csv(\''.$stats_tempfile_2.'\', quantitative_replicate='.$replicate_is_quantitative.');
         cv_step_size <- length(mat\$plot_id) %/% 5;
         cv_step_size_modulo <- length(mat\$plot_id) %% 5;
         ';
@@ -3668,11 +3699,12 @@ sub perform_drone_imagery_analytics {
             push @encoded_traits_cv_save_5_2, 'mat\$'.$t_coded_cv5_2;
         }
         $prepare_file_cv2_cmd .= '
-        write.table(mat, file=\''.$stats_tempfile_2.'\', row.names=FALSE, col.names=TRUE, sep=\',\');
+        write.table(mat, file=\''.$stats_tempfile_2.'\', row.names=FALSE, col.names=TRUE, qmethod=\'double\', sep=\',\');
         "';
 
         $statistics_cmd_reading = 'R -e "library(asreml); library(data.table); library(reshape2);
-        mat <- data.frame(fread(\''.$stats_tempfile_2.'\', header=TRUE, sep=\',\'));
+        source(\''.$drone_sommer_compat_file.'\');
+        mat <- drone_read_model_csv(\''.$stats_tempfile_2.'\', quantitative_replicate='.$replicate_is_quantitative.');
         geno_mat_3col <- data.frame(fread(\''.$grm_rename_tempfile.'\', header=FALSE, sep=\' \'));
         mat\$rowNumber <- as.numeric(mat\$rowNumber);
         mat\$colNumber <- as.numeric(mat\$colNumber);
@@ -3685,11 +3717,11 @@ sub perform_drone_imagery_analytics {
         attr(geno_mat_3col,\'INVERSE\') <- TRUE;
         ';
         my $statistics_cmd_model = '
-        mix <- asreml('.$cbind_string.'~trait + replicate, random=~us(trait,init=c('.$init_values_string.')):vm(id_factor, geno_mat_3col) + id(trait):ar1(rowNumberFactor):ar1v(colNumberFactor), residual=~units:us(trait,init=c('.$init_values_string.')), data=mat, tol='.$tol_asr.');
+        mix <- asreml('.$cbind_string.'~trait + '.$design_fixed_terms.', random=~us(trait,init=c('.$init_values_string.')):vm(id_factor, geno_mat_3col) + id(trait):ar1(rowNumberFactor):ar1v(colNumberFactor), residual=~units:us(trait,init=c('.$init_values_string.')), data=mat, tol='.$tol_asr.');
         if (!is.null(summary(mix,coef=TRUE)\$coef.random)) {
-        write.table(summary(mix,coef=TRUE)\$coef.random, file=\''.$stats_out_tempfile.'\', row.names=TRUE, col.names=TRUE, sep=\'\t\');
-        write.table(summary(mix)\$varcomp, file=\''.$stats_out_tempfile_varcomp.'\', row.names=TRUE, col.names=TRUE, sep=\'\t\');
-        write.table(data.frame(plot_id = mat\$plot_id, residuals = mix\$residuals, fitted = mix\$linear.predictors), file=\''.$stats_out_tempfile_residual.'\', row.names=FALSE, col.names=TRUE, sep=\'\t\');
+        write.table(summary(mix,coef=TRUE)\$coef.random, file=\''.$stats_out_tempfile.'\', row.names=TRUE, col.names=TRUE, qmethod=\'double\', sep=\'\t\');
+        write.table(summary(mix)\$varcomp, file=\''.$stats_out_tempfile_varcomp.'\', row.names=TRUE, col.names=TRUE, qmethod=\'double\', sep=\'\t\');
+        write.table(data.frame(plot_id = mat\$plot_id, residuals = mix\$residuals, fitted = mix\$linear.predictors), file=\''.$stats_out_tempfile_residual.'\', row.names=FALSE, col.names=TRUE, qmethod=\'double\', sep=\'\t\');
         }
         "';
 
@@ -3704,11 +3736,11 @@ sub perform_drone_imagery_analytics {
         my $encoded_trait_cv_string_5 = join ',', @encoded_traits_cv_5;
         my $cbind_string_cv_5 = $number_traits > 1 ? "cbind($encoded_trait_cv_string_5)" : $encoded_trait_cv_string_5;
         $statistics_cmd_cv_1 = '
-        mix_cv_1 <- asreml('.$cbind_string_cv_1.'~trait + replicate, random=~us(trait,init=c('.$init_values_string.')):vm(id_factor, geno_mat_3col) + id(trait):ar1(rowNumberFactor):ar1v(colNumberFactor), residual=~units:us(trait,init=c('.$init_values_string.')), data=mat, tol='.$tol_asr.');
-        mix_cv_2 <- asreml('.$cbind_string_cv_2.'~trait + replicate, random=~us(trait,init=c('.$init_values_string.')):vm(id_factor, geno_mat_3col) + id(trait):ar1(rowNumberFactor):ar1v(colNumberFactor), residual=~units:us(trait,init=c('.$init_values_string.')), data=mat, tol='.$tol_asr.');
-        mix_cv_3 <- asreml('.$cbind_string_cv_3.'~trait + replicate, random=~us(trait,init=c('.$init_values_string.')):vm(id_factor, geno_mat_3col) + id(trait):ar1(rowNumberFactor):ar1v(colNumberFactor), residual=~units:us(trait,init=c('.$init_values_string.')), data=mat, tol='.$tol_asr.');
-        mix_cv_4 <- asreml('.$cbind_string_cv_4.'~trait + replicate, random=~us(trait,init=c('.$init_values_string.')):vm(id_factor, geno_mat_3col) + id(trait):ar1(rowNumberFactor):ar1v(colNumberFactor), residual=~units:us(trait,init=c('.$init_values_string.')), data=mat, tol='.$tol_asr.');
-        mix_cv_5 <- asreml('.$cbind_string_cv_5.'~trait + replicate, random=~us(trait,init=c('.$init_values_string.')):vm(id_factor, geno_mat_3col) + id(trait):ar1(rowNumberFactor):ar1v(colNumberFactor), residual=~units:us(trait,init=c('.$init_values_string.')), data=mat, tol='.$tol_asr.');
+        mix_cv_1 <- asreml('.$cbind_string_cv_1.'~trait + '.$design_fixed_terms.', random=~us(trait,init=c('.$init_values_string.')):vm(id_factor, geno_mat_3col) + id(trait):ar1(rowNumberFactor):ar1v(colNumberFactor), residual=~units:us(trait,init=c('.$init_values_string.')), data=mat, tol='.$tol_asr.');
+        mix_cv_2 <- asreml('.$cbind_string_cv_2.'~trait + '.$design_fixed_terms.', random=~us(trait,init=c('.$init_values_string.')):vm(id_factor, geno_mat_3col) + id(trait):ar1(rowNumberFactor):ar1v(colNumberFactor), residual=~units:us(trait,init=c('.$init_values_string.')), data=mat, tol='.$tol_asr.');
+        mix_cv_3 <- asreml('.$cbind_string_cv_3.'~trait + '.$design_fixed_terms.', random=~us(trait,init=c('.$init_values_string.')):vm(id_factor, geno_mat_3col) + id(trait):ar1(rowNumberFactor):ar1v(colNumberFactor), residual=~units:us(trait,init=c('.$init_values_string.')), data=mat, tol='.$tol_asr.');
+        mix_cv_4 <- asreml('.$cbind_string_cv_4.'~trait + '.$design_fixed_terms.', random=~us(trait,init=c('.$init_values_string.')):vm(id_factor, geno_mat_3col) + id(trait):ar1(rowNumberFactor):ar1v(colNumberFactor), residual=~units:us(trait,init=c('.$init_values_string.')), data=mat, tol='.$tol_asr.');
+        mix_cv_5 <- asreml('.$cbind_string_cv_5.'~trait + '.$design_fixed_terms.', random=~us(trait,init=c('.$init_values_string.')):vm(id_factor, geno_mat_3col) + id(trait):ar1(rowNumberFactor):ar1v(colNumberFactor), residual=~units:us(trait,init=c('.$init_values_string.')), data=mat, tol='.$tol_asr.');
         ';
         my $encoded_traits_cv_save_1 = join ',', @encoded_traits_cv_save_1;
         my $encoded_traits_cv_save_2 = join ',', @encoded_traits_cv_save_2;
@@ -3728,11 +3760,11 @@ sub perform_drone_imagery_analytics {
         }
         my $plot_id_cbind_string = join ',', @plot_id_cbind_array;
         $statistics_cmd_cv_1 .= '
-        write.table(data.frame(plot_id = c('.$plot_id_cbind_string.'), true_values = c('.$encoded_traits_cv_check.'), cv_values = c('.$encoded_traits_cv_save_1.'), residuals = mix_cv_1\$residuals, fitted = mix_cv_1\$linear.predictors), file=\''.$stats_out_cv1_predict_tempfile.'\', row.names=FALSE, col.names=TRUE, sep=\'\t\');
-        write.table(data.frame(plot_id = c('.$plot_id_cbind_string.'), true_values = c('.$encoded_traits_cv_check.'), cv_values = c('.$encoded_traits_cv_save_2.'), residuals = mix_cv_2\$residuals, fitted = mix_cv_2\$linear.predictors), file=\''.$stats_out_cv2_predict_tempfile.'\', row.names=FALSE, col.names=TRUE, sep=\'\t\');
-        write.table(data.frame(plot_id = c('.$plot_id_cbind_string.'), true_values = c('.$encoded_traits_cv_check.'), cv_values = c('.$encoded_traits_cv_save_3.'), residuals = mix_cv_3\$residuals, fitted = mix_cv_3\$linear.predictors), file=\''.$stats_out_cv3_predict_tempfile.'\', row.names=FALSE, col.names=TRUE, sep=\'\t\');
-        write.table(data.frame(plot_id = c('.$plot_id_cbind_string.'), true_values = c('.$encoded_traits_cv_check.'), cv_values = c('.$encoded_traits_cv_save_4.'), residuals = mix_cv_4\$residuals, fitted = mix_cv_4\$linear.predictors), file=\''.$stats_out_cv4_predict_tempfile.'\', row.names=FALSE, col.names=TRUE, sep=\'\t\');
-        write.table(data.frame(plot_id = c('.$plot_id_cbind_string.'), true_values = c('.$encoded_traits_cv_check.'), cv_values = c('.$encoded_traits_cv_save_5.'), residuals = mix_cv_5\$residuals, fitted = mix_cv_5\$linear.predictors), file=\''.$stats_out_cv5_predict_tempfile.'\', row.names=FALSE, col.names=TRUE, sep=\'\t\');
+        write.table(data.frame(plot_id = c('.$plot_id_cbind_string.'), true_values = c('.$encoded_traits_cv_check.'), cv_values = c('.$encoded_traits_cv_save_1.'), residuals = mix_cv_1\$residuals, fitted = mix_cv_1\$linear.predictors), file=\''.$stats_out_cv1_predict_tempfile.'\', row.names=FALSE, col.names=TRUE, qmethod=\'double\', sep=\'\t\');
+        write.table(data.frame(plot_id = c('.$plot_id_cbind_string.'), true_values = c('.$encoded_traits_cv_check.'), cv_values = c('.$encoded_traits_cv_save_2.'), residuals = mix_cv_2\$residuals, fitted = mix_cv_2\$linear.predictors), file=\''.$stats_out_cv2_predict_tempfile.'\', row.names=FALSE, col.names=TRUE, qmethod=\'double\', sep=\'\t\');
+        write.table(data.frame(plot_id = c('.$plot_id_cbind_string.'), true_values = c('.$encoded_traits_cv_check.'), cv_values = c('.$encoded_traits_cv_save_3.'), residuals = mix_cv_3\$residuals, fitted = mix_cv_3\$linear.predictors), file=\''.$stats_out_cv3_predict_tempfile.'\', row.names=FALSE, col.names=TRUE, qmethod=\'double\', sep=\'\t\');
+        write.table(data.frame(plot_id = c('.$plot_id_cbind_string.'), true_values = c('.$encoded_traits_cv_check.'), cv_values = c('.$encoded_traits_cv_save_4.'), residuals = mix_cv_4\$residuals, fitted = mix_cv_4\$linear.predictors), file=\''.$stats_out_cv4_predict_tempfile.'\', row.names=FALSE, col.names=TRUE, qmethod=\'double\', sep=\'\t\');
+        write.table(data.frame(plot_id = c('.$plot_id_cbind_string.'), true_values = c('.$encoded_traits_cv_check.'), cv_values = c('.$encoded_traits_cv_save_5.'), residuals = mix_cv_5\$residuals, fitted = mix_cv_5\$linear.predictors), file=\''.$stats_out_cv5_predict_tempfile.'\', row.names=FALSE, col.names=TRUE, qmethod=\'double\', sep=\'\t\');
         "';
         my $cv_classify_string = 'id_factor';
 
@@ -3747,17 +3779,17 @@ sub perform_drone_imagery_analytics {
         my $encoded_trait_cv_string_5_2 = join ',', @encoded_traits_cv_5_2;
         my $cbind_string_cv_5_2 = $number_traits > 1 ? "cbind($encoded_trait_cv_string_5_2)" : $encoded_trait_cv_string_5_2;
         $statistics_cmd_cv_2 = '
-        mix_cv_1_2 <- asreml('.$cbind_string_cv_1_2.'~trait + replicate, random=~us(trait,init=c('.$init_values_string.')):vm(id_factor, geno_mat_3col) + id(trait):ar1(rowNumberFactor):ar1v(colNumberFactor), residual=~units:us(trait,init=c('.$init_values_string.')), data=mat, tol='.$tol_asr.' );
-        mix_cv_2_2 <- asreml('.$cbind_string_cv_2_2.'~trait + replicate, random=~us(trait,init=c('.$init_values_string.')):vm(id_factor, geno_mat_3col) + id(trait):ar1(rowNumberFactor):ar1v(colNumberFactor), residual=~units:us(trait,init=c('.$init_values_string.')), data=mat, tol='.$tol_asr.' );
-        mix_cv_3_2 <- asreml('.$cbind_string_cv_3_2.'~trait + replicate, random=~us(trait,init=c('.$init_values_string.')):vm(id_factor, geno_mat_3col) + id(trait):ar1(rowNumberFactor):ar1v(colNumberFactor), residual=~units:us(trait,init=c('.$init_values_string.')), data=mat, tol='.$tol_asr.' );
-        mix_cv_4_2 <- asreml('.$cbind_string_cv_4_2.'~trait + replicate, random=~us(trait,init=c('.$init_values_string.')):vm(id_factor, geno_mat_3col) + id(trait):ar1(rowNumberFactor):ar1v(colNumberFactor), residual=~units:us(trait,init=c('.$init_values_string.')), data=mat, tol='.$tol_asr.' );
-        mix_cv_5_2 <- asreml('.$cbind_string_cv_5_2.'~trait + replicate, random=~us(trait,init=c('.$init_values_string.')):vm(id_factor, geno_mat_3col) + id(trait):ar1(rowNumberFactor):ar1v(colNumberFactor), residual=~units:us(trait,init=c('.$init_values_string.')), data=mat, tol='.$tol_asr.' );
+        mix_cv_1_2 <- asreml('.$cbind_string_cv_1_2.'~trait + '.$design_fixed_terms.', random=~us(trait,init=c('.$init_values_string.')):vm(id_factor, geno_mat_3col) + id(trait):ar1(rowNumberFactor):ar1v(colNumberFactor), residual=~units:us(trait,init=c('.$init_values_string.')), data=mat, tol='.$tol_asr.' );
+        mix_cv_2_2 <- asreml('.$cbind_string_cv_2_2.'~trait + '.$design_fixed_terms.', random=~us(trait,init=c('.$init_values_string.')):vm(id_factor, geno_mat_3col) + id(trait):ar1(rowNumberFactor):ar1v(colNumberFactor), residual=~units:us(trait,init=c('.$init_values_string.')), data=mat, tol='.$tol_asr.' );
+        mix_cv_3_2 <- asreml('.$cbind_string_cv_3_2.'~trait + '.$design_fixed_terms.', random=~us(trait,init=c('.$init_values_string.')):vm(id_factor, geno_mat_3col) + id(trait):ar1(rowNumberFactor):ar1v(colNumberFactor), residual=~units:us(trait,init=c('.$init_values_string.')), data=mat, tol='.$tol_asr.' );
+        mix_cv_4_2 <- asreml('.$cbind_string_cv_4_2.'~trait + '.$design_fixed_terms.', random=~us(trait,init=c('.$init_values_string.')):vm(id_factor, geno_mat_3col) + id(trait):ar1(rowNumberFactor):ar1v(colNumberFactor), residual=~units:us(trait,init=c('.$init_values_string.')), data=mat, tol='.$tol_asr.' );
+        mix_cv_5_2 <- asreml('.$cbind_string_cv_5_2.'~trait + '.$design_fixed_terms.', random=~us(trait,init=c('.$init_values_string.')):vm(id_factor, geno_mat_3col) + id(trait):ar1(rowNumberFactor):ar1v(colNumberFactor), residual=~units:us(trait,init=c('.$init_values_string.')), data=mat, tol='.$tol_asr.' );
 
-        write.table(data.frame(plot_id = c('.$plot_id_cbind_string.'), true_values = c('.$encoded_traits_cv_check.'), cv_values = c('.$encoded_traits_cv_save_1_2.'), residuals = mix_cv_1_2\$residuals, fitted = mix_cv_1_2\$linear.predictors), file=\''.$stats_out_cv1_2_predict_tempfile.'\', row.names=FALSE, col.names=TRUE, sep=\'\t\');
-        write.table(data.frame(plot_id = c('.$plot_id_cbind_string.'), true_values = c('.$encoded_traits_cv_check.'), cv_values = c('.$encoded_traits_cv_save_2_2.'), residuals = mix_cv_2_2\$residuals, fitted = mix_cv_2_2\$linear.predictors), file=\''.$stats_out_cv2_2_predict_tempfile.'\', row.names=FALSE, col.names=TRUE, sep=\'\t\');
-        write.table(data.frame(plot_id = c('.$plot_id_cbind_string.'), true_values = c('.$encoded_traits_cv_check.'), cv_values = c('.$encoded_traits_cv_save_3_2.'), residuals = mix_cv_3_2\$residuals, fitted = mix_cv_3_2\$linear.predictors), file=\''.$stats_out_cv3_2_predict_tempfile.'\', row.names=FALSE, col.names=TRUE, sep=\'\t\');
-        write.table(data.frame(plot_id = c('.$plot_id_cbind_string.'), true_values = c('.$encoded_traits_cv_check.'), cv_values = c('.$encoded_traits_cv_save_4_2.'), residuals = mix_cv_4_2\$residuals, fitted = mix_cv_4_2\$linear.predictors), file=\''.$stats_out_cv4_2_predict_tempfile.'\', row.names=FALSE, col.names=TRUE, sep=\'\t\');
-        write.table(data.frame(plot_id = c('.$plot_id_cbind_string.'), true_values = c('.$encoded_traits_cv_check.'), cv_values = c('.$encoded_traits_cv_save_5_2.'), residuals = mix_cv_5_2\$residuals, fitted = mix_cv_5_2\$linear.predictors), file=\''.$stats_out_cv5_2_predict_tempfile.'\', row.names=FALSE, col.names=TRUE, sep=\'\t\');
+        write.table(data.frame(plot_id = c('.$plot_id_cbind_string.'), true_values = c('.$encoded_traits_cv_check.'), cv_values = c('.$encoded_traits_cv_save_1_2.'), residuals = mix_cv_1_2\$residuals, fitted = mix_cv_1_2\$linear.predictors), file=\''.$stats_out_cv1_2_predict_tempfile.'\', row.names=FALSE, col.names=TRUE, qmethod=\'double\', sep=\'\t\');
+        write.table(data.frame(plot_id = c('.$plot_id_cbind_string.'), true_values = c('.$encoded_traits_cv_check.'), cv_values = c('.$encoded_traits_cv_save_2_2.'), residuals = mix_cv_2_2\$residuals, fitted = mix_cv_2_2\$linear.predictors), file=\''.$stats_out_cv2_2_predict_tempfile.'\', row.names=FALSE, col.names=TRUE, qmethod=\'double\', sep=\'\t\');
+        write.table(data.frame(plot_id = c('.$plot_id_cbind_string.'), true_values = c('.$encoded_traits_cv_check.'), cv_values = c('.$encoded_traits_cv_save_3_2.'), residuals = mix_cv_3_2\$residuals, fitted = mix_cv_3_2\$linear.predictors), file=\''.$stats_out_cv3_2_predict_tempfile.'\', row.names=FALSE, col.names=TRUE, qmethod=\'double\', sep=\'\t\');
+        write.table(data.frame(plot_id = c('.$plot_id_cbind_string.'), true_values = c('.$encoded_traits_cv_check.'), cv_values = c('.$encoded_traits_cv_save_4_2.'), residuals = mix_cv_4_2\$residuals, fitted = mix_cv_4_2\$linear.predictors), file=\''.$stats_out_cv4_2_predict_tempfile.'\', row.names=FALSE, col.names=TRUE, qmethod=\'double\', sep=\'\t\');
+        write.table(data.frame(plot_id = c('.$plot_id_cbind_string.'), true_values = c('.$encoded_traits_cv_check.'), cv_values = c('.$encoded_traits_cv_save_5_2.'), residuals = mix_cv_5_2\$residuals, fitted = mix_cv_5_2\$linear.predictors), file=\''.$stats_out_cv5_2_predict_tempfile.'\', row.names=FALSE, col.names=TRUE, qmethod=\'double\', sep=\'\t\');
         "';
 
         # p_cv1 <- predict.asreml(mix_cv_1_2, classify = \''.$cv_classify_string.'\', tol='.$tol_asr.', pworkspace=\'48gb\' );
@@ -3766,11 +3798,11 @@ sub perform_drone_imagery_analytics {
         # p_cv4 <- predict.asreml(mix_cv_4_2, classify = \''.$cv_classify_string.'\', tol='.$tol_asr.', pworkspace=\'48gb\' );
         # p_cv5 <- predict.asreml(mix_cv_5_2, classify = \''.$cv_classify_string.'\', tol='.$tol_asr.', pworkspace=\'48gb\' );
         # p_cv1;
-        # write.table(p_cv1\$pvals, file=\''.$stats_out_cv1_2_predict_tempfile.'\', row.names=FALSE, col.names=TRUE, sep=\'\t\');
-        # write.table(p_cv2\$pvals, file=\''.$stats_out_cv2_2_predict_tempfile.'\', row.names=FALSE, col.names=TRUE, sep=\'\t\');
-        # write.table(p_cv3\$pvals, file=\''.$stats_out_cv3_2_predict_tempfile.'\', row.names=FALSE, col.names=TRUE, sep=\'\t\');
-        # write.table(p_cv4\$pvals, file=\''.$stats_out_cv4_2_predict_tempfile.'\', row.names=FALSE, col.names=TRUE, sep=\'\t\');
-        # write.table(p_cv5\$pvals, file=\''.$stats_out_cv5_2_predict_tempfile.'\', row.names=FALSE, col.names=TRUE, sep=\'\t\');
+        # write.table(p_cv1\$pvals, file=\''.$stats_out_cv1_2_predict_tempfile.'\', row.names=FALSE, col.names=TRUE, qmethod=\'double\', sep=\'\t\');
+        # write.table(p_cv2\$pvals, file=\''.$stats_out_cv2_2_predict_tempfile.'\', row.names=FALSE, col.names=TRUE, qmethod=\'double\', sep=\'\t\');
+        # write.table(p_cv3\$pvals, file=\''.$stats_out_cv3_2_predict_tempfile.'\', row.names=FALSE, col.names=TRUE, qmethod=\'double\', sep=\'\t\');
+        # write.table(p_cv4\$pvals, file=\''.$stats_out_cv4_2_predict_tempfile.'\', row.names=FALSE, col.names=TRUE, qmethod=\'double\', sep=\'\t\');
+        # write.table(p_cv5\$pvals, file=\''.$stats_out_cv5_2_predict_tempfile.'\', row.names=FALSE, col.names=TRUE, qmethod=\'double\', sep=\'\t\');
 
         $statistics_cmd = $statistics_cmd_reading.$statistics_cmd_model;
 
@@ -4250,8 +4282,7 @@ sub perform_drone_imagery_analytics {
         open(my $F, ">", $stats_tempfile) || die "Can't open file ".$stats_tempfile;
             print $F $header_string."\n";
             foreach (@data_matrix_altered) {
-                my $line = join ',', @$_;
-                print $F "$line\n";
+                CXGN::DroneImagery::DroneImageryAnalyticsRunSimulation::_write_model_csv_row($F,$_);
             }
         close($F);
     }
@@ -4272,7 +4303,7 @@ sub perform_drone_imagery_analytics {
                 my @row = (
                     $accession_id_factor_map{$germplasm_stock_id},
                     $obsunit_stock_id,
-                    $replicate,
+                    (($fixed_effect_type // '') eq 'fixed_effect_trait' ? 0 : CXGN::DroneImagery::DesignFactors::numeric_group_code($recorded_study_design,$replicate,$block,$f90_group_codes)),
                     $t,
                     $plot_rep_time_factor_map{$obsunit_stock_id}->{$replicate}->{$t},
                     $stock_row_col{$obsunit_stock_id}->{plot_id_factor}
@@ -4372,8 +4403,7 @@ sub perform_drone_imagery_analytics {
 
         open(my $F2, ">", $stats_prep2_tempfile) || die "Can't open file ".$stats_prep2_tempfile;
             foreach (@data_matrix_phenotypes_altered) {
-                my $line = join ',', @$_;
-                print $F2 "$line\n";
+                CXGN::DroneImagery::DroneImageryAnalyticsRunSimulation::_write_model_csv_row($F2,$_);
             }
         close($F2);
     }
@@ -4391,6 +4421,7 @@ sub perform_drone_imagery_analytics {
                 $germplasm_stock_id,
                 $obsunit_stock_id,
                 $replicate,
+                $block,
                 $row_number,
                 $col_number,
                 $accession_id_factor_map{$germplasm_stock_id},
@@ -4431,8 +4462,7 @@ sub perform_drone_imagery_analytics {
         open(my $F, ">", $stats_tempfile_2) || die "Can't open file ".$stats_tempfile_2;
             print $F $header_string."\n";
             foreach (@data_matrix_altered) {
-                my $line = join ',', @$_;
-                print $F "$line\n";
+                CXGN::DroneImagery::DroneImageryAnalyticsRunSimulation::_write_model_csv_row($F,$_);
             }
         close($F);
     }
@@ -5330,11 +5360,11 @@ sub perform_drone_imagery_analytics {
         cv_step_size <- length(mat[,1]) %/% 5;
         cv_step_size_modulo <- length(mat[,1]) %% 5;
         mat_CV1 <- mat; mat_CV2 <- mat; mat_CV3 <- mat; mat_CV4 <- mat; mat_CV5 <- mat;
-        mat_CV1[c(randomized_positions[1:cv_step_size]),ncol(mat)] <- median(mat[,ncol(mat)]);
-        mat_CV2[c(randomized_positions[(cv_step_size+1):(2*cv_step_size)]),ncol(mat)] <- median(mat[,ncol(mat)]);
-        mat_CV3[c(randomized_positions[((2*cv_step_size)+1):(3*cv_step_size)]),ncol(mat)] <- median(mat[,ncol(mat)]);
-        mat_CV4[c(randomized_positions[((3*cv_step_size)+1):(4*cv_step_size)]),ncol(mat)] <- median(mat[,ncol(mat)]);
-        mat_CV5[c(randomized_positions[((4*cv_step_size)+1):((5*cv_step_size)+cv_step_size_modulo)]),ncol(mat)] <- median(mat[,ncol(mat)]);
+        mat_CV1[fold_positions[[1]],ncol(mat)] <- observed_median;
+        mat_CV2[fold_positions[[2]],ncol(mat)] <- observed_median;
+        mat_CV3[fold_positions[[3]],ncol(mat)] <- observed_median;
+        mat_CV4[fold_positions[[4]],ncol(mat)] <- observed_median;
+        mat_CV5[fold_positions[[5]],ncol(mat)] <- observed_median;
         mat_CV1_2 <- mat; mat_CV2_2 <- mat; mat_CV3_2 <- mat; mat_CV4_2 <- mat; mat_CV5_2 <- mat;
         mat_CV1_2[c(randomized_positions[1:cv_step_size]),ncol(mat)] <- -999;
         mat_CV2_2[c(randomized_positions[(cv_step_size+1):(2*cv_step_size)]),ncol(mat)] <- -999;
@@ -5615,8 +5645,7 @@ sub perform_drone_imagery_analytics {
 
         while ( my ($accession_name, $coeffs) = each %rr_genetic_coefficients_altered) {
             my @line = ($accession_name, @$coeffs);
-            my $line_string = join ',', @line;
-            print $Fgc "$line_string\n";
+            CXGN::DroneImagery::DroneImageryAnalyticsRunSimulation::_write_model_csv_row($Fgc,\@line);
 
             foreach my $t_i (0..20) {
                 my $time = $t_i*5/100;
@@ -5671,8 +5700,7 @@ sub perform_drone_imagery_analytics {
 
         while ( my ($plot_name, $coeffs) = each %rr_temporal_coefficients_altered) {
             my @line = ($plot_name, @$coeffs);
-            my $line_string = join ',', @line;
-            print $Fpc "$line_string\n";
+            CXGN::DroneImagery::DroneImageryAnalyticsRunSimulation::_write_model_csv_row($Fpc,\@line);
 
             foreach my $t_i (0..20) {
                 my $time = $t_i*5/100;
@@ -7274,7 +7302,7 @@ sub perform_drone_imagery_analytics {
             eigen(newc);
             chol2 <- chol(newc);
             finalx <- newx %*% chol2 * sd(x1) + mean(x1);
-            write.table(finalx, file=\''.$sim_env_changing_mat_full_tempfile.'\', row.names=FALSE, col.names=FALSE, sep=\'\t\');"';
+            write.table(finalx, file=\''.$sim_env_changing_mat_full_tempfile.'\', row.names=FALSE, col.names=FALSE, qmethod=\'double\', sep=\'\t\');"';
             # print STDERR Dumper $sim_change_cmd;
             my $status_sim_change = system($sim_change_cmd);
 
@@ -7350,7 +7378,7 @@ sub perform_drone_imagery_analytics {
         colnames(cor_mat) <- data.matrix(mat_agg[,1]);
         range01 <- function(x){(x-min(x))/(max(x)-min(x))};
         cor_mat <- range01(cor_mat);
-        write.table(cor_mat, file=\''.$permanent_environment_structure_env_tempfile2.'\', row.names=TRUE, col.names=TRUE, sep=\'\t\');"';
+        write.table(cor_mat, file=\''.$permanent_environment_structure_env_tempfile2.'\', row.names=TRUE, col.names=TRUE, qmethod=\'double\', sep=\'\t\');"';
         # print STDERR Dumper $pe_rel_cmd;
         my $status_pe_rel = system($pe_rel_cmd);
 
@@ -7446,8 +7474,7 @@ sub perform_drone_imagery_analytics {
         open(my $F, ">", $stats_tempfile) || die "Can't open file ".$stats_tempfile;
             print $F $header_string."\n";
             foreach (@data_matrix_altered_env) {
-                my $line = join ',', @$_;
-                print $F "$line\n";
+                CXGN::DroneImagery::DroneImageryAnalyticsRunSimulation::_write_model_csv_row($F,$_);
             }
         close($F);
     }
@@ -7468,7 +7495,7 @@ sub perform_drone_imagery_analytics {
                 my @row = (
                     $accession_id_factor_map{$germplasm_stock_id},
                     $obsunit_stock_id,
-                    $replicate,
+                    (($fixed_effect_type // '') eq 'fixed_effect_trait' ? 0 : CXGN::DroneImagery::DesignFactors::numeric_group_code($recorded_study_design,$replicate,$block,$f90_group_codes)),
                     $t,
                     $plot_rep_time_factor_map{$obsunit_stock_id}->{$replicate}->{$t},
                     $stock_row_col{$obsunit_stock_id}->{plot_id_factor}
@@ -7556,8 +7583,7 @@ sub perform_drone_imagery_analytics {
 
         open(my $F2, ">", $stats_prep2_tempfile) || die "Can't open file ".$stats_prep2_tempfile;
             foreach (@data_matrix_phenotypes_altered_env) {
-                my $line = join ',', @$_;
-                print $F2 "$line\n";
+                CXGN::DroneImagery::DroneImageryAnalyticsRunSimulation::_write_model_csv_row($F2,$_);
             }
         close($F2);
     }
@@ -7575,6 +7601,7 @@ sub perform_drone_imagery_analytics {
                 $germplasm_stock_id,
                 $obsunit_stock_id,
                 $replicate,
+                $block,
                 $row_number,
                 $col_number,
                 $accession_id_factor_map{$germplasm_stock_id},
@@ -7609,8 +7636,7 @@ sub perform_drone_imagery_analytics {
         open(my $F, ">", $stats_tempfile_2) || die "Can't open file ".$stats_tempfile_2;
             print $F $header_string."\n";
             foreach (@data_matrix_altered_env) {
-                my $line = join ',', @$_;
-                print $F "$line\n";
+                CXGN::DroneImagery::DroneImageryAnalyticsRunSimulation::_write_model_csv_row($F,$_);
             }
         close($F);
     }
@@ -8504,11 +8530,11 @@ sub perform_drone_imagery_analytics {
         cv_step_size <- length(mat[,1]) %/% 5;
         cv_step_size_modulo <- length(mat[,1]) %% 5;
         mat_CV1 <- mat; mat_CV2 <- mat; mat_CV3 <- mat; mat_CV4 <- mat; mat_CV5 <- mat;
-        mat_CV1[c(randomized_positions[1:cv_step_size]),ncol(mat)] <- median(mat[,ncol(mat)]);
-        mat_CV2[c(randomized_positions[(cv_step_size+1):(2*cv_step_size)]),ncol(mat)] <- median(mat[,ncol(mat)]);
-        mat_CV3[c(randomized_positions[((2*cv_step_size)+1):(3*cv_step_size)]),ncol(mat)] <- median(mat[,ncol(mat)]);
-        mat_CV4[c(randomized_positions[((3*cv_step_size)+1):(4*cv_step_size)]),ncol(mat)] <- median(mat[,ncol(mat)]);
-        mat_CV5[c(randomized_positions[((4*cv_step_size)+1):((5*cv_step_size)+cv_step_size_modulo)]),ncol(mat)] <- median(mat[,ncol(mat)]);
+        mat_CV1[fold_positions[[1]],ncol(mat)] <- observed_median;
+        mat_CV2[fold_positions[[2]],ncol(mat)] <- observed_median;
+        mat_CV3[fold_positions[[3]],ncol(mat)] <- observed_median;
+        mat_CV4[fold_positions[[4]],ncol(mat)] <- observed_median;
+        mat_CV5[fold_positions[[5]],ncol(mat)] <- observed_median;
         mat_CV1_2 <- mat; mat_CV2_2 <- mat; mat_CV3_2 <- mat; mat_CV4_2 <- mat; mat_CV5_2 <- mat;
         mat_CV1_2[c(randomized_positions[1:cv_step_size]),ncol(mat)] <- -999;
         mat_CV2_2[c(randomized_positions[(cv_step_size+1):(2*cv_step_size)]),ncol(mat)] <- -999;
@@ -8789,8 +8815,7 @@ sub perform_drone_imagery_analytics {
 
         while ( my ($accession_name, $coeffs) = each %rr_genetic_coefficients_altered_env) {
             my @line = ($accession_name, @$coeffs);
-            my $line_string = join ',', @line;
-            print $Fgc "$line_string\n";
+            CXGN::DroneImagery::DroneImageryAnalyticsRunSimulation::_write_model_csv_row($Fgc,\@line);
 
             foreach my $t_i (0..20) {
                 my $time = $t_i*5/100;
@@ -8845,8 +8870,7 @@ sub perform_drone_imagery_analytics {
 
         while ( my ($plot_name, $coeffs) = each %rr_temporal_coefficients_altered_env) {
             my @line = ($plot_name, @$coeffs);
-            my $line_string = join ',', @line;
-            print $Fpc "$line_string\n";
+            CXGN::DroneImagery::DroneImageryAnalyticsRunSimulation::_write_model_csv_row($Fpc,\@line);
 
             foreach my $t_i (0..20) {
                 my $time = $t_i*5/100;
@@ -10440,7 +10464,7 @@ sub perform_drone_imagery_analytics {
             eigen(newc);
             chol2 <- chol(newc);
             finalx <- newx %*% chol2 * sd(x1) + mean(x1);
-            write.table(finalx, file=\''.$sim_env_changing_mat_full_tempfile.'\', row.names=FALSE, col.names=FALSE, sep=\'\t\');"';
+            write.table(finalx, file=\''.$sim_env_changing_mat_full_tempfile.'\', row.names=FALSE, col.names=FALSE, qmethod=\'double\', sep=\'\t\');"';
             # print STDERR Dumper $sim_change_cmd;
             my $status_sim_change = system($sim_change_cmd);
 
@@ -10513,7 +10537,7 @@ sub perform_drone_imagery_analytics {
         colnames(cor_mat) <- data.matrix(mat_agg[,1]);
         range01 <- function(x){(x-min(x))/(max(x)-min(x))};
         cor_mat <- range01(cor_mat);
-        write.table(cor_mat, file=\''.$permanent_environment_structure_env_tempfile2.'\', row.names=TRUE, col.names=TRUE, sep=\'\t\');"';
+        write.table(cor_mat, file=\''.$permanent_environment_structure_env_tempfile2.'\', row.names=TRUE, col.names=TRUE, qmethod=\'double\', sep=\'\t\');"';
         # print STDERR Dumper $pe_rel_cmd;
         my $status_pe_rel = system($pe_rel_cmd);
 
@@ -10609,8 +10633,7 @@ sub perform_drone_imagery_analytics {
         open(my $F, ">", $stats_tempfile) || die "Can't open file ".$stats_tempfile;
             print $F $header_string."\n";
             foreach (@data_matrix_altered_env_2) {
-                my $line = join ',', @$_;
-                print $F "$line\n";
+                CXGN::DroneImagery::DroneImageryAnalyticsRunSimulation::_write_model_csv_row($F,$_);
             }
         close($F);
     }
@@ -10631,7 +10654,7 @@ sub perform_drone_imagery_analytics {
                 my @row = (
                     $accession_id_factor_map{$germplasm_stock_id},
                     $obsunit_stock_id,
-                    $replicate,
+                    (($fixed_effect_type // '') eq 'fixed_effect_trait' ? 0 : CXGN::DroneImagery::DesignFactors::numeric_group_code($recorded_study_design,$replicate,$block,$f90_group_codes)),
                     $t,
                     $plot_rep_time_factor_map{$obsunit_stock_id}->{$replicate}->{$t},
                     $stock_row_col{$obsunit_stock_id}->{plot_id_factor}
@@ -10719,8 +10742,7 @@ sub perform_drone_imagery_analytics {
 
         open(my $F2, ">", $stats_prep2_tempfile) || die "Can't open file ".$stats_prep2_tempfile;
             foreach (@data_matrix_phenotypes_altered_env_2) {
-                my $line = join ',', @$_;
-                print $F2 "$line\n";
+                CXGN::DroneImagery::DroneImageryAnalyticsRunSimulation::_write_model_csv_row($F2,$_);
             }
         close($F2);
     }
@@ -10738,6 +10760,7 @@ sub perform_drone_imagery_analytics {
                 $germplasm_stock_id,
                 $obsunit_stock_id,
                 $replicate,
+                $block,
                 $row_number,
                 $col_number,
                 $accession_id_factor_map{$germplasm_stock_id},
@@ -10772,8 +10795,7 @@ sub perform_drone_imagery_analytics {
         open(my $F, ">", $stats_tempfile_2) || die "Can't open file ".$stats_tempfile_2;
             print $F $header_string."\n";
             foreach (@data_matrix_altered_env_2) {
-                my $line = join ',', @$_;
-                print $F "$line\n";
+                CXGN::DroneImagery::DroneImageryAnalyticsRunSimulation::_write_model_csv_row($F,$_);
             }
         close($F);
     }
@@ -11667,11 +11689,11 @@ sub perform_drone_imagery_analytics {
         cv_step_size <- length(mat[,1]) %/% 5;
         cv_step_size_modulo <- length(mat[,1]) %% 5;
         mat_CV1 <- mat; mat_CV2 <- mat; mat_CV3 <- mat; mat_CV4 <- mat; mat_CV5 <- mat;
-        mat_CV1[c(randomized_positions[1:cv_step_size]),ncol(mat)] <- median(mat[,ncol(mat)]);
-        mat_CV2[c(randomized_positions[(cv_step_size+1):(2*cv_step_size)]),ncol(mat)] <- median(mat[,ncol(mat)]);
-        mat_CV3[c(randomized_positions[((2*cv_step_size)+1):(3*cv_step_size)]),ncol(mat)] <- median(mat[,ncol(mat)]);
-        mat_CV4[c(randomized_positions[((3*cv_step_size)+1):(4*cv_step_size)]),ncol(mat)] <- median(mat[,ncol(mat)]);
-        mat_CV5[c(randomized_positions[((4*cv_step_size)+1):((5*cv_step_size)+cv_step_size_modulo)]),ncol(mat)] <- median(mat[,ncol(mat)]);
+        mat_CV1[fold_positions[[1]],ncol(mat)] <- observed_median;
+        mat_CV2[fold_positions[[2]],ncol(mat)] <- observed_median;
+        mat_CV3[fold_positions[[3]],ncol(mat)] <- observed_median;
+        mat_CV4[fold_positions[[4]],ncol(mat)] <- observed_median;
+        mat_CV5[fold_positions[[5]],ncol(mat)] <- observed_median;
         mat_CV1_2 <- mat; mat_CV2_2 <- mat; mat_CV3_2 <- mat; mat_CV4_2 <- mat; mat_CV5_2 <- mat;
         mat_CV1_2[c(randomized_positions[1:cv_step_size]),ncol(mat)] <- -999;
         mat_CV2_2[c(randomized_positions[(cv_step_size+1):(2*cv_step_size)]),ncol(mat)] <- -999;
@@ -11952,8 +11974,7 @@ sub perform_drone_imagery_analytics {
 
         while ( my ($accession_name, $coeffs) = each %rr_genetic_coefficients_altered_env_2) {
             my @line = ($accession_name, @$coeffs);
-            my $line_string = join ',', @line;
-            print $Fgc "$line_string\n";
+            CXGN::DroneImagery::DroneImageryAnalyticsRunSimulation::_write_model_csv_row($Fgc,\@line);
 
             foreach my $t_i (0..20) {
                 my $time = $t_i*5/100;
@@ -12008,8 +12029,7 @@ sub perform_drone_imagery_analytics {
 
         while ( my ($plot_name, $coeffs) = each %rr_temporal_coefficients_altered_env_2) {
             my @line = ($plot_name, @$coeffs);
-            my $line_string = join ',', @line;
-            print $Fpc "$line_string\n";
+            CXGN::DroneImagery::DroneImageryAnalyticsRunSimulation::_write_model_csv_row($Fpc,\@line);
 
             foreach my $t_i (0..20) {
                 my $time = $t_i*5/100;
@@ -13604,7 +13624,7 @@ sub perform_drone_imagery_analytics {
             eigen(newc);
             chol2 <- chol(newc);
             finalx <- newx %*% chol2 * sd(x1) + mean(x1);
-            write.table(finalx, file=\''.$sim_env_changing_mat_full_tempfile.'\', row.names=FALSE, col.names=FALSE, sep=\'\t\');"';
+            write.table(finalx, file=\''.$sim_env_changing_mat_full_tempfile.'\', row.names=FALSE, col.names=FALSE, qmethod=\'double\', sep=\'\t\');"';
             # print STDERR Dumper $sim_change_cmd;
             my $status_sim_change = system($sim_change_cmd);
 
@@ -13677,7 +13697,7 @@ sub perform_drone_imagery_analytics {
         colnames(cor_mat) <- data.matrix(mat_agg[,1]);
         range01 <- function(x){(x-min(x))/(max(x)-min(x))};
         cor_mat <- range01(cor_mat);
-        write.table(cor_mat, file=\''.$permanent_environment_structure_env_tempfile2.'\', row.names=TRUE, col.names=TRUE, sep=\'\t\');"';
+        write.table(cor_mat, file=\''.$permanent_environment_structure_env_tempfile2.'\', row.names=TRUE, col.names=TRUE, qmethod=\'double\', sep=\'\t\');"';
         # print STDERR Dumper $pe_rel_cmd;
         my $status_pe_rel = system($pe_rel_cmd);
 
@@ -13773,8 +13793,7 @@ sub perform_drone_imagery_analytics {
         open(my $F, ">", $stats_tempfile) || die "Can't open file ".$stats_tempfile;
             print $F $header_string."\n";
             foreach (@data_matrix_altered_env_3) {
-                my $line = join ',', @$_;
-                print $F "$line\n";
+                CXGN::DroneImagery::DroneImageryAnalyticsRunSimulation::_write_model_csv_row($F,$_);
             }
         close($F);
     }
@@ -13795,7 +13814,7 @@ sub perform_drone_imagery_analytics {
                 my @row = (
                     $accession_id_factor_map{$germplasm_stock_id},
                     $obsunit_stock_id,
-                    $replicate,
+                    (($fixed_effect_type // '') eq 'fixed_effect_trait' ? 0 : CXGN::DroneImagery::DesignFactors::numeric_group_code($recorded_study_design,$replicate,$block,$f90_group_codes)),
                     $t,
                     $plot_rep_time_factor_map{$obsunit_stock_id}->{$replicate}->{$t},
                     $stock_row_col{$obsunit_stock_id}->{plot_id_factor}
@@ -13883,8 +13902,7 @@ sub perform_drone_imagery_analytics {
 
         open(my $F2, ">", $stats_prep2_tempfile) || die "Can't open file ".$stats_prep2_tempfile;
             foreach (@data_matrix_phenotypes_altered_env_3) {
-                my $line = join ',', @$_;
-                print $F2 "$line\n";
+                CXGN::DroneImagery::DroneImageryAnalyticsRunSimulation::_write_model_csv_row($F2,$_);
             }
         close($F2);
     }
@@ -13902,6 +13920,7 @@ sub perform_drone_imagery_analytics {
                 $germplasm_stock_id,
                 $obsunit_stock_id,
                 $replicate,
+                $block,
                 $row_number,
                 $col_number,
                 $accession_id_factor_map{$germplasm_stock_id},
@@ -13936,8 +13955,7 @@ sub perform_drone_imagery_analytics {
         open(my $F, ">", $stats_tempfile_2) || die "Can't open file ".$stats_tempfile_2;
             print $F $header_string."\n";
             foreach (@data_matrix_altered_env_3) {
-                my $line = join ',', @$_;
-                print $F "$line\n";
+                CXGN::DroneImagery::DroneImageryAnalyticsRunSimulation::_write_model_csv_row($F,$_);
             }
         close($F);
     }
@@ -14832,11 +14850,11 @@ sub perform_drone_imagery_analytics {
         cv_step_size <- length(mat[,1]) %/% 5;
         cv_step_size_modulo <- length(mat[,1]) %% 5;
         mat_CV1 <- mat; mat_CV2 <- mat; mat_CV3 <- mat; mat_CV4 <- mat; mat_CV5 <- mat;
-        mat_CV1[c(randomized_positions[1:cv_step_size]),ncol(mat)] <- median(mat[,ncol(mat)]);
-        mat_CV2[c(randomized_positions[(cv_step_size+1):(2*cv_step_size)]),ncol(mat)] <- median(mat[,ncol(mat)]);
-        mat_CV3[c(randomized_positions[((2*cv_step_size)+1):(3*cv_step_size)]),ncol(mat)] <- median(mat[,ncol(mat)]);
-        mat_CV4[c(randomized_positions[((3*cv_step_size)+1):(4*cv_step_size)]),ncol(mat)] <- median(mat[,ncol(mat)]);
-        mat_CV5[c(randomized_positions[((4*cv_step_size)+1):((5*cv_step_size)+cv_step_size_modulo)]),ncol(mat)] <- median(mat[,ncol(mat)]);
+        mat_CV1[fold_positions[[1]],ncol(mat)] <- observed_median;
+        mat_CV2[fold_positions[[2]],ncol(mat)] <- observed_median;
+        mat_CV3[fold_positions[[3]],ncol(mat)] <- observed_median;
+        mat_CV4[fold_positions[[4]],ncol(mat)] <- observed_median;
+        mat_CV5[fold_positions[[5]],ncol(mat)] <- observed_median;
         mat_CV1_2 <- mat; mat_CV2_2 <- mat; mat_CV3_2 <- mat; mat_CV4_2 <- mat; mat_CV5_2 <- mat;
         mat_CV1_2[c(randomized_positions[1:cv_step_size]),ncol(mat)] <- -999;
         mat_CV2_2[c(randomized_positions[(cv_step_size+1):(2*cv_step_size)]),ncol(mat)] <- -999;
@@ -15117,8 +15135,7 @@ sub perform_drone_imagery_analytics {
 
         while ( my ($accession_name, $coeffs) = each %rr_genetic_coefficients_altered_env_3) {
             my @line = ($accession_name, @$coeffs);
-            my $line_string = join ',', @line;
-            print $Fgc "$line_string\n";
+            CXGN::DroneImagery::DroneImageryAnalyticsRunSimulation::_write_model_csv_row($Fgc,\@line);
 
             foreach my $t_i (0..20) {
                 my $time = $t_i*5/100;
@@ -15173,8 +15190,7 @@ sub perform_drone_imagery_analytics {
 
         while ( my ($plot_name, $coeffs) = each %rr_temporal_coefficients_altered_env_3) {
             my @line = ($plot_name, @$coeffs);
-            my $line_string = join ',', @line;
-            print $Fpc "$line_string\n";
+            CXGN::DroneImagery::DroneImageryAnalyticsRunSimulation::_write_model_csv_row($Fpc,\@line);
 
             foreach my $t_i (0..20) {
                 my $time = $t_i*5/100;
@@ -16761,7 +16777,7 @@ sub perform_drone_imagery_analytics {
             eigen(newc);
             chol2 <- chol(newc);
             finalx <- newx %*% chol2 * sd(x1) + mean(x1);
-            write.table(finalx, file=\''.$sim_env_changing_mat_full_tempfile.'\', row.names=FALSE, col.names=FALSE, sep=\'\t\');"';
+            write.table(finalx, file=\''.$sim_env_changing_mat_full_tempfile.'\', row.names=FALSE, col.names=FALSE, qmethod=\'double\', sep=\'\t\');"';
             # print STDERR Dumper $sim_change_cmd;
             my $status_sim_change = system($sim_change_cmd);
 
@@ -16839,7 +16855,7 @@ sub perform_drone_imagery_analytics {
         colnames(cor_mat) <- data.matrix(mat_agg[,1]);
         range01 <- function(x){(x-min(x))/(max(x)-min(x))};
         cor_mat <- range01(cor_mat);
-        write.table(cor_mat, file=\''.$permanent_environment_structure_env_tempfile2.'\', row.names=TRUE, col.names=TRUE, sep=\'\t\');"';
+        write.table(cor_mat, file=\''.$permanent_environment_structure_env_tempfile2.'\', row.names=TRUE, col.names=TRUE, qmethod=\'double\', sep=\'\t\');"';
         # print STDERR Dumper $pe_rel_cmd;
         my $status_pe_rel = system($pe_rel_cmd);
 
@@ -16935,8 +16951,7 @@ sub perform_drone_imagery_analytics {
         open(my $F, ">", $stats_tempfile) || die "Can't open file ".$stats_tempfile;
             print $F $header_string."\n";
             foreach (@data_matrix_altered_env_4) {
-                my $line = join ',', @$_;
-                print $F "$line\n";
+                CXGN::DroneImagery::DroneImageryAnalyticsRunSimulation::_write_model_csv_row($F,$_);
             }
         close($F);
     }
@@ -16957,7 +16972,7 @@ sub perform_drone_imagery_analytics {
                 my @row = (
                     $accession_id_factor_map{$germplasm_stock_id},
                     $obsunit_stock_id,
-                    $replicate,
+                    (($fixed_effect_type // '') eq 'fixed_effect_trait' ? 0 : CXGN::DroneImagery::DesignFactors::numeric_group_code($recorded_study_design,$replicate,$block,$f90_group_codes)),
                     $t,
                     $plot_rep_time_factor_map{$obsunit_stock_id}->{$replicate}->{$t},
                     $stock_row_col{$obsunit_stock_id}->{plot_id_factor}
@@ -17045,8 +17060,7 @@ sub perform_drone_imagery_analytics {
 
         open(my $F2, ">", $stats_prep2_tempfile) || die "Can't open file ".$stats_prep2_tempfile;
             foreach (@data_matrix_phenotypes_altered_env_4) {
-                my $line = join ',', @$_;
-                print $F2 "$line\n";
+                CXGN::DroneImagery::DroneImageryAnalyticsRunSimulation::_write_model_csv_row($F2,$_);
             }
         close($F2);
     }
@@ -17064,6 +17078,7 @@ sub perform_drone_imagery_analytics {
                 $germplasm_stock_id,
                 $obsunit_stock_id,
                 $replicate,
+                $block,
                 $row_number,
                 $col_number,
                 $accession_id_factor_map{$germplasm_stock_id},
@@ -17098,8 +17113,7 @@ sub perform_drone_imagery_analytics {
         open(my $F, ">", $stats_tempfile_2) || die "Can't open file ".$stats_tempfile_2;
             print $F $header_string."\n";
             foreach (@data_matrix_altered_env_4) {
-                my $line = join ',', @$_;
-                print $F "$line\n";
+                CXGN::DroneImagery::DroneImageryAnalyticsRunSimulation::_write_model_csv_row($F,$_);
             }
         close($F);
     }
@@ -17994,11 +18008,11 @@ sub perform_drone_imagery_analytics {
         cv_step_size <- length(mat[,1]) %/% 5;
         cv_step_size_modulo <- length(mat[,1]) %% 5;
         mat_CV1 <- mat; mat_CV2 <- mat; mat_CV3 <- mat; mat_CV4 <- mat; mat_CV5 <- mat;
-        mat_CV1[c(randomized_positions[1:cv_step_size]),ncol(mat)] <- median(mat[,ncol(mat)]);
-        mat_CV2[c(randomized_positions[(cv_step_size+1):(2*cv_step_size)]),ncol(mat)] <- median(mat[,ncol(mat)]);
-        mat_CV3[c(randomized_positions[((2*cv_step_size)+1):(3*cv_step_size)]),ncol(mat)] <- median(mat[,ncol(mat)]);
-        mat_CV4[c(randomized_positions[((3*cv_step_size)+1):(4*cv_step_size)]),ncol(mat)] <- median(mat[,ncol(mat)]);
-        mat_CV5[c(randomized_positions[((4*cv_step_size)+1):((5*cv_step_size)+cv_step_size_modulo)]),ncol(mat)] <- median(mat[,ncol(mat)]);
+        mat_CV1[fold_positions[[1]],ncol(mat)] <- observed_median;
+        mat_CV2[fold_positions[[2]],ncol(mat)] <- observed_median;
+        mat_CV3[fold_positions[[3]],ncol(mat)] <- observed_median;
+        mat_CV4[fold_positions[[4]],ncol(mat)] <- observed_median;
+        mat_CV5[fold_positions[[5]],ncol(mat)] <- observed_median;
         mat_CV1_2 <- mat; mat_CV2_2 <- mat; mat_CV3_2 <- mat; mat_CV4_2 <- mat; mat_CV5_2 <- mat;
         mat_CV1_2[c(randomized_positions[1:cv_step_size]),ncol(mat)] <- -999;
         mat_CV2_2[c(randomized_positions[(cv_step_size+1):(2*cv_step_size)]),ncol(mat)] <- -999;
@@ -18279,8 +18293,7 @@ sub perform_drone_imagery_analytics {
 
         while ( my ($accession_name, $coeffs) = each %rr_genetic_coefficients_altered_env_4) {
             my @line = ($accession_name, @$coeffs);
-            my $line_string = join ',', @line;
-            print $Fgc "$line_string\n";
+            CXGN::DroneImagery::DroneImageryAnalyticsRunSimulation::_write_model_csv_row($Fgc,\@line);
 
             foreach my $t_i (0..20) {
                 my $time = $t_i*5/100;
@@ -18335,8 +18348,7 @@ sub perform_drone_imagery_analytics {
 
         while ( my ($plot_name, $coeffs) = each %rr_temporal_coefficients_altered_env_4) {
             my @line = ($plot_name, @$coeffs);
-            my $line_string = join ',', @line;
-            print $Fpc "$line_string\n";
+            CXGN::DroneImagery::DroneImageryAnalyticsRunSimulation::_write_model_csv_row($Fpc,\@line);
 
             foreach my $t_i (0..20) {
                 my $time = $t_i*5/100;
@@ -19926,8 +19938,8 @@ sub perform_drone_imagery_analytics {
         }
         $pe_rel_cmd .= 'Rscr <- kronecker(time_corr_matrix,Rscr);
         Resscr <- mvrnorm(1,rep(0,length(Rscr[1,])),Rscr);
-        write.table(Rscr, file=\''.$permanent_environment_structure_env_tempfile.'\', row.names=FALSE, col.names=FALSE, sep=\'\t\');
-        write.table(Resscr, file=\''.$permanent_environment_structure_env_tempfile2.'\', row.names=FALSE, col.names=FALSE, sep=\'\t\');"';
+        write.table(Rscr, file=\''.$permanent_environment_structure_env_tempfile.'\', row.names=FALSE, col.names=FALSE, qmethod=\'double\', sep=\'\t\');
+        write.table(Resscr, file=\''.$permanent_environment_structure_env_tempfile2.'\', row.names=FALSE, col.names=FALSE, qmethod=\'double\', sep=\'\t\');"';
         print STDERR Dumper $pe_rel_cmd;
         my $status_pe_rel = system($pe_rel_cmd);
 
@@ -20066,8 +20078,7 @@ sub perform_drone_imagery_analytics {
         open(my $F, ">", $stats_tempfile) || die "Can't open file ".$stats_tempfile;
             print $F $header_string."\n";
             foreach (@data_matrix_altered_env_5) {
-                my $line = join ',', @$_;
-                print $F "$line\n";
+                CXGN::DroneImagery::DroneImageryAnalyticsRunSimulation::_write_model_csv_row($F,$_);
             }
         close($F);
     }
@@ -20088,7 +20099,7 @@ sub perform_drone_imagery_analytics {
                 my @row = (
                     $accession_id_factor_map{$germplasm_stock_id},
                     $obsunit_stock_id,
-                    $replicate,
+                    (($fixed_effect_type // '') eq 'fixed_effect_trait' ? 0 : CXGN::DroneImagery::DesignFactors::numeric_group_code($recorded_study_design,$replicate,$block,$f90_group_codes)),
                     $t,
                     $plot_rep_time_factor_map{$obsunit_stock_id}->{$replicate}->{$t},
                     $stock_row_col{$obsunit_stock_id}->{plot_id_factor}
@@ -20175,8 +20186,7 @@ sub perform_drone_imagery_analytics {
 
         open(my $F2, ">", $stats_prep2_tempfile) || die "Can't open file ".$stats_prep2_tempfile;
             foreach (@data_matrix_phenotypes_altered_env_5) {
-                my $line = join ',', @$_;
-                print $F2 "$line\n";
+                CXGN::DroneImagery::DroneImageryAnalyticsRunSimulation::_write_model_csv_row($F2,$_);
             }
         close($F2);
     }
@@ -20194,6 +20204,7 @@ sub perform_drone_imagery_analytics {
                 $germplasm_stock_id,
                 $obsunit_stock_id,
                 $replicate,
+                $block,
                 $row_number,
                 $col_number,
                 $accession_id_factor_map{$germplasm_stock_id},
@@ -20228,8 +20239,7 @@ sub perform_drone_imagery_analytics {
         open(my $F, ">", $stats_tempfile_2) || die "Can't open file ".$stats_tempfile_2;
             print $F $header_string."\n";
             foreach (@data_matrix_altered_env_5) {
-                my $line = join ',', @$_;
-                print $F "$line\n";
+                CXGN::DroneImagery::DroneImageryAnalyticsRunSimulation::_write_model_csv_row($F,$_);
             }
         close($F);
     }
@@ -21127,11 +21137,11 @@ sub perform_drone_imagery_analytics {
         cv_step_size <- length(mat[,1]) %/% 5;
         cv_step_size_modulo <- length(mat[,1]) %% 5;
         mat_CV1 <- mat; mat_CV2 <- mat; mat_CV3 <- mat; mat_CV4 <- mat; mat_CV5 <- mat;
-        mat_CV1[c(randomized_positions[1:cv_step_size]),ncol(mat)] <- median(mat[,ncol(mat)]);
-        mat_CV2[c(randomized_positions[(cv_step_size+1):(2*cv_step_size)]),ncol(mat)] <- median(mat[,ncol(mat)]);
-        mat_CV3[c(randomized_positions[((2*cv_step_size)+1):(3*cv_step_size)]),ncol(mat)] <- median(mat[,ncol(mat)]);
-        mat_CV4[c(randomized_positions[((3*cv_step_size)+1):(4*cv_step_size)]),ncol(mat)] <- median(mat[,ncol(mat)]);
-        mat_CV5[c(randomized_positions[((4*cv_step_size)+1):((5*cv_step_size)+cv_step_size_modulo)]),ncol(mat)] <- median(mat[,ncol(mat)]);
+        mat_CV1[fold_positions[[1]],ncol(mat)] <- observed_median;
+        mat_CV2[fold_positions[[2]],ncol(mat)] <- observed_median;
+        mat_CV3[fold_positions[[3]],ncol(mat)] <- observed_median;
+        mat_CV4[fold_positions[[4]],ncol(mat)] <- observed_median;
+        mat_CV5[fold_positions[[5]],ncol(mat)] <- observed_median;
         mat_CV1_2 <- mat; mat_CV2_2 <- mat; mat_CV3_2 <- mat; mat_CV4_2 <- mat; mat_CV5_2 <- mat;
         mat_CV1_2[c(randomized_positions[1:cv_step_size]),ncol(mat)] <- -999;
         mat_CV2_2[c(randomized_positions[(cv_step_size+1):(2*cv_step_size)]),ncol(mat)] <- -999;
@@ -21412,8 +21422,7 @@ sub perform_drone_imagery_analytics {
 
         while ( my ($accession_name, $coeffs) = each %rr_genetic_coefficients_altered_env_5) {
             my @line = ($accession_name, @$coeffs);
-            my $line_string = join ',', @line;
-            print $Fgc "$line_string\n";
+            CXGN::DroneImagery::DroneImageryAnalyticsRunSimulation::_write_model_csv_row($Fgc,\@line);
 
             foreach my $t_i (0..20) {
                 my $time = $t_i*5/100;
@@ -21468,8 +21477,7 @@ sub perform_drone_imagery_analytics {
 
         while ( my ($plot_name, $coeffs) = each %rr_temporal_coefficients_altered_env_5) {
             my @line = ($plot_name, @$coeffs);
-            my $line_string = join ',', @line;
-            print $Fpc "$line_string\n";
+            CXGN::DroneImagery::DroneImageryAnalyticsRunSimulation::_write_model_csv_row($Fpc,\@line);
 
             foreach my $t_i (0..20) {
                 my $time = $t_i*5/100;
@@ -23083,7 +23091,7 @@ sub perform_drone_imagery_analytics {
             eigen(newc);
             chol2 <- chol(newc);
             finalx <- newx %*% chol2 * sd(x1) + mean(x1);
-            write.table(finalx, file=\''.$sim_env_changing_mat_full_tempfile.'\', row.names=FALSE, col.names=FALSE, sep=\'\t\');"';
+            write.table(finalx, file=\''.$sim_env_changing_mat_full_tempfile.'\', row.names=FALSE, col.names=FALSE, qmethod=\'double\', sep=\'\t\');"';
             # print STDERR Dumper $sim_change_cmd;
             my $status_sim_change = system($sim_change_cmd);
 
@@ -23156,7 +23164,7 @@ sub perform_drone_imagery_analytics {
         colnames(cor_mat) <- data.matrix(mat_agg[,1]);
         range01 <- function(x){(x-min(x))/(max(x)-min(x))};
         cor_mat <- range01(cor_mat);
-        write.table(cor_mat, file=\''.$permanent_environment_structure_env_tempfile2.'\', row.names=TRUE, col.names=TRUE, sep=\'\t\');"';
+        write.table(cor_mat, file=\''.$permanent_environment_structure_env_tempfile2.'\', row.names=TRUE, col.names=TRUE, qmethod=\'double\', sep=\'\t\');"';
         # print STDERR Dumper $pe_rel_cmd;
         my $status_pe_rel = system($pe_rel_cmd);
 
@@ -23252,8 +23260,7 @@ sub perform_drone_imagery_analytics {
         open(my $F, ">", $stats_tempfile) || die "Can't open file ".$stats_tempfile;
             print $F $header_string."\n";
             foreach (@data_matrix_altered_env_6) {
-                my $line = join ',', @$_;
-                print $F "$line\n";
+                CXGN::DroneImagery::DroneImageryAnalyticsRunSimulation::_write_model_csv_row($F,$_);
             }
         close($F);
     }
@@ -23274,7 +23281,7 @@ sub perform_drone_imagery_analytics {
                 my @row = (
                     $accession_id_factor_map{$germplasm_stock_id},
                     $obsunit_stock_id,
-                    $replicate,
+                    (($fixed_effect_type // '') eq 'fixed_effect_trait' ? 0 : CXGN::DroneImagery::DesignFactors::numeric_group_code($recorded_study_design,$replicate,$block,$f90_group_codes)),
                     $t,
                     $plot_rep_time_factor_map{$obsunit_stock_id}->{$replicate}->{$t},
                     $stock_row_col{$obsunit_stock_id}->{plot_id_factor}
@@ -23361,8 +23368,7 @@ sub perform_drone_imagery_analytics {
 
         open(my $F2, ">", $stats_prep2_tempfile) || die "Can't open file ".$stats_prep2_tempfile;
             foreach (@data_matrix_phenotypes_altered_env_6) {
-                my $line = join ',', @$_;
-                print $F2 "$line\n";
+                CXGN::DroneImagery::DroneImageryAnalyticsRunSimulation::_write_model_csv_row($F2,$_);
             }
         close($F2);
     }
@@ -23380,6 +23386,7 @@ sub perform_drone_imagery_analytics {
                 $germplasm_stock_id,
                 $obsunit_stock_id,
                 $replicate,
+                $block,
                 $row_number,
                 $col_number,
                 $accession_id_factor_map{$germplasm_stock_id},
@@ -23414,8 +23421,7 @@ sub perform_drone_imagery_analytics {
         open(my $F, ">", $stats_tempfile_2) || die "Can't open file ".$stats_tempfile_2;
             print $F $header_string."\n";
             foreach (@data_matrix_altered_env_6) {
-                my $line = join ',', @$_;
-                print $F "$line\n";
+                CXGN::DroneImagery::DroneImageryAnalyticsRunSimulation::_write_model_csv_row($F,$_);
             }
         close($F);
     }
@@ -24313,11 +24319,11 @@ sub perform_drone_imagery_analytics {
         cv_step_size <- length(mat[,1]) %/% 5;
         cv_step_size_modulo <- length(mat[,1]) %% 5;
         mat_CV1 <- mat; mat_CV2 <- mat; mat_CV3 <- mat; mat_CV4 <- mat; mat_CV5 <- mat;
-        mat_CV1[c(randomized_positions[1:cv_step_size]),ncol(mat)] <- median(mat[,ncol(mat)]);
-        mat_CV2[c(randomized_positions[(cv_step_size+1):(2*cv_step_size)]),ncol(mat)] <- median(mat[,ncol(mat)]);
-        mat_CV3[c(randomized_positions[((2*cv_step_size)+1):(3*cv_step_size)]),ncol(mat)] <- median(mat[,ncol(mat)]);
-        mat_CV4[c(randomized_positions[((3*cv_step_size)+1):(4*cv_step_size)]),ncol(mat)] <- median(mat[,ncol(mat)]);
-        mat_CV5[c(randomized_positions[((4*cv_step_size)+1):((5*cv_step_size)+cv_step_size_modulo)]),ncol(mat)] <- median(mat[,ncol(mat)]);
+        mat_CV1[fold_positions[[1]],ncol(mat)] <- observed_median;
+        mat_CV2[fold_positions[[2]],ncol(mat)] <- observed_median;
+        mat_CV3[fold_positions[[3]],ncol(mat)] <- observed_median;
+        mat_CV4[fold_positions[[4]],ncol(mat)] <- observed_median;
+        mat_CV5[fold_positions[[5]],ncol(mat)] <- observed_median;
         mat_CV1_2 <- mat; mat_CV2_2 <- mat; mat_CV3_2 <- mat; mat_CV4_2 <- mat; mat_CV5_2 <- mat;
         mat_CV1_2[c(randomized_positions[1:cv_step_size]),ncol(mat)] <- -999;
         mat_CV2_2[c(randomized_positions[(cv_step_size+1):(2*cv_step_size)]),ncol(mat)] <- -999;
@@ -24598,8 +24604,7 @@ sub perform_drone_imagery_analytics {
 
         while ( my ($accession_name, $coeffs) = each %rr_genetic_coefficients_altered_env_6) {
             my @line = ($accession_name, @$coeffs);
-            my $line_string = join ',', @line;
-            print $Fgc "$line_string\n";
+            CXGN::DroneImagery::DroneImageryAnalyticsRunSimulation::_write_model_csv_row($Fgc,\@line);
 
             foreach my $t_i (0..20) {
                 my $time = $t_i*5/100;
@@ -24654,8 +24659,7 @@ sub perform_drone_imagery_analytics {
 
         while ( my ($plot_name, $coeffs) = each %rr_temporal_coefficients_altered_env_6) {
             my @line = ($plot_name, @$coeffs);
-            my $line_string = join ',', @line;
-            print $Fpc "$line_string\n";
+            CXGN::DroneImagery::DroneImageryAnalyticsRunSimulation::_write_model_csv_row($Fpc,\@line);
 
             foreach my $t_i (0..20) {
                 my $time = $t_i*5/100;

@@ -17,6 +17,7 @@ Titima Tantikanjana <tt15@cornell.edu>
 package SGN::Controller::AJAX::BreedingProgram;
 
 use Moose;
+use CXGN::Phenotypes::Summary;
 
 BEGIN { extends 'Catalyst::Controller::REST' };
 
@@ -125,17 +126,16 @@ sub phenotype_summary : Chained('ajax_breeding_program') PathPart('phenotypes') 
             JOIN nd_experiment_project USING(nd_experiment_id)
             JOIN nd_experiment_stock USING(nd_experiment_id)
             JOIN stock as plot USING(stock_id)
-            JOIN stock_relationship on (plot.stock_id = stock_relationship.subject_id)
-            JOIN stock as accession on (accession.stock_id = stock_relationship.object_id)
             JOIN dbxref ON cvterm.dbxref_id = dbxref.dbxref_id JOIN db ON dbxref.db_id = db.db_id
         WHERE project_id IN ( $trial_ids )
             AND phenotype.value~?
+
 
         GROUP BY (((cvterm.name::text || '|'::text) || db.name::text) || ':'::text) || dbxref.accession::text, cvterm.cvterm_id
         ORDER BY cvterm.name ASC
        ;");
 
-	my $numeric_regex = '^-?[0-9]+([,.][0-9]+)?$';
+	my $numeric_regex = CXGN::Phenotypes::Summary::numeric_value_regex();
 	$h->execute( @trial_ids , $numeric_regex);
 
         while (my ($trait, $trait_id, $count, $average, $max, $min, $stddev) = $h->fetchrow_array()) {

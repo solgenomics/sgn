@@ -41,6 +41,7 @@ CXGN::Trial::TrialLayoutSearch - Module to get layout information about one or m
 # use warnings;
 use Moose;
 use CXGN::DB::ReadSnapshot;
+use CXGN::Trial::DesignReplication;
 use Try::Tiny;
 use Data::Dumper;
 use SGN::Model::Cvterm;
@@ -350,6 +351,17 @@ sub search {
         };
     }
 
+    my $replication = CXGN::Trial::DesignReplication::read(
+        $schema, [map { $_->{obsunit_stock_id} } @result]);
+    for my $unit (@result) {
+        my $record = $replication->{$unit->{obsunit_stock_id}} || {};
+        $unit->{rep} = $record->{value};
+        $unit->{block} = $record->{block};
+        $unit->{design_replicate_recorded} = $record->{recorded} ? 1 : 0;
+        $unit->{accession_occurrence} = $record->{occurrence_ready} ? $record->{occurrence} : undef;
+        $unit->{accession_occurrence_ready} = $record->{occurrence_ready} ? 1 : 0;
+    }
+
     # Fetch treatments per stock from the phenotype table.
     # Grouped by (stock_id, treatment_id_str, value) to produce one entry per unique application.
     my %treatments_by_stock;
@@ -408,7 +420,7 @@ sub _include_observations {
         data_level=>$self->data_level,
         plot_list=>$observation_units,
         order_by=>"plot_number",
-        include_timestamp=>1,
+        include_timestamp=>1
     });
     my ($data, $unique_traits) = $phenotypes_search->search();
 

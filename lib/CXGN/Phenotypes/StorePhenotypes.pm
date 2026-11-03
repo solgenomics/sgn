@@ -840,9 +840,9 @@ sub check_measurement {
     return ($warning_message, $error_message);
 }
 
-# Serialize concurrent writers and layout changes, including a sample's source trial.
+# Serialize with accession changes, including a sample's source trial.
 # NO KEY UPDATE permits ordinary FK checks while holding the same project
-# rows that protect the associated observation units.
+# rows used by AccessionChange and the observation-unit writer.
 sub _lock_observation_projects {
     my ($self)=@_;
     my $schema=$self->bcs_schema;

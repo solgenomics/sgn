@@ -598,6 +598,7 @@ sub generate_predictions_POST : Args(0) {
             col_number => $v->{col_number},
             row_number => $v->{row_number},
             rep_number => $v->{rep_number},
+                design_rep_number => $v->{design_rep_number},
             block_number => $v->{block_number},
             is_a_control => $v->{is_a_control}
         };

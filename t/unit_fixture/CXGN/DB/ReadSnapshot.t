@@ -1,8 +1,8 @@
 use strict;use warnings;use lib 't/lib';
 use Test::More;use JSON qw(encode_json);
 use SGN::Test::Fixture;use SGN::Model::Cvterm;use Bio::Chado::Schema;
-use CXGN::Trial::TrialCreate;use CXGN::Trial::TrialLayout;
-use CXGN::Phenotypes::SearchFactory;
+use CXGN::Trial::TrialCreate;use CXGN::Trial::TrialLayout;use CXGN::Trial::AccessionChange;use CXGN::Trial::DesignReplication;
+use CXGN::Phenotypes::SearchFactory;use CXGN::Trial::TrialLayoutSearch;use CXGN::BrAPI::v2::ObservationUnits;
 
 # Private committed fixtures are necessary for the independent writer to see
 # the same rows. Cleanup targets captured IDs; never use global fixture cleanup.
@@ -12,16 +12,7 @@ my$prefix='audit_read_snapshot_'.$$;my($trial,$target,$phenotype,@plots,@stocks)
 {package SnapshotContext;sub config {$_[0]{config}}}
 my$context=bless({config=>$c},'SnapshotContext');
 sub term{SGN::Model::Cvterm->get_cvterm_row($s,@_)->cvterm_id}
-# Both values are ordinary legacy metadata in this independent PR. The later
-# accession service is not required to reproduce a two-statement read race.
-sub change {
- my ($new)=@_;my $label=$new==$stocks[0] ? 2:1;
- $writer->txn_do(sub {
-  $writer->storage->dbh->do('UPDATE stock_relationship SET object_id=? WHERE subject_id=? AND type_id=?',undef,$new,$target,term('plot_of','stock_relationship'));
-  $writer->storage->dbh->do('UPDATE stockprop SET value=? WHERE stock_id=? AND type_id=?',undef,$label,$target,term('replicate','stock_property'));
-  CXGN::Trial::TrialLayout->new({schema=>$writer,trial_id=>$trial,experiment_type=>'field_layout'})->generate_and_cache_layout;
- });
-}
+sub change{my($new)=@_;CXGN::Trial::AccessionChange->new({schema=>$writer,trial_id=>$trial})->apply([{plot_id=>$target,new_stock_id=>$new}],{curator=>1,rename_plots=>'none'})}
 sub current_pair{my($stock,$counter)=$writer->storage->dbh->selectrow_array('SELECT r.object_id,p.value FROM stock_relationship r LEFT JOIN stockprop p ON p.stock_id=r.subject_id AND p.type_id=? WHERE r.subject_id=? AND r.type_id=?',undef,term('replicate','stock_property'),$target,term('plot_of','stock_relationship'));return[$stock,$counter]}
 sub cleanup{
  return unless$trial;eval{$s->txn_rollback}if!$dbh->{AutoCommit};
@@ -39,30 +30,35 @@ my$ran=eval{
  @stocks=map{$s->resultset('Stock::Stock')->find({uniquename=>"test_accession$_"})->stock_id}(1,2);
  $s->txn_do(sub{
   my%layout=map{my$i=$_;($i=>{plot_name=>"${prefix}_plot_$i",stock_name=>"test_accession$i",plot_number=>$i,rep_number=>9,block_number=>9,row_number=>1,col_number=>$i})}1..2;
-  my$r=CXGN::Trial::TrialCreate->new({chado_schema=>$s,dbh=>$dbh,owner_id=>41,operator=>'janedoe',program=>'test',trial_location=>'test_location',trial_name=>$prefix,trial_year=>2031,trial_description=>'Private generic read consistency fixture',design_type=>'CRD',design=>\%layout})->save_trial;$trial=$r->{trial_id};die'Native fixture failed'if!$trial;
+  my$r=CXGN::Trial::TrialCreate->new({chado_schema=>$s,dbh=>$dbh,owner_id=>41,operator=>'janedoe',program=>'test',trial_location=>'test_location',trial_name=>$prefix,trial_year=>2031,trial_description=>'Private committed two-connection read consistency fixture',design_type=>'CRD',design=>\%layout})->save_trial;$trial=$r->{trial_id};die'Native fixture failed'if!$trial;
   @plots=map{$s->resultset('Stock::Stock')->find({uniquename=>"${prefix}_plot_$_"})->stock_id}1..2;$target=$plots[1];
   my$type=term('phenotyping_experiment','experiment_type');my$e=$s->resultset('NaturalDiversity::NdExperiment')->create({type_id=>$type,nd_geolocation_id=>$s->resultset('NaturalDiversity::NdGeolocation')->first->nd_geolocation_id});$e->create_related('nd_experiment_projects',{project_id=>$trial});$e->create_related('nd_experiment_stocks',{stock_id=>$target,type_id=>$type});
   my$p=$s->resultset('Phenotype::Phenotype')->create({uniquename=>$prefix.'_measurement',cvalue_id=>70666,observable_id=>70666,value=>17,operator=>'janedoe'});$phenotype=$p->phenotype_id;$e->create_related('nd_experiment_phenotypes',{phenotype_id=>$phenotype});
  });
- ok($trial&&$target&&$phenotype,'private native fixture committed for independent generic reader/writer connections');
- change($stocks[1]);
- my $get_design=CXGN::Trial::TrialLayout::AbstractLayout->can('get_design');
- my ($armed,$hooks)=(1,0);
- {
-  no warnings 'redefine';
-  local *CXGN::Trial::TrialLayout::AbstractLayout::get_design=sub {
-   my $layout=$get_design->(@_);
-   if ($armed) {$armed=0;++$hooks;change($stocks[0]);}
-   return $layout;
+ ok($trial&&$target&&$phenotype,'private native fixture committed for independent connections');
+ my$original=\&CXGN::Trial::DesignReplication::read;
+ for my$kind(qw(Native TrialLayoutSearch BrAPIUnit)){
+  change($stocks[1]);
+  my($armed,$hooks)=(1,0);my$boundary=$kind eq'Native'?'CXGN::Phenotypes::Search::Native::search':'CXGN::Trial::TrialLayoutSearch::search';
+  no warnings 'redefine';local*CXGN::Trial::DesignReplication::read=sub{
+   my$caller=(caller(1))[3]//'';
+   if($armed&&$caller eq$boundary){$armed=0;++$hooks;change($stocks[0])}
+   return$original->(@_);
   };
-  my ($rows)=CXGN::Phenotypes::SearchFactory->instantiate('Native',{bcs_schema=>$s,data_level=>'plot',trial_list=>[$trial],plot_list=>[$target],trait_list=>[70666]})->search;
-  my ($row)=grep {defined($_->{phenotype_id})&&$_->{phenotype_id}==$phenotype} @$rows;
-  die 'Native measured row missing' if !$row;
-  is($hooks,1,'independent writer committed between actual layout and observation reads');
-  is_deeply(current_pair(),[$stocks[0],2],'independent identity and metadata changes are committed');
-  is_deeply([$row->{accession_stock_id},$row->{rep}],[$stocks[1],1],
-   'Native returns one old snapshot instead of the new identity with old layout metadata');
-  ok($dbh->{AutoCommit},'actual Native read restores its owned connection');
+  my$pair;
+  if($kind eq'Native'){
+   my($rows)=CXGN::Phenotypes::SearchFactory->instantiate('Native',{bcs_schema=>$s,data_level=>'plot',trial_list=>[$trial],plot_list=>[$target],trait_list=>[70666]})->search;
+   my($row)=grep{defined($_->{phenotype_id})&&$_->{phenotype_id}==$phenotype}@$rows;die'Native measured row missing'if!$row;$pair=[$row->{accession_stock_id},$row->{obsunit_accession_occurrence}];
+  }elsif($kind eq'TrialLayoutSearch'){
+   my($rows)=CXGN::Trial::TrialLayoutSearch->new({bcs_schema=>$s,data_level=>'plot',trial_list=>[$trial],observation_unit_id_list=>[$target]})->search;die'Layout expected one row'if@$rows!=1;$pair=[$rows->[0]{germplasm_stock_id},$rows->[0]{accession_occurrence}];
+  }else{
+   my$r=CXGN::BrAPI::v2::ObservationUnits->new({bcs_schema=>$s,metadata_schema=>$f->metadata_schema,phenome_schema=>$f->phenome_schema,people_schema=>$f->people_schema,context=>$context,page=>0,page_size=>10,status=>[]})->detail($target,$context);die'Unit detail failed '.encode_json($r)if!$r->{result};$pair=[$r->{result}{germplasmDbId},$r->{result}{additionalInfo}{accessionOccurrence}];
+  }
+  is($hooks,1,"$kind hook fired once at the actual pre-enrichment boundary");
+  is_deeply(current_pair(),[$stocks[0],2],"$kind independent actual service correction committed A plus occurrence2");
+  my$coherent=($pair->[0]==$stocks[1]&&defined($pair->[1])&&$pair->[1]==1)||($pair->[0]==$stocks[0]&&defined($pair->[1])&&$pair->[1]==2);
+  ok($coherent,"$kind read never combines the old B identity with new A occurrence")or diag(encode_json({reader=>$kind,returned=>$pair,live=>current_pair()}));
+  ok($dbh->{AutoCommit},"$kind reader leaves its connection outside an owned transaction");
  }
  if (!$ENV{AUDIT_SNAPSHOT_BASELINE}) {
   require CXGN::DB::ReadSnapshot;

@@ -455,7 +455,8 @@ sub create_cross_wishlist_submit_POST : Args(0) {
             my $accession_id = $value->{accession_id};
             my $plot_number = $value->{plot_number};
             my $block_number = $value->{block_number} || '';
-            my $rep_number = $value->{rep_number} || '';
+            my $rep_number = $value->{design_rep_number} // '';
+            $rep_number =~ s/"/""/g; # quoted CSV metadata, including literal group labels
             my $row_number = $value->{row_number} || '';
             my $col_number = $value->{col_number} || '';
             my $is_a_control = $value->{is_a_control} || '';
@@ -581,7 +582,8 @@ sub create_cross_wishlist_submit_POST : Args(0) {
             my $accession_id = $female->{accession_id};
             my $plot_number = $female->{plot_number};
             my $block_number = $female->{block_number} || '';
-            my $rep_number = $female->{rep_number} || '';
+            my $rep_number = $female->{design_rep_number} // '';
+            $rep_number =~ s/"/""/g; # quoted CSV metadata, including literal group labels
             my $num_males = 0;
             my $plant_names = $female->{plant_names};
             my $plant_ids = $female->{plant_ids};

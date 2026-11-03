@@ -119,9 +119,12 @@ sub prepare: Path('/ajax/mixedmodels/prepare') Args(0) {
 
     # only use if factor has multiple levels, start from appropriate hardcoded list
     #
-    my @factors = qw | studyYear programName studyName studyDesign plantingDate locationName replicate rowNumber colNumber germplasmName|;
+    my @factors = qw | studyYear programName studyName studyDesign plantingDate locationName designReplicate blockNumber rowNumber colNumber germplasmName|;
     foreach my $factor (@factors) {
-	if ($pf->distinct_levels_for_factor($factor) > 1) {
+        my $source_factor = $factor eq 'designReplicate' && !exists($pf->levels()->{designReplicate}) ? 'replicate' : $factor;
+        my @designs = keys %{$pf->levels()->{studyDesign}->{fields} || {}};
+        next if ($factor eq 'designReplicate' || $factor eq 'blockNumber') && grep { /^(?:CRD|completely randomi[sz]ed)$/i } @designs;
+	if ($pf->distinct_levels_for_factor($source_factor) > 1) {
 	    push @factor_select, $factor;
 	}
     }
@@ -312,7 +315,7 @@ sub result_file_to_hash {
     my $file = shift;
 
     print STDERR "result_file_to_hash(): Processing file $file...\n";
-    my @lines = read_file($file);
+    my @lines = read_file($file, binmode => ":encoding(UTF-8)");
     chomp(@lines);
 
     my $header_line = shift(@lines);
@@ -374,7 +377,7 @@ sub extract_trait_data :Path('/ajax/mixedmodels/grabdata') Args(0) {
     my $temppath = File::Spec->catfile($c->config->{basepath}, "static/documents/tempfiles/mixedmodels/".$file);
 
     my $F;
-    if (! open($F, "<", $temppath)) {
+    if (! open($F, "<:encoding(UTF-8)", $temppath)) {
 	$c->stash->{rest} = { error => "Can't find data." };
 	return;
     }

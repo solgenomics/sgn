@@ -91,7 +91,7 @@ sub xls {
             # Design replication is a tag ("01" differs from "1"). Keep real
             # numeric measurements and the occurrence counter numeric.
             my $text = $name =~ /(?:_name|Name)$/ ||
-                $name =~ /^(?:replicate|rep_number|design_rep_number|designReplicate|blockNumber|block_number|reject_reason)$/;
+                $name =~ /^(?:replicate|rep_number|design_rep_number|designReplicate|blockNumber|block_number)$/;
             if (defined($value) && ($line == 0 || $text || $value =~ /^=/)) {
                 $ws->write_string($line, $column, $value);
             } else {

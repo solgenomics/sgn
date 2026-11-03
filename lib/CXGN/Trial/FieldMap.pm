@@ -90,7 +90,9 @@ sub display_fieldmap {
         my $row_number = $v->{row_number};
         my $col_number = $v->{col_number};
         my $block_number = $v->{block_number};
-        my $rep_number = $v->{rep_number};
+        my $rep_number = $v->{design_rep_number};
+        my $accession_occurrence = $v->{accession_occurrence_ready} ? $v->{rep_number} : undef;
+        my $rep_coordinate = defined($rep_number) && $rep_number =~ /^[1-9]\d*$/ ? $rep_number : undef;
         my $plot_name = $v->{plot_name};
         my $accession_name = $v->{accession_name};
         my $plant_names = $v->{plant_names};
@@ -115,16 +117,16 @@ sub display_fieldmap {
                 $row_number = $block_number;
                 push @row_numbers, $row_number;
             }
-            elsif ($rep_number && !$block_number && $design_type ne 'splitplot'){
-                $row_number = $rep_number;
+            elsif (defined($rep_coordinate) && !$block_number && $design_type ne 'splitplot'){
+                $row_number = $rep_coordinate;
                 push @row_numbers, $row_number;
             }
             elsif ($design_type eq 'splitplot'){
-                $row_number = $rep_number;
+                $row_number = $rep_coordinate;
                 push @row_numbers, $row_number;
             }
         }
-        if ($rep_number) {
+        if (defined($rep_number) && $rep_number ne '') {
             push @rep_numbers, $rep_number;
         }
         if ($block_number) {
@@ -144,6 +146,8 @@ sub display_fieldmap {
             col_number => $col_number,
             block_number=> $block_number,
             rep_number =>  $rep_number,
+            design_rep_number => $rep_number,
+            accession_occurrence => $accession_occurrence,
             plot_name => $plot_name,
             accession_name => $accession_name,
             plant_names => $plant_names,
@@ -175,12 +179,12 @@ sub display_fieldmap {
         push @plot_numbers, $hash->{'plot_number'};
         push @stocks_hm, $hash->{'accession_name'};
     	if (scalar(@{$hash->{"plant_names"}}) < 1) {
-    	    $plot_popUp = $hash->{'plot_name'}."\nplot_No:".$hash->{'plot_number'}."\nblock_No:".$hash->{'block_number'}."\nrep_No:".$hash->{'rep_number'}."\nstock:".$hash->{'accession_name'};
+        $plot_popUp = $hash->{'plot_name'}."\nplot_No:".$hash->{'plot_number'}."\nblock_No:".$hash->{'block_number'}."\ndesign_group:".$hash->{'rep_number'}."\naccession_occurrence:".($hash->{'accession_occurrence'} // 'unknown')."\nstock:".$hash->{'accession_name'};
     	}
     	else {
-    	    $plot_popUp = $hash->{'plot_name'}."\nplot_No:".$hash->{'plot_number'}."\nblock_No:".$hash->{'block_number'}."\nrep_No:".$hash->{'rep_number'}."\nstock:".$hash->{'accession_name'}."\nnumber_of_plants:".scalar(@{$hash->{"plant_names"}});
+        $plot_popUp = $hash->{'plot_name'}."\nplot_No:".$hash->{'plot_number'}."\nblock_No:".$hash->{'block_number'}."\ndesign_group:".$hash->{'rep_number'}."\naccession_occurrence:".($hash->{'accession_occurrence'} // 'unknown')."\nstock:".$hash->{'accession_name'}."\nnumber_of_plants:".scalar(@{$hash->{"plant_names"}});
     	}
-    	push @$result,  {plotname => $hash->{'plot_name'}, plot_id => $hash->{'plot_id'}, stock => $hash->{'accession_name'}, plotn => $hash->{'plot_number'}, blkn=>$hash->{'block_number'}, rep=>$hash->{'rep_number'}, row=>$hash->{'row_number'}, plot_image_ids=>$hash->{'plot_image_ids'}, col=>$hash->{'col_number'}, plot_msg=>$plot_popUp} ;
+        push @$result,  {plotname => $hash->{'plot_name'}, plot_id => $hash->{'plot_id'}, stock => $hash->{'accession_name'}, plotn => $hash->{'plot_number'}, blkn=>$hash->{'block_number'}, rep=>$hash->{'rep_number'}, design_rep_number=>$hash->{'design_rep_number'}, accession_occurrence=>$hash->{'accession_occurrence'}, row=>$hash->{'row_number'}, plot_image_ids=>$hash->{'plot_image_ids'}, col=>$hash->{'col_number'}, plot_msg=>$plot_popUp} ;
     }
     #print STDERR Dumper(\@col_numbers);
     #print STDERR Dumper($result);
@@ -196,10 +200,10 @@ sub display_fieldmap {
     	if ($my_hash->{'row_number'}) {
     	    if ($my_hash->{'row_number'} =~ m/\d+/) {
                 if (scalar(@{$my_hash->{"plant_names"}}) < 1) {
-                    $array_msg[$my_hash->{'row_number'}-1][$my_hash->{'col_number'}-1] = "rep_number: ".$my_hash->{'rep_number'}."\nblock_number: ".$my_hash->{'block_number'}."\nrow_number: ".$my_hash->{'row_number'}."\ncol_number: ".$my_hash->{'col_number'}."\naccession_name: ".$my_hash->{'accession_name'}."\nPlot_name: ".$my_hash->{'plot_name'};
+                    $array_msg[$my_hash->{'row_number'}-1][$my_hash->{'col_number'}-1] = "design_group: ".($my_hash->{'design_rep_number'} // 'unknown')."\naccession_occurrence: ".($my_hash->{'accession_occurrence'} // 'unknown')."\nblock_number: ".$my_hash->{'block_number'}."\nrow_number: ".$my_hash->{'row_number'}."\ncol_number: ".$my_hash->{'col_number'}."\naccession_name: ".$my_hash->{'accession_name'}."\nPlot_name: ".$my_hash->{'plot_name'};
                 }
                 else {
-                    $array_msg[$my_hash->{'row_number'}-1][$my_hash->{'col_number'}-1] = "rep_number: ".$my_hash->{'rep_number'}."\nblock_number: ".$my_hash->{'block_number'}."\nrow_number: ".$my_hash->{'row_number'}."\ncol_number: ".$my_hash->{'col_number'}."\naccession_name: ".$my_hash->{'accession_name'}."\nnumber_of_plants:".scalar(@{$my_hash->{"plant_names"}})."\nPlot_name: ".$my_hash->{'plot_name'};
+                    $array_msg[$my_hash->{'row_number'}-1][$my_hash->{'col_number'}-1] = "design_group: ".($my_hash->{'design_rep_number'} // 'unknown')."\naccession_occurrence: ".($my_hash->{'accession_occurrence'} // 'unknown')."\nblock_number: ".$my_hash->{'block_number'}."\nrow_number: ".$my_hash->{'row_number'}."\ncol_number: ".$my_hash->{'col_number'}."\naccession_name: ".$my_hash->{'accession_name'}."\nnumber_of_plants:".scalar(@{$my_hash->{"plant_names"}})."\nPlot_name: ".$my_hash->{'plot_name'};
                 }
                 $plot_id[$my_hash->{'row_number'}-1][$my_hash->{'col_number'}-1] = $my_hash->{'plot_id'};
                 $plot_number[$my_hash->{'row_number'}-1][$my_hash->{'col_number'}-1] = $my_hash->{'plot_number'};
@@ -224,7 +228,9 @@ sub display_fieldmap {
 
     my @sorted_block = sort@block_numbers;
     my @uniq_block = uniq(@sorted_block);
-    my ($min_rep, $max_rep) = minmax @rep_numbers;
+    # Only numeric tags can describe the legacy numeric map scale.
+    my @numeric_reps = grep {defined($_) && /^[0-9]+$/} @rep_numbers;
+    my ($min_rep, $max_rep) = minmax @numeric_reps;
     my ($min_block, $max_block) = minmax @block_numbers;
     my ($min_col, $max_col) = minmax @col_numbers;
     my ($min_row, $max_row) = minmax @row_numbers;
@@ -302,16 +308,16 @@ sub update_fieldmap_precheck {
         bcs_schema => $self->bcs_schema,
         trial_id => $trial_id
     });
-    my $triat_name = $trial->get_traits_assayed();
-    #print STDERR Dumper($triat_name);
+    # treatments are part of the design, not traits assayed
+    my @traits = grep { $_->[1] !~ /_TREATMENT:/ } @{ $trial->get_traits_assayed() };
 
-    if (scalar(@{$triat_name}) != 0)  {
-        $error = "One or more traits have been assayed for this trial; Map/Layout can not be modified. Please contact us.";
+    if (scalar(@traits) != 0)  {
+        $error = "One or more traits have been assayed for this trial, so its map and layout are locked; where the page offers it, a curator can still change them after a warning.";
         return $error;
     }
     my $seedlots = $trial->get_seedlots();
     if (scalar(@$seedlots) != 0){
-        $error = "Seedlots have already been saved as the source material for the plots in this trial. Map/Layout can not be modified. Please contact us.";
+        $error = "Seedlots have already been saved as the source material for the plots in this trial, so its map and layout are locked; where the page offers it, a curator can still change them after a warning.";
     }
     return $error;
 }
@@ -341,273 +347,6 @@ sub substitute_accession_precheck {
         $error = "Accessions used as control/check can't be substituted between plots...";
     }
     return $error;
-}
-
-sub substitute_accession_fieldmap {
-    my $self = shift;
-    my $error;
-    my $plot_1_id = $self->first_plot_selected;
-    my $plot_2_id = $self->second_plot_selected;
-    my $dbh = $self->bcs_schema->storage->dbh;
-
-    my @plot_1_objectIDs;
-    my @plot_2_objectIDs;
-    my $h = $dbh->prepare("select object_id from stock_relationship where subject_id=?;");
-    $h->execute($plot_1_id);
-    while (my $plot_1_objectID = $h->fetchrow_array()) {
-        push @plot_1_objectIDs, $plot_1_objectID;
-    }
-
-    my $h1 = $dbh->prepare("select object_id from stock_relationship where subject_id=?;");
-    $h1->execute($plot_2_id);
-    while (my $plot_2_objectID = $h1->fetchrow_array()) {
-        push @plot_2_objectIDs, $plot_2_objectID;
-    }
-
-    for (my $n=0; $n<scalar(@plot_2_objectIDs); $n++) {
-        my $h2 = $dbh->prepare("update stock_relationship set object_id =? where object_id=? and subject_id=?;");
-        $h2->execute($plot_1_objectIDs[$n],$plot_2_objectIDs[$n],$plot_2_id);
-    }
-
-    for (my $n=0; $n<scalar(@plot_2_objectIDs); $n++) {
-        my $h2 = $dbh->prepare("update stock_relationship set object_id =? where object_id=? and subject_id=?;");
-        $h2->execute($plot_2_objectIDs[$n],$plot_1_objectIDs[$n],$plot_1_id);
-    }
-
-    $self->_regenerate_trial_layout_cache();
-
-    return $error;
-}
-
-sub replace_plot_accession_fieldMap {
-    my $self = shift;
-    my $plot_id = shift;
-    my $old_accession_id = shift;
-    my $new_accession_id = shift;
-    my $plot_of_type_id = shift;
-    my $error;
-    my $schema = $self->bcs_schema;
-    my $dbh = $self->bcs_schema->storage->dbh;
-
-    my $stockprop_rs = $schema->resultset("Stock::StockRelationship")->search({
-        subject_id => $plot_id,
-        # object_id => $old_accession_id,   #in future updates, this line may be uncommented to allow for multiple accessions per plot and swapping only one at a time
-        type_id => $plot_of_type_id
-    });
-
-    if ($stockprop_rs->count == 1) {
-        $stockprop_rs->update({
-            object_id => $new_accession_id,
-        });
-    }
-    elsif ($stockprop_rs->count > 1) {
-        $error = "There should only be one accession linked to the plot via plot_of\n";
-    } else {
-        $error = "Plot entry does not exist in database.\n";
-    }
-
-    my $plot = CXGN::Stock->new({
-        schema => $schema,
-        stock_id => $plot_id,
-        type => 'plot'
-    });
-
-    my $child_stocks = $plot->get_child_stocks_flat_list();
-
-    foreach my $child (@$child_stocks) {
-        my $stock_id = $child->{stock_id};
-        if ($child->{type} eq "plant") {
-            my $plant_accession_rs = $schema->resultset("Stock::StockRelationship")->search({
-                subject_id => $stock_id,
-                object_id => $old_accession_id
-            });
-            if ($plant_accession_rs->count == 1) {
-                $plant_accession_rs->update({
-                    object_id => $new_accession_id
-                });
-            } else {
-                $error = "Strange: plant with id $stock_id has either no accession or multiple accessions.\n";
-            }
-        }
-        if ($child->{type} eq "subplot") {
-            my $subplot_accession_rs = $schema->resultset("Stock::StockRelationship")->search({
-                subject_id => $stock_id,
-                object_id => $old_accession_id
-            });
-            $subplot_accession_rs->update({
-                object_id => $new_accession_id
-            });
-        }
-        if ($child->{type} eq "tissue_sample") {
-            my $ts_accession_rs = $schema->resultset("Stock::StockRelationship")->search({
-                subject_id => $stock_id,
-                object_id => $old_accession_id
-            });
-            if ($ts_accession_rs->count == 1) {
-                $ts_accession_rs->update({
-                    object_id => $new_accession_id
-                });
-            } else {    
-                $error = "Strange: tissue sample with id $stock_id has either no accession or multiple accessions.\n";
-            }
-        }
-    }
-
-    # $self->_regenerate_trial_layout_cache();
-
-    return $error;
-
-}
-
-sub replace_plot_name_fieldMap {
-    my $self = shift;
-    my $plot_id = shift;
-    my $old_plot_name = shift;
-    my $new_plot_name = shift;
-    my $error;
-    my $schema = $self->bcs_schema;
-
-    my $new_plot_name_validator = CXGN::List::Validate->new();
-    my $valid_new_plot_name = @{$new_plot_name_validator->validate($schema,'plots',[$new_plot_name])->{'missing'}};
-    if (!$valid_new_plot_name) {
-        $error .= "Plot name $new_plot_name already exists in the database";
-        return $error;  # nothing is renamed, neither plants nor samples
-    } else {
-        my $plot_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'plot', 'stock_type')->cvterm_id();
-        my $stock_rs = $schema->resultset("Stock::Stock")->search(
-        {
-            stock_id => $plot_id,
-            type_id => $plot_type_id,
-        });
-
-    	$stock_rs->update(
-        {
-            uniquename => $new_plot_name,
-            name => $new_plot_name
-        });
-    }
-
-    my $plot = CXGN::Stock->new({
-        schema => $schema,
-        stock_id => $plot_id,
-        type => 'plot'
-    });
-
-    my $child_stocks = $plot->get_child_stocks_flat_list();
-
-    foreach my $child (@$child_stocks) {
-        my $stock_id = $child->{stock_id};
-        my $stock_rs = $schema->resultset("Stock::Stock")->search({
-            stock_id => $stock_id,
-        });
-        # only names that start with the plot name, which may contain regex characters
-        my $new_name = $child->{name} =~ s/^\Q$old_plot_name\E/$new_plot_name/r;
-        next if $new_name eq $child->{name};
-        $stock_rs->update({
-            name => $new_name,
-            uniquename => $new_name
-        });
-    }
-
-    # $self->_regenerate_trial_layout_cache();
-
-    return $error;
-}
-
-
-sub replace_trial_stock_fieldMap {
-    my $self = shift;
-    my $new_stock = shift;
-    my $old_stock_id = shift;
-    my $error;
-    my $schema = $self->bcs_schema;
-    my $dbh = $self->bcs_schema->storage->dbh;
-    my $trial_id = $self->trial_id;
-    my $trial_stock_type = $self->trial_stock_type;
-
-    print "New Stock: $new_stock and OLD Stock: $old_stock_id\n";
-
-    my $new_stock_id = $schema->resultset("Stock::Stock")->search({uniquename => $new_stock})->first->stock_id();
-    my $accession_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'accession', 'stock_type' )->cvterm_id();
-    my $family_name_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'family_name', 'stock_type' )->cvterm_id();
-    my $cross_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'cross', 'stock_type' )->cvterm_id();
-    my $field_trial_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, "field_layout", "experiment_type")->cvterm_id();
-    my $plot_of_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, "plot_of", "stock_relationship")->cvterm_id();
-    my $tissue_sample_of_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, "tissue_sample_of", "stock_relationship")->cvterm_id();
-    my $plant_of_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, "plant_of", "stock_relationship")->cvterm_id();
-    my $subplot_of_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, "subplot_of", "stock_relationship")->cvterm_id();
-
-    my $h_update = $dbh->prepare("UPDATE stock_relationship SET object_id=? 
-    WHERE stock_relationship_id IN 
-        (SELECT stock_relationship.stock_relationship_id FROM stock AS accession 
-        JOIN stock_relationship ON (accession.stock_id = stock_relationship.object_id) 
-        JOIN stock AS plot ON (plot.stock_id = stock_relationship.subject_id) 
-        JOIN nd_experiment_stock ON (plot.stock_id=nd_experiment_stock.stock_id) 
-        JOIN nd_experiment USING(nd_experiment_id) 
-        JOIN nd_experiment_project USING(nd_experiment_id) 
-        JOIN project USING(project_id) 
-        WHERE accession.type_id =? AND stock_relationship.type_id IN (?,?,?,?) AND project.project_id =? AND nd_experiment.type_id=?) AND object_id=?;");
-    if ($trial_stock_type eq 'family_name') {
-        $h_update->execute($new_stock_id,$family_name_cvterm_id,$plot_of_cvterm_id,$plant_of_cvterm_id,$subplot_of_cvterm_id,$tissue_sample_of_cvterm_id,$trial_id,$field_trial_cvterm_id,$old_stock_id);
-    }
-    elsif ($trial_stock_type eq 'cross') {
-        $h_update->execute($new_stock_id,$cross_cvterm_id,$plot_of_cvterm_id,$plant_of_cvterm_id,$subplot_of_cvterm_id,$tissue_sample_of_cvterm_id,$trial_id,$field_trial_cvterm_id,$old_stock_id);
-    }
-    else {
-        $h_update->execute($new_stock_id,$accession_cvterm_id,$plot_of_cvterm_id,$plant_of_cvterm_id,$subplot_of_cvterm_id,$tissue_sample_of_cvterm_id,$trial_id,$field_trial_cvterm_id,$old_stock_id);
-    }
-
-    # $self->_regenerate_trial_layout_cache();
-
-    return $error;
-}
-
-# The purpose of this function is to recalculate replicate numbers using plot numbers after an accession swap has occurred, then save the new rep numbers.
-# takes as argument a hash of accessions with the plot IDs and plot numbers of the plots with those accessions. Plots are sorted based on their plot number and 
-# assigned new rep numbers.
-# data structure generated in trial_change_plot_accessions_upload in TrialMetadata.pm. The structure is 
-# accession_id->{
-#   start -> {plot->{plot_number}...more plots...},
-#   add -> {...plots...},
-#   remove -> {...plots...}
-# }
-# If there is no add or remove, we can skip. We take the add and remove IDs and add/remove them from the start list to get the final list of plots using that accession.
-# Then we sort by plot_number and assign new rep numbers
-sub rebuild_trial_plot_replicates {
-    my $self = shift;
-    my $rep_hash = shift;
-    my $rep_number_id = shift;
-    my $trial_id = $self->trial_id();
-    my $schema = $self->bcs_schema;
-
-    foreach my $accession_id (keys(%$rep_hash)) {
-        my $accession_hash = $rep_hash->{$accession_id};
-        next if (!$accession_hash->{add} && !$accession_hash->{remove});
-        my $start_plots = $accession_hash->{start};
-        my $add_plots = $accession_hash->{add};
-        my $remove_plots = $accession_hash->{remove};
-        foreach my $plot_id (keys(%$remove_plots)) {
-            delete $start_plots->{$plot_id};
-        }
-        foreach my $plot_id (keys(%$add_plots)) {
-            $start_plots->{$plot_id} = $add_plots->{$plot_id};
-        }
-
-        #sort by plot number and set rep numbers
-        my @unsorted = map { {plot_id => $_, plot_number => $start_plots->{$_}->{plot_number}} } keys(%$start_plots);
-        my @sorted_plots = sort { $a->{plot_number} <=> $b->{plot_number}} @unsorted; 
-        my $i = 1;
-        foreach my $plot (@sorted_plots) {
-            my $row = $schema->resultset("Stock::Stockprop")->find({ type_id=>$rep_number_id, stock_id=>$plot->{plot_id}});
-            $row->update({
-                type_id=>$rep_number_id, 
-                stock_id=>$plot->{plot_id}, 
-                rank=>0, 
-                value=>$i 
-            });
-            $i += 1;
-        } 
-    }
 }
 
 sub _regenerate_trial_layout_cache {

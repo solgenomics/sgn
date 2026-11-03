@@ -1,5 +1,22 @@
 rm(list = ls())
 
+# Load the explicit analytical recorded-design-tag contract.
+design_source <- NULL
+for (frame in sys.frames()) if (!is.null(frame$ofile)) design_source <- frame$ofile
+if (is.null(design_source)) {
+  invocation <- commandArgs()
+  file_option <- grep("^--file=", invocation, value = TRUE)
+  if (length(file_option)) {
+    design_source <- sub("^--file=", "", file_option[1])
+  } else {
+    file_index <- which(invocation %in% c("-f", "--file"))
+    if (length(file_index) && file_index[1] < length(invocation)) design_source <- invocation[file_index[1] + 1L]
+  }
+}
+if (is.null(design_source) || is.na(design_source) || !nzchar(design_source)) stop("Cannot locate the owning R script; use Rscript, R -f, or source().")
+source(file.path(dirname(normalizePath(design_source)), "design_replication.R"), local = TRUE)
+
+
 required_packages <- c("dplyr", "tidyr", "jsonlite")
 missing_packages <- required_packages[!vapply(required_packages, requireNamespace, logical(1), quietly = TRUE)]
 if (length(missing_packages) > 0) {
@@ -233,9 +250,13 @@ has_numeric_levels <- function(data, column) {
 }
 
 detect_design <- function(data) {
-  design_text <- ""
-  if ("study_design" %in% names(data)) {
-    design_text <- paste(unique(tolower(as.character(data$study_design))), collapse = " ")
+  if (!"study_design" %in% names(data) || anyNA(data$study_design) || any(trimws(data$study_design) == "")) stop("Declare studyDesign before environment stratification; occurrence labels cannot identify a design.")
+  declared <- unique(tolower(trimws(as.character(data$study_design))))
+  if (length(declared) != 1L) stop("Mixed declared study designs require separate environment stratification analyses.")
+  design_text <- declared[1]
+  require_group <- function(column) {
+    if (!column %in% names(data) || anyNA(data[[column]]) || any(trimws(as.character(data[[column]])) == "")) stop("Recorded design metadata is missing for ",column,"; occurrence labels cannot replace it.")
+    if (!has_factor_levels(data,column)) stop("At least two recorded levels are required for ",column,".")
   }
 
   has_environment <- has_factor_levels(data, "environment")
@@ -255,33 +276,30 @@ detect_design <- function(data) {
       if (has_row) "environment:row_number",
       if (has_col) "environment:col_number"
     )
+  } else if (grepl("^crd$|completely randomized|completely randomised", design_text)) {
+    design_label <- "CRD"
+    design_message <- "Detected completely randomized layout; accession occurrence numbers are not blocking factors."
+    design_terms <- character()
   } else if (grepl("rcbd|randomized complete block|randomised complete block", design_text)) {
     design_label <- "RCBD"
     design_message <- "Detected randomized complete block layout; blocks are fitted within environment when block has at least two levels."
-    design_terms <- c(
-      if (has_block) "environment:block_number" else if (has_rep) "environment:rep_number"
-    )
-  } else if (grepl("alpha|lattice|incomplete", design_text) || block_differs_from_rep) {
+    require_group("block_number")
+    design_terms <- "environment:block_number"
+  } else if (grepl("alpha|lattice|incomplete", design_text)) {
+    require_group("rep_number"); require_group("block_number")
     design_label <- "Incomplete block / alpha-lattice"
     design_message <- "Detected replicate and block layout; blocks are fitted within replicate and environment when those terms have at least two levels."
     design_terms <- c(
       if (has_rep) "environment:rep_number",
       if (has_rep && has_block) "environment:rep_number:block_number"
     )
-  } else if (grepl("augmented", design_text) || (has_block && !has_rep)) {
+  } else if (grepl("augmented", design_text)) {
+    require_group("block_number")
     design_label <- "Augmented / block-only"
     design_message <- "Detected block-only layout; blocks are fitted within environment when block has at least two levels."
     design_terms <- c(if (has_block) "environment:block_number")
-  } else if (has_rep) {
-    design_label <- "RCBD"
-    design_message <- "Detected randomized complete block layout; blocks are fitted within environment when available."
-    design_terms <- c(
-      if (has_block) "environment:block_number" else "environment:rep_number"
-    )
   } else {
-    design_label <- "CRD"
-    design_message <- "No usable blocking, replicate, row, or column layout detected; using CRD model."
-    design_terms <- character()
+    stop("Unsupported declared studyDesign for environment stratification: ",design_text)
   }
 
   model_terms <- c(
@@ -570,17 +588,18 @@ main <- function() {
     stop("Alpha must be a number between 0 and 1.")
   }
 
-  pheno <- read.table(phenotype_file, sep = "\t", header = TRUE, check.names = FALSE, quote = "", comment.char = "", stringsAsFactors = FALSE)
+  pheno <- read_analysis_phenotypes(phenotype_file)
   colnames(pheno) <- normalize_column_name(colnames(pheno))
   study_trait <- normalize_column_name(gsub("\\.", " ", study_trait))
 
   trait_col <- find_column(pheno, c(study_trait), "selected trait")
   accession_col <- find_column(pheno, c("germplasmName", "accession_name", "accessionName", "stockName"), "accession")
+  assert_genotype_name_identity(pheno, name_column = accession_col)
   location_col <- find_column(pheno, c("locationName", "location", "studyLocation"), "location")
   trial_col <- c("studyName", "trialName", "trial_name", "projectName")
-  year_col <- c("year", "Year", "season")
+  year_col <- c("studyYear", "year", "Year", "season")
   design_col <- c("studyDesign", "study_design", "trialDesign", "design")
-  rep_col <- c("replicate", "rep_number", "repNumber", "rep")
+  rep_col <- c("designReplicate", "design_rep_number", "replicate")
   block_col <- c("blockNumber", "block_number", "block", "block_number")
   row_col <- c("rowNumber", "row_number", "Y", "y")
   col_col <- c("colNumber", "col_number", "X", "x")

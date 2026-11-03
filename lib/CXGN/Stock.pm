@@ -29,6 +29,7 @@ object that instantiates the correct object given the stock_id).
 package CXGN::Stock;
 
 use Moose;
+use CXGN::Phenotypes::Summary;
 
 use Carp;
 use Data::Dumper;
@@ -1303,26 +1304,29 @@ sub get_additional_uploaded_files {
 
 sub get_trait_list {
     my $self = shift;
+    my $options = shift || {};
+    my $include_count = $options->{include_count};
 
-    my $q = "select distinct(cvterm.cvterm_id), db.name || ':' || dbxref.accession, cvterm.name, avg(phenotype.value::Real), stddev(phenotype.value::Real) from stock as accession join stock_relationship on (accession.stock_id=stock_relationship.object_id) JOIN stock as plot on (plot.stock_id=stock_relationship.subject_id) JOIN nd_experiment_stock ON (plot.stock_id=nd_experiment_stock.stock_id) JOIN nd_experiment_phenotype USING(nd_experiment_id) JOIN phenotype USING (phenotype_id) JOIN cvterm ON (phenotype.cvalue_id = cvterm.cvterm_id) JOIN dbxref ON(cvterm.dbxref_id = dbxref.dbxref_id) JOIN db USING(db_id) where accession.stock_id=? and phenotype.value~? group by cvterm.cvterm_id, db.name || ':' || dbxref.accession, cvterm.name";
+
+    my $q = "select distinct(cvterm.cvterm_id), db.name || ':' || dbxref.accession, cvterm.name, avg(phenotype.value::Real), stddev(phenotype.value::Real), count(phenotype.value) from stock as accession join stock_relationship on (accession.stock_id=stock_relationship.object_id) JOIN stock as plot on (plot.stock_id=stock_relationship.subject_id) JOIN nd_experiment_stock ON (plot.stock_id=nd_experiment_stock.stock_id) JOIN nd_experiment_phenotype USING(nd_experiment_id) JOIN phenotype USING (phenotype_id) JOIN cvterm ON (phenotype.cvalue_id = cvterm.cvterm_id) JOIN dbxref ON(cvterm.dbxref_id = dbxref.dbxref_id) JOIN db USING(db_id) where accession.stock_id=? and phenotype.value~? group by cvterm.cvterm_id, db.name || ':' || dbxref.accession, cvterm.name";
     my $h = $self->schema()->storage()->dbh()->prepare($q);
-    my $numeric_regex = '^-?[0-9]+([,.][0-9]+)?$';
+    my $numeric_regex = CXGN::Phenotypes::Summary::numeric_value_regex();
     $h->execute($self->stock_id(), $numeric_regex);
     my @traits;
-    while (my ($cvterm_id, $cvterm_accession, $cvterm_name, $avg, $stddev) = $h->fetchrow_array()) {
-	push @traits, [ $cvterm_id, $cvterm_accession, $cvterm_name, $avg, $stddev ];
+    while (my ($cvterm_id, $cvterm_accession, $cvterm_name, $avg, $stddev, $count) = $h->fetchrow_array()) {
+	push @traits, [ $cvterm_id, $cvterm_accession, $cvterm_name, $avg, $stddev, ($include_count ? ($count) : ()) ];
     }
 
     # get directly associated traits
     #
-    $q = "select distinct(cvterm.cvterm_id), db.name || ':' || dbxref.accession, cvterm.name, avg(phenotype.value::Real), stddev(phenotype.value::Real) from stock JOIN nd_experiment_stock ON (stock.stock_id=nd_experiment_stock.stock_id) JOIN nd_experiment_phenotype USING(nd_experiment_id) JOIN phenotype USING (phenotype_id) JOIN cvterm ON (phenotype.cvalue_id = cvterm.cvterm_id) JOIN dbxref ON(cvterm.dbxref_id = dbxref.dbxref_id) JOIN db USING(db_id) where stock.stock_id=? and phenotype.value~? group by cvterm.cvterm_id, db.name || ':' || dbxref.accession, cvterm.name";
+    $q = "select distinct(cvterm.cvterm_id), db.name || ':' || dbxref.accession, cvterm.name, avg(phenotype.value::Real), stddev(phenotype.value::Real), count(phenotype.value) from stock JOIN nd_experiment_stock ON (stock.stock_id=nd_experiment_stock.stock_id) JOIN nd_experiment_phenotype USING(nd_experiment_id) JOIN phenotype USING (phenotype_id) JOIN cvterm ON (phenotype.cvalue_id = cvterm.cvterm_id) JOIN dbxref ON(cvterm.dbxref_id = dbxref.dbxref_id) JOIN db USING(db_id) where stock.stock_id=? and phenotype.value~? group by cvterm.cvterm_id, db.name || ':' || dbxref.accession, cvterm.name";
 
     $h = $self->schema()->storage()->dbh()->prepare($q);
-    $numeric_regex = '^-?[0-9]+([,.][0-9]+)?$';
+    $numeric_regex = CXGN::Phenotypes::Summary::numeric_value_regex();
     $h->execute($self->stock_id(), $numeric_regex);
 
-    while (my ($cvterm_id, $cvterm_accession, $cvterm_name, $avg, $stddev) = $h->fetchrow_array()) {
-	push @traits, [ $cvterm_id, $cvterm_accession, $cvterm_name, $avg, $stddev ];
+    while (my ($cvterm_id, $cvterm_accession, $cvterm_name, $avg, $stddev, $count) = $h->fetchrow_array()) {
+	push @traits, [ $cvterm_id, $cvterm_accession, $cvterm_name, $avg, $stddev, ($include_count ? ($count) : ()) ];
     }
 
     return @traits;

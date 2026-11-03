@@ -15,7 +15,7 @@ Module to format layout info for trial based on which columns user wants to see.
 'tissue_sample_name','tissue_sample_id','plant_name','plant_id','subplot_name','subplot_id','plot_name','plot_id','accession_name','accession_id','plot_number','block_number','is_a_control','range_number','rep_number','row_number','col_number','seedlot_name','seed_transaction_operator','num_seed_per_plot','subplot_number','plant_number','tissue_sample_number','pedigree','location_name','trial_name','year','synonyms','tier','plot_geo_json'
 
 This module can also optionally include treatments into the output.
-This module can also optionally include accession trait performace summaries into the output.
+This module can also optionally include accession trait performance summaries into the output.
 
 This module is used from CXGN::Trial::Download::Plugin::TrialLayoutExcel, CXGN::Trial::Download::Plugin::TrialLayoutCSV, CXGN::Fieldbook::DownloadFile, CXGN::Trial->get_plots, CXGN::Trial->get_plants, CXGN::Trial->get_subplots, CXGN::Trial->get_tissue_samples
 
@@ -238,7 +238,7 @@ sub get_layout_output {
         $errors{'error_messages'} = \@error_messages;
         return \%errors;
     }
-    print STDERR "TrialLayoutDownload retrieving deisgn ".localtime."\n";
+    print STDERR "TrialLayoutDownload retrieving design ".localtime."\n";
     my $design = $trial_layout->get_design();
     if (!$design){
         push @error_messages, "Trial does not have valid field design. Please contact us.";

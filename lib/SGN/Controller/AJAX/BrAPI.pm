@@ -2772,6 +2772,11 @@ sub observation_units_PUT {
 	my $force_authenticate = $c->config->{brapi_observation_units_require_login};
 	my ($auth,$user_id) = _authenticate_user($c, $force_authenticate);
 	my $clean_inputs = $c->stash->{clean_inputs};
+    my $body_version = $c->request->captures->[0];
+    if ($body_version eq 'v2' && (ref($clean_inputs) ne 'HASH' || !keys(%$clean_inputs) || grep { $_ !~ /^[1-9]\d*$/ || ref($clean_inputs->{$_}) ne 'HASH' } keys %$clean_inputs)) {
+        return _standard_response_construction($c, CXGN::BrAPI::JSONResponse->return_error([], 'Bulk observation unit updates require an object keyed by existing positive identifiers.', 400));
+    }
+
 	my %data = %$clean_inputs;
     my @all_units;
     foreach my $unit (keys %data) {
@@ -2812,14 +2817,14 @@ sub observation_unit_single_PUT {
     my $c = shift;
     my $observation_unit_db_id = shift;
     my $clean_inputs = $c->stash->{clean_inputs};
-    my ($auth) = _authenticate_user($c);
+    my ($auth, $user_id) = _authenticate_user($c);
     my $observationUnits = $clean_inputs;
     $observationUnits->{observationUnitDbId} = $observation_unit_db_id;
     my @all_observations_units;
     push @all_observations_units, $observationUnits;
     my $brapi = $self->brapi_module;
     my $brapi_module = $brapi->brapi_wrapper('ObservationUnits');
-    my $brapi_package_result = $brapi_module->observationunits_update(\@all_observations_units, $c);
+    my $brapi_package_result = $brapi_module->observationunits_update(\@all_observations_units, $c, $user_id);
 
     _standard_response_construction($c, $brapi_package_result);
 }

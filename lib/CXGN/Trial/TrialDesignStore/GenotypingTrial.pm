@@ -28,6 +28,7 @@ sub BUILD {
     [
      'stock_name',
      'plot_name',
+        'design_rep_number',
      'row_number',
      'col_number',
      'is_blank',

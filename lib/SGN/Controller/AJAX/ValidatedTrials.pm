@@ -149,6 +149,7 @@ sub get_phenotype :Path('/ajax/validatedtrials/getphenotype') Args(0){
     my $projects_json = $c->req->param('projectTrait');
     my $projects_names = decode_json($projects_json);
 
+
     # Array to hold final results
     my @data;
 
@@ -172,8 +173,10 @@ sub get_phenotype :Path('/ajax/validatedtrials/getphenotype') Args(0){
             join stock s on s.stock_id = nes.stock_id
             join stock_relationship sr on sr.subject_id = nes.stock_id
             join stock s2 on s2.stock_id = sr.object_id
+                AND s2.type_id IN (SELECT cvterm_id FROM cvterm JOIN cv USING(cv_id) WHERE cv.name = 'stock_type' AND cvterm.name IN ('accession', 'cross', 'family_name'))
             where p.name = ?
             and cvterm.name = ?
+
             and phenotype.phenotype_id not in ( select phenotype_id from phenotypeprop p3 WHERE p3.type_id = ( select cvterm_id from cvterm where name = 'phenotype_outlier'));
         ";
 

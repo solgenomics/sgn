@@ -47,6 +47,7 @@ use CXGN::DB::ReadSnapshot;
 use Try::Tiny;
 use Data::Dumper;
 use SGN::Model::Cvterm;
+use CXGN::Trial::DesignReplication;
 use CXGN::Stock::StockLookup;
 use CXGN::Trial::TrialLayout;
 use CXGN::Calendar;
@@ -702,6 +703,28 @@ sub search {
     #print STDERR Dumper \@result;
 
     _project_live_layout_fields($schema,\@result,$layout_terms);
+    # The historical analytical replica slot remains the recorded physical
+    # design group. Resolve live rows after cached layout/materialized data so
+    # a stale occurrence value cannot masquerade as a design group.
+    if (@result) {
+        my %unit_ids = map { $_->{observationunit_stock_id} => 1 } @result;
+        my $replication = CXGN::Trial::DesignReplication::read($schema, [keys %unit_ids]);
+        for my $row (@result) {
+            my $info = $replication->{$row->{observationunit_stock_id}};
+            $row->{obsunit_rep} = $info->{value};
+            $row->{obsunit_design_rep} = $info->{value};
+            $row->{obsunit_accession_occurrence} = $info->{occurrence_ready} ? $info->{occurrence} : undef;
+            $row->{obsunit_occurrence_ready} = $info->{occurrence_ready} ? 1 : 0;
+            $row->{obsunit_design_rep_recorded} = $info->{recorded} ? 1 : 0;
+            $row->{obsunit_block} = $info->{block};
+            $row->{obsunit_block_raw} = $info->{block_raw};
+            $row->{obsunit_block_recorded} = $info->{block_recorded} ? 1 : 0;
+        }
+    }
+
+    # Recheck after live projections too: a correction committed during this
+    # read must not combine the former cached identity with a new counter.
+    $assert_identity->();
     print STDERR "Search End:".localtime."\n";
     return (\@result, \%unique_traits, \%trait_synonyms);
 }

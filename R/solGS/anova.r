@@ -1,3 +1,19 @@
+# Analytical replicate is the recorded design tag, never the field counter.
+design_source <- NULL
+for (frame in sys.frames()) if (!is.null(frame$ofile)) design_source <- frame$ofile
+if (is.null(design_source)) {
+  invocation <- commandArgs()
+  file_option <- grep("^--file=", invocation, value = TRUE)
+  if (length(file_option)) {
+    design_source <- sub("^--file=", "", file_option[1])
+  } else {
+    file_index <- which(invocation %in% c("-f", "--file"))
+    if (length(file_index) && file_index[1] < length(invocation)) design_source <- invocation[file_index[1] + 1L]
+  }
+}
+if (is.null(design_source) || is.na(design_source) || !nzchar(design_source)) stop("Cannot locate the owning R script; use Rscript, R -f, or source().")
+source(file.path(dirname(normalizePath(design_source)), "../design_replication.R"), local = TRUE)
+
  #SNOPSIS
 
  #runs ANOVA.
@@ -34,13 +50,10 @@ metaData <- scan(metadataFile, what="character")
 designFactors <- c('germplasmName','studyYear', 'studyDesign', 'blockNumber', 'locationName', 'replicate')
 dropCols <-  metaData[! metaData %in% designFactors]
 
-phenoData <- fread(phenoDataFile,
-                   header = TRUE,
-                   sep="\t",
-                   drop=dropCols,
-                   na.strings=c("NA", "-", " ", ".", ".."))
+phenoData <- read_analysis_phenotypes(phenoDataFile)
+assert_genotype_name_identity(phenoData)
+phenoData <- phenoData[,setdiff(names(phenoData),dropCols),drop=FALSE]
 
-phenoData <- data.frame(phenoData)
 
 traits  <- scan(traitsFile,  what = "character")
 traits  <- strsplit(traits, "\t")
@@ -78,8 +91,8 @@ for (trait in traits) {
                        outputFiles,
                        value = TRUE)
 
-    anovaOut <- runAnova(phenoData, trait)
-    if (class(anovaOut) == 'character') {
+    anovaOut <- analysis_run_anova(phenoData, trait)
+    if (is.character(anovaOut)) {
         cat(anovaOut, file=errorFile)
     } else if (is.null(anovaOut)) {
         
@@ -88,7 +101,7 @@ for (trait in traits) {
             file=errorFile)
         
     } else if (class(anovaOut)[1] == 'lmerModLmerTest' ||
-               class(anovaOut)[1] == 'merModLmerTest') {
+               class(anovaOut)[1] == 'merModLmerTest' || inherits(anovaOut,'lm')) {
     
         png(diagnosticsFile, 960, 480)
         par(mfrow=c(1,2))
@@ -100,18 +113,18 @@ for (trait in traits) {
         qqnorm(resid(anovaOut))      
         dev.off()
  
-        anovaHtmlTable <- getAnovaTable(anovaOut,
+        anovaHtmlTable <- analysis_anova_table(anovaOut,
                                     tableType="html",
                                     traitName=trait,
                                     out=anovaHtmlFile)
 
-        anovaTxtTable <- getAnovaTable(anovaOut,
+        anovaTxtTable <- analysis_anova_table(anovaOut,
                                     tableType="text",
                                     traitName=trait,
                                     out=anovaTxtFile)
         
   
-        adjMeans   <- getAdjMeans(traitName=trait, modelOut=anovaOut)
+        adjMeans   <- analysis_adjusted_means(traitName=trait, modelOut=anovaOut)
   
         fwrite(adjMeans,
                file      = adjMeansFile,

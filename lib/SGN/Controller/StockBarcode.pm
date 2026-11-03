@@ -10,6 +10,7 @@ use Data::Dumper;
 use CXGN::Stock;
 use SGN::Model::Cvterm;
 use CXGN::Stock::Order;
+use CXGN::Trial::DesignReplication;
 use CXGN::TrackingActivity::ActivityProject;
 
 BEGIN { extends "Catalyst::Controller"; }
@@ -214,6 +215,7 @@ sub download_pdf_labels :Path('/barcode/stock/download/pdf') :Args(0) {
                     $stockprop_hash{$stock_id}->{$stockprop_name} = $value;
 
                 }
+                $stockprop_hash{$stock_id}{replicate}=CXGN::Trial::DesignReplication::read($schema,[$plot_of_plant_id])->{$plot_of_plant_id}{value} // '';
                 $row = $stockprop_hash{$stock_id}->{'replicate'};
                 $fdata = "rep:".$stockprop_hash{$stock_id}->{'replicate'}.' '."blk:".$stockprop_hash{$stock_id}->{'block'}.' '."plot:".$stockprop_hash{$stock_id}->{'plot number'};
                 $fdata_block = "blk:".$stockprop_hash{$stock_id}->{'block'};
@@ -240,6 +242,7 @@ sub download_pdf_labels :Path('/barcode/stock/download/pdf') :Args(0) {
             while (($stockprop_name, $value) = $h->fetchrow_array) {
                 $stockprop_hash{$stock_id}->{$stockprop_name} = $value;
             }
+            $stockprop_hash{$stock_id}{replicate}=CXGN::Trial::DesignReplication::read($schema,[$stock_id])->{$stock_id}{value} // '';
             $row = $stockprop_hash{$stock_id}->{'replicate'};
             $fdata = "rep:".$stockprop_hash{$stock_id}->{'replicate'}.' '."blk:".$stockprop_hash{$stock_id}->{'block'}.' '."plot:".$stockprop_hash{$stock_id}->{'plot number'};
             $fdata_block = "blk:".$stockprop_hash{$stock_id}->{'block'};
@@ -1065,6 +1068,7 @@ sub download_qrcode : Path('/barcode/stock/download/plot_QRcode') : Args(0) {
      while (($stockprop_name, $value) = $h->fetchrow_array) {
        $stockprop_hash{$stock_id}->{$stockprop_name} = $value;
     }
+    $stockprop_hash{$stock_id}{replicate}=CXGN::Trial::DesignReplication::read($schema,[$stock_id])->{$stock_id}{value} // '';
     $row = $stockprop_hash{$stock_id}->{'replicate'};
     $fdata = "rep:".$stockprop_hash{$stock_id}->{'replicate'}.' '."block:".$stockprop_hash{$stock_id}->{'block'}.' '."plot:".$stockprop_hash{$stock_id}->{'plot number'};
 

@@ -7,6 +7,7 @@ use SGN::Test::Fixture;
 use SGN::Model::Cvterm;
 use CXGN::Phenotypes::StorePhenotypes;
 use CXGN::Phenotypes::ParseUpload;
+use CXGN::Trial::AccessionChange;
 use CXGN::TimeUtils;
 use CXGN::BrAPI::v1::Observations;
 use CXGN::BrAPI::v2::Observations;
@@ -83,5 +84,6 @@ $s->txn_begin;my $ran=eval {
  like($archive_error // '',qr/Can't open file/,'a missing archive prevents committing its observation update');
  $a->discard_changes;is($a->value,13,'failed archive registration rolls the value back too');
  for my $bad ('NaN','Inf','-Inf','1e999') {my $v=store_values({$names[0]=>{$tn=>[$bad,'2026-11-02T11:00:00Z','after']}},1);my(undef,$invalid)=$v->verify;like($invalid//'',qr/finite/,'nonfinite numeric input refused before writing');}
+ my $trial=$s->resultset('Project::Project')->find({name=>'test_trial'})->project_id;my $ac=CXGN::Trial::AccessionChange->new({schema=>$s,trial_id=>$trial});
  1;
 };my $error=$@;$s->txn_rollback;ok($ran,'scenario completed and fixture rolled back')or diag($error);done_testing;

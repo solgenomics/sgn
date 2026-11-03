@@ -12,6 +12,7 @@ use MooseX::FollowPBP;
 use Try::Tiny;
 use Data::Dumper;
 use CXGN::Stock;
+use CXGN::Stock::Seedlot;
 use JSON;
 
 =head1 ACCESSORS
@@ -412,6 +413,8 @@ sub store {
     my $design_type = $self->get_design_type;
     my %design = %{$self->get_design};
     my $trial_id = $self->get_trial_id;
+    my $design_rep_term=SGN::Model::Cvterm->get_cvterm_row($chado_schema,'design_replicate','stock_property');
+    my $design_rep_type=$design_rep_term ? $design_rep_term->cvterm_id : undef;
     my $nd_geolocation_id = $self->get_nd_geolocation_id;
     my $allow_obsoleted_accessions = $self->get_allow_obsoleted_accessions;
     my $nd_experiment_type_id = $self->get_nd_experiment_type_id();
@@ -462,7 +465,7 @@ sub store {
     my %seen_accessions_hash;
     my %seen_seedlots_hash;
     foreach my $key (keys %design) {
-        if ($design{$key}->{stock_name}) {
+        if (defined($design{$key}->{stock_name}) && $design{$key}->{stock_name} ne '') {
             my $stock_name = $design{$key}->{stock_name};
             $seen_accessions_hash{$stock_name}++;
         }
@@ -471,7 +474,7 @@ sub store {
                 $seen_accessions_hash{$stock_name}++;
             }
         }
-        if ($design{$key}->{seedlot_name}) {
+        if (defined($design{$key}->{seedlot_name}) && $design{$key}->{seedlot_name} ne '') {
             my $stock_name = $design{$key}->{seedlot_name};
             $seen_seedlots_hash{$stock_name}++;
         }
@@ -506,6 +509,8 @@ sub store {
     my $timestamp = localtime();
 
     my $coderef = sub {
+        $chado_schema->storage->dbh->selectrow_array('SELECT project_id FROM project WHERE project_id=? FOR UPDATE',undef,$trial_id);
+        CXGN::Stock::Seedlot::lock_for_recount($chado_schema,[values %seedlot_data]);
 
         #print STDERR Dumper \%design;
         my %new_stock_ids_hash;
@@ -517,11 +522,11 @@ sub store {
             }
 
             my $plot_name;
-            if ($design{$key}->{plot_name}) {
+            if (defined($design{$key}->{plot_name}) && $design{$key}->{plot_name} ne '') {
                 $plot_name = $design{$key}->{plot_name};
             }
             my $plot_number;
-            if ($design{$key}->{plot_number}) {
+            if (defined($design{$key}->{plot_number}) && $design{$key}->{plot_number} ne '') {
                 $plot_number = $design{$key}->{plot_number};
             } else {
                 $plot_number = $key;
@@ -544,7 +549,7 @@ sub store {
             }
 
             my $stock_name;
-            if ($design{$key}->{stock_name}) {
+            if (defined($design{$key}->{stock_name}) && $design{$key}->{stock_name} ne '') {
                 $stock_name = $design{$key}->{stock_name};
             }
             my @intercrop_stock_names;
@@ -555,44 +560,49 @@ sub store {
             }
             my $seedlot_name;
             my $seedlot_stock_id;
-            if ($design{$key}->{seedlot_name}) {
+            if (defined($design{$key}->{seedlot_name}) && $design{$key}->{seedlot_name} ne '') {
                 $seedlot_name = $design{$key}->{seedlot_name};
                 $seedlot_stock_id = $seedlot_data{$seedlot_name};
             }
             my $num_seed_per_plot;
-            if($design{$key}->{num_seed_per_plot}){
+            if (defined($design{$key}->{num_seed_per_plot}) && $design{$key}->{num_seed_per_plot} ne '') {
                 $num_seed_per_plot = $design{$key}->{num_seed_per_plot};
             }
             my $weight_gram_seed_per_plot;
-            if($design{$key}->{weight_gram_seed_per_plot}){
+            if (defined($design{$key}->{weight_gram_seed_per_plot}) && $design{$key}->{weight_gram_seed_per_plot} ne '') {
                 $weight_gram_seed_per_plot = $design{$key}->{weight_gram_seed_per_plot};
             }
-            my $block_number;
-            if ($design{$key}->{block_number}) { #set block number to 1 if no blocks are specified
-                $block_number = $design{$key}->{block_number};
-            } else {
-                $block_number = 1;
-            }
+            # An explicit unknown physical block is not the same as omitted
+            # input. Preserve the native default only when the key is absent.
+            my $block_number = exists($design{$key}->{block_number})
+                ? (defined($design{$key}->{block_number}) && $design{$key}->{block_number} ne ''
+                    ? $design{$key}->{block_number} : undef)
+                : 1;
             my $rep_number;
-            if ($design{$key}->{rep_number}) { #set rep number to 1 if no reps are specified
+            if (defined($design{$key}->{rep_number}) && $design{$key}->{rep_number} ne '') { # operational default only
                 $rep_number = $design{$key}->{rep_number};
             } else {
                 $rep_number = 1;
             }
+            # Capture the declared input before operational defaults. Aggregated
+            # analyses without an explicit group have unknown design metadata.
+            my $design_rep_number=exists($design{$key}->{design_rep_number})
+                ? $design{$key}->{design_rep_number}
+                : ($self->get_is_analysis ? undef : $design{$key}->{rep_number});
             my $is_a_control;
             if ($design{$key}->{is_a_control}) {
                 $is_a_control = $design{$key}->{is_a_control};
             }
             my $row_number;
-            if ($design{$key}->{row_number}) {
+            if (defined($design{$key}->{row_number}) && $design{$key}->{row_number} ne '') {
                 $row_number = $design{$key}->{row_number};
             }
             my $col_number;
-            if ($design{$key}->{col_number}) {
+            if (defined($design{$key}->{col_number}) && $design{$key}->{col_number} ne '') {
                 $col_number = $design{$key}->{col_number};
             }
             my $range_number;
-            if ($design{$key}->{range_number}) {
+            if (defined($design{$key}->{range_number}) && $design{$key}->{range_number} ne '') {
                 $range_number = $design{$key}->{range_number};
             }
             my $well_is_blank;
@@ -674,22 +684,23 @@ sub store {
 
             #create the plot, if plot given
             my $new_plot_id;
-            if ($plot_name) {
+            if (defined($plot_name) && $plot_name ne '') {
                 my @plot_stock_props = (
                     { type_id => $self->get_replicate_cvterm_id, value => $rep_number },
                     { type_id => $self->get_block_cvterm_id, value => $block_number },
                     { type_id => $self->get_plot_number_cvterm_id, value => $plot_number }
                 );
+                    push @plot_stock_props, {type_id=>$design_rep_type,value=>$design_rep_number,rank=>0} if defined($design_rep_type);
                 if ($is_a_control) {
                     push @plot_stock_props, { type_id => $self->get_is_control_cvterm_id, value => $is_a_control };
                 }
-                if ($range_number) {
+                if (defined($range_number) && $range_number ne '') {
                     push @plot_stock_props, { type_id => $self->get_range_cvterm_id, value => $range_number };
                 }
-                if ($row_number) {
+                if (defined($row_number) && $row_number ne '') {
                     push @plot_stock_props, { type_id => $self->get_row_number_cvterm_id, value => $row_number };
                 }
-                if ($col_number) {
+                if (defined($col_number) && $col_number ne '') {
                     push @plot_stock_props, { type_id => $self->get_col_number_cvterm_id, value => $col_number };
                 }
                 if ($well_is_blank) {
@@ -952,14 +963,14 @@ sub store {
                 my $stock = CXGN::Stock->new({schema=>$chado_schema,stock_id=>$new_plot_id});
                 $stock->associate_owner($sp_person_id,$sp_person_id,$username,"");
 
-                if ($seedlot_stock_id && $seedlot_name){
+                if ($seedlot_stock_id && defined($seedlot_name) && $seedlot_name ne '') {
                     my $transaction = CXGN::Stock::Seedlot::Transaction->new(schema => $chado_schema);
                     $transaction->from_stock([$seedlot_stock_id, $seedlot_name]);
                     $transaction->to_stock([$plot->stock_id(), $plot->uniquename()]);
-                    if ($num_seed_per_plot){
+                    if (defined($num_seed_per_plot)) {
                         $transaction->amount($num_seed_per_plot);
                     }
-                    if ($weight_gram_seed_per_plot){
+                    if (defined($weight_gram_seed_per_plot)) {
                         $transaction->weight_gram($weight_gram_seed_per_plot);
                     }
                     $transaction->timestamp($timestamp);
@@ -968,8 +979,7 @@ sub store {
                     $transaction->operator($self->get_operator);
                     my $transaction_id = $transaction->store();
                     my $sl = CXGN::Stock::Seedlot->new(schema=>$chado_schema, seedlot_id=>$seedlot_stock_id);
-                    $sl->set_current_count_property();
-                    $sl->set_current_weight_property();
+                    $sl->recalculate_current_properties();
                 }
             }
 
@@ -992,6 +1002,7 @@ sub store {
                         { type_id => $self->get_block_cvterm_id, value => $block_number },
                         { type_id => $self->get_plot_number_cvterm_id, value => $plot_number }
                     );
+                    push @plant_stock_props, {type_id=>$design_rep_type,value=>$design_rep_number,rank=>0} if defined($design_rep_type);
                     if ($plant_row && $plant_col) {
                         push @plant_stock_props, {type_id => $self->get_row_number_cvterm_id, value => $plant_row};
                         push @plant_stock_props, {type_id => $self->get_col_number_cvterm_id, value => $plant_col};
@@ -999,13 +1010,13 @@ sub store {
                     if ($is_a_control) {
                         push @plant_stock_props, { type_id => $self->get_is_control_cvterm_id, value => $is_a_control };
                     }
-                    if ($range_number) {
+                    if (defined($range_number) && $range_number ne '') {
                         push @plant_stock_props, { type_id => $self->get_range_cvterm_id, value => $range_number };
                     }
-                    if ($row_number) {
+                    if (defined($row_number) && $row_number ne '') {
                         push @plant_stock_props, { type_id => $self->get_row_number_cvterm_id, value => $row_number };
                     }
-                    if ($col_number) {
+                    if (defined($col_number) && $col_number ne '') {
                         push @plant_stock_props, { type_id => $self->get_col_number_cvterm_id, value => $col_number };
                     }
                     if ($additional_info) {
@@ -1054,16 +1065,17 @@ sub store {
                         { type_id => $self->get_block_cvterm_id, value => $block_number },
                         { type_id => $self->get_plot_number_cvterm_id, value => $plot_number }
                     );
+                    push @tissue_sample_stockprops, {type_id=>$design_rep_type,value=>$design_rep_number,rank=>0} if defined($design_rep_type);
                     if ($is_a_control) {
                         push @tissue_sample_stockprops, { type_id => $self->get_is_control_cvterm_id, value => $is_a_control };
                     }
-                    if ($range_number) {
+                    if (defined($range_number) && $range_number ne '') {
                         push @tissue_sample_stockprops, { type_id => $self->get_range_cvterm_id, value => $range_number };
                     }
-                    if ($row_number) {
+                    if (defined($row_number) && $row_number ne '') {
                         push @tissue_sample_stockprops, { type_id => $self->get_row_number_cvterm_id, value => $row_number };
                     }
-                    if ($col_number) {
+                    if (defined($col_number) && $col_number ne '') {
                         push @tissue_sample_stockprops, { type_id => $self->get_col_number_cvterm_id, value => $col_number };
                     }
                     if ($additional_info) {
@@ -1132,16 +1144,17 @@ sub store {
                         { type_id => $self->get_block_cvterm_id, value => $block_number },
                         { type_id => $self->get_plot_number_cvterm_id, value => $plot_number }
                     );
+                    push @subplot_stockprops, {type_id=>$design_rep_type,value=>$design_rep_number,rank=>0} if defined($design_rep_type);
                     if ($is_a_control) {
                         push @subplot_stockprops, { type_id => $self->get_is_control_cvterm_id, value => $is_a_control };
                     }
-                    if ($range_number) {
+                    if (defined($range_number) && $range_number ne '') {
                         push @subplot_stockprops, { type_id => $self->get_range_cvterm_id, value => $range_number };
                     }
-                    if ($row_number) {
+                    if (defined($row_number) && $row_number ne '') {
                         push @subplot_stockprops, { type_id => $self->get_row_number_cvterm_id, value => $row_number };
                     }
-                    if ($col_number) {
+                    if (defined($col_number) && $col_number ne '') {
                         push @subplot_stockprops, { type_id => $self->get_col_number_cvterm_id, value => $col_number };
                     }
 
@@ -1280,6 +1293,11 @@ sub store {
 #             }
 #         }
 
+        if (defined($design_rep_type) && !$self->get_is_genotyping && !$self->get_is_analysis && !$self->get_is_sampling_trial) {
+            require CXGN::Trial::AccessionChange;
+            CXGN::Trial::AccessionChange->new({schema=>$chado_schema,trial_id=>$trial_id})
+                ->apply([],{normalize_occurrences=>1,rename_plots=>'none'});
+        }
         print STDERR "Design Stored ".localtime."\n";
     };
 

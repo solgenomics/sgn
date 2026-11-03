@@ -10,7 +10,7 @@ use CXGN::File::Parse;
 sub parse_file {
     return CXGN::File::Parse->new(
         file => $_[0], required_columns => [qw(plot_name accession_name)],
-        optional_columns => [qw(new_plot_name rejected reject_reason trial_name)],
+        optional_columns => [qw(new_plot_name free_text trial_name)],
         column_aliases => {plot_name => ['plot name'], accession_name => ['accession name']},
         unique_only_columns => [qw(plot_name new_plot_name)],
     )->parse;
@@ -46,11 +46,11 @@ subtest 'Blank separators do not discard later corrections' => sub {
 subtest 'Internal Unicode whitespace is part of stock identity and free text' => sub {
     my $name = "A\x{a0}B";
     my $reason = "затоплено\x{a0}після сходів";
-    for my $parsed (csv("plot_name,accession_name,reject_reason\nP1,$name,$reason\n"),
-                    xlsx([[qw(plot_name accession_name reject_reason)], ['P1',$name,$reason]])) {
+    for my $parsed (csv("plot_name,accession_name,free_text\nP1,$name,$reason\n"),
+                    xlsx([[qw(plot_name accession_name free_text)], ['P1',$name,$reason]])) {
         is_deeply($parsed->{errors}, [], 'valid Unicode file');
         is($parsed->{data}[0]{accession_name}, $name, 'distinct accession identity retained');
-        is($parsed->{data}[0]{reject_reason}, $reason, 'free-text spacing retained');
+        is($parsed->{data}[0]{free_text}, $reason, 'free-text spacing retained');
     }
 };
 subtest 'Uploaded row labels cannot hide conflicting plot corrections' => sub {
@@ -68,8 +68,8 @@ subtest 'Unknown headers are literal text' => sub {
     is_deeply($parsed->{additional_columns}, ['notes (original','.*'], 'extra columns classified literally');
 };
 subtest 'BOM, quoted identity and multiline text remain supported' => sub {
-    my $parsed = csv("\x{feff}Plot Name,Accession Name,reject_reason\r\n\"P,1\",\"зразок \"\"А\"\"\",\"rain, then\nwind\"\r\n");
+    my $parsed = csv("\x{feff}Plot Name,Accession Name,free_text\r\n\"P,1\",\"зразок \"\"А\"\"\",\"rain, then\nwind\"\r\n");
     is_deeply($parsed->{errors}, [], 'valid quoted CSV');
-    is_deeply($parsed->{data}[0], {_row=>2,plot_name=>'P,1',accession_name=>'зразок "А"',reject_reason=>"rain, then\nwind"}, 'all cell boundaries preserved');
+    is_deeply($parsed->{data}[0], {_row=>2,plot_name=>'P,1',accession_name=>'зразок "А"',free_text=>"rain, then\nwind"}, 'all cell boundaries preserved');
 };
 done_testing;

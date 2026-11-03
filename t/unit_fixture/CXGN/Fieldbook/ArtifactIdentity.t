@@ -6,6 +6,8 @@ use Test::More;
 use SGN::Test::Fixture;
 use SGN::Model::Cvterm;
 use CXGN::Fieldbook::DownloadTrial;
+use CXGN::Trial;
+use CXGN::Trial::AccessionChange;
 use CXGN::Trial::TrialLayout;
 use CXGN::Trial::Download;
 use CXGN::File::Parse;
@@ -44,6 +46,15 @@ sub names_in {
     die "Missing $header" if !defined $col;
     return [map {$sheet->{cell}[$col][$_]} 2..$sheet->{maxrow}];
 }
+sub row_for_plot {
+    my ($file, $plot_name) = @_;
+    my $sheet = ReadData($file)->[1];
+    my %col = map {($sheet->{cell}[$_][1] // '') => $_} 1..$sheet->{maxcol};
+    my ($row) = grep {($sheet->{cell}[$col{plot_name}][$_] // '') eq $plot_name} 2..$sheet->{maxrow};
+    die "No downloaded child row for $plot_name" if !defined $row;
+    return {map {$_ => $sheet->{cell}[$col{$_}][$row]} keys %col};
+}
+
 $schema->txn_begin;
 my $ran = eval {
     my $plot = $schema->resultset('Stock::Stock')->find({uniquename=>'test_trial215'});
@@ -81,6 +92,15 @@ my $ran = eval {
     is_deeply($parsed->{errors}, [], 'actual layout CSV parses without errors');
     ok((grep {$_->{accession_name} eq $unicode_name} @{$parsed->{data}}), 'CSV producer/parser round trip retains exact Unicode identity');
 
+    # Qualify all child dimensions through the platform's public creation
+    # methods, including the required indexes/properties/layout membership.
+    my $trial_object = CXGN::Trial->new({bcs_schema=>$schema,trial_id=>$trial,metadata_schema=>$f->metadata_schema,phenome_schema=>$f->phenome_schema});
+    my $config = {map {$_=>$f->config->{$_}} qw(basepath dbhost dbname dbuser dbpass)};
+    $config->{user_id}=41;$config->{temp_file_nd_experiment_id}="$dir/unused";
+    $config->{metadata_hash}={operator=>'janedoe',date=>'2026-11-02'};
+    die 'Plant setup failed' if !$trial_object->create_plant_entities(1,0,undef,undef,undef,undef,$config);
+    die 'Tissue setup failed' if !$trial_object->create_tissue_samples(['leaf'],0,0,undef,undef,$config);
+    die 'Subplot setup failed' if !$trial_object->create_subplot_entities(1,0,undef,undef,$config);
     1;
 };
 my $error = $@;

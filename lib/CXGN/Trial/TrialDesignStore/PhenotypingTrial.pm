@@ -29,6 +29,7 @@ sub BUILD {   # adjust the cvterm ids for phenotyping trials
         'plot_number',
         'block_number',
         'rep_number',
+        'design_rep_number',
         'is_a_control',
         'range_number',
         'row_number',
@@ -94,7 +95,7 @@ sub validate_design {
             }
             if ($property eq 'seedlot_name') {
                 my $stock_name = $design{$stock}->{$property};
-                if ($stock_name){
+                if (defined($stock_name) && $stock_name ne '') {
                     $seen_source_names{$stock_name}++;
                 }
             }

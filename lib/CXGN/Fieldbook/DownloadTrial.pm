@@ -216,7 +216,7 @@ sub download {
         all_stats => $self->all_stats,
         use_synonyms => $self->use_synonyms,
         selected_trait_ids => $self->selected_trait_ids,
-        trial_stock_type => $self->trial_stock_type,
+        trial_stock_type => $self->trial_stock_type
     });
     my $output = $trial_layout_download->get_layout_output();
     if ($output->{error_messages}){
@@ -240,13 +240,13 @@ sub download {
     my $plot_name_col = 0;
     my %text_column = map { $_ => 1 } grep {
         my $header = $output_array[0][$_] // '';
-        $header =~ /_name$/ || $header eq 'rep_number' || $header eq 'block_number';
+        $header =~ /_name$/ || $header eq 'rep_number' || $header eq 'design_rep_number' || $header eq 'block_number';
     } 0 .. $#{ $output_array[0] || [] };
     foreach my $l (@output_array){
         my $col_num = 0;
         foreach my $c (@$l){
             $plot_name_col = $col_num if $row_num == 0 && $c eq 'plot_name';
-            # Labels are text, and a value beginning with '=' must not
+            # Labels/reasons are text, and a value beginning with '=' must not
             # turn into a spreadsheet calculation. Real numeric data still use
             # the ordinary writer and retain their numeric cell type.
             if (defined($c) && ($row_num == 0 || $text_column{$col_num} || $c =~ /^=/)) {

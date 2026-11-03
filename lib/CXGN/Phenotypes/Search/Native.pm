@@ -49,6 +49,7 @@ use CXGN::Phenotypes::Summary;
 use Try::Tiny;
 use Data::Dumper;
 use SGN::Model::Cvterm;
+use CXGN::Trial::DesignReplication;
 use CXGN::Stock::StockLookup;
 use CXGN::Trial;
 use CXGN::Project;
@@ -802,6 +803,25 @@ sub search {
             phenotype_external_references => $phenotype_external_references
         };
 
+    }
+
+    # The historical analytical replica slot remains the recorded physical
+    # design group. Resolve live rows after cached layout/materialized data so
+    # a stale occurrence value cannot masquerade as a design group.
+    if (@result) {
+        my %unit_ids = map { $_->{obsunit_stock_id} => 1 } @result;
+        my $replication = CXGN::Trial::DesignReplication::read($schema, [keys %unit_ids]);
+        for my $row (@result) {
+            my $info = $replication->{$row->{obsunit_stock_id}};
+            $row->{rep} = $info->{value};
+            $row->{obsunit_rep} = $info->{value};
+            $row->{block} = $info->{block};
+            $row->{obsunit_block} = $info->{block};
+            $row->{obsunit_design_rep} = $info->{value};
+            $row->{obsunit_accession_occurrence} = $info->{occurrence_ready} ? $info->{occurrence} : undef;
+            $row->{obsunit_occurrence_ready} = $info->{occurrence_ready} ? 1 : 0;
+            $row->{obsunit_design_rep_recorded} = $info->{recorded} ? 1 : 0;
+        }
     }
 
     print STDERR "Search End:".localtime."\n";

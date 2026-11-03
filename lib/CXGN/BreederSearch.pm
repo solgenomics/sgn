@@ -192,6 +192,7 @@ sub avg_phenotypes_query {
   my $allow_missing = shift;
 
   return { error => 'Invalid trial ID.' } unless defined($trial_id) && $trial_id =~ /^\d+$/;
+
   my $numeric_regex = CXGN::Phenotypes::Summary::numeric_value_regex();
   my @bind;
   my $select = "SELECT table0.accession_id, table0.accession_name";
