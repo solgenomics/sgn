@@ -26,6 +26,31 @@ use CXGN::Trait::Treatment;
 
 my $f = SGN::Test::Fixture->new();
 
+
+# Each uploaded observation unit records its input design tag separately from
+# the operational replicate; only field layouts mark occurrence conversion.
+sub check_design_replication {
+    my ($trial_name, $input, $is_field) = @_;
+    my $schema = $f->bcs_schema;
+    my $trial_id = $schema->resultset('Project::Project')->find({name => $trial_name})->project_id;
+    my $type = SGN::Model::Cvterm->get_cvterm_row($schema, 'design_replicate', 'stock_property')->cvterm_id;
+    my @expected = sort {$a->[0] cmp $b->[0]} map {
+        [$_->{plot_name}, exists($_->{design_rep_number}) ? $_->{design_rep_number} : $_->{rep_number}]
+    } grep {ref($_) eq 'HASH' && defined($_->{plot_name})} values %$input;
+    my $actual = $schema->storage->dbh->selectall_arrayref(
+        'SELECT s.uniquename, sp.value FROM stock s
+         JOIN nd_experiment_stock nes ON nes.stock_id=s.stock_id
+         JOIN nd_experiment_project nep USING (nd_experiment_id)
+         JOIN stockprop sp ON sp.stock_id=s.stock_id AND sp.type_id=?
+         WHERE nep.project_id=? ORDER BY s.uniquename', undef, $type, $trial_id);
+    is_deeply($actual, \@expected, "$trial_name preserves every uploaded design replicate, including unknown tags");
+    my $version_type = SGN::Model::Cvterm->get_cvterm_row($schema, 'accession_occurrence_version', 'project_property')->cvterm_id;
+    my $versions = $schema->storage->dbh->selectcol_arrayref(
+        'SELECT value FROM projectprop WHERE project_id=? AND type_id=? ORDER BY rank',
+        undef, $trial_id, $version_type);
+    is_deeply($versions, $is_field ? ['1'] : [], "$trial_name marks occurrence conversion only for a field layout");
+}
+
 for my $extension ("xls", "xlsx", "csv") {
 
 	#######################################
@@ -239,7 +264,9 @@ for my $extension ("xls", "xlsx", "csv") {
 	my $post_project_prop_count = $f->bcs_schema->resultset('Project::Projectprop')->search({})->count();
 	my $post1_project_prop_diff = $post_project_prop_count - $pre_project_prop_count;
 	print STDERR "Projectprop: " . $post1_project_prop_diff . "\n";
-	ok($post1_project_prop_diff == 4, "check projectprop table after upload excel trial");
+	check_design_replication("Trial_upload_test", $parsed_data_check, 1);
+	# One field occurrence-version record is additional to the established rows.
+	ok($post1_project_prop_diff == 4 + 1, "check projectprop table after upload excel trial");
 
 	my $post_stock_count = $f->bcs_schema->resultset('Stock::Stock')->search({})->count();
 	my $post1_stock_diff = $post_stock_count - $pre_stock_count;
@@ -249,7 +276,7 @@ for my $extension ("xls", "xlsx", "csv") {
 	my $post_stock_prop_count = $f->bcs_schema->resultset('Stock::Stockprop')->search({})->count();
 	my $post1_stock_prop_diff = $post_stock_prop_count - $pre_stock_prop_count;
 	print STDERR "Stockprop: " . $post1_stock_prop_diff . "\n";
-	ok($post1_stock_prop_diff == 48, "check stockprop table after upload excel trial");
+	ok($post1_stock_prop_diff == 48 + 8, "check stockprop table after upload excel trial");
 
 	my $post_stock_relationship_count = $f->bcs_schema->resultset('Stock::StockRelationship')->search({})->count();
 	my $post1_stock_relationship_diff = $post_stock_relationship_count - $pre_stock_relationship_count;
@@ -491,7 +518,9 @@ for my $extension ("xls", "xlsx", "csv") {
 	$post_project_prop_count = $f->bcs_schema->resultset('Project::Projectprop')->search({})->count();
 	my $post2_project_prop_diff = $post_project_prop_count - $pre_project_prop_count;
 	print STDERR "Projectprop: " . $post2_project_prop_diff . "\n";
-	ok($post2_project_prop_diff == 15, "check projectprop table after adding genotyping project and uploading igd trial");
+	check_design_replication("test_genotyping_trial_upload", $igd_design_check, 0);
+	# The genotyping plate adds design snapshots but no field version record.
+	ok($post2_project_prop_diff == 15 + 1, "check projectprop table after adding genotyping project and uploading igd trial");
 
 	$post_stock_count = $f->bcs_schema->resultset('Stock::Stock')->search({})->count();
 	my $post2_stock_diff = $post_stock_count - $pre_stock_count;
@@ -501,7 +530,7 @@ for my $extension ("xls", "xlsx", "csv") {
 	$post_stock_prop_count = $f->bcs_schema->resultset('Stock::Stockprop')->search({})->count();
 	my $post2_stock_prop_diff = $post_stock_prop_count - $pre_stock_prop_count;
 	print STDERR "Stockprop: " . $post2_stock_prop_diff . "\n";
-	ok($post2_stock_prop_diff == 84, "check stockprop table after upload igd trial");
+	ok($post2_stock_prop_diff == 84 + 8 + 6, "check stockprop table after upload igd trial");
 
 	$post_stock_relationship_count = $f->bcs_schema->resultset('Stock::StockRelationship')->search({})->count();
 	my $post2_stock_relationship_diff = $post_stock_relationship_count - $pre_stock_relationship_count;
@@ -733,7 +762,8 @@ for my $extension ("xls", "xlsx", "csv") {
 	my $post_project_prop_count = $f->bcs_schema->resultset('Project::Projectprop')->search({})->count();
 	my $post1_project_prop_diff = $post_project_prop_count - $pre_project_prop_count;
 	print STDERR "Projectprop: " . $post1_project_prop_diff . "\n";
-	ok($post1_project_prop_diff == 19, "check projectprop table after upload excel trial");
+	check_design_replication("Trial_upload_with_seedlot_test", $parsed_data_check, 1);
+	ok($post1_project_prop_diff == 19 + 2, "check projectprop table after upload excel trial");
 
 	my $post_stock_count = $f->bcs_schema->resultset('Stock::Stock')->search({})->count();
 	my $post1_stock_diff = $post_stock_count - $pre_stock_count;

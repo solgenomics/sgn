@@ -1,7 +1,7 @@
 use strict;use warnings;use lib 't/lib';use Test::More;use JSON qw(encode_json decode_json);use SGN::Test::Fixture;use SGN::Model::Cvterm;use CXGN::Trial;use CXGN::Trial::TrialCreate;use CXGN::Trial::TrialLayout;use CXGN::Trial::TrialLayoutDownload;use CXGN::Trial::DesignReplication;use CXGN::Phenotypes::SearchFactory;use CXGN::BrAPI::v1::ObservationUnits;use CXGN::BrAPI::v2::ObservationUnits;
 my$f=SGN::Test::Fixture->new;my$s=$f->bcs_schema;my$dbh=$s->storage->dbh;$s->storage->auto_savepoint(1);my$prefix='audit_inherited_metadata_'.$$;
 my($trial,$other,$child,$pool,$cross,$external,@plots,@otherplots);
-{package InheritedMetaDbc;sub dbh{$_[0]{dbh}}}{package InheritedMetaClear;sub clear_cached_analyses_result{1}}{package InheritedMetaContext;sub dbc{$_[0]{dbc}}sub config{$_[0]{config}}sub controller{$_[0]{clear}}}
+{package InheritedMetaDbc;sub dbh{$_[0]{dbh}}}{package InheritedMetaClear;sub clear_cached_analyses_result{1}}{package InheritedMetaContext;sub dbc{$_[0]{dbc}}sub config{$_[0]{config}}sub controller{$_[0]{clear}}} ## no critic (Modules::RequireFilenameMatchesPackage) -- This test embeds its named test double beside the assertions.
 my$c=bless{dbc=>bless({dbh=>$dbh},'InheritedMetaDbc'),config=>$f->config,clear=>bless({},'InheritedMetaClear')},'InheritedMetaContext';
 sub term{SGN::Model::Cvterm->get_cvterm_row($s,@_)->cvterm_id}
 sub api{my$v=shift||2;my$class='CXGN::BrAPI::v'.$v.'::ObservationUnits';$class->new({bcs_schema=>$s,metadata_schema=>$f->metadata_schema,phenome_schema=>$f->phenome_schema,people_schema=>$f->people_schema,context=>$c,page=>0,page_size=>100,status=>[]})}

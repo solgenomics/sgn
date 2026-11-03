@@ -152,7 +152,7 @@ $trial_stock_type => undef
     </div>
 </div>
 
-<div class="form-group form-group-sm" id="ctrldiv" style="diaplay:none">
+<div class="form-group form-group-sm" id="ctrldiv">
     <label for="check_list_dropdown" class="col-sm-2 control-label">View Check Plots:</label><br />
     <div class="col-sm-12">
         <div id="heatmap_trial_checks_dropdown">

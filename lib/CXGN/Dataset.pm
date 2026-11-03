@@ -121,7 +121,7 @@ has 'name' =>        ( isa => 'Maybe[Str]',
 
 =head2 description()
 
-accessor for the descrition of this dataset
+accessor for the description of this dataset
 
 =cut
 

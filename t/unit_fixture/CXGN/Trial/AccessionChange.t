@@ -756,7 +756,7 @@ scenario 'rejected: the plot keeps everything; both properties are written; the 
     is_deeply($plan->{rejections}, [ { plot_id => $plot{10}, plot_name => 'test_trial210', rejected => 1, reject_reason => 'trampled by cattle', was_rejected => 0 } ], 'the plan lists the rejection, with the reason trimmed');
     is_deeply([ $plan->{changes}, $plan->{unchanged}, $plan->{warnings} ], [ [], [], [] ], 'no accession change, not "unchanged", no warnings');
     is_deeply($ac->summary($plan)->{rejections}, [ { plot_name => 'test_trial210', rejected => 1, reject_reason => 'trampled by cattle', was_rejected => 0 } ], 'the summary too');
-    isnt($ac->plan_digest($plan), $ac->plan_digest($ac->plan([ { plot_id => $plot{10}, rejected => 1, reject_reason => 'flooded' } ])), 'another reason is another plan');
+    isnt($ac->plan_digest($plan), $ac->plan_digest($ac->plan([ { plot_id => $plot{10}, rejected => 1, reject_reason => 'flooded' } ])), 'another reason is another plan'); # codespell:ignore isnt
     $ac->apply([ { plot_id => $plot{10}, rejected => 1, reject_reason => 'trampled by cattle' } ], { rename_plots => 'none' });
     is_deeply([ prop($plot{10}, 'rejected'), prop($plot{10}, 'reject_reason') ], [ '1', 'trampled by cattle' ], 'both properties on the plot');
     is_deeply([ linked_stock($plot{10}, 'plot_of'), prop($plot{10}, 'replicate'), name_of($plot{10}), prop($plot{10}, 'not_planted') ], [ 'test_accession3', $replicate, 'test_trial210', undef ], 'accession, replicate and name as before; planted');

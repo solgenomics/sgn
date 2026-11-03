@@ -49,7 +49,7 @@ is(refaddr($archive_phenome->storage->dbh),refaddr($dbh),'artifact experiment li
 my $dir=tempdir(CLEANUP=>1);
 my $prefix='audit_design_dto_'.$$;
 my ($trial,@plots,@files,@refresh);
-{package DesignDtoDbc;sub dbh {$_[0]{dbh}}}
+{package DesignDtoDbc;sub dbh {$_[0]{dbh}}} ## no critic (Modules::RequireFilenameMatchesPackage) -- This test embeds its named test double beside the assertions.
 {package DesignDtoClear;sub clear_cached_analyses_result {1}}
 {package DesignDtoContext;sub dbc {$_[0]{dbc}}sub config {$_[0]{config}}sub controller {$_[0]{clear}}}
 my $context=bless {dbc=>bless({dbh=>$dbh},'DesignDtoDbc'),config=>$f->config,clear=>bless({},'DesignDtoClear')},'DesignDtoContext';

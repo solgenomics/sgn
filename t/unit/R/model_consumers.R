@@ -160,7 +160,7 @@ if((run_group("h2_order") || run_group("h2")) && available(c("ltm","rjson","data
 }
 
 if(run_group("stratification") && available(c("dplyr","tidyr","jsonlite"),"actual environment stratification")) {
-  strat<-function(d,case){wd<-file.path(out,case);dir.create(wd);p<-file.path(wd,"phenotype.tsv");write_input(d,p);outputs<-file.path(wd,c("pairwise","groups","membership","ungrouped","summary","anova","message"));execute("R/environment_stratification.R",c(p,"Yield","0.05",outputs),wd);list(pairwise=json(outputs[1]),groups=json(outputs[2]),anova=json(outputs[6]))}
+  strat<-function(d,case){wd<-file.path(out,case);dir.create(wd);p<-file.path(wd,"phenotype.tsv");write_input(d,p);outputs<-file.path(wd,c("pairwise","groups","membership","ungrouped","summary","anova","message"));execute("R/environment_stratification.R",c(p,"Yield","0.05",outputs),wd);list(pairwise=json(outputs[1]),groups=json(outputs[2]),anova=json(outputs[6]))} # codespell:ignore strat
   d<-balanced("CRD",3);a<-strat(d,"strat_crd");b<-strat(renumber(d),"strat_occurrence")
   check(all(a$anova$design=="CRD"),"stratification honors explicit CRD")
   check(same(a$anova,b$anova)&&same(a$pairwise,b$pairwise),"stratification ignores accession-specific CRD occurrence renumbering")

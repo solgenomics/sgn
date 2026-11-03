@@ -47,7 +47,7 @@ has 'dbname' => (
 
                queryref: same structure as dataref, but instead of storing ids it stores a
                1 if user to retrieve an intersection of matches, or 0 for the default union,
-               or a fractional number (between 0 and 1) to filter a miniumum match percentage
+               or a fractional number (between 0 and 1) to filter a minimum match percentage
 
  Side Effects: none
  Example:   retrieving all the trials from location 'test_location' (location_id = 23) and year '2014' in the fixture db:

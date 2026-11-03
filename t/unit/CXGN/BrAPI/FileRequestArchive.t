@@ -40,7 +40,7 @@ subtest 'Serial archives retain separate identities and original bytes' => sub {
     my $first=archive([record('first')]);
     my $original=bytes($first);
     my $second=archive([record('second')]);
-    isnt($first,$second,'consecutive archive paths are unique, including within one second');
+    isnt($first,$second,'consecutive archive paths are unique, including within one second'); # codespell:ignore isnt
     is(bytes($first),$original,'a later request cannot overwrite the first archived input');
 };
 subtest 'Quoted Unicode text stays within its original CSV cells' => sub {

@@ -13,7 +13,7 @@ my @keys=map {CXGN::DroneImagery::DesignFactors::group_key('Alpha',$_,'B')} ('01
 my $codes=CXGN::DroneImagery::DesignFactors::category_codes(\@keys);
 is(scalar(keys %$codes),4,'numeric matrix category bijection preserves 01, 1, 0 and literal NA');
 is_deeply([sort values %$codes],[1,2,3,4],'matrix group codes are explicit category indices');
-isnt(CXGN::DroneImagery::DesignFactors::group_key('RCBD','x','B','Trial1'),CXGN::DroneImagery::DesignFactors::group_key('RCBD','x','B','Trial2'),'blocks from different trials are distinct fixed categories');
+isnt(CXGN::DroneImagery::DesignFactors::group_key('RCBD','x','B','Trial1'),CXGN::DroneImagery::DesignFactors::group_key('RCBD','x','B','Trial2'),'blocks from different trials are distinct fixed categories'); # codespell:ignore isnt
 for my $bad (['Alpha',undef,'B'],['Lattice','1',undef],['RCBD','999',undef]) {
     eval {CXGN::DroneImagery::DesignFactors::group_key(@$bad)};
     like($@,qr/Recorded.*metadata is missing/,'missing required recorded metadata is refused instead of using occurrences');

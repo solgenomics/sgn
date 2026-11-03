@@ -96,7 +96,7 @@ for (trait in traits) {
         cat(anovaOut, file=errorFile)
     } else if (is.null(anovaOut)) {
         
-        cat('Error occured fitting anova model to this trait data.
+        cat('Error occurred fitting anova model to this trait data.
              Please check the trait data and design factors.',
             file=errorFile)
         

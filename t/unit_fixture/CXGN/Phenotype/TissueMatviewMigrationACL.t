@@ -30,7 +30,7 @@ sub stable_metadata {
  my($v)=@_;my %copy=%$v;delete @copy{qw(oid definition)};
  $copy{indexes}=[map {[@$_[1..$#$_]]} @{$v->{indexes}}];return \%copy;
 }
-{package TissueACLContext;sub dbh {$_[0]{dbh}}}
+{package TissueACLContext;sub dbh {$_[0]{dbh}}} ## no critic (Modules::RequireFilenameMatchesPackage) -- This test embeds its named test double beside the assertions.
 sub patch {
  no warnings 'redefine';local *Bio::Chado::Schema::connect=sub {return $s};
  IncludeTissueSamplesInPhenotypeMatview::patch(bless({dbh=>$dbh},'TissueACLContext'));
@@ -91,7 +91,7 @@ my $ok=eval {
  ok($dbh->selectrow_array('SELECT to_regclass(?) IS NOT NULL',undef,'public.'.$dependent),'private dependent view still exists after refused migration');
  $dbh->do('DROP VIEW '.$dep);
  patch();my $after=snapshot();
- isnt($after->{oid},$before->{oid},'the actual legacy materialized view was rebuilt after removing only the private dependency');
+ isnt($after->{oid},$before->{oid},'the actual legacy materialized view was rebuilt after removing only the private dependency'); # codespell:ignore isnt
  is_deeply(stable_metadata($after),stable_metadata($before),'successful rebuild preserves grantors, column/table ACL, owner, indexes, access method, default tablespaces, comments, statistics, options and cluster hint');
  ok(($after->{definition}=~/\bstock_relationship\.type_id\s*=\s*ANY\s*\(ARRAY\[[\d,\s]*\b$tissue\b/),'rebuilt predicate includes the actual tissue relationship ID');
  is($dbh->selectrow_array(q{SELECT current_setting('default_tablespace')}),'pg_global','successful rebuild restores pg_global session value instead of moving the view there');

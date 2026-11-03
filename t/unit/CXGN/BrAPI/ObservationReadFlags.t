@@ -3,7 +3,7 @@ use strict;use warnings;use Test::More;use JSON ();use Bio::Chado::Schema;use CX
 # and query-string booleans. Any attempted database access fails this unit test.
 sub schema {$_[0]->connect(sub {die 'Read flag contract must not access a database'})}
 my %args=(bcs_schema=>schema('Bio::Chado::Schema'),metadata_schema=>schema('CXGN::Metadata::Schema'),phenome_schema=>schema('CXGN::Phenome::Schema'),people_schema=>schema('CXGN::People::Schema'),page=>0,page_size=>10,status=>[]);
-{package FlagPolicyNative;sub search {return([],[])}}
+{package FlagPolicyNative;sub search {return([],[])}} ## no critic (Modules::RequireFilenameMatchesPackage) -- This test embeds its named test double beside the assertions.
 my $exclude;
 no warnings 'redefine';
 local *CXGN::Phenotypes::SearchFactory::instantiate=sub {my($class,$engine,$params)=@_;$exclude=$params->{exclude_rejected};return bless{},'FlagPolicyNative'};
