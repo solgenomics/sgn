@@ -1,20 +1,6 @@
 // Depends on CXGN.BreedersToolbox.HTMLSelect
 
-// A failed optional language asset must not block the native save workflow.
-// Source messages remain ordinary text; this fallback never evaluates input.
-window.SGN = window.SGN || {};
-if (!window.SGN.i18n) {
-    window.SGN.i18n = {
-        locale: document.documentElement.lang || 'en',
-        requestedLocale: document.documentElement.getAttribute('data-sgn-locale') || document.documentElement.lang || 'en',
-        p: function (context, source, variables) {
-            variables = variables || {};
-            return source.replace(/%\{([A-Za-z_][A-Za-z0-9_]*)\}/g, function (match, name) {
-                return Object.prototype.hasOwnProperty.call(variables, name) ? String(variables[name]) : match;
-            });
-        }
-    };
-}
+// English fallback is owned by the standard shared SGN.t/tn helpers.
 
 function delete_phenotype_data_by_trial_id(trial_id) {
     var yes = confirm((window.SGN && window.SGN.i18n ? window.SGN.i18n.p("trial.card.delete_phenotype_data.confirm", "Are you sure you want to delete all phenotypic data associated with trial %{trial_id} ? This action cannot be undone.", { trial_id: ("" + trial_id) }) : "Are you sure you want to delete all phenotypic data associated with trial " + trial_id + " ? This action cannot be undone."));
@@ -410,7 +396,7 @@ function edit_trial_details(){
             if(jQuery('#'+id).is("select")){
                 new_value = changed_elements[i].options[changed_elements[i].selectedIndex].text
             }
-            success_message.push(SGN.i18n.p('trial.details.changed', 'Changed %{field} to: %{value}', {field: trial_detail_label(type), value: new_value}));
+            success_message.push(SGN.t('trial.details.changed', 'Changed %{field} to: %{value}', {field: trial_detail_label(type), value: new_value}));
         }
 
         save_trial_details(categories, new_details, success_message);
@@ -609,30 +595,33 @@ function reset_dialog_body (body_id, body_html) {
 /** Return a human label without changing the canonical trial field key. */
 function trial_detail_label(field) {
     switch (field) {
-    case 'name': return SGN.i18n.p('trial.field.name', 'Trial Name');
-    case 'breeding_program': return SGN.i18n.p('trial.field.breeding_program', 'Breeding Program');
-    case 'location': return SGN.i18n.p('trial.field.location', 'Location');
-    case 'year': return SGN.i18n.p('trial.field.year', 'Year');
-    case 'type': return SGN.i18n.p('trial.field.type', 'Trial Type');
-    case 'planting_date': return SGN.i18n.p('trial.field.planting_date', 'Planting Date');
-    case 'transplanting_date': return SGN.i18n.p('trial.field.transplanting_date', 'Transplanting Date');
-    case 'harvest_date': return SGN.i18n.p('trial.field.harvest_date', 'Harvest Date');
-    case 'description': return SGN.i18n.p('trial.field.description', 'Description');
-    case 'field_size': return SGN.i18n.p('trial.field.field_size', 'Field Size (ha)');
-    case 'plot_width': return SGN.i18n.p('trial.field.plot_width', 'Plot Width (m)');
-    case 'plot_length': return SGN.i18n.p('trial.field.plot_length', 'Plot Length (m)');
-    case 'plan_to_genotype': return SGN.i18n.p('trial.field.plan_to_genotype', 'Trial Will Be Genotyped');
-    case 'plan_to_cross': return SGN.i18n.p('trial.field.plan_to_cross', 'Trial Will Be Crossed');
+    case 'name': return SGN.t('trial.field.name', 'Trial Name');
+    case 'breeding_program': return SGN.t('trial.field.breeding_program', 'Breeding Program');
+    case 'location': return SGN.t('trial.field.location', 'Location');
+    case 'year': return SGN.t('trial.field.year', 'Year');
+    case 'type': return SGN.t('trial.field.type', 'Trial Type');
+    case 'planting_date': return SGN.t('trial.field.planting_date', 'Planting Date');
+    case 'transplanting_date': return SGN.t('trial.field.transplanting_date', 'Transplanting Date');
+    case 'harvest_date': return SGN.t('trial.field.harvest_date', 'Harvest Date');
+    case 'description': return SGN.t('trial.field.description', 'Description');
+    case 'field_size': return SGN.t('trial.field.field_size', 'Field Size (ha)');
+    case 'plot_width': return SGN.t('trial.field.plot_width', 'Plot Width (m)');
+    case 'plot_length': return SGN.t('trial.field.plot_length', 'Plot Length (m)');
+    case 'plan_to_genotype': return SGN.t('trial.field.plan_to_genotype', 'Trial Will Be Genotyped');
+    case 'plan_to_cross': return SGN.t('trial.field.plan_to_cross', 'Trial Will Be Crossed');
     default: return field;
     }
 }
 
 function save_trial_details (categories, details, success_message) {
   var trial_id = get_trial_id();
+  var runtime = window.SGN && SGN.i18n;
+  var locale = runtime && (runtime.requestedLocale || runtime.locale)
+    || document.documentElement.getAttribute('data-sgn-locale') || document.documentElement.lang || 'en';
   jQuery.ajax( {
     url: '/ajax/breeders/trial/'+trial_id+'/details/',
     type: 'POST',
-    headers: {'X-SGN-Locale': SGN.i18n.requestedLocale || SGN.i18n.locale},
+    headers: {'X-SGN-Locale': locale},
     data: { 'categories' : categories, 'details' : details },
 
     success: function(response) {
@@ -648,7 +637,7 @@ function save_trial_details (categories, details, success_message) {
       }
     },
     error: function(response) {
-      jQuery('#trial_details_error_message').empty().append(jQuery('<li>').addClass('list-group-item list-group-item-danger').text(SGN.i18n.p('trial.details.network_error', 'Trial detail update AJAX request failed. Update not completed.')));
+      jQuery('#trial_details_error_message').empty().append(jQuery('<li>').addClass('list-group-item list-group-item-danger').text(SGN.t('trial.details.network_error', 'Trial detail update AJAX request failed. Update not completed.')));
       jQuery('#trial_details_error_dialog').modal("show");
     },
   });

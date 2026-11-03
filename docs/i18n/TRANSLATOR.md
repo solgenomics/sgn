@@ -11,6 +11,11 @@ formulas and machine import/export/API keys remain data. Keep complete English
 fallbacks. A missing, fuzzy or incomplete translation retains its whole English
 message; a filled obsolete source or changed plural identity is rejected.
 
+Use the same command entry point throughout. Run `sgn-i18n COMMAND --help`
+for options. Use absolute paths for tools and release/workspace/store locations
+when working outside the application checkout. Operators can follow the
+[short installation procedure](README.md#enable-a-ready-language-pack) directly.
+
 ## Release builder: freeze source once
 
 Only the source-release builder needs the qualified Perl/PPI, JavaScript/Acorn
@@ -21,7 +26,7 @@ application source, using its exact application version or commit:
 SGN_ROOT=/path/to/frozen-sgn-source
 RELEASE_DIR=/path/to/release-output
 
-python3 "$SGN_ROOT/bin/i18n/catalog.py" --root "$SGN_ROOT" freeze \
+python3 "$SGN_ROOT/bin/i18n/sgn-i18n" freeze --root "$SGN_ROOT" \
   --application-version APPLICATION_VERSION_OR_COMMIT \
   --output "$RELEASE_DIR/release.json"
 ```
@@ -40,7 +45,7 @@ revision or invalid/incomplete partition references before writing outputs.
 
 ## Translator: initialize or merge an external PO
 
-A translator building from the frozen snapshot needs Python 3 and GNU gettext
+A translator building from the frozen snapshot needs Python 3.9+ and GNU gettext
 (`msgfmt`, `msgcat`, `msgmerge`), without Node, Acorn, PPI, R or an application
 checkout. The copied Python tool modules parse source only for the explicit
 source-extraction commands; `init/build --release` never invokes those parsers.
@@ -51,7 +56,7 @@ RELEASE_JSON=/path/to/release-output/release.json
 PO_WORKSPACE=/path/to/translator-workspace
 PO_FILE="$PO_WORKSPACE/fr/LC_MESSAGES/sgn.po"
 
-python3 "$I18N_TOOLS/catalog.py" init --release "$RELEASE_JSON" \
+python3 "$I18N_TOOLS/sgn-i18n" init --release "$RELEASE_JSON" \
   --locale fr --direction ltr --plural-forms 'nplurals=2; plural=(n > 1);' \
   --name 'Français' --output "$PO_FILE"
 ```
@@ -88,10 +93,10 @@ counts measure coverage; they do not certify linguistic or scientific quality.
 ## Translator or release builder: compile and package
 
 ```sh
-python3 "$I18N_TOOLS/catalog.py" build --release "$RELEASE_JSON" \
+python3 "$I18N_TOOLS/sgn-i18n" build --release "$RELEASE_JSON" \
   --po "$PO_FILE" --output "$PO_WORKSPACE/build-v1"
 
-python3 "$I18N_TOOLS/pack.py" create \
+python3 "$I18N_TOOLS/sgn-i18n" create \
   --catalog "$PO_WORKSPACE/build-v1/fr/sgn/index.json" \
   --output "$PO_WORKSPACE/pack-v1"
 
@@ -107,37 +112,43 @@ all-count form bounds and rejects unsafe or unsupported formulas.
 The normal output is an indexed common/workflow bundle. The index and every
 partition have independent 2 MiB limits. The pack binds all file checksums and
 its source revision in one manifest; one missing, extra, symlinked, mismatched or
-conflicting member rejects the package. Preserve `catalogSha256` printed by
-`create`: for an indexed package it identifies the complete file-hash set.
+conflicting member rejects the package. The `catalogSha256` printed by
+`create` equals the `installed` hash printed by `install`: for an indexed package it identifies the complete file-hash set.
 
 A small existing single-file catalog remains supported through
-`build --legacy-single-file`, followed by `pack.py create --catalog .../fr/sgn.json`.
+`build --legacy-single-file`, followed by `sgn-i18n create --catalog .../fr/sgn.json`.
 The full multilingual corpus must use indexed packages rather than increasing
 the single-file limit.
 
 ## Operator: install, activate and roll back
 
-Operators need Python's standard library and three files: `pack.py`,
-`catalog_format.py` and `plural.py`. The installer does not import the builder
-or source extractors. Ready
-package validation, installation, activation and rollback require no Node,
+Operators use the same `sgn-i18n` command with Python 3.9+ on Linux/POSIX.
+The tools use only the standard library, including the host's `fcntl` store lock.
+A minimal operator distribution contains that launcher plus `pack.py`,
+`catalog_format.py` and `plural.py`. The three modules also remain independently
+usable; copying the whole supplied tool directory does not install parser dependencies.
+The installer does not import the builder or source extractors. Ready-package
+validation, installation, activation and rollback require no Node,
 gettext, Perl, R or application source. Use a separate writable store, preserve
-both the current and previous immutable package, and keep its absolute path
-stable when mounting it into a container.
+both the current and previous immutable package. Mount the whole store in the
+application container; its absolute mount path can differ from the operator's
+path. New activations use store-relative pointers. Existing absolute selectors
+remain readable; activate the desired package with the new tools before moving
+an older store. No catalog rebuild or data migration is required.
 
 ```sh
 PACK_STORE=/path/to/operator-language-store
-python3 "$I18N_TOOLS/pack.py" install \
+python3 "$I18N_TOOLS/sgn-i18n" install \
   --pack "$PO_WORKSPACE/pack-v1" --root "$PACK_STORE"
 
-CATALOG_SHA=64_HEX_DIGITS_PRINTED_BY_CREATE
-python3 "$I18N_TOOLS/pack.py" activate \
+CATALOG_SHA=64_HEX_DIGITS_FROM_INSTALL_RECEIPT
+python3 "$I18N_TOOLS/sgn-i18n" activate \
   --locale fr --hash "$CATALOG_SHA" --root "$PACK_STORE"
 
-python3 "$I18N_TOOLS/pack.py" rollback --locale fr --root "$PACK_STORE"
+python3 "$I18N_TOOLS/sgn-i18n" rollback --locale fr --root "$PACK_STORE"
 ```
 
-`create` and `install` already validate their inputs; use `pack.py validate`
+`create` and `install` already validate their inputs; use `sgn-i18n validate`
 only to inspect a package without installing it.
 
 Installation validates and copies the complete immutable package to

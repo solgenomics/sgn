@@ -11,7 +11,11 @@ Follow [PEP 20](https://peps.python.org/pep-0020/): make behavior explicit and
 readable, use existing platform features and give each function one clear job.
 Keep data-format rules in `catalog_format.py`, build work in `catalog.py`, and
 installation in `pack.py`. Do not add flags, backends or compatibility paths
-without a real caller. State errors clearly and preserve input data. Simplify
+without a real caller. Keep one documented command entry point and one source
+of truth for each setting. Show the minimum working setup first; give optional
+settings their defaults and purpose. Require explicit output paths for generated
+artifacts. Use the project's formatter versions instead of hand-formatting or
+adding lint exceptions. State errors clearly and preserve input data. Simplify
 only when runtime checks confirm the intended behavior; retain necessary
 validation, package integrity and rollback boundaries.
 

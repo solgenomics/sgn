@@ -3,6 +3,9 @@
 
 import collections
 import re
+import shutil
+import subprocess
+import tempfile
 import unittest
 
 # Test names state their contracts; raw source fixtures retain exact line layouts.
@@ -46,6 +49,35 @@ class ManualTranslationTests(unittest.TestCase):
         for locale in LANGUAGES:
             for chapter in self.chapters:
                 yield locale, chapter, (ROOT / chapter).read_text(), (ROOT / "i18n" / locale / chapter).read_text()
+
+    @unittest.skipUnless(shutil.which("Rscript"), "Rscript not installed")
+    def test_build_help_and_invalid_outputs_do_not_render_or_write(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            scratch = Path(temporary)
+            alias = scratch / "manual-link"
+            alias.symlink_to(ROOT, target_is_directory=True)
+            command = ["Rscript", "--vanilla", str(ROOT / "build.R")]
+            result = subprocess.run(command + ["--help"], capture_output=True, text=True, check=False)
+            self.assertEqual(result.returncode, 0, result.stderr)
+            self.assertIn("/absolute/output", result.stdout)
+            cases = [
+                (["uk"], "Usage:"),
+                (["uk", "relative-output"], "absolute path"),
+                (["uk", str(ROOT / "generated")], "overlap"),
+                (["uk", str(ROOT.parent)], "overlap"),
+                (["uk", "/"], "overlap"),
+                (["uk", str(alias / "generated")], "overlap"),
+                (["uk", str(scratch / "missing" / ".." / "manual-link" / "generated")], "overlap"),
+                (["uk", str(scratch / "output"), "bad-mode"], "split or single"),
+                (["uk", str(scratch / "output"), "split", "extra"], "Usage:"),
+            ]
+            for args, error in cases:
+                with self.subTest(args=args):
+                    result = subprocess.run(command + args, capture_output=True, text=True, check=False)
+                    self.assertNotEqual(result.returncode, 0)
+                    self.assertIn(error, result.stderr)
+            self.assertEqual(list(scratch.iterdir()), [alias])
+            self.assertFalse((ROOT / "generated").exists())
 
     def test_all_current_chapters_have_one_copy_per_language(self):
         self.assertTrue(self.chapters)

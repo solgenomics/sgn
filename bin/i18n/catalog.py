@@ -450,6 +450,15 @@ def main():
     init.add_argument("--plural-forms", required=True)
     init.add_argument("--output", type=Path, required=True)
     init.add_argument("--name", help="native language name, such as Français; optional for old packs")
+    # Keep direct catalog.py callers compatible; the shared launcher uses
+    # COMMAND --root PATH like every other command option.
+    for command in commands.choices.values():
+        command.add_argument(
+            "--root",
+            type=Path,
+            default=argparse.SUPPRESS,
+            help="application source root (default: current directory)",
+        )
     args = parser.parse_args()
     root = args.root.resolve()
     release_path = getattr(args, "release", None)

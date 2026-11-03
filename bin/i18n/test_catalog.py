@@ -82,12 +82,10 @@ SGN.i18n.np('trial.count', '%{count} trial', '%{count} trials', n, {count:n});
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
             path = root / "test.js"
-            path.write_text(
-                """/* SGN.i18n.p('a','Fake') */
+            path.write_text("""/* SGN.i18n.p('a','Fake') */
 const x = "SGN.i18n.p('a','Fake')";
 SGN.i18n.p('real', 'Quote: \\' and \\"');
-"""
-            )
+""")
             records = extract_file(path, root)
             self.assertEqual(len(records), 1)
             self.assertEqual(records[0]["context"], "real")

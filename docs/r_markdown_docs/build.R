@@ -1,16 +1,40 @@
 # The default English build remains the original Bookdown command.
 args <- commandArgs(trailingOnly = TRUE)
+usage <- "Usage: Rscript build.R LOCALE /absolute/output [split|single]"
+if (identical(args, "--help") || identical(args, "-h")) {
+    cat(usage, "\nLocales: en, uk, es, ar. Default mode: split.\n",
+        "No arguments: original English Bookdown build.\n", sep = "")
+    quit(status = 0)
+}
+if (length(args) && (length(args) < 2L || length(args) > 3L)) stop(usage)
 file_arg <- grep("^--file=", commandArgs(FALSE), value = TRUE)
 source_dir <- if (length(file_arg)) dirname(normalizePath(sub("^--file=", "", file_arg[1]))) else getwd()
 setwd(source_dir)
 
+# Resolve existing symlink prefixes and missing output components without writes.
+resolve_output <- function(path) {
+    if (dir.exists(path)) return(normalizePath(path, mustWork = TRUE))
+    parent <- resolve_output(dirname(path))
+    leaf <- basename(path)
+    if (leaf == ".") return(parent)
+    if (leaf == "..") return(dirname(parent))
+    resolved <- file.path(parent, leaf)
+    if (dir.exists(resolved)) normalizePath(resolved, mustWork = TRUE) else resolved
+}
+
 render_language <- function(locale, output_dir, single_page = FALSE) {
     if (!locale %in% c("en", "uk", "es", "ar")) stop("Unsupported manual locale")
+    if (!startsWith(output_dir, "/")) stop("Manual output must be an absolute path outside the source directory")
+    output_dir <- resolve_output(output_dir)
+    output_prefix <- paste0(sub("/+$", "", output_dir), "/")
+    source_prefix <- paste0(source_dir, "/")
+    if (startsWith(output_prefix, source_prefix) || startsWith(source_prefix, output_prefix)) {
+        stop("Manual output must not overlap the source directory")
+    }
     chapter_files <- yaml::read_yaml("_bookdown.yml")$rmd_files
     locale_dir <- if (locale == "en") source_dir else file.path(source_dir, "i18n", locale)
     required <- c(chapter_files, "_bookdown.yml", "_output.yml")
     if (!all(file.exists(file.path(locale_dir, required)))) stop("Incomplete manual language source")
-    output_dir <- normalizePath(output_dir, mustWork = FALSE)
     dir.create(output_dir, recursive = TRUE, showWarnings = FALSE)
     stage <- tempfile(paste0("breedbase-manual-", locale, "-"))
     dir.create(stage)
@@ -47,7 +71,7 @@ if (!length(args)) {
     bookdown::render_book("index.Rmd", "bookdown::gitbook")
 } else {
     locale <- args[1]
-    output_dir <- if (length(args) >= 2) args[2] else file.path(dirname(source_dir), if (locale == "en") "" else locale)
+    output_dir <- args[2]
     mode <- if (length(args) >= 3) args[3] else "split"
     if (!mode %in% c("split", "single")) stop("Manual mode must be split or single")
     render_language(locale, output_dir, mode == "single")

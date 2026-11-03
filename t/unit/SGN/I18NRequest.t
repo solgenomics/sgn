@@ -1,3 +1,4 @@
+package main;
 use strict;
 use warnings;
 use Test::More;
@@ -51,8 +52,26 @@ subtest 'missing and corrupt unselected languages are isolated' => sub {
     $c = context(); $c->req->{params}{lang} = 'en';
     is($c->i18n->locale, 'en', 'English request survives corrupt other catalog');
     is_deeply([map {$_->{locale}} $c->i18n_locale_choices], ['en','uk'], 'Corrupt language is omitted');
-    is(scalar @{$c->log->{warnings}}, 1, 'Catalog failure is logged once per request');
+    is(scalar @{$c->log->{warnings}}, 2, 'Missing and corrupt catalogs are each logged once per request');
     write_catalog('ar');
+};
+subtest 'setup errors identify the store and usable parent languages survive' => sub {
+    my $missing = "$root/not-installed";
+    my $c = context(i18n_catalog_dir => $missing, i18n_enabled_locales => 'en,uk');
+    $c->req->{params}{lang} = 'uk';
+    is($c->i18n->locale, 'en', 'Missing store safely retains English');
+    is_deeply([map {$_->{locale}} $c->i18n_locale_choices], ['en'], 'Missing store offers English only');
+    is(scalar @{$c->log->{warnings}}, 1, 'Repeated access logs the missing configured pack once');
+    like($c->log->{warnings}[0], qr/\Q$missing\E/, 'Diagnostic names the configured store');
+    like($c->log->{warnings}[0], qr/no installed catalog/, 'Diagnostic explains the missing pack');
+    write_catalog('uk-UA', '{}');
+    $c = context(i18n_enabled_locales => 'en,uk-UA,uk,ar');
+    $c->req->{params}{lang} = 'uk-UA';
+    $c->req->headers->header('Accept-Language' => 'ar');
+    is($c->i18n->locale, 'uk', 'Usable parent wins over the next browser preference');
+    is($c->stash->{i18n_locale_source}, 'query', 'Parent retains the explicit preference source');
+    is(scalar @{$c->log->{warnings}}, 1, 'Corrupt regional pack is logged once');
+    unlink "$root/uk-UA/sgn.json" or die $!;
 };
 subtest 'explicit preference, cookie, regional fallback and disabled feature' => sub {
     my $c = context();

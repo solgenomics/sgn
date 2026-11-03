@@ -1,3 +1,4 @@
+package main;
 use strict;
 use warnings;
 use Test::More;
@@ -10,9 +11,11 @@ use URI;
 use HTML::Mason::Interp;
 use HTML::Parser;
 use SGN::I18N;
+use Path::Class;
 {
     package Local::NavigationRequest;
     sub uri { URI->new('/search/stocks?tag=A%26B&lang=en') }
+    sub path { 'search/stocks' }
     package Local::NavigationContext;
     use Moose;
     has config => (is=>'ro');
@@ -20,6 +23,7 @@ use SGN::I18N;
     has stash => (is=>'ro',default=>sub{{}});
     sub req { bless {}, 'Local::NavigationRequest' }
     sub i18n { $_[0]->translator }
+    sub path_to { shift; Path::Class::file(@_) }
     with 'SGN::Role::Site::I18N';
 }
 my $tmp = tempdir(CLEANUP=>1);
@@ -28,7 +32,7 @@ sub save {
     my ($path,$text)=@_; my $dir=$path; $dir=~s{/[^/]+$}{}; make_path($dir);
     open my $out,'>:encoding(UTF-8)',$path or die $!; print {$out} $text; close $out;
 }
-for my $file ('site/toolbar.mas','site/toolbar/about.mas','site/toolbar/login.mas','i18n/language_selector.mas') {
+for my $file ('site/toolbar.mas','site/toolbar/about.mas','site/toolbar/login.mas','i18n/language_selector.mas','site/header/head.mas') {
     my $target="$tmp/comp/$file"; my $dir=$target; $dir=~s{/[^/]+$}{}; make_path($dir);
     copy("$root/mason/$file",$target) or die $!;
 }
@@ -69,4 +73,27 @@ for my $locale (qw(en uk es ar)) {
         save("$evidence/$locale.html",$document);
     }
 }
+for my $component ('util/import_css.mas', 'site/header/local_head.mas', 'site/header/analytics.mas') {
+    save("$tmp/comp/$component", '');
+}
+save("$tmp/comp/util/import_javascript.mas", '<script src="/js/sgn.js"></script>');
+subtest 'disabled localization has no optional runtime requests' => sub {
+    for my $enabled (0, 1) {
+        my $c = Local::NavigationContext->new(config => {i18n_enabled => $enabled},
+            translator => SGN::I18N->new(locale => 'en'));
+        my $html = '';
+        my $interp = HTML::Mason::Interp->new(comp_root => "$tmp/comp", data_dir => "$tmp/cache",
+            allow_globals => ['$c'], preamble => 'use utf8;', autohandler_name => '__unit_no_autohandler__',
+            out_method => \$html);
+        $interp->set_global('$c', $c);
+        $interp->exec('/site/header/head.mas');
+        like($html, qr{/js/sgn.js}, 'Ordinary shared script remains present');
+        if ($enabled) {
+            like($html, qr{/i18n/runtime.js.*?/i18n/bootstrap.js.*?/js/sgn.js}s,
+                'Enabled runtime and catalog precede ordinary consumers');
+        } else {
+            unlike($html, qr{/i18n/(?:runtime|bootstrap)\.js}, 'Disabled page omits both optional requests');
+        }
+    }
+};
 done_testing;

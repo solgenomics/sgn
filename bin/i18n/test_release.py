@@ -28,9 +28,7 @@ class ReleaseTests(unittest.TestCase):  # pylint: disable=too-many-public-method
     def setUp(self):
         # unittest addCleanup retains ownership even after a failed assertion.
         # pylint: disable=consider-using-with
-        self.temporary = tempfile.TemporaryDirectory(
-            prefix="sgn-i18n-release-test-"
-        )  # pylint: disable=consider-using-with
+        self.temporary = tempfile.TemporaryDirectory(prefix="sgn-i18n-release-test-")
         self.addCleanup(self.temporary.cleanup)
         self.root = Path(self.temporary.name)
 
@@ -86,7 +84,7 @@ class ReleaseTests(unittest.TestCase):  # pylint: disable=too-many-public-method
         """Install tools run without importing the builder or source extractors."""
         operator = self.root / "operator"
         operator.mkdir()
-        for name in ("pack.py", "catalog_format.py", "plural.py"):
+        for name in ("sgn-i18n", "pack.py", "catalog_format.py", "plural.py"):
             shutil.copyfile(TOOLS / name, operator / name)
         source = self.root / "catalog.json"
         source.write_bytes(catalog.json_bytes(self.native_catalog()))
@@ -94,7 +92,7 @@ class ReleaseTests(unittest.TestCase):  # pylint: disable=too-many-public-method
         result = subprocess.run(
             [
                 sys.executable,
-                str(operator / "pack.py"),
+                str(operator / "sgn-i18n"),
                 "create",
                 "--catalog",
                 str(source),
@@ -108,6 +106,25 @@ class ReleaseTests(unittest.TestCase):  # pylint: disable=too-many-public-method
         )
         self.assertEqual(result.returncode, 0, result.stderr)
         self.assertEqual(json.loads(result.stdout)["locale"], "es")
+
+    def test_shared_command_accepts_source_root_after_command(self):
+        """The documented launcher and old direct syntax read the same source."""
+        source = self.root / "source"
+        (source / "locale").mkdir(parents=True)
+        (source / "locale/sources.txt").write_text("")
+        receipt = self.command("sgn-i18n", "extract", "--root", source)
+        self.assertEqual(receipt["messages"], 0)
+        template = (source / "locale/sgn.pot").read_bytes()
+        self.assertEqual(self.command("catalog.py", "--root", source, "extract"), receipt)
+        self.assertEqual((source / "locale/sgn.pot").read_bytes(), template)
+        result = subprocess.run(
+            [sys.executable, str(TOOLS / "sgn-i18n"), "freeze", "--help"],
+            capture_output=True,
+            text=True,
+            check=False,
+        )
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertIn("--root", result.stdout)
 
     def test_json_inputs_are_bounded_and_reject_non_json_numbers(self):
         """Malformed JSON cannot enter a ready pack or exceed the read limit."""
@@ -215,7 +232,7 @@ class ReleaseTests(unittest.TestCase):  # pylint: disable=too-many-public-method
         po.write_text(text)
         output = self.root / "build"
         self.command(
-            "catalog.py", "--root", empty_root, "build", "--release", release, "--po", po, "--output", output, env=env
+            "sgn-i18n", "build", "--root", empty_root, "--release", release, "--po", po, "--output", output, env=env
         )
         index = output / "es/sgn/index.json"
         package = self.root / "release-pack"
@@ -296,6 +313,10 @@ class ReleaseTests(unittest.TestCase):  # pylint: disable=too-many-public-method
         )
         self.assertTrue(same["unchanged"])
         self.assertEqual((store / "history/es.json").read_bytes(), before)
+        relocated = self.root / "container-mounted-store"
+        store.rename(relocated)
+        store = relocated
+        self.assertTrue((store / "active/es/sgn/index.json").is_file())
         self.command("pack.py", "rollback", "--locale", "es", "--root", store, env=env)
         self.assertEqual(
             json.loads((store / "active/es/sgn.json").read_text())["messages"]["controls.save\x04Save"]["forms"],
@@ -336,8 +357,9 @@ class ReleaseTests(unittest.TestCase):  # pylint: disable=too-many-public-method
         before_active = os.readlink(active)
         before_history = (store / "history/es.json").read_bytes()
         for operation in ("atomic_json", "atomic_link"):
-            with self.subTest(operation=operation), patch.object(
-                pack, operation, side_effect=PermissionError("injected storage failure")
+            with (
+                self.subTest(operation=operation),
+                patch.object(pack, operation, side_effect=PermissionError("injected storage failure")),
             ):
                 with self.assertRaises(PermissionError):
                     self.in_process("activate", "--locale", "es", "--hash", two["catalogSha256"], "--root", store)
@@ -388,6 +410,33 @@ class ReleaseTests(unittest.TestCase):  # pylint: disable=too-many-public-method
         with self.assertRaisesRegex(ValueError, "identity mismatch"):
             self.in_process("activate", "--locale", "es", "--hash", fake, "--root", store)
         self.assertEqual(os.readlink(store / "active/es"), before)
+
+    def test_absolute_generations_remain_compatible_and_new_generations_can_move(self):
+        """Existing stores upgrade without losing rollback or requiring equal mount paths."""
+        store, one, two = self.prepared_store()
+        selector = store / "active/es"
+        generation = selector.resolve()
+        runtime = generation / "sgn.json"
+        target = runtime.resolve()
+        # Recreate the previous installer's absolute selector representation.
+        selector.unlink()
+        selector.symlink_to(generation)
+        runtime.unlink()
+        runtime.symlink_to(target)
+        history_before = (store / "history/es.json").read_bytes()
+        self.in_process("activate", "--locale", "es", "--hash", one["catalogSha256"], "--root", store)
+        self.assertEqual((store / "history/es.json").read_bytes(), history_before)
+        selected = selector.readlink()
+        self.in_process("activate", "--locale", "es", "--hash", one["catalogSha256"], "--root", store)
+        self.assertEqual(selector.readlink(), selected, "A current relative generation remains a no-op")
+        moved = self.root / "different-mount-path"
+        store.rename(moved)
+        self.assertIn("Guardar 1", (moved / "active/es/sgn.json").read_text())
+        self.in_process("activate", "--locale", "es", "--hash", two["catalogSha256"], "--root", moved)
+        self.assertIn("Guardar 2", (moved / "active/es/sgn.json").read_text())
+        self.in_process("rollback", "--locale", "es", "--root", moved)
+        self.assertIn("Guardar 1", (moved / "active/es/sgn.json").read_text())
+        self.in_process("activate", "--locale", "es", "--hash", one["catalogSha256"], "--root", moved)
 
     def test_corrupt_selected_pack_can_roll_back_to_valid_previous_version(self):
         """Corrupt selected pack can roll back to valid previous version."""

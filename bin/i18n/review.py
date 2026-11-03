@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Export one frozen workflow into a separate gettext review workspace."""
+
 import argparse
 from pathlib import Path
 
@@ -47,9 +48,9 @@ def main():
     )
     report = f"""# Translation review: {args.workflow}
 
-Application version: {release['applicationVersion']}
+Application version: {release["applicationVersion"]}
 
-Source revision: {release['sourceRevision']}
+Source revision: {release["sourceRevision"]}
 
 {len(messages)} of {len(all_messages)} source messages, starting at offset {args.offset}.
 {next_batch}. Filled text may be machine-generated; export does not certify human

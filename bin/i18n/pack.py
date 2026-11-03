@@ -207,7 +207,8 @@ def atomic_link(path, target, replace_file=False):
         raise ValueError("refusing to replace a non-symlink active catalog")
     temporary = path.parent / (".i18n-link-" + str(os.getpid()))
     temporary.unlink(missing_ok=True)
-    temporary.symlink_to(target)
+    target = Path(target)
+    temporary.symlink_to(os.path.relpath(target, path.parent) if target.is_absolute() else target)
     try:
         os.replace(temporary, path)
     finally:
@@ -425,7 +426,7 @@ def publish_state(root, locale, current, history):
         if current:
             target = checked_target(root, locale, current)
             (generation / ("sgn" if target.name == "index.json" else "sgn.json")).symlink_to(
-                target.parent if target.name == "index.json" else target
+                os.path.relpath(target.parent if target.name == "index.json" else target, generation)
             )
         history_view = root / "history" / (locale + ".json")
         wanted = Path("../active") / locale / ".history.json"
@@ -591,6 +592,11 @@ def main():
                 )
             )
             if current == target:
+                active = root / "active" / args.locale
+                runtime = active / ("sgn" if manifest.get("format") == "indexed" else "sgn.json")
+                # Upgrade old absolute pointers without adding an activation event.
+                if not active.is_symlink() or any(Path(os.readlink(link)).is_absolute() for link in (active, runtime)):
+                    publish_state(root, args.locale, target, history)
                 print(json.dumps({"active": args.hash, "unchanged": True}))
                 return
             publish_state(root, args.locale, target, history + [{"before": current, "after": target}])

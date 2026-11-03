@@ -11299,7 +11299,7 @@ msgctxt "collection.add_new_population"
 msgid "Add New Population"
 msgstr "Додати нову популяцію"
 
-#: js/source/legacy/CXGN/Trial.js:163
+#: js/source/legacy/CXGN/Trial.js:149
 #: mason/breeders_toolbox/trial/create_datacollector_dialog.mas:106
 msgctxt "collection.an_error_occurred_creating_a_datacollector_file"
 msgid "An error occurred creating a DataCollector file."
@@ -17523,8 +17523,8 @@ msgctxt "cross.ui.an_error_occured_no_pedigrees_were_saved_try_fixing_your_file_
 msgid "An Error Occurred: No pedigrees were saved! Try Fixing Your File For The Issues Identified In the Validation. %{detail}"
 msgstr "Сталася помилка: жодну родовідну інформацію не збережено! Виправте у файлі проблеми, виявлені під час перевірки. %{detail}"
 
-#: js/source/legacy/CXGN/BreederSearch.js:205 js/source/legacy/CXGN/Trial.js:40
-#: js/source/legacy/CXGN/Trial.js:71 mason/breeders_toolbox/cross/index.mas:298
+#: js/source/legacy/CXGN/BreederSearch.js:205 js/source/legacy/CXGN/Trial.js:26
+#: js/source/legacy/CXGN/Trial.js:57 mason/breeders_toolbox/cross/index.mas:298
 #: mason/breeders_toolbox/genotyping_data_project/genotyping_project_deletion.mas:196
 msgctxt "cross.ui.an_error_occurred"
 msgid "An error occurred."
@@ -41385,7 +41385,7 @@ msgid "order"
 msgstr "замовити"
 
 # Draft translation; human review required.
-#: mason/site/header/head.mas:10
+#: mason/site/header/head.mas:12
 msgctxt "global.header.search_database"
 msgid "Search Database"
 msgstr "Пошук у базі даних"
@@ -68577,78 +68577,78 @@ msgctxt "seedlots.ui.you_want_to_use_seeds_from_existing_seedlots_for_plots"
 msgid "You want to use seeds from existing seedlots for plots"
 msgstr "Ви хочете використати насіння з наявних партій для ділянок"
 
-#: mason/site/header/head.mas:78
+#: mason/site/header/head.mas:80
 msgctxt "shared.datatables.ascending"
 msgid ": activate to sort column ascending"
 msgstr ": активуйте для сортування стовпця за зростанням"
 
-#: mason/site/header/head.mas:79
+#: mason/site/header/head.mas:81
 msgctxt "shared.datatables.descending"
 msgid ": activate to sort column descending"
 msgstr ": активуйте для сортування стовпця за спаданням"
 
-#: mason/site/header/head.mas:62
+#: mason/site/header/head.mas:64
 msgctxt "shared.datatables.empty"
 msgid "No data available in table"
 msgstr "У таблиці немає даних"
 
-#: mason/site/header/head.mas:65
+#: mason/site/header/head.mas:67
 msgctxt "shared.datatables.filtered"
 msgid "(filtered from _MAX_ total entries)"
 msgstr "(відфільтровано з _MAX_ записів загалом)"
 
-#: mason/site/header/head.mas:72
+#: mason/site/header/head.mas:74
 msgctxt "shared.datatables.first"
 msgid "First"
 msgstr "Перша"
 
-#: mason/site/header/head.mas:63
+#: mason/site/header/head.mas:65
 msgctxt "shared.datatables.info"
 msgid "Showing _START_ to _END_ of _TOTAL_ entries"
 msgstr "Показано від _START_ до _END_ із _TOTAL_ записів"
 
-#: mason/site/header/head.mas:64
+#: mason/site/header/head.mas:66
 msgctxt "shared.datatables.info_empty"
 msgid "Showing 0 to 0 of 0 entries"
 msgstr "Показано від 0 до 0 із 0 записів"
 
-#: mason/site/header/head.mas:73
+#: mason/site/header/head.mas:75
 msgctxt "shared.datatables.last"
 msgid "Last"
 msgstr "Остання"
 
-#: mason/site/header/head.mas:66
+#: mason/site/header/head.mas:68
 msgctxt "shared.datatables.length"
 msgid "Show _MENU_ entries"
 msgstr "Показувати _MENU_ записів"
 
 #: mason/breeders_toolbox/genotyping_protocol/marker_metadata.mas:19
-#: mason/site/header/head.mas:67
+#: mason/site/header/head.mas:69
 msgctxt "shared.datatables.loading"
 msgid "Loading..."
 msgstr "Завантаження..."
 
-#: mason/site/header/head.mas:74
+#: mason/site/header/head.mas:76
 msgctxt "shared.datatables.next"
 msgid "Next"
 msgstr "Наступна"
 
-#: mason/site/header/head.mas:75
+#: mason/site/header/head.mas:77
 msgctxt "shared.datatables.previous"
 msgid "Previous"
 msgstr "Попередня"
 
-#: mason/site/header/head.mas:68
+#: mason/site/header/head.mas:70
 msgctxt "shared.datatables.processing"
 msgid "Processing..."
 msgstr "Обробка..."
 
-#: mason/site/header/head.mas:69
+#: mason/site/header/head.mas:71
 msgctxt "shared.datatables.search"
 msgid "Search:"
 msgstr "Пошук:"
 
-#: mason/site/header/head.mas:70
+#: mason/site/header/head.mas:72
 msgctxt "shared.datatables.zero"
 msgid "No matching records found"
 msgstr "Відповідних записів не знайдено"
@@ -68801,7 +68801,7 @@ msgid "Unknown error [%{error}]"
 msgstr "Невідома помилка [%{error}]"
 
 #: js/source/legacy/CXGN/Page/Form/JSFormPage.js:194
-#: js/source/legacy/CXGN/Trial.js:151
+#: js/source/legacy/CXGN/Trial.js:137
 msgctxt "shared.form.error_prefix_lower"
 msgid "error: "
 msgstr "помилка: "
@@ -76106,7 +76106,7 @@ msgctxt "trial.card.audit.username"
 msgid "Username"
 msgstr "Ім’я користувача"
 
-#: js/source/legacy/CXGN/Trial.js:204
+#: js/source/legacy/CXGN/Trial.js:190
 msgctxt "trial.card.computation_stopped_prefix"
 msgid "Computation stopped: "
 msgstr "Обчислення зупинено: "
@@ -76261,22 +76261,22 @@ msgctxt "trial.card.coords.update_title"
 msgid "Update Physical Field Map"
 msgstr "Оновлення фізичної карти поля"
 
-#: js/source/legacy/CXGN/Trial.js:240
+#: js/source/legacy/CXGN/Trial.js:226
 msgctxt "trial.card.delete_fieldmap_error_prefix"
 msgid "Error deleting field map: "
 msgstr "Помилка видалення схеми поля: "
 
-#: js/source/legacy/CXGN/Trial.js:48
+#: js/source/legacy/CXGN/Trial.js:34
 msgctxt "trial.card.delete_layout_data.confirm"
 msgid "Are you sure you want to delete the layout data associated with trial %{trial_id} and the trial entry itself? This action cannot be undone."
 msgstr "Ви впевнені, що хочете видалити дані схеми, пов’язані з дослідом %{trial_id}, а також сам запис досліду? Цю дію не можна скасувати."
 
-#: js/source/legacy/CXGN/Trial.js:20
+#: js/source/legacy/CXGN/Trial.js:6
 msgctxt "trial.card.delete_phenotype_data.confirm"
 msgid "Are you sure you want to delete all phenotypic data associated with trial %{trial_id} ? This action cannot be undone."
 msgstr "Ви впевнені, що хочете видалити всі фенотипові дані, пов’язані з дослідом %{trial_id}? Цю дію не можна скасувати."
 
-#: js/source/legacy/CXGN/Trial.js:34
+#: js/source/legacy/CXGN/Trial.js:20
 msgctxt "trial.card.delete_phenotype_data.success"
 msgid "The phenotypic data has been deleted."
 msgstr "Фенотипові дані видалено."
@@ -76306,7 +76306,7 @@ msgctxt "trial.card.deletion.network_error"
 msgid "An error occurred deleting trait"
 msgstr "Сталася помилка під час видалення ознаки"
 
-#: js/source/legacy/CXGN/Trial.js:188
+#: js/source/legacy/CXGN/Trial.js:174
 #: mason/breeders_toolbox/trial/trial_deletion.mas:101
 msgctxt "trial.card.deletion.no_trait_selected"
 msgid "No trait selected"
@@ -76357,7 +76357,7 @@ msgctxt "trial.card.deletion.traits"
 msgid "Trait(s):"
 msgstr "Ознака(и):"
 
-#: js/source/legacy/CXGN/Trial.js:493
+#: js/source/legacy/CXGN/Trial.js:479
 msgctxt "trial.card.derived_traits_retrieve_error"
 msgid "An error occurred trying to retrieve derived traits."
 msgstr "Сталася помилка під час отримання похідних ознак."
@@ -76624,7 +76624,7 @@ msgctxt "trial.card.entry_numbers.number_definition"
 msgid " The entry number to assign to the Accession in all of the specified Trial(s).  The entry number should be unique in this set of Trial(s)."
 msgstr " Номер запису, який призначається зразку в усіх указаних дослідах.  Номер має бути унікальним у цьому наборі дослідів."
 
-#: js/source/legacy/CXGN/Trial.js:734
+#: js/source/legacy/CXGN/Trial.js:723
 #: mason/breeders_toolbox/trial/add_plants_per_plot.mas:429
 #: mason/breeders_toolbox/trial/add_plants_per_plot.mas:464
 #: mason/breeders_toolbox/trial/add_plants_per_plot.mas:499
@@ -76684,17 +76684,17 @@ msgctxt "trial.card.error_prefix"
 msgid "Error: "
 msgstr "Помилка: "
 
-#: js/source/legacy/CXGN/Trial.js:64
+#: js/source/legacy/CXGN/Trial.js:50
 msgctxt "trial.card.field_trial_deleted"
 msgid "The field trial has been deleted."
 msgstr "Польовий дослід видалено."
 
-#: js/source/legacy/CXGN/Trial.js:248
+#: js/source/legacy/CXGN/Trial.js:234
 msgctxt "trial.card.fieldmap_delete_error"
 msgid "An error occurred deleting field map."
 msgstr "Сталася помилка під час видалення схеми поля."
 
-#: js/source/legacy/CXGN/Trial.js:242
+#: js/source/legacy/CXGN/Trial.js:228
 msgctxt "trial.card.fieldmap_delete_success"
 msgid "Field map deletion successful."
 msgstr "Схему поля успішно видалено."
@@ -76799,7 +76799,7 @@ msgctxt "trial.card.list_selection.toggle_all"
 msgid "Select/Deselect All"
 msgstr "Вибрати/зняти вибір з усіх"
 
-#: js/source/legacy/CXGN/Trial.js:704
+#: js/source/legacy/CXGN/Trial.js:693
 msgctxt "trial.card.no_file_response"
 msgid "Error: No response received from server. Please try again."
 msgstr "Помилка: сервер не надіслав відповіді. Спробуйте ще раз."
@@ -77214,7 +77214,7 @@ msgctxt "trial.card.page.store_spatial"
 msgid "Store Spatial Correction"
 msgstr "Зберегти просторову поправку"
 
-#: js/source/legacy/CXGN/Trial.js:212
+#: js/source/legacy/CXGN/Trial.js:198
 msgctxt "trial.card.phenotype_derived_uploaded"
 msgid "Successfully derived and uploaded phenotype"
 msgstr "Фенотип успішно обчислено та завантажено"
@@ -77264,7 +77264,7 @@ msgctxt "trial.card.plots.error"
 msgid "error"
 msgstr "помилка"
 
-#: js/source/legacy/CXGN/Trial.js:86
+#: js/source/legacy/CXGN/Trial.js:72
 msgctxt "trial.card.program_associated"
 msgid "Associated program with id %{program_id} to trial with id %{trial_id}"
 msgstr "До досліду з ідентифікатором %{trial_id} прив’язано програму з ідентифікатором %{program_id}"
@@ -77389,12 +77389,12 @@ msgctxt "trial.card.raw_data.trait_label"
 msgid "Trait:"
 msgstr "Ознака:"
 
-#: js/source/legacy/CXGN/Trial.js:281
+#: js/source/legacy/CXGN/Trial.js:267
 msgctxt "trial.card.replace_accessions_error"
 msgid "An error occurred replacing accessions."
 msgstr "Сталася помилка під час заміни зразків."
 
-#: js/source/legacy/CXGN/Trial.js:273
+#: js/source/legacy/CXGN/Trial.js:259
 msgctxt "trial.card.replace_accessions_error_prefix"
 msgid "Error replacing accessions: "
 msgstr "Помилка заміни зразків: "
@@ -77404,7 +77404,7 @@ msgctxt "trial.card.server_console_error"
 msgid "A server error occurred, check console."
 msgstr "Сталася помилка сервера; перевірте консоль."
 
-#: js/source/legacy/CXGN/Trial.js:519
+#: js/source/legacy/CXGN/Trial.js:505
 msgctxt "trial.card.spatial_layout_delete_confirm"
 msgid "Are you sure you want to delete the spatial layout of this trial?"
 msgstr "Ви впевнені, що хочете видалити просторову схему цього досліду?"
@@ -77619,7 +77619,7 @@ msgctxt "trial.card.stocks.login_required"
 msgid "Please login to use lists!"
 msgstr "Увійдіть, щоб користуватися списками!"
 
-#: js/source/legacy/CXGN/Trial.js:218
+#: js/source/legacy/CXGN/Trial.js:204
 msgctxt "trial.card.trait_create_error"
 msgid "An error occurred creating trait."
 msgstr "Сталася помилка під час створення ознаки."
@@ -77675,7 +77675,7 @@ msgctxt "trial.card.treatments.retrieve_error"
 msgid "Error retrieving treatments."
 msgstr "Помилка отримання даних про обробки."
 
-#: js/source/legacy/CXGN/Trial.js:725
+#: js/source/legacy/CXGN/Trial.js:714
 msgctxt "trial.card.unexpected_response"
 msgid "An unexpected error occurred. The server response was not in the expected format. Please check the console for details or contact support."
 msgstr "Сталася неочікувана помилка. Відповідь сервера має неочікуваний формат. Перевірте консоль або зверніться до служби підтримки."
@@ -80023,7 +80023,7 @@ msgctxt "trial.details.cancel"
 msgid "Cancel"
 msgstr "Скасувати"
 
-#: js/source/legacy/CXGN/Trial.js:413
+#: js/source/legacy/CXGN/Trial.js:399
 msgctxt "trial.details.changed"
 msgid "Changed %{field} to: %{value}"
 msgstr "Змінено %{field} на: %{value}"
@@ -80083,7 +80083,7 @@ msgctxt "trial.details.name"
 msgid "Trial Name: "
 msgstr "Назва досліду: "
 
-#: js/source/legacy/CXGN/Trial.js:651
+#: js/source/legacy/CXGN/Trial.js:640
 msgctxt "trial.details.network_error"
 msgid "Trial detail update AJAX request failed. Update not completed."
 msgstr "Не вдалося виконати AJAX-запит для оновлення даних досліду. Оновлення не завершено."
@@ -80429,73 +80429,73 @@ msgctxt "trial.expression_atlas.validation.trials"
 msgid "Please select at least one trial."
 msgstr "Виберіть принаймні один дослід."
 
-#: js/source/legacy/CXGN/Trial.js:613
+#: js/source/legacy/CXGN/Trial.js:599
 msgctxt "trial.field.breeding_program"
 msgid "Breeding Program"
 msgstr "Селекційна програма"
 
-#: js/source/legacy/CXGN/Trial.js:620
+#: js/source/legacy/CXGN/Trial.js:606
 #: mason/breeders_toolbox/genotyping_protocol/genotype_data.mas:17
 msgctxt "trial.field.description"
 msgid "Description"
 msgstr "Опис"
 
-#: js/source/legacy/CXGN/Trial.js:621
+#: js/source/legacy/CXGN/Trial.js:607
 msgctxt "trial.field.field_size"
 msgid "Field Size (ha)"
 msgstr "Площа поля (ha)"
 
-#: js/source/legacy/CXGN/Trial.js:619
+#: js/source/legacy/CXGN/Trial.js:605
 msgctxt "trial.field.harvest_date"
 msgid "Harvest Date"
 msgstr "Дата збирання"
 
-#: js/source/legacy/CXGN/Trial.js:614
+#: js/source/legacy/CXGN/Trial.js:600
 msgctxt "trial.field.location"
 msgid "Location"
 msgstr "Місце"
 
-#: js/source/legacy/CXGN/Trial.js:612
+#: js/source/legacy/CXGN/Trial.js:598
 msgctxt "trial.field.name"
 msgid "Trial Name"
 msgstr "Назва досліду"
 
-#: js/source/legacy/CXGN/Trial.js:625
+#: js/source/legacy/CXGN/Trial.js:611
 msgctxt "trial.field.plan_to_cross"
 msgid "Trial Will Be Crossed"
 msgstr "Дослід для схрещувань"
 
-#: js/source/legacy/CXGN/Trial.js:624
+#: js/source/legacy/CXGN/Trial.js:610
 msgctxt "trial.field.plan_to_genotype"
 msgid "Trial Will Be Genotyped"
 msgstr "Дослід для генотипування"
 
-#: js/source/legacy/CXGN/Trial.js:617
+#: js/source/legacy/CXGN/Trial.js:603
 msgctxt "trial.field.planting_date"
 msgid "Planting Date"
 msgstr "Дата сівби"
 
-#: js/source/legacy/CXGN/Trial.js:623
+#: js/source/legacy/CXGN/Trial.js:609
 msgctxt "trial.field.plot_length"
 msgid "Plot Length (m)"
 msgstr "Довжина ділянки (m)"
 
-#: js/source/legacy/CXGN/Trial.js:622
+#: js/source/legacy/CXGN/Trial.js:608
 msgctxt "trial.field.plot_width"
 msgid "Plot Width (m)"
 msgstr "Ширина ділянки (m)"
 
-#: js/source/legacy/CXGN/Trial.js:618
+#: js/source/legacy/CXGN/Trial.js:604
 msgctxt "trial.field.transplanting_date"
 msgid "Transplanting Date"
 msgstr "Дата висаджування"
 
-#: js/source/legacy/CXGN/Trial.js:616
+#: js/source/legacy/CXGN/Trial.js:602
 msgctxt "trial.field.type"
 msgid "Trial Type"
 msgstr "Тип досліду"
 
-#: js/source/legacy/CXGN/Trial.js:615
+#: js/source/legacy/CXGN/Trial.js:601
 msgctxt "trial.field.year"
 msgid "Year"
 msgstr "Рік"
@@ -85578,7 +85578,7 @@ msgctxt "trial.upload.multi.generic.unsupported_trial_type"
 msgid "%{field} %{value} is not supported. Supported trial types: %{supported_types}."
 msgstr "%{field} %{value} не підтримується. Підтримувані типи досліду: %{supported_types}."
 
-#: js/source/legacy/CXGN/Trial.js:696
+#: js/source/legacy/CXGN/Trial.js:685
 #: mason/breeders_toolbox/trial/add_plants_per_plot.mas:442
 #: mason/breeders_toolbox/trial/add_plants_per_plot.mas:477
 #: mason/breeders_toolbox/trial/add_plants_per_plot.mas:512

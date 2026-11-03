@@ -13,49 +13,84 @@ objects do not change process locale, authentication, permissions or schema.
 Background solGS notification emails remain English. Translated user manuals are included in the same contribution; see
 [manual sources and build commands](../r_markdown_docs/i18n/README.md).
 
-Start with the [developer chapter](DEVELOPER.md) for short call examples and debugging.
-Review machine-translated text in [small breeding workflows](REVIEW.md).
+## Start here
 
-## Enable a language pack
+| Task | Instructions | Required tools |
+| --- | --- | --- |
+| Enable a ready language pack | Steps below | Python 3.9+ on Linux/POSIX, standard library only |
+| Translate or update wording | [Translator workflow](TRANSLATOR.md) and [review batches](REVIEW.md) | Python 3.9+ and GNU gettext |
+| Add translated messages to code | [Developer chapter](DEVELOPER.md) | Application tests and source extractors |
+| Build or publish a user manual | [Manual instructions](../r_markdown_docs/i18n/README.md) | Bookdown; Chromium for PDF only |
 
-Install a ready package matching the application release. Site operators need
-Python and the supplied `bin/i18n` directory; they do not need extraction parsers,
-Node, Perl, R or gettext for the ready-package lifecycle.
+Use `bin/i18n/sgn-i18n COMMAND [OPTIONS]` for language tools.
+`--help` lists commands; `COMMAND --help` lists that command's options.
+Run examples from the application root, or use an absolute tool path.
+Source commands accept `--root /path/to/source` after the command.
+Ready packs and frozen-release builds do not need source extractors.
+
+## Enable a ready language pack
+
+1. Obtain the package matching the application release and the supplied
+   `bin/i18n` tools through the normal trusted release channel.
+2. Install and activate it in a separate writable store:
+
+   ```sh
+   bin/i18n/sgn-i18n install --pack /release/uk-pack --root /srv/sgn-language-store
+   bin/i18n/sgn-i18n activate --locale uk --hash CATALOG_SHA256 \
+     --root /srv/sgn-language-store
+   ```
+
+   Replace `CATALOG_SHA256` with the `installed` value printed by `install`.
+   Both commands validate the package; a separate `validate` is optional.
+3. Add these settings to `sgn_local.conf`, then restart the application using
+   the site's normal service procedure:
+
+   ```text
+   i18n_enabled 1
+   i18n_enabled_locales en,uk
+   i18n_catalog_dir /srv/sgn-language-store/active
+   ```
+
+   Install and activate each additional language, then add its tag to
+   `i18n_enabled_locales`. Use the absolute store path visible **inside the
+   application container**. Mount the whole store directory. New activations use
+   relative internal links, so the host and container mount paths can differ.
+4. Open a new page and choose the language immediately left of Login. Check
+   a translated caption and the page's `Content-Language` and HTML `lang`/`dir`.
+   A missing or corrupt pack is omitted from the selector; other installed
+   languages remain available. See [debugging](DEVELOPER.md#diagnose-english-text-or-an-unexpected-language).
+
+The default remains English. Preference order is query `lang`,
+`X-SGN-Locale`, saved browser cookie, browser language, site default, then
+English. The selector saves a preference and removes an old query override;
+it does not change access rights or data.
+
+For a catalog update, repeat `install` and `activate`. Subsequent requests use
+it without an application restart. To undo the latest activation:
 
 ```sh
-bin/i18n/sgn-i18n install --pack /release/uk-pack --root /srv/sgn-language-store
-bin/i18n/sgn-i18n activate --locale uk --hash CATALOG_SHA256 \
-  --root /srv/sgn-language-store
+bin/i18n/sgn-i18n rollback --locale uk --root /srv/sgn-language-store
 ```
 
-`install` validates the package before storing it. Use the exact hash printed
-by package creation for activation; a separate `validate` is optional diagnostics. Set the site's local
-configuration using an absolute path:
+To disable the feature, set `i18n_enabled 0` and restart the application.
+English then needs no catalog files. Keep the store for later reuse or rollback.
 
-```text
-i18n_enabled 1
-i18n_default_locale en
-i18n_enabled_locales en,uk,es,ar
-i18n_catalog_dir /srv/sgn-language-store/active
-```
+## Optional site settings
 
-Install each requested language before enabling it. Available languages appear
-beside the login control; missing or corrupt packs do not block other languages.
-Release builders freeze source messages once and translators build from that
-snapshot; see [the complete release and operator procedure](TRANSLATOR.md).
+The three settings above are sufficient. Change these only when needed:
 
-`i18n_enabled 0` preserves the English interface. Locale choice is resolved for
-one request from an explicit preference, the saved browser cookie, browser
-language preferences, the configured default, then English. Only configured,
-installed catalogs can supply translations. The selector remembers a preference;
-it does not change a user's access rights or data.
+| Setting | Default | When to change it |
+| --- | --- | --- |
+| `i18n_default_locale` | `en` | Set a different fallback when no browser preference matches; it does not force every user into one language. |
+| `i18n_manual_base_url` | `https://solgenomics.github.io/sgn` | Point to a separately published multilingual manual root. |
+| `i18n_manual_locales` | `en` | List only manual languages actually published at that root. Interface packs do not publish manuals. |
 
-For a closed-site reverse proxy, the login page also needs the exact UI-only
-GET/HEAD `/i18n/runtime.js` and `/i18n/bootstrap.js` resources, and POST
-`/i18n/language`. Preserve authentication for other paths. These handlers serve
-trusted runtime code, message data and a validated preference cookie; they do
-not expose breeding records. The prototype/test-only demonstration routes are
-not part of this contribution.
+For a closed-site reverse proxy, allow the exact UI-only GET/HEAD
+`/i18n/runtime.js` and `/i18n/bootstrap.js` resources, and POST `/i18n/language`
+on the login page. Preserve authentication for other paths. These handlers
+serve trusted runtime code, message data and a validated preference cookie;
+they do not expose breeding records. Prototype/test-only demonstration routes
+are not part of this contribution.
 
 ## Catalog and rendering contract
 
@@ -83,7 +118,7 @@ numerical output, or automatically qualify an application calculation.
 ## Developer extraction tools
 
 Extraction parses application source as data and never loads it as executable
-application code. It requires Python 3, GNU gettext (`msgfmt`, `msgmerge`), Perl
+application code. It requires Python 3.9+, GNU gettext (`msgfmt`, `msgmerge`), Perl
 with PPI 1.272/JSON::PP and Node with the qualified Acorn 8.18.0 parser. Install
 the isolated JavaScript tool dependency with:
 
@@ -124,7 +159,7 @@ A new language needs a PO file, native name, text direction and supported plural
 rule. Already instrumented pages do not need to be rewritten. For example:
 
 ```sh
-python3 bin/i18n/catalog.py init --locale fr --direction ltr \
+bin/i18n/sgn-i18n init --locale fr --direction ltr \
   --plural-forms 'nplurals=2; plural=(n > 1);' --name 'Français' \
   --output locale/fr/LC_MESSAGES/sgn.po
 ```

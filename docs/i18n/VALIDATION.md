@@ -1,5 +1,57 @@
 # Localization validation
 
+## Setup and simplicity review, 2026-11-03
+
+This follow-up starts at `df1df33437fe659fa969050b8aa7a5d854a5448c` and retains
+the combined interface/catalog/manual scope. The review applies PEP 20 across
+the existing languages: one documented command interface, explicit behavior,
+useful errors and preserved scientific/data contracts.
+
+| Requirement | Change | Evidence |
+| --- | --- | --- |
+| Simple site setup | Three required settings; defaults/manual publication settings separated; restart versus live catalog activation explained. | Actual request and Mason header tests. |
+| Obvious commands | One `sgn-i18n COMMAND [OPTIONS]` interface; source `--root` works after the command; old direct syntax remains valid. | Real CLI regression and frozen external-workspace tests. |
+| Minimal operator environment | Common launcher plus three standard-library modules; ready packages need no source parsers, gettext or application checkout. | Three full language cycles with no external commands in PATH. |
+| Flexible container mounts | New runtime/selector links are relative within the whole store. Re-activating an older selected hash upgrades absolute pointers without changing activation history. | Single-file/indexed store moves, old-absolute compatibility, rollback, and actual Perl loading through a different container mount path. |
+| English without optional resources | Trial no longer publishes its own incomplete global translator; it uses shared helpers. Disabled pages omit both optional resource requests. | Whole shared/Trial source before/after regression, real edit/save payloads and plural messages in three modes; actual Mason header in both modes. |
+| Useful fallback diagnostics | Missing/corrupt configured packs log locale, store and reason once per request; a usable configured parent survives corrupt regional data. | New request regressions fail against the old role and pass after the correction. |
+| Predictable manual output | Help and explicit absolute output; source overlap, symlink aliases, parent/root output and extra arguments rejected. | Actual R boundary checks; English, Arabic and unchanged no-argument English Bookdown builds. |
+| Preserve catalogs and data | Only source references refreshed; no new messages, schema, permissions or scientific algorithms. | All 15,398 identities, 90 JSON/index bytes and three complete package hashes match the prior qualified version. |
+
+Final local qualification passed: **60 native files / 2,311 top-level checks**,
+**128 Python tool checks**, and **133 R checks**. The R fixture, environment and
+process locale remained unchanged. The complete Trial regression verifies the
+actual save callback with Unicode/literal markup, canonical field keys, zero
+values, empty-date removal, locale headers and plain success/error text. It
+first proves native save behavior, then reproduces the former shared plural
+failure; it does not claim the former native save always failed.
+
+Black 26.1.0, Ruff 0.14.14 (check/format), isort 5.13.2 and pylint 3.3.2 passed
+all 20 Python tool files; pylint rated them 10/10. Four armed Chromium source checks passed with current serializer evidence.
+The recorder check used the qualified Perl/Mason container after the host lacked
+JSON::PP; no product fallback was substituted. Root README passed Markdown,
+Prettier and terminology checks; changed sources passed spelling and JavaScript
+syntax checks. Explicit `package main` declarations fix the executable-test
+classification reported by hosted Perl lint. No lint rule was disabled for this
+follow-up.
+
+The independent runtime scan classified 122 direct p/np call lines in ten
+production files and 704 inline guarded calls. Existing guarded branches and
+local fallbacks remain compatible; blanket equivalence of each alternate
+fallback is not claimed. Trial was the only identified custom assignment of an
+incomplete global translator. Content-hash cache bounds, immutable snapshots,
+explicit locale headers, catalog integrity and atomic rollback are retained
+because they protect real application/release behavior. Existing scientific R
+workflows are not newly instrumented.
+
+These results qualify the changed source, local tools, synthetic request paths
+and catalog artifacts. Full authenticated application acceptance and human
+language/terminology approval remain separate. At the published base, hosted
+application and documentation jobs passed and lint failed; this candidate
+includes those lint corrections. Hosted checks must qualify the newly approved
+head after publication. Existing fixture-bootstrap and optional-probe limits
+below remain applicable. No merge or deployment is included.
+
 ## Upstream synchronization, 2026-11-03
 
 After publication of the approved head, upstream master advanced to

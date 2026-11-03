@@ -10,8 +10,8 @@ SGN::Role::Site::I18N - request-scoped message translation for SGN
 
 The feature is opt-in. Language preferences are UI preferences only. This role
 never changes authentication, process locale, dates, units or database values.
-Set i18n_enabled, i18n_catalog_dir, i18n_default_locale and
- i18n_enabled_locales in sgn_local.conf. Catalogs are built before startup.
+Set i18n_enabled, i18n_catalog_dir and i18n_enabled_locales in sgn_local.conf.
+The optional i18n_default_locale defaults to English. Install packs before enabling them.
 
 =cut
 
@@ -40,13 +40,15 @@ sub _i18n_translator {
         $available->{$locale} = SGN::I18N->new(locale => 'en');
         return $available->{$locale};
     }
+    my $root = $c->config->{i18n_catalog_dir} || $c->path_to('locale', 'build')->stringify;
     my $translator = eval { SGN::I18N->new(
         locale => $locale, domain => 'sgn',
-        catalog_root => $c->config->{i18n_catalog_dir} || $c->path_to('locale', 'build')->stringify,
+        catalog_root => $root,
     ) };
-    if (!$translator) {
-        $c->log->warn('Unavailable i18n catalog for ' . $locale) if $c->can('log');
-    } elsif ($locale ne 'en' && $translator->locale eq 'en') {
+    my $error = $@;
+    if (!$translator || $translator->locale eq 'en') {
+        $c->log->warn('Unavailable i18n catalog for ' . $locale . ' at ' . $root . ': '
+            . ($error || 'no installed catalog')) if $c->can('log');
         $translator = undef;
     }
     $available->{$locale} = $translator;
@@ -107,9 +109,17 @@ sub initialize_i18n {
         push @preferences, map { [$_->[0], 'header'] }
             sort { $b->[1] <=> $a->[1] || $a->[2] <=> $b->[2] } @ranges;
         push @preferences, [$c->config->{i18n_default_locale} || 'en', 'default'], ['en', 'default'];
-        for my $preference (@preferences) {
-            my $matched = _i18n_match_locale($preference->[0], \@locales);
-            if ($matched && $c->_i18n_translator($matched)) { ($locale, $source) = ($matched, $preference->[1]); last; }
+        PREFERENCE: for my $preference (@preferences) {
+            my $candidate = $preference->[0];
+            while (my $matched = _i18n_match_locale($candidate, \@locales)) {
+                if ($c->_i18n_translator($matched)) {
+                    ($locale, $source) = ($matched, $preference->[1]);
+                    last PREFERENCE;
+                }
+                # An unavailable regional pack must not hide its usable parent.
+                $candidate = $matched;
+                last unless $candidate =~ s/-[^-]+$//;
+            }
         }
     }
     my $translator = $c->config->{i18n_enabled} ? $c->_i18n_translator($locale) : undef;

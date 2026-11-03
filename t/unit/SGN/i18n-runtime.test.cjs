@@ -144,3 +144,67 @@ test('late nonnumeric plural results retain the pinned Jed form-zero behavior', 
  assert.equal(runtime.np('trials.count','%{count} trial found','%{count} trials found',5000,{count:5000}),'pt-PT[0] 5000');
  assert.throws(()=>runtime.np('trials.count','%{count} trial found','%{count} trials found',NaN,{count:5000}),/count/);
 });
+
+test('full Trial entrypoint preserves native save and shared plurals without optional locale resources', () => {
+ const shared=fs.readFileSync(path.resolve(__dirname,'../../../js/source/legacy/sgn.js'),'utf8');
+ const source=fs.readFileSync(path.resolve(__dirname,'../../../js/source/legacy/CXGN/Trial.js'),'utf8');
+ const fieldName='Field_Жито_%{name} <img src=x> & literal';
+ for(const mode of ['english-only','locale-assets-failed','translated']) {
+  const callbacks=new Map(),elements=new Map(),calls=[];
+  const item=selector=>{
+   if(selector&&selector.element)return selector.element;
+   if(String(selector).startsWith('<'))return {text:'',children:[]};
+   if(!elements.has(selector))elements.set(selector,{text:selector==='#trialIDDiv'?'73':'',value:'',children:[]});
+   return elements.get(selector);
+  };
+  const jq=selector=>{
+   const element=item(selector);
+   const api={element,
+    ready(){return this;},on(){return this;},change(){return this;},daterangepicker(){return this;},
+    click(callback){callbacks.set(selector,callback);return this;},
+    data(){return this;},attr(){return this;},addClass(){return this;},modal(){return this;},
+    is(){return selector==='#edit_trial_plan_to_genotype';},
+    val(value){if(arguments.length){element.value=value;return this;}return element.value;},
+    text(value){if(arguments.length){element.text=String(value);return this;}return element.text;},
+    empty(){element.children=[];element.text='';return this;},
+    append(child){element.children.push(item(child));return this;},
+    appendTo(target){item(target).children.push(element);return this;}
+   };return api;
+  };
+  jq.noConflict=()=>jq;jq.ajax=options=>calls.push(options);
+  const changed=[
+   {id:'edit_trial_name',title:'name',value:fieldName},
+   {id:'edit_trial_plan_to_genotype',title:'plan_to_genotype',value:'0',selectedIndex:0,options:[{text:'No'}]},
+   {id:'edit_trial_harvest_date',title:'harvest_date',value:''}
+  ];
+  const document={documentElement:{lang:mode==='english-only'?'en':'uk',getAttribute(){return mode==='english-only'?'en':'uk-UA';}},
+   getElementById(){return {innerHTML:'',getAttribute(){return '';}};},getElementsByName(){return changed;}};
+  const sandbox={document,jQuery:jq,JSAN:{use(){}},get_select_box(){},console};sandbox.window=sandbox;
+  vm.createContext(sandbox);vm.runInContext(shared,sandbox,{filename:'shared-sgn.js'});
+  if(mode==='translated') {
+   const catalog=clone(fixture.catalogs.uk);
+   for(const [context,english,translated] of [
+    ['trial.field.name','Trial Name','uk: name'],
+    ['trial.field.plan_to_genotype','Trial Will Be Genotyped','uk: genotype'],
+    ['trial.field.harvest_date','Harvest Date','uk: harvest'],
+    ['trial.details.changed','Changed %{field} to: %{value}','uk: %{field} = %{value}'],
+    ['trial.details.network_error','Trial detail update AJAX request failed. Update not completed.','uk: network error']
+   ])catalog.messages[context+'\u0004'+english]={plural:null,forms:[translated]};
+   sandbox.SGN.i18n=new I18N({locale:'uk',requestedLocale:'uk-UA',dir:'ltr',domain:'sgn',catalogs:[catalog]});
+  }
+  vm.runInContext(source,sandbox,{filename:'native-Trial.js'});
+  sandbox.edit_trial_details();callbacks.get('#save_trial_details')();
+  assert.equal(calls.length,1,mode+': save reaches native AJAX');
+  const request=calls[0];
+  assert.equal(request.url,'/ajax/breeders/trial/73/details/');assert.equal(request.type,'POST');
+  assert.deepEqual(JSON.parse(JSON.stringify(request.data)),{categories:['name','plan_to_genotype','harvest_date'],details:{name:fieldName,plan_to_genotype:'0',harvest_date:'remove'}});
+  assert.equal(request.headers['X-SGN-Locale'],mode==='english-only'?'en':'uk-UA');
+  request.success({success:1});
+  assert.deepEqual(item('#trial_details_saved_message').children.map(child=>child.text),mode==='translated'
+   ?['uk: uk: name = '+fieldName,'uk: uk: genotype = No','uk: uk: harvest = remove']
+   :['Changed Trial Name to: '+fieldName,'Changed Trial Will Be Genotyped to: No','Changed Harvest Date to: remove']);
+  request.error({});
+  assert.equal(item('#trial_details_error_message').children[0].text,mode==='translated'?'uk: network error':'Trial detail update AJAX request failed. Update not completed.');
+  assert.equal(sandbox.SGN.tn('trials.count','%{count} trial found','%{count} trials found',2,{count:2}),mode==='translated'?'Знайдено 2 досліди':'2 trials found',mode+': loading Trial cannot poison shared plural fallback');
+ }
+});

@@ -5,7 +5,10 @@ native-language and breeding-terminology review before publication.
 
 English chapter sources and shared reference figures remain in the parent directory. Each language directory contains translated chapter copies and standard Bookdown configuration. Explicit canonical English heading IDs preserve navigation between languages. Scientific code, examples, formulas, identifiers, units and file fields are not localized.
 
-Use the existing builder from any directory:
+Run from the application root with an absolute output directory outside the
+manual source tree. `Rscript --vanilla docs/r_markdown_docs/build.R --help`
+shows the accepted languages and modes. For a different working directory,
+use the absolute path to `build.R`.
 
 ```sh
 Rscript --vanilla docs/r_markdown_docs/build.R en /absolute/output split
@@ -16,7 +19,7 @@ Rscript --vanilla docs/r_markdown_docs/build.R ar /absolute/output/ar split
 
 `en` builds the English root with the shared language navigator. Publish all four
 reader outputs as one multilingual release, keeping English at the root and the
-three translated readers in their locale directories. `single` instead of `split` creates the full-book HTML used for PDF export. Without arguments the original English Bookdown command and its default output remain unchanged. The language builder stages independent copies of the shared figures so knitr writes portable relative URLs, cleans the temporary project, and writes only to the selected output directory. Do not bind-mount this source over a running SGN application.
+three translated readers in their locale directories. `single` instead of `split` creates the full-book HTML used for PDF export. For an explicit language build the output argument is required; source/output overlap and extra arguments are rejected before rendering. Without arguments the original English Bookdown command and its default output remain unchanged for existing documentation CI. The language builder stages independent copies of the shared figures so knitr writes portable relative URLs, cleans the temporary project, and writes only to the selected output directory. Do not bind-mount this source over a running SGN application.
 
 `manual-locale.css`, `manual-locale.js`, and each `locale-header.html` provide RTL/code/table presentation, language navigation and captions for standard reader controls without editing vendor libraries. Mathematical notation uses native MathML. The standard optional Hypothesis integration and pinned external Fuse library remain inherited reader dependencies; a local preview can block services and supply the exact cached library.
 
