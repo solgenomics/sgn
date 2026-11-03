@@ -1,35 +1,88 @@
-# Build the translated user manual
+# Build the user manual
 
-Run these commands from the SGN source folder. You need the site's Bookdown
-build environment. The translated chapters are drafts; have a native speaker
-and a breeder review them before publication.
+Use this guide to build English, Ukrainian, Spanish and Arabic web readers and
+PDFs. Translated chapters are drafts; have a native speaker and a breeder review
+them before publication. Editing chapters only needs a text editor.
+
+## Before you start
+
+Run commands from the SGN source folder, unless a step says otherwise.
+The builder needs R with `bookdown`, `rmarkdown`, `knitr` and `yaml`, plus Pandoc.
+Use the existing documentation build environment, separate from scientific R
+jobs. [Bookdown's setup guide](https://bookdown.org/yihui/bookdown/get-started.html)
+explains installation. RStudio is optional.
+
+Check that the main build dependencies are available:
+
+```sh
+Rscript --vanilla -e 'library(bookdown); library(yaml); stopifnot(rmarkdown::pandoc_available())'
+```
+
+If this fails, fix the named missing dependency in the documentation build
+environment before continuing. The English PDF also needs XeLaTeX. Translated
+PDFs use Node, npm, Chromium and suitable fonts, as described below.
 
 ## Build the web pages
 
-Choose a new output folder outside the source checkout. One command builds all four readers:
+Choose a new output folder outside the source checkout. One command builds all
+four readers:
 
 ```sh
-MANUAL_DIR="$HOME/sgn-manual-v1"
-Rscript --vanilla docs/r_markdown_docs/build.R all "$MANUAL_DIR"
+Rscript --vanilla docs/r_markdown_docs/build.R all "$HOME/sgn-manual-v1"
 ```
 
-Open `~/sgn-manual-v1/index.html` to read English. The `uk`, `es` and `ar`
-folders contain the other languages. Keep this layout when publishing, so
-language links find the same chapter and section.
+Open `~/sgn-manual-v1/index.html` for English. The output layout is:
 
-For help, run `Rscript --vanilla docs/r_markdown_docs/build.R --help`.
-The language build requires an absolute output path and rejects source overlap.
-`all` refuses an existing output folder and publishes it only after all four
-builds succeed. Use `en`, `uk`, `es` or `ar` to build one language.
+```text
+sgn-manual-v1/
+  index.html
+  uk/index.html
+  es/index.html
+  ar/index.html
+```
+
+Keep the complete folders when publishing, including their other chapter pages
+and assets. Language links preserve the matching chapter and section.
+
+`all` refuses an existing output folder and makes the final folder available
+only after all four builds succeed. After an edit, use a new name such as
+`sgn-manual-v2`. To build Ukrainian alone instead:
+
+```sh
+Rscript --vanilla docs/r_markdown_docs/build.R uk "$HOME/sgn-manual-uk-v1"
+```
+
+Use `en`, `es` or `ar` for another single language. Output paths must be absolute
+and outside the source directory. For help:
+
+```sh
+Rscript --vanilla docs/r_markdown_docs/build.R --help
+```
+
 With no arguments, `build.R` keeps the original English Bookdown build.
 
-## Build a PDF
+## Build an English PDF
 
-Build the web pages above first. The PDF will go beside those pages.
+Build the web pages above first. In a disposable documentation checkout with
+XeLaTeX installed, run this block from the SGN source folder:
 
-You also need Node, Chromium and the fonts listed in `manual-locale.css`,
+```sh
+(
+  cd docs/r_markdown_docs
+  Rscript --vanilla -e 'bookdown::render_book("index.Rmd", "bookdown::pdf_book", output_dir = path.expand("~/sgn-manual-v1"))'
+)
+```
+
+The PDF is `~/sgn-manual-v1/BreedbaseManual.pdf`, beside the English web pages.
+The subshell returns the terminal to the SGN source folder. Bookdown may create
+intermediate files in its source folder; do not commit those files. This uses
+the same English PDF renderer as the documentation CI.
+
+## Build a translated PDF
+
+You need Node and npm, Chromium, and the fonts listed in `manual-locale.css`,
 including Arabic and mathematical glyphs. Install the print tools outside the
-checkout so documentation publication cannot accidentally commit them:
+checkout so publication cannot accidentally commit them:
 
 ```sh
 PRINT_TOOLS="$HOME/sgn-manual-print-tools"
@@ -40,56 +93,61 @@ npm ci --prefix "$PRINT_TOOLS" --ignore-scripts
 export NODE_PATH="$PRINT_TOOLS/node_modules"
 ```
 
-Build one full-book HTML file, then print it. This example uses Ukrainian:
+Build one full-book HTML file, then print it. This example creates Ukrainian
+`~/sgn-manual-v1/uk/BreedbaseManual.pdf`:
 
 ```sh
-MANUAL_DIR="$HOME/sgn-manual-v1"
 Rscript --vanilla docs/r_markdown_docs/build.R uk "$HOME/sgn-manual-print-v1/uk" single
 node docs/r_markdown_docs/i18n/print_manual.cjs \
-  "$HOME/sgn-manual-print-v1/uk" "$MANUAL_DIR/uk/BreedbaseManual.pdf" uk
+  "$HOME/sgn-manual-print-v1/uk" "$HOME/sgn-manual-v1/uk/BreedbaseManual.pdf" uk
 ```
 
-Repeat with `es` and `ar`. Put each PDF beside its web pages, keeping the name
-`BreedbaseManual.pdf`. English PDFs still use the original Bookdown build.
-The exporter checks missing images and browser errors.
-It reads local book files, provides the pinned Fuse library locally, blocks
-other external requests and uses four supplied static figures for print.
+Repeat with `es` and `ar`. Put each PDF beside its web pages and keep the name
+`BreedbaseManual.pdf`. If you used a different web output folder, replace
+`sgn-manual-v1` in the PDF commands too.
 
-## Publish
+The exporter checks missing images and browser errors. It reads local book
+files, provides the pinned Fuse library locally, blocks other external requests
+and uses four supplied static figures for print.
 
-Publish the English root and three language folders together. Then set the
-site's `i18n_manual_base_url` and list the published languages in
-`i18n_manual_locales`; see [optional site settings](../../i18n/DEVELOPER.md#optional-site-settings).
-The site's Manual link can then use the matching language.
+## Edit, check and preview
 
-The existing documentation CI publishes English only. Other languages need a
-separate publication step by the maintainer. UI pack installation does not
-publish a manual. Keep generated HTML, PDFs, caches and tools outside Git.
-The existing workflow force-adds `docs/`, so do not install tool dependencies there.
+Use a regular text editor such as Visual Studio Code for `.Rmd` chapters. Poedit is for PO
+interface files. Keep heading IDs, code blocks, formulas, numbers and file-field
+examples unchanged in translations.
 
-## Edit chapter text
-
-Use a regular text editor such as VS Code for `.Rmd` chapters. Poedit is for PO
-interface files. Change paragraphs, then have the release builder run the source
-checks and build the preview:
+After editing paragraphs, run from the SGN source folder:
 
 ```sh
 python3 bin/i18n/test_manual.py
+Rscript --vanilla docs/r_markdown_docs/build.R all "$HOME/sgn-manual-v2"
 ```
 
-Keep heading IDs, code blocks, formulas, numbers and file-field examples unchanged.
-The checks compare these with English. Building the reader does not publish it.
+The first command checks consistency with English; it does not build a preview.
+The second builds the pages. Open `~/sgn-manual-v2/index.html` and check the
+changed chapters and language links. Building does not publish the reader.
+
+## Publish
+
+Publish the English root and three language folders together. Set the site's
+`i18n_manual_base_url` and list the published languages in `i18n_manual_locales`;
+see [optional site settings](../../i18n/DEVELOPER.md#optional-site-settings).
+The site's Manual link can then use the matching language.
+
+The existing documentation CI checks English only. A maintainer publishes the
+translated output separately. UI pack installation does not publish a manual.
+Keep generated HTML, PDFs, caches and tools outside Git. The existing workflow
+force-adds `docs/` during publication, so do not install tool dependencies there.
 
 ## Source files
 
 English chapters and shared figures are in the parent folder. Each language
 folder contains 29 translated chapters and Bookdown settings. Shared CSS/JS add
-language navigation and Arabic layout without changing vendor code. Heading IDs,
-scientific code, examples, formulas, units and file fields stay unchanged.
-The builder copies sources/figures to a temporary folder and cleans it afterwards.
+language navigation and Arabic layout without changing vendor code. The builder
+copies sources and figures to a temporary folder and cleans it afterwards.
 
 Web readers use native MathML and inherit Bookdown's optional Hypothesis and
-external pinned Fuse services. The PDF exporter works offline.
+external pinned Fuse services. The translated PDF exporter works offline.
 Two English cross-references were repaired; translated references keep the same
 anchors. The unimplemented external walkthrough remains a text note. Application
 URLs refer to the reader's SGN site, not pages hosted by this manual.

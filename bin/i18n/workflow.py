@@ -181,14 +181,36 @@ def prepare(args):
         copy_notices(notices, stage)
         example = "uk" if "uk" in translations else sorted(translations)[0]
         (stage / "README.md").write_text(
-            "# Translate this release\n\n"
-            "Open translations/" + example + ".po in Poedit. Double-clicking the file is enough.\n"
-            "Edit the translation column. Keep the English text and named values unchanged.\n"
-            "Save in Poedit. Then run the package command below. Saving does not update the live site.\n\n"
-            "From this folder, create a new ready bundle with:\n\n"
-            "```sh\npython3 tools/sgn-i18n package --workspace . --output ../ready-language-packs-v1\n```\n\n"
-            "Packaging checks the saved translations. It never activates them or changes the site.\n"
-            "Keep release.json, release.pot and the supplied notices with the translations.\n",
+            f"""# Edit these translations
+
+## Translator: open, edit and save
+
+Install Poedit from https://poedit.com/download/ on your computer once.
+In Poedit, choose File -> Open and select translations/{example}.po.
+The Source text is English. Edit the Translation field and fill every plural form.
+Keep named values such as %{{name}} unchanged. Mark uncertain text Needs Work.
+Save, then return this whole folder to the release builder.
+
+Editing needs no SGN, Python or translation server. Saving does not update a site.
+Have a native speaker and a breeder review the wording before use.
+
+## Builder: make the ready folder
+
+Use Linux/POSIX, Python 3.9 or newer and GNU gettext (msgcat, msgfmt, msgmerge).
+Open a terminal in this workspace folder, then run:
+
+```sh
+python3 tools/sgn-i18n package --workspace . --output ../ready-language-packs-v1
+```
+
+The new sibling ready-language-packs-v1 folder contains the language packs,
+operator tools, installation instructions and exact release/PO copies used.
+Existing output folders are refused; use ready-language-packs-v2 for a correction.
+Give the whole ready folder to the administrator. Packaging does not activate it.
+
+Keep release.json, release.pot, tools and notices with the translations.
+Original source PO/POT files were not edited to make this workspace.
+""",
             encoding="utf-8",
         )
     return {
@@ -202,15 +224,32 @@ def ready_notes(example):
     """Render the three ordinary operator actions for a validated locale tag."""
     return f"""# Install a language
 
-Use the SGN server account. The matching SGN application must already be installed.
-Keep this whole folder together. Open a terminal in this folder, then run:
+## Before you start
+
+The matching SGN application must already be installed. Use its server account
+on a Linux/POSIX server with Python 3.9 or newer. Ready packs need no Node, Perl,
+R or GNU gettext. The account needs write access to /srv/sgn-languages.
+In Docker, its user ID must be able to read these mounted files inside the container.
+Keep this whole ready folder together.
+
+## 1. Install and select the pack
+
+Open a terminal in this ready folder. Run both commands:
 
 ```sh
-python3 operator-tools/sgn-i18n install --activate --pack {example}-pack --root /srv/sgn-languages
+READY_DIR="$PWD"
+python3 "$READY_DIR/operator-tools/sgn-i18n" install --activate \\
+  --pack "$READY_DIR/{example}-pack" --root /srv/sgn-languages
 ```
 
-No code needs to be copied from the output. The pack is selected, but the site
-settings still need to be applied once by its administrator:
+The tool checks the files and reads the language/hash itself. A local receipt
+does not mean the running site has applied the configuration. Keep this terminal
+open: READY_DIR remembers the ready folder for the later commands.
+
+## 2. Apply site settings once
+
+The administrator edits the configuration used by the running site, usually
+sgn_local.conf:
 
 ```text
 i18n_enabled 1
@@ -218,25 +257,64 @@ i18n_enabled_locales en,{example}
 i18n_catalog_dir /srv/sgn-languages/active
 ```
 
-Docker sites must mount the whole language folder read-only and recreate their
-web container when adding that mount. Use the same SGN user ID inside the container.
-Open a new page and choose the language. Translations still need human review.
+This enables translations, allows the listed languages and points SGN at the
+selected files. Keep the final /active. For Docker, add this line to the web
+service's existing volumes list without removing its other volumes:
 
-To check the files and the site's language response, replace YOUR_SITE_URL:
-
-```sh
-python3 operator-tools/sgn-i18n doctor --root /srv/sgn-languages --locale {example} --site YOUR_SITE_URL
+```yaml
+- /srv/sgn-languages:/srv/sgn-languages:ro
 ```
 
+From the site's Compose project folder, find the web service and recreate it:
+
+```sh
+docker compose config --services
+docker compose up -d --no-deps YOUR_SGN_SERVICE
+```
+
+Replace YOUR_SGN_SERVICE with the web service name. Keep the site's usual -f and
+-p options on both commands. Restart alone does not add a new volume.
+Without Docker, use the site's normal SGN restart command.
+
+## 3. Check the result
+
+In the same terminal, check the selected and previous files:
+
+```sh
+python3 "$READY_DIR/operator-tools/sgn-i18n" doctor \\
+  --root /srv/sgn-languages --locale {example}
+```
+
+To check the site's language resources too, replace YOUR_SITE_URL with its root
+URL, for example https://example.org:
+
+```sh
+python3 "$READY_DIR/operator-tools/sgn-i18n" doctor \\
+  --root /srv/sgn-languages --locale {example} --site YOUR_SITE_URL
+```
+
+Doctor is read-only. Its site check reads resource headers; it does not prove
+every screen or the exact remote pack version. Open a new page, choose the
+language in the header and click the button beside the list. Check that messages
+change and trial/accession names stay the same. Translations need human review.
+
+## Update or undo
+
+For an update, repeat step 1 from the new ready folder, including READY_DIR.
+Open a new page. Existing settings and the whole-folder mount need no restart.
 To undo the last activation:
 
 ```sh
-python3 operator-tools/sgn-i18n rollback --root /srv/sgn-languages --locale {example}
+python3 "$READY_DIR/operator-tools/sgn-i18n" rollback \\
+  --root /srv/sgn-languages --locale {example}
 ```
 
-The release files, saved PO copies and notices record the inputs used for these
-packs. Edit the separate workspace to prepare the next version. This bundle has
-not changed a live site by itself.
+This selects the previous pack, or English fallback after the first activation.
+To disable translations for the site, set i18n_enabled 0 and restart SGN.
+In a new terminal, open the ready folder and set READY_DIR="$PWD" again.
+
+Release files, saved PO copies and notices record the exact inputs used for
+these packs. Edit the separate workspace to prepare the next version.
 """
 
 

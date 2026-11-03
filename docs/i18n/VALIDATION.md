@@ -4,9 +4,13 @@ This is the test record. For site setup, use [Install a language](README.md).
 
 ## Release and editor automation audit, 2026-11-03
 
-This local candidate starts at `3a9221bf99e50cb6cd500a4e381ac34ca3817c67`.
-The published base passed application, lint and documentation CI. Those hosted
-results do not certify the new commands until this candidate is published.
+The automation update starts at `3a9221bf99e50cb6cd500a4e381ac34ca3817c67`
+and was published as `a9a26a0eb34a998edd6fd7f7444656d21ccfa61d`. Its hosted
+[documentation](https://github.com/solgenomics/sgn/actions/runs/41661034770)
+and [lint](https://github.com/solgenomics/sgn/actions/runs/41661034748) passed.
+The [application run](https://github.com/solgenomics/sgn/actions/runs/41661034872)
+is tracked separately; check that run for its current result. The local checks
+below do not stand in for full hosted or target-site acceptance.
 
 The review covered the complete translation chain in four passes: current PR
 comments/linked issue; administrator and release workflow; independent adversarial
@@ -50,7 +54,7 @@ The local-editor test used synthetic messages in one offline Linux GUI session.
 It is not human terminology review or Windows/macOS GUI acceptance. A proposed
 custom editor-launch wrapper did not prove a reliable already-running handoff
 (exit 255), so it is excluded from the final design; standard Poedit file opening
-is used instead. The test editor lacked the optional Ukrainian spellcheck
+is used instead. The test editor lacked the optional Ukrainian spelling
 dictionary. No editor or OS package was installed on the host.
 
 Diagnostics verify selected/previous local package bytes and, when explicitly
@@ -88,10 +92,10 @@ failure; it does not claim the former native save always failed.
 Black 26.1.0, Ruff 0.14.14 (check/format), isort 5.13.2 and pylint 3.3.2 passed
 all 20 Python tool files; pylint rated them 10/10. Four armed Chromium source checks passed with current serializer evidence.
 The recorder check used the qualified Perl/Mason container after the host lacked
-JSON::PP; no product fallback was substituted. Root README passed Markdown,
+JSON::PP; no product fallback was substituted. Root `README.md` passed Markdown,
 Prettier and terminology checks; changed sources passed spelling and JavaScript
 syntax checks. Explicit `package main` declarations fix the executable-test
-classification reported by hosted Perl lint. No lint rule was disabled for this
+classification reported by hosted Perl lint. No linter rule was disabled for this
 follow-up.
 
 The independent runtime scan classified 122 direct p/np call lines in ten
@@ -209,7 +213,7 @@ of every route, scientific analysis or background email.
 
 ## Reproduce
 
-Use the qualified extraction dependencies in [README.md](README.md), the normal
+Use the qualified [source tools](DEVELOPER.md#source-tools), the normal
 application dependencies under `js/node_modules`, and an isolated source/fixture.
 
 ```sh

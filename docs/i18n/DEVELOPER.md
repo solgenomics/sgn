@@ -1,6 +1,6 @@
 # Change interface text
 
-For site setup, use [Turn on translations](README.md).
+For site setup, use [Install a language](README.md).
 This guide is for developers. It is also the proposed internationalization
 chapter for the [developer guide](https://github.com/solgenomics/sgn/wiki).
 
@@ -55,7 +55,7 @@ need completed translations for every language.
 
 ## If text stays English
 
-1. Check the three [site settings](README.md#3-apply-the-site-settings-once).
+1. Check the three [site settings](README.md#2-apply-the-site-settings-once).
 2. Check that the requested language is installed and activated. Read the server
    log for a missing or corrupt pack and its path.
 3. Open a new page. Existing pages keep their original translator.
@@ -89,7 +89,11 @@ Keep authentication on breeding-data routes.
 
 ## Source tools
 
-Only the source-release builder needs these tools:
+Only the source-release builder needs the extraction tools below. The person
+editing PO files needs only Poedit. A ready-pack operator needs Linux/POSIX
+and Python 3.9 or newer. See [who runs each step](TRANSLATOR.md).
+
+For source extraction, use a separate release-build environment with:
 
 - Python 3.9 or newer and GNU gettext (`msgfmt`, `msgcat`, `msgmerge`).
 - Perl with PPI 1.272 and JSON::PP.
