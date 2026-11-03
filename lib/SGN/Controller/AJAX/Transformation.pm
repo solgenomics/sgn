@@ -1066,6 +1066,7 @@ sub get_tranformant_experiment_info :Path('/ajax/transformation/transformant_exp
     my $transformant_obj = CXGN::Transformation::Transformant->new({schema=>$schema, dbh=>$dbh, transformant_stock_id=>$stock_id});
     my $vector_construct = $transformant_obj->vector_construct();
     my $plant_material = $transformant_obj->plant_material();
+    my $FEC_batch = $transformant_obj->FEC_batch();
     my $transformation_identifier = $transformant_obj->transformation_identifier();
 
     if (@$vector_construct) {
@@ -1094,7 +1095,7 @@ sub get_tranformant_experiment_info :Path('/ajax/transformation/transformant_exp
     }
 
     my @transformant_experiment_info;
-    push @transformant_experiment_info, [$vector_link, $plant_link, $transformation_link, $project_link];
+    push @transformant_experiment_info, [$vector_link, $plant_link, $FEC_batch, $transformation_link, $project_link];
 
     $c->stash->{rest} = { data => \@transformant_experiment_info };
 

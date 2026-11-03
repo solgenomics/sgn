@@ -64,6 +64,13 @@ has 'transformation_identifier' => (
     builder => '_get_transformation_identifier',
 );
 
+has 'FEC_batch' => (
+    isa => 'Str|Undef',
+    is => 'rw',
+    lazy => 1,
+    builder => '_get_FEC_batch',
+);
+
 sub get_transformant_qPCR_data {
     my $self = shift;
     my $schema = $self->schema();
@@ -197,6 +204,17 @@ sub _get_transgenes {
     }
 
     $self->transgenes(\@transgenes);
+}
+
+sub _get_FEC_batch {
+    my $self = shift;
+    my $schema = $self->schema();
+    my $transformant_stock_id = $self->transformant_stock_id();
+    my $FEC_batch_type_id = SGN::Model::Cvterm->get_cvterm_row($schema,  'FEC_batch', 'stock_property')->cvterm_id();
+    my $FEC_batch = $schema->resultset("Stock::Stockprop")->find({stock_id => $transformant_stock_id, type_id => $FEC_batch_type_id})->value();
+
+    $self->FEC_batch($FEC_batch);
+    
 }
 
 
