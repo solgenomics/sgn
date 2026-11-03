@@ -41,6 +41,7 @@ sub search {
 sub values_at {
     my(%args)=@_;
     # Exercise exact instants explicitly; native trial-page filters default to calendar days.
+    # Native trial-page filters default to calendar days; this helper tests exact instants.
     my($rows)=search('Native',$plots[1],$trait_a,date_range_mode=>'timestamp',include_dateless_items=>0,%args);
     return [sort { $a <=> $b } map {0+$_->{phenotype_value}} grep {defined $_->{phenotype_value}} @$rows];
 }
