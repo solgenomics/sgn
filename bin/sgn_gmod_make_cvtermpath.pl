@@ -159,7 +159,7 @@ if (!$schema || !$db) { die "No schema or dbh is available! \n"; }
 print STDOUT "Connected to database $dbname on host $dbhost.\n" if $verbose;
 ##########
 
-open (my $OUT, ">", $opt_o || '-') ||die "can't open error file $opt_o for writing.\n" ; } # - is STDOUT
+open (my $OUT, ">", $opt_o || '-') ||die "can't open error file $opt_o for writing.\n" ; # - is STDOUT
 
 my $cv_id;
 warn "select cv_id from cv where name = '$cvname'" if $verbose;

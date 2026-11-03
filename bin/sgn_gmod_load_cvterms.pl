@@ -282,7 +282,7 @@ if (!$file) {
 
 die "Some required command lines parameters not set. Aborting.\n" if $error;
 
-open (my $OUT, ">", $opt_o || '-') || die "can't open error file $opt_o for writing.\n" ; }
+open (my $OUT, ">", $opt_o || '-') || die "can't open error file $opt_o for writing.\n" ;
 
 
 message( "Connected to database $dbname on host $dbhost.\n", 1);
