@@ -38,6 +38,24 @@ sub search {
     my($engine,$plot,$trait,%args)=@_;
     return CXGN::Phenotypes::SearchFactory->instantiate($engine,{bcs_schema=>$s,data_level=>'plot',trial_list=>[$trial],plot_list=>[$plot],trait_list=>[$trait],%args})->search;
 }
+# Establish the complete valid baseline from owning raw rows, independently
+# of either search engine and of observations committed by earlier tests.
+sub baseline_ids {
+    my ($plot, $trait, $include_marked) = @_;
+    return $dbh->selectcol_arrayref(
+        'SELECT DISTINCT p.phenotype_id FROM phenotype p
+         JOIN nd_experiment_phenotype ep USING (phenotype_id)
+         JOIN nd_experiment_stock es USING (nd_experiment_id)
+         JOIN nd_experiment_project e USING (nd_experiment_id)
+         WHERE e.project_id=? AND es.stock_id=? AND p.observable_id=?
+         AND p.value IS NOT NULL AND (? OR NOT EXISTS (
+             SELECT 1 FROM phenotypeprop pp WHERE pp.phenotype_id=p.phenotype_id AND pp.type_id=?))
+         ORDER BY p.phenotype_id', undef, $trial, $plot, $trait, $include_marked ? 1 : 0,
+         term('phenotype_outlier', 'phenotype_property'));
+}
+sub phenotype_ids {
+    return [sort {$a <=> $b} map {0+$_->{phenotype_id}} @_];
+}
 sub values_at {
     my(%args)=@_;
     # Exercise exact instants explicitly; native trial-page filters default to calendar days.
@@ -59,8 +77,14 @@ my $ran=eval {
     my $template=$s->resultset('Stock::Stock')->find({uniquename=>'test_accession1'});
     my $private=$s->resultset('Stock::Stock')->create({name=>$prefix.'accession',uniquename=>$prefix.'accession',organism_id=>$template->organism_id,type_id=>$template->type_id});
     CXGN::Trial::AccessionChange->new({schema=>$s,trial_id=>$trial})->apply([{plot_id=>$plots[0],new_stock_id=>$private->stock_id}],{curator=>1,rename_plots=>'none'});
+    my $baseline_a=baseline_ids($plots[0],$trait_a);
+    my $baseline_b=baseline_ids($plots[0],$trait_b);
+    my $baseline_raw_a=baseline_ids($plots[0],$trait_a,1);
     my $marked=measurement($plots[0],$trait_a,10,'2026-11-02 10:00:00');
-    measurement($plots[0],$trait_b,20,'2026-11-02 10:00:00');
+    my $unmarked=measurement($plots[0],$trait_b,20,'2026-11-02 10:00:00');
+    my $expected_a=[sort {$a<=>$b} (@$baseline_a,$marked)];
+    my $expected_b=[sort {$a<=>$b} (@$baseline_b,$unmarked)];
+    my $expected_raw_a=[sort {$a<=>$b} (@$baseline_raw_a,$marked)];
     measurement($plots[1],$trait_a,9,'2026-11-02 09:00:00');
     measurement($plots[1],$trait_a,10,'2026-11-02 10:00:00');
     measurement($plots[1],$trait_a,11,'2026-11-02 11:00:00');
@@ -70,18 +94,19 @@ my $ran=eval {
     subtest 'Outlier filtering has phenotype granularity in both engines, including live marks' => sub {
         my($native)=search('Native',$plots[0],$trait_b,exclude_phenotype_outlier=>1);
         my @valid=grep {defined $_->{phenotype_value}} @$native;
-        is(scalar @valid,1,'Native retains the valid other trait');
+        is_deeply(phenotype_ids(@valid),$expected_b,'Native retains every valid other-trait observation');
         my($fast,$traits)=search('MaterializedViewTable',$plots[0],$trait_b,exclude_phenotype_outlier=>1);
         is(scalar @$fast,1,'fast search retains the same unit');
-        is_deeply([map {$_->{trait_id}} @{$fast->[0]{observations}}],[$trait_b],'fast search returns only the requested unmarked trait');
+        is_deeply([map {$_->{trait_id}} @{$fast->[0]{observations}}],[($trait_b) x scalar(@$expected_b)],'fast search returns only the requested unmarked trait');
+        is_deeply(phenotype_ids(@{$fast->[0]{observations}}),$expected_b,'fast search retains the complete valid other-trait baseline and new observation');
         is($fast->[0]{full_count},1,'filtered unit pagination count is correct');
         my($hidden)=search('MaterializedViewTable',$plots[0],$trait_a,exclude_phenotype_outlier=>1);
-        is(scalar @$hidden,0,'requesting only the marked trait gives no unit');
+        is_deeply(phenotype_ids(map {@{$_->{observations}}} @$hidden),$baseline_a,'the marked observation is excluded while valid same-trait baseline stays');
         my($raw)=search('MaterializedViewTable',$plots[0],$trait_a,exclude_phenotype_outlier=>0);
-        is(scalar @{$raw->[0]{observations}},1,'explicit unfiltered standard read keeps the source observation');
+        is_deeply(phenotype_ids(@{$raw->[0]{observations}}),$expected_raw_a,'explicit unfiltered standard read keeps the marked source and complete baseline');
         $prop->delete;
         my($restored)=search('MaterializedViewTable',$plots[0],$trait_a,exclude_phenotype_outlier=>1);
-        is(scalar @{$restored->[0]{observations}},1,'restoration is visible without refreshing cached JSON');
+        is_deeply(phenotype_ids(@{$restored->[0]{observations}}),$expected_a,'restoration is visible without refreshing cached JSON and preserves valid baseline');
     };
     subtest 'Explicit observation-unit filters stay exact and caller lists stay unchanged' => sub {
         my @ids=($plots[1]);
