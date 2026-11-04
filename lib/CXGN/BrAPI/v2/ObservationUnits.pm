@@ -653,7 +653,9 @@ sub _unit_prop {
     _unit_fail("Observation unit $stock_id has multiple $name values; correct its layout metadata first.") if @old > 1;
     if (@value) {
         return undef if !@old && !defined($value[0]); ## no critic (Subroutines::ProhibitExplicitReturnUndef) -- Preserve the explicit absent-value sentinel in every calling context.
-        return $old[0]->value if @old && defined($value[0]) && defined($old[0]->value) && $old[0]->value eq $value[0];
+        return $old[0]->value if @old && (
+            (!defined($value[0]) && !defined($old[0]->value))
+            || (defined($value[0]) && defined($old[0]->value) && $old[0]->value eq $value[0]));
         if (defined($value[0])) {
             if (@old) { $old[0]->update({value => $value[0]}); }
             else { $schema->resultset('Stock::Stockprop')->create({stock_id => $stock_id, type_id => $type->cvterm_id, value => $value[0], rank => 0}); }
