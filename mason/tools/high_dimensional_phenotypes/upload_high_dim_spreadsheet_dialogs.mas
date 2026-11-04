@@ -159,6 +159,7 @@ my @sequencing_center_options = split ",", $c->config->{genotyping_facilities};
                                     <option value="FPKM">FPKM</option>
                                     <option value="TPM">TPM</option>
                                     <option value="VST">VST</option>
+                                    <option value="rlog">rlog</option>
                                     <option value="RawCount">RawCount</option>
                                     </select>
                                 </div>
@@ -1193,18 +1194,14 @@ jQuery(document).ready(function() {
                 }
             }
             if (response.warning) {
+                // NIRS store does not support overwriting/skipping previously stored values,
+                // so only the actual warnings are shown (no generic phenotype-upload header/checkbox)
                 var warningarrayLength = response.warning.length;
-                if (warningarrayLength > 0) {
+                for (var i = 0; i < warningarrayLength; i++) {
                     message_text += "<li class='list-group-item list-group-item-warning'>";
                     message_text += "<span class='badge'><span class='glyphicon glyphicon-asterisk'></span></span>";
-                    message_text += "Warnings are shown in yellow. Either fix the file and try again or continue with storing the data.<hr>If you continue, by default any new values will be uploaded and any previously stored values will be skipped.<hr>To overwrite previously stored values instead: <input type='checkbox' id='phenotype_upload_overwrite_values' name='phenotype_upload_overwrite_values' /><br><br>";
+                    message_text += response.warning[i];
                     message_text += "</li>";
-                    for (var i = 0; i < warningarrayLength; i++) {
-                        message_text += "<li class='list-group-item list-group-item-warning'>";
-                        message_text += "<span class='badge'><span class='glyphicon glyphicon-asterisk'></span></span>";
-                        message_text += response.warning[i];
-                        message_text += "</li>";
-                    }
                 }
             }
             message_text += "</ul>";
@@ -1345,7 +1342,7 @@ jQuery(document).ready(function() {
                     if (warningarrayLength > 0) {
                         message_text += "<li class='list-group-item list-group-item-warning'>";
                         message_text += "<span class='badge'><span class='glyphicon glyphicon-asterisk'></span></span>";
-                        message_text += "Warnings are shown in yellow. Either fix the file and try again or continue with storing the data.<hr>If you continue, by default any new values will be uploaded and any previously stored values will be skipped.<hr>To overwrite previously stored values instead: <input type='checkbox' id='phenotype_upload_overwrite_values' name='phenotype_upload_overwrite_values' /><br><br>";
+                        message_text += "Warnings are shown in yellow test. Either fix the file and try again or continue with storing the data.<hr>If you continue, by default any new values will be uploaded and any previously stored values will be skipped.<hr>To overwrite previously stored values instead: <input type='checkbox' id='phenotype_upload_overwrite_values' name='phenotype_upload_overwrite_values' /><br><br>";
                         message_text += "</li>";
                         for (var i = 0; i < warningarrayLength; i++) {
                             message_text += "<li class='list-group-item list-group-item-warning'>";
