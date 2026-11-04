@@ -10,7 +10,7 @@ my @pending;
 
 =head1 NAME
 
-SGN::Test::OwnedTrialCleanup - isolate the two committed observation HTTP tests
+SGN::Test::OwnedTrialCleanup - observation ownership and shared HTTP cache cleanup
 
 =head1 SYNOPSIS
 
@@ -21,6 +21,8 @@ SGN::Test::OwnedTrialCleanup - isolate the two committed observation HTTP tests
  );
  # Create the named trial, make HTTP requests, then:
  $owned->cleanup;
+ # ImageAnalysis, after committing its own source/study restoration:
+ SGN::Test::OwnedTrialCleanup->refresh_analytical_caches($schema);
 
 =head1 CONTRACT
 
@@ -29,8 +31,10 @@ and exclusive to this test. All three ID cutoffs are mandatory. Cleanup proves
 ownership of every experiment, phenotype and file before deleting exact IDs.
 It never rewinds sequences. Existing metadata IDs are preserved even when no
 file references them; foreign-key constraints protect other metadata users.
-The helper owns only the two observation regression callers, not arbitrary
-fixture changes. Standard project phenotype deletion is asynchronous and is
+Provenance and Transfer own disposable trial graphs through this helper.
+ImageAnalysis restores its own image/study graph separately and uses only the
+shared refresh_analytical_caches class method. This is a contract for these
+three HTTP regression roles, not arbitrary fixture changes. Standard project phenotype deletion is asynchronous and is
 unsuitable for isolation between sequential HTTP tests.
 
 An unlinked archive is attributable only when its nonempty, valid CSV contains
@@ -211,7 +215,30 @@ sub refresh_owned_caches {
     my ($self) = @_;
     return unless keys %{$self->{owned_stock_ids}};
     $self->{schema}->txn_do(sub {
-        my $db = $self->{schema}->storage->dbh;
+        __PACKAGE__->refresh_analytical_caches($self->{schema});
+        my $counts = $self->owned_cache_rows;
+        for my $view (sort keys %$counts) {
+            die "Owned-trial cache $view retains $counts->{$view} deleted rows\n" if $counts->{$view};
+        }
+    });
+}
+
+=head2 refresh_analytical_caches($schema)
+
+Synchronously refresh the three all_but_genoview analytical caches after the
+caller's source-data restoration has committed. The observation cleanup uses
+this method inside its verification transaction; ImageAnalysis uses the class
+method after restoring study properties and layout caches, before marking its
+cleanup complete. Both paths share advisory mutex67895, the bounded waits and
+visible PostgreSQL errors. The refresh transaction can be nested so the
+observation caller verifies absence of its deleted unit IDs before commit.
+
+=cut
+
+sub refresh_analytical_caches {
+    my ($class, $schema) = @_;
+    $schema->txn_do(sub {
+        my $db = $schema->storage->dbh;
         $db->do("SET LOCAL lock_timeout='10s'");
         $db->do("SET LOCAL statement_timeout='60s'");
         my $deadline = time() + 10;
@@ -224,11 +251,8 @@ sub refresh_owned_caches {
             $db->do("REFRESH MATERIALIZED VIEW public.$view");
             $db->do('UPDATE public.matviews SET currently_refreshing=FALSE,last_refresh=statement_timestamp() WHERE mv_name=?', undef, $view);
         }
-        my $counts = $self->owned_cache_rows;
-        for my $view (sort keys %$counts) {
-            die "Owned-trial cache $view retains $counts->{$view} deleted rows\n" if $counts->{$view};
-        }
     });
+    return 1;
 }
 
 sub owned_cache_rows {
