@@ -256,8 +256,14 @@ my $all=eval {
  scenario 'Scalar metadata updates preserve original row identity and reject ambiguity'=>sub {
   my $type=term('row_number','stock_property');
   $s->resultset('Stock::Stockprop')->search({stock_id=>$plots[0],type_id=>$type})->delete;
-  my $row=$s->resultset('Stock::Stockprop')->create({stock_id=>$plots[0],type_id=>$type,value=>'before',rank=>0});
+  my $row=$s->resultset('Stock::Stockprop')->create({stock_id=>$plots[0],type_id=>$type,value=>undef,rank=>0});
   my $id=$row->stockprop_id;
+  CXGN::Trial::TrialLayout->new({schema=>$s,trial_id=>$trial,experiment_type=>'field_layout'})->generate_and_cache_layout;
+  my $clears=scalar @clear;
+  my $null=api()->observationunits_update([request_unit($plots[0],observationUnitPosition=>{positionCoordinateY=>undef})],$context,41);
+  ok(defined($null->{result}),'an existing JSON-null coordinate roundtrip succeeds');
+  ok($s->resultset('Stock::Stockprop')->find($id),'the original NULL-valued property keeps its identity');
+  is(scalar @clear,$clears,'an unchanged NULL coordinate does not invalidate analyses');
   my $r=api()->observationunits_update([request_unit($plots[0],observationUnitPosition=>{positionCoordinateY=>'007'})],$context,41);
   ok(defined($r->{result}),'a scalar coordinate update succeeds');
   my $changed=$s->resultset('Stock::Stockprop')->find($id);
