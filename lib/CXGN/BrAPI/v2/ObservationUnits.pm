@@ -901,7 +901,9 @@ sub _unit_apply_updates {
             if ($u->{type} eq 'tissue_sample' && $number =~ /^[A-Za-z]\d+$/) {
                 $self->_unit_prop($id, 'plot number', $number); # genotyping well code
             } else {
-                _unit_fail('The stored unit numbering requires a positive integer.') unless $number =~ /^[1-9]\d*$/;
+                # BrAPI plot codes are literal labels; child indexes remain numeric.
+                _unit_fail('The stored unit numbering requires a positive integer.')
+                    if $u->{type} ne 'plot' && $number !~ /^[1-9]\d*$/;
                 $self->_unit_prop($id, $field{$u->{type}}, $number);
             }
         }
@@ -1037,7 +1039,9 @@ sub observationunits_store {
                     push @parents,$parent;
                     my $stock=$self->bcs_schema->resultset('Stock::Stock')->find({stock_id=>$parent});
                     _unit_fail('Parent plot does not exist.',404) if !$stock;
-                    _unit_fail('This creation endpoint requires a plot parent.') if $stock->type->name ne 'plot';
+                    my $parent_type = $stock->type->name;
+                    _unit_fail('This creation endpoint requires a plot parent, or a plant parent for a tissue sample.')
+                        if $parent_type ne 'plot' && !($level eq 'tissue_sample' && $parent_type eq 'plant');
                     _unit_fail('The new child germplasm must match its parent plot.') if $target->{id} != $self->_unit_old_germplasm($parent);
                     my $parent_trial=CXGN::Trial::AccessionChange->field_trial_of_plot($self->bcs_schema,$parent);
                     _unit_fail('This child-creation endpoint requires its parent plot in the same field study.') if !$parent_trial || !defined($study) || $parent_trial ne $study;

@@ -11,6 +11,7 @@ use File::Basename qw | basename |;
 use File::Copy;
 use CXGN::Dataset;
 use CXGN::Dataset::File;
+use SGN::Model::Cvterm;
 use CXGN::Tools::Run;
 use CXGN::Job;
 use CXGN::Page::UserPrefs;
@@ -154,8 +155,16 @@ sub generate_results: Path('/ajax/heritability/generate_results') : {
     my $errorFile = $tempfile . "_" . "error.txt";
 
 
-    $trait_id =~ tr/ /./;
-    $trait_id =~ tr/\//./;
+    # The HTTP API accepts the numeric option ID and the browser's legacy name.
+    # Resolve both through the same extended-name helper as PhenotypeMatrix.
+    my $trait_header = eval {
+        _resolve_trait_header($schema, $ds->retrieve_traits(),
+            $phenotype_data_ref->[0] || [], $trait_id);
+    };
+    if ($@) {
+        $c->stash->{rest} = { error => $@ };
+        return;
+    }
 
     my $cxgn_tools_run_config = {
         backend => $c->config->{backend},
@@ -166,11 +175,11 @@ sub generate_results: Path('/ajax/heritability/generate_results') : {
         # don't block and wait if the cluster looks full
         max_cluster_jobs => 1_000_000_000,
     };
-    my $cmd_str = join(" ",(
-        "Rscript ",
+    my $cmd_str = join(" ", map { _shell_quote($_) } (
+        "Rscript",
         $c->config->{basepath} . "/R/heritability/h2_blup_rscript.R",
         $pheno_filepath,
-        $trait_id,
+        $trait_header,
         $h2File,
         $h2CsvFile,
         $errorFile
@@ -254,6 +263,38 @@ sub generate_results: Path('/ajax/heritability/generate_results') : {
         error => $errors,
         h2CsvTable => $h2CsvFile_response
     };
+}
+
+# Resolve identity before R performs its existing presentation normalization.
+# Never infer an ID from a header suffix or choose one of two equal trait names.
+sub _resolve_trait_header {
+    my ($schema, $traits, $headers, $selected) = @_;
+    die "A selected trait is required.\n" if !defined($selected) || $selected eq '';
+    my %matches;
+    for my $trait (@$traits) {
+        my ($id, $name) = @$trait;
+        next if !defined($id);
+        if ($selected eq "$id" || (defined($name) && $selected eq $name)) {
+            $matches{$id} = 1;
+        }
+    }
+    die "The selected trait was not found in the dataset.\n" if !keys(%matches);
+    die "The selected trait is ambiguous in the dataset.\n" if keys(%matches) > 1;
+    my ($id) = keys %matches;
+    my $header = SGN::Model::Cvterm::get_trait_from_cvterm_id($schema, $id, 'extended');
+    die "The selected trait has no declared phenotype header.\n"
+        if !defined($header) || $header eq '';
+    my @columns = grep { defined($_) && $_ eq $header } @$headers;
+    die "The selected trait header was not found in the phenotype data.\n" if !@columns;
+    die "The selected trait header is ambiguous in the phenotype data.\n" if @columns > 1;
+    return $header;
+}
+
+# Keep every raw header (including composed traits and quotes) one shell argument.
+sub _shell_quote {
+    my $value = shift;
+    my @parts = split(/'/, $value, -1);
+    return "'" . join("'\"'\"'", @parts) . "'";
 }
 
 1
